@@ -32,7 +32,7 @@
 #ifndef WEBRTC_VOICE_ENGINE_VOE_EXTERNAL_MEDIA_H
 #define WEBRTC_VOICE_ENGINE_VOE_EXTERNAL_MEDIA_H
 
-#include "common_types.h"
+#include "webrtc/common_types.h"
 
 namespace webrtc {
 
@@ -51,9 +51,9 @@ public:
     // The sampling frequency will depend upon the codec used.
     // If |isStereo| is true, audio10ms will contain 16-bit PCM data
     // samples in interleaved stereo format (L0,R0,L1,R1,...).
-    virtual void Process(const int channel, const ProcessingTypes type,
-                         int16_t audio10ms[], const int length,
-                         const int samplingFreq, const bool isStereo) = 0;
+    virtual void Process(int channel, ProcessingTypes type,
+                         int16_t audio10ms[], int length,
+                         int samplingFreq, bool isStereo) = 0;
 
 protected:
     virtual ~VoEMediaProcess() {}

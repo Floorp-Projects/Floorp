@@ -3,11 +3,11 @@
  * Do not edit.
  */
 
-#ifndef _JS_CONFDEFS_H_
-#define _JS_CONFDEFS_H_
+#ifndef js_confdefs_h
+#define js_confdefs_h
 
 @ALLDEFINES@
 
 #include "js/RequiredDefines.h"
 
-#endif /* _JS_CONFDEFS_H_ */
+#endif /* js_confdefs_h */

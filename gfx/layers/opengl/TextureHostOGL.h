@@ -242,6 +242,8 @@ public:
 
   virtual gfx3DMatrix GetTextureTransform() MOZ_OVERRIDE { return mTextureTransform; }
 
+  virtual GLenum GetTextureTarget() const { return mTextureTarget; }
+
   virtual GLenum GetWrapMode() const MOZ_OVERRIDE { return mWrapMode; }
 
   virtual void UnbindTexture() MOZ_OVERRIDE {}

@@ -171,7 +171,7 @@ var tests = {
           domwindow.removeEventListener("load", _load, false);
 
           domwindow.addEventListener("unload", function _close(event) {
-          if (event.target != doc)
+            if (event.target != doc)
               return;
             domwindow.removeEventListener("unload", _close, false);
             ok(true, "window has been closed");

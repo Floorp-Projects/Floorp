@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, Jay Loden, Giampaolo Rodola'. All rights reserved.
+ * Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  *
@@ -993,6 +993,10 @@ psutil_search_tcplist(char *buf, struct kinfo_file *kif)
     return NULL;
 }
 
+
+// a signaler for connections without an actual status
+static int PSUTIL_CONN_NONE = 128;
+
 /*
  * Return connections opened by process.
  */
@@ -1045,10 +1049,9 @@ get_process_connections(PyObject* self, PyObject* args)
     }
 
     for (i = 0; i < cnt; i++) {
-        int lport, rport;
+        int lport, rport, state;
         char lip[200], rip[200];
         char path[PATH_MAX];
-        char *state;
         int inseq;
         tuple = NULL;
         laddr = NULL;
@@ -1075,11 +1078,11 @@ get_process_connections(PyObject* self, PyObject* args)
             if ((kif->kf_sock_domain == AF_INET) ||
                 (kif->kf_sock_domain == AF_INET6)) {
                 // fill status
-                state = "";
+                state = PSUTIL_CONN_NONE;
                 if (kif->kf_sock_type == SOCK_STREAM) {
                     tcp = psutil_search_tcplist(tcplist, kif);
                     if (tcp != NULL)
-                        state = get_connection_status((int)tcp->t_state);
+                        state = (int)tcp->t_state;
                 }
 
                 // build addr and port
@@ -1106,7 +1109,7 @@ get_process_connections(PyObject* self, PyObject* args)
                 }
                 if (!raddr)
                     goto error;
-                tuple = Py_BuildValue("(iiiNNs)", kif->kf_fd,
+                tuple = Py_BuildValue("(iiiNNi)", kif->kf_fd,
                                                   kif->kf_sock_domain,
                                                   kif->kf_sock_type,
                                                   laddr,
@@ -1127,12 +1130,12 @@ get_process_connections(PyObject* self, PyObject* args)
                         (sun->sun_len - (sizeof(*sun) - sizeof(sun->sun_path))),
                          sun->sun_path);
 
-                tuple = Py_BuildValue("(iiisOs)", kif->kf_fd,
+                tuple = Py_BuildValue("(iiisOi)", kif->kf_fd,
                                                   kif->kf_sock_domain,
                                                   kif->kf_sock_type,
                                                   path,
                                                   Py_None,
-                                                  "");
+                                                  PSUTIL_CONN_NONE);
                 if (!tuple)
                     goto error;
                 if (PyList_Append(retList, tuple))
@@ -1464,7 +1467,7 @@ error:
  * Return a Python list of named tuples with overall network I/O information
  */
 static PyObject*
-get_network_io_counters(PyObject* self, PyObject* args)
+get_net_io_counters(PyObject* self, PyObject* args)
 {
     char *buf = NULL, *lim, *next;
     struct if_msghdr *ifm;
@@ -1773,7 +1776,7 @@ PsutilMethods[] =
      {"get_disk_partitions", get_disk_partitions, METH_VARARGS,
          "Return a list of tuples including device, mount point and "
          "fs type for all partitions mounted on the system."},
-     {"get_network_io_counters", get_network_io_counters, METH_VARARGS,
+     {"get_net_io_counters", get_net_io_counters, METH_VARARGS,
          "Return dict of tuples of networks I/O information."},
      {"get_disk_io_counters", get_disk_io_counters, METH_VARARGS,
          "Return a Python dict of tuples for disk I/O information"},
@@ -1836,6 +1839,7 @@ void init_psutil_bsd(void)
 #else
     PyObject *module = Py_InitModule("_psutil_bsd", PsutilMethods);
 #endif
+    // process status constants
     PyModule_AddIntConstant(module, "SSTOP", SSTOP);
     PyModule_AddIntConstant(module, "SSLEEP", SSLEEP);
     PyModule_AddIntConstant(module, "SRUN", SRUN);
@@ -1843,6 +1847,19 @@ void init_psutil_bsd(void)
     PyModule_AddIntConstant(module, "SWAIT", SWAIT);
     PyModule_AddIntConstant(module, "SLOCK", SLOCK);
     PyModule_AddIntConstant(module, "SZOMB", SZOMB);
+    // connection status constants
+    PyModule_AddIntConstant(module, "TCPS_CLOSED", TCPS_CLOSED);
+    PyModule_AddIntConstant(module, "TCPS_CLOSING", TCPS_CLOSING);
+    PyModule_AddIntConstant(module, "TCPS_CLOSE_WAIT", TCPS_CLOSE_WAIT);
+    PyModule_AddIntConstant(module, "TCPS_LISTEN", TCPS_LISTEN);
+    PyModule_AddIntConstant(module, "TCPS_ESTABLISHED", TCPS_ESTABLISHED);
+    PyModule_AddIntConstant(module, "TCPS_SYN_SENT", TCPS_SYN_SENT);
+    PyModule_AddIntConstant(module, "TCPS_SYN_RECEIVED", TCPS_SYN_RECEIVED);
+    PyModule_AddIntConstant(module, "TCPS_FIN_WAIT_1", TCPS_FIN_WAIT_1);
+    PyModule_AddIntConstant(module, "TCPS_FIN_WAIT_2", TCPS_FIN_WAIT_2);
+    PyModule_AddIntConstant(module, "TCPS_LAST_ACK", TCPS_LAST_ACK);
+    PyModule_AddIntConstant(module, "TCPS_TIME_WAIT", TCPS_TIME_WAIT);
+    PyModule_AddIntConstant(module, "PSUTIL_CONN_NONE", PSUTIL_CONN_NONE);
 
     if (module == NULL) {
         INITERROR;

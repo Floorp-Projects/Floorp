@@ -33,11 +33,11 @@ AsmJSModule::patchHeapAccesses(ArrayBufferObject *heap, JSContext *cx)
         JSC::X86Assembler::setPointer(heapAccesses_[i].patchOffsetAt(code_), heapOffset);
     }
 #elif defined(JS_CPU_ARM)
-    ion::IonContext ic(cx, NULL);
-    ion::AutoFlushCache afc("patchBoundsCheck");
+    jit::IonContext ic(cx, NULL);
+    jit::AutoFlushCache afc("patchBoundsCheck");
     uint32_t bits = mozilla::CeilingLog2(heap->byteLength());
     for (unsigned i = 0; i < heapAccesses_.length(); i++)
-        ion::Assembler::updateBoundsCheck(bits, (ion::Instruction*)(heapAccesses_[i].offset() + code_));
+        jit::Assembler::updateBoundsCheck(bits, (jit::Instruction*)(heapAccesses_[i].offset() + code_));
 #endif
 }
 
@@ -81,13 +81,13 @@ AsmJSModule::allocateCodeAndGlobalSegment(ExclusiveContext *cx, size_t bytesNeed
     // The global data section sits immediately after the executable (and
     // other) data allocated by the MacroAssembler, so ensure it is
     // double-aligned.
-    codeBytes_ = AlignBytes(bytesNeeded, sizeof(double));
+    pod.codeBytes_ = AlignBytes(bytesNeeded, sizeof(double));
 
     // The entire region is allocated via mmap/VirtualAlloc which requires
     // units of pages.
-    totalBytes_ = AlignBytes(codeBytes_ + globalDataBytes(), AsmJSPageSize);
+    pod.totalBytes_ = AlignBytes(pod.codeBytes_ + globalDataBytes(), AsmJSPageSize);
 
-    code_ = AllocateExecutableMemory(cx, totalBytes_);
+    code_ = AllocateExecutableMemory(cx, pod.totalBytes_);
     if (!code_)
         return NULL;
 
@@ -110,11 +110,11 @@ AsmJSModule::~AsmJSModule()
             if (!script->hasIonScript())
                 continue;
 
-            ion::DependentAsmJSModuleExit exit(this, i);
+            jit::DependentAsmJSModuleExit exit(this, i);
             script->ionScript()->removeDependentAsmJSModule(exit);
         }
 
-        DeallocateExecutableMemory(code_, totalBytes_);
+        DeallocateExecutableMemory(code_, pod.totalBytes_);
     }
 
     for (size_t i = 0; i < numFunctionCounts(); i++)
@@ -125,7 +125,7 @@ void
 AsmJSModule::sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModuleCode,
                         size_t *asmJSModuleData)
 {
-    *asmJSModuleCode = totalBytes_;
+    *asmJSModuleCode = pod.totalBytes_;
     *asmJSModuleData = mallocSizeOf(this) +
                        globals_.sizeOfExcludingThis(mallocSizeOf) +
                        exits_.sizeOfExcludingThis(mallocSizeOf) +
@@ -135,7 +135,7 @@ AsmJSModule::sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModuleC
                        profiledFunctions_.sizeOfExcludingThis(mallocSizeOf) +
 #endif
 #if defined(JS_ION_PERF)
-                       perfProfiledFunctions_.sizeOfExcludingThis(mallocSizeOf) +
+                       profiledFunctions_.sizeOfExcludingThis(mallocSizeOf) +
                        perfProfiledBlocksFunctions_.sizeOfExcludingThis(mallocSizeOf) +
 #endif
                        functionCounts_.sizeOfExcludingThis(mallocSizeOf);

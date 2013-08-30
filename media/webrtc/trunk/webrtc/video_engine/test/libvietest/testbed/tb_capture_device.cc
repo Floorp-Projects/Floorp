@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_engine/test/libvietest/include/tb_capture_device.h"
+#include "webrtc/video_engine/test/libvietest/include/tb_capture_device.h"
 
-#include "gtest/gtest.h"
-#include "video_engine/test/libvietest/include/tb_interfaces.h"
+#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/video_engine/test/libvietest/include/tb_interfaces.h"
 
 TbCaptureDevice::TbCaptureDevice(TbInterfaces& Engine) :
     captureId(-1),

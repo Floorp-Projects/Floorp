@@ -14,9 +14,9 @@
 #include <assert.h>
 #include <windows.h>
 
-#include "aligned_malloc.h"
-#include "atomic32.h"
-#include "typedefs.h"
+#include "webrtc/system_wrappers/interface/aligned_malloc.h"
+#include "webrtc/system_wrappers/interface/atomic32.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 template<class MemoryType> struct MemoryPoolItem;

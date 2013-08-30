@@ -234,8 +234,11 @@ public:
     virtual already_AddRefed<gfxASurface>
       GetThebesSurfaceForDrawTarget(mozilla::gfx::DrawTarget *aTarget);
 
-    virtual mozilla::RefPtr<mozilla::gfx::DrawTarget>
-      CreateOffscreenDrawTarget(const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat);
+    mozilla::RefPtr<mozilla::gfx::DrawTarget>
+      CreateOffscreenContentDrawTarget(const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat);
+
+    mozilla::RefPtr<mozilla::gfx::DrawTarget>
+      CreateOffscreenCanvasDrawTarget(const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat);
 
     virtual mozilla::RefPtr<mozilla::gfx::DrawTarget>
       CreateDrawTargetForData(unsigned char* aData, const mozilla::gfx::IntSize& aSize, 
@@ -585,6 +588,12 @@ public:
     mozilla::layers::DiagnosticTypes GetLayerDiagnosticTypes();
 
     static bool DrawFrameCounter();
+    static nsIntRect FrameCounterBounds() {
+      int bits = 16;
+      int sizeOfBit = 3;
+      return nsIntRect(0, 0, bits * sizeOfBit, sizeOfBit);
+    }
+
     /**
      * Returns true if we should use raw memory to send data to the compositor
      * rather than using shmems.
@@ -628,17 +637,19 @@ protected:
      * returns the first backend named in the pref gfx.content.azure.backend
      * which is a component of aBackendBitmask, a bitmask of backend types
      */
-    static mozilla::gfx::BackendType GetContentBackendPref(uint32_t aBackendBitmask);
+    static mozilla::gfx::BackendType GetContentBackendPref(uint32_t &aBackendBitmask);
 
     /**
      * If aEnabledPrefName is non-null, checks the aEnabledPrefName pref and
      * returns BACKEND_NONE if the pref is not enabled.
      * Otherwise it will return the first backend named in aBackendPrefName
      * allowed by aBackendBitmask, a bitmask of backend types.
+     * It also modifies aBackendBitmask to only include backends that are
+     * allowed given the prefs.
      */
     static mozilla::gfx::BackendType GetBackendPref(const char* aEnabledPrefName,
                                                     const char* aBackendPrefName,
-                                                    uint32_t aBackendBitmask);
+                                                    uint32_t &aBackendBitmask);
     /**
      * Decode the backend enumberation from a string.
      */

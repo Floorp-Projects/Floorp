@@ -21,7 +21,6 @@ relativesrcdir   = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME     = domsystemgonk_s
 include $(topsrcdir)/dom/dom-config.mk
 
 LOCAL_INCLUDES = \
@@ -32,6 +31,14 @@ LOCAL_INCLUDES = \
   -I$(topsrcdir)/dom/bluetooth \
   -I$(topsrcdir)/content/events/src \
   $(NULL)
+
+# TODO: Bug 908038, move this to moz.build
+WORKER_FILES := worker_buf.js \
+  $(NULL)
+
+INSTALL_TARGETS += WORKER
+
+WORKER_DEST = $(FINAL_TARGET)/modules/workers
 
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

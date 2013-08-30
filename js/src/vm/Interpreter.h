@@ -18,8 +18,6 @@
 
 namespace js {
 
-/* Implemented in jsdbgapi: */
-
 /*
  * Announce to the debugger that the thread has entered a new JavaScript frame,
  * |frame|. Call whatever hooks have been registered to observe new frames, and

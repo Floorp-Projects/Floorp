@@ -12,6 +12,7 @@
 
 #include "jspubtd.h"
 
+#include "js/IdForward.h"
 #include "js/Utility.h"
 
 /*

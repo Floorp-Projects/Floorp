@@ -38,7 +38,7 @@ public:
               ErrorResult& aRv)
   {
     nsRefPtr<Activity> activity = new Activity();
-    aRv = activity->Initialize(aOwner.Get(), aOptions);
+    aRv = activity->Initialize(aOwner.GetAsSupports(), aOptions);
     return activity.forget();
   }
 

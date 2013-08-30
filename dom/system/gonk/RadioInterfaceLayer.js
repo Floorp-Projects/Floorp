@@ -74,6 +74,7 @@ const DOM_MOBILE_MESSAGE_DELIVERY_SENT     = "sent";
 const DOM_MOBILE_MESSAGE_DELIVERY_ERROR    = "error";
 
 const CALL_WAKELOCK_TIMEOUT              = 5000;
+const RADIO_POWER_OFF_TIMEOUT            = 30000;
 
 const RIL_IPC_TELEPHONY_MSG_NAMES = [
   "RIL:EnumerateCalls",
@@ -109,6 +110,7 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:GetCallForwardingOption",
   "RIL:SetCallBarringOption",
   "RIL:GetCallBarringOption",
+  "RIL:ChangeCallBarringPassword",
   "RIL:SetCallWaitingOption",
   "RIL:GetCallWaitingOption",
   "RIL:SetCallingLineIdRestriction",
@@ -1017,6 +1019,9 @@ RadioInterface.prototype = {
       case "RIL:GetCallBarringOption":
         this.workerMessenger.sendWithIPCMessage(msg, "queryCallBarringStatus");
         break;
+      case "RIL:ChangeCallBarringPassword":
+        this.workerMessenger.sendWithIPCMessage(msg, "changeCallBarringPassword");
+        break;
       case "RIL:SetCallWaitingOption":
         this.workerMessenger.sendWithIPCMessage(msg, "setCallWaiting");
         break;
@@ -1099,6 +1104,9 @@ RadioInterface.prototype = {
         break;
       case "operatorchange":
         this.handleOperatorChange(message);
+        break;
+      case "otastatuschange":
+        this.handleOtaStatus(message);
         break;
       case "radiostatechange":
         this.handleRadioStateChange(message);
@@ -1457,6 +1465,18 @@ RadioInterface.prototype = {
     }
   },
 
+  handleOtaStatus: function handleOtaStatus(message) {
+    if (message.status < 0 ||
+        RIL.CDMA_OTA_PROVISION_STATUS_TO_GECKO.length <= message.status) {
+      return;
+    }
+
+    let status = RIL.CDMA_OTA_PROVISION_STATUS_TO_GECKO[message.status];
+
+    gMessageManager.sendMobileConnectionMessage("RIL:OtaStatusChanged",
+                                                this.clientId, status);
+  },
+
   handleRadioStateChange: function handleRadioStateChange(message) {
     this._changingRadioPower = false;
 
@@ -1497,12 +1517,50 @@ RadioInterface.prototype = {
 
     if (this.rilContext.radioState == RIL.GECKO_RADIOSTATE_OFF &&
         this._radioEnabled) {
+      this._changingRadioPower = true;
       this.setRadioEnabled(true);
     }
     if (this.rilContext.radioState == RIL.GECKO_RADIOSTATE_READY &&
         !this._radioEnabled) {
-      this.setRadioEnabled(false);
+      this._changingRadioPower = true;
+      this.powerOffRadioSafely();
     }
+  },
+
+  _radioOffTimer: null,
+  _cancelRadioOffTimer: function _cancelRadioOffTimer() {
+    if (this._radioOffTimer) {
+      this._radioOffTimer.cancel();
+    }
+  },
+  _fireRadioOffTimer: function _fireRadioOffTimer() {
+    if (DEBUG) this.debug("Radio off timer expired, set radio power off right away.");
+    this.setRadioEnabled(false);
+  },
+
+  /**
+   * Clean up all existing data calls before turning radio off.
+   */
+  powerOffRadioSafely: function powerOffRadioSafely() {
+    let dataDisconnecting = false;
+    for each (let apnSetting in this.apnSettings.byAPN) {
+      for each (let type in apnSetting.types) {
+        if (this.getDataCallStateByType(type) ==
+            RIL.GECKO_NETWORK_STATE_CONNECTED) {
+          this.deactivateDataCallByType(type);
+          dataDisconnecting = true;
+        }
+      }
+    }
+    if (dataDisconnecting) {
+      if (this._radioOffTimer == null) {
+        this._radioOffTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      }
+      this._radioOffTimer.initWithCallback(this._fireRadioOffTimer.bind(this),
+                                           RADIO_POWER_OFF_TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
+      return;
+    }
+    this.setRadioEnabled(false);
   },
 
   /**
@@ -2067,6 +2125,29 @@ RadioInterface.prototype = {
 
     this._deliverDataCallCallback("dataCallStateChanged",
                                   [datacall]);
+
+    // Process pending radio power off request after all data calls
+    // are disconnected.
+    if (datacall.state == RIL.GECKO_NETWORK_STATE_UNKNOWN &&
+        this._changingRadioPower) {
+      let anyDataConnected = false;
+      for each (let apnSetting in this.apnSettings.byAPN) {
+        for each (let type in apnSetting.types) {
+          if (this.getDataCallStateByType(type) == RIL.GECKO_NETWORK_STATE_CONNECTED) {
+            anyDataConnected = true;
+            break;
+          }
+        }
+        if (anyDataConnected) {
+          break;
+        }
+      }
+      if (!anyDataConnected) {
+        if (DEBUG) this.debug("All data connections are disconnected, set radio off.");
+        this._cancelRadioOffTimer();
+        this.setRadioEnabled(false);
+      }
+    }
   },
 
   /**
@@ -2379,7 +2460,6 @@ RadioInterface.prototype = {
 
   setRadioEnabled: function setRadioEnabled(value) {
     if (DEBUG) this.debug("Setting radio power to " + value);
-    this._changingRadioPower = true;
     this.workerMessenger.send("setRadioPower", { on: value });
   },
 
@@ -2487,6 +2567,7 @@ RadioInterface.prototype = {
         this._updateCallingLineIdRestrictionPref(response.clirMode);
       }
       target.sendAsyncMessage("RIL:SetCallingLineIdRestriction", response);
+      return false;
     }).bind(this));
   },
 
@@ -3349,8 +3430,6 @@ RILNetworkInterface.prototype = {
   },
 
   name: null,
-
-  dhcp: false,
 
   ip: null,
 

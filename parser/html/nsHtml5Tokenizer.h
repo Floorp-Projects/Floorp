@@ -28,8 +28,8 @@
  * Please edit Tokenizer.java instead and regenerate.
  */
 
-#ifndef nsHtml5Tokenizer_h__
-#define nsHtml5Tokenizer_h__
+#ifndef nsHtml5Tokenizer_h
+#define nsHtml5Tokenizer_h
 
 #include "nsIAtom.h"
 #include "nsHtml5AtomTable.h"

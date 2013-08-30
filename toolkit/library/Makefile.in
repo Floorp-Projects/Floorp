@@ -148,7 +148,7 @@ COMPONENT_LIBS += \
   uconv \
   i18n \
   chardet \
-  jar$(VERSION_NUMBER) \
+  jar \
   startupcache \
   pref \
   htmlpars \
@@ -177,6 +177,12 @@ COMPONENT_LIBS += \
   windowds \
   diskspacewatcher \
   $(NULL)
+
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+COMPONENT_LIBS += \
+  domwifi_s \
+  $(NULL)
+endif
 
 ifdef BUILD_CTYPES
 COMPONENT_LIBS += \
@@ -509,14 +515,6 @@ ifeq (OpenBSD,$(OS_ARCH))
 ifdef MOZ_CUBEB
 EXTRA_DSO_LDOPTS += -lsndio
 endif
-endif
-
-ifdef MOZ_PLATFORM_MAEMO
-EXTRA_DSO_LDOPTS += $(MOZ_PLATFORM_MAEMO_LIBS)
-endif
-
-ifdef MOZ_ENABLE_LIBCONIC
-EXTRA_DSO_LDOPTS += $(LIBCONIC_LIBS)
 endif
 
 ifdef MOZ_ENABLE_DBUS

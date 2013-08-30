@@ -6,6 +6,10 @@ import os
 import cPickle
 from Configuration import Configuration
 from Codegen import CGBindingRoot, replaceFileIfChanged
+from mozbuild.makeutil import Makefile
+from mozbuild.pythonutil import iter_modules_in_path
+from buildconfig import topsrcdir
+
 
 def generate_binding_files(config, outputprefix, srcprefix, webidlfile):
     """
@@ -18,10 +22,17 @@ def generate_binding_files(config, outputprefix, srcprefix, webidlfile):
     replaceFileIfChanged(outputprefix + ".h", root.declare())
     replaceFileIfChanged(outputprefix + ".cpp", root.define())
 
-    with open(depsname, 'wb') as f:
-        # Sort so that our output is stable
-        f.write("\n".join(outputprefix + ": " + os.path.join(srcprefix, x) for
-                          x in sorted(root.deps())))
+    mk = Makefile()
+    # NOTE: it's VERY important that we output dependencies for the FooBinding
+    # file here, not for the header or generated cpp file.  These dependencies
+    # are used later to properly determine changedDeps and prevent rebuilding
+    # too much.  See the comment explaining $(binding_dependency_trackers) in
+    # Makefile.in.
+    rule = mk.create_rule([outputprefix])
+    rule.add_dependencies(os.path.join(srcprefix, x) for x in root.deps())
+    rule.add_dependencies(iter_modules_in_path(topsrcdir))
+    with open(depsname, 'w') as f:
+        mk.dump(f)
 
 def main():
     # Parse arguments.

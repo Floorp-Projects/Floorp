@@ -3805,38 +3805,35 @@ ocsp_VerifyResponseSignature(CERTCertificate *signerCert,
                              SECItem *tbsResponseDataDER,
                              void *pwArg)
 {
-    SECItem rawSignature;
     SECKEYPublicKey *signerKey = NULL;
     SECStatus rv = SECFailure;
+    CERTSignedData signedData;
 
     /*
      * Now get the public key from the signer's certificate; we need
      * it to perform the verification.
      */
     signerKey = CERT_ExtractPublicKey(signerCert);
-    if (signerKey == NULL)
-	return SECFailure;
+    if (signerKey == NULL) {
+        return SECFailure;
+    }
+
     /*
      * We copy the signature data *pointer* and length, so that we can
      * modify the length without damaging the original copy.  This is a
      * simple copy, not a dup, so no destroy/free is necessary.
      */
-    rawSignature = signature->signature;
-    /*
-     * The raw signature is a bit string, but we need to represent its
-     * length in bytes, because that is what the verify function expects.
-     */
-    DER_ConvertBitString(&rawSignature);
+    signedData.signature = signature->signature;
+    signedData.signatureAlgorithm = signature->signatureAlgorithm;
+    signedData.data = *tbsResponseDataDER;
 
-    rv = VFY_VerifyDataWithAlgorithmID(tbsResponseDataDER->data,
-                                       tbsResponseDataDER->len,
-                                       signerKey, &rawSignature,
-                                       &signature->signatureAlgorithm,
-                                       NULL, pwArg);
-    if (rv != SECSuccess && PORT_GetError() == SEC_ERROR_BAD_SIGNATURE) {
+    rv = CERT_VerifySignedDataWithPublicKey(&signedData, signerKey, pwArg);
+    if (rv != SECSuccess &&
+        (PORT_GetError() == SEC_ERROR_BAD_SIGNATURE || 
+         PORT_GetError() == SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED)) {
         PORT_SetError(SEC_ERROR_OCSP_BAD_SIGNATURE);
     }
-    
+
     if (signerKey != NULL) {
         SECKEY_DestroyPublicKey(signerKey);
     }

@@ -5,26 +5,27 @@
 #ifndef mozilla_dom_textencoder_h_
 #define mozilla_dom_textencoder_h_
 
-#include "mozilla/dom/TextEncoderBase.h"
+#include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "mozilla/dom/TextEncoderBinding.h"
+#include "mozilla/dom/TypedArray.h"
+#include "nsIUnicodeEncoder.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
-class TextEncoder MOZ_FINAL
-  : public nsWrapperCache, public TextEncoderBase
+class TextEncoder MOZ_FINAL : public NonRefcountedDOMObject
 {
 public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(TextEncoder)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(TextEncoder)
-
   // The WebIDL constructor.
-  static already_AddRefed<TextEncoder>
+
+  static TextEncoder*
   Constructor(const GlobalObject& aGlobal,
               const nsAString& aEncoding,
               ErrorResult& aRv)
   {
-    nsRefPtr<TextEncoder> txtEncoder = new TextEncoder(aGlobal.Get());
+    nsAutoPtr<TextEncoder> txtEncoder(new TextEncoder());
     txtEncoder->Init(aEncoding, aRv);
     if (aRv.Failed()) {
       return nullptr;
@@ -32,46 +33,76 @@ public:
     return txtEncoder.forget();
   }
 
-  TextEncoder(nsISupports* aGlobal)
-    : mGlobal(aGlobal)
+  TextEncoder()
   {
-    MOZ_ASSERT(aGlobal);
-    SetIsDOMBinding();
   }
 
   virtual
   ~TextEncoder()
   {}
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope,
+                       bool* aTookOwnership)
   {
-    return TextEncoderBinding::Wrap(aCx, aScope, this);
+    return TextEncoderBinding::Wrap(aCx, aScope, this, aTookOwnership);
   }
 
   nsISupports*
   GetParentObject()
   {
-    return mGlobal;
+    return nullptr;
   }
 
   JSObject* Encode(JSContext* aCx,
+                   JS::Handle<JSObject*> aObj,
                    const nsAString& aString,
                    const TextEncodeOptions& aOptions,
                    ErrorResult& aRv) {
-    return TextEncoderBase::Encode(aCx, aString, aOptions.mStream, aRv);
+    return TextEncoder::Encode(aCx, aObj, aString, aOptions.mStream, aRv);
   }
 
 protected:
-  virtual JSObject*
-  CreateUint8Array(JSContext* aCx, char* aBuf, uint32_t aLen) MOZ_OVERRIDE
-  {
-    return Uint8Array::Create(aCx, this, aLen,
-                              reinterpret_cast<uint8_t*>(aBuf));
-  }
+
+  /**
+   * Validates provided encoding and throws an exception if invalid encoding.
+   * If no encoding is provided then mEncoding is default initialised to "utf-8".
+   *
+   * @param aEncoding    Optional encoding (case insensitive) provided.
+   *                     (valid values are "utf-8", "utf-16", "utf-16be")
+   *                     Default value is "utf-8" if no encoding is provided.
+   * @return aRv         EncodingError exception else null.
+   */
+  void Init(const nsAString& aEncoding, ErrorResult& aRv);
+
+public:
+  /**
+   * Return the encoding name.
+   *
+   * @param aEncoding, current encoding.
+   */
+  void GetEncoding(nsAString& aEncoding);
+
+  /**
+   * Encodes incoming utf-16 code units/ DOM string to the requested encoding.
+   *
+   * @param aCx        Javascript context.
+   * @param aObj       the wrapper of the TextEncoder
+   * @param aString    utf-16 code units to be encoded.
+   * @param aOptions   Streaming option. Initialised by default to false.
+   *                   If the streaming option is false, then the encoding
+   *                   algorithm state will get reset. If set to true then
+   *                   the previous encoding is reused/continued.
+   * @return JSObject* The Uint8Array wrapped in a JS object.
+   */
+  JSObject* Encode(JSContext* aCx,
+                   JS::Handle<JSObject*> aObj,
+                   const nsAString& aString,
+                   const bool aStream,
+                   ErrorResult& aRv);
 
 private:
-  nsCOMPtr<nsISupports> mGlobal;
+  nsCString mEncoding;
+  nsCOMPtr<nsIUnicodeEncoder> mEncoder;
 };
 
 } // dom

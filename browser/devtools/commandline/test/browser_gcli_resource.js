@@ -43,7 +43,7 @@ var types = require('gcli/types');
 var Status = require('gcli/types').Status;
 
 
-var tempDocument = undefined;
+var tempDocument;
 
 exports.setup = function(options) {
   tempDocument = resource.getDocument();

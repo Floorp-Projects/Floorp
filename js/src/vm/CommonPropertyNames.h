@@ -10,7 +10,6 @@
 #define vm_CommonPropertyNames_h
 
 #include "jsprototypes.h"
-#include "jsversion.h"
 
 #define FOR_EACH_COMMON_PROPERTYNAME(macro) \
     macro(anonymous, anonymous, "anonymous") \
@@ -19,6 +18,7 @@
     macro(buffer, buffer, "buffer") \
     macro(builder, builder, "builder") \
     macro(byteLength, byteLength, "byteLength") \
+    macro(byteAlignment, byteAlignment, "byteAlignment") \
     macro(byteOffset, byteOffset, "byteOffset") \
     macro(bytes, bytes, "bytes") \
     macro(BYTES_PER_ELEMENT, BYTES_PER_ELEMENT, "BYTES_PER_ELEMENT") \
@@ -56,6 +56,9 @@
     macro(escape, escape, "escape") \
     macro(eval, eval, "eval") \
     macro(false, false_, "false") \
+    macro(fieldNames, fieldNames, "fieldNames") \
+    macro(fieldOffsets, fieldOffsets, "fieldOffsets") \
+    macro(fieldTypes, fieldTypes, "fieldTypes") \
     macro(fileName, fileName, "fileName") \
     macro(fix, fix, "fix") \
     macro(format, format, "format") \
@@ -149,6 +152,7 @@
     macro(value, value, "value") \
     macro(valueOf, valueOf, "valueOf") \
     macro(var, var, "var") \
+    macro(variable, variable, "variable") \
     macro(void0, void0, "(void 0)") \
     macro(watch, watch, "watch") \
     macro(writable, writable, "writable") \

@@ -264,16 +264,9 @@ gfxFontEntry::TryGetSVGData()
             return false;
         }
 
-        hb_blob_t *cmapTable = GetFontTable(TRUETYPE_TAG('c','m','a','p'));
-        if (!cmapTable) {
-            NS_NOTREACHED("using a font with no cmap!");
-            hb_blob_destroy(svgTable);
-            return false;
-        }
-
-        // gfxSVGGlyphs will hb_blob_destroy() the tables when it is finished
-        // with them.
-        mSVGGlyphs = new gfxSVGGlyphs(svgTable, cmapTable);
+        // gfxSVGGlyphs will hb_blob_destroy() the table when it is finished
+        // with it.
+        mSVGGlyphs = new gfxSVGGlyphs(svgTable);
     }
 
     return !!mSVGGlyphs;
@@ -2319,12 +2312,14 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
     // synthetic-bold strikes are each offset one device pixel in run direction
     // (these values are only needed if IsSyntheticBold() is true)
     double synBoldOnePixelOffset = 0;
-    int32_t strikes = 0;
+    int32_t strikes = 1;
     if (IsSyntheticBold()) {
         double xscale = CalcXScale(aContext);
         synBoldOnePixelOffset = direction * xscale;
-        // use as many strikes as needed for the the increased advance
-        strikes = NS_lroundf(GetSyntheticBoldOffset() / xscale);
+        if (xscale != 0.0) {
+            // use as many strikes as needed for the the increased advance
+            strikes = NS_lroundf(GetSyntheticBoldOffset() / xscale);
+        }
     }
 
     uint32_t i;

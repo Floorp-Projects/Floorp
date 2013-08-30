@@ -3359,7 +3359,16 @@ NSEvent* gLastDragMouseDownEvent = nil;
     new gfxQuartzSurface(aContext, backingSize);
   targetSurface->SetAllowUseAsSource(false);
 
-  nsRefPtr<gfxContext> targetContext = new gfxContext(targetSurface);
+  nsRefPtr<gfxContext> targetContext;
+  if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(mozilla::gfx::BACKEND_CAIRO)) {
+    RefPtr<mozilla::gfx::DrawTarget> dt =
+      gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(targetSurface,
+                                                             mozilla::gfx::IntSize(backingSize.width,
+                                                                                   backingSize.height));
+    targetContext = new gfxContext(dt);
+  } else {
+    targetContext = new gfxContext(targetSurface);
+  }
 
   // Set up the clip region.
   nsIntRegionRectIterator iter(region);

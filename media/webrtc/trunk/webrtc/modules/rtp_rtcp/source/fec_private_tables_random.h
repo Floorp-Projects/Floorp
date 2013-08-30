@@ -15,7 +15,7 @@
 // this table are specifically designed to favor recovery to random loss.
 // These packet masks are defined to protect up to maximum of 48 media packets.
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
 namespace {
 
@@ -24520,4 +24520,3 @@ const uint8_t** kPacketMaskRandomTbl[48] = {
 
 }  // namespace
 #endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_FEC_PRIVATE_TABLES_H_
-

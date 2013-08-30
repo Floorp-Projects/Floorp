@@ -64,7 +64,11 @@ SimpleTest.waitForFocus(function() {
   text.focus();
 
   SimpleTest.executeSoon(function() {
-    synthesizeKey("a", { accelKey: true }, frameWindow);
+    if (navigator.platform.indexOf("Linux") == 0) {
+      synthesizeKey("a", { altKey: true }, frameWindow);
+    } else {
+      synthesizeKey("a", { accelKey: true }, frameWindow);
+    }
     // Windows and Mac don't have primary selection, we should copy the text to
     // the global clipboard.
     if (!SpecialPowers.supportsSelectionClipboard()) {

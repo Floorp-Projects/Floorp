@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,7 +9,10 @@
 #include "nsStyleSheetService.h"
 #include "nsIStyleSheet.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/unused.h"
 #include "mozilla/css/Loader.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/ipc/URIUtils.h"
 #include "nsCSSStyleSheet.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
@@ -19,21 +23,25 @@
 #include "nsLayoutStatics.h"
 #include "nsIMemoryReporter.h"
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(LayoutStyleSheetServiceMallocSizeOf)
+using namespace mozilla;
 
-static int64_t
-GetStyleSheetServiceSize()
+class LayoutStyleSheetServiceReporter MOZ_FINAL
+  : public mozilla::MemoryReporterBase
 {
-  return nsStyleSheetService::SizeOfIncludingThis(
-           LayoutStyleSheetServiceMallocSizeOf);
-}
-
-NS_MEMORY_REPORTER_IMPLEMENT(StyleSheetService,
-  "explicit/layout/style-sheet-service",
-  KIND_HEAP,
-  nsIMemoryReporter::UNITS_BYTES,
-  GetStyleSheetServiceSize,
-  "Memory used for style sheets held by the style sheet service.")
+public:
+  LayoutStyleSheetServiceReporter()
+    : MemoryReporterBase("explicit/layout/style-sheet-service",
+                         KIND_HEAP, UNITS_BYTES,
+"Memory used for style sheets held by the style sheet service.")
+  {}
+private:
+  int64_t Amount() MOZ_OVERRIDE
+  {
+    return nsStyleSheetService::gInstance
+         ? nsStyleSheetService::gInstance->SizeOfIncludingThis(MallocSizeOf)
+         : 0;
+  }
+};
 
 nsStyleSheetService *nsStyleSheetService::gInstance = nullptr;
 
@@ -44,17 +52,16 @@ nsStyleSheetService::nsStyleSheetService()
   gInstance = this;
   nsLayoutStatics::AddRef();
 
-  mReporter = new NS_MEMORY_REPORTER_NAME(StyleSheetService);
-  (void)::NS_RegisterMemoryReporter(mReporter);
+  mReporter = new LayoutStyleSheetServiceReporter();
+  NS_RegisterMemoryReporter(mReporter);
 }
 
 nsStyleSheetService::~nsStyleSheetService()
 {
+  NS_UnregisterMemoryReporter(mReporter);
+
   gInstance = nullptr;
   nsLayoutStatics::Release();
-
-  (void)::NS_UnregisterMemoryReporter(mReporter);
-  mReporter = nullptr;
 }
 
 NS_IMPL_ISUPPORTS1(nsStyleSheetService, nsIStyleSheetService)
@@ -111,6 +118,11 @@ nsStyleSheetService::FindSheetByURI(const nsCOMArray<nsIStyleSheet> &sheets,
 nsresult
 nsStyleSheetService::Init()
 {
+  // Child processes get their style sheets from the ContentParent.
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    return NS_OK;
+  }
+
   // Enumerate all of the style sheet URIs registered in the category
   // manager and load them.
 
@@ -152,13 +164,28 @@ nsStyleSheetService::LoadAndRegisterSheet(nsIURI *aSheetURI,
       default:
         return NS_ERROR_INVALID_ARG;
     }
-    nsCOMPtr<nsIObserverService> serv =
-      mozilla::services::GetObserverService();
+    nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
     if (serv) {
       // We're guaranteed that the new sheet is the last sheet in
       // mSheets[aSheetType]
       const nsCOMArray<nsIStyleSheet> & sheets = mSheets[aSheetType];
       serv->NotifyObservers(sheets[sheets.Count() - 1], message, nullptr);
+    }
+
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+      nsTArray<dom::ContentParent*> children;
+      dom::ContentParent::GetAll(children);
+
+      if (children.IsEmpty()) {
+        return rv;
+      }
+
+      ipc::URIParams uri;
+      SerializeURI(aSheetURI, uri);
+
+      for (uint32_t i = 0; i < children.Length(); i++) {
+        unused << children[i]->SendLoadAndRegisterSheet(uri, aSheetType);
+      }
     }
   }
   return rv;
@@ -173,7 +200,7 @@ nsStyleSheetService::LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
                 aSheetType == AUTHOR_SHEET);
   NS_ENSURE_ARG_POINTER(aSheetURI);
 
-  nsRefPtr<mozilla::css::Loader> loader = new mozilla::css::Loader();
+  nsRefPtr<css::Loader> loader = new css::Loader();
 
   nsRefPtr<nsCSSStyleSheet> sheet;
   // Allow UA sheets, but not user sheets, to use unsafe rules
@@ -204,14 +231,14 @@ nsStyleSheetService::SheetRegistered(nsIURI *sheetURI,
 }
 
 NS_IMETHODIMP
-nsStyleSheetService::UnregisterSheet(nsIURI *sheetURI, uint32_t aSheetType)
+nsStyleSheetService::UnregisterSheet(nsIURI *aSheetURI, uint32_t aSheetType)
 {
   NS_ENSURE_ARG(aSheetType == AGENT_SHEET ||
                 aSheetType == USER_SHEET ||
                 aSheetType == AUTHOR_SHEET);
-  NS_ENSURE_ARG_POINTER(sheetURI);
+  NS_ENSURE_ARG_POINTER(aSheetURI);
 
-  int32_t foundIndex = FindSheetByURI(mSheets[aSheetType], sheetURI);
+  int32_t foundIndex = FindSheetByURI(mSheets[aSheetType], aSheetURI);
   NS_ENSURE_TRUE(foundIndex >= 0, NS_ERROR_INVALID_ARG);
   nsCOMPtr<nsIStyleSheet> sheet = mSheets[aSheetType][foundIndex];
   mSheets[aSheetType].RemoveObjectAt(foundIndex);
@@ -229,10 +256,25 @@ nsStyleSheetService::UnregisterSheet(nsIURI *sheetURI, uint32_t aSheetType)
       break;
   }
 
-  nsCOMPtr<nsIObserverService> serv =
-    mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
   if (serv)
     serv->NotifyObservers(sheet, message, nullptr);
+
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    nsTArray<dom::ContentParent*> children;
+    dom::ContentParent::GetAll(children);
+
+    if (children.IsEmpty()) {
+      return NS_OK;
+    }
+
+    ipc::URIParams uri;
+    SerializeURI(aSheetURI, uri);
+
+    for (uint32_t i = 0; i < children.Length(); i++) {
+      unused << children[i]->SendUnregisterSheet(uri, aSheetType);
+    }
+  }
 
   return NS_OK;
 }
@@ -252,26 +294,15 @@ nsStyleSheetService::GetInstance()
   return gInstance;
 }
 
-size_t
-nsStyleSheetService::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
-{
-  if (!nsStyleSheetService::gInstance) {
-    return 0;
-  }
-
-  return nsStyleSheetService::gInstance->
-      SizeOfIncludingThisHelper(aMallocSizeOf);
-}
-
 static size_t
 SizeOfElementIncludingThis(nsIStyleSheet* aElement,
-                           mozilla::MallocSizeOf aMallocSizeOf, void *aData)
+                           MallocSizeOf aMallocSizeOf, void *aData)
 {
     return aElement->SizeOfIncludingThis(aMallocSizeOf);
 }
 
 size_t
-nsStyleSheetService::SizeOfIncludingThisHelper(mozilla::MallocSizeOf aMallocSizeOf) const
+nsStyleSheetService::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
   n += mSheets[AGENT_SHEET].SizeOfExcludingThis(SizeOfElementIncludingThis,

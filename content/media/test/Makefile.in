@@ -127,6 +127,7 @@ MOCHITEST_FILES = \
 		test_decoder_disable.html \
 		test_mediarecorder_record_no_timeslice.html \
 		test_mediarecorder_reload_crash.html \
+		test_mediarecorder_record_immediate_stop.html \
 		test_media_selection.html \
 		test_playback.html \
 		test_seekLies.html \
@@ -245,6 +246,7 @@ MOCHITEST_FILES += \
 		multiple-bos.ogg \
 		no-cues.webm \
 		owl.mp3 \
+		owl-funny-id3.mp3 \
 		split.webm \
 		seek.ogv \
 		seek.webm \

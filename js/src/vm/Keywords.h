@@ -9,8 +9,6 @@
 #ifndef vm_Keywords_h
 #define vm_Keywords_h
 
-#include "jsversion.h"
-
 #if JS_HAS_CONST
 #  define FOR_CONST_KEYWORD(macro) \
       macro(const, const_, TOK_CONST, JSVERSION_DEFAULT)

@@ -15,7 +15,7 @@
  *
  */
 
-#include "signal_processing_library.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
 #ifdef WEBRTC_ARCH_ARM_V7
 
@@ -67,7 +67,7 @@ static const uint16_t kResampleAllpass2[3] = {12199, 37471, 60255};
 
 // decimator
 #if !defined(MIPS32_LE)
-void WebRtcSpl_DownsampleBy2(const int16_t* in, const int16_t len,
+void WebRtcSpl_DownsampleBy2(const int16_t* in, int16_t len,
                              int16_t* out, int32_t* filtState) {
   int32_t tmp1, tmp2, diff, in32, out32;
   int16_t i;

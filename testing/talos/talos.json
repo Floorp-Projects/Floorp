@@ -5,7 +5,7 @@
     },
     "global": {
         "talos_repo": "http://hg.mozilla.org/build/talos",
-        "talos_revision": "2a32cc64e7ff"
+        "talos_revision": "1817a7d17991"
     },
     "suites": {
         "chromez": {
@@ -51,7 +51,7 @@
             ]
         },
         "svgr": {
-            "tests": ["tsvgx", "tsvgr_opacity"],
+            "tests": ["tsvgx", "tsvgr_opacity", "tart"],
             "talos_options": [
                 "--filter",
                 "ignore_first:5",

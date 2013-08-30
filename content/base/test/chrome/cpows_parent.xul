@@ -17,6 +17,11 @@
       return opener.wrappedJSObject.ok(condition, message);
     }
 
+    // Make sure that an error in this file actually causes the test to fail.
+    window.onerror = function (msg, url, line) {
+      ok(false, "Error while executing: \n" + msg + "\n" + url + ":" + line);
+    };
+
     function testCpowMessage(message) {
       ok(message.json.check == "ok", "correct json");
 

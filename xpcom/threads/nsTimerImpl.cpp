@@ -12,11 +12,13 @@
 #include "plarena.h"
 #include "pratom.h"
 #include "GeckoProfiler.h"
+#include "mozilla/Atomics.h"
 
+using mozilla::Atomic;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 
-static int32_t          gGenerator = 0;
+static Atomic<int32_t>  gGenerator;
 static TimerThread*     gThread = nullptr;
 
 #ifdef DEBUG_TIMERS
@@ -114,7 +116,7 @@ public:
     MOZ_ASSERT(gThread->IsOnTimerThread(),
                "nsTimer must always be allocated on the timer thread");
 
-    PR_ATOMIC_INCREMENT(&sAllocatorUsers);
+    sAllocatorUsers++;
   }
 
 #ifdef DEBUG_TIMERS
@@ -140,19 +142,19 @@ private:
 
     MOZ_ASSERT(!sCanDeleteAllocator || sAllocatorUsers > 0,
                "This will result in us attempting to deallocate the nsTimerEvent allocator twice");
-    PR_ATOMIC_DECREMENT(&sAllocatorUsers);
+    sAllocatorUsers--;
   }
 
   nsRefPtr<nsTimerImpl> mTimer;
   int32_t      mGeneration;
 
   static TimerEventAllocator* sAllocator;
-  static int32_t sAllocatorUsers;
+  static Atomic<int32_t> sAllocatorUsers;
   static bool sCanDeleteAllocator;
 };
 
 TimerEventAllocator* nsTimerEvent::sAllocator = nullptr;
-int32_t nsTimerEvent::sAllocatorUsers = 0;
+Atomic<int32_t> nsTimerEvent::sAllocatorUsers;
 bool nsTimerEvent::sCanDeleteAllocator = false;
 
 namespace {
@@ -342,7 +344,7 @@ nsresult nsTimerImpl::InitCommon(uint32_t aType, uint32_t aDelay)
     gThread->RemoveTimer(this);
   mCanceled = false;
   mTimeout = TimeStamp();
-  mGeneration = PR_ATOMIC_INCREMENT(&gGenerator);
+  mGeneration = gGenerator++;
 
   mType = (uint8_t)aType;
   SetDelayInternal(aDelay);

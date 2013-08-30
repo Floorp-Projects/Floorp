@@ -702,7 +702,7 @@ IDBDatabase::MozCreateFileHandle(const nsAString& aName,
     return nullptr;
   }
 
-  nsRefPtr<IDBRequest> request = IDBRequest::Create(nullptr, this, nullptr);
+  nsRefPtr<IDBRequest> request = IDBRequest::Create(this, nullptr);
 
   nsRefPtr<CreateFileHelper> helper =
     new CreateFileHelper(this, request, aName,

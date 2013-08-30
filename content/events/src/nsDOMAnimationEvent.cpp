@@ -47,7 +47,7 @@ nsDOMAnimationEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
                                  const mozilla::dom::AnimationEventInit& aParam,
                                  mozilla::ErrorResult& aRv)
 {
-  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   nsRefPtr<nsDOMAnimationEvent> e = new nsDOMAnimationEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
 

@@ -35,7 +35,7 @@
 
 using namespace js;
 using namespace js::frontend;
-using namespace js::ion;
+using namespace js::jit;
 
 using mozilla::AddToHash;
 using mozilla::ArrayLength;
@@ -44,7 +44,7 @@ using mozilla::HashGeneric;
 using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
 using mozilla::Maybe;
-using mozilla::Move;
+using mozilla::OldMove;
 using mozilla::MoveRef;
 
 static const size_t LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
@@ -664,7 +664,7 @@ class Signature
     Signature(MoveRef<VarTypeVector> argTypes, RetType retType)
       : argTypes_(argTypes), retType_(retType) {}
     Signature(MoveRef<Signature> rhs)
-      : argTypes_(Move(rhs->argTypes_)), retType_(rhs->retType_) {}
+      : argTypes_(OldMove(rhs->argTypes_)), retType_(rhs->retType_) {}
 
     bool copy(const Signature &rhs) {
         if (!argTypes_.resize(rhs.argTypes_.length()))
@@ -678,7 +678,7 @@ class Signature
     bool appendArg(VarType type) { return argTypes_.append(type); }
     VarType arg(unsigned i) const { return argTypes_[i]; }
     const VarTypeVector &args() const { return argTypes_; }
-    MoveRef<VarTypeVector> extractArgs() { return Move(argTypes_); }
+    MoveRef<VarTypeVector> extractArgs() { return OldMove(argTypes_); }
 
     RetType retType() const { return retType_; }
 };
@@ -1077,8 +1077,8 @@ class MOZ_STACK_CLASS ModuleCompiler
         {}
 
         FuncPtrTable(MoveRef<FuncPtrTable> rhs)
-          : sig_(Move(rhs->sig_)), mask_(rhs->mask_), globalDataOffset_(rhs->globalDataOffset_),
-            elems_(Move(rhs->elems_))
+          : sig_(OldMove(rhs->sig_)), mask_(rhs->mask_), globalDataOffset_(rhs->globalDataOffset_),
+            elems_(OldMove(rhs->elems_))
         {}
 
         Signature &sig() { return sig_; }
@@ -1102,7 +1102,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         ExitDescriptor(PropertyName *name, MoveRef<Signature> sig)
           : name_(name), sig_(sig) {}
         ExitDescriptor(MoveRef<ExitDescriptor> rhs)
-          : name_(rhs->name_), sig_(Move(rhs->sig_))
+          : name_(rhs->name_), sig_(OldMove(rhs->sig_))
         {}
         const Signature &sig() const {
             return sig_;
@@ -1276,6 +1276,8 @@ class MOZ_STACK_CLASS ModuleCompiler
     }
 
     bool failName(ParseNode *pn, const char *fmt, PropertyName *name) {
+        // This function is invoked without the caller properly rooting its locals.
+        gc::AutoSuppressGC suppress(cx_);
         JSAutoByteString bytes;
         if (AtomToPrintableString(cx_, name, &bytes))
             failf(pn, fmt, bytes.ptr());
@@ -1399,7 +1401,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         if (!module_->addFuncPtrTable(/* numElems = */ mask + 1, &globalDataOffset))
             return false;
         FuncPtrTable tmpTable(cx_, sig, mask, globalDataOffset);
-        if (!funcPtrTables_.append(Move(tmpTable)))
+        if (!funcPtrTables_.append(OldMove(tmpTable)))
             return false;
         *table = &funcPtrTables_.back();
         return true;
@@ -1450,7 +1452,7 @@ class MOZ_STACK_CLASS ModuleCompiler
             argCoercions[i] = args[i].toCoercion();
         AsmJSModule::ReturnType retType = func->sig().retType().toModuleReturnType();
         return module_->addExportedFunction(func->name(), maybeFieldName,
-                                            Move(argCoercions), retType);
+                                            OldMove(argCoercions), retType);
     }
     bool addExit(unsigned ffiIndex, PropertyName *name, MoveRef<Signature> sig, unsigned *exitIndex) {
         ExitDescriptor exitDescriptor(name, sig);
@@ -1461,7 +1463,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         }
         if (!module_->addExit(ffiIndex, exitIndex))
             return false;
-        return exits_.add(p, Move(exitDescriptor), *exitIndex);
+        return exits_.add(p, OldMove(exitDescriptor), *exitIndex);
     }
     bool addGlobalAccess(AsmJSGlobalAccess access) {
         return globalAccesses_.append(access);
@@ -1579,14 +1581,9 @@ class MOZ_STACK_CLASS ModuleCompiler
 
         // Patch everything that needs an absolute address:
 
-        // Entry points
-        for (unsigned i = 0; i < module_->numExportedFunctions(); i++)
-            module_->exportedFunction(i).patch(code);
-
         // Exit points
         for (unsigned i = 0; i < module_->numExits(); i++) {
-            module_->exit(i).patch(code);
-            module_->exitIndexToGlobalDatum(i).exit = module_->exit(i).interpCode();
+            module_->exitIndexToGlobalDatum(i).exit = module_->interpExitTrampoline(module_->exit(i));
             module_->exitIndexToGlobalDatum(i).fun = NULL;
         }
         module_->setOperationCallbackExit(code + masm_.actualOffset(operationCallbackLabel_.offset()));
@@ -2395,16 +2392,6 @@ class FunctionCompiler
             return false;
         if (!*defaultBlock)
             return true;
-        for (unsigned i = 0; i < cases->length(); i++) {
-            if (!(*cases)[i]) {
-                MBasicBlock *bb;
-                if (!newBlock(switchBlock, &bb, NULL))
-                    return false;
-                bb->end(MGoto::New(*defaultBlock));
-                (*defaultBlock)->addPredecessor(bb);
-                (*cases)[i] = bb;
-            }
-        }
         mirGraph().moveBlockToEnd(*defaultBlock);
         return true;
     }
@@ -2415,9 +2402,13 @@ class FunctionCompiler
         if (!switchBlock)
             return true;
         MTableSwitch *mir = switchBlock->lastIns()->toTableSwitch();
-        mir->addDefault(defaultBlock);
-        for (unsigned i = 0; i < cases.length(); i++)
-            mir->addCase(cases[i]);
+        size_t defaultIndex = mir->addDefault(defaultBlock);
+        for (unsigned i = 0; i < cases.length(); i++) {
+            if (!cases[i])
+                mir->addCase(defaultIndex);
+            else
+                mir->addCase(mir->addSuccessor(cases[i]));
+        }
         if (curBlock_) {
             MBasicBlock *next;
             if (!newBlock(curBlock_, &next, pn))
@@ -2517,7 +2508,7 @@ class FunctionCompiler
         typename Map::AddPtr p = map->lookupForAdd(key);
         if (!p) {
             BlockVector empty(m().cx());
-            if (!map->add(p, key, Move(empty)))
+            if (!map->add(p, key, OldMove(empty)))
                 return false;
         }
         if (!p->value.append(curBlock_))
@@ -3394,7 +3385,7 @@ CheckInternalCall(FunctionCompiler &f, ParseNode *callNode, PropertyName *callee
         return false;
 
     ModuleCompiler::Func *callee;
-    if (!CheckFunctionSignature(f.m(), callNode, Move(call.sig()), calleeName, &callee))
+    if (!CheckFunctionSignature(f.m(), callNode, OldMove(call.sig()), calleeName, &callee))
         return false;
 
     if (!f.internalCall(*callee, call, def))
@@ -3470,7 +3461,7 @@ CheckFuncPtrCall(FunctionCompiler &f, ParseNode *callNode, RetType retType, MDef
         return false;
 
     ModuleCompiler::FuncPtrTable *table;
-    if (!CheckFuncPtrTableAgainstExisting(f.m(), tableNode, name, Move(call.sig()), mask, &table))
+    if (!CheckFuncPtrTableAgainstExisting(f.m(), tableNode, name, OldMove(call.sig()), mask, &table))
         return false;
 
     if (!f.funcPtrCall(*table, indexDef, call, def))
@@ -3499,7 +3490,7 @@ CheckFFICall(FunctionCompiler &f, ParseNode *callNode, unsigned ffiIndex, RetTyp
         return false;
 
     unsigned exitIndex;
-    if (!f.m().addExit(ffiIndex, calleeName, Move(call.sig()), &exitIndex))
+    if (!f.m().addExit(ffiIndex, calleeName, OldMove(call.sig()), &exitIndex))
         return false;
 
     if (!f.ffiCall(exitIndex, call, retType.toMIRType(), def))
@@ -4586,10 +4577,18 @@ ParseFunction(ModuleCompiler &m, ParseNode **fnOut)
     DebugOnly<TokenKind> tk = tokenStream.getToken();
     JS_ASSERT(tk == TOK_FUNCTION);
 
-    if (tokenStream.getToken(TokenStream::KeywordIsName) != TOK_NAME)
-        return false;  // This will throw a SyntaxError, no need to m.fail.
+    RootedPropertyName name(m.cx());
 
-    RootedPropertyName name(m.cx(), tokenStream.currentToken().name());
+    TokenKind tt = tokenStream.getToken();
+    if (tt == TOK_NAME) {
+        name = tokenStream.currentName();
+    } else if (tt == TOK_YIELD) {
+        if (!m.parser().checkYieldNameValidity())
+            return false;
+        name = m.cx()->names().yield;
+    } else {
+        return false;  // The regular parser will throw a SyntaxError, no need to m.fail.
+    }
 
     ParseNode *fn = m.parser().handler.newFunctionDefinition();
     if (!fn)
@@ -4612,7 +4611,7 @@ ParseFunction(ModuleCompiler &m, ParseNode **fnOut)
     Directives newDirectives = directives;
     AsmJSParseContext funpc(&m.parser(), outerpc, fn, funbox, &newDirectives,
                             outerpc->staticLevel + 1, outerpc->blockidGen);
-    if (!funpc.init())
+    if (!funpc.init(m.parser().tokenStream))
         return false;
 
     if (!m.parser().functionArgsAndBodyGeneric(fn, fun, Normal, Statement, &newDirectives))
@@ -4675,9 +4674,9 @@ CheckFunction(ModuleCompiler &m, LifoAlloc &lifo, MIRGenerator **mir, ModuleComp
     if (!CheckReturnType(f, lastNonEmptyStmt, retType))
         return false;
 
-    Signature sig(Move(argTypes), retType);
+    Signature sig(OldMove(argTypes), retType);
     ModuleCompiler::Func *func;
-    if (!CheckFunctionSignature(m, fn, Move(sig), FunctionName(fn), &func))
+    if (!CheckFunctionSignature(m, fn, OldMove(sig), FunctionName(fn), &func))
         return false;
 
     if (func->defined())
@@ -4700,14 +4699,14 @@ GenerateCode(ModuleCompiler &m, ModuleCompiler::Func &func, MIRGenerator &mir, L
 
     m.masm().bind(func.code());
 
-    ScopedJSDeletePtr<CodeGenerator> codegen(ion::GenerateCode(&mir, &lir, &m.masm()));
+    ScopedJSDeletePtr<CodeGenerator> codegen(jit::GenerateCode(&mir, &lir, &m.masm()));
     if (!codegen)
         return m.fail(NULL, "internal codegen failure (probably out of memory)");
 
     if (!m.collectAccesses(mir))
         return false;
 
-    ion::IonScriptCounts *counts = codegen->extractUnassociatedScriptCounts();
+    jit::IonScriptCounts *counts = codegen->extractUnassociatedScriptCounts();
     if (counts && !m.addFunctionCounts(counts)) {
         js_delete(counts);
         return false;
@@ -5058,10 +5057,10 @@ CheckFuncPtrTable(ModuleCompiler &m, ParseNode *var)
         return false;
 
     ModuleCompiler::FuncPtrTable *table;
-    if (!CheckFuncPtrTableAgainstExisting(m, var, var->name(), Move(sig), mask, &table))
+    if (!CheckFuncPtrTableAgainstExisting(m, var, var->name(), OldMove(sig), mask, &table))
         return false;
 
-    table->initElems(Move(elems));
+    table->initElems(OldMove(elems));
     return true;
 }
 
@@ -5376,7 +5375,7 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
     masm.reserveStack(stackDec);
     //JS_ASSERT(masm.framePushed() % 8 == 0);
     if(getenv("GDB_BREAK")) {
-        masm.breakpoint(js::ion::Assembler::Always);
+        masm.breakpoint(js::jit::Assembler::Always);
     }
     // Copy parameters out of argv into the registers/stack-slots specified by
     // the system ABI.
@@ -5469,7 +5468,7 @@ TryEnablingIon(JSContext *cx, AsmJSModule &module, HandleFunction fun, uint32_t 
     if (!ionScript->addDependentAsmJSModule(cx, DependentAsmJSModuleExit(&module, exitIndex)))
         return false;
 
-    module.exitIndexToGlobalDatum(exitIndex).exit = module.exit(exitIndex).ionCode();
+    module.exitIndexToGlobalDatum(exitIndex).exit = module.ionExitTrampoline(module.exit(exitIndex));
     return true;
 }
 

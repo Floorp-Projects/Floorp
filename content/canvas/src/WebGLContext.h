@@ -25,7 +25,6 @@
 
 #include "mozilla/LinkedList.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/dom/ImageData.h"
 
 #ifdef XP_MACOSX
 #include "ForceDiscreteGPUHelperCGL.h"
@@ -73,6 +72,8 @@ class WebGLTexture;
 class WebGLVertexArray;
 
 namespace dom {
+class ImageData;
+
 struct WebGLContextAttributes;
 struct WebGLContextAttributesInitializer;
 template<typename> class Nullable;
@@ -147,8 +148,6 @@ public:
 
     virtual JSObject* WrapObject(JSContext *cx,
                                  JS::Handle<JSObject*> scope) = 0;
-
-    virtual bool IsWebGL2() const = 0;
 
     NS_DECL_NSIDOMWEBGLRENDERINGCONTEXT
 
@@ -731,11 +730,13 @@ public:
     JS::Value GetQueryObject(JSContext* cx, WebGLQuery *query, WebGLenum pname);
 
 private:
+    // ANY_SAMPLES_PASSED(_CONSERVATIVE) slot
     WebGLRefPtr<WebGLQuery> mActiveOcclusionQuery;
+
+    // LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN slot
     WebGLRefPtr<WebGLQuery> mActiveTransformFeedbackQuery;
 
-    bool ValidateQueryTargetParameter(WebGLenum target, const char* infos);
-    WebGLRefPtr<WebGLQuery>& GetActiveQueryByTarget(WebGLenum target);
+    WebGLRefPtr<WebGLQuery>* GetQueryTargetSlot(WebGLenum target, const char* infos);
 
 // -----------------------------------------------------------------------------
 // Buffer Objects (WebGLContextBuffers.cpp)
@@ -780,7 +781,13 @@ public:
     bool IsEnabled(WebGLenum cap);
 
 private:
+    // State tracking slots
+    realGLboolean mDitherEnabled;
+    realGLboolean mRasterizerDiscardEnabled;
+    realGLboolean mScissorTestEnabled;
+
     bool ValidateCapabilityEnum(WebGLenum cap, const char* info);
+    realGLboolean* GetStateTrackingSlot(WebGLenum cap);
 
 // -----------------------------------------------------------------------------
 // Vertices Feature (WebGLContextVertices.cpp)
@@ -865,6 +872,7 @@ private:
     void VertexAttrib4fv_base(WebGLuint idx, uint32_t arrayLength, const WebGLfloat* ptr);
 
     bool ValidateBufferFetching(const char *info);
+    bool BindArrayAttribToLocation0(WebGLProgram *program);
 
 // -----------------------------------------------------------------------------
 // PROTECTED
@@ -954,7 +962,8 @@ protected:
         ContextLostAwaitingRestore
     };
 
-    // extensions
+    // -------------------------------------------------------------------------
+    // WebGL extensions (implemented in WebGLContextExtensions.cpp)
     enum WebGLExtensionID {
         EXT_texture_filter_anisotropic,
         OES_element_index_uint,
@@ -970,6 +979,7 @@ protected:
         WEBGL_lose_context,
         WEBGL_draw_buffers,
         ANGLE_instanced_arrays,
+        WebGLExtensionID_max,
         WebGLExtensionID_unknown_extension
     };
     nsTArray<nsRefPtr<WebGLExtensionBase> > mExtensions;
@@ -984,7 +994,18 @@ protected:
     bool IsExtensionSupported(JSContext *cx, WebGLExtensionID ext) const;
     bool IsExtensionSupported(WebGLExtensionID ext) const;
 
+    static const char* GetExtensionString(WebGLExtensionID ext);
+
     nsTArray<WebGLenum> mCompressedTextureFormats;
+
+
+    // -------------------------------------------------------------------------
+    // WebGL 2 specifics (implemented in WebGL2Context.cpp)
+
+    virtual bool IsWebGL2() const = 0;
+
+    bool InitWebGL2();
+
 
     // -------------------------------------------------------------------------
     // Validation functions (implemented in WebGLContextValidate.cpp)
@@ -1166,8 +1187,6 @@ protected:
               mStencilWriteMaskFront, mStencilWriteMaskBack;
     realGLboolean mColorWriteMask[4];
     realGLboolean mDepthWriteMask;
-    realGLboolean mScissorTestEnabled;
-    realGLboolean mDitherEnabled;
     WebGLfloat mColorClearValue[4];
     WebGLint mStencilClearValue;
     WebGLfloat mDepthClearValue;

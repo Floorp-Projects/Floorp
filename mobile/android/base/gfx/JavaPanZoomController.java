@@ -131,6 +131,8 @@ class JavaPanZoomController
     private AxisLockMode mMode;
     /* A medium-length tap/press is happening */
     private boolean mMediumPress;
+    /* Used to change the scrollY direction */
+    private boolean mNegateWheelScrollY;
 
     public JavaPanZoomController(PanZoomTarget target, View view, EventDispatcher eventDispatcher) {
         mTarget = target;
@@ -150,14 +152,23 @@ class JavaPanZoomController
 
         mMode = AxisLockMode.STANDARD;
 
-        PrefsHelper.getPref("ui.scrolling.axis_lock_mode", new PrefsHelper.PrefHandlerBase() {
+        String[] prefs = { "ui.scrolling.axis_lock_mode", "ui.scrolling.negate_wheel_scrollY" };
+        mNegateWheelScrollY = false;
+        PrefsHelper.getPrefs(prefs, new PrefsHelper.PrefHandlerBase() {
             @Override public void prefValue(String pref, String value) {
-                if (value.equals("standard")) {
-                    mMode = AxisLockMode.STANDARD;
-                } else if (value.equals("free")) {
-                    mMode = AxisLockMode.FREE;
-                } else {
-                    mMode = AxisLockMode.STICKY;
+                if (pref.equals("ui.scrolling.axis_lock_mode")) {
+                    if (value.equals("standard")) {
+                        mMode = AxisLockMode.STANDARD;
+                    } else if (value.equals("free")) {
+                        mMode = AxisLockMode.FREE;
+                    } else {
+                        mMode = AxisLockMode.STICKY;
+                    }
+                }
+            }
+            @Override public void prefValue(String pref, boolean value) {
+                if (pref.equals("ui.scrolling.negate_wheel_scrollY")) {
+                    mNegateWheelScrollY = value;
                 }
             }
 
@@ -555,7 +566,9 @@ class JavaPanZoomController
         if (mState == PanZoomState.NOTHING || mState == PanZoomState.FLING) {
             float scrollX = event.getAxisValue(MotionEvent.AXIS_HSCROLL);
             float scrollY = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
-
+            if (mNegateWheelScrollY) {
+                scrollY *= -1.0;
+            }
             scrollBy(scrollX * MAX_SCROLL, scrollY * MAX_SCROLL);
             bounce();
             return true;

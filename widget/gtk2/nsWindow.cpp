@@ -8,11 +8,6 @@
 #include "mozilla/Util.h"
 #include <algorithm>
 
-#ifdef MOZ_PLATFORM_MAEMO
-// needed to include hildon parts in gtk.h
-#define MAEMO_CHANGES
-#endif
-
 #include "prlink.h"
 #include "nsGTKToolkit.h"
 #include "nsIRollupListener.h"
@@ -138,9 +133,6 @@ const gint kEvents = GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK |
                      GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
                      GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
                      GDK_SCROLL_MASK |
-#ifdef MOZ_PLATFORM_MAEMO
-                     GDK_POINTER_MOTION_HINT_MASK |
-#endif
                      GDK_POINTER_MOTION_MASK;
 
 /* utility functions */
@@ -721,29 +713,6 @@ nsWindow::GetParent(void)
 float
 nsWindow::GetDPI()
 {
-
-#ifdef MOZ_PLATFORM_MAEMO
-    static float sDPI = 0;
-
-    if (!sDPI) {
-        // X on Maemo does not report true DPI: https://bugs.maemo.org/show_bug.cgi?id=4825
-        nsCOMPtr<nsIPropertyBag2> infoService = do_GetService("@mozilla.org/system-info;1");
-        NS_ASSERTION(infoService, "Could not find a system info service");
-
-        nsCString deviceType;
-        infoService->GetPropertyAsACString(NS_LITERAL_STRING("device"), deviceType);
-        if (deviceType.EqualsLiteral("Nokia N900")) {
-            sDPI = 265.0f;
-        } else if (deviceType.EqualsLiteral("Nokia N8xx")) {
-            sDPI = 225.0f;
-        } else {
-            // Fall back to something sane.
-            NS_WARNING("Unknown device - using default DPI");
-            sDPI = 96.0f;
-        }
-    }
-    return sDPI;
-#else
     Display *dpy = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
     int defaultScreen = DefaultScreen(dpy);
     double heightInches = DisplayHeightMM(dpy, defaultScreen)/MM_PER_INCH_FLOAT;
@@ -752,7 +721,6 @@ nsWindow::GetDPI()
         return 96.0f;
     }
     return float(DisplayHeight(dpy, defaultScreen)/heightInches);
-#endif
 }
 
 NS_IMETHODIMP
@@ -3129,12 +3097,6 @@ nsWindow::OnVisibilityNotifyEvent(GdkEventVisibility *aEvent)
 
         mIsFullyObscured = false;
 
-        // In Hildon/Maemo, a browser window will get into 'patially visible' state wheneven an
-        // autocomplete feature is dropped down (from urlbar or from an entry form completion),
-        // and there are no much further ways for that to happen in the plaftorm. In such cases, if hildon
-        // virtual keyboard is up, we can not grab focus to any dropdown list. Reason: nsWindow::EnsureGrabs()
-        // calls gdk_pointer_grab() which grabs the pointer (usually a mouse) so that all events are passed
-        // to this it until the pointer is ungrabbed.
         if (!nsGtkIMModule::IsVirtualKeyboardOpened()) {
             // if we have to retry the grab, retry it.
             EnsureGrabs();
@@ -3613,25 +3575,6 @@ nsWindow::Create(nsIWidget        *aParent,
         g_signal_connect_after(default_settings,
                                "notify::gtk-font-name",
                                G_CALLBACK(theme_changed_cb), this);
-
-#ifdef MOZ_PLATFORM_MAEMO
-        if (mWindowType == eWindowType_toplevel) {
-            GdkWindow *gdkwin = gtk_widget_get_window(mShell);
-
-            // Tell the Hildon desktop that we support being rotated
-            gulong portrait_set = 1;
-            GdkAtom support = gdk_atom_intern("_HILDON_PORTRAIT_MODE_SUPPORT", FALSE);
-            gdk_property_change(gdkwin, support, gdk_x11_xatom_to_atom(XA_CARDINAL),
-                                32, GDK_PROP_MODE_REPLACE,
-                                (const guchar *) &portrait_set, 1);
-
-            // Tell maemo-status-volume daemon to ungrab keys
-            gulong volume_set = 1;
-            GdkAtom keys = gdk_atom_intern("_HILDON_ZOOM_KEY_ATOM", FALSE);
-            gdk_property_change(gdkwin, keys, gdk_x11_xatom_to_atom(XA_INTEGER),
-                                32, GDK_PROP_MODE_REPLACE, (const guchar *) &volume_set, 1);
-        }
-#endif
     }
 
     if (mContainer) {
@@ -4402,9 +4345,6 @@ nsWindow::GrabPointer(guint32 aTime)
                                              GDK_BUTTON_RELEASE_MASK |
                                              GDK_ENTER_NOTIFY_MASK |
                                              GDK_LEAVE_NOTIFY_MASK |
-#ifdef MOZ_PLATFORM_MAEMO
-                                             GDK_POINTER_MOTION_HINT_MASK |
-#endif
                                              GDK_POINTER_MOTION_MASK),
                               (GdkWindow *)NULL, NULL, aTime);
 
@@ -5197,9 +5137,6 @@ motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
 
     window->OnMotionNotifyEvent(event);
 
-#ifdef MOZ_PLATFORM_MAEMO
-    gdk_event_request_motions(event);
-#endif
     return TRUE;
 }
 

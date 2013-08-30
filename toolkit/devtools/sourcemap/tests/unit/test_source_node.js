@@ -212,6 +212,25 @@ define("test/source-map/test-source-node", ["require", "exports", "module"], fun
     assert.equal(map.mappings, util.testMap.mappings);
   };
 
+  exports['test .fromStringWithSourceMap() empty map'] = function (assert, util) {
+    var node = SourceNode.fromStringWithSourceMap(
+                              util.testGeneratedCode,
+                              new SourceMapConsumer(util.emptyMap));
+    var result = node.toStringWithSourceMap({
+      file: 'min.js'
+    });
+    var map = result.map;
+    var code = result.code;
+
+    assert.equal(code, util.testGeneratedCode);
+    assert.ok(map instanceof SourceMapGenerator, 'map instanceof SourceMapGenerator');
+    map = map.toJSON();
+    assert.equal(map.version, util.emptyMap.version);
+    assert.equal(map.file, util.emptyMap.file);
+    assert.equal(map.mappings.length, util.emptyMap.mappings.length);
+    assert.equal(map.mappings, util.emptyMap.mappings);
+  };
+
   exports['test .fromStringWithSourceMap() complex version'] = function (assert, util) {
     var input = new SourceNode(null, null, null, [
       "(function() {\n",
@@ -239,6 +258,64 @@ define("test/source-map/test-source-node", ["require", "exports", "module"], fun
     map = map.toJSON();
     var inputMap = input.map.toJSON();
     util.assertEqualMaps(assert, map, inputMap);
+  };
+
+  exports['test .fromStringWithSourceMap() merging duplicate mappings'] = function (assert, util) {
+    var input = new SourceNode(null, null, null, [
+      new SourceNode(1, 0, "a.js", "(function"), new SourceNode(1, 0, "a.js", "() {\n"),
+        "  ", new SourceNode(1, 0, "a.js", "var Test = "), new SourceNode(1, 0, "b.js", "{};\n"),
+        new SourceNode(2, 0, "b.js", "Test"), new SourceNode(2, 0, "b.js", ".A", "A"), new SourceNode(2, 20, "b.js", " = { value: 1234 };\n", "A"),
+        "}());\n",
+        "/* Generated Source */"]);
+    input = input.toStringWithSourceMap({
+      file: 'foo.js'
+    });
+
+    var correctMap = new SourceMapGenerator({
+      file: 'foo.js'
+    });
+    correctMap.addMapping({
+      generated: { line: 1, column: 0 },
+      source: 'a.js',
+      original: { line: 1, column: 0 }
+    });
+    correctMap.addMapping({
+      generated: { line: 2, column: 0 }
+    });
+    correctMap.addMapping({
+      generated: { line: 2, column: 2 },
+      source: 'a.js',
+      original: { line: 1, column: 0 }
+    });
+    correctMap.addMapping({
+      generated: { line: 2, column: 13 },
+      source: 'b.js',
+      original: { line: 1, column: 0 }
+    });
+    correctMap.addMapping({
+      generated: { line: 3, column: 0 },
+      source: 'b.js',
+      original: { line: 2, column: 0 }
+    });
+    correctMap.addMapping({
+      generated: { line: 3, column: 4 },
+      source: 'b.js',
+      name: 'A',
+      original: { line: 2, column: 0 }
+    });
+    correctMap.addMapping({
+      generated: { line: 3, column: 6 },
+      source: 'b.js',
+      name: 'A',
+      original: { line: 2, column: 20 }
+    });
+    correctMap.addMapping({
+      generated: { line: 4, column: 0 }
+    });
+
+    var inputMap = input.map.toJSON();
+    correctMap = correctMap.toJSON();
+    util.assertEqualMaps(assert, correctMap, inputMap);
   };
 
   exports['test setSourceContent with toStringWithSourceMap'] = function (assert, util) {

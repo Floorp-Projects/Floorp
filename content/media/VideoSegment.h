@@ -107,6 +107,14 @@ public:
     }
     return &c->mFrame;
   }
+  // Override default impl
+  virtual void ReplaceWithDisabled() MOZ_OVERRIDE {
+    for (ChunkIterator i(*this);
+         !i.IsEnded(); i.Next()) {
+      VideoChunk& chunk = *i;
+      chunk.SetForceBlack(true);
+    }
+  }
 
   // Segment-generic methods not in MediaSegmentBase
   static Type StaticType() { return VIDEO; }

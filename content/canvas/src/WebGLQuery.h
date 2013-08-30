@@ -41,7 +41,11 @@ public:
 
     bool IsActive() const
     {
-        return mContext->GetActiveQueryByTarget(mType) == this;
+        WebGLRefPtr<WebGLQuery>* targetSlot = mContext->GetQueryTargetSlot(mType, "WebGLQuery::IsActive()");
+
+        MOZ_ASSERT(targetSlot, "unknown query object's type");
+
+        return *targetSlot == this;
     }
 
     bool HasEverBeenActive()

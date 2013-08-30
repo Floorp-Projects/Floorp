@@ -122,6 +122,13 @@ class JSFunction : public JSObject
         return flags & SH_WRAPPABLE;
     }
 
+    bool hasJITCode() const {
+        if (!hasScript())
+            return false;
+
+        return nonLazyScript()->hasBaselineScript() || nonLazyScript()->hasIonScript();
+    }
+
     // Arrow functions are a little weird.
     //
     // Like all functions, (1) when the compiler parses an arrow function, it
@@ -281,7 +288,12 @@ class JSFunction : public JSObject
     js::GeneratorKind generatorKind() const {
         if (!isInterpreted())
             return js::NotGenerator;
-        return hasScript() ? nonLazyScript()->generatorKind() : lazyScript()->generatorKind();
+        if (hasScript())
+            return nonLazyScript()->generatorKind();
+        if (js::LazyScript *lazy = lazyScriptOrNull())
+            return lazy->generatorKind();
+        JS_ASSERT(isSelfHostedBuiltin());
+        return js::NotGenerator;
     }
 
     bool isGenerator() const { return generatorKind() != js::NotGenerator; }
@@ -410,11 +422,21 @@ namespace js {
 extern bool
 Function(JSContext *cx, unsigned argc, Value *vp);
 
+extern bool
+Generator(JSContext *cx, unsigned argc, Value *vp);
+
 extern JSFunction *
 NewFunction(ExclusiveContext *cx, HandleObject funobj, JSNative native, unsigned nargs,
             JSFunction::Flags flags, HandleObject parent, HandleAtom atom,
             gc::AllocKind allocKind = JSFunction::FinalizeKind,
             NewObjectKind newKind = GenericObject);
+
+// If proto is NULL, Function.prototype is used instead.
+extern JSFunction *
+NewFunctionWithProto(ExclusiveContext *cx, HandleObject funobj, JSNative native, unsigned nargs,
+                     JSFunction::Flags flags, HandleObject parent, HandleAtom atom,
+                     JSObject *proto, gc::AllocKind allocKind = JSFunction::FinalizeKind,
+                     NewObjectKind newKind = GenericObject);
 
 extern JSFunction *
 DefineFunction(JSContext *cx, HandleObject obj, HandleId id, JSNative native,

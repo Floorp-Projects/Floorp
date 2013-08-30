@@ -93,7 +93,7 @@ public:
  * In order to send several different buffers to the compositor side, use
  * several TextureClients.
  */
-class TextureClient : public RefCounted<TextureClient>
+class TextureClient : public AtomicRefCounted<TextureClient>
 {
 public:
   TextureClient(TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
@@ -111,10 +111,26 @@ public:
 
   virtual void Unlock() {}
 
+  /**
+   * Returns true if this texture has a lock/unlock mechanism.
+   * Textures that do not implement locking should be immutable or should
+   * use immediate uploads (see TextureFlags in CompositorTypes.h)
+   */
+  virtual bool ImplementsLocking() const
+  {
+    return false;
+  }
+
   void SetID(uint64_t aID)
   {
-    MOZ_ASSERT(mID == 0 || aID == 0);
+    MOZ_ASSERT(mID == 0 && aID != 0);
     mID = aID;
+    mShared = true;
+  }
+  void ClearID()
+  {
+    MOZ_ASSERT(mID != 0);
+    mID = 0;
   }
 
   uint64_t GetID() const
@@ -139,7 +155,7 @@ public:
 
   void MarkImmutable() { AddFlags(TEXTURE_IMMUTABLE); }
 
-  bool IsSharedWithCompositor() const { return GetID() != 0; }
+  bool IsSharedWithCompositor() const { return mShared; }
 
   bool ShouldDeallocateInDestructor() const;
 protected:
@@ -158,6 +174,7 @@ protected:
 
   uint64_t mID;
   TextureFlags mFlags;
+  bool mShared;
 };
 
 /**
@@ -179,11 +196,7 @@ public:
 
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor) = 0;
 
-  virtual bool Allocate(uint32_t aSize) = 0;
-
   virtual uint8_t* GetBuffer() const = 0;
-
-  virtual size_t GetBufferSize() const = 0;
 
   virtual gfx::IntSize GetSize() const { return mSize; }
 
@@ -208,6 +221,14 @@ public:
                                 StereoMode aStereoMode) MOZ_OVERRIDE;
 
   gfx::SurfaceFormat GetFormat() const { return mFormat; }
+
+  // XXX - Bug 908196 - Make Allocate(uint32_t) and GetBufferSize() protected.
+  // these two methods should only be called by methods of BufferTextureClient
+  // that are overridden in GrallocTextureClient (which does not implement the
+  // two methods below)
+  virtual bool Allocate(uint32_t aSize) = 0;
+
+  virtual size_t GetBufferSize() const = 0;
 
 protected:
   CompositableClient* mCompositable;
@@ -274,7 +295,6 @@ protected:
   uint8_t* mBuffer;
   size_t mBufSize;
 };
-
 
 struct TextureClientAutoUnlock
 {

@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {Cu} = require("chrome");
+const {Cc, Ci, Cu} = require("chrome");
 const {setTimeout, clearTimeout} = require('sdk/timers');
 const EventEmitter = require("devtools/shared/event-emitter");
 
@@ -25,6 +25,7 @@ Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
  * Methods:
  *  ⬩ Connection createConnection(host, port)
  *  ⬩ void       destroyConnection(connection)
+ *  ⬩ Number     getFreeTCPPort()
  *
  * Properties:
  *  ⬩ Array      connections
@@ -46,6 +47,7 @@ Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
  *  ⬩ port              Port
  *  ⬩ logs              Current logs. "newlog" event notifies new available logs
  *  ⬩ store             Reference to a local data store (see below)
+ *  ⬩ keepConnecting    Should the connection keep trying connecting
  *  ⬩ status            Connection status:
  *                        Connection.Status.CONNECTED
  *                        Connection.Status.DISCONNECTED
@@ -86,6 +88,14 @@ let ConnectionManager = {
   get connections() {
     return [c for (c of this._connections)];
   },
+  getFreeTCPPort: function () {
+    let serv = Cc['@mozilla.org/network/server-socket;1']
+                 .createInstance(Ci.nsIServerSocket);
+    serv.init(-1, true, -1);
+    let port = serv.port;
+    serv.close();
+    return port;
+  },
 }
 
 EventEmitter.decorate(ConnectionManager);
@@ -101,6 +111,7 @@ function Connection(host, port) {
   this._onDisconnected = this._onDisconnected.bind(this);
   this._onConnected = this._onConnected.bind(this);
   this._onTimeout = this._onTimeout.bind(this);
+  this.keepConnecting = false;
 }
 
 Connection.Status = {
@@ -180,15 +191,7 @@ Connection.prototype = {
       let delay = Services.prefs.getIntPref("devtools.debugger.remote-timeout");
       this._timeoutID = setTimeout(this._onTimeout, delay);
 
-      let transport;
-      if (!this._host) {
-        transport = DebuggerServer.connectPipe();
-      } else {
-        transport = debuggerSocketConnect(this._host, this._port);
-      }
-      this._client = new DebuggerClient(transport);
-      this._client.addOneTimeListener("closed", this._onDisconnected);
-      this._client.connect(this._onConnected);
+      this._clientConnect();
     } else {
       let msg = "Can't connect. Client is not fully disconnected";
       this.log(msg);
@@ -199,11 +202,24 @@ Connection.prototype = {
   destroy: function() {
     this.log("killing connection");
     clearTimeout(this._timeoutID);
+    this.keepConnecting = false;
     if (this._client) {
       this._client.close();
       this._client = null;
     }
     this._setStatus(Connection.Status.DESTROYED);
+  },
+
+  _clientConnect: function () {
+    let transport;
+    if (!this._host) {
+      transport = DebuggerServer.connectPipe();
+    } else {
+      transport = debuggerSocketConnect(this._host, this._port);
+    }
+    this._client = new DebuggerClient(transport);
+    this._client.addOneTimeListener("closed", this._onDisconnected);
+    this._client.connect(this._onConnected);
   },
 
   get status() {
@@ -219,6 +235,13 @@ Connection.prototype = {
   },
 
   _onDisconnected: function() {
+    this._client = null;
+
+    if (this._status == Connection.Status.CONNECTING && this.keepConnecting) {
+      setTimeout(() => this._clientConnect(), 0);
+      return;
+    }
+
     clearTimeout(this._timeoutID);
     switch (this.status) {
       case Connection.Status.CONNECTED:
@@ -230,7 +253,6 @@ Connection.prototype = {
       default:
         this.log("disconnected");
     }
-    this._client = null;
     this._setStatus(Connection.Status.DISCONNECTED);
   },
 
@@ -242,7 +264,7 @@ Connection.prototype = {
 
   _onTimeout: function() {
     this.log("connection timeout");
-    this.emit(Connection.Events.TIMEOUT, str);
+    this.emit(Connection.Events.TIMEOUT);
     this.disconnect();
   },
 }

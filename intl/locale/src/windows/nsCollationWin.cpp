@@ -125,7 +125,7 @@ nsresult nsCollationWin::AllocateRawSortKey(int32_t strength,
 
   byteLen = LCMapStringW(mLCID, dwMapFlags, 
                          (LPCWSTR) PromiseFlatString(stringIn).get(),
-                         -1, NULL, 0);
+                         -1, nullptr, 0);
   buffer = PR_Malloc(byteLen);
   if (!buffer) {
     res = NS_ERROR_OUT_OF_MEMORY;

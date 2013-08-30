@@ -7,7 +7,6 @@
 #include "ipc/IPCMessageUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDOMUIEvent.h"
-#include "nsIPresShell.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMNode.h"
@@ -15,7 +14,6 @@
 #include "nsContentUtils.h"
 #include "nsEventStateManager.h"
 #include "nsIFrame.h"
-#include "nsIScrollableFrame.h"
 #include "mozilla/Util.h"
 #include "mozilla/Assertions.h"
 #include "prtime.h"
@@ -82,7 +80,7 @@ nsDOMUIEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
                           const mozilla::dom::UIEventInit& aParam,
                           mozilla::ErrorResult& aRv)
 {
-  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   nsRefPtr<nsDOMUIEvent> e = new nsDOMUIEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
   aRv = e->InitUIEvent(aType, aParam.mBubbles, aParam.mCancelable, aParam.mView,

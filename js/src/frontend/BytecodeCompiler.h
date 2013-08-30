@@ -16,7 +16,7 @@ namespace js {
 class AutoNameVector;
 class LazyScript;
 class LifoAlloc;
-struct SourceCompressionToken;
+struct SourceCompressionTask;
 
 namespace frontend {
 
@@ -25,7 +25,7 @@ CompileScript(ExclusiveContext *cx, LifoAlloc *alloc,
               HandleObject scopeChain, HandleScript evalCaller,
               const CompileOptions &options, const jschar *chars, size_t length,
               JSString *source_ = NULL, unsigned staticLevel = 0,
-              SourceCompressionToken *extraSct = NULL);
+              SourceCompressionTask *extraSct = NULL);
 
 bool
 CompileLazyFunction(JSContext *cx, LazyScript *lazy, const jschar *chars, size_t length);
@@ -33,6 +33,9 @@ CompileLazyFunction(JSContext *cx, LazyScript *lazy, const jschar *chars, size_t
 bool
 CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileOptions options,
                     const AutoNameVector &formals, const jschar *chars, size_t length);
+bool
+CompileStarGeneratorBody(JSContext *cx, MutableHandleFunction fun, CompileOptions options,
+                         const AutoNameVector &formals, const jschar *chars, size_t length);
 
 /*
  * This should be called while still on the main thread if compilation will

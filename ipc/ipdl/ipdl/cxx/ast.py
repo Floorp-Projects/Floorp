@@ -447,7 +447,7 @@ class FriendClassDecl(Node):
 class MethodDecl(Node):
     def __init__(self, name, params=[ ], ret=Type('void'),
                  virtual=0, const=0, pure=0, static=0, warn_unused=0,
-                 inline=0, force_inline=0,
+                 inline=0, force_inline=0, never_inline=0,
                  typeop=None,
                  T=None):
         assert not (virtual and static)
@@ -458,6 +458,8 @@ class MethodDecl(Node):
         assert not isinstance(ret, list)
         for decl in params:  assert not isinstance(decl, str)
         assert not isinstance(T, int)
+        assert not (inline and never_inline)
+        assert not (force_inline and never_inline)
 
         if typeop is not None:
             ret = None
@@ -473,6 +475,7 @@ class MethodDecl(Node):
         self.warn_unused = warn_unused  # bool
         self.force_inline = (force_inline or T) # bool
         self.inline = inline            # bool
+        self.never_inline = never_inline # bool
         self.typeop = typeop            # Type or None
         self.T = T                      # Type or None
 
@@ -488,6 +491,7 @@ class MethodDecl(Node):
             warn_unused=self.warn_unused,
             inline=self.inline,
             force_inline=self.force_inline,
+            never_inline=self.never_inline,
             typeop=copy.deepcopy(self.typeop, memo),
             T=copy.deepcopy(self.T, memo))
 

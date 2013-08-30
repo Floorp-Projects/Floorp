@@ -15,6 +15,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MotionEvent;
@@ -98,6 +99,20 @@ public class HomeListView extends ListView
         return mContextMenuInfo;
     }
 
+    @Override
+    public void setOnItemClickListener(final AdapterView.OnItemClickListener listener) {
+        super.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (mShowTopDivider) {
+                    position--;
+                }
+
+                listener.onItemClick(parent, view, position, id);
+            }
+        });
+    }
+
     public OnUrlOpenListener getOnUrlOpenListener() {
         return mUrlOpenListener;
     }
@@ -110,6 +125,10 @@ public class HomeListView extends ListView
      * A ContextMenuInfo for HomeListView that adds details from the cursor.
      */
     public static class HomeContextMenuInfo extends AdapterContextMenuInfo {
+
+        // URL to Title replacement regex.
+        private static final String REGEX_URL_TO_TITLE = "^([a-z]+://)?(www\\.)?";
+
         public int bookmarkId;
         public int historyId;
         public String url;
@@ -178,6 +197,10 @@ public class HomeListView extends ListView
             } else {
                 display = Combined.DISPLAY_NORMAL;
             }
+        }
+
+        public String getDisplayTitle() {
+            return TextUtils.isEmpty(title) ? url.replaceAll(REGEX_URL_TO_TITLE, "") : title;
         }
     }
 }

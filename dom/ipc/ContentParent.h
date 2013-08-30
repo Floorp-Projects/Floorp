@@ -25,7 +25,6 @@
 #include "nsNetUtil.h"
 #include "nsIPermissionManager.h"
 #include "nsIDOMGeoPositionCallback.h"
-#include "nsIMemoryReporter.h"
 #include "nsCOMArray.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
@@ -36,6 +35,7 @@
 class mozIApplication;
 class nsConsoleService;
 class nsIDOMBlob;
+class nsIMemoryReporter;
 
 namespace mozilla {
 
@@ -179,6 +179,8 @@ public:
 protected:
     void OnChannelConnected(int32_t pid) MOZ_OVERRIDE;
     virtual void ActorDestroy(ActorDestroyReason why);
+
+    bool ShouldContinueFromReplyTimeout() MOZ_OVERRIDE;
 
 private:
     static nsDataHashtable<nsStringHashKey, ContentParent*> *sAppContentParents;

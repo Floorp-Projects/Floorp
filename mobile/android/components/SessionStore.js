@@ -15,8 +15,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
   "@mozilla.org/xre/app-info;1", "nsICrashReporter");
 #endif
 
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 function dump(a) {
   Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(a);
@@ -66,17 +66,8 @@ SessionStore.prototype = {
   },
 
   _clearDisk: function ss_clearDisk() {
-    if (this._sessionFile.exists()) {
-      try {
-        this._sessionFile.remove(false);
-      } catch (ex) { dump(ex + '\n'); } // couldn't remove the file - what now?
-    }
-    if (this._sessionFileBackup.exists()) {
-      try {
-        this._sessionFileBackup.remove(false);
-      } catch (ex) { dump(ex + '\n'); } // couldn't remove the file - what now?
-    }
-
+    OS.File.remove(this._sessionFile.path);
+    OS.File.remove(this._sessionFileBackup.path);
   },
 
   _sendMessageToJava: function (aMsg) {
@@ -155,8 +146,11 @@ SessionStore.prototype = {
         // Move this session to sessionstore.bak so that:
         //   1) we can get "tabs from last time" from sessionstore.bak
         //   2) if sessionstore.js exists on next start, we know we crashed
-        if (this._sessionFile.exists())
-          this._sessionFile.moveTo(null, this._sessionFileBackup.leafName);
+        OS.File.move(this._sessionFile.path, this._sessionFileBackup.path).then(null, function onError(reason) {
+          if (!(reason instanceof OS.File.Error && reason.becauseNoSuchFile)) {
+            Cu.reportError("Error moving sessionstore files: " + reason);
+          }
+        });
 
         observerService.removeObserver(this, "domwindowopened");
         observerService.removeObserver(this, "domwindowclosed");
@@ -564,20 +558,10 @@ SessionStore.prototype = {
     if (!stateString.data)
       return;
 
-    // Initialize the file output stream.
-    let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-    ostream.init(aFile, 0x02 | 0x08 | 0x20, 0600, ostream.DEFER_OPEN);
-
-    // Obtain a converter to convert our data to a UTF-8 encoded input stream.
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-
     // Asynchronously copy the data to the file.
-    let istream = converter.convertToInputStream(aData);
-    NetUtil.asyncCopy(istream, ostream, function(rc) {
-      if (Components.isSuccessCode(rc)) {
-        Services.obs.notifyObservers(null, "sessionstore-state-write-complete", "");
-      }
+    let array = new TextEncoder().encode(aData);
+    OS.File.writeAtomic(aFile.path, array, { tmpPath: aFile.path + ".tmp" }).then(function onSuccess() {
+      Services.obs.notifyObservers(null, "sessionstore-state-write-complete", "");
     });
   },
 
@@ -1006,26 +990,17 @@ SessionStore.prototype = {
       // session will be read from sessionstore.bak (which is also used for
       // "tabs from last time").
       if (aSessionString == null) {
-        if (!this._sessionFileBackup.exists()) {
-          throw "Session file doesn't exist";
-        }
-
-        let channel = NetUtil.newChannel(this._sessionFileBackup);
-        channel.contentType = "application/json";
-        NetUtil.asyncFetch(channel, function(aStream, aResult) {
-          try {
-            if (!Components.isSuccessCode(aResult)) {
-              throw "Could not fetch session file";
-            }
-
-            let data = NetUtil.readInputStreamToString(aStream, aStream.available(), { charset : "UTF-8" }) || "";
-            aStream.close();
-            
-            restoreWindow(data);
-          } catch (e) {
-            Cu.reportError("SessionStore: " + e.message);
-            notifyObservers("fail");
+        Task.spawn(function() {
+          let bytes = yield OS.File.read(this._sessionFileBackup.path);
+          let data = JSON.parse(new TextDecoder().decode(bytes) || "");
+          restoreWindow(data);
+        }.bind(this)).then(null, function onError(reason) {
+          if (reason instanceof OS.File.Error && reason.becauseNoSuchFile) {
+            Cu.reportError("Session file doesn't exist");
+          } else {
+            Cu.reportError("SessionStore: " + reason.message);
           }
+          notifyObservers("fail");
         });
       } else {
         restoreWindow(aSessionString);

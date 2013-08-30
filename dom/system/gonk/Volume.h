@@ -47,6 +47,7 @@ public:
   bool MediaPresent() const           { return mMediaPresent; }
   bool CanBeShared() const            { return mCanBeShared; }
   bool IsSharingEnabled() const       { return mCanBeShared && mSharingEnabled; }
+  bool IsSharing() const              { return mIsSharing; }
 
   void SetSharingEnabled(bool aSharingEnabled);
 
@@ -71,6 +72,7 @@ private:
   void StartShare(VolumeResponseCallback* aCallback);
   void StartUnshare(VolumeResponseCallback* aCallback);
 
+  void SetIsSharing(bool aIsSharing);
   void SetState(STATE aNewState);
   void SetMediaPresent(bool aMediaPresent);
   void SetMountPoint(const nsCSubstring& aMountPoint);
@@ -90,6 +92,7 @@ private:
   bool              mMountLocked;
   bool              mSharingEnabled;
   bool              mCanBeShared;
+  bool              mIsSharing;
 
   static EventObserverList mEventObserverList;
 };

@@ -1,7 +1,5 @@
 function numClosedTabs()
-  Cc["@mozilla.org/browser/sessionstore;1"].
-    getService(Ci.nsISessionStore).
-    getNumberOfTabsClosedLast(window);
+  SessionStore.getNumberOfTabsClosedLast(window);
 
 var originalTab;
 var tab1Loaded = false;
@@ -42,7 +40,9 @@ function verifyUndoMultipleClose() {
 function test() {
   waitForExplicitFinish();
 
+  Services.prefs.setBoolPref("browser.tabs.animate", false);
   registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("browser.tabs.animate");
     originalTab.linkedBrowser.loadURI("about:blank");
     originalTab = null;
   });

@@ -29,7 +29,8 @@ NS_GetComplexLineBreaks(const PRUnichar* aText, uint32_t aLength,
     return;
 
   do {
-    result = ScriptItemize(aText, aLength, items.Length(), NULL, NULL, items.Elements(), &outItems);
+    result = ScriptItemize(aText, aLength, items.Length(), nullptr, nullptr,
+                           items.Elements(), &outItems);
 
     if (result == E_OUTOFMEMORY) {
       if (!items.AppendElements(items.Length()))

@@ -169,9 +169,10 @@ function goUpdateConsoleCommands() {
 
       <hbox class="jsterm-input-container" style="direction:ltr">
         <stack class="jsterm-stack-node" flex="1">
-          <textbox class="jsterm-complete-node" multiline="true" rows="1"
-                   tabindex="-1"/>
-          <textbox class="jsterm-input-node" multiline="true" rows="1" tabindex="0"/>
+          <textbox class="jsterm-complete-node devtools-monospace"
+                   multiline="true" rows="1" tabindex="-1"/>
+          <textbox class="jsterm-input-node devtools-monospace"
+                   multiline="true" rows="1" tabindex="0"/>
         </stack>
       </hbox>
     </vbox>

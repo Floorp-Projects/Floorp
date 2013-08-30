@@ -121,7 +121,7 @@ MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSourc
       file = "WebRTC.log";
     }
 
-    LOG(("Logging webrtc to %s level %d", __FUNCTION__, file, logs->level));
+    LOG(("%s Logging webrtc to %s level %d", __FUNCTION__, file, logs->level));
 
     mVideoEngine->SetTraceFilter(logs->level);
     mVideoEngine->SetTraceFile(file);

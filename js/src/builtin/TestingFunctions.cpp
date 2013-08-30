@@ -896,7 +896,7 @@ static bool
 EnableOsiPointRegisterChecks(JSContext *, unsigned, jsval *vp)
 {
 #ifdef CHECK_OSIPOINT_REGISTERS
-    ion::js_IonOptions.checkOsiPointRegisters = true;
+    jit::js_IonOptions.checkOsiPointRegisters = true;
 #endif
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
@@ -933,14 +933,12 @@ static const char *ObjectMetadataPropertyName = "__objectMetadataFunction__";
 static bool
 ShellObjectMetadataCallback(JSContext *cx, JSObject **pmetadata)
 {
-    Value thisv = UndefinedValue();
-
     RootedValue fun(cx);
     if (!JS_GetProperty(cx, cx->global(), ObjectMetadataPropertyName, &fun))
         return false;
 
     RootedValue rval(cx);
-    if (!Invoke(cx, thisv, fun, 0, NULL, &rval))
+    if (!Invoke(cx, UndefinedValue(), fun, 0, NULL, &rval))
         return false;
 
     if (rval.isObject())
@@ -1004,6 +1002,53 @@ js::testingFunc_bailout(JSContext *cx, unsigned argc, jsval *vp)
 {
     // NOP when not in IonMonkey
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return true;
+}
+
+static bool
+SetJitCompilerOption(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject callee(cx, &args.callee());
+
+    if (args.length() != 2) {
+        ReportUsageError(cx, callee, "Wrong number of arguments.");
+        return false;
+    }
+
+    if (!args[0].isString()) {
+        ReportUsageError(cx, callee, "First argument must be a String.");
+        return false;
+    }
+
+    if (!args[1].isInt32()) {
+        ReportUsageError(cx, callee, "Second argument must be an Int32.");
+        return false;
+    }
+
+    JSFlatString *strArg = JS_FlattenString(cx, args[0].toString());
+
+#define JIT_COMPILER_MATCH(key, string)                 \
+    else if (JS_FlatStringEqualsAscii(strArg, string))  \
+        opt = JSJITCOMPILER_ ## key;
+
+    JSJitCompilerOption opt = JSJITCOMPILER_NOT_AN_OPTION;
+    if (false) {}
+    JIT_COMPILER_OPTIONS(JIT_COMPILER_MATCH);
+#undef JIT_COMPILER_MATCH
+
+    if (opt == JSJITCOMPILER_NOT_AN_OPTION) {
+        ReportUsageError(cx, callee, "First argument does not name a valid option (see jsapi.h).");
+        return false;
+    }
+
+    int32_t number = args[1].toInt32();
+    if (number < 0)
+        number = -1;
+
+    JS_SetGlobalJitCompilerOption(cx, opt, uint32_t(number));
+
+    args.rval().setBoolean(true);
     return true;
 }
 
@@ -1193,6 +1238,10 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("bailout", testingFunc_bailout, 0, 0,
 "bailout()",
 "  Force a bailout out of ionmonkey (if running in ionmonkey)."),
+
+    JS_FN_HELP("setJitCompilerOption", SetJitCompilerOption, 2, 0,
+"setCompilerOption(<option>, <number>)",
+"  Set a compiler option indexed in JSCompileOption enum to a number.\n"),
 
     JS_FS_HELP_END
 };

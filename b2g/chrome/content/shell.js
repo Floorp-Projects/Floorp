@@ -186,7 +186,7 @@ var shell = {
 
   get contentBrowser() {
     delete this.contentBrowser;
-    return this.contentBrowser = document.getElementById('homescreen');
+    return this.contentBrowser = document.getElementById('systemapp');
   },
 
   get homeURL() {
@@ -269,25 +269,25 @@ var shell = {
     }
 
     let manifestURL = this.manifestURL;
-    // <html:iframe id="homescreen"
+    // <html:iframe id="systemapp"
     //              mozbrowser="true" allowfullscreen="true"
-    //              style="overflow: hidden; -moz-box-flex: 1; border: none;"
+    //              style="overflow: hidden; height: 100%; width: 100%; border: none;"
     //              src="data:text/html;charset=utf-8,%3C!DOCTYPE html>%3Cbody style='background:black;'>"/>
-    let browserFrame =
+    let systemAppFrame =
       document.createElementNS('http://www.w3.org/1999/xhtml', 'html:iframe');
-    browserFrame.setAttribute('id', 'homescreen');
-    browserFrame.setAttribute('mozbrowser', 'true');
-    browserFrame.setAttribute('mozapp', manifestURL);
-    browserFrame.setAttribute('allowfullscreen', 'true');
-    browserFrame.setAttribute('style', "overflow: hidden; -moz-box-flex: 1; border: none;");
-    browserFrame.setAttribute('src', "data:text/html;charset=utf-8,%3C!DOCTYPE html>%3Cbody style='background:black;");
-    document.getElementById('shell').appendChild(browserFrame);
+    systemAppFrame.setAttribute('id', 'systemapp');
+    systemAppFrame.setAttribute('mozbrowser', 'true');
+    systemAppFrame.setAttribute('mozapp', manifestURL);
+    systemAppFrame.setAttribute('allowfullscreen', 'true');
+    systemAppFrame.setAttribute('style', "overflow: hidden; height: 100%; width: 100%; border: none;");
+    systemAppFrame.setAttribute('src', "data:text/html;charset=utf-8,%3C!DOCTYPE html>%3Cbody style='background:black;");
+    document.getElementById('container').appendChild(systemAppFrame);
 
-    browserFrame.contentWindow
-                .QueryInterface(Ci.nsIInterfaceRequestor)
-                .getInterface(Ci.nsIWebNavigation)
-                .sessionHistory = Cc["@mozilla.org/browser/shistory;1"]
-                                    .createInstance(Ci.nsISHistory);
+    systemAppFrame.contentWindow
+                  .QueryInterface(Ci.nsIInterfaceRequestor)
+                  .getInterface(Ci.nsIWebNavigation)
+                  .sessionHistory = Cc["@mozilla.org/browser/shistory;1"]
+                                      .createInstance(Ci.nsISHistory);
 
     // Capture all key events so we can filter out hardware buttons
     // And send them to Gaia via mozChromeEvents.
@@ -462,35 +462,21 @@ var shell = {
         }
         break;
       case 'mozbrowserloadstart':
-        if (content.document.location == 'about:blank')
+        if (content.document.location == 'about:blank') {
+          this.contentBrowser.addEventListener('mozbrowserlocationchange', this, true);
           return;
+        }
 
-        this.contentBrowser.removeEventListener('mozbrowserloadstart', this, true);
-
-        this.reportCrash(true);
-
-        Cu.import('resource://gre/modules/Webapps.jsm');
-        DOMApplicationRegistry.allAppsLaunchable = true;
-
-        this.sendEvent(window, 'ContentStart');
-
-        content.addEventListener('load', function shell_homeLoaded() {
-          content.removeEventListener('load', shell_homeLoaded);
-          shell.isHomeLoaded = true;
-
-#ifdef MOZ_WIDGET_GONK
-          libcutils.property_set('sys.boot_completed', '1');
-#endif
-
-          Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
-
-          if ('pendingChromeEvents' in shell) {
-            shell.pendingChromeEvents.forEach((shell.sendChromeEvent).bind(shell));
-          }
-          delete shell.pendingChromeEvents;
-        });
-
+        this.notifyContentStart();
         break;
+      case 'mozbrowserlocationchange':
+        if (content.document.location == 'about:blank') {
+          return;
+        }
+
+        this.notifyContentStart();
+       break;
+
       case 'MozApplicationManifest':
         try {
           if (!Services.prefs.getBoolPref('browser.cache.offline.enable'))
@@ -592,6 +578,36 @@ var shell = {
         sender.sendAsyncMessage(activity.response, { success: false });
       }
     }
+  },
+
+  notifyContentStart: function shell_notifyContentStart() {
+    this.contentBrowser.removeEventListener('mozbrowserloadstart', this, true);
+    this.contentBrowser.removeEventListener('mozbrowserlocationchange', this, true);
+
+    let content = this.contentBrowser.contentWindow;
+
+    this.reportCrash(true);
+
+    Cu.import('resource://gre/modules/Webapps.jsm');
+    DOMApplicationRegistry.allAppsLaunchable = true;
+
+    this.sendEvent(window, 'ContentStart');
+
+    content.addEventListener('load', function shell_homeLoaded() {
+      content.removeEventListener('load', shell_homeLoaded);
+      shell.isHomeLoaded = true;
+
+#ifdef MOZ_WIDGET_GONK
+      libcutils.property_set('sys.boot_completed', '1');
+#endif
+
+      Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
+
+      if ('pendingChromeEvents' in shell) {
+        shell.pendingChromeEvents.forEach((shell.sendChromeEvent).bind(shell));
+      }
+      delete shell.pendingChromeEvents;
+    });
   }
 };
 
@@ -743,7 +759,7 @@ var AlertsHelper = {
     this._listeners[uid] = listener;
 
     let app = DOMApplicationRegistry.getAppByManifestURL(listener.manifestURL);
-    DOMApplicationRegistry.getManifestFor(app.origin, function(manifest) {
+    DOMApplicationRegistry.getManifestFor(app.manifestURL, function(manifest) {
       let helper = new ManifestHelper(manifest, app.origin);
       let getNotificationURLFor = function(messages) {
         if (!messages)
@@ -757,6 +773,9 @@ var AlertsHelper = {
             return helper.resolveFromOrigin(message["notification"]);
           }
         }
+
+        // No message found...
+        return null;
       }
 
       listener.target = getNotificationURLFor(manifest.messages);
@@ -797,7 +816,7 @@ var AlertsHelper = {
     // If we have a manifest URL, get the icon and title from the manifest
     // to prevent spoofing.
     let app = DOMApplicationRegistry.getAppByManifestURL(manifestUrl);
-    DOMApplicationRegistry.getManifestFor(app.origin, function(aManifest) {
+    DOMApplicationRegistry.getManifestFor(manifestUrl, function(aManifest) {
       let helper = new ManifestHelper(aManifest, app.origin);
       send(helper.name, helper.iconURLForSize(128));
     });
@@ -833,7 +852,7 @@ var AlertsHelper = {
     if (!aMessage.target.assertAppHasPermission("desktop-notification")) {
       Cu.reportError("Desktop-notification message " + aMessage.name +
                      " from a content process with no desktop-notification privileges.");
-      return null;
+      return;
     }
 
     let data = aMessage.data;
@@ -890,7 +909,7 @@ var WebappsHelper = {
 
     switch(topic) {
       case "webapps-launch":
-        DOMApplicationRegistry.getManifestFor(json.origin, function(aManifest) {
+        DOMApplicationRegistry.getManifestFor(json.manifestURL, function(aManifest) {
           if (!aManifest)
             return;
 
@@ -1219,4 +1238,51 @@ Services.obs.addObserver(function(aSubject, aTopic, aData) {
   let size = Math.floor(stats.totalBytes / 1024) - 1024;
   Services.prefs.setIntPref("browser.cache.disk.capacity", size);
 }) ()
+#endif
+
+#ifdef MOZ_WIDGET_GONK
+let SensorsListener = {
+  sensorsListenerDevices: ['crespo'],
+  device: libcutils.property_get("ro.product.device"),
+
+  deviceNeedsWorkaround: function SensorsListener_deviceNeedsWorkaround() {
+    return (this.sensorsListenerDevices.indexOf(this.device) != -1);
+  },
+
+  handleEvent: function SensorsListener_handleEvent(evt) {
+    switch(evt.type) {
+      case 'devicemotion':
+        // Listener that does nothing, we need this to have the sensor being
+        // able to report correct values, as explained in bug 753245, comment 6
+        // and in bug 871916
+        break;
+
+      default:
+        break;
+    }
+  },
+
+  observe: function SensorsListener_observe(subject, topic, data) {
+    // We remove the listener when the screen is off, otherwise sensor will
+    // continue to bother us with data and we won't be able to get the
+    // system into suspend state, thus draining battery.
+    if (data === 'on') {
+      window.addEventListener('devicemotion', this);
+    } else {
+      window.removeEventListener('devicemotion', this);
+    }
+  },
+
+  init: function SensorsListener_init() {
+    if (this.deviceNeedsWorkaround()) {
+      // On boot, enable the listener, screen will be on.
+      window.addEventListener('devicemotion', this);
+
+      // Then listen for further screen state changes
+      Services.obs.addObserver(this, 'screen-state-changed', false);
+    }
+  }
+}
+
+SensorsListener.init();
 #endif

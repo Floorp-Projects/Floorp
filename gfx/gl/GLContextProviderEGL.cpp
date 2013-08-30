@@ -122,7 +122,7 @@ public:
 
 using namespace mozilla::gfx;
 
-#if defined(MOZ_PLATFORM_MAEMO) || defined(MOZ_WIDGET_GONK)
+#if defined(MOZ_WIDGET_GONK)
 static bool gUseBackingSurface = true;
 #else
 static bool gUseBackingSurface = false;
@@ -1990,9 +1990,7 @@ GLContextEGL::CreateEGLPixmapOffscreenContext(const gfxIntSize& size)
     return glContext.forget();
 }
 
-// Under EGL, if we're under X11, then we have to create a Pixmap
-// because Maemo's EGL implementation doesn't support pbuffers at all
-// for some reason.  On Android, pbuffers are supported fine, though
+// Under EGL, on Android, pbuffers are supported fine, though
 // often without the ability to texture from them directly.
 already_AddRefed<GLContext>
 GLContextProviderEGL::CreateOffscreen(const gfxIntSize& size,

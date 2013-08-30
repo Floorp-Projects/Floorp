@@ -11,6 +11,8 @@
 
 <!-- C-style format strings. -->
 <!ENTITY formatS "&#037;s">
+<!ENTITY formatS1 "&#037;1&#036;s">
+<!ENTITY formatS2 "&#037;2&#036;s">
 <!ENTITY formatD "&#037;d">
 ]>
 
@@ -127,8 +129,7 @@
   <string name="pref_reflow_on_zoom">&pref_reflow_on_zoom4;</string>
   <string name="pref_restore">&pref_restore;</string>
   <string name="pref_restore_always">&pref_restore_always;</string>
-  <string name="pref_restore_crash">&pref_restore_crash;</string>
-  <string name="pref_restore_never">&pref_restore_never;</string>
+  <string name="pref_restore_quit">&pref_restore_quit;</string>
   <string name="pref_show_product_announcements">&pref_show_product_announcements;</string>
   <string name="pref_sync">&pref_sync;</string>
   <string name="pref_search_suggestions">&pref_search_suggestions;</string>
@@ -261,6 +262,7 @@
   <string name="home_most_visited_empty">&home_most_visited_empty;</string>
   <string name="home_reading_list_empty">&home_reading_list_empty;</string>
   <string name="home_reading_list_hint">&home_reading_list_hint;</string>
+  <string name="home_reading_list_hint_accessible">&home_reading_list_hint_accessible;</string>
   <string name="pin_bookmark_dialog_hint">&pin_bookmark_dialog_hint;</string>
 
   <string name="filepicker_title">&filepicker_title;</string>
@@ -323,6 +325,8 @@
 
   <!-- Search suggestions opt-in -->
   <string name="suggestions_prompt">&suggestions_prompt2;</string>
+
+  <string name="suggestion_for_engine">&suggestion_for_engine;</string>
 
   <!-- Set Image Notifications -->
   <string name="set_image_fail">&set_image_fail;</string>

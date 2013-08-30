@@ -20,7 +20,7 @@ interface nsIWebProgressListener;
  * The nsIDocShellFile    
  */
 
-[scriptable, uuid(1b373597-6132-49f7-940e-6ff62fca5d35)]
+[scriptable, uuid(564a3276-6228-401e-9b5c-d82cb382a60f)]
 interface nsIContentViewerFile : nsISupports
 {
   readonly attribute boolean printable;
@@ -28,9 +28,4 @@ interface nsIContentViewerFile : nsISupports
   [noscript] void print(in boolean aSilent,
                         in FILE    aDebugFile, 
                         in nsIPrintSettings aPrintSettings);
-
-  [noscript] void printWithParent(in nsIDOMWindow aParentWin,
-                                  in nsIPrintSettings aThePrintSettings,
-                                  in nsIWebProgressListener aWPListener);
-
 };

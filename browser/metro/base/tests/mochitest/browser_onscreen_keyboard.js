@@ -14,13 +14,13 @@ gTests.push({
     // http://msdn.microsoft.com/en-us/library/windows/apps/hh465404.aspx#user-driven_invocation
     //
     // Instead, we will use this mock object to simulate keyboard changes.
-    let originalUtils = window.MetroUtils;
-    window.MetroUtils = {
+    let originalUtils = Services.metro;
+    Services.metro = {
       keyboardHeight: 0,
       keyboardVisible: false
     };
     registerCleanupFunction(function() {
-      window.MetroUtils = originalUtils;
+      Services.metro = originalUtils;
     });
 
     let tab = yield addTab(chromeRoot + "browser_onscreen_keyboard.html");
@@ -37,8 +37,8 @@ gTests.push({
     SelectionHelperUI.attachToCaret(tab.browser, rect0.left + 5, rect0.top + 5);
 
     // "Show" the keyboard.
-    MetroUtils.keyboardHeight = 100;
-    MetroUtils.keyboardVisible = true;
+    Services.metro.keyboardHeight = 100;
+    Services.metro.keyboardVisible = true;
     Services.obs.notifyObservers(null, "metro_softkeyboard_shown", null);
 
     let event = yield waitForEvent(window, "MozDeckOffsetChanged");
@@ -49,8 +49,8 @@ gTests.push({
     is(rect1browserY, rect0browserY + 100, "text field moves up by 100px");
 
     // "Hide" the keyboard.
-    MetroUtils.keyboardHeight = 0;
-    MetroUtils.keyboardVisible = false;
+    Services.metro.keyboardHeight = 0;
+    Services.metro.keyboardVisible = false;
     Services.obs.notifyObservers(null, "metro_softkeyboard_hidden", null);
 
     yield waitForEvent(window, "MozDeckOffsetChanged");

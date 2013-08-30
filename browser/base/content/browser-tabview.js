@@ -67,15 +67,13 @@ let TabView = {
 
     if (this.firstUseExperienced) {
       // ___ visibility
-      let sessionstore =
-        Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
-      let data = sessionstore.getWindowValue(window, this.VISIBILITY_IDENTIFIER);
+      let data = SessionStore.getWindowValue(window, this.VISIBILITY_IDENTIFIER);
       if (data && data == "true") {
         this.show();
       } else {
         try {
-          data = sessionstore.getWindowValue(window, this.GROUPS_IDENTIFIER);
+          data = SessionStore.getWindowValue(window, this.GROUPS_IDENTIFIER);
           if (data) {
             let parsedData = JSON.parse(data);
             this.updateGroupNumberBroadcaster(parsedData.totalNumber || 1);

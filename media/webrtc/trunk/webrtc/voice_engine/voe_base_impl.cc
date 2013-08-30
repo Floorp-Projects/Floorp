@@ -8,21 +8,21 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "voe_base_impl.h"
+#include "webrtc/voice_engine/voe_base_impl.h"
 
-#include "audio_coding_module.h"
-#include "audio_processing.h"
-#include "channel.h"
-#include "critical_section_wrapper.h"
-#include "file_wrapper.h"
-#include "modules/audio_device/audio_device_impl.h"
-#include "output_mixer.h"
-#include "signal_processing_library.h"
-#include "trace.h"
-#include "transmit_mixer.h"
-#include "utility.h"
-#include "voe_errors.h"
-#include "voice_engine_impl.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
+#include "webrtc/modules/audio_device/audio_device_impl.h"
+#include "webrtc/modules/audio_processing/include/audio_processing.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/file_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/voice_engine/channel.h"
+#include "webrtc/voice_engine/include/voe_errors.h"
+#include "webrtc/voice_engine/output_mixer.h"
+#include "webrtc/voice_engine/transmit_mixer.h"
+#include "webrtc/voice_engine/utility.h"
+#include "webrtc/voice_engine/voice_engine_impl.h"
 
 #if (defined(_WIN32) && defined(_DLL) && (_MSC_VER == 1400))
 // Fix for VS 2005 MD/MDd link problem
@@ -65,7 +65,7 @@ VoEBaseImpl::~VoEBaseImpl()
     delete &_callbackCritSect;
 }
 
-void VoEBaseImpl::OnErrorIsReported(const ErrorCode error)
+void VoEBaseImpl::OnErrorIsReported(ErrorCode error)
 {
     CriticalSectionScoped cs(&_callbackCritSect);
     if (_voiceEngineObserver)
@@ -94,7 +94,7 @@ void VoEBaseImpl::OnErrorIsReported(const ErrorCode error)
     }
 }
 
-void VoEBaseImpl::OnWarningIsReported(const WarningCode warning)
+void VoEBaseImpl::OnWarningIsReported(WarningCode warning)
 {
     CriticalSectionScoped cs(&_callbackCritSect);
     if (_voiceEngineObserver)
@@ -126,13 +126,14 @@ void VoEBaseImpl::OnWarningIsReported(const WarningCode warning)
 
 int32_t VoEBaseImpl::RecordedDataIsAvailable(
         const void* audioSamples,
-        const uint32_t nSamples,
-        const uint8_t nBytesPerSample,
-        const uint8_t nChannels,
-        const uint32_t samplesPerSec,
-        const uint32_t totalDelayMS,
-        const int32_t clockDrift,
-        const uint32_t currentMicLevel,
+        uint32_t nSamples,
+        uint8_t nBytesPerSample,
+        uint8_t nChannels,
+        uint32_t samplesPerSec,
+        uint32_t totalDelayMS,
+        int32_t clockDrift,
+        uint32_t currentMicLevel,
+        bool keyPressed,
         uint32_t& newMicLevel)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_shared->instance_id(), -1),
@@ -195,7 +196,7 @@ int32_t VoEBaseImpl::RecordedDataIsAvailable(
     // (APM, mix with file, record to file, mute, etc.)
     _shared->transmit_mixer()->PrepareDemux(audioSamples, nSamples, nChannels,
         samplesPerSec, static_cast<uint16_t>(totalDelayMS), clockDrift,
-        currentVoEMicLevel);
+        currentVoEMicLevel, keyPressed);
 
     // Copy the audio frame to each sending channel and perform
     // channel-dependent operations (file mixing, mute, etc.) to prepare
@@ -231,10 +232,10 @@ int32_t VoEBaseImpl::RecordedDataIsAvailable(
 }
 
 int32_t VoEBaseImpl::NeedMorePlayData(
-        const uint32_t nSamples,
-        const uint8_t nBytesPerSample,
-        const uint8_t nChannels,
-        const uint32_t samplesPerSec,
+        uint32_t nSamples,
+        uint8_t nBytesPerSample,
+        uint8_t nChannels,
+        uint32_t samplesPerSec,
         void* audioSamples,
         uint32_t& nSamplesOut)
 {

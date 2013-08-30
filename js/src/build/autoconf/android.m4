@@ -297,7 +297,7 @@ case "$target" in
     # The build tools got moved around to different directories in
     # SDK Tools r22.  Try to locate them.
     android_build_tools=""
-    for suffix in 18.0.1 18.0.0 17.0.0 android-4.2.2; do
+    for suffix in android-4.3 18.0.1 18.0.0 17.0.0 android-4.2.2; do
         tools_directory="$android_sdk/../../build-tools/$suffix"
         if test -d "$tools_directory" ; then
             android_build_tools="$tools_directory"

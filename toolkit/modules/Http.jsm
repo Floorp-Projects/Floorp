@@ -34,14 +34,12 @@ function httpRequest(aUrl, aOptions) {
   let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
               .createInstance(Ci.nsIXMLHttpRequest);
   xhr.mozBackgroundRequest = true; // no error dialogs
-  let hasPostData = "postData" in aOptions && aOptions.postData;
-  xhr.open("method" in aOptions ? aOptions.method :
-           (hasPostData ? "POST" : "GET"), aUrl);
+  xhr.open(aOptions.method || (aOptions.postData ? "POST" : "GET"), aUrl);
   xhr.channel.loadFlags = Ci.nsIChannel.LOAD_ANONYMOUS | // don't send cookies
                           Ci.nsIChannel.LOAD_BYPASS_CACHE |
                           Ci.nsIChannel.INHIBIT_CACHING;
   xhr.onerror = function(aProgressEvent) {
-    if ("onError" in aOptions) {
+    if (aOptions.onError) {
       // adapted from toolkit/mozapps/extensions/nsBlocklistService.js
       let request = aProgressEvent.target;
       let status;
@@ -58,10 +56,10 @@ function httpRequest(aUrl, aOptions) {
       aOptions.onError(statusText, null, this);
     }
   };
-  xhr.onload = function (aRequest) {
+  xhr.onload = function(aRequest) {
     try {
       let target = aRequest.target;
-      if ("logger" in aOptions)
+      if (aOptions.logger)
         aOptions.logger.debug("Received response: " + target.responseText);
       if (target.status < 200 || target.status >= 300) {
         let errorText = target.responseText;
@@ -69,23 +67,23 @@ function httpRequest(aUrl, aOptions) {
           errorText = target.statusText;
         throw target.status + " - " + errorText;
       }
-      if ("onLoad" in aOptions)
+      if (aOptions.onLoad)
         aOptions.onLoad(target.responseText, this);
     } catch (e) {
       Cu.reportError(e);
-      if ("onError" in aOptions)
+      if (aOptions.onError)
         aOptions.onError(e, aRequest.target.responseText, this);
     }
   };
 
-  if ("headers" in aOptions) {
+  if (aOptions.headers) {
     aOptions.headers.forEach(function(header) {
       xhr.setRequestHeader(header[0], header[1]);
     });
   }
 
   // Handle adding postData as defined above.
-  let POSTData = hasPostData ? aOptions.postData : "";
+  let POSTData = aOptions.postData || "";
   if (Array.isArray(POSTData)) {
     xhr.setRequestHeader("Content-Type",
                          "application/x-www-form-urlencoded; charset=utf-8");
@@ -93,7 +91,7 @@ function httpRequest(aUrl, aOptions) {
                        .join("&");
   }
 
-  if ("logger" in aOptions) {
+  if (aOptions.logger) {
     aOptions.logger.log("sending request to " + aUrl + " (POSTData = " +
                         POSTData + ")");
   }

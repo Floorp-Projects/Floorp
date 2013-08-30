@@ -208,11 +208,16 @@ public:
     virtual bool RecvFileSystemUpdate(const nsString& aFsName,
                                       const nsString& aVolumeName,
                                       const int32_t& aState,
-                                      const int32_t& aMountGeneration);
+                                      const int32_t& aMountGeneration,
+                                      const bool& aIsMediaPresent,
+                                      const bool& aIsSharing);
 
     virtual bool RecvNotifyProcessPriorityChanged(const hal::ProcessPriority& aPriority);
     virtual bool RecvMinimizeMemoryUsage();
     virtual bool RecvCancelMinimizeMemoryUsage();
+
+    virtual bool RecvLoadAndRegisterSheet(const URIParams& aURI, const uint32_t& aType);
+    virtual bool RecvUnregisterSheet(const URIParams& aURI, const uint32_t& aType);
 
 #ifdef ANDROID
     gfxIntSize GetScreenSize() { return mScreenSize; }

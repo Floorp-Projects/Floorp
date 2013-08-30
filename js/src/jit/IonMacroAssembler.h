@@ -27,7 +27,7 @@
 #include "vm/TypedArrayObject.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 // The public entrypoint for emitting assembly. Note that a MacroAssembler can
 // use cx->lifoAlloc, so take care not to interleave masm use with other
@@ -104,7 +104,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         sps_(NULL)
     {
         constructRoot(cx);
-        ionContext_.construct(cx, (js::ion::TempAllocator *)NULL);
+        ionContext_.construct(cx, (js::jit::TempAllocator *)NULL);
         alloc_.construct(cx);
 #ifdef JS_CPU_ARM
         initWithAllocator();
@@ -561,17 +561,17 @@ class MacroAssembler : public MacroAssemblerSpecific
     template<typename S, typename T>
     void storeToTypedIntArray(int arrayType, const S &value, const T &dest) {
         switch (arrayType) {
-          case TypedArrayObject::TYPE_INT8:
-          case TypedArrayObject::TYPE_UINT8:
-          case TypedArrayObject::TYPE_UINT8_CLAMPED:
+          case ScalarTypeRepresentation::TYPE_INT8:
+          case ScalarTypeRepresentation::TYPE_UINT8:
+          case ScalarTypeRepresentation::TYPE_UINT8_CLAMPED:
             store8(value, dest);
             break;
-          case TypedArrayObject::TYPE_INT16:
-          case TypedArrayObject::TYPE_UINT16:
+          case ScalarTypeRepresentation::TYPE_INT16:
+          case ScalarTypeRepresentation::TYPE_UINT16:
             store16(value, dest);
             break;
-          case TypedArrayObject::TYPE_INT32:
-          case TypedArrayObject::TYPE_UINT32:
+          case ScalarTypeRepresentation::TYPE_INT32:
+          case ScalarTypeRepresentation::TYPE_UINT32:
             store32(value, dest);
             break;
           default:
@@ -586,11 +586,11 @@ class MacroAssembler : public MacroAssemblerSpecific
         canonicalizeDouble(value);
 #endif
         switch (arrayType) {
-          case TypedArrayObject::TYPE_FLOAT32:
+          case ScalarTypeRepresentation::TYPE_FLOAT32:
             convertDoubleToFloat(value, ScratchFloatReg);
             storeFloat(ScratchFloatReg, dest);
             break;
-          case TypedArrayObject::TYPE_FLOAT64:
+          case ScalarTypeRepresentation::TYPE_FLOAT64:
             storeDouble(value, dest);
             break;
           default:
@@ -1051,7 +1051,7 @@ JSOpToCondition(JSOp op, bool isSigned)
     }
 }
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif // JS_ION

@@ -16,7 +16,7 @@
 #define WEBRTC_SPL_SPL_INL_H_
 
 #ifdef WEBRTC_ARCH_ARM_V7
-#include "spl_inl_armv7.h"
+#include "webrtc/common_audio/signal_processing/include/spl_inl_armv7.h"
 #else
 
 static __inline int16_t WebRtcSpl_SatW32ToW16(int32_t value32) {

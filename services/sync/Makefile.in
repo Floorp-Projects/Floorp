@@ -45,7 +45,6 @@ sync_modules := \
 # copied as-is.
 sync_engine_modules := \
   addons.js \
-  apps.js \
   bookmarks.js \
   clients.js \
   forms.js \

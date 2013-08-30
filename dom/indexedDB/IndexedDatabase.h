@@ -10,7 +10,7 @@
 #include "nsIProgrammingLanguage.h"
 
 #include "mozilla/Attributes.h"
-#include "jsapi.h"
+#include "js/StructuredClone.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"

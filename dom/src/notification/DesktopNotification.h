@@ -5,8 +5,6 @@
 #ifndef mozilla_dom_DesktopNotification_h
 #define mozilla_dom_DesktopNotification_h
 
-#include "PCOMContentPermissionRequestChild.h"
-
 #include "nsIPrincipal.h"
 #include "nsIAlertsService.h"
 #include "nsIContentPermissionPrompt.h"
@@ -84,6 +82,7 @@ private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
+class DesktopNotificationRequest;
 
 class DesktopNotification MOZ_FINAL : public nsDOMEventTargetHelper
 {
@@ -143,48 +142,6 @@ protected:
   bool mShowHasBeenCalled;
 
   static uint32_t sCount;
-};
-
-/*
- * Simple Request
- */
-class DesktopNotificationRequest : public nsIContentPermissionRequest,
-                                   public nsRunnable,
-                                   public PCOMContentPermissionRequestChild
-
-{
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICONTENTPERMISSIONREQUEST
-
-  DesktopNotificationRequest(DesktopNotification* notification)
-    : mDesktopNotification(notification) {}
-
-  NS_IMETHOD Run() MOZ_OVERRIDE
-  {
-    nsCOMPtr<nsIContentPermissionPrompt> prompt =
-      do_CreateInstance(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
-    if (prompt) {
-      prompt->Prompt(this);
-    }
-    return NS_OK;
-  }
-
-  ~DesktopNotificationRequest()
-  {
-  }
-
- virtual bool Recv__delete__(const bool& allow) MOZ_OVERRIDE
- {
-   if (allow)
-     (void) Allow();
-   else
-     (void) Cancel();
-   return true;
- }
- virtual void IPDLRelease() MOZ_OVERRIDE { Release(); }
-
-  nsRefPtr<DesktopNotification> mDesktopNotification;
 };
 
 class AlertServiceObserver: public nsIObserver

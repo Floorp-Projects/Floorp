@@ -181,14 +181,16 @@ void
 js::MarkAtoms(JSTracer *trc)
 {
     JSRuntime *rt = trc->runtime;
-    for (AtomSet::Range r = rt->atoms().all(); !r.empty(); r.popFront()) {
-        AtomStateEntry entry = r.front();
+    for (AtomSet::Enum e(rt->atoms()); !e.empty(); e.popFront()) {
+        const AtomStateEntry &entry = e.front();
         if (!entry.isTagged())
             continue;
 
-        JSAtom *tmp = entry.asPtr();
-        MarkStringRoot(trc, &tmp, "interned_atom");
-        JS_ASSERT(tmp == entry.asPtr());
+        JSAtom *atom = entry.asPtr();
+        bool tagged = entry.isTagged();
+        MarkStringRoot(trc, &atom, "interned_atom");
+        if (entry.asPtr() != atom)
+            e.rekeyFront(AtomHasher::Lookup(atom), AtomStateEntry(atom, tagged));
     }
 }
 

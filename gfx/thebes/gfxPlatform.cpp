@@ -876,7 +876,7 @@ gfxPlatform::CreateDrawTargetForBackend(BackendType aBackend, const IntSize& aSi
 }
 
 RefPtr<DrawTarget>
-gfxPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
+gfxPlatform::CreateOffscreenCanvasDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
 {
   NS_ASSERTION(mPreferredCanvasBackend, "No backend.");
   RefPtr<DrawTarget> target = CreateDrawTargetForBackend(mPreferredCanvasBackend, aSize, aFormat);
@@ -888,6 +888,12 @@ gfxPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aForm
   return CreateDrawTargetForBackend(mFallbackCanvasBackend, aSize, aFormat);
 }
 
+RefPtr<DrawTarget>
+gfxPlatform::CreateOffscreenContentDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
+{
+  NS_ASSERTION(mContentBackend, "No backend.");
+  return CreateDrawTargetForBackend(mContentBackend, aSize, aFormat);
+}
 
 RefPtr<DrawTarget>
 gfxPlatform::CreateDrawTargetForData(unsigned char* aData, const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat)
@@ -1358,8 +1364,9 @@ gfxPlatform::InitBackendPrefs(uint32_t aCanvasBitmask, uint32_t aContentBitmask)
       mPreferredCanvasBackend = BACKEND_CAIRO;
     }
     mFallbackCanvasBackend = GetCanvasBackendPref(aCanvasBitmask & ~(1 << mPreferredCanvasBackend));
-    mContentBackend = GetContentBackendPref(aContentBitmask);
+
     mContentBackendBitmask = aContentBitmask;
+    mContentBackend = GetContentBackendPref(mContentBackendBitmask);
 }
 
 /* static */ BackendType
@@ -1369,16 +1376,17 @@ gfxPlatform::GetCanvasBackendPref(uint32_t aBackendBitmask)
 }
 
 /* static */ BackendType
-gfxPlatform::GetContentBackendPref(uint32_t aBackendBitmask)
+gfxPlatform::GetContentBackendPref(uint32_t &aBackendBitmask)
 {
     return GetBackendPref("gfx.content.azure.enabled", "gfx.content.azure.backends", aBackendBitmask);
 }
 
 /* static */ BackendType
-gfxPlatform::GetBackendPref(const char* aEnabledPrefName, const char* aBackendPrefName, uint32_t aBackendBitmask)
+gfxPlatform::GetBackendPref(const char* aEnabledPrefName, const char* aBackendPrefName, uint32_t &aBackendBitmask)
 {
     if (aEnabledPrefName &&
         !Preferences::GetBool(aEnabledPrefName, false)) {
+        aBackendBitmask = 0;
         return BACKEND_NONE;
     }
 
@@ -1388,13 +1396,20 @@ gfxPlatform::GetBackendPref(const char* aEnabledPrefName, const char* aBackendPr
         ParseString(prefString, ',', backendList);
     }
 
+    uint32_t allowedBackends = 0;
+    BackendType result = BACKEND_NONE;
     for (uint32_t i = 0; i < backendList.Length(); ++i) {
-        BackendType result = BackendTypeForName(backendList[i]);
-        if ((1 << result) & aBackendBitmask) {
-            return result;
+        BackendType type = BackendTypeForName(backendList[i]);
+        if ((1 << type) & aBackendBitmask) {
+            allowedBackends |= (1 << type);
+            if (result == BACKEND_NONE) {
+                result = type;
+            }
         }
     }
-    return BACKEND_NONE;
+
+    aBackendBitmask = allowedBackends;
+    return result;
 }
 
 bool

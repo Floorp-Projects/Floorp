@@ -134,7 +134,7 @@ RTCIceCandidate.prototype = {
   __init: function(dict) {
     this.candidate = dict.candidate;
     this.sdpMid = dict.sdpMid;
-    this.sdpMLineIndex = ("sdpMLineIndex" in dict)? dict.sdpMLineIndex+1 : null;
+    this.sdpMLineIndex = ("sdpMLineIndex" in dict)? dict.sdpMLineIndex : null;
   }
 };
 
@@ -691,7 +691,8 @@ RTCPeerConnection.prototype = {
 
     this._queueOrRun({
       func: this._getPC().addIceCandidate,
-      args: [cand.candidate, cand.sdpMid || "", cand.sdpMLineIndex],
+      args: [cand.candidate, cand.sdpMid || "",
+             (cand.sdpMLineIndex === null)? 0 : cand.sdpMLineIndex + 1],
       wait: true
     });
   },
@@ -1014,6 +1015,7 @@ PeerConnectionObserver.prototype = {
   },
 
   handleIceStateChanges: function(iceState) {
+    var histogram = Services.telemetry.getHistogramById("WEBRTC_ICE_SUCCESS_RATE");
     switch (iceState) {
       case Ci.IPeerConnection.kIceWaiting:
         this._dompc.changeIceConnectionState("new");
@@ -1032,10 +1034,12 @@ PeerConnectionObserver.prototype = {
         break;
       case Ci.IPeerConnection.kIceConnected:
         // ICE gathering complete.
+        histogram.add(true);
         this._dompc.changeIceConnectionState("connected");
         this.callCB(this._onicechange, "connected");
         break;
       case Ci.IPeerConnection.kIceFailed:
+        histogram.add(false);
         this._dompc.changeIceConnectionState("failed");
         this.callCB(this._onicechange, "failed");
         break;

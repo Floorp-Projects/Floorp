@@ -26,8 +26,11 @@ using namespace js::gc;
 using mozilla::ArrayLength;
 
 void
-js::AutoEnterPolicy::reportError(JSContext *cx, jsid id)
+js::AutoEnterPolicy::reportErrorIfExceptionIsNotPending(JSContext *cx, jsid id)
 {
+    if (JS_IsExceptionPending(cx))
+        return;
+
     if (JSID_IS_VOID(id)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_OBJECT_ACCESS_DENIED);
@@ -2681,7 +2684,7 @@ Proxy::className(JSContext *cx, HandleObject proxy)
     // Check for unbounded recursion, but don't signal an error; className
     // needs to be infallible.
     int stackDummy;
-    if (!JS_CHECK_STACK_SIZE(cx->mainThread().nativeStackLimit, &stackDummy))
+    if (!JS_CHECK_STACK_SIZE(GetNativeStackLimit(cx), &stackDummy))
         return "too much recursion";
 
     BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();

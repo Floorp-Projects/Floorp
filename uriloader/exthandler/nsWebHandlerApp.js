@@ -86,12 +86,13 @@ nsWebHandlerApp.prototype = {
       // load the channel
       var uriLoader = Cc["@mozilla.org/uriloader;1"].
                       getService(Ci.nsIURILoader);
-      // XXX ideally, aIsContentPreferred (the second param) should really be
-      // passed in from above.  Practically, true is probably a reasonable
+      // XXX ideally, whether to pass the IS_CONTENT_PREFERRED flag should be
+      // passed in from above.  Practically, the flag is probably a reasonable
       // default since browsers don't care much, and link click is likely to be
       // the more interesting case for non-browser apps.  See 
       // <https://bugzilla.mozilla.org/show_bug.cgi?id=392957#c9> for details.
-      uriLoader.openURI(channel, true, aWindowContext);
+      uriLoader.openURI(channel, Ci.nsIURILoader.IS_CONTENT_PREFERRED,
+                        aWindowContext);
       return;
     } 
 

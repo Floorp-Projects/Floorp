@@ -393,6 +393,32 @@ define("test/source-map/test-source-map-generator", ["require", "exports", "modu
 
     util.assertEqualMaps(assert, map1.toJSON(), map2.toJSON());
   };
+
+  exports['test github issue #72, check for duplicate names or sources'] = function (assert, util) {
+    var map = new SourceMapGenerator({
+      file: 'test.js'
+    });
+    map.addMapping({
+      generated: { line: 1, column: 1 },
+      original: { line: 2, column: 2 },
+      source: 'a.js',
+      name: 'foo'
+    });
+    map.addMapping({
+      generated: { line: 3, column: 3 },
+      original: { line: 4, column: 4 },
+      source: 'a.js',
+      name: 'foo'
+    });
+    util.assertEqualMaps(assert, map.toJSON(), {
+      version: 3,
+      file: 'test.js',
+      sources: ['a.js'],
+      names: ['foo'],
+      mappings: 'CACEA;;GAEEA'
+    });
+  };
+
 });
 function run_test() {
   runSourceMapTests('test/source-map/test-source-map-generator', do_throw);

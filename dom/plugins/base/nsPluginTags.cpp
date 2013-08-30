@@ -17,12 +17,10 @@
 #include "nsICharsetConverterManager.h"
 #include "nsPluginLogging.h"
 #include "nsNPAPIPlugin.h"
-#include "mozilla/TimeStamp.h"
 #include "mozilla/Preferences.h"
 #include <cctype>
 
 using namespace mozilla;
-using mozilla::TimeStamp;
 
 // These legacy flags are used in the plugin registry. The states are now
 // stored in prefs, but we still need to be able to import them.

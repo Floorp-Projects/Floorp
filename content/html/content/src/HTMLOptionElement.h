@@ -26,7 +26,8 @@ public:
   virtual ~HTMLOptionElement();
 
   static already_AddRefed<HTMLOptionElement>
-    Option(const GlobalObject& aGlobal, const Optional<nsAString>& aText,
+    Option(const GlobalObject& aGlobal,
+           const Optional<nsAString>& aText,
            const Optional<nsAString>& aValue,
            const Optional<bool>& aDefaultSelected,
            const Optional<bool>& aSelected, ErrorResult& aError);

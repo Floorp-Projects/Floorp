@@ -26,6 +26,7 @@
 #include "mozilla/layers/SharedPlanarYCbCrImage.h"
 #include "mozilla/layers/SharedRGBImage.h"
 #include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
+#include "mozilla/layers/TextureClientOGL.h"  // for SharedTextureClientOGL
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
@@ -136,7 +137,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
 
     bool bufferCreated = false;
     if (!mFrontBuffer) {
-      mFrontBuffer = CreateBufferTextureClient(gfx::FORMAT_YUV);
+      mFrontBuffer = CreateBufferTextureClient(gfx::FORMAT_YUV, TEXTURE_DEALLOCATE_HOST);
       gfx::IntSize ySize(data->mYSize.width, data->mYSize.height);
       gfx::IntSize cbCrSize(data->mCbCrSize.width, data->mCbCrSize.height);
       if (!mFrontBuffer->AsTextureClientYCbCr()->AllocateForYCbCr(ySize, cbCrSize, data->mStereoMode)) {
@@ -164,6 +165,22 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
       return false;
     }
 
+  } else if (image->GetFormat() == SHARED_TEXTURE) {
+    SharedTextureImage* sharedImage = static_cast<SharedTextureImage*>(image);
+    const SharedTextureImage::Data *data = sharedImage->GetData();
+    gfx::IntSize size = gfx::IntSize(image->GetSize().width, image->GetSize().height);
+
+    if (mFrontBuffer) {
+      RemoveTextureClient(mFrontBuffer);
+      mFrontBuffer = nullptr;
+    }
+
+    RefPtr<SharedTextureClientOGL> buffer = new SharedTextureClientOGL(mTextureFlags);
+    buffer->InitWith(data->mHandle, size, data->mShareType, data->mInverted);
+    mFrontBuffer = buffer;
+
+    AddTextureClient(mFrontBuffer);
+    GetForwarder()->UseTexture(this, mFrontBuffer);
   } else {
     nsRefPtr<gfxASurface> surface = image->GetAsSurface();
     MOZ_ASSERT(surface);
@@ -180,7 +197,8 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     if (!mFrontBuffer) {
       gfxASurface::gfxImageFormat format
         = gfxPlatform::GetPlatform()->OptimalFormatForContent(surface->GetContentType());
-      mFrontBuffer = CreateBufferTextureClient(gfx::ImageFormatToSurfaceFormat(format));
+      mFrontBuffer = CreateBufferTextureClient(gfx::ImageFormatToSurfaceFormat(format),
+                                               TEXTURE_DEALLOCATE_HOST);
       MOZ_ASSERT(mFrontBuffer->AsTextureClientSurface());
       mFrontBuffer->AsTextureClientSurface()->AllocateForSurface(size);
 
@@ -227,6 +245,12 @@ ImageClientSingle::AddTextureClient(TextureClient* aTexture)
 {
   MOZ_ASSERT((mTextureFlags & aTexture->GetFlags()) == mTextureFlags);
   CompositableClient::AddTextureClient(aTexture);
+}
+
+TemporaryRef<BufferTextureClient>
+ImageClientSingle::CreateBufferTextureClient(gfx::SurfaceFormat aFormat, TextureFlags aFlags)
+{
+  return CompositableClient::CreateBufferTextureClient(aFormat, mTextureFlags | aFlags);
 }
 
 TemporaryRef<BufferTextureClient>
@@ -425,25 +449,17 @@ ImageClientBridge::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
 }
 
 already_AddRefed<Image>
-ImageClient::CreateImage(const uint32_t *aFormats,
-                         uint32_t aNumFormats)
+ImageClientSingle::CreateImage(const uint32_t *aFormats,
+                               uint32_t aNumFormats)
 {
   nsRefPtr<Image> img;
   for (uint32_t i = 0; i < aNumFormats; i++) {
     switch (aFormats[i]) {
       case PLANAR_YCBCR:
-        if (gfxPlatform::GetPlatform()->UseDeprecatedTextures()) {
-            img = new DeprecatedSharedPlanarYCbCrImage(GetForwarder());
-        } else {
-            img = new SharedPlanarYCbCrImage(this);
-        }
+        img = new SharedPlanarYCbCrImage(this);
         return img.forget();
       case SHARED_RGB:
-        if (gfxPlatform::GetPlatform()->UseDeprecatedTextures()) {
-            img = new DeprecatedSharedRGBImage(GetForwarder());
-        } else {
-            img = new SharedRGBImage(this);
-        }
+        img = new SharedRGBImage(this);
         return img.forget();
 #ifdef MOZ_WIDGET_GONK
       case GRALLOC_PLANAR_YCBCR:
@@ -454,6 +470,30 @@ ImageClient::CreateImage(const uint32_t *aFormats,
   }
   return nullptr;
 }
+
+already_AddRefed<Image>
+DeprecatedImageClientSingle::CreateImage(const uint32_t *aFormats,
+                                         uint32_t aNumFormats)
+{
+  nsRefPtr<Image> img;
+  for (uint32_t i = 0; i < aNumFormats; i++) {
+    switch (aFormats[i]) {
+      case PLANAR_YCBCR:
+        img = new DeprecatedSharedPlanarYCbCrImage(GetForwarder());
+        return img.forget();
+      case SHARED_RGB:
+        img = new DeprecatedSharedRGBImage(GetForwarder());
+        return img.forget();
+#ifdef MOZ_WIDGET_GONK
+      case GRALLOC_PLANAR_YCBCR:
+        img = new GrallocImage();
+        return img.forget();
+#endif
+    }
+  }
+  return nullptr;
+}
+
 
 }
 }

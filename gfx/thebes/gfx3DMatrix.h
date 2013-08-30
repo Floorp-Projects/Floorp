@@ -9,8 +9,9 @@
 #include <gfxTypes.h>
 #include <gfxPoint3D.h>
 #include <gfxPointH3D.h>
-#include <gfxMatrix.h>
 #include <gfxQuad.h>
+
+class gfxMatrix;
 
 /**
  * This class represents a 3D transformation. The matrix is laid

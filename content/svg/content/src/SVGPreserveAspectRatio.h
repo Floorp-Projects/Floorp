@@ -11,8 +11,7 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/ErrorResult.h"
-
-class nsSVGElement;
+#include "nsSVGElement.h"
 
 namespace mozilla {
 // Alignment Types

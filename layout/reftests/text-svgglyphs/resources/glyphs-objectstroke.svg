@@ -6,20 +6,20 @@
   <!-- a -->
   <rect x="100" y="-900" width="800" height="800" stroke="powderblue"
     stroke-width="50" stroke-dashoffset="35"
-    stroke-dasharray="50 50" glyphchar="a" />
+    stroke-dasharray="50 50" id="glyph67" />
 
   <!-- b -->
   <rect x="100" y="-900" width="800" height="800" stroke="chartreuse"
     stroke-width="50" stroke-dashoffset="35"
-    stroke-dasharray="-moz-objectValue" glyphchar="b" />
+    stroke-dasharray="-moz-objectValue" id="glyph68" />
 
   <!-- c -->
   <rect x="100" y="-900" width="800" height="800" stroke="sienna"
     stroke-width="50" stroke-dasharray="50 50"
-    stroke-dashoffset="-moz-objectValue" glyphchar="c" />
+    stroke-dashoffset="-moz-objectValue" id="glyph69" />
 
   <!-- d -->
   <rect x="100" y="-900" width="800" height="800" stroke="olivedrab"
     stroke-width="-moz-objectValue" stroke-dasharray="-moz-objectValue"
-    stroke-dashoffset="-moz-objectValue" glyphchar="d" />
+    stroke-dashoffset="-moz-objectValue" id="glyph70" />
 </svg>

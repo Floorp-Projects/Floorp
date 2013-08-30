@@ -87,6 +87,13 @@ It looks like you passed an unrecognized argument into mach.
 The %s command does not accept the arguments: %s
 '''.lstrip()
 
+INVALID_COMMAND_CONTEXT = r'''
+It looks like you tried to run a mach command from an invalid context. The %s
+command failed to meet the following conditions: %s
+
+Run |mach help| to show a list of all commands available to the current context.
+'''.lstrip()
+
 
 class ArgumentParser(argparse.ArgumentParser):
     """Custom implementation argument parser to make things look pretty."""
@@ -140,6 +147,10 @@ class Mach(object):
             as its single argument right before command dispatch. This allows
             modification of the context instance and thus passing of
             arbitrary data to command handlers.
+
+        require_conditions -- If True, commands that do not have any condition
+            functions applied will be skipped. Defaults to False.
+
     """
 
     USAGE = """%(prog)s [global arguments] command [command arguments]
@@ -209,6 +220,14 @@ To see more help for a specific command, run:
 
         Registrar.register_category(name, title, description, priority)
 
+    @property
+    def require_conditions(self):
+        return Registrar.require_conditions
+
+    @require_conditions.setter
+    def require_conditions(self, value):
+        Registrar.require_conditions = value
+
     def run(self, argv, stdin=None, stdout=None, stderr=None):
         """Runs mach with arguments provided from the command line.
 
@@ -270,7 +289,14 @@ To see more help for a specific command, run:
             sys.stderr = orig_stderr
 
     def _run(self, argv):
-        parser = self.get_argument_parser()
+        context = CommandContext(topdir=self.cwd, cwd=self.cwd,
+            settings=self.settings, log_manager=self.log_manager,
+            commands=Registrar)
+
+        if self.populate_context_handler:
+            self.populate_context_handler(context)
+
+        parser = self.get_argument_parser(context)
 
         if not len(argv):
             # We don't register the usage until here because if it is globally
@@ -314,13 +340,6 @@ To see more help for a specific command, run:
         if not hasattr(args, 'mach_handler'):
             raise MachError('ArgumentParser result missing mach handler info.')
 
-        context = CommandContext(topdir=self.cwd, cwd=self.cwd,
-            settings=self.settings, log_manager=self.log_manager,
-            commands=Registrar)
-
-        if self.populate_context_handler:
-            self.populate_context_handler(context)
-
         handler = getattr(args, 'mach_handler')
         cls = handler.cls
 
@@ -328,6 +347,16 @@ To see more help for a specific command, run:
             instance = cls(context)
         else:
             instance = cls()
+
+        if handler.conditions:
+            fail_conditions = []
+            for c in handler.conditions:
+                if not c(instance):
+                    fail_conditions.append(c)
+
+            if fail_conditions:
+                print(self._condition_failed_message(handler.name, fail_conditions))
+                return 1
 
         fn = getattr(instance, handler.method)
 
@@ -393,6 +422,16 @@ To see more help for a specific command, run:
         self.logger.log(level, format_str,
             extra={'action': action, 'params': params})
 
+    @classmethod
+    def _condition_failed_message(cls, name, conditions):
+        msg = ['\n']
+        for c in conditions:
+            part = ['  %s' % c.__name__]
+            if c.__doc__ is not None:
+                part.append(c.__doc__)
+            msg.append(' - '.join(part))
+        return INVALID_COMMAND_CONTEXT % (name, '\n'.join(msg))
+
     def _print_error_header(self, argv, fh):
         fh.write('Error running mach:\n\n')
         fh.write('    ')
@@ -448,7 +487,7 @@ To see more help for a specific command, run:
 
         return os.path.exists(p)
 
-    def get_argument_parser(self):
+    def get_argument_parser(self, context):
         """Returns an argument parser for the command-line interface."""
 
         parser = ArgumentParser(add_help=False,
@@ -476,7 +515,7 @@ To see more help for a specific command, run:
         # We need to be last because CommandAction swallows all remaining
         # arguments and argparse parses arguments in the order they were added.
         parser.add_argument('command', action=CommandAction,
-            registrar=Registrar)
+            registrar=Registrar, context=context)
 
         return parser
 

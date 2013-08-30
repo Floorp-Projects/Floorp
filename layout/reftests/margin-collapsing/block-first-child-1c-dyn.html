@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+#separator, #first-child {
+ height: 20px;
+ background-color: green;
+}
+#parent {
+ margin-top: 20px;
+}
+#first-child {
+ display: none;
+ margin-top: 20px;
+}
+</style>
+<script type="text/javascript">
+function test() {
+ document.getElementById('first-child').style.display = 'block';
+ document.documentElement.removeAttribute('class');
+}
+document.addEventListener('MozReftestInvalidate', test, false);
+</script>
+</head>
+<body>
+<div id="separator"></div>
+<div id="parent">
+ <div id="first-child"></div>
+</div>
+</body>
+</html>

@@ -12,7 +12,7 @@ import shutil
 import math
 import base64
 
-sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0]))))
+sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(__file__))))
 
 from automation import Automation
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
@@ -209,7 +209,7 @@ class RemoteOptions(MochitestOptions):
     def verifyOptions(self, options, mochitest):
         # since we are reusing verifyOptions, it will exit if App is not found
         temp = options.app
-        options.app = sys.argv[0]
+        options.app = __file__
         tempPort = options.httpPort
         tempSSL = options.sslPort
         tempIP = options.webServer
@@ -621,6 +621,10 @@ def main():
                 # Get the OS so we can run the insert in the apropriate database and following the correct table schema
                 osInfo = dm.getInfo("os")
                 devOS = " ".join(osInfo['os'])
+
+                # Bug 900664: stock browser db not available on x86 emulator
+                if ("sdk_x86" in devOS):
+                    continue
 
                 if ("pandaboard" in devOS):
                     delete = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser2.db \'delete from bookmarks where _id > 14;\'"]

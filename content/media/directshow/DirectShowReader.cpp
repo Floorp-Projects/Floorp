@@ -167,6 +167,7 @@ DirectShowReader::ReadMetadata(VideoInfo* aInfo,
   mInfo.mHasVideo = false;
 
   *aInfo = mInfo;
+  // Note: The SourceFilter strips ID3v2 tags out of the stream.
   *aTags = nullptr;
 
   // Begin decoding!

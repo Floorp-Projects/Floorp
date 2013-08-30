@@ -93,7 +93,7 @@ class MercurialSetupWizard(object):
 
         try:
             hg = which.which('hg')
-        except which.whichError as e:
+        except which.WhichError as e:
             print(e)
             print('Try running |mach bootstrap| to ensure your environment is '
                 'up to date.')

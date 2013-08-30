@@ -30,6 +30,7 @@ EXPORTS += [
     'DisplayListClipState.h',
     'FrameLayerBuilder.h',
     'FramePropertyTable.h',
+    'ScrollbarStyles.h',
     'StackArena.h',
     'Units.h',
     'nsArenaMemoryStats.h',
@@ -104,4 +105,6 @@ FAIL_ON_WARNINGS = True
 LIBXUL_LIBRARY = True
 
 MSVC_ENABLE_PGO = True
+
+LIBRARY_NAME = 'gkbase_s'
 

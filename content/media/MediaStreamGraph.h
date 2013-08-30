@@ -170,6 +170,30 @@ public:
 };
 
 /**
+ * This is a base class for media graph thread listener direct callbacks
+ * from within AppendToTrack().  Note that your regular listener will
+ * still get NotifyQueuedTrackChanges() callbacks from the MSG thread, so
+ * you must be careful to ignore them if AddDirectListener was successful.
+ */
+class MediaStreamDirectListener : public MediaStreamListener
+{
+public:
+  virtual ~MediaStreamDirectListener() {}
+
+  /*
+   * This will be called on any MediaStreamDirectListener added to a
+   * a SourceMediaStream when AppendToTrack() is called.  The MediaSegment
+   * will be the RawSegment (unresampled) if available in AppendToTrack().
+   * Note that NotifyQueuedTrackChanges() calls will also still occur.
+   */
+  virtual void NotifyRealtimeData(MediaStreamGraph* aGraph, TrackID aID,
+                                  TrackRate aTrackRate,
+                                  TrackTicks aTrackOffset,
+                                  uint32_t aTrackEvents,
+                                  const MediaSegment& aMedia) {}
+};
+
+/**
  * This is a base class for main-thread listener callbacks.
  * This callback is invoked on the main thread when the main-thread-visible
  * state of a stream has changed.
@@ -435,7 +459,7 @@ public:
 
   StreamBuffer::Track* EnsureTrack(TrackID aTrack, TrackRate aSampleRate);
 
-  void ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment);
+  void ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment, MediaSegment* aRawSegment = nullptr);
 
   DOMMediaStream* GetWrapper()
   {
@@ -599,6 +623,10 @@ public:
    * it is still possible for a NotifyPull to occur.
    */
   void SetPullEnabled(bool aEnabled);
+
+  void AddDirectListener(MediaStreamDirectListener* aListener);
+  void RemoveDirectListener(MediaStreamDirectListener* aListener);
+
   /**
    * Add a new track to the stream starting at the given base time (which
    * must be greater than or equal to the last time passed to
@@ -613,7 +641,7 @@ public:
    * Returns false if the data was not appended because no such track exists
    * or the stream was already finished.
    */
-  bool AppendToTrack(TrackID aID, MediaSegment* aSegment);
+  bool AppendToTrack(TrackID aID, MediaSegment* aSegment, MediaSegment *aRawSegment = nullptr);
   /**
    * Returns true if the buffer currently has enough data.
    * Returns false if there isn't enough data or if no such track exists.
@@ -651,12 +679,28 @@ public:
       FinishWithLockHeld();
     }
 
+  // Overriding allows us to hold the mMutex lock while changing the track enable status
+  void SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled) {
+    MutexAutoLock lock(mMutex);
+    MediaStream::SetTrackEnabledImpl(aTrackID, aEnabled);
+  }
 
   /**
    * End all tracks and Finish() this stream.  Used to voluntarily revoke access
    * to a LocalMediaStream.
    */
   void EndAllTrackAndFinish();
+
+  /**
+   * Note: Only call from Media Graph thread (eg NotifyPull)
+   *
+   * Returns amount of time (data) that is currently buffered in the track,
+   * assuming playout via PlayAudio or via a TrackUnion - note that
+   * NotifyQueuedTrackChanges() on a SourceMediaStream will occur without
+   * any "extra" buffering, but NotifyQueued TrackChanges() on a TrackUnion
+   * will be buffered.
+   */
+  TrackTicks GetBufferedTicks(TrackID aID);
 
   // XXX need a Reset API
 
@@ -704,6 +748,15 @@ protected:
     return nullptr;
   }
 
+  /**
+   * Notify direct consumers of new data to one of the stream tracks.
+   * The data doesn't have to be resampled (though it may be).  This is called
+   * from AppendToTrack on the thread providing the data, and will call
+   * the Listeners on this thread.
+   */
+  void NotifyDirectConsumers(TrackData *aTrack,
+                             MediaSegment *aSegment);
+
   // Media stream graph thread only
   MediaStreamListener::Consumption mLastConsumptionState;
 
@@ -713,6 +766,7 @@ protected:
   // protected by mMutex
   StreamTime mUpdateKnownTracksTime;
   nsTArray<TrackData> mUpdateTracks;
+  nsTArray<nsRefPtr<MediaStreamDirectListener> > mDirectListeners;
   bool mPullEnabled;
   bool mUpdateFinished;
   bool mDestroyed;
@@ -887,6 +941,11 @@ public:
    */
   virtual void ProduceOutput(GraphTime aFrom, GraphTime aTo) = 0;
   void SetAutofinishImpl(bool aAutofinish) { mAutofinish = aAutofinish; }
+
+  /**
+   * Forward SetTrackEnabled() to the input MediaStream(s) and translate the ID
+   */
+  virtual void ForwardTrackEnabled(TrackID aOutputID, bool aEnabled) {};
 
 protected:
   // This state is all accessed only on the media graph thread.

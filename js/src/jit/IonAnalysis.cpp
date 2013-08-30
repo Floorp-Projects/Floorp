@@ -14,13 +14,13 @@
 #include "jit/MIRGraph.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 // A critical edge is an edge which is neither its successor's only predecessor
 // nor its predecessor's only successor. Critical edges must be split to
 // prevent copy-insertion and code motion from affecting other edges.
 bool
-ion::SplitCriticalEdges(MIRGraph &graph)
+jit::SplitCriticalEdges(MIRGraph &graph)
 {
     for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
         if (block->numSuccessors() < 2)
@@ -54,7 +54,7 @@ ion::SplitCriticalEdges(MIRGraph &graph)
 // otherwise occur if the new resume point captured a value which is created
 // between the old and new resume point and is dead at the new resume point.
 bool
-ion::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
+jit::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
 {
     // If we are compiling try blocks, locals and arguments may be observable
     // from catch or finally blocks (which Ion does not compile). For now just
@@ -148,7 +148,7 @@ ion::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
 // This pass eliminates useless instructions.
 // The graph itself is unchanged.
 bool
-ion::EliminateDeadCode(MIRGenerator *mir, MIRGraph &graph)
+jit::EliminateDeadCode(MIRGenerator *mir, MIRGraph &graph)
 {
     // Traverse in postorder so that we hit uses before definitions.
     // Traverse instruction list backwards for the same reason.
@@ -243,7 +243,7 @@ IsPhiRedundant(MPhi *phi)
 }
 
 bool
-ion::EliminatePhis(MIRGenerator *mir, MIRGraph &graph,
+jit::EliminatePhis(MIRGenerator *mir, MIRGraph &graph,
                    Observability observe)
 {
     // Eliminates redundant or unobservable phis from the graph.  A
@@ -525,29 +525,10 @@ TypeAnalyzer::adjustPhiInputs(MPhi *phi)
 {
     MIRType phiType = phi->type();
 
-    if (phiType == MIRType_Double) {
-        // Convert int32 operands to double.
-        for (size_t i = 0, e = phi->numOperands(); i < e; i++) {
-            MDefinition *in = phi->getOperand(i);
-
-            if (in->type() == MIRType_Int32) {
-                MToDouble *toDouble = MToDouble::New(in);
-                in->block()->insertBefore(in->block()->lastIns(), toDouble);
-                phi->replaceOperand(i, toDouble);
-            } else if (in->type() == MIRType_Value) {
-                MUnbox *unbox = MUnbox::New(in, MIRType_Double, MUnbox::Fallible);
-                in->block()->insertBefore(in->block()->lastIns(), unbox);
-                phi->replaceOperand(i, unbox);
-            } else {
-                JS_ASSERT(in->type() == MIRType_Double);
-            }
-        }
-        return;
-    }
-
-    // If we specialized a type that's not Value, either every input is of
-    // that type or the input's typeset was unobserved (i.e. the opcode hasn't
-    // been executed yet.)
+    // If we specialized a type that's not Value, there are 3 cases:
+    // 1. Every input is of that type.
+    // 2. Every observed input is of that type (i.e., some inputs haven't been executed yet).
+    // 3. Inputs were doubles and int32s, and was specialized to double.
     if (phiType != MIRType_Value) {
         for (size_t i = 0, e = phi->numOperands(); i < e; i++) {
             MDefinition *in = phi->getOperand(i);
@@ -557,20 +538,28 @@ TypeAnalyzer::adjustPhiInputs(MPhi *phi)
             if (in->isBox() && in->toBox()->input()->type() == phiType) {
                 phi->replaceOperand(i, in->toBox()->input());
             } else {
-                // If we know this branch will fail to convert to phiType,
-                // insert a box that'll immediately fail in the fallible unbox
-                // below.
-                if (in->type() != MIRType_Value) {
-                    MBox *box = MBox::New(in);
-                    in->block()->insertBefore(in->block()->lastIns(), box);
-                    in = box;
+                MInstruction *replacement;
+
+                if (phiType == MIRType_Double && in->type() == MIRType_Int32) {
+                    // Convert int32 operands to double.
+                    replacement = MToDouble::New(in);
+                } else {
+                    // If we know this branch will fail to convert to phiType,
+                    // insert a box that'll immediately fail in the fallible unbox
+                    // below.
+                    if (in->type() != MIRType_Value) {
+                        MBox *box = MBox::New(in);
+                        in->block()->insertBefore(in->block()->lastIns(), box);
+                        in = box;
+                    }
+
+                    // Be optimistic and insert unboxes when the operand is a
+                    // value.
+                    replacement = MUnbox::New(in, phiType, MUnbox::Fallible);
                 }
 
-                // Be optimistic and insert unboxes when the operand is a
-                // value.
-                MUnbox *unbox = MUnbox::New(in, phiType, MUnbox::Fallible);
-                in->block()->insertBefore(in->block()->lastIns(), unbox);
-                phi->replaceOperand(i, unbox);
+                in->block()->insertBefore(in->block()->lastIns(), replacement);
+                phi->replaceOperand(i, replacement);
             }
         }
 
@@ -666,7 +655,7 @@ TypeAnalyzer::analyze()
 }
 
 bool
-ion::ApplyTypeInformation(MIRGenerator *mir, MIRGraph &graph)
+jit::ApplyTypeInformation(MIRGenerator *mir, MIRGraph &graph)
 {
     TypeAnalyzer analyzer(mir, graph);
 
@@ -677,7 +666,7 @@ ion::ApplyTypeInformation(MIRGenerator *mir, MIRGraph &graph)
 }
 
 bool
-ion::RenumberBlocks(MIRGraph &graph)
+jit::RenumberBlocks(MIRGraph &graph)
 {
     size_t id = 0;
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++)
@@ -783,7 +772,7 @@ ComputeImmediateDominators(MIRGraph &graph)
 }
 
 bool
-ion::BuildDominatorTree(MIRGraph &graph)
+jit::BuildDominatorTree(MIRGraph &graph)
 {
     ComputeImmediateDominators(graph);
 
@@ -846,7 +835,7 @@ ion::BuildDominatorTree(MIRGraph &graph)
 }
 
 bool
-ion::BuildPhiReverseMapping(MIRGraph &graph)
+jit::BuildPhiReverseMapping(MIRGraph &graph)
 {
     // Build a mapping such that given a basic block, whose successor has one or
     // more phis, we can find our specific input to that phi. To make this fast
@@ -958,7 +947,7 @@ CheckUseImpliesOperand(MInstruction *ins, MUse *use)
 #endif // DEBUG
 
 void
-ion::AssertBasicGraphCoherency(MIRGraph &graph)
+jit::AssertBasicGraphCoherency(MIRGraph &graph)
 {
 #ifdef DEBUG
     // Assert successor and predecessor list coherency.
@@ -1008,7 +997,7 @@ AssertReversePostOrder(MIRGraph &graph)
 #endif
 
 void
-ion::AssertGraphCoherency(MIRGraph &graph)
+jit::AssertGraphCoherency(MIRGraph &graph)
 {
 #ifdef DEBUG
     AssertBasicGraphCoherency(graph);
@@ -1017,7 +1006,7 @@ ion::AssertGraphCoherency(MIRGraph &graph)
 }
 
 void
-ion::AssertExtendedGraphCoherency(MIRGraph &graph)
+jit::AssertExtendedGraphCoherency(MIRGraph &graph)
 {
     // Checks the basic GraphCoherency but also other conditions that
     // do not hold immediately (such as the fact that critical edges
@@ -1113,7 +1102,7 @@ FindDominatingBoundsCheck(BoundsCheckMap &checks, MBoundsCheck *check, size_t in
 
 // Extract a linear sum from ins, if possible (otherwise giving the sum 'ins + 0').
 SimpleLinearSum
-ion::ExtractLinearSum(MDefinition *ins)
+jit::ExtractLinearSum(MDefinition *ins)
 {
     if (ins->isBeta())
         ins = ins->getOperand(0);
@@ -1156,7 +1145,7 @@ ion::ExtractLinearSum(MDefinition *ins)
 // Extract a linear inequality holding when a boolean test goes in the
 // specified direction, of the form 'lhs + lhsN <= rhs' (or >=).
 bool
-ion::ExtractLinearInequality(MTest *test, BranchDirection direction,
+jit::ExtractLinearInequality(MTest *test, BranchDirection direction,
                              SimpleLinearSum *plhs, MDefinition **prhs, bool *plessEqual)
 {
     if (!test->getOperand(0)->isCompare())
@@ -1379,7 +1368,7 @@ TryEliminateTypeBarrier(MTypeBarrier *barrier, bool *eliminated)
 // differences in constant offset, this offers a fast way to find redundant
 // checks.
 bool
-ion::EliminateRedundantChecks(MIRGraph &graph)
+jit::EliminateRedundantChecks(MIRGraph &graph)
 {
     BoundsCheckMap checks;
 
@@ -1465,7 +1454,7 @@ FindLeadingGoto(LBlock *bb)
 // splits end up being unused after optimization and register allocation,
 // fold them back away to avoid unnecessary branching.
 bool
-ion::UnsplitEdges(LIRGraph *lir)
+jit::UnsplitEdges(LIRGraph *lir)
 {
     for (size_t i = 0; i < lir->numBlocks(); i++) {
         LBlock *bb = lir->getBlock(i);

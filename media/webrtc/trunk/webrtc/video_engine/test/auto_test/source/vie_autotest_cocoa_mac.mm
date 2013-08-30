@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "engine_configurations.h"
+#include "webrtc/engine_configurations.h"
 
-#import "cocoa_render_view.h"
-#import "testsupport/mac/run_threaded_main_mac.h"
-#include "video_engine/test/auto_test/interface/vie_autotest_main.h"
-#include "vie_autotest_mac_cocoa.h"
-#include "vie_autotest_defines.h"
-#include "vie_autotest.h"
-#include "vie_autotest_main.h"
+#import "webrtc/modules/video_render/mac/cocoa_render_view.h"
+#import "webrtc/test/testsupport/mac/run_threaded_main_mac.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest_defines.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest_mac_cocoa.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest_main.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest_main.h"
 
 @implementation TestCocoaUi
 
@@ -138,4 +138,3 @@ int ImplementThisToRunYourTest(int argc, char** argv) {
   ViEAutoTestMain auto_test;
   return auto_test.RunTests(argc, argv);
 }
-

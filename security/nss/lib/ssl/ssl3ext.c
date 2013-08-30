@@ -1411,7 +1411,7 @@ ssl3_ServerHandleSessionTicketXtn(sslSocket *ss, PRUint16 ex_type,
 	    goto no_ticket;
 	
 	/* Allow for the wrapped master secret to be longer. */
-	if (buffer_len < sizeof(SSL3_MASTER_SECRET_LENGTH))
+	if (buffer_len < parsed_session_ticket->ms_length)
 	    goto no_ticket;
 	PORT_Memcpy(parsed_session_ticket->master_secret, buffer,
 	    parsed_session_ticket->ms_length);

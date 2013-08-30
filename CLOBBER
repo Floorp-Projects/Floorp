@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 904831 - MSVC_ENABLE_PGO in js/src/Makefile.in
+Bug 909870 - xpidl header generation is somehow busted so we need to clobber on windows

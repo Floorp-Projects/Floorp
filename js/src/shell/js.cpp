@@ -33,7 +33,6 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsdate.h"
-#include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsiter.h"
@@ -62,6 +61,8 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "jit/Ion.h"
+#include "js/OldDebugAPI.h"
+#include "js/StructuredClone.h"
 #include "perf/jsperf.h"
 #include "shell/jsheaptools.h"
 #include "shell/jsoptparse.h"
@@ -3236,7 +3237,7 @@ SyntaxParse(JSContext *cx, unsigned argc, jsval *vp)
 #ifdef JS_THREADSAFE
 
 static void
-OffThreadCompileScriptCallback(JSScript *script, void *callbackData)
+OffThreadCompileScriptCallback(void *token, void *callbackData)
 {
     // This callback is invoked off the main thread and there isn't a good way
     // to pass the script on to the main thread. Just let the script leak.
@@ -3262,7 +3263,7 @@ OffThreadCompileScript(JSContext *cx, unsigned argc, jsval *vp)
     CompileOptions options(cx);
     options.setFileAndLine("<string>", 1)
            .setCompileAndGo(true)
-           .setSourcePolicy(CompileOptions::NO_SOURCE);
+           .setSourcePolicy(CompileOptions::SAVE_SOURCE);
 
     const jschar *chars = JS_GetStringCharsZ(cx, scriptContents);
     if (!chars)
@@ -3368,6 +3369,52 @@ static bool
 ReadRelativeToScript(JSContext *cx, unsigned argc, jsval *vp)
 {
     return ReadFile(cx, argc, vp, true);
+}
+
+static bool
+redirect(JSContext *cx, FILE* fp, HandleString relFilename)
+{
+    RootedString filename(cx, ResolvePath(cx, relFilename, false));
+    if (!filename)
+        return false;
+    JSAutoByteString filenameABS(cx, filename);
+    if (!filenameABS)
+        return false;
+    if (freopen(filenameABS.ptr(), "wb", fp) == NULL) {
+        JS_ReportError(cx, "cannot redirect to %s: %s", filenameABS.ptr(), strerror(errno));
+        return false;
+    }
+    return true;
+}
+
+static bool
+RedirectOutput(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() < 1 || args.length() > 2) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "redirect");
+        return false;
+    }
+
+    if (args[0].isString()) {
+        RootedString stdoutPath(cx, args[0].toString());
+        if (!stdoutPath)
+            return false;
+        if (!redirect(cx, stdout, stdoutPath))
+            return false;
+    }
+
+    if (args.length() > 1 && args[1].isString()) {
+        RootedString stderrPath(cx, args[1].toString());
+        if (!stderrPath)
+            return false;
+        if (!redirect(cx, stderr, stderrPath))
+            return false;
+    }
+
+    args.rval().setUndefined();
+    return true;
 }
 
 static bool
@@ -3860,7 +3907,7 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("readRelativeToScript", ReadRelativeToScript, 1, 0,
 "readRelativeToScript(filename, [\"binary\"])",
 "  Read filename into returned string. Filename is relative to the directory\n"
-               "  containing the current script."),
+"  containing the current script."),
 
     JS_FN_HELP("compile", Compile, 1, 0,
 "compile(code)",
@@ -3965,6 +4012,11 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
     JS_FN_HELP("pc2line", PCToLine, 0, 0,
 "pc2line(fun[, pc])",
 "  Map PC to line number."),
+
+    JS_FN_HELP("redirect", RedirectOutput, 2, 0,
+"redirect(stdoutFilename[, stderrFilename])",
+"  Redirect stdout and/or stderr to the named file. Pass undefined to avoid\n"
+"   redirecting. Filenames are relative to the current working directory."),
 
     JS_FN_HELP("setThrowHook", SetThrowHook, 1, 0,
 "setThrowHook(f)",
@@ -4087,7 +4139,7 @@ Help(JSContext *cx, unsigned argc, jsval *vp)
  */
 enum its_tinyid {
     ITS_COLOR, ITS_HEIGHT, ITS_WIDTH, ITS_FUNNY, ITS_ARRAY, ITS_RDONLY,
-    ITS_CUSTOM, ITS_CUSTOMRDONLY, ITS_CUSTOMNATIVE
+    ITS_CUSTOM, ITS_CUSTOMRDONLY
 };
 
 static bool
@@ -4113,11 +4165,8 @@ static const JSPropertySpec its_props[] = {
                         JSOP_WRAPPER(its_getter),     JSOP_WRAPPER(its_setter)},
     {"customRdOnly",    ITS_CUSTOMRDONLY, JSPROP_ENUMERATE | JSPROP_READONLY,
                         JSOP_WRAPPER(its_getter),     JSOP_WRAPPER(its_setter)},
-    {"customNative",    ITS_CUSTOMNATIVE,
-                        JSPROP_ENUMERATE | JSPROP_NATIVE_ACCESSORS,
-                        JSOP_WRAPPER((JSPropertyOp)its_get_customNative),
-                        JSOP_WRAPPER((JSStrictPropertyOp)its_set_customNative)},
-    {NULL,0,0,JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}
+    JS_PSGS("customNative", its_get_customNative, its_set_customNative, JSPROP_ENUMERATE),
+    JS_PS_END
 };
 
 static bool its_noisy;    /* whether to be noisy when finalizing it */
@@ -4938,8 +4987,8 @@ NewGlobalObject(JSContext *cx, JS::CompartmentOptions &options)
             return NULL;
 
         if (!JS_DefineProperty(cx, glob, "customNative", UndefinedValue(),
-                               (JSPropertyOp)its_get_customNative,
-                               (JSStrictPropertyOp)its_set_customNative,
+                               JS_CAST_NATIVE_TO(its_get_customNative, JSPropertyOp),
+                               JS_CAST_NATIVE_TO(its_set_customNative, JSStrictPropertyOp),
                                JSPROP_SHARED | JSPROP_NATIVE_ACCESSORS))
         {
             return NULL;
@@ -5056,99 +5105,99 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 
     if (const char *str = op->getStringOption("ion-gvn")) {
         if (strcmp(str, "off") == 0)
-            ion::js_IonOptions.gvn = false;
+            jit::js_IonOptions.gvn = false;
         else if (strcmp(str, "pessimistic") == 0)
-            ion::js_IonOptions.gvnIsOptimistic = false;
+            jit::js_IonOptions.gvnIsOptimistic = false;
         else if (strcmp(str, "optimistic") == 0)
-            ion::js_IonOptions.gvnIsOptimistic = true;
+            jit::js_IonOptions.gvnIsOptimistic = true;
         else
             return OptionFailure("ion-gvn", str);
     }
 
     if (const char *str = op->getStringOption("ion-licm")) {
         if (strcmp(str, "on") == 0)
-            ion::js_IonOptions.licm = true;
+            jit::js_IonOptions.licm = true;
         else if (strcmp(str, "off") == 0)
-            ion::js_IonOptions.licm = false;
+            jit::js_IonOptions.licm = false;
         else
             return OptionFailure("ion-licm", str);
     }
 
     if (const char *str = op->getStringOption("ion-edgecase-analysis")) {
         if (strcmp(str, "on") == 0)
-            ion::js_IonOptions.edgeCaseAnalysis = true;
+            jit::js_IonOptions.edgeCaseAnalysis = true;
         else if (strcmp(str, "off") == 0)
-            ion::js_IonOptions.edgeCaseAnalysis = false;
+            jit::js_IonOptions.edgeCaseAnalysis = false;
         else
             return OptionFailure("ion-edgecase-analysis", str);
     }
 
      if (const char *str = op->getStringOption("ion-range-analysis")) {
          if (strcmp(str, "on") == 0)
-             ion::js_IonOptions.rangeAnalysis = true;
+             jit::js_IonOptions.rangeAnalysis = true;
          else if (strcmp(str, "off") == 0)
-             ion::js_IonOptions.rangeAnalysis = false;
+             jit::js_IonOptions.rangeAnalysis = false;
          else
              return OptionFailure("ion-range-analysis", str);
      }
 
     if (op->getBoolOption("ion-check-range-analysis"))
-        ion::js_IonOptions.checkRangeAnalysis = true;
+        jit::js_IonOptions.checkRangeAnalysis = true;
 
     if (const char *str = op->getStringOption("ion-inlining")) {
         if (strcmp(str, "on") == 0)
-            ion::js_IonOptions.inlining = true;
+            jit::js_IonOptions.inlining = true;
         else if (strcmp(str, "off") == 0)
-            ion::js_IonOptions.inlining = false;
+            jit::js_IonOptions.inlining = false;
         else
             return OptionFailure("ion-inlining", str);
     }
 
     if (const char *str = op->getStringOption("ion-osr")) {
         if (strcmp(str, "on") == 0)
-            ion::js_IonOptions.osr = true;
+            jit::js_IonOptions.osr = true;
         else if (strcmp(str, "off") == 0)
-            ion::js_IonOptions.osr = false;
+            jit::js_IonOptions.osr = false;
         else
             return OptionFailure("ion-osr", str);
     }
 
     if (const char *str = op->getStringOption("ion-limit-script-size")) {
         if (strcmp(str, "on") == 0)
-            ion::js_IonOptions.limitScriptSize = true;
+            jit::js_IonOptions.limitScriptSize = true;
         else if (strcmp(str, "off") == 0)
-            ion::js_IonOptions.limitScriptSize = false;
+            jit::js_IonOptions.limitScriptSize = false;
         else
             return OptionFailure("ion-limit-script-size", str);
     }
 
     int32_t useCount = op->getIntOption("ion-uses-before-compile");
     if (useCount >= 0)
-        ion::js_IonOptions.usesBeforeCompile = useCount;
+        jit::js_IonOptions.usesBeforeCompile = useCount;
 
     useCount = op->getIntOption("baseline-uses-before-compile");
     if (useCount >= 0)
-        ion::js_IonOptions.baselineUsesBeforeCompile = useCount;
+        jit::js_IonOptions.baselineUsesBeforeCompile = useCount;
 
     if (op->getBoolOption("baseline-eager"))
-        ion::js_IonOptions.baselineUsesBeforeCompile = 0;
+        jit::js_IonOptions.baselineUsesBeforeCompile = 0;
 
     if (const char *str = op->getStringOption("ion-regalloc")) {
         if (strcmp(str, "lsra") == 0)
-            ion::js_IonOptions.registerAllocator = ion::RegisterAllocator_LSRA;
+            jit::js_IonOptions.registerAllocator = jit::RegisterAllocator_LSRA;
         else if (strcmp(str, "backtracking") == 0)
-            ion::js_IonOptions.registerAllocator = ion::RegisterAllocator_Backtracking;
+            jit::js_IonOptions.registerAllocator = jit::RegisterAllocator_Backtracking;
         else if (strcmp(str, "stupid") == 0)
-            ion::js_IonOptions.registerAllocator = ion::RegisterAllocator_Stupid;
+            jit::js_IonOptions.registerAllocator = jit::RegisterAllocator_Stupid;
         else
             return OptionFailure("ion-regalloc", str);
     }
 
     if (op->getBoolOption("ion-eager"))
-        ion::js_IonOptions.setEagerCompilation();
+        jit::js_IonOptions.setEagerCompilation();
 
     if (op->getBoolOption("ion-compile-try-catch"))
-        ion::js_IonOptions.compileTryCatch = true;
+        jit::js_IonOptions.compileTryCatch = true;
 
 #ifdef JS_THREADSAFE
     bool parallelCompilation = false;

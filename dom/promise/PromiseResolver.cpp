@@ -7,6 +7,7 @@
 #include "mozilla/dom/PromiseResolver.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "nsThreadUtils.h"
 #include "PromiseCallback.h"
 
 namespace mozilla {
@@ -104,7 +105,7 @@ PromiseResolver::ResolveInternal(JSContext* aCx,
   if (aValue.WasPassed() && aValue.Value().isObject()) {
     JS::Rooted<JSObject*> valueObj(aCx, &aValue.Value().toObject());
     Promise* nextPromise;
-    nsresult rv = UnwrapObject<Promise>(aCx, valueObj, nextPromise);
+    nsresult rv = UNWRAP_OBJECT(Promise, aCx, valueObj, nextPromise);
 
     if (NS_SUCCEEDED(rv)) {
       nsRefPtr<PromiseCallback> resolveCb = new ResolvePromiseCallback(this);

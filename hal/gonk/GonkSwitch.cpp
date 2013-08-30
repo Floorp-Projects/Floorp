@@ -22,9 +22,11 @@
 
 #include "Hal.h"
 #include "mozilla/FileUtils.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Monitor.h"
 #include "nsPrintfCString.h"
 #include "nsXULAppAPI.h"
+#include "nsThreadUtils.h"
 #include "UeventPoller.h"
 
 using namespace mozilla::hal;
@@ -359,7 +361,7 @@ ReleaseResourceIfNeed()
 {
   if (sSwitchObserver->GetEnableCount() == 0) {
     UnregisterUeventListener(sSwitchObserver);
-    sSwitchObserver = NULL;
+    sSwitchObserver = nullptr;
   }
 }
 

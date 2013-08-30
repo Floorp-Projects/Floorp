@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2009, Jay Loden, Giampaolo Rodola'. All rights reserved.
+# Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -33,12 +33,14 @@ def main():
             cons = p.get_connections(kind='inet')
         except psutil.AccessDenied:
             print_(templ % (AD, AD, AD, AD, p.pid, name))
+        except psutil.NoSuchProcess:
+            continue
         else:
             for c in cons:
                 raddr = ""
-                laddr = "%s:%s" % (c.local_address)
-                if c.remote_address:
-                    raddr = "%s:%s" % (c.remote_address)
+                laddr = "%s:%s" % (c.laddr)
+                if c.raddr:
+                    raddr = "%s:%s" % (c.raddr)
                 print_(templ % (proto_map[(c.family, c.type)],
                                 laddr,
                                 raddr,

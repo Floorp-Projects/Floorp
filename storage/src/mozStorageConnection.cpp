@@ -329,15 +329,13 @@ WaitForUnlockNotify(sqlite3* aDatabase)
 
 namespace {
 
-class AsyncCloseConnection : public nsRunnable
+class AsyncCloseConnection MOZ_FINAL: public nsRunnable
 {
 public:
   AsyncCloseConnection(Connection *aConnection,
-                       nsIEventTarget *aCallingThread,
                        nsIRunnable *aCallbackEvent,
                        already_AddRefed<nsIThread> aAsyncExecutionThread)
   : mConnection(aConnection)
-  , mCallingThread(aCallingThread)
   , mCallbackEvent(aCallbackEvent)
   , mAsyncExecutionThread(aAsyncExecutionThread)
   {
@@ -345,46 +343,39 @@ public:
 
   NS_METHOD Run()
   {
-    // This event is first dispatched to the background thread to ensure that
-    // all pending asynchronous events are completed, and then back to the
-    // calling thread to actually close and notify.
-    bool onCallingThread = false;
-    (void)mCallingThread->IsOnCurrentThread(&onCallingThread);
-    if (!onCallingThread) {
 #ifdef DEBUG
-      {
-        bool onAsyncThread = false;
-        (void)mAsyncExecutionThread->IsOnCurrentThread(&onAsyncThread);
-        MOZ_ASSERT(onAsyncThread);
-      }
-#endif
-      (void)mCallingThread->Dispatch(this, NS_DISPATCH_NORMAL);
-      return NS_OK;
-    }
+    // This code is executed on the background thread
+    bool onAsyncThread = false;
+    (void)mAsyncExecutionThread->IsOnCurrentThread(&onAsyncThread);
+    MOZ_ASSERT(onAsyncThread);
+#endif // DEBUG
 
+    // Internal close.
     (void)mConnection->internalClose();
-    if (mCallbackEvent)
-      (void)mCallingThread->Dispatch(mCallbackEvent, NS_DISPATCH_NORMAL);
 
-    (void)mAsyncExecutionThread->Shutdown();
-
-    // Because we have no guarantee that the invocation of this method on the
-    // asynchronous thread has fully completed (including the Release of the
-    // reference to this object held by that event loop), we need to explicitly
-    // null out our pointers here.  It is possible this object will be destroyed
-    // on the asynchronous thread and if the references are still alive we will
-    // release them on that thread. We definitely do not want that for
-    // mConnection and it's nice to avoid for mCallbackEvent too.  We do not
-    // null out mCallingThread because it is conceivable the async thread might
-    // still be 'in' the object.
-    mConnection = nullptr;
-    mCallbackEvent = nullptr;
+    // Callback
+    if (mCallbackEvent) {
+      nsCOMPtr<nsIThread> thread;
+      (void)NS_GetMainThread(getter_AddRefs(thread));
+      (void)thread->Dispatch(mCallbackEvent, NS_DISPATCH_NORMAL);
+    }
 
     return NS_OK;
   }
+
+  ~AsyncCloseConnection() {
+    nsCOMPtr<nsIThread> thread;
+    (void)NS_GetMainThread(getter_AddRefs(thread));
+    // Handle ambiguous nsISupports inheritance.
+    Connection *rawConnection = nullptr;
+    mConnection.swap(rawConnection);
+    (void)NS_ProxyRelease(thread,
+                          NS_ISUPPORTS_CAST(mozIStorageConnection *,
+                                            rawConnection));
+    (void)NS_ProxyRelease(thread, mCallbackEvent);
+  }
 private:
   nsRefPtr<Connection> mConnection;
-  nsCOMPtr<nsIEventTarget> mCallingThread;
   nsCOMPtr<nsIRunnable> mCallbackEvent;
   nsCOMPtr<nsIThread> mAsyncExecutionThread;
 };
@@ -819,13 +810,9 @@ Connection::internalClose()
                  "Did not call setClosedState!");
   }
 
-  { // Ensure that we are being called on the thread we were opened with.
-    bool onOpenedThread = false;
-    (void)threadOpenedOn->IsOnCurrentThread(&onOpenedThread);
-    NS_ASSERTION(onOpenedThread,
-                 "Not called on the thread the database was opened on!");
-  }
-#endif
+  bool onOpeningThread = false;
+  (void)threadOpenedOn->IsOnCurrentThread(&onOpeningThread);
+#endif // DEBUG
 
 #ifdef PR_LOGGING
   nsAutoCString leafName(":memory");
@@ -835,20 +822,62 @@ Connection::internalClose()
                                       leafName.get()));
 #endif
 
-#ifdef DEBUG
-  // Notify about any non-finalized statements.
-  sqlite3_stmt *stmt = nullptr;
-  while ((stmt = ::sqlite3_next_stmt(mDBConn, stmt))) {
-    char *msg = ::PR_smprintf("SQL statement '%s' was not finalized",
-                              ::sqlite3_sql(stmt));
-    NS_WARNING(msg);
-    ::PR_smprintf_free(msg);
-  }
-#endif
+  // At this stage, we may still have statements that need to be
+  // finalized. Attempt to close the database connection. This will
+  // always disconnect any virtual tables and cleanly finalize their
+  // internal statements. Once this is done, closing may fail due to
+  // unfinalized client statements, in which case we need to finalize
+  // these statements and close again.
 
-  int srv = ::sqlite3_close(mDBConn);
-  NS_ASSERTION(srv == SQLITE_OK,
+  int srv = sqlite3_close(mDBConn);
+
+  if (srv == SQLITE_BUSY) {
+    // We still have non-finalized statements. Finalize them.
+
+    sqlite3_stmt *stmt = NULL;
+    while ((stmt = ::sqlite3_next_stmt(mDBConn, stmt))) {
+      PR_LOG(gStorageLog, PR_LOG_NOTICE,
+             ("Auto-finalizing SQL statement '%s' (%x)",
+              ::sqlite3_sql(stmt),
+              stmt));
+
+#ifdef DEBUG
+      char *msg = ::PR_smprintf("SQL statement '%s' (%x) should have been finalized",
+                                ::sqlite3_sql(stmt),
+                                stmt);
+      NS_WARNING(msg);
+      ::PR_smprintf_free(msg);
+#endif // DEBUG
+
+      srv = ::sqlite3_finalize(stmt);
+
+#ifdef DEBUG
+      if (srv != SQLITE_OK) {
+        char *msg = ::PR_smprintf("Could not finalize SQL statement '%s' (%x)",
+                                  ::sqlite3_sql(stmt),
+                                  stmt);
+        NS_WARNING(msg);
+        ::PR_smprintf_free(msg);
+      }
+#endif // DEBUG
+
+      // Ensure that the loop continues properly, whether closing has succeeded
+      // or not.
+      if (srv == SQLITE_OK) {
+        stmt = NULL;
+      }
+    }
+
+    // Now that all statements have been finalized, we
+    // shoudl be able to close.
+    srv = ::sqlite3_close(mDBConn);
+
+  }
+
+  if (srv != SQLITE_OK) {
+    MOZ_ASSERT(srv == SQLITE_OK,
                "sqlite3_close failed. There are probably outstanding statements that are listed above!");
+  }
 
   mDBConn = nullptr;
   return convertResultCode(srv);
@@ -1047,7 +1076,7 @@ Connection::AsyncClose(mozIStorageCompletionCallback *aCallback)
     return NS_ERROR_NOT_INITIALIZED;
 
   nsIEventTarget *asyncThread = getAsyncExecutionTarget();
-  NS_ENSURE_TRUE(asyncThread, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(asyncThread, NS_ERROR_NOT_INITIALIZED);
 
   nsresult rv = setClosedState();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1063,7 +1092,7 @@ Connection::AsyncClose(mozIStorageCompletionCallback *aCallback)
   {
     // We need to lock because we're modifying mAsyncExecutionThread
     MutexAutoLock lockedScope(sharedAsyncExecutionMutex);
-    closeEvent = new AsyncCloseConnection(this, NS_GetCurrentThread(),
+    closeEvent = new AsyncCloseConnection(this,
                                           completeEvent,
                                           mAsyncExecutionThread.forget());
   }
