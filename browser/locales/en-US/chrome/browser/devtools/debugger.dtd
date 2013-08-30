@@ -38,11 +38,6 @@
 <!ENTITY debuggerUI.pauseExceptions     "Pause on exceptions">
 <!ENTITY debuggerUI.pauseExceptions.key "E">
 
-<!-- LOCALIZATION NOTE (debuggerUI.pauseExceptions): This is the label for the
-  -  checkbox that toggles ignoring caught exceptions. -->
-<!ENTITY debuggerUI.ignoreCaughtExceptions     "Ignore caught exceptions">
-<!ENTITY debuggerUI.ignoreCaughtExceptions.key "C">
-
 <!-- LOCALIZATION NOTE (debuggerUI.showPanesOnInit): This is the label for the
   -  checkbox that toggles visibility of panes when opening the debugger. -->
 <!ENTITY debuggerUI.showPanesOnInit     "Show panes on startup">
