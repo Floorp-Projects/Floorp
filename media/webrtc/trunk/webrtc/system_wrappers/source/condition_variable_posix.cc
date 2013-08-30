@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "condition_variable_posix.h"
+#include "webrtc/system_wrappers/source/condition_variable_posix.h"
 
 #include <errno.h>
 #if defined(WEBRTC_LINUX)
@@ -17,7 +17,7 @@
 #include <sys/time.h>
 #endif
 
-#include "critical_section_posix.h"
+#include "webrtc/system_wrappers/source/critical_section_posix.h"
 
 namespace webrtc {
 
@@ -79,7 +79,7 @@ bool ConditionVariablePosix::SleepCS(CriticalSectionWrapper& crit_sect,
                                      unsigned long max_time_inMS) {
   const unsigned long INFINITE =  0xFFFFFFFF;
   const int MILLISECONDS_PER_SECOND = 1000;
-#if !defined(WEBRTC_LINUX) && !defined(WEBRTC_BSD)
+#ifndef WEBRTC_LINUX
   const int MICROSECONDS_PER_MILLISECOND = 1000;
 #endif
   const int NANOSECONDS_PER_SECOND = 1000000000;

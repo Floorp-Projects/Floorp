@@ -40,7 +40,7 @@ class VCMRobustnessTest : public ::testing::Test {
     ASSERT_EQ(0, vcm_->InitializeReceiver());
     const size_t kMaxNackListSize = 250;
     const int kMaxPacketAgeToNack = 450;
-    vcm_->SetNackSettings(kMaxNackListSize, kMaxPacketAgeToNack);
+    vcm_->SetNackSettings(kMaxNackListSize, kMaxPacketAgeToNack, 0);
     ASSERT_EQ(0, vcm_->RegisterFrameTypeCallback(&frame_type_callback_));
     ASSERT_EQ(0, vcm_->RegisterPacketRequestCallback(&request_callback_));
     ASSERT_EQ(VCM_OK, vcm_->Codec(kVideoCodecVP8, &video_codec_));
@@ -107,10 +107,12 @@ TEST_F(VCMRobustnessTest, TestHardNack) {
   InsertPacket(0, 0, true, false, kVideoFrameKey);
   InsertPacket(0, 1, false, false, kVideoFrameKey);
   InsertPacket(0, 2, false, true, kVideoFrameKey);
+  clock_->AdvanceTimeMilliseconds(1000 / 30);
 
   InsertPacket(3000, 3, true, false, kVideoFrameDelta);
   InsertPacket(3000, 4, false, false, kVideoFrameDelta);
   InsertPacket(3000, 5, false, true, kVideoFrameDelta);
+  clock_->AdvanceTimeMilliseconds(1000 / 30);
 
   ASSERT_EQ(VCM_OK, vcm_->Decode(0));
   ASSERT_EQ(VCM_OK, vcm_->Decode(0));

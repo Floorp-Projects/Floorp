@@ -16,8 +16,7 @@
         'aec_debug_dump%': 0,
       },
       'dependencies': [
-        '<(webrtc_root)/common_audio/common_audio.gyp:signal_processing',
-        '<(webrtc_root)/common_audio/common_audio.gyp:vad',
+        '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
       'include_dirs': [
@@ -155,7 +154,6 @@
             'aec/aec_rdft_sse2.c',
           ],
           'cflags': ['-msse2',],
-          'cflags_mozilla': [ '-msse2', ],
           'xcode_settings': {
             'OTHER_CFLAGS': ['-msse2',],
           },
@@ -168,7 +166,7 @@
         'type': 'static_library',
         'includes': ['../../build/arm_neon.gypi',],
         'dependencies': [
-          '<(webrtc_root)/common_audio/common_audio.gyp:signal_processing',
+          '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
         ],
         'sources': [
           'aecm/aecm_core_neon.c',
@@ -179,14 +177,11 @@
             'dependencies': [
               'audio_processing_offsets',
             ],
-	    #
-	    # We disable the ASM source, because our gyp->Makefile translator
-	    # does not support the build steps to get the asm offsets.
-            'sources!': [
+            'sources': [
               'aecm/aecm_core_neon.S',
               'ns/nsx_core_neon.S',
             ],
-            'sources': [
+            'sources!': [
               'aecm/aecm_core_neon.c',
               'ns/nsx_core_neon.c',
             ],

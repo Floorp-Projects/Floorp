@@ -11,10 +11,10 @@
 #ifndef WEBRTC_VIDEO_ENGINE_VIE_FILE_RECORDER_H_
 #define WEBRTC_VIDEO_ENGINE_VIE_FILE_RECORDER_H_
 
-#include "modules/utility/interface/file_recorder.h"
-#include "typedefs.h"  // NOLINT
-#include "video_engine/include/vie_file.h"
-#include "voice_engine/include/voe_file.h"
+#include "webrtc/modules/utility/interface/file_recorder.h"
+#include "webrtc/typedefs.h"
+#include "webrtc/video_engine/include/vie_file.h"
+#include "webrtc/voice_engine/include/voe_file.h"
 
 namespace webrtc {
 

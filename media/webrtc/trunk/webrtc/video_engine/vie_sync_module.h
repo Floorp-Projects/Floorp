@@ -14,11 +14,11 @@
 #ifndef WEBRTC_VIDEO_ENGINE_VIE_SYNC_MODULE_H_
 #define WEBRTC_VIDEO_ENGINE_VIE_SYNC_MODULE_H_
 
-#include "modules/interface/module.h"
-#include "system_wrappers/interface/scoped_ptr.h"
-#include "system_wrappers/interface/tick_util.h"
-#include "video_engine/stream_synchronization.h"
-#include "voice_engine/include/voe_video_sync.h"
+#include "webrtc/modules/interface/module.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/video_engine/stream_synchronization.h"
+#include "webrtc/voice_engine/include/voe_video_sync.h"
 
 namespace webrtc {
 

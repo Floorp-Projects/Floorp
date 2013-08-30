@@ -117,15 +117,6 @@ public class VideoCaptureDeviceInfoAndroid {
                 camera = null;
                 deviceList.add(newDevice);
             }
-        } else {
-          camera = Camera.open();
-          Camera.Parameters parameters = camera.getParameters();
-          AndroidVideoCaptureDevice newDevice = new AndroidVideoCaptureDevice();
-          AddDeviceInfo(newDevice, parameters);
-          newDevice.deviceUniqueName = "Camera";
-          camera.release();
-          camera = null;
-          deviceList.add(newDevice);
         }
         VerifyCapabilities();
         return 0;
@@ -261,7 +252,6 @@ public class VideoCaptureDeviceInfoAndroid {
             Log.d(TAG, "AllocateCamera " + deviceUniqueId);
 
             Camera camera = null;
-            int cameraId = 0;
             AndroidVideoCaptureDevice deviceToUse = null;
             for (AndroidVideoCaptureDevice device: deviceList) {
                 if(device.deviceUniqueName.equals(deviceUniqueId)) {
@@ -276,12 +266,10 @@ public class VideoCaptureDeviceInfoAndroid {
                             break;
                         default:
                             // From Android 2.3 and onwards)
-                            if(android.os.Build.VERSION.SDK_INT>8) {
-                                cameraId = device.index;
-                                camera = Camera.open(device.index);
-                            } else {
-                                camera = Camera.open(); // Default_ camera
-                            }
+                            if(android.os.Build.VERSION.SDK_INT>8)
+                                camera=Camera.open(device.index);
+                            else
+                                camera=Camera.open(); // Default camera
                     }
                 }
             }
@@ -291,7 +279,7 @@ public class VideoCaptureDeviceInfoAndroid {
             }
             Log.v(TAG, "AllocateCamera - creating VideoCaptureAndroid");
 
-            return new VideoCaptureAndroid(id, context, camera, deviceToUse, cameraId);
+            return new VideoCaptureAndroid(id, context, camera, deviceToUse);
         } catch (NoSuchMethodException e) {
             Log.e(TAG, "AllocateCamera Failed to open camera", e);
         } catch (ClassNotFoundException e) {

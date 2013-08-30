@@ -8,16 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_engine/vie_render_manager.h"
+#include "webrtc/video_engine/vie_render_manager.h"
 
-#include "engine_configurations.h"  // NOLINT
+#include "webrtc/engine_configurations.h"
 #include "webrtc/modules/video_render/include/video_render.h"
 #include "webrtc/modules/video_render/include/video_render_defines.h"
-#include "system_wrappers/interface/critical_section_wrapper.h"
-#include "system_wrappers/interface/rw_lock_wrapper.h"
-#include "system_wrappers/interface/trace.h"
-#include "video_engine/vie_defines.h"
-#include "video_engine/vie_renderer.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/rw_lock_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/video_engine/vie_defines.h"
+#include "webrtc/video_engine/vie_renderer.h"
 
 namespace webrtc {
 

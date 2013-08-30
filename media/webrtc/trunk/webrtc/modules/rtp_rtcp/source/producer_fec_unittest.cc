@@ -10,10 +10,10 @@
 
 #include <list>
 
-#include "gtest/gtest.h"
-#include "modules/rtp_rtcp/source/fec_test_helper.h"
-#include "modules/rtp_rtcp/source/forward_error_correction.h"
-#include "modules/rtp_rtcp/source/producer_fec.h"
+#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/modules/rtp_rtcp/source/fec_test_helper.h"
+#include "webrtc/modules/rtp_rtcp/source/forward_error_correction.h"
+#include "webrtc/modules/rtp_rtcp/source/producer_fec.h"
 
 namespace webrtc {
 

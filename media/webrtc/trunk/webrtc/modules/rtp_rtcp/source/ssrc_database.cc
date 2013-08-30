@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "ssrc_database.h"
+#include "webrtc/modules/rtp_rtcp/source/ssrc_database.h"
 
-#include "critical_section_wrapper.h"
-#include "trace.h"
-
+#include <assert.h>
 #include <stdlib.h>
-#include <cassert>
+
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 #ifdef _WIN32
     #include <windows.h>

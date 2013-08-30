@@ -13,17 +13,17 @@
 
 #include <string>
 
-#include "constructor_magic.h"
-#include "common_types.h"
-#include "video_engine/include/vie_base.h"
-#include "video_engine/include/vie_capture.h"
-#include "video_engine/include/vie_codec.h"
-#include "video_engine/include/vie_image_process.h"
-#include "video_engine/include/vie_network.h"
-#include "video_engine/include/vie_render.h"
-#include "video_engine/include/vie_rtp_rtcp.h"
-#include "video_engine/include/vie_encryption.h"
-#include "video_engine/vie_defines.h"
+#include "webrtc/common_types.h"
+#include "webrtc/system_wrappers/interface/constructor_magic.h"
+#include "webrtc/video_engine/include/vie_base.h"
+#include "webrtc/video_engine/include/vie_capture.h"
+#include "webrtc/video_engine/include/vie_codec.h"
+#include "webrtc/video_engine/include/vie_encryption.h"
+#include "webrtc/video_engine/include/vie_image_process.h"
+#include "webrtc/video_engine/include/vie_network.h"
+#include "webrtc/video_engine/include/vie_render.h"
+#include "webrtc/video_engine/include/vie_rtp_rtcp.h"
+#include "webrtc/video_engine/vie_defines.h"
 
 // This class deals with all the tedium of setting up video engine interfaces.
 // It does its work in constructor and destructor, so keeping it in scope is

@@ -8,11 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "mt_test_common.h"
+#include "webrtc/modules/video_coding/main/test/mt_test_common.h"
 
 #include <cmath>
 
-#include "rtp_dump.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_header_parser.h"
+#include "webrtc/modules/utility/interface/rtp_dump.h"
 #include "webrtc/system_wrappers/interface/clock.h"
 
 namespace webrtc {
@@ -88,12 +89,15 @@ TransportCallback::TransportPackets()
 
         _rtpPackets.pop_front();
         // Send to receive side
-        if (_rtp->IncomingPacket((const uint8_t*)packet->data,
-                                     packet->length) < 0)
+        RTPHeader header;
+        scoped_ptr<RtpHeaderParser> parser(RtpHeaderParser::Create());
+        if (!parser->Parse(packet->data, packet->length, &header)) {
+          delete packet;
+          return -1;
+        }
+        if (_rtp->IncomingRtpPacket(packet->data, packet->length, header) < 0)
         {
             delete packet;
-            packet = NULL;
-            // Will return an error after the first packet that goes wrong
             return -1;
         }
         delete packet;
