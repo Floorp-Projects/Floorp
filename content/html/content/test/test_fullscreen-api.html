@@ -95,8 +95,8 @@ function runNextTest() {
   }
 }
 
-if (isOSXMtnLion) {
-  todo(false, "Mountain Lion doesn't like this test (bug 802504)");
+if (isOSXLion || isOSXMtnLion) {
+  todo(false, "Can't reliably run full-screen tests on OS X (bug 900453 comment 18 & bug 802504)");
 } else {
   try {
     window.fullScreen = true;
