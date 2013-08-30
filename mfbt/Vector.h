@@ -86,7 +86,7 @@ struct VectorImpl
     template<typename U>
     static inline void moveConstruct(T* dst, const U* srcbeg, const U* srcend) {
       for (const U* p = srcbeg; p < srcend; ++p, ++dst)
-        new(dst) T(Move(*p));
+        new(dst) T(OldMove(*p));
     }
 
     /*
@@ -115,7 +115,7 @@ struct VectorImpl
       T* dst = newbuf;
       T* src = v.beginNoCheck();
       for (; src < v.endNoCheck(); ++dst, ++src)
-        new(dst) T(Move(*src));
+        new(dst) T(OldMove(*src));
       VectorImpl::destroy(v.beginNoCheck(), v.endNoCheck());
       v.free_(v.mBegin);
       v.mBegin = newbuf;

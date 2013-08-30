@@ -89,6 +89,12 @@ typedef struct
      reached 0 */
     int16_t extraDelayMs; /* extra delay for sync with video */
 
+    int minimum_delay_ms; /* Desired delay, NetEq maintains this amount of
+     delay unless jitter statistics suggests a higher value. */
+    int required_delay_q8; /* Smallest delay required. This is computed
+     according to inter-arrival time and playout mode. It has the same unit
+     as |optBufLevel|. */
+
     /* Peak-detection */
     /* vector with the latest peak periods (peak spacing in samples) */
     uint32_t peakPeriodSamp[NUM_PEAKS];

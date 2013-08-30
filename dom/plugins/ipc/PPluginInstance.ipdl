@@ -139,11 +139,6 @@ child:
   // refer to the existing background or a fresh descriptor.
   async UpdateBackground(SurfaceDescriptor background, nsIntRect rect);
 
-  rpc HandleTextEvent(nsTextEvent event)
-    returns (bool handled);
-  rpc HandleKeyEvent(nsKeyEvent event)
-    returns (bool handled);
-
   async NPP_DidComposite();
 
   rpc NPP_Destroy()

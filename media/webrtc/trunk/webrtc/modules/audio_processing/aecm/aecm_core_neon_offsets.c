@@ -9,7 +9,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "aecm_core.h"
+#include "webrtc/modules/audio_processing/aecm/aecm_core.h"
 
 #include <stddef.h>
 

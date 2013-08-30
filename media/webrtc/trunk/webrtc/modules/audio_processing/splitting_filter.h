@@ -11,8 +11,8 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_MAIN_SOURCE_SPLITTING_FILTER_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_MAIN_SOURCE_SPLITTING_FILTER_H_
 
-#include "typedefs.h"
-#include "signal_processing_library.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 /*

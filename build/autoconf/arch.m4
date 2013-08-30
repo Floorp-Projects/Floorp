@@ -37,16 +37,6 @@ if test -z "$MOZ_ARCH"; then
         MOZ_ARCH=toolchain-default
         MOZ_THUMB=yes
         ;;
-    arm-*)
-        if test -n "$MOZ_PLATFORM_MAEMO"; then
-            MOZ_THUMB=no
-            MOZ_ARCH=armv7-a
-            MOZ_FLOAT_ABI=softfp
-        fi
-        if test "$MOZ_PLATFORM_MAEMO" = 6; then
-            MOZ_THUMB=yes
-        fi
-        ;;
     esac
 fi
 

@@ -13,7 +13,7 @@
 #ifndef WEBRTC_VIDEO_ENGINE_VIE_REF_COUNT_H_
 #define WEBRTC_VIDEO_ENGINE_VIE_REF_COUNT_H_
 
-#include "system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 

@@ -37,9 +37,6 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 INSTALL_SDK = 1
-ifndef MOZ_PLATFORM_MAEMO
-GENERATE_CACHE = 1
-endif
 
 include $(topsrcdir)/toolkit/mozapps/installer/signing.mk
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk

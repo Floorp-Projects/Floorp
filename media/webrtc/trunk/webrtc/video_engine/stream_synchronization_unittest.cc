@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <math.h>
 #include <algorithm>
+#include <math.h>
 
-#include "gtest/gtest.h"
-#include "video_engine/stream_synchronization.h"
+#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/video_engine/stream_synchronization.h"
 
 namespace webrtc {
 

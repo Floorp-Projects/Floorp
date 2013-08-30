@@ -79,9 +79,9 @@ int32_t RTPReceiverVideo::ParseRtpPacket(
                "seqnum", rtp_header->header.sequenceNumber,
                "timestamp", rtp_header->header.timestamp);
   const uint8_t* payload_data =
-      ModuleRTPUtility::GetPayloadData(rtp_header, packet);
+      ModuleRTPUtility::GetPayloadData(rtp_header->header, packet);
   const uint16_t payload_data_length =
-      ModuleRTPUtility::GetPayloadDataLength(rtp_header, packet_length);
+      ModuleRTPUtility::GetPayloadDataLength(rtp_header->header, packet_length);
   return ParseVideoCodecSpecific(rtp_header,
                                  payload_data,
                                  payload_data_length,

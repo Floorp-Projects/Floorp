@@ -10,8 +10,8 @@
 
 #include <assert.h>
 
-#include "system_wrappers/interface/rw_lock_wrapper.h"
-#include "video_engine/vie_manager_base.h"
+#include "webrtc/system_wrappers/interface/rw_lock_wrapper.h"
+#include "webrtc/video_engine/vie_manager_base.h"
 
 namespace webrtc {
 

@@ -18,10 +18,13 @@
 #include "webrtc/system_wrappers/interface/constructor_magic.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/test/testsupport/gtest_prod_util.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
-// Callback class to provide SincResampler with input.
+// Callback class for providing more data into the resampler.  Expects |frames|
+// of data to be rendered into |destination|; zero padded if not enough frames
+// are available to satisfy the request.
 class SincResamplerCallback {
  public:
   virtual ~SincResamplerCallback() {}
@@ -31,6 +34,27 @@ class SincResamplerCallback {
 // SincResampler is a high-quality single-channel sample-rate converter.
 class SincResampler {
  public:
+  enum {
+    // The kernel size can be adjusted for quality (higher is better) at the
+    // expense of performance.  Must be a multiple of 32.
+    // TODO(dalecurtis): Test performance to see if we can jack this up to 64+.
+    kKernelSize = 32,
+
+    // The number of destination frames generated per processing pass.  Affects
+    // how often and for how much SincResampler calls back for input.  Must be
+    // greater than kKernelSize.
+    kDefaultBlockSize = 512,
+
+    // The kernel offset count is used for interpolation and is the number of
+    // sub-sample kernel shifts.  Can be adjusted for quality (higher is better)
+    // at the expense of allocating more memory.
+    kKernelOffsetCount = 32,
+    kKernelStorageSize = kKernelSize * (kKernelOffsetCount + 1),
+
+    // The size (in samples) of the internal buffer used by the resampler.
+    kDefaultBufferSize = kDefaultBlockSize + kKernelSize,
+  };
+
   // Constructs a SincResampler with the specified |read_cb|, which is used to
   // acquire audio data for resampling.  |io_sample_rate_ratio| is the ratio of
   // input / output sample rates.  If desired, the number of destination frames
@@ -54,8 +78,19 @@ class SincResampler {
   // more to prime the buffer.
   int BlockSize();
 
-  // Flush all buffered data and reset internal indices.
+  // Flush all buffered data and reset internal indices.  Not thread safe, do
+  // not call while Resample() is in progress.
   void Flush();
+
+  // Update |io_sample_rate_ratio_|.  SetRatio() will cause a reconstruction of
+  // the kernels used for resampling.  Not thread safe, do not call while
+  // Resample() is in progress.
+  //
+  // TODO(ajm): use this in PushSincResampler rather than reconstructing
+  // SincResampler.
+  void SetRatio(double io_sample_rate_ratio);
+
+  float* get_kernel_for_testing() { return kernel_storage_.get(); }
 
  private:
   FRIEND_TEST_ALL_PREFIXES(SincResamplerTest, Convolve);
@@ -68,16 +103,17 @@ class SincResampler {
   // linearly interpolated using |kernel_interpolation_factor|.  On x86, the
   // underlying implementation is chosen at run time based on SSE support.  On
   // ARM, NEON support is chosen at compile time based on compilation flags.
-  static float Convolve(const float* input_ptr, const float* k1,
-                        const float* k2, double kernel_interpolation_factor);
   static float Convolve_C(const float* input_ptr, const float* k1,
                           const float* k2, double kernel_interpolation_factor);
+#if defined(WEBRTC_ARCH_X86_FAMILY)
   static float Convolve_SSE(const float* input_ptr, const float* k1,
                             const float* k2,
                             double kernel_interpolation_factor);
+#elif defined(WEBRTC_ARCH_ARM_V7)
   static float Convolve_NEON(const float* input_ptr, const float* k1,
                              const float* k2,
                              double kernel_interpolation_factor);
+#endif
 
   // The ratio of input / output sample rates.
   double io_sample_rate_ratio_;
@@ -102,9 +138,19 @@ class SincResampler {
   // The kernel offsets are sub-sample shifts of a windowed sinc shifted from
   // 0.0 to 1.0 sample.
   scoped_ptr_malloc<float, AlignedFree> kernel_storage_;
+  scoped_ptr_malloc<float, AlignedFree> kernel_pre_sinc_storage_;
+  scoped_ptr_malloc<float, AlignedFree> kernel_window_storage_;
 
   // Data from the source is copied into this buffer for each processing pass.
   scoped_ptr_malloc<float, AlignedFree> input_buffer_;
+
+  // Stores the runtime selection of which Convolve function to use.
+#if (defined(WEBRTC_ARCH_X86_FAMILY) && !defined(__SSE__)) ||  \
+    (defined(WEBRTC_ARCH_ARM_V7) && !defined(WEBRTC_ARCH_ARM_NEON))
+  typedef float (*ConvolveProc)(const float*, const float*, const float*,
+                                double);
+  const ConvolveProc convolve_proc_;
+#endif
 
   // Pointers to the various regions inside |input_buffer_|.  See the diagram at
   // the top of the .cc file for more information.

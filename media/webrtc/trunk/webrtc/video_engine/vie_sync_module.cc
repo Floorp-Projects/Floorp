@@ -8,16 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_engine/vie_sync_module.h"
+#include "webrtc/video_engine/vie_sync_module.h"
 
-#include "modules/rtp_rtcp/interface/rtp_rtcp.h"
-#include "modules/video_coding/main/interface/video_coding.h"
-#include "system_wrappers/interface/critical_section_wrapper.h"
-#include "system_wrappers/interface/trace.h"
-#include "system_wrappers/interface/trace_event.h"
-#include "video_engine/stream_synchronization.h"
-#include "video_engine/vie_channel.h"
-#include "voice_engine/include/voe_video_sync.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/interface/trace_event.h"
+#include "webrtc/video_engine/stream_synchronization.h"
+#include "webrtc/video_engine/vie_channel.h"
+#include "webrtc/voice_engine/include/voe_video_sync.h"
 
 namespace webrtc {
 
@@ -103,10 +103,9 @@ int32_t ViESyncModule::Process() {
   CriticalSectionScoped cs(data_cs_.get());
   last_sync_time_ = TickTime::Now();
 
-  int total_video_delay_target_ms = vcm_->Delay();
+  const int current_video_delay_ms = vcm_->Delay();
   WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo, vie_channel_->Id(),
-               "Video delay (JB + decoder) is %d ms",
-               total_video_delay_target_ms);
+               "Video delay (JB + decoder) is %d ms", current_video_delay_ms);
 
   if (voe_channel_id_ == -1) {
     return 0;
@@ -126,6 +125,8 @@ int32_t ViESyncModule::Process() {
                  __FUNCTION__, voe_channel_id_);
     return 0;
   }
+  const int current_audio_delay_ms = audio_jitter_buffer_delay_ms +
+      playout_buffer_delay_ms;
 
   RtpRtcp* voice_rtp_rtcp = NULL;
   if (0 != voe_sync_interface_->GetRtpRtcp(voe_channel_id_, voice_rtp_rtcp)) {
@@ -148,32 +149,31 @@ int32_t ViESyncModule::Process() {
     return 0;
   }
 
-  TRACE_COUNTER1("webrtc", "SyncCurrentVideoDelay",
-                 total_video_delay_target_ms);
-  TRACE_COUNTER1("webrtc", "SyncCurrentAudioDelay",
-                 audio_jitter_buffer_delay_ms);
+  TRACE_COUNTER1("webrtc", "SyncCurrentVideoDelay", current_video_delay_ms);
+  TRACE_COUNTER1("webrtc", "SyncCurrentAudioDelay", current_audio_delay_ms);
   TRACE_COUNTER1("webrtc", "SyncRelativeDelay", relative_delay_ms);
-  int extra_audio_delay_ms = 0;
+  int target_audio_delay_ms = 0;
+  int target_video_delay_ms = current_video_delay_ms;
   // Calculate the necessary extra audio delay and desired total video
   // delay to get the streams in sync.
   if (!sync_->ComputeDelays(relative_delay_ms,
-                            audio_jitter_buffer_delay_ms,
-                            &extra_audio_delay_ms,
-                            &total_video_delay_target_ms)) {
+                            current_audio_delay_ms,
+                            &target_audio_delay_ms,
+                            &target_video_delay_ms)) {
     return 0;
   }
 
-  TRACE_COUNTER1("webrtc", "SyncExtraAudioDelayTarget", extra_audio_delay_ms);
-  TRACE_COUNTER1("webrtc", "SyncTotalVideoDelayTarget",
-                 total_video_delay_target_ms);
+  WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo, vie_channel_->Id(),
+               "Set delay current(a=%d v=%d rel=%d) target(a=%d v=%d)",
+               current_audio_delay_ms, current_video_delay_ms,
+               relative_delay_ms,
+               target_audio_delay_ms, target_video_delay_ms);
   if (voe_sync_interface_->SetMinimumPlayoutDelay(
-      voe_channel_id_, extra_audio_delay_ms) == -1) {
+      voe_channel_id_, target_audio_delay_ms) == -1) {
     WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideo, vie_channel_->Id(),
                  "Error setting voice delay");
   }
-  vcm_->SetMinimumPlayoutDelay(total_video_delay_target_ms);
-  WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo, vie_channel_->Id(),
-               "New Video delay target is: %d", total_video_delay_target_ms);
+  vcm_->SetMinimumPlayoutDelay(target_video_delay_ms);
   return 0;
 }
 

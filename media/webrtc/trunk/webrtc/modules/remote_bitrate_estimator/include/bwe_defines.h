@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_BWE_DEFINES_H_
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_BWE_DEFINES_H_
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
 #define BWE_MAX(a,b) ((a)>(b)?(a):(b))
 #define BWE_MIN(a,b) ((a)<(b)?(a):(b))

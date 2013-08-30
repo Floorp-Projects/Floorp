@@ -7,8 +7,8 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-
-#pragma once
+#ifndef WEBRTC_VOICE_ENGINE_TEST_WIN_TEST_WINTEST_H_
+#define WEBRTC_VOICE_ENGINE_TEST_WIN_TEST_WINTEST_H_
 
 #ifndef __AFXWIN_H__
 	#error "include 'stdafx.h' before including this file for PCH"
@@ -36,3 +36,5 @@ public:
 };
 
 extern CWinTestApp theApp;
+
+#endif  // WEBRTC_VOICE_ENGINE_TEST_WIN_TEST_WINTEST_H_

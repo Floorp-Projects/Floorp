@@ -101,9 +101,6 @@ protected:
     virtual ~VideoCaptureImpl();
     int32_t DeliverCapturedFrame(I420VideoFrame& captureFrame,
                                  int64_t capture_time);
-    int32_t DeliverEncodedCapturedFrame(VideoFrame& captureFrame,
-                                        int64_t capture_time,
-                                        VideoCodecType codec_type);
 
     int32_t _id; // Module ID
     char* _deviceUniqueId; // current Device unique name;

@@ -8,18 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "rtcp_sender.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_sender.h"
 
 #include <algorithm>  // min
 #include <cassert>  // assert
 #include <cstdlib>  // rand
 #include <string.h>  // memcpy
 
-#include "common_types.h"
-#include "modules/rtp_rtcp/source/rtp_rtcp_impl.h"
-#include "system_wrappers/interface/critical_section_wrapper.h"
-#include "system_wrappers/interface/trace.h"
-#include "system_wrappers/interface/trace_event.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_rtcp_impl.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/interface/trace_event.h"
 
 namespace webrtc {
 

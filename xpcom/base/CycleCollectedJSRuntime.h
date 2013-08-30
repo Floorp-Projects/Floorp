@@ -87,12 +87,6 @@ protected:
                           bool aExpectUnrootedGlobals);
   virtual ~CycleCollectedJSRuntime();
 
-  JSRuntime* Runtime() const
-  {
-    MOZ_ASSERT(mJSRuntime);
-    return mJSRuntime;
-  }
-
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   void UnmarkSkippableJSHolders();
 
@@ -208,6 +202,11 @@ public:
   
   virtual void DispatchDeferredDeletion(bool aContinuation) = 0;
 
+  JSRuntime* Runtime() const
+  {
+    MOZ_ASSERT(mJSRuntime);
+    return mJSRuntime;
+  }
 private:
   JSGCThingParticipant mGCThingCycleCollectorGlobal;
 

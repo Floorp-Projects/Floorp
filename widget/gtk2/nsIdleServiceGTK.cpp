@@ -93,9 +93,7 @@ bool
 nsIdleServiceGTK::PollIdleTime(uint32_t *aIdleTime)
 {
     if (!sInitialized) {
-        // For some reason, we could not find xscreensaver.  This this might be
-        // because we are on a mobile platforms (e.g. Maemo/OSSO).  In this
-        // case, let the base class handle it
+        // For some reason, we could not find xscreensaver.
         return false;
     }
 

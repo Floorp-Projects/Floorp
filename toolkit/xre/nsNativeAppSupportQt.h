@@ -14,24 +14,13 @@
 #include "nsNativeAppSupportBase.h"
 #include "nsString.h"
 
-#ifdef MOZ_ENABLE_LIBCONIC
-#include <glib-object.h>
-#endif
-
-#if (MOZ_PLATFORM_MAEMO == 5)
-#include <libosso.h>
-#endif
-
 class nsNativeAppSupportQt : public QObject, public nsNativeAppSupportBase
 {
   Q_OBJECT
 public:
   NS_IMETHOD Start(bool* aRetVal);
   NS_IMETHOD Stop(bool* aResult);
-#if (MOZ_PLATFORM_MAEMO == 5)
-  // Osso context must be initialized for maemo5 otherwise we will be killed in ~20 seconds
-  osso_context_t *m_osso_context;
-#endif
+
 #ifdef MOZ_ENABLE_QMSYSTEM2
 public Q_SLOTS:
   void activityChanged(MeeGo::QmActivity::Activity activity);

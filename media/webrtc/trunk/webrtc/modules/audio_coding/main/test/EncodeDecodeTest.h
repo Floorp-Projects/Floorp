@@ -24,21 +24,18 @@ namespace webrtc {
 #define MAX_INCOMING_PAYLOAD 8096
 
 // TestPacketization callback which writes the encoded payloads to file
-class TestPacketization: public AudioPacketizationCallback {
+class TestPacketization : public AudioPacketizationCallback {
  public:
   TestPacketization(RTPStream *rtpStream, uint16_t frequency);
   ~TestPacketization();
-  virtual int32_t SendData(const FrameType frameType,
-                           const uint8_t payloadType,
-                           const uint32_t timeStamp,
-                           const uint8_t* payloadData,
+  virtual int32_t SendData(const FrameType frameType, const uint8_t payloadType,
+                           const uint32_t timeStamp, const uint8_t* payloadData,
                            const uint16_t payloadSize,
                            const RTPFragmentationHeader* fragmentation);
 
  private:
   static void MakeRTPheader(uint8_t* rtpHeader, uint8_t payloadType,
-                            int16_t seqNo, uint32_t timeStamp,
-                            uint32_t ssrc);
+                            int16_t seqNo, uint32_t timeStamp, uint32_t ssrc);
   RTPStream* _rtpStream;
   int32_t _frequency;
   int16_t _seqNo;
@@ -92,7 +89,7 @@ class Receiver {
   uint32_t _nextTime;
 };
 
-class EncodeDecodeTest: public ACMTest {
+class EncodeDecodeTest : public ACMTest {
  public:
   EncodeDecodeTest();
   EncodeDecodeTest(int testMode);
@@ -109,6 +106,6 @@ class EncodeDecodeTest: public ACMTest {
   Receiver _receiver;
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif

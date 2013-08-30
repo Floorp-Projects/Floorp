@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "dtmf_inband.h"
+#include "webrtc/voice_engine/dtmf_inband.h"
 
-#include "critical_section_wrapper.h"
-#include "trace.h"
 #include <cassert>
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 
@@ -64,7 +64,7 @@ const int16_t Dtmf_dBm0kHz[37]=
 };
 
 
-DtmfInband::DtmfInband(const int32_t id) :
+DtmfInband::DtmfInband(int32_t id) :
     _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
     _id(id),
     _outputFrequencyHz(8000),
@@ -87,7 +87,7 @@ DtmfInband::~DtmfInband()
 }
 
 int
-DtmfInband::SetSampleRate(const uint16_t frequency)
+DtmfInband::SetSampleRate(uint16_t frequency)
 {
     if (frequency != 8000 &&
             frequency != 16000 &&
@@ -125,7 +125,7 @@ DtmfInband::Init()
 }
 
 int
-DtmfInband::AddTone(const uint8_t eventCode,
+DtmfInband::AddTone(uint8_t eventCode,
                     int32_t lengthMs,
                     int32_t attenuationDb)
 {
@@ -170,7 +170,7 @@ DtmfInband::ResetTone()
 }
 
 int
-DtmfInband::StartTone(const uint8_t eventCode,
+DtmfInband::StartTone(uint8_t eventCode,
                       int32_t attenuationDb)
 {
     CriticalSectionScoped lock(&_critSect);
@@ -263,10 +263,10 @@ DtmfInband::DelaySinceLastTone() const
 
 int16_t
 DtmfInband::DtmfFix_generate(int16_t *decoded,
-                             const int16_t value,
-                             const int16_t volume,
-                             const int16_t frameLen,
-                             const int16_t fs)
+                             int16_t value,
+                             int16_t volume,
+                             int16_t frameLen,
+                             int16_t fs)
 {
     const int16_t *a_times2Tbl;
     const int16_t *y2_Table;
@@ -348,11 +348,11 @@ DtmfInband::DtmfFix_generate(int16_t *decoded,
 }
 
 int16_t
-DtmfInband::DtmfFix_generateSignal(const int16_t a1_times2,
-                                   const int16_t a2_times2,
-                                   const int16_t volume,
+DtmfInband::DtmfFix_generateSignal(int16_t a1_times2,
+                                   int16_t a2_times2,
+                                   int16_t volume,
                                    int16_t *signal,
-                                   const int16_t length)
+                                   int16_t length)
 {
     int i;
 

@@ -15,7 +15,7 @@
  *
  */
 
-#include "signal_processing_library.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
 int32_t WebRtcSpl_Energy(int16_t* vector, int vector_length, int* scale_factor)
 {

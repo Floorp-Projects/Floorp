@@ -12,11 +12,11 @@
 #include <iostream>
 #include <time.h>
 
-#include "functionTest.h"
-#include "event_wrapper.h"
-#include "trace.h"
-#include "thread_wrapper.h"
-#include "webrtc_vad.h"
+#include "webrtc/common_audio/vad/include/webrtc_vad.h"
+#include "webrtc/modules/audio_conference_mixer/test/FunctionTest/functionTest.h"
+#include "webrtc/system_wrappers/interface/event_wrapper.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 #if (defined(WEBRTC_LINUX) || defined(WEBRTC_MAC))
    #include <sys/stat.h>

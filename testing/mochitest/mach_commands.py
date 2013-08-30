@@ -9,6 +9,7 @@ import mozpack.path
 import os
 import platform
 import sys
+import which
 
 from mozbuild.base import (
     MachCommandBase,
@@ -24,6 +25,8 @@ from mach.decorators import (
 
 from mach.logging import StructuredHumanFormatter
 
+ADB_NOT_FOUND = """The %s command requires the adb binary to be on your path.
+This can be found in '%s/out/host/<platform>/bin'."""
 
 class UnexpectedFilter(logging.Filter):
     def filter(self, record):
@@ -56,6 +59,12 @@ class MochitestRunner(MozbuildObject):
         top source directory, an absolute filename, or a directory containing
         test files.
         """
+        try:
+            which.which('adb')
+        except which.WhichError:
+            # TODO Find adb automatically if it isn't on the path
+            raise Exception(ADB_NOT_FOUND % ('mochitest-remote', b2g_home))
+
         # TODO without os.chdir, chained imports fail below
         os.chdir(self.mochitest_dir)
 

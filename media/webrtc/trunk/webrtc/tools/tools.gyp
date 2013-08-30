@@ -12,14 +12,6 @@
   ],
   'targets': [
     {
-      'target_name': 'command_line_parser',
-      'type': 'static_library',
-      'sources': [
-        'simple_command_line_parser.h',
-        'simple_command_line_parser.cc',
-      ],
-    }, # command_line_parser
-    {
       'target_name': 'video_quality_analysis',
       'type': 'static_library',
       'dependencies': [
@@ -45,7 +37,7 @@
       'target_name': 'frame_analyzer',
       'type': 'executable',
       'dependencies': [
-        'command_line_parser',
+        '<(webrtc_root)/tools/internal_tools.gyp:command_line_parser',
         'video_quality_analysis',
       ],
       'sources': [
@@ -56,7 +48,7 @@
       'target_name': 'psnr_ssim_analyzer',
       'type': 'executable',
       'dependencies': [
-        'command_line_parser',
+        '<(webrtc_root)/tools/internal_tools.gyp:command_line_parser',
         'video_quality_analysis',
       ],
       'sources': [
@@ -67,7 +59,7 @@
       'target_name': 'rgba_to_i420_converter',
       'type': 'executable',
       'dependencies': [
-        'command_line_parser',
+        '<(webrtc_root)/tools/internal_tools.gyp:command_line_parser',
         '<(DEPTH)/third_party/libyuv/libyuv.gyp:libyuv',
       ],
       'sources': [
@@ -95,13 +87,23 @@
       'target_name': 'frame_editor',
       'type': 'executable',
       'dependencies': [
-        'command_line_parser',
+        '<(webrtc_root)/tools/internal_tools.gyp:command_line_parser',
         'frame_editing_lib',
       ],
       'sources': [
         'frame_editing/frame_editing.cc',
       ],
     }, # frame_editing
+    {
+      'target_name': 'force_mic_volume_max',
+      'type': 'executable',
+      'dependencies': [
+        '<(webrtc_root)/voice_engine/voice_engine.gyp:voice_engine',
+      ],
+      'sources': [
+        'force_mic_volume_max/force_mic_volume_max.cc',
+      ],
+    }, # force_mic_volume_max
   ],
   'conditions': [
     ['include_tests==1', {
@@ -110,8 +112,8 @@
           'target_name': 'tools_unittests',
           'type': 'executable',
           'dependencies': [
-            'command_line_parser',
             'frame_editing_lib',
+            '<(webrtc_root)/tools/internal_tools.gyp:command_line_parser',
             '<(webrtc_root)/test/test.gyp:test_support_main',
             '<(DEPTH)/testing/gtest.gyp:gtest',
           ],

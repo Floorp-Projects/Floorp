@@ -7,16 +7,16 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "video_engine/test/libvietest/include/vie_file_capture_device.h"
+#include "webrtc/video_engine/test/libvietest/include/vie_file_capture_device.h"
 
 #include <assert.h>
 
-#include "common_types.h"
-#include "modules/interface/module_common_types.h"
-#include "system_wrappers/interface/critical_section_wrapper.h"
-#include "system_wrappers/interface/event_wrapper.h"
-#include "system_wrappers/interface/tick_util.h"
-#include "video_engine/include/vie_capture.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/event_wrapper.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/video_engine/include/vie_capture.h"
 
 // This class ensures we are not exceeding the max FPS.
 class FramePacemaker {

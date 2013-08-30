@@ -1,14 +1,21 @@
-# Copyright (c) 2011 The Chromium Authors. All rights reserved.
-# Use of this source code is governed by a BSD-style license that can be
-# found in the LICENSE file.
+# Copyright (c) 2013 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
 
+# Copied from Chromium's src/build/protoc.gypi
+#
 # It was necessary to copy this file to WebRTC, because the path to
 # build/common.gypi is different for the standalone and Chromium builds. Gyp
 # doesn't permit conditional inclusion or variable expansion in include paths.
 # http://code.google.com/p/gyp/wiki/InputFormatReference#Including_Other_Files
 
 # This file is meant to be included into a target to provide a rule
-# to invoke protoc in a consistent manner.
+# to invoke protoc in a consistent manner. For Java-targets, see
+# protoc_java.gypi.
 #
 # To use this, create a gyp target with the following form:
 # {
@@ -37,6 +44,14 @@
 # like:
 #   #include "dir/for/my_proto_lib/foo.pb.h"
 #
+# If you need to add an EXPORT macro to a protobuf's c++ header, set the
+# 'cc_generator_options' variable with the value: 'dllexport_decl=FOO_EXPORT:'
+# e.g. 'dllexport_decl=BASE_EXPORT:'
+#
+# It is likely you also need to #include a file for the above EXPORT macro to
+# work. You can do so with the 'cc_include' variable.
+# e.g. 'base/base_export.h'
+#
 # Implementation notes:
 # A proto_out_dir of foo/bar produces
 #   <(SHARED_INTERMEDIATE_DIR)/protoc_out/foo/bar/{file1,file2}.pb.{cc,h}
@@ -44,16 +59,26 @@
 
 {
   'variables': {
-    'protoc': '<(PRODUCT_DIR)/<(EXECUTABLE_PREFIX)protoc<(EXECUTABLE_SUFFIX)',
+    'protoc_wrapper': '<(DEPTH)/tools/protoc_wrapper/protoc_wrapper.py',
     'cc_dir': '<(SHARED_INTERMEDIATE_DIR)/protoc_out/<(proto_out_dir)',
     'py_dir': '<(PRODUCT_DIR)/pyproto/<(proto_out_dir)',
+    'cc_generator_options%': '',
+    'cc_include%': '',
     'proto_in_dir%': '.',
+    'conditions': [
+      ['use_system_protobuf==0', {
+        'protoc': '<(PRODUCT_DIR)/<(EXECUTABLE_PREFIX)protoc<(EXECUTABLE_SUFFIX)',
+      }, { # use_system_protobuf==1
+        'protoc': '<!(which protoc)',
+      }],
+    ],
   },
   'rules': [
     {
       'rule_name': 'genproto',
       'extension': 'proto',
       'inputs': [
+        '<(protoc_wrapper)',
         '<(protoc)',
       ],
       'outputs': [
@@ -62,14 +87,25 @@
         '<(cc_dir)/<(RULE_INPUT_ROOT).pb.h',
       ],
       'action': [
-        '<(protoc)',
-        '--proto_path=<(proto_in_dir)',
+        'python',
+        '<(protoc_wrapper)',
+        '--include',
+        '<(cc_include)',
+        '--protobuf',
+        '<(cc_dir)/<(RULE_INPUT_ROOT).pb.h',
+        # Using the --arg val form (instead of --arg=val) allows gyp's msvs rule
+        # generation to correct 'val' which is a path.
+        '--proto-in-dir','<(proto_in_dir)',
         # Naively you'd use <(RULE_INPUT_PATH) here, but protoc requires
         # --proto_path is a strict prefix of the path given as an argument.
-        '<(proto_in_dir)/<(RULE_INPUT_ROOT)<(RULE_INPUT_EXT)',
-        '--cpp_out=<(cc_dir)',
-        '--python_out=<(py_dir)',
-        ],
+        '--proto-in-file','<(RULE_INPUT_ROOT)<(RULE_INPUT_EXT)',
+        '--use-system-protobuf=<(use_system_protobuf)',
+        '--',
+        '<(protoc)',
+        '--cpp_out', '<(cc_generator_options)<(cc_dir)',
+        '--python_out', '<(py_dir)',
+      ],
+      'msvs_cygwin_shell': 0,
       'message': 'Generating C++ and Python code from <(RULE_INPUT_PATH)',
       'process_outputs_as_sources': 1,
     },
@@ -80,10 +116,12 @@
   ],
   'include_dirs': [
     '<(SHARED_INTERMEDIATE_DIR)/protoc_out',
+    '<(DEPTH)',
   ],
   'direct_dependent_settings': {
     'include_dirs': [
       '<(SHARED_INTERMEDIATE_DIR)/protoc_out',
+      '<(DEPTH)',
     ]
   },
   'export_dependent_settings': [

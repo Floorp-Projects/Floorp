@@ -53,9 +53,6 @@ nsFastStartup::GetStartupGraphicsView(QWidget* parentWidget, IMozQWidget* aTopCh
     view = new MozGraphicsView(parentWidget);
     Qt::WindowFlags flags = Qt::Widget;
     view->setWindowFlags(flags);
-#if MOZ_PLATFORM_MAEMO == 6
-    view->setViewport(new QGLWidget());
-#endif
   }
   view->SetTopLevel(aTopChild, parentWidget);
 
@@ -118,11 +115,7 @@ nsFastStartup::CreateFastStartup(int& argc, char ** argv,
   mFakeWidget = fakeWidget;
 
   mThread->start();
-#ifdef MOZ_PLATFORM_MAEMO
-  mGraphicsView->showFullScreen();
-#else
   mGraphicsView->showNormal();
-#endif
 
   // Start native loop in order to get view opened and painted once
   // Will block CreateFastStartup function and

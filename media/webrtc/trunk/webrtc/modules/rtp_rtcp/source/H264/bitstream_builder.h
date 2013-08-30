@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_H264_BITSTREAM_BUILDER_H_
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_H264_BITSTREAM_BUILDER_H_
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 class BitstreamBuilder

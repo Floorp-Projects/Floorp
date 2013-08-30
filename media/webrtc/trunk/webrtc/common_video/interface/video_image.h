@@ -11,8 +11,8 @@
 #ifndef COMMON_VIDEO_INTERFACE_VIDEO_IMAGE_H
 #define COMMON_VIDEO_INTERFACE_VIDEO_IMAGE_H
 
-#include "typedefs.h"
 #include <stdlib.h>
+#include "webrtc/typedefs.h"
 
 namespace webrtc
 {

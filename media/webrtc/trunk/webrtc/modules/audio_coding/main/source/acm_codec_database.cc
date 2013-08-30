@@ -649,8 +649,8 @@ ACMGenericCodec* ACMCodecDB::CreateCodecInstance(const CodecInst* codec_inst) {
           default: {
             return NULL;
           }
-          return new ACMG722_1(codec_id);
         }
+        return new ACMG722_1(codec_id);
 #endif
       }
       case 32000: {
@@ -672,8 +672,8 @@ ACMGenericCodec* ACMCodecDB::CreateCodecInstance(const CodecInst* codec_inst) {
           default: {
             return NULL;
           }
-          return new ACMG722_1C(codec_id);
         }
+        return new ACMG722_1C(codec_id);
 #endif
       }
     }

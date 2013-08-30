@@ -10,16 +10,13 @@
 #include "nsCOMPtr.h"
 #include "nsEvent.h"
 #include "nsINode.h"
-#include "nsString.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 
-class nsCompositionEvent;
 class nsDispatchingCallback;
 class nsIMEStateManager;
 class nsIWidget;
-class nsPresContext;
 
 namespace mozilla {
 

@@ -5,7 +5,7 @@
 
 module.metadata = {
   'engines': {
-    'Firefox': '> 24'
+    'Firefox': '*'
   }
 };
 
@@ -19,9 +19,9 @@ const { isPrivate } = require('sdk/private-browsing');
 const { data } = require('sdk/self');
 const { URL } = require('sdk/url');
 
-const { BLANK_IMG, BUILTIN_SIDEBAR_MENUITEMS, isSidebarShowing,
+const { BUILTIN_SIDEBAR_MENUITEMS, isSidebarShowing,
         getSidebarMenuitems, getExtraSidebarMenuitems, makeID, simulateCommand,
-        simulateClick, getWidget, isChecked } = require('./sidebar/utils');
+        simulateClick, isChecked } = require('./sidebar/utils');
 
 exports.testSideBarIsNotInNewPrivateWindows = function(assert, done) {
   const { Sidebar } = require('sdk/ui/sidebar');
@@ -29,7 +29,6 @@ exports.testSideBarIsNotInNewPrivateWindows = function(assert, done) {
   let sidebar = Sidebar({
     id: testName,
     title: testName,
-    icon: BLANK_IMG,
     url: 'data:text/html;charset=utf-8,'+testName
   });
 
@@ -58,7 +57,6 @@ exports.testSidebarIsNotOpenInNewPrivateWindow = function(assert, done) {
     let sidebar = Sidebar({
       id: testName,
       title: testName,
-      icon: BLANK_IMG,
       url: 'data:text/html;charset=utf-8,'+testName
     });
 
@@ -94,7 +92,6 @@ exports.testDestroyEdgeCaseBugWithPrivateWindow = function(assert, done) {
   let sidebar = Sidebar({
     id: testName,
     title: testName,
-    icon: BLANK_IMG,
     url: 'data:text/html;charset=utf-8,'+testName
   });
 
@@ -123,14 +120,13 @@ exports.testDestroyEdgeCaseBugWithPrivateWindow = function(assert, done) {
       let sidebar = loader.require('sdk/ui/sidebar').Sidebar({
         id: testName,
         title: testName,
-        icon: BLANK_IMG,
         url:  'data:text/html;charset=utf-8,'+ testName,
         onShow: function() {
           assert.pass('onShow works for Sidebar');
           loader.unload();
 
           let sidebarMI = getSidebarMenuitems();
-          for each (let mi in sidebarMI) {
+          for (let mi of sidebarMI) {
             assert.ok(BUILTIN_SIDEBAR_MENUITEMS.indexOf(mi.getAttribute('id')) >= 0, 'the menuitem is for a built-in sidebar')
             assert.ok(!isChecked(mi), 'no sidebar menuitem is checked');
           }
@@ -158,7 +154,6 @@ exports.testShowInPrivateWindow = function(assert, done) {
   let sidebar1 = Sidebar({
     id: testName,
     title: testName,
-    icon: BLANK_IMG,
     url: url
   });
 

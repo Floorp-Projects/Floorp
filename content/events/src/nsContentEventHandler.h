@@ -6,16 +6,12 @@
 #ifndef nsContentEventHandler_h__
 #define nsContentEventHandler_h__
 
-#include "nscore.h"
 #include "nsCOMPtr.h"
 
 #include "nsISelection.h"
 #include "nsRange.h"
-#include "nsIDOMTreeWalker.h"
 
 class nsCaret;
-class nsIContent;
-class nsIPresShell;
 class nsPresContext;
 class nsQueryContentEvent;
 class nsSelectionEvent;

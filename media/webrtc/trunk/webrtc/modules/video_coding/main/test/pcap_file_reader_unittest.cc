@@ -56,9 +56,9 @@ class TestPcapFileReader : public ::testing::Test {
       length = kBufferSize;
 
       ModuleRTPUtility::RTPHeaderParser rtp_header_parser(data, length);
-      webrtc::WebRtcRTPHeader header;
+      webrtc::RTPHeader header;
       if (!rtp_header_parser.RTCP() && rtp_header_parser.Parse(header, NULL)) {
-        pps[header.header.ssrc]++;
+        pps[header.ssrc]++;
       }
     }
     return pps;

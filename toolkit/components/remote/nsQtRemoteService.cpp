@@ -65,9 +65,6 @@ mServerWindow(0)
 NS_IMETHODIMP
 nsQtRemoteService::Startup(const char* aAppName, const char* aProfileName)
 {
-#if (MOZ_PLATFORM_MAEMO == 5)
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
   if (mServerWindow) return NS_ERROR_ALREADY_INITIALIZED;
   NS_ASSERTION(aAppName, "Don't pass a null appname!");
 

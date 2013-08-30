@@ -6,6 +6,6 @@
 #  in the file PATENTS.  All contributing project authors may
 #  be found in the AUTHORS file in the root of the source tree.
 
-# Build both ARMv5TE and ARMv7-A machine code.
-APP_ABI := armeabi-v7a #armeabi armeabi-v7a x86
+# Build both ARMv7-A and x86 machine code.
+APP_ABI := armeabi-v7a x86
 APP_STL := stlport_static

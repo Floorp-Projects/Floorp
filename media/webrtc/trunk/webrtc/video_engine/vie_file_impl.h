@@ -11,13 +11,13 @@
 #ifndef WEBRTC_VIDEO_ENGINE_VIE_FILE_IMPL_H_
 #define WEBRTC_VIDEO_ENGINE_VIE_FILE_IMPL_H_
 
-#include "system_wrappers/interface/scoped_ptr.h"
-#include "typedefs.h"  // NOLINT
-#include "video_engine/include/vie_file.h"
-#include "video_engine/vie_defines.h"
-#include "video_engine/vie_frame_provider_base.h"
-#include "video_engine/vie_ref_count.h"
-#include "video_engine/vie_shared_data.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/typedefs.h"
+#include "webrtc/video_engine/include/vie_file.h"
+#include "webrtc/video_engine/vie_defines.h"
+#include "webrtc/video_engine/vie_frame_provider_base.h"
+#include "webrtc/video_engine/vie_ref_count.h"
+#include "webrtc/video_engine/vie_shared_data.h"
 
 namespace webrtc {
 

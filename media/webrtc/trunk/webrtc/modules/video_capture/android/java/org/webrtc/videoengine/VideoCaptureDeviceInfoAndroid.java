@@ -117,15 +117,6 @@ public class VideoCaptureDeviceInfoAndroid {
                 camera = null;
                 deviceList.add(newDevice);
             }
-        } else {
-          camera = Camera.open();
-          Camera.Parameters parameters = camera.getParameters();
-          AndroidVideoCaptureDevice newDevice = new AndroidVideoCaptureDevice();
-          AddDeviceInfo(newDevice, parameters);
-          newDevice.deviceUniqueName = "Camera";
-          camera.release();
-          camera = null;
-          deviceList.add(newDevice);
         }
         VerifyCapabilities();
         return 0;

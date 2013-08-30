@@ -27,10 +27,6 @@
 
 class nsIPrincipal;
 
-#ifdef MOZ_MAEMO_LIBLOCATION
-#include "MaemoLocationProvider.h"
-#endif
-
 #ifdef MOZ_ENABLE_QTMOBILITY
 #include "QTMLocationProvider.h"
 #endif
@@ -680,10 +676,6 @@ nsresult nsGeolocationService::Init()
 
   obs->AddObserver(this, "quit-application", false);
   obs->AddObserver(this, "mozsettings-changed", false);
-
-#ifdef MOZ_MAEMO_LIBLOCATION
-  mProvider = new MaemoLocationProvider();
-#endif
 
 #ifdef MOZ_ENABLE_QTMOBILITY
   mProvider = new QTMLocationProvider();

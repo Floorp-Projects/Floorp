@@ -58,9 +58,9 @@ public:
     uint16_t NumOfSendingChannels();
 
     // Convenience methods for calling statistics().SetLastError().
-    void SetLastError(const int32_t error) const;
-    void SetLastError(const int32_t error, const TraceLevel level) const;
-    void SetLastError(const int32_t error, const TraceLevel level,
+    void SetLastError(int32_t error) const;
+    void SetLastError(int32_t error, TraceLevel level) const;
+    void SetLastError(int32_t error, TraceLevel level,
                       const char* msg) const;
 
 protected:

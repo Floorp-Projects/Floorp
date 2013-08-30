@@ -16,7 +16,7 @@
 #ifndef WEBRTC_COMMON_AUDIO_VAD_INCLUDE_WEBRTC_VAD_H_  // NOLINT
 #define WEBRTC_COMMON_AUDIO_VAD_INCLUDE_WEBRTC_VAD_H_
 
-#include "typedefs.h"  // NOLINT
+#include "webrtc/typedefs.h"
 
 typedef struct WebRtcVadInst VadInst;
 

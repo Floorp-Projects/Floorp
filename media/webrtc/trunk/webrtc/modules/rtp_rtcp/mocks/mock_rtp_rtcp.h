@@ -11,11 +11,11 @@
 #ifndef WEBRTC_MODULES_RTP_RTCP_MOCKS_MOCK_RTP_RTCP_H_
 #define WEBRTC_MODULES_RTP_RTCP_MOCKS_MOCK_RTP_RTCP_H_
 
-#include <gmock/gmock.h>
+#include "testing/gmock/include/gmock/gmock.h"
 
-#include "modules/interface/module.h"
-#include "modules/rtp_rtcp/interface/rtp_rtcp.h"
-#include "modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/modules/interface/module.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
 
 namespace webrtc {
 
@@ -57,10 +57,6 @@ class MockRtpRtcp : public RtpRtcp {
       int32_t(const VideoCodec& videoCodec, int8_t* plType));
   MOCK_METHOD1(DeRegisterReceivePayload,
       int32_t(const int8_t payloadType));
-  MOCK_METHOD2(RegisterReceiveRtpHeaderExtension,
-      int32_t(const RTPExtensionType type, const uint8_t id));
-  MOCK_METHOD1(DeregisterReceiveRtpHeaderExtension,
-               int32_t(const RTPExtensionType type));
   MOCK_CONST_METHOD0(RemoteTimestamp,
       uint32_t());
   MOCK_CONST_METHOD0(LocalTimeOfRemoteTimeStamp,
@@ -81,9 +77,11 @@ class MockRtpRtcp : public RtpRtcp {
       int32_t(bool* enable, uint32_t* ssrc, int* payload_type));
   MOCK_METHOD1(SetRtxReceivePayloadType,
       void(int));
-  MOCK_METHOD2(IncomingPacket,
-      int32_t(const WebRtc_UWord8* incomingPacket,
-              const WebRtc_UWord16 packetLength));
+  MOCK_METHOD3(IncomingRtpPacket,
+      int32_t(const uint8_t* incomingPacket, const uint16_t packetLength,
+              const webrtc::RTPHeader& header));
+  MOCK_METHOD2(IncomingRtcpPacket,
+      int32_t(const uint8_t* incomingPacket, uint16_t packetLength));
   MOCK_METHOD4(IncomingAudioNTP,
       int32_t(const uint32_t audioReceivedNTPsecs,
               const uint32_t audioReceivedNTPfrac,
@@ -158,7 +156,9 @@ class MockRtpRtcp : public RtpRtcp {
               const RTPFragmentationHeader* fragmentation,
               const RTPVideoHeader* rtpVideoHdr));
   MOCK_METHOD3(TimeToSendPacket,
-      void(uint32_t ssrc, uint16_t sequence_number, int64_t capture_time_ms));
+      bool(uint32_t ssrc, uint16_t sequence_number, int64_t capture_time_ms));
+  MOCK_METHOD1(TimeToSendPadding,
+      int(int bytes));
   MOCK_METHOD3(RegisterRtcpObservers,
       void(RtcpIntraFrameObserver* intraFrameCallback,
            RtcpBandwidthObserver* bandwidthCallback,

@@ -14,17 +14,18 @@
 #include <list>
 #include <map>
 
-#include "engine_configurations.h"  // NOLINT
-#include "system_wrappers/interface/scoped_ptr.h"
-#include "typedefs.h"  // NOLINT
-#include "video_engine/include/vie_rtp_rtcp.h"
-#include "video_engine/vie_channel_group.h"
-#include "video_engine/vie_defines.h"
-#include "video_engine/vie_manager_base.h"
-#include "video_engine/vie_remb.h"
+#include "webrtc/engine_configurations.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/typedefs.h"
+#include "webrtc/video_engine/include/vie_rtp_rtcp.h"
+#include "webrtc/video_engine/vie_channel_group.h"
+#include "webrtc/video_engine/vie_defines.h"
+#include "webrtc/video_engine/vie_manager_base.h"
+#include "webrtc/video_engine/vie_remb.h"
 
 namespace webrtc {
 
+class Config;
 class CriticalSectionWrapper;
 class MapWrapper;
 class ProcessThread;
@@ -44,7 +45,7 @@ class ViEChannelManager: private ViEManagerBase {
  public:
   ViEChannelManager(int engine_id,
                     int number_of_cores,
-                    const OverUseDetectorOptions& options);
+                    const Config& config);
   ~ViEChannelManager();
 
   void SetModuleProcessThread(ProcessThread* module_process_thread);
@@ -74,9 +75,9 @@ class ViEChannelManager: private ViEManagerBase {
   // Adds a channel to include when sending REMB.
   bool SetRembStatus(int channel_id, bool sender, bool receiver);
 
-  // Sets the bandwidth estimation mode. This can only be changed before
-  // adding a channel.
-  bool SetBandwidthEstimationMode(BandwidthEstimationMode mode);
+  // Switches a channel and its associated group to use (or not) the absolute
+  // send time header extension with |id|.
+  bool SetReceiveAbsoluteSendTimeStatus(int channel_id, bool enable, int id);
 
   // Updates the SSRCs for a channel. If one of the SSRCs already is registered,
   // it will simply be ignored and no error is returned.
@@ -135,8 +136,7 @@ class ViEChannelManager: private ViEManagerBase {
 
   VoiceEngine* voice_engine_;
   ProcessThread* module_process_thread_;
-  const OverUseDetectorOptions& over_use_detector_options_;
-  RemoteBitrateEstimator::EstimationMode bwe_mode_;
+  const Config& config_;
 };
 
 class ViEChannelManagerScoped: private ViEManagerScopedBase {

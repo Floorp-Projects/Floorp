@@ -24,10 +24,6 @@ protected:
   virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI *aURI);
 
   virtual NS_HIDDEN_(nsresult) LaunchDefaultWithFile(nsIFile *aFile);
-#if (MOZ_PLATFORM_MAEMO == 5) && defined (MOZ_ENABLE_GNOMEVFS)
-  nsresult LaunchDefaultWithDBus(const char *aFilePath);
-  NS_IMETHOD GetPossibleApplicationHandlers(nsIMutableArray * *aPossibleAppHandlers);
-#endif
 #if defined(MOZ_ENABLE_CONTENTACTION)
   NS_IMETHOD GetPossibleApplicationHandlers(nsIMutableArray * *aPossibleAppHandlers);
 #endif

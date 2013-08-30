@@ -12,8 +12,7 @@
       'target_name': 'audio_device',
       'type': 'static_library',
       'dependencies': [
-        '<(webrtc_root)/common_audio/common_audio.gyp:resampler',
-        '<(webrtc_root)/common_audio/common_audio.gyp:signal_processing',
+        '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
       'include_dirs': [
@@ -137,7 +136,7 @@
             ['OS=="linux"', {
               'link_settings': {
                 'libraries': [
-                  '-ldl',
+                  '-ldl','-lX11',
                 ],
               },
             }],
@@ -201,7 +200,7 @@
     ['include_tests==1', {
       'targets': [
         {
-          'target_name': 'audio_device_test_api',
+          'target_name': 'audio_device_integrationtests',
          'type': 'executable',
          'dependencies': [
             'audio_device',
@@ -221,7 +220,7 @@
           'dependencies': [
             'audio_device',
             'webrtc_utility',
-            '<(webrtc_root)/common_audio/common_audio.gyp:resampler',
+            '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
             '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
             '<(webrtc_root)/test/test.gyp:test_support',
             '<(DEPTH)/testing/gtest.gyp:gtest',

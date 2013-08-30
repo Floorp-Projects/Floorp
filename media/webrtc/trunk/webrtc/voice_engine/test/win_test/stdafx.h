@@ -8,11 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#ifndef WEBRTC_VOICE_ENGINE_TEST_WIN_TEST_STDAFX_H_
+#define WEBRTC_VOICE_ENGINE_TEST_WIN_TEST_STDAFX_H_
+
 // stdafx.h : include file for standard system include files,
 // or project specific include files that are used frequently,
 // but are changed infrequently
-
-#pragma once
 
 #ifndef _SECURE_ATL
 #define _SECURE_ATL 1
@@ -48,24 +49,12 @@
 #include <afxwin.h>         // MFC core and standard components
 #include <afxext.h>         // MFC extensions
 
-
-
-
-
 #ifndef _AFX_NO_OLE_SUPPORT
 #include <afxdtctl.h>		// MFC support for Internet Explorer 4 Common Controls
 #endif
 #ifndef _AFX_NO_AFXCMN_SUPPORT
 #include <afxcmn.h>			// MFC support for Windows Common Controls
 #endif // _AFX_NO_AFXCMN_SUPPORT
-
-
-
-
-
-
-
-
 
 #ifdef _UNICODE
 #if defined _M_IX86
@@ -79,4 +68,4 @@
 #endif
 #endif
 
-
+#endif  // WEBRTC_VOICE_ENGINE_TEST_WIN_TEST_STDAFX_H_

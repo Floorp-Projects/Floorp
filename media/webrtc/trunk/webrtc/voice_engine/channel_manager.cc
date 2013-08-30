@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "channel.h"
-#include "channel_manager.h"
+#include "webrtc/voice_engine/channel.h"
+#include "webrtc/voice_engine/channel_manager.h"
 
 namespace webrtc
 {
@@ -17,7 +17,7 @@ namespace webrtc
 namespace voe
 {
 
-ChannelManager::ChannelManager(const uint32_t instanceId) :
+ChannelManager::ChannelManager(uint32_t instanceId) :
     ChannelManagerBase(),
     _instanceId(instanceId)
 {
@@ -33,7 +33,7 @@ bool ChannelManager::CreateChannel(int32_t& channelId)
     return ChannelManagerBase::CreateItem(channelId);
 }
 
-int32_t ChannelManager::DestroyChannel(const int32_t channelId)
+int32_t ChannelManager::DestroyChannel(int32_t channelId)
 {
     Channel* deleteChannel =
         static_cast<Channel*> (ChannelManagerBase::RemoveItem(channelId));
@@ -71,7 +71,7 @@ void ChannelManager::DeleteItem(void* item)
     delete deleteItem;
 }
 
-Channel* ChannelManager::GetChannel(const int32_t channelId) const
+Channel* ChannelManager::GetChannel(int32_t channelId) const
 {
     return static_cast<Channel*> (ChannelManagerBase::GetItem(channelId));
 }

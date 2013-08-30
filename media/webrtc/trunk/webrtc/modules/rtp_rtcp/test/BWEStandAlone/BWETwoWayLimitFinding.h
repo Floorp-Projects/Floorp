@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_RTP_RTCP_TEST_BWESTANDALONE_BWETWOWAYLIMITFINDING_H_
 #define WEBRTC_MODULES_RTP_RTCP_TEST_BWESTANDALONE_BWETWOWAYLIMITFINDING_H_
 
-#include "BWETestBase.h"
+#include "webrtc/modules/rtp_rtcp/test/BWEStandAlone/BWETestBase.h"
 
 class BWETwoWayLimitFinding : public BWETest
 {

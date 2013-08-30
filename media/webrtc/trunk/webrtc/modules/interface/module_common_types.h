@@ -27,22 +27,24 @@
 
 namespace webrtc {
 
-struct RTPHeader
-{
-    bool           markerBit;
-    uint8_t  payloadType;
-    uint16_t sequenceNumber;
-    uint32_t timestamp;
-    uint32_t ssrc;
-    uint8_t  numCSRCs;
-    uint32_t arrOfCSRCs[kRtpCsrcSize];
-    uint8_t  paddingLength;
-    uint16_t headerLength;
-};
-
 struct RTPHeaderExtension
 {
     int32_t  transmissionTimeOffset;
+    uint32_t absoluteSendTime;
+};
+
+struct RTPHeader
+{
+    bool markerBit;
+    uint8_t payloadType;
+    uint16_t sequenceNumber;
+    uint32_t timestamp;
+    uint32_t ssrc;
+    uint8_t numCSRCs;
+    uint32_t arrOfCSRCs[kRtpCsrcSize];
+    uint8_t paddingLength;
+    uint16_t headerLength;
+    RTPHeaderExtension extension;
 };
 
 struct RTPAudioHeader
@@ -121,7 +123,6 @@ struct WebRtcRTPHeader
     RTPHeader       header;
     FrameType       frameType;
     RTPTypeHeader   type;
-    RTPHeaderExtension extension;
 };
 
 class RTPFragmentationHeader

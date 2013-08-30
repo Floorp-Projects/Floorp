@@ -15,9 +15,9 @@
 #ifndef WEBRTC_COMMON_VIDEO_LIBYUV_INCLUDE_SCALER_H_
 #define WEBRTC_COMMON_VIDEO_LIBYUV_INCLUDE_SCALER_H_
 
-#include "common_video/interface/i420_video_frame.h"
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "typedefs.h"
+#include "webrtc/common_video/interface/i420_video_frame.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
