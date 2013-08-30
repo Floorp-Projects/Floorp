@@ -9,13 +9,16 @@
 #include "nsTArray.h"
 #include "MediaResource.h"
 #include "MPAPI.h"
+#include "MediaResourceServer.h"
 
 namespace mozilla {
 
 class MediaPluginReader;
 
 class MediaPluginHost {
+  nsCOMPtr<MediaResourceServer> mResourceServer;
   nsTArray<MPAPI::Manifest *> mPlugins;
+
   MPAPI::Manifest *FindPlugin(const nsACString& aMimeType);
 public:
   MediaPluginHost();
