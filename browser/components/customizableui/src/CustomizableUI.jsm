@@ -1431,7 +1431,7 @@ let CustomizableUIInternal = {
 
     for (let listener of gListeners) {
       try {
-        if (aEvent in listener) {
+        if (typeof listener[aEvent] == "function") {
           listener[aEvent].apply(listener, aArgs);
         }
       } catch (e) {
@@ -1960,7 +1960,8 @@ this.CustomizableUI = {
       throw new Error("Area not yet restored");
     }
 
-    return gPlacements.get(aArea);
+    // We need to clone this, as we don't want to let consumers muck with placements
+    return [].concat(gPlacements.get(aArea));
   },
   getWidgetsInArea: function(aArea) {
     return this.getWidgetIdsInArea(aArea).map(
