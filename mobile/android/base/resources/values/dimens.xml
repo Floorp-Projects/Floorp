@@ -87,4 +87,7 @@
 
     <!-- PageActionButtons dimensions -->
     <dimen name="page_action_button_width">32dp</dimen>
+
+    <!-- Banner -->
+    <dimen name="home_banner_height">72dp</dimen>
 </resources>

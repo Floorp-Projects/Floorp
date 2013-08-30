@@ -86,14 +86,16 @@ def markGotSIGINT(signum, stackFrame):
     gotSIGINT = True
 
 class XPCShellTestThread(Thread):
-    def __init__(self, test_object, event, cleanup_dir_list, tests_root_dir=None,
-            app_dir_key=None, interactive=False, verbose=False, pStdout=None,
-            pStderr=None, keep_going=False, log=None, **kwargs):
+    def __init__(self, test_object, event, cleanup_dir_list, retry=True,
+            tests_root_dir=None, app_dir_key=None, interactive=False,
+            verbose=False, pStdout=None, pStderr=None, keep_going=False,
+            log=None, **kwargs):
         Thread.__init__(self)
         self.daemon = True
 
         self.test_object = test_object
         self.cleanup_dir_list = cleanup_dir_list
+        self.retry = retry
 
         self.appPath = kwargs.get('appPath')
         self.xrePath = kwargs.get('xrePath')
@@ -143,6 +145,9 @@ class XPCShellTestThread(Thread):
         else:
             self.exception = None
             self.traceback = None
+        if self.retry:
+            self.log.info("TEST-INFO | %s | Test failed or timed out, will retry."
+                          % self.test_object['name'])
         self.event.set()
 
     def kill(self, proc):
@@ -211,7 +216,8 @@ class XPCShellTestThread(Thread):
         self.log.info("TEST-INFO | %s | environment: %s" % (name, list(changedEnv)))
 
     def testTimeout(self, test_file, processPID):
-        self.log.error("TEST-UNEXPECTED-FAIL | %s | Test timed out" % test_file)
+        if not self.retry:
+            self.log.error("TEST-UNEXPECTED-FAIL | %s | Test timed out" % test_file)
         Automation().killAndGetStackNoScreenshot(processPID, self.appPath, self.debuggerInfo)
 
     def buildCmdTestFile(self, name):
@@ -351,6 +357,9 @@ class XPCShellTestThread(Thread):
             self.xpcsCmd.extend(['-p', self.pluginsDir])
 
     def cleanupDir(self, directory, name, xunit_result):
+        if not os.path.exists(directory):
+            return
+
         TRY_LIMIT = 25 # up to TRY_LIMIT attempts (one every second), because
                        # the Windows filesystem is slow to react to the changes
         try_count = 0
@@ -374,6 +383,9 @@ class XPCShellTestThread(Thread):
 
         # we couldn't clean up the directory, and it's not the plugins dir,
         # which means that something wrong has probably happened
+        if self.retry:
+            return
+
         with LOG_MUTEX:
             message = "TEST-UNEXPECTED-FAIL | %s | Failed to clean up directory: %s" % (name, sys.exc_info()[1])
             self.log.error(message)
@@ -385,8 +397,19 @@ class XPCShellTestThread(Thread):
         xunit_result["failure"] = {
             "type": "TEST-UNEXPECTED-FAIL",
             "message": message,
-            "text": "%s\n%s" % (stdout, traceback.format_exc())
+            "text": "%s\n%s" % ("\n".join(self.output_lines), traceback.format_exc())
         }
+
+    def clean_temp_dirs(self, name, stdout):
+        # We don't want to delete the profile when running check-interactive
+        # or check-one.
+        if self.profileDir and not self.interactive and not self.singleFile:
+            self.cleanupDir(self.profileDir, name, self.xunit_result)
+
+        self.cleanupDir(self.tempDir, name, self.xunit_result)
+
+        if self.pluginsDir:
+            self.cleanupDir(self.pluginsDir, name, self.xunit_result)
 
     def append_message_from_line(self, line):
         """Given a line of raw output, convert to message and append to
@@ -488,6 +511,7 @@ class XPCShellTestThread(Thread):
                 (name, self.test_object['disabled']))
 
             self.xunit_result['skipped'] = True
+            self.retry = False
 
             self.keep_going = True
             return
@@ -559,6 +583,10 @@ class XPCShellTestThread(Thread):
                           (self.getReturnCode(proc) != 0))
 
             if result != expected:
+                if self.retry:
+                    self.clean_temp_dirs(name, stdout)
+                    return
+
                 failureType = "TEST-UNEXPECTED-%s" % ("FAIL" if expected else "PASS")
                 message = "%s | %s | test failed (with xpcshell return code: %d), see following log:" % (
                               failureType, name, self.getReturnCode(proc))
@@ -593,6 +621,7 @@ class XPCShellTestThread(Thread):
                         self.log_output(self.output_lines)
 
                 self.xunit_result["passed"] = True
+                self.retry = False
 
                 if expected:
                     self.passCount = 1
@@ -601,6 +630,10 @@ class XPCShellTestThread(Thread):
                     self.xunit_result["todo"] = True
 
             if mozcrash.check_for_crashes(self.tempDir, self.symbolsPath, test_name=name):
+                if self.retry:
+                    self.clean_temp_dirs(name, stdout)
+                    return
+
                 message = "PROCESS-CRASH | %s | application crashed" % name
                 self.failCount = 1
                 self.xunit_result["passed"] = False
@@ -617,6 +650,12 @@ class XPCShellTestThread(Thread):
             # We can sometimes get here before the process has terminated, which would
             # cause removeDir() to fail - so check for the process & kill it it needed.
             if proc and self.poll(proc) is None:
+                self.kill(proc)
+
+                if self.retry:
+                    self.clean_temp_dirs(name, stdout)
+                    return
+
                 with LOG_MUTEX:
                     message = "TEST-UNEXPECTED-FAIL | %s | Process still running after test!" % name
                     self.log.error(message)
@@ -629,18 +668,8 @@ class XPCShellTestThread(Thread):
                   "message": message,
                   "text": stdout
                 }
-                self.kill(proc)
 
-
-            # We don't want to delete the profile when running check-interactive
-            # or check-one.
-            if self.profileDir and not self.interactive and not self.singleFile:
-                self.cleanupDir(self.profileDir, name, self.xunit_result)
-
-            self.cleanupDir(self.tempDir, name, self.xunit_result)
-
-            if self.pluginsDir:
-                self.cleanupDir(self.pluginsDir, name, self.xunit_result)
+            self.clean_temp_dirs(name, stdout)
 
         if gotSIGINT:
             self.xunit_result["passed"] = False
@@ -1217,6 +1246,7 @@ class XPCShellTests(object):
 
         self.xunitResults = []
         self.cleanup_dir_list = []
+        self.try_again_list = []
 
         kwargs = {
             'appPath': self.appPath,
@@ -1311,6 +1341,11 @@ class XPCShellTests(object):
                 if not test.is_alive():
                     done_tests.add(test)
                     test.join()
+                    # if the test had trouble, we will try running it again
+                    # at the end of the run
+                    if test.retry:
+                        self.try_again_list.append(test.test_object)
+                        continue
                     # did the test encounter any exception?
                     if test.exception:
                         exceptions.append(test.exception)
@@ -1331,6 +1366,8 @@ class XPCShellTests(object):
                     self.log.error("TEST-UNEXPECTED-FAIL | Received SIGINT (control-C), so stopped run. " \
                                    "(Use --keep-going to keep running tests after killing one with SIGINT)")
                     break
+                # we don't want to retry these tests
+                test.retry = False
                 test.start()
                 test.join()
                 self.addTestResults(test)
@@ -1340,6 +1377,26 @@ class XPCShellTests(object):
                     tracebacks.append(test.traceback)
                     break
                 keep_going = test.keep_going
+
+        # retry tests that failed when run in parallel
+        if self.try_again_list:
+            self.log.info("Retrying tests that failed when run in parallel.")
+        for test_object in self.try_again_list:
+            test = testClass(test_object, self.event, self.cleanup_dir_list,
+                    retry=False, tests_root_dir=testsRootDir,
+                    app_dir_key=appDirKey, interactive=interactive,
+                    verbose=verbose, pStdout=pStdout, pStderr=pStderr,
+                    keep_going=keepGoing, log=self.log, mobileArgs=mobileArgs,
+                    **kwargs)
+            test.start()
+            test.join()
+            self.addTestResults(test)
+            # did the test encounter any exception?
+            if test.exception:
+                exceptions.append(test.exception)
+                tracebacks.append(test.traceback)
+                break
+            keep_going = test.keep_going
 
         # restore default SIGINT behaviour
         signal.signal(signal.SIGINT, signal.SIG_DFL)
@@ -1369,6 +1426,7 @@ class XPCShellTests(object):
         self.log.info("INFO | Passed: %d" % self.passCount)
         self.log.info("INFO | Failed: %d" % self.failCount)
         self.log.info("INFO | Todo: %d" % self.todoCount)
+        self.log.info("INFO | Retried: %d" % len(self.try_again_list))
 
         if autolog:
             self.post_to_autolog(self.xunitResults, xunitName)

@@ -4653,7 +4653,9 @@ let TabStateCache = {
    */
   get: function(aKey) {
     let key = this._normalizeToBrowser(aKey);
-    return this._data.get(key);
+    let result = this._data.get(key);
+    TabStateCacheTelemetry.recordAccess(!!result);
+    return result;
   },
 
   /**
@@ -4672,6 +4674,7 @@ let TabStateCache = {
    * Delete all tab data.
    */
   clear: function() {
+    TabStateCacheTelemetry.recordClear();
     this._data.clear();
   },
 
@@ -4689,6 +4692,7 @@ let TabStateCache = {
     if (data) {
       data[aField] = aValue;
     }
+    TabStateCacheTelemetry.recordAccess(!!data);
   },
 
   _normalizeToBrowser: function(aKey) {
@@ -4700,5 +4704,70 @@ let TabStateCache = {
       return aKey;
     }
     throw new TypeError("Key is neither a tab nor a browser: " + nodeName);
+  }
+};
+
+let TabStateCacheTelemetry = {
+  // Total number of hits during the session
+  _hits: 0,
+  // Total number of misses during the session
+  _misses: 0,
+  // Total number of clears during the session
+  _clears: 0,
+  // |true| once we have been initialized
+  _initialized: false,
+
+  /**
+   * Record a cache access.
+   *
+   * @param {boolean} isHit If |true|, the access was a hit, otherwise
+   * a miss.
+   */
+  recordAccess: function(isHit) {
+    this._init();
+    if (isHit) {
+      ++this._hits;
+    } else {
+      ++this._misses;
+    }
+  },
+
+  /**
+   * Record a cache clear
+   */
+  recordClear: function() {
+    this._init();
+    ++this._clears;
+  },
+
+  /**
+   * Initialize the telemetry.
+   */
+  _init: function() {
+    if (this._initialized) {
+      // Avoid double initialization
+      return;
+    }
+    Services.obs.addObserver(this, "profile-before-change", false);
+  },
+
+  observe: function() {
+    Services.obs.removeObserver(this, "profile-before-change");
+
+    // Record hit/miss rate
+    let accesses = this._hits + this._misses;
+    if (accesses == 0) {
+      return;
+    }
+
+    this._fillHistogram("HIT_RATE", this._hits, accesses);
+    this._fillHistogram("CLEAR_RATIO", this._clears, accesses);
+  },
+
+  _fillHistogram: function(suffix, positive, total) {
+    let PREFIX = "FX_SESSION_RESTORE_TABSTATECACHE_";
+    let histo = Services.telemetry.getHistogramById(PREFIX + suffix);
+    let rate = Math.floor( ( positive * 100 ) / total );
+    histo.add(rate);
   }
 };

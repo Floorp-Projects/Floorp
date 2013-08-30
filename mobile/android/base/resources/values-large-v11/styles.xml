@@ -60,4 +60,9 @@
         <item name="topDivider">true</item>
     </style>
 
+    <style name="Widget.HomeBanner">
+        <item name="android:paddingLeft">32dp</item>
+        <item name="android:paddingRight">32dp</item>
+    </style>
+
 </resources>
