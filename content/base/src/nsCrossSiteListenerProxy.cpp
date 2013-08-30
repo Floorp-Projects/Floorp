@@ -22,7 +22,6 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsAsyncRedirectVerifyHelper.h"
-#include "prtime.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsStreamUtils.h"
@@ -45,7 +44,7 @@ public:
   struct TokenTime
   {
     nsCString token;
-    PRTime expirationTime;
+    TimeStamp expirationTime;
   };
 
   struct CacheEntry : public LinkedListElement<CacheEntry>
@@ -61,7 +60,7 @@ public:
       MOZ_COUNT_DTOR(nsPreflightCache::CacheEntry);
     }
 
-    void PurgeExpired(PRTime now);
+    void PurgeExpired(TimeStamp now);
     bool CheckRequest(const nsCString& aMethod,
                         const nsTArray<nsCString>& aCustomHeaders);
 
@@ -124,7 +123,7 @@ static bool EnsurePreflightCache()
 }
 
 void
-nsPreflightCache::CacheEntry::PurgeExpired(PRTime now)
+nsPreflightCache::CacheEntry::PurgeExpired(TimeStamp now)
 {
   uint32_t i;
   for (i = 0; i < mMethods.Length(); ++i) {
@@ -143,7 +142,7 @@ bool
 nsPreflightCache::CacheEntry::CheckRequest(const nsCString& aMethod,
                                            const nsTArray<nsCString>& aHeaders)
 {
-  PurgeExpired(PR_Now());
+  PurgeExpired(TimeStamp::NowLoRes());
 
   if (!aMethod.EqualsLiteral("GET") && !aMethod.EqualsLiteral("POST")) {
     uint32_t i;
@@ -214,7 +213,7 @@ nsPreflightCache::GetEntry(nsIURI* aURI,
   // Now enforce the max count.
   if (mTable.Count() == PREFLIGHT_CACHE_SIZE) {
     // Try to kick out all the expired entries.
-    PRTime now = PR_Now();
+    TimeStamp now = TimeStamp::NowLoRes();
     mTable.Enumerate(RemoveExpiredEntries, &now);
 
     // If that didn't remove anything then kick out the least recently used
@@ -267,7 +266,7 @@ nsPreflightCache::RemoveExpiredEntries(const nsACString& aKey,
                                            nsAutoPtr<CacheEntry>& aValue,
                                            void* aUserData)
 {
-  PRTime* now = static_cast<PRTime*>(aUserData);
+  TimeStamp* now = static_cast<TimeStamp*>(aUserData);
   
   aValue->PurgeExpired(*now);
   
@@ -899,8 +898,7 @@ nsCORSPreflightListener::AddResultToCache(nsIRequest *aRequest)
   nsCOMPtr<nsIURI> uri;
   NS_GetFinalChannelURI(http, getter_AddRefs(uri));
 
-  // PR_Now gives microseconds
-  PRTime expirationTime = PR_Now() + (uint64_t)age * PR_USEC_PER_SEC;
+  TimeStamp expirationTime = TimeStamp::NowLoRes() + TimeDuration::FromSeconds(age);
 
   nsPreflightCache::CacheEntry* entry =
     sPreflightCache->GetEntry(uri, mReferrerPrincipal, mWithCredentials,
