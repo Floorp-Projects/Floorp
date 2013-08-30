@@ -227,6 +227,7 @@ FENNEC_JAVA_FILES = \
   home/HomeListView.java \
   home/HomePager.java \
   home/HomePagerTabStrip.java \
+  home/HomeBanner.java \
   home/FadedTextView.java \
   home/FaviconsLoader.java \
   home/LastTabsPage.java \
@@ -481,6 +482,7 @@ RES_LAYOUT = \
   res/layout/home_pager.xml \
   res/layout/home_reading_list_page.xml \
   res/layout/home_search_item_row.xml \
+  res/layout/home_banner.xml \
   res/layout/home_suggestion_prompt.xml \
   res/layout/web_app.xml \
   res/layout/launch_app_list.xml \
@@ -1113,6 +1115,7 @@ RES_DRAWABLE += \
   res/drawable/handle_start_level.xml                 \
   res/drawable/home_history_tabs_indicator.xml        \
   res/drawable/home_page_title_background.xml         \
+  res/drawable/home_banner.xml                        \
   res/drawable/ic_menu_back.xml                       \
   res/drawable/ic_menu_desktop_mode_off.xml           \
   res/drawable/ic_menu_desktop_mode_on.xml            \

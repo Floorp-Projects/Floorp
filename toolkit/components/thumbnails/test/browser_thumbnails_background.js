@@ -54,7 +54,7 @@ let tests = [
     let files = urls.map(fileForURL);
     files.forEach(f => ok(!f.exists(), "Thumbnail should not be cached yet."));
     urls.forEach(function (url) {
-      let isTimeoutTest = url.indexOf("?wait") >= 0;
+      let isTimeoutTest = url.indexOf("wait") >= 0;
       imports.BackgroundPageThumbs.capture(url, {
         timeout: isTimeoutTest ? 100 : 30000,
         onDone: function onDone(capturedURL) {
