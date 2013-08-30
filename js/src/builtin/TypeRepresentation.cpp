@@ -27,6 +27,7 @@ using namespace mozilla;
 
 Class TypeRepresentation::class_ = {
     "TypeRepresentation",
+    JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,         /* addProperty */
     JS_DeletePropertyStub,   /* delProperty */
