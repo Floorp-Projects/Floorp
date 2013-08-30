@@ -17,7 +17,9 @@
 %define urlbar_edit_height 36px
 
 %define toolbar_vertical_spacing 5px
-%define toolbar_horizontal_spacing 20px
+%define toolbar_horizontal_spacing 17px
+%define toolbar_horizontal_padding 21px
+%define toolbar_snapped_horizontal_padding 10px
 %define toolbar_snapped_horizontal_spacing 10px
 
 % XXX Per UX mockups, this should be 68px, but we need to make this
@@ -65,7 +67,8 @@
 %define metro_font_snormal 14px
 %define metro_font_normal 15px
 %define metro_font_large 25px
-%define metro_font_xlarge 45px
+%define metro_font_xlarge 35px
+%define metro_font_xxlarge 45px
 
 %define font_normal 16px
 %define font_snormal 15px

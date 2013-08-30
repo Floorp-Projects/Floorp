@@ -205,7 +205,7 @@
               observes="cmd_back"></html:div>
 
     <!-- Navigation bar -->
-    <appbar id="navbar" mousethrough="never" observes="bcast_windowState">
+    <appbar id="navbar" mousethrough="never">
       <hbox id="progress-container" layer="true">
         <hbox id="progress-control" />
       </hbox>
