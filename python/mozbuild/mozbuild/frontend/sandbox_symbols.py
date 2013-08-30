@@ -414,7 +414,7 @@ FUNCTIONS = {
         include('/elsewhere/foo.build')
         """),
 
-    'add_tier_dir': ('_add_tier_directory', (str, [str, list], bool),
+    'add_tier_dir': ('_add_tier_directory', (str, [str, list], bool, bool),
         """Register a directory for tier traversal.
 
         This is the preferred way to populate the TIERS variable.
@@ -443,6 +443,10 @@ FUNCTIONS = {
 
         # Register a directory as having static content (no dependencies).
         add_tier_dir('base', 'foo', static=True)
+
+        # Register a directory as having external content (same as static
+        # content, but traversed with export, libs, and tools subtiers.
+        add_tier_dir('base', 'bar', external=True)
         """),
 
     'warning': ('_warning', (str,),

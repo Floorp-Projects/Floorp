@@ -20,8 +20,6 @@
 
 namespace webrtc {
 
-enum { kInitialMaxJitterEstimate = 0 };
-
 VCMJitterEstimator::VCMJitterEstimator(int32_t vcmId, int32_t receiverId) :
 _vcmId(vcmId),
 _receiverId(receiverId),
@@ -37,7 +35,7 @@ _noiseStdDevs(2.33), // ~Less than 1% chance
 _noiseStdDevOffset(30.0), // ...of getting 30 ms freezes
 _rttFilter(vcmId, receiverId),
 _jitterEstimateMode(kLastEstimate),
-_maxJitterEstimateMs(kInitialMaxJitterEstimate)
+_maxJitterEstimateMs(0)
 {
     Reset();
 }
@@ -407,13 +405,11 @@ VCMJitterEstimator::UpdateMaxFrameSize(uint32_t frameSizeBytes)
     }
 }
 
-void VCMJitterEstimator::SetMaxJitterEstimate(uint32_t initial_delay_ms)
+void VCMJitterEstimator::SetMaxJitterEstimate(bool enable)
 {
-    if (initial_delay_ms > 0) {
-        _maxJitterEstimateMs = initial_delay_ms;
+    if (enable) {
         _jitterEstimateMode = kMaxEstimate;
     } else {
-        _maxJitterEstimateMs = kInitialMaxJitterEstimate;
         _jitterEstimateMode = kLastEstimate;
     }
 }

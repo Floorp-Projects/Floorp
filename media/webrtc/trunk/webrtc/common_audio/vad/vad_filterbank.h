@@ -15,8 +15,8 @@
 #ifndef WEBRTC_COMMON_AUDIO_VAD_VAD_FILTERBANK_H_
 #define WEBRTC_COMMON_AUDIO_VAD_VAD_FILTERBANK_H_
 
-#include "typedefs.h"
-#include "vad_core.h"
+#include "webrtc/common_audio/vad/vad_core.h"
+#include "webrtc/typedefs.h"
 
 // Takes |data_length| samples of |data_in| and calculates the logarithm of the
 // energy of each of the |kNumChannels| = 6 frequency bands used by the VAD:

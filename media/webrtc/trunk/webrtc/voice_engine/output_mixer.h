@@ -11,14 +11,14 @@
 #ifndef WEBRTC_VOICE_ENGINE_OUTPUT_MIXER_H_
 #define WEBRTC_VOICE_ENGINE_OUTPUT_MIXER_H_
 
-#include "audio_conference_mixer.h"
-#include "audio_conference_mixer_defines.h"
-#include "common_types.h"
-#include "dtmf_inband.h"
-#include "file_recorder.h"
-#include "level_indicator.h"
-#include "resampler.h"
-#include "voice_engine_defines.h"
+#include "webrtc/common_audio/resampler/include/push_resampler.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/audio_conference_mixer/interface/audio_conference_mixer.h"
+#include "webrtc/modules/audio_conference_mixer/interface/audio_conference_mixer_defines.h"
+#include "webrtc/modules/utility/interface/file_recorder.h"
+#include "webrtc/voice_engine/dtmf_inband.h"
+#include "webrtc/voice_engine/level_indicator.h"
+#include "webrtc/voice_engine/voice_engine_defines.h"
 
 namespace webrtc {
 
@@ -36,7 +36,7 @@ class OutputMixer : public AudioMixerOutputReceiver,
                     public FileCallback
 {
 public:
-    static int32_t Create(OutputMixer*& mixer, const uint32_t instanceId);
+    static int32_t Create(OutputMixer*& mixer, uint32_t instanceId);
 
     static void Destroy(OutputMixer*& mixer);
 
@@ -63,10 +63,10 @@ public:
     int32_t DoOperationsOnCombinedSignal();
 
     int32_t SetMixabilityStatus(MixerParticipant& participant,
-                                const bool mixable);
+                                bool mixable);
 
     int32_t SetAnonymousMixabilityStatus(MixerParticipant& participant,
-                                         const bool mixable);
+                                         bool mixable);
 
     int GetMixedAudio(int sample_rate_hz, int num_channels,
                       AudioFrame* audioFrame);
@@ -92,34 +92,34 @@ public:
 
     // from AudioMixerOutputReceiver
     virtual void NewMixedAudio(
-        const int32_t id,
+        int32_t id,
         const AudioFrame& generalAudioFrame,
         const AudioFrame** uniqueAudioFrames,
-        const uint32_t size);
+        uint32_t size);
 
     // from AudioMixerStatusReceiver
     virtual void MixedParticipants(
-        const int32_t id,
+        int32_t id,
         const ParticipantStatistics* participantStatistics,
-        const uint32_t size);
+        uint32_t size);
 
     virtual void VADPositiveParticipants(
-        const int32_t id,
+        int32_t id,
         const ParticipantStatistics* participantStatistics,
-        const uint32_t size);
+        uint32_t size);
 
-    virtual void MixedAudioLevel(const int32_t id, const uint32_t level);
+    virtual void MixedAudioLevel(int32_t id, uint32_t level);
 
     // For file recording
-    void PlayNotification(const int32_t id, const uint32_t durationMs);
+    void PlayNotification(int32_t id, uint32_t durationMs);
 
-    void RecordNotification(const int32_t id, const uint32_t durationMs);
+    void RecordNotification(int32_t id, uint32_t durationMs);
 
-    void PlayFileEnded(const int32_t id);
-    void RecordFileEnded(const int32_t id);
+    void PlayFileEnded(int32_t id);
+    void RecordFileEnded(int32_t id);
 
 private:
-    OutputMixer(const uint32_t instanceId);
+    OutputMixer(uint32_t instanceId);
     void APMAnalyzeReverseStream();
     int InsertInbandDtmfTone();
 
@@ -133,8 +133,8 @@ private:
     CriticalSectionWrapper& _fileCritSect;
     AudioConferenceMixer& _mixerModule;
     AudioFrame _audioFrame;
-    Resampler _resampler;        // converts mixed audio to fit ADM format
-    Resampler _apmResampler;    // converts mixed audio to fit APM rate
+    PushResampler resampler_;  // converts mixed audio to fit ADM format
+    PushResampler audioproc_resampler_;  // converts mixed audio to fit APM rate
     AudioLevel _audioLevel;    // measures audio level for the combined signal
     DtmfInband _dtmfGenerator;
     int _instanceId;

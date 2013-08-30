@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "signal_processing_library.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
 // TODO(Bjornv): Change the function parameter order to WebRTC code style.
 // C version of WebRtcSpl_DownsampleFast() for generic platforms.

@@ -11,7 +11,7 @@
 #ifndef WEBRTC_VIDEO_ENGINE_TEST_ANDROID_JNI_ANDROID_MEDIA_CODEC_DECODER_H_
 #define WEBRTC_VIDEO_ENGINE_TEST_ANDROID_JNI_ANDROID_MEDIA_CODEC_DECODER_H_
 
-#include "modules/video_coding/codecs/interface/video_codec_interface.h"
+#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
 
 namespace webrtc {
 

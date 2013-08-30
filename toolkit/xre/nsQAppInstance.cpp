@@ -29,32 +29,7 @@ void nsQAppInstance::AddRef(int& aArgc, char** aArgv, bool aDefaultProcess) {
       QApplication::setGraphicsSystem(QString(graphicsSystem));
     }
 #endif
-#if (MOZ_PLATFORM_MAEMO == 6)
-    // Should create simple windows style for non chrome process
-    // otherwise meegotouch style initialize and crash happen
-    // because we don't initialize MComponent for child process
-    if (!aDefaultProcess) {
-      QApplication::setStyle(QLatin1String("windows"));
-    }
-    if (!aArgc) {
-      aArgv[aArgc] = strdup("nsQAppInstance");
-      aArgc++;
-    }
-#endif
     sQAppInstance = new QApplication(aArgc, aArgv);
-#ifdef MOZ_ENABLE_MEEGOTOUCH
-    if (aDefaultProcess) {
-      // GLContext created by meegotouch will be under meego graphics
-      // system control, and will drop GL context automatically in background mode
-      // In order to use that GLContext we need to implement
-      // LayerManager switch in runtime from SW<->HW
-      // That not yet implemented so we need to control GL context,
-      // force software mode for, and create our own QGLWidget
-      gArgv[gArgc] = strdup("-software");
-      gArgc++;
-      sMComponentData = new MComponentData(aArgc, aArgv, "", new MApplicationService(""));
-    }
-#endif
   }
   sQAppRefCount++;
 }

@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "voe_rtp_rtcp_impl.h"
-#include "trace.h"
-#include "file_wrapper.h"
-#include "critical_section_wrapper.h"
-#include "voice_engine_impl.h"
-#include "voe_errors.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/file_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/voice_engine/include/voe_errors.h"
+#include "webrtc/voice_engine/voe_rtp_rtcp_impl.h"
+#include "webrtc/voice_engine/voice_engine_impl.h"
 
-#include "channel.h"
-#include "transmit_mixer.h"
+#include "webrtc/voice_engine/channel.h"
+#include "webrtc/voice_engine/transmit_mixer.h"
 
 namespace webrtc {
 
@@ -224,8 +224,8 @@ int VoERTP_RTCPImpl::SetRTPAudioLevelIndicationStatus(int channel,
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    if (ID < kVoiceEngineMinRtpExtensionId ||
-        ID > kVoiceEngineMaxRtpExtensionId)
+    if (enable && (ID < kVoiceEngineMinRtpExtensionId ||
+                   ID > kVoiceEngineMaxRtpExtensionId))
     {
         // [RFC5285] The 4-bit ID is the local identifier of this element in
         // the range 1-14 inclusive.
@@ -403,7 +403,7 @@ int VoERTP_RTCPImpl::GetRemoteRTCPData(
 
 int VoERTP_RTCPImpl::SendApplicationDefinedRTCPPacket(
     int channel,
-    const unsigned char subType,
+    unsigned char subType,
     unsigned int name,
     const char* data,
     unsigned short dataLengthInBytes)
@@ -567,6 +567,28 @@ int VoERTP_RTCPImpl::GetFECStatus(int channel,
     return -1;
 #endif
 }
+
+
+int VoERTP_RTCPImpl::SetNACKStatus(int channel,
+                                   bool enable,
+                                   int maxNoPackets)
+{
+    WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
+                 "SetNACKStatus(channel=%d, enable=%d, maxNoPackets=%d)",
+                 channel, enable, maxNoPackets);
+
+    voe::ScopedChannel sc(_shared->channel_manager(), channel);
+    voe::Channel* channelPtr = sc.ChannelPtr();
+    if (channelPtr == NULL)
+    {
+        _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
+            "SetNACKStatus() failed to locate channel");
+        return -1;
+    }
+    channelPtr->SetNACKStatus(enable, maxNoPackets);
+    return 0;
+}
+
 
 int VoERTP_RTCPImpl::StartRTPDump(int channel,
                                   const char fileNameUTF8[1024],

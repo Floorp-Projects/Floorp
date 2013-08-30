@@ -92,6 +92,7 @@ class AudioTransportAPI: public AudioTransport {
       const uint32_t totalDelay,
       const int32_t clockSkew,
       const uint32_t currentMicLevel,
+      const bool keyPressed,
       uint32_t& newMicLevel) {
     rec_count_++;
     if (rec_count_ % 100 == 0) {

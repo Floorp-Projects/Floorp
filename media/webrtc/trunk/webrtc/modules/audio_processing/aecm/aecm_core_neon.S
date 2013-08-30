@@ -12,8 +12,8 @@
 @ This file contains some functions in AECM, optimized for ARM Neon
 @ platforms. Reference C code is in file aecm_core.c. Bit-exact.
 
-#include "aecm_defines.h"
 #include "aecm_core_neon_offsets.h"
+#include "webrtc/modules/audio_processing/aecm/aecm_defines.h"
 #include "webrtc/system_wrappers/interface/asm_defines.h"
 
 GLOBAL_LABEL WebRtcAecm_kSqrtHanning

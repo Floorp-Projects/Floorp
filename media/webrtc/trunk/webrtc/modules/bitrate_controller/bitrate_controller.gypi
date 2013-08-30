@@ -34,24 +34,4 @@
       'msvs_disabled_warnings': [ 4267, ],
     },
   ], # targets
-
-  'conditions': [
-    ['include_tests==1', {
-      'targets' : [
-        {
-          'target_name': 'bitrate_controller_unittests',
-          'type': 'executable',
-          'dependencies': [
-            'bitrate_controller',
-            '<(webrtc_root)/test/test.gyp:test_support_main',
-            '<(DEPTH)/testing/gtest.gyp:gtest',
-          ],
-          'sources': [
-            'bitrate_controller_unittest.cc',
-           ],
-         },
-       ], # targets
-    }], # include_tests
-  ], # conditions
-
 }

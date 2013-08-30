@@ -28,14 +28,6 @@
 #include <sys/quota.h>
 #endif
 
-#if (MOZ_PLATFORM_MAEMO == 6)
-#include <QUrl>
-#include <QString>
-#if (MOZ_ENABLE_CONTENTACTION)
-#include <contentaction/contentaction.h>
-#endif
-#endif
-
 #include "xpcom-private.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsCRT.h"
@@ -66,17 +58,14 @@
 static nsresult MacErrorMapper(OSErr inErr);
 #endif
 
-#if (MOZ_PLATFORM_MAEMO == 5)
-#include <glib.h>
-#include <hildon-uri.h>
-#include <hildon-mime.h>
-#include <libosso.h>
-#endif
-
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
 #include "nsIMIMEService.h"
 #include <linux/magic.h>
+#endif
+
+#ifdef MOZ_ENABLE_CONTENTACTION
+#include <contentaction/contentaction.h>
 #endif
 
 #include "nsNativeCharsetUtils.h"
@@ -1788,24 +1777,6 @@ NS_IMETHODIMP
 nsLocalFile::Launch()
 {
 #ifdef MOZ_WIDGET_GTK
-#if (MOZ_PLATFORM_MAEMO==5)
-    const int32_t kHILDON_SUCCESS = 1;
-    DBusError err;
-    dbus_error_init(&err);
-
-    DBusConnection *connection = dbus_bus_get(DBUS_BUS_SESSION, &err);
-    if (dbus_error_is_set(&err)) {
-      dbus_error_free(&err);
-      return NS_ERROR_FAILURE;
-    }
-
-    if (nullptr == connection)
-      return NS_ERROR_FAILURE;
-
-    if (hildon_mime_open_file(connection, mPath.get()) != kHILDON_SUCCESS)
-      return NS_ERROR_FAILURE;
-    return NS_OK;
-#else
     nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
     nsCOMPtr<nsIGnomeVFSService> gnomevfs = do_GetService(NS_GNOMEVFSSERVICE_CONTRACTID);
     if (giovfs) {
@@ -1816,11 +1787,10 @@ nsLocalFile::Launch()
     }
     
     return NS_ERROR_FAILURE;
-#endif
 #elif defined(MOZ_ENABLE_CONTENTACTION)
     QUrl uri = QUrl::fromLocalFile(QString::fromUtf8(mPath.get()));
     ContentAction::Action action =
-      ContentAction::Action::defaultActionForFile(uri);
+        ContentAction::Action::defaultActionForFile(uri);
 
     if (action.isValid()) {
       action.trigger();

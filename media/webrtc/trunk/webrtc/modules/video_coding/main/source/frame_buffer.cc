@@ -104,7 +104,7 @@ VCMFrameBuffer::InsertPacket(const VCMPacket& packet, int64_t timeInMs,
     // Sanity to check if the frame has been freed. (Too old for example)
     if (_state == kStateFree)
     {
-        return kStateError;
+        return kGeneralError;
     }
 
     // is this packet part of this frame
@@ -162,6 +162,11 @@ VCMFrameBuffer::InsertPacket(const VCMPacket& packet, int64_t timeInMs,
             return kSizeError;
         }
         _sessionInfo.UpdateDataPointers(prevBuffer, _buffer);
+    }
+
+    if (packet.width > 0 && packet.height > 0) {
+      _encodedWidth = packet.width;
+      _encodedHeight = packet.height;
     }
 
     CopyCodecSpecific(&packet.codecSpecificHeader);

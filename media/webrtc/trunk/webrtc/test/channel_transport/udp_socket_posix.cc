@@ -13,12 +13,12 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <netdb.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <stdio.h>
 
 #include "webrtc/system_wrappers/interface/trace.h"
 #include "webrtc/test/channel_transport/udp_socket_manager_wrapper.h"

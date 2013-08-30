@@ -1187,11 +1187,6 @@ InitSystemMetrics()
     sSystemMetrics->AppendElement(nsGkAtoms::touch_enabled);
   }
  
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_MaemoClassic, &metricResult);
-  if (NS_SUCCEEDED(rv) && metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::maemo_classic);
-  }
-
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_SwipeAnimationEnabled,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {

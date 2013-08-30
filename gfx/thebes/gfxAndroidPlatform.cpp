@@ -178,6 +178,7 @@ gfxAndroidPlatform::GetCommonFallbackFonts(const uint32_t aCh,
                                            nsTArray<const char*>& aFontList)
 {
     static const char kDroidSansJapanese[] = "Droid Sans Japanese";
+    static const char kMotoyaLMaru[] = "MotoyaLMaru";
 
     if (IS_IN_BMP(aCh)) {
         // try language-specific "Droid Sans *" fonts for certain blocks,
@@ -208,11 +209,13 @@ gfxAndroidPlatform::GetCommonFallbackFonts(const uint32_t aCh,
             break;
         case 0xf9: case 0xfa:
             if (IsJapaneseLocale()) {
+                aFontList.AppendElement(kMotoyaLMaru);
                 aFontList.AppendElement(kDroidSansJapanese);
             }
             break;
         default:
             if (block >= 0x2e && block <= 0x9f && IsJapaneseLocale()) {
+                aFontList.AppendElement(kMotoyaLMaru);
                 aFontList.AppendElement(kDroidSansJapanese);
             }
             break;

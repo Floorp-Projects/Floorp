@@ -16,22 +16,20 @@
 #include <cstdio>
 #include <cstdlib>
 
+class TimedTrace {
+ public:
+  TimedTrace();
+  ~TimedTrace();
 
-class TimedTrace
-{
-public:
-    TimedTrace();
-    ~TimedTrace();
+  void SetTimeEllapsed(double myTime);
+  double TimeEllapsed();
+  void Tick10Msec();
+  int16_t SetUp(char* fileName);
+  void TimedLogg(char* message);
 
-    void SetTimeEllapsed(double myTime);
-    double TimeEllapsed();
-    void Tick10Msec();
-    int16_t SetUp(char* fileName);
-    void TimedLogg(char* message);
-
-private:
-    static double _timeEllapsedSec;
-    static FILE*  _timedTraceFile;
+ private:
+  static double _timeEllapsedSec;
+  static FILE* _timedTraceFile;
 
 };
 

@@ -864,13 +864,6 @@ public:
     mLastJSContext = nullptr;
   }
 
-  // Make this public for now.  Ideally we'd hide the JSRuntime inside.
-  JSRuntime*
-  Runtime() const
-  {
-    return mozilla::CycleCollectedJSRuntime::Runtime();
-  }
-
   void
   DispatchDeferredDeletion(bool aContinuation) MOZ_OVERRIDE
   {
@@ -1118,6 +1111,20 @@ GetWorkerPrivateFromContext(JSContext* aCx)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
   return static_cast<WorkerThreadRuntimePrivate*>(JS_GetRuntimePrivate(JS_GetRuntime(aCx)))->mWorkerPrivate;
+}
+
+bool
+IsCurrentThreadRunningChromeWorker()
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  CycleCollectedJSRuntime* ccrt = nsCycleCollector_currentJSRuntime();
+  if (!ccrt) {
+    return false;
+  }
+
+  JSRuntime* rt = ccrt->Runtime();
+  return static_cast<WorkerThreadRuntimePrivate*>(JS_GetRuntimePrivate(rt))->
+    mWorkerPrivate->UsesSystemPrincipal();
 }
 
 END_WORKERS_NAMESPACE

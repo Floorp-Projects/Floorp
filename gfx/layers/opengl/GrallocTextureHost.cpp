@@ -143,7 +143,7 @@ GrallocTextureSourceOGL::GetTextureTarget() const
 }
 
 gfx::SurfaceFormat
-GrallocTextureSourceOGL::GetFormat() const MOZ_OVERRIDE {
+GrallocTextureSourceOGL::GetFormat() const {
   if (!mGraphicBuffer.get()) {
     return gfx::FORMAT_UNKNOWN;
   }

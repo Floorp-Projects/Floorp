@@ -47,6 +47,13 @@ jclass AudioDeviceAndroidJni::globalScClass = NULL;
 int32_t AudioDeviceAndroidJni::SetAndroidAudioDeviceObjects(
     void* javaVM,
     void* context) {
+  return SetAndroidAudioDeviceObjects(javaVM, NULL, context);
+}
+
+int32_t AudioDeviceAndroidJni::SetAndroidAudioDeviceObjects(
+    void* javaVM,
+    void* null_env,
+    void* context) {
   WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, -1,
                "%s called", __FUNCTION__);
 
@@ -129,8 +136,8 @@ AudioDeviceAndroidJni::AudioDeviceAndroidJni(const int32_t id) :
             _playoutDeviceIsSpecified(false), _initialized(false),
             _recording(false), _playing(false), _recIsInitialized(false),
             _playIsInitialized(false), _micIsInitialized(false),
-            _speakerIsInitialized(false), _startRec(false), _stopRec(false),
-            _startPlay(false), _stopPlay(false), _playWarning(0),
+            _speakerIsInitialized(false), _startRec(false),
+            _startPlay(false), _playWarning(0),
             _playError(0), _recWarning(0), _recError(0), _delayPlayout(0),
             _delayRecording(0),
             _AGC(false),
