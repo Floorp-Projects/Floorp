@@ -1079,6 +1079,7 @@ ThreadClient.prototype = {
   get paused() { return this._state === "paused"; },
 
   _pauseOnExceptions: false,
+  _ignoreCaughtExceptions: false,
   _pauseOnDOMEvents: null,
 
   _actor: null,
@@ -1120,6 +1121,9 @@ ThreadClient.prototype = {
       }
       if (this._pauseOnExceptions) {
         aPacket.pauseOnExceptions = this._pauseOnExceptions;
+      }
+      if (this._ignoreCaughtExceptions) {
+        aPacket.ignoreCaughtExceptions = this._ignoreCaughtExceptions;
       }
       if (this._pauseOnDOMEvents) {
         aPacket.pauseOnDOMEvents = this._pauseOnDOMEvents;
@@ -1193,12 +1197,19 @@ ThreadClient.prototype = {
    * @param function aOnResponse
    *        Called with the response packet.
    */
-  pauseOnExceptions: function TC_pauseOnExceptions(aFlag, aOnResponse) {
-    this._pauseOnExceptions = aFlag;
+  pauseOnExceptions: function TC_pauseOnExceptions(aPauseOnExceptions,
+                                                   aIgnoreCaughtExceptions,
+                                                   aOnResponse) {
+    this._pauseOnExceptions = aPauseOnExceptions;
+    this._ignoreCaughtExceptions = aIgnoreCaughtExceptions;
+
     // If the debuggee is paused, we have to send the flag via a reconfigure
     // request.
     if (this.paused) {
-      this._client.reconfigureThread({ pauseOnExceptions: aFlag }, aOnResponse);
+      this._client.reconfigureThread({
+        pauseOnExceptions: aPauseOnExceptions,
+        ignoreCaughtExceptions: aIgnoreCaughtExceptions
+      }, aOnResponse);
       return;
     }
     // Otherwise send the flag using a standard resume request.
