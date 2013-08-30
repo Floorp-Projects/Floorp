@@ -447,8 +447,27 @@ notification {
   min-height: 64px;
 }
 
+notificationbox[count="0"] .notification-layer,
+notificationbox[count="1"] .notification-layer,
+notificationbox[count="2"] .notification-layer[anonid="layer2"] {
+  visibility: collapse;
+}
+
+notificationbox[count="2"] .notification-layer[anonid="layer1"],
+notificationbox[count="3"] .notification-layer[anonid="layer1"],
+notificationbox[count="3"] .notification-layer[anonid="layer2"] {
+  visibility: visible;
+}
+
+.notification-layer {
+  border: @metro_border_thin@ solid @field_disabled_foreground_color@;
+  border-bottom: none;
+  height:5px
+}
+
 .notification-inner {
   border-style: none;
+  border: @metro_border_thin@ solid @field_disabled_foreground_color@;
 }
 
 .notification-button {
