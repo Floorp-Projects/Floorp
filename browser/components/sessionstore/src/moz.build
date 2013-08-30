@@ -16,6 +16,7 @@ EXTRA_JS_MODULES = [
     'DocumentUtils.jsm',
     'PrivacyLevel.jsm',
     'SessionCookies.jsm',
+    'SessionHistory.jsm',
     'SessionMigration.jsm',
     'SessionStorage.jsm',
     'SessionWorker.js',
