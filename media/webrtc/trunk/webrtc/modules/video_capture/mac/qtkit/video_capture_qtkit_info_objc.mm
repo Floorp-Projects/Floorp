@@ -94,11 +94,15 @@ using namespace webrtc;
         return [NSNumber numberWithInt:-1];
     }
 
-    QTCaptureDevice* tempCaptureDevice =
-        (QTCaptureDevice*)[_captureDevicesInfo objectAtIndex:index];
+    if ([_captureDevicesInfo count] <= index)
+    {
+      return [NSNumber numberWithInt:-1];
+    }
+
+    QTCaptureDevice* tempCaptureDevice = (QTCaptureDevice*)[_captureDevicesInfo objectAtIndex:index];
     if(!tempCaptureDevice)
     {
-        return [NSNumber numberWithInt:-1];
+      return [NSNumber numberWithInt:-1];
     }
 
     memset(deviceName, 0, deviceNameLength);
@@ -138,7 +142,6 @@ using namespace webrtc;
         return [NSNumber numberWithInt:0];
     }
 
-    _poolInfo = [[NSAutoreleasePool alloc]init];
     _captureDeviceCountInfo = 0;
     [self getCaptureDevices];
 

@@ -1332,7 +1332,7 @@ int32_t AudioDeviceIPhone::InitPlayOrRecord() {
     // todo: Add 48 kHz (increase buffer sizes). Other fs?
     if ((playoutDesc.mSampleRate > 44090.0)
         && (playoutDesc.mSampleRate < 44110.0)) {
-        _adbSampFreq = 44000;
+        _adbSampFreq = 44100;
     } else if ((playoutDesc.mSampleRate > 15990.0)
                && (playoutDesc.mSampleRate < 16010.0)) {
         _adbSampFreq = 16000;

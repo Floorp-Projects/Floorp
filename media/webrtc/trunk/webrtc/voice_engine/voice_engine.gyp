@@ -34,6 +34,9 @@
           'include',
         ],
       },
+      'defines': [
+        'WEBRTC_EXTERNAL_TRANSPORT',
+      ],
       'sources': [
         '../common_types.h',
         '../engine_configurations.h',

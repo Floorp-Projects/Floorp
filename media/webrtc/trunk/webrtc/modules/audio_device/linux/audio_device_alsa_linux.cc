@@ -986,7 +986,8 @@ int32_t AudioDeviceLinuxALSA::RecordingDeviceName(
         memset(guid, 0, kAdmMaxGuidSize);
     }
     
-    return GetDevicesInfo(1, false, index, name, kAdmMaxDeviceNameSize);
+    return GetDevicesInfo(1, false, index, name, kAdmMaxDeviceNameSize,
+                          guid, kAdmMaxGuidSize);
 }
 
 int16_t AudioDeviceLinuxALSA::RecordingDevices()
@@ -1634,6 +1635,17 @@ int32_t AudioDeviceLinuxALSA::StartPlayout()
         return -1;
     }
 
+    int errVal = LATE(snd_pcm_prepare)(_handlePlayout);
+    if (errVal < 0)
+    {
+        WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
+                     "     playout snd_pcm_prepare failed (%s)\n",
+                     LATE(snd_strerror)(errVal));
+        // just log error
+        // if snd_pcm_open fails will return -1
+    }
+
+
     unsigned int threadID(0);
     if (!_ptrThreadPlay->Start(threadID))
     {
@@ -1647,16 +1659,6 @@ int32_t AudioDeviceLinuxALSA::StartPlayout()
         return -1;
     }
     _playThreadID = threadID;
-
-    int errVal = LATE(snd_pcm_prepare)(_handlePlayout);
-    if (errVal < 0)
-    {
-        WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
-                     "     playout snd_pcm_prepare failed (%s)\n",
-                     LATE(snd_strerror)(errVal));
-        // just log error
-        // if snd_pcm_open fails will return -1
-    }
 
     return 0;
 }
@@ -1829,7 +1831,9 @@ int32_t AudioDeviceLinuxALSA::GetDevicesInfo(
     const bool playback,
     const int32_t enumDeviceNo,
     char* enumDeviceName,
-    const int32_t ednLen) const
+    const int32_t ednLen,
+    char* enumDeviceId,
+    const int32_t ediLen) const
 {
     
     // Device enumeration based on libjingle implementation
@@ -1868,6 +1872,8 @@ int32_t AudioDeviceLinuxALSA::GetDevicesInfo(
             function == FUNC_GET_DEVICE_NAME_FOR_AN_ENUM) && enumDeviceNo == 0)
         {
             strcpy(enumDeviceName, "default");
+            if (enumDeviceId)
+                memset(enumDeviceId, 0, ediLen);
 
             err = LATE(snd_device_name_free_hint)(hints);
             if (err != 0)
@@ -1930,6 +1936,11 @@ int32_t AudioDeviceLinuxALSA::GetDevicesInfo(
                     // We have found the enum device, copy the name to buffer.
                     strncpy(enumDeviceName, desc, ednLen);
                     enumDeviceName[ednLen-1] = '\0';
+                    if (enumDeviceId)
+                    {
+                        strncpy(enumDeviceId, name, ediLen);
+                        enumDeviceId[ediLen-1] = '\0';
+                    }
                     keepSearching = false;
                     // Replace '\n' with '-'.
                     char * pret = strchr(enumDeviceName, '\n'/*0xa*/); //LF
@@ -1942,6 +1953,11 @@ int32_t AudioDeviceLinuxALSA::GetDevicesInfo(
                     // We have found the enum device, copy the name to buffer.
                     strncpy(enumDeviceName, name, ednLen);
                     enumDeviceName[ednLen-1] = '\0';
+                    if (enumDeviceId)
+                    {
+                        strncpy(enumDeviceId, name, ediLen);
+                        enumDeviceId[ediLen-1] = '\0';
+                    }
                     keepSearching = false;
                 }
 
@@ -1966,7 +1982,7 @@ int32_t AudioDeviceLinuxALSA::GetDevicesInfo(
                          LATE(snd_strerror)(err));
             // Continue and return true anyway, since we did get the whole list.
         }
-    }
+      }
 
     if (FUNC_GET_NUM_OF_DEVICE == function)
     {
