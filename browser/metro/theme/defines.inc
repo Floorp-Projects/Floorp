@@ -79,6 +79,7 @@
 %define touch_row 47px
 %define touch_button_small 37px
 %define touch_action_minwidth 133px
+%define touch_action_snapped_minwidth 80px
 
 %define margin_large 16px
 %define margin_xnormal 7px
