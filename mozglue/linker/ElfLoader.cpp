@@ -152,6 +152,12 @@ __dl_munmap(void *handle, void *addr, size_t length)
   return reinterpret_cast<LibHandle *>(handle)->MappableMUnmap(addr, length);
 }
 
+MFBT_API bool
+IsSignalHandlingBroken()
+{
+  return ElfLoader::Singleton.isSignalHandlingBroken();
+}
+
 namespace {
 
 /**
@@ -897,38 +903,87 @@ Divert(T func, T new_func)
 #endif
 
 SEGVHandler::SEGVHandler()
-: registeredHandler(false)
+: registeredHandler(false), signalHandlingBroken(false)
 {
+  /* Initialize oldStack.ss_flags to an invalid value when used to set
+   * an alternative stack, meaning we haven't got information about the
+   * original alternative stack and thus don't mean to restore it */
+  oldStack.ss_flags = SS_ONSTACK;
   if (!Divert(sigaction, __wrap_sigaction))
     return;
+
+  /* Get the current segfault signal handler. */
+  sys_sigaction(SIGSEGV, NULL, &this->action);
+
+  /* Some devices don't provide useful information to their SIGSEGV handlers,
+   * making it impossible for on-demand decompression to work. To check if
+   * we're on such a device, setup a temporary handler and deliberately
+   * trigger a segfault. The handler will set signalHandlingBroken if the
+   * provided information is bogus. */
+  struct sigaction action;
+  action.sa_sigaction = &SEGVHandler::test_handler;
+  sigemptyset(&action.sa_mask);
+  action.sa_flags = SA_SIGINFO | SA_NODEFER;
+  action.sa_restorer = NULL;
+  if (sys_sigaction(SIGSEGV, &action, NULL))
+    return;
+  stackPtr.Assign(MemoryRange::mmap(NULL, PageSize(), PROT_NONE,
+                                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+  if (stackPtr.get() == MAP_FAILED)
+    return;
+
+  *((volatile int*)stackPtr.get()) = 123;
+  stackPtr.Assign(MAP_FAILED, 0);
+  if (signalHandlingBroken) {
+    /* Restore the original segfault signal handler. */
+    sys_sigaction(SIGSEGV, &this->action, NULL);
+    return;
+  }
+
   /* Setup an alternative stack if the already existing one is not big
    * enough, or if there is none. */
-  if (sigaltstack(NULL, &oldStack) == -1 || !oldStack.ss_sp ||
-      oldStack.ss_size < stackSize) {
-    stackPtr.Assign(MemoryRange::mmap(NULL, stackSize, PROT_READ | PROT_WRITE,
-                                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
-    stack_t stack;
-    stack.ss_sp = stackPtr;
-    stack.ss_size = stackSize;
-    stack.ss_flags = 0;
-    sigaltstack(&stack, NULL);
+  if (sigaltstack(NULL, &oldStack) == 0) {
+    if (oldStack.ss_flags == SS_ONSTACK)
+      oldStack.ss_flags = 0;
+    if (!oldStack.ss_sp || oldStack.ss_size < stackSize) {
+      stackPtr.Assign(MemoryRange::mmap(NULL, stackSize, PROT_READ | PROT_WRITE,
+                                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+      if (stackPtr.get() == MAP_FAILED)
+        return;
+      stack_t stack;
+      stack.ss_sp = stackPtr;
+      stack.ss_size = stackSize;
+      stack.ss_flags = 0;
+      if (sigaltstack(&stack, NULL) != 0)
+        return;
+    }
   }
   /* Register our own handler, and store the already registered one in
    * SEGVHandler's struct sigaction member */
-  struct sigaction action;
   action.sa_sigaction = &SEGVHandler::handler;
-  sigemptyset(&action.sa_mask);
   action.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
-  action.sa_restorer = NULL;
-  registeredHandler = !sys_sigaction(SIGSEGV, &action, &this->action);
+  registeredHandler = !sys_sigaction(SIGSEGV, &action, NULL);
 }
 
 SEGVHandler::~SEGVHandler()
 {
   /* Restore alternative stack for signals */
-  sigaltstack(&oldStack, NULL);
+  if (oldStack.ss_flags != SS_ONSTACK)
+    sigaltstack(&oldStack, NULL);
   /* Restore original signal handler */
-  sys_sigaction(SIGSEGV, &this->action, NULL);
+  if (registeredHandler)
+    sys_sigaction(SIGSEGV, &this->action, NULL);
+}
+
+/* Test handler for a deliberately triggered SIGSEGV that determines whether
+ * useful information is provided to signal handlers, particularly whether
+ * si_addr is filled in properly. */
+void SEGVHandler::test_handler(int signum, siginfo_t *info, void *context)
+{
+  SEGVHandler &that = ElfLoader::Singleton;
+  if (signum != SIGSEGV || info == NULL || info->si_addr != that.stackPtr.get())
+    that.signalHandlingBroken = true;
+  mprotect(that.stackPtr, that.stackPtr.GetLength(), PROT_READ | PROT_WRITE);
 }
 
 /* TODO: "properly" handle signal masks and flags */
