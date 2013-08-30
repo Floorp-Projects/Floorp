@@ -7,10 +7,6 @@
 # used by frozen (dependent) linkage components. The internal-linkage code should use
 # rdfutil_s which is built in the internal/ subdirectory. 
 
-include $(srcdir)/objs.mk
-
-EXTRA_DEPS += $(srcdir)/objs.mk
-
 DIST_INSTALL = 1
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

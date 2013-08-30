@@ -3,9 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include $(srcdir)/../objs.mk
-
-EXTRA_DEPS += $(srcdir)/../objs.mk
 
 DIST_INSTALL	= 1
 
@@ -16,8 +13,6 @@ LOCAL_INCLUDES	= \
 SDK_LIBRARY     	= \
 	$(LIB_PREFIX)xpcomglue_staticruntime_s.$(LIB_SUFFIX) \
 	$(NULL)
-
-GARBAGE         += $(XPCOM_GLUE_SRC_LCPPSRCS)
 
 FORCE_STATIC_LIB = 1
 
@@ -35,9 +30,6 @@ OS_COMPILE_CXXFLAGS += -Zl
 OS_COMPILE_CFLAGS += -Zl
 DEFINES += -D_USE_ANSI_CPP
 endif
-
-export:: $(XPCOM_GLUE_SRC_CPPSRCS) $(XPCOM_GLUENS_SRC_CPPSRCS) $(topsrcdir)/xpcom/glue/nsStringAPI.cpp $(topsrcdir)/xpcom/glue/GenericModule.cpp $(topsrcdir)/xpcom/glue/DeadlockDetector.h
-	$(INSTALL) $^ .
 
 ifdef TARGET_XPCOM_ABI
 DEFINES += -DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\"

@@ -2,9 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include $(topsrcdir)/rdf/util/src/objs.mk
-include $(topsrcdir)/intl/unicharutil/util/objs.mk
-
 FORCE_SHARED_LIB = 1
 MOZILLA_INTERNAL_API = 1
 
@@ -470,16 +467,6 @@ ifdef MOZ_DIRECTSHOW
 OS_LIBS += $(call EXPAND_LIBNAME,dmoguids wmcodecdspuuid strmiids msdmo)
 endif
 
-EXTRA_DEPS += \
-  $(topsrcdir)/intl/unicharutil/util/objs.mk \
-  $(topsrcdir)/rdf/util/src/objs.mk \
-  $(NULL)
-
-GARBAGE += \
-  $(INTL_UNICHARUTIL_UTIL_LCPPSRCS) \
-  $(RDF_UTIL_SRC_LCPPSRCS) \
-  $(NULL)
-
 LOCAL_INCLUDES += -I$(topsrcdir)/intl/unicharutil/util \
   -I$(topsrcdir)/intl/unicharutil/src
 
@@ -644,9 +631,6 @@ GTEST_LIB = $(EFFECTIVE_LIB_PREFIX)gtest/$(EFFECTIVE_LIB_PREFIX)$(LIBRARY_NAME)$
 EXTRA_MDDEPEND_FILES = $(GTEST_LIB).pp
 
 include $(topsrcdir)/config/rules.mk
-
-export:: $(RDF_UTIL_SRC_CPPSRCS) $(INTL_UNICHARUTIL_UTIL_CPPSRCS)
-	$(INSTALL) $^ .
 
 # need widget/windows for resource.h (included from widget.rc)
 LOCAL_INCLUDES += \
