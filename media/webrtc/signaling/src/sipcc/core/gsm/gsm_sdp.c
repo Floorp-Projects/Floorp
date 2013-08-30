@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <errno.h>
-
 #include "cpr_in.h"
 #include "cpr_rand.h"
 #include "cpr_stdlib.h"
@@ -102,38 +100,6 @@ gsmsdp_add_remote_track(uint16_t idx, uint16_t track,
 extern cc_media_cap_table_t g_media_table;
 
 extern boolean g_disable_mass_reg_debug_print;
-
-/*
- * gsmsdp_requires_two_dc_components
- *
- * returns TRUE if we are talking to Firefox and it's
- * a version that required two components for datachannel.
- */
-static boolean gsmsdp_requires_two_dc_components(void *sdp) {
-#define FIRST_VERSION_TO_USE_ONE_DC_COMPONENT 26
-    const char *owner_name = sdp_get_owner_username(sdp);
-    unsigned long remote_version;
-    char* strtoul_end;
-
-    if (strncmp(owner_name, SIPSDP_ORIGIN_APPNAME,
-        strlen(SIPSDP_ORIGIN_APPNAME)) == 0) {
-        /* This means we are talking to firefox, now read the major version */
-        errno = 0;
-        remote_version = strtoul(owner_name + strlen(SIPSDP_ORIGIN_APPNAME),
-            &strtoul_end, 10);
-        if (errno ||
-            strtoul_end == (owner_name + strlen(SIPSDP_ORIGIN_APPNAME)) ||
-            !remote_version) {
-            /* Unable to parse remote, must not be earlier firefox */
-            return FALSE;
-        }
-
-        return (remote_version < FIRST_VERSION_TO_USE_ONE_DC_COMPONENT) ?
-            TRUE : FALSE;
-    }
-
-    return FALSE;
-}
 
 /**
  * A wraper function to return the media capability supported by
@@ -5731,6 +5697,13 @@ gsmsdp_create_local_sdp (fsmdef_dcb_t *dcb_p, boolean force_streams_enabled,
          */
         if (media_enabled && ( media_cap->enabled || force_streams_enabled)) {
             level = level + 1;  /* next level */
+
+            /* Only audio and video use two ICE components */
+            if (media_cap->type != SDP_MEDIA_AUDIO &&
+                media_cap->type != SDP_MEDIA_VIDEO) {
+                vcmDisableRtcpComponent(dcb_p->peerconnection, level);
+            }
+
             ip_mode = platform_get_ip_address_mode();
             if (ip_mode >= CPR_IP_MODE_IPV6) {
                 if (gsmsdp_add_media_line(dcb_p, media_cap, cap_index,
@@ -7016,19 +6989,6 @@ gsmsdp_install_peer_ice_attributes(fsm_fcb_t *fcb_p)
 
         if (vcm_res) {
           return (CC_CAUSE_SETTING_ICE_SESSION_PARAMETERS_FAILED);
-        }
-      }
-
-      /* If this is Datachannel and we are talking to anything other
-         than an older version of Firefox then disable the second component
-         of the ICE stream */
-      if (media->type == DATA &&
-          !gsmsdp_requires_two_dc_components(sdp_p->dest_sdp)) {
-        vcm_res = vcmDisableRtcpComponent(dcb_p->peerconnection,
-          media->level);
-
-        if (vcm_res) {
-          return CC_CAUSE_SETTING_ICE_SESSION_PARAMETERS_FAILED;
         }
       }
 
