@@ -16,8 +16,6 @@
 #include "trace.h"
 #include "video_capture_android.h"
 
-#include "AndroidJNIWrapper.h"
-
 namespace webrtc
 {
 
@@ -181,7 +179,7 @@ int32_t DeviceInfoAndroid::CreateCapabilityMap(
     return -1;
 
   // Find the capability class
-  jclass javaCapClass = jsjni_GetGlobalClassRef(AndroidJavaCaptureCapabilityClass);
+  jclass javaCapClass = g_capabilityClass;
   if (javaCapClass == NULL) {
     VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(attached);
     WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
@@ -258,8 +256,6 @@ int32_t DeviceInfoAndroid::CreateCapabilityMap(
   memcpy(_lastUsedDeviceName,
          deviceUniqueIdUTF8,
          _lastUsedDeviceNameLength + 1);
-
-  env->DeleteGlobalRef(javaCapClass);
 
   VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(attached);
   WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _id,

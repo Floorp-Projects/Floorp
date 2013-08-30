@@ -92,6 +92,7 @@ class AudioTransportAPI: public AudioTransport {
       const uint32_t totalDelay,
       const int32_t clockSkew,
       const uint32_t currentMicLevel,
+      const bool keyPressed,
       uint32_t& newMicLevel) {
     rec_count_++;
     if (rec_count_ % 100 == 0) {
@@ -1769,10 +1770,10 @@ TEST_F(AudioDeviceAPITest, RecordingSampleRate) {
   EXPECT_EQ(48000, sampleRate);
 #elif defined(ANDROID)
   TEST_LOG("Recording sample rate is %u\n\n", sampleRate);
-  EXPECT_TRUE((sampleRate == 44100) || (sampleRate == 16000));
+  EXPECT_TRUE((sampleRate == 44000) || (sampleRate == 16000));
 #elif defined(WEBRTC_IOS)
   TEST_LOG("Recording sample rate is %u\n\n", sampleRate);
-  EXPECT_TRUE((sampleRate == 44100) || (sampleRate == 16000) ||
+  EXPECT_TRUE((sampleRate == 44000) || (sampleRate == 16000) ||
               (sampleRate == 8000));
 #endif
 
@@ -1788,10 +1789,10 @@ TEST_F(AudioDeviceAPITest, PlayoutSampleRate) {
   EXPECT_EQ(48000, sampleRate);
 #elif defined(ANDROID)
   TEST_LOG("Playout sample rate is %u\n\n", sampleRate);
-  EXPECT_TRUE((sampleRate == 44100) || (sampleRate == 16000));
+  EXPECT_TRUE((sampleRate == 44000) || (sampleRate == 16000));
 #elif defined(WEBRTC_IOS)
   TEST_LOG("Playout sample rate is %u\n\n", sampleRate);
-  EXPECT_TRUE((sampleRate == 44100) || (sampleRate == 16000) ||
+  EXPECT_TRUE((sampleRate == 44000) || (sampleRate == 16000) ||
               (sampleRate == 8000));
 #endif
 }

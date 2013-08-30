@@ -10,7 +10,7 @@
 #ifndef VOICE_ENGINE_MAIN_TEST_AUTO_TEST_FAKES_FAKE_EXTERNAL_TRANSPORT_H_
 #define VOICE_ENGINE_MAIN_TEST_AUTO_TEST_FAKES_FAKE_EXTERNAL_TRANSPORT_H_
 
-#include "common_types.h"
+#include "webrtc/common_types.h"
 
 namespace webrtc {
 class CriticalSectionWrapper;

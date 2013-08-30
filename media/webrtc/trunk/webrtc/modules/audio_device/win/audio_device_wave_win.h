@@ -178,6 +178,9 @@ private:
     inline int32_t OutputSanityCheckAfterUnlockedPeriod() const;
 
 private:
+    bool KeyPressed() const;
+
+private:
     int32_t EnumeratePlayoutDevices();
     int32_t EnumerateRecordingDevices();
     void TraceSupportFlags(DWORD dwSupport) const;

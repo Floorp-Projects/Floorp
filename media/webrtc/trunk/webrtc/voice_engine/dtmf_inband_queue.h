@@ -11,9 +11,9 @@
 #ifndef WEBRTC_VOICE_ENGINE_DTMF_INBAND_QUEUE_H
 #define WEBRTC_VOICE_ENGINE_DTMF_INBAND_QUEUE_H
 
-#include "critical_section_wrapper.h"
-#include "typedefs.h"
-#include "voice_engine_defines.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/typedefs.h"
+#include "webrtc/voice_engine/voice_engine_defines.h"
 
 
 namespace webrtc {
@@ -22,7 +22,7 @@ class DtmfInbandQueue
 {
 public:
 
-    DtmfInbandQueue(const int32_t id);
+    DtmfInbandQueue(int32_t id);
 
     virtual ~DtmfInbandQueue();
 

@@ -14,12 +14,12 @@
 #include <map>
 #include <vector>
 
-#include "typedefs.h"
-#include "rtp_utility.h"
-#include "rtcp_utility.h"
-#include "rtp_rtcp_defines.h"
-#include "rtcp_receiver_help.h"
-#include "tmmbr_help.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_receiver_help.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_utility.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
+#include "webrtc/modules/rtp_rtcp/source/tmmbr_help.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 class ModuleRtpRtcpImpl;

@@ -13,7 +13,7 @@
       'type': 'static_library',
       'dependencies': [
         'webrtc_utility',
-        '<(webrtc_root)/common_audio/common_audio.gyp:signal_processing',
+        '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
         '<(webrtc_root)/common_video/common_video.gyp:common_video',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
@@ -73,7 +73,6 @@
           'conditions': [
             ['os_posix==1 and OS!="mac"', {
               'cflags': [ '-msse2', ],
-              'cflags_mozilla': [ '-msse2', ],
             }],
             ['OS=="mac"', {
               'xcode_settings': {

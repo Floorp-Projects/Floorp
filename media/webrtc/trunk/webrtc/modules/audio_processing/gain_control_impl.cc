@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "gain_control_impl.h"
+#include "webrtc/modules/audio_processing/gain_control_impl.h"
 
 #include <cassert>
 
-#include "critical_section_wrapper.h"
-#include "gain_control.h"
+#include "webrtc/modules/audio_processing/agc/include/gain_control.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 
-#include "audio_processing_impl.h"
-#include "audio_buffer.h"
+#include "webrtc/modules/audio_processing/audio_buffer.h"
+#include "webrtc/modules/audio_processing/audio_processing_impl.h"
 
 namespace webrtc {
 

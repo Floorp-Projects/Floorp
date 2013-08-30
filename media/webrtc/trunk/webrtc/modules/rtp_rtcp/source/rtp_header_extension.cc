@@ -10,8 +10,8 @@
 
 #include <cassert>
 
-#include "common_types.h"
-#include "rtp_header_extension.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_header_extension.h"
 
 namespace webrtc {
 
@@ -107,7 +107,7 @@ uint16_t RtpHeaderExtensionMap::GetTotalLengthInBytes() const {
   }
   // Add RTP extension header length.
   if (length > 0) {
-    length += RTP_ONE_BYTE_HEADER_LENGTH_IN_BYTES;
+    length += kRtpOneByteHeaderLength;
   }
   return length;
 }
@@ -120,7 +120,7 @@ int32_t RtpHeaderExtensionMap::GetLengthUntilBlockStartInBytes(
     return -1;
   }
   // Get length until start of extension block type.
-  uint16_t length = RTP_ONE_BYTE_HEADER_LENGTH_IN_BYTES;
+  uint16_t length = kRtpOneByteHeaderLength;
 
   std::map<uint8_t, HeaderExtension*>::const_iterator it =
       extensionMap_.begin();

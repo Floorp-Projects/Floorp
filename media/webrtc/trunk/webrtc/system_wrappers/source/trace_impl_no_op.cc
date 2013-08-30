@@ -12,6 +12,10 @@
 
 namespace webrtc {
 
+const int Trace::kBoilerplateLength = 71;
+const int Trace::kTimestampPosition = 13;
+const int Trace::kTimestampLength = 12;
+
 void Trace::CreateTrace() {
 }
 

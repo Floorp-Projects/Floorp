@@ -28,9 +28,9 @@
 #include <queue>
 #include <vector>
 
-#include "modules/interface/module_common_types.h"
-#include "system_wrappers/interface/constructor_magic.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/system_wrappers/interface/constructor_magic.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
