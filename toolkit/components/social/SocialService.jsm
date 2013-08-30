@@ -350,6 +350,16 @@ function schedule(callback) {
 
 // Public API
 this.SocialService = {
+  get hasEnabledProviders() {
+    // used as an optimization during startup, can be used to check if further
+    // initialization should be done (e.g. creating the instances of
+    // SocialProvider and turning on UI). ActiveProviders may have changed and
+    // not yet flushed so we check the active providers array
+    for (let p in ActiveProviders._providers) {
+      return true;
+    };
+    return false;
+  },
   get enabled() {
     return SocialServiceInternal.enabled;
   },
