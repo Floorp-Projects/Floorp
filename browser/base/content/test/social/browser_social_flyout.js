@@ -133,12 +133,10 @@ var tests = {
 
     function onTabOpen(event) {
       gBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen, true);
-      is(panel.state, "closed", "flyout should be closed");
-      ok(true, "Link should open a new tab");
-      executeSoon(function(){
+      waitForCondition(function() { return panel.state == "closed" }, function() {
         gBrowser.removeTab(event.target);
         next();
-      });
+      }, "panel should close after tab open");
     }
 
     let panel = document.getElementById("social-flyout-panel");
@@ -154,7 +152,7 @@ var tests = {
           if (e.data.result == "shown") {
             // click on our test link
             is(panel.state, "open", "flyout should be open");
-            gBrowser.tabContainer.addEventListener("TabOpen", onTabOpen, true); 
+            gBrowser.tabContainer.addEventListener("TabOpen", onTabOpen, true);
             let iframe = panel.firstChild;
             iframe.contentDocument.getElementById('traversal').click();
           }
