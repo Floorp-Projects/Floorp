@@ -370,6 +370,7 @@ var Browser = {
     let promptBox = {
       appendPrompt : function(args, onCloseCallback) {
           let newPrompt = document.createElementNS(XUL_NS, "tabmodalprompt");
+          newPrompt.setAttribute("promptType", args.promptType);
           stack.appendChild(newPrompt);
           browser.setAttribute("tabmodalPromptShowing", true);
           newPrompt.clientTop; // style flush to assure binding is attached
@@ -377,7 +378,7 @@ var Browser = {
           let tab = self.getTabForBrowser(browser);
           tab = tab.chromeTab;
 
-          newPrompt.init(args, tab, onCloseCallback);
+          newPrompt.metroInit(args, tab, onCloseCallback);
           return newPrompt;
       },
 

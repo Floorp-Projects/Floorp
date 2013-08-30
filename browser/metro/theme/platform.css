@@ -78,14 +78,14 @@ button:not([disabled]):hover {
 
 /* Default button colors */
 
-.button-default,
+button[default],
 .notification-button-default {
   background: linear-gradient(to bottom, hsl(35, 100%, 50%), hsl(30, 100%, 50%));
   border-color: hsl(30, 100%, 48%);
   color: white;
 }
 
-.button-default:not([disabled]):hover,
+button[default]:not([disabled]):hover,
 .notification-button-default:not([disabled]):hover {
   background: linear-gradient(to bottom, hsl(25, 100%, 47%), hsl(25, 100%, 45%));
   border-color: hsl(25, 100%, 43%);
@@ -97,7 +97,7 @@ button:not([disabled]):hover {
 /* Note: these need enough specificity to override all the :hover rules above. */
 button:not([disabled]):hover:active,
 button:not([disabled])[checked="true"],
-.button-default:not([disabled])[checked="true"],
+button[default]:not([disabled])[checked="true"],
 .notification-button-default:not([disabled])[checked="true"] {
   background: linear-gradient(to bottom, hsl(210, 5%, 28%), hsl(210, 5%, 25%));
   border-color: hsl(216, 4%, 27%);
@@ -551,23 +551,80 @@ notificationbox[count="3"] .notification-layer[anonid="layer2"] {
 /* Prompts ----------------------------------------------------------------- */
 
 .mainContainer {
-/* TODO: These values should probably come from somewhere. Maybe the same as the width of our overlay buttons? */
-  padding-left: 60px;
-  padding-right: 60px;
+  padding: 5vh 10vw;
 }
 
 .info\.title {
   font-size: @metro_font_large@;
+  border-bottom: 1px solid #C7C7C7;
+  padding-bottom: @metro_spacing_normal@;
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .info\.body {
   font-size: @metro_font_normal@;
+  padding-bottom: @metro_spacing_normal@;
+  height: 100%;
+  max-height: 30vh;
+  max-width: 55vw;
 }
 
 .buttonContainer {
   background-color: transparent;
-  padding: 0;
   border: none;
+}
+
+.buttonContainer > button {
+  min-width: @touch_action_minwidth@;
+  margin: 5px 0 5px @metro_spacing_xnormal@;
+}
+
+/* set all the things to display block to allow body to grow with content and
+  obey overflow auto. Except on authentication prompts because a grid is used to
+  align labels and textboxes. */
+tabmodalprompt:not([promptType="promptUserAndPass"]) .info\.body,
+tabmodalprompt:not([promptType="promptUserAndPass"]) .infoContainer,
+tabmodalprompt:not([promptType="promptUserAndPass"]) .topContainer,
+tabmodalprompt:not([promptType="promptUserAndPass"]) .topContainer > rows > row:not([hidden]),
+tabmodalprompt:not([promptType="promptUserAndPass"]) .topContainer > rows {
+  display: block;
+}
+
+tabmodalprompt:not([promptType="promptUserAndPass"]) .infoContainer {
+  overflow: auto;
+}
+
+.topContainer > rows > row > label {
+  margin-left: 0;
+}
+
+.topContainer > rows > row > checkbox {
+  -moz-margin-start: 0;
+  -moz-padding-start: 0;
+}
+
+.topContainer > rows > row > textbox {
+  font-size: @metro_font_normal@;
+  height: 40px;
+  margin: 5px 0;
+  width: 100%;
+}
+
+.topContainer > rows > row > textbox[focused] {
+  border-color: @metro_orange@ !important;
+}
+
+@media (max-width: 600px) {
+  .mainContainer {
+    padding: 5vh 5vw;
+    width: 90vw;
+  }
+
+  .buttonContainer > button {
+    min-width: @touch_action_snapped_minwidth@;
+  }
 }
 
 /*.meta -------------------------------------------------------------------- */
