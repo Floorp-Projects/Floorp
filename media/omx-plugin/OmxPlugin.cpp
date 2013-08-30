@@ -38,90 +38,9 @@
 
 using namespace MPAPI;
 
-namespace android {
-
 #if !defined(MOZ_STAGEFRIGHT_OFF_T)
 #define MOZ_STAGEFRIGHT_OFF_T off64_t
 #endif
-
-// MediaStreamSource is a DataSource that reads from a MPAPI media stream.
-class MediaStreamSource : public DataSource {
-  PluginHost *mPluginHost;
-public:
-  MediaStreamSource(PluginHost *aPluginHost, Decoder *aDecoder);
-
-  virtual status_t initCheck() const;
-  virtual ssize_t readAt(MOZ_STAGEFRIGHT_OFF_T offset, void *data, size_t size);
-  virtual status_t getSize(MOZ_STAGEFRIGHT_OFF_T *size);
-  virtual uint32_t flags() {
-    return kWantsPrefetching;
-  }
-
-  virtual ~MediaStreamSource();
-
-private:
-  Decoder *mDecoder;
-
-  MediaStreamSource(const MediaStreamSource &);
-  MediaStreamSource &operator=(const MediaStreamSource &);
-
-#ifdef MOZ_ANDROID_HTC_WORKAROUND
-  // libstagefright on some Jellybean HTC devices (at least the Tegra 3 One X)
-  // calls this function and expects this magic number to be returned when
-  // sniffing audio stream formats.
-  // It is unclear what this is for or what it does.
-  virtual uint32_t MagicalHTCIncantation() { return 0x3f0; }
-#endif
-};
-
-MediaStreamSource::MediaStreamSource(PluginHost *aPluginHost, Decoder *aDecoder) :
-  mPluginHost(aPluginHost)
-{
-  mDecoder = aDecoder;
-}
-
-MediaStreamSource::~MediaStreamSource()
-{
-}
-
-status_t MediaStreamSource::initCheck() const
-{
-  return OK;
-}
-
-ssize_t MediaStreamSource::readAt(MOZ_STAGEFRIGHT_OFF_T offset, void *data, size_t size)
-{
-  char *ptr = reinterpret_cast<char *>(data);
-  size_t todo = size;
-  while (todo > 0) {
-    uint32_t bytesRead;
-    if (!mPluginHost->Read(mDecoder, ptr, offset, todo, &bytesRead)) {
-      return ERROR_IO;
-    }
-
-    if (bytesRead == 0) {
-      return size - todo;
-    }
-
-    offset += bytesRead;
-    todo -= bytesRead;
-    ptr += bytesRead;
-  }
-  return size;
-}
-
-status_t MediaStreamSource::getSize(MOZ_STAGEFRIGHT_OFF_T *size)
-{
-  uint64_t length = mPluginHost->GetLength(mDecoder);
-  if (length == static_cast<uint64_t>(-1))
-    return ERROR_UNSUPPORTED;
-
-  *size = length;
-
-  return OK;
-}
-
-}  // namespace android
 
 using namespace android;
 
@@ -369,12 +288,11 @@ bool OmxDecoder::Init() {
   //register sniffers, if they are not registered in this process.
   DataSource::RegisterDefaultSniffers();
 
-  sp<DataSource> dataSource = new MediaStreamSource(mPluginHost, mDecoder);
-  if (dataSource->initCheck()) {
+  sp<DataSource> dataSource =
+    DataSource::CreateFromURI(static_cast<char*>(mDecoder->mResource));
+  if (!dataSource.get() || dataSource->initCheck()) {
     return false;
   }
-
-  mPluginHost->SetMetaDataReadMode(mDecoder);
 
   sp<MediaExtractor> extractor = MediaExtractor::Create(dataSource);
   if (extractor == NULL) {
@@ -406,8 +324,6 @@ bool OmxDecoder::Init() {
   if (videoTrackIndex == -1 && audioTrackIndex == -1) {
     return false;
   }
-
-  mPluginHost->SetPlaybackReadMode(mDecoder);
 
   int64_t totalDurationUs = 0;
 
