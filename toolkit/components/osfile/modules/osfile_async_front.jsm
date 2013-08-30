@@ -166,9 +166,9 @@ let Scheduler = {
         let durationMs = Math.max(0, data.durationMs);
         // Accumulate (or initialize) outExecutionDuration
         if (typeof options.outExecutionDuration == "number") {
-          options.outExecutionDuration += data.durationMs;
+          options.outExecutionDuration += durationMs;
         } else {
-          options.outExecutionDuration = data.durationMs;
+          options.outExecutionDuration = durationMs;
         }
         return data.ok;
       },
