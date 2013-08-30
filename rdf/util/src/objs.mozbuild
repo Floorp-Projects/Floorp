@@ -4,10 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'profdirserviceprovider'
+rdf_util_src_lcppsrcs = [
+    'nsRDFResource.cpp',
+]
 
-include('objs.mozbuild')
-
-CPP_SOURCES += modules_profiledirservice_src_csrcs
-
-LIBRARY_NAME = 'profdirserviceprovider_s'
+rdf_util_src_cppsrcs = [
+    '%s/rdf/util/src/%s' % (TOPSRCDIR, s) for s in rdf_util_src_lcppsrcs
+]

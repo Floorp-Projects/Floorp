@@ -24,9 +24,9 @@ EXPORTS.mtransport += [
     '../transportlayerprsock.h',
 ]
 
-CPP_SOURCES += [
-    '$(MTRANSPORT_LCPPSRCS)',
-]
+include('../objs.mozbuild')
+
+CPP_SOURCES += mtransport_cppsrcs
 
 LIBRARY_NAME = 'mtransport'
 
@@ -34,3 +34,40 @@ FAIL_ON_WARNINGS = not CONFIG['_MSC_VER']
 
 LIBXUL_LIBRARY = True
 
+LOCAL_INCLUDES = [
+    '/media/webrtc/trunk/third_party/libjingle/source/',
+]
+LOCAL_INCLUDES += [
+    '/media/mtransport/',
+    '/media/mtransport/third_party/',
+    '/media/mtransport/third_party/nICEr/src/crypto',
+    '/media/mtransport/third_party/nICEr/src/ice',
+    '/media/mtransport/third_party/nICEr/src/net',
+    '/media/mtransport/third_party/nICEr/src/stun',
+    '/media/mtransport/third_party/nICEr/src/util',
+    '/media/mtransport/third_party/nrappkit/src/event',
+    '/media/mtransport/third_party/nrappkit/src/log',
+    '/media/mtransport/third_party/nrappkit/src/plugin',
+    '/media/mtransport/third_party/nrappkit/src/port/generic/include',
+    '/media/mtransport/third_party/nrappkit/src/registry',
+    '/media/mtransport/third_party/nrappkit/src/share',
+    '/media/mtransport/third_party/nrappkit/src/stats',
+    '/media/mtransport/third_party/nrappkit/src/util/libekr',
+]
+
+if CONFIG['OS_TARGET'] in ['Darwin', 'DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD']:
+    LOCAL_INCLUDES += [
+        '/media/mtransport/third_party/nrappkit/src/port/darwin/include',
+    ]
+elif CONFIG['OS_TARGET'] == 'Linux':
+    LOCAL_INCLUDES += [
+        '/media/mtransport/third_party/nrappkit/src/port/linux/include',
+    ]
+elif CONFIG['OS_TARGET'] == 'Android':
+    LOCAL_INCLUDES += [
+        '/media/mtransport/third_party/nrappkit/src/port/android/include',
+    ]
+elif CONFIG['OS_TARGET'] == 'WINNT':
+    LOCAL_INCLUDES += [
+        '/media/mtransport/third_party/nrappkit/src/port/win32/include',
+    ]
