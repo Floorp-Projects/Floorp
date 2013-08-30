@@ -43,7 +43,7 @@
 #    define MOZ_USING_STLPORT 1
 #    define MOZ_STLPORT_VERSION_AT_LEAST(major, minor, patch) \
        (_STLPORT_VERSION >= ((major) << 8 | (minor) << 4 | (patch)))
-#  elif defined(__LIBCPP_VERSION)
+#  elif defined(_LIBCPP_VERSION)
    /*
     * libc++, unfortunately, doesn't appear to have useful versioning macros.
     * Hopefully, the recommendations of N3694 with respect to standard libraries
