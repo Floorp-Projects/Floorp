@@ -632,14 +632,30 @@ arrowbox {
 
 .meta {
   background-color: @panel_light_color@;
-  padding: @metro_spacing_normal@ @metro_spacing_xxnormal@;
-  overflow: auto;
-  max-width: 100%;
-  width: 100%;
+}
+
+/* needs to observe the viewstate */
+.meta-section-container {
+  padding: 45px 75px 0;
+  -moz-box-orient: horizontal;
+}
+
+.meta-section-container[viewstate="snapped"],
+.meta-section-container[viewstate="portrait"] {
+  -moz-box-orient: vertical;
+  -moz-box-flex: 1;
+}
+
+.meta-section-container[viewstate="snapped"] {
+  padding: 0;
 }
 
 .meta-section {
   margin: 0 @metro_spacing_large@;
+}
+
+.meta-section-container[viewstate="snapped"] > .meta-section {
+  margin: 0 @metro_spacing_xnormal@;
 }
 
 .meta-section-title {
@@ -649,12 +665,28 @@ arrowbox {
   cursor: default;
 }
 
+.meta-section-title.wide-title {
+  font-size: @metro_font_xlarge@;
+  margin-bottom: calc(40px - @tile_side_margin@);
+}
+
 .meta-section:not([expanded]) > .meta-section-title.narrow-title:-moz-locale-dir(ltr):after {
   content: ">";
 }
 
 .meta-section:not([expanded]) > .meta-section-title.narrow-title:-moz-locale-dir(rtl):before {
   content: "<";
+}
+
+.meta-section-container:not([viewstate="snapped"]) .meta-section-title.narrow-title,
+.meta-section-container[viewstate="snapped"] .meta-section-title.wide-title {
+  display: none;
+}
+
+.meta-section-container[viewstate="snapped"] .meta-section-title,
+.meta-section-container[viewstate="snapped"] richgrid {
+  margin-top: @metro_spacing_xnormal@;
+  padding: 0;
 }
 
 /* App bars ----------------------------------------------------------------- */
@@ -702,10 +734,6 @@ appbar toolbar toolbarbutton {
   padding: 0;
   /* Don't inherit background-color from toolbarbutton[checked="true"] */
   background-color: transparent;
-}
-
-appbar[viewstate="snapped"] toolbar toolbarbutton {
-  margin: 0 @toolbar_snapped_horizontal_spacing@;
 }
 
 appbar toolbar toolbarbutton[disabled] {
