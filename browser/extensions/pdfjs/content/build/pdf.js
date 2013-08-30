@@ -6142,6 +6142,7 @@ var Annotation = (function AnnotationClosure() {
     }
 
     this.appearance = getDefaultAppearance(dict);
+    data.hasAppearance = !!this.appearance;
   }
 
   Annotation.prototype = {
@@ -6471,7 +6472,7 @@ var TextWidgetAnnotation = (function TextWidgetAnnotationClosure() {
   var parent = WidgetAnnotation.prototype;
   Util.inherit(TextWidgetAnnotation, WidgetAnnotation, {
     hasHtml: function TextWidgetAnnotation_hasHtml() {
-      return !!this.data.fieldValue;
+      return !this.data.hasAppearance && !!this.data.fieldValue;
     },
 
     getHtmlElement: function TextWidgetAnnotation_getHtmlElement(commonObjs) {
@@ -6499,6 +6500,9 @@ var TextWidgetAnnotation = (function TextWidgetAnnotationClosure() {
     },
 
     getOperatorList: function TextWidgetAnnotation_getOperatorList(evaluator) {
+      if (this.appearance) {
+        return Annotation.prototype.getOperatorList.call(this, evaluator);
+      }
 
 
       var promise = new Promise();
