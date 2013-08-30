@@ -384,8 +384,7 @@ ThreadState.prototype = {
     dumpn("ThreadState is connecting...");
     this.activeThread.addListener("paused", this._update);
     this.activeThread.addListener("resumed", this._update);
-    this.activeThread.pauseOnExceptions(Prefs.pauseOnExceptions,
-                                        Prefs.ignoreCaughtExceptions);
+    this.activeThread.pauseOnExceptions(Prefs.pauseOnExceptions);
     this._handleTabNavigation();
   },
 
@@ -1558,7 +1557,6 @@ let Prefs = new ViewHelpers.Prefs("devtools.debugger", {
   variablesOnlyEnumVisible: ["Bool", "ui.variables-only-enum-visible"],
   variablesSearchboxVisible: ["Bool", "ui.variables-searchbox-visible"],
   pauseOnExceptions: ["Bool", "pause-on-exceptions"],
-  ignoreCaughtExceptions: ["Bool", "ignore-caught-exceptions"],
   sourceMapsEnabled: ["Bool", "source-maps-enabled"]
 });
 
