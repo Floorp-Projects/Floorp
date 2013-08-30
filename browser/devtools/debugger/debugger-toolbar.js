@@ -190,7 +190,6 @@ function OptionsView() {
   dumpn("OptionsView was instantiated");
 
   this._togglePauseOnExceptions = this._togglePauseOnExceptions.bind(this);
-  this._toggleIgnoreCaughtExceptions = this._toggleIgnoreCaughtExceptions.bind(this);
   this._toggleShowPanesOnStartup = this._toggleShowPanesOnStartup.bind(this);
   this._toggleShowVariablesOnlyEnum = this._toggleShowVariablesOnlyEnum.bind(this);
   this._toggleShowVariablesFilterBox = this._toggleShowVariablesFilterBox.bind(this);
@@ -206,14 +205,12 @@ OptionsView.prototype = {
 
     this._button = document.getElementById("debugger-options");
     this._pauseOnExceptionsItem = document.getElementById("pause-on-exceptions");
-    this._ignoreCaughtExceptionsItem = document.getElementById("ignore-caught-exceptions");
     this._showPanesOnStartupItem = document.getElementById("show-panes-on-startup");
     this._showVariablesOnlyEnumItem = document.getElementById("show-vars-only-enum");
     this._showVariablesFilterBoxItem = document.getElementById("show-vars-filter-box");
     this._showOriginalSourceItem = document.getElementById("show-original-source");
 
     this._pauseOnExceptionsItem.setAttribute("checked", Prefs.pauseOnExceptions);
-    this._ignoreCaughtExceptionsItem.setAttribute("checked", Prefs.ignoreCaughtExceptions);
     this._showPanesOnStartupItem.setAttribute("checked", Prefs.panesVisibleOnStartup);
     this._showVariablesOnlyEnumItem.setAttribute("checked", Prefs.variablesOnlyEnumVisible);
     this._showVariablesFilterBoxItem.setAttribute("checked", Prefs.variablesSearchboxVisible);
@@ -253,21 +250,10 @@ OptionsView.prototype = {
    * Listener handling the 'pause on exceptions' menuitem command.
    */
   _togglePauseOnExceptions: function() {
-    Prefs.pauseOnExceptions =
+    let pref = Prefs.pauseOnExceptions =
       this._pauseOnExceptionsItem.getAttribute("checked") == "true";
 
-    DebuggerController.activeThread.pauseOnExceptions(
-      Prefs.pauseOnExceptions,
-      Prefs.ignoreCaughtExceptions);
-  },
-
-  _toggleIgnoreCaughtExceptions: function() {
-    Prefs.ignoreCaughtExceptions =
-      this._ignoreCaughtExceptionsItem.getAttribute("checked") == "true";
-
-    DebuggerController.activeThread.pauseOnExceptions(
-      Prefs.pauseOnExceptions,
-      Prefs.ignoreCaughtExceptions);
+    DebuggerController.activeThread.pauseOnExceptions(pref);
   },
 
   /**
