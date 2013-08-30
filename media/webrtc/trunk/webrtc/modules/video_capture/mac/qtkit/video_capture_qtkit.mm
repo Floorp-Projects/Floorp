@@ -15,20 +15,6 @@
 #include "critical_section_wrapper.h"
 #include "../../video_capture_config.h"
 
-class nsAutoreleasePool {
-public:
-    nsAutoreleasePool()
-    {
-        mLocalPool = [[NSAutoreleasePool alloc] init];
-    }
-    ~nsAutoreleasePool()
-    {
-        [mLocalPool release];
-    }
-private:
-    NSAutoreleasePool *mLocalPool;
-};
-
 namespace webrtc
 {
 
@@ -55,11 +41,11 @@ VideoCaptureMacQTKit::VideoCaptureMacQTKit(const int32_t id) :
 VideoCaptureMacQTKit::~VideoCaptureMacQTKit()
 {
 
-    nsAutoreleasePool localPool;
     WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, _id,
                  "~VideoCaptureMacQTKit() called");
     if(_captureDevice)
     {
+        [_captureDevice registerOwner:nil];
         [_captureDevice stopCapture];
         [_captureDevice release];
     }
@@ -85,8 +71,6 @@ int32_t VideoCaptureMacQTKit::Init(
     _deviceUniqueId = new char[nameLength+1];
     memcpy(_deviceUniqueId, iDeviceUniqueIdUTF8,nameLength+1);
 
-    nsAutoreleasePool localPool;
-
     _captureDevice = [[VideoCaptureMacQTKitObjC alloc] init];
     if(NULL == _captureDevice)
     {
@@ -96,12 +80,7 @@ int32_t VideoCaptureMacQTKit::Init(
         return -1;
     }
 
-    if(-1 == [[_captureDevice registerOwner:this]intValue])
-    {
-        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, id,
-                     "Failed to register owner for _captureDevice");
-        return -1;
-    }
+    [_captureDevice registerOwner:this];
 
     if(0 == strcmp((char*)iDeviceUniqueIdUTF8, ""))
     {
@@ -165,8 +144,7 @@ int32_t VideoCaptureMacQTKit::Init(
 
     // at this point we know that the user has passed in a valid camera. Let's
     // set it as the current.
-    if(-1 == [[_captureDevice
-               setCaptureDeviceById:(char*)deviceUniqueIdUTF8]intValue])
+    if(![_captureDevice setCaptureDeviceById:(char*)deviceUniqueIdUTF8])
     {
         strcpy((char*)_deviceUniqueId, (char*)deviceUniqueIdUTF8);
         WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
@@ -186,34 +164,23 @@ int32_t VideoCaptureMacQTKit::StartCapture(
     const VideoCaptureCapability& capability)
 {
 
-    nsAutoreleasePool localPool;
     _captureWidth = capability.width;
     _captureHeight = capability.height;
     _captureFrameRate = capability.maxFPS;
     _captureDelay = 120;
 
-    if(-1 == [[_captureDevice setCaptureHeight:_captureHeight
-               AndWidth:_captureWidth AndFrameRate:_captureFrameRate]intValue])
-    {
-        WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _id,
-                     "Could not set width=%d height=%d frameRate=%d",
-                     _captureWidth, _captureHeight, _captureFrameRate);
-        return -1;
-    }
+    [_captureDevice setCaptureHeight:_captureHeight
+                               width:_captureWidth
+                           frameRate:_captureFrameRate];
 
-    if(-1 == [[_captureDevice startCapture]intValue])
-    {
-        return -1;
-    }
+    [_captureDevice startCapture];
     _isCapturing = true;
     return 0;
 }
 
 int32_t VideoCaptureMacQTKit::StopCapture()
 {
-    nsAutoreleasePool localPool;
     [_captureDevice stopCapture];
-
     _isCapturing = false;
     return 0;
 }

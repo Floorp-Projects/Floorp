@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "voe_external_media_impl.h"
+#include "webrtc/voice_engine/voe_external_media_impl.h"
 
-#include "channel.h"
-#include "critical_section_wrapper.h"
-#include "output_mixer.h"
-#include "trace.h"
-#include "transmit_mixer.h"
-#include "voice_engine_impl.h"
-#include "voe_errors.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/voice_engine/channel.h"
+#include "webrtc/voice_engine/include/voe_errors.h"
+#include "webrtc/voice_engine/output_mixer.h"
+#include "webrtc/voice_engine/transmit_mixer.h"
+#include "webrtc/voice_engine/voice_engine_impl.h"
 
 namespace webrtc {
 
@@ -191,7 +191,7 @@ int VoEExternalMediaImpl::ExternalRecordingInsertData(
         return -1;
     }
     if ((16000 != samplingFreqHz) && (32000 != samplingFreqHz) &&
-        (48000 != samplingFreqHz) && (44100 != samplingFreqHz))
+        (48000 != samplingFreqHz) && (44000 != samplingFreqHz))
     {
          shared_->SetLastError(VE_INVALID_ARGUMENT, kTraceError,
              "SetExternalRecordingStatus() invalid sample rate");
@@ -244,7 +244,8 @@ int VoEExternalMediaImpl::ExternalRecordingInsertData(
             samplingFreqHz,
             totalDelayMS,
             0,
-            0);
+            0,
+            false); // Typing detection not supported
 
         shared_->transmit_mixer()->DemuxAndMix();
         shared_->transmit_mixer()->EncodeAndSend();
@@ -300,7 +301,7 @@ int VoEExternalMediaImpl::ExternalPlayoutGetData(
         return -1;
     }
     if ((16000 != samplingFreqHz) && (32000 != samplingFreqHz) &&
-        (48000 != samplingFreqHz) && (44100 != samplingFreqHz))
+        (48000 != samplingFreqHz) && (44000 != samplingFreqHz))
     {
         shared_->SetLastError(VE_INVALID_ARGUMENT, kTraceError,
             "ExternalPlayoutGetData() invalid sample rate");

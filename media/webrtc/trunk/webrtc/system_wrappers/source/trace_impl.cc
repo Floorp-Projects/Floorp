@@ -414,6 +414,14 @@ void TraceImpl::AddMessageToList(
     const char trace_message[WEBRTC_TRACE_MAX_MESSAGE_SIZE],
     const uint16_t length,
     const TraceLevel level) {
+// NOTE(andresp): Enabled externally.
+#ifdef WEBRTC_DIRECT_TRACE
+  if (callback_) {
+    callback_->Print(level, trace_message, length);
+  }
+  return;
+#endif
+
   CriticalSectionScoped lock(critsect_array_);
 
   if (next_free_idx_[active_queue_] >= WEBRTC_TRACE_MAX_QUEUE) {
@@ -448,13 +456,13 @@ void TraceImpl::AddMessageToList(
   length_[active_queue_][idx] = length;
   memcpy(message_queue_[active_queue_][idx], trace_message, length);
 
-  if (next_free_idx_[active_queue_] >= WEBRTC_TRACE_MAX_QUEUE - 1) {
+  if (next_free_idx_[active_queue_] == WEBRTC_TRACE_MAX_QUEUE - 1) {
     // Logging more messages than can be worked off. Log a warning.
     const char warning_msg[] = "WARNING MISSING TRACE MESSAGES\n";
-    level_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1] = kTraceWarning;
-    length_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1] = strlen(warning_msg);
-    memcpy(message_queue_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1],
-           warning_msg, length_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1]);
+    level_[active_queue_][next_free_idx_[active_queue_]] = kTraceWarning;
+    length_[active_queue_][next_free_idx_[active_queue_]] = strlen(warning_msg);
+    memcpy(message_queue_[active_queue_][next_free_idx_[active_queue_]],
+           warning_msg, strlen(warning_msg));
     next_free_idx_[active_queue_]++;
   }
 }

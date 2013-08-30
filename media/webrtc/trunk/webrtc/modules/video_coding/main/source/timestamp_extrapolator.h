@@ -27,9 +27,8 @@ public:
                              int32_t receiverId = 0);
     ~VCMTimestampExtrapolator();
     void Update(int64_t tMs, uint32_t ts90khz, bool trace = true);
-    uint32_t ExtrapolateTimestamp(int64_t tMs) const;
-    int64_t ExtrapolateLocalTime(uint32_t timestamp90khz) const;
-    void Reset(int64_t nowMs = -1);
+    int64_t ExtrapolateLocalTime(uint32_t timestamp90khz);
+    void Reset();
 
 private:
     void CheckForWrapArounds(uint32_t ts90khz);
@@ -39,12 +38,13 @@ private:
     int32_t         _id;
     Clock*                _clock;
     double                _w[2];
-    double                _pp[2][2];
+    double                _P[2][2];
     int64_t         _startMs;
     int64_t         _prevMs;
     uint32_t        _firstTimestamp;
     int32_t         _wrapArounds;
-    uint32_t        _prevTs90khz;
+    int64_t         _prevUnwrappedTimestamp;
+    int64_t         _prevWrapTimestamp;
     const double          _lambda;
     bool                  _firstAfterReset;
     uint32_t        _packetCount;

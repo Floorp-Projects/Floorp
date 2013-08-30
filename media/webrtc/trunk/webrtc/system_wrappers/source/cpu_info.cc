@@ -12,19 +12,14 @@
 
 #if defined(_WIN32)
 #include <Windows.h>
-#elif defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
-#include <sys/types.h>
+#elif defined(WEBRTC_MAC)
 #include <sys/sysctl.h>
-#elif defined(WEBRTC_ANDROID)
-// Not implemented yet, might be possible to use Linux implementation
-#elif defined(WEBRTC_LINUX)
-#include <unistd.h>  // required for get_nprocs() with uClibc
-#include <sys/sysinfo.h>
-#else // defined(_SC_NPROCESSORS_ONLN)
+#include <sys/types.h>
+#else // defined(WEBRTC_LINUX) or defined(WEBRTC_ANDROID)
 #include <unistd.h>
 #endif
 
-#include "system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 
@@ -39,20 +34,13 @@ uint32_t CpuInfo::DetectNumberOfCores() {
     WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, -1,
                  "Available number of cores:%d", number_of_cores_);
 
-#elif defined(WEBRTC_LINUX) && !defined(WEBRTC_ANDROID) && !defined(WEBRTC_GONK)
-    number_of_cores_ = get_nprocs();
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID)
+    number_of_cores_ = static_cast<uint32_t>(sysconf(_SC_NPROCESSORS_ONLN));
     WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, -1,
                  "Available number of cores:%d", number_of_cores_);
 
-#elif defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
-    int name[] = {
-      CTL_HW,
-#ifdef HW_AVAILCPU
-      HW_AVAILCPU,
-#else
-      HW_NCPU,
-#endif
-    };
+#elif defined(WEBRTC_MAC)
+    int name[] = {CTL_HW, HW_AVAILCPU};
     int ncpu;
     size_t size = sizeof(ncpu);
     if (0 == sysctl(name, 2, &ncpu, &size, NULL, 0)) {
@@ -64,8 +52,6 @@ uint32_t CpuInfo::DetectNumberOfCores() {
                    "Failed to get number of cores");
       number_of_cores_ = 1;
     }
-#elif defined(_SC_NPROCESSORS_ONLN)
-    number_of_cores_ = sysconf(_SC_NPROCESSORS_ONLN);
 #else
     WEBRTC_TRACE(kTraceWarning, kTraceUtility, -1,
                  "No function to get number of cores");

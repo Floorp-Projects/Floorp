@@ -678,11 +678,6 @@ int WebRtcNetEQ_GetDefaultCodecSettings(const enum WebRtcNetEQDecoder *codecID,
             codecBytes = 15300; /* 240ms @ 510kbps (60ms frames) */
             codecBuffers = 30;  /* Replicating the value for PCMu/a */
         }
-        else if (codecID[i] == kDecoderOpus)
-        {
-            codecBytes = 15300; /* 240ms @ 510kbps (60ms frames) */
-            codecBuffers = 30;  /* ?? Codec supports down to 2.5-60 ms frames */
-        }
         else if ((codecID[i] == kDecoderPCM16B) ||
             (codecID[i] == kDecoderPCM16B_2ch))
         {

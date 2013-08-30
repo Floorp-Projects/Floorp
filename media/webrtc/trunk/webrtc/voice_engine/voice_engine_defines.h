@@ -197,7 +197,7 @@ enum { kVoiceEngineMaxRtpExtensionId = 14 };
 namespace webrtc
 {
 
-inline int VoEId(const int veId, const int chId)
+inline int VoEId(int veId, int chId)
 {
     if (chId == -1)
     {
@@ -207,13 +207,13 @@ inline int VoEId(const int veId, const int chId)
     return (int) ((veId << 16) + chId);
 }
 
-inline int VoEModuleId(const int veId, const int chId)
+inline int VoEModuleId(int veId, int chId)
 {
     return (int) ((veId << 16) + chId);
 }
 
 // Convert module ID to internal VoE channel ID
-inline int VoEChannelId(const int moduleId)
+inline int VoEChannelId(int moduleId)
 {
     return (int) (moduleId & 0xffff);
 }
@@ -255,28 +255,28 @@ inline int VoEChannelId(const int moduleId)
 
 #ifdef WEBRTC_LINUX
 
-#include <pthread.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
+#include <pthread.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #ifndef QNX
   #include <linux/net.h>
 #ifndef ANDROID
   #include <sys/soundcard.h>
 #endif // ANDROID
 #endif // QNX
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <errno.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <sched.h>
-#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <sys/time.h>
+#include <time.h>
+#include <unistd.h>
 
 #define DWORD unsigned long int
 #define WINAPI
@@ -314,18 +314,11 @@ inline int VoEChannelId(const int moduleId)
 
   // Always excluded for Android builds
   #undef WEBRTC_CODEC_ISAC
-  // We need WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT to make things work on Android.
-  // Motivation for the commented-out undef below is unclear.
-  //
-  // #undef WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT
+  #undef WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT
   #undef WEBRTC_CONFERENCING
   #undef WEBRTC_TYPING_DETECTION
 
-  // This macro used to cause the calling function to set an error code and return.
-  // However, not doing that seems to cause the unit tests to pass / behave reasonably,
-  // so it's disabled for now; see bug 819856.
-  #define ANDROID_NOT_SUPPORTED(stat)
-  //#define ANDROID_NOT_SUPPORTED(stat) NOT_SUPPORTED(stat)
+  #define ANDROID_NOT_SUPPORTED(stat) NOT_SUPPORTED(stat)
 
 #else // LINUX PC
 
@@ -344,32 +337,30 @@ inline int VoEChannelId(const int moduleId)
 // *** WEBRTC_MAC ***
 // including iPhone
 
-#if defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
+#ifdef WEBRTC_MAC
 
-#include <pthread.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sched.h>
-#include <sys/time.h>
-#include <time.h>
-#if !defined(WEBRTC_BSD)
 #include <AudioUnit/AudioUnit.h>
+#include <arpa/inet.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <pthread.h>
+#include <sched.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
 #if !defined(WEBRTC_IOS)
   #include <CoreServices/CoreServices.h>
   #include <CoreAudio/CoreAudio.h>
   #include <AudioToolbox/DefaultAudioOutput.h>
   #include <AudioToolbox/AudioConverter.h>
   #include <CoreAudio/HostTime.h>
-#endif
 #endif
 
 #define DWORD unsigned long int
@@ -426,6 +417,6 @@ inline int VoEChannelId(const int moduleId)
 
 #else
 #define IPHONE_NOT_SUPPORTED(stat)
-#endif  // #if defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
+#endif  // #ifdef WEBRTC_MAC
 
 #endif // WEBRTC_VOICE_ENGINE_VOICE_ENGINE_DEFINES_H

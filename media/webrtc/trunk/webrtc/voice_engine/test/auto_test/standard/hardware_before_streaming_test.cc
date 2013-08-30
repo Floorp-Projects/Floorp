@@ -10,7 +10,7 @@
 
 #include <cstring>
 
-#include "after_initialization_fixture.h"
+#include "webrtc/voice_engine/test/auto_test/fixtures/after_initialization_fixture.h"
 
 using namespace webrtc;
 

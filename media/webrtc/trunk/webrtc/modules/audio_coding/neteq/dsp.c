@@ -200,16 +200,11 @@ int WebRtcNetEQ_DSPInit(DSPInst_t *inst, uint16_t fs)
     int16_t saveMsPerCall = inst->millisecondsPerCall;
     enum BGNMode saveBgnMode = inst->BGNInst.bgnMode;
 #ifdef NETEQ_STEREO
-    MasterSlaveInfo saveMSinfo;
+    MasterSlaveInfo* saveMSinfo = inst->msInfo;
 #endif
 
     /* copy contents of statInst to avoid clearing */WEBRTC_SPL_MEMCPY_W16(&saveStats, &(inst->statInst),
         sizeof(DSPStats_t)/sizeof(int16_t));
-
-#ifdef NETEQ_STEREO
-    /* copy contents of msInfo to avoid clearing */WEBRTC_SPL_MEMCPY_W16(&saveMSinfo, &(inst->msInfo),
-        sizeof(MasterSlaveInfo)/sizeof(int16_t));
-#endif
 
     /* check that the sample rate is valid */
     if ((fs != 8000)
@@ -292,8 +287,8 @@ int WebRtcNetEQ_DSPInit(DSPInst_t *inst, uint16_t fs)
         sizeof(DSPStats_t)/sizeof(int16_t));
 
 #ifdef NETEQ_STEREO
-    /* Recreate MSinfo */WEBRTC_SPL_MEMCPY_W16(&(inst->msInfo), &saveMSinfo,
-        sizeof(MasterSlaveInfo)/sizeof(int16_t));
+    /* Write back the pointer. */
+    inst->msInfo = saveMSinfo;
 #endif
 
 #ifdef NETEQ_CNG_CODEC

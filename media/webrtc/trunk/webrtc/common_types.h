@@ -35,6 +35,8 @@
 
 namespace webrtc {
 
+class Config;
+
 class InStream
 {
 public:
@@ -266,23 +268,23 @@ enum VadModes                 // degree of bandwidth reduction
 struct NetworkStatistics           // NETEQ statistics
 {
     // current jitter buffer size in ms
-    WebRtc_UWord16 currentBufferSize;
+    uint16_t currentBufferSize;
     // preferred (optimal) buffer size in ms
-    WebRtc_UWord16 preferredBufferSize;
+    uint16_t preferredBufferSize;
     // adding extra delay due to "peaky jitter"
     bool jitterPeaksFound;
     // loss rate (network + late) in percent (in Q14)
-    WebRtc_UWord16 currentPacketLossRate;
+    uint16_t currentPacketLossRate;
     // late loss rate in percent (in Q14)
-    WebRtc_UWord16 currentDiscardRate;
+    uint16_t currentDiscardRate;
     // fraction (of original stream) of synthesized speech inserted through
     // expansion (in Q14)
-    WebRtc_UWord16 currentExpandRate;
+    uint16_t currentExpandRate;
     // fraction of synthesized speech inserted through pre-emptive expansion
     // (in Q14)
-    WebRtc_UWord16 currentPreemptiveRate;
+    uint16_t currentPreemptiveRate;
     // fraction of data removed through acceleration (in Q14)
-    WebRtc_UWord16 currentAccelerateRate;
+    uint16_t currentAccelerateRate;
     // clock-drift in parts-per-million (negative or positive)
     int32_t clockDriftPPM;
     // average packet waiting time in the jitter buffer (ms)
@@ -329,7 +331,7 @@ enum NsModes    // type of Noise Suppression
     kNsLowSuppression,  // lowest suppression
     kNsModerateSuppression,
     kNsHighSuppression,
-    kNsVeryHighSuppression     // highest suppression
+    kNsVeryHighSuppression,     // highest suppression
 };
 
 enum AgcModes                  // type of Automatic Gain Control
@@ -354,7 +356,7 @@ enum EcModes                   // type of Echo Control
     kEcDefault,                // platform default
     kEcConference,             // conferencing default (aggressive AEC)
     kEcAec,                    // Acoustic Echo Cancellation
-    kEcAecm                    // AEC mobile
+    kEcAecm,                   // AEC mobile
 };
 
 // AECM modes
@@ -406,7 +408,7 @@ enum NetEqModes             // NetEQ playout configurations
     kNetEqFax = 2,
     // Minimal buffer management. Inserts zeros for lost packets and during
     // buffer increases.
-    kNetEqOff = 3
+    kNetEqOff = 3,
 };
 
 enum OnHoldModes            // On Hold direction
@@ -420,7 +422,7 @@ enum AmrMode
 {
     kRfc3267BwEfficient = 0,
     kRfc3267OctetAligned = 1,
-    kRfc3267FileStorage = 2
+    kRfc3267FileStorage = 2,
 };
 
 // ==================================================================
@@ -534,11 +536,6 @@ enum VideoCodecMode {
   kScreensharing
 };
 
-// When using an external encoder/decoder one may need to specify extra
-// options. This struct definition is left for the external implementation.
-// TODO(andresp): Support for multiple external encoder/decoders.
-struct ExtraCodecOptions;
-
 // Common video codec properties
 struct VideoCodec
 {
@@ -561,7 +558,10 @@ struct VideoCodec
     SimulcastStream     simulcastStream[kMaxSimulcastStreams];
 
     VideoCodecMode      mode;
-    ExtraCodecOptions*  extra_options;
+
+    // When using an external encoder/decoder this allows to pass
+    // extra options without requiring webrtc to be aware of them.
+    Config*  extra_options;
 };
 
 // Bandwidth over-use detector options.  These are used to drive

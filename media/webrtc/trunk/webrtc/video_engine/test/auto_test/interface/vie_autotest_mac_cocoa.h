@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "engine_configurations.h"
+#include "webrtc/engine_configurations.h"
 
 #if defined(COCOA_RENDERING)
 
 #ifndef WEBRTC_VIDEO_ENGINE_MAIN_TEST_AUTOTEST_INTERFACE_VIE_AUTOTEST_MAC_COCOA_H_
 #define WEBRTC_VIDEO_ENGINE_MAIN_TEST_AUTOTEST_INTERFACE_VIE_AUTOTEST_MAC_COCOA_H_
 
-#include "vie_autotest_window_manager_interface.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest_window_manager_interface.h"
 
 @class CocoaRenderView;
 

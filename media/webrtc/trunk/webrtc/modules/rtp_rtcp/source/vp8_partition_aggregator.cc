@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/rtp_rtcp/source/vp8_partition_aggregator.h"
+#include "webrtc/modules/rtp_rtcp/source/vp8_partition_aggregator.h"
 
 #include <assert.h>
 #include <stdlib.h>  // NULL
@@ -265,4 +265,3 @@ int Vp8PartitionAggregator::CalcNumberOfFragments(int large_partition_size,
 }
 
 }  // namespace
-

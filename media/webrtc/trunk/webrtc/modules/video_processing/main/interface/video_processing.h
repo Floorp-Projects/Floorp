@@ -18,10 +18,10 @@
 #ifndef WEBRTC_MODULES_INTERFACE_VIDEO_PROCESSING_H
 #define WEBRTC_MODULES_INTERFACE_VIDEO_PROCESSING_H
 
-#include "common_video/interface/i420_video_frame.h"
-#include "module.h"
-#include "module_common_types.h"
-#include "video_processing_defines.h"
+#include "webrtc/common_video/interface/i420_video_frame.h"
+#include "webrtc/modules/interface/module.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/video_processing/main/interface/video_processing_defines.h"
 
 /**
    The module is largely intended to process video streams, except functionality 

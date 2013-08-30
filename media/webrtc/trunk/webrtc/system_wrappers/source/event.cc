@@ -30,33 +30,4 @@ EventWrapper* EventWrapper::Create() {
   return EventPosix::Create();
 #endif
 }
-
-int EventWrapper::KeyPressed() {
-#if defined(_WIN32)
-  int key_down = 0;
-  for (int key = 0x20; key < 0x90; key++) {
-    short res = GetAsyncKeyState(key);
-    key_down |= res % 2; // Get the LSB
-  }
-  if (key_down) {
-    return 1;
-  } else {
-    return 0;
-  }
-#elif defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
-  bool key_down = false;
-  // loop through all Mac virtual key constant values
-  for (int key_index = 0; key_index <= 0x5C; key_index++) {
-    key_down |= CGEventSourceKeyState(kCGEventSourceStateHIDSystemState,
-                                      key_index);
-  }
-  if (key_down) {
-    return 1;
-  } else {
-    return 0;
-  }
-#else
-  return -1;
-#endif
-}
 } // namespace webrtc

@@ -15,6 +15,10 @@
 
 #include "typedefs.h"
 
+#ifdef WEBRTC_BIG_ENDIAN
+#include "signal_processing_library.h"
+#endif
+
 #define HIGHEND 0xFF00
 #define LOWEND    0xFF
 
@@ -26,7 +30,7 @@ int16_t WebRtcPcm16b_EncodeW16(int16_t *speechIn16b,
                                int16_t *speechOut16b)
 {
 #ifdef WEBRTC_BIG_ENDIAN
-    memcpy(speechOut16b, speechIn16b, len * sizeof(WebRtc_Word16));
+    WEBRTC_SPL_MEMCPY_W16(speechOut16b, speechIn16b, len);
 #else
     int i;
     for (i=0;i<len;i++) {
@@ -65,7 +69,7 @@ int16_t WebRtcPcm16b_DecodeW16(void *inst,
                                int16_t* speechType)
 {
 #ifdef WEBRTC_BIG_ENDIAN
-    memcpy(speechOut16b, speechIn16b, ((len*sizeof(WebRtc_Word16)+1)>>1));
+    WEBRTC_SPL_MEMCPY_W8(speechOut16b, speechIn16b, ((len*sizeof(int16_t)+1)>>1));
 #else
     int i;
     int samples=len>>1;

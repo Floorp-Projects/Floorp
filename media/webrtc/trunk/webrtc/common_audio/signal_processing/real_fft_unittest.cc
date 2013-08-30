@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "common_audio/signal_processing/include/real_fft.h"
-#include "common_audio/signal_processing/include/signal_processing_library.h"
-#include "typedefs.h"
+#include "webrtc/common_audio/signal_processing/include/real_fft.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/typedefs.h"
 
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 
 namespace webrtc {
 namespace {

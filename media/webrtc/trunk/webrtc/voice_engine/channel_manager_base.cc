@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "channel_manager_base.h"
+#include "webrtc/voice_engine/channel_manager_base.h"
 
-#include "critical_section_wrapper.h"
-#include "rw_lock_wrapper.h"
 #include <cassert>
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/rw_lock_wrapper.h"
 
 namespace webrtc
 {

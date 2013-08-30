@@ -176,6 +176,7 @@ int32_t AudioTransportImpl::RecordedDataIsAvailable(
     const uint32_t totalDelayMS,
     const int32_t clockDrift,
     const uint32_t currentMicLevel,
+    const bool keyPressed,
     uint32_t& newMicLevel)
 {
     if (_fullDuplex && _audioList.GetSize() < 15)
@@ -346,6 +347,12 @@ int32_t AudioTransportImpl::NeedMorePlayData(
 
                 int32_t fsInHz(samplesPerSecIn);
                 int32_t fsOutHz(samplesPerSec);
+
+                if (fsInHz == 44100)
+                    fsInHz = 44000;
+
+                if (fsOutHz == 44100)
+                    fsOutHz = 44000;
 
                 if (nChannelsIn == 2 && nBytesPerSampleIn == 4)
                 {
@@ -1238,7 +1245,7 @@ int32_t FuncTestManager::TestAudioTransport()
         if (samplesPerSec == 48000) {
             _audioTransport->SetFilePlayout(
                 true, GetResource(_playoutFile48.c_str()));
-        } else if (samplesPerSec == 44100) {
+        } else if (samplesPerSec == 44100 || samplesPerSec == 44000) {
             _audioTransport->SetFilePlayout(
                 true, GetResource(_playoutFile44.c_str()));
         } else if (samplesPerSec == 16000) {
@@ -1471,7 +1478,7 @@ int32_t FuncTestManager::TestSpeakerVolume()
         if (48000 == samplesPerSec) {
             _audioTransport->SetFilePlayout(
                 true, GetResource(_playoutFile48.c_str()));
-        } else if (44100 == samplesPerSec) {
+        } else if (44100 == samplesPerSec || samplesPerSec == 44000) {
             _audioTransport->SetFilePlayout(
                 true, GetResource(_playoutFile44.c_str()));
         } else if (samplesPerSec == 16000) {
@@ -1572,7 +1579,7 @@ int32_t FuncTestManager::TestSpeakerMute()
         EXPECT_EQ(0, audioDevice->PlayoutSampleRate(&samplesPerSec));
         if (48000 == samplesPerSec)
             _audioTransport->SetFilePlayout(true, _playoutFile48.c_str());
-        else if (44100 == samplesPerSec)
+        else if (44100 == samplesPerSec || 44000 == samplesPerSec)
             _audioTransport->SetFilePlayout(true, _playoutFile44.c_str());
         else
         {

@@ -8,19 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "noise_suppression_impl.h"
+#include "webrtc/modules/audio_processing/noise_suppression_impl.h"
 
 #include <cassert>
 
-#include "critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #if defined(WEBRTC_NS_FLOAT)
-#include "noise_suppression.h"
+#include "webrtc/modules/audio_processing/ns/include/noise_suppression.h"
 #elif defined(WEBRTC_NS_FIXED)
-#include "noise_suppression_x.h"
+#include "webrtc/modules/audio_processing/ns/include/noise_suppression_x.h"
 #endif
 
-#include "audio_processing_impl.h"
-#include "audio_buffer.h"
+#include "webrtc/modules/audio_processing/audio_buffer.h"
+#include "webrtc/modules/audio_processing/audio_processing_impl.h"
 
 namespace webrtc {
 
@@ -176,4 +176,3 @@ int NoiseSuppressionImpl::GetHandleError(void* handle) const {
   return apm_->kUnspecifiedError;
 }
 }  // namespace webrtc
-
