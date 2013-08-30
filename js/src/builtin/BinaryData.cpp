@@ -935,7 +935,7 @@ ArrayType::create(JSContext *cx, HandleObject arrayTypeGlobal,
     RootedObject obj(cx, NewBuiltinClassInstance(cx, &ArrayType::class_));
     if (!obj)
         return NULL;
-    obj->setFixedSlot(SLOT_TYPE_REPR, ObjectValue(*typeReprObj));
+    obj->initFixedSlot(SLOT_TYPE_REPR, ObjectValue(*typeReprObj));
 
     RootedValue elementTypeVal(cx, ObjectValue(*elementType));
     if (!JSObject::defineProperty(cx, obj, cx->names().elementType,
@@ -943,7 +943,7 @@ ArrayType::create(JSContext *cx, HandleObject arrayTypeGlobal,
                                   JSPROP_READONLY | JSPROP_PERMANENT))
         return NULL;
 
-    obj->setFixedSlot(SLOT_ARRAY_ELEM_TYPE, elementTypeVal);
+    obj->initFixedSlot(SLOT_ARRAY_ELEM_TYPE, elementTypeVal);
 
     RootedValue lengthVal(cx, Int32Value(length));
     if (!JSObject::defineProperty(cx, obj, cx->names().length,
@@ -1142,7 +1142,7 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
         return false;
     StructTypeRepresentation *typeRepr =
         TypeRepresentation::fromOwnerObject(typeReprObj)->asStruct();
-    structType->setFixedSlot(SLOT_TYPE_REPR, ObjectValue(*typeReprObj));
+    structType->initFixedSlot(SLOT_TYPE_REPR, ObjectValue(*typeReprObj));
 
     // Construct for internal use an array with the type object for each field.
     RootedObject fieldTypeVec(
@@ -1151,7 +1151,7 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
     if (!fieldTypeVec)
         return false;
 
-    structType->setFixedSlot(SLOT_STRUCT_FIELD_TYPES,
+    structType->initFixedSlot(SLOT_STRUCT_FIELD_TYPES,
                              ObjectValue(*fieldTypeVec));
 
     // Construct the fieldNames vector
@@ -1581,7 +1581,7 @@ DefineNumericClass(JSContext *cx,
     if (!typeReprObj)
         return false;
 
-    numFun->setFixedSlot(SLOT_TYPE_REPR, ObjectValue(*typeReprObj));
+    numFun->initFixedSlot(SLOT_TYPE_REPR, ObjectValue(*typeReprObj));
 
     if (!InitializeCommonTypeDescriptorProperties(cx, numFun, typeReprObj))
         return false;
@@ -1629,6 +1629,7 @@ Class BinaryBlock::class_ = {
     Class::NON_NATIVE |
     JSCLASS_HAS_RESERVED_SLOTS(BLOCK_RESERVED_SLOTS) |
     JSCLASS_HAS_PRIVATE |
+    JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayType),
     JS_PropertyStub,
     JS_DeletePropertyStub,
@@ -1738,8 +1739,8 @@ BinaryBlock::createNull(JSContext *cx, HandleObject type, HandleValue owner)
 
     RootedObject obj(cx,
         NewObjectWithClassProto(cx, &class_, &protoVal.toObject(), NULL));
-    obj->setFixedSlot(SLOT_DATATYPE, ObjectValue(*type));
-    obj->setFixedSlot(SLOT_BLOCKREFOWNER, owner);
+    obj->initFixedSlot(SLOT_DATATYPE, ObjectValue(*type));
+    obj->initFixedSlot(SLOT_BLOCKREFOWNER, owner);
 
     // Tag the type object for this instance with the type
     // representation, if that has not been done already.
