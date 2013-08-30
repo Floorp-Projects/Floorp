@@ -11,8 +11,8 @@
 #ifndef SRC_VOICE_ENGINE_MAIN_TEST_AUTO_TEST_STANDARD_AFTER_STREAMING_H_
 #define SRC_VOICE_ENGINE_MAIN_TEST_AUTO_TEST_STANDARD_AFTER_STREAMING_H_
 
-#include "after_initialization_fixture.h"
-#include "resource_manager.h"
+#include "webrtc/voice_engine/test/auto_test/fixtures/after_initialization_fixture.h"
+#include "webrtc/voice_engine/test/auto_test/resource_manager.h"
 
 // This fixture will, in addition to the work done by its superclasses,
 // create a channel and start playing a file through the fake microphone

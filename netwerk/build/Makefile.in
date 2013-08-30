@@ -48,11 +48,6 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
         ../system/mac/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
 endif
 
-ifdef MOZ_ENABLE_LIBCONIC
-    SHARED_LIBRARY_LIBS += \
-        ../system/maemo/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
-endif
-
 ifdef MOZ_ENABLE_QTNETWORK
     SHARED_LIBRARY_LIBS += \
         ../system/qt/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
@@ -88,10 +83,6 @@ endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
     LOCAL_INCLUDES += -I$(srcdir)/../system/mac
-endif
-
-ifdef MOZ_ENABLE_LIBCONIC
-    LOCAL_INCLUDES += -I$(srcdir)/../system/maemo
 endif
 
 ifdef MOZ_ENABLE_QTNETWORK

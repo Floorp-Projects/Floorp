@@ -1531,10 +1531,6 @@ def main():
         print >>sys.stderr, "Error: You must specify a test filename in interactive mode!"
         sys.exit(1)
 
-    # running sequentially for safety reasons for now (in automation)
-    # mach will run tests in parallel by default
-    options.sequential = True
-
     if not xpcsh.runTests(args[0], testdirs=args[1:], **options.__dict__):
         sys.exit(1)
 

@@ -8,18 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "output_mixer_internal.h"
+#include "webrtc/voice_engine/output_mixer_internal.h"
 
-#include "audio_frame_operations.h"
-#include "common_audio/resampler/include/resampler.h"
-#include "module_common_types.h"
-#include "trace.h"
+#include "webrtc/common_audio/resampler/include/push_resampler.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/utility/interface/audio_frame_operations.h"
+#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 namespace voe {
 
 int RemixAndResample(const AudioFrame& src_frame,
-                     Resampler* resampler,
+                     PushResampler* resampler,
                      AudioFrame* dst_frame) {
   const int16_t* audio_ptr = src_frame.data_;
   int audio_ptr_num_channels = src_frame.num_channels_;
@@ -34,30 +35,26 @@ int RemixAndResample(const AudioFrame& src_frame,
     audio_ptr_num_channels = 1;
   }
 
-  const ResamplerType resampler_type = audio_ptr_num_channels == 1 ?
-      kResamplerFixedSynchronous : kResamplerFixedSynchronousStereo;
-  if (resampler->ResetIfNeeded(src_frame.sample_rate_hz_,
-                               dst_frame->sample_rate_hz_,
-                               resampler_type) == -1) {
+  if (resampler->InitializeIfNeeded(src_frame.sample_rate_hz_,
+                                    dst_frame->sample_rate_hz_,
+                                    audio_ptr_num_channels) == -1) {
     dst_frame->CopyFrom(src_frame);
-    WEBRTC_TRACE(kTraceError, kTraceVoice, -1,
-                "%s ResetIfNeeded failed", __FUNCTION__);
+    LOG_FERR3(LS_ERROR, InitializeIfNeeded, src_frame.sample_rate_hz_,
+              dst_frame->sample_rate_hz_, audio_ptr_num_channels);
     return -1;
   }
 
-  int out_length = 0;
-  if (resampler->Push(audio_ptr,
-                      src_frame.samples_per_channel_* audio_ptr_num_channels,
-                      dst_frame->data_,
-                      AudioFrame::kMaxDataSizeSamples,
-                      out_length) == 0) {
-    dst_frame->samples_per_channel_ = out_length / audio_ptr_num_channels;
-  } else {
+  const int src_length = src_frame.samples_per_channel_ *
+                         audio_ptr_num_channels;
+  int out_length = resampler->Resample(audio_ptr, src_length, dst_frame->data_,
+                                       AudioFrame::kMaxDataSizeSamples);
+  if (out_length == -1) {
     dst_frame->CopyFrom(src_frame);
-    WEBRTC_TRACE(kTraceError, kTraceVoice, -1,
-                 "%s resampling failed", __FUNCTION__);
+    LOG_FERR3(LS_ERROR, Resample, src_length, dst_frame->data_,
+              AudioFrame::kMaxDataSizeSamples);
     return -1;
   }
+  dst_frame->samples_per_channel_ = out_length / audio_ptr_num_channels;
 
   // Upmix after resampling.
   if (src_frame.num_channels_ == 1 && dst_frame->num_channels_ == 2) {

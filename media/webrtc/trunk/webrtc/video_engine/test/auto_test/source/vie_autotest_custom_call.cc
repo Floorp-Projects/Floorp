@@ -578,7 +578,7 @@ int ViEAutoTest::ViECustomCall() {
         "Keep the call running indefinitely\n")
             .WithDefault("Keep the call running indefinitely").Choose();
     if (selection == 3) {
-        AutoTestSleep(std::numeric_limits<long>::max());
+        AutoTestSleep(std::numeric_limits<int>::max());
     }
 
     while (selection == 2) {

@@ -176,6 +176,7 @@ int32_t AudioTransportImpl::RecordedDataIsAvailable(
     const uint32_t totalDelayMS,
     const int32_t clockDrift,
     const uint32_t currentMicLevel,
+    const bool keyPressed,
     uint32_t& newMicLevel)
 {
     if (_fullDuplex && _audioList.GetSize() < 15)

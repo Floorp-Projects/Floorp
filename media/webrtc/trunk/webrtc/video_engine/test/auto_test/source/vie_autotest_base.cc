@@ -130,10 +130,7 @@ void ViEAutoTest::ViEBaseAPITest() {
   EXPECT_EQ(0, vie_base->GetVersion(version));
   EXPECT_EQ(0, vie_base->LastError());
 
-  // Create without init
   int video_channel = -1;
-  EXPECT_NE(0, vie_base->CreateChannel(video_channel)) <<
-      "Should fail since Init has not been called yet";
   EXPECT_EQ(0, vie_base->Init());
   EXPECT_EQ(0, vie_base->CreateChannel(video_channel));
 

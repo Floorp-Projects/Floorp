@@ -7,33 +7,15 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 {
-  'targets': [{   
-     'target_name': 'test_fec',
-      'type': 'executable',
-      'dependencies': [
-        'rtp_rtcp',
-        '<(webrtc_root)/test/test.gyp:test_support_main',
-      ],      
-      'include_dirs': [
-        '../../source',
-        '../../../../system_wrappers/interface',
-      ],
-      'sources': [
-        'test_fec.cc',
-      ],         
-    },
-    {   
+  'targets': [
+    {
+      # The test below takes long to run, no need to add it to any bot.
       'target_name': 'test_packet_masks_metrics',
       'type': 'executable',
       'dependencies': [
         'rtp_rtcp',
         '<(webrtc_root)/test/test.gyp:test_support_main',
-        'rtp_rtcp',
         '<(DEPTH)/testing/gtest.gyp:gtest',
-      ],      
-      'include_dirs': [
-        '../../source',
-        '<(webrtc_root)/system_wrappers/interface',
       ],
       'sources': [
         'test_packet_masks_metrics.cc',

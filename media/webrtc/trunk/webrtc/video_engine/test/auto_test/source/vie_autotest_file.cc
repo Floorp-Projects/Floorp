@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "vie_autotest_defines.h"
-#include "vie_autotest.h"
-#include "engine_configurations.h"
+#include "webrtc/engine_configurations.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest_defines.h"
 
-#include "testsupport/fileutils.h"
-#include "tb_interfaces.h"
-#include "tb_capture_device.h"
+#include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/video_engine/test/libvietest/include/tb_capture_device.h"
+#include "webrtc/video_engine/test/libvietest/include/tb_interfaces.h"
 
-#include "voe_codec.h"
+#include "webrtc/voice_engine/include/voe_codec.h"
 
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/test/channel_transport/include/channel_transport.h"

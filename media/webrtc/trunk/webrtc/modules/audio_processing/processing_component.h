@@ -13,7 +13,7 @@
 
 #include <vector>
 
-#include "audio_processing.h"
+#include "webrtc/modules/audio_processing/include/audio_processing.h"
 
 namespace webrtc {
 class AudioProcessingImpl;

@@ -10,12 +10,12 @@
  * This file includes unit tests for the RTPPacketHistory.
  */
 
-#include <gtest/gtest.h>
+#include "testing/gtest/include/gtest/gtest.h"
 
-#include "clock.h"
-#include "rtp_packet_history.h"
-#include "rtp_rtcp_defines.h"
-#include "typedefs.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_packet_history.h"
+#include "webrtc/system_wrappers/interface/clock.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 

@@ -93,7 +93,7 @@ class I420VideoFrame {
   int height() const {return height_;}
 
   // Set frame timestamp (90kHz).
-  void set_timestamp(const uint32_t timestamp) {timestamp_ = timestamp;}
+  void set_timestamp(uint32_t timestamp) {timestamp_ = timestamp;}
 
   // Get frame timestamp (90kHz).
   uint32_t timestamp() const {return timestamp_;}
@@ -134,4 +134,3 @@ class I420VideoFrame {
 }  // namespace webrtc
 
 #endif  // COMMON_VIDEO_INTERFACE_I420_VIDEO_FRAME_H
-

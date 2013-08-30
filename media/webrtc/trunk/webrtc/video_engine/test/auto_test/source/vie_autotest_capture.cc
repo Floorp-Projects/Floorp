@@ -8,22 +8,22 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "common_types.h"  // NOLINT
-#include "engine_configurations.h"  // NOLINT
 #include "gflags/gflags.h"
+#include "webrtc/common_types.h"
+#include "webrtc/engine_configurations.h"
 #include "webrtc/modules/video_capture/include/video_capture_factory.h"
-#include "system_wrappers/interface/tick_util.h"
-#include "video_engine/include/vie_base.h"
-#include "video_engine/include/vie_capture.h"
-#include "video_engine/include/vie_codec.h"
-#include "video_engine/include/vie_network.h"
-#include "video_engine/include/vie_render.h"
-#include "video_engine/include/vie_rtp_rtcp.h"
-#include "video_engine/test/auto_test/interface/vie_autotest.h"
-#include "video_engine/test/auto_test/interface/vie_autotest_defines.h"
-#include "video_engine/test/libvietest/include/tb_interfaces.h"
-#include "video_engine/test/libvietest/include/tb_video_channel.h"
-#include "voice_engine/include/voe_base.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/video_engine/include/vie_base.h"
+#include "webrtc/video_engine/include/vie_capture.h"
+#include "webrtc/video_engine/include/vie_codec.h"
+#include "webrtc/video_engine/include/vie_network.h"
+#include "webrtc/video_engine/include/vie_render.h"
+#include "webrtc/video_engine/include/vie_rtp_rtcp.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest_defines.h"
+#include "webrtc/video_engine/test/libvietest/include/tb_interfaces.h"
+#include "webrtc/video_engine/test/libvietest/include/tb_video_channel.h"
+#include "webrtc/voice_engine/include/voe_base.h"
 
 DEFINE_bool(capture_test_ensure_resolution_alignment_in_capture_device, true,
             "If true, we will give resolutions slightly below a reasonable "
@@ -151,7 +151,7 @@ void ViEAutoTest::ViECaptureStandardTest() {
                                            capability));
       ViETest::Log("Capture capability %d (of %u)", cap_index + 1,
                    number_of_capabilities);
-      ViETest::Log("witdh %d, height %d, frame rate %d",
+      ViETest::Log("width %d, height %d, frame rate %d",
                    capability.width, capability.height, capability.maxFPS);
       ViETest::Log("expected delay %d, color type %d, encoding %d",
                    capability.expectedCaptureDelay, capability.rawType,

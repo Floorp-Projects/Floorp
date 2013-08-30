@@ -15,7 +15,7 @@
  *
  */
 
-#include "signal_processing_library.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
 void WebRtcSpl_FilterMAFastQ12(int16_t* in_ptr,
                                int16_t* out_ptr,

@@ -190,6 +190,16 @@ static inline size_t alignTo(size_t address, size_t align) {
     return (address + align - 1) & -align;
 }
 
+StructField::StructField(size_t index,
+                         jsid &id,
+                         TypeRepresentation *typeRepr,
+                         size_t offset)
+  : index(index),
+    id(id),
+    typeRepr(typeRepr),
+    offset(offset)
+{}
+
 StructTypeRepresentation::StructTypeRepresentation()
   : TypeRepresentation(Struct, 0, 1),
     fieldCount_(0) // see ::init() below!
