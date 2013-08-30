@@ -1539,12 +1539,12 @@ public:
 
   // Call EnterMicroTask when you're entering JS execution.
   // Usually the best way to do this is to use nsAutoMicroTask.
-  static void EnterMicroTask() { ++sMicroTaskLevel; }
+  static void EnterMicroTask();
   static void LeaveMicroTask();
 
-  static bool IsInMicroTask() { return sMicroTaskLevel != 0; }
-  static uint32_t MicroTaskLevel() { return sMicroTaskLevel; }
-  static void SetMicroTaskLevel(uint32_t aLevel) { sMicroTaskLevel = aLevel; }
+  static bool IsInMicroTask();
+  static uint32_t MicroTaskLevel();
+  static void SetMicroTaskLevel(uint32_t aLevel);
 
   /* Process viewport META data. This gives us information for the scale
    * and zoom of a page on mobile devices. We stick the information in
