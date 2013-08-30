@@ -364,11 +364,6 @@
         <getter><![CDATA[
             // return the rect that represents our bounding box
             let containerNode = this.hasAttribute("flex") ? this : this.parentNode;
-            // Autocomplete is a binding within a binding, so we have to step
-            // up an additional parentNode.
-            if (containerNode.id == "results-vbox" ||
-                containerNode.id == "searches-vbox")
-                containerNode = containerNode.parentNode;
             let rect = containerNode.getBoundingClientRect();
             // return falsy if the container has no height
             return rect.height ? {
