@@ -11,14 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsCExternalHandlerService.h"
 
-#if (MOZ_PLATFORM_MAEMO == 5)
-#define APP_LAUNCH_BANNER_SERVICE           "com.nokia.hildon-desktop"
-#define APP_LAUNCH_BANNER_METHOD_INTERFACE  "com.nokia.hildon.hdwm.startupnotification"
-#define APP_LAUNCH_BANNER_METHOD_PATH       "/com/nokia/hildon/hdwm"
-#define APP_LAUNCH_BANNER_METHOD            "starting"
-#endif
-
-
 // XXX why does nsMIMEInfoImpl have a threadsafe nsISupports?  do we need one 
 // here too?
 NS_IMPL_CLASSINFO(nsDBusHandlerApp, NULL, 0, NS_DBUSHANDLERAPP_CID)
@@ -123,25 +115,6 @@ nsDBusHandlerApp::LaunchWithURI(nsIURI *aURI,
   if (dbus_connection_send(connection, msg, NULL)) {
     dbus_connection_flush(connection);
     dbus_message_unref(msg);
-#if (MOZ_PLATFORM_MAEMO == 5)
-    msg = dbus_message_new_method_call (APP_LAUNCH_BANNER_SERVICE,
-                                        APP_LAUNCH_BANNER_METHOD_PATH,
-                                        APP_LAUNCH_BANNER_METHOD_INTERFACE,
-                                        APP_LAUNCH_BANNER_METHOD);
-    
-    if (msg) {
-      const char* service = mService.get();
-      if (dbus_message_append_args(msg,
-                                   DBUS_TYPE_STRING, 
-                                   &service,
-                                   DBUS_TYPE_INVALID)) {
-        if (dbus_connection_send(connection, msg, NULL)) {
-          dbus_connection_flush(connection);
-        }
-        dbus_message_unref(msg);
-      }
-    }
-#endif
   } else {
     dbus_message_unref(msg);
     return NS_ERROR_FAILURE;		    

@@ -17,12 +17,6 @@
 #include "nsGUIEvent.h"
 #include "nsIWidget.h"
 
-// If software keyboard is needed in password field and uses GTK2 IM module
-// for inputting characters, we need to enable IME in password field too.
-#ifdef MOZ_PLATFORM_MAEMO
-#define NS_IME_ENABLED_ON_PASSWORD_FIELD 1
-#endif
-
 class nsWindow;
 
 class nsGtkIMModule
@@ -110,13 +104,11 @@ protected:
     // Actual context. This is used for handling the user's input.
     GtkIMContext       *mContext;
 
-#ifndef NS_IME_ENABLED_ON_PASSWORD_FIELD
     // mSimpleContext is used for the password field and
     // the |ime-mode: disabled;| editors.  These editors disable IME.
     // But dead keys should work.  Fortunately, the simple IM context of
     // GTK2 support only them.
     GtkIMContext       *mSimpleContext;
-#endif // NS_IME_ENABLED_ON_PASSWORD_FIELD
 
     // mDummyContext is a dummy context and will be used in Focus()
     // when the state of mEnabled means disabled.  This context's IME state is

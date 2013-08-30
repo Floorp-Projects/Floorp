@@ -165,7 +165,7 @@ public:
     //                     < 0,                     on error.
     virtual int32_t CodecConfigParameters(uint8_t* buffer, int32_t size) = 0;
 
-    // API to get currently configured encoder target bitrate in kbit/s.
+    // API to get currently configured encoder target bitrate in bits/s.
     //
     // Return value      : 0,   on success.
     //                     < 0, on error.
@@ -571,9 +571,12 @@ public:
     // Sets the maximum number of sequence numbers that we are allowed to NACK
     // and the oldest sequence number that we will consider to NACK. If a
     // sequence number older than |max_packet_age_to_nack| is missing
-    // a key frame will be requested.
+    // a key frame will be requested. A key frame will also be requested if the
+    // time of incomplete or non-continuous frames in the jitter buffer is above
+    // |max_incomplete_time_ms|.
     virtual void SetNackSettings(size_t max_nack_list_size,
-                                 int max_packet_age_to_nack) = 0;
+                                 int max_packet_age_to_nack,
+                                 int max_incomplete_time_ms) = 0;
 
     // Setting a desired delay to the VCM receiver. Video rendering will be
     // delayed by at least desired_delay_ms.

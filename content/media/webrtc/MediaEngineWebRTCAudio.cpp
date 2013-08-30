@@ -343,12 +343,12 @@ MediaEngineWebRTCAudioSource::Shutdown()
   mInitDone = false;
 }
 
-typedef WebRtc_Word16 sample;
+typedef int16_t sample;
 
 void
-MediaEngineWebRTCAudioSource::Process(const int channel,
-  const webrtc::ProcessingTypes type, sample* audio10ms,
-  const int length, const int samplingFreq, const bool isStereo)
+MediaEngineWebRTCAudioSource::Process(int channel,
+  webrtc::ProcessingTypes type, sample* audio10ms,
+  int length, int samplingFreq, bool isStereo)
 {
   MonitorAutoLock lock(mMonitor);
   if (mState != kStarted)

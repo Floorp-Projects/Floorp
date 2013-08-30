@@ -16,7 +16,7 @@
 #ifndef WEBRTC_RESAMPLER_RESAMPLER_H_
 #define WEBRTC_RESAMPLER_RESAMPLER_H_
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 #include "speex/speex_resampler.h"
 
 namespace webrtc

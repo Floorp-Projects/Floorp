@@ -12,17 +12,17 @@
 /*
  * This file includes unit tests for the RTCPReceiver.
  */
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include "testing/gmock/include/gmock/gmock.h"
+#include "testing/gtest/include/gtest/gtest.h"
 
 // Note: This file has no directory. Lint warning must be ignored.
-#include "common_types.h"
-#include "modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
-#include "modules/remote_bitrate_estimator/include/mock/mock_remote_bitrate_observer.h"
-#include "modules/rtp_rtcp/source/rtp_utility.h"
-#include "modules/rtp_rtcp/source/rtcp_sender.h"
-#include "modules/rtp_rtcp/source/rtcp_receiver.h"
-#include "modules/rtp_rtcp/source/rtp_rtcp_impl.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/remote_bitrate_estimator/include/mock/mock_remote_bitrate_observer.h"
+#include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_receiver.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_sender.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_rtcp_impl.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
 
 namespace webrtc {
 
@@ -171,9 +171,7 @@ class RtcpReceiverTest : public ::testing::Test {
         system_clock_(1335900000),
         remote_bitrate_observer_(),
         remote_bitrate_estimator_(
-            RemoteBitrateEstimator::Create(
-                over_use_detector_options_,
-                RemoteBitrateEstimator::kSingleStreamEstimation,
+            RemoteBitrateEstimatorFactory().Create(
                 &remote_bitrate_observer_,
                 &system_clock_)) {
     test_transport_ = new TestTransport();

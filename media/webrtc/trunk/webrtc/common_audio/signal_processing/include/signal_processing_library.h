@@ -771,6 +771,16 @@ int WebRtcSpl_DownsampleFastNeon(const int16_t* data_in,
                                  int factor,
                                  int delay);
 #endif
+#if defined(MIPS32_LE)
+int WebRtcSpl_DownsampleFast_mips(const int16_t* data_in,
+                                  int data_in_length,
+                                  int16_t* data_out,
+                                  int data_out_length,
+                                  const int16_t* __restrict coefficients,
+                                  int coefficients_length,
+                                  int factor,
+                                  int delay);
+#endif
 
 // End: Filter operations.
 
@@ -879,13 +889,13 @@ void WebRtcSpl_ResetResample8khzTo22khz(WebRtcSpl_State8khzTo22khz* state);
  ******************************************************************/
 
 void WebRtcSpl_Resample48khzTo32khz(const int32_t* In, int32_t* Out,
-                                    const int32_t K);
+                                    int32_t K);
 
 void WebRtcSpl_Resample32khzTo24khz(const int32_t* In, int32_t* Out,
-                                    const int32_t K);
+                                    int32_t K);
 
 void WebRtcSpl_Resample44khzTo32khz(const int32_t* In, int32_t* Out,
-                                    const int32_t K);
+                                    int32_t K);
 
 /*******************************************************************
  * resample_48khz.c
@@ -955,7 +965,7 @@ void WebRtcSpl_ResetResample8khzTo48khz(WebRtcSpl_State8khzTo48khz* state);
  *
  ******************************************************************/
 
-void WebRtcSpl_DownsampleBy2(const int16_t* in, const int16_t len,
+void WebRtcSpl_DownsampleBy2(const int16_t* in, int16_t len,
                              int16_t* out, int32_t* filtState);
 
 void WebRtcSpl_UpsampleBy2(const int16_t* in, int16_t len,

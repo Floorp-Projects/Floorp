@@ -45,9 +45,14 @@ int32_t VCMDecodedFrameCallback::Decoded(I420VideoFrame& decodedImage)
 {
     // TODO(holmer): We should improve this so that we can handle multiple
     // callbacks from one call to Decode().
-    CriticalSectionScoped cs(_critSect);
-    VCMFrameInformation* frameInfo = static_cast<VCMFrameInformation*>(
-        _timestampMap.Pop(decodedImage.timestamp()));
+    VCMFrameInformation* frameInfo;
+    VCMReceiveCallback* callback;
+    {
+        CriticalSectionScoped cs(_critSect);
+        frameInfo = static_cast<VCMFrameInformation*>(
+            _timestampMap.Pop(decodedImage.timestamp()));
+        callback = _receiveCallback;
+    }
     if (frameInfo == NULL)
     {
         // The map should never be empty or full if this callback is called.
@@ -59,11 +64,10 @@ int32_t VCMDecodedFrameCallback::Decoded(I420VideoFrame& decodedImage)
         frameInfo->decodeStartTimeMs,
         _clock->TimeInMilliseconds());
 
-    if (_receiveCallback != NULL)
+    if (callback != NULL)
     {
-        _frame.SwapFrame(&decodedImage);
-        _frame.set_render_time_ms(frameInfo->renderTimeMs);
-        int32_t callbackReturn = _receiveCallback->FrameToRender(_frame);
+        decodedImage.set_render_time_ms(frameInfo->renderTimeMs);
+        int32_t callbackReturn = callback->FrameToRender(decodedImage);
         if (callbackReturn < 0)
         {
             WEBRTC_TRACE(webrtc::kTraceDebug,

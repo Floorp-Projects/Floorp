@@ -15,10 +15,10 @@
 
 #include <stdio.h>
 
-#include "google/gflags.h"
-#include "scoped_ptr.h"
-#include "typedefs.h"
+#include "gflags/gflags.h"
 #include "webrtc/audio_processing/debug.pb.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/typedefs.h"
 
 using webrtc::scoped_array;
 

@@ -11,7 +11,7 @@
 #if defined(WEBRTC_CHROMIUM_BUILD)
 #include <cpu-features.h>
 #else
-#include "android/cpu-features.h"
+#include "webrtc/system_wrappers/source/android/cpu-features.h"
 #endif  //  defined(WEBRTC_CHROMIUM_BUILD)
 
 uint64_t WebRtc_GetCPUFeaturesARM(void) {

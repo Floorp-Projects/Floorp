@@ -13,10 +13,10 @@
  * This file conatins unit tests for the ModuleRTPUtility.
  */
 
-#include "gtest/gtest.h"
-#include "modules/rtp_rtcp/source/rtp_format_vp8.h"
-#include "modules/rtp_rtcp/source/rtp_utility.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_format_vp8.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 

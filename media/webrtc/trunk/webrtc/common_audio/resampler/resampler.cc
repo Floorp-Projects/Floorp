@@ -17,8 +17,8 @@
 #include <string.h>
 #include <assert.h>
 
-#include "signal_processing_library.h"
-#include "resampler.h"
+#include "webrtc/common_audio/resampler/include/resampler.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
 // TODO(jesup) better adjust per platform ability
 // Note: if these are changed (higher), you may need to change the
@@ -110,6 +110,7 @@ int Resampler::Push(const int16_t* samples_in, int length_in,
       // until Reset() is called
       return -1;
     }
+
     // Fixed-rate, same-freq "resample" - use memcpy, which avoids
     // filtering and delay.  For non-fixed rates, where we might tweak
     // from 48000->48000 to 48000->48001 for drift, we need to resample

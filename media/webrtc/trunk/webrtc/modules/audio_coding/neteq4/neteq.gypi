@@ -16,8 +16,7 @@
       'iSAC',
       'iSACFix',
       'CNG',
-      '<(webrtc_root)/common_audio/common_audio.gyp:signal_processing',
-      '<(webrtc_root)/common_audio/common_audio.gyp:vad',
+      '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
       '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
     ],
     'neteq_defines': [],
@@ -129,7 +128,7 @@
           'dependencies': [
             '<@(neteq_dependencies)',
             '<(DEPTH)/testing/gtest.gyp:gtest',
-            '<(webrtc_root)/common_audio/common_audio.gyp:resampler',
+            '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
             '<(webrtc_root)/test/test.gyp:test_support_main',
           ],
           'defines': [

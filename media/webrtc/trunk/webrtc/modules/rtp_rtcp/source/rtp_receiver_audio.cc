@@ -194,10 +194,11 @@ int32_t RTPReceiverAudio::ParseRtpPacket(
   TRACE_EVENT2("webrtc_rtp", "Audio::ParseRtp",
                "seqnum", rtp_header->header.sequenceNumber,
                "timestamp", rtp_header->header.timestamp);
+  rtp_header->type.Audio.numEnergy = rtp_header->header.numCSRCs;
   const uint8_t* payload_data =
-      ModuleRTPUtility::GetPayloadData(rtp_header, packet);
+      ModuleRTPUtility::GetPayloadData(rtp_header->header, packet);
   const uint16_t payload_data_length =
-      ModuleRTPUtility::GetPayloadDataLength(rtp_header, packet_length);
+      ModuleRTPUtility::GetPayloadDataLength(rtp_header->header, packet_length);
 
   return ParseAudioCodecSpecific(rtp_header,
                                  payload_data,

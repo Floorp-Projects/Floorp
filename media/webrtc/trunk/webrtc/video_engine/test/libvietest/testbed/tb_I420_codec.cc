@@ -10,9 +10,9 @@
 
 #include "webrtc/video_engine/test/libvietest/include/tb_I420_codec.h"
 
-#include <string.h>
-#include <stdio.h>
 #include <assert.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 

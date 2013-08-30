@@ -14,12 +14,12 @@
 
 class FakeMediaProcess : public webrtc::VoEMediaProcess {
  public:
-  virtual void Process(const int channel,
+  virtual void Process(int channel,
                        const webrtc::ProcessingTypes type,
                        int16_t audio_10ms[],
-                       const int length,
-                       const int sampling_freq_hz,
-                       const bool stereo) {
+                       int length,
+                       int sampling_freq_hz,
+                       bool stereo) {
     for (int i = 0; i < length; i++) {
       if (!stereo) {
         audio_10ms[i] = static_cast<int16_t>(audio_10ms[i] *

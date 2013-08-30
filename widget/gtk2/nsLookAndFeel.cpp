@@ -24,12 +24,6 @@
 #include "gtkdrawing.h"
 #include "nsStyleConsts.h"
 
-#ifdef MOZ_PLATFORM_MAEMO
-#include "nsIServiceManager.h"
-#include "nsIPropertyBag2.h"
-#include "nsLiteralString.h"
-#endif
-
 using mozilla::LookAndFeel;
 
 #define GDK_COLOR_TO_NS_RGB(c) \
@@ -630,33 +624,8 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
         res = NS_ERROR_NOT_IMPLEMENTED;
         break;
     case eIntID_TouchEnabled:
-#ifdef MOZ_PLATFORM_MAEMO
-        // All Hildon devices are touch-enabled
-        aResult = 1;
-#else
         aResult = 0;
         res = NS_ERROR_NOT_IMPLEMENTED;
-#endif
-        break;
-    case eIntID_MaemoClassic:
-#ifdef MOZ_PLATFORM_MAEMO
-        {
-            aResult = 0;
-            nsCOMPtr<nsIPropertyBag2> infoService(do_GetService("@mozilla.org/system-info;1"));
-            if (infoService) {
-                nsCString deviceType;
-                nsresult rv = infoService->GetPropertyAsACString(NS_LITERAL_STRING("device"),
-                                                                 deviceType);
-                if (NS_SUCCEEDED(rv)) {
-                    if (deviceType.EqualsLiteral("Nokia N8xx"))
-                        aResult = 1;
-                }
-            }
-        }
-#else
-        aResult = 0;
-        res = NS_ERROR_NOT_IMPLEMENTED;
-#endif
         break;
     case eIntID_MacGraphiteTheme:
     case eIntID_MacLionTheme:
@@ -1284,9 +1253,5 @@ nsLookAndFeel::RefreshImpl()
 
 bool
 nsLookAndFeel::GetEchoPasswordImpl() {
-#ifdef MOZ_PLATFORM_MAEMO
-    return true;
-#else
     return false;
-#endif
 }

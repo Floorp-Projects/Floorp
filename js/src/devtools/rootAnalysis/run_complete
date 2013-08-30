@@ -27,6 +27,7 @@ use strict;
 use IO::Handle;
 use File::Basename qw(dirname);
 use Getopt::Long;
+use Cwd;
 
 #################################
 # environment specific settings #
@@ -55,8 +56,10 @@ my $foreground;
 
 my $builder = "make -j4";
 
+my $suppress_logs;
 GetOptions("build-root|b=s" => \$build_dir,
            "poll-file=s" => \$poll_file,
+           "no-logs!" => \$suppress_logs,
            "work-dir=s" => \$WORKDIR,
            "sixgill-binaries|binaries|b=s" => \$SIXGILL_BIN,
            "wrap-dir=s" => \$wrap_dir,
@@ -103,6 +106,13 @@ sub build_project {
     return system($builder) >> 8;
 }
 
+our %kill_on_exit;
+END {
+    for my $pid (keys %kill_on_exit) {
+        kill($pid);
+    }
+}
+
 # commands to start the various xgill binaries. timeouts can be specified
 # for the backend analyses here, and a memory limit can be specified for
 # xmanager if desired (and USE_COUNT_ALLOCATOR is defined in util/alloc.h).
@@ -143,12 +153,15 @@ if (not (-d $result_dir)) {
     mkdir $result_dir;
 }
 
-open(OUT, ">> $result_dir/complete.log");
-OUT->autoflush(1);  # don't buffer writes to the main log.
+if (!$suppress_logs) {
+    my $log_file = "$result_dir/complete.log";
+    open(OUT, ">>", $log_file) or die "append to $log_file: $!";
+    OUT->autoflush(1);  # don't buffer writes to the main log.
 
-# redirect stdout and stderr to the log.
-STDOUT->fdopen(\*OUT, "w");
-STDERR->fdopen(\*OUT, "w");
+    # redirect stdout and stderr to the log.
+    STDOUT->fdopen(\*OUT, "w");
+    STDERR->fdopen(\*OUT, "w");
+}
 
 # pids to wait on before exiting. these are collating worker output.
 my @waitpids;
@@ -160,8 +173,6 @@ chdir $result_dir;
 my $status = run_build();
 
 # end of run commands.
-
-close(OUT);
 
 for my $pid (@waitpids) {
     waitpid($pid, 0);
@@ -197,20 +208,23 @@ sub run_build
     defined(my $pid = fork) or die;
 
     # log file for the manager.
-    my $log_file = "$result_dir/build_manager.log";
+    my $manager_log_file = "$result_dir/build_manager.log";
 
     if (!$pid) {
         # this is the child process, fork another process to run a manager.
         defined(my $pid = fork) or die;
-        exec("$xmanager -terminate-on-assert > $log_file 2>&1") if (!$pid);
+        exec("$xmanager -terminate-on-assert > $manager_log_file 2>&1") if (!$pid);
+        $kill_on_exit{$pid} = 1;
 
-        # open new streams to redirect stdout and stderr.
-        open(LOGOUT, "> $result_dir/build.log");
-        open(LOGERR, "> $result_dir/build_err.log");
-        STDOUT->fdopen(\*LOGOUT, "w");
-        STDERR->fdopen(\*LOGERR, "w");
+        if (!$suppress_logs) {
+            # open new streams to redirect stdout and stderr.
+            open(LOGOUT, "> $result_dir/build.log");
+            open(LOGERR, "> $result_dir/build_err.log");
+            STDOUT->fdopen(\*LOGOUT, "w");
+            STDERR->fdopen(\*LOGERR, "w");
+        }
 
-        my $address = get_manager_address($log_file);
+        my $address = get_manager_address($manager_log_file);
 
         # write the configuration file for the wrapper script.
         my $config_file = "$WORKDIR/xgill.config";
@@ -239,11 +253,13 @@ sub run_build
         # wait for the manager to clean up and terminate.
         print "Waiting for manager to finish (build status $exit_status)...\n";
         waitpid($pid, 0);
+        my $manager_status = $?;
+        delete $kill_on_exit{$pid};
 
         # build is finished, the complete run can resume.
         # return value only useful if --foreground
-        print "Exiting with status " . ($? || $exit_status) . "\n";
-        exit($? || $exit_status);
+        print "Exiting with status " . ($manager_status || $exit_status) . "\n";
+        exit($manager_status || $exit_status);
     }
 
     # this is the complete process, wait for the build to finish.

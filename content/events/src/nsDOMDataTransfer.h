@@ -11,16 +11,16 @@
 #include "nsIVariant.h"
 #include "nsIPrincipal.h"
 #include "nsIDOMDataTransfer.h"
-#include "nsIDragService.h"
 #include "nsIDOMElement.h"
 #include "nsCycleCollectionParticipant.h"
 
 #include "nsAutoPtr.h"
-#include "nsIFile.h"
 #include "nsDOMFile.h"
 #include "mozilla/Attributes.h"
 
 class nsITransferable;
+class nsISupportsArray;
+class nsILoadContext;
 
 /**
  * TransferItem is used to hold data for a particular format. Each piece of

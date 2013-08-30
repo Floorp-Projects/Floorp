@@ -6,16 +6,9 @@
 module.metadata = {
   'stability': 'experimental',
   'engines': {
-    'Firefox': '> 24'
+    'Firefox': '*'
   }
 };
-
-try {
-  require('chrome').Cu.import('resource:///modules/CustomizableUI.jsm', {});
-}
-catch (e) {
-  throw Error('Unsupported Application: The module ' + module.id + ' does not support this application.');
-}
 
 const { Class } = require('../core/heritage');
 const { merge } = require('../util/object');
@@ -32,11 +25,9 @@ const { remove: removeFromArray } = require('../util/array');
 const { show, hide, toggle } = require('./sidebar/actions');
 const { Worker: WorkerTrait } = require('../content/worker');
 const { contract: sidebarContract } = require('./sidebar/contract');
-const { Button } = require('./button');
-const { setStateFor, getStateFor } = require('./state');
 const { create, dispose, updateTitle, updateURL, isSidebarShowing, showSidebar, hideSidebar } = require('./sidebar/view');
 const { defer } = require('../core/promise');
-const { models, buttons, views, viewsFor, modelFor } = require('./sidebar/namespace');
+const { models, views, viewsFor, modelFor } = require('./sidebar/namespace');
 const { isLocalURL } = require('../url');
 const { ensure } = require('../system/unload');
 
@@ -61,19 +52,6 @@ const Sidebar = Class({
 
     validateTitleAndURLCombo({}, this.title, this.url);
 
-    // NOTE: delegating icon validation to the Button.
-    // IMPORTANT: Make the button first since it has it's own
-    // validation which we make use of.. (even if the sidebar
-    // id is not a duplicate the button id could be..)
-    let button = Button({
-      id: model.id,
-      icon: model.icon,
-      label: model.title,
-      type: 'checkbox',
-      onChange: update.bind(null, 'button')
-    });
-    buttons.set(this, button);
-
     const self = this;
     const internals = sidebarNS(self);
     const windowNS = internals.windowNS = ns();
@@ -82,28 +60,6 @@ const Sidebar = Class({
     ensure(this, 'destroy');
 
     setListeners(this, options);
-
-    function update(source, state) {
-      let wins = windows('navigator:browser', { includePrivate: true });
-
-      for (let window of wins) {
-        let isShowing = isSidebarShowing(window, self);
-        let isChecked = (source == 'button') ? getStateFor(button, window).checked : isShowing;
-
-        // update sidebar?
-        if (isShowing != isChecked) {
-          if (isChecked) {
-            showSidebar(window, self);
-          }
-          else {
-            hideSidebar(window, self);
-          }
-        }
-
-        // update the button
-        setStateFor(button, window, { checked: isChecked });
-      }
-    }
 
     let bars = [];
     internals.tracker = WindowTracker({
@@ -160,7 +116,6 @@ const Sidebar = Class({
 
               // uncheck the associated menuitem
               bar.setAttribute('checked', 'false');
-              setStateFor(button, window, { checked: false });
 
               emit(self, 'hide', {});
               emit(self, 'detach', worker);
@@ -174,8 +129,6 @@ const Sidebar = Class({
             function onWebPanelSidebarLoad() {
               panelBrowser.contentWindow.removeEventListener('load', onWebPanelSidebarLoad, true);
               windowNS(window).onWebPanelSidebarLoad = null;
-
-              update();
 
               // TODO: decide if returning worker is acceptable..
               //emit(self, 'show', { worker: worker });
@@ -263,13 +216,6 @@ const Sidebar = Class({
     updateURL(this, v);
     modelFor(this).url = v;
   },
-  get icon() (buttons.get(this) || {}).icon,
-  set icon(v) {
-    let button = buttons.get(this);
-    if (!button)
-      return;
-    button.icon = v;
-  },
   show: function() {
     return showSidebar(null, this);
   },
@@ -291,11 +237,6 @@ const Sidebar = Class({
 
     views.delete(this);
     models.delete(this);
-
-    // kill the button
-    let button = buttons.get(this);
-    if (button)
-      button.destroy();
   }
 });
 exports.Sidebar = Sidebar;

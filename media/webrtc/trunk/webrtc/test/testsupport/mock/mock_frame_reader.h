@@ -11,9 +11,9 @@
 #ifndef WEBRTC_TEST_TESTSUPPORT_MOCK_MOCK_FRAME_READER_H_
 #define WEBRTC_TEST_TESTSUPPORT_MOCK_MOCK_FRAME_READER_H_
 
-#include "testsupport/frame_reader.h"
+#include "webrtc/test/testsupport/frame_reader.h"
 
-#include "gmock/gmock.h"
+#include "testing/gmock/include/gmock/gmock.h"
 
 namespace webrtc {
 namespace test {

@@ -136,6 +136,7 @@ AudioDeviceLinuxPulse::AudioDeviceLinuxPulse(const int32_t id) :
     memset(_paServerVersion, 0, sizeof(_paServerVersion));
     memset(&_playBufferAttr, 0, sizeof(_playBufferAttr));
     memset(&_recBufferAttr, 0, sizeof(_recBufferAttr));
+    memset(_oldKeyState, 0, sizeof(_oldKeyState));
 }
 
 AudioDeviceLinuxPulse::~AudioDeviceLinuxPulse()
@@ -229,6 +230,14 @@ int32_t AudioDeviceLinuxPulse::Init()
     _playError = 0;
     _recWarning = 0;
     _recError = 0;
+
+    //Get X display handle for typing detection
+    _XDisplay = XOpenDisplay(NULL);
+    if (!_XDisplay)
+    {
+        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
+          "  failed to open X display, typing detection will not work");
+    }
 
     // RECORDING
     const char* threadName = "webrtc_audio_module_rec_thread";
@@ -341,6 +350,12 @@ int32_t AudioDeviceLinuxPulse::Terminate()
         WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
                      "  failed to terminate PulseAudio");
         return -1;
+    }
+
+    if (_XDisplay)
+    {
+      XCloseDisplay(_XDisplay);
+      _XDisplay = NULL;
     }
 
     _initialized = false;
@@ -2655,7 +2670,7 @@ int32_t AudioDeviceLinuxPulse::ProcessRecordedData(
     else
         recDelay = 0;
     _ptrAudioBuffer->SetVQEData(_sndCardPlayDelay, recDelay, clockDrift);
-
+    _ptrAudioBuffer->SetTypingStatus(KeyPressed());
     // Deliver recorded samples at specified sample rate,
     // mic level etc. to the observer using callback
     UnLock();
@@ -3094,4 +3109,24 @@ bool AudioDeviceLinuxPulse::RecThreadProcess()
     return true;
 }
 
+bool AudioDeviceLinuxPulse::KeyPressed() const{
+
+  char szKey[32];
+  unsigned int i = 0;
+  char state = 0;
+
+  if (!_XDisplay)
+    return false;
+
+  // Check key map status
+  XQueryKeymap(_XDisplay, szKey);
+
+  // A bit change in keymap means a key is pressed
+  for (i = 0; i < sizeof(szKey); i++)
+    state |= (szKey[i] ^ _oldKeyState[i]) & szKey[i];
+
+  // Save old state
+  memcpy((char*)_oldKeyState, (char*)szKey, sizeof(_oldKeyState));
+  return (state != 0);
+}
 }

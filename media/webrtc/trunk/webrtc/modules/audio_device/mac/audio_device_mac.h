@@ -31,30 +31,21 @@ const uint32_t N_PLAY_SAMPLES_PER_SEC = 48000;
 
 const uint32_t N_REC_CHANNELS = 1; // default is mono recording
 const uint32_t N_PLAY_CHANNELS = 2; // default is stereo playout
-const uint32_t N_DEVICE_CHANNELS = 8;
+const uint32_t N_DEVICE_CHANNELS = 64;
 
 const uint32_t ENGINE_REC_BUF_SIZE_IN_SAMPLES = (N_REC_SAMPLES_PER_SEC / 100);
 const uint32_t ENGINE_PLAY_BUF_SIZE_IN_SAMPLES = (N_PLAY_SAMPLES_PER_SEC / 100);
 
-enum
-{
-    N_BLOCKS_IO = 2
-};
-enum
-{
-    N_BUFFERS_IN = 10
-};
-enum
-{
-    N_BUFFERS_OUT = 3
-}; // Must be at least N_BLOCKS_IO
+const int N_BLOCKS_IO = 2;
+const int N_BUFFERS_IN = 2;  // Must be at least N_BLOCKS_IO.
+const int N_BUFFERS_OUT = 3;  // Must be at least N_BLOCKS_IO.
 
 const uint32_t TIMER_PERIOD_MS = (2 * 10 * N_BLOCKS_IO * 1000000);
 
-const uint32_t REC_BUF_SIZE_IN_SAMPLES = (ENGINE_REC_BUF_SIZE_IN_SAMPLES
-    * N_DEVICE_CHANNELS * N_BUFFERS_IN);
+const uint32_t REC_BUF_SIZE_IN_SAMPLES =
+    ENGINE_REC_BUF_SIZE_IN_SAMPLES * N_DEVICE_CHANNELS * N_BUFFERS_IN;
 const uint32_t PLAY_BUF_SIZE_IN_SAMPLES =
-    (ENGINE_PLAY_BUF_SIZE_IN_SAMPLES * N_PLAY_CHANNELS * N_BUFFERS_OUT);
+    ENGINE_PLAY_BUF_SIZE_IN_SAMPLES * N_PLAY_CHANNELS * N_BUFFERS_OUT;
 
 class AudioDeviceMac: public AudioDeviceGeneric
 {
@@ -294,6 +285,9 @@ private:
     bool RenderWorkerThread();
 
 private:
+    bool KeyPressed() const;
+
+private:
     AudioDeviceBuffer* _ptrAudioBuffer;
 
     CriticalSectionWrapper& _critSect;
@@ -381,8 +375,8 @@ private:
     semaphore_t _renderSemaphore;
     semaphore_t _captureSemaphore;
 
-    uint32_t _captureBufSizeSamples;
-    uint32_t _renderBufSizeSamples;
+    int _captureBufSizeSamples;
+    int _renderBufSizeSamples;
 };
 
 } //  namespace webrtc

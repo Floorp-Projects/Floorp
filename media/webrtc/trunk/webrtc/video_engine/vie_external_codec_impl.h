@@ -11,8 +11,8 @@
 #ifndef WEBRTC_VIDEO_ENGINE_VIE_EXTERNAL_CODEC_IMPL_H_
 #define WEBRTC_VIDEO_ENGINE_VIE_EXTERNAL_CODEC_IMPL_H_
 
-#include "video_engine/include/vie_external_codec.h"
-#include "video_engine/vie_ref_count.h"
+#include "webrtc/video_engine/include/vie_external_codec.h"
+#include "webrtc/video_engine/vie_ref_count.h"
 
 namespace webrtc {
 

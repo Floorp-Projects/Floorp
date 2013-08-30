@@ -8,19 +8,22 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "MatlabPlot.h"
+#include "webrtc/modules/rtp_rtcp/test/BWEStandAlone/MatlabPlot.h"
+
+#include <math.h>
+#include <stdio.h>
+
+#include <algorithm>
+#include <sstream>
+
 #ifdef MATLAB
 #include "engine.h"
 #endif
-#include "event_wrapper.h"
-#include "thread_wrapper.h"
-#include "critical_section_wrapper.h"
-#include "tick_util.h"
 
-#include <sstream>
-#include <algorithm>
-#include <math.h>
-#include <stdio.h>
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/event_wrapper.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
 
 using namespace webrtc;
 

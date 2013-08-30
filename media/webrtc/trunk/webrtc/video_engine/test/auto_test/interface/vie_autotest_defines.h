@@ -21,18 +21,19 @@
 #include <stdio.h>
 #include <string>
 
-#include "engine_configurations.h"
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/engine_configurations.h"
+#include "webrtc/system_wrappers/interface/sleep.h"
 
 #if defined(_WIN32)
 #include <windows.h>
 #elif defined (WEBRTC_ANDROID)
 #include <android/log.h>
 #elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
-#include <string.h>
-#include <time.h>
-#include <sys/time.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/time.h>
+#include <time.h>
 #endif
 
 // Choose how to log
@@ -189,21 +190,6 @@ private:
   static char* log_str_;
 };
 
-// milliseconds
-#if defined(_WIN32)
-#define AutoTestSleep ::Sleep
-#elif defined(WEBRTC_MAC)
-#define AutoTestSleep(x) usleep(x * 1000)
-#elif defined(WEBRTC_LINUX)
-namespace {
-  void Sleep(unsigned long x) {
-    timespec t;
-    t.tv_sec = x/1000;
-    t.tv_nsec = (x-(x/1000)*1000)*1000000;
-    nanosleep(&t,NULL);
-  }
-}
-#define AutoTestSleep ::Sleep
-#endif
+#define AutoTestSleep webrtc::SleepMs
 
 #endif  // WEBRTC_VIDEO_ENGINE_MAIN_TEST_AUTOTEST_INTERFACE_VIE_AUTOTEST_DEFINES_H_

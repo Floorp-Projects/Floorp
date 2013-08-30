@@ -11,9 +11,9 @@
 #ifndef WEBRTC_VOICE_ENGINE_MONITOR_MODULE_H
 #define WEBRTC_VOICE_ENGINE_MONITOR_MODULE_H
 
-#include "module.h"
-#include "typedefs.h"
-#include "voice_engine_defines.h"
+#include "webrtc/modules/interface/module.h"
+#include "webrtc/typedefs.h"
+#include "webrtc/voice_engine/voice_engine_defines.h"
 
 class MonitorObserver
 {
@@ -44,7 +44,7 @@ public:	// module
                     uint32_t& remainingBufferInBytes,
                     uint32_t& position) const;
 
-    int32_t ChangeUniqueId(const int32_t id);
+    int32_t ChangeUniqueId(int32_t id);
 
     int32_t TimeUntilNextProcess();
 

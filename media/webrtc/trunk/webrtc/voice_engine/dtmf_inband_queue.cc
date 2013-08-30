@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "dtmf_inband_queue.h"
-#include "trace.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/voice_engine/dtmf_inband_queue.h"
 
 namespace webrtc {
 
-DtmfInbandQueue::DtmfInbandQueue(const int32_t id):
+DtmfInbandQueue::DtmfInbandQueue(int32_t id):
     _id(id),
     _DtmfCritsect(*CriticalSectionWrapper::CreateCriticalSection()),
     _nextEmptyIndex(0)

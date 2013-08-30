@@ -18,7 +18,7 @@ void DesktopRect::IntersectWith(const DesktopRect& rect) {
   left_ = std::max(left(), rect.left());
   top_ = std::max(top(), rect.top());
   right_ = std::min(right(), rect.right());
-  bottom_ = std::min(bottom(), rect.top());
+  bottom_ = std::min(bottom(), rect.bottom());
   if (is_empty()) {
     left_ = 0;
     top_ = 0;

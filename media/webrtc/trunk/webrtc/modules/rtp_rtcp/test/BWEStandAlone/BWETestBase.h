@@ -14,9 +14,9 @@
 #include <string>
 #include <vector>
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
-#include "TestSenderReceiver.h"
+#include "webrtc/modules/rtp_rtcp/test/BWEStandAlone/TestSenderReceiver.h"
 
 
 class StatVec : public std::vector<double>

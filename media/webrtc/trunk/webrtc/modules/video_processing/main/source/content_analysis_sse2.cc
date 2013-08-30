@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "content_analysis.h"
+#include "webrtc/modules/video_processing/main/source/content_analysis.h"
 
 #include <emmintrin.h>
 #include <math.h>

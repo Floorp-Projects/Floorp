@@ -28,12 +28,14 @@ VCMPacket::VCMPacket()
     isFirstPacket(false),
     completeNALU(kNaluUnset),
     insertStartCode(false),
+    width(0),
+    height(0),
     codecSpecificHeader() {
 }
 
 VCMPacket::VCMPacket(const uint8_t* ptr,
-                               const uint32_t size,
-                               const WebRtcRTPHeader& rtpHeader) :
+                     const uint32_t size,
+                     const WebRtcRTPHeader& rtpHeader) :
     payloadType(rtpHeader.header.payloadType),
     timestamp(rtpHeader.header.timestamp),
     seqNum(rtpHeader.header.sequenceNumber),
@@ -46,6 +48,8 @@ VCMPacket::VCMPacket(const uint8_t* ptr,
     isFirstPacket(rtpHeader.type.Video.isFirstPacket),
     completeNALU(kNaluComplete),
     insertStartCode(false),
+    width(rtpHeader.type.Video.width),
+    height(rtpHeader.type.Video.height),
     codecSpecificHeader(rtpHeader.type.Video)
 {
     CopyCodecSpecifics(rtpHeader.type.Video);
@@ -64,6 +68,8 @@ VCMPacket::VCMPacket(const uint8_t* ptr, uint32_t size, uint16_t seq, uint32_t t
     isFirstPacket(false),
     completeNALU(kNaluComplete),
     insertStartCode(false),
+    width(0),
+    height(0),
     codecSpecificHeader()
 {}
 
@@ -79,6 +85,8 @@ void VCMPacket::Reset() {
   isFirstPacket = false;
   completeNALU = kNaluUnset;
   insertStartCode = false;
+  width = 0;
+  height = 0;
   memset(&codecSpecificHeader, 0, sizeof(RTPVideoHeader));
 }
 

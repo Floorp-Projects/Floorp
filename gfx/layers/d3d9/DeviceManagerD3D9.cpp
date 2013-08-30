@@ -248,12 +248,6 @@ DeviceManagerD3D9::Init()
     return false;
   }
 
-  if (!PL_strncasecmp(ident.Driver, "nvumdshim.dll", strlen(ident.Driver))) {
-    // XXX - This is a device using NVidia Optimus. We have no idea how to do
-    // interop here so let's fail and use BasicLayers. See bug 597320.
-    return false;
-  }
-
   D3DPRESENT_PARAMETERS pp;
   memset(&pp, 0, sizeof(D3DPRESENT_PARAMETERS));
 

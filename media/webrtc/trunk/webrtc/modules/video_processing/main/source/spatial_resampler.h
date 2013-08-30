@@ -15,13 +15,13 @@
 #ifndef VPM_SPATIAL_RESAMPLER_H
 #define VPM_SPATIAL_RESAMPLER_H
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
-#include "module_common_types.h"
-#include "video_processing_defines.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/video_processing/main/interface/video_processing_defines.h"
 
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "common_video/libyuv/include/scaler.h"
+#include "webrtc/common_video/libyuv/include/scaler.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 
 namespace webrtc {
 

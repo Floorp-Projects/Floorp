@@ -48,7 +48,7 @@ class TestVideoCodingModule : public ::testing::Test {
                                                true));
     const size_t kMaxNackListSize = 250;
     const int kMaxPacketAgeToNack = 450;
-    vcm_->SetNackSettings(kMaxNackListSize, kMaxPacketAgeToNack);
+    vcm_->SetNackSettings(kMaxNackListSize, kMaxPacketAgeToNack, 0);
     memset(&settings_, 0, sizeof(settings_));
     EXPECT_EQ(0, vcm_->Codec(kVideoCodecVP8, &settings_));
     settings_.numberOfSimulcastStreams = kNumberOfStreams;

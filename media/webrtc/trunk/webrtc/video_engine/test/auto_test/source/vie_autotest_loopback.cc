@@ -23,6 +23,8 @@
 
 #include "webrtc/common_types.h"
 #include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/test/channel_transport/include/channel_transport.h"
 #include "webrtc/video_engine/include/vie_base.h"
 #include "webrtc/video_engine/include/vie_capture.h"
 #include "webrtc/video_engine/include/vie_codec.h"
@@ -34,8 +36,6 @@
 #include "webrtc/video_engine/test/auto_test/interface/vie_autotest_defines.h"
 #include "webrtc/video_engine/test/libvietest/include/tb_external_transport.h"
 #include "webrtc/voice_engine/include/voe_base.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
-#include "webrtc/test/channel_transport/include/channel_transport.h"
 
 #define VCM_RED_PAYLOAD_TYPE        96
 #define VCM_ULPFEC_PAYLOAD_TYPE     97
@@ -97,33 +97,6 @@ int VideoEngineSampleCode(void* window1, void* window2)
     if (ptrViERtpRtcp == NULL)
     {
         printf("ERROR in ViERTP_RTCP::GetInterface\n");
-        return -1;
-    }
-
-    printf("Bandwidth estimation modes:\n");
-    printf("1. Single-stream bandwidth estimation\n");
-    printf("2. Multi-stream bandwidth estimation\n");
-    printf("Choose bandwidth estimation mode (default is 1): ");
-    std::string str;
-    std::getline(std::cin, str);
-    int bwe_mode_choice = atoi(str.c_str());
-    webrtc::BandwidthEstimationMode bwe_mode;
-    switch (bwe_mode_choice) {
-      case 1:
-        bwe_mode = webrtc::kViESingleStreamEstimation;
-        break;
-      case 2:
-        bwe_mode = webrtc::kViEMultiStreamEstimation;
-        break;
-      default:
-        bwe_mode = webrtc::kViESingleStreamEstimation;
-        break;
-    }
-
-    error = ptrViERtpRtcp->SetBandwidthEstimationMode(bwe_mode);
-    if (error == -1)
-    {
-        printf("ERROR in ViERTP_RTCP::SetBandwidthEstimationMode\n");
         return -1;
     }
 
@@ -241,6 +214,15 @@ int VideoEngineSampleCode(void* window1, void* window2)
     if (error == -1)
     {
         printf("ERROR in ViERTP_RTCP::SetTMMBRStatus\n");
+        return -1;
+    }
+
+    // Setting SSRC manually (arbitrary value), as otherwise we will get a clash
+    // (loopback), and a new SSRC will be set, which will reset the receiver.
+    error = ptrViERtpRtcp->SetLocalSSRC(videoChannel, 0x01234567);
+    if (error == -1)
+    {
+        printf("ERROR in ViERTP_RTCP::SetLocalSSRC\n");
         return -1;
     }
 
@@ -375,6 +357,7 @@ int VideoEngineSampleCode(void* window1, void* window2)
     }
 
     // Set spatial resolution option
+    std::string str;
     std::cout << std::endl;
     std::cout << "Enter frame size option (default is CIF):" << std::endl;
     std::cout << "1. QCIF (176X144) " << std::endl;
@@ -485,6 +468,22 @@ int VideoEngineSampleCode(void* window1, void* window2)
         printf("ERROR in ViERTP_RTCP::SetProtectionStatus\n");
     }
 
+    // Set up buffering delay.
+    std::cout << std::endl;
+    std::cout << "Set buffering delay (mS). Press enter for default(0mS):  ";
+    std::getline(std::cin, str);
+    int buffering_delay = atoi(str.c_str());
+    if (buffering_delay != 0) {
+      error = ptrViERtpRtcp->SetSenderBufferingMode(videoChannel,
+                                                    buffering_delay);
+      if (error < 0)
+        printf("ERROR in ViERTP_RTCP::SetSenderBufferingMode\n");
+
+      error = ptrViERtpRtcp->SetReceiverBufferingMode(videoChannel,
+                                                      buffering_delay);
+      if (error < 0)
+        printf("ERROR in ViERTP_RTCP::SetReceiverBufferingMode\n");
+    }
 
     //
     // Address settings

@@ -11,8 +11,8 @@
 #ifndef WEBRTC_VOICE_ENGINE_VOE_FILE_IMPL_H
 #define WEBRTC_VOICE_ENGINE_VOE_FILE_IMPL_H
 
-#include "voe_file.h"
-#include "shared_data.h"
+#include "webrtc/voice_engine/include/voe_file.h"
+#include "webrtc/voice_engine/shared_data.h"
 
 namespace webrtc {
 
@@ -138,4 +138,3 @@ private:
 }  // namespace webrtc
 
 #endif  // WEBRTC_VOICE_ENGINE_VOE_FILE_IMPL_H
-

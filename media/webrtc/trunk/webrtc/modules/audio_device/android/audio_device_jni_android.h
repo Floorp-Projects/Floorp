@@ -36,6 +36,10 @@ class AudioDeviceAndroidJni : public AudioDeviceGeneric {
   static int32_t SetAndroidAudioDeviceObjects(void* javaVM,
                                               void* context);
 
+  static int32_t SetAndroidAudioDeviceObjects(void* javaVM,
+                                              void* env,
+                                              void* context);
+
   virtual int32_t ActiveAudioLayer(
       AudioDeviceModule::AudioLayer& audioLayer) const;
 
@@ -214,9 +218,7 @@ class AudioDeviceAndroidJni : public AudioDeviceGeneric {
 
   // Signal flags to threads
   bool _startRec;
-  bool _stopRec;
   bool _startPlay;
-  bool _stopPlay;
 
   // Warnings and errors
   uint16_t _playWarning;

@@ -21,8 +21,7 @@ namespace webrtc
 {
 
 AudioDeviceUtilityAndroid::AudioDeviceUtilityAndroid(const int32_t id) :
-    _critSect(*CriticalSectionWrapper::CreateCriticalSection()), _id(id),
-    _lastError(AudioDeviceModule::kAdmErrNone)
+    _critSect(*CriticalSectionWrapper::CreateCriticalSection()), _id(id)
 {
     WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, id,
                  "%s created", __FUNCTION__);

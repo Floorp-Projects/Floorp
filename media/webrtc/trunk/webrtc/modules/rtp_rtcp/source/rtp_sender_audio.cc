@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "rtp_sender_audio.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_sender_audio.h"
 
-#include <string.h> //memcpy
 #include <cassert> //assert
+#include <string.h> //memcpy
 
-#include "trace_event.h"
+#include "webrtc/system_wrappers/interface/trace_event.h"
 
 namespace webrtc {
 RTPSenderAudio::RTPSenderAudio(const int32_t id, Clock* clock,
@@ -353,12 +353,14 @@ int32_t RTPSenderAudio::SendAudio(
     // we need to get the current timestamp to calc the diff
     uint32_t oldTimeStamp = _rtpSender->Timestamp();
     rtpHeaderLength = _rtpSender->BuildRTPheader(dataBuffer, _REDPayloadType,
-                                                 markerBit, captureTimeStamp);
+                                                 markerBit, captureTimeStamp,
+                                                 _clock->TimeInMilliseconds());
 
     timestampOffset = uint16_t(_rtpSender->Timestamp() - oldTimeStamp);
   } else {
     rtpHeaderLength = _rtpSender->BuildRTPheader(dataBuffer, payloadType,
-                                                 markerBit, captureTimeStamp);
+                                                 markerBit, captureTimeStamp,
+                                                 _clock->TimeInMilliseconds());
   }
   if (rtpHeaderLength <= 0) {
     return -1;
@@ -480,14 +482,15 @@ int32_t RTPSenderAudio::SendAudio(
                                    payloadSize,
                                    static_cast<uint16_t>(rtpHeaderLength),
                                    -1,
-                                   kAllowRetransmission);
+                                   kAllowRetransmission,
+                                   PacedSender::kHighPriority);
 }
 
 int32_t
 RTPSenderAudio::SetAudioLevelIndicationStatus(const bool enable,
                                               const uint8_t ID)
 {
-    if(ID < 1 || ID > 14)
+    if(enable && (ID < 1 || ID > 14))
     {
         return -1;
     }
@@ -582,7 +585,8 @@ RTPSenderAudio::SendTelephoneEventPacket(const bool ended,
         _sendAudioCritsect->Enter();
 
         //Send DTMF data
-        _rtpSender->BuildRTPheader(dtmfbuffer, _dtmfPayloadType, markerBit, dtmfTimeStamp);
+        _rtpSender->BuildRTPheader(dtmfbuffer, _dtmfPayloadType, markerBit,
+                                   dtmfTimeStamp, _clock->TimeInMilliseconds());
 
         // reset CSRC and X bit
         dtmfbuffer[0] &= 0xe0;
@@ -619,7 +623,8 @@ RTPSenderAudio::SendTelephoneEventPacket(const bool ended,
                              "timestamp", dtmfTimeStamp,
                              "seqnum", _rtpSender->SequenceNumber());
         retVal = _rtpSender->SendToNetwork(dtmfbuffer, 4, 12, -1,
-                                           kAllowRetransmission);
+                                           kAllowRetransmission,
+                                           PacedSender::kHighPriority);
         sendCount--;
 
     }while (sendCount > 0 && retVal == 0);

@@ -4,10 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef MOZ_PLATFORM_MAEMO
-#define MAEMO_CHANGES
-#endif
-
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG /* Allow logging in the release build */
 #endif // MOZ_LOGGING
@@ -17,12 +13,6 @@
 #include "nsWindow.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Likely.h"
-
-#ifdef MOZ_PLATFORM_MAEMO
-#include "nsServiceManagerUtils.h"
-#include "nsIObserverService.h"
-#include "mozilla/Services.h"
-#endif
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -69,16 +59,9 @@ GetEnabledStateName(uint32_t aState)
 
 nsGtkIMModule* nsGtkIMModule::sLastFocusedModule = nullptr;
 
-#ifdef MOZ_PLATFORM_MAEMO
-static bool gIsVirtualKeyboardOpened = false;
-#endif
-
 nsGtkIMModule::nsGtkIMModule(nsWindow* aOwnerWindow) :
     mOwnerWindow(aOwnerWindow), mLastFocusedWindow(nullptr),
     mContext(nullptr),
-#ifndef NS_IME_ENABLED_ON_PASSWORD_FIELD
-    mSimpleContext(nullptr),
-#endif
     mDummyContext(nullptr),
     mCompositionStart(UINT32_MAX), mProcessingKeyEvent(nullptr),
     mCompositionState(eCompositionState_NotComposing),
@@ -127,30 +110,6 @@ nsGtkIMModule::Init()
     g_signal_connect(mContext, "preedit_end",
                      G_CALLBACK(nsGtkIMModule::OnEndCompositionCallback),
                      this);
-
-#ifndef NS_IME_ENABLED_ON_PASSWORD_FIELD
-    // Simple context
-    mSimpleContext = gtk_im_context_simple_new();
-    gtk_im_context_set_client_window(mSimpleContext, gdkWindow);
-    g_signal_connect(mSimpleContext, "preedit_changed",
-                     G_CALLBACK(&nsGtkIMModule::OnChangeCompositionCallback),
-                     this);
-    g_signal_connect(mSimpleContext, "retrieve_surrounding",
-                     G_CALLBACK(&nsGtkIMModule::OnRetrieveSurroundingCallback),
-                     this);
-    g_signal_connect(mSimpleContext, "delete_surrounding",
-                     G_CALLBACK(&nsGtkIMModule::OnDeleteSurroundingCallback),
-                     this);
-    g_signal_connect(mSimpleContext, "commit",
-                     G_CALLBACK(&nsGtkIMModule::OnCommitCompositionCallback),
-                     this);
-    g_signal_connect(mSimpleContext, "preedit_start",
-                     G_CALLBACK(nsGtkIMModule::OnStartCompositionCallback),
-                     this);
-    g_signal_connect(mSimpleContext, "preedit_end",
-                     G_CALLBACK(nsGtkIMModule::OnEndCompositionCallback),
-                     this);
-#endif // NS_IME_ENABLED_ON_PASSWORD_FIELD
 
     // Dummy context
     mDummyContext = gtk_im_multicontext_new();
@@ -205,14 +164,6 @@ nsGtkIMModule::OnDestroyWindow(nsWindow* aWindow)
         g_object_unref(mContext);
         mContext = nullptr;
     }
-
-#ifndef NS_IME_ENABLED_ON_PASSWORD_FIELD
-    if (mSimpleContext) {
-        gtk_im_context_set_client_window(mSimpleContext, nullptr);
-        g_object_unref(mSimpleContext);
-        mSimpleContext = nullptr;
-    }
-#endif // NS_IME_ENABLED_ON_PASSWORD_FIELD
 
     if (mDummyContext) {
         // mContext and mDummyContext have the same slaveType and signal_data
@@ -572,70 +523,6 @@ nsGtkIMModule::SetInputContext(nsWindow* aCaller,
     if (changingEnabledState) {
         Focus();
     }
-
-#if (MOZ_PLATFORM_MAEMO == 5)
-    GtkIMContext *im = GetContext();
-    if (im) {
-        if (IsEnabled()) {
-            // Ensure that opening the virtual keyboard is allowed for this specific
-            // InputContext depending on the content.ime.strict.policy pref
-            if (mInputContext.mIMEState.mEnabled != IMEState::DISABLED && 
-                mInputContext.mIMEState.mEnabled != IMEState::PLUGIN &&
-                Preferences::GetBool("content.ime.strict_policy", false) &&
-                !aAction->ContentGotFocusByTrustedCause() &&
-                !aAction->UserMightRequestOpenVKB()) {
-                return;
-            }
-
-            // It is not desired that the hildon's autocomplete mechanism displays
-            // user previous entered passwds, so lets make completions invisible
-            // in these cases.
-            int mode;
-            g_object_get(im, "hildon-input-mode", &mode, NULL);
-
-            if (mInputContext.mIMEState.mEnabled == IMEState::ENABLED ||
-                mInputContext.mIMEState.mEnabled == IMEState::PLUGIN) {
-                mode &= ~HILDON_GTK_INPUT_MODE_INVISIBLE;
-            } else if (mInputContext.mIMEState.mEnabled == IMEState::PASSWORD) {
-               mode |= HILDON_GTK_INPUT_MODE_INVISIBLE;
-            }
-
-            // Turn off auto-capitalization for editboxes
-            mode &= ~HILDON_GTK_INPUT_MODE_AUTOCAP;
-
-            // Turn off predictive dictionaries for editboxes
-            mode &= ~HILDON_GTK_INPUT_MODE_DICTIONARY;
-
-            g_object_set(im, "hildon-input-mode",
-                         (HildonGtkInputMode)mode, NULL);
-            gIsVirtualKeyboardOpened = true;
-            hildon_gtk_im_context_show(im);
-        } else {
-            gIsVirtualKeyboardOpened = false;
-            hildon_gtk_im_context_hide(im);
-        }
-    }
-
-    nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
-    if (observerService) {
-        nsAutoString rectBuf;
-        int32_t x, y, w, h;
-        gdk_window_get_position(aCaller->GetGdkWindow(), &x, &y);
-        gdk_window_get_size(aCaller->GetGdkWindow(), &w, &h);
-        rectBuf.Assign(NS_LITERAL_STRING("{\"left\": "));
-        rectBuf.AppendInt(x);
-        rectBuf.Append(NS_LITERAL_STRING(", \"top\": "));
-        rectBuf.AppendInt(y);
-        rectBuf.Append(NS_LITERAL_STRING(", \"right\": "));
-        rectBuf.AppendInt(w);
-        rectBuf.Append(NS_LITERAL_STRING(", \"bottom\": "));
-        rectBuf.AppendInt(h);
-        rectBuf.Append(NS_LITERAL_STRING("}"));
-        observerService->NotifyObservers(nullptr, "softkb-change",
-                                         rectBuf.get());
-    }
-#endif
 }
 
 InputContext
@@ -649,11 +536,7 @@ nsGtkIMModule::GetInputContext()
 bool
 nsGtkIMModule::IsVirtualKeyboardOpened()
 {
-#ifdef MOZ_PLATFORM_MAEMO
-    return gIsVirtualKeyboardOpened;
-#else
     return false;
-#endif
 }
 
 GtkIMContext*
@@ -663,12 +546,6 @@ nsGtkIMModule::GetContext()
         return mContext;
     }
 
-#ifndef NS_IME_ENABLED_ON_PASSWORD_FIELD
-    if (mInputContext.mIMEState.mEnabled == IMEState::PASSWORD) {
-        return mSimpleContext;
-    }
-#endif // NS_IME_ENABLED_ON_PASSWORD_FIELD
-
     return mDummyContext;
 }
 
@@ -676,9 +553,7 @@ bool
 nsGtkIMModule::IsEnabled()
 {
     return mInputContext.mIMEState.mEnabled == IMEState::ENABLED ||
-#ifdef NS_IME_ENABLED_ON_PASSWORD_FIELD
            mInputContext.mIMEState.mEnabled == IMEState::PASSWORD ||
-#endif // NS_IME_ENABLED_ON_PASSWORD_FIELD
            mInputContext.mIMEState.mEnabled == IMEState::PLUGIN;
 }
 

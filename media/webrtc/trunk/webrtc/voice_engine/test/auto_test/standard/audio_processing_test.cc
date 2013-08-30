@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "testsupport/fileutils.h"
-#include "voice_engine/test/auto_test/fixtures/after_streaming_fixture.h"
-#include "voice_engine/test/auto_test/voe_standard_test.h"
+#include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/voice_engine/test/auto_test/fixtures/after_streaming_fixture.h"
+#include "webrtc/voice_engine/test/auto_test/voe_standard_test.h"
 
 class RxCallback : public webrtc::VoERxVadCallback {
  public:

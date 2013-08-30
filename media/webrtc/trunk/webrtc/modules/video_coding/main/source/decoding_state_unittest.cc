@@ -168,38 +168,6 @@ TEST(TestDecodingState, FrameContinuity) {
   delete packet;
 }
 
-TEST(TestDecodingState, SetStateOneBack) {
-  VCMDecodingState dec_state;
-  VCMFrameBuffer frame;
-  frame.SetState(kStateEmpty);
-  VCMPacket* packet = new VCMPacket();
-  // Based on PictureId.
-  packet->frameType = kVideoFrameDelta;
-  packet->codecSpecificHeader.codec = kRTPVideoVP8;
-  packet->timestamp = 0;
-  packet->seqNum = 0;
-  packet->codecSpecificHeader.codecHeader.VP8.pictureId = 0;
-  packet->frameType = kVideoFrameDelta;
-  frame.InsertPacket(*packet, 0, false, 0);
-  dec_state.SetStateOneBack(&frame);
-  EXPECT_EQ(dec_state.sequence_num(), 0xFFFF);
-  // Check continuity.
-  EXPECT_TRUE(dec_state.ContinuousFrame(&frame));
-
-  // Based on Temporal layers.
-  packet->timestamp = 0;
-  packet->seqNum = 0;
-  packet->codecSpecificHeader.codecHeader.VP8.pictureId = kNoPictureId;
-  packet->frameType = kVideoFrameDelta;
-  packet->codecSpecificHeader.codecHeader.VP8.tl0PicIdx = 0;
-  packet->codecSpecificHeader.codecHeader.VP8.temporalIdx = 0;
-  frame.InsertPacket(*packet, 0, false, 0);
-  dec_state.SetStateOneBack(&frame);
-  // Check continuity
-  EXPECT_TRUE(dec_state.ContinuousFrame(&frame));
-  delete packet;
-}
-
 TEST(TestDecodingState, UpdateOldPacket) {
   VCMDecodingState dec_state;
   // Update only if zero size and newer than previous.

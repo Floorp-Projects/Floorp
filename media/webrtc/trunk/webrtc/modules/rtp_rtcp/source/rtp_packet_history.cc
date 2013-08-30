@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "rtp_packet_history.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_packet_history.h"
 
 #include <assert.h>
 #include <cstring>   // memset
 
-#include "critical_section_wrapper.h"
-#include "rtp_utility.h"
-#include "trace.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 

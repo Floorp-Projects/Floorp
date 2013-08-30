@@ -265,7 +265,8 @@ public:
                                           DecodeErrors errorMode);
 
     virtual void SetNackSettings(size_t max_nack_list_size,
-                                 int max_packet_age_to_nack);
+                                 int max_packet_age_to_nack,
+                                 int max_incomplete_time_ms);
 
     // Set the video delay for the receiver (default = 0).
     virtual int SetMinReceiverDelay(int desired_delay_ms);

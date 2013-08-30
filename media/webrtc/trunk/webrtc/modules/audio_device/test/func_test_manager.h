@@ -101,6 +101,7 @@ public:
                                 const uint32_t totalDelayMS,
                                 const int32_t clockDrift,
                                 const uint32_t currentMicLevel,
+                                const bool keyPressed,
                                 uint32_t& newMicLevel);
 
     virtual int32_t NeedMorePlayData(const uint32_t nSamples,

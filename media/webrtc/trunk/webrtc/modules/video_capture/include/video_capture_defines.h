@@ -134,9 +134,6 @@ class VideoCaptureDataCallback
 public:
     virtual void OnIncomingCapturedFrame(const int32_t id,
                                          I420VideoFrame& videoFrame) = 0;
-    virtual void OnIncomingCapturedEncodedFrame(const int32_t id,
-                                                VideoFrame& videoFrame,
-                                                VideoCodecType codecType) = 0;
     virtual void OnCaptureDelayChanged(const int32_t id,
                                        const int32_t delay) = 0;
 protected:

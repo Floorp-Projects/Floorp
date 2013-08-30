@@ -13,7 +13,7 @@
 #include "nsIPrefBranch.h"
 #include "nsThreadUtils.h"
 
-#include "voice_engine/include/voe_errors.h"
+#include "webrtc/voice_engine/include/voe_errors.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidJNIWrapper.h"
