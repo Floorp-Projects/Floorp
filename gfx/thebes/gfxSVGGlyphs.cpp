@@ -18,7 +18,6 @@
 #include "nsIStreamListener.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIPresShell.h"
-#include "nsIFrame.h"
 #include "nsQueryFrame.h"
 #include "nsIContentSink.h"
 #include "nsXMLContentSink.h"
