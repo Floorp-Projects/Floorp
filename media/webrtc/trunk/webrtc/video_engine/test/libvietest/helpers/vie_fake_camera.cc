@@ -7,13 +7,13 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "video_engine/test/libvietest/include/vie_fake_camera.h"
+#include "webrtc/video_engine/test/libvietest/include/vie_fake_camera.h"
 
 #include <assert.h>
 
-#include "system_wrappers/interface/thread_wrapper.h"
-#include "video_engine/include/vie_capture.h"
-#include "video_engine/test/libvietest/include/vie_file_capture_device.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/video_engine/include/vie_capture.h"
+#include "webrtc/video_engine/test/libvietest/include/vie_file_capture_device.h"
 
 // This callback runs the camera thread:
 bool StreamVideoFileRepeatedlyIntoCaptureDevice(void* data) {

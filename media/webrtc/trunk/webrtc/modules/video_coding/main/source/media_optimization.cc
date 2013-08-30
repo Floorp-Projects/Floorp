@@ -382,8 +382,17 @@ VCMMediaOptimization::UpdateWithEncodedData(int encodedLength,
 {
     const int64_t now_ms = _clock->TimeInMilliseconds();
     PurgeOldFrameSamples(now_ms);
-    _encodedFrameSamples.push_back(VCMEncodedFrameSample(
-        encodedLength, timestamp, now_ms));
+    if (_encodedFrameSamples.size() > 0 &&
+        _encodedFrameSamples.back().timestamp == timestamp) {
+        // Frames having the same timestamp are generated from the same input
+        // frame. We don't want to double count them, but only increment the
+        // size_bytes.
+        _encodedFrameSamples.back().size_bytes += encodedLength;
+        _encodedFrameSamples.back().time_complete_ms = now_ms;
+    } else {
+        _encodedFrameSamples.push_back(VCMEncodedFrameSample(
+            encodedLength, timestamp, now_ms));
+    }
     UpdateSentBitrate(now_ms);
     UpdateSentFramerate();
     if(encodedLength > 0)
@@ -457,7 +466,7 @@ void VCMMediaOptimization::UpdateSentBitrate(int64_t now_ms) {
     framesize_sum += it->size_bytes;
   }
   float denom = static_cast<float>(
-      now_ms - _encodedFrameSamples.back().time_complete_ms);
+      now_ms - _encodedFrameSamples.front().time_complete_ms);
   if (denom >= 1.0f) {
     _avgSentBitRateBps = static_cast<uint32_t>(framesize_sum * 8 * 1000 /
                                                denom + 0.5f);

@@ -20,7 +20,7 @@
  *
  */
 
-#include "signal_processing_library.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
 static const int16_t kRandNTable[] = {
     9178,    -7260,       40,    10189,     4894,    -3531,   -13779,    14764,

@@ -10,7 +10,7 @@
 
 #include "webrtc/voice_engine/include/voe_codec.h"
 
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/audio_device/include/fake_audio_device.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/voice_engine/include/voe_base.h"

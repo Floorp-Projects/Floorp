@@ -33,7 +33,6 @@ public:
 private:
     CriticalSectionWrapper& _critSect;
     int32_t _id;
-    AudioDeviceModule::ErrorCode _lastError;
 };
 
 } // namespace webrtc

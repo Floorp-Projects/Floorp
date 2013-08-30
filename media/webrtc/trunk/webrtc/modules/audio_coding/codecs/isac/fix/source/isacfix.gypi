@@ -12,7 +12,7 @@
       'target_name': 'iSACFix',
       'type': 'static_library',
       'dependencies': [
-        '<(webrtc_root)/common_audio/common_audio.gyp:signal_processing',
+        '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
       'include_dirs': [
@@ -94,7 +94,7 @@
           'type': 'static_library',
           'includes': ['../../../../../../build/arm_neon.gypi',],
           'dependencies': [
-            '<(webrtc_root)/common_audio/common_audio.gyp:signal_processing',
+            '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
           ],
           'sources': [
             'entropy_coding_neon.c',

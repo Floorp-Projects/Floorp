@@ -14,10 +14,10 @@
 #include <windows.h>
 #endif
 
-#include "modules/remote_bitrate_estimator/overuse_detector.h"
-#include "modules/remote_bitrate_estimator/remote_rate_control.h"
-#include "modules/rtp_rtcp/source/rtp_utility.h"
-#include "system_wrappers/interface/trace.h"
+#include "webrtc/modules/remote_bitrate_estimator/overuse_detector.h"
+#include "webrtc/modules/remote_bitrate_estimator/remote_rate_control.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 #ifdef WEBRTC_BWE_MATLAB
 extern MatlabEngine eng;  // global variable defined elsewhere

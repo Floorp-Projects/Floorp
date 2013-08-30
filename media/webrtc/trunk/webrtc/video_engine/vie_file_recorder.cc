@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_engine/vie_file_recorder.h"
+#include "webrtc/video_engine/vie_file_recorder.h"
 
-#include "modules/utility/interface/file_player.h"
-#include "modules/utility/interface/file_recorder.h"
-#include "system_wrappers/interface/critical_section_wrapper.h"
-#include "system_wrappers/interface/tick_util.h"
-#include "system_wrappers/interface/trace.h"
-#include "video_engine/vie_defines.h"
+#include "webrtc/modules/utility/interface/file_player.h"
+#include "webrtc/modules/utility/interface/file_recorder.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/video_engine/vie_defines.h"
 
 namespace webrtc {
 

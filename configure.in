@@ -2464,88 +2464,6 @@ if test -z "$COMPILE_ENVIRONMENT"; then
     SKIP_LIBRARY_CHECKS=1
 fi
 
-dnl ========================================================
-dnl =
-dnl = Debugging Options
-dnl =
-dnl = These must come before MOZ_COMPILER_OPTS so that MOZ_COMPILER_OPTS
-dnl = sees any debug flags set by the user.
-dnl =
-dnl ========================================================
-MOZ_ARG_HEADER(Debugging)
-
-dnl ========================================================
-dnl = Debug info is ON by default.
-dnl ========================================================
-if test -z "$MOZ_DEBUG_FLAGS"; then
-  MOZ_DEBUG_FLAGS="-g"
-fi
-
-MOZ_ARG_ENABLE_STRING(debug,
-[  --enable-debug[=DBG]    Enable building with developer debug info
-                           (using compiler flags DBG)],
-[ if test "$enableval" != "no"; then
-    MOZ_DEBUG=1
-    if test -n "$enableval" -a "$enableval" != "yes"; then
-        MOZ_DEBUG_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
-        _MOZ_DEBUG_FLAGS_SET=1
-    fi
-  else
-    MOZ_DEBUG=
-  fi ],
-  MOZ_DEBUG=)
-
-MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG -DTRACING"
-MOZ_ARG_WITH_STRING(debug-label,
-[  --with-debug-label=LABELS
-                          Define DEBUG_<value> for each comma-separated
-                          value given.],
-[ for option in `echo $withval | sed 's/,/ /g'`; do
-    MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${option}"
-done])
-
-MOZ_DEBUG_DISABLE_DEFS="-DNDEBUG -DTRIMMED"
-
-if test -n "$MOZ_DEBUG"; then
-    AC_MSG_CHECKING([for valid debug flags])
-    _SAVE_CFLAGS=$CFLAGS
-    CFLAGS="$CFLAGS $MOZ_DEBUG_FLAGS"
-    AC_TRY_COMPILE([#include <stdio.h>],
-        [printf("Hello World\n");],
-        _results=yes,
-        _results=no)
-    AC_MSG_RESULT([$_results])
-    if test "$_results" = "no"; then
-        AC_MSG_ERROR([These compiler flags are invalid: $MOZ_DEBUG_FLAGS])
-    fi
-    CFLAGS=$_SAVE_CFLAGS
-fi
-
-dnl ========================================================
-dnl = Enable generation of debug symbols
-dnl ========================================================
-MOZ_ARG_ENABLE_STRING(debug-symbols,
-[  --enable-debug-symbols[=DBG]
-                          Enable debugging symbols (using compiler flags DBG)],
-[ if test "$enableval" != "no"; then
-      MOZ_DEBUG_SYMBOLS=1
-      if test -n "$enableval" -a "$enableval" != "yes"; then
-          if test -z "$_MOZ_DEBUG_FLAGS_SET"; then
-              MOZ_DEBUG_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
-          else
-              AC_MSG_ERROR([--enable-debug-symbols flags cannot be used with --enable-debug flags])
-          fi
-      fi
-  else
-      MOZ_DEBUG_SYMBOLS=
-  fi ],
-  MOZ_DEBUG_SYMBOLS=1)
-
-if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
-    AC_DEFINE(MOZ_DEBUG_SYMBOLS)
-    export MOZ_DEBUG_SYMBOLS
-fi
-
 MOZ_COMPILER_OPTS
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -4818,6 +4736,8 @@ incorrect])
        MOZ_ENABLE_QTMOBILITY=1
        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $_QTMOBILITY_CFLAGS"
        MOZ_QT_LIBS="$MOZ_QT_LIBS $_QTMOBILITY_LIBS"
+       AC_DEFINE(MOZ_ENABLE_QTMOBILITY)
+       AC_SUBST(MOZ_ENABLE_QTMOBILITY)
     else
        AC_CHECK_LIB(QtSensors, main, [
           MOZ_ENABLE_QTMOBILITY=1
@@ -4828,8 +4748,20 @@ incorrect])
           MOZ_QT_LIBS="$MOZ_QT_LIBS -lQtSensors -lQtFeedback -lQtLocation"
        ])
     fi
-    if test "$MOZ_ENABLE_QTMOBILITY"; then
-       AC_DEFINE(MOZ_ENABLE_QTMOBILITY)
+
+    if test "$MOZ_ENABLE_CONTENTACTION"; then
+      MOZ_ENABLE_CONTENTACTION=1
+      AC_DEFINE(MOZ_ENABLE_CONTENTACTION)
+    fi
+
+    MOZ_ENABLE_CONTENTACTION=
+    PKG_CHECK_MODULES(LIBCONTENTACTION, contentaction-0.1, _LIB_FOUND=1, _LIB_FOUND=)
+    if test "$MOZ_ENABLE_CONTENTACTION"; then
+       MOZ_ENABLE_CONTENTACTION=1
+       MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $_CONTENTACTION_CFLAGS"
+       MOZ_QT_LIBS="$MOZ_QT_LIBS $_CONTENTACTION_LIBS"
+       AC_DEFINE(MOZ_ENABLE_CONTENTACTION)
+       AC_SUBST(MOZ_ENABLE_CONTENTACTION)
     fi
 fi
 
@@ -6766,185 +6698,6 @@ MOZ_ARG_DISABLE_BOOL(zipwriter,
 AC_SUBST(MOZ_ZIPWRITER)
 
 dnl ========================================================
-dnl = libconic
-dnl ========================================================
-dnl superseded by QtNetwork starting from 4.7
-MOZ_ENABLE_LIBCONIC=1
-
-if test -n "$MOZ_ENABLE_QT"; then
-  if test "$MOZ_ENABLE_QTNETWORK"; then
-    MOZ_ENABLE_LIBCONIC=
-  fi
-fi
-
-MOZ_ARG_DISABLE_BOOL(libconic,
-[  --disable-libconic      Disable libconic],
-    MOZ_ENABLE_LIBCONIC=,
-    MOZ_ENABLE_LIBCONIC=1 )
-
-if test -n "$MOZ_ENABLE_LIBCONIC"; then
-    PKG_CHECK_MODULES(LIBCONIC, conic,
-                      MOZ_ENABLE_LIBCONIC=1,
-                      MOZ_ENABLE_LIBCONIC=)
-fi
-if test "$MOZ_ENABLE_LIBCONIC"; then
-    AC_DEFINE(MOZ_ENABLE_LIBCONIC)
-fi
-
-AC_SUBST(MOZ_ENABLE_LIBCONIC)
-AC_SUBST(LIBCONIC_CFLAGS)
-AC_SUBST(LIBCONIC_LIBS)
-
-dnl ========================================================
-dnl = Maemo checks
-dnl ========================================================
-
-MAEMO_SDK_TARGET_VER=-1
-
-MOZ_ARG_WITH_STRING(maemo-version,
-[  --with-maemo-version=MAEMO_SDK_TARGET_VER
-                          Maemo SDK Version],
-  MAEMO_SDK_TARGET_VER=$withval)
-
-case "$MAEMO_SDK_TARGET_VER" in
-5)
-    MOZ_PLATFORM_MAEMO=5
-    ;;
-
-6)
-    MOZ_PLATFORM_MAEMO=6
-    ;;
-
--1)
-    dnl We aren't compiling for Maemo, move on.
-    ;;
-*)
-    AC_MSG_ERROR([Unknown Maemo Version.  Try setting --with-maemo-version to 5 or 6.])
-    ;;
-esac
-
-if test $MOZ_PLATFORM_MAEMO; then
-   AC_DEFINE_UNQUOTED([MOZ_PLATFORM_MAEMO], $MOZ_PLATFORM_MAEMO)
-
-   if test -z "$MOZ_ENABLE_DBUS"; then
-       AC_MSG_ERROR([DBus is required when building for Maemo])
-   fi
-
-   MOZ_GFX_OPTIMIZE_MOBILE=1
-   MOZ_GL_DEFAULT_PROVIDER=EGL
-   MOZ_MAEMO_LIBLOCATION=
-
-   if test $MOZ_PLATFORM_MAEMO = 5; then
-      dnl if we have Xcomposite we should also have Xdamage and Xfixes
-      MOZ_CHECK_HEADERS([X11/extensions/Xdamage.h], [],
-          [AC_MSG_ERROR([Couldn't find X11/extensions/Xdamage.h which is required for composited plugins.])])
-      AC_CHECK_LIB(Xcomposite, XCompositeRedirectWindow, [XCOMPOSITE_LIBS="-lXcomposite -lXdamage -lXfixes"],
-                   [MISSING_X="$MISSING_X -lXcomposite"], $XLIBS)
-
-      AC_SUBST(XCOMPOSITE_LIBS)
-
-      PKG_CHECK_MODULES(LIBHILDONMIME,libhildonmime, _LIB_FOUND=1, _LIB_FOUND=)
-      MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBHILDONMIME_LIBS"
-      MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBHILDONMIME_CFLAGS"
-      if test -z "$_LIB_FOUND"; then
-         AC_MSG_ERROR([Hildon Mime is required when building for Maemo])
-      fi
-
-
-      PKG_CHECK_MODULES(LIBOSSO,libosso, _LIB_FOUND=1, _LIB_FOUND=)
-      MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBOSSO_LIBS"
-      MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBOSSO_CFLAGS"
-      if test -z "$_LIB_FOUND"; then
-         AC_MSG_ERROR([LibOSSO is required when building for Maemo])
-      fi
-
-      PKG_CHECK_MODULES(LIBHILDONFM,hildon-fm-2, _LIB_FOUND=1, _LIB_FOUND=)
-      MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBHILDONFM_LIBS"
-      MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBHILDONFM_CFLAGS"
-      if test -z "$_LIB_FOUND"; then
-         AC_MSG_ERROR([Hildon FM-2 is required when building for Maemo])
-      fi
-
-   fi
-   if test $MOZ_PLATFORM_MAEMO = 6; then
-
-      PKG_CHECK_MODULES(LIBCONTENTMANAGER, ContentManager QtSparql,
-                        _LIB_FOUND=1,
-                        _LIB_FOUND=)
-      if test "$_LIB_FOUND"; then
-         MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBCONTENTMANAGER_LIBS"
-         MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBCONTENTMANAGER_CFLAGS"
-         MOZ_ENABLE_CONTENTMANAGER=1
-         AC_DEFINE(MOZ_ENABLE_CONTENTMANAGER)
-      else
-         AC_MSG_WARN([Cannot find libcontentmanager and or QtSparql building for Maemo 6])
-      fi
-      AC_SUBST(MOZ_ENABLE_CONTENTMANAGER)
-
-      dnl ========================================================
-      dnl = Enable meego libcontentaction
-      dnl ========================================================
-      MOZ_ARG_ENABLE_BOOL(meegocontentaction,
-      [  --enable-meegocontentaction           Enable meegocontentaction support],
-         MOZ_MEEGOCONTENTACTION=1,
-         MOZ_MEEGOCONTENTACTION=)
-
-      if test -n "$MOZ_MEEGOCONTENTACTION"; then
-
-         PKG_CHECK_MODULES(LIBCONTENTACTION, contentaction-0.1, _LIB_FOUND=1, _LIB_FOUND=)
-         if test "$_LIB_FOUND"; then
-            MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBCONTENTACTION_LIBS"
-            MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBCONTENTACTION_CFLAGS"
-            MOZ_ENABLE_CONTENTACTION=1
-            AC_DEFINE(MOZ_ENABLE_CONTENTACTION)
-            AC_SUBST(MOZ_ENABLE_CONTENTACTION)
-         fi
-      fi
-
-      MOZ_ARG_ENABLE_BOOL(meegotouch,
-      [  --enable-meegotouch  Enable meegotouch support],
-         MOZ_MEEGOTOUCHENABLED=1,
-         MOZ_MEEGOTOUCHENABLED=)
-
-      if test -n "$MOZ_MEEGOTOUCHENABLED"; then
-          PKG_CHECK_MODULES(MOZ_MEEGOTOUCH, meegotouchcore, _LIB_FOUND=1, _LIB_FOUND=)
-          if test "$_LIB_FOUND"; then
-              MOZ_QT_CFLAGS="$MOZ_MEEGOTOUCH_CFLAGS $MOZ_QT_CFLAGS"
-              MOZ_QT_LIBS="$MOZ_MEEGOTOUCH_LIBS $MOZ_QT_LIBS"
-              AC_DEFINE(MOZ_ENABLE_MEEGOTOUCH)
-          else
-              AC_MSG_WARN([Cannot meegotouchcore-dev. Disabling Meegotouch support.])
-          fi
-      fi
-   fi
-
-   PKG_CHECK_MODULES(LIBLOCATION,liblocation, _LIB_FOUND=1, _LIB_FOUND=)
-   MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBLOCATION_LIBS"
-   MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBLOCATION_CFLAGS"
-   if test "$_LIB_FOUND"; then
-      MOZ_MAEMO_LIBLOCATION=1
-      AC_DEFINE(MOZ_MAEMO_LIBLOCATION)
-   else
-      AC_MSG_WARN([Cannot liblocation-dev. Disabling Maemo geolocation.])
-   fi
-   AC_SUBST(MOZ_MAEMO_LIBLOCATION)
-
-   PKG_CHECK_MODULES(LIBMEEGOTOUCHSHARE, ShareUiInterface-maemo-meegotouch >= 0.3.31 mdatauri, _LIB_FOUND=1, _LIB_FOUND=)
-   MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBMEEGOTOUCHSHARE_LIBS"
-   MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBMEEGOTOUCHSHARE_CFLAGS"
-   if test "$_LIB_FOUND"; then
-      MOZ_ENABLE_MEEGOTOUCHSHARE=1
-      AC_DEFINE(MOZ_ENABLE_MEEGOTOUCHSHARE)
-   else
-      AC_MSG_WARN([Cannot find maemo-meegotouch-interfaces-dev or libmdatauri-dev. Disabling meegotouch share ui.])
-   fi
-   AC_SUBST(MOZ_ENABLE_MEEGOTOUCHSHARE)
-
-   AC_SUBST(MOZ_PLATFORM_MAEMO_LIBS)
-   AC_SUBST(MOZ_PLATFORM_MAEMO_CFLAGS)
-fi
-
-dnl ========================================================
 dnl GL provider
 dnl ========================================================
 MOZ_GL_PROVIDER=
@@ -8614,7 +8367,6 @@ AC_SUBST(FILTER)
 AC_SUBST(BIN_FLAGS)
 AC_SUBST(MOZ_WIDGET_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
-AC_SUBST(MOZ_PLATFORM_MAEMO)
 AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST(MOZ_PERMISSIONS)
 AC_SUBST(MOZ_PREF_EXTENSIONS)

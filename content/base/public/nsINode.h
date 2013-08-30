@@ -16,6 +16,7 @@
 #include "nsPropertyTable.h"        // for typedefs
 #include "nsTObserverArray.h"       // for member
 #include "nsWindowMemoryReporter.h" // for NS_DECL_SIZEOF_EXCLUDING_THIS
+#include "mozilla/ErrorResult.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/EventTarget.h" // for base class
 

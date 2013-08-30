@@ -1,5 +1,4 @@
 # Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
-#
 # Use of this source code is governed by a BSD-style license
 # that can be found in the LICENSE file in the root of the source
 # tree. An additional intellectual property rights grant can be found
@@ -52,14 +51,12 @@
         '../test/codec_database_test.cc',
         '../test/decode_from_storage_test.cc',
         '../test/generic_codec_test.cc',
-        '../test/jitter_buffer_test.cc',
         '../test/media_opt_test.cc',
         '../test/mt_test_common.cc',
         '../test/mt_rx_tx_test.cc',
         '../test/normal_test.cc',
         '../test/pcap_file_reader.cc',
         '../test/quality_modes_test.cc',
-        '../test/receiver_timing_tests.cc',
         '../test/rtp_file_reader.cc',
         '../test/rtp_player.cc',
         '../test/test_callbacks.cc',
@@ -70,60 +67,6 @@
         '../test/video_rtp_play.cc',
         '../test/video_source.cc',
       ], # sources
-    },
-    {
-      'target_name': 'video_coding_integrationtests',
-      'type': 'executable',
-      'dependencies': [
-         'video_codecs_test_framework',
-         'webrtc_video_coding',
-         '<(DEPTH)/testing/gtest.gyp:gtest',
-         '<(webrtc_root)/test/test.gyp:test_support_main',
-         '<(webrtc_root)/test/metrics.gyp:metrics',
-      ],
-      'sources': [
-        '../../codecs/test/videoprocessor_integrationtest.cc',
-      ],
-    },
-    {
-      'target_name': 'video_coding_unittests',
-      'type': 'executable',
-      'dependencies': [
-        'rtp_rtcp',
-        'video_codecs_test_framework',
-        'webrtc_video_coding',
-        '<(webrtc_root)/test/test.gyp:test_support_main',
-        '<(DEPTH)/testing/gtest.gyp:gtest',
-        '<(DEPTH)/testing/gmock.gyp:gmock',
-        '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
-      ],
-      'include_dirs': [
-        '../../../interface',
-        '../../codecs/interface',
-      ],
-      'sources': [
-        '../interface/mock/mock_vcm_callbacks.h',
-        'decoding_state_unittest.cc',
-        'jitter_buffer_unittest.cc',
-        'receiver_unittest.cc',
-        'session_info_unittest.cc',
-        'stream_generator.cc',
-        'stream_generator.h',
-        'video_coding_robustness_unittest.cc',
-        'video_coding_impl_unittest.cc',
-        'qm_select_unittest.cc',
-        '../test/pcap_file_reader.cc',
-        '../test/pcap_file_reader_unittest.cc',
-        '../test/rtp_file_reader.cc',
-        '../test/rtp_file_reader_unittest.cc',
-        '../../codecs/test/packet_manipulator_unittest.cc',
-        '../../codecs/test/stats_unittest.cc',
-        '../../codecs/test/videoprocessor_unittest.cc',
-      ],
-      # Disable warnings to enable Win64 build, issue 1323.
-      'msvs_disabled_warnings': [
-        4267,  # size_t to int truncation.
-      ],
     },
   ],
 }

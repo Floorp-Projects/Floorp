@@ -1798,24 +1798,6 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
   return NS_OK;
 }    
 
-#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
-nsresult nsPluginInstanceOwner::Text(nsIDOMEvent* aTextEvent)
-{
-  if (mInstance) {
-    nsEvent *event = aTextEvent->GetInternalNSEvent();
-    if (event && event->eventStructType == NS_TEXT_EVENT) {
-      nsEventStatus rv = ProcessEvent(*static_cast<nsGUIEvent*>(event));
-      if (nsEventStatus_eConsumeNoDefault == rv) {
-        aTextEvent->PreventDefault();
-        aTextEvent->StopPropagation();
-      }
-    }
-  }
-
-  return NS_OK;
-}
-#endif
-
 nsresult nsPluginInstanceOwner::ProcessKeyPress(nsIDOMEvent* aKeyEvent)
 {
 #ifdef XP_MACOSX
@@ -1953,11 +1935,6 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
   if (eventType.EqualsLiteral("keypress")) {
     return ProcessKeyPress(aEvent);
   }
-#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
-  if (eventType.EqualsLiteral("text")) {
-    return Text(aEvent);
-  }
-#endif
 
   nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aEvent));
   if (dragEvent && mInstance) {
@@ -2396,29 +2373,10 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
           // DOMKeyCodeToGdkKeyCode(keyEvent.keyCode) and
           // gdk_keymap_get_entries_for_keyval will be useful, but the
           // mappings will not be unique.
-#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
-          bool handled;
-          if (NS_SUCCEEDED(mInstance->HandleGUIEvent(anEvent, &handled)) &&
-              handled) {
-            rv = nsEventStatus_eConsumeNoDefault;
-          }
-#else
           NS_WARNING("Synthesized key event not sent to plugin");
-#endif
         }
       break;
 
-#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
-   case NS_TEXT_EVENT:
-        {
-          bool handled;
-          if (NS_SUCCEEDED(mInstance->HandleGUIEvent(anEvent, &handled)) &&
-              handled) {
-            rv = nsEventStatus_eConsumeNoDefault;
-          }
-        }
-      break;
-#endif
     default: 
       switch (anEvent.message)
         {
@@ -2582,9 +2540,6 @@ nsPluginInstanceOwner::Destroy()
   mContent->RemoveEventListener(NS_LITERAL_STRING("dragstart"), this, true);
   mContent->RemoveEventListener(NS_LITERAL_STRING("draggesture"), this, true);
   mContent->RemoveEventListener(NS_LITERAL_STRING("dragend"), this, true);
-#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
-  mContent->RemoveEventListener(NS_LITERAL_STRING("text"), this, true);
-#endif
 
 #if MOZ_WIDGET_ANDROID
   RemovePluginView();
@@ -3011,9 +2966,6 @@ nsresult nsPluginInstanceOwner::Init(nsIContent* aContent)
   mContent->AddEventListener(NS_LITERAL_STRING("dragstart"), this, true);
   mContent->AddEventListener(NS_LITERAL_STRING("draggesture"), this, true);
   mContent->AddEventListener(NS_LITERAL_STRING("dragend"), this, true);
-#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
-  mContent->AddEventListener(NS_LITERAL_STRING("text"), this, true);
-#endif
 
   return NS_OK; 
 }

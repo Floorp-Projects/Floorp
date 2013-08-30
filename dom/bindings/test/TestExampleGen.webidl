@@ -362,6 +362,33 @@ interface TestExampleInterface {
   void passUnionWithObject((object or long) arg);
   //void passUnionWithDict((Dict or long) arg);
 
+  void passUnionWithDefaultValue1(optional (double or DOMString) arg = "");
+  void passUnionWithDefaultValue2(optional (double or DOMString) arg = 1);
+  void passUnionWithDefaultValue3(optional (double or DOMString) arg = 1.5);
+  void passUnionWithDefaultValue4(optional (float or DOMString) arg = "");
+  void passUnionWithDefaultValue5(optional (float or DOMString) arg = 1);
+  void passUnionWithDefaultValue6(optional (float or DOMString) arg = 1.5);
+  void passUnionWithDefaultValue7(optional (unrestricted double or DOMString) arg = "");
+  void passUnionWithDefaultValue8(optional (unrestricted double or DOMString) arg = 1);
+  void passUnionWithDefaultValue9(optional (unrestricted double or DOMString) arg = 1.5);
+  void passUnionWithDefaultValue10(optional (unrestricted double or DOMString) arg = Infinity);
+  void passUnionWithDefaultValue11(optional (unrestricted float or DOMString) arg = "");
+  void passUnionWithDefaultValue12(optional (unrestricted float or DOMString) arg = 1);
+  void passUnionWithDefaultValue13(optional (unrestricted float or DOMString) arg = Infinity);
+
+  void passNullableUnionWithDefaultValue1(optional (double or DOMString)? arg = "");
+  void passNullableUnionWithDefaultValue2(optional (double or DOMString)? arg = 1);
+  void passNullableUnionWithDefaultValue3(optional (double or DOMString)? arg = null);
+  void passNullableUnionWithDefaultValue4(optional (float or DOMString)? arg = "");
+  void passNullableUnionWithDefaultValue5(optional (float or DOMString)? arg = 1);
+  void passNullableUnionWithDefaultValue6(optional (float or DOMString)? arg = null);
+  void passNullableUnionWithDefaultValue7(optional (unrestricted double or DOMString)? arg = "");
+  void passNullableUnionWithDefaultValue8(optional (unrestricted double or DOMString)? arg = 1);
+  void passNullableUnionWithDefaultValue9(optional (unrestricted double or DOMString)? arg = null);
+  void passNullableUnionWithDefaultValue10(optional (unrestricted float or DOMString)? arg = "");
+  void passNullableUnionWithDefaultValue11(optional (unrestricted float or DOMString)? arg = 1);
+  void passNullableUnionWithDefaultValue12(optional (unrestricted float or DOMString)? arg = null);
+
   //(CanvasPattern or CanvasGradient) receiveUnion();
   //(CanvasPattern? or CanvasGradient) receiveUnionContainingNull();
   //(CanvasPattern or CanvasGradient)? receiveNullableUnion();

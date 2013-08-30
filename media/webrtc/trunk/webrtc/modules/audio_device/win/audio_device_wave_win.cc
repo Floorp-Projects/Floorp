@@ -3359,6 +3359,8 @@ int32_t AudioDeviceWindowsWave::RecProc(LONGLONG& consumedTime)
 
         _ptrAudioBuffer->SetVQEData(msecOnPlaySide, msecOnRecordSide, drift);
 
+        _ptrAudioBuffer->SetTypingStatus(KeyPressed());
+
         // Store the play and rec delay values for video synchronization
         _sndCardPlayDelay = msecOnPlaySide;
         _sndCardRecDelay = msecOnRecordSide;
@@ -3820,5 +3822,15 @@ int32_t AudioDeviceWindowsWave::RestartTimerIfNeeded(const uint32_t time)
     return 0;
 }
 
+
+bool AudioDeviceWindowsWave::KeyPressed() const{
+
+  int key_down = 0;
+  for (int key = VK_SPACE; key < VK_NUMLOCK; key++) {
+    short res = GetAsyncKeyState(key);
+    key_down |= res & 0x1; // Get the LSB
+  }
+  return (key_down > 0);
+}
 }  // namespace webrtc
 

@@ -13,14 +13,9 @@ include $(DEPTH)/config/autoconf.mk
 
 LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/base
 
-ifdef MOZ_PLATFORM_MAEMO
-ifdef MOZ_ENABLE_LIBCONIC
-	LOCAL_INCLUDES += -I$(srcdir)/../../system/maemo
-endif
 ifdef MOZ_ENABLE_QTNETWORK
 	LOCAL_INCLUDES += -I$(srcdir)/../../system/qt
 	OS_INCLUDES += $(MOZ_QT_CFLAGS)
-endif
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -64,10 +64,9 @@ public:
 
     void UpdateMaxFrameSize(uint32_t frameSizeBytes);
 
-    // Set a max filter on the jitter estimate by setting an initial
-    // non-zero delay. When set to zero (default), the last jitter
-    // estimate will be used.
-    void SetMaxJitterEstimate(uint32_t initial_delay_ms);
+    // Set a max filter on the jitter estimate. When disabled (default), the
+    // last jitter estimate will be used.
+    void SetMaxJitterEstimate(bool enable);
 
     // A constant describing the delay from the jitter buffer
     // to the delay on the receiving side which is not accounted

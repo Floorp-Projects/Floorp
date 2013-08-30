@@ -10,7 +10,7 @@
 
 #include "webrtc/system_wrappers/interface/event_tracer.h"
 
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/system_wrappers/interface/static_instance.h"
 #include "webrtc/system_wrappers/interface/trace_event.h"
 
