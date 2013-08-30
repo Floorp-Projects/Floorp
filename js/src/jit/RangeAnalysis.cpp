@@ -1066,7 +1066,13 @@ MMod::computeRange()
     int64_t b = Abs<int64_t>(rhs.upper());
     if (a == 0 && b == 0)
         return;
-    int64_t rhsAbsBound = Max(a-1, b-1);
+    int64_t rhsAbsBound = Max(a, b);
+
+    // If the value is known to be integer, less-than abs(rhs) is equivalent
+    // to less-than-or-equal abs(rhs)-1. This is important for being able to
+    // say that the result of x%256 is an 8-bit unsigned number.
+    if (!lhs.isDecimal() && !rhs.isDecimal())
+        --rhsAbsBound;
 
     // Next, the absolute value of the result will never be greater than the
     // absolute value of lhs.
