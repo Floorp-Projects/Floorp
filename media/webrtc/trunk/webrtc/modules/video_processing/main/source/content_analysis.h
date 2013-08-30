@@ -11,10 +11,10 @@
 #ifndef VPM_CONTENT_ANALYSIS_H
 #define VPM_CONTENT_ANALYSIS_H
 
-#include "common_video/interface/i420_video_frame.h"
-#include "typedefs.h"
-#include "module_common_types.h"
-#include "video_processing_defines.h"
+#include "webrtc/common_video/interface/i420_video_frame.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/video_processing/main/interface/video_processing_defines.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 

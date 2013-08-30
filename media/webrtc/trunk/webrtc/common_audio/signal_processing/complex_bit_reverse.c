@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "signal_processing_library.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
 /* Tables for data buffer indexes that are bit reversed and thus need to be
  * swapped. Note that, index_7[{0, 2, 4, ...}] are for the left side of the swap
@@ -106,4 +106,3 @@ void WebRtcSpl_ComplexBitReverse(int16_t* __restrict complex_data, int stages) {
     }
   }
 }
-

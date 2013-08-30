@@ -13,8 +13,8 @@
 #include <cstdio>
 #include <map>
 
+#include "webrtc/modules/rtp_rtcp/interface/rtp_header_parser.h"
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
-#include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
 #include "webrtc/modules/video_coding/main/source/internal_defines.h"
 #include "webrtc/modules/video_coding/main/test/pcap_file_reader.h"
 #include "webrtc/modules/video_coding/main/test/rtp_file_reader.h"
@@ -229,7 +229,7 @@ class SsrcHandlers {
     handler->rtp_module_->SetRTCPStatus(kRtcpNonCompound);
     handler->rtp_module_->SetREMBStatus(true);
     handler->rtp_module_->SetSSRCFilter(true, ssrc);
-    handler->rtp_module_->RegisterReceiveRtpHeaderExtension(
+    handler->rtp_header_parser_->RegisterRtpHeaderExtension(
         kRtpExtensionTransmissionTimeOffset,
         kDefaultTransmissionTimeOffsetExtensionId);
 
@@ -257,7 +257,13 @@ class SsrcHandlers {
 
   void IncomingPacket(const uint8_t* data, uint32_t length) {
     for (HandlerMapIt it = handlers_.begin(); it != handlers_.end(); ++it) {
-      it->second->rtp_module_->IncomingPacket(data, length);
+      if (it->second->rtp_header_parser_->IsRtcp(data, length)) {
+        it->second->rtp_module_->IncomingRtcpPacket(data, length);
+      } else {
+        RTPHeader header;
+        it->second->rtp_header_parser_->Parse(data, length, &header);
+        it->second->rtp_module_->IncomingRtpPacket(data, length, header);
+      }
     }
   }
 
@@ -266,7 +272,8 @@ class SsrcHandlers {
    public:
     Handler(uint32_t ssrc, const PayloadTypes& payload_types,
             LostPackets* lost_packets)
-        : rtp_module_(),
+        : rtp_header_parser_(RtpHeaderParser::Create()),
+          rtp_module_(),
           payload_sink_(),
           ssrc_(ssrc),
           payload_types_(payload_types),
@@ -288,6 +295,7 @@ class SsrcHandlers {
       return payload_types_;
     }
 
+    scoped_ptr<RtpHeaderParser> rtp_header_parser_;
     scoped_ptr<RtpRtcp> rtp_module_;
     scoped_ptr<PayloadSinkInterface> payload_sink_;
 
@@ -421,13 +429,13 @@ class RtpPlayerImpl : public RtpPlayerInterface {
     assert(data);
     assert(length > 0);
 
-    ModuleRTPUtility::RTPHeaderParser rtp_header_parser(data, length);
-    if (!rtp_header_parser.RTCP()) {
-      WebRtcRTPHeader header;
-      if (!rtp_header_parser.Parse(header, NULL)) {
+    scoped_ptr<RtpHeaderParser> rtp_header_parser(RtpHeaderParser::Create());
+    if (!rtp_header_parser->IsRtcp(data, length)) {
+      RTPHeader header;
+      if (!rtp_header_parser->Parse(data, length, &header)) {
         return -1;
       }
-      uint32_t ssrc = header.header.ssrc;
+      uint32_t ssrc = header.ssrc;
       if (ssrc_handlers_.RegisterSsrc(ssrc, &lost_packets_) < 0) {
         DEBUG_LOG1("Unable to register ssrc: %d", ssrc);
         return -1;
@@ -436,7 +444,7 @@ class RtpPlayerImpl : public RtpPlayerInterface {
       if (no_loss_startup_ > 0) {
         no_loss_startup_--;
       } else if ((rand() + 1.0)/(RAND_MAX + 1.0) < loss_rate_) {
-        uint16_t seq_num = header.header.sequenceNumber;
+        uint16_t seq_num = header.sequenceNumber;
         lost_packets_.AddPacket(new RawRtpPacket(data, length, ssrc, seq_num));
         DEBUG_LOG1("Dropped packet: %d!", header.header.sequenceNumber);
         return 0;

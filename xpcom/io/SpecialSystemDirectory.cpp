@@ -441,22 +441,6 @@ GetUnixXDGUserDirectory(SystemDirectories aSystemDirectory,
 
         rv = file->AppendNative(NS_LITERAL_CSTRING("Desktop"));
     }
-#if defined(MOZ_PLATFORM_MAEMO)
-    // "MYDOCSDIR" is exported to point to "/home/user/MyDocs" in maemo.
-    else if (Unix_XDG_Documents == aSystemDirectory) {
-
-        char *myDocs = PR_GetEnv("MYDOCSDIR");
-        if (!myDocs || !*myDocs)
-            return NS_ERROR_FAILURE;
-
-        rv = NS_NewNativeLocalFile(nsDependentCString(myDocs), true,
-                                   getter_AddRefs(file));
-        if (NS_FAILED(rv))
-            return rv;
-
-        rv = file->AppendNative(NS_LITERAL_CSTRING(".documents"));
-    }
-#endif
     else {
       // no fallback for the other XDG dirs
       rv = NS_ERROR_FAILURE;

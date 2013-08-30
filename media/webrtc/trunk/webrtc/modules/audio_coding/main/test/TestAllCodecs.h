@@ -35,7 +35,7 @@ class TestPack : public AudioPacketizationCallback {
   void reset_payload_size();
 
  private:
-  AudioCodingModule*  receiver_acm_;
+  AudioCodingModule* receiver_acm_;
   uint16_t sequence_number_;
   uint8_t payload_data_[60 * 32 * 2 * 2];
   uint32_t timestamp_diff_;

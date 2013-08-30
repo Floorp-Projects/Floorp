@@ -10,7 +10,7 @@
 
 #include "webrtc/system_wrappers/interface/logging.h"
 
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/system_wrappers/interface/condition_variable_wrapper.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"

@@ -13,20 +13,21 @@
 
 #include <vector>
 
-#include "common_types.h"  // NOLINT
-#include "engine_configurations.h"  // NOLINT
+#include "webrtc/common_types.h"
+#include "webrtc/engine_configurations.h"
 #include "webrtc/modules/video_capture/include/video_capture.h"
-#include "modules/video_coding/codecs/interface/video_codec_interface.h"
-#include "modules/video_coding/main/interface/video_coding.h"
-#include "modules/video_processing/main/interface/video_processing.h"
-#include "system_wrappers/interface/scoped_ptr.h"
-#include "typedefs.h" // NOLINT
-#include "video_engine/include/vie_capture.h"
-#include "video_engine/vie_defines.h"
-#include "video_engine/vie_frame_provider_base.h"
+#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding.h"
+#include "webrtc/modules/video_processing/main/interface/video_processing.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/typedefs.h"
+#include "webrtc/video_engine/include/vie_capture.h"
+#include "webrtc/video_engine/vie_defines.h"
+#include "webrtc/video_engine/vie_frame_provider_base.h"
 
 namespace webrtc {
 
+class Config;
 class CriticalSectionWrapper;
 class EventWrapper;
 class ProcessThread;
@@ -38,19 +39,19 @@ struct ViEPicture;
 class ViECapturer
     : public ViEFrameProviderBase,
       public ViEExternalCapture,
-      protected VCMReceiveCallback,
       protected VideoCaptureDataCallback,
-      protected VideoCaptureFeedBack,
-      protected VideoEncoder {
+      protected VideoCaptureFeedBack {
  public:
   static ViECapturer* CreateViECapture(int capture_id,
                                        int engine_id,
+                                       const Config& config,
                                        VideoCaptureModule* capture_module,
                                        ProcessThread& module_process_thread);
 
   static ViECapturer* CreateViECapture(
       int capture_id,
       int engine_id,
+      const Config& config,
       const char* device_unique_idUTF8,
       uint32_t device_unique_idUTF8Length,
       ProcessThread& module_process_thread);
@@ -72,12 +73,6 @@ class ViECapturer
 
   virtual int IncomingFrameI420(const ViEVideoFrameI420& video_frame,
                                 unsigned long long capture_time = 0);  // NOLINT
-
-  // Use this capture device as encoder.
-  // Returns 0 if the codec is supported by this capture device.
-  virtual int32_t PreEncodeToViEEncoder(const VideoCodec& codec,
-                                        ViEEncoder& vie_encoder,
-                                        int32_t vie_encoder_id);
 
   // Start/Stop.
   int32_t Start(
@@ -108,22 +103,18 @@ class ViECapturer
  protected:
   ViECapturer(int capture_id,
               int engine_id,
+              const Config& config,
               ProcessThread& module_process_thread);
 
   int32_t Init(VideoCaptureModule* capture_module);
   int32_t Init(const char* device_unique_idUTF8,
-               const uint32_t device_unique_idUTF8Length);
+               uint32_t device_unique_idUTF8Length);
 
   // Implements VideoCaptureDataCallback.
   virtual void OnIncomingCapturedFrame(const int32_t id,
                                        I420VideoFrame& video_frame);
-  virtual void OnIncomingCapturedEncodedFrame(const int32_t capture_id,
-                                              VideoFrame& video_frame,
-                                              VideoCodecType codec_type);
   virtual void OnCaptureDelayChanged(const int32_t id,
                                      const int32_t delay);
-
-  bool EncoderActive();
 
   // Returns true if the capture capability has been set in |StartCapture|
   // function and may not be changed.
@@ -134,25 +125,6 @@ class ViECapturer
   // that the image proc module exist.
   int32_t IncImageProcRefCount();
   int32_t DecImageProcRefCount();
-
-  // Implements VideoEncoder.
-  virtual int32_t Version(char* version, int32_t length) const;
-  virtual int32_t InitEncode(const VideoCodec* codec_settings,
-                             int32_t number_of_cores,
-                             uint32_t max_payload_size);
-  virtual int32_t Encode(const I420VideoFrame& input_image,
-                         const CodecSpecificInfo* codec_specific_info,
-                         const std::vector<VideoFrameType>* frame_types);
-  virtual int32_t RegisterEncodeCompleteCallback(
-      EncodedImageCallback* callback);
-  virtual int32_t Release();
-  virtual int32_t Reset();
-  virtual int32_t SetChannelParameters(uint32_t packet_loss, int rtt);
-  virtual int32_t SetRates(uint32_t new_bit_rate, uint32_t frame_rate);
-
-  // Implements  VCMReceiveCallback.
-  // TODO(mflodman) Change input argument to pointer.
-  virtual int32_t FrameToRender(I420VideoFrame& video_frame);  // NOLINT
 
   // Implements VideoCaptureFeedBack
   virtual void OnCaptureFrameRate(const int32_t id,
@@ -183,8 +155,6 @@ class ViECapturer
 
   I420VideoFrame captured_frame_;
   I420VideoFrame deliver_frame_;
-  VideoFrame deliver_encoded_frame_;
-  VideoFrame encoded_frame_;
 
   // Image processing.
   ViEEffectFilter* effect_filter_;
@@ -200,19 +170,6 @@ class ViECapturer
   scoped_ptr<CriticalSectionWrapper> observer_cs_;
   ViECaptureObserver* observer_;
 
-  // Encoding using encoding capable cameras.
-  scoped_ptr<CriticalSectionWrapper> encoding_cs_;
-  VideoCaptureModule::VideoCaptureEncodeInterface* capture_encoder_;
-  EncodedImageCallback* encode_complete_callback_;
-  VideoCodec codec_;
-  // The ViEEncoder we are encoding for.
-  ViEEncoder* vie_encoder_;
-  // ViEEncoder id we are encoding for.
-  int32_t vie_encoder_id_;
-  // Used for decoding preencoded frames.
-  VideoCodingModule* vcm_;
-  EncodedVideoData decode_buffer_;
-  bool decoder_initialized_;
   CaptureCapability requested_capability_;
 
   I420VideoFrame capture_device_image_;

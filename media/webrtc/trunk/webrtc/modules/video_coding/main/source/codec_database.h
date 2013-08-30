@@ -68,9 +68,10 @@ class VCMCodecDataBase {
   // Sets the sender side codec and initiates the desired codec given the
   // VideoCodec struct.
   // Returns true if the codec was successfully registered, false otherwise.
-  bool RegisterSendCodec(const VideoCodec* send_codec,
-                         int number_of_cores,
-                         int max_payload_size);
+  bool SetSendCodec(const VideoCodec* send_codec,
+                    int number_of_cores,
+                    int max_payload_size,
+                    VCMEncodedFrameCallback* encoded_frame_callback);
 
   // Gets the current send codec. Relevant for internal codecs only.
   // Returns true if there is a send codec, false otherwise.
@@ -93,15 +94,7 @@ class VCMCodecDataBase {
   // if the external encoder was the send codec before being deregistered.
   bool DeregisterExternalEncoder(uint8_t payload_type, bool* was_send_codec);
 
-  // Returns an encoder specified by the payload type in |settings|. The
-  // encoded frame callback of the encoder is set to |encoded_frame_callback|.
-  // If no such encoder already exists an instance will be created and
-  // initialized using |settings|.
-  // NULL is returned if no encoder with the specified payload type was found
-  // and the function failed to create one.
-  VCMGenericEncoder* GetEncoder(
-      const VideoCodec* settings,
-      VCMEncodedFrameCallback* encoded_frame_callback);
+  VCMGenericEncoder* GetEncoder();
 
   bool SetPeriodicKeyFrames(bool enable);
 
@@ -165,6 +158,9 @@ class VCMCodecDataBase {
                                           VideoCodec* new_codec,
                                           bool* external) const;
 
+  // Determines whether a new codec has to be created or not.
+  // Checks every setting apart from maxFramerate and startBitrate.
+  bool RequiresEncoderReset(const VideoCodec& send_codec);
   // Create an internal encoder given a codec type.
   VCMGenericEncoder* CreateEncoder(const VideoCodecType type) const;
 
@@ -182,6 +178,7 @@ class VCMCodecDataBase {
   int number_of_cores_;
   int max_payload_size_;
   bool periodic_key_frames_;
+  bool pending_encoder_reset_;
   bool current_enc_is_external_;
   VideoCodec send_codec_;
   VideoCodec receive_codec_;

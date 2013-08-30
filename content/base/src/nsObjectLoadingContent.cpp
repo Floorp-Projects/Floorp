@@ -2676,12 +2676,6 @@ DoDelayedStop(nsPluginInstanceOwner* aInstanceOwner,
               nsObjectLoadingContent* aContent,
               bool aDelayedStop)
 {
-#if (MOZ_PLATFORM_MAEMO==5)
-  // Don't delay stop on Maemo/Hildon (bug 530739).
-  if (aDelayedStop && aInstanceOwner->MatchPluginName("Shockwave Flash"))
-    return false;
-#endif
-
   // Don't delay stopping QuickTime (bug 425157), Flip4Mac (bug 426524),
   // XStandard (bug 430219), CMISS Zinc (bug 429604).
   if (aDelayedStop

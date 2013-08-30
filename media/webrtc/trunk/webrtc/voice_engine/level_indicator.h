@@ -11,8 +11,8 @@
 #ifndef WEBRTC_VOICE_ENGINE_LEVEL_INDICATOR_H
 #define WEBRTC_VOICE_ENGINE_LEVEL_INDICATOR_H
 
-#include "typedefs.h"
-#include "voice_engine_defines.h"
+#include "webrtc/typedefs.h"
+#include "webrtc/voice_engine/voice_engine_defines.h"
 
 namespace webrtc {
 

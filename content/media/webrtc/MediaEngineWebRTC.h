@@ -30,21 +30,21 @@
 // WebRTC library includes follow
 
 // Audio Engine
-#include "voice_engine/include/voe_base.h"
-#include "voice_engine/include/voe_codec.h"
-#include "voice_engine/include/voe_hardware.h"
-#include "voice_engine/include/voe_network.h"
-#include "voice_engine/include/voe_audio_processing.h"
-#include "voice_engine/include/voe_volume_control.h"
-#include "voice_engine/include/voe_external_media.h"
-#include "voice_engine/include/voe_audio_processing.h"
+#include "webrtc/voice_engine/include/voe_base.h"
+#include "webrtc/voice_engine/include/voe_codec.h"
+#include "webrtc/voice_engine/include/voe_hardware.h"
+#include "webrtc/voice_engine/include/voe_network.h"
+#include "webrtc/voice_engine/include/voe_audio_processing.h"
+#include "webrtc/voice_engine/include/voe_volume_control.h"
+#include "webrtc/voice_engine/include/voe_external_media.h"
+#include "webrtc/voice_engine/include/voe_audio_processing.h"
 
 // Video Engine
-#include "video_engine/include/vie_base.h"
-#include "video_engine/include/vie_codec.h"
-#include "video_engine/include/vie_render.h"
-#include "video_engine/include/vie_capture.h"
-#include "video_engine/include/vie_file.h"
+#include "webrtc/video_engine/include/vie_base.h"
+#include "webrtc/video_engine/include/vie_codec.h"
+#include "webrtc/video_engine/include/vie_render.h"
+#include "webrtc/video_engine/include/vie_capture.h"
+#include "webrtc/video_engine/include/vie_file.h"
 #ifdef MOZ_B2G_CAMERA
 #include "CameraPreviewMediaStream.h"
 #include "DOMCameraManager.h"
@@ -301,9 +301,9 @@ public:
   }
 
   // VoEMediaProcess.
-  void Process(const int channel, const webrtc::ProcessingTypes type,
-               WebRtc_Word16 audio10ms[], const int length,
-               const int samplingFreq, const bool isStereo);
+  void Process(int channel, webrtc::ProcessingTypes type,
+               int16_t audio10ms[], int length,
+               int samplingFreq, bool isStereo);
 
   NS_DECL_THREADSAFE_ISUPPORTS
 

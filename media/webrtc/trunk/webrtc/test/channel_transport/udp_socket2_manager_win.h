@@ -11,10 +11,6 @@
 #ifndef WEBRTC_TEST_CHANNEL_TRANSPORT_UDP_SOCKET2_MANAGER_WINDOWS_H_
 #define WEBRTC_TEST_CHANNEL_TRANSPORT_UDP_SOCKET2_MANAGER_WINDOWS_H_
 
-#if _MSC_VER > 1000
-#pragma once
-#endif
-
 #include <winsock2.h>
 
 #include "webrtc/system_wrappers/interface/atomic32.h"
@@ -24,6 +20,7 @@
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/test/channel_transport/udp_socket2_win.h"
 #include "webrtc/test/channel_transport/udp_socket_manager_wrapper.h"
+#include "webrtc/test/channel_transport/udp_transport.h"
 
 #define MAX_IO_BUFF_SIZE 1600
 

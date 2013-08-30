@@ -11,7 +11,7 @@
 // A ring buffer to hold arbitrary data. Provides no thread safety. Unless
 // otherwise specified, functions return 0 on success and -1 on error.
 
-#include "ring_buffer.h"
+#include "webrtc/modules/audio_processing/utility/ring_buffer.h"
 
 #include <stddef.h>  // size_t
 #include <stdlib.h>

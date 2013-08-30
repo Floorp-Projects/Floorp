@@ -593,13 +593,6 @@ nsMediaFeatures::features[] = {
         GetSystemMetric
     },
     {
-        &nsGkAtoms::_moz_maemo_classic,
-        nsMediaFeature::eMinMaxNotAllowed,
-        nsMediaFeature::eBoolInteger,
-        { &nsGkAtoms::maemo_classic },
-        GetSystemMetric
-    },
-    {
         &nsGkAtoms::_moz_menubar_drag,
         nsMediaFeature::eMinMaxNotAllowed,
         nsMediaFeature::eBoolInteger,

@@ -16,7 +16,7 @@
 #ifndef WEBRTC_VIDEO_ENGINE_MAIN_TEST_AUTOTEST_INTERFACE_TB_I420_CODEC_H_
 #define WEBRTC_VIDEO_ENGINE_MAIN_TEST_AUTOTEST_INTERFACE_TB_I420_CODEC_H_
 
-#include "modules/video_coding/codecs/interface/video_codec_interface.h"
+#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
 
 class TbI420Encoder: public webrtc::VideoEncoder
 {

@@ -11,22 +11,10 @@
 #ifndef WEBRTC_VOICE_ENGINE_VOE_TEST_DEFINES_H
 #define WEBRTC_VOICE_ENGINE_VOE_TEST_DEFINES_H
 
-// Read WEBRTC_VOICE_ENGINE_XXX_API compiler flags
-#include "engine_configurations.h"
+#include "webrtc/voice_engine/test/auto_test/voe_test_common.h"
 
-#ifdef WEBRTC_ANDROID
-#include <android/log.h>
-#define ANDROID_LOG_TAG "VoiceEngine Auto Test"
-#define TEST_LOG(...) \
-    __android_log_print(ANDROID_LOG_DEBUG, ANDROID_LOG_TAG, __VA_ARGS__)
-#define TEST_LOG_ERROR(...) \
-    __android_log_print(ANDROID_LOG_ERROR, ANDROID_LOG_TAG, __VA_ARGS__)
-#define TEST_LOG_FLUSH
-#else
-#define TEST_LOG printf
-#define TEST_LOG_ERROR printf
-#define TEST_LOG_FLUSH fflush(NULL)
-#endif
+// Read WEBRTC_VOICE_ENGINE_XXX_API compiler flags
+#include "webrtc/engine_configurations.h"
 
 // Select the tests to execute, list order below is same as they will be
 // executed. Note that, all settings below will be overriden by sub-API
@@ -101,9 +89,6 @@
 #ifdef __INSURE__
 #define _INSTRUMENTATION_TESTING_
 #endif
-
-// Time in ms to test each packet size for each codec
-#define CODEC_TEST_TIME 400
 
 #define MARK() TEST_LOG("."); fflush(NULL);             // Add test marker
 #define ANL() TEST_LOG("\n")                            // Add New Line

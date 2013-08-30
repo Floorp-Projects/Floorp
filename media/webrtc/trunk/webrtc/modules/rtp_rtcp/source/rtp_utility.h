@@ -13,10 +13,10 @@
 
 #include <cstddef> // size_t, ptrdiff_t
 
-#include "typedefs.h"
-#include "rtp_header_extension.h"
-#include "rtp_rtcp_config.h"
-#include "rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_header_extension.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_rtcp_config.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 enum RtpVideoCodecTypes
@@ -73,11 +73,11 @@ namespace ModuleRTPUtility
     uint32_t pow2(uint8_t exp);
 
     // Returns a pointer to the payload data given a packet.
-    const uint8_t* GetPayloadData(const WebRtcRTPHeader* rtp_header,
+    const uint8_t* GetPayloadData(const RTPHeader& rtp_header,
                                   const uint8_t* packet);
 
     // Returns payload length given a packet.
-    uint16_t GetPayloadDataLength(const WebRtcRTPHeader* rtp_header,
+    uint16_t GetPayloadDataLength(const RTPHeader& rtp_header,
                                   const uint16_t packet_length);
 
     // Returns true if |newTimestamp| is older than |existingTimestamp|.
@@ -124,12 +124,12 @@ namespace ModuleRTPUtility
         ~RTPHeaderParser();
 
         bool RTCP() const;
-        bool Parse(WebRtcRTPHeader& parsedPacket,
+        bool Parse(RTPHeader& parsedPacket,
                    RtpHeaderExtensionMap* ptrExtensionMap = NULL) const;
 
     private:
         void ParseOneByteExtensionHeader(
-            WebRtcRTPHeader& parsedPacket,
+            RTPHeader& parsedPacket,
             const RtpHeaderExtensionMap* ptrExtensionMap,
             const uint8_t* ptrRTPDataExtensionEnd,
             const uint8_t* ptr) const;

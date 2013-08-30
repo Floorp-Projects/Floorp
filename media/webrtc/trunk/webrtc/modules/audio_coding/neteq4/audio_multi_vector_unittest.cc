@@ -27,14 +27,15 @@ namespace webrtc {
 // tests for AudioVector already covers a number of different type parameters,
 // this test focuses on testing different number of channels, and keeping the
 // value type constant.
+
 class AudioMultiVectorTest : public ::testing::TestWithParam<size_t> {
  protected:
   typedef int16_t T;  // Use this value type for all tests.
 
   AudioMultiVectorTest()
       : num_channels_(GetParam()),  // Get the test parameter.
-        interleaved_length_(num_channels_ * kLength) {
-    array_interleaved_ = new T[num_channels_ * kLength];
+        interleaved_length_(num_channels_ * array_length()) {
+    array_interleaved_ = new T[num_channels_ * array_length()];
   }
 
   ~AudioMultiVectorTest() {
@@ -43,14 +44,14 @@ class AudioMultiVectorTest : public ::testing::TestWithParam<size_t> {
 
   virtual void SetUp() {
     // Populate test arrays.
-    for (size_t i = 0; i < kLength; ++i) {
+    for (size_t i = 0; i < array_length(); ++i) {
       array_[i] = static_cast<T>(i);
     }
     T* ptr = array_interleaved_;
     // Write 100, 101, 102, ... for first channel.
     // Write 200, 201, 202, ... for second channel.
     // And so on.
-    for (size_t i = 0; i < kLength; ++i) {
+    for (size_t i = 0; i < array_length(); ++i) {
       for (size_t j = 1; j <= num_channels_; ++j) {
         *ptr = j * 100 + i;
         ++ptr;
@@ -58,13 +59,13 @@ class AudioMultiVectorTest : public ::testing::TestWithParam<size_t> {
     }
   }
 
-  enum {
-    kLength = 10
-  };
+  size_t array_length() const {
+    return sizeof(array_) / sizeof(array_[0]);
+  }
 
   const size_t num_channels_;
   size_t interleaved_length_;
-  T array_[kLength];
+  T array_[10];
   T* array_interleaved_;
 };
 
@@ -85,9 +86,9 @@ TEST_P(AudioMultiVectorTest, CreateAndDestroy) {
 
 // Test the subscript operator [] for getting and setting.
 TEST_P(AudioMultiVectorTest, SubscriptOperator) {
-  AudioMultiVector<T> vec(num_channels_, kLength);
+  AudioMultiVector<T> vec(num_channels_, array_length());
   for (size_t channel = 0; channel < num_channels_; ++channel) {
-    for (size_t i = 0; i < kLength; ++i) {
+    for (size_t i = 0; i < array_length(); ++i) {
       vec[channel][i] = static_cast<T>(i);
       // Make sure to use the const version.
       const AudioVector<T>& audio_vec = vec[channel];
@@ -104,11 +105,11 @@ TEST_P(AudioMultiVectorTest, PushBackInterleavedAndCopy) {
   AudioMultiVector<T> vec_copy(num_channels_);
   vec.CopyFrom(&vec_copy);  // Copy from |vec| to |vec_copy|.
   ASSERT_EQ(num_channels_, vec.Channels());
-  ASSERT_EQ(kLength, vec.Size());
+  ASSERT_EQ(array_length(), vec.Size());
   ASSERT_EQ(num_channels_, vec_copy.Channels());
-  ASSERT_EQ(kLength, vec_copy.Size());
+  ASSERT_EQ(array_length(), vec_copy.Size());
   for (size_t channel = 0; channel < vec.Channels(); ++channel) {
-    for (size_t i = 0; i < kLength; ++i) {
+    for (size_t i = 0; i < array_length(); ++i) {
       EXPECT_EQ(static_cast<T>((channel + 1) * 100 + i), vec[channel][i]);
       EXPECT_EQ(vec[channel][i], vec_copy[channel][i]);
     }
@@ -133,22 +134,23 @@ TEST_P(AudioMultiVectorTest, CopyToNull) {
 
 // Test the PushBack method with another AudioMultiVector as input argument.
 TEST_P(AudioMultiVectorTest, PushBackVector) {
-  AudioMultiVector<T> vec1(num_channels_, kLength);
-  AudioMultiVector<T> vec2(num_channels_, kLength);
-  // Set the first vector to [0, 1, ..., kLength - 1] + 100 * channel_number.
-  // Set the second vector to [kLength, kLength + 1, ..., 2 * kLength - 1]  +
-  // 100 * channel_number.
+  AudioMultiVector<T> vec1(num_channels_, array_length());
+  AudioMultiVector<T> vec2(num_channels_, array_length());
+  // Set the first vector to [0, 1, ..., array_length() - 1] +
+  //   100 * channel_number.
+  // Set the second vector to [array_length(), array_length() + 1, ...,
+  //   2 * array_length() - 1] + 100 * channel_number.
   for (size_t channel = 0; channel < num_channels_; ++channel) {
-    for (size_t i = 0; i < kLength; ++i) {
+    for (size_t i = 0; i < array_length(); ++i) {
       vec1[channel][i] = static_cast<T>(i + 100 * channel);
-      vec2[channel][i] = static_cast<T>(i + 100 * channel + kLength);
+      vec2[channel][i] = static_cast<T>(i + 100 * channel + array_length());
     }
   }
   // Append vec2 to the back of vec1.
   vec1.PushBack(vec2);
-  ASSERT_EQ(2u * kLength, vec1.Size());
+  ASSERT_EQ(2u * array_length(), vec1.Size());
   for (size_t channel = 0; channel < num_channels_; ++channel) {
-    for (size_t i = 0; i < 2 * kLength; ++i) {
+    for (size_t i = 0; i < 2 * array_length(); ++i) {
       EXPECT_EQ(static_cast<T>(i + 100 * channel), vec1[channel][i]);
     }
   }
@@ -162,12 +164,12 @@ TEST_P(AudioMultiVectorTest, PushBackFromIndex) {
 
   // Append vec1 to the back of vec2 (which is empty). Read vec1 from the second
   // last element.
-  vec2.PushBackFromIndex(vec1, kLength - 2);
+  vec2.PushBackFromIndex(vec1, array_length() - 2);
   ASSERT_EQ(2u, vec2.Size());
   for (size_t channel = 0; channel < num_channels_; ++channel) {
     for (size_t i = 0; i < 2; ++i) {
-      EXPECT_EQ(array_interleaved_[channel + num_channels_ * (kLength - 2 + i)],
-                vec2[channel][i]);
+      EXPECT_EQ(array_interleaved_[channel + num_channels_ *
+                  (array_length() - 2 + i)], vec2[channel][i]);
     }
   }
 }
@@ -176,11 +178,11 @@ TEST_P(AudioMultiVectorTest, PushBackFromIndex) {
 TEST_P(AudioMultiVectorTest, Zeros) {
   AudioMultiVector<T> vec(num_channels_);
   vec.PushBackInterleaved(array_interleaved_, interleaved_length_);
-  vec.Zeros(2 * kLength);
+  vec.Zeros(2 * array_length());
   ASSERT_EQ(num_channels_, vec.Channels());
-  ASSERT_EQ(2u * kLength, vec.Size());
+  ASSERT_EQ(2u * array_length(), vec.Size());
   for (size_t channel = 0; channel < num_channels_; ++channel) {
-    for (size_t i = 0; i < 2 * kLength; ++i) {
+    for (size_t i = 0; i < 2 * array_length(); ++i) {
       EXPECT_EQ(0, vec[channel][i]);
     }
   }
@@ -199,7 +201,7 @@ TEST_P(AudioMultiVectorTest, ReadInterleaved) {
 
   // Read too many samples. Expect to get all samples from the vector.
   EXPECT_EQ(interleaved_length_,
-            vec.ReadInterleaved(kLength + 1, output));
+            vec.ReadInterleaved(array_length() + 1, output));
   EXPECT_EQ(0, memcmp(array_interleaved_, output, read_samples * sizeof(T)));
 
   delete [] output;
@@ -220,17 +222,17 @@ TEST_P(AudioMultiVectorTest, PopFront) {
   AudioMultiVector<T> vec(num_channels_);
   vec.PushBackInterleaved(array_interleaved_, interleaved_length_);
   vec.PopFront(1);  // Remove one element from each channel.
-  ASSERT_EQ(kLength - 1u, vec.Size());
+  ASSERT_EQ(array_length() - 1u, vec.Size());
   // Let |ptr| point to the second element of the first channel in the
   // interleaved array.
   T* ptr = &array_interleaved_[num_channels_];
-  for (size_t i = 0; i < kLength - 1; ++i) {
+  for (size_t i = 0; i < array_length() - 1; ++i) {
     for (size_t channel = 0; channel < num_channels_; ++channel) {
       EXPECT_EQ(*ptr, vec[channel][i]);
       ++ptr;
     }
   }
-  vec.PopFront(kLength);  // Remove more elements than vector size.
+  vec.PopFront(array_length());  // Remove more elements than vector size.
   EXPECT_EQ(0u, vec.Size());
 }
 
@@ -239,36 +241,36 @@ TEST_P(AudioMultiVectorTest, PopBack) {
   AudioMultiVector<T> vec(num_channels_);
   vec.PushBackInterleaved(array_interleaved_, interleaved_length_);
   vec.PopBack(1);  // Remove one element from each channel.
-  ASSERT_EQ(kLength - 1u, vec.Size());
+  ASSERT_EQ(array_length() - 1u, vec.Size());
   // Let |ptr| point to the first element of the first channel in the
   // interleaved array.
   T* ptr = array_interleaved_;
-  for (size_t i = 0; i < kLength - 1; ++i) {
+  for (size_t i = 0; i < array_length() - 1; ++i) {
     for (size_t channel = 0; channel < num_channels_; ++channel) {
       EXPECT_EQ(*ptr, vec[channel][i]);
       ++ptr;
     }
   }
-  vec.PopBack(kLength);  // Remove more elements than vector size.
+  vec.PopBack(array_length());  // Remove more elements than vector size.
   EXPECT_EQ(0u, vec.Size());
 }
 
 // Test the AssertSize method.
 TEST_P(AudioMultiVectorTest, AssertSize) {
-  AudioMultiVector<T> vec(num_channels_, kLength);
-  EXPECT_EQ(kLength, vec.Size());
+  AudioMultiVector<T> vec(num_channels_, array_length());
+  EXPECT_EQ(array_length(), vec.Size());
   // Start with asserting with smaller sizes than already allocated.
   vec.AssertSize(0);
-  vec.AssertSize(kLength - 1);
+  vec.AssertSize(array_length() - 1);
   // Nothing should have changed.
-  EXPECT_EQ(kLength, vec.Size());
+  EXPECT_EQ(array_length(), vec.Size());
   // Assert with one element longer than already allocated.
-  vec.AssertSize(kLength + 1);
+  vec.AssertSize(array_length() + 1);
   // Expect vector to have grown.
-  EXPECT_EQ(kLength + 1u, vec.Size());
+  EXPECT_EQ(array_length() + 1, vec.Size());
   // Also check the individual AudioVectors.
   for (size_t channel = 0; channel < vec.Channels(); ++channel) {
-    EXPECT_EQ(kLength + 1u, vec[channel].Size());
+    EXPECT_EQ(array_length() + 1u, vec[channel].Size());
   }
 }
 
@@ -281,9 +283,10 @@ TEST_P(AudioMultiVectorTest, OverwriteAt) {
   // Overwrite vec2 at position 5.
   vec1.OverwriteAt(vec2, 3, 5);
   // Verify result.
-  ASSERT_EQ(kLength, vec1.Size());  // Length remains the same.
+  // Length remains the same.
+  ASSERT_EQ(array_length(), vec1.Size());
   T* ptr = array_interleaved_;
-  for (size_t i = 0; i < kLength - 1; ++i) {
+  for (size_t i = 0; i < array_length() - 1; ++i) {
     for (size_t channel = 0; channel < num_channels_; ++channel) {
       if (i >= 5 && i <= 7) {
         // Elements 5, 6, 7 should have been replaced with zeros.

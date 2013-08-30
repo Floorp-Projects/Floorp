@@ -11,12 +11,12 @@
 #ifndef WEBRTC_TOOLS_SIMPLE_COMMAND_LINE_PARSER_H_
 #define WEBRTC_TOOLS_SIMPLE_COMMAND_LINE_PARSER_H_
 
-#include <string>
 #include <map>
+#include <string>
 #include <vector>
 
-#include "system_wrappers/interface/constructor_magic.h"
-#include "test/testsupport/gtest_prod_util.h"
+#include "webrtc/system_wrappers/interface/constructor_magic.h"
+#include "webrtc/test/testsupport/gtest_prod_util.h"
 
 // This is a very basic command line parsing class. We pass the command line
 // arguments and their number and the class forms a vector out of these. Than we

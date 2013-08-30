@@ -1163,9 +1163,6 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
 #ifdef MOZ_WIDGET_GTK
   // Check the GConf registry for a protocol handler
   *aHandlerExists = nsGNOMERegistry::HandlerExists(aProtocolScheme);
-#if (MOZ_PLATFORM_MAEMO == 5) && defined (MOZ_ENABLE_GNOMEVFS)
-  *aHandlerExists = nsMIMEInfoUnix::HandlerExists(aProtocolScheme);
-#endif
 #endif
 
   return NS_OK;

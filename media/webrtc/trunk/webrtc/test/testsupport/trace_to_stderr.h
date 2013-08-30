@@ -21,9 +21,29 @@ namespace test {
 class TraceToStderr : public TraceCallback {
  public:
   TraceToStderr();
+  // Set |override_time| to true to control the time printed with each trace
+  // through SetTimeSeconds(). Otherwise, the trace's usual wallclock time is
+  // used.
+  //
+  // This is useful for offline test tools, where the file time is much more
+  // informative than the real time.
+  explicit TraceToStderr(bool override_time);
   virtual ~TraceToStderr();
 
+  // Every subsequent trace printout will use |time|. Has no effect if
+  // |override_time| in the constructor was set to false.
+  //
+  // No attempt is made to ensure thread-safety between the trace writing and
+  // time updating. In tests, since traces will normally be triggered by the
+  // main thread doing the time updating, this should be of no concern.
+  virtual void SetTimeSeconds(float time) { time_seconds_ = time; }
+
+  // Implements TraceCallback.
   virtual void Print(TraceLevel level, const char* msg_array, int length);
+
+ private:
+  bool override_time_;
+  float time_seconds_;
 };
 
 }  // namespace test

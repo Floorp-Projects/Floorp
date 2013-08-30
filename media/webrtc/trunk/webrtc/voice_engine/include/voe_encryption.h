@@ -24,7 +24,7 @@
 #ifndef WEBRTC_VOICE_ENGINE_VOE_ENCRYPTION_H
 #define WEBRTC_VOICE_ENGINE_VOE_ENCRYPTION_H
 
-#include "common_types.h"
+#include "webrtc/common_types.h"
 
 namespace webrtc {
 

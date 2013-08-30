@@ -85,40 +85,41 @@ public:
     VCMGenericEncoder(VideoEncoder& encoder, bool internalSource = false);
     ~VCMGenericEncoder();
     /**
-    *	Free encoder memory
+    * Free encoder memory
     */
     int32_t Release();
     /**
-    *	Initialize the encoder with the information from the VideoCodec
+    * Initialize the encoder with the information from the VideoCodec
     */
     int32_t InitEncode(const VideoCodec* settings,
-                             int32_t numberOfCores,
-                             uint32_t maxPayloadSize);
+                       int32_t numberOfCores,
+                       uint32_t maxPayloadSize);
     /**
-    *	Encode raw image
-    *	inputFrame        : Frame containing raw image
-    *	codecSpecificInfo : Specific codec data
-    *	cameraFrameRate	  :	request or information from the remote side
-    *	frameType         : The requested frame type to encode
+    * Encode raw image
+    * inputFrame        : Frame containing raw image
+    * codecSpecificInfo : Specific codec data
+    * cameraFrameRate   : Request or information from the remote side
+    * frameType         : The requested frame type to encode
     */
     int32_t Encode(const I420VideoFrame& inputFrame,
-                         const CodecSpecificInfo* codecSpecificInfo,
-                         const std::vector<FrameType>& frameTypes);
+                   const CodecSpecificInfo* codecSpecificInfo,
+                   const std::vector<FrameType>& frameTypes);
     /**
     * Set new target bitrate (bits/s) and framerate.
     * Return Value: new bit rate if OK, otherwise <0s.
     */
-    int32_t SetRates(uint32_t target_bitrate,
-                           uint32_t frameRate);
+    int32_t SetRates(uint32_t target_bitrate, uint32_t frameRate);
     /**
     * Set a new packet loss rate and a new round-trip time in milliseconds.
     */
     int32_t SetChannelParameters(int32_t packetLoss, int rtt);
     int32_t CodecConfigParameters(uint8_t* buffer, int32_t size);
     /**
-    * Register a transport callback which will be called to deliver the encoded buffers
+    * Register a transport callback which will be called to deliver the encoded
+    * buffers
     */
-    int32_t RegisterEncodeCallback(VCMEncodedFrameCallback* VCMencodedFrameCallback);
+    int32_t RegisterEncodeCallback(
+        VCMEncodedFrameCallback* VCMencodedFrameCallback);
     /**
     * Get encoder bit rate
     */
@@ -138,8 +139,8 @@ private:
     VideoEncoder&               _encoder;
     VideoCodecType              _codecType;
     VCMEncodedFrameCallback*    _VCMencodedFrameCallback;
-    uint32_t              _bitRate;
-    uint32_t              _frameRate;
+    uint32_t                    _bitRate;
+    uint32_t                    _frameRate;
     bool                        _internalSource;
 }; // end of VCMGenericEncoder class
 

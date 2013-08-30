@@ -232,10 +232,6 @@ class WEBRTC_DLLEXPORT ViERTP_RTCP {
                             bool sender,
                             bool receiver) = 0;
 
-  // Sets the bandwidth estimation mode. This can only be changed before
-  // adding a channel.
-  virtual int SetBandwidthEstimationMode(BandwidthEstimationMode mode) = 0;
-
   // Enables RTP timestamp extension offset described in RFC 5450. This call
   // must be done before ViECodec::SetSendCodec is called.
   virtual int SetSendTimestampOffsetStatus(int video_channel,
@@ -245,6 +241,18 @@ class WEBRTC_DLLEXPORT ViERTP_RTCP {
   virtual int SetReceiveTimestampOffsetStatus(int video_channel,
                                               bool enable,
                                               int id) = 0;
+
+  // Enables RTP absolute send time header extension. This call must be done
+  // before ViECodec::SetSendCodec is called.
+  virtual int SetSendAbsoluteSendTimeStatus(int video_channel,
+                                            bool enable,
+                                            int id) = 0;
+
+  // When enabled for a channel, *all* channels on the same transport will be
+  // expected to include the absolute send time header extension.
+  virtual int SetReceiveAbsoluteSendTimeStatus(int video_channel,
+                                               bool enable,
+                                               int id) = 0;
 
   // Enables transmission smoothening, i.e. packets belonging to the same frame
   // will be sent over a longer period of time instead of sending them
@@ -298,16 +306,6 @@ class WEBRTC_DLLEXPORT ViERTP_RTCP {
   virtual int GetEstimatedReceiveBandwidth(
       const int video_channel,
       unsigned int* estimated_bandwidth) const = 0;
-
-  // This function sets various options for the bandwidth estimator
-  // code.  The options are applied to new channels only.  For a given
-  // channel, the options that are active at the time when the channel
-  // is created are immutable for that channel.  See
-  // http://tools.ietf.org/html/draft-alvestrand-rtcweb-congestion-02
-  // (or later, updated documentation) and common_types.h to get a
-  // feel for what the options do.
-  virtual int SetOverUseDetectorOptions(
-      const OverUseDetectorOptions& options) const = 0;
 
   // This function enables capturing of RTP packets to a binary file on a
   // specific channel and for a given direction. The file can later be

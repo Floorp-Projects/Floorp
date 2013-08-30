@@ -15,11 +15,9 @@
 #include "module_common_types.h"
 #include "jitter_buffer_common.h"
 
-namespace webrtc
-{
+namespace webrtc {
 
-class VCMPacket
-{
+class VCMPacket {
 public:
     VCMPacket();
     VCMPacket(const uint8_t* ptr,
@@ -47,6 +45,8 @@ public:
     VCMNaluCompleteness completeNALU;   // Default is kNaluIncomplete.
     bool insertStartCode;               // True if a start code should be inserted before this
                                         // packet.
+    int width;
+    int height;
     RTPVideoHeader codecSpecificHeader;
 
 protected:

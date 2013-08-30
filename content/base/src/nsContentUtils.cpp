@@ -1746,6 +1746,7 @@ nsContentUtils::GetDocumentFromContext()
 bool
 nsContentUtils::IsCallerChrome()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   bool is_caller_chrome = false;
   nsresult rv = sSecurityManager->SubjectPrincipalIsSystem(&is_caller_chrome);
   if (NS_FAILED(rv)) {
@@ -1757,6 +1758,22 @@ nsContentUtils::IsCallerChrome()
 
   // If the check failed, look for UniversalXPConnect on the cx compartment.
   return xpc::IsUniversalXPConnectEnabled(GetCurrentJSContext());
+}
+
+namespace mozilla {
+namespace dom {
+namespace workers {
+extern bool IsCurrentThreadRunningChromeWorker();
+}
+}
+}
+
+bool
+nsContentUtils::ThreadsafeIsCallerChrome()
+{
+  return NS_IsMainThread() ?
+    IsCallerChrome() :
+    mozilla::dom::workers::IsCurrentThreadRunningChromeWorker();
 }
 
 bool

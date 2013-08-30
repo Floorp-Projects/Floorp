@@ -14,8 +14,8 @@
 #include <cstring>
 
 #include "webrtc/modules/audio_processing/aecm/include/echo_control_mobile.h"
-#include "webrtc/modules/audio_processing/audio_processing_impl.h"
 #include "webrtc/modules/audio_processing/audio_buffer.h"
+#include "webrtc/modules/audio_processing/audio_processing_impl.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/logging.h"
 

@@ -12,16 +12,17 @@
 #define WEBRTC_VIDEO_ENGINE_VIE_INPUT_MANAGER_H_
 
 #include "webrtc/modules/video_capture/include/video_capture.h"
-#include "system_wrappers/interface/map_wrapper.h"
-#include "system_wrappers/interface/scoped_ptr.h"
-#include "typedefs.h"  // NOLINT
-#include "video_engine/include/vie_capture.h"
-#include "video_engine/vie_defines.h"
-#include "video_engine/vie_frame_provider_base.h"
-#include "video_engine/vie_manager_base.h"
+#include "webrtc/system_wrappers/interface/map_wrapper.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/typedefs.h"
+#include "webrtc/video_engine/include/vie_capture.h"
+#include "webrtc/video_engine/vie_defines.h"
+#include "webrtc/video_engine/vie_frame_provider_base.h"
+#include "webrtc/video_engine/vie_manager_base.h"
 
 namespace webrtc {
 
+class Config;
 class CriticalSectionWrapper;
 class ProcessThread;
 class RWLockWrapper;
@@ -33,7 +34,7 @@ class VoiceEngine;
 class ViEInputManager : private ViEManagerBase {
   friend class ViEInputManagerScoped;
  public:
-  explicit ViEInputManager(int engine_id);
+  ViEInputManager(int engine_id, const Config& config);
   ~ViEInputManager();
 
   void SetModuleProcessThread(ProcessThread* module_process_thread);
@@ -109,6 +110,7 @@ class ViEInputManager : private ViEManagerBase {
   // Gets the ViEFilePlayer for this file_id.
   ViEFilePlayer* ViEFilePlayerPtr(int file_id) const;
 
+  const Config& config_;
   int engine_id_;
   scoped_ptr<CriticalSectionWrapper> map_cs_;
   scoped_ptr<CriticalSectionWrapper> device_info_cs_;

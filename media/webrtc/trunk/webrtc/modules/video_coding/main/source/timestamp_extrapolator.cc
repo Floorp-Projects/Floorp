@@ -26,7 +26,8 @@ _clock(clock),
 _startMs(0),
 _firstTimestamp(0),
 _wrapArounds(0),
-_prevTs90khz(0),
+_prevUnwrappedTimestamp(-1),
+_prevWrapTimestamp(-1),
 _lambda(1),
 _firstAfterReset(true),
 _packetCount(0),
@@ -38,7 +39,7 @@ _accDrift(6600), // in timestamp ticks, i.e. 15 ms
 _accMaxError(7000),
 _P11(1e10)
 {
-    Reset(_clock->TimeInMilliseconds());
+    Reset();
 }
 
 VCMTimestampExtrapolator::~VCMTimestampExtrapolator()
@@ -47,17 +48,10 @@ VCMTimestampExtrapolator::~VCMTimestampExtrapolator()
 }
 
 void
-VCMTimestampExtrapolator::Reset(const int64_t nowMs /* = -1 */)
+VCMTimestampExtrapolator::Reset()
 {
     WriteLockScoped wl(*_rwLock);
-    if (nowMs > -1)
-    {
-        _startMs = nowMs;
-    }
-    else
-    {
-        _startMs = _clock->TimeInMilliseconds();
-    }
+    _startMs = _clock->TimeInMilliseconds();
     _prevMs = _startMs;
     _firstTimestamp = 0;
     _w[0] = 90.0;
@@ -66,7 +60,8 @@ VCMTimestampExtrapolator::Reset(const int64_t nowMs /* = -1 */)
     _pp[1][1] = _P11;
     _pp[0][1] = _pp[1][0] = 0;
     _firstAfterReset = true;
-    _prevTs90khz = 0;
+    _prevUnwrappedTimestamp = -1;
+    _prevWrapTimestamp = -1;
     _wrapArounds = 0;
     _packetCount = 0;
     _detectorAccumulatorPos = 0;
@@ -94,12 +89,15 @@ VCMTimestampExtrapolator::Update(int64_t tMs, uint32_t ts90khz, bool trace)
     // Remove offset to prevent badly scaled matrices
     tMs -= _startMs;
 
-    int32_t prevWrapArounds = _wrapArounds;
     CheckForWrapArounds(ts90khz);
-    int32_t wrapAroundsSincePrev = _wrapArounds - prevWrapArounds;
 
-    if (wrapAroundsSincePrev == 0 && ts90khz < _prevTs90khz)
+    int64_t unwrapped_ts90khz = static_cast<int64_t>(ts90khz) +
+        _wrapArounds * ((static_cast<int64_t>(1) << 32) - 1);
+
+    if (_prevUnwrappedTimestamp >= 0 &&
+        unwrapped_ts90khz < _prevUnwrappedTimestamp)
     {
+        // Drop reordered frames.
         _rwLock->ReleaseLockExclusive();
         return;
     }
@@ -110,14 +108,13 @@ VCMTimestampExtrapolator::Update(int64_t tMs, uint32_t ts90khz, bool trace)
         // should be almost correct since tMs - _startMs
         // should about zero at this time.
         _w[1] = -_w[0] * tMs;
-        _firstTimestamp = ts90khz;
+        _firstTimestamp = unwrapped_ts90khz;
         _firstAfterReset = false;
     }
 
-    // Compensate for wraparounds by changing the line offset
-    _w[1] = _w[1] - wrapAroundsSincePrev * ((static_cast<int64_t>(1)<<32) - 1);
-
-    double residual = (static_cast<double>(ts90khz) - _firstTimestamp) - static_cast<double>(tMs) * _w[0] - _w[1];
+    double residual =
+        (static_cast<double>(unwrapped_ts90khz) - _firstTimestamp) -
+        static_cast<double>(tMs) * _w[0] - _w[1];
     if (DelayChangeDetection(residual, trace) &&
         _packetCount >= _startUpFilterDelayInPackets)
     {
@@ -145,6 +142,7 @@ VCMTimestampExtrapolator::Update(int64_t tMs, uint32_t ts90khz, bool trace)
     _pp[1][1] = 1 / _lambda * (_pp[1][1] - (K[1] * tMs * _pp[0][1] + K[1] * _pp[1][1]));
     _pp[0][0] = p00;
     _pp[0][1] = p01;
+    _prevUnwrappedTimestamp = unwrapped_ts90khz;
     if (_packetCount < _startUpFilterDelayInPackets)
     {
         _packetCount++;
@@ -156,38 +154,23 @@ VCMTimestampExtrapolator::Update(int64_t tMs, uint32_t ts90khz, bool trace)
     _rwLock->ReleaseLockExclusive();
 }
 
-uint32_t
-VCMTimestampExtrapolator::ExtrapolateTimestamp(int64_t tMs) const
-{
-    ReadLockScoped rl(*_rwLock);
-    uint32_t timestamp = 0;
-    if (_packetCount == 0)
-    {
-        timestamp = 0;
-    }
-    else if (_packetCount < _startUpFilterDelayInPackets)
-    {
-        timestamp = static_cast<uint32_t>(90.0 * (tMs - _prevMs) + _prevTs90khz + 0.5);
-    }
-    else
-    {
-        timestamp = static_cast<uint32_t>(_w[0] * (tMs - _startMs) + _w[1] + _firstTimestamp + 0.5);
-    }
-    return timestamp;
-}
-
 int64_t
-VCMTimestampExtrapolator::ExtrapolateLocalTime(uint32_t timestamp90khz) const
+VCMTimestampExtrapolator::ExtrapolateLocalTime(uint32_t timestamp90khz)
 {
     ReadLockScoped rl(*_rwLock);
     int64_t localTimeMs = 0;
+    CheckForWrapArounds(timestamp90khz);
+    double unwrapped_ts90khz = static_cast<double>(timestamp90khz) +
+        _wrapArounds * ((static_cast<int64_t>(1) << 32) - 1);
     if (_packetCount == 0)
     {
         localTimeMs = -1;
     }
     else if (_packetCount < _startUpFilterDelayInPackets)
     {
-        localTimeMs = _prevMs + static_cast<int64_t>(static_cast<double>(timestamp90khz - _prevTs90khz) / 90.0 + 0.5);
+        localTimeMs = _prevMs + static_cast<int64_t>(
+            static_cast<double>(unwrapped_ts90khz - _prevUnwrappedTimestamp) /
+            90.0 + 0.5);
     }
     else
     {
@@ -197,8 +180,11 @@ VCMTimestampExtrapolator::ExtrapolateLocalTime(uint32_t timestamp90khz) const
         }
         else
         {
-            double timestampDiff = static_cast<double>(timestamp90khz) - static_cast<double>(_firstTimestamp);
-            localTimeMs = static_cast<int64_t>(static_cast<double>(_startMs) + (timestampDiff - _w[1]) / _w[0] + 0.5);
+            double timestampDiff = unwrapped_ts90khz -
+                static_cast<double>(_firstTimestamp);
+            localTimeMs = static_cast<int64_t>(
+                static_cast<double>(_startMs) + (timestampDiff - _w[1]) /
+                _w[0] + 0.5);
         }
     }
     return localTimeMs;
@@ -209,17 +195,17 @@ VCMTimestampExtrapolator::ExtrapolateLocalTime(uint32_t timestamp90khz) const
 void
 VCMTimestampExtrapolator::CheckForWrapArounds(uint32_t ts90khz)
 {
-    if (_prevTs90khz == 0)
+    if (_prevWrapTimestamp == -1)
     {
-        _prevTs90khz = ts90khz;
+        _prevWrapTimestamp = ts90khz;
         return;
     }
-    if (ts90khz < _prevTs90khz)
+    if (ts90khz < _prevWrapTimestamp)
     {
         // This difference will probably be less than -2^31 if we have had a wrap around
         // (e.g. timestamp = 1, _previousTimestamp = 2^32 - 1). Since it is casted to a Word32,
         // it should be positive.
-        if (static_cast<int32_t>(ts90khz - _prevTs90khz) > 0)
+        if (static_cast<int32_t>(ts90khz - _prevWrapTimestamp) > 0)
         {
             // Forward wrap around
             _wrapArounds++;
@@ -227,12 +213,12 @@ VCMTimestampExtrapolator::CheckForWrapArounds(uint32_t ts90khz)
     }
     // This difference will probably be less than -2^31 if we have had a backward wrap around.
     // Since it is casted to a Word32, it should be positive.
-    else if (static_cast<int32_t>(_prevTs90khz - ts90khz) > 0)
+    else if (static_cast<int32_t>(_prevWrapTimestamp - ts90khz) > 0)
     {
         // Backward wrap around
         _wrapArounds--;
     }
-    _prevTs90khz = ts90khz;
+    _prevWrapTimestamp = ts90khz;
 }
 
 bool

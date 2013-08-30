@@ -9,9 +9,10 @@
 
 #include "nsIDOMNotifyAudioAvailableEvent.h"
 #include "nsDOMEvent.h"
-#include "nsPresContext.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/NotifyAudioAvailableEventBinding.h"
+
+class nsPresContext;
 
 class nsDOMNotifyAudioAvailableEvent : public nsDOMEvent,
                                        public nsIDOMNotifyAudioAvailableEvent

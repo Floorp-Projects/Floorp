@@ -11,6 +11,8 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_MAIN_SOURCE_AUDIO_CODING_MODULE_IMPL_H_
 #define WEBRTC_MODULES_AUDIO_CODING_MAIN_SOURCE_AUDIO_CODING_MODULE_IMPL_H_
 
+#include <vector>
+
 #include "webrtc/common_types.h"
 #include "webrtc/engine_configurations.h"
 #include "webrtc/modules/audio_coding/main/source/acm_codec_database.h"
@@ -24,11 +26,13 @@ class ACMDTMFDetection;
 class ACMGenericCodec;
 class CriticalSectionWrapper;
 class RWLockWrapper;
+class Clock;
+class Nack;
 
 class AudioCodingModuleImpl : public AudioCodingModule {
  public:
   // Constructor
-  explicit AudioCodingModuleImpl(const int32_t id);
+  AudioCodingModuleImpl(const int32_t id, Clock* clock);
 
   // Destructor
   ~AudioCodingModuleImpl();
@@ -167,8 +171,17 @@ class AudioCodingModuleImpl : public AudioCodingModule {
                           const uint8_t payload_type,
                           const uint32_t timestamp = 0);
 
-  // Minimum playout delay (used for lip-sync).
-  int32_t SetMinimumPlayoutDelay(const int32_t time_ms);
+  // NetEq minimum playout delay (used for lip-sync). The actual target delay
+  // is the max of |time_ms| and the required delay dictated by the channel.
+  int SetMinimumPlayoutDelay(int time_ms);
+
+  //
+  // The shortest latency, in milliseconds, required by jitter buffer. This
+  // is computed based on inter-arrival times and playout mode of NetEq. The
+  // actual delay is the maximum of least-required-delay and the minimum-delay
+  // specified by SetMinumumPlayoutDelay() API.
+  //
+  int LeastRequiredDelayMs() const ;
 
   // Configure Dtmf playout status i.e on/off playout the incoming outband Dtmf
   // tone.
@@ -234,6 +247,8 @@ class AudioCodingModuleImpl : public AudioCodingModule {
 
   int32_t UnregisterReceiveCodec(const int16_t payload_type);
 
+  std::vector<uint16_t> GetNackList(int round_trip_time_ms) const;
+
  protected:
   void UnregisterSendCodec();
 
@@ -290,6 +305,12 @@ class AudioCodingModuleImpl : public AudioCodingModule {
   //   0: if delay set successfully.
   int SetInitialPlayoutDelay(int delay_ms);
 
+  // Enable NACK and set the maximum size of the NACK list.
+  int EnableNack(size_t max_nack_list_size);
+
+  // Disable NACK.
+  void DisableNack();
+
  private:
   // Change required states after starting to receive the codec corresponding
   // to |index|.
@@ -323,6 +344,12 @@ class AudioCodingModuleImpl : public AudioCodingModule {
   // section.
   void UpdateBufferingSafe(const WebRtcRTPHeader& rtp_info,
                            int payload_len_bytes);
+
+  //
+  // Return the timestamp of current time, computed according to sampling rate
+  // of the codec identified by |codec_id|.
+  //
+  uint32_t NowTimestamp(int codec_id);
 
   AudioPacketizationCallback* packetization_callback_;
   int32_t id_;
@@ -418,6 +445,10 @@ class AudioCodingModuleImpl : public AudioCodingModule {
   uint32_t last_ssrc_;
   bool last_packet_was_sync_;
   int64_t last_receive_timestamp_;
+
+  Clock* clock_;
+  scoped_ptr<Nack> nack_;
+  bool nack_enabled_;
 };
 
 }  // namespace webrtc

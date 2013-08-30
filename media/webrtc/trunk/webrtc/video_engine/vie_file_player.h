@@ -14,12 +14,12 @@
 #include <list>
 #include <set>
 
-#include "common_types.h"  // NOLINT
-#include "common_video/interface/i420_video_frame.h"
-#include "modules/media_file/interface/media_file_defines.h"
-#include "system_wrappers/interface/file_wrapper.h"
-#include "typedefs.h"  // NOLINT
-#include "video_engine/vie_frame_provider_base.h"
+#include "webrtc/common_types.h"
+#include "webrtc/common_video/interface/i420_video_frame.h"
+#include "webrtc/modules/media_file/interface/media_file_defines.h"
+#include "webrtc/system_wrappers/interface/file_wrapper.h"
+#include "webrtc/typedefs.h"
+#include "webrtc/video_engine/vie_frame_provider_base.h"
 
 namespace webrtc {
 

@@ -121,11 +121,6 @@ public:
                                            const nsIntRect&, gfxContext** aCtx) MOZ_OVERRIDE;
     virtual nsresult EndUpdateBackground(NPP instance,
                                          gfxContext* aCtx, const nsIntRect&) MOZ_OVERRIDE;
-#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
-    virtual nsresult HandleGUIEvent(NPP instance,
-                                    const nsGUIEvent& anEvent, bool* handled);
-#endif
-
     virtual void GetLibraryPath(nsACString& aPath) { aPath.Assign(mFilePath); }
 
 private:

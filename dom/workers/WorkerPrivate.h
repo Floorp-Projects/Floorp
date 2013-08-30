@@ -968,6 +968,9 @@ private:
 WorkerPrivate*
 GetWorkerPrivateFromContext(JSContext* aCx);
 
+bool
+IsCurrentThreadRunningChromeWorker();
+
 enum WorkerStructuredDataType
 {
   DOMWORKER_SCTAG_FILE = SCTAG_DOM_MAX,

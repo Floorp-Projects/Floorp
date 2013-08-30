@@ -2933,6 +2933,16 @@ nsCycleCollector_forgetJSRuntime()
     }
 }
 
+mozilla::CycleCollectedJSRuntime*
+nsCycleCollector_currentJSRuntime()
+{
+    CollectorData* data = sCollectorData.get();
+    if (data) {
+        return data->mRuntime;
+    }
+    return nullptr;
+}
+
 void
 cyclecollector::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
 {

@@ -12,9 +12,9 @@
 @ This file contains some functions in NS, optimized for ARM Neon
 @ platforms. Reference C code is in file nsx_core.c. Bit-exact.
 
-#include "webrtc/system_wrappers/interface/asm_defines.h"
-#include "nsx_defines.h"
 #include "nsx_core_neon_offsets.h"
+#include "webrtc/modules/audio_processing/ns/nsx_defines.h"
+#include "webrtc/system_wrappers/interface/asm_defines.h"
 
 GLOBAL_FUNCTION WebRtcNsx_NoiseEstimationNeon
 GLOBAL_FUNCTION WebRtcNsx_PrepareSpectrumNeon

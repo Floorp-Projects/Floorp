@@ -396,7 +396,6 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
             break;
 
         case eIntID_WindowsDefaultTheme:
-        case eIntID_MaemoClassic:
         case eIntID_WindowsThemeIdentifier:
         case eIntID_OperatingSystemVersionIdentifier:
             aResult = 0;

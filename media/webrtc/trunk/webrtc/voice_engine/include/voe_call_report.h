@@ -34,7 +34,7 @@
 #ifndef WEBRTC_VOICE_ENGINE_VOE_CALL_REPORT_H
 #define WEBRTC_VOICE_ENGINE_VOE_CALL_REPORT_H
 
-#include "common_types.h"
+#include "webrtc/common_types.h"
 
 namespace webrtc {
 

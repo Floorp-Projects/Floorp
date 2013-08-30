@@ -3,7 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifdef MOZ_B2G
 #include "mozilla/Hal.h"
+#endif
 #include "mozilla/HalSensor.h"
 
 // Microsoft's API Name hackery sucks
@@ -13,46 +15,29 @@
 #include "nsGUIEvent.h"
 #include "nsDOMEvent.h"
 #include "nsEventListenerManager.h"
-#include "nsCaret.h"
 #include "nsIDOMEventListener.h"
-#include "nsITextControlFrame.h"
 #include "nsGkAtoms.h"
 #include "nsPIDOMWindow.h"
 #include "nsIJSEventListener.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsLayoutUtils.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/dom/Element.h"
-#include "nsIFrame.h"
-#include "nsView.h"
-#include "nsViewManager.h"
 #include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsError.h"
 #include "nsIDocument.h"
-#include "nsIPresShell.h"
 #include "nsMutationEvent.h"
 #include "nsIXPConnect.h"
 #include "nsDOMCID.h"
-#include "nsFocusManager.h"
-#include "nsIDOMElement.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsJSUtils.h"
-#include "nsContentCID.h"
 #include "nsEventDispatcher.h"
-#include "nsDOMJSUtils.h"
-#include "nsDataHashtable.h"
 #include "nsCOMArray.h"
 #include "nsEventListenerService.h"
 #include "nsIContentSecurityPolicy.h"
-#include "nsJSEnvironment.h"
 #include "xpcpublic.h"
 #include "nsSandboxFlags.h"
-#include "mozilla/dom/time/TimeChangeObserver.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

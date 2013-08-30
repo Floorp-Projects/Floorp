@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "framedrop_primitives.h"
+#include "webrtc/video_engine/test/auto_test/primitives/framedrop_primitives.h"
 
 #include <cstdio>
 #include <vector>
 
-#include "gtest/gtest.h"
-#include "testsupport/fileutils.h"
-#include "testsupport/frame_reader.h"
-#include "testsupport/frame_writer.h"
+#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/test/testsupport/frame_reader.h"
+#include "webrtc/test/testsupport/frame_writer.h"
 
 namespace webrtc {
 

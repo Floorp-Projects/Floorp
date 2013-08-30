@@ -10,8 +10,8 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtp_payload_registry.h"
 
-#include "gtest/gtest.h"
-#include "gmock/gmock.h"
+#include "testing/gmock/include/gmock/gmock.h"
+#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/rtp_rtcp/source/mock/mock_rtp_payload_strategy.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"

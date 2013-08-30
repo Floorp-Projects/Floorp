@@ -8,23 +8,23 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_engine/vie_render_impl.h"
+#include "webrtc/video_engine/vie_render_impl.h"
 
-#include "engine_configurations.h"  // NOLINT
+#include "webrtc/engine_configurations.h"
 #include "webrtc/modules/video_render/include/video_render.h"
 #include "webrtc/modules/video_render/include/video_render_defines.h"
-#include "system_wrappers/interface/trace.h"
-#include "video_engine/include/vie_errors.h"
-#include "video_engine/vie_capturer.h"
-#include "video_engine/vie_channel.h"
-#include "video_engine/vie_channel_manager.h"
-#include "video_engine/vie_defines.h"
-#include "video_engine/vie_frame_provider_base.h"
-#include "video_engine/vie_impl.h"
-#include "video_engine/vie_input_manager.h"
-#include "video_engine/vie_render_manager.h"
-#include "video_engine/vie_renderer.h"
-#include "video_engine/vie_shared_data.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/video_engine/include/vie_errors.h"
+#include "webrtc/video_engine/vie_capturer.h"
+#include "webrtc/video_engine/vie_channel.h"
+#include "webrtc/video_engine/vie_channel_manager.h"
+#include "webrtc/video_engine/vie_defines.h"
+#include "webrtc/video_engine/vie_frame_provider_base.h"
+#include "webrtc/video_engine/vie_impl.h"
+#include "webrtc/video_engine/vie_input_manager.h"
+#include "webrtc/video_engine/vie_render_manager.h"
+#include "webrtc/video_engine/vie_renderer.h"
+#include "webrtc/video_engine/vie_shared_data.h"
 
 namespace webrtc {
 
@@ -33,7 +33,7 @@ ViERender* ViERender::GetInterface(VideoEngine* video_engine) {
   if (!video_engine) {
     return NULL;
   }
-  VideoEngineImpl* vie_impl = reinterpret_cast<VideoEngineImpl*>(video_engine);
+  VideoEngineImpl* vie_impl = static_cast<VideoEngineImpl*>(video_engine);
   ViERenderImpl* vie_render_impl = vie_impl;
   // Increase ref count.
   (*vie_render_impl)++;
@@ -104,13 +104,6 @@ int ViERenderImpl::AddRenderer(const int render_id, void* window,
                "top: %f, right: %f, bottom: %f)",
                __FUNCTION__, render_id, window, z_order, left, top, right,
                bottom);
-  if (!shared_data_->Initialized()) {
-    shared_data_->SetLastError(kViENotInitialized);
-    WEBRTC_TRACE(kTraceError, kTraceVideo, ViEId(shared_data_->instance_id()),
-                 "%s - ViE instance %d not initialized", __FUNCTION__,
-                 shared_data_->instance_id());
-    return -1;
-  }
   {
     ViERenderManagerScoped rs(*(shared_data_->render_manager()));
     if (rs.Renderer(render_id)) {
@@ -163,14 +156,6 @@ int ViERenderImpl::AddRenderer(const int render_id, void* window,
 int ViERenderImpl::RemoveRenderer(const int render_id) {
   WEBRTC_TRACE(kTraceApiCall, kTraceVideo, ViEId(shared_data_->instance_id()),
                "%s(render_id: %d)", __FUNCTION__, render_id);
-  if (!shared_data_->Initialized()) {
-    shared_data_->SetLastError(kViENotInitialized);
-    WEBRTC_TRACE(kTraceError, kTraceVideo, ViEId(shared_data_->instance_id()),
-                 "%s - ViE instance %d not initialized", __FUNCTION__,
-                 shared_data_->instance_id());
-    return -1;
-  }
-
   ViERenderer* renderer = NULL;
   {
     ViERenderManagerScoped rs(*(shared_data_->render_manager()));
@@ -346,13 +331,6 @@ int ViERenderImpl::AddRenderer(const int render_id,
                  "%s: Unsupported video frame format requested",
                  __FUNCTION__, render_id);
     shared_data_->SetLastError(kViERenderInvalidFrameFormat);
-    return -1;
-  }
-  if (!shared_data_->Initialized()) {
-    shared_data_->SetLastError(kViENotInitialized);
-    WEBRTC_TRACE(kTraceError, kTraceVideo, ViEId(shared_data_->instance_id()),
-                 "%s - ViE instance %d not initialized", __FUNCTION__,
-                 shared_data_->instance_id());
     return -1;
   }
   {

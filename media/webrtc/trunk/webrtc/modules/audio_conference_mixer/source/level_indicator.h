@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_SOURCE_LEVEL_INDICATOR_H_
 #define WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_SOURCE_LEVEL_INDICATOR_H_
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 class LevelIndicator
