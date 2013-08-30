@@ -730,7 +730,14 @@ MMod::computeRange()
     int64_t b = Abs<int64_t>(rhs.upper());
     if (a == 0 && b == 0)
         return;
-    int64_t bound = Max(1-a, b-1);
+    int64_t bound = Max(a, b);
+
+    // If the value is known to be integer, less-than abs(rhs) is equivalent
+    // to less-than-or-equal abs(rhs)-1. This is important for being able to
+    // say that the result of x%256 is an 8-bit unsigned number.
+    if (!lhs.isDecimal() && !rhs.isDecimal())
+        --bound;
+
     setRange(new Range(-bound, bound, lhs.isDecimal() || rhs.isDecimal()));
 }
 
