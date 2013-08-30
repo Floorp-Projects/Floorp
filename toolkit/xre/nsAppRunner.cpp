@@ -240,6 +240,10 @@ static char **gQtOnlyArgv;
 #endif
 #include "BinaryPath.h"
 
+#ifdef MOZ_LINKER
+extern "C" MFBT_API bool IsSignalHandlingBroken();
+#endif
+
 namespace mozilla {
 int (*RunGTest)() = 0;
 }
@@ -2997,6 +3001,11 @@ XREMain::XRE_mainInit(bool* aExitFlag)
     nsDependentCString releaseChannel(NS_STRINGIFY(MOZ_UPDATE_CHANNEL));
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ReleaseChannel"),
                                        releaseChannel);
+#ifdef MOZ_LINKER
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("CrashAddressLikelyWrong"),
+                                       IsSignalHandlingBroken() ? NS_LITERAL_CSTRING("1")
+                                                                : NS_LITERAL_CSTRING("0"));
+#endif
     CrashReporter::SetRestartArgs(gArgc, gArgv);
 
     // annotate other data (user id etc)
