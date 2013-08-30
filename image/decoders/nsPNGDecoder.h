@@ -57,7 +57,7 @@ public:
         png_color_type;
 
     if (png_get_IHDR(mPNG, mInfo, &png_width, &png_height, &png_bit_depth,
-                     &png_color_type, NULL, NULL, NULL)) {
+                     &png_color_type, nullptr, nullptr, nullptr)) {
 
       return ((png_color_type == PNG_COLOR_TYPE_RGB_ALPHA ||
                png_color_type == PNG_COLOR_TYPE_RGB) &&

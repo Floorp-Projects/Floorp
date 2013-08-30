@@ -65,10 +65,11 @@ DOMError::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 }
 
 /* static */ already_AddRefed<DOMError>
-DOMError::Constructor(const GlobalObject& aGlobal, const nsAString& aName,
-                      const nsAString& aMessage, ErrorResult& aRv)
+DOMError::Constructor(const GlobalObject& aGlobal,
+                      const nsAString& aName, const nsAString& aMessage,
+                      ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
 
   // Window is null for chrome code.
 

@@ -17,12 +17,13 @@ namespace mozilla {
 namespace dom {
 
 void
-URL::CreateObjectURL(const GlobalObject& aGlobal, nsIDOMBlob* aBlob,
+URL::CreateObjectURL(const GlobalObject& aGlobal,
+                     nsIDOMBlob* aBlob,
                      const objectURLOptions& aOptions,
                      nsString& aResult,
                      ErrorResult& aError)
 {
-  CreateObjectURLInternal(aGlobal.Get(), aBlob,
+  CreateObjectURLInternal(aGlobal.GetAsSupports(), aBlob,
                           NS_LITERAL_CSTRING(BLOBURI_SCHEME), aOptions, aResult,
                           aError);
 }
@@ -33,7 +34,7 @@ URL::CreateObjectURL(const GlobalObject& aGlobal, DOMMediaStream& aStream,
                      nsString& aResult,
                      ErrorResult& aError)
 {
-  CreateObjectURLInternal(aGlobal.Get(), &aStream,
+  CreateObjectURLInternal(aGlobal.GetAsSupports(), &aStream,
                           NS_LITERAL_CSTRING(MEDIASTREAMURI_SCHEME), aOptions,
                           aResult, aError);
 }
@@ -44,7 +45,7 @@ URL::CreateObjectURL(const GlobalObject& aGlobal, MediaSource& aSource,
                      nsString& aResult,
                      ErrorResult& aError)
 {
-  CreateObjectURLInternal(aGlobal.Get(), &aSource,
+  CreateObjectURLInternal(aGlobal.GetAsSupports(), &aSource,
                           NS_LITERAL_CSTRING(MEDIASOURCEURI_SCHEME), aOptions,
                           aResult, aError);
 }
@@ -83,7 +84,7 @@ URL::CreateObjectURLInternal(nsISupports* aGlobal, nsISupports* aObject,
 void
 URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aURL)
 {
-  nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aGlobal.GetAsSupports());
   nsGlobalWindow* window = static_cast<nsGlobalWindow*>(w.get());
   NS_PRECONDITION(!window || window->IsInnerWindow(),
                   "Should be inner window");

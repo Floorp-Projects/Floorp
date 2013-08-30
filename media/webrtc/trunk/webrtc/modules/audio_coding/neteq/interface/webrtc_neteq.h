@@ -209,6 +209,9 @@ int WebRtcNetEQ_RecOut(void *inst, int16_t *pw16_outData, int16_t *pw16_len);
 int WebRtcNetEQ_GetRTCPStats(void *inst, WebRtcNetEQ_RTCPStat *RTCP_inst);
 int WebRtcNetEQ_GetRTCPStatsNoReset(void *inst, WebRtcNetEQ_RTCPStat *RTCP_inst);
 int WebRtcNetEQ_GetSpeechTimeStamp(void *inst, uint32_t *timestamp);
+int WebRtcNetEQ_DecodedRtpInfo(const void* inst,
+                               int* sequence_number,
+                               uint32_t* timestamp);
 int WebRtcNetEQ_GetSpeechOutputType(void *inst, enum WebRtcNetEQOutputType *outputType);
 
 /* VQmon related functions */

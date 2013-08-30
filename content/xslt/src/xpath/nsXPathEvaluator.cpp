@@ -221,7 +221,8 @@ nsXPathEvaluator::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 
 /* static */
 already_AddRefed<nsXPathEvaluator>
-nsXPathEvaluator::Constructor(const GlobalObject& aGlobal, ErrorResult& rv)
+nsXPathEvaluator::Constructor(const GlobalObject& aGlobal,
+                              ErrorResult& rv)
 {
     nsRefPtr<nsXPathEvaluator> newObj = new nsXPathEvaluator(nullptr);
     newObj->Init();

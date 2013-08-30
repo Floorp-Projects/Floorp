@@ -18,7 +18,7 @@
 #include "vm/NumericConversions.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 using mozilla::Abs;
 using mozilla::CountLeadingZeroes32;
@@ -1075,7 +1075,13 @@ MMod::computeRange()
     int64_t b = Abs<int64_t>(rhs.upper());
     if (a == 0 && b == 0)
         return;
-    int64_t rhsAbsBound = Max(a-1, b-1);
+    int64_t rhsAbsBound = Max(a, b);
+
+    // If the value is known to be integer, less-than abs(rhs) is equivalent
+    // to less-than-or-equal abs(rhs)-1. This is important for being able to
+    // say that the result of x%256 is an 8-bit unsigned number.
+    if (!lhs.isDecimal() && !rhs.isDecimal())
+        --rhsAbsBound;
 
     // Next, the absolute value of the result will never be greater than the
     // absolute value of lhs.
@@ -1118,17 +1124,23 @@ MToInt32::computeRange()
 static Range *GetTypedArrayRange(int type)
 {
     switch (type) {
-      case TypedArrayObject::TYPE_UINT8_CLAMPED:
-      case TypedArrayObject::TYPE_UINT8:  return new Range(0, UINT8_MAX);
-      case TypedArrayObject::TYPE_UINT16: return new Range(0, UINT16_MAX);
-      case TypedArrayObject::TYPE_UINT32: return new Range(0, UINT32_MAX);
+      case ScalarTypeRepresentation::TYPE_UINT8_CLAMPED:
+      case ScalarTypeRepresentation::TYPE_UINT8:
+        return new Range(0, UINT8_MAX);
+      case ScalarTypeRepresentation::TYPE_UINT16:
+        return new Range(0, UINT16_MAX);
+      case ScalarTypeRepresentation::TYPE_UINT32:
+        return new Range(0, UINT32_MAX);
 
-      case TypedArrayObject::TYPE_INT8:   return new Range(INT8_MIN, INT8_MAX);
-      case TypedArrayObject::TYPE_INT16:  return new Range(INT16_MIN, INT16_MAX);
-      case TypedArrayObject::TYPE_INT32:  return new Range(INT32_MIN, INT32_MAX);
+      case ScalarTypeRepresentation::TYPE_INT8:
+        return new Range(INT8_MIN, INT8_MAX);
+      case ScalarTypeRepresentation::TYPE_INT16:
+        return new Range(INT16_MIN, INT16_MAX);
+      case ScalarTypeRepresentation::TYPE_INT32:
+        return new Range(INT32_MIN, INT32_MAX);
 
-      case TypedArrayObject::TYPE_FLOAT32:
-      case TypedArrayObject::TYPE_FLOAT64:
+      case ScalarTypeRepresentation::TYPE_FLOAT32:
+      case ScalarTypeRepresentation::TYPE_FLOAT64:
         break;
     }
 
@@ -1607,6 +1619,35 @@ RangeAnalysis::analyze()
 
         if (block->isLoopHeader())
             analyzeLoop(block);
+    }
+
+    return true;
+}
+
+bool
+RangeAnalysis::addRangeAssertions()
+{
+    if (!js_IonOptions.checkRangeAnalysis)
+        return true;
+
+    // Check the computed range for this instruction, if the option is set. Note
+    // that this code is quite invasive; it adds numerous additional
+    // instructions for each MInstruction with a computed range, and it uses
+    // registers, so it also affects register allocation.
+    for (ReversePostorderIterator iter(graph_.rpoBegin()); iter != graph_.rpoEnd(); iter++) {
+        MBasicBlock *block = *iter;
+
+        for (MInstructionIterator iter(block->begin()); iter != block->end(); iter++) {
+            MInstruction *ins = *iter;
+
+            Range *r = ins->range();
+            if (!r || ins->isAssertRange() || ins->isBeta())
+                continue;
+
+            MAssertRange *guard = MAssertRange::New(ins);
+            guard->setRange(new Range(*r));
+            block->insertAfter(ins, guard);
+        }
     }
 
     return true;

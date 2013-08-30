@@ -1,10 +1,10 @@
 "use strict";
 
-load('Util.js');
+load("Util.js");
 
 function run_test() {
   do_print("Testing Util.extend");
-  
+
   do_print("Check if function is defined");
   do_check_true(!!Util.extend);
 
@@ -14,7 +14,7 @@ function run_test() {
 
   let nullRes = Util.extend(null);
   do_check_true(nullRes && typeof nullRes == "object");
-  
+
   do_print("Simple extend");
   let simpleExtend = {a: 1, b: 2};
   let simpleExtendResult = Util.extend(simpleExtend, {b: 3, c: 4});

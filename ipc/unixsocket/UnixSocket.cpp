@@ -567,6 +567,7 @@ UnixSocketImpl::Connect()
       int current_opts = fcntl(mFd.get(), F_GETFL, 0);
       if (-1 == current_opts) {
         NS_WARNING("Cannot get socket opts!");
+        mFd.reset(-1);
         nsRefPtr<OnSocketEventTask> t =
           new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
         NS_DispatchToMainThread(t);
@@ -574,6 +575,7 @@ UnixSocketImpl::Connect()
       }
       if (-1 == fcntl(mFd.get(), F_SETFL, current_opts & ~O_NONBLOCK)) {
         NS_WARNING("Cannot set socket opts to blocking!");
+        mFd.reset(-1);
         nsRefPtr<OnSocketEventTask> t =
           new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
         NS_DispatchToMainThread(t);
@@ -842,6 +844,7 @@ UnixSocketImpl::OnFileCanWriteWithoutBlocking(int aFd)
 
     if (ret || error) {
       NS_WARNING("getsockopt failure on async socket connect!");
+      mFd.reset(-1);
       nsRefPtr<OnSocketEventTask> t =
         new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
       NS_DispatchToMainThread(t);
@@ -849,6 +852,7 @@ UnixSocketImpl::OnFileCanWriteWithoutBlocking(int aFd)
     }
 
     if (!SetSocketFlags()) {
+      mFd.reset(-1);
       nsRefPtr<OnSocketEventTask> t =
         new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
       NS_DispatchToMainThread(t);
@@ -857,6 +861,7 @@ UnixSocketImpl::OnFileCanWriteWithoutBlocking(int aFd)
 
     if (!mConnector->SetUp(mFd)) {
       NS_WARNING("Could not set up socket!");
+      mFd.reset(-1);
       nsRefPtr<OnSocketEventTask> t =
         new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
       NS_DispatchToMainThread(t);

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2009, Jay Loden, Giampaolo Rodola'. All rights reserved.
+# Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -12,7 +12,7 @@ Python.
 
 from __future__ import division
 
-__version__ = "0.7.1"
+__version__ = "1.0.1"
 version_info = tuple([int(num) for num in __version__.split('.')])
 
 __all__ = [
@@ -24,13 +24,16 @@ __all__ = [
     "STATUS_RUNNING", "STATUS_IDLE", "STATUS_SLEEPING", "STATUS_DISK_SLEEP",
     "STATUS_STOPPED", "STATUS_TRACING_STOP", "STATUS_ZOMBIE", "STATUS_DEAD",
     "STATUS_WAKING", "STATUS_LOCKED",
+    "CONN_ESTABLISHED", "CONN_SYN_SENT", "CONN_SYN_RECV", "CONN_FIN_WAIT1",
+    "CONN_FIN_WAIT2", "CONN_TIME_WAIT", "CONN_CLOSE", "CONN_CLOSE_WAIT",
+    "CONN_LAST_ACK", "CONN_LISTEN", "CONN_CLOSING", "CONN_NONE",
     # classes
     "Process", "Popen",
     # functions
     "pid_exists", "get_pid_list", "process_iter",                   # proc
     "virtual_memory", "swap_memory",                                # memory
     "cpu_times", "cpu_percent", "cpu_times_percent",                # cpu
-    "network_io_counters",                                          # network
+    "net_io_counters",                                              # network
     "disk_io_counters", "disk_partitions", "disk_usage",            # disk
     "get_users", "get_boot_time",                                   # others
     ]
@@ -59,7 +62,12 @@ from psutil._common import (deprecated as _deprecated,
 from psutil._common import (STATUS_RUNNING, STATUS_IDLE, STATUS_SLEEPING,
                             STATUS_DISK_SLEEP, STATUS_STOPPED,
                             STATUS_TRACING_STOP, STATUS_ZOMBIE, STATUS_DEAD,
-                            STATUS_WAKING, STATUS_LOCKED)
+                            STATUS_WAKING, STATUS_LOCKED,
+                            #
+                            CONN_ESTABLISHED, CONN_SYN_SENT, CONN_SYN_RECV,
+                            CONN_FIN_WAIT1, CONN_FIN_WAIT2, CONN_TIME_WAIT,
+                            CONN_CLOSE, CONN_CLOSE_WAIT, CONN_LAST_ACK,
+                            CONN_LISTEN, CONN_CLOSING, CONN_NONE)
 
 # import the appropriate module for our platform only
 if sys.platform.startswith("linux"):
@@ -80,13 +88,19 @@ elif sys.platform.startswith("win32"):
                                      HIGH_PRIORITY_CLASS,
                                      IDLE_PRIORITY_CLASS,
                                      NORMAL_PRIORITY_CLASS,
-                                     REALTIME_PRIORITY_CLASS)
+                                     REALTIME_PRIORITY_CLASS,
+                                     CONN_DELETE_TCB)
 
 elif sys.platform.startswith("darwin"):
     import psutil._psosx as _psplatform
 
 elif sys.platform.startswith("freebsd"):
     import psutil._psbsd as _psplatform
+
+elif sys.platform.startswith("sunos"):
+    import psutil._pssunos as _psplatform
+    from psutil._pssunos import (CONN_IDLE,
+                                 CONN_BOUND)
 
 else:
     raise NotImplementedError('platform %s is not supported' % sys.platform)
@@ -300,9 +314,11 @@ class Process(object):
             cmdline = self.cmdline
             if cmdline and hasattr(os, 'access') and hasattr(os, 'X_OK'):
                 exe = cmdline[0]  # the possible exe
-                rexe = os.path.realpath(exe)  # ...in case it's a symlink
-                if os.path.isabs(rexe) and os.path.isfile(rexe) \
-                and os.access(rexe, os.X_OK):
+                # Attempt to guess only in case of an absolute path.
+                # It is not safe otherwise as the process might have
+                # changed cwd.
+                if os.path.isabs(exe) and os.path.isfile(exe) \
+                and os.access(exe, os.X_OK):
                     return exe
             if isinstance(fallback, AccessDenied):
                 raise fallback
@@ -1222,7 +1238,7 @@ def disk_io_counters(perdisk=False):
 # --- network related functions
 # =====================================================================
 
-def network_io_counters(pernic=False):
+def net_io_counters(pernic=False):
     """Return network I/O statistics as a namedtuple including
     the following attributes:
 
@@ -1241,7 +1257,7 @@ def network_io_counters(pernic=False):
     with network interface names as the keys and the namedtuple
     described above as the values.
     """
-    rawdict = _psplatform.network_io_counters()
+    rawdict = _psplatform.net_io_counters()
     if not rawdict:
         raise RuntimeError("couldn't find any network interface")
     if pernic:
@@ -1317,6 +1333,10 @@ def used_virtmem():
 def avail_virtmem():
     return virtmem_usage().free
 
+@_deprecated("psutil.net_io_counters()")
+def network_io_counters(pernic=False):
+    return net_io_counters(pernic)
+
 def test():
     """List info of all currently running processes emulating ps aux
     output.
@@ -1326,9 +1346,10 @@ def test():
 
     today_day = datetime.date.today()
     templ = "%-10s %5s %4s %4s %7s %7s %-13s %5s %7s  %s"
-    attrs = ['pid', 'username', 'get_cpu_percent', 'get_memory_percent', 'name',
+    attrs = ['pid', 'get_cpu_percent', 'get_memory_percent', 'name',
              'get_cpu_times', 'create_time', 'get_memory_info']
     if os.name == 'posix':
+        attrs.append('uids')
         attrs.append('terminal')
     print_(templ % ("USER", "PID", "%CPU", "%MEM", "VSZ", "RSS", "TTY", "START",
                     "TIME", "COMMAND"))
@@ -1347,7 +1368,18 @@ def test():
             else:
                 ctime = ''
             cputime = time.strftime("%M:%S", time.localtime(sum(pinfo['cpu_times'])))
-            user = pinfo['username']
+            try:
+                user = p.username
+            except KeyError:
+                if os.name == 'posix':
+                    if pinfo['uids']:
+                        user = str(pinfo['uids'].real)
+                    else:
+                        user = ''
+                else:
+                    raise
+            except Error:
+                user = ''
             if os.name == 'nt' and '\\' in user:
                 user = user.split('\\')[1]
             vms = pinfo['memory_info'] and \

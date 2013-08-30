@@ -11,6 +11,7 @@
 #include <cstddef>
 
 #include <glib.h>
+#include <linux/joystick.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <sys/ioctl.h>
@@ -19,9 +20,6 @@
 #include "nscore.h"
 #include "mozilla/dom/GamepadService.h"
 #include "udev.h"
-
-// Include this later because it also does #define JS_VERSION
-#include <linux/joystick.h>
 
 namespace {
 
@@ -120,7 +118,9 @@ LinuxGamepadService::AddDevice(struct udev_device* dev)
     mUdev.udev_device_get_property_value(dev, "ID_MODEL_ID");
   if (!vendor_id || !model_id) {
     struct udev_device* parent =
-      mUdev.udev_device_get_parent_with_subsystem_devtype(dev, "input", NULL);
+      mUdev.udev_device_get_parent_with_subsystem_devtype(dev,
+                                                          "input",
+                                                          nullptr);
     if (parent) {
       vendor_id = mUdev.udev_device_get_sysattr_value(parent, "id/vendor");
       model_id = mUdev.udev_device_get_sysattr_value(parent, "id/product");

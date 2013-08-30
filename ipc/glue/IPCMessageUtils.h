@@ -22,7 +22,7 @@
 #include "nsMemory.h"
 #include "nsStringGlue.h"
 #include "nsTArray.h"
-#include "jsapi.h"
+#include "js/StructuredClone.h"
 #include "nsCSSProperty.h"
 
 #ifdef _MSC_VER
@@ -210,7 +210,7 @@ struct ParamTraits<nsACString>
     aMsg->WriteBool(isVoid);
 
     if (isVoid)
-      // represents a NULL pointer
+      // represents a nullptr pointer
       return;
 
     uint32_t length = aParam.Length();
@@ -260,7 +260,7 @@ struct ParamTraits<nsAString>
     aMsg->WriteBool(isVoid);
 
     if (isVoid)
-      // represents a NULL pointer
+      // represents a nullptr pointer
       return;
 
     uint32_t length = aParam.Length();
@@ -581,7 +581,7 @@ struct ParamTraits<mozilla::SerializedStructuredCloneBuffer>
         return false;
       }
     } else {
-      aResult->data = NULL;
+      aResult->data = nullptr;
     }
 
     return true;

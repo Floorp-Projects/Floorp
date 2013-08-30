@@ -13,7 +13,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-var gEnabled = false, gDebug = false; // these mirror signon.* prefs
+var gEnabled = false, gDebug = false, gAutofillForms = true; // these mirror signon.* prefs
+var gUseDOMFormHasPassword = false; // use DOMFormHasPassword event for autofill
 
 function log(...pieces) {
     function generateLogMessage(args) {
@@ -70,6 +71,8 @@ var observer = {
     onPrefChange : function() {
         gDebug = Services.prefs.getBoolPref("signon.debug");
         gEnabled = Services.prefs.getBoolPref("signon.rememberSignons");
+        gAutofillForms = Services.prefs.getBoolPref("signon.autofillForms");
+        gUseDOMFormHasPassword = Services.prefs.getBoolPref("signon.useDOMFormHasPassword");
     },
 };
 
@@ -92,6 +95,10 @@ var LoginManagerContent = {
     },
 
     onContentLoaded : function (event) {
+      // If we're using the new DOMFormHasPassword event, don't fill at pageload.
+      if (gUseDOMFormHasPassword)
+          return;
+
       if (!event.isTrusted)
           return;
 
@@ -105,6 +112,64 @@ var LoginManagerContent = {
           return;
 
       this._fillDocument(domDoc);
+    },
+
+
+    onFormPassword: function (event) {
+      // If we're not using the new DOMFormHasPassword event, only fill at pageload.
+      if (!gUseDOMFormHasPassword)
+          return;
+
+      if (!event.isTrusted)
+          return;
+
+      if (!gEnabled)
+          return;
+
+      let form = event.target;
+      let doc = form.ownerDocument;
+
+      log("onFormPassword for", doc.documentURI);
+
+      // If there are no logins for this site, bail out now.
+      let formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
+      if (!Services.logins.countLogins(formOrigin, "", null))
+          return;
+
+      // If we're currently displaying a master password prompt, defer
+      // processing this form until the user handles the prompt.
+      if (Services.logins.uiBusy) {
+        log("deferring onFormPassword for", doc.documentURI);
+        let self = this;
+        let observer = {
+            QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+
+            observe: function (subject, topic, data) {
+                log("Got deferred onFormPassword notification:", topic);
+                // Only run observer once.
+                Services.obs.removeObserver(this, "passwordmgr-crypto-login");
+                Services.obs.removeObserver(this, "passwordmgr-crypto-loginCanceled");
+                if (topic == "passwordmgr-crypto-loginCanceled")
+                    return;
+                self.onFormPassword(event);
+            },
+            handleEvent : function (event) {
+                // Not expected to be called
+            }
+        };
+        // Trickyness follows: We want an observer, but don't want it to
+        // cause leaks. So add the observer with a weak reference, and use
+        // a dummy event listener (a strong reference) to keep it alive
+        // until the form is destroyed.
+        Services.obs.addObserver(observer, "passwordmgr-crypto-login", true);
+        Services.obs.addObserver(observer, "passwordmgr-crypto-loginCanceled", true);
+        form.addEventListener("mozCleverClosureHack", observer);
+        return;
+      }
+
+      let autofillForm = gAutofillForms && !PrivateBrowsingUtils.isWindowPrivate(doc.defaultView);
+
+      this._fillForm(form, autofillForm, false, false, null);
     },
 
 
@@ -537,8 +602,7 @@ var LoginManagerContent = {
 
         log("fillDocument processing", forms.length, "forms on", doc.documentURI);
 
-        var autofillForm = !PrivateBrowsingUtils.isWindowPrivate(doc.defaultView) &&
-                           Services.prefs.getBoolPref("signon.autofillForms");
+        var autofillForm = gAutofillForms && !PrivateBrowsingUtils.isWindowPrivate(doc.defaultView);
         var previousActionOrigin = null;
         var foundLogins = null;
 

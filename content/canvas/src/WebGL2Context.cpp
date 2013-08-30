@@ -9,6 +9,7 @@
 #include "mozilla/Telemetry.h"
 
 using namespace mozilla;
+using namespace mozilla::gl;
 
 // -----------------------------------------------------------------------------
 // CONSTRUCTOR & DESTRUCTOR
@@ -51,3 +52,76 @@ WebGL2Context::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
     return dom::WebGL2RenderingContextBinding::Wrap(cx, scope, this);
 }
 
+
+// -----------------------------------------------------------------------------
+// WebGL 2 initialisation
+
+bool
+WebGLContext::InitWebGL2()
+{
+    MOZ_ASSERT(IsWebGL2(), "WebGLContext is not a WebGL 2 context!");
+
+    const WebGLExtensionID sExtensionNativelySupportedArr[] = {
+        ANGLE_instanced_arrays,
+        OES_element_index_uint,
+        OES_standard_derivatives,
+        OES_texture_float,
+        OES_texture_float_linear,
+        OES_vertex_array_object,
+        WEBGL_depth_texture,
+        WEBGL_draw_buffers
+    };
+    const GLFeature::Enum sFeatureRequiredArr[] = {
+        GLFeature::blend_minmax,
+        GLFeature::transform_feedback
+    };
+
+    // check WebGL extensions that are supposed to be natively supported
+    for (size_t i = 0; i < size_t(MOZ_ARRAY_LENGTH(sExtensionNativelySupportedArr)); i++)
+    {
+        WebGLExtensionID extension = sExtensionNativelySupportedArr[i];
+
+        if (!IsExtensionSupported(extension)) {
+            GenerateWarning("WebGL 2 requires %s!", GetExtensionString(extension));
+            return false;
+        }
+    }
+
+    // check required OpenGL extensions
+    if (!gl->IsExtensionSupported(GLContext::EXT_gpu_shader4)) {
+        GenerateWarning("WebGL 2 requires GL_EXT_gpu_shader4!");
+        return false;
+    }
+
+    // check OpenGL features
+    if (!gl->IsSupported(GLFeature::occlusion_query) &&
+        !gl->IsSupported(GLFeature::occlusion_query_boolean))
+    {
+        /*
+         * on desktop, we fake occlusion_query_boolean with occlusion_query if
+         * necessary. See WebGLContextAsyncQueries.cpp.
+         */
+        GenerateWarning("WebGL 2 requires occlusion queries!");
+        return false;
+    }
+
+    for (size_t i = 0; i < size_t(MOZ_ARRAY_LENGTH(sFeatureRequiredArr)); i++)
+    {
+        if (!gl->IsSupported(sFeatureRequiredArr[i])) {
+            GenerateWarning("WebGL 2 requires GLFeature::%s!", GLContext::GetFeatureName(sFeatureRequiredArr[i]));
+            return false;
+        }
+    }
+
+    // ok WebGL 2 is compatible, we can enable natively supported extensions.
+    for (size_t i = 0; i < size_t(MOZ_ARRAY_LENGTH(sExtensionNativelySupportedArr)); i++) {
+        EnableExtension(sExtensionNativelySupportedArr[i]);
+
+        MOZ_ASSERT(IsExtensionEnabled(sExtensionNativelySupportedArr[i]));
+    }
+
+    // we initialise WebGL 2 related stuff.
+    gl->GetUIntegerv(LOCAL_GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS, &mGLMaxTransformFeedbackSeparateAttribs);
+
+    return true;
+}

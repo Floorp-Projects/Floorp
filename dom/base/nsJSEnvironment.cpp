@@ -29,7 +29,6 @@
 #include "nsIPrompt.h"
 #include "nsIObserverService.h"
 #include "nsGUIEvent.h"
-#include "nsThreadUtils.h"
 #include "nsITimer.h"
 #include "nsIAtom.h"
 #include "nsContentUtils.h"
@@ -44,7 +43,7 @@
 
 #include "xpcpublic.h"
 
-#include "jsdbgapi.h"
+#include "js/OldDebugAPI.h"
 #include "jswrapper.h"
 #include "nsIArray.h"
 #include "nsIObjectInputStream.h"
@@ -329,23 +328,102 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
   return called;
 }
 
-class ScriptErrorEvent : public nsRunnable
+namespace mozilla {
+namespace dom {
+
+AsyncErrorReporter::AsyncErrorReporter(JSRuntime* aRuntime,
+                                       JSErrorReport* aErrorReport,
+                                       const char* aFallbackMessage,
+                                       nsIPrincipal* aGlobalPrincipal,
+                                       nsPIDOMWindow* aWindow)
+  : mSourceLine(static_cast<const PRUnichar*>(aErrorReport->uclinebuf))
+  , mLineNumber(aErrorReport->lineno)
+  , mColumn(aErrorReport->uctokenptr - aErrorReport->uclinebuf)
+  , mFlags(aErrorReport->flags)
+{
+  if (!aErrorReport->filename) {
+    mFileName.SetIsVoid(true);
+  } else {
+    mFileName.AssignWithConversion(aErrorReport->filename);
+  }
+
+  const PRUnichar* m = static_cast<const PRUnichar*>(aErrorReport->ucmessage);
+  if (m) {
+    const PRUnichar* n = static_cast<const PRUnichar*>
+      (js::GetErrorTypeName(aRuntime, aErrorReport->exnType));
+    if (n) {
+      mErrorMsg.Assign(n);
+      mErrorMsg.AppendLiteral(": ");
+    }
+    mErrorMsg.Append(m);
+  }
+
+  if (mErrorMsg.IsEmpty() && aFallbackMessage) {
+    mErrorMsg.AssignWithConversion(aFallbackMessage);
+  }
+
+  mCategory = nsContentUtils::IsSystemPrincipal(aGlobalPrincipal) ?
+    NS_LITERAL_CSTRING("chrome javascript") :
+    NS_LITERAL_CSTRING("content javascript");
+
+  mInnerWindowID = 0;
+  if (aWindow && aWindow->IsOuterWindow()) {
+    aWindow = aWindow->GetCurrentInnerWindow();
+  }
+  if (aWindow) {
+    mInnerWindowID = aWindow->WindowID();
+  }
+}
+
+void
+AsyncErrorReporter::ReportError()
+{
+  nsCOMPtr<nsIScriptError> errorObject =
+    do_CreateInstance("@mozilla.org/scripterror;1");
+  if (!errorObject) {
+    return;
+  }
+
+  nsresult rv = errorObject->InitWithWindowID(mErrorMsg, mFileName,
+                                              mSourceLine, mLineNumber,
+                                              mColumn, mFlags, mCategory,
+                                              mInnerWindowID);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  nsCOMPtr<nsIConsoleService> consoleService =
+    do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+  if (!consoleService) {
+    return;
+  }
+
+  consoleService->LogMessage(errorObject);
+  return;
+}
+
+} // namespace dom
+} // namespace mozilla
+
+class ScriptErrorEvent : public AsyncErrorReporter
 {
 public:
   ScriptErrorEvent(nsIScriptGlobalObject* aScriptGlobal,
+                   JSRuntime* aRuntime,
+                   JSErrorReport* aErrorReport,
+                   const char* aFallbackMessage,
                    nsIPrincipal* aScriptOriginPrincipal,
-                   uint32_t aLineNr, uint32_t aColumn, uint32_t aFlags,
-                   const nsAString& aErrorMsg,
-                   const nsAString& aFileName,
-                   const nsAString& aSourceLine,
-                   bool aDispatchEvent,
-                   uint64_t aInnerWindowID)
-    : mScriptGlobal(aScriptGlobal), mOriginPrincipal(aScriptOriginPrincipal),
-      mLineNr(aLineNr), mColumn(aColumn),
-    mFlags(aFlags), mErrorMsg(aErrorMsg), mFileName(aFileName),
-    mSourceLine(aSourceLine), mDispatchEvent(aDispatchEvent),
-    mInnerWindowID(aInnerWindowID)
-  {}
+                   nsIPrincipal* aGlobalPrincipal,
+                   nsPIDOMWindow* aWindow,
+                   bool aDispatchEvent)
+    // Pass an empty category, then compute ours
+    : AsyncErrorReporter(aRuntime, aErrorReport, aFallbackMessage,
+                         aGlobalPrincipal, aWindow)
+    , mScriptGlobal(aScriptGlobal)
+    , mOriginPrincipal(aScriptOriginPrincipal)
+    , mDispatchEvent(aDispatchEvent)
+  {
+  }
 
   NS_IMETHOD Run()
   {
@@ -383,7 +461,7 @@ public:
           NS_NAMED_LITERAL_STRING(xoriginMsg, "Script error.");
           if (sameOrigin) {
             errorevent.errorMsg = mErrorMsg.get();
-            errorevent.lineNr = mLineNr;
+            errorevent.lineNr = mLineNumber;
           } else {
             NS_WARNING("Not same origin error!");
             errorevent.errorMsg = xoriginMsg.get();
@@ -399,54 +477,16 @@ public:
     }
 
     if (status != nsEventStatus_eConsumeNoDefault) {
-      // Make an nsIScriptError and populate it with information from
-      // this error.
-      nsCOMPtr<nsIScriptError> errorObject =
-        do_CreateInstance("@mozilla.org/scripterror;1");
-
-      if (errorObject != nullptr) {
-        nsresult rv = NS_ERROR_NOT_AVAILABLE;
-
-        // Set category to chrome or content
-        nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal =
-          do_QueryInterface(mScriptGlobal);
-        NS_ASSERTION(scriptPrincipal, "Global objects must implement "
-                     "nsIScriptObjectPrincipal");
-        nsCOMPtr<nsIPrincipal> systemPrincipal;
-        sSecurityManager->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
-        const nsACString& category =
-          scriptPrincipal->GetPrincipal() == systemPrincipal
-          ? NS_LITERAL_CSTRING("chrome javascript")
-          : NS_LITERAL_CSTRING("content javascript");
-
-        rv = errorObject->InitWithWindowID(mErrorMsg, mFileName,
-                                           mSourceLine,
-                                           mLineNr, mColumn, mFlags,
-                                           category, mInnerWindowID);
-
-        if (NS_SUCCEEDED(rv)) {
-          nsCOMPtr<nsIConsoleService> consoleService =
-            do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
-          if (NS_SUCCEEDED(rv)) {
-            consoleService->LogMessage(errorObject);
-          }
-        }
-      }
+      AsyncErrorReporter::ReportError();
     }
+
     return NS_OK;
   }
 
-
+private:
   nsCOMPtr<nsIScriptGlobalObject> mScriptGlobal;
   nsCOMPtr<nsIPrincipal>          mOriginPrincipal;
-  uint32_t                        mLineNr;
-  uint32_t                        mColumn;
-  uint32_t                        mFlags;
-  nsString                        mErrorMsg;
-  nsString                        mFileName;
-  nsString                        mSourceLine;
   bool                            mDispatchEvent;
-  uint64_t                        mInnerWindowID;
 
   static bool sHandlingScriptError;
 };
@@ -499,53 +539,28 @@ NS_ScriptErrorReporter(JSContext *cx,
     nsIScriptGlobalObject *globalObject = context->GetGlobalObject();
 
     if (globalObject) {
-      nsAutoString fileName, msg;
-      if (!report->filename) {
-        fileName.SetIsVoid(true);
-      } else {
-        fileName.AssignWithConversion(report->filename);
-      }
 
-      const PRUnichar* m = static_cast<const PRUnichar*>(report->ucmessage);
-      if (m) {
-        const PRUnichar* n = static_cast<const PRUnichar*>
-            (js::GetErrorTypeName(cx, report->exnType));
-        if (n) {
-          msg.Assign(n);
-          msg.AppendLiteral(": ");
-        }
-        msg.Append(m);
-      }
-
-      if (msg.IsEmpty() && message) {
-        msg.AssignWithConversion(message);
-      }
-
-
-      /* We do not try to report Out Of Memory via a dom
-       * event because the dom event handler would encounter
-       * an OOM exception trying to process the event, and
-       * then we'd need to generate a new OOM event for that
-       * new OOM instance -- this isn't pretty.
-       */
-      nsAutoString sourceLine;
-      sourceLine.Assign(reinterpret_cast<const PRUnichar*>(report->uclinebuf));
       nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(globalObject);
-      uint64_t innerWindowID = 0;
-      if (win) {
-        nsCOMPtr<nsPIDOMWindow> innerWin = win->GetCurrentInnerWindow();
-        if (innerWin) {
-          innerWindowID = innerWin->WindowID();
-        }
-      }
+      nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal =
+        do_QueryInterface(globalObject);
+      NS_ASSERTION(scriptPrincipal, "Global objects must implement "
+                   "nsIScriptObjectPrincipal");
       nsContentUtils::AddScriptRunner(
         new ScriptErrorEvent(globalObject,
+                             JS_GetRuntime(cx),
+                             report,
+                             message,
                              nsJSPrincipals::get(report->originPrincipals),
-                             report->lineno,
-                             report->uctokenptr - report->uclinebuf,
-                             report->flags, msg, fileName, sourceLine,
-                             report->errorNumber != JSMSG_OUT_OF_MEMORY,
-                             innerWindowID));
+                             scriptPrincipal->GetPrincipal(),
+                             win,
+                             /* We do not try to report Out Of Memory via a dom
+                              * event because the dom event handler would
+                              * encounter an OOM exception trying to process the
+                              * event, and then we'd need to generate a new OOM
+                              * event for that new OOM instance -- this isn't
+                              * pretty.
+                              */
+                             report->errorNumber != JSMSG_OUT_OF_MEMORY));
     }
   }
 
@@ -798,11 +813,11 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   ::JS_SetParallelParsingEnabled(context->mContext, parallelParsing);
   ::JS_SetParallelIonCompilationEnabled(context->mContext, parallelIonCompilation);
 
-  ::JS_SetGlobalCompilerOption(context->mContext, JSCOMPILER_BASELINE_USECOUNT_TRIGGER,
-                               (useBaselineJITEager ? 0 : -1));
+  ::JS_SetGlobalJitCompilerOption(context->mContext, JSJITCOMPILER_BASELINE_USECOUNT_TRIGGER,
+                                  (useBaselineJITEager ? 0 : -1));
 
-  ::JS_SetGlobalCompilerOption(context->mContext, JSCOMPILER_ION_USECOUNT_TRIGGER,
-                               (useIonEager ? 0 : -1));
+  ::JS_SetGlobalJitCompilerOption(context->mContext, JSJITCOMPILER_ION_USECOUNT_TRIGGER,
+                                  (useIonEager ? 0 : -1));
 
   // Save the new defaults for the next page load (InitContext).
   context->mDefaultJSOptions = newDefaultJSOptions;
@@ -1836,8 +1851,10 @@ nsJSContext::InitClasses(JS::Handle<JSObject*> aGlobalObj)
   ::JS_DefineProfilingFunctions(cx, aGlobalObj);
 
 #ifdef NS_TRACE_MALLOC
-  // Attempt to initialize TraceMalloc functions
-  ::JS_DefineFunctions(cx, aGlobalObj, TraceMallocFunctions);
+  if (nsContentUtils::IsCallerChrome()) {
+    // Attempt to initialize TraceMalloc functions
+    ::JS_DefineFunctions(cx, aGlobalObj, TraceMallocFunctions);
+  }
 #endif
 
 #ifdef MOZ_DMD
@@ -2731,7 +2748,7 @@ NS_DOMWriteStructuredClone(JSContext* cx,
                            void *closure)
 {
   ImageData* imageData;
-  nsresult rv = UnwrapObject<ImageData>(cx, obj, imageData);
+  nsresult rv = UNWRAP_OBJECT(ImageData, cx, obj, imageData);
   if (NS_FAILED(rv)) {
     // Don't know what this is. Bail.
     xpc::Throw(cx, NS_ERROR_DOM_DATA_CLONE_ERR);

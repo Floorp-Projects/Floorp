@@ -747,24 +747,10 @@ function getCanStageUpdates() {
   return canStageUpdatesSession;
 }
 
-XPCOMUtils.defineLazyGetter(this, "gIsMetro", function aus_gIsMetro() {
-#ifdef XP_WIN
-#ifdef MOZ_METRO
-  try {
-    let metroUtils = Cc["@mozilla.org/windows-metroutils;1"].
-                    createInstance(Ci.nsIWinMetroUtils);
-    return metroUtils && metroUtils.immersive;
-  } catch (e) {}
-#endif
-#endif
-
-  return false;
-});
-
 XPCOMUtils.defineLazyGetter(this, "gMetroUpdatesEnabled", function aus_gMetroUpdatesEnabled() {
 #ifdef XP_WIN
 #ifdef MOZ_METRO
-  if (gIsMetro) {
+  if (Services.metro.immersive) {
     let metroUpdate = getPref("getBoolPref", PREF_APP_UPDATE_METRO_ENABLED, true);
     if (!metroUpdate) {
       LOG("gMetroUpdatesEnabled - unable to automatically check for metro " +
@@ -2543,6 +2529,24 @@ UpdateService.prototype = {
    *          The timer that fired
    */
   notify: function AUS_notify(timer) {
+    // The telemetry below is specific to background notification.
+    this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_ENABLED,
+                                    "UPDATER_UPDATES_ENABLED");
+    this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_METRO_ENABLED,
+                                    "UPDATER_UPDATES_METRO_ENABLED");
+    this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_AUTO,
+                                    "UPDATER_UPDATES_AUTOMATIC");
+    this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_STAGING_ENABLED,
+                                    "UPDATER_STAGE_ENABLED");
+
+#ifdef XP_WIN
+    this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_SERVICE_ENABLED,
+                                    "UPDATER_SERVICE_ENABLED");
+    this._sendIntPrefTelemetryPing(PREF_APP_UPDATE_SERVICE_ERRORS,
+                                   "UPDATER_SERVICE_ERRORS");
+    this._sendServiceInstalledTelemetryPing();
+#endif
+
     this._checkForBackgroundUpdates(true);
   },
 
@@ -2561,24 +2565,10 @@ UpdateService.prototype = {
    */
   _checkForBackgroundUpdates: function AUS__checkForBackgroundUpdates(isNotify) {
     this._isNotify = isNotify;
-    // This ensures that telemetry is gathered even if update is disabled.
+    // From this point on, the telemetry reported differentiates between a call
+    // to notify and a call to checkForBackgroundUpdates so they are reported
+    // separately.
     this._sendLastNotifyIntervalPing();
-    this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_ENABLED,
-                                    "UPDATER_UPDATES_ENABLED");
-    this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_METRO_ENABLED,
-                                    "UPDATER_UPDATES_METRO_ENABLED");
-    this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_AUTO,
-                                    "UPDATER_UPDATES_AUTOMATIC");
-    this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_STAGING_ENABLED,
-                                    "UPDATER_STAGE_ENABLED");
-
-#ifdef XP_WIN
-    this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_SERVICE_ENABLED,
-                                    "UPDATER_SERVICE_ENABLED");
-    this._sendIntPrefTelemetryPing(PREF_APP_UPDATE_SERVICE_ERRORS,
-                                   "UPDATER_SERVICE_ERRORS");
-    this._sendServiceInstalledTelemetryPing();
-#endif
 
     // If a download is in progress or the patch has been staged do nothing.
     if (this.isDownloading) {
@@ -2801,7 +2791,7 @@ UpdateService.prototype = {
       LOG("UpdateService:_selectAndInstallUpdate - prompting because the " +
           "update snippet specified showPrompt");
       this._showPrompt(update);
-      if (!gIsMetro) {
+      if (!Services.metro || !Services.metro.immersive) {
         this._backgroundUpdateCheckCodePing(PING_BGUC_SHOWPROMPT_SNIPPET);
         return;
       }
@@ -2811,7 +2801,7 @@ UpdateService.prototype = {
       LOG("UpdateService:_selectAndInstallUpdate - prompting because silent " +
           "install is disabled");
       this._showPrompt(update);
-      if (!gIsMetro) {
+      if (!Services.metro || !Services.metro.immersive) {
         this._backgroundUpdateCheckCodePing(PING_BGUC_SHOWPROMPT_PREF);
         return;
       }

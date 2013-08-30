@@ -714,3 +714,18 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
 *:-moz-full-screen-ancestor #social-sidebar-box:not(:-moz-full-screen-ancestor) {
   display: none;
 }
+
+/* Combobox dropdown renderer */
+#ContentSelectDropdown {
+  max-height: 400px;
+}
+
+.contentSelectDropdown-optgroup {
+  font-weight: bold;
+  /* color: menutext used to overwrite the disabled color */
+  color: menutext;
+}
+
+.contentSelectDropdown-ingroup {
+  -moz-margin-start: 2em;
+}

@@ -54,7 +54,7 @@ extern JSErrorReport *
 js_ErrorFromException(jsval exn);
 
 extern const JSErrorFormatString *
-js_GetLocalizedErrorMessage(JSContext* cx, void *userRef, const char *locale,
+js_GetLocalizedErrorMessage(js::ExclusiveContext *cx, void *userRef, const char *locale,
                             const unsigned errorNumber);
 
 /*

@@ -692,6 +692,20 @@ public:
   nsCOMPtr<mozilla::dom::EventTarget> target;
   nsCOMPtr<mozilla::dom::EventTarget> currentTarget;
   nsCOMPtr<mozilla::dom::EventTarget> originalTarget;
+
+  void AssignEventData(const nsEvent& aEvent, bool aCopyTargets)
+  {
+    // eventStructType, message should be initialized with the constructor.
+    refPoint = aEvent.refPoint;
+    // lastRefPoint doesn't need to be copied.
+    time = aEvent.time;
+    // mFlags should be copied manually if it's necessary.
+    userType = aEvent.userType;
+    // typeString should be copied manually if it's necessary.
+    target = aCopyTargets ? aEvent.target : nullptr;
+    currentTarget = aCopyTargets ? aEvent.currentTarget : nullptr;
+    originalTarget = aCopyTargets ? aEvent.originalTarget : nullptr;
+  }
 };
 
 /**
@@ -725,6 +739,17 @@ public:
 
   /// Event for NPAPI plugin
   void* pluginEvent;
+
+  void AssignGUIEventData(const nsGUIEvent& aEvent, bool aCopyTargets)
+  {
+    AssignEventData(aEvent, aCopyTargets);
+
+    // widget should be initialized with the constructor.
+
+    // pluginEvent shouldn't be copied because it may be referred after its
+    // instance is destroyed.
+    pluginEvent = nullptr;
+  }
 };
 
 /**
@@ -894,6 +919,13 @@ public:
   }
 
   mozilla::widget::Modifiers modifiers;
+
+  void AssignInputEventData(const nsInputEvent& aEvent, bool aCopyTargets)
+  {
+    AssignGUIEventData(aEvent, aCopyTargets);
+
+    modifiers = aEvent.modifiers;
+  }
 };
 
 /**
@@ -929,6 +961,18 @@ public:
 
   // Possible values at nsIDOMMouseEvent
   uint16_t              inputSource;
+
+  void AssignMouseEventBaseData(const nsMouseEvent_base& aEvent,
+                                bool aCopyTargets)
+  {
+    AssignInputEventData(aEvent, aCopyTargets);
+
+    relatedTarget = aCopyTargets ? aEvent.relatedTarget : nullptr;
+    button = aEvent.button;
+    buttons = aEvent.buttons;
+    pressure = aEvent.pressure;
+    inputSource = aEvent.inputSource;
+  }
 };
 
 class nsMouseEvent : public nsMouseEvent_base
@@ -1024,6 +1068,15 @@ public:
 
   /// The number of mouse clicks
   uint32_t     clickCount;
+
+  void AssignMouseEventData(const nsMouseEvent& aEvent, bool aCopyTargets)
+  {
+    AssignMouseEventBaseData(aEvent, aCopyTargets);
+
+    acceptActivation = aEvent.acceptActivation;
+    ignoreRootScrollFrame = aEvent.ignoreRootScrollFrame;
+    clickCount = aEvent.clickCount;
+  }
 };
 
 /**
@@ -1115,6 +1168,21 @@ public:
         return;
     }
 #undef NS_DEFINE_KEYNAME
+  }
+
+  void AssignKeyEventData(const nsKeyEvent& aEvent, bool aCopyTargets)
+  {
+    AssignInputEventData(aEvent, aCopyTargets);
+
+    keyCode = aEvent.keyCode;
+    charCode = aEvent.charCode;
+    location = aEvent.location;
+    alternativeCharCodes = aEvent.alternativeCharCodes;
+    isChar = aEvent.isChar;
+    mKeyNameIndex = aEvent.mKeyNameIndex;
+    // Don't copy mNativeKeyEvent because it may be referred after its instance
+    // is destroyed.
+    mNativeKeyEvent = nullptr;
   }
 };
 

@@ -47,6 +47,7 @@ typedef enum {
 } jstate;
 
 class RasterImage;
+class Orientation;
 
 class nsJPEGDecoder : public Decoder
 {
@@ -62,6 +63,7 @@ public:
   void NotifyDone();
 
 protected:
+  Orientation ReadOrientationFromEXIF();
   void OutputScanlines(bool* suspend);
 
 public:

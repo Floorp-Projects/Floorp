@@ -448,6 +448,14 @@ ImageBridgeChild::EndTransaction()
         ->SetDescriptorFromReply(ots.textureId(), ots.image());
       break;
     }
+    case EditReply::TReplyTextureRemoved: {
+      // We receive this reply when a Texture is removed and when it is not
+      // the responsibility of the compositor side to deallocate memory.
+      // This would be, for instance, the place to implement a mechanism to
+      // notify the B2G camera that the gralloc buffer is not used by the
+      // compositor anymore and that it can be recycled.
+      break;
+    }
     default:
       NS_RUNTIMEABORT("not reached");
     }

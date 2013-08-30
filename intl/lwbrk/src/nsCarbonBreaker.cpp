@@ -15,7 +15,10 @@ NS_GetComplexLineBreaks(const PRUnichar* aText, uint32_t aLength,
 
   memset(aBreakBefore, false, aLength * sizeof(uint8_t));
 
-  OSStatus status = UCCreateTextBreakLocator(NULL, 0, kUCTextBreakLineMask, &breakLocator);
+  OSStatus status = UCCreateTextBreakLocator(nullptr,
+                                             0,
+                                             kUCTextBreakLineMask,
+                                             &breakLocator);
 
   if (status != noErr)
     return;

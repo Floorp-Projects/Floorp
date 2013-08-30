@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "denoising.h"
-#include "trace.h"
+#include "webrtc/modules/video_processing/main/source/denoising.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 #include <cstring>
 

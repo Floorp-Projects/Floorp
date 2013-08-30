@@ -22,13 +22,13 @@ loader.lazyGetter(this, "osString", () => Cc["@mozilla.org/xre/app-info;1"].getS
 let events = require("sdk/system/events");
 
 // Panels
-loader.lazyGetter(this, "OptionsPanel", function() require("devtools/framework/toolbox-options").OptionsPanel);
-loader.lazyGetter(this, "InspectorPanel", function() require("devtools/inspector/inspector-panel").InspectorPanel);
-loader.lazyGetter(this, "WebConsolePanel", function() require("devtools/webconsole/panel").WebConsolePanel);
-loader.lazyImporter(this, "DebuggerPanel", "resource:///modules/devtools/DebuggerPanel.jsm");
+loader.lazyGetter(this, "OptionsPanel", () => require("devtools/framework/toolbox-options").OptionsPanel);
+loader.lazyGetter(this, "InspectorPanel", () => require("devtools/inspector/inspector-panel").InspectorPanel);
+loader.lazyGetter(this, "WebConsolePanel", () => require("devtools/webconsole/panel").WebConsolePanel);
+loader.lazyGetter(this, "DebuggerPanel", () => require("devtools/debugger/debugger-panel").DebuggerPanel);
 loader.lazyImporter(this, "StyleEditorPanel", "resource:///modules/devtools/StyleEditorPanel.jsm");
-loader.lazyGetter(this, "ProfilerPanel", function() require("devtools/profiler/panel"));
-loader.lazyImporter(this, "NetMonitorPanel", "resource:///modules/devtools/NetMonitorPanel.jsm");
+loader.lazyGetter(this, "ProfilerPanel", () => require("devtools/profiler/panel"));
+loader.lazyGetter(this, "NetMonitorPanel", () => require("devtools/netmonitor/netmonitor-panel").NetMonitorPanel);
 
 // Strings
 const toolboxProps = "chrome://browser/locale/devtools/toolbox.properties";
@@ -105,7 +105,7 @@ Tools.inspector = {
   },
 
   isTargetSupported: function(target) {
-    return !target.isRemote;
+    return true;
   },
 
   build: function(iframeWindow, toolbox) {

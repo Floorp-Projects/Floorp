@@ -207,6 +207,12 @@ interface CanvasRenderingContext2D {
   void asyncDrawXULElement(XULElement elem, double x, double y, double w,
                            double h, DOMString bgColor,
                            optional unsigned long flags = 0);
+  /**
+   * This causes a context that is currently using a hardware-accelerated
+   * backend to fallback to a software one. All state should be preserved.
+   */
+  [ChromeOnly]
+  void demote();
 };
 CanvasRenderingContext2D implements CanvasDrawingStyles;
 CanvasRenderingContext2D implements CanvasPathMethods;

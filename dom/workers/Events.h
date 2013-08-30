@@ -8,7 +8,7 @@
 
 #include "Workers.h"
 
-class JSAutoStructuredCloneBuffer;
+#include "js/StructuredClone.h"
 
 BEGIN_WORKERS_NAMESPACE
 

@@ -75,7 +75,7 @@ class RTPReceiver : public Bitrate {
       int8_t* payload_type) const;
 
   int32_t IncomingRTPPacket(
-      WebRtcRTPHeader* rtpheader,
+      RTPHeader* rtpheader,
       const uint8_t* incoming_rtp_packet,
       const uint16_t incoming_rtp_packet_length);
 
@@ -154,7 +154,7 @@ class RTPReceiver : public Bitrate {
   virtual bool RetransmitOfOldPacket(const uint16_t sequence_number,
                                      const uint32_t rtp_time_stamp) const;
 
-  void UpdateStatistics(const WebRtcRTPHeader* rtp_header,
+  void UpdateStatistics(const RTPHeader* rtp_header,
                         const uint16_t bytes,
                         const bool old_packet);
 
@@ -164,9 +164,9 @@ class RTPReceiver : public Bitrate {
 
   bool InOrderPacket(const uint16_t sequence_number) const;
 
-  void CheckSSRCChanged(const WebRtcRTPHeader* rtp_header);
+  void CheckSSRCChanged(const RTPHeader* rtp_header);
   void CheckCSRC(const WebRtcRTPHeader* rtp_header);
-  int32_t CheckPayloadChanged(const WebRtcRTPHeader* rtp_header,
+  int32_t CheckPayloadChanged(const RTPHeader* rtp_header,
                               const int8_t first_payload_byte,
                               bool& isRED,
                               ModuleRTPUtility::PayloadUnion* payload);
@@ -187,8 +187,6 @@ class RTPReceiver : public Bitrate {
   uint16_t          last_received_payload_length_;
 
   uint32_t          packet_timeout_ms_;
-
-  RtpHeaderExtensionMap   rtp_header_extension_map_;
 
   // SSRCs.
   uint32_t            ssrc_;

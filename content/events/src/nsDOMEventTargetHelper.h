@@ -13,10 +13,9 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsEventListenerManager.h"
 #include "nsIScriptContext.h"
+#include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/EventTarget.h"
-
-class nsDOMEvent;
 
 #define NS_DOMEVENTTARGETHELPER_IID \
 { 0xda0e6d40, 0xc17b, 0x4937, \

@@ -177,7 +177,7 @@ var Browser = {
 
     Task.spawn(function() {
       // Activation URIs come from protocol activations, secondary tiles, and file activations
-      let activationURI = yield this.getShortcutOrURI(MetroUtils.activationURI);
+      let activationURI = yield this.getShortcutOrURI(Services.metro.activationURI);
 
       let self = this;
       function loadStartupURI() {
@@ -230,41 +230,11 @@ var Browser = {
     }.bind(this));
   },
 
-  quit: function quit() {
-    // NOTE: onclose seems to be called only when using OS chrome to close a window,
-    // so we need to handle the Browser.closing check ourselves.
-    if (this.closing()) {
-      window.QueryInterface(Ci.nsIDOMChromeWindow).minimize();
-      window.close();
-    }
-  },
-
-  closing: function closing() {
-    // Figure out if there's at least one other browser window around.
-    let lastBrowser = true;
-    let e = Services.wm.getEnumerator("navigator:browser");
-    while (e.hasMoreElements() && lastBrowser) {
-      let win = e.getNext();
-      if (win != window)
-        lastBrowser = false;
-    }
-    if (!lastBrowser)
-      return true;
-
-    // Let everyone know we are closing the last browser window
-    let closingCancelled = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
-    Services.obs.notifyObservers(closingCancelled, "browser-lastwindow-close-requested", null);
-    if (closingCancelled.data)
-      return false;
-
-    Services.obs.notifyObservers(null, "browser-lastwindow-close-granted", null);
-    return true;
-  },
-
   shutdown: function shutdown() {
     APZCObserver.shutdown();
     BrowserUI.uninit();
     ContentAreaObserver.shutdown();
+    Appbar.shutdown();
 
     messageManager.removeMessageListener("MozScrolledAreaChanged", this);
     messageManager.removeMessageListener("Browser:ViewportMetadata", this);
@@ -763,10 +733,10 @@ var Browser = {
     var ios = Components.classes["@mozilla.org/network/io-service;1"].
               getService(Components.interfaces.nsIIOService);
     var uriSpec = ios.newFileURI(file).spec;
-    MetroUtils.pinTileAsync(this._currentPageTileID,
-                            Browser.selectedBrowser.contentTitle, // short name
-                            Browser.selectedBrowser.contentTitle, // display name
-                            "metrobrowser -url " + Browser.selectedBrowser.currentURI.spec,
+    Services.metro.pinTileAsync(this._currentPageTileID,
+                                Browser.selectedBrowser.contentTitle, // short name
+                                Browser.selectedBrowser.contentTitle, // display name
+                                "metrobrowser -url " + Browser.selectedBrowser.currentURI.spec,
                             uriSpec, uriSpec);
   },
 
@@ -785,17 +755,17 @@ var Browser = {
   },
 
   unpinSite: function browser_unpinSite() {
-    if (!MetroUtils.immersive)
+    if (!Services.metro.immersive)
       return;
 
-    MetroUtils.unpinTileAsync(this._currentPageTileID);
+    Services.metro.unpinTileAsync(this._currentPageTileID);
   },
 
   isSitePinned: function browser_isSitePinned() {
-    if (!MetroUtils.immersive)
+    if (!Services.metro.immersive)
       return false;
 
-    return MetroUtils.isTilePinned(this._currentPageTileID);
+    return Services.metro.isTilePinned(this._currentPageTileID);
   },
 
   starSite: function browser_starSite(callback) {
@@ -1588,12 +1558,18 @@ Tab.prototype = {
   },
 
   startLoading: function startLoading() {
-    if (this._loading) throw "Already Loading!";
+    if (this._loading) {
+      let stack = new Error().stack;
+      throw "Already Loading!\n" + stack;
+    }
     this._loading = true;
   },
 
   endLoading: function endLoading() {
-    if (!this._loading) throw "Not Loading!";
+    if (!this._loading) {
+      let stack = new Error().stack;
+      throw "Not Loading!\n" + stack;
+    }
     this._loading = false;
     this.updateFavicon();
   },

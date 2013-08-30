@@ -5,20 +5,25 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import copy
-import re, sys, os, os.path, logging, shutil, math, time, traceback
+import json
+import math
+import os
+import os.path
+import random
+import shutil
+import signal
+import socket
+import sys
+import time
+import traceback
 import xml.dom.minidom
 from collections import deque
 from distutils import dir_util
-from glob import glob
 from multiprocessing import cpu_count
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
 from tempfile import mkdtemp, gettempdir
 from threading import Timer, Thread, Event, RLock
-import random
-import signal
-import socket
-import time
 
 try:
     import psutil
@@ -39,6 +44,18 @@ HARNESS_TIMEOUT = 5 * 60
 
 # benchmarking on tbpl revealed that this works best for now
 NUM_THREADS = int(cpu_count() * 4)
+
+FAILURE_ACTIONS = set(['test_unexpected_fail',
+                       'test_unexpected_pass',
+                       'javascript_error'])
+ACTION_STRINGS = {
+    "test_unexpected_fail": "TEST-UNEXPECTED-FAIL",
+    "test_known_fail": "TEST-KNOWN-FAIL",
+    "test_unexpected_pass": "TEST-UNEXPECTED-PASS",
+    "javascript_error": "TEST-UNEXPECTED-FAIL",
+    "test_pass": "TEST-PASS",
+    "test_info": "TEST-INFO"
+}
 
 # --------------------------------------------------------------
 # TODO: this is a hack for mozbase without virtualenv, remove with bug 849900
@@ -69,14 +86,16 @@ def markGotSIGINT(signum, stackFrame):
     gotSIGINT = True
 
 class XPCShellTestThread(Thread):
-    def __init__(self, test_object, event, cleanup_dir_list, tests_root_dir=None,
-            app_dir_key=None, interactive=False, verbose=False, pStdout=None,
-            pStderr=None, keep_going=False, log=None, **kwargs):
+    def __init__(self, test_object, event, cleanup_dir_list, retry=True,
+            tests_root_dir=None, app_dir_key=None, interactive=False,
+            verbose=False, pStdout=None, pStderr=None, keep_going=False,
+            log=None, **kwargs):
         Thread.__init__(self)
         self.daemon = True
 
         self.test_object = test_object
         self.cleanup_dir_list = cleanup_dir_list
+        self.retry = retry
 
         self.appPath = kwargs.get('appPath')
         self.xrePath = kwargs.get('xrePath')
@@ -94,6 +113,7 @@ class XPCShellTestThread(Thread):
         self.logfiles = kwargs.get('logfiles')
         self.xpcshell = kwargs.get('xpcshell')
         self.xpcsRunArgs = kwargs.get('xpcsRunArgs')
+        self.failureManifest = kwargs.get('failureManifest')
 
         self.tests_root_dir = tests_root_dir
         self.app_dir_key = app_dir_key
@@ -110,6 +130,9 @@ class XPCShellTestThread(Thread):
         self.todoCount = 0
         self.failCount = 0
 
+        self.output_lines = []
+        self.has_failure_output = False
+
         # event from main thread to signal work done
         self.event = event
 
@@ -122,6 +145,9 @@ class XPCShellTestThread(Thread):
         else:
             self.exception = None
             self.traceback = None
+        if self.retry:
+            self.log.info("TEST-INFO | %s | Test failed or timed out, will retry."
+                          % self.test_object['name'])
         self.event.set()
 
     def kill(self, proc):
@@ -190,7 +216,8 @@ class XPCShellTestThread(Thread):
         self.log.info("TEST-INFO | %s | environment: %s" % (name, list(changedEnv)))
 
     def testTimeout(self, test_file, processPID):
-        self.log.error("TEST-UNEXPECTED-FAIL | %s | Test timed out" % test_file)
+        if not self.retry:
+            self.log.error("TEST-UNEXPECTED-FAIL | %s | Test timed out" % test_file)
         Automation().killAndGetStackNoScreenshot(processPID, self.appPath, self.debuggerInfo)
 
     def buildCmdTestFile(self, name):
@@ -329,15 +356,10 @@ class XPCShellTestThread(Thread):
         if self.pluginsDir:
             self.xpcsCmd.extend(['-p', self.pluginsDir])
 
-    def print_stdout(self, stdout):
-        """Print stdout line-by-line to avoid overflowing buffers."""
-        self.log.info(">>>>>>>")
-        if stdout:
-            for line in stdout.splitlines():
-                self.log.info(line)
-        self.log.info("<<<<<<<")
+    def cleanupDir(self, directory, name, xunit_result):
+        if not os.path.exists(directory):
+            return
 
-    def cleanupDir(self, directory, name, stdout, xunit_result):
         TRY_LIMIT = 25 # up to TRY_LIMIT attempts (one every second), because
                        # the Windows filesystem is slow to react to the changes
         try_count = 0
@@ -361,19 +383,108 @@ class XPCShellTestThread(Thread):
 
         # we couldn't clean up the directory, and it's not the plugins dir,
         # which means that something wrong has probably happened
+        if self.retry:
+            return
+
         with LOG_MUTEX:
             message = "TEST-UNEXPECTED-FAIL | %s | Failed to clean up directory: %s" % (name, sys.exc_info()[1])
             self.log.error(message)
-            self.print_stdout(stdout)
-            self.print_stdout(traceback.format_exc())
+            self.log_output(self.output_lines)
+            self.log_output(traceback.format_exc())
 
         self.failCount += 1
         xunit_result["passed"] = False
         xunit_result["failure"] = {
             "type": "TEST-UNEXPECTED-FAIL",
             "message": message,
-            "text": "%s\n%s" % (stdout, traceback.format_exc())
+            "text": "%s\n%s" % ("\n".join(self.output_lines), traceback.format_exc())
         }
+
+    def clean_temp_dirs(self, name, stdout):
+        # We don't want to delete the profile when running check-interactive
+        # or check-one.
+        if self.profileDir and not self.interactive and not self.singleFile:
+            self.cleanupDir(self.profileDir, name, self.xunit_result)
+
+        self.cleanupDir(self.tempDir, name, self.xunit_result)
+
+        if self.pluginsDir:
+            self.cleanupDir(self.pluginsDir, name, self.xunit_result)
+
+    def append_message_from_line(self, line):
+        """Given a line of raw output, convert to message and append to
+        output buffer."""
+        if isinstance(line, basestring):
+            # This function has received unstructured output.
+            if line:
+                self.output_lines.append(line)
+                if 'TEST-UNEXPECTED-' in line:
+                    self.has_failure_output = True
+            return
+
+        msg = ['%s: ' % line['process'] if 'process' in line else '']
+
+        # Each call to the logger in head.js either specified '_message'
+        # or both 'source_file' and 'diagnostic'. If either of these are
+        # missing, they ended up being undefined as a result of the way
+        # the test was run.
+        if '_message' in line:
+            msg.append(line['_message'])
+        else:
+            msg.append('%s | %s | %s' % (ACTION_STRINGS[line['action']],
+                                         line.get('source_file', 'undefined'),
+                                         line.get('diagnostic', 'undefined')))
+
+        msg.append('\n%s' % line['stack'] if 'stack' in line else '')
+        self.output_lines.append(''.join(msg))
+
+    def parse_output(self, output):
+        """Parses process output for structured messages and saves output as it is
+        read. Sets self.has_failure_output in case of evidence of a failure"""
+        seen_proc_start = False
+        seen_proc_end = False
+        self.output_lines = []
+        for line_string in output.splitlines():
+            try:
+                line_object = json.loads(line_string)
+                if not isinstance(line_object, dict):
+                    self.append_message_from_line(line_string)
+                    continue
+            except ValueError:
+                self.append_message_from_line(line_string)
+                continue
+
+            if 'action' not in line_object:
+                # In case a test outputs something that happens to be valid
+                # JSON object.
+                self.append_message_from_line(line_string)
+                continue
+
+            action = line_object['action']
+            self.append_message_from_line(line_object)
+
+            if action in FAILURE_ACTIONS:
+                self.has_failure_output = True
+
+            elif action == 'child_test_start':
+                seen_proc_start = True
+            elif action == 'child_test_end':
+                seen_proc_end = True
+
+        if seen_proc_start and not seen_proc_end:
+            self.has_failure_output = True
+
+    def log_output(self, output):
+        """Prints given output line-by-line to avoid overflowing buffers."""
+        self.log.info(">>>>>>>")
+        if output:
+            if isinstance(output, basestring):
+                output = output.splitlines()
+            for part in output:
+                # For multi-line output, such as a stack trace
+                for line in part.splitlines():
+                    self.log.info(line)
+        self.log.info("<<<<<<<")
 
     def run_test(self):
         """Run an individual xpcshell test."""
@@ -400,6 +511,7 @@ class XPCShellTestThread(Thread):
                 (name, self.test_object['disabled']))
 
             self.xunit_result['skipped'] = True
+            self.retry = False
 
             self.keep_going = True
             return
@@ -466,27 +578,22 @@ class XPCShellTestThread(Thread):
             if testTimer:
                 testTimer.cancel()
 
-            result = not ((self.getReturnCode(proc) != 0) or
-                          # if do_throw or do_check failed
-                          (stdout and re.search("^((parent|child): )?TEST-UNEXPECTED-",
-                                                stdout, re.MULTILINE)) or
-                          # if syntax error in xpcshell file
-                          (stdout and re.search(": SyntaxError:", stdout,
-                                                re.MULTILINE)) or
-                          # if e10s test started but never finished (child process crash)
-                          (stdout and re.search("^child: CHILD-TEST-STARTED",
-                                                stdout, re.MULTILINE)
-                                  and not re.search("^child: CHILD-TEST-COMPLETED",
-                                                    stdout, re.MULTILINE)))
+            self.parse_output(stdout)
+            result = not (self.has_failure_output or
+                          (self.getReturnCode(proc) != 0))
 
             if result != expected:
+                if self.retry:
+                    self.clean_temp_dirs(name, stdout)
+                    return
+
                 failureType = "TEST-UNEXPECTED-%s" % ("FAIL" if expected else "PASS")
                 message = "%s | %s | test failed (with xpcshell return code: %d), see following log:" % (
                               failureType, name, self.getReturnCode(proc))
 
                 with LOG_MUTEX:
                     self.log.error(message)
-                    self.print_stdout(stdout)
+                    self.log_output(self.output_lines)
 
                 self.failCount += 1
                 self.xunit_result["passed"] = False
@@ -496,6 +603,13 @@ class XPCShellTestThread(Thread):
                   "message": message,
                   "text": stdout
                 }
+
+                if self.failureManifest:
+                    with open(self.failureManifest, 'a') as f:
+                        f.write('[%s]\n' % self.test_object['path'])
+                        for k, v in self.test_object.items():
+                            f.write('%s = %s\n' % (k, v))
+
             else:
                 now = time.time()
                 timeTaken = (now - startTime) * 1000
@@ -504,9 +618,10 @@ class XPCShellTestThread(Thread):
                 with LOG_MUTEX:
                     self.log.info("TEST-%s | %s | test passed (time: %.3fms)" % ("PASS" if expected else "KNOWN-FAIL", name, timeTaken))
                     if self.verbose:
-                        self.print_stdout(stdout)
+                        self.log_output(self.output_lines)
 
                 self.xunit_result["passed"] = True
+                self.retry = False
 
                 if expected:
                     self.passCount = 1
@@ -515,6 +630,10 @@ class XPCShellTestThread(Thread):
                     self.xunit_result["todo"] = True
 
             if mozcrash.check_for_crashes(self.tempDir, self.symbolsPath, test_name=name):
+                if self.retry:
+                    self.clean_temp_dirs(name, stdout)
+                    return
+
                 message = "PROCESS-CRASH | %s | application crashed" % name
                 self.failCount = 1
                 self.xunit_result["passed"] = False
@@ -531,10 +650,16 @@ class XPCShellTestThread(Thread):
             # We can sometimes get here before the process has terminated, which would
             # cause removeDir() to fail - so check for the process & kill it it needed.
             if proc and self.poll(proc) is None:
+                self.kill(proc)
+
+                if self.retry:
+                    self.clean_temp_dirs(name, stdout)
+                    return
+
                 with LOG_MUTEX:
                     message = "TEST-UNEXPECTED-FAIL | %s | Process still running after test!" % name
                     self.log.error(message)
-                    self.print_stdout(stdout)
+                    self.log_output(self.output_lines)
 
                 self.failCount = 1
                 self.xunit_result["passed"] = False
@@ -543,18 +668,8 @@ class XPCShellTestThread(Thread):
                   "message": message,
                   "text": stdout
                 }
-                self.kill(proc)
 
-
-            # We don't want to delete the profile when running check-interactive
-            # or check-one.
-            if self.profileDir and not self.interactive and not self.singleFile:
-                self.cleanupDir(self.profileDir, name, stdout, self.xunit_result)
-
-            self.cleanupDir(self.tempDir, name, stdout, self.xunit_result)
-
-            if self.pluginsDir:
-                self.cleanupDir(self.pluginsDir, name, stdout, self.xunit_result)
+            self.clean_temp_dirs(name, stdout)
 
         if gotSIGINT:
             self.xunit_result["passed"] = False
@@ -984,7 +1099,8 @@ class XPCShellTests(object):
                  profileName=None, mozInfo=None, sequential=False, shuffle=False,
                  testsRootDir=None, xunitFilename=None, xunitName=None,
                  testingModulesDir=None, autolog=False, pluginsPath=None,
-                 testClass=XPCShellTestThread, **otherOptions):
+                 testClass=XPCShellTestThread, failureManifest=None,
+                 **otherOptions):
         """Run xpcshell tests.
 
         |xpcshell|, is the xpcshell executable to use to run the tests.
@@ -1130,6 +1246,7 @@ class XPCShellTests(object):
 
         self.xunitResults = []
         self.cleanup_dir_list = []
+        self.try_again_list = []
 
         kwargs = {
             'appPath': self.appPath,
@@ -1148,6 +1265,7 @@ class XPCShellTests(object):
             'logfiles': self.logfiles,
             'xpcshell': self.xpcshell,
             'xpcsRunArgs': self.xpcsRunArgs,
+            'failureManifest': failureManifest
         }
 
         if self.sequential:
@@ -1223,6 +1341,11 @@ class XPCShellTests(object):
                 if not test.is_alive():
                     done_tests.add(test)
                     test.join()
+                    # if the test had trouble, we will try running it again
+                    # at the end of the run
+                    if test.retry:
+                        self.try_again_list.append(test.test_object)
+                        continue
                     # did the test encounter any exception?
                     if test.exception:
                         exceptions.append(test.exception)
@@ -1243,13 +1366,37 @@ class XPCShellTests(object):
                     self.log.error("TEST-UNEXPECTED-FAIL | Received SIGINT (control-C), so stopped run. " \
                                    "(Use --keep-going to keep running tests after killing one with SIGINT)")
                     break
+                # we don't want to retry these tests
+                test.retry = False
                 test.start()
                 test.join()
+                self.addTestResults(test)
                 # did the test encounter any exception?
                 if test.exception:
-                    raise test.exception
+                    exceptions.append(test.exception)
+                    tracebacks.append(test.traceback)
+                    break
                 keep_going = test.keep_going
-                self.addTestResults(test)
+
+        # retry tests that failed when run in parallel
+        if self.try_again_list:
+            self.log.info("Retrying tests that failed when run in parallel.")
+        for test_object in self.try_again_list:
+            test = testClass(test_object, self.event, self.cleanup_dir_list,
+                    retry=False, tests_root_dir=testsRootDir,
+                    app_dir_key=appDirKey, interactive=interactive,
+                    verbose=verbose, pStdout=pStdout, pStderr=pStderr,
+                    keep_going=keepGoing, log=self.log, mobileArgs=mobileArgs,
+                    **kwargs)
+            test.start()
+            test.join()
+            self.addTestResults(test)
+            # did the test encounter any exception?
+            if test.exception:
+                exceptions.append(test.exception)
+                tracebacks.append(test.traceback)
+                break
+            keep_going = test.keep_going
 
         # restore default SIGINT behaviour
         signal.signal(signal.SIGINT, signal.SIG_DFL)
@@ -1279,6 +1426,7 @@ class XPCShellTests(object):
         self.log.info("INFO | Passed: %d" % self.passCount)
         self.log.info("INFO | Failed: %d" % self.failCount)
         self.log.info("INFO | Todo: %d" % self.todoCount)
+        self.log.info("INFO | Retried: %d" % len(self.try_again_list))
 
         if autolog:
             self.post_to_autolog(self.xunitResults, xunitName)
@@ -1362,6 +1510,9 @@ class XPCShellOptions(OptionParser):
                         help="name to record for this xUnit test suite. Many "
                              "tools expect Java class notation, e.g. "
                              "dom.basic.foo")
+        self.add_option("--failure-manifest", dest="failureManifest",
+                        action="store",
+                        help="path to file where failure manifest will be written.")
 
 def main():
     parser = XPCShellOptions()
@@ -1379,10 +1530,6 @@ def main():
     if options.interactive and not options.testPath:
         print >>sys.stderr, "Error: You must specify a test filename in interactive mode!"
         sys.exit(1)
-
-    # running sequentially for safety reasons for now (in automation)
-    # mach will run tests in parallel by default
-    options.sequential = True
 
     if not xpcsh.runTests(args[0], testdirs=args[1:], **options.__dict__):
         sys.exit(1)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2009, Jay Loden, Giampaolo Rodola'. All rights reserved.
+# Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -11,8 +11,6 @@ import unittest
 import platform
 import signal
 import time
-import warnings
-import atexit
 import sys
 import subprocess
 import errno
@@ -21,21 +19,21 @@ import traceback
 import psutil
 import _psutil_mswindows
 from psutil._compat import PY3, callable, long
-from test_psutil import reap_children, get_test_subprocess, wait_for_pid, warn
+from test_psutil import *
+
 try:
     import wmi
 except ImportError:
     err = sys.exc_info()[1]
-    atexit.register(warn, "Couldn't run wmi tests: %s" % str(err))
+    register_warning("Couldn't run wmi tests: %s" % str(err))
     wmi = None
 try:
     import win32api
     import win32con
 except ImportError:
     err = sys.exc_info()[1]
-    atexit.register(warn, "Couldn't run pywin32 tests: %s" % str(err))
+    register_warning("Couldn't run pywin32 tests: %s" % str(err))
     win32api = None
-
 
 
 class WindowsSpecificTestCase(unittest.TestCase):
@@ -78,7 +76,7 @@ class WindowsSpecificTestCase(unittest.TestCase):
         out = p.communicate()[0]
         if PY3:
             out = str(out, sys.stdout.encoding)
-        nics = psutil.network_io_counters(pernic=True).keys()
+        nics = psutil.net_io_counters(pernic=True).keys()
         for nic in nics:
             if "pseudo-interface" in nic.replace(' ', '-').lower():
                 continue
@@ -149,6 +147,8 @@ class WindowsSpecificTestCase(unittest.TestCase):
 
         # --- psutil namespace functions and constants tests
 
+        @unittest.skipUnless(hasattr(os, 'NUMBER_OF_PROCESSORS'),
+                             'NUMBER_OF_PROCESSORS env var is not available')
         def test_NUM_CPUS(self):
             num_cpus = int(os.environ['NUMBER_OF_PROCESSORS'])
             self.assertEqual(num_cpus, psutil.NUM_CPUS)
@@ -294,9 +294,9 @@ class TestDualProcessImplementation(unittest.TestCase):
         def assert_ge_0(obj):
             if isinstance(obj, tuple):
                 for value in obj:
-                    assert value >= 0, value
+                    self.assertGreaterEqual(value, 0)
             elif isinstance(obj, (int, long, float)):
-                assert obj >= 0, obj
+                self.assertGreaterEqual(obj, 0)
             else:
                 assert 0  # case not handled which needs to be fixed
 
@@ -306,17 +306,19 @@ class TestDualProcessImplementation(unittest.TestCase):
             else:
                 if isinstance(ret2, (int, long, float)):
                     diff = abs(ret1 - ret2)
-                    assert diff <= tolerance, diff
+                    self.assertLessEqual(diff, tolerance)
                 elif isinstance(ret2, tuple):
                     for a, b in zip(ret1, ret2):
                         diff = abs(a - b)
-                        assert diff <= tolerance, diff
+                        self.assertLessEqual(diff, tolerance)
 
         failures = []
         for name, tolerance in self.fun_names:
             meth1 = wrap_exceptions(getattr(_psutil_mswindows, name))
             meth2 = wrap_exceptions(getattr(_psutil_mswindows, name + '_2'))
             for p in psutil.process_iter():
+                if name == 'get_process_memory_info' and p.pid == os.getpid():
+                    continue
                 #
                 try:
                     ret1 = meth1(p.pid)
@@ -359,8 +361,13 @@ class TestDualProcessImplementation(unittest.TestCase):
             self.assertRaises(psutil.NoSuchProcess, meth, ZOMBIE_PID)
 
 
-if __name__ == '__main__':
+def test_main():
     test_suite = unittest.TestSuite()
     test_suite.addTest(unittest.makeSuite(WindowsSpecificTestCase))
     test_suite.addTest(unittest.makeSuite(TestDualProcessImplementation))
-    unittest.TextTestRunner(verbosity=2).run(test_suite)
+    result = unittest.TextTestRunner(verbosity=2).run(test_suite)
+    return result.wasSuccessful()
+
+if __name__ == '__main__':
+    if not test_main():
+        sys.exit(1)

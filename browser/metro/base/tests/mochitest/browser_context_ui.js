@@ -9,10 +9,20 @@ function test() {
   runTests();
 }
 
+function doEdgeUIGesture() {
+  let event = document.createEvent("Events");
+  event.initEvent("MozEdgeUICompleted", true, false);
+  window.dispatchEvent(event);
+}
+
+function getpage(idx) {
+  return "http://mochi.test:8888/metro/browser/metro/base/tests/mochitest/" + "res/blankpage" + idx + ".html";
+}
+
 gTests.push({
   desc: "Context UI on about:start",
   run: function testAboutStart() {
-    yield addTab("about:start");
+    let tab = yield addTab("about:start");
 
     yield waitForCondition(function () {
       return BrowserUI.isStartTabVisible;
@@ -42,13 +52,15 @@ gTests.push({
     is(ContextUI.contextAppbarVisible, false, "Appbar is hidden after third swipe");
 
     is(BrowserUI.isStartTabVisible, true, "Start UI is still visible");
+
+    Browser.closeTab(tab, { forceClose: true });
   }
 });
 
 gTests.push({
   desc: "Context UI on a web page (about:)",
   run: function testAbout() {
-    yield addTab("about:");
+    let tab = yield addTab("about:");
     ContextUI.dismiss();
     is(BrowserUI.isStartTabVisible, false, "Start UI is not visible on about:");
     is(ContextUI.navbarVisible, false, "Navbar is not initially visible on about:");
@@ -63,6 +75,8 @@ gTests.push({
     is(ContextUI.tabbarVisible, false, "Tabbar is not visible after second swipe");
 
     is(BrowserUI.isStartTabVisible, false, "Start UI is still not visible");
+
+    Browser.closeTab(tab, { forceClose: true });
   }
 });
 
@@ -96,8 +110,125 @@ gTests.push({
   }
 });
 
-function doEdgeUIGesture() {
-  let event = document.createEvent("Events");
-  event.initEvent("MozEdgeUICompleted", true, false);
-  window.dispatchEvent(event);
-}
+gTests.push({
+  desc: "taps vs context ui dismissal",
+  run: function () {
+    // off by default
+    InputSourceHelper.isPrecise = false;
+    InputSourceHelper.fireUpdate();
+
+    let tab = yield addTab("about:mozilla");
+
+    ok(ContextUI.navbarVisible, "navbar visible after open");
+
+    let navButtonDisplayPromise = waitForEvent(NavButtonSlider.back, "transitionend");
+
+    yield loadUriInActiveTab(getpage(1));
+
+    is(tab.browser.currentURI.spec, getpage(1), getpage(1));
+    ok(ContextUI.navbarVisible, "navbar visible after navigate 1");
+
+    yield loadUriInActiveTab(getpage(2));
+
+    is(tab.browser.currentURI.spec, getpage(2), getpage(2));
+    ok(ContextUI.navbarVisible, "navbar visible after navigate 2");
+
+    yield loadUriInActiveTab(getpage(3));
+
+    is(tab.browser.currentURI.spec, getpage(3), getpage(3));
+    ok(ContextUI.navbarVisible, "navbar visible after navigate 3");
+
+    // These transition in after we navigate. If we click on one of
+    // them before they are visible they don't work, so wait for
+    // display to occur.
+    yield navButtonDisplayPromise;
+
+    yield navBackViaNavButton();
+    yield waitForCondition2(function () { return tab.browser.currentURI.spec == getpage(2); }, "getpage(2)");
+    yield waitForCondition2(function () { return ContextUI.navbarVisible; }, "ContextUI.navbarVisible");
+
+    is(tab.browser.currentURI.spec, getpage(2), getpage(2));
+
+    yield navForward();
+    yield waitForCondition2(function () { return tab.browser.currentURI.spec == getpage(3); }, "getpage(3)");
+
+    is(tab.browser.currentURI.spec, getpage(3), getpage(3));
+    ok(ContextUI.navbarVisible, "navbar visible after navigate");
+
+    doEdgeUIGesture();
+
+    is(ContextUI.navbarVisible, true, "Navbar is visible after swipe");
+    is(ContextUI.tabbarVisible, true, "Tabbar is visible after swipe");
+
+    yield navBackViaNavButton();
+    yield waitForCondition2(function () { return tab.browser.currentURI.spec == getpage(2); }, "getpage(2)");
+
+    is(tab.browser.currentURI.spec, getpage(2), getpage(2));
+    is(ContextUI.navbarVisible, true, "Navbar is visible after navigating back (overlay)");
+    yield waitForCondition2(function () { return !ContextUI.tabbarVisible; }, "!ContextUI.tabbarVisible");
+
+    sendElementTap(window, window.document.documentElement);
+    yield waitForCondition2(function () { return !BrowserUI.navbarVisible; }, "!BrowserUI.navbarVisible");
+
+    is(ContextUI.tabbarVisible, false, "Tabbar is hidden after content tap");
+
+    yield navForward();
+    yield waitForCondition2(function () {
+      return tab.browser.currentURI.spec == getpage(3) && ContextUI.navbarVisible;
+    }, "getpage(3)");
+
+    is(tab.browser.currentURI.spec, getpage(3), getpage(3));
+    ok(ContextUI.navbarVisible, "navbar visible after navigate");
+
+    yield navBackViaNavButton();
+    yield waitForCondition2(function () { return tab.browser.currentURI.spec == getpage(2); }, "getpage(2)");
+    yield waitForCondition2(function () { return !ContextUI.tabbarVisible; }, "!ContextUI.tabbarVisible");
+
+    is(tab.browser.currentURI.spec, getpage(2), getpage(2));
+    is(ContextUI.navbarVisible, true, "Navbar is visible after navigating back (overlay)");
+
+    ContextUI.dismiss();
+
+    let note = yield showNotification();
+    doEdgeUIGesture();
+    sendElementTap(window, note);
+
+    is(ContextUI.navbarVisible, true, "Navbar is visible after clicking notification close button");
+
+    removeNotifications();
+
+    Browser.closeTab(tab, { forceClose: true });
+  }
+});
+
+gTests.push({
+  desc: "Bug 907244 - Opening a new tab when the page has focus doesn't correctly focus the location bar",
+  run: function () {
+    let mozTab = yield addTab("about:mozilla");
+
+    // addTab will dismiss navbar, but lets check anyway.
+    ok(!ContextUI.navbarVisible, "navbar dismissed");
+
+    BrowserUI.doCommand("cmd_newTab");
+    let newTab = Browser.selectedTab;
+    yield newTab.pageShowPromise;
+
+    yield waitForCondition(() => ContextUI.navbarVisible);
+    ok(ContextUI.navbarVisible, "navbar visible");
+
+    let edit = document.getElementById("urlbar-edit");
+
+    ok(edit.focused, "Edit has focus");
+
+    // Lets traverse since node.contains() doesn't work for anonymous elements.
+    let parent = document.activeElement;
+    while(parent && parent != edit) {
+      parent = parent.parentNode;
+    }
+
+    ok(parent === edit, 'Active element is a descendant of urlbar');
+
+    Browser.closeTab(newTab, { forceClose: true });
+    Browser.closeTab(mozTab, { forceClose: true });
+  }
+});

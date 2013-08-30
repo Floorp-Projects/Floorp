@@ -8,6 +8,7 @@
 #ifndef xpcpublic_h
 #define xpcpublic_h
 
+#include "jsapi.h"
 #include "jsproxy.h"
 #include "js/HeapAPI.h"
 #include "js/GCAPI.h"
@@ -18,7 +19,7 @@
 #include "nsWrapperCache.h"
 #include "nsStringGlue.h"
 #include "nsTArray.h"
-#include "mozilla/dom/DOMJSClass.h"
+#include "mozilla/dom/JSSlots.h"
 #include "nsMathUtils.h"
 #include "nsStringBuffer.h"
 #include "nsIGlobalObject.h"
@@ -446,21 +447,6 @@ SimulateActivityCallback(bool aActive);
 
 namespace mozilla {
 namespace dom {
-
-extern int HandlerFamily;
-inline void* ProxyFamily() { return &HandlerFamily; }
-
-inline bool IsDOMProxy(JSObject *obj, const js::Class* clasp)
-{
-    MOZ_ASSERT(js::GetObjectClass(obj) == clasp);
-    return (js::IsObjectProxyClass(clasp) || js::IsFunctionProxyClass(clasp)) &&
-           js::GetProxyHandler(obj)->family() == ProxyFamily();
-}
-
-inline bool IsDOMProxy(JSObject *obj)
-{
-    return IsDOMProxy(obj, js::GetObjectClass(obj));
-}
 
 typedef JSObject*
 (*DefineInterface)(JSContext *cx, JS::Handle<JSObject*> global,

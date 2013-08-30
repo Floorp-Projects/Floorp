@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMClassInfoID.h"
 #include "SpeechRecognitionError.h"
 
 namespace mozilla {
@@ -22,7 +21,7 @@ SpeechRecognitionError::Constructor(const GlobalObject& aGlobal,
                                     const SpeechRecognitionErrorInit& aParam,
                                     ErrorResult& aRv)
 {
-  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   nsRefPtr<SpeechRecognitionError> e = new SpeechRecognitionError(t, nullptr, nullptr);
   bool trusted = e->Init(t);
   e->InitSpeechRecognitionError(aType, aParam.mBubbles, aParam.mCancelable, aParam.mError, aParam.mMessage, aRv);

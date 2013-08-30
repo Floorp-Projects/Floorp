@@ -13,15 +13,17 @@
 #include "audio_device_config.h"
 
 #include "event_wrapper.h"
+#include "portaudio/pa_ringbuffer.h"
 #include "trace.h"
 #include "thread_wrapper.h"
 
+#include <ApplicationServices/ApplicationServices.h>
 #include <cassert>
-
-#include <sys/sysctl.h>         // sysctlbyname()
-#include <mach/mach.h>          // mach_task_self()
 #include <libkern/OSAtomic.h>   // OSAtomicCompareAndSwap()
-#include "portaudio/pa_ringbuffer.h"
+#include <mach/mach.h>          // mach_task_self()
+#include <sys/sysctl.h>         // sysctlbyname()
+
+
 
 namespace webrtc
 {
@@ -371,10 +373,10 @@ int32_t AudioDeviceMac::Init()
         return -1;
     }
 
-    // Setting RunLoop to NULL here instructs HAL to manage its own thread for 
-    // notifications. This was the default behaviour on OS X 10.5 and earlier, but now 
-    // must be explicitly specified. HAL would otherwise try to use the main thread to
-    // issue notifications.
+    // Setting RunLoop to NULL here instructs HAL to manage its own thread for
+    // notifications. This was the default behaviour on OS X 10.5 and earlier,
+    // but now must be explicitly specified. HAL would otherwise try to use the
+    // main thread to issue notifications.
     AudioObjectPropertyAddress propertyAddress = {
             kAudioHardwarePropertyRunLoop,
             kAudioObjectPropertyScopeGlobal,
@@ -493,8 +495,8 @@ int32_t AudioDeviceMac::SpeakerIsAvailable(bool& available)
         return 0;
     }
 
-    // Given that InitSpeaker was successful, we know that a valid speaker exists
-    // 
+    // Given that InitSpeaker was successful, we know that a valid speaker
+    // exists.
     available = true;
 
     // Close the initialized output mixer
@@ -552,8 +554,8 @@ int32_t AudioDeviceMac::MicrophoneIsAvailable(bool& available)
         return 0;
     }
 
-    // Given that InitMicrophone was successful, we know that a valid microphone exists
-    // 
+    // Given that InitMicrophone was successful, we know that a valid microphone
+    // exists.
     available = true;
 
     // Close the initialized input mixer
@@ -1361,13 +1363,13 @@ int32_t AudioDeviceMac::InitPlayout()
                              _id, "MacBook Pro not using internal speakers");
             }
 
-            // Add a listener to determine if the status changes. 
+            // Add a listener to determine if the status changes.
             WEBRTC_CA_LOG_WARN(AudioObjectAddPropertyListener(_outputDeviceID,
                     &propertyAddress, &objectListenerProc, this));
         }
     }
 
-    // Get current stream description  
+    // Get current stream description
     propertyAddress.mSelector = kAudioDevicePropertyStreamFormat;
     memset(&_outStreamFormat, 0, sizeof(_outStreamFormat));
     size = sizeof(_outStreamFormat);
@@ -1385,8 +1387,8 @@ int32_t AudioDeviceMac::InitPlayout()
     if (_outStreamFormat.mChannelsPerFrame > N_DEVICE_CHANNELS)
     {
         WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-                     "Too many channels on device -> mChannelsPerFrame = %d",
-                     _outStreamFormat.mChannelsPerFrame);
+            "Too many channels on output device (mChannelsPerFrame = %d)",
+            _outStreamFormat.mChannelsPerFrame);
         return -1;
     }
 
@@ -1413,13 +1415,12 @@ int32_t AudioDeviceMac::InitPlayout()
                  _outStreamFormat.mBytesPerFrame,
                  _outStreamFormat.mBitsPerChannel);
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "mFormatFlags = %u, mChannelsPerFrame = %u",
-                 _outStreamFormat.mFormatFlags,
-                 _outStreamFormat.mChannelsPerFrame);
+                 "mFormatFlags = %u",
+                 _outStreamFormat.mFormatFlags);
     logCAMsg(kTraceInfo, kTraceAudioDevice, _id, "mFormatID",
              (const char *) &_outStreamFormat.mFormatID);
 
-    // Our preferred format to work with 
+    // Our preferred format to work with
     _outDesiredFormat.mSampleRate = N_PLAY_SAMPLES_PER_SEC;
     if (_outStreamFormat.mChannelsPerFrame >= 2 && (_playChannels == 2))
     {
@@ -1445,7 +1446,7 @@ int32_t AudioDeviceMac::InitPlayout()
 
     _outDesiredFormat.mBytesPerPacket = _outDesiredFormat.mChannelsPerFrame
         * sizeof(SInt16);
-    _outDesiredFormat.mFramesPerPacket = 1; // In uncompressed audio, 
+    _outDesiredFormat.mFramesPerPacket = 1; // In uncompressed audio,
     // a packet is one frame.
     _outDesiredFormat.mBytesPerFrame = _outDesiredFormat.mChannelsPerFrame
         * sizeof(SInt16);
@@ -1593,7 +1594,7 @@ int32_t AudioDeviceMac::InitRecording()
     _captureDeviceIsAlive = 1;
     _doStopRec = false;
 
-    // Get current stream description  
+    // Get current stream description
     AudioObjectPropertyAddress
         propertyAddress = { kAudioDevicePropertyStreamFormat,
                 kAudioDevicePropertyScopeInput, 0 };
@@ -1613,8 +1614,18 @@ int32_t AudioDeviceMac::InitRecording()
     if (_inStreamFormat.mChannelsPerFrame > N_DEVICE_CHANNELS)
     {
         WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-                     ", Too many channels on device (mChannelsPerFrame = %d)",
-                     _inStreamFormat.mChannelsPerFrame);
+            "Too many channels on input device (mChannelsPerFrame = %d)",
+            _inStreamFormat.mChannelsPerFrame);
+        return -1;
+    }
+
+    const int io_block_size_samples = _inStreamFormat.mChannelsPerFrame *
+        _inStreamFormat.mSampleRate / 100 * N_BLOCKS_IO;
+    if (io_block_size_samples > _captureBufSizeSamples)
+    {
+        WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
+            "Input IO block size (%d) is larger than ring buffer (%u)",
+            io_block_size_samples, _captureBufSizeSamples);
         return -1;
     }
 
@@ -1632,9 +1643,8 @@ int32_t AudioDeviceMac::InitRecording()
                  _inStreamFormat.mBytesPerFrame,
                  _inStreamFormat.mBitsPerChannel);
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 " mFormatFlags = %u, mChannelsPerFrame = %u",
-                 _inStreamFormat.mFormatFlags,
-                 _inStreamFormat.mChannelsPerFrame);
+                 " mFormatFlags = %u",
+                 _inStreamFormat.mFormatFlags);
     logCAMsg(kTraceInfo, kTraceAudioDevice, _id, "mFormatID",
              (const char *) &_inStreamFormat.mFormatID);
 
@@ -1929,7 +1939,7 @@ bool AudioDeviceMac::PlayoutIsInitialized() const
 
 int32_t AudioDeviceMac::StartPlayout()
 {
-    
+
     CriticalSectionScoped lock(&_critSect);
 
     if (!_playIsInitialized)
@@ -2281,7 +2291,7 @@ AudioDeviceMac::GetNumberDevices(const AudioObjectPropertyScope scope,
         return -1;
     }
 
-    // Happy ending   
+    // Happy ending
     if (deviceIds)
     {
         free(deviceIds);
@@ -2433,7 +2443,7 @@ int32_t AudioDeviceMac::InitDevice(const uint16_t userDeviceIndex,
     }
 
     // Obtain device name and manufacturer for logging.
-    // Also use this as a test to ensure a user-set device ID is valid. 
+    // Also use this as a test to ensure a user-set device ID is valid.
     char devName[128];
     char devManf[128];
     memset(devName, 0, sizeof(devName));
@@ -2486,7 +2496,7 @@ OSStatus AudioDeviceMac::implObjectListenerProc(
 {
     WEBRTC_TRACE(kTraceDebug, kTraceAudioDevice, _id,
                  "AudioDeviceMac::implObjectListenerProc()");
-    
+
     for (UInt32 i = 0; i < numberAddresses; i++)
     {
         if (addresses[i].mSelector == kAudioHardwarePropertyDevices)
@@ -2543,7 +2553,7 @@ int32_t AudioDeviceMac::HandleDeviceChange()
             logCAMsg(kTraceError, kTraceAudioDevice, _id,
                      "Error in AudioDeviceGetProperty()", (const char*) &err);
             return -1;
-        }      
+        }
     }
 
     if (SpeakerIsInitialized())
@@ -2627,13 +2637,24 @@ int32_t AudioDeviceMac::HandleStreamFormatChange(
                  "mBytesPerFrame = %u, mBitsPerChannel = %u",
                  streamFormat.mBytesPerFrame, streamFormat.mBitsPerChannel);
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "mFormatFlags = %u, mChannelsPerFrame = %u",
-                 streamFormat.mFormatFlags, streamFormat.mChannelsPerFrame);
+                 "mFormatFlags = %u",
+                 streamFormat.mFormatFlags);
     logCAMsg(kTraceInfo, kTraceAudioDevice, _id, "mFormatID",
              (const char *) &streamFormat.mFormatID);
 
     if (propertyAddress.mScope == kAudioDevicePropertyScopeInput)
     {
+        const int io_block_size_samples = streamFormat.mChannelsPerFrame *
+            streamFormat.mSampleRate / 100 * N_BLOCKS_IO;
+        if (io_block_size_samples > _captureBufSizeSamples)
+        {
+            WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
+                "Input IO block size (%d) is larger than ring buffer (%u)",
+                io_block_size_samples, _captureBufSizeSamples);
+            return -1;
+
+        }
+
         memcpy(&_inStreamFormat, &streamFormat, sizeof(streamFormat));
 
         if (_inStreamFormat.mChannelsPerFrame >= 2 && (_recChannels == 2))
@@ -3207,6 +3228,8 @@ bool AudioDeviceMac::CaptureWorkerThread()
 
         _ptrAudioBuffer->SetVQEData(msecOnPlaySide, msecOnRecordSide, 0);
 
+        _ptrAudioBuffer->SetTypingStatus(KeyPressed());
+
         // deliver recorded samples at specified sample rate, mic level etc.
         // to the observer using callback
         _ptrAudioBuffer->DeliverRecordedData();
@@ -3236,4 +3259,14 @@ bool AudioDeviceMac::CaptureWorkerThread()
     return true;
 }
 
+bool AudioDeviceMac::KeyPressed() const{
+
+  bool key_down = false;
+  // loop through all Mac virtual key constant values
+  for (int key_index = 0; key_index <= 0x5C; key_index++) {
+    key_down |= CGEventSourceKeyState(kCGEventSourceStateHIDSystemState,
+                                      key_index);
+  }
+  return(key_down);
+}
 } //  namespace webrtc

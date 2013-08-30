@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+Components.utils.import("resource:///modules/ContentUtil.jsm");
+
 let Util = {
   /*
    * General purpose utilities
@@ -11,68 +13,10 @@ let Util = {
     return aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
   },
 
-  // Recursively find all documents, including root document.
-  getAllDocuments: function getAllDocuments(doc, resultSoFar) {
-    resultSoFar = resultSoFar || [doc];
-    if (!doc.defaultView)
-      return resultSoFar;
-    let frames = doc.defaultView.frames;
-    if (!frames)
-      return resultSoFar;
-
-    let i;
-    let currentDoc;
-    for (i = 0; i < frames.length; i++) {
-      currentDoc = frames[i].document;
-      resultSoFar.push(currentDoc);
-      this.getAllDocuments(currentDoc, resultSoFar);
-    }
-
-    return resultSoFar;
-  },
-
   // Put the Mozilla networking code into a state that will kick the
   // auto-connection process.
   forceOnline: function forceOnline() {
     Services.io.offline = false;
-  },
-
-  // Pass several objects in and it will combine them all into the first object and return it.
-  // NOTE: Deep copy is not supported
-  extend: function extend() {
-    // copy reference to target object
-    let target = arguments[0] || {};
-    let length = arguments.length;
-
-    if (length === 1) {
-      return target;
-    }
-
-    // Handle case when target is a string or something
-    if (typeof target != "object" && typeof target != "function") {
-      target = {};
-    }
-
-    for (let i = 1; i < length; i++) {
-      // Only deal with non-null/undefined values
-      let options = arguments[i];
-      if (options != null) {
-        // Extend the base object
-        for (let name in options) {
-          let copy = options[name];
-
-          // Prevent never-ending loop
-          if (target === copy)
-            continue;
-
-          if (copy !== undefined)
-            target[name] = copy;
-        }
-      }
-    }
-
-    // Return the modified object
-    return target;
   },
 
   /*
@@ -92,17 +36,6 @@ let Util = {
    * Console printing utilities
    */
 
-  dumpf: function dumpf(str) {
-    let args = arguments;
-    let i = 1;
-    dump(str.replace(/%s/g, function() {
-      if (i >= args.length) {
-        throw "dumps received too many placeholders and not enough arguments";
-      }
-      return args[i++].toString();
-    }));
-  },
-
   // Like dump, but each arg is handled and there's an automatic newline
   dumpLn: function dumpLn() {
     for (let i = 0; i < arguments.length; i++)
@@ -110,29 +43,9 @@ let Util = {
     dump("\n");
   },
 
-  dumpElement: function dumpElement(aElement) {
-    this.dumpLn(aElement.id);
-  },
-
-  dumpElementTree: function dumpElementTree(aElement) {
-    let node = aElement;
-    while (node) {
-      this.dumpLn("node:", node, "id:", node.id, "class:", node.classList);
-      node = node.parentNode;
-    }
-  },
-
   /*
    * Element utilities
    */
-
-  highlightElement: function highlightElement(aElement) {
-    if (aElement == null) {
-      this.dumpLn("aElement is null");
-      return;
-    }
-    aElement.style.border = "2px solid red";
-  },
 
   transitionElementVisibility: function(aNodes, aVisible) {
     // accept single node or a collection of nodes
@@ -159,24 +72,6 @@ let Util = {
       pending++;
     });
     return defd.promise;
-  },
-
-  getHrefForElement: function getHrefForElement(target) {
-    let link = null;
-    while (target) {
-      if (target instanceof Ci.nsIDOMHTMLAnchorElement ||
-          target instanceof Ci.nsIDOMHTMLAreaElement ||
-          target instanceof Ci.nsIDOMHTMLLinkElement) {
-          if (target.hasAttribute("href"))
-            link = target;
-      }
-      target = target.parentNode;
-    }
-
-    if (link && link.hasAttribute("href"))
-      return link.href;
-    else
-      return null;
   },
 
   isTextInput: function isTextInput(aElement) {
@@ -308,16 +203,6 @@ let Util = {
             aURL.indexOf("chrome:") == 0);
   },
 
-  isOpenableScheme: function isShareableScheme(aProtocol) {
-    let dontOpen = /^(mailto|javascript|news|snews)$/;
-    return (aProtocol && !dontOpen.test(aProtocol));
-  },
-
-  isShareableScheme: function isShareableScheme(aProtocol) {
-    let dontShare = /^(chrome|about|file|javascript|resource)$/;
-    return (aProtocol && !dontShare.test(aProtocol));
-  },
-
   // Don't display anything in the urlbar for these special URIs.
   isURLEmpty: function isURLEmpty(aURL) {
     return (!aURL ||
@@ -380,68 +265,6 @@ let Util = {
   get displayDPI() {
     delete this.displayDPI;
     return this.displayDPI = this.getWindowUtils(window).displayDPI;
-  },
-
-  isPortrait: function isPortrait() {
-    return (window.innerWidth <= window.innerHeight);
-  },
-
-  LOCALE_DIR_RTL: -1,
-  LOCALE_DIR_LTR: 1,
-  get localeDir() {
-    // determine browser dir first to know which direction to snap to
-    let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
-    return chromeReg.isLocaleRTL("global") ? this.LOCALE_DIR_RTL : this.LOCALE_DIR_LTR;
-  },
-
-  /*
-   * Process utilities
-   */
-
-  isParentProcess: function isInParentProcess() {
-    let appInfo = Cc["@mozilla.org/xre/app-info;1"];
-    return (!appInfo || appInfo.getService(Ci.nsIXULRuntime).processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT);
-  },
-
-  /*
-   * Event utilities
-   */
-
-  modifierMaskFromEvent: function modifierMaskFromEvent(aEvent) {
-    return (aEvent.altKey   ? Ci.nsIDOMEvent.ALT_MASK     : 0) |
-           (aEvent.ctrlKey  ? Ci.nsIDOMEvent.CONTROL_MASK : 0) |
-           (aEvent.shiftKey ? Ci.nsIDOMEvent.SHIFT_MASK   : 0) |
-           (aEvent.metaKey  ? Ci.nsIDOMEvent.META_MASK    : 0);
-  },
-
-  /*
-   * Download utilities
-   */
-
-  insertDownload: function insertDownload(aSrcUri, aFile) {
-    let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
-    let db = dm.DBConnection;
-
-    let stmt = db.createStatement(
-      "INSERT INTO moz_downloads (name, source, target, startTime, endTime, state, referrer) " +
-      "VALUES (:name, :source, :target, :startTime, :endTime, :state, :referrer)"
-    );
-
-    stmt.params.name = aFile.leafName;
-    stmt.params.source = aSrcUri.spec;
-    stmt.params.target = aFile.path;
-    stmt.params.startTime = Date.now() * 1000;
-    stmt.params.endTime = Date.now() * 1000;
-    stmt.params.state = Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED;
-    stmt.params.referrer = aSrcUri.spec;
-
-    stmt.execute();
-    stmt.finalize();
-
-    let newItemId = db.lastInsertRowID;
-    let download = dm.getDownload(newItemId);
-    //dm.resumeDownload(download);
-    //Services.obs.notifyObservers(download, "dl-start", null);
   },
 
   /*
@@ -540,3 +363,11 @@ Util.Timeout.prototype = {
   }
 };
 
+// Mixin the ContentUtil module exports
+{
+  for (let name in ContentUtil) {
+    let copy = ContentUtil[name];
+    if (copy !== undefined)
+      Util[name] = copy;
+  }
+}

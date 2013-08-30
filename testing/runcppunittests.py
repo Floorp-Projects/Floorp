@@ -106,11 +106,19 @@ class CPPUnitTests(object):
         """
         self.xre_path = xre_path
         env = self.build_environment()
-        result = True
+        pass_count = 0
+        fail_count = 0
         for prog in programs:
             single_result = self.run_one_test(prog, env, symbols_path)
-            result = result and single_result
-        return result
+            if single_result:
+                pass_count += 1
+            else:
+                fail_count += 1
+
+        log.info("Result summary:")
+        log.info("Passed: %d" % pass_count)
+        log.info("Failed: %d" % fail_count)
+        return fail_count == 0
 
 class CPPUnittestOptions(OptionParser):
     def __init__(self):

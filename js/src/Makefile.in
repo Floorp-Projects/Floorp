@@ -13,12 +13,6 @@ TOPLEVEL_BUILD := 1
 run_for_side_effects := $(shell echo "MAKE: $(MAKE)")
 include $(DEPTH)/config/autoconf.mk
 
-ifdef JS_STANDALONE
-LIBRARY_NAME	= mozjs-@MOZJS_MAJOR_VERSION@.@MOZJS_MINOR_VERSION@@MOZJS_ALPHA@
-else
-LIBRARY_NAME	= mozjs
-endif
-
 STATIC_LIBRARY_NAME = js_static
 LIBS		= $(NSPR_LIBS)
 
@@ -69,6 +63,10 @@ VPATH		+= \
 #
 ifdef NIGHTLY_BUILD
 DEFINES += -DENABLE_PARALLEL_JS
+endif
+
+ifdef NIGHTLY_BUILD
+DEFINES += -DENABLE_BINARYDATA
 endif
 
 # Ion
@@ -225,12 +223,17 @@ endif
 # ICU headers need to be available whether we build with the complete
 # Internationalization API or not - ICU stubs rely on them.
 
+ifdef MOZ_NATIVE_ICU
+LOCAL_INCLUDES += $(MOZ_ICU_CFLAGS)
+else
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/../../intl/icu/source/common \
   -I$(topsrcdir)/../../intl/icu/source/i18n \
   $(NULL)
+endif
 
 ifdef ENABLE_INTL_API
+ifndef MOZ_NATIVE_ICU
 
 ifeq ($(OS_ARCH),WINNT)
   # Parallel gmake is buggy on Windows
@@ -258,6 +261,7 @@ export::
 distclean clean::
 	$(call SUBMAKE,$@,intl/icu)
 
+endif
 endif
 
 #
@@ -337,8 +341,12 @@ endif
 endif
 
 DIST_GARBAGE = config.cache config.log config.status* \
-   config/autoconf.mk \
-   $(JS_CONFIG_NAME) js-config.h js-confdefs.h
+   config/autoconf.mk config/emptyvars.mk \
+   $(JS_CONFIG_NAME) js-config.h js-confdefs.h \
+   backend.mk config/backend.mk devtools/backend.mk editline/backend.mk \
+   gdb/backend.mk jsapi-tests/backend.mk shell/backend.mk tests/backend.mk \
+   backend.RecursiveMakeBackend.built backend.RecursiveMakeBackend.built.pp \
+   devtools/rootAnalysis/Makefile
 
 distclean::
 	$(RM) $(DIST_GARBAGE)
@@ -381,7 +389,11 @@ ifneq (,$(MOZ_ZLIB_LIBS)$(MOZ_GLUE_LDFLAGS))
 DEFINES += -DUSE_ZLIB
 endif
 
-SHARED_LIBRARY_LIBS += $(ICU_LIBS)
+ifdef MOZ_NATIVE_ICU
+EXTRA_DSO_LDOPTS += $(MOZ_ICU_LIBS)
+else
+SHARED_LIBRARY_LIBS += $(MOZ_ICU_LIBS)
+endif
 
 # Prevent floating point errors caused by VC++ optimizations
 ifdef _MSC_VER
@@ -665,3 +677,30 @@ endif
 #
 # END kludges for the Nitro assembler
 ###############################################
+
+###############################################
+# Generating source package tarballs
+# (only possible when tar is found)
+ifneq (,$(TAR))
+
+source-package:
+	SRCDIR=$(srcdir) \
+	DIST=$(DIST) \
+	MAKE=$(MAKE) \
+	MKDIR=$(MKDIR) \
+	TAR=$(TAR) \
+	MOZJS_MAJOR_VERSION=$(MOZJS_MAJOR_VERSION) \
+	MOZJS_MINOR_VERSION=$(MOZJS_MINOR_VERSION) \
+	MOZJS_PATCH_VERSION=$(MOZJS_PATCH_VERSION) \
+	MOZJS_ALPHA=$(MOZJS_ALPHA) \
+	$(srcdir)/make-source-package.sh
+
+clean::
+	DIST=$(DIST) \
+	MOZJS_MAJOR_VERSION=$(MOZJS_MAJOR_VERSION) \
+	MOZJS_MINOR_VERSION=$(MOZJS_MINOR_VERSION) \
+	MOZJS_PATCH_VERSION=$(MOZJS_PATCH_VERSION) \
+	MOZJS_ALPHA=$(MOZJS_ALPHA) \
+	$(srcdir)/make-source-package.sh clean
+
+endif

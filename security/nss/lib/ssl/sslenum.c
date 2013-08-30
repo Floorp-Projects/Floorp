@@ -29,6 +29,14 @@
  * Finally, update the ssl_V3_SUITES_IMPLEMENTED macro in sslimpl.h.
  */
 const PRUint16 SSL_ImplementedCiphers[] = {
+    /* AES-GCM */
+#ifdef NSS_ENABLE_ECC
+    TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+    TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+#endif /* NSS_ENABLE_ECC */
+    TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,
+    TLS_RSA_WITH_AES_128_GCM_SHA256,
+
     /* 256-bit */
 #ifdef NSS_ENABLE_ECC
     TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,

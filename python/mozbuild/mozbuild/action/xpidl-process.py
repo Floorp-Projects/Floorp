@@ -13,11 +13,14 @@ import sys
 
 from io import BytesIO
 
+from buildconfig import topsrcdir
 from header import print_header
 from typelib import write_typelib
 from xpidl import IDLParser
 from xpt import xpt_link
 
+from mozbuild.makeutil import Makefile
+from mozbuild.pythonutil import iter_modules_in_path
 from mozbuild.util import FileAvoidWrite
 
 
@@ -25,17 +28,12 @@ def process(input_dir, cache_dir, header_dir, xpt_dir, deps_dir, module, stems):
     p = IDLParser(outputdir=cache_dir)
 
     xpts = {}
-    deps = set()
+    mk = Makefile()
+    rule = mk.create_rule()
 
     # Write out dependencies for Python modules we import. If this list isn't
     # up to date, we will not re-process XPIDL files if the processor changes.
-    for imported in ('header', 'typelib', 'xpidl', 'xpt'):
-        path = sys.modules[imported].__file__
-
-        if path.endswith('.pyc'):
-            path = path[0:-1]
-
-        deps.add(path)
+    rule.add_dependencies(iter_modules_in_path(topsrcdir))
 
     for stem in stems:
         path = os.path.join(input_dir, '%s.idl' % stem)
@@ -52,7 +50,7 @@ def process(input_dir, cache_dir, header_dir, xpt_dir, deps_dir, module, stems):
         xpt.seek(0)
         xpts[stem] = xpt
 
-        deps |= set(dep.replace('\\', '/') for dep in idl.deps)
+        rule.add_dependencies(idl.deps)
 
         with FileAvoidWrite(header_path) as fh:
             print_header(idl, fh, path)
@@ -61,13 +59,10 @@ def process(input_dir, cache_dir, header_dir, xpt_dir, deps_dir, module, stems):
     xpt_path = os.path.join(xpt_dir, '%s.xpt' % module)
     xpt_link(xpts.values()).write(xpt_path)
 
+    rule.add_targets([xpt_path])
     deps_path = os.path.join(deps_dir, '%s.pp' % module)
     with FileAvoidWrite(deps_path) as fh:
-        # Need output to be consistent to avoid rewrites.
-        s_deps = sorted(deps)
-        fh.write('%s: %s\n' % (xpt_path, ' '.join(s_deps)))
-        for dep in s_deps:
-            fh.write('%s:\n' % dep)
+        mk.dump(fh)
 
 
 if __name__ == '__main__':

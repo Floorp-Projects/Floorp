@@ -18,6 +18,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 
+class nsIMemoryReporter;
+
 /**
  * The StartupCache is a persistent cache of simple key-value pairs,
  * where the keys are null-terminated c-strings and the values are 
@@ -63,8 +65,6 @@
  * as 'dumb' as the underlying buffers about multiply-referenced objects. They just
  * provide some convenience in writing out data.
  */
-
-class nsIMemoryReporter;
 
 namespace mozilla {
 namespace scache {
@@ -177,8 +177,8 @@ private:
   nsTHashtable<nsISupportsHashKey> mWriteObjectMap;
 #endif
 
-  nsIMemoryReporter* mMappingMemoryReporter;
-  nsIMemoryReporter* mDataMemoryReporter;
+  nsCOMPtr<nsIMemoryReporter> mMappingReporter;
+  nsCOMPtr<nsIMemoryReporter> mDataReporter;
 };
 
 // This debug outputstream attempts to detect if clients are writing multiple

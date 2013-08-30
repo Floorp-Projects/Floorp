@@ -8,7 +8,11 @@
 
 #include "mozilla/NullPtr.h"
 #include <stdint.h>
-#include "mozilla/TimeStamp.h"
+
+namespace mozilla {
+class TimeDuration;
+class TimeStamp;
+}
 
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;

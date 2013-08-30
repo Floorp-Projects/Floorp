@@ -174,7 +174,8 @@ class TreeMetadataEmitter(LoggingMixin):
 
         if 'TIERS' in sandbox:
             for tier in sandbox['TIERS']:
-                o.tier_dirs[tier] = sandbox['TIERS'][tier]['regular']
+                o.tier_dirs[tier] = sandbox['TIERS'][tier]['regular'] + \
+                    sandbox['TIERS'][tier]['external']
                 o.tier_static_dirs[tier] = sandbox['TIERS'][tier]['static']
 
         yield o

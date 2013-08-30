@@ -65,7 +65,7 @@ let FlyoutPanelsUI = {
       this._currentFlyout._onBackButton();
     } else {
       this.hide();
-      MetroUtils.showSettingsFlyout();
+      Services.metro.showSettingsFlyout();
     }
   },
 

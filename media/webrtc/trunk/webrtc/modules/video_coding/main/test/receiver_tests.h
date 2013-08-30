@@ -26,9 +26,9 @@ class RtpDataCallback : public webrtc::RtpData {
   RtpDataCallback(webrtc::VideoCodingModule* vcm) : vcm_(vcm) {}
   virtual ~RtpDataCallback() {}
 
-  virtual WebRtc_Word32 OnReceivedPayloadData(
-      const WebRtc_UWord8* payload_data,
-      const WebRtc_UWord16 payload_size,
+  virtual int32_t OnReceivedPayloadData(
+      const uint8_t* payload_data,
+      const uint16_t payload_size,
       const webrtc::WebRtcRTPHeader* rtp_header) {
     return vcm_->IncomingPacket(payload_data, payload_size, *rtp_header);
   }

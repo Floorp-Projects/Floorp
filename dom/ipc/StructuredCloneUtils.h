@@ -11,7 +11,7 @@
 #include "nsTArray.h"
 #include "nsIDOMFile.h"
 
-#include "jsapi.h"
+#include "js/StructuredClone.h"
 
 namespace mozilla {
 

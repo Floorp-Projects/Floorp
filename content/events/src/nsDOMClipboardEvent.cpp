@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMClipboardEvent.h"
-#include "nsClientRect.h"
 #include "nsDOMDataTransfer.h"
 #include "nsIClipboard.h"
 
@@ -56,7 +55,7 @@ nsDOMClipboardEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
                                  const mozilla::dom::ClipboardEventInit& aParam,
                                  mozilla::ErrorResult& aRv)
 {
-  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   nsRefPtr<nsDOMClipboardEvent> e =
     new nsDOMClipboardEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);

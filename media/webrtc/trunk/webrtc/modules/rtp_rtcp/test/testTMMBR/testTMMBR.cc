@@ -8,15 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <cassert>
 #include <windows.h>
-#include <iostream>
+
+#include <assert.h>
 #include <tchar.h>
 
-#include "rtp_rtcp.h"
-#include "common_types.h"
-#include "rtcp_utility.h"
-#include "tmmbr_help.h"
+#include <iostream>
+
+#include "webrtc/common_types.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
+#include "webrtc/modules/rtp_rtcp/source/rtcp_utility.h"
+#include "webrtc/modules/rtp_rtcp/source/tmmbr_help.h"
 
 #define TEST_STR "Test TMMBR."
 #define TEST_PASSED() std::cerr << TEST_STR << " : [OK]" << std::endl
@@ -1031,4 +1033,3 @@ int _tmain(int argc, _TCHAR* argv[])
 
     return 0;
 }
-

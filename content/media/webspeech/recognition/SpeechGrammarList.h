@@ -33,7 +33,8 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SpeechGrammarList)
 
-  SpeechGrammarList* Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
+  SpeechGrammarList* Constructor(const GlobalObject& aGlobal,
+                                 ErrorResult& aRv);
 
   nsISupports* GetParentObject() const;
 

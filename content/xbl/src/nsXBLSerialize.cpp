@@ -4,11 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsXBLSerialize.h"
+
+#include "jsfriendapi.h"
+#include "js/OldDebugAPI.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsIXPConnect.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
-#include "jsdbgapi.h"
 
 using namespace mozilla;
 

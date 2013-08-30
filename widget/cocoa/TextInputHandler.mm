@@ -914,6 +914,7 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     case kVK_ANSI_KeypadDivide:
     case kVK_ANSI_KeypadEquals:
     case kVK_ANSI_KeypadEnter:
+    case kVK_JIS_KeypadComma:
     case kVK_Powerbook_KeypadEnter:
       aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
       break;
@@ -1222,6 +1223,8 @@ TISInputSourceWrapper::ComputeGeckoKeyCode(UInt32 aNativeKeyCode,
     case kVK_ANSI_KeypadMinus:    return NS_VK_SUBTRACT;
     case kVK_ANSI_KeypadDecimal:  return NS_VK_DECIMAL;
     case kVK_ANSI_KeypadDivide:   return NS_VK_DIVIDE;
+
+    case kVK_JIS_KeypadComma:   return NS_VK_SEPARATOR;
 
     // IME keys
     case kVK_JIS_Eisu:          return NS_VK_EISU;
@@ -1662,10 +1665,20 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
       //     dependent flags.
       if (isKeyDown && ((diff & ~NSDeviceIndependentModifierFlagsMask) != 0)) {
         unsigned short keyCode = [aNativeEvent keyCode];
-        ModifierKey* modifierKey = GetModifierKeyForDeviceDependentFlags(diff);
-        if (modifierKey) {
-          MOZ_ASSERT(modifierKey->keyCode == keyCode);
-        } else {
+        const ModifierKey* modifierKey =
+          GetModifierKeyForDeviceDependentFlags(diff);
+        if (modifierKey && modifierKey->keyCode != keyCode) {
+          // Although, we're not sure the actual cause of this case, the stored
+          // modifier information and the latest key event information may be
+          // mismatched. Then, let's reset the stored information.
+          // NOTE: If this happens, it may fail to handle NSFlagsChanged event
+          // in the default case (below). However, it's the rare case handler
+          // and this case occurs rarely. So, we can ignore the edge case bug.
+          NS_WARNING("Resetting stored modifier key information");
+          mModifierKeys.Clear();
+          modifierKey = nullptr;
+        }
+        if (!modifierKey) {
           mModifierKeys.AppendElement(ModifierKey(diff, keyCode));
         }
       }
@@ -1746,7 +1759,7 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
               continue;
           }
         } else {
-          ModifierKey* modifierKey =
+          const ModifierKey* modifierKey =
             GetModifierKeyForDeviceDependentFlags(flag);
           if (!modifierKey) {
             // See the note above (in the other branch of the if statement)
@@ -1761,7 +1774,7 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
         modifiers &= ~flag;
         switch (keyCode) {
           case kVK_Shift: {
-            ModifierKey* modifierKey =
+            const ModifierKey* modifierKey =
               GetModifierKeyForNativeKeyCode(kVK_RightShift);
             if (!modifierKey ||
                 !(modifiers & modifierKey->GetDeviceDependentFlags())) {
@@ -1770,7 +1783,7 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
             break;
           }
           case kVK_RightShift: {
-            ModifierKey* modifierKey =
+            const ModifierKey* modifierKey =
               GetModifierKeyForNativeKeyCode(kVK_Shift);
             if (!modifierKey ||
                 !(modifiers & modifierKey->GetDeviceDependentFlags())) {
@@ -1779,7 +1792,7 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
             break;
           }
           case kVK_Command: {
-            ModifierKey* modifierKey =
+            const ModifierKey* modifierKey =
               GetModifierKeyForNativeKeyCode(kVK_RightCommand);
             if (!modifierKey ||
                 !(modifiers & modifierKey->GetDeviceDependentFlags())) {
@@ -1788,7 +1801,7 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
             break;
           }
           case kVK_RightCommand: {
-            ModifierKey* modifierKey =
+            const ModifierKey* modifierKey =
               GetModifierKeyForNativeKeyCode(kVK_Command);
             if (!modifierKey ||
                 !(modifiers & modifierKey->GetDeviceDependentFlags())) {
@@ -1797,7 +1810,7 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
             break;
           }
           case kVK_Control: {
-            ModifierKey* modifierKey =
+            const ModifierKey* modifierKey =
               GetModifierKeyForNativeKeyCode(kVK_RightControl);
             if (!modifierKey ||
                 !(modifiers & modifierKey->GetDeviceDependentFlags())) {
@@ -1806,7 +1819,7 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
             break;
           }
           case kVK_RightControl: {
-            ModifierKey* modifierKey =
+            const ModifierKey* modifierKey =
               GetModifierKeyForNativeKeyCode(kVK_Control);
             if (!modifierKey ||
                 !(modifiers & modifierKey->GetDeviceDependentFlags())) {
@@ -1815,7 +1828,7 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
             break;
           }
           case kVK_Option: {
-            ModifierKey* modifierKey =
+            const ModifierKey* modifierKey =
               GetModifierKeyForNativeKeyCode(kVK_RightOption);
             if (!modifierKey ||
                 !(modifiers & modifierKey->GetDeviceDependentFlags())) {
@@ -1824,7 +1837,7 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
             break;
           }
           case kVK_RightOption: {
-            ModifierKey* modifierKey =
+            const ModifierKey* modifierKey =
               GetModifierKeyForNativeKeyCode(kVK_Option);
             if (!modifierKey ||
                 !(modifiers & modifierKey->GetDeviceDependentFlags())) {
@@ -1872,7 +1885,7 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-TextInputHandler::ModifierKey*
+const TextInputHandler::ModifierKey*
 TextInputHandler::GetModifierKeyForNativeKeyCode(unsigned short aKeyCode) const
 {
   for (ModifierKeyArray::index_type i = 0; i < mModifierKeys.Length(); ++i) {
@@ -1883,7 +1896,7 @@ TextInputHandler::GetModifierKeyForNativeKeyCode(unsigned short aKeyCode) const
   return nullptr;
 }
 
-TextInputHandler::ModifierKey*
+const TextInputHandler::ModifierKey*
 TextInputHandler::GetModifierKeyForDeviceDependentFlags(NSUInteger aFlags) const
 {
   for (ModifierKeyArray::index_type i = 0; i < mModifierKeys.Length(); ++i) {

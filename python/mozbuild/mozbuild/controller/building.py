@@ -16,13 +16,9 @@ from collections import (
     OrderedDict,
 )
 
-# keep in sync with psutil os support, see psutil/__init__.py
-if sys.platform.startswith("freebsd") or sys.platform.startswith("darwin") or sys.platform.startswith("win32") or sys.platform.startswith("linux"):
-    try:
-        import psutil
-    except ImportError:
-        psutil = None
-else:
+try:
+    import psutil
+except Exception:
     psutil = None
 
 from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
@@ -99,6 +95,7 @@ class TierStatus(object):
     def begin_subtier(self, tier, subtier, dirs):
         """Record that execution of a subtier has begun."""
         self.resources.begin_phase(self._phase(tier, subtier))
+
         st = self.tiers[tier]['subtiers'][subtier]
         st['begin_time'] = time.time()
 

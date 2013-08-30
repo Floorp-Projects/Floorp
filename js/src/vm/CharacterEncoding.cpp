@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "js/CharacterEncoding.h"
+
 #include "jscntxt.h"
 #include "jsprf.h"
-
-#include "js/CharacterEncoding.h"
 
 using namespace JS;
 
@@ -226,6 +226,8 @@ enum InflateUTF8Action {
 
 static const uint32_t REPLACE_UTF8 = 0xFFFD;
 
+// If making changes to this algorithm, make sure to also update
+// LossyConvertUTF8toUTF16() in dom/wifi/WifiUtils.cpp
 template <InflateUTF8Action action>
 static bool
 InflateUTF8StringToBuffer(JSContext *cx, const UTF8Chars src, jschar *dst, size_t *dstlenp,

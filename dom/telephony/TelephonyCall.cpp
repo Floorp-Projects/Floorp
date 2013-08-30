@@ -266,6 +266,13 @@ TelephonyCall::Hold(ErrorResult& aRv)
     return;
   }
 
+  if (!mSecondNumber.IsEmpty()) {
+    // No state transition when we switch two numbers within one TelephonyCall
+    // object. Otherwise, the state here will be inconsistent with the backend
+    // RIL and will never be right.
+    return;
+  }
+
   ChangeStateInternal(nsITelephonyProvider::CALL_STATE_HOLDING, true);
 }
 

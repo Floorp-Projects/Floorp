@@ -11,10 +11,10 @@
 #include "jit/IonLinker.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 namespace js {
-namespace ion {
+namespace jit {
 
 // ICCompare_Int32
 
@@ -255,5 +255,5 @@ ICUnaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
     return true;
 }
 
-} // namespace ion
+} // namespace jit
 } // namespace js

@@ -143,18 +143,4 @@ MOZ_EXPORT void OMXClient::disconnect()
 {
 }
 
-class __attribute__ ((visibility ("default"))) UnknownDataSource : public DataSource {
-public:
-UnknownDataSource();
-
-virtual status_t initCheck() const { return 0; }
-virtual ssize_t readAt(MOZ_STAGEFRIGHT_OFF_T offset, void *data, size_t size) { return 0; }
-virtual status_t getSize(MOZ_STAGEFRIGHT_OFF_T *size) { return 0; }
-
-virtual ~UnknownDataSource() { }
-};
-
-UnknownDataSource foo;
-
-MOZ_EXPORT UnknownDataSource::UnknownDataSource() { }
 }

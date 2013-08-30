@@ -334,25 +334,32 @@ CallSetter(JSContext *cx, HandleObject obj, HandleId id, StrictPropertyOp op, un
 }
 
 inline uintptr_t
-GetNativeStackLimit(ExclusiveContext *cx)
+GetNativeStackLimit(ThreadSafeContext *cx)
 {
-    return cx->perThreadData->nativeStackLimit;
+    StackKind kind;
+    if (cx->isJSContext()) {
+        kind = cx->asJSContext()->runningWithTrustedPrincipals()
+                 ? StackForTrustedScript : StackForUntrustedScript;
+    } else {
+        // For other threads, we just use the trusted stack depth, since it's
+        // unlikely that we'll be mixing trusted and untrusted code together.
+        kind = StackForTrustedScript;
+    }
+    return cx->perThreadData->nativeStackLimit[kind];
 }
 
 inline void
 ExclusiveContext::maybePause() const
 {
 #ifdef JS_WORKER_THREADS
-    if (workerThread && runtime_->workerThreadState->shouldPause) {
-        AutoLockWorkerThreadState lock(*runtime_->workerThreadState);
-        workerThread->pause();
-    }
+    if (workerThread)
+        workerThread->maybePause();
 #endif
 }
 
 class AutoLockForExclusiveAccess
 {
-#ifdef JS_THREADSAFE
+#ifdef JS_WORKER_THREADS
     JSRuntime *runtime;
 
     void init(JSRuntime *rt) {
@@ -389,7 +396,7 @@ class AutoLockForExclusiveAccess
             runtime->mainThreadHasExclusiveAccess = false;
         }
     }
-#else // JS_THREADSAFE
+#else // JS_WORKER_THREADS
   public:
     AutoLockForExclusiveAccess(ExclusiveContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
@@ -401,7 +408,7 @@ class AutoLockForExclusiveAccess
         // An empty destructor is needed to avoid warnings from clang about
         // unused local variables of this type.
     }
-#endif // JS_THREADSAFE
+#endif // JS_WORKER_THREADS
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
@@ -520,7 +527,7 @@ JSContext::currentScript(jsbytecode **ppc,
 #ifdef JS_ION
     if (act->isJit()) {
         JSScript *script = NULL;
-        js::ion::GetPcScript(const_cast<JSContext *>(this), &script, ppc);
+        js::jit::GetPcScript(const_cast<JSContext *>(this), &script, ppc);
         if (!allowCrossCompartment && script->compartment() != compartment())
             return NULL;
         return script;

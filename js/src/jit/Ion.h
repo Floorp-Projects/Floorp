@@ -18,7 +18,7 @@
 #include "jit/IonCode.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class TempAllocator;
 
@@ -138,6 +138,8 @@ struct IonOptions
     uint32_t exceptionBailoutThreshold;
 
     // Whether Ion should compile try-catch statements.
+    //
+    // Default: true
     bool compileTryCatch;
 
     // How many actual arguments are accepted on the C stack.
@@ -223,7 +225,7 @@ struct IonOptions
         osrPcMismatchesBeforeRecompile(6000),
         frequentBailoutThreshold(10),
         exceptionBailoutThreshold(10),
-        compileTryCatch(false),
+        compileTryCatch(true),
         maxStackArgs(4096),
         maxInlineDepth(3),
         smallFunctionMaxInlineDepth(10),
@@ -359,7 +361,7 @@ void AttachFinishedCompilations(JSContext *cx);
 void FinishOffThreadBuilder(IonBuilder *builder);
 
 static inline bool
-IsEnabled(JSContext *cx)
+IsIonEnabled(JSContext *cx)
 {
     return cx->hasOption(JSOPTION_ION) &&
         cx->hasOption(JSOPTION_BASELINE) &&
@@ -385,7 +387,7 @@ void TraceIonScripts(JSTracer* trc, JSScript *script);
 
 void TriggerOperationCallbackForIonCode(JSRuntime *rt, JSRuntime::OperationCallbackTrigger trigger);
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif // JS_ION

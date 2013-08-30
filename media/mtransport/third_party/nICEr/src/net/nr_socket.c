@@ -37,6 +37,7 @@ static char *RCSSTRING __UNUSED__="$Id: nr_socket.c,v 1.2 2008/04/28 17:59:02 ek
 #include <assert.h>
 #include <nr_api.h>
 #include "nr_socket.h"
+#include "local_addr.h"
 
 int nr_socket_create_int(void *obj, nr_socket_vtbl *vtbl, nr_socket **sockp)
   {

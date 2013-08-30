@@ -39,6 +39,8 @@ class AudioStreamTrack;
 class VideoStreamTrack;
 }
 
+class MediaStreamDirectListener;
+
 /**
  * DOM wrapper for MediaStreams.
  */
@@ -73,6 +75,20 @@ public:
   void GetVideoTracks(nsTArray<nsRefPtr<VideoStreamTrack> >& aTracks);
 
   MediaStream* GetStream() const { return mStream; }
+
+  /**
+   * Overridden in DOMLocalMediaStreams to allow getUserMedia to pass
+   * data directly to RTCPeerConnection without going through graph queuing.
+   * Returns a bool to let us know if direct data will be delivered.
+   */
+  virtual bool AddDirectListener(MediaStreamDirectListener *aListener) { return false; }
+  virtual void RemoveDirectListener(MediaStreamDirectListener *aListener) {}
+
+  /**
+   * Overridden in DOMLocalMediaStreams to allow getUserMedia to disable
+   * media at the SourceMediaStream.
+   */
+  virtual void SetTrackEnabled(TrackID aTrackID, bool aEnabled);
 
   bool IsFinished();
   /**

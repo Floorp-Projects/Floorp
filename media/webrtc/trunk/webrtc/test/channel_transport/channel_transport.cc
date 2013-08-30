@@ -13,12 +13,12 @@
 #include <stdio.h>
 
 #ifndef WEBRTC_ANDROID
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 #endif
 #include "webrtc/test/channel_transport/udp_transport.h"
 #include "webrtc/video_engine/include/vie_network.h"
-#include "webrtc/voice_engine/include/voe_network.h"
 #include "webrtc/video_engine/vie_defines.h"
+#include "webrtc/voice_engine/include/voe_network.h"
 
 #ifdef WEBRTC_ANDROID
 #undef NDEBUG

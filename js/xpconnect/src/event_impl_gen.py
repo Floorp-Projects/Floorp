@@ -417,7 +417,7 @@ def write_cpp(eventname, iface, fd, conf):
     fd.write("const %sInit& aParam, " % eventname)
     fd.write("ErrorResult& aRv)\n")
     fd.write("{\n")
-    fd.write("  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.Get());\n")
+    fd.write("  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());\n")
     fd.write("  nsRefPtr<%s> e = new %s(t, nullptr, nullptr);\n" % (eventname, eventname))
     fd.write("  bool trusted = e->Init(t);\n")
     fd.write("  e->Init%s(" % eventname)

@@ -29,6 +29,9 @@
 #include "nsIPrincipal.h"
 #include "Element.h"
 #include "nsSVGUtils.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsHostObjectProtocolHandler.h"
+#include "nsContentUtils.h"
 #include "harfbuzz/hb.h"
 
 #define SVG_CONTENT_TYPE NS_LITERAL_CSTRING("image/svg+xml")
@@ -42,23 +45,33 @@ const float gfxSVGGlyphs::SVG_UNITS_PER_EM = 1000.0f;
 
 const gfxRGBA SimpleTextObjectPaint::sZero = gfxRGBA(0.0f, 0.0f, 0.0f, 0.0f);
 
-gfxSVGGlyphs::gfxSVGGlyphs(hb_blob_t *aSVGTable, hb_blob_t *aCmapTable)
+gfxSVGGlyphs::gfxSVGGlyphs(hb_blob_t *aSVGTable)
 {
     mSVGData = aSVGTable;
 
-    const char* svgData = hb_blob_get_data(mSVGData, nullptr);
+    unsigned int length;
+    const char* svgData = hb_blob_get_data(mSVGData, &length);
     mHeader = reinterpret_cast<const Header*>(svgData);
-    mIndex = reinterpret_cast<const IndexEntry*>(svgData + sizeof(Header));
+    mDocIndex = nullptr;
+
+    if (sizeof(Header) <= length && uint16_t(mHeader->mVersion) == 0 &&
+        uint64_t(mHeader->mDocIndexOffset) + 2 <= length) {
+        const DocIndex* docIndex = reinterpret_cast<const DocIndex*>
+            (svgData + mHeader->mDocIndexOffset);
+        // Limit the number of documents to avoid overflow
+        if (uint64_t(mHeader->mDocIndexOffset) + 2 +
+                uint16_t(docIndex->mNumEntries) * sizeof(IndexEntry) <= length) {
+            mDocIndex = docIndex;
+        }
+    }
 
     mGlyphDocs.Init();
     mGlyphIdMap.Init();
-    mCmapData = aCmapTable;
 }
 
 gfxSVGGlyphs::~gfxSVGGlyphs()
 {
     hb_blob_destroy(mSVGData);
-    hb_blob_destroy(mCmapData);
 }
 
 /*
@@ -90,8 +103,13 @@ gfxSVGGlyphs::CompareIndexEntries(const void *aKey, const void *aEntry)
 gfxSVGGlyphsDocument *
 gfxSVGGlyphs::FindOrCreateGlyphsDocument(uint32_t aGlyphId)
 {
-    IndexEntry *entry = (IndexEntry*)bsearch(&aGlyphId, mIndex,
-                                             uint16_t(mHeader->mIndexLength),
+    if (!mDocIndex) {
+        // Invalid table
+        return nullptr;
+    }
+
+    IndexEntry *entry = (IndexEntry*)bsearch(&aGlyphId, mDocIndex->mEntries,
+                                             uint16_t(mDocIndex->mNumEntries),
                                              sizeof(IndexEntry),
                                              CompareIndexEntries);
     if (!entry) {
@@ -101,10 +119,14 @@ gfxSVGGlyphs::FindOrCreateGlyphsDocument(uint32_t aGlyphId)
     gfxSVGGlyphsDocument *result = mGlyphDocs.Get(entry->mDocOffset);
 
     if (!result) {
-        const uint8_t *data = (const uint8_t*)hb_blob_get_data(mSVGData, nullptr);
-        result = new gfxSVGGlyphsDocument(data + entry->mDocOffset,
-                                          entry->mDocLength, mCmapData);
-        mGlyphDocs.Put(entry->mDocOffset, result);
+        unsigned int length;
+        const uint8_t *data = (const uint8_t*)hb_blob_get_data(mSVGData, &length);
+        if (entry->mDocOffset > 0 &&
+            uint64_t(mHeader->mDocIndexOffset) + entry->mDocOffset + entry->mDocLength <= length) {
+            result = new gfxSVGGlyphsDocument(data + mHeader->mDocIndexOffset + entry->mDocOffset,
+                                              entry->mDocLength);
+            mGlyphDocs.Put(entry->mDocOffset, result);
+        }
     }
 
     return result;
@@ -156,20 +178,18 @@ gfxSVGGlyphsDocument::SetupPresentation()
  * Walk the DOM tree to find all glyph elements and insert them into the lookup
  * table
  * @param aElem The element to search from
- * @param aCmapTable Buffer containing the raw cmap table data
  */
 void
-gfxSVGGlyphsDocument::FindGlyphElements(Element *aElem, hb_blob_t *aCmapTable)
+gfxSVGGlyphsDocument::FindGlyphElements(Element *aElem)
 {
     for (nsIContent *child = aElem->GetLastChild(); child;
             child = child->GetPreviousSibling()) {
         if (!child->IsElement()) {
             continue;
         }
-        FindGlyphElements(child->AsElement(), aCmapTable);
+        FindGlyphElements(child->AsElement());
     }
 
-    InsertGlyphChar(aElem, aCmapTable);
     InsertGlyphId(aElem);
 }
 
@@ -235,8 +255,7 @@ gfxSVGGlyphsDocument::GetGlyphElement(uint32_t aGlyphId)
     return mGlyphIdMap.Get(aGlyphId);
 }
 
-gfxSVGGlyphsDocument::gfxSVGGlyphsDocument(const uint8_t *aBuffer, uint32_t aBufLen,
-                                           hb_blob_t *aCmapTable)
+gfxSVGGlyphsDocument::gfxSVGGlyphsDocument(const uint8_t *aBuffer, uint32_t aBufLen)
 {
     mGlyphIdMap.Init();
     ParseDocument(aBuffer, aBufLen);
@@ -257,7 +276,7 @@ gfxSVGGlyphsDocument::gfxSVGGlyphsDocument(const uint8_t *aBuffer, uint32_t aBuf
         return;
     }
 
-    FindGlyphElements(root, aCmapTable);
+    FindGlyphElements(root);
 }
 
 static nsresult
@@ -291,12 +310,16 @@ gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer, uint32_t aBufLen)
     nsresult rv = CreateBufferedStream(aBuffer, aBufLen, stream);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIPrincipal> principal =
-        do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+    nsCOMPtr<nsIURI> uri;
+    nsHostObjectProtocolHandler::GenerateURIString(NS_LITERAL_CSTRING(FONTTABLEURI_SCHEME),
+                                                   mSVGGlyphsDocumentURI);
+ 
+    rv = NS_NewURI(getter_AddRefs(uri), mSVGGlyphsDocumentURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIURI> uri;
-    principal->GetURI(getter_AddRefs(uri));
+    nsCOMPtr<nsIPrincipal> principal;
+    nsContentUtils::GetSecurityManager()->
+        GetNoAppCodebasePrincipal(uri, getter_AddRefs(principal));
 
     nsCOMPtr<nsIDOMDocument> domDoc;
     rv = NS_NewDOMDocument(getter_AddRefs(domDoc),
@@ -309,6 +332,11 @@ gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer, uint32_t aBufLen)
                            DocumentFlavorSVG);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsCOMPtr<nsIDocument> document(do_QueryInterface(domDoc));
+    if (!document) {
+        return NS_ERROR_FAILURE;
+    }
+
     nsCOMPtr<nsIChannel> channel;
     rv = NS_NewInputStreamChannel(getter_AddRefs(channel), uri, nullptr /* stream */,
                                   SVG_CONTENT_TYPE, UTF8_CHARSET);
@@ -316,10 +344,6 @@ gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer, uint32_t aBufLen)
 
     channel->SetOwner(principal);
 
-    nsCOMPtr<nsIDocument> document(do_QueryInterface(domDoc));
-    if (!document) {
-        return NS_ERROR_FAILURE;
-    }
     document->SetReadyStateInternal(nsIDocument::READYSTATE_UNINITIALIZED);
 
     nsCOMPtr<nsIStreamListener> listener;
@@ -331,9 +355,6 @@ gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer, uint32_t aBufLen)
     if (NS_FAILED(rv) || !listener) {
         return NS_ERROR_FAILURE;
     }
-
-    document->SetBaseURI(uri);
-    document->SetPrincipal(principal);
 
     rv = listener->OnStartRequest(channel, nullptr /* aContext */);
     if (NS_FAILED(rv)) {
@@ -362,83 +383,28 @@ void
 gfxSVGGlyphsDocument::InsertGlyphId(Element *aGlyphElement)
 {
     nsAutoString glyphIdStr;
-    if (!aGlyphElement->GetAttr(kNameSpaceID_None, nsGkAtoms::glyphid, glyphIdStr)) {
+    static const uint32_t glyphPrefixLength = 5;
+    // The maximum glyph ID is 65535 so the maximum length of the numeric part
+    // is 5.
+    if (!aGlyphElement->GetAttr(kNameSpaceID_None, nsGkAtoms::id, glyphIdStr) ||
+        !StringBeginsWith(glyphIdStr, NS_LITERAL_STRING("glyph")) ||
+        glyphIdStr.Length() > glyphPrefixLength + 5) {
         return;
     }
 
-    nsresult rv;
-    uint32_t glyphId = glyphIdStr.ToInteger(&rv);
-
-    if (NS_FAILED(rv)) {
+    uint32_t id = 0;
+    for (uint32_t i = glyphPrefixLength; i < glyphIdStr.Length(); ++i) {
+      PRUnichar ch = glyphIdStr.CharAt(i);
+      if (ch < '0' || ch > '9') {
         return;
-    }
-
-    mGlyphIdMap.Put(glyphId, aGlyphElement);
-}
-
-// Get the Unicode character at index aPos in the string, and update aPos to
-// point to the next char (i.e. advance by one or two, depending whether we
-// found a surrogate pair).
-// This will assert (and return junk) if the string is not well-formed UTF16.
-// However, this is only used to process an attribute that comes from the
-// SVG-glyph XML document, and is not exposed to modification via the DOM,
-// so it must be well-formed UTF16 data (no unpaired surrogate codepoints)
-// unless our Unicode handling is seriously broken.
-static uint32_t
-NextUSV(const nsAString& aString, uint32_t& aPos)
-{
-    mozilla::DebugOnly<uint32_t> len = aString.Length();
-    NS_ASSERTION(aPos < len, "already at end of string");
-
-    uint32_t c1 = aString[aPos++];
-    if (NS_IS_HIGH_SURROGATE(c1)) {
-        NS_ASSERTION(aPos < len, "trailing high surrogate");
-        uint32_t c2 = aString[aPos++];
-        NS_ASSERTION(NS_IS_LOW_SURROGATE(c2), "isolated high surrogate");
-        return SURROGATE_TO_UCS4(c1, c2);
-    }
-
-    NS_ASSERTION(!NS_IS_LOW_SURROGATE(c1), "isolated low surrogate");
-    return c1;
-}
-
-void
-gfxSVGGlyphsDocument::InsertGlyphChar(Element *aGlyphElement,
-                                      hb_blob_t *aCmapTable)
-{
-    nsAutoString glyphChar;
-    if (!aGlyphElement->GetAttr(kNameSpaceID_None, nsGkAtoms::glyphchar,
-                                glyphChar)) {
+      }
+      if (ch == '0' && i == glyphPrefixLength) {
         return;
+      }
+      id = id * 10 + (ch - '0');
     }
 
-    uint32_t charCode, varSelector = 0, len = glyphChar.Length(), index = 0;
-    if (!len) {
-        NS_WARNING("glyphchar is empty");
-        return;
-    }
-
-    charCode = NextUSV(glyphChar, index);
-    if (index < len) {
-        varSelector = NextUSV(glyphChar, index);
-        if (!gfxFontUtils::IsVarSelector(varSelector)) {
-            NS_WARNING("glyphchar contains more than one character");
-            return;
-        }
-    }
-
-    if (index < len) {
-        NS_WARNING("glyphchar contains more than one character");
-        return;
-    }
-
-    const uint8_t *data = (const uint8_t*)hb_blob_get_data(aCmapTable, &len);
-    uint32_t glyphId =
-        gfxFontUtils::MapCharToGlyph(data, len, charCode, varSelector);
-
-    if (glyphId) {
-        mGlyphIdMap.Put(glyphId, aGlyphElement);
-    }
+    mGlyphIdMap.Put(id, aGlyphElement);
 }
 
 void

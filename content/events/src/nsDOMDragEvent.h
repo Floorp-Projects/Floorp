@@ -10,8 +10,6 @@
 #include "nsDOMMouseEvent.h"
 #include "mozilla/dom/DragEventBinding.h"
 
-class nsEvent;
-
 class nsDOMDragEvent : public nsDOMMouseEvent,
                        public nsIDOMDragEvent
 {

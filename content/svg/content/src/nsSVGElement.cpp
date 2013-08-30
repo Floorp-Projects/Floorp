@@ -1302,15 +1302,34 @@ ParseMappedAttrAnimValueCallback(void*    aObject,
                                  void*    aPropertyValue,
                                  void*    aData)
 {
-  NS_ABORT_IF_FALSE(aPropertyName != SMIL_MAPPED_ATTR_STYLERULE_ATOM,
-                    "animated content style rule should have been removed "
-                    "from properties table already (we're rebuilding it now)");
+  MOZ_ASSERT(aPropertyName != SMIL_MAPPED_ATTR_STYLERULE_ATOM,
+             "animated content style rule should have been removed "
+             "from properties table already (we're rebuilding it now)");
 
-  MappedAttrParser* mappedAttrParser =
-    static_cast<MappedAttrParser*>(aData);
+  MappedAttrParser* mappedAttrParser = static_cast<MappedAttrParser*>(aData);
+  MOZ_ASSERT(mappedAttrParser, "parser should be non-null");
 
-  nsStringBuffer* valueBuf = static_cast<nsStringBuffer*>(aPropertyValue);
-  mappedAttrParser->ParseMappedAttrValue(aPropertyName, nsCheapString(valueBuf));
+  nsStringBuffer* animValBuf = static_cast<nsStringBuffer*>(aPropertyValue);
+  MOZ_ASSERT(animValBuf, "animated value should be non-null");
+
+  PRUnichar* animValBufData = static_cast<PRUnichar*>(animValBuf->Data());
+  uint32_t logicalStringLen = NS_strlen(animValBufData);
+  // SANITY CHECK: In case the string buffer wasn't correctly
+  // null-terminated, let's check the allocated size, too, and make sure we
+  // don't read further than that. (Note that StorageSize() is in units of
+  // bytes, so we have to convert that to units of PRUnichars, and subtract
+  // 1 for the null-terminator.)
+  uint32_t allocStringLen =
+    (animValBuf->StorageSize() / sizeof(PRUnichar)) - 1;
+
+  MOZ_ASSERT(logicalStringLen <= allocStringLen,
+             "The string in our string buffer wasn't null-terminated!!");
+
+  nsString animValStr;
+  animValBuf->ToString(std::min(logicalStringLen, allocStringLen),
+                       animValStr);
+
+  mappedAttrParser->ParseMappedAttrValue(aPropertyName, animValStr);
 }
 
 // Callback for freeing animated content style rule, in property table.

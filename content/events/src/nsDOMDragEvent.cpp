@@ -4,11 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMDragEvent.h"
-#include "nsIServiceManager.h"
 #include "nsGUIEvent.h"
 #include "nsContentUtils.h"
-#include "nsDOMDataTransfer.h"
-#include "nsIDragService.h"
+#include "nsIDOMDataTransfer.h"
+#include "prtime.h"
 
 nsDOMDragEvent::nsDOMDragEvent(mozilla::dom::EventTarget* aOwner,
                                nsPresContext* aPresContext,

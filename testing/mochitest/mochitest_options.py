@@ -4,7 +4,6 @@
 
 import optparse
 import os
-import sys
 import tempfile
 
 from automation import Automation
@@ -12,7 +11,7 @@ from automationutils import addCommonOptions, isURL
 from mozprofile import DEFAULT_PORTS
 import moznetwork
 
-here = os.path.abspath(os.path.dirname(sys.argv[0]))
+here = os.path.abspath(os.path.dirname(__file__))
 
 try:
     from mozbuild.base import MozbuildObject
@@ -652,7 +651,7 @@ class B2GOptions(MochitestOptions):
     def verifyOptions(self, options, mochitest):
         # since we are reusing verifyOptions, it will exit if App is not found
         temp = options.app
-        options.app = sys.argv[0]
+        options.app = __file__
         tempPort = options.httpPort
         tempSSL = options.sslPort
         tempIP = options.webServer

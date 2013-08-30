@@ -12,7 +12,7 @@
 #include "vm/ObjectImpl-inl.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 using namespace mozilla;
 
 #if defined(XP_WIN)
@@ -941,8 +941,7 @@ HandleSignal(int signum, siginfo_t *info, void *ctx)
 #  endif
 }
 
-static struct sigaction sPrevSegvHandler;
-static struct sigaction sPrevBusHandler;
+static struct sigaction sPrevHandler;
 
 static void
 AsmJSFaultHandler(int signum, siginfo_t *info, void *context)
@@ -953,27 +952,21 @@ AsmJSFaultHandler(int signum, siginfo_t *info, void *context)
     // This signal is not for any asm.js code we expect, so we need to forward
     // the signal to the next handler. If there is no next handler (SIG_IGN or
     // SIG_DFL), then it's time to crash. To do this, we set the signal back to
-    // it's previous disposition and return. This will cause the faulting op to
-    // be re-executed which will crash in the normal way. The advantage to
-    // doing this is that we remove ourselves from the crash stack which
-    // simplifies crash reports. Note: the order of these tests matter.
-    struct sigaction* prevHandler = NULL;
-    if (signum == SIGSEGV)
-        prevHandler = &sPrevSegvHandler;
-    else {
-	JS_ASSERT(signum == SIGBUS);
-        prevHandler = &sPrevBusHandler;
-    }
-
-    if (prevHandler->sa_flags & SA_SIGINFO) {
-        prevHandler->sa_sigaction(signum, info, context);
-        exit(signum);  // backstop
-    } else if (prevHandler->sa_handler == SIG_DFL || prevHandler->sa_handler == SIG_IGN) {
-        sigaction(signum, prevHandler, NULL);
-    } else {
-        prevHandler->sa_handler(signum);
-        exit(signum);  // backstop
-    }
+    // its original disposition and return. This will cause the faulting op to
+    // be re-executed which will crash in the normal way. The advantage of
+    // doing this to calling _exit() is that we remove ourselves from the crash
+    // stack which improves crash reports. If there is a next handler, call it.
+    // It will either crash synchronously, fix up the instruction so that
+    // execution can continue and return, or trigger a crash by returning the
+    // signal to it's original disposition and returning.
+    //
+    // Note: the order of these tests matter.
+    if (sPrevHandler.sa_flags & SA_SIGINFO)
+        sPrevHandler.sa_sigaction(signum, info, context);
+    else if (sPrevHandler.sa_handler == SIG_DFL || sPrevHandler.sa_handler == SIG_IGN)
+        sigaction(signum, &sPrevHandler, NULL);
+    else
+        sPrevHandler.sa_handler(signum);
 }
 # endif
 
@@ -993,19 +986,15 @@ js::EnsureAsmJSSignalHandlersInstalled(JSRuntime *rt)
 # if defined(XP_WIN)
     if (!AddVectoredExceptionHandler(/* FirstHandler = */true, AsmJSExceptionHandler))
         return false;
-# else  // assume Unix
+# else
+    // Assume Unix. SA_NODEFER allows us to reenter the signal handler if we
+    // crash while handling the signal, and fall through to the Breakpad
+    // handler by testing handlingSignal.
     struct sigaction sigAction;
+    sigAction.sa_flags = SA_SIGINFO | SA_NODEFER;
     sigAction.sa_sigaction = &AsmJSFaultHandler;
     sigemptyset(&sigAction.sa_mask);
-
-    // Note: SA_NODEFER allows us to reenter the signal handler if we crash
-    // while handling the signal, and fall through to the Breakpad handler
-    // by testing handlingSignal.
-    sigAction.sa_flags = SA_SIGINFO | SA_NODEFER;
-
-    if (sigaction(SIGSEGV, &sigAction, &sPrevSegvHandler))
-        return false;
-    if (sigaction(SIGBUS, &sigAction, &sPrevBusHandler))
+    if (sigaction(SIGSEGV, &sigAction, &sPrevHandler))
         return false;
 # endif
 

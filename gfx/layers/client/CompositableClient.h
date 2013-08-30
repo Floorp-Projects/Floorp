@@ -66,7 +66,7 @@ class SurfaceDescriptor;
  * where we have a different way of interfacing with the textures - in terms of
  * drawing into the compositable and/or passing its contents to the compostior.
  */
-class CompositableClient : public RefCounted<CompositableClient>
+class CompositableClient : public AtomicRefCounted<CompositableClient>
 {
 public:
   CompositableClient(CompositableForwarder* aForwarder);
@@ -80,7 +80,7 @@ public:
   TemporaryRef<DeprecatedTextureClient>
   CreateDeprecatedTextureClient(DeprecatedTextureClientType aDeprecatedTextureClientType);
 
-  TemporaryRef<BufferTextureClient>
+  virtual TemporaryRef<BufferTextureClient>
   CreateBufferTextureClient(gfx::SurfaceFormat aFormat, TextureFlags aFlags);
 
   virtual TemporaryRef<BufferTextureClient>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style type="text/css">
+    <![CDATA[
+      @font-face {
+        font-family: "Liberation";
+        src:url(resources/svg.woff);
+      }
+      text
+      {
+        font-family: Liberation;
+        font-size: 200px;
+      }
+    ]]>
+  </style>
+  <!--
+      Test that the right SVG glyph is picked from a document containing various
+      invalid glyph IDs.
+  -->
+  <text x="0" y="200">
+  M
+  </text>
+</svg>

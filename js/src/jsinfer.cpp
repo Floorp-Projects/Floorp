@@ -1921,12 +1921,12 @@ HeapTypeSet::isOwnProperty(JSContext *cx, TypeObject *object, bool configurable)
      * definite properties be invalidated.
      */
     if (object->flags & OBJECT_FLAG_NEW_SCRIPT_REGENERATE) {
-        if (object->newScript) {
+        if (object->hasNewScript()) {
             Rooted<TypeObject*> typeObj(cx, object);
-            RootedFunction fun(cx, object->newScript->fun);
+            RootedFunction fun(cx, object->newScript()->fun);
             CheckNewScriptProperties(cx, typeObj, fun);
         } else {
-            JS_ASSERT(object->flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED);
+            JS_ASSERT(object->flags & OBJECT_FLAG_ADDENDUM_CLEARED);
             object->flags &= ~OBJECT_FLAG_NEW_SCRIPT_REGENERATE;
         }
     }
@@ -2090,7 +2090,7 @@ StackTypeSet::getTypedArrayType()
 
     if (clasp && IsTypedArrayClass(clasp))
         return clasp - &TypedArrayObject::classes[0];
-    return TypedArrayObject::TYPE_MAX;
+    return ScalarTypeRepresentation::TYPE_MAX;
 }
 
 bool
@@ -2610,7 +2610,7 @@ TypeCompartment::processPendingRecompiles(FreeOp *fop)
     JS_ASSERT(!pending->empty());
 
 #ifdef JS_ION
-    ion::Invalidate(*this, fop, *pending);
+    jit::Invalidate(*this, fop, *pending);
 #endif
 
     fop->delete_(pending);
@@ -2659,13 +2659,13 @@ TypeZone::nukeTypes(FreeOp *fop)
     inferenceEnabled = false;
 
 #ifdef JS_ION
-    ion::InvalidateAll(fop, zone());
+    jit::InvalidateAll(fop, zone());
 
     /* Throw away all JIT code in the compartment, but leave everything else alone. */
 
     for (gc::CellIter i(zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
-        ion::FinishInvalidation(fop, script);
+        jit::FinishInvalidation(fop, script);
     }
 #endif /* JS_ION */
 
@@ -2741,7 +2741,7 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script)
     CancelOffThreadIonCompile(cx->compartment(), script);
 
     // Let the script warm up again before attempting another compile.
-    if (ion::IsBaselineEnabled(cx))
+    if (jit::IsBaselineEnabled(cx))
         script->resetUseCount();
 
     if (script->hasIonScript())
@@ -3042,7 +3042,7 @@ GetValueTypeForTable(const Value &v)
     return type;
 }
 
-struct types::ArrayTableKey
+struct types::ArrayTableKey : public DefaultHasher<types::ArrayTableKey>
 {
     Type type;
     JSObject *proto;
@@ -3050,8 +3050,6 @@ struct types::ArrayTableKey
     ArrayTableKey()
         : type(Type::UndefinedType()), proto(NULL)
     {}
-
-    typedef ArrayTableKey Lookup;
 
     static inline uint32_t hash(const ArrayTableKey &v) {
         return (uint32_t) (v.type.raw() ^ ((uint32_t)(size_t)v.proto >> 2));
@@ -3681,8 +3679,8 @@ TypeObject::markUnknown(ExclusiveContext *cx)
     JS_ASSERT(cx->compartment()->activeAnalysis);
     JS_ASSERT(!unknownProperties());
 
-    if (!(flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED))
-        clearNewScript(cx);
+    if (!(flags & OBJECT_FLAG_ADDENDUM_CLEARED))
+        clearAddendum(cx);
 
     InferSpew(ISpewOps, "UnknownProperties: %s", TypeObjectString(this));
 
@@ -3708,22 +3706,45 @@ TypeObject::markUnknown(ExclusiveContext *cx)
 }
 
 void
-TypeObject::clearNewScript(ExclusiveContext *cx)
+TypeObject::clearAddendum(ExclusiveContext *cx)
 {
-    JS_ASSERT(!(flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED));
-    flags |= OBJECT_FLAG_NEW_SCRIPT_CLEARED;
+    JS_ASSERT(!(flags & OBJECT_FLAG_ADDENDUM_CLEARED));
+    flags |= OBJECT_FLAG_ADDENDUM_CLEARED;
 
     /*
-     * It is possible for the object to not have a new script yet but to have
-     * one added in the future. When analyzing properties of new scripts we mix
-     * in adding constraints to trigger clearNewScript with changes to the
-     * type sets themselves (from breakTypeBarriers). It is possible that we
-     * could trigger one of these constraints before AnalyzeNewScriptProperties
-     * has finished, in which case we want to make sure that call fails.
+     * It is possible for the object to not have a new script or other
+     * addendum yet, but to have one added in the future. When
+     * analyzing properties of new scripts we mix in adding
+     * constraints to trigger clearNewScript with changes to the type
+     * sets themselves (from breakTypeBarriers). It is possible that
+     * we could trigger one of these constraints before
+     * AnalyzeNewScriptProperties has finished, in which case we want
+     * to make sure that call fails.
      */
-    if (!newScript)
+    if (!addendum)
         return;
 
+    switch (addendum->kind) {
+      case TypeObjectAddendum::NewScript:
+        clearNewScriptAddendum(cx);
+        break;
+
+      case TypeObjectAddendum::BinaryData:
+        clearBinaryDataAddendum(cx);
+        break;
+    }
+
+    /* We NULL out addendum *before* freeing it so the write barrier works. */
+    TypeObjectAddendum *savedAddendum = addendum;
+    addendum = NULL;
+    js_free(savedAddendum);
+
+    markStateChange(cx);
+}
+
+void
+TypeObject::clearNewScriptAddendum(ExclusiveContext *cx)
+{
     AutoEnterAnalysis enter(cx);
 
     /*
@@ -3756,7 +3777,7 @@ TypeObject::clearNewScript(ExclusiveContext *cx)
         for (ScriptFrameIter iter(cx->asJSContext()); !iter.done(); ++iter) {
             pcOffsets.append(uint32_t(iter.pc() - iter.script()->code));
             if (iter.isConstructing() &&
-                iter.callee() == newScript->fun &&
+                iter.callee() == newScript()->fun &&
                 iter.thisv().isObject() &&
                 !iter.thisv().toObject().hasLazyType() &&
                 iter.thisv().toObject().type() == this)
@@ -3777,7 +3798,7 @@ TypeObject::clearNewScript(ExclusiveContext *cx)
                 size_t callDepth = pcOffsets.length() - 1;
                 uint32_t offset = pcOffsets[callDepth];
 
-                for (TypeNewScript::Initializer *init = newScript->initializerList;; init++) {
+                for (TypeNewScript::Initializer *init = newScript()->initializerList;; init++) {
                     if (init->kind == TypeNewScript::Initializer::SETPROP) {
                         if (!depth && init->offset > offset) {
                             /* Advanced past all properties which have been initialized. */
@@ -3820,13 +3841,11 @@ TypeObject::clearNewScript(ExclusiveContext *cx)
         // Threads with an ExclusiveContext are not allowed to run scripts.
         JS_ASSERT(!cx->perThreadData->activation());
     }
+}
 
-    /* We NULL out newScript *before* freeing it so the write barrier works. */
-    TypeNewScript *savedNewScript = newScript;
-    newScript = NULL;
-    js_free(savedNewScript);
-
-    markStateChange(cx);
+void
+TypeObject::clearBinaryDataAddendum(ExclusiveContext *cx)
+{
 }
 
 void
@@ -4749,7 +4768,7 @@ class TypeConstraintClearDefiniteGetterSetter : public TypeConstraint
 
     void newPropertyState(JSContext *cx, TypeSet *source)
     {
-        if (!object->newScript)
+        if (!object->hasNewScript())
             return;
         /*
          * Clear out the newScript shape and definite property information from
@@ -4757,8 +4776,8 @@ class TypeConstraintClearDefiniteGetterSetter : public TypeConstraint
          * non-writable, both of which are indicated by the source type set
          * being marked as configured.
          */
-        if (!(object->flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED) && source->ownProperty(true))
-            object->clearNewScript(cx);
+        if (!(object->flags & OBJECT_FLAG_ADDENDUM_CLEARED) && source->ownProperty(true))
+            object->clearAddendum(cx);
     }
 
     void newType(JSContext *cx, TypeSet *source, Type type) {}
@@ -4802,11 +4821,11 @@ class TypeConstraintClearDefiniteSingle : public TypeConstraint
     const char *kind() { return "clearDefiniteSingle"; }
 
     void newType(JSContext *cx, TypeSet *source, Type type) {
-        if (object->flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED)
+        if (object->flags & OBJECT_FLAG_ADDENDUM_CLEARED)
             return;
 
         if (source->baseFlags() || source->getObjectCount() > 1)
-            object->clearNewScript(cx);
+            object->clearAddendum(cx);
     }
 };
 
@@ -5152,8 +5171,8 @@ CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, HandleFunction fu
     /* Strawman object to add properties to and watch for duplicates. */
     state.baseobj = NewBuiltinClassInstance(cx, &JSObject::class_, gc::FINALIZE_OBJECT16);
     if (!state.baseobj) {
-        if (type->newScript)
-            type->clearNewScript(cx);
+        if (type->addendum)
+            type->clearAddendum(cx);
         cx->compartment()->types.setPendingNukeTypes(cx);
         return;
     }
@@ -5161,10 +5180,10 @@ CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, HandleFunction fu
     AnalyzeNewScriptProperties(cx, type, fun, state);
     if (!state.baseobj ||
         state.baseobj->slotSpan() == 0 ||
-        !!(type->flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED))
+        !!(type->flags & OBJECT_FLAG_ADDENDUM_CLEARED))
     {
-        if (type->newScript)
-            type->clearNewScript(cx);
+        if (type->addendum)
+            type->clearAddendum(cx);
         return;
     }
 
@@ -5173,11 +5192,13 @@ CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, HandleFunction fu
      * constraints and don't need to make another TypeNewScript. Make sure that
      * the properties added to baseobj match the type's definite properties.
      */
-    if (type->newScript) {
+    if (type->hasNewScript()) {
         if (!type->matchDefiniteProperties(state.baseobj))
-            type->clearNewScript(cx);
+            type->clearAddendum(cx);
         return;
     }
+    JS_ASSERT(!type->addendum);
+    JS_ASSERT(!(type->flags & OBJECT_FLAG_ADDENDUM_CLEARED));
 
     gc::AllocKind kind = gc::GetGCObjectKind(state.baseobj->slotSpan());
 
@@ -5202,29 +5223,32 @@ CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, HandleFunction fu
 
     size_t numBytes = sizeof(TypeNewScript)
                     + (state.initializerList.length() * sizeof(TypeNewScript::Initializer));
+    TypeNewScript *newScript;
 #ifdef JSGC_ROOT_ANALYSIS
     // calloc can legitimately return a pointer that appears to be poisoned.
     void *p;
     do {
         p = cx->calloc_(numBytes);
     } while (IsPoisonedPtr(p));
-    type->newScript = (TypeNewScript *) p;
+    newScript = (TypeNewScript *) p;
 #else
-    type->newScript = (TypeNewScript *) cx->calloc_(numBytes);
+    newScript = (TypeNewScript *) cx->calloc_(numBytes);
 #endif
+    new (newScript) TypeNewScript();
+    type->addendum = newScript;
 
-    if (!type->newScript) {
+    if (!newScript) {
         cx->compartment()->types.setPendingNukeTypes(cx);
         return;
     }
 
-    type->newScript->fun = fun;
-    type->newScript->allocKind = kind;
-    type->newScript->shape = state.baseobj->lastProperty();
+    newScript->fun = fun;
+    newScript->allocKind = kind;
+    newScript->shape = state.baseobj->lastProperty();
 
-    type->newScript->initializerList = (TypeNewScript::Initializer *)
-        ((char *) type->newScript.get() + sizeof(TypeNewScript));
-    PodCopy(type->newScript->initializerList,
+    newScript->initializerList = (TypeNewScript::Initializer *)
+        ((char *) newScript + sizeof(TypeNewScript));
+    PodCopy(newScript->initializerList,
             state.initializerList.begin(),
             state.initializerList.length());
 }
@@ -6045,7 +6069,7 @@ ExclusiveContext::getNewType(Class *clasp, TaggedProto proto_, JSFunction *fun_)
 
     TypeObjectSet::AddPtr p = newTypeObjects.lookupForAdd(TypeObjectSet::Lookup(clasp, proto_));
     SkipRoot skipHash(this, &p); /* Prevent the hash from being poisoned. */
-
+    uint64_t originalGcNumber = gcNumber();
     if (p) {
         TypeObject *type = *p;
 
@@ -6060,8 +6084,8 @@ ExclusiveContext::getNewType(Class *clasp, TaggedProto proto_, JSFunction *fun_)
          * Object.create is called with a prototype object that is also the
          * 'prototype' property of some scripted function.
          */
-        if (type->newScript && type->newScript->fun != fun_)
-            type->clearNewScript(this);
+        if (type->hasNewScript() && type->newScript()->fun != fun_)
+            type->clearAddendum(this);
 
         return type;
     }
@@ -6081,7 +6105,15 @@ ExclusiveContext::getNewType(Class *clasp, TaggedProto proto_, JSFunction *fun_)
     if (!type)
         return NULL;
 
-    if (!newTypeObjects.relookupOrAdd(p, TypeObjectSet::Lookup(clasp, proto), type.get()))
+    /*
+     * If a GC has occured, then the hash we calculated may be invalid, as it
+     * is based on proto, which may have been moved.
+     */
+    bool gcHappened = gcNumber() != originalGcNumber;
+    bool added =
+        gcHappened ? newTypeObjects.putNew(TypeObjectSet::Lookup(clasp, proto), type.get())
+                   : newTypeObjects.relookupOrAdd(p, TypeObjectSet::Lookup(clasp, proto), type.get());
+    if (!added)
         return NULL;
 
     if (!typeInferenceEnabled())
@@ -6128,14 +6160,13 @@ ExclusiveContext::getNewType(Class *clasp, TaggedProto proto_, JSFunction *fun_)
 }
 
 TypeObject *
-JSCompartment::getLazyType(JSContext *cx, Class *clasp, TaggedProto proto)
+ExclusiveContext::getLazyType(Class *clasp, TaggedProto proto)
 {
-    JS_ASSERT(cx->compartment() == this);
-    JS_ASSERT_IF(proto.isObject(), cx->compartment() == proto.toObject()->compartment());
+    JS_ASSERT_IF(proto.isObject(), compartment() == proto.toObject()->compartment());
 
-    AutoEnterAnalysis enter(cx);
+    AutoEnterAnalysis enter(this);
 
-    TypeObjectSet &table = cx->compartment()->lazyTypeObjects;
+    TypeObjectSet &table = compartment()->lazyTypeObjects;
 
     if (!table.initialized() && !table.init())
         return NULL;
@@ -6148,8 +6179,8 @@ JSCompartment::getLazyType(JSContext *cx, Class *clasp, TaggedProto proto)
         return type;
     }
 
-    Rooted<TaggedProto> protoRoot(cx, proto);
-    TypeObject *type = cx->compartment()->types.newTypeObject(cx, clasp, protoRoot, false);
+    Rooted<TaggedProto> protoRoot(this, proto);
+    TypeObject *type = compartment()->types.newTypeObject(this, clasp, protoRoot, false);
     if (!type)
         return NULL;
 
@@ -6230,7 +6261,7 @@ inline void
 TypeObject::sweep(FreeOp *fop)
 {
     if (singleton) {
-        JS_ASSERT(!newScript);
+        JS_ASSERT(!hasNewScript());
 
         /*
          * All properties can be discarded. We will regenerate them as needed
@@ -6242,8 +6273,8 @@ TypeObject::sweep(FreeOp *fop)
     }
 
     if (!isMarked()) {
-        if (newScript)
-            fop->free_(newScript);
+        if (addendum)
+            fop->free_(addendum);
         return;
     }
 
@@ -6308,7 +6339,7 @@ TypeObject::sweep(FreeOp *fop)
      * newScript information, these constraints will need to be regenerated
      * the next time we compile code which depends on this info.
      */
-    if (newScript)
+    if (hasNewScript())
         flags |= OBJECT_FLAG_NEW_SCRIPT_REGENERATE;
 }
 
@@ -6660,11 +6691,11 @@ TypeObject::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
          * every GC. The type object is normally destroyed too, but we don't
          * charge this to 'temporary' as this is not for GC heap values.
          */
-        JS_ASSERT(!newScript);
+        JS_ASSERT(!hasNewScript());
         return 0;
     }
 
-    return mallocSizeOf(newScript);
+    return mallocSizeOf(addendum);
 }
 
 TypeZone::TypeZone(Zone *zone)
@@ -6741,4 +6772,52 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes)
         gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_FREE_TI_ARENA);
         rt->freeLifoAlloc.transferFrom(&oldAlloc);
     }
+}
+
+/////////////////////////////////////////////////////////////////////
+// Binary data
+/////////////////////////////////////////////////////////////////////
+
+bool
+TypeObject::addBinaryDataAddendum(JSContext *cx, TypeRepresentation *repr)
+{
+    if (!cx->typeInferenceEnabled())
+        return true;
+
+    JS_ASSERT(repr);
+
+    if (flags & OBJECT_FLAG_ADDENDUM_CLEARED)
+        return true;
+
+    JS_ASSERT(!unknownProperties());
+
+    if (addendum) {
+        JS_ASSERT(hasBinaryData());
+        JS_ASSERT(binaryData()->typeRepr == repr);
+        return true;
+    }
+
+    TypeBinaryData *binaryData = js_new<TypeBinaryData>(repr);
+    if (!binaryData)
+        return false;
+    addendum = binaryData;
+    return true;
+}
+
+/////////////////////////////////////////////////////////////////////
+// Type object addenda constructor
+/////////////////////////////////////////////////////////////////////
+
+TypeObjectAddendum::TypeObjectAddendum(Kind kind)
+  : kind(kind)
+{}
+
+TypeNewScript::TypeNewScript()
+  : TypeObjectAddendum(NewScript)
+{}
+
+TypeBinaryData::TypeBinaryData(TypeRepresentation *repr)
+  : TypeObjectAddendum(BinaryData),
+    typeRepr(repr)
+{
 }

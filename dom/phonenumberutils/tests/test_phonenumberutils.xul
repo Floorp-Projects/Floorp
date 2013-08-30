@@ -24,7 +24,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/PhoneNumberUtils.jsm");
 
 Services.prefs.setIntPref("dom.phonenumber.substringmatching.BR", 8);
-Services.prefs.setCharPref("ril.lastKnownSimMcc", "310");
+Services.prefs.setCharPref("ril.lastKnownSimMcc", "724");
 
 function CantParseWithMcc(dial, mcc) {
   var result = PhoneNumberUtils.parseWithMCC(dial, mcc);

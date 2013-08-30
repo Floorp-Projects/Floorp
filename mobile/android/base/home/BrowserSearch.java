@@ -93,7 +93,7 @@ public class BrowserSearch extends HomeFragment
     private LinearLayout mView;
 
     // The list showing search results
-    private ListView mList;
+    private HomeListView mList;
 
     // Client that performs search suggestion queries
     private volatile SuggestClient mSuggestClient;
@@ -205,7 +205,7 @@ public class BrowserSearch extends HomeFragment
         // All list views are styled to look the same with a global activity theme.
         // If the style of the list changes, inflate it from an XML.
         mView = (LinearLayout) inflater.inflate(R.layout.browser_search, container, false);
-        mList = (ListView) mView.findViewById(R.id.home_list_view);
+        mList = (HomeListView) mView.findViewById(R.id.home_list_view);
 
         return mView;
     }
@@ -236,6 +236,16 @@ public class BrowserSearch extends HomeFragment
 
                 // This item is a TwoLinePageRow, so we allow switch-to-tab.
                 mUrlOpenListener.onUrlOpen(url, EnumSet.of(OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
+            }
+        });
+
+        mList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                // Account for the search engines
+                position -= getSuggestEngineCount();
+
+                return mList.onItemLongClick(parent, view, position, id);
             }
         });
 
@@ -872,7 +882,7 @@ public class BrowserSearch extends HomeFragment
                 requestFocus();
             }
 
-            return false;
+            return super.onInterceptTouchEvent(event);
         }
     }
 }

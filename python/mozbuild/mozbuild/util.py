@@ -175,12 +175,8 @@ def resolve_target_to_make(topobjdir, target):
     Makefile containing a different Makefile, and an appropriate
     target.
     '''
-    if os.path.isabs(target):
-        print('Absolute paths for make targets are not allowed.')
-        return (None, None)
 
-    target = target.replace(os.sep, '/')
-
+    target = target.replace(os.sep, '/').lstrip('/')
     abs_target = os.path.join(topobjdir, target)
 
     # For directories, run |make -C dir|. If the directory does not

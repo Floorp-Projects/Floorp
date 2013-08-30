@@ -359,11 +359,11 @@ static dbus_bool_t dbus_func_args_async_valist(DBusConnection *conn,
                                                const char *func,
                                                int first_arg_type,
                                                va_list args) {
-  DBusMessage *msg = NULL;
+  DBusMessage *msg = nullptr;
   /* Compose the command */
   msg = dbus_message_new_method_call(BLUEZ_DBUS_BASE_IFC, path, ifc, func);
 
-  if (msg == NULL) {
+  if (msg == nullptr) {
     LOG("Could not allocate D-Bus message object!");
     goto done;
   }
@@ -524,12 +524,12 @@ dbus_func_send_and_block(DBusConnection* aConnection,
   return TRUE;
 }
 
-// If err is NULL, then any errors will be LOG'd, and free'd and the reply
-// will be NULL.
-// If err is not NULL, then it is assumed that dbus_error_init was already
+// If err is nullptr, then any errors will be LOG'd, and free'd and the reply
+// will be nullptr.
+// If err is not nullptr, then it is assumed that dbus_error_init was already
 // called, and error's will be returned to the caller without logging. The
-// return value is NULL iff an error was set. The client must free the error if
-// set.
+// return value is nullptr iff an error was set. The client must free the
+// error if set.
 DBusMessage* dbus_func_args_timeout_valist(DBusConnection* conn,
                                            int timeout_ms,
                                            DBusError* err,
@@ -591,7 +591,7 @@ DBusMessage * dbus_func_args(DBusConnection *conn,
   DBusMessage *ret;
   va_list lst;
   va_start(lst, first_arg_type);
-  ret = dbus_func_args_timeout_valist(conn, -1, NULL,
+  ret = dbus_func_args_timeout_valist(conn, -1, nullptr,
                                       path, ifc, func,
                                       first_arg_type, lst);
   va_end(lst);

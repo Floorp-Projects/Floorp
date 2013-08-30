@@ -10,12 +10,16 @@
 #include "nsCycleCollectionParticipant.h"
 
 #include "mozilla/dom/SpeechRecognitionBinding.h"
+#include "mozilla/MediaManager.h"
+#include "mozilla/Services.h"
 
 #include "AudioSegment.h"
 #include "endpointer.h"
 
 #include "GeneratedEvents.h"
 #include "nsIDOMSpeechRecognitionEvent.h"
+#include "nsIObserverService.h"
+#include "nsServiceManagerUtils.h"
 
 #include <algorithm>
 
@@ -107,9 +111,10 @@ SpeechRecognition::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 }
 
 already_AddRefed<SpeechRecognition>
-SpeechRecognition::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
+SpeechRecognition::Constructor(const GlobalObject& aGlobal,
+                               ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.GetAsSupports());
   if (!win) {
     aRv.Throw(NS_ERROR_FAILURE);
   }
@@ -623,8 +628,7 @@ SpeechRecognition::GetGrammars(ErrorResult& aRv) const
 }
 
 void
-SpeechRecognition::SetGrammars(mozilla::dom::SpeechGrammarList& aArg,
-                               ErrorResult& aRv)
+SpeechRecognition::SetGrammars(SpeechGrammarList& aArg, ErrorResult& aRv)
 {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return;

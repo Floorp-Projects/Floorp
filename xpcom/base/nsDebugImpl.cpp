@@ -6,6 +6,8 @@
 // Chromium headers must come before Mozilla headers.
 #include "base/process_util.h"
 
+#include "mozilla/Atomics.h"
+
 #include "nsDebugImpl.h"
 #include "nsDebug.h"
 #ifdef MOZ_CRASHREPORTER
@@ -20,7 +22,6 @@
 #include "prerror.h"
 #include "prerr.h"
 #include "prenv.h"
-#include "pratom.h"
 
 #ifdef ANDROID
 #include <android/log.h>
@@ -83,7 +84,7 @@ using namespace mozilla;
 static bool sIsMultiprocess = false;
 static const char *sMultiprocessDescription = NULL;
 
-static int32_t gAssertionCount = 0;
+static Atomic<int32_t> gAssertionCount;
 
 NS_IMPL_QUERY_INTERFACE2(nsDebugImpl, nsIDebug, nsIDebug2)
 
@@ -390,7 +391,7 @@ NS_DebugBreak(uint32_t aSeverity, const char *aStr, const char *aExpr,
    }
 
    // Now we deal with assertions
-   PR_ATOMIC_INCREMENT(&gAssertionCount);
+   gAssertionCount++;
 
    switch (GetAssertBehavior()) {
    case NS_ASSERT_WARN:

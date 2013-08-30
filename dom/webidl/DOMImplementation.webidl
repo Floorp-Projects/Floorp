@@ -21,7 +21,7 @@ interface DOMImplementation {
   [Throws]
   Document createDocument(DOMString? namespace,
                           [TreatNullAs=EmptyString] DOMString qualifiedName,
-                          DocumentType? doctype);
+                          optional DocumentType? doctype = null);
   [Throws]
   Document createHTMLDocument(optional DOMString title);
 };

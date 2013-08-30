@@ -11,7 +11,6 @@
 #include "nsIParser.h"
 #include "CNavDTD.h"
 #include "nsIHTMLContentSink.h"
-#include "nsParserNode.h"
 
 NS_IMPL_ISUPPORTS1(CNavDTD, nsIDTD);
 
@@ -42,17 +41,14 @@ CNavDTD::BuildModel(nsITokenizer* aTokenizer,
     return NS_ERROR_HTMLPARSER_STOPPARSING;
   }
 
-  nsParserNode html(eHTMLTag_html);
-  nsParserNode body(eHTMLTag_body);
-
-  nsresult rv = sink->OpenContainer(html);
+  nsresult rv = sink->OpenContainer(nsIHTMLContentSink::eHTML);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = sink->OpenContainer(body);
+  rv = sink->OpenContainer(nsIHTMLContentSink::eBody);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = sink->CloseContainer(eHTMLTag_body);
+  rv = sink->CloseContainer(nsIHTMLContentSink::eBody);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
-  rv = sink->CloseContainer(eHTMLTag_html);
+  rv = sink->CloseContainer(nsIHTMLContentSink::eHTML);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   return NS_OK;

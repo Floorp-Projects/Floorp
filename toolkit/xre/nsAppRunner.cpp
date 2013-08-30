@@ -190,6 +190,7 @@ using mozilla::scache::StartupCache;
 #include "nsICrashReporter.h"
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 #include "nsIPrefService.h"
+#include "mozilla/Preferences.h"
 #endif
 
 #include "base/command_line.h"
@@ -238,6 +239,10 @@ static char **gQtOnlyArgv;
 #include "nsGTKToolkit.h"
 #endif
 #include "BinaryPath.h"
+
+#ifdef MOZ_LINKER
+extern "C" MFBT_API bool IsSignalHandlingBroken();
+#endif
 
 namespace mozilla {
 int (*RunGTest)() = 0;
@@ -924,10 +929,6 @@ nsXULAppInfo::SetEnabled(bool aEnabled)
       if (!xreDirectory)
         return NS_ERROR_FAILURE;
     }
-    AnnotateCrashReport(NS_LITERAL_CSTRING("FramePoisonBase"),
-                        nsPrintfCString("%.16llx", uint64_t(gMozillaPoisonBase)));
-    AnnotateCrashReport(NS_LITERAL_CSTRING("FramePoisonSize"),
-                        nsPrintfCString("%lu", uint32_t(gMozillaPoisonSize)));
     return CrashReporter::SetExceptionHandler(xreDirectory, true);
   }
   else {
@@ -3000,6 +3001,11 @@ XREMain::XRE_mainInit(bool* aExitFlag)
     nsDependentCString releaseChannel(NS_STRINGIFY(MOZ_UPDATE_CHANNEL));
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ReleaseChannel"),
                                        releaseChannel);
+#ifdef MOZ_LINKER
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("CrashAddressLikelyWrong"),
+                                       IsSignalHandlingBroken() ? NS_LITERAL_CSTRING("1")
+                                                                : NS_LITERAL_CSTRING("0"));
+#endif
     CrashReporter::SetRestartArgs(gArgc, gArgv);
 
     // annotate other data (user id etc)
@@ -3261,18 +3267,6 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
 #if defined(MOZ_WIDGET_QT)
   nsQAppInstance::AddRef(gArgc, gArgv, true);
 
-#if MOZ_PLATFORM_MAEMO > 5
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    // try to get the MInputContext if possible to support the MeeGo VKB
-    QInputContext* inputContext = qApp->inputContext();
-    if (inputContext && inputContext->identifierName() != "MInputContext") {
-        QInputContext* context = QInputContextFactory::create("MInputContext",
-                                                              qApp);
-        if (context)
-            qApp->setInputContext(context);
-    }
-  }
-#endif
   QStringList nonQtArguments = qApp->arguments();
   gQtOnlyArgc = 1;
   gQtOnlyArgv = (char**) malloc(sizeof(char*) 
@@ -3680,6 +3674,11 @@ XREMain::XRE_mainRun()
       }
     }
   }
+  // Needs to be set after xpcom initialization.
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("FramePoisonBase"),
+                                     nsPrintfCString("%.16llx", uint64_t(gMozillaPoisonBase)));
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("FramePoisonSize"),
+                                     nsPrintfCString("%lu", uint32_t(gMozillaPoisonSize)));
 #endif
 
   if (mStartOffline) {
@@ -3755,6 +3754,13 @@ XREMain::XRE_mainRun()
   }
 
   mDirProvider.DoStartup();
+
+#ifdef MOZ_CRASHREPORTER
+  nsCString userAgentLocale;
+  if (NS_SUCCEEDED(Preferences::GetCString("general.useragent.locale", &userAgentLocale))) {
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("useragent_locale"), userAgentLocale);
+  }
+#endif
 
   appStartup->GetShuttingDown(&mShuttingDown);
 

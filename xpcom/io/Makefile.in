@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= xpcomio_s
 MOZILLA_INTERNAL_API = 1
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
@@ -21,14 +20,4 @@ endif
 endif
 
 LOCAL_INCLUDES	+= -I..
-
-ifeq ($(MOZ_PLATFORM_MAEMO),5)
-CFLAGS          += $(MOZ_DBUS_CFLAGS)
-CXXFLAGS        += $(MOZ_DBUS_CFLAGS)
-endif
-
-ifdef MOZ_PLATFORM_MAEMO
-CFLAGS          += $(MOZ_PLATFORM_MAEMO_CFLAGS) $(MOZ_QT_CFLAGS)
-CXXFLAGS        += $(MOZ_PLATFORM_MAEMO_CFLAGS) $(MOZ_QT_CFLAGS)
-endif
 

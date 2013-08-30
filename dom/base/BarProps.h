@@ -16,10 +16,10 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "nsAutoPtr.h"
+#include "nsPIDOMWindow.h"
 
 class nsGlobalWindow;
 class nsIWebBrowserChrome;
-class nsPIDOMWindow;
 
 namespace mozilla {
 

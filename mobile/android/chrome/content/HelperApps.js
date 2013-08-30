@@ -69,6 +69,54 @@ var HelperApps =  {
     return found;
   },
 
+  updatePageAction: function setPageAction(uri) {
+    let apps = this.getAppsForUri(uri);
+    if (apps.length > 0)
+      this._setPageActionFor(uri, apps);
+    else
+      this._removePageAction();
+  },
+
+  _setPageActionFor: function setPageActionFor(uri, apps) {
+    this._pageActionUri = uri;
+
+    // If the pageaction is already added, simply update the URI to be launched when 'onclick' is triggered.
+    if (this._pageActionId != undefined)
+      return;
+
+    this._pageActionId = NativeWindow.pageactions.add({
+      title: Strings.browser.GetStringFromName("openInApp.pageAction"),
+      icon: "drawable://icon_openinapp",
+      clickCallback: function() {
+        if (apps.length == 1)
+          this._launchApp(apps[0], this._pageActionUri);
+        else
+          this.openUriInApp(this._pageActionUri);
+      }.bind(this)
+    });
+  },
+
+  _removePageAction: function removePageAction() {
+    if(!this._pageActionId)
+      return;
+
+    NativeWindow.pageactions.remove(this._pageActionId);
+    delete this._pageActionId;
+  },
+
+  _launchApp: function launchApp(appData, uri) {
+    let mimeType = ContentAreaUtils.getMIMETypeForURI(uri) || "";
+    let msg = {
+      type: "Intent:Open",
+      mime: mimeType,
+      action: "android.intent.action.VIEW",
+      url: uri.spec,
+      packageName: appData.packageName,
+      className: appData.activityName
+    };
+    sendMessageToJava(msg);
+  },
+
   openUriInApp: function openUriInApp(uri) {
     let mimeType = ContentAreaUtils.getMIMETypeForURI(uri) || "";
     let msg = {

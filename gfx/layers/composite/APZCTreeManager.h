@@ -208,8 +208,8 @@ public:
    */
   void UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
                              bool aAllowZoom,
-                             float aMinScale,
-                             float aMaxScale);
+                             const CSSToScreenScale& aMinScale,
+                             const CSSToScreenScale& aMaxScale);
 
   /**
    * Update mFrameMetrics.mScrollOffset to the given offset.
@@ -234,6 +234,17 @@ public:
    * may prevent objects from being freed properly.
    */
   void ClearTree();
+
+  /**
+   * Set the dpi value used by all AsyncPanZoomControllers.
+   * DPI defaults to 72 if not set using SetDPI() at any point.
+   */
+  static void SetDPI(float aDpiValue) { sDPI = aDpiValue; }
+
+  /**
+   * Returns the current dpi value in use.
+   */
+  static float GetDPI() { return sDPI; }
 
 protected:
   /**
@@ -292,6 +303,8 @@ private:
    * input delivery thread, and so does not require locking.
    */
   nsRefPtr<AsyncPanZoomController> mApzcForInputBlock;
+
+  static float sDPI;
 };
 
 }

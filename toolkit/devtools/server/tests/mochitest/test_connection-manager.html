@@ -20,6 +20,7 @@ window.onload = function() {
 
   Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
   Cu.import("resource://gre/modules/devtools/Loader.jsm");
+  Cu.import("resource://gre/modules/Services.jsm");
 
   DebuggerServer.init(function () { return true; });
   DebuggerServer.addBrowserActors();
@@ -43,7 +44,7 @@ window.onload = function() {
 
     var c = c2;
 
-    var eventsRef = "connecting connected disconnecting disconnected host-changed disconnected destroyed";
+    var eventsRef = "connecting connected disconnecting disconnected host-changed disconnected timeout destroyed";
     var events = [];
 
     var s = Connection.Status;
@@ -70,7 +71,7 @@ window.onload = function() {
     function testError() {
       c.once(Connection.Events.DISCONNECTED, function(e) {
         events.push(e);
-        ConnectionManager.destroyConnection(c);
+        testKeepConnecting();
       });
       c.once(Connection.Events.HOST_CHANGED, function(e) {
         events.push(e);
@@ -78,6 +79,24 @@ window.onload = function() {
       });
       c.port = 1;
       c.host = "localhost";
+    }
+
+    function testKeepConnecting() {
+      // ensure that keepConnecting keep trying connecting
+      // until the connection attempts timeout
+      var originalTimeout = Services.prefs.getIntPref("devtools.debugger.remote-timeout");
+      Services.prefs.setIntPref("devtools.debugger.remote-timeout", 1000);
+      c.once("timeout", function (e) {
+        events.push(e);
+        Services.prefs.setIntPref("devtools.debugger.remote-timeout", originalTimeout);
+        ConnectionManager.destroyConnection(c);
+      });
+      c.keepConnecting = true;
+      var port = ConnectionManager.getFreeTCPPort();
+      ok(parseInt(port), "Free TCP port looks like a port number");
+      c.port = port;
+      c.host = "locahost";
+      c.connect();
     }
 
     function finish() {

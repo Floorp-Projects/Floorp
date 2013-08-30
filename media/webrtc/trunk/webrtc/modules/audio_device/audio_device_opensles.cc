@@ -1165,48 +1165,50 @@ int32_t AudioDeviceAndroidOpenSLES::StartPlayout() {
 }
 
 int32_t AudioDeviceAndroidOpenSLES::StopPlayout() {
-  {
-    CriticalSectionScoped lock(&crit_sect_);
-    if (!is_play_initialized_) {
-      WEBRTC_OPENSL_TRACE(kTraceInfo, kTraceAudioDevice, id_,
-                          "  Playout is not initialized");
-      return 0;
-    }
 
-    if (!sles_player_itf_ && !sles_output_mixer_ && !sles_player_) {
-      // Make sure player is stopped
-      int32_t res =
-          (*sles_player_itf_)->SetPlayState(sles_player_itf_,
-                                           SL_PLAYSTATE_STOPPED);
-      if (res != SL_RESULT_SUCCESS) {
-        WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
-                            "  failed to stop playout");
-        return -1;
-      }
-      res = (*sles_player_sbq_itf_)->Clear(sles_player_sbq_itf_);
-      if (res != SL_RESULT_SUCCESS) {
-        WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
-                            "  failed to clear player buffer queue");
-        return -1;
-      }
+  CriticalSectionScoped lock(&crit_sect_);
+  if (!is_play_initialized_) {
+    WEBRTC_OPENSL_TRACE(kTraceInfo, kTraceAudioDevice, id_,
+                        "  Playout is not initialized");
+    return 0;
+  }
 
-      // Destroy the player
-      (*sles_player_)->Destroy(sles_player_);
-      // Destroy Output Mix object
-      (*sles_output_mixer_)->Destroy(sles_output_mixer_);
-      sles_player_ = NULL;
-      sles_player_itf_ = NULL;
-      sles_player_sbq_itf_ = NULL;
-      sles_output_mixer_ = NULL;
+  if (sles_player_itf_) {
+    // Make sure player is stopped
+    int32_t res = (*sles_player_itf_)->SetPlayState(sles_player_itf_,
+                                                    SL_PLAYSTATE_STOPPED);
+    if (res != SL_RESULT_SUCCESS) {
+      WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
+                          "  failed to stop playout");
     }
   }
 
-  CriticalSectionScoped lock(&crit_sect_);
+  if (sles_player_sbq_itf_) {
+    int32_t res = (*sles_player_sbq_itf_)->Clear(sles_player_sbq_itf_);
+    if (res != SL_RESULT_SUCCESS) {
+      WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
+                          "  failed to clear player buffer queue");
+    }
+  }
+
+  if (sles_player_) {
+    // Destroy the player
+    (*sles_player_)->Destroy(sles_player_);
+  }
+
+  if (sles_output_mixer_) {
+    // Destroy Output Mix object
+    (*sles_output_mixer_)->Destroy(sles_output_mixer_);
+  }
+
   is_play_initialized_ = false;
   is_playing_ = false;
   play_warning_ = 0;
   play_error_ = 0;
-
+  sles_player_sbq_itf_ = NULL;
+  sles_player_itf_ = NULL;
+  sles_player_ = NULL;
+  sles_output_mixer_ = NULL;
   return 0;
 }
 

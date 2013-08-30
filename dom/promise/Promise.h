@@ -14,9 +14,9 @@
 #include "mozilla/dom/PromiseBinding.h"
 #include "nsWrapperCache.h"
 #include "nsAutoPtr.h"
+#include "nsPIDOMWindow.h"
 
 struct JSContext;
-class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {
@@ -54,7 +54,7 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   static already_AddRefed<Promise>
-  Constructor(const GlobalObject& aGlobal, JSContext* aCx, PromiseInit& aInit,
+  Constructor(const GlobalObject& aGlobal, PromiseInit& aInit,
               ErrorResult& aRv);
 
   static already_AddRefed<Promise>
@@ -101,6 +101,10 @@ private:
   void AppendCallbacks(PromiseCallback* aResolveCallback,
                        PromiseCallback* aRejectCallback);
 
+  // If we have been rejected and our mResult is a JS exception,
+  // report it to the error console.
+  void MaybeReportRejected();
+
   nsRefPtr<nsPIDOMWindow> mWindow;
 
   nsRefPtr<PromiseResolver> mResolver;
@@ -111,6 +115,7 @@ private:
   JS::Heap<JS::Value> mResult;
   PromiseState mState;
   bool mTaskPending;
+  bool mHadRejectCallback;
 };
 
 } // namespace dom

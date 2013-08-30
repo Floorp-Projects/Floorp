@@ -11,6 +11,7 @@
 #include "nsEventListenerManager.h"
 #include "nsPrintfCString.h"
 #include "mozilla/dom/Element.h"
+#include "nsRegion.h"
 #include <algorithm>
 
 namespace mozilla {

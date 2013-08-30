@@ -443,6 +443,7 @@ AutoMounter::UpdateState()
           // Volume is mounted, we need to unmount before
           // we can share.
           LOG("UpdateState: Unmounting %s", vol->NameStr());
+          vol->SetIsSharing(true);
           vol->StartUnmount(mResponseCallback);
           return; // UpdateState will be called again when the Unmount command completes
         }

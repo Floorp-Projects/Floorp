@@ -24,6 +24,7 @@
 #include "mozilla/Util.h"
 #include "nsCycleCollector.h"
 #include "nsIXPConnect.h"
+#include "nsThreadUtils.h" // Hacky work around for some bindings needing NS_IsMainThread.
 #include "nsTraceRefcnt.h"
 #include "qsObjectHelper.h"
 #include "xpcpublic.h"
@@ -181,6 +182,10 @@ IsDOMObject(JSObject* obj)
   return IsDOMClass(clasp) || IsDOMProxy(obj, clasp);
 }
 
+#define UNWRAP_OBJECT(Interface, cx, obj, value)                             \
+  UnwrapObject<prototypes::id::Interface,                                    \
+               mozilla::dom::Interface##Binding::NativeType>(cx, obj, value)
+
 // Some callers don't want to set an exception when unwrapping fails
 // (for example, overload resolution uses unwrapping to tell what sort
 // of thing it's looking at).
@@ -255,15 +260,6 @@ MOZ_ALWAYS_INLINE bool
 IsConvertibleToCallbackInterface(JSContext* cx, JS::Handle<JSObject*> obj)
 {
   return IsNotDateOrRegExp(cx, obj);
-}
-
-// U must be something that a T* can be assigned to (e.g. T* or an nsRefPtr<T>).
-template <class T, typename U>
-inline nsresult
-UnwrapObject(JSContext* cx, JSObject* obj, U& value)
-{
-  return UnwrapObject<static_cast<prototypes::ID>(
-           PrototypeIDMap<T>::PrototypeID), T>(cx, obj, value);
 }
 
 // The items in the protoAndIfaceArray are indexed by the prototypes::id::ID and
@@ -1626,6 +1622,12 @@ class UnionMember {
 public:
     T& SetValue() {
       new (storage.addr()) T();
+      return *storage.addr();
+    }
+    template <typename T1>
+    T& SetValue(const T1 &t1)
+    {
+      new (storage.addr()) T(t1);
       return *storage.addr();
     }
     template <typename T1, typename T2>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style type="text/css">
+    <![CDATA[
+      @font-face {
+        font-family: "Liberation";
+        src:url(resources/svg.woff);
+      }
+      text
+      {
+        font-family: Liberation;
+        font-size: 200px;
+      }
+    ]]>
+  </style>
+  <!-- 
+      Test that paintservers within SVG glyph documents are rendered properly
+  -->
+  <text x="0" y="200">
+  e
+  </text>
+</svg>

@@ -43,6 +43,7 @@ extern "C" {
 #include "transport_addr.h"
 #include "nr_socket.h"
 #include "nr_resolver.h"
+#include "nr_interface_prioritizer.h"
 #include "stun_client_ctx.h"
 #include "stun_server_ctx.h"
 #include "turn_client_ctx.h"
@@ -122,8 +123,11 @@ struct nr_ice_ctx_ {
   int stun_server_ct;
   nr_ice_turn_server *turn_servers;           /* The list of turn servers */
   int turn_server_ct;
+  nr_local_addr *local_addrs;                 /* The list of available local addresses and corresponding interface information */
+  int local_addr_ct;
 
   nr_resolver *resolver;                      /* The resolver to use */
+  nr_interface_prioritizer *interface_prioritizer;  /* Priority decision logic */
 
   nr_ice_foundation_head foundations;
 
@@ -161,6 +165,7 @@ int nr_ice_ctx_finalize(nr_ice_ctx *ctx, nr_ice_peer_ctx *pctx);
 int nr_ice_ctx_set_stun_servers(nr_ice_ctx *ctx,nr_ice_stun_server *servers, int ct);
 int nr_ice_ctx_set_turn_servers(nr_ice_ctx *ctx,nr_ice_turn_server *servers, int ct);
 int nr_ice_ctx_set_resolver(nr_ice_ctx *ctx, nr_resolver *resolver);
+int nr_ice_ctx_set_interface_prioritizer(nr_ice_ctx *ctx, nr_interface_prioritizer *prioritizer);
 
 extern int LOG_ICE;
 

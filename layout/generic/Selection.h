@@ -9,6 +9,7 @@
 
 #include "nsIWeakReference.h"
 
+#include "nsGUIEvent.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsISelectionPrivate.h"

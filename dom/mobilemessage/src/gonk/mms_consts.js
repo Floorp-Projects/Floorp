@@ -29,9 +29,10 @@ this.MMS_PDU_TYPE_DELETE_CONF = 149;
 this.MMS_PDU_TYPE_CANCEL_REQ = 150;
 this.MMS_PDU_TYPE_CANCEL_CONF = 151;
 
-// MMS version 1.3
+// MMS version
 // @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.34
-this.MMS_VERSION = (0x01 << 4) | 0x03;
+this.MMS_VERSION_1_1 = (0x01 << 4) | 0x01;
+this.MMS_VERSION_1_3 = (0x01 << 4) | 0x03;
 
 // Common Status Values
 this.MMS_PDU_ERROR_OK                = 128;

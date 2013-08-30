@@ -26,6 +26,7 @@
 #include "nricemediastream.h"
 #include "nriceresolverfake.h"
 #include "nriceresolver.h"
+#include "nrinterfaceprioritizer.h"
 #include "mtransport_test_utils.h"
 #include "runnable_utils.h"
 
@@ -485,6 +486,54 @@ class IceConnectTest : public ::testing::Test {
   mozilla::ScopedDeletePtr<IceTestPeer> p2_;
 };
 
+class PrioritizerTest : public ::testing::Test {
+ public:
+  PrioritizerTest():
+    prioritizer_(nullptr) {}
+
+  ~PrioritizerTest() {
+    if (prioritizer_) {
+      nr_interface_prioritizer_destroy(&prioritizer_);
+    }
+  }
+
+  void SetPriorizer(nr_interface_prioritizer *prioritizer) {
+    prioritizer_ = prioritizer;
+  }
+
+  void AddInterface(const std::string& num, int type, int estimated_speed) {
+    std::string str_addr = "10.0.0." + num;
+    std::string ifname = "eth" + num;
+    nr_local_addr local_addr;
+    local_addr.interface.type = type;
+    local_addr.interface.estimated_speed = estimated_speed;
+
+    int r = nr_ip4_str_port_to_transport_addr(str_addr.c_str(), 0,
+                                              IPPROTO_UDP, &(local_addr.addr));
+    ASSERT_EQ(0, r);
+    strncpy(local_addr.addr.ifname, ifname.c_str(), MAXIFNAME);
+
+    r = nr_interface_prioritizer_add_interface(prioritizer_, &local_addr);
+    ASSERT_EQ(0, r);
+    r = nr_interface_prioritizer_sort_preference(prioritizer_);
+    ASSERT_EQ(0, r);
+  }
+
+  void HasLowerPreference(const std::string& num1, const std::string& num2) {
+    std::string key1 = "eth" + num1 + ":10.0.0." + num1;
+    std::string key2 = "eth" + num2 + ":10.0.0." + num2;
+    UCHAR pref1, pref2;
+    int r = nr_interface_prioritizer_get_priority(prioritizer_, key1.c_str(), &pref1);
+    ASSERT_EQ(0, r);
+    r = nr_interface_prioritizer_get_priority(prioritizer_, key2.c_str(), &pref2);
+    ASSERT_EQ(0, r);
+    ASSERT_LE(pref1, pref2);
+  }
+
+ private:
+  nr_interface_prioritizer *prioritizer_;
+};
+
 }  // end namespace
 
 TEST_F(IceGatherTest, TestGatherFakeStunServerHostnameNoResolver) {
@@ -671,6 +720,37 @@ TEST_F(IceConnectTest, TestConnectShutdownOneSide) {
   AddStream("first", 1);
   ASSERT_TRUE(Gather(true));
   ConnectThenDelete();
+}
+
+TEST_F(PrioritizerTest, TestPrioritizer) {
+  SetPriorizer(::mozilla::CreateInterfacePrioritizer());
+
+  AddInterface("0", NR_INTERFACE_TYPE_VPN, 100); // unknown vpn
+  AddInterface("1", NR_INTERFACE_TYPE_VPN | NR_INTERFACE_TYPE_WIRED, 100); // wired vpn
+  AddInterface("2", NR_INTERFACE_TYPE_VPN | NR_INTERFACE_TYPE_WIFI, 100); // wifi vpn
+  AddInterface("3", NR_INTERFACE_TYPE_VPN | NR_INTERFACE_TYPE_MOBILE, 100); // wifi vpn
+  AddInterface("4", NR_INTERFACE_TYPE_WIRED, 1000); // wired, high speed
+  AddInterface("5", NR_INTERFACE_TYPE_WIRED, 10); // wired, low speed
+  AddInterface("6", NR_INTERFACE_TYPE_WIFI, 10); // wifi, low speed
+  AddInterface("7", NR_INTERFACE_TYPE_WIFI, 1000); // wifi, high speed
+  AddInterface("8", NR_INTERFACE_TYPE_MOBILE, 10); // mobile, low speed
+  AddInterface("9", NR_INTERFACE_TYPE_MOBILE, 1000); // mobile, high speed
+  AddInterface("10", NR_INTERFACE_TYPE_UNKNOWN, 10); // unknown, low speed
+  AddInterface("11", NR_INTERFACE_TYPE_UNKNOWN, 1000); // unknown, high speed
+
+  // expected preference "4" > "5" > "1" > "7" > "6" > "2" > "9" > "8" > "3" > "11" > "10" > "0"
+
+  HasLowerPreference("0", "10");
+  HasLowerPreference("10", "11");
+  HasLowerPreference("11", "3");
+  HasLowerPreference("3", "8");
+  HasLowerPreference("8", "9");
+  HasLowerPreference("9", "2");
+  HasLowerPreference("2", "6");
+  HasLowerPreference("6", "7");
+  HasLowerPreference("7", "1");
+  HasLowerPreference("1", "5");
+  HasLowerPreference("5", "4");
 }
 
 static std::string get_environment(const char *name) {

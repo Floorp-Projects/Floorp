@@ -90,7 +90,7 @@ CanvasLayerComposite::RenderLayer(const nsIntPoint& aOffset,
 #endif
 
   EffectChain effectChain;
-  LayerManagerComposite::AddMaskEffect(mMaskLayer, effectChain);
+  LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(mMaskLayer, effectChain);
   gfx::Matrix4x4 transform;
   ToMatrix4x4(GetEffectiveTransform(), transform);
   gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
@@ -101,8 +101,6 @@ CanvasLayerComposite::RenderLayer(const nsIntPoint& aOffset,
                         gfx::Point(aOffset.x, aOffset.y),
                         gfx::ToFilter(filter),
                         clipRect);
-
-  LayerManagerComposite::RemoveMaskEffect(mMaskLayer);
 }
 
 CompositableHost*

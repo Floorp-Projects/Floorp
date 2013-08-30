@@ -62,13 +62,17 @@ ImageDataSerializer::InitializeBufferInfo(gfx::IntSize aSize,
   info->format = aFormat;
 }
 
+static inline uint32_t
+ComputeStride(gfx::SurfaceFormat aFormat, uint32_t aWidth)
+{
+  return gfx::GetAlignedStride<4>(gfx::BytesPerPixel(aFormat) * aWidth);
+}
+
 uint32_t
 ImageDataSerializer::ComputeMinBufferSize(gfx::IntSize aSize,
                                           gfx::SurfaceFormat aFormat)
 {
-  // Note that at the moment we pack the image data with the minimum possible
-  // stride, we may decide to change that if we want aligned stride.
-  uint32_t bufsize = aSize.height * gfx::BytesPerPixel(aFormat) * aSize.width;
+  uint32_t bufsize = aSize.height * ComputeStride(aFormat, aSize.width);
   return SurfaceBufferInfo::GetOffset()
        + gfx::GetAlignedStride<16>(bufsize);
 }
@@ -107,8 +111,7 @@ ImageDataSerializerBase::GetAsThebesSurface()
 {
   MOZ_ASSERT(IsValid());
   SurfaceBufferInfo* info = GetBufferInfo(mData);
-  uint32_t stride = gfxASurface::BytesPerPixel(
-    gfx::SurfaceFormatToImageFormat(GetFormat())) * info->width;
+  uint32_t stride = ComputeStride(GetFormat(), info->width);
   gfxIntSize size(info->width, info->height);
   RefPtr<gfxImageSurface> surf =
     new gfxImageSurface(GetData(), size, stride,
@@ -122,8 +125,7 @@ ImageDataSerializerBase::GetAsSurface()
   MOZ_ASSERT(IsValid());
   SurfaceBufferInfo* info = GetBufferInfo(mData);
   gfx::IntSize size(info->width, info->height);
-  uint32_t stride = gfxASurface::BytesPerPixel(
-    gfx::SurfaceFormatToImageFormat(GetFormat())) * info->width;
+  uint32_t stride = ComputeStride(GetFormat(), info->width);
   RefPtr<gfx::DataSourceSurface> surf =
     gfx::Factory::CreateWrappingDataSourceSurface(GetData(), stride, size, GetFormat());
   return surf.forget();

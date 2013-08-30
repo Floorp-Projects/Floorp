@@ -185,8 +185,7 @@
                android:layout_width="fill_parent"
                android:layout_height="2dp"
                android:layout_alignParentBottom="true"
-               android:background="@drawable/url_bar_bg_shadow_repeat"
-               android:contentDescription="@null"
-               android:visibility="gone"/>
+               android:background="@color/url_bar_shadow"
+               android:contentDescription="@null"/>
 
 </merge>

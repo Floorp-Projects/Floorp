@@ -46,9 +46,9 @@ public:
 
   // WebIDL
 
-  static already_AddRefed<HTMLAudioElement> Audio(const GlobalObject& global,
-                                                  const Optional<nsAString>& src,
-                                                  ErrorResult& aRv);
+  static already_AddRefed<HTMLAudioElement>
+  Audio(const GlobalObject& aGlobal,
+        const Optional<nsAString>& aSrc, ErrorResult& aRv);
 
   void MozSetup(uint32_t aChannels, uint32_t aRate, ErrorResult& aRv);
 

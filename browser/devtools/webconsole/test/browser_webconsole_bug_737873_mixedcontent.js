@@ -48,7 +48,7 @@ function testMixedContent(hud) {
     let oldOpenLink = hud.openLink;
     let linkOpened = false;
     hud.openLink = (url) => {
-      is(url, "https://developer.mozilla.org/en/Security/MixedContent",
+      is(url, "https://developer.mozilla.org/Security/MixedContent",
          "url opened");
       linkOpened = true;
     };

@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "console", "resource://gre/modules/devto
 let loader = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {}).Loader;
 let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {}).Promise;
 
-this.EXPORTED_SYMBOLS = ["devtools"];
+this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools"];
 
 /**
  * Providers are different strategies for loading the devtools.
@@ -36,11 +36,11 @@ let loaderGlobals = {
     lazyImporter: XPCOMUtils.defineLazyModuleGetter.bind(XPCOMUtils),
     lazyServiceGetter: XPCOMUtils.defineLazyServiceGetter.bind(XPCOMUtils)
   }
-}
+};
 
 // Used when the tools should be loaded from the Firefox package itself (the default)
 var BuiltinProvider = {
-  load: function(done) {
+  load: function() {
     this.loader = new loader.Loader({
       modules: {
         "toolkit/loader": loader
@@ -78,7 +78,7 @@ var SrcdirProvider = {
     return Services.io.newFileURI(file).spec;
   },
 
-  load: function(done) {
+  load: function() {
     let srcdir = Services.prefs.getComplexValue("devtools.loader.srcdir",
                                                 Ci.nsISupportsString);
     srcdir = OS.Path.normalize(srcdir.data.trim());
@@ -182,9 +182,15 @@ var SrcdirProvider = {
 /**
  * The main devtools API.
  * In addition to a few loader-related details, this object will also include all
- * exports from the main module.
+ * exports from the main module.  The standard instance of this loader is
+ * exported as |devtools| below, but if a fresh copy of the loader is needed,
+ * then a new one can also be created.
  */
-this.devtools = {
+this.DevToolsLoader = function DevToolsLoader() {
+  this._chooseProvider();
+};
+
+DevToolsLoader.prototype = {
   _provider: null,
 
   /**
@@ -267,5 +273,5 @@ this.devtools = {
   },
 };
 
-// Now load the tools.
-devtools._chooseProvider();
+// Export the standard instance of DevToolsLoader used by the tools.
+this.devtools = new DevToolsLoader();

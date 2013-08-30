@@ -13,9 +13,9 @@ NS_IMPL_ISUPPORTS1(nsCollationMacUC, nsICollation)
 nsCollationMacUC::nsCollationMacUC() 
   : mInit(false)
   , mHasCollator(false)
-  , mLocale(NULL)
+  , mLocale(nullptr)
   , mLastStrength(-1)
-  , mCollator(NULL)
+  , mCollator(nullptr)
   , mBuffer(nullptr)
   , mBufferLen(1)
 {
@@ -174,7 +174,7 @@ NS_IMETHODIMP nsCollationMacUC::CompareString(int32_t strength, const nsAString&
   err = ::UCCompareText(mCollator, 
                         (const UniChar *) PromiseFlatString(string1).get(), (UniCharCount) string1.Length(),
                         (const UniChar *) PromiseFlatString(string2).get(), (UniCharCount) string2.Length(),
-                        NULL, (SInt32*) result);
+                        nullptr, (SInt32*) result);
 
   NS_ENSURE_TRUE((err == noErr), NS_ERROR_FAILURE);
   return NS_OK;
@@ -193,7 +193,7 @@ NS_IMETHODIMP nsCollationMacUC::CompareRawSortKey(const uint8_t* key1, uint32_t 
   OSStatus err;
   err = ::UCCompareCollationKeys((const UCCollationValue*) key1, (ItemCount) len1,
                                  (const UCCollationValue*) key2, (ItemCount) len2,
-                                 NULL, (SInt32*) result);
+                                 nullptr, (SInt32*) result);
 
   NS_ENSURE_TRUE((err == noErr), NS_ERROR_FAILURE);
 

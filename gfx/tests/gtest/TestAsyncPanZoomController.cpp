@@ -178,7 +178,7 @@ TEST(AsyncPanZoomController, ComplexTransform) {
   metrics.mScrollOffset = CSSPoint(10, 10);
   metrics.mScrollableRect = CSSRect(0, 0, 50, 50);
   metrics.mResolution = LayoutDeviceToLayerScale(2);
-  metrics.mZoom = ScreenToScreenScale(1);
+  metrics.mZoom = CSSToScreenScale(6);
   metrics.mDevPixelsPerCSSPixel = CSSToLayoutDeviceScale(3);
   metrics.mScrollId = FrameMetrics::ROOT_SCROLL_ID;
 

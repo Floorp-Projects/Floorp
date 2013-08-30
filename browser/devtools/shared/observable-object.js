@@ -51,6 +51,7 @@ function isObject(x) {
 function Handler(emitter) {
   this._emitter = emitter;
   this._wrappers = new WeakMap();
+  this._values = new WeakMap();
   this._paths = new WeakMap();
 }
 
@@ -61,11 +62,15 @@ Handler.prototype = {
       path = this._paths.get(target).concat(key);
     } else if (this._wrappers.has(value)) {
       path = this._paths.get(value);
+    } else if (this._paths.has(value)) {
+      path = this._paths.get(value);
+      value = this._values.get(value);
     } else {
       path = this._paths.get(target).concat(key);
       this._paths.set(value, path);
       let wrapper = new Proxy(value, this);
       this._wrappers.set(wrapper, value);
+      this._values.set(value, wrapper);
       value = wrapper;
     }
     return [value, path];

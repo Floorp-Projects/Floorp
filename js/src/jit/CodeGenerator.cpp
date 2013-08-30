@@ -34,13 +34,13 @@
 #include "vm/Interpreter-inl.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 using mozilla::DebugOnly;
 using mozilla::Maybe;
 
 namespace js {
-namespace ion {
+namespace jit {
 
 // This out-of-line cache is used to do a double dispatch including it-self and
 // the wrapped IonCache.
@@ -79,9 +79,10 @@ class OutOfLineUpdateCache :
     }
 
     // ICs' visit functions delegating the work to the CodeGen visit funtions.
-#define VISIT_CACHE_FUNCTION(op)                                \
-    bool visit##op##IC(CodeGenerator *codegen, op##IC *ic) {    \
-        return codegen->visit##op##IC(this, ic);                \
+#define VISIT_CACHE_FUNCTION(op)                                        \
+    bool visit##op##IC(CodeGenerator *codegen) {                        \
+        CodeGenerator::DataPtr<op##IC> ic(codegen, getCacheIndex());    \
+        return codegen->visit##op##IC(this, ic);                        \
     }
 
     IONCACHE_KIND_LIST(VISIT_CACHE_FUNCTION)
@@ -95,7 +96,7 @@ class OutOfLineUpdateCache :
 bool
 CodeGeneratorShared::addCache(LInstruction *lir, size_t cacheIndex)
 {
-    IonCache *cache = static_cast<IonCache *>(getCache(cacheIndex));
+    DataPtr<IonCache> cache(this, cacheIndex);
     MInstruction *mir = lir->mirRaw()->toInstruction();
     if (mir->resumePoint())
         cache->setScriptedLocation(mir->block()->info().script(),
@@ -119,8 +120,7 @@ CodeGeneratorShared::addCache(LInstruction *lir, size_t cacheIndex)
 bool
 CodeGenerator::visitOutOfLineCache(OutOfLineUpdateCache *ool)
 {
-    size_t cacheIndex = ool->getCacheIndex();
-    IonCache *cache = static_cast<IonCache *>(getCache(cacheIndex));
+    DataPtr<IonCache> cache(this, ool->getCacheIndex());
 
     // Register the location of the OOL path in the IC.
     cache->setFallbackLabel(masm.labelForPatch());
@@ -3367,7 +3367,7 @@ CodeGenerator::visitCreateThisWithProto(LCreateThisWithProto *lir)
 
 typedef JSObject *(*NewGCThingFn)(JSContext *cx, gc::AllocKind allocKind, size_t thingSize);
 static const VMFunction NewGCThingInfo =
-    FunctionInfo<NewGCThingFn>(js::ion::NewGCThing);
+    FunctionInfo<NewGCThingFn>(js::jit::NewGCThing);
 
 bool
 CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate *lir)
@@ -3628,74 +3628,78 @@ CodeGenerator::visitMathFunctionD(LMathFunctionD *ins)
     masm.passABIArg(temp);
     masm.passABIArg(input);
 
+#   define MAYBE_CACHED(fcn) (mathCache ? (void*)fcn ## _impl : (void*)fcn ## _uncached)
+
     void *funptr = NULL;
     switch (ins->mir()->function()) {
       case MMathFunction::Log:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_log_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_log));
         break;
       case MMathFunction::Sin:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_sin_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_sin));
         break;
       case MMathFunction::Cos:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_cos_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_cos));
         break;
       case MMathFunction::Exp:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_exp_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_exp));
         break;
       case MMathFunction::Tan:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_tan_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_tan));
         break;
       case MMathFunction::ATan:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_atan_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_atan));
         break;
       case MMathFunction::ASin:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_asin_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_asin));
         break;
       case MMathFunction::ACos:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_acos_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_acos));
         break;
       case MMathFunction::Log10:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_log10_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_log10));
         break;
       case MMathFunction::Log2:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_log2_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_log2));
         break;
       case MMathFunction::Log1P:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_log1p_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_log1p));
         break;
       case MMathFunction::ExpM1:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_expm1_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_expm1));
         break;
       case MMathFunction::CosH:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_cosh_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_cosh));
         break;
       case MMathFunction::SinH:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_sinh_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_sinh));
         break;
       case MMathFunction::TanH:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_tanh_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_tanh));
         break;
       case MMathFunction::ACosH:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_acosh_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_acosh));
         break;
       case MMathFunction::ASinH:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_asinh_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_asinh));
         break;
       case MMathFunction::ATanH:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_atanh_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_atanh));
         break;
       case MMathFunction::Sign:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_sign_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_sign));
         break;
       case MMathFunction::Trunc:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_trunc_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_trunc));
         break;
       case MMathFunction::Cbrt:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_cbrt_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_cbrt));
         break;
       default:
         MOZ_ASSUME_UNREACHABLE("Unknown math function");
     }
+
+#   undef MAYBE_CACHED
 
     masm.callWithABI(funptr, MacroAssembler::DOUBLE);
     return true;
@@ -3769,11 +3773,11 @@ CodeGenerator::visitBinaryV(LBinaryV *lir)
 typedef bool (*StringCompareFn)(JSContext *, HandleString, HandleString, bool *);
 typedef ParallelResult (*StringCompareParFn)(ForkJoinSlice *, HandleString, HandleString, bool *);
 static const VMFunctionsModal StringsEqualInfo = VMFunctionsModal(
-    FunctionInfo<StringCompareFn>(ion::StringsEqual<true>),
-    FunctionInfo<StringCompareParFn>(ion::StringsEqualPar));
+    FunctionInfo<StringCompareFn>(jit::StringsEqual<true>),
+    FunctionInfo<StringCompareParFn>(jit::StringsEqualPar));
 static const VMFunctionsModal StringsNotEqualInfo = VMFunctionsModal(
-    FunctionInfo<StringCompareFn>(ion::StringsEqual<false>),
-    FunctionInfo<StringCompareParFn>(ion::StringsUnequalPar));
+    FunctionInfo<StringCompareFn>(jit::StringsEqual<false>),
+    FunctionInfo<StringCompareParFn>(jit::StringsUnequalPar));
 
 bool
 CodeGenerator::emitCompareS(LInstruction *lir, JSOp op, Register left, Register right,
@@ -3842,29 +3846,29 @@ typedef bool (*CompareFn)(JSContext *, MutableHandleValue, MutableHandleValue, b
 typedef ParallelResult (*CompareParFn)(ForkJoinSlice *, MutableHandleValue, MutableHandleValue,
                                        bool *);
 static const VMFunctionsModal EqInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(ion::LooselyEqual<true>),
-    FunctionInfo<CompareParFn>(ion::LooselyEqualPar));
+    FunctionInfo<CompareFn>(jit::LooselyEqual<true>),
+    FunctionInfo<CompareParFn>(jit::LooselyEqualPar));
 static const VMFunctionsModal NeInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(ion::LooselyEqual<false>),
-    FunctionInfo<CompareParFn>(ion::LooselyUnequalPar));
+    FunctionInfo<CompareFn>(jit::LooselyEqual<false>),
+    FunctionInfo<CompareParFn>(jit::LooselyUnequalPar));
 static const VMFunctionsModal StrictEqInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(ion::StrictlyEqual<true>),
-    FunctionInfo<CompareParFn>(ion::StrictlyEqualPar));
+    FunctionInfo<CompareFn>(jit::StrictlyEqual<true>),
+    FunctionInfo<CompareParFn>(jit::StrictlyEqualPar));
 static const VMFunctionsModal StrictNeInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(ion::StrictlyEqual<false>),
-    FunctionInfo<CompareParFn>(ion::StrictlyUnequalPar));
+    FunctionInfo<CompareFn>(jit::StrictlyEqual<false>),
+    FunctionInfo<CompareParFn>(jit::StrictlyUnequalPar));
 static const VMFunctionsModal LtInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(ion::LessThan),
-    FunctionInfo<CompareParFn>(ion::LessThanPar));
+    FunctionInfo<CompareFn>(jit::LessThan),
+    FunctionInfo<CompareParFn>(jit::LessThanPar));
 static const VMFunctionsModal LeInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(ion::LessThanOrEqual),
-    FunctionInfo<CompareParFn>(ion::LessThanOrEqualPar));
+    FunctionInfo<CompareFn>(jit::LessThanOrEqual),
+    FunctionInfo<CompareParFn>(jit::LessThanOrEqualPar));
 static const VMFunctionsModal GtInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(ion::GreaterThan),
-    FunctionInfo<CompareParFn>(ion::GreaterThanPar));
+    FunctionInfo<CompareFn>(jit::GreaterThan),
+    FunctionInfo<CompareParFn>(jit::GreaterThanPar));
 static const VMFunctionsModal GeInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(ion::GreaterThanOrEqual),
-    FunctionInfo<CompareParFn>(ion::GreaterThanOrEqualPar));
+    FunctionInfo<CompareFn>(jit::GreaterThanOrEqual),
+    FunctionInfo<CompareParFn>(jit::GreaterThanOrEqualPar));
 
 bool
 CodeGenerator::visitCompareVM(LCompareVM *lir)
@@ -4346,7 +4350,7 @@ IonCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
 }
 
 typedef bool (*CharCodeAtFn)(JSContext *, HandleString, int32_t, uint32_t *);
-static const VMFunction CharCodeAtInfo = FunctionInfo<CharCodeAtFn>(ion::CharCodeAt);
+static const VMFunction CharCodeAtInfo = FunctionInfo<CharCodeAtFn>(jit::CharCodeAt);
 
 bool
 CodeGenerator::visitCharCodeAt(LCharCodeAt *lir)
@@ -4374,7 +4378,7 @@ CodeGenerator::visitCharCodeAt(LCharCodeAt *lir)
 }
 
 typedef JSFlatString *(*StringFromCharCodeFn)(JSContext *, int32_t);
-static const VMFunction StringFromCharCodeInfo = FunctionInfo<StringFromCharCodeFn>(ion::StringFromCharCode);
+static const VMFunction StringFromCharCodeInfo = FunctionInfo<StringFromCharCodeFn>(jit::StringFromCharCode);
 
 bool
 CodeGenerator::visitFromCharCode(LFromCharCode *lir)
@@ -4858,8 +4862,8 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
 }
 
 typedef bool (*ArrayPopShiftFn)(JSContext *, HandleObject, MutableHandleValue);
-static const VMFunction ArrayPopDenseInfo = FunctionInfo<ArrayPopShiftFn>(ion::ArrayPopDense);
-static const VMFunction ArrayShiftDenseInfo = FunctionInfo<ArrayPopShiftFn>(ion::ArrayShiftDense);
+static const VMFunction ArrayPopDenseInfo = FunctionInfo<ArrayPopShiftFn>(jit::ArrayPopDense);
+static const VMFunction ArrayShiftDenseInfo = FunctionInfo<ArrayPopShiftFn>(jit::ArrayShiftDense);
 
 bool
 CodeGenerator::emitArrayPopShift(LInstruction *lir, const MArrayPopShift *mir, Register obj,
@@ -4967,7 +4971,7 @@ CodeGenerator::visitArrayPopShiftT(LArrayPopShiftT *lir)
 
 typedef bool (*ArrayPushDenseFn)(JSContext *, HandleObject, HandleValue, uint32_t *);
 static const VMFunction ArrayPushDenseInfo =
-    FunctionInfo<ArrayPushDenseFn>(ion::ArrayPushDense);
+    FunctionInfo<ArrayPushDenseFn>(jit::ArrayPushDense);
 
 bool
 CodeGenerator::emitArrayPush(LInstruction *lir, const MArrayPush *mir, Register obj,
@@ -5222,7 +5226,7 @@ CodeGenerator::visitIteratorNext(LIteratorNext *lir)
 }
 
 typedef bool (*IteratorMoreFn)(JSContext *, HandleObject, bool *);
-static const VMFunction IteratorMoreInfo = FunctionInfo<IteratorMoreFn>(ion::IteratorMore);
+static const VMFunction IteratorMoreInfo = FunctionInfo<IteratorMoreFn>(jit::IteratorMore);
 
 bool
 CodeGenerator::visitIteratorMore(LIteratorMore *lir)
@@ -5447,7 +5451,6 @@ CodeGenerator::generateAsmJS()
     JS_ASSERT(osiIndices_.empty());
     JS_ASSERT(cacheList_.empty());
     JS_ASSERT(safepoints_.size() == 0);
-    JS_ASSERT(graph.mir().numScripts() == 0);
     return true;
 }
 
@@ -5509,7 +5512,7 @@ CodeGenerator::link()
     JSContext *cx = GetIonContext()->cx;
 
     // Check to make sure we didn't have a mid-build invalidation. If so, we
-    // will trickle to ion::Compile() and return Method_Skipped.
+    // will trickle to jit::Compile() and return Method_Skipped.
     if (cx->compartment()->types.compiledInfo.compilerOutput(cx)->isInvalidated())
         return true;
 
@@ -5533,8 +5536,8 @@ CodeGenerator::link()
                      bailouts_.length(), graph.numConstants(),
                      safepointIndices_.length(), osiIndices_.length(),
                      cacheList_.length(), runtimeData_.length(),
-                     safepoints_.size(), graph.mir().numScripts(),
-                     callTargets.length(), patchableBackedges_.length());
+                     safepoints_.size(), callTargets.length(),
+                     patchableBackedges_.length());
     if (!ionScript)
         return false;
 
@@ -5616,8 +5619,6 @@ CodeGenerator::link()
         ionScript->copySnapshots(&snapshots_);
     if (graph.numConstants())
         ionScript->copyConstants(graph.constantPool());
-    JS_ASSERT(graph.mir().numScripts() > 0);
-    ionScript->copyScriptEntries(graph.mir().scripts());
     if (callTargets.length() > 0)
         ionScript->copyCallTargetEntries(callTargets.begin());
     if (patchableBackedges_.length() > 0)
@@ -5828,7 +5829,7 @@ const VMFunction CallsiteCloneIC::UpdateInfo =
     FunctionInfo<CallsiteCloneICFn>(CallsiteCloneIC::update);
 
 bool
-CodeGenerator::visitCallsiteCloneIC(OutOfLineUpdateCache *ool, CallsiteCloneIC *ic)
+CodeGenerator::visitCallsiteCloneIC(OutOfLineUpdateCache *ool, DataPtr<CallsiteCloneIC> &ic)
 {
     LInstruction *lir = ool->lir();
     saveLive(lir);
@@ -5860,7 +5861,7 @@ typedef bool (*NameICFn)(JSContext *, size_t, HandleObject, MutableHandleValue);
 const VMFunction NameIC::UpdateInfo = FunctionInfo<NameICFn>(NameIC::update);
 
 bool
-CodeGenerator::visitNameIC(OutOfLineUpdateCache *ool, NameIC *ic)
+CodeGenerator::visitNameIC(OutOfLineUpdateCache *ool, DataPtr<NameIC> &ic)
 {
     LInstruction *lir = ool->lir();
     saveLive(lir);
@@ -5924,9 +5925,17 @@ const VMFunction GetPropertyIC::UpdateInfo =
     FunctionInfo<GetPropertyICFn>(GetPropertyIC::update);
 
 bool
-CodeGenerator::visitGetPropertyIC(OutOfLineUpdateCache *ool, GetPropertyIC *ic)
+CodeGenerator::visitGetPropertyIC(OutOfLineUpdateCache *ool, DataPtr<GetPropertyIC> &ic)
 {
     LInstruction *lir = ool->lir();
+
+    if (ic->idempotent()) {
+        size_t numLocs;
+        CacheLocationList &cacheLocs = lir->mirRaw()->toGetPropertyCache()->location();
+        size_t locationBase = addCacheLocations(cacheLocs, &numLocs);
+        ic->setLocationInfo(locationBase, numLocs);
+    }
+
     saveLive(lir);
 
     pushArg(ic->object());
@@ -5946,7 +5955,7 @@ const VMFunction GetPropertyParIC::UpdateInfo =
     FunctionInfo<GetPropertyParICFn>(GetPropertyParIC::update);
 
 bool
-CodeGenerator::visitGetPropertyParIC(OutOfLineUpdateCache *ool, GetPropertyParIC *ic)
+CodeGenerator::visitGetPropertyParIC(OutOfLineUpdateCache *ool, DataPtr<GetPropertyParIC> &ic)
 {
     LInstruction *lir = ool->lir();
     saveLive(lir);
@@ -6005,7 +6014,7 @@ const VMFunction GetElementIC::UpdateInfo =
     FunctionInfo<GetElementICFn>(GetElementIC::update);
 
 bool
-CodeGenerator::visitGetElementIC(OutOfLineUpdateCache *ool, GetElementIC *ic)
+CodeGenerator::visitGetElementIC(OutOfLineUpdateCache *ool, DataPtr<GetElementIC> &ic)
 {
     LInstruction *lir = ool->lir();
     saveLive(lir);
@@ -6060,7 +6069,7 @@ const VMFunction SetElementIC::UpdateInfo =
     FunctionInfo<SetElementICFn>(SetElementIC::update);
 
 bool
-CodeGenerator::visitSetElementIC(OutOfLineUpdateCache *ool, SetElementIC *ic)
+CodeGenerator::visitSetElementIC(OutOfLineUpdateCache *ool, DataPtr<SetElementIC> &ic)
 {
     LInstruction *lir = ool->lir();
     saveLive(lir);
@@ -6083,7 +6092,7 @@ const VMFunction GetElementParIC::UpdateInfo =
     FunctionInfo<GetElementParICFn>(GetElementParIC::update);
 
 bool
-CodeGenerator::visitGetElementParIC(OutOfLineUpdateCache *ool, GetElementParIC *ic)
+CodeGenerator::visitGetElementParIC(OutOfLineUpdateCache *ool, DataPtr<GetElementParIC> &ic)
 {
     LInstruction *lir = ool->lir();
     saveLive(lir);
@@ -6115,7 +6124,7 @@ const VMFunction BindNameIC::UpdateInfo =
     FunctionInfo<BindNameICFn>(BindNameIC::update);
 
 bool
-CodeGenerator::visitBindNameIC(OutOfLineUpdateCache *ool, BindNameIC *ic)
+CodeGenerator::visitBindNameIC(OutOfLineUpdateCache *ool, DataPtr<BindNameIC> &ic)
 {
     LInstruction *lir = ool->lir();
     saveLive(lir);
@@ -6203,7 +6212,7 @@ const VMFunction SetPropertyIC::UpdateInfo =
     FunctionInfo<SetPropertyICFn>(SetPropertyIC::update);
 
 bool
-CodeGenerator::visitSetPropertyIC(OutOfLineUpdateCache *ool, SetPropertyIC *ic)
+CodeGenerator::visitSetPropertyIC(OutOfLineUpdateCache *ool, DataPtr<SetPropertyIC> &ic)
 {
     LInstruction *lir = ool->lir();
     saveLive(lir);
@@ -6543,7 +6552,7 @@ template <typename T>
 static inline void
 StoreToTypedArray(MacroAssembler &masm, int arrayType, const LAllocation *value, const T &dest)
 {
-    if (arrayType == TypedArrayObject::TYPE_FLOAT32 || arrayType == TypedArrayObject::TYPE_FLOAT64) {
+    if (arrayType == ScalarTypeRepresentation::TYPE_FLOAT32 || arrayType == ScalarTypeRepresentation::TYPE_FLOAT64) {
         masm.storeToTypedFloatArray(arrayType, ToFloatRegister(value), dest);
     } else {
         if (value->isConstant())
@@ -7265,7 +7274,7 @@ CodeGenerator::visitAsmJSVoidReturn(LAsmJSVoidReturn *lir)
 bool
 CodeGenerator::visitAsmJSCheckOverRecursed(LAsmJSCheckOverRecursed *lir)
 {
-    uintptr_t *limitAddr = &GetIonContext()->runtime->mainThread.nativeStackLimit;
+    uintptr_t *limitAddr = &GetIonContext()->runtime->mainThread.nativeStackLimit[StackForUntrustedScript];
     masm.branchPtr(Assembler::AboveOrEqual,
                    AbsoluteAddress(limitAddr),
                    StackPointer,
@@ -7274,11 +7283,8 @@ CodeGenerator::visitAsmJSCheckOverRecursed(LAsmJSCheckOverRecursed *lir)
 }
 
 bool
-CodeGenerator::visitRangeAssert(LRangeAssert *ins)
+CodeGenerator::emitAssertRangeI(Range *r, Register input)
 {
-     Register input = ToRegister(ins->input());
-     Range *r = ins->range();
-
     // Check the lower bound.
     if (r->lower() != INT32_MIN) {
         Label success;
@@ -7303,12 +7309,8 @@ CodeGenerator::visitRangeAssert(LRangeAssert *ins)
 }
 
 bool
-CodeGenerator::visitDoubleRangeAssert(LDoubleRangeAssert *ins)
+CodeGenerator::emitAssertRangeD(Range *r, FloatRegister input, FloatRegister temp)
 {
-     FloatRegister input = ToFloatRegister(ins->input());
-     FloatRegister temp = ToFloatRegister(ins->temp());
-     Range *r = ins->range();
-
     // Check the lower bound.
     if (!r->isLowerInfinite()) {
         Label success;
@@ -7353,5 +7355,58 @@ CodeGenerator::visitDoubleRangeAssert(LDoubleRangeAssert *ins)
     return true;
 }
 
-} // namespace ion
+bool
+CodeGenerator::visitAssertRangeI(LAssertRangeI *ins)
+{
+    Register input = ToRegister(ins->input());
+    Range *r = ins->range();
+
+    return emitAssertRangeI(r, input);
+}
+
+bool
+CodeGenerator::visitAssertRangeD(LAssertRangeD *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    FloatRegister temp = ToFloatRegister(ins->temp());
+    Range *r = ins->range();
+
+    return emitAssertRangeD(r, input, temp);
+}
+
+bool
+CodeGenerator::visitAssertRangeV(LAssertRangeV *ins)
+{
+    Range *r = ins->range();
+    const ValueOperand value = ToValue(ins, LAssertRangeV::Input);
+    Register tag = masm.splitTagForTest(value);
+    Label done;
+
+    {
+        Label isNotInt32;
+        masm.branchTestInt32(Assembler::NotEqual, tag, &isNotInt32);
+        Register unboxInt32 = ToTempUnboxRegister(ins->temp());
+        Register input = masm.extractInt32(value, unboxInt32);
+        emitAssertRangeI(r, input);
+        masm.jump(&done);
+        masm.bind(&isNotInt32);
+    }
+
+    {
+        Label isNotDouble;
+        masm.branchTestDouble(Assembler::NotEqual, tag, &isNotDouble);
+        FloatRegister input = ToFloatRegister(ins->floatTemp1());
+        FloatRegister temp = ToFloatRegister(ins->floatTemp2());
+        masm.unboxDouble(value, input);
+        emitAssertRangeD(r, input, temp);
+        masm.jump(&done);
+        masm.bind(&isNotDouble);
+    }
+
+    masm.breakpoint();
+    masm.bind(&done);
+    return true;
+}
+
+} // namespace jit
 } // namespace js

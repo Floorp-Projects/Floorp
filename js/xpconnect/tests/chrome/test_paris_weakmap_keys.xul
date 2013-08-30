@@ -45,11 +45,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=777385
 
   make_live_map();
 
-
-  // TextDecoder is a non-nsISupports refCounted class using WebIDL bindings.
+  // RGBColor is a non-nsISupports refCounted class using WebIDL bindings.
 
   // non-nsISupports cycle-collected classes should fail as weak map keys.
-  let context = new TextDecoder();
+  let context = window.getComputedStyle(document.documentElement, null).getPropertyCSSValue("color").getRGBColorValue();
   let contextFail = false;
   try {
     live_map.set(context, 2);

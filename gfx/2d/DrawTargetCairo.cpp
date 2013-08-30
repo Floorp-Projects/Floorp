@@ -370,7 +370,6 @@ DrawTargetCairo::DrawTargetCairo()
 
 DrawTargetCairo::~DrawTargetCairo()
 {
-  MarkSnapshotIndependent();
   if (mPathObserver) {
     mPathObserver->ForgetDrawTarget();
   }
@@ -1025,6 +1024,9 @@ DrawTargetCairo::GetNativeSurface(NativeSurfaceType aType)
 {
   if (aType == NATIVE_SURFACE_CAIRO_SURFACE) {
     return cairo_get_target(mContext);
+  }
+  if (aType == NATIVE_SURFACE_CAIRO_CONTEXT) {
+    return mContext;
   }
 
   return nullptr;

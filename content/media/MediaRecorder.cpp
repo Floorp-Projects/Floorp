@@ -89,10 +89,14 @@ public:
     NS_IMETHODIMP Run()
     {
       MOZ_ASSERT(NS_IsMainThread());
-      mRecorder->mState = RecordingState::Inactive;
-      mRecorder->DispatchSimpleEvent(NS_LITERAL_STRING("stop"));
       mRecorder->mReadThread->Shutdown();
       mRecorder->mReadThread = nullptr;
+
+      // Setting mState to Inactive here is for the case where SourceStream
+      // ends itself, thus the recorder should stop itself too.
+      mRecorder->mState = RecordingState::Inactive;
+      mRecorder->DispatchSimpleEvent(NS_LITERAL_STRING("stop"));
+
       return NS_OK;
     }
 
@@ -124,7 +128,7 @@ MediaRecorder::~MediaRecorder()
 }
 
 void
-MediaRecorder::Init(JSContext* aCx, nsPIDOMWindow* aOwnerWindow)
+MediaRecorder::Init(nsPIDOMWindow* aOwnerWindow)
 {
   MOZ_ASSERT(aOwnerWindow);
   MOZ_ASSERT(aOwnerWindow->IsInnerWindow());
@@ -154,7 +158,7 @@ MediaRecorder::ExtractEncodedData()
       NS_DispatchToMainThread(new PushBlobTask(this));
       lastBlobTimeStamp = TimeStamp::Now();
     }
-  } while (mState == RecordingState::Recording && !mEncoder->IsShutdown());
+  } while (!mEncoder->IsShutdown());
 
   NS_DispatchToMainThread(new PushBlobTask(this));
 }
@@ -229,7 +233,12 @@ MediaRecorder::Stop(ErrorResult& aResult)
     return;
   }
   mState = RecordingState::Inactive;
-  mTrackUnionStream->RemoveListener(mEncoder);
+
+  mStreamPort->Destroy();
+  mStreamPort = nullptr;
+
+  mTrackUnionStream->Destroy();
+  mTrackUnionStream = nullptr;
 }
 
 void
@@ -273,23 +282,23 @@ MediaRecorder::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 }
 
 /* static */ already_AddRefed<MediaRecorder>
-MediaRecorder::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
+MediaRecorder::Constructor(const GlobalObject& aGlobal,
                            DOMMediaStream& aStream, ErrorResult& aRv)
 {
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aGlobal.GetAsSupports());
   if (!sgo) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindow> ownerWindow = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<nsPIDOMWindow> ownerWindow = do_QueryInterface(aGlobal.GetAsSupports());
   if (!ownerWindow) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
   nsRefPtr<MediaRecorder> object = new MediaRecorder(aStream);
-  object->Init(aCx, ownerWindow);
+  object->Init(ownerWindow);
   return object.forget();
 }
 

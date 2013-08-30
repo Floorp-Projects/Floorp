@@ -1,31 +1,24 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>CERTUTIL</title><meta name="generator" content="DocBook XSL Stylesheets V1.77.1"><link rel="home" href="index.html" title="CERTUTIL"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">CERTUTIL</th></tr></table><hr></div><div class="refentry"><a name="certutil"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>certutil — Manage keys and certificate in the the NSS database.</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="command">certutil</code>  [<em class="replaceable"><code>options</code></em>] [[<em class="replaceable"><code>arguments</code></em>]]</p></div></div><div class="refsection"><a name="idp225008"></a><h2>STATUS</h2><p>This documentation is still work in progress. Please contribute to the initial review in <a class="ulink" href="https://bugzilla.mozilla.org/show_bug.cgi?id=836477" target="_top">Mozilla NSS bug 836477</a>
-    </p></div><div class="refsection"><a name="description"></a><h2>Description</h2><p>The Certificate Database Tool, <span class="command"><strong>certutil</strong></span>, is a command-line utility that manages certs and keys in both NSS databases and other NSS tokens (such as smart cards). It can specifically list, generate, modify, or delete certificates within the database, create or change the password, generate new public and private key pairs, display the contents of the key database, or delete key pairs within the key database.</p><p>The key and certificate management process generally includes certificate issuance once keys and certificates have been created in the key database. This document discusses certificate and key database management. For information security module database management, see the <span class="command"><strong>modutil</strong></span> manpage.</p></div><div class="refsection"><a name="options"></a><h2>Options and Arguments</h2><p>Running <span class="command"><strong>certutil</strong></span> always requires one and only one option to specify the type of certificate operation. Each option may take arguments, anywhere from none to multiple arguments. Run the command option and <code class="option">-H</code> to see the arguments available for each command option.</p><p><span class="command"><strong>Command Options</strong></span></p><p>Command options are typically upper case. </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">-A </span></dt><dd><p>Add an existing certificate to a certificate database. The certificate database should already exist; if one is not present, this command option will initialize one by default. </p></dd><dt><span class="term">-B</span></dt><dd><p>Run a series of commands from the specified batch file. This requires the <code class="option">-i</code> argument.</p></dd><dt><span class="term">-C </span></dt><dd><p>Create a new binary certificate file from a binary certificate request file. Use the <code class="option">-i</code> argument to specify the certificate request file. If this argument is not used, <span class="command"><strong>certutil</strong></span> prompts for a filename. </p></dd><dt><span class="term">-D </span></dt><dd><p>Delete a certificate from the certificate database.</p></dd><dt><span class="term">-E </span></dt><dd><p>Add an email certificate to the certificate database.</p></dd><dt><span class="term">-F</span></dt><dd><p>Delete a private key from a key database. Specify the key to delete with the -n argument. Specify the database from which to delete the key with the 
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>CERTUTIL</title><meta name="generator" content="DocBook XSL Stylesheets V1.78.1"><link rel="home" href="index.html" title="CERTUTIL"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">CERTUTIL</th></tr></table><hr></div><div class="refentry"><a name="certutil"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>certutil — Manage keys and certificate in both NSS databases and other NSS tokens</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="command">certutil</code>  [<em class="replaceable"><code>options</code></em>] [[<em class="replaceable"><code>arguments</code></em>]]</p></div></div><div class="refsection"><a name="idm207694846832"></a><h2>STATUS</h2><p>This documentation is still work in progress. Please contribute to the initial review in <a class="ulink" href="https://bugzilla.mozilla.org/show_bug.cgi?id=836477" target="_top">Mozilla NSS bug 836477</a>
+    </p></div><div class="refsection"><a name="description"></a><h2>Description</h2><p>The Certificate Database Tool, <span class="command"><strong>certutil</strong></span>, is a command-line utility that can create and modify certificate and key databases. It can specifically list, generate, modify, or delete certificates, create or change the password, generate new public and private key pairs, display the contents of the key database, or delete key pairs within the key database.</p><p>Certificate issuance, part of the key and certificate management process, requires that keys and certificates be created in the key database. This document discusses certificate and key database management. For information on the security module database management, see the <span class="command"><strong>modutil</strong></span> manpage.</p></div><div class="refsection"><a name="options"></a><h2>Command Options and Arguments</h2><p>Running <span class="command"><strong>certutil</strong></span> always requires one and only one command option to specify the type of certificate operation. Each command option may take zero or more arguments. The command option <code class="option">-H</code> will list all the command options and their relevant arguments.</p><p><span class="command"><strong>Command Options</strong></span></p><div class="variablelist"><dl class="variablelist"><dt><span class="term">-A </span></dt><dd><p>Add an existing certificate to a certificate database. The certificate database should already exist; if one is not present, this command option will initialize one by default.</p></dd><dt><span class="term">-B</span></dt><dd><p>Run a series of commands from the specified batch file. This requires the <code class="option">-i</code> argument.</p></dd><dt><span class="term">-C </span></dt><dd><p>Create a new binary certificate file from a binary certificate request file. Use the <code class="option">-i</code> argument to specify the certificate request file. If this argument is not used, <span class="command"><strong>certutil</strong></span> prompts for a filename. </p></dd><dt><span class="term">-D </span></dt><dd><p>Delete a certificate from the certificate database.</p></dd><dt><span class="term">-E </span></dt><dd><p>Add an email certificate to the certificate database.</p></dd><dt><span class="term">-F</span></dt><dd><p>Delete a private key from a key database. Specify the key to delete with the -n argument. Specify the database from which to delete the key with the 
 <code class="option">-d</code> argument. Use the <code class="option">-k</code> argument to specify explicitly whether to delete a DSA, RSA, or ECC key. If you don't use the <code class="option">-k</code> argument, the option looks for an RSA key matching the specified nickname. 
 </p><p>
-When you delete keys, be sure to also remove any certificates associated with those keys from the certificate database, by using -D. Some smart cards do not let you remove a public key you have generated. In such a case, only the private key is deleted from the key pair. You can display the public key with the command certutil -K -h tokenname. </p></dd><dt><span class="term">-G </span></dt><dd><p>Generate a new public and private key pair within a key database. The key database should already exist; if one is not present, this option will initialize one by default. Some smart cards can store only one key pair. If you create a new key pair for such a card, the previous pair is overwritten.</p></dd><dt><span class="term">-H </span></dt><dd><p>Display a list of the command options and arguments used by the Certificate Database Tool.</p></dd><dt><span class="term">-K </span></dt><dd><p>List the key ID of keys in the key database. A key ID is the modulus of the RSA key or the publicValue of the DSA key. IDs are displayed in hexadecimal ("0x" is not shown).</p></dd><dt><span class="term">-L </span></dt><dd><p>List all the certificates, or display information about a named certificate, in a certificate database.
-Use the -h tokenname argument to specify the certificate database on a particular hardware or software token.</p></dd><dt><span class="term">-M </span></dt><dd><p>Modify a certificate's trust attributes using the values of the -t argument.</p></dd><dt><span class="term">-N</span></dt><dd><p>Create new certificate and key databases.</p></dd><dt><span class="term">-O </span></dt><dd><p>Print the certificate chain.</p></dd><dt><span class="term">-R</span></dt><dd><p>Create a certificate request file  that can be submitted to a Certificate Authority (CA) for processing into a finished certificate. Output defaults to standard out unless you use -o output-file argument.
+When you delete keys, be sure to also remove any certificates associated with those keys from the certificate database, by using -D. Some smart cards do not let you remove a public key you have generated. In such a case, only the private key is deleted from the key pair. You can display the public key with the command certutil -K -h tokenname. </p></dd><dt><span class="term">-G </span></dt><dd><p>Generate a new public and private key pair within a key database. The key database should already exist; if one is not present, this command option will initialize one by default. Some smart cards can store only one key pair. If you create a new key pair for such a card, the previous pair is overwritten.</p></dd><dt><span class="term">-H </span></dt><dd><p>Display a list of the command options and arguments.</p></dd><dt><span class="term">-K </span></dt><dd><p>List the key ID of keys in the key database. A key ID is the modulus of the RSA key or the publicValue of the DSA key. IDs are displayed in hexadecimal ("0x" is not shown).</p></dd><dt><span class="term">-L </span></dt><dd><p>List all the certificates, or display information about a named certificate, in a certificate database.
+Use the -h tokenname argument to specify the certificate database on a particular hardware or software token.</p></dd><dt><span class="term">-M </span></dt><dd><p>Modify a certificate's trust attributes using the values of the -t argument.</p></dd><dt><span class="term">-N</span></dt><dd><p>Create new certificate and key databases.</p></dd><dt><span class="term">-O </span></dt><dd><p>Print the certificate chain.</p></dd><dt><span class="term">-R</span></dt><dd><p>Create a certificate request file that can be submitted to a Certificate Authority (CA) for processing into a finished certificate. Output defaults to standard out unless you use -o output-file argument.
 
-Use the -a argument to specify ASCII output.</p></dd><dt><span class="term">-S </span></dt><dd><p>Create an individual certificate and add it to a certificate database.</p></dd><dt><span class="term">-T </span></dt><dd><p>Reset the key database or token.</p></dd><dt><span class="term">-U </span></dt><dd><p>List all available modules or print a single named module.</p></dd><dt><span class="term">-V </span></dt><dd><p>Check the validity of a certificate and its attributes.</p></dd><dt><span class="term">-W </span></dt><dd><p>Change the password to a key database.</p></dd><dt><span class="term">--merge</span></dt><dd><p>Merge a source database into the target database. This is used to merge legacy NSS databases (<code class="filename">cert8.db</code> and <code class="filename">key3.db</code>) into the newer SQLite databases (<code class="filename">cert9.db</code> and <code class="filename">key4.db</code>).</p></dd><dt><span class="term">--upgrade-merge</span></dt><dd><p>Upgrade an old database and merge it into a new database. This is used to migrate legacy NSS databases (<code class="filename">cert8.db</code> and <code class="filename">key3.db</code>) into the newer SQLite databases (<code class="filename">cert9.db</code> and <code class="filename">key4.db</code>).</p></dd></dl></div><p><span class="command"><strong>Arguments</strong></span></p><p>Arguments modify a command option and are usually lower case, numbers, or symbols.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">-a</span></dt><dd><p>Use ASCII format or allow the use of ASCII format for input or output. This formatting follows RFC 1113. 
+Use the -a argument to specify ASCII output.</p></dd><dt><span class="term">-S </span></dt><dd><p>Create an individual certificate and add it to a certificate database.</p></dd><dt><span class="term">-T </span></dt><dd><p>Reset the key database or token.</p></dd><dt><span class="term">-U </span></dt><dd><p>List all available modules or print a single named module.</p></dd><dt><span class="term">-V </span></dt><dd><p>Check the validity of a certificate and its attributes.</p></dd><dt><span class="term">-W </span></dt><dd><p>Change the password to a key database.</p></dd><dt><span class="term">--merge</span></dt><dd><p>Merge two databases into one.</p></dd><dt><span class="term">--upgrade-merge</span></dt><dd><p>Upgrade an old database and merge it into a new database. This is used to migrate legacy NSS databases (<code class="filename">cert8.db</code> and <code class="filename">key3.db</code>) into the newer SQLite databases (<code class="filename">cert9.db</code> and <code class="filename">key4.db</code>).</p></dd></dl></div><p><span class="command"><strong>Arguments</strong></span></p><p>Arguments modify a command option and are usually lower case, numbers, or symbols.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">-a</span></dt><dd><p>Use ASCII format or allow the use of ASCII format for input or output. This formatting follows RFC 1113. 
 For certificate requests, ASCII output defaults to standard output unless redirected.</p></dd><dt><span class="term">-b validity-time</span></dt><dd><p>Specify a time at which a certificate is required to be valid. Use when checking certificate validity with the <code class="option">-V</code> option. The format of the <span class="emphasis"><em>validity-time</em></span> argument is <span class="emphasis"><em>YYMMDDHHMMSS[+HHMM|-HHMM|Z]</em></span>, which allows offsets to be set relative to the validity end time. Specifying seconds (<span class="emphasis"><em>SS</em></span>) is optional. When specifying an explicit time, use a Z at the end of the term, <span class="emphasis"><em>YYMMDDHHMMSSZ</em></span>, to close it. When specifying an offset time, use <span class="emphasis"><em>YYMMDDHHMMSS+HHMM</em></span> or <span class="emphasis"><em>YYMMDDHHMMSS-HHMM</em></span> for adding or subtracting time, respectively.
 </p><p>
 If this option is not used, the validity check defaults to the current system time.</p></dd><dt><span class="term">-c issuer</span></dt><dd><p>Identify the certificate of the CA from which a new certificate will derive its authenticity. 
  Use the exact nickname or alias of the CA certificate, or use the CA's email address. Bracket the issuer string 
- with quotation marks if it contains spaces. </p></dd><dt><span class="term">-d [prefix]directory</span></dt><dd><p>Specify the database directory containing the certificate and key database files.</p><p><span class="command"><strong>certutil</strong></span> supports two types of databases: the legacy security databases (<code class="filename">cert8.db</code>, <code class="filename">key3.db</code>, and <code class="filename">secmod.db</code>) and new SQLite databases (<code class="filename">cert9.db</code>, <code class="filename">key4.db</code>, and <code class="filename">pkcs11.txt</code>). If the prefix <span class="command"><strong>sql:</strong></span> is not used, then the tool assumes that the given databases are in the old format.</p><p>NSS recognizes the following prefixes:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><span class="command"><strong>sql: explicitly requests the newer database</strong></span></p></li><li class="listitem"><p><span class="command"><strong>dbm: explicitly requests the older database</strong></span></p></li><li class="listitem"><p><span class="command"><strong>extern: explicitly reserved for future use</strong></span></p></li></ul></div></dd><dt><span class="term">-e </span></dt><dd><p>Check a certificate's signature during the process of validating a certificate.</p></dd><dt><span class="term">-f password-file</span></dt><dd><p>Specify a file that will automatically supply the password to include in a certificate 
+ with quotation marks if it contains spaces. </p></dd><dt><span class="term">-d [prefix]directory</span></dt><dd><p>Specify the database directory containing the certificate and key database files.</p><p><span class="command"><strong>certutil</strong></span> supports two types of databases: the legacy security databases (<code class="filename">cert8.db</code>, <code class="filename">key3.db</code>, and <code class="filename">secmod.db</code>) and new SQLite databases (<code class="filename">cert9.db</code>, <code class="filename">key4.db</code>, and <code class="filename">pkcs11.txt</code>). </p><p>NSS recognizes the following prefixes:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p><span class="command"><strong>sql: requests the newer database</strong></span></p></li><li class="listitem"><p><span class="command"><strong>dbm: requests the legacy database</strong></span></p></li></ul></div><p>If no prefix is specified the default type is retrieved from NSS_DEFAULT_DB_TYPE. If NSS_DEFAULT_DB_TYPE is not set then dbm: is the default.</p></dd><dt><span class="term">-e </span></dt><dd><p>Check a certificate's signature during the process of validating a certificate.</p></dd><dt><span class="term">-f password-file</span></dt><dd><p>Specify a file that will automatically supply the password to include in a certificate 
  or to access a certificate database. This is a plain-text file containing one password. Be sure to prevent 
- unauthorized access to this file.</p></dd><dt><span class="term">-g keysize</span></dt><dd><p>Set a key size to use when generating new public and private key pairs. The minimum is 512 bits and the maximum is 8192 bits. The default is 1024 bits. Any size between the minimum and maximum is allowed.</p></dd><dt><span class="term">-h tokenname</span></dt><dd><p>Specify the name of a token to use or act on. Unless specified otherwise the default token is an internal slot.</p></dd><dt><span class="term">-i input_file</span></dt><dd><p>Pass an input file to the command. Depending on the command option, an input file can be a specific certificate, a certificate request file, or a batch file of commands.</p></dd><dt><span class="term">-k rsa|dsa|ec|all</span></dt><dd><p>Specify the type of a key. The valid options are RSA, DSA, ECC, or all. The default value is rsa. Specifying the type of key can avoid mistakes caused by duplicate nicknames.</p></dd><dt><span class="term">-k key-type-or-id</span></dt><dd><p>Specify the type or specific ID of a key. </p><p>
-           The valid key type options are RSA, DSA, ECC, or all. The default 
+ unauthorized access to this file.</p></dd><dt><span class="term">-g keysize</span></dt><dd><p>Set a key size to use when generating new public and private key pairs. The minimum is 512 bits and the maximum is 8192 bits. The default is 1024 bits. Any size between the minimum and maximum is allowed.</p></dd><dt><span class="term">-h tokenname</span></dt><dd><p>Specify the name of a token to use or act on. If not specified the default token is the internal database slot.</p></dd><dt><span class="term">-i input_file</span></dt><dd><p>Pass an input file to the command. Depending on the command option, an input file can be a specific certificate, a certificate request file, or a batch file of commands.</p></dd><dt><span class="term">-k key-type-or-id</span></dt><dd><p>Specify the type or specific ID of a key.</p><p>
+           The valid key type options are rsa, dsa, ec, or all. The default 
            value is rsa. Specifying the type of key can avoid mistakes caused by
            duplicate nicknames. Giving a key type generates a new key pair; 
            giving the ID of an existing key reuses that key pair (which is 
            required to renew certificates).
-          </p><p>
-           The valid key type options are RSA, DSA, ECC, or all. The default 
-           value is rsa. Specifying the type of key can avoid mistakes caused by
-           duplicate nicknames. Giving a key type generates a new key pair; 
-           giving the ID of an existing key reuses that key pair (which is 
-           required to renew certificates).
-          </p></dd><dt><span class="term">-l </span></dt><dd><p>Display detailed information when validating a certificate with the -V option.</p></dd><dt><span class="term">-m serial-number</span></dt><dd><p>Assign a unique serial number to a certificate being created. This operation should be performed by a CA. If no serial number is 
-           provided a default serial number is made from the current time. Serial numbers are limited to integers </p></dd><dt><span class="term">-n nickname</span></dt><dd><p>Specify the nickname of a certificate or key to list, create, add to a database, modify, or validate. Bracket the nickname string with quotation marks if it contains spaces.</p></dd><dt><span class="term">-o output-file</span></dt><dd><p>Specify the output file name for new certificates or binary certificate requests. Bracket the output-file string with quotation marks if it contains spaces. If this argument is not used the output destination defaults to standard output.</p></dd><dt><span class="term">-P dbPrefix</span></dt><dd><p>Specify the prefix used on the certificate and key database file. This argument is provided to support legacy servers. Most applications do not use a database prefix.</p></dd><dt><span class="term">-p phone</span></dt><dd><p>Specify a contact telephone number to include in new certificates or certificate requests. Bracket this string with quotation marks if it contains spaces.</p></dd><dt><span class="term">-q pqgfile or curve-name</span></dt><dd><p>Read an alternate PQG value from the specified file when generating DSA key pairs. If this argument is not used, <span class="command"><strong>certutil</strong></span> generates its own PQG value. PQG files are created with a separate DSA utility.</p><p>Elliptic curve name is one of the ones from SUITE B: nistp256, nistp384, nistp521</p><p>
+          </p></dd><dt><span class="term">-l </span></dt><dd><p>Display detailed information when validating a certificate with the -V option.</p></dd><dt><span class="term">-m serial-number</span></dt><dd><p>Assign a unique serial number to a certificate being created. This operation should be performed by a CA. If no serial number is provided a default serial number is made from the current time. Serial numbers are limited to integers </p></dd><dt><span class="term">-n nickname</span></dt><dd><p>Specify the nickname of a certificate or key to list, create, add to a database, modify, or validate. Bracket the nickname string with quotation marks if it contains spaces.</p></dd><dt><span class="term">-o output-file</span></dt><dd><p>Specify the output file name for new certificates or binary certificate requests. Bracket the output-file string with quotation marks if it contains spaces. If this argument is not used the output destination defaults to standard output.</p></dd><dt><span class="term">-P dbPrefix</span></dt><dd><p>Specify the prefix used on the certificate and key database file. This argument is provided to support legacy servers. Most applications do not use a database prefix.</p></dd><dt><span class="term">-p phone</span></dt><dd><p>Specify a contact telephone number to include in new certificates or certificate requests. Bracket this string with quotation marks if it contains spaces.</p></dd><dt><span class="term">-q pqgfile or curve-name</span></dt><dd><p>Read an alternate PQG value from the specified file when generating DSA key pairs. If this argument is not used, <span class="command"><strong>certutil</strong></span> generates its own PQG value. PQG files are created with a separate DSA utility.</p><p>Elliptic curve name is one of the ones from SUITE B: nistp256, nistp384, nistp521</p><p>
            If NSS has been compiled with support curves outside of SUITE B:
               sect163k1, nistk163, sect163r1, sect163r2,            
               nistb163,  sect193r1, sect193r2, sect233k1, nistk233,            
@@ -55,7 +48,7 @@ of the attribute codes:
 	</p></li><li class="listitem"><p>
 		<span class="command"><strong>T</strong></span> - Trusted CA (implies c)
 	</p></li><li class="listitem"><p>
-		<span class="command"><strong>C</strong></span> - rusted CA for client authentication (ssl server only)
+		<span class="command"><strong>C</strong></span> - trusted CA for client authentication (ssl server only)
 	</p></li><li class="listitem"><p>
 		<span class="command"><strong>u</strong></span> - user
 	</p></li></ul></div><p>
@@ -116,7 +109,12 @@ of the attribute codes:
 		msTrustListSign
 	</p></li><li class="listitem"><p>
 		critical
-	</p></li></ul></div><p>X.509 certificate extensions are described in RFC 5280.</p></dd><dt><span class="term">-7 emailAddrs</span></dt><dd><p>Add a comma-separated list of email addresses to the subject alternative name extension of a certificate or certificate request that is being created or added to the database. Subject alternative name extensions are described in Section 4.2.1.7 of RFC 3280.</p></dd><dt><span class="term">-8 dns-names</span></dt><dd><p>Add a comma-separated list of DNS names to the subject alternative name extension of a certificate or certificate request that is being created or added to the database. Subject alternative name extensions are described in Section 4.2.1.7 of RFC 3280.</p></dd><dt><span class="term">--extAIA</span></dt><dd><p>Add the Authority Information Access extension to the certificate. X.509 certificate extensions are described in RFC 5280.</p></dd><dt><span class="term">--extSIA</span></dt><dd><p>Add the Subject Information Access extension to the certificate. X.509 certificate extensions are described in RFC 5280.</p></dd><dt><span class="term">--extCP</span></dt><dd><p>Add the Certificate Policies extension to the certificate. X.509 certificate extensions are described in RFC 5280.</p></dd><dt><span class="term">--extPM</span></dt><dd><p>Add the Policy Mappings extension to the certificate. X.509 certificate extensions are described in RFC 5280.</p></dd><dt><span class="term">--extPC</span></dt><dd><p>Add the Policy Constraints extension to the certificate. X.509 certificate extensions are described in RFC 5280.</p></dd><dt><span class="term">--extIA</span></dt><dd><p>Add the Inhibit Any Policy Access extension to the certificate. X.509 certificate extensions are described in RFC 5280.</p></dd><dt><span class="term">--extSKID</span></dt><dd><p>Add the Subject Key ID extension to the certificate. X.509 certificate extensions are described in RFC 5280.</p></dd><dt><span class="term">--source-dir certdir</span></dt><dd><p>Identify the certificate database directory to upgrade.</p></dd><dt><span class="term">--source-prefix certdir</span></dt><dd><p>Give the prefix of the certificate and key databases to upgrade.</p></dd><dt><span class="term">--upgrade-id uniqueID</span></dt><dd><p>Give the unique ID of the database to upgrade.</p></dd><dt><span class="term">--upgrade-token-name name</span></dt><dd><p>Set the name of the token to use while it is being upgraded.</p></dd><dt><span class="term">-@ pwfile</span></dt><dd><p>Give the name of a password file to use for the database being upgraded.</p></dd></dl></div></div><div class="refsection"><a name="basic-usage"></a><h2>Usage and Examples</h2><p>
+	</p></li></ul></div><p>X.509 certificate extensions are described in RFC 5280.</p></dd><dt><span class="term">-7 emailAddrs</span></dt><dd><p>Add a comma-separated list of email addresses to the subject alternative name extension of a certificate or certificate request that is being created or added to the database. Subject alternative name extensions are described in Section 4.2.1.7 of RFC 3280.</p></dd><dt><span class="term">-8 dns-names</span></dt><dd><p>Add a comma-separated list of DNS names to the subject alternative name extension of a certificate or certificate request that is being created or added to the database. Subject alternative name extensions are described in Section 4.2.1.7 of RFC 3280.</p></dd><dt><span class="term">--extAIA</span></dt><dd><p>Add the Authority Information Access extension to the certificate. X.509 certificate extensions are described in RFC 5280.</p></dd><dt><span class="term">--extSIA</span></dt><dd><p>Add the Subject Information Access extension to the certificate. X.509 certificate extensions are described in RFC 5280.</p></dd><dt><span class="term">--extCP</span></dt><dd><p>Add the Certificate Policies extension to the certificate. X.509 certificate extensions are described in RFC 5280.</p></dd><dt><span class="term">--extPM</span></dt><dd><p>Add the Policy Mappings extension to the certificate. X.509 certificate extensions are described in RFC 5280.</p></dd><dt><span class="term">--extPC</span></dt><dd><p>Add the Policy Constraints extension to the certificate. X.509 certificate extensions are described in RFC 5280.</p></dd><dt><span class="term">--extIA</span></dt><dd><p>Add the Inhibit Any Policy Access extension to the certificate. X.509 certificate extensions are described in RFC 5280.</p></dd><dt><span class="term">--extSKID</span></dt><dd><p>Add the Subject Key ID extension to the certificate. X.509 certificate extensions are described in RFC 5280.</p></dd><dt><span class="term">--extNC</span></dt><dd><p>Add a Name Constraint extension to the certificate. X.509 certificate extensions are described in RFC 5280.</p></dd><dt><span class="term">--keyAttrFlags attrflags</span></dt><dd><p>
+PKCS #11 key Attributes. Comma separated list of key attribute flags, selected from the following list of choices: {token | session} {public | private} {sensitive | insensitive} {modifiable | unmodifiable} {extractable | unextractable}</p></dd><dt><span class="term">--keyFlagsOn opflags, </span><span class="term">--keyFlagsOff opflags</span></dt><dd><p>
+PKCS #11 key Operation Flags.
+Comma separated list of one or more of the following:
+{token | session} {public | private} {sensitive | insensitive} {modifiable | unmodifiable} {extractable | unextractable}
+          </p></dd><dt><span class="term">--source-dir certdir</span></dt><dd><p>Identify the certificate database directory to upgrade.</p></dd><dt><span class="term">--source-prefix certdir</span></dt><dd><p>Give the prefix of the certificate and key databases to upgrade.</p></dd><dt><span class="term">--upgrade-id uniqueID</span></dt><dd><p>Give the unique ID of the database to upgrade.</p></dd><dt><span class="term">--upgrade-token-name name</span></dt><dd><p>Set the name of the token to use while it is being upgraded.</p></dd><dt><span class="term">-@ pwfile</span></dt><dd><p>Give the name of a password file to use for the database being upgraded.</p></dd></dl></div></div><div class="refsection"><a name="basic-usage"></a><h2>Usage and Examples</h2><p>
 		Most of the command options in the examples listed here have more arguments available. The arguments included in these examples are the most common ones or are used to illustrate a specific scenario. Use the <code class="option">-H</code> option to show the complete list of arguments for each command option.
 	</p><p><span class="command"><strong>Creating New Security Databases</strong></span></p><p>
 		Certificates, keys, and security modules related to managing certificates are stored in three related databases:
@@ -144,44 +142,25 @@ of the attribute codes:
 		The new certificate request can be output in ASCII format (<code class="option">-a</code>) or can be written to a specified file (<code class="option">-o</code>).
 	</p><p>
 		For example:
-	</p><pre class="programlisting">$ certutil -R -k ec -q nistb409 -g 512 -s "CN=John Smith,O=Example Corp,L=Mountain View,ST=California,C=US" -d sql:/home/my/sharednssdb -p 650-555-0123 -a -o cert.cer
+	</p><pre class="programlisting">$ certutil -R -k rsa -g 1024 -s "CN=John Smith,O=Example Corp,L=Mountain View,ST=California,C=US" -d sql:$HOME/nssdb -p 650-555-0123 -a -o cert.cer
 
 Generating key.  This may take a few moments...
 
-
-Certificate request generated by Netscape 
-Phone: 650-555-0123
-Common Name: John Smith
-Email: (not ed)
-Organization: Example Corp
-State: California
-Country: US
-
------BEGIN NEW CERTIFICATE REQUEST-----
-MIIBIDCBywIBADBmMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEW
-MBQGA1UEBxMNTW91bnRhaW4gVmlldzEVMBMGA1UEChMMRXhhbXBsZSBDb3JwMRMw
-EQYDVQQDEwpKb2huIFNtaXRoMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAMVUpDOZ
-KmHnOx7reP8Cc0Lk+fFWEuYIDX9W5K/BioQOKvEjXyQZhit9aThzBVMoSf1Y1S8J
-CzdUbCg1+IbnXaECAwEAAaAAMA0GCSqGSIb3DQEBBQUAA0EAryqZvpYrUtQ486Ny
-qmtyQNjIi1F8c1Z+TL4uFYlMg8z6LG/J/u1E5t1QqB5e9Q4+BhRbrQjRR1JZx3tB
-1hP9Gg==
------END NEW CERTIFICATE REQUEST-----</pre><p><span class="command"><strong>Creating a Certificate</strong></span></p><p>
+</pre><p><span class="command"><strong>Creating a Certificate</strong></span></p><p>
 		A valid certificate must be issued by a trusted CA. This can be done by specifying a CA certificate (<code class="option">-c</code>) that is stored in the certificate database. If a CA key pair is not available, you can create a self-signed certificate using the <code class="option">-x</code> argument with the <code class="option">-S</code> command option.
 	</p><pre class="programlisting">$ certutil -S -k rsa|dsa|ec -n certname -s subject [-c issuer |-x] -t trustargs -d [sql:]directory [-m serial-number] [-v valid-months] [-w offset-months] [-p phone] [-1] [-2] [-3] [-4] [-5 keyword] [-6 keyword] [-7 emailAddress] [-8 dns-names] [--extAIA] [--extSIA] [--extCP] [--extPM] [--extPC] [--extIA] [--extSKID]</pre><p>
-		The series of numbers and <code class="option">--ext*</code> options set certificate extensions that can be added to the certificate when it is generated by the CA.
+		The series of numbers and <code class="option">--ext*</code> options set certificate extensions that can be added to the certificate when it is generated by the CA. Interactive prompts will result.
 	</p><p>
 		For example, this creates a self-signed certificate:
 	</p><pre class="programlisting">$ certutil -S -s "CN=Example CA" -n my-ca-cert -x -t "C,C,C" -1 -2 -5 -m 3650</pre><p>
+The interative prompts for key usage and whether any extensions are critical and responses have been ommitted for brevity.
+	</p><p>
 		From there, new certificates can reference the self-signed certificate:
 	</p><pre class="programlisting">$ certutil -S -s "CN=My Server Cert" -n my-server-cert -c "my-ca-cert" -t "u,u,u" -1 -5 -6 -8 -m 730</pre><p><span class="command"><strong>Generating a Certificate from a Certificate Request</strong></span></p><p>
 		When a certificate request is created, a certificate can be generated by using the request and then referencing a certificate authority signing certificate (the <span class="emphasis"><em>issuer</em></span> specified in the <code class="option">-c</code> argument). The issuing certificate must be in the certificate database in the specified directory.
 	</p><pre class="programlisting">certutil -C -c issuer -i cert-request-file -o output-file [-m serial-number] [-v valid-months] [-w offset-months] -d [sql:]directory [-1] [-2] [-3] [-4] [-5 keyword] [-6 keyword] [-7 emailAddress] [-8 dns-names]</pre><p>
 		For example:
-	</p><pre class="programlisting">$ certutil -C -c "my-ca-cert" -i /home/certs/cert.req -o cert.cer -m 010 -v 12 -w 1 -d sql:/home/my/sharednssdb -1 nonRepudiation,dataEncipherment -5 sslClient -6 clientAuth -7 jsmith@example.com</pre><p><span class="command"><strong>Generating Key Pairs</strong></span></p><p>
-		Key pairs are generated automatically with a certificate request or certificate, but they can also be generated independently using the <code class="option">-G</code> command option. 
-	</p><pre class="programlisting">certutil -G -d [sql:]directory | -h tokenname -k key-type -g key-size [-y exponent-value] -q pqgfile|curve-name</pre><p>
-		For example:
-	</p><pre class="programlisting">$ certutil -G -h lunasa -k ec -g 256 -q sect193r2</pre><p><span class="command"><strong>Listing Certificates</strong></span></p><p>
+	</p><pre class="programlisting">$ certutil -C -c "my-ca-cert" -i /home/certs/cert.req -o cert.cer -m 010 -v 12 -w 1 -d sql:$HOME/nssdb -1 nonRepudiation,dataEncipherment -5 sslClient -6 clientAuth -7 jsmith@example.com</pre><p><span class="command"><strong>Listing Certificates</strong></span></p><p>
 		The <code class="option">-L</code> command option lists all of the certificates listed in the certificate database. The path to the directory (<code class="option">-d</code>) is required.
 	</p><pre class="programlisting">$ certutil -L -d sql:/home/my/sharednssdb
 
@@ -193,34 +172,89 @@ TPS Administrator's Example Domain ID                        u,u,u
 Google Internet Authority                                    ,,   
 Certificate Authority - Example Domain                       CT,C,C</pre><p>
 		Using additional arguments with <code class="option">-L</code> can return and print the information for a single, specific certificate. For example, the <code class="option">-n</code> argument passes the certificate name, while the <code class="option">-a</code> argument prints the certificate in ASCII format:
-	</p><pre class="programlisting">$ certutil -L -d sql:/home/my/sharednssdb -a -n "Certificate Authority - Example Domain"
-
+	</p><pre class="programlisting">
+$ certutil -L -d sql:$HOME/nssdb -a -n my-ca-cert
 -----BEGIN CERTIFICATE-----
-MIIDmTCCAoGgAwIBAgIBATANBgkqhkiG9w0BAQUFADA5MRcwFQYDVQQKEw5FeGFt
-cGxlIERvbWFpbjEeMBwGA1UEAxMVQ2VydGlmaWNhdGUgQXV0aG9yaXR5MB4XDTEw
-MDQyOTIxNTY1OFoXDTEyMDQxODIxNTY1OFowOTEXMBUGA1UEChMORXhhbXBsZSBE
-b21haW4xHjAcBgNVBAMTFUNlcnRpZmljYXRlIEF1dGhvcml0eTCCASIwDQYJKoZI
-hvcNAQEBBQADggEPADCCAQoCggEBAO/bqUli2KwqXFKmMMG93KN1SANzNTXA/Vlf
-Tmrih3hQgjvR1ktIY9aG6cB7DSKWmtHp/+p4PUCMqL4ZrSGt901qxkePyZ2dYmM2
-RnelK+SEUIPiUtoZaDhNdiYsE/yuDE8vQWj0vHCVL0w72qFUcSQ/WZT7FCrnUIUI
-udeWnoPSUn70gLhcj/lvxl7K9BHyD4Sq5CzktwYtFWLiiwV+ZY/Fl6JgbGaQyQB2
-bP4iRMfloGqsxGuB1evWVDF1haGpFDSPgMnEPSLg3/3dXn+HDJbZ29EU8/xKzQEb
-3V0AHKbu80zGllLEt2Zx/WDIrgJEN9yMfgKFpcmL+BvIRsmh0VsCAwEAAaOBqzCB
-qDAfBgNVHSMEGDAWgBQATgxHQyRUfKIZtdp55bZlFr+tFzAPBgNVHRMBAf8EBTAD
-AQH/MA4GA1UdDwEB/wQEAwIBxjAdBgNVHQ4EFgQUAE4MR0MkVHyiGbXaeeW2ZRa/
-rRcwRQYIKwYBBQUHAQEEOTA3MDUGCCsGAQUFBzABhilodHRwOi8vbG9jYWxob3N0
-LmxvY2FsZG9tYWluOjkxODAvY2Evb2NzcDANBgkqhkiG9w0BAQUFAAOCAQEAi8Gk
-L3XO43u7/TDOeEsWPmq+jZsDZ3GZ85Ajt3KROLWeKVZZZa2E2Hnsvf2uXbk5amKe
-lRxdSeRH9g85pv4KY7Z8xZ71NrI3+K3uwmnqkc6t0hhYb1mw/gx8OAAoluQx3biX
-JBDxjI73Cf7XUopplHBjjiwyGIJUO8BEZJ5L+TF4P38MJz1snLtzZpEAX5bl0U76
-bfu/tZFWBbE8YAWYtkCtMcalBPj6jn2WD3M01kGozW4mmbvsj1cRB9HnsGsqyHCu
-U0ujlL1H/RWcjn607+CTeKH9jLMUqCIqPJNOa+kq/6F7NhNRRiuzASIbZc30BZ5a
-nI7q5n1USM3eWQlVXw==
------END CERTIFICATE-----</pre><p><span class="command"><strong>Listing Keys</strong></span></p><p>
+MIIB1DCCAT2gAwIBAgICDkIwDQYJKoZIhvcNAQEFBQAwFTETMBEGA1UEAxMKRXhh
+bXBsZSBDQTAeFw0xMzAzMTMxOTEwMjlaFw0xMzA2MTMxOTEwMjlaMBUxEzARBgNV
+BAMTCkV4YW1wbGUgQ0EwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAJ4Kzqvz
+JyBVgFqDXRYSyTBNw1DrxUU/3GvWA/ngjAwHEv0Cul/6sO/gsCvnABHiH6unns6x
+XRzPORlC2WY3gkk7vmlsLvYpyecNazAi/NAwVnU/66HOsaoVFWE+gBQo99UrN2yk
+0BiK/GMFlLm5dXQROgA9ZKKyFdI0LIXtf6SbAgMBAAGjMzAxMBEGCWCGSAGG+EIB
+AQQEAwIHADAMBgNVHRMEBTADAQH/MA4GA1UdDwEB/wQEAwICBDANBgkqhkiG9w0B
+AQUFAAOBgQA6chkzkACN281d1jKMrc+RHG2UMaQyxiteaLVZO+Ro1nnRUvseDf09
+XKYFwPMJjWCihVku6bw/ihZfuMHhxK22Nue6inNQ6eDu7WmrqL8z3iUrQwxs+WiF
+ob2rb8XRVVJkzXdXxlk4uo3UtNvw8sAz7sWD71qxKaIHU5q49zijfg==
+-----END CERTIFICATE-----
+</pre><p>For a human-readable display</p><pre class="programlisting">$ certutil -L -d sql:$HOME/nssdb -n my-ca-cert
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 3650 (0xe42)
+        Signature Algorithm: PKCS #1 SHA-1 With RSA Encryption
+        Issuer: "CN=Example CA"
+        Validity:
+            Not Before: Wed Mar 13 19:10:29 2013
+            Not After : Thu Jun 13 19:10:29 2013
+        Subject: "CN=Example CA"
+        Subject Public Key Info:
+            Public Key Algorithm: PKCS #1 RSA Encryption
+            RSA Public Key:
+                Modulus:
+                    9e:0a:ce:ab:f3:27:20:55:80:5a:83:5d:16:12:c9:30:
+                    4d:c3:50:eb:c5:45:3f:dc:6b:d6:03:f9:e0:8c:0c:07:
+                    12:fd:02:ba:5f:fa:b0:ef:e0:b0:2b:e7:00:11:e2:1f:
+                    ab:a7:9e:ce:b1:5d:1c:cf:39:19:42:d9:66:37:82:49:
+                    3b:be:69:6c:2e:f6:29:c9:e7:0d:6b:30:22:fc:d0:30:
+                    56:75:3f:eb:a1:ce:b1:aa:15:15:61:3e:80:14:28:f7:
+                    d5:2b:37:6c:a4:d0:18:8a:fc:63:05:94:b9:b9:75:74:
+                    11:3a:00:3d:64:a2:b2:15:d2:34:2c:85:ed:7f:a4:9b
+                Exponent: 65537 (0x10001)
+        Signed Extensions:
+            Name: Certificate Type
+            Data: none
+
+            Name: Certificate Basic Constraints
+            Data: Is a CA with no maximum path length.
+
+            Name: Certificate Key Usage
+            Critical: True
+            Usages: Certificate Signing
+
+    Signature Algorithm: PKCS #1 SHA-1 With RSA Encryption
+    Signature:
+        3a:72:19:33:90:00:8d:db:cd:5d:d6:32:8c:ad:cf:91:
+        1c:6d:94:31:a4:32:c6:2b:5e:68:b5:59:3b:e4:68:d6:
+        79:d1:52:fb:1e:0d:fd:3d:5c:a6:05:c0:f3:09:8d:60:
+        a2:85:59:2e:e9:bc:3f:8a:16:5f:b8:c1:e1:c4:ad:b6:
+        36:e7:ba:8a:73:50:e9:e0:ee:ed:69:ab:a8:bf:33:de:
+        25:2b:43:0c:6c:f9:68:85:a1:bd:ab:6f:c5:d1:55:52:
+        64:cd:77:57:c6:59:38:ba:8d:d4:b4:db:f0:f2:c0:33:
+        ee:c5:83:ef:5a:b1:29:a2:07:53:9a:b8:f7:38:a3:7e
+    Fingerprint (MD5):
+        86:D8:A5:8B:8A:26:BE:9E:17:A8:7B:66:10:6B:27:80
+    Fingerprint (SHA1):
+        48:78:09:EF:C5:D4:0C:BD:D2:64:45:59:EB:03:13:15:F7:A9:D6:F7
+
+    Certificate Trust Flags:
+        SSL Flags:
+            Valid CA
+            Trusted CA
+            User
+        Email Flags:
+            Valid CA
+            Trusted CA
+            User
+        Object Signing Flags:
+            Valid CA
+            Trusted CA
+            User
+
+</pre><p><span class="command"><strong>Listing Keys</strong></span></p><p>
 		Keys are the original material used to encrypt certificate data. The keys generated for certificates are stored separately, in the key database. 
 	</p><p>
 		To list all keys in the database, use the <code class="option">-K</code> command option and the (required) <code class="option">-d</code> argument to give the path to the directory.
-	</p><pre class="programlisting">$ certutil -K -d sql:/home/my/sharednssdb
+	</p><pre class="programlisting">$ certutil -K -d sql:$HOME/nssdb
 certutil: Checking token "NSS Certificate DB" in slot "NSS User Private Key and Certificate Services                  "
 &lt; 0&gt; rsa      455a6673bde9375c2887ec8bf8016b3f9f35861d   Thawte Freemail Member's Thawte Consulting (Pty) Ltd. ID
 &lt; 1&gt; rsa      40defeeb522ade11090eacebaaf1196a172127df   Example Domain Administrator Cert
@@ -291,12 +325,12 @@ The last versions of these <span class="emphasis"><em>legacy</em></span> databas
 		</p></li></ul></div><p>BerkeleyDB has performance limitations, though, which prevent it from being easily used by multiple applications simultaneously. NSS has 
 some flexibility that allows applications to use their own, independent database engine while keeping a shared database and working around the access issues. Still, NSS
 requires more flexibility to provide a truly shared security database.</p><p>In 2009, NSS introduced a new set of databases that are SQLite databases rather than 
-BerkleyDB. These new databases provide more accessibility and performance:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
+BerkeleyDB. These new databases provide more accessibility and performance:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
 			cert9.db for certificates
 		</p></li><li class="listitem"><p>
 			key4.db for keys
 		</p></li><li class="listitem"><p>
-			pkcs11.txt, which is listing of all of the PKCS #11 modules contained in a new subdirectory in the security databases directory
+			pkcs11.txt, a listing of all of the PKCS #11 modules, contained in a new subdirectory in the security databases directory
 		</p></li></ul></div><p>Because the SQLite databases are designed to be shared, these are the <span class="emphasis"><em>shared</em></span> database type. The shared database type is preferred; the legacy format is included for backward compatibility.</p><p>By default, the tools (<span class="command"><strong>certutil</strong></span>, <span class="command"><strong>pk12util</strong></span>, <span class="command"><strong>modutil</strong></span>) assume that the given security databases follow the more common legacy type. 
 Using the SQLite databases must be manually specified by using the <span class="command"><strong>sql:</strong></span> prefix with the given security directory. For example:</p><pre class="programlisting">$ certutil -L -d sql:/home/my/sharednssdb</pre><p>To set the shared database type as the default type for the tools, set the <code class="envar">NSS_DEFAULT_DB_TYPE</code> environment variable to <code class="envar">sql</code>:</p><pre class="programlisting">export NSS_DEFAULT_DB_TYPE="sql"</pre><p>This line can be set added to the <code class="filename">~/.bashrc</code> file to make the change permanent.</p><p>Most applications do not use the shared database by default, but they can be configured to use them. For example, this how-to article covers how to configure Firefox and Thunderbird to use the new shared NSS databases:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
 			https://wiki.mozilla.org/NSS_Shared_DB_Howto</p></li></ul></div><p>For an engineering draft on the changes in the shared NSS databases, see the NSS project wiki:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
@@ -310,9 +344,7 @@ Using the SQLite databases must be manually specified by using the <span class="
 	</p></li></ul></div><p>The NSS wiki has information on the new database design and how to configure applications to use it.</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
 			https://wiki.mozilla.org/NSS_Shared_DB_Howto</p></li><li class="listitem"><p>
 			https://wiki.mozilla.org/NSS_Shared_DB
-		</p></li></ul></div></div><div class="refsection"><a name="resources"></a><h2>Additional Resources</h2><p>For information about NSS and other tools related to NSS (like JSS), check out the NSS project wiki at <a class="ulink" href="http://www.mozilla.org/projects/security/pki/nss/" target="_top">http://www.mozilla.org/projects/security/pki/nss/</a>. The NSS site relates directly to NSS code changes and releases.</p><p>Mailing lists: https://lists.mozilla.org/listinfo/dev-tech-crypto</p><p>IRC: Freenode at #dogtag-pki</p></div><div class="refsection"><a name="authors"></a><h2>Authors</h2><p>The NSS tools were written and maintained by developers with Netscape, Red Hat, and Sun.</p><p>
+		</p></li></ul></div></div><div class="refsection"><a name="resources"></a><h2>Additional Resources</h2><p>For information about NSS and other tools related to NSS (like JSS), check out the NSS project wiki at <a class="ulink" href="http://www.mozilla.org/projects/security/pki/nss/" target="_top">http://www.mozilla.org/projects/security/pki/nss/</a>. The NSS site relates directly to NSS code changes and releases.</p><p>Mailing lists: https://lists.mozilla.org/listinfo/dev-tech-crypto</p><p>IRC: Freenode at #dogtag-pki</p></div><div class="refsection"><a name="authors"></a><h2>Authors</h2><p>The NSS tools were written and maintained by developers with Netscape, Red Hat,  Sun, Oracle, Mozilla, and Google.</p><p>
 	Authors: Elio Maldonado &lt;emaldona@redhat.com&gt;, Deon Lackey &lt;dlackey@redhat.com&gt;.
-    </p></div><div class="refsection"><a name="license"></a><h2>LICENSE</h2><p>Licensed under the Mozilla Public License, version 1.1,
-        and/or the GNU General Public License, version 2 or later,
-        and/or the GNU Lesser General Public License, version 2.1 or later.
+    </p></div><div class="refsection"><a name="license"></a><h2>LICENSE</h2><p>Licensed under the Mozilla Public License, v. 2.0.  If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
     </p></div></div><div class="navfooter"><hr></div></body></html>

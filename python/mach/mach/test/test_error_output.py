@@ -11,26 +11,17 @@ import unittest
 
 from StringIO import StringIO
 
-import mach.main
+from mach.main import (
+    COMMAND_ERROR,
+    MODULE_ERROR
+)
+from mach.test.common import TestBase
 
 
-class TestErrorOutput(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        common_path = os.path.join(os.path.dirname(__file__), 'common.py')
-        imp.load_source('mach.commands.error_output_test', common_path)
+class TestErrorOutput(TestBase):
 
     def _run_mach(self, args):
-        m = mach.main.Mach(os.getcwd())
-
-        stdout = StringIO()
-        stderr = StringIO()
-        stdout.encoding = 'UTF-8'
-        stderr.encoding = 'UTF-8'
-
-        result = m.run(args, stdout=stdout, stderr=stderr)
-
-        return (result, stdout.getvalue(), stderr.getvalue())
+        return TestBase._run_mach(self, args, 'throw.py')
 
     def test_command_error(self):
         result, stdout, stderr = self._run_mach(['throw', '--message',

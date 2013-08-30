@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "level_indicator.h"
+#include "webrtc/modules/audio_conference_mixer/source/level_indicator.h"
 
 namespace webrtc {
 // Array for adding smothing to level changes (ad-hoc).

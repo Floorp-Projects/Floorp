@@ -26,7 +26,7 @@
 #include "jsscriptinlines.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 using mozilla::IsNaN;
 
@@ -349,16 +349,24 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
     }
 
     {
+        // Each call into an asm.js module requires an AsmJSActivation record
+        // pushed on a stack maintained by the runtime. This record is used for
+        // to handle a variety of exceptional things that can happen in asm.js
+        // code.
         AsmJSActivation activation(cx, module);
-        ion::IonContext ictx(cx, NULL);
+
+        // Eagerly push an IonContext+JitActivation so that the optimized
+        // asm.js-to-Ion FFI call path (which we want to be very fast) can
+        // avoid doing so.
+        jit::IonContext ictx(cx, NULL);
         JitActivation jitActivation(cx, /* firstFrameIsConstructing = */ false, /* active */ false);
 
-        // Call into generated code.
+        // Call the per-exported-function trampoline created by GenerateEntry.
 #ifdef JS_CPU_ARM
-        if (!func.code()(coercedArgs.begin(), module.globalData()))
+        if (!module.entryTrampoline(func)(coercedArgs.begin(), module.globalData()))
             return false;
 #else
-        if (!func.code()(coercedArgs.begin()))
+        if (!module.entryTrampoline(func)(coercedArgs.begin()))
             return false;
 #endif
     }

@@ -39,14 +39,14 @@ NS_DEFINE_NAMED_CID(NS_PNGENCODER_CID);
 NS_DEFINE_NAMED_CID(NS_BMPENCODER_CID);
 
 static const mozilla::Module::CIDEntry kImageCIDs[] = {
-  { &kNS_IMGLOADER_CID, false, NULL, imgLoaderConstructor, },
-  { &kNS_IMGREQUESTPROXY_CID, false, NULL, imgRequestProxyConstructor, },
-  { &kNS_IMGTOOLS_CID, false, NULL, imgToolsConstructor, },
-  { &kNS_ICOENCODER_CID, false, NULL, nsICOEncoderConstructor, },
-  { &kNS_JPEGENCODER_CID, false, NULL, nsJPEGEncoderConstructor, },
-  { &kNS_PNGENCODER_CID, false, NULL, nsPNGEncoderConstructor, },
-  { &kNS_BMPENCODER_CID, false, NULL, nsBMPEncoderConstructor, },
-  { NULL }
+  { &kNS_IMGLOADER_CID, false, nullptr, imgLoaderConstructor, },
+  { &kNS_IMGREQUESTPROXY_CID, false, nullptr, imgRequestProxyConstructor, },
+  { &kNS_IMGTOOLS_CID, false, nullptr, imgToolsConstructor, },
+  { &kNS_ICOENCODER_CID, false, nullptr, nsICOEncoderConstructor, },
+  { &kNS_JPEGENCODER_CID, false, nullptr, nsJPEGEncoderConstructor, },
+  { &kNS_PNGENCODER_CID, false, nullptr, nsPNGEncoderConstructor, },
+  { &kNS_BMPENCODER_CID, false, nullptr, nsBMPEncoderConstructor, },
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kImageContracts[] = {
@@ -58,7 +58,7 @@ static const mozilla::Module::ContractIDEntry kImageContracts[] = {
   { "@mozilla.org/image/encoder;2?type=" IMAGE_JPEG, &kNS_JPEGENCODER_CID },
   { "@mozilla.org/image/encoder;2?type=" IMAGE_PNG, &kNS_PNGENCODER_CID },
   { "@mozilla.org/image/encoder;2?type=" IMAGE_BMP, &kNS_BMPENCODER_CID },
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module::CategoryEntry kImageCategories[] = {
@@ -74,7 +74,7 @@ static const mozilla::Module::CategoryEntry kImageCategories[] = {
   { "Gecko-Content-Viewers", IMAGE_PNG, "@mozilla.org/content/document-loader-factory;1" },
   { "Gecko-Content-Viewers", IMAGE_X_PNG, "@mozilla.org/content/document-loader-factory;1" },
   { "content-sniffing-services", "@mozilla.org/image/loader;1", "@mozilla.org/image/loader;1" },
-  { NULL }
+  { nullptr }
 };
 
 static nsresult
@@ -98,7 +98,7 @@ static const mozilla::Module kImageModule = {
   kImageCIDs,
   kImageContracts,
   kImageCategories,
-  NULL,
+  nullptr,
   imglib_Initialize,
   imglib_Shutdown
 };

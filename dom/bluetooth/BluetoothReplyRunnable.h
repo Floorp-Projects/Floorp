@@ -10,7 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "BluetoothCommon.h"
 #include "nsThreadUtils.h"
-#include "jsapi.h"
+#include "js/Value.h"
 
 class nsIDOMDOMRequest;
 
