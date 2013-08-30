@@ -623,7 +623,7 @@ static LayoutDeviceIntPoint
 ToWidgetPoint(const CSSPoint& aPoint, const nsPoint& aOffset,
               nsPresContext* aPresContext)
 {
-  return LayoutDeviceIntPoint::FromAppUnits(
+  return LayoutDeviceIntPoint::FromAppUnitsRounded(
     CSSPoint::ToAppUnits(aPoint) + aOffset,
     aPresContext->AppUnitsPerDevPixel());
 }
