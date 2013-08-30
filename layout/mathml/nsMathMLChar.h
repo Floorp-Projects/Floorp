@@ -7,9 +7,21 @@
 #define nsMathMLChar_h___
 
 #include "nsMathMLOperators.h"
-#include "nsMathMLFrame.h"
+#include "nsPoint.h"
+#include "nsRect.h"
+#include "nsString.h"
+#include "nsBoundingMetrics.h"
 
 class nsGlyphTable;
+class nsIFrame;
+class nsDisplayListBuilder;
+class nsDisplayListSet;
+class nsRect;
+class nsPresContext;
+class nsRenderingContext;
+class nsBoundingMetrics;
+class nsStyleContext;
+class nsFont;
 
 // Hints for Stretch() to indicate criteria for stretching
 enum {
@@ -71,10 +83,7 @@ public:
   }
 
   // not a virtual destructor: this class is not intended to be subclassed
-  ~nsMathMLChar() {
-    MOZ_COUNT_DTOR(nsMathMLChar);
-    mStyleContext->Release();
-  }
+  ~nsMathMLChar();
 
   void Display(nsDisplayListBuilder*   aBuilder,
                nsIFrame*               aForFrame,

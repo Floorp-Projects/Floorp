@@ -3,17 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsMathMLOperators.h"
 #include "nsCOMPtr.h"
-#include "nsString.h"
 #include "nsHashtable.h"
 #include "nsTArray.h"
 
-#include "nsIComponentManager.h"
 #include "nsIPersistentProperties2.h"
 #include "nsNetUtil.h"
 #include "nsCRT.h"
-
-#include "nsMathMLOperators.h"
 
 // operator dictionary entry
 struct OperatorData {

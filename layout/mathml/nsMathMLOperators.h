@@ -6,7 +6,8 @@
 #ifndef nsMathMLOperators_h___
 #define nsMathMLOperators_h___
 
-#include "nsCoord.h"
+#include <stdint.h>
+#include "nsStringFwd.h"
 
 enum nsStretchDirection {
   NS_STRETCH_DIRECTION_UNSUPPORTED = -1,
