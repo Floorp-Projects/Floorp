@@ -27,7 +27,7 @@
 #include "nsStringStream.h"
 #include "nsStreamUtils.h"
 #include "nsIPrincipal.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 #include "nsSVGUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsHostObjectProtocolHandler.h"
