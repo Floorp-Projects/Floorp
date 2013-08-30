@@ -12,16 +12,17 @@ function startTest(aInspector, aRuleView)
   inspector = aInspector;
   ruleWindow = aRuleView.doc.defaultView;
   ruleView = aRuleView;
-  let style = '' +
-    '#testid {' +
-    '  background-color: blue;' +
-    '} ' +
-    '.testclass, .unmatched {' +
-    '  background-color: green;' +
-    '}';
+  let style = "" +
+    "#testid {" +
+    "  background-color: blue;" +
+    "}" +
+    ".testclass, .unmatched {" +
+    "  background-color: green;" +
+    "}";
 
   let styleNode = addStyle(doc, style);
-  doc.body.innerHTML = '<div id="testid" class="testclass">Styled Node</div>';
+  doc.body.innerHTML = "<div id='testid' class='testclass'>Styled Node</div>" +
+                       "<div id='testid2'>Styled Node</div>";
 
   let testElement = doc.getElementById("testid");
   inspector.selection.setNode(testElement);
@@ -30,7 +31,7 @@ function startTest(aInspector, aRuleView)
     inspector.selection.setNode(null);
     inspector.once("inspector-updated", () => {
       is(ruleView.element.querySelectorAll("#noResults").length, 1, "After highlighting null, has a no-results element again.");
-      inspector.selection.setNode(testElement)
+      inspector.selection.setNode(testElement);
       inspector.once("inspector-updated", () => {
         let classEditor = ruleView.element.children[2]._ruleEditor;
         is(classEditor.selectorText.querySelector(".ruleview-selector-matched").textContent, ".testclass", ".textclass should be matched.");
@@ -50,7 +51,6 @@ function testCancelNew()
   let elementRuleEditor = ruleView.element.children[0]._ruleEditor;
   waitForEditorFocus(elementRuleEditor.element, function onNewElement(aEditor) {
     is(inplaceEditor(elementRuleEditor.newPropSpan), aEditor, "Next focused editor should be the new property editor.");
-    let input = aEditor.input;
     waitForEditorBlur(aEditor, function () {
       ok(!elementRuleEditor.rule._applyingModifications, "Shouldn't have an outstanding modification request after a cancel.");
       is(elementRuleEditor.rule.textProps.length,  0, "Should have canceled creating a new text property.");
@@ -137,7 +137,7 @@ function testEditProperty()
         input.select();
 
         waitForEditorBlur(aEditor, function() {
-          promiseDone(expectRuleChange(idRuleEditor.rule).then(() => {;
+          promiseDone(expectRuleChange(idRuleEditor.rule).then(() => {
             is(idRuleEditor.rule.style._rawStyle().getPropertyValue("border-color"), "red",
                "border-color should have been set.");
 
@@ -182,8 +182,27 @@ function testDisableProperty()
     is(idRuleEditor.rule.style._rawStyle().getPropertyValue("border-color"), "red",
       "Border-color should have been reset.");
 
-    finishTest();
+    testPropertyStillMarkedDirty();
   }));
+}
+
+function testPropertyStillMarkedDirty() {
+  // Select an unstyled node.
+  let testElement = doc.getElementById("testid2");
+  inspector.selection.setNode(testElement);
+  inspector.once("inspector-updated", () => {
+    // Select the original node again.
+    testElement = doc.getElementById("testid");
+    inspector.selection.setNode(testElement);
+    inspector.once("inspector-updated", () => {
+      let props = ruleView.element.querySelectorAll(".ruleview-property");
+      for (let i = 0; i < props.length; i++) {
+        is(props[i].hasAttribute("dirty"), i <= 1,
+          "props[" + i + "] marked dirty as appropriate");
+      }
+      finishTest();
+    });
+  });
 }
 
 function finishTest()
