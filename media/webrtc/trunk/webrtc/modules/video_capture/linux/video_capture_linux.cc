@@ -12,13 +12,20 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <linux/videodev2.h>
 #include <errno.h>
 #include <stdio.h>
 #include <sys/mman.h>
 #include <string.h>
 
-#include <iostream>
+//v4l includes
+#if defined(__DragonFly__) || defined(__NetBSD__) || defined(__OpenBSD__)
+#include <sys/videoio.h>
+#elif defined(__sun)
+#include <sys/videodev2.h>
+#else
+#include <linux/videodev2.h>
+#endif
+
 #include <new>
 
 #include "ref_count.h"
@@ -69,6 +76,13 @@ int32_t VideoCaptureModuleV4L2::Init(const char* deviceUniqueIdUTF8)
     if (_deviceUniqueId)
     {
         memcpy(_deviceUniqueId, deviceUniqueIdUTF8, len + 1);
+    }
+
+    int device_index;
+    if (sscanf(deviceUniqueIdUTF8,"fake_%d", &device_index) == 1)
+    {
+      _deviceId = device_index;
+      return 0;
     }
 
     int fd;
