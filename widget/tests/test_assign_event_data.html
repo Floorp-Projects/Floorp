@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Testing ns*Event::Assign*EventData()</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/NativeKeyCodes.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="display">
+  <input id="input-text">
+  <button id="button">button</button>
+</div>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var gUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
+const kIsMac = (navigator.platform.indexOf("Mac") == 0);
+const kIsWin = (navigator.platform.indexOf("Win") == 0);
+
+var gEvent = null;
+var gCopiedEvent = [];
+
+function onEvent(aEvent)
+{
+  gEvent = aEvent;
+  for (var attr in aEvent) {
+    if (!attr.match(/^[A-Z0-9_]+$/) && // ignore const attributes
+        attr != "multipleActionsPrevented" && // multipleActionsPrevented isn't defined in any DOM event specs.
+        typeof(aEvent[attr]) != "function") {
+      gCopiedEvent.push({ name: attr, value: aEvent[attr]});
+    }
+  }
+}
+
+const WIN_KL_US = 0x409;
+const MAC_KL_US = 0;
+
+const NATIVE_SHIFT_LEFT    = 0x0100;
+const NATIVE_CONTROL_RIGHT = 0x0800;
+const NATIVE_META_RIGHT    = 0x8000;
+
+const kTests = [
+  {  description: "nsKeyEvent (keydown of 'a' key without modifiers)",
+     targetID: "input-text", eventType: "keydown",
+     dispatchEvent: function () {
+       document.getElementById(this.targetID).value = "";
+       document.getElementById(this.targetID).focus();
+       if (kIsWin) {
+         gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_A, 0, "a", "a");
+       } else if (kIsMac) {
+         gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_A, 0, "a", "a");
+       }
+     },
+     canRun: function () {
+       return (kIsMac || kIsWin);
+     },
+     todoMismatch: [ "key" ],
+  },
+  {  description: "nsKeyEvent (keyup of 'a' key without modifiers)",
+     targetID: "input-text", eventType: "keydown",
+     dispatchEvent: function () {
+       document.getElementById(this.targetID).value = "";
+       document.getElementById(this.targetID).focus();
+       if (kIsWin) {
+         gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_A, 0, "a", "a");
+       } else if (kIsMac) {
+         gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_A, 0, "a", "a");
+       }
+     },
+     canRun: function () {
+       return (kIsMac || kIsWin);
+     },
+     todoMismatch: [ "key" ],
+  },
+  {  description: "nsKeyEvent (keypress of 'b' key with Shift)",
+     targetID: "input-text", eventType: "keypress",
+     dispatchEvent: function () {
+       document.getElementById(this.targetID).value = "";
+       document.getElementById(this.targetID).focus();
+       if (kIsWin) {
+         gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_B, NATIVE_SHIFT_LEFT, "B", "B");
+       } else if (kIsMac) {
+         gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_B, NATIVE_SHIFT_LEFT, "B", "B");
+       }
+     },
+     canRun: function () {
+       return (kIsMac || kIsWin);
+     },
+     // "defaultPrevented" becomes true because the editor consumes the keypress event.
+     todoMismatch: [ "key", "defaultPrevented" ],
+  },
+  {  description: "nsKeyEvent (keypress of 'c' key with Accel)",
+     targetID: "input-text", eventType: "keypress",
+     dispatchEvent: function () {
+       document.getElementById(this.targetID).value = "";
+       document.getElementById(this.targetID).focus();
+       if (kIsWin) {
+         gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_C, NATIVE_CONTROL_RIGHT, "\u0003", "c");
+       } else if (kIsMac) {
+         gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_C, NATIVE_META_RIGHT, "c", "c");
+       }
+     },
+     canRun: function () {
+       return (kIsMac || kIsWin);
+     },
+     // "defaultPrevented" becomes true because the editor consumes the keypress event.
+     todoMismatch: [ "key", "defaultPrevented" ],
+  },
+  {  description: "nsMouseEvent (mousedown of left button without modifier)",
+     targetID: "button", eventType: "mousedown",
+     dispatchEvent: function () {
+       synthesizeMouseAtCenter(document.getElementById(this.targetID),
+                               { button: 0 });
+     },
+     canRun: function () {
+       return true;
+     },
+     todoMismatch: [],
+  },
+  {  description: "nsMouseEvent (click of middle button with Shift)",
+     // XXX I'm not sure why middle click event isn't fired on button element.
+     targetID: "input-text", eventType: "click",
+     dispatchEvent: function () {
+       document.getElementById(this.targetID).value = "";
+       synthesizeMouseAtCenter(document.getElementById(this.targetID),
+                               { button: 1, shiftKey: true, pressure: 0.5 });
+     },
+     canRun: function () {
+       return true;
+     },
+     todoMismatch: [],
+  },
+  {  description: "nsMouseEvent (mouseup of right button with Alt)",
+     targetID: "button", eventType: "mouseup",
+     dispatchEvent: function () {
+       document.getElementById(this.targetID).value = "";
+       synthesizeMouseAtCenter(document.getElementById(this.targetID),
+                               { button: 2, altKey: true });
+     },
+     canRun: function () {
+       return true;
+     },
+     todoMismatch: [],
+  },
+];
+
+function doTest(aTest)
+{
+  if (!aTest.canRun()) {
+    SimpleTest.executeSoon(runNextTest);
+    return;
+  }
+  gEvent = null;
+  gCopiedEvent = [];
+  var target = document.getElementById(aTest.targetID);
+  target.addEventListener(aTest.eventType, onEvent, true);
+  setTimeout(function () {
+    target.removeEventListener(aTest.eventType, onEvent, true);
+    ok(gEvent !== null, aTest.description + ": failed to get duplicated event");
+    ok(gCopiedEvent.length > 0, aTest.description + ": count of attribute of the event must be larger than 0");
+    for (var i = 0; i < gCopiedEvent.length; ++i) {
+      var name = gCopiedEvent[i].name;
+      if (name == "rangeOffset") {
+        todo(false, aTest.description + ": " + name + " attribute value is never reset (" + gEvent[name] + ")");
+      } else if (name == "eventPhase") {
+        is(gEvent[name], 0, aTest.description + ": mismatch with fixed value (" + name + ")");
+      } else if (name == "rangeParent" || name == "currentTarget") {
+        is(gEvent[name], null, aTest.description + ": mismatch with fixed value (" + name + ")");
+      } else if (aTest.todoMismatch.indexOf(name) >= 0) {
+        todo_is(gEvent[name], gCopiedEvent[i].value, aTest.description + ": mismatch (" + name + ")");
+      } else {
+        is(gEvent[name], gCopiedEvent[i].value, aTest.description + ": mismatch (" + name + ")");
+      }
+    }
+    runNextTest();
+  }, 0);
+  aTest.dispatchEvent();
+}
+
+var gIndex = -1;
+function runNextTest()
+{
+  if (++gIndex == kTests.length) {
+    finish();
+    return;
+  }
+  doTest(kTests[gIndex]);
+}
+
+function init()
+{
+  SpecialPowers.setBoolPref("middlemouse.contentLoadURL", false);
+  SpecialPowers.setBoolPref("middlemouse.paste", false);
+  SpecialPowers.setBoolPref("general.autoScroll", false);
+
+  runNextTest();
+}
+
+function finish()
+{
+  SpecialPowers.clearUserPref("middlemouse.contentLoadURL");
+  SpecialPowers.clearUserPref("middlemouse.paste");
+  SpecialPowers.clearUserPref("general.autoScroll");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(init);
+
+</script>
+</body>
