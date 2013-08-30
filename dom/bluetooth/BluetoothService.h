@@ -307,9 +307,6 @@ public:
   void
   RemoveObserverFromTable(const nsAString& key);
 
-  void
-  DispatchToCommandThread(nsRunnable* aRunnable);
-
 protected:
   BluetoothService()
   : mEnabled(false)
@@ -387,26 +384,21 @@ protected:
   static BluetoothService*
   Create();
 
-  /**
-   * Due to the fact that some operations require multiple calls, a
-   * CommandThread is created that can run blocking, platform-specific calls
-   * where either no asynchronous equivilent exists, or else where multiple
-   * asynchronous calls would require excessive runnable bouncing between main
-   * thread and IO thread.
-   *
-   * For instance, when we retrieve an Adapter object, we would like it to come
-   * with all of its properties filled in and registered as an agent, which
-   * requires a minimum of 3 calls to platform specific code on some platforms.
-   *
-   */
-  nsCOMPtr<nsIThread> mBluetoothCommandThread;
-
   typedef nsClassHashtable<nsStringHashKey, BluetoothSignalObserverList >
   BluetoothSignalObserverTable;
 
   BluetoothSignalObserverTable mBluetoothSignalObserverTable;
 
   bool mEnabled;
+
+private:
+  /**
+   * Due to the fact that the startup and shutdown of the Bluetooth system
+   * can take an indefinite amount of time, a command thread is created
+   * that can run blocking calls. The thread is not intended for regular
+   * Bluetooth operations though.
+   */
+  nsCOMPtr<nsIThread> mBluetoothThread;
 };
 
 END_BLUETOOTH_NAMESPACE
