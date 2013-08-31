@@ -27,7 +27,7 @@ function String_repeat(count) {
     n = n & ((1 << 28) - 1);
 
     // Steps 8-9.
-    var T = '';
+    var T = "";
     for (;;) {
         if (n & 1)
             T += S;

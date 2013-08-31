@@ -4808,11 +4808,40 @@ nsContentUtils::AddScriptRunner(nsIRunnable* aRunnable)
 }
 
 void
+nsContentUtils::EnterMicroTask()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  ++sMicroTaskLevel;
+}
+
+void
 nsContentUtils::LeaveMicroTask()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   if (--sMicroTaskLevel == 0) {
     nsDOMMutationObserver::HandleMutations();
   }
+}
+
+bool
+nsContentUtils::IsInMicroTask()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return sMicroTaskLevel != 0;
+}
+
+uint32_t
+nsContentUtils::MicroTaskLevel()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return sMicroTaskLevel;
+}
+
+void
+nsContentUtils::SetMicroTaskLevel(uint32_t aLevel)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  sMicroTaskLevel = aLevel;
 }
 
 /* 

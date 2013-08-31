@@ -9,16 +9,8 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="button-base" extends="chrome://global/content/bindings/general.xml#basetext">
-    <implementation implements="nsIDOMXULButtonElement, nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULButton;
-          ]]>
-        </getter>
-      </property>
-
+  <binding id="button-base" extends="chrome://global/content/bindings/general.xml#basetext" role="xul:button">
+    <implementation implements="nsIDOMXULButtonElement">
       <property name="type"
                 onget="return this.getAttribute('type');"
                 onset="this.setAttribute('type', val); return val;"/>

@@ -3518,6 +3518,12 @@
     "n_buckets": "1000",
     "description": "The length of time (in seconds) that a call lasted."
   },
+  "WEBRTC_CALL_COUNT":{
+    "kind": "exponential",
+    "high": "500",
+    "n_buckets": "50",
+    "description": "The number of calls made during a session."
+  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_TRACERDETACH_MS": {
     "kind": "exponential",
     "high": "10000",
