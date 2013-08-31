@@ -6386,17 +6386,10 @@ JSCompartment::sweepNewTypeObjectTable(TypeObjectSet &table)
 
 TypeCompartment::~TypeCompartment()
 {
-    if (pendingArray)
-        js_free(pendingArray);
-
-    if (arrayTypeTable)
-        js_delete(arrayTypeTable);
-
-    if (objectTypeTable)
-        js_delete(objectTypeTable);
-
-    if (allocationSiteTable)
-        js_delete(allocationSiteTable);
+    js_free(pendingArray);
+    js_delete(arrayTypeTable);
+    js_delete(objectTypeTable);
+    js_delete(allocationSiteTable);
 }
 
 /* static */ void

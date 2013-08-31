@@ -96,8 +96,7 @@ struct BaselineStackBuilder
     }
 
     ~BaselineStackBuilder() {
-        if (buffer_)
-            js_free(buffer_);
+        js_free(buffer_);
     }
 
     bool init() {
