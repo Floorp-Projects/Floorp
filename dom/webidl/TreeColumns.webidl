@@ -44,7 +44,7 @@ interface TreeColumns {
   /**
    * Parametric column getters.
    */
-  getter MozTreeColumn? getNamedColumn(DOMString id);
+  getter MozTreeColumn? getNamedColumn(DOMString name);
   getter MozTreeColumn? getColumnAt(unsigned long index);
 
   /**

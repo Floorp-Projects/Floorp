@@ -84,9 +84,73 @@ function namedSetNonStrict(obj) {
   ok(threw,
      "Should throw in non-strict mode when defining named property on " + obj);
 }
-for (var obj of [ document ]) {
+for (var obj of [ document, document.forms ]) {
   namedSetStrict(obj);
   namedSetNonStrict(obj);
+}
+
+function indexedSetStrict(obj) {
+  "use strict";
+  var threw;
+  try {
+    obj[0] = 5;
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw,
+     "Should throw in strict mode when setting indexed property on " + obj);
+
+  try {
+    obj[1000] = 5;
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw,
+     "Should throw in strict mode when setting out of bounds indexed property on " + obj);
+
+  try {
+    Object.defineProperty(obj, "0", { value: 17 });
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw,
+     "Should throw in strict mode when defining indexed property on " + obj);
+}
+function indexedSetNonStrict(obj) {
+  var threw;
+  try {
+    obj[0] = 5;
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  ok(!threw,
+     "Should not throw in non-strict mode when setting indexed property on " + obj);
+
+  try {
+    obj[1000] = 5;
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  ok(!threw,
+     "Should not throw in non-strict mode when setting out of bounds indexed property on " + obj);
+
+  try {
+    Object.defineProperty(obj, "0", { value: 17 });
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw,
+     "Should throw in non-strict mode when defining indexed property on " + obj);
+}
+for (var obj of [ document.forms, document.childNodes ]) {
+  indexedSetStrict(obj);
+  indexedSetNonStrict(obj);
 }
 </script>
 </body>
