@@ -7376,9 +7376,6 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                     "  return true;\n" +
                     "}\n") % (self.descriptor.nativeType)
         elif self.descriptor.supportsIndexedProperties():
-            # XXXbz Once this is fixed to only throw in strict mode, update the
-            # code that decides whether to do a
-            # CGDOMJSProxyHandler_defineProperty at all.
             set += ("if (IsArrayIndex(GetArrayIndexFromId(cx, id))) {\n"
                     "  return js::IsInNonStrictPropertySet(cx) || ThrowErrorMessage(cx, MSG_NO_INDEXED_SETTER, \"%s\");\n"
                     "}\n" % self.descriptor.name)
@@ -7408,11 +7405,6 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                     "return true;\n")
         else:
             if self.descriptor.supportsNamedProperties():
-                # XXXbz Once this is fixed to only throw in strict mode, update
-                # the code that decides whether to do a
-                # CGDOMJSProxyHandler_defineProperty at all.  If we support
-                # indexed properties, we won't get down here for indices, so we
-                # can just do our setter unconditionally here.
                 set += (CGProxyNamedPresenceChecker(self.descriptor).define() + "\n" +
                         "if (found) {\n"
                         "  return js::IsInNonStrictPropertySet(cx) || ThrowErrorMessage(cx, MSG_NO_NAMED_SETTER, \"%s\");\n"
@@ -7799,26 +7791,22 @@ return &instance;"""
 
 class CGDOMJSProxyHandler(CGClass):
     def __init__(self, descriptor):
+        assert (descriptor.supportsIndexedProperties() or
+                descriptor.supportsNamedProperties())
         constructors = [CGDOMJSProxyHandler_CGDOMJSProxyHandler()]
-        methods = [CGDOMJSProxyHandler_getOwnPropertyDescriptor(descriptor)]
-        # XXXbz This should really just test supportsIndexedProperties() and
-        # supportsNamedProperties(), but that would make us throw in all cases
-        # because we don't know whether we're in strict mode.
-        if (descriptor.operations['IndexedSetter'] or
-            descriptor.operations['NamedSetter'] or
-            UseHolderForUnforgeable(descriptor)):
-            methods.extend([CGDOMJSProxyHandler_defineProperty(descriptor),
-                            ClassUsingDeclaration("mozilla::dom::DOMProxyHandler",
-                                                  "defineProperty")])
-        methods.extend([CGDOMJSProxyHandler_getOwnPropertyNames(descriptor),
-                        CGDOMJSProxyHandler_hasOwn(descriptor),
-                        CGDOMJSProxyHandler_get(descriptor),
-                        CGDOMJSProxyHandler_className(descriptor),
-                        CGDOMJSProxyHandler_finalizeInBackground(descriptor),
-                        CGDOMJSProxyHandler_finalize(descriptor),
-                        CGDOMJSProxyHandler_getElementIfPresent(descriptor),
-                        CGDOMJSProxyHandler_getInstance(),
-                        CGDOMJSProxyHandler_delete(descriptor)])
+        methods = [CGDOMJSProxyHandler_getOwnPropertyDescriptor(descriptor),
+                   CGDOMJSProxyHandler_defineProperty(descriptor),
+                   ClassUsingDeclaration("mozilla::dom::DOMProxyHandler",
+                                         "defineProperty"),
+                   CGDOMJSProxyHandler_getOwnPropertyNames(descriptor),
+                   CGDOMJSProxyHandler_hasOwn(descriptor),
+                   CGDOMJSProxyHandler_get(descriptor),
+                   CGDOMJSProxyHandler_className(descriptor),
+                   CGDOMJSProxyHandler_finalizeInBackground(descriptor),
+                   CGDOMJSProxyHandler_finalize(descriptor),
+                   CGDOMJSProxyHandler_getElementIfPresent(descriptor),
+                   CGDOMJSProxyHandler_getInstance(),
+                   CGDOMJSProxyHandler_delete(descriptor)]
         CGClass.__init__(self, 'DOMProxyHandler',
                          bases=[ClassBase('mozilla::dom::DOMProxyHandler')],
                          constructors=constructors,
