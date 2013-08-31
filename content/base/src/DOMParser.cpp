@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMParser.h"
+#include "mozilla/dom/DOMParser.h"
 
 #include "nsIDOMDocument.h"
 #include "nsNetUtil.h"
@@ -20,28 +20,28 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsDOMParser::nsDOMParser()
+DOMParser::DOMParser()
   : mAttemptedInit(false)
 {
   SetIsDOMBinding();
 }
 
-nsDOMParser::~nsDOMParser()
+DOMParser::~DOMParser()
 {
 }
 
-// QueryInterface implementation for nsDOMParser
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMParser)
+// QueryInterface implementation for DOMParser
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMParser)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMParser)
   NS_INTERFACE_MAP_ENTRY(nsIDOMParser)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsDOMParser, mOwner)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(DOMParser, mOwner)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMParser)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMParser)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMParser)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMParser)
 
 static const char*
 StringFromSupportedType(SupportedType aType)
@@ -50,8 +50,8 @@ StringFromSupportedType(SupportedType aType)
 }
 
 already_AddRefed<nsIDocument>
-nsDOMParser::ParseFromString(const nsAString& aStr, SupportedType aType,
-                             ErrorResult& rv)
+DOMParser::ParseFromString(const nsAString& aStr, SupportedType aType,
+                           ErrorResult& rv)
 {
   nsCOMPtr<nsIDOMDocument> domDocument;
   rv = ParseFromString(aStr,
@@ -62,9 +62,9 @@ nsDOMParser::ParseFromString(const nsAString& aStr, SupportedType aType,
 }
 
 NS_IMETHODIMP 
-nsDOMParser::ParseFromString(const PRUnichar *str, 
-                             const char *contentType,
-                             nsIDOMDocument **aResult)
+DOMParser::ParseFromString(const PRUnichar *str, 
+                           const char *contentType,
+                           nsIDOMDocument **aResult)
 {
   NS_ENSURE_ARG(str);
   // Converting a string to an enum value manually is a bit of a pain,
@@ -73,9 +73,9 @@ nsDOMParser::ParseFromString(const PRUnichar *str,
 }
 
 nsresult
-nsDOMParser::ParseFromString(const nsAString& str,
-                             const char *contentType,
-                             nsIDOMDocument **aResult)
+DOMParser::ParseFromString(const nsAString& str,
+                           const char *contentType,
+                           nsIDOMDocument **aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
@@ -120,31 +120,31 @@ nsDOMParser::ParseFromString(const nsAString& str,
 }
 
 already_AddRefed<nsIDocument>
-nsDOMParser::ParseFromBuffer(const Sequence<uint8_t>& aBuf, uint32_t aBufLen,
-                             SupportedType aType, ErrorResult& rv)
+DOMParser::ParseFromBuffer(const Sequence<uint8_t>& aBuf, uint32_t aBufLen,
+                           SupportedType aType, ErrorResult& rv)
 {
   if (aBufLen > aBuf.Length()) {
     rv.Throw(NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY);
     return nullptr;
   }
   nsCOMPtr<nsIDOMDocument> domDocument;
-  rv = nsDOMParser::ParseFromBuffer(aBuf.Elements(), aBufLen,
-                                    StringFromSupportedType(aType),
-                                    getter_AddRefs(domDocument));
+  rv = DOMParser::ParseFromBuffer(aBuf.Elements(), aBufLen,
+                                  StringFromSupportedType(aType),
+                                  getter_AddRefs(domDocument));
   nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
   return document.forget();
 }
 
 already_AddRefed<nsIDocument>
-nsDOMParser::ParseFromBuffer(const Uint8Array& aBuf, uint32_t aBufLen,
-                             SupportedType aType, ErrorResult& rv)
+DOMParser::ParseFromBuffer(const Uint8Array& aBuf, uint32_t aBufLen,
+                           SupportedType aType, ErrorResult& rv)
 {
   if (aBufLen > aBuf.Length()) {
     rv.Throw(NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY);
     return nullptr;
   }
   nsCOMPtr<nsIDOMDocument> domDocument;
-  rv = nsDOMParser::ParseFromBuffer(aBuf.Data(), aBufLen,
+  rv = DOMParser::ParseFromBuffer(aBuf.Data(), aBufLen,
                                     StringFromSupportedType(aType),
                                     getter_AddRefs(domDocument));
   nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
@@ -152,10 +152,10 @@ nsDOMParser::ParseFromBuffer(const Uint8Array& aBuf, uint32_t aBufLen,
 }
 
 NS_IMETHODIMP 
-nsDOMParser::ParseFromBuffer(const uint8_t *buf,
-                             uint32_t bufLen,
-                             const char *contentType,
-                             nsIDOMDocument **aResult)
+DOMParser::ParseFromBuffer(const uint8_t *buf,
+                           uint32_t bufLen,
+                           const char *contentType,
+                           nsIDOMDocument **aResult)
 {
   NS_ENSURE_ARG_POINTER(buf);
   NS_ENSURE_ARG_POINTER(aResult);
@@ -173,28 +173,28 @@ nsDOMParser::ParseFromBuffer(const uint8_t *buf,
 
 
 already_AddRefed<nsIDocument>
-nsDOMParser::ParseFromStream(nsIInputStream* aStream,
-                             const nsAString& aCharset,
-                             int32_t aContentLength,
-                             SupportedType aType,
-                             ErrorResult& rv)
+DOMParser::ParseFromStream(nsIInputStream* aStream,
+                           const nsAString& aCharset,
+                           int32_t aContentLength,
+                           SupportedType aType,
+                           ErrorResult& rv)
 {
   nsCOMPtr<nsIDOMDocument> domDocument;
-  rv = nsDOMParser::ParseFromStream(aStream,
-                                    NS_ConvertUTF16toUTF8(aCharset).get(),
-                                    aContentLength,
-                                    StringFromSupportedType(aType),
-                                    getter_AddRefs(domDocument));
+  rv = DOMParser::ParseFromStream(aStream,
+                                  NS_ConvertUTF16toUTF8(aCharset).get(),
+                                  aContentLength,
+                                  StringFromSupportedType(aType),
+                                  getter_AddRefs(domDocument));
   nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
   return document.forget();
 }
 
 NS_IMETHODIMP 
-nsDOMParser::ParseFromStream(nsIInputStream *stream, 
-                             const char *charset, 
-                             int32_t contentLength,
-                             const char *contentType,
-                             nsIDOMDocument **aResult)
+DOMParser::ParseFromStream(nsIInputStream *stream, 
+                           const char *charset, 
+                           int32_t contentLength,
+                           const char *contentType,
+                           nsIDOMDocument **aResult)
 {
   NS_ENSURE_ARG(stream);
   NS_ENSURE_ARG(contentType);
@@ -304,8 +304,8 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
 }
 
 NS_IMETHODIMP
-nsDOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
-                  nsIURI* baseURI, nsIScriptGlobalObject* aScriptObject)
+DOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
+                nsIURI* baseURI, nsIScriptGlobalObject* aScriptObject)
 {
   NS_ENSURE_STATE(!mAttemptedInit);
   mAttemptedInit = true;
@@ -360,16 +360,16 @@ nsDOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
   return NS_OK;
 }
 
-/*static */already_AddRefed<nsDOMParser>
-nsDOMParser::Constructor(const GlobalObject& aOwner,
-                         nsIPrincipal* aPrincipal, nsIURI* aDocumentURI,
-                         nsIURI* aBaseURI, ErrorResult& rv)
+/*static */already_AddRefed<DOMParser>
+DOMParser::Constructor(const GlobalObject& aOwner,
+                       nsIPrincipal* aPrincipal, nsIURI* aDocumentURI,
+                       nsIURI* aBaseURI, ErrorResult& rv)
 {
   if (!nsContentUtils::IsCallerChrome()) {
     rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
-  nsRefPtr<nsDOMParser> domParser = new nsDOMParser(aOwner.GetAsSupports());
+  nsRefPtr<DOMParser> domParser = new DOMParser(aOwner.GetAsSupports());
   rv = domParser->InitInternal(aOwner.GetAsSupports(), aPrincipal, aDocumentURI,
                                aBaseURI);
   if (rv.Failed()) {
@@ -378,9 +378,9 @@ nsDOMParser::Constructor(const GlobalObject& aOwner,
   return domParser.forget();
 }
 
-/*static */already_AddRefed<nsDOMParser>
-nsDOMParser::Constructor(const GlobalObject& aOwner,
-                         ErrorResult& rv)
+/*static */already_AddRefed<DOMParser>
+DOMParser::Constructor(const GlobalObject& aOwner,
+                       ErrorResult& rv)
 {
   nsCOMPtr<nsIPrincipal> prin;
   nsCOMPtr<nsIURI> documentURI;
@@ -403,7 +403,7 @@ nsDOMParser::Constructor(const GlobalObject& aOwner,
     return nullptr;
   }
 
-  nsRefPtr<nsDOMParser> domParser = new nsDOMParser(aOwner.GetAsSupports());
+  nsRefPtr<DOMParser> domParser = new DOMParser(aOwner.GetAsSupports());
   rv = domParser->InitInternal(aOwner.GetAsSupports(), prin, documentURI, baseURI);
   if (rv.Failed()) {
     return nullptr;
@@ -412,8 +412,8 @@ nsDOMParser::Constructor(const GlobalObject& aOwner,
 }
 
 nsresult
-nsDOMParser::InitInternal(nsISupports* aOwner, nsIPrincipal* prin,
-                          nsIURI* documentURI, nsIURI* baseURI)
+DOMParser::InitInternal(nsISupports* aOwner, nsIPrincipal* prin,
+                        nsIURI* documentURI, nsIURI* baseURI)
 {
   AttemptedInitMarker marker(&mAttemptedInit);
   if (!documentURI) {
@@ -446,8 +446,8 @@ nsDOMParser::InitInternal(nsISupports* aOwner, nsIPrincipal* prin,
 }
 
 void
-nsDOMParser::Init(nsIPrincipal* aPrincipal, nsIURI* aDocumentURI,
-                  nsIURI* aBaseURI, mozilla::ErrorResult& rv)
+DOMParser::Init(nsIPrincipal* aPrincipal, nsIURI* aDocumentURI,
+                nsIURI* aBaseURI, mozilla::ErrorResult& rv)
 {
   AttemptedInitMarker marker(&mAttemptedInit);
 
@@ -485,7 +485,7 @@ nsDOMParser::Init(nsIPrincipal* aPrincipal, nsIURI* aDocumentURI,
 }
 
 nsresult
-nsDOMParser::SetUpDocument(DocumentFlavor aFlavor, nsIDOMDocument** aResult)
+DOMParser::SetUpDocument(DocumentFlavor aFlavor, nsIDOMDocument** aResult)
 {
   nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
     do_QueryReferent(mScriptHandlingObject);

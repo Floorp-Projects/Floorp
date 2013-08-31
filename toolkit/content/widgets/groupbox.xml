@@ -15,7 +15,8 @@
     </resources>
   </binding>
 
-  <binding id="groupbox" extends="chrome://global/content/bindings/groupbox.xml#groupbox-base">
+  <binding id="groupbox" role="xul:groupbox"
+    extends="chrome://global/content/bindings/groupbox.xml#groupbox-base">
     <content>
       <xul:hbox class="groupbox-title" align="center" pack="start">
         <children includes="caption"/>
@@ -24,16 +25,6 @@
         <children/>
       </xul:box>
     </content>
-
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULGroupbox;
-          ]]>
-        </getter>
-      </property>
-    </implementation>
   </binding>
 
   <binding id="caption" extends="chrome://global/content/bindings/general.xml#basetext">

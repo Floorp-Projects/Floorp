@@ -72,19 +72,12 @@
     /** Fire "select" event */
     _fireOnSelect()
    -->
-   <binding id="listbox-base"
+   <binding id="listbox-base" role="xul:listbox"
             extends="chrome://global/content/bindings/general.xml#basecontrol">
 
-    <implementation implements="nsIDOMXULMultiSelectControlElement, nsIAccessibleProvider">
+    <implementation implements="nsIDOMXULMultiSelectControlElement">
       <field name="_lastKeyTime">0</field>
       <field name="_incrementalString">""</field>
-
-    <!-- nsIAccessibleProvider -->
-      <property name="accessibleType" readonly="true">
-        <getter>
-          return Components.interfaces.nsIAccessibleProvider.XULListbox;
-        </getter>
-      </property>
 
     <!-- nsIDOMXULSelectControlElement -->
       <property name="selectedItem"
@@ -900,7 +893,7 @@
     </handlers>
   </binding>
   
-  <binding id="listitem"
+  <binding id="listitem" role="xul:listitem"
            extends="chrome://global/content/bindings/general.xml#basetext">
     <resources>
       <stylesheet src="chrome://global/skin/listbox.css"/>
@@ -912,7 +905,7 @@
       </children>
     </content>
 
-    <implementation implements="nsIDOMXULSelectControlItemElement, nsIAccessibleProvider">
+    <implementation implements="nsIDOMXULSelectControlItemElement">
       <property name="current" onget="return this.getAttribute('current') == 'true';">
         <setter><![CDATA[
           if (val)
@@ -924,16 +917,6 @@
 
           return val;
         ]]></setter>
-      </property>
-
-      <!-- ///////////////// nsIAccessibleProvider ///////////////// -->
-
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULListitem;
-          ]]>
-        </getter>
       </property>
 
       <!-- ///////////////// nsIDOMXULSelectControlItemElement ///////////////// -->
@@ -1087,7 +1070,7 @@
     </content>
   </binding>
   
-  <binding id="listcell"
+  <binding id="listcell" role="xul:listcell"
            extends="chrome://global/content/bindings/general.xml#basecontrol">
 
     <resources>
@@ -1099,38 +1082,6 @@
         <xul:label class="listcell-label" xbl:inherits="value=label,flex=flexlabel,crop,disabled" flex="1" crop="right"/>
       </children>
     </content>
-
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-        <![CDATA[
-          // Don't expose xul:listcell as cell accessible until listbox is
-          // multicolumn.
-          const Ci = Components.interfaces;
-          const kNoAccessible = Ci.nsIAccessibleProvider.NoAccessible;
-          const kListCellAccessible = Ci.nsIAccessibleProvider.XULListCell;
-
-          var listitem = this.parentNode;
-          if (!(listitem instanceof Ci.nsIDOMXULSelectControlItemElement))
-            return kNoAccessible;
-
-          var list = listitem.control;
-          if (!list)
-            return kNoAccessible;
-
-          var listcolsElm = list.getElementsByTagName("listcols")[0];
-          if (!listcolsElm)
-            return kNoAccessible;
-
-          var listcolElms = listcolsElm.getElementsByTagName("listcol");
-          if (listcolElms.length <= 1)
-            return kNoAccessible;
-
-          return kListCellAccessible;
-        ]]>
-        </getter>
-      </property>
-    </implementation>
   </binding>
 
   <binding id="listcell-iconic"
@@ -1164,7 +1115,7 @@
     </content>
   </binding>
 
-  <binding id="listhead">
+  <binding id="listhead" role="xul:listhead">
 
     <resources>
       <stylesheet src="chrome://global/skin/listbox.css"/>
@@ -1175,17 +1126,9 @@
         <children includes="listheader"/>
       </xul:listheaditem>
     </content>
-
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          return Components.interfaces.nsIAccessibleProvider.XULListHead;
-        </getter>
-      </property>
-    </implementation>
   </binding>
 
-  <binding id="listheader" display="xul:button">
+  <binding id="listheader" display="xul:button" role="xul:listheader">
 
     <resources>
       <stylesheet src="chrome://global/skin/listbox.css"/>
@@ -1196,14 +1139,6 @@
       <xul:label class="listheader-label" xbl:inherits="value=label,crop" flex="1" crop="right"/>
       <xul:image class="listheader-sortdirection" xbl:inherits="sortDirection"/>
     </content>
-
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          return Components.interfaces.nsIAccessibleProvider.XULListHeader;
-        </getter>
-      </property>
-    </implementation>
   </binding>
 
 </bindings>
