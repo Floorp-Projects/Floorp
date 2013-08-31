@@ -1570,11 +1570,8 @@ GetPropertyIC::tryAttachGenericProxy(JSContext *cx, IonScript *ion, HandleObject
 
     // Ensure that the incoming object is not a DOM proxy, so that we can get to
     // the specialized stubs
-    Address handlerAddr(object(), ProxyObject::offsetOfHandler());
-    masm.loadPrivate(handlerAddr, scratchReg);
-    Address familyAddr(scratchReg, BaseProxyHandler::offsetOfFamily());
-    masm.branchPtr(Assembler::Equal, familyAddr, ImmWord(GetDOMProxyHandlerFamily()),
-                   &failures);
+    masm.branchTestProxyHandlerFamily(Assembler::Equal, object(), scratchReg,
+                                      GetDOMProxyHandlerFamily(), &failures);
 
     if (!EmitCallProxyGet(cx, masm, attacher, name, liveRegs_, object(), output(), returnAddr))
         return false;
@@ -2160,6 +2157,11 @@ SetPropertyIC::attachGenericProxy(JSContext *cx, IonScript *ion, void *returnAdd
 
         GenerateProxyClassGuards(masm, object(), scratch, &proxyFailures, &proxySuccess);
 
+        // Remove the DOM proxies. They'll take care of themselves so this stub doesn't
+        // catch too much.
+        masm.branchTestProxyHandlerFamily(Assembler::Equal, object(), scratch,
+                                          GetDOMProxyHandlerFamily(), &proxyFailures);
+
         masm.bind(&proxyFailures);
         masm.pop(scratch);
         // Unify the point of failure to allow for later DOM proxy handling.
@@ -2185,6 +2187,44 @@ SetPropertyIC::attachGenericProxy(JSContext *cx, IonScript *ion, void *returnAdd
     hasGenericProxyStub_ = true;
 
     return linkAndAttachStub(cx, masm, attacher, ion, "generic proxy set");
+}
+
+bool
+SetPropertyIC::attachDOMProxyShadowed(JSContext *cx, IonScript *ion, HandleObject obj,
+                                        void *returnAddr)
+{
+    JS_ASSERT(IsCacheableDOMProxy(obj));
+
+    Label failures;
+    MacroAssembler masm(cx);
+    RepatchStubAppender attacher(*this);
+
+    masm.setFramePushed(ion->frameSize());
+
+    // Guard on the shape of the object.
+    masm.branchPtr(Assembler::NotEqual,
+                   Address(object(), JSObject::offsetOfShape()),
+                   ImmGCPtr(obj->lastProperty()), &failures);
+
+    // Make sure object is a DOMProxy
+    GenerateDOMProxyChecks(cx, masm, obj, name(), object(), &failures,
+                           /*skipExpandoCheck=*/true);
+
+    RootedId propId(cx, AtomToId(name()));
+    if (!EmitCallProxySet(cx, masm, attacher, propId, liveRegs_, object(),
+                          value(), returnAddr, strict()))
+    {
+        return false;
+    }
+
+    // Success.
+    attacher.jumpRejoin(masm);
+
+    // Failure.
+    masm.bind(&failures);
+    attacher.jumpNextStub(masm);
+
+    return linkAndAttachStub(cx, masm, attacher, ion, "DOM proxy shadowed set");
 }
 
 bool
@@ -2565,12 +2605,23 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
     bool inlinable = cache.canAttachStub() && !obj->watched();
     bool addedSetterStub = false;
     if (inlinable) {
-        if (!addedSetterStub && obj->is<ProxyObject>() &&
-            !cache.hasGenericProxyStub())
-        {
-            if (!cache.attachGenericProxy(cx, ion, returnAddr))
-                return false;
-            addedSetterStub = true;
+        if (!addedSetterStub && obj->is<ProxyObject>()) {
+            if (IsCacheableDOMProxy(obj)) {
+                DOMProxyShadowsResult shadows = GetDOMProxyShadowsCheck()(cx, obj, id);
+                if (shadows == ShadowCheckFailed)
+                    return false;
+                if (shadows == Shadows) {
+                    if (!cache.attachDOMProxyShadowed(cx, ion, obj, returnAddr))
+                        return false;
+                    addedSetterStub = true;
+                }
+            }
+
+            if (!addedSetterStub && !cache.hasGenericProxyStub()) {
+                if (!cache.attachGenericProxy(cx, ion, returnAddr))
+                    return false;
+                addedSetterStub = true;
+            }
         }
         RootedShape shape(cx);
         if (!addedSetterStub && IsPropertySetInlineable(cx, cache, obj, id, &shape)) {
