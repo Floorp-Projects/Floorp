@@ -358,12 +358,12 @@ Range::unionWith(const Range *other)
    if (lower_infinite_ || other->lower_infinite_)
        makeLowerInfinite();
    else
-       setLower(Min(lower_, other->lower_));
+       setLowerInit(Min(lower_, other->lower_));
 
    if (upper_infinite_ || other->upper_infinite_)
        makeUpperInfinite();
    else
-       setUpper(Max(upper_, other->upper_));
+       setUpperInit(Max(upper_, other->upper_));
 
    decimal_ = decimal;
    max_exponent_ = max_exponent;
