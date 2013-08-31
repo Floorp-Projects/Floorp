@@ -5,8 +5,7 @@
 
 const { defer } = require('../core/promise');
 const events = require('../system/events');
-const { open: openWindow, onFocus, getToplevelWindow,
-        isInteractive } = require('./utils');
+const { open: openWindow, onFocus, getToplevelWindow } = require('./utils');
 
 function open(uri, options) {
   return promise(openWindow.apply(null, arguments), 'load');
@@ -36,18 +35,6 @@ function focus(window) {
   return p;
 }
 exports.focus = focus;
-
-function ready(window) {
-  let { promise: result, resolve } = defer();
-
-  if (isInteractive(window))
-    resolve(window);
-  else
-    resolve(promise(window, 'DOMContentLoaded'));
-
-  return result;
-}
-exports.ready = ready;
 
 function promise(target, evt, capture) {
   let deferred = defer();
