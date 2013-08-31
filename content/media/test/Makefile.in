@@ -117,6 +117,7 @@ MOCHITEST_FILES = \
 		test_audiowrite.html \
 		test_mediarecorder_creation.html \
 		test_mediarecorder_avoid_recursion.html \
+		test_mediarecorder_record_timeslice.html \
 		test_mediarecorder_record_audiocontext.html \
 		test_mediarecorder_record_stopms.html \
 		test_mozHasAudio.html \
