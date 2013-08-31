@@ -259,6 +259,7 @@ jit::CheckLogging()
             "  safepoints Safepoints\n"
             "  pools      Literal Pools (ARM only for now)\n"
             "  cacheflush Instruction Cache flushes (ARM only for now)\n"
+            "  range      Range Analysis\n"
             "  logs       C1 and JSON visualization logging\n"
             "  trace      Generate calls to js::jit::Trace() for effectful instructions\n"
             "  all        Everything\n"
