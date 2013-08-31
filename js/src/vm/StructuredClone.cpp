@@ -971,7 +971,7 @@ class Chars {
     jschar *p;
   public:
     Chars(JSContext *cx) : cx(cx), p(NULL) {}
-    ~Chars() { if (p) js_free(p); }
+    ~Chars() { js_free(p); }
 
     bool allocate(size_t len) {
         JS_ASSERT(!p);

@@ -532,8 +532,7 @@ ToCStringBuf::ToCStringBuf() :dbuf(NULL)
 
 ToCStringBuf::~ToCStringBuf()
 {
-    if (dbuf)
-        js_free(dbuf);
+    js_free(dbuf);
 }
 
 template <AllowGC allowGC>

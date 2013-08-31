@@ -390,8 +390,7 @@ JSRuntime::~JSRuntime()
     mainThread.removeFromThreadList();
 
 #ifdef JS_WORKER_THREADS
-    if (workerThreadState)
-        js_delete(workerThreadState);
+    js_delete(workerThreadState);
 
     JS_ASSERT(!exclusiveAccessOwner);
     if (exclusiveAccessLock)
@@ -451,8 +450,7 @@ JSRuntime::~JSRuntime()
 #endif
     js_delete(execAlloc_);  /* Delete after ionRuntime_. */
 
-    if (ionPcScriptCache)
-        js_delete(ionPcScriptCache);
+    js_delete(ionPcScriptCache);
 
 #ifdef JSGC_GENERATIONAL
     gcStoreBuffer.disable();

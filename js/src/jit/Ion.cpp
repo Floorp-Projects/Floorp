@@ -478,8 +478,7 @@ IonCompartment::IonCompartment(IonRuntime *rt)
 
 IonCompartment::~IonCompartment()
 {
-    if (stubCodes_)
-        js_delete(stubCodes_);
+    js_delete(stubCodes_);
 }
 
 bool
