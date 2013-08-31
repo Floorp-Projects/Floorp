@@ -1973,6 +1973,38 @@ SetPropertyIC::attachNativeExisting(JSContext *cx, IonScript *ion,
     return linkAndAttachStub(cx, masm, attacher, ion, "setting");
 }
 
+static bool
+IsCacheableSetPropCallNative(HandleObject obj, HandleObject holder, HandleShape shape)
+{
+    if (!shape || !IsCacheableProtoChain(obj, holder))
+        return false;
+
+    return shape->hasSetterValue() && shape->setterObject()->is<JSFunction>() &&
+           shape->setterObject()->as<JSFunction>().isNative();
+}
+
+static bool
+IsCacheableSetPropCallPropertyOp(HandleObject obj, HandleObject holder,
+                                 HandleShape shape)
+{
+    if (!shape)
+        return false;
+
+    if (!IsCacheableProtoChain(obj, holder))
+        return false;
+
+    if (shape->hasSlot())
+        return false;
+
+    if (shape->hasDefaultSetter())
+        return false;
+
+    if (shape->hasSetterValue())
+        return false;
+
+    return true;
+}
+
 bool
 SetPropertyIC::attachSetterCall(JSContext *cx, IonScript *ion,
                                 HandleObject obj, HandleObject holder, HandleShape shape,
@@ -2038,56 +2070,104 @@ SetPropertyIC::attachSetterCall(JSContext *cx, IonScript *ion,
     // to try so hard to not use the stack.  Scratch regs are just taken from the register
     // set not including the input, current value saved on the stack, and restored when
     // we're done with it.
+    //
+    // Be very careful not to use any of these before value() is pushed, since they
+    // might shadow.
     Register scratchReg     = regSet.takeGeneral();
     Register argJSContextReg = regSet.takeGeneral();
-    Register argObjReg       = regSet.takeGeneral();
-    Register argIdReg        = regSet.takeGeneral();
-    Register argStrictReg    = regSet.takeGeneral();
     Register argVpReg        = regSet.takeGeneral();
+
+    bool callNative = IsCacheableSetPropCallNative(obj, holder, shape);
+    JS_ASSERT_IF(!callNative, IsCacheableSetPropCallPropertyOp(obj, holder, shape));
 
     // Ensure stack is aligned.
     DebugOnly<uint32_t> initialStack = masm.framePushed();
 
-    attacher.pushStubCodePointer(masm);
+    if (callNative) {
+        JS_ASSERT(shape->hasSetterValue() && shape->setterObject() &&
+                  shape->setterObject()->is<JSFunction>());
+        JSFunction *target = &shape->setterObject()->as<JSFunction>();
 
-    StrictPropertyOp target = shape->setterOp();
-    JS_ASSERT(target);
-    // JSStrictPropertyOp: bool fn(JSContext *cx, HandleObject obj,
-    //                               HandleId id, bool strict, MutableHandleValue vp);
+        JS_ASSERT(target->isNative());
 
-    // Push args on stack first so we can take pointers to make handles.
-    if (value().constant())
-        masm.Push(value().value());
-    else
-        masm.Push(value().reg());
-    masm.movePtr(StackPointer, argVpReg);
+        Register argUintNReg = regSet.takeGeneral();
 
-    masm.move32(Imm32(strict() ? 1 : 0), argStrictReg);
+        // Set up the call:
+        //  bool (*)(JSContext *, unsigned, Value *vp)
+        // vp[0] is callee/outparam
+        // vp[1] is |this|
+        // vp[2] is the value
 
-    // push canonical jsid from shape instead of propertyname.
-    RootedId propId(cx);
-    if (!shape->getUserId(cx, &propId))
-        return false;
-    masm.Push(propId, argIdReg);
-    masm.movePtr(StackPointer, argIdReg);
+        // Build vp and move the base into argVpReg.
+        masm.Push(value());
+        masm.Push(TypedOrValueRegister(MIRType_Object, AnyRegister(object())));
+        masm.Push(ObjectValue(*target));
+        masm.movePtr(StackPointer, argVpReg);
 
-    masm.Push(object());
-    masm.movePtr(StackPointer, argObjReg);
+        // Preload other regs
+        masm.loadJSContext(argJSContextReg);
+        masm.move32(Imm32(1), argUintNReg);
 
-    masm.loadJSContext(argJSContextReg);
+        // Push data for GC marking
+        masm.Push(argUintNReg);
+        attacher.pushStubCodePointer(masm);
 
-    if (!masm.buildOOLFakeExitFrame(returnAddr))
-        return false;
-    masm.enterFakeExitFrame(ION_FRAME_OOL_PROPERTY_OP);
+        if (!masm.buildOOLFakeExitFrame(returnAddr))
+            return false;
+        masm.enterFakeExitFrame(ION_FRAME_OOL_NATIVE);
 
-    // Make the call.
-    masm.setupUnalignedABICall(5, scratchReg);
-    masm.passABIArg(argJSContextReg);
-    masm.passABIArg(argObjReg);
-    masm.passABIArg(argIdReg);
-    masm.passABIArg(argStrictReg);
-    masm.passABIArg(argVpReg);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target));
+        // Make the call
+        masm.setupUnalignedABICall(3, scratchReg);
+        masm.passABIArg(argJSContextReg);
+        masm.passABIArg(argUintNReg);
+        masm.passABIArg(argVpReg);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target->native()));
+    } else {
+        Register argObjReg       = regSet.takeGeneral();
+        Register argIdReg        = regSet.takeGeneral();
+        Register argStrictReg    = regSet.takeGeneral();
+
+        attacher.pushStubCodePointer(masm);
+
+        StrictPropertyOp target = shape->setterOp();
+        JS_ASSERT(target);
+        // JSStrictPropertyOp: bool fn(JSContext *cx, HandleObject obj,
+        //                               HandleId id, bool strict, MutableHandleValue vp);
+
+        // Push args on stack first so we can take pointers to make handles.
+        if (value().constant())
+            masm.Push(value().value());
+        else
+            masm.Push(value().reg());
+        masm.movePtr(StackPointer, argVpReg);
+
+        masm.move32(Imm32(strict() ? 1 : 0), argStrictReg);
+
+        // push canonical jsid from shape instead of propertyname.
+        RootedId propId(cx);
+        if (!shape->getUserId(cx, &propId))
+            return false;
+        masm.Push(propId, argIdReg);
+        masm.movePtr(StackPointer, argIdReg);
+
+        masm.Push(object());
+        masm.movePtr(StackPointer, argObjReg);
+
+        masm.loadJSContext(argJSContextReg);
+
+        if (!masm.buildOOLFakeExitFrame(returnAddr))
+            return false;
+        masm.enterFakeExitFrame(ION_FRAME_OOL_PROPERTY_OP);
+
+        // Make the call.
+        masm.setupUnalignedABICall(5, scratchReg);
+        masm.passABIArg(argJSContextReg);
+        masm.passABIArg(argObjReg);
+        masm.passABIArg(argIdReg);
+        masm.passABIArg(argStrictReg);
+        masm.passABIArg(argVpReg);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target));
+    }
 
     // Test for failure.
     masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
@@ -2096,7 +2176,10 @@ SetPropertyIC::attachSetterCall(JSContext *cx, IonScript *ion,
     // is no need for leaveFakeExitFrame.
 
     // Move the StackPointer back to its original location, unwinding the exit frame.
-    masm.adjustStack(IonOOLPropertyOpExitFrameLayout::Size());
+    if (callNative)
+        masm.adjustStack(IonOOLNativeExitFrameLayout::Size(1));
+    else
+        masm.adjustStack(IonOOLPropertyOpExitFrameLayout::Size());
     JS_ASSERT(masm.framePushed() == initialStack);
 
     // restoreLive()
@@ -2109,7 +2192,7 @@ SetPropertyIC::attachSetterCall(JSContext *cx, IonScript *ion,
     masm.bind(&failure);
     attacher.jumpNextStub(masm);
 
-    return linkAndAttachStub(cx, masm, attacher, ion, "calling");
+    return linkAndAttachStub(cx, masm, attacher, ion, "setter call");
 }
 
 bool
@@ -2216,33 +2299,6 @@ IsPropertySetInlineable(JSContext *cx, HandleObject obj, HandleId id, MutableHan
 }
 
 static bool
-IsPropertySetterCallInlineable(JSContext *cx, HandleObject obj, HandleObject holder,
-                               HandleShape shape)
-{
-    if (!shape)
-        return false;
-
-    if (!holder->isNative())
-        return false;
-
-    if (shape->hasSlot())
-        return false;
-
-    if (shape->hasDefaultSetter())
-        return false;
-
-    if (!shape->writable())
-        return false;
-
-    // We only handle propertyOps for now, so fail if we have SetterValue
-    // (which implies JSNative setter).
-    if (shape->hasSetterValue())
-        return false;
-
-    return true;
-}
-
-static bool
 IsPropertyAddInlineable(JSContext *cx, HandleObject obj, HandleId id, uint32_t oldSlots,
                         MutableHandleShape pShape)
 {
@@ -2325,7 +2381,9 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
             if (!JSObject::lookupProperty(cx, obj, name, &holder, &shape))
                 return false;
 
-            if (IsPropertySetterCallInlineable(cx, obj, holder, shape)) {
+            if (IsCacheableSetPropCallPropertyOp(obj, holder, shape) ||
+                IsCacheableSetPropCallNative(obj, holder, shape))
+            {
                 if (!cache.attachSetterCall(cx, ion, obj, holder, shape, returnAddr))
                     return false;
                 addedSetterStub = true;
