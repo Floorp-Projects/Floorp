@@ -650,15 +650,17 @@ class SetPropertyIC : public RepatchIonCache
     PropertyName *name_;
     ConstantOrRegister value_;
     bool strict_;
+    bool needsTypeBarrier_;
 
   public:
     SetPropertyIC(RegisterSet liveRegs, Register object, PropertyName *name,
-                  ConstantOrRegister value, bool strict)
+                  ConstantOrRegister value, bool strict, bool needsTypeBarrier)
       : liveRegs_(liveRegs),
         object_(object),
         name_(name),
         value_(value),
-        strict_(strict)
+        strict_(strict),
+        needsTypeBarrier_(needsTypeBarrier)
     {
     }
 
@@ -675,6 +677,9 @@ class SetPropertyIC : public RepatchIonCache
     }
     bool strict() const {
         return strict_;
+    }
+    bool needsTypeBarrier() const {
+        return needsTypeBarrier_;
     }
 
     bool attachNativeExisting(JSContext *cx, IonScript *ion, HandleObject obj, HandleShape shape);

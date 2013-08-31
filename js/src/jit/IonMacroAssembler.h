@@ -605,6 +605,22 @@ class MacroAssembler : public MacroAssemblerSpecific
         return extractObject(value, scratch);
     }
 
+    using MacroAssemblerSpecific::extractTag;
+    Register extractTag(const TypedOrValueRegister &reg, Register scratch) {
+        if (reg.hasValue()) {
+            return extractTag(reg.valueReg(), scratch);
+        }
+        mov(ImmWord(ValueTypeFromMIRType(reg.type())), scratch);
+        return scratch;
+    }
+
+    using MacroAssemblerSpecific::extractObject;
+    Register extractObject(const TypedOrValueRegister &reg, Register scratch) {
+        if (reg.hasValue())
+            return extractObject(reg.valueReg(), scratch);
+        return reg.typedReg().gpr();
+    }
+
     // Inline version of js_TypedArray_uint8_clamp_double.
     // This function clobbers the input register.
     void clampDoubleToUint8(FloatRegister input, Register output);
