@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "after_initialization_fixture.h"
-#include "test/testsupport/fileutils.h"
+#include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/voice_engine/test/auto_test/fixtures/after_initialization_fixture.h"
 
 namespace {
 

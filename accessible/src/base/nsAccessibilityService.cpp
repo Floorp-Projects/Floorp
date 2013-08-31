@@ -23,7 +23,6 @@
 #include "nsAccessiblePivot.h"
 #include "nsAccUtils.h"
 #include "nsEventShell.h"
-#include "nsIAccessibleProvider.h"
 #include "OuterDocAccessible.h"
 #include "Platform.h"
 #include "Role.h"
@@ -61,6 +60,9 @@
 #include "nsTreeBodyFrame.h"
 #include "nsTreeColumns.h"
 #include "nsTreeUtils.h"
+#include "nsBindingManager.h"
+#include "nsXBLPrototypeBinding.h"
+#include "nsXBLBinding.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -1137,204 +1139,187 @@ already_AddRefed<Accessible>
 nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
                                                DocAccessible* aDoc)
 {
-  nsCOMPtr<nsIAccessibleProvider> accessibleProvider(do_QueryInterface(aContent));
-  if (!accessibleProvider)
+  nsAutoString role;
+  for (const nsXBLBinding* binding = aContent->GetXBLBinding(); binding; binding = binding->GetBaseBinding()) {
+    nsIContent* bindingElm = binding->PrototypeBinding()->GetBindingElement();
+    bindingElm->GetAttr(kNameSpaceID_None, nsGkAtoms::role, role);
+    if (!role.IsEmpty())
+      break;
+  }
+
+  if (role.IsEmpty() || role.EqualsLiteral("none"))
     return nullptr;
 
-  int32_t type;
-  nsresult rv = accessibleProvider->GetAccessibleType(&type);
-  if (NS_FAILED(rv))
-    return nullptr;
-
-  if (type == nsIAccessibleProvider::OuterDoc) {
+  if (role.EqualsLiteral("outerdoc")) {
     nsRefPtr<Accessible> accessible = new OuterDocAccessible(aContent, aDoc);
     return accessible.forget();
   }
-
+ 
   nsRefPtr<Accessible> accessible;
-  switch (type)
-  {
 #ifdef MOZ_XUL
-    case nsIAccessibleProvider::NoAccessible:
-      return nullptr;
+  // XUL controls
+  if (role.EqualsLiteral("xul:alert")) {
+    accessible = new XULAlertAccessible(aContent, aDoc);
 
-    // XUL controls
-    case nsIAccessibleProvider::XULAlert:
-      accessible = new XULAlertAccessible(aContent, aDoc);
-      break;
+  } else if (role.EqualsLiteral("xul:button")) {
+    accessible = new XULButtonAccessible(aContent, aDoc);
 
-    case nsIAccessibleProvider::XULButton:
-      accessible = new XULButtonAccessible(aContent, aDoc);
-      break;
+  } else if (role.EqualsLiteral("xul:checkbox")) {
+    accessible = new XULCheckboxAccessible(aContent, aDoc);
 
-    case nsIAccessibleProvider::XULCheckbox:
-      accessible = new XULCheckboxAccessible(aContent, aDoc);
-      break;
+  } else if (role.EqualsLiteral("xul:colorpicker")) {
+    accessible = new XULColorPickerAccessible(aContent, aDoc);
 
-    case nsIAccessibleProvider::XULColorPicker:
-      accessible = new XULColorPickerAccessible(aContent, aDoc);
-      break;
+  } else if (role.EqualsLiteral("xul:colorpickertile")) {
+    accessible = new XULColorPickerTileAccessible(aContent, aDoc);
 
-    case nsIAccessibleProvider::XULColorPickerTile:
-      accessible = new XULColorPickerTileAccessible(aContent, aDoc);
-      break;
+  } else if (role.EqualsLiteral("xul:combobox")) {
+    accessible = new XULComboboxAccessible(aContent, aDoc);
 
-    case nsIAccessibleProvider::XULCombobox:
-      accessible = new XULComboboxAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULTabpanels:
+  } else if (role.EqualsLiteral("xul:tabpanels")) {
       accessible = new XULTabpanelsAccessible(aContent, aDoc);
-      break;
 
-    case nsIAccessibleProvider::XULDropmarker:
+  } else if (role.EqualsLiteral("xul:dropmarker")) {
       accessible = new XULDropmarkerAccessible(aContent, aDoc);
-      break;
 
-    case nsIAccessibleProvider::XULGroupbox:
+  } else if (role.EqualsLiteral("xul:groupbox")) {
       accessible = new XULGroupboxAccessible(aContent, aDoc);
-      break;
 
-    case nsIAccessibleProvider::XULImage:
-    {
+  } else if (role.EqualsLiteral("xul:image")) {
+    if (aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::onclick)) {
+      accessible = new XULToolbarButtonAccessible(aContent, aDoc);
+
+    } else {
       // Don't include nameless images in accessible tree.
       if (!aContent->HasAttr(kNameSpaceID_None,
                              nsGkAtoms::tooltiptext))
         return nullptr;
 
       accessible = new ImageAccessibleWrap(aContent, aDoc);
-      break;
-
     }
-    case nsIAccessibleProvider::XULLink:
-      accessible = new XULLinkAccessible(aContent, aDoc);
-      break;
 
-    case nsIAccessibleProvider::XULListbox:
+  } else if (role.EqualsLiteral("xul:link")) {
+    accessible = new XULLinkAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:listbox")) {
       accessible = new XULListboxAccessibleWrap(aContent, aDoc);
-      break;
 
-    case nsIAccessibleProvider::XULListCell:
-      accessible = new XULListCellAccessibleWrap(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULListHead:
-      accessible = new XULColumAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULListHeader:
-      accessible = new XULColumnItemAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULListitem:
-      accessible = new XULListitemAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULMenubar:
-      accessible = new XULMenubarAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULMenuitem:
-      accessible = new XULMenuitemAccessibleWrap(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULMenupopup:
-    {
-#ifdef MOZ_ACCESSIBILITY_ATK
-      // ATK considers this node to be redundant when within menubars, and it makes menu
-      // navigation with assistive technologies more difficult
-      // XXX In the future we will should this for consistency across the nsIAccessible
-      // implementations on each platform for a consistent scripting environment, but
-      // then strip out redundant accessibles in the AccessibleWrap class for each platform.
-      nsIContent *parent = aContent->GetParent();
-      if (parent && parent->NodeInfo()->Equals(nsGkAtoms::menu,
-                                               kNameSpaceID_XUL))
-        return nullptr;
-#endif
-      accessible = new XULMenupopupAccessible(aContent, aDoc);
-      break;
-
-    }
-    case nsIAccessibleProvider::XULMenuSeparator:
-      accessible = new XULMenuSeparatorAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULPane:
-      accessible = new EnumRoleAccessible(aContent, aDoc, roles::PANE);
-      break;
-
-    case nsIAccessibleProvider::XULProgressMeter:
-      accessible = new XULProgressMeterAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULStatusBar:
-      accessible = new XULStatusBarAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULScale:
-      accessible = new XULSliderAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULRadioButton:
-      accessible = new XULRadioButtonAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULRadioGroup:
-      accessible = new XULRadioGroupAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULTab:
-      accessible = new XULTabAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULTabs:
-      accessible = new XULTabsAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULText:
-      accessible = new XULLabelAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULTextBox:
-      accessible = new XULTextFieldAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULThumb:
-      accessible = new XULThumbAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULTree:
-      return CreateAccessibleForXULTree(aContent, aDoc);
-
-    case nsIAccessibleProvider::XULTreeColumns:
-      accessible = new XULTreeColumAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULTreeColumnItem:
-      accessible = new XULColumnItemAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULToolbar:
-      accessible = new XULToolbarAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULToolbarSeparator:
-      accessible = new XULToolbarSeparatorAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULTooltip:
-      accessible = new XULTooltipAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULToolbarButton:
-      accessible = new XULToolbarButtonAccessible(aContent, aDoc);
-      break;
-
-#endif // MOZ_XUL
-
-    default:
+  } else if (role.EqualsLiteral("xul:listcell")) {
+    // Only create cells if there's more than one per row.
+    nsIContent* listItem = aContent->GetParent();
+    if (!listItem)
       return nullptr;
+
+    for (nsIContent* child = listItem->GetFirstChild(); child;
+         child = child->GetNextSibling()) {
+      if (child->IsXUL(nsGkAtoms::listcell) && child != aContent) {
+        accessible = new XULListCellAccessibleWrap(aContent, aDoc);
+        break;
+      }
+    }
+
+  } else if (role.EqualsLiteral("xul:listhead")) {
+    accessible = new XULColumAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:listheader")) {
+    accessible = new XULColumnItemAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:listitem")) {
+    accessible = new XULListitemAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:menubar")) {
+    accessible = new XULMenubarAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:menulist")) {
+      if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::droppable,
+                                nsGkAtoms::_false, eCaseMatters))
+      accessible = new XULTextFieldAccessible(aContent, aDoc);
+      else
+      accessible = new XULComboboxAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:menuitem")) {
+    accessible = new XULMenuitemAccessibleWrap(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:menupopup")) {
+#ifdef MOZ_ACCESSIBILITY_ATK
+    // ATK considers this node to be redundant when within menubars, and it makes menu
+    // navigation with assistive technologies more difficult
+    // XXX In the future we will should this for consistency across the nsIAccessible
+    // implementations on each platform for a consistent scripting environment, but
+    // then strip out redundant accessibles in the AccessibleWrap class for each platform.
+    nsIContent *parent = aContent->GetParent();
+    if (parent && parent->IsXUL() && parent->Tag() == nsGkAtoms::menu)
+      return nullptr;
+#endif
+
+    accessible = new XULMenupopupAccessible(aContent, aDoc);
+
+  } else if(role.EqualsLiteral("xul:menuseparator")) {
+    accessible = new XULMenuSeparatorAccessible(aContent, aDoc);
+
+  } else if(role.EqualsLiteral("xul:pane")) {
+    accessible = new EnumRoleAccessible(aContent, aDoc, roles::PANE);
+
+  } else if (role.EqualsLiteral("xul:panel")) {
+    if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::noautofocus,
+                              nsGkAtoms::_true, eCaseMatters))
+      accessible = new XULAlertAccessible(aContent, aDoc);
+    else
+      accessible = new EnumRoleAccessible(aContent, aDoc, roles::PANE);
+
+  } else if (role.EqualsLiteral("xul:progressmeter")) {
+    accessible = new XULProgressMeterAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xulstatusbar")) {
+    accessible = new XULStatusBarAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:scale")) {
+    accessible = new XULSliderAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:radiobutton")) {
+    accessible = new XULRadioButtonAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:radiogroup")) {
+    accessible = new XULRadioGroupAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:tab")) {
+    accessible = new XULTabAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:tabs")) {
+    accessible = new XULTabsAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:text")) {
+    accessible = new XULLabelAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:textbox")) {
+    accessible = new XULTextFieldAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:thumb")) {
+    accessible = new XULThumbAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:tree")) {
+    accessible = CreateAccessibleForXULTree(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:treecolumns")) {
+    accessible = new XULTreeColumAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:treecolumnitem")) {
+    accessible = new XULColumnItemAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:toolbar")) {
+    accessible = new XULToolbarAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:toolbarseparator")) {
+    accessible = new XULToolbarSeparatorAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:tooltip")) {
+    accessible = new XULTooltipAccessible(aContent, aDoc);
+
+  } else if (role.EqualsLiteral("xul:toolbarbutton")) {
+    accessible = new XULToolbarButtonAccessible(aContent, aDoc);
+
   }
+#endif // MOZ_XUL
 
   return accessible.forget();
 }

@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_decimator.h"
-#include "tick_util.h"
-#include "video_processing.h"
+#include "webrtc/modules/video_processing/main/interface/video_processing.h"
+#include "webrtc/modules/video_processing/main/source/video_decimator.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
 
 #define VD_MIN(a, b) ((a) < (b)) ? (a) : (b)
 

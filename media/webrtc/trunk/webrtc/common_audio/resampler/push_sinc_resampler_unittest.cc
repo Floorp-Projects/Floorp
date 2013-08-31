@@ -230,4 +230,3 @@ INSTANTIATE_TEST_CASE_P(
         std::tr1::make_tuple(192000, 32000, -21.02, -10.94)));
 
 }  // namespace webrtc
-

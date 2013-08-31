@@ -14,11 +14,11 @@
 #ifndef VPM_FRAME_PREPROCESSOR_H
 #define VPM_FRAME_PREPROCESSOR_H
 
-#include "typedefs.h"
-#include "video_processing.h"
-#include "content_analysis.h"
-#include "spatial_resampler.h"
-#include "video_decimator.h"
+#include "webrtc/modules/video_processing/main/interface/video_processing.h"
+#include "webrtc/modules/video_processing/main/source/content_analysis.h"
+#include "webrtc/modules/video_processing/main/source/spatial_resampler.h"
+#include "webrtc/modules/video_processing/main/source/video_decimator.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 

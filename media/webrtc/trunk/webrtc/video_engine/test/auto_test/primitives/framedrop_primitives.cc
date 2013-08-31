@@ -14,19 +14,19 @@
 #include <string>
 
 #include "webrtc/modules/video_capture/include/video_capture_factory.h"
-#include "system_wrappers/interface/tick_util.h"
-#include "testsupport/fileutils.h"
-#include "testsupport/frame_reader.h"
-#include "testsupport/frame_writer.h"
-#include "testsupport/perf_test.h"
-#include "video_engine/test/auto_test/interface/vie_autotest.h"
-#include "video_engine/test/auto_test/interface/vie_autotest_defines.h"
-#include "video_engine/test/auto_test/primitives/framedrop_primitives.h"
-#include "video_engine/test/auto_test/primitives/general_primitives.h"
-#include "video_engine/test/libvietest/include/tb_interfaces.h"
-#include "video_engine/test/libvietest/include/tb_external_transport.h"
-#include "video_engine/test/libvietest/include/vie_external_render_filter.h"
-#include "video_engine/test/libvietest/include/vie_to_file_renderer.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/test/testsupport/frame_reader.h"
+#include "webrtc/test/testsupport/frame_writer.h"
+#include "webrtc/test/testsupport/perf_test.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest_defines.h"
+#include "webrtc/video_engine/test/auto_test/primitives/framedrop_primitives.h"
+#include "webrtc/video_engine/test/auto_test/primitives/general_primitives.h"
+#include "webrtc/video_engine/test/libvietest/include/tb_external_transport.h"
+#include "webrtc/video_engine/test/libvietest/include/tb_interfaces.h"
+#include "webrtc/video_engine/test/libvietest/include/vie_external_render_filter.h"
+#include "webrtc/video_engine/test/libvietest/include/vie_to_file_renderer.h"
 
 enum { kWaitTimeForFinalDecodeMs = 100 };
 
@@ -255,8 +255,9 @@ void TestFullStack(const TbInterfaces& interfaces,
   int32_t num_rtp_packets = 0;
   int32_t num_dropped_packets = 0;
   int32_t num_rtcp_packets = 0;
+  std::map<uint8_t, int> packet_counters;
   external_transport.GetStats(num_rtp_packets, num_dropped_packets,
-                              num_rtcp_packets);
+                              num_rtcp_packets, &packet_counters);
   ViETest::Log("RTP packets    : %5d", num_rtp_packets);
   ViETest::Log("Dropped packets: %5d", num_dropped_packets);
   ViETest::Log("RTCP packets   : %5d", num_rtcp_packets);

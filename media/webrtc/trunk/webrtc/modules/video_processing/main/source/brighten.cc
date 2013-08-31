@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_processing/main/source/brighten.h"
+#include "webrtc/modules/video_processing/main/source/brighten.h"
 
 #include <cstdlib>
 
-#include "system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 namespace VideoProcessing {

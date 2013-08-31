@@ -11,12 +11,12 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_MAIN_SOURCE_AUDIO_PROCESSING_IMPL_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_MAIN_SOURCE_AUDIO_PROCESSING_IMPL_H_
 
-#include "audio_processing.h"
+#include "webrtc/modules/audio_processing/include/audio_processing.h"
 
 #include <list>
 #include <string>
 
-#include "scoped_ptr.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 class AudioBuffer;

@@ -3,28 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsMathMLmactionFrame.h"
 #include "nsCOMPtr.h"
-#include "nsFrame.h"
 #include "nsPresContext.h"
-#include "nsStyleContext.h"
-#include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
-
-#include "nsCSSRendering.h"
 #include "prprf.h"         // For PR_snprintf()
-
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIDOMElement.h"
 #include "nsTextFragment.h"
-
-#include "nsMathMLmactionFrame.h"
-#include "nsAutoPtr.h"
-#include "nsStyleSet.h"
-#include "nsDisplayList.h"
+#include "nsIDOMEvent.h"
 
 //
 // <maction> -- bind actions to a subexpression - implementation

@@ -1269,7 +1269,7 @@ class TypeScript
     HeapTypeSet *propertyReadTypes;
 
     /* Array of type type sets for variables and JOF_TYPESET ops. */
-    TypeSet *typeArray() { return (TypeSet *) (uintptr_t(this) + sizeof(TypeScript)); }
+    TypeSet *typeArray() const { return (TypeSet *) (uintptr_t(this) + sizeof(TypeScript)); }
 
     static inline unsigned NumTypeSets(JSScript *script);
 
@@ -1329,6 +1329,10 @@ class TypeScript
 
     static void Sweep(FreeOp *fop, JSScript *script);
     void destroy();
+
+#ifdef DEBUG
+    void printTypes(JSContext *cx, HandleScript script) const;
+#endif
 };
 
 struct ArrayTableKey;
@@ -1454,13 +1458,6 @@ struct TypeCompartment
     void fixRestArgumentsType(ExclusiveContext *cx, JSObject *obj);
 
     JSObject *newTypedObject(JSContext *cx, IdValuePair *properties, size_t nproperties);
-
-    /* Logging fields */
-
-    /* Counts of stack type sets with some number of possible operand types. */
-    static const unsigned TYPE_COUNT_LIMIT = 4;
-    unsigned typeCounts[TYPE_COUNT_LIMIT];
-    unsigned typeCountOver;
 
     TypeCompartment();
     ~TypeCompartment();

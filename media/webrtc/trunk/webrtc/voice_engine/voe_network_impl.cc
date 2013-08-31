@@ -8,13 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "voe_network_impl.h"
+#include "webrtc/voice_engine/voe_network_impl.h"
 
-#include "channel.h"
-#include "critical_section_wrapper.h"
-#include "trace.h"
-#include "voe_errors.h"
-#include "voice_engine_impl.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/voice_engine/channel.h"
+#include "webrtc/voice_engine/include/voe_errors.h"
+#include "webrtc/voice_engine/voice_engine_impl.h"
 
 namespace webrtc
 {
@@ -95,10 +96,11 @@ int VoENetworkImpl::ReceivedRTPPacket(int channel,
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    if ((length < 12) || (length > 807))
+    // L16 at 32 kHz, stereo, 10 ms frames (+12 byte RTP header) -> 1292 bytes
+    if ((length < 12) || (length > 1292))
     {
-        _shared->SetLastError(VE_INVALID_PACKET, kTraceError,
-            "ReceivedRTPPacket() invalid packet length");
+        _shared->SetLastError(VE_INVALID_PACKET);
+        LOG(LS_ERROR) << "Invalid packet length: " << length;
         return -1;
     }
     if (NULL == data)

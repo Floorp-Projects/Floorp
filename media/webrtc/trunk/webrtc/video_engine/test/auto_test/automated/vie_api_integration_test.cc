@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/test/testsupport/gtest_disable.h"
 #include "webrtc/video_engine/test/auto_test/automated/legacy_fixture.h"
 #include "webrtc/video_engine/test/auto_test/interface/vie_autotest.h"

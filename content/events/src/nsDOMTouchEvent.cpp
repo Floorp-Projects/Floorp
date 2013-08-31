@@ -8,7 +8,6 @@
 #include "nsGUIEvent.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
-#include "nsPresContext.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/dom/TouchListBinding.h"
 

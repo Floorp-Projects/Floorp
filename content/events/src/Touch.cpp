@@ -7,10 +7,8 @@
 
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/TouchBinding.h"
-#include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
 #include "nsDOMTouchEvent.h"
-#include "nsPresContext.h"
 
 namespace mozilla {
 namespace dom {

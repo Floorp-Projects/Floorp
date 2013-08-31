@@ -11,8 +11,8 @@
 #include "webrtc/voice_engine/include/voe_base.h"
 
 #include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/modules/audio_device/include/fake_audio_device.h"
+#include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {

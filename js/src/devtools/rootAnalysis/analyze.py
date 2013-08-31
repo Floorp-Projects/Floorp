@@ -97,6 +97,7 @@ def generate_hazards(config, outfilename):
 JOBS = { 'dbs':
              (('%(ANALYSIS_SCRIPTDIR)s/run_complete',
                '--foreground',
+               '--no-logs',
                '--build-root=%(objdir)s',
                '--wrap-dir=%(sixgill)s/scripts/wrap_gcc',
                '--work-dir=work',
@@ -161,6 +162,7 @@ def run_job(name, config):
             temp_map[command[i]] = outfiles[outfile]
             outfile += 1
 
+        sys.stdout.flush()
         with open(temp, 'w') as output:
             subprocess.check_call(command, stdout=output, env=env(config))
         for (temp, final) in temp_map.items():

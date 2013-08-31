@@ -413,7 +413,7 @@
     </handlers>
   </binding>
 
-  <binding id="colorpicker-button" display="xul:menu"
+  <binding id="colorpicker-button" display="xul:menu" role="xul:colorpicker"
            extends="chrome://global/content/bindings/general.xml#basecontrol">
     <resources>
       <stylesheet src="chrome://global/skin/colorpicker.css"/>
@@ -432,15 +432,7 @@
       </xul:panel>
     </content>
     
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULColorPicker;
-          ]]>
-        </getter>
-      </property>
-    
+    <implementation>
       <property name="open"
                 onget="return this.getAttribute('open') == 'true'"
                 onset="this.showPopup();"/>
@@ -549,16 +541,7 @@
     </handlers>
   </binding>
 
-  <binding id="colorpickertile">
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULColorPickerTile;
-          ]]>
-        </getter>
-      </property>
-    </implementation>
+  <binding id="colorpickertile" role="xul:colorpickertile">
   </binding>
 
 </bindings>

@@ -11,7 +11,7 @@
 #ifndef SRC_VIDEO_ENGINE_MAIN_TEST_AUTOTEST_AUTOMATED_TWO_WINDOWS_FIXTURE_H_
 #define SRC_VIDEO_ENGINE_MAIN_TEST_AUTOTEST_AUTOMATED_TWO_WINDOWS_FIXTURE_H_
 
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 
 class ViEWindowCreator;
 class ViEAutoTest;

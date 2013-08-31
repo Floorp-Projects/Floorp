@@ -663,6 +663,17 @@ int WebRtcNetEQ_SignalMcu(MCUInst_t *inst)
         prevTS = inst->PacketBuffer_inst.timeStamp[i_bufferpos];
         oldPT = inst->PacketBuffer_inst.payloadType[i_bufferpos];
 
+        /* These values are used by NACK module to estimate time-to-play of
+         * a missing packet. Occasionally, NetEq might decide to decode more
+         * than one packet. Therefore, these values store sequence number and
+         * timestamp of the first packet pulled from the packet buffer. In
+         * such cases, these values do not exactly represent the sequence number
+         * or timestamp associated with a 10ms audio pulled from NetEq. NACK
+         * module is designed to compensate for this.
+         */
+        inst->decoded_packet_sequence_number = prevSeqNo;
+        inst->decoded_packet_timestamp = prevTS;
+
         /* clear flag bits */
         inst->pw16_writeAddress[0] = inst->pw16_writeAddress[0] & 0xFF3F;
         do

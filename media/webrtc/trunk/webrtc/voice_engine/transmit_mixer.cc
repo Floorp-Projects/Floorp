@@ -8,19 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "transmit_mixer.h"
+#include "webrtc/voice_engine/transmit_mixer.h"
 
-#include "audio_frame_operations.h"
-#include "channel.h"
-#include "channel_manager.h"
-#include "critical_section_wrapper.h"
-#include "event_wrapper.h"
-#include "statistics.h"
-#include "trace.h"
-#include "utility.h"
-#include "voe_base_impl.h"
-#include "voe_external_media.h"
+#include "webrtc/modules/utility/interface/audio_frame_operations.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/event_wrapper.h"
 #include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/voice_engine/channel.h"
+#include "webrtc/voice_engine/channel_manager.h"
+#include "webrtc/voice_engine/include/voe_external_media.h"
+#include "webrtc/voice_engine/statistics.h"
+#include "webrtc/voice_engine/utility.h"
+#include "webrtc/voice_engine/voe_base_impl.h"
 
 #define WEBRTC_ABS(a) (((a) < 0) ? -(a) : (a))
 
@@ -81,8 +81,8 @@ TransmitMixer::OnPeriodicProcess()
 }
 
 
-void TransmitMixer::PlayNotification(const int32_t id,
-                                     const uint32_t durationMs)
+void TransmitMixer::PlayNotification(int32_t id,
+                                     uint32_t durationMs)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId, -1),
                  "TransmitMixer::PlayNotification(id=%d, durationMs=%d)",
@@ -91,8 +91,8 @@ void TransmitMixer::PlayNotification(const int32_t id,
     // Not implement yet
 }
 
-void TransmitMixer::RecordNotification(const int32_t id,
-                                       const uint32_t durationMs)
+void TransmitMixer::RecordNotification(int32_t id,
+                                       uint32_t durationMs)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId,-1),
                  "TransmitMixer::RecordNotification(id=%d, durationMs=%d)",
@@ -101,7 +101,7 @@ void TransmitMixer::RecordNotification(const int32_t id,
     // Not implement yet
 }
 
-void TransmitMixer::PlayFileEnded(const int32_t id)
+void TransmitMixer::PlayFileEnded(int32_t id)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId, -1),
                  "TransmitMixer::PlayFileEnded(id=%d)", id);
@@ -117,7 +117,7 @@ void TransmitMixer::PlayFileEnded(const int32_t id)
 }
 
 void
-TransmitMixer::RecordFileEnded(const int32_t id)
+TransmitMixer::RecordFileEnded(int32_t id)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId, -1),
                  "TransmitMixer::RecordFileEnded(id=%d)", id);
@@ -140,7 +140,7 @@ TransmitMixer::RecordFileEnded(const int32_t id)
 }
 
 int32_t
-TransmitMixer::Create(TransmitMixer*& mixer, const uint32_t instanceId)
+TransmitMixer::Create(TransmitMixer*& mixer, uint32_t instanceId)
 {
     WEBRTC_TRACE(kTraceMemory, kTraceVoice, VoEId(instanceId, -1),
                  "TransmitMixer::Create(instanceId=%d)", instanceId);
@@ -165,7 +165,7 @@ TransmitMixer::Destroy(TransmitMixer*& mixer)
     }
 }
 
-TransmitMixer::TransmitMixer(const uint32_t instanceId) :
+TransmitMixer::TransmitMixer(uint32_t instanceId) :
     _engineStatisticsPtr(NULL),
     _channelManagerPtr(NULL),
     audioproc_(NULL),
@@ -327,12 +327,13 @@ void TransmitMixer::GetSendCodecInfo(int* max_sample_rate, int* max_channels) {
 
 int32_t
 TransmitMixer::PrepareDemux(const void* audioSamples,
-                            const uint32_t nSamples,
-                            const uint8_t nChannels,
-                            const uint32_t samplesPerSec,
-                            const uint16_t totalDelayMS,
-                            const int32_t clockDrift,
-                            const uint16_t currentMicLevel)
+                            uint32_t nSamples,
+                            uint8_t nChannels,
+                            uint32_t samplesPerSec,
+                            uint16_t totalDelayMS,
+                            int32_t clockDrift,
+                            uint16_t currentMicLevel,
+                            bool keyPressed)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId, -1),
                  "TransmitMixer::PrepareDemux(nSamples=%u, nChannels=%u,"
@@ -369,7 +370,7 @@ TransmitMixer::PrepareDemux(const void* audioSamples,
 
     // --- Annoying typing detection (utilizes the APM/VAD decision)
 #ifdef WEBRTC_VOICE_ENGINE_TYPING_DETECTION
-    TypingDetection();
+    TypingDetection(keyPressed);
 #endif
 
     // --- Mute during DTMF tone if direct feedback is enabled
@@ -469,7 +470,7 @@ uint32_t TransmitMixer::CaptureLevel() const
 }
 
 void
-TransmitMixer::UpdateMuteMicrophoneTime(const uint32_t lengthMs)
+TransmitMixer::UpdateMuteMicrophoneTime(uint32_t lengthMs)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, -1),
                "TransmitMixer::UpdateMuteMicrophoneTime(lengthMs=%d)",
@@ -487,11 +488,11 @@ TransmitMixer::StopSend()
 }
 
 int TransmitMixer::StartPlayingFileAsMicrophone(const char* fileName,
-                                                const bool loop,
-                                                const FileFormats format,
-                                                const int startPosition,
-                                                const float volumeScaling,
-                                                const int stopPosition,
+                                                bool loop,
+                                                FileFormats format,
+                                                int startPosition,
+                                                float volumeScaling,
+                                                int stopPosition,
                                                 const CodecInst* codecInst)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, -1),
@@ -558,10 +559,10 @@ int TransmitMixer::StartPlayingFileAsMicrophone(const char* fileName,
 }
 
 int TransmitMixer::StartPlayingFileAsMicrophone(InStream* stream,
-                                                const FileFormats format,
-                                                const int startPosition,
-                                                const float volumeScaling,
-                                                const int stopPosition,
+                                                FileFormats format,
+                                                int startPosition,
+                                                float volumeScaling,
+                                                int stopPosition,
                                                 const CodecInst* codecInst)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId,-1),
@@ -670,7 +671,7 @@ int TransmitMixer::IsPlayingFileAsMicrophone() const
     return _filePlaying;
 }
 
-int TransmitMixer::ScaleFileAsMicrophonePlayout(const float scale)
+int TransmitMixer::ScaleFileAsMicrophonePlayout(float scale)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, -1),
                  "TransmitMixer::ScaleFileAsMicrophonePlayout(scale=%5.3f)",
@@ -1157,64 +1158,59 @@ bool TransmitMixer::IsRecordingMic()
 int TransmitMixer::GenerateAudioFrame(const int16_t audio[],
                                       int samples_per_channel,
                                       int num_channels,
-                                      int sample_rate_hz)
-{
-    int destination_rate;
-    int num_codec_channels;
-    GetSendCodecInfo(&destination_rate, &num_codec_channels);
+                                      int sample_rate_hz) {
+  int destination_rate;
+  int num_codec_channels;
+  GetSendCodecInfo(&destination_rate, &num_codec_channels);
 
-    // Never upsample the capture signal here. This should be done at the
-    // end of the send chain.
-    destination_rate = std::min(destination_rate, sample_rate_hz);
-    stereo_codec_ = num_codec_channels == 2;
+  // Never upsample the capture signal here. This should be done at the
+  // end of the send chain.
+  destination_rate = std::min(destination_rate, sample_rate_hz);
+  stereo_codec_ = num_codec_channels == 2;
 
-    const int16_t* audio_ptr = audio;
-    int16_t mono_audio[kMaxMonoDeviceDataSizeSamples];
-    assert(samples_per_channel <= kMaxMonoDeviceDataSizeSamples);
-    // If no stereo codecs are in use, we downmix a stereo stream from the
-    // device early in the chain, before resampling.
-    if (num_channels == 2 && !stereo_codec_) {
-      AudioFrameOperations::StereoToMono(audio, samples_per_channel,
-                                         mono_audio);
-      audio_ptr = mono_audio;
-      num_channels = 1;
-    }
+  const int16_t* audio_ptr = audio;
+  int16_t mono_audio[kMaxMonoDeviceDataSizeSamples];
+  assert(samples_per_channel <= kMaxMonoDeviceDataSizeSamples);
+  // If no stereo codecs are in use, we downmix a stereo stream from the
+  // device early in the chain, before resampling.
+  if (num_channels == 2 && !stereo_codec_) {
+    AudioFrameOperations::StereoToMono(audio, samples_per_channel,
+                                       mono_audio);
+    audio_ptr = mono_audio;
+    num_channels = 1;
+  }
 
-    ResamplerType resampler_type = (num_channels == 1) ?
-            kResamplerFixedSynchronous : kResamplerFixedSynchronousStereo;
+  if (resampler_.InitializeIfNeeded(sample_rate_hz,
+                                    destination_rate,
+                                    num_channels) != 0) {
+    WEBRTC_TRACE(kTraceError, kTraceVoice, VoEId(_instanceId, -1),
+                 "TransmitMixer::GenerateAudioFrame() unable to resample");
+    return -1;
+  }
 
-    if (_audioResampler.ResetIfNeeded(sample_rate_hz,
-                                      destination_rate,
-                                      resampler_type) != 0)
-    {
-        WEBRTC_TRACE(kTraceError, kTraceVoice, VoEId(_instanceId, -1),
-                     "TransmitMixer::GenerateAudioFrame() unable to resample");
-        return -1;
-    }
-    if (_audioResampler.Push(audio_ptr,
-                             samples_per_channel * num_channels,
-                             _audioFrame.data_,
-                             AudioFrame::kMaxDataSizeSamples,
-                             _audioFrame.samples_per_channel_) == -1)
-    {
-        WEBRTC_TRACE(kTraceError, kTraceVoice, VoEId(_instanceId, -1),
-                     "TransmitMixer::GenerateAudioFrame() resampling failed");
-        return -1;
-    }
+  int out_length = resampler_.Resample(audio_ptr,
+                                       samples_per_channel * num_channels,
+                                       _audioFrame.data_,
+                                       AudioFrame::kMaxDataSizeSamples);
+  if (out_length == -1) {
+    WEBRTC_TRACE(kTraceError, kTraceVoice, VoEId(_instanceId, -1),
+                 "TransmitMixer::GenerateAudioFrame() resampling failed");
+    return -1;
+  }
 
-    _audioFrame.samples_per_channel_ /= num_channels;
-    _audioFrame.id_ = _instanceId;
-    _audioFrame.timestamp_ = -1;
-    _audioFrame.sample_rate_hz_ = destination_rate;
-    _audioFrame.speech_type_ = AudioFrame::kNormalSpeech;
-    _audioFrame.vad_activity_ = AudioFrame::kVadUnknown;
-    _audioFrame.num_channels_ = num_channels;
+  _audioFrame.samples_per_channel_ = out_length / num_channels;
+  _audioFrame.id_ = _instanceId;
+  _audioFrame.timestamp_ = -1;
+  _audioFrame.sample_rate_hz_ = destination_rate;
+  _audioFrame.speech_type_ = AudioFrame::kNormalSpeech;
+  _audioFrame.vad_activity_ = AudioFrame::kVadUnknown;
+  _audioFrame.num_channels_ = num_channels;
 
-    return 0;
+  return 0;
 }
 
 int32_t TransmitMixer::RecordAudioToFile(
-    const uint32_t mixingFrequency)
+    uint32_t mixingFrequency)
 {
     CriticalSectionScoped cs(&_critSect);
     if (_fileRecorderPtr == NULL)
@@ -1237,7 +1233,7 @@ int32_t TransmitMixer::RecordAudioToFile(
 }
 
 int32_t TransmitMixer::MixOrReplaceAudioWithFile(
-    const int mixingFrequency)
+    int mixingFrequency)
 {
     scoped_array<int16_t> fileBuffer(new int16_t[640]);
 
@@ -1334,20 +1330,13 @@ void TransmitMixer::ProcessAudio(int delay_ms, int clock_drift,
 }
 
 #ifdef WEBRTC_VOICE_ENGINE_TYPING_DETECTION
-int TransmitMixer::TypingDetection()
+int TransmitMixer::TypingDetection(bool keyPressed)
 {
 
     // We let the VAD determine if we're using this feature or not.
     if (_audioFrame.vad_activity_ == AudioFrame::kVadUnknown)
     {
         return (0);
-    }
-
-    int keyPressed = EventWrapper::KeyPressed();
-
-    if (keyPressed < 0)
-    {
-        return (-1);
     }
 
     if (_audioFrame.vad_activity_ == AudioFrame::kVadActive)

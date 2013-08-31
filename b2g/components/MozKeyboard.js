@@ -415,6 +415,8 @@ MozInputContext.prototype = {
        "Keyboard:SetSelectionRange:Result:OK",
        "Keyboard:ReplaceSurroundingText:Result:OK",
        "Keyboard:SendKey:Result:OK",
+       "Keyboard:SetComposition:Result:OK",
+       "Keyboard:EndComposition:Result:OK",
        "Keyboard:SequenceError"]);
   },
 
@@ -471,6 +473,10 @@ MozInputContext.prototype = {
         // Occurs when a new element got focus, but the inputContext was
         // not invalidated yet...
         resolver.reject("InputContext has expired");
+        break;
+      case "Keyboard:SetComposition:Result:OK": // Fall through.
+      case "Keyboard:EndComposition:Result:OK":
+        resolver.resolve();
         break;
       default:
         dump("Could not find a handler for " + msg.name);
@@ -627,12 +633,30 @@ MozInputContext.prototype = {
     });
   },
 
-  setComposition: function ic_setComposition(text, cursor) {
-    throw new this._window.DOMError("NotSupportedError", "Not implemented");
+  setComposition: function ic_setComposition(text, cursor, clauses) {
+    let self = this;
+    return this.createPromise(function(resolver) {
+      let resolverId = self.getPromiseResolverId(resolver);
+      cpmm.sendAsyncMessage('Keyboard:SetComposition', {
+        contextId: self._contextId,
+        requestId: resolverId,
+        text: text,
+        cursor: cursor || text.length,
+        clauses: clauses || null
+      });
+    });
   },
 
   endComposition: function ic_endComposition(text) {
-    throw new this._window.DOMError("NotSupportedError", "Not implemented");
+    let self = this;
+    return this.createPromise(function(resolver) {
+      let resolverId = self.getPromiseResolverId(resolver);
+      cpmm.sendAsyncMessage('Keyboard:EndComposition', {
+        contextId: self._contextId,
+        requestId: resolverId,
+        text: text || ''
+      });
+    });
   }
 };
 

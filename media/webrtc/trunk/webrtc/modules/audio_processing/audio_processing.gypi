@@ -16,8 +16,7 @@
         'aec_debug_dump%': 0,
       },
       'dependencies': [
-        '<(webrtc_root)/common_audio/common_audio.gyp:signal_processing',
-        '<(webrtc_root)/common_audio/common_audio.gyp:vad',
+        '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
       'include_dirs': [
@@ -168,7 +167,7 @@
         'type': 'static_library',
         'includes': ['../../build/arm_neon.gypi',],
         'dependencies': [
-          '<(webrtc_root)/common_audio/common_audio.gyp:signal_processing',
+          '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
         ],
         'sources': [
           'aecm/aecm_core_neon.c',

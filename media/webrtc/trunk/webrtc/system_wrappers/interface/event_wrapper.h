@@ -54,12 +54,6 @@ class EventWrapper {
 
   virtual bool StopTimer() = 0;
 
-  // Only implemented on Windows
-  // Returns 1 if a key has been pressed since last call to this function.
-  // -1 indicates failure
-  // 0 indicates no key has been pressed since last call
-  // TODO(hellner) this function does not seem to belong here
-  static int KeyPressed();
 };
 } // namespace webrtc
 

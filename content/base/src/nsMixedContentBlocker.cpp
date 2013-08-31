@@ -482,12 +482,14 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
       *aDecision = nsIContentPolicy::ACCEPT;
       rootDoc->SetHasMixedActiveContentLoaded(true);
       if (!rootDoc->GetHasMixedDisplayContentLoaded() && NS_SUCCEEDED(stateRV)) {
+        rootDoc->SetHasMixedDisplayContentLoaded(true);
         eventSink->OnSecurityChange(aRequestingContext, (State | nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT));
       }
     } else {
       *aDecision = nsIContentPolicy::REJECT_REQUEST;
       LogMixedContentMessage(classification, aContentLocation, rootDoc, eBlocked);
       if (!rootDoc->GetHasMixedDisplayContentBlocked() && NS_SUCCEEDED(stateRV)) {
+        rootDoc->SetHasMixedDisplayContentBlocked(true);
         eventSink->OnSecurityChange(aRequestingContext, (State | nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT));
       }
     }

@@ -1,6 +1,30 @@
-@ Written by Wilco Dijkstra, 1996. Refer to file LICENSE under
-@ trunk/third_party_mods/sqrt_floor.
 @
+@ Written by Wilco Dijkstra, 1996. The following email exchange establishes the
+@ license.
+@
+@ From: Wilco Dijkstra <Wilco.Dijkstra@ntlworld.com>
+@ Date: Fri, Jun 24, 2011 at 3:20 AM
+@ Subject: Re: sqrt routine
+@ To: Kevin Ma <kma@google.com>
+@ Hi Kevin,
+@ Thanks for asking. Those routines are public domain (originally posted to
+@ comp.sys.arm a long time ago), so you can use them freely for any purpose.
+@ Cheers,
+@ Wilco
+@
+@ ----- Original Message -----
+@ From: "Kevin Ma" <kma@google.com>
+@ To: <Wilco.Dijkstra@ntlworld.com>
+@ Sent: Thursday, June 23, 2011 11:44 PM
+@ Subject: Fwd: sqrt routine
+@ Hi Wilco,
+@ I saw your sqrt routine from several web sites, including
+@ http://www.finesse.demon.co.uk/steven/sqrt.html.
+@ Just wonder if there's any copyright information with your Successive
+@ approximation routines, or if I can freely use it for any purpose.
+@ Thanks.
+@ Kevin
+
 @ Minor modifications in code style for WebRTC, 2012.
 @ Output is bit-exact with the reference C code in spl_sqrt_floor.c.
 
@@ -84,4 +108,3 @@ DEFINE_FUNCTION WebRtcSpl_SqrtFloor
 
   bic    r0, r2, #3 << 30  @ for rounding add: cmp r0, r2  adc r2, #1
   bx lr
-

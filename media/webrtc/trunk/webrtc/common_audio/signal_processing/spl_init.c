@@ -14,9 +14,9 @@
  * Some code came from common/rtcd.c in the WebM project.
  */
 
-#include "common_audio/signal_processing/include/real_fft.h"
-#include "common_audio/signal_processing/include/signal_processing_library.h"
-#include "system_wrappers/interface/cpu_features_wrapper.h"
+#include "webrtc/common_audio/signal_processing/include/real_fft.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/system_wrappers/interface/cpu_features_wrapper.h"
 
 /* Declare function pointers. */
 MaxAbsValueW16 WebRtcSpl_MaxAbsValueW16;
@@ -77,7 +77,7 @@ static void InitPointersToMIPS() {
   WebRtcSpl_MinValueW16 = WebRtcSpl_MinValueW16_mips;
   WebRtcSpl_MinValueW32 = WebRtcSpl_MinValueW32_mips;
   WebRtcSpl_CrossCorrelation = WebRtcSpl_CrossCorrelationC;
-  WebRtcSpl_DownsampleFast = WebRtcSpl_DownsampleFastC;
+  WebRtcSpl_DownsampleFast = WebRtcSpl_DownsampleFast_mips;
   WebRtcSpl_ScaleAndAddVectorsWithRound =
       WebRtcSpl_ScaleAndAddVectorsWithRoundC;
   WebRtcSpl_RealForwardFFT = WebRtcSpl_RealForwardFFTC;

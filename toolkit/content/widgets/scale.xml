@@ -9,18 +9,10 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
   
-  <binding id="scalethumb" extends="xul:button">
+  <binding id="scalethumb" extends="xul:button" role="xul:thumb">
     <resources>
       <stylesheet src="chrome://global/skin/scale.css"/>
     </resources>
-
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          return Components.interfaces.nsIAccessibleProvider.XULThumb;
-        </getter>
-      </property>
-    </implementation>
   </binding>
 
   <binding id="scaleslider" display="xul:slider"
@@ -30,7 +22,7 @@
     </resources>
   </binding>
 
-  <binding id="scale"
+  <binding id="scale" role="xul:scale"
            extends="chrome://global/content/bindings/general.xml#basecontrol">
     <resources>
       <stylesheet src="chrome://global/skin/scale.css"/>
@@ -43,13 +35,7 @@
       </xul:slider>
     </content>
     
-    <implementation implements="nsIAccessibleProvider, nsISliderListener">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          return Components.interfaces.nsIAccessibleProvider.XULScale;
-        </getter>
-      </property>
-
+    <implementation implements="nsISliderListener">
       <property name="value" onget="return this._getIntegerAttribute('curpos', 0);"
                              onset="return this._setIntegerAttribute('curpos', val);"/>
       <property name="min" onget="return this._getIntegerAttribute('minpos', 0);"

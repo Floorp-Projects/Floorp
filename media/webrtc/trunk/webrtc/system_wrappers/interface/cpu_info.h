@@ -11,7 +11,7 @@
 #ifndef WEBRTC_SYSTEM_WRAPPERS_INTERFACE_CPU_INFO_H_
 #define WEBRTC_SYSTEM_WRAPPERS_INTERFACE_CPU_INFO_H_
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 

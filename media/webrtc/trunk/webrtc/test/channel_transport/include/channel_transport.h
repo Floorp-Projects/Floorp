@@ -86,4 +86,3 @@ class VideoChannelTransport : public UdpTransportData {
 }  // namespace webrtc
 
 #endif  // WEBRTC_TEST_CHANNEL_TRANSPORT_INCLUDE_CHANNEL_TRANSPORT_H_
-

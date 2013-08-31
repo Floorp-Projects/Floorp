@@ -16,6 +16,7 @@
 #include <map>
 
 #include "webrtc/common_types.h"
+#include "webrtc/modules/pacing/include/paced_sender.h"
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
 #include "webrtc/modules/rtp_rtcp/source/bitrate.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_header_extension.h"
@@ -28,7 +29,6 @@
 namespace webrtc {
 
 class CriticalSectionWrapper;
-class PacedSender;
 class RTPPacketHistory;
 class RTPSenderAudio;
 class RTPSenderVideo;
@@ -44,6 +44,7 @@ class RTPSenderInterface {
   virtual int32_t BuildRTPheader(
       uint8_t *data_buffer, const int8_t payload_type,
       const bool marker_bit, const uint32_t capture_time_stamp,
+      int64_t capture_time_ms,
       const bool time_stamp_provided = true,
       const bool inc_sequence_number = true) = 0;
 
@@ -57,7 +58,8 @@ class RTPSenderInterface {
 
   virtual int32_t SendToNetwork(
       uint8_t *data_buffer, int payload_length, int rtp_header_length,
-      int64_t capture_time_ms, StorageType storage) = 0;
+      int64_t capture_time_ms, StorageType storage,
+      PacedSender::Priority priority) = 0;
 };
 
 class RTPSender : public Bitrate, public RTPSenderInterface {
@@ -130,12 +132,15 @@ class RTPSender : public Bitrate, public RTPSenderInterface {
       VideoCodecInformation *codec_info = NULL,
       const RTPVideoTypeHeader * rtp_type_hdr = NULL);
 
-  int32_t SendPadData(int8_t payload_type,
-                      uint32_t capture_timestamp,
-                      int64_t capture_time_ms, int32_t bytes);
+  int BuildPaddingPacket(uint8_t* packet, int header_length, int32_t bytes);
+  int SendPadData(int payload_type, uint32_t timestamp, int64_t capture_time_ms,
+                  int32_t bytes, StorageType store,
+                  bool force_full_size_packets);
   // RTP header extension
   int32_t SetTransmissionTimeOffset(
       const int32_t transmission_time_offset);
+  int32_t SetAbsoluteSendTime(
+      const uint32_t absolute_send_time);
 
   int32_t RegisterRtpHeaderExtension(const RTPExtensionType type,
                                      const uint8_t id);
@@ -144,17 +149,24 @@ class RTPSender : public Bitrate, public RTPSenderInterface {
 
   uint16_t RtpHeaderExtensionTotalLength() const;
 
-  uint16_t BuildRTPHeaderExtension(uint8_t *data_buffer) const;
+  uint16_t BuildRTPHeaderExtension(uint8_t* data_buffer) const;
 
   uint8_t BuildTransmissionTimeOffsetExtension(
       uint8_t *data_buffer) const;
+  uint8_t BuildAbsoluteSendTimeExtension(
+      uint8_t* data_buffer) const;
 
   bool UpdateTransmissionTimeOffset(uint8_t *rtp_packet,
                                     const uint16_t rtp_packet_length,
-                                    const WebRtcRTPHeader &rtp_header,
+                                    const RTPHeader &rtp_header,
                                     const int64_t time_diff_ms) const;
+  bool UpdateAbsoluteSendTime(uint8_t *rtp_packet,
+                              const uint16_t rtp_packet_length,
+                              const RTPHeader &rtp_header,
+                              const int64_t now_ms) const;
 
-  void TimeToSendPacket(uint16_t sequence_number, int64_t capture_time_ms);
+  bool TimeToSendPacket(uint16_t sequence_number, int64_t capture_time_ms);
+  int TimeToSendPadding(int bytes);
 
   // NACK.
   int SelectiveRetransmissions() const;
@@ -182,6 +194,7 @@ class RTPSender : public Bitrate, public RTPSenderInterface {
   virtual int32_t BuildRTPheader(
       uint8_t *data_buffer, const int8_t payload_type,
       const bool marker_bit, const uint32_t capture_time_stamp,
+      int64_t capture_time_ms,
       const bool time_stamp_provided = true,
       const bool inc_sequence_number = true);
 
@@ -196,7 +209,8 @@ class RTPSender : public Bitrate, public RTPSenderInterface {
 
   virtual int32_t SendToNetwork(
       uint8_t *data_buffer, int payload_length, int rtp_header_length,
-      int64_t capture_time_ms, StorageType storage);
+      int64_t capture_time_ms, StorageType storage,
+      PacedSender::Priority priority);
 
   // Audio.
 
@@ -252,11 +266,16 @@ class RTPSender : public Bitrate, public RTPSenderInterface {
                            RtpVideoCodecTypes *video_type);
 
  private:
+  int CreateRTPHeader(uint8_t* header, int8_t payload_type,
+                      uint32_t ssrc, bool marker_bit,
+                      uint32_t timestamp, uint16_t sequence_number,
+                      const uint32_t* csrcs, uint8_t csrcs_length) const;
+
   void UpdateNACKBitRate(const uint32_t bytes, const uint32_t now);
 
-  int32_t SendPaddingAccordingToBitrate(int8_t payload_type,
-                                        uint32_t capture_timestamp,
-                                        int64_t capture_time_ms);
+  bool SendPaddingAccordingToBitrate(int8_t payload_type,
+                                     uint32_t capture_timestamp,
+                                     int64_t capture_time_ms);
 
   void BuildRtxPacket(uint8_t* buffer, uint16_t* length,
                       uint8_t* buffer_rtx);
@@ -283,6 +302,7 @@ class RTPSender : public Bitrate, public RTPSenderInterface {
 
   RtpHeaderExtensionMap rtp_header_extension_map_;
   int32_t transmission_time_offset_;
+  uint32_t absolute_send_time_;
 
   // NACK
   uint32_t nack_byte_count_times_[NACK_BYTECOUNT_SIZE];
@@ -305,9 +325,11 @@ class RTPSender : public Bitrate, public RTPSenderInterface {
   uint16_t sequence_number_rtx_;
   bool ssrc_forced_;
   uint32_t ssrc_;
-  uint32_t time_stamp_;
-  uint8_t csrcs_;
-  uint32_t csrc_[kRtpCsrcSize];
+  uint32_t timestamp_;
+  int64_t capture_time_ms_;
+  bool last_packet_marker_bit_;
+  uint8_t num_csrcs_;
+  uint32_t csrcs_[kRtpCsrcSize];
   bool include_csrcs_;
   RtxMode rtx_;
   uint32_t ssrc_rtx_;

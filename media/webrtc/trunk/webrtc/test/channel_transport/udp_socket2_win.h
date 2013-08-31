@@ -26,8 +26,8 @@
 #include "webrtc/system_wrappers/interface/list_wrapper.h"
 #include "webrtc/system_wrappers/interface/rw_lock_wrapper.h"
 #include "webrtc/system_wrappers/interface/trace.h"
-#include "webrtc/test/channel_transport/udp_socket_wrapper.h"
 #include "webrtc/test/channel_transport/udp_socket2_manager_win.h"
+#include "webrtc/test/channel_transport/udp_socket_wrapper.h"
 
 namespace webrtc {
 namespace test {

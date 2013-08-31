@@ -7,10 +7,9 @@
 
 let tmp = {};
 Cu.import("resource://gre/modules/osfile.jsm", tmp);
-Cu.import("resource://gre/modules/Task.jsm", tmp);
 Cu.import("resource:///modules/sessionstore/_SessionFile.jsm", tmp);
 
-const {OS, Task, _SessionFile} = tmp;
+const {OS, _SessionFile} = tmp;
 
 const PREF_SS_INTERVAL = "browser.sessionstore.interval";
 // Full paths for sessionstore.js and sessionstore.bak.

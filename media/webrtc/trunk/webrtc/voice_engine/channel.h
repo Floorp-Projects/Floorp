@@ -15,6 +15,7 @@
 #include "webrtc/common_types.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
 #include "webrtc/modules/audio_conference_mixer/interface/audio_conference_mixer_defines.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_header_parser.h"
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
 #include "webrtc/modules/utility/interface/file_player.h"
 #include "webrtc/modules/utility/interface/file_recorder.h"
@@ -28,7 +29,8 @@
 #include "webrtc/voice_engine/voice_engine_defines.h"
 
 #ifdef WEBRTC_DTMF_DETECTION
-#include "voe_dtmf.h" // TelephoneEventDetectionMethods, TelephoneEventObserver
+// TelephoneEventDetectionMethods, TelephoneEventObserver
+#include "webrtc/voice_engine/include/voe_dtmf.h"
 #endif
 
 namespace webrtc
@@ -72,9 +74,9 @@ public:
 public:
     virtual ~Channel();
     static int32_t CreateChannel(Channel*& channel,
-                                 const int32_t channelId,
-                                 const uint32_t instanceId);
-    Channel(const int32_t channelId, const uint32_t instanceId);
+                                 int32_t channelId,
+                                 uint32_t instanceId);
+    Channel(int32_t channelId, uint32_t instanceId);
     int32_t Init();
     int32_t SetEngineInformation(
         Statistics& engineStatistics,
@@ -139,37 +141,37 @@ public:
     int32_t GetPeriodicDeadOrAliveStatus(bool& enabled, int& sampleTimeSeconds);
 
     // VoEFile
-    int StartPlayingFileLocally(const char* fileName, const bool loop,
-                                const FileFormats format,
-                                const int startPosition,
-                                const float volumeScaling,
-                                const int stopPosition,
+    int StartPlayingFileLocally(const char* fileName, bool loop,
+                                FileFormats format,
+                                int startPosition,
+                                float volumeScaling,
+                                int stopPosition,
                                 const CodecInst* codecInst);
-    int StartPlayingFileLocally(InStream* stream, const FileFormats format,
-                                const int startPosition,
-                                const float volumeScaling,
-                                const int stopPosition,
+    int StartPlayingFileLocally(InStream* stream, FileFormats format,
+                                int startPosition,
+                                float volumeScaling,
+                                int stopPosition,
                                 const CodecInst* codecInst);
     int StopPlayingFileLocally();
     int IsPlayingFileLocally() const;
     int RegisterFilePlayingToMixer();
-    int ScaleLocalFilePlayout(const float scale);
+    int ScaleLocalFilePlayout(float scale);
     int GetLocalPlayoutPosition(int& positionMs);
-    int StartPlayingFileAsMicrophone(const char* fileName, const bool loop,
-                                     const FileFormats format,
-                                     const int startPosition,
-                                     const float volumeScaling,
-                                     const int stopPosition,
+    int StartPlayingFileAsMicrophone(const char* fileName, bool loop,
+                                     FileFormats format,
+                                     int startPosition,
+                                     float volumeScaling,
+                                     int stopPosition,
                                      const CodecInst* codecInst);
     int StartPlayingFileAsMicrophone(InStream* stream,
-                                     const FileFormats format,
-                                     const int startPosition,
-                                     const float volumeScaling,
-                                     const int stopPosition,
+                                     FileFormats format,
+                                     int startPosition,
+                                     float volumeScaling,
+                                     int stopPosition,
                                      const CodecInst* codecInst);
     int StopPlayingFileAsMicrophone();
     int IsPlayingFileAsMicrophone() const;
-    int ScaleFileAsMicrophonePlayout(const float scale);
+    int ScaleFileAsMicrophonePlayout(float scale);
     int StartRecordingPlayout(const char* fileName, const CodecInst* codecInst);
     int StartRecordingPlayout(OutStream* stream, const CodecInst* codecInst);
     int StopRecordingPlayout();
@@ -185,7 +187,7 @@ public:
     // VoEVolumeControl
     int GetSpeechOutputLevel(uint32_t& level) const;
     int GetSpeechOutputLevelFullRange(uint32_t& level) const;
-    int SetMute(const bool enable);
+    int SetMute(bool enable);
     bool Mute() const;
     int SetOutputVolumePan(float left, float right);
     int GetOutputVolumePan(float& left, float& right) const;
@@ -204,6 +206,7 @@ public:
     // VoEVideoSync
     bool GetDelayEstimate(int* jitter_buffer_delay_ms,
                           int* playout_buffer_delay_ms) const;
+    int least_required_delay_ms() const { return least_required_delay_ms_; }
     int SetInitialPlayoutDelay(int delay_ms);
     int SetMinimumPlayoutDelay(int delayMs);
     int GetPlayoutTimestamp(unsigned int& timestamp);
@@ -234,13 +237,13 @@ public:
     int DeRegisterRxVadObserver();
     int VoiceActivityIndicator(int &activity);
 #ifdef WEBRTC_VOICE_ENGINE_AGC
-    int SetRxAgcStatus(const bool enable, const AgcModes mode);
+    int SetRxAgcStatus(bool enable, AgcModes mode);
     int GetRxAgcStatus(bool& enabled, AgcModes& mode);
-    int SetRxAgcConfig(const AgcConfig config);
+    int SetRxAgcConfig(AgcConfig config);
     int GetRxAgcConfig(AgcConfig& config);
 #endif
 #ifdef WEBRTC_VOICE_ENGINE_NR
-    int SetRxNsStatus(const bool enable, const NsModes mode);
+    int SetRxNsStatus(bool enable, NsModes mode);
     int GetRxNsStatus(bool& enabled, NsModes& mode);
 #endif
 
@@ -264,7 +267,7 @@ public:
                           unsigned int& timestamp,
                           unsigned int& playoutTimestamp, unsigned int* jitter,
                           unsigned short* fractionLost);
-    int SendApplicationDefinedRTCPPacket(const unsigned char subType,
+    int SendApplicationDefinedRTCPPacket(unsigned char subType,
                                          unsigned int name, const char* data,
                                          unsigned short dataLengthInBytes);
     int GetRTPStatistics(unsigned int& averageJitterMs,
@@ -275,6 +278,7 @@ public:
     int GetRTPStatistics(CallStatistics& stats);
     int SetFECStatus(bool enable, int redPayloadtype);
     int GetFECStatus(bool& enabled, int& redPayloadtype);
+    void SetNACKStatus(bool enable, int maxNumberOfPackets);
     int StartRTPDump(const char fileNameUTF8[1024], RTPDirections direction);
     int StopRTPDump(RTPDirections direction);
     bool RTPDumpIsActive(RTPDirections direction);
@@ -295,55 +299,55 @@ public:
     int32_t InFrameType(int16_t frameType);
 
 public:
-    int32_t OnRxVadDetected(const int vadDecision);
+    int32_t OnRxVadDetected(int vadDecision);
 
 public:
     // From RtpData in the RTP/RTCP module
     int32_t OnReceivedPayloadData(const uint8_t* payloadData,
-                                  const uint16_t payloadSize,
+                                  uint16_t payloadSize,
                                   const WebRtcRTPHeader* rtpHeader);
 
 public:
     // From RtpFeedback in the RTP/RTCP module
     int32_t OnInitializeDecoder(
-            const int32_t id,
-            const int8_t payloadType,
+            int32_t id,
+            int8_t payloadType,
             const char payloadName[RTP_PAYLOAD_NAME_SIZE],
-            const int frequency,
-            const uint8_t channels,
-            const uint32_t rate);
+            int frequency,
+            uint8_t channels,
+            uint32_t rate);
 
-    void OnPacketTimeout(const int32_t id);
+    void OnPacketTimeout(int32_t id);
 
-    void OnReceivedPacket(const int32_t id, const RtpRtcpPacketType packetType);
+    void OnReceivedPacket(int32_t id, RtpRtcpPacketType packetType);
 
-    void OnPeriodicDeadOrAlive(const int32_t id,
-                               const RTPAliveType alive);
+    void OnPeriodicDeadOrAlive(int32_t id,
+                               RTPAliveType alive);
 
-    void OnIncomingSSRCChanged(const int32_t id,
-                               const uint32_t SSRC);
+    void OnIncomingSSRCChanged(int32_t id,
+                               uint32_t SSRC);
 
-    void OnIncomingCSRCChanged(const int32_t id,
-                               const uint32_t CSRC, const bool added);
+    void OnIncomingCSRCChanged(int32_t id,
+                               uint32_t CSRC, bool added);
 
 public:
     // From RtcpFeedback in the RTP/RTCP module
-    void OnApplicationDataReceived(const int32_t id,
-                                   const uint8_t subType,
-                                   const uint32_t name,
-                                   const uint16_t length,
+    void OnApplicationDataReceived(int32_t id,
+                                   uint8_t subType,
+                                   uint32_t name,
+                                   uint16_t length,
                                    const uint8_t* data);
 
 public:
     // From RtpAudioFeedback in the RTP/RTCP module
-    void OnReceivedTelephoneEvent(const int32_t id,
-                                  const uint8_t event,
-                                  const bool endOfEvent);
+    void OnReceivedTelephoneEvent(int32_t id,
+                                  uint8_t event,
+                                  bool endOfEvent);
 
-    void OnPlayTelephoneEvent(const int32_t id,
-                              const uint8_t event,
-                              const uint16_t lengthMs,
-                              const uint8_t volume);
+    void OnPlayTelephoneEvent(int32_t id,
+                              uint8_t event,
+                              uint16_t lengthMs,
+                              uint8_t volume);
 
 public:
     // From Transport (called by the RTP/RTCP module)
@@ -352,8 +356,8 @@ public:
 
 public:
     // From MixerParticipant
-    int32_t GetAudioFrame(const int32_t id, AudioFrame& audioFrame);
-    int32_t NeededFrequency(const int32_t id);
+    int32_t GetAudioFrame(int32_t id, AudioFrame& audioFrame);
+    int32_t NeededFrequency(int32_t id);
 
 public:
     // From MonitorObserver
@@ -361,12 +365,12 @@ public:
 
 public:
     // From FileCallback
-    void PlayNotification(const int32_t id,
-                          const uint32_t durationMs);
-    void RecordNotification(const int32_t id,
-                            const uint32_t durationMs);
-    void PlayFileEnded(const int32_t id);
-    void RecordFileEnded(const int32_t id);
+    void PlayNotification(int32_t id,
+                          uint32_t durationMs);
+    void RecordNotification(int32_t id,
+                            uint32_t durationMs);
+    void PlayFileEnded(int32_t id);
+    void RecordFileEnded(int32_t id);
 
 public:
     uint32_t InstanceId() const
@@ -422,9 +426,10 @@ public:
     uint32_t EncodeAndSend();
 
 private:
+    int ResendPackets(const uint16_t* sequence_numbers, int length);
     int InsertInbandDtmfTone();
-    int32_t MixOrReplaceAudioWithFile(const int mixingFrequency);
-    int32_t MixAudioWithFile(AudioFrame& audioFrame, const int mixingFrequency);
+    int32_t MixOrReplaceAudioWithFile(int mixingFrequency);
+    int32_t MixAudioWithFile(AudioFrame& audioFrame, int mixingFrequency);
     void UpdateDeadOrAliveCounters(bool alive);
     int32_t SendPacketRaw(const void *data, int len, bool RTCP);
     void UpdatePacketDelay(uint32_t timestamp,
@@ -440,6 +445,7 @@ private:
     int32_t _channelId;
 
 private:
+    scoped_ptr<RtpHeaderParser> rtp_header_parser_;
     scoped_ptr<RtpRtcp> _rtpRtcpModule;
     AudioCodingModule& _audioCodingModule;
     RtpDump& _rtpDumpIn;
@@ -535,6 +541,7 @@ private:
     AudioFrame::SpeechType _outputSpeechType;
     // VoEVideoSync
     uint32_t _average_jitter_buffer_delay_us;
+    int least_required_delay_ms_;
     uint32_t _previousTimestamp;
     uint16_t _recPacketDelayMs;
     // VoEAudioProcessing

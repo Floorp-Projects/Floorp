@@ -8,19 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_engine/vie_file_player.h"
+#include "webrtc/video_engine/vie_file_player.h"
 
-#include "modules/utility/interface/file_player.h"
-#include "system_wrappers/interface/critical_section_wrapper.h"
-#include "system_wrappers/interface/event_wrapper.h"
-#include "system_wrappers/interface/thread_wrapper.h"
-#include "system_wrappers/interface/tick_util.h"
-#include "system_wrappers/interface/trace.h"
-#include "video_engine/include/vie_file.h"
-#include "video_engine/vie_defines.h"
-#include "voice_engine/include/voe_base.h"
-#include "voice_engine/include/voe_file.h"
-#include "voice_engine/include/voe_video_sync.h"
+#include "webrtc/modules/utility/interface/file_player.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/event_wrapper.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/video_engine/include/vie_file.h"
+#include "webrtc/video_engine/vie_defines.h"
+#include "webrtc/voice_engine/include/voe_base.h"
+#include "webrtc/voice_engine/include/voe_file.h"
+#include "webrtc/voice_engine/include/voe_video_sync.h"
 
 namespace webrtc {
 

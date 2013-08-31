@@ -83,11 +83,13 @@ function symlinkUpdateFilesIntoBundleDirectory() {
   do_check_true(source2.exists());
 
   // Cleanup the symlinks when the test is finished.
-  do_register_cleanup(function() {
+  do_register_cleanup(function AUFIBD_cleanup() {
+    logTestInfo("start - unlinking symlinks");
     let ret = unlink(source.path);
     do_check_false(source.exists());
     let ret = unlink(source2.path);
     do_check_false(source2.exists());
+    logTestInfo("finish - unlinking symlinks");
   });
 
   // Now, make sure that getUpdatesRootDir returns the application bundle
@@ -198,6 +200,7 @@ function run_test() {
 }
 
 function end_test() {
+  logTestInfo("start - test cleanup");
   // Remove the files added by the update.
   let updateTestDir = getUpdateTestDir();
   try {
@@ -230,6 +233,7 @@ function end_test() {
   }
 
   cleanUp();
+  logTestInfo("finish - test cleanup");
 }
 
 function shouldAdjustPathsOnMac() {

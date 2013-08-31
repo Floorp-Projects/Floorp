@@ -17,166 +17,138 @@
 namespace webrtc {
 
 //-----------------------------
-#define CHECK_ERROR(f)                                                                      \
-    do {                                                                                    \
-        EXPECT_GE(f, 0) << "Error Calling API";                                             \
-    }while(0)
+#define CHECK_ERROR(f)                                                         \
+  do {                                                                         \
+    EXPECT_GE(f, 0) << "Error Calling API";                                    \
+  } while(0)
 
 //-----------------------------
-#define CHECK_PROTECTED(f)                                                                  \
-    do {                                                                                    \
-        if(f >= 0) {                                                                        \
-            ADD_FAILURE() << "Error Calling API";                                           \
-        }                                                                                   \
-        else {                                                                              \
-            printf("An expected error is caught.\n");                                       \
-        }                                                                                   \
-    }while(0)
+#define CHECK_PROTECTED(f)                                                     \
+  do {                                                                         \
+    if (f >= 0) {                                                              \
+      ADD_FAILURE() << "Error Calling API";                                    \
+    } else {                                                                   \
+      printf("An expected error is caught.\n");                                \
+    }                                                                          \
+  } while(0)
 
 //----------------------------
-#define CHECK_ERROR_MT(f)                                                                   \
-    do {                                                                                    \
-        if(f < 0) {                                                                         \
-            fprintf(stderr, "Error Calling API in file %s at line %d \n",                   \
-                __FILE__, __LINE__);                                                        \
-        }                                                                                   \
-    }while(0)
+#define CHECK_ERROR_MT(f)                                                      \
+  do {                                                                         \
+    if (f < 0) {                                                               \
+      fprintf(stderr, "Error Calling API in file %s at line %d \n",            \
+              __FILE__, __LINE__);                                             \
+    }                                                                          \
+  } while(0)
 
 //----------------------------
-#define CHECK_PROTECTED_MT(f)                                                               \
-    do {                                                                                    \
-        if(f >= 0) {                                                                        \
-            fprintf(stderr, "Error Calling API in file %s at line %d \n",                   \
-                __FILE__, __LINE__);                                                        \
-        }                                                                                   \
-        else {                                                                              \
-            printf("An expected error is caught.\n");                                       \
-        }                                                                                   \
-    }while(0)
+#define CHECK_PROTECTED_MT(f)                                                  \
+  do {                                                                         \
+    if (f >= 0) {                                                              \
+      fprintf(stderr, "Error Calling API in file %s at line %d \n",            \
+              __FILE__, __LINE__);                                             \
+    } else {                                                                   \
+      printf("An expected error is caught.\n");                                \
+    }                                                                          \
+  } while(0)
 
+#define DESTROY_ACM(acm)                                                       \
+  do {                                                                         \
+    if (acm != NULL) {                                                         \
+      AudioCodingModule::Destroy(acm);                                         \
+      acm = NULL;                                                              \
+    }                                                                          \
+  } while(0)
 
-#define DESTROY_ACM(acm)                                                                    \
-    do {                                                                                    \
-        if(acm != NULL) {                                                                   \
-            AudioCodingModule::Destroy(acm);                       \
-            acm = NULL;                                                                     \
-        }                                                                                   \
-    } while(0)
+#define DELETE_POINTER(p)                                                      \
+  do {                                                                         \
+    if (p != NULL) {                                                           \
+      delete p;                                                                \
+      p = NULL;                                                                \
+    }                                                                          \
+  } while(0)
 
+class ACMTestTimer {
+ public:
+  ACMTestTimer();
+  ~ACMTestTimer();
 
-#define DELETE_POINTER(p)                                                                   \
-    do {                                                                                    \
-        if(p != NULL) {                                                                     \
-            delete p;                                                                       \
-            p = NULL;                                                                       \
-        }                                                                                   \
-    } while(0)
+  void Reset();
+  void Tick10ms();
+  void Tick1ms();
+  void Tick100ms();
+  void Tick1sec();
+  void CurrentTimeHMS(char* currTime);
+  void CurrentTime(unsigned long& h, unsigned char& m, unsigned char& s,
+                   unsigned short& ms);
 
-class ACMTestTimer
-{
-public:
-    ACMTestTimer();
-    ~ACMTestTimer();
+ private:
+  void Adjust();
 
-    void Reset();
-    void Tick10ms();
-    void Tick1ms();
-    void Tick100ms();
-    void Tick1sec();
-    void CurrentTimeHMS(
-        char* currTime);
-    void CurrentTime(
-        unsigned long&  h, 
-        unsigned char&  m,
-        unsigned char&  s,
-        unsigned short& ms);
-
-private:
-    void Adjust();
-
-    unsigned short _msec;
-    unsigned char  _sec;
-    unsigned char  _min;
-    unsigned long  _hour;  
+  unsigned short _msec;
+  unsigned char _sec;
+  unsigned char _min;
+  unsigned long _hour;
 };
 
+class CircularBuffer {
+ public:
+  CircularBuffer(uint32_t len);
+  ~CircularBuffer();
 
+  void SetArithMean(bool enable);
+  void SetVariance(bool enable);
 
-class CircularBuffer
-{
-public:
-    CircularBuffer(uint32_t len);
-    ~CircularBuffer();
+  void Update(const double newVal);
+  void IsBufferFull();
 
-    void SetArithMean(
-        bool enable);
-    void SetVariance(
-        bool enable);
+  int16_t Variance(double& var);
+  int16_t ArithMean(double& mean);
 
-    void Update(
-        const double newVal);
-    void IsBufferFull();
+ protected:
+  double* _buff;
+  uint32_t _idx;
+  uint32_t _buffLen;
 
-    int16_t Variance(double& var);
-    int16_t ArithMean(double& mean);
-
-protected:
-    double* _buff;
-    uint32_t _idx;
-    uint32_t _buffLen;
-
-    bool         _buffIsFull;
-    bool         _calcAvg;
-    bool         _calcVar;
-    double       _sum;
-    double       _sumSqr;
+  bool _buffIsFull;
+  bool _calcAvg;
+  bool _calcVar;
+  double _sum;
+  double _sumSqr;
 };
 
-
-
-
-
-int16_t ChooseCodec(
-    CodecInst& codecInst);
+int16_t ChooseCodec(CodecInst& codecInst);
 
 void PrintCodecs();
 
 bool FixedPayloadTypeCodec(const char* payloadName);
 
+class DTMFDetector : public AudioCodingFeedback {
+ public:
+  DTMFDetector();
+  ~DTMFDetector();
+  // used for inband DTMF detection
+  int32_t IncomingDtmf(const uint8_t digitDtmf, const bool toneEnded);
+  void PrintDetectedDigits();
 
-
-
-class DTMFDetector: public AudioCodingFeedback
-{
-public:
-    DTMFDetector();
-    ~DTMFDetector();
-    // used for inband DTMF detection
-    int32_t IncomingDtmf(const uint8_t digitDtmf, const bool toneEnded);
-    void PrintDetectedDigits();
-
-private:
-    uint32_t _toneCntr[1000];
+ private:
+  uint32_t _toneCntr[1000];
 
 };
 
+class VADCallback : public ACMVADCallback {
+ public:
+  VADCallback();
+  ~VADCallback() {
+  }
 
+  int32_t InFrameType(int16_t frameType);
 
+  void PrintFrameTypes();
+  void Reset();
 
-class VADCallback : public ACMVADCallback
-{
-public:
-    VADCallback();
-    ~VADCallback(){}
-
-    int32_t InFrameType(
-        int16_t frameType);
-
-    void PrintFrameTypes();
-    void Reset();
-
-private:
-    uint32_t _numFrameTypes[6];
+ private:
+  uint32_t _numFrameTypes[6];
 };
 
 }  // namespace webrtc

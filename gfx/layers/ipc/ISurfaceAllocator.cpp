@@ -29,16 +29,7 @@ namespace layers {
 
 SharedMemory::SharedMemoryType OptimalShmemType()
 {
-#if defined(MOZ_PLATFORM_MAEMO) && defined(MOZ_HAVE_SHAREDMEMORYSYSV)
-  // Use SysV memory because maemo5 on the N900 only allots 64MB to
-  // /dev/shm, even though it has 1GB(!!) of system memory.  Sys V shm
-  // is allocated from a different pool.  We don't want an arbitrary
-  // cap that's much much lower than available memory on the memory we
-  // use for layers.
-  return SharedMemory::TYPE_SYSV;
-#else
   return SharedMemory::TYPE_BASIC;
-#endif
 }
 
 bool

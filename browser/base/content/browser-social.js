@@ -45,9 +45,9 @@ SocialUI = {
 
     if (!Social.initialized) {
       Social.init();
-    } else if (Social.enabled) {
-      // social was previously initialized, so it's not going to notify us of
-      // anything, so handle that now.
+    } else if (Social.providers.length > 0) {
+      // Social was initialized during startup in a previous window. If we have
+      // providers enabled initialize the UI for this window.
       this.observe(null, "social:providers-changed", null);
       this.observe(null, "social:provider-set", Social.provider ? Social.provider.origin : null);
     }
@@ -322,7 +322,10 @@ SocialUI = {
     let containerParent = container.parentNode;
     if (containerParent.classList.contains("social-panel") &&
         containerParent instanceof Ci.nsIDOMXULPopupElement) {
-      containerParent.hidePopup();
+      // allow the link traversal to finish before closing the panel
+      setTimeout(() => {
+        containerParent.hidePopup();
+      }, 0);
     }
   },
 
@@ -693,7 +696,7 @@ SocialShare = {
 
   onHidden: function() {
     this.shareButton.removeAttribute("open");
-    this.iframe.setAttribute("src", "data:text/plain;charset=utf8,")
+    this.iframe.setAttribute("src", "data:text/plain;charset=utf8,");
     this.currentShare = null;
   },
 

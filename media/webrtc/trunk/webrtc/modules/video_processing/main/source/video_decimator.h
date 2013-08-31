@@ -14,8 +14,8 @@
 #ifndef VPM_VIDEO_DECIMATOR_H
 #define VPM_VIDEO_DECIMATOR_H
 
-#include "typedefs.h"
-#include "module_common_types.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 

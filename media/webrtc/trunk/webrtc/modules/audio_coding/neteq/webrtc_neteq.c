@@ -437,6 +437,7 @@ int WebRtcNetEQ_Init(void *inst, uint16_t fs)
     NetEqMainInst->MCUinst.first_packet = 1;
     NetEqMainInst->MCUinst.one_desc = 0;
     NetEqMainInst->MCUinst.BufferStat_inst.Automode_inst.extraDelayMs = 0;
+    NetEqMainInst->MCUinst.BufferStat_inst.Automode_inst.minimum_delay_ms = 0;
     NetEqMainInst->MCUinst.NoOfExpandCalls = 0;
     NetEqMainInst->MCUinst.fs = fs;
 
@@ -466,6 +467,10 @@ int WebRtcNetEQ_Init(void *inst, uint16_t fs)
     /* set master/slave info to undecided */
     NetEqMainInst->masterSlave = 0;
 #endif
+
+    /* Set to an invalid value. */
+    NetEqMainInst->MCUinst.decoded_packet_sequence_number = -1;
+    NetEqMainInst->MCUinst.decoded_packet_timestamp = 0;
 
     return (ok);
 }
@@ -527,6 +532,19 @@ int WebRtcNetEQ_SetExtraDelay(void *inst, int DelayInMs)
     }
     NetEqMainInst->MCUinst.BufferStat_inst.Automode_inst.extraDelayMs = DelayInMs;
     return (0);
+}
+
+int WebRtcNetEQ_SetMinimumDelay(void *inst, int minimum_delay_ms) {
+  MainInst_t *NetEqMainInst = (MainInst_t*) inst;
+  if (NetEqMainInst == NULL)
+    return -1;
+  if (minimum_delay_ms < 0 || minimum_delay_ms > 10000) {
+      NetEqMainInst->ErrorCode = -FAULTY_DELAYVALUE;
+      return -1;
+  }
+  NetEqMainInst->MCUinst.BufferStat_inst.Automode_inst.minimum_delay_ms =
+      minimum_delay_ms;
+  return 0;
 }
 
 int WebRtcNetEQ_SetPlayoutMode(void *inst, enum WebRtcNetEQPlayoutMode playoutMode)
@@ -1213,7 +1231,7 @@ int WebRtcNetEQ_GetNetworkStatistics(void *inst, WebRtcNetEQ_NetworkStatistics *
     /* Get optimal buffer size */
     /***************************/
 
-    if (NetEqMainInst->MCUinst.fs != 0 && NetEqMainInst->MCUinst.fs <= WEBRTC_SPL_WORD16_MAX)
+    if (NetEqMainInst->MCUinst.fs != 0)
     {
         /* preferredBufferSize = Bopt * packSizeSamples / (fs/1000) */
         stats->preferredBufferSize
@@ -1692,4 +1710,38 @@ int WebRtcNetEQ_RecInSyncRTP(void* inst, WebRtcNetEQ_RTPInfo* rtp_info,
     return -1;
   }
   return SYNC_PAYLOAD_LEN_BYTES;
+}
+
+int WebRtcNetEQ_GetRequiredDelayMs(const void* inst) {
+  const MainInst_t* NetEqMainInst = (MainInst_t*)inst;
+  const AutomodeInst_t* auto_mode = (NetEqMainInst == NULL) ? NULL :
+      &NetEqMainInst->MCUinst.BufferStat_inst.Automode_inst;
+
+  /* Instance sanity */
+  if (NetEqMainInst == NULL || auto_mode == NULL)
+    return 0;
+
+  if (NetEqMainInst->MCUinst.fs == 0)
+    return 0;  // Sampling rate not initialized.
+
+  /* |required_delay_q8| has the unit of packets in Q8 domain, therefore,
+   * the corresponding delay is
+   * required_delay_ms = (1000 * required_delay_q8 * samples_per_packet /
+   *     sample_rate_hz) / 256;
+   */
+  return (auto_mode->required_delay_q8 *
+      ((auto_mode->packetSpeechLenSamp * 1000) / NetEqMainInst->MCUinst.fs) +
+      128) >> 8;
+}
+
+int WebRtcNetEQ_DecodedRtpInfo(const void* inst,
+                               int* sequence_number,
+                               uint32_t* timestamp) {
+  const MainInst_t *NetEqMainInst = (inst == NULL) ? NULL :
+      (const MainInst_t*) inst;
+  if (NetEqMainInst->MCUinst.decoded_packet_sequence_number < 0)
+    return -1;
+  *sequence_number = NetEqMainInst->MCUinst.decoded_packet_sequence_number;
+  *timestamp = NetEqMainInst->MCUinst.decoded_packet_timestamp;
+  return 0;
 }

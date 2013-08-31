@@ -37,7 +37,6 @@ DEFINE_int32(init_delay, 0, "Initial delay in millisecond.");
 DEFINE_bool(dtx, false, "Enable DTX at the sender side.");
 
 namespace webrtc {
-
 namespace {
 
 struct CodecConfig {
@@ -57,31 +56,29 @@ struct Config {
   bool packet_loss;
 };
 
-}
 
 class DelayTest {
  public:
 
   DelayTest()
-     : acm_a_(NULL),
-       acm_b_(NULL),
-       channel_a2b_(NULL),
-       test_cntr_(0),
-       encoding_sample_rate_hz_(8000) {
-  }
+      : acm_a_(NULL),
+        acm_b_(NULL),
+        channel_a2b_(NULL),
+        test_cntr_(0),
+        encoding_sample_rate_hz_(8000) {}
 
   ~DelayTest() {}
 
   void TearDown() {
-    if(acm_a_ != NULL) {
+    if (acm_a_ != NULL) {
       AudioCodingModule::Destroy(acm_a_);
       acm_a_ = NULL;
     }
-    if(acm_b_ != NULL) {
+    if (acm_b_ != NULL) {
       AudioCodingModule::Destroy(acm_b_);
       acm_b_ = NULL;
     }
-    if(channel_a2b_ != NULL) {
+    if (channel_a2b_ != NULL) {
       delete channel_a2b_;
       channel_a2b_ = NULL;
     }
@@ -89,8 +86,8 @@ class DelayTest {
 
   void SetUp() {
     test_cntr_ = 0;
-    std::string file_name =
-        webrtc::test::ResourcePath("audio_coding/testfile32kHz", "pcm");
+    std::string file_name = webrtc::test::ResourcePath(
+        "audio_coding/testfile32kHz", "pcm");
     if (FLAGS_input_file.size() > 0)
       file_name = FLAGS_input_file;
     in_file_a_.Open(file_name, 32000, "rb");
@@ -108,15 +105,15 @@ class DelayTest {
 
     uint8_t num_encoders = acm_a_->NumberOfCodecs();
     CodecInst my_codec_param;
-    for(int n = 0; n < num_encoders; n++) {
+    for (int n = 0; n < num_encoders; n++) {
       acm_b_->Codec(n, &my_codec_param);
       if (STR_CASE_CMP(my_codec_param.plname, "opus") == 0)
         my_codec_param.channels = 1;
-      else if  (my_codec_param.channels > 1)
+      else if (my_codec_param.channels > 1)
         continue;
       if (STR_CASE_CMP(my_codec_param.plname, "CN") == 0 &&
           my_codec_param.plfreq == 48000)
-          continue;
+        continue;
       if (STR_CASE_CMP(my_codec_param.plname, "telephone-event") == 0)
         continue;
       acm_b_->RegisterReceiveCodec(my_codec_param);
@@ -141,14 +138,13 @@ class DelayTest {
   void ApplyConfig(const Config& config) {
     printf("====================================\n");
     printf("Test %d \n"
-        "Codec: %s, %d kHz, %d channel(s)\n"
-        "ACM: DTX %s, FEC %s\n"
-        "Channel: %s\n",
-        ++test_cntr_,
-        config.codec.name, config.codec.sample_rate_hz,
-        config.codec.num_channels, config.acm.dtx ? "on" : "off",
-        config.acm.fec ? "on" : "off",
-        config.packet_loss ? "with packet-loss" : "no packet-loss");
+           "Codec: %s, %d kHz, %d channel(s)\n"
+           "ACM: DTX %s, FEC %s\n"
+           "Channel: %s\n",
+           ++test_cntr_, config.codec.name, config.codec.sample_rate_hz,
+           config.codec.num_channels, config.acm.dtx ? "on" : "off",
+           config.acm.fec ? "on" : "off",
+           config.packet_loss ? "with packet-loss" : "no packet-loss");
     SendCodec(config.codec);
     ConfigAcm(config.acm);
     ConfigChannel(config.packet_loss);
@@ -156,9 +152,10 @@ class DelayTest {
 
   void SendCodec(const CodecConfig& config) {
     CodecInst my_codec_param;
-    ASSERT_EQ(0, AudioCodingModule::Codec(config.name, &my_codec_param,
-                                          config.sample_rate_hz,
-                                          config.num_channels));
+    ASSERT_EQ(
+        0,
+        AudioCodingModule::Codec(config.name, &my_codec_param,
+                                 config.sample_rate_hz, config.num_channels));
     encoding_sample_rate_hz_ = my_codec_param.plfreq;
     ASSERT_EQ(0, acm_a_->RegisterSendCodec(my_codec_param));
   }
@@ -174,11 +171,9 @@ class DelayTest {
 
   void OpenOutFile(const char* output_id) {
     std::stringstream file_stream;
-    file_stream << "delay_test_" << FLAGS_codec << "_"
-        << FLAGS_sample_rate_hz << "Hz" << "_"
-        << FLAGS_init_delay << "ms_"
-        << FLAGS_delay << "ms.pcm";
-    std::cout << "Output file: " << file_stream.str() << std::endl <<std::endl;
+    file_stream << "delay_test_" << FLAGS_codec << "_" << FLAGS_sample_rate_hz
+        << "Hz" << "_" << FLAGS_init_delay << "ms_" << FLAGS_delay << "ms.pcm";
+    std::cout << "Output file: " << file_stream.str() << std::endl << std::endl;
     std::string file_name = webrtc::test::OutputPath() + file_stream.str();
     out_file_b_.Open(file_name.c_str(), 32000, "wb");
   }
@@ -194,7 +189,7 @@ class DelayTest {
     uint32_t received_ts;
     double average_delay = 0;
     double inst_delay_sec = 0;
-    while(num_frames < (duration_sec * 100)) {
+    while (num_frames < (duration_sec * 100)) {
       if (in_file_a_.EndOfFile()) {
         in_file_a_.Rewind();
       }
@@ -206,27 +201,24 @@ class DelayTest {
         fprintf(stdout, "delay: min=%3d  max=%3d  mean=%3d  median=%3d"
                 " ts-based average = %6.3f, "
                 "curr buff-lev = %4u opt buff-lev = %4u \n",
-                statistics.minWaitingTimeMs,
-                statistics.maxWaitingTimeMs,
-                statistics.meanWaitingTimeMs,
-                statistics.medianWaitingTimeMs,
-                average_delay,
-                statistics.currentBufferSize,
+                statistics.minWaitingTimeMs, statistics.maxWaitingTimeMs,
+                statistics.meanWaitingTimeMs, statistics.medianWaitingTimeMs,
+                average_delay, statistics.currentBufferSize,
                 statistics.preferredBufferSize);
-        fflush(stdout);
+        fflush (stdout);
       }
 
       in_file_a_.Read10MsData(audio_frame);
       ASSERT_EQ(0, acm_a_->Add10MsData(audio_frame));
       ASSERT_LE(0, acm_a_->Process());
       ASSERT_EQ(0, acm_b_->PlayoutData10Ms(out_freq_hz_b, &audio_frame));
-      out_file_b_.Write10MsData(audio_frame.data_,
-                                audio_frame.samples_per_channel_ *
-                                audio_frame.num_channels_);
+      out_file_b_.Write10MsData(
+          audio_frame.data_,
+          audio_frame.samples_per_channel_ * audio_frame.num_channels_);
       acm_b_->PlayoutTimestamp(&playout_ts);
       received_ts = channel_a2b_->LastInTimestamp();
-      inst_delay_sec = static_cast<uint32_t>(received_ts - playout_ts) /
-          static_cast<double>(encoding_sample_rate_hz_);
+      inst_delay_sec = static_cast<uint32_t>(received_ts - playout_ts)
+          / static_cast<double>(encoding_sample_rate_hz_);
 
       if (num_frames > 10)
         average_delay = 0.95 * average_delay + 0.05 * inst_delay_sec;
@@ -248,13 +240,8 @@ class DelayTest {
   int encoding_sample_rate_hz_;
 };
 
-} // namespace webrtc
-
-int main(int argc, char* argv[]) {
-
-  google::ParseCommandLineFlags(&argc, &argv, true);
-
-  webrtc::Config config;
+void RunTest() {
+  Config config;
   strcpy(config.codec.name, FLAGS_codec.c_str());
   config.codec.sample_rate_hz = FLAGS_sample_rate_hz;
   config.codec.num_channels = FLAGS_num_channels;
@@ -262,8 +249,16 @@ int main(int argc, char* argv[]) {
   config.acm.fec = false;
   config.packet_loss = false;
 
-  webrtc::DelayTest delay_test;
+  DelayTest delay_test;
   delay_test.SetUp();
   delay_test.Perform(&config, 1, 240, "delay_test");
   delay_test.TearDown();
+}
+}  // namespace
+}  // namespace webrtc
+
+int main(int argc, char* argv[]) {
+  using namespace webrtc;
+  google::ParseCommandLineFlags(&argc, &argv, true);
+  RunTest();
 }

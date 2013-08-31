@@ -58,19 +58,6 @@ ifdef MOZ_ENABLE_DBUS
 LOCAL_INCLUDES   += $(TK_CFLAGS) $(MOZ_DBUS_CFLAGS)
 endif
 
-ifdef MOZ_ENABLE_MEEGOTOUCHSHARE
-LOCAL_INCLUDES   += $(MOZ_PLATFORM_MAEMO_CFLAGS)
-endif
-
-ifeq ($(MOZ_PLATFORM_MAEMO),5)
-ifdef MOZ_ENABLE_GNOMEVFS
-LOCAL_INCLUDES   += $(MOZ_GNOMEVFS_CFLAGS)
-endif
-ifdef MOZ_ENABLE_GIO
-LOCAL_INCLUDES   += $(MOZ_GIO_CFLAGS)
-endif
-endif
-
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

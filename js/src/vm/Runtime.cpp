@@ -109,6 +109,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
 #endif
 #endif
 #ifdef JS_WORKER_THREADS
+    workerThreadState(NULL),
     exclusiveAccessLock(NULL),
     exclusiveAccessOwner(NULL),
     mainThreadHasExclusiveAccess(false),
@@ -235,9 +236,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcLock(NULL),
     gcHelperThread(thisFromCtor()),
     signalHandlersInstalled_(false),
-#ifdef JS_WORKER_THREADS
-    workerThreadState(NULL),
-#endif
     defaultFreeOp_(thisFromCtor(), false),
     debuggerMutations(0),
     securityCallbacks(const_cast<JSSecurityCallbacks *>(&NullSecurityCallbacks)),

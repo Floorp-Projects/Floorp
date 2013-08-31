@@ -17,30 +17,27 @@
 #include "testsupport/fileutils.h"
 #include "typedefs.h"
 
-
 namespace webrtc {
 
-class DualStreamTest : public AudioPacketizationCallback,
-public ::testing::Test  {
+class DualStreamTest :
+    public AudioPacketizationCallback,
+    public ::testing::Test {
  protected:
   DualStreamTest();
   ~DualStreamTest();
 
   int32_t SendData(FrameType frameType, uint8_t payload_type,
-                   uint32_t timestamp,
-                   const uint8_t* payload_data,
+                   uint32_t timestamp, const uint8_t* payload_data,
                    uint16_t payload_size,
                    const RTPFragmentationHeader* fragmentation);
 
   void Perform(bool start_in_sync, int num_channels_input);
 
   void InitializeSender(int frame_size_primary_samples,
-                        int num_channels_primary,
-                        int sampling_rate);
+                        int num_channels_primary, int sampling_rate);
 
   void PopulateCodecInstances(int frame_size_primary_ms,
-                              int num_channels_primary,
-                              int sampling_rate);
+                              int num_channels_primary, int sampling_rate);
 
   void Validate(bool start_in_sync, int tolerance);
   bool EqualTimestamp(int stream, int position);
@@ -49,7 +46,11 @@ public ::testing::Test  {
 
   static const int kMaxNumStoredPayloads = 2;
 
-  enum {kPrimary = 0, kSecondary, kMaxNumStreams};
+  enum {
+    kPrimary = 0,
+    kSecondary,
+    kMaxNumStreams
+  };
 
   AudioCodingModule* acm_dual_stream_;
   AudioCodingModule* acm_ref_primary_;
@@ -69,10 +70,10 @@ public ::testing::Test  {
   int payload_len_ref_[kMaxNumStreams][kMaxNumStoredPayloads];
   int payload_len_dual_[kMaxNumStreams][kMaxNumStoredPayloads];
 
-  uint8_t payload_data_ref_[kMaxNumStreams]
-                            [MAX_PAYLOAD_SIZE_BYTE * kMaxNumStoredPayloads];
-  uint8_t payload_data_dual_[kMaxNumStreams]
-                             [MAX_PAYLOAD_SIZE_BYTE * kMaxNumStoredPayloads];
+  uint8_t payload_data_ref_[kMaxNumStreams][MAX_PAYLOAD_SIZE_BYTE
+      * kMaxNumStoredPayloads];
+  uint8_t payload_data_dual_[kMaxNumStreams][MAX_PAYLOAD_SIZE_BYTE
+      * kMaxNumStoredPayloads];
   int num_received_payloads_dual_[kMaxNumStreams];
   int num_received_payloads_ref_[kMaxNumStreams];
 
@@ -92,7 +93,8 @@ DualStreamTest::DualStreamTest()
       num_received_payloads_ref_(),
       num_compared_payloads_(),
       last_timestamp_(),
-      received_payload_() {}
+      received_payload_() {
+}
 
 DualStreamTest::~DualStreamTest() {
   AudioCodingModule::Destroy(acm_dual_stream_);
@@ -112,17 +114,17 @@ void DualStreamTest::PopulateCodecInstances(int frame_size_primary_ms,
 
   for (int n = 0; n < AudioCodingModule::NumberOfCodecs(); n++) {
     AudioCodingModule::Codec(n, &my_codec);
-    if (strcmp(my_codec.plname, "ISAC") == 0 &&
-        my_codec.plfreq == sampling_rate) {
+    if (strcmp(my_codec.plname, "ISAC") == 0
+        && my_codec.plfreq == sampling_rate) {
       my_codec.rate = 32000;
       my_codec.pacsize = 30 * sampling_rate / 1000;
       memcpy(&secondary_encoder_, &my_codec, sizeof(my_codec));
-    } else if (strcmp(my_codec.plname, "L16") == 0 &&
-        my_codec.channels == num_channels_primary &&
-        my_codec.plfreq == sampling_rate) {
+    } else if (strcmp(my_codec.plname, "L16") == 0
+        && my_codec.channels == num_channels_primary
+        && my_codec.plfreq == sampling_rate) {
       my_codec.pacsize = frame_size_primary_ms * sampling_rate / 1000;
       memcpy(&primary_encoder_, &my_codec, sizeof(my_codec));
-    } else if (strcmp(my_codec.plname, "red") == 0)  {
+    } else if (strcmp(my_codec.plname, "red") == 0) {
       memcpy(&red_encoder_, &my_codec, sizeof(my_codec));
     }
   }
@@ -160,15 +162,16 @@ void DualStreamTest::InitializeSender(int frame_size_primary_samples,
 void DualStreamTest::Perform(bool start_in_sync, int num_channels_input) {
   PCMFile pcm_file;
   std::string file_name = test::ResourcePath(
-      (num_channels_input == 1) ? "audio_coding/testfile32kHz" :
-          "audio_coding/teststereo32kHz", "pcm");
+      (num_channels_input == 1) ?
+          "audio_coding/testfile32kHz" : "audio_coding/teststereo32kHz",
+      "pcm");
   pcm_file.Open(file_name, 32000, "rb");
   pcm_file.ReadStereo(num_channels_input == 2);
   AudioFrame audio_frame;
 
   int tolerance = 0;
-  if (num_channels_input == 2 && primary_encoder_.channels == 2 &&
-      secondary_encoder_.channels == 1) {
+  if (num_channels_input == 2 && primary_encoder_.channels == 2
+      && secondary_encoder_.channels == 1) {
     tolerance = 12;
   }
 
@@ -215,10 +218,11 @@ void DualStreamTest::Perform(bool start_in_sync, int num_channels_input) {
   // later and the input file may end before the "next" payload .
   EXPECT_EQ(num_received_payloads_ref_[kPrimary],
             num_received_payloads_dual_[kPrimary]);
-  EXPECT_TRUE(num_received_payloads_ref_[kSecondary] ==
-      num_received_payloads_dual_[kSecondary] ||
-      num_received_payloads_ref_[kSecondary] ==
-          (num_received_payloads_dual_[kSecondary] + 1));
+  EXPECT_TRUE(
+      num_received_payloads_ref_[kSecondary]
+          == num_received_payloads_dual_[kSecondary]
+          || num_received_payloads_ref_[kSecondary]
+              == (num_received_payloads_dual_[kSecondary] + 1));
 
   // Make sure all received payloads are compared.
   if (start_in_sync) {
@@ -237,25 +241,27 @@ void DualStreamTest::Perform(bool start_in_sync, int num_channels_input) {
 }
 
 bool DualStreamTest::EqualTimestamp(int stream_index, int position) {
-  if (timestamp_dual_[stream_index][position] !=
-      timestamp_ref_[stream_index][position]) {
+  if (timestamp_dual_[stream_index][position]
+      != timestamp_ref_[stream_index][position]) {
     return false;
   }
   return true;
 }
 
 int DualStreamTest::EqualPayloadLength(int stream_index, int position) {
-  return abs(payload_len_dual_[stream_index][position] -
-             payload_len_ref_[stream_index][position]);
+  return abs(
+      payload_len_dual_[stream_index][position]
+          - payload_len_ref_[stream_index][position]);
 }
 
 bool DualStreamTest::EqualPayloadData(int stream_index, int position) {
-  assert(payload_len_dual_[stream_index][position] ==
-      payload_len_ref_[stream_index][position]);
+  assert(
+      payload_len_dual_[stream_index][position]
+          == payload_len_ref_[stream_index][position]);
   int offset = position * MAX_PAYLOAD_SIZE_BYTE;
   for (int n = 0; n < payload_len_dual_[stream_index][position]; n++) {
-    if (payload_data_dual_[stream_index][offset + n] !=
-        payload_data_ref_[stream_index][offset + n]) {
+    if (payload_data_dual_[stream_index][offset + n]
+        != payload_data_ref_[stream_index][offset + n]) {
       return false;
     }
   }
@@ -266,10 +272,10 @@ void DualStreamTest::Validate(bool start_in_sync, int tolerance) {
   for (int stream_index = 0; stream_index < kMaxNumStreams; stream_index++) {
     int my_tolerance = stream_index == kPrimary ? 0 : tolerance;
     for (int position = 0; position < kMaxNumStoredPayloads; position++) {
-      if (payload_ref_is_stored_[stream_index][position] == 1 &&
-          payload_dual_is_stored_[stream_index][position] == 1) {
+      if (payload_ref_is_stored_[stream_index][position] == 1
+          && payload_dual_is_stored_[stream_index][position] == 1) {
         // Check timestamps only if codecs started in sync or it is primary.
-        if (start_in_sync || stream_index  == 0)
+        if (start_in_sync || stream_index == 0)
           EXPECT_TRUE(EqualTimestamp(stream_index, position));
         EXPECT_LE(EqualPayloadLength(stream_index, position), my_tolerance);
         if (my_tolerance == 0)
@@ -282,10 +288,11 @@ void DualStreamTest::Validate(bool start_in_sync, int tolerance) {
   }
 }
 
-int32_t DualStreamTest::SendData(
-    FrameType frameType, uint8_t payload_type, uint32_t timestamp,
-    const uint8_t* payload_data, uint16_t payload_size,
-    const RTPFragmentationHeader* fragmentation) {
+int32_t DualStreamTest::SendData(FrameType frameType, uint8_t payload_type,
+                                 uint32_t timestamp,
+                                 const uint8_t* payload_data,
+                                 uint16_t payload_size,
+                                 const RTPFragmentationHeader* fragmentation) {
   int position;
   int stream_index;
 
@@ -297,12 +304,12 @@ int32_t DualStreamTest::SendData(
     // As the oldest payloads are in the higher indices of fragmentation,
     // to be able to check the increment of timestamps are correct we loop
     // backward.
-    for (int n = fragmentation->fragmentationVectorSize - 1; n >= 0 ; --n) {
+    for (int n = fragmentation->fragmentationVectorSize - 1; n >= 0; --n) {
       if (fragmentation->fragmentationPlType[n] == primary_encoder_.pltype) {
         // Received primary payload from dual stream.
         stream_index = kPrimary;
-      } else if (fragmentation->fragmentationPlType[n] ==
-          secondary_encoder_.pltype) {
+      } else if (fragmentation->fragmentationPlType[n]
+          == secondary_encoder_.pltype) {
         // Received secondary payload from dual stream.
         stream_index = kSecondary;
       } else {
@@ -318,10 +325,10 @@ int32_t DualStreamTest::SendData(
         assert(false);
         return -1;
       }
-      timestamp_dual_[stream_index][position] = timestamp -
-          fragmentation->fragmentationTimeDiff[n];
-      payload_len_dual_[stream_index][position] =
-          fragmentation->fragmentationLength[n];
+      timestamp_dual_[stream_index][position] = timestamp
+          - fragmentation->fragmentationTimeDiff[n];
+      payload_len_dual_[stream_index][position] = fragmentation
+          ->fragmentationLength[n];
       memcpy(
           &payload_data_dual_[stream_index][position * MAX_PAYLOAD_SIZE_BYTE],
           &payload_data[fragmentation->fragmentationOffset[n]],
@@ -329,8 +336,8 @@ int32_t DualStreamTest::SendData(
       payload_dual_is_stored_[stream_index][position] = 1;
       // Check if timestamps are incremented correctly.
       if (received_payload_[stream_index]) {
-        int t = timestamp_dual_[stream_index][position] -
-            last_timestamp_[stream_index];
+        int t = timestamp_dual_[stream_index][position]
+            - last_timestamp_[stream_index];
         if ((stream_index == kPrimary) && (t != primary_encoder_.pacsize)) {
           assert(false);
           return -1;
@@ -460,7 +467,6 @@ TEST_F(DualStreamTest, BitExactAsyncMonoInputMonoPrimaryWb40Ms) {
   Perform(false, 1);
 }
 
-
 TEST_F(DualStreamTest, Api) {
   PopulateCodecInstances(20, 1, 16000);
   CodecInst my_codec;
@@ -469,7 +475,7 @@ TEST_F(DualStreamTest, Api) {
 
   // Not allowed to register secondary codec if primary is not registered yet.
   ASSERT_EQ(-1,
-            acm_dual_stream_->RegisterSecondarySendCodec(secondary_encoder_));
+      acm_dual_stream_->RegisterSecondarySendCodec(secondary_encoder_));
   ASSERT_EQ(-1, acm_dual_stream_->SecondarySendCodec(&my_codec));
 
   ASSERT_EQ(0, acm_dual_stream_->RegisterSendCodec(primary_encoder_));
@@ -486,7 +492,7 @@ TEST_F(DualStreamTest, Api) {
   EXPECT_EQ(VADNormal, vad_mode);
 
   ASSERT_EQ(0,
-            acm_dual_stream_->RegisterSecondarySendCodec(secondary_encoder_));
+      acm_dual_stream_->RegisterSecondarySendCodec(secondary_encoder_));
 
   ASSERT_EQ(0, acm_dual_stream_->SecondarySendCodec(&my_codec));
   ASSERT_EQ(0, memcmp(&my_codec, &secondary_encoder_, sizeof(my_codec)));
@@ -512,4 +518,5 @@ TEST_F(DualStreamTest, Api) {
   EXPECT_EQ(VADVeryAggr, vad_mode);
 }
 
-}  // namespace webrtc
+}
+  // namespace webrtc

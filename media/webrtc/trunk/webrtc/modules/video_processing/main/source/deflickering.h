@@ -15,8 +15,8 @@
 #ifndef VPM_DEFLICKERING_H
 #define VPM_DEFLICKERING_H
 
-#include "typedefs.h"
-#include "video_processing.h"
+#include "webrtc/modules/video_processing/main/interface/video_processing.h"
+#include "webrtc/typedefs.h"
 
 #include <cstring>  // NULL
 
@@ -63,4 +63,3 @@ private:
 } //namespace
 
 #endif // VPM_DEFLICKERING_H
-

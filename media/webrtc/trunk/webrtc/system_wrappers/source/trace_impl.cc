@@ -414,6 +414,14 @@ void TraceImpl::AddMessageToList(
     const char trace_message[WEBRTC_TRACE_MAX_MESSAGE_SIZE],
     const uint16_t length,
     const TraceLevel level) {
+// NOTE(andresp): Enabled externally.
+#ifdef WEBRTC_DIRECT_TRACE
+  if (callback_) {
+    callback_->Print(level, trace_message, length);
+  }
+  return;
+#endif
+
   CriticalSectionScoped lock(critsect_array_);
 
   if (next_free_idx_[active_queue_] >= WEBRTC_TRACE_MAX_QUEUE) {

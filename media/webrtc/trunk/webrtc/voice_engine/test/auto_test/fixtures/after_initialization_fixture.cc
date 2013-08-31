@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "after_initialization_fixture.h"
+#include "webrtc/voice_engine/test/auto_test/fixtures/after_initialization_fixture.h"
 
 class TestErrorObserver : public webrtc::VoiceEngineObserver {
  public:
   TestErrorObserver() {}
   virtual ~TestErrorObserver() {}
-  void CallbackOnError(const int channel, const int error_code) {
+  void CallbackOnError(int channel, int error_code) {
     ADD_FAILURE() << "Unexpected error on channel " << channel <<
         ": error code " << error_code;
   }

@@ -130,18 +130,6 @@ class ACMNetEQ {
                                int16_t num_codecs);
 
   //
-  // SetExtraDelay()
-  // Sets a |delay_in_ms| milliseconds extra delay in NetEQ.
-  //
-  // Input:
-  //   - delay_in_ms          : Extra delay in milliseconds.
-  //
-  // Return value             : 0 if ok.
-  //                           <0 if NetEQ returned an error.
-  //
-  int32_t SetExtraDelay(const int32_t delay_in_ms);
-
-  //
   // SetAVTPlayout()
   // Enable/disable playout of AVT payloads.
   //
@@ -301,6 +289,25 @@ class ACMNetEQ {
   //
   void EnableAVSync(bool enable);
 
+  //
+  // Get sequence number and timestamp of the last decoded RTP.
+  //
+  bool DecodedRtpInfo(int* sequence_number, uint32_t* timestamp) const;
+
+  //
+  // Set a minimum delay in NetEq. Unless channel condition dictates a longer
+  // delay, the given delay is maintained by NetEq.
+  //
+  int SetMinimumDelay(int minimum_delay_ms);
+
+  //
+  // The shortest latency, in milliseconds, required by jitter buffer. This
+  // is computed based on inter-arrival times and playout mode of NetEq. The
+  // actual delay is the maximum of least-required-delay and the minimum-delay
+  // specified by SetMinumumPlayoutDelay() API.
+  //
+  int LeastRequiredDelayMs() const ;
+
  private:
   //
   // RTPPack()
@@ -365,7 +372,6 @@ class ACMNetEQ {
   bool received_stereo_;
   void* master_slave_info_;
   AudioFrame::VADActivity previous_audio_activity_;
-  int32_t extra_delay_;
 
   CriticalSectionWrapper* callback_crit_sect_;
   // Minimum of "max number of packets," among all NetEq instances.
@@ -376,6 +382,8 @@ class ACMNetEQ {
 
   // Keep track of AV-sync. Just used to set the slave when a slave is added.
   bool av_sync_;
+
+  int minimum_delay_ms_;
 };
 
 }  // namespace webrtc

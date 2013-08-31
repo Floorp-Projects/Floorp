@@ -19,12 +19,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "aec_rdft.h"
+#include "webrtc/modules/audio_processing/aec/aec_rdft.h"
 
 #include <math.h>
 
-#include "system_wrappers/interface/cpu_features_wrapper.h"
-#include "typedefs.h"
+#include "webrtc/system_wrappers/interface/cpu_features_wrapper.h"
+#include "webrtc/typedefs.h"
 
 // constants shared by all paths (C, SSE2).
 float rdft_w[64];

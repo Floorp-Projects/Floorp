@@ -10,8 +10,8 @@
 
 #include <ctime>
 
-#include "test/libtest/include/bit_flip_encryption.h"
-#include "voice_engine/test/auto_test/fixtures/after_streaming_fixture.h"
+#include "webrtc/test/libtest/include/bit_flip_encryption.h"
+#include "webrtc/voice_engine/test/auto_test/fixtures/after_streaming_fixture.h"
 
 class RtpFuzzTest : public AfterStreamingFixture {
  protected:

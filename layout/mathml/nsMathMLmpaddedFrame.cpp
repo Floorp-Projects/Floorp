@@ -4,14 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-#include "nsCOMPtr.h"
-#include "nsCRT.h"  // to get NS_IS_SPACE
-#include "nsFrame.h"
-#include "nsPresContext.h"
-#include "nsStyleContext.h"
-#include "nsStyleConsts.h"
-
 #include "nsMathMLmpaddedFrame.h"
+#include "nsMathMLElement.h"
 #include <algorithm>
 
 //

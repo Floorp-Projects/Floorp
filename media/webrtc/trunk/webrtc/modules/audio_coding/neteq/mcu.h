@@ -99,6 +99,9 @@ typedef struct
     int usingStereo;
 #endif
 
+    /* The sequence number of the latest decoded RTP payload. */
+    int decoded_packet_sequence_number;
+    uint32_t decoded_packet_timestamp;
 } MCUInst_t;
 
 /****************************************************************************

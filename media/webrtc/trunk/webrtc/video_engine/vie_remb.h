@@ -15,10 +15,10 @@
 #include <utility>
 #include <vector>
 
-#include "modules/interface/module.h"
-#include "modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
-#include "modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
-#include "system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/modules/interface/module.h"
+#include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -51,7 +51,7 @@ class VieRemb : public RemoteBitrateObserver {
   // estimate has decreased or if no RTCP REMB packet has been sent for
   // a certain time interval.
   // Implements RtpReceiveBitrateUpdate.
-  virtual void OnReceiveBitrateChanged(std::vector<unsigned int>* ssrcs,
+  virtual void OnReceiveBitrateChanged(const std::vector<unsigned int>& ssrcs,
                                        unsigned int bitrate);
 
  private:
@@ -71,7 +71,6 @@ class VieRemb : public RemoteBitrateObserver {
 
   // The last bitrate update.
   unsigned int bitrate_;
-  std::vector<unsigned int> ssrcs_;
 };
 
 }  // namespace webrtc

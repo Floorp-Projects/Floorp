@@ -20,10 +20,10 @@
 // This is done differently in the Winsock2 code, but that code
 // will also hang if the destructor is called directly.
 
-#include "gtest/gtest.h"
-#include "gmock/gmock.h"
-#include "webrtc/test/channel_transport/udp_socket_wrapper.h"
+#include "testing/gmock/include/gmock/gmock.h"
+#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/test/channel_transport/udp_socket_manager_wrapper.h"
+#include "webrtc/test/channel_transport/udp_socket_wrapper.h"
 
 using ::testing::_;
 using ::testing::Return;
