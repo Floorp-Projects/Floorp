@@ -80,6 +80,7 @@ var interfaceNamesInGlobalScope =
     "Attr",
     "Audio",
     "AudioBuffer",
+    {name: "AudioChannelManager", b2g: true},
     "AudioContext",
     "AudioBufferSourceNode",
     "AudioDestinationNode",
@@ -94,8 +95,14 @@ var interfaceNamesInGlobalScope =
     "BiquadFilterNode",
     "Blob",
     "BlobEvent",
+    {name: "BluetoothAdapter", b2g: true},
+    {name: "BluetoothDevice", b2g: true},
+    {name: "BluetoothDeviceEvent", b2g: true},
+    {name: "BluetoothManager", b2g: true},
+    {name: "BluetoothStatusChangedEvent", b2g: true},
     {name: "BoxObject", xbl: true},
-    {name: "BrowserFeedWriter", android: false},
+    {name: "BrowserFeedWriter", desktop: true},
+    {name: "CallEvent", b2g: true},
     "CameraCapabilities",
     "CameraControl",
     "CameraManager",
@@ -104,6 +111,7 @@ var interfaceNamesInGlobalScope =
     "CanvasRenderingContext2D",
     "CaretPosition",
     "CDATASection",
+    {name: "CFStateChangeEvent", b2g: true},
     "ChannelMergerNode",
     "ChannelSplitterNode",
     "CharacterData",
@@ -117,7 +125,7 @@ var interfaceNamesInGlobalScope =
     "CompositionEvent",
     "Controllers",
     "ConvolverNode",
-    {name: "CRMFObject", android: false},
+    {name: "CRMFObject", desktop: true},
     "Crypto",
     "CSS",
     "CSS2Properties",
@@ -144,6 +152,7 @@ var interfaceNamesInGlobalScope =
     "CustomEvent",
     "DataChannel",
     "DataContainerEvent",
+    {name: "DataErrorEvent", b2g: true},
     "DataTransfer",
     "DelayNode",
     "DesktopNotification",
@@ -185,13 +194,14 @@ var interfaceNamesInGlobalScope =
     "FileList",
     "FileReader",
     "FileRequest",
+    {name: "FMRadio", b2g: true},
     "FocusEvent",
     "FormData",
     "GainNode",
-    {name: "Gamepad", android: false},
-    {name: "GamepadAxisMoveEvent", android: false},
-    {name: "GamepadButtonEvent", android: false},
-    {name: "GamepadEvent", android: false},
+    {name: "Gamepad", desktop: true},
+    {name: "GamepadAxisMoveEvent", desktop: true},
+    {name: "GamepadButtonEvent", desktop: true},
+    {name: "GamepadEvent", desktop: true},
     "HashChangeEvent",
     "History",
     "HTMLAnchorElement",
@@ -265,6 +275,7 @@ var interfaceNamesInGlobalScope =
     "HTMLUListElement",
     "HTMLUnknownElement",
     "HTMLVideoElement",
+    {name: "IccCardLockErrorEvent", b2g: true},
     "IDBCursor",
     "IDBCursorWithValue",
     "IDBDatabase",
@@ -279,7 +290,7 @@ var interfaceNamesInGlobalScope =
     "IDBVersionChangeEvent",
     "Image",
     "ImageData",
-    {name: "InstallTrigger", xbl: false},
+    {name: "InstallTrigger", b2g: false, xbl: false},
     "KeyEvent",
     "KeyboardEvent",
     "LoadStatus",
@@ -302,18 +313,28 @@ var interfaceNamesInGlobalScope =
     "ModalContentWindow",
     "MouseEvent",
     "MouseScrollEvent",
+    {name: "MozActivity", b2g: true},
     "MozApplicationEvent",
     "MozCanvasPrintState",
+    {name: "MozCellBroadcast", b2g: true},
+    {name: "MozCellBroadcastEvent", b2g: true},
     "MozConnection",
     "mozContact",
     "MozContactChangeEvent",
     "MozCSSKeyframeRule",
     "MozCSSKeyframesRule",
+    {name: "MozEmergencyCbModeEvent", b2g: true},
+    {name: "MozIccManager", b2g: true},
+    {name: "MozInputContext", b2g: true},
+    {name: "MozInputMethod", b2g: true},
+    {name: "MozInputMethodManager", b2g: true},
     "MozMmsEvent",
     "MozMmsMessage",
+    {name: "MozMobileConnection", b2g: true},
     "MozMobileMessageManager",
     "MozMobileMessageThread",
     "MozNamedAttrMap",
+    {name: "MozOtaStatusEvent", b2g: true},
     "MozPowerManager",
     "mozRTCIceCandidate",
     "mozRTCPeerConnection",
@@ -323,7 +344,13 @@ var interfaceNamesInGlobalScope =
     "MozSmsFilter",
     "MozSmsMessage",
     "MozSmsSegmentInfo",
+    {name: "MozStkCommandEvent", b2g: true},
+    {name: "MozTimeManager", b2g: true},
+    {name: "MozVoicemail", b2g: true},
+    {name: "MozVoicemailEvent", b2g: true},
     "MozWakeLock",
+    {name: "MozWifiConnectionInfoEvent", b2g: true},
+    {name: "MozWifiStatusChangeEvent", b2g: true},
     "MutationEvent",
     "MutationObserver",
     "MutationRecord",
@@ -355,8 +382,8 @@ var interfaceNamesInGlobalScope =
     "PopupBlockedEvent",
     "ProcessingInstruction",
     "ProgressEvent",
-    {name: "Promise", release: false},
-    {name: "PromiseResolver", release: false},
+    {name: "Promise", b2g: false, release: false},
+    {name: "PromiseResolver", b2g: false, release: false},
     "PropertyNodeList",
     "Range",
     "RecordErrorEvent",
@@ -504,6 +531,9 @@ var interfaceNamesInGlobalScope =
     "SVGViewElement",
     "SVGZoomAndPan",
     "SVGZoomEvent",
+    {name: "Telephony", b2g: true},
+    {name: "TelephonyCall", b2g: true},
+    {name: "TelephonyCallGroup", b2g: true},
     "Text",
     "TextDecoder",
     "TextEncoder",
@@ -524,6 +554,7 @@ var interfaceNamesInGlobalScope =
     "URL",
     {name: "UserDataHandler", xbl: true},
     "UserProximityEvent",
+    {name: "USSDReceivedEvent", b2g: true},
     "ValidityState",
     "VideoStreamTrack",
     "WaveShaperNode",
@@ -572,7 +603,8 @@ function createInterfaceMap(isXBLScope) {
   var version = SpecialPowers.Cc["@mozilla.org/xre/app-info;1"].getService(SpecialPowers.Ci.nsIXULAppInfo).version;
   var isNightly = version.endsWith("a1");
   var isRelease = !version.contains("a");
-  var isAndroid = navigator.userAgent.indexOf("Android") >= 0;
+  var isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
+  var isB2G = !isDesktop && !navigator.userAgent.contains("Android");
   var interfaceMap = {};
   for (var entry of ecmaGlobals) {
     if (typeof(entry) === "string") {
@@ -587,12 +619,13 @@ function createInterfaceMap(isXBLScope) {
   for (var entry of interfaceNamesInGlobalScope) {
     if (typeof(entry) === "string") {
       interfaceMap[entry] = true;
-    } else if (entry.xbl === isXBLScope ||
-               entry.android === isAndroid ||
-               entry.release === isRelease) {
-      interfaceMap[entry.name] = true;
-    } else {
+    } else if (entry.xbl === !isXBLScope ||
+               entry.desktop === !isDesktop ||
+               entry.b2g === !isB2G ||
+               entry.release === !isRelease) {
       interfaceMap[entry.name] = false;
+    } else {
+      interfaceMap[entry.name] = true;
     }
   }
   return interfaceMap;
