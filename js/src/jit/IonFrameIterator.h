@@ -143,7 +143,7 @@ class IonFrameIterator
         return type_ == IonFrame_BaselineStub;
     }
     bool isNative() const;
-    bool isOOLNativeGetter() const;
+    bool isOOLNative() const;
     bool isOOLPropertyOp() const;
     bool isOOLProxyGet() const;
     bool isDOMExit() const;
