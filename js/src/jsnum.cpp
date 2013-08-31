@@ -85,6 +85,8 @@ ComputeAccurateDecimalInteger(ThreadSafeContext *cx,
     return true;
 }
 
+namespace {
+
 class BinaryDigitReader
 {
     const int base;      /* Base of number; must be a power of 2 */
@@ -121,6 +123,8 @@ class BinaryDigitReader
         return bit;
     }
 };
+
+} /* anonymous namespace */
 
 /*
  * The fast result might also have been inaccurate for power-of-two bases. This
