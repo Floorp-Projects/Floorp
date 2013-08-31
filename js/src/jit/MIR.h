@@ -480,6 +480,13 @@ class MDefinition : public MNode
     // (only counting MDefinitions, ignoring MResumePoints)
     size_t defUseCount() const;
 
+    // Test whether this MDefinition has exactly one use.
+    bool hasOneUse() const;
+
+    // Test whether this MDefinition has exactly one use.
+    // (only counting MDefinitions, ignoring MResumePoints)
+    bool hasOneDefUse() const;
+
     bool hasUses() const {
         return !uses_.empty();
     }
@@ -3946,11 +3953,9 @@ class MBeta : public MUnaryInstruction
 {
   private:
     const Range *comparison_;
-    MDefinition *val_;
     MBeta(MDefinition *val, const Range *comp)
         : MUnaryInstruction(val),
-          comparison_(comp),
-          val_(val)
+          comparison_(comp)
     {
         setResultType(val->type());
         setResultTypeSet(val->resultTypeSet());

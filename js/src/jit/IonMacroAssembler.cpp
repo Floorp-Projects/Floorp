@@ -1012,7 +1012,8 @@ MacroAssembler::loadBaselineOrIonNoArgCheck(Register script, Register dest, Exec
 void
 MacroAssembler::loadBaselineFramePtr(Register framePtr, Register dest)
 {
-    movePtr(framePtr, dest);
+    if (framePtr != dest)
+        movePtr(framePtr, dest);
     subPtr(Imm32(BaselineFrame::Size()), dest);
 }
 

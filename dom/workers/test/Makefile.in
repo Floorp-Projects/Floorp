@@ -93,6 +93,7 @@ MOCHITEST_FILES = \
   test_xhr_parameters.js \
   test_xhr_system.html \
   test_xhr_system.js \
+  test_xhr_timeout.html \
   test_blobConstructor.html \
   test_csp.html \
   test_csp.js \
@@ -107,9 +108,6 @@ MOCHITEST_FILES = \
   test_url.html \
   url_worker.js \
   $(NULL)
-
-# Disabled for frequent failures (bug 841505, bug 842344, etc)
-#  test_xhr_timeout.html \
 
 MOCHITEST_CHROME_FILES = \
   test_chromeWorker.xul \

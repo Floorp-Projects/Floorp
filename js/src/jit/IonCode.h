@@ -586,10 +586,8 @@ struct IonBlockCounts
     }
 
     void destroy() {
-        if (successors_)
-            js_free(successors_);
-        if (code_)
-            js_free(code_);
+        js_free(successors_);
+        js_free(code_);
     }
 
     uint32_t id() const {
@@ -673,8 +671,7 @@ struct IonScriptCounts
         for (size_t i = 0; i < numBlocks_; i++)
             blocks_[i].destroy();
         js_free(blocks_);
-        if (previous_)
-            js_delete(previous_);
+        js_delete(previous_);
     }
 
     bool init(size_t numBlocks) {

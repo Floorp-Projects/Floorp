@@ -11,6 +11,7 @@
 
 .text-link {
   color: #fff !important;
+  text-decoration: underline;
 }
 
 .text-link:-moz-focusring {

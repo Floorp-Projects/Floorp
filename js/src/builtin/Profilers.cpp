@@ -213,8 +213,7 @@ struct RequiredStringArg {
         return (void*) mBytes;
     }
     ~RequiredStringArg() {
-        if (mBytes)
-            js_free(mBytes);
+        js_free(mBytes);
     }
 };
 
