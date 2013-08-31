@@ -19,8 +19,10 @@
 using namespace js;
 using namespace js::jit;
 
+using mozilla::DoubleSignificandBits;
 using mozilla::FloorLog2;
 using mozilla::NegativeInfinity;
+using mozilla::SpecificNaN;
 
 namespace js {
 namespace jit {
@@ -421,9 +423,9 @@ CodeGeneratorX86Shared::visitAbsD(LAbsD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     JS_ASSERT(input == ToFloatRegister(ins->output()));
-    masm.xorpd(ScratchFloatReg, ScratchFloatReg);
-    masm.subsd(input, ScratchFloatReg); // negate the sign bit.
-    masm.andpd(ScratchFloatReg, input); // s & ~s
+    // Load a value which is all ones except for the sign bit.
+    masm.loadConstantDouble(SpecificNaN(0, DoubleSignificandBits), ScratchFloatReg);
+    masm.andpd(ScratchFloatReg, input);
     return true;
 }
 
