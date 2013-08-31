@@ -15,16 +15,13 @@
 #elif defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
 #include <sys/types.h>
 #include <sys/sysctl.h>
-#elif defined(WEBRTC_ANDROID)
-// Not implemented yet, might be possible to use Linux implementation
-#elif defined(WEBRTC_LINUX)
-#include <unistd.h>  // required for get_nprocs() with uClibc
-#include <sys/sysinfo.h>
+#elif defined(WEBRTC_LINUX) or defined(WEBRTC_ANDROID)
+#include <unistd.h>
 #else // defined(_SC_NPROCESSORS_ONLN)
 #include <unistd.h>
 #endif
 
-#include "system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 
@@ -40,7 +37,7 @@ uint32_t CpuInfo::DetectNumberOfCores() {
                  "Available number of cores:%d", number_of_cores_);
 
 #elif defined(WEBRTC_LINUX) && !defined(WEBRTC_ANDROID) && !defined(WEBRTC_GONK)
-    number_of_cores_ = get_nprocs();
+    number_of_cores_ = static_cast<uint32_t>(sysconf(_SC_NPROCESSORS_ONLN));
     WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, -1,
                  "Available number of cores:%d", number_of_cores_);
 

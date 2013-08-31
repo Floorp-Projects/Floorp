@@ -10,14 +10,14 @@
 #include "MediaConduitInterface.h"
 
 // Video Engine Includes
-#include "common_types.h"
-#include "video_engine/include/vie_base.h"
-#include "video_engine/include/vie_capture.h"
-#include "video_engine/include/vie_codec.h"
-#include "video_engine/include/vie_render.h"
-#include "video_engine/include/vie_network.h"
-#include "video_engine/include/vie_file.h"
-#include "video_engine/include/vie_rtp_rtcp.h"
+#include "webrtc/common_types.h"
+#include "webrtc/video_engine/include/vie_base.h"
+#include "webrtc/video_engine/include/vie_capture.h"
+#include "webrtc/video_engine/include/vie_codec.h"
+#include "webrtc/video_engine/include/vie_render.h"
+#include "webrtc/video_engine/include/vie_network.h"
+#include "webrtc/video_engine/include/vie_file.h"
+#include "webrtc/video_engine/include/vie_rtp_rtcp.h"
 
 /** This file hosts several structures identifying different aspects
  * of a RTP Session.

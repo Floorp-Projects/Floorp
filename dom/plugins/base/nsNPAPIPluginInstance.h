@@ -118,9 +118,6 @@ public:
   nsPluginInstanceOwner* GetOwner();
   void SetOwner(nsPluginInstanceOwner *aOwner);
   nsresult ShowStatus(const char* message);
-#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
-  nsresult HandleGUIEvent(const nsGUIEvent& anEvent, bool* handled);
-#endif
 
   nsNPAPIPlugin* GetPlugin();
 

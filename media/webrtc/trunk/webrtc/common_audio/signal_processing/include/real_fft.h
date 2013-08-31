@@ -11,7 +11,7 @@
 #ifndef WEBRTC_COMMON_AUDIO_SIGNAL_PROCESSING_INCLUDE_REAL_FFT_H_
 #define WEBRTC_COMMON_AUDIO_SIGNAL_PROCESSING_INCLUDE_REAL_FFT_H_
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
 struct RealFFT;
 

@@ -13,7 +13,6 @@
 #include "nsPresContext.h"
 #include "nsIDocShell.h"
 #include "nsIWebNavigation.h"
-#include "nsIHistoryEntry.h"
 #include "nsIURI.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsReadableUtils.h"

@@ -15,8 +15,8 @@
 #ifndef WEBRTC_VOICE_ENGINE_UTILITY_H
 #define WEBRTC_VOICE_ENGINE_UTILITY_H
 
-#include "typedefs.h"
-#include "voice_engine_defines.h"
+#include "webrtc/typedefs.h"
+#include "webrtc/voice_engine/voice_engine_defines.h"
 
 namespace webrtc
 {

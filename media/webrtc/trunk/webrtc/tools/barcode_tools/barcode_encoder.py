@@ -324,7 +324,7 @@ def _main():
   """The main function.
 
   A simple invocation will be:
-  ./tools/barcode_tools/barcode_encoder.py --barcode_height=32
+  ./webrtc/tools/barcode_tools/barcode_encoder.py --barcode_height=32
   --base_frame_width=352 --base_frame_height=288
   --base_yuv=<path_and_name_of_base_file>
   --output_yuv=<path and name_of_output_file>

@@ -14,16 +14,12 @@
 // This code is also used as sample code for ViE 3.0
 //
 
-#include <stdio.h>
 #include <fstream>
+#include <stdio.h>
 
 #include "webrtc/common_types.h"
 #include "webrtc/system_wrappers/interface/tick_util.h"
 #include "webrtc/test/channel_transport/include/channel_transport.h"
-#include "webrtc/video_engine/test/libvietest/include/tb_external_transport.h"
-#include "webrtc/voice_engine/include/voe_base.h"
-#include "webrtc/video_engine/test/auto_test/interface/vie_autotest_defines.h"
-#include "webrtc/video_engine/test/auto_test/interface/vie_autotest.h"
 #include "webrtc/video_engine/include/vie_base.h"
 #include "webrtc/video_engine/include/vie_capture.h"
 #include "webrtc/video_engine/include/vie_codec.h"
@@ -31,6 +27,10 @@
 #include "webrtc/video_engine/include/vie_network.h"
 #include "webrtc/video_engine/include/vie_render.h"
 #include "webrtc/video_engine/include/vie_rtp_rtcp.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest_defines.h"
+#include "webrtc/video_engine/test/libvietest/include/tb_external_transport.h"
+#include "webrtc/voice_engine/include/voe_base.h"
 #include "webrtc/voice_engine/include/voe_network.h"
 #include "webrtc/voice_engine/include/voe_rtp_rtcp.h"
 

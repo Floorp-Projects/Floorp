@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "common_video/interface/i420_video_frame.h"
+#include "webrtc/common_video/interface/i420_video_frame.h"
 
 #include <algorithm>  // swap
 

@@ -11,7 +11,7 @@
 #ifndef SRC_VIDEO_ENGINE_TEST_AUTO_TEST_HELPERS_RANDOM_ENCRYPTION_H_
 #define SRC_VIDEO_ENGINE_TEST_AUTO_TEST_HELPERS_RANDOM_ENCRYPTION_H_
 
-#include "common_types.h"
+#include "webrtc/common_types.h"
 
 // These algorithms attempt to create an uncrackable encryption
 // scheme by completely disregarding the input data.

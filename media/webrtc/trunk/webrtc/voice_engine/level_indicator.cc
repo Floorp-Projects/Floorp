@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "critical_section_wrapper.h"
-#include "level_indicator.h"
-#include "module_common_types.h"
-#include "signal_processing_library.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/voice_engine/level_indicator.h"
 
 namespace webrtc {
 

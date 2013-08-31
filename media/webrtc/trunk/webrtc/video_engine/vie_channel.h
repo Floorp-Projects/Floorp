@@ -32,21 +32,22 @@ namespace webrtc {
 
 class CallStatsObserver;
 class ChannelStatsObserver;
+class Config;
 class CriticalSectionWrapper;
 class Encryption;
 class PacedSender;
 class ProcessThread;
-class RtpRtcp;
 class RtcpRttObserver;
+class RtpRtcp;
 class ThreadWrapper;
-class VideoCodingModule;
-class VideoDecoder;
-class VideoRenderCallback;
 class ViEDecoderObserver;
 class ViEEffectFilter;
 class ViENetworkObserver;
 class ViERTCPObserver;
 class ViERTPObserver;
+class VideoCodingModule;
+class VideoDecoder;
+class VideoRenderCallback;
 class VoEVideoSync;
 
 class ViEChannel
@@ -64,6 +65,7 @@ class ViEChannel
   ViEChannel(int32_t channel_id,
              int32_t engine_id,
              uint32_t number_of_cores,
+             const Config& config,
              ProcessThread& module_process_thread,
              RtcpIntraFrameObserver* intra_frame_observer,
              RtcpBandwidthObserver* bandwidth_observer,
@@ -121,6 +123,9 @@ class ViEChannel
   bool EnableRemb(bool enable);
   int SetSendTimestampOffsetStatus(bool enable, int id);
   int SetReceiveTimestampOffsetStatus(bool enable, int id);
+  int SetSendAbsoluteSendTimeStatus(bool enable, int id);
+  int SetReceiveAbsoluteSendTimeStatus(bool enable, int id);
+  bool GetReceiveAbsoluteSendTimeStatus() const;
   void SetTransmissionSmoothingStatus(bool enable);
   int32_t EnableTMMBR(const bool enable);
   int32_t EnableKeyFrameRequestCallback(const bool enable);
@@ -380,6 +385,8 @@ class ViEChannel
   scoped_ptr<RtcpBandwidthObserver> bandwidth_observer_;
   bool rtp_packet_timeout_;
   int send_timestamp_extension_id_;
+  int absolute_send_time_extension_id_;
+  bool receive_absolute_send_time_enabled_;
   bool using_packet_spread_;
 
   Transport* external_transport_;

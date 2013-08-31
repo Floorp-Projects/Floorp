@@ -25,7 +25,7 @@
 #include "vm/ObjectImpl-inl.h"
 
 using mozilla::DebugOnly;
-using mozilla::Move;
+using mozilla::OldMove;
 using mozilla::MoveRef;
 using mozilla::PodEqual;
 
@@ -439,7 +439,7 @@ FindNotableStrings(ZoneStats &zStats)
             !zStats.notableStrings.growBy(1))
             continue;
 
-        zStats.notableStrings.back() = Move(NotableStringInfo(str, info));
+        zStats.notableStrings.back() = OldMove(NotableStringInfo(str, info));
 
         // We're moving this string from a non-notable to a notable bucket, so
         // subtract it out of the non-notable tallies.

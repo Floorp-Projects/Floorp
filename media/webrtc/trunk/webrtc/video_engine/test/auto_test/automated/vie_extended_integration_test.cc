@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/test/testsupport/gtest_disable.h"
 #include "webrtc/video_engine/test/auto_test/automated/legacy_fixture.h"
 #include "webrtc/video_engine/test/auto_test/interface/vie_autotest.h"
@@ -30,8 +30,15 @@ TEST_F(DISABLED_ON_MAC(ViEExtendedIntegrationTest),
   tests_->ViECaptureExtendedTest();
 }
 
+// Flaky on Windows: http://code.google.com/p/webrtc/issues/detail?id=1925
+// (in addition to being disabled on Mac due to webrtc:1268).
+#if defined(_WIN32)
+#define MAYBE_RunsCodecTestWithoutErrors DISABLED_RunsCodecTestWithoutErrors
+#else
+#define MAYBE_RunsCodecTestWithoutErrors RunsCodecTestWithoutErrors
+#endif
 TEST_F(DISABLED_ON_MAC(ViEExtendedIntegrationTest),
-       RunsCodecTestWithoutErrors) {
+       MAYBE_RunsCodecTestWithoutErrors) {
   tests_->ViECodecExtendedTest();
 }
 

@@ -7,7 +7,7 @@
 
 #include "VideoConduit.h"
 #include "AudioConduit.h"
-#include "video_engine/include/vie_errors.h"
+#include "webrtc/video_engine/include/vie_errors.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidJNIWrapper.h"
@@ -559,7 +559,7 @@ WebrtcVideoConduit::SelectSendResolution(unsigned short width,
 
     // Get current vie codec.
     webrtc::VideoCodec vie_codec;
-    WebRtc_Word32 err;
+    int32_t err;
 
     if ((err = mPtrViECodec->GetSendCodec(mChannel, vie_codec)) != 0)
     {

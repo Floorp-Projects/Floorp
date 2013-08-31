@@ -8,30 +8,26 @@
 
 #include "mozilla/dom/EventListenerBinding.h"
 #include "mozilla/MemoryReporting.h"
-#include "nsAutoPtr.h"
-#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "nsCxPusher.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsGkAtoms.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIJSEventListener.h"
-#include "nsIScriptContext.h"
 #include "nsTObserverArray.h"
 
 class nsIDOMEvent;
-class nsIAtom;
-class nsIWidget;
-struct nsPoint;
 struct EventTypeData;
 class nsEventTargetChainItem;
 class nsPIDOMWindow;
 class nsCxPusher;
 class nsIEventListenerInfo;
+class nsIScriptContext;
 
 struct nsListenerStruct;
 class nsEventListenerManager;
+
+template<class T> class nsCOMArray;
 
 namespace mozilla {
 namespace dom {

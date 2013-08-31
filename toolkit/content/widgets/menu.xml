@@ -9,21 +9,12 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="menuitem-base"
+  <binding id="menuitem-base" role="xul:menuitem"
            extends="chrome://global/content/bindings/general.xml#control-item">
     <resources>
       <stylesheet src="chrome://global/skin/menu.css"/>
     </resources>
-    <implementation implements="nsIDOMXULSelectControlItemElement, nsIDOMXULContainerItemElement, nsIAccessibleProvider">
-      <!-- nsIAccessibleProvider -->
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULMenuitem;
-          ]]>
-        </getter>
-      </property>
-
+    <implementation implements="nsIDOMXULSelectControlItemElement, nsIDOMXULContainerItemElement">
       <!-- nsIDOMXULSelectControlItemElement -->
       <property name="selected" readonly="true"
                 onget="return this.getAttribute('selected') == 'true';"/>
@@ -273,18 +264,8 @@
     </content>
   </binding>  
   
-  <binding id="menuseparator"
+  <binding id="menuseparator" role="xul:menuseparator"
            extends="chrome://global/content/bindings/menu.xml#menuitem-base">
-    <implementation>
-      <!-- nsIAccessibleProvider -->
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULMenuSeparator;
-          ]]>
-        </getter>
-      </property>
-    </implementation>
   </binding>
 
 </bindings>

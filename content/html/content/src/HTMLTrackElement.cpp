@@ -25,7 +25,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMHTMLMediaElement.h"
-#include "nsIFrame.h"
 #include "nsIHttpChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadGroup.h"

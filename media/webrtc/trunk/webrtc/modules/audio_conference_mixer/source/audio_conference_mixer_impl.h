@@ -11,14 +11,14 @@
 #ifndef WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_SOURCE_AUDIO_CONFERENCE_MIXER_IMPL_H_
 #define WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_SOURCE_AUDIO_CONFERENCE_MIXER_IMPL_H_
 
-#include "audio_conference_mixer.h"
-#include "engine_configurations.h"
-#include "level_indicator.h"
-#include "list_wrapper.h"
-#include "memory_pool.h"
-#include "module_common_types.h"
-#include "scoped_ptr.h"
-#include "time_scheduler.h"
+#include "webrtc/engine_configurations.h"
+#include "webrtc/modules/audio_conference_mixer/interface/audio_conference_mixer.h"
+#include "webrtc/modules/audio_conference_mixer/source/level_indicator.h"
+#include "webrtc/modules/audio_conference_mixer/source/memory_pool.h"
+#include "webrtc/modules/audio_conference_mixer/source/time_scheduler.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/system_wrappers/interface/list_wrapper.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 class AudioProcessing;

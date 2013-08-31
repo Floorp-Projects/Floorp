@@ -364,17 +364,11 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
       break;
 
     case eIntID_TouchEnabled:
-#ifdef MOZ_PLATFORM_MAEMO
-      // All known Maemo devices are touch enabled.
-      aResult = 1;
-#else
       aResult = 0;
       res = NS_ERROR_NOT_IMPLEMENTED;
-#endif
       break;
 
     case eIntID_WindowsDefaultTheme:
-    case eIntID_MaemoClassic:
       aResult = 0;
       res = NS_ERROR_NOT_IMPLEMENTED;
       break;

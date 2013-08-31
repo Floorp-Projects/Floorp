@@ -78,6 +78,85 @@ if test -z "$_MOZ_USE_RTTI"; then
 fi
 ])
 
+dnl ========================================================
+dnl =
+dnl = Debugging Options
+dnl =
+dnl ========================================================
+AC_DEFUN([MOZ_DEBUGGING_OPTS],
+[
+dnl Debug info is ON by default.
+if test -z "$MOZ_DEBUG_FLAGS"; then
+  MOZ_DEBUG_FLAGS="-g"
+fi
+
+MOZ_ARG_ENABLE_STRING(debug,
+[  --enable-debug[=DBG]    Enable building with developer debug info
+                           (using compiler flags DBG)],
+[ if test "$enableval" != "no"; then
+    MOZ_DEBUG=1
+    if test -n "$enableval" -a "$enableval" != "yes"; then
+        MOZ_DEBUG_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
+        _MOZ_DEBUG_FLAGS_SET=1
+    fi
+  else
+    MOZ_DEBUG=
+  fi ],
+  MOZ_DEBUG=)
+
+MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG -DTRACING"
+MOZ_ARG_WITH_STRING(debug-label,
+[  --with-debug-label=LABELS
+                          Define DEBUG_<value> for each comma-separated
+                          value given.],
+[ for option in `echo $withval | sed 's/,/ /g'`; do
+    MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${option}"
+done])
+
+MOZ_DEBUG_DISABLE_DEFS="-DNDEBUG -DTRIMMED"
+
+if test -n "$MOZ_DEBUG"; then
+    AC_MSG_CHECKING([for valid debug flags])
+    _SAVE_CFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS $MOZ_DEBUG_FLAGS"
+    AC_TRY_COMPILE([#include <stdio.h>],
+        [printf("Hello World\n");],
+        _results=yes,
+        _results=no)
+    AC_MSG_RESULT([$_results])
+    if test "$_results" = "no"; then
+        AC_MSG_ERROR([These compiler flags are invalid: $MOZ_DEBUG_FLAGS])
+    fi
+    CFLAGS=$_SAVE_CFLAGS
+fi
+
+dnl ========================================================
+dnl = Enable generation of debug symbols
+dnl ========================================================
+MOZ_ARG_ENABLE_STRING(debug-symbols,
+[  --enable-debug-symbols[=DBG]
+                          Enable debugging symbols (using compiler flags DBG)],
+[ if test "$enableval" != "no"; then
+      MOZ_DEBUG_SYMBOLS=1
+      if test -n "$enableval" -a "$enableval" != "yes"; then
+          if test -z "$_MOZ_DEBUG_FLAGS_SET"; then
+              MOZ_DEBUG_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
+          else
+              AC_MSG_ERROR([--enable-debug-symbols flags cannot be used with --enable-debug flags])
+          fi
+      fi
+  else
+      MOZ_DEBUG_SYMBOLS=
+  fi ],
+  MOZ_DEBUG_SYMBOLS=1)
+
+if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
+    AC_DEFINE(MOZ_DEBUG_SYMBOLS)
+    export MOZ_DEBUG_SYMBOLS
+fi
+
+])
+
 dnl A high level macro for selecting compiler options.
 AC_DEFUN([MOZ_COMPILER_OPTS],
 [

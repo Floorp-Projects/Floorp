@@ -6,12 +6,9 @@
 #include "nsDOMEventTargetHelper.h"
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
-#include "nsGUIEvent.h"
 #include "nsIDocument.h"
-#include "nsDOMJSUtils.h"
 #include "prprf.h"
 #include "nsGlobalWindow.h"
-#include "nsDOMEvent.h"
 #include "mozilla/Likely.h"
 
 using namespace mozilla;

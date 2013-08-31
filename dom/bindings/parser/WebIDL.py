@@ -2386,16 +2386,28 @@ class IDLValue(IDLObject):
         if type == self.type:
             return self # Nothing to do
 
+        # We first check for unions to ensure that even if the union is nullable
+        # we end up with the right flat member type, not the union's type.
+        if type.isUnion():
+            for subtype in type.unroll().memberTypes:
+                try:
+                    coercedValue = self.coerceToType(subtype, location)
+                    # Create a new IDLValue to make sure that we have the
+                    # correct float/double type.  This is necessary because we
+                    # use the value's type when it is a default value of a
+                    # union, and the union cares about the exact float type.
+                    return IDLValue(self.location, subtype, coercedValue.value)
+                except:
+                    pass
         # If the type allows null, rerun this matching on the inner type, except
         # nullable enums.  We handle those specially, because we want our
         # default string values to stay strings even when assigned to a nullable
         # enum.
-        if type.nullable() and not type.isEnum():
+        elif type.nullable() and not type.isEnum():
             innerValue = self.coerceToType(type.inner, location)
             return IDLValue(self.location, type, innerValue.value)
 
-        # Else, see if we can coerce to 'type'.
-        if self.type.isInteger() and type.isInteger():
+        elif self.type.isInteger() and type.isInteger():
             # We're both integer types.  See if we fit.
 
             (min, max) = integerTypeSizes[type._typeTag]
@@ -2428,9 +2440,8 @@ class IDLValue(IDLObject):
                 raise WebIDLError("Trying to convert unrestricted value %s to non-unrestricted"
                                   % self.value, [location]);
             return self
-        else:
-            raise WebIDLError("Cannot coerce type %s to type %s." %
-                              (self.type, type), [location])
+        raise WebIDLError("Cannot coerce type %s to type %s." %
+                          (self.type, type), [location])
 
     def _getDependentObjects(self):
         return set()

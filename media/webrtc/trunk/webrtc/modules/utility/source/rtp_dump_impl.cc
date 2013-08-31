@@ -233,7 +233,7 @@ bool RtpDumpImpl::RTCP(const uint8_t* packet) const
 }
 
 // TODO (hellner): why is TickUtil not used here?
-inline WebRtc_UWord32 RtpDumpImpl::GetTimeInMS() const
+inline uint32_t RtpDumpImpl::GetTimeInMS() const
 {
 #if defined(_WIN32)
     return timeGetTime();

@@ -1,0 +1,113 @@
+﻿﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaRecorder Immediate Stop</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+/**
+ * Stops the media recorder immediately after starting the recorder. This test
+ * verifies whether the media recorder can handle this scenario nicely. The
+ * return blob size should be greater than zero, but its duration would be zero
+ * length when play.
+ */
+function startTest(test, token) {
+  var element = document.createElement('audio');
+  var expectedMimeType = test.type.substring(0, test.type.indexOf(';'));
+
+  element.token = token;
+  manager.started(token);
+
+  element.src = test.name;
+  element.test = test;
+  element.stream = element.mozCaptureStreamUntilEnded();
+
+  var mediaRecorder = new MediaRecorder(element.stream);
+  var onStopFired = false;
+  var onDataAvailableFired = false;
+
+  mediaRecorder.onerror = function () {
+    ok(false, 'Unexpected onerror callback fired');
+  };
+
+  mediaRecorder.onwarning = function () {
+    ok(false, 'Unexpected onwarning callback fired');
+  };
+
+  // This handler verifies that only a single onstop event handler is fired.
+  mediaRecorder.onstop = function () {
+    if (onStopFired) {
+      ok(false, 'onstop unexpectedly fired more than once');
+    } else {
+      onStopFired = true;
+
+      // ondataavailable should always fire before onstop
+      if (onDataAvailableFired) {
+        manager.finished(token);
+      } else {
+        ok(false, 'onstop fired without an ondataavailable event first');
+      }
+    }
+  };
+
+  // This handler verifies that only a single ondataavailable event handler
+  // is fired with the blob generated having greater than zero size
+  // and a correct mime type.
+  mediaRecorder.ondataavailable = function (evt) {
+    if (onDataAvailableFired) {
+        ok(false, 'ondataavailable unexpectedly fired more than once');
+    } else {
+      onDataAvailableFired = true;
+
+      ok(evt instanceof BlobEvent,
+         'Events fired from ondataavailable should be BlobEvent');
+      is(evt.type, 'dataavailable',
+         'Event type should dataavailable');
+      ok(evt.data.size > 0,
+         'Blob data received should be greater than zero');
+      is(evt.data.type, expectedMimeType,
+         'Blob data received should have type = ' + expectedMimeType);
+
+      is(mediaRecorder.mimeType, expectedMimeType,
+         'Mime type in ondataavailable = ' + expectedMimeType);
+
+      // onstop should not have fired before ondataavailable
+      if (onStopFired) {
+        ok(false, 'ondataavailable unexpectedly fired later than onstop');
+        manager.finished(token);
+      }
+    }
+  };
+
+  // This handler completes a start and stop of recording and verifies
+  // respective media recorder state.
+  var canPlayThrough = function() {
+    element.removeEventListener('canplaythrough', canPlayThrough, false);
+
+    mediaRecorder.start();
+    is(mediaRecorder.state, 'recording', 'Media recorder should be recording');
+    is(mediaRecorder.stream, element.stream,
+       'Media recorder stream = element stream at the start of recording');
+
+    mediaRecorder.stop();
+    is(mediaRecorder.state, 'inactive',
+       'Media recorder is inactive after being stopped');
+    is(mediaRecorder.stream, element.stream,
+       'Media recorder stream = element stream post recording');
+  };
+
+  element.addEventListener('canplaythrough', canPlayThrough, false);
+  element.play();
+}
+
+manager.runTests(gMediaRecorderTests, startTest);
+</script>
+</pre>
+</body>
+</html>

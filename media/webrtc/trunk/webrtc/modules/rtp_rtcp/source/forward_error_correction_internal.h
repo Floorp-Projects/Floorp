@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/rtp_rtcp/source/forward_error_correction.h"
-#include "typedefs.h"
+#include "webrtc/modules/rtp_rtcp/source/forward_error_correction.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -23,49 +23,44 @@ namespace internal {
 class PacketMaskTable {
  public:
   PacketMaskTable(FecMaskType fec_mask_type, int num_media_packets);
-  ~PacketMaskTable() {
-  }
+  ~PacketMaskTable() {}
   FecMaskType fec_mask_type() const { return fec_mask_type_; }
   const uint8_t*** fec_packet_mask_table() const {
     return fec_packet_mask_table_;
   }
+
  private:
-  FecMaskType InitMaskType(FecMaskType fec_mask_type,
-                           int num_media_packets);
+  FecMaskType InitMaskType(FecMaskType fec_mask_type, int num_media_packets);
   const uint8_t*** InitMaskTable(FecMaskType fec_mask_type_);
   const FecMaskType fec_mask_type_;
   const uint8_t*** fec_packet_mask_table_;
 };
 
- /**
-  * Returns an array of packet masks. The mask of a single FEC packet
-  * corresponds to a number of mask bytes. The mask indicates which
-  * media packets should be protected by the FEC packet.
+// Returns an array of packet masks. The mask of a single FEC packet
+// corresponds to a number of mask bytes. The mask indicates which
+// media packets should be protected by the FEC packet.
 
-  * \param[in]  numMediaPackets       The number of media packets to protect.
-  *                                    [1, maxMediaPackets].
-  * \param[in]  numFecPackets         The number of FEC packets which will
-  *                                    be generated. [1, numMediaPackets].
-  * \param[in]  numImpPackets         The number of important packets.
-  *                                    [0, numMediaPackets].
-  *                                   numImpPackets = 0 is the equal
-  *                                    protection scenario.
-  * \param[in]  useUnequalProtection  Enables unequal protection: allocates
-  *                                    more protection to the numImpPackets.
-  * \param[in]  mask_table            An instance of the |PacketMaskTable|
-  *                                    class, which contains the type of FEC
-  *                                    packet mask used, and a pointer to the
-  *                                    corresponding packet masks.
-  * \param[out] packetMask            A pointer to hold the packet mask array,
-  *                                    of size:
-  *                                    numFecPackets * "number of mask bytes".
-  */
-void GeneratePacketMasks(int numMediaPackets,
-                         int numFecPackets,
-                         int numImpPackets,
-                         bool useUnequalProtection,
+// \param[in]  num_media_packets       The number of media packets to protect.
+//                                     [1, max_media_packets].
+// \param[in]  num_fec_packets         The number of FEC packets which will
+//                                     be generated. [1, num_media_packets].
+// \param[in]  num_imp_packets         The number of important packets.
+//                                     [0, num_media_packets].
+//                                     num_imp_packets = 0 is the equal
+//                                     protection scenario.
+// \param[in]  use_unequal_protection  Enables unequal protection: allocates
+//                                     more protection to the num_imp_packets.
+// \param[in]  mask_table              An instance of the |PacketMaskTable|
+//                                     class, which contains the type of FEC
+//                                     packet mask used, and a pointer to the
+//                                     corresponding packet masks.
+// \param[out] packet_mask             A pointer to hold the packet mask array,
+//                                     of size: num_fec_packets *
+//                                     "number of mask bytes".
+void GeneratePacketMasks(int num_media_packets, int num_fec_packets,
+                         int num_imp_packets, bool use_unequal_protection,
                          const PacketMaskTable& mask_table,
-                         uint8_t* packetMask);
+                         uint8_t* packet_mask);
 
-} // namespace internal
-} // namespace webrtc
+}  // namespace internal
+}  // namespace webrtc

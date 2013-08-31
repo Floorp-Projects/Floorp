@@ -12,12 +12,13 @@
 #ifdef __arm__
 #include <machine/cpu-features.h>
 #endif
+#include <errno.h>
+#include <fcntl.h>
 #include <pthread.h>
-#include "cpu-features.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
-#include <errno.h>
+
+#include "webrtc/system_wrappers/source/android/cpu-features.h"
 
 static  pthread_once_t     g_once;
 static  AndroidCpuFamily   g_cpuFamily;

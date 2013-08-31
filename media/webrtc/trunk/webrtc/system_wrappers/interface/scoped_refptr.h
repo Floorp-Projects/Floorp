@@ -1,7 +1,12 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file under third_party_mods/chromium or at:
-// http://src.chromium.org/svn/trunk/src/LICENSE
+/*
+ *  Copyright (c) 2013 The WebRTC project authors. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS.  All contributing project authors may
+ *  be found in the AUTHORS file in the root of the source tree.
+ */
 
 #ifndef SYSTEM_WRAPPERS_INTERFACE_SCOPED_REFPTR_H_
 #define SYSTEM_WRAPPERS_INTERFACE_SCOPED_REFPTR_H_

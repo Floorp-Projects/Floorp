@@ -10,7 +10,7 @@
 
 #include "webrtc/system_wrappers/interface/map_wrapper.h"
 
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 
 using ::webrtc::MapWrapper;
 using ::webrtc::MapItem;

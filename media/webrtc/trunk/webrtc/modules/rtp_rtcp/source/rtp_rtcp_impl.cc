@@ -10,8 +10,8 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtp_rtcp_impl.h"
 
-#include <string.h>
 #include <cassert>
+#include <string.h>
 
 #include "webrtc/common_types.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_receiver_audio.h"
@@ -565,77 +565,56 @@ void ModuleRtpRtcpImpl::SetRtxReceivePayloadType(int payload_type) {
 }
 
 // Called by the network module when we receive a packet.
-int32_t ModuleRtpRtcpImpl::IncomingPacket(
+int32_t ModuleRtpRtcpImpl::IncomingRtpPacket(
     const uint8_t* incoming_packet,
-    const uint16_t incoming_packet_length) {
+    const uint16_t incoming_packet_length,
+    const RTPHeader& parsed_rtp_header) {
   WEBRTC_TRACE(kTraceStream,
                kTraceRtpRtcp,
                id_,
-               "IncomingPacket(packet_length:%u)",
+               "IncomingRtpPacket(packet_length:%u)",
                incoming_packet_length);
+  RTPHeader rtp_header_copy = parsed_rtp_header;
+  return rtp_receiver_->IncomingRTPPacket(&rtp_header_copy,
+                                          incoming_packet,
+                                          incoming_packet_length);
+}
+
+int32_t ModuleRtpRtcpImpl::IncomingRtcpPacket(
+    const uint8_t* rtcp_packet,
+    const uint16_t length) {
+  WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1,
+               "IncomingRtcpPacket(packet_length:%u)", length);
   // Minimum RTP is 12 bytes.
   // Minimum RTCP is 8 bytes (RTCP BYE).
-  if (incoming_packet_length < 8 || incoming_packet == NULL) {
-    WEBRTC_TRACE(kTraceDebug,
-                 kTraceRtpRtcp,
-                 id_,
-                 "IncomingPacket invalid buffer or length");
-    return -1;
+  if (length == 8) {
+    WEBRTC_TRACE(kTraceDebug, kTraceRtpRtcp, -1,
+                 "IncomingRtcpPacket invalid length");
+    return false;
   }
   // Check RTP version.
-  const uint8_t version = incoming_packet[0] >> 6;
+  const uint8_t version = rtcp_packet[0] >> 6;
   if (version != 2) {
-    WEBRTC_TRACE(kTraceDebug,
-                 kTraceRtpRtcp,
-                 id_,
-                 "IncomingPacket invalid RTP version");
+    WEBRTC_TRACE(kTraceDebug, kTraceRtpRtcp, -1,
+                 "IncomingRtcpPacket invalid RTP version");
+    return false;
+  }
+  // Allow receive of non-compound RTCP packets.
+  RTCPUtility::RTCPParserV2 rtcp_parser(rtcp_packet, length, true);
+
+  const bool valid_rtcpheader = rtcp_parser.IsValid();
+  if (!valid_rtcpheader) {
+    WEBRTC_TRACE(kTraceDebug, kTraceRtpRtcp, id_,
+                 "IncomingRtcpPacket invalid RTCP packet");
     return -1;
   }
-
-  ModuleRTPUtility::RTPHeaderParser rtp_parser(incoming_packet,
-                                               incoming_packet_length);
-
-  if (rtp_parser.RTCP()) {
-    // Allow receive of non-compound RTCP packets.
-    RTCPUtility::RTCPParserV2 rtcp_parser(incoming_packet,
-                                          incoming_packet_length,
-                                          true);
-
-    const bool valid_rtcpheader = rtcp_parser.IsValid();
-    if (!valid_rtcpheader) {
-      WEBRTC_TRACE(kTraceDebug,
-                   kTraceRtpRtcp,
-                   id_,
-                   "IncomingPacket invalid RTCP packet");
-      return -1;
-    }
-    RTCPHelp::RTCPPacketInformation rtcp_packet_information;
-    int32_t ret_val = rtcp_receiver_.IncomingRTCPPacket(
-        rtcp_packet_information, &rtcp_parser);
-    if (ret_val == 0) {
-      rtcp_receiver_.TriggerCallbacksFromRTCPPacket(rtcp_packet_information);
-    }
-    return ret_val;
-
-  } else {
-    WebRtcRTPHeader rtp_header;
-    memset(&rtp_header, 0, sizeof(rtp_header));
-
-    RtpHeaderExtensionMap map;
-    rtp_receiver_->GetHeaderExtensionMapCopy(&map);
-
-    const bool valid_rtpheader = rtp_parser.Parse(rtp_header, &map);
-    if (!valid_rtpheader) {
-      WEBRTC_TRACE(kTraceDebug,
-                   kTraceRtpRtcp,
-                   id_,
-                   "IncomingPacket invalid RTP header");
-      return -1;
-    }
-    return rtp_receiver_->IncomingRTPPacket(&rtp_header,
-                                            incoming_packet,
-                                            incoming_packet_length);
+  RTCPHelp::RTCPPacketInformation rtcp_packet_information;
+  int32_t ret_val = rtcp_receiver_.IncomingRTCPPacket(
+      rtcp_packet_information, &rtcp_parser);
+  if (ret_val == 0) {
+    rtcp_receiver_.TriggerCallbacksFromRTCPPacket(rtcp_packet_information);
   }
+  return ret_val;
 }
 
 int32_t ModuleRtpRtcpImpl::RegisterSendPayload(
@@ -988,7 +967,7 @@ int32_t ModuleRtpRtcpImpl::SendOutgoingData(
   return ret_val;
 }
 
-void ModuleRtpRtcpImpl::TimeToSendPacket(uint32_t ssrc,
+bool ModuleRtpRtcpImpl::TimeToSendPacket(uint32_t ssrc,
                                          uint16_t sequence_number,
                                          int64_t capture_time_ms) {
   WEBRTC_TRACE(
@@ -998,35 +977,57 @@ void ModuleRtpRtcpImpl::TimeToSendPacket(uint32_t ssrc,
     "TimeToSendPacket(ssrc:0x%x sequence_number:%u capture_time_ms:%ll)",
     ssrc, sequence_number, capture_time_ms);
 
-  if (simulcast_) {
+  bool no_child_modules = false;
+  {
+    CriticalSectionScoped lock(critical_section_module_ptrs_.get());
+    no_child_modules = child_modules_.empty();
+  }
+  if (no_child_modules) {
+    // Don't send from default module.
+    if (SendingMedia() && ssrc == rtp_sender_.SSRC()) {
+      return rtp_sender_.TimeToSendPacket(sequence_number, capture_time_ms);
+    }
+  } else {
     CriticalSectionScoped lock(critical_section_module_ptrs_.get());
     std::list<ModuleRtpRtcpImpl*>::iterator it = child_modules_.begin();
     while (it != child_modules_.end()) {
       if ((*it)->SendingMedia() && ssrc == (*it)->rtp_sender_.SSRC()) {
-        (*it)->rtp_sender_.TimeToSendPacket(sequence_number, capture_time_ms);
-        return;
+        return (*it)->rtp_sender_.TimeToSendPacket(sequence_number,
+                                                   capture_time_ms);
       }
       ++it;
     }
+  }
+  // No RTP sender is interested in sending this packet.
+  return true;
+}
+
+int ModuleRtpRtcpImpl::TimeToSendPadding(int bytes) {
+  WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, id_, "TimeToSendPadding(bytes: %d)",
+               bytes);
+
+  bool no_child_modules = false;
+  {
+    CriticalSectionScoped lock(critical_section_module_ptrs_.get());
+    no_child_modules = child_modules_.empty();
+  }
+  if (no_child_modules) {
+    // Don't send from default module.
+    if (SendingMedia()) {
+      return rtp_sender_.TimeToSendPadding(bytes);
+    }
   } else {
-    bool have_child_modules = !child_modules_.empty();
-    if (!have_child_modules) {
-      // Don't send from default module.
-      if (SendingMedia() && ssrc == rtp_sender_.SSRC()) {
-        rtp_sender_.TimeToSendPacket(sequence_number, capture_time_ms);
+    CriticalSectionScoped lock(critical_section_module_ptrs_.get());
+    std::list<ModuleRtpRtcpImpl*>::iterator it = child_modules_.begin();
+    while (it != child_modules_.end()) {
+      // Send padding on one of the modules sending media.
+      if ((*it)->SendingMedia()) {
+        return (*it)->rtp_sender_.TimeToSendPadding(bytes);
       }
-    } else {
-      CriticalSectionScoped lock(critical_section_module_ptrs_.get());
-      std::list<ModuleRtpRtcpImpl*>::iterator it = child_modules_.begin();
-      while (it != child_modules_.end()) {
-        if ((*it)->SendingMedia() && ssrc == (*it)->rtp_sender_.SSRC()) {
-          (*it)->rtp_sender_.TimeToSendPacket(sequence_number, capture_time_ms);
-          return;
-        }
-        ++it;
-      }
+      ++it;
     }
   }
+  return 0;
 }
 
 uint16_t ModuleRtpRtcpImpl::MaxPayloadLength() const {
@@ -1434,17 +1435,6 @@ int32_t ModuleRtpRtcpImpl::DeregisterSendRtpHeaderExtension(
   return rtp_sender_.DeregisterRtpHeaderExtension(type);
 }
 
-int32_t ModuleRtpRtcpImpl::RegisterReceiveRtpHeaderExtension(
-    const RTPExtensionType type,
-    const uint8_t id) {
-  return rtp_receiver_->RegisterRtpHeaderExtension(type, id);
-}
-
-int32_t ModuleRtpRtcpImpl::DeregisterReceiveRtpHeaderExtension(
-  const RTPExtensionType type) {
-  return rtp_receiver_->DeregisterRtpHeaderExtension(type);
-}
-
 // (TMMBR) Temporary Max Media Bit Rate.
 bool ModuleRtpRtcpImpl::TMMBR() const {
   WEBRTC_TRACE(kTraceModuleCall, kTraceRtpRtcp, id_, "TMMBR()");
@@ -1682,11 +1672,6 @@ int32_t ModuleRtpRtcpImpl::SetRTPAudioLevelIndicationStatus(
                enable,
                id);
 
-  if (enable) {
-    rtp_receiver_->RegisterRtpHeaderExtension(kRtpExtensionAudioLevel, id);
-  } else {
-    rtp_receiver_->DeregisterRtpHeaderExtension(kRtpExtensionAudioLevel);
-  }
   return rtp_sender_.SetAudioLevelIndicationStatus(enable, id);
 }
 

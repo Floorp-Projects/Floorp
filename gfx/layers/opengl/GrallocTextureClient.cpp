@@ -128,7 +128,7 @@ GrallocTextureClientOGL::AllocateForSurface(gfx::IntSize aSize)
 }
 
 bool
-GrallocTextureClientOGL::AllocateForYCbCr(gfx::IntSize aYSize, gfx::IntSize aCbCrSize)
+GrallocTextureClientOGL::AllocateForYCbCr(gfx::IntSize aYSize, gfx::IntSize aCbCrSize, StereoMode aStereoMode)
 {
   return AllocateGralloc(aYSize,
                          HAL_PIXEL_FORMAT_YV12,

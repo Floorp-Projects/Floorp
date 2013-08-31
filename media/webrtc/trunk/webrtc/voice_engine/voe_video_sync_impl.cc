@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "voe_video_sync_impl.h"
+#include "webrtc/voice_engine/voe_video_sync_impl.h"
 
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/trace.h"
@@ -237,6 +237,24 @@ int VoEVideoSyncImpl::GetRtpRtcp(int channel, RtpRtcp* &rtpRtcpModule)
     return channelPtr->GetRtpRtcp(rtpRtcpModule);
 }
 
+int VoEVideoSyncImpl::GetLeastRequiredDelayMs(int channel) const {
+  WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
+               "GetLeastRequiredDelayMS(channel=%d)", channel);
+  IPHONE_NOT_SUPPORTED(_shared->statistics());
+
+  if (!_shared->statistics().Initialized()) {
+    _shared->SetLastError(VE_NOT_INITED, kTraceError);
+    return -1;
+  }
+  voe::ScopedChannel sc(_shared->channel_manager(), channel);
+  voe::Channel* channel_ptr = sc.ChannelPtr();
+  if (channel_ptr == NULL) {
+    _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
+                          "GetLeastRequiredDelayMs() failed to locate channel");
+    return -1;
+  }
+  return channel_ptr->least_required_delay_ms();
+}
 
 #endif  // #ifdef WEBRTC_VOICE_ENGINE_VIDEO_SYNC_API
 

@@ -41,7 +41,7 @@
 #define WEBRTC_VOICE_ENGINE_VOE_RTP_RTCP_H
 
 #include <vector>
-#include "common_types.h"
+#include "webrtc/common_types.h"
 
 namespace webrtc {
 
@@ -52,10 +52,10 @@ class WEBRTC_DLLEXPORT VoERTPObserver
 {
 public:
     virtual void OnIncomingCSRCChanged(
-        const int channel, const unsigned int CSRC, const bool added) = 0;
+        int channel, unsigned int CSRC, bool added) = 0;
 
     virtual void OnIncomingSSRCChanged(
-        const int channel, const unsigned int SSRC) = 0;
+        int channel, unsigned int SSRC) = 0;
 
 protected:
     virtual ~VoERTPObserver() {}
@@ -66,9 +66,9 @@ class WEBRTC_DLLEXPORT VoERTCPObserver
 {
 public:
     virtual void OnApplicationDataReceived(
-        const int channel, const unsigned char subType,
-        const unsigned int name, const unsigned char* data,
-        const unsigned short dataLengthInBytes) = 0;
+        int channel, unsigned char subType,
+        unsigned int name, const unsigned char* data,
+        unsigned short dataLengthInBytes) = 0;
 
 protected:
     virtual ~VoERTCPObserver() {}
@@ -209,7 +209,7 @@ public:
 
     // Sends an RTCP APP packet on a specific |channel|.
     virtual int SendApplicationDefinedRTCPPacket(
-        int channel, const unsigned char subType, unsigned int name,
+        int channel, unsigned char subType, unsigned int name,
         const char* data, unsigned short dataLengthInBytes) = 0;
 
     // Sets the Forward Error Correction (FEC) status on a specific |channel|.
@@ -219,6 +219,14 @@ public:
     // Gets the FEC status on a specific |channel|.
     virtual int GetFECStatus(
         int channel, bool& enabled, int& redPayloadtype) = 0;
+
+    // This function enables Negative Acknowledgment (NACK) using RTCP,
+    // implemented based on RFC 4585. NACK retransmits RTP packets if lost on
+    // the network. This creates a lossless transport at the expense of delay.
+    // If using NACK, NACK should be enabled on both endpoints in a call.
+    virtual int SetNACKStatus(int channel,
+                              bool enable,
+                              int maxNoPackets) = 0;
 
     // Enables capturing of RTP packets to a binary file on a specific
     // |channel| and for a given |direction|. The file can later be replayed

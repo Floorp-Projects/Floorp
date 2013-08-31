@@ -17,6 +17,7 @@
       'includes': [
         'test/libvietest/libvietest.gypi',
         'test/auto_test/vie_auto_test.gypi',
+        'test/tests.gypi',
       ],
       'conditions': [
         ['OS=="android"', {

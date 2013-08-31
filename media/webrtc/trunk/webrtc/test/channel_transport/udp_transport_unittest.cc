@@ -10,8 +10,8 @@
 
 #include <vector>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+#include "testing/gmock/include/gmock/gmock.h"
+#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/test/channel_transport/udp_transport.h"
 // We include the implementation header file to get at the dependency-injecting
 // constructor.

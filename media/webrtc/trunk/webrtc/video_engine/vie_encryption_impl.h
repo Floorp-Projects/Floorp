@@ -11,9 +11,9 @@
 #ifndef WEBRTC_VIDEO_ENGINE_VIE_ENCRYPTION_IMPL_H_
 #define WEBRTC_VIDEO_ENGINE_VIE_ENCRYPTION_IMPL_H_
 
-#include "typedefs.h"  // NOLINT
-#include "video_engine/include/vie_encryption.h"
-#include "video_engine/vie_ref_count.h"
+#include "webrtc/typedefs.h"
+#include "webrtc/video_engine/include/vie_encryption.h"
+#include "webrtc/video_engine/vie_ref_count.h"
 
 namespace webrtc {
 

@@ -37,21 +37,34 @@ _ROOT_DIR = os.path.abspath(os.path.join(_CURRENT_DIR, '..', '..', '..', '..'))
 _ANDROID_ENV_SCRIPT = os.path.join(_ROOT_DIR, 'build', 'android', 'envsetup.sh')
 
 def main():
-  parser = optparse.OptionParser('usage: %prog -t <target>')
+  parser = optparse.OptionParser('usage: %prog -t <target> -a <arch>')
 
   parser.add_option('-t', '--target', default='debug',
                     help='Compile target (debug/release). Default: %default')
+  parser.add_option('-a', '--arch', type='choice', choices=['arm', 'ia32'],
+                    help='Compile arch (arm/ia32).')
   # Build and factory properties are currently unused but are required to avoid
   # errors when the script is executed by the buildbots.
   parser.add_option('--build-properties', help='Build properties (unused)')
   parser.add_option('--factory-properties', help='Factory properties (unused)')
   options, _args = parser.parse_args()
 
+  if options.arch.lower() == 'ia32':
+    target_arch = 'x86'
+    app_abi = 'x86'
+  elif options.arch.lower() == 'arm':
+    target_arch = 'arm'
+    app_abi = 'armeabi-v7a'
+  else:
+    print 'Unsupported target platform'
+    raise
+
   def RunInAndroidEnv(cmd):
-    return 'source %s && %s' % (_ANDROID_ENV_SCRIPT, cmd)
+    return 'source %s --target-arch=%s && %s' % (_ANDROID_ENV_SCRIPT,
+                                                 target_arch, cmd)
 
   print '@@@BUILD_STEP ndk-build@@@'
-  cmd = RunInAndroidEnv('ndk-build')
+  cmd = RunInAndroidEnv('ndk-build APP_ABI=%s' % app_abi)
   print cmd
   try:
     subprocess.check_call(cmd, cwd=_CURRENT_DIR, executable='/bin/bash',

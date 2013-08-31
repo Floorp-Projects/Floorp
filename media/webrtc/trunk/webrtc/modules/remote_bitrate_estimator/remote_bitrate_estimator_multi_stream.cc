@@ -8,36 +8,89 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_multi_stream.h"
+#include <map>
 
+#include "webrtc/modules/remote_bitrate_estimator/bitrate_estimator.h"
+#include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
 #include "webrtc/modules/remote_bitrate_estimator/include/rtp_to_ntp.h"
-#include "webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_single_stream.h"
+#include "webrtc/modules/remote_bitrate_estimator/overuse_detector.h"
+#include "webrtc/modules/remote_bitrate_estimator/remote_rate_control.h"
 #include "webrtc/system_wrappers/interface/clock.h"
+#include "webrtc/system_wrappers/interface/constructor_magic.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
+namespace {
+class RemoteBitrateEstimatorMultiStream : public RemoteBitrateEstimator {
+ public:
+  RemoteBitrateEstimatorMultiStream(RemoteBitrateObserver* observer,
+                                    Clock* clock);
+  virtual ~RemoteBitrateEstimatorMultiStream() {}
 
-RemoteBitrateEstimator* RemoteBitrateEstimator::Create(
-    const OverUseDetectorOptions& options,
-    EstimationMode mode,
-    RemoteBitrateObserver* observer,
-    Clock* clock) {
-  switch (mode) {
-    case kMultiStreamEstimation:
-      return new RemoteBitrateEstimatorMultiStream(options, observer, clock);
-    case kSingleStreamEstimation:
-      return new RemoteBitrateEstimatorSingleStream(options, observer, clock);
-  }
-  return NULL;
-}
+  // Stores an RTCP SR (NTP, RTP timestamp) tuple for a specific SSRC to be used
+  // in future RTP timestamp to NTP time conversions. As soon as any SSRC has
+  // two tuples the RemoteBitrateEstimator will switch to multi-stream mode.
+  virtual void IncomingRtcp(unsigned int ssrc, uint32_t ntp_secs,
+                            uint32_t ntp_frac, uint32_t rtp_timestamp);
+
+  // Called for each incoming packet. The first SSRC will immediately be used
+  // for over-use detection. Subsequent SSRCs will only be used when at least
+  // two RTCP SR reports with the same SSRC have been received. Updates the
+  // incoming payload bitrate estimate and the over-use detector.
+  // If an over-use is detected the remote bitrate estimate will be updated.
+  // Note that |payload_size| is the packet size excluding headers.
+  virtual void IncomingPacket(int64_t arrival_time_ms,
+                              int payload_size,
+                              const RTPHeader& header);
+
+  // Triggers a new estimate calculation.
+  // Implements the Module interface.
+  virtual int32_t Process();
+  virtual int32_t TimeUntilNextProcess();
+  // Set the current round-trip time experienced by the stream.
+  // Implements the StatsObserver interface.
+  virtual void OnRttUpdate(uint32_t rtt);
+
+  // Removes all data for |ssrc|.
+  virtual void RemoveStream(unsigned int ssrc);
+
+  // Returns true if a valid estimate exists and sets |bitrate_bps| to the
+  // estimated payload bitrate in bits per second. |ssrcs| is the list of ssrcs
+  // currently being received and of which the bitrate estimate is based upon.
+  virtual bool LatestEstimate(std::vector<unsigned int>* ssrcs,
+                              unsigned int* bitrate_bps) const;
+
+ private:
+  typedef std::map<unsigned int, synchronization::RtcpList> StreamMap;
+
+  // Triggers a new estimate calculation.
+  void UpdateEstimate(int64_t time_now);
+
+  void GetSsrcs(std::vector<unsigned int>* ssrcs) const;
+
+  Clock* clock_;
+  RemoteRateControl remote_rate_;
+  OveruseDetector overuse_detector_;
+  BitRateStats incoming_bitrate_;
+  RemoteBitrateObserver* observer_;
+  StreamMap streams_;
+  scoped_ptr<CriticalSectionWrapper> crit_sect_;
+  unsigned int initial_ssrc_;
+  bool multi_stream_;
+  int32_t last_process_time_;
+
+  DISALLOW_COPY_AND_ASSIGN(RemoteBitrateEstimatorMultiStream);
+};
 
 RemoteBitrateEstimatorMultiStream::RemoteBitrateEstimatorMultiStream(
-    const OverUseDetectorOptions& options,
     RemoteBitrateObserver* observer,
     Clock* clock)
     : clock_(clock),
       remote_rate_(),
-      overuse_detector_(options),
+      overuse_detector_(OverUseDetectorOptions()),
       incoming_bitrate_(),
       observer_(observer),
       streams_(),
@@ -83,12 +136,15 @@ void RemoteBitrateEstimatorMultiStream::IncomingRtcp(unsigned int ssrc,
   rtcp_list->push_front(measurement);
 }
 
-void RemoteBitrateEstimatorMultiStream::IncomingPacket(unsigned int ssrc,
-                                                       int payload_size,
-                                                       int64_t arrival_time,
-                                                       uint32_t rtp_timestamp) {
+void RemoteBitrateEstimatorMultiStream::IncomingPacket(
+    int64_t arrival_time_ms,
+    int payload_size,
+    const RTPHeader& header) {
+  uint32_t ssrc = header.ssrc;
+  uint32_t rtp_timestamp = header.timestamp +
+      header.extension.transmissionTimeOffset;
   CriticalSectionScoped cs(crit_sect_.get());
-  incoming_bitrate_.Update(payload_size, arrival_time);
+  incoming_bitrate_.Update(payload_size, arrival_time_ms);
   // Add this stream to the map of streams if it doesn't already exist.
   std::pair<StreamMap::iterator, bool> stream_insert_result =
       streams_.insert(std::make_pair(ssrc, synchronization::RtcpList()));
@@ -112,15 +168,15 @@ void RemoteBitrateEstimatorMultiStream::IncomingPacket(unsigned int ssrc,
     synchronization::RtpToNtpMs(rtp_timestamp, *rtcp_list, &timestamp_in_ms);
   }
   overuse_detector_.Update(payload_size, timestamp_in_ms, rtp_timestamp,
-                           arrival_time);
+                           arrival_time_ms);
   if (overuse_detector_.State() == kBwOverusing) {
-    unsigned int incoming_bitrate = incoming_bitrate_.BitRate(arrival_time);
+    unsigned int incoming_bitrate = incoming_bitrate_.BitRate(arrival_time_ms);
     if (prior_state != kBwOverusing ||
-        remote_rate_.TimeToReduceFurther(arrival_time, incoming_bitrate)) {
+        remote_rate_.TimeToReduceFurther(arrival_time_ms, incoming_bitrate)) {
       // The first overuse should immediately trigger a new estimate.
       // We also have to update the estimate immediately if we are overusing
       // and the target bitrate is too high compared to what we are receiving.
-      UpdateEstimate(arrival_time);
+      UpdateEstimate(arrival_time_ms);
     }
   }
 }
@@ -161,7 +217,7 @@ void RemoteBitrateEstimatorMultiStream::UpdateEstimate(int64_t time_now) {
     std::vector<unsigned int> ssrcs;
     GetSsrcs(&ssrcs);
     if (!ssrcs.empty()) {
-      observer_->OnReceiveBitrateChanged(&ssrcs, target_bitrate);
+      observer_->OnReceiveBitrateChanged(ssrcs, target_bitrate);
     }
   }
   overuse_detector_.SetRateControlRegion(region);
@@ -203,5 +259,11 @@ void RemoteBitrateEstimatorMultiStream::GetSsrcs(
     (*ssrcs)[i] = it->first;
   }
 }
+}  // namespace
 
+RemoteBitrateEstimator* MultiStreamRemoteBitrateEstimatorFactory::Create(
+    RemoteBitrateObserver* observer,
+    Clock* clock) const {
+  return new RemoteBitrateEstimatorMultiStream(observer, clock);
+}
 }  // namespace webrtc

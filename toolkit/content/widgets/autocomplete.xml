@@ -16,7 +16,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="autocomplete"
+  <binding id="autocomplete" role="xul:combobox"
            extends="chrome://global/content/bindings/textbox.xml#textbox">
     <resources>
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
@@ -46,7 +46,7 @@
       <children includes="toolbarbutton"/>
     </content>
 
-    <implementation implements="nsIAccessibleProvider, nsIAutoCompleteInput, nsIDOMXULMenuListElement">
+    <implementation implements="nsIAutoCompleteInput, nsIDOMXULMenuListElement">
       <field name="mController">null</field>
       <field name="mSearchNames">null</field>
       <field name="mIgnoreInput">false</field>
@@ -73,17 +73,6 @@
       <destructor><![CDATA[
         this.inputField.controllers.removeController(this._pasteController);
       ]]></destructor>
-
-      <!-- =================== nsIAccessibleProvider =================== -->
-
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            // Will be exposed as nsIAccessible::ROLE_AUTOCOMPLETE
-            return Components.interfaces.nsIAccessibleProvider.XULCombobox;
-          ]]>
-        </getter>
-      </property>
 
       <!-- =================== nsIAutoCompleteInput =================== -->
 
@@ -816,12 +805,9 @@
     </implementation>
   </binding>
 
-  <binding id="autocomplete-base-popup" extends="chrome://global/content/bindings/popup.xml#popup">
+  <binding id="autocomplete-base-popup" role="none"
+extends="chrome://global/content/bindings/popup.xml#popup">
     <implementation implements="nsIAutoCompletePopup">
-      <!-- nsIAccessible from #popup -->
-      <property name="accessibleType" readonly="true"
-                onget="return Components.interfaces.nsIAccessibleProvider.NoAccessible;"/>
-
       <field name="mInput">null</field>
       <field name="mPopupOpen">false</field>
 

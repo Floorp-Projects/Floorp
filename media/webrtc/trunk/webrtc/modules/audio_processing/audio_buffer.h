@@ -11,9 +11,9 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_MAIN_SOURCE_AUDIO_BUFFER_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_MAIN_SOURCE_AUDIO_BUFFER_H_
 
-#include "module_common_types.h"
-#include "scoped_ptr.h"
-#include "typedefs.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 

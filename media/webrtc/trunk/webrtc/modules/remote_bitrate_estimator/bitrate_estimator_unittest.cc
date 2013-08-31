@@ -8,8 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <gtest/gtest.h>
-
+#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/remote_bitrate_estimator/bitrate_estimator.h"
 
 namespace {

@@ -1392,16 +1392,7 @@ nsDownloadManager::GetDefaultDownloadsDirectory(nsIFile **aResult)
     }
   }
 #elif defined(XP_UNIX)
-#if defined(MOZ_PLATFORM_MAEMO)
-    // As maemo does not follow the XDG "standard" (as usually desktop
-    // Linux distros do) neither has a working $HOME/Desktop folder
-    // for us to fallback into, "$HOME/MyDocs/.documents/" is the folder
-    // we found most apropriate to be the default target folder for downloads
-    // on the platform.
-    rv = dirService->Get(NS_UNIX_XDG_DOCUMENTS_DIR,
-                         NS_GET_IID(nsIFile),
-                         getter_AddRefs(downloadDir));
-#elif defined(MOZ_WIDGET_ANDROID)
+#if defined(MOZ_WIDGET_ANDROID)
     // Android doesn't have a $HOME directory, and by default we only have
     // write access to /data/data/org.mozilla.{$APP} and /sdcard
     char* downloadDirPath = getenv("DOWNLOADS_DIRECTORY");

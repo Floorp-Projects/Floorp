@@ -14,7 +14,7 @@
  *
  */
 
-#include "resample_by_2_internal.h"
+#include "webrtc/common_audio/signal_processing/resample_by_2_internal.h"
 
 // allpass filter coefficients.
 static const int16_t kResampleAllpass[2][3] = {
