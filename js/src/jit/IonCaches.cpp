@@ -854,8 +854,6 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
     // TODO: ensure stack is aligned?
     DebugOnly<uint32_t> initialStack = masm.framePushed();
 
-    attacher.pushStubCodePointer(masm);
-
     if (callNative) {
         JS_ASSERT(shape->hasGetterValue() && shape->getterValue().isObject() &&
                   shape->getterValue().toObject().is<JSFunction>());
@@ -880,9 +878,13 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
         masm.move32(Imm32(0), argUintNReg);
         masm.movePtr(StackPointer, argVpReg);
 
+        // Push marking data for later use.
+        masm.Push(argUintNReg);
+        attacher.pushStubCodePointer(masm);
+
         if (!masm.buildOOLFakeExitFrame(returnAddr))
             return false;
-        masm.enterFakeExitFrame(ION_FRAME_OOL_NATIVE_GETTER);
+        masm.enterFakeExitFrame(ION_FRAME_OOL_NATIVE);
 
         // Construct and execute call.
         masm.setupUnalignedABICall(3, scratchReg);
@@ -896,7 +898,7 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
 
         // Load the outparam vp[0] into output register(s).
         masm.loadValue(
-            Address(StackPointer, IonOOLNativeGetterExitFrameLayout::offsetOfResult()),
+            Address(StackPointer, IonOOLNativeExitFrameLayout::offsetOfResult()),
             JSReturnOperand);
     } else {
         Register argObjReg       = argUintNReg;
@@ -904,6 +906,10 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
 
         PropertyOp target = shape->getterOp();
         JS_ASSERT(target);
+
+        // Push stubCode for marking.
+        attacher.pushStubCodePointer(masm);
+
         // JSPropertyOp: bool fn(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 
         // Push args on stack first so we can take pointers to make handles.
@@ -952,7 +958,7 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
 
     // Move the StackPointer back to its original location, unwinding the native exit frame.
     if (callNative)
-        masm.adjustStack(IonOOLNativeGetterExitFrameLayout::Size());
+        masm.adjustStack(IonOOLNativeExitFrameLayout::Size(0));
     else
         masm.adjustStack(IonOOLPropertyOpExitFrameLayout::Size());
     JS_ASSERT(masm.framePushed() == initialStack);
