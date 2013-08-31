@@ -47,6 +47,7 @@ public:
   virtual bool RecvOpen(const nsString& aHost, const uint16_t& aPort,
                         const bool& useSSL, const nsString& aBinaryType);
 
+  virtual bool RecvStartTLS() MOZ_OVERRIDE;
   virtual bool RecvSuspend() MOZ_OVERRIDE;
   virtual bool RecvResume() MOZ_OVERRIDE;
   virtual bool RecvClose() MOZ_OVERRIDE;
