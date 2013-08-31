@@ -189,6 +189,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     void branchTestObjShape(Condition cond, Register obj, Register shape, Label *label) {
         branchPtr(cond, Address(obj, JSObject::offsetOfShape()), shape, label);
     }
+    void branchTestProxyHandlerFamily(Condition cond, Register proxy, Register scratch,
+                                      void *handlerp, Label *label) {
+        Address handlerAddr(proxy, ProxyObject::offsetOfHandler());
+        loadPrivate(handlerAddr, scratch);
+        Address familyAddr(scratch, BaseProxyHandler::offsetOfFamily());
+        branchPtr(cond, familyAddr, ImmWord(handlerp), label);
+    }
 
     template <typename Value>
     Condition testMIRType(Condition cond, const Value &val, MIRType type) {
@@ -603,6 +610,22 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
     Register extractString(const ValueOperand &value, Register scratch) {
         return extractObject(value, scratch);
+    }
+
+    using MacroAssemblerSpecific::extractTag;
+    Register extractTag(const TypedOrValueRegister &reg, Register scratch) {
+        if (reg.hasValue()) {
+            return extractTag(reg.valueReg(), scratch);
+        }
+        mov(ImmWord(ValueTypeFromMIRType(reg.type())), scratch);
+        return scratch;
+    }
+
+    using MacroAssemblerSpecific::extractObject;
+    Register extractObject(const TypedOrValueRegister &reg, Register scratch) {
+        if (reg.hasValue())
+            return extractObject(reg.valueReg(), scratch);
+        return reg.typedReg().gpr();
     }
 
     // Inline version of js_TypedArray_uint8_clamp_double.

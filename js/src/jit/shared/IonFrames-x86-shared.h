@@ -156,9 +156,9 @@ class IonExitFooterFrame
 };
 
 class IonNativeExitFrameLayout;
-class IonOOLNativeGetterExitFrameLayout;
+class IonOOLNativeExitFrameLayout;
 class IonOOLPropertyOpExitFrameLayout;
-class IonOOLProxyGetExitFrameLayout;
+class IonOOLProxyExitFrameLayout;
 class IonDOMExitFrameLayout;
 
 class IonExitFrameLayout : public IonCommonFrameLayout
@@ -194,14 +194,14 @@ class IonExitFrameLayout : public IonCommonFrameLayout
     inline bool isNativeExit() {
         return footer()->ionCode() == NULL;
     }
-    inline bool isOOLNativeGetterExit() {
-        return footer()->ionCode() == ION_FRAME_OOL_NATIVE_GETTER;
+    inline bool isOOLNativeExit() {
+        return footer()->ionCode() == ION_FRAME_OOL_NATIVE;
     }
     inline bool isOOLPropertyOpExit() {
         return footer()->ionCode() == ION_FRAME_OOL_PROPERTY_OP;
     }
-    inline bool isOOLProxyGetExit() {
-        return footer()->ionCode() == ION_FRAME_OOL_PROXY_GET;
+    inline bool isOOLProxyExit() {
+        return footer()->ionCode() == ION_FRAME_OOL_PROXY;
     }
     inline bool isDomExit() {
         IonCode *code = footer()->ionCode();
@@ -216,17 +216,17 @@ class IonExitFrameLayout : public IonCommonFrameLayout
         JS_ASSERT(isNativeExit());
         return reinterpret_cast<IonNativeExitFrameLayout *>(footer());
     }
-    inline IonOOLNativeGetterExitFrameLayout *oolNativeGetterExit() {
-        JS_ASSERT(isOOLNativeGetterExit());
-        return reinterpret_cast<IonOOLNativeGetterExitFrameLayout *>(footer());
+    inline IonOOLNativeExitFrameLayout *oolNativeExit() {
+        JS_ASSERT(isOOLNativeExit());
+        return reinterpret_cast<IonOOLNativeExitFrameLayout *>(footer());
     }
     inline IonOOLPropertyOpExitFrameLayout *oolPropertyOpExit() {
         JS_ASSERT(isOOLPropertyOpExit());
         return reinterpret_cast<IonOOLPropertyOpExitFrameLayout *>(footer());
     }
-    inline IonOOLProxyGetExitFrameLayout *oolProxyGetExit() {
-        JS_ASSERT(isOOLProxyGetExit());
-        return reinterpret_cast<IonOOLProxyGetExitFrameLayout *>(footer());
+    inline IonOOLProxyExitFrameLayout *oolProxyExit() {
+        JS_ASSERT(isOOLProxyExit());
+        return reinterpret_cast<IonOOLProxyExitFrameLayout *>(footer());
     }
     inline IonDOMExitFrameLayout *DOMExit() {
         JS_ASSERT(isDomExit());
@@ -262,31 +262,34 @@ class IonNativeExitFrameLayout
     }
 };
 
-class IonOOLNativeGetterExitFrameLayout
+class IonOOLNativeExitFrameLayout
 {
   protected: // only to silence a clang warning about unused private fields
     IonExitFooterFrame footer_;
     IonExitFrameLayout exit_;
+
+    // pointer to root the stub's IonCode
+    IonCode *stubCode_;
+
+    uintptr_t argc_;
 
     // We need to split the Value into 2 fields of 32 bits, otherwise the C++
     // compiler may add some padding between the fields.
     uint32_t loCalleeResult_;
     uint32_t hiCalleeResult_;
 
-    // The frame includes the object argument.
+    // Split Value for |this| and args above.
     uint32_t loThis_;
     uint32_t hiThis_;
 
-    // pointer to root the stub's IonCode
-    IonCode *stubCode_;
-
   public:
-    static inline size_t Size() {
-        return sizeof(IonOOLNativeGetterExitFrameLayout);
+    static inline size_t Size(size_t argc) {
+        // The Frame accounts for the callee/result and |this|, so we only needs args.
+        return sizeof(IonOOLNativeExitFrameLayout) + (argc * sizeof(Value));
     }
 
     static size_t offsetOfResult() {
-        return offsetof(IonOOLNativeGetterExitFrameLayout, loCalleeResult_);
+        return offsetof(IonOOLNativeExitFrameLayout, loCalleeResult_);
     }
 
     inline IonCode **stubCode() {
@@ -298,9 +301,8 @@ class IonOOLNativeGetterExitFrameLayout
     inline Value *thisp() {
         return reinterpret_cast<Value*>(&loThis_);
     }
-
     inline uintptr_t argc() const {
-        return 0;
+        return argc_;
     }
 };
 
@@ -349,7 +351,9 @@ class IonOOLPropertyOpExitFrameLayout
 
 // Proxy::get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
 //            MutableHandleValue vp)
-class IonOOLProxyGetExitFrameLayout
+// Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
+//            bool strict, MutableHandleValue vp)
+class IonOOLProxyExitFrameLayout
 {
   protected: // only to silence a clang warning about unused private fields
     IonExitFooterFrame footer_;
@@ -374,11 +378,11 @@ class IonOOLProxyGetExitFrameLayout
 
   public:
     static inline size_t Size() {
-        return sizeof(IonOOLProxyGetExitFrameLayout);
+        return sizeof(IonOOLProxyExitFrameLayout);
     }
 
     static size_t offsetOfResult() {
-        return offsetof(IonOOLProxyGetExitFrameLayout, vp0_);
+        return offsetof(IonOOLProxyExitFrameLayout, vp0_);
     }
 
     inline IonCode **stubCode() {
