@@ -300,8 +300,6 @@ public:
     void GetDPI(float* aDPI);
     void GetDefaultScale(double *aScale);
 
-    CSSToScreenScale GetZoom() { return mLastMetrics.mZoom; }
-
     ScreenOrientation GetOrientation() { return mOrientation; }
 
     void SetBackgroundColor(const nscolor& aColor);
