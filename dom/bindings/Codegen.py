@@ -7393,9 +7393,9 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
             # XXXbz Once this is fixed to only throw in strict mode, update the
             # code that decides whether to do a
             # CGDOMJSProxyHandler_defineProperty at all.
-            set += ("if (IsArrayIndex(GetArrayIndexFromId(cx, id))) {\n" +
-                    "  return ThrowErrorMessage(cx, MSG_NO_PROPERTY_SETTER, \"%s\");\n" +
-                    "}\n") % self.descriptor.name
+            set += ("if (IsArrayIndex(GetArrayIndexFromId(cx, id))) {\n"
+                    "  return js::IsInNonStrictPropertySet(cx) || ThrowErrorMessage(cx, MSG_NO_INDEXED_SETTER, \"%s\");\n"
+                    "}\n" % self.descriptor.name)
 
         if UseHolderForUnforgeable(self.descriptor):
             defineOnUnforgeable = ("JSBool hasUnforgeable;\n"
@@ -7429,8 +7429,8 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                 # can just do our setter unconditionally here.
                 set += (CGProxyNamedPresenceChecker(self.descriptor).define() + "\n" +
                         "if (found) {\n"
-                        "  return ThrowErrorMessage(cx, MSG_NO_PROPERTY_SETTER, \"%s\");\n"
-                        "}" % self.descriptor.name)
+                        "  return js::IsInNonStrictPropertySet(cx) || ThrowErrorMessage(cx, MSG_NO_NAMED_SETTER, \"%s\");\n"
+                        "}\n" % self.descriptor.name)
             set += ("return mozilla::dom::DOMProxyHandler::defineProperty(%s);" %
                     ", ".join(a.name for a in self.args))
         return set
