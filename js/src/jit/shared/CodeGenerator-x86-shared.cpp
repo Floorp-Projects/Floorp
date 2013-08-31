@@ -20,6 +20,7 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::FloorLog2;
+using mozilla::NegativeInfinity;
 
 namespace js {
 namespace jit {
@@ -439,15 +440,12 @@ bool
 CodeGeneratorX86Shared::visitPowHalfD(LPowHalfD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
-    Register scratch = ToRegister(ins->temp());
     JS_ASSERT(input == ToFloatRegister(ins->output()));
 
-    const uint32_t NegInfinityFloatBits = 0xFF800000;
     Label done, sqrt;
 
     // Branch if not -Infinity.
-    masm.move32(Imm32(NegInfinityFloatBits), scratch);
-    masm.loadFloatAsDouble(scratch, ScratchFloatReg);
+    masm.loadConstantDouble(NegativeInfinity(), ScratchFloatReg);
     masm.branchDouble(Assembler::DoubleNotEqualOrUnordered, input, ScratchFloatReg, &sqrt);
 
     // Math.pow(-Infinity, 0.5) == Infinity.
