@@ -12,6 +12,6 @@
 #define ION_FRAME_DOMMETHOD ((IonCode *)0x3)
 #define ION_FRAME_OOL_NATIVE        ((IonCode *)0x4)
 #define ION_FRAME_OOL_PROPERTY_OP   ((IonCode *)0x5)
-#define ION_FRAME_OOL_PROXY_GET     ((IonCode *)0x6)
+#define ION_FRAME_OOL_PROXY         ((IonCode *)0x6)
 
 #endif /* jit_shared_IonFrames_shared_h */

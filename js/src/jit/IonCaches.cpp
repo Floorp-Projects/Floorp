@@ -1325,7 +1325,7 @@ EmitCallProxyGet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
 
     if (!masm.buildOOLFakeExitFrame(returnAddr))
         return false;
-    masm.enterFakeExitFrame(ION_FRAME_OOL_PROXY_GET);
+    masm.enterFakeExitFrame(ION_FRAME_OOL_PROXY);
 
     // Make the call.
     masm.setupUnalignedABICall(5, scratch);
@@ -1341,7 +1341,7 @@ EmitCallProxyGet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
 
     // Load the outparam vp[0] into output register(s).
     masm.loadValue(
-        Address(StackPointer, IonOOLProxyGetExitFrameLayout::offsetOfResult()),
+        Address(StackPointer, IonOOLProxyExitFrameLayout::offsetOfResult()),
         JSReturnOperand);
 
     masm.storeCallResultValue(output);
@@ -1350,7 +1350,7 @@ EmitCallProxyGet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
     // is no need for leaveFakeExitFrame.
 
     // Move the StackPointer back to its original location, unwinding the exit frame.
-    masm.adjustStack(IonOOLProxyGetExitFrameLayout::Size());
+    masm.adjustStack(IonOOLProxyExitFrameLayout::Size());
     JS_ASSERT(masm.framePushed() == initialStack);
 
     // restoreLive()
