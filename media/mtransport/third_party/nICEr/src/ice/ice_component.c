@@ -806,10 +806,13 @@ int nr_ice_component_nominated_pair(nr_ice_component *comp, nr_ice_cand_pair *pa
 
     r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/comp(%d): cancelling all pairs but %s (0x%p)",comp->stream->pctx->label,comp->stream->label,comp->component_id,pair->as_string,pair);
 
-    /* OK, we need to cancel off everything on this component */
+    /* Cancel checks in WAITING and FROZEN per ICE S 8.1.2 */
     p2=TAILQ_FIRST(&comp->stream->check_list);
     while(p2){
-      if((p2 != pair) && (p2->remote->component->component_id == comp->component_id)){
+      if((p2 != pair) &&
+         (p2->remote->component->component_id == comp->component_id) &&
+         ((p2->state == NR_ICE_PAIR_STATE_FROZEN) ||
+	  (p2->state == NR_ICE_PAIR_STATE_WAITING))) {
         r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/comp(%d): cancelling pair %s (0x%p)",comp->stream->pctx->label,comp->stream->label,comp->component_id,p2->as_string,p2);
 
         if(r=nr_ice_candidate_pair_cancel(pair->pctx,p2))
