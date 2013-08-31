@@ -192,7 +192,7 @@ class IonBaselineStubFrameLayout : public IonCommonFrameLayout
 class IonNativeExitFrameLayout;
 class IonOOLNativeExitFrameLayout;
 class IonOOLPropertyOpExitFrameLayout;
-class IonOOLProxyGetExitFrameLayout;
+class IonOOLProxyExitFrameLayout;
 class IonDOMExitFrameLayout;
 
 // this is the frame layout when we are exiting ion code, and about to enter EABI code
@@ -235,8 +235,8 @@ class IonExitFrameLayout : public IonCommonFrameLayout
     inline bool isOOLPropertyOpExit() {
         return footer()->ionCode() == ION_FRAME_OOL_PROPERTY_OP;
     }
-    inline bool isOOLProxyGetExit() {
-        return footer()->ionCode() == ION_FRAME_OOL_PROXY_GET;
+    inline bool isOOLProxyExit() {
+        return footer()->ionCode() == ION_FRAME_OOL_PROXY;
     }
     inline bool isDomExit() {
         IonCode *code = footer()->ionCode();
@@ -259,9 +259,9 @@ class IonExitFrameLayout : public IonCommonFrameLayout
         JS_ASSERT(isOOLPropertyOpExit());
         return reinterpret_cast<IonOOLPropertyOpExitFrameLayout *>(footer());
     }
-    inline IonOOLProxyGetExitFrameLayout *oolProxyGetExit() {
-        JS_ASSERT(isOOLProxyGetExit());
-        return reinterpret_cast<IonOOLProxyGetExitFrameLayout *>(footer());
+    inline IonOOLProxyExitFrameLayout *oolProxyExit() {
+        JS_ASSERT(isOOLProxyExit());
+        return reinterpret_cast<IonOOLProxyExitFrameLayout *>(footer());
     }
     inline IonDOMExitFrameLayout *DOMExit() {
         JS_ASSERT(isDomExit());
@@ -385,7 +385,9 @@ class IonOOLPropertyOpExitFrameLayout
 
 // Proxy::get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
 //            MutableHandleValue vp)
-class IonOOLProxyGetExitFrameLayout
+// Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
+//            bool strict, MutableHandleValue vp)
+class IonOOLProxyExitFrameLayout
 {
   protected: // only to silence a clang warning about unused private fields
     IonExitFooterFrame footer_;
@@ -410,11 +412,11 @@ class IonOOLProxyGetExitFrameLayout
 
   public:
     static inline size_t Size() {
-        return sizeof(IonOOLProxyGetExitFrameLayout);
+        return sizeof(IonOOLProxyExitFrameLayout);
     }
 
     static size_t offsetOfResult() {
-        return offsetof(IonOOLProxyGetExitFrameLayout, vp0_);
+        return offsetof(IonOOLProxyExitFrameLayout, vp0_);
     }
 
     inline IonCode **stubCode() {
