@@ -1407,8 +1407,6 @@ template<> inline const bool ElementTypeMayBeDouble<uint32_t>() { return true; }
 template<> inline const bool ElementTypeMayBeDouble<float>() { return true; }
 template<> inline const bool ElementTypeMayBeDouble<double>() { return true; }
 
-template<typename NativeType> class TypedArrayObjectTemplate;
-
 template<typename ElementType>
 static inline JSObject *
 NewArray(JSContext *cx, uint32_t nelements);
@@ -1424,6 +1422,8 @@ InitArrayBufferViewDataPointer(JSObject *obj, ArrayBufferObject *buffer, size_t 
     obj->initPrivate(buffer->dataPointer() + byteOffset);
     PostBarrierTypedArrayObject(obj);
 }
+
+namespace {
 
 template<typename NativeType>
 class TypedArrayObjectTemplate : public TypedArrayObject
@@ -2619,6 +2619,8 @@ class Uint8ClampedArrayObject : public TypedArrayObjectTemplate<uint8_clamped> {
     static const JSFunctionSpec jsfuncs[];
 };
 
+} /* anonymous namespace */
+
 template<typename T>
 bool
 ArrayBufferObject::createTypedArrayFromBufferImpl(JSContext *cx, CallArgs args)
@@ -2682,6 +2684,8 @@ TypedArrayObjectTemplate<NativeType>::copyIndexToValue(JSObject *tarray, uint32_
     vp.setInt32(getIndex(tarray, index));
 }
 
+namespace {
+
 // and we need to specialize for 32-bit integers and floats
 template<>
 void
@@ -2738,6 +2742,8 @@ TypedArrayObjectTemplate<double>::copyIndexToValue(JSObject *tarray, uint32_t in
      */
     vp.setDouble(JS_CANONICALIZE_NAN(val));
 }
+
+} /* anonymous namespace */
 
 static NewObjectKind
 DataViewNewObjectKind(JSContext *cx, uint32_t byteLength, JSObject *proto)

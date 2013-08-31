@@ -20,6 +20,8 @@
 using namespace js;
 using namespace js::frontend;
 
+namespace {
+
 class NameResolver
 {
     static const size_t MaxParents = 100;
@@ -324,6 +326,8 @@ class NameResolver
         nparents--;
     }
 };
+
+} /* anonymous namespace */
 
 bool
 frontend::NameFunctions(JSContext *cx, ParseNode *pn)
