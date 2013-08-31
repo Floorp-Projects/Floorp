@@ -5,6 +5,7 @@ api.recurly.com: did not receive HSTS header
 api.simple.com: did not receive HSTS header
 apis.google.com: did not receive HSTS header
 appengine.google.com: did not receive HSTS header
+bcrook.com: max-age too low: 86400
 betnet.fr: could not connect to host
 bigshinylock.minazo.net: could not connect to host
 blueseed.co: did not receive HSTS header
@@ -18,7 +19,6 @@ chrome-devtools-frontend.appspot.com: did not receive HSTS header
 chrome.google.com: did not receive HSTS header
 code.google.com: did not receive HSTS header
 codereview.chromium.org: did not receive HSTS header
-crypto.cat: could not connect to host
 crypto.is: did not receive HSTS header
 csawctf.poly.edu: did not receive HSTS header
 dl.google.com: did not receive HSTS header
@@ -35,7 +35,7 @@ gmail.com: did not receive HSTS header
 gocardless.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIStrictTransportSecurityService.processStsHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-aurora-l64-hsts-000000000000/getHSTSPreloadList.js :: processStsHeader :: line 123"  data: no]
 googlemail.com: did not receive HSTS header
 googleplex.com: could not connect to host
-greplin.com: did not receive HSTS header
+greplin.com: could not connect to host
 grepular.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIStrictTransportSecurityService.processStsHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-aurora-l64-hsts-000000000000/getHSTSPreloadList.js :: processStsHeader :: line 123"  data: no]
 groups.google.com: did not receive HSTS header
 health.google.com: did not receive HSTS header
@@ -57,7 +57,6 @@ neonisi.com: could not connect to host
 openshift.redhat.com: did not receive HSTS header
 ottospora.nl: could not connect to host
 packagist.org: max-age too low: 2592000
-passwd.io: could not connect to host
 paypal.com: max-age too low: 14400
 piratenlogin.de: could not connect to host
 plus.google.com: did not receive HSTS header
@@ -91,7 +90,7 @@ www.elanex.biz: did not receive HSTS header
 www.gmail.com: did not receive HSTS header
 www.googlemail.com: did not receive HSTS header
 www.gov.uk: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIStrictTransportSecurityService.processStsHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-aurora-l64-hsts-000000000000/getHSTSPreloadList.js :: processStsHeader :: line 123"  data: no]
-www.greplin.com: did not receive HSTS header
+www.greplin.com: could not connect to host
 www.jitsi.org: did not receive HSTS header
 www.lastpass.com: did not receive HSTS header
 www.ledgerscope.net: max-age too low: 86400
