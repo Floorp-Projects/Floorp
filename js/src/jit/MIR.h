@@ -3953,11 +3953,9 @@ class MBeta : public MUnaryInstruction
 {
   private:
     const Range *comparison_;
-    MDefinition *val_;
     MBeta(MDefinition *val, const Range *comp)
         : MUnaryInstruction(val),
-          comparison_(comp),
-          val_(val)
+          comparison_(comp)
     {
         setResultType(val->type());
         setResultTypeSet(val->resultTypeSet());

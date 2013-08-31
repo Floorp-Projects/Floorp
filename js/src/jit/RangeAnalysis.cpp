@@ -800,7 +800,7 @@ MBeta::computeRange()
 {
     bool emptyRange = false;
 
-    Range *range = Range::intersect(val_->range(), comparison_, &emptyRange);
+    Range *range = Range::intersect(getOperand(0)->range(), comparison_, &emptyRange);
     if (emptyRange) {
         IonSpew(IonSpew_Range, "Marking block for inst %d unexitable", id());
         block()->setEarlyAbort();
