@@ -538,7 +538,10 @@ class Automation(object):
     return env
 
   def killPid(self, pid):
-    os.kill(pid, getattr(signal, "SIGKILL", signal.SIGTERM))
+    try:
+      os.kill(pid, getattr(signal, "SIGKILL", signal.SIGTERM))
+    except WindowsError:
+      self.log.info("Failed to kill process %d." % pid)
 
   if IS_WIN32:
     PeekNamedPipe = ctypes.windll.kernel32.PeekNamedPipe
