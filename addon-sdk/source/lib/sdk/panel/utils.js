@@ -246,12 +246,7 @@ function make(document) {
   let viewFrame = createFrame(panel, frameOptions);
   setupPanelFrame(viewFrame);
 
-  function onDisplayChange({type, target}) {
-    // Events from child element like <select /> may propagate (dropdowns are
-    // popups too), in which case frame loader shouldn't be swapped.
-    // See Bug 886329
-    if (target !== this) return;
-
+  function onDisplayChange({type}) {
     try { swapFrameLoaders(backgroundFrame, viewFrame); }
     catch(error) { console.exception(error); }
     events.emit(EVENT_NAMES[type], { subject: panel });
