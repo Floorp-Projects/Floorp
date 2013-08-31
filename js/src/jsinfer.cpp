@@ -568,6 +568,8 @@ TypeSet::unionSets(TypeSet *a, TypeSet *b, LifoAlloc *alloc)
 // TypeSet constraints
 /////////////////////////////////////////////////////////////////////
 
+namespace {
+
 /* Standard subset constraint, propagate all types from one set to another. */
 class TypeConstraintSubset : public TypeConstraint
 {
@@ -589,6 +591,8 @@ class TypeConstraintSubset : public TypeConstraint
     }
 };
 
+} /* anonymous namespace */
+
 void
 StackTypeSet::addSubset(JSContext *cx, TypeSet *target)
 {
@@ -601,6 +605,8 @@ HeapTypeSet::addSubset(JSContext *cx, TypeSet *target)
     JS_ASSERT(!target->purged());
     add(cx, cx->typeLifoAlloc().new_<TypeConstraintSubset>(target));
 }
+
+namespace {
 
 enum PropertyAccessKind {
     PROPERTY_WRITE,
@@ -641,6 +647,8 @@ typedef TypeConstraintProp<PROPERTY_WRITE> TypeConstraintSetProperty;
 typedef TypeConstraintProp<PROPERTY_READ>  TypeConstraintGetProperty;
 typedef TypeConstraintProp<PROPERTY_READ_EXISTING> TypeConstraintGetPropertyExisting;
 
+} /* anonymous namespace */
+
 void
 StackTypeSet::addGetProperty(JSContext *cx, JSScript *script, jsbytecode *pc,
                              StackTypeSet *target, jsid id)
@@ -668,6 +676,8 @@ HeapTypeSet::addGetProperty(JSContext *cx, JSScript *script, jsbytecode *pc,
     JS_ASSERT(!target->purged());
     add(cx, cx->typeLifoAlloc().new_<TypeConstraintGetProperty>(script, pc, target, id));
 }
+
+namespace {
 
 /*
  * Constraints for updating the 'this' types of callees on CALLPROP/CALLELEM.
@@ -701,6 +711,8 @@ class TypeConstraintCallProp : public TypeConstraint
 typedef TypeConstraintCallProp<PROPERTY_READ> TypeConstraintCallProperty;
 typedef TypeConstraintCallProp<PROPERTY_READ_EXISTING> TypeConstraintCallPropertyExisting;
 
+} /* anonymous namespace */
+
 void
 HeapTypeSet::addCallProperty(JSContext *cx, JSScript *script, jsbytecode *pc, jsid id)
 {
@@ -715,6 +727,8 @@ HeapTypeSet::addCallProperty(JSContext *cx, JSScript *script, jsbytecode *pc, js
 
     add(cx, cx->typeLifoAlloc().new_<TypeConstraintCallProperty>(script, callpc, id));
 }
+
+namespace {
 
 /*
  * Constraints for generating 'set' property constraints on a SETELEM only if
@@ -745,6 +759,8 @@ class TypeConstraintSetElement : public TypeConstraint
     void newType(JSContext *cx, TypeSet *source, Type type);
 };
 
+} /* anonymous namespace */
+
 void
 StackTypeSet::addSetElement(JSContext *cx, JSScript *script, jsbytecode *pc,
                             StackTypeSet *objectTypes, StackTypeSet *valueTypes)
@@ -752,6 +768,8 @@ StackTypeSet::addSetElement(JSContext *cx, JSScript *script, jsbytecode *pc,
     add(cx, cx->analysisLifoAlloc().new_<TypeConstraintSetElement>(script, pc, objectTypes,
                                                                    valueTypes));
 }
+
+namespace {
 
 /*
  * Constraints for watching call edges as they are discovered and invoking native
@@ -773,11 +791,15 @@ class TypeConstraintCall : public TypeConstraint
     void newType(JSContext *cx, TypeSet *source, Type type);
 };
 
+} /* anonymous namespace */
+
 void
 StackTypeSet::addCall(JSContext *cx, TypeCallsite *site)
 {
     add(cx, cx->analysisLifoAlloc().new_<TypeConstraintCall>(site));
 }
+
+namespace {
 
 /* Constraints for arithmetic operations. */
 class TypeConstraintArith : public TypeConstraint
@@ -804,12 +826,16 @@ class TypeConstraintArith : public TypeConstraint
     void newType(JSContext *cx, TypeSet *source, Type type);
 };
 
+} /* anonymous namespace */
+
 void
 StackTypeSet::addArith(JSContext *cx, JSScript *script, jsbytecode *pc, TypeSet *target,
                        TypeSet *other)
 {
     add(cx, cx->analysisLifoAlloc().new_<TypeConstraintArith>(script, pc, target, other));
 }
+
+namespace {
 
 /* Subset constraint which transforms primitive values into appropriate objects. */
 class TypeConstraintTransformThis : public TypeConstraint
@@ -828,11 +854,15 @@ class TypeConstraintTransformThis : public TypeConstraint
     void newType(JSContext *cx, TypeSet *source, Type type);
 };
 
+} /* anonymous namespace */
+
 void
 StackTypeSet::addTransformThis(JSContext *cx, JSScript *script, TypeSet *target)
 {
     add(cx, cx->analysisLifoAlloc().new_<TypeConstraintTransformThis>(script, target));
 }
+
+namespace {
 
 /*
  * Constraint which adds a particular type to the 'this' types of all
@@ -856,12 +886,16 @@ class TypeConstraintPropagateThis : public TypeConstraint
     void newType(JSContext *cx, TypeSet *source, Type type);
 };
 
+} /* anonymous namespace */
+
 void
 StackTypeSet::addPropagateThis(JSContext *cx, JSScript *script, jsbytecode *pc,
                                Type type, StackTypeSet *types)
 {
     add(cx, cx->analysisLifoAlloc().new_<TypeConstraintPropagateThis>(script, pc, type, types));
 }
+
+namespace {
 
 /* Subset constraint which filters out primitive types. */
 class TypeConstraintFilterPrimitive : public TypeConstraint
@@ -883,6 +917,8 @@ class TypeConstraintFilterPrimitive : public TypeConstraint
         target->addType(cx, type);
     }
 };
+
+} /* anonymous namespace */
 
 void
 HeapTypeSet::addFilterPrimitives(JSContext *cx, TypeSet *target)
@@ -994,6 +1030,8 @@ void ScriptAnalysis::breakTypeBarriersSSA(JSContext *cx, const SSAValue &v)
     breakTypeBarriers(cx, offset, true);
 }
 
+namespace {
+
 /*
  * Subset constraint for property reads and argument passing which can add type
  * barriers on the read instead of passing types along.
@@ -1020,6 +1058,8 @@ class TypeConstraintSubsetBarrier : public TypeConstraint
         }
     }
 };
+
+} /* anonymous namespace */
 
 void
 StackTypeSet::addSubsetBarrier(JSContext *cx, JSScript *script, jsbytecode *pc, TypeSet *target)
@@ -1634,6 +1674,8 @@ TypeConstraintTransformThis::newType(JSContext *cx, TypeSet *source, Type type)
 // Freeze constraints
 /////////////////////////////////////////////////////////////////////
 
+namespace {
+
 /* Constraint which triggers recompilation of a script if any type is added to a type set. */
 class TypeConstraintFreeze : public TypeConstraint
 {
@@ -1658,6 +1700,8 @@ class TypeConstraintFreeze : public TypeConstraint
         cx->compartment()->types.addPendingRecompile(cx, info);
     }
 };
+
+} /* anonymous namespace */
 
 void
 HeapTypeSet::addFreeze(JSContext *cx)
@@ -1754,6 +1798,8 @@ StackTypeSet::mightBeType(JSValueType type)
     return baseFlags() & PrimitiveTypeFlag(type);
 }
 
+namespace {
+
 /* Constraint which triggers recompilation if an object acquires particular flags. */
 class TypeConstraintFreezeObjectFlags : public TypeConstraint
 {
@@ -1783,6 +1829,8 @@ class TypeConstraintFreezeObjectFlags : public TypeConstraint
         }
     }
 };
+
+} /* anonymous namespace */
 
 bool
 StackTypeSet::hasObjectFlags(JSContext *cx, TypeObjectFlags flags)
@@ -1881,6 +1929,8 @@ HeapTypeSet::WatchObjectStateChange(JSContext *cx, TypeObject *obj)
                      0));
 }
 
+namespace {
+
 class TypeConstraintFreezeOwnProperty : public TypeConstraint
 {
   public:
@@ -1907,6 +1957,8 @@ class TypeConstraintFreezeOwnProperty : public TypeConstraint
         }
     }
 };
+
+} /* anonymous namespace */
 
 static void
 CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, HandleFunction fun);
@@ -2217,6 +2269,8 @@ AddPendingRecompile(JSContext *cx, JSScript *script)
     cx->compartment()->types.addPendingRecompile(cx, script);
 }
 
+namespace {
+
 /*
  * As for TypeConstraintFreeze, but describes an implicit freeze constraint
  * added for stack types within a script. Applies to all compilations of the
@@ -2242,6 +2296,8 @@ class TypeConstraintFreezeStack : public TypeConstraint
         AddPendingRecompile(cx, script_);
     }
 };
+
+} /* anonymous namespace */
 
 /////////////////////////////////////////////////////////////////////
 // TypeCompartment
@@ -4745,6 +4801,8 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
     TypeScript::AddFreezeConstraints(cx, script_);
 }
 
+namespace {
+
 /*
  * Persistent constraint clearing out newScript and definite properties from
  * an object should a property on another object get a getter or setter.
@@ -4777,6 +4835,8 @@ class TypeConstraintClearDefiniteGetterSetter : public TypeConstraint
     void newType(JSContext *cx, TypeSet *source, Type type) {}
 };
 
+} /* anonymous namespace */
+
 static bool
 AddClearDefiniteGetterSetterForPrototypeChain(JSContext *cx, TypeObject *type, jsid id)
 {
@@ -4798,6 +4858,8 @@ AddClearDefiniteGetterSetterForPrototypeChain(JSContext *cx, TypeObject *type, j
     }
     return true;
 }
+
+namespace {
 
 /*
  * Constraint which clears definite properties on an object should a type set
@@ -4834,6 +4896,8 @@ struct NewScriptPropertiesState
       : thisFunction(cx), baseobj(cx), initializerList(cx), accessedProperties(cx)
     {}
 };
+
+} /* anonymous namespace */
 
 static bool
 AnalyzePoppedThis(JSContext *cx, SSAUseChain *use,

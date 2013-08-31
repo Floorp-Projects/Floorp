@@ -966,6 +966,8 @@ JSStructuredCloneReader::checkDouble(double d)
     return true;
 }
 
+namespace {
+
 class Chars {
     JSContext *cx;
     jschar *p;
@@ -986,6 +988,8 @@ class Chars {
     jschar *get() { return p; }
     void forget() { p = NULL; }
 };
+
+} /* anonymous namespace */
 
 JSString *
 JSStructuredCloneReader::readString(uint32_t nchars)
