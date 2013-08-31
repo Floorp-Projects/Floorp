@@ -480,6 +480,13 @@ class MDefinition : public MNode
     // (only counting MDefinitions, ignoring MResumePoints)
     size_t defUseCount() const;
 
+    // Test whether this MDefinition has exactly one use.
+    bool hasOneUse() const;
+
+    // Test whether this MDefinition has exactly one use.
+    // (only counting MDefinitions, ignoring MResumePoints)
+    bool hasOneDefUse() const;
+
     bool hasUses() const {
         return !uses_.empty();
     }
