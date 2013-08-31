@@ -189,6 +189,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     void branchTestObjShape(Condition cond, Register obj, Register shape, Label *label) {
         branchPtr(cond, Address(obj, JSObject::offsetOfShape()), shape, label);
     }
+    void branchTestProxyHandlerFamily(Condition cond, Register proxy, Register scratch,
+                                      void *handlerp, Label *label) {
+        Address handlerAddr(proxy, ProxyObject::offsetOfHandler());
+        loadPrivate(handlerAddr, scratch);
+        Address familyAddr(scratch, BaseProxyHandler::offsetOfFamily());
+        branchPtr(cond, familyAddr, ImmWord(handlerp), label);
+    }
 
     template <typename Value>
     Condition testMIRType(Condition cond, const Value &val, MIRType type) {

@@ -696,6 +696,8 @@ class SetPropertyIC : public RepatchIonCache
     bool attachNativeAdding(JSContext *cx, IonScript *ion, JSObject *obj, HandleShape oldshape,
                             HandleShape newshape, HandleShape propshape);
     bool attachGenericProxy(JSContext *cx, IonScript *ion, void *returnAddr);
+    bool attachDOMProxyShadowed(JSContext *cx, IonScript *ion, HandleObject obj,
+                                void *returnAddr);
 
     static bool
     update(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue value);
