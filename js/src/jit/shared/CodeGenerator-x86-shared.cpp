@@ -431,8 +431,8 @@ bool
 CodeGeneratorX86Shared::visitSqrtD(LSqrtD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
-    JS_ASSERT(input == ToFloatRegister(ins->output()));
-    masm.sqrtsd(input, input);
+    FloatRegister output = ToFloatRegister(ins->output());
+    masm.sqrtsd(input, output);
     return true;
 }
 
