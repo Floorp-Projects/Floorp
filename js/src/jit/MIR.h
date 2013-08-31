@@ -6674,20 +6674,29 @@ class MSetPropertyCache
   : public MSetPropertyInstruction,
     public SingleObjectPolicy
 {
-    MSetPropertyCache(MDefinition *obj, MDefinition *value, HandlePropertyName name, bool strict)
-      : MSetPropertyInstruction(obj, value, name, strict)
+    bool needsTypeBarrier_;
+
+    MSetPropertyCache(MDefinition *obj, MDefinition *value, HandlePropertyName name, bool strict,
+                      bool typeBarrier)
+      : MSetPropertyInstruction(obj, value, name, strict),
+        needsTypeBarrier_(typeBarrier)
     {
     }
 
   public:
     INSTRUCTION_HEADER(SetPropertyCache)
 
-    static MSetPropertyCache *New(MDefinition *obj, MDefinition *value, HandlePropertyName name, bool strict) {
-        return new MSetPropertyCache(obj, value, name, strict);
+    static MSetPropertyCache *New(MDefinition *obj, MDefinition *value, HandlePropertyName name,
+                                  bool strict, bool typeBarrier) {
+        return new MSetPropertyCache(obj, value, name, strict, typeBarrier);
     }
 
     TypePolicy *typePolicy() {
         return this;
+    }
+
+    bool needsTypeBarrier() const {
+        return needsTypeBarrier_;
     }
 };
 
