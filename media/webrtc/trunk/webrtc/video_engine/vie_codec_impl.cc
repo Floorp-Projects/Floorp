@@ -8,23 +8,23 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_engine/vie_codec_impl.h"
+#include "webrtc/video_engine/vie_codec_impl.h"
 
 #include <list>
 
-#include "engine_configurations.h"  // NOLINT
-#include "modules/video_coding/main/interface/video_coding.h"
-#include "system_wrappers/interface/logging.h"
-#include "system_wrappers/interface/trace.h"
-#include "video_engine/include/vie_errors.h"
-#include "video_engine/vie_capturer.h"
-#include "video_engine/vie_channel.h"
-#include "video_engine/vie_channel_manager.h"
-#include "video_engine/vie_defines.h"
-#include "video_engine/vie_encoder.h"
-#include "video_engine/vie_impl.h"
-#include "video_engine/vie_input_manager.h"
-#include "video_engine/vie_shared_data.h"
+#include "webrtc/engine_configurations.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding.h"
+#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/video_engine/include/vie_errors.h"
+#include "webrtc/video_engine/vie_capturer.h"
+#include "webrtc/video_engine/vie_channel.h"
+#include "webrtc/video_engine/vie_channel_manager.h"
+#include "webrtc/video_engine/vie_defines.h"
+#include "webrtc/video_engine/vie_encoder.h"
+#include "webrtc/video_engine/vie_impl.h"
+#include "webrtc/video_engine/vie_input_manager.h"
+#include "webrtc/video_engine/vie_shared_data.h"
 
 namespace webrtc {
 
@@ -33,7 +33,7 @@ ViECodec* ViECodec::GetInterface(VideoEngine* video_engine) {
   if (!video_engine) {
     return NULL;
   }
-  VideoEngineImpl* vie_impl = reinterpret_cast<VideoEngineImpl*>(video_engine);
+  VideoEngineImpl* vie_impl = static_cast<VideoEngineImpl*>(video_engine);
   ViECodecImpl* vie_codec_impl = vie_impl;
   // Increase ref count.
   (*vie_codec_impl)++;
@@ -193,28 +193,7 @@ int ViECodecImpl::SetSendCodec(const int video_channel,
   // Stop the media flow while reconfiguring.
   vie_encoder->Pause();
 
-  // Check if we have a frame provider that is a camera and can provide this
-  // codec for us.
-  bool use_capture_device_as_encoder = false;
-  frame_provider = is.FrameProvider(vie_encoder);
-  if (frame_provider) {
-    if (frame_provider->Id() >= kViECaptureIdBase &&
-        frame_provider->Id() <= kViECaptureIdMax) {
-      ViECapturer* vie_capture = static_cast<ViECapturer*>(frame_provider);
-      // Try to get preencoded. Nothing to do if it is not supported.
-      if (vie_capture && vie_capture->PreEncodeToViEEncoder(
-          video_codec_internal,
-          *vie_encoder,
-          video_channel) == 0) {
-        use_capture_device_as_encoder = true;
-      }
-    }
-  }
-
-  // Update the encoder settings if we are not using a capture device capable
-  // of this codec.
-  if (!use_capture_device_as_encoder &&
-      vie_encoder->SetEncoder(video_codec_internal) != 0) {
+  if (vie_encoder->SetEncoder(video_codec_internal) != 0) {
     WEBRTC_TRACE(kTraceError, kTraceVideo,
                  ViEId(shared_data_->instance_id(), video_channel),
                  "%s: Could not change encoder for channel %d", __FUNCTION__,

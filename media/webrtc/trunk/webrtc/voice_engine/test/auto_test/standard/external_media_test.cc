@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/interface/module_common_types.h"
-#include "voice_engine/include/voe_external_media.h"
-#include "voice_engine/test/auto_test/fakes/fake_media_process.h"
-#include "voice_engine/test/auto_test/fixtures/after_streaming_fixture.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/voice_engine/include/voe_external_media.h"
+#include "webrtc/voice_engine/test/auto_test/fakes/fake_media_process.h"
+#include "webrtc/voice_engine/test/auto_test/fixtures/after_streaming_fixture.h"
 
 class ExternalMediaTest : public AfterStreamingFixture {
  protected:
@@ -146,7 +146,7 @@ TEST_F(ExternalMediaTest,
 
 TEST_F(ExternalMediaTest,
        ExternalMixingResamplingToInvalidFrequenciesFails) {
-  const int kInvalidFrequencies[] = {-8000, -1, 1, 1000, 8001, 16001};
+  const int kInvalidFrequencies[] = {-8000, -1};
   webrtc::AudioFrame frame;
   PausePlaying();
   EXPECT_EQ(0, voe_xmedia_->SetExternalMixing(channel_, true));

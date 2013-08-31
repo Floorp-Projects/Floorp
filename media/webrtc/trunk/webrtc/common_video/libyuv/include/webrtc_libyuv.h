@@ -17,9 +17,9 @@
 
 #include <stdio.h>
 
-#include "common_types.h"  // RawVideoTypes.
-#include "common_video/interface/i420_video_frame.h"
-#include "typedefs.h"
+#include "webrtc/common_types.h"  // RawVideoTypes.
+#include "webrtc/common_video/interface/i420_video_frame.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 

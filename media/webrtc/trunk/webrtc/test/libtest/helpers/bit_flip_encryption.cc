@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "test/libtest/include/bit_flip_encryption.h"
+#include "webrtc/test/libtest/include/bit_flip_encryption.h"
 
 #include <cstdlib>
 

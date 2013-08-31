@@ -25,7 +25,7 @@ using namespace js;
 
 using mozilla::DoubleIsInt32;
 using mozilla::IsNaN;
-using mozilla::Move;
+using mozilla::OldMove;
 using mozilla::MoveRef;
 
 
@@ -610,7 +610,7 @@ class OrderedHashTable
             if (!Ops::isEmpty(Ops::getKey(rp->element))) {
                 HashNumber h = prepareHash(Ops::getKey(rp->element)) >> hashShift;
                 if (rp != wp)
-                    wp->element = Move(rp->element);
+                    wp->element = OldMove(rp->element);
                 wp->chain = hashTable[h];
                 hashTable[h] = wp;
                 wp++;
@@ -657,7 +657,7 @@ class OrderedHashTable
         for (Data *p = data, *end = data + dataLength; p != end; p++) {
             if (!Ops::isEmpty(Ops::getKey(p->element))) {
                 HashNumber h = prepareHash(Ops::getKey(p->element)) >> newHashShift;
-                new (wp) Data(Move(p->element), newHashTable[h]);
+                new (wp) Data(OldMove(p->element), newHashTable[h]);
                 newHashTable[h] = wp;
                 wp++;
             }
@@ -698,14 +698,14 @@ class OrderedHashMap
         }
 
         void operator=(MoveRef<Entry> rhs) {
-            const_cast<Key &>(key) = Move(rhs->key);
-            value = Move(rhs->value);
+            const_cast<Key &>(key) = OldMove(rhs->key);
+            value = OldMove(rhs->value);
         }
 
       public:
         Entry() : key(), value() {}
         Entry(const Key &k, const Value &v) : key(k), value(v) {}
-        Entry(MoveRef<Entry> rhs) : key(Move(rhs->key)), value(Move(rhs->value)) {}
+        Entry(MoveRef<Entry> rhs) : key(OldMove(rhs->key)), value(OldMove(rhs->value)) {}
 
         const Key key;
         Value value;

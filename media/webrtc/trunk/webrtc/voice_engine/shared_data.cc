@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "shared_data.h"
+#include "webrtc/voice_engine/shared_data.h"
 
-#include "audio_processing.h"
-#include "critical_section_wrapper.h"
-#include "channel.h"
-#include "output_mixer.h"
-#include "trace.h"
-#include "transmit_mixer.h"
+#include "webrtc/modules/audio_processing/include/audio_processing.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/voice_engine/channel.h"
+#include "webrtc/voice_engine/output_mixer.h"
+#include "webrtc/voice_engine/transmit_mixer.h"
 
 namespace webrtc {
 
@@ -104,16 +104,16 @@ uint16_t SharedData::NumOfSendingChannels()
     return nChannelsSending;
 }
 
-void SharedData::SetLastError(const int32_t error) const {
+void SharedData::SetLastError(int32_t error) const {
   _engineStatistics.SetLastError(error);
 }
 
-void SharedData::SetLastError(const int32_t error,
-                              const TraceLevel level) const {
+void SharedData::SetLastError(int32_t error,
+                              TraceLevel level) const {
   _engineStatistics.SetLastError(error, level);
 }
 
-void SharedData::SetLastError(const int32_t error, const TraceLevel level,
+void SharedData::SetLastError(int32_t error, TraceLevel level,
                               const char* msg) const {
   _engineStatistics.SetLastError(error, level, msg);
 }

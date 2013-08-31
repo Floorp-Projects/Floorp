@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_engine/test/auto_test/primitives/fake_stdin.h"
+#include "webrtc/video_engine/test/auto_test/primitives/fake_stdin.h"
 
 namespace webrtc {
 

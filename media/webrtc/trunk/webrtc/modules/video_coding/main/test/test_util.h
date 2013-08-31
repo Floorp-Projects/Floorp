@@ -50,7 +50,7 @@ int MTRxTxTest(CmdArgs& args);
 double NormalDist(double mean, double stdDev);
 
 struct RtpPacket {
-  int8_t data[1650]; // max packet size
+  uint8_t data[1650]; // max packet size
   int32_t length;
   int64_t receiveTime;
 };
@@ -87,7 +87,7 @@ class FileOutputFrameReceiver : public webrtc::VCMReceiveCallback {
   virtual ~FileOutputFrameReceiver();
 
   // VCMReceiveCallback
-  virtual WebRtc_Word32 FrameToRender(webrtc::I420VideoFrame& video_frame);
+  virtual int32_t FrameToRender(webrtc::I420VideoFrame& video_frame);
 
  private:
   std::string out_filename_;

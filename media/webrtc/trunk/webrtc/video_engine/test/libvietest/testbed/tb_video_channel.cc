@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_engine/test/libvietest/include/tb_video_channel.h"
+#include "webrtc/video_engine/test/libvietest/include/tb_video_channel.h"
 
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/test/channel_transport/include/channel_transport.h"
 
 TbVideoChannel::TbVideoChannel(TbInterfaces& Engine,

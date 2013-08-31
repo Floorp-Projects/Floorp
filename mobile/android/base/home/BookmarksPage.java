@@ -8,6 +8,9 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.Favicons;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.animation.PropertyAnimator;
+import org.mozilla.gecko.animation.PropertyAnimator.Property;
+import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserDB;
@@ -41,7 +44,9 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
@@ -76,6 +81,9 @@ public class BookmarksPage extends HomeFragment {
     // Grid of top bookmarks.
     private TopBookmarksView mTopBookmarks;
 
+    // Banner to show snippets.
+    private HomeBanner mBanner;
+
     // Adapter for list of bookmarks.
     private BookmarksListAdapter mListAdapter;
 
@@ -91,14 +99,22 @@ public class BookmarksPage extends HomeFragment {
     // Listener for pinning bookmarks.
     private PinBookmarkListener mPinBookmarkListener;
 
+    // Raw Y value of the last event that happened on the list view.
+    private float mListTouchY = -1;
+
+    // Scrolling direction of the banner.
+    private boolean mSnapBannerToTop;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        BookmarksListView list = (BookmarksListView) inflater.inflate(R.layout.home_bookmarks_page, container, false);
+        final View view = inflater.inflate(R.layout.home_bookmarks_page, container, false);
+
+        mList = (BookmarksListView) view.findViewById(R.id.bookmarks_list);
 
         mTopBookmarks = new TopBookmarksView(getActivity());
-        list.addHeaderView(mTopBookmarks);
+        mList.addHeaderView(mTopBookmarks);
 
-        return list;
+        return view;
     }
 
     @Override
@@ -115,7 +131,6 @@ public class BookmarksPage extends HomeFragment {
 
         mPinBookmarkListener = new PinBookmarkListener();
 
-        mList = (BookmarksListView) view.findViewById(R.id.bookmarks_list);
         mList.setTag(HomePager.LIST_TAG_BOOKMARKS);
         mList.setOnUrlOpenListener(listener);
         mList.setHeaderDividersEnabled(false);
@@ -125,6 +140,15 @@ public class BookmarksPage extends HomeFragment {
 
         registerForContextMenu(mList);
         registerForContextMenu(mTopBookmarks);
+
+        mBanner = (HomeBanner) view.findViewById(R.id.home_banner);
+        mList.setOnTouchListener(new OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                BookmarksPage.this.handleListTouchEvent(event);
+                return false;
+            }
+        });
     }
 
     @Override
@@ -187,6 +211,60 @@ public class BookmarksPage extends HomeFragment {
                                 .detach(this)
                                 .attach(this)
                                 .commitAllowingStateLoss();
+        }
+    }
+
+    private void handleListTouchEvent(MotionEvent event) {
+        // Ignore the event if the banner is hidden for this session.
+        if (mBanner.isDismissed()) {
+            return;
+        }
+
+        switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN: {
+                mListTouchY = event.getRawY();
+                break;
+             }
+
+            case MotionEvent.ACTION_MOVE: {
+                // There is a chance that we won't receive ACTION_DOWN, if the touch event
+                // actually started on the Grid instead of the List. Treat this as first event.
+                if (mListTouchY == -1) {
+                    mListTouchY = event.getRawY();
+                    return;
+                }
+
+                final float curY = event.getRawY();
+                final float delta = mListTouchY - curY;
+                mSnapBannerToTop = (delta > 0.0f) ? false : true;
+
+                final float height = mBanner.getHeight();
+                float newTranslationY = ViewHelper.getTranslationY(mBanner) + delta;
+
+                // Clamp the values to be between 0 and height.
+                if (newTranslationY < 0.0f) {
+                    newTranslationY = 0.0f;
+                } else if (newTranslationY > height) {
+                    newTranslationY = height;
+                }
+
+                ViewHelper.setTranslationY(mBanner, newTranslationY);
+                mListTouchY = curY;
+                break;
+            }
+
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL: {
+                mListTouchY = -1;
+                final float y = ViewHelper.getTranslationY(mBanner);
+                final float height = mBanner.getHeight();
+                if (y > 0.0f && y < height) {
+                    final PropertyAnimator animator = new PropertyAnimator(100);
+                    animator.attach(mBanner, Property.TRANSLATION_Y, mSnapBannerToTop ? 0 : height);
+                    animator.start();
+                }
+                break;
+            }
         }
     }
 

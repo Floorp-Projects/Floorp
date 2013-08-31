@@ -21,27 +21,26 @@
 
 namespace webrtc {
 
-class SpatialAudio : public ACMTest
-{
-public:
-    SpatialAudio(int testMode);
-    ~SpatialAudio();
+class SpatialAudio : public ACMTest {
+ public:
+  SpatialAudio(int testMode);
+  ~SpatialAudio();
 
-    void Perform();
-private:
-    int16_t Setup();
-    void EncodeDecode(double leftPanning, double rightPanning);
-    void EncodeDecode();
+  void Perform();
+ private:
+  int16_t Setup();
+  void EncodeDecode(double leftPanning, double rightPanning);
+  void EncodeDecode();
 
-    AudioCodingModule* _acmLeft;
-    AudioCodingModule* _acmRight;
-    AudioCodingModule* _acmReceiver;
-    Channel*               _channel;
-    PCMFile                _inFile;
-    PCMFile                _outFile;
-    int                    _testMode;
+  AudioCodingModule* _acmLeft;
+  AudioCodingModule* _acmRight;
+  AudioCodingModule* _acmReceiver;
+  Channel* _channel;
+  PCMFile _inFile;
+  PCMFile _outFile;
+  int _testMode;
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif

@@ -11,9 +11,9 @@
 #ifndef WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_INTERFACE_AUDIO_CONFERENCE_MIXER_DEFINES_H_
 #define WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_INTERFACE_AUDIO_CONFERENCE_MIXER_DEFINES_H_
 
-#include "map_wrapper.h"
-#include "module_common_types.h"
-#include "typedefs.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/system_wrappers/interface/map_wrapper.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 class MixHistory;

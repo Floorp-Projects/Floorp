@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_AGC_INCLUDE_GAIN_CONTROL_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_AGC_INCLUDE_GAIN_CONTROL_H_
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
 // Errors
 #define AGC_UNSPECIFIED_ERROR           18000

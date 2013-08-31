@@ -11,7 +11,7 @@
 #ifndef SYSTEM_WRAPPERS_INTERFACE_REF_COUNT_H_
 #define SYSTEM_WRAPPERS_INTERFACE_REF_COUNT_H_
 
-#include "system_wrappers/interface/atomic32.h"
+#include "webrtc/system_wrappers/interface/atomic32.h"
 
 namespace webrtc {
 

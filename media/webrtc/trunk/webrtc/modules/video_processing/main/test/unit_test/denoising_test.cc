@@ -11,11 +11,11 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "modules/video_processing/main/interface/video_processing.h"
-#include "modules/video_processing/main/test/unit_test/unit_test.h"
-#include "system_wrappers/interface/tick_util.h"
-#include "testsupport/fileutils.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/modules/video_processing/main/interface/video_processing.h"
+#include "webrtc/modules/video_processing/main/test/unit_test/unit_test.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
 

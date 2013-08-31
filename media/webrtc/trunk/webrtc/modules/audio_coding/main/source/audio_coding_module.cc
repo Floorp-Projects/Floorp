@@ -14,13 +14,21 @@
 #include "webrtc/modules/audio_coding/main/source/acm_codec_database.h"
 #include "webrtc/modules/audio_coding/main/source/acm_dtmf_detection.h"
 #include "webrtc/modules/audio_coding/main/source/audio_coding_module_impl.h"
+#include "webrtc/system_wrappers/interface/clock.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 
 // Create module
 AudioCodingModule* AudioCodingModule::Create(const int32_t id) {
-  return new AudioCodingModuleImpl(id);
+  return new AudioCodingModuleImpl(id, Clock::GetRealTimeClock());
+}
+
+// Used for testing by inserting a simulated clock. ACM will not destroy the
+// injected |clock| the client has to take care of that.
+AudioCodingModule* AudioCodingModule::Create(const int32_t id,
+                                             Clock* clock) {
+  return new AudioCodingModuleImpl(id, clock);
 }
 
 // Destroy module
@@ -49,7 +57,7 @@ int32_t AudioCodingModule::Codec(const char* payload_name,
   // Get the id of the codec from the database.
   codec_id = ACMCodecDB::CodecId(payload_name, sampling_freq_hz, channels);
   if (codec_id < 0) {
-    // We couldn't find a matching codec, set the parameterss to unacceptable
+    // We couldn't find a matching codec, set the parameters to unacceptable
     // values and return.
     codec->plname[0] = '\0';
     codec->pltype = -1;
@@ -63,7 +71,7 @@ int32_t AudioCodingModule::Codec(const char* payload_name,
   ACMCodecDB::Codec(codec_id, codec);
 
   // Keep the number of channels from the function call. For most codecs it
-  // will be the same value as in defaul codec settings, but not for all.
+  // will be the same value as in default codec settings, but not for all.
   codec->channels = channels;
 
   return 0;

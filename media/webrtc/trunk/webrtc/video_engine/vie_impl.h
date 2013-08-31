@@ -11,97 +11,105 @@
 #ifndef WEBRTC_VIDEO_ENGINE_VIE_IMPL_H_
 #define WEBRTC_VIDEO_ENGINE_VIE_IMPL_H_
 
-#include "engine_configurations.h"  // NOLINT
-#include "video_engine/vie_defines.h"
+#include "webrtc/common.h"
+#include "webrtc/engine_configurations.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/video_engine/vie_defines.h"
 
-#include "video_engine/vie_base_impl.h"
+#include "webrtc/video_engine/vie_base_impl.h"
 
 #ifdef WEBRTC_VIDEO_ENGINE_CAPTURE_API
-#include "video_engine/vie_capture_impl.h"
+#include "webrtc/video_engine/vie_capture_impl.h"
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_CODEC_API
-#include "video_engine/vie_codec_impl.h"
+#include "webrtc/video_engine/vie_codec_impl.h"
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_ENCRYPTION_API
-#include "video_engine/vie_encryption_impl.h"
+#include "webrtc/video_engine/vie_encryption_impl.h"
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_FILE_API
-#include "video_engine/vie_file_impl.h"
+#include "webrtc/video_engine/vie_file_impl.h"
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_IMAGE_PROCESS_API
-#include "video_engine/vie_image_process_impl.h"
+#include "webrtc/video_engine/vie_image_process_impl.h"
 #endif
-#include "video_engine/vie_network_impl.h"
+#include "webrtc/video_engine/vie_network_impl.h"
 #ifdef WEBRTC_VIDEO_ENGINE_RENDER_API
-#include "video_engine/vie_render_impl.h"
+#include "webrtc/video_engine/vie_render_impl.h"
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_RTP_RTCP_API
-#include "video_engine/vie_rtp_rtcp_impl.h"
+#include "webrtc/video_engine/vie_rtp_rtcp_impl.h"
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_EXTERNAL_CODEC_API
-#include "video_engine/vie_external_codec_impl.h"
+#include "webrtc/video_engine/vie_external_codec_impl.h"
 #endif
 
 namespace webrtc {
 
 class VideoEngineImpl
-    : public ViEBaseImpl
+    : public ViEBaseImpl,
 #ifdef WEBRTC_VIDEO_ENGINE_CODEC_API
-      , public ViECodecImpl
+      public ViECodecImpl,
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_CAPTURE_API
-      , public ViECaptureImpl
+      public ViECaptureImpl,
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_ENCRYPTION_API
-      , public ViEEncryptionImpl
+      public ViEEncryptionImpl,
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_FILE_API
-      , public ViEFileImpl
+      public ViEFileImpl,
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_IMAGE_PROCESS_API
-      , public ViEImageProcessImpl
+      public ViEImageProcessImpl,
 #endif
-      , public ViENetworkImpl
+      public ViENetworkImpl,
 #ifdef WEBRTC_VIDEO_ENGINE_RENDER_API
-      , public ViERenderImpl
+      public ViERenderImpl,
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_RTP_RTCP_API
-      , public ViERTP_RTCPImpl
+      public ViERTP_RTCPImpl,
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_EXTERNAL_CODEC_API
-      , public ViEExternalCodecImpl
+      public ViEExternalCodecImpl,
 #endif
+      public VideoEngine
 {  // NOLINT
  public:
-  VideoEngineImpl()
-      :
+  VideoEngineImpl(const Config* config, bool owns_config)
+      : ViEBaseImpl(*config),
 #ifdef WEBRTC_VIDEO_ENGINE_CODEC_API
-        ViECodecImpl(ViEBaseImpl::shared_data())
+        ViECodecImpl(ViEBaseImpl::shared_data()),
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_CAPTURE_API
-        , ViECaptureImpl(ViEBaseImpl::shared_data())
+        ViECaptureImpl(ViEBaseImpl::shared_data()),
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_ENCRYPTION_API
-        , ViEEncryptionImpl(ViEBaseImpl::shared_data())
+        ViEEncryptionImpl(ViEBaseImpl::shared_data()),
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_FILE_API
-        , ViEFileImpl(ViEBaseImpl::shared_data())
+        ViEFileImpl(ViEBaseImpl::shared_data()),
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_IMAGE_PROCESS_API
-        , ViEImageProcessImpl(ViEBaseImpl::shared_data())
+        ViEImageProcessImpl(ViEBaseImpl::shared_data()),
 #endif
-        , ViENetworkImpl(ViEBaseImpl::shared_data())
+        ViENetworkImpl(ViEBaseImpl::shared_data()),
 #ifdef WEBRTC_VIDEO_ENGINE_RENDER_API
-        , ViERenderImpl(ViEBaseImpl::shared_data())
+        ViERenderImpl(ViEBaseImpl::shared_data()),
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_RTP_RTCP_API
-        , ViERTP_RTCPImpl(ViEBaseImpl::shared_data())
+        ViERTP_RTCPImpl(ViEBaseImpl::shared_data()),
 #endif
 #ifdef WEBRTC_VIDEO_ENGINE_EXTERNAL_CODEC_API
-        , ViEExternalCodecImpl(ViEBaseImpl::shared_data())
+        ViEExternalCodecImpl(ViEBaseImpl::shared_data()),
 #endif
+        own_config_(owns_config ? config : NULL)
   {}
   virtual ~VideoEngineImpl() {}
+
+ private:
+  // Placeholder for the case where this owns the config.
+  scoped_ptr<const Config> own_config_;
 };
 
 }  // namespace webrtc

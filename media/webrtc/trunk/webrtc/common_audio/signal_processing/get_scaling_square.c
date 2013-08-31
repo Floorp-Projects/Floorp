@@ -15,7 +15,7 @@
  *
  */
 
-#include "signal_processing_library.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
 int WebRtcSpl_GetScalingSquare(int16_t *in_vector, int in_vector_length, int times)
 {

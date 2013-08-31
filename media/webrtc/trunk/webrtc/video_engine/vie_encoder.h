@@ -14,20 +14,21 @@
 #include <list>
 #include <map>
 
-#include "common_types.h"  // NOLINT
-#include "typedefs.h"  //NOLINT
-#include "modules/bitrate_controller/include/bitrate_controller.h"
-#include "modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
-#include "modules/video_coding/main/interface/video_coding_defines.h"
-#include "modules/video_processing/main/interface/video_processing.h"
-#include "system_wrappers/interface/scoped_ptr.h"
-#include "video_engine/vie_defines.h"
-#include "video_engine/vie_file_recorder.h"
-#include "video_engine/vie_frame_provider_base.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/bitrate_controller/include/bitrate_controller.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding_defines.h"
+#include "webrtc/modules/video_processing/main/interface/video_processing.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/typedefs.h"
+#include "webrtc/video_engine/vie_defines.h"
+#include "webrtc/video_engine/vie_file_recorder.h"
+#include "webrtc/video_engine/vie_frame_provider_base.h"
 
 namespace webrtc {
 
 class CriticalSectionWrapper;
+class Config;
 class PacedSender;
 class ProcessThread;
 class QMVideoSettingsCallback;
@@ -51,6 +52,7 @@ class ViEEncoder
   ViEEncoder(int32_t engine_id,
              int32_t channel_id,
              uint32_t number_of_cores,
+             const Config& config,
              ProcessThread& module_process_thread,
              BitrateController* bitrate_controller);
   ~ViEEncoder();
@@ -171,8 +173,9 @@ class ViEEncoder
                         const uint32_t round_trip_time_ms);
 
   // Called by PacedSender.
-  void TimeToSendPacket(uint32_t ssrc, uint16_t sequence_number,
+  bool TimeToSendPacket(uint32_t ssrc, uint16_t sequence_number,
                         int64_t capture_time_ms);
+  int TimeToSendPadding(int bytes);
 
  private:
   bool EncoderPaused() const;
@@ -192,6 +195,7 @@ class ViEEncoder
 
   BitrateController* bitrate_controller_;
 
+  bool send_padding_;
   int target_delay_ms_;
   bool network_is_transmitting_;
   bool encoder_paused_;

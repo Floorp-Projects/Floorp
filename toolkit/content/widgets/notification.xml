@@ -359,7 +359,7 @@
 
   </binding>
 
-  <binding id="notification">
+  <binding id="notification" role="xul:alert">
     <content>
       <xul:hbox class="notification-inner outset" flex="1" xbl:inherits="type">
         <xul:hbox anonid="details" align="center" flex="1"
@@ -379,15 +379,7 @@
     <resources>
       <stylesheet src="chrome://global/skin/notification.css"/>
     </resources>
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULAlert;
-          ]]>
-        </getter>
-      </property>
-
+    <implementation>
       <property name="label" onset="this.setAttribute('label', val); return val;"
                              onget="return this.getAttribute('label');"/>
       <property name="value" onset="this.setAttribute('value', val); return val;"

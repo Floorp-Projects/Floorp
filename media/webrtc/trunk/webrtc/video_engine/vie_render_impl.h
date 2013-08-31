@@ -12,9 +12,9 @@
 #define WEBRTC_VIDEO_ENGINE_VIE_RENDER_IMPL_H_
 
 #include "webrtc/modules/video_render/include/video_render_defines.h"
-#include "typedefs.h"  // NOLINT
-#include "video_engine/include/vie_render.h"
-#include "video_engine/vie_ref_count.h"
+#include "webrtc/typedefs.h"
+#include "webrtc/video_engine/include/vie_render.h"
+#include "webrtc/video_engine/vie_ref_count.h"
 
 namespace webrtc {
 

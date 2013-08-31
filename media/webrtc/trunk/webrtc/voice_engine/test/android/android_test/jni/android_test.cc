@@ -8,26 +8,26 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <android/log.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <android/log.h>
 
-#include "org_webrtc_voiceengine_test_AndroidTest.h"
+#include "webrtc/voice_engine/test/android/android_test/jni/org_webrtc_voiceengine_test_AndroidTest.h"
 
-#include "thread_wrapper.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 
-#include "voe_base.h"
-#include "voe_codec.h"
-#include "voe_file.h"
-#include "voe_network.h"
-#include "voe_audio_processing.h"
-#include "voe_volume_control.h"
-#include "voe_hardware.h"
-#include "voe_rtp_rtcp.h"
-#include "voe_encryption.h"
+#include "webrtc/voice_engine/include/voe_audio_processing.h"
+#include "webrtc/voice_engine/include/voe_base.h"
+#include "webrtc/voice_engine/include/voe_codec.h"
+#include "webrtc/voice_engine/include/voe_encryption.h"
+#include "webrtc/voice_engine/include/voe_file.h"
+#include "webrtc/voice_engine/include/voe_hardware.h"
+#include "webrtc/voice_engine/include/voe_network.h"
+#include "webrtc/voice_engine/include/voe_rtp_rtcp.h"
+#include "webrtc/voice_engine/include/voe_volume_control.h"
 
-#include "voe_test_interface.h"
+#include "webrtc/voice_engine/test/auto_test/voe_test_interface.h"
 
 //#define INIT_FROM_THREAD
 //#define START_CALL_FROM_THREAD

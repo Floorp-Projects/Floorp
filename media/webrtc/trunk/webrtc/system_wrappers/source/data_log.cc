@@ -11,6 +11,7 @@
 #include "webrtc/system_wrappers/interface/data_log.h"
 
 #include <assert.h>
+
 #include <algorithm>
 #include <list>
 

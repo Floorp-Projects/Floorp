@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#import "run_threaded_main_mac.h"
+#import "webrtc/test/testsupport/mac/run_threaded_main_mac.h"
 
 #import <Cocoa/Cocoa.h>
 

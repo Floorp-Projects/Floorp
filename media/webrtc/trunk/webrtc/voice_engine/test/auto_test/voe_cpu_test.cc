@@ -8,18 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "voe_cpu_test.h"
+#include "webrtc/voice_engine/test/auto_test/voe_cpu_test.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include <cassert>
 #if defined(_WIN32)
 #include <conio.h>
 #endif
 
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/test/channel_transport/include/channel_transport.h"
+#include "webrtc/voice_engine/test/auto_test/voe_test_defines.h"
 
 using namespace webrtc;
 using namespace test;

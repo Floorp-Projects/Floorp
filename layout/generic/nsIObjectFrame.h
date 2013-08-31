@@ -11,9 +11,10 @@
 #ifndef nsIObjectFrame_h___
 #define nsIObjectFrame_h___
 
-#include "nsIFrame.h"
+#include "nsQueryFrame.h"
 
 class nsNPAPIPluginInstance;
+class nsIWidget;
 
 class nsIObjectFrame : public nsQueryFrame
 {

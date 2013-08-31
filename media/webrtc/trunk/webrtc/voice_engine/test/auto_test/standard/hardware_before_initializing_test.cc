@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "common_types.h"
-#include "before_initialization_fixture.h"
+#include "webrtc/common_types.h"
+#include "webrtc/voice_engine/test/auto_test/fixtures/before_initialization_fixture.h"
 
 using namespace webrtc;
 

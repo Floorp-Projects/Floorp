@@ -78,8 +78,7 @@ int32_t TestPack::SendData(FrameType frame_type, uint8_t payload_type,
   rtp_info.type.Audio.channel = 1;
   memcpy(payload_data_, payload_data, payload_size);
 
-  status =  receiver_acm_->IncomingPacket(payload_data_, payload_size,
-                                          rtp_info);
+  status = receiver_acm_->IncomingPacket(payload_data_, payload_size, rtp_info);
 
   payload_size_ = payload_size;
   timestamp_diff_ = timestamp - last_in_timestamp_;
@@ -127,8 +126,8 @@ TestAllCodecs::~TestAllCodecs() {
 }
 
 void TestAllCodecs::Perform() {
-  const std::string file_name =
-      webrtc::test::ResourcePath("audio_coding/testfile32kHz", "pcm");
+  const std::string file_name = webrtc::test::ResourcePath(
+      "audio_coding/testfile32kHz", "pcm");
   infile_a_.Open(file_name, 32000, "rb");
 
   if (test_mode_ == 0) {
@@ -725,9 +724,9 @@ void TestAllCodecs::RegisterSendCodec(char side, char* codec_name,
   // packet. If variable rate codec (extra_byte == -1), set to -1 (65535).
   if (extra_byte != -1) {
     // Add 0.875 to always round up to a whole byte
-    packet_size_bytes_ =
-        static_cast<uint16_t>(static_cast<float>(packet_size * rate) /
-        static_cast<float>(sampling_freq_hz * 8) + 0.875) + extra_byte;
+    packet_size_bytes_ = static_cast<uint16_t>(static_cast<float>(packet_size
+        * rate) / static_cast<float>(sampling_freq_hz * 8) + 0.875)
+        + extra_byte;
   } else {
     // Packets will have a variable size.
     packet_size_bytes_ = -1;

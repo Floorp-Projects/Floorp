@@ -8,25 +8,21 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/rtp_rtcp/source/fec_test_helper.h"
+#include "webrtc/modules/rtp_rtcp/source/fec_test_helper.h"
 
-#include "modules/rtp_rtcp/source/rtp_utility.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
 
 namespace webrtc {
 
 FrameGenerator::FrameGenerator()
-    : num_packets_(0),
-      seq_num_(0),
-      timestamp_(0) {}
+    : num_packets_(0), seq_num_(0), timestamp_(0) {}
 
 void FrameGenerator::NewFrame(int num_packets) {
   num_packets_ = num_packets;
   timestamp_ += 3000;
 }
 
-uint16_t FrameGenerator::NextSeqNum() {
-  return ++seq_num_;
-}
+uint16_t FrameGenerator::NextSeqNum() { return ++seq_num_; }
 
 RtpPacket* FrameGenerator::NextPacket(int offset, size_t length) {
   RtpPacket* rtp_packet = new RtpPacket;
@@ -71,8 +67,7 @@ RtpPacket* FrameGenerator::BuildFecRedPacket(const Packet* packet) {
   red_packet->data[1] &= ~0x80;  // Clear marker bit.
   const int kHeaderLength = red_packet->header.header.headerLength;
   SetRedHeader(red_packet, kFecPayloadType, kHeaderLength);
-  memcpy(red_packet->data + kHeaderLength + 1, packet->data,
-         packet->length);
+  memcpy(red_packet->data + kHeaderLength + 1, packet->data, packet->length);
   red_packet->length = kHeaderLength + 1 + packet->length;
   return red_packet;
 }
@@ -80,7 +75,7 @@ RtpPacket* FrameGenerator::BuildFecRedPacket(const Packet* packet) {
 void FrameGenerator::SetRedHeader(Packet* red_packet, uint8_t payload_type,
                                   int header_length) const {
   // Replace pltype.
-  red_packet->data[1] &= 0x80;  // Reset.
+  red_packet->data[1] &= 0x80;             // Reset.
   red_packet->data[1] += kRedPayloadType;  // Replace.
 
   // Add RED header, f-bit always 0.
@@ -91,9 +86,9 @@ void FrameGenerator::BuildRtpHeader(uint8_t* data, const RTPHeader* header) {
   data[0] = 0x80;  // Version 2.
   data[1] = header->payloadType;
   data[1] |= (header->markerBit ? kRtpMarkerBitMask : 0);
-  ModuleRTPUtility::AssignUWord16ToBuffer(data+2, header->sequenceNumber);
-  ModuleRTPUtility::AssignUWord32ToBuffer(data+4, header->timestamp);
-  ModuleRTPUtility::AssignUWord32ToBuffer(data+8, header->ssrc);
+  ModuleRTPUtility::AssignUWord16ToBuffer(data + 2, header->sequenceNumber);
+  ModuleRTPUtility::AssignUWord32ToBuffer(data + 4, header->timestamp);
+  ModuleRTPUtility::AssignUWord32ToBuffer(data + 8, header->ssrc);
 }
 
 }  // namespace webrtc

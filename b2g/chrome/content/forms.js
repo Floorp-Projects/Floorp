@@ -197,6 +197,8 @@ let FormAssistant = {
     addMessageListener("Forms:GetText", this);
     addMessageListener("Forms:Input:SendKey", this);
     addMessageListener("Forms:GetContext", this);
+    addMessageListener("Forms:SetComposition", this);
+    addMessageListener("Forms:EndComposition", this);
   },
 
   ignoredInputTypes: new Set([
@@ -239,6 +241,7 @@ let FormAssistant = {
     if (this.focusedElement) {
       this.focusedElement.removeEventListener('mousedown', this);
       this.focusedElement.removeEventListener('mouseup', this);
+      this.focusedElement.removeEventListener('compositionend', this);
       if (this._observer) {
         this._observer.disconnect();
         this._observer = null;
@@ -263,6 +266,7 @@ let FormAssistant = {
     if (element) {
       element.addEventListener('mousedown', this);
       element.addEventListener('mouseup', this);
+      element.addEventListener('compositionend', this);
       if (isContentEditable(element)) {
         this._documentEncoder = getDocumentEncoder(element);
       }
@@ -423,6 +427,8 @@ let FormAssistant = {
           break;
         }
 
+        CompositionManager.endComposition('');
+
         // Don't monitor the text change resulting from key event.
         this._ignoreEditActionOnce = true;
 
@@ -438,7 +444,17 @@ let FormAssistant = {
           break;
         }
 
+        CompositionManager.endComposition('');
+
         this._ignoreEditActionOnce = false;
+        break;
+
+      case "compositionend":
+        if (!this.focusedElement) {
+          break;
+        }
+
+        CompositionManager.onCompositionEnd();
         break;
     }
   },
@@ -475,6 +491,8 @@ let FormAssistant = {
     this._editing = true;
     switch (msg.name) {
       case "Forms:Input:Value": {
+        CompositionManager.endComposition('');
+
         target.value = json.value;
 
         let event = target.ownerDocument.createEvent('HTMLEvents');
@@ -484,6 +502,8 @@ let FormAssistant = {
       }
 
       case "Forms:Input:SendKey":
+        CompositionManager.endComposition('');
+
         ["keydown", "keypress", "keyup"].forEach(function(type) {
           domWindowUtils.sendKeyEvent(type, json.keyCode, json.charCode,
             json.modifiers);
@@ -528,6 +548,8 @@ let FormAssistant = {
       }
 
       case "Forms:SetSelectionRange":  {
+        CompositionManager.endComposition('');
+
         let start = json.selectionStart;
         let end =  json.selectionEnd;
         setSelectionRange(target, start, end);
@@ -543,6 +565,8 @@ let FormAssistant = {
       }
 
       case "Forms:ReplaceSurroundingText": {
+        CompositionManager.endComposition('');
+
         let text = json.text;
         let beforeLength = json.beforeLength;
         let afterLength = json.afterLength;
@@ -581,6 +605,23 @@ let FormAssistant = {
       case "Forms:GetContext": {
         let obj = getJSON(target, this._focusCounter);
         sendAsyncMessage("Forms:GetContext:Result:OK", obj);
+        break;
+      }
+
+      case "Forms:SetComposition": {
+        CompositionManager.setComposition(target, json.text, json.cursor,
+                                          json.clauses);
+        sendAsyncMessage("Forms:SetComposition:Result:OK", {
+          requestId: json.requestId,
+        });
+        break;
+      }
+
+      case "Forms:EndComposition": {
+        CompositionManager.endComposition(json.text);
+        sendAsyncMessage("Forms:EndComposition:Result:OK", {
+          requestId: json.requestId,
+        });
         break;
       }
     }
@@ -1015,3 +1056,97 @@ function replaceSurroundingText(element, text, selectionStart, beforeLength,
     editor.insertText(text);
   }
 }
+
+let CompositionManager =  {
+  _isStarted: false,
+  _text: '',
+  _clauseAttrMap: {
+    'raw-input': domWindowUtils.COMPOSITION_ATTR_RAWINPUT,
+    'selected-raw-text': domWindowUtils.COMPOSITION_ATTR_SELECTEDRAWTEXT,
+    'converted-text': domWindowUtils.COMPOSITION_ATTR_CONVERTEDTEXT,
+    'selected-converted-text': domWindowUtils.COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT
+  },
+
+  setComposition: function cm_setComposition(element, text, cursor, clauses) {
+    // Check parameters.
+    if (!element) {
+      return;
+    }
+    let len = text.length;
+    if (cursor < 0) {
+      cursor = 0;
+    } else if (cursor > len) {
+      cursor = len;
+    }
+    let clauseLens = [len, 0, 0];
+    let clauseAttrs = [domWindowUtils.COMPOSITION_ATTR_RAWINPUT,
+                       domWindowUtils.COMPOSITION_ATTR_RAWINPUT,
+                       domWindowUtils.COMPOSITION_ATTR_RAWINPUT];
+    if (clauses) {
+      let remainingLength = len;
+      // Currently we don't support 4 or more clauses composition string.
+      let clauseNum = Math.min(3, clauses.length);
+      for (let i = 0; i < clauseNum; i++) {
+        if (clauses[i]) {
+          let clauseLength = clauses[i].length || 0;
+          // Make sure the total clauses length is not bigger than that of the
+          // composition string.
+          if (clauseLength > remainingLength) {
+            clauseLength = remainingLength;
+          }
+          remainingLength -= clauseLength;
+          clauseLens[i] = clauseLength;
+          clauseAttrs[i] = this._clauseAttrMap[clauses[i].selectionType] ||
+                           domWindowUtils.COMPOSITION_ATTR_RAWINPUT;
+        }
+      }
+      // If the total clauses length is less than that of the composition
+      // string, extend the last clause to the end of the composition string.
+      if (remainingLength > 0) {
+        clauseLens[2] += remainingLength;
+      }
+    }
+
+    // Start composition if need to.
+    if (!this._isStarted) {
+      this._isStarted = true;
+      domWindowUtils.sendCompositionEvent('compositionstart', '', '');
+      this._text = '';
+    }
+
+    // Update the composing text.
+    if (this._text !== text) {
+      this._text = text;
+      domWindowUtils.sendCompositionEvent('compositionupdate', text, '');
+    }
+    domWindowUtils.sendTextEvent(text,
+                                 clauseLens[0], clauseAttrs[0],
+                                 clauseLens[1], clauseAttrs[1],
+                                 clauseLens[2], clauseAttrs[2],
+                                 cursor, 0);
+  },
+
+  endComposition: function cm_endComposition(text) {
+    if (!this._isStarted) {
+      return;
+    }
+    // Update the composing text.
+    if (this._text !== text) {
+      domWindowUtils.sendCompositionEvent('compositionupdate', text, '');
+    }
+    domWindowUtils.sendTextEvent(text, 0, 0, 0, 0, 0, 0, 0, 0);
+    domWindowUtils.sendCompositionEvent('compositionend', text, '');
+    this._text = '';
+    this._isStarted = false;
+  },
+
+  // Composition ends due to external actions.
+  onCompositionEnd: function cm_onCompositionEnd() {
+    if (!this._isStarted) {
+      return;
+    }
+
+    this._text = '';
+    this._isStarted = false;
+  }
+};

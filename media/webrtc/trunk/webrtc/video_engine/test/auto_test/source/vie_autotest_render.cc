@@ -12,21 +12,21 @@
 // vie_autotest_render.cc
 //
 
-#include "vie_autotest_defines.h"
-#include "vie_autotest.h"
-#include "engine_configurations.h"
+#include "webrtc/engine_configurations.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest_defines.h"
 
-#include "video_render.h"
+#include "webrtc/modules/video_render/include/video_render.h"
 
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "tb_interfaces.h"
-#include "tb_video_channel.h"
-#include "tb_capture_device.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/video_engine/test/libvietest/include/tb_capture_device.h"
+#include "webrtc/video_engine/test/libvietest/include/tb_interfaces.h"
+#include "webrtc/video_engine/test/libvietest/include/tb_video_channel.h"
 
 #if defined(WIN32)
-#include <windows.h>
 #include <ddraw.h>
 #include <tchar.h>
+#include <windows.h>
 #elif defined(WEBRTC_LINUX)
     //From windgi.h
     #undef RGB

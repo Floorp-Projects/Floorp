@@ -15,7 +15,7 @@
 #define WEBRTC_SYSTEM_WRAPPERS_INTERFACE_TICK_UTIL_H_
 
 #if _WIN32
-// Note: These includes must be in this order since mmsystem depends on windows.
+// Note: The Windows header must always be included before mmsystem.h
 #include <windows.h>
 #include <mmsystem.h>
 #elif WEBRTC_LINUX

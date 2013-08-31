@@ -8,9 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "common_video/libyuv/include/scaler.h"
+#include "webrtc/common_video/libyuv/include/scaler.h"
 
-#include "libyuv.h"
+// NOTE(ajm): Path provided by gyp.
+#include "libyuv.h"  // NOLINT
 
 namespace webrtc {
 

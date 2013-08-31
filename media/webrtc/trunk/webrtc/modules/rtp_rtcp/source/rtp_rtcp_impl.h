@@ -70,14 +70,6 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
   virtual int32_t DeRegisterReceivePayload(
       const int8_t payload_type);
 
-  // Register RTP header extension.
-  virtual int32_t RegisterReceiveRtpHeaderExtension(
-      const RTPExtensionType type,
-      const uint8_t id);
-
-  virtual int32_t DeregisterReceiveRtpHeaderExtension(
-      const RTPExtensionType type);
-
   // Get the currently configured SSRC filter.
   virtual int32_t SSRCFilter(uint32_t& allowed_ssrc) const;
 
@@ -108,9 +100,14 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
 
   virtual void SetRtxReceivePayloadType(int payload_type);
 
-  // Called by the network module when we receive a packet.
-  virtual int32_t IncomingPacket(const uint8_t* incoming_packet,
-                                 const uint16_t packet_length);
+  // Called when we receive an RTP packet.
+  virtual int32_t IncomingRtpPacket(const uint8_t* incoming_packet,
+                                    const uint16_t packet_length,
+                                    const RTPHeader& parsed_rtp_header);
+
+  // Called when we receive an RTCP packet.
+  virtual int32_t IncomingRtcpPacket(const uint8_t* incoming_packet,
+                                     uint16_t incoming_packet_length);
 
   // Sender part.
 
@@ -191,8 +188,11 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
       const RTPFragmentationHeader* fragmentation = NULL,
       const RTPVideoHeader* rtp_video_hdr = NULL);
 
-  virtual void TimeToSendPacket(uint32_t ssrc, uint16_t sequence_number,
+  virtual bool TimeToSendPacket(uint32_t ssrc, uint16_t sequence_number,
                                 int64_t capture_time_ms);
+  // Returns the number of padding bytes actually sent, which can be more or
+  // less than |bytes|.
+  virtual int TimeToSendPadding(int bytes);
   // RTCP part.
 
   // Get RTCP status.

@@ -51,11 +51,11 @@
 #include <string.h>  // strncpy
 #include <unistd.h>
 #ifdef WEBRTC_LINUX
-#include <sys/types.h>
-#include <sched.h>
-#include <sys/syscall.h>
 #include <linux/unistd.h>
+#include <sched.h>
 #include <sys/prctl.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
 #endif
 
 #if defined(__NetBSD__)

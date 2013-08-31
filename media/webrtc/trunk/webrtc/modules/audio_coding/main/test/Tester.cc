@@ -122,7 +122,7 @@ void PopulateTests(std::vector<ACMTest*>* tests) {
 TEST(AudioCodingModuleTest, TestAllCodecs) {
   Trace::CreateTrace();
   Trace::SetTraceFile((webrtc::test::OutputPath() +
-      "acm_allcodecs_trace.txt").c_str());
+          "acm_allcodecs_trace.txt").c_str());
   webrtc::TestAllCodecs(ACM_TEST_MODE).Perform();
   Trace::ReturnTrace();
 }
@@ -131,7 +131,7 @@ TEST(AudioCodingModuleTest, TestAllCodecs) {
 TEST(AudioCodingModuleTest, TestOpus) {
   Trace::CreateTrace();
   Trace::SetTraceFile((webrtc::test::OutputPath() +
-      "acm_opus_trace.txt").c_str());
+          "acm_opus_trace.txt").c_str());
   webrtc::OpusTest().Perform();
   Trace::ReturnTrace();
 }

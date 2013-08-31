@@ -112,9 +112,12 @@ class AudioDecoderTest : public ::testing::Test {
       encoded_bytes_ += enc_len;
       processed_samples += frame_size_;
     }
+    // This test fails on Win x64, see issue webrtc:1459
+#if !(defined(_WIN32) && defined(WEBRTC_ARCH_64_BITS))
     EXPECT_EQ(expected_bytes, encoded_bytes_);
     CompareInputOutput(processed_samples, tolerance, delay);
     EXPECT_LE(MseInputOutput(processed_samples, delay), mse);
+#endif
   }
 
   // The absolute difference between the input and output (the first channel) is

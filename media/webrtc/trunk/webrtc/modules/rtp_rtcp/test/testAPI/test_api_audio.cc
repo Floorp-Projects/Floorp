@@ -10,13 +10,13 @@
 
 #include <algorithm>
 #include <vector>
-#include <gtest/gtest.h>
+#include "testing/gtest/include/gtest/gtest.h"
 
-#include "test_api.h"
+#include "webrtc/modules/rtp_rtcp/test/testAPI/test_api.h"
 
-#include "common_types.h"
-#include "rtp_rtcp.h"
-#include "rtp_rtcp_defines.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
 
 using namespace webrtc;
 

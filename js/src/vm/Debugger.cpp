@@ -3518,6 +3518,39 @@ DebuggerScript_clearAllBreakpoints(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static bool
+DebuggerScript_isInCatchScope(JSContext *cx, unsigned argc, Value* vp)
+{
+    REQUIRE_ARGC("Debugger.Script.isInCatchScope", 1);
+    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "isInCatchScope", args, obj, script);
+
+    size_t offset;
+    if (!ScriptOffset(cx, script, args[0], &offset))
+        return false;
+
+    /*
+     * Try note ranges are relative to the mainOffset of the script, so adjust
+     * offset accordingly.
+     */
+    offset -= script->mainOffset;
+
+    args.rval().setBoolean(false);
+    if (script->hasTrynotes()) {
+        JSTryNote* tnBegin = script->trynotes()->vector;
+        JSTryNote* tnEnd = tnBegin + script->trynotes()->length;
+        while (tnBegin != tnEnd) {
+            if (offset - tnBegin->start < tnBegin->length &&
+                tnBegin->kind == JSTRY_CATCH)
+            {
+                args.rval().setBoolean(true);
+                break;
+            }
+            ++tnBegin;
+        }
+    }
+    return true;
+}
+
+static bool
 DebuggerScript_construct(JSContext *cx, unsigned argc, Value *vp)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR, "Debugger.Script");
@@ -3546,6 +3579,7 @@ static const JSFunctionSpec DebuggerScript_methods[] = {
     JS_FN("getBreakpoints", DebuggerScript_getBreakpoints, 1, 0),
     JS_FN("clearBreakpoint", DebuggerScript_clearBreakpoint, 1, 0),
     JS_FN("clearAllBreakpoints", DebuggerScript_clearAllBreakpoints, 0, 0),
+    JS_FN("isInCatchScope", DebuggerScript_isInCatchScope, 1, 0),
     JS_FS_END
 };
 

@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_engine/test/auto_test/interface/vie_window_creator.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_window_creator.h"
 
-#include "video_engine/include/vie_codec.h"
-#include "video_engine/test/auto_test/interface/vie_autotest_main.h"
-#include "video_engine/test/auto_test/interface/vie_autotest_window_manager_interface.h"
-#include "video_engine/test/auto_test/interface/vie_window_manager_factory.h"
-#include "voice_engine/include/voe_codec.h"
+#include "webrtc/video_engine/include/vie_codec.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest_main.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest_window_manager_interface.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_window_manager_factory.h"
+#include "webrtc/voice_engine/include/voe_codec.h"
 
 #if defined(WIN32)
 #include <tchar.h>

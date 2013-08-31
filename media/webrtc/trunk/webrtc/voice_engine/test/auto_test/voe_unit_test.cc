@@ -10,19 +10,20 @@
 
 #include "webrtc/voice_engine/test/auto_test/voe_unit_test.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include <cassert>
 #if defined(_WIN32)
 #include <conio.h>
 #endif
 
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/system_wrappers/interface/sleep.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/test/testsupport/fileutils.h"
-#include "webrtc/voice_engine/voice_engine_defines.h"
 #include "webrtc/voice_engine/test/auto_test/fakes/fake_media_process.h"
+#include "webrtc/voice_engine/test/auto_test/voe_test_defines.h"
+#include "webrtc/voice_engine/voice_engine_defines.h"
 
 using namespace webrtc;
 using namespace test;

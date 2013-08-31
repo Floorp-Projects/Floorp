@@ -27,3 +27,7 @@
     transition: transform 0.3s ease 0s;
   }
 }
+
+img {
+  image-orientation: from-image;
+}

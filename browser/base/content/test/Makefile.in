@@ -186,6 +186,7 @@ MOCHITEST_BROWSER_FILES = \
                  browser_bug882977.js \
                  browser_bug887515.js \
                  browser_canonizeURL.js \
+                 browser_mixedcontent_securityflags.js \
                  browser_clearplugindata_noage.html \
                  browser_clearplugindata.html \
                  browser_clearplugindata.js \
@@ -329,6 +330,7 @@ MOCHITEST_BROWSER_FILES = \
                  test_bug628179.html \
                  test_bug839103.html \
                  test_wyciwyg_copying.html \
+                 test-mixedcontent-securityerrors.html \
                  title_test.svg \
                  video.ogg \
                  zoom_test.html \

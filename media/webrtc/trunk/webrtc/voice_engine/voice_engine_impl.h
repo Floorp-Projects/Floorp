@@ -11,46 +11,46 @@
 #ifndef WEBRTC_VOICE_ENGINE_VOICE_ENGINE_IMPL_H
 #define WEBRTC_VOICE_ENGINE_VOICE_ENGINE_IMPL_H
 
-#include "atomic32.h"
-#include "engine_configurations.h"
-#include "voe_base_impl.h"
+#include "webrtc/engine_configurations.h"
+#include "webrtc/system_wrappers/interface/atomic32.h"
+#include "webrtc/voice_engine/voe_base_impl.h"
 
 #ifdef WEBRTC_VOICE_ENGINE_AUDIO_PROCESSING_API
-#include "voe_audio_processing_impl.h"
+#include "webrtc/voice_engine/voe_audio_processing_impl.h"
 #endif
 #ifdef WEBRTC_VOICE_ENGINE_CALL_REPORT_API
-#include "voe_call_report_impl.h"
+#include "webrtc/voice_engine/voe_call_report_impl.h"
 #endif
 #ifdef WEBRTC_VOICE_ENGINE_CODEC_API
-#include "voe_codec_impl.h"
+#include "webrtc/voice_engine/voe_codec_impl.h"
 #endif
 #ifdef WEBRTC_VOICE_ENGINE_DTMF_API
-#include "voe_dtmf_impl.h"
+#include "webrtc/voice_engine/voe_dtmf_impl.h"
 #endif
 #ifdef WEBRTC_VOICE_ENGINE_ENCRYPTION_API
-#include "voe_encryption_impl.h"
+#include "webrtc/voice_engine/voe_encryption_impl.h"
 #endif
 #ifdef WEBRTC_VOICE_ENGINE_EXTERNAL_MEDIA_API
-#include "voe_external_media_impl.h"
+#include "webrtc/voice_engine/voe_external_media_impl.h"
 #endif
 #ifdef WEBRTC_VOICE_ENGINE_FILE_API
-#include "voe_file_impl.h"
+#include "webrtc/voice_engine/voe_file_impl.h"
 #endif
 #ifdef WEBRTC_VOICE_ENGINE_HARDWARE_API
-#include "voe_hardware_impl.h"
+#include "webrtc/voice_engine/voe_hardware_impl.h"
 #endif
 #ifdef WEBRTC_VOICE_ENGINE_NETEQ_STATS_API
-#include "voe_neteq_stats_impl.h"
+#include "webrtc/voice_engine/voe_neteq_stats_impl.h"
 #endif
-#include "voe_network_impl.h"
+#include "webrtc/voice_engine/voe_network_impl.h"
 #ifdef WEBRTC_VOICE_ENGINE_RTP_RTCP_API
-#include "voe_rtp_rtcp_impl.h"
+#include "webrtc/voice_engine/voe_rtp_rtcp_impl.h"
 #endif
 #ifdef WEBRTC_VOICE_ENGINE_VIDEO_SYNC_API
-#include "voe_video_sync_impl.h"
+#include "webrtc/voice_engine/voe_video_sync_impl.h"
 #endif
 #ifdef WEBRTC_VOICE_ENGINE_VOLUME_CONTROL_API
-#include "voe_volume_control_impl.h"
+#include "webrtc/voice_engine/voe_volume_control_impl.h"
 #endif
 
 namespace webrtc

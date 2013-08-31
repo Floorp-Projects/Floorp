@@ -12,6 +12,7 @@
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_BITRATE_H_
 
 #include <stdio.h>
+
 #include <list>
 
 #include "webrtc/common_types.h"

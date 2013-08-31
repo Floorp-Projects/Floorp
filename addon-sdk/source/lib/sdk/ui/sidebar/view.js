@@ -6,7 +6,7 @@
 module.metadata = {
   'stability': 'unstable',
   'engines': {
-    'Firefox': '> 24'
+    'Firefox': '*'
   }
 };
 
@@ -20,10 +20,14 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const WEB_PANEL_BROWSER_ID = 'web-panels-browser';
 
 function create(window, details) {
+  let id = makeID(details.id);
   let { document } = window;
 
+  if (document.getElementById(id))
+    throw new Error('The ID "' + details.id + '" seems already used.');
+
   let menuitem = document.createElementNS(XUL_NS, 'menuitem');
-  menuitem.setAttribute('id', makeID(details.id));
+  menuitem.setAttribute('id', id);
   menuitem.setAttribute('label', details.title);
   menuitem.setAttribute('sidebarurl', details.sidebarurl);
   menuitem.setAttribute('checked', 'false');

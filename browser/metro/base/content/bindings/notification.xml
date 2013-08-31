@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE bindings [
+<!ENTITY % notificationDTD SYSTEM "chrome://global/locale/notification.dtd">
+%notificationDTD;
+]>
+
+<bindings id="notificationBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="notificationbox" extends="chrome://global/content/bindings/notification.xml#notificationbox">
+    <content>
+      <xul:stack xbl:inherits="hidden=notificationshidden"
+                 class="notificationbox-stack">
+        <xul:spacer/>
+        <children includes="notification"/>
+      </xul:stack>
+      <html:div anonid="layer1" class="notification-layer"></html:div>
+      <html:div anonid="layer2" class="notification-layer"></html:div>
+      <children/>
+    </content>
+
+    <implementation>
+      <constructor>
+        <![CDATA[
+          this.addEventListener("AlertActive", this.handleEvent, true);
+          this.addEventListener("AlertClose", this.handleEvent, true);
+          this.setAttribute("count", 0);
+        ]]>
+      </constructor>
+      <destructor>
+        <![CDATA[
+          this.removeEventListener("AlertActive", this.handleEvent, true);
+          this.removeEventListener("AlertClose", this.handleEvent, true);
+        ]]>
+      </destructor>
+      <method name="removeNotification">
+        <parameter name="aItem"/>
+        <parameter name="aSkipAnimation"/>
+        <body>
+          <![CDATA[
+            if (aItem == this.currentNotification)
+              this.removeCurrentNotification(aSkipAnimation);
+            else if (aItem != this._closedNotification)
+              this._removeNotificationElement(aItem);
+
+            // Fire notification closed event.
+            let event = new Event('AlertClose');
+            this.dispatchEvent(event);
+
+            return aItem;
+          ]]>
+        </body>
+      </method>
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            switch (aEvent.type) {
+              case "AlertActive":
+              case "AlertClose":
+                this.setAttribute("count", this.allNotifications.length);
+                break;
+            }
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+
+</bindings>

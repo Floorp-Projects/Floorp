@@ -8,33 +8,34 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_engine/vie_channel.h"
+#include "webrtc/video_engine/vie_channel.h"
 
 #include <algorithm>
 #include <vector>
 
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "modules/pacing/include/paced_sender.h"
-#include "modules/rtp_rtcp/interface/rtp_rtcp.h"
-#include "modules/utility/interface/process_thread.h"
-#include "modules/video_coding/main/interface/video_coding.h"
-#include "modules/video_processing/main/interface/video_processing.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/modules/pacing/include/paced_sender.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
+#include "webrtc/modules/utility/interface/process_thread.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding.h"
+#include "webrtc/modules/video_processing/main/interface/video_processing.h"
 #include "webrtc/modules/video_render/include/video_render_defines.h"
-#include "system_wrappers/interface/critical_section_wrapper.h"
-#include "system_wrappers/interface/thread_wrapper.h"
-#include "system_wrappers/interface/trace.h"
-#include "video_engine/call_stats.h"
-#include "video_engine/include/vie_codec.h"
-#include "video_engine/include/vie_errors.h"
-#include "video_engine/include/vie_image_process.h"
-#include "video_engine/include/vie_rtp_rtcp.h"
-#include "video_engine/vie_defines.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/video_engine/call_stats.h"
+#include "webrtc/video_engine/include/vie_codec.h"
+#include "webrtc/video_engine/include/vie_errors.h"
+#include "webrtc/video_engine/include/vie_image_process.h"
+#include "webrtc/video_engine/include/vie_rtp_rtcp.h"
+#include "webrtc/video_engine/vie_defines.h"
 
 namespace webrtc {
 
 const int kMaxDecodeWaitTimeMs = 50;
 const int kInvalidRtpExtensionId = 0;
 static const int kMaxTargetDelayMs = 10000;
+static const float kMaxIncompleteTimeMultiplier = 3.5f;
 
 // Helper class receiving statistics callbacks.
 class ChannelStatsObserver : public CallStatsObserver {
@@ -54,6 +55,7 @@ class ChannelStatsObserver : public CallStatsObserver {
 ViEChannel::ViEChannel(int32_t channel_id,
                        int32_t engine_id,
                        uint32_t number_of_cores,
+                       const Config& config,
                        ProcessThread& module_process_thread,
                        RtcpIntraFrameObserver* intra_frame_observer,
                        RtcpBandwidthObserver* bandwidth_observer,
@@ -88,6 +90,8 @@ ViEChannel::ViEChannel(int32_t channel_id,
       bandwidth_observer_(bandwidth_observer),
       rtp_packet_timeout_(false),
       send_timestamp_extension_id_(kInvalidRtpExtensionId),
+      absolute_send_time_extension_id_(kInvalidRtpExtensionId),
+      receive_absolute_send_time_enabled_(false),
       using_packet_spread_(false),
       external_transport_(NULL),
       decoder_reset_(true),
@@ -121,7 +125,7 @@ ViEChannel::ViEChannel(int32_t channel_id,
 
   rtp_rtcp_.reset(RtpRtcp::CreateRtpRtcp(configuration));
   vie_receiver_.SetRtpRtcpModule(rtp_rtcp_.get());
-  vcm_.SetNackSettings(kMaxNackListSize, max_nack_reordering_threshold_);
+  vcm_.SetNackSettings(kMaxNackListSize, max_nack_reordering_threshold_, 0);
 }
 
 int32_t ViEChannel::Init() {
@@ -160,6 +164,11 @@ int32_t ViEChannel::Init() {
     WEBRTC_TRACE(kTraceError, kTraceVideo,
                  ViEId(engine_id_, channel_id_),
                  "%s: VCM::InitializeReceiver failure", __FUNCTION__);
+    return -1;
+  }
+  if (vcm_.SetVideoProtection(kProtectionKeyOnLoss, true)) {
+    WEBRTC_TRACE(kTraceError, kTraceVideo, ViEId(engine_id_, channel_id_),
+                 "%s: VCM::SetVideoProtection failure", __FUNCTION__);
     return -1;
   }
   if (vcm_.RegisterReceiveCallback(this) != 0) {
@@ -367,6 +376,21 @@ int32_t ViEChannel::SetSendCodec(const VideoCodec& video_codec,
       } else {
         rtp_rtcp->DeregisterSendRtpHeaderExtension(
             kRtpExtensionTransmissionTimeOffset);
+      }
+      if (absolute_send_time_extension_id_ != kInvalidRtpExtensionId) {
+        // Deregister in case the extension was previously enabled.
+        rtp_rtcp->DeregisterSendRtpHeaderExtension(
+            kRtpExtensionAbsoluteSendTime);
+        if (rtp_rtcp->RegisterSendRtpHeaderExtension(
+            kRtpExtensionAbsoluteSendTime,
+            absolute_send_time_extension_id_) != 0) {
+          WEBRTC_TRACE(kTraceError, kTraceVideo, ViEId(engine_id_, channel_id_),
+                       "%s: could not register absolute send time extension",
+                       __FUNCTION__);
+        }
+      } else {
+        rtp_rtcp->DeregisterSendRtpHeaderExtension(
+            kRtpExtensionAbsoluteSendTime);
       }
     }
     // |RegisterSimulcastRtpRtcpModules| resets all old weak pointers and old
@@ -779,15 +803,21 @@ int ViEChannel::SetReceiverBufferingMode(int target_delay_ms) {
     return -1;
   }
   int max_nack_list_size;
+  int max_incomplete_time_ms;
   if (target_delay_ms == 0) {
     // Real-time mode - restore default settings.
     max_nack_reordering_threshold_ = kMaxPacketAgeToNack;
     max_nack_list_size = kMaxNackListSize;
+    max_incomplete_time_ms = 0;
   } else {
     max_nack_list_size =  3 * GetRequiredNackListSize(target_delay_ms) / 4;
     max_nack_reordering_threshold_ = max_nack_list_size;
+    // Calculate the max incomplete time and round to int.
+    max_incomplete_time_ms = static_cast<int>(kMaxIncompleteTimeMultiplier *
+        target_delay_ms + 0.5f);
   }
-  vcm_.SetNackSettings(max_nack_list_size, max_nack_reordering_threshold_);
+  vcm_.SetNackSettings(max_nack_list_size, max_nack_reordering_threshold_,
+                       max_incomplete_time_ms);
   vcm_.SetMinReceiverDelay(target_delay_ms);
   if (vie_sync_.SetTargetBufferingDelay(target_delay_ms) < 0)
     return -1;
@@ -848,13 +878,47 @@ int ViEChannel::SetSendTimestampOffsetStatus(bool enable, int id) {
 }
 
 int ViEChannel::SetReceiveTimestampOffsetStatus(bool enable, int id) {
+  return vie_receiver_.SetReceiveTimestampOffsetStatus(enable, id) ? 0 : -1;
+}
+
+int ViEChannel::SetSendAbsoluteSendTimeStatus(bool enable, int id) {
+  CriticalSectionScoped cs(rtp_rtcp_cs_.get());
+  int error = 0;
   if (enable) {
-    return rtp_rtcp_->RegisterReceiveRtpHeaderExtension(
-        kRtpExtensionTransmissionTimeOffset, id);
+    // Enable the extension, but disable possible old id to avoid errors.
+    absolute_send_time_extension_id_ = id;
+    rtp_rtcp_->DeregisterSendRtpHeaderExtension(
+        kRtpExtensionAbsoluteSendTime);
+    error = rtp_rtcp_->RegisterSendRtpHeaderExtension(
+        kRtpExtensionAbsoluteSendTime, id);
+    for (std::list<RtpRtcp*>::iterator it = simulcast_rtp_rtcp_.begin();
+         it != simulcast_rtp_rtcp_.end(); it++) {
+      (*it)->DeregisterSendRtpHeaderExtension(
+          kRtpExtensionAbsoluteSendTime);
+      error |= (*it)->RegisterSendRtpHeaderExtension(
+          kRtpExtensionAbsoluteSendTime, id);
+    }
   } else {
-    return rtp_rtcp_->DeregisterReceiveRtpHeaderExtension(
-        kRtpExtensionTransmissionTimeOffset);
+    // Disable the extension.
+    absolute_send_time_extension_id_ = kInvalidRtpExtensionId;
+    rtp_rtcp_->DeregisterSendRtpHeaderExtension(
+        kRtpExtensionAbsoluteSendTime);
+    for (std::list<RtpRtcp*>::iterator it = simulcast_rtp_rtcp_.begin();
+         it != simulcast_rtp_rtcp_.end(); it++) {
+      (*it)->DeregisterSendRtpHeaderExtension(
+          kRtpExtensionAbsoluteSendTime);
+    }
   }
+  return error;
+}
+
+int ViEChannel::SetReceiveAbsoluteSendTimeStatus(bool enable, int id) {
+  receive_absolute_send_time_enabled_ = enable;
+  return vie_receiver_.SetReceiveAbsoluteSendTimeStatus(enable, id) ? 0 : -1;
+}
+
+bool ViEChannel::GetReceiveAbsoluteSendTimeStatus() const {
+  return receive_absolute_send_time_enabled_;
 }
 
 void ViEChannel::SetTransmissionSmoothingStatus(bool enable) {
@@ -883,14 +947,17 @@ int32_t ViEChannel::EnableKeyFrameRequestCallback(const bool enable) {
 }
 
 int32_t ViEChannel::SetSSRC(const uint32_t SSRC,
-                                  const StreamType usage,
-                                  const uint8_t simulcast_idx) {
+                            const StreamType usage,
+                            const uint8_t simulcast_idx) {
   WEBRTC_TRACE(webrtc::kTraceInfo,
                webrtc::kTraceVideo,
                ViEId(engine_id_, channel_id_),
                "%s(usage:%d, SSRC: 0x%x, idx:%u)",
                __FUNCTION__, usage, SSRC, simulcast_idx);
   if (simulcast_idx == 0) {
+    if (usage == kViEStreamTypeRtx) {
+      return rtp_rtcp_->SetRTXSendStatus(kRtxRetransmitted, true, SSRC);
+    }
     return rtp_rtcp_->SetSSRC(SSRC);
   }
   CriticalSectionScoped cs(rtp_rtcp_cs_.get());
@@ -903,15 +970,15 @@ int32_t ViEChannel::SetSSRC(const uint32_t SSRC,
       return -1;
     }
   }
-  RtpRtcp* rtp_rtcp = *it;
+  RtpRtcp* rtp_rtcp_module = *it;
   if (usage == kViEStreamTypeRtx) {
-    return rtp_rtcp->SetRTXSendStatus(kRtxRetransmitted, true, SSRC);
+    return rtp_rtcp_module->SetRTXSendStatus(kRtxRetransmitted, true, SSRC);
   }
-  return rtp_rtcp->SetSSRC(SSRC);
+  return rtp_rtcp_module->SetSSRC(SSRC);
 }
 
 int32_t ViEChannel::SetRemoteSSRCType(const StreamType usage,
-                                            const uint32_t SSRC) const {
+                                      const uint32_t SSRC) const {
   WEBRTC_TRACE(webrtc::kTraceInfo,
                webrtc::kTraceVideo,
                ViEId(engine_id_, channel_id_),
