@@ -8612,11 +8612,8 @@ IonBuilder::setPropTryCache(bool *emitted, MDefinition *obj,
 {
     JS_ASSERT(*emitted == false);
 
-    if (barrier)
-        return true;
-
     // Emit SetPropertyCache.
-    MSetPropertyCache *ins = MSetPropertyCache::New(obj, value, name, script()->strict);
+    MSetPropertyCache *ins = MSetPropertyCache::New(obj, value, name, script()->strict, barrier);
 
     RootedId id(cx, NameToId(name));
     if (!objTypes || objTypes->propertyNeedsBarrier(cx, id))

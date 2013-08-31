@@ -1945,9 +1945,48 @@ SetPropertyIC::attachNativeExisting(JSContext *cx, IonScript *ion,
     MacroAssembler masm(cx);
     RepatchStubAppender attacher(*this);
 
-    attacher.branchNextStub(masm, Assembler::NotEqual,
-                            Address(object(), JSObject::offsetOfShape()),
-                            ImmGCPtr(obj->lastProperty()));
+    Label failures;
+    masm.branchPtr(Assembler::NotEqual,
+                   Address(object(), JSObject::offsetOfShape()),
+                   ImmGCPtr(obj->lastProperty()), &failures);
+
+    // Guard that the incoming value is in the type set for the property
+    // if a type barrier is required.
+    if (needsTypeBarrier() && !value().constant()) {
+        // We can't do anything that would change the HeapTypeSet, so
+        // just guard that it's already there.
+
+        // Obtain and guard on the TypeObject of the object.
+        types::TypeObject *type = obj->getType(cx);
+        masm.branchPtr(Assembler::NotEqual,
+                       Address(object(), JSObject::offsetOfType()),
+                       ImmGCPtr(type), &failures);
+
+        if (!type->unknownProperties()) {
+            TypedOrValueRegister valReg = value().reg();
+            RootedId id(cx, types::IdToTypeId(AtomToId(name())));
+            types::HeapTypeSet *propTypes = type->maybeGetProperty(cx, id);
+            JS_ASSERT(propTypes);
+
+            if (!propTypes->unknown()) {
+                Label barrierSuccess;
+                Label barrierFailure;
+
+                Register scratchReg = object();
+                masm.push(scratchReg);
+
+                masm.guardTypeSet(valReg, propTypes, scratchReg,
+                                  &barrierSuccess, &barrierFailure);
+
+                masm.bind(&barrierFailure);
+                masm.pop(object());
+                masm.jump(&failures);
+
+                masm.bind(&barrierSuccess);
+                masm.pop(object());
+            }
+        }
+    }
 
     if (obj->isFixedSlot(shape->slot())) {
         Address addr(object(), JSObject::getFixedSlotOffset(shape->slot()));
@@ -1969,6 +2008,9 @@ SetPropertyIC::attachNativeExisting(JSContext *cx, IonScript *ion,
     }
 
     attacher.jumpRejoin(masm);
+
+    masm.bind(&failures);
+    attacher.jumpNextStub(masm);
 
     return linkAndAttachStub(cx, masm, attacher, ion, "setting");
 }
@@ -2277,7 +2319,8 @@ IsPropertyInlineable(JSObject *obj)
 }
 
 static bool
-IsPropertySetInlineable(JSContext *cx, HandleObject obj, HandleId id, MutableHandleShape pshape)
+IsPropertySetInlineable(JSContext *cx, const SetPropertyIC &cache, HandleObject obj,
+                        HandleId id, MutableHandleShape pshape)
 {
     Shape *shape = obj->nativeLookup(cx, id);
 
@@ -2292,6 +2335,19 @@ IsPropertySetInlineable(JSContext *cx, HandleObject obj, HandleId id, MutableHan
 
     if (!shape->writable())
         return false;
+
+    types::TypeObject *type = obj->getType(cx);
+    if (cache.needsTypeBarrier() && !type->unknownProperties()) {
+        RootedId typeId(cx, types::IdToTypeId(id));
+        types::HeapTypeSet *propTypes = type->maybeGetProperty(cx, typeId);
+        if (!propTypes)
+            return false;
+        if (cache.value().constant() && !propTypes->unknown()) {
+            // If the input is a constant, then don't bother if the barrier will always fail.
+            if (!propTypes->hasType(types::GetValueType(cache.value().value())))
+                return false;
+        }
+    }
 
     pshape.set(shape);
 
@@ -2372,7 +2428,7 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
     bool addedSetterStub = false;
     if (inlinable) {
         RootedShape shape(cx);
-        if (IsPropertySetInlineable(cx, obj, id, &shape)) {
+        if (IsPropertySetInlineable(cx, cache, obj, id, &shape)) {
             if (!cache.attachNativeExisting(cx, ion, obj, shape))
                 return false;
             addedSetterStub = true;
@@ -2399,7 +2455,8 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
         return false;
 
     // The property did not exist before, now we can try to inline the property add.
-    if (inlinable && !addedSetterStub && obj->lastProperty() != oldShape &&
+    if (inlinable && !addedSetterStub && !cache.needsTypeBarrier() &&
+        obj->lastProperty() != oldShape &&
         IsPropertyAddInlineable(cx, obj, id, oldSlots, &shape))
     {
         RootedShape newShape(cx, obj->lastProperty());
