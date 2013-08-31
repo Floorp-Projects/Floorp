@@ -2979,6 +2979,8 @@ DebuggerScript_getOffsetLine(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+namespace {
+
 class BytecodeRangeWithPosition : private BytecodeRange
 {
   public:
@@ -3206,6 +3208,8 @@ class FlowGraphSummary {
 
     Vector<Entry> entries_;
 };
+
+} /* anonymous namespace */
 
 static bool
 DebuggerScript_getAllOffsets(JSContext *cx, unsigned argc, Value *vp)

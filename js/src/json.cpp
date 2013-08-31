@@ -115,6 +115,8 @@ Quote(JSContext *cx, StringBuffer &sb, JSString *str)
     return sb.append('"');
 }
 
+namespace {
+
 class StringifyContext
 {
   public:
@@ -134,6 +136,8 @@ class StringifyContext
     uint32_t depth;
 };
 
+} /* anonymous namespace */
+
 static bool Str(JSContext *cx, const Value &v, StringifyContext *scx);
 
 static bool
@@ -150,6 +154,8 @@ WriteIndent(JSContext *cx, StringifyContext *scx, uint32_t limit)
 
     return true;
 }
+
+namespace {
 
 template<typename KeyType>
 class KeyStringifier {
@@ -170,6 +176,8 @@ class KeyStringifier<HandleId> {
         return IdToString(cx, id);
     }
 };
+
+} /* anonymous namespace */
 
 /*
  * ES5 15.12.3 Str, steps 2-4, extracted to enable preprocessing of property

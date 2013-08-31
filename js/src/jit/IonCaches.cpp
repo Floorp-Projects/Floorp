@@ -1807,8 +1807,7 @@ void
 ParallelIonCache::destroy()
 {
     DispatchIonCache::destroy();
-    if (stubbedShapes_)
-        js_delete(stubbedShapes_);
+    js_delete(stubbedShapes_);
 }
 
 void
