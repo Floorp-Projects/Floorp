@@ -295,7 +295,6 @@ int nr_ice_media_stream_service_pre_answer_requests(nr_ice_peer_ctx *pctx, nr_ic
     nr_ice_component *pcomp;
     int r,_status;
     char *user = 0;
-    char *lufrag, *rufrag;
 
     if (serviced)
       *serviced = 0;
@@ -698,7 +697,6 @@ int nr_ice_media_stream_find_component(nr_ice_media_stream *str, int comp_id, nr
     return(_status);
   }
 
-
 int nr_ice_media_stream_send(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str, int component, UCHAR *data, int len)
   {
     int r,_status;
@@ -710,7 +708,7 @@ int nr_ice_media_stream_send(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str, in
 
     /* Do we have an active pair yet? We should... */
     if(!comp->active)
-      ABORT(R_BAD_ARGS);
+      ABORT(R_NOT_FOUND);
 
     /* OK, write to that pair, which means:
        1. Use the socket on our local side.
@@ -718,7 +716,7 @@ int nr_ice_media_stream_send(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str, in
     */
     comp->keepalive_needed=0; /* Suppress keepalives */
     if(r=nr_socket_sendto(comp->active->local->osock,data,len,0,
-      &comp->active->remote->addr))
+                          &comp->active->remote->addr))
       ABORT(r);
 
     _status=0;
@@ -726,6 +724,25 @@ int nr_ice_media_stream_send(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str, in
     return(_status);
   }
 
+int nr_ice_media_stream_get_active(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str, int component, nr_ice_candidate **local, nr_ice_candidate **remote)
+  {
+    int r,_status;
+    nr_ice_component *comp;
+
+    /* First find the peer component */
+    if(r=nr_ice_peer_ctx_find_component(pctx, str, component, &comp))
+      ABORT(r);
+
+    if(!comp->active)
+      ABORT(R_NOT_FOUND);
+
+    if (local) *local = comp->active->local;
+    if (remote) *remote = comp->active->remote;
+
+    _status=0;
+  abort:
+    return(_status);
+  }
 
 int nr_ice_media_stream_addrs(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str, int component, nr_transport_addr *local, nr_transport_addr *remote)
   {

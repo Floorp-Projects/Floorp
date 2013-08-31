@@ -76,7 +76,9 @@ class IceTestPeer : public sigslot::has_slots<> {
       fake_resolver_(),
       dns_resolver_(new NrIceResolver()),
       remote_(nullptr),
-      candidate_filter_(nullptr) {
+      candidate_filter_(nullptr),
+      expected_local_type_(NrIceCandidate::ICE_HOST),
+      expected_remote_type_(NrIceCandidate::ICE_HOST) {
     ice_ctx_->SignalGatheringCompleted.connect(this,
                                                &IceTestPeer::GatheringComplete);
     ice_ctx_->SignalCompleted.connect(this, &IceTestPeer::IceCompleted);
@@ -179,6 +181,11 @@ class IceTestPeer : public sigslot::has_slots<> {
     return candidates;
   }
 
+  void SetExpectedTypes(NrIceCandidate::Type local, NrIceCandidate::Type remote) {
+    expected_local_type_ = local;
+    expected_remote_type_ = remote;
+  }
+
   bool gathering_complete() { return gathering_complete_; }
   int ready_ct() { return ready_ct_; }
   bool is_ready(size_t stream) {
@@ -254,6 +261,57 @@ class IceTestPeer : public sigslot::has_slots<> {
     }
   }
 
+  void DumpCandidate(std::string which, const NrIceCandidate& cand) {
+    std::string type;
+
+    switch(cand.type) {
+      case NrIceCandidate::ICE_HOST:
+        type = "host";
+        break;
+      case NrIceCandidate::ICE_SERVER_REFLEXIVE:
+        type = "srflx";
+        break;
+      case NrIceCandidate::ICE_PEER_REFLEXIVE:
+        type = "prflx";
+        break;
+      case NrIceCandidate::ICE_RELAYED:
+        type = "relay";
+        break;
+      default:
+        FAIL();
+    };
+
+    std::cerr << which
+              << " --> "
+              << type
+              << " "
+              << cand.host
+              << ":"
+              << cand.port
+              << std::endl;
+  }
+
+  void DumpAndCheckActiveCandidates() {
+    std::cerr << "Active candidates:" << std::endl;
+    for (size_t i=0; i < streams_.size(); ++i) {
+      for (int j=0; j < streams_[i]->components(); ++j) {
+        std::cerr << "Stream " << i << " component " << j+1 << std::endl;
+
+        NrIceCandidate *local;
+        NrIceCandidate *remote;
+
+        nsresult res = streams_[i]->GetActivePair(j+1, &local, &remote);
+        ASSERT_TRUE(NS_SUCCEEDED(res));
+        DumpCandidate("Local  ", *local);
+        ASSERT_EQ(expected_local_type_, local->type);
+        DumpCandidate("Remote ", *remote);
+        ASSERT_EQ(expected_remote_type_, remote->type);
+        delete local;
+        delete remote;
+      }
+    }
+  }
+
   void Close() {
     test_utils->sts_target()->Dispatch(
       WrapRunnable(ice_ctx_, &NrIceCtx::destroy_peer_ctx),
@@ -285,8 +343,8 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void StreamReady(NrIceMediaStream *stream) {
-    std::cerr << "Stream ready " << stream->name() << std::endl;
     ++ready_ct_;
+    std::cerr << "Stream ready " << stream->name() << " ct=" << ready_ct_ << std::endl;
   }
 
   void IceCompleted(NrIceCtx *ctx) {
@@ -334,6 +392,8 @@ class IceTestPeer : public sigslot::has_slots<> {
   nsRefPtr<NrIceResolver> dns_resolver_;
   IceTestPeer *remote_;
   CandidateFilter candidate_filter_;
+  NrIceCandidate::Type expected_local_type_;
+  NrIceCandidate::Type expected_remote_type_;
 };
 
 class IceGatherTest : public ::testing::Test {
@@ -400,9 +460,11 @@ class IceConnectTest : public ::testing::Test {
     p2_->SetTurnServer(addr, port, username, password);
   }
 
-  void SetCandidateFilter(CandidateFilter filter) {
+  void SetCandidateFilter(CandidateFilter filter, bool both=true) {
     p1_->SetCandidateFilter(filter);
-    p2_->SetCandidateFilter(filter);
+    if (both) {
+      p2_->SetCandidateFilter(filter);
+    }
   }
 
   void Connect() {
@@ -411,8 +473,21 @@ class IceConnectTest : public ::testing::Test {
 
     ASSERT_TRUE_WAIT(p1_->ready_ct() == 1 && p2_->ready_ct() == 1, 5000);
     ASSERT_TRUE_WAIT(p1_->ice_complete() && p2_->ice_complete(), 5000);
+
+    p1_->DumpAndCheckActiveCandidates();
+    p2_->DumpAndCheckActiveCandidates();
   }
 
+  void SetExpectedTypes(NrIceCandidate::Type local, NrIceCandidate::Type remote) {
+    p1_->SetExpectedTypes(local, remote);
+    p2_->SetExpectedTypes(local, remote);
+  }
+
+  void SetExpectedTypes(NrIceCandidate::Type local1, NrIceCandidate::Type remote1,
+                        NrIceCandidate::Type local2, NrIceCandidate::Type remote2) {
+    p1_->SetExpectedTypes(local1, remote1);
+    p2_->SetExpectedTypes(local2, remote2);
+  }
 
   void ConnectP1(TrickleMode mode = TRICKLE_NONE) {
     p1_->Connect(p2_, mode);
@@ -651,6 +726,8 @@ TEST_F(IceConnectTest, TestConnectTurnOnly) {
                 g_turn_user, g_turn_password);
   ASSERT_TRUE(Gather(true));
   SetCandidateFilter(IsRelayCandidate);
+  SetExpectedTypes(NrIceCandidate::Type::ICE_RELAYED,
+                   NrIceCandidate::Type::ICE_RELAYED);
   Connect();
 }
 
@@ -663,6 +740,8 @@ TEST_F(IceConnectTest, TestSendReceiveTurnOnly) {
                 g_turn_user, g_turn_password);
   ASSERT_TRUE(Gather(true));
   SetCandidateFilter(IsRelayCandidate);
+  SetExpectedTypes(NrIceCandidate::Type::ICE_RELAYED,
+                   NrIceCandidate::Type::ICE_RELAYED);
   Connect();
   SendReceive();
 }

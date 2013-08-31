@@ -63,6 +63,21 @@ typedef struct nr_ice_media_stream_ nr_ice_media_stream;
 
 class NrIceCtx;
 
+/* A summary of a candidate, for use in asking which candidate
+   pair is active */
+struct NrIceCandidate {
+  enum Type {
+    ICE_HOST,
+    ICE_SERVER_REFLEXIVE,
+    ICE_PEER_REFLEXIVE,
+    ICE_RELAYED
+  };
+
+  std::string host;
+  uint16_t port;
+  Type type;
+};
+
 class NrIceMediaStream {
  public:
   static RefPtr<NrIceMediaStream> Create(NrIceCtx *ctx,
@@ -88,6 +103,14 @@ class NrIceMediaStream {
 
   // Parse trickle ICE candidate
   nsresult ParseTrickleCandidate(const std::string& candidate);
+
+  // Get the candidate pair currently active. It's the
+  // caller's responsibility to free these.
+  nsresult GetActivePair(int component,
+                         NrIceCandidate** local, NrIceCandidate** remote);
+
+  // The number of components
+  int components() const { return components_; }
 
   // The underlying nICEr stream
   nr_ice_media_stream *stream() { return stream_; }
@@ -126,11 +149,7 @@ class NrIceMediaStream {
       ctx_(ctx),
       name_(name),
       components_(components),
-      stream_(nullptr)
-  {
-    // XXX: components_ will be used eventually;  placate clang in the meantime.
-    (void)components_;
-  }
+      stream_(nullptr) {}
 
   DISALLOW_COPY_ASSIGN(NrIceMediaStream);
 
