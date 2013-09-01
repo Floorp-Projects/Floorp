@@ -3240,11 +3240,18 @@ CanvasRenderingContext2D::DrawWindow(nsIDOMWindow* window, double x,
       return;
     }
 
+    // TODO: This function makes a copy of the data, which really isn't
+    // required here.
     RefPtr<SourceSurface> data =
       mTarget->CreateSourceSurfaceFromData(img->Data(),
                                            IntSize(size.width, size.height),
                                            img->Stride(),
                                            FORMAT_B8G8R8A8);
+    if (!data) {
+      error.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+    
     mgfx::Rect rect(0, 0, w, h);
     mTarget->DrawSurface(data, rect, rect);
     mTarget->Flush();
