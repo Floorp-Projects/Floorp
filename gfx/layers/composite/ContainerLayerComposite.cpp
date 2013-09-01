@@ -116,6 +116,11 @@ ContainerRender(ContainerT* aContainer,
     } else {
       surface = compositor->CreateRenderTarget(surfaceRect, mode);
     }
+
+    if (!surface) {
+      return;
+    }
+
     compositor->SetRenderTarget(surface);
     childOffset.x = visibleRect.x;
     childOffset.y = visibleRect.y;
