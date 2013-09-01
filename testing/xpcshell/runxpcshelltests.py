@@ -135,6 +135,7 @@ class XPCShellTestThread(Thread):
 
         # event from main thread to signal work done
         self.event = event
+        self.done = False # explicitly set flag so we don't rely on thread.isAlive
 
     def run(self):
         try:
@@ -148,6 +149,7 @@ class XPCShellTestThread(Thread):
         if self.retry:
             self.log.info("TEST-INFO | %s | Test failed or timed out, will retry."
                           % self.test_object['name'])
+        self.done = True
         self.event.set()
 
     def kill(self, proc):
@@ -218,6 +220,7 @@ class XPCShellTestThread(Thread):
     def testTimeout(self, test_file, processPID):
         if not self.retry:
             self.log.error("TEST-UNEXPECTED-FAIL | %s | Test timed out" % test_file)
+        self.done = True
         Automation().killAndGetStackNoScreenshot(processPID, self.appPath, self.debuggerInfo)
 
     def buildCmdTestFile(self, name):
@@ -1347,7 +1350,7 @@ class XPCShellTests(object):
             # find what tests are done (might be more than 1)
             done_tests = set()
             for test in running_tests:
-                if not test.is_alive():
+                if test.done:
                     done_tests.add(test)
                     test.join()
                     # if the test had trouble, we will try running it again
