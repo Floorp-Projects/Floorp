@@ -54,7 +54,7 @@
 #include "nsICachingChannel.h"
 #include "nsLayoutUtils.h"
 #include "nsVideoFrame.h"
-#include "BasicLayers.h"
+#include "Layers.h"
 #include <limits>
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIAppShell.h"
