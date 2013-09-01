@@ -7,6 +7,7 @@
 #include "mozTXTToHTMLConv.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
+#include "nsUnicodeProperties.h"
 #include "nsCRT.h"
 #include "nsIExternalProtocolHandler.h"
 #include "nsIIOService.h"
@@ -18,9 +19,6 @@
 #include "prtime.h"
 #include "prinrval.h"
 #endif
-
-using mozilla::IsAsciiAlpha;
-using mozilla::IsAsciiDigit;
 
 const double growthRate = 1.2;
 
@@ -507,6 +505,14 @@ bool mozTXTToHTMLConv::FindURL(const char16_t* aInString, int32_t aInLength,
   return state[check] == success;
 }
 
+static inline bool IsAlpha(const uint32_t aChar) {
+  return mozilla::unicode::GetGenCategory(aChar) == nsUGenCategory::kLetter;
+}
+
+static inline bool IsDigit(const uint32_t aChar) {
+  return mozilla::unicode::GetGenCategory(aChar) == nsUGenCategory::kNumber;
+}
+
 bool mozTXTToHTMLConv::ItMatchesDelimited(const char16_t* aInString,
                                           int32_t aInLength,
                                           const char16_t* rep, int32_t aRepLen,
@@ -525,17 +531,17 @@ bool mozTXTToHTMLConv::ItMatchesDelimited(const char16_t* aInString,
        textLen < aRepLen + 2))
     return false;
 
-  char16_t text0 = aInString[0];
-  char16_t textAfterPos = aInString[aRepLen + (before == LT_IGNORE ? 0 : 1)];
+  uint32_t text0 = aInString[0];
+  uint32_t textAfterPos = aInString[aRepLen + (before == LT_IGNORE ? 0 : 1)];
 
-  if ((before == LT_ALPHA && !IsAsciiAlpha(text0)) ||
-      (before == LT_DIGIT && !IsAsciiDigit(text0)) ||
+  if ((before == LT_ALPHA && !IsAlpha(text0)) ||
+      (before == LT_DIGIT && !IsDigit(text0)) ||
       (before == LT_DELIMITER &&
-       (IsAsciiAlpha(text0) || IsAsciiDigit(text0) || text0 == *rep)) ||
-      (after == LT_ALPHA && !IsAsciiAlpha(textAfterPos)) ||
-      (after == LT_DIGIT && !IsAsciiDigit(textAfterPos)) ||
+       (IsAlpha(text0) || IsDigit(text0) || text0 == *rep)) ||
+      (after == LT_ALPHA && !IsAlpha(textAfterPos)) ||
+      (after == LT_DIGIT && !IsDigit(textAfterPos)) ||
       (after == LT_DELIMITER &&
-       (IsAsciiAlpha(textAfterPos) || IsAsciiDigit(textAfterPos) ||
+       (IsAlpha(textAfterPos) || IsDigit(textAfterPos) ||
         textAfterPos == *rep)) ||
       !Substring(Substring(aInString, aInString + aInLength),
                  (before == LT_IGNORE ? 0 : 1), aRepLen)
