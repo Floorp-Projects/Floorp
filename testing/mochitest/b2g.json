@@ -332,7 +332,6 @@
     "content/base/test/test_bug166235.html":"clipboard undefined",
 
     "dom/tests/mochitest/general/test_idleapi_permissions.html":"",
-    "dom/tests/mochitest/general/test_interfaces.html":"",
     "dom/tests/mochitest/general/test_paste_selection.html":"No clipboard",
 
     "dom/tests/mochitest/geolocation/test_allowCurrent.html":"Bug 910235 - Error: no message manager set when calling method: [nsIObserver::observe]",

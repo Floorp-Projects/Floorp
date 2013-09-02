@@ -4,12 +4,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsThebesFontEnumerator.h"
-
-#include "nsMemory.h"
-
-#include "gfxPlatform.h"
-#include "nsTArray.h"
-#include "nsIAtom.h"
+#include <stdint.h>                     // for uint32_t
+#include "gfxPlatform.h"                // for gfxPlatform
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
+#include "nsCOMPtr.h"                   // for nsCOMPtr
+#include "nsDebug.h"                    // for NS_ENSURE_ARG_POINTER
+#include "nsError.h"                    // for NS_OK, NS_FAILED, nsresult
+#include "nsIAtom.h"                    // for nsIAtom, do_GetAtom
+#include "nsID.h"
+#include "nsMemory.h"                   // for nsMemory
+#include "nsStringGlue.h"               // for nsAutoCString, nsAutoString, etc
+#include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
+#include "nscore.h"                     // for PRUnichar, NS_IMETHODIMP
 
 NS_IMPL_ISUPPORTS1(nsThebesFontEnumerator, nsIFontEnumerator)
 

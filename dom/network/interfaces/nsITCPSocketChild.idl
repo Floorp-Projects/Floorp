@@ -8,7 +8,7 @@ interface nsITCPSocketInternal;
 interface nsIDOMWindow;
 
 // Interface to allow the content process socket to reach the IPC bridge.
-[scriptable, uuid(edf07a93-36a6-4574-8e23-40f64ab5f596)]
+[scriptable, uuid(ada5342d-6d45-4ff1-a7d3-6a4b150d0385)]
 interface nsITCPSocketChild : nsISupports
 {
   // Tell the chrome process to open a corresponding connection with the given parameters
@@ -23,6 +23,7 @@ interface nsITCPSocketChild : nsISupports
   void resume();
   void suspend();
   void close();
+  void startTLS();
 
   /**
    * Initialize the TCP socket on the child side for IPC. It is called from the child side,

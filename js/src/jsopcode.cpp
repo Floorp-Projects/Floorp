@@ -1087,6 +1087,8 @@ GetBlockChainAtPC(JSContext *cx, JSScript *script, jsbytecode *pc)
     return blockChain;
 }
 
+namespace {
+
 class PCStack
 {
     jsbytecode **stack;
@@ -1099,6 +1101,8 @@ class PCStack
     int depth() const { return depth_; }
     jsbytecode *operator[](int i) const;
 };
+
+} /* anonymous namespace */
 
 PCStack::~PCStack()
 {

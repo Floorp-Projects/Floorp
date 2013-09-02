@@ -623,6 +623,8 @@ operator<=(Type lhs, VarType rhs)
 static inline MIRType ToMIRType(MIRType t) { return t; }
 static inline MIRType ToMIRType(VarType t) { return t.toMIRType(); }
 
+namespace {
+
 template <class VecT>
 class ABIArgIter
 {
@@ -682,6 +684,8 @@ class Signature
 
     RetType retType() const { return retType_; }
 };
+
+} /* namespace anonymous */
 
 static
 bool operator==(const Signature &lhs, const Signature &rhs)
@@ -907,10 +911,10 @@ TypedArrayStoreType(ArrayBufferView::ViewType viewType)
 
 /*****************************************************************************/
 
+namespace {
+
 typedef Vector<PropertyName*,1> LabelVector;
 typedef Vector<MBasicBlock*,8> BlockVector;
-
-namespace {
 
 // ModuleCompiler encapsulates the compilation of an entire asm.js module. Over
 // the course of an ModuleCompiler object's lifetime, many FunctionCompiler

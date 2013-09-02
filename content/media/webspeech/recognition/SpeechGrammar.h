@@ -10,13 +10,12 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsString.h"
 #include "nsWrapperCache.h"
+#include "js/TypeDecls.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 
 #include "EnableWebSpeechRecognitionCheck.h"
-
-struct JSContext;
 
 namespace mozilla {
 namespace dom {

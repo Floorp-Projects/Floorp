@@ -13,7 +13,7 @@ interface nsIScriptGlobalObject;
 [ptr] native JSContext(JSContext);
 
 %{C++
-namespace JS { class Value; }
+#include "js/TypeDecls.h"
 %}
 
 /**

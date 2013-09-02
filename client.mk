@@ -104,18 +104,9 @@ endif
 # Load mozconfig Options
 
 # See build pages, http://www.mozilla.org/build/ for how to set up mozconfig.
-
-MOZCONFIG_LOADER := build/autoconf/mozconfig2client-mk
-
-define CR
-
-
-endef
-
-# As $(shell) doesn't preserve newlines, use sed to replace them with an
-# unlikely sequence (||), which is then replaced back to newlines by make
-# before evaluation.
-$(eval $(subst ||,$(CR),$(shell _PYMAKE=$(.PYMAKE) $(TOPSRCDIR)/$(MOZCONFIG_LOADER) $(TOPSRCDIR) 2> $(TOPSRCDIR)/.mozconfig.out | sed 's/$$/||/')))
+# mozconfig.mk needs to be loaded multiple times by configure, so we don't check
+# for INCLUDED_MOZCONFIG_MK
+include $(TOPSRCDIR)/config/makefiles/mozconfig.mk
 
 ifdef AUTOCLOBBER
 export AUTOCLOBBER=1

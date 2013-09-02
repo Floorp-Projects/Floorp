@@ -11,11 +11,9 @@
 #include "mozilla/ipc/PTestShellParent.h"
 #include "mozilla/ipc/PTestShellCommandParent.h"
 
+#include "js/TypeDecls.h"
 #include "nsAutoJSValHolder.h"
 #include "nsStringGlue.h"
-
-struct JSContext;
-class JSObject;
 
 namespace mozilla {
 

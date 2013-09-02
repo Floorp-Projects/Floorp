@@ -15,8 +15,7 @@
 #include "nsWrapperCache.h"
 #include "nsAutoPtr.h"
 #include "nsPIDOMWindow.h"
-
-struct JSContext;
+#include "js/TypeDecls.h"
 
 namespace mozilla {
 namespace dom {

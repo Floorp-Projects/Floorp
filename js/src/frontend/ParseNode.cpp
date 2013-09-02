@@ -70,6 +70,8 @@ ParseNodeAllocator::freeNode(ParseNode *pn)
     freelist = pn;
 }
 
+namespace {
+
 /*
  * A work pool of ParseNodes. The work pool is a stack, chained together
  * by nodes' pn_next fields. We use this to avoid creating deep C++ stacks
@@ -103,6 +105,8 @@ class NodeStack {
   private:
     ParseNode *top;
 };
+
+} /* anonymous namespace */
 
 /*
  * Push the children of |pn| on |stack|. Return true if |pn| itself could be

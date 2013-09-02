@@ -1,0 +1,157 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=910220
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 910220</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=910220">Mozilla Bug 910220</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<form name="x"></form>
+</div>
+<pre id="test">
+</pre>
+<script type="application/javascript">
+
+/** Test for Bug 910220 **/
+
+function getX() {
+  return "x";
+}
+
+function namedSetStrict(obj) {
+  "use strict";
+  var threw;
+  try {
+    obj.x = 5;
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw,
+     "Should throw in strict mode when setting named property on " + obj);
+
+  try {
+    obj[getX()] = 5;
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw,
+     "Should throw in strict mode when setting named property via SETELEM on " + obj);
+
+  try {
+    Object.defineProperty(obj, "x", { value: 17 });
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw,
+     "Should throw in strict mode when defining named property on " + obj);
+}
+function namedSetNonStrict(obj) {
+  var threw;
+  try {
+    obj.x = 5;
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  ok(!threw,
+     "Should not throw in non-strict mode when setting named property on " + obj);
+
+  try {
+    obj[getX()] = 5;
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  ok(!threw,
+     "Should not throw in non-strict mode when setting named property via SETELEM on" + obj);
+
+  try {
+    Object.defineProperty(obj, "x", { value: 17 });
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw,
+     "Should throw in non-strict mode when defining named property on " + obj);
+}
+for (var obj of [ document, document.forms ]) {
+  namedSetStrict(obj);
+  namedSetNonStrict(obj);
+}
+
+function indexedSetStrict(obj) {
+  "use strict";
+  var threw;
+  try {
+    obj[0] = 5;
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw,
+     "Should throw in strict mode when setting indexed property on " + obj);
+
+  try {
+    obj[1000] = 5;
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw,
+     "Should throw in strict mode when setting out of bounds indexed property on " + obj);
+
+  try {
+    Object.defineProperty(obj, "0", { value: 17 });
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw,
+     "Should throw in strict mode when defining indexed property on " + obj);
+}
+function indexedSetNonStrict(obj) {
+  var threw;
+  try {
+    obj[0] = 5;
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  ok(!threw,
+     "Should not throw in non-strict mode when setting indexed property on " + obj);
+
+  try {
+    obj[1000] = 5;
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  ok(!threw,
+     "Should not throw in non-strict mode when setting out of bounds indexed property on " + obj);
+
+  try {
+    Object.defineProperty(obj, "0", { value: 17 });
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw,
+     "Should throw in non-strict mode when defining indexed property on " + obj);
+}
+for (var obj of [ document.forms, document.childNodes ]) {
+  indexedSetStrict(obj);
+  indexedSetNonStrict(obj);
+}
+</script>
+</body>
+</html>

@@ -1050,7 +1050,7 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayerTransactionChild* aShadowManag
   return usedLayerManager;
 }
 
-BasicLayerManager* nsBaseWidget::CreateBasicLayerManager()
+LayerManager* nsBaseWidget::CreateBasicLayerManager()
 {
   return new BasicLayerManager(this);
 }

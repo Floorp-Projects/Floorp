@@ -273,6 +273,35 @@ MDefinition::defUseCount() const
     return count;
 }
 
+bool
+MDefinition::hasOneUse() const
+{
+    MUseIterator i(uses_.begin());
+    if (i == uses_.end())
+        return false;
+    i++;
+    return i == uses_.end();
+}
+
+bool
+MDefinition::hasOneDefUse() const
+{
+    bool hasOneDefUse = false;
+    for (MUseIterator i(uses_.begin()); i != uses_.end(); i++) {
+        if (!(*i)->consumer()->isDefinition())
+            continue;
+
+        // We already have a definition use. So 1+
+        if (hasOneDefUse)
+            return false;
+
+        // We saw one definition. Loop to test if there is another.
+        hasOneDefUse = true;
+    }
+
+    return hasOneDefUse;
+}
+
 MUseIterator
 MDefinition::removeUse(MUseIterator use)
 {
@@ -856,7 +885,7 @@ MPhi::addInputSlow(MDefinition *ins, bool *ptypeChange)
 uint32_t
 MPrepareCall::argc() const
 {
-    JS_ASSERT(useCount() == 1);
+    JS_ASSERT(hasOneUse());
     MCall *call = usesBegin()->consumer()->toDefinition()->toCall();
     return call->numStackArgs();
 }

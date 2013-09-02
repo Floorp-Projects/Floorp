@@ -8,7 +8,7 @@
 
 #include "TabChild.h"
 
-#include "BasicLayers.h"
+#include "Layers.h"
 #include "Blob.h"
 #include "ContentChild.h"
 #include "IndexedDBChild.h"

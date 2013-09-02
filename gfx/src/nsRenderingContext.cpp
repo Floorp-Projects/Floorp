@@ -4,9 +4,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsRenderingContext.h"
-#include "nsBoundingMetrics.h"
-#include "nsRegion.h"
-#include <algorithm>
+#include <string.h>                     // for strlen
+#include <algorithm>                    // for min
+#include "gfxColor.h"                   // for gfxRGBA
+#include "gfxMatrix.h"                  // for gfxMatrix
+#include "gfxPoint.h"                   // for gfxPoint, gfxSize
+#include "gfxRect.h"                    // for gfxRect
+#include "gfxTypes.h"                   // for gfxFloat
+#include "mozilla/gfx/BasePoint.h"      // for BasePoint
+#include "mozilla/mozalloc.h"           // for operator delete[], etc
+#include "nsBoundingMetrics.h"          // for nsBoundingMetrics
+#include "nsCharTraits.h"               // for NS_IS_LOW_SURROGATE
+#include "nsDebug.h"                    // for NS_ERROR
+#include "nsPoint.h"                    // for nsPoint
+#include "nsRect.h"                     // for nsRect, nsIntRect
+#include "nsRegion.h"                   // for nsIntRegionRectIterator, etc
+
+class gfxASurface;
 
 // XXXTodo: rename FORM_TWIPS to FROM_APPUNITS
 #define FROM_TWIPS(_x)  ((gfxFloat)((_x)/(mP2A)))

@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test ConvolverNode after a GainNode - Bug 891254 </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script src="webaudio.js" type="text/javascript"></script>
+<script class="testbody" type="text/javascript">
+
+const signalLength = 2048;
+const responseLength = 100;
+const outputLength = 4096; // > signalLength + responseLength
+
+var gTest = {
+  length: outputLength,
+  numberOfChannels: 1,
+  createGraph: function(context) {
+    var buffer = context.createBuffer(1, signalLength, context.sampleRate);
+    for (var i = 0; i < signalLength; ++i) {
+      buffer.getChannelData(0)[i] = Math.sin(2 * Math.PI * i / signalLength);
+    }
+
+    var source = context.createBufferSource();
+    source.buffer = buffer;
+    source.start(0);
+
+    var response = context.createBuffer(1, responseLength, context.sampleRate);
+    for (var i = 0; i < responseLength; ++i) {
+      response.getChannelData(0)[i] = i / responseLength;
+    }
+
+    var gain = context.createGain();
+    gain.gain.value = -1;
+    source.connect(gain);
+
+    var convolver1 = context.createConvolver();
+    convolver1.buffer = response;
+    gain.connect(convolver1);
+
+    var convolver2 = context.createConvolver();
+    convolver2.buffer = response;
+    source.connect(convolver2);
+
+    // The output of convolver1 should be the inverse of convolver2, so blend
+    // them together and expect silence.
+    var blend = context.createGain();
+    convolver1.connect(blend);
+    convolver2.connect(blend);
+
+    return blend;
+  },
+};
+
+runTest();
+
+</script>
+</pre>
+</body>
+</html>

@@ -358,12 +358,12 @@ Range::unionWith(const Range *other)
    if (lower_infinite_ || other->lower_infinite_)
        makeLowerInfinite();
    else
-       setLower(Min(lower_, other->lower_));
+       setLowerInit(Min(lower_, other->lower_));
 
    if (upper_infinite_ || other->upper_infinite_)
        makeUpperInfinite();
    else
-       setUpper(Max(upper_, other->upper_));
+       setUpperInit(Max(upper_, other->upper_));
 
    decimal_ = decimal;
    max_exponent_ = max_exponent;
@@ -800,7 +800,7 @@ MBeta::computeRange()
 {
     bool emptyRange = false;
 
-    Range *range = Range::intersect(val_->range(), comparison_, &emptyRange);
+    Range *range = Range::intersect(getOperand(0)->range(), comparison_, &emptyRange);
     if (emptyRange) {
         IonSpew(IonSpew_Range, "Marking block for inst %d unexitable", id());
         block()->setEarlyAbort();

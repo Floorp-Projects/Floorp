@@ -32,7 +32,7 @@ interface nsISocketTransport;
 // Bug 797561 - Expose a server tcp socket API to web applications
 
 
-[scriptable, uuid(b7803a0b-4492-45ec-ac7a-3e29f6445fa4)]
+[scriptable, uuid(65f6d2c8-4be6-4695-958d-0735e8935289)]
 interface nsIDOMTCPSocket : nsISupports
 {
   /**
@@ -44,7 +44,7 @@ interface nsIDOMTCPSocket : nsISupports
    * @param options An object specifying one or more parameters which
    *                determine the details of the socket.
    *
-   *        useSSL: true to create an SSL socket. Defaults to false.
+   *        useSecureTransport: true to create an SSL socket. Defaults to false.
    *
    *        binaryType: "arraybuffer" to use ArrayBuffer
    *          instances in the ondata callback and as the argument
@@ -73,6 +73,11 @@ interface nsIDOMTCPSocket : nsISupports
    */
   nsIDOMTCPServerSocket listen(in unsigned short localPort, [optional] in jsval options,
                                [optional] in unsigned short backlog);
+
+  /**
+   * Enable secure on channel.
+   */
+  void upgradeToSecure();
 
   /**
    * The host of this socket object.

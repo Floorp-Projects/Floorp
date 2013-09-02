@@ -124,14 +124,16 @@ void
 LifoAlloc::transferFrom(LifoAlloc *other)
 {
     JS_ASSERT(!markCount);
-    JS_ASSERT(latest == first);
     JS_ASSERT(!other->markCount);
 
     if (!other->first)
         return;
 
     incrementCurSize(other->curSize_);
-    append(other->first, other->last);
+    if (other->isEmpty())
+        appendUnused(other->first, other->last);
+    else
+        appendUsed(other->first, other->latest, other->last);
     other->first = other->last = other->latest = NULL;
     other->curSize_ = 0;
 }
@@ -161,7 +163,7 @@ LifoAlloc::transferUnusedFrom(LifoAlloc *other)
             }
         }
 
-        append(other->latest->next(), other->last);
+        appendUnused(other->latest->next(), other->last);
         other->latest->setNext(NULL);
         other->last = other->latest;
     }

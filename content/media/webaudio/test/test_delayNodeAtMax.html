@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test DelayNode with maxDelayTime delay - bug 890528</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script src="webaudio.js" type="text/javascript"></script>
+<script class="testbody" type="text/javascript">
+
+const signalLength = 2048;
+const delayLength = 1000; // Not on a block boundary
+const outputLength = 4096 // > signalLength + 2 * delayLength;
+
+function applySignal(buffer, offset) {
+  for (var i = 0; i < signalLength; ++i) {
+    buffer.getChannelData(0)[offset + i] = Math.cos(Math.PI * i / signalLength);
+  }
+}
+
+var gTest = {
+  numberOfChannels: 1,
+  createGraph: function(context) {
+    var buffer = context.createBuffer(1, signalLength, context.sampleRate);
+    applySignal(buffer, 0);
+
+    var source = context.createBufferSource();
+    source.buffer = buffer;
+
+    const delayTime = delayLength / context.sampleRate;
+    var delay = context.createDelay(delayTime);
+    delay.delayTime.value = delayTime;
+
+    source.connect(delay);
+
+    source.start(0);
+    return delay;
+  },
+  createExpectedBuffers: function(context) {
+    var expectedBuffer = context.createBuffer(1, outputLength, context.sampleRate);
+    applySignal(expectedBuffer, delayLength);
+    return expectedBuffer;
+  },
+};
+
+runTest();
+
+</script>
+</pre>
+</body>
+</html>

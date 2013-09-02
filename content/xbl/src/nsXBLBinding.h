@@ -15,6 +15,7 @@
 #include "nsTArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
+#include "js/TypeDecls.h"
 
 class nsXBLPrototypeBinding;
 class nsIContent;
@@ -31,8 +32,6 @@ class XBLChildrenElement;
 }
 
 class nsAnonymousContentList;
-struct JSContext;
-class JSObject;
 
 // *********************************************************************/
 // The XBLBinding class

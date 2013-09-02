@@ -18,6 +18,7 @@
 #include <ieeefp.h>
 #endif
 
+#include "js/TypeDecls.h"
 #include "js/RootingAPI.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/GuardObjects.h"
@@ -92,7 +93,6 @@ class nsTextFragment;
 class nsViewportInfo;
 class nsWrapperCache;
 
-struct JSContext;
 struct JSPropertyDescriptor;
 struct JSRuntime;
 struct nsIntMargin;
@@ -102,10 +102,6 @@ template<class E> class nsTArray;
 template<class K, class V> class nsDataHashtable;
 template<class K, class V> class nsRefPtrHashtable;
 template<class T> class nsReadingIterator;
-
-namespace JS {
-class Value;
-} // namespace JS
 
 namespace mozilla {
 class ErrorResult;

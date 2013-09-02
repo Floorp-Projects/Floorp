@@ -371,6 +371,10 @@ CompositorD3D11::CreateRenderTarget(const gfx::IntRect& aRect,
 
   RefPtr<ID3D11Texture2D> texture;
   mDevice->CreateTexture2D(&desc, nullptr, byRef(texture));
+  NS_ASSERTION(texture, "Could not create texture");
+  if (!texture) {
+    return nullptr;
+  }
 
   RefPtr<CompositingRenderTargetD3D11> rt = new CompositingRenderTargetD3D11(texture);
   rt->SetSize(IntSize(aRect.width, aRect.height));
@@ -393,6 +397,10 @@ CompositorD3D11::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
 
   RefPtr<ID3D11Texture2D> texture;
   mDevice->CreateTexture2D(&desc, nullptr, byRef(texture));
+  NS_ASSERTION(texture, "Could not create texture");
+  if (!texture) {
+    return nullptr;
+  }
 
   if (aSource) {
     const CompositingRenderTargetD3D11* sourceD3D11 =
