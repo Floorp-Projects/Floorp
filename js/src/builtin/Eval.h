@@ -9,6 +9,7 @@
 
 #include "jsapi.h"
 #include "jsbytecode.h"
+#include "NamespaceImports.h"
 
 namespace js {
 

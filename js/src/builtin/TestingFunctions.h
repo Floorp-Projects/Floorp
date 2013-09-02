@@ -8,6 +8,7 @@
 #define builtin_TestingFunctions_h
 
 #include "jsapi.h"
+#include "NamespaceImports.h"
 
 namespace js {
 
