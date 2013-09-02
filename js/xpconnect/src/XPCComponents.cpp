@@ -41,6 +41,7 @@
 #include "nsGlobalWindow.h"
 
 using namespace mozilla;
+using namespace JS;
 using namespace js;
 using namespace xpc;
 
@@ -3714,7 +3715,7 @@ nsXPCComponents::AttachComponentsObject(JSContext* aCx,
     MOZ_ASSERT(js::IsObjectInContextCompartment(global, aCx));
 
     RootedId id(aCx, XPCJSRuntime::Get()->GetStringID(XPCJSRuntime::IDX_COMPONENTS));
-    return JS_DefinePropertyById(aCx, global, id, js::ObjectValue(*components),
+    return JS_DefinePropertyById(aCx, global, id, JS::ObjectValue(*components),
                                  nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY);
 }
 

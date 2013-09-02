@@ -12,6 +12,7 @@
 
 #include "jsapi.h"
 #include "jsutil.h"
+#include "NamespaceImports.h"
 
 #include "js/RootingAPI.h"
 #include "vm/Unicode.h"
