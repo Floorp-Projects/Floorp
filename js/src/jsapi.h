@@ -9,11 +9,9 @@
 #ifndef jsapi_h
 #define jsapi_h
 
-#include "mozilla/Compiler.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RangedPtr.h"
-#include "mozilla/TypeTraits.h"
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -24,7 +22,6 @@
 #include "jspubtd.h"
 
 #include "js/CallArgs.h"
-#include "js/CallNonGenericMethod.h"
 #include "js/Class.h"
 #include "js/HashTable.h"
 #include "js/Id.h"
@@ -1358,7 +1355,7 @@ JS_EndRequest(JSContext *cx);
 extern JS_PUBLIC_API(bool)
 JS_IsInRequest(JSRuntime *rt);
 
-namespace JS {
+namespace js {
 
 inline bool
 IsPoisonedId(jsid iden)
@@ -1370,15 +1367,11 @@ IsPoisonedId(jsid iden)
     return false;
 }
 
-} /* namespace JS */
-
-namespace js {
-
 template <> struct GCMethods<jsid>
 {
     static jsid initial() { return JSID_VOID; }
     static ThingRootKind kind() { return THING_ROOT_ID; }
-    static bool poisoned(jsid id) { return JS::IsPoisonedId(id); }
+    static bool poisoned(jsid id) { return IsPoisonedId(id); }
     static bool needsPostBarrier(jsid id) { return false; }
 #ifdef JSGC_GENERATIONAL
     static void postBarrier(jsid *idp) {}
@@ -4585,82 +4578,5 @@ extern JS_PUBLIC_DATA(const Handle<jsid>) JSID_VOIDHANDLE;
 extern JS_PUBLIC_DATA(const Handle<jsid>) JSID_EMPTYHANDLE;
 
 } /* namespace JS */
-
-namespace js {
-
-/*
- * Import some JS:: names into the js namespace so we can make unqualified
- * references to them.
- */
-
-using JS::Value;
-using JS::IsPoisonedValue;
-using JS::NullValue;
-using JS::UndefinedValue;
-using JS::Int32Value;
-using JS::DoubleValue;
-using JS::StringValue;
-using JS::BooleanValue;
-using JS::ObjectValue;
-using JS::MagicValue;
-using JS::NumberValue;
-using JS::ObjectOrNullValue;
-using JS::PrivateValue;
-using JS::PrivateUint32Value;
-
-using JS::IsPoisonedPtr;
-using JS::IsPoisonedId;
-
-using JS::StableCharPtr;
-using JS::TwoByteChars;
-using JS::Latin1CharsZ;
-
-using JS::AutoIdVector;
-using JS::AutoValueVector;
-using JS::AutoObjectVector;
-using JS::AutoFunctionVector;
-using JS::AutoScriptVector;
-using JS::AutoIdArray;
-
-using JS::AutoGCRooter;
-using JS::AutoArrayRooter;
-using JS::AutoVectorRooter;
-using JS::AutoHashMapRooter;
-using JS::AutoHashSetRooter;
-
-using JS::CallArgs;
-using JS::IsAcceptableThis;
-using JS::NativeImpl;
-using JS::CallReceiver;
-using JS::CompileOptions;
-using JS::CallNonGenericMethod;
-
-using JS::Rooted;
-using JS::RootedObject;
-using JS::RootedFunction;
-using JS::RootedScript;
-using JS::RootedString;
-using JS::RootedId;
-using JS::RootedValue;
-
-using JS::Handle;
-using JS::HandleObject;
-using JS::HandleFunction;
-using JS::HandleScript;
-using JS::HandleString;
-using JS::HandleId;
-using JS::HandleValue;
-
-using JS::MutableHandle;
-using JS::MutableHandleObject;
-using JS::MutableHandleFunction;
-using JS::MutableHandleScript;
-using JS::MutableHandleString;
-using JS::MutableHandleId;
-using JS::MutableHandleValue;
-
-using JS::Zone;
-
-} /* namespace js */
 
 #endif /* jsapi_h */

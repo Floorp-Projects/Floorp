@@ -39,9 +39,9 @@ class JavaScriptParent
                                   JS::MutableHandle<JSPropertyDescriptor> desc, unsigned flags);
     bool defineProperty(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
                         JS::MutableHandle<JSPropertyDescriptor> desc);
-    bool getOwnPropertyNames(JSContext *cx, JS::HandleObject proxy, js::AutoIdVector &props);
+    bool getOwnPropertyNames(JSContext *cx, JS::HandleObject proxy, JS::AutoIdVector &props);
     bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
-    bool enumerate(JSContext *cx, JS::HandleObject proxy, js::AutoIdVector &props);
+    bool enumerate(JSContext *cx, JS::HandleObject proxy, JS::AutoIdVector &props);
 
     // Derived proxy traps. Implementing these is useful for perfomance.
     bool has(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
@@ -50,7 +50,7 @@ class JavaScriptParent
              JS::HandleId id, JS::MutableHandleValue vp);
     bool set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
              JS::HandleId id, bool strict, JS::MutableHandleValue vp);
-    bool keys(JSContext *cx, JS::HandleObject proxy, js::AutoIdVector &props);
+    bool keys(JSContext *cx, JS::HandleObject proxy, JS::AutoIdVector &props);
     // We use "iterate" provided by the base class here.
 
     // SpiderMonkey Extensions.
@@ -82,7 +82,8 @@ class JavaScriptParent
 
   private:
     bool makeId(JSContext *cx, JSObject *obj, ObjectId *idp);
-    bool getPropertyNames(JSContext *cx, JS::HandleObject proxy, uint32_t flags, js::AutoIdVector &props);
+    bool getPropertyNames(JSContext *cx, JS::HandleObject proxy, uint32_t flags,
+                          JS::AutoIdVector &props);
     ObjectId idOf(JSObject *obj);
 
     // Catastrophic IPC failure.
