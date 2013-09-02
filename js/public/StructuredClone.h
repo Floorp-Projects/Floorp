@@ -11,16 +11,11 @@
 
 #include "jstypes.h"
 
-struct JSContext;
-class JSObject;
+#include "js/TypeDecls.h"
+
 struct JSRuntime;
 struct JSStructuredCloneReader;
 struct JSStructuredCloneWriter;
-
-namespace JS {
-template <typename T> class Handle;
-class Value;
-}
 
 // API for the HTML5 internal structured cloning algorithm.
 

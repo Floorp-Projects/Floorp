@@ -552,6 +552,9 @@ MOCHITEST_FILES_C= \
 		test_bug708620.html \
 		file_bug708620.html \
 		file_bug708620-2.html \
+		test_XHR_timeout.html \
+		test_XHR_timeout.js \
+		file_XHR_timeout.sjs \
 		test_bug717511.html \
 		file_bug717511.html \
 		file_bug717511.html^headers^ \
@@ -700,11 +703,6 @@ MOCHITEST_FILES_PARTS = $(foreach s,A B C,MOCHITEST_FILES_$(s))
 # Disabled due to making the harness time out
 #		test_bug503473.html \
 #		file_bug503473-frame.sjs \
-
-# Disabled for frequent failures (bug 841505, bug 842344, etc)
-#		test_XHR_timeout.html \
-#		test_XHR_timeout.js \
-#		file_XHR_timeout.sjs \
 
 MOCHITEST_BROWSER_FILES = \
 		browser_bug593387.js \

@@ -4023,12 +4023,16 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
     rt->gcLastGCTime = PRMJ_Now();
 }
 
+namespace {
+
 /* ...while this class is to be used only for garbage collection. */
 class AutoGCSession : AutoTraceSession {
   public:
     explicit AutoGCSession(JSRuntime *rt);
     ~AutoGCSession();
 };
+
+} /* anonymous namespace */
 
 /* Start a new heap session. */
 AutoTraceSession::AutoTraceSession(JSRuntime *rt, js::HeapState heapState)
@@ -4173,6 +4177,8 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
 #endif
 }
 
+namespace {
+
 class AutoGCSlice {
   public:
     AutoGCSlice(JSRuntime *rt);
@@ -4181,6 +4187,8 @@ class AutoGCSlice {
   private:
     JSRuntime *runtime;
 };
+
+} /* anonymous namespace */
 
 AutoGCSlice::AutoGCSlice(JSRuntime *rt)
   : runtime(rt)
@@ -4505,6 +4513,8 @@ ShouldCleanUpEverything(JSRuntime *rt, JS::gcreason::Reason reason, JSGCInvocati
            gckind == GC_SHRINK;
 }
 
+namespace {
+
 #ifdef JSGC_GENERATIONAL
 class AutoDisableStoreBuffer
 {
@@ -4527,6 +4537,8 @@ struct AutoDisableStoreBuffer
     AutoDisableStoreBuffer(JSRuntime *) {}
 };
 #endif
+
+} /* anonymous namespace */
 
 static void
 Collect(JSRuntime *rt, bool incremental, int64_t budget,

@@ -2859,7 +2859,7 @@ DebuggerScript_getSource(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get source)", args, obj, script);
     Debugger *dbg = Debugger::fromChildJSObject(obj);
 
-    JS::RootedScriptSource source(cx, script->sourceObject());
+    RootedScriptSource source(cx, script->sourceObject());
     RootedObject sourceObject(cx, dbg->wrapSource(cx, source));
     if (!sourceObject)
         return false;
@@ -2978,6 +2978,8 @@ DebuggerScript_getOffsetLine(JSContext *cx, unsigned argc, Value *vp)
     args.rval().setNumber(lineno);
     return true;
 }
+
+namespace {
 
 class BytecodeRangeWithPosition : private BytecodeRange
 {
@@ -3206,6 +3208,8 @@ class FlowGraphSummary {
 
     Vector<Entry> entries_;
 };
+
+} /* anonymous namespace */
 
 static bool
 DebuggerScript_getAllOffsets(JSContext *cx, unsigned argc, Value *vp)
@@ -3620,7 +3624,7 @@ Class DebuggerSource_class = {
 };
 
 JSObject *
-Debugger::newDebuggerSource(JSContext *cx, JS::HandleScriptSource source)
+Debugger::newDebuggerSource(JSContext *cx, HandleScriptSource source)
 {
     assertSameCompartment(cx, object.get());
 
@@ -3636,7 +3640,7 @@ Debugger::newDebuggerSource(JSContext *cx, JS::HandleScriptSource source)
 }
 
 JSObject *
-Debugger::wrapSource(JSContext *cx, JS::HandleScriptSource source)
+Debugger::wrapSource(JSContext *cx, HandleScriptSource source)
 {
     assertSameCompartment(cx, object.get());
     JS_ASSERT(cx->compartment() != source->compartment());
@@ -3700,7 +3704,7 @@ DebuggerSource_checkThis(JSContext *cx, const CallArgs &args, const char *fnname
     RootedObject obj(cx, DebuggerSource_checkThis(cx, args, fnname));               \
     if (!obj)                                                                       \
         return false;                                                               \
-    JS::RootedScriptSource sourceObject(cx, GetSourceReferent(obj));                \
+    RootedScriptSource sourceObject(cx, GetSourceReferent(obj));                    \
     if (!sourceObject)                                                              \
         return false;
 

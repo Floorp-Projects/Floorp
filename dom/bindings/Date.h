@@ -9,13 +9,7 @@
 #ifndef mozilla_dom_Date_h
 #define mozilla_dom_Date_h
 
-class JSObject;
-struct JSContext;
-
-namespace JS {
-class Value;
-template<typename> class MutableHandle;
-} // namespace JS
+#include "js/TypeDecls.h"
 
 namespace mozilla {
 namespace dom {

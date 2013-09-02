@@ -14,12 +14,12 @@
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "mozilla/dom/EventTarget.h"
+#include "js/TypeDecls.h"
 
 #define DOM_WINDOW_DESTROYED_TOPIC "dom-window-destroyed"
 #define DOM_WINDOW_FROZEN_TOPIC "dom-window-frozen"
 #define DOM_WINDOW_THAWED_TOPIC "dom-window-thawed"
 
-class JSObject;
 class nsIArray;
 class nsIContent;
 class nsIDocShell;
@@ -32,10 +32,6 @@ class nsPerformance;
 class nsPIWindowRoot;
 class nsXBLPrototypeHandler;
 struct nsTimeout;
-
-namespace JS {
-template<typename> class Handle;
-}
 
 namespace mozilla {
 namespace dom {

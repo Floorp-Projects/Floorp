@@ -18,13 +18,10 @@
 #include "pldhash.h"
 #include "plstr.h"
 #include "nsIScriptExternalNameSet.h"
+#include "js/TypeDecls.h"
 
 #include <stdint.h>
 
-namespace JS {
-template <typename T> class Handle;
-template <typename T> class MutableHandle;
-}
 class nsIDocShell;
 class nsString;
 class nsIClassInfo;

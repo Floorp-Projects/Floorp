@@ -393,8 +393,7 @@ RegExpShared::~RegExpShared()
 #if ENABLE_YARR_JIT
     codeBlock.release();
 #endif
-    if (bytecode)
-        js_delete<BytecodePattern>(bytecode);
+    js_delete<BytecodePattern>(bytecode);
 }
 
 void

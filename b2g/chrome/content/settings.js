@@ -415,6 +415,10 @@ SettingsListener.observe('privacy.donottrackheader.enabled', false, function(val
   Services.prefs.setBoolPref('privacy.donottrackheader.enabled', value);
 });
 
+SettingsListener.observe('privacy.donottrackheader.value', 1, function(value) {
+  Services.prefs.setIntPref('privacy.donottrackheader.value', value);
+});
+
 // =================== Crash Reporting ====================
 SettingsListener.observe('app.reportCrashes', 'ask', function(value) {
   if (value == 'always') {

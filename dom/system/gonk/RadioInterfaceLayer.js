@@ -3129,11 +3129,11 @@ RadioInterface.prototype = {
             .setMessageDeliveryByMessageId(context.sms.id,
                                            null,
                                            context.sms.delivery,
-                                           message.deliveryStatus,
+                                           response.deliveryStatus,
                                            null,
                                            function notifyResult(rv, domMessage) {
             // TODO bug 832140 handle !Components.isSuccessCode(rv)
-            let topic = (message.deliveryStatus == RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS)
+            let topic = (response.deliveryStatus == RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS)
                         ? kSmsDeliverySuccessObserverTopic
                         : kSmsDeliveryErrorObserverTopic;
             Services.obs.notifyObservers(domMessage, topic, null);

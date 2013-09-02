@@ -104,6 +104,17 @@ function run_test() {
     return;
   }
 
+  if (IS_WIN) {
+    var version = AUS_Cc["@mozilla.org/system-info;1"]
+                  .getService(AUS_Ci.nsIPropertyBag2)
+                  .getProperty("version");
+    var isVistaOrHigher = (parseFloat(version) >= 6.0);
+    if (!isVistaOrHigher) {
+      logTestInfo("Disabled on Windows XP due to bug 909489");
+      return;
+    }
+  }
+
   do_test_pending();
   do_register_cleanup(end_test);
 

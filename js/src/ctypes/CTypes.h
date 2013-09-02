@@ -298,8 +298,7 @@ struct ClosureInfo
   ~ClosureInfo() {
     if (closure)
       ffi_closure_free(closure);
-    if (errResult)
-      js_free(errResult);
+    js_free(errResult);
   }
 };
 

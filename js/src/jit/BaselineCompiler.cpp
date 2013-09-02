@@ -422,8 +422,8 @@ BaselineCompiler::emitStackCheck()
 {
     Label skipCall;
     uintptr_t *limitAddr = &cx->runtime()->mainThread.ionStackLimit;
-    masm.loadPtr(AbsoluteAddress(limitAddr), R0.scratchReg());
-    masm.branchPtr(Assembler::AboveOrEqual, BaselineStackReg, R0.scratchReg(), &skipCall);
+    masm.branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(limitAddr), BaselineStackReg,
+                   &skipCall);
 
     prepareVMCall();
     if (!callVM(CheckOverRecursedInfo))

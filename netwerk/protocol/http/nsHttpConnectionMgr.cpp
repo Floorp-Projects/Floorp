@@ -3343,6 +3343,9 @@ nsHttpConnectionMgr::ReadConnectionEntry(const nsACString &key,
                 nsAutoPtr<nsConnectionEntry> &ent,
                 void *aArg)
 {
+    if (ent->mConnInfo->GetPrivate())
+        return PL_DHASH_NEXT;
+
     nsTArray<HttpRetParams> *args = static_cast<nsTArray<HttpRetParams> *> (aArg);
     HttpRetParams data;
     data.host = ent->mConnInfo->Host();

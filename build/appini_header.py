@@ -27,6 +27,16 @@ def main(file):
     appdata = dict(("%s:%s" % (s, o), config.get(s, o)) for s in config.sections() for o in config.options(s))
     appdata['flags'] = ' | '.join(flags) if flags else '0'
     appdata['App:profile'] = '"%s"' % appdata['App:profile'] if 'App:profile' in appdata else 'NULL'
+    expected = ('App:vendor', 'App:name', 'App:version', 'App:buildid',
+                'App:id', 'Gecko:minversion', 'Gecko:maxversion')
+    missing = [var for var in expected if var not in appdata]
+    if missing:
+        print >>sys.stderr, \
+            "Missing values in %s: %s" % (file, ', '.join(missing))
+        sys.exit(1)
+
+    if not 'Crash Reporter:serverurl' in appdata:
+        appdata['Crash Reporter:serverurl'] = ''
 
     print '''#include "nsXREAppData.h"
              static const nsXREAppData sAppData = {

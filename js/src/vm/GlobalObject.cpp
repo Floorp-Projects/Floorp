@@ -232,7 +232,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
             js_free(source);
             return NULL;
         }
-        JS::RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
+        RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
         if (!sourceObject)
             return NULL;
         ss->setSource(source, sourceLen);

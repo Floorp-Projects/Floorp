@@ -9,7 +9,7 @@
 
 #include <stdio.h>
 
-class JSScript;
+#include "js/TypeDecls.h"
 
 namespace js {
 namespace jit {

@@ -24,7 +24,7 @@ using namespace js;
 // Once the worker's state is set to |TERMINATING|, the worker will
 // exit as soon as its queue is empty.
 
-const size_t WORKER_THREAD_STACK_SIZE = 1*1024*1024;
+static const size_t WORKER_THREAD_STACK_SIZE = 1*1024*1024;
 
 class js::ThreadPoolWorker : public Monitor
 {

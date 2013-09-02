@@ -3,11 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsRegion.h"
-#include "nsISupportsImpl.h"
-#include "nsTArray.h"
-#include "mozilla/ThreadLocal.h"
-#include "nsPrintfCString.h"
-#include <algorithm>
+#include <algorithm>                    // for max, min
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2, etc
+#include "mozilla/ThreadLocal.h"        // for ThreadLocal
+#include "mozilla/mozalloc.h"           // for operator delete, etc
+#include "nsDebug.h"                    // for NS_ASSERTION, NS_ERROR
+#include "nsISupports.h"                // for NS_ASSERT_OWNINGTHREAD, etc
+#include "nsPrintfCString.h"            // for nsPrintfCString
+#include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
 
 /*
  * The SENTINEL values below guaranties that a < or >
