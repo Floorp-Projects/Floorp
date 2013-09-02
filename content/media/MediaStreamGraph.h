@@ -943,6 +943,9 @@ public:
    */
   virtual void ForwardTrackEnabled(TrackID aOutputID, bool aEnabled) {};
 
+  bool InCycle() const { return mInCycle; }
+
+
 protected:
   // This state is all accessed only on the media graph thread.
 
