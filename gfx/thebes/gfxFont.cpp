@@ -1714,6 +1714,14 @@ gfxFont::gfxFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
     mKerningSet = HasFeatureSet(HB_TAG('k','e','r','n'), mKerningEnabled);
 }
 
+static PLDHashOperator
+NotifyFontDestroyed(nsPtrHashKey<gfxFont::GlyphChangeObserver>* aKey,
+                    void* aClosure)
+{
+    aKey->GetKey()->ForgetFont();
+    return PL_DHASH_NEXT;
+}
+
 gfxFont::~gfxFont()
 {
     uint32_t i, count = mGlyphExtentsArray.Length();
@@ -1725,6 +1733,10 @@ gfxFont::~gfxFont()
     }
 
     mFontEntry->NotifyFontDestroyed(this);
+
+    if (mGlyphChangeObservers) {
+        mGlyphChangeObservers->EnumerateEntries(NotifyFontDestroyed, nullptr);
+    }
 }
 
 /*static*/
@@ -3735,6 +3747,23 @@ gfxFont::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 {
     aSizes->mFontInstances += aMallocSizeOf(this);
     SizeOfExcludingThis(aMallocSizeOf, aSizes);
+}
+
+void
+gfxFont::AddGlyphChangeObserver(GlyphChangeObserver *aObserver)
+{
+    if (!mGlyphChangeObservers) {
+        mGlyphChangeObservers = new nsTHashtable<nsPtrHashKey<GlyphChangeObserver> >;
+    }
+    mGlyphChangeObservers->PutEntry(aObserver);
+}
+
+void
+gfxFont::RemoveGlyphChangeObserver(GlyphChangeObserver *aObserver)
+{
+    NS_ASSERTION(mGlyphChangeObservers, "No observers registered");
+    NS_ASSERTION(mGlyphChangeObservers->Contains(aObserver), "Observer not registered");
+    mGlyphChangeObservers->RemoveEntry(aObserver);
 }
 
 gfxGlyphExtents::~gfxGlyphExtents()
