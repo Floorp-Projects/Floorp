@@ -126,7 +126,7 @@ function runTest()
            "Correct number of channels for expected buffer " + i);
         expectedFrames += expectedBuffers[i].length;
       }
-      if (gTest.length && !gTest.createExpectedBuffers) {
+      if (gTest.length && gTest.createExpectedBuffers) {
         is(expectedFrames, gTest.length, "Correct number of expected frames");
       }
 
