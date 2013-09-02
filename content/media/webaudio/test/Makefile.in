@@ -60,6 +60,7 @@ MOCHITEST_FILES := \
   test_convolverNode_mono_mono.html \
   test_currentTime.html \
   test_delayNode.html \
+  test_delayNodeAtMax.html \
   test_delayNodeSmallMaxDelay.html \
   test_delayNodeWithGain.html \
   test_dynamicsCompressorNode.html \
