@@ -50,6 +50,7 @@ using IPC::Principal;
 using mozilla::null_t;
 using mozilla::void_t;
 using mozilla::dom::AudioChannelType;
+using mozilla::dom::AudioChannelState;
 using mozilla::dom::BlobConstructorParams;
 using mozilla::dom::NativeThreadId;
 using mozilla::hal::ProcessPriority;
@@ -436,9 +437,9 @@ parent:
     async FirstIdle();
 
     // Get Muted from the main AudioChannelService.
-    sync AudioChannelGetMuted(AudioChannelType aType, bool aElementHidden,
+    sync AudioChannelGetState(AudioChannelType aType, bool aElementHidden,
                               bool aElementWasHidden)
-        returns (bool value);
+        returns (AudioChannelState value);
 
     sync AudioChannelRegisterType(AudioChannelType aType);
     sync AudioChannelUnregisterType(AudioChannelType aType,
