@@ -9227,19 +9227,32 @@ fi
 dist=$MOZ_BUILD_ROOT/dist
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 ac_configure_args="$ac_configure_args --enable-threadsafe"
+
+MOZ_ARG_WITH_STRING(intl-api,
+[  --with-intl-api, --with-intl-api=build, --without-intl-api
+    Determine the status of the ECMAScript Internationalization API.  The first
+    (or lack of any of these) builds and exposes the API.  The second builds it
+    but doesn't use ICU or expose the API to script.  The third doesn't build
+    ICU at all.],
+    WITH_INTL="--with-intl-api=$withval"
+])
+if test -z "$WITH_INTL"; then
 if test "$NIGHTLY_BUILD" = "1" -a "$MOZ_BUILD_APP" = "browser"; then
     # In desktop nightlies the Internationalization API is disabled, but all
     # code for it is still built.  Bug 853301 will remove this so that it's
     # built and the API is enabled.
-    ac_configure_args="$ac_configure_args --with-intl-api=build"
+    WITH_INTL="--with-intl-api=build"
 else
     # Internationalization isn't built or exposed by default in non-desktop and
     # non-nightly builds.  Bugs to enable:
     #
     #   Android:  bug 864843
     #   B2G:      bug 866301
-    ac_configure_args="$ac_configure_args --without-intl-api"
+    WITH_INTL="--without-intl-api"
 fi
+fi
+ac_configure_args="$ac_configure_args $WITH_INTL"
+
 if test "$BUILD_CTYPES"; then
     # Build js-ctypes on the platforms we can.
     ac_configure_args="$ac_configure_args --enable-ctypes"
