@@ -19,6 +19,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/EventTarget.h" // for base class
+#include "js/TypeDecls.h"     // for Handle, Value, JSObject, JSContext
 
 // Including 'windows.h' will #define GetClassInfo to something else.
 #ifdef XP_WIN
@@ -66,11 +67,6 @@ class OnErrorEventHandlerNonNull;
 template<typename T> class Optional;
 } // namespace dom
 } // namespace mozilla
-
-namespace JS {
-class Value;
-template<typename T> class Handle;
-}
 
 #define NODE_FLAG_BIT(n_) (1U << (WRAPPER_CACHE_FLAGS_BITS_USED + (n_)))
 

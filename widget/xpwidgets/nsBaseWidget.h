@@ -332,7 +332,7 @@ protected:
     return widget.forget();
   }
 
-  BasicLayerManager* CreateBasicLayerManager();
+  LayerManager* CreateBasicLayerManager();
 
   nsPopupType PopupType() const { return mPopupType; }
 

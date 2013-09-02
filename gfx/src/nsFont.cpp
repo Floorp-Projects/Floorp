@@ -4,10 +4,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsFont.h"
-#include "nsString.h"
+#include "gfxFont.h"                    // for gfxFontStyle
+#include "gfxFontConstants.h"           // for NS_FONT_KERNING_AUTO, etc
+#include "gfxFontFeatures.h"            // for gfxFontFeature, etc
+#include "gfxFontUtils.h"               // for TRUETYPE_TAG
+#include "nsCRT.h"                      // for nsCRT
+#include "nsDebug.h"                    // for NS_ASSERTION
+#include "nsISupports.h"
+#include "nsMemory.h"                   // for NS_ARRAY_LENGTH
 #include "nsUnicharUtils.h"
-#include "nsCRT.h"
-#include "gfxFont.h"
+#include "nscore.h"                     // for PRUnichar
+#include "prtypes.h"                    // for PR_STATIC_ASSERT
 
 nsFont::nsFont(const char* aName, uint8_t aStyle, uint8_t aVariant,
                uint16_t aWeight, int16_t aStretch, uint8_t aDecoration,

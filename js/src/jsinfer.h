@@ -18,8 +18,6 @@
 #include "gc/Barrier.h"
 #include "js/Utility.h"
 
-class JSScript;
-
 namespace js {
 
 class TypeRepresentation;
