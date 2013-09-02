@@ -9,11 +9,9 @@
 #ifndef jsapi_h
 #define jsapi_h
 
-#include "mozilla/Compiler.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RangedPtr.h"
-#include "mozilla/TypeTraits.h"
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -24,7 +22,6 @@
 #include "jspubtd.h"
 
 #include "js/CallArgs.h"
-#include "js/CallNonGenericMethod.h"
 #include "js/Class.h"
 #include "js/HashTable.h"
 #include "js/Id.h"
