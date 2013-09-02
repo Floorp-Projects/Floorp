@@ -8,13 +8,19 @@
 
 #include "jsanalyze.h"
 
+#include "jit/BaselineInspector.h"
 #include "jit/Ion.h"
 #include "jit/IonBuilder.h"
 #include "jit/LIR.h"
 #include "jit/MIRGraph.h"
 
+#include "jsinferinlines.h"
+#include "jsscriptinlines.h"
+
 using namespace js;
 using namespace js::jit;
+
+using mozilla::DebugOnly;
 
 // A critical edge is an edge which is neither its successor's only predecessor
 // nor its predecessor's only successor. Critical edges must be split to
@@ -1604,4 +1610,264 @@ LinearSum::print(Sprinter &sp) const
         sp.printf("+%d", constant_);
     else if (constant_ < 0)
         sp.printf("%d", constant_);
+}
+
+static bool
+AnalyzePoppedThis(JSContext *cx, types::TypeObject *type,
+                  MDefinition *thisValue, MInstruction *ins, bool definitelyExecuted,
+                  HandleObject baseobj,
+                  Vector<types::TypeNewScript::Initializer> *initializerList,
+                  Vector<jsid> *accessedProperties,
+                  bool *phandled)
+{
+    // Determine the effect that a use of the |this| value when calling |new|
+    // on a script has on the properties definitely held by the new object.
+
+    if (ins->isCallSetProperty()) {
+        MCallSetProperty *setprop = ins->toCallSetProperty();
+
+        if (setprop->obj() != thisValue)
+            return true;
+
+        // Don't use GetAtomId here, we need to watch for SETPROP on
+        // integer properties and bail out. We can't mark the aggregate
+        // JSID_VOID type property as being in a definite slot.
+        RootedId id(cx, NameToId(setprop->name()));
+        if (types::IdToTypeId(id) != id ||
+            id == NameToId(cx->names().classPrototype) ||
+            id == NameToId(cx->names().proto) ||
+            id == NameToId(cx->names().constructor))
+        {
+            return true;
+        }
+
+        // Ignore assignments to properties that were already written to.
+        if (baseobj->nativeLookup(cx, id)) {
+            *phandled = true;
+            return true;
+        }
+
+        // Don't add definite properties for properties that were already
+        // read in the constructor.
+        for (size_t i = 0; i < accessedProperties->length(); i++) {
+            if ((*accessedProperties)[i] == id)
+                return true;
+        }
+
+        if (baseobj->slotSpan() >= (types::TYPE_FLAG_DEFINITE_MASK >> types::TYPE_FLAG_DEFINITE_SHIFT)) {
+            // Maximum number of definite properties added.
+            return true;
+        }
+
+        // Assignments to new properties must always execute.
+        if (!definitelyExecuted)
+            return true;
+
+        if (!types::AddClearDefiniteGetterSetterForPrototypeChain(cx, type, id)) {
+            // The prototype chain already contains a getter/setter for this
+            // property, or type information is too imprecise.
+            return true;
+        }
+
+        DebugOnly<unsigned> slotSpan = baseobj->slotSpan();
+        RootedValue value(cx, UndefinedValue());
+        if (!DefineNativeProperty(cx, baseobj, id, value, NULL, NULL,
+                                  JSPROP_ENUMERATE, 0, 0, DNP_SKIP_TYPE))
+        {
+            return false;
+        }
+        JS_ASSERT(baseobj->slotSpan() != slotSpan);
+        JS_ASSERT(!baseobj->inDictionaryMode());
+
+        Vector<MResumePoint *> callerResumePoints(cx);
+        MBasicBlock *block = ins->block();
+        for (MResumePoint *rp = block->callerResumePoint();
+             rp;
+             block = rp->block(), rp = block->callerResumePoint())
+        {
+            JSScript *script = rp->block()->info().script();
+            types::AddClearDefiniteFunctionUsesInScript(cx, type, script, block->info().script());
+            if (!callerResumePoints.append(rp))
+                return false;
+        }
+
+        for (int i = callerResumePoints.length() - 1; i >= 0; i--) {
+            MResumePoint *rp = callerResumePoints[i];
+            JSScript *script = rp->block()->info().script();
+            types::TypeNewScript::Initializer entry(types::TypeNewScript::Initializer::SETPROP_FRAME,
+                                                    rp->pc() - script->code);
+            if (!initializerList->append(entry))
+                return false;
+        }
+
+        JSScript *script = ins->block()->info().script();
+        types::TypeNewScript::Initializer entry(types::TypeNewScript::Initializer::SETPROP,
+                                                setprop->resumePoint()->pc() - script->code);
+        if (!initializerList->append(entry))
+            return false;
+
+        *phandled = true;
+        return true;
+    }
+
+    if (ins->isCallGetProperty()) {
+        MCallGetProperty *get = ins->toCallGetProperty();
+
+        /*
+         * Properties can be read from the 'this' object if the following hold:
+         *
+         * - The read is not on a getter along the prototype chain, which
+         *   could cause 'this' to escape.
+         *
+         * - The accessed property is either already a definite property or
+         *   is not later added as one. Since the definite properties are
+         *   added to the object at the point of its creation, reading a
+         *   definite property before it is assigned could incorrectly hit.
+         */
+        RootedId id(cx, NameToId(get->name()));
+        if (types::IdToTypeId(id) != id)
+            return true;
+        if (!baseobj->nativeLookup(cx, id) && !accessedProperties->append(id.get()))
+            return false;
+
+        if (!types::AddClearDefiniteGetterSetterForPrototypeChain(cx, type, id)) {
+            // The |this| value can escape if any property reads it does go
+            // through a getter.
+            return true;
+        }
+
+        *phandled = true;
+        return true;
+    }
+
+    if (ins->isPostWriteBarrier()) {
+        *phandled = true;
+        return true;
+    }
+
+    return true;
+}
+
+static int
+CmpInstructions(const void *a, const void *b)
+{
+    return (*static_cast<MInstruction * const *>(a))->id() -
+           (*static_cast<MInstruction * const *>(b))->id();
+}
+
+bool
+jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
+                                types::TypeObject *type, HandleObject baseobj,
+                                Vector<types::TypeNewScript::Initializer> *initializerList)
+{
+    // When invoking 'new' on the specified script, try to find some properties
+    // which will definitely be added to the created object before it has a
+    // chance to escape and be accessed elsewhere.
+
+    if (!fun->nonLazyScript()->compileAndGo)
+        return true;
+
+    if (!fun->nonLazyScript()->ensureHasTypes(cx))
+        return false;
+
+    types::TypeScript::SetThis(cx, fun->nonLazyScript(), types::Type::ObjectType(type));
+
+    Vector<jsid> accessedProperties(cx);
+
+    LifoAlloc alloc(JSCompartment::ANALYSIS_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
+
+    TempAllocator temp(&alloc);
+    IonContext ictx(cx, &temp);
+
+    types::AutoEnterAnalysis enter(cx);
+
+    if (!fun->nonLazyScript()->ensureRanAnalysis(cx))
+        return false;
+
+    MIRGraph graph(&temp);
+    CompileInfo info(fun->nonLazyScript(), fun,
+                     /* osrPc = */ NULL, /* constructing = */ false,
+                     DefinitePropertiesAnalysis);
+
+    AutoTempAllocatorRooter root(cx, &temp);
+
+    BaselineInspector inspector(cx, fun->nonLazyScript());
+    IonBuilder builder(cx, &temp, &graph, &inspector, &info, /* baselineFrame = */ NULL);
+
+    if (!builder.build()) {
+        if (builder.abortReason() == AbortReason_Alloc)
+            return false;
+        return true;
+    }
+
+    if (!SplitCriticalEdges(graph))
+        return false;
+
+    if (!RenumberBlocks(graph))
+        return false;
+
+    if (!BuildDominatorTree(graph))
+        return false;
+
+    if (!EliminatePhis(&builder, graph, AggressiveObservability))
+        return false;
+
+    MDefinition *thisValue = graph.begin()->getSlot(info.thisSlot());
+
+    // Get a list of instructions using the |this| value in the order they
+    // appear in the graph.
+    Vector<MInstruction *> instructions(cx);
+
+    Vector<MDefinition *> useWorklist(cx);
+    for (MUseDefIterator uses(thisValue); uses; uses++) {
+        MDefinition *use = uses.def();
+
+        // Don't track |this| through assignments to phis.
+        if (!use->isInstruction())
+            return true;
+
+        if (!instructions.append(use->toInstruction()))
+            return false;
+    }
+
+    // Sort the instructions to visit in increasing order.
+    qsort(instructions.begin(), instructions.length(),
+          sizeof(MInstruction *), CmpInstructions);
+
+    // Find all exit blocks in the graph.
+    Vector<MBasicBlock *> exitBlocks(cx);
+    for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
+        if (!block->numSuccessors() && !exitBlocks.append(*block))
+            return false;
+    }
+
+    for (size_t i = 0; i < instructions.length(); i++) {
+        MInstruction *ins = instructions[i];
+
+        // Track whether the use of |this| is in unconditional code, i.e.
+        // the block dominates all graph exits.
+        bool definitelyExecuted = true;
+        for (size_t i = 0; i < exitBlocks.length(); i++) {
+            for (MBasicBlock *exit = exitBlocks[i];
+                 exit != ins->block();
+                 exit = exit->immediateDominator())
+            {
+                if (exit == exit->immediateDominator()) {
+                    definitelyExecuted = false;
+                    break;
+                }
+            }
+        }
+
+        bool handled = false;
+        if (!AnalyzePoppedThis(cx, type, thisValue, ins, definitelyExecuted,
+                               baseobj, initializerList, &accessedProperties, &handled))
+        {
+            return false;
+        }
+        if (!handled)
+            return true;
+    }
+
+    return true;
 }
