@@ -107,6 +107,9 @@ namespace dom {
 // Number of milliseconds between timeupdate events as defined by spec
 #define TIMEUPDATE_MS 250
 
+// Used by AudioChannel for suppresssing the volume to this ratio.
+#define FADED_VOLUME_RATIO 0.25
+
 // These constants are arbitrary
 // Minimum playbackRate for a media
 static const double MIN_PLAYBACKRATE = 0.25;
@@ -1699,7 +1702,8 @@ void HTMLMediaElement::SetMutedInternal(uint32_t aMuted)
 
 void HTMLMediaElement::SetVolumeInternal()
 {
-  float effectiveVolume = mMuted ? 0.0f : float(mVolume);
+  float effectiveVolume = mMuted ? 0.0f :
+    mAudioChannelFaded ? float(mVolume) * FADED_VOLUME_RATIO : float(mVolume);
 
   if (mDecoder) {
     mDecoder->SetVolume(effectiveVolume);
@@ -1949,6 +1953,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     mHasAudio(false),
     mDownloadSuspendedByCache(false),
     mAudioChannelType(AUDIO_CHANNEL_NORMAL),
+    mAudioChannelFaded(false),
     mPlayingThroughTheAudioChannel(false)
 {
 #ifdef PR_LOGGING
@@ -3760,17 +3765,24 @@ ImageContainer* HTMLMediaElement::GetImageContainer()
   return container ? container->GetImageContainer() : nullptr;
 }
 
-nsresult HTMLMediaElement::UpdateChannelMuteState(bool aCanPlay)
+nsresult HTMLMediaElement::UpdateChannelMuteState(AudioChannelState aCanPlay)
 {
   if (!UseAudioChannelService()) {
     return NS_OK;
   }
 
+  if ((aCanPlay == AUDIO_CHANNEL_STATE_FADED && !mAudioChannelFaded) ||
+      (aCanPlay != AUDIO_CHANNEL_STATE_FADED && mAudioChannelFaded)) {
+    mAudioChannelFaded = !mAudioChannelFaded;
+    SetVolumeInternal();
+  }
+
   // We have to mute this channel.
-  if (!aCanPlay && !(mMuted & MUTED_BY_AUDIO_CHANNEL)) {
+  if (aCanPlay == AUDIO_CHANNEL_STATE_MUTED && !(mMuted & MUTED_BY_AUDIO_CHANNEL)) {
     SetMutedInternal(mMuted | MUTED_BY_AUDIO_CHANNEL);
     DispatchAsyncEvent(NS_LITERAL_STRING("mozinterruptbegin"));
-  } else if (aCanPlay && (mMuted & MUTED_BY_AUDIO_CHANNEL)) {
+  } else if (aCanPlay != AUDIO_CHANNEL_STATE_MUTED &&
+             (mMuted & MUTED_BY_AUDIO_CHANNEL)) {
     SetMutedInternal(mMuted & ~MUTED_BY_AUDIO_CHANNEL);
     DispatchAsyncEvent(NS_LITERAL_STRING("mozinterruptend"));
   }
@@ -3805,7 +3817,7 @@ void HTMLMediaElement::UpdateAudioChannelPlayingState()
     }
 
     if (mPlayingThroughTheAudioChannel) {
-      bool canPlay;
+      int32_t canPlay;
       mAudioChannelAgent->StartPlaying(&canPlay);
       CanPlayChanged(canPlay);
     } else {
@@ -3816,12 +3828,24 @@ void HTMLMediaElement::UpdateAudioChannelPlayingState()
 }
 
 /* void canPlayChanged (in boolean canPlay); */
-NS_IMETHODIMP HTMLMediaElement::CanPlayChanged(bool canPlay)
+NS_IMETHODIMP HTMLMediaElement::CanPlayChanged(int32_t canPlay)
 {
+  static_assert(static_cast<AudioChannelState>(
+                nsIAudioChannelAgent::AUDIO_AGENT_STATE_NORMAL) ==
+                AUDIO_CHANNEL_STATE_NORMAL &&
+                static_cast<AudioChannelState>(
+                nsIAudioChannelAgent::AUDIO_AGENT_STATE_MUTED) ==
+                AUDIO_CHANNEL_STATE_MUTED &&
+                static_cast<AudioChannelState>(
+                nsIAudioChannelAgent::AUDIO_AGENT_STATE_FADED) ==
+                AUDIO_CHANNEL_STATE_FADED,
+                "Enum of channel state on nsIAudioChannelAgent.idl should be "
+                "the same with AudioChannelCommon.h");
+
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
-  UpdateChannelMuteState(canPlay);
-  mPaused.SetCanPlay(canPlay);
+  UpdateChannelMuteState(static_cast<AudioChannelState>(canPlay));
+  mPaused.SetCanPlay(canPlay != AUDIO_CHANNEL_STATE_MUTED);
   return NS_OK;
 }
 
