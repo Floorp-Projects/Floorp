@@ -29,11 +29,12 @@ public:
   NS_DECL_NSITIMERCALLBACK
 
   /**
-   * Returns the AudioChannelServce singleton. Only to be called from main thread.
+   * Returns the AudioChannelServce singleton. Only to be called from main
+   * thread.
+   *
    * @return NS_OK on proper assignment, NS_ERROR_FAILURE otherwise.
    */
-  static AudioChannelService*
-  GetAudioChannelService();
+  static AudioChannelService* GetAudioChannelService();
 
   /**
    * Shutdown the singleton.
@@ -54,9 +55,11 @@ public:
   virtual void UnregisterAudioChannelAgent(AudioChannelAgent* aAgent);
 
   /**
-   * Return true if this type should be muted.
+   * Return the state to indicate this agent should keep playing/
+   * fading volume/muted.
    */
-  virtual bool GetMuted(AudioChannelAgent* aAgent, bool aElementHidden);
+  virtual AudioChannelState GetState(AudioChannelAgent* aAgent,
+                                     bool aElementHidden);
 
   /**
    * Return true if there is a content channel active in this process
@@ -65,8 +68,8 @@ public:
   virtual bool ContentOrNormalChannelIsActive();
 
   /**
-   * Return true iff a normal or content channel is active for the given process
-   * ID.
+   * Return true if a normal or content channel is active for the given
+   * process ID.
    */
   virtual bool ProcessContentOrNormalChannelIsActive(uint64_t aChildID);
 
@@ -93,8 +96,9 @@ protected:
   void UnregisterTypeInternal(AudioChannelType aType, bool aElementHidden,
                               uint64_t aChildID);
 
-  bool GetMutedInternal(AudioChannelType aType, uint64_t aChildID,
-                        bool aElementHidden, bool aElementWasHidden);
+  AudioChannelState GetStateInternal(AudioChannelType aType, uint64_t aChildID,
+                                     bool aElementHidden,
+                                     bool aElementWasHidden);
 
   /* Update the internal type value following the visibility changes */
   void UpdateChannelType(AudioChannelType aType, uint64_t aChildID,
@@ -127,6 +131,9 @@ protected:
 
   bool ChannelsActiveWithHigherPriorityThan(AudioChannelInternalType aType);
 
+  bool CheckVolumeFadedCondition(AudioChannelInternalType aType,
+                                 bool aElementHidden);
+
   const char* ChannelName(AudioChannelType aType);
 
   AudioChannelInternalType GetInternalType(AudioChannelType aType,
@@ -136,15 +143,15 @@ protected:
   public:
     AudioChannelAgentData(AudioChannelType aType,
                           bool aElementHidden,
-                          bool aMuted)
+                          AudioChannelState aState)
     : mType(aType)
     , mElementHidden(aElementHidden)
-    , mMuted(aMuted)
+    , mState(aState)
     {}
 
     AudioChannelType mType;
     bool mElementHidden;
-    bool mMuted;
+    AudioChannelState mState;
   };
 
   static PLDHashOperator
