@@ -745,6 +745,13 @@ TypeSet::toHeapTypeSet()
     return (HeapTypeSet *) this;
 }
 
+bool
+AddClearDefiniteGetterSetterForPrototypeChain(JSContext *cx, TypeObject *type, jsid id);
+
+void
+AddClearDefiniteFunctionUsesInScript(JSContext *cx, TypeObject *type,
+                                     JSScript *script, JSScript *calleeScript);
+
 /*
  * Handler which persists information about dynamic types pushed within a
  * script which can affect its behavior and are not covered by JOF_TYPESET ops,
@@ -932,14 +939,14 @@ struct TypeNewScript : public TypeObjectAddendum
      * scripted setter is added to one of the object's prototypes while it is
      * in the middle of being initialized, so we can walk the stack and fixup
      * any objects which look for in-progress objects which were prematurely
-     * set with their final shape. Initialization can traverse stack frames,
-     * in which case FRAME_PUSH/FRAME_POP are used.
+     * set with their final shape. Property assignments in inner frames are
+     * preceded by a series of SETPROP_FRAME entries specifying the stack down
+     * to the frame containing the write.
      */
     struct Initializer {
         enum Kind {
             SETPROP,
-            FRAME_PUSH,
-            FRAME_POP,
+            SETPROP_FRAME,
             DONE
         } kind;
         uint32_t offset;
