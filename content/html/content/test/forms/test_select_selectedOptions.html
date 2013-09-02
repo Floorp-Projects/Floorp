@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=596681
+-->
+<head>
+  <title>Test for HTMLSelectElement.selectedOptions</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=596681">Mozilla Bug 596681</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+
+/** Test for HTMLSelectElement's selectedOptions attribute.
+ *
+ * selectedOptions is a live list of the options that have selectedness of true
+ * (not the selected content attribute).
+ *
+ * See http://www.whatwg.org/html/#dom-select-selectedoptions
+ **/
+
+function checkSelectedOptions(size, elements)
+{
+  is(selectedOptions.length, size,
+     "select should have " + size + " selected options");
+  for (let i = 0; i < size; ++i) {
+    ok(selectedOptions[i], "selected option is valid");
+    if (selectedOptions[i]) {
+      is(selectedOptions[i].value, elements[i].value, "selected options are correct");
+    }
+  }
+}
+
+let select = document.createElement("select");
+document.body.appendChild(select);
+let selectedOptions = select.selectedOptions;
+
+ok("selectedOptions" in select,
+   "select element should have a selectedOptions IDL attribute");
+
+ok(select.selectedOptions instanceof HTMLCollection,
+   "selectedOptions should be an HTMLCollection instance");
+
+let option1 = document.createElement("option");
+let option2 = document.createElement("option");
+let option3 = document.createElement("option");
+option1.id = "option1";
+option1.value = "option1";
+option2.value = "option2";
+option3.value = "option3";
+
+checkSelectedOptions(0, null);
+
+select.add(option1, null);
+is(selectedOptions.namedItem("option1").value, "option1", "named getter works");
+checkSelectedOptions(1, [option1]);
+
+select.add(option2, null);
+checkSelectedOptions(1, [option1]);
+
+select.options[1].selected = true;
+checkSelectedOptions(1, [option2]);
+
+select.multiple = true;
+checkSelectedOptions(1, [option2]);
+
+select.options[0].selected = true;
+checkSelectedOptions(2, [option1, option2]);
+
+option1.selected = false;
+// Usinig selected directly on the option should work.
+checkSelectedOptions(1, [option2]);
+
+select.remove(1);
+select.add(option2, 0);
+select.options[0].selected = true;
+select.options[1].selected = true;
+// Should be in tree order.
+checkSelectedOptions(2, [option2, option1]);
+
+select.add(option3, null);
+checkSelectedOptions(2, [option2, option1]);
+
+select.options[2].selected = true;
+checkSelectedOptions(3, [option2, option1, option3]);
+
+select.length = 0;
+option1.selected = false;
+option2.selected = false;
+option3.selected = false;
+var optgroup1 = document.createElement("optgroup");
+optgroup1.appendChild(option1);
+optgroup1.appendChild(option2);
+select.add(optgroup1)
+var optgroup2 = document.createElement("optgroup");
+optgroup2.appendChild(option3);
+select.add(optgroup2);
+
+checkSelectedOptions(0, null);
+
+option2.selected = true;
+checkSelectedOptions(1, [option2]);
+
+option3.selected = true;
+checkSelectedOptions(2, [option2, option3]);
+
+optgroup1.removeChild(option2);
+checkSelectedOptions(1, [option3]);
+
+document.body.removeChild(select);
+option1.selected = true;
+checkSelectedOptions(2, [option1, option3]);
+</script>
+</pre>
+</body>
+</html>

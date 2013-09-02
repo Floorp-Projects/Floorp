@@ -38,7 +38,7 @@ interface HTMLSelectElement : HTMLElement {
   [Throws]
   setter creator void (unsigned long index, HTMLOptionElement? option);
 
-// NYI:  readonly attribute HTMLCollection selectedOptions;
+  readonly attribute HTMLCollection selectedOptions;
   [SetterThrows, Pure]
            attribute long selectedIndex;
   [Pure]
