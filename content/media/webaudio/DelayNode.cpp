@@ -128,18 +128,28 @@ public:
     float* const* outputChannels = reinterpret_cast<float* const*>
       (const_cast<void* const*>(aOutput->mChannelData.Elements()));
 
+
+    bool inCycle = aStream->AsProcessedStream()->InCycle();
     double sampleRate = aStream->SampleRate();
     if (mDelay.HasSimpleValue()) {
-      double delayFrames = mDelay.GetValue() * sampleRate;
-      mProcessor.Process(delayFrames, inputChannels, outputChannels,
+      // If this DelayNode is in a cycle, make sure the delay value is at least
+      // one block.
+      float delayFrames = mDelay.GetValue() * sampleRate;
+      float delayFramesClamped = inCycle ? std::max(static_cast<float>(WEBAUDIO_BLOCK_SIZE), delayFrames) :
+                                           delayFrames;
+      mProcessor.Process(delayFramesClamped, inputChannels, outputChannels,
                          numChannels, WEBAUDIO_BLOCK_SIZE);
     } else {
       // Compute the delay values for the duration of the input AudioChunk
+      // If this DelayNode is in a cycle, make sure the delay value is at least
+      // one block.
       double computedDelay[WEBAUDIO_BLOCK_SIZE];
       TrackTicks tick = aStream->GetCurrentPosition();
       for (size_t counter = 0; counter < WEBAUDIO_BLOCK_SIZE; ++counter) {
-        computedDelay[counter] =
-          mDelay.GetValueAtTime(tick, counter) * sampleRate;
+        float delayAtTick = mDelay.GetValueAtTime(tick, counter) * sampleRate;
+        float delayAtTickClamped = inCycle ? std::max(static_cast<float>(WEBAUDIO_BLOCK_SIZE), delayAtTick) :
+                                             delayAtTick;
+        computedDelay[counter] = delayAtTickClamped;
       }
       mProcessor.Process(computedDelay, inputChannels, outputChannels,
                          numChannels, WEBAUDIO_BLOCK_SIZE);
