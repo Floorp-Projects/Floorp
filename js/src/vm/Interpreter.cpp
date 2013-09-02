@@ -953,8 +953,8 @@ TryNoteIter::settle()
     }
 }
 
-#define PUSH_COPY(v)             do { *regs.sp++ = v; assertSameCompartmentDebugOnly(cx, regs.sp[-1]); } while (0)
-#define PUSH_COPY_SKIP_CHECK(v)  *regs.sp++ = v
+#define PUSH_COPY(v)             do { *regs.sp++ = (v); assertSameCompartmentDebugOnly(cx, regs.sp[-1]); } while (0)
+#define PUSH_COPY_SKIP_CHECK(v)  *regs.sp++ = (v)
 #define PUSH_NULL()              regs.sp++->setNull()
 #define PUSH_UNDEFINED()         regs.sp++->setUndefined()
 #define PUSH_BOOLEAN(b)          regs.sp++->setBoolean(b)
@@ -964,13 +964,13 @@ TryNoteIter::settle()
 #define PUSH_OBJECT(obj)         do { regs.sp++->setObject(obj); assertSameCompartmentDebugOnly(cx, regs.sp[-1]); } while (0)
 #define PUSH_OBJECT_OR_NULL(obj) do { regs.sp++->setObjectOrNull(obj); assertSameCompartmentDebugOnly(cx, regs.sp[-1]); } while (0)
 #define PUSH_HOLE()              regs.sp++->setMagic(JS_ELEMENTS_HOLE)
-#define POP_COPY_TO(v)           v = *--regs.sp
+#define POP_COPY_TO(v)           (v) = *--regs.sp
 #define POP_RETURN_VALUE()       regs.fp()->setReturnValue(*--regs.sp)
 
 #define FETCH_OBJECT(cx, n, obj)                                              \
     JS_BEGIN_MACRO                                                            \
         HandleValue val = regs.stackHandleAt(n);                              \
-        obj = ToObjectFromStack(cx, (val));                                   \
+        obj = ToObjectFromStack((cx), (val));                                 \
         if (!obj)                                                             \
             goto error;                                                       \
     JS_END_MACRO
@@ -1277,15 +1277,19 @@ Interpret(JSContext *cx, RunState &state)
     register int switchMask = 0;
     int switchOp;
 
-# define DO_OP()            goto do_op
+#define DO_OP()            goto do_op
 
-# define BEGIN_CASE(OP)     case OP:
-# define END_CASE(OP)       len = OP##_LENGTH; goto advanceAndDoOp;
+#define BEGIN_CASE(OP)     case OP:
+#define END_CASE(OP)                                                          \
+    JS_BEGIN_MACRO                                                            \
+        len = OP##_LENGTH;                                                    \
+        goto advanceAndDoOp;                                                  \
+    JS_END_MACRO;
 
-# define END_VARLEN_CASE    goto advanceAndDoOp;
+#define END_VARLEN_CASE    goto advanceAndDoOp;
 
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
-    (dbl = script->getConst(GET_UINT32_INDEX(regs.pc + (PCOFF))).toDouble())
+    ((dbl) = script->getConst(GET_UINT32_INDEX(regs.pc + (PCOFF))).toDouble())
 
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
@@ -1750,17 +1754,17 @@ END_CASE(JSOP_AND)
 
 #define FETCH_ELEMENT_ID(n, id)                                               \
     JS_BEGIN_MACRO                                                            \
-        if (!ValueToId<CanGC>(cx, regs.stackHandleAt(n), &id))                \
+        if (!ValueToId<CanGC>(cx, regs.stackHandleAt(n), &(id)))              \
             goto error;                                                       \
     JS_END_MACRO
 
 #define TRY_BRANCH_AFTER_COND(cond,spdec)                                     \
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(js_CodeSpec[op].length == 1);                               \
-        unsigned diff_ = (unsigned) GET_UINT8(regs.pc) - (unsigned) JSOP_IFEQ;         \
+        unsigned diff_ = (unsigned) GET_UINT8(regs.pc) - (unsigned) JSOP_IFEQ;\
         if (diff_ <= 1) {                                                     \
-            regs.sp -= spdec;                                                 \
-            if (cond == (diff_ != 0)) {                                       \
+            regs.sp -= (spdec);                                               \
+            if ((cond) == (diff_ != 0)) {                                     \
                 ++regs.pc;                                                    \
                 len = GET_JUMP_OFFSET(regs.pc);                               \
                 BRANCH(len);                                                  \
@@ -1982,7 +1986,7 @@ END_CASE(JSOP_NE)
         bool equal;                                                           \
         if (!StrictlyEqual(cx, lref, rref, &equal))                           \
             goto error;                                                       \
-        COND = equal OP true;                                                 \
+        (COND) = equal OP true;                                               \
         regs.sp--;                                                            \
     JS_END_MACRO
 
