@@ -19,8 +19,6 @@ namespace JSC {
     class ExecutablePool;
 }
 
-class JSScript;
-
 namespace js {
 
 class AsmJSModule;
