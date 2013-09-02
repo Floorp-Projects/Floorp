@@ -12,10 +12,7 @@
 #include "nsITimer.h"
 #include "nsAutoPtr.h"
 #include "mozilla/net/DNS.h"
-
-namespace JS {
-class Value;
-}
+#include "js/TypeDecls.h"
 
 namespace mozilla { namespace net {
 

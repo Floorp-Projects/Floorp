@@ -10,6 +10,10 @@
 
 using namespace js;
 
+namespace js {
+typedef Rooted<Module*> RootedModule;
+}
+
 Class Module::class_ = {
     "Module",
     JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS,

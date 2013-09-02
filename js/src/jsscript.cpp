@@ -546,7 +546,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         options.setVersion(version_)
                .setNoScriptRval(!!(scriptBits & (1 << NoScriptRval)))
                .setSelfHostingMode(!!(scriptBits & (1 << SelfHosted)));
-        JS::RootedScriptSource sourceObject(cx);
+        RootedScriptSource sourceObject(cx);
         if (scriptBits & (1 << OwnSource)) {
             ScriptSource *ss = cx->new_<ScriptSource>(xdr->originPrincipals());
             if (!ss)
@@ -962,7 +962,7 @@ ScriptSourceObject::create(ExclusiveContext *cx, ScriptSource *source)
     RootedObject object(cx, NewObjectWithGivenProto(cx, &class_, NULL, cx->global()));
     if (!object)
         return NULL;
-    JS::RootedScriptSource sourceObject(cx, &object->as<ScriptSourceObject>());
+    RootedScriptSource sourceObject(cx, &object->as<ScriptSourceObject>());
     sourceObject->setSlot(SOURCE_SLOT, PrivateValue(source));
     source->incref();
     return sourceObject;
@@ -1610,7 +1610,7 @@ JSScript::initCompartment(ExclusiveContext *cx)
 JSScript *
 JSScript::Create(ExclusiveContext *cx, HandleObject enclosingScope, bool savedCallerFun,
                  const CompileOptions &options, unsigned staticLevel,
-                 JS::HandleScriptSource sourceObject, uint32_t bufStart, uint32_t bufEnd)
+                 HandleScriptSource sourceObject, uint32_t bufStart, uint32_t bufEnd)
 {
     JS_ASSERT(bufStart <= bufEnd);
 
@@ -2291,7 +2291,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
            .setVersion(src->getVersion());
 
     /* Make sure we clone the script source object with the script */
-    JS::RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, src->scriptSource()));
+    RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, src->scriptSource()));
     if (!sourceObject)
         return NULL;
 

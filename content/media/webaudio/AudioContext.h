@@ -17,6 +17,7 @@
 #include "nsDOMEventTargetHelper.h"
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
+#include "js/TypeDecls.h"
 
 // X11 has a #define for CurrentTime. Unbelievable :-(.
 // See content/media/DOMMediaStream.h for more fun!
@@ -24,8 +25,6 @@
 #undef CurrentTime
 #endif
 
-struct JSContext;
-class JSObject;
 class nsPIDOMWindow;
 
 namespace mozilla {

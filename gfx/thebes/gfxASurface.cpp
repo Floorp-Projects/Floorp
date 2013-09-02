@@ -523,7 +523,7 @@ gfxASurface::MovePixels(const nsIntRect& aSourceRect,
     // CreateSimilarSurface can return nullptr if the current surface is
     // in an error state. This isn't good, but its better to carry
     // on with the error surface instead of crashing.
-    NS_ASSERTION(tmp, "Must have temporary surface to move pixels!");
+    NS_WARN_IF_FALSE(tmp, "Must have temporary surface to move pixels!");
     if (!tmp) {
         return;
     }
