@@ -1280,29 +1280,10 @@ Interpret(JSContext *cx, RunState &state)
 # define DO_OP()            goto do_op
 
 # define BEGIN_CASE(OP)     case OP:
-# define END_CASE(OP)       END_CASE_LEN(OP##_LENGTH)
-# define END_CASE_LEN(n)    END_CASE_LENX(n)
-# define END_CASE_LENX(n)   END_CASE_LEN##n
+# define END_CASE(OP)       len = OP##_LENGTH; goto advanceAndDoOp;
 
-/*
- * To share the code for all len == 1 cases we use the specialized label with
- * code that falls through to advanceAndDoOp: .
- */
-# define END_CASE_LEN1      goto advance_pc_by_one;
-# define END_CASE_LEN2      len = 2; goto advanceAndDoOp;
-# define END_CASE_LEN3      len = 3; goto advanceAndDoOp;
-# define END_CASE_LEN4      len = 4; goto advanceAndDoOp;
-# define END_CASE_LEN5      len = 5; goto advanceAndDoOp;
-# define END_CASE_LEN6      len = 6; goto advanceAndDoOp;
-# define END_CASE_LEN7      len = 7; goto advanceAndDoOp;
-# define END_CASE_LEN8      len = 8; goto advanceAndDoOp;
-# define END_CASE_LEN9      len = 9; goto advanceAndDoOp;
-# define END_CASE_LEN10     len = 10; goto advanceAndDoOp;
-# define END_CASE_LEN11     len = 11; goto advanceAndDoOp;
-# define END_CASE_LEN12     len = 12; goto advanceAndDoOp;
 # define END_VARLEN_CASE    goto advanceAndDoOp;
 # define ADD_EMPTY_CASE(OP) BEGIN_CASE(OP)
-# define END_EMPTY_CASES    goto advance_pc_by_one;
 
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
     (dbl = script->getConst(GET_UINT32_INDEX(regs.pc + (PCOFF))).toDouble())
@@ -1431,12 +1412,7 @@ Interpret(JSContext *cx, RunState &state)
     if (rt->profilingScripts || cx->runtime()->debugHooks.interruptHook)
         switchMask = -1; /* Enable interrupts. */
 
-    goto advanceAndDoOp;
-
     for (;;) {
-      advance_pc_by_one:
-        JS_ASSERT(js_CodeSpec[op].length == 1);
-        len = 1;
       advanceAndDoOp:
         js::gc::MaybeVerifyBarriers(cx);
         regs.pc += len;
@@ -1562,7 +1538,11 @@ ADD_EMPTY_CASE(JSOP_UNUSED222)
 ADD_EMPTY_CASE(JSOP_UNUSED223)
 ADD_EMPTY_CASE(JSOP_CONDSWITCH)
 ADD_EMPTY_CASE(JSOP_TRY)
-END_EMPTY_CASES
+{
+    JS_ASSERT(js_CodeSpec[op].length == 1);
+    len = 1;
+    goto advanceAndDoOp;
+}
 
 BEGIN_CASE(JSOP_LOOPHEAD)
 END_CASE(JSOP_LOOPHEAD)
