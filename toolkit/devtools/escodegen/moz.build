@@ -4,15 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['tests']
+XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
-PARALLEL_DIRS += [
-    'server',
-    'client',
-    'gcli',
-    'sourcemap',
-    'webconsole',
-    'apps',
-    'styleinspector',
-    'escodegen'
+JS_MODULES_PATH = 'modules/devtools/escodegen'
+
+EXTRA_JS_MODULES += [
+    'escodegen.js',
+    'estraverse.js',
+    'package.json.js',
 ]
