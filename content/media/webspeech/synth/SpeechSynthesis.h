@@ -10,12 +10,12 @@
 #include "nsString.h"
 #include "nsWrapperCache.h"
 #include "nsRefPtrHashtable.h"
+#include "js/TypeDecls.h"
 
 #include "EnableSpeechSynthesisCheck.h"
 #include "SpeechSynthesisUtterance.h"
 #include "SpeechSynthesisVoice.h"
 
-struct JSContext;
 class nsIDOMWindow;
 
 namespace mozilla {

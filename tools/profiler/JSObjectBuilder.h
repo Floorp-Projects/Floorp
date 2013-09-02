@@ -7,11 +7,10 @@
 #define JSOBJECTBUILDER_H
 
 #include "JSAObjectBuilder.h"
+#include "js/TypeDecls.h"
 
 class JSCustomObject;
 class JSCustomObjectBuilder;
-struct JSContext;
-class JSObject;
 class nsAString;
 
 /* this is handy wrapper around JSAPI to make it more pleasant to use.

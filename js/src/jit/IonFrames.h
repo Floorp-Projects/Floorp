@@ -20,9 +20,6 @@
 #include "jit/IonFrameIterator.h"
 #include "jit/Registers.h"
 
-class JSFunction;
-class JSScript;
-
 namespace js {
 namespace jit {
 

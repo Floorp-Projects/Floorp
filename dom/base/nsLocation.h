@@ -12,10 +12,10 @@
 #include "nsIWeakReferenceUtils.h"
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
+#include "js/TypeDecls.h"
 
 class nsIURI;
 class nsIDocShell;
-struct JSContext;
 class nsIDocShellLoadInfo;
 
 //*****************************************************************************

@@ -7,9 +7,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMTCPSocket.h"
-
-struct JSContext;
-class JSObject;
+#include "js/TypeDecls.h"
 
 #define TCPSOCKETPARENT_CID \
   { 0x4e7246c6, 0xa8b3, 0x426d, { 0x9c, 0x17, 0x76, 0xda, 0xb1, 0xe1, 0xe1, 0x4a } }
@@ -49,6 +47,7 @@ public:
   virtual bool RecvOpen(const nsString& aHost, const uint16_t& aPort,
                         const bool& useSSL, const nsString& aBinaryType);
 
+  virtual bool RecvStartTLS() MOZ_OVERRIDE;
   virtual bool RecvSuspend() MOZ_OVERRIDE;
   virtual bool RecvResume() MOZ_OVERRIDE;
   virtual bool RecvClose() MOZ_OVERRIDE;

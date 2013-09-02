@@ -108,8 +108,6 @@ StructuredCloneData UnpackClonedMessageDataForChild(const ClonedMessageData& aDa
 } // namespace mozilla
 
 class nsAXPCNativeCallContext;
-struct JSContext;
-class JSObject;
 
 struct nsMessageListenerInfo
 {

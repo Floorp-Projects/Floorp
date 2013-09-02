@@ -14,9 +14,7 @@
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "AudioContext.h"
-
-struct JSContext;
-class JSObject;
+#include "js/TypeDecls.h"
 
 namespace mozilla {
 

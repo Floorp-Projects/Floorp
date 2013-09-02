@@ -15,8 +15,8 @@
 #include "nsIWeakReference.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsCycleCollectionParticipant.h"
+#include "js/TypeDecls.h"
 
-class JSObject;
 class nsIDOMEvent;
 class nsIContent;
 class nsIDOMUIEvent;
@@ -25,10 +25,6 @@ class nsIDOMMouseEvent;
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
 class nsXBLPrototypeBinding;
-
-namespace JS {
-template <typename T> class MutableHandle;
-}
 
 namespace mozilla {
 namespace dom {

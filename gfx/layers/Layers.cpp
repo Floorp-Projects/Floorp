@@ -713,6 +713,121 @@ ContainerLayer::ContainerLayer(LayerManager* aManager, void* aImplData)
 ContainerLayer::~ContainerLayer() {}
 
 void
+ContainerLayer::InsertAfter(Layer* aChild, Layer* aAfter)
+{
+  NS_ASSERTION(aChild->Manager() == Manager(),
+               "Child has wrong manager");
+  NS_ASSERTION(!aChild->GetParent(),
+               "aChild already in the tree");
+  NS_ASSERTION(!aChild->GetNextSibling() && !aChild->GetPrevSibling(),
+               "aChild already has siblings?");
+  NS_ASSERTION(!aAfter ||
+               (aAfter->Manager() == Manager() &&
+                aAfter->GetParent() == this),
+               "aAfter is not our child");
+
+  aChild->SetParent(this);
+  if (aAfter == mLastChild) {
+    mLastChild = aChild;
+  }
+  if (!aAfter) {
+    aChild->SetNextSibling(mFirstChild);
+    if (mFirstChild) {
+      mFirstChild->SetPrevSibling(aChild);
+    }
+    mFirstChild = aChild;
+    NS_ADDREF(aChild);
+    DidInsertChild(aChild);
+    return;
+  }
+
+  Layer* next = aAfter->GetNextSibling();
+  aChild->SetNextSibling(next);
+  aChild->SetPrevSibling(aAfter);
+  if (next) {
+    next->SetPrevSibling(aChild);
+  }
+  aAfter->SetNextSibling(aChild);
+  NS_ADDREF(aChild);
+  DidInsertChild(aChild);
+}
+
+void
+ContainerLayer::RemoveChild(Layer *aChild)
+{
+  NS_ASSERTION(aChild->Manager() == Manager(),
+               "Child has wrong manager");
+  NS_ASSERTION(aChild->GetParent() == this,
+               "aChild not our child");
+
+  Layer* prev = aChild->GetPrevSibling();
+  Layer* next = aChild->GetNextSibling();
+  if (prev) {
+    prev->SetNextSibling(next);
+  } else {
+    this->mFirstChild = next;
+  }
+  if (next) {
+    next->SetPrevSibling(prev);
+  } else {
+    this->mLastChild = prev;
+  }
+
+  aChild->SetNextSibling(nullptr);
+  aChild->SetPrevSibling(nullptr);
+  aChild->SetParent(nullptr);
+
+  this->DidRemoveChild(aChild);
+  NS_RELEASE(aChild);
+}
+
+
+void
+ContainerLayer::RepositionChild(Layer* aChild, Layer* aAfter)
+{
+  NS_ASSERTION(aChild->Manager() == Manager(),
+               "Child has wrong manager");
+  NS_ASSERTION(aChild->GetParent() == this,
+               "aChild not our child");
+  NS_ASSERTION(!aAfter ||
+               (aAfter->Manager() == Manager() &&
+                aAfter->GetParent() == this),
+               "aAfter is not our child");
+
+  Layer* prev = aChild->GetPrevSibling();
+  Layer* next = aChild->GetNextSibling();
+  if (prev == aAfter) {
+    // aChild is already in the correct position, nothing to do.
+    return;
+  }
+  if (prev) {
+    prev->SetNextSibling(next);
+  }
+  if (next) {
+    next->SetPrevSibling(prev);
+  }
+  if (!aAfter) {
+    aChild->SetPrevSibling(nullptr);
+    aChild->SetNextSibling(mFirstChild);
+    if (mFirstChild) {
+      mFirstChild->SetPrevSibling(aChild);
+    }
+    mFirstChild = aChild;
+    return;
+  }
+
+  Layer* afterNext = aAfter->GetNextSibling();
+  if (afterNext) {
+    afterNext->SetPrevSibling(aChild);
+  } else {
+    mLastChild = aChild;
+  }
+  aAfter->SetNextSibling(aChild);
+  aChild->SetPrevSibling(aAfter);
+  aChild->SetNextSibling(afterNext);
+}
+
+void
 ContainerLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
 {
   aAttrs = ContainerLayerAttributes(GetFrameMetrics(), mPreXScale, mPreYScale,
@@ -825,6 +940,16 @@ ContainerLayer::ComputeEffectiveTransformsForChildren(const gfx3DMatrix& aTransf
   for (Layer* l = mFirstChild; l; l = l->GetNextSibling()) {
     l->ComputeEffectiveTransforms(aTransformToSurface);
   }
+}
+
+/* static */ bool
+ContainerLayer::HasOpaqueAncestorLayer(Layer* aLayer)
+{
+  for (Layer* l = aLayer->GetParent(); l; l = l->GetParent()) {
+    if (l->GetContentFlags() & Layer::CONTENT_OPAQUE)
+      return true;
+  }
+  return false;
 }
 
 void

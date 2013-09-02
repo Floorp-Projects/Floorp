@@ -93,8 +93,6 @@
  * a single BaseShape.
  */
 
-class JSObject;
-
 namespace js {
 
 class Bindings;

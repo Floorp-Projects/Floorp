@@ -8,9 +8,8 @@
 
 #include "nsIDOMHTMLCollection.h"
 #include "nsWrapperCache.h"
+#include "js/TypeDecls.h"
 
-struct JSContext;
-class JSObject;
 class nsINode;
 class nsString;
 template<class> class nsTArray;

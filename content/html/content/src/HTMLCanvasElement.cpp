@@ -5,7 +5,7 @@
 
 #include "mozilla/dom/HTMLCanvasElement.h"
 
-#include "BasicLayers.h"
+#include "Layers.h"
 #include "imgIEncoder.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"

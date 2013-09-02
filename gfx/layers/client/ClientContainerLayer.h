@@ -23,140 +23,9 @@ namespace layers {
 
 class ShadowableLayer;
 
-template<class Container> void
-ContainerInsertAfter(Layer* aChild, Layer* aAfter, Container* aContainer)
-{
-  NS_ASSERTION(aChild->Manager() == aContainer->Manager(),
-               "Child has wrong manager");
-  NS_ASSERTION(!aChild->GetParent(),
-               "aChild already in the tree");
-  NS_ASSERTION(!aChild->GetNextSibling() && !aChild->GetPrevSibling(),
-               "aChild already has siblings?");
-  NS_ASSERTION(!aAfter ||
-               (aAfter->Manager() == aContainer->Manager() &&
-                aAfter->GetParent() == aContainer),
-               "aAfter is not our child");
-
-  aChild->SetParent(aContainer);
-  if (aAfter == aContainer->mLastChild) {
-    aContainer->mLastChild = aChild;
-  }
-  if (!aAfter) {
-    aChild->SetNextSibling(aContainer->mFirstChild);
-    if (aContainer->mFirstChild) {
-      aContainer->mFirstChild->SetPrevSibling(aChild);
-    }
-    aContainer->mFirstChild = aChild;
-    NS_ADDREF(aChild);
-    aContainer->DidInsertChild(aChild);
-    return;
-  }
-
-  Layer* next = aAfter->GetNextSibling();
-  aChild->SetNextSibling(next);
-  aChild->SetPrevSibling(aAfter);
-  if (next) {
-    next->SetPrevSibling(aChild);
-  }
-  aAfter->SetNextSibling(aChild);
-  NS_ADDREF(aChild);
-  aContainer->DidInsertChild(aChild);
-}
-
-template<class Container> void
-ContainerRemoveChild(Layer* aChild, Container* aContainer)
-{
-  NS_ASSERTION(aChild->Manager() == aContainer->Manager(),
-               "Child has wrong manager");
-  NS_ASSERTION(aChild->GetParent() == aContainer,
-               "aChild not our child");
-
-  Layer* prev = aChild->GetPrevSibling();
-  Layer* next = aChild->GetNextSibling();
-  if (prev) {
-    prev->SetNextSibling(next);
-  } else {
-    aContainer->mFirstChild = next;
-  }
-  if (next) {
-    next->SetPrevSibling(prev);
-  } else {
-    aContainer->mLastChild = prev;
-  }
-
-  aChild->SetNextSibling(nullptr);
-  aChild->SetPrevSibling(nullptr);
-  aChild->SetParent(nullptr);
-
-  aContainer->DidRemoveChild(aChild);
-  NS_RELEASE(aChild);
-}
-
-template<class Container> void
-ContainerRepositionChild(Layer* aChild, Layer* aAfter, Container* aContainer)
-{
-  NS_ASSERTION(aChild->Manager() == aContainer->Manager(),
-               "Child has wrong manager");
-  NS_ASSERTION(aChild->GetParent() == aContainer,
-               "aChild not our child");
-  NS_ASSERTION(!aAfter ||
-               (aAfter->Manager() == aContainer->Manager() &&
-                aAfter->GetParent() == aContainer),
-               "aAfter is not our child");
-
-  Layer* prev = aChild->GetPrevSibling();
-  Layer* next = aChild->GetNextSibling();
-  if (prev == aAfter) {
-    // aChild is already in the correct position, nothing to do.
-    return;
-  }
-  if (prev) {
-    prev->SetNextSibling(next);
-  }
-  if (next) {
-    next->SetPrevSibling(prev);
-  }
-  if (!aAfter) {
-    aChild->SetPrevSibling(nullptr);
-    aChild->SetNextSibling(aContainer->mFirstChild);
-    if (aContainer->mFirstChild) {
-      aContainer->mFirstChild->SetPrevSibling(aChild);
-    }
-    aContainer->mFirstChild = aChild;
-    return;
-  }
-
-  Layer* afterNext = aAfter->GetNextSibling();
-  if (afterNext) {
-    afterNext->SetPrevSibling(aChild);
-  } else {
-    aContainer->mLastChild = aChild;
-  }
-  aAfter->SetNextSibling(aChild);
-  aChild->SetPrevSibling(aAfter);
-  aChild->SetNextSibling(afterNext);
-}
-
-static bool
-HasOpaqueAncestorLayer(Layer* aLayer)
-{
-  for (Layer* l = aLayer->GetParent(); l; l = l->GetParent()) {
-    if (l->GetContentFlags() & Layer::CONTENT_OPAQUE)
-      return true;
-  }
-  return false;
-}
-
 class ClientContainerLayer : public ContainerLayer,
                              public ClientLayer
 {
-  template<class Container>
-  friend void ContainerInsertAfter(Layer* aChild, Layer* aAfter, Container* aContainer);
-  template<class Container>
-  friend void ContainerRemoveChild(Layer* aChild, Container* aContainer);
-  template<class Container>
-  friend void ContainerRepositionChild(Layer* aChild, Layer* aAfter, Container* aContainer);
-
 public:
   ClientContainerLayer(ClientLayerManager* aManager) :
     ContainerLayer(aManager,
@@ -168,7 +37,7 @@ public:
   virtual ~ClientContainerLayer()
   {
     while (mFirstChild) {
-      ContainerRemoveChild(mFirstChild, this);
+      ContainerLayer::RemoveChild(mFirstChild);
     }
 
     MOZ_COUNT_DTOR(ClientContainerLayer);
@@ -219,33 +88,33 @@ public:
                  "Can only set properties in construction phase");
     ContainerLayer::SetVisibleRegion(aRegion);
   }
-  virtual void InsertAfter(Layer* aChild, Layer* aAfter)
+  virtual void InsertAfter(Layer* aChild, Layer* aAfter) MOZ_OVERRIDE
   {
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
     ClientManager()->InsertAfter(ClientManager()->Hold(this),
                                  ClientManager()->Hold(aChild),
                                  aAfter ? ClientManager()->Hold(aAfter) : nullptr);
-    ContainerInsertAfter(aChild, aAfter, this);
+    ContainerLayer::InsertAfter(aChild, aAfter);
   }
 
-  virtual void RemoveChild(Layer* aChild)
+  virtual void RemoveChild(Layer* aChild) MOZ_OVERRIDE
   { 
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
     ClientManager()->RemoveChild(ClientManager()->Hold(this),
                                  ClientManager()->Hold(aChild));
-    ContainerRemoveChild(aChild, this);
+    ContainerLayer::RemoveChild(aChild);
   }
 
-  virtual void RepositionChild(Layer* aChild, Layer* aAfter)
+  virtual void RepositionChild(Layer* aChild, Layer* aAfter) MOZ_OVERRIDE
   {
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
     ClientManager()->RepositionChild(ClientManager()->Hold(this),
                                      ClientManager()->Hold(aChild),
                                      aAfter ? ClientManager()->Hold(aAfter) : nullptr);
-    ContainerRepositionChild(aChild, aAfter, this);
+    ContainerLayer::RepositionChild(aChild, aAfter);
   }
   
   virtual Layer* AsLayer() { return this; }
