@@ -162,9 +162,9 @@ NS_IMPL_ISUPPORTS1(MapsReporter, nsIMemoryMultiReporter)
 
 MapsReporter::MapsReporter()
   : mSearchedForLibxul(false)
+  , mMozillaLibraries(ArrayLength(mozillaLibraries))
 {
   const uint32_t len = ArrayLength(mozillaLibraries);
-  mMozillaLibraries.Init(len);
   for (uint32_t i = 0; i < len; i++) {
     nsAutoCString str;
     str.Assign(mozillaLibraries[i]);
