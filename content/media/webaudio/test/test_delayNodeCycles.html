@@ -1,0 +1,170 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the support of cycles.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script src="webaudio.js" type="text/javascript"></script>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  function getSineBuffer(ctx) {
+    var buffer = ctx.createBuffer(1, 2048, ctx.sampleRate);
+    var b = buffer.getChannelData(0);
+    for (var i = 0; i < 2048; i++) {
+      b[i] = Math.sin(440 * 2 * Math.PI * i / ctx.sampleRate);
+    }
+    return buffer;
+  }
+
+  function createAndPlayWithCycleAndDelayNode(ctx) {
+    var source = ctx.createBufferSource();
+    source.loop = true;
+    source.buffer = getSineBuffer(ctx);
+
+    var gain = ctx.createGain();
+    var delay = ctx.createDelay();
+    delay.delayTime = 0.5;
+
+    source.connect(gain);
+    gain.connect(delay);
+    delay.connect(ctx.destination);
+    // cycle
+    delay.connect(gain);
+
+    source.start(0);
+  }
+
+  function createAndPlayWithCycleAndDelayNodeButNullDelayTime(ctx) {
+    var source = ctx.createBufferSource();
+    source.loop = true;
+    source.buffer = getSineBuffer(ctx);
+
+    var gain = ctx.createGain();
+    var delay = ctx.createDelay();
+    delay.delayTime = 0.0;
+
+    source.connect(gain);
+    gain.connect(delay);
+    delay.connect(ctx.destination);
+    // cycle
+    delay.connect(gain);
+
+    source.start(0);
+  }
+
+  function createAndPlayWithCycleAndNoDelayNode(ctx) {
+    var source = ctx.createBufferSource();
+    source.loop = true;
+    source.buffer = getSineBuffer(ctx);
+
+    var gain = ctx.createGain();
+    var gain2 = ctx.createGain();
+
+    source.connect(gain);
+    gain.connect(gain2);
+    // cycle
+    gain2.connect(gain);
+    gain2.connect(ctx.destination);
+
+    source.start(0);
+  }
+
+  function createAndPlayWithCycleAndNoDelayNodeInCycle(ctx) {
+    var source = ctx.createBufferSource();
+    source.loop = true;
+    source.buffer = getSineBuffer(ctx);
+
+    var delay = ctx.createDelay();
+    var gain = ctx.createGain();
+    var gain2 = ctx.createGain();
+
+    // Their is a cycle, a delay, but the delay is not in the cycle.
+    source.connect(delay);
+    delay.connect(gain);
+    gain.connect(gain2);
+    // cycle
+    gain2.connect(gain);
+    gain2.connect(ctx.destination);
+
+    source.start(0);
+  }
+
+  var remainingTests = 0;
+  function finish() {
+    if (--remainingTests == 0) {
+      SimpleTest.finish();
+    }
+  }
+
+  function getOfflineContext(oncomplete) {
+    var ctx = new OfflineAudioContext(1, 48000, 48000);
+    ctx.oncomplete = oncomplete;
+    return ctx;
+  }
+
+  function checkSilentBuffer(e) {
+    var buffer = e.renderedBuffer.getChannelData(0);
+    for (var i = 0; i < buffer.length; i++) {
+      if (buffer[i] != 0.0) {
+        ok(false, "buffer should be silent.");
+        finish();
+        return;
+      }
+    }
+    ok(true, "buffer should be silent.");
+    finish();
+  }
+
+  function checkNoisyBuffer(e) {
+    var buffer = e.renderedBuffer.getChannelData(0);
+    for (var i = 0; i < buffer.length; i++) {
+      if (buffer[i] != 0.0) {
+        ok(true, "buffer should be noisy.");
+        finish();
+        return true;
+      }
+    }
+    ok(false, "buffer should be noisy.");
+    finish();
+    return false;
+  }
+
+  function expectSilentOutput(f) {
+    remainingTests++;
+    var ctx = getOfflineContext(checkSilentBuffer);
+    f(ctx);
+    ctx.startRendering();
+  }
+
+  function expectNoisyOutput(f) {
+    remainingTests++;
+    var ctx = getOfflineContext(checkNoisyBuffer);
+    f(ctx);
+    ctx.startRendering();
+  }
+
+  // This is trying to make a graph with a cycle and no DelayNode in the graph.
+  // The cycle subgraph should be muted, in this graph the output should be silent.
+  expectSilentOutput(createAndPlayWithCycleAndNoDelayNode);
+  // This is trying to make a graph with a cycle and a DelayNode in the graph, but
+  // not part of the cycle.
+  // The cycle subgraph should be muted, in this graph the output should be silent.
+  expectSilentOutput(createAndPlayWithCycleAndNoDelayNodeInCycle);
+  // Those are making legal graphs, with at least one DelayNode in the cycle.
+  // There should be some non-silent output.
+  expectNoisyOutput(createAndPlayWithCycleAndDelayNode);
+  // DelayNode.delayTime will be clamped to 128/ctx.sampleRate.
+  // There should be some non-silent output.
+  expectNoisyOutput(createAndPlayWithCycleAndDelayNodeButNullDelayTime);
+});
+
+</script>
+</pre>
+</body>
+</html>
