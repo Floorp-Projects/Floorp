@@ -38,9 +38,7 @@ DelayProcessor::Process(const double *aPerFrameDelays,
                                    0.0, static_cast<double>(mMaxDelayFrames));
 
       // Write the input sample to the correct location in our buffer
-      if (input) {
-        buffer[writeIndex] = input[i];
-      }
+      buffer[writeIndex] = input ? input[i] : 0.0f;
 
       // Now, determine the correct read position.  We adjust the read position to be
       // from currentDelayFrames frames in the past.  We also interpolate the two input
