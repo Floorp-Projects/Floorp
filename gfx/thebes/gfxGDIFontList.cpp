@@ -565,8 +565,8 @@ GDIFontFamily::FindStyleVariations()
  */
 
 gfxGDIFontList::gfxGDIFontList()
+    : mFontSubstitutes(50)
 {
-    mFontSubstitutes.Init(50);
 }
 
 static void
@@ -725,8 +725,8 @@ gfxGDIFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
     }
 
     // lookup in name lookup tables, return null if not found
-    if (!(lookup = mPostscriptNames.GetWeak(aFullname)) &&
-        !(lookup = mFullnames.GetWeak(aFullname))) 
+    if (!(lookup = mExtraNames->mPostscriptNames.GetWeak(aFullname)) &&
+        !(lookup = mExtraNames->mFullnames.GetWeak(aFullname)))
     {
         return nullptr;
     }

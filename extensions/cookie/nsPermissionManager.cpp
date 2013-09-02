@@ -371,8 +371,6 @@ nsPermissionManager::Init()
 {
   nsresult rv;
 
-  mPermissionTable.Init();
-
   mObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv)) {
     mObserverService->AddObserver(this, "profile-before-change", true);

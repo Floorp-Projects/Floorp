@@ -142,7 +142,6 @@ class nsChromeRegistryChrome : public nsChromeRegistry
     OverlayListHash() { }
     ~OverlayListHash() { }
 
-    void Init() { mTable.Init(); }
     void Add(nsIURI* aBase, nsIURI* aOverlay);
     void Clear() { mTable.Clear(); }
     const nsCOMArray<nsIURI>* GetArray(nsIURI* aBase);

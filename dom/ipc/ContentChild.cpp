@@ -1336,7 +1336,6 @@ ContentChild::RecvNotifyProcessPriorityChanged(
     NS_ENSURE_TRUE(os, true);
 
     nsRefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
-    props->Init();
     props->SetPropertyAsInt32(NS_LITERAL_STRING("priority"),
                               static_cast<int32_t>(aPriority));
 

@@ -4044,14 +4044,15 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNavHistoryResult)
 NS_INTERFACE_MAP_END
 
 nsNavHistoryResult::nsNavHistoryResult(nsNavHistoryContainerResultNode* aRoot)
-: mRootNode(aRoot)
-, mNeedsToApplySortingMode(false)
-, mIsHistoryObserver(false)
-, mIsBookmarkFolderObserver(false)
-, mIsAllBookmarksObserver(false)
-, mBatchInProgress(false)
-, mRelatedNotificationsCount(0)
-, mSuppressNotifications(false)
+  : mRootNode(aRoot)
+  , mNeedsToApplySortingMode(false)
+  , mIsHistoryObserver(false)
+  , mIsBookmarkFolderObserver(false)
+  , mIsAllBookmarksObserver(false)
+  , mBookmarkFolderObservers(128)
+  , mBatchInProgress(false)
+  , mRelatedNotificationsCount(0)
+  , mSuppressNotifications(false)
 {
   mRootNode->mResult = this;
 }
@@ -4110,8 +4111,6 @@ nsNavHistoryResult::Init(nsINavHistoryQuery** aQueries,
   mSortingMode = aOptions->SortingMode();
   rv = aOptions->GetSortingAnnotation(mSortingAnnotation);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  mBookmarkFolderObservers.Init(128);
 
   NS_ASSERTION(mRootNode->mIndentLevel == -1,
                "Root node's indent level initialized wrong");

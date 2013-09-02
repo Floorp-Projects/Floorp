@@ -1101,7 +1101,7 @@ TabChild::GetDOMWindowUtils()
   return utils.forget();
 }
 
-static nsInterfaceHashtable<nsPtrHashKey<PContentDialogChild>, nsIDialogParamBlock> gActiveDialogs;
+static nsInterfaceHashtable<nsPtrHashKey<PContentDialogChild>, nsIDialogParamBlock>* gActiveDialogs;
 
 NS_IMETHODIMP
 TabChild::OpenDialog(uint32_t aType, const nsACString& aName,
@@ -1109,8 +1109,8 @@ TabChild::OpenDialog(uint32_t aType, const nsACString& aName,
                      nsIDialogParamBlock* aArguments,
                      nsIDOMElement* aFrameElement)
 {
-  if (!gActiveDialogs.IsInitialized()) {
-    gActiveDialogs.Init();
+  if (!gActiveDialogs) {
+    gActiveDialogs = new nsInterfaceHashtable<nsPtrHashKey<PContentDialogChild>, nsIDialogParamBlock>;
   }
   InfallibleTArray<int32_t> intParams;
   InfallibleTArray<nsString> stringParams;
@@ -1118,9 +1118,9 @@ TabChild::OpenDialog(uint32_t aType, const nsACString& aName,
   PContentDialogChild* dialog =
     SendPContentDialogConstructor(aType, nsCString(aName),
                                   nsCString(aFeatures), intParams, stringParams);
-  gActiveDialogs.Put(dialog, aArguments);
+  gActiveDialogs->Put(dialog, aArguments);
   nsIThread *thread = NS_GetCurrentThread();
-  while (gActiveDialogs.GetWeak(dialog)) {
+  while (gActiveDialogs && gActiveDialogs->GetWeak(dialog)) {
     if (!NS_ProcessNextEvent(thread)) {
       break;
     }
@@ -1133,9 +1133,13 @@ ContentDialogChild::Recv__delete__(const InfallibleTArray<int>& aIntParams,
                                    const InfallibleTArray<nsString>& aStringParams)
 {
   nsCOMPtr<nsIDialogParamBlock> params;
-  if (gActiveDialogs.Get(this, getter_AddRefs(params))) {
+  if (gActiveDialogs && gActiveDialogs->Get(this, getter_AddRefs(params))) {
     TabChild::ArraysToParams(aIntParams, aStringParams, params);
-    gActiveDialogs.Remove(this);
+    gActiveDialogs->Remove(this);
+    if (gActiveDialogs->Count() == 0) {
+      delete gActiveDialogs;
+      gActiveDialogs = nullptr;
+    }
   }
   return true;
 }

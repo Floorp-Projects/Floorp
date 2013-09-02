@@ -33,9 +33,6 @@ nsSMILAnimationController::nsSMILAnimationController(nsIDocument* aDoc)
 {
   NS_ABORT_IF_FALSE(aDoc, "need a non-null document");
 
-  mAnimationElementTable.Init();
-  mChildContainerTable.Init();
-
   nsRefreshDriver* refreshDriver = GetRefreshDriver();
   if (refreshDriver) {
     mStartTime = refreshDriver->MostRecentRefresh();
@@ -381,8 +378,7 @@ nsSMILAnimationController::DoSample(bool aSkipUnchangedContainers)
   //
   // When we sample the child time containers they will simply record the sample
   // time in document time.
-  TimeContainerHashtable activeContainers;
-  activeContainers.Init(mChildContainerTable.Count());
+  TimeContainerHashtable activeContainers(mChildContainerTable.Count());
   SampleTimeContainerParams tcParams = { &activeContainers,
                                          aSkipUnchangedContainers };
   mChildContainerTable.EnumerateEntries(SampleTimeContainer, &tcParams);
@@ -409,8 +405,7 @@ nsSMILAnimationController::DoSample(bool aSkipUnchangedContainers)
 
   // Create the compositor table
   nsAutoPtr<nsSMILCompositorTable>
-    currentCompositorTable(new nsSMILCompositorTable());
-  currentCompositorTable->Init(0);
+    currentCompositorTable(new nsSMILCompositorTable(0));
 
   SampleAnimationParams saParams = { &activeContainers,
                                      currentCompositorTable };
