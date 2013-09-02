@@ -256,7 +256,8 @@ ImageClientSingle::CreateBufferTextureClient(gfx::SurfaceFormat aFormat, Texture
 TemporaryRef<BufferTextureClient>
 ImageClientSingle::CreateBufferTextureClient(gfx::SurfaceFormat aFormat)
 {
-  return CompositableClient::CreateBufferTextureClient(aFormat, mTextureFlags);
+  return CompositableClient::CreateBufferTextureClient(aFormat,
+    mTextureFlags | TEXTURE_FLAGS_DEFAULT);
 }
 
 void
