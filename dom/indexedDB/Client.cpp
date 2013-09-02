@@ -59,8 +59,7 @@ Client::InitOrigin(const nsACString& aOrigin, UsageRunnable* aUsageRunnable)
 
   nsAutoTArray<nsString, 20> subdirsToProcess;
   nsAutoTArray<nsCOMPtr<nsIFile> , 20> unknownFiles;
-  nsTHashtable<nsStringHashKey> validSubdirs;
-  validSubdirs.Init(20);
+  nsTHashtable<nsStringHashKey> validSubdirs(20);
 
   nsCOMPtr<nsISimpleEnumerator> entries;
   rv = directory->GetDirectoryEntries(getter_AddRefs(entries));

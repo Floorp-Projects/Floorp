@@ -34,7 +34,6 @@ nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aScheme,
 
   if (!gDataTable) {
     gDataTable = new nsClassHashtable<nsCStringHashKey, DataInfo>;
-    gDataTable->Init();
   }
 
   DataInfo* info = new DataInfo;

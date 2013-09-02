@@ -306,8 +306,6 @@ RDFContentSinkImpl::RDFContentSinkImpl()
         NS_RegisterStaticAtoms(rdf_atoms);
     }
 
-    mNodeIDMap.Init();
-
 #ifdef PR_LOGGING
     if (! gLog)
         gLog = PR_NewLogModule("nsRDFContentSink");

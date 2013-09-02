@@ -67,7 +67,6 @@ class FramePropertyTable {
 public:
   FramePropertyTable() : mLastFrame(nullptr), mLastEntry(nullptr)
   {
-    mEntries.Init();
   }
   ~FramePropertyTable()
   {

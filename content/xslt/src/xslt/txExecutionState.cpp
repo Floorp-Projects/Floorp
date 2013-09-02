@@ -18,8 +18,6 @@ const int32_t txExecutionState::kMaxRecursionDepth = 20000;
 
 nsresult txLoadedDocumentsHash::init(txXPathNode* aSourceDocument)
 {
-    Init(8);
-
     mSourceDocument = aSourceDocument;
     
     nsAutoString baseURI;
@@ -37,10 +35,6 @@ nsresult txLoadedDocumentsHash::init(txXPathNode* aSourceDocument)
 
 txLoadedDocumentsHash::~txLoadedDocumentsHash()
 {
-    if (!IsInitialized()) {
-        return;
-    }
-
     nsAutoString baseURI;
     txXPathNodeUtils::getBaseURI(*mSourceDocument, baseURI);
 

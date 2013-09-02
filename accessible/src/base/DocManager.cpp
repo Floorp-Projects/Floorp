@@ -38,6 +38,11 @@ using namespace mozilla::dom;
 // DocManager
 ////////////////////////////////////////////////////////////////////////////////
 
+DocManager::DocManager()
+  : mDocAccessibleCache(4)
+{
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // DocManager public
 
@@ -88,8 +93,6 @@ DocManager::IsProcessingRefreshDriverNotification() const
 bool
 DocManager::Init()
 {
-  mDocAccessibleCache.Init(4);
-
   nsCOMPtr<nsIWebProgress> progress =
     do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
 

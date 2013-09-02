@@ -347,7 +347,6 @@ public:
                         mozilla::dom::MutationCallback& aCb)
   : mOwner(aOwner), mCallback(&aCb), mWaitingForRun(false), mId(++sCount)
   {
-    mTransientReceivers.Init();
     SetIsDOMBinding();
   }
   virtual ~nsDOMMutationObserver();

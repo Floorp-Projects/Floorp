@@ -94,7 +94,7 @@ protected:
     gfxFont::Metrics          *mMetrics;
 
     // cache of glyph widths in 16.16 fixed-point pixels
-    nsDataHashtable<nsUint32HashKey,int32_t>    mGlyphWidths;
+    nsAutoPtr<nsDataHashtable<nsUint32HashKey,int32_t> > mGlyphWidths;
 
     bool mNeedsOblique;
     bool mNeedsBold;

@@ -64,7 +64,6 @@ class AutoHashtable : public nsTHashtable<EntryType>
 {
 public:
   AutoHashtable(uint32_t initSize = PL_DHASH_MIN_SIZE);
-  ~AutoHashtable();
   typedef bool (*ReflectEntryFunc)(EntryType *entry, JSContext *cx, JS::Handle<JSObject*> obj);
   bool ReflectIntoJS(ReflectEntryFunc entryFunc, JSContext *cx, JS::Handle<JSObject*> obj);
 private:
@@ -78,14 +77,8 @@ private:
 
 template<class EntryType>
 AutoHashtable<EntryType>::AutoHashtable(uint32_t initSize)
+  : nsTHashtable<EntryType>(initSize)
 {
-  this->Init(initSize);
-}
-
-template<class EntryType>
-AutoHashtable<EntryType>::~AutoHashtable()
-{
-  this->Clear();
 }
 
 template<typename EntryType>
@@ -960,7 +953,6 @@ mFailedLockCount(0)
     "webappsstore.sqlite"
   };
 
-  mTrackedDBs.Init();
   for (size_t i = 0; i < ArrayLength(trackedDBs); i++)
     mTrackedDBs.PutEntry(nsDependentCString(trackedDBs[i]));
 

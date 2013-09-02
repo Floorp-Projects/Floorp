@@ -664,7 +664,6 @@ VorbisState::GetTags()
   NS_ASSERTION(mComment.user_comments, "no vorbis comment strings!");
   NS_ASSERTION(mComment.comment_lengths, "no vorbis comment lengths!");
   tags = new MetadataTags;
-  tags->Init();
   for (int i = 0; i < mComment.comments; i++) {
     AddVorbisComment(tags, mComment.user_comments[i],
                      mComment.comment_lengths[i]);
@@ -1066,7 +1065,6 @@ MetadataTags* OpusState::GetTags()
   MetadataTags* tags;
 
   tags = new MetadataTags;
-  tags->Init();
   for (uint32_t i = 0; i < mTags.Length(); i++) {
     AddVorbisComment(tags, mTags[i].Data(), mTags[i].Length());
   }
@@ -1543,7 +1541,6 @@ bool SkeletonState::DecodeHeader(ogg_packet* aPacket)
     LOG(PR_LOG_DEBUG, ("Skeleton segment length: %lld", mLength));
 
     // Initialize the serialno-to-index map.
-    mIndex.Init();
     return true;
   } else if (IsSkeletonIndex(aPacket) && mVersion >= SKELETON_VERSION(4,0)) {
     return DecodeIndex(aPacket);
