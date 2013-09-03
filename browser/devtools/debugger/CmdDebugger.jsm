@@ -9,7 +9,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 this.EXPORTED_SYMBOLS = [ ];
 
-Cu.import("resource://gre/modules/devtools/gcli.jsm");
+let devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
+var gcli = devtools.require('gcli/index');
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
 XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",

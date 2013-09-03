@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-// define(function(require, exports, module) {
-
+'use strict';
 // <INJECTED SOURCE:START>
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
@@ -23,23 +22,29 @@
 
 var exports = {};
 
-const TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testUtil.js</p>";
+var TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testUtil.js</p>";
 
 function test() {
-  helpers.addTabWithToolbar(TEST_URI, function(options) {
-    return helpers.runTests(options, exports);
-  }).then(finish);
+  return Task.spawn(function() {
+    let options = yield helpers.openTab(TEST_URI);
+    yield helpers.openToolbar(options);
+    gcli.addItems(mockCommands.items);
+
+    yield helpers.runTests(options, exports);
+
+    gcli.removeItems(mockCommands.items);
+    yield helpers.closeToolbar(options);
+    yield helpers.closeTab(options);
+  }).then(finish, helpers.handleError);
 }
 
 // <INJECTED SOURCE:END>
 
-'use strict';
-
-var util = require('util/util');
-// var assert = require('test/assert');
+// var assert = require('../testharness/assert');
+var util = require('gcli/util/util');
 
 exports.testFindCssSelector = function(options) {
-  if (options.isPhantomjs) {
+  if (options.isPhantomjs || options.isNoDom) {
     assert.log('Skipping tests due to issues with querySelectorAll.');
     return;
   }
@@ -53,6 +58,3 @@ exports.testFindCssSelector = function(options) {
     assert.is(matches[0], nodes[i], 'non-matching selector: ' + selector);
   }
 };
-
-
-// });

@@ -69,7 +69,7 @@ BuiltinProvider.prototype = {
         "devtools/client": "resource://gre/modules/devtools/client",
         "devtools/pretty-fast": "resource://gre/modules/devtools/pretty-fast.js",
         "devtools/async-utils": "resource://gre/modules/devtools/async-utils",
-
+        "gcli": "resource://gre/modules/devtools/gcli",
         "acorn": "resource://gre/modules/devtools/acorn",
         "acorn/util/walk": "resource://gre/modules/devtools/acorn/walk.js",
 
@@ -118,6 +118,7 @@ SrcdirProvider.prototype = {
     let clientURI = this.fileURI(OS.Path.join(toolkitDir, "client"));
     let prettyFastURI = this.fileURI(OS.Path.join(toolkitDir), "pretty-fast.js");
     let asyncUtilsURI = this.fileURI(OS.Path.join(toolkitDir), "async-utils.js");
+    let gcliURI = this.fileURI(OS.Path.join(toolkitDir, "gcli"));
     let acornURI = this.fileURI(OS.Path.join(toolkitDir, "acorn"));
     let acornWalkURI = OS.Path.join(acornURI, "walk.js");
     this.loader = new loader.Loader({
@@ -140,7 +141,7 @@ SrcdirProvider.prototype = {
         "devtools/client": clientURI,
         "devtools/pretty-fast": prettyFastURI,
         "devtools/async-utils": asyncUtilsURI,
-
+        "gcli": gcliURI,
         "acorn": acornURI,
         "acorn/util/walk": acornWalkURI
       },

@@ -1,0 +1,76 @@
+
+.gcli-menu {
+  overflow: hidden;
+  font-size: 90%;
+}
+
+.gcli-menu-template {
+  column-width: 20em;
+  column-rule-style: solid;
+  column-rule-width: 1px;
+  -moz-column-width: 20em;
+  -moz-column-rule-style: solid;
+  -moz-column-rule-width: 1px;
+  -webkit-column-width: 20em;
+  -webkit-column-rule-style: solid;
+  -webkit-column-rule-width: 1px;
+  position: relative;
+  height: 5em;
+}
+
+.dark .gcli-menu-template {
+  column-rule-color: #000;
+  -moz-column-rule-color: #000;
+  -webkit-column--rule-color: #000;
+}
+
+.light .gcli-menu-template {
+  column-rule-color: #FFF;
+  -moz-column-rule-color: #FFF;
+  -webkit-column-rule-color: #FFF;
+}
+
+.gcli-menu-option {
+  overflow: hidden;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.gcli-menu-name,
+.gcli-menu-desc {
+  display: inline-block;
+  padding: 1px 3px;
+  -moz-padding-start: 8px;
+  -webkit-padding-start: 8px;
+}
+
+.gcli-menu-name {
+  width: 5em;
+}
+
+.gcli-menu-desc {
+  width: 15em;
+  color: #777;
+}
+
+.gcli-menu-option:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.gcli-menu-highlight,
+.gcli-menu-highlight.gcli-menu-option:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.gcli-menu-typed {
+  color: #FF6600;
+}
+
+.gcli-menu-more {
+  font-size: 80%;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  -moz-padding-end: 8px;
+  -webkit-padding-end: 8px;
+}

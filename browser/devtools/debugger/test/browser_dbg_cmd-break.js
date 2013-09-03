@@ -78,8 +78,7 @@ function test() {
           }
         },
         exec: {
-          output: 'Added breakpoint',
-          completed: false
+          output: 'Added breakpoint'
         }
       },
       {
@@ -94,8 +93,7 @@ function test() {
           }
         },
         exec: {
-          output: 'Added breakpoint',
-          completed: false
+          output: 'Added breakpoint'
         }
       },
       {
@@ -132,7 +130,7 @@ function test() {
           args: {
             breakpoint: {
               status: 'INCOMPLETE',
-              message: ''
+              message: 'Value required for \'breakpoint\'.'
             }
           }
         }
@@ -149,8 +147,7 @@ function test() {
           }
         },
         exec: {
-          output: 'Breakpoint removed',
-          completed: false
+          output: 'Breakpoint removed'
         }
       },
       {
@@ -180,8 +177,7 @@ function test() {
           }
         },
         exec: {
-          output: 'Breakpoint removed',
-          completed: false
+          output: 'Breakpoint removed'
         }
       },
       {

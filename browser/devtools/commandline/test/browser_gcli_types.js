@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-// define(function(require, exports, module) {
-
+'use strict';
 // <INJECTED SOURCE:START>
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
@@ -23,24 +22,33 @@
 
 var exports = {};
 
-const TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testTypes.js</p>";
+var TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testTypes.js</p>";
 
 function test() {
-  helpers.addTabWithToolbar(TEST_URI, function(options) {
-    return helpers.runTests(options, exports);
-  }).then(finish);
+  return Task.spawn(function() {
+    let options = yield helpers.openTab(TEST_URI);
+    yield helpers.openToolbar(options);
+    gcli.addItems(mockCommands.items);
+
+    yield helpers.runTests(options, exports);
+
+    gcli.removeItems(mockCommands.items);
+    yield helpers.closeToolbar(options);
+    yield helpers.closeTab(options);
+  }).then(finish, helpers.handleError);
 }
 
 // <INJECTED SOURCE:END>
 
-'use strict';
-
-// var assert = require('test/assert');
-var types = require('gcli/types');
+// var assert = require('../testharness/assert');
+var util = require('gcli/util/util');
+var promise = require('gcli/util/promise');
 var nodetype = require('gcli/types/node');
 
 exports.setup = function(options) {
-  nodetype.setDocument(options.window.document);
+  if (options.window) {
+    nodetype.setDocument(options.window.document);
+  }
 };
 
 exports.shutdown = function(options) {
@@ -48,9 +56,10 @@ exports.shutdown = function(options) {
 };
 
 function forEachType(options, typeSpec, callback) {
-  types.getTypeNames().forEach(function(name) {
+  var types = options.requisition.types;
+  return util.promiseEach(types.getTypeNames(), function(name) {
     typeSpec.name = name;
-    typeSpec.requisition = options.display.requisition;
+    typeSpec.requisition = options.requisition;
 
     // Provide some basic defaults to help selection/delegate/array work
     if (name === 'selection') {
@@ -58,33 +67,39 @@ function forEachType(options, typeSpec, callback) {
     }
     else if (name === 'delegate') {
       typeSpec.delegateType = function() {
-        return types.createType('string');
+        return 'string';
       };
     }
     else if (name === 'array') {
       typeSpec.subtype = 'string';
     }
+    else if (name === 'remote') {
+      return;
+    }
 
     var type = types.createType(typeSpec);
-    callback(type);
+    var reply = callback(type);
+    return promise.resolve(reply).then(function(value) {
+      // Clean up
+      delete typeSpec.name;
+      delete typeSpec.requisition;
+      delete typeSpec.data;
+      delete typeSpec.delegateType;
+      delete typeSpec.subtype;
 
-    // Clean up
-    delete typeSpec.name;
-    delete typeSpec.requisition;
-    delete typeSpec.data;
-    delete typeSpec.delegateType;
-    delete typeSpec.subtype;
+      return value;
+    });
   });
 }
 
 exports.testDefault = function(options) {
-  if (options.isJsdom) {
+  if (options.isNoDom) {
     assert.log('Skipping tests due to issues with resource type.');
     return;
   }
 
-  forEachType(options, {}, function(type) {
-    var context = options.display.requisition.executionContext;
+  return forEachType(options, {}, function(type) {
+    var context = options.requisition.executionContext;
     var blank = type.getBlank(context).value;
 
     // boolean and array types are exempt from needing undefined blank values
@@ -106,10 +121,12 @@ exports.testDefault = function(options) {
 };
 
 exports.testNullDefault = function(options) {
-  forEachType(options, { defaultValue: null }, function(type) {
-    assert.is(type.stringify(null, null), '', 'stringify(null) for ' + type.name);
+  var context = null; // Is this test still valid with a null context?
+
+  return forEachType(options, { defaultValue: null }, function(type) {
+    var reply = type.stringify(null, context);
+    return promise.resolve(reply).then(function(str) {
+      assert.is(str, '', 'stringify(null) for ' + type.name);
+    });
   });
 };
-
-
-// });

@@ -1,0 +1,32 @@
+
+<div>
+  <div save="${displayElement}" class="gcli-display">
+    <div save="${topElement}" class="gcli-in-top">
+      <input save="${inputElement}" class="gcli-in-input" type="text" autofocus="autofocus" spellcheck="false"/>
+      <div save="${completeElement}" class="gcli-in-complete" tabindex="-1" aria-live="polite">
+        <!-- Sub template used to show completion -->
+        <div>
+          <loop foreach="member in ${statusMarkup}">
+            <span class="${member.className}">${member.string}</span>
+          </loop>
+          <span class="gcli-in-ontab">${directTabText}</span>
+          <span class="gcli-in-todo" foreach="param in ${emptyParameters}">${param}</span>
+          <span class="gcli-in-ontab">${arrowTabText}</span>
+          <span class="gcli-in-closebrace theme-comment" if="${unclosedJs}">}</span>
+        </div>
+      </div>
+      <div save="${promptElement}" class="gcli-prompt theme-fg-color6"></div>
+    </div>
+    <div save="${panelElement}" class="gcli-panel">
+      <div save="${tooltipElement}" class="gcli-tooltip">
+        <!-- Sub template used for popup hints -->
+        <div class="gcli-tt" aria-live="polite">
+          <div save="${descriptionEle}" class="gcli-tt-description">${language.description}</div>
+          ${field.element}
+          <div save="${errorEle}" class="gcli-tt-error theme-fg-color7">${language.message}</div>
+          <div class="gcli-tt-highlight"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

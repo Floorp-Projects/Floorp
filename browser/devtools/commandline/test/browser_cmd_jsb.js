@@ -6,18 +6,17 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/commandline/" +
                  "test/browser_cmd_jsb_script.jsi";
 
-let scratchpadWin = null;
-let scratchpad = null;
-let tests = {};
-
 function test() {
-  helpers.addTabWithToolbar("about:blank", function(options) {
-    return helpers.runTests(options, tests);
-  }).then(finish);
+  return Task.spawn(testTask).then(finish, helpers.handleError);
 }
 
-tests.jsbTest = function(options) {
+function testTask() {
+  let options = yield helpers.openTab("about:blank");
+  yield helpers.openToolbar(options);
+
   let deferred = promise.defer();
+  let scratchpadWin = null;
+  let scratchpad = null;
 
   let observer = {
     onReady: function() {
@@ -77,10 +76,12 @@ tests.jsbTest = function(options) {
       setup: 'jsb ' + TEST_URI,
       // Should result in a new window, which should fire onReady (eventually)
       exec: {
-        completed: false
       }
     }
   ]);
 
-  return deferred.promise;
-};
+  yield deferred.promise;
+
+  yield helpers.closeToolbar(options);
+  yield helpers.closeTab(options);
+}
