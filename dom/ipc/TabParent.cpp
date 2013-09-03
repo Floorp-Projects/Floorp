@@ -297,12 +297,16 @@ TabParent::ActorDestroy(ActorDestroyReason why)
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (frameLoader) {
+    nsCOMPtr<Element> frameElement(mFrameElement);
     ReceiveMessage(CHILD_PROCESS_SHUTDOWN_MESSAGE, false, nullptr, nullptr);
     frameLoader->DestroyChild();
 
     if (why == AbnormalShutdown && os) {
       os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, frameLoader),
                           "oop-frameloader-crashed", nullptr);
+      nsContentUtils::DispatchTrustedEvent(frameElement->OwnerDoc(), frameElement,
+                                           NS_LITERAL_STRING("oop-browser-crashed"),
+                                           true, true);
     }
   }
 
