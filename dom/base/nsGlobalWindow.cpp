@@ -189,6 +189,8 @@
 #include "prenv.h"
 #include "prprf.h"
 
+#include "mozilla/dom/MessagePort.h"
+#include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/indexedDB/IDBFactory.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 
@@ -6750,6 +6752,7 @@ namespace {
 struct StructuredCloneInfo {
   PostMessageEvent* event;
   bool subsumes;
+  nsPIDOMWindow* window;
 };
 
 static JSObject*
@@ -6774,6 +6777,21 @@ PostMessageReadStructuredClone(JSContext* cx,
                                                     val.address(),
                                                     getter_AddRefs(wrapper)))) {
           return JSVAL_TO_OBJECT(val);
+        }
+      }
+    }
+  }
+
+  if (tag == SCTAG_DOM_MESSAGEPORT) {
+    NS_ASSERTION(!data, "Data should be empty");
+
+    MessagePort* port;
+    if (JS_ReadBytes(reader, &port, sizeof(port))) {
+      JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
+      if (global) {
+        JS::Rooted<JSObject*> obj(cx, port->WrapObject(cx, global));
+        if (JS_WrapObject(cx, obj.address())) {
+          return obj;
         }
       }
     }
@@ -6817,6 +6835,16 @@ PostMessageWriteStructuredClone(JSContext* cx,
       return JS_WriteUint32Pair(writer, scTag, 0) &&
              JS_WriteBytes(writer, &supports, sizeof(supports)) &&
              scInfo->event->StoreISupports(supports);
+  }
+
+  MessagePort* port = nullptr;
+  nsresult rv = UNWRAP_OBJECT(MessagePort, cx, obj, port);
+  if (NS_SUCCEEDED(rv) && scInfo->subsumes) {
+    nsRefPtr<MessagePort> newPort = port->Clone(scInfo->window);
+
+    return JS_WriteUint32Pair(writer, SCTAG_DOM_MESSAGEPORT, 0) &&
+           JS_WriteBytes(writer, &newPort, sizeof(newPort)) &&
+           scInfo->event->StoreISupports(newPort);
   }
 
   const JSStructuredCloneCallbacks* runtimeCallbacks =
@@ -6910,6 +6938,7 @@ PostMessageEvent::Run()
   {
     StructuredCloneInfo scInfo;
     scInfo.event = this;
+    scInfo.window = targetWindow;
 
     if (!buffer.read(cx, messageData.address(), &kPostMessageCallbacks,
                      &scInfo)) {
@@ -7056,6 +7085,7 @@ nsGlobalWindow::PostMessageMoz(const JS::Value& aMessage,
   JSAutoStructuredCloneBuffer buffer;
   StructuredCloneInfo scInfo;
   scInfo.event = event;
+  scInfo.window = this;
 
   nsIPrincipal* principal = GetPrincipal();
   if (NS_FAILED(callerPrin->Subsumes(principal, &scInfo.subsumes)))
