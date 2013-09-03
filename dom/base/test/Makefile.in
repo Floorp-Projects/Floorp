@@ -40,6 +40,7 @@ MOCHITEST_FILES = \
   test_messageChannel_start.html \
   test_messageChannel_pingpong.html \
   iframe_messageChannel_pingpong.html \
+  test_messageChannel_unshipped.html \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \
