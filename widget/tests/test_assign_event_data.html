@@ -494,6 +494,38 @@ const kTests = [
     },
     todoMismatch: [],
   },
+  { description: "nsMutationEvent (DOMAttrModified)",
+    targetID: "animated-div", eventType: "DOMAttrModified",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).setAttribute("x-data", "foo");
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsMutationEvent (DOMNodeInserted)",
+    targetID: "animated-div", eventType: "DOMNodeInserted",
+    dispatchEvent: function () {
+      var div = document.createElement("div");
+      div.id = "inserted-div";
+      document.getElementById("animated-div").appendChild(div);
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsMutationEvent (DOMNodeRemoved)",
+    targetID: "animated-div", eventType: "DOMNodeRemoved",
+    dispatchEvent: function () {
+      document.getElementById("animated-div").removeChild(document.getElementById("inserted-div"));
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
 ];
 
 function doTest(aTest)
