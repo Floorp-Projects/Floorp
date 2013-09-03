@@ -212,9 +212,7 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
      mLastAsyncScrollOffset(0, 0),
      mCurrentAsyncScrollOffset(0, 0),
      mAsyncScrollTimeoutTask(nullptr),
-     mDisableNextTouchBatch(false),
-     mHandlingTouchQueue(false),
-     mDelayPanning(false)
+     mHandlingTouchQueue(false)
 {
   MOZ_COUNT_CTOR(AsyncPanZoomController);
 
@@ -312,27 +310,10 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) 
   nsEventStatus rv = nsEventStatus_eIgnore;
 
   nsRefPtr<GestureEventListener> listener = GetGestureEventListener();
-  if (listener && !mDisableNextTouchBatch) {
+  if (listener) {
     rv = listener->HandleInputEvent(aEvent);
     if (rv == nsEventStatus_eConsumeNoDefault)
       return rv;
-  }
-
-  if (mDelayPanning && aEvent.mInputType == MULTITOUCH_INPUT) {
-    const MultiTouchInput& multiTouchInput = aEvent.AsMultiTouchInput();
-    if (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_MOVE) {
-      // Let BrowserElementScrolling perform panning gesture first.
-      SetState(WAITING_LISTENERS);
-      mTouchQueue.AppendElement(multiTouchInput);
-
-      if (!mTouchListenerTimeoutTask) {
-        mTouchListenerTimeoutTask =
-          NewRunnableMethod(this, &AsyncPanZoomController::TimeoutTouchListeners);
-
-        PostDelayedTask(mTouchListenerTimeoutTask, gTouchListenerTimeout);
-      }
-      return nsEventStatus_eConsumeNoDefault;
-    }
   }
 
   switch (aEvent.mInputType) {
@@ -416,10 +397,6 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
 }
 
 nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent) {
-  if (mDisableNextTouchBatch) {
-    return nsEventStatus_eIgnore;
-  }
-
   switch (mState) {
     case FLING:
     case NOTHING:
@@ -459,11 +436,6 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
 }
 
 nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) {
-  if (mDisableNextTouchBatch) {
-    mDisableNextTouchBatch = false;
-    return nsEventStatus_eIgnore;
-  }
-
   {
     ReentrantMonitorAutoEnter lock(mMonitor);
     SendAsyncScrollEvent();
@@ -1185,18 +1157,6 @@ void AsyncPanZoomController::UpdateCompositionBounds(const ScreenIntRect& aCompo
   }
 }
 
-void AsyncPanZoomController::CancelDefaultPanZoom() {
-  mDisableNextTouchBatch = true;
-  nsRefPtr<GestureEventListener> listener = GetGestureEventListener();
-  if (listener) {
-    listener->CancelGesture();
-  }
-}
-
-void AsyncPanZoomController::DetectScrollableSubframe() {
-  mDelayPanning = true;
-}
-
 void AsyncPanZoomController::ZoomToRect(CSSRect aRect) {
   SetState(ANIMATING_ZOOM);
 
@@ -1276,7 +1236,7 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect) {
 }
 
 void AsyncPanZoomController::ContentReceivedTouch(bool aPreventDefault) {
-  if (!mFrameMetrics.mMayHaveTouchListeners && !mDelayPanning) {
+  if (!mFrameMetrics.mMayHaveTouchListeners) {
     mTouchQueue.Clear();
     return;
   }
@@ -1288,21 +1248,12 @@ void AsyncPanZoomController::ContentReceivedTouch(bool aPreventDefault) {
 
   if (mState == WAITING_LISTENERS) {
     if (!aPreventDefault) {
-      // Delayed scrolling gesture is pending at TOUCHING state.
-      if (mDelayPanning) {
-        SetState(TOUCHING);
-      } else {
-        SetState(NOTHING);
-      }
+      SetState(NOTHING);
     }
 
     mHandlingTouchQueue = true;
 
     while (!mTouchQueue.IsEmpty()) {
-      // we need to reset mDelayPanning before handling scrolling gesture.
-      if (!aPreventDefault && mTouchQueue[0].mType == MultiTouchInput::MULTITOUCH_MOVE) {
-        mDelayPanning = false;
-      }
       if (!aPreventDefault) {
         HandleInputEvent(mTouchQueue[0]);
       }
