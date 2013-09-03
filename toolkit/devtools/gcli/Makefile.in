@@ -2,7 +2,56 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+gcli_commands_FILES = $(wildcard $(srcdir)/source/lib/gcli/commands/*)
+gcli_commands_DEST = $(FINAL_TARGET)/modules/devtools/gcli/commands
+INSTALL_TARGETS += gcli_commands
+
+gcli_connectors_FILES = $(wildcard $(srcdir)/source/lib/gcli/connectors/*)
+gcli_connectors_DEST = $(FINAL_TARGET)/modules/devtools/gcli/connectors
+INSTALL_TARGETS += gcli_connectors
+
+gcli_converters_FILES = $(wildcard $(srcdir)/source/lib/gcli/converters/*)
+gcli_converters_DEST = $(FINAL_TARGET)/modules/devtools/gcli/converters
+INSTALL_TARGETS += gcli_converters
+
+gcli_fields_FILES = $(wildcard $(srcdir)/source/lib/gcli/fields/*)
+gcli_fields_DEST = $(FINAL_TARGET)/modules/devtools/gcli/fields
+INSTALL_TARGETS += gcli_fields
+
+gcli_languages_FILES = $(wildcard $(srcdir)/source/lib/gcli/languages/*)
+gcli_languages_DEST = $(FINAL_TARGET)/modules/devtools/gcli/languages
+INSTALL_TARGETS += gcli_languages
+
+gcli_mozui_FILES = $(wildcard $(srcdir)/source/mozilla/gcli/mozui/*)
+gcli_mozui_DEST = $(FINAL_TARGET)/modules/devtools/gcli/mozui
+INSTALL_TARGETS += gcli_mozui
+
+gcli_types_FILES = $(wildcard $(srcdir)/source/lib/gcli/types/*)
+gcli_types_DEST = $(FINAL_TARGET)/modules/devtools/gcli/types
+INSTALL_TARGETS += gcli_types
+
 include $(topsrcdir)/config/rules.mk
 
 libs::
-	$(NSINSTALL) $(srcdir)/*.jsm $(FINAL_TARGET)/modules/devtools
+	$(INSTALL) $(IFLAGS1) $(srcdir)/*.jsm $(FINAL_TARGET)/modules/devtools
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/mozilla/gcli/util/domtemplate.js $(FINAL_TARGET)/modules/devtools/gcli/util
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/lib/gcli/util/fileparser.js $(FINAL_TARGET)/modules/devtools/gcli/util
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/mozilla/gcli/util/filesystem.js $(FINAL_TARGET)/modules/devtools/gcli/util
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/mozilla/gcli/util/host.js $(FINAL_TARGET)/modules/devtools/gcli/util
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/mozilla/gcli/util/l10n.js $(FINAL_TARGET)/modules/devtools/gcli/util
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/lib/gcli/util/legacy.js $(FINAL_TARGET)/modules/devtools/gcli/util
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/lib/gcli/util/prism.js $(FINAL_TARGET)/modules/devtools/gcli/util
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/mozilla/gcli/util/promise.js $(FINAL_TARGET)/modules/devtools/gcli/util
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/lib/gcli/util/spell.js $(FINAL_TARGET)/modules/devtools/gcli/util
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/lib/gcli/util/util.js $(FINAL_TARGET)/modules/devtools/gcli/util
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/lib/gcli/ui/focus.js $(FINAL_TARGET)/modules/devtools/gcli/ui
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/lib/gcli/ui/history.js $(FINAL_TARGET)/modules/devtools/gcli/ui
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/lib/gcli/ui/intro.js $(FINAL_TARGET)/modules/devtools/gcli/ui
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/lib/gcli/ui/menu.js $(FINAL_TARGET)/modules/devtools/gcli/ui
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/lib/gcli/ui/menu.css $(FINAL_TARGET)/modules/devtools/gcli/ui
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/lib/gcli/ui/view.js $(FINAL_TARGET)/modules/devtools/gcli/ui
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/mozilla/gcli/ui/menu.html $(FINAL_TARGET)/modules/devtools/gcli/ui
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/lib/gcli/api.js $(FINAL_TARGET)/modules/devtools/gcli
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/lib/gcli/cli.js $(FINAL_TARGET)/modules/devtools/gcli
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/mozilla/gcli/index.js $(FINAL_TARGET)/modules/devtools/gcli
+	$(INSTALL) $(IFLAGS1) $(srcdir)/source/mozilla/gcli/settings.js $(FINAL_TARGET)/modules/devtools/gcli

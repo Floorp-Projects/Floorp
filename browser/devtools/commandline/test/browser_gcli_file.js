@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-// define(function(require, exports, module) {
-
+'use strict';
 // <INJECTED SOURCE:START>
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
@@ -23,40 +22,35 @@
 
 var exports = {};
 
-const TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testFile.js</p>";
+var TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testFile.js</p>";
 
 function test() {
-  helpers.addTabWithToolbar(TEST_URI, function(options) {
-    return helpers.runTests(options, exports);
-  }).then(finish);
+  return Task.spawn(function() {
+    let options = yield helpers.openTab(TEST_URI);
+    yield helpers.openToolbar(options);
+    gcli.addItems(mockCommands.items);
+
+    yield helpers.runTests(options, exports);
+
+    gcli.removeItems(mockCommands.items);
+    yield helpers.closeToolbar(options);
+    yield helpers.closeTab(options);
+  }).then(finish, helpers.handleError);
 }
 
 // <INJECTED SOURCE:END>
 
-'use strict';
-
-// var helpers = require('gclitest/helpers');
-// var mockCommands = require('gclitest/mockCommands');
-
-exports.setup = function(options) {
-  mockCommands.setup();
-};
-
-exports.shutdown = function(options) {
-  mockCommands.shutdown();
-};
+// var helpers = require('./helpers');
 
 var local = false;
 
 exports.testBasic = function(options) {
-  var isPhantomjsFromFilesystem = (!options.isHttp && options.isPhantomjs);
   return helpers.audit(options, [
     {
       // These tests require us to be using node directly or to be in
-      // phantomjs connected to an allowexec enabled node server or to be in
-      // firefox. In short they only don't work when in phantomjs reading
-      // from the filesystem, but they do work in Firefox
-      skipRemainingIf: isPhantomjsFromFilesystem || options.isFirefox,
+      // PhantomJS connected to an execute enabled node server or to be in
+      // firefox.
+      skipRemainingIf: options.isPhantomjs || options.isFirefox,
       setup:    'tsfile open /',
       check: {
         input:  'tsfile open /',
@@ -843,6 +837,3 @@ exports.testFirefoxBasic = function(options) {
     }
   ]);
 };
-
-
-// });

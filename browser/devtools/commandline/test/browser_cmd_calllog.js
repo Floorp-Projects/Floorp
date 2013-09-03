@@ -8,9 +8,15 @@ const TEST_URI = "data:text/html;charset=utf-8,gcli-calllog";
 let tests = {};
 
 function test() {
-  helpers.addTabWithToolbar(TEST_URI, function(options) {
-    return helpers.runTests(options, tests);
-  }).then(finish);
+  return Task.spawn(function() {
+    let options = yield helpers.openTab(TEST_URI);
+    yield helpers.openToolbar(options);
+
+    yield helpers.runTests(options, tests);
+
+    yield helpers.closeToolbar(options);
+    yield helpers.closeTab(options);
+  }).then(finish, helpers.handleError);
 }
 
 tests.testCallLogStatus = function(options) {
@@ -97,8 +103,9 @@ tests.testCallLogExec = function(options) {
         // This test wants to be in a different event
         var deferred = promise.defer();
         executeSoon(function() {
-          helpers.setInput(options, "calllog start");
-          deferred.resolve();
+          helpers.setInput(options, "calllog start").then(() => {
+            deferred.resolve();
+          });
         });
         return deferred.promise;
       },
