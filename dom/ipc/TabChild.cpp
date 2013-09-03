@@ -554,15 +554,14 @@ TabChild::HandlePossibleViewportChange()
 
   nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
 
-  nsViewportInfo viewportInfo =
-    nsContentUtils::GetViewportInfo(document, mInnerSize.width, mInnerSize.height);
+  nsViewportInfo viewportInfo = nsContentUtils::GetViewportInfo(document, mInnerSize);
   SendUpdateZoomConstraints(viewportInfo.IsZoomAllowed(),
                             viewportInfo.GetMinZoom(),
                             viewportInfo.GetMaxZoom());
 
   float screenW = mInnerSize.width;
   float screenH = mInnerSize.height;
-  CSSSize viewport(viewportInfo.GetWidth(), viewportInfo.GetHeight());
+  CSSSize viewport(viewportInfo.GetSize());
 
   // We're not being displayed in any way; don't bother doing anything because
   // that will just confuse future adjustments.
