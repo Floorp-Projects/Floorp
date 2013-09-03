@@ -1838,6 +1838,14 @@ public:
   }
 
   nsCOMPtr<nsIAtom> command;
+
+  // XXX Not tested by test_assign_event_data.html
+  void AssignCommandEventData(const nsCommandEvent& aEvent, bool aCopyTargets)
+  {
+    AssignGUIEventData(aEvent, aCopyTargets);
+
+    // command must have been initialized with the constructor.
+  }
 };
 
 /**
