@@ -102,8 +102,52 @@ function test() {
     let [width, height] = extractSizeFromString(instance.menulist.firstChild.firstChild.getAttribute("label"));
     is(width, expectedWidth, "Label updated (width).");
     is(height, expectedHeight, "Label updated (height).");
+    testCustom2();
+  }
+
+  function testCustom2() {
+    let initialWidth = content.innerWidth;
+    let initialHeight = content.innerHeight;
+
+    let x = 2, y = 2;
+    EventUtils.synthesizeMouse(instance.resizer, x, y, {type: "mousedown"}, window);
+    x += 23; y += 13;
+    EventUtils.synthesizeMouse(instance.resizer, x, y, {type: "mousemove", shiftKey: true}, window);
+    EventUtils.synthesizeMouse(instance.resizer, x, y, {type: "mouseup"}, window);
+
+    let expectedWidth = initialWidth + 20;
+    let expectedHeight = initialHeight + 10;
+    is(content.innerWidth, expectedWidth, "with shift: Size correcty updated (width).");
+    is(content.innerHeight, expectedHeight, "with shift: Size correcty updated (height).");
+    is(instance.menulist.selectedIndex, 0, "with shift: Custom menuitem selected");
+    let [width, height] = extractSizeFromString(instance.menulist.firstChild.firstChild.getAttribute("label"));
+    is(width, expectedWidth, "Label updated (width).");
+    is(height, expectedHeight, "Label updated (height).");
+    testCustom3();
+  }
+
+  function testCustom3() {
+    let initialWidth = content.innerWidth;
+    let initialHeight = content.innerHeight;
+
+    let x = 2, y = 2;
+    EventUtils.synthesizeMouse(instance.resizer, x, y, {type: "mousedown"}, window);
+    x += 60; y += 30;
+    EventUtils.synthesizeMouse(instance.resizer, x, y, {type: "mousemove", ctrlKey: true}, window);
+    EventUtils.synthesizeMouse(instance.resizer, x, y, {type: "mouseup"}, window);
+
+    let expectedWidth = initialWidth + 10;
+    let expectedHeight = initialHeight + 5;
+    is(content.innerWidth, expectedWidth, "with ctrl: Size correcty updated (width).");
+    is(content.innerHeight, expectedHeight, "with ctrl: Size correcty updated (height).");
+    is(instance.menulist.selectedIndex, 0, "with ctrl: Custom menuitem selected");
+    let [width, height] = extractSizeFromString(instance.menulist.firstChild.firstChild.getAttribute("label"));
+    is(width, expectedWidth, "Label updated (width).");
+    is(height, expectedHeight, "Label updated (height).");
+
     rotate();
   }
+
 
   function rotate() {
     let initialWidth = content.innerWidth;
