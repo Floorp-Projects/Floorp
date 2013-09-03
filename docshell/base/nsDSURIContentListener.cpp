@@ -7,7 +7,6 @@
 #include "nsDSURIContentListener.h"
 #include "nsIChannel.h"
 #include "nsServiceManagerUtils.h"
-#include "nsXPIDLString.h"
 #include "nsDocShellCID.h"
 #include "nsIWebNavigationInfo.h"
 #include "nsIDocument.h"
@@ -18,9 +17,9 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsError.h"
 #include "nsCharSeparatedTokenizer.h"
-#include "mozilla/Preferences.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
+#include "nsDocShellLoadTypes.h"
 
 using namespace mozilla;
 

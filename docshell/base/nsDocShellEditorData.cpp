@@ -5,12 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-#include "nsIComponentManager.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsIDOMWindow.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIDOMDocument.h"
 #include "nsDocShellEditorData.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsComponentManagerUtils.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMDocument.h"
+#include "nsIEditor.h"
+#include "nsIEditingSession.h"
+#include "nsIDocShell.h"
 
 /*---------------------------------------------------------------------------
 
