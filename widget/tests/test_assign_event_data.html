@@ -380,6 +380,17 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
+  { description: "nsCommandEvent",
+    targetID: "input-text", eventType: "",
+    dispatchEvent: function () {
+      return;
+    },
+    canRun: function () {
+      todo(false, "nsCommandEvent isn't tested");
+      return false;
+    },
+    todoMismatch: [],
+  },
 ];
 
 function doTest(aTest)
