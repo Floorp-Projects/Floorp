@@ -3982,7 +3982,7 @@ bool
 nsDocShell::IsPrintingOrPP(bool aDisplayErrorDialog)
 {
   if (mIsPrintingOrPP && aDisplayErrorDialog) {
-    DisplayLoadError(NS_ERROR_DOCUMENT_IS_PRINTMODE, nullptr, nullptr);
+    DisplayLoadError(NS_ERROR_DOCUMENT_IS_PRINTMODE, nullptr, nullptr, nullptr);
   }
 
   return mIsPrintingOrPP;
@@ -4138,7 +4138,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
     // what happens
 
     if (NS_ERROR_MALFORMED_URI == rv) {
-        DisplayLoadError(rv, uri, aURI);
+        DisplayLoadError(rv, uri, aURI, nullptr);
     }
 
     if (NS_FAILED(rv) || !uri)
@@ -4353,6 +4353,15 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
                                            bucketId);
 
         cssClass.AssignLiteral("blacklist");
+    } else if (NS_ERROR_CONTENT_CRASHED == aError) {
+      errorPage.AssignLiteral("tabcrashed");
+      error.AssignLiteral("tabcrashed");
+
+      nsCOMPtr<EventTarget> handler = mChromeEventHandler;
+      if (handler) {
+        nsCOMPtr<Element> element = do_QueryInterface(handler);
+        element->GetAttribute(NS_LITERAL_STRING("crashedPageTitle"), messageStr);
+      }
     }
     else {
         // Errors requiring simple formatting
