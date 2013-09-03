@@ -10,6 +10,9 @@ Cu.import("resource://gre/modules/Services.jsm");
  * JS modules
  */
 
+XPCOMUtils.defineLazyModuleGetter(this , "FormHistory",
+                                  "resource://gre/modules/FormHistory.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
