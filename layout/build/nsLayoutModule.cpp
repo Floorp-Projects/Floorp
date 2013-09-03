@@ -54,11 +54,11 @@
 #include "nsIMessageManager.h"
 
 // Transformiix stuff
-#include "nsXPathEvaluator.h"
+#include "mozilla/dom/XPathEvaluator.h"
 #include "txMozillaXSLTProcessor.h"
 #include "txNodeSetAdaptor.h"
 
-#include "nsDOMParser.h"
+#include "mozilla/dom/DOMParser.h"
 #include "nsDOMSerializer.h"
 #include "nsXMLHttpRequest.h"
 #include "nsChannelPolicy.h"
@@ -262,7 +262,7 @@ using mozilla::dom::time::TimeService;
 
 // Factory Constructor
 NS_GENERIC_FACTORY_CONSTRUCTOR(txMozillaXSLTProcessor)
-NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(nsXPathEvaluator, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(XPathEvaluator)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(txNodeSetAdaptor, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsXMLHttpRequest, Init)
@@ -275,7 +275,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMediaStreamProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMediaSourceProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontTableProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHostObjectURI)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
+NS_GENERIC_FACTORY_CONSTRUCTOR(DOMParser)
 NS_GENERIC_FACTORY_CONSTRUCTOR(DOMSessionStorageManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(DOMLocalStorageManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChannelPolicy)
@@ -1019,7 +1019,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_VIDEODOCUMENT_CID, false, NULL, CreateVideoDocument },
   { &kNS_STYLESHEETSERVICE_CID, false, NULL, nsStyleSheetServiceConstructor },
   { &kTRANSFORMIIX_XSLT_PROCESSOR_CID, false, NULL, txMozillaXSLTProcessorConstructor },
-  { &kTRANSFORMIIX_XPATH_EVALUATOR_CID, false, NULL, nsXPathEvaluatorConstructor },
+  { &kTRANSFORMIIX_XPATH_EVALUATOR_CID, false, NULL, XPathEvaluatorConstructor },
   { &kTRANSFORMIIX_NODESET_CID, false, NULL, txNodeSetAdaptorConstructor },
   { &kNS_XMLSERIALIZER_CID, false, NULL, nsDOMSerializerConstructor },
   { &kNS_FILEREADER_CID, false, NULL, nsDOMFileReaderConstructor },
@@ -1032,7 +1032,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_XMLHTTPREQUEST_CID, false, NULL, nsXMLHttpRequestConstructor },
   { &kNS_EVENTSOURCE_CID, false, NULL, EventSourceConstructor },
   { &kNS_DOMACTIVITY_CID, false, NULL, ActivityConstructor },
-  { &kNS_DOMPARSER_CID, false, NULL, nsDOMParserConstructor },
+  { &kNS_DOMPARSER_CID, false, NULL, DOMParserConstructor },
   { &kNS_DOMSESSIONSTORAGEMANAGER_CID, false, NULL, DOMSessionStorageManagerConstructor },
   { &kNS_DOMLOCALSTORAGEMANAGER_CID, false, NULL, DOMLocalStorageManagerConstructor },
   { &kNS_DOMJSON_CID, false, NULL, NS_NewJSON },

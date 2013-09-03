@@ -3,16 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsCOMPtr.h"
-#include "nsFrame.h"
+#include "nsMathMLmoFrame.h"
 #include "nsPresContext.h"
-#include "nsStyleContext.h"
-#include "nsStyleConsts.h"
 #include "nsRenderingContext.h"
 #include "nsContentUtils.h"
 #include "nsFrameSelection.h"
-
-#include "nsMathMLmoFrame.h"
+#include "nsMathMLElement.h"
 #include <algorithm>
 
 //

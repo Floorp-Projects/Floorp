@@ -9,7 +9,7 @@
 
 #include "mozilla/FloatingPoint.h"
 
-#include "jsapi.h"
+#include "NamespaceImports.h"
 
 #include "vm/NumericConversions.h"
 
@@ -41,8 +41,6 @@ extern const char js_isNaN_str[];
 extern const char js_isFinite_str[];
 extern const char js_parseFloat_str[];
 extern const char js_parseInt_str[];
-
-class JSString;
 
 /*
  * When base == 10, this function implements ToString() as specified by

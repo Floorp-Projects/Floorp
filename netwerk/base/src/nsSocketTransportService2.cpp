@@ -1051,10 +1051,14 @@ nsSocketTransportService::DiscoverMaxCount()
     return PR_SUCCESS;
 }
 
+
+// Used to return connection info to Dashboard.cpp
 void
 nsSocketTransportService::AnalyzeConnection(nsTArray<SocketInfo> *data,
         struct SocketContext *context, bool aActive)
 {
+    if (context->mHandler->mIsPrivate)
+        return;
     PRFileDesc *aFD = context->mFD;
     bool tcp = (PR_GetDescType(aFD) == PR_DESC_SOCKET_TCP);
 

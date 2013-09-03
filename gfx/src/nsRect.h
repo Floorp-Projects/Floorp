@@ -7,17 +7,20 @@
 #ifndef NSRECT_H
 #define NSRECT_H
 
-#include <stdio.h>
-#include "nsCoord.h"
-#include "nsPoint.h"
-#include "nsSize.h"
-#include "nsMargin.h"
-#include "gfxCore.h"
-#include "nsTraceRefcnt.h"
-#include "mozilla/gfx/BaseRect.h"
-#include "mozilla/Likely.h"
-#include <climits>
-#include <algorithm>
+#include <stdio.h>                      // for FILE
+#include <sys/types.h>                  // for int32_t, int64_t
+#include <algorithm>                    // for max, min
+#include <climits>                      // for INT_MAX
+#include "gfxCore.h"                    // for NS_GFX
+#include "mozilla/Likely.h"             // for MOZ_UNLIKELY
+#include "mozilla/gfx/BaseRect.h"       // for BaseRect
+#include "nsCoord.h"                    // for nscoord, etc
+#include "nsDebug.h"                    // for NS_WARNING
+#include "nsMargin.h"                   // for nsMargin, etc
+#include "nsPoint.h"                    // for nsIntPoint, nsPoint
+#include "nsSize.h"                     // for nsIntSize, nsSize
+#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "nscore.h"                     // for NS_BUILD_REFCNT_LOGGING
 
 struct nsIntRect;
 

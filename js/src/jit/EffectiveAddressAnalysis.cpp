@@ -32,7 +32,7 @@ AnalyzeLsh(MBasicBlock *block, MLsh *lsh)
     MInstruction *last = lsh;
     MDefinition *base = NULL;
     while (true) {
-        if (last->useCount() != 1)
+        if (!last->hasOneUse())
             break;
 
         MUseIterator use = last->usesBegin();
@@ -61,7 +61,7 @@ AnalyzeLsh(MBasicBlock *block, MLsh *lsh)
         if (displacement % elemSize != 0)
             return;
 
-        if (last->useCount() != 1)
+        if (!last->hasOneUse())
             return;
 
         MUseIterator use = last->usesBegin();

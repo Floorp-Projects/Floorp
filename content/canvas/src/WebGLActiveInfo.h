@@ -9,12 +9,7 @@
 #include "WebGLTypes.h"
 #include "nsISupports.h"
 #include "nsString.h"
-
-struct JSContext;
-class JSObject;
-namespace JS {
-template <typename T> class Handle;
-}
+#include "js/TypeDecls.h"
 
 namespace mozilla {
 

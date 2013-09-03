@@ -102,8 +102,52 @@ function test() {
     let [width, height] = extractSizeFromString(instance.menulist.firstChild.firstChild.getAttribute("label"));
     is(width, expectedWidth, "Label updated (width).");
     is(height, expectedHeight, "Label updated (height).");
+    testCustom2();
+  }
+
+  function testCustom2() {
+    let initialWidth = content.innerWidth;
+    let initialHeight = content.innerHeight;
+
+    let x = 2, y = 2;
+    EventUtils.synthesizeMouse(instance.resizer, x, y, {type: "mousedown"}, window);
+    x += 23; y += 13;
+    EventUtils.synthesizeMouse(instance.resizer, x, y, {type: "mousemove", shiftKey: true}, window);
+    EventUtils.synthesizeMouse(instance.resizer, x, y, {type: "mouseup"}, window);
+
+    let expectedWidth = initialWidth + 20;
+    let expectedHeight = initialHeight + 10;
+    is(content.innerWidth, expectedWidth, "with shift: Size correcty updated (width).");
+    is(content.innerHeight, expectedHeight, "with shift: Size correcty updated (height).");
+    is(instance.menulist.selectedIndex, 0, "with shift: Custom menuitem selected");
+    let [width, height] = extractSizeFromString(instance.menulist.firstChild.firstChild.getAttribute("label"));
+    is(width, expectedWidth, "Label updated (width).");
+    is(height, expectedHeight, "Label updated (height).");
+    testCustom3();
+  }
+
+  function testCustom3() {
+    let initialWidth = content.innerWidth;
+    let initialHeight = content.innerHeight;
+
+    let x = 2, y = 2;
+    EventUtils.synthesizeMouse(instance.resizer, x, y, {type: "mousedown"}, window);
+    x += 60; y += 30;
+    EventUtils.synthesizeMouse(instance.resizer, x, y, {type: "mousemove", ctrlKey: true}, window);
+    EventUtils.synthesizeMouse(instance.resizer, x, y, {type: "mouseup"}, window);
+
+    let expectedWidth = initialWidth + 10;
+    let expectedHeight = initialHeight + 5;
+    is(content.innerWidth, expectedWidth, "with ctrl: Size correcty updated (width).");
+    is(content.innerHeight, expectedHeight, "with ctrl: Size correcty updated (height).");
+    is(instance.menulist.selectedIndex, 0, "with ctrl: Custom menuitem selected");
+    let [width, height] = extractSizeFromString(instance.menulist.firstChild.firstChild.getAttribute("label"));
+    is(width, expectedWidth, "Label updated (width).");
+    is(height, expectedHeight, "Label updated (height).");
+
     rotate();
   }
+
 
   function rotate() {
     let initialWidth = content.innerWidth;
@@ -153,8 +197,36 @@ function test() {
     is(content.innerWidth, widthBeforeClose, "width restored.");
     is(content.innerHeight, heightBeforeClose, "height restored.");
 
-    mgr.once("off", function() {executeSoon(finishUp)});
+    mgr.once("off", function() {executeSoon(testScreenshot)});
     EventUtils.synthesizeKey("VK_ESCAPE", {});
+  }
+
+  function testScreenshot() {
+    let isWinXP = navigator.userAgent.indexOf("Windows NT 5.1") != -1;
+    if (isWinXP) {
+      // We have issues testing this on Windows XP.
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=848760#c17
+      return finishUp();
+    }
+
+    info("screenshot");
+    instance.screenshot("responsiveui");
+    let FileUtils = (Cu.import("resource://gre/modules/FileUtils.jsm", {})).FileUtils;
+
+    // while(1) until we find the file.
+    // no need for a timeout, the test will get killed anyway.
+    info("checking if file exists in 200ms");
+    function checkIfFileExist() {
+      let file = FileUtils.getFile("DfltDwnld", [ "responsiveui.png" ]);
+      if (file.exists()) {
+        ok(true, "Screenshot file exists");
+        file.remove(false);
+        finishUp();
+      } else {
+        setTimeout(checkIfFileExist, 200);
+      }
+    }
+    checkIfFileExist();
   }
 
   function finishUp() {

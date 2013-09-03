@@ -11,16 +11,24 @@
               android:paddingLeft="50dp"
               android:paddingRight="50dp">
 
+    <!-- Empty spacer view -->
+    <View android:layout_width="fill_parent"
+          android:layout_height="0dip"
+          android:layout_weight="1"/>
+
     <ImageView android:id="@+id/home_empty_image"
                android:layout_width="wrap_content"
                android:layout_height="wrap_content"
-               android:paddingBottom="15dp"/>
+               android:gravity="top|center"
+               android:scaleType="center"
+               android:paddingBottom="10dp"/>
 
     <TextView android:id="@+id/home_empty_text"
               android:layout_width="fill_parent"
-              android:layout_height="wrap_content"
-              android:gravity="center"
-              android:textAppearance="@style/TextAppearance.EmptyMessage"/>
+              android:layout_height="0dip"
+              android:gravity="top|center"
+              android:textAppearance="@style/TextAppearance.EmptyMessage"
+              android:layout_weight="3"/>
 
 </LinearLayout>
 

@@ -24,6 +24,7 @@
 #include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
+using namespace JS;
 using namespace js;
 
 namespace xpc {

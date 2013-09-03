@@ -85,7 +85,7 @@ function test() {
     // We're still in the loop of initializing the responsive mode.
     // Let's wait next loop to stop it.
     executeSoon(function() {
-      EventUtils.synthesizeKey("VK_ESCAPE", {});
+      instance.close();
     });
   }
 
@@ -135,7 +135,7 @@ function test() {
 
     // We're still in the loop of initializing the responsive mode.
     // Let's wait next loop to stop it.
-    executeSoon(() => EventUtils.synthesizeKey("VK_ESCAPE", {}));
+    executeSoon(() => instance.close());
   }
 
   function restartAgain() {

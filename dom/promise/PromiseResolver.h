@@ -12,8 +12,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
-
-struct JSContext;
+#include "js/TypeDecls.h"
 
 namespace mozilla {
 namespace dom {

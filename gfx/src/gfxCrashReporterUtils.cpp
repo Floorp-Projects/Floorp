@@ -10,15 +10,25 @@
 #endif
 
 #ifdef MOZ_GFXFEATUREREPORTER
-#include "nsExceptionHandler.h"
-#include "nsString.h"
-#include "nsTArray.h"
-#include "nsIObserverService.h"
-#include "nsIObserver.h"
-#include "nsAutoPtr.h"
-#include "nsServiceManagerUtils.h"
-#include "mozilla/Services.h"
-#include "nsThreadUtils.h"
+#include "gfxCrashReporterUtils.h"
+#include <string.h>                     // for strcmp
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
+#include "mozilla/Services.h"           // for GetObserverService
+#include "mozilla/mozalloc.h"           // for operator new, etc
+#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "nsCOMPtr.h"                   // for nsCOMPtr
+#include "nsError.h"                    // for NS_OK, NS_FAILED, nsresult
+#include "nsExceptionHandler.h"         // for AppendAppNotesToCrashReport
+#include "nsID.h"
+#include "nsIEventTarget.h"             // for NS_DISPATCH_NORMAL
+#include "nsIObserver.h"                // for nsIObserver, etc
+#include "nsIObserverService.h"         // for nsIObserverService
+#include "nsIRunnable.h"                // for nsIRunnable
+#include "nsISupports.h"
+#include "nsStringGlue.h"               // for nsAutoCString, nsCString, etc
+#include "nsTArray.h"                   // for nsTArray
+#include "nsThreadUtils.h"              // for NS_DispatchToMainThread, etc
+#include "nscore.h"                     // for NS_IMETHOD, NS_IMETHODIMP, etc
 
 namespace mozilla {
 

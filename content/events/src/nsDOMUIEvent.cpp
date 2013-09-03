@@ -348,7 +348,7 @@ nsDOMUIEvent::IsChar() const
     case NS_KEY_EVENT:
       return static_cast<nsKeyEvent*>(mEvent)->isChar;
     case NS_TEXT_EVENT:
-      return static_cast<nsKeyEvent*>(mEvent)->isChar;
+      return static_cast<nsTextEvent*>(mEvent)->isChar;
     default:
       return false;
   }
@@ -460,6 +460,9 @@ nsDOMUIEvent::ComputeModifierState(const nsAString& aModifiersList)
 bool
 nsDOMUIEvent::GetModifierStateInternal(const nsAString& aKey)
 {
+  if (!NS_IS_INPUT_EVENT(mEvent)) {
+    MOZ_CRASH("mEvent must be nsInputEvent or derived class");
+  }
   nsInputEvent* inputEvent = static_cast<nsInputEvent*>(mEvent);
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SHIFT)) {
     return inputEvent->IsShift();
