@@ -16,49 +16,52 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
 </pre>
   <script type="application/javascript">
 
-  var a = new MessageChannel();
-  ok(a, "MessageChannel created");
+  function start() {
+    var a = new MessageChannel();
+    ok(a, "MessageChannel created");
 
-  window.addEventListener('message', receiveMessage, false);
-  function receiveMessage(evt) {
-    if (evt.data.status == 'READY') {
-      runTest();
-    } else {
-      ok(false, "Unknown message");
+    window.addEventListener('message', receiveMessage, false);
+    function receiveMessage(evt) {
+      if (evt.data.status == 'READY') {
+        runTest();
+      } else {
+        ok(false, "Unknown message");
+      }
+    }
+
+    var div = document.getElementById("content");
+    ok(div, "Parent exists");
+
+    var ifr = document.createElement("iframe");
+    ifr.addEventListener("load", iframeLoaded, false);
+    ifr.setAttribute('src', "iframe_messageChannel_post.html");
+    div.appendChild(ifr);
+
+    function iframeLoaded() {
+      ifr.contentWindow.postMessage({ port: a.port2 }, '*');
+    }
+
+    a.port1.addEventListener('message', receivePortMessage, false);
+    function receivePortMessage(evt) {
+      is(evt.data.ab.byteLength, size, "The size is: " + size + " == " + ab.byteLength);
+      SimpleTest.finish();
+    }
+
+    // Start() is not implicity invoked when addEventListener is used.
+    a.port1.start();
+
+    var size = 1024 * 1024 * 32;
+    var ab = new ArrayBuffer(size);
+    is(ab.byteLength, size, "The size is: " + size + " == " + ab.byteLength);
+
+    function runTest() {
+      a.port1.postMessage({ab: ab, cb: ab}, [ab]);
+      ok(ab.byteLength == 0, "PostMessage - The size is: 0 == " + ab.byteLength)
     }
   }
 
-  var div = document.getElementById("content");
-  ok(div, "Parent exists");
-
-  var ifr = document.createElement("iframe");
-  ifr.addEventListener("load", iframeLoaded, false);
-  ifr.setAttribute('src', "iframe_messageChannel_post.html");
-  div.appendChild(ifr);
-
-  function iframeLoaded() {
-    ifr.contentWindow.postMessage({ port: a.port2 }, '*');
-  }
-
-  a.port1.addEventListener('message', receivePortMessage, false);
-  function receivePortMessage(evt) {
-    is(evt.data.ab.byteLength, size, "The size is: " + size + " == " + ab.byteLength);
-    SimpleTest.finish();
-  }
-
-  // Start() is not implicity invoked when addEventListener is used.
-  a.port1.start();
-
-  var size = 1024 * 1024 * 32;
-  var ab = new ArrayBuffer(size);
-  is(ab.byteLength, size, "The size is: " + size + " == " + ab.byteLength);
-
-  function runTest() {
-    a.port1.postMessage({ab: ab, cb: ab}, [ab]);
-    ok(ab.byteLength == 0, "PostMessage - The size is: 0 == " + ab.byteLength)
-  }
-
   SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [["dom.messageChannel.enabled", true]]}, start);
   </script>
 </body>
 </html>

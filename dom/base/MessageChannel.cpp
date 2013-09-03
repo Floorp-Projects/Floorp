@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MessageChannel.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/dom/MessageChannelBinding.h"
 #include "mozilla/dom/MessagePort.h"
 #include "nsContentUtils.h"
@@ -20,6 +21,24 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MessageChannel)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
+
+namespace {
+  bool gPrefInitialized = false;
+  bool gPrefEnabled = false;
+
+}
+
+
+/* static */ bool
+MessageChannel::PrefEnabled()
+{
+  if (!gPrefInitialized) {
+    Preferences::AddBoolVarCache(&gPrefEnabled, "dom.messageChannel.enabled");
+    gPrefInitialized = true;
+  }
+
+  return gPrefEnabled;
+}
 
 MessageChannel::MessageChannel(nsPIDOMWindow* aWindow)
   : mWindow(aWindow)
