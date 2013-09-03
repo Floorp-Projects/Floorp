@@ -751,9 +751,7 @@ public:
   nsRadioGroupStruct* GetRadioGroup(const nsAString& aName) const;
   nsRadioGroupStruct* GetOrCreateRadioGroup(const nsAString& aName);
 
-  virtual nsViewportInfo GetViewportInfo(uint32_t aDisplayWidth,
-                                         uint32_t aDisplayHeight) MOZ_OVERRIDE;
-
+  virtual nsViewportInfo GetViewportInfo(const mozilla::ScreenIntSize& aDisplaySize) MOZ_OVERRIDE;
 
 private:
   nsRadioGroupStruct* GetRadioGroupInternal(const nsAString& aName) const;
@@ -1415,7 +1413,7 @@ private:
   mozilla::LayoutDeviceToScreenScale mScaleFloat;
   mozilla::CSSToLayoutDeviceScale mPixelRatio;
   bool mAutoSize, mAllowZoom, mValidScaleFloat, mValidMaxScale, mScaleStrEmpty, mWidthStrEmpty;
-  uint32_t mViewportWidth, mViewportHeight;
+  mozilla::CSSIntSize mViewportSize;
 
   nsrefcnt mStackRefCnt;
   bool mNeedsReleaseAfterStackRefCntRelease;
