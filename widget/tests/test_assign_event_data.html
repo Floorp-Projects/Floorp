@@ -415,6 +415,26 @@ const kTests = [
     },
     todoMismatch: [],
   },
+  { description: "nsFocusEvent (focus)",
+    targetID: "input-text", eventType: "focus",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).focus();
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsFocusEvent (blur)",
+    targetID: "input-text", eventType: "blur",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).blur();
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
 ];
 
 function doTest(aTest)
