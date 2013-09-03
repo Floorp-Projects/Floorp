@@ -1427,6 +1427,15 @@ public:
 
   int32_t               delta;
   bool                  isHorizontal;
+
+  void AssignMouseScrollEventData(const nsMouseScrollEvent& aEvent,
+                                  bool aCopyTargets)
+  {
+    AssignMouseEventBaseData(aEvent, aCopyTargets);
+
+    delta = aEvent.delta;
+    isHorizontal = aEvent.isHorizontal;
+  }
 };
 
 /**
