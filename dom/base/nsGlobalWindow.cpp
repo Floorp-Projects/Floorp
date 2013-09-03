@@ -189,6 +189,7 @@
 #include "prenv.h"
 #include "prprf.h"
 
+#include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/indexedDB/IDBFactory.h"
@@ -6782,7 +6783,7 @@ PostMessageReadStructuredClone(JSContext* cx,
     }
   }
 
-  if (tag == SCTAG_DOM_MESSAGEPORT) {
+  if (MessageChannel::PrefEnabled() && tag == SCTAG_DOM_MESSAGEPORT) {
     NS_ASSERTION(!data, "Data should be empty");
 
     MessagePort* port;
@@ -6837,14 +6838,16 @@ PostMessageWriteStructuredClone(JSContext* cx,
              scInfo->event->StoreISupports(supports);
   }
 
-  MessagePort* port = nullptr;
-  nsresult rv = UNWRAP_OBJECT(MessagePort, cx, obj, port);
-  if (NS_SUCCEEDED(rv) && scInfo->subsumes) {
-    nsRefPtr<MessagePort> newPort = port->Clone(scInfo->window);
+  if (MessageChannel::PrefEnabled()) {
+    MessagePort* port = nullptr;
+    nsresult rv = UNWRAP_OBJECT(MessagePort, cx, obj, port);
+    if (NS_SUCCEEDED(rv) && scInfo->subsumes) {
+      nsRefPtr<MessagePort> newPort = port->Clone(scInfo->window);
 
-    return JS_WriteUint32Pair(writer, SCTAG_DOM_MESSAGEPORT, 0) &&
-           JS_WriteBytes(writer, &newPort, sizeof(newPort)) &&
-           scInfo->event->StoreISupports(newPort);
+      return JS_WriteUint32Pair(writer, SCTAG_DOM_MESSAGEPORT, 0) &&
+             JS_WriteBytes(writer, &newPort, sizeof(newPort)) &&
+             scInfo->event->StoreISupports(newPort);
+    }
   }
 
   const JSStructuredCloneCallbacks* runtimeCallbacks =
