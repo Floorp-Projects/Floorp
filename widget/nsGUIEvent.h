@@ -75,7 +75,6 @@ enum nsEventStructType {
   NS_SELECTION_EVENT,                // nsSelectionEvent
 
   // Scroll related events
-  NS_SCROLLBAR_EVENT,                // nsScrollbarEvent
   NS_SCROLLPORT_EVENT,               // nsScrollPortEvent
   NS_SCROLLAREA_EVENT,               // nsScrollAreaEvent
 
@@ -782,23 +781,6 @@ public:
     errorMsg = nullptr;
     fileName = nullptr;
   }
-};
-
-/**
- * Scrollbar event
- */
-
-class nsScrollbarEvent : public nsGUIEvent
-{
-public:
-  nsScrollbarEvent(bool isTrusted, uint32_t msg, nsIWidget *w)
-    : nsGUIEvent(isTrusted, msg, w, NS_SCROLLBAR_EVENT),
-      position(0)
-  {
-  }
-
-  /// ranges between scrollbar 0 and (maxRange - thumbSize). See nsIScrollbar
-  uint32_t        position; 
 };
 
 class nsScrollPortEvent : public nsGUIEvent
