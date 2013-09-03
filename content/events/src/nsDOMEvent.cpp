@@ -576,7 +576,7 @@ nsDOMEvent::DuplicatePrivateData()
     {
       nsTextEvent* oldTextEvent = static_cast<nsTextEvent*>(mEvent);
       nsTextEvent* textEvent = new nsTextEvent(false, msg, nullptr);
-      textEvent->AssignGUIEventData(*oldTextEvent, true);
+      textEvent->AssignTextEventData(*oldTextEvent, true);
       newEvent = textEvent;
       break;
     }

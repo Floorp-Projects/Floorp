@@ -1331,7 +1331,7 @@ struct nsTextRange
 
 typedef nsTextRange* nsTextRangeArray;
 
-class nsTextEvent : public nsInputEvent
+class nsTextEvent : public nsGUIEvent
 {
 private:
   friend class mozilla::dom::PBrowserParent;
@@ -1347,7 +1347,7 @@ public:
 
 public:
   nsTextEvent(bool isTrusted, uint32_t msg, nsIWidget *w)
-    : nsInputEvent(isTrusted, msg, w, NS_TEXT_EVENT),
+    : nsGUIEvent(isTrusted, msg, w, NS_TEXT_EVENT),
       rangeCount(0), rangeArray(nullptr), isChar(false)
   {
   }
@@ -1359,6 +1359,16 @@ public:
   // array.
   nsTextRangeArray  rangeArray;
   bool              isChar;
+
+  void AssignTextEventData(const nsTextEvent& aEvent, bool aCopyTargets)
+  {
+    AssignGUIEventData(aEvent, aCopyTargets);
+
+    isChar = aEvent.isChar;
+
+    // Currently, we don't need to copy the other members because they are
+    // for internal use only (not available from JS).
+  }
 };
 
 class nsCompositionEvent : public nsGUIEvent
@@ -1924,10 +1934,10 @@ enum nsDragDropEventStatus {
        (((evnt)->eventStructType == NS_INPUT_EVENT) || \
         ((evnt)->eventStructType == NS_MOUSE_EVENT) || \
         ((evnt)->eventStructType == NS_KEY_EVENT) || \
-        ((evnt)->eventStructType == NS_TEXT_EVENT) || \
         ((evnt)->eventStructType == NS_TOUCH_EVENT) || \
         ((evnt)->eventStructType == NS_DRAG_EVENT) || \
         ((evnt)->eventStructType == NS_MOUSE_SCROLL_EVENT) || \
+        ((evnt)->eventStructType == NS_WHEEL_EVENT) || \
         ((evnt)->eventStructType == NS_SIMPLE_GESTURE_EVENT))
 
 #define NS_IS_MOUSE_EVENT(evnt) \

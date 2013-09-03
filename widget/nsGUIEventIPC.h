@@ -338,7 +338,7 @@ struct ParamTraits<nsTextEvent>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<nsInputEvent>(aParam));
+    WriteParam(aMsg, static_cast<nsGUIEvent>(aParam));
     WriteParam(aMsg, aParam.seqno);
     WriteParam(aMsg, aParam.theText);
     WriteParam(aMsg, aParam.isChar);
@@ -349,7 +349,7 @@ struct ParamTraits<nsTextEvent>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    if (!ReadParam(aMsg, aIter, static_cast<nsInputEvent*>(aResult)) ||
+    if (!ReadParam(aMsg, aIter, static_cast<nsGUIEvent*>(aResult)) ||
         !ReadParam(aMsg, aIter, &aResult->seqno) ||
         !ReadParam(aMsg, aIter, &aResult->theText) ||
         !ReadParam(aMsg, aIter, &aResult->isChar) ||
