@@ -447,6 +447,7 @@ ifdef MOZ_B2G_RIL
 webidl_files += \
   CallsList.webidl \
   MozStkCommandEvent.webidl \
+  MozVoicemail.webidl \
   Telephony.webidl \
   TelephonyCall.webidl \
   TelephonyCallGroup.webidl \

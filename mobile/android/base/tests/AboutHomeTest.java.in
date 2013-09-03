@@ -107,7 +107,7 @@ abstract class AboutHomeTest extends BaseTest {
      * This method uses the predefined tags in HomePager.
      */
     protected final ListView findListViewWithTag(String tag) {
-        for (ListView listView : mSolo.getCurrentListViews()) {
+        for (ListView listView : mSolo.getCurrentViews(ListView.class)) {
             final String listTag = (String) listView.getTag();
             if (TextUtils.isEmpty(listTag)) {
                 continue;
