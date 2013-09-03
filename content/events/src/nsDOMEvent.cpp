@@ -587,8 +587,7 @@ nsDOMEvent::DuplicatePrivateData()
       nsScriptErrorEvent* oldScriptErrorEvent =
         static_cast<nsScriptErrorEvent*>(mEvent);
       nsScriptErrorEvent* scriptErrorEvent = new nsScriptErrorEvent(false, msg);
-      scriptErrorEvent->AssignEventData(*oldScriptErrorEvent, true);
-      scriptErrorEvent->lineNr = oldScriptErrorEvent->lineNr;
+      scriptErrorEvent->AssignScriptErrorEventData(*oldScriptErrorEvent, true);
       newEvent = scriptErrorEvent;
       break;
     }

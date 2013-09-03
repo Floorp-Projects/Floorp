@@ -49,6 +49,17 @@ const NATIVE_CONTROL_RIGHT = 0x0800;
 const NATIVE_META_RIGHT    = 0x8000;
 
 const kTests = [
+  { description: "nsScriptErrorEvent",
+    targetID: "input-text", eventType: "error",
+    dispatchEvent: function () {
+      return;
+    },
+    canRun: function () {
+      todo(false, "nsScriptErrorEvent isn't tested");
+      return false;
+    },
+    todoMismatch: [],
+  },
   { description: "nsKeyEvent (keydown of 'a' key without modifiers)",
     targetID: "input-text", eventType: "keydown",
     dispatchEvent: function () {
