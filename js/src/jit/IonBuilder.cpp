@@ -3929,16 +3929,21 @@ IonBuilder::makeInliningDecision(JSFunction *target, CallInfo &callInfo)
         return false;
     }
 
-    // Caller must be... somewhat hot.
+    // Caller must be... somewhat hot. Ignore use counts when inlining for
+    // the definite properties analysis, as the caller has not run yet.
     uint32_t callerUses = script()->getUseCount();
-    if (callerUses < js_IonOptions.usesBeforeInlining()) {
+    if (callerUses < js_IonOptions.usesBeforeInlining() &&
+        info().executionMode() != DefinitePropertiesAnalysis)
+    {
         IonSpew(IonSpew_Inlining, "%s:%d - Vetoed: caller is insufficiently hot.",
                                   targetScript->filename(), targetScript->lineno);
         return false;
     }
 
     // Callee must be hot relative to the caller.
-    if (targetScript->getUseCount() * js_IonOptions.inlineUseCountRatio < callerUses) {
+    if (targetScript->getUseCount() * js_IonOptions.inlineUseCountRatio < callerUses &&
+        info().executionMode() != DefinitePropertiesAnalysis)
+    {
         IonSpew(IonSpew_Inlining, "%s:%d - Vetoed: callee is not hot.",
                                   targetScript->filename(), targetScript->lineno);
         return false;
@@ -4803,7 +4808,7 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
 
     // When this script isn't inlined, use MApplyArgs,
     // to copy the arguments from the stack and call the function
-    if (inliningDepth_ == 0) {
+    if (inliningDepth_ == 0 && info().executionMode() != DefinitePropertiesAnalysis) {
 
         // Vp
         MPassArg *passVp = current->pop()->toPassArg();
@@ -4841,7 +4846,9 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
 
     // When inlining we have the arguments the function gets called with
     // and can optimize even more, by just calling the functions with the args.
-    JS_ASSERT(inliningDepth_ > 0);
+    // We also try this path when doing the definite properties analysis, as we
+    // can inline the apply() target and don't care about the actual arguments
+    // that were passed in.
 
     CallInfo callInfo(cx, false);
 
@@ -4853,8 +4860,10 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
 
     // Arguments
     Vector<MDefinition *> args(cx);
-    if (!args.append(inlineCallInfo_->argv().begin(), inlineCallInfo_->argv().end()))
-        return false;
+    if (inliningDepth_) {
+        if (!args.append(inlineCallInfo_->argv().begin(), inlineCallInfo_->argv().end()))
+            return false;
+    }
     callInfo.setArgs(&args);
 
     // This
@@ -5570,6 +5579,7 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
     // forkjoin.cpp for more information.
     switch (info().executionMode()) {
       case SequentialExecution:
+      case DefinitePropertiesAnalysis:
         break;
       case ParallelExecution:
         needsBarrier = false;
@@ -8019,11 +8029,22 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
     if (!getPropTryArgumentsLength(&emitted) || emitted)
         return emitted;
 
+    bool barrier = PropertyReadNeedsTypeBarrier(cx, current->peek(-1), name, types);
+
     // Try to hardcode known constants.
     if (!getPropTryConstant(&emitted, id, types) || emitted)
         return emitted;
 
-    bool barrier = PropertyReadNeedsTypeBarrier(cx, current->peek(-1), name, types);
+    // Except when loading constants above, always use a call if we are doing
+    // the definite properties analysis and not actually emitting code, to
+    // simplify later analysis.
+    if (info().executionMode() == DefinitePropertiesAnalysis) {
+        MDefinition *obj = current->pop();
+        MCallGetProperty *call = MCallGetProperty::New(obj, name);
+        current->add(call);
+        current->push(call);
+        return resumeAfter(call);
+    }
 
     // Try to emit loads from definite slots.
     if (!getPropTryDefiniteSlot(&emitted, name, barrier, types) || emitted)
@@ -8369,6 +8390,15 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
 
     RootedId id(cx, NameToId(name));
     bool emitted = false;
+
+    // Always use a call if we are doing the definite properties analysis and
+    // not actually emitting code, to simplify later analysis.
+    if (info().executionMode() == DefinitePropertiesAnalysis) {
+        MInstruction *ins = MCallSetProperty::New(obj, value, name, script()->strict);
+        current->add(ins);
+        current->push(value);
+        return resumeAfter(ins);
+    }
 
     // Add post barrier if needed.
     if (NeedsPostBarrier(info(), value))
@@ -8755,6 +8785,15 @@ IonBuilder::jsop_this()
         // This is safe, because if the entry type of |this| is an object, it
         // will necessarily be an object throughout the entire function. OSR
         // can introduce a phi, but this phi will be specialized.
+        current->pushSlot(info().thisSlot());
+        return true;
+    }
+
+    // If we are doing a definite properties analysis, we don't yet know the
+    // |this| type as its type object is being created right now. Instead of
+    // bailing out just push the |this| slot, as this code won't actually
+    // execute and it does not matter whether |this| is primitive.
+    if (info().executionMode() == DefinitePropertiesAnalysis) {
         current->pushSlot(info().thisSlot());
         return true;
     }

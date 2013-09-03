@@ -183,11 +183,7 @@ class AsmJSModule
             ionCodeOffset_ = off;
         }
     };
-#ifdef JS_CPU_ARM
     typedef int32_t (*CodePtr)(uint64_t *args, uint8_t *global);
-#else
-    typedef int32_t (*CodePtr)(uint64_t *args);
-#endif
 
     typedef Vector<AsmJSCoercion, 0, SystemAllocPolicy> ArgCoercionVector;
 
