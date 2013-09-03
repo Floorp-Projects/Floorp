@@ -1317,7 +1317,7 @@
           <![CDATA[
             let isRemote = aBrowser.getAttribute("remote") == "true";
             if (isRemote == aRemote)
-              return;
+              return false;
 
             // Unhook our progress listener.
             let tab = this._getTabForBrowser(aBrowser);
@@ -1338,6 +1338,8 @@
               tab.setAttribute("remote", "true");
             else
               tab.removeAttribute("remote");
+
+            return true;
           ]]>
         </body>
       </method>
