@@ -818,6 +818,14 @@ public:
   }
 
   nsRect mArea;
+
+  void AssignScrollAreaEventData(const nsScrollAreaEvent& aEvent,
+                                 bool aCopyTargets)
+  {
+    AssignGUIEventData(aEvent, aCopyTargets);
+
+    mArea = aEvent.mArea;
+  }
 };
 
 class nsInputEvent : public nsGUIEvent

@@ -83,6 +83,28 @@ const kTests = [
     },
     todoMismatch: [],
   },
+  { description: "nsScrollAreaEvent (MozScrolledAreaChanged, spreading)",
+    target: function () { return document; }, eventType: "MozScrolledAreaChanged",
+    dispatchEvent: function () {
+      document.getElementById("scrollable-div").style.width = "50000px";
+      document.getElementById("scrollable-div").style.height = "50000px";
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsScrollAreaEvent (MozScrolledAreaChanged, shrinking)",
+    target: function () { return document; }, eventType: "MozScrolledAreaChanged",
+    dispatchEvent: function () {
+      document.getElementById("scrollable-div").style.width = "30px";
+      document.getElementById("scrollable-div").style.height = "30px";
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
   { description: "nsKeyEvent (keydown of 'a' key without modifiers)",
     targetID: "input-text", eventType: "keydown",
     dispatchEvent: function () {
@@ -195,7 +217,7 @@ function doTest(aTest)
   }
   gEvent = null;
   gCopiedEvent = [];
-  var target = document.getElementById(aTest.targetID);
+  var target = aTest.target ? aTest.target() : document.getElementById(aTest.targetID);
   target.addEventListener(aTest.eventType, onEvent, true);
   gCallback = function () {
     target.removeEventListener(aTest.eventType, onEvent, true);
