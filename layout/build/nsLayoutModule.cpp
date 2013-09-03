@@ -125,11 +125,6 @@ using mozilla::dom::gonk::AudioManager;
 using mozilla::system::nsVolumeService;
 #endif
 
-#ifdef MOZ_B2G_FM
-#include "FMRadio.h"
-using mozilla::dom::fm::FMRadio;
-#endif
-
 #include "AudioChannelAgent.h"
 using mozilla::dom::AudioChannelAgent;
 
@@ -301,10 +296,6 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSynthVoiceRegistry,
 
 #ifdef MOZ_WIDGET_GONK
 NS_GENERIC_FACTORY_CONSTRUCTOR(AudioManager)
-#endif
-
-#ifdef MOZ_B2G_FM
-NS_GENERIC_FACTORY_CONSTRUCTOR(FMRadio)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(AudioChannelAgent)
@@ -761,10 +752,6 @@ NS_DEFINE_NAMED_CID(NS_AUDIOMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_VOLUMESERVICE_CID);
 #endif
 
-#ifdef MOZ_B2G_FM
-NS_DEFINE_NAMED_CID(NS_FMRADIO_CID);
-#endif
-
 NS_DEFINE_NAMED_CID(NS_AUDIOCHANNELAGENT_CID);
 
 NS_DEFINE_NAMED_CID(NS_HTMLEDITOR_CID);
@@ -1050,9 +1037,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_AUDIOMANAGER_CID, true, NULL, AudioManagerConstructor },
   { &kNS_VOLUMESERVICE_CID, true, NULL, nsVolumeServiceConstructor },
 #endif
-#ifdef MOZ_B2G_FM
-  { &kNS_FMRADIO_CID, true, NULL, FMRadioConstructor },
-#endif
   { &kNS_AUDIOCHANNELAGENT_CID, true, NULL, AudioChannelAgentConstructor },
   { &kNS_HTMLEDITOR_CID, false, NULL, nsHTMLEditorConstructor },
   { &kNS_EDITORCONTROLLER_CID, false, NULL, nsEditorControllerConstructor },
@@ -1207,9 +1191,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 #ifdef MOZ_WIDGET_GONK
   { NS_AUDIOMANAGER_CONTRACTID, &kNS_AUDIOMANAGER_CID },
   { NS_VOLUMESERVICE_CONTRACTID, &kNS_VOLUMESERVICE_CID },
-#endif
-#ifdef MOZ_B2G_FM
-  { NS_FMRADIO_CONTRACTID, &kNS_FMRADIO_CID },
 #endif
   { NS_AUDIOCHANNELAGENT_CONTRACTID, &kNS_AUDIOCHANNELAGENT_CID },
   { "@mozilla.org/editor/htmleditor;1", &kNS_HTMLEDITOR_CID },

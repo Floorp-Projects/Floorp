@@ -172,9 +172,6 @@
 @BINPATH@/components/dom_cellbroadcast.xpt
 @BINPATH@/components/dom_wappush.xpt
 #endif
-#ifdef MOZ_B2G_FM
-@BINPATH@/components/dom_fm.xpt
-#endif
 #ifdef MOZ_B2G_BT
 @BINPATH@/components/dom_bluetooth.xpt
 #endif
@@ -474,10 +471,6 @@
 @BINPATH@/components/NetworkStatsManager.manifest
 @BINPATH@/components/NetworkInterfaceListService.manifest
 @BINPATH@/components/NetworkInterfaceListService.js
-#endif
-#ifdef MOZ_B2G_FM
-@BINPATH@/components/DOMFMRadioChild.js
-@BINPATH@/components/DOMFMRadio.manifest
 #endif
 #ifdef MOZ_ENABLE_DBUS
 @BINPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@
