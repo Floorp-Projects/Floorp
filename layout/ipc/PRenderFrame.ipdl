@@ -45,9 +45,6 @@ parent:
 
     async NotifyCompositorTransaction();
 
-    async CancelDefaultPanZoom();
-    async DetectScrollableSubframe();
-
     async UpdateHitRegion(nsRegion aRegion);
 
     async __delete__();
