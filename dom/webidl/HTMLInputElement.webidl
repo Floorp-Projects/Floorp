@@ -33,6 +33,8 @@ interface HTMLInputElement : HTMLElement {
   readonly attribute HTMLFormElement? form;
   [Pure]
   readonly attribute FileList? files;
+  [Throws, Pref="dom.input.dirpicker"]
+  void openDirectoryPicker();
   [Pure, SetterThrows]
            attribute DOMString formAction;
   [Pure, SetterThrows]

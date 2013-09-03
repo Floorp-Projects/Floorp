@@ -317,6 +317,12 @@ struct CompileError {
     }
     ~CompileError();
     void throwError(JSContext *cx);
+
+  private:
+    // CompileError owns raw allocated memory, so disable assignment and copying
+    // for safety.
+    void operator=(const CompileError &) MOZ_DELETE;
+    CompileError(const CompileError &) MOZ_DELETE;
 };
 
 // Ideally, tokenizing would be entirely independent of context.  But the

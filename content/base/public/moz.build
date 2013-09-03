@@ -61,7 +61,6 @@ EXPORTS += [
     'nsINodeList.h',
     'nsIScriptElement.h',
     'nsIStyleSheetLinkingElement.h',
-    'nsIXPathEvaluatorInternal.h',
     'nsLineBreaker.h',
     'nsReferencedElement.h',
     'nsTreeSanitizer.h',

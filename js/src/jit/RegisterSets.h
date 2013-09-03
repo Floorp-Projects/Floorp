@@ -163,6 +163,15 @@ class TypedOrValueRegister
         return *data.value.addr();
     }
 
+    const AnyRegister &dataTyped() const {
+        JS_ASSERT(hasTyped());
+        return *data.typed.addr();
+    }
+    const ValueOperand &dataValue() const {
+        JS_ASSERT(hasValue());
+        return *data.value.addr();
+    }
+
   public:
 
     TypedOrValueRegister()
@@ -193,11 +202,11 @@ class TypedOrValueRegister
         return type() == MIRType_Value;
     }
 
-    AnyRegister typedReg() {
+    AnyRegister typedReg() const {
         return dataTyped();
     }
 
-    ValueOperand valueReg() {
+    ValueOperand valueReg() const {
         return dataValue();
     }
 

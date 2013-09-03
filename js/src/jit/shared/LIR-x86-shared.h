@@ -157,20 +157,16 @@ class LModPowTwoI : public LInstructionHelper<1,1,0>
 };
 
 // Double raised to a half power.
-class LPowHalfD : public LInstructionHelper<1, 1, 1>
+class LPowHalfD : public LInstructionHelper<1, 1, 0>
 {
   public:
     LIR_HEADER(PowHalfD)
-    LPowHalfD(const LAllocation &input, const LDefinition &temp) {
+    LPowHalfD(const LAllocation &input) {
         setOperand(0, input);
-        setTemp(0, temp);
     }
 
     const LAllocation *input() {
         return getOperand(0);
-    }
-    const LDefinition *temp() {
-        return getTemp(0);
     }
     const LDefinition *output() {
         return getDef(0);

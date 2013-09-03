@@ -3,18 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsINameSpaceManager.h"
 #include "nsMathMLFrame.h"
+#include "nsINameSpaceManager.h"
 #include "nsMathMLChar.h"
 #include "nsCSSPseudoElements.h"
+#include "nsMathMLElement.h"
 
 // used to map attributes into CSS rules
 #include "nsStyleSet.h"
 #include "nsAutoPtr.h"
 #include "nsDisplayList.h"
 #include "nsRenderingContext.h"
-#include "nsContentUtils.h"
-#include "nsIScriptError.h"
 
 eMathMLFrameType
 nsMathMLFrame::GetMathMLFrameType()

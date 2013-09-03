@@ -4,6 +4,7 @@
 
 #include "CSFLog.h"
 
+#include "base/histogram.h"
 #include "CallControlManager.h"
 #include "CC_Device.h"
 #include "CC_Call.h"
@@ -19,6 +20,8 @@
 #include "runnable_utils.h"
 #include "cpr_socket.h"
 #include "debug-psipcc-types.h"
+
+#include "mozilla/Telemetry.h"
 
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
@@ -232,6 +235,11 @@ nsresult PeerConnectionCtx::Initialize() {
   ccAppReadyToStart = 1;
   PR_NotifyAllCondVar(ccAppReadyToStartCond);
   PR_Unlock(ccAppReadyToStartLock);
+
+  mConnectionCounter = 0;
+#ifdef MOZILLA_INTERNAL_API
+  Telemetry::GetHistogramById(Telemetry::WEBRTC_CALL_COUNT)->Add(0);
+#endif
 
   return NS_OK;
 }

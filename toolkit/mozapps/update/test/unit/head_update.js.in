@@ -318,6 +318,7 @@ if (APP_BIN_NAME == "xulrunner") {
  * Nulls out the most commonly used global vars used by tests as appropriate.
  */
 function cleanUp() {
+  logTestInfo("start - general test cleanup");
   removeUpdateDirsAndFiles();
 
   // Force the update manager to reload the update data to prevent it from
@@ -348,6 +349,7 @@ function cleanUp() {
   }
 
   gTestserver = null;
+  logTestInfo("finish - general test cleanup");
 }
 
 /**
@@ -1562,14 +1564,41 @@ function removeCallbackCopy() {
       appBinCopy.remove(false);
     }
     catch (e) {
-      logTestInfo("non-fatal error removing file during cleanup (will try " +
-                  "again). File: " + appBinCopy.path + " Exception: " + e);
+      logTestInfo("non-fatal error removing file after test finished (will " +
+                  "try again). File: " + appBinCopy.path + " Exception: " + e);
       do_timeout(TEST_HELPER_TIMEOUT, removeCallbackCopy);
       return;
     }
   }
-  // Use a timeout to give any files that were in use additional 
-  // time to close.  Same as updater.exe without service tests.
+  logTestInfo("attempting removal of the updater binary");
+  removeUpdater();
+}
+
+
+/**
+ * Helper function for updater tests that removes the updater binary before
+ * ending the test so the updater binary isn't in use during test cleanup.
+ */
+function removeUpdater() {
+  if (IS_WIN) {
+    // Remove the copy of the application executable used for the test on
+    // Windows if it exists.
+    let updater = getUpdatesDir();
+    updater.append("0");
+    updater.append(UPDATER_BIN_FILE);
+    if (updater.exists()) {
+      try {
+        updater.remove(false);
+      }
+      catch (e) {
+        logTestInfo("non-fatal error removing file after test finished (will " +
+                    "try again). File: " + updater.path + " Exception: " + e);
+        do_timeout(TEST_HELPER_TIMEOUT, removeUpdater);
+        return;
+      }
+    }
+  }
+  logTestInfo("calling do_test_finished");
   do_test_finished();
 }
 
@@ -2113,8 +2142,10 @@ function adjustPathsOnWindows() {
   let ds = Services.dirsvc.QueryInterface(AUS_Ci.nsIDirectoryService);
   ds.QueryInterface(AUS_Ci.nsIProperties).undefine(NS_GRE_DIR);
   ds.registerProvider(dirProvider);
-  do_register_cleanup(function() {
+  do_register_cleanup(function APOW_cleanup() {
+    logTestInfo("start - unregistering directory provider");
     ds.unregisterProvider(dirProvider);
+    logTestInfo("finish - unregistering directory provider");
   });
   logTestInfo("finish - setup new process directory");
 }

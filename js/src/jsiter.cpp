@@ -1166,6 +1166,8 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
     return true;
 }
 
+namespace {
+
 class SingleStringPredicate {
     Handle<JSFlatString*> str;
 public:
@@ -1174,6 +1176,8 @@ public:
     bool operator()(JSFlatString *str) { return EqualStrings(str, this->str); }
     bool matchesAtMostOne() { return true; }
 };
+
+} /* anonymous namespace */
 
 bool
 js_SuppressDeletedProperty(JSContext *cx, HandleObject obj, jsid id)
@@ -1193,6 +1197,8 @@ js_SuppressDeletedElement(JSContext *cx, HandleObject obj, uint32_t index)
     return js_SuppressDeletedProperty(cx, obj, id);
 }
 
+namespace {
+
 class IndexRangePredicate {
     uint32_t begin, end;
 
@@ -1206,6 +1212,8 @@ class IndexRangePredicate {
 
     bool matchesAtMostOne() { return false; }
 };
+
+} /* anonymous namespace */
 
 bool
 js_SuppressDeletedElements(JSContext *cx, HandleObject obj, uint32_t begin, uint32_t end)

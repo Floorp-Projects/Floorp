@@ -10,6 +10,10 @@ ifndef topsrcdir
 $(error topsrcdir was not set))
 endif
 
+ifndef INCLUDED_MOZCONFIG_MK
+include $(topsrcdir)/config/makefiles/mozconfig.mk
+endif
+
 # Integrate with mozbuild-generated make files. We first verify that no
 # variables provided by the automatically generated .mk files are
 # present. If they are, this is a violation of the separation of

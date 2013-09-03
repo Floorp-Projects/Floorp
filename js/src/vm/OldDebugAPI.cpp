@@ -1004,6 +1004,8 @@ JS::FreeStackDescription(JSContext *cx, JS::StackDescription *desc)
     js_delete(desc);
 }
 
+namespace {
+
 class AutoPropertyDescArray
 {
     JSContext *cx_;
@@ -1031,6 +1033,8 @@ class AutoPropertyDescArray
         return &descArray_;
     }
 };
+
+} /* anonymous namespace */
 
 static const char *
 FormatValue(JSContext *cx, const Value &vArg, JSAutoByteString &bytes)

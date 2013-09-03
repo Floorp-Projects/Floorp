@@ -776,7 +776,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
 
   nsRefPtr<nsXBLBinding> baseBinding;
   if (baseBindingURI) {
-    nsCOMPtr<nsIContent> child = protoBinding->GetBindingElement();
+    nsIContent* child = protoBinding->GetBindingElement();
     rv = GetBinding(aBoundElement, baseBindingURI, aPeekOnly,
                     child->NodePrincipal(), aIsReady,
                     getter_AddRefs(baseBinding), aDontExtendURIs);
