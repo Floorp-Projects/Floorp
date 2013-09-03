@@ -28,6 +28,8 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MessageChannel)
 
+  static bool PrefEnabled();
+
 public:
   MessageChannel(nsPIDOMWindow* aWindow);
 
