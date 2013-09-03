@@ -12,6 +12,7 @@
 <div id="display">
   <input id="input-text">
   <button id="button">button</button>
+  <div id="scrollable-div" style="overflow: auto; width: 30px; height: 30px;"><div id="scrolled-div" style="width: 10px; height: 10px;"></div></div>
 </div>
 <div id="content" style="display: none">
 </div>
@@ -28,6 +29,7 @@ const kIsWin = (navigator.platform.indexOf("Win") == 0);
 
 var gEvent = null;
 var gCopiedEvent = [];
+var gCallback = null;
 
 function onEvent(aEvent)
 {
@@ -39,6 +41,7 @@ function onEvent(aEvent)
       gCopiedEvent.push({ name: attr, value: aEvent[attr]});
     }
   }
+  setTimeout(gCallback, 0);
 }
 
 const WIN_KL_US = 0x409;
@@ -57,6 +60,26 @@ const kTests = [
     canRun: function () {
       todo(false, "nsScriptErrorEvent isn't tested");
       return false;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsScrollPortEvent (overflow, vertical)",
+    targetID: "scrollable-div", eventType: "overflow",
+    dispatchEvent: function () {
+      document.getElementById("scrolled-div").style.height = "500px";
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsScrollPortEvent (overflow, horizontal)",
+    targetID: "scrollable-div", eventType: "overflow",
+    dispatchEvent: function () {
+      document.getElementById("scrolled-div").style.width = "500px";
+    },
+    canRun: function () {
+      return true;
     },
     todoMismatch: [],
   },
@@ -174,7 +197,7 @@ function doTest(aTest)
   gCopiedEvent = [];
   var target = document.getElementById(aTest.targetID);
   target.addEventListener(aTest.eventType, onEvent, true);
-  setTimeout(function () {
+  gCallback = function () {
     target.removeEventListener(aTest.eventType, onEvent, true);
     ok(gEvent !== null, aTest.description + ": failed to get duplicated event");
     ok(gCopiedEvent.length > 0, aTest.description + ": count of attribute of the event must be larger than 0");
@@ -193,7 +216,7 @@ function doTest(aTest)
       }
     }
     runNextTest();
-  }, 0);
+  };
   aTest.dispatchEvent();
 }
 

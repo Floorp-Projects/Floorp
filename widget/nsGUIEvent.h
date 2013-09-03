@@ -799,6 +799,14 @@ public:
   }
 
   orientType orient;
+
+  void AssignScrollPortEventData(const nsScrollPortEvent& aEvent,
+                                 bool aCopyTargets)
+  {
+    AssignGUIEventData(aEvent, aCopyTargets);
+
+    orient = aEvent.orient;
+  }
 };
 
 class nsScrollAreaEvent : public nsGUIEvent
