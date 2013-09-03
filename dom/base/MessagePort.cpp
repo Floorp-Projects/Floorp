@@ -22,8 +22,35 @@
 namespace mozilla {
 namespace dom {
 
+class DispatchEventRunnable : public nsRunnable
+{
+  friend class MessagePort;
+
+  public:
+    DispatchEventRunnable(MessagePort* aPort)
+      : mPort(aPort)
+    {
+    }
+
+    NS_IMETHOD
+    Run()
+    {
+      nsRefPtr<DispatchEventRunnable> mKungFuDeathGrip(this);
+
+      mPort->mDispatchRunnable = nullptr;
+      mPort->Dispatch();
+
+      return NS_OK;
+    }
+
+  private:
+    nsRefPtr<MessagePort> mPort;
+};
+
 class PostMessageRunnable : public nsRunnable
 {
+  friend class MessagePort;
+
   public:
     NS_DECL_NSIRUNNABLE
 
@@ -254,8 +281,42 @@ PostMessageRunnable::Run()
   return status ? NS_OK : NS_ERROR_FAILURE;
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_2(MessagePort, nsDOMEventTargetHelper,
-                                     mEntangledPort, mMessageQueue)
+NS_IMPL_CYCLE_COLLECTION_CLASS(MessagePort)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MessagePort,
+                                                nsDOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEntangledPort)
+
+  // Custom unlink loop because this array contains nsRunnable objects
+  // which are not cycle colleactable.
+  while (!tmp->mMessageQueue.IsEmpty()) {
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessageQueue[0]->mPort);
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessageQueue[0]->mSupportsArray);
+    tmp->mMessageQueue.RemoveElementAt(0);
+  }
+
+  if (tmp->mDispatchRunnable) {
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mDispatchRunnable->mPort);
+  }
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MessagePort,
+                                                  nsDOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEntangledPort)
+
+  // Custom unlink loop because this array contains nsRunnable objects
+  // which are not cycle colleactable.
+  for (uint32_t i = 0, len = tmp->mMessageQueue.Length(); i < len; ++i) {
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMessageQueue[i]->mPort);
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMessageQueue[i]->mSupportsArray);
+  }
+
+  if (tmp->mDispatchRunnable) {
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDispatchRunnable->mPort);
+  }
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MessagePort)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
@@ -313,12 +374,8 @@ MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-  if (!mEntangledPort->mMessageQueueEnabled) {
-    mEntangledPort->mMessageQueue.AppendElement(event);
-    return;
-  }
-
-  event->Dispatch(mEntangledPort);
+  mEntangledPort->mMessageQueue.AppendElement(event);
+  mEntangledPort->Dispatch();
 }
 
 void
@@ -329,13 +386,23 @@ MessagePort::Start()
   }
 
   mMessageQueueEnabled = true;
+  Dispatch();
+}
 
-  while (!mMessageQueue.IsEmpty()) {
-    nsRefPtr<PostMessageRunnable> event = mMessageQueue.ElementAt(0);
-    mMessageQueue.RemoveElementAt(0);
-
-    event->Dispatch(this);
+void
+MessagePort::Dispatch()
+{
+  if (!mMessageQueueEnabled || mMessageQueue.IsEmpty() || mDispatchRunnable) {
+    return;
   }
+
+  nsRefPtr<PostMessageRunnable> event = mMessageQueue.ElementAt(0);
+  mMessageQueue.RemoveElementAt(0);
+
+  event->Dispatch(this);
+
+  mDispatchRunnable = new DispatchEventRunnable(this);
+  NS_DispatchToCurrentThread(mDispatchRunnable);
 }
 
 void
