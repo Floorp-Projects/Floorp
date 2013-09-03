@@ -32,6 +32,8 @@ MOCHITEST_FILES = \
   test_setting_opener.html \
   test_error.html \
   test_messageChannel.html \
+  test_messageChannel_cloning.html \
+  iframe_messageChannel_cloning.html \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \
