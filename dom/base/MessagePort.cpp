@@ -82,5 +82,25 @@ MessagePort::Entangle(MessagePort* aMessagePort)
   mEntangledPort = aMessagePort;
 }
 
+already_AddRefed<MessagePort>
+MessagePort::Clone(nsPIDOMWindow* aWindow)
+{
+  nsRefPtr<MessagePort> newPort = new MessagePort(aWindow);
+
+  // TODO Move all the events in the port message queue of original port to the
+  // port message queue of new port, if any, leaving the new port's port
+  // message queue in its initial disabled state.
+
+  if (mEntangledPort) {
+    nsRefPtr<MessagePort> port = mEntangledPort;
+    mEntangledPort = nullptr;
+
+    newPort->Entangle(port);
+    port->Entangle(newPort);
+  }
+
+  return newPort.forget();
+}
+
 } // namespace dom
 } // namespace mozilla

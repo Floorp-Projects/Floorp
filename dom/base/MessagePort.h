@@ -49,6 +49,12 @@ public:
   void
   Entangle(MessagePort* aMessagePort);
 
+  // Duplicate this message port. This method is used by the Structured Clone
+  // Algorithm and makes the new MessagePort active with the entangled
+  // MessagePort of this object.
+  already_AddRefed<MessagePort>
+  Clone(nsPIDOMWindow* aWindow);
+
 private:
   nsRefPtr<MessagePort> mEntangledPort;
 };
