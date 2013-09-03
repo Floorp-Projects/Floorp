@@ -31,7 +31,8 @@ public:
 
   void
   PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-              const Optional<JS::Handle<JS::Value> >& aTransfer);
+              const Optional<JS::Handle<JS::Value> >& aTransfer,
+              ErrorResult& aRv);
 
   void
   Start();
