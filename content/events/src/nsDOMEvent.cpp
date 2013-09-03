@@ -520,17 +520,6 @@ nsDOMEvent::DuplicatePrivateData()
       newEvent = guiEvent;
       break;
     }
-    case NS_SCROLLBAR_EVENT:
-    {
-      nsScrollbarEvent* oldScrollbarEvent =
-        static_cast<nsScrollbarEvent*>(mEvent);
-      nsScrollbarEvent* scrollbarEvent =
-        new nsScrollbarEvent(false, msg, nullptr);
-      scrollbarEvent->AssignGUIEventData(*scrollbarEvent, true);
-      scrollbarEvent->position = oldScrollbarEvent->position;
-      newEvent = scrollbarEvent;
-      break;
-    }
     case NS_INPUT_EVENT:
     {
       nsInputEvent* oldInputEvent = static_cast<nsInputEvent*>(mEvent);
