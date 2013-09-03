@@ -380,7 +380,6 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
         // Gingerbread HTC devices are whitelisted.
         // Gingerbread Samsung devices are whitelisted except for:
         //   Samsung devices identified in Bug 847837
-        //   Samsung SGH-T989 (Bug 818363)
         // Gingerbread Sony devices are whitelisted.
         // All other Gingerbread devices are blacklisted.
         bool isWhitelisted =
@@ -398,7 +397,6 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
             cModel.Equals("GT-S7500T", nsCaseInsensitiveCStringComparator()) ||
             cModel.Equals("GT-S7500L", nsCaseInsensitiveCStringComparator()) ||
             cModel.Equals("GT-S6500T", nsCaseInsensitiveCStringComparator()) ||
-            cModel.Equals("SGH-T989", nsCaseInsensitiveCStringComparator()) ||
             cHardware.Equals("smdkc110", nsCaseInsensitiveCStringComparator()) ||
             cHardware.Equals("smdkc210", nsCaseInsensitiveCStringComparator()) ||
             cHardware.Equals("herring", nsCaseInsensitiveCStringComparator()) ||
@@ -443,7 +441,6 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
         //     Samsung SGH-I717 (Bug 845729)
         //     Samsung SGH-I727 (Bug 845729)
         //     Samsung SGH-I757 (Bug 845729)
-        //     Samsung SGH-T989 (Bug 845729)
         //   All Galaxy nexus ICS devices
         //   Sony Xperia Ion (LT28) ICS devices
         bool isWhitelisted =
@@ -453,8 +450,7 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
 
         if (cModel.Find("SGH-I717", true) != -1 ||
             cModel.Find("SGH-I727", true) != -1 ||
-            cModel.Find("SGH-I757", true) != -1 ||
-            cModel.Find("SGH-T989", true) != -1)
+            cModel.Find("SGH-I757", true) != -1)
         {
           isWhitelisted = false;
         }
