@@ -282,10 +282,10 @@ nsDOMWindowUtils::GetViewportInfo(uint32_t aDisplayWidth,
   NS_ENSURE_STATE(doc);
 
   nsViewportInfo info = nsContentUtils::GetViewportInfo(doc, aDisplayWidth, aDisplayHeight);
-  *aDefaultZoom = info.GetDefaultZoom();
+  *aDefaultZoom = info.GetDefaultZoom().scale;
   *aAllowZoom = info.IsZoomAllowed();
-  *aMinZoom = info.GetMinZoom();
-  *aMaxZoom = info.GetMaxZoom();
+  *aMinZoom = info.GetMinZoom().scale;
+  *aMaxZoom = info.GetMaxZoom().scale;
   *aWidth = info.GetWidth();
   *aHeight = info.GetHeight();
   *aAutoSize = info.IsAutoSizeEnabled();

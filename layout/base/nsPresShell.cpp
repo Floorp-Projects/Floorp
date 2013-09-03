@@ -9614,7 +9614,7 @@ nsIPresShell::RecomputeFontSizeInflationEnabled()
     nsViewportInfo vInf =
       nsContentUtils::GetViewportInfo(GetDocument(), screenWidth, screenHeight);
 
-    if (vInf.GetDefaultZoom() >= 1.0 || vInf.IsAutoSizeEnabled()) {
+    if (vInf.GetDefaultZoom() >= CSSToScreenScale(1.0f) || vInf.IsAutoSizeEnabled()) {
       mFontSizeInflationEnabled = false;
       return;
     }
