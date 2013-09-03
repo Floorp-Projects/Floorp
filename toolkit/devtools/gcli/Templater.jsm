@@ -19,7 +19,11 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "console",
                                   "resource://gre/modules/devtools/Console.jsm");
 
-// WARNING: do not 'use_strict' without reading the notes in _envEval();
+'do not use strict';
+
+// WARNING: do not 'use strict' without reading the notes in envEval();
+// Also don't remove the 'do not use strict' marker. The orion build uses these
+// markers to know where to insert AMD headers.
 
 /**
  * For full documentation, see:
@@ -43,53 +47,52 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
  *   convert null/undefined to ''. By setting blankNullUndefined:true, this
  *   conversion is handled by DOMTemplate
  */
-function template(node, data, options) {
-  var template = new Templater(options || {});
-  template.processNode(node, data);
-  return template;
-}
+var template = function(node, data, options) {
+  var state = {
+    options: options || {},
+    // We keep a track of the nodes that we've passed through so we can keep
+    // data.__element pointing to the correct node
+    nodes: []
+  };
+
+  state.stack = state.options.stack;
+
+  if (!Array.isArray(state.stack)) {
+    if (typeof state.stack === 'string') {
+      state.stack = [ options.stack ];
+    }
+    else {
+      state.stack = [];
+    }
+  }
+
+  processNode(state, node, data);
+};
+
+//
+//
+//
 
 /**
- * Construct a Templater object. Use template() in preference to this ctor.
- * @deprecated Use template(node, data, options);
+ * Helper for the places where we need to act asynchronously and keep track of
+ * where we are right now
  */
-function Templater(options) {
-  if (options == null) {
-    options = { allowEval: true };
-  }
-  this.options = options;
-  if (options.stack && Array.isArray(options.stack)) {
-    this.stack = options.stack;
-  }
-  else if (typeof options.stack === 'string') {
-    this.stack = [ options.stack ];
-  }
-  else {
-    this.stack = [];
-  }
-  this.nodes = [];
+function cloneState(state) {
+  return {
+    options: state.options,
+    stack: state.stack.slice(),
+    nodes: state.nodes.slice()
+  };
 }
 
 /**
- * Cached regex used to find ${...} sections in some text.
+ * Regex used to find ${...} sections in some text.
  * Performance note: This regex uses ( and ) to capture the 'script' for
  * further processing. Not all of the uses of this regex use this feature so
  * if use of the capturing group is a performance drain then we should split
  * this regex in two.
  */
-Templater.prototype._templateRegion = /\$\{([^}]*)\}/g;
-
-/**
- * Cached regex used to split a string using the unicode chars F001 and F002.
- * See Templater._processTextNode() for details.
- */
-Templater.prototype._splitSpecial = /\uF001|\uF002/;
-
-/**
- * Cached regex used to detect if a script is capable of being interpreted
- * using Template._property() or if we need to use Template._envEval()
- */
-Templater.prototype._isPropertyScript = /^[_a-zA-Z0-9.]*$/;
+var TEMPLATE_REGION = /\$\{([^}]*)\}/g;
 
 /**
  * Recursive function to walk the tree processing the attributes as it goes.
@@ -97,14 +100,14 @@ Templater.prototype._isPropertyScript = /^[_a-zA-Z0-9.]*$/;
  * element, it is assumed to be an id for use with document.getElementById()
  * @param data the data to use for node processing.
  */
-Templater.prototype.processNode = function(node, data) {
+function processNode(state, node, data) {
   if (typeof node === 'string') {
     node = document.getElementById(node);
   }
   if (data == null) {
     data = {};
   }
-  this.stack.push(node.nodeName + (node.id ? '#' + node.id : ''));
+  state.stack.push(node.nodeName + (node.id ? '#' + node.id : ''));
   var pushedNode = false;
   try {
     // Process attributes
@@ -113,16 +116,16 @@ Templater.prototype.processNode = function(node, data) {
       // some types of processing from happening, and foreach must come first
       // because it defines new data on which 'if' might depend.
       if (node.hasAttribute('foreach')) {
-        this._processForEach(node, data);
+        processForEach(state, node, data);
         return;
       }
       if (node.hasAttribute('if')) {
-        if (!this._processIf(node, data)) {
+        if (!processIf(state, node, data)) {
           return;
         }
       }
       // Only make the node available once we know it's not going away
-      this.nodes.push(data.__element);
+      state.nodes.push(data.__element);
       data.__element = node;
       pushedNode = true;
       // It's good to clean up the attributes when we've processed them,
@@ -132,20 +135,20 @@ Templater.prototype.processNode = function(node, data) {
         var value = attrs[i].value;
         var name = attrs[i].name;
 
-        this.stack.push(name);
+        state.stack.push(name);
         try {
           if (name === 'save') {
             // Save attributes are a setter using the node
-            value = this._stripBraces(value);
-            this._property(value, data, node);
+            value = stripBraces(state, value);
+            property(state, value, data, node);
             node.removeAttribute('save');
           }
           else if (name.substring(0, 2) === 'on') {
             // If this attribute value contains only an expression
             if (value.substring(0, 2) === '${' && value.slice(-1) === '}' &&
                     value.indexOf('${', 2) === -1) {
-              value = this._stripBraces(value);
-              var func = this._property(value, data);
+              value = stripBraces(state, value);
+              var func = property(state, value, data);
               if (typeof func === 'function') {
                 node.removeAttribute(name);
                 var capture = node.hasAttribute('capture' + name.substring(2));
@@ -161,7 +164,7 @@ Templater.prototype.processNode = function(node, data) {
             }
             else {
               // Attribute value is not a single expression use as DOM-L0
-              node.setAttribute(name, this._processString(value, data));
+              node.setAttribute(name, processString(state, value, data));
             }
           }
           else {
@@ -174,28 +177,29 @@ Templater.prototype.processNode = function(node, data) {
 
             // Async attributes can only work if the whole attribute is async
             var replacement;
-            if (value.indexOf('${') === 0 && value.charAt(value.length - 1) === '}') {
-              replacement = this._envEval(value.slice(2, -1), data, value);
+            if (value.indexOf('${') === 0 &&
+                value.charAt(value.length - 1) === '}') {
+              replacement = envEval(state, value.slice(2, -1), data, value);
               if (replacement && typeof replacement.then === 'function') {
                 node.setAttribute(name, '');
                 replacement.then(function(newValue) {
                   node.setAttribute(name, newValue);
-                }.bind(this)).then(null, console.error);
+                }).then(null, console.error);
               }
               else {
-                if (this.options.blankNullUndefined && replacement == null) {
+                if (state.options.blankNullUndefined && replacement == null) {
                   replacement = '';
                 }
                 node.setAttribute(name, replacement);
               }
             }
             else {
-              node.setAttribute(name, this._processString(value, data));
+              node.setAttribute(name, processString(state, value, data));
             }
           }
         }
         finally {
-          this.stack.pop();
+          state.stack.pop();
         }
       }
     }
@@ -204,49 +208,49 @@ Templater.prototype.processNode = function(node, data) {
     // set of nodes that we visit will be unaffected by additions or removals.
     var childNodes = Array.prototype.slice.call(node.childNodes);
     for (var j = 0; j < childNodes.length; j++) {
-      this.processNode(childNodes[j], data);
+      processNode(state, childNodes[j], data);
     }
 
     if (node.nodeType === 3 /*Node.TEXT_NODE*/) {
-      this._processTextNode(node, data);
+      processTextNode(state, node, data);
     }
   }
   finally {
     if (pushedNode) {
-      data.__element = this.nodes.pop();
+      data.__element = state.nodes.pop();
     }
-    this.stack.pop();
+    state.stack.pop();
   }
-};
+}
 
 /**
  * Handle attribute values where the output can only be a string
  */
-Templater.prototype._processString = function(value, data) {
-  return value.replace(this._templateRegion, function(path) {
-    var insert = this._envEval(path.slice(2, -1), data, value);
-    return this.options.blankNullUndefined && insert == null ? '' : insert;
-  }.bind(this));
-};
+function processString(state, value, data) {
+  return value.replace(TEMPLATE_REGION, function(path) {
+    var insert = envEval(state, path.slice(2, -1), data, value);
+    return state.options.blankNullUndefined && insert == null ? '' : insert;
+  });
+}
 
 /**
  * Handle <x if="${...}">
  * @param node An element with an 'if' attribute
- * @param data The data to use with _envEval()
+ * @param data The data to use with envEval()
  * @returns true if processing should continue, false otherwise
  */
-Templater.prototype._processIf = function(node, data) {
-  this.stack.push('if');
+function processIf(state, node, data) {
+  state.stack.push('if');
   try {
     var originalValue = node.getAttribute('if');
-    var value = this._stripBraces(originalValue);
+    var value = stripBraces(state, originalValue);
     var recurse = true;
     try {
-      var reply = this._envEval(value, data, originalValue);
+      var reply = envEval(state, value, data, originalValue);
       recurse = !!reply;
     }
     catch (ex) {
-      this._handleError('Error with \'' + value + '\'', ex);
+      handleError(state, 'Error with \'' + value + '\'', ex);
       recurse = false;
     }
     if (!recurse) {
@@ -256,22 +260,22 @@ Templater.prototype._processIf = function(node, data) {
     return recurse;
   }
   finally {
-    this.stack.pop();
+    state.stack.pop();
   }
-};
+}
 
 /**
  * Handle <x foreach="param in ${array}"> and the special case of
  * <loop foreach="param in ${array}">.
  * This function is responsible for extracting what it has to do from the
  * attributes, and getting the data to work on (including resolving promises
- * in getting the array). It delegates to _processForEachLoop to actually
+ * in getting the array). It delegates to processForEachLoop to actually
  * unroll the data.
  * @param node An element with a 'foreach' attribute
- * @param data The data to use with _envEval()
+ * @param data The data to use with envEval()
  */
-Templater.prototype._processForEach = function(node, data) {
-  this.stack.push('foreach');
+function processForEach(state, node, data) {
+  state.stack.push('foreach');
   try {
     var originalValue = node.getAttribute('foreach');
     var value = originalValue;
@@ -279,105 +283,109 @@ Templater.prototype._processForEach = function(node, data) {
     var paramName = 'param';
     if (value.charAt(0) === '$') {
       // No custom loop variable name. Use the default: 'param'
-      value = this._stripBraces(value);
+      value = stripBraces(state, value);
     }
     else {
       // Extract the loop variable name from 'NAME in ${ARRAY}'
       var nameArr = value.split(' in ');
       paramName = nameArr[0].trim();
-      value = this._stripBraces(nameArr[1].trim());
+      value = stripBraces(state, nameArr[1].trim());
     }
     node.removeAttribute('foreach');
     try {
-      var evaled = this._envEval(value, data, originalValue);
-      this._handleAsync(evaled, node, function(reply, siblingNode) {
-        this._processForEachLoop(reply, node, siblingNode, data, paramName);
-      }.bind(this));
+      var evaled = envEval(state, value, data, originalValue);
+      var cState = cloneState(state);
+      handleAsync(evaled, node, function(reply, siblingNode) {
+        processForEachLoop(cState, reply, node, siblingNode, data, paramName);
+      });
       node.parentNode.removeChild(node);
     }
     catch (ex) {
-      this._handleError('Error with \'' + value + '\'', ex);
+      handleError(state, 'Error with \'' + value + '\'', ex);
     }
   }
   finally {
-    this.stack.pop();
+    state.stack.pop();
   }
-};
+}
 
 /**
- * Called by _processForEach to handle looping over the data in a foreach loop.
+ * Called by processForEach to handle looping over the data in a foreach loop.
  * This works with both arrays and objects.
- * Calls _processForEachMember() for each member of 'set'
+ * Calls processForEachMember() for each member of 'set'
  * @param set The object containing the data to loop over
- * @param template The node to copy for each set member
+ * @param templNode The node to copy for each set member
  * @param sibling The sibling node to which we add things
  * @param data the data to use for node processing
  * @param paramName foreach loops have a name for the parameter currently being
  * processed. The default is 'param'. e.g. <loop foreach="param in ${x}">...
  */
-Templater.prototype._processForEachLoop = function(set, template, sibling, data, paramName) {
+function processForEachLoop(state, set, templNode, sibling, data, paramName) {
   if (Array.isArray(set)) {
     set.forEach(function(member, i) {
-      this._processForEachMember(member, template, sibling, data, paramName, '' + i);
-    }, this);
+      processForEachMember(state, member, templNode, sibling,
+                           data, paramName, '' + i);
+    });
   }
   else {
     for (var member in set) {
       if (set.hasOwnProperty(member)) {
-        this._processForEachMember(member, template, sibling, data, paramName, member);
+        processForEachMember(state, member, templNode, sibling,
+                             data, paramName, member);
       }
     }
   }
-};
+}
 
 /**
- * Called by _processForEachLoop() to resolve any promises in the array (the
+ * Called by processForEachLoop() to resolve any promises in the array (the
  * array itself can also be a promise, but that is resolved by
- * _processForEach()). Handle <LOOP> elements (which are taken out of the DOM),
- * clone the template, and pass the processing on to processNode().
+ * processForEach()). Handle <LOOP> elements (which are taken out of the DOM),
+ * clone the template node, and pass the processing on to processNode().
  * @param member The data item to use in templating
- * @param template The node to copy for each set member
+ * @param templNode The node to copy for each set member
  * @param siblingNode The parent node to which we add things
  * @param data the data to use for node processing
  * @param paramName The name given to 'member' by the foreach attribute
  * @param frame A name to push on the stack for debugging
  */
-Templater.prototype._processForEachMember = function(member, template, siblingNode, data, paramName, frame) {
-  this.stack.push(frame);
+function processForEachMember(state, member, templNode, siblingNode, data, paramName, frame) {
+  state.stack.push(frame);
   try {
-    this._handleAsync(member, siblingNode, function(reply, node) {
+    var cState = cloneState(state);
+    handleAsync(member, siblingNode, function(reply, node) {
       data[paramName] = reply;
       if (node.parentNode != null) {
-        if (template.nodeName.toLowerCase() === 'loop') {
-          for (var i = 0; i < template.childNodes.length; i++) {
-            var clone = template.childNodes[i].cloneNode(true);
+        if (templNode.nodeName.toLowerCase() === 'loop') {
+          for (var i = 0; i < templNode.childNodes.length; i++) {
+            var clone = templNode.childNodes[i].cloneNode(true);
             node.parentNode.insertBefore(clone, node);
-            this.processNode(clone, data);
+            processNode(cState, clone, data);
           }
         }
         else {
-          var clone = template.cloneNode(true);
+          var clone = templNode.cloneNode(true);
           clone.removeAttribute('foreach');
           node.parentNode.insertBefore(clone, node);
-          this.processNode(clone, data);
+          processNode(cState, clone, data);
         }
       }
       delete data[paramName];
-    }.bind(this));
+    });
   }
   finally {
-    this.stack.pop();
+    state.stack.pop();
   }
-};
+}
 
 /**
  * Take a text node and replace it with another text node with the ${...}
  * sections parsed out. We replace the node by altering node.parentNode but
  * we could probably use a DOM Text API to achieve the same thing.
  * @param node The Text node to work on
- * @param data The data to use in calls to _envEval()
+ * @param data The data to use in calls to envEval()
  */
-Templater.prototype._processTextNode = function(node, data) {
+function processTextNode(state, node, data) {
   // Replace references in other attributes
   var value = node.data;
   // We can't use the string.replace() with function trick (see generic
@@ -389,46 +397,48 @@ Templater.prototype._processTextNode = function(node, data) {
   // We can then split using \uF001 or \uF002 to get an array of strings
   // where scripts are prefixed with $.
   // \uF001 and \uF002 are just unicode chars reserved for private use.
-  value = value.replace(this._templateRegion, '\uF001$$$1\uF002');
-  var parts = value.split(this._splitSpecial);
+  value = value.replace(TEMPLATE_REGION, '\uF001$$$1\uF002');
+  // Split a string using the unicode chars F001 and F002.
+  var parts = value.split(/\uF001|\uF002/);
   if (parts.length > 1) {
     parts.forEach(function(part) {
       if (part === null || part === undefined || part === '') {
         return;
       }
       if (part.charAt(0) === '$') {
-        part = this._envEval(part.slice(1), data, node.data);
+        part = envEval(state, part.slice(1), data, node.data);
       }
-      this._handleAsync(part, node, function(reply, siblingNode) {
+      var cState = cloneState(state);
+      handleAsync(part, node, function(reply, siblingNode) {
         var doc = siblingNode.ownerDocument;
         if (reply == null) {
-          reply = this.options.blankNullUndefined ? '' : '' + reply;
+          reply = cState.options.blankNullUndefined ? '' : '' + reply;
         }
         if (typeof reply.cloneNode === 'function') {
           // i.e. if (reply instanceof Element) { ...
-          reply = this._maybeImportNode(reply, doc);
+          reply = maybeImportNode(cState, reply, doc);
           siblingNode.parentNode.insertBefore(reply, siblingNode);
         }
         else if (typeof reply.item === 'function' && reply.length) {
-          // NodeLists can be live, in which case _maybeImportNode can
+          // NodeLists can be live, in which case maybeImportNode can
           // remove them from the document, and thus the NodeList, which in
           // turn breaks iteration. So first we clone the list
           var list = Array.prototype.slice.call(reply, 0);
           list.forEach(function(child) {
-            var imported = this._maybeImportNode(child, doc);
+            var imported = maybeImportNode(cState, child, doc);
             siblingNode.parentNode.insertBefore(imported, siblingNode);
-          }.bind(this));
+          });
         }
         else {
           // if thing isn't a DOM element then wrap its string value in one
           reply = doc.createTextNode(reply.toString());
           siblingNode.parentNode.insertBefore(reply, siblingNode);
         }
-      }.bind(this));
-    }, this);
+      });
+    });
     node.parentNode.removeChild(node);
   }
-};
+}
 
 /**
  * Return node or a import of node, if it's not in the given document
@@ -436,9 +446,9 @@ Templater.prototype._processTextNode = function(node, data) {
  * @param doc The document that the given node should belong to
  * @return A node that belongs to the given document
  */
-Templater.prototype._maybeImportNode = function(node, doc) {
+function maybeImportNode(state, node, doc) {
   return node.ownerDocument === doc ? node : doc.importNode(node, true);
-};
+}
 
 /**
  * A function to handle the fact that some nodes can be promises, so we check
@@ -448,9 +458,9 @@ Templater.prototype._maybeImportNode = function(node, doc) {
  * we use it directly if it's not a promise, or resolve it if it is.
  * @param siblingNode The element before which we insert new elements.
  * @param inserter The function to to the insertion. If thing is not a promise
- * then _handleAsync() is just 'inserter(thing, siblingNode)'
+ * then handleAsync() is just 'inserter(thing, siblingNode)'
  */
-Templater.prototype._handleAsync = function(thing, siblingNode, inserter) {
+function handleAsync(thing, siblingNode, inserter) {
   if (thing != null && typeof thing.then === 'function') {
     // Placeholder element to be replaced once we have the real data
     var tempNode = siblingNode.ownerDocument.createElement('span');
@@ -460,35 +470,35 @@ Templater.prototype._handleAsync = function(thing, siblingNode, inserter) {
       if (tempNode.parentNode != null) {
         tempNode.parentNode.removeChild(tempNode);
       }
-    }.bind(this)).then(null, function(error) {
+    }).then(null, function(error) {
       console.error(error.stack);
     });
   }
   else {
     inserter(thing, siblingNode);
   }
-};
+}
 
 /**
  * Warn of string does not begin '${' and end '}'
  * @param str the string to check.
  * @return The string stripped of ${ and }, or untouched if it does not match
  */
-Templater.prototype._stripBraces = function(str) {
-  if (!str.match(this._templateRegion)) {
-    this._handleError('Expected ' + str + ' to match ${...}');
+function stripBraces(state, str) {
+  if (!str.match(TEMPLATE_REGION)) {
+    handleError(state, 'Expected ' + str + ' to match ${...}');
     return str;
   }
   return str.slice(2, -1);
-};
+}
 
 /**
  * Combined getter and setter that works with a path through some data set.
  * For example:
  * <ul>
- * <li>_property('a.b', { a: { b: 99 }}); // returns 99
- * <li>_property('a', { a: { b: 99 }}); // returns { b: 99 }
- * <li>_property('a', { a: { b: 99 }}, 42); // returns 99 and alters the
+ * <li>property(state, 'a.b', { a: { b: 99 }}); // returns 99
+ * <li>property(state, 'a', { a: { b: 99 }}); // returns { b: 99 }
+ * <li>property(state, 'a', { a: { b: 99 }}, 42); // returns 99 and alters the
  * input data to be { a: { b: 42 }}
  * </ul>
  * @param path An array of strings indicating the path through the data, or
@@ -499,7 +509,7 @@ Templater.prototype._stripBraces = function(str) {
  * @return The value pointed to by <tt>path</tt> before any
  * <tt>newValue</tt> is applied.
  */
-Templater.prototype._property = function(path, data, newValue) {
+function property(state, path, data, newValue) {
   try {
     if (typeof path === 'string') {
       path = path.split('.');
@@ -515,16 +525,16 @@ Templater.prototype._property = function(path, data, newValue) {
       return value;
     }
     if (!value) {
-      this._handleError('"' + path[0] + '" is undefined');
+      handleError(state, '"' + path[0] + '" is undefined');
       return null;
     }
-    return this._property(path.slice(1), value, newValue);
+    return property(state, path.slice(1), value, newValue);
   }
   catch (ex) {
-    this._handleError('Path error with \'' + path + '\'', ex);
+    handleError(state, 'Path error with \'' + path + '\'', ex);
     return '${' + path + '}';
   }
-};
+}
 
 /**
  * Like eval, but that creates a context of the variables in <tt>env</tt> in
@@ -539,15 +549,16 @@ Templater.prototype._property = function(path, data, newValue) {
  * @return The return value of the script, or the error message if the script
  * execution failed.
  */
-Templater.prototype._envEval = function(script, data, frame) {
+function envEval(state, script, data, frame) {
   try {
-    this.stack.push(frame.replace(/\s+/g, ' '));
-    if (this._isPropertyScript.test(script)) {
-      return this._property(script, data);
+    state.stack.push(frame.replace(/\s+/g, ' '));
+    // Detect if a script is capable of being interpreted using property()
+    if (/^[_a-zA-Z0-9.]*$/.test(script)) {
+      return property(state, script, data);
     }
     else {
-      if (!this.options.allowEval) {
-        this._handleError('allowEval is not set, however \'' + script + '\'' +
+      if (!state.options.allowEval) {
+        handleError(state, 'allowEval is not set, however \'' + script + '\'' +
             ' can not be resolved using a simple property path.');
         return '${' + script + '}';
       }
@@ -557,13 +568,13 @@ Templater.prototype._envEval = function(script, data, frame) {
     }
   }
   catch (ex) {
-    this._handleError('Template error evaluating \'' + script + '\'', ex);
+    handleError(state, 'Template error evaluating \'' + script + '\'', ex);
     return '${' + script + '}';
   }
   finally {
-    this.stack.pop();
+    state.stack.pop();
   }
-};
+}
 
 /**
  * A generic way of reporting errors, for easy overloading in different
@@ -571,24 +582,18 @@ Templater.prototype._envEval = function(script, data, frame) {
  * @param message the error message to report.
  * @param ex optional associated exception.
  */
-Templater.prototype._handleError = function(message, ex) {
-  this._logError(message + ' (In: ' + this.stack.join(' > ') + ')');
+function handleError(state, message, ex) {
+  logError(message + ' (In: ' + state.stack.join(' > ') + ')');
   if (ex) {
-    this._logError(ex);
+    logError(ex);
   }
-};
+}
 
 /**
  * A generic way of reporting errors, for easy overloading in different
  * environments.
  * @param message the error message to report.
  */
-Templater.prototype._logError = function(message) {
+function logError(message) {
   console.log(message);
-};
-
-//
-this.template = template;
-//
-
-// });
+}

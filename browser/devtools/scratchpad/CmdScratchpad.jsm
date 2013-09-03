@@ -4,7 +4,8 @@
 
 this.EXPORTED_SYMBOLS = [ ];
 
-Components.utils.import("resource://gre/modules/devtools/gcli.jsm");
+const { devtools } = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
+const gcli = devtools.require("gcli/index");
 
 /**
  * 'scratchpad' command
