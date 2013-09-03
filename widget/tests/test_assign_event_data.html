@@ -49,107 +49,107 @@ const NATIVE_CONTROL_RIGHT = 0x0800;
 const NATIVE_META_RIGHT    = 0x8000;
 
 const kTests = [
-  {  description: "nsKeyEvent (keydown of 'a' key without modifiers)",
-     targetID: "input-text", eventType: "keydown",
-     dispatchEvent: function () {
-       document.getElementById(this.targetID).value = "";
-       document.getElementById(this.targetID).focus();
-       if (kIsWin) {
-         gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_A, 0, "a", "a");
-       } else if (kIsMac) {
-         gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_A, 0, "a", "a");
-       }
-     },
-     canRun: function () {
-       return (kIsMac || kIsWin);
-     },
-     todoMismatch: [ "key" ],
+  { description: "nsKeyEvent (keydown of 'a' key without modifiers)",
+    targetID: "input-text", eventType: "keydown",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      document.getElementById(this.targetID).focus();
+      if (kIsWin) {
+        gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_A, 0, "a", "a");
+      } else if (kIsMac) {
+        gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_A, 0, "a", "a");
+      }
+    },
+    canRun: function () {
+      return (kIsMac || kIsWin);
+    },
+    todoMismatch: [ "key" ],
   },
-  {  description: "nsKeyEvent (keyup of 'a' key without modifiers)",
-     targetID: "input-text", eventType: "keydown",
-     dispatchEvent: function () {
-       document.getElementById(this.targetID).value = "";
-       document.getElementById(this.targetID).focus();
-       if (kIsWin) {
-         gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_A, 0, "a", "a");
-       } else if (kIsMac) {
-         gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_A, 0, "a", "a");
-       }
-     },
-     canRun: function () {
-       return (kIsMac || kIsWin);
-     },
-     todoMismatch: [ "key" ],
+  { description: "nsKeyEvent (keyup of 'a' key without modifiers)",
+    targetID: "input-text", eventType: "keydown",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      document.getElementById(this.targetID).focus();
+      if (kIsWin) {
+        gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_A, 0, "a", "a");
+      } else if (kIsMac) {
+        gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_A, 0, "a", "a");
+      }
+    },
+    canRun: function () {
+      return (kIsMac || kIsWin);
+    },
+    todoMismatch: [ "key" ],
   },
-  {  description: "nsKeyEvent (keypress of 'b' key with Shift)",
-     targetID: "input-text", eventType: "keypress",
-     dispatchEvent: function () {
-       document.getElementById(this.targetID).value = "";
-       document.getElementById(this.targetID).focus();
-       if (kIsWin) {
-         gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_B, NATIVE_SHIFT_LEFT, "B", "B");
-       } else if (kIsMac) {
-         gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_B, NATIVE_SHIFT_LEFT, "B", "B");
-       }
-     },
-     canRun: function () {
-       return (kIsMac || kIsWin);
-     },
-     // "defaultPrevented" becomes true because the editor consumes the keypress event.
-     todoMismatch: [ "key", "defaultPrevented" ],
+  { description: "nsKeyEvent (keypress of 'b' key with Shift)",
+    targetID: "input-text", eventType: "keypress",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      document.getElementById(this.targetID).focus();
+      if (kIsWin) {
+        gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_B, NATIVE_SHIFT_LEFT, "B", "B");
+      } else if (kIsMac) {
+        gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_B, NATIVE_SHIFT_LEFT, "B", "B");
+      }
+    },
+    canRun: function () {
+      return (kIsMac || kIsWin);
+    },
+    // "defaultPrevented" becomes true because the editor consumes the keypress event.
+    todoMismatch: [ "key", "defaultPrevented" ],
   },
-  {  description: "nsKeyEvent (keypress of 'c' key with Accel)",
-     targetID: "input-text", eventType: "keypress",
-     dispatchEvent: function () {
-       document.getElementById(this.targetID).value = "";
-       document.getElementById(this.targetID).focus();
-       if (kIsWin) {
-         gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_C, NATIVE_CONTROL_RIGHT, "\u0003", "c");
-       } else if (kIsMac) {
-         gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_C, NATIVE_META_RIGHT, "c", "c");
-       }
-     },
-     canRun: function () {
-       return (kIsMac || kIsWin);
-     },
-     // "defaultPrevented" becomes true because the editor consumes the keypress event.
-     todoMismatch: [ "key", "defaultPrevented" ],
+  { description: "nsKeyEvent (keypress of 'c' key with Accel)",
+    targetID: "input-text", eventType: "keypress",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      document.getElementById(this.targetID).focus();
+      if (kIsWin) {
+        gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_C, NATIVE_CONTROL_RIGHT, "\u0003", "c");
+      } else if (kIsMac) {
+        gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_C, NATIVE_META_RIGHT, "c", "c");
+      }
+    },
+    canRun: function () {
+      return (kIsMac || kIsWin);
+    },
+    // "defaultPrevented" becomes true because the editor consumes the keypress event.
+    todoMismatch: [ "key", "defaultPrevented" ],
   },
-  {  description: "nsMouseEvent (mousedown of left button without modifier)",
-     targetID: "button", eventType: "mousedown",
-     dispatchEvent: function () {
-       synthesizeMouseAtCenter(document.getElementById(this.targetID),
-                               { button: 0 });
-     },
-     canRun: function () {
-       return true;
-     },
-     todoMismatch: [],
+  { description: "nsMouseEvent (mousedown of left button without modifier)",
+    targetID: "button", eventType: "mousedown",
+    dispatchEvent: function () {
+      synthesizeMouseAtCenter(document.getElementById(this.targetID),
+                              { button: 0 });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
   },
-  {  description: "nsMouseEvent (click of middle button with Shift)",
-     // XXX I'm not sure why middle click event isn't fired on button element.
-     targetID: "input-text", eventType: "click",
-     dispatchEvent: function () {
-       document.getElementById(this.targetID).value = "";
-       synthesizeMouseAtCenter(document.getElementById(this.targetID),
-                               { button: 1, shiftKey: true, pressure: 0.5 });
-     },
-     canRun: function () {
-       return true;
-     },
-     todoMismatch: [],
+  { description: "nsMouseEvent (click of middle button with Shift)",
+    // XXX I'm not sure why middle click event isn't fired on button element.
+    targetID: "input-text", eventType: "click",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      synthesizeMouseAtCenter(document.getElementById(this.targetID),
+                              { button: 1, shiftKey: true, pressure: 0.5 });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
   },
-  {  description: "nsMouseEvent (mouseup of right button with Alt)",
-     targetID: "button", eventType: "mouseup",
-     dispatchEvent: function () {
-       document.getElementById(this.targetID).value = "";
-       synthesizeMouseAtCenter(document.getElementById(this.targetID),
-                               { button: 2, altKey: true });
-     },
-     canRun: function () {
-       return true;
-     },
-     todoMismatch: [],
+  { description: "nsMouseEvent (mouseup of right button with Alt)",
+    targetID: "button", eventType: "mouseup",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      synthesizeMouseAtCenter(document.getElementById(this.targetID),
+                              { button: 2, altKey: true });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
   },
 ];
 
