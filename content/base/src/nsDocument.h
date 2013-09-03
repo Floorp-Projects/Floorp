@@ -1410,7 +1410,10 @@ private:
   // These member variables cache information about the viewport so we don't have to
   // recalculate it each time.
   bool mValidWidth, mValidHeight;
-  float mScaleMinFloat, mScaleMaxFloat, mScaleFloat, mPixelRatio;
+  mozilla::LayoutDeviceToScreenScale mScaleMinFloat;
+  mozilla::LayoutDeviceToScreenScale mScaleMaxFloat;
+  mozilla::LayoutDeviceToScreenScale mScaleFloat;
+  mozilla::CSSToLayoutDeviceScale mPixelRatio;
   bool mAutoSize, mAllowZoom, mValidScaleFloat, mValidMaxScale, mScaleStrEmpty, mWidthStrEmpty;
   uint32_t mViewportWidth, mViewportHeight;
 
