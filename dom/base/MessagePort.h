@@ -15,8 +15,12 @@ class nsPIDOMWindow;
 namespace mozilla {
 namespace dom {
 
+class PostMessageRunnable;
+
 class MessagePort MOZ_FINAL : public nsDOMEventTargetHelper
 {
+  friend class PostMessageRunnable;
+
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
@@ -40,7 +44,13 @@ public:
   void
   Close();
 
-  IMPL_EVENT_HANDLER(message)
+  // The 'message' event handler has to call |Start()| method, so we
+  // cannot use IMPL_EVENT_HANDLER macro here.
+  EventHandlerNonNull*
+  GetOnmessage();
+
+  void
+  SetOnmessage(EventHandlerNonNull* aCallback, ErrorResult& aRv);
 
   // Non WebIDL methods
 
@@ -58,6 +68,9 @@ public:
 
 private:
   nsRefPtr<MessagePort> mEntangledPort;
+
+  nsTArray<nsRefPtr<PostMessageRunnable> > mMessageQueue;
+  bool mMessageQueueEnabled;
 };
 
 } // namespace dom
