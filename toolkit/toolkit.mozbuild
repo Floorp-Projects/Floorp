@@ -87,7 +87,6 @@ if CONFIG['MOZ_OMX_PLUGIN']:
         'media/omx-plugin/lib/hc/libstagefright',
         'media/omx-plugin/hc',
         'media/omx-plugin/sony',
-        'media/omx-plugin/jb-htc',
     ])
 
 if CONFIG['ENABLE_TESTS']:
