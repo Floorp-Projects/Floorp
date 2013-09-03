@@ -649,8 +649,7 @@ nsDOMEvent::DuplicatePrivateData()
         static_cast<nsScrollPortEvent*>(mEvent);
       nsScrollPortEvent* scrollPortEvent =
         new nsScrollPortEvent(false, msg, nullptr);
-      scrollPortEvent->AssignGUIEventData(*oldScrollPortEvent, true);
-      scrollPortEvent->orient = oldScrollPortEvent->orient;
+      scrollPortEvent->AssignScrollPortEventData(*oldScrollPortEvent, true);
       newEvent = scrollPortEvent;
       break;
     }
