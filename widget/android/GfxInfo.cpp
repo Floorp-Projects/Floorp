@@ -351,7 +351,6 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
       NS_LossyConvertUTF16toASCII cHardware(mHardware);
 
       if (cHardware.Equals("antares") ||
-          cHardware.Equals("endeavoru") ||
           cHardware.Equals("harmony") ||
           cHardware.Equals("picasso") ||
           cHardware.Equals("picasso_e") ||
