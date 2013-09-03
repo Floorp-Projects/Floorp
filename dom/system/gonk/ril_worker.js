@@ -2727,6 +2727,13 @@ let RIL = {
         };
         command.language = command.event.language;
         break;
+      case STK_EVENT_TYPE_BROWSER_TERMINATION:
+        command.deviceId = {
+          sourceId: STK_DEVICE_ID_ME,
+          destinationId: STK_DEVICE_ID_SIM
+        };
+        command.terminationCause = command.event.terminationCause;
+        break;
     }
     this.sendICCEnvelopeCommand(command);
   },
@@ -2746,6 +2753,7 @@ let RIL = {
    * @param [optional] cause
    * @param [optional] timerId
    * @param [optional] timerValue
+   * @param [optional] terminationCause
    */
   sendICCEnvelopeCommand: function sendICCEnvelopeCommand(options) {
     if (DEBUG) {
@@ -2851,6 +2859,14 @@ let RIL = {
     // Language
     if (options.language) {
       ComprehensionTlvHelper.writeLanguageTlv(options.language);
+    }
+
+    // Browser Termination
+    if (options.terminationCause != null) {
+      GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_BROWSER_TERMINATION_CAUSE |
+                                 COMPREHENSIONTLV_FLAG_CR);
+      GsmPDUHelper.writeHexOctet(1);
+      GsmPDUHelper.writeHexOctet(options.terminationCause);
     }
 
     // Calculate and write BER length to 2nd mark
