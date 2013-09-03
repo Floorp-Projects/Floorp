@@ -99,10 +99,8 @@
 #include "nsBidiUtils.h"
 
 #include "nsIDOMUserDataHandler.h"
-#include "nsIDOMXPathEvaluator.h"
 #include "nsIDOMXPathExpression.h"
 #include "nsIDOMXPathNSResolver.h"
-#include "nsIXPathEvaluatorInternal.h"
 #include "nsIParserService.h"
 #include "nsContentCreatorFunctions.h"
 
@@ -213,6 +211,7 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsISecurityConsoleMessage.h"
 #include "nsCharSeparatedTokenizer.h"
+#include "mozilla/dom/XPathEvaluator.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1582,23 +1581,11 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIMutationObserver)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIApplicationCacheContainer)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIObserver)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMXPathEvaluator)
   NS_INTERFACE_TABLE_END
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsDocument)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
                                  new nsNode3Tearoff(this))
-  if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator)) ||
-      aIID.Equals(NS_GET_IID(nsIXPathEvaluatorInternal))) {
-    if (!mXPathEvaluatorTearoff) {
-      nsresult rv;
-      mXPathEvaluatorTearoff =
-        do_CreateInstance(NS_XPATH_EVALUATOR_CONTRACTID,
-                          static_cast<nsIDocument *>(this), &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    return mXPathEvaluatorTearoff->QueryInterface(aIID, aInstancePtr);
-  }
-  else
 NS_INTERFACE_MAP_END
 
 
@@ -1784,7 +1771,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChannel)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleAttrStyleSheet)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mXPathEvaluatorTearoff)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mXPathEvaluator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLayoutHistoryState)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOnloadBlocker)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFirstBaseNodeWithHref)
@@ -1871,7 +1858,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   }
   tmp->mFirstChild = nullptr;
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mXPathEvaluatorTearoff)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mXPathEvaluator)
   tmp->mCachedRootElement = nullptr; // Avoid a dangling pointer
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDisplayDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFirstBaseNodeWithHref)
@@ -11290,31 +11277,14 @@ nsIDocument::CreateExpression(const nsAString& aExpression,
                               nsIDOMXPathNSResolver* aResolver,
                               ErrorResult& rv)
 {
-  nsCOMPtr<nsIDOMXPathEvaluator> evaluator = do_QueryInterface(this);
-  if (!evaluator) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIDOMXPathExpression> expr;
-  rv = evaluator->CreateExpression(aExpression, aResolver, getter_AddRefs(expr));
-  return expr.forget();
+  return XPathEvaluator()->CreateExpression(aExpression, aResolver, rv);
 }
 
 already_AddRefed<nsIDOMXPathNSResolver>
 nsIDocument::CreateNSResolver(nsINode* aNodeResolver,
                               ErrorResult& rv)
 {
-  nsCOMPtr<nsIDOMXPathEvaluator> evaluator = do_QueryInterface(this);
-  if (!evaluator) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIDOMNode> nodeResolver = do_QueryInterface(aNodeResolver);
-  nsCOMPtr<nsIDOMXPathNSResolver> res;
-  rv = evaluator->CreateNSResolver(nodeResolver, getter_AddRefs(res));
-  return res.forget();
+  return XPathEvaluator()->CreateNSResolver(aNodeResolver, rv);
 }
 
 already_AddRefed<nsISupports>
@@ -11322,18 +11292,33 @@ nsIDocument::Evaluate(const nsAString& aExpression, nsINode* aContextNode,
                       nsIDOMXPathNSResolver* aResolver, uint16_t aType,
                       nsISupports* aResult, ErrorResult& rv)
 {
-  nsCOMPtr<nsIDOMXPathEvaluator> evaluator = do_QueryInterface(this);
-  if (!evaluator) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIDOMNode> contextNode = do_QueryInterface(aContextNode);
-  nsCOMPtr<nsISupports> res;
-  rv = evaluator->Evaluate(aExpression, contextNode, aResolver, aType,
-                           aResult, getter_AddRefs(res));
-  return res.forget();
+  return XPathEvaluator()->Evaluate(aExpression, aContextNode, aResolver, aType,
+                                    aResult, rv);
 }
+
+NS_IMETHODIMP
+nsDocument::CreateExpression(const nsAString& aExpression,
+                             nsIDOMXPathNSResolver* aResolver,
+                             nsIDOMXPathExpression** aResult)
+{
+  return XPathEvaluator()->CreateExpression(aExpression, aResolver, aResult);
+}
+
+NS_IMETHODIMP
+nsDocument::CreateNSResolver(nsIDOMNode* aNodeResolver,
+                             nsIDOMXPathNSResolver** aResult)
+{
+  return XPathEvaluator()->CreateNSResolver(aNodeResolver, aResult);
+}
+
+NS_IMETHODIMP
+nsDocument::Evaluate(const nsAString& aExpression, nsIDOMNode* aContextNode,
+                     nsIDOMXPathNSResolver* aResolver, uint16_t aType,
+                     nsISupports* aInResult, nsISupports** aResult)
+{
+  return XPathEvaluator()->Evaluate(aExpression, aContextNode, aResolver, aType,
+                                    aInResult, aResult);
+} 
 
 // This is just a hack around the fact that window.document is not
 // [Unforgeable] yet.
@@ -11384,6 +11369,15 @@ nsIDocument::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
   }
 
   return obj;
+}
+
+XPathEvaluator*
+nsIDocument::XPathEvaluator()
+{
+  if (!mXPathEvaluator) {
+    mXPathEvaluator = new dom::XPathEvaluator(this);
+  }
+  return mXPathEvaluator;
 }
 
 bool
