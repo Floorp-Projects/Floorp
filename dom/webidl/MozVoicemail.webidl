@@ -4,31 +4,33 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMEventTarget.idl"
+// nsIDOMMozVoicemailStatus
+interface MozVoicemailStatus;
 
-interface nsIDOMMozVoicemailStatus;
-
-[scriptable, builtinclass, uuid(12e6604b-4981-4aa4-a31f-f77181f8a466)]
-interface nsIDOMMozVoicemail : nsIDOMEventTarget
+interface MozVoicemail : EventTarget
 {
   /**
    * The current voicemail status, or null when the status is unknown
    */
-  readonly attribute nsIDOMMozVoicemailStatus status;
+  [GetterThrows]
+  readonly attribute MozVoicemailStatus? status;
 
   /**
    * The voicemail box dialing number, or null if one wasn't found
    */
-  readonly attribute DOMString number;
+  [GetterThrows]
+  readonly attribute DOMString? number;
 
   /**
    * The display name of the voicemail box dialing number, or null if one
    * wasn't found
    */
-  readonly attribute DOMString displayName;
+  [GetterThrows]
+  readonly attribute DOMString? displayName;
 
   /**
    * The current voicemail status has changed
    */
-  [implicit_jscontext] attribute jsval onstatuschanged;
+  [SetterThrows]
+  attribute EventHandler onstatuschanged;
 };
