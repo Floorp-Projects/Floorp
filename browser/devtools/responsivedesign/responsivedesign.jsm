@@ -24,6 +24,9 @@ const MIN_HEIGHT = 50;
 const MAX_WIDTH = 10000;
 const MAX_HEIGHT = 10000;
 
+const SLOW_RATIO = 6;
+const ROUND_RATIO = 10;
+
 this.ResponsiveUIManager = {
   /**
    * Check if the a tab is in a responsive mode.
@@ -366,22 +369,26 @@ ResponsiveUI.prototype = {
     this.toolbar.appendChild(this.screenshotbutton);
 
     // Resizers
+    let resizerTooltip = this.strings.GetStringFromName("responsiveUI.resizerTooltip");
     this.resizer = this.chromeDoc.createElement("box");
     this.resizer.className = "devtools-responsiveui-resizehandle";
     this.resizer.setAttribute("right", "0");
     this.resizer.setAttribute("bottom", "0");
+    this.resizer.setAttribute("tooltiptext", resizerTooltip);
     this.resizer.onmousedown = this.bound_startResizing;
 
     this.resizeBarV =  this.chromeDoc.createElement("box");
     this.resizeBarV.className = "devtools-responsiveui-resizebarV";
     this.resizeBarV.setAttribute("top", "0");
     this.resizeBarV.setAttribute("right", "0");
+    this.resizeBarV.setAttribute("tooltiptext", resizerTooltip);
     this.resizeBarV.onmousedown = this.bound_startResizing;
 
     this.resizeBarH =  this.chromeDoc.createElement("box");
     this.resizeBarH.className = "devtools-responsiveui-resizebarH";
     this.resizeBarH.setAttribute("bottom", "0");
     this.resizeBarH.setAttribute("left", "0");
+    this.resizeBarV.setAttribute("tooltiptext", resizerTooltip);
     this.resizeBarH.onmousedown = this.bound_startResizing;
 
     this.container.insertBefore(this.toolbar, this.stack);
@@ -692,27 +699,48 @@ ResponsiveUI.prototype = {
    * @param aEvent
    */
   onDrag: function RUI_onDrag(aEvent) {
-    let deltaX = aEvent.screenX - this.lastScreenX;
-    let deltaY = aEvent.screenY - this.lastScreenY;
+    let shift = aEvent.shiftKey;
+    let ctrl = !aEvent.shiftKey && aEvent.ctrlKey;
+
+    let screenX = aEvent.screenX;
+    let screenY = aEvent.screenY;
+
+    let deltaX = screenX - this.lastScreenX;
+    let deltaY = screenY - this.lastScreenY;
 
     if (this.ignoreY)
       deltaY = 0;
     if (this.ignoreX)
       deltaX = 0;
 
+    if (ctrl) {
+      deltaX /= SLOW_RATIO;
+      deltaY /= SLOW_RATIO;
+    }
+
     let width = this.customPreset.width + deltaX;
     let height = this.customPreset.height + deltaY;
+
+    if (shift) {
+      let roundedWidth, roundedHeight;
+      roundedWidth = 10 * Math.floor(width / ROUND_RATIO);
+      roundedHeight = 10 * Math.floor(height / ROUND_RATIO);
+      screenX += roundedWidth - width;
+      screenY += roundedHeight - height;
+      width = roundedWidth;
+      height = roundedHeight;
+    }
 
     if (width < MIN_WIDTH) {
         width = MIN_WIDTH;
     } else {
-        this.lastScreenX = aEvent.screenX;
+        this.lastScreenX = screenX;
     }
 
     if (height < MIN_HEIGHT) {
         height = MIN_HEIGHT;
     } else {
-        this.lastScreenY = aEvent.screenY;
+        this.lastScreenY = screenY;
     }
 
     this.setSize(width, height);
