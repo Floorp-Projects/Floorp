@@ -193,30 +193,32 @@ extern int32_t IsTouchDeviceSupportPresent();
 bool
 nsDOMTouchEvent::PrefEnabled()
 {
-  static bool sDidCheckPref = false;
-  static bool sPrefValue = false;
-  if (!sDidCheckPref) {
-    sDidCheckPref = true;
-    int32_t flag = 0;
-    if (NS_SUCCEEDED(Preferences::GetInt("dom.w3c_touch_events.enabled",
-                                         &flag))) {
-      if (flag == 2) {
+  bool prefValue = false;
+  int32_t flag = 0;
+  if (NS_SUCCEEDED(Preferences::GetInt("dom.w3c_touch_events.enabled",
+                                        &flag))) {
+    if (flag == 2) {
 #ifdef XP_WIN
-        // On Windows we auto-detect based on device support.
-        sPrefValue = mozilla::widget::IsTouchDeviceSupportPresent();
-#else
-        NS_WARNING("dom.w3c_touch_events.enabled=2 not implemented!");
-        sPrefValue = false;
-#endif
-      } else {
-        sPrefValue = !!flag;
+      static bool sDidCheckTouchDeviceSupport = false;
+      static bool sIsTouchDeviceSupportPresent = false;
+      // On Windows we auto-detect based on device support.
+      if (!sDidCheckTouchDeviceSupport) {
+        sDidCheckTouchDeviceSupport = true;
+        sIsTouchDeviceSupportPresent = mozilla::widget::IsTouchDeviceSupportPresent();
       }
-    }
-    if (sPrefValue) {
-      nsContentUtils::InitializeTouchEventTable();
+      prefValue = sIsTouchDeviceSupportPresent;
+#else
+      NS_WARNING("dom.w3c_touch_events.enabled=2 not implemented!");
+      prefValue = false;
+#endif
+    } else {
+      prefValue = !!flag;
     }
   }
-  return sPrefValue;
+  if (prefValue) {
+    nsContentUtils::InitializeTouchEventTable();
+  }
+  return prefValue;
 }
 
 nsresult
