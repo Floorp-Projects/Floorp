@@ -715,7 +715,7 @@ nsDOMEvent::DuplicatePrivateData()
                                oldTransitionEvent->propertyName,
                                oldTransitionEvent->elapsedTime,
                                oldTransitionEvent->pseudoElement);
-      transitionEvent->AssignEventData(*oldTransitionEvent, true);
+      transitionEvent->AssignTransitionEventData(*oldTransitionEvent, true);
       newEvent = transitionEvent;
       break;
     }

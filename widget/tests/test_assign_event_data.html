@@ -7,11 +7,21 @@
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"></script>
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/NativeKeyCodes.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <style>
+    #a {
+      background-color: transparent;
+      transition: background-color 0.1s linear;
+    }
+    #a:focus {
+      background-color: red;
+    }
+  </style>
 </head>
 <body>
 <div id="display">
   <input id="input-text">
   <button id="button">button</button>
+  <a id="a" href="about:blank">hyper link</a>
   <div id="scrollable-div" style="overflow: auto; width: 30px; height: 30px;"><div id="scrolled-div" style="width: 10px; height: 10px;"></div></div>
   <form id="form"></form>
 </div>
@@ -445,6 +455,16 @@ const kTests = [
       // So, we cannot test it in this test.
       todo(false, "nsSimpleGestureEvent isn't tested");
       return false;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsTransitionEvent (transitionend)",
+    targetID: "a", eventType: "transitionend",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).focus();
+    },
+    canRun: function () {
+      return true;
     },
     todoMismatch: [],
   },
