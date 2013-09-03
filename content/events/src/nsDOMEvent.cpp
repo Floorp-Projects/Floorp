@@ -701,10 +701,8 @@ nsDOMEvent::DuplicatePrivateData()
         static_cast<nsSimpleGestureEvent*>(mEvent);
       nsSimpleGestureEvent* simpleGestureEvent = 
         new nsSimpleGestureEvent(false, msg, nullptr, 0, 0.0);
-      simpleGestureEvent->AssignInputEventData(*oldSimpleGestureEvent, true);
-      simpleGestureEvent->direction = oldSimpleGestureEvent->direction;
-      simpleGestureEvent->delta = oldSimpleGestureEvent->delta;
-      simpleGestureEvent->clickCount = oldSimpleGestureEvent->clickCount;
+      simpleGestureEvent->
+        AssignSimpleGestureEventData(*oldSimpleGestureEvent, true);
       newEvent = simpleGestureEvent;
       break;
     }
