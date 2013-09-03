@@ -606,24 +606,7 @@ nsDOMEvent::DuplicatePrivateData()
         static_cast<widget::WheelEvent*>(mEvent);
       widget::WheelEvent* wheelEvent =
         new widget::WheelEvent(false, msg, nullptr);
-      wheelEvent->AssignInputEventData(*oldWheelEvent, true);
-      wheelEvent->deltaX = oldWheelEvent->deltaX;
-      wheelEvent->deltaY = oldWheelEvent->deltaY;
-      wheelEvent->deltaZ = oldWheelEvent->deltaZ;
-      wheelEvent->deltaMode = oldWheelEvent->deltaMode;
-      wheelEvent->relatedTarget = oldWheelEvent->relatedTarget;
-      wheelEvent->button = oldWheelEvent->button;
-      wheelEvent->buttons = oldWheelEvent->buttons;
-      wheelEvent->modifiers = oldWheelEvent->modifiers;
-      wheelEvent->inputSource = oldWheelEvent->inputSource;
-      wheelEvent->customizedByUserPrefs = oldWheelEvent->customizedByUserPrefs;
-      wheelEvent->isMomentum = oldWheelEvent->isMomentum;
-      wheelEvent->isPixelOnlyDevice = oldWheelEvent->isPixelOnlyDevice;
-      wheelEvent->lineOrPageDeltaX = oldWheelEvent->lineOrPageDeltaX;
-      wheelEvent->lineOrPageDeltaY = oldWheelEvent->lineOrPageDeltaY;
-      wheelEvent->scrollType = oldWheelEvent->scrollType;
-      wheelEvent->overflowDeltaX = oldWheelEvent->overflowDeltaX;
-      wheelEvent->overflowDeltaY = oldWheelEvent->overflowDeltaY;
+      wheelEvent->AssignWheelEventData(*oldWheelEvent, true);
       newEvent = wheelEvent;
       break;
     }

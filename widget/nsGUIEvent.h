@@ -1541,6 +1541,24 @@ public:
   //       it would need to check the deltaX and deltaY.
   double overflowDeltaX;
   double overflowDeltaY;
+
+  void AssignWheelEventData(const WheelEvent& aEvent, bool aCopyTargets)
+  {
+    AssignMouseEventBaseData(aEvent, aCopyTargets);
+
+    deltaX = aEvent.deltaX;
+    deltaY = aEvent.deltaY;
+    deltaZ = aEvent.deltaZ;
+    deltaMode = aEvent.deltaMode;
+    customizedByUserPrefs = aEvent.customizedByUserPrefs;
+    isMomentum = aEvent.isMomentum;
+    isPixelOnlyDevice = aEvent.isPixelOnlyDevice;
+    lineOrPageDeltaX = aEvent.lineOrPageDeltaX;
+    lineOrPageDeltaY = aEvent.lineOrPageDeltaY;
+    scrollType = aEvent.scrollType;
+    overflowDeltaX = aEvent.overflowDeltaX;
+    overflowDeltaY = aEvent.overflowDeltaY;
+  }
 };
 
 } // namespace widget

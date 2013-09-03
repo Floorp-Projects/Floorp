@@ -312,6 +312,43 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
+  { description: "widget::WheelEvent (wheel, vertical)",
+    targetID: "input-text", eventType: "wheel",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      synthesizeWheel(document.getElementById(this.targetID), 3, 4,
+                      { deltaY: 20, lineOrPageDeltaY: 1, altKey: true });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "widget::WheelEvent (wheel, horizontal)",
+    targetID: "input-text", eventType: "wheel",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      synthesizeWheel(document.getElementById(this.targetID), 4, 5,
+                      { deltaX: 20, lineOrPageDeltaX: 1, ctrlKey: true });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "widget::WheelEvent (wheel, both)",
+    targetID: "input-text", eventType: "wheel",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      synthesizeWheel(document.getElementById(this.targetID), 4, 5,
+                      { deltaX: 20, deltaY: 10,
+                        lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
 ];
 
 function doTest(aTest)
