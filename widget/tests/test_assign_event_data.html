@@ -264,6 +264,54 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
+  { description: "nsMouseScrollEvent (DOMMouseScroll, vertical)",
+    targetID: "input-text", eventType: "DOMMouseScroll",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      synthesizeWheel(document.getElementById(this.targetID), 3, 4,
+                      { deltaY: 30, lineOrPageDeltaY: 2 });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "nsMouseScrollEvent (DOMMouseScroll, horizontal)",
+    targetID: "input-text", eventType: "DOMMouseScroll",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      synthesizeWheel(document.getElementById(this.targetID), 4, 5,
+                      { deltaX: 30, lineOrPageDeltaX: 2, shiftKey: true });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "nsMouseScrollEvent (MozMousePixelScroll, vertical)",
+    targetID: "input-text", eventType: "MozMousePixelScroll",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      synthesizeWheel(document.getElementById(this.targetID), 3, 4,
+                      { deltaY: 20, lineOrPageDeltaY: 1, altKey: true });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "nsMouseScrollEvent (MozMousePixelScroll, horizontal)",
+    targetID: "input-text", eventType: "MozMousePixelScroll",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      synthesizeWheel(document.getElementById(this.targetID), 4, 5,
+                      { deltaX: 20, lineOrPageDeltaX: 1, ctrlKey: true });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
 ];
 
 function doTest(aTest)
@@ -314,6 +362,16 @@ function init()
   SpecialPowers.setBoolPref("middlemouse.contentLoadURL", false);
   SpecialPowers.setBoolPref("middlemouse.paste", false);
   SpecialPowers.setBoolPref("general.autoScroll", false);
+  SpecialPowers.setIntPref("mousewheel.default.action", 0);
+  SpecialPowers.setIntPref("mousewheel.default.action.override_x", -1);
+  SpecialPowers.setIntPref("mousewheel.with_shift.action", 0);
+  SpecialPowers.setIntPref("mousewheel.with_shift.action.override_x", -1);
+  SpecialPowers.setIntPref("mousewheel.with_control.action", 0);
+  SpecialPowers.setIntPref("mousewheel.with_control.action.override_x", -1);
+  SpecialPowers.setIntPref("mousewheel.with_alt.action", 0);
+  SpecialPowers.setIntPref("mousewheel.with_alt.action.override_x", -1);
+  SpecialPowers.setIntPref("mousewheel.with_meta.action", 0);
+  SpecialPowers.setIntPref("mousewheel.with_meta.action.override_x", -1);
 
   runNextTest();
 }
@@ -323,6 +381,17 @@ function finish()
   SpecialPowers.clearUserPref("middlemouse.contentLoadURL");
   SpecialPowers.clearUserPref("middlemouse.paste");
   SpecialPowers.clearUserPref("general.autoScroll");
+  SpecialPowers.clearUserPref("mousewheel.default.action");
+  SpecialPowers.clearUserPref("mousewheel.default.action.override_x");
+  SpecialPowers.clearUserPref("mousewheel.with_shift.action");
+  SpecialPowers.clearUserPref("mousewheel.with_shift.action.override_x");
+  SpecialPowers.clearUserPref("mousewheel.with_control.action");
+  SpecialPowers.clearUserPref("mousewheel.with_control.action.override_x");
+  SpecialPowers.clearUserPref("mousewheel.with_alt.action");
+  SpecialPowers.clearUserPref("mousewheel.with_alt.action.override_x");
+  SpecialPowers.clearUserPref("mousewheel.with_meta.action");
+  SpecialPowers.clearUserPref("mousewheel.with_meta.action.override_x");
+
   SimpleTest.finish();
 }
 

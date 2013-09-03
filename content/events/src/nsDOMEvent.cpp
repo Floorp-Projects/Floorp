@@ -596,14 +596,7 @@ nsDOMEvent::DuplicatePrivateData()
         static_cast<nsMouseScrollEvent*>(mEvent);
       nsMouseScrollEvent* mouseScrollEvent =
         new nsMouseScrollEvent(false, msg, nullptr);
-      mouseScrollEvent->AssignInputEventData(*oldMouseScrollEvent, true);
-      mouseScrollEvent->isHorizontal = oldMouseScrollEvent->isHorizontal;
-      mouseScrollEvent->delta = oldMouseScrollEvent->delta;
-      mouseScrollEvent->relatedTarget = oldMouseScrollEvent->relatedTarget;
-      mouseScrollEvent->button = oldMouseScrollEvent->button;
-      mouseScrollEvent->buttons = oldMouseScrollEvent->buttons;
-      static_cast<nsMouseEvent_base*>(mouseScrollEvent)->inputSource =
-        static_cast<nsMouseEvent_base*>(oldMouseScrollEvent)->inputSource;
+      mouseScrollEvent->AssignMouseScrollEventData(*oldMouseScrollEvent, true);
       newEvent = mouseScrollEvent;
       break;
     }
