@@ -17,6 +17,7 @@ LOCAL_INCLUDES = \
   -I$(srcdir)/../feeds \
   -I$(srcdir)/../find \
   -I$(srcdir)/../intl \
+  -I$(srcdir)/../jsdownloads/src \
   -I$(srcdir)/../protobuf \
   -I$(srcdir)/../startup \
   -I$(srcdir)/../statusfilter \
@@ -32,6 +33,7 @@ SHARED_LIBRARY_LIBS = \
   ../startup/$(LIB_PREFIX)appstartup_s.$(LIB_SUFFIX) \
   ../statusfilter/$(LIB_PREFIX)mozbrwsr_s.$(LIB_SUFFIX) \
   ../downloads/$(LIB_PREFIX)download_s.$(LIB_SUFFIX) \
+  ../jsdownloads/src/$(LIB_PREFIX)jsdownloads_s.$(LIB_SUFFIX) \
   ../protobuf/$(LIB_PREFIX)protobuf_s.$(LIB_SUFFIX) \
   ../intl/$(LIB_PREFIX)intl_s.$(LIB_SUFFIX) \
   $(NULL)

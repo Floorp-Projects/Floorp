@@ -25,6 +25,17 @@ public:
   nsCOMPtr<nsIAtom>    mPrevAttrValue;
   nsCOMPtr<nsIAtom>    mNewAttrValue;
   unsigned short       mAttrChange;
+
+  void AssignMutationEventData(const nsMutationEvent& aEvent, bool aCopyTargets)
+  {
+    AssignEventData(aEvent, aCopyTargets);
+
+    mRelatedNode = aEvent.mRelatedNode;
+    mAttrName = aEvent.mAttrName;
+    mPrevAttrValue = aEvent.mPrevAttrValue;
+    mNewAttrValue = aEvent.mNewAttrValue;
+    mAttrChange = aEvent.mAttrChange;
+  }
 };
 
 #define NS_MUTATION_START           1800

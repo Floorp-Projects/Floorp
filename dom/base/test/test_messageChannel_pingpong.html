@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=677638
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 677638 - port cloning</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=677638">Mozilla Bug 677638</a>
+<div id="content"></div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+
+  function runTest() {
+    var MAX = 100;
+
+    var a = new MessageChannel();
+    ok(a, "MessageChannel created");
+
+    // Populate the message queue of this port.
+    for (var i = 0; i < MAX; ++i) {
+      a.port1.postMessage(i);
+    }
+
+    window.addEventListener('message', receiveMessage, false);
+    function receiveMessage(evt) {
+
+      // This test sends the port from this window to the iframe and viceversa.
+      if (evt.data.type == 'PORT') {
+        var port = evt.data.port;
+        var counter = 0;
+        port.onmessage = function(evt) {
+          // only 1 message should be received by this port.
+          if (counter++ == 0) {
+            ok(evt.data % 2, "The number " + evt.data + " has been received correctly by the main window");
+
+            if (evt.data < MAX - 1) {
+              ifr.contentWindow.postMessage({ type: 'PORT', port: port }, '*');
+            } else {
+              SimpleTest.finish();
+            }
+          } else {
+            ok(false, "Wrong message!");
+          }
+        }
+      } else if (evt.data.type == 'OK') {
+        ok(true, evt.data.msg);
+      } else if (evt.data.type == 'KO') {
+        ok(false, evt.data.msg);
+      } else {
+        ok(false, "Unknown message");
+      }
+    }
+
+    var div = document.getElementById("content");
+    ok(div, "Parent exists");
+
+    var ifr = document.createElement("iframe");
+    ifr.addEventListener("load", iframeLoaded, false);
+    ifr.setAttribute('src', "iframe_messageChannel_pingpong.html");
+    div.appendChild(ifr);
+
+    function iframeLoaded() {
+      ifr.contentWindow.postMessage({ type: 'PORT', port: a.port2 }, '*');
+    }
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [["dom.messageChannel.enabled", true]]}, runTest);
+  </script>
+</body>
+</html>
