@@ -1395,6 +1395,14 @@ public:
   }
 
   nsString data;
+
+  void AssignCompositionEventData(const nsCompositionEvent& aEvent,
+                                  bool aCopyTargets)
+  {
+    AssignGUIEventData(aEvent, aCopyTargets);
+
+    data = aEvent.data;
+  }
 };
 
 /**

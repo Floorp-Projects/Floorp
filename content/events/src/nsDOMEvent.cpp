@@ -586,8 +586,7 @@ nsDOMEvent::DuplicatePrivateData()
         new nsCompositionEvent(false, msg, nullptr);
       nsCompositionEvent* oldCompositionEvent =
         static_cast<nsCompositionEvent*>(mEvent);
-      compositionEvent->AssignGUIEventData(*oldCompositionEvent, true);
-      compositionEvent->data = oldCompositionEvent->data;
+      compositionEvent->AssignCompositionEventData(*oldCompositionEvent, true);
       newEvent = compositionEvent;
       break;
     }

@@ -241,6 +241,29 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
+  { description: "nsCompositionEvent (compositionupdate)",
+    targetID: "input-text", eventType: "compositionupdate",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      document.getElementById(this.targetID).focus();
+      synthesizeComposition({ type: "compositionstart" });
+      synthesizeComposition({ type: "compositionupdate", data: "\u30E9\u30FC\u30E1\u30F3" });
+      synthesizeText({ "composition":
+        { "string": "\u30E9\u30FC\u30E1\u30F3",
+          "clauses":
+          [
+            { "length": 0, "attr": 0 }
+          ]
+        },
+        "caret": { "start": 4, "length": 0 }
+      });
+      synthesizeComposition({ type: "compositionend", data: "\u30E9\u30FC\u30E1\u30F3" });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
 ];
 
 function doTest(aTest)
