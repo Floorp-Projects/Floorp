@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+  <script type="application/javascript">
+
+  function ok(what, msg) {
+    window.parent.postMessage({type: what ? 'OK' : 'KO', msg: msg }, '*');
+  }
+
+  window.addEventListener('message', receiveMessage, false);
+  function receiveMessage(evt) {
+    if (evt.data.type == 'PORT') {
+      var port = evt.data.port;
+      var counter = 0;
+      port.onmessage = function(evt) {
+        if (counter++ == 0) {
+          ok(!(evt.data % 2), "The number " + evt.data + " has been received correctly by the iframe");
+
+          window.parent.postMessage({ type: 'PORT', port: port }, '*');
+        }
+        else {
+          ok(false, "Wrong message!");
+        }
+      }
+    } else {
+      ok(false, "Unknown message");
+    }
+  }
+
+  </script>
+</body>
+</html>
+

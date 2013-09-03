@@ -853,7 +853,12 @@ private:
       return false;
     }
 
-    return scope->mWorker->PostMessageToParent(aCx, message, transferable);
+    if (!scope->mWorker->PostMessageToParent(aCx, message, transferable)) {
+      return false;
+    }
+
+    JS_RVAL(aCx, aVp).setUndefined();
+    return true;
   }
 };
 

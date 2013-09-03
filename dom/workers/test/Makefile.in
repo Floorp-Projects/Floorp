@@ -106,6 +106,8 @@ MOCHITEST_FILES = \
   content_worker.js \
   test_url.html \
   url_worker.js \
+  test_bug911085.html \
+  bug911085_worker.js \
   $(NULL)
 
 # Bug 842386 - Disabled on OSX due to intermittent failures.

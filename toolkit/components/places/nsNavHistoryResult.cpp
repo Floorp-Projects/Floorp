@@ -233,6 +233,19 @@ nsNavHistoryResultNode::GetTags(nsAString& aTags) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNavHistoryResultNode::GetPageGuid(nsACString& aPageGuid) {
+  aPageGuid = mPageGuid;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsNavHistoryResultNode::GetBookmarkGuid(nsACString& aBookmarkGuid) {
+  aBookmarkGuid = mBookmarkGuid;
+  return NS_OK;
+}
+
 
 void
 nsNavHistoryResultNode::OnRemoving()

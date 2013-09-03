@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=677638
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 677638 - port cloning</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=677638">Mozilla Bug 677638</a>
+<div id="content"></div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+
+  function start() {
+    var a = new MessageChannel();
+    ok(a, "MessageChannel created");
+
+    window.addEventListener('message', receiveMessage, false);
+    function receiveMessage(evt) {
+      if (evt.data.status == 'READY') {
+        runTest();
+      } else {
+        ok(false, "Unknown message");
+      }
+    }
+
+    var div = document.getElementById("content");
+    ok(div, "Parent exists");
+
+    var ifr = document.createElement("iframe");
+    ifr.addEventListener("load", iframeLoaded, false);
+    ifr.setAttribute('src', "iframe_messageChannel_post.html");
+    div.appendChild(ifr);
+
+    function iframeLoaded() {
+      ifr.contentWindow.postMessage({ port: a.port2 }, '*');
+    }
+
+    var tests = [ 42,
+                  null,
+                  undefined,
+                  "hello world",
+                  new Blob([]),
+                  true ];
+
+    a.port1.onmessage = function(evt) {
+      ok(tests.length, "We are waiting for a message");
+      is(tests[0], evt.data, "Value ok: " + tests[0]);
+      tests.shift();
+      runTest();
+    }
+
+    function runTest() {
+      if (!tests.length) {
+        SimpleTest.finish();
+        return;
+      }
+
+      a.port1.postMessage(tests[0]);
+    }
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [["dom.messageChannel.enabled", true]]}, start);
+  </script>
+</body>
+</html>
