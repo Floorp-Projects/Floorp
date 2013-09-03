@@ -573,7 +573,7 @@ WebappsActor.prototype = {
   },
 
   watchApps: function () {
-    this._framesByOrigin = {};
+    this._openedApps = new Set();
     let chromeWindow = Services.wm.getMostRecentWindow('navigator:browser');
     let systemAppFrame = chromeWindow.getContentWindow();
     systemAppFrame.addEventListener("appwillopen", this);
@@ -583,7 +583,7 @@ WebappsActor.prototype = {
   },
 
   unwatchApps: function () {
-    this._framesByOrigin = null;
+    this._openedApps = null;
     let chromeWindow = Services.wm.getMostRecentWindow('navigator:browser');
     let systemAppFrame = chromeWindow.getContentWindow();
     systemAppFrame.removeEventListener("appwillopen", this);
@@ -593,46 +593,33 @@ WebappsActor.prototype = {
   },
 
   handleEvent: function (event) {
-    let frame;
-    let origin = event.detail.origin;
+    let manifestURL;
     switch(event.type) {
       case "appwillopen":
-        frame = event.target;
+        let frame = event.target;
+        manifestURL = frame.getAttribute("mozapp")
+
         // Ignore the event if we already received an appwillopen for this app
         // (appwillopen is also fired when the app has been moved to background
         // and get back to foreground)
-        let mm = frame.QueryInterface(Ci.nsIFrameLoaderOwner)
-                         .frameLoader
-                         .messageManager;
-        if (this._appActorsMap.has(mm)) {
+        if (this._openedApps.has(manifestURL)) {
           return;
         }
-
-        // Workaround to be able to get the related frame on `appterminated`.
-        // `appterminated` event being dispatched by gaia only comes app origin
-        // whereas we need to get the its manifest URL, that we can fetch
-        // on the app frame.
-        this._framesByOrigin[origin] = frame;
+        this._openedApps.add(manifestURL);
 
         this.conn.send({ from: this.actorID,
                          type: "appOpen",
-                         manifestURL: frame.getAttribute("mozapp")
+                         manifestURL: manifestURL
                        });
         break;
 
       case "appterminated":
-        // Get the related app frame out of this event
-        // TODO: eventually fire the event on the frame or at least use
-        // manifestURL as key (and propagate manifestURL via event detail)
-        frame = this._framesByOrigin[origin];
-        delete this._framesByOrigin[origin];
-        if (frame) {
-          let manifestURL = frame.getAttribute("mozapp");
-          this.conn.send({ from: this.actorID,
-                           type: "appClose",
-                           manifestURL: manifestURL
-                         });
-        }
+        manifestURL = event.detail.manifestURL;
+        this._openedApps.delete(manifestURL);
+        this.conn.send({ from: this.actorID,
+                         type: "appClose",
+                         manifestURL: manifestURL
+                       });
         break;
     }
   }
