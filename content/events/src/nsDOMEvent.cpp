@@ -675,7 +675,7 @@ nsDOMEvent::DuplicatePrivateData()
     {
       nsUIEvent* oldUIEvent = static_cast<nsUIEvent*>(mEvent);
       nsUIEvent* uiEvent = new nsUIEvent(false, msg, oldUIEvent->detail);
-      uiEvent->AssignEventData(*oldUIEvent, true);
+      uiEvent->AssignUIEventData(*oldUIEvent, true);
       newEvent = uiEvent;
       break;
     }
@@ -693,7 +693,7 @@ nsDOMEvent::DuplicatePrivateData()
       nsUIEvent* oldUIEvent = static_cast<nsUIEvent*>(mEvent);
       nsUIEvent* uiEvent = new nsUIEvent(false, msg, 0);
       uiEvent->eventStructType = NS_SMIL_TIME_EVENT;
-      uiEvent->AssignGUIEventData(*oldUIEvent, true);
+      uiEvent->AssignUIEventData(*oldUIEvent, true);
       newEvent = uiEvent;
       break;
     }
