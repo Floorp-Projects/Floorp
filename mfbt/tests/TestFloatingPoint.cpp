@@ -8,6 +8,11 @@
 #include <math.h>
 
 using mozilla::DoublesAreIdentical;
+using mozilla::IsFinite;
+using mozilla::IsInfinite;
+using mozilla::IsNaN;
+using mozilla::IsNegative;
+using mozilla::IsNegativeZero;
 using mozilla::NegativeInfinity;
 using mozilla::PositiveInfinity;
 using mozilla::SpecificNaN;
@@ -97,8 +102,54 @@ TestDoublesAreIdentical()
   ShouldNotBeIdentical(UnspecifiedNaN(), NegativeInfinity());
 }
 
+static void
+TestPredicates()
+{
+  MOZ_ASSERT(IsNaN(UnspecifiedNaN()));
+  MOZ_ASSERT(IsNaN(SpecificNaN(1, 17)));;
+  MOZ_ASSERT(IsNaN(SpecificNaN(0, 0xfffffffffff0fULL)));
+  MOZ_ASSERT(!IsNaN(0));
+  MOZ_ASSERT(!IsNaN(-0.0));
+  MOZ_ASSERT(!IsNaN(1.0));
+  MOZ_ASSERT(!IsNaN(PositiveInfinity()));
+  MOZ_ASSERT(!IsNaN(NegativeInfinity()));
+
+  MOZ_ASSERT(IsInfinite(PositiveInfinity()));
+  MOZ_ASSERT(IsInfinite(NegativeInfinity()));
+  MOZ_ASSERT(!IsInfinite(UnspecifiedNaN()));
+  MOZ_ASSERT(!IsInfinite(0));
+  MOZ_ASSERT(!IsInfinite(-0.0));
+  MOZ_ASSERT(!IsInfinite(1.0));
+
+  MOZ_ASSERT(!IsFinite(PositiveInfinity()));
+  MOZ_ASSERT(!IsFinite(NegativeInfinity()));
+  MOZ_ASSERT(!IsFinite(UnspecifiedNaN()));
+  MOZ_ASSERT(IsFinite(0));
+  MOZ_ASSERT(IsFinite(-0.0));
+  MOZ_ASSERT(IsFinite(1.0));
+
+  MOZ_ASSERT(!IsNegative(PositiveInfinity()));
+  MOZ_ASSERT(IsNegative(NegativeInfinity()));
+  MOZ_ASSERT(IsNegative(-0.0));
+  MOZ_ASSERT(!IsNegative(0.0));
+  MOZ_ASSERT(IsNegative(-1.0));
+  MOZ_ASSERT(!IsNegative(1.0));
+
+  MOZ_ASSERT(!IsNegativeZero(PositiveInfinity()));
+  MOZ_ASSERT(!IsNegativeZero(NegativeInfinity()));
+  MOZ_ASSERT(!IsNegativeZero(SpecificNaN(1, 17)));;
+  MOZ_ASSERT(!IsNegativeZero(SpecificNaN(1, 0xfffffffffff0fULL)));
+  MOZ_ASSERT(!IsNegativeZero(SpecificNaN(0, 17)));;
+  MOZ_ASSERT(!IsNegativeZero(SpecificNaN(0, 0xfffffffffff0fULL)));
+  MOZ_ASSERT(IsNegativeZero(-0.0));
+  MOZ_ASSERT(!IsNegativeZero(0.0));
+  MOZ_ASSERT(!IsNegativeZero(-1.0));
+  MOZ_ASSERT(!IsNegativeZero(1.0));
+}
+
 int
 main()
 {
   TestDoublesAreIdentical();
+  TestPredicates();
 }
