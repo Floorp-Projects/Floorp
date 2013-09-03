@@ -9,14 +9,13 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
+#include "js/TypeDecls.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingUtils.h"
 
 #include "EnableWebSpeechRecognitionCheck.h"
 #include "SpeechGrammar.h"
-
-struct JSContext;
 
 namespace mozilla {
 namespace dom {

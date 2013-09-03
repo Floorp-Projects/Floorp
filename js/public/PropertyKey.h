@@ -9,9 +9,8 @@
 #ifndef js_PropertyKey_h
 #define js_PropertyKey_h
 
+#include "js/TypeDecls.h"
 #include "js/Value.h"
-
-struct JSContext;
 
 namespace JS {
 

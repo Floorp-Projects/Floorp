@@ -120,6 +120,8 @@ typedef AutoValueVector NodeVector;
         return false;                                                                  \
     JS_END_MACRO
 
+namespace {
+
 /*
  * Builder class that constructs JavaScript AST node objects. See:
  *
@@ -614,6 +616,8 @@ class NodeBuilder
 
     bool propertyPattern(HandleValue key, HandleValue patt, TokenPos *pos, MutableHandleValue dst);
 };
+
+} /* anonymous namespace */
 
 bool
 NodeBuilder::newNode(ASTType type, TokenPos *pos, MutableHandleObject dst)

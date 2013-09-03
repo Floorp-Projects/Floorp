@@ -49,7 +49,7 @@ ToCanonicalSupports(nsISupports* p)
 ////////////////////////////////////////////////////////////////////////////////
 // Macros to help detect thread-safety:
 
-#if defined(DEBUG) && !defined(XPCOM_GLUE_AVOID_NSPR)
+#if (defined(DEBUG) || defined(NIGHTLY_BUILD)) && !defined(XPCOM_GLUE_AVOID_NSPR)
 
 class nsAutoOwningThread {
 public:
@@ -63,12 +63,12 @@ private:
 #define NS_DECL_OWNINGTHREAD            nsAutoOwningThread _mOwningThread;
 #define NS_ASSERT_OWNINGTHREAD(_class) \
   NS_CheckThreadSafe(_mOwningThread.GetThread(), #_class " not thread-safe")
-#else // !DEBUG
+#else // !DEBUG && !NIGHTLY_BUILD
 
 #define NS_DECL_OWNINGTHREAD            /* nothing */
 #define NS_ASSERT_OWNINGTHREAD(_class)  ((void)0)
 
-#endif // DEBUG
+#endif // DEBUG || NIGHTLY_BUILD
 
 // Support for ISupports classes which interact with cycle collector.
 

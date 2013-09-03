@@ -2875,6 +2875,8 @@ JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp)
     return true;
 }
 
+namespace {
+
 class AutoHoldZone
 {
   public:
@@ -2894,6 +2896,8 @@ class AutoHoldZone
     bool *holdp;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
+
+} /* anonymous namespace */
 
 JS_PUBLIC_API(JSObject *)
 JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals,
@@ -4713,6 +4717,8 @@ ReadCompleteFile(JSContext *cx, FILE *fp, FileContents &buffer)
     return true;
 }
 
+namespace {
+
 class AutoFile
 {
     FILE *fp_;
@@ -4733,6 +4739,8 @@ class AutoFile
         return ReadCompleteFile(cx, fp_, buffer);
     }
 };
+
+} /* anonymous namespace */
 
 /*
  * Open a source file for reading. Supports "-" and NULL to mean stdin. The

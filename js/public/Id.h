@@ -7,13 +7,23 @@
 #ifndef js_Id_h
 #define js_Id_h
 
+// A jsid is an identifier for a property or method of an object which is
+// either a 31-bit signed integer, interned string or object.
+//
+// Also, there is an additional jsid value, JSID_VOID, which does not occur in
+// JS scripts but may be used to indicate the absence of a valid jsid.  A void
+// jsid is not a valid id and only arises as an exceptional API return value,
+// such as in JS_NextProperty. Embeddings must not pass JSID_VOID into JSAPI
+// entry points expecting a jsid and do not need to handle JSID_VOID in hooks
+// receiving a jsid except when explicitly noted in the API contract.
+//
+// A jsid is not implicitly convertible to or from a jsval; JS_ValueToId or
+// JS_IdToValue must be used instead.
+
 #include "jstypes.h"
 
-#include "js/IdForward.h"
+#include "js/TypeDecls.h"
 #include "js/Utility.h"
-
-class JSObject;
-class JSString;
 
 #ifdef JS_USE_JSID_STRUCT_TYPES
 struct jsid

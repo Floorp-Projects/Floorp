@@ -1,6 +1,5 @@
 {
   "Historical DOM features must be removed: CDATASection": true,
-  "Historical DOM features must be removed: UserDataHandler": true,
   "Historical DOM features must be removed: createCDATASection": true,
   "Historical DOM features must be removed: createAttribute": true,
   "Historical DOM features must be removed: createAttributeNS": true,

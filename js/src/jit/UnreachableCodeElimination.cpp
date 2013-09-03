@@ -297,7 +297,7 @@ UnreachableCodeElimination::removeUnmarkedBlocksAndClearDominators()
                     MCall *call = iter->toCall();
                     for (size_t i = 0; i < call->numStackArgs(); i++) {
                         JS_ASSERT(call->getArg(i)->isPassArg());
-                        JS_ASSERT(call->getArg(i)->defUseCount() == 1);
+                        JS_ASSERT(call->getArg(i)->hasOneDefUse());
                         MPassArg *arg = call->getArg(i)->toPassArg();
                         arg->replaceAllUsesWith(arg->getArgument());
                     }

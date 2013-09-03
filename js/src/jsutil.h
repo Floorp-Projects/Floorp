@@ -20,9 +20,6 @@
 
 #include "js/Utility.h"
 
-/* Forward declarations. */
-struct JSContext;
-
 static JS_ALWAYS_INLINE void *
 js_memcpy(void *dst_, const void *src_, size_t len)
 {

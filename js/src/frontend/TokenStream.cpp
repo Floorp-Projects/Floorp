@@ -333,8 +333,7 @@ TokenStream::TokenStream(ExclusiveContext *cx, const CompileOptions &options,
 
 TokenStream::~TokenStream()
 {
-    if (sourceMap)
-        js_free(sourceMap);
+    js_free(sourceMap);
 
     JS_ASSERT_IF(originPrincipals, originPrincipals->refcount);
 }
@@ -847,8 +846,7 @@ TokenStream::getSourceMappingURL(bool isMultiline, bool shouldWarnDeprecated)
 
         size_t sourceMapLength = tokenbuf.length();
 
-        if (sourceMap)
-            js_free(sourceMap);
+        js_free(sourceMap);
         sourceMap = cx->pod_malloc<jschar>(sourceMapLength + 1);
         if (!sourceMap)
             return false;

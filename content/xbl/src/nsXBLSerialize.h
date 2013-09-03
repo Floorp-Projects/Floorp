@@ -9,11 +9,7 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsINameSpaceManager.h"
-
-namespace JS {
-template <typename T> class Handle;
-template <typename T> class MutableHandle;
-}
+#include "js/TypeDecls.h"
 
 typedef uint8_t XBLBindingSerializeDetails;
 

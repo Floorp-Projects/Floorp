@@ -227,7 +227,7 @@
     </implementation>
   </binding>
 
-  <binding id="tabs"
+  <binding id="tabs" role="xul:tabs"
            extends="chrome://global/content/bindings/general.xml#basecontrol">
     <resources>
       <stylesheet src="chrome://global/skin/tabbox.css"/>
@@ -239,7 +239,7 @@
       <xul:spacer class="tabs-right" flex="1"/>
     </content>
     
-    <implementation implements="nsIDOMXULSelectControlElement, nsIDOMXULRelatedElement, nsIAccessibleProvider">
+    <implementation implements="nsIDOMXULSelectControlElement, nsIDOMXULRelatedElement">
       <constructor>
       <![CDATA[
         // first and last tabs need to be able to have unique styles
@@ -274,15 +274,6 @@
           this.selectedIndex = 0;
       ]]>
       </constructor>
-
-      <!-- nsIAccessibleProvider -->
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULTabs;
-          ]]>
-        </getter>
-      </property>
 
       <!-- nsIDOMXULRelatedElement -->
       <method name="getRelatedElement">
@@ -593,19 +584,9 @@
 #endif
   </binding>
 
-  <binding id="tabpanels"
+  <binding id="tabpanels" role="xul:tabpanels"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
-    <implementation implements="nsIAccessibleProvider, nsIDOMXULRelatedElement">
-
-      <!-- nsIAccessibleProvider -->
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULTabpanels;
-          ]]>
-        </getter>
-      </property>
-
+    <implementation implements="nsIDOMXULRelatedElement">
       <!-- nsIDOMXULRelatedElement -->
       <method name="getRelatedElement">
         <parameter name="aTabPanelElm"/>
@@ -703,7 +684,7 @@
     </implementation>
   </binding>
 
-  <binding id="tab" display="xul:button"
+  <binding id="tab" display="xul:button" role="xul:tab"
            extends="chrome://global/content/bindings/general.xml#control-item">
     <resources>
       <stylesheet src="chrome://global/skin/tabbox.css"/>
@@ -721,15 +702,7 @@
       </xul:hbox>
     </content>
 
-    <implementation implements="nsIDOMXULSelectControlItemElement, nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULTab;
-          ]]>
-        </getter>
-      </property>
-
+    <implementation implements="nsIDOMXULSelectControlItemElement">
       <property name="control" readonly="true">
         <getter>
           <![CDATA[

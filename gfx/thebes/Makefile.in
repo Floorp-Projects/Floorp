@@ -11,9 +11,7 @@ include $(DEPTH)/config/autoconf.mk
 
 EXPORT_LIBRARY	= 1
 
-# gfxSVGGlyphs needs nsDOMParser.h
 LOCAL_INCLUDES += \
-	-I$(topsrcdir)/content/base/public \
 	-I$(topsrcdir)/content/xml/document/src \
 	$(NULL)
 

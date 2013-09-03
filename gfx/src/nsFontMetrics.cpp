@@ -4,11 +4,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsFontMetrics.h"
-#include "nsBoundingMetrics.h"
-#include "nsRenderingContext.h"
-#include "nsDeviceContext.h"
-#include "nsStyleConsts.h"
-#include <algorithm>
+#include <math.h>                       // for floor, ceil
+#include <algorithm>                    // for max
+#include "gfxPlatform.h"                // for gfxPlatform
+#include "gfxPoint.h"                   // for gfxPoint
+#include "gfxRect.h"                    // for gfxRect
+#include "gfxTypes.h"                   // for gfxFloat
+#include "nsBoundingMetrics.h"          // for nsBoundingMetrics
+#include "nsDebug.h"                    // for NS_ERROR, NS_ABORT_IF_FALSE
+#include "nsDeviceContext.h"            // for nsDeviceContext
+#include "nsIAtom.h"                    // for nsIAtom
+#include "nsMathUtils.h"                // for NS_round
+#include "nsRenderingContext.h"         // for nsRenderingContext
+#include "nsStringGlue.h"               // for nsString
+#include "nsStyleConsts.h"              // for NS_STYLE_HYPHENS_NONE
+
+class gfxUserFontSet;
 
 namespace {
 

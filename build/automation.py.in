@@ -537,6 +537,12 @@ class Automation(object):
 
     return env
 
+  def killPid(self, pid):
+    try:
+      os.kill(pid, getattr(signal, "SIGKILL", signal.SIGTERM))
+    except WindowsError:
+      self.log.info("Failed to kill process %d." % pid)
+
   if IS_WIN32:
     PeekNamedPipe = ctypes.windll.kernel32.PeekNamedPipe
     GetLastError = ctypes.windll.kernel32.GetLastError
@@ -587,14 +593,6 @@ class Automation(object):
       ctypes.windll.kernel32.CloseHandle(pHandle)
       return pExitCode.value == STILL_ACTIVE
 
-    def killPid(self, pid):
-      PROCESS_TERMINATE = 0x0001
-      pHandle = ctypes.windll.kernel32.OpenProcess(PROCESS_TERMINATE, 0, pid)
-      if not pHandle:
-        return
-      ctypes.windll.kernel32.TerminateProcess(pHandle, 1)
-      ctypes.windll.kernel32.CloseHandle(pHandle)
-
   else:
 
     def readWithTimeout(self, f, timeout):
@@ -623,9 +621,6 @@ class Automation(object):
         if err.errno == errno.ESRCH or err.errno == errno.ECHILD:
           return False
         raise
-
-    def killPid(self, pid):
-      os.kill(pid, signal.SIGKILL)
 
   def dumpScreen(self, utilityPath):
     if self.haveDumpedScreen:

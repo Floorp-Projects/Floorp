@@ -127,6 +127,14 @@ nsDOMFileBase::GetName(nsAString &aFileName)
 }
 
 NS_IMETHODIMP
+nsDOMFileBase::GetPath(nsAString &aPath)
+{
+  NS_ASSERTION(mIsFile, "Should only be called on files");
+  aPath = mPath;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMFileBase::GetLastModifiedDate(JSContext* cx, JS::Value *aLastModifiedDate)
 {
   JSObject* date = JS_NewDateObjectMsec(cx, JS_Now() / PR_USEC_PER_MSEC);
@@ -589,6 +597,12 @@ nsDOMFileFile::GetInternalStream(nsIInputStream **aStream)
     NS_NewLocalFileInputStream(aStream, mFile, -1, -1, sFileStreamFlags) :
     NS_NewPartialLocalFileInputStream(aStream, mFile, mStart, mLength,
                                       -1, -1, sFileStreamFlags);
+}
+
+void
+nsDOMFileFile::SetPath(const nsAString& aPath)
+{
+  mPath = aPath;
 }
 
 ////////////////////////////////////////////////////////////////////////////

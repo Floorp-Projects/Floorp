@@ -7,7 +7,7 @@
 #ifndef frontend_NameFunctions_h
 #define frontend_NameFunctions_h
 
-struct JSContext;
+#include "js/TypeDecls.h"
 
 namespace js {
 namespace frontend {

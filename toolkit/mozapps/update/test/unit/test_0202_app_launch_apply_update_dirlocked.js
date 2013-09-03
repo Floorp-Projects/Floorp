@@ -83,11 +83,13 @@ function symlinkUpdateFilesIntoBundleDirectory() {
   do_check_true(source2.exists());
 
   // Cleanup the symlinks when the test is finished.
-  do_register_cleanup(function() {
+  do_register_cleanup(function AUFIBD_cleanup() {
+    logTestInfo("start - unlinking symlinks");
     let ret = unlink(source.path);
     do_check_false(source.exists());
     let ret = unlink(source2.path);
     do_check_false(source2.exists());
+    logTestInfo("finish - unlinking symlinks");
   });
 
   // Now, make sure that getUpdatesRootDir returns the application bundle
@@ -100,6 +102,17 @@ function run_test() {
   if (APP_BIN_NAME == "xulrunner") {
     logTestInfo("Unable to run this test on xulrunner");
     return;
+  }
+
+  if (IS_WIN) {
+    var version = AUS_Cc["@mozilla.org/system-info;1"]
+                  .getService(AUS_Ci.nsIPropertyBag2)
+                  .getProperty("version");
+    var isVistaOrHigher = (parseFloat(version) >= 6.0);
+    if (!isVistaOrHigher) {
+      logTestInfo("Disabled on Windows XP due to bug 909489");
+      return;
+    }
   }
 
   do_test_pending();
@@ -198,6 +211,7 @@ function run_test() {
 }
 
 function end_test() {
+  logTestInfo("start - test cleanup");
   // Remove the files added by the update.
   let updateTestDir = getUpdateTestDir();
   try {
@@ -230,6 +244,7 @@ function end_test() {
   }
 
   cleanUp();
+  logTestInfo("finish - test cleanup");
 }
 
 function shouldAdjustPathsOnMac() {

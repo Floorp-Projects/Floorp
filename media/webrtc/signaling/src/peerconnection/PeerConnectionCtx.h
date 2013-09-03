@@ -72,6 +72,9 @@ class PeerConnectionCtx : public CSF::CC_Observer {
     mSipccState = aState;
   }
 
+  // Telemetry Peer conection counter
+  int mConnectionCounter;
+
   // SIPCC objects
   PeerConnectionImpl::SipccState mSipccState;  // TODO(ekr@rtfm.com): refactor this out? What does it do?
   CSF::CallControlManagerPtr mCCM;

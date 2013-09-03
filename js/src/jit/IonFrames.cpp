@@ -117,11 +117,11 @@ IonFrameIterator::isNative() const
 }
 
 bool
-IonFrameIterator::isOOLNativeGetter() const
+IonFrameIterator::isOOLNative() const
 {
     if (type_ != IonFrame_Exit)
         return false;
-    return exitFrame()->footer()->ionCode() == ION_FRAME_OOL_NATIVE_GETTER;
+    return exitFrame()->footer()->ionCode() == ION_FRAME_OOL_NATIVE;
 }
 
 bool
@@ -133,11 +133,11 @@ IonFrameIterator::isOOLPropertyOp() const
 }
 
 bool
-IonFrameIterator::isOOLProxyGet() const
+IonFrameIterator::isOOLProxy() const
 {
     if (type_ != IonFrame_Exit)
         return false;
-    return exitFrame()->footer()->ionCode() == ION_FRAME_OOL_PROXY_GET;
+    return exitFrame()->footer()->ionCode() == ION_FRAME_OOL_PROXY;
 }
 
 bool
@@ -906,11 +906,12 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
         return;
     }
 
-    if (frame.isOOLNativeGetter()) {
-        IonOOLNativeGetterExitFrameLayout *oolgetter = frame.exitFrame()->oolNativeGetterExit();
-        gc::MarkIonCodeRoot(trc, oolgetter->stubCode(), "ion-ool-getter-code");
-        gc::MarkValueRoot(trc, oolgetter->vp(), "ion-ool-getter-callee");
-        gc::MarkValueRoot(trc, oolgetter->thisp(), "ion-ool-getter-this");
+    if (frame.isOOLNative()) {
+        IonOOLNativeExitFrameLayout *oolnative = frame.exitFrame()->oolNativeExit();
+        gc::MarkIonCodeRoot(trc, oolnative->stubCode(), "ion-ool-native-code");
+        gc::MarkValueRoot(trc, oolnative->vp(), "iol-ool-native-vp");
+        size_t len = oolnative->argc() + 1;
+        gc::MarkValueRootRange(trc, len, oolnative->thisp(), "ion-ool-native-thisargs");
         return;
     }
 
@@ -923,13 +924,13 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
         return;
     }
 
-    if (frame.isOOLProxyGet()) {
-        IonOOLProxyGetExitFrameLayout *oolproxyget = frame.exitFrame()->oolProxyGetExit();
-        gc::MarkIonCodeRoot(trc, oolproxyget->stubCode(), "ion-ool-proxy-get-code");
-        gc::MarkValueRoot(trc, oolproxyget->vp(), "ion-ool-proxy-get-vp");
-        gc::MarkIdRoot(trc, oolproxyget->id(), "ion-ool-proxy-get-id");
-        gc::MarkObjectRoot(trc, oolproxyget->proxy(), "ion-ool-proxy-get-proxy");
-        gc::MarkObjectRoot(trc, oolproxyget->receiver(), "ion-ool-proxy-get-receiver");
+    if (frame.isOOLProxy()) {
+        IonOOLProxyExitFrameLayout *oolproxy = frame.exitFrame()->oolProxyExit();
+        gc::MarkIonCodeRoot(trc, oolproxy->stubCode(), "ion-ool-proxy-code");
+        gc::MarkValueRoot(trc, oolproxy->vp(), "ion-ool-proxy-vp");
+        gc::MarkIdRoot(trc, oolproxy->id(), "ion-ool-proxy-id");
+        gc::MarkObjectRoot(trc, oolproxy->proxy(), "ion-ool-proxy-proxy");
+        gc::MarkObjectRoot(trc, oolproxy->receiver(), "ion-ool-proxy-receiver");
         return;
     }
 

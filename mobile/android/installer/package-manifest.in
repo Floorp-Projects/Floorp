@@ -44,8 +44,6 @@
 @BINPATH@/@DLL_PREFIX@omxplugingb@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@omxplugingb235@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@omxpluginhc@DLL_SUFFIX@
-@BINPATH@/@DLL_PREFIX@omxpluginjb-htc@DLL_SUFFIX@
-@BINPATH@/@DLL_PREFIX@omxpluginsony@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@omxpluginfroyo@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@xul@DLL_SUFFIX@
 
@@ -190,6 +188,7 @@
 @BINPATH@/components/jar.xpt
 @BINPATH@/components/jsdservice.xpt
 @BINPATH@/components/jsdebugger.xpt
+@BINPATH@/components/jsdownloads.xpt
 @BINPATH@/components/jsinspector.xpt
 @BINPATH@/components/layout_base.xpt
 #ifdef NS_PRINTING
