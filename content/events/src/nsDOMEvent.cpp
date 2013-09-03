@@ -648,7 +648,7 @@ nsDOMEvent::DuplicatePrivateData()
     {
       nsFormEvent* oldFormEvent = static_cast<nsFormEvent*>(mEvent);
       nsFormEvent* formEvent = new nsFormEvent(false, msg);
-      formEvent->AssignEventData(*oldFormEvent, true);
+      formEvent->AssignFormEventData(*oldFormEvent, true);
       newEvent = formEvent;
       break;
     }
