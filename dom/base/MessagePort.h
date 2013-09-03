@@ -15,10 +15,12 @@ class nsPIDOMWindow;
 namespace mozilla {
 namespace dom {
 
+class DispatchEventRunnable;
 class PostMessageRunnable;
 
 class MessagePort MOZ_FINAL : public nsDOMEventTargetHelper
 {
+  friend class DispatchEventRunnable;
   friend class PostMessageRunnable;
 
 public:
@@ -67,6 +69,11 @@ public:
   Clone(nsPIDOMWindow* aWindow);
 
 private:
+  // Dispatch events from the Message Queue using a nsRunnable.
+  void Dispatch();
+
+  nsRefPtr<DispatchEventRunnable> mDispatchRunnable;
+
   nsRefPtr<MessagePort> mEntangledPort;
 
   nsTArray<nsRefPtr<PostMessageRunnable> > mMessageQueue;
