@@ -115,6 +115,12 @@ struct SizeTyped :
 };
 typedef SizeTyped<UnknownUnits> Size;
 
+template<class units>
+IntSizeTyped<units> RoundedToInt(const SizeTyped<units>& aSize) {
+  return IntSizeTyped<units>(int32_t(floorf(aSize.width + 0.5f)),
+                             int32_t(floorf(aSize.height + 0.5f)));
+}
+
 }
 }
 
