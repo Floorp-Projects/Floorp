@@ -13,6 +13,7 @@
   <input id="input-text">
   <button id="button">button</button>
   <div id="scrollable-div" style="overflow: auto; width: 30px; height: 30px;"><div id="scrolled-div" style="width: 10px; height: 10px;"></div></div>
+  <form id="form"></form>
 </div>
 <div id="content" style="display: none">
 </div>
@@ -363,6 +364,16 @@ const kTests = [
     target: function () { return document; }, eventType: "touchend",
     dispatchEvent: function () {
       synthesizeTouchAtPoint(4, 6, { id: 5, rx: 1, ry: 2, angle: 0.5, force: 0.8, ctrlKey: true});
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "nsFormEvent (reset)",
+    targetID: "form", eventType: "reset",
+    dispatchEvent: function () {
+      document.getElementById("form").reset();
     },
     canRun: function () {
       return true;
