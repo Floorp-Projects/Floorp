@@ -1228,14 +1228,15 @@ OptimizeMIR(MIRGenerator *mir)
     if (mir->shouldCancel("Phi reverse mapping"))
         return false;
 
-    // This pass also removes copies.
-    if (!ApplyTypeInformation(mir, graph))
-        return false;
-    IonSpewPass("Apply types");
-    AssertExtendedGraphCoherency(graph);
+    if (!mir->compilingAsmJS()) {
+        if (!ApplyTypeInformation(mir, graph))
+            return false;
+        IonSpewPass("Apply types");
+        AssertExtendedGraphCoherency(graph);
 
-    if (mir->shouldCancel("Apply types"))
-        return false;
+        if (mir->shouldCancel("Apply types"))
+            return false;
+    }
 
     if (graph.entryBlock()->info().executionMode() == ParallelExecution) {
         ParallelSafetyAnalysis analysis(mir, graph);
