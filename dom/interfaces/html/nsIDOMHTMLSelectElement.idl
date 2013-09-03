@@ -19,7 +19,7 @@
 
 interface nsIDOMValidityState;
 
-[scriptable, uuid(846578b2-6d4f-4399-86cc-2c05f19469d0)]
+[scriptable, uuid(d8914a2d-3556-4b66-911c-a84c4394e7fa)]
 interface nsIDOMHTMLSelectElement : nsISupports
 {
            attribute boolean                     autofocus;
@@ -44,6 +44,7 @@ interface nsIDOMHTMLSelectElement : nsISupports
                                                      raises(DOMException);   
   void                      remove(in long index);
 
+  readonly attribute nsIDOMHTMLCollection  selectedOptions;
            attribute long                  selectedIndex;
            attribute DOMString             value;
 
