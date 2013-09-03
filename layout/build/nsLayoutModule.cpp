@@ -58,7 +58,7 @@
 #include "txMozillaXSLTProcessor.h"
 #include "txNodeSetAdaptor.h"
 
-#include "nsDOMParser.h"
+#include "mozilla/dom/DOMParser.h"
 #include "nsDOMSerializer.h"
 #include "nsXMLHttpRequest.h"
 #include "nsChannelPolicy.h"
@@ -149,7 +149,7 @@ using mozilla::dom::AudioChannelAgent;
 #include "nsNullPrincipal.h"
 #include "nsNetCID.h"
 #ifndef MOZ_WIDGET_GONK
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_PLATFORM_MAEMO)
+#if defined(MOZ_WIDGET_ANDROID)
 #include "nsHapticFeedback.h"
 #endif
 #endif
@@ -275,7 +275,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMediaStreamProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMediaSourceProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontTableProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHostObjectURI)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
+NS_GENERIC_FACTORY_CONSTRUCTOR(DOMParser)
 NS_GENERIC_FACTORY_CONSTRUCTOR(DOMSessionStorageManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(DOMLocalStorageManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChannelPolicy)
@@ -312,7 +312,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(AudioChannelAgent)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceSensors)
 
 #ifndef MOZ_WIDGET_GONK
-#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
+#if defined(ANDROID)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHapticFeedback)
 #endif
 #endif
@@ -794,7 +794,7 @@ NS_DEFINE_NAMED_CID(NS_STRUCTUREDCLONECONTAINER_CID);
 NS_DEFINE_NAMED_CID(NS_DEVICE_SENSORS_CID);
 
 #ifndef MOZ_WIDGET_GONK
-#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
+#if defined(ANDROID)
 NS_DEFINE_NAMED_CID(NS_HAPTICFEEDBACK_CID);
 #endif
 #endif
@@ -1032,7 +1032,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_XMLHTTPREQUEST_CID, false, NULL, nsXMLHttpRequestConstructor },
   { &kNS_EVENTSOURCE_CID, false, NULL, EventSourceConstructor },
   { &kNS_DOMACTIVITY_CID, false, NULL, ActivityConstructor },
-  { &kNS_DOMPARSER_CID, false, NULL, nsDOMParserConstructor },
+  { &kNS_DOMPARSER_CID, false, NULL, DOMParserConstructor },
   { &kNS_DOMSESSIONSTORAGEMANAGER_CID, false, NULL, DOMSessionStorageManagerConstructor },
   { &kNS_DOMLOCALSTORAGEMANAGER_CID, false, NULL, DOMLocalStorageManagerConstructor },
   { &kNS_DOMJSON_CID, false, NULL, NS_NewJSON },
@@ -1082,7 +1082,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_SECURITYNAMESET_CID, false, NULL, nsSecurityNameSetConstructor },
   { &kNS_DEVICE_SENSORS_CID, false, NULL, nsDeviceSensorsConstructor },
 #ifndef MOZ_WIDGET_GONK
-#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
+#if defined(ANDROID)
   { &kNS_HAPTICFEEDBACK_CID, false, NULL, nsHapticFeedbackConstructor },
 #endif
 #endif
@@ -1239,7 +1239,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_SECURITYNAMESET_CONTRACTID, &kNS_SECURITYNAMESET_CID },
   { NS_DEVICE_SENSORS_CONTRACTID, &kNS_DEVICE_SENSORS_CID },
 #ifndef MOZ_WIDGET_GONK
-#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
+#if defined(ANDROID)
   { "@mozilla.org/widget/hapticfeedback;1", &kNS_HAPTICFEEDBACK_CID },
 #endif
 #endif

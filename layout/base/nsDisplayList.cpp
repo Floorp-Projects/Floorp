@@ -660,14 +660,21 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   metrics.mScrollId = aScrollId;
 
   nsIPresShell* presShell = presContext->GetPresShell();
-  if (TabChild *tc = GetTabChildFrom(presShell)) {
-    metrics.mZoom = tc->GetZoom();
+  if (metrics.mScrollId == FrameMetrics::ROOT_SCROLL_ID) {
+    metrics.mResolution = LayoutDeviceToLayerScale(presShell->GetXResolution(),
+                                                   presShell->GetYResolution());
+  } else {
+    // Only the root scrollable frame for a given presShell should pick up
+    // the presShell's resolution. All the other subframes are 1.0.
+    metrics.mResolution = LayoutDeviceToLayerScale(1.0f);
   }
-  metrics.mResolution = LayoutDeviceToLayerScale(presShell->GetXResolution(),
-                                                 presShell->GetYResolution());
-
   metrics.mDevPixelsPerCSSPixel = CSSToLayoutDeviceScale(
     (float)nsPresContext::AppUnitsPerCSSPixel() / auPerDevPixel);
+
+  // Provide an initial zoom to the AsyncPanZoomController so that it
+  // renders the content to the screen at the painted resolution.
+  metrics.mZoom = metrics.mResolution * metrics.mDevPixelsPerCSSPixel
+                * LayerToScreenScale(1.0f);
 
   metrics.mMayHaveTouchListeners = aMayHaveTouchListeners;
 

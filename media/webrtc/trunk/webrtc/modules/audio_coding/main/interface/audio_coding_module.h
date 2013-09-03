@@ -8,8 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_AUDIO_CODING_MAIN_INTERFACE_AUDIO_CODING_MODULE_H
-#define WEBRTC_MODULES_AUDIO_CODING_MAIN_INTERFACE_AUDIO_CODING_MODULE_H
+#ifndef WEBRTC_MODULES_AUDIO_CODING_MAIN_INTERFACE_AUDIO_CODING_MODULE_H_
+#define WEBRTC_MODULES_AUDIO_CODING_MAIN_INTERFACE_AUDIO_CODING_MODULE_H_
+
+#include <vector>
 
 #include "webrtc/common_types.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module_typedefs.h"
@@ -23,8 +25,9 @@ struct CodecInst;
 struct WebRtcRTPHeader;
 class AudioFrame;
 class RTPFragmentationHeader;
+class Clock;
 
-#define WEBRTC_10MS_PCM_AUDIO 960 // 16 bits super wideband 48 kHz
+#define WEBRTC_10MS_PCM_AUDIO 960  // 16 bits super wideband 48 kHz
 
 // Callback class used for sending data ready to be packetized
 class AudioPacketizationCallback {
@@ -63,11 +66,11 @@ class ACMVQMonCallback {
   virtual ~ACMVQMonCallback() {}
 
   virtual int32_t NetEqStatistics(
-      const int32_t id, // current ACM id
-      const uint16_t MIUsValid, // valid voice duration in ms
-      const uint16_t MIUsReplaced, // concealed voice duration in ms
-      const uint8_t eventFlags, // concealed voice flags
-      const uint16_t delayMS) = 0; // average delay in ms
+      const int32_t id,  // current ACM id
+      const uint16_t MIUsValid,  // valid voice duration in ms
+      const uint16_t MIUsReplaced,  // concealed voice duration in ms
+      const uint8_t eventFlags,  // concealed voice flags
+      const uint16_t delayMS) = 0;  // average delay in ms
 };
 
 class AudioCodingModule: public Module {
@@ -77,9 +80,14 @@ class AudioCodingModule: public Module {
 
  public:
   ///////////////////////////////////////////////////////////////////////////
-  // Creation and destruction of a ACM
+  // Creation and destruction of a ACM.
+  //
+  // The second method is used for testing where a simulated clock can be
+  // injected into ACM. ACM will take the owner ship of the object clock and
+  // delete it when destroyed.
   //
   static AudioCodingModule* Create(const int32_t id);
+  static AudioCodingModule* Create(const int32_t id, Clock* clock);
 
   static void Destroy(AudioCodingModule* module);
 
@@ -639,8 +647,9 @@ class AudioCodingModule: public Module {
                                         const uint32_t timestamp = 0) = 0;
 
   ///////////////////////////////////////////////////////////////////////////
-  // int32_t SetMinimumPlayoutDelay()
-  // Set Minimum playout delay, used for lip-sync.
+  // int SetMinimumPlayoutDelay()
+  // Set a minimum for the playout delay, used for lip-sync. NetEq maintains
+  // such a delay unless channel condition yields to a higher delay.
   //
   // Input:
   //   -time_ms            : minimum delay in milliseconds.
@@ -649,7 +658,15 @@ class AudioCodingModule: public Module {
   //   -1 if failed to set the delay,
   //    0 if the minimum delay is set.
   //
-  virtual int32_t SetMinimumPlayoutDelay(const int32_t time_ms) = 0;
+  virtual int SetMinimumPlayoutDelay(int time_ms) = 0;
+
+  //
+  // The shortest latency, in milliseconds, required by jitter buffer. This
+  // is computed based on inter-arrival times and playout mode of NetEq. The
+  // actual delay is the maximum of least-required-delay and the minimum-delay
+  // specified by SetMinumumPlayoutDelay() API.
+  //
+  virtual int LeastRequiredDelayMs() const = 0;
 
   ///////////////////////////////////////////////////////////////////////////
   // int32_t RegisterIncomingMessagesCallback()
@@ -805,8 +822,8 @@ class AudioCodingModule: public Module {
   //
   // Input:
   //   -desired_freq_hz    : the desired sampling frequency, in Hertz, of the
-  //                         output audio. If set to -1, the function returns the
-  //                         audio at the current sampling frequency.
+  //                         output audio. If set to -1, the function returns
+  //                         the audio at the current sampling frequency.
   //
   // Output:
   //   -audio_frame        : output audio frame which contains raw audio data
@@ -945,8 +962,9 @@ class AudioCodingModule: public Module {
   // Set an initial delay for playout.
   // An initial delay yields ACM playout silence until equivalent of |delay_ms|
   // audio payload is accumulated in NetEq jitter. Thereafter, ACM pulls audio
-  // from NetEq in its regular fashion, and the given delay is maintained as
-  // "minimum playout delay."
+  // from NetEq in its regular fashion, and the given delay is maintained
+  // through out the call, unless channel conditions yield to a higher jitter
+  // buffer delay.
   //
   // Input:
   //   -delay_ms           : delay in milliseconds.
@@ -956,8 +974,35 @@ class AudioCodingModule: public Module {
   //    0 if delay is set successfully.
   //
   virtual int SetInitialPlayoutDelay(int delay_ms) = 0;
+
+  //
+  // Enable NACK and set the maximum size of the NACK list. If NACK is already
+  // enable then the maximum NACK list size is modified accordingly.
+  //
+  // If the sequence number of last received packet is N, the sequence numbers
+  // of NACK list are in the range of [N - |max_nack_list_size|, N).
+  //
+  // |max_nack_list_size| should be positive (none zero) and less than or
+  // equal to |Nack::kNackListSizeLimit|. Otherwise, No change is applied and -1
+  // is returned. 0 is returned at success.
+  //
+  virtual int EnableNack(size_t max_nack_list_size) = 0;
+
+  // Disable NACK.
+  virtual void DisableNack() = 0;
+
+  //
+  // Get a list of packets to be retransmitted. |round_trip_time_ms| is an
+  // estimate of the round-trip-time (in milliseconds). Missing packets which
+  // will be playout in a shorter time than the round-trip-time (with respect
+  // to the time this API is called) will not be included in the list.
+  //
+  // Negative |round_trip_time_ms| results is an error message and empty list
+  // is returned.
+  //
+  virtual std::vector<uint16_t> GetNackList(int round_trip_time_ms) const = 0;
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_AUDIO_CODING_MAIN_INTERFACE_AUDIO_CODING_MODULE_H
+#endif  // WEBRTC_MODULES_AUDIO_CODING_MAIN_INTERFACE_AUDIO_CODING_MODULE_H_

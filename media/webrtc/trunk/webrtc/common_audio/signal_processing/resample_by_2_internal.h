@@ -17,7 +17,7 @@
 #ifndef WEBRTC_SPL_RESAMPLE_BY_2_INTERNAL_H_
 #define WEBRTC_SPL_RESAMPLE_BY_2_INTERNAL_H_
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
 /*******************************************************************
  * resample_by_2_fast.c

@@ -17,6 +17,7 @@
 
 #include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
+#include "nsIDebug2.h"
 #include "amIAddonManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
@@ -1186,7 +1187,12 @@ WatchdogMain(void *arg)
         if (manager->IsRuntimeActive() &&
             manager->TimeSinceLastRuntimeStateChange() >= PRTime(PR_USEC_PER_SEC))
         {
-            JS_TriggerOperationCallback(manager->Runtime()->Runtime());
+            bool debuggerAttached = false;
+            nsCOMPtr<nsIDebug2> dbg = do_GetService("@mozilla.org/xpcom/debug;1");
+            if (dbg)
+                dbg->GetIsDebuggerAttached(&debuggerAttached);
+            if (!debuggerAttached)
+                JS_TriggerOperationCallback(manager->Runtime()->Runtime());
         }
     }
 

@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_engine/test/libvietest/include/tb_external_transport.h"
+#include "webrtc/video_engine/test/libvietest/include/tb_external_transport.h"
 
+#include <cassert>
 #include <math.h>
 #include <stdio.h> // printf
 #include <stdlib.h> // rand
-#include <cassert>
 
 #if defined(WEBRTC_LINUX) || defined(__linux__)
 #include <string.h>
@@ -22,11 +22,11 @@
 #include <cstring>
 #endif
 
-#include "system_wrappers/interface/critical_section_wrapper.h"
-#include "system_wrappers/interface/event_wrapper.h"
-#include "system_wrappers/interface/thread_wrapper.h"
-#include "system_wrappers/interface/tick_util.h"
-#include "video_engine/include/vie_network.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/event_wrapper.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/video_engine/include/vie_network.h"
 
 #if defined(_WIN32)
 #pragma warning(disable: 4355) // 'this' : used in base member initializer list
@@ -53,6 +53,7 @@ TbExternalTransport::TbExternalTransport(
       _rtpCount(0),
       _rtcpCount(0),
       _dropCount(0),
+      packet_counters_(),
       _rtpPackets(),
       _rtcpPackets(),
       _send_frame_callback(NULL),
@@ -109,6 +110,7 @@ int TbExternalTransport::SendPacket(int channel, const void *data, int len)
 {
   // Parse timestamp from RTP header according to RFC 3550, section 5.1.
     uint8_t* ptr = (uint8_t*)data;
+    uint8_t payload_type = ptr[1] & 0x7F;
     uint32_t rtp_timestamp = ptr[4] << 24;
     rtp_timestamp += ptr[5] << 16;
     rtp_timestamp += ptr[6] << 8;
@@ -122,6 +124,7 @@ int TbExternalTransport::SendPacket(int channel, const void *data, int len)
         _lastSendRTPTimestamp != rtp_timestamp) {
       _send_frame_callback->FrameSent(rtp_timestamp);
     }
+    ++packet_counters_[payload_type];
     _lastSendRTPTimestamp = rtp_timestamp;
 
     if (_filterSSRC)
@@ -223,7 +226,7 @@ int TbExternalTransport::SendPacket(int channel, const void *data, int len)
         _statCrit.Enter();
         _dropCount++;
         _statCrit.Leave();
-        return 0;
+        return len;
     }
 
     VideoPacket* newPacket = new VideoPacket();
@@ -323,16 +326,19 @@ void TbExternalTransport::ClearStats()
     _rtpCount = 0;
     _dropCount = 0;
     _rtcpCount = 0;
+    packet_counters_.clear();
 }
 
 void TbExternalTransport::GetStats(int32_t& numRtpPackets,
                                    int32_t& numDroppedPackets,
-                                   int32_t& numRtcpPackets)
+                                   int32_t& numRtcpPackets,
+                                   std::map<uint8_t, int>* packet_counters)
 {
     webrtc::CriticalSectionScoped cs(&_statCrit);
     numRtpPackets = _rtpCount;
     numDroppedPackets = _dropCount;
     numRtcpPackets = _rtcpCount;
+    *packet_counters = packet_counters_;
 }
 
 void TbExternalTransport::EnableSSRCCheck()

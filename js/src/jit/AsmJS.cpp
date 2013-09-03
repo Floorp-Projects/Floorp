@@ -44,7 +44,7 @@ using mozilla::HashGeneric;
 using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
 using mozilla::Maybe;
-using mozilla::Move;
+using mozilla::OldMove;
 using mozilla::MoveRef;
 
 static const size_t LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
@@ -623,6 +623,8 @@ operator<=(Type lhs, VarType rhs)
 static inline MIRType ToMIRType(MIRType t) { return t; }
 static inline MIRType ToMIRType(VarType t) { return t.toMIRType(); }
 
+namespace {
+
 template <class VecT>
 class ABIArgIter
 {
@@ -664,7 +666,7 @@ class Signature
     Signature(MoveRef<VarTypeVector> argTypes, RetType retType)
       : argTypes_(argTypes), retType_(retType) {}
     Signature(MoveRef<Signature> rhs)
-      : argTypes_(Move(rhs->argTypes_)), retType_(rhs->retType_) {}
+      : argTypes_(OldMove(rhs->argTypes_)), retType_(rhs->retType_) {}
 
     bool copy(const Signature &rhs) {
         if (!argTypes_.resize(rhs.argTypes_.length()))
@@ -678,10 +680,12 @@ class Signature
     bool appendArg(VarType type) { return argTypes_.append(type); }
     VarType arg(unsigned i) const { return argTypes_[i]; }
     const VarTypeVector &args() const { return argTypes_; }
-    MoveRef<VarTypeVector> extractArgs() { return Move(argTypes_); }
+    MoveRef<VarTypeVector> extractArgs() { return OldMove(argTypes_); }
 
     RetType retType() const { return retType_; }
 };
+
+} /* namespace anonymous */
 
 static
 bool operator==(const Signature &lhs, const Signature &rhs)
@@ -907,10 +911,10 @@ TypedArrayStoreType(ArrayBufferView::ViewType viewType)
 
 /*****************************************************************************/
 
+namespace {
+
 typedef Vector<PropertyName*,1> LabelVector;
 typedef Vector<MBasicBlock*,8> BlockVector;
-
-namespace {
 
 // ModuleCompiler encapsulates the compilation of an entire asm.js module. Over
 // the course of an ModuleCompiler object's lifetime, many FunctionCompiler
@@ -1077,8 +1081,8 @@ class MOZ_STACK_CLASS ModuleCompiler
         {}
 
         FuncPtrTable(MoveRef<FuncPtrTable> rhs)
-          : sig_(Move(rhs->sig_)), mask_(rhs->mask_), globalDataOffset_(rhs->globalDataOffset_),
-            elems_(Move(rhs->elems_))
+          : sig_(OldMove(rhs->sig_)), mask_(rhs->mask_), globalDataOffset_(rhs->globalDataOffset_),
+            elems_(OldMove(rhs->elems_))
         {}
 
         Signature &sig() { return sig_; }
@@ -1102,7 +1106,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         ExitDescriptor(PropertyName *name, MoveRef<Signature> sig)
           : name_(name), sig_(sig) {}
         ExitDescriptor(MoveRef<ExitDescriptor> rhs)
-          : name_(rhs->name_), sig_(Move(rhs->sig_))
+          : name_(rhs->name_), sig_(OldMove(rhs->sig_))
         {}
         const Signature &sig() const {
             return sig_;
@@ -1401,7 +1405,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         if (!module_->addFuncPtrTable(/* numElems = */ mask + 1, &globalDataOffset))
             return false;
         FuncPtrTable tmpTable(cx_, sig, mask, globalDataOffset);
-        if (!funcPtrTables_.append(Move(tmpTable)))
+        if (!funcPtrTables_.append(OldMove(tmpTable)))
             return false;
         *table = &funcPtrTables_.back();
         return true;
@@ -1452,7 +1456,7 @@ class MOZ_STACK_CLASS ModuleCompiler
             argCoercions[i] = args[i].toCoercion();
         AsmJSModule::ReturnType retType = func->sig().retType().toModuleReturnType();
         return module_->addExportedFunction(func->name(), maybeFieldName,
-                                            Move(argCoercions), retType);
+                                            OldMove(argCoercions), retType);
     }
     bool addExit(unsigned ffiIndex, PropertyName *name, MoveRef<Signature> sig, unsigned *exitIndex) {
         ExitDescriptor exitDescriptor(name, sig);
@@ -1463,7 +1467,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         }
         if (!module_->addExit(ffiIndex, exitIndex))
             return false;
-        return exits_.add(p, Move(exitDescriptor), *exitIndex);
+        return exits_.add(p, OldMove(exitDescriptor), *exitIndex);
     }
     bool addGlobalAccess(AsmJSGlobalAccess access) {
         return globalAccesses_.append(access);
@@ -2508,7 +2512,7 @@ class FunctionCompiler
         typename Map::AddPtr p = map->lookupForAdd(key);
         if (!p) {
             BlockVector empty(m().cx());
-            if (!map->add(p, key, Move(empty)))
+            if (!map->add(p, key, OldMove(empty)))
                 return false;
         }
         if (!p->value.append(curBlock_))
@@ -3385,7 +3389,7 @@ CheckInternalCall(FunctionCompiler &f, ParseNode *callNode, PropertyName *callee
         return false;
 
     ModuleCompiler::Func *callee;
-    if (!CheckFunctionSignature(f.m(), callNode, Move(call.sig()), calleeName, &callee))
+    if (!CheckFunctionSignature(f.m(), callNode, OldMove(call.sig()), calleeName, &callee))
         return false;
 
     if (!f.internalCall(*callee, call, def))
@@ -3461,7 +3465,7 @@ CheckFuncPtrCall(FunctionCompiler &f, ParseNode *callNode, RetType retType, MDef
         return false;
 
     ModuleCompiler::FuncPtrTable *table;
-    if (!CheckFuncPtrTableAgainstExisting(f.m(), tableNode, name, Move(call.sig()), mask, &table))
+    if (!CheckFuncPtrTableAgainstExisting(f.m(), tableNode, name, OldMove(call.sig()), mask, &table))
         return false;
 
     if (!f.funcPtrCall(*table, indexDef, call, def))
@@ -3490,7 +3494,7 @@ CheckFFICall(FunctionCompiler &f, ParseNode *callNode, unsigned ffiIndex, RetTyp
         return false;
 
     unsigned exitIndex;
-    if (!f.m().addExit(ffiIndex, calleeName, Move(call.sig()), &exitIndex))
+    if (!f.m().addExit(ffiIndex, calleeName, OldMove(call.sig()), &exitIndex))
         return false;
 
     if (!f.ffiCall(exitIndex, call, retType.toMIRType(), def))
@@ -4674,9 +4678,9 @@ CheckFunction(ModuleCompiler &m, LifoAlloc &lifo, MIRGenerator **mir, ModuleComp
     if (!CheckReturnType(f, lastNonEmptyStmt, retType))
         return false;
 
-    Signature sig(Move(argTypes), retType);
+    Signature sig(OldMove(argTypes), retType);
     ModuleCompiler::Func *func;
-    if (!CheckFunctionSignature(m, fn, Move(sig), FunctionName(fn), &func))
+    if (!CheckFunctionSignature(m, fn, OldMove(sig), FunctionName(fn), &func))
         return false;
 
     if (func->defined())
@@ -5057,10 +5061,10 @@ CheckFuncPtrTable(ModuleCompiler &m, ParseNode *var)
         return false;
 
     ModuleCompiler::FuncPtrTable *table;
-    if (!CheckFuncPtrTableAgainstExisting(m, var, var->name(), Move(sig), mask, &table))
+    if (!CheckFuncPtrTableAgainstExisting(m, var, var->name(), OldMove(sig), mask, &table))
         return false;
 
-    table->initElems(Move(elems));
+    table->initElems(OldMove(elems));
     return true;
 }
 
@@ -5219,7 +5223,7 @@ StackDecrementForCall(MacroAssembler &masm, const VectorT &argTypes, unsigned ex
 
 static const unsigned FramePushedAfterSave = NonVolatileRegs.gprs().size() * STACK_SLOT_SIZE +
                                              NonVolatileRegs.fpus().size() * sizeof(double);
-#ifndef JS_CPU_ARM
+
 static bool
 GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFunc)
 {
@@ -5233,72 +5237,85 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
     // PushRegsInMask(NonVolatileRegs).
     masm.setFramePushed(0);
     masm.PushRegsInMask(NonVolatileRegs);
+    JS_ASSERT(masm.framePushed() == FramePushedAfterSave);
 
     // Remember the stack pointer in the current AsmJSActivation. This will be
     // used by error exit paths to set the stack pointer back to what it was
     // right after the (C++) caller's non-volatile registers were saved so that
     // they can be restored.
-    JS_ASSERT(masm.framePushed() == FramePushedAfterSave);
     Register activation = ABIArgGenerator::NonArgReturnVolatileReg0;
     LoadAsmJSActivationIntoRegister(masm, activation);
-    masm.movePtr(StackPointer, Operand(activation, AsmJSActivation::offsetOfErrorRejoinSP()));
+    masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfErrorRejoinSP()));
 
-#if defined(JS_CPU_X64)
-    // Install the heap pointer into the globally-pinned HeapReg. The heap
-    // pointer is stored in the global data section and is patched at dynamic
-    // link time.
-    CodeOffsetLabel label = masm.loadRipRelativeInt64(HeapReg);
-    m.addGlobalAccess(AsmJSGlobalAccess(label.offset(), m.module().heapOffset()));
+    // ARM has a globally-pinned GlobalReg (x64 uses RIP-relative addressing,
+    // x86 uses immediates in effective addresses) and NaN register (used as
+    // part of the out-of-bounds handling in heap loads/stores).
+#if defined(JS_CPU_ARM)
+    masm.movePtr(IntArgReg1, GlobalReg);
+    masm.ma_vimm(js_NaN, NANReg);
 #endif
 
+    // ARM and x64 have a globally-pinned HeapReg (x86 uses immediates in
+    // effective addresses).
+#if defined(JS_CPU_X64) || defined(JS_CPU_ARM)
+    masm.loadPtr(Address(IntArgReg1, m.module().heapOffset()), HeapReg);
+#endif
+
+    // Get 'argv' into a non-arg register and save it on the stack.
     Register argv = ABIArgGenerator::NonArgReturnVolatileReg0;
     Register scratch = ABIArgGenerator::NonArgReturnVolatileReg1;
 #if defined(JS_CPU_X86)
-    masm.movl(Operand(StackPointer, NativeFrameSize + masm.framePushed()), argv);
-#elif defined(JS_CPU_X64)
-    masm.movq(IntArgReg0, argv);
-    masm.Push(argv);
+    masm.loadPtr(Address(StackPointer, NativeFrameSize + masm.framePushed()), argv);
+#else
+    masm.movePtr(IntArgReg0, argv);
 #endif
+    masm.Push(argv);
 
     // Bump the stack for the call.
     const ModuleCompiler::Func &func = *m.lookupFunction(exportedFunc.name());
     unsigned stackDec = StackDecrementForCall(masm, func.sig().args());
     masm.reserveStack(stackDec);
 
+    // Copy parameters out of argv and into the registers/stack-slots specified by
+    // the system ABI.
     for (ABIArgTypeIter iter(func.sig().args()); !iter.done(); iter++) {
-        Operand src(argv, iter.index() * sizeof(uint64_t));
+        unsigned argOffset = iter.index() * sizeof(uint64_t);
+        Address src(argv, argOffset);
         switch (iter->kind()) {
           case ABIArg::GPR:
             masm.load32(src, iter->gpr());
             break;
           case ABIArg::FPU:
+#if defined(JS_CPU_ARM) and !defined(JS_CPU_ARM_HARDFP)
+            masm.ma_dataTransferN(IsLoad, 64, true, argv, Imm32(argOffset),
+                                  Register::FromCode(iter->fpu().code()*2));
+#else
             masm.loadDouble(src, iter->fpu());
+#endif
             break;
           case ABIArg::Stack:
             if (iter.mirType() == MIRType_Int32) {
                 masm.load32(src, scratch);
-                masm.storePtr(scratch, Operand(StackPointer, iter->offsetFromArgBase()));
+                masm.storePtr(scratch, Address(StackPointer, iter->offsetFromArgBase()));
             } else {
                 JS_ASSERT(iter.mirType() == MIRType_Double);
                 masm.loadDouble(src, ScratchFloatReg);
-                masm.storeDouble(ScratchFloatReg, Operand(StackPointer, iter->offsetFromArgBase()));
+                masm.storeDouble(ScratchFloatReg, Address(StackPointer, iter->offsetFromArgBase()));
             }
             break;
         }
     }
 
+    // Call into the real function.
     AssertStackAlignment(masm);
     masm.call(func.code());
 
+    // Pop the stack and recover the original 'argv' argument passed to the
+    // trampoline (which was pushed on the stack).
     masm.freeStack(stackDec);
-
-#if defined(JS_CPU_X86)
-    masm.movl(Operand(StackPointer, NativeFrameSize + masm.framePushed()), argv);
-#elif defined(JS_CPU_X64)
     masm.Pop(argv);
-#endif
 
-    // Store return value in argv[0]
+    // Store the return value in argv[0]
     switch (func.sig().retType().which()) {
       case RetType::Void:
         break;
@@ -5306,119 +5323,7 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
         masm.storeValue(JSVAL_TYPE_INT32, ReturnReg, Address(argv, 0));
         break;
       case RetType::Double:
-        masm.canonicalizeDouble(ReturnFloatReg);
-        masm.storeDouble(ReturnFloatReg, Address(argv, 0));
-        break;
-    }
-
-    // Restore clobbered registers.
-    masm.PopRegsInMask(NonVolatileRegs);
-    JS_ASSERT(masm.framePushed() == 0);
-
-    masm.move32(Imm32(true), ReturnReg);
-    masm.ret();
-    return true;
-}
-#else
-static bool
-GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFunc)
-{
-    const ModuleCompiler::Func &func = *m.lookupFunction(exportedFunc.name());
-
-    MacroAssembler &masm = m.masm();
-
-    // In constrast to the X64 system ABI, the Ion convention is that all
-    // registers are clobbered by calls. Thus, we must save the caller's
-    // non-volatile registers.
-    //
-    // NB: GenerateExits assumes that masm.framePushed() == 0 before
-    // PushRegsInMask(NonVolatileRegs).
-    masm.setFramePushed(0);
-    masm.PushRegsInMask(NonVolatileRegs);
-    JS_ASSERT(masm.framePushed() == FramePushedAfterSave);
-    JS_ASSERT(masm.framePushed() % 8 == 0);
-
-    // Remember the stack pointer in the current AsmJSActivation. This will be
-    // used by error exit paths to set the stack pointer back to what it was
-    // right after the (C++) caller's non-volatile registers were saved so that
-    // they can be restored.
-
-    LoadAsmJSActivationIntoRegister(masm, r9);
-    masm.ma_str(StackPointer, Address(r9, AsmJSActivation::offsetOfErrorRejoinSP()));
-    //    masm.storeErrorRejoinSp();
-
-    // Move the parameters into non-argument registers since we are about to
-    // clobber these registers with the contents of argv.
-    Register argv = r9;
-    masm.movePtr(IntArgReg1, GlobalReg);  // globalData
-    masm.movePtr(IntArgReg0, argv);       // argv
-
-    masm.ma_ldr(Operand(GlobalReg, Imm32(m.module().heapOffset())), HeapReg);
-    // Remember argv so that we can load argv[0] after the call.
-    JS_ASSERT(masm.framePushed() % 8 == 0);
-    masm.Push(argv);
-    JS_ASSERT(masm.framePushed() % 8 == 4);
-
-    // Determine how many stack slots we need to hold arguments that don't fit
-    // in registers.
-    unsigned numStackArgs = 0;
-    for (ABIArgTypeIter iter(func.sig().args()); !iter.done(); iter++) {
-        if (iter->kind() == ABIArg::Stack)
-            numStackArgs++;
-    }
-
-    // Before calling, we must ensure sp % 16 == 0. Since (sp % 16) = 8 on
-    // entry, we need to push 8 (mod 16) bytes.
-    //JS_ASSERT(AlignmentAtPrologue == 8);
-    JS_ASSERT(masm.framePushed() % 8 == 4);
-    unsigned stackDec = numStackArgs * sizeof(double) + (masm.framePushed() >> 2) % 2 * sizeof(uint32_t);
-    masm.reserveStack(stackDec);
-    //JS_ASSERT(masm.framePushed() % 8 == 0);
-    if(getenv("GDB_BREAK")) {
-        masm.breakpoint(js::jit::Assembler::Always);
-    }
-    // Copy parameters out of argv into the registers/stack-slots specified by
-    // the system ABI.
-    for (ABIArgTypeIter iter(func.sig().args()); !iter.done(); iter++) {
-        unsigned argOffset = iter.index() * sizeof(uint64_t);
-        switch (iter->kind()) {
-          case ABIArg::GPR:
-            masm.ma_ldr(Operand(argv, argOffset), iter->gpr());
-            break;
-          case ABIArg::FPU:
-#if defined(JS_CPU_ARM_HARDFP)
-            masm.ma_vldr(Operand(argv, argOffset), iter->fpu());
-#else
-            // The ABI is expecting a double value in a pair of gpr's.  Figure out which gprs it is,
-            // and use them explicityl.
-            masm.ma_dataTransferN(IsLoad, 64, true, argv, Imm32(argOffset), Register::FromCode(iter->fpu().code()*2));
-#endif
-            break;
-          case ABIArg::Stack:
-            if (iter.mirType() == MIRType_Int32) {
-                masm.memMove32(Address(argv, argOffset), Address(StackPointer, iter->offsetFromArgBase()));
-            } else {
-                masm.memMove64(Address(argv, argOffset), Address(StackPointer, iter->offsetFromArgBase()));
-            }
-            break;
-        }
-    }
-    masm.ma_vimm(js_NaN, NANReg);
-    masm.call(func.code());
-
-    // Recover argv.
-    masm.freeStack(stackDec);
-    masm.Pop(argv);
-
-    // Store the result in argv[0].
-    switch (func.sig().retType().which()) {
-      case RetType::Void:
-        break;
-      case RetType::Signed:
-        masm.storeValue(JSVAL_TYPE_INT32, ReturnReg, Address(argv, 0));
-        break;
-      case RetType::Double:
-#ifndef JS_CPU_ARM_HARDFP
+#if defined(JS_CPU_ARM) and !defined(JS_CPU_ARM_HARDFP)
         masm.ma_vxfer(r0, r1, d0);
 #endif
         masm.canonicalizeDouble(ReturnFloatReg);
@@ -5426,13 +5331,15 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
         break;
     }
 
+    // Restore clobbered non-volatile registers of the caller.
     masm.PopRegsInMask(NonVolatileRegs);
 
-    masm.ma_mov(Imm32(true), ReturnReg);
+    JS_ASSERT(masm.framePushed() == 0);
+
+    masm.move32(Imm32(true), ReturnReg);
     masm.abiret();
     return true;
 }
-#endif
 
 static inline bool
 TryEnablingIon(JSContext *cx, AsmJSModule &module, HandleFunction fun, uint32_t exitIndex,
@@ -6025,16 +5932,9 @@ GenerateStackOverflowExit(ModuleCompiler &m, Label *throwLabel)
     LoadAsmJSActivationIntoRegister(masm, eax);
     LoadJSContextFromActivation(masm, eax, eax);
     masm.storePtr(eax, Address(StackPointer, 0));
-#elif defined(JS_CPU_X64)
-    LoadAsmJSActivationIntoRegister(masm, IntArgReg0);
-    LoadJSContextFromActivation(masm, IntArgReg0, IntArgReg0);
 #else
-
-    // on ARM, we should always be aligned, just do the context manipulation
-    // and make the call.
     LoadAsmJSActivationIntoRegister(masm, IntArgReg0);
     LoadJSContextFromActivation(masm, IntArgReg0, IntArgReg0);
-
 #endif
     void (*pf)(JSContext*) = js_ReportOverRecursed;
     masm.call(ImmWord(JS_FUNC_TO_DATA_PTR(void*, pf)));

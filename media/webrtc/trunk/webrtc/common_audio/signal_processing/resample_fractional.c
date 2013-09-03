@@ -15,7 +15,7 @@
  *
  */
 
-#include "signal_processing_library.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
 // interpolation coefficients
 static const int16_t kCoefficients48To32[2][8] = {
@@ -42,7 +42,7 @@ static const int16_t kCoefficients44To32[4][9] = {
 //      K: number of blocks
 
 void WebRtcSpl_Resample48khzTo32khz(const int32_t *In, int32_t *Out,
-                                    const int32_t K)
+                                    int32_t K)
 {
     /////////////////////////////////////////////////////////////
     // Filter operation:
@@ -88,7 +88,7 @@ void WebRtcSpl_Resample48khzTo32khz(const int32_t *In, int32_t *Out,
 //      K: number of blocks
 
 void WebRtcSpl_Resample32khzTo24khz(const int32_t *In, int32_t *Out,
-                                    const int32_t K)
+                                    int32_t K)
 {
     /////////////////////////////////////////////////////////////
     // Filter operation:
@@ -197,7 +197,7 @@ static void WebRtcSpl_ResampDotProduct(const int32_t *in1, const int32_t *in2,
 //      K: number of blocks
 
 void WebRtcSpl_Resample44khzTo32khz(const int32_t *In, int32_t *Out,
-                                    const int32_t K)
+                                    int32_t K)
 {
     /////////////////////////////////////////////////////////////
     // Filter operation:

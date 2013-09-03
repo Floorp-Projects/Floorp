@@ -11,13 +11,13 @@
 #ifndef WEBRTC_MODULE_VIDEO_PROCESSING_IMPL_H
 #define WEBRTC_MODULE_VIDEO_PROCESSING_IMPL_H
 
-#include "video_processing.h"
-#include "brighten.h"
-#include "brightness_detection.h"
-#include "color_enhancement.h"
-#include "deflickering.h"
-#include "denoising.h"
-#include "frame_preprocessor.h"
+#include "webrtc/modules/video_processing/main/interface/video_processing.h"
+#include "webrtc/modules/video_processing/main/source/brighten.h"
+#include "webrtc/modules/video_processing/main/source/brightness_detection.h"
+#include "webrtc/modules/video_processing/main/source/color_enhancement.h"
+#include "webrtc/modules/video_processing/main/source/deflickering.h"
+#include "webrtc/modules/video_processing/main/source/denoising.h"
+#include "webrtc/modules/video_processing/main/source/frame_preprocessor.h"
 
 namespace webrtc {
 class CriticalSectionWrapper;

@@ -10,16 +10,6 @@ VPATH       = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORT_LIBRARY = 1
-ifdef MOZ_MAEMO_LIBLOCATION
-        LOCAL_INCLUDES  += $(MOZ_PLATFORM_MAEMO_CFLAGS) \
-                           -I$(topsrcdir)/dom/src/geolocation \
-                           $(NULL)
-endif
-
-ifdef MOZ_PLATFORM_MAEMO
-LOCAL_INCLUDES  += $(MOZ_DBUS_CFLAGS) \
-                   $(NULL)
-endif
 ifdef MOZ_ENABLE_QTMOBILITY
 LOCAL_INCLUDES  += $(MOZ_QT_CFLAGS) \
                    -I$(topsrcdir)/dom/src/geolocation \

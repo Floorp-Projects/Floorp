@@ -150,6 +150,8 @@ class LogMessageVoidify {
     << ", " << #v2 << "=" << v2
 #define LOG_FERR3(sev, func, v1, v2, v3) LOG_FERR2(sev, func, v1, v2) \
     << ", " << #v3 << "=" << v3
+#define LOG_FERR4(sev, func, v1, v2, v3, v4) LOG_FERR3(sev, func, v1, v2, v3) \
+    << ", " << #v4 << "=" << v4
 
 #endif  // LOG
 

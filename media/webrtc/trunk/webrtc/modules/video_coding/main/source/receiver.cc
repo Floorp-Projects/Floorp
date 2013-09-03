@@ -77,94 +77,43 @@ void VCMReceiver::UpdateRtt(uint32_t rtt) {
 int32_t VCMReceiver::InsertPacket(const VCMPacket& packet,
                                   uint16_t frame_width,
                                   uint16_t frame_height) {
-  // Find an empty frame.
-  VCMEncodedFrame* buffer = NULL;
-  const int32_t error = jitter_buffer_.GetFrame(packet, buffer);
-  if (error == VCM_OLD_PACKET_ERROR) {
-    return VCM_OK;
-  } else if (error != VCM_OK) {
-    return error;
+  if (packet.frameType == kVideoFrameKey) {
+    WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCoding,
+                 VCMId(vcm_id_, receiver_id_),
+                 "Inserting key frame packet seqnum=%u, timestamp=%u",
+                 packet.seqNum, packet.timestamp);
   }
-  assert(buffer);
-  {
-    CriticalSectionScoped cs(crit_sect_);
 
-    if (frame_width && frame_height) {
-      buffer->SetEncodedSize(static_cast<uint32_t>(frame_width),
-                             static_cast<uint32_t>(frame_height));
-    }
-
-    if (master_) {
-      // Only trace the primary receiver to make it possible to parse and plot
-      // the trace file.
-      WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCoding,
-                   VCMId(vcm_id_, receiver_id_),
-                   "Packet seq_no %u of frame %u at %u",
-                   packet.seqNum, packet.timestamp,
-                   MaskWord64ToUWord32(clock_->TimeInMilliseconds()));
-    }
-
-    const int64_t now_ms = clock_->TimeInMilliseconds();
-
-    int64_t render_time_ms = timing_->RenderTimeMs(packet.timestamp, now_ms);
-
-    if (render_time_ms < 0) {
-      // Render time error. Assume that this is due to some change in the
-      // incoming video stream and reset the JB and the timing.
-      jitter_buffer_.Flush();
-      timing_->Reset(clock_->TimeInMilliseconds());
-      return VCM_FLUSH_INDICATOR;
-    } else if (render_time_ms < now_ms - max_video_delay_ms_) {
-      WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCoding,
-                   VCMId(vcm_id_, receiver_id_),
-                   "This frame should have been rendered more than %u ms ago."
-                   "Flushing jitter buffer and resetting timing.",
-                   max_video_delay_ms_);
-      jitter_buffer_.Flush();
-      timing_->Reset(clock_->TimeInMilliseconds());
-      return VCM_FLUSH_INDICATOR;
-    } else if (static_cast<int>(timing_->TargetVideoDelay()) >
-               max_video_delay_ms_) {
-      WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCoding,
-                   VCMId(vcm_id_, receiver_id_),
-                   "More than %u ms target delay. Flushing jitter buffer and"
-                   "resetting timing.", max_video_delay_ms_);
-      jitter_buffer_.Flush();
-      timing_->Reset(clock_->TimeInMilliseconds());
-      return VCM_FLUSH_INDICATOR;
-    }
-
-    // First packet received belonging to this frame.
-    if (buffer->Length() == 0) {
-      const int64_t now_ms = clock_->TimeInMilliseconds();
-      if (master_) {
-        // Only trace the primary receiver to make it possible to parse and plot
-        // the trace file.
-        WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCoding,
-                     VCMId(vcm_id_, receiver_id_),
-                     "First packet of frame %u at %u", packet.timestamp,
-                     MaskWord64ToUWord32(now_ms));
-      }
-      render_time_ms = timing_->RenderTimeMs(packet.timestamp, now_ms);
-      if (render_time_ms >= 0) {
-        buffer->SetRenderTime(render_time_ms);
-      } else {
-        buffer->SetRenderTime(now_ms);
-      }
-    }
-
-    // Insert packet into the jitter buffer both media and empty packets.
-    const VCMFrameBufferEnum
-    ret = jitter_buffer_.InsertPacket(buffer, packet);
-    if (ret == kFlushIndicator) {
-      return VCM_FLUSH_INDICATOR;
-    } else if (ret < 0) {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCoding,
-                   VCMId(vcm_id_, receiver_id_),
-                   "Error inserting packet seq_no=%u, time_stamp=%u",
-                   packet.seqNum, packet.timestamp);
-      return VCM_JITTER_BUFFER_ERROR;
-    }
+  // Insert the packet into the jitter buffer. The packet can either be empty or
+  // contain media at this point.
+  bool retransmitted = false;
+  const VCMFrameBufferEnum ret = jitter_buffer_.InsertPacket(packet,
+                                                             &retransmitted);
+  if (ret == kOldPacket) {
+    return VCM_OK;
+  } else if (ret == kFlushIndicator) {
+    return VCM_FLUSH_INDICATOR;
+  } else if (ret < 0) {
+    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCoding,
+                 VCMId(vcm_id_, receiver_id_),
+                 "Error inserting packet seqnum=%u, timestamp=%u",
+                 packet.seqNum, packet.timestamp);
+    return VCM_JITTER_BUFFER_ERROR;
+  }
+  if (ret == kCompleteSession && !retransmitted) {
+    // We don't want to include timestamps which have suffered from
+    // retransmission here, since we compensate with extra retransmission
+    // delay within the jitter estimate.
+    timing_->IncomingTimestamp(packet.timestamp, clock_->TimeInMilliseconds());
+  }
+  if (master_) {
+    // Only trace the primary receiver to make it possible to parse and plot
+    // the trace file.
+    WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCoding,
+                 VCMId(vcm_id_, receiver_id_),
+                 "Packet seqnum=%u timestamp=%u inserted at %u",
+                 packet.seqNum, packet.timestamp,
+                 MaskWord64ToUWord32(clock_->TimeInMilliseconds()));
   }
   return VCM_OK;
 }
@@ -175,155 +124,103 @@ VCMEncodedFrame* VCMReceiver::FrameForDecoding(
     bool render_timing,
     VCMReceiver* dual_receiver) {
   TRACE_EVENT0("webrtc", "Recv::FrameForDecoding");
-  // No need to enter the critical section here since the jitter buffer
-  // is thread-safe.
-  FrameType incoming_frame_type = kVideoFrameDelta;
-  next_render_time_ms = -1;
   const int64_t start_time_ms = clock_->TimeInMilliseconds();
-  int64_t ret = jitter_buffer_.NextTimestamp(max_wait_time_ms,
-                                             &incoming_frame_type,
-                                             &next_render_time_ms);
-  if (ret < 0) {
-    // No timestamp in jitter buffer at the moment.
+  uint32_t frame_timestamp = 0;
+  // Exhaust wait time to get a complete frame for decoding.
+  bool found_frame = jitter_buffer_.NextCompleteTimestamp(
+      max_wait_time_ms, &frame_timestamp);
+
+  if (!found_frame) {
+    // Get an incomplete frame when enabled.
+    const bool dual_receiver_enabled_and_passive = (dual_receiver != NULL &&
+        dual_receiver->State() == kPassive &&
+        dual_receiver->NackMode() == kNack);
+    if (dual_receiver_enabled_and_passive &&
+        !jitter_buffer_.CompleteSequenceWithNextFrame()) {
+      // Jitter buffer state might get corrupt with this frame.
+      dual_receiver->CopyJitterBufferStateFromReceiver(*this);
+    }
+    found_frame = jitter_buffer_.NextMaybeIncompleteTimestamp(
+        &frame_timestamp);
+  }
+
+  if (!found_frame) {
     return NULL;
   }
-  const uint32_t time_stamp = static_cast<uint32_t>(ret);
 
-  // Update the timing.
-  timing_->SetRequiredDelay(jitter_buffer_.EstimatedJitterMs());
-  timing_->UpdateCurrentDelay(time_stamp);
-
-  const int32_t temp_wait_time = max_wait_time_ms -
-      static_cast<int32_t>(clock_->TimeInMilliseconds() - start_time_ms);
-  uint16_t new_max_wait_time = static_cast<uint16_t>(VCM_MAX(temp_wait_time,
-                                                             0));
-
-  VCMEncodedFrame* frame = NULL;
-
-  if (render_timing) {
-    frame = FrameForDecoding(new_max_wait_time, next_render_time_ms,
-                             dual_receiver);
-  } else {
-    frame = FrameForRendering(new_max_wait_time, next_render_time_ms,
-                              dual_receiver);
+  // We have a frame - Set timing and render timestamp.
+  timing_->SetJitterDelay(jitter_buffer_.EstimatedJitterMs());
+  const int64_t now_ms = clock_->TimeInMilliseconds();
+  timing_->UpdateCurrentDelay(frame_timestamp);
+  next_render_time_ms = timing_->RenderTimeMs(frame_timestamp, now_ms);
+  // Check render timing.
+  bool timing_error = false;
+  // Assume that render timing errors are due to changes in the video stream.
+  if (next_render_time_ms < 0) {
+    timing_error = true;
+  } else if (next_render_time_ms < now_ms - max_video_delay_ms_) {
+    WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCoding,
+                 VCMId(vcm_id_, receiver_id_),
+                 "This frame should have been rendered more than %u ms ago."
+                 "Flushing jitter buffer and resetting timing.",
+                 max_video_delay_ms_);
+    timing_error = true;
+  } else if (static_cast<int>(timing_->TargetVideoDelay()) >
+             max_video_delay_ms_) {
+    WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCoding,
+                 VCMId(vcm_id_, receiver_id_),
+                 "More than %u ms target delay. Flushing jitter buffer and"
+                 "resetting timing.", max_video_delay_ms_);
+    timing_error = true;
   }
 
-  if (frame != NULL) {
+  if (timing_error) {
+    // Timing error => reset timing and flush the jitter buffer.
+    jitter_buffer_.Flush();
+    timing_->Reset();
+    return NULL;
+  }
+
+  if (!render_timing) {
+    // Decode frame as close as possible to the render timestamp.
+    TRACE_EVENT0("webrtc", "FrameForRendering");
+    const int32_t available_wait_time = max_wait_time_ms -
+        static_cast<int32_t>(clock_->TimeInMilliseconds() - start_time_ms);
+    uint16_t new_max_wait_time = static_cast<uint16_t>(
+        VCM_MAX(available_wait_time, 0));
+    uint32_t wait_time_ms = timing_->MaxWaitingTime(
+        next_render_time_ms, clock_->TimeInMilliseconds());
+    if (new_max_wait_time < wait_time_ms) {
+      // We're not allowed to wait until the frame is supposed to be rendered,
+      // waiting as long as we're allowed to avoid busy looping, and then return
+      // NULL. Next call to this function might return the frame.
+      render_wait_event_->Wait(max_wait_time_ms);
+      return NULL;
+    }
+    // Wait until it's time to render.
+    render_wait_event_->Wait(wait_time_ms);
+  }
+
+  // Extract the frame from the jitter buffer and set the render time.
+  VCMEncodedFrame* frame = jitter_buffer_.ExtractAndSetDecode(frame_timestamp);
+  if (frame == NULL) {
+    return NULL;
+  }
+  frame->SetRenderTime(next_render_time_ms);
+  if (dual_receiver != NULL) {
+    dual_receiver->UpdateState(*frame);
+  }
+  if (!frame->Complete()) {
+    // Update stats for incomplete frames.
     bool retransmitted = false;
     const int64_t last_packet_time_ms =
-      jitter_buffer_.LastPacketTime(frame, &retransmitted);
+        jitter_buffer_.LastPacketTime(frame, &retransmitted);
     if (last_packet_time_ms >= 0 && !retransmitted) {
       // We don't want to include timestamps which have suffered from
       // retransmission here, since we compensate with extra retransmission
       // delay within the jitter estimate.
-      timing_->IncomingTimestamp(time_stamp, last_packet_time_ms);
+      timing_->IncomingTimestamp(frame_timestamp, last_packet_time_ms);
     }
-    if (dual_receiver != NULL) {
-      dual_receiver->UpdateState(*frame);
-    }
-  }
-  return frame;
-}
-
-VCMEncodedFrame* VCMReceiver::FrameForDecoding(
-    uint16_t max_wait_time_ms,
-    int64_t next_render_time_ms,
-    VCMReceiver* dual_receiver) {
-  TRACE_EVENT1("webrtc", "FrameForDecoding",
-               "max_wait", max_wait_time_ms);
-  // How long can we wait until we must decode the next frame.
-  uint32_t wait_time_ms = timing_->MaxWaitingTime(
-      next_render_time_ms, clock_->TimeInMilliseconds());
-
-  // Try to get a complete frame from the jitter buffer.
-  VCMEncodedFrame* frame = jitter_buffer_.GetCompleteFrameForDecoding(0);
-
-  if (frame == NULL && max_wait_time_ms == 0 && wait_time_ms > 0) {
-    // If we're not allowed to wait for frames to get complete we must
-    // calculate if it's time to decode, and if it's not we will just return
-    // for now.
-    return NULL;
-  }
-
-  if (frame == NULL && VCM_MIN(wait_time_ms, max_wait_time_ms) == 0) {
-    // No time to wait for a complete frame, check if we have an incomplete.
-    const bool dual_receiver_enabled_and_passive = (dual_receiver != NULL &&
-        dual_receiver->State() == kPassive &&
-        dual_receiver->NackMode() == kNack);
-    if (dual_receiver_enabled_and_passive &&
-        !jitter_buffer_.CompleteSequenceWithNextFrame()) {
-      // Jitter buffer state might get corrupt with this frame.
-      dual_receiver->CopyJitterBufferStateFromReceiver(*this);
-    }
-    frame = jitter_buffer_.MaybeGetIncompleteFrameForDecoding();
-  }
-  if (frame == NULL) {
-    // Wait for a complete frame.
-    frame = jitter_buffer_.GetCompleteFrameForDecoding(max_wait_time_ms);
-  }
-  if (frame == NULL) {
-    // Get an incomplete frame.
-    if (timing_->MaxWaitingTime(next_render_time_ms,
-                                clock_->TimeInMilliseconds()) > 0) {
-      // Still time to wait for a complete frame.
-      return NULL;
-    }
-
-    // No time left to wait, we must decode this frame now.
-    const bool dual_receiver_enabled_and_passive = (dual_receiver != NULL &&
-        dual_receiver->State() == kPassive &&
-        dual_receiver->NackMode() == kNack);
-    if (dual_receiver_enabled_and_passive &&
-        !jitter_buffer_.CompleteSequenceWithNextFrame()) {
-      // Jitter buffer state might get corrupt with this frame.
-      dual_receiver->CopyJitterBufferStateFromReceiver(*this);
-    }
-
-    frame = jitter_buffer_.MaybeGetIncompleteFrameForDecoding();
-  }
-  return frame;
-}
-
-VCMEncodedFrame* VCMReceiver::FrameForRendering(uint16_t max_wait_time_ms,
-                                                int64_t next_render_time_ms,
-                                                VCMReceiver* dual_receiver) {
-  TRACE_EVENT0("webrtc", "FrameForRendering");
-  // How long MUST we wait until we must decode the next frame. This is
-  // different for the case where we have a renderer which can render at a
-  // specified time. Here we must wait as long as possible before giving the
-  // frame to the decoder, which will render the frame as soon as it has been
-  // decoded.
-  uint32_t wait_time_ms = timing_->MaxWaitingTime(
-      next_render_time_ms, clock_->TimeInMilliseconds());
-  if (max_wait_time_ms < wait_time_ms) {
-    // If we're not allowed to wait until the frame is supposed to be rendered,
-    // waiting as long as we're allowed to avoid busy looping, and then return
-    // NULL. Next call to this function might return the frame.
-    render_wait_event_->Wait(max_wait_time_ms);
-    return NULL;
-  }
-  // Wait until it's time to render.
-  render_wait_event_->Wait(wait_time_ms);
-
-  // Get a complete frame if possible.
-  // Note: This might cause us to wait more than a total of |max_wait_time_ms|.
-  // This is necessary to avoid a possible busy loop if no complete frame
-  // has been received.
-  VCMEncodedFrame* frame = jitter_buffer_.GetCompleteFrameForDecoding(
-      max_wait_time_ms);
-
-  if (frame == NULL) {
-    // Get an incomplete frame.
-    const bool dual_receiver_enabled_and_passive = (dual_receiver != NULL &&
-        dual_receiver->State() == kPassive &&
-        dual_receiver->NackMode() == kNack);
-    if (dual_receiver_enabled_and_passive &&
-        !jitter_buffer_.CompleteSequenceWithNextFrame()) {
-      // Jitter buffer state might get corrupt with this frame.
-      dual_receiver->CopyJitterBufferStateFromReceiver(*this);
-    }
-
-    frame = jitter_buffer_.MaybeGetIncompleteFrameForDecoding();
   }
   return frame;
 }
@@ -362,9 +259,11 @@ void VCMReceiver::SetNackMode(VCMNackMode nackMode,
 }
 
 void VCMReceiver::SetNackSettings(size_t max_nack_list_size,
-                                  int max_packet_age_to_nack) {
+                                  int max_packet_age_to_nack,
+                                  int max_incomplete_time_ms) {
   jitter_buffer_.SetNackSettings(max_nack_list_size,
-                                 max_packet_age_to_nack);
+                                 max_packet_age_to_nack,
+                                 max_incomplete_time_ms);
 }
 
 VCMNackMode VCMReceiver::NackMode() const {
@@ -378,15 +277,15 @@ VCMNackStatus VCMReceiver::NackList(uint16_t* nack_list,
   bool request_key_frame = false;
   uint16_t* internal_nack_list = jitter_buffer_.GetNackList(
       nack_list_length, &request_key_frame);
-  if (request_key_frame) {
-    // This combination is used to trigger key frame requests.
-    return kNackKeyFrameRequest;
-  }
   if (*nack_list_length > size) {
+    *nack_list_length = 0;
     return kNackNeedMoreMemory;
   }
   if (internal_nack_list != NULL && *nack_list_length > 0) {
     memcpy(nack_list, internal_nack_list, *nack_list_length * sizeof(uint16_t));
+  }
+  if (request_key_frame) {
+    return kNackKeyFrameRequest;
   }
   return kNackOk;
 }
@@ -430,16 +329,29 @@ int VCMReceiver::SetMinReceiverDelay(int desired_delay_ms) {
   if (desired_delay_ms < 0 || desired_delay_ms > kMaxReceiverDelayMs) {
     return -1;
   }
-  jitter_buffer_.SetMaxJitterEstimate(desired_delay_ms);
+  jitter_buffer_.SetMaxJitterEstimate(desired_delay_ms > 0);
   max_video_delay_ms_ = desired_delay_ms + kMaxVideoDelayMs;
-  timing_->SetMaxVideoDelay(max_video_delay_ms_);
   // Initializing timing to the desired delay.
-  timing_->SetRequiredDelay(desired_delay_ms);
+  timing_->set_min_playout_delay(desired_delay_ms);
   return 0;
 }
 
 int VCMReceiver::RenderBufferSizeMs() {
-  return jitter_buffer_.RenderBufferSizeMs();
+  uint32_t timestamp_start = 0u;
+  uint32_t timestamp_end = 0u;
+  // Render timestamps are computed just prior to decoding. Therefore this is
+  // only an estimate based on frames' timestamps and current timing state.
+  jitter_buffer_.RenderBufferSize(&timestamp_start, &timestamp_end);
+  if (timestamp_start == timestamp_end) {
+    return 0;
+  }
+  // Update timing.
+  const int64_t now_ms = clock_->TimeInMilliseconds();
+  timing_->SetJitterDelay(jitter_buffer_.EstimatedJitterMs());
+  // Get render timestamps.
+  uint32_t render_start = timing_->RenderTimeMs(timestamp_start, now_ms);
+  uint32_t render_end = timing_->RenderTimeMs(timestamp_end, now_ms);
+  return render_end - render_start;
 }
 
 void VCMReceiver::UpdateState(VCMReceiverState new_state) {

@@ -34,7 +34,7 @@
 #ifndef WEBRTC_VOICE_ENGINE_VOE_BASE_H
 #define WEBRTC_VOICE_ENGINE_VOE_BASE_H
 
-#include "common_types.h"
+#include "webrtc/common_types.h"
 
 namespace webrtc {
 
@@ -50,7 +50,7 @@ public:
     // This method will be called after the occurrence of any runtime error
     // code, or warning notification, when the observer interface has been
     // installed using VoEBase::RegisterVoiceEngineObserver().
-    virtual void CallbackOnError(const int channel, const int errCode) = 0;
+    virtual void CallbackOnError(int channel, int errCode) = 0;
 
 protected:
     virtual ~VoiceEngineObserver() {}
@@ -72,17 +72,18 @@ public:
 
     // Specifies the amount and type of trace information which will be
     // created by the VoiceEngine.
-    static int SetTraceFilter(const unsigned int filter);
+    static int SetTraceFilter(unsigned int filter);
 
     // Sets the name of the trace file and enables non-encrypted trace messages.
     static int SetTraceFile(const char* fileNameUTF8,
-                            const bool addFileCounter = false);
+                            bool addFileCounter = false);
 
     // Installs the TraceCallback implementation to ensure that the user
     // receives callbacks for generated trace messages.
     static int SetTraceCallback(TraceCallback* callback);
 
     static int SetAndroidObjects(void* javaVM, void* context);
+    static int SetAndroidObjects(void* javaVM, void* env, void* context);
 
 protected:
     VoiceEngine() {}

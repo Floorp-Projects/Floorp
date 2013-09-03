@@ -10,7 +10,7 @@
 
 #include "webrtc/system_wrappers/interface/list_wrapper.h"
 
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 using ::webrtc::ListWrapper;

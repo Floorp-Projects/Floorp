@@ -514,13 +514,13 @@ LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */)
 
     matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX
                             "gc_allocation_threshold_mb");
-    if (memPrefName == matchName || (!rts && index == 9)) {
+    if (memPrefName == matchName || (!rts && index == 8)) {
       UpdateCommonJSGCMemoryOption(rts, matchName, JSGC_ALLOCATION_THRESHOLD);
       continue;
     }
 
     matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX "gc_incremental_slice_ms");
-    if (memPrefName == matchName || (!rts && index == 10)) {
+    if (memPrefName == matchName || (!rts && index == 9)) {
       int32_t prefValue = GetWorkerPref(matchName, -1);
       uint32_t value =
         (prefValue <= 0 || prefValue >= 100000) ? 0 : uint32_t(prefValue);
@@ -529,7 +529,7 @@ LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */)
     }
 
     matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX "gc_dynamic_heap_growth");
-    if (memPrefName == matchName || (!rts && index == 11)) {
+    if (memPrefName == matchName || (!rts && index == 10)) {
       bool prefValue = GetWorkerPref(matchName, false);
       UpdatOtherJSGCMemoryOption(rts, JSGC_DYNAMIC_HEAP_GROWTH,
                                  prefValue ? 0 : 1);
@@ -537,7 +537,7 @@ LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */)
     }
 
     matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX "gc_dynamic_mark_slice");
-    if (memPrefName == matchName || (!rts && index == 12)) {
+    if (memPrefName == matchName || (!rts && index == 11)) {
       bool prefValue = GetWorkerPref(matchName, false);
       UpdatOtherJSGCMemoryOption(rts, JSGC_DYNAMIC_MARK_SLICE,
                                  prefValue ? 0 : 1);
@@ -864,13 +864,6 @@ public:
     mLastJSContext = nullptr;
   }
 
-  // Make this public for now.  Ideally we'd hide the JSRuntime inside.
-  JSRuntime*
-  Runtime() const
-  {
-    return mozilla::CycleCollectedJSRuntime::Runtime();
-  }
-
   void
   DispatchDeferredDeletion(bool aContinuation) MOZ_OVERRIDE
   {
@@ -1118,6 +1111,20 @@ GetWorkerPrivateFromContext(JSContext* aCx)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
   return static_cast<WorkerThreadRuntimePrivate*>(JS_GetRuntimePrivate(JS_GetRuntime(aCx)))->mWorkerPrivate;
+}
+
+bool
+IsCurrentThreadRunningChromeWorker()
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  CycleCollectedJSRuntime* ccrt = nsCycleCollector_currentJSRuntime();
+  if (!ccrt) {
+    return false;
+  }
+
+  JSRuntime* rt = ccrt->Runtime();
+  return static_cast<WorkerThreadRuntimePrivate*>(JS_GetRuntimePrivate(rt))->
+    mWorkerPrivate->UsesSystemPrincipal();
 }
 
 END_WORKERS_NAMESPACE

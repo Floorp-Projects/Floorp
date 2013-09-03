@@ -348,8 +348,6 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
 
         masm.push(r10);
         masm.subl(Imm32(1), rcx);
-
-        masm.testl(rcx, rcx);
         masm.j(Assembler::NonZero, &undefLoopTop);
     }
 
@@ -358,19 +356,14 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
     masm.lea(Operand(b), rcx);
 
     // Push arguments, |nargs| + 1 times (to include |this|).
+    masm.addl(Imm32(1), r8);
     {
-        Label copyLoopTop, initialSkip;
-
-        masm.jump(&initialSkip);
+        Label copyLoopTop;
 
         masm.bind(&copyLoopTop);
+        masm.push(Operand(rcx, 0x0));
         masm.subq(Imm32(sizeof(Value)), rcx);
         masm.subl(Imm32(1), r8);
-        masm.bind(&initialSkip);
-
-        masm.push(Operand(rcx, 0x0));
-
-        masm.testl(r8, r8);
         masm.j(Assembler::NonZero, &copyLoopTop);
     }
 

@@ -8,16 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "high_pass_filter_impl.h"
+#include "webrtc/modules/audio_processing/high_pass_filter_impl.h"
 
 #include <cassert>
 
-#include "critical_section_wrapper.h"
-#include "typedefs.h"
-#include "signal_processing_library.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/typedefs.h"
 
-#include "audio_processing_impl.h"
-#include "audio_buffer.h"
+#include "webrtc/modules/audio_processing/audio_buffer.h"
+#include "webrtc/modules/audio_processing/audio_processing_impl.h"
 
 namespace webrtc {
 namespace {

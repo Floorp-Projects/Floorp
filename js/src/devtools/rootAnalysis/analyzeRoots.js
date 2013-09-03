@@ -4,7 +4,7 @@
 
 loadRelativeToScript('utility.js');
 loadRelativeToScript('annotations.js');
-loadRelativeToScript('suppressedPoints.js');
+loadRelativeToScript('CFG.js');
 
 var sourceRoot = (environment['SOURCE'] || '') + '/'
 
@@ -241,19 +241,6 @@ function edgeCanGC(edge)
     assert(callee.Exp[0].Kind == "Var");
     var calleeName = callee.Exp[0].Variable.Name[0];
     return indirectCallCannotGC(functionName, calleeName) ? null : "*" + calleeName;
-}
-
-function computePredecessors(body)
-{
-    body.predecessors = [];
-    if (!("PEdge" in body))
-        return;
-    for (var edge of body.PEdge) {
-        var target = edge.Index[1];
-        if (!(target in body.predecessors))
-            body.predecessors[target] = [];
-        body.predecessors[target].push(edge);
-    }
 }
 
 function variableUseFollowsGC(suppressed, variable, worklist)
@@ -573,8 +560,10 @@ for (var nameIndex = start; nameIndex <= end; nameIndex++) {
 
     for (var body of functionBodies)
         body.suppressed = [];
-    for (var body of functionBodies)
-        computeSuppressedPoints(body);
+    for (var body of functionBodies) {
+        for (var [pbody, id] of allRAIIGuardedCallPoints(body, isSuppressConstructor))
+            pbody.suppressed[id] = true;
+    }
     processBodies(functionName);
 
     xdb.free_string(name);

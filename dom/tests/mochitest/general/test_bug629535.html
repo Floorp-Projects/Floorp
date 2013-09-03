@@ -14,23 +14,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=629535
 <script type="application/javascript">
 
 const dntPref = 'privacy.donottrackheader.enabled';
-const oldDNT = SpecialPowers.getBoolPref(dntPref);
+
+SimpleTest.waitForExplicitFinish();
 
 is(SpecialPowers.getBoolPref(dntPref), false,
    'DNT should be disabled by default');
 is(navigator.doNotTrack, 'unspecified',
    'navigator.doNotTrack should initially be "unspecified".');
 
-SpecialPowers.clearUserPref(dntPref);
-is(navigator.doNotTrack, "unspecified", 'after clearing pref');
+SpecialPowers.pushPrefEnv({"clear": [[dntPref]]}, test1);
 
-SpecialPowers.setBoolPref(dntPref, true);
-is(navigator.doNotTrack, "yes", 'after setting pref to true');
+function test1() {
+  is(navigator.doNotTrack, "unspecified", 'after clearing pref');
+  SpecialPowers.pushPrefEnv({"set": [[dntPref, true]]}, test2);
+}
 
-SpecialPowers.setBoolPref(dntPref, false);
-is(navigator.doNotTrack, "unspecified", 'after setting pref to false');
+function test2() {
+  is(navigator.doNotTrack, "yes", 'after setting pref to true');
+  SpecialPowers.pushPrefEnv({"set": [[dntPref, false]]}, test3);
+}
 
-SpecialPowers.setBoolPref(dntPref, oldDNT);
+function test3() {
+  is(navigator.doNotTrack, "unspecified", 'after setting pref to false');
+  SimpleTest.finish();
+}
 
 </script>
 

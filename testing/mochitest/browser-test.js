@@ -73,10 +73,14 @@ function Tester(aTests, aDumper, aCallback) {
   this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/SimpleTest.js", simpleTestScope);
   this._scriptLoader.loadSubScript("chrome://mochikit/content/chrome-harness.js", simpleTestScope);
   this.SimpleTest = simpleTestScope.SimpleTest;
+  this.Task = Components.utils.import("resource://gre/modules/Task.jsm", null).Task;
+  this.Promise = Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js", null).Promise;
 }
 Tester.prototype = {
   EventUtils: {},
   SimpleTest: {},
+  Task: null,
+  Promise: null,
 
   repeat: 0,
   runUntilFailure: false,
@@ -398,6 +402,8 @@ Tester.prototype = {
     this.currentTest.scope.EventUtils = this.EventUtils;
     this.currentTest.scope.SimpleTest = this.SimpleTest;
     this.currentTest.scope.gTestPath = this.currentTest.path;
+    this.currentTest.scope.Task = this.Task;
+    this.currentTest.scope.Promise = this.Promise;
 
     // Override SimpleTest methods with ours.
     ["ok", "is", "isnot", "ise", "todo", "todo_is", "todo_isnot", "info"].forEach(function(m) {
@@ -431,9 +437,34 @@ Tester.prototype = {
 
       // Run the test
       this.lastStartTime = Date.now();
-      if ("generatorTest" in this.currentTest.scope) {
-        if ("test" in this.currentTest.scope)
+      if (this.currentTest.scope.__tasks) {
+        // This test consists of tasks, added via the `add_task()` API.
+        if ("test" in this.currentTest.scope) {
+          throw "Cannot run both a add_task test and a normal test at the same time.";
+        }
+        let testScope = this.currentTest.scope;
+        let currentTest = this.currentTest;
+        this.Task.spawn(function() {
+          let task;
+          while ((task = this.__tasks.shift())) {
+            this.SimpleTest.info("Entering test " + task.name);
+            try {
+              yield task();
+            } catch (ex) {
+              let isExpected = !!this.SimpleTest.isExpectingUncaughtException();
+              let stack = (typeof ex == "object" && "stack" in ex)?ex.stack:null;
+              let name = "Uncaught exception";
+              let result = new testResult(isExpected, name, ex, false, stack);
+              currentTest.addResult(result);
+            }
+            this.SimpleTest.info("Leaving test " + task.name);
+          }
+          this.finish();
+        }.bind(testScope));
+      } else if ("generatorTest" in this.currentTest.scope) {
+        if ("test" in this.currentTest.scope) {
           throw "Cannot run both a generator test and a normal test at the same time.";
+        }
 
         // This test is a generator. It will not finish immediately.
         this.currentTest.scope.waitForExplicitFinish();
@@ -444,7 +475,7 @@ Tester.prototype = {
         this.currentTest.scope.test();
       }
     } catch (ex) {
-      var isExpected = !!this.SimpleTest.isExpectingUncaughtException();
+      let isExpected = !!this.SimpleTest.isExpectingUncaughtException();
       if (!this.SimpleTest.isIgnoringAllUncaughtExceptions()) {
         this.currentTest.addResult(new testResult(isExpected, "Exception thrown", ex, false));
         this.SimpleTest.expectUncaughtException(false);
@@ -668,12 +699,58 @@ function testScope(aTester, aTest) {
 testScope.prototype = {
   __done: true,
   __generator: null,
+  __tasks: null,
   __waitTimer: null,
   __cleanupFunctions: [],
   __timeoutFactor: 1,
 
   EventUtils: {},
   SimpleTest: {},
+  Task: null,
+  Promise: null,
+
+  /**
+   * Add a test function which is a Task function.
+   *
+   * Task functions are functions fed into Task.jsm's Task.spawn(). They are
+   * generators that emit promises.
+   *
+   * If an exception is thrown, an assertion fails, or if a rejected
+   * promise is yielded, the test function aborts immediately and the test is
+   * reported as a failure. Execution continues with the next test function.
+   *
+   * To trigger premature (but successful) termination of the function, simply
+   * return or throw a Task.Result instance.
+   *
+   * Example usage:
+   *
+   * add_task(function test() {
+   *   let result = yield Promise.resolve(true);
+   *
+   *   ok(result);
+   *
+   *   let secondary = yield someFunctionThatReturnsAPromise(result);
+   *   is(secondary, "expected value");
+   * });
+   *
+   * add_task(function test_early_return() {
+   *   let result = yield somethingThatReturnsAPromise();
+   *
+   *   if (!result) {
+   *     // Test is ended immediately, with success.
+   *     return;
+   *   }
+   *
+   *   is(result, "foo");
+   * });
+   */
+  add_task: function(aFunction) {
+    if (!this.__tasks) {
+      this.waitForExplicitFinish();
+      this.__tasks = [];
+    }
+    this.__tasks.push(aFunction.bind(this));
+  },
 
   destroy: function test_destroy() {
     for (let prop in this)

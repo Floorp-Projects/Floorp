@@ -372,7 +372,14 @@ void NetEqDecodingTest::PopulateCng(int frame_index,
   *payload_len = 1;  // Only noise level, no spectral parameters.
 }
 
-TEST_F(NetEqDecodingTest, TestBitExactness) {
+#if defined(_WIN32) && defined(WEBRTC_ARCH_64_BITS)
+// Disabled for Windows 64-bit until webrtc:1458 is fixed.
+#define MAYBE_TestBitExactness DISABLED_TestBitExactness
+#else
+#define MAYBE_TestBitExactness TestBitExactness
+#endif
+
+TEST_F(NetEqDecodingTest, MAYBE_TestBitExactness) {
   const std::string kInputRtpFile = webrtc::test::ProjectRootPath() +
       "resources/audio_coding/neteq_universal_new.rtp";
 #if defined(_MSC_VER) && (_MSC_VER >= 1700)

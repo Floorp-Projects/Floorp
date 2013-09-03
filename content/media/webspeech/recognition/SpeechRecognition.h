@@ -12,6 +12,7 @@
 #include "nsString.h"
 #include "nsWrapperCache.h"
 #include "nsTArray.h"
+#include "js/TypeDecls.h"
 
 #include "nsIDOMNavigatorUserMedia.h"
 #include "nsITimer.h"
@@ -30,7 +31,6 @@
 
 #include "mozilla/dom/SpeechRecognitionError.h"
 
-struct JSContext;
 class nsIDOMWindow;
 
 namespace mozilla {

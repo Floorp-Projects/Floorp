@@ -45,7 +45,7 @@
 #include "nsIProtocolProxyCallback.h"
 #include "nsICancelable.h"
 
-#if defined(XP_WIN) || defined(MOZ_PLATFORM_MAEMO)
+#if defined(XP_WIN)
 #include "nsNativeConnectionHelper.h"
 #endif
 
@@ -1105,10 +1105,11 @@ nsIOService::TrackNetworkLinkStatusForOffline()
         // option is set to always autodial. If so, then we are 
         // always up for the purposes of offline management.
         if (autodialEnabled) {
-#if defined(XP_WIN) || defined(MOZ_PLATFORM_MAEMO)
-            // On Windows and Maemo (libconic) we should first check with the OS
-            // to see if autodial is enabled.  If it is enabled then we are
-            // allowed to manage the offline state.
+#if defined(XP_WIN)
+            // On Windows, we should first check with the OS
+            // to see if autodial is enabled.  If it is
+            // enabled then we are allowed to manage the
+            // offline state.
             if(nsNativeConnectionHelper::IsAutodialEnabled()) 
                 return SetOffline(false);
 #else

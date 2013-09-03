@@ -41,7 +41,6 @@ class VideoRenderOpenGles20 {
   int32_t _id;
   GLuint _textureIds[3]; // Texture id of Y,U and V texture.
   GLuint _program;
-  GLuint _vPositionHandle;
   GLsizei _textureWidth;
   GLsizei _textureHeight;
 

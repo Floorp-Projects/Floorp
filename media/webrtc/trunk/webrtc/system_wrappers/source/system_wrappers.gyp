@@ -133,6 +133,14 @@
           ],
         }],
         ['OS=="android" or moz_widget_toolkit_gonk==1', {
+          'defines': [
+            'WEBRTC_THREAD_RR',
+            # TODO(leozwang): Investigate CLOCK_REALTIME and CLOCK_MONOTONIC
+            # support on Android. Keep WEBRTC_CLOCK_TYPE_REALTIME for now,
+            # remove it after I verify that CLOCK_MONOTONIC is fully functional
+            # with condition and event functions in system_wrappers.
+            'WEBRTC_CLOCK_TYPE_REALTIME',
+           ],
           'dependencies': [ 'cpu_features_android', ],
           'sources!': [
             # Android doesn't have these in <=2.2
@@ -141,6 +149,12 @@
           ],
         }],
         ['OS=="linux"', {
+          'defines': [
+            'WEBRTC_THREAD_RR',
+            # TODO(andrew): can we select this automatically?
+            # Define this if the Linux system does not support CLOCK_MONOTONIC.
+            #'WEBRTC_CLOCK_TYPE_REALTIME',
+          ],
           'link_settings': {
             'libraries': [ '-lrt', ],
           },
@@ -151,6 +165,12 @@
           },
           'sources!': [
             'atomic32_posix.cc',
+          ],
+        }],
+        ['OS=="ios" or OS=="mac"', {
+          'defines': [
+            'WEBRTC_THREAD_RR',
+            'WEBRTC_CLOCK_TYPE_REALTIME',
           ],
         }],
         ['OS=="win"', {

@@ -5,16 +5,14 @@
 # shared libs for webrtc
 WEBRTC_LIBS = \
   $(call EXPAND_LIBNAME_PATH,common_video,$(DEPTH)/media/webrtc/trunk/webrtc/common_video/common_video_common_video) \
+  $(call EXPAND_LIBNAME_PATH,common_audio,$(DEPTH)/media/webrtc/trunk/webrtc/common_audio/common_audio_common_audio) \
   $(call EXPAND_LIBNAME_PATH,video_capture_module,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_video_capture_module) \
   $(call EXPAND_LIBNAME_PATH,webrtc_utility,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_webrtc_utility) \
   $(call EXPAND_LIBNAME_PATH,audio_coding_module,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_audio_coding_module) \
   $(call EXPAND_LIBNAME_PATH,CNG,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_CNG) \
-  $(call EXPAND_LIBNAME_PATH,signal_processing,$(DEPTH)/media/webrtc/trunk/webrtc/common_audio/common_audio_signal_processing) \
   $(call EXPAND_LIBNAME_PATH,G711,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_G711) \
   $(call EXPAND_LIBNAME_PATH,PCM16B,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_PCM16B) \
   $(call EXPAND_LIBNAME_PATH,NetEq,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_NetEq) \
-  $(call EXPAND_LIBNAME_PATH,resampler,$(DEPTH)/media/webrtc/trunk/webrtc/common_audio/common_audio_resampler) \
-  $(call EXPAND_LIBNAME_PATH,vad,$(DEPTH)/media/webrtc/trunk/webrtc/common_audio/common_audio_vad) \
   $(call EXPAND_LIBNAME_PATH,system_wrappers,$(DEPTH)/media/webrtc/trunk/webrtc/system_wrappers/source/system_wrappers_system_wrappers) \
   $(call EXPAND_LIBNAME_PATH,webrtc_video_coding,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_webrtc_video_coding) \
   $(call EXPAND_LIBNAME_PATH,video_coding_utility,$(DEPTH)/media/webrtc/trunk/webrtc/modules/video_coding/utility/video_coding_utility_video_coding_utility) \
@@ -23,13 +21,13 @@ WEBRTC_LIBS = \
   $(call EXPAND_LIBNAME_PATH,webrtc_opus,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_webrtc_opus) \
   $(call EXPAND_LIBNAME_PATH,video_render_module,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_video_render_module) \
   $(call EXPAND_LIBNAME_PATH,video_engine_core,$(DEPTH)/media/webrtc/trunk/webrtc/video_engine/video_engine_video_engine_core) \
+  $(call EXPAND_LIBNAME_PATH,voice_engine,$(DEPTH)/media/webrtc/trunk/webrtc/voice_engine/voice_engine_voice_engine) \
   $(call EXPAND_LIBNAME_PATH,media_file,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_media_file) \
   $(call EXPAND_LIBNAME_PATH,rtp_rtcp,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_rtp_rtcp) \
   $(call EXPAND_LIBNAME_PATH,bitrate_controller,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_bitrate_controller) \
   $(call EXPAND_LIBNAME_PATH,remote_bitrate_estimator,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_remote_bitrate_estimator) \
   $(call EXPAND_LIBNAME_PATH,paced_sender,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_paced_sender) \
   $(call EXPAND_LIBNAME_PATH,video_processing,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_video_processing) \
-  $(call EXPAND_LIBNAME_PATH,voice_engine_core,$(DEPTH)/media/webrtc/trunk/webrtc/voice_engine/voice_engine_voice_engine_core) \
   $(call EXPAND_LIBNAME_PATH,audio_conference_mixer,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_audio_conference_mixer) \
   $(call EXPAND_LIBNAME_PATH,audio_device,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_audio_device) \
   $(call EXPAND_LIBNAME_PATH,audio_processing,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_audio_processing) \
@@ -43,6 +41,7 @@ ifneq (,$(INTEL_ARCHITECTURE))
 WEBRTC_LIBS += \
   $(call EXPAND_LIBNAME_PATH,video_processing_sse2,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_video_processing_sse2) \
   $(call EXPAND_LIBNAME_PATH,audio_processing_sse2,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_audio_processing_sse2) \
+  $(call EXPAND_LIBNAME_PATH,common_audio_sse2,$(DEPTH)/media/webrtc/trunk/webrtc/common_audio/common_audio_common_audio_sse2) \
   $(NULL)
 endif
 
@@ -57,7 +56,7 @@ WEBRTC_LIBS += \
 # neon for ARM
 ifeq ($(BUILD_ARM_NEON),1)
 WEBRTC_LIBS += \
-  $(call EXPAND_LIBNAME_PATH,signal_processing_neon,$(DEPTH)/media/webrtc/trunk/webrtc/common_audio/common_audio_signal_processing_neon) \
+  $(call EXPAND_LIBNAME_PATH,common_audio_neon,$(DEPTH)/media/webrtc/trunk/webrtc/common_audio/common_audio_common_audio_neon) \
   $(call EXPAND_LIBNAME_PATH,audio_processing_neon,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_audio_processing_neon) \
   $(NULL)
 endif

@@ -603,7 +603,7 @@ js_Disassemble1(JSContext *cx, HandleScript script, jsbytecode *pc,
 
       case JOF_OBJECT: {
         /* Don't call obj.toSource if analysis/inference is active. */
-        if (cx->compartment()->activeAnalysis) {
+        if (script->compartment()->activeAnalysis) {
             Sprint(sp, " object");
             break;
         }
@@ -1087,6 +1087,8 @@ GetBlockChainAtPC(JSContext *cx, JSScript *script, jsbytecode *pc)
     return blockChain;
 }
 
+namespace {
+
 class PCStack
 {
     jsbytecode **stack;
@@ -1099,6 +1101,8 @@ class PCStack
     int depth() const { return depth_; }
     jsbytecode *operator[](int i) const;
 };
+
+} /* anonymous namespace */
 
 PCStack::~PCStack()
 {

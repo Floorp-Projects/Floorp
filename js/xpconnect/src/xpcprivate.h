@@ -605,12 +605,6 @@ public:
     static XPCJSRuntime* newXPCJSRuntime(nsXPConnect* aXPConnect);
     static XPCJSRuntime* Get() { return nsXPConnect::XPConnect()->GetRuntime(); }
 
-    // Make this public for now.  Ideally we'd hide the JSRuntime inside.
-    JSRuntime* Runtime() const
-    {
-      return mozilla::CycleCollectedJSRuntime::Runtime();
-    }
-
     XPCJSContextStack* GetJSContextStack() {return mJSContextStack;}
     void DestroyJSContextStack();
 

@@ -41,27 +41,28 @@ double FrameRms(AudioFrame& frame) {
 
 }
 
-class InitialPlayoutDelayTest  : public ::testing::Test {
+class InitialPlayoutDelayTest : public ::testing::Test {
  protected:
 
   InitialPlayoutDelayTest()
-     : acm_a_(NULL),
-       acm_b_(NULL),
-       channel_a2b_(NULL) {
+      : acm_a_(NULL),
+        acm_b_(NULL),
+        channel_a2b_(NULL) {
   }
 
-  ~InitialPlayoutDelayTest() {}
+  ~InitialPlayoutDelayTest() {
+  }
 
   void TearDown() {
-    if(acm_a_ != NULL) {
+    if (acm_a_ != NULL) {
       AudioCodingModule::Destroy(acm_a_);
       acm_a_ = NULL;
     }
-    if(acm_b_ != NULL) {
+    if (acm_b_ != NULL) {
       AudioCodingModule::Destroy(acm_b_);
       acm_b_ = NULL;
     }
-    if(channel_a2b_ != NULL) {
+    if (channel_a2b_ != NULL) {
       delete channel_a2b_;
       channel_a2b_ = NULL;
     }
@@ -76,8 +77,8 @@ class InitialPlayoutDelayTest  : public ::testing::Test {
 
     // Register all L16 codecs in receiver.
     CodecInst codec;
-    const int kFsHz[3] = {8000, 16000, 32000};
-    const int kChannels[2] = {1, 2};
+    const int kFsHz[3] = { 8000, 16000, 32000 };
+    const int kChannels[2] = { 1, 2 };
     for (int n = 0; n < 3; ++n) {
       for (int k = 0; k < 2; ++k) {
         AudioCodingModule::Codec("L16", &codec, kFsHz[n], kChannels[k]);
@@ -109,7 +110,7 @@ class InitialPlayoutDelayTest  : public ::testing::Test {
     double rms = 0;
     acm_a_->RegisterSendCodec(codec);
     acm_b_->SetInitialPlayoutDelay(initial_delay_ms);
-    while(rms < kAmp / 2) {
+    while (rms < kAmp / 2) {
       in_audio_frame.timestamp_ = timestamp;
       timestamp += in_audio_frame.samples_per_channel_;
       ASSERT_EQ(0, acm_a_->Add10MsData(in_audio_frame));
@@ -127,7 +128,6 @@ class InitialPlayoutDelayTest  : public ::testing::Test {
   AudioCodingModule* acm_b_;
   Channel* channel_a2b_;
 };
-
 
 TEST_F( InitialPlayoutDelayTest, NbMono) {
   CodecInst codec;
@@ -167,4 +167,5 @@ TEST_F( InitialPlayoutDelayTest, SwbStereo) {
                      // PCM16 super-wideband.
 }
 
-} // namespace webrtc
+}
+  // namespace webrtc

@@ -7,10 +7,8 @@
 #define nsIScriptTimeoutHandler_h___
 
 #include "nsTArray.h"
+#include "js/TypeDecls.h"
 
-namespace JS {
-class Value;
-} // namespace JS
 namespace mozilla {
 namespace dom {
 class Function;

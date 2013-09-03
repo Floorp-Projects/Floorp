@@ -22,7 +22,7 @@
 #ifdef AGC_DEBUG //test log
 #include <stdio.h>
 #endif
-#include "analog_agc.h"
+#include "webrtc/modules/audio_processing/agc/analog_agc.h"
 
 /* The slope of in Q13*/
 static const int16_t kSlope1[8] = {21793, 12517, 7189, 4129, 2372, 1362, 472, 78};

@@ -36,9 +36,7 @@
         'bitrate_estimator.h',
         'overuse_detector.cc',
         'overuse_detector.h',
-        'remote_bitrate_estimator_multi_stream.h',
         'remote_bitrate_estimator_multi_stream.cc',
-        'remote_bitrate_estimator_single_stream.h',
         'remote_bitrate_estimator_single_stream.cc',
         'remote_rate_control.cc',
         'remote_rate_control.h',
@@ -46,28 +44,4 @@
       ], # source
     },
   ], # targets
-  'conditions': [
-    ['include_tests==1', {
-      'targets': [
-        {
-          'target_name': 'remote_bitrate_estimator_unittests',
-          'type': 'executable',
-          'dependencies': [
-            'remote_bitrate_estimator',
-            '<(DEPTH)/testing/gmock.gyp:gmock',
-            '<(DEPTH)/testing/gtest.gyp:gtest',
-            '<(webrtc_root)/test/test.gyp:test_support_main',
-          ],
-          'sources': [
-            'include/mock/mock_remote_bitrate_observer.h',
-            'bitrate_estimator_unittest.cc',
-            'remote_bitrate_estimator_unittest.cc',
-            'remote_bitrate_estimator_unittest_helper.cc',
-            'remote_bitrate_estimator_unittest_helper.h',
-            'rtp_to_ntp_unittest.cc',
-          ],
-        },
-      ], # targets
-    }], # build_with_chromium
-  ], # conditions
 }

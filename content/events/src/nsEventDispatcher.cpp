@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsEventDispatcher.h"
-#include "nsDOMEvent.h"
 #include "nsPresContext.h"
 #include "nsEventListenerManager.h"
 #include "nsContentUtils.h"
@@ -15,7 +14,6 @@
 #include <new>
 #include "nsINode.h"
 #include "nsPIDOMWindow.h"
-#include "nsFrameLoader.h"
 #include "nsDOMTouchEvent.h"
 #include "GeckoProfiler.h"
 #include "GeneratedEvents.h"
@@ -662,7 +660,7 @@ nsEventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
 
     if (!dontResetTrusted) {
       //Check security state to determine if dispatcher is trusted
-      aDOMEvent->SetTrusted(nsContentUtils::IsCallerChrome());
+      aDOMEvent->SetTrusted(nsContentUtils::ThreadsafeIsCallerChrome());
     }
 
     return nsEventDispatcher::Dispatch(aTarget, aPresContext, innerEvent,

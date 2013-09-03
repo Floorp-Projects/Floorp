@@ -19,7 +19,10 @@
 using namespace js;
 using namespace js::jit;
 
+using mozilla::DoubleSignificandBits;
 using mozilla::FloorLog2;
+using mozilla::NegativeInfinity;
+using mozilla::SpecificNaN;
 
 namespace js {
 namespace jit {
@@ -420,9 +423,9 @@ CodeGeneratorX86Shared::visitAbsD(LAbsD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     JS_ASSERT(input == ToFloatRegister(ins->output()));
-    masm.xorpd(ScratchFloatReg, ScratchFloatReg);
-    masm.subsd(input, ScratchFloatReg); // negate the sign bit.
-    masm.andpd(ScratchFloatReg, input); // s & ~s
+    // Load a value which is all ones except for the sign bit.
+    masm.loadConstantDouble(SpecificNaN(0, DoubleSignificandBits), ScratchFloatReg);
+    masm.andpd(ScratchFloatReg, input);
     return true;
 }
 
@@ -430,8 +433,8 @@ bool
 CodeGeneratorX86Shared::visitSqrtD(LSqrtD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
-    JS_ASSERT(input == ToFloatRegister(ins->output()));
-    masm.sqrtsd(input, input);
+    FloatRegister output = ToFloatRegister(ins->output());
+    masm.sqrtsd(input, output);
     return true;
 }
 
@@ -439,15 +442,12 @@ bool
 CodeGeneratorX86Shared::visitPowHalfD(LPowHalfD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
-    Register scratch = ToRegister(ins->temp());
     JS_ASSERT(input == ToFloatRegister(ins->output()));
 
-    const uint32_t NegInfinityFloatBits = 0xFF800000;
     Label done, sqrt;
 
     // Branch if not -Infinity.
-    masm.move32(Imm32(NegInfinityFloatBits), scratch);
-    masm.loadFloatAsDouble(scratch, ScratchFloatReg);
+    masm.loadConstantDouble(NegativeInfinity(), ScratchFloatReg);
     masm.branchDouble(Assembler::DoubleNotEqualOrUnordered, input, ScratchFloatReg, &sqrt);
 
     // Math.pow(-Infinity, 0.5) == Infinity.

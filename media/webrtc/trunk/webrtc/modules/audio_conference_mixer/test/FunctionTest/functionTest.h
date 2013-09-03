@@ -11,13 +11,13 @@
 #ifndef WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_TEST_FUNCTIONTEST_FUNCTIONTEST_H_
 #define WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_TEST_FUNCTIONTEST_FUNCTIONTEST_H_
 
-#include "module_common_types.h"
-#include "level_indicator.h"
-#include "list_wrapper.h"
-#include "map_wrapper.h"
-#include "audio_conference_mixer.h"
-#include "audio_conference_mixer_defines.h"
-#include "tick_util.h"
+#include "webrtc/modules/audio_conference_mixer/interface/audio_conference_mixer.h"
+#include "webrtc/modules/audio_conference_mixer/interface/audio_conference_mixer_defines.h"
+#include "webrtc/modules/audio_conference_mixer/source/level_indicator.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/system_wrappers/interface/list_wrapper.h"
+#include "webrtc/system_wrappers/interface/map_wrapper.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
 
 namespace webrtc {
 class EventWrapper;
