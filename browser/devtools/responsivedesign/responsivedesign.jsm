@@ -15,6 +15,7 @@ Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 
 var require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
 let Telemetry = require("devtools/shared/telemetry");
+let {TouchEventHandler} = require("devtools/shared/touch-events");
 
 this.EXPORTED_SYMBOLS = ["ResponsiveUIManager"];
 
@@ -116,6 +117,7 @@ function ResponsiveUI(aWindow, aTab)
   this.stack = this.container.querySelector(".browserStack");
   this._telemetry = new Telemetry();
 
+
   // Try to load presets from prefs
   if (Services.prefs.prefHasUserValue("devtools.responsiveUI.presets")) {
     try {
@@ -156,11 +158,14 @@ function ResponsiveUI(aWindow, aTab)
   this.stack.setAttribute("responsivemode", "true");
 
   // Let's bind some callbacks.
+  this.bound_onPageLoad = this.onPageLoad.bind(this);
+  this.bound_onPageUnload = this.onPageUnload.bind(this);
   this.bound_presetSelected = this.presetSelected.bind(this);
   this.bound_addPreset = this.addPreset.bind(this);
   this.bound_removePreset = this.removePreset.bind(this);
   this.bound_rotate = this.rotate.bind(this);
   this.bound_screenshot = () => this.screenshot();
+  this.bound_touch = this.toggleTouch.bind(this);
   this.bound_close = this.close.bind(this);
   this.bound_startResizing = this.startResizing.bind(this);
   this.bound_stopResizing = this.stopResizing.bind(this);
@@ -188,6 +193,18 @@ function ResponsiveUI(aWindow, aTab)
 
   this._telemetry.toolOpened("responsive");
 
+  // Touch events support
+  this.touchEnableBefore = false;
+  this.touchEventHandler = new TouchEventHandler(this.browser.contentWindow);
+
+  this.browser.addEventListener("load", this.bound_onPageLoad, true);
+  this.browser.addEventListener("unload", this.bound_onPageUnload, true);
+
+  if (this.browser.contentWindow.document &&
+      this.browser.contentWindow.document.readyState == "complete") {
+    this.onPageLoad();
+  }
+
   ResponsiveUIManager.emit("on", this.tab, this);
 }
 
@@ -205,12 +222,33 @@ ResponsiveUI.prototype = {
   },
 
   /**
+   * Window onload / onunload
+   */
+   onPageLoad: function() {
+     this.touchEventHandler = new TouchEventHandler(this.browser.contentWindow);
+     if (this.touchEnableBefore) {
+       this.enableTouch();
+     }
+   },
+
+   onPageUnload: function() {
+     if (this.closing)
+       return;
+     this.touchEnableBefore = this.touchEventHandler.enabled;
+     this.disableTouch();
+     delete this.touchEventHandler;
+   },
+
+  /**
    * Destroy the nodes. Remove listeners. Reset the style.
    */
   close: function RUI_unload() {
     if (this.closing)
       return;
     this.closing = true;
+
+    this.browser.removeEventListener("load", this.bound_onPageLoad, true);
+    this.browser.removeEventListener("unload", this.bound_onPageUnload, true);
 
     if (this._floatingScrollbars)
       switchToNativeScrollbars(this.tab);
@@ -233,6 +271,7 @@ ResponsiveUI.prototype = {
     this.tabContainer.removeEventListener("TabSelect", this);
     this.rotatebutton.removeEventListener("command", this.bound_rotate, true);
     this.screenshotbutton.removeEventListener("command", this.bound_screenshot, true);
+    this.touchbutton.removeEventListener("command", this.bound_touch, true);
     this.closebutton.removeEventListener("command", this.bound_close, true);
     this.addbutton.removeEventListener("command", this.bound_addPreset, true);
     this.removebutton.removeEventListener("command", this.bound_removePreset, true);
@@ -248,6 +287,8 @@ ResponsiveUI.prototype = {
     this.stack.removeAttribute("responsivemode");
 
     delete this.tab.__responsiveUI;
+    if (this.touchEventHandler)
+      this.touchEventHandler.stop();
     this._telemetry.toolClosed("responsive");
     ResponsiveUIManager.emit("off", this.tab, this);
   },
@@ -357,6 +398,12 @@ ResponsiveUI.prototype = {
     this.screenshotbutton.className = "devtools-toolbarbutton devtools-responsiveui-screenshot";
     this.screenshotbutton.addEventListener("command", this.bound_screenshot, true);
 
+    this.touchbutton = this.chromeDoc.createElement("toolbarbutton");
+    this.touchbutton.setAttribute("tabindex", "0");
+    this.touchbutton.setAttribute("tooltiptext", this.strings.GetStringFromName("responsiveUI.touch"));
+    this.touchbutton.className = "devtools-toolbarbutton devtools-responsiveui-touch";
+    this.touchbutton.addEventListener("command", this.bound_touch, true);
+
     this.closebutton = this.chromeDoc.createElement("toolbarbutton");
     this.closebutton.setAttribute("tabindex", "0");
     this.closebutton.className = "devtools-toolbarbutton devtools-responsiveui-close";
@@ -366,6 +413,7 @@ ResponsiveUI.prototype = {
     this.toolbar.appendChild(this.closebutton);
     this.toolbar.appendChild(this.menulist);
     this.toolbar.appendChild(this.rotatebutton);
+    this.toolbar.appendChild(this.touchbutton);
     this.toolbar.appendChild(this.screenshotbutton);
 
     // Resizers
@@ -621,6 +669,37 @@ ResponsiveUI.prototype = {
       chromeWindow.saveURL(url, filename + ".png", null, true, true, document.documentURIObject, document);
     });
   },
+
+  /**
+   * Enable/Disable mouse -> touch events translation.
+   */
+   enableTouch: function RUI_enableTouch() {
+     if (!this.touchEventHandler.enabled) {
+       let isReloadNeeded = this.touchEventHandler.start();
+       this.touchbutton.setAttribute("checked", "true");
+       return isReloadNeeded;
+     }
+     return false;
+   },
+
+   disableTouch: function RUI_disableTouch() {
+     if (this.touchEventHandler.enabled) {
+       this.touchEventHandler.stop();
+       this.touchbutton.removeAttribute("checked");
+     }
+   },
+
+   toggleTouch: function RUI_toggleTouch() {
+     if (this.touchEventHandler.enabled) {
+       this.disableTouch();
+     } else {
+       let isReloadNeeded = this.enableTouch();
+       if (isReloadNeeded) {
+         // Lightest way to reload I found:
+         this.browser.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+       }
+     }
+   },
 
   /**
    * Change the size of the browser.
