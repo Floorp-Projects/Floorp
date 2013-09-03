@@ -381,9 +381,11 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
         // Gingerbread Samsung devices are whitelisted except for:
         //   Samsung devices identified in Bug 847837
         //   Samsung SGH-T989 (Bug 818363)
+        // Gingerbread Sony devices are whitelisted.
         // All other Gingerbread devices are blacklisted.
         bool isWhitelisted =
           cManufacturer.Equals("htc", nsCaseInsensitiveCStringComparator()) ||
+          (cManufacturer.Find("sony", true) != -1) ||
           cManufacturer.Equals("samsung", nsCaseInsensitiveCStringComparator());
 
         if (cModel.Equals("GT-I8160", nsCaseInsensitiveCStringComparator()) ||
