@@ -26,6 +26,8 @@
 #include "nsPrintfCString.h"
 #include "prprf.h"
 
+#include "mozilla/dom/DOMError.h"
+#include "mozilla/dom/DOMErrorBinding.h"
 #include "mozilla/dom/HTMLObjectElement.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "mozilla/dom/HTMLSharedObjectElement.h"
@@ -183,6 +185,41 @@ ErrorResult::ReportJSException(JSContext* cx)
   // If JS_WrapValue failed, not much we can do about it...  No matter
   // what, go ahead and unroot mJSException.
   JS_RemoveValueRoot(cx, &mJSException);
+}
+
+void
+ErrorResult::ReportJSExceptionFromJSImplementation(JSContext* aCx)
+{
+  MOZ_ASSERT(!mMightHaveUnreportedJSException,
+             "Why didn't you tell us you planned to handle JS exceptions?");
+
+  dom::DOMError* domError;
+  nsresult rv = UNWRAP_OBJECT(DOMError, aCx, &mJSException.toObject(),
+                              domError);
+  if (NS_FAILED(rv)) {
+    // Unwrapping really shouldn't fail here, if mExceptionHandling is set to
+    // eRethrowContentExceptions then the CallSetup destructor only stores an
+    // exception if it unwraps to DOMError. If we reach this then either
+    // mExceptionHandling wasn't set to eRethrowContentExceptions and we
+    // shouldn't be calling ReportJSExceptionFromJSImplementation or something
+    // went really wrong.
+    NS_RUNTIMEABORT("We stored a non-DOMError exception!");
+  }
+
+  nsString message;
+  domError->GetMessage(message);
+
+  JSErrorReport errorReport;
+  memset(&errorReport, 0, sizeof(JSErrorReport));
+  errorReport.errorNumber = JSMSG_USER_DEFINED_ERROR;
+  errorReport.ucmessage = message.get();
+  errorReport.exnType = JSEXN_ERR;
+  JS_ThrowReportedError(aCx, nullptr, &errorReport);
+  JS_RemoveValueRoot(aCx, &mJSException);
+  
+  // We no longer have a useful exception but we do want to signal that an error
+  // occured.
+  mResult = NS_ERROR_FAILURE;
 }
 
 void
