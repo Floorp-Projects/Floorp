@@ -1908,6 +1908,15 @@ public:
 
   bool fromRaise;
   bool isRefocus;
+
+  void AssignFocusEventData(const nsFocusEvent& aEvent, bool aCopyTargets)
+  {
+    AssignUIEventData(aEvent, aCopyTargets);
+
+    relatedTarget = aCopyTargets ? aEvent.relatedTarget : nullptr;
+    fromRaise = aEvent.fromRaise;
+    isRefocus = aEvent.isRefocus;
+  }
 };
 
 /**

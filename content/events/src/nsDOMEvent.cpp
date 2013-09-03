@@ -655,9 +655,7 @@ nsDOMEvent::DuplicatePrivateData()
     {
       nsFocusEvent* newFocusEvent = new nsFocusEvent(false, msg);
       nsFocusEvent* oldFocusEvent = static_cast<nsFocusEvent*>(mEvent);
-      newFocusEvent->AssignGUIEventData(*oldFocusEvent, true);
-      newFocusEvent->fromRaise = oldFocusEvent->fromRaise;
-      newFocusEvent->isRefocus = oldFocusEvent->isRefocus;
+      newFocusEvent->AssignFocusEventData(*oldFocusEvent, true);
       newEvent = newFocusEvent;
       break;
     }
