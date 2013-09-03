@@ -98,6 +98,10 @@ VARIABLES = {
         delimiters.
         """),
 
+    'EXPORT_LIBRARY': (bool, bool, False,
+        """Install the library to the static libraries folder.
+        """),
+
     'EXTRA_COMPONENTS': (StrictOrderingOnAppendList, list, [],
         """Additional component files to distribute.
 
@@ -138,6 +142,14 @@ VARIABLES = {
         """Whether to treat warnings as errors.
         """),
 
+    'FORCE_SHARED_LIB': (bool, bool, False,
+        """Whether the library in this directory is a shared library.
+        """),
+
+    'FORCE_STATIC_LIB': (bool, bool, False,
+        """Whether the library in this directory is a static library.
+        """),
+
     'GTEST_C_SOURCES': (StrictOrderingOnAppendList, list, [],
         """C code source files for GTest unit tests.
 
@@ -169,6 +181,10 @@ VARIABLES = {
         """C source files to compile with the host compiler.
 
         This variable contains a list of C source files to compile.
+        """),
+
+    'IS_COMPONENT': (bool, bool, False,
+        """Whether the library contains a binary XPCOM component manifest.
         """),
 
     'PARALLEL_DIRS': (list, list, [],
@@ -212,7 +228,7 @@ VARIABLES = {
     'LIBXUL_LIBRARY': (bool, bool, False,
         """Whether the library in this directory is linked into libxul.
 
-        Implies MOZILLA_INTERNAL_API.
+        Implies MOZILLA_INTERNAL_API and FORCE_STATIC_LIB.
         """),
 
     'MSVC_ENABLE_PGO': (bool, bool, False,
