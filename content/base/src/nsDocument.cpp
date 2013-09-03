@@ -6849,14 +6849,14 @@ nsDocument::GetViewportInfo(uint32_t aDisplayWidth,
     GetHeaderData(nsGkAtoms::viewport_minimum_scale, minScaleStr);
 
     nsresult errorCode;
-    mScaleMinFloat = minScaleStr.ToFloat(&errorCode);
+    mScaleMinFloat = LayoutDeviceToScreenScale(minScaleStr.ToFloat(&errorCode));
 
     if (NS_FAILED(errorCode)) {
       mScaleMinFloat = kViewportMinScale;
     }
 
-    mScaleMinFloat = std::min((double)mScaleMinFloat, kViewportMaxScale);
-    mScaleMinFloat = std::max((double)mScaleMinFloat, kViewportMinScale);
+    mScaleMinFloat = mozilla::clamped(
+        mScaleMinFloat, kViewportMinScale, kViewportMaxScale);
 
     nsAutoString maxScaleStr;
     GetHeaderData(nsGkAtoms::viewport_maximum_scale, maxScaleStr);
@@ -6864,20 +6864,20 @@ nsDocument::GetViewportInfo(uint32_t aDisplayWidth,
     // We define a special error code variable for the scale and max scale,
     // because they are used later (see the width calculations).
     nsresult scaleMaxErrorCode;
-    mScaleMaxFloat = maxScaleStr.ToFloat(&scaleMaxErrorCode);
+    mScaleMaxFloat = LayoutDeviceToScreenScale(maxScaleStr.ToFloat(&scaleMaxErrorCode));
 
     if (NS_FAILED(scaleMaxErrorCode)) {
       mScaleMaxFloat = kViewportMaxScale;
     }
 
-    mScaleMaxFloat = std::min((double)mScaleMaxFloat, kViewportMaxScale);
-    mScaleMaxFloat = std::max((double)mScaleMaxFloat, kViewportMinScale);
+    mScaleMaxFloat = mozilla::clamped(
+        mScaleMaxFloat, kViewportMinScale, kViewportMaxScale);
 
     nsAutoString scaleStr;
     GetHeaderData(nsGkAtoms::viewport_initial_scale, scaleStr);
 
     nsresult scaleErrorCode;
-    mScaleFloat = scaleStr.ToFloat(&scaleErrorCode);
+    mScaleFloat = LayoutDeviceToScreenScale(scaleStr.ToFloat(&scaleErrorCode));
 
     nsAutoString widthStr, heightStr;
 
@@ -6892,7 +6892,7 @@ nsDocument::GetViewportInfo(uint32_t aDisplayWidth,
 
     if (widthStr.IsEmpty() &&
         (heightStr.EqualsLiteral("device-height") ||
-         (mScaleFloat /* not adjusted for pixel ratio */ == 1.0)))
+         (mScaleFloat.scale == 1.0)))
     {
       mAutoSize = true;
     }
@@ -6946,16 +6946,16 @@ nsDocument::GetViewportInfo(uint32_t aDisplayWidth,
     }
     // Now convert the scale into device pixels per CSS pixel.
     nsIWidget *widget = nsContentUtils::WidgetForDocument(this);
-    double pixelRatio = widget ? widget->GetDefaultScale() : 1.0;
-    float scaleFloat = mScaleFloat * pixelRatio;
-    float scaleMinFloat= mScaleMinFloat * pixelRatio;
-    float scaleMaxFloat = mScaleMaxFloat * pixelRatio;
+    CSSToLayoutDeviceScale pixelRatio(widget ? widget->GetDefaultScale() : 1.0f);
+    CSSToScreenScale scaleFloat = mScaleFloat * pixelRatio;
+    CSSToScreenScale scaleMinFloat = mScaleMinFloat * pixelRatio;
+    CSSToScreenScale scaleMaxFloat = mScaleMaxFloat * pixelRatio;
 
     if (mAutoSize) {
       // aDisplayWidth and aDisplayHeight are in device pixels; convert them to
       // CSS pixels for the viewport size.
-      width = aDisplayWidth / pixelRatio;
-      height = aDisplayHeight / pixelRatio;
+      width = aDisplayWidth / pixelRatio.scale;
+      height = aDisplayHeight / pixelRatio.scale;
     }
 
     width = std::min(width, kViewportMaxWidth);
@@ -6964,7 +6964,8 @@ nsDocument::GetViewportInfo(uint32_t aDisplayWidth,
     // Also recalculate the default zoom, if it wasn't specified in the metadata,
     // and the width is specified.
     if (mScaleStrEmpty && !mWidthStrEmpty) {
-      scaleFloat = std::max(scaleFloat, float(aDisplayWidth) / float(width));
+      CSSToScreenScale defaultScale(float(aDisplayWidth) / float(width));
+      scaleFloat = (scaleFloat > defaultScale) ? scaleFloat : defaultScale;
     }
 
     height = std::min(height, kViewportMaxHeight);
@@ -6973,11 +6974,11 @@ nsDocument::GetViewportInfo(uint32_t aDisplayWidth,
     // We need to perform a conversion, but only if the initial or maximum
     // scale were set explicitly by the user.
     if (mValidScaleFloat) {
-      width = std::max(width, (uint32_t)(aDisplayWidth / scaleFloat));
-      height = std::max(height, (uint32_t)(aDisplayHeight / scaleFloat));
+      width = std::max(width, (uint32_t)(aDisplayWidth / scaleFloat.scale));
+      height = std::max(height, (uint32_t)(aDisplayHeight / scaleFloat.scale));
     } else if (mValidMaxScale) {
-      width = std::max(width, (uint32_t)(aDisplayWidth / scaleMaxFloat));
-      height = std::max(height, (uint32_t)(aDisplayHeight / scaleMaxFloat));
+      width = std::max(width, (uint32_t)(aDisplayWidth / scaleMaxFloat.scale));
+      height = std::max(height, (uint32_t)(aDisplayHeight / scaleMaxFloat.scale));
     }
 
     nsViewportInfo ret(scaleFloat, scaleMinFloat, scaleMaxFloat, width, height,
