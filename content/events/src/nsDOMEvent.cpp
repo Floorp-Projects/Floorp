@@ -659,8 +659,7 @@ nsDOMEvent::DuplicatePrivateData()
         static_cast<nsScrollAreaEvent*>(mEvent);
       nsScrollAreaEvent* scrollAreaEvent = 
         new nsScrollAreaEvent(false, msg, nullptr);
-      scrollAreaEvent->AssignGUIEventData(*oldScrollAreaEvent, true);
-      scrollAreaEvent->mArea = oldScrollAreaEvent->mArea;
+      scrollAreaEvent->AssignScrollAreaEventData(*oldScrollAreaEvent, true);
       newEvent = scrollAreaEvent;
       break;
     }
