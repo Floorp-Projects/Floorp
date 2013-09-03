@@ -623,6 +623,23 @@ dictionary MozStkLanguageSelectionEvent
   DOMString language;
 };
 
+dictionary MozStkBrowserTerminationEvent
+{
+  /**
+   * The type of this event.
+   * It shall be nsIDOMMozIccManager.STK_EVENT_TYPE_BROWSER_TERMINATION
+   */
+  unsigned short eventType;
+
+  /**
+   * This object shall contain the browser termination cause.
+   * See TZ 102 223 8.51. It shall be one of following:
+   * - nsIDOMMozIccManager.STK_BROWSER_TERMINATION_CAUSE_USER
+   * - nsIDOMMozIccManager.STK_BROWSER_TERMINATION_CAUSE_ERROR
+   */
+  unsigned short terminationCause;
+};
+
 dictionary MozStkGeneralEvent
 {
   /**

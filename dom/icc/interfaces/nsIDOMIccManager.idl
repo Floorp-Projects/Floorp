@@ -9,7 +9,7 @@ interface nsIDOMDOMRequest;
 interface nsIDOMEventListener;
 interface nsIDOMMozIccInfo;
 
-[scriptable, builtinclass, uuid(6b5875dc-de44-4681-84a1-9ea12d60fbe2)]
+[scriptable, builtinclass, uuid(b403e307-e4ff-47a0-ac1e-c97b042b4595)]
 interface nsIDOMMozIccManager : nsIDOMEventTarget
 {
   /**
@@ -216,6 +216,12 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
   const unsigned short STK_TIMER_GET_CURRENT_VALUE = 0x02;
 
   /**
+   * Browser Termination Cause
+   */
+  const unsigned short STK_BROWSER_TERMINATION_CAUSE_USER  = 0x00;
+  const unsigned short STK_BROWSER_TERMINATION_CAUSE_ERROR = 0x01;
+
+  /**
    * Send the response back to ICC after an attempt to execute STK Proactive
    * Command.
    *
@@ -260,6 +266,7 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    *        - MozStkCallEvent
    *        - MozStkLanguageSelectionEvent
    *        - MozStkGeneralEvent
+   *        - MozStkBrowserTerminationEvent
    */
   void sendStkEventDownload(in jsval event);
 
