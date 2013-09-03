@@ -741,7 +741,7 @@ nsDOMEvent::DuplicatePrivateData()
     {
       nsTouchEvent* oldTouchEvent = static_cast<nsTouchEvent*>(mEvent);
       nsTouchEvent* touchEvent = new nsTouchEvent(false, oldTouchEvent);
-      touchEvent->AssignInputEventData(*oldTouchEvent, true);
+      touchEvent->AssignTouchEventData(*oldTouchEvent, true);
       newEvent = touchEvent;
       break;
     }
