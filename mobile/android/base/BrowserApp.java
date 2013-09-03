@@ -1472,6 +1472,10 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         mBrowserToolbar.cancelEdit();
+
+        // Resetting the visibility of HomePager, which might have been hidden
+        // by the filterEditingMode().
+        mHomePager.setVisibility(View.VISIBLE);
         animateHideHomePager();
         hideBrowserSearch();
 
