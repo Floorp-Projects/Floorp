@@ -107,9 +107,6 @@ static bool IsOmxSupported()
 // nullptr is returned if Omx decoding is not supported on the device,
 static const char* GetOmxLibraryName()
 {
-  if (!IsOmxSupported())
-    return nullptr;
-
 #if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
   nsCOMPtr<nsIPropertyBag2> infoService = do_GetService("@mozilla.org/system-info;1");
   NS_ASSERTION(infoService, "Could not find a system info service");
@@ -138,6 +135,17 @@ static const char* GetOmxLibraryName()
     ALOG("Android Manufacturer is: %s", NS_LossyConvertUTF16toASCII(manufacturer).get());
   }
 
+  nsAutoString hardware;
+  rv = infoService->GetPropertyAsAString(NS_LITERAL_STRING("hardware"), hardware);
+  if (NS_SUCCEEDED(rv)) {
+    ALOG("Android Hardware is: %s", NS_LossyConvertUTF16toASCII(hardware).get());
+  }
+#endif
+
+  if (!IsOmxSupported())
+    return nullptr;
+
+#if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
   if (version == 13 || version == 12 || version == 11) {
     return "libomxpluginhc.so";
   }
