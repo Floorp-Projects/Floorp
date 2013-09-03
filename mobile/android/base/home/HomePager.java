@@ -189,6 +189,15 @@ public class HomePager extends ViewPager {
         return mLoaded;
     }
 
+    @Override
+    public void setCurrentItem(int item, boolean smoothScroll) {
+        super.setCurrentItem(item, smoothScroll);
+
+        if (mDecor != null) {
+            mDecor.onPageSelected(item);
+        }
+    }
+
     class TabsAdapter extends FragmentStatePagerAdapter
                       implements OnTitleClickListener {
         private final ArrayList<TabInfo> mTabs = new ArrayList<TabInfo>();
