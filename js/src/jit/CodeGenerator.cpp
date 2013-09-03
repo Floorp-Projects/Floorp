@@ -5568,8 +5568,12 @@ CodeGenerator::link()
     IonCode *code = (executionMode == SequentialExecution)
                     ? linker.newCodeForIonScript(cx)
                     : linker.newCode(cx, JSC::ION_CODE);
-    if (!code)
+    if (!code) {
+        // Use js_free instead of IonScript::Destroy: the cache list and
+        // backedge list are still uninitialized.
+        js_free(ionScript);
         return false;
+    }
 
     JSScript *script = gen->info().script();
     JS_ASSERT(!HasIonScript(script, executionMode));
