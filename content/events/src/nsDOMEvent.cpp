@@ -634,12 +634,7 @@ nsDOMEvent::DuplicatePrivateData()
       nsMutationEvent* mutationEvent = new nsMutationEvent(false, msg);
       nsMutationEvent* oldMutationEvent =
         static_cast<nsMutationEvent*>(mEvent);
-      mutationEvent->AssignEventData(*oldMutationEvent, true);
-      mutationEvent->mRelatedNode = oldMutationEvent->mRelatedNode;
-      mutationEvent->mAttrName = oldMutationEvent->mAttrName;
-      mutationEvent->mPrevAttrValue = oldMutationEvent->mPrevAttrValue;
-      mutationEvent->mNewAttrValue = oldMutationEvent->mNewAttrValue;
-      mutationEvent->mAttrChange = oldMutationEvent->mAttrChange;
+      mutationEvent->AssignMutationEventData(*oldMutationEvent, true);
       newEvent = mutationEvent;
       break;
     }
