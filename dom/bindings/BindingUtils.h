@@ -88,14 +88,19 @@ template<bool mainThread>
 inline bool
 ThrowMethodFailedWithDetails(JSContext* cx, ErrorResult& rv,
                              const char* ifaceName,
-                             const char* memberName)
+                             const char* memberName,
+                             bool reportJSContentExceptions = false)
 {
   if (rv.IsTypeError()) {
     rv.ReportTypeError(cx);
     return false;
   }
   if (rv.IsJSException()) {
-    rv.ReportJSException(cx);
+    if (reportJSContentExceptions) {
+      rv.ReportJSExceptionFromJSImplementation(cx);
+    } else {
+      rv.ReportJSException(cx);
+    }
     return false;
   }
   if (rv.IsNotEnoughArgsError()) {
