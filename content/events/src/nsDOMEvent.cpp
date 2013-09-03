@@ -558,8 +558,7 @@ nsDOMEvent::DuplicatePrivateData()
     {
       nsClipboardEvent* oldClipboardEvent = static_cast<nsClipboardEvent*>(mEvent);
       nsClipboardEvent* clipboardEvent = new nsClipboardEvent(false, msg);
-      clipboardEvent->AssignEventData(*oldClipboardEvent, true);
-      clipboardEvent->clipboardData = oldClipboardEvent->clipboardData;
+      clipboardEvent->AssignClipboardEventData(*oldClipboardEvent, true);
       newEvent = clipboardEvent;
       break;
     }
