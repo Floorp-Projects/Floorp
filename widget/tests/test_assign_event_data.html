@@ -15,6 +15,21 @@
     #a:focus {
       background-color: red;
     }
+    .slidin {
+      border: green 1px solid;
+      width: 10px;
+      height: 10px;
+      animation-name: slidein;
+      animation-duration: 1s;
+    }
+    @keyframes slidein {
+      from {
+        margin-left: 100%;
+      }
+      to {
+        margin-left: 0;
+      }
+    }
   </style>
 </head>
 <body>
@@ -24,6 +39,7 @@
   <a id="a" href="about:blank">hyper link</a>
   <div id="scrollable-div" style="overflow: auto; width: 30px; height: 30px;"><div id="scrolled-div" style="width: 10px; height: 10px;"></div></div>
   <form id="form"></form>
+  <div id="animated-div"></div>
 </div>
 <div id="content" style="display: none">
 </div>
@@ -462,6 +478,16 @@ const kTests = [
     targetID: "a", eventType: "transitionend",
     dispatchEvent: function () {
       document.getElementById(this.targetID).focus();
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsAnimationEvent (animationend)",
+    targetID: "animated-div", eventType: "animationend",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).className = "slidin";
     },
     canRun: function () {
       return true;

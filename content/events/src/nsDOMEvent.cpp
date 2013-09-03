@@ -728,7 +728,7 @@ nsDOMEvent::DuplicatePrivateData()
                              oldAnimationEvent->animationName,
                              oldAnimationEvent->elapsedTime,
                              oldAnimationEvent->pseudoElement);
-      animationEvent->AssignEventData(*oldAnimationEvent, true);
+      animationEvent->AssignAnimationEventData(*oldAnimationEvent, true);
       newEvent = animationEvent;
       break;
     }

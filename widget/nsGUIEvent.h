@@ -1999,6 +1999,15 @@ public:
   nsString animationName;
   float elapsedTime;
   nsString pseudoElement;
+
+  void AssignAnimationEventData(const nsAnimationEvent& aEvent,
+                                bool aCopyTargets)
+  {
+    AssignEventData(aEvent, aCopyTargets);
+
+    // animationName, elapsedTime and pseudoElement must have been initialized
+    // with the constructor.
+  }
 };
 
 /**
