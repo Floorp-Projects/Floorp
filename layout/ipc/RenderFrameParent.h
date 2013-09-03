@@ -117,9 +117,6 @@ protected:
 
   virtual bool RecvNotifyCompositorTransaction() MOZ_OVERRIDE;
 
-  virtual bool RecvCancelDefaultPanZoom() MOZ_OVERRIDE;
-  virtual bool RecvDetectScrollableSubframe() MOZ_OVERRIDE;
-
   virtual bool RecvUpdateHitRegion(const nsRegion& aRegion) MOZ_OVERRIDE;
 
   virtual PLayerTransactionParent* AllocPLayerTransactionParent() MOZ_OVERRIDE;
