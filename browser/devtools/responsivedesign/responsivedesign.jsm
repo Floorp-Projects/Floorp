@@ -689,14 +689,47 @@ ResponsiveUI.prototype = {
      }
    },
 
+   hideTouchNotification: function RUI_hideTouchNotification() {
+     let nbox = this.mainWindow.gBrowser.getNotificationBox(this.browser);
+     let n = nbox.getNotificationWithValue("responsive-ui-need-reload");
+     if (n) {
+       n.close();
+     }
+   },
+
    toggleTouch: function RUI_toggleTouch() {
+     this.hideTouchNotification();
      if (this.touchEventHandler.enabled) {
        this.disableTouch();
      } else {
        let isReloadNeeded = this.enableTouch();
        if (isReloadNeeded) {
-         // Lightest way to reload I found:
-         this.browser.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+         if (Services.prefs.getBoolPref("devtools.responsiveUI.no-reload-notification")) {
+           return;
+         }
+
+         let nbox = this.mainWindow.gBrowser.getNotificationBox(this.browser);
+
+         var buttons = [{
+           label: this.strings.GetStringFromName("responsiveUI.notificationReload"),
+           callback: () => {
+             this.browser.reload();
+           },
+           accessKey: this.strings.GetStringFromName("responsiveUI.notificationReload_accesskey"),
+         }, {
+           label: this.strings.GetStringFromName("responsiveUI.dontShowReloadNotification"),
+           callback: function() {
+             Services.prefs.setBoolPref("devtools.responsiveUI.no-reload-notification", true);
+           },
+           accessKey: this.strings.GetStringFromName("responsiveUI.dontShowReloadNotification_accesskey"),
+         }];
+
+         nbox.appendNotification(
+           this.strings.GetStringFromName("responsiveUI.needReload"),
+           "responsive-ui-need-reload",
+           null,
+           nbox.PRIORITY_INFO_LOW,
+           buttons);
        }
      }
    },
