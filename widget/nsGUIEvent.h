@@ -768,6 +768,20 @@ public:
   int32_t           lineNr;
   const PRUnichar*  errorMsg;
   const PRUnichar*  fileName;
+
+  // XXX Not tested by test_assign_event_data.html
+  void AssignScriptErrorEventData(const nsScriptErrorEvent& aEvent,
+                                  bool aCopyTargets)
+  {
+    AssignEventData(aEvent, aCopyTargets);
+
+    lineNr = aEvent.lineNr;
+
+    // We don't copy errorMsg and fileName.  If it's necessary, perhaps, this
+    // should duplicate the characters and free them at destructing.
+    errorMsg = nullptr;
+    fileName = nullptr;
+  }
 };
 
 /**
