@@ -1362,7 +1362,7 @@ OptimizeMIR(MIRGenerator *mir)
     // Passes after this point must not move instructions; these analyses
     // depend on knowing the final order in which instructions will execute.
 
-    if (js_IonOptions.edgeCaseAnalysis) {
+    if (js_IonOptions.edgeCaseAnalysis && !mir->compilingAsmJS()) {
         EdgeCaseAnalysis edgeCaseAnalysis(mir, graph);
         if (!edgeCaseAnalysis.analyzeLate())
             return false;
@@ -1373,14 +1373,16 @@ OptimizeMIR(MIRGenerator *mir)
             return false;
     }
 
-    // Note: check elimination has to run after all other passes that move
-    // instructions. Since check uses are replaced with the actual index, code
-    // motion after this pass could incorrectly move a load or store before its
-    // bounds check.
-    if (!EliminateRedundantChecks(graph))
-        return false;
-    IonSpewPass("Bounds Check Elimination");
-    AssertGraphCoherency(graph);
+    if (!mir->compilingAsmJS()) {
+        // Note: check elimination has to run after all other passes that move
+        // instructions. Since check uses are replaced with the actual index,
+        // code motion after this pass could incorrectly move a load or store
+        // before its bounds check.
+        if (!EliminateRedundantChecks(graph))
+            return false;
+        IonSpewPass("Bounds Check Elimination");
+        AssertGraphCoherency(graph);
+    }
 
     return true;
 }
