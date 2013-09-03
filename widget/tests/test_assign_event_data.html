@@ -391,6 +391,19 @@ const kTests = [
     },
     todoMismatch: [],
   },
+  { description: "nsClipboardEvent (copy)",
+    targetID: "input-text", eventType: "copy",
+    dispatchEvent: function () {
+      document.getElementById("input-text").value = "go to clipboard!";
+      document.getElementById("input-text").focus();
+      document.getElementById("input-text").select();
+      synthesizeKey("c", { accelKey: true });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
 ];
 
 function doTest(aTest)

@@ -1860,6 +1860,14 @@ public:
   }
 
   nsCOMPtr<nsIDOMDataTransfer> clipboardData;
+
+  void AssignClipboardEventData(const nsClipboardEvent& aEvent,
+                                bool aCopyTargets)
+  {
+    AssignEventData(aEvent, aCopyTargets);
+
+    clipboardData = aEvent.clipboardData;
+  }
 };
 
 /**
