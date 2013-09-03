@@ -492,6 +492,119 @@ var Output = {
     }
   },
 
+  speechHelper: {
+    EARCONS: ['chrome://global/content/accessibility/tick.wav'],
+
+    delayedActions: [],
+
+    earconsToLoad: -1, // -1: not inited, 1 or more: initing, 0: inited
+
+    earconBuffers: {},
+
+    webaudioEnabled: false,
+
+    webspeechEnabled: false,
+
+    doDelayedActionsIfLoaded: function doDelayedActionsIfLoaded(aToLoadCount) {
+      if (aToLoadCount === 0) {
+        this.outputActions(this.delayedActions);
+        this.delayedActions = [];
+        return true;
+      }
+
+      return false;
+    },
+
+    init: function init() {
+      if (this.earconsToLoad === 0) {
+        // Already inited.
+        return;
+      }
+
+      let window = Utils.win;
+      this.webaudioEnabled = !!window.AudioContext;
+      this.webspeechEnabled = !!window.speechSynthesis;
+
+      this.earconsToLoad = this.webaudioEnabled ? this.EARCONS.length : 0;
+
+      if (this.doDelayedActionsIfLoaded(this.earconsToLoad)) {
+        // Nothing to load
+        return;
+      }
+
+      this.audioContext = new window.AudioContext();
+
+      for (let earcon of this.EARCONS) {
+        let xhr = new window.XMLHttpRequest();
+        xhr.open('GET', earcon);
+        xhr.responseType = 'arraybuffer';
+        xhr.onerror = () => {
+          Logger.error('Error getting earcon:', xhr.statusText);
+          this.doDelayedActionsIfLoaded(--this.earconsToLoad);
+        };
+        xhr.onload = () => {
+          this.audioContext.decodeAudioData(
+            xhr.response,
+            (audioBuffer) => {
+              try {
+                let earconName = /.*\/(.*)\..*$/.exec(earcon)[1];
+                this.earconBuffers[earconName] = new WeakMap();
+                this.earconBuffers[earconName].set(window, audioBuffer);
+                this.doDelayedActionsIfLoaded(--this.earconsToLoad);
+              } catch (x) {
+                Logger.logException(x);
+              }
+            },
+            () => {
+              this.doDelayedActionsIfLoaded(--this.earconsToLoad);
+              Logger.error('Error decoding earcon');
+            });
+        };
+        xhr.send();
+      }
+    },
+
+    output: function output(aActions) {
+      if (this.earconsToLoad !== 0) {
+        // We did not load the earcons yet.
+        this.delayedActions.push.apply(this.delayedActions, aActions);
+        if (this.earconsToLoad < 0) {
+          // Loading did not start yet, start it.
+          this.init();
+        }
+        return;
+      }
+
+      this.outputActions(aActions);
+    },
+
+    outputActions: function outputActions(aActions) {
+      for (let action of aActions) {
+        let window = Utils.win;
+        Logger.info('tts.' + action.method,
+                    '"' + action.data + '"',
+                    JSON.stringify(action.options));
+
+        if (!action.options.enqueue && this.webspeechEnabled) {
+          window.speechSynthesis.cancel();
+        }
+
+        if (action.method === 'speak' && this.webspeechEnabled) {
+          window.speechSynthesis.speak(
+            new window.SpeechSynthesisUtterance(action.data));
+        } else if (action.method === 'playEarcon' && this.webaudioEnabled) {
+          let audioBufferWeakMap = this.earconBuffers[action.data];
+          if (audioBufferWeakMap) {
+            let node = this.audioContext.createBufferSource();
+            node.connect(this.audioContext.destination);
+            node.buffer = audioBufferWeakMap.get(window);
+            node.start(0);
+          }
+        }
+      }
+    }
+  },
+
   start: function start() {
     Cu.import('resource://gre/modules/Geometry.jsm');
   },
@@ -509,8 +622,7 @@ var Output = {
   },
 
   Speech: function Speech(aDetails, aBrowser) {
-    for each (let action in aDetails.actions)
-      Logger.info('tts.' + action.method, '"' + action.data + '"', JSON.stringify(action.options));
+    this.speechHelper.output(aDetails.actions);
   },
 
   Visual: function Visual(aDetails, aBrowser) {
