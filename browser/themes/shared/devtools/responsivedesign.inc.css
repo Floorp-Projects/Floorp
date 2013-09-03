@@ -34,6 +34,18 @@
   margin-left: 0;
 }
 
+.devtools-responsiveui-close {
+  list-style-image: url("chrome://browser/skin/devtools/close.png");
+}
+
+.devtools-responsiveui-rotate {
+  list-style-image: url("chrome://browser/skin/devtools/responsiveui-rotate.png");
+}
+
+.devtools-responsiveui-screenshot {
+  list-style-image: url("chrome://browser/skin/devtools/responsiveui-screenshot.png");
+}
+
 .devtools-responsiveui-resizebarV {
   width: 7px;
   height: 24px;
