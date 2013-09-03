@@ -404,6 +404,17 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
+  { description: "nsUIEvent (DOMActivate)",
+    targetID: "button", eventType: "DOMActivate",
+    dispatchEvent: function () {
+      synthesizeMouseAtCenter(document.getElementById(this.targetID),
+                              { button: 0, shiftKey: true });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
 ];
 
 function doTest(aTest)
