@@ -349,6 +349,26 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
+  { description: "nsTouchEvent (touchstart)",
+    target: function () { return document; }, eventType: "touchstart",
+    dispatchEvent: function () {
+      synthesizeTouchAtPoint(1, 2, { id: 10, rx: 4, ry: 3, angle: 0, force: 1, shiftKey: true});
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "nsTouchEvent (touchend)",
+    target: function () { return document; }, eventType: "touchend",
+    dispatchEvent: function () {
+      synthesizeTouchAtPoint(4, 6, { id: 5, rx: 1, ry: 2, angle: 0.5, force: 0.8, ctrlKey: true});
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
 ];
 
 function doTest(aTest)
