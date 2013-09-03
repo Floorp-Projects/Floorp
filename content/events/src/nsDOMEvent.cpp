@@ -668,7 +668,7 @@ nsDOMEvent::DuplicatePrivateData()
       nsCommandEvent* commandEvent =
         new nsCommandEvent(false, mEvent->userType,
                            oldCommandEvent->command, nullptr);
-      commandEvent->AssignGUIEventData(*oldCommandEvent, true);
+      commandEvent->AssignCommandEventData(*oldCommandEvent, true);
       newEvent = commandEvent;
       break;
     }
