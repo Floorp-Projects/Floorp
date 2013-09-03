@@ -175,7 +175,7 @@ class DeviceManager(object):
         """
 
     @abstractmethod
-    def pushDir(self, localDirname, remoteDirname, retryLimit=1):
+    def pushDir(self, localDirname, remoteDirname, retryLimit=1, timeout=None):
         """
         Push local directory from host to remote directory on the device,
         """

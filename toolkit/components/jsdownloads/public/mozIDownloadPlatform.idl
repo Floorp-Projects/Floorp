@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIFile;
+
+[scriptable, uuid(314A0972-E6E3-413A-8BD4-2C052BCB2C74)]
+interface mozIDownloadPlatform : nsISupports
+{
+  /**
+   * Perform platform specific operations when a download is done.
+   *
+   *   Windows:
+   *     Add the download to the recent documents list
+   *     Set the file to be indexed for searching
+   *   Mac:
+   *     Bounce the downloads dock icon
+   *   GTK:
+   *     Add the download to the recent documents list
+   *     Save the source uri in the downloaded file's metadata
+   *   Android:
+   *     Scan media
+   *
+   * @param aSource
+   *        Source URI of the download
+   * @param aTarget
+   *        Downloaded file
+   * @param aContentType
+   *        The source's content type
+   * @param aIsPrivate
+   *        True for private downloads
+   * @return none
+   */
+  void downloadDone(in nsIURI aSource, in nsIFile aTarget,
+                    in ACString aContentType, in boolean aIsPrivate);
+};
