@@ -80,7 +80,13 @@ public:
   }
 
   enum ExceptionHandling {
+    // Report any exception and don't throw it to the caller code.
     eReportExceptions,
+    // Throw an exception to the caller code if the thrown exception is a
+    // binding object for a DOMError from the caller's scope, otherwise report
+    // it.
+    eRethrowContentExceptions,
+    // Throw any exception to the caller code.
     eRethrowExceptions
   };
 
@@ -123,8 +129,11 @@ protected:
      * non-null.
      */
   public:
+    // If aExceptionHandling == eRethrowContentExceptions then aCompartment
+    // needs to be set to the caller's compartment.
     CallSetup(JS::Handle<JSObject*> aCallable, ErrorResult& aRv,
-              ExceptionHandling aExceptionHandling);
+              ExceptionHandling aExceptionHandling,
+              JSCompartment* aCompartment = nullptr);
     ~CallSetup();
 
     JSContext* GetContext() const
@@ -136,9 +145,15 @@ protected:
     // We better not get copy-constructed
     CallSetup(const CallSetup&) MOZ_DELETE;
 
+    bool ShouldRethrowException(JS::Handle<JS::Value> aException);
+
     // Members which can go away whenever
     JSContext* mCx;
     nsCOMPtr<nsIScriptContext> mCtx;
+
+    // Caller's compartment. This will only have a sensible value if
+    // mExceptionHandling == eRethrowContentExceptions.
+    JSCompartment* mCompartment;
 
     // And now members whose construction/destruction order we need to control.
 

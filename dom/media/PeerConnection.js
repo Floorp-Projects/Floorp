@@ -359,20 +359,19 @@ RTCPeerConnection.prototype = {
    * ErrorMsg is passed in to detail which array-entry failed, if any.
    */
   _mustValidateRTCConfiguration: function(rtcConfig, errorMsg) {
+    var errorCtor = this._win.DOMError;
     function nicerNewURI(uriStr, errorMsg) {
       let ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
       try {
         return ios.newURI(uriStr, null, null);
       } catch (e if (e.result == Cr.NS_ERROR_MALFORMED_URI)) {
-        throw new Components.Exception(errorMsg + " - malformed URI: " + uriStr,
-                                       Cr.NS_ERROR_MALFORMED_URI);
+        throw new errorCtor("", errorMsg + " - malformed URI: " + uriStr);
       }
     }
     function mustValidateServer(server) {
       let url = nicerNewURI(server.url, errorMsg);
       if (!(url.scheme in { stun:1, stuns:1, turn:1, turns:1 })) {
-        throw new Components.Exception(errorMsg + " - improper scheme: " + url.scheme,
-                                       Cr.NS_ERROR_MALFORMED_URI);
+        throw new errorCtor("", errorMsg + " - improper scheme: " + url.scheme);
       }
     }
     if (rtcConfig.iceServers) {

@@ -67,11 +67,14 @@ public:
   // Facilities for throwing a preexisting JS exception value via this
   // ErrorResult.  The contract is that any code which might end up calling
   // ThrowJSException() must call MightThrowJSException() even if no exception
-  // is being thrown.  Code that would call ReportJSException or
+  // is being thrown.  Code that would call ReportJSException* or
   // StealJSException as needed must first call WouldReportJSException even if
   // this ErrorResult has not failed.
   void ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn);
   void ReportJSException(JSContext* cx);
+  // Used to implement throwing exceptions from the JS implementation of
+  // bindings to callers of the binding.
+  void ReportJSExceptionFromJSImplementation(JSContext* aCx);
   bool IsJSException() const { return ErrorCode() == NS_ERROR_DOM_JS_EXCEPTION; }
 
   void ThrowNotEnoughArgsError() { mResult = NS_ERROR_XPC_NOT_ENOUGH_ARGS; }
