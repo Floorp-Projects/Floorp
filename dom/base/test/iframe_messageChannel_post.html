@@ -13,6 +13,7 @@
     function receivePostMessage(evt) {
       port.postMessage(evt.data);
     }
+    port.start();
 
     window.parent.postMessage({ status: "READY" }, '*');
   }
