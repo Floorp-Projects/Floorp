@@ -550,15 +550,7 @@ nsDOMEvent::DuplicatePrivateData()
       nsDragEvent* oldDragEvent = static_cast<nsDragEvent*>(mEvent);
       nsDragEvent* dragEvent =
         new nsDragEvent(false, msg, nullptr);
-      dragEvent->AssignInputEventData(*oldDragEvent, true);
-      dragEvent->dataTransfer = oldDragEvent->dataTransfer;
-      dragEvent->clickCount = oldDragEvent->clickCount;
-      dragEvent->acceptActivation = oldDragEvent->acceptActivation;
-      dragEvent->relatedTarget = oldDragEvent->relatedTarget;
-      dragEvent->button = oldDragEvent->button;
-      dragEvent->buttons = oldDragEvent->buttons;
-      static_cast<nsMouseEvent*>(dragEvent)->inputSource =
-        static_cast<nsMouseEvent*>(oldDragEvent)->inputSource;
+      dragEvent->AssignDragEventData(*oldDragEvent, true);
       newEvent = dragEvent;
       break;
     }

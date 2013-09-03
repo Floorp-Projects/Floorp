@@ -207,6 +207,17 @@ const kTests = [
     },
     todoMismatch: [],
   },
+  { description: "nsDragEvent",
+    targetID: "input-text", eventType: "dragstart",
+    dispatchEvent: function () {
+      return;
+    },
+    canRun: function () {
+      todo(false, "nsDragEvent isn't tested");
+      return false;
+    },
+    todoMismatch: [],
+  },
 ];
 
 function doTest(aTest)
