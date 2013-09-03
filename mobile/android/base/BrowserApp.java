@@ -1988,8 +1988,7 @@ abstract public class BrowserApp extends GeckoApp
      * @return true if update UI was launched.
      */
     protected boolean handleUpdaterLaunch() {
-        if ("release".equals(AppConstants.MOZ_UPDATE_CHANNEL) ||
-            "beta".equals(AppConstants.MOZ_UPDATE_CHANNEL)) {
+        if (AppConstants.RELEASE_BUILD) {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("market://details?id=" + getPackageName()));
             startActivity(intent);
