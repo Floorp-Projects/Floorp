@@ -13,9 +13,9 @@
 
 #include <assert.h>
 
-#include "critical_section_wrapper.h"
-#include "list_wrapper.h"
-#include "typedefs.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/list_wrapper.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 template<class MemoryType>

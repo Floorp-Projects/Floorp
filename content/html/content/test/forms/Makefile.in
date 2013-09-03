@@ -67,6 +67,7 @@ MOCHITEST_FILES = \
 		test_input_color_picker_popup.html \
 		test_input_color_input_change_events.html \
 		test_restore_form_elements.html \
+		test_select_selectedOptions.html \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

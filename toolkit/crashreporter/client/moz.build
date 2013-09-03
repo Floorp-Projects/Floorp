@@ -9,8 +9,6 @@ MODULE = 'crashreporter'
 if CONFIG['OS_TARGET'] != 'Android':
     PROGRAM = 'crashreporter'
 # The xpcshell test case here verifies that the CA certificate list
-if CONFIG['MOZ_ENABLE_GTK'] and CONFIG['MOZ_PLATFORM_MAEMO']:
-    XPCSHELL_TESTS_MANIFESTS += ['maemo-unit/xpcshell.ini']
 
 CPP_SOURCES += [
     'crashreporter.cpp',
@@ -34,14 +32,7 @@ if CONFIG['MOZ_ENABLE_GTK']:
     CPP_SOURCES += [
         'crashreporter_gtk_common.cpp',
         'crashreporter_unix_common.cpp',
-    ]
-    if CONFIG['MOZ_PLATFORM_MAEMO']:
-        CPP_SOURCES += [
-            'crashreporter_maemo_gtk.cpp',
-        ]
-    else:
-        CPP_SOURCES += [
-            'crashreporter_linux.cpp',
+        'crashreporter_linux.cpp'
         ]
 
 if CONFIG['OS_ARCH'] == 'Darwin':

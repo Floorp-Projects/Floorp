@@ -74,6 +74,9 @@
     # which can be easily parsed for offline processing.
     'enable_data_logging%': 0,
 
+    # Enables the use of protocol buffers for debug recordings.
+    'enable_protobuf%': 1,
+
     # Disable these to not build components which can be externally provided.
     'build_libjpeg%': 1,
     'build_libyuv%': 1,
@@ -107,9 +110,6 @@
 
         'include_tests%': 0,
 
-        # Disable the use of protocol buffers in production code.
-        'enable_protobuf%': 0,
-
         'enable_tracing%': 0,
 
         'enable_android_opensl%': 0,
@@ -118,7 +118,6 @@
         'include_internal_audio_device%': 1,
         'include_internal_video_capture%': 1,
         'include_internal_video_render%': 1,
-        'enable_protobuf%': 1,
         'enable_tracing%': 1,
         'include_tests%': 1,
 
@@ -188,6 +187,12 @@
       ['enable_tracing==1', {
         'defines': ['WEBRTC_LOGGING',],
       }],
+      ['build_with_mozilla==1', {
+        'defines': [
+          # Changes settings for Mozilla build.
+          'WEBRTC_MOZILLA_BUILD',
+         ],
+      }],
       ['build_with_chromium==1', {
         'defines': [
           # Changes settings for Chromium build.
@@ -210,30 +215,19 @@
           }],
         ],
       }],
-      ['build_with_mozilla==1', {
-        'defines': [
-          # Changes settings for Mozilla build.
-          'WEBRTC_MOZILLA_BUILD',
-        ],
-      }],
-      ['build_with_mozilla==1', {
-        'defines': [
-          # Changes settings for Mozilla build.
-          'WEBRTC_MOZILLA_BUILD',
-        ],
-      }],
       ['target_arch=="arm"', {
         'defines': [
           'WEBRTC_ARCH_ARM',
         ],
         'conditions': [
           ['armv7==1', {
-            'defines': ['WEBRTC_ARCH_ARM_V7',],
+            'defines': ['WEBRTC_ARCH_ARM_V7',
+                        'WEBRTC_BUILD_NEON_LIBS'],
             'conditions': [
               ['arm_neon==1', {
-                'defines': ['WEBRTC_ARCH_ARM_NEON',
-                            'WEBRTC_BUILD_NEON_LIBS',
-                            'WEBRTC_DETECT_ARM_NEON'],
+                'defines': ['WEBRTC_ARCH_ARM_NEON',],
+              }, {
+                'defines': ['WEBRTC_DETECT_ARM_NEON',],
               }],
             ],
           }],
@@ -309,31 +303,23 @@
         'defines': [
           'WEBRTC_MAC',
           'WEBRTC_IOS',
-          'WEBRTC_THREAD_RR',
-          'WEBRTC_CLOCK_TYPE_REALTIME',
         ],
       }],
       ['OS=="linux"', {
-        'conditions': [
-          ['have_clock_monotonic==1', {
-            'defines': [
-              'WEBRTC_CLOCK_TYPE_REALTIME',
-            ],
-          }],
-        ],
+#        'conditions': [
+#          ['have_clock_monotonic==1', {
+#            'defines': [
+#              'WEBRTC_CLOCK_TYPE_REALTIME',
+#            ],
+#          }],
+#        ],
         'defines': [
           'WEBRTC_LINUX',
-          'WEBRTC_THREAD_RR',
-          # TODO(andrew): can we select this automatically?
-          # Define this if the Linux system does not support CLOCK_MONOTONIC.
-          #'WEBRTC_CLOCK_TYPE_REALTIME',
         ],
       }],
       ['OS=="mac"', {
         'defines': [
           'WEBRTC_MAC',
-          'WEBRTC_THREAD_RR',
-          'WEBRTC_CLOCK_TYPE_REALTIME',
         ],
       }],
       ['OS=="win"', {
@@ -355,12 +341,6 @@
         'defines': [
           'WEBRTC_LINUX',
           'WEBRTC_ANDROID',
-          # TODO(leozwang): Investigate CLOCK_REALTIME and CLOCK_MONOTONIC
-          # support on Android. Keep WEBRTC_CLOCK_TYPE_REALTIME for now,
-          # remove it after I verify that CLOCK_MONOTONIC is fully functional
-          # with condition and event functions in system_wrappers.
-          'WEBRTC_CLOCK_TYPE_REALTIME',
-          'WEBRTC_THREAD_RR',
          ],
          'conditions': [
            ['enable_android_opensl==1', {
@@ -381,6 +361,59 @@
          ],
       }],
     ], # conditions
+    'direct_dependent_settings': {
+      'include_dirs': [
+        '../..',
+      ],
+      'conditions': [
+        ['build_with_mozilla==1', {
+          'defines': [
+            # Changes settings for Mozilla build.
+            'WEBRTC_MOZILLA_BUILD',
+           ],
+        }],
+        ['build_with_chromium==1', {
+          'defines': [
+            # Changes settings for Chromium build.
+            'WEBRTC_CHROMIUM_BUILD',
+          ],
+        }],
+        ['OS=="mac"', {
+          'defines': [
+            'WEBRTC_MAC',
+          ],
+        }],
+        ['OS=="ios"', {
+          'defines': [
+            'WEBRTC_MAC',
+            'WEBRTC_IOS',
+          ],
+        }],
+        ['OS=="win"', {
+          'defines': [
+            'WEBRTC_WIN',
+          ],
+        }],
+        ['OS=="linux"', {
+          'defines': [
+            'WEBRTC_LINUX',
+          ],
+        }],
+        ['OS=="android"', {
+          'defines': [
+            'WEBRTC_LINUX',
+            'WEBRTC_ANDROID',
+           ],
+           'conditions': [
+             ['enable_android_opensl==1', {
+               'defines': [
+                 'WEBRTC_ANDROID_OPENSLES',
+               ],
+             }]
+           ],
+        }],
+      ],
+    },
   }, # target_defaults
 }
 

@@ -9,12 +9,13 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="radiogroup" extends="chrome://global/content/bindings/general.xml#basecontrol">
+  <binding id="radiogroup" role="xul:radiogroup"
+           extends="chrome://global/content/bindings/general.xml#basecontrol">
     <resources>
       <stylesheet src="chrome://global/skin/radio.css"/>
     </resources>
 
-    <implementation implements="nsIDOMXULSelectControlElement, nsIAccessibleProvider">
+    <implementation implements="nsIDOMXULSelectControlElement">
       <constructor>
         <![CDATA[
           if (this.getAttribute("disabled") == "true")
@@ -36,14 +37,6 @@
             this.selectedIndex = 0;
         ]]>
       </constructor>
-
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULRadioGroup;
-          ]]>
-        </getter>
-      </property>
 
       <property name="value" onget="return this.getAttribute('value');">
         <setter>
@@ -431,7 +424,8 @@
     </handlers>
   </binding>
 
-  <binding id="radio" extends="chrome://global/content/bindings/general.xml#control-item">
+  <binding id="radio" role="xul:radiobutton"
+    extends="chrome://global/content/bindings/general.xml#control-item">
     <resources>
       <stylesheet src="chrome://global/skin/radio.css"/>
     </resources>
@@ -444,7 +438,7 @@
       </xul:hbox>
     </content>
 
-    <implementation implements="nsIDOMXULSelectControlItemElement, nsIAccessibleProvider">
+    <implementation implements="nsIDOMXULSelectControlItemElement">
       <constructor>
         <![CDATA[
           // Just clear out the parent's cached list of radio children
@@ -469,13 +463,6 @@
           }
         ]]>
       </destructor>
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULRadioButton;
-          ]]>
-        </getter>
-      </property>
       <property name="selected" readonly="true">
         <getter>
           <![CDATA[

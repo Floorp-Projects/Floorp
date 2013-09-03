@@ -8,16 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "BWEConvergenceTest.h"
+#include "webrtc/modules/rtp_rtcp/test/BWEStandAlone/BWEConvergenceTest.h"
 
 #include <fstream>
 #include <string>
 
-#include "TestSenderReceiver.h"
-#include "TestLoadGenerator.h"
-#include "event_wrapper.h"
-#include "thread_wrapper.h"
-#include "tick_util.h"
+#include "webrtc/modules/rtp_rtcp/test/BWEStandAlone/TestLoadGenerator.h"
+#include "webrtc/modules/rtp_rtcp/test/BWEStandAlone/TestSenderReceiver.h"
+#include "webrtc/system_wrappers/interface/event_wrapper.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
 
 
 BWEConvergenceTestUp::BWEConvergenceTestUp(std::string testName, int startRateKbps, int availBWkbps)
@@ -62,5 +62,3 @@ bool BWEConvergenceTestUp::StoppingCriterionMaster()
 {
     return ((_sendrec->BitrateSent() / 1000.0) > (0.9 * _availBWkbps));
 }
-
-

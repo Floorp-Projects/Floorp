@@ -13,6 +13,35 @@
   ],
   'targets': [
     {
+      'target_name': 'channel_transport',
+      'type': 'static_library',
+      'dependencies': [
+        '<(DEPTH)/testing/gtest.gyp:gtest',
+        '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
+      ],
+      'sources': [
+        'channel_transport/channel_transport.cc',
+        'channel_transport/include/channel_transport.h',
+        'channel_transport/traffic_control_win.cc',
+        'channel_transport/traffic_control_win.h',
+        'channel_transport/udp_socket_manager_posix.cc',
+        'channel_transport/udp_socket_manager_posix.h',
+        'channel_transport/udp_socket_manager_wrapper.cc',
+        'channel_transport/udp_socket_manager_wrapper.h',
+        'channel_transport/udp_socket_posix.cc',
+        'channel_transport/udp_socket_posix.h',
+        'channel_transport/udp_socket_wrapper.cc',
+        'channel_transport/udp_socket_wrapper.h',
+        'channel_transport/udp_socket2_manager_win.cc',
+        'channel_transport/udp_socket2_manager_win.h',
+        'channel_transport/udp_socket2_win.cc',
+        'channel_transport/udp_socket2_win.h',
+        'channel_transport/udp_transport.h',
+        'channel_transport/udp_transport_impl.cc',
+        'channel_transport/udp_transport_impl.h',
+      ],
+    },
+    {
       'target_name': 'test_support',
       'type': 'static_library',
       'include_dirs': [
@@ -84,16 +113,25 @@
       'target_name': 'test_support_unittests',
       'type': 'executable',
       'dependencies': [
+        'channel_transport',
         'test_support_main',
+        '<(DEPTH)/testing/gmock.gyp:gmock',
         '<(DEPTH)/testing/gtest.gyp:gtest',
       ],
       'sources': [
+        'channel_transport/udp_transport_unittest.cc',
+        'channel_transport/udp_socket_manager_unittest.cc',
+        'channel_transport/udp_socket_wrapper_unittest.cc',
         'testsupport/unittest_utils.h',
         'testsupport/fileutils_unittest.cc',
         'testsupport/frame_reader_unittest.cc',
         'testsupport/frame_writer_unittest.cc',
         'testsupport/packet_reader_unittest.cc',
         'testsupport/perf_test_unittest.cc',
+      ],
+      # Disable warnings to enable Win64 build, issue 1323.
+      'msvs_disabled_warnings': [
+        4267,  # size_t to int truncation.
       ],
     },
     {

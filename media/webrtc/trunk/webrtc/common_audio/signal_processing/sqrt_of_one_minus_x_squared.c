@@ -15,7 +15,7 @@
  *
  */
 
-#include "signal_processing_library.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
 void WebRtcSpl_SqrtOfOneMinusXSquared(int16_t *xQ15, int vector_length,
                                       int16_t *yQ15)

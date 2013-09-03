@@ -11,9 +11,9 @@
 #ifndef WEBRTC_VOICE_ENGINE_VOE_EXTERNAL_MEDIA_IMPL_H
 #define WEBRTC_VOICE_ENGINE_VOE_EXTERNAL_MEDIA_IMPL_H
 
-#include "voe_external_media.h"
+#include "webrtc/voice_engine/include/voe_external_media.h"
 
-#include "shared_data.h"
+#include "webrtc/voice_engine/shared_data.h"
 
 namespace webrtc {
 

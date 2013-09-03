@@ -454,8 +454,10 @@ function runTest() {
             allowMethods: test.allowMethods,
             cacheTime: test.cacheTime };
     xhr = new XMLHttpRequest();
-    xhr.open("POST", setStateURL + escape(sec.toSource()), false);
+    xhr.open("POST", setStateURL + escape(sec.toSource()), true);
+    xhr.onloadend = function() { gen.next(); }
     xhr.send();
+    yield undefined;
 
     loaderWindow.postMessage(req.toSource(), origin);
 

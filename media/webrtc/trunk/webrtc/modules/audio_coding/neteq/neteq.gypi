@@ -13,7 +13,7 @@
       'type': 'static_library',
       'dependencies': [
         'CNG',
-        '<(webrtc_root)/common_audio/common_audio.gyp:signal_processing',
+        '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
       ],
       'defines': [
         'NETEQ_VOICEENGINE_CODECS', # TODO: Should create a Chrome define which

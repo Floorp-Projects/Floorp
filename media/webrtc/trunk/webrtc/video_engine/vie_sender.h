@@ -14,11 +14,11 @@
 #ifndef WEBRTC_VIDEO_ENGINE_VIE_SENDER_H_
 #define WEBRTC_VIDEO_ENGINE_VIE_SENDER_H_
 
-#include "common_types.h"  // NOLINT
-#include "engine_configurations.h"  // NOLINT
-#include "system_wrappers/interface/scoped_ptr.h"
-#include "typedefs.h"  // NOLINT
-#include "video_engine/vie_defines.h"
+#include "webrtc/common_types.h"
+#include "webrtc/engine_configurations.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/typedefs.h"
+#include "webrtc/video_engine/vie_defines.h"
 
 namespace webrtc {
 

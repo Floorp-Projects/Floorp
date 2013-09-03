@@ -59,19 +59,11 @@ class DirReaderBSD {
     if (offset_ != size_)
       return true;
 
-#ifdef OS_OPENBSD
-    const int r = getdirentries(fd_, buf_, sizeof(buf_), basep_);
-#else
     const int r = getdents(fd_, buf_, sizeof(buf_));
-#endif
     if (r == 0)
       return false;
     if (r == -1) {
-#ifdef OS_OPENBSD
-      DLOG(ERROR) << "getdirentries returned an error: " << errno;
-#else
       DLOG(ERROR) << "getdents returned an error: " << errno;
-#endif
       return false;
     }
     size_ = r;
@@ -99,9 +91,6 @@ class DirReaderBSD {
  private:
   const int fd_;
   char buf_[512];
-#ifdef OS_OPENBSD
-  off_t *basep_;
-#endif
   size_t offset_, size_;
 
   DISALLOW_COPY_AND_ASSIGN(DirReaderBSD);

@@ -10,7 +10,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsEventStateManager.h"
-#include "nsEventListenerManager.h"
 #include "nsIMEStateManager.h"
 #include "nsContentEventHandler.h"
 #include "nsIContent.h"
@@ -35,19 +34,9 @@
 #include "nsPIWindowRoot.h"
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
-#include <algorithm>
-#ifdef MOZ_XUL
-#include "nsXULPopupManager.h"
-#endif
 #include "nsFrameManager.h"
 
-#include "nsIServiceManager.h"
-#include "nsIScriptSecurityManager.h"
-
-#include "nsFocusManager.h"
-
 #include "nsIDOMXULElement.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIObserverService.h"
 #include "nsIDocShell.h"
@@ -56,14 +45,9 @@
 #include "nsIDOMDragEvent.h"
 #include "nsIDOMUIEvent.h"
 #include "nsDOMDragEvent.h"
-#include "nsIDOMNSEditableElement.h"
-#include "nsIDOMMozBrowserFrame.h"
 #include "nsIMozBrowserFrame.h"
 
-#include "nsCaret.h"
-
 #include "nsSubDocumentFrame.h"
-#include "nsLayoutCID.h"
 #include "nsLayoutUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsUnicharUtils.h"
@@ -88,14 +72,11 @@
 #include "nsIController.h"
 #include "nsICommandParams.h"
 #include "mozilla/Services.h"
-#include "mozAutoDocUpdate.h"
 #include "mozilla/dom/HTMLLabelElement.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "GeckoProfiler.h"
-
-#include "nsIDOMClientRect.h"
 #include "Units.h"
 
 #ifdef XP_MACOSX

@@ -251,7 +251,7 @@ def _main():
   """The main function.
 
   A simple invocation is:
-  ./tools/barcode_tolls/barcode_decoder.py
+  ./webrtc/tools/barcode_tools/barcode_decoder.py
   --yuv_file=<path_and_name_of_overlaid_yuv_video>
   --yuv_frame_width=640 --yuv_frame_height=480
   --stats_file=<path_and_name_to_stats_file>

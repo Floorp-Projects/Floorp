@@ -44,12 +44,12 @@ ACMNetEQ::ACMNetEQ()
       received_stereo_(false),
       master_slave_info_(NULL),
       previous_audio_activity_(AudioFrame::kVadUnknown),
-      extra_delay_(0),
       callback_crit_sect_(CriticalSectionWrapper::CreateCriticalSection()),
       min_of_max_num_packets_(0),
       min_of_buffer_size_bytes_(0),
       per_packet_overhead_bytes_(0),
-      av_sync_(false) {
+      av_sync_(false),
+      minimum_delay_ms_(0) {
   for (int n = 0; n < MAX_NUM_SLAVE_NETEQ + 1; n++) {
     is_initialized_[n] = false;
     ptr_vadinst_[n] = NULL;
@@ -267,24 +267,6 @@ int16_t ACMNetEQ::AllocatePacketBufferByIdxSafe(
     LogError("AssignBuffer", idx);
     return -1;
   }
-  return 0;
-}
-
-int32_t ACMNetEQ::SetExtraDelay(const int32_t delay_in_ms) {
-  CriticalSectionScoped lock(neteq_crit_sect_);
-
-  for (int16_t idx = 0; idx < num_slaves_ + 1; idx++) {
-    if (!is_initialized_[idx]) {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceAudioCoding, id_,
-                   "SetExtraDelay: NetEq is not initialized.");
-      return -1;
-    }
-    if (WebRtcNetEQ_SetExtraDelay(inst_[idx], delay_in_ms) < 0) {
-      LogError("SetExtraDelay", idx);
-      return -1;
-    }
-  }
-  extra_delay_ = delay_in_ms;
   return 0;
 }
 
@@ -1037,14 +1019,6 @@ int16_t ACMNetEQ::AddSlave(const WebRtcNetEQDecoder* used_codecs,
     num_slaves_ = 1;
     is_initialized_[slave_idx] = true;
 
-    // Set Slave delay as all other instances.
-    if (WebRtcNetEQ_SetExtraDelay(inst_[slave_idx], extra_delay_) < 0) {
-      LogError("SetExtraDelay", slave_idx);
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceAudioCoding, id_,
-                   "AddSlave: AddSlave Failed, Could not set delay");
-      return -1;
-    }
-
     // Set AVT
     if (WebRtcNetEQ_SetAVTPlayout(inst_[slave_idx],
                                   (avt_playout_) ? 1 : 0) < 0) {
@@ -1093,8 +1067,13 @@ int16_t ACMNetEQ::AddSlave(const WebRtcNetEQDecoder* used_codecs,
                    "AddSlave: AddSlave Failed, Could not Set Playout Mode.");
       return -1;
     }
+
     // Set AV-sync for the slave.
     WebRtcNetEQ_EnableAVSync(inst_[slave_idx], av_sync_ ? 1 : 0);
+
+    // Set minimum delay.
+    if (minimum_delay_ms_ > 0)
+      WebRtcNetEQ_SetMinimumDelay(inst_[slave_idx], minimum_delay_ms_);
   }
 
   return 0;
@@ -1117,6 +1096,32 @@ void ACMNetEQ::EnableAVSync(bool enable) {
     assert(is_initialized_[i]);
     WebRtcNetEQ_EnableAVSync(inst_[i], enable ? 1 : 0);
   }
+}
+
+int ACMNetEQ::SetMinimumDelay(int minimum_delay_ms) {
+  CriticalSectionScoped lock(neteq_crit_sect_);
+  for (int i = 0; i < num_slaves_ + 1; ++i) {
+    assert(is_initialized_[i]);
+    if (WebRtcNetEQ_SetMinimumDelay(inst_[i], minimum_delay_ms) < 0)
+      return -1;
+  }
+  minimum_delay_ms_ = minimum_delay_ms;
+  return 0;
+}
+
+int ACMNetEQ::LeastRequiredDelayMs() const {
+  CriticalSectionScoped lock(neteq_crit_sect_);
+  assert(is_initialized_[0]);
+
+  // Sufficient to query the master.
+  return WebRtcNetEQ_GetRequiredDelayMs(inst_[0]);
+}
+
+bool ACMNetEQ::DecodedRtpInfo(int* sequence_number, uint32_t* timestamp) const {
+  CriticalSectionScoped lock(neteq_crit_sect_);
+  if (WebRtcNetEQ_DecodedRtpInfo(inst_[0], sequence_number, timestamp) < 0)
+    return false;
+  return true;
 }
 
 }  // namespace webrtc

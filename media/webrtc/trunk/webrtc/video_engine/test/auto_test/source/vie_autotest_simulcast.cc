@@ -10,17 +10,17 @@
 
 #include <iostream>  // NOLINT
 
-#include "common_types.h"  // NOLINT
-#include "video_engine/include/vie_base.h"
-#include "video_engine/include/vie_capture.h"
-#include "video_engine/include/vie_codec.h"
-#include "video_engine/include/vie_network.h"
-#include "video_engine/include/vie_render.h"
-#include "video_engine/include/vie_rtp_rtcp.h"
-#include "video_engine/test/auto_test/interface/vie_autotest.h"
-#include "video_engine/test/auto_test/interface/vie_autotest_defines.h"
-#include "video_engine/test/libvietest/include/tb_external_transport.h"
-#include "voice_engine/include/voe_base.h"
+#include "webrtc/common_types.h"
+#include "webrtc/video_engine/include/vie_base.h"
+#include "webrtc/video_engine/include/vie_capture.h"
+#include "webrtc/video_engine/include/vie_codec.h"
+#include "webrtc/video_engine/include/vie_network.h"
+#include "webrtc/video_engine/include/vie_render.h"
+#include "webrtc/video_engine/include/vie_rtp_rtcp.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest.h"
+#include "webrtc/video_engine/test/auto_test/interface/vie_autotest_defines.h"
+#include "webrtc/video_engine/test/libvietest/include/tb_external_transport.h"
+#include "webrtc/voice_engine/include/voe_base.h"
 
 enum RelayMode {
   kRelayOneStream = 1,
@@ -142,32 +142,6 @@ int VideoEngineSimulcastTest(void* window1, void* window2) {
       webrtc::ViERTP_RTCP::GetInterface(video_engine);
   if (vie_rtp_rtcp == NULL) {
     printf("ERROR in ViERTP_RTCP::GetInterface\n");
-    return -1;
-  }
-
-  printf("Bandwidth estimation modes:\n");
-  printf("1. Single-stream bandwidth estimation\n");
-  printf("2. Multi-stream bandwidth estimation\n");
-  printf("Choose bandwidth estimation mode (default is 1): ");
-  std::string str;
-  std::getline(std::cin, str);
-  int bwe_mode_choice = atoi(str.c_str());
-  webrtc::BandwidthEstimationMode bwe_mode;
-  switch (bwe_mode_choice) {
-    case 1:
-      bwe_mode = webrtc::kViESingleStreamEstimation;
-      break;
-    case 2:
-      bwe_mode = webrtc::kViEMultiStreamEstimation;
-      break;
-    default:
-      bwe_mode = webrtc::kViESingleStreamEstimation;
-      break;
-  }
-
-  error = vie_rtp_rtcp->SetBandwidthEstimationMode(bwe_mode);
-  if (error == -1) {
-    printf("ERROR in ViERTP_RTCP::SetBandwidthEstimationMode\n");
     return -1;
   }
 
@@ -392,6 +366,7 @@ int VideoEngineSimulcastTest(void* window1, void* window2) {
   }
 
   // Set start bit rate.
+  std::string str;
   std::cout << std::endl;
   std::cout << "Choose start rate (in kbps). Press enter for default:  ";
   std::getline(std::cin, str);

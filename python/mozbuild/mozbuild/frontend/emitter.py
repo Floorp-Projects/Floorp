@@ -118,17 +118,21 @@ class TreeMetadataEmitter(LoggingMixin):
             CPP_UNIT_TESTS='CPP_UNIT_TESTS',
             CSRCS='CSRCS',
             DEFINES='DEFINES',
+            EXPORT_LIBRARY='EXPORT_LIBRARY',
             EXTRA_COMPONENTS='EXTRA_COMPONENTS',
             EXTRA_JS_MODULES='EXTRA_JS_MODULES',
             EXTRA_PP_COMPONENTS='EXTRA_PP_COMPONENTS',
             EXTRA_PP_JS_MODULES='EXTRA_PP_JS_MODULES',
             FAIL_ON_WARNINGS='FAIL_ON_WARNINGS',
+            FORCE_SHARED_LIB='FORCE_SHARED_LIB',
+            FORCE_STATIC_LIB='FORCE_STATIC_LIB',
             GTEST_CMMSRCS='GTEST_CMM_SOURCES',
             GTEST_CPPSRCS='GTEST_CPP_SOURCES',
             GTEST_CSRCS='GTEST_C_SOURCES',
             HOST_CPPSRCS='HOST_CPPSRCS',
             HOST_CSRCS='HOST_CSRCS',
             HOST_LIBRARY_NAME='HOST_LIBRARY_NAME',
+            IS_COMPONENT='IS_COMPONENT',
             JS_MODULES_PATH='JS_MODULES_PATH',
             LIBRARY_NAME='LIBRARY_NAME',
             LIBS='LIBS',
@@ -174,7 +178,8 @@ class TreeMetadataEmitter(LoggingMixin):
 
         if 'TIERS' in sandbox:
             for tier in sandbox['TIERS']:
-                o.tier_dirs[tier] = sandbox['TIERS'][tier]['regular']
+                o.tier_dirs[tier] = sandbox['TIERS'][tier]['regular'] + \
+                    sandbox['TIERS'][tier]['external']
                 o.tier_static_dirs[tier] = sandbox['TIERS'][tier]['static']
 
         yield o

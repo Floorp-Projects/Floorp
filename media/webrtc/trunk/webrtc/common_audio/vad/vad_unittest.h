@@ -13,9 +13,9 @@
 
 #include <stddef.h>  // size_t
 
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
 namespace {
 

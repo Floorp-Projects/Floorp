@@ -12,14 +12,14 @@
  * skew by resampling the farend signal.
  */
 
-#include "aec_resampler.h"
+#include "webrtc/modules/audio_processing/aec/aec_resampler.h"
 
 #include <assert.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
-#include "aec_core.h"
+#include "webrtc/modules/audio_processing/aec/aec_core.h"
 
 enum { kEstimateLengthFrames = 400 };
 

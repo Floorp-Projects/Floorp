@@ -13,7 +13,7 @@
  *
  */
 
-#include "signal_processing_library.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
 // Number of samples in a low/high-band frame.
 enum
@@ -43,7 +43,7 @@ static const uint16_t WebRtcSpl_kAllPassFilter2[3] = {21333, 49062, 63010};
 //                            |data_length|
 //
 
-void WebRtcSpl_AllPassQMF(int32_t* in_data, const int16_t data_length,
+void WebRtcSpl_AllPassQMF(int32_t* in_data, int16_t data_length,
                           int32_t* out_data, const uint16_t* filter_coefficients,
                           int32_t* filter_state)
 {

@@ -16,9 +16,9 @@ BUILDTYPE ?= Debug
 MY_LIBS_PATH := ../../../../../out/$(BUILDTYPE)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := libvoice_engine_core
+LOCAL_MODULE := libvoice_engine
 LOCAL_SRC_FILES := \
-    $(MY_LIBS_PATH)/libvoice_engine_core.a
+    $(MY_LIBS_PATH)/libvoice_engine.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -61,12 +61,6 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := libaudio_processing
 LOCAL_SRC_FILES := \
     $(MY_LIBS_PATH)/libaudio_processing.a
-include $(PREBUILT_STATIC_LIBRARY)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := libaudio_processing_neon
-LOCAL_SRC_FILES := \
-    $(MY_LIBS_PATH)/libaudio_processing_neon.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -117,12 +111,6 @@ LOCAL_SRC_FILES := \
     $(MY_LIBS_PATH)/libiSACFix.a
 include $(PREBUILT_STATIC_LIBRARY)
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := libisac_neon
-LOCAL_SRC_FILES := \
-    $(MY_LIBS_PATH)/libisac_neon.a
-include $(PREBUILT_STATIC_LIBRARY)
-
 # Remove the following file existense check when opus is always enabled.
 ifneq ($(wildcard jni/$(MY_LIBS_PATH)/libopus.a),)
 include $(CLEAR_VARS)
@@ -141,33 +129,15 @@ include $(PREBUILT_STATIC_LIBRARY)
 endif
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := libvad
+LOCAL_MODULE := libcommon_audio
 LOCAL_SRC_FILES := \
-    $(MY_LIBS_PATH)/libvad.a
+    $(MY_LIBS_PATH)/libcommon_audio.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := libbitrate_controller
 LOCAL_SRC_FILES := \
     $(MY_LIBS_PATH)/libbitrate_controller.a
-include $(PREBUILT_STATIC_LIBRARY)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := libresampler
-LOCAL_SRC_FILES := \
-    $(MY_LIBS_PATH)/libresampler.a
-include $(PREBUILT_STATIC_LIBRARY)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := libsignal_processing
-LOCAL_SRC_FILES := \
-    $(MY_LIBS_PATH)/libsignal_processing.a
-include $(PREBUILT_STATIC_LIBRARY)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := libsignal_processing_neon
-LOCAL_SRC_FILES := \
-    $(MY_LIBS_PATH)/libsignal_processing_neon.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -278,19 +248,89 @@ LOCAL_SRC_FILES := \
     $(MY_LIBS_PATH)/libvpx.a
 include $(PREBUILT_STATIC_LIBRARY)
 
-# TODO(leozwang): Upstream required Android changes to libvpx.gyp to enable
-# this optimization.
-#include $(CLEAR_VARS)
-#LOCAL_MODULE := libvpx_arm_neon
-#LOCAL_SRC_FILES := \
-#    $(MY_LIBS_PATH)/libvpx_arm_neon.a
-#include $(PREBUILT_STATIC_LIBRARY)
-
 include $(CLEAR_VARS)
 LOCAL_MODULE := libpaced_sender
 LOCAL_SRC_FILES := \
     $(MY_LIBS_PATH)/libpaced_sender.a
 include $(PREBUILT_STATIC_LIBRARY)
+
+ifeq ($(APP_ABI), x86)  # x86 Android specific
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libvideo_processing_sse2
+  LOCAL_SRC_FILES := \
+      $(MY_LIBS_PATH)/libvideo_processing_sse2.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libaudio_processing_sse2
+  LOCAL_SRC_FILES := \
+      $(MY_LIBS_PATH)/libaudio_processing_sse2.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libcommon_audio_sse2
+  LOCAL_SRC_FILES := \
+      $(MY_LIBS_PATH)/libcommon_audio_sse2.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libvpx_intrinsics_mmx
+  LOCAL_SRC_FILES := \
+      $(MY_LIBS_PATH)/libvpx_intrinsics_mmx.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libvpx_intrinsics_sse2
+  LOCAL_SRC_FILES := \
+      $(MY_LIBS_PATH)/libvpx_intrinsics_sse2.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libvpx_intrinsics_ssse3
+  LOCAL_SRC_FILES := \
+      $(MY_LIBS_PATH)/libvpx_intrinsics_ssse3.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
+  LOCAL_PLATFORM_SPECIFIC_STATIC_LIBRARIES := \
+      libvideo_processing_sse2 \
+      libaudio_processing_sse2 \
+      libcommon_audio_sse2 \
+      libvpx_intrinsics_mmx \
+      libvpx_intrinsics_sse2 \
+      libvpx_intrinsics_ssse3
+else                    # arm Android specific
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libaudio_processing_neon
+  LOCAL_SRC_FILES := \
+      $(MY_LIBS_PATH)/libaudio_processing_neon.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libisac_neon
+  LOCAL_SRC_FILES := \
+      $(MY_LIBS_PATH)/libisac_neon.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libcommon_audio_neon
+  LOCAL_SRC_FILES := \
+      $(MY_LIBS_PATH)/libcommon_audio_neon.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
+  # TODO(leozwang): Upstream required Android changes to libvpx.gyp to enable
+  # this optimization.
+  #include $(CLEAR_VARS)
+  #LOCAL_MODULE := libvpx_arm_neon
+  #LOCAL_SRC_FILES := \
+  #    $(MY_LIBS_PATH)/libvpx_arm_neon.a
+  #include $(PREBUILT_STATIC_LIBRARY)
+
+  LOCAL_PLATFORM_SPECIFIC_STATIC_LIBRARIES := \
+      libaudio_processing_neon \
+      libisac_neon \
+      libcommon_audio_neon \
+      libvpx_arm_neon
+endif
 
 include $(CLEAR_VARS)
 LOCAL_MODULE_TAGS := tests
@@ -316,8 +356,11 @@ LOCAL_LDLIBS := \
     -lGLESv2 \
     -lOpenSLES \
 
-LOCAL_STATIC_LIBRARIES := \
-    libvoice_engine_core \
+# TODO(yujie.mao): Replace LOCAL_WHOLE_STATIC_LIBRARIES to
+# LOCAL_STATIC_LIBRARIES after removing the circular dependencies between
+# libvpx.a and libvpx_intrinsics_[mmx,sse2,ssse3].a
+LOCAL_WHOLE_STATIC_LIBRARIES := \
+    libvoice_engine \
     libvideo_engine_core \
     libvideo_processing \
     libwebrtc_video_coding \
@@ -325,7 +368,6 @@ LOCAL_STATIC_LIBRARIES := \
     libvideo_capture_module \
     libaudio_coding_module \
     libaudio_processing \
-    libaudio_processing_neon \
     libPCM16B \
     libCNG \
     libNetEq \
@@ -334,14 +376,10 @@ LOCAL_STATIC_LIBRARIES := \
     libG711 \
     libiLBC \
     libiSACFix \
-    libisac_neon \
     libwebrtc_opus \
     libopus \
-    libvad \
+    libcommon_audio \
     libbitrate_controller \
-    libresampler \
-    libsignal_processing \
-    libsignal_processing_neon \
     libcommon_video \
     libcpu_features_android \
     libaudio_device \
@@ -360,9 +398,9 @@ LOCAL_STATIC_LIBRARIES := \
     libjpeg_turbo \
     libaudioproc_debug_proto \
     libprotobuf_lite \
-    libvpx \
-    libvpx_arm_neon \
     libpaced_sender \
+    libvpx \
+    $(LOCAL_PLATFORM_SPECIFIC_STATIC_LIBRARIES) \
     $(MY_SUPPLEMENTAL_LIBS)
 
 include $(BUILD_SHARED_LIBRARY)

@@ -47,13 +47,6 @@ ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 DEFINES += -DELFSIZE=32
 endif
 
-ifdef MOZ_PLATFORM_MAEMO
-# The GCC in scratchbox crashes writing DWARF debug info for language.cc.
-# Since we don't really need debug symbols for the host tools anyway,
-# just get rid of debug options.
-HOST_CXXFLAGS = $(patsubst -g%,,$(CXXFLAGS))
-endif
-
 # This kind of sucks.
 ifeq (Linux,$(OS_ARCH))
 HOST_CXXFLAGS += -DHAVE_A_OUT_H

@@ -14,9 +14,6 @@
 #include "jit/Registers.h"
 #include "jit/shared/Assembler-shared.h"
 
-class JSFunction;
-class JSScript;
-
 namespace js {
 
 class LockedJSContext;
@@ -650,19 +647,26 @@ class SetPropertyIC : public RepatchIonCache
     PropertyName *name_;
     ConstantOrRegister value_;
     bool strict_;
+    bool needsTypeBarrier_;
+
+    bool hasGenericProxyStub_;
 
   public:
     SetPropertyIC(RegisterSet liveRegs, Register object, PropertyName *name,
-                  ConstantOrRegister value, bool strict)
+                  ConstantOrRegister value, bool strict, bool needsTypeBarrier)
       : liveRegs_(liveRegs),
         object_(object),
         name_(name),
         value_(value),
-        strict_(strict)
+        strict_(strict),
+        needsTypeBarrier_(needsTypeBarrier),
+        hasGenericProxyStub_(false)
     {
     }
 
     CACHE_HEADER(SetProperty)
+
+    void reset();
 
     Register object() const {
         return object_;
@@ -676,12 +680,23 @@ class SetPropertyIC : public RepatchIonCache
     bool strict() const {
         return strict_;
     }
+    bool needsTypeBarrier() const {
+        return needsTypeBarrier_;
+    }
+    bool hasGenericProxyStub() const {
+        return hasGenericProxyStub_;
+    }
 
     bool attachNativeExisting(JSContext *cx, IonScript *ion, HandleObject obj, HandleShape shape);
     bool attachSetterCall(JSContext *cx, IonScript *ion, HandleObject obj,
                           HandleObject holder, HandleShape shape, void *returnAddr);
     bool attachNativeAdding(JSContext *cx, IonScript *ion, JSObject *obj, HandleShape oldshape,
                             HandleShape newshape, HandleShape propshape);
+    bool attachGenericProxy(JSContext *cx, IonScript *ion, void *returnAddr);
+    bool attachDOMProxyShadowed(JSContext *cx, IonScript *ion, HandleObject obj,
+                                void *returnAddr);
+    bool attachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, HandleObject obj,
+                                  void *returnAddr);
 
     static bool
     update(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue value);

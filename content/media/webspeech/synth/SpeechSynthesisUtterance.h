@@ -9,11 +9,10 @@
 #include "nsCOMPtr.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsString.h"
+#include "js/TypeDecls.h"
 
 #include "EnableSpeechSynthesisCheck.h"
 #include "nsSpeechTask.h"
-
-struct JSContext;
 
 namespace mozilla {
 namespace dom {

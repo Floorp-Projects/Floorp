@@ -8,10 +8,7 @@
 #include "nsIException.idl"
 
 %{ C++
-struct JSContext;
-namespace JS {
-class Value;
-}
+#include "js/TypeDecls.h"
 %}
 
 [ptr] native xpcexJSContextPtr(JSContext);
