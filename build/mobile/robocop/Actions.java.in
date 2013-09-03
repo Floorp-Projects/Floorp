@@ -83,13 +83,6 @@ public interface Actions {
     void drag(int startingX, int endingX, int startingY, int endingY);
 
     /**
-     * This is the implementation of clickLongOnScreen from Robotium 4.0 since this sometimes fails for Robotium 3.6
-     * TODO : Remove this when Robotium is updated
-     */
-
-    void clickLongOnScreen(float x, float y);
-
-    /**
      * Run a sql query on the specified database
      */
     public Cursor querySql(String dbPath, String sql);

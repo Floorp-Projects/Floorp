@@ -23,7 +23,7 @@ interface nsINavHistoryQueryOptions;
 interface nsINavHistoryResult;
 interface nsINavHistoryBatchCallback;
 
-[scriptable, uuid(081452e5-be5c-4038-a5ea-f1f34cb6fd81)]
+[scriptable, uuid(91d104bb-17ef-404b-9f9a-d9ed8de6824c)]
 interface nsINavHistoryResultNode : nsISupports
 {
   /**
@@ -154,6 +154,19 @@ interface nsINavHistoryResultNode : nsISupports
    * for the uri represented by this node. Otherwise this is an empty string.
    */
   readonly attribute AString tags;
+
+  /**
+   * The unique ID associated with the page. It my return an empty string
+   * if the result node is a non-URI node.
+   */
+  readonly attribute ACString pageGuid;
+
+  /**
+   * The unique ID associated with the bookmark. It returns an empty string
+   * if the result node is not associated with a bookmark, a folder or a
+   * separator.
+   */
+  readonly attribute ACString bookmarkGuid;
 };
 
 
@@ -162,7 +175,7 @@ interface nsINavHistoryResultNode : nsISupports
  * Bookmark folders and places queries will be QueryResultNodes which extends
  * these items.
  */
-[scriptable, uuid(62534d3c-1b3f-401e-b3ba-b911f57f8a29)]
+[scriptable, uuid(5bac9734-c0ff-44eb-8d19-da88462ff6da)]
 interface nsINavHistoryContainerResultNode : nsINavHistoryResultNode
 {
 
@@ -262,7 +275,7 @@ interface nsINavHistoryContainerResultNode : nsINavHistoryResultNode
  * generated this node, this item will report it has no children and never try
  * to populate itself.
  */
-[scriptable, uuid(ea17745a-1852-4155-a98f-d1dd1763b3df)]
+[scriptable, uuid(a4144c3e-8125-46d5-a719-831bec8095f4)]
 interface nsINavHistoryQueryResultNode : nsINavHistoryContainerResultNode
 {
   /**

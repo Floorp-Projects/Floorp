@@ -45,6 +45,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "gDownloadPlatform",
+                                   "@mozilla.org/toolkit/download-platform;1",
+                                   "mozIDownloadPlatform");
 XPCOMUtils.defineLazyServiceGetter(this, "gEnvironment",
                                    "@mozilla.org/process/environment;1",
                                    "nsIEnvironment");
@@ -54,7 +57,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gMIMEService",
 XPCOMUtils.defineLazyServiceGetter(this, "gExternalProtocolService",
                                    "@mozilla.org/uriloader/external-protocol-service;1",
                                    "nsIExternalProtocolService");
-
+ 
 XPCOMUtils.defineLazyGetter(this, "gParentalControlsService", function() {
   if ("@mozilla.org/parental-controls-service;1" in Cc) {
     return Cc["@mozilla.org/parental-controls-service;1"]
@@ -116,6 +119,7 @@ this.DownloadIntegration = {
   dontCheckParentalControls: false,
   shouldBlockInTest: false,
   dontOpenFileAndFolder: false,
+  downloadDoneCalled: false,
   _deferTestOpenFile: null,
   _deferTestShowDir: null,
 
@@ -378,6 +382,28 @@ this.DownloadIntegration = {
     }
 
     return Promise.resolve(shouldBlock);
+  },
+
+  /**
+   * Performs platform-specific operations when a download is done.
+   *
+   * aParam aDownload
+   *        The Download object.
+   *
+   * @return {Promise}
+   * @resolves When all the operations completed successfully.
+   * @rejects JavaScript exception if any of the operations failed.
+   */
+  downloadDone: function(aDownload) {
+    try {
+      gDownloadPlatform.downloadDone(NetUtil.newURI(aDownload.source.url),
+                                     new FileUtils.File(aDownload.target.path),
+                                     aDownload.contentType, aDownload.source.isPrivate);
+      this.downloadDoneCalled = true;
+      return Promise.resolve();
+    } catch(ex) {
+      return Promise.reject(ex);
+    }
   },
 
   /**
