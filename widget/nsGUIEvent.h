@@ -1944,6 +1944,18 @@ public:
   uint32_t direction;         // See nsIDOMSimpleGestureEvent for values
   double delta;               // Delta for magnify and rotate events
   uint32_t clickCount;        // The number of taps for tap events
+
+  // XXX Not tested by test_assign_event_data.html
+  void AssignSimpleGestureEventData(const nsSimpleGestureEvent& aEvent,
+                                    bool aCopyTargets)
+  {
+    AssignMouseEventBaseData(aEvent, aCopyTargets);
+
+    // allowedDirections isn't copied
+    direction = aEvent.direction;
+    delta = aEvent.delta;
+    clickCount = aEvent.clickCount;
+  }
 };
 
 class nsTransitionEvent : public nsEvent

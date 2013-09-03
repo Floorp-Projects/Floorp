@@ -435,6 +435,19 @@ const kTests = [
     },
     todoMismatch: [],
   },
+  { description: "nsSimpleGestureEvent",
+    targetID: "", eventType: "",
+    dispatchEvent: function () {
+      return;
+    },
+    canRun: function () {
+      // Simple gesture event may be handled before it comes content.
+      // So, we cannot test it in this test.
+      todo(false, "nsSimpleGestureEvent isn't tested");
+      return false;
+    },
+    todoMismatch: [],
+  },
 ];
 
 function doTest(aTest)
