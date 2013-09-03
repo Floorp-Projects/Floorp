@@ -1,0 +1,43 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=677638
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 677638 - basic support</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=677638">Mozilla Bug 677638</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe name="x" id="x"></iframe>
+  <iframe name="y" id="y"></iframe>
+</div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+
+  /** Test for Bug 677638 **/
+  var a = new MessageChannel();
+  ok(a, "MessageChannel created");
+
+  var port1 = a.port1;
+  ok(port1, "MessageChannel.port1 exists");
+  is(port1, a.port1, "MessageChannel.port1 is port1");
+
+  var port2 = a.port2;
+  ok(port2, "MessageChannel.port1 exists");
+  is(port2, a.port2, "MessageChannel.port2 is port2");
+
+  [ 'postMessage', 'start', 'close' ].forEach(function(e) {
+    ok(e in port1, "MessagePort1." + e + " exists");
+    ok(e in port2, "MessagePort2." + e + " exists");
+  });
+
+  </script>
+</body>
+</html>
