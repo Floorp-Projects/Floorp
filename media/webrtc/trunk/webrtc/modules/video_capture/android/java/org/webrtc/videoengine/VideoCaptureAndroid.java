@@ -71,6 +71,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     private int mCaptureWidth = -1;
     private int mCaptureHeight = -1;
     private int mCaptureFPS = -1;
+
     private int mCaptureRotation = 0;
 
     private AppStateListener mAppStateListener = null;
@@ -106,7 +107,6 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
             // Invoked every time there's a new Camera preview frame
         }
     }
-
     public static
     void DeleteVideoCaptureAndroid(VideoCaptureAndroid captureAndroid) {
         Log.d(TAG, "DeleteVideoCaptureAndroid");
@@ -279,6 +279,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
             currentCapability.height = height;
             currentCapability.maxFPS = frameRate;
             PixelFormat.getPixelFormatInfo(PIXEL_FORMAT, pixelFormat);
+
 
             Camera.Parameters parameters = camera.getParameters();
             parameters.setPreviewSize(currentCapability.width,

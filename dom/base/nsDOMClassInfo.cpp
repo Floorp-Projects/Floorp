@@ -558,8 +558,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(CSSFontFeatureValuesRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(UserDataHandler, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(UserDataHandler, nsDOMGenericSH,
+                                      DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(LoadStatus, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(XPathNamespace, nsDOMGenericSH,
@@ -3507,7 +3507,6 @@ const InterfaceShimEntry kInterfaceShimMap[] =
   { "nsIXMLHttpRequest", "XMLHttpRequest" },
   { "nsIDOMDOMException", "DOMException" },
   { "nsIDOMNode", "Node" },
-  { "nsIDOMUserDataHandler", "UserDataHandler" },
   { "nsIDOMCSSPrimitiveValue", "CSSPrimitiveValue" },
   { "nsIDOMCSSRule", "CSSRule" },
   { "nsIDOMCSSValue", "CSSValue" },

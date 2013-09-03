@@ -10,7 +10,6 @@
 
 #ifndef WEBRTC_TEST_TESTSUPPORT_GTEST_PROD_UTIL_H_
 #define WEBRTC_TEST_TESTSUPPORT_GTEST_PROD_UTIL_H_
-#pragma once
 
 // Define our own version of FRIEND_TEST here rather than including
 // gtest_prod.h to avoid depending on any part of GTest in production code.

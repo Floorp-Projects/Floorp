@@ -8,29 +8,29 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_engine/vie_file_impl.h"
+#include "webrtc/video_engine/vie_file_impl.h"
 
-#include "engine_configurations.h"  // NOLINT
+#include "webrtc/engine_configurations.h"
 
 #ifdef WEBRTC_VIDEO_ENGINE_FILE_API
-#include "common_video/jpeg/include/jpeg.h"
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "system_wrappers/interface/condition_variable_wrapper.h"
-#include "system_wrappers/interface/critical_section_wrapper.h"
-#include "system_wrappers/interface/trace.h"
-#include "video_engine/include/vie_errors.h"
-#include "video_engine/vie_capturer.h"
-#include "video_engine/vie_channel.h"
-#include "video_engine/vie_channel_manager.h"
-#include "video_engine/vie_defines.h"
-#include "video_engine/vie_encoder.h"
-#include "video_engine/vie_file_image.h"
-#include "video_engine/vie_file_player.h"
-#include "video_engine/vie_file_recorder.h"
-#include "video_engine/vie_impl.h"
-#include "video_engine/vie_input_manager.h"
-#include "video_engine/vie_render_manager.h"
-#include "video_engine/vie_renderer.h"
+#include "webrtc/common_video/jpeg/include/jpeg.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/system_wrappers/interface/condition_variable_wrapper.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/video_engine/include/vie_errors.h"
+#include "webrtc/video_engine/vie_capturer.h"
+#include "webrtc/video_engine/vie_channel.h"
+#include "webrtc/video_engine/vie_channel_manager.h"
+#include "webrtc/video_engine/vie_defines.h"
+#include "webrtc/video_engine/vie_encoder.h"
+#include "webrtc/video_engine/vie_file_image.h"
+#include "webrtc/video_engine/vie_file_player.h"
+#include "webrtc/video_engine/vie_file_recorder.h"
+#include "webrtc/video_engine/vie_impl.h"
+#include "webrtc/video_engine/vie_input_manager.h"
+#include "webrtc/video_engine/vie_render_manager.h"
+#include "webrtc/video_engine/vie_renderer.h"
 #endif
 
 namespace webrtc {

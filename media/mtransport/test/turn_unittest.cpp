@@ -315,6 +315,10 @@ TEST_F(TurnClient, SendToSelf) {
   Allocate();
   SendTo(relay_addr_);
   ASSERT_TRUE_WAIT(received() == 100, 1000);
+  PR_Sleep(10000); // Wait 10 seconds to make sure the
+                   // CreatePermission has time to complete/fail.
+  SendTo(relay_addr_);
+  ASSERT_TRUE_WAIT(received() == 200, 1000);
 }
 
 TEST_F(TurnClient, AllocateDummyServer) {

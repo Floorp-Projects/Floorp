@@ -116,6 +116,15 @@ TCPSocketParent::InitJS(const JS::Value& aIntermediary, JSContext* aCx)
 }
 
 bool
+TCPSocketParent::RecvStartTLS()
+{
+  NS_ENSURE_TRUE(mSocket, true);
+  nsresult rv = mSocket->UpgradeToSecure();
+  NS_ENSURE_SUCCESS(rv, true);
+  return true;
+}
+
+bool
 TCPSocketParent::RecvSuspend()
 {
   NS_ENSURE_TRUE(mSocket, true);

@@ -14,15 +14,7 @@
 #include "jstypes.h"
 
 #include "js/RootingAPI.h"
-
-extern "C" {
-class JSObject;
-struct JSContext;
-}
-
-namespace JS {
-class Value;
-}
+#include "js/TypeDecls.h"
 
 extern JSObject *
 js_InitDateClass(JSContext *cx, JS::HandleObject obj);

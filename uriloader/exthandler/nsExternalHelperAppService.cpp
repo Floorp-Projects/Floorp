@@ -347,9 +347,6 @@ static nsresult GetDownloadDirectory(nsIFile **_directory)
   else {
     return NS_ERROR_FAILURE;
   }
-#elif defined(MOZ_PLATFORM_MAEMO)
-  nsresult rv = NS_GetSpecialDirectory(NS_UNIX_XDG_DOCUMENTS_DIR, getter_AddRefs(dir));
-  NS_ENSURE_SUCCESS(rv, rv);
 #elif defined(XP_WIN)
   // On metro we want to be able to search opened files and the temp directory
   // is exlcuded in searches.

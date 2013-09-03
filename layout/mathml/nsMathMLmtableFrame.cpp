@@ -3,24 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsCOMPtr.h"
-#include "nsFrame.h"
-#include "nsBlockFrame.h"
+#include "nsMathMLmtableFrame.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsTableRowFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsRenderingContext.h"
 
 #include "nsTArray.h"
-#include "nsCSSFrameConstructor.h"
-#include "nsTableOuterFrame.h"
 #include "nsTableFrame.h"
-#include "nsTableCellFrame.h"
 #include "celldata.h"
 
-#include "nsMathMLmtableFrame.h"
 #include "RestyleManager.h"
 #include <algorithm>
 

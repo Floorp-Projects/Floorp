@@ -11,6 +11,7 @@
 #include "webrtc/system_wrappers/interface/logging.h"
 
 #include <string.h>
+
 #include <sstream>
 
 #include "webrtc/common_types.h"

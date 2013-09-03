@@ -1411,13 +1411,13 @@ public:
    * If aAfter is non-null, it must be a child of this container and
    * we insert after that layer. If it's null we insert at the start.
    */
-  virtual void InsertAfter(Layer* aChild, Layer* aAfter) = 0;
+  virtual void InsertAfter(Layer* aChild, Layer* aAfter);
   /**
    * CONSTRUCTION PHASE ONLY
    * Remove aChild from the child list of this container. aChild must
    * be a child of this container.
    */
-  virtual void RemoveChild(Layer* aChild) = 0;
+  virtual void RemoveChild(Layer* aChild);
   /**
    * CONSTRUCTION PHASE ONLY
    * Reposition aChild from the child list of this container. aChild must
@@ -1425,7 +1425,7 @@ public:
    * If aAfter is non-null, it must be a child of this container and we
    * reposition after that layer. If it's null, we reposition at the start.
    */
-  virtual void RepositionChild(Layer* aChild, Layer* aAfter) = 0;
+  virtual void RepositionChild(Layer* aChild, Layer* aAfter);
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -1529,6 +1529,8 @@ public:
 
 protected:
   friend class ReadbackProcessor;
+
+  static bool HasOpaqueAncestorLayer(Layer* aLayer);
 
   void DidInsertChild(Layer* aLayer);
   void DidRemoveChild(Layer* aLayer);

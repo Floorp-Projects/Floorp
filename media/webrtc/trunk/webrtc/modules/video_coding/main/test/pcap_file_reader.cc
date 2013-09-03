@@ -193,7 +193,7 @@ class PcapFileReaderImpl : public RtpPacketSourceInterface {
     uint32_t dest_ip;
     uint16_t source_port;
     uint16_t dest_port;
-    WebRtcRTPHeader rtp_header;
+    RTPHeader rtp_header;
     int32_t pos_in_file;
     uint32_t payload_length;
   };
@@ -277,7 +277,7 @@ class PcapFileReaderImpl : public RtpPacketSourceInterface {
         return kResultSkip;
       }
 
-      uint32_t ssrc = marker.rtp_header.header.ssrc;
+      uint32_t ssrc = marker.rtp_header.ssrc;
       packets_by_ssrc_[ssrc].push_back(marker.packet_number);
       packets_.push_back(marker);
     }

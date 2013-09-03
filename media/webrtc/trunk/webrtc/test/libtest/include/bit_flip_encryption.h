@@ -11,7 +11,7 @@
 #ifndef SRC_VIDEO_ENGINE_TEST_AUTO_TEST_HELPERS_BIT_FLIP_ENCRYPTION_H_
 #define SRC_VIDEO_ENGINE_TEST_AUTO_TEST_HELPERS_BIT_FLIP_ENCRYPTION_H_
 
-#include "common_types.h"
+#include "webrtc/common_types.h"
 
 // This encryption scheme will randomly flip bits every now and then in the
 // input data.

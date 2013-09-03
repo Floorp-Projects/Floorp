@@ -19,7 +19,7 @@
 
 #include <stddef.h>
 
-#include "system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 

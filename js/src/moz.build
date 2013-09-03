@@ -16,11 +16,7 @@ if CONFIG['JS_NATIVE_EDITLINE']:
 if not CONFIG['JS_DISABLE_SHELL']:
     DIRS += ['shell']
 
-# FIXME: bug 530688 covers getting these working on Android
-if CONFIG['OS_ARCH'] != 'ANDROID':
-    TEST_DIRS += ['jsapi-tests']
-
-TEST_DIRS += ['tests', 'gdb']
+TEST_DIRS += ['jsapi-tests', 'tests', 'gdb']
 
 MODULE = 'js'
 
@@ -72,7 +68,6 @@ EXPORTS.js += [
     '../public/HashTable.h',
     '../public/HeapAPI.h',
     '../public/Id.h',
-    '../public/IdForward.h',
     '../public/LegacyIntTypes.h',
     '../public/MemoryMetrics.h',
     '../public/OldDebugAPI.h',
@@ -81,6 +76,7 @@ EXPORTS.js += [
     '../public/RequiredDefines.h',
     '../public/RootingAPI.h',
     '../public/StructuredClone.h',
+    '../public/TypeDecls.h',
     '../public/Utility.h',
     '../public/Value.h',
     '../public/Vector.h',

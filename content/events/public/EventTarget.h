@@ -8,19 +8,21 @@
 
 #include "nsIDOMEventTarget.h"
 #include "nsWrapperCache.h"
-#include "nsIDOMEventListener.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/dom/Nullable.h"
 #include "nsIAtom.h"
 
 class nsDOMEvent;
 class nsIDOMWindow;
+class nsIDOMEventListener;
 
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
 
 class EventListener;
 class EventHandlerNonNull;
+template <class T> class Nullable;
 
 // IID for the dom::EventTarget interface
 #define NS_EVENTTARGET_IID \

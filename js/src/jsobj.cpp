@@ -1868,10 +1868,8 @@ struct JSObject::TradeGutsReserved {
 
     ~TradeGutsReserved()
     {
-        if (newaslots)
-            js_free(newaslots);
-        if (newbslots)
-            js_free(newbslots);
+        js_free(newaslots);
+        js_free(newbslots);
     }
 };
 

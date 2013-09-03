@@ -18,8 +18,6 @@
 #include "nsStringGlue.h"
 #include "mozilla/Assertions.h"
 
-struct JSContext;
-
 namespace mozilla {
 
 namespace dom {

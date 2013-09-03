@@ -8,18 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_engine/vie_image_process_impl.h"
+#include "webrtc/video_engine/vie_image_process_impl.h"
 
-#include "system_wrappers/interface/trace.h"
-#include "video_engine/include/vie_errors.h"
-#include "video_engine/vie_capturer.h"
-#include "video_engine/vie_channel.h"
-#include "video_engine/vie_channel_manager.h"
-#include "video_engine/vie_defines.h"
-#include "video_engine/vie_encoder.h"
-#include "video_engine/vie_impl.h"
-#include "video_engine/vie_input_manager.h"
-#include "video_engine/vie_shared_data.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/video_engine/include/vie_errors.h"
+#include "webrtc/video_engine/vie_capturer.h"
+#include "webrtc/video_engine/vie_channel.h"
+#include "webrtc/video_engine/vie_channel_manager.h"
+#include "webrtc/video_engine/vie_defines.h"
+#include "webrtc/video_engine/vie_encoder.h"
+#include "webrtc/video_engine/vie_impl.h"
+#include "webrtc/video_engine/vie_input_manager.h"
+#include "webrtc/video_engine/vie_shared_data.h"
 
 namespace webrtc {
 
@@ -28,7 +28,7 @@ ViEImageProcess* ViEImageProcess::GetInterface(VideoEngine* video_engine) {
   if (!video_engine) {
     return NULL;
   }
-  VideoEngineImpl* vie_impl = reinterpret_cast<VideoEngineImpl*>(video_engine);
+  VideoEngineImpl* vie_impl = static_cast<VideoEngineImpl*>(video_engine);
   ViEImageProcessImpl* vie_image_process_impl = vie_impl;
   // Increase ref count.
   (*vie_image_process_impl)++;
@@ -72,14 +72,6 @@ int ViEImageProcessImpl::RegisterCaptureEffectFilter(
   ViEEffectFilter& capture_filter) {
   WEBRTC_TRACE(kTraceApiCall, kTraceVideo, ViEId(shared_data_->instance_id()),
                "%s(capture_id: %d)", __FUNCTION__, capture_id);
-  if (!shared_data_->Initialized()) {
-    shared_data_->SetLastError(kViENotInitialized);
-    WEBRTC_TRACE(kTraceError, kTraceVideo, ViEId(shared_data_->instance_id()),
-                 "%s - ViE instance %d not initialized", __FUNCTION__,
-                 shared_data_->instance_id());
-    return -1;
-  }
-
   ViEInputManagerScoped is(*(shared_data_->input_manager()));
   ViECapturer* vie_capture = is.Capture(capture_id);
   if (!vie_capture) {

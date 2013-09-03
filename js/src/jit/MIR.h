@@ -480,6 +480,13 @@ class MDefinition : public MNode
     // (only counting MDefinitions, ignoring MResumePoints)
     size_t defUseCount() const;
 
+    // Test whether this MDefinition has exactly one use.
+    bool hasOneUse() const;
+
+    // Test whether this MDefinition has exactly one use.
+    // (only counting MDefinitions, ignoring MResumePoints)
+    bool hasOneDefUse() const;
+
     bool hasUses() const {
         return !uses_.empty();
     }
@@ -3946,11 +3953,9 @@ class MBeta : public MUnaryInstruction
 {
   private:
     const Range *comparison_;
-    MDefinition *val_;
     MBeta(MDefinition *val, const Range *comp)
         : MUnaryInstruction(val),
-          comparison_(comp),
-          val_(val)
+          comparison_(comp)
     {
         setResultType(val->type());
         setResultTypeSet(val->resultTypeSet());
@@ -6674,20 +6679,29 @@ class MSetPropertyCache
   : public MSetPropertyInstruction,
     public SingleObjectPolicy
 {
-    MSetPropertyCache(MDefinition *obj, MDefinition *value, HandlePropertyName name, bool strict)
-      : MSetPropertyInstruction(obj, value, name, strict)
+    bool needsTypeBarrier_;
+
+    MSetPropertyCache(MDefinition *obj, MDefinition *value, HandlePropertyName name, bool strict,
+                      bool typeBarrier)
+      : MSetPropertyInstruction(obj, value, name, strict),
+        needsTypeBarrier_(typeBarrier)
     {
     }
 
   public:
     INSTRUCTION_HEADER(SetPropertyCache)
 
-    static MSetPropertyCache *New(MDefinition *obj, MDefinition *value, HandlePropertyName name, bool strict) {
-        return new MSetPropertyCache(obj, value, name, strict);
+    static MSetPropertyCache *New(MDefinition *obj, MDefinition *value, HandlePropertyName name,
+                                  bool strict, bool typeBarrier) {
+        return new MSetPropertyCache(obj, value, name, strict, typeBarrier);
     }
 
     TypePolicy *typePolicy() {
         return this;
+    }
+
+    bool needsTypeBarrier() const {
+        return needsTypeBarrier_;
     }
 };
 

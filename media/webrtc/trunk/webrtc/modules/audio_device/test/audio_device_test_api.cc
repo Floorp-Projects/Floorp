@@ -92,6 +92,7 @@ class AudioTransportAPI: public AudioTransport {
       const uint32_t totalDelay,
       const int32_t clockSkew,
       const uint32_t currentMicLevel,
+      const bool keyPressed,
       uint32_t& newMicLevel) {
     rec_count_++;
     if (rec_count_ % 100 == 0) {
@@ -196,7 +197,7 @@ class AudioDeviceAPITest: public testing::Test {
     // Create default implementation instance
     EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
                 kId, AudioDeviceModule::kPlatformDefaultAudio)) != NULL);
-#elif defined(WEBRTC_LINUX)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
     EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
                 kId, AudioDeviceModule::kWindowsWaveAudio)) == NULL);
     EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
@@ -1689,7 +1690,7 @@ TEST_F(AudioDeviceAPITest, CPULoad) {
 
 // TODO(kjellander): Fix flakiness causing failures on Windows.
 // TODO(phoglund):  Fix flakiness causing failures on Linux.
-#if !defined(_WIN32) && !defined(WEBRTC_LINUX)
+#if !defined(_WIN32) && !defined(WEBRTC_LINUX) && !defined(WEBRTC_BSD)
 TEST_F(AudioDeviceAPITest, StartAndStopRawOutputFileRecording) {
   // NOTE: this API is better tested in a functional test
   CheckInitialPlayoutStates();
@@ -1758,7 +1759,7 @@ TEST_F(AudioDeviceAPITest, StartAndStopRawInputFileRecording) {
   // - size of raw_input_not_recording.pcm shall be 0
   // - size of raw_input_not_recording.pcm shall be > 0
 }
-#endif  // !WIN32 && !WEBRTC_LINUX
+#endif  // !WIN32 && !WEBRTC_LINUX && !defined(WEBRTC_BSD)
 
 TEST_F(AudioDeviceAPITest, RecordingSampleRate) {
   uint32_t sampleRate(0);

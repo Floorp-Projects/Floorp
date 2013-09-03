@@ -15,7 +15,7 @@
 
   <binding id="local-browser" extends="chrome://global/content/bindings/browser.xml#browser">
     <implementation type="application/javascript"
-      implements="nsIAccessibleProvider, nsIObserver, nsIDOMEventListener, nsIMessageListener">
+      implements="nsIObserver, nsIDOMEventListener, nsIMessageListener">
 
       <constructor>
         <![CDATA[
@@ -782,15 +782,7 @@
   </binding>
 
   <binding id="remote-browser" extends="#local-browser">
-    <implementation type="application/javascript" implements="nsIAccessibleProvider, nsIObserver, nsIDOMEventListener, nsIMessageListener">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            throw "accessibleType: Supports Remote?";
-          ]]>
-        </getter>
-      </property>
-
+    <implementation type="application/javascript" implements="nsIObserver, nsIDOMEventListener, nsIMessageListener">
       <property name="autoscrollEnabled">
         <getter>
           <![CDATA[

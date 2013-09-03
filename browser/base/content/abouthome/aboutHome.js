@@ -153,7 +153,7 @@ const SNIPPETS_OBJECTSTORE_NAME = "snippets";
 let gInitialized = false;
 let gObserver = new MutationObserver(function (mutations) {
   for (let mutation of mutations) {
-    if (mutation.attributeName == "searchEngineURL") {
+    if (mutation.attributeName == "searchEngineName") {
       setupSearchEngine();
       if (!gInitialized) {
         ensureSnippetsMapThen(loadSnippets);
@@ -295,52 +295,17 @@ function ensureSnippetsMapThen(aCallback)
 function onSearchSubmit(aEvent)
 {
   let searchTerms = document.getElementById("searchText").value;
-  let searchURL = document.documentElement.getAttribute("searchEngineURL");
+  let engineName = document.documentElement.getAttribute("searchEngineName");
 
-  if (searchURL && searchTerms.length > 0) {
-    // Send an event that a search was performed. This was originally
-    // added so Firefox Health Report could record that a search from
-    // about:home had occurred.
-    let engineName = document.documentElement.getAttribute("searchEngineName");
-    let event = new CustomEvent("AboutHomeSearchEvent", {detail: engineName});
+  if (engineName && searchTerms.length > 0) {
+    // Send an event that will perform a search and Firefox Health Report will
+    // record that a search from about:home has occurred.
+    let eventData = JSON.stringify({
+      engineName: engineName,
+      searchTerms: searchTerms
+    });
+    let event = new CustomEvent("AboutHomeSearchEvent", {detail: eventData});
     document.dispatchEvent(event);
-
-    const SEARCH_TOKEN = "_searchTerms_";
-    let searchPostData = document.documentElement.getAttribute("searchEnginePostData");
-    if (searchPostData) {
-      // Check if a post form already exists. If so, remove it.
-      const POST_FORM_NAME = "searchFormPost";
-      let form = document.forms[POST_FORM_NAME];
-      if (form) {
-        form.parentNode.removeChild(form);
-      }
-
-      // Create a new post form.
-      form = document.body.appendChild(document.createElement("form"));
-      form.setAttribute("name", POST_FORM_NAME);
-      // Set the URL to submit the form to.
-      form.setAttribute("action", searchURL.replace(SEARCH_TOKEN, searchTerms));
-      form.setAttribute("method", "post");
-
-      // Create new <input type=hidden> elements for search param.
-      searchPostData = searchPostData.split("&");
-      for (let postVar of searchPostData) {
-        let [name, value] = postVar.split("=");
-        if (value == SEARCH_TOKEN) {
-          value = searchTerms;
-        }
-        let input = document.createElement("input");
-        input.setAttribute("type", "hidden");
-        input.setAttribute("name", name);
-        input.setAttribute("value", value);
-        form.appendChild(input);
-      }
-      // Submit the form.
-      form.submit();
-   } else {
-      searchURL = searchURL.replace(SEARCH_TOKEN, encodeURIComponent(searchTerms));
-      window.location.href = searchURL;
-    }
   }
 
   aEvent.preventDefault();

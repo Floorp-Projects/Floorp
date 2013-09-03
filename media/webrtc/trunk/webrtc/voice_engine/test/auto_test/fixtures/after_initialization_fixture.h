@@ -11,9 +11,9 @@
 #ifndef SRC_VOICE_ENGINE_MAIN_TEST_AUTO_TEST_STANDARD_TEST_BASE_AFTER_INIT_H_
 #define SRC_VOICE_ENGINE_MAIN_TEST_AUTO_TEST_STANDARD_TEST_BASE_AFTER_INIT_H_
 
-#include "before_initialization_fixture.h"
-#include "scoped_ptr.h"
 #include "webrtc/common_types.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/voice_engine/test/auto_test/fixtures/before_initialization_fixture.h"
 
 class TestErrorObserver;
 

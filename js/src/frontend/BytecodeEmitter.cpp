@@ -3621,6 +3621,8 @@ EmitSingletonInitialiser(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *
 JS_STATIC_ASSERT(JSOP_NOP_LENGTH == 1);
 JS_STATIC_ASSERT(JSOP_POP_LENGTH == 1);
 
+namespace {
+
 class EmitLevelManager
 {
     BytecodeEmitter *bce;
@@ -3628,6 +3630,8 @@ class EmitLevelManager
     EmitLevelManager(BytecodeEmitter *bce) : bce(bce) { bce->emitLevel++; }
     ~EmitLevelManager() { bce->emitLevel--; }
 };
+
+} /* anonymous namespace */
 
 static bool
 EmitCatch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)

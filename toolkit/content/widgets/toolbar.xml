@@ -93,14 +93,9 @@
     </implementation>
   </binding>
   
-  <binding id="toolbar" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          return Components.interfaces.nsIAccessibleProvider.XULToolbar;
-        </getter>
-      </property>
-      
+  <binding id="toolbar" role="xul:toolbar"
+           extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
+    <implementation>
       <property name="toolbarName"
                 onget="return this.getAttribute('toolbarname');"
                 onset="this.setAttribute('toolbarname', val); return val;"/>
@@ -516,15 +511,9 @@
     </implementation>
   </binding>
 
-  <binding id="menubar" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base" display="xul:menubar">
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULMenubar;
-          ]]>
-        </getter>
-       </property>
+  <binding id="menubar" role="xul:menubar" 
+           extends="chrome://global/content/bindings/toolbar.xml#toolbar-base" display="xul:menubar">
+    <implementation>
        <field name="_active">false</field>
        <field name="_statusbar">null</field>
        <field name="_originalStatusText">null</field>
@@ -567,14 +556,7 @@
     </handlers>
   </binding>
 
-  <binding id="toolbardecoration" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          return Components.interfaces.nsIAccessibleProvider.XULToolbarSeparator;
-        </getter>
-      </property>
-    </implementation>
+  <binding id="toolbardecoration" role="xul:toolbarseparator" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
   </binding>
 
   <binding id="toolbarpaletteitem" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base" display="xul:button">

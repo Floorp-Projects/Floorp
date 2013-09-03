@@ -14,7 +14,7 @@
 #include "jsbytecode.h"
 
 #include "js/CallArgs.h"
-#include "js/IdForward.h"
+#include "js/TypeDecls.h"
 
 class JSAtom;
 class JSFreeOp;

@@ -10,12 +10,12 @@
 
 #include "webrtc/test/channel_transport/udp_socket_manager_posix.h"
 
+#include <stdio.h>
 #include <strings.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <stdio.h>
 
 #include "webrtc/system_wrappers/interface/sleep.h"
 #include "webrtc/system_wrappers/interface/trace.h"

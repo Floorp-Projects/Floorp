@@ -9,11 +9,11 @@
 #ifndef js_Class_h
 #define js_Class_h
 
-#include "jspubtd.h"
 #include "jstypes.h"
 
 #include "js/CallArgs.h"
 #include "js/Id.h"
+#include "js/TypeDecls.h"
 
 /*
  * A JSClass acts as a vtable for JS objects that allows JSAPI clients to
@@ -23,18 +23,6 @@
  */
 
 class JSFreeOp;
-
-namespace JS {
-template <typename T> class Handle;
-template <typename T> class MutableHandle;
-class Value;
-
-typedef JS::Handle<JSObject*> HandleObject;
-typedef JS::Handle<jsid> HandleId;
-typedef JS::Handle<JS::Value> HandleValue;
-typedef JS::MutableHandle<JSObject*> MutableHandleObject;
-typedef JS::MutableHandle<JS::Value> MutableHandleValue;
-}
 
 namespace js {
 

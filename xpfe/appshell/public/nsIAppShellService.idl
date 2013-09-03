@@ -14,7 +14,7 @@ interface nsIAppShell;
 [ptr] native JSContext(JSContext);
 
 %{C++
-struct JSContext;
+#include "js/TypeDecls.h"
 %}
 
 [scriptable, uuid(5c19ab54-67bf-46d0-ac5b-21abd9050c3b)]

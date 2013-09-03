@@ -2859,7 +2859,7 @@ DebuggerScript_getSource(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get source)", args, obj, script);
     Debugger *dbg = Debugger::fromChildJSObject(obj);
 
-    JS::RootedScriptSource source(cx, script->sourceObject());
+    RootedScriptSource source(cx, script->sourceObject());
     RootedObject sourceObject(cx, dbg->wrapSource(cx, source));
     if (!sourceObject)
         return false;
@@ -2978,6 +2978,8 @@ DebuggerScript_getOffsetLine(JSContext *cx, unsigned argc, Value *vp)
     args.rval().setNumber(lineno);
     return true;
 }
+
+namespace {
 
 class BytecodeRangeWithPosition : private BytecodeRange
 {
@@ -3206,6 +3208,8 @@ class FlowGraphSummary {
 
     Vector<Entry> entries_;
 };
+
+} /* anonymous namespace */
 
 static bool
 DebuggerScript_getAllOffsets(JSContext *cx, unsigned argc, Value *vp)
@@ -3518,6 +3522,39 @@ DebuggerScript_clearAllBreakpoints(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static bool
+DebuggerScript_isInCatchScope(JSContext *cx, unsigned argc, Value* vp)
+{
+    REQUIRE_ARGC("Debugger.Script.isInCatchScope", 1);
+    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "isInCatchScope", args, obj, script);
+
+    size_t offset;
+    if (!ScriptOffset(cx, script, args[0], &offset))
+        return false;
+
+    /*
+     * Try note ranges are relative to the mainOffset of the script, so adjust
+     * offset accordingly.
+     */
+    offset -= script->mainOffset;
+
+    args.rval().setBoolean(false);
+    if (script->hasTrynotes()) {
+        JSTryNote* tnBegin = script->trynotes()->vector;
+        JSTryNote* tnEnd = tnBegin + script->trynotes()->length;
+        while (tnBegin != tnEnd) {
+            if (offset - tnBegin->start < tnBegin->length &&
+                tnBegin->kind == JSTRY_CATCH)
+            {
+                args.rval().setBoolean(true);
+                break;
+            }
+            ++tnBegin;
+        }
+    }
+    return true;
+}
+
+static bool
 DebuggerScript_construct(JSContext *cx, unsigned argc, Value *vp)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR, "Debugger.Script");
@@ -3546,6 +3583,7 @@ static const JSFunctionSpec DebuggerScript_methods[] = {
     JS_FN("getBreakpoints", DebuggerScript_getBreakpoints, 1, 0),
     JS_FN("clearBreakpoint", DebuggerScript_clearBreakpoint, 1, 0),
     JS_FN("clearAllBreakpoints", DebuggerScript_clearAllBreakpoints, 0, 0),
+    JS_FN("isInCatchScope", DebuggerScript_isInCatchScope, 1, 0),
     JS_FS_END
 };
 
@@ -3586,7 +3624,7 @@ Class DebuggerSource_class = {
 };
 
 JSObject *
-Debugger::newDebuggerSource(JSContext *cx, JS::HandleScriptSource source)
+Debugger::newDebuggerSource(JSContext *cx, HandleScriptSource source)
 {
     assertSameCompartment(cx, object.get());
 
@@ -3602,7 +3640,7 @@ Debugger::newDebuggerSource(JSContext *cx, JS::HandleScriptSource source)
 }
 
 JSObject *
-Debugger::wrapSource(JSContext *cx, JS::HandleScriptSource source)
+Debugger::wrapSource(JSContext *cx, HandleScriptSource source)
 {
     assertSameCompartment(cx, object.get());
     JS_ASSERT(cx->compartment() != source->compartment());
@@ -3666,7 +3704,7 @@ DebuggerSource_checkThis(JSContext *cx, const CallArgs &args, const char *fnname
     RootedObject obj(cx, DebuggerSource_checkThis(cx, args, fnname));               \
     if (!obj)                                                                       \
         return false;                                                               \
-    JS::RootedScriptSource sourceObject(cx, GetSourceReferent(obj));                \
+    RootedScriptSource sourceObject(cx, GetSourceReferent(obj));                    \
     if (!sourceObject)                                                              \
         return false;
 

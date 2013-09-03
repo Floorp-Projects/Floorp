@@ -11,8 +11,8 @@
 #ifndef WEBRTC_VOICE_ENGINE_CHANNEL_MANAGER_H
 #define WEBRTC_VOICE_ENGINE_CHANNEL_MANAGER_H
 
-#include "channel_manager_base.h"
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
+#include "webrtc/voice_engine/channel_manager_base.h"
 
 namespace webrtc
 {
@@ -30,7 +30,7 @@ class ChannelManager: private ChannelManagerBase
 public:
     bool CreateChannel(int32_t& channelId);
 
-    int32_t DestroyChannel(const int32_t channelId);
+    int32_t DestroyChannel(int32_t channelId);
 
     int32_t MaxNumOfChannels() const;
 
@@ -39,7 +39,7 @@ public:
     void GetChannelIds(int32_t* channelsArray,
                        int32_t& numOfChannels) const;
 
-    ChannelManager(const uint32_t instanceId);
+    ChannelManager(uint32_t instanceId);
 
     ~ChannelManager();
 
@@ -48,7 +48,7 @@ private:
 
     ChannelManager& operator=(const ChannelManager&);
 
-    Channel* GetChannel(const int32_t channelId) const;
+    Channel* GetChannel(int32_t channelId) const;
 
     void GetChannels(MapWrapper& channels) const;
 

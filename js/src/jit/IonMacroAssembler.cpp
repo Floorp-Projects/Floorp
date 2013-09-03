@@ -125,6 +125,13 @@ template void MacroAssembler::guardTypeSet(const Address &address, const types::
 template void MacroAssembler::guardTypeSet(const ValueOperand &value, const types::StackTypeSet *types,
                                            Register scratch, Label *matched, Label *miss);
 
+template void MacroAssembler::guardTypeSet(const Address &address, const types::HeapTypeSet *types,
+                                           Register scratch, Label *matched, Label *miss);
+template void MacroAssembler::guardTypeSet(const ValueOperand &value, const types::HeapTypeSet *types,
+                                           Register scratch, Label *matched, Label *miss);
+template void MacroAssembler::guardTypeSet(const TypedOrValueRegister &reg, const types::HeapTypeSet *types,
+                                           Register scratch, Label *matched, Label *miss);
+
 template void MacroAssembler::guardTypeSet(const Address &address, const types::TypeSet *types,
                                            Register scratch, Label *matched, Label *miss);
 template void MacroAssembler::guardTypeSet(const ValueOperand &value, const types::TypeSet *types,
@@ -1005,7 +1012,8 @@ MacroAssembler::loadBaselineOrIonNoArgCheck(Register script, Register dest, Exec
 void
 MacroAssembler::loadBaselineFramePtr(Register framePtr, Register dest)
 {
-    movePtr(framePtr, dest);
+    if (framePtr != dest)
+        movePtr(framePtr, dest);
     subPtr(Imm32(BaselineFrame::Size()), dest);
 }
 

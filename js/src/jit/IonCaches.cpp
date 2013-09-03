@@ -854,8 +854,6 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
     // TODO: ensure stack is aligned?
     DebugOnly<uint32_t> initialStack = masm.framePushed();
 
-    attacher.pushStubCodePointer(masm);
-
     if (callNative) {
         JS_ASSERT(shape->hasGetterValue() && shape->getterValue().isObject() &&
                   shape->getterValue().toObject().is<JSFunction>());
@@ -880,9 +878,13 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
         masm.move32(Imm32(0), argUintNReg);
         masm.movePtr(StackPointer, argVpReg);
 
+        // Push marking data for later use.
+        masm.Push(argUintNReg);
+        attacher.pushStubCodePointer(masm);
+
         if (!masm.buildOOLFakeExitFrame(returnAddr))
             return false;
-        masm.enterFakeExitFrame(ION_FRAME_OOL_NATIVE_GETTER);
+        masm.enterFakeExitFrame(ION_FRAME_OOL_NATIVE);
 
         // Construct and execute call.
         masm.setupUnalignedABICall(3, scratchReg);
@@ -896,7 +898,7 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
 
         // Load the outparam vp[0] into output register(s).
         masm.loadValue(
-            Address(StackPointer, IonOOLNativeGetterExitFrameLayout::offsetOfResult()),
+            Address(StackPointer, IonOOLNativeExitFrameLayout::offsetOfResult()),
             JSReturnOperand);
     } else {
         Register argObjReg       = argUintNReg;
@@ -904,6 +906,10 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
 
         PropertyOp target = shape->getterOp();
         JS_ASSERT(target);
+
+        // Push stubCode for marking.
+        attacher.pushStubCodePointer(masm);
+
         // JSPropertyOp: bool fn(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 
         // Push args on stack first so we can take pointers to make handles.
@@ -952,7 +958,7 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
 
     // Move the StackPointer back to its original location, unwinding the native exit frame.
     if (callNative)
-        masm.adjustStack(IonOOLNativeGetterExitFrameLayout::Size());
+        masm.adjustStack(IonOOLNativeExitFrameLayout::Size(0));
     else
         masm.adjustStack(IonOOLPropertyOpExitFrameLayout::Size());
     JS_ASSERT(masm.framePushed() == initialStack);
@@ -1319,7 +1325,7 @@ EmitCallProxyGet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
 
     if (!masm.buildOOLFakeExitFrame(returnAddr))
         return false;
-    masm.enterFakeExitFrame(ION_FRAME_OOL_PROXY_GET);
+    masm.enterFakeExitFrame(ION_FRAME_OOL_PROXY);
 
     // Make the call.
     masm.setupUnalignedABICall(5, scratch);
@@ -1335,7 +1341,7 @@ EmitCallProxyGet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
 
     // Load the outparam vp[0] into output register(s).
     masm.loadValue(
-        Address(StackPointer, IonOOLProxyGetExitFrameLayout::offsetOfResult()),
+        Address(StackPointer, IonOOLProxyExitFrameLayout::offsetOfResult()),
         JSReturnOperand);
 
     masm.storeCallResultValue(output);
@@ -1344,7 +1350,7 @@ EmitCallProxyGet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
     // is no need for leaveFakeExitFrame.
 
     // Move the StackPointer back to its original location, unwinding the exit frame.
-    masm.adjustStack(IonOOLProxyGetExitFrameLayout::Size());
+    masm.adjustStack(IonOOLProxyExitFrameLayout::Size());
     JS_ASSERT(masm.framePushed() == initialStack);
 
     // restoreLive()
@@ -1521,6 +1527,21 @@ GetPropertyIC::tryAttachProxy(JSContext *cx, IonScript *ion, HandleObject obj,
     return tryAttachGenericProxy(cx, ion, obj, name, returnAddr, emitted);
 }
 
+static void
+GenerateProxyClassGuards(MacroAssembler &masm, Register object, Register scratchReg,
+                         Label *failures, Label *success)
+{
+    // Ensure that the incoming object has one of the magic class pointers, i.e,
+    // that it is one of an ObjectProxy, FunctionProxy, or OuterWindowProxy.
+    // This is equivalent to obj->is<ProxyObject>().
+    masm.branchTestObjClass(Assembler::Equal, object, scratchReg,
+                            ObjectProxyClassPtr, success);
+    masm.branchTestObjClass(Assembler::Equal, object, scratchReg,
+                            FunctionProxyClassPtr, success);
+    masm.branchTestObjClass(Assembler::NotEqual, object, scratchReg,
+                            OuterWindowProxyClassPtr, failures);
+}
+
 bool
 GetPropertyIC::tryAttachGenericProxy(JSContext *cx, IonScript *ion, HandleObject obj,
                                      HandlePropertyName name, void *returnAddr,
@@ -1536,7 +1557,6 @@ GetPropertyIC::tryAttachGenericProxy(JSContext *cx, IonScript *ion, HandleObject
     *emitted = true;
 
     Label failures;
-    Label classPass;
     MacroAssembler masm(cx);
     RepatchStubAppender attacher(*this);
 
@@ -1544,25 +1564,14 @@ GetPropertyIC::tryAttachGenericProxy(JSContext *cx, IonScript *ion, HandleObject
 
     masm.setFramePushed(ion->frameSize());
 
-    // The branching around here is a little kludgy. It seems mostly unavoidable.
+    Label proxySuccess;
+    GenerateProxyClassGuards(masm, object(), scratchReg, &failures, &proxySuccess);
+    masm.bind(&proxySuccess);
 
-    // Ensure that the incoming object has one of the magic class pointers, i.e,
-    // that it is one of an ObjectProxy, FunctionProxy, or OuterWindowProxy.
-    masm.branchTestObjClass(Assembler::Equal, object(), scratchReg,
-                            ObjectProxyClassPtr, &classPass);
-    masm.branchTestObjClass(Assembler::Equal, object(), scratchReg,
-                            FunctionProxyClassPtr, &classPass);
-    masm.branchTestObjClass(Assembler::NotEqual, object(), scratchReg,
-                            OuterWindowProxyClassPtr, &failures);
-
-    masm.bind(&classPass);
     // Ensure that the incoming object is not a DOM proxy, so that we can get to
     // the specialized stubs
-    Address handlerAddr(object(), ProxyObject::offsetOfHandler());
-    masm.loadPrivate(handlerAddr, scratchReg);
-    Address familyAddr(scratchReg, BaseProxyHandler::offsetOfFamily());
-    masm.branchPtr(Assembler::Equal, familyAddr, ImmWord(GetDOMProxyHandlerFamily()),
-                   &failures);
+    masm.branchTestProxyHandlerFamily(Assembler::Equal, object(), scratchReg,
+                                      GetDOMProxyHandlerFamily(), &failures);
 
     if (!EmitCallProxyGet(cx, masm, attacher, name, liveRegs_, object(), output(), returnAddr))
         return false;
@@ -1798,8 +1807,7 @@ void
 ParallelIonCache::destroy()
 {
     DispatchIonCache::destroy();
-    if (stubbedShapes_)
-        js_delete(stubbedShapes_);
+    js_delete(stubbedShapes_);
 }
 
 void
@@ -1936,12 +1944,53 @@ bool
 SetPropertyIC::attachNativeExisting(JSContext *cx, IonScript *ion,
                                     HandleObject obj, HandleShape shape)
 {
+    JS_ASSERT(obj->isNative());
+
     MacroAssembler masm(cx);
     RepatchStubAppender attacher(*this);
 
-    attacher.branchNextStub(masm, Assembler::NotEqual,
-                            Address(object(), JSObject::offsetOfShape()),
-                            ImmGCPtr(obj->lastProperty()));
+    Label failures;
+    masm.branchPtr(Assembler::NotEqual,
+                   Address(object(), JSObject::offsetOfShape()),
+                   ImmGCPtr(obj->lastProperty()), &failures);
+
+    // Guard that the incoming value is in the type set for the property
+    // if a type barrier is required.
+    if (needsTypeBarrier() && !value().constant()) {
+        // We can't do anything that would change the HeapTypeSet, so
+        // just guard that it's already there.
+
+        // Obtain and guard on the TypeObject of the object.
+        types::TypeObject *type = obj->getType(cx);
+        masm.branchPtr(Assembler::NotEqual,
+                       Address(object(), JSObject::offsetOfType()),
+                       ImmGCPtr(type), &failures);
+
+        if (!type->unknownProperties()) {
+            TypedOrValueRegister valReg = value().reg();
+            RootedId id(cx, types::IdToTypeId(AtomToId(name())));
+            types::HeapTypeSet *propTypes = type->maybeGetProperty(cx, id);
+            JS_ASSERT(propTypes);
+
+            if (!propTypes->unknown()) {
+                Label barrierSuccess;
+                Label barrierFailure;
+
+                Register scratchReg = object();
+                masm.push(scratchReg);
+
+                masm.guardTypeSet(valReg, propTypes, scratchReg,
+                                  &barrierSuccess, &barrierFailure);
+
+                masm.bind(&barrierFailure);
+                masm.pop(object());
+                masm.jump(&failures);
+
+                masm.bind(&barrierSuccess);
+                masm.pop(object());
+            }
+        }
+    }
 
     if (obj->isFixedSlot(shape->slot())) {
         Address addr(object(), JSObject::getFixedSlotOffset(shape->slot()));
@@ -1964,7 +2013,475 @@ SetPropertyIC::attachNativeExisting(JSContext *cx, IonScript *ion,
 
     attacher.jumpRejoin(masm);
 
+    masm.bind(&failures);
+    attacher.jumpNextStub(masm);
+
     return linkAndAttachStub(cx, masm, attacher, ion, "setting");
+}
+
+static bool
+IsCacheableSetPropCallNative(HandleObject obj, HandleObject holder, HandleShape shape)
+{
+    if (!obj->isNative())
+        return false;
+
+    if (!shape || !IsCacheableProtoChain(obj, holder))
+        return false;
+
+    return shape->hasSetterValue() && shape->setterObject()->is<JSFunction>() &&
+           shape->setterObject()->as<JSFunction>().isNative();
+}
+
+static bool
+IsCacheableSetPropCallPropertyOp(HandleObject obj, HandleObject holder,
+                                 HandleShape shape)
+{
+    if (!obj->isNative())
+        return false;
+
+    if (!shape)
+        return false;
+
+    if (!IsCacheableProtoChain(obj, holder))
+        return false;
+
+    if (shape->hasSlot())
+        return false;
+
+    if (shape->hasDefaultSetter())
+        return false;
+
+    if (shape->hasSetterValue())
+        return false;
+
+    return true;
+}
+
+static bool
+EmitCallProxySet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
+                 HandleId propId, RegisterSet liveRegs, Register object,
+                 ConstantOrRegister value, void *returnAddr, bool strict)
+{
+    // saveLive()
+    masm.PushRegsInMask(liveRegs);
+
+    // Remaining registers should be free, but we need to use |object| still
+    // so leave it alone.
+    RegisterSet regSet(RegisterSet::All());
+    regSet.take(AnyRegister(object));
+
+    // Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
+    //            bool strict, MutableHandleValue vp)
+    Register argJSContextReg = regSet.takeGeneral();
+    Register argProxyReg     = regSet.takeGeneral();
+    Register argIdReg        = regSet.takeGeneral();
+    Register argVpReg        = regSet.takeGeneral();
+    Register argStrictReg    = regSet.takeGeneral();
+
+    Register scratch         = regSet.takeGeneral();
+
+    DebugOnly<uint32_t> initialStack = masm.framePushed();
+
+    // Push stubCode for marking.
+    attacher.pushStubCodePointer(masm);
+
+    // Push args on stack first so we can take pointers to make handles.
+    masm.Push(value);
+    masm.movePtr(StackPointer, argVpReg);
+
+    masm.Push(propId, scratch);
+    masm.movePtr(StackPointer, argIdReg);
+
+    // Pushing object and receiver.  Both are the same, so Handle to one is equivalent to
+    // handle to other.
+    masm.Push(object);
+    masm.Push(object);
+    masm.movePtr(StackPointer, argProxyReg);
+
+    masm.loadJSContext(argJSContextReg);
+    masm.move32(Imm32(strict? 1 : 0), argStrictReg);
+
+    if (!masm.buildOOLFakeExitFrame(returnAddr))
+        return false;
+    masm.enterFakeExitFrame(ION_FRAME_OOL_PROXY);
+
+    // Make the call.
+    masm.setupUnalignedABICall(6, scratch);
+    masm.passABIArg(argJSContextReg);
+    masm.passABIArg(argProxyReg);
+    masm.passABIArg(argProxyReg);
+    masm.passABIArg(argIdReg);
+    masm.passABIArg(argStrictReg);
+    masm.passABIArg(argVpReg);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, Proxy::set));
+
+    // Test for failure.
+    masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
+
+    // The next instruction is removing the footer of the exit frame, so there
+    // is no need for leaveFakeExitFrame.
+
+    // Move the StackPointer back to its original location, unwinding the exit frame.
+    masm.adjustStack(IonOOLProxyExitFrameLayout::Size());
+    JS_ASSERT(masm.framePushed() == initialStack);
+
+    // restoreLive()
+    masm.PopRegsInMask(liveRegs);
+
+    return true;
+}
+
+bool
+SetPropertyIC::attachGenericProxy(JSContext *cx, IonScript *ion, void *returnAddr)
+{
+    JS_ASSERT(!hasGenericProxyStub());
+
+    MacroAssembler masm(cx);
+    RepatchStubAppender attacher(*this);
+
+    masm.setFramePushed(ion->frameSize());
+
+    Label failures;
+    {
+        Label proxyFailures;
+        Label proxySuccess;
+
+        RegisterSet regSet(RegisterSet::All());
+        regSet.take(AnyRegister(object()));
+        if (!value().constant())
+            regSet.maybeTake(value().reg());
+
+        Register scratch = regSet.takeGeneral();
+        masm.push(scratch);
+
+        GenerateProxyClassGuards(masm, object(), scratch, &proxyFailures, &proxySuccess);
+
+        // Remove the DOM proxies. They'll take care of themselves so this stub doesn't
+        // catch too much.
+        masm.branchTestProxyHandlerFamily(Assembler::Equal, object(), scratch,
+                                          GetDOMProxyHandlerFamily(), &proxyFailures);
+
+        masm.bind(&proxyFailures);
+        masm.pop(scratch);
+        // Unify the point of failure to allow for later DOM proxy handling.
+        masm.jump(&failures);
+
+        masm.bind(&proxySuccess);
+        masm.pop(scratch);
+    }
+
+    RootedId propId(cx, AtomToId(name()));
+    if (!EmitCallProxySet(cx, masm, attacher, propId, liveRegs_, object(), value(),
+                          returnAddr, strict()))
+    {
+        return false;
+    }
+
+    attacher.jumpRejoin(masm);
+
+    masm.bind(&failures);
+    attacher.jumpNextStub(masm);
+
+    JS_ASSERT(!hasGenericProxyStub_);
+    hasGenericProxyStub_ = true;
+
+    return linkAndAttachStub(cx, masm, attacher, ion, "generic proxy set");
+}
+
+bool
+SetPropertyIC::attachDOMProxyShadowed(JSContext *cx, IonScript *ion, HandleObject obj,
+                                        void *returnAddr)
+{
+    JS_ASSERT(IsCacheableDOMProxy(obj));
+
+    Label failures;
+    MacroAssembler masm(cx);
+    RepatchStubAppender attacher(*this);
+
+    masm.setFramePushed(ion->frameSize());
+
+    // Guard on the shape of the object.
+    masm.branchPtr(Assembler::NotEqual,
+                   Address(object(), JSObject::offsetOfShape()),
+                   ImmGCPtr(obj->lastProperty()), &failures);
+
+    // Make sure object is a DOMProxy
+    GenerateDOMProxyChecks(cx, masm, obj, name(), object(), &failures,
+                           /*skipExpandoCheck=*/true);
+
+    RootedId propId(cx, AtomToId(name()));
+    if (!EmitCallProxySet(cx, masm, attacher, propId, liveRegs_, object(),
+                          value(), returnAddr, strict()))
+    {
+        return false;
+    }
+
+    // Success.
+    attacher.jumpRejoin(masm);
+
+    // Failure.
+    masm.bind(&failures);
+    attacher.jumpNextStub(masm);
+
+    return linkAndAttachStub(cx, masm, attacher, ion, "DOM proxy shadowed set");
+}
+
+static bool
+GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
+                   IonCache::StubAttacher &attacher, HandleObject obj,
+                   HandleObject holder, HandleShape shape, bool strict, Register object,
+                   ConstantOrRegister value, Label *failure, RegisterSet liveRegs,
+                   void *returnAddr)
+{
+    // Generate prototype guards if needed.
+    // Take a scratch register for use, save on stack.
+    {
+        RegisterSet regSet(RegisterSet::All());
+        regSet.take(AnyRegister(object));
+        if (!value.constant())
+            regSet.maybeTake(value.reg());
+        Register scratchReg = regSet.takeGeneral();
+        masm.push(scratchReg);
+
+        Label protoFailure;
+        Label protoSuccess;
+
+        // Generate prototype/shape guards.
+        if (obj != holder)
+            GeneratePrototypeGuards(cx, ion, masm, obj, holder, object, scratchReg, &protoFailure);
+
+        masm.moveNurseryPtr(ImmMaybeNurseryPtr(holder), scratchReg);
+        masm.branchPtr(Assembler::NotEqual,
+                       Address(scratchReg, JSObject::offsetOfShape()),
+                       ImmGCPtr(holder->lastProperty()),
+                       &protoFailure);
+
+        masm.jump(&protoSuccess);
+
+        masm.bind(&protoFailure);
+        masm.pop(scratchReg);
+        masm.jump(failure);
+
+        masm.bind(&protoSuccess);
+        masm.pop(scratchReg);
+    }
+
+    // Good to go for invoking setter.
+
+    // saveLive()
+    masm.PushRegsInMask(liveRegs);
+
+    // Remaining registers should basically be free, but we need to use |object| still
+    // so leave it alone.
+    RegisterSet regSet(RegisterSet::All());
+    regSet.take(AnyRegister(object));
+
+    // This is a slower stub path, and we're going to be doing a call anyway.  Don't need
+    // to try so hard to not use the stack.  Scratch regs are just taken from the register
+    // set not including the input, current value saved on the stack, and restored when
+    // we're done with it.
+    //
+    // Be very careful not to use any of these before value is pushed, since they
+    // might shadow.
+    Register scratchReg     = regSet.takeGeneral();
+    Register argJSContextReg = regSet.takeGeneral();
+    Register argVpReg        = regSet.takeGeneral();
+
+    bool callNative = IsCacheableSetPropCallNative(obj, holder, shape);
+    JS_ASSERT_IF(!callNative, IsCacheableSetPropCallPropertyOp(obj, holder, shape));
+
+    // Ensure stack is aligned.
+    DebugOnly<uint32_t> initialStack = masm.framePushed();
+
+    if (callNative) {
+        JS_ASSERT(shape->hasSetterValue() && shape->setterObject() &&
+                  shape->setterObject()->is<JSFunction>());
+        JSFunction *target = &shape->setterObject()->as<JSFunction>();
+
+        JS_ASSERT(target->isNative());
+
+        Register argUintNReg = regSet.takeGeneral();
+
+        // Set up the call:
+        //  bool (*)(JSContext *, unsigned, Value *vp)
+        // vp[0] is callee/outparam
+        // vp[1] is |this|
+        // vp[2] is the value
+
+        // Build vp and move the base into argVpReg.
+        masm.Push(value);
+        masm.Push(TypedOrValueRegister(MIRType_Object, AnyRegister(object)));
+        masm.Push(ObjectValue(*target));
+        masm.movePtr(StackPointer, argVpReg);
+
+        // Preload other regs
+        masm.loadJSContext(argJSContextReg);
+        masm.move32(Imm32(1), argUintNReg);
+
+        // Push data for GC marking
+        masm.Push(argUintNReg);
+        attacher.pushStubCodePointer(masm);
+
+        if (!masm.buildOOLFakeExitFrame(returnAddr))
+            return false;
+        masm.enterFakeExitFrame(ION_FRAME_OOL_NATIVE);
+
+        // Make the call
+        masm.setupUnalignedABICall(3, scratchReg);
+        masm.passABIArg(argJSContextReg);
+        masm.passABIArg(argUintNReg);
+        masm.passABIArg(argVpReg);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target->native()));
+    } else {
+        Register argObjReg       = regSet.takeGeneral();
+        Register argIdReg        = regSet.takeGeneral();
+        Register argStrictReg    = regSet.takeGeneral();
+
+        attacher.pushStubCodePointer(masm);
+
+        StrictPropertyOp target = shape->setterOp();
+        JS_ASSERT(target);
+        // JSStrictPropertyOp: bool fn(JSContext *cx, HandleObject obj,
+        //                               HandleId id, bool strict, MutableHandleValue vp);
+
+        // Push args on stack first so we can take pointers to make handles.
+        if (value.constant())
+            masm.Push(value.value());
+        else
+            masm.Push(value.reg());
+        masm.movePtr(StackPointer, argVpReg);
+
+        masm.move32(Imm32(strict ? 1 : 0), argStrictReg);
+
+        // push canonical jsid from shape instead of propertyname.
+        RootedId propId(cx);
+        if (!shape->getUserId(cx, &propId))
+            return false;
+        masm.Push(propId, argIdReg);
+        masm.movePtr(StackPointer, argIdReg);
+
+        masm.Push(object);
+        masm.movePtr(StackPointer, argObjReg);
+
+        masm.loadJSContext(argJSContextReg);
+
+        if (!masm.buildOOLFakeExitFrame(returnAddr))
+            return false;
+        masm.enterFakeExitFrame(ION_FRAME_OOL_PROPERTY_OP);
+
+        // Make the call.
+        masm.setupUnalignedABICall(5, scratchReg);
+        masm.passABIArg(argJSContextReg);
+        masm.passABIArg(argObjReg);
+        masm.passABIArg(argIdReg);
+        masm.passABIArg(argStrictReg);
+        masm.passABIArg(argVpReg);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target));
+    }
+
+    // Test for failure.
+    masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
+
+    // The next instruction is removing the footer of the exit frame, so there
+    // is no need for leaveFakeExitFrame.
+
+    // Move the StackPointer back to its original location, unwinding the exit frame.
+    if (callNative)
+        masm.adjustStack(IonOOLNativeExitFrameLayout::Size(1));
+    else
+        masm.adjustStack(IonOOLPropertyOpExitFrameLayout::Size());
+    JS_ASSERT(masm.framePushed() == initialStack);
+
+    // restoreLive()
+    masm.PopRegsInMask(liveRegs);
+
+    return true;
+}
+
+bool
+IsCacheableDOMProxyUnshadowedSetterCall(JSContext *cx, HandleObject obj, HandlePropertyName name,
+                                        MutableHandleObject holder, MutableHandleShape shape,
+                                        bool *isSetter)
+{
+    JS_ASSERT(IsCacheableDOMProxy(obj));
+
+    *isSetter = false;
+
+    RootedObject checkObj(cx, obj->getTaggedProto().toObjectOrNull());
+    if (!checkObj)
+        return true;
+
+    if (!JSObject::lookupProperty(cx, obj, name, holder, shape))
+        return false;
+
+    if (!holder)
+        return true;
+
+    if (!IsCacheableSetPropCallNative(checkObj, holder, shape) &&
+        !IsCacheableSetPropCallPropertyOp(checkObj, holder, shape))
+    {
+        return true;
+    }
+
+    *isSetter = true;
+    return true;
+}
+
+bool
+SetPropertyIC::attachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, HandleObject obj,
+                                        void *returnAddr)
+{
+    JS_ASSERT(IsCacheableDOMProxy(obj));
+
+    Label failures;
+    MacroAssembler masm(cx);
+    RepatchStubAppender attacher(*this);
+
+    masm.setFramePushed(ion->frameSize());
+
+    // Guard on the shape of the object.
+    masm.branchPtr(Assembler::NotEqual,
+                   Address(object(), JSObject::offsetOfShape()),
+                   ImmGCPtr(obj->lastProperty()), &failures);
+
+    // Make sure object is a DOMProxy
+    GenerateDOMProxyChecks(cx, masm, obj, name(), object(), &failures);
+
+    RootedPropertyName propName(cx, name());
+    RootedObject holder(cx);
+    RootedShape shape(cx);
+    bool isSetter;
+    if (!IsCacheableDOMProxyUnshadowedSetterCall(cx, obj, propName, &holder,
+                                                 &shape, &isSetter))
+    {
+        return false;
+    }
+
+    if (isSetter) {
+        if (!GenerateCallSetter(cx, ion, masm, attacher, obj, holder, shape, strict(),
+                                object(), value(), &failures, liveRegs_, returnAddr))
+        {
+            return false;
+        }
+    } else {
+        // Either there was no proto, or the property wasn't appropriately found on it.
+        // Drop back to just a call to Proxy::set().
+        RootedId propId(cx, AtomToId(name()));
+        if (!EmitCallProxySet(cx, masm, attacher, propId, liveRegs_, object(),
+                            value(), returnAddr, strict()))
+        {
+            return false;
+        }
+    }
+
+    // Success.
+    attacher.jumpRejoin(masm);
+
+    // Failure.
+    masm.bind(&failures);
+    attacher.jumpNextStub(masm);
+
+    return linkAndAttachStub(cx, masm, attacher, ion, "DOM proxy unshadowed set");
 }
 
 bool
@@ -1972,6 +2489,8 @@ SetPropertyIC::attachSetterCall(JSContext *cx, IonScript *ion,
                                 HandleObject obj, HandleObject holder, HandleShape shape,
                                 void *returnAddr)
 {
+    JS_ASSERT(obj->isNative());
+
     MacroAssembler masm(cx);
     RepatchStubAppender attacher(*this);
 
@@ -1985,116 +2504,11 @@ SetPropertyIC::attachSetterCall(JSContext *cx, IonScript *ion,
                    ImmGCPtr(obj->lastProperty()),
                    &failure);
 
-    // Generate prototype guards if needed.
-    // Take a scratch register for use, save on stack.
+    if (!GenerateCallSetter(cx, ion, masm, attacher, obj, holder, shape, strict(),
+                            object(), value(), &failure, liveRegs_, returnAddr))
     {
-        RegisterSet regSet(RegisterSet::All());
-        regSet.take(AnyRegister(object()));
-        if (!value().constant())
-            regSet.maybeTake(value().reg());
-        Register scratchReg = regSet.takeGeneral();
-        masm.push(scratchReg);
-
-        Label protoFailure;
-        Label protoSuccess;
-
-        // Generate prototype/shape guards.
-        if (obj != holder)
-            GeneratePrototypeGuards(cx, ion, masm, obj, holder, object(), scratchReg, &protoFailure);
-
-        masm.moveNurseryPtr(ImmMaybeNurseryPtr(holder), scratchReg);
-        masm.branchPtr(Assembler::NotEqual,
-                       Address(scratchReg, JSObject::offsetOfShape()),
-                       ImmGCPtr(holder->lastProperty()),
-                       &protoFailure);
-
-        masm.jump(&protoSuccess);
-
-        masm.bind(&protoFailure);
-        masm.pop(scratchReg);
-        masm.jump(&failure);
-
-        masm.bind(&protoSuccess);
-        masm.pop(scratchReg);
+        return false;
     }
-
-    // Good to go for invoking setter.
-
-    // saveLive()
-    masm.PushRegsInMask(liveRegs_);
-
-    // Remaining registers should basically be free, but we need to use |object| still
-    // so leave it alone.
-    RegisterSet regSet(RegisterSet::All());
-    regSet.take(AnyRegister(object()));
-
-    // This is a slower stub path, and we're going to be doing a call anyway.  Don't need
-    // to try so hard to not use the stack.  Scratch regs are just taken from the register
-    // set not including the input, current value saved on the stack, and restored when
-    // we're done with it.
-    Register scratchReg     = regSet.takeGeneral();
-    Register argJSContextReg = regSet.takeGeneral();
-    Register argObjReg       = regSet.takeGeneral();
-    Register argIdReg        = regSet.takeGeneral();
-    Register argStrictReg    = regSet.takeGeneral();
-    Register argVpReg        = regSet.takeGeneral();
-
-    // Ensure stack is aligned.
-    DebugOnly<uint32_t> initialStack = masm.framePushed();
-
-    attacher.pushStubCodePointer(masm);
-
-    StrictPropertyOp target = shape->setterOp();
-    JS_ASSERT(target);
-    // JSStrictPropertyOp: bool fn(JSContext *cx, HandleObject obj,
-    //                               HandleId id, bool strict, MutableHandleValue vp);
-
-    // Push args on stack first so we can take pointers to make handles.
-    if (value().constant())
-        masm.Push(value().value());
-    else
-        masm.Push(value().reg());
-    masm.movePtr(StackPointer, argVpReg);
-
-    masm.move32(Imm32(strict() ? 1 : 0), argStrictReg);
-
-    // push canonical jsid from shape instead of propertyname.
-    RootedId propId(cx);
-    if (!shape->getUserId(cx, &propId))
-        return false;
-    masm.Push(propId, argIdReg);
-    masm.movePtr(StackPointer, argIdReg);
-
-    masm.Push(object());
-    masm.movePtr(StackPointer, argObjReg);
-
-    masm.loadJSContext(argJSContextReg);
-
-    if (!masm.buildOOLFakeExitFrame(returnAddr))
-        return false;
-    masm.enterFakeExitFrame(ION_FRAME_OOL_PROPERTY_OP);
-
-    // Make the call.
-    masm.setupUnalignedABICall(5, scratchReg);
-    masm.passABIArg(argJSContextReg);
-    masm.passABIArg(argObjReg);
-    masm.passABIArg(argIdReg);
-    masm.passABIArg(argStrictReg);
-    masm.passABIArg(argVpReg);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target));
-
-    // Test for failure.
-    masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
-
-    // The next instruction is removing the footer of the exit frame, so there
-    // is no need for leaveFakeExitFrame.
-
-    // Move the StackPointer back to its original location, unwinding the exit frame.
-    masm.adjustStack(IonOOLPropertyOpExitFrameLayout::Size());
-    JS_ASSERT(masm.framePushed() == initialStack);
-
-    // restoreLive()
-    masm.PopRegsInMask(liveRegs_);
 
     // Rejoin jump.
     attacher.jumpRejoin(masm);
@@ -2103,7 +2517,7 @@ SetPropertyIC::attachSetterCall(JSContext *cx, IonScript *ion,
     masm.bind(&failure);
     attacher.jumpNextStub(masm);
 
-    return linkAndAttachStub(cx, masm, attacher, ion, "calling");
+    return linkAndAttachStub(cx, masm, attacher, ion, "setter call");
 }
 
 bool
@@ -2111,6 +2525,8 @@ SetPropertyIC::attachNativeAdding(JSContext *cx, IonScript *ion, JSObject *obj,
                                   HandleShape oldShape, HandleShape newShape,
                                   HandleShape propShape)
 {
+    JS_ASSERT(obj->isNative());
+
     MacroAssembler masm(cx);
     RepatchStubAppender attacher(*this);
 
@@ -2176,20 +2592,12 @@ SetPropertyIC::attachNativeAdding(JSContext *cx, IonScript *ion, JSObject *obj,
 }
 
 static bool
-IsPropertyInlineable(JSObject *obj)
+IsPropertySetInlineable(JSContext *cx, const SetPropertyIC &cache, HandleObject obj,
+                        HandleId id, MutableHandleShape pshape)
 {
     if (!obj->isNative())
         return false;
 
-    if (obj->watched())
-        return false;
-
-    return true;
-}
-
-static bool
-IsPropertySetInlineable(JSContext *cx, HandleObject obj, HandleId id, MutableHandleShape pshape)
-{
     Shape *shape = obj->nativeLookup(cx, id);
 
     if (!shape)
@@ -2204,34 +2612,20 @@ IsPropertySetInlineable(JSContext *cx, HandleObject obj, HandleId id, MutableHan
     if (!shape->writable())
         return false;
 
+    types::TypeObject *type = obj->getType(cx);
+    if (cache.needsTypeBarrier() && !type->unknownProperties()) {
+        RootedId typeId(cx, types::IdToTypeId(id));
+        types::HeapTypeSet *propTypes = type->maybeGetProperty(cx, typeId);
+        if (!propTypes)
+            return false;
+        if (cache.value().constant() && !propTypes->unknown()) {
+            // If the input is a constant, then don't bother if the barrier will always fail.
+            if (!propTypes->hasType(types::GetValueType(cache.value().value())))
+                return false;
+        }
+    }
+
     pshape.set(shape);
-
-    return true;
-}
-
-static bool
-IsPropertySetterCallInlineable(JSContext *cx, HandleObject obj, HandleObject holder,
-                               HandleShape shape)
-{
-    if (!shape)
-        return false;
-
-    if (!holder->isNative())
-        return false;
-
-    if (shape->hasSlot())
-        return false;
-
-    if (shape->hasDefaultSetter())
-        return false;
-
-    if (!shape->writable())
-        return false;
-
-    // We only handle propertyOps for now, so fail if we have SetterValue
-    // (which implies JSNative setter).
-    if (shape->hasSetterValue())
-        return false;
 
     return true;
 }
@@ -2240,6 +2634,9 @@ static bool
 IsPropertyAddInlineable(JSContext *cx, HandleObject obj, HandleId id, uint32_t oldSlots,
                         MutableHandleShape pShape)
 {
+    if (!obj->isNative())
+        return false;
+
     // This is not a Add, the property exists.
     if (pShape.get())
         return false;
@@ -2306,20 +2703,47 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
 
     // Stop generating new stubs once we hit the stub count limit, see
     // GetPropertyCache.
-    bool inlinable = cache.canAttachStub() && IsPropertyInlineable(obj);
+    bool inlinable = cache.canAttachStub() && !obj->watched();
     bool addedSetterStub = false;
     if (inlinable) {
+        if (!addedSetterStub && obj->is<ProxyObject>()) {
+            if (IsCacheableDOMProxy(obj)) {
+                DOMProxyShadowsResult shadows = GetDOMProxyShadowsCheck()(cx, obj, id);
+                if (shadows == ShadowCheckFailed)
+                    return false;
+                if (shadows == Shadows) {
+                    if (!cache.attachDOMProxyShadowed(cx, ion, obj, returnAddr))
+                        return false;
+                    addedSetterStub = true;
+                } else {
+                    JS_ASSERT(shadows == DoesntShadow || shadows == DoesntShadowUnique);
+                    if (shadows == DoesntShadowUnique)
+                        cache.reset();
+                    if (!cache.attachDOMProxyUnshadowed(cx, ion, obj, returnAddr))
+                        return false;
+                    addedSetterStub = true;
+                }
+            }
+
+            if (!addedSetterStub && !cache.hasGenericProxyStub()) {
+                if (!cache.attachGenericProxy(cx, ion, returnAddr))
+                    return false;
+                addedSetterStub = true;
+            }
+        }
         RootedShape shape(cx);
-        if (IsPropertySetInlineable(cx, obj, id, &shape)) {
+        if (!addedSetterStub && IsPropertySetInlineable(cx, cache, obj, id, &shape)) {
             if (!cache.attachNativeExisting(cx, ion, obj, shape))
                 return false;
             addedSetterStub = true;
-        } else {
+        } else if (!addedSetterStub) {
             RootedObject holder(cx);
             if (!JSObject::lookupProperty(cx, obj, name, &holder, &shape))
                 return false;
 
-            if (IsPropertySetterCallInlineable(cx, obj, holder, shape)) {
+            if (IsCacheableSetPropCallPropertyOp(obj, holder, shape) ||
+                IsCacheableSetPropCallNative(obj, holder, shape))
+            {
                 if (!cache.attachSetterCall(cx, ion, obj, holder, shape, returnAddr))
                     return false;
                 addedSetterStub = true;
@@ -2335,7 +2759,8 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
         return false;
 
     // The property did not exist before, now we can try to inline the property add.
-    if (inlinable && !addedSetterStub && obj->lastProperty() != oldShape &&
+    if (inlinable && !addedSetterStub && !cache.needsTypeBarrier() &&
+        obj->lastProperty() != oldShape &&
         IsPropertyAddInlineable(cx, obj, id, oldSlots, &shape))
     {
         RootedShape newShape(cx, obj->lastProperty());
@@ -2344,6 +2769,13 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
     }
 
     return true;
+}
+
+void
+SetPropertyIC::reset()
+{
+    RepatchIonCache::reset();
+    hasGenericProxyStub_ = false;
 }
 
 const size_t GetElementIC::MAX_FAILED_UPDATES = 16;

@@ -201,13 +201,6 @@ nsXBLPrototypeBinding::SetBasePrototype(nsXBLPrototypeBinding* aBinding)
   mBaseBinding = aBinding;
 }
 
-already_AddRefed<nsIContent>
-nsXBLPrototypeBinding::GetBindingElement()
-{
-  nsCOMPtr<nsIContent> result = mBinding;
-  return result.forget();
-}
-
 void
 nsXBLPrototypeBinding::SetBindingElement(nsIContent* aElement)
 {

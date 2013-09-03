@@ -254,14 +254,16 @@ public:
         MOZ_ASSERT(mProfile != ContextProfile::Unknown, "unknown context profile");
         MOZ_ASSERT(mVersion != 0, "unknown context version");
 
-        if (profile == ContextProfile::OpenGL) {
-            return (profile == ContextProfile::OpenGLCore ||
-                    profile == ContextProfile::OpenGLCompatibility) &&
-                   version >= mVersion;
+        if (version > mVersion) {
+            return false;
         }
 
-        return profile == mProfile &&
-               version >= mVersion;
+        if (profile == ContextProfile::OpenGL) {
+            return profile == ContextProfile::OpenGLCore ||
+                   profile == ContextProfile::OpenGLCompatibility;
+        }
+
+        return profile == mProfile;
     }
 
     /**

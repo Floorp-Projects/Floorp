@@ -1,0 +1,233 @@
+/*
+ *  Copyright (c) 2013 The WebRTC project authors. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS.  All contributing project authors may
+ *  be found in the AUTHORS file in the root of the source tree.
+ */
+
+#include "webrtc/modules/desktop_capture/window_capturer.h"
+
+#include <cassert>
+#include <windows.h>
+
+#include "webrtc/modules/desktop_capture/desktop_frame_win.h"
+#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+
+namespace webrtc {
+
+namespace {
+
+typedef HRESULT (WINAPI *DwmIsCompositionEnabledFunc)(BOOL* enabled);
+
+// Coverts a zero-terminated UTF-16 string to UTF-8. Returns an empty string if
+// error occurs.
+std::string Utf16ToUtf8(const WCHAR* str) {
+  int len_utf8 = WideCharToMultiByte(CP_UTF8, 0, str, -1,
+                                     NULL, 0, NULL, NULL);
+  if (len_utf8 <= 0)
+    return std::string();
+  std::string result(len_utf8, '\0');
+  int rv = WideCharToMultiByte(CP_UTF8, 0, str, -1,
+                               &*(result.begin()), len_utf8, NULL, NULL);
+  if (rv != len_utf8)
+    assert(false);
+
+  return result;
+}
+
+BOOL CALLBACK WindowsEnumerationHandler(HWND hwnd, LPARAM param) {
+  WindowCapturer::WindowList* list =
+      reinterpret_cast<WindowCapturer::WindowList*>(param);
+
+  // Skip windows that are invisible, minimized, have no title, or are owned,
+  // unless they have the app window style set.
+  int len = GetWindowTextLength(hwnd);
+  HWND owner = GetWindow(hwnd, GW_OWNER);
+  LONG exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+  if (len == 0 || IsIconic(hwnd) || !IsWindowVisible(hwnd) ||
+      (owner && !(exstyle & WS_EX_APPWINDOW))) {
+    return TRUE;
+  }
+
+  // Skip the Program Manager window and the Start button.
+  const size_t kClassLength = 256;
+  WCHAR class_name[kClassLength];
+  GetClassName(hwnd, class_name, kClassLength);
+  // Skip Program Manager window and the Start button. This is the same logic
+  // that's used in Win32WindowPicker in libjingle. Consider filtering other
+  // windows as well (e.g. toolbars).
+  if (wcscmp(class_name, L"Progman") == 0 || wcscmp(class_name, L"Button") == 0)
+    return TRUE;
+
+  WindowCapturer::Window window;
+  window.id = reinterpret_cast<WindowCapturer::WindowId>(hwnd);
+
+  const size_t kTitleLength = 500;
+  WCHAR window_title[kTitleLength];
+  // Truncate the title if it's longer than kTitleLength.
+  GetWindowText(hwnd, window_title, kTitleLength);
+  window.title = Utf16ToUtf8(window_title);
+
+  // Skip windows when we failed to convert the title or it is empty.
+  if (window.title.empty())
+    return TRUE;
+
+  list->push_back(window);
+
+  return TRUE;
+}
+
+class WindowCapturerWin : public WindowCapturer {
+ public:
+  WindowCapturerWin();
+  virtual ~WindowCapturerWin();
+
+  // WindowCapturer interface.
+  virtual bool GetWindowList(WindowList* windows) OVERRIDE;
+  virtual bool SelectWindow(WindowId id) OVERRIDE;
+
+  // DesktopCapturer interface.
+  virtual void Start(Callback* callback) OVERRIDE;
+  virtual void Capture(const DesktopRegion& region) OVERRIDE;
+
+ private:
+  bool IsAeroEnabled();
+
+  Callback* callback_;
+
+  // HWND and HDC for the currently selected window or NULL if window is not
+  // selected.
+  HWND window_;
+  HDC window_dc_;
+
+  // dwmapi.dll is used to determine if desktop compositing is enabled.
+  HMODULE dwmapi_library_;
+  DwmIsCompositionEnabledFunc is_composition_enabled_func_;
+
+  DISALLOW_COPY_AND_ASSIGN(WindowCapturerWin);
+};
+
+WindowCapturerWin::WindowCapturerWin()
+    : callback_(NULL),
+      window_(NULL),
+      window_dc_(NULL) {
+  // Try to load dwmapi.dll dynamically since it is not available on XP.
+  dwmapi_library_ = LoadLibrary(L"dwmapi.dll");
+  if (dwmapi_library_) {
+    is_composition_enabled_func_ =
+        reinterpret_cast<DwmIsCompositionEnabledFunc>(
+            GetProcAddress(dwmapi_library_, "DwmIsCompositionEnabled"));
+    assert(is_composition_enabled_func_);
+  } else {
+    is_composition_enabled_func_ = NULL;
+  }
+}
+
+WindowCapturerWin::~WindowCapturerWin() {
+  if (dwmapi_library_)
+    FreeLibrary(dwmapi_library_);
+}
+
+bool WindowCapturerWin::IsAeroEnabled() {
+  BOOL result = FALSE;
+  if (is_composition_enabled_func_)
+    is_composition_enabled_func_(&result);
+  return result != FALSE;
+}
+
+bool WindowCapturerWin::GetWindowList(WindowList* windows) {
+  WindowList result;
+  LPARAM param = reinterpret_cast<LPARAM>(&result);
+  if (!EnumWindows(&WindowsEnumerationHandler, param))
+    return false;
+  windows->swap(result);
+  return true;
+}
+
+bool WindowCapturerWin::SelectWindow(WindowId id) {
+  if (window_dc_)
+    ReleaseDC(window_, window_dc_);
+
+  window_ = reinterpret_cast<HWND>(id);
+  window_dc_ = GetWindowDC(window_);
+  if (!window_dc_) {
+    LOG(LS_WARNING) << "Failed to select window: " << GetLastError();
+    window_ = NULL;
+    return false;
+  }
+
+  return true;
+}
+
+void WindowCapturerWin::Start(Callback* callback) {
+  assert(!callback_);
+  assert(callback);
+
+  callback_ = callback;
+}
+
+void WindowCapturerWin::Capture(const DesktopRegion& region) {
+  if (!window_dc_) {
+    LOG(LS_ERROR) << "Window hasn't been selected: " << GetLastError();
+    callback_->OnCaptureCompleted(NULL);
+    return;
+  }
+
+  assert(window_);
+
+  RECT rect;
+  if (!GetWindowRect(window_, &rect)) {
+    LOG(LS_WARNING) << "Failed to get window size: " << GetLastError();
+    callback_->OnCaptureCompleted(NULL);
+    return;
+  }
+
+  scoped_ptr<DesktopFrameWin> frame(DesktopFrameWin::Create(
+      DesktopSize(rect.right - rect.left, rect.bottom - rect.top),
+      NULL, window_dc_));
+
+  HDC mem_dc = CreateCompatibleDC(window_dc_);
+  SelectObject(mem_dc, frame->bitmap());
+  BOOL result = FALSE;
+
+  // When desktop composition (Aero) is enabled each window is rendered to a
+  // private buffer allowing BitBlt() to get the window content even if the
+  // window is occluded. PrintWindow() is slower but lets rendering the window
+  // contents to an off-screen device context when Aero is not available.
+  // PrintWindow() is not supported by some applications.
+
+  // If Aero is enabled, we prefer BitBlt() because it's faster and avoids
+  // window flickering. Otherwise, we prefer PrintWindow() because BitBlt() may
+  // render occluding windows on top of the desired window.
+
+  if (!IsAeroEnabled())
+    result = PrintWindow(window_, mem_dc, 0);
+
+  // Aero is enabled or PrintWindow() failed, use BitBlt.
+  if (!result) {
+    result = BitBlt(mem_dc, 0, 0, frame->size().width(), frame->size().height(),
+                    window_dc_, 0, 0, SRCCOPY);
+  }
+
+  DeleteDC(mem_dc);
+
+  if (!result) {
+    LOG(LS_ERROR) << "Both PrintWindow() and BitBlt() failed.";
+    frame.reset();
+  }
+
+  callback_->OnCaptureCompleted(frame.release());
+}
+
+}  // namespace
+
+// static
+WindowCapturer* WindowCapturer::Create() {
+  return new WindowCapturerWin();
+}
+
+}  // namespace webrtc
