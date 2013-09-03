@@ -138,16 +138,7 @@ static const char* GetOmxLibraryName()
     ALOG("Android Manufacturer is: %s", NS_LossyConvertUTF16toASCII(manufacturer).get());
   }
 
-  if (version == 15 &&
-      (device.Find("LT28", false) == 0 ||
-       device.Find("LT26", false) == 0 ||
-       device.Find("LT22", false) == 0 ||
-       device.Find("IS12", false) == 0 ||
-       device.Find("MT27", false) == 0)) {
-    // Sony Ericsson devices running ICS
-    return "libomxpluginsony.so";
-  }
-  else if (version == 13 || version == 12 || version == 11) {
+  if (version == 13 || version == 12 || version == 11) {
     return "libomxpluginhc.so";
   }
   else if (version == 10 && release_version >= NS_LITERAL_STRING("2.3.6")) {
