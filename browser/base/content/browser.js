@@ -2341,6 +2341,9 @@ let BrowserOnClick = {
              ownerDoc.documentURI.toLowerCase() == "about:newtab") {
       this.onE10sAboutNewTab(aEvent, ownerDoc);
     }
+    else if (ownerDoc.documentURI.startsWith("about:tabcrashed")) {
+      this.onAboutTabCrashed(aEvent, ownerDoc);
+    }
   },
 
   onAboutCertError: function BrowserOnClick_onAboutCertError(aTargetElm, aOwnerDoc) {
@@ -2473,6 +2476,22 @@ let BrowserOnClick = {
     }
   },
 
+  /**
+   * The about:tabcrashed can't do window.reload() because that
+   * would reload the page but not use a remote browser.
+   */
+  onAboutTabCrashed: function(aEvent, aOwnerDoc) {
+    let isTopFrame = (aOwnerDoc.defaultView.parent === aOwnerDoc.defaultView);
+    if (!isTopFrame) {
+      return;
+    }
+
+    let button = aEvent.originalTarget;
+    if (button.id == "tryAgain") {
+      openUILinkIn(button.getAttribute("url"), "current");
+    }
+  },
+
   ignoreWarningButton: function BrowserOnClick_ignoreWarningButton(aIsMalware) {
     // Allow users to override and continue through to the site,
     // but add a notify bar as a reminder, so that they don't lose
@@ -2582,6 +2601,16 @@ function getWebNavigation()
 }
 
 function BrowserReloadWithFlags(reloadFlags) {
+  let url = gBrowser.currentURI.spec;
+  if (gBrowser._updateBrowserRemoteness(gBrowser.selectedBrowser,
+                                        gBrowser._shouldBrowserBeRemote(url))) {
+    // If the remoteness has changed, the new browser doesn't have any
+    // information of what was loaded before, so we need to load the previous
+    // URL again.
+    gBrowser.loadURIWithFlags(url, reloadFlags);
+    return;
+  }
+
   /* First, we'll try to use the session history object to reload so
    * that framesets are handled properly. If we're in a special
    * window (such as view-source) that has no session history, fall
