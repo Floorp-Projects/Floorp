@@ -34,6 +34,9 @@ MOCHITEST_FILES = \
   test_messageChannel.html \
   test_messageChannel_cloning.html \
   iframe_messageChannel_cloning.html \
+  test_messageChannel_post.html \
+  iframe_messageChannel_post.html \
+  test_messageChannel_transferable.html \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \

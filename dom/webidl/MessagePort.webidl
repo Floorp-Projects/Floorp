@@ -9,7 +9,9 @@
 
 interface MessagePort : EventTarget {
   // TODO void postMessage(any message, optional sequence<Transferable> transfer);
+  [Throws]
   void postMessage(any message, optional any transfer);
+
   void start();
   void close();
 
