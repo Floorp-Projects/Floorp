@@ -1110,6 +1110,16 @@ public:
 
   nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
   bool userCancelled;
+
+  // XXX Not tested by test_assign_event_data.html
+  void AssignDragEventData(const nsDragEvent& aEvent, bool aCopyTargets)
+  {
+    AssignMouseEventData(aEvent, aCopyTargets);
+
+    dataTransfer = aEvent.dataTransfer;
+    // XXX userCancelled isn't copied, is this instentionally?
+    userCancelled = false;
+  }
 };
 
 /**
