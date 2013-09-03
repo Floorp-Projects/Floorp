@@ -120,8 +120,10 @@ XPInstallConfirm.init = function XPInstallConfirm_init()
   }
 
   function myUnload() {
-    document.removeEventListener("focus", myfocus, true);
-    document.removeEventListener("blur", myblur, true);
+    if (_installCountdownLength > 0) {
+      document.removeEventListener("focus", myfocus, true);
+      document.removeEventListener("blur", myblur, true);
+    }
     window.removeEventListener("unload", myUnload, false);
 
     // Now perform the desired action - either install the
@@ -136,10 +138,11 @@ XPInstallConfirm.init = function XPInstallConfirm_init()
     }
   }
 
+  window.addEventListener("unload", myUnload, false);
+
   if (_installCountdownLength > 0) {
     document.addEventListener("focus", myfocus, true);
     document.addEventListener("blur", myblur, true);
-    window.addEventListener("unload", myUnload, false);
 
     okButton.disabled = true;
     setWidgetsAfterFocus();
