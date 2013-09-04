@@ -124,6 +124,14 @@ SmsIPCService::Send(const nsAString& aNumber,
 }
 
 NS_IMETHODIMP
+SmsIPCService::IsSilentNumber(const nsAString& aNumber,
+                              bool*            aIsSilent)
+{
+  NS_ERROR("We should not be here!");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 SmsIPCService::AddSilentNumber(const nsAString& aNumber)
 {
   PSmsChild* smsChild = GetSmsChild();
