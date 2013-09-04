@@ -124,9 +124,6 @@ AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull)
 
   // Enter a request and a compartment for the duration that the cx is on the
   // stack if non-null.
-  //
-  // NB: We call UnmarkGrayContext so that this can obsolete the need for the
-  // old XPCAutoRequest as well.
   if (cx) {
     mAutoRequest.construct(cx);
 
@@ -135,7 +132,6 @@ AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull)
                                        : js::DefaultObjectForContextOrNull(cx);
     if (compartmentObject)
       mAutoCompartment.construct(cx, compartmentObject);
-    xpc_UnmarkGrayContext(cx);
   }
 }
 
