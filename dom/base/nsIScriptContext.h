@@ -27,8 +27,8 @@ class nsIDOMWindow;
 class nsIURI;
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x03c0874e, 0xcb49, 0x41c8, \
-  { 0xa3, 0x0b, 0xef, 0x3e, 0xc1, 0x88, 0xb1, 0x1f } }
+{ 0xf3859ce7, 0x7551, 0x4760, \
+  { 0x84, 0x29, 0x64, 0x4f, 0x26, 0x1e, 0xdb, 0x91 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -102,12 +102,6 @@ public:
    *
    **/
   virtual JSContext* GetNativeContext() = 0;
-
-  /**
-   * Return the native global object for this context.
-   *
-   **/
-  virtual JSObject* GetNativeGlobal() = 0;
 
   /**
    * Initialize the context generally. Does not create a global object.
