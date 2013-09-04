@@ -23,7 +23,7 @@ static const int MAX_DRAW_CALLS_SINCE_FLUSH = 100;
 void
 WebGLContext::VertexAttrib1f(GLuint index, GLfloat x0)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     MakeContextCurrent();
@@ -43,7 +43,7 @@ WebGLContext::VertexAttrib1f(GLuint index, GLfloat x0)
 void
 WebGLContext::VertexAttrib2f(GLuint index, GLfloat x0, GLfloat x1)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     MakeContextCurrent();
@@ -63,7 +63,7 @@ WebGLContext::VertexAttrib2f(GLuint index, GLfloat x0, GLfloat x1)
 void
 WebGLContext::VertexAttrib3f(GLuint index, GLfloat x0, GLfloat x1, GLfloat x2)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     MakeContextCurrent();
@@ -84,7 +84,7 @@ void
 WebGLContext::VertexAttrib4f(GLuint index, GLfloat x0, GLfloat x1,
                              GLfloat x2, GLfloat x3)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     MakeContextCurrent();
@@ -185,7 +185,7 @@ WebGLContext::VertexAttrib4fv_base(GLuint idx, uint32_t arrayLength,
 void
 WebGLContext::EnableVertexAttribArray(GLuint index)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateAttribIndex(index, "enableVertexAttribArray"))
@@ -201,7 +201,7 @@ WebGLContext::EnableVertexAttribArray(GLuint index)
 void
 WebGLContext::DisableVertexAttribArray(GLuint index)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateAttribIndex(index, "disableVertexAttribArray"))
@@ -221,7 +221,7 @@ JS::Value
 WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
                               ErrorResult& rv)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return JS::NullValue();
 
     if (!mBoundVertexArray->EnsureAttribIndex(index, "getVertexAttrib"))
@@ -309,7 +309,7 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
 WebGLsizeiptr
 WebGLContext::GetVertexAttribOffset(GLuint index, GLenum pname)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return 0;
 
     if (!ValidateAttribIndex(index, "getVertexAttribOffset"))
@@ -328,7 +328,7 @@ WebGLContext::VertexAttribPointer(GLuint index, GLint size, GLenum type,
                                   WebGLboolean normalized, GLsizei stride,
                                   WebGLintptr byteOffset)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (mBoundArrayBuffer == nullptr)
@@ -405,7 +405,7 @@ WebGLContext::VertexAttribPointer(GLuint index, GLint size, GLenum type,
 void
 WebGLContext::VertexAttribDivisor(GLuint index, GLuint divisor)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if ( !mBoundVertexArray->EnsureAttribIndex(index, "vertexAttribDivisor") ) {
@@ -500,7 +500,7 @@ bool WebGLContext::DrawArrays_check(GLint first, GLsizei count, GLsizei primcoun
 void
 WebGLContext::DrawArrays(GLenum mode, GLint first, GLsizei count)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateDrawModeEnum(mode, "drawArrays: mode"))
@@ -518,7 +518,7 @@ WebGLContext::DrawArrays(GLenum mode, GLint first, GLsizei count)
 void
 WebGLContext::DrawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateDrawModeEnum(mode, "drawArraysInstanced: mode"))
@@ -665,7 +665,7 @@ void
 WebGLContext::DrawElements(GLenum mode, GLsizei count, GLenum type,
                                WebGLintptr byteOffset)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateDrawModeEnum(mode, "drawElements: mode"))
@@ -684,7 +684,7 @@ void
 WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
                                         WebGLintptr byteOffset, GLsizei primcount)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateDrawModeEnum(mode, "drawElementsInstanced: mode"))

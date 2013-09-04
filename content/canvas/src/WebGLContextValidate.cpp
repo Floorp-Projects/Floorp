@@ -654,7 +654,7 @@ WebGLContext::ValidateSamplerUniformSetter(const char* info, WebGLUniformLocatio
 bool
 WebGLContext::ValidateAttribArraySetter(const char* name, uint32_t cnt, uint32_t arrayLength)
 {
-    if (!IsContextStable()) {
+    if (IsContextLost()) {
         return false;
     }
     if (arrayLength < cnt) {
@@ -668,7 +668,7 @@ bool
 WebGLContext::ValidateUniformArraySetter(const char* name, uint32_t expectedElemSize, WebGLUniformLocation *location_object,
                                          GLint& location, uint32_t& numElementsToUpload, uint32_t arrayLength)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return false;
     if (!ValidateUniformLocation(name, location_object))
         return false;
@@ -711,7 +711,7 @@ WebGLContext::ValidateUniformMatrixArraySetter(const char* name, int dim, WebGLU
                                               WebGLboolean aTranspose)
 {
     uint32_t expectedElemSize = (dim)*(dim);
-    if (!IsContextStable())
+    if (IsContextLost())
         return false;
     if (!ValidateUniformLocation(name, location_object))
         return false;
@@ -756,7 +756,7 @@ WebGLContext::ValidateUniformMatrixArraySetter(const char* name, int dim, WebGLU
 bool
 WebGLContext::ValidateUniformSetter(const char* name, WebGLUniformLocation *location_object, GLint& location)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return false;
     if (!ValidateUniformLocation(name, location_object))
         return false;

@@ -6,8 +6,11 @@
 #ifndef WEBGLTYPES_H_
 #define WEBGLTYPES_H_
 
-// Manual reflection of WebIDL typedefs that are different from the
-// corresponding OpenGL typedefs.
+// Most WebIDL typedefs are identical to their OpenGL counterparts.
+#include "GLTypes.h"
+
+// Manual reflection of WebIDL typedefs that are different from their
+// OpenGL counterparts.
 typedef int64_t WebGLsizeiptr;
 typedef int64_t WebGLintptr;
 typedef bool WebGLboolean;
