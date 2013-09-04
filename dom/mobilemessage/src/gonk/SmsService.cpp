@@ -5,15 +5,23 @@
 
 #include "SmsMessage.h"
 #include "SmsService.h"
-#include "SmsSegmentInfo.h"
-#include "AndroidBridge.h"
 #include "jsapi.h"
+#include "SmsSegmentInfo.h"
 
 namespace mozilla {
 namespace dom {
 namespace mobilemessage {
 
 NS_IMPL_ISUPPORTS1(SmsService, nsISmsService)
+
+SmsService::SmsService()
+{
+  nsCOMPtr<nsIRadioInterfaceLayer> ril = do_GetService("@mozilla.org/ril;1");
+  if (ril) {
+    ril->GetRadioInterface(0, getter_AddRefs(mRadioInterface));
+  }
+  NS_WARN_IF_FALSE(mRadioInterface, "This shouldn't fail!");
+}
 
 NS_IMETHODIMP
 SmsService::HasSupport(bool* aHasSupport)
@@ -26,17 +34,9 @@ NS_IMETHODIMP
 SmsService::GetSegmentInfoForText(const nsAString & aText,
                                   nsIDOMMozSmsSegmentInfo** aResult)
 {
-  if (!AndroidBridge::Bridge()) {
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_TRUE(mRadioInterface, NS_ERROR_FAILURE);
 
-  SmsSegmentInfoData data;
-  nsresult rv = AndroidBridge::Bridge()->GetSegmentInfoForText(aText, &data);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMMozSmsSegmentInfo> info = new SmsSegmentInfo(data);
-  info.forget(aResult);
-  return NS_OK;
+  return mRadioInterface->GetSegmentInfoForText(aText, aResult);
 }
 
 NS_IMETHODIMP
@@ -45,34 +45,39 @@ SmsService::Send(const nsAString& aNumber,
                  const bool       aSilent,
                  nsIMobileMessageCallback* aRequest)
 {
-  if (!AndroidBridge::Bridge()) {
-    return NS_OK;
-  }
+  NS_ENSURE_TRUE(mRadioInterface, NS_ERROR_FAILURE);
 
-  AndroidBridge::Bridge()->SendMessage(aNumber, aMessage, aRequest);
-  return NS_OK;
+  return mRadioInterface->SendSMS(aNumber, aMessage, aSilent, aRequest);
 }
 
 NS_IMETHODIMP
 SmsService::IsSilentNumber(const nsAString& aNumber,
                            bool*            aIsSilent)
 {
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aIsSilent = mSilentNumbers.Contains(aNumber);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 SmsService::AddSilentNumber(const nsAString& aNumber)
 {
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mSilentNumbers.Contains(aNumber)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  NS_ENSURE_TRUE(mSilentNumbers.AppendElement(aNumber), NS_ERROR_FAILURE);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 SmsService::RemoveSilentNumber(const nsAString& aNumber)
 {
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mSilentNumbers.Contains(aNumber)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  NS_ENSURE_TRUE(mSilentNumbers.RemoveElement(aNumber), NS_ERROR_FAILURE);
+  return NS_OK;
 }
 
 } // namespace mobilemessage
