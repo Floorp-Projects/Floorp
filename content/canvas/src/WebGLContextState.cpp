@@ -19,7 +19,7 @@ using namespace dom;
 void
 WebGLContext::Disable(GLenum cap)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateCapabilityEnum(cap, "disable"))
@@ -39,7 +39,7 @@ WebGLContext::Disable(GLenum cap)
 void
 WebGLContext::Enable(GLenum cap)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateCapabilityEnum(cap, "enable"))
@@ -71,7 +71,7 @@ StringValue(JSContext* cx, const char* chars, ErrorResult& rv)
 JS::Value
 WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return JS::NullValue();
 
     MakeContextCurrent();
@@ -486,7 +486,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 JS::Value
 WebGLContext::GetParameterIndexed(JSContext* cx, GLenum pname, GLuint index)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return JS::NullValue();
 
     MakeContextCurrent();
@@ -512,7 +512,7 @@ WebGLContext::GetParameterIndexed(JSContext* cx, GLenum pname, GLuint index)
 bool
 WebGLContext::IsEnabled(GLenum cap)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return false;
 
     if (!ValidateCapabilityEnum(cap, "isEnabled"))

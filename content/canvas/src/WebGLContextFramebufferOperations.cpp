@@ -13,7 +13,7 @@ using namespace mozilla;
 void
 WebGLContext::Clear(GLbitfield mask)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     MakeContextCurrent();
@@ -92,7 +92,7 @@ void
 WebGLContext::ClearColor(GLclampf r, GLclampf g,
                              GLclampf b, GLclampf a)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     MakeContextCurrent();
@@ -106,7 +106,7 @@ WebGLContext::ClearColor(GLclampf r, GLclampf g,
 void
 WebGLContext::ClearDepth(GLclampf v)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     MakeContextCurrent();
@@ -117,7 +117,7 @@ WebGLContext::ClearDepth(GLclampf v)
 void
 WebGLContext::ClearStencil(GLint v)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     MakeContextCurrent();
@@ -128,7 +128,7 @@ WebGLContext::ClearStencil(GLint v)
 void
 WebGLContext::ColorMask(WebGLboolean r, WebGLboolean g, WebGLboolean b, WebGLboolean a)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     MakeContextCurrent();
@@ -142,7 +142,7 @@ WebGLContext::ColorMask(WebGLboolean r, WebGLboolean g, WebGLboolean b, WebGLboo
 void
 WebGLContext::DepthMask(WebGLboolean b)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     MakeContextCurrent();
@@ -229,7 +229,7 @@ WebGLContext::DrawBuffers(const dom::Sequence<GLenum>& buffers)
 void
 WebGLContext::StencilMask(GLuint mask)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     mStencilWriteMaskFront = mask;
@@ -242,7 +242,7 @@ WebGLContext::StencilMask(GLuint mask)
 void
 WebGLContext::StencilMaskSeparate(GLenum face, GLuint mask)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateFaceEnum(face, "stencilMaskSeparate: face"))

@@ -184,7 +184,7 @@ WebGLContext::WebGLContext()
     mContextLossTimerRunning = false;
     mDrawSinceContextLossTimerSet = false;
     mContextRestorer = do_CreateInstance("@mozilla.org/timer;1");
-    mContextStatus = ContextStable;
+    mContextStatus = ContextNotLost;
     mContextLostErrorSet = false;
     mLoseContextOnHeapMinimize = false;
     mCanLoseContextInForeground = true;
@@ -844,7 +844,7 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                              CanvasLayer *aOldLayer,
                              LayerManager *aManager)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return nullptr;
 
     if (!mResetLayer && aOldLayer &&
@@ -899,7 +899,7 @@ void
 WebGLContext::GetContextAttributes(Nullable<dom::WebGLContextAttributesInitializer> &retval)
 {
     retval.SetNull();
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     dom::WebGLContextAttributes& result = retval.SetValue();
@@ -918,7 +918,7 @@ WebGLContext::GetContextAttributes(Nullable<dom::WebGLContextAttributesInitializ
 NS_IMETHODIMP
 WebGLContext::MozGetUnderlyingParamString(uint32_t pname, nsAString& retval)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return NS_OK;
 
     retval.SetIsVoid(true);
@@ -1220,7 +1220,7 @@ WebGLContext::RobustnessTimerCallback(nsITimer* timer)
             SetupContextLossTimer();
             return;
         }
-        mContextStatus = ContextStable;
+        mContextStatus = ContextNotLost;
         nsContentUtils::DispatchTrustedEvent(mCanvasElement->OwnerDoc(),
                                              static_cast<nsIDOMHTMLCanvasElement*>(mCanvasElement),
                                              NS_LITERAL_STRING("webglcontextrestored"),
@@ -1240,7 +1240,7 @@ void
 WebGLContext::MaybeRestoreContext()
 {
     // Don't try to handle it if we already know it's busted.
-    if (mContextStatus != ContextStable || gl == nullptr)
+    if (mContextStatus != ContextNotLost || gl == nullptr)
         return;
 
     bool isEGL = gl->GetContextType() == GLContext::ContextTypeEGL,
