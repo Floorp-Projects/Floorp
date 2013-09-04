@@ -21,8 +21,8 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioListener, Release)
 AudioListener::AudioListener(AudioContext* aContext)
   : mContext(aContext)
   , mPosition()
-  , mOrientation(0., 0., -1.)
-  , mUpVector(0., 1., 0.)
+  , mFrontVector(0., 0., -1.)
+  , mRightVector(1., 0., 0.)
   , mVelocity()
   , mDopplerFactor(1.)
   , mSpeedOfSound(343.3) // meters/second
@@ -38,14 +38,48 @@ AudioListener::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 }
 
 void
+AudioListener::SetOrientation(double aX, double aY, double aZ,
+                              double aXUp, double aYUp, double aZUp)
+{
+  ThreeDPoint front(aX, aY, aZ);
+  // The panning effect and the azimuth and elevation calculation in the Web
+  // Audio spec becomes undefined with linearly dependent vectors, so keep
+  // existing state in these situations.
+  if (front.IsZero()) {
+    return;
+  }
+  // Normalize before using CrossProduct() to avoid overflow.
+  front.Normalize();
+  ThreeDPoint up(aXUp, aYUp, aZUp);
+  if (up.IsZero()) {
+    return;
+  }
+  up.Normalize();
+  ThreeDPoint right = front.CrossProduct(up);
+  if (right.IsZero()) {
+    return;
+  }
+  right.Normalize();
+
+  if (!mFrontVector.FuzzyEqual(front)) {
+    mFrontVector = front;
+    SendThreeDPointParameterToStream(PannerNode::LISTENER_FRONT_VECTOR, front);
+  }
+  if (!mRightVector.FuzzyEqual(right)) {
+    mRightVector = right;
+    SendThreeDPointParameterToStream(PannerNode::LISTENER_RIGHT_VECTOR, right);
+  }
+}
+
+void
 AudioListener::RegisterPannerNode(PannerNode* aPannerNode)
 {
   mPanners.AppendElement(aPannerNode->asWeakPtr());
 
   // Let the panner node know about our parameters
   aPannerNode->SendThreeDPointParameterToStream(PannerNode::LISTENER_POSITION, mPosition);
-  aPannerNode->SendThreeDPointParameterToStream(PannerNode::LISTENER_ORIENTATION, mOrientation);
-  aPannerNode->SendThreeDPointParameterToStream(PannerNode::LISTENER_UPVECTOR, mUpVector);
+  aPannerNode->SendThreeDPointParameterToStream(PannerNode::LISTENER_FRONT_VECTOR, mFrontVector);
+  aPannerNode->SendThreeDPointParameterToStream(PannerNode::LISTENER_RIGHT_VECTOR, mRightVector);
   aPannerNode->SendThreeDPointParameterToStream(PannerNode::LISTENER_VELOCITY, mVelocity);
   aPannerNode->SendDoubleParameterToStream(PannerNode::LISTENER_DOPPLER_FACTOR, mDopplerFactor);
   aPannerNode->SendDoubleParameterToStream(PannerNode::LISTENER_SPEED_OF_SOUND, mSpeedOfSound);
