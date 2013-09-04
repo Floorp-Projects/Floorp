@@ -7,15 +7,30 @@
 #ifndef mozilla_dom_workers_url_h__
 #define mozilla_dom_workers_url_h__
 
+#include "mozilla/dom/workers/bindings/DOMBindingBase.h"
 #include "mozilla/dom/URLBinding.h"
 
 #include "EventTarget.h"
 
 BEGIN_WORKERS_NAMESPACE
 
-class URL : public EventTarget
+class URLProxy;
+
+class URL MOZ_FINAL : public DOMBindingBase
 {
-public: // Methods for WebIDL
+public:
+
+  URL(WorkerPrivate* aWorkerPrivate, URLProxy* aURLProxy);
+  ~URL();
+
+  virtual void
+  _trace(JSTracer* aTrc) MOZ_OVERRIDE;
+
+  virtual void
+  _finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
+
+  // Methods for WebIDL
+
   static URL*
   Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
               URL& aBase, ErrorResult& aRv);
@@ -79,12 +94,13 @@ public: // Methods for WebIDL
   void SetHash(const nsAString& aHash);
 
 private:
-  mozilla::dom::URL* GetURL() const
+  URLProxy* GetURLProxy() const
   {
-    return mURL;
+    return mURLProxy;
   }
 
-  nsRefPtr<mozilla::dom::URL> mURL;
+  WorkerPrivate* mWorkerPrivate;
+  nsRefPtr<URLProxy> mURLProxy;
 };
 
 END_WORKERS_NAMESPACE
