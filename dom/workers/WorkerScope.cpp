@@ -400,7 +400,12 @@ private:
       return false;
     }
 
-    return scope->mWorker->CloseInternal(aCx);
+    if (!scope->mWorker->CloseInternal(aCx)) {
+      return false;
+    }
+
+    JS_RVAL(aCx, aVp).setUndefined();
+    return true;
   }
 
   static bool
@@ -420,6 +425,7 @@ private:
       return false;
     }
 
+    JS_RVAL(aCx, aVp).setUndefined();
     return true;
   }
 
@@ -462,7 +468,12 @@ private:
       return false;
     }
 
-    return scope->mWorker->ClearTimeout(aCx, id);
+    if (!scope->mWorker->ClearTimeout(aCx, id)) {
+      return false;
+    }
+
+    JS_RVAL(aCx, aVp).setUndefined();
+    return true;
   }
 
   static bool
@@ -504,7 +515,12 @@ private:
       return false;
     }
 
-    return scope->mWorker->ClearTimeout(aCx, id);
+    if (!scope->mWorker->ClearTimeout(aCx, id)) {
+      return false;
+    }
+
+    JS_RVAL(aCx, aVp).setUndefined();
+    return true;
   }
 
   static bool
@@ -537,6 +553,7 @@ private:
       fflush(stdout);
     }
 
+    JS_RVAL(aCx, aVp).setUndefined();
     return true;
   }
 
