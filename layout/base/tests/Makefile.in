@@ -151,6 +151,7 @@ MOCHITEST_FILES =	\
 		test_bug851445.html \
 		  bug851445_helper.html \
 		test_emulateMedium.html \
+		enableTestPlugin.js \
 		$(NULL)
 
 ifeq (,$(filter gonk,$(MOZ_WIDGET_TOOLKIT)))
