@@ -106,6 +106,7 @@ MOCHITEST_FILES = \
   test_bug791616.html \
   test_bug831780.html \
   test_bug841361.html \
+  $(srcdir)/../../base/tests/enableTestPlugin.js \
   $(NULL)
 
 # Disable the caret movement by word test on Linux because the shortcut keys
