@@ -83,8 +83,7 @@ class CycleCollectedJSRuntime
   friend class IncrementalFinalizeRunnable;
 protected:
   CycleCollectedJSRuntime(uint32_t aMaxbytes,
-                          JSUseHelperThreads aUseHelperThreads,
-                          bool aExpectUnrootedGlobals);
+                          JSUseHelperThreads aUseHelperThreads);
   virtual ~CycleCollectedJSRuntime();
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -222,8 +221,6 @@ private:
   DeferredFinalizerTable mDeferredFinalizerTable;
 
   nsRefPtr<IncrementalFinalizeRunnable> mFinalizeRunnable;
-
-  bool mExpectUnrootedGlobals;
 
 #ifdef DEBUG
   void* mObjectToUnlink;
