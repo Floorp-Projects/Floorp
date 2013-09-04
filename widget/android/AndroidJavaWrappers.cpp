@@ -672,6 +672,11 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
+        case PREFERENCES_REMOVE_OBSERVERS: {
+            mCount = jenv->GetIntField(jobj, jCountField);
+            break;
+        }
+
         default:
             break;
     }
