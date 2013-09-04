@@ -64,7 +64,6 @@ cairo_public cairo_surface_t *
 cairo_win32_surface_create_with_dib (cairo_format_t format,
                                      int width,
                                      int height);
-
 cairo_public HDC
 cairo_win32_surface_get_dc (cairo_surface_t *surface);
 
@@ -147,6 +146,10 @@ int
 cairo_dwrite_get_cleartype_rendering_mode();
 
 #endif /* CAIRO_HAS_DWRITE_FONT */
+
+cairo_public cairo_surface_t *
+cairo_win32_surface_create_with_d3dsurface9 (struct IDirect3DSurface9 *surface);
+
 
 #if CAIRO_HAS_D2D_SURFACE
 
