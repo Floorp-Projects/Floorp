@@ -1857,6 +1857,7 @@ cairo_win32_printing_surface_create (HDC hdc)
     surface->image = NULL;
     surface->format = CAIRO_FORMAT_RGB24;
     surface->content = CAIRO_CONTENT_COLOR_ALPHA;
+    surface->d3d9surface = NULL;
 
     surface->dc = hdc;
     surface->bitmap = NULL;

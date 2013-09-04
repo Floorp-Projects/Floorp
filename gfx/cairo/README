@@ -234,6 +234,8 @@ use-show-text-glyphs-if-glyph-path-fails.patch: fall back to show_text_glyphs ev
 
 pixman-enable-altivec-acceleration.patch: enable building the altivec acceleration
 
+win32-d3dsurface9.patch: Create a win32 d3d9 surface to support LockRect
+
 ==== disable printing patch ====
 
 disable-printing.patch:  allows us to use NS_PRINTING to disable printing.
