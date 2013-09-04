@@ -74,6 +74,7 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
+    'RilMessageManager.jsm',
     'net_worker.js',
     'ril_consts.js',
     'ril_worker.js',
