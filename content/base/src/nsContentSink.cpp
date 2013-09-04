@@ -1220,7 +1220,7 @@ nsContentSink::Notify(nsITimer *timer)
     return NS_OK;
   }
   
-#ifdef MOZ_DEBUG
+#ifdef DEBUG
   {
     PRTime now = PR_Now();
 
@@ -1232,7 +1232,7 @@ nsContentSink::Notify(nsITimer *timer)
                ("nsContentSink::Notify: reflow on a timer: %d milliseconds "
                 "late, backoff count: %d", delay, mBackoffCount));
   }
-#endif
+#endif // DEBUG
 
   if (WaitForPendingSheets()) {
     mDeferredFlushTags = true;
