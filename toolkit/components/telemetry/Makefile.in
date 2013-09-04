@@ -30,6 +30,11 @@ ifdef MOZ_HISTOGRAMS_VERSION
 DEFINES += -DHISTOGRAMS_FILE_VERSION="$(MOZ_HISTOGRAMS_VERSION)"
 endif
 
+INSTALL_TARGETS += histoenums
+histoenums_FILES := TelemetryHistogramEnums.h
+histoenums_DEST = $(DIST)/include/mozilla
+histoenums_TARGET := export
+
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

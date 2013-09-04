@@ -54,7 +54,6 @@ EXPORTS += [
     'nsStyleStruct.h',
     'nsStyleStructFwd.h',
     'nsStyleStructInlines.h',
-    'nsStyleStructList.h',
     'nsStyleTransformMatrix.h',
     'nsStyleUtil.h',
 ]
