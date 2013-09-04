@@ -1322,7 +1322,7 @@ WebGLContext::MakeContextCurrent() const { gl->MakeCurrent(); }
 NS_IMPL_CYCLE_COLLECTING_ADDREF(WebGLContext)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WebGLContext)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_12(WebGLContext,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_13(WebGLContext,
   mCanvasElement,
   mExtensions,
   mBound2DTextures,
@@ -1333,6 +1333,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_12(WebGLContext,
   mBoundFramebuffer,
   mBoundRenderbuffer,
   mBoundVertexArray,
+  mDefaultVertexArray,
   mActiveOcclusionQuery,
   mActiveTransformFeedbackQuery)
 
