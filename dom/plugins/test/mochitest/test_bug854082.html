@@ -3,6 +3,7 @@
 <head>
   <title>Test for Bug 854082</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
@@ -14,6 +15,7 @@
   // crash
 
   SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   // Create an object that will spawn asynchronously
   var o = document.createElement("object");

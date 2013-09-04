@@ -2,17 +2,17 @@
 <head>
   <title>NPAPI Cookie Tests</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="utils.js"></script>
 
   <link rel="stylesheet" type="text/css" 
         href="/tests/SimpleTest/test.css" />
 </head>
 
 <body onload="runTests()">
-  <p id="display"></p>
-
-  <embed id="plugin1" type="application/x-test" width="400" height="400"></embed>
   <script class="testbody" type="application/javascript">
     SimpleTest.waitForExplicitFinish();
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
     function runTests() {
       var pluginElement = document.getElementById("plugin1");
       var c = 0;
@@ -28,5 +28,9 @@
       SimpleTest.finish();
     }
   </script>
+
+  <p id="display"></p>
+
+  <embed id="plugin1" type="application/x-test" width="400" height="400"></embed>
 </body>
 </html>

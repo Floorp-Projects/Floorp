@@ -1,10 +1,12 @@
 <head>
   <title>Plugin crashing in nested loop</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="utils.js"></script>
 
 <body>
   <script class="testbody" type="application/javascript">
   SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   window.frameLoaded = function frameLoaded_toCrash() {
     if (!SimpleTest.testPluginIsOOP()) {

@@ -2,14 +2,14 @@
 <head>
   <title>Test NPPVpluginWantsAllNetworkStreams</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="utils.js"></script>
 </head>
-<body onload="runNextTest()">
-  <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
-
+<body onload="runTests()">
   <script class="testbody" type="application/javascript">
     SimpleTest.waitForExplicitFinish();
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
-    var p = document.getElementById("plugin1");
+    var p = null;
 
     var missingDoc = "not-found.html";
 
@@ -65,6 +65,13 @@
         SimpleTest.finish();
       }
     }
+
+    function runTests() {
+      p = document.getElementById("plugin1");
+      runNextTest();
+    }
   </script>
+
+  <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
 </body>
 </html>
