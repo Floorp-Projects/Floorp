@@ -373,10 +373,6 @@ add_task(function ()
   // ===== 19 =====
   // Remove an entry by time
   testnum++;
-  results = yield promiseSearchEntries(["timesUsed", "firstUsed", "lastUsed"],
-                                       { fieldname: "field1", value: "modifiedValue" });
-  [timesUsed, firstUsed, lastUsed] = processFirstResult(results);
-
   yield promiseUpdate({ op : "remove", firstUsedStart: 60, firstUsedEnd: 250 });
   yield promiseCountEntries("field1", "modifiedValue", checkExists);
   yield promiseCountEntries("field2", "value2", checkNotExists);
@@ -384,6 +380,30 @@ add_task(function ()
   yield promiseCountEntries("field4", "value4", checkNotExists);
   yield promiseCountEntries(null, null, function(num) do_check_eq(num, 2));
   yield countDeletedEntries(10);
+
+  // ===== 20 =====
+  // Bump multiple existing entries at once
+  testnum++;
+
+  yield promiseUpdate([{ op : "add", fieldname: "field5", value: "value5",
+                         timesUsed: 5, firstUsed: 230, lastUsed: 600 },
+                       { op : "add", fieldname: "field6", value: "value6",
+                         timesUsed: 12, firstUsed: 430, lastUsed: 700 }]);
+  yield promiseCountEntries(null, null, function(num) do_check_eq(num, 4));
+
+  yield promiseUpdate([
+                       { op : "bump", fieldname: "field5", value: "value5" },
+                       { op : "bump", fieldname: "field6", value: "value6" }]);
+  results = yield promiseSearchEntries(["fieldname", "timesUsed", "firstUsed", "lastUsed"], { });
+  
+  do_check_eq(6, results[2].timesUsed);
+  do_check_eq(13, results[3].timesUsed);
+  do_check_eq(230, results[2].firstUsed);
+  do_check_eq(430, results[3].firstUsed);
+  do_check_true(results[2].lastUsed > 600);
+  do_check_true(results[3].lastUsed > 700);
+
+  yield promiseCountEntries(null, null, function(num) do_check_eq(num, 4));
 
   } catch (e) {
     throw "FAILED in test #" + testnum + " -- " + e;

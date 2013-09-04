@@ -18,7 +18,7 @@
  *     callback - callback that is called when results are available or an error occurs.
  *       The callback is passed a result array containing each found entry. Each element in
  *       the array is an object containing a property for each search term specified by 'terms'.
- * count(terms, queryData, callback)
+ * count(queryData, callback)
  *   Find the number of stored entries that match the given criteria.
  *     queryData - array of objects that indicate the query. See the search method for details.
  *     callback - callback that is called when results are available or an error occurs.
@@ -903,6 +903,7 @@ this.FormHistory = {
       }
 
       numSearches++;
+      let changeToUpdate = change;
       FormHistory.search(
         [ "guid" ],
         {
@@ -926,7 +927,7 @@ this.FormHistory = {
             }
 
             this.foundResult = true;
-            change.guid = aResult["guid"];
+            changeToUpdate.guid = aResult["guid"];
           },
 
           handleError : function(aError) {
