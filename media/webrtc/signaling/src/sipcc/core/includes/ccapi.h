@@ -8,6 +8,12 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Util.h"
 
+#if defined(__cplusplus) && __cplusplus >= 201103L
+typedef struct Timecard Timecard;
+#else
+#include "timecard.h"
+#endif
+
 #include "cpr_types.h"
 #include "cpr_memory.h"
 #include "phone_types.h"
@@ -955,6 +961,7 @@ typedef struct cc_feature_t_ {
     boolean              data_valid;
     cc_jsep_action_t     action;
     char                 sdp[SDP_SIZE];
+    Timecard            *timecard;
 } cc_feature_t;
 
 typedef struct cc_feature_ack_t_ {
@@ -1174,19 +1181,23 @@ void cc_int_release_complete(cc_srcs_t src_id, cc_srcs_t dst_id,
 
 void cc_int_feature2(cc_msgs_t msg_id, cc_srcs_t src_id, cc_srcs_t dst_id,
                     callid_t call_id, line_t line, cc_features_t feature_id,
-                    cc_feature_data_t *data);
+                    cc_feature_data_t *data, Timecard *);
 
 void cc_createoffer(cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
-                    line_t line, cc_features_t feature_id, cc_feature_data_t *data);
+                    line_t line, cc_features_t feature_id, cc_feature_data_t *data,
+                    Timecard *);
 
 void cc_createanswer (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
-                    line_t line, cc_features_t feature_id, string_t sdp, cc_feature_data_t *data);
+                    line_t line, cc_features_t feature_id, string_t sdp, cc_feature_data_t *data,
+                    Timecard *);
 
 void cc_setlocaldesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line,
-                    cc_features_t feature_id, cc_jsep_action_t action, string_t sdp, cc_feature_data_t *data);
+                    cc_features_t feature_id, cc_jsep_action_t action, string_t sdp, cc_feature_data_t *data,
+                    Timecard *);
 
 void cc_setremotedesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line,
-                    cc_features_t feature_id, cc_jsep_action_t action, string_t sdp, cc_feature_data_t *data);
+                    cc_features_t feature_id, cc_jsep_action_t action, string_t sdp, cc_feature_data_t *data,
+                    Timecard *);
 
 void cc_int_feature_ack(cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
                         line_t line, cc_features_t feature_id,
@@ -1255,8 +1266,8 @@ void cc_int_fail_fallback(cc_srcs_t src_id, cc_srcs_t dst_id, int rsp_type,
 #define cc_release(a, b, c, d, e, f)     cc_int_release(a, CC_SRC_GSM, b, c, d, e, f)
 #define cc_release_complete(a, b, c, d, e) \
         cc_int_release_complete(a, CC_SRC_GSM, b, c, d, e)
-#define cc_feature(a, b, c, d, e)     cc_int_feature2(CC_MSG_FEATURE, a, CC_SRC_GSM, b, c, d, e)
-#define cc_int_feature(a, b, c, d, e, f)     cc_int_feature2(CC_MSG_FEATURE, a, b, c, d, e, f)
+#define cc_feature(a, b, c, d, e)     cc_int_feature2(CC_MSG_FEATURE, a, CC_SRC_GSM, b, c, d, e, NULL)
+#define cc_int_feature(a, b, c, d, e, f)     cc_int_feature2(CC_MSG_FEATURE, a, b, c, d, e, f, NULL)
 #define cc_feature_ack(a, b, c, d, e, f) \
         cc_int_feature_ack(a, CC_SRC_GSM, b, c, d, e, f)
 #define cc_offhook(a, b, c)           cc_int_offhook(a, CC_SRC_GSM, CC_NO_CALL_ID, CC_REASON_NONE, b, c, NULL, CC_MONITOR_NONE,CFWDALL_NONE)

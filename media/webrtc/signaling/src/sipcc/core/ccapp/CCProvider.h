@@ -5,6 +5,12 @@
 #ifndef __CCPROVIDER_H__
 #define __CCPROVIDER_H__
 
+#if defined(__cplusplus) && __cplusplus >= 201103L
+typedef struct Timecard Timecard;
+#else
+#include "timecard.h"
+#endif
+
 #include "cpr_types.h"
 #include "cpr_ipc.h"
 #include "cpr_socket.h"
@@ -101,6 +107,7 @@ typedef struct cc_call_info_t_{
     unsigned int  media_stream_track_id;
     unsigned int  media_stream_id;
     cc_media_constraints_t* cc_constraints;
+    Timecard *    timecard;
 } session_data_t;
 
 typedef enum {
