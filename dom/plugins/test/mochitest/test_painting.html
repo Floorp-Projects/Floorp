@@ -97,7 +97,7 @@ function waitForPaintHelper(func) {
     setTimeout(func, 0);
     return;
   }
-  setTimeout(function() { waitForPaintHelper(func); }, 100);
+  setTimeout(function() { waitForPaintHelper(func); }, 1000);
 }
 
 </script>
