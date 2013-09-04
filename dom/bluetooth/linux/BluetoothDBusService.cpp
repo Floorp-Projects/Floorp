@@ -2655,55 +2655,6 @@ BluetoothDBusService::IsConnected(const uint16_t aProfileId)
   return profile->IsConnected();
 }
 
-class ConnectBluetoothSocketRunnable : public nsRunnable
-{
-public:
-  ConnectBluetoothSocketRunnable(BluetoothReplyRunnable* aRunnable,
-                                 UnixSocketConsumer* aConsumer,
-                                 const nsAString& aObjectPath,
-                                 const nsAString& aServiceUUID,
-                                 BluetoothSocketType aType,
-                                 bool aAuth,
-                                 bool aEncrypt,
-                                 int aChannel)
-    : mRunnable(dont_AddRef(aRunnable))
-    , mConsumer(aConsumer)
-    , mObjectPath(aObjectPath)
-    , mServiceUUID(aServiceUUID)
-    , mType(aType)
-    , mAuth(aAuth)
-    , mEncrypt(aEncrypt)
-    , mChannel(aChannel)
-  {
-  }
-
-  nsresult
-  Run()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    nsString address = GetAddressFromObjectPath(mObjectPath);
-    BluetoothUnixSocketConnector* c =
-      new BluetoothUnixSocketConnector(mType, mChannel, mAuth, mEncrypt);
-    if (!mConsumer->ConnectSocket(c, NS_ConvertUTF16toUTF8(address).get())) {
-      NS_NAMED_LITERAL_STRING(errorStr, "SocketConnectionError");
-      DispatchBluetoothReply(mRunnable, BluetoothValue(), errorStr);
-      return NS_ERROR_FAILURE;
-    }
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<BluetoothReplyRunnable> mRunnable;
-  nsRefPtr<UnixSocketConsumer> mConsumer;
-  nsString mObjectPath;
-  nsString mServiceUUID;
-  BluetoothSocketType mType;
-  bool mAuth;
-  bool mEncrypt;
-  int mChannel;
-};
-
 class OnUpdateSdpRecordsRunnable : public nsRunnable
 {
 public:
