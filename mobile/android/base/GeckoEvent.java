@@ -67,7 +67,10 @@ public class GeckoEvent {
         REMOVE_OBSERVER(34),
         LOW_MEMORY(35),
         NETWORK_LINK_CHANGE(36),
-        TELEMETRY_HISTOGRAM_ADD(37);
+        TELEMETRY_HISTOGRAM_ADD(37),
+        PREFERENCES_OBSERVE(39),
+        PREFERENCES_GET(40),
+        PREFERENCES_REMOVE_OBSERVERS(41);
 
         public final int value;
 
@@ -185,6 +188,8 @@ public class GeckoEvent {
 
     private int mWidth;
     private int mHeight;
+
+    private String[] mPrefNames;
 
     private GeckoEvent(NativeGeckoEvent event) {
         mType = event.value;
@@ -686,6 +691,26 @@ public class GeckoEvent {
     public static GeckoEvent createRemoveObserverEvent(String observerKey) {
         GeckoEvent event = new GeckoEvent(NativeGeckoEvent.REMOVE_OBSERVER);
         event.mCharacters = observerKey;
+        return event;
+    }
+
+    public static GeckoEvent createPreferencesObserveEvent(int requestId, String[] prefNames) {
+        GeckoEvent event = new GeckoEvent(NativeGeckoEvent.PREFERENCES_OBSERVE);
+        event.mCount = requestId;
+        event.mPrefNames = prefNames;
+        return event;
+    }
+
+    public static GeckoEvent createPreferencesGetEvent(int requestId, String[] prefNames) {
+        GeckoEvent event = new GeckoEvent(NativeGeckoEvent.PREFERENCES_GET);
+        event.mCount = requestId;
+        event.mPrefNames = prefNames;
+        return event;
+    }
+
+    public static GeckoEvent createPreferencesRemoveObserversEvent(int requestId) {
+        GeckoEvent event = new GeckoEvent(NativeGeckoEvent.PREFERENCES_REMOVE_OBSERVERS);
+        event.mCount = requestId;
         return event;
     }
 
