@@ -177,7 +177,6 @@ MOZILLA_DTRACE_SRC = $(srcdir)/devtools/javascript-trace.d
 endif
 
 default::
-	$(call py_action,process_install_manifest,$(if $(JS_STANDALONE),,--no-remove) $(DIST)/include _build_manifests/install/dist_include)
 
 ifneq (,$(CROSS_COMPILE)$(filter-out WINNT OS2,$(OS_ARCH)))
 # nsinstall doesn't get built until we enter config/ in the exports phase,
@@ -201,16 +200,6 @@ symverscript: symverscript.in
 
 EXTRA_DEPS += symverscript
 endif
-
-export_files = js-config.h
-ifdef HAVE_DTRACE
-export_files += $(CURDIR)/javascript-trace.h
-endif
-
-INSTALL_TARGETS += jsconfig
-jsconfig_FILES = $(export_files)
-jsconfig_DEST = $(DIST)/include
-jsconfig_TARGETS := export
 
 include $(topsrcdir)/config/rules.mk
 
