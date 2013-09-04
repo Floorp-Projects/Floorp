@@ -2143,6 +2143,14 @@ HTMLInputElement::StepUp(int32_t n, uint8_t optional_argc)
 }
 
 void
+HTMLInputElement::FlushFrames()
+{
+  if (GetCurrentDoc()) {
+    GetCurrentDoc()->FlushPendingNotifications(Flush_Frames);
+  }
+}
+
+void
 HTMLInputElement::MozGetFileNameArray(nsTArray< nsString >& aArray)
 {
   for (uint32_t i = 0; i < mFiles.Length(); i++) {
@@ -2233,7 +2241,7 @@ HTMLInputElement::MozSetFileNameArray(const PRUnichar** aFileNames, uint32_t aLe
 bool
 HTMLInputElement::MozIsTextField(bool aExcludePassword)
 {
-  // TODO: temporary until bug 635240 and 773205 are fixed.
+  // TODO: temporary until bug 773205 is fixed.
   if (IsExperimentalMobileType(mType)) {
     return false;
   }
@@ -3421,7 +3429,8 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   // the click event handling, and allow cancellation of DOMActivate to cancel
   // the click.
   if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault &&
-      !IsSingleLineTextControl(true)) {
+      !IsSingleLineTextControl(true) &&
+      mType != NS_FORM_INPUT_NUMBER) {
     WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
     if (mouseEvent && mouseEvent->IsLeftClickEvent() &&
         !ShouldPreventDOMActivateDispatch(aVisitor.mEvent->originalTarget)) {
@@ -5516,7 +5525,8 @@ HTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable, int32_t* 
   }
 
   if (IsSingleLineTextControl(false) ||
-      mType == NS_FORM_INPUT_RANGE) {
+      mType == NS_FORM_INPUT_RANGE ||
+      mType == NS_FORM_INPUT_NUMBER) {
     *aIsFocusable = true;
     return false;
   }
@@ -5727,7 +5737,7 @@ HTMLInputElement::PlaceholderApplies() const
 bool
 HTMLInputElement::DoesPatternApply() const
 {
-  // TODO: temporary until bug 635240 and bug 773205 are fixed.
+  // TODO: temporary until bug 773205 is fixed.
   if (IsExperimentalMobileType(mType)) {
     return false;
   }

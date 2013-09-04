@@ -250,8 +250,6 @@ nsIFormControl::IsSingleLineTextControl(bool aExcludePassword, uint32_t aType)
          aType == NS_FORM_INPUT_SEARCH ||
          aType == NS_FORM_INPUT_TEL ||
          aType == NS_FORM_INPUT_URL ||
-         // TODO: this is temporary until bug 635240 is fixed.
-         aType == NS_FORM_INPUT_NUMBER ||
          // TODO: those are temporary until bug 773205 is fixed.
          aType == NS_FORM_INPUT_DATE ||
          aType == NS_FORM_INPUT_TIME ||
