@@ -59,21 +59,18 @@ public class testAddonManager extends PixelTest  {
             mActions.sendGeckoEvent("Preferences:Set", jsonPref.toString());
 
             // Wait for confirmation of the pref change before proceeding with the test.
-            JSONArray getPrefData = new JSONArray();
-            getPrefData.put("extensions.getAddons.browseAddons");
-            JSONObject message = new JSONObject();
-            message.put("requestId", "testAddonManager");
-            message.put("preferences", getPrefData);
+            final String[] prefNames = { "extensions.getAddons.browseAddons" };
+            final int ourRequestId = 0x7357;
             Actions.RepeatedEventExpecter eventExpecter = mActions.expectGeckoEvent("Preferences:Data");
-            mActions.sendGeckoEvent("Preferences:Get", message.toString());
+            mActions.sendPreferencesGetEvent(ourRequestId, prefNames);
 
             JSONObject data = null;
-            String requestId = "";
+            int requestId = -1;
 
             // Wait until we get the correct "Preferences:Data" event
-            while (!requestId.equals("testAddonManager")) {
+            while (requestId != ourRequestId) {
                 data = new JSONObject(eventExpecter.blockForEventData());
-                requestId = data.getString("requestId");
+                requestId = data.getInt("requestId");
             }
             eventExpecter.unregisterListener();
 

@@ -49,6 +49,29 @@ public interface Actions {
     void sendGeckoEvent(String geckoEvent, String data);
 
     /**
+     * Sends a preferences get event to Gecko.
+     *
+     * @param requestId The id of this request.
+     * @param prefNames The preferences being requested.
+     */
+    void sendPreferencesGetEvent(int requestId, String[] prefNames);
+
+    /**
+     * Sends a preferences observe event to Gecko.
+     *
+     * @param requestId The id of this request.
+     * @param prefNames The preferences being requested.
+     */
+    void sendPreferencesObserveEvent(int requestId, String[] prefNames);
+
+    /**
+     * Sends a preferences remove observers event to Gecko.
+     *
+     * @param requestId The id of this request.
+     */
+    void sendPreferencesRemoveObserversEvent(int requestid);
+
+    /**
      * Listens for a gecko event to be sent from the Gecko instance.
      * The returned object can be used to test if the event has been
      * received. Note that only one event is listened for.
