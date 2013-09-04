@@ -6,5 +6,14 @@
 
 MODULE = 'accessibility'
 
+EXPORTS += [
+    'ISimpleDOMDocument.h',
+    'ISimpleDOMDocument_i.c',
+    'ISimpleDOMNode.h',
+    'ISimpleDOMNode_i.c',
+    'ISimpleDOMText.h',
+    'ISimpleDOMText_i.c',
+]
+
 LIBRARY_NAME = 'AccessibleMarshal'
 
