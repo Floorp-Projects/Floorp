@@ -281,7 +281,7 @@ WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
     if (!boundBuffer)
         return ErrorInvalidOperation("bufferData: no buffer bound!");
 
-    CheckedUint32 checked_neededByteLength = CheckedUint32(byteOffset) + data.Length();
+    CheckedInt<WebGLsizeiptr> checked_neededByteLength = CheckedInt<WebGLsizeiptr>(byteOffset) + data.Length();
     if (!checked_neededByteLength.isValid())
         return ErrorInvalidValue("bufferSubData: integer overflow computing the needed byte length");
 
@@ -317,7 +317,7 @@ WebGLContext::BufferSubData(WebGLenum target, WebGLsizeiptr byteOffset,
     if (!boundBuffer)
         return ErrorInvalidOperation("bufferSubData: no buffer bound!");
 
-    CheckedUint32 checked_neededByteLength = CheckedUint32(byteOffset) + data.Length();
+    CheckedInt<WebGLsizeiptr> checked_neededByteLength = CheckedInt<WebGLsizeiptr>(byteOffset) + data.Length();
     if (!checked_neededByteLength.isValid())
         return ErrorInvalidValue("bufferSubData: integer overflow computing the needed byte length");
 
