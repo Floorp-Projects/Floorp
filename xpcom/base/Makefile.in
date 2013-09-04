@@ -19,6 +19,14 @@ endif
 
 endif #if OS_ARCH == WINNT
 
+INSTALL_TARGETS += errorlist
+errorlist_FILES := \
+  ErrorListCDefines.h \
+  ErrorListCxxDefines.h \
+  $(NULL)
+errorlist_DEST = $(DIST)/include
+errorlist_TARGET := export
+
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
