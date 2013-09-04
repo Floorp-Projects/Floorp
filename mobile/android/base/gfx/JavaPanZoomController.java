@@ -74,8 +74,8 @@ class JavaPanZoomController
     // The maximum zoom factor adjustment per frame of the AUTONAV animation
     private static final float MAX_ZOOM_DELTA = 0.125f;
 
-    // The number of time a bounce animation run at most.
-    private static final int BOUNCE_FRAME_NUMBER = 15;
+    // The duration of the bounce animation in ns
+    private static final int BOUNCE_ANIMATION_DURATION = 250000000;
 
     private enum PanZoomState {
         NOTHING,                /* no touch-start events received */
@@ -824,6 +824,11 @@ class JavaPanZoomController
      */
     private abstract class PanZoomRenderTask extends RenderTask {
 
+        /**
+         * the time when the current frame was started in ns.
+         */
+        protected long mCurrentFrameStartTime;
+
         private final Runnable mRunnable = new Runnable() {
             @Override
             public final void run() {
@@ -841,6 +846,8 @@ class JavaPanZoomController
 
         @Override
         protected final boolean internalRun(long timeDelta, long currentFrameStartTime) {
+
+            mCurrentFrameStartTime = currentFrameStartTime;
 
             mTarget.post(mRunnable);
             return mContinueAnimation;
@@ -887,7 +894,8 @@ class JavaPanZoomController
          */
         private ImmutableViewportMetrics mBounceStartMetrics;
         private ImmutableViewportMetrics mBounceEndMetrics;
-        private int mBounceFrame;
+        // How long ago this bounce was started in ns.
+        private long mBounceDuration;
 
         BounceRenderTask(ImmutableViewportMetrics startMetrics, ImmutableViewportMetrics endMetrics) {
             super();
@@ -908,7 +916,8 @@ class JavaPanZoomController
             }
 
             /* Perform the next frame of the bounce-back animation. */
-            if (mBounceFrame < BOUNCE_FRAME_NUMBER) {
+            mBounceDuration = mCurrentFrameStartTime - getStartTime();
+            if (mBounceDuration < BOUNCE_ANIMATION_DURATION) {
                 advanceBounce();
                 return;
             }
@@ -922,10 +931,9 @@ class JavaPanZoomController
         /* Performs one frame of a bounce animation. */
         private void advanceBounce() {
             synchronized (mTarget.getLock()) {
-                float t = easeOut(((float)mBounceFrame) / BOUNCE_FRAME_NUMBER);
+                float t = easeOut((float)mBounceDuration / BOUNCE_ANIMATION_DURATION);
                 ImmutableViewportMetrics newMetrics = mBounceStartMetrics.interpolate(mBounceEndMetrics, t);
                 mTarget.setViewportMetrics(newMetrics);
-                mBounceFrame++;
             }
         }
 
@@ -933,7 +941,6 @@ class JavaPanZoomController
         private void finishBounce() {
             synchronized (mTarget.getLock()) {
                 mTarget.setViewportMetrics(mBounceEndMetrics);
-                mBounceFrame = -1;
             }
         }
     }
