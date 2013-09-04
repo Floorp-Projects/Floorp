@@ -1491,15 +1491,17 @@ class MOZ_STACK_CLASS ModuleCompiler
     bool trackPerfProfiledFunction(const Func &func, unsigned endCodeOffset) {
         unsigned lineno = 0U, columnIndex = 0U;
         parser().tokenStream.srcCoords.lineNumAndColumnIndex(func.srcOffset(), &lineno, &columnIndex);
-
         unsigned startCodeOffset = func.code()->offset();
-        return module_->trackPerfProfiledFunction(func.name(), startCodeOffset, endCodeOffset, lineno, columnIndex);
+        return module_->trackPerfProfiledFunction(func.name(), startCodeOffset, endCodeOffset,
+                                                  lineno, columnIndex);
     }
 
     bool trackPerfProfiledBlocks(AsmJSPerfSpewer &perfSpewer, const Func &func, unsigned endCodeOffset) {
         unsigned startCodeOffset = func.code()->offset();
-        perfSpewer.noteBlocksOffsets(masm_);
-        return module_->trackPerfProfiledBlocks(func.name(), startCodeOffset, endCodeOffset, perfSpewer.basicBlocks());
+        perfSpewer.noteBlocksOffsets();
+        unsigned endInlineCodeOffset = perfSpewer.endInlineCode.offset();
+        return module_->trackPerfProfiledBlocks(func.name(), startCodeOffset, endInlineCodeOffset,
+                                                endCodeOffset, perfSpewer.basicBlocks());
     }
 #endif
     bool addFunctionCounts(IonScriptCounts *counts) {
@@ -1584,6 +1586,27 @@ class MOZ_STACK_CLASS ModuleCompiler
         JS_ASSERT(!masm_.hasEnteredExitFrame());
 
         // Patch everything that needs an absolute address:
+
+#ifdef JS_ION_PERF
+        // Fix up the code offsets.  Note the endCodeOffset should not be filtered through
+        // 'actualOffset' as it is generated using 'size()' rather than a label.
+        for (unsigned i = 0; i < module_->numPerfFunctions(); i++) {
+            AsmJSModule::ProfiledFunction &func = module_->perfProfiledFunction(i);
+            func.startCodeOffset = masm_.actualOffset(func.startCodeOffset);
+        }
+
+        for (unsigned i = 0; i < module_->numPerfBlocksFunctions(); i++) {
+            AsmJSModule::ProfiledBlocksFunction &func = module_->perfProfiledBlocksFunction(i);
+            func.startCodeOffset = masm_.actualOffset(func.startCodeOffset);
+            func.endInlineCodeOffset = masm_.actualOffset(func.endInlineCodeOffset);
+            BasicBlocksVector &basicBlocks = func.blocks;
+            for (uint32_t i = 0; i < basicBlocks.length(); i++) {
+                Record &r = basicBlocks[i];
+                r.startOffset = masm_.actualOffset(r.startOffset);
+                r.endOffset = masm_.actualOffset(r.endOffset);
+            }
+        }
+#endif
 
         // Exit points
         for (unsigned i = 0; i < module_->numExits(); i++) {
