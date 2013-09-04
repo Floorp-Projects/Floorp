@@ -115,7 +115,14 @@ MOCHITEST_FILES := \
 
 ifneq ($(MOZ_DEBUG)+$(MOZ_WIDGET_TOOLKIT),+gtk2) # bug 911777
 MOCHITEST_FILES += \
+  test_convolverNodeChannelCount.html \
   test_delayNodeAtMax.html \
+  $(NULL)
+endif # bug 911777
+
+ifneq ($(OS_TARGET),Android) # bug 912474
+MOCHITEST_FILES += \
+  test_pannerNodeChannelCount.html \
   $(NULL)
 endif
 
