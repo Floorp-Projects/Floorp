@@ -65,6 +65,10 @@
 #include "AudioChannelManager.h"
 #endif
 
+#ifdef MOZ_B2G_FM
+#include "mozilla/dom/FMRadio.h"
+#endif
+
 #include "nsIDOMGlobalPropertyInitializer.h"
 #include "nsJSUtils.h"
 
@@ -194,6 +198,13 @@ Navigator::Invalidate()
     mBatteryManager->Shutdown();
     mBatteryManager = nullptr;
   }
+
+#ifdef MOZ_B2G_FM
+  if (mFMRadio) {
+    mFMRadio->Shutdown();
+    mFMRadio = nullptr;
+  }
+#endif
 
   if (mPowerManager) {
     mPowerManager->Shutdown();
@@ -1044,6 +1055,34 @@ Navigator::GetMozNotification(ErrorResult& aRv)
   return mNotification;
 }
 
+#ifdef MOZ_B2G_FM
+
+using mozilla::dom::FMRadio;
+
+FMRadio*
+Navigator::GetMozFMRadio(ErrorResult& aRv)
+{
+  if (!mFMRadio) {
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+
+    NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
+
+    mFMRadio = new FMRadio();
+    mFMRadio->Init(mWindow);
+  }
+
+  return mFMRadio;
+}
+
+#endif  // MOZ_B2G_FM
+
+//*****************************************************************************
+//    Navigator::nsINavigatorBattery
+//*****************************************************************************
+
 battery::BatteryManager*
 Navigator::GetBattery(ErrorResult& aRv)
 {
@@ -1709,6 +1748,16 @@ Navigator::HasBluetoothSupport(JSContext* /* unused */, JSObject* aGlobal)
   return win && bluetooth::BluetoothManager::CheckPermission(win);
 }
 #endif // MOZ_B2G_BT
+
+#ifdef MOZ_B2G_FM
+/* static */
+bool
+Navigator::HasFMRadioSupport(JSContext* /* unused */, JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return win && CheckPermission(win, "fmradio");
+}
+#endif // MOZ_B2G_FM
 
 #ifdef MOZ_TIME_MANAGER
 /* static */

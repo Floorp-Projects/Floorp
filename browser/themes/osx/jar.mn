@@ -17,6 +17,7 @@ browser.jar:
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/aboutSyncTabs.css
 #endif
+  skin/classic/browser/aboutTabCrashed.css
   skin/classic/browser/actionicon-tab.png
   skin/classic/browser/actionicon-tab@2x.png
 * skin/classic/browser/browser.css                          (browser.css)

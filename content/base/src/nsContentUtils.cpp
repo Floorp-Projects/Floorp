@@ -4875,10 +4875,9 @@ static void ProcessViewportToken(nsIDocument *aDocument,
 /* static */
 nsViewportInfo
 nsContentUtils::GetViewportInfo(nsIDocument *aDocument,
-                                uint32_t aDisplayWidth,
-                                uint32_t aDisplayHeight)
+                                const ScreenIntSize& aDisplaySize)
 {
-  return aDocument->GetViewportInfo(aDisplayWidth, aDisplayHeight);
+  return aDocument->GetViewportInfo(aDisplaySize);
 }
 
 /* static */
