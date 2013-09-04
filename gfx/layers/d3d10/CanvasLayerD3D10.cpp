@@ -12,12 +12,24 @@
 #include "SurfaceStream.h"
 #include "SharedSurfaceANGLE.h"
 #include "gfxContext.h"
+#include "GLContext.h"
 
 using namespace mozilla::gl;
 using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace layers {
+
+CanvasLayerD3D10::CanvasLayerD3D10(LayerManagerD3D10 *aManager)
+  : CanvasLayer(aManager, nullptr)
+  , LayerD3D10(aManager)
+  , mDataIsPremultiplied(false)
+  , mNeedsYFlip(false)
+  , mHasAlpha(true)
+{
+    mImplData = static_cast<LayerD3D10*>(this);
+    mForceReadback = Preferences::GetBool("webgl.force-layers-readback", false);
+}
 
 CanvasLayerD3D10::~CanvasLayerD3D10()
 {

@@ -7,6 +7,7 @@
 #include "WebGLTexture.h"
 #include "WebGLRenderbuffer.h"
 #include "WebGLFramebuffer.h"
+#include "GLContext.h"
 
 using namespace mozilla;
 

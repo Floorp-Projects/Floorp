@@ -13,6 +13,7 @@
 #include "WebGLRenderbuffer.h"
 #include "WebGLTexture.h"
 #include "WebGLVertexArray.h"
+#include "GLContext.h"
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Preferences.h"

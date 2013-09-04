@@ -37,6 +37,7 @@
 #include "nsDisplayList.h"
 
 #include "GLContextProvider.h"
+#include "GLContext.h"
 
 #include "gfxCrashReporterUtils.h"
 
@@ -530,9 +531,9 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
 
     // try the default provider, whatever that is
     if (!gl && useOpenGL) {
-        GLContext::ContextFlags flag = useMesaLlvmPipe
-                                       ? GLContext::ContextFlagsMesaLLVMPipe
-                                       : GLContext::ContextFlagsNone;
+        gl::ContextFlags flag = useMesaLlvmPipe
+                                ? gl::ContextFlagsMesaLLVMPipe
+                                : gl::ContextFlagsNone;
         gl = gl::GLContextProvider::CreateOffscreen(size, caps, flag);
         if (gl && !InitAndValidateGL()) {
             GenerateWarning("Error during %s initialization",
@@ -1243,7 +1244,7 @@ WebGLContext::MaybeRestoreContext()
     if (mContextStatus != ContextNotLost || gl == nullptr)
         return;
 
-    bool isEGL = gl->GetContextType() == GLContext::ContextTypeEGL,
+    bool isEGL = gl->GetContextType() == gl::ContextTypeEGL,
          isANGLE = gl->IsANGLE();
 
     GLContext::ContextResetARB resetStatus = GLContext::CONTEXT_NO_ERROR;
@@ -1310,6 +1311,9 @@ WebGLContext::ForceRestoreContext()
 {
     mContextStatus = ContextLostAwaitingRestore;
 }
+
+void
+WebGLContext::MakeContextCurrent() const { gl->MakeCurrent(); }
 
 //
 // XPCOM goop

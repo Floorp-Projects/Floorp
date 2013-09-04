@@ -6,6 +6,7 @@ include protocol PGrallocBuffer;
 
 include "gfxipc/ShadowLayerUtils.h";
 include "mozilla/gfx/Types.h";
+include "nsRegion.h";
 
 using gfx3DMatrix;
 using gfxIntSize;
@@ -23,7 +24,7 @@ using mozilla::layers::SurfaceDescriptorX11;
 using mozilla::null_t;
 using mozilla::WindowsHandle;
 using mozilla::gl::SharedTextureHandle;
-using mozilla::gl::GLContext::SharedTextureShareType;
+using mozilla::gl::SharedTextureShareType;
 using mozilla::gfx::SurfaceStreamHandle;
 using mozilla::gfx::SurfaceFormat;
 using mozilla::gfx::IntSize;

@@ -5,19 +5,20 @@
 #if !defined(GLTYPES_H_)
 #define GLTYPES_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
+typedef int8_t realGLboolean;
+
 #if !defined(__gltypes_h_) && !defined(__gl_h_)
 #define __gltypes_h_
 #define __gl_h_
-
-#include <stddef.h>
-#include <stdint.h>
 
 typedef uint32_t GLenum;
 typedef uint32_t GLbitfield;
 typedef uint32_t GLuint;
 typedef int32_t GLint;
 typedef int32_t GLsizei;
-typedef int8_t realGLboolean;
 typedef int8_t GLbyte;
 typedef int16_t GLshort;
 typedef uint8_t GLubyte;

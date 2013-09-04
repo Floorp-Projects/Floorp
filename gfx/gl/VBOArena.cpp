@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VBOArena.h"
+#include "GLContext.h"
 
 using namespace mozilla::gl;
 

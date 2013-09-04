@@ -23,6 +23,7 @@
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
+#include "GLContext.h"
 
 #include "nsContentUtils.h"
 #include "nsError.h"

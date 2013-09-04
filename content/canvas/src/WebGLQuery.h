@@ -7,7 +7,6 @@
 #define WEBGLQUERY_H_
 
 #include "WebGLObjectModel.h"
-#include "WebGLContext.h"
 
 #include "nsWrapperCache.h"
 
@@ -38,14 +37,7 @@ public:
     // -------------------------------------------------------------------------
     // MEMBER FUNCTIONS
 
-    bool IsActive() const
-    {
-        WebGLRefPtr<WebGLQuery>* targetSlot = mContext->GetQueryTargetSlot(mType, "WebGLQuery::IsActive()");
-
-        MOZ_ASSERT(targetSlot, "unknown query object's type");
-
-        return *targetSlot == this;
-    }
+    bool IsActive() const;
 
     bool HasEverBeenActive()
     {
