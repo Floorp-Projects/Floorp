@@ -13,6 +13,7 @@
 
 USING_TELEPHONY_NAMESPACE
 using namespace mozilla::dom;
+using mozilla::ErrorResult;
 
 TelephonyCallGroup::TelephonyCallGroup()
 : mCallState(nsITelephonyProvider::CALL_STATE_UNKNOWN)

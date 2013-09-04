@@ -321,6 +321,9 @@ private:
     virtual PSmsParent* AllocPSmsParent();
     virtual bool DeallocPSmsParent(PSmsParent*);
 
+    virtual PTelephonyParent* AllocPTelephonyParent();
+    virtual bool DeallocPTelephonyParent(PTelephonyParent*);
+
     virtual PStorageParent* AllocPStorageParent();
     virtual bool DeallocPStorageParent(PStorageParent* aActor);
 
