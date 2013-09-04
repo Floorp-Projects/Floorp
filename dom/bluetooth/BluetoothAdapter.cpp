@@ -346,6 +346,15 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
     e->InitBluetoothStatusChangedEvent(aData.name(), false, false,
                                        address, status);
     DispatchTrustedEvent(event);
+  } else if (aData.name().EqualsLiteral(REQUEST_MEDIA_PLAYSTATUS_ID)) {
+    nsCOMPtr<nsIDOMEvent> event;
+    nsresult rv = NS_NewDOMEvent(getter_AddRefs(event), this, nullptr, nullptr);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    rv = event->InitEvent(aData.name(), false, false);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    DispatchTrustedEvent(event);
   } else {
 #ifdef DEBUG
     nsCString warningMsg;
