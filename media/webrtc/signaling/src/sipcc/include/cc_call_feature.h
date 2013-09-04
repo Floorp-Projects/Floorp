@@ -87,6 +87,12 @@
 #ifndef _CC_CALL_FEATURE_H_
 #define _CC_CALL_FEATURE_H_
 
+#if defined(__cplusplus) && __cplusplus >= 201103L
+typedef struct Timecard Timecard;
+#else
+#include "timecard.h"
+#endif
+
 #include "cc_constants.h"
 
 /***********************************Basic Call Feature Control Methods************************************
@@ -152,14 +158,22 @@ cc_return_t CC_CallFeature_backSpace(cc_call_handle_t call_handle);
 cc_return_t CC_CallFeature_dial(cc_call_handle_t call_handle, cc_sdp_direction_t video_pref, const cc_string_t numbers);
 
 cc_return_t CC_CallFeature_CreateOffer(cc_call_handle_t call_handle,
-                                       cc_media_constraints_t *constraints);
+                                       cc_media_constraints_t *constraints,
+                                       Timecard *tc);
 
 cc_return_t CC_CallFeature_CreateAnswer(cc_call_handle_t call_handle,
-                                        cc_media_constraints_t *constraints);
+                                        cc_media_constraints_t *constraints,
+                                        Timecard *tc);
 
-cc_return_t CC_CallFeature_SetLocalDescription(cc_call_handle_t call_handle, cc_jsep_action_t action, const char* sdp);
+cc_return_t CC_CallFeature_SetLocalDescription(cc_call_handle_t call_handle,
+                                               cc_jsep_action_t action,
+                                               const char* sdp,
+                                               Timecard *tc);
 
-cc_return_t CC_CallFeature_SetRemoteDescription(cc_call_handle_t call_handle, cc_jsep_action_t action, const char* sdp);
+cc_return_t CC_CallFeature_SetRemoteDescription(cc_call_handle_t call_handle,
+                                                cc_jsep_action_t action,
+                                                const char* sdp,
+                                                Timecard *tc);
 
 cc_return_t CC_CallFeature_SetPeerConnection(cc_call_handle_t call_handle, cc_peerconnection_t pc);
 
@@ -167,7 +181,11 @@ cc_return_t CC_CallFeature_AddStream(cc_call_handle_t call_handle, cc_media_stre
 
 cc_return_t CC_CallFeature_RemoveStream(cc_call_handle_t call_handle, cc_media_stream_id_t stream_id, cc_media_track_id_t id, cc_media_type_t media_type);
 
-cc_return_t CC_CallFeature_AddICECandidate(cc_call_handle_t call_handle, const char* candidate, const char *mid, cc_level_t level);
+cc_return_t CC_CallFeature_AddICECandidate(cc_call_handle_t call_handle,
+                                           const char* candidate,
+                                           const char *mid,
+                                           cc_level_t level,
+                                           Timecard *tc);
 
 /**
  * Initiate a speed dial.

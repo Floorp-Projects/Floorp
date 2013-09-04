@@ -4,6 +4,7 @@
 
 #include <limits.h>
 
+#include "timecard.h"
 #include "CCProvider.h"
 #include "ccSession.h"
 #include "ccsip_task.h"
@@ -631,7 +632,9 @@ processSessionEvent (line_t line_id, callid_t call_id, unsigned int event, sdp_d
     char* data1 =(char*)ccData.info1;
     long strtol_result;
     char *strtol_end;
+    Timecard *timecard = ccData.timecard;
     int sdpmode = 0;
+
 
     CCAPP_DEBUG(DEB_L_C_F_PREFIX"event=%d data=%s",
                 DEB_L_C_F_PREFIX_ARGS(SIP_CC_PROV, call_id, line_id, fname), event,
@@ -660,18 +663,22 @@ processSessionEvent (line_t line_id, callid_t call_id, unsigned int event, sdp_d
              dp_int_update_keypress(line_id, call_id, BKSP_KEY);
              break;
          case CC_FEATURE_CREATEOFFER:
+             STAMP_TIMECARD(timecard, "Processing create offer event");
              featdata.session.constraints = ccData.constraints;
-             cc_createoffer (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_CREATEOFFER, &featdata);
+             cc_createoffer (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_CREATEOFFER, &featdata, timecard);
              break;
          case CC_FEATURE_CREATEANSWER:
+             STAMP_TIMECARD(timecard, "Processing create answer event");
              featdata.session.constraints = ccData.constraints;
-             cc_createanswer (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_CREATEANSWER, data, &featdata);
+             cc_createanswer (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_CREATEANSWER, data, &featdata, timecard);
              break;
          case CC_FEATURE_SETLOCALDESC:
-             cc_setlocaldesc (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_SETLOCALDESC, ccData.action, data, &featdata);
+             STAMP_TIMECARD(timecard, "Processing set local event");
+             cc_setlocaldesc (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_SETLOCALDESC, ccData.action, data, &featdata, timecard);
              break;
          case CC_FEATURE_SETREMOTEDESC:
-             cc_setremotedesc (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_SETREMOTEDESC, ccData.action, data, &featdata);
+             STAMP_TIMECARD(timecard, "Processing set remote event");
+             cc_setremotedesc (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_SETREMOTEDESC, ccData.action, data, &featdata, timecard);
              break;
          case CC_FEATURE_SETPEERCONNECTION:
            PR_ASSERT(strlen(data) < PC_HANDLE_SIZE);
@@ -682,25 +689,26 @@ processSessionEvent (line_t line_id, callid_t call_id, unsigned int event, sdp_d
 
            cc_int_feature2(CC_MSG_SETPEERCONNECTION, CC_SRC_UI, CC_SRC_GSM,
              call_id, (line_t)instance,
-             CC_FEATURE_SETPEERCONNECTION, &featdata);
+             CC_FEATURE_SETPEERCONNECTION, &featdata, NULL);
            break;
          case CC_FEATURE_ADDSTREAM:
            featdata.track.stream_id = ccData.stream_id;
            featdata.track.track_id = ccData.track_id;
            featdata.track.media_type = ccData.media_type;
-           cc_int_feature2(CC_MSG_ADDSTREAM, CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_ADDSTREAM, &featdata);
+           cc_int_feature2(CC_MSG_ADDSTREAM, CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_ADDSTREAM, &featdata, timecard);
            break;
          case CC_FEATURE_REMOVESTREAM:
            featdata.track.stream_id = ccData.stream_id;
            featdata.track.track_id = ccData.track_id;
            featdata.track.media_type = ccData.media_type;
-           cc_int_feature2(CC_MSG_REMOVESTREAM, CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_REMOVESTREAM, &featdata);
+           cc_int_feature2(CC_MSG_REMOVESTREAM, CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_REMOVESTREAM, &featdata, timecard);
            break;
          case CC_FEATURE_ADDICECANDIDATE:
+           STAMP_TIMECARD(timecard, "Processing add candidate event");
            featdata.candidate.level = ccData.level;
            sstrncpy(featdata.candidate.candidate, data, sizeof(featdata.candidate.candidate)-1);
            sstrncpy(featdata.candidate.mid, data1, sizeof(featdata.candidate.mid)-1);
-           cc_int_feature2(CC_MSG_ADDCANDIDATE, CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_ADDICECANDIDATE, &featdata);
+           cc_int_feature2(CC_MSG_ADDCANDIDATE, CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_ADDICECANDIDATE, &featdata, timecard);
            break;
          case CC_FEATURE_DIALSTR:
              if (CheckAndGetAvailableLine(&line_id, &call_id) == TRUE) {
@@ -1053,6 +1061,11 @@ session_data_t * getDeepCopyOfSessionData(session_data_t *data)
            newData->plcd_number =  strlib_copy(data->plcd_number);
            newData->status =  strlib_copy(data->status);
            newData->sdp = strlib_copy(data->sdp);
+
+           /* The timecard can have only one owner */
+           newData->timecard = data->timecard;
+           data->timecard = NULL;
+
            calllogger_copy_call_log(&newData->call_log, &data->call_log);
        } else {
            newData->ref_count = 1;
@@ -1072,6 +1085,7 @@ session_data_t * getDeepCopyOfSessionData(session_data_t *data)
            newData->plcd_number =  strlib_empty();
            newData->status = strlib_empty();
            newData->sdp = strlib_empty();
+           newData->timecard = NULL;
            calllogger_init_call_log(&newData->call_log);
        }
 
@@ -1118,6 +1132,7 @@ void cleanSessionData(session_data_t *data)
         data->status = strlib_empty();
         strlib_free(data->sdp);
         data->sdp = strlib_empty();
+        data->timecard = NULL;
         calllogger_free_call_log(&data->call_log);
     }
 }
@@ -1456,6 +1471,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
 	data->vid_dir = SDP_DIRECTION_INACTIVE;
         data->callref = 0;
         data->sdp = strlib_empty();
+        data->timecard = NULL;
         calllogger_init_call_log(&data->call_log);
 
         switch (sessUpd->eventID) {
@@ -1467,6 +1483,8 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
             case UPDATE_REMOTE_DESC:
             case ICE_CANDIDATE_ADD:
                 data->sdp = sessUpd->update.ccSessionUpd.data.state_data.sdp;
+                data->timecard =
+                    sessUpd->update.ccSessionUpd.data.state_data.timecard;
                 /* Fall through to the next case... */
             case REMOTE_STREAM_ADD:
                 data->cause =
@@ -1817,6 +1835,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
         data->sdp = sessUpd->update.ccSessionUpd.data.state_data.sdp;
         /* Fall through to the next case... */
     case REMOTE_STREAM_ADD:
+        data->timecard = sessUpd->update.ccSessionUpd.data.state_data.timecard;
         data->cause = sessUpd->update.ccSessionUpd.data.state_data.cause;
         data->state = sessUpd->update.ccSessionUpd.data.state_data.state;
         data->fsm_state =
