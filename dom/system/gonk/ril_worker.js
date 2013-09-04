@@ -96,7 +96,15 @@ let RILQUIRKS_HAVE_QUERY_ICC_LOCK_RETRY_COUNT = libcutils.property_get("ro.moz.r
 // Marker object.
 let PENDING_NETWORK_TYPE = {};
 
-let Buf = require("resource://gre/modules/workers/worker_buf.js");
+let Buf = {
+  __proto__: (function(){
+    return require("resource://gre/modules/workers/worker_buf.js").Buf;
+  })(),
+
+  onSendParcel: function onSendParcel(parcel) {
+    postRILMessage(CLIENT_ID, parcel);
+  }
+};
 
 /**
  * The RIL state machine.
@@ -12792,9 +12800,6 @@ let RuimRecordHelper = {
 // Initialize buffers. This is a separate function so that unit tests can
 // re-initialize the buffers at will.
 Buf.init();
-Buf.setOutputStream(function (parcel) {
-  postRILMessage(CLIENT_ID, parcel);
-});
 
 function onRILMessage(data) {
   Buf.processIncoming(data);
