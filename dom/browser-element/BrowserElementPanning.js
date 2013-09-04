@@ -183,6 +183,12 @@ const ContentPanning = {
 
     this.position.set(screenX, screenY);
     KineticPanning.record(new Point(0, 0), evt.timeStamp);
+
+    // We prevent start events to avoid sending a focus event at the end of this
+    // touch series. See bug 889717.
+    if (this.panning || this.preventNextClick) {
+      evt.preventDefault();
+    }
   },
 
   onTouchEnd: function cp_onTouchEnd(evt) {
@@ -214,10 +220,15 @@ const ContentPanning = {
     }
 
     if (this.target && click && (this.panning || this.preventNextClick)) {
-      let target = this.target;
-      let view = target.ownerDocument ? target.ownerDocument.defaultView
-                                      : target;
-      view.addEventListener('click', this, true, true);
+      if (this.hybridEvents) {
+        let target = this.target;
+        let view = target.ownerDocument ? target.ownerDocument.defaultView
+                                        : target;
+        view.addEventListener('click', this, true, true);
+      } else {
+        // We prevent end events to avoid sending a focus event. See bug 889717.
+        evt.preventDefault();
+      }
     }
 
     this._finishPanning();
