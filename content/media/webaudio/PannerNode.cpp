@@ -421,7 +421,7 @@ PannerNodeEngine::ComputeAzimuthAndElevation(float& aAzimuth, float& aElevation)
     aAzimuth = 450 - aAzimuth;
   }
 
-  aElevation = 90 - 180 * acos(sourceListener.DotProduct(up)) / M_PI;
+  aElevation = 90 - 180 * acos(upProjection) / M_PI;
 
   if (aElevation > 90) {
     aElevation = 180 - aElevation;
