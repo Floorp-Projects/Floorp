@@ -22,6 +22,7 @@ import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.widget.GeckoActionProvider;
@@ -74,6 +75,7 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Vector;
@@ -1422,9 +1424,46 @@ abstract public class BrowserApp extends GeckoApp
         animateHideHomePager();
         hideBrowserSearch();
 
-        if (!TextUtils.isEmpty(url)) {
-            Tabs.getInstance().loadUrl(url, Tabs.LOADURL_USER_ENTERED);
+        // Don't do anything if the user entered an empty URL.
+        if (TextUtils.isEmpty(url)) {
+            return;
         }
+
+        // If the URL doesn't look like a search query, just load it.
+        if (!StringUtils.isSearchQuery(url, true)) {
+            Tabs.getInstance().loadUrl(url, Tabs.LOADURL_USER_ENTERED);
+            return;
+        }
+
+        // Otherwise, check for a bookmark keyword.
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                final String keyword;
+                final String keywordSearch;
+
+                final int index = url.indexOf(" ");
+                if (index == -1) {
+                    keyword = url;
+                    keywordSearch = "";
+                } else {
+                    keyword = url.substring(0, index);
+                    keywordSearch = url.substring(index + 1);
+                }
+
+                final String keywordUrl = BrowserDB.getUrlForKeyword(getContentResolver(), keyword);
+
+                // If there isn't a bookmark keyword, just load the URL.
+                if (TextUtils.isEmpty(keywordUrl)) {
+                    Tabs.getInstance().loadUrl(url, Tabs.LOADURL_USER_ENTERED);
+                    return;
+                }
+
+                // Otherwise, construct a search query from the bookmark keyword.
+                final String searchUrl = keywordUrl.replace("%s", URLEncoder.encode(keywordSearch));
+                Tabs.getInstance().loadUrl(searchUrl, Tabs.LOADURL_USER_ENTERED);
+            }
+        });
     }
 
     boolean dismissEditingMode() {

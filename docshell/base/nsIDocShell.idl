@@ -42,7 +42,7 @@ interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 interface nsIReflowObserver;
 
-[scriptable, builtinclass, uuid(4bb2261b-4c13-44a4-ace3-fc2eec17cc34)]
+[scriptable, builtinclass, uuid(62f1b40d-1d15-4640-95dc-20caae775bd1)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -410,6 +410,22 @@ interface nsIDocShell : nsIDocShellTreeItem
 
   /* attribute to access whether error pages are enabled */
   attribute boolean useErrorPages;
+
+  /**
+   * Display a load error in a frame while keeping that frame's currentURI
+   * pointing correctly to the page where the error ocurred, rather than to
+   * the error document page. You must provide either the aURI or aURL parameter.
+   *
+   * @param  aError         The error code to be displayed
+   * @param  aURI           nsIURI of the page where the error happened
+   * @param  aURL           wstring of the page where the error happened
+   * @param  aFailedChannel The channel related to this error
+   */
+  void displayLoadError(in nsresult aError,
+                        in nsIURI aURI,
+                        in wstring aURL,
+                        [optional] in nsIChannel aFailedChannel);
+
 
   /**
    * Keeps track of the previous SHTransaction index and the current
