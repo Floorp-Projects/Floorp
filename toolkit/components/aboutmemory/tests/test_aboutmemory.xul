@@ -165,12 +165,12 @@
   // the largest).  Processes without a |resident| memory reporter are saved
   // for the end.
   let fakeReporters2 = [
-    { name: "resident-fast",
+    { name: "redundant/foobar",
       collectReports: function(aCbObj, aClosure) {
         // Shouldn't reach here;  aboutMemory.js should skip the reporter.
         // (Nb: this must come after |mgr.explicit| is accessed, otherwise it
         // *will* be run by nsMemoryReporterManager::GetExplicit()).
-        ok(false, "'resident-fast' reporter was run");
+        ok(false, "'redundant/foobar' reporter was run");
       }
     },
     { name: "fake3",
@@ -195,7 +195,7 @@
         // to be skipped;  the report-level skipping will be hit instead.
         f("2nd", "size/e",          NONHEAP, BYTES,24*4*KB);
         f("2nd", "size/f",          NONHEAP, BYTES,24*4*KB);
-        f("2nd", "resident-fast",   NONHEAP, BYTES,24*4*KB); // ignored!
+        f("2nd", "redundant/blah",  NONHEAP, BYTES,24*4*KB); // ignored!
 
         // Check that we can handle "heap-allocated" not being present.
         f("3rd", "explicit/a/b",    HEAP,    BYTES,333 * MB);

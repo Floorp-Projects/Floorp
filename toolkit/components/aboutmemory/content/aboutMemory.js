@@ -1017,24 +1017,19 @@ function getPCollsByProcess(aProcessReports, aForceShowSmaps)
   // reach here via a "content-child" reporter if they were in a child
   // process.)
   //
-  // Also ignore the "resident-fast" reporter; we use the vanilla "resident"
-  // reporter because it's more important that we get accurate results than
-  // that we avoid the (small) possibility of a long pause when loading
-  // about:memory.  Furthermore, the "resident" reporter can purge pages on
-  // MacOS, which affects the results of the "resident-fast" reporter, and we
-  // don't want the measurements shown in about:memory to be affected by the
-  // (arbitrary) order of memory reporter execution.
+  // Ignore any "redundant/"-prefixed reporters and reports, which are only
+  // used by telemetry.
 
   function ignoreReporter(aName)
   {
     return (aName === "smaps" && !gVerbose.checked && !aForceShowSmaps) ||
-           aName === "resident-fast";
+           aName.startsWith("redundant/");
   }
 
   function ignoreReport(aUnsafePath)
   {
     return (isSmapsPath(aUnsafePath) && !gVerbose.checked && !aForceShowSmaps) ||
-           aUnsafePath == "resident-fast";
+           aUnsafePath.startsWith("redundant/");
   }
 
   function handleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount,

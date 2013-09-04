@@ -1586,13 +1586,14 @@ private:
 // easily report them via telemetry, so we live with the small risk of
 // inconsistencies.
 
-class JSMainRuntimeCompartmentsCountSystemReporter MOZ_FINAL : public MemoryUniReporter
+class RedundantJSMainRuntimeCompartmentsSystemReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
-    JSMainRuntimeCompartmentsCountSystemReporter()
-      : MemoryUniReporter("js-main-runtime-compartments-count/system",
-                          KIND_OTHER, UNITS_COUNT,
-"The number of JavaScript compartments for system code in the main JSRuntime.")
+    // An empty description is ok because this is a "redundant/"-prefixed
+    // reporter and so is ignored by about:memory.
+    RedundantJSMainRuntimeCompartmentsSystemReporter()
+      : MemoryUniReporter("redundant/js-main-runtime-compartments/system",
+                          KIND_OTHER, UNITS_COUNT, "")
     {}
 private:
     int64_t Amount() MOZ_OVERRIDE
@@ -1602,11 +1603,13 @@ private:
     }
 };
 
-class JSMainRuntimeCompartmentsCountUserReporter MOZ_FINAL : public MemoryUniReporter
+class RedundantJSMainRuntimeCompartmentsUserReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
-    JSMainRuntimeCompartmentsCountUserReporter()
-      : MemoryUniReporter("js-main-runtime-compartments-count/user",
+    // An empty description is ok because this is a "redundant/"-prefixed
+    // reporter and so is ignored by about:memory.
+    RedundantJSMainRuntimeCompartmentsUserReporter()
+      : MemoryUniReporter("redundant/js-main-runtime-compartments/user",
                           KIND_OTHER, UNITS_COUNT,
 "The number of JavaScript compartments for user code in the main JSRuntime.")
     {}
@@ -3043,8 +3046,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         NS_RUNTIMEABORT("xpc_LocalizeRuntime failed.");
 
     NS_RegisterMemoryReporter(new JSMainRuntimeGCHeapReporter());
-    NS_RegisterMemoryReporter(new JSMainRuntimeCompartmentsCountSystemReporter());
-    NS_RegisterMemoryReporter(new JSMainRuntimeCompartmentsCountUserReporter());
+    NS_RegisterMemoryReporter(new RedundantJSMainRuntimeCompartmentsSystemReporter());
+    NS_RegisterMemoryReporter(new RedundantJSMainRuntimeCompartmentsUserReporter());
     NS_RegisterMemoryReporter(new JSMainRuntimeTemporaryPeakReporter());
     NS_RegisterMemoryReporter(new JSMainRuntimeCompartmentsReporter);
 
