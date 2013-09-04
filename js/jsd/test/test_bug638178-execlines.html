@@ -11,12 +11,9 @@ var BUG = 638178;
 var TEST_SCRIPT = "test-bug638178-execlines.js";
 document.getElementsByTagName("title")[0].innerHTML = "JSD Test for Bug " + BUG;
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     console.log("start of runTest, loading script");
     loadScript(TEST_SCRIPT, document.getElementById("test"));
     console.log("end of runTest");

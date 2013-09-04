@@ -17,10 +17,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=578096
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
 
 var file = Cc["@mozilla.org/file/directory_service;1"]
            .getService(Ci.nsIProperties)
@@ -29,12 +27,11 @@ file.append("foo.txt");
 file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
 
 SimpleTest.waitForExplicitFinish();
-document.getElementById('file').value = file.path;
+SpecialPowers.wrap(document.getElementById('file')).value = file.path;
 
 var xhr = new XMLHttpRequest();
 xhr.onreadystatechange = function(event) {
   if (xhr.readyState == 4) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     file.remove(false);
     ok(true, "We didn't throw! Yay!");
     SimpleTest.finish();

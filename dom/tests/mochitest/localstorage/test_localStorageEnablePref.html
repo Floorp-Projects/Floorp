@@ -9,10 +9,8 @@
 
 function setDOMStorageEnabled(enabled)
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-              .getService(Components.interfaces.nsIPrefBranch);
+  var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
+              .getService(SpecialPowers.Ci.nsIPrefBranch);
   prefs.setBoolPref("dom.storage.enabled", enabled);
 }
 
