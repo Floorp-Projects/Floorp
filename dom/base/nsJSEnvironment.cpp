@@ -874,7 +874,7 @@ nsJSContext::nsJSContext(bool aGCOnDestruction,
   mIsInitialized = false;
   mScriptsEnabled = true;
   mProcessingScriptTag = false;
-  NS_HOLD_JS_OBJECTS(this, nsJSContext);
+  HoldJSObjects(this);
 }
 
 nsJSContext::~nsJSContext()
@@ -925,7 +925,7 @@ nsJSContext::DestroyJSContext()
 
   JS_DestroyContextNoGC(mContext);
   mContext = nullptr;
-  NS_DROP_JS_OBJECTS(this, nsJSContext);
+  DropJSObjects(this);
 }
 
 // QueryInterface implementation for nsJSContext
