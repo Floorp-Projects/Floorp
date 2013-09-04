@@ -642,7 +642,6 @@ Rule.prototype = {
     let props = [];
 
     for (let line of lines) {
-      dump("line: " + line + "\n");
       let [, name, value, priority] = CSS_PROP_RE.exec(line) || []
       if (!name || !value) {
         continue;
