@@ -6,8 +6,6 @@
 
 interface nsIDOMMozIccInfo;
 interface nsIDOMMozMobileConnectionInfo;
-interface nsIDOMMozSmsSegmentInfo;
-interface nsIMobileMessageCallback;
 
 [scriptable, uuid(1e602d20-d066-4399-8997-daf36b3158ef)]
 interface nsIRILDataCallInfo : nsISupports
@@ -85,7 +83,7 @@ interface nsIRilSendWorkerMessageCallback : nsISupports
   boolean handleResponse(in jsval response);
 };
 
-[scriptable, uuid(61a8ca67-6113-4cd0-b443-e045f09863ed)]
+[scriptable, uuid(b1af7aad-6547-427c-a878-e2ebf98a14d6)]
 interface nsIRadioInterface : nsISupports
 {
   readonly attribute nsIRilContext rilContext;
@@ -101,16 +99,6 @@ interface nsIRadioInterface : nsISupports
   void unregisterDataCallCallback(in nsIRILDataCallback callback);
 
   void updateRILNetworkInterface();
-
-  /**
-   * SMS-related functionality.
-   */
-  nsIDOMMozSmsSegmentInfo getSegmentInfoForText(in DOMString text);
-
-  void sendSMS(in DOMString number,
-               in DOMString message,
-               in boolean silent,
-               in nsIMobileMessageCallback request);
 
   void sendWorkerMessage(in DOMString type,
               [optional] in jsval message,

@@ -54,14 +54,6 @@ SmsService::Send(const nsAString& aNumber,
 }
 
 NS_IMETHODIMP
-SmsService::IsSilentNumber(const nsAString& aNumber,
-                           bool*            aIsSilent)
-{
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 SmsService::AddSilentNumber(const nsAString& aNumber)
 {
   NS_NOTYETIMPLEMENTED("Implement me!");
