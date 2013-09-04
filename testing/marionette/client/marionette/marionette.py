@@ -1255,7 +1255,4 @@ class Marionette(object):
         '''
         if element is not None:
             element = element.id
-        lights = None
-        if highlights is not None:
-            lights = [highlight.id for highlight in highlights if highlights]
-        return self._send_message("screenShot", 'value', element=element, highlights=lights)
+        return self._send_message("screenShot", 'value', element=element, highlights=highlights)
