@@ -932,7 +932,7 @@ CycleCollectedJSRuntime::UsefulToMergeZones() const
     // NativeGlobal() is not an outer window (this happens with XUL Prototype
     // compilation scopes, for example, which we're not interested in).
     nsIScriptContext* scx = GetScriptContextFromJSContext(cx);
-    JS::RootedObject global(cx, scx ? scx->GetNativeGlobal() : nullptr);
+    JS::RootedObject global(cx, scx ? scx->GetWindowProxyPreserveColor() : nullptr);
     if (!global || !js::GetObjectParent(global)) {
       continue;
     }
