@@ -101,6 +101,90 @@ let Buf = {
     return require("resource://gre/modules/workers/worker_buf.js").Buf;
   })(),
 
+  mToken: 0,
+  mTokenRequestMap: null,
+
+  init: function init() {
+    this._init();
+
+    // This gets incremented each time we send out a parcel.
+    this.mToken = 1;
+
+    // Maps tokens we send out with requests to the request type, so that
+    // when we get a response parcel back, we know what request it was for.
+    this.mTokenRequestMap = {};
+  },
+
+  /**
+   * Process one parcel.
+   */
+  processParcel: function processParcel() {
+    let response_type = this.readUint32();
+
+    let request_type, options;
+    if (response_type == RESPONSE_TYPE_SOLICITED) {
+      let token = this.readUint32();
+      let error = this.readUint32();
+
+      options = this.mTokenRequestMap[token];
+      if (!options) {
+        if (DEBUG) {
+          debug("Suspicious uninvited request found: " + token + ". Ignored!");
+        }
+        return;
+      }
+
+      delete this.mTokenRequestMap[token];
+      request_type = options.rilRequestType;
+
+      options.rilRequestError = error;
+      if (DEBUG) {
+        debug("Solicited response for request type " + request_type +
+              ", token " + token + ", error " + error);
+      }
+    } else if (response_type == RESPONSE_TYPE_UNSOLICITED) {
+      request_type = this.readUint32();
+      if (DEBUG) debug("Unsolicited response for request type " + request_type);
+    } else {
+      if (DEBUG) debug("Unknown response type: " + response_type);
+      return;
+    }
+
+    RIL.handleParcel(request_type, this.mReadAvailable, options);
+  },
+
+  /**
+   * Start a new outgoing parcel.
+   *
+   * @param type
+   *        Integer specifying the request type.
+   * @param options [optional]
+   *        Object containing information about the request, e.g. the
+   *        original main thread message object that led to the RIL request.
+   */
+  newParcel: function newParcel(type, options) {
+    if (DEBUG) debug("New outgoing parcel of type " + type);
+
+    // We're going to leave room for the parcel size at the beginning.
+    this.mOutgoingIndex = this.PARCEL_SIZE_SIZE;
+    this.writeUint32(type);
+    this.writeUint32(this.mToken);
+
+    if (!options) {
+      options = {};
+    }
+    options.rilRequestType = type;
+    options.rilRequestError = null;
+    this.mTokenRequestMap[this.mToken] = options;
+    this.mToken++;
+    return this.mToken;
+  },
+
+  simpleRequest: function simpleRequest(type, options) {
+    this.newParcel(type, options);
+    this.sendParcel();
+  },
+
   onSendParcel: function onSendParcel(parcel) {
     postRILMessage(CLIENT_ID, parcel);
   }
