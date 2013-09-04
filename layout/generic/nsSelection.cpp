@@ -92,7 +92,7 @@ static void printRange(nsRange *aDomRange);
 #define DEBUG_OUT_RANGE(x)  printRange(x)
 #else
 #define DEBUG_OUT_RANGE(x)  
-#endif //MOZ_DEBUG
+#endif // PRINT_RANGE
 
 
 
