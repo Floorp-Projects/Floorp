@@ -63,6 +63,21 @@ public:
     }
   }
 
+  virtual void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv) MOZ_OVERRIDE
+  {
+    if (aChannelCount != ChannelCount()) {
+      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    }
+    return;
+  }
+  virtual void SetChannelCountModeValue(ChannelCountMode aMode, ErrorResult& aRv) MOZ_OVERRIDE
+  {
+    if (aMode != ChannelCountMode::Explicit) {
+      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    }
+    return;
+  }
+
   uint32_t BufferSize() const
   {
     return mBufferSize;

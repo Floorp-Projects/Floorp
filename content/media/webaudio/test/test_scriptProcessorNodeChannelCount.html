@@ -32,9 +32,14 @@ addLoadEvent(function() {
 
   var source = context.createBufferSource();
 
-  var sp = context.createScriptProcessor(2048);
-  sp.channelCount = 3;
+  var sp = context.createScriptProcessor(2048, 3);
+  expectException(function() { sp.channelCount = 2; },
+                  DOMException.NOT_SUPPORTED_ERR);
   sp.channelCountMode = "explicit";
+  expectException(function() { sp.channelCountMode = "max"; },
+                  DOMException.NOT_SUPPORTED_ERR);
+  expectException(function() { sp.channelCountMode = "clamped-max"; },
+                  DOMException.NOT_SUPPORTED_ERR);
   sp.channelInterpretation = "discrete";
   source.start(0);
   source.buffer = buffer;
