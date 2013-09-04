@@ -36,6 +36,7 @@ else:
     CPP_SOURCES += [
         'MobileMessageDatabaseService.cpp',
         'MmsService.cpp',
+        'SmsService.cpp',
     ]
 
 EXPORTS.mozilla.dom += [
@@ -60,7 +61,6 @@ CPP_SOURCES += [
     'SmsMessage.cpp',
     'SmsParent.cpp',
     'SmsSegmentInfo.cpp',
-    'SmsService.cpp',
     'SmsServicesFactory.cpp',
 ]
 
@@ -70,6 +70,8 @@ if CONFIG['MOZ_B2G_RIL']:
         'gonk/MmsService.manifest',
         'gonk/MobileMessageDatabaseService.js',
         'gonk/MobileMessageDatabaseService.manifest',
+        'gonk/SmsService.js',
+        'gonk/SmsService.manifest',
     ]
 
 IPDL_SOURCES += [
