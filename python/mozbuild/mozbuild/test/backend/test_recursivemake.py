@@ -234,16 +234,33 @@ class TestRecursiveMakeBackend(BackendTester):
             self.assertEqual(found, val)
 
     def test_exports(self):
-        """Ensure EXPORTS is handled properly."""
+        """Ensure EXPORTS is written out correctly."""
         env = self._consume('exports', RecursiveMakeBackend)
 
-        # EXPORTS files should appear in the dist_include install manifest.
-        m = InstallManifest(path=os.path.join(env.topobjdir,
-            '_build_manifests', 'install', 'dist_include'))
-        self.assertEqual(len(m), 7)
-        self.assertIn('foo.h', m)
-        self.assertIn('mozilla/mozilla1.h', m)
-        self.assertIn('mozilla/dom/dom2.h', m)
+        backend_path = os.path.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        self.assertEqual(lines, [
+            'MOZBUILD_DERIVED := 1',
+            'NO_MAKEFILE_RULE := 1',
+            'NO_SUBMAKEFILES_RULE := 1',
+            'EXPORTS += foo.h',
+            'EXPORTS_NAMESPACES += mozilla',
+            'EXPORTS_mozilla += mozilla1.h mozilla2.h',
+            'EXPORTS_NAMESPACES += mozilla/dom',
+            'EXPORTS_mozilla/dom += dom1.h dom2.h',
+            'EXPORTS_NAMESPACES += mozilla/gfx',
+            'EXPORTS_mozilla/gfx += gfx.h',
+            'EXPORTS_NAMESPACES += nspr/private',
+            'EXPORTS_nspr/private += pprio.h',
+        ])
+
+        # EXPORTS files should appear in the dist_include purge manifest.
+        m = PurgeManifest(path=os.path.join(env.topobjdir,
+            '_build_manifests', 'purge', 'dist_include'))
+        self.assertIn('foo.h', m.entries)
+        self.assertIn('mozilla/mozilla1.h', m.entries)
+        self.assertIn('mozilla/dom/dom2.h', m.entries)
 
     def test_xpcshell_manifests(self):
         """Ensure XPCSHELL_TESTS_MANIFESTS is written out correctly."""
@@ -280,8 +297,8 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertIn('bar.idl', m)
         self.assertIn('foo.idl', m)
 
-        m = InstallManifest(path=os.path.join(install_dir, 'dist_include'))
-        self.assertIn('foo.h', m)
+        m = PurgeManifest(path=os.path.join(purge_dir, 'dist_include'))
+        self.assertIn('foo.h', m.entries)
 
         p = os.path.join(env.topobjdir, 'config/makefiles/xpidl')
         self.assertTrue(os.path.isdir(p))
@@ -308,6 +325,7 @@ class TestRecursiveMakeBackend(BackendTester):
 
         expected = [
             'dist_bin',
+            'dist_include',
             'dist_private',
             'dist_public',
             'dist_sdk',

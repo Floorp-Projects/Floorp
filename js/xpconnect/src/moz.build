@@ -8,6 +8,7 @@ MODULE = 'xpconnect'
 
 EXPORTS += [
     'BackstagePass.h',
+    'GeneratedEvents.h',
     'XPCJSMemoryReporter.h',
     'nsCxPusher.h',
     'qsObjectHelper.h',
