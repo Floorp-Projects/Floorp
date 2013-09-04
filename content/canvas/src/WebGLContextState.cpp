@@ -12,6 +12,7 @@
 #include "WebGLRenderbuffer.h"
 #include "WebGLTexture.h"
 #include "WebGLVertexArray.h"
+#include "GLContext.h"
 
 using namespace mozilla;
 using namespace dom;

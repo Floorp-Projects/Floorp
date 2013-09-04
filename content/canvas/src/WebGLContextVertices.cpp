@@ -13,6 +13,7 @@
 #include "WebGLUniformInfo.h"
 #include "WebGLShader.h"
 #include "WebGLProgram.h"
+#include "GLContext.h"
 
 using namespace mozilla;
 using namespace dom;

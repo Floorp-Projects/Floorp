@@ -12,6 +12,7 @@
 
 #include "mozilla/LinkedList.h"
 #include "mozilla/CheckedInt.h"
+#include <map>
 
 namespace mozilla {
 
