@@ -42,12 +42,14 @@ EXPORTS += [
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     EXPORTS += [
-        'nsExternalSharingAppService.h',
-        'nsExternalURLHandlerService.h',
+        osdir + '/nsExternalSharingAppService.h',
+        osdir + '/nsExternalURLHandlerService.h',
     ]
 
 if CONFIG['MOZ_ENABLE_MEEGOTOUCHSHARE']:
-    EXPORTS += ['nsExternalSharingAppService.h']
+    EXPORTS += [
+        osdir + '/nsExternalSharingAppService.h',
+    ]
 
 EXPORTS.mozilla.dom += [
     'ExternalHelperAppChild.h',

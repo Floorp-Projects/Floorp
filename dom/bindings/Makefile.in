@@ -110,6 +110,7 @@ INSTALL_TARGETS += EXPORTS_GENERATED
 # be in the same target/subtier as GlobalGen.py, otherwise the files will not
 # get installed into the appropriate location as they are generated.
 globalgen_headers_FILES := \
+  GeneratedAtomList.h \
   PrototypeList.h \
   RegisterBindings.h \
   UnionConversions.h \
