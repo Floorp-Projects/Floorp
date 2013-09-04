@@ -62,7 +62,6 @@ ifndef MOZ_PROFILE_USE
 default alldep all:: CLOBBER $(topsrcdir)/configure config.status backend.RecursiveMakeBackend.built
 	$(call SUBMAKE,backend.RecursiveMakeBackend.built,js/src,1)
 	$(call py_action,purge_manifests,-d _build_manifests/purge .)
-	$(call py_action,process_install_manifest,$(DIST)/include _build_manifests/install/dist_include js/src/_build_manifests/install/dist_include)
 endif
 
 CLOBBER: $(topsrcdir)/CLOBBER
