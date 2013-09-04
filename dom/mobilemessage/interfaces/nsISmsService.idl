@@ -13,12 +13,13 @@ interface nsIMobileMessageCallback;
 #define SMS_SERVICE_CONTRACTID "@mozilla.org/sms/smsservice;1"
 %}
 
-[scriptable, builtinclass, uuid(f0d5d11b-0326-4cb1-bb76-a3f912212287)]
+[scriptable, builtinclass, uuid(0f3f75ec-00dd-11e3-87ac-0b1d5c79afdf)]
 interface nsISmsService : nsISupports
 {
   boolean hasSupport();
 
-  nsIDOMMozSmsSegmentInfo getSegmentInfoForText(in DOMString text);
+  void getSegmentInfoForText(in DOMString text,
+                             in nsIMobileMessageCallback request);
 
   void send(in DOMString number,
             in DOMString message,

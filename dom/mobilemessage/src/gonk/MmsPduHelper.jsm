@@ -11,6 +11,8 @@ Cu.import("resource://gre/modules/WspPduHelper.jsm", WSP);
 
 Cu.import("resource://gre/modules/mms_consts.js");
 
+Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
+
 let DEBUG; // set to true to see debug messages
 
 this.MMS_VERSION = (function () {
@@ -178,6 +180,33 @@ this.Address = {
 
     EncodedStringValue.encode(data, str);
   },
+
+  /**
+   * @param address
+   *        Address string which want to find the type.
+   *
+   * @return Address type.
+   */
+  resolveType: function resolveType(address) {
+    if (address.match(this.REGEXP_EMAIL)) {
+      return "email";
+    }
+
+    if (address.match(this.REGEXP_IPV4)) {
+      return "IPv4";
+    }
+
+    if (address.match(this.REGEXP_IPV6)) {
+      return "IPv6";
+    }
+
+    let normalizedAddress = PhoneNumberUtils.normalize(address, false);
+    if (PhoneNumberUtils.isPlainPhoneNumber(normalizedAddress)) {
+      return "PLMN";
+    }
+
+    return "Others";
+  },
 };
 
 defineLazyRegExp(Address, "REGEXP_DECODE_PLMN",        "^(\\+?[\\d.-]+)\\/TYPE=(PLMN)$");
@@ -191,6 +220,10 @@ defineLazyRegExp(Address, "REGEXP_ENCODE_CUSTOM_TYPE", "^\\w+$");
 defineLazyRegExp(Address, "REGEXP_ENCODE_CUSTOM_ADDR", "^[\\w\\+\\-.%]+$");
 defineLazyRegExp(Address, "REGEXP_NUM",                "^[\\+*#]\\d+$");
 defineLazyRegExp(Address, "REGEXP_ALPHANUM",           "^\\w+$");
+defineLazyRegExp(Address, "REGEXP_PLMN",               "^\\?[\\d.-]$");
+defineLazyRegExp(Address, "REGEXP_IPV4",               "^\\d{1,3}(?:\\.\\d{1,3}){3}$");
+defineLazyRegExp(Address, "REGEXP_IPV6",               "^[\\da-fA-F]{4}(?::[\\da-fA-F]{4}){7}$");
+defineLazyRegExp(Address, "REGEXP_EMAIL",              "@");
 
 /**
  * Header-field = MMS-header | Application-header
