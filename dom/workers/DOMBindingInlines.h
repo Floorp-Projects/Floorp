@@ -12,6 +12,7 @@
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 #include "mozilla/dom/WorkerLocationBinding.h"
 #include "mozilla/dom/WorkerNavigatorBinding.h"
+#include "mozilla/dom/URLBinding.h"
 #include "jsfriendapi.h"
 
 BEGIN_WORKERS_NAMESPACE
@@ -21,6 +22,7 @@ class XMLHttpRequest;
 class XMLHttpRequestUpload;
 class WorkerLocation;
 class WorkerNavigator;
+class URL;
 
 namespace {
 
@@ -54,6 +56,7 @@ SPECIALIZE_PROTO_TRAITS(XMLHttpRequest)
 SPECIALIZE_PROTO_TRAITS(XMLHttpRequestUpload)
 SPECIALIZE_PROTO_TRAITS(WorkerLocation)
 SPECIALIZE_PROTO_TRAITS(WorkerNavigator)
+SPECIALIZE_PROTO_TRAITS(URL)
 
 #undef SPECIALIZE_PROTO_TRAITS
 

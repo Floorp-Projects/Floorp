@@ -26,6 +26,10 @@ class MediaSource;
 class GlobalObject;
 struct objectURLOptions;
 
+namespace workers {
+class URLProxy;
+}
+
 class URL MOZ_FINAL
 {
 public:
@@ -124,6 +128,8 @@ private:
 
   nsRefPtr<nsPIDOMWindow> mWindow;
   nsCOMPtr<nsIURI> mURI;
+
+  friend class mozilla::dom::workers::URLProxy;
 };
 
 }
