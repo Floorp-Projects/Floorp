@@ -5,30 +5,30 @@
     <title>Test Modifying Plugin click-to-play Flag</title>
     <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
     <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"></script>
+    <script type="application/javascript" src="utils.js"></script>
   </head>
   <body>
     <script class="testbody" type="application/javascript">
       Components.utils.import("resource://gre/modules/Services.jsm");
+      Services.prefs.setBoolPref("plugins.click_to_play", true);
       var pluginHost = Components.classes["@mozilla.org/plugin/host;1"]
                        .getService(Components.interfaces.nsIPluginHost);
-      is(pluginHost.getStateForType("application/x-test"), Components.interfaces.nsIPluginTag.STATE_ENABLED, "click-to-play should be off to begin with");
-      Services.prefs.setBoolPref("plugins.click_to_play", true);
 
-      var pluginTags = pluginHost.getPluginTags();
-      var testPlugin = null;
-      for (var plugin of pluginTags) {
-        if (plugin.name == "Test Plug-in") {
-          testPlugin = plugin;
-          break;
-        }
-      }
+      var testPlugin = getTestPlugin();
+      var secondTestPlugin = getTestPlugin("Second Test Plug-in");
       ok(testPlugin, "Should have Test Plug-in");
-      testPlugin.enabledState = Components.interfaces.nsIPluginTag.STATE_CLICKTOPLAY;
-      is(pluginHost.getStateForType("application/x-test"), Components.interfaces.nsIPluginTag.STATE_CLICKTOPLAY, "click-to-play should be on for Test Plug-in now");
-      is(pluginHost.getStateForType("application/x-second-test"), Components.interfaces.nsIPluginTag.STATE_ENABLED, "click-to-play should still be off for the Second Test Plug-in");
+      ok(secondTestPlugin, "Should have Second Test Plug-in");
+
+      // make sure both start off as click-to-play
+      setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_CLICKTOPLAY);
+      setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Second Test Plug-in");
 
       testPlugin.enabledState = Components.interfaces.nsIPluginTag.STATE_ENABLED;
       is(pluginHost.getStateForType("application/x-test"), Components.interfaces.nsIPluginTag.STATE_ENABLED, "click-to-play should be off for Test Plug-in now");
+      is(pluginHost.getStateForType("application/x-second-test"), Components.interfaces.nsIPluginTag.STATE_CLICKTOPLAY, "click-to-play should still be on for the Second Test Plug-in");
+
+      testPlugin.enabledState = Components.interfaces.nsIPluginTag.STATE_CLICKTOPLAY;
+      is(pluginHost.getStateForType("application/x-test"), Components.interfaces.nsIPluginTag.STATE_CLICKTOPLAY, "click-to-play should be on for Test Plug-in now");
 
       Services.prefs.clearUserPref("plugins.click_to_play");
     </script>
