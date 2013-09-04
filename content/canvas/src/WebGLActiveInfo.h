@@ -6,8 +6,7 @@
 #ifndef WEBGLACTIVEINFO_H_
 #define WEBGLACTIVEINFO_H_
 
-#include "WebGLTypes.h"
-#include "nsISupports.h"
+#include "WebGLObjectModel.h"
 #include "nsString.h"
 #include "js/TypeDecls.h"
 
