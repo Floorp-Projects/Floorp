@@ -79,8 +79,6 @@ ComputeAccurateDecimalInteger(ThreadSafeContext *cx,
         js_free(cstr);
         return false;
     }
-    if (err == JS_DTOA_ERANGE && *dp == HUGE_VAL)
-        *dp = js_PositiveInfinity;
     js_free(cstr);
     return true;
 }
@@ -1718,10 +1716,6 @@ js_strtod(ThreadSafeContext *cx, const jschar *s, const jschar *send,
     } else {
         int err;
         d = js_strtod_harder(cx->dtoaState(), cstr, &estr, &err);
-        if (d == HUGE_VAL)
-            d = js_PositiveInfinity;
-        else if (d == -HUGE_VAL)
-            d = js_NegativeInfinity;
     }
 
     i = estr - cstr;
