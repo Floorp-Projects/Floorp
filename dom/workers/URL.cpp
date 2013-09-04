@@ -226,6 +226,129 @@ public:
 };
 
 // static
+URL*
+URL::Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
+                 URL& aBase, ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
+}
+
+// static
+URL*
+URL::Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
+                 const nsAString& aBase, ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
+}
+
+void
+URL::GetHref(nsString& aHref) const
+{
+}
+
+void
+URL::SetHref(const nsAString& aHref, ErrorResult& aRv)
+{
+}
+
+void
+URL::GetOrigin(nsString& aOrigin) const
+{
+}
+
+void
+URL::GetProtocol(nsString& aProtocol) const
+{
+}
+
+void
+URL::SetProtocol(const nsAString& aProtocol)
+{
+}
+
+void
+URL::GetUsername(nsString& aUsername) const
+{
+}
+
+void
+URL::SetUsername(const nsAString& aUsername)
+{
+}
+
+void
+URL::GetPassword(nsString& aPassword) const
+{
+}
+
+void
+URL::SetPassword(const nsAString& aPassword)
+{
+}
+
+void
+URL::GetHost(nsString& aHost) const
+{
+}
+
+void
+URL::SetHost(const nsAString& aHost)
+{
+}
+
+void
+URL::GetHostname(nsString& aHostname) const
+{
+}
+
+void
+URL::SetHostname(const nsAString& aHostname)
+{
+}
+
+void
+URL::GetPort(nsString& aPort) const
+{
+}
+
+void
+URL::SetPort(const nsAString& aPort)
+{
+}
+
+void
+URL::GetPathname(nsString& aPathname) const
+{
+}
+
+void
+URL::SetPathname(const nsAString& aPathname)
+{
+}
+
+void
+URL::GetSearch(nsString& aSearch) const
+{
+}
+
+void
+URL::SetSearch(const nsAString& aSearch)
+{
+}
+
+void
+URL::GetHash(nsString& aHash) const
+{
+}
+
+void
+URL::SetHash(const nsAString& aHash)
+{
+}
+
+// static
 void
 URL::CreateObjectURL(const GlobalObject& aGlobal, JSObject* aBlob,
                      const mozilla::dom::objectURLOptions& aOptions,
