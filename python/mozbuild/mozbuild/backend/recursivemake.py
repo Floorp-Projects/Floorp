@@ -149,8 +149,11 @@ class RecursiveMakeBackend(CommonBackend):
         self.backend_input_files.add(os.path.join(self.environment.topobjdir,
             'config', 'autoconf.mk'))
 
+        self._install_manifests = dict()
+
         self._purge_manifests = dict(
             dist_bin=PurgeManifest(relpath='dist/bin'),
+            dist_include=PurgeManifest(relpath='dist/include'),
             dist_private=PurgeManifest(relpath='dist/private'),
             dist_public=PurgeManifest(relpath='dist/public'),
             dist_sdk=PurgeManifest(relpath='dist/sdk'),
@@ -160,7 +163,6 @@ class RecursiveMakeBackend(CommonBackend):
 
         self._install_manifests = dict(
             dist_idl=InstallManifest(),
-            dist_include=InstallManifest(),
         )
 
     def _update_from_avoid_write(self, result):
@@ -366,22 +368,27 @@ class RecursiveMakeBackend(CommonBackend):
                 ' '.join(obj.parallel_external_make_dirs))
 
     def _process_exports(self, obj, exports, backend_file, namespace=""):
-        # This may not be needed, but is present for backwards compatibility
-        # with the old make rules, just in case.
-        if not obj.dist_install:
-            return
-
         strings = exports.get_strings()
         if namespace:
+            if strings:
+                backend_file.write('EXPORTS_NAMESPACES += %s\n' % namespace)
+            export_name = 'EXPORTS_%s' % namespace
             namespace += '/'
+        else:
+            export_name = 'EXPORTS'
 
-        for s in strings:
-            source = os.path.normpath(os.path.join(obj.srcdir, s))
-            dest = '%s%s' % (namespace, os.path.basename(s))
-            self._install_manifests['dist_include'].add_symlink(source, dest)
+        # Iterate over the list of export filenames, printing out an EXPORTS
+        # declaration for each.
+        if strings:
+            backend_file.write('%s += %s\n' % (export_name, ' '.join(strings)))
 
-            if not os.path.exists(source):
-                raise Exception('File listed in EXPORTS does not exist: %s' % source)
+            for s in strings:
+                source = os.path.normpath(os.path.join(obj.srcdir, s))
+                if not os.path.isfile(source):
+                    raise Exception('File listed in EXPORTS does not exist: %s' % source)
+
+                p = '%s%s' % (namespace, s)
+                self._purge_manifests['dist_include'].add(p)
 
         children = exports.get_children()
         for subdir in sorted(children):
@@ -398,8 +405,7 @@ class RecursiveMakeBackend(CommonBackend):
         for idl in manager.idls.values():
             self._install_manifests['dist_idl'].add_symlink(idl['source'],
                 idl['basename'])
-            self._install_manifests['dist_include'].add_optional_exists('%s.h'
-                % idl['root'])
+            self._purge_manifests['dist_include'].add('%s.h' % idl['root'])
             build_files.add(mozpath.join('headers', '%s.h' % idl['root']))
 
         for module in manager.modules:
