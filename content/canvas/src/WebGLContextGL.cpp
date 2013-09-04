@@ -277,41 +277,6 @@ WebGLContext::BlendFuncSeparate(GLenum srcRGB, GLenum dstRGB,
     gl->fBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
 }
 
-GLenum WebGLContext::CheckedBufferData(GLenum target,
-                                       GLsizeiptr size,
-                                       const GLvoid *data,
-                                       GLenum usage)
-{
-#ifdef XP_MACOSX
-    // bug 790879
-    if (gl->WorkAroundDriverBugs() &&
-        int64_t(size) > INT32_MAX) // the cast avoids a potential always-true warning on 32bit
-    {
-        GenerateWarning("Rejecting valid bufferData call with size %lu to avoid a Mac bug", size);
-        return LOCAL_GL_INVALID_VALUE;
-    }
-#endif
-    WebGLBuffer *boundBuffer = nullptr;
-    if (target == LOCAL_GL_ARRAY_BUFFER) {
-        boundBuffer = mBoundArrayBuffer;
-    } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
-        boundBuffer = mBoundVertexArray->mBoundElementArrayBuffer;
-    }
-    NS_ABORT_IF_FALSE(boundBuffer != nullptr, "no buffer bound for this target");
-    
-    bool sizeChanges = uint32_t(size) != boundBuffer->ByteLength();
-    if (sizeChanges) {
-        UpdateWebGLErrorAndClearGLError();
-        gl->fBufferData(target, size, data, usage);
-        GLenum error = LOCAL_GL_NO_ERROR;
-        UpdateWebGLErrorAndClearGLError(&error);
-        return error;
-    } else {
-        gl->fBufferData(target, size, data, usage);
-        return LOCAL_GL_NO_ERROR;
-    }
-}
-
 GLenum
 WebGLContext::CheckFramebufferStatus(GLenum target)
 {
