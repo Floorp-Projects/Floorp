@@ -114,14 +114,13 @@ void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioChunk* 
     unsigned numInputChannels =
         inputBus->IsNull() ? 0 : inputBus->mChannelData.Length();
 
-    bool isInputGood = inputBus && numInputChannels <= 2;
-    MOZ_ASSERT(isInputGood);
+    MOZ_ASSERT(numInputChannels <= 2);
     MOZ_ASSERT(framesToProcess <= inputBus->mDuration);
 
     bool isOutputGood = outputBus && outputBus->mChannelData.Length() == 2 && framesToProcess <= outputBus->mDuration;
     MOZ_ASSERT(isOutputGood);
 
-    if (!isInputGood || !isOutputGood) {
+    if (!isOutputGood) {
         if (outputBus)
             outputBus->SetNull(outputBus->mDuration);
         return;

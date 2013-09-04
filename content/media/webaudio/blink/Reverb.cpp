@@ -145,10 +145,7 @@ void Reverb::process(const AudioChunk* sourceBus, AudioChunk* destinationBus, si
         return;
 
     // For now only handle mono or stereo output
-    if (destinationBus->mChannelData.Length() > 2) {
-        destinationBus->SetNull(destinationBus->mDuration);
-        return;
-    }
+    MOZ_ASSERT(destinationBus->mChannelData.Length() <= 2);
 
     float* destinationChannelL = static_cast<float*>(const_cast<void*>(destinationBus->mChannelData[0]));
     const float* sourceBusL = static_cast<const float*>(sourceBus->mChannelData[0]);

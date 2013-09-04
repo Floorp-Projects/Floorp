@@ -37,6 +37,23 @@ public:
 
   virtual void DestroyMediaStream() MOZ_OVERRIDE;
 
+  virtual void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv) MOZ_OVERRIDE
+  {
+    if (aChannelCount > 2) {
+      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return;
+    }
+    AudioNode::SetChannelCount(aChannelCount, aRv);
+  }
+  virtual void SetChannelCountModeValue(ChannelCountMode aMode, ErrorResult& aRv) MOZ_OVERRIDE
+  {
+    if (aMode == ChannelCountMode::Max) {
+      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return;
+    }
+    AudioNode::SetChannelCountModeValue(aMode, aRv);
+  }
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PannerNode, AudioNode)
 

@@ -39,6 +39,22 @@ public:
 
   void SetNormalize(bool aNormal);
 
+  virtual void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv) MOZ_OVERRIDE
+  {
+    if (aChannelCount > 2) {
+      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return;
+    }
+    AudioNode::SetChannelCount(aChannelCount, aRv);
+  }
+  virtual void SetChannelCountModeValue(ChannelCountMode aMode, ErrorResult& aRv) MOZ_OVERRIDE
+  {
+    if (aMode == ChannelCountMode::Max) {
+      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return;
+    }
+    AudioNode::SetChannelCountModeValue(aMode, aRv);
+  }
   virtual void NotifyInputConnected() MOZ_OVERRIDE
   {
     mMediaStreamGraphUpdateIndexAtLastInputConnection =
