@@ -176,6 +176,7 @@
 @BINPATH@/components/dom_base.xpt
 @BINPATH@/components/dom_system.xpt
 #ifdef MOZ_B2G_RIL
+@BINPATH@/components/dom_telephony.xpt
 @BINPATH@/components/dom_voicemail.xpt
 @BINPATH@/components/dom_wifi.xpt
 @BINPATH@/components/dom_system_gonk.xpt
@@ -211,7 +212,6 @@
 @BINPATH@/components/dom_mobilemessage.xpt
 @BINPATH@/components/dom_storage.xpt
 @BINPATH@/components/dom_stylesheets.xpt
-@BINPATH@/components/dom_telephony.xpt
 @BINPATH@/components/dom_traversal.xpt
 #ifdef MOZ_WEBSPEECH
 @BINPATH@/components/dom_webspeechrecognition.xpt

@@ -24,9 +24,10 @@
 #include "TelephonyCall.h"
 #include "TelephonyCallGroup.h"
 
+#define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
+
 USING_TELEPHONY_NAMESPACE
 using namespace mozilla::dom;
-using mozilla::ErrorResult;
 
 namespace {
 
@@ -49,8 +50,6 @@ public:
   {
     MOZ_ASSERT(mTelephony);
   }
-
-  virtual ~Listener() {}
 
   void
   Disconnect()
@@ -112,7 +111,7 @@ Telephony::Shutdown()
     mListener->Disconnect();
 
     if (mProvider) {
-      mProvider->UnregisterListener(mListener);
+      mProvider->UnregisterTelephonyMsg(mListener);
       mProvider = nullptr;
     }
 
@@ -133,7 +132,7 @@ Telephony::Create(nsPIDOMWindow* aOwner, ErrorResult& aRv)
   NS_ASSERTION(aOwner, "Null owner!");
 
   nsCOMPtr<nsITelephonyProvider> ril =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+    do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
   if (!ril) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -166,7 +165,7 @@ Telephony::Create(nsPIDOMWindow* aOwner, ErrorResult& aRv)
     return nullptr;
   }
 
-  rv = ril->RegisterListener(telephony->mListener);
+  rv = ril->RegisterTelephonyMsg(telephony->mListener);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;
@@ -223,7 +222,12 @@ Telephony::DialInternal(bool isEmergency,
     }
   }
 
-  nsresult rv = mProvider->Dial(aNumber, isEmergency);
+  nsresult rv;
+  if (isEmergency) {
+    rv = mProvider->DialEmergency(aNumber);
+  } else {
+    rv = mProvider->Dial(aNumber);
+  }
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;
@@ -587,7 +591,7 @@ NS_IMETHODIMP
 Telephony::EnumerateCallState(uint32_t aCallIndex, uint16_t aCallState,
                               const nsAString& aNumber, bool aIsActive,
                               bool aIsOutgoing, bool aIsEmergency,
-                              bool aIsConference)
+                              bool aIsConference, bool* aContinue)
 {
   nsRefPtr<TelephonyCall> call;
 
@@ -599,10 +603,12 @@ Telephony::EnumerateCallState(uint32_t aCallIndex, uint16_t aCallState,
   call = aIsConference ? mGroup->GetCall(aCallIndex) : GetCall(aCallIndex);
   if (call) {
     // We have the call either in mCalls or in mGroup. Skip it.
+    *aContinue = true;
     return NS_OK;
   }
 
   if (MoveCall(aCallIndex, aIsConference)) {
+    *aContinue = true;
     return NS_OK;
   }
 
@@ -616,6 +622,7 @@ Telephony::EnumerateCallState(uint32_t aCallIndex, uint16_t aCallState,
                                mCalls.Contains(call),
                "Should have auto-added new call!");
 
+  *aContinue = true;
   return NS_OK;
 }
 
