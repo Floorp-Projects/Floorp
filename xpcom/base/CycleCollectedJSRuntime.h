@@ -172,9 +172,6 @@ public:
   void AssertNoObjectsToTrace(void* aPossibleJSHolder);
 #endif
 
-  // This returns the singleton nsCycleCollectionParticipant for JSContexts.
-  static nsCycleCollectionParticipant* JSContextParticipant();
-
   nsCycleCollectionParticipant* GCThingParticipant();
   nsCycleCollectionParticipant* ZoneParticipant();
 
