@@ -19,6 +19,8 @@ namespace mozilla {
  */
 class ActiveLayerTracker {
 public:
+  static void Shutdown();
+
   /*
    * We track eCSSProperty_transform and eCSSProperty_opacity style changes
    * and use that information to guess whether style changes are animated.
@@ -37,22 +39,32 @@ public:
    */
   static void NotifyAnimated(nsIFrame* aFrame, nsCSSProperty aProperty);
   /**
+   * Notify that a property in the inline style rule of aFrame's element
+   * has been modified.
+   * This notification is incomplete --- not all modifications to inline
+   * style will trigger this.
+   */
+  static void NotifyInlineStyleRuleModified(nsIFrame* aFrame, nsCSSProperty aProperty);
+  /**
    * Return true if aFrame's aProperty style should be considered as being animated
    * for constructing active layers.
    */
   static bool IsStyleAnimated(nsIFrame* aFrame, nsCSSProperty aProperty);
 
+  /*
+   * We track modifications to the content of certain frames (i.e. canvas frames)
+   * and use that to make layering decisions.
+   */
+
   /**
    * Mark aFrame's content as being active. This marking will time out after
-   * a short period. This is useful for frames such as canvas frames.
+   * a short period.
    */
   static void NotifyContentChange(nsIFrame* aFrame);
   /**
    * Return true if this frame's content is still marked as active.
    */
   static bool IsContentActive(nsIFrame* aFrame);
-
-  static void Shutdown();
 };
 
 }
