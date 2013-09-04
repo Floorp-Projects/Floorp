@@ -72,9 +72,8 @@ function checkFocus(aElement, aExpected)
   aElement.setAttribute('tabindex', 1);
 
   // We use the focus manager so we can test <label>.
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var fm = Components.classes["@mozilla.org/focus-manager;1"]
-                     .getService(Components.interfaces.nsIFocusManager);
+  var fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"]
+                        .getService(SpecialPowers.Ci.nsIFocusManager);
   fm.setFocus(aElement, 0);
 
   if (aExpected) {

@@ -11,8 +11,6 @@ var BUG = 617870;
 var TEST_SCRIPT = "test-bug617870-callhooks.js";
 document.getElementsByTagName("title")[0].innerHTML = "JSD Test for Bug " + BUG;
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
 SimpleTest.waitForExplicitFinish();
 
 var hits = { gn: [], ge: [], fn: [], fe: [] };
@@ -21,10 +19,8 @@ var numFunctionNonevals = 0;
 var numGlobalEvals = 0;
 var numFunctionEvals = 0;
 function runTest() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     jsd.topLevelHook = {
         onCall: function(frame,type) {
-            netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
             if (frame.script.fileName.indexOf(TEST_SCRIPT) != -1) {
                 var desc = frame.script.fileName + ":" + frame.line + " (" + frame.functionName + ")";
                 if (type == Ci.jsdICallHook.TYPE_TOPLEVEL_START) {
@@ -45,7 +41,6 @@ function runTest() {
     };
     jsd.functionHook = {
         onCall: function(frame,type) {
-            netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
             if (frame.script.fileName.indexOf(TEST_SCRIPT) != -1) {
                 if (type == Ci.jsdICallHook.TYPE_FUNCTION_CALL) {
                     var desc = frame.script.fileName + ":" + frame.line + " (" + frame.functionName + ")";

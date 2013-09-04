@@ -15,20 +15,18 @@ function setupTest(uri, domain, cookies, loads, headers) {
 
   SimpleTest.waitForExplicitFinish();
 
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
+               .getService(SpecialPowers.Ci.nsIPrefBranch)
+               .setIntPref("network.cookie.cookieBehavior", 1);
 
-  Components.classes["@mozilla.org/preferences-service;1"]
-            .getService(Components.interfaces.nsIPrefBranch)
-            .setIntPref("network.cookie.cookieBehavior", 1);
-
-  var cs = Components.classes["@mozilla.org/cookiemanager;1"]
-                     .getService(Components.interfaces.nsICookieManager2);
+  var cs = SpecialPowers.Cc["@mozilla.org/cookiemanager;1"]
+                        .getService(SpecialPowers.Ci.nsICookieManager2);
 
   ok(true, "we are going to remove these cookies");
   var count = 0;
   var list = cs.enumerator;
   while (list.hasMoreElements()) {
-    var cookie = list.getNext().QueryInterface(Components.interfaces.nsICookie);
+    var cookie = list.getNext().QueryInterface(SpecialPowers.Ci.nsICookie);
     ok(true, "cookie: " + cookie);
     ok(true, "cookie host " + cookie.host + " path " + cookie.path + " name " + cookie.name +
        " value " + cookie.value + " isSecure " + cookie.isSecure + " expires " + cookie.expires);
@@ -57,10 +55,9 @@ function finishTest()
 {
   gObs.remove();
 
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  Components.classes["@mozilla.org/preferences-service;1"]
-            .getService(Components.interfaces.nsIPrefBranch)
-            .clearUserPref("network.cookie.cookieBehavior");
+  SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
+               .getService(SpecialPowers.Ci.nsIPrefBranch)
+               .clearUserPref("network.cookie.cookieBehavior");
 
   SimpleTest.finish();
 }
@@ -72,23 +69,20 @@ function obs () {
   ok(true, "adding observer");
 
   this.window = window;
-  this.os = Components.classes["@mozilla.org/observer-service;1"]
-                      .getService(Components.interfaces.nsIObserverService);
+  this.os = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+                         .getService(SpecialPowers.Ci.nsIObserverService);
   this.os.addObserver(this, "http-on-modify-request", false);
 }
 
 obs.prototype = {
   observe: function obs_observe (theSubject, theTopic, theData)
   {
-    this.window.netscape.security
-        .PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
     ok(true, "theSubject " + theSubject);
     ok(true, "theTopic " + theTopic);
     ok(true, "theData " + theData);
 
     var channel = theSubject.QueryInterface(
-                    this.window.Components.interfaces.nsIHttpChannel);
+                    this.window.SpecialPowers.Ci.nsIHttpChannel);
     ok(true, "channel " + channel);
     try {
       ok(true, "channel.URI " + channel.URI);
@@ -163,14 +157,12 @@ function runTest() {
 
   is(gHeaders, gExpectedHeaders, "number of observed request headers");
 
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  var cs = Components.classes["@mozilla.org/cookiemanager;1"]
-                     .getService(Components.interfaces.nsICookieManager);
+  var cs = SpecialPowers.Cc["@mozilla.org/cookiemanager;1"]
+                        .getService(SpecialPowers.Ci.nsICookieManager);
   var count = 0;
   var list = cs.enumerator;
   while (list.hasMoreElements()) {
-    var cookie = list.getNext().QueryInterface(Components.interfaces.nsICookie);
+    var cookie = list.getNext().QueryInterface(SpecialPowers.Ci.nsICookie);
     ok(true, "cookie: " + cookie);
     ok(true, "cookie host " + cookie.host + " path " + cookie.path + " name " + cookie.name +
        " value " + cookie.value + " isSecure " + cookie.isSecure + " expires " + cookie.expires);
