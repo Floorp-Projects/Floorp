@@ -374,7 +374,6 @@ MOCHITEST_FILES = \
 		test_meta_attributes_reflection.html \
 		test_mod_attributes_reflection.html \
 		test_mozaudiochannel.html \
-		test_mozLoadFrom.html \
 		test_style_attributes_reflection.html \
 		test_bug629801.html \
 		test_bug839371.html \
