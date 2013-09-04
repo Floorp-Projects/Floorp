@@ -152,6 +152,10 @@ WebGLContext::BufferData(WebGLenum target, WebGLsizeiptr size,
     if (!ValidateBufferUsageEnum(usage, "bufferData: usage"))
         return;
 
+    // careful: WebGLsizeiptr is always 64-bit, but GLsizeiptr is like intptr_t.
+    if (!CheckedInt<GLsizeiptr>(size).isValid())
+        return ErrorOutOfMemory("bufferData: bad size");
+
     WebGLBuffer* boundBuffer = bufferSlot->get();
 
     if (!boundBuffer)
@@ -199,6 +203,10 @@ WebGLContext::BufferData(WebGLenum target,
 
     const ArrayBuffer& data = maybeData.Value();
 
+    // careful: data.Length() could conceivably be any size_t, but GLsizeiptr is like intptr_t.
+    if (!CheckedInt<GLsizeiptr>(data.Length()).isValid())
+        return ErrorOutOfMemory("bufferData: bad size");
+
     if (!ValidateBufferUsageEnum(usage, "bufferData: usage"))
         return;
 
@@ -243,6 +251,10 @@ WebGLContext::BufferData(WebGLenum target, const ArrayBufferView& data,
 
     if (!boundBuffer)
         return ErrorInvalidOperation("bufferData: no buffer bound!");
+
+    // careful: data.Length() could conceivably be any size_t, but GLsizeiptr is like intptr_t.
+    if (!CheckedInt<GLsizeiptr>(data.Length()).isValid())
+        return ErrorOutOfMemory("bufferData: bad size");
 
     InvalidateBufferFetching();
     MakeContextCurrent();
