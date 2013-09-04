@@ -213,6 +213,7 @@
 @BINPATH@/components/dom_xpath.xpt
 @BINPATH@/components/dom_xul.xpt
 @BINPATH@/components/dom_time.xpt
+@BINPATH@/components/dom_inputmethod.xpt
 @BINPATH@/components/downloads.xpt
 @BINPATH@/components/editor.xpt
 @BINPATH@/components/embed_base.xpt

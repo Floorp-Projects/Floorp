@@ -4380,3 +4380,6 @@ pref("dom.forms.inputmode", false);
 #else
 pref("dom.forms.inputmode", true);
 #endif
+
+// InputMethods for soft keyboards in B2G
+pref("dom.mozInputMethod.enabled", false);
