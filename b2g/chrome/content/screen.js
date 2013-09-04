@@ -11,7 +11,7 @@ window.addEventListener('ContentStart', function() {
   let shell = document.getElementById('shell');
 
   // The <browser> element inside it
-  let browser = document.getElementById('systemapp');
+  let browser = document.getElementById('homescreen');
 
   // Figure out the native resolution of the screen
   let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
