@@ -96,6 +96,7 @@
 
 #include "mozilla/dom/indexedDB/PIndexedDBChild.h"
 #include "mozilla/dom/mobilemessage/SmsChild.h"
+#include "mozilla/dom/telephony/TelephonyChild.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
 #include "mozilla/dom/bluetooth/PBluetoothChild.h"
 #include "mozilla/dom/PFMRadioChild.h"
@@ -126,6 +127,7 @@ using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::ipc;
 using namespace mozilla::dom::mobilemessage;
 using namespace mozilla::dom::indexedDB;
+using namespace mozilla::dom::telephony;
 using namespace mozilla::hal_sandbox;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
@@ -916,6 +918,19 @@ bool
 ContentChild::DeallocPSmsChild(PSmsChild* aSms)
 {
     delete aSms;
+    return true;
+}
+
+PTelephonyChild*
+ContentChild::AllocPTelephonyChild()
+{
+    MOZ_CRASH("No one should be allocating PTelephonyChild actors");
+}
+
+bool
+ContentChild::DeallocPTelephonyChild(PTelephonyChild* aActor)
+{
+    delete aActor;
     return true;
 }
 
