@@ -181,6 +181,15 @@ js::Nursery::reallocateElements(JSContext *cx, JSObject *obj, ObjectElements *ol
     return reinterpret_cast<ObjectElements *>(slots);
 }
 
+void
+js::Nursery::freeSlots(JSContext *cx, HeapSlot *slots)
+{
+    if (!isInside(slots)) {
+        hugeSlots.remove(slots);
+        js_free(slots);
+    }
+}
+
 HeapSlot *
 js::Nursery::allocateHugeSlots(JSContext *cx, size_t nslots)
 {

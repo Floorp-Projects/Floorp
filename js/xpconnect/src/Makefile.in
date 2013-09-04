@@ -40,6 +40,15 @@ SHARED_LIBRARY_LIBS = \
 
 EXTRA_MDDEPEND_FILES = dom_qsgen.pp dictionary_helper_gen.pp event_impl_gen.pp
 
+INSTALL_TARGETS += extra_export_files
+extra_export_files_FILES := \
+  DictionaryHelpers.h \
+  GeneratedEventClasses.h \
+  GeneratedEvents.h \
+  $(NULL)
+extra_export_files_DEST = $(DIST)/include
+extra_export_files_TARGET := export
+
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
@@ -146,14 +155,6 @@ GeneratedEvents-webidl: event_impl_gen.conf
 	  -I $(DEPTH)/dist/idl \
 	  --webidltarget=$(top_srcdir)/dom/webidl \
 	  event_impl_gen.conf
-
-_EXTRA_EXPORT_FILES = \
-  DictionaryHelpers.h \
-  GeneratedEventClasses.h \
-  $(NULL)
-
-libs:: $(_EXTRA_EXPORT_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/dist/include
 
 GARBAGE += \
 		dom_quickstubs.h \
