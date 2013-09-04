@@ -12,6 +12,7 @@
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
 #include "Layers.h"
+#include "ActiveLayerTracker.h"
 
 #include <algorithm>
 
@@ -68,10 +69,11 @@ public:
       return LAYER_INACTIVE;
 
     // If compositing is cheap, just do that
-    if (aManager->IsCompositingCheap())
+    if (aManager->IsCompositingCheap() ||
+        ActiveLayerTracker::IsContentActive(mFrame))
       return mozilla::LAYER_ACTIVE;
 
-    return mFrame->AreLayersMarkedActive() ? LAYER_ACTIVE : LAYER_INACTIVE;
+    return LAYER_INACTIVE;
   }
 };
 
@@ -96,9 +98,9 @@ nsHTMLCanvasFrame::Init(nsIContent* aContent,
   nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
   // We can fill in the canvas before the canvas frame is created, in
-  // which case we never get around to marking the layer active. Therefore,
+  // which case we never get around to marking the content as active. Therefore,
   // we mark it active here when we create the frame.
-  MarkLayersActive(nsChangeHint(0));
+  ActiveLayerTracker::NotifyContentChange(this);
 }
 
 nsHTMLCanvasFrame::~nsHTMLCanvasFrame()
