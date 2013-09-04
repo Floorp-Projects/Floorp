@@ -148,11 +148,6 @@ interface nsIMemoryReporterCallback : nsISupports
  *   Reporters in this category must have kind NONHEAP, units BYTES, and a
  *   non-empty description.
  *
- * - The "compartments" and "ghost-windows" trees are optional.  They are
- *   used by about:compartments.  Reporters in these trees must have kind
- *   OTHER, units COUNT, an amount of 1, and a description that's an empty
- *   string.
- *
  * - All other reports are unconstrained except that they must have a
  *   description that is a sentence.
  */
