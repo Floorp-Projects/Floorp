@@ -63,7 +63,7 @@ inline const WebGLRectangleObject *WebGLContext::FramebufferRectangleObject() co
 void
 WebGLContext::ActiveTexture(GLenum texture)
 {
-    if (!IsContextStable()) 
+    if (IsContextLost()) 
         return;
 
     if (texture < LOCAL_GL_TEXTURE0 ||
@@ -84,7 +84,7 @@ WebGLContext::ActiveTexture(GLenum texture)
 void
 WebGLContext::AttachShader(WebGLProgram *program, WebGLShader *shader)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateObject("attachShader: program", program) ||
@@ -106,7 +106,7 @@ void
 WebGLContext::BindAttribLocation(WebGLProgram *prog, GLuint location,
                                  const nsAString& name)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateObject("bindAttribLocation: program", prog))
@@ -131,7 +131,7 @@ WebGLContext::BindAttribLocation(WebGLProgram *prog, GLuint location,
 void
 WebGLContext::BindFramebuffer(GLenum target, WebGLFramebuffer *wfb)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (target != LOCAL_GL_FRAMEBUFFER)
@@ -160,7 +160,7 @@ WebGLContext::BindFramebuffer(GLenum target, WebGLFramebuffer *wfb)
 void
 WebGLContext::BindRenderbuffer(GLenum target, WebGLRenderbuffer *wrb)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (target != LOCAL_GL_RENDERBUFFER)
@@ -187,7 +187,7 @@ WebGLContext::BindRenderbuffer(GLenum target, WebGLRenderbuffer *wrb)
 void
 WebGLContext::BindTexture(GLenum target, WebGLTexture *tex)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateObjectAllowDeletedOrNull("bindTexture", tex))
@@ -216,7 +216,7 @@ WebGLContext::BindTexture(GLenum target, WebGLTexture *tex)
 
 void WebGLContext::BlendEquation(GLenum mode)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateBlendEquationEnum(mode, "blendEquation: mode"))
@@ -228,7 +228,7 @@ void WebGLContext::BlendEquation(GLenum mode)
 
 void WebGLContext::BlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateBlendEquationEnum(modeRGB, "blendEquationSeparate: modeRGB") ||
@@ -241,7 +241,7 @@ void WebGLContext::BlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha)
 
 void WebGLContext::BlendFunc(GLenum sfactor, GLenum dfactor)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateBlendFuncSrcEnum(sfactor, "blendFunc: sfactor") ||
@@ -259,7 +259,7 @@ void
 WebGLContext::BlendFuncSeparate(GLenum srcRGB, GLenum dstRGB,
                                 GLenum srcAlpha, GLenum dstAlpha)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateBlendFuncSrcEnum(srcRGB, "blendFuncSeparate: srcRGB") ||
@@ -315,7 +315,7 @@ GLenum WebGLContext::CheckedBufferData(GLenum target,
 GLenum
 WebGLContext::CheckFramebufferStatus(GLenum target)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
     {
         return LOCAL_GL_FRAMEBUFFER_UNSUPPORTED;
     }
@@ -472,7 +472,7 @@ WebGLContext::CopyTexImage2D(GLenum target,
                              GLsizei height,
                              GLint border)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     switch (target) {
@@ -581,7 +581,7 @@ WebGLContext::CopyTexSubImage2D(GLenum target,
                                 GLsizei width,
                                 GLsizei height)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     switch (target) {
@@ -654,7 +654,7 @@ WebGLContext::CopyTexSubImage2D(GLenum target,
 already_AddRefed<WebGLProgram>
 WebGLContext::CreateProgram()
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return nullptr;
     nsRefPtr<WebGLProgram> globj = new WebGLProgram(this);
     return globj.forget();
@@ -663,7 +663,7 @@ WebGLContext::CreateProgram()
 already_AddRefed<WebGLShader>
 WebGLContext::CreateShader(GLenum type)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return nullptr;
 
     if (type != LOCAL_GL_VERTEX_SHADER &&
@@ -680,7 +680,7 @@ WebGLContext::CreateShader(GLenum type)
 void
 WebGLContext::CullFace(GLenum face)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateFaceEnum(face, "cullFace"))
@@ -693,7 +693,7 @@ WebGLContext::CullFace(GLenum face)
 void
 WebGLContext::DeleteFramebuffer(WebGLFramebuffer* fbuf)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateObjectAllowDeletedOrNull("deleteFramebuffer", fbuf))
@@ -712,7 +712,7 @@ WebGLContext::DeleteFramebuffer(WebGLFramebuffer* fbuf)
 void
 WebGLContext::DeleteRenderbuffer(WebGLRenderbuffer *rbuf)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateObjectAllowDeletedOrNull("deleteRenderbuffer", rbuf))
@@ -734,7 +734,7 @@ WebGLContext::DeleteRenderbuffer(WebGLRenderbuffer *rbuf)
 void
 WebGLContext::DeleteTexture(WebGLTexture *tex)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateObjectAllowDeletedOrNull("deleteTexture", tex))
@@ -763,7 +763,7 @@ WebGLContext::DeleteTexture(WebGLTexture *tex)
 void
 WebGLContext::DeleteProgram(WebGLProgram *prog)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateObjectAllowDeletedOrNull("deleteProgram", prog))
@@ -778,7 +778,7 @@ WebGLContext::DeleteProgram(WebGLProgram *prog)
 void
 WebGLContext::DeleteShader(WebGLShader *shader)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateObjectAllowDeletedOrNull("deleteShader", shader))
@@ -793,7 +793,7 @@ WebGLContext::DeleteShader(WebGLShader *shader)
 void
 WebGLContext::DetachShader(WebGLProgram *program, WebGLShader *shader)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateObject("detachShader: program", program) ||
@@ -809,7 +809,7 @@ WebGLContext::DetachShader(WebGLProgram *program, WebGLShader *shader)
 void
 WebGLContext::DepthFunc(GLenum func)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateComparisonEnum(func, "depthFunc"))
@@ -822,7 +822,7 @@ WebGLContext::DepthFunc(GLenum func)
 void
 WebGLContext::DepthRange(GLfloat zNear, GLfloat zFar)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (zNear > zFar)
@@ -1053,7 +1053,7 @@ WebGLContext::UnbindFakeBlackTextures()
 void
 WebGLContext::FramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum rbtarget, WebGLRenderbuffer *wrb)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!mBoundFramebuffer)
@@ -1069,7 +1069,7 @@ WebGLContext::FramebufferTexture2D(GLenum target,
                                    WebGLTexture *tobj,
                                    GLint level)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!mBoundFramebuffer)
@@ -1081,7 +1081,7 @@ WebGLContext::FramebufferTexture2D(GLenum target,
 void
 WebGLContext::FrontFace(GLenum mode)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     switch (mode) {
@@ -1099,7 +1099,7 @@ WebGLContext::FrontFace(GLenum mode)
 already_AddRefed<WebGLActiveInfo>
 WebGLContext::GetActiveAttrib(WebGLProgram *prog, uint32_t index)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return nullptr;
 
     if (!ValidateObject("getActiveAttrib: program", prog))
@@ -1133,7 +1133,7 @@ WebGLContext::GetActiveAttrib(WebGLProgram *prog, uint32_t index)
 void
 WebGLContext::GenerateMipmap(GLenum target)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateTextureTargetEnum(target, "generateMipmap"))
@@ -1184,7 +1184,7 @@ WebGLContext::GenerateMipmap(GLenum target)
 already_AddRefed<WebGLActiveInfo>
 WebGLContext::GetActiveUniform(WebGLProgram *prog, uint32_t index)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return nullptr;
 
     if (!ValidateObject("getActiveUniform: program", prog))
@@ -1237,7 +1237,7 @@ WebGLContext::GetAttachedShaders(WebGLProgram *prog,
                                  Nullable< nsTArray<WebGLShader*> > &retval)
 {
     retval.SetNull();
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateObjectAllowNull("getAttachedShaders", prog))
@@ -1258,7 +1258,7 @@ WebGLContext::GetAttachedShaders(WebGLProgram *prog,
 GLint
 WebGLContext::GetAttribLocation(WebGLProgram *prog, const nsAString& name)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return -1;
 
     if (!ValidateObject("getAttribLocation: program", prog))
@@ -1280,7 +1280,7 @@ WebGLContext::GetAttribLocation(WebGLProgram *prog, const nsAString& name)
 JS::Value
 WebGLContext::GetBufferParameter(GLenum target, GLenum pname)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return JS::NullValue();
 
     if (target != LOCAL_GL_ARRAY_BUFFER && target != LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
@@ -1319,7 +1319,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
                                                 GLenum pname,
                                                 ErrorResult& rv)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return JS::NullValue();
 
     if (target != LOCAL_GL_FRAMEBUFFER) {
@@ -1409,7 +1409,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
 JS::Value
 WebGLContext::GetRenderbufferParameter(GLenum target, GLenum pname)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return JS::NullValue();
 
     if (target != LOCAL_GL_RENDERBUFFER) {
@@ -1452,7 +1452,7 @@ WebGLContext::GetRenderbufferParameter(GLenum target, GLenum pname)
 already_AddRefed<WebGLTexture>
 WebGLContext::CreateTexture()
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return nullptr;
     nsRefPtr<WebGLTexture> globj = new WebGLTexture(this);
     return globj.forget();
@@ -1461,7 +1461,7 @@ WebGLContext::CreateTexture()
 GLenum
 WebGLContext::GetError()
 {
-    if (mContextStatus == ContextStable) {
+    if (mContextStatus == ContextNotLost) {
         MakeContextCurrent();
         UpdateWebGLErrorAndClearGLError();
     } else if (!mContextLostErrorSet) {
@@ -1477,7 +1477,7 @@ WebGLContext::GetError()
 JS::Value
 WebGLContext::GetProgramParameter(WebGLProgram *prog, GLenum pname)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return JS::NullValue();
 
     if (!ValidateObjectAllowDeleted("getProgramParameter: program", prog))
@@ -1539,7 +1539,7 @@ WebGLContext::GetProgramInfoLog(WebGLProgram *prog, nsAString& retval)
 void
 WebGLContext::GetProgramInfoLog(WebGLProgram *prog, nsACString& retval)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
     {
         retval.SetIsVoid(true);
         return;
@@ -1583,7 +1583,7 @@ void WebGLContext::TexParameter_base(GLenum target, GLenum pname,
 {
     MOZ_ASSERT(intParamPtr || floatParamPtr);
 
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     GLint intParam = intParamPtr ? *intParamPtr : GLint(*floatParamPtr);
@@ -1686,7 +1686,7 @@ void WebGLContext::TexParameter_base(GLenum target, GLenum pname,
 JS::Value
 WebGLContext::GetTexParameter(GLenum target, GLenum pname)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return JS::NullValue();
 
     MakeContextCurrent();
@@ -1730,7 +1730,7 @@ JS::Value
 WebGLContext::GetUniform(JSContext* cx, WebGLProgram *prog,
                          WebGLUniformLocation *location, ErrorResult& rv)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return JS::NullValue();
 
     if (!ValidateObject("getUniform: program", prog))
@@ -1862,7 +1862,7 @@ WebGLContext::GetUniform(JSContext* cx, WebGLProgram *prog,
 already_AddRefed<WebGLUniformLocation>
 WebGLContext::GetUniformLocation(WebGLProgram *prog, const nsAString& name)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return nullptr;
 
     if (!ValidateObject("getUniformLocation: program", prog))
@@ -1893,7 +1893,7 @@ WebGLContext::GetUniformLocation(WebGLProgram *prog, const nsAString& name)
 void
 WebGLContext::Hint(GLenum target, GLenum mode)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     bool isValid = false;
@@ -1917,7 +1917,7 @@ WebGLContext::Hint(GLenum target, GLenum mode)
 bool
 WebGLContext::IsFramebuffer(WebGLFramebuffer *fb)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return false;
 
     return ValidateObjectAllowDeleted("isFramebuffer", fb) &&
@@ -1928,7 +1928,7 @@ WebGLContext::IsFramebuffer(WebGLFramebuffer *fb)
 bool
 WebGLContext::IsProgram(WebGLProgram *prog)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return false;
 
     return ValidateObjectAllowDeleted("isProgram", prog) && !prog->IsDeleted();
@@ -1937,7 +1937,7 @@ WebGLContext::IsProgram(WebGLProgram *prog)
 bool
 WebGLContext::IsRenderbuffer(WebGLRenderbuffer *rb)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return false;
 
     return ValidateObjectAllowDeleted("isRenderBuffer", rb) &&
@@ -1948,7 +1948,7 @@ WebGLContext::IsRenderbuffer(WebGLRenderbuffer *rb)
 bool
 WebGLContext::IsShader(WebGLShader *shader)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return false;
 
     return ValidateObjectAllowDeleted("isShader", shader) &&
@@ -1958,7 +1958,7 @@ WebGLContext::IsShader(WebGLShader *shader)
 bool
 WebGLContext::IsTexture(WebGLTexture *tex)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return false;
 
     return ValidateObjectAllowDeleted("isTexture", tex) &&
@@ -1999,7 +1999,7 @@ bool WebGLContext::BindArrayAttribToLocation0(WebGLProgram *program)
 void
 WebGLContext::LinkProgram(WebGLProgram *program)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateObject("linkProgram", program))
@@ -2129,7 +2129,7 @@ WebGLContext::LinkProgram(WebGLProgram *program)
 void
 WebGLContext::PixelStorei(GLenum pname, GLint param)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     switch (pname) {
@@ -2170,7 +2170,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
                          GLenum type, const Nullable<ArrayBufferView> &pixels,
                          ErrorResult& rv)
 {
-    if (!IsContextStable()) {
+    if (IsContextLost()) {
         return;
     }
 
@@ -2393,7 +2393,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
 void
 WebGLContext::RenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!mBoundRenderbuffer || !mBoundRenderbuffer->GLName())
@@ -2470,7 +2470,7 @@ WebGLContext::RenderbufferStorage(GLenum target, GLenum internalformat, GLsizei 
 void
 WebGLContext::Scissor(GLint x, GLint y, GLsizei width, GLsizei height)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (width < 0 || height < 0)
@@ -2483,7 +2483,7 @@ WebGLContext::Scissor(GLint x, GLint y, GLsizei width, GLsizei height)
 void
 WebGLContext::StencilFunc(GLenum func, GLint ref, GLuint mask)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateComparisonEnum(func, "stencilFunc: func"))
@@ -2501,7 +2501,7 @@ WebGLContext::StencilFunc(GLenum func, GLint ref, GLuint mask)
 void
 WebGLContext::StencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateFaceEnum(face, "stencilFuncSeparate: face") ||
@@ -2532,7 +2532,7 @@ WebGLContext::StencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint ma
 void
 WebGLContext::StencilOp(GLenum sfail, GLenum dpfail, GLenum dppass)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateStencilOpEnum(sfail, "stencilOp: sfail") ||
@@ -2547,7 +2547,7 @@ WebGLContext::StencilOp(GLenum sfail, GLenum dpfail, GLenum dppass)
 void
 WebGLContext::StencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateFaceEnum(face, "stencilOpSeparate: face") ||
@@ -2936,7 +2936,7 @@ WebGLContext::UniformMatrix4fv_base(WebGLUniformLocation* location_object,
 void
 WebGLContext::UseProgram(WebGLProgram *prog)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateObjectAllowNull("useProgram", prog))
@@ -2959,7 +2959,7 @@ WebGLContext::UseProgram(WebGLProgram *prog)
 void
 WebGLContext::ValidateProgram(WebGLProgram *prog)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateObject("validateProgram", prog))
@@ -2982,7 +2982,7 @@ WebGLContext::ValidateProgram(WebGLProgram *prog)
 already_AddRefed<WebGLFramebuffer>
 WebGLContext::CreateFramebuffer()
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return nullptr;
     nsRefPtr<WebGLFramebuffer> globj = new WebGLFramebuffer(this);
     return globj.forget();
@@ -2991,7 +2991,7 @@ WebGLContext::CreateFramebuffer()
 already_AddRefed<WebGLRenderbuffer>
 WebGLContext::CreateRenderbuffer()
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return nullptr;
     nsRefPtr<WebGLRenderbuffer> globj = new WebGLRenderbuffer(this);
     return globj.forget();
@@ -3000,7 +3000,7 @@ WebGLContext::CreateRenderbuffer()
 void
 WebGLContext::Viewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (width < 0 || height < 0)
@@ -3013,7 +3013,7 @@ WebGLContext::Viewport(GLint x, GLint y, GLsizei width, GLsizei height)
 void
 WebGLContext::CompileShader(WebGLShader *shader)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateObject("compileShader", shader))
@@ -3283,7 +3283,7 @@ WebGLContext::CompressedTexImage2D(GLenum target, GLint level, GLenum internalfo
                                    GLsizei width, GLsizei height, GLint border,
                                    const ArrayBufferView& view)
 {
-    if (!IsContextStable()) {
+    if (IsContextLost()) {
         return;
     }
 
@@ -3323,7 +3323,7 @@ WebGLContext::CompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset,
                                       GLint yoffset, GLsizei width, GLsizei height,
                                       GLenum format, const ArrayBufferView& view)
 {
-    if (!IsContextStable()) {
+    if (IsContextLost()) {
         return;
     }
 
@@ -3421,7 +3421,7 @@ WebGLContext::CompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset,
 JS::Value
 WebGLContext::GetShaderParameter(WebGLShader *shader, GLenum pname)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return JS::NullValue();
 
     if (!ValidateObject("getShaderParameter: shader", shader))
@@ -3470,7 +3470,7 @@ WebGLContext::GetShaderInfoLog(WebGLShader *shader, nsAString& retval)
 void
 WebGLContext::GetShaderInfoLog(WebGLShader *shader, nsACString& retval)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
     {
         retval.SetIsVoid(true);
         return;
@@ -3507,7 +3507,7 @@ WebGLContext::GetShaderInfoLog(WebGLShader *shader, nsACString& retval)
 already_AddRefed<WebGLShaderPrecisionFormat>
 WebGLContext::GetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return nullptr;
 
     switch (shadertype) {
@@ -3555,7 +3555,7 @@ WebGLContext::GetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype)
 void
 WebGLContext::GetShaderSource(WebGLShader *shader, nsAString& retval)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
     {
         retval.SetIsVoid(true);
         return;
@@ -3570,7 +3570,7 @@ WebGLContext::GetShaderSource(WebGLShader *shader, nsAString& retval)
 void
 WebGLContext::ShaderSource(WebGLShader *shader, const nsAString& source)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateObject("shaderSource: shader", shader))
@@ -3776,7 +3776,7 @@ WebGLContext::TexImage2D(GLenum target, GLint level,
                          GLsizei height, GLint border, GLenum format,
                          GLenum type, const Nullable<ArrayBufferView> &pixels, ErrorResult& rv)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     return TexImage2D_base(target, level, internalformat, width, height, 0, border, format, type,
@@ -3791,7 +3791,7 @@ WebGLContext::TexImage2D(GLenum target, GLint level,
                          GLenum internalformat, GLenum format,
                          GLenum type, ImageData* pixels, ErrorResult& rv)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!pixels) {
@@ -3927,7 +3927,7 @@ WebGLContext::TexSubImage2D(GLenum target, GLint level,
                             const Nullable<ArrayBufferView> &pixels,
                             ErrorResult& rv)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (pixels.IsNull())
@@ -3946,7 +3946,7 @@ WebGLContext::TexSubImage2D(GLenum target, GLint level,
                             GLenum format, GLenum type, ImageData* pixels,
                             ErrorResult& rv)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!pixels)
@@ -3964,7 +3964,7 @@ WebGLContext::TexSubImage2D(GLenum target, GLint level,
 bool
 WebGLContext::LoseContext()
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return false;
 
     ForceLoseContext();
@@ -3975,7 +3975,7 @@ WebGLContext::LoseContext()
 bool
 WebGLContext::RestoreContext()
 {
-    if (IsContextStable() || !mAllowRestore) {
+    if (!IsContextLost() || !mAllowRestore) {
         return false;
     }
 

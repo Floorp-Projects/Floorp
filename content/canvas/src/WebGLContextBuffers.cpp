@@ -13,7 +13,7 @@ using namespace mozilla::dom;
 void
 WebGLContext::BindBuffer(GLenum target, WebGLBuffer *buffer)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateObjectAllowDeletedOrNull("bindBuffer", buffer))
@@ -48,7 +48,7 @@ WebGLContext::BindBuffer(GLenum target, WebGLBuffer *buffer)
 void
 WebGLContext::BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateObjectAllowDeletedOrNull("bindBufferBase", buffer))
@@ -90,7 +90,7 @@ void
 WebGLContext::BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer,
                               WebGLintptr offset, WebGLsizeiptr size)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateObjectAllowDeletedOrNull("bindBufferRange", buffer))
@@ -137,7 +137,7 @@ void
 WebGLContext::BufferData(GLenum target, WebGLsizeiptr size,
                          GLenum usage)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     WebGLRefPtr<WebGLBuffer>* bufferSlot = GetBufferSlotByTarget(target, "bufferData");
@@ -187,7 +187,7 @@ WebGLContext::BufferData(GLenum target,
                          const Nullable<ArrayBuffer> &maybeData,
                          GLenum usage)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (maybeData.IsNull()) {
@@ -235,7 +235,7 @@ void
 WebGLContext::BufferData(GLenum target, const ArrayBufferView& data,
                          GLenum usage)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     WebGLRefPtr<WebGLBuffer>* bufferSlot = GetBufferSlotByTarget(target, "bufferSubData");
@@ -275,7 +275,7 @@ void
 WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
                             const Nullable<ArrayBuffer> &maybeData)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (maybeData.IsNull()) {
@@ -318,7 +318,7 @@ void
 WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
                             const ArrayBufferView& data)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     WebGLRefPtr<WebGLBuffer>* bufferSlot = GetBufferSlotByTarget(target, "bufferSubData");
@@ -352,7 +352,7 @@ WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
 already_AddRefed<WebGLBuffer>
 WebGLContext::CreateBuffer()
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return nullptr;
 
     nsRefPtr<WebGLBuffer> globj = new WebGLBuffer(this);
@@ -362,7 +362,7 @@ WebGLContext::CreateBuffer()
 void
 WebGLContext::DeleteBuffer(WebGLBuffer *buffer)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     if (!ValidateObjectAllowDeletedOrNull("deleteBuffer", buffer))
@@ -392,7 +392,7 @@ WebGLContext::DeleteBuffer(WebGLBuffer *buffer)
 bool
 WebGLContext::IsBuffer(WebGLBuffer *buffer)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return false;
 
     return ValidateObjectAllowDeleted("isBuffer", buffer) &&
