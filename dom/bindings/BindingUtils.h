@@ -1513,6 +1513,16 @@ struct FakeDependentString {
     mFlags |= nsDependentString::F_VOIDED;
   }
 
+  const nsDependentString::char_type* Data() const
+  {
+    return mData;
+  }
+
+  nsDependentString::size_type Length() const
+  {
+    return mLength;
+  }
+
   // If this ever changes, change the corresponding code in the
   // Optional<nsAString> specialization as well.
   const nsAString* ToAStringPtr() const {
