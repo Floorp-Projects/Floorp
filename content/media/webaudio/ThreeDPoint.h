@@ -59,11 +59,6 @@ struct ThreeDPoint {
     return x * rhs.x + y * rhs.y + z * rhs.z;
   }
 
-  double Distance(const ThreeDPoint& rhs)
-  {
-    return sqrt(hypot(rhs.x, x) + hypot(rhs.y, y) + hypot(rhs.z, z));
-  }
-
   bool IsZero() const
   {
     return x == 0 && y == 0 && z == 0;
