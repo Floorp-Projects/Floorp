@@ -93,6 +93,11 @@ endif
 
 LOCAL_INCLUDES  += -I$(srcdir)
 
+INSTALL_TARGETS += cairo_features
+cairo_features_FILES := cairo-features.h
+cairo_features_DEST = $(DIST)/include/cairo
+cairo_features_TARGET := export
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef GNU_CC
