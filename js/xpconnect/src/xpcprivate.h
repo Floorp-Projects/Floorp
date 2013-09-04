@@ -3704,6 +3704,8 @@ struct SandboxOptions {
         bool Parse(JSContext* cx, JS::HandleObject obj);
         bool Define(JSContext* cx, JS::HandleObject obj);
         bool XMLHttpRequest;
+        bool TextDecoder;
+        bool TextEncoder;
     };
 
     SandboxOptions(JSContext *cx)

@@ -34,6 +34,8 @@
 #include "XPCWrapper.h"
 #include "XrayWrapper.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/TextDecoderBinding.h"
+#include "mozilla/dom/TextEncoderBinding.h"
 
 using namespace mozilla;
 using namespace JS;
@@ -887,6 +889,10 @@ xpc::SandboxOptions::DOMConstructors::Parse(JSContext* cx, JS::HandleObject obj)
         NS_ENSURE_TRUE(name, false);
         if (!strcmp(name, "XMLHttpRequest")) {
             XMLHttpRequest = true;
+        } else if (!strcmp(name, "TextEncoder")) {
+            TextEncoder = true;
+        } else if (!strcmp(name, "TextDecoder")) {
+            TextDecoder = true;
         } else {
             // Reporting error, if one of the DOM constructor names is unknown.
             return false;
@@ -900,6 +906,14 @@ xpc::SandboxOptions::DOMConstructors::Define(JSContext* cx, JS::HandleObject obj
 {
     if (XMLHttpRequest &&
         !JS_DefineFunction(cx, obj, "XMLHttpRequest", CreateXMLHttpRequest, 0, JSFUN_CONSTRUCTOR))
+        return false;
+
+    if (TextEncoder &&
+        !dom::TextEncoderBinding::GetConstructorObject(cx, obj))
+        return false;
+
+    if (TextDecoder &&
+        !dom::TextDecoderBinding::GetConstructorObject(cx, obj))
         return false;
 
     return true;
