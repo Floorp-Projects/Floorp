@@ -156,8 +156,7 @@ function gc()
 {
   try
   {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    Components.utils.forceGC();
+    SpecialPowers.forceGC();
   }
   catch(ex)
   {
@@ -169,10 +168,8 @@ function jsdgc()
 {
   try
   {
-    // Thanks to dveditz
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    var jsdIDebuggerService = Components.interfaces.jsdIDebuggerService;
-    var service = Components.classes['@mozilla.org/js/jsd/debugger-service;1'].
+    var jsdIDebuggerService = SpecialPowers.Ci.jsdIDebuggerService;
+    var service = SpecialPowers.Cc['@mozilla.org/js/jsd/debugger-service;1'].
       getService(jsdIDebuggerService);
     service.GC();
   }
@@ -202,9 +199,7 @@ function options(aOptionName)
   }
 
   if (aOptionName) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    if (!(aOptionName in Components.utils)) {
-//    if (!(aOptionName in SpecialPowers.wrap(Components).utils)) {
+    if (!(aOptionName in SpecialPowers.Cu)) {
       // This test is trying to flip an unsupported option, so it's
       // likely no longer testing what it was supposed to.  Fail it
       // hard.
@@ -218,8 +213,7 @@ function options(aOptionName)
       // option is not set, toggle it to set
       options.currvalues[aOptionName] = true;
 
-//    SpecialPowers.wrap(Components).utils[aOptionName] = options.currvalues.hasOwnProperty(aOptionName);
-    Components.utils[aOptionName] =
+    SpecialPowers.Cu[aOptionName] =
       options.currvalues.hasOwnProperty(aOptionName);
   }
 
@@ -248,18 +242,15 @@ function optionsInit() {
   // and popping options
   options.stackvalues = [];
 
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   for (var optionName in options.currvalues)
   {
     var propName = optionName;
 
-//    if (!(propName in SpecialPowers.wrap(Components).utils))
-    if (!(propName in Components.utils))
+    if (!(propName in SpecialPowers.Cu))
     {
       throw "options.currvalues is out of sync with Components.utils";
     }
-//    if (!SpecialPowers.wrap(Components).utils[propName])
-    if (!Components.utils[propName])
+    if (!SpecialPowers.Cu[propName])
     {
       delete options.currvalues[optionName];
     }
@@ -272,8 +263,7 @@ function optionsInit() {
 
 function gczeal(z)
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  Components.utils.setGCZeal(z);
+  SpecialPowers.setGCZeal(z);
 }
 
 function jit(on)
@@ -513,11 +503,9 @@ var gDialogCloserObserver;
 
 function registerDialogCloser()
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-//  gDialogCloser = SpecialPowers.wrap(Components).
-  gDialogCloser = Components.
-    classes['@mozilla.org/embedcomp/window-watcher;1'].
-    getService(Components.interfaces.nsIWindowWatcher);
+  gDialogCloser = SpecialPowers.
+    Cc['@mozilla.org/embedcomp/window-watcher;1'].
+    getService(SpecialPowers.Ci.nsIWindowWatcher);
 
   gDialogCloserObserver = {observe: dialogCloser_observe};
 
