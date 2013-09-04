@@ -87,7 +87,7 @@ class RefTest(object):
 
     # I would prefer to use "--install-extension reftest/specialpowers", but that requires tight coordination with
     # release engineering and landing on multiple branches at once.
-    if special_powers and manifest.endswith('crashtests.list'):
+    if special_powers and (manifest.endswith('crashtests.list') or manifest.endswith('jstests.list')):
       addons.append(os.path.join(SCRIPT_DIRECTORY, 'specialpowers'))
 
     # Install distributed extensions, if application has any.
