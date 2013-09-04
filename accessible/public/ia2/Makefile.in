@@ -67,6 +67,11 @@ MIDL_GENERATED_FILES = \
 
 EMBED_MANIFEST_AT = 2
 
+INSTALL_TARGETS += midl
+midl_FILES := $(filter %.h %_i.c,$(MIDL_GENERATED_FILES))
+midl_DEST = $(DIST)/include
+midl_TARGET := export
+
 include $(topsrcdir)/config/rules.mk
 
 OS_LIBS = $(call EXPAND_LIBNAME,uuid kernel32 rpcns4 rpcrt4 ole32 oleaut32)
