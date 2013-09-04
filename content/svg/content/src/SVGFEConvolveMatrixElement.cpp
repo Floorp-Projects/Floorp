@@ -306,7 +306,8 @@ SVGFEConvolveMatrixElement::Filter(nsSVGFilterInstance* instance,
   if (orderX > NS_SVG_OFFSCREEN_MAX_DIMENSION ||
       orderY > NS_SVG_OFFSCREEN_MAX_DIMENSION)
     return NS_ERROR_FAILURE;
-  nsAutoArrayPtr<float> kernel(new float[orderX * orderY]);
+  const fallible_t fallible = fallible_t();
+  nsAutoArrayPtr<float> kernel(new (fallible) float[orderX * orderY]);
   if (!kernel)
     return NS_ERROR_FAILURE;
   for (uint32_t i = 0; i < kmLength; i++) {
