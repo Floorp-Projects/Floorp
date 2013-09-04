@@ -11,7 +11,7 @@
 using namespace mozilla;
 
 void
-WebGLContext::Clear(WebGLbitfield mask)
+WebGLContext::Clear(GLbitfield mask)
 {
     if (!IsContextStable())
         return;
@@ -76,8 +76,8 @@ WebGLContext::Clear(WebGLbitfield mask)
     mShouldPresent = true;
 }
 
-static WebGLclampf
-GLClampFloat(WebGLclampf val)
+static GLclampf
+GLClampFloat(GLclampf val)
 {
     if (val < 0.0)
         return 0.0;
@@ -89,8 +89,8 @@ GLClampFloat(WebGLclampf val)
 }
 
 void
-WebGLContext::ClearColor(WebGLclampf r, WebGLclampf g,
-                             WebGLclampf b, WebGLclampf a)
+WebGLContext::ClearColor(GLclampf r, GLclampf g,
+                             GLclampf b, GLclampf a)
 {
     if (!IsContextStable())
         return;
@@ -104,7 +104,7 @@ WebGLContext::ClearColor(WebGLclampf r, WebGLclampf g,
 }
 
 void
-WebGLContext::ClearDepth(WebGLclampf v)
+WebGLContext::ClearDepth(GLclampf v)
 {
     if (!IsContextStable())
         return;
@@ -115,7 +115,7 @@ WebGLContext::ClearDepth(WebGLclampf v)
 }
 
 void
-WebGLContext::ClearStencil(WebGLint v)
+WebGLContext::ClearStencil(GLint v)
 {
     if (!IsContextStable())
         return;
@@ -227,7 +227,7 @@ WebGLContext::DrawBuffers(const dom::Sequence<GLenum>& buffers)
 }
 
 void
-WebGLContext::StencilMask(WebGLuint mask)
+WebGLContext::StencilMask(GLuint mask)
 {
     if (!IsContextStable())
         return;
@@ -240,7 +240,7 @@ WebGLContext::StencilMask(WebGLuint mask)
 }
 
 void
-WebGLContext::StencilMaskSeparate(WebGLenum face, WebGLuint mask)
+WebGLContext::StencilMaskSeparate(GLenum face, GLuint mask)
 {
     if (!IsContextStable())
         return;

@@ -16,7 +16,7 @@ WebGLShader::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope) {
     return dom::WebGLShaderBinding::Wrap(cx, scope, this);
 }
 
-WebGLShader::WebGLShader(WebGLContext *context, WebGLenum stype)
+WebGLShader::WebGLShader(WebGLContext *context, GLenum stype)
     : WebGLContextBoundObject(context)
     , mType(stype)
     , mNeedsTranslation(true)

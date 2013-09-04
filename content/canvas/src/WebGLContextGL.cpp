@@ -48,8 +48,8 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gl;
 
-static bool BaseTypeAndSizeFromUniformType(WebGLenum uType, WebGLenum *baseType, WebGLint *unitSize);
-static WebGLenum InternalFormatForFormatAndType(WebGLenum format, WebGLenum type, bool isGLES2);
+static bool BaseTypeAndSizeFromUniformType(GLenum uType, GLenum *baseType, GLint *unitSize);
+static GLenum InternalFormatForFormatAndType(GLenum format, GLenum type, bool isGLES2);
 
 //
 //  WebGL API
@@ -61,7 +61,7 @@ inline const WebGLRectangleObject *WebGLContext::FramebufferRectangleObject() co
 }
 
 void
-WebGLContext::ActiveTexture(WebGLenum texture)
+WebGLContext::ActiveTexture(GLenum texture)
 {
     if (!IsContextStable()) 
         return;
@@ -103,7 +103,7 @@ WebGLContext::AttachShader(WebGLProgram *program, WebGLShader *shader)
 
 
 void
-WebGLContext::BindAttribLocation(WebGLProgram *prog, WebGLuint location,
+WebGLContext::BindAttribLocation(WebGLProgram *prog, GLuint location,
                                  const nsAString& name)
 {
     if (!IsContextStable())
@@ -112,7 +112,7 @@ WebGLContext::BindAttribLocation(WebGLProgram *prog, WebGLuint location,
     if (!ValidateObject("bindAttribLocation: program", prog))
         return;
 
-    WebGLuint progname = prog->GLName();
+    GLuint progname = prog->GLName();
 
     if (!ValidateGLSLVariableName(name, "bindAttribLocation"))
         return;
@@ -129,7 +129,7 @@ WebGLContext::BindAttribLocation(WebGLProgram *prog, WebGLuint location,
 }
 
 void
-WebGLContext::BindFramebuffer(WebGLenum target, WebGLFramebuffer *wfb)
+WebGLContext::BindFramebuffer(GLenum target, WebGLFramebuffer *wfb)
 {
     if (!IsContextStable())
         return;
@@ -149,7 +149,7 @@ WebGLContext::BindFramebuffer(WebGLenum target, WebGLFramebuffer *wfb)
     if (!wfb) {
         gl->fBindFramebuffer(target, 0);
     } else {
-        WebGLuint framebuffername = wfb->GLName();
+        GLuint framebuffername = wfb->GLName();
         gl->fBindFramebuffer(target, framebuffername);
         wfb->SetHasEverBeenBound(true);
     }
@@ -158,7 +158,7 @@ WebGLContext::BindFramebuffer(WebGLenum target, WebGLFramebuffer *wfb)
 }
 
 void
-WebGLContext::BindRenderbuffer(WebGLenum target, WebGLRenderbuffer *wrb)
+WebGLContext::BindRenderbuffer(GLenum target, WebGLRenderbuffer *wrb)
 {
     if (!IsContextStable())
         return;
@@ -178,14 +178,14 @@ WebGLContext::BindRenderbuffer(WebGLenum target, WebGLRenderbuffer *wrb)
 
     MakeContextCurrent();
 
-    WebGLuint renderbuffername = wrb ? wrb->GLName() : 0;
+    GLuint renderbuffername = wrb ? wrb->GLName() : 0;
     gl->fBindRenderbuffer(target, renderbuffername);
 
     mBoundRenderbuffer = wrb;
 }
 
 void
-WebGLContext::BindTexture(WebGLenum target, WebGLTexture *tex)
+WebGLContext::BindTexture(GLenum target, WebGLTexture *tex)
 {
     if (!IsContextStable())
         return;
@@ -214,7 +214,7 @@ WebGLContext::BindTexture(WebGLenum target, WebGLTexture *tex)
         gl->fBindTexture(target, 0 /* == texturename */);
 }
 
-void WebGLContext::BlendEquation(WebGLenum mode)
+void WebGLContext::BlendEquation(GLenum mode)
 {
     if (!IsContextStable())
         return;
@@ -226,7 +226,7 @@ void WebGLContext::BlendEquation(WebGLenum mode)
     gl->fBlendEquation(mode);
 }
 
-void WebGLContext::BlendEquationSeparate(WebGLenum modeRGB, WebGLenum modeAlpha)
+void WebGLContext::BlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha)
 {
     if (!IsContextStable())
         return;
@@ -239,7 +239,7 @@ void WebGLContext::BlendEquationSeparate(WebGLenum modeRGB, WebGLenum modeAlpha)
     gl->fBlendEquationSeparate(modeRGB, modeAlpha);
 }
 
-void WebGLContext::BlendFunc(WebGLenum sfactor, WebGLenum dfactor)
+void WebGLContext::BlendFunc(GLenum sfactor, GLenum dfactor)
 {
     if (!IsContextStable())
         return;
@@ -256,8 +256,8 @@ void WebGLContext::BlendFunc(WebGLenum sfactor, WebGLenum dfactor)
 }
 
 void
-WebGLContext::BlendFuncSeparate(WebGLenum srcRGB, WebGLenum dstRGB,
-                                WebGLenum srcAlpha, WebGLenum dstAlpha)
+WebGLContext::BlendFuncSeparate(GLenum srcRGB, GLenum dstRGB,
+                                GLenum srcAlpha, GLenum dstAlpha)
 {
     if (!IsContextStable())
         return;
@@ -312,8 +312,8 @@ GLenum WebGLContext::CheckedBufferData(GLenum target,
     }
 }
 
-WebGLenum
-WebGLContext::CheckFramebufferStatus(WebGLenum target)
+GLenum
+WebGLContext::CheckFramebufferStatus(GLenum target)
 {
     if (!IsContextStable())
     {
@@ -363,20 +363,20 @@ WebGLContext::CheckFramebufferStatus(WebGLenum target)
 }
 
 void
-WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
-                                     WebGLint level,
-                                     WebGLenum internalformat,
-                                     WebGLint xoffset,
-                                     WebGLint yoffset,
-                                     WebGLint x,
-                                     WebGLint y,
-                                     WebGLsizei width,
-                                     WebGLsizei height,
+WebGLContext::CopyTexSubImage2D_base(GLenum target,
+                                     GLint level,
+                                     GLenum internalformat,
+                                     GLint xoffset,
+                                     GLint yoffset,
+                                     GLint x,
+                                     GLint y,
+                                     GLsizei width,
+                                     GLsizei height,
                                      bool sub)
 {
     const WebGLRectangleObject *framebufferRect = FramebufferRectangleObject();
-    WebGLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
-    WebGLsizei framebufferHeight = framebufferRect ? framebufferRect->Height() : 0;
+    GLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
+    GLsizei framebufferHeight = framebufferRect ? framebufferRect->Height() : 0;
 
     const char *info = sub ? "copyTexSubImage2D" : "copyTexImage2D";
 
@@ -463,14 +463,14 @@ WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
 }
 
 void
-WebGLContext::CopyTexImage2D(WebGLenum target,
-                             WebGLint level,
-                             WebGLenum internalformat,
-                             WebGLint x,
-                             WebGLint y,
-                             WebGLsizei width,
-                             WebGLsizei height,
-                             WebGLint border)
+WebGLContext::CopyTexImage2D(GLenum target,
+                             GLint level,
+                             GLenum internalformat,
+                             GLint x,
+                             GLint y,
+                             GLsizei width,
+                             GLsizei height,
+                             GLint border)
 {
     if (!IsContextStable())
         return;
@@ -509,7 +509,7 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
     if (level < 0)
         return ErrorInvalidValue("copyTexImage2D: level may not be negative");
 
-    WebGLsizei maxTextureSize = MaxTextureSizeForTarget(target);
+    GLsizei maxTextureSize = MaxTextureSizeForTarget(target);
     if (!(maxTextureSize >> level))
         return ErrorInvalidValue("copyTexImage2D: 2^level exceeds maximum texture size");
 
@@ -572,14 +572,14 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
 }
 
 void
-WebGLContext::CopyTexSubImage2D(WebGLenum target,
-                                WebGLint level,
-                                WebGLint xoffset,
-                                WebGLint yoffset,
-                                WebGLint x,
-                                WebGLint y,
-                                WebGLsizei width,
-                                WebGLsizei height)
+WebGLContext::CopyTexSubImage2D(GLenum target,
+                                GLint level,
+                                GLint xoffset,
+                                GLint yoffset,
+                                GLint x,
+                                GLint y,
+                                GLsizei width,
+                                GLsizei height)
 {
     if (!IsContextStable())
         return;
@@ -600,7 +600,7 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
     if (level < 0)
         return ErrorInvalidValue("copyTexSubImage2D: level may not be negative");
 
-    WebGLsizei maxTextureSize = MaxTextureSizeForTarget(target);
+    GLsizei maxTextureSize = MaxTextureSizeForTarget(target);
     if (!(maxTextureSize >> level))
         return ErrorInvalidValue("copyTexSubImage2D: 2^level exceeds maximum texture size");
 
@@ -614,13 +614,13 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
     if (!tex)
         return ErrorInvalidOperation("copyTexSubImage2D: no texture bound to this target");
 
-    WebGLint face = WebGLTexture::FaceForTarget(target);
+    GLint face = WebGLTexture::FaceForTarget(target);
     if (!tex->HasImageInfoAt(level, face))
         return ErrorInvalidOperation("copyTexSubImage2D: no texture image previously defined for this level and face");
 
     const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(level, face);
-    WebGLsizei texWidth = imageInfo.Width();
-    WebGLsizei texHeight = imageInfo.Height();
+    GLsizei texWidth = imageInfo.Width();
+    GLsizei texHeight = imageInfo.Height();
 
     if (xoffset + width > texWidth || xoffset + width < 0)
       return ErrorInvalidValue("copyTexSubImage2D: xoffset+width is too large");
@@ -628,7 +628,7 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
     if (yoffset + height > texHeight || yoffset + height < 0)
       return ErrorInvalidValue("copyTexSubImage2D: yoffset+height is too large");
 
-    WebGLenum format = imageInfo.Format();
+    GLenum format = imageInfo.Format();
     bool texFormatRequiresAlpha = format == LOCAL_GL_RGBA ||
                                   format == LOCAL_GL_ALPHA ||
                                   format == LOCAL_GL_LUMINANCE_ALPHA;
@@ -661,7 +661,7 @@ WebGLContext::CreateProgram()
 }
 
 already_AddRefed<WebGLShader>
-WebGLContext::CreateShader(WebGLenum type)
+WebGLContext::CreateShader(GLenum type)
 {
     if (!IsContextStable())
         return nullptr;
@@ -678,7 +678,7 @@ WebGLContext::CreateShader(WebGLenum type)
 }
 
 void
-WebGLContext::CullFace(WebGLenum face)
+WebGLContext::CullFace(GLenum face)
 {
     if (!IsContextStable())
         return;
@@ -746,7 +746,7 @@ WebGLContext::DeleteTexture(WebGLTexture *tex)
     if (mBoundFramebuffer)
         mBoundFramebuffer->DetachTexture(tex);
 
-    WebGLuint activeTexture = mActiveTexture;
+    GLuint activeTexture = mActiveTexture;
     for (int32_t i = 0; i < mGLMaxTextureUnits; i++) {
         if ((tex->Target() == LOCAL_GL_TEXTURE_2D && mBound2DTextures[i] == tex) ||
             (tex->Target() == LOCAL_GL_TEXTURE_CUBE_MAP && mBoundCubeMapTextures[i] == tex))
@@ -807,7 +807,7 @@ WebGLContext::DetachShader(WebGLProgram *program, WebGLShader *shader)
 }
 
 void
-WebGLContext::DepthFunc(WebGLenum func)
+WebGLContext::DepthFunc(GLenum func)
 {
     if (!IsContextStable())
         return;
@@ -820,7 +820,7 @@ WebGLContext::DepthFunc(WebGLenum func)
 }
 
 void
-WebGLContext::DepthRange(WebGLfloat zNear, WebGLfloat zFar)
+WebGLContext::DepthRange(GLfloat zNear, GLfloat zFar)
 {
     if (!IsContextStable())
         return;
@@ -853,7 +853,7 @@ WebGLContext::WhatDoesVertexAttrib0Need()
 }
 
 bool
-WebGLContext::DoFakeVertexAttrib0(WebGLuint vertexCount)
+WebGLContext::DoFakeVertexAttrib0(GLuint vertexCount)
 {
     int whatDoesAttrib0Need = WhatDoesVertexAttrib0Need();
 
@@ -869,7 +869,7 @@ WebGLContext::DoFakeVertexAttrib0(WebGLuint vertexCount)
         mAlreadyWarnedAboutFakeVertexAttrib0 = true;
     }
 
-    CheckedUint32 checked_dataSize = CheckedUint32(vertexCount) * 4 * sizeof(WebGLfloat);
+    CheckedUint32 checked_dataSize = CheckedUint32(vertexCount) * 4 * sizeof(GLfloat);
 
     if (!checked_dataSize.isValid()) {
         ErrorOutOfMemory("Integer overflow trying to construct a fake vertex attrib 0 array for a draw-operation "
@@ -877,7 +877,7 @@ WebGLContext::DoFakeVertexAttrib0(WebGLuint vertexCount)
         return false;
     }
     
-    WebGLuint dataSize = checked_dataSize.value();
+    GLuint dataSize = checked_dataSize.value();
 
     if (!mFakeVertexAttrib0BufferObject) {
         gl->fGenBuffers(1, &mFakeVertexAttrib0BufferObject);
@@ -910,7 +910,7 @@ WebGLContext::DoFakeVertexAttrib0(WebGLuint vertexCount)
         UpdateWebGLErrorAndClearGLError();
 
         if (mFakeVertexAttrib0BufferStatus == VertexAttrib0Status::EmulatedInitializedArray) {
-            nsAutoArrayPtr<WebGLfloat> array(new WebGLfloat[4 * vertexCount]);
+            nsAutoArrayPtr<GLfloat> array(new GLfloat[4 * vertexCount]);
             for(size_t i = 0; i < vertexCount; ++i) {
                 array[4 * i + 0] = mVertexAttrib0Vector[0];
                 array[4 * i + 1] = mVertexAttrib0Vector[1];
@@ -1005,7 +1005,7 @@ WebGLContext::BindFakeBlackTextures()
 
         gl->fGenTextures(1, &mBlackTextureCubeMap);
         gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, mBlackTextureCubeMap);
-        for (WebGLuint i = 0; i < 6; ++i) {
+        for (GLuint i = 0; i < 6; ++i) {
             gl->fTexImage2D(LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, LOCAL_GL_RGBA, 1, 1,
                             0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, &black);
         }
@@ -1051,7 +1051,7 @@ WebGLContext::UnbindFakeBlackTextures()
 }
 
 void
-WebGLContext::FramebufferRenderbuffer(WebGLenum target, WebGLenum attachment, WebGLenum rbtarget, WebGLRenderbuffer *wrb)
+WebGLContext::FramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum rbtarget, WebGLRenderbuffer *wrb)
 {
     if (!IsContextStable())
         return;
@@ -1063,11 +1063,11 @@ WebGLContext::FramebufferRenderbuffer(WebGLenum target, WebGLenum attachment, We
 }
 
 void
-WebGLContext::FramebufferTexture2D(WebGLenum target,
-                                   WebGLenum attachment,
-                                   WebGLenum textarget,
+WebGLContext::FramebufferTexture2D(GLenum target,
+                                   GLenum attachment,
+                                   GLenum textarget,
                                    WebGLTexture *tobj,
-                                   WebGLint level)
+                                   GLint level)
 {
     if (!IsContextStable())
         return;
@@ -1079,7 +1079,7 @@ WebGLContext::FramebufferTexture2D(WebGLenum target,
 }
 
 void
-WebGLContext::FrontFace(WebGLenum mode)
+WebGLContext::FrontFace(GLenum mode)
 {
     if (!IsContextStable())
         return;
@@ -1108,7 +1108,7 @@ WebGLContext::GetActiveAttrib(WebGLProgram *prog, uint32_t index)
     MakeContextCurrent();
 
     GLint len = 0;
-    WebGLuint progname = prog->GLName();;
+    GLuint progname = prog->GLName();;
     gl->fGetProgramiv(progname, LOCAL_GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &len);
     if (len == 0)
         return nullptr;
@@ -1131,7 +1131,7 @@ WebGLContext::GetActiveAttrib(WebGLProgram *prog, uint32_t index)
 }
 
 void
-WebGLContext::GenerateMipmap(WebGLenum target)
+WebGLContext::GenerateMipmap(GLenum target)
 {
     if (!IsContextStable())
         return;
@@ -1193,7 +1193,7 @@ WebGLContext::GetActiveUniform(WebGLProgram *prog, uint32_t index)
     MakeContextCurrent();
 
     GLint len = 0;
-    WebGLuint progname = prog->GLName();
+    GLuint progname = prog->GLName();
     gl->fGetProgramiv(progname, LOCAL_GL_ACTIVE_UNIFORM_MAX_LENGTH, &len);
     if (len == 0)
         return nullptr;
@@ -1255,7 +1255,7 @@ WebGLContext::GetAttachedShaders(WebGLProgram *prog,
     }
 }
 
-WebGLint
+GLint
 WebGLContext::GetAttribLocation(WebGLProgram *prog, const nsAString& name)
 {
     if (!IsContextStable())
@@ -1271,14 +1271,14 @@ WebGLContext::GetAttribLocation(WebGLProgram *prog, const nsAString& name)
     nsCString mappedName;
     prog->MapIdentifier(cname, &mappedName);
 
-    WebGLuint progname = prog->GLName();
+    GLuint progname = prog->GLName();
 
     MakeContextCurrent();
     return gl->fGetAttribLocation(progname, mappedName.get());
 }
 
 JS::Value
-WebGLContext::GetBufferParameter(WebGLenum target, WebGLenum pname)
+WebGLContext::GetBufferParameter(GLenum target, GLenum pname)
 {
     if (!IsContextStable())
         return JS::NullValue();
@@ -1314,9 +1314,9 @@ WebGLContext::GetBufferParameter(WebGLenum target, WebGLenum pname)
 
 JS::Value
 WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
-                                                WebGLenum target,
-                                                WebGLenum attachment,
-                                                WebGLenum pname,
+                                                GLenum target,
+                                                GLenum attachment,
+                                                GLenum pname,
                                                 ErrorResult& rv)
 {
     if (!IsContextStable())
@@ -1334,7 +1334,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
         if (IsExtensionEnabled(WEBGL_draw_buffers))
         {
             if (attachment < LOCAL_GL_COLOR_ATTACHMENT0 ||
-                attachment >= WebGLenum(LOCAL_GL_COLOR_ATTACHMENT0 + mGLMaxColorAttachments))
+                attachment >= GLenum(LOCAL_GL_COLOR_ATTACHMENT0 + mGLMaxColorAttachments))
             {
                 ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: attachment", attachment);
                 return JS::NullValue();
@@ -1407,7 +1407,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
 }
 
 JS::Value
-WebGLContext::GetRenderbufferParameter(WebGLenum target, WebGLenum pname)
+WebGLContext::GetRenderbufferParameter(GLenum target, GLenum pname)
 {
     if (!IsContextStable())
         return JS::NullValue();
@@ -1458,7 +1458,7 @@ WebGLContext::CreateTexture()
     return globj.forget();
 }
 
-WebGLenum
+GLenum
 WebGLContext::GetError()
 {
     if (mContextStatus == ContextStable) {
@@ -1469,13 +1469,13 @@ WebGLContext::GetError()
         mContextLostErrorSet = true;
     }
 
-    WebGLenum err = mWebGLError;
+    GLenum err = mWebGLError;
     mWebGLError = LOCAL_GL_NO_ERROR;
     return err;
 }
 
 JS::Value
-WebGLContext::GetProgramParameter(WebGLProgram *prog, WebGLenum pname)
+WebGLContext::GetProgramParameter(WebGLProgram *prog, GLenum pname)
 {
     if (!IsContextStable())
         return JS::NullValue();
@@ -1483,7 +1483,7 @@ WebGLContext::GetProgramParameter(WebGLProgram *prog, WebGLenum pname)
     if (!ValidateObjectAllowDeleted("getProgramParameter: program", prog))
         return JS::NullValue();
 
-    WebGLuint progname = prog->GLName();
+    GLuint progname = prog->GLName();
 
     MakeContextCurrent();
 
@@ -1550,7 +1550,7 @@ WebGLContext::GetProgramInfoLog(WebGLProgram *prog, nsACString& retval)
         return;
     }
         
-    WebGLuint progname = prog->GLName();
+    GLuint progname = prog->GLName();
 
     MakeContextCurrent();
 
@@ -1577,17 +1577,17 @@ WebGLContext::GetProgramInfoLog(WebGLProgram *prog, nsACString& retval)
 // here we have to support all pnames with both int and float params.
 // See this discussion:
 //  https://www.khronos.org/webgl/public-mailing-list/archives/1008/msg00014.html
-void WebGLContext::TexParameter_base(WebGLenum target, WebGLenum pname,
-                                     WebGLint *intParamPtr,
-                                     WebGLfloat *floatParamPtr)
+void WebGLContext::TexParameter_base(GLenum target, GLenum pname,
+                                     GLint *intParamPtr,
+                                     GLfloat *floatParamPtr)
 {
     MOZ_ASSERT(intParamPtr || floatParamPtr);
 
     if (!IsContextStable())
         return;
 
-    WebGLint intParam = intParamPtr ? *intParamPtr : WebGLint(*floatParamPtr);
-    WebGLfloat floatParam = floatParamPtr ? *floatParamPtr : WebGLfloat(*intParamPtr);
+    GLint intParam = intParamPtr ? *intParamPtr : GLint(*floatParamPtr);
+    GLfloat floatParam = floatParamPtr ? *floatParamPtr : GLfloat(*intParamPtr);
 
     if (!ValidateTextureTargetEnum(target, "texParameter: target"))
         return;
@@ -1684,7 +1684,7 @@ void WebGLContext::TexParameter_base(WebGLenum target, WebGLenum pname,
 }
 
 JS::Value
-WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname)
+WebGLContext::GetTexParameter(GLenum target, GLenum pname)
 {
     if (!IsContextStable())
         return JS::NullValue();
@@ -1749,7 +1749,7 @@ WebGLContext::GetUniform(JSContext* cx, WebGLProgram *prog,
         return JS::NullValue();
     }
 
-    WebGLuint progname = prog->GLName();
+    GLuint progname = prog->GLName();
 
     MakeContextCurrent();
 
@@ -1875,7 +1875,7 @@ WebGLContext::GetUniformLocation(WebGLProgram *prog, const nsAString& name)
     nsCString mappedName;
     prog->MapIdentifier(cname, &mappedName);
 
-    WebGLuint progname = prog->GLName();
+    GLuint progname = prog->GLName();
     MakeContextCurrent();
     GLint intlocation = gl->fGetUniformLocation(progname, mappedName.get());
 
@@ -1891,7 +1891,7 @@ WebGLContext::GetUniformLocation(WebGLProgram *prog, const nsAString& name)
 }
 
 void
-WebGLContext::Hint(WebGLenum target, WebGLenum mode)
+WebGLContext::Hint(GLenum target, GLenum mode)
 {
     if (!IsContextStable())
         return;
@@ -2127,7 +2127,7 @@ WebGLContext::LinkProgram(WebGLProgram *program)
 }
 
 void
-WebGLContext::PixelStorei(WebGLenum pname, WebGLint param)
+WebGLContext::PixelStorei(GLenum pname, GLint param)
 {
     if (!IsContextStable())
         return;
@@ -2165,9 +2165,9 @@ WebGLContext::PixelStorei(WebGLenum pname, WebGLint param)
 }
 
 void
-WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
-                         WebGLsizei height, WebGLenum format,
-                         WebGLenum type, const Nullable<ArrayBufferView> &pixels,
+WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
+                         GLsizei height, GLenum format,
+                         GLenum type, const Nullable<ArrayBufferView> &pixels,
                          ErrorResult& rv)
 {
     if (!IsContextStable()) {
@@ -2186,8 +2186,8 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
         return ErrorInvalidValue("readPixels: null destination buffer");
 
     const WebGLRectangleObject *framebufferRect = FramebufferRectangleObject();
-    WebGLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
-    WebGLsizei framebufferHeight = framebufferRect ? framebufferRect->Height() : 0;
+    GLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
+    GLsizei framebufferHeight = framebufferRect ? framebufferRect->Height() : 0;
 
     uint32_t channels = 0;
 
@@ -2391,7 +2391,7 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
 }
 
 void
-WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, WebGLsizei width, WebGLsizei height)
+WebGLContext::RenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height)
 {
     if (!IsContextStable())
         return;
@@ -2409,7 +2409,7 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
         return ErrorInvalidValue("renderbufferStorage: width or height exceeds maximum renderbuffer size");
 
     // certain OpenGL ES renderbuffer formats may not exist on desktop OpenGL
-    WebGLenum internalformatForGL = internalformat;
+    GLenum internalformatForGL = internalformat;
 
     switch (internalformat) {
     case LOCAL_GL_RGBA4:
@@ -2468,7 +2468,7 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
 }
 
 void
-WebGLContext::Scissor(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height)
+WebGLContext::Scissor(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     if (!IsContextStable())
         return;
@@ -2481,7 +2481,7 @@ WebGLContext::Scissor(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei heigh
 }
 
 void
-WebGLContext::StencilFunc(WebGLenum func, WebGLint ref, WebGLuint mask)
+WebGLContext::StencilFunc(GLenum func, GLint ref, GLuint mask)
 {
     if (!IsContextStable())
         return;
@@ -2499,7 +2499,7 @@ WebGLContext::StencilFunc(WebGLenum func, WebGLint ref, WebGLuint mask)
 }
 
 void
-WebGLContext::StencilFuncSeparate(WebGLenum face, WebGLenum func, WebGLint ref, WebGLuint mask)
+WebGLContext::StencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask)
 {
     if (!IsContextStable())
         return;
@@ -2530,7 +2530,7 @@ WebGLContext::StencilFuncSeparate(WebGLenum face, WebGLenum func, WebGLint ref, 
 }
 
 void
-WebGLContext::StencilOp(WebGLenum sfail, WebGLenum dpfail, WebGLenum dppass)
+WebGLContext::StencilOp(GLenum sfail, GLenum dpfail, GLenum dppass)
 {
     if (!IsContextStable())
         return;
@@ -2545,7 +2545,7 @@ WebGLContext::StencilOp(WebGLenum sfail, WebGLenum dpfail, WebGLenum dppass)
 }
 
 void
-WebGLContext::StencilOpSeparate(WebGLenum face, WebGLenum sfail, WebGLenum dpfail, WebGLenum dppass)
+WebGLContext::StencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass)
 {
     if (!IsContextStable())
         return;
@@ -2635,7 +2635,7 @@ WebGLContext::SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromE
 
 
 void
-WebGLContext::Uniform1i(WebGLUniformLocation *location_object, WebGLint a1)
+WebGLContext::Uniform1i(WebGLUniformLocation *location_object, GLint a1)
 {
     GLint location;
     if (!ValidateUniformSetter("Uniform1i", location_object, location))
@@ -2649,8 +2649,8 @@ WebGLContext::Uniform1i(WebGLUniformLocation *location_object, WebGLint a1)
 }
 
 void
-WebGLContext::Uniform2i(WebGLUniformLocation *location_object, WebGLint a1,
-                        WebGLint a2)
+WebGLContext::Uniform2i(WebGLUniformLocation *location_object, GLint a1,
+                        GLint a2)
 {
     GLint location;
     if (!ValidateUniformSetter("Uniform2i", location_object, location))
@@ -2667,8 +2667,8 @@ WebGLContext::Uniform2i(WebGLUniformLocation *location_object, WebGLint a1,
 }
 
 void
-WebGLContext::Uniform3i(WebGLUniformLocation *location_object, WebGLint a1,
-                        WebGLint a2, WebGLint a3)
+WebGLContext::Uniform3i(WebGLUniformLocation *location_object, GLint a1,
+                        GLint a2, GLint a3)
 {
     GLint location;
     if (!ValidateUniformSetter("Uniform3i", location_object, location))
@@ -2686,8 +2686,8 @@ WebGLContext::Uniform3i(WebGLUniformLocation *location_object, WebGLint a1,
 }
 
 void
-WebGLContext::Uniform4i(WebGLUniformLocation *location_object, WebGLint a1,
-                        WebGLint a2, WebGLint a3, WebGLint a4)
+WebGLContext::Uniform4i(WebGLUniformLocation *location_object, GLint a1,
+                        GLint a2, GLint a3, GLint a4)
 {
     GLint location;
     if (!ValidateUniformSetter("Uniform4i", location_object, location))
@@ -2706,7 +2706,7 @@ WebGLContext::Uniform4i(WebGLUniformLocation *location_object, WebGLint a1,
 }
 
 void
-WebGLContext::Uniform1f(WebGLUniformLocation *location_object, WebGLfloat a1)
+WebGLContext::Uniform1f(WebGLUniformLocation *location_object, GLfloat a1)
 {
     GLint location;
     if (!ValidateUniformSetter("Uniform1f", location_object, location))
@@ -2716,8 +2716,8 @@ WebGLContext::Uniform1f(WebGLUniformLocation *location_object, WebGLfloat a1)
 }
 
 void
-WebGLContext::Uniform2f(WebGLUniformLocation *location_object, WebGLfloat a1,
-                        WebGLfloat a2)
+WebGLContext::Uniform2f(WebGLUniformLocation *location_object, GLfloat a1,
+                        GLfloat a2)
 {
     GLint location;
     if (!ValidateUniformSetter("Uniform2f", location_object, location))
@@ -2727,8 +2727,8 @@ WebGLContext::Uniform2f(WebGLUniformLocation *location_object, WebGLfloat a1,
 }
 
 void
-WebGLContext::Uniform3f(WebGLUniformLocation *location_object, WebGLfloat a1,
-                        WebGLfloat a2, WebGLfloat a3)
+WebGLContext::Uniform3f(WebGLUniformLocation *location_object, GLfloat a1,
+                        GLfloat a2, GLfloat a3)
 {
     GLint location;
     if (!ValidateUniformSetter("Uniform3f", location_object, location))
@@ -2738,8 +2738,8 @@ WebGLContext::Uniform3f(WebGLUniformLocation *location_object, WebGLfloat a1,
 }
 
 void
-WebGLContext::Uniform4f(WebGLUniformLocation *location_object, WebGLfloat a1,
-                        WebGLfloat a2, WebGLfloat a3, WebGLfloat a4)
+WebGLContext::Uniform4f(WebGLUniformLocation *location_object, GLfloat a1,
+                        GLfloat a2, GLfloat a3, GLfloat a4)
 {
     GLint location;
     if (!ValidateUniformSetter("Uniform4f", location_object, location))
@@ -2750,7 +2750,7 @@ WebGLContext::Uniform4f(WebGLUniformLocation *location_object, WebGLfloat a1,
 
 void
 WebGLContext::Uniform1iv_base(WebGLUniformLocation *location_object,
-                              uint32_t arrayLength, const WebGLint* data)
+                              uint32_t arrayLength, const GLint* data)
 {
     uint32_t numElementsToUpload;
     GLint location;
@@ -2768,7 +2768,7 @@ WebGLContext::Uniform1iv_base(WebGLUniformLocation *location_object,
 
 void
 WebGLContext::Uniform2iv_base(WebGLUniformLocation *location_object,
-                              uint32_t arrayLength, const WebGLint* data)
+                              uint32_t arrayLength, const GLint* data)
 {
     uint32_t numElementsToUpload;
     GLint location;
@@ -2789,7 +2789,7 @@ WebGLContext::Uniform2iv_base(WebGLUniformLocation *location_object,
 
 void
 WebGLContext::Uniform3iv_base(WebGLUniformLocation *location_object,
-                              uint32_t arrayLength, const WebGLint* data)
+                              uint32_t arrayLength, const GLint* data)
 {
     uint32_t numElementsToUpload;
     GLint location;
@@ -2811,7 +2811,7 @@ WebGLContext::Uniform3iv_base(WebGLUniformLocation *location_object,
 
 void
 WebGLContext::Uniform4iv_base(WebGLUniformLocation *location_object,
-                              uint32_t arrayLength, const WebGLint* data)
+                              uint32_t arrayLength, const GLint* data)
 {
     uint32_t numElementsToUpload;
     GLint location;
@@ -2834,7 +2834,7 @@ WebGLContext::Uniform4iv_base(WebGLUniformLocation *location_object,
 
 void
 WebGLContext::Uniform1fv_base(WebGLUniformLocation *location_object,
-                              uint32_t arrayLength, const WebGLfloat* data)
+                              uint32_t arrayLength, const GLfloat* data)
 {
     uint32_t numElementsToUpload;
     GLint location;
@@ -2848,7 +2848,7 @@ WebGLContext::Uniform1fv_base(WebGLUniformLocation *location_object,
 
 void
 WebGLContext::Uniform2fv_base(WebGLUniformLocation *location_object,
-                              uint32_t arrayLength, const WebGLfloat* data)
+                              uint32_t arrayLength, const GLfloat* data)
 {
     uint32_t numElementsToUpload;
     GLint location;
@@ -2862,7 +2862,7 @@ WebGLContext::Uniform2fv_base(WebGLUniformLocation *location_object,
 
 void
 WebGLContext::Uniform3fv_base(WebGLUniformLocation *location_object,
-                              uint32_t arrayLength, const WebGLfloat* data)
+                              uint32_t arrayLength, const GLfloat* data)
 {
     uint32_t numElementsToUpload;
     GLint location;
@@ -2876,7 +2876,7 @@ WebGLContext::Uniform3fv_base(WebGLUniformLocation *location_object,
 
 void
 WebGLContext::Uniform4fv_base(WebGLUniformLocation *location_object,
-                              uint32_t arrayLength, const WebGLfloat* data)
+                              uint32_t arrayLength, const GLfloat* data)
 {
     uint32_t numElementsToUpload;
     GLint location;
@@ -2946,7 +2946,7 @@ WebGLContext::UseProgram(WebGLProgram *prog)
 
     InvalidateBufferFetching();
 
-    WebGLuint progname = prog ? prog->GLName() : 0;
+    GLuint progname = prog ? prog->GLName() : 0;
 
     if (prog && !prog->LinkStatus())
         return ErrorInvalidOperation("useProgram: program was not linked successfully");
@@ -2975,7 +2975,7 @@ WebGLContext::ValidateProgram(WebGLProgram *prog)
     }
 #endif
 
-    WebGLuint progname = prog->GLName();
+    GLuint progname = prog->GLName();
     gl->fValidateProgram(progname);
 }
 
@@ -2998,7 +2998,7 @@ WebGLContext::CreateRenderbuffer()
 }
 
 void
-WebGLContext::Viewport(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height)
+WebGLContext::Viewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     if (!IsContextStable())
         return;
@@ -3019,7 +3019,7 @@ WebGLContext::CompileShader(WebGLShader *shader)
     if (!ValidateObject("compileShader", shader))
         return;
 
-    WebGLuint shadername = shader->GLName();
+    GLuint shadername = shader->GLName();
 
     shader->SetCompileStatus(false);
 
@@ -3279,8 +3279,8 @@ WebGLContext::CompileShader(WebGLShader *shader)
 }
 
 void
-WebGLContext::CompressedTexImage2D(WebGLenum target, WebGLint level, WebGLenum internalformat,
-                                   WebGLsizei width, WebGLsizei height, WebGLint border,
+WebGLContext::CompressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
+                                   GLsizei width, GLsizei height, GLint border,
                                    const ArrayBufferView& view)
 {
     if (!IsContextStable()) {
@@ -3319,9 +3319,9 @@ WebGLContext::CompressedTexImage2D(WebGLenum target, WebGLint level, WebGLenum i
 }
 
 void
-WebGLContext::CompressedTexSubImage2D(WebGLenum target, WebGLint level, WebGLint xoffset,
-                                      WebGLint yoffset, WebGLsizei width, WebGLsizei height,
-                                      WebGLenum format, const ArrayBufferView& view)
+WebGLContext::CompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset,
+                                      GLint yoffset, GLsizei width, GLsizei height,
+                                      GLenum format, const ArrayBufferView& view)
 {
     if (!IsContextStable()) {
         return;
@@ -3419,7 +3419,7 @@ WebGLContext::CompressedTexSubImage2D(WebGLenum target, WebGLint level, WebGLint
 }
 
 JS::Value
-WebGLContext::GetShaderParameter(WebGLShader *shader, WebGLenum pname)
+WebGLContext::GetShaderParameter(WebGLShader *shader, GLenum pname)
 {
     if (!IsContextStable())
         return JS::NullValue();
@@ -3427,7 +3427,7 @@ WebGLContext::GetShaderParameter(WebGLShader *shader, WebGLenum pname)
     if (!ValidateObject("getShaderParameter: shader", shader))
         return JS::NullValue();
 
-    WebGLuint shadername = shader->GLName();
+    GLuint shadername = shader->GLName();
 
     MakeContextCurrent();
 
@@ -3486,7 +3486,7 @@ WebGLContext::GetShaderInfoLog(WebGLShader *shader, nsACString& retval)
 
     MakeContextCurrent();
 
-    WebGLuint shadername = shader->GLName();
+    GLuint shadername = shader->GLName();
     GLint k = -1;
     gl->fGetShaderiv(shadername, LOCAL_GL_INFO_LOG_LENGTH, &k);
     if (k == -1) {
@@ -3505,7 +3505,7 @@ WebGLContext::GetShaderInfoLog(WebGLShader *shader, nsACString& retval)
 }
 
 already_AddRefed<WebGLShaderPrecisionFormat>
-WebGLContext::GetShaderPrecisionFormat(WebGLenum shadertype, WebGLenum precisiontype)
+WebGLContext::GetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype)
 {
     if (!IsContextStable())
         return nullptr;
@@ -3626,10 +3626,10 @@ GLenum WebGLContext::CheckedTexImage2D(GLenum target,
 }
 
 void
-WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum internalformat,
-                              WebGLsizei width, WebGLsizei height, WebGLsizei srcStrideOrZero,
-                              WebGLint border,
-                              WebGLenum format, WebGLenum type,
+WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
+                              GLsizei width, GLsizei height, GLsizei srcStrideOrZero,
+                              GLint border,
+                              GLenum format, GLenum type,
                               void *data, uint32_t byteLength,
                               int jsArrayType, // a TypedArray format enum, or -1 if not relevant
                               WebGLTexelFormat srcFormat, bool srcPremultiplied)
@@ -3771,10 +3771,10 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
 }
 
 void
-WebGLContext::TexImage2D(WebGLenum target, WebGLint level,
-                         WebGLenum internalformat, WebGLsizei width,
-                         WebGLsizei height, WebGLint border, WebGLenum format,
-                         WebGLenum type, const Nullable<ArrayBufferView> &pixels, ErrorResult& rv)
+WebGLContext::TexImage2D(GLenum target, GLint level,
+                         GLenum internalformat, GLsizei width,
+                         GLsizei height, GLint border, GLenum format,
+                         GLenum type, const Nullable<ArrayBufferView> &pixels, ErrorResult& rv)
 {
     if (!IsContextStable())
         return;
@@ -3787,9 +3787,9 @@ WebGLContext::TexImage2D(WebGLenum target, WebGLint level,
 }
 
 void
-WebGLContext::TexImage2D(WebGLenum target, WebGLint level,
-                         WebGLenum internalformat, WebGLenum format,
-                         WebGLenum type, ImageData* pixels, ErrorResult& rv)
+WebGLContext::TexImage2D(GLenum target, GLint level,
+                         GLenum internalformat, GLenum format,
+                         GLenum type, ImageData* pixels, ErrorResult& rv)
 {
     if (!IsContextStable())
         return;
@@ -3808,10 +3808,10 @@ WebGLContext::TexImage2D(WebGLenum target, WebGLint level,
 
 
 void
-WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
-                                 WebGLint xoffset, WebGLint yoffset,
-                                 WebGLsizei width, WebGLsizei height, WebGLsizei srcStrideOrZero,
-                                 WebGLenum format, WebGLenum type,
+WebGLContext::TexSubImage2D_base(GLenum target, GLint level,
+                                 GLint xoffset, GLint yoffset,
+                                 GLsizei width, GLsizei height, GLsizei srcStrideOrZero,
+                                 GLenum format, GLenum type,
                                  void *pixels, uint32_t byteLength,
                                  int jsArrayType,
                                  WebGLTexelFormat srcFormat, bool srcPremultiplied)
@@ -3920,10 +3920,10 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
 }
 
 void
-WebGLContext::TexSubImage2D(WebGLenum target, WebGLint level,
-                            WebGLint xoffset, WebGLint yoffset,
-                            WebGLsizei width, WebGLsizei height,
-                            WebGLenum format, WebGLenum type,
+WebGLContext::TexSubImage2D(GLenum target, GLint level,
+                            GLint xoffset, GLint yoffset,
+                            GLsizei width, GLsizei height,
+                            GLenum format, GLenum type,
                             const Nullable<ArrayBufferView> &pixels,
                             ErrorResult& rv)
 {
@@ -3941,9 +3941,9 @@ WebGLContext::TexSubImage2D(WebGLenum target, WebGLint level,
 }
 
 void
-WebGLContext::TexSubImage2D(WebGLenum target, WebGLint level,
-                            WebGLint xoffset, WebGLint yoffset,
-                            WebGLenum format, WebGLenum type, ImageData* pixels,
+WebGLContext::TexSubImage2D(GLenum target, GLint level,
+                            GLint xoffset, GLint yoffset,
+                            GLenum format, GLenum type, ImageData* pixels,
                             ErrorResult& rv)
 {
     if (!IsContextStable())
@@ -3985,7 +3985,7 @@ WebGLContext::RestoreContext()
 }
 
 bool
-BaseTypeAndSizeFromUniformType(WebGLenum uType, WebGLenum *baseType, WebGLint *unitSize)
+BaseTypeAndSizeFromUniformType(GLenum uType, GLenum *baseType, GLint *unitSize)
 {
     switch (uType) {
         case LOCAL_GL_INT:
@@ -4126,8 +4126,8 @@ WebGLTexelFormat mozilla::GetWebGLTexelFormat(GLenum format, GLenum type)
     }
 }
 
-WebGLenum
-InternalFormatForFormatAndType(WebGLenum format, WebGLenum type, bool isGLES2)
+GLenum
+InternalFormatForFormatAndType(GLenum format, GLenum type, bool isGLES2)
 {
     // ES2 requires that format == internalformat; floating-point is
     // indicated purely by the type that's loaded.  For desktop GL, we
@@ -4179,7 +4179,7 @@ InternalFormatForFormatAndType(WebGLenum format, WebGLenum type, bool isGLES2)
 
 void
 WebGLContext::ReattachTextureToAnyFramebufferToWorkAroundBugs(WebGLTexture *tex,
-                                                              WebGLint level)
+                                                              GLint level)
 {
     MOZ_ASSERT(tex);
 

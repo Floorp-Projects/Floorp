@@ -914,7 +914,7 @@ WebGLContext::GetContextAttributes(Nullable<dom::WebGLContextAttributesInitializ
     result.mPreserveDrawingBuffer = mOptions.preserveDrawingBuffer;
 }
 
-/* [noscript] DOMString mozGetUnderlyingParamString(in WebGLenum pname); */
+/* [noscript] DOMString mozGetUnderlyingParamString(in GLenum pname); */
 NS_IMETHODIMP
 WebGLContext::MozGetUnderlyingParamString(uint32_t pname, nsAString& retval)
 {
@@ -1156,7 +1156,7 @@ WebGLContext::PresentScreenBuffer()
 void
 WebGLContext::DummyFramebufferOperation(const char *info)
 {
-    WebGLenum status = CheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+    GLenum status = CheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (status == LOCAL_GL_FRAMEBUFFER_COMPLETE)
         return;
     else
