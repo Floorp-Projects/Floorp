@@ -3,19 +3,16 @@
   <title>NPN_AsyncCallback Tests</title>
   <script type="text/javascript" 
           src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
   <link rel="stylesheet" type="text/css" 
         href="/tests/SimpleTest/test.css" />
 </head>
 <body onload="runTests()">
-  <p id="display"></p>
-
-  <embed id="plugin1" type="application/x-test" width="400" height="100">
-  </embed>
-
   <script class="testbody" type="application/javascript">
   
   SimpleTest.waitForExplicitFinish();
-  
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
   function asyncTestsComplete(result) {
     ok(result, "asyncCallback tests completed");
     SimpleTest.finish();
@@ -26,6 +23,11 @@
     plugin.asyncCallbackTest("asyncTestsComplete");
   }
   </script>
-  
+
+  <p id="display"></p>
+
+  <embed id="plugin1" type="application/x-test" width="400" height="100">
+  </embed>
+
  </body>
  </html>

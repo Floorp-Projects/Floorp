@@ -3,6 +3,7 @@
 <head>
   <title>Test copying text from browser to plugin</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
 
   <script class="testbody" type="text/javascript">
 function runTests() {
@@ -23,6 +24,7 @@ function runTests() {
 }
 
 SimpleTest.waitForExplicitFinish();
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   </script>
 </head>

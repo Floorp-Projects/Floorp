@@ -3,21 +3,17 @@
   <title>Test NPN_Invalidate working for a windowed plugin</title>
   <script type="text/javascript" 
           src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
   <link rel="stylesheet" type="text/css" 
         href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="checkPaintCountStabilized()">
-  <p id="display"></p>
-
-  <embed id="p" type="application/x-test" wmode="window" drawmode="solid"
-         color="FFFF0000">
-  </embed>
-
+<body onload="runTests()">
   <script class="testbody" type="application/javascript">
   SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   var lastPaintCount;
-  var p = document.getElementById("p");
+  var p = null;
 
   function checkPainted() {
     if (p.getPaintCount() > lastPaintCount) {
@@ -50,8 +46,19 @@
       }
     }, 1000);
   }
+
+  function runTests() {
+    p = document.getElementById("p");
+    checkPaintCountStabilized();
+  }
   </script>
-  
+
+  <p id="display"></p>
+
+  <embed id="p" type="application/x-test" wmode="window" drawmode="solid"
+         color="FFFF0000">
+  </embed>
+
   <div id="verbose">
   </div>
  </body>

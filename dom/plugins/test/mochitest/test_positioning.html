@@ -3,6 +3,7 @@
 <head>
   <title>Test whether windowless plugins receive correct visible/invisible notifications.</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
   <style type="text/css">
@@ -14,14 +15,15 @@
 <body onload="startTest()">
   <p id="display"></p>
 
-  <embed id="theplugin" type="application/x-test" width="200" height="200"></embed>
-
   <script type="application/javascript;version=1.8">
   SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
-  var p = document.getElementById('theplugin');
+  var p = null;
 
   function startTest() {
+    p = document.getElementById('theplugin');
+
     // Wait for the plugin to have painted once
     var interval = setInterval(function() {
       if (!p.getPaintCount())
@@ -50,3 +52,5 @@
     SimpleTest.finish();
   }
   </script>
+
+  <embed id="theplugin" type="application/x-test" width="200" height="200"></embed>
