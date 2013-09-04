@@ -148,6 +148,11 @@ interface nsIMemoryReporterCallback : nsISupports
  *   Reporters in this category must have kind NONHEAP, units BYTES, and a
  *   non-empty description.
  *
+ * - The "redundant" tree is optional, and can be used for reports that are
+ *   redundant w.r.t. other reports.  These are useful for telemetry, and are
+ *   not shown in about:memory.  Reports in this tree are entirely
+ *   unconstrained.
+ *
  * - All other reports are unconstrained except that they must have a
  *   description that is a sentence.
  */
