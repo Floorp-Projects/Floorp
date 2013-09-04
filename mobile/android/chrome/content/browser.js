@@ -1000,9 +1000,18 @@ var BrowserApp = {
   },
 
   getPreferences: function getPreferences(aPrefsRequest, aListen) {
+    this.handlePreferencesRequest(aPrefsRequest.requestId,
+                                  aPrefsRequest.preferences,
+                                  aListen);
+  },
+
+  handlePreferencesRequest: function handlePreferencesRequest(aRequestId,
+                                                              aPrefNames,
+                                                              aListen) {
+
     let prefs = [];
 
-    for (let prefName of aPrefsRequest.preferences) {
+    for (let prefName of aPrefNames) {
       let pref = {
         name: prefName,
         type: "",
@@ -1011,9 +1020,9 @@ var BrowserApp = {
 
       if (aListen) {
         if (this._prefObservers[prefName])
-          this._prefObservers[prefName].push(aPrefsRequest.requestId);
+          this._prefObservers[prefName].push(aRequestId);
         else
-          this._prefObservers[prefName] = [ aPrefsRequest.requestId ];
+          this._prefObservers[prefName] = [ aRequestId ];
         Services.prefs.addObserver(prefName, this, false);
       }
 
@@ -1120,7 +1129,7 @@ var BrowserApp = {
 
     sendMessageToJava({
       type: "Preferences:Data",
-      requestId: aPrefsRequest.requestId,    // opaque request identifier, can be any string/int/whatever
+      requestId: aRequestId,    // opaque request identifier, can be any string/int/whatever
       preferences: prefs
     });
   },
