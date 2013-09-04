@@ -721,14 +721,17 @@ nsHttpChannel::RetrieveSSLOptions()
         return;
 
     uint32_t perm;
-    nsresult rv = permMgr->TestPermissionFromPrincipal(principal,
-                                                       "falsestart-rsa", &perm);
+    nsresult rv = permMgr->TestExactPermissionFromPrincipal(principal,
+                                                            "falsestart-rsa",
+                                                            &perm);
     if (NS_SUCCEEDED(rv) && perm == nsIPermissionManager::ALLOW_ACTION) {
         LOG(("nsHttpChannel::RetrieveSSLOptions [this=%p] "
              "falsestart-rsa permission found\n", this));
         mCaps |= NS_HTTP_ALLOW_RSA_FALSESTART;
     }
-    rv = permMgr->TestPermissionFromPrincipal(principal, "falsestart-rc4", &perm);
+    rv = permMgr->TestExactPermissionFromPrincipal(principal,
+                                                   "falsestart-rc4",
+                                                   &perm);
     if (NS_SUCCEEDED(rv) && perm == nsIPermissionManager::ALLOW_ACTION) {
         LOG(("nsHttpChannel::RetrieveSSLOptions [this=%p] "
              "falsestart-rc4 permission found\n", this));
