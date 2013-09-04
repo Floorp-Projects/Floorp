@@ -154,7 +154,8 @@ class TreeMetadataEmitter(LoggingMixin):
 
         exports = sandbox.get('EXPORTS')
         if exports:
-            yield Exports(sandbox, exports)
+            yield Exports(sandbox, exports,
+                dist_install=not sandbox.get('NO_DIST_INSTALL', False))
 
         program = sandbox.get('PROGRAM')
         if program:
