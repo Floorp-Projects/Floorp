@@ -5,7 +5,7 @@
     },
     "global": {
         "talos_repo": "http://hg.mozilla.org/build/talos",
-        "talos_revision": "1817a7d17991"
+        "talos_revision": "63e4fcd8784d"
     },
     "suites": {
         "chromez": {
@@ -34,14 +34,10 @@
             ]
         },
         "dromaeojs": {
-            "tests": [
-                "dromaeo_css",
-                "dromaeo_dom",
-                "kraken:v8_7"
-            ]
+            "tests": ["dromaeo_css", "dromaeo_dom", "kraken", "v8_7"]
         },
         "other": {
-            "tests": ["tscrollx", "a11yr", "ts_paint", "tpaint"],
+            "tests": ["a11yr", "ts_paint", "tpaint"],
             "talos_options": [
                 "--mozAfterPaint",
                 "--filter",
@@ -51,13 +47,7 @@
             ]
         },
         "svgr": {
-            "tests": ["tsvgx", "tsvgr_opacity", "tart"],
-            "talos_options": [
-                "--filter",
-                "ignore_first:5",
-                "--filter",
-                "median"
-            ]
+            "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx"]
         },
         "rafx": {
             "tests": ["tscrollr", "tsvgr"],

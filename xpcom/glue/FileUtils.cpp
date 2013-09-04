@@ -450,7 +450,7 @@ mozilla::ReadAheadLib(mozilla::pathstr_t aFilePath)
   // information to find the biggest offset from the library that
   // will be mapped in memory.
   char *cmd = &base[sizeof(struct cpu_mach_header)];
-  off_t end = 0;
+  uint32_t end = 0;
   for (uint32_t ncmds = mh->ncmds; ncmds; ncmds--) {
     struct segment_command *sh = (struct segment_command *)cmd;
     if (sh->cmd != LC_SEGMENT) {

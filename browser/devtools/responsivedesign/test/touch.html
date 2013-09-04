@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+
+<meta charset=utf-8 />
+<title>test</title>
+
+
+<style>
+  div {
+    border:1px solid red;
+    width: 100px; height: 100px;
+  }
+</style>
+
+<div></div>
+
+<script>
+  var div = document.querySelector("div");
+  var initX, initY;
+
+
+  div.addEventListener("touchstart", function(evt) {
+    var touch = evt.changedTouches[0];
+    initX = touch.pageX;
+    initY = touch.pageY;
+  }, true);
+
+  div.addEventListener("touchmove", function(evt) {
+    var touch = evt.changedTouches[0];
+    var deltaX = touch.pageX - initX;
+    var deltaY = touch.pageY - initY;
+    div.style.transform = "translate(" + deltaX + "px, " + deltaY + "px)";
+  }, true);
+
+  div.addEventListener("touchend", function(evt) {
+    div.style.transform = "none";
+  }, true);
+</script>

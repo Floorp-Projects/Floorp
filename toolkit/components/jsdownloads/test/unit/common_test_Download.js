@@ -1623,3 +1623,47 @@ add_task(function test_contentType() {
 
   do_check_eq("text/plain", download.contentType);
 });
+
+/**
+ * This test will call the platform specific operations within
+ * DownloadPlatform::DownloadDone. While there is no test to verify the
+ * specific behaviours, this at least ensures that there is no error or crash.
+ */
+add_task(function test_platform_integration()
+{
+  for (let isPrivate of [false, true]) {
+    DownloadIntegration.downloadDoneCalled = false;
+
+    // Some platform specific operations only operate on files outside the
+    // temporary directory or in the Downloads directory (such as setting
+    // the Windows searchable attribute, and the Mac Downloads icon bouncing),
+    // so use the system Downloads directory for the target file.
+    let targetFile = yield DownloadIntegration.getSystemDownloadsDirectory();
+    targetFile = targetFile.clone();
+    targetFile.append("test" + (Math.floor(Math.random() * 1000000)));
+
+    let download;
+    if (gUseLegacySaver) {
+      download = yield promiseStartLegacyDownload(httpUrl("source.txt"),
+                                                  { targetFile: targetFile });
+    }
+    else {
+      download = yield Downloads.createDownload({
+        source: httpUrl("source.txt"),
+        target: targetFile,
+      });
+      download.start();
+    }
+
+    // Wait for the whenSucceeded promise to be resolved first.
+    // downloadDone should be called before the whenSucceeded promise is resolved.
+    yield download.whenSucceeded().then(function () {
+      do_check_true(DownloadIntegration.downloadDoneCalled);
+    });
+
+    // Then, wait for the promise returned by "start" to be resolved.
+    yield promiseDownloadStopped(download);
+
+    yield promiseVerifyContents(download.target.path, TEST_DATA_SHORT);
+  }
+});

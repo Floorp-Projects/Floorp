@@ -1683,18 +1683,6 @@ JSScript::ensureRanAnalysis(JSContext *cx)
 }
 
 inline bool
-JSScript::ensureRanInference(JSContext *cx)
-{
-    if (!ensureRanAnalysis(cx))
-        return false;
-    if (!analysis()->ranInference()) {
-        js::types::AutoEnterAnalysis enter(cx);
-        analysis()->analyzeTypes(cx);
-    }
-    return !analysis()->OOM() && !cx->zone()->types.pendingNukeTypes;
-}
-
-inline bool
 JSScript::hasAnalysis()
 {
     return types && types->analysis;
@@ -1721,14 +1709,6 @@ JSScript::clearPropertyReadTypes()
 {
     if (types && types->propertyReadTypes)
         types->propertyReadTypes = NULL;
-}
-
-inline void
-js::analyze::ScriptAnalysis::addPushedType(JSContext *cx, uint32_t offset, uint32_t which,
-                                           js::types::Type type)
-{
-    js::types::TypeSet *pushed = pushedTypes(offset, which);
-    pushed->addType(cx, type);
 }
 
 namespace js {

@@ -389,7 +389,7 @@ struct ParseTask
 
     // Any errors or warnings produced during compilation. These are reported
     // when finishing the script.
-    Vector<frontend::CompileError> errors;
+    Vector<frontend::CompileError *> errors;
 
     ParseTask(ExclusiveContext *cx, const CompileOptions &options,
               const jschar *chars, size_t length, JSObject *scopeChain,

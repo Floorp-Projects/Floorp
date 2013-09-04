@@ -29,64 +29,6 @@ ScriptAnalysis::poppedValue(const jsbytecode *pc, uint32_t which)
     return poppedValue(pc - script_->code, which);
 }
 
-inline types::StackTypeSet *
-ScriptAnalysis::pushedTypes(uint32_t offset, uint32_t which)
-{
-    JS_ASSERT(offset < script_->length);
-    JS_ASSERT(which < GetDefCount(script_, offset) +
-              (ExtendedDef(script_->code + offset) ? 1 : 0));
-    types::StackTypeSet *array = getCode(offset).pushedTypes;
-    JS_ASSERT(array);
-    return array + which;
-}
-
-inline types::StackTypeSet *
-ScriptAnalysis::pushedTypes(const jsbytecode *pc, uint32_t which)
-{
-    return pushedTypes(pc - script_->code, which);
-}
-
-inline types::StackTypeSet *
-ScriptAnalysis::getValueTypes(const SSAValue &v)
-{
-    switch (v.kind()) {
-      case SSAValue::PUSHED:
-        return pushedTypes(v.pushedOffset(), v.pushedIndex());
-      case SSAValue::VAR:
-        JS_ASSERT(!slotEscapes(v.varSlot()));
-        if (v.varInitial()) {
-            if (v.varSlot() < LocalSlot(script_, 0))
-                return types::TypeScript::SlotTypes(script_, v.varSlot());
-            return undefinedTypeSet;
-        } else {
-            /*
-             * Results of intermediate assignments have the same type as
-             * the first type pushed by the assignment op. Note that this
-             * may not be the exact same value as was pushed, due to
-             * post-inc/dec ops.
-             */
-            return pushedTypes(v.varOffset(), 0);
-        }
-      case SSAValue::PHI:
-        return &v.phiNode()->types;
-      default:
-        /* Cannot compute types for empty SSA values. */
-        MOZ_ASSUME_UNREACHABLE("Bad SSA value");
-    }
-}
-
-inline types::StackTypeSet *
-ScriptAnalysis::poppedTypes(uint32_t offset, uint32_t which)
-{
-    return getValueTypes(poppedValue(offset, which));
-}
-
-inline types::StackTypeSet *
-ScriptAnalysis::poppedTypes(const jsbytecode *pc, uint32_t which)
-{
-    return getValueTypes(poppedValue(pc, which));
-}
-
 inline SSAUseChain *&
 ScriptAnalysis::useChain(const SSAValue &v)
 {
@@ -105,12 +47,6 @@ ScriptAnalysis::getCallPC(jsbytecode *pc)
     JS_ASSERT(uses && uses->popped);
     JS_ASSERT(js_CodeSpec[script_->code[uses->offset]].format & JOF_INVOKE);
     return script_->code + uses->offset;
-}
-
-inline types::StackTypeSet *
-CrossScriptSSA::getValueTypes(const CrossSSAValue &cv)
-{
-    return getFrame(cv.frame).script->analysis()->getValueTypes(cv.v);
 }
 
 } /* namespace analyze */

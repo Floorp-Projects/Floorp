@@ -12,8 +12,13 @@ include $(DEPTH)/config/autoconf.mk
 MOCHITEST_FILES := \
   test_Document-open.html.json \
   test_addRange.html.json \
+  test_collapse.html.json \
+  test_collapseToStartEnd.html.json \
+  test_extend.html.json \
   test_getSelection.html.json \
   test_interfaces.html.json \
+  test_removeAllRanges.html.json \
+  test_selectAllChildren.html.json \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

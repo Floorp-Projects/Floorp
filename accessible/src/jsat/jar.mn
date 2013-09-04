@@ -5,3 +5,4 @@
 toolkit.jar:
     content/global/accessibility/AccessFu.css (AccessFu.css)
     content/global/accessibility/content-script.js (content-script.js)
+    content/global/accessibility/tick.wav (tick.wav)

@@ -625,12 +625,6 @@ MUnbox::printOpcode(FILE *fp) const
     }
 }
 
-MPhi *
-MPhi::New(uint32_t slot)
-{
-    return new MPhi(slot);
-}
-
 void
 MPhi::removeOperand(size_t index)
 {

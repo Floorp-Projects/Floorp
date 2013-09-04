@@ -294,7 +294,12 @@ private:
       return false;
     }
 
-    return worker->PostMessage(aCx, message, transferable);
+    if (!worker->PostMessage(aCx, message, transferable)) {
+      return false;
+    }
+
+    JS_RVAL(aCx, aVp).setUndefined();
+    return true;
   }
 };
 

@@ -1786,6 +1786,9 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
         if (!emitCallToUncompiledScriptPar(call, calleereg))
             return false;
         break;
+
+      default:
+        MOZ_ASSUME_UNREACHABLE("No such execution mode");
     }
 
     masm.bind(&end);
@@ -1911,6 +1914,9 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
         if (!emitCallToUncompiledScriptPar(call, calleereg))
             return false;
         break;
+
+      default:
+        MOZ_ASSUME_UNREACHABLE("No such execution mode");
     }
 
     masm.bind(&end);
@@ -4800,7 +4806,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
         masm.jump(ool->rejoin());
         return true;
 
-      case ParallelExecution:
+      case ParallelExecution: {
         //////////////////////////////////////////////////////////////
         // If the problem is that we do not have sufficient capacity,
         // try to reallocate the elements array and then branch back
@@ -4855,6 +4861,10 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
             return false;
         masm.jump(bail1->entry());
         return true;
+      }
+
+      default:
+        MOZ_ASSUME_UNREACHABLE("No such execution mode");
     }
 
     JS_ASSERT(false);
@@ -5558,8 +5568,12 @@ CodeGenerator::link()
     IonCode *code = (executionMode == SequentialExecution)
                     ? linker.newCodeForIonScript(cx)
                     : linker.newCode(cx, JSC::ION_CODE);
-    if (!code)
+    if (!code) {
+        // Use js_free instead of IonScript::Destroy: the cache list and
+        // backedge list are still uninitialized.
+        js_free(ionScript);
         return false;
+    }
 
     JSScript *script = gen->info().script();
     JS_ASSERT(!HasIonScript(script, executionMode));

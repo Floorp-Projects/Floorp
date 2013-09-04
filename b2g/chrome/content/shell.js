@@ -299,6 +299,7 @@ var shell = {
     window.addEventListener('keyup', this, true);
     window.addEventListener('MozApplicationManifest', this);
     window.addEventListener('mozfullscreenchange', this);
+    window.addEventListener('MozAfterPaint', this);
     window.addEventListener('sizemodechange', this);
     this.contentBrowser.addEventListener('mozbrowserloadstart', this, true);
 
@@ -510,6 +511,12 @@ var shell = {
         } catch (e) {
           dump('Error while creating offline cache: ' + e + '\n');
         }
+        break;
+      case 'MozAfterPaint':
+        window.removeEventListener('MozAfterPaint', this);
+        this.sendChromeEvent({
+          type: 'system-first-paint'
+        });
         break;
     }
   },

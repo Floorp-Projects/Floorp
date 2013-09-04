@@ -6,7 +6,6 @@
 
 #include "jspropertytree.h"
 
-#include "jsapi.h"
 #include "jscntxt.h"
 #include "jsgc.h"
 #include "jstypes.h"

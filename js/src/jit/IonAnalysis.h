@@ -124,6 +124,11 @@ class LinearSum
     int32_t constant_;
 };
 
+bool
+AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
+                           types::TypeObject *type, HandleObject baseobj,
+                           Vector<types::TypeNewScript::Initializer> *initializerList);
+
 } // namespace jit
 } // namespace js
 
