@@ -123,14 +123,14 @@ public:
 
   void SetOrientation(double aX, double aY, double aZ)
   {
-    if (WebAudioUtils::FuzzyEqual(mOrientation.x, aX) &&
-        WebAudioUtils::FuzzyEqual(mOrientation.y, aY) &&
-        WebAudioUtils::FuzzyEqual(mOrientation.z, aZ)) {
+    ThreeDPoint orientation(aX, aY, aZ);
+    if (!orientation.IsZero()) {
+      orientation.Normalize();
+    }
+    if (mOrientation.FuzzyEqual(orientation)) {
       return;
     }
-    mOrientation.x = aX;
-    mOrientation.y = aY;
-    mOrientation.z = aZ;
+    mOrientation = orientation;
     SendThreeDPointParameterToStream(ORIENTATION, mOrientation);
   }
 
@@ -236,15 +236,15 @@ private:
   friend class PannerNodeEngine;
   enum EngineParameters {
     LISTENER_POSITION,
-    LISTENER_ORIENTATION,
-    LISTENER_UPVECTOR,
+    LISTENER_FRONT_VECTOR, // unit length
+    LISTENER_RIGHT_VECTOR, // unit length, orthogonal to LISTENER_FRONT_VECTOR
     LISTENER_VELOCITY,
     LISTENER_DOPPLER_FACTOR,
     LISTENER_SPEED_OF_SOUND,
     PANNING_MODEL,
     DISTANCE_MODEL,
     POSITION,
-    ORIENTATION,
+    ORIENTATION, // unit length or zero
     VELOCITY,
     REF_DISTANCE,
     MAX_DISTANCE,

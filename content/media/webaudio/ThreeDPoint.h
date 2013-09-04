@@ -68,6 +68,10 @@ struct ThreeDPoint {
   {
     return x == 0 && y == 0 && z == 0;
   }
+
+  // For comparing two vectors of close to unit magnitude.
+  bool FuzzyEqual(const ThreeDPoint& other);
+
   double x, y, z;
 
 private:
