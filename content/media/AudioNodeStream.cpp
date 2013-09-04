@@ -8,6 +8,8 @@
 #include "MediaStreamGraphImpl.h"
 #include "AudioNodeEngine.h"
 #include "ThreeDPoint.h"
+#include "AudioChannelFormat.h"
+#include "AudioParamTimeline.h"
 
 using namespace mozilla::dom;
 
