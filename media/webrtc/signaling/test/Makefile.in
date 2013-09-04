@@ -140,6 +140,7 @@ LOCAL_INCLUDES += \
  -I$(topsrcdir)/media/webrtc/signaling/src/sipcc/cpr/include \
  -I$(topsrcdir)/media/webrtc/signaling/src/sipcc/core/includes \
  -I$(topsrcdir)/media/webrtc/signaling/src/common/browser_logging \
+ -I$(topsrcdir)/media/webrtc/signaling/src/common/time_profiling \
  -I$(topsrcdir)/media/webrtc/signaling/src/media \
  -I$(topsrcdir)/media/webrtc/signaling/src/media-conduit \
  -I$(topsrcdir)/media/webrtc/signaling/src/mediapipeline \
