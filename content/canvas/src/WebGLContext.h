@@ -190,9 +190,7 @@ public:
     void ErrorInvalidOperation(const char *fmt = 0, ...);
     void ErrorInvalidValue(const char *fmt = 0, ...);
     void ErrorInvalidFramebufferOperation(const char *fmt = 0, ...);
-    void ErrorInvalidEnumInfo(const char *info, GLenum enumvalue) {
-        return ErrorInvalidEnum("%s: invalid enum value 0x%x", info, enumvalue);
-    }
+    void ErrorInvalidEnumInfo(const char *info, GLenum enumvalue);
     void ErrorOutOfMemory(const char *fmt = 0, ...);
 
     const char *ErrorName(GLenum error);
@@ -200,7 +198,7 @@ public:
 
     void DummyFramebufferOperation(const char *info);
 
-    WebGLTexture *activeBoundTextureForTarget(GLenum target) {
+    WebGLTexture *activeBoundTextureForTarget(GLenum target) const {
         return target == LOCAL_GL_TEXTURE_2D ? mBound2DTextures[mActiveTexture]
                                              : mBoundCubeMapTextures[mActiveTexture];
     }
@@ -213,13 +211,9 @@ public:
     // contents of the buffer.
     void MarkContextClean() MOZ_OVERRIDE { mInvalidated = false; }
 
-    gl::GLContext* GL() const {
-        return gl;
-    }
+    gl::GLContext* GL() const { return gl; }
 
-    bool IsPremultAlpha() const {
-        return mOptions.premultipliedAlpha;
-    }
+    bool IsPremultAlpha() const { return mOptions.premultipliedAlpha; }
 
     bool PresentScreenBuffer();
 
@@ -240,72 +234,21 @@ public:
     // Calls ForceClearFramebufferWithDefaultValues() for the Context's 'screen'.
     void ClearScreen();
 
-    // checks for GL errors, clears any pending GL error, stores the current GL error in currentGLError,
+    // checks for GL errors, clears any pending GL error, stores the current GL error in currentGLError (if not nullptr),
     // and copies it into mWebGLError if it doesn't already have an error set
-    void UpdateWebGLErrorAndClearGLError(GLenum *currentGLError) {
-        // get and clear GL error in ALL cases
-        *currentGLError = gl->GetAndClearError();
-        // only store in mWebGLError if is hasn't already recorded an error
-        if (!mWebGLError)
-            mWebGLError = *currentGLError;
-    }
-    
-    // checks for GL errors, clears any pending GL error,
-    // and stores the current GL error into mWebGLError if it doesn't already have an error set
-    void UpdateWebGLErrorAndClearGLError() {
-        GLenum currentGLError;
-        UpdateWebGLErrorAndClearGLError(&currentGLError);
-    }
-    
-    bool MinCapabilityMode() const {
-        return mMinCapability;
-    }
+    void UpdateWebGLErrorAndClearGLError(GLenum *currentGLError = nullptr);
+
+    bool MinCapabilityMode() const { return mMinCapability; }
 
     void RobustnessTimerCallback(nsITimer* timer);
-
-    static void RobustnessTimerCallbackStatic(nsITimer* timer, void *thisPointer) {
-        static_cast<WebGLContext*>(thisPointer)->RobustnessTimerCallback(timer);
-    }
-
-    void SetupContextLossTimer() {
-        // If the timer was already running, don't restart it here. Instead,
-        // wait until the previous call is done, then fire it one more time.
-        // This is an optimization to prevent unnecessary cross-communication
-        // between threads.
-        if (mContextLossTimerRunning) {
-            mDrawSinceContextLossTimerSet = true;
-            return;
-        }
-
-        mContextRestorer->InitWithFuncCallback(RobustnessTimerCallbackStatic,
-                                               static_cast<void*>(this),
-                                               1000,
-                                               nsITimer::TYPE_ONE_SHOT);
-        mContextLossTimerRunning = true;
-        mDrawSinceContextLossTimerSet = false;
-    }
-
-    void TerminateContextLossTimer() {
-        if (mContextLossTimerRunning) {
-            mContextRestorer->Cancel();
-            mContextLossTimerRunning = false;
-        }
-    }
+    static void RobustnessTimerCallbackStatic(nsITimer* timer, void *thisPointer);
+    void SetupContextLossTimer();
+    void TerminateContextLossTimer();
 
     // WebIDL WebGLRenderingContext API
-    dom::HTMLCanvasElement* GetCanvas() const {
-        return mCanvasElement;
-    }
-    GLsizei DrawingBufferWidth() const {
-        if (IsContextLost())
-            return 0;
-        return mWidth;
-    }
-    GLsizei DrawingBufferHeight() const {
-        if (IsContextLost())
-            return 0;
-        return mHeight;
-    }
+    dom::HTMLCanvasElement* GetCanvas() const { return mCanvasElement; }
+    GLsizei DrawingBufferWidth() const { return IsContextLost() ? 0 : mWidth; }
+    GLsizei DrawingBufferHeight() const { return IsContextLost() ? 0 : mHeight; }
 
     void GetContextAttributes(dom::Nullable<dom::WebGLContextAttributesInitializer>& retval);
     bool IsContextLost() const { return mContextStatus != ContextNotLost; }
@@ -319,12 +262,7 @@ public:
     void BindRenderbuffer(GLenum target, WebGLRenderbuffer* wrb);
     void BindTexture(GLenum target, WebGLTexture *tex);
     void BindVertexArray(WebGLVertexArray *vao);
-    void BlendColor(GLclampf r, GLclampf g, GLclampf b, GLclampf a) {
-        if (IsContextLost())
-            return;
-        MakeContextCurrent();
-        gl->fBlendColor(r, g, b, a);
-    }
+    void BlendColor(GLclampf r, GLclampf g, GLclampf b, GLclampf a);
     void BlendEquation(GLenum mode);
     void BlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha);
     void BlendFunc(GLenum sfactor, GLenum dfactor);
@@ -370,18 +308,8 @@ public:
     void DepthRange(GLclampf zNear, GLclampf zFar);
     void DetachShader(WebGLProgram *program, WebGLShader *shader);
     void DrawBuffers(const dom::Sequence<GLenum>& buffers);
-    void Flush() {
-        if (IsContextLost())
-            return;
-        MakeContextCurrent();
-        gl->fFlush();
-    }
-    void Finish() {
-        if (IsContextLost())
-            return;
-        MakeContextCurrent();
-        gl->fFinish();
-    }
+    void Flush();
+    void Finish();
     void FramebufferRenderbuffer(GLenum target, GLenum attachment,
                                  GLenum rbtarget, WebGLRenderbuffer *wrb);
     void FramebufferTexture2D(GLenum target, GLenum attachment,
@@ -445,32 +373,17 @@ public:
     bool IsShader(WebGLShader *shader);
     bool IsTexture(WebGLTexture *tex);
     bool IsVertexArray(WebGLVertexArray *vao);
-    void LineWidth(GLfloat width) {
-        if (IsContextLost())
-            return;
-        MakeContextCurrent();
-        gl->fLineWidth(width);
-    }
+    void LineWidth(GLfloat width);
     void LinkProgram(WebGLProgram *program);
     void PixelStorei(GLenum pname, GLint param);
-    void PolygonOffset(GLfloat factor, GLfloat units) {
-        if (IsContextLost())
-            return;
-        MakeContextCurrent();
-        gl->fPolygonOffset(factor, units);
-    }
+    void PolygonOffset(GLfloat factor, GLfloat units);
     void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                     GLenum format, GLenum type,
                     const Nullable<dom::ArrayBufferView> &pixels,
                     ErrorResult& rv);
     void RenderbufferStorage(GLenum target, GLenum internalformat,
                              GLsizei width, GLsizei height);
-    void SampleCoverage(GLclampf value, WebGLboolean invert) {
-        if (IsContextLost())
-            return;
-        MakeContextCurrent();
-        gl->fSampleCoverage(value, invert);
-    }
+    void SampleCoverage(GLclampf value, WebGLboolean invert);
     void Scissor(GLint x, GLint y, GLsizei width, GLsizei height);
     void ShaderSource(WebGLShader *shader, const nsAString& source);
     void StencilFunc(GLenum func, GLint ref, GLuint mask);
@@ -1204,13 +1117,7 @@ protected:
     int mMaxWarnings;
     bool mAlreadyWarnedAboutFakeVertexAttrib0;
 
-    bool ShouldGenerateWarnings() const {
-        if (mMaxWarnings == -1) {
-            return true;
-        }
-
-        return mAlreadyGeneratedWarnings < mMaxWarnings;
-    }
+    bool ShouldGenerateWarnings() const;
 
     uint64_t mLastUseIndex;
 

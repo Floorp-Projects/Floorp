@@ -4193,3 +4193,51 @@ WebGLContext::ReattachTextureToAnyFramebufferToWorkAroundBugs(WebGLTexture *tex,
 
     BindFramebuffer(LOCAL_GL_FRAMEBUFFER, curFB);
 }
+
+void
+WebGLContext::BlendColor(GLclampf r, GLclampf g, GLclampf b, GLclampf a) {
+    if (IsContextLost())
+        return;
+    MakeContextCurrent();
+    gl->fBlendColor(r, g, b, a);
+}
+
+void
+WebGLContext::Flush() {
+    if (IsContextLost())
+        return;
+    MakeContextCurrent();
+    gl->fFlush();
+}
+
+void
+WebGLContext::Finish() {
+    if (IsContextLost())
+        return;
+    MakeContextCurrent();
+    gl->fFinish();
+}
+
+void
+WebGLContext::LineWidth(GLfloat width) {
+    if (IsContextLost())
+        return;
+    MakeContextCurrent();
+    gl->fLineWidth(width);
+}
+
+void
+WebGLContext::PolygonOffset(GLfloat factor, GLfloat units) {
+    if (IsContextLost())
+        return;
+    MakeContextCurrent();
+    gl->fPolygonOffset(factor, units);
+}
+
+void
+WebGLContext::SampleCoverage(GLclampf value, WebGLboolean invert) {
+    if (IsContextLost())
+        return;
+    MakeContextCurrent();
+    gl->fSampleCoverage(value, invert);
+}
