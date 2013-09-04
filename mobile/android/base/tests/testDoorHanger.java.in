@@ -81,22 +81,19 @@ public class testDoorHanger extends BaseTest {
         boolean offlineAllowedByDefault = true;
         try {
             // Save offline-allow-by-default preferences first
-            JSONArray getPrefData = new JSONArray();
-            getPrefData.put("offline-apps.allow_by_default");
-            JSONObject message = new JSONObject();
-            message.put("requestId", "testDoorHanger");
-            message.put("preferences", getPrefData);
+            final String[] prefNames = { "offline-apps.allow_by_default" };
+            final int ourRequestId = 0x7357;
 
             Actions.RepeatedEventExpecter eventExpecter = mActions.expectGeckoEvent("Preferences:Data");
-            mActions.sendGeckoEvent("Preferences:Get", message.toString());
+            mActions.sendPreferencesGetEvent(ourRequestId, prefNames);
 
             JSONObject data = null;
-            String requestId = "";
+            int requestId = -1;
 
             // Wait until we get the correct "Preferences:Data" event
-            while (!requestId.equals("testDoorHanger")) {
+            while (requestId != ourRequestId) {
                 data = new JSONObject(eventExpecter.blockForEventData());
-                requestId = data.getString("requestId");
+                requestId = data.getInt("requestId");
             }
             eventExpecter.unregisterListener();
 
