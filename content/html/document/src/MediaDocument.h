@@ -52,7 +52,7 @@ protected:
   // filename but w/o dimension, a format name with dimension but w/o filename,
   // a format name with both of them.  For instance, it can have
   // "ImageTitleWithNeitherDimensionsNorFile", "ImageTitleWithoutDimensions",
-  // "ImageTitleWithDimesions",  "ImageTitleWithDimensionsAndFile".
+  // "ImageTitleWithDimesions2",  "ImageTitleWithDimensions2AndFile".
   //
   // Also see MediaDocument.properties if you want to define format names
   // for a new subclass. aWidth and aHeight are pixels for |ImageDocument|,
