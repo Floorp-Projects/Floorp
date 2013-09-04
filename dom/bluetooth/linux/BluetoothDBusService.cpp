@@ -1298,10 +1298,10 @@ private:
   nsString mAdapterPath;
 };
 
-class SendPlayStatusTask : public nsRunnable
+class RequestPlayStatusTask : public nsRunnable
 {
 public:
-  SendPlayStatusTask()
+  RequestPlayStatusTask()
   {
     MOZ_ASSERT(!NS_IsMainThread());
   }
@@ -1310,15 +1310,14 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
-    NS_ENSURE_TRUE(a2dp, NS_ERROR_FAILURE);
+    BluetoothSignal signal(NS_LITERAL_STRING(REQUEST_MEDIA_PLAYSTATUS_ID),
+                           NS_LITERAL_STRING(KEY_ADAPTER),
+                           InfallibleTArray<BluetoothNamedValue>());
 
     BluetoothService* bs = BluetoothService::Get();
     NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
+    bs->DistributeSignal(signal);
 
-    bs->UpdatePlayStatus(a2dp->GetDuration(),
-                         a2dp->GetPosition(),
-                         a2dp->GetPlayStatus());
     return NS_OK;
   }
 };
@@ -1533,7 +1532,7 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
                         sSinkProperties,
                         ArrayLength(sSinkProperties));
   } else if (dbus_message_is_signal(aMsg, DBUS_CTL_IFACE, "GetPlayStatus")) {
-    NS_DispatchToMainThread(new SendPlayStatusTask());
+    NS_DispatchToMainThread(new RequestPlayStatusTask());
     return DBUS_HANDLER_RESULT_HANDLED;
   } else if (dbus_message_is_signal(aMsg, DBUS_CTL_IFACE, "PropertyChanged")) {
     ParsePropertyChange(aMsg,
