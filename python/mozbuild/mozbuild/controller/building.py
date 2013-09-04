@@ -53,6 +53,7 @@ class TierStatus(object):
         self.tiers = OrderedDict()
         self.active_tier = None
         self.active_subtiers = set()
+        self.active_dirs = {}
         self.resources = resources
 
     def set_tiers(self, tiers):
@@ -163,6 +164,9 @@ class TierStatus(object):
             yield tier, active, finished
 
     def current_subtier_status(self):
+        if self.active_tier not in self.tiers:
+            return
+
         for subtier, state in self.tiers[self.active_tier]['subtiers'].items():
             active = subtier in self.active_subtiers
             finished = state['finish_time'] is not None
