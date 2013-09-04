@@ -190,6 +190,8 @@ function isRootedPointerTypeName(name)
         name = name.substr(4);
     if (name.startsWith('JS::'))
         name = name.substr(4);
+    if (name.startsWith('mozilla::dom::'))
+        name = name.substr(14);
 
     if (name.startsWith('MaybeRooted<'))
         return /\(js::AllowGC\)1u>::RootType/.test(name);
