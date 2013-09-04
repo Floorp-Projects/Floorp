@@ -152,9 +152,6 @@ public:
     virtual PSmsChild* AllocPSmsChild();
     virtual bool DeallocPSmsChild(PSmsChild*);
 
-    virtual PTelephonyChild* AllocPTelephonyChild();
-    virtual bool DeallocPTelephonyChild(PTelephonyChild*);
-
     virtual PStorageChild* AllocPStorageChild();
     virtual bool DeallocPStorageChild(PStorageChild* aActor);
 
