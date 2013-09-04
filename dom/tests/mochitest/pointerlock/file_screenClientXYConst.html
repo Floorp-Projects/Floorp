@@ -48,7 +48,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       }
 
       function moveUnlocked(e) {
-        div.removeEventListener("mousemove", moveUnlocked, false);
+        var firstCall = !unLockedCoords;
+        if (!firstCall) {
+          todo(false, "mousemove is fired twice.");
+        }
 
         isUnlocked = !document.mozPointerLockElement;
         unLockedCoords = {
@@ -57,6 +60,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           clientX: e.clientX,
           clientY: e.clientY
         };
+
+        if (!firstCall) {
+          return;
+        }
 
         div.mozRequestPointerLock();
       }
@@ -77,6 +84,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
 
       document.addEventListener("mozpointerlockchange", function (e) {
         if (document.mozPointerLockElement === div) {
+          div.removeEventListener("mousemove", moveUnlocked, false);
           div.addEventListener("mousemove", moveLocked, false);
           divRect = div.getBoundingClientRect();
           synthesizeMouse(div, (divRect.width / 4) * 3, (divRect.height / 4) * 3, {
