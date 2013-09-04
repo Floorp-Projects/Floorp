@@ -24,6 +24,7 @@
 #include "nsContentCID.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "nsIDOMProgressEvent.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
@@ -213,6 +214,9 @@ const Decimal HTMLInputElement::kStepAny = 0;
   0x4479,                                          \
   {0xb5, 0x13, 0x7b, 0x36, 0x93, 0x43, 0xe3, 0xa0} \
 }
+
+#define PROGRESS_STR "progress"
+static const uint32_t kProgressEventInterval = 50; // ms
 
 class HTMLInputElementState MOZ_FINAL : public nsISupports
 {
@@ -483,6 +487,7 @@ public:
         nsCOMPtr<nsIDOMFile> domFile = do_QueryInterface(tmp);
         MOZ_ASSERT(domFile);
         mFileList.AppendElement(domFile);
+        mInput->SetFileListProgress(mFileList.Length());
       }
       return NS_DispatchToMainThread(this);
     }
@@ -495,6 +500,7 @@ public:
     // event because it will think this is done by a script.
     // So, we can safely send one by ourself.
     mInput->SetFiles(mFileList, true);
+    mInput->MaybeDispatchProgressEvent(true); // last progress event
     nsresult rv =
       nsContentUtils::DispatchTrustedEvent(mInput->OwnerDoc(),
                                            static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
@@ -566,6 +572,9 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
     nsCOMPtr<nsIEventTarget> target
       = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
     NS_ASSERTION(target, "Must have stream transport service");
+
+    mInput->ResetProgressCounters();
+    mInput->StartProgressEventTimer();
 
     // DirPickerBuildFileListTask takes care of calling SetFiles() and
     // dispatching the "change" event.
@@ -992,6 +1001,8 @@ static nsresult FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
 HTMLInputElement::HTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                    FromParser aFromParser)
   : nsGenericHTMLFormElementWithState(aNodeInfo)
+  , mFileListProgress(0)
+  , mLastFileListProgress(0)
   , mType(kInputDefaultType->value)
   , mDisabledChanged(false)
   , mValueChanged(false)
@@ -1008,6 +1019,7 @@ HTMLInputElement::HTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   , mCanShowInvalidUI(true)
   , mHasRange(false)
   , mIsDraggingRange(false)
+  , mProgressTimerIsActive(false)
 {
   // We are in a type=text so we now we currenty need a nsTextEditorState.
   mInputData.mState = new nsTextEditorState(this);
@@ -1096,7 +1108,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLInputElement, Element)
 
 // QueryInterface implementation for HTMLInputElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLInputElement)
-  NS_INTERFACE_TABLE_INHERITED8(HTMLInputElement,
+  NS_INTERFACE_TABLE_INHERITED9(HTMLInputElement,
                                 nsIDOMHTMLInputElement,
                                 nsITextControlElement,
                                 nsIPhonetic,
@@ -1104,6 +1116,7 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLInputElement)
                                 nsIImageLoadingContent,
                                 imgIOnloadBlocker,
                                 nsIDOMNSEditableElement,
+                                nsITimerCallback,
                                 nsIConstraintValidation)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLFormElementWithState)
 
@@ -2429,6 +2442,93 @@ HTMLInputElement::OpenDirectoryPicker(ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
   }
   InitFilePicker(FILE_PICKER_DIRECTORY);
+}
+
+void
+HTMLInputElement::StartProgressEventTimer()
+{
+  if (!mProgressTimer) {
+    mProgressTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  }
+  if (mProgressTimer) {
+    mProgressTimerIsActive = true;
+    mProgressTimer->Cancel();
+    mProgressTimer->InitWithCallback(this, kProgressEventInterval,
+                                           nsITimer::TYPE_ONE_SHOT);
+  }
+}
+
+// nsITimerCallback's only method
+NS_IMETHODIMP
+HTMLInputElement::Notify(nsITimer* aTimer)
+{
+  if (mProgressTimer == aTimer) {
+    mProgressTimerIsActive = false;
+    MaybeDispatchProgressEvent(false);
+    return NS_OK;
+  }
+
+  // Just in case some JS user wants to QI to nsITimerCallback and play with us...
+  NS_WARNING("Unexpected timer!");
+  return NS_ERROR_INVALID_POINTER;
+}
+
+void
+HTMLInputElement::MaybeDispatchProgressEvent(bool aFinalProgress)
+{
+  nsRefPtr<HTMLInputElement> kungFuDeathGrip;
+
+  if (aFinalProgress && mProgressTimerIsActive) {
+    // mProgressTimer may hold the last reference to us, so take another strong
+    // ref to make sure we don't die under Cancel() and leave this method
+    // running on deleted memory.
+    kungFuDeathGrip = this;
+
+    mProgressTimerIsActive = false;
+    mProgressTimer->Cancel();
+  }
+
+  if (mProgressTimerIsActive ||
+      mFileListProgress == mLastFileListProgress) {
+    return;
+  }
+
+  if (!aFinalProgress) {
+    StartProgressEventTimer();
+  }
+
+  mLastFileListProgress = mFileListProgress;
+
+  DispatchProgressEvent(NS_LITERAL_STRING(PROGRESS_STR),
+                        false, mLastFileListProgress,
+                        0);
+}
+
+void
+HTMLInputElement::DispatchProgressEvent(const nsAString& aType,
+                                        bool aLengthComputable,
+                                        uint64_t aLoaded, uint64_t aTotal)
+{
+  NS_ASSERTION(!aType.IsEmpty(), "missing event type");
+
+  nsCOMPtr<nsIDOMEvent> event;
+  nsresult rv = NS_NewDOMProgressEvent(getter_AddRefs(event), this,
+                                       nullptr, nullptr);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  nsCOMPtr<nsIDOMProgressEvent> progress = do_QueryInterface(event);
+  if (!progress) {
+    return;
+  }
+
+  progress->InitProgressEvent(aType, false, false, aLengthComputable,
+                              aLoaded, (aTotal == UINT64_MAX) ? 0 : aTotal);
+
+  event->SetTrusted(true);
+
+  DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }
 
 nsresult
