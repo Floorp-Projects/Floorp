@@ -5,20 +5,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ReentrantMonitor.h"
-#include "mozilla/XPCOM.h"
 
 #include "MediaCache.h"
-#include "nsNetUtil.h"
 #include "prio.h"
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "MediaResource.h"
-#include "nsMathUtils.h"
 #include "prlog.h"
 #include "mozilla/Preferences.h"
 #include "FileBlockCache.h"
-#include "mozilla/Attributes.h"
 #include "nsAnonymousTemporaryFile.h"
+#include "nsIObserverService.h"
+#include "nsISeekableStream.h"
+#include "nsIPrincipal.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/Services.h"
 #include <algorithm>
 
 namespace mozilla {
@@ -362,6 +363,26 @@ MediaCacheFlusher::Observe(nsISupports *aSubject, char const *aTopic, PRUnichar 
     MediaCache::Flush();
   }
   return NS_OK;
+}
+
+MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient)
+  : mClient(aClient),
+    mInitialized(false),
+    mHasHadUpdate(false),
+    mClosed(false),
+    mDidNotifyDataEnded(false),
+    mResourceID(0),
+    mIsTransportSeekable(false),
+    mCacheSuspended(false),
+    mChannelEnded(false),
+    mChannelOffset(0),
+    mStreamLength(-1),
+    mStreamOffset(0),
+    mPlaybackBytesPerSecond(10000),
+    mPinCount(0),
+    mCurrentMode(MODE_PLAYBACK),
+    mMetadataInPartialBlockBuffer(false)
+{
 }
 
 void MediaCacheStream::BlockList::AddFirstBlock(int32_t aBlock)

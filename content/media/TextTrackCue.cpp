@@ -5,9 +5,7 @@
 
 #include "mozilla/dom/HTMLTrackElement.h"
 #include "mozilla/dom/TextTrackCue.h"
-#include "mozilla/dom/ProcessingInstruction.h"
 #include "nsIFrame.h"
-#include "nsTextNode.h"
 #include "nsVideoFrame.h"
 
 // Alternate value for the 'auto' keyword.
