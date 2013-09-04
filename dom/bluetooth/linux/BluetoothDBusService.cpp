@@ -178,10 +178,20 @@ static nsTArray<uint32_t> sAuthorizedServiceClass;
 static nsString sAdapterPath;
 static Atomic<int32_t> sIsPairing(0);
 static int sConnectedDeviceCount = 0;
-static Monitor sStopBluetoothMonitor("BluetoothService.sStopBluetoothMonitor");
+static StaticAutoPtr<Monitor> sStopBluetoothMonitor;
 
 typedef void (*UnpackFunc)(DBusMessage*, DBusError*, BluetoothValue&, nsAString&);
 typedef bool (*FilterFunc)(const BluetoothValue&);
+
+BluetoothDBusService::BluetoothDBusService()
+{
+  sStopBluetoothMonitor = new Monitor("BluetoothService.sStopBluetoothMonitor");
+}
+
+BluetoothDBusService::~BluetoothDBusService()
+{
+  sStopBluetoothMonitor = nullptr;
+}
 
 static bool
 GetConnectedDevicesFilter(const BluetoothValue& aValue)
@@ -1493,15 +1503,13 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
       signal.value() = parameters;
       NS_DispatchToMainThread(new DistributeBluetoothSignalTask(signal));
     } else if (property.name().EqualsLiteral("Connected")) {
-      MonitorAutoLock lock(sStopBluetoothMonitor);
+      MonitorAutoLock lock(*sStopBluetoothMonitor);
 
       if (property.value().get_bool()) {
         ++sConnectedDeviceCount;
       } else {
         MOZ_ASSERT(sConnectedDeviceCount > 0);
-
-        --sConnectedDeviceCount;
-        if (sConnectedDeviceCount == 0) {
+        if (--sConnectedDeviceCount == 0) {
           lock.Notify();
         }
       }
@@ -1696,7 +1704,7 @@ BluetoothDBusService::StopInternal()
   MOZ_ASSERT(!NS_IsMainThread());
 
   {
-    MonitorAutoLock lock(sStopBluetoothMonitor);
+    MonitorAutoLock lock(*sStopBluetoothMonitor);
     if (sConnectedDeviceCount > 0) {
       lock.Wait(PR_SecondsToInterval(TIMEOUT_FORCE_TO_DISABLE_BT));
     }
