@@ -79,13 +79,7 @@ interface nsIRilContext : nsISupports
   readonly attribute nsIDOMMozMobileConnectionInfo data;
 };
 
-[scriptable, function, uuid(3bc96351-53b0-47a1-a888-c74c64b60f25)]
-interface nsIRilSendWorkerMessageCallback : nsISupports
-{
-  boolean handleResponse(in jsval response);
-};
-
-[scriptable, uuid(61a8ca67-6113-4cd0-b443-e045f09863ed)]
+[scriptable, uuid(5efcd358-080e-46d6-a7f7-4f36c204eec3)]
 interface nsIRadioInterface : nsISupports
 {
   readonly attribute nsIRilContext rilContext;
@@ -111,10 +105,6 @@ interface nsIRadioInterface : nsISupports
                in DOMString message,
                in boolean silent,
                in nsIMobileMessageCallback request);
-
-  void sendWorkerMessage(in DOMString type,
-              [optional] in jsval message,
-              [optional] in nsIRilSendWorkerMessageCallback callback);
 };
 
 [scriptable, uuid(44b03951-1444-4c03-bd37-0bcb3a01b56f)]
