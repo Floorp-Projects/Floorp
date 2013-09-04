@@ -31,7 +31,6 @@ CONFIGURE_SUBST_FILES += ['devtools/rootAnalysis/Makefile']
 # browser builds.  Don't add new files here unless you know what you're
 # doing!
 EXPORTS += [
-    'js-config.h',
     'js.msg',
     'jsalloc.h',
     'jsapi.h',
@@ -48,11 +47,6 @@ EXPORTS += [
     'jswrapper.h',
     'perf/jsperf.h',
 ]
-
-if CONFIG['HAVE_DTRACE']:
-    EXPORTS += [
-        '$(CURDIR)/javascript-trace.h',
-    ]
 
 # If you add a header here, add it to js/src/jsapi-tests/testIntTypesABI.cpp so
 # that we ensure we don't over-expose our internal integer typedefs.  Note that
