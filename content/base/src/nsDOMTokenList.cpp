@@ -140,7 +140,6 @@ nsDOMTokenList::AddInternal(const nsAttrValue* aAttr,
 
   bool oneWasAdded = false;
   nsAutoTArray<nsString, 10> addedClasses;
-  addedClasses.SetCapacity(aTokens.Length());
 
   for (uint32_t i = 0, l = aTokens.Length(); i < l; ++i) {
     const nsString& aToken = aTokens[i];
@@ -180,9 +179,9 @@ nsDOMTokenList::Add(const nsTArray<nsString>& aTokens, ErrorResult& aError)
 void
 nsDOMTokenList::Add(const nsAString& aToken, mozilla::ErrorResult& aError)
 {
-  nsAutoTArray<nsString, 1> aTokens;
-  aTokens.AppendElement(aToken);
-  Add(aTokens, aError);
+  nsAutoTArray<nsString, 1> tokens;
+  tokens.AppendElement(aToken);
+  Add(tokens, aError);
 }
 
 void
@@ -266,9 +265,9 @@ nsDOMTokenList::Remove(const nsTArray<nsString>& aTokens, ErrorResult& aError)
 void
 nsDOMTokenList::Remove(const nsAString& aToken, mozilla::ErrorResult& aError)
 {
-  nsAutoTArray<nsString, 1> aTokens;
-  aTokens.AppendElement(aToken);
-  Remove(aTokens, aError);
+  nsAutoTArray<nsString, 1> tokens;
+  tokens.AppendElement(aToken);
+  Remove(tokens, aError);
 }
 
 bool
@@ -286,17 +285,17 @@ nsDOMTokenList::Toggle(const nsAString& aToken,
   const bool forceOff = aForce.WasPassed() && !aForce.Value();
 
   bool isPresent = attr && attr->Contains(aToken);
-  nsAutoTArray<nsString, 1> aTokens;
-  aTokens.AppendElement(aToken);
+  nsAutoTArray<nsString, 1> tokens;
+  (*tokens.AppendElement()).Rebind(aToken.Data(), aToken.Length());
 
   if (isPresent) {
     if (!forceOn) {
-      RemoveInternal(attr, aTokens);
+      RemoveInternal(attr, tokens);
       isPresent = false;
     }
   } else {
     if (!forceOff) {
-      AddInternal(attr, aTokens);
+      AddInternal(attr, tokens);
       isPresent = true;
     }
   }
