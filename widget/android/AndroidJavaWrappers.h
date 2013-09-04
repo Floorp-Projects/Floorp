@@ -738,6 +738,7 @@ public:
         ADD_OBSERVER = 38,
         PREFERENCES_OBSERVE = 39,
         PREFERENCES_GET = 40,
+        PREFERENCES_REMOVE_OBSERVERS = 41,
         dummy_java_enum_list_end
     };
 
