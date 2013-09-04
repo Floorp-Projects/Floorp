@@ -181,32 +181,7 @@ Link::SetHost(const nsAString &aHost)
     return;
   }
 
-  // We cannot simply call nsIURI::SetHost because that would treat the name as
-  // an IPv6 address (like http:://[server:443]/).  We also cannot call
-  // nsIURI::SetHostPort because that isn't implemented.  Sadfaces.
-
-  // First set the hostname.
-  nsAString::const_iterator start, end;
-  aHost.BeginReading(start);
-  aHost.EndReading(end);
-  nsAString::const_iterator iter(start);
-  (void)FindCharInReadable(':', iter, end);
-  NS_ConvertUTF16toUTF8 host(Substring(start, iter));
-  (void)uri->SetHost(host);
-
-  // Also set the port if needed.
-  if (iter != end) {
-    iter++;
-    if (iter != end) {
-      nsAutoString portStr(Substring(iter, end));
-      nsresult rv;
-      int32_t port = portStr.ToInteger(&rv);
-      if (NS_SUCCEEDED(rv)) {
-        (void)uri->SetPort(port);
-      }
-    }
-  };
-
+  (void)uri->SetHostPort(NS_ConvertUTF16toUTF8(aHost));
   SetHrefAttribute(uri);
   return;
 }
@@ -296,14 +271,8 @@ Link::GetOrigin(nsAString &aOrigin)
   }
 
   nsString origin;
-  nsresult rv = nsContentUtils::GetUTFOrigin(uri, origin);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  if (!aOrigin.EqualsLiteral("null")) {
-    aOrigin.Assign(origin);
-  }
+  nsContentUtils::GetUTFNonNullOrigin(uri, origin);
+  aOrigin.Assign(origin);
 }
 
 void
