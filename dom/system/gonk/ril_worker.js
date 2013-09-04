@@ -2724,6 +2724,12 @@ let RIL = {
         };
         command.transactionId = 0;
         break;
+      case STK_EVENT_TYPE_USER_ACTIVITY:
+        command.deviceId = {
+          sourceId: STK_DEVICE_ID_ME,
+          destinationId: STK_DEVICE_ID_SIM
+        };
+        break;
       case STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE:
         command.deviceId = {
           sourceId: STK_DEVICE_ID_DISPLAY,
