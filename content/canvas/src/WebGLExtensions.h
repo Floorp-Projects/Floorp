@@ -11,9 +11,8 @@ namespace mozilla {
 class WebGLContext;
 
 class WebGLExtensionBase
-    : public nsISupports
+    : public nsWrapperCache
     , public WebGLContextBoundObject
-    , public nsWrapperCache
 {
 public:
     WebGLExtensionBase(WebGLContext*);
@@ -23,8 +22,8 @@ public:
         return Context();
     }
 
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLExtensionBase)
+    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLExtensionBase)
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLExtensionBase)
 };
 
 #define DECL_WEBGL_EXTENSION_GOOP                                           \
