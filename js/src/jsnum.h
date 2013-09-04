@@ -9,7 +9,7 @@
 
 #include "mozilla/FloatingPoint.h"
 
-#include "jsapi.h"
+#include "NamespaceImports.h"
 
 #include "vm/NumericConversions.h"
 

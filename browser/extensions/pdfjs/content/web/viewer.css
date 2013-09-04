@@ -982,7 +982,7 @@ html[dir='rtl'] .outlineItem > a {
 }
 
 canvas {
-  margin: auto;
+  margin: 0;
   display: block;
 }
 
@@ -1104,6 +1104,9 @@ canvas {
   z-index: 1000;
   padding: 3px;
   font-size: 0.8em;
+}
+.loadingInProgress #errorWrapper {
+  top: 39px;
 }
 
 #errorMessageLeft {

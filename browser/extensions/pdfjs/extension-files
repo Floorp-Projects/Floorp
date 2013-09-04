@@ -2,8 +2,10 @@ chrome.manifest
 components/PdfRedirector.js
 components/PdfStreamConverter.js
 content/build/pdf.js
+content/build/pdf.worker.js
 content/network.js
 content/PdfJs.jsm
+content/PdfJsTelemetry.jsm
 content/web/debugger.js
 content/web/images/annotation-check.svg
 content/web/images/annotation-comment.svg

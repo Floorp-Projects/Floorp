@@ -102,7 +102,7 @@ extern "C" NS_EXPORT pid_t
 WRAP(fork)(void)
 {
   pid_t pid;
-  for (std::vector<AtForkFuncs>::reverse_iterator it = atfork.rbegin();
+  for (auto it = atfork.rbegin();
        it < atfork.rend(); ++it)
     if (it->prepare)
       it->prepare();
@@ -110,13 +110,13 @@ WRAP(fork)(void)
   switch ((pid = __fork())) {
   case 0:
     cpuacct_add(getuid());
-    for (std::vector<AtForkFuncs>::iterator it = atfork.begin();
+    for (auto it = atfork.begin();
          it < atfork.end(); ++it)
       if (it->child)
         it->child();
     break;
   default:
-    for (std::vector<AtForkFuncs>::iterator it = atfork.begin();
+    for (auto it = atfork.begin();
          it < atfork.end(); ++it)
       if (it->parent)
         it->parent();

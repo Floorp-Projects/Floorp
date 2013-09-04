@@ -236,6 +236,9 @@ browser.jar:
   skin/classic/browser/devtools/font-inspector.css        (devtools/font-inspector.css)
   skin/classic/browser/devtools/computedview.css          (devtools/computedview.css)
   skin/classic/browser/devtools/arrow-e.png               (devtools/arrow-e.png)
+  skin/classic/browser/devtools/responsiveui-rotate.png   (../shared/devtools/responsiveui-rotate.png)
+  skin/classic/browser/devtools/responsiveui-touch.png    (../shared/devtools/responsiveui-touch.png)
+  skin/classic/browser/devtools/responsiveui-screenshot.png (../shared/devtools/responsiveui-screenshot.png)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-16-throbber.png
   skin/classic/browser/sync-16.png

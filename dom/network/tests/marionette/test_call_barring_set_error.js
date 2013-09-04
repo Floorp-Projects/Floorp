@@ -52,7 +52,8 @@ function testSetCallBarringOptionError(option) {
        'should not fire onsuccess for invaild call barring option: '
        + JSON.stringify(option));
   };
-  request.onerror = function() {
+  request.onerror = function(event) {
+    is(event.target.error.name, 'InvalidCallBarringOption', JSON.stringify(option));
     nextTest();
   };
 }

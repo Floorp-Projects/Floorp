@@ -363,7 +363,7 @@ class DeviceManagerSUT(DeviceManager):
         if not self.dirExists(name):
             self._runCmds([{ 'cmd': 'mkdr ' + name }])
 
-    def pushDir(self, localDir, remoteDir, retryLimit = None):
+    def pushDir(self, localDir, remoteDir, retryLimit=None, timeout=None):
         retryLimit = retryLimit or self.retryLimit
         self._logger.info("pushing directory: %s to %s" % (localDir, remoteDir))
 

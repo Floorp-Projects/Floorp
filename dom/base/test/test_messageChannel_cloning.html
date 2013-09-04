@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=677638
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 677638 - port cloning</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=677638">Mozilla Bug 677638</a>
+<div id="content"></div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+
+  // This test checks if MessagePorts can be shared with iframes
+  function test_iframe() {
+    window.addEventListener('message', receiveMessage, false);
+    function receiveMessage(evt) {
+      if (evt.data.status == 'OK') {
+        ok(true, evt.data.message);
+      } else if (evt.data.status == 'KO') {
+        ok(false, evt.data.message);
+      } else if (evt.data.status == 'FINISH') {
+        ok (evt.data.port instanceof MessagePort, "Data contains a MessagePort");
+        window.removeEventListener('message', receiveMessage);
+        runTest();
+      } else {
+        ok(false, "Unknown message");
+      }
+    }
+
+    var a = new MessageChannel();
+    ok(a, "MessageChannel created");
+
+    var div = document.getElementById("content");
+    ok(div, "Parent exists");
+
+    var ifr = document.createElement("iframe");
+    ifr.addEventListener("load", iframeLoaded, false);
+    ifr.setAttribute('src', "iframe_messageChannel_cloning.html");
+    div.appendChild(ifr);
+
+    function iframeLoaded() {
+      ifr.contentWindow.postMessage({ port: a.port2 }, '*');
+    }
+  }
+
+  var tests = [
+    test_iframe
+  ];
+
+  function runTest() {
+    if (!tests.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [["dom.messageChannel.enabled", true]]}, runTest);
+  </script>
+</body>
+</html>
