@@ -2363,7 +2363,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       CreateOuterObject(newInnerWindow);
       mContext->DidInitializeContext();
 
-      mJSObject = mContext->GetNativeGlobal();
+      mJSObject = mContext->GetWindowProxy();
       SetWrapper(mJSObject);
     } else {
       JS::Rooted<JSObject*> global(cx,

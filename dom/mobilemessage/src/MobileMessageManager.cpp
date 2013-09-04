@@ -155,7 +155,7 @@ MobileMessageManager::Send(const JS::Value& aNumber_, const nsAString& aMessage,
     return NS_ERROR_INVALID_ARG;
   }
 
-  JS::Rooted<JSObject*> global(cx, sc->GetNativeGlobal());
+  JS::Rooted<JSObject*> global(cx, sc->GetWindowProxy());
   NS_ASSERTION(global, "Failed to get global object!");
 
   JSAutoCompartment ac(cx, global);

@@ -143,7 +143,7 @@ nsJSUtils::ReportPendingException(JSContext *aContext)
     {
       nsIScriptContext* scx = GetScriptContextFromJSContext(aContext);
       JS::Rooted<JSObject*> scope(aContext);
-      scope = scx ? scx->GetNativeGlobal()
+      scope = scx ? scx->GetWindowProxy()
                   : js::DefaultObjectForContextOrNull(aContext);
       JSAutoCompartment ac(aContext, scope);
       JS_ReportPendingException(aContext);
@@ -304,7 +304,7 @@ JSObject* GetDefaultScopeFromJSContext(JSContext *cx)
   // instead.
   nsIScriptContext *scx = GetScriptContextFromJSContext(cx);
   if (scx) {
-    return scx->GetNativeGlobal();
+    return scx->GetWindowProxy();
   }
   return js::DefaultObjectForContextOrNull(cx);
 }
