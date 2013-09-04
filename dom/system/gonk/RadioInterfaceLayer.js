@@ -46,6 +46,9 @@ const RADIOINTERFACE_CID =
 const RILNETWORKINTERFACE_CID =
   Components.ID("{3bdd52a9-3965-4130-b569-0ac5afed045e}");
 
+const nsIAudioManager = Ci.nsIAudioManager;
+const nsITelephonyProvider = Ci.nsITelephonyProvider;
+
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 const kSmsReceivedObserverTopic          = "sms-received";
 const kSilentSmsReceivedObserverTopic    = "silent-sms-received";
@@ -70,7 +73,30 @@ const DOM_MOBILE_MESSAGE_DELIVERY_SENDING  = "sending";
 const DOM_MOBILE_MESSAGE_DELIVERY_SENT     = "sent";
 const DOM_MOBILE_MESSAGE_DELIVERY_ERROR    = "error";
 
-const RADIO_POWER_OFF_TIMEOUT = 30000;
+const CALL_WAKELOCK_TIMEOUT              = 5000;
+const RADIO_POWER_OFF_TIMEOUT            = 30000;
+
+const RIL_IPC_TELEPHONY_MSG_NAMES = [
+  "RIL:EnumerateCalls",
+  "RIL:GetMicrophoneMuted",
+  "RIL:SetMicrophoneMuted",
+  "RIL:GetSpeakerEnabled",
+  "RIL:SetSpeakerEnabled",
+  "RIL:StartTone",
+  "RIL:StopTone",
+  "RIL:Dial",
+  "RIL:DialEmergency",
+  "RIL:HangUp",
+  "RIL:AnswerCall",
+  "RIL:RejectCall",
+  "RIL:HoldCall",
+  "RIL:ResumeCall",
+  "RIL:RegisterTelephonyMsg",
+  "RIL:ConferenceCall",
+  "RIL:SeparateCall",
+  "RIL:HoldConference",
+  "RIL:ResumeConference"
+];
 
 const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:GetRilContext",
@@ -162,10 +188,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSystemWorkerManager",
                                    "@mozilla.org/telephony/system-worker-manager;1",
                                    "nsISystemWorkerManager");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gTelephonyProvider",
-                                   "@mozilla.org/telephony/telephonyprovider;1",
-                                   "nsIGonkTelephonyProvider");
-
 XPCOMUtils.defineLazyGetter(this, "WAP", function () {
   let wap = {};
   Cu.import("resource://gre/modules/WapPushManager.js", wap);
@@ -176,6 +198,64 @@ XPCOMUtils.defineLazyGetter(this, "PhoneNumberUtils", function () {
   let ns = {};
   Cu.import("resource://gre/modules/PhoneNumberUtils.jsm", ns);
   return ns.PhoneNumberUtils;
+});
+
+function convertRILCallState(state) {
+  switch (state) {
+    case RIL.CALL_STATE_ACTIVE:
+      return nsITelephonyProvider.CALL_STATE_CONNECTED;
+    case RIL.CALL_STATE_HOLDING:
+      return nsITelephonyProvider.CALL_STATE_HELD;
+    case RIL.CALL_STATE_DIALING:
+      return nsITelephonyProvider.CALL_STATE_DIALING;
+    case RIL.CALL_STATE_ALERTING:
+      return nsITelephonyProvider.CALL_STATE_ALERTING;
+    case RIL.CALL_STATE_INCOMING:
+    case RIL.CALL_STATE_WAITING:
+      return nsITelephonyProvider.CALL_STATE_INCOMING;
+    default:
+      throw new Error("Unknown rilCallState: " + state);
+  }
+}
+
+function convertRILSuppSvcNotification(notification) {
+  switch (notification) {
+    case RIL.GECKO_SUPP_SVC_NOTIFICATION_REMOTE_HELD:
+      return nsITelephonyProvider.NOTIFICATION_REMOTE_HELD;
+    case RIL.GECKO_SUPP_SVC_NOTIFICATION_REMOTE_RESUMED:
+      return nsITelephonyProvider.NOTIFICATION_REMOTE_RESUMED;
+    default:
+      throw new Error("Unknown rilSuppSvcNotification: " + notification);
+  }
+}
+
+/**
+ * Fake nsIAudioManager implementation so that we can run the telephony
+ * code in a non-Gonk build.
+ */
+let FakeAudioManager = {
+  microphoneMuted: false,
+  masterVolume: 1.0,
+  masterMuted: false,
+  phoneState: nsIAudioManager.PHONE_STATE_CURRENT,
+  _forceForUse: {},
+  setForceForUse: function setForceForUse(usage, force) {
+    this._forceForUse[usage] = force;
+  },
+  getForceForUse: function setForceForUse(usage) {
+    return this._forceForUse[usage] || nsIAudioManager.FORCE_NONE;
+  }
+};
+
+XPCOMUtils.defineLazyGetter(this, "gAudioManager", function getAudioManager() {
+  try {
+    return Cc["@mozilla.org/telephony/audiomanager;1"]
+             .getService(nsIAudioManager);
+  } catch (ex) {
+    //TODO on the phone this should not fall back as silently.
+    if (DEBUG) debug("Using fake audio manager.");
+    return FakeAudioManager;
+  }
 });
 
 XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
@@ -210,6 +290,9 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
 
     _registerMessageListeners: function _registerMessageListeners() {
       ppmm.addMessageListener("child-process-shutdown", this);
+      for (let msgname of RIL_IPC_TELEPHONY_MSG_NAMES) {
+        ppmm.addMessageListener(msgname, this);
+      }
       for (let msgname of RIL_IPC_MOBILECONNECTION_MSG_NAMES) {
         ppmm.addMessageListener(msgname, this);
       }
@@ -226,6 +309,9 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
 
     _unregisterMessageListeners: function _unregisterMessageListeners() {
       ppmm.removeMessageListener("child-process-shutdown", this);
+      for (let msgname of RIL_IPC_TELEPHONY_MSG_NAMES) {
+        ppmm.removeMessageListener(msgname, this);
+      }
       for (let msgname of RIL_IPC_MOBILECONNECTION_MSG_NAMES) {
         ppmm.removeMessageListener(msgname, this);
       }
@@ -344,7 +430,15 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
         return;
       }
 
-      if (RIL_IPC_MOBILECONNECTION_MSG_NAMES.indexOf(msg.name) != -1) {
+      if (RIL_IPC_TELEPHONY_MSG_NAMES.indexOf(msg.name) != -1) {
+        if (!msg.target.assertPermission("telephony")) {
+          if (DEBUG) {
+            debug("Telephony message " + msg.name +
+                  " from a content process with no 'telephony' privileges.");
+          }
+          return null;
+        }
+      } else if (RIL_IPC_MOBILECONNECTION_MSG_NAMES.indexOf(msg.name) != -1) {
         if (!msg.target.assertPermission("mobileconnection")) {
           if (DEBUG) {
             debug("MobileConnection message " + msg.name +
@@ -382,6 +476,9 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       }
 
       switch (msg.name) {
+        case "RIL:RegisterTelephonyMsg":
+          this._registerMessageTarget("telephony", msg.target);
+          return;
         case "RIL:RegisterMobileConnectionMsg":
           this._registerMessageTarget("mobileconnection", msg.target);
           return;
@@ -420,6 +517,13 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
           this._shutdown();
           break;
       }
+    },
+
+    sendTelephonyMessage: function sendTelephonyMessage(message, clientId, data) {
+      this._sendTargetMessage("telephony", message, {
+        clientId: clientId,
+        data: data
+      });
     },
 
     sendMobileConnectionMessage: function sendMobileConnectionMessage(message, clientId, data) {
@@ -790,6 +894,61 @@ RadioInterface.prototype = {
       case "RIL:GetRilContext":
         // This message is sync.
         return this.rilContext;
+      case "RIL:EnumerateCalls":
+        this.enumerateCalls(msg.target, msg.json.data);
+        break;
+      case "RIL:GetMicrophoneMuted":
+        // This message is sync.
+        return this.microphoneMuted;
+      case "RIL:SetMicrophoneMuted":
+        this.microphoneMuted = msg.json.data;
+        break;
+      case "RIL:GetSpeakerEnabled":
+        // This message is sync.
+        return this.speakerEnabled;
+      case "RIL:SetSpeakerEnabled":
+        this.speakerEnabled = msg.json.data;
+        break;
+      case "RIL:StartTone":
+        this.workerMessenger.send("startTone", { dtmfChar: msg.json.data });
+        break;
+      case "RIL:StopTone":
+        this.workerMessenger.send("stopTone");
+        break;
+      case "RIL:Dial":
+        this.dial(msg.json.data);
+        break;
+      case "RIL:DialEmergency":
+        this.dialEmergency(msg.json.data);
+        break;
+      case "RIL:HangUp":
+        this.workerMessenger.send("hangUp", { callIndex: msg.json.data });
+        break;
+      case "RIL:AnswerCall":
+        this.workerMessenger.send("answerCall", { callIndex: msg.json.data });
+        break;
+      case "RIL:RejectCall":
+        this.workerMessenger.send("rejectCall", { callIndex: msg.json.data });
+        break;
+      case "RIL:HoldCall":
+        this.workerMessenger.send("holdCall", { callIndex: msg.json.data });
+        break;
+      case "RIL:ResumeCall":
+        this.workerMessenger.send("resumeCall", { callIndex: msg.json.data });
+        break;
+      case "RIL:ConferenceCall":
+        this.workerMessenger.send("conferenceCall");
+        break;
+      case "RIL:SeparateCall":
+        this.workerMessenger.send("separateCall",
+                                  { callIndex: msg.json.data });
+        break;
+      case "RIL:HoldConference":
+        this.workerMessenger.send("holdConference");
+        break;
+      case "RIL:ResumeConference":
+        this.workerMessenger.send("resumeConference");
+        break;
       case "RIL:GetAvailableNetworks":
         this.workerMessenger.sendWithIPCMessage(msg, "getAvailableNetworks");
         break;
@@ -899,26 +1058,28 @@ RadioInterface.prototype = {
   handleUnsolicitedWorkerMessage: function handleUnsolicitedWorkerMessage(message) {
     switch (message.rilMessageType) {
       case "callRing":
-        gTelephonyProvider.notifyCallRing();
+        this.handleCallRing();
         break;
       case "callStateChange":
-        gTelephonyProvider.notifyCallStateChanged(message.call);
+        // This one will handle its own notifications.
+        this.handleCallStateChange(message.call);
         break;
       case "callDisconnected":
-        gTelephonyProvider.notifyCallDisconnected(message.call);
+        // This one will handle its own notifications.
+        this.handleCallDisconnected(message.call);
         break;
       case "conferenceCallStateChanged":
-        gTelephonyProvider.notifyConferenceCallStateChanged(message.state);
+        this.handleConferenceCallStateChanged(message.state);
         break;
       case "cdmaCallWaiting":
-        gTelephonyProvider.notifyCdmaCallWaiting(message.number);
+        gMessageManager.sendTelephonyMessage("RIL:CdmaCallWaiting",
+                                             this.clientId, message.number);
         break;
       case "callError":
-        gTelephonyProvider.notifyCallError(message.callIndex, message.errorMsg);
+        this.handleCallError(message);
         break;
       case "suppSvcNotification":
-        gTelephonyProvider.notifySupplementaryService(message.callIndex,
-                                                      message.notification);
+        this.handleSuppSvcNotification(message);
         break;
       case "emergencyCbModeChange":
         this.handleEmergencyCbModeChange(message);
@@ -1567,6 +1728,165 @@ RadioInterface.prototype = {
   },
 
   /**
+   * Track the active call and update the audio system as its state changes.
+   */
+  _activeCall: null,
+  updateCallAudioState: function updateCallAudioState(options) {
+    if (options.conferenceState === nsITelephonyProvider.CALL_STATE_CONNECTED) {
+      gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_IN_CALL;
+      if (this.speakerEnabled) {
+        gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION,
+                                     nsIAudioManager.FORCE_SPEAKER);
+      }
+      return;
+    }
+    if (options.conferenceState === nsITelephonyProvider.CALL_STATE_UNKNOWN ||
+        options.conferenceState === nsITelephonyProvider.CALL_STATE_HELD) {
+      if (!this._activeCall) {
+        gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
+      }
+      return;
+    }
+
+    if (!options.call) {
+      return;
+    }
+
+    if (options.call.isConference) {
+      if (this._activeCall && this._activeCall.callIndex == options.call.callIndex) {
+        this._activeCall = null;
+      }
+      return;
+    }
+
+    let call = options.call;
+    switch (call.state) {
+      case nsITelephonyProvider.CALL_STATE_DIALING: // Fall through...
+      case nsITelephonyProvider.CALL_STATE_ALERTING:
+      case nsITelephonyProvider.CALL_STATE_CONNECTED:
+        call.isActive = true;
+        this._activeCall = call;
+        gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_IN_CALL;
+        if (this.speakerEnabled) {
+          gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION,
+                                       nsIAudioManager.FORCE_SPEAKER);
+        }
+        if (DEBUG) {
+          this.debug("Active call, put audio system into PHONE_STATE_IN_CALL: "
+                     + gAudioManager.phoneState);
+        }
+        break;
+      case nsITelephonyProvider.CALL_STATE_INCOMING:
+        call.isActive = false;
+        if (!this._activeCall) {
+          // We can change the phone state into RINGTONE only when there's
+          // no active call.
+          gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_RINGTONE;
+          if (DEBUG) {
+            this.debug("Incoming call, put audio system into " +
+                       "PHONE_STATE_RINGTONE: " + gAudioManager.phoneState);
+          }
+        }
+        break;
+      case nsITelephonyProvider.CALL_STATE_HELD: // Fall through...
+      case nsITelephonyProvider.CALL_STATE_DISCONNECTED:
+        call.isActive = false;
+        if (this._activeCall &&
+            this._activeCall.callIndex == call.callIndex) {
+          // Previously active call is not active now.
+          this._activeCall = null;
+        }
+
+        if (!this._activeCall) {
+          // No active call. Disable the audio.
+          gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
+          if (DEBUG) {
+            this.debug("No active call, put audio system into " +
+                       "PHONE_STATE_NORMAL: " + gAudioManager.phoneState);
+          }
+        }
+        break;
+    }
+  },
+
+  _callRingWakeLock: null,
+  _callRingWakeLockTimer: null,
+  _cancelCallRingWakeLockTimer: function _cancelCallRingWakeLockTimer() {
+    if (this._callRingWakeLockTimer) {
+      this._callRingWakeLockTimer.cancel();
+    }
+    if (this._callRingWakeLock) {
+      this._callRingWakeLock.unlock();
+      this._callRingWakeLock = null;
+    }
+  },
+
+  /**
+   * Handle an incoming call.
+   *
+   * Not much is known about this call at this point, but it's enough
+   * to start bringing up the Phone app already.
+   */
+  handleCallRing: function handleCallRing() {
+    if (!this._callRingWakeLock) {
+      this._callRingWakeLock = gPowerManagerService.newWakeLock("cpu");
+    }
+    if (!this._callRingWakeLockTimer) {
+      this._callRingWakeLockTimer =
+        Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    }
+    this._callRingWakeLockTimer
+        .initWithCallback(this._cancelCallRingWakeLockTimer.bind(this),
+                          CALL_WAKELOCK_TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
+
+    gSystemMessenger.broadcastMessage("telephony-new-call", {});
+  },
+
+  /**
+   * Handle call state changes by updating our current state and the audio
+   * system.
+   */
+  handleCallStateChange: function handleCallStateChange(call) {
+    if (DEBUG) this.debug("handleCallStateChange: " + JSON.stringify(call));
+    call.state = convertRILCallState(call.state);
+
+    if (call.state == nsITelephonyProvider.CALL_STATE_DIALING) {
+      gSystemMessenger.broadcastMessage("telephony-new-call", {});
+    }
+    this.updateCallAudioState({call: call});
+    gMessageManager.sendTelephonyMessage("RIL:CallStateChanged",
+                                         this.clientId, call);
+  },
+
+  /**
+   * Handle call disconnects by updating our current state and the audio system.
+   */
+  handleCallDisconnected: function handleCallDisconnected(call) {
+    if (DEBUG) this.debug("handleCallDisconnected: " + JSON.stringify(call));
+    call.state = nsITelephonyProvider.CALL_STATE_DISCONNECTED;
+    let duration = ("started" in call && typeof call.started == "number") ?
+      new Date().getTime() - call.started : 0;
+    let data = {
+      number: call.number,
+      duration: duration,
+      direction: call.isOutgoing ? "outgoing" : "incoming"
+    };
+    gSystemMessenger.broadcastMessage("telephony-call-ended", data);
+    this.updateCallAudioState({call: call});
+    gMessageManager.sendTelephonyMessage("RIL:CallStateChanged",
+                                         this.clientId, call);
+  },
+
+  handleConferenceCallStateChanged: function handleConferenceCallStateChanged(state) {
+    debug("handleConferenceCallStateChanged: " + state);
+    state = state != null ? convertRILCallState(state) :
+                            nsITelephonyProvider.CALL_STATE_UNKNOWN;
+    this.updateCallAudioState({conferenceState: state});
+    gMessageManager.sendTelephonyMessage("RIL:ConferenceCallStateChanged",
+                                         this.clientId, state);
+  },
+
+  /**
    * Update network selection mode
    */
   updateNetworkSelectionMode: function updateNetworkSelectionMode(message) {
@@ -1583,6 +1903,23 @@ RadioInterface.prototype = {
     if (DEBUG) this.debug("handleEmergencyCbModeChange: " + JSON.stringify(message));
     gMessageManager.sendMobileConnectionMessage("RIL:EmergencyCbModeChanged",
                                                 this.clientId, message);
+  },
+
+  /**
+   * Handle call error.
+   */
+  handleCallError: function handleCallError(message) {
+    gMessageManager.sendTelephonyMessage("RIL:CallError",
+                                         this.clientId, message);
+  },
+
+  /**
+   * Handle supplementary service notification.
+   */
+  handleSuppSvcNotification: function handleSuppSvcNotification(message) {
+    message.notification = convertRILSuppSvcNotification(message.notification);
+    gMessageManager.sendTelephonyMessage("RIL:SuppSvcNotification",
+                                         this.clientId, message);
   },
 
   /**
@@ -1979,6 +2316,8 @@ RadioInterface.prototype = {
         }
         break;
       case "xpcom-shutdown":
+        // Cancel the timer for the call-ring wake lock.
+        this._cancelCallRingWakeLockTimer();
         // Shutdown all RIL network interfaces
         for each (let apnSetting in this.apnSettings.byAPN) {
           if (apnSetting.iface) {
@@ -2128,6 +2467,56 @@ RadioInterface.prototype = {
 
   // Handle phone functions of nsIRILContentHelper
 
+  enumerateCalls: function enumerateCalls(target, message) {
+    if (DEBUG) this.debug("Requesting enumeration of calls for callback");
+    this.workerMessenger.send("enumerateCalls", message, (function(response) {
+      for (let call of response.calls) {
+        call.state = convertRILCallState(call.state);
+        call.isActive = this._activeCall ?
+          call.callIndex == this._activeCall.callIndex : false;
+      }
+      target.sendAsyncMessage("RIL:EnumerateCalls", response);
+      return false;
+    }).bind(this));
+  },
+
+  _validateNumber: function _validateNumber(number) {
+    // note: isPlainPhoneNumber also accepts USSD and SS numbers
+    if (PhoneNumberUtils.isPlainPhoneNumber(number)) {
+      return true;
+    }
+
+    this.handleCallError({
+      callIndex: -1,
+      errorMsg: RIL.RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[RIL.CALL_FAIL_UNOBTAINABLE_NUMBER]
+    });
+    if (DEBUG) {
+      this.debug("Number '" + number + "' doesn't seem to be a viable number." +
+                 " Drop.");
+    }
+
+    return false;
+  },
+
+  dial: function dial(number) {
+    if (DEBUG) this.debug("Dialing " + number);
+    number = PhoneNumberUtils.normalize(number);
+    if (this._validateNumber(number)) {
+      this.workerMessenger.send("dial", { number: number,
+                                          isDialEmergency: false });
+    }
+  },
+
+  dialEmergency: function dialEmergency(number) {
+    if (DEBUG) this.debug("Dialing emergency " + number);
+    // we don't try to be too clever here, as the phone is probably in the
+    // locked state. Let's just check if it's a number without normalizing
+    if (this._validateNumber(number)) {
+      this.workerMessenger.send("dial", { number: number,
+                                          isDialEmergency: true });
+    }
+  },
+
   _sendCfStateChanged: function _sendCfStateChanged(message) {
     gMessageManager.sendMobileConnectionMessage("RIL:CfStateChanged",
                                                 this.clientId, message);
@@ -2180,6 +2569,37 @@ RadioInterface.prototype = {
       target.sendAsyncMessage("RIL:SetCallingLineIdRestriction", response);
       return false;
     }).bind(this));
+  },
+
+  get microphoneMuted() {
+    return gAudioManager.microphoneMuted;
+  },
+  set microphoneMuted(value) {
+    if (value == this.microphoneMuted) {
+      return;
+    }
+    gAudioManager.microphoneMuted = value;
+
+    if (!this._activeCall) {
+      gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
+    }
+  },
+
+  get speakerEnabled() {
+    return (gAudioManager.getForceForUse(nsIAudioManager.USE_COMMUNICATION) ==
+            nsIAudioManager.FORCE_SPEAKER);
+  },
+  set speakerEnabled(value) {
+    if (value == this.speakerEnabled) {
+      return;
+    }
+    let force = value ? nsIAudioManager.FORCE_SPEAKER :
+                        nsIAudioManager.FORCE_NONE;
+    gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION, force);
+
+    if (!this._activeCall) {
+      gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
+    }
   },
 
   /**
@@ -2948,13 +3368,6 @@ RadioInterface.prototype = {
     this.workerMessenger.send("deactivateDataCall", { cid: cid,
                                                       reason: reason });
   },
-
-  sendWorkerMessage: function sendWorkerMessage(rilMessageType, message,
-                                                callback) {
-    this.workerMessenger.send(rilMessageType, message, function (response) {
-      return callback.handleResponse(response);
-    });
-  }
 };
 
 function RILNetworkInterface(radioInterface, apnSetting) {
