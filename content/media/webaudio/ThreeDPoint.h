@@ -8,6 +8,7 @@
 #define ThreeDPoint_h_
 
 #include <cmath>
+#include <algorithm>
 
 namespace mozilla {
 
@@ -34,6 +35,12 @@ struct ThreeDPoint {
 
   void Normalize()
   {
+    // Normalize with the maximum norm first to avoid overflow and underflow.
+    double invMax = 1 / MaxNorm();
+    x *= invMax;
+    y *= invMax;
+    z *= invMax;
+
     double invDistance = 1 / Magnitude();
     x *= invDistance;
     y *= invDistance;
@@ -62,6 +69,12 @@ struct ThreeDPoint {
     return x == 0 && y == 0 && z == 0;
   }
   double x, y, z;
+
+private:
+  double MaxNorm() const
+  {
+    return std::max(fabs(x), std::max(fabs(y), fabs(z)));
+  }
 };
 
 ThreeDPoint operator-(const ThreeDPoint& lhs, const ThreeDPoint& rhs);
