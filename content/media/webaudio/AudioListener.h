@@ -87,25 +87,7 @@ public:
   }
 
   void SetOrientation(double aX, double aY, double aZ,
-                      double aXUp, double aYUp, double aZUp)
-  {
-    if (WebAudioUtils::FuzzyEqual(mOrientation.x, aX) &&
-        WebAudioUtils::FuzzyEqual(mOrientation.y, aY) &&
-        WebAudioUtils::FuzzyEqual(mOrientation.z, aZ) &&
-        WebAudioUtils::FuzzyEqual(mUpVector.x, aX) &&
-        WebAudioUtils::FuzzyEqual(mUpVector.y, aY) &&
-        WebAudioUtils::FuzzyEqual(mUpVector.z, aZ)) {
-      return;
-    }
-    mOrientation.x = aX;
-    mOrientation.y = aY;
-    mOrientation.z = aZ;
-    mUpVector.x = aXUp;
-    mUpVector.y = aYUp;
-    mUpVector.z = aZUp;
-    SendThreeDPointParameterToStream(PannerNode::LISTENER_ORIENTATION, mOrientation);
-    SendThreeDPointParameterToStream(PannerNode::LISTENER_UPVECTOR, mUpVector);
-  }
+                      double aXUp, double aYUp, double aZUp);
 
   const ThreeDPoint& Velocity() const
   {
@@ -138,8 +120,8 @@ private:
   friend class PannerNode;
   nsRefPtr<AudioContext> mContext;
   ThreeDPoint mPosition;
-  ThreeDPoint mOrientation;
-  ThreeDPoint mUpVector;
+  ThreeDPoint mFrontVector;
+  ThreeDPoint mRightVector;
   ThreeDPoint mVelocity;
   double mDopplerFactor;
   double mSpeedOfSound;
