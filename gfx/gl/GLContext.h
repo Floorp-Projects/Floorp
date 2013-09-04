@@ -48,8 +48,6 @@
 #include "SurfaceTypes.h"
 #include "GLScreenBuffer.h"
 
-typedef char realGLboolean;
-
 #include "GLContextSymbols.h"
 
 #include "mozilla/mozalloc.h"

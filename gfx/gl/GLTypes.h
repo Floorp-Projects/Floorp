@@ -12,16 +12,16 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef unsigned int GLenum;
-typedef unsigned int GLbitfield;
-typedef unsigned int GLuint;
-typedef int GLint;
-typedef int GLsizei;
-typedef char realGLboolean;
-typedef signed char GLbyte;
-typedef short GLshort;
-typedef unsigned char GLubyte;
-typedef unsigned short GLushort;
+typedef uint32_t GLenum;
+typedef uint32_t GLbitfield;
+typedef uint32_t GLuint;
+typedef int32_t GLint;
+typedef int32_t GLsizei;
+typedef int8_t realGLboolean;
+typedef int8_t GLbyte;
+typedef int16_t GLshort;
+typedef uint8_t GLubyte;
+typedef uint16_t GLushort;
 typedef float GLfloat;
 typedef float GLclampf;
 #ifndef GLdouble_defined
