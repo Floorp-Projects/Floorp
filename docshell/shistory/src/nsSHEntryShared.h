@@ -8,7 +8,6 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
-#include "nsISupportsArray.h"
 #include "nsIBFCacheEntry.h"
 #include "nsIMutationObserver.h"
 #include "nsExpirationTracker.h"
@@ -23,6 +22,7 @@ class nsIContentViewer;
 class nsIDocShellTreeItem;
 class nsILayoutHistoryState;
 class nsDocShellEditorData;
+class nsISupportsArray;
 
 // A document may have multiple SHEntries, either due to hash navigations or
 // calls to history.pushState.  SHEntries corresponding to the same document

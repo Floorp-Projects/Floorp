@@ -292,7 +292,7 @@ SharedTextureSourceOGL::gl() const
 
 SharedTextureHostOGL::SharedTextureHostOGL(uint64_t aID,
                                            TextureFlags aFlags,
-                                           gl::GLContext::SharedTextureShareType aShareType,
+                                           gl::SharedTextureShareType aShareType,
                                            gl::SharedTextureHandle aSharedHandle,
                                            gfx::IntSize aSize,
                                            bool inverted)
@@ -741,6 +741,14 @@ SurfaceStreamHostOGL::Lock()
   return true;
 }
 
+void
+SurfaceStreamHostOGL::BindTexture(GLenum activetex)
+{
+  MOZ_ASSERT(mGL);
+  mGL->fActiveTexture(activetex);
+  mGL->fBindTexture(mTextureTarget, mTextureHandle);
+}
+
 
 void
 YCbCrDeprecatedTextureHostOGL::SetCompositor(Compositor* aCompositor)
@@ -824,6 +832,13 @@ YCbCrDeprecatedTextureHostOGL::Lock()
 TiledDeprecatedTextureHostOGL::~TiledDeprecatedTextureHostOGL()
 {
   DeleteTextures();
+}
+
+void
+TiledDeprecatedTextureHostOGL::BindTexture(GLenum aTextureUnit)
+{
+  mGL->fActiveTexture(aTextureUnit);
+  mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextureHandle);
 }
 
 static void

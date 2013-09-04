@@ -5,12 +5,10 @@
 #ifndef GFX_TEXTUREPOOLOGL_H
 #define GFX_TEXTUREPOOLOGL_H
 
-#include "GLContextTypes.h"             // for GLuint
+#include "GLContextTypes.h"             // for GLContext, GLuint
 
 namespace mozilla {
 namespace gl {
-
-class GLContext;
 
 // A texture pool for for the on-screen GLContext. The main purpose of this class
 // is to provide the ability to easily allocate an on-screen texture from the

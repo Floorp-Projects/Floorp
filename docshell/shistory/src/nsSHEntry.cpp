@@ -5,18 +5,16 @@
 
 // Local Includes
 #include "nsSHEntry.h"
-#include "nsXPIDLString.h"
-#include "nsReadableUtils.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsISHistory.h"
-#include "nsISHistoryInternal.h"
 #include "nsDocShellEditorData.h"
 #include "nsSHEntryShared.h"
 #include "nsILayoutHistoryState.h"
 #include "nsIContentViewer.h"
 #include "nsISupportsArray.h"
 #include "nsIStructuredCloneContainer.h"
+#include "nsIInputStream.h"
+#include "nsIURI.h"
 #include <algorithm>
 
 namespace dom = mozilla::dom;

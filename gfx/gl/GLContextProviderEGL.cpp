@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "GLContext.h"
 #include "mozilla/Util.h"
 // please add new includes below Qt, otherwise it break Qt build due malloc wrapper conflicts
 
@@ -736,12 +737,12 @@ protected:
 };
 
 
-typedef enum {
-    Image
+enum SharedHandleType {
+    SharedHandleType_Image
 #ifdef MOZ_WIDGET_ANDROID
-    , SurfaceTexture
+    , SharedHandleType_SurfaceTexture
 #endif
-} SharedHandleType;
+};
 
 class SharedTextureHandleWrapper
 {
@@ -765,7 +766,7 @@ class SurfaceTextureWrapper: public SharedTextureHandleWrapper
 {
 public:
     SurfaceTextureWrapper(nsSurfaceTexture* aSurfaceTexture) :
-        SharedTextureHandleWrapper(SharedHandleType::SurfaceTexture)
+        SharedTextureHandleWrapper(SharedHandleType_SurfaceTexture)
         , mSurfaceTexture(aSurfaceTexture)
     {
     }
@@ -785,7 +786,7 @@ class EGLTextureWrapper : public SharedTextureHandleWrapper
 {
 public:
     EGLTextureWrapper() :
-        SharedTextureHandleWrapper(SharedHandleType::Image)
+        SharedTextureHandleWrapper(SharedHandleType_Image)
         , mEGLImage(nullptr)
         , mSyncObject(nullptr)
     {
@@ -876,7 +877,7 @@ GLContextEGL::UpdateSharedHandle(SharedTextureShareType shareType,
 
     SharedTextureHandleWrapper* wrapper = reinterpret_cast<SharedTextureHandleWrapper*>(sharedHandle);
 
-    NS_ASSERTION(wrapper->Type() == SharedHandleType::Image, "Expected EGLImage shared handle");
+    NS_ASSERTION(wrapper->Type() == SharedHandleType_Image, "Expected EGLImage shared handle");
     NS_ASSERTION(mShareWithEGLImage, "EGLImage not supported or disabled in runtime");
 
     EGLTextureWrapper* wrap = reinterpret_cast<EGLTextureWrapper*>(wrapper);
@@ -950,12 +951,12 @@ void GLContextEGL::ReleaseSharedHandle(SharedTextureShareType shareType,
 
     switch (wrapper->Type()) {
 #ifdef MOZ_WIDGET_ANDROID
-    case SharedHandleType::SurfaceTexture:
+    case SharedHandleType_SurfaceTexture:
         delete wrapper;
         break;
 #endif
     
-    case SharedHandleType::Image: {
+    case SharedHandleType_Image: {
         NS_ASSERTION(mShareWithEGLImage, "EGLImage not supported or disabled in runtime");
 
         EGLTextureWrapper* wrap = (EGLTextureWrapper*)sharedHandle;
@@ -980,7 +981,7 @@ bool GLContextEGL::GetSharedHandleDetails(SharedTextureShareType shareType,
 
     switch (wrapper->Type()) {
 #ifdef MOZ_WIDGET_ANDROID
-    case SharedHandleType::SurfaceTexture: {
+    case SharedHandleType_SurfaceTexture: {
         SurfaceTextureWrapper* surfaceWrapper = reinterpret_cast<SurfaceTextureWrapper*>(wrapper);
 
         details.mTarget = LOCAL_GL_TEXTURE_EXTERNAL;
@@ -990,7 +991,7 @@ bool GLContextEGL::GetSharedHandleDetails(SharedTextureShareType shareType,
     }
 #endif
 
-    case SharedHandleType::Image:
+    case SharedHandleType_Image:
         details.mTarget = LOCAL_GL_TEXTURE_2D;
         details.mTextureFormat = FORMAT_R8G8B8A8;
         break;
@@ -1013,7 +1014,7 @@ bool GLContextEGL::AttachSharedHandle(SharedTextureShareType shareType,
 
     switch (wrapper->Type()) {
 #ifdef MOZ_WIDGET_ANDROID
-    case SharedHandleType::SurfaceTexture: {
+    case SharedHandleType_SurfaceTexture: {
 #ifndef DEBUG
         /**
          * NOTE: SurfaceTexture spams us if there are any existing GL errors, so we'll clear
@@ -1031,7 +1032,7 @@ bool GLContextEGL::AttachSharedHandle(SharedTextureShareType shareType,
     }
 #endif // MOZ_WIDGET_ANDROID
 
-    case SharedHandleType::Image: {
+    case SharedHandleType_Image: {
         NS_ASSERTION(mShareWithEGLImage, "EGLImage not supported or disabled in runtime");
 
         EGLTextureWrapper* wrap = (EGLTextureWrapper*)sharedHandle;
@@ -2012,7 +2013,7 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& size,
     if (!glContext)
         return nullptr;
 
-    if (flags & GLContext::ContextFlagsGlobal)
+    if (flags & ContextFlagsGlobal)
         return glContext.forget();
 
     if (!glContext->InitOffscreen(size, caps))
@@ -2022,15 +2023,15 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& size,
 }
 
 SharedTextureHandle
-GLContextProviderEGL::CreateSharedHandle(GLContext::SharedTextureShareType shareType,
+GLContextProviderEGL::CreateSharedHandle(SharedTextureShareType shareType,
                                          void* buffer,
-                                         GLContext::SharedTextureBufferType bufferType)
+                                         SharedTextureBufferType bufferType)
 {
   return 0;
 }
 
 already_AddRefed<gfxASurface>
-GLContextProviderEGL::GetSharedHandleAsSurface(GLContext::SharedTextureShareType shareType,
+GLContextProviderEGL::GetSharedHandleAsSurface(SharedTextureShareType shareType,
                                                SharedTextureHandle sharedHandle)
 {
   return nullptr;
