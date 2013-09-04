@@ -643,7 +643,8 @@ RILContentHelper.prototype = {
     let requestId = this.getRequestId(request);
 
     if (!mode) {
-      this.dispatchFireRequestError(requestId, "InvalidParameter");
+      this.dispatchFireRequestError(requestId,
+                                    RIL.GECKO_ERROR_INVALID_PARAMETER);
       return request;
     }
 
@@ -1006,7 +1007,8 @@ RILContentHelper.prototype = {
     let requestId = this.getRequestId(request);
 
     if (!this._isValidCFReason(reason)){
-      this.dispatchFireRequestError(requestId, "Invalid call forwarding reason.");
+      this.dispatchFireRequestError(requestId,
+                                    RIL.GECKO_ERROR_INVALID_PARAMETER);
       return request;
     }
 
@@ -1032,7 +1034,8 @@ RILContentHelper.prototype = {
     if (!cfInfo ||
         !this._isValidCFReason(cfInfo.reason) ||
         !this._isValidCFAction(cfInfo.action)){
-      this.dispatchFireRequestError(requestId, "Invalid call forwarding rule definition.");
+      this.dispatchFireRequestError(requestId,
+                                    RIL.GECKO_ERROR_INVALID_PARAMETER);
       return request;
     }
 
@@ -1061,7 +1064,8 @@ RILContentHelper.prototype = {
 
     if (DEBUG) debug("getCallBarringOption: " + JSON.stringify(option));
     if (!this._isValidCallBarringOption(option)) {
-      this.dispatchFireRequestError(requestId, "InvalidCallBarringOption");
+      this.dispatchFireRequestError(requestId,
+                                    RIL.GECKO_ERROR_INVALID_PARAMETER);
       return request;
     }
 
@@ -1087,7 +1091,8 @@ RILContentHelper.prototype = {
 
     if (DEBUG) debug("setCallBarringOption: " + JSON.stringify(option));
     if (!this._isValidCallBarringOption(option, true)) {
-      this.dispatchFireRequestError(requestId, "InvalidCallBarringOption");
+      this.dispatchFireRequestError(requestId,
+                                    RIL.GECKO_ERROR_INVALID_PARAMETER);
       return request;
     }
 
