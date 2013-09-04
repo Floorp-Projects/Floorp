@@ -52,6 +52,9 @@ MOZ_APP_STATIC_INI=1
 
 MOZ_FENNEC=1
 
+# Enable on-demand decompression
+MOZ_ENABLE_SZIP=1
+
 MOZ_FOLD_LIBS=1
 
 # Enable navigator.mozPay
