@@ -32,10 +32,9 @@ const kIsLinux = navigator.platform.indexOf("Linux") == 0 || navigator.platform.
 function runTests()
 {
   document.execCommand("stylewithcss", false, "true");
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-  var fm = Components.classes["@mozilla.org/focus-manager;1"].
-    getService(Components.interfaces.nsIFocusManager);
+  var fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"].
+    getService(SpecialPowers.Ci.nsIFocusManager);
 
   var capturingPhase = { fired: false, prevented: false };
   var bubblingPhase = { fired: false, prevented: false };
@@ -126,7 +125,7 @@ function runTests()
     aDescription += ": "
 
     aElement.focus();
-    is(fm.focusedElement, aElement, aDescription + "failed to move focus");
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement, aDescription + "failed to move focus");
 
     // Modifier keys:
     //   Basically, modifier keys shouldn't cause keypress event.  However,
@@ -301,14 +300,14 @@ function runTests()
        aIsTabbable || aIsReadonly ? "a" :
          aIsPlaintext ? "a\t" : "a&nbsp;&nbsp;&nbsp; <br>",
        aDescription + "Tab");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Tab)");
 
     reset("a");
     synthesizeKey("VK_TAB", { shiftKey: true });
     check(aDescription + "Shift+Tab", true, true, false);
     is(aElement.innerHTML, "a", aDescription + "Shift+Tab");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab)");
 
     // Ctrl+Tab may be consumed by tabbrowser but editor shouldn't consume this.
@@ -316,28 +315,28 @@ function runTests()
     synthesizeKey("VK_TAB", { ctrlKey: true });
     check(aDescription + "Ctrl+Tab", true, true, false);
     is(aElement.innerHTML, "a", aDescription + "Ctrl+Tab");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Ctrl+Tab)");
 
     reset("a");
     synthesizeKey("VK_TAB", { altKey: true });
     check(aDescription + "Alt+Tab", true, true, false);
     is(aElement.innerHTML, "a", aDescription + "Alt+Tab");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Alt+Tab)");
 
     reset("a");
     synthesizeKey("VK_TAB", { metaKey: true });
     check(aDescription + "Meta+Tab", true, true, false);
     is(aElement.innerHTML, "a", aDescription + "Meta+Tab");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Meta+Tab)");
 
     reset("a");
     synthesizeKey("VK_TAB", { osKey: true });
     check(aDescription + "OS+Tab", true, true, false);
     is(aElement.innerHTML, "a", aDescription + "OS+Tab");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (OS+Tab)");
 
     // Indent/Outdent tests:
@@ -352,7 +351,7 @@ function runTests()
          aIsPlaintext ? "<ul><li id=\"target\">ul list item\t</li></ul>" :
            "<ul><ul><li id=\"target\">ul list item</li></ul></ul>",
        aDescription + "Tab on UL");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Tab on UL)");
     synthesizeKey("VK_TAB", { shiftKey: true });
     check(aDescription + "Shift+Tab after Tab on UL",
@@ -362,7 +361,7 @@ function runTests()
          "<ul><li id=\"target\">ul list item</li></ul>" :
          "<ul><li id=\"target\">ul list item\t</li></ul>",
        aDescription + "Shift+Tab after Tab on UL");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab after Tab on UL)");
 
     resetForIndent("<ul><li id=\"target\">ul list item</li></ul>");
@@ -373,7 +372,7 @@ function runTests()
        aIsReadonly || aIsTabbable || aIsPlaintext ?
          "<ul><li id=\"target\">ul list item</li></ul>" : "ul list item",
        aDescription + "Shift+Tab on UL");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab on UL)");
 
     // Ctrl+Tab may be consumed by tabbrowser but editor shouldn't consume this.
@@ -382,7 +381,7 @@ function runTests()
     check(aDescription + "Ctrl+Tab on UL", true, true, false);
     is(aElement.innerHTML, "<ul><li id=\"target\">ul list item</li></ul>",
        aDescription + "Ctrl+Tab on UL");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Ctrl+Tab on UL)");
 
     resetForIndent("<ul><li id=\"target\">ul list item</li></ul>");
@@ -390,7 +389,7 @@ function runTests()
     check(aDescription + "Alt+Tab on UL", true, true, false);
     is(aElement.innerHTML, "<ul><li id=\"target\">ul list item</li></ul>",
        aDescription + "Alt+Tab on UL");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Alt+Tab on UL)");
 
     resetForIndent("<ul><li id=\"target\">ul list item</li></ul>");
@@ -398,7 +397,7 @@ function runTests()
     check(aDescription + "Meta+Tab on UL", true, true, false);
     is(aElement.innerHTML, "<ul><li id=\"target\">ul list item</li></ul>",
        aDescription + "Meta+Tab on UL");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Meta+Tab on UL)");
 
     resetForIndent("<ul><li id=\"target\">ul list item</li></ul>");
@@ -406,7 +405,7 @@ function runTests()
     check(aDescription + "OS+Tab on UL", true, true, false);
     is(aElement.innerHTML, "<ul><li id=\"target\">ul list item</li></ul>",
        aDescription + "OS+Tab on UL");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (OS+Tab on UL)");
 
     // OL
@@ -420,7 +419,7 @@ function runTests()
          aIsPlaintext ? "<ol><li id=\"target\">ol list item\t</li></ol>" :
            "<ol><ol><li id=\"target\">ol list item</li></ol></ol>",
        aDescription + "Tab on OL");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Tab on OL)");
     synthesizeKey("VK_TAB", { shiftKey: true });
     check(aDescription + "Shift+Tab after Tab on OL",
@@ -430,7 +429,7 @@ function runTests()
          "<ol><li id=\"target\">ol list item</li></ol>" :
          "<ol><li id=\"target\">ol list item\t</li></ol>",
        aDescription + "Shift+Tab after Tab on OL");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab after Tab on OL)");
 
     resetForIndent("<ol><li id=\"target\">ol list item</li></ol>");
@@ -441,7 +440,7 @@ function runTests()
        aIsReadonly || aIsTabbable || aIsPlaintext ?
          "<ol><li id=\"target\">ol list item</li></ol>" : "ol list item",
        aDescription + "Shfit+Tab on OL");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab on OL)");
 
     // Ctrl+Tab may be consumed by tabbrowser but editor shouldn't consume this.
@@ -450,7 +449,7 @@ function runTests()
     check(aDescription + "Ctrl+Tab on OL", true, true, false);
     is(aElement.innerHTML, "<ol><li id=\"target\">ol list item</li></ol>",
        aDescription + "Ctrl+Tab on OL");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Ctrl+Tab on OL)");
 
     resetForIndent("<ol><li id=\"target\">ol list item</li></ol>");
@@ -458,7 +457,7 @@ function runTests()
     check(aDescription + "Alt+Tab on OL", true, true, false);
     is(aElement.innerHTML, "<ol><li id=\"target\">ol list item</li></ol>",
        aDescription + "Alt+Tab on OL");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Alt+Tab on OL)");
 
     resetForIndent("<ol><li id=\"target\">ol list item</li></ol>");
@@ -466,7 +465,7 @@ function runTests()
     check(aDescription + "Meta+Tab on OL", true, true, false);
     is(aElement.innerHTML, "<ol><li id=\"target\">ol list item</li></ol>",
        aDescription + "Meta+Tab on OL");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Meta+Tab on OL)");
 
     resetForIndent("<ol><li id=\"target\">ol list item</li></ol>");
@@ -474,7 +473,7 @@ function runTests()
     check(aDescription + "OS+Tab on OL", true, true, false);
     is(aElement.innerHTML, "<ol><li id=\"target\">ol list item</li></ol>",
        aDescription + "OS+Tab on OL");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (OS+Tab on OL)");
 
     // TD
@@ -488,7 +487,7 @@ function runTests()
          aIsPlaintext ? "<table><tbody><tr><td id=\"target\">td\t</td></tr></tbody></table>" :
            "<table><tbody><tr><td id=\"target\">td</td></tr><tr><td style=\"vertical-align: top;\"><br></td></tr></tbody></table>",
        aDescription + "Tab on TD");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Tab on TD)");
     synthesizeKey("VK_TAB", { shiftKey: true });
     check(aDescription + "Shift+Tab after Tab on TD",
@@ -499,7 +498,7 @@ function runTests()
          aIsPlaintext ? "<table><tbody><tr><td id=\"target\">td\t</td></tr></tbody></table>" :
            "<table><tbody><tr><td id=\"target\">td</td></tr><tr><td style=\"vertical-align: top;\"><br></td></tr></tbody></table>",
        aDescription + "Shift+Tab after Tab on TD");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab after Tab on TD)");
 
     resetForIndent("<table><tr><td id=\"target\">td</td></tr></table>");
@@ -508,7 +507,7 @@ function runTests()
     is(aElement.innerHTML,
        "<table><tbody><tr><td id=\"target\">td</td></tr></tbody></table>",
        aDescription + "Shift+Tab on TD");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab on TD)");
 
     // Ctrl+Tab may be consumed by tabbrowser but editor shouldn't consume this.
@@ -518,7 +517,7 @@ function runTests()
     is(aElement.innerHTML,
        "<table><tbody><tr><td id=\"target\">td</td></tr></tbody></table>",
        aDescription + "Ctrl+Tab on TD");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Ctrl+Tab on TD)");
 
     resetForIndent("<table><tr><td id=\"target\">td</td></tr></table>");
@@ -527,7 +526,7 @@ function runTests()
     is(aElement.innerHTML,
        "<table><tbody><tr><td id=\"target\">td</td></tr></tbody></table>",
        aDescription + "Alt+Tab on TD");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Alt+Tab on TD)");
 
     resetForIndent("<table><tr><td id=\"target\">td</td></tr></table>");
@@ -536,7 +535,7 @@ function runTests()
     is(aElement.innerHTML,
        "<table><tbody><tr><td id=\"target\">td</td></tr></tbody></table>",
        aDescription + "Meta+Tab on TD");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Meta+Tab on TD)");
 
     resetForIndent("<table><tr><td id=\"target\">td</td></tr></table>");
@@ -545,7 +544,7 @@ function runTests()
     is(aElement.innerHTML,
        "<table><tbody><tr><td id=\"target\">td</td></tr></tbody></table>",
        aDescription + "OS+Tab on TD");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (OS+Tab on TD)");
 
     // TH
@@ -559,7 +558,7 @@ function runTests()
          aIsPlaintext ? "<table><tbody><tr><th id=\"target\">th\t</th></tr></tbody></table>" :
            "<table><tbody><tr><th id=\"target\">th</th></tr><tr><td style=\"vertical-align: top;\"><br></td></tr></tbody></table>",
        aDescription + "Tab on TH");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Tab on TH)");
     synthesizeKey("VK_TAB", { shiftKey: true });
     check(aDescription + "Shift+Tab after Tab on TH",
@@ -570,7 +569,7 @@ function runTests()
          aIsPlaintext ? "<table><tbody><tr><th id=\"target\">th\t</th></tr></tbody></table>" :
            "<table><tbody><tr><th id=\"target\">th</th></tr><tr><td style=\"vertical-align: top;\"><br></td></tr></tbody></table>",
        aDescription + "Shift+Tab after Tab on TH");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab after Tab on TH)");
 
     resetForIndent("<table><tr><th id=\"target\">th</th></tr></table>");
@@ -579,7 +578,7 @@ function runTests()
     is(aElement.innerHTML,
        "<table><tbody><tr><th id=\"target\">th</th></tr></tbody></table>",
        aDescription + "Shift+Tab on TH");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab on TH)");
 
     // Ctrl+Tab may be consumed by tabbrowser but editor shouldn't consume this.
@@ -589,7 +588,7 @@ function runTests()
     is(aElement.innerHTML,
        "<table><tbody><tr><th id=\"target\">th</th></tr></tbody></table>",
        aDescription + "Ctrl+Tab on TH");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Ctrl+Tab on TH)");
 
     resetForIndent("<table><tr><th id=\"target\">th</th></tr></table>");
@@ -598,7 +597,7 @@ function runTests()
     is(aElement.innerHTML,
        "<table><tbody><tr><th id=\"target\">th</th></tr></tbody></table>",
        aDescription + "Alt+Tab on TH");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Alt+Tab on TH)");
 
     resetForIndent("<table><tr><th id=\"target\">th</th></tr></table>");
@@ -607,7 +606,7 @@ function runTests()
     is(aElement.innerHTML,
        "<table><tbody><tr><th id=\"target\">th</th></tr></tbody></table>",
        aDescription + "Meta+Tab on TH");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Meta+Tab on TH)");
 
     resetForIndent("<table><tr><th id=\"target\">th</th></tr></table>");
@@ -616,7 +615,7 @@ function runTests()
     is(aElement.innerHTML,
        "<table><tbody><tr><th id=\"target\">th</th></tr></tbody></table>",
        aDescription + "OS+Tab on TH");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (OS+Tab on TH)");
 
     // Esc key:
@@ -670,11 +669,11 @@ function runTests()
 
   doTest(htmlEditor, "contenteditable=\"true\"", false, true, false);
 
-  const nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
-  var editor =
-    window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-      getInterface(Components.interfaces.nsIWebNavigation).
-      QueryInterface(Components.interfaces.nsIDocShell).editor;
+  const nsIPlaintextEditor = SpecialPowers.Ci.nsIPlaintextEditor;
+  var editor = SpecialPowers.wrap(window).
+      QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
+      getInterface(SpecialPowers.Ci.nsIWebNavigation).
+      QueryInterface(SpecialPowers.Ci.nsIDocShell).editor;
   var flags = editor.flags;
   // readonly
   editor.flags = flags | nsIPlaintextEditor.eEditorReadonlyMask;

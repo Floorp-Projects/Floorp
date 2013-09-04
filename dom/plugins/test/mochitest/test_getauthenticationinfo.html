@@ -15,10 +15,8 @@ Test for NPN_GetAuthenticationInfo
 
 <script class="testbody" type="text/javascript">
 
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-const Ci = Components.interfaces;
-const Cc = Components.classes;
+const Ci = SpecialPowers.Ci;
+const Cc = SpecialPowers.Cc;
 
 function iframeLoad() {
   var plugin = iframe.contentDocument.getElementById("embedtest");
