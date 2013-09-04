@@ -43,6 +43,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_bug894376_css_value_completion_new_property_value_pair.js \
   browser_bug894376_css_value_completion_existing_property_value_pair.js \
   browser_ruleview_bug_902966_revert_value_on_ESC.js \
+  browser_ruleview_pseudoelement.js \
   head.js \
   $(NULL)
 
@@ -60,6 +61,7 @@ MOCHITEST_BROWSER_FILES += \
   browser_styleinspector_bug_677930_urls_clickable \
   browser_styleinspector_bug_677930_urls_clickable/browser_styleinspector_bug_677930_urls_clickable.css \
   test-image.png \
+  browser_ruleview_pseudoelement.html \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
