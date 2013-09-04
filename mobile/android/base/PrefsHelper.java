@@ -28,28 +28,18 @@ public final class PrefsHelper {
     private static int sUniqueRequestId = 1;
 
     public static int getPref(String prefName, PrefHandler callback) {
-        JSONArray prefs = new JSONArray();
-        prefs.put(prefName);
-        return getPrefs(prefs, callback);
+        return getPrefsInternal(new String[] { prefName }, callback);
     }
 
     public static int getPrefs(String[] prefNames, PrefHandler callback) {
-        JSONArray prefs = new JSONArray();
-        for (String p : prefNames) {
-            prefs.put(p);
-        }
-        return getPrefs(prefs, callback);
+        return getPrefsInternal(prefNames, callback);
     }
 
     public static int getPrefs(ArrayList<String> prefNames, PrefHandler callback) {
-        JSONArray prefs = new JSONArray();
-        for (String p : prefNames) {
-            prefs.put(p);
-        }
-        return getPrefs(prefs, callback);
+        return getPrefsInternal(prefNames.toArray(new String[prefNames.size()]), callback);
     }
 
-    public static int getPrefs(JSONArray prefNames, PrefHandler callback) {
+    private static int getPrefsInternal(String[] prefNames, PrefHandler callback) {
         int requestId;
         synchronized (PrefsHelper.class) {
             ensureRegistered();
@@ -59,25 +49,12 @@ public final class PrefsHelper {
         }
 
         GeckoEvent event;
-        try {
-            JSONObject message = new JSONObject();
-            message.put("requestId", Integer.toString(requestId));
-            message.put("preferences", prefNames);
-            event = GeckoEvent.createBroadcastEvent(callback.isObserver() ?
-                "Preferences:Observe" : "Preferences:Get", message.toString());
-            GeckoAppShell.sendEventToGecko(event);
-        } catch (Exception e) {
-            Log.e(LOGTAG, "Error while composing Preferences:" +
-                  (callback.isObserver() ? "Observe" : "Get") + " message", e);
-
-            // if we failed to send the message, drop our reference to the callback because
-            // otherwise it will leak since we will never get the response
-            synchronized (PrefsHelper.class) {
-                sCallbacks.remove(requestId);
-            }
-
-            return -1;
+        if (callback.isObserver()) {
+            event = GeckoEvent.createPreferencesObserveEvent(requestId, prefNames);
+        } else {
+            event = GeckoEvent.createPreferencesGetEvent(requestId, prefNames);
         }
+        GeckoAppShell.sendEventToGecko(event);
 
         return requestId;
     }
