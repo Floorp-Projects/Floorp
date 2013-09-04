@@ -10,6 +10,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "js/TypeDecls.h"
+
 namespace JS {
 class CompileOptions;
 }
