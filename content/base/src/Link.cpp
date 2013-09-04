@@ -147,6 +147,32 @@ Link::SetProtocol(const nsAString &aProtocol)
 }
 
 void
+Link::SetPassword(const nsAString &aPassword)
+{
+  nsCOMPtr<nsIURI> uri(GetURIToMutate());
+  if (!uri) {
+    // Ignore failures to be compatible with NS4.
+    return;
+  }
+
+  uri->SetPassword(NS_ConvertUTF16toUTF8(aPassword));
+  SetHrefAttribute(uri);
+}
+
+void
+Link::SetUsername(const nsAString &aUsername)
+{
+  nsCOMPtr<nsIURI> uri(GetURIToMutate());
+  if (!uri) {
+    // Ignore failures to be compatible with NS4.
+    return;
+  }
+
+  uri->SetUsername(NS_ConvertUTF16toUTF8(aUsername));
+  SetHrefAttribute(uri);
+}
+
+void
 Link::SetHost(const nsAString &aHost)
 {
   nsCOMPtr<nsIURI> uri(GetURIToMutate());
@@ -260,6 +286,27 @@ Link::SetHash(const nsAString &aHash)
 }
 
 void
+Link::GetOrigin(nsAString &aOrigin)
+{
+  aOrigin.Truncate();
+
+  nsCOMPtr<nsIURI> uri(GetURI());
+  if (!uri) {
+    return;
+  }
+
+  nsString origin;
+  nsresult rv = nsContentUtils::GetUTFOrigin(uri, origin);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  if (!aOrigin.EqualsLiteral("null")) {
+    aOrigin.Assign(origin);
+  }
+}
+
+void
 Link::GetProtocol(nsAString &_protocol)
 {
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -273,6 +320,36 @@ Link::GetProtocol(nsAString &_protocol)
   }
   _protocol.Append(PRUnichar(':'));
   return;
+}
+
+void
+Link::GetUsername(nsAString& aUsername)
+{
+  aUsername.Truncate();
+
+  nsCOMPtr<nsIURI> uri(GetURI());
+  if (!uri) {
+    return;
+  }
+
+  nsAutoCString username;
+  uri->GetUsername(username);
+  CopyASCIItoUTF16(username, aUsername);
+}
+
+void
+Link::GetPassword(nsAString &aPassword)
+{
+  aPassword.Truncate();
+
+  nsCOMPtr<nsIURI> uri(GetURI());
+  if (!uri) {
+    return;
+  }
+
+  nsAutoCString password;
+  uri->GetPassword(password);
+  CopyASCIItoUTF16(password, aPassword);
 }
 
 void

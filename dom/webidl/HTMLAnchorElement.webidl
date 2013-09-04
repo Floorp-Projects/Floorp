@@ -13,12 +13,7 @@
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-a-element
 interface HTMLAnchorElement : HTMLElement {
-  // No support for stringifier attributes yet
-  //[SetterThrows]
-  //stringifier attribute DOMString href;
   stringifier;
-           [SetterThrows]
-           attribute DOMString href;
            [SetterThrows]
            attribute DOMString target;
            [SetterThrows]
