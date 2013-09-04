@@ -1152,7 +1152,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
         return retval;
 
     XPCContext *xpcc = ccx.GetXPCContext();
-    JSContext *cx = xpc_UnmarkGrayContext(ccx.GetJSContext());
+    JSContext *cx = ccx.GetJSContext();
 
     if (!cx || !xpcc || !IsReflectable(methodIndex))
         return NS_ERROR_FAILURE;
