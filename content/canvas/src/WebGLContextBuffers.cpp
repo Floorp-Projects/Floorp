@@ -11,7 +11,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 void
-WebGLContext::BindBuffer(WebGLenum target, WebGLBuffer *buffer)
+WebGLContext::BindBuffer(GLenum target, WebGLBuffer *buffer)
 {
     if (!IsContextStable())
         return;
@@ -46,7 +46,7 @@ WebGLContext::BindBuffer(WebGLenum target, WebGLBuffer *buffer)
 }
 
 void
-WebGLContext::BindBufferBase(WebGLenum target, WebGLuint index, WebGLBuffer* buffer)
+WebGLContext::BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer)
 {
     if (!IsContextStable())
         return;
@@ -87,7 +87,7 @@ WebGLContext::BindBufferBase(WebGLenum target, WebGLuint index, WebGLBuffer* buf
 }
 
 void
-WebGLContext::BindBufferRange(WebGLenum target, WebGLuint index, WebGLBuffer* buffer,
+WebGLContext::BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer,
                               WebGLintptr offset, WebGLsizeiptr size)
 {
     if (!IsContextStable())
@@ -134,8 +134,8 @@ WebGLContext::BindBufferRange(WebGLenum target, WebGLuint index, WebGLBuffer* bu
 }
 
 void
-WebGLContext::BufferData(WebGLenum target, WebGLsizeiptr size,
-                         WebGLenum usage)
+WebGLContext::BufferData(GLenum target, WebGLsizeiptr size,
+                         GLenum usage)
 {
     if (!IsContextStable())
         return;
@@ -183,9 +183,9 @@ WebGLContext::BufferData(WebGLenum target, WebGLsizeiptr size,
 }
 
 void
-WebGLContext::BufferData(WebGLenum target,
+WebGLContext::BufferData(GLenum target,
                          const Nullable<ArrayBuffer> &maybeData,
-                         WebGLenum usage)
+                         GLenum usage)
 {
     if (!IsContextStable())
         return;
@@ -232,8 +232,8 @@ WebGLContext::BufferData(WebGLenum target,
 }
 
 void
-WebGLContext::BufferData(WebGLenum target, const ArrayBufferView& data,
-                         WebGLenum usage)
+WebGLContext::BufferData(GLenum target, const ArrayBufferView& data,
+                         GLenum usage)
 {
     if (!IsContextStable())
         return;
@@ -315,7 +315,7 @@ WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
 }
 
 void
-WebGLContext::BufferSubData(WebGLenum target, WebGLsizeiptr byteOffset,
+WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
                             const ArrayBufferView& data)
 {
     if (!IsContextStable())
@@ -401,7 +401,7 @@ WebGLContext::IsBuffer(WebGLBuffer *buffer)
 }
 
 bool
-WebGLContext::ValidateBufferUsageEnum(WebGLenum target, const char *infos)
+WebGLContext::ValidateBufferUsageEnum(GLenum target, const char *infos)
 {
     switch (target) {
         case LOCAL_GL_STREAM_DRAW:

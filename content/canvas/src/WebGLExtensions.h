@@ -196,12 +196,12 @@ public:
     WebGLExtensionInstancedArrays(WebGLContext* context);
     virtual ~WebGLExtensionInstancedArrays();
 
-    void DrawArraysInstancedANGLE(WebGLenum mode, WebGLint first,
-                                  WebGLsizei count, WebGLsizei primcount);
-    void DrawElementsInstancedANGLE(WebGLenum mode, WebGLsizei count,
-                                    WebGLenum type, WebGLintptr offset,
-                                    WebGLsizei primcount);
-    void VertexAttribDivisorANGLE(WebGLuint index, WebGLuint divisor);
+    void DrawArraysInstancedANGLE(GLenum mode, GLint first,
+                                  GLsizei count, GLsizei primcount);
+    void DrawElementsInstancedANGLE(GLenum mode, GLsizei count,
+                                    GLenum type, WebGLintptr offset,
+                                    GLsizei primcount);
+    void VertexAttribDivisorANGLE(GLuint index, GLuint divisor);
 
     static bool IsSupported(const WebGLContext* context);
 

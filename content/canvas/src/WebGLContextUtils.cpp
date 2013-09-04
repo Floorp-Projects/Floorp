@@ -56,8 +56,8 @@ WebGLContext::GenerateWarning(const char *fmt, va_list ap)
 }
 
 CheckedUint32
-WebGLContext::GetImageSize(WebGLsizei height, 
-                           WebGLsizei width, 
+WebGLContext::GetImageSize(GLsizei height, 
+                           GLsizei width, 
                            uint32_t pixelSize,
                            uint32_t packOrUnpackAlignment)
 {
@@ -74,7 +74,7 @@ WebGLContext::GetImageSize(WebGLsizei height,
 }
 
 void
-WebGLContext::SynthesizeGLError(WebGLenum err)
+WebGLContext::SynthesizeGLError(GLenum err)
 {
     // If there is already a pending error, don't overwrite it;
     // but if there isn't, then we need to check for a gl error
@@ -90,7 +90,7 @@ WebGLContext::SynthesizeGLError(WebGLenum err)
 }
 
 void
-WebGLContext::SynthesizeGLError(WebGLenum err, const char *fmt, ...)
+WebGLContext::SynthesizeGLError(GLenum err, const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);

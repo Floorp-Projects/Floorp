@@ -16,7 +16,7 @@ namespace mozilla {
 class WebGLActiveInfo MOZ_FINAL
 {
 public:
-    WebGLActiveInfo(WebGLint size, WebGLenum type, const nsACString& name) :
+    WebGLActiveInfo(GLint size, GLenum type, const nsACString& name) :
         mSize(size),
         mType(type),
         mName(NS_ConvertASCIItoUTF16(name))
@@ -24,11 +24,11 @@ public:
 
     // WebIDL attributes
 
-    WebGLint Size() const {
+    GLint Size() const {
         return mSize;
     }
 
-    WebGLenum Type() const {
+    GLenum Type() const {
         return mType;
     }
 
@@ -41,8 +41,8 @@ public:
    NS_INLINE_DECL_REFCOUNTING(WebGLActiveInfo)
 
 protected:
-    WebGLint mSize;
-    WebGLenum mType;
+    GLint mSize;
+    GLenum mType;
     nsString mName;
 };
 

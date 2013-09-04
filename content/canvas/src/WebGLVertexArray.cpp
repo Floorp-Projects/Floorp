@@ -36,10 +36,10 @@ void WebGLVertexArray::Delete() {
     mAttribBuffers.Clear();
 }
 
-bool WebGLVertexArray::EnsureAttribIndex(WebGLuint index, const char *info)
+bool WebGLVertexArray::EnsureAttribIndex(GLuint index, const char *info)
 {
-    if (index >= WebGLuint(mContext->mGLMaxVertexAttribs)) {
-        if (index == WebGLuint(-1)) {
+    if (index >= GLuint(mContext->mGLMaxVertexAttribs)) {
+        if (index == GLuint(-1)) {
             mContext->ErrorInvalidValue("%s: index -1 is invalid. That probably comes from a getAttribLocation() call, "
                                         "where this return value -1 means that the passed name didn't correspond to an active attribute in "
                                         "the specified program.", info);

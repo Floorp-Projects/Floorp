@@ -80,8 +80,8 @@ private:
 
     // -------------------------------------------------------------------------
     // MEMBERS
-    WebGLuint mGLName;
-    WebGLenum mType;
+    GLuint mGLName;
+    GLenum mType;
 
     // -------------------------------------------------------------------------
     // FRIENDSHIPS
