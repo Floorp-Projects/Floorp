@@ -1789,7 +1789,7 @@ function screenShot(msg) {
   let highlights = msg.json.highlights;
 
   var document = curWindow.document;
-  var rect, win, width, height, left, top, needsOffset;
+  var rect, win, width, height, left, top;
   // node can be either a window or an arbitrary DOM node
   if (node == curWindow) {
     // node is a window
@@ -1798,8 +1798,6 @@ function screenShot(msg) {
     height = win.innerHeight;
     top = 0;
     left = 0;
-    // offset needed for highlights to take 'outerHeight' of window into account
-    needsOffset = true;
   }
   else {
     // node is an arbitrary DOM node
@@ -1809,8 +1807,6 @@ function screenShot(msg) {
     height = rect.height;
     top = rect.top;
     left = rect.left;
-    // offset for highlights not needed as they will be relative to this node
-    needsOffset = false;
   }
 
   var canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
@@ -1827,19 +1823,11 @@ function screenShot(msg) {
     ctx.save();
 
     for (var i = 0; i < highlights.length; ++i) {
-      var elem = highlights[i];
+      var elem = elementManager.getKnownElement(highlights[i], curWindow)
       rect = elem.getBoundingClientRect();
 
-      var offsetY = 0, offsetX = 0;
-      if (needsOffset) {
-        var offset = getChromeOffset(elem);
-        offsetX = offset.x;
-        offsetY = offset.y;
-      } else {
-        // Don't need to offset the window chrome, just make relative to containing node
-        offsetY = -top;
-        offsetX = -left;
-      }
+      var offsetY = -top;
+      var offsetX = -left;
 
       // Draw the rectangle
       ctx.strokeRect(rect.left + offsetX, rect.top + offsetY, rect.width, rect.height);
