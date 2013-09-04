@@ -960,14 +960,14 @@ xpc::CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandb
         // Pass on ownership of sbp to |sandbox|.
         JS_SetPrivate(sandbox, sbp.forget().get());
 
-      bool allowComponents = nsContentUtils::IsSystemPrincipal(principal) ||
-                             nsContentUtils::IsExpandedPrincipal(principal);
-      if (options.wantComponents && allowComponents &&
-          !nsXPCComponents::AttachComponentsObject(cx, GetObjectScope(sandbox)))
-          return NS_ERROR_XPC_UNEXPECTED;
+        bool allowComponents = nsContentUtils::IsSystemPrincipal(principal) ||
+                               nsContentUtils::IsExpandedPrincipal(principal);
+        if (options.wantComponents && allowComponents &&
+            !nsXPCComponents::AttachComponentsObject(cx, GetObjectScope(sandbox)))
+            return NS_ERROR_XPC_UNEXPECTED;
 
-      if (!XPCNativeWrapper::AttachNewConstructorObject(cx, sandbox))
-          return NS_ERROR_XPC_UNEXPECTED;
+        if (!XPCNativeWrapper::AttachNewConstructorObject(cx, sandbox))
+            return NS_ERROR_XPC_UNEXPECTED;
 
         if (!JS_DefineFunctions(cx, sandbox, SandboxFunctions))
             return NS_ERROR_XPC_UNEXPECTED;
@@ -1037,7 +1037,7 @@ nsXPCComponents_utils_Sandbox::Construct(nsIXPConnectWrappedNative *wrapper, JSC
  * For sandbox constructor the first argument can be a URI string in which case
  * we use the related Codebase Principal for the sandbox.
  */
-nsresult
+static nsresult
 GetPrincipalFromString(JSContext *cx, HandleString codebase, nsIPrincipal **principal)
 {
     MOZ_ASSERT(principal);
@@ -1063,10 +1063,10 @@ GetPrincipalFromString(JSContext *cx, HandleString codebase, nsIPrincipal **prin
 }
 
 /*
- * For sandbox constructor  the first argument can be a principal object or
+ * For sandbox constructor the first argument can be a principal object or
  * a script object principal (Document, Window).
  */
-nsresult
+static nsresult
 GetPrincipalOrSOP(JSContext *cx, HandleObject from, nsISupports **out)
 {
     MOZ_ASSERT(out);
@@ -1095,7 +1095,7 @@ GetPrincipalOrSOP(JSContext *cx, HandleObject from, nsISupports **out)
  * The first parameter of the sandbox constructor might be an array of principals, either in string
  * format or actual objects (see GetPrincipalOrSOP)
  */
-nsresult
+static nsresult
 GetExpandedPrincipal(JSContext *cx, HandleObject arrayObj, nsIExpandedPrincipal **out)
 {
     MOZ_ASSERT(out);
@@ -1159,38 +1159,39 @@ GetExpandedPrincipal(JSContext *cx, HandleObject arrayObj, nsIExpandedPrincipal 
 /*
  * Helper that tries to get a property form the options object.
  */
-nsresult
+static nsresult
 GetPropFromOptions(JSContext *cx, HandleObject from, const char *name, MutableHandleValue prop,
                    bool *found)
 {
-    if (!JS_HasProperty(cx, from, name, found))
-        return NS_ERROR_INVALID_ARG;
+    MOZ_ASSERT(found);
+    bool ok = JS_HasProperty(cx, from, name, found);
+    NS_ENSURE_TRUE(ok, NS_ERROR_INVALID_ARG);
 
-    if (*found && !JS_GetProperty(cx, from, name, prop))
-        return NS_ERROR_INVALID_ARG;
+    if (!*found)
+        return NS_OK;
 
+    ok = JS_GetProperty(cx, from, name, prop);
+    NS_ENSURE_TRUE(ok, NS_ERROR_INVALID_ARG);
     return NS_OK;
 }
 
 /*
  * Helper that tries to get a boolean property form the options object.
  */
-nsresult
+static nsresult
 GetBoolPropFromOptions(JSContext *cx, HandleObject from, const char *name, bool *prop)
 {
     MOZ_ASSERT(prop);
 
-
     RootedValue value(cx);
     bool found;
-    if (NS_FAILED(GetPropFromOptions(cx, from, name, &value, &found)))
-        return NS_ERROR_INVALID_ARG;
+    nsresult rv = GetPropFromOptions(cx, from, name, &value, &found);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (!found)
         return NS_OK;
 
-    if (!value.isBoolean())
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_TRUE(value.isBoolean(), NS_ERROR_INVALID_ARG);
 
     *prop = value.toBoolean();
     return NS_OK;
@@ -1199,24 +1200,22 @@ GetBoolPropFromOptions(JSContext *cx, HandleObject from, const char *name, bool 
 /*
  * Helper that tries to get an object property form the options object.
  */
-nsresult
+static nsresult
 GetObjPropFromOptions(JSContext *cx, HandleObject from, const char *name, JSObject **prop)
 {
     MOZ_ASSERT(prop);
 
     RootedValue value(cx);
     bool found;
-    if (NS_FAILED(GetPropFromOptions(cx, from, name, &value, &found)))
-        return NS_ERROR_INVALID_ARG;
+    nsresult rv = GetPropFromOptions(cx, from, name, &value, &found);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (!found) {
         *prop = NULL;
         return NS_OK;
     }
 
-    if (!value.isObject())
-        return NS_ERROR_INVALID_ARG;
-
+    NS_ENSURE_TRUE(value.isObject(), NS_ERROR_INVALID_ARG);
     *prop = &value.toObject();
     return NS_OK;
 }
@@ -1224,7 +1223,7 @@ GetObjPropFromOptions(JSContext *cx, HandleObject from, const char *name, JSObje
 /*
  * Helper that tries to get a string property form the options object.
  */
-nsresult
+static nsresult
 GetStringPropFromOptions(JSContext *cx, HandleObject from, const char *name, nsCString &prop)
 {
     RootedValue value(cx);
@@ -1246,7 +1245,7 @@ GetStringPropFromOptions(JSContext *cx, HandleObject from, const char *name, nsC
 /*
  * Helper that parsing the sandbox options object (from) and sets the fields of the incoming options struct (options).
  */
-nsresult
+static nsresult
 ParseOptionsObject(JSContext *cx, jsval from, SandboxOptions &options)
 {
     NS_ENSURE_TRUE(from.isObject(), NS_ERROR_INVALID_ARG);
