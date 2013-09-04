@@ -42,15 +42,6 @@ IPDL_SOURCES += [
     'ipc/TelephonyTypes.ipdlh'
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    XPIDL_SOURCES += [
-        'nsIGonkTelephonyProvider.idl',
-    ]
-    EXTRA_COMPONENTS += [
-        'gonk/TelephonyProvider.js',
-        'gonk/TelephonyProvider.manifest',
-    ]
-
 FAIL_ON_WARNINGS = True
 
 LIBXUL_LIBRARY = True

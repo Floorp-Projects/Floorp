@@ -4,9 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/telephony/TelephonyFactory.h"
-#ifdef MOZ_WIDGET_GONK
-#include "nsIGonkTelephonyProvider.h"
-#endif
 #include "nsServiceManagerUtils.h"
 #include "nsXULAppAPI.h"
 #include "TelephonyIPCProvider.h"
@@ -20,10 +17,6 @@ TelephonyFactory::CreateTelephonyProvider()
 
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     provider = new TelephonyIPCProvider();
-#ifdef MOZ_WIDGET_GONK
-  } else {
-    provider = do_CreateInstance(GONK_TELEPHONY_PROVIDER_CONTRACTID);
-#endif
   }
 
   return provider.forget();
