@@ -5,6 +5,7 @@
 
 #include "WebGLContext.h"
 #include "WebGLQuery.h"
+#include "GLContext.h"
 
 using namespace mozilla;
 

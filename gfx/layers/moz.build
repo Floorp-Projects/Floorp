@@ -209,6 +209,7 @@ CPP_SOURCES += [
     'CompositableClient.cpp',
     'CompositableHost.cpp',
     'CompositableTransactionParent.cpp',
+    'CompositingRenderTargetOGL.cpp',
     'Compositor.cpp',
     'CompositorChild.cpp',
     'CompositorCocoaWidgetHelper.cpp',

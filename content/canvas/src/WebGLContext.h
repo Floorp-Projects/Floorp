@@ -951,7 +951,7 @@ protected:
     void Invalidate();
     void DestroyResourcesAndContext();
 
-    void MakeContextCurrent() const { gl->MakeCurrent(); }
+    void MakeContextCurrent() const;
 
     // helpers
     void TexImage2D_base(GLenum target, GLint level, GLenum internalformat,

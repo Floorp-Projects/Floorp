@@ -6,6 +6,7 @@
 #include <stdarg.h>
 
 #include "WebGLContext.h"
+#include "GLContext.h"
 
 #include "prprf.h"
 
