@@ -23,6 +23,7 @@ public class testBookmarklets extends AboutHomeTest {
 
         // load a standard page so bookmarklets work
         inputAndLoadUrl(url);
+        verifyPageTitle("Browser Blank Page 01"); // Waiting for page title to ensure the page is loaded
 
         // verify that user-entered bookmarklets do *not* work
         enterUrl(js);
@@ -39,28 +40,33 @@ public class testBookmarklets extends AboutHomeTest {
         // add this using the UI, so we go through the content provider.
         addOrUpdateMobileBookmark(title, js);
 
-        // verify that bookmarklets clicked in awesomescreen work
-        /*  Removed by Bug 896576 - [fig] Remove [getBookmarksList] from BaseTest
-        ListView bookmarks = getBookmarksList(title);
+        // Open about:home in the Bookmarks page
+        openAboutHomeTab(AboutHomeTabs.BOOKMARKS);
 
-        Boolean found = false;
-        if (bookmarks == null) {
-            mAsserter.is(true, true, "Did not find the bookmarks section in the awesomebar");
-        } else {
-            for (int i = 0; i < bookmarks.getAdapter().getCount(); i++) {
-                Cursor c = (Cursor)bookmarks.getItemAtPosition(i);
-                String turl = c.getString(c.getColumnIndexOrThrow("url"));
-                if (turl.equals(js)) {
-                    found = true;
-                    mAsserter.is(1, 1, "Found bookmarklet added to bookmarks: " + js);
-                    mSolo.clickOnView(bookmarks.getChildAt(i));
-                }
+        ListView bookmarks = findListViewWithTag("bookmarks");
+        mAsserter.is(waitForListToLoad(bookmarks), true, "list is properly loaded");
+
+        int width = mDriver.getGeckoWidth();
+        int height = mDriver.getGeckoHeight();
+
+        // Scroll down so that the bookmarks list has more items on screen.
+        mActions.drag(width / 2, width / 2, height - 10, height / 2);
+
+        // Verify that bookmarklets clicked in awesomescreen work
+        boolean found = false;
+        for (int i = bookmarks.getHeaderViewsCount(); i < bookmarks.getAdapter().getCount(); i++) {
+            Cursor c = (Cursor)bookmarks.getItemAtPosition(i);
+            String aUrl = c.getString(c.getColumnIndexOrThrow("url"));
+            if (aUrl.equals(js)) {
+                found = true;
+                mAsserter.is(1, 1, "Found bookmarklet added to bookmarks: " + js);
+                mSolo.clickOnView(bookmarks.getChildAt(i));
             }
         }
+
         if (!found) {
             mAsserter.is(found, true, "Found the bookmark: " + js + " and clicked on it");
         }
-        */
 
         alerted = waitForTest(new BooleanTest() {
             @Override
