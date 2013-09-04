@@ -51,3 +51,7 @@ test-pref(media.webvtt.enabled,true) load 882549.html
 load 884459.html
 load 889042.html
 test-pref(media.webvtt.enabled,true) load 894104.html
+load 907986-1.html
+load 907986-2.html
+load 907986-3.html
+load 907986-4.html
