@@ -34,6 +34,8 @@ webidl_files = \
   BiquadFilterNode.webidl \
   Blob.webidl \
   BrowserElementDictionaries.webidl \
+  CallEvent.webidl \
+  CallsList.webidl \
   CameraControl.webidl \
   CameraManager.webidl \
   CanvasRenderingContext2D.webidl \
@@ -359,6 +361,9 @@ webidl_files = \
   SVGViewElement.webidl \
   SVGZoomAndPan.webidl \
   SVGZoomEvent.webidl \
+  Telephony.webidl \
+  TelephonyCall.webidl \
+  TelephonyCallGroup.webidl \
   Text.webidl \
   TextDecoder.webidl \
   TextEncoder.webidl \
@@ -445,12 +450,8 @@ endif
 
 ifdef MOZ_B2G_RIL
 webidl_files += \
-  CallsList.webidl \
   MozStkCommandEvent.webidl \
   MozVoicemail.webidl \
-  Telephony.webidl \
-  TelephonyCall.webidl \
-  TelephonyCallGroup.webidl \
   $(NULL)
 endif
 
@@ -495,7 +496,6 @@ endif
 
 ifdef MOZ_B2G_RIL
 webidl_files += \
-  CallEvent.webidl \
   CFStateChangeEvent.webidl \
   DataErrorEvent.webidl \
   IccCardLockErrorEvent.webidl \
