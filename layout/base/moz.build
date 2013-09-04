@@ -26,6 +26,7 @@ XPIDL_MODULE = 'layout_base'
 MODULE = 'layout'
 
 EXPORTS += [
+    'ActiveLayerTracker.h',
     'DisplayItemClip.h',
     'DisplayListClipState.h',
     'FrameLayerBuilder.h',
@@ -66,6 +67,7 @@ EXPORTS.mozilla += [
 ]
 
 SOURCES += [
+    'ActiveLayerTracker.cpp',
     'DisplayItemClip.cpp',
     'DisplayListClipState.cpp',
     'FrameLayerBuilder.cpp',
