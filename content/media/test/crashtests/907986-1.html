@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+var context = new window.OfflineAudioContext(1, 100, 48000);
+context.oncomplete = function(e) {
+    document.documentElement.removeAttribute("class");
+};
+// zero front vector
+context.listener.setOrientation(0, 0, 0, 6.311749985202524e+307, 0, 0);
+var panner = context.createPanner();
+panner.setPosition(6.311749985202524e+307, 4, 6.311749985202524e+307);
+panner.connect(context.destination);
+var source = context.createOscillator();
+source.connect(panner);
+source.start(0);
+context.startRendering();
+</script>
