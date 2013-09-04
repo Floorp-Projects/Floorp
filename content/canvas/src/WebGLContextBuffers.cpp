@@ -113,6 +113,12 @@ WebGLContext::BindBufferRange(WebGLenum target, WebGLuint index, WebGLBuffer* bu
         } else if (target != buffer->Target()) {
             return ErrorInvalidOperation("bindBuffer: buffer already bound to a different target");
         }
+        CheckedInt<WebGLsizeiptr> checked_neededByteLength = CheckedInt<WebGLsizeiptr>(offset) + size;
+        if (!checked_neededByteLength.isValid() ||
+            checked_neededByteLength.value() > buffer->ByteLength())
+        {
+            return ErrorInvalidValue("bindBufferRange: invalid range");
+        }
     }
 
     WebGLRefPtr<WebGLBuffer>* bufferSlot = GetBufferSlotByTarget(target, "bindBuffer");
