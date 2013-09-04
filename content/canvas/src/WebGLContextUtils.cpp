@@ -55,6 +55,16 @@ WebGLContext::GenerateWarning(const char *fmt, va_list ap)
     }
 }
 
+bool
+WebGLContext::ShouldGenerateWarnings() const
+{
+    if (mMaxWarnings == -1) {
+        return true;
+    }
+
+    return mAlreadyGeneratedWarnings < mMaxWarnings;
+}
+
 CheckedUint32
 WebGLContext::GetImageSize(GLsizei height, 
                            GLsizei width, 
@@ -109,6 +119,12 @@ WebGLContext::ErrorInvalidEnum(const char *fmt, ...)
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_INVALID_ENUM);
+}
+
+void
+WebGLContext::ErrorInvalidEnumInfo(const char *info, GLenum enumvalue)
+{
+    return ErrorInvalidEnum("%s: invalid enum value 0x%x", info, enumvalue);
 }
 
 void
@@ -207,4 +223,16 @@ WebGLContext::IsTextureFormatCompressed(GLenum format)
     NS_NOTREACHED("Invalid WebGL texture format?");
     NS_ABORT();
     return false;
+}
+
+void
+WebGLContext::UpdateWebGLErrorAndClearGLError(GLenum *currentGLError)
+{
+    // get and clear GL error in ALL cases
+    GLenum error = gl->GetAndClearError();
+    if (currentGLError)
+        *currentGLError = error;
+    // only store in mWebGLError if is hasn't already recorded an error
+    if (!mWebGLError)
+        mWebGLError = error;
 }
