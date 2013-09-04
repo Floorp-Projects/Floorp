@@ -113,6 +113,7 @@
         f("other2",           OTHER,   BYTES, 222 * MB);
         f("perc2",            OTHER,   PERCENTAGE, 10000);
         f("perc1",            OTHER,   PERCENTAGE, 4567);
+        f("compartments/user/https:\\\\very-long-url.com\\very-long\\oh-so-long\\really-quite-long.html?a=2&b=3&c=4&d=5&e=abcdefghijklmnopqrstuvwxyz&f=123456789123456789123456789", OTHER, COUNT, 1);
       }
     },
     { name: "smaps",
@@ -133,7 +134,7 @@
     { name: "compartments",
       collectReports: function(aCbObj, aClosure) {
         function f(aP) {
-          aCbObj.callback("", aP, OTHER, COUNT, 1, "", aClosure);
+          aCbObj.callback("", aP, OTHER, COUNT, 1, "Desc.", aClosure);
         }
         f("compartments/user/bar");
         f("compartments/system/bar");
@@ -271,6 +272,15 @@ Explicit Allocations\n\
 └────0.58 MB (00.09%) ++ (2 tiny)\n\
 \n\
 Other Measurements\n\
+\n\
+5 (100.0%) -- compartments\n\
+├──3 (60.00%) -- user\n\
+│  ├──1 (20.00%) ── bar\n\
+│  ├──1 (20.00%) ── foo\n\
+│  └──1 (20.00%) ── https://very-long-url.com/very-long/oh-so-long/really-quite-long.html?a=2&b=3&c=4&d=5&e=abcdefghijklmnopqrstuvwxyz&f=123456789123456789123456789\n\
+└──2 (40.00%) -- system\n\
+   ├──1 (20.00%) ── bar\n\
+   └──1 (20.00%) ── foo\n\
 \n\
 166.00 MB (100.0%) -- other1\n\
 ├──111.00 MB (66.87%) ── a/b\n\
@@ -444,6 +454,15 @@ Swap Breakdown\n\
 53,248 B (100.0%) ++ swap\n\
 \n\
 Other Measurements\n\
+\n\
+5 (100.0%) -- compartments\n\
+├──3 (60.00%) -- user\n\
+│  ├──1 (20.00%) ── bar\n\
+│  ├──1 (20.00%) ── foo\n\
+│  └──1 (20.00%) ── https://very-long-url.com/very-long/oh-so-long/really-quite-long.html?a=2&b=3&c=4&d=5&e=abcdefghijklmnopqrstuvwxyz&f=123456789123456789123456789\n\
+└──2 (40.00%) -- system\n\
+   ├──1 (20.00%) ── bar\n\
+   └──1 (20.00%) ── foo\n\
 \n\
 174,063,616 B (100.0%) -- other1\n\
 ├──116,391,936 B (66.87%) ── a/b\n\
