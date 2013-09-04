@@ -26,6 +26,7 @@
 #include "nsPropertyTable.h"             // for member
 #include "nsTHashtable.h"                // for member
 #include "mozilla/dom/DocumentBinding.h"
+#include "Units.h"
 
 class imgIRequest;
 class nsAString;
@@ -622,8 +623,7 @@ public:
    */
   Element* GetRootElement() const;
 
-  virtual nsViewportInfo GetViewportInfo(uint32_t aDisplayWidth,
-                                         uint32_t aDisplayHeight) = 0;
+  virtual nsViewportInfo GetViewportInfo(const mozilla::ScreenIntSize& aDisplaySize) = 0;
 
   /**
    * True iff this doc will ignore manual character encoding overrides.
