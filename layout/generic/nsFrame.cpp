@@ -4492,14 +4492,9 @@ nsIFrame::IsLeaf() const
 
 class LayerActivity {
 public:
-  LayerActivity(nsIFrame* aFrame)
-    : mFrame(aFrame)
-    , mChangeHint(nsChangeHint(0))
-    , mMutationCount(0)
-  {}
+  LayerActivity(nsIFrame* aFrame) : mFrame(aFrame), mChangeHint(nsChangeHint(0)) {}
   ~LayerActivity();
   nsExpirationState* GetExpirationState() { return &mState; }
-  uint32_t GetMutationCount() { return mMutationCount; }
 
   nsIFrame* mFrame;
   nsExpirationState mState;
@@ -4508,7 +4503,6 @@ public:
   // The presence of those bits indicates whether opacity or transform
   // changes have been detected.
   nsChangeHint mChangeHint;
-  uint32_t mMutationCount;
 };
 
 class LayerActivityTracker MOZ_FINAL : public nsExpirationTracker<LayerActivity,4> {
@@ -4571,7 +4565,6 @@ nsIFrame::MarkLayersActive(nsChangeHint aChangeHint)
     static_cast<LayerActivity*>(properties.Get(LayerActivityProperty()));
   if (layerActivity) {
     gLayerActivityTracker->MarkUsed(layerActivity);
-    layerActivity->mMutationCount++;
   } else {
     if (!gLayerActivityTracker) {
       gLayerActivityTracker = new LayerActivityTracker();
@@ -4595,9 +4588,6 @@ nsIFrame::AreLayersMarkedActive(nsChangeHint aChangeHint)
   LayerActivity* layerActivity =
     static_cast<LayerActivity*>(Properties().Get(LayerActivityProperty()));
   if (layerActivity && (layerActivity->mChangeHint & aChangeHint)) {
-    if (aChangeHint & nsChangeHint_UpdateOpacityLayer) {
-      return layerActivity->GetMutationCount() > 1;
-    }
     return true;
   }
   if (aChangeHint & nsChangeHint_UpdateTransformLayer &&
