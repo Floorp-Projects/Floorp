@@ -12,6 +12,7 @@
 #include "jit/FixedList.h"
 #include "jit/IonLinker.h"
 #include "jit/IonSpewer.h"
+#include "jit/PerfSpewer.h"
 #include "jit/VMFunctions.h"
 
 #include "jsscriptinlines.h"
@@ -164,6 +165,10 @@ BaselineCompiler::compile()
     IonSpew(IonSpew_BaselineScripts, "Created BaselineScript %p (raw %p) for %s:%d",
             (void *) script->baselineScript(), (void *) code->raw(),
             script->filename(), script->lineno);
+
+#ifdef JS_ION_PERF
+    writePerfSpewerBaselineProfile(script, code);
+#endif
 
     JS_ASSERT(pcMappingIndexEntries.length() > 0);
     baselineScript->copyPCMappingIndexEntries(&pcMappingIndexEntries[0]);
