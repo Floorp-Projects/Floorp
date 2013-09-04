@@ -6,16 +6,10 @@
 #ifndef WEBGLTYPES_H_
 #define WEBGLTYPES_H_
 
-// Manual reflection of WebIDL typedefs
-typedef uint32_t WebGLenum;
-typedef uint32_t WebGLbitfield;
-typedef int32_t WebGLint;
-typedef int32_t WebGLsizei;
+// Manual reflection of WebIDL typedefs that are different from the
+// corresponding OpenGL typedefs.
 typedef int64_t WebGLsizeiptr;
 typedef int64_t WebGLintptr;
-typedef uint32_t WebGLuint;
-typedef float WebGLfloat;
-typedef float WebGLclampf;
 typedef bool WebGLboolean;
 
 namespace mozilla {

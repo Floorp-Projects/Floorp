@@ -102,7 +102,7 @@ WebGLTexture::SetDontKnowIfNeedFakeBlack() {
 }
 
 void
-WebGLTexture::Bind(WebGLenum aTarget) {
+WebGLTexture::Bind(GLenum aTarget) {
     // this function should only be called by bindTexture().
     // it assumes that the GL context is already current.
 
@@ -135,9 +135,9 @@ WebGLTexture::Bind(WebGLenum aTarget) {
 }
 
 void
-WebGLTexture::SetImageInfo(WebGLenum aTarget, WebGLint aLevel,
-                  WebGLsizei aWidth, WebGLsizei aHeight,
-                  WebGLenum aFormat, WebGLenum aType)
+WebGLTexture::SetImageInfo(GLenum aTarget, GLint aLevel,
+                  GLsizei aWidth, GLsizei aHeight,
+                  GLenum aFormat, GLenum aType)
 {
     if ( (aTarget == LOCAL_GL_TEXTURE_2D) != (mTarget == LOCAL_GL_TEXTURE_2D) )
         return;
@@ -173,11 +173,11 @@ WebGLTexture::SetCustomMipmap() {
         ImageInfo imageInfo = ImageInfoAt(0, 0);
         NS_ASSERTION(imageInfo.IsPowerOfTwo(), "this texture is NPOT, so how could GenerateMipmap() ever accept it?");
 
-        WebGLsizei size = std::max(imageInfo.mWidth, imageInfo.mHeight);
+        GLsizei size = std::max(imageInfo.mWidth, imageInfo.mHeight);
 
         // so, the size is a power of two, let's find its log in base 2.
         size_t maxLevel = 0;
-        for (WebGLsizei n = size; n > 1; n >>= 1)
+        for (GLsizei n = size; n > 1; n >>= 1)
             ++maxLevel;
 
         EnsureMaxLevelWithCustomImagesAtLeast(maxLevel);
