@@ -184,15 +184,15 @@ function _do_quit() {
 }
 
 function _format_exception_stack(stack) {
-  // frame is of the form "fname(args)@file:line"
-  let frame_regexp = new RegExp("(.*)\\(.*\\)@(.*):(\\d*)", "g");
+  // frame is of the form "fname@file:line"
+  let frame_regexp = new RegExp("(.*)@(.*):(\\d*)", "g");
   return stack.split("\n").reduce(function(stack_msg, frame) {
     if (frame) {
       let parts = frame_regexp.exec(frame);
       if (parts) {
-        return stack_msg + "JS frame :: " + parts[2] + " :: " +
-          (parts[1] ? parts[1] : "anonymous") +
-          " :: line " + parts[3] + "\n";
+        let [ _, func, file, line ] = parts;
+        return stack_msg + "JS frame :: " + file + " :: " +
+          (func || "anonymous") + " :: line " + line + "\n";
       }
       else { /* Could be a -e (command line string) style location. */
         return stack_msg + "JS frame :: " + frame + "\n";

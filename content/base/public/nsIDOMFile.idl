@@ -59,10 +59,12 @@ interface nsIDOMBlob : nsISupports
   [notxpcom] FileInfo getFileInfo(in FileManager aFileManager);
 };
 
-[scriptable, builtinclass, uuid(6928584d-7d87-4d56-9ce1-1c89c24f2c6a)]
+[scriptable, builtinclass, uuid(0acb4135-9f79-4516-ba92-b5fba5203620)]
 interface nsIDOMFile : nsIDOMBlob
 {
   readonly attribute DOMString name;
+
+  readonly attribute DOMString path;
 
   [implicit_jscontext]
   readonly attribute jsval lastModifiedDate;

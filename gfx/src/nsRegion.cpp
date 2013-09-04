@@ -246,7 +246,9 @@ void nsRegion::Init()
   mRectListHead.prev = mRectListHead.next = &mRectListHead;
   mCurRect = &mRectListHead;
   mRectCount = 0;
-  mBoundRect.SetRect (0, 0, 0, 0);
+  MOZ_ASSERT(mBoundRect.x == 0 && mBoundRect.y == 0 &&
+             mBoundRect.width == 0 && mBoundRect.height == 0,
+             "Caller must have initialized mBoundRect");
 }
 
 inline void nsRegion::InsertBefore (RgnRect* aNewRect, RgnRect* aRelativeRect)

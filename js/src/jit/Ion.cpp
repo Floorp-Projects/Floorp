@@ -1228,14 +1228,15 @@ OptimizeMIR(MIRGenerator *mir)
     if (mir->shouldCancel("Phi reverse mapping"))
         return false;
 
-    // This pass also removes copies.
-    if (!ApplyTypeInformation(mir, graph))
-        return false;
-    IonSpewPass("Apply types");
-    AssertExtendedGraphCoherency(graph);
+    if (!mir->compilingAsmJS()) {
+        if (!ApplyTypeInformation(mir, graph))
+            return false;
+        IonSpewPass("Apply types");
+        AssertExtendedGraphCoherency(graph);
 
-    if (mir->shouldCancel("Apply types"))
-        return false;
+        if (mir->shouldCancel("Apply types"))
+            return false;
+    }
 
     if (graph.entryBlock()->info().executionMode() == ParallelExecution) {
         ParallelSafetyAnalysis analysis(mir, graph);
@@ -1361,7 +1362,7 @@ OptimizeMIR(MIRGenerator *mir)
     // Passes after this point must not move instructions; these analyses
     // depend on knowing the final order in which instructions will execute.
 
-    if (js_IonOptions.edgeCaseAnalysis) {
+    if (js_IonOptions.edgeCaseAnalysis && !mir->compilingAsmJS()) {
         EdgeCaseAnalysis edgeCaseAnalysis(mir, graph);
         if (!edgeCaseAnalysis.analyzeLate())
             return false;
@@ -1372,14 +1373,16 @@ OptimizeMIR(MIRGenerator *mir)
             return false;
     }
 
-    // Note: check elimination has to run after all other passes that move
-    // instructions. Since check uses are replaced with the actual index, code
-    // motion after this pass could incorrectly move a load or store before its
-    // bounds check.
-    if (!EliminateRedundantChecks(graph))
-        return false;
-    IonSpewPass("Bounds Check Elimination");
-    AssertGraphCoherency(graph);
+    if (!mir->compilingAsmJS()) {
+        // Note: check elimination has to run after all other passes that move
+        // instructions. Since check uses are replaced with the actual index,
+        // code motion after this pass could incorrectly move a load or store
+        // before its bounds check.
+        if (!EliminateRedundantChecks(graph))
+            return false;
+        IonSpewPass("Bounds Check Elimination");
+        AssertGraphCoherency(graph);
+    }
 
     return true;
 }
@@ -2451,6 +2454,8 @@ jit::Invalidate(JSContext *cx, JSScript *script, ExecutionMode mode, bool resetU
         if (!scripts.append(script->parallelIonScript()->recompileInfo()))
             return false;
         break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("No such execution mode");
     }
 
     Invalidate(cx, scripts, resetUses);
@@ -2542,6 +2547,9 @@ jit::ForbidCompilation(JSContext *cx, JSScript *script, ExecutionMode mode)
 
         script->setParallelIonScript(ION_DISABLED_SCRIPT);
         return;
+
+      default:
+        MOZ_ASSUME_UNREACHABLE("No such execution mode");
     }
 
     MOZ_ASSUME_UNREACHABLE("No such execution mode");

@@ -21,6 +21,7 @@
 // actually run.)
 
 #include "jsapi.h"
+#include "NamespaceImports.h"
 
 void breakpoint();
 

@@ -10,12 +10,13 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/PodOperations.h"
 
-#include "jsapi.h"
 #include "jsutil.h"
+#include "NamespaceImports.h"
 
 #include "js/RootingAPI.h"
 #include "vm/Unicode.h"
 
+class JSAutoByteString;
 class JSFlatString;
 class JSLinearString;
 class JSStableString;

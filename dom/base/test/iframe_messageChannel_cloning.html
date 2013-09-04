@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+  <script type="application/javascript">
+
+  function ok(a, msg) {
+    window.parent.postMessage({ status: a ? "OK" : "KO", message: msg }, "*");
+  }
+
+  window.addEventListener('message', receiveMessage, false);
+  function receiveMessage(evt) {
+    ok (evt.data, "Data received");
+    ok (evt.data.port instanceof MessagePort, "Data contains a MessagePort");
+
+    var a = new MessageChannel();
+    window.parent.postMessage({ status: "FINISH", port: a.port2 }, '*');
+  }
+
+  </script>
+</body>
+</html>
+

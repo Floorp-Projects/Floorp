@@ -351,7 +351,6 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
       NS_LossyConvertUTF16toASCII cHardware(mHardware);
 
       if (cHardware.Equals("antares") ||
-          cHardware.Equals("endeavoru") ||
           cHardware.Equals("harmony") ||
           cHardware.Equals("picasso") ||
           cHardware.Equals("picasso_e") ||
@@ -381,10 +380,11 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
         // Gingerbread HTC devices are whitelisted.
         // Gingerbread Samsung devices are whitelisted except for:
         //   Samsung devices identified in Bug 847837
-        //   Samsung SGH-T989 (Bug 818363)
+        // Gingerbread Sony devices are whitelisted.
         // All other Gingerbread devices are blacklisted.
         bool isWhitelisted =
           cManufacturer.Equals("htc", nsCaseInsensitiveCStringComparator()) ||
+          (cManufacturer.Find("sony", true) != -1) ||
           cManufacturer.Equals("samsung", nsCaseInsensitiveCStringComparator());
 
         if (cModel.Equals("GT-I8160", nsCaseInsensitiveCStringComparator()) ||
@@ -397,7 +397,6 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
             cModel.Equals("GT-S7500T", nsCaseInsensitiveCStringComparator()) ||
             cModel.Equals("GT-S7500L", nsCaseInsensitiveCStringComparator()) ||
             cModel.Equals("GT-S6500T", nsCaseInsensitiveCStringComparator()) ||
-            cModel.Equals("SGH-T989", nsCaseInsensitiveCStringComparator()) ||
             cHardware.Equals("smdkc110", nsCaseInsensitiveCStringComparator()) ||
             cHardware.Equals("smdkc210", nsCaseInsensitiveCStringComparator()) ||
             cHardware.Equals("herring", nsCaseInsensitiveCStringComparator()) ||
@@ -442,7 +441,6 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
         //     Samsung SGH-I717 (Bug 845729)
         //     Samsung SGH-I727 (Bug 845729)
         //     Samsung SGH-I757 (Bug 845729)
-        //     Samsung SGH-T989 (Bug 845729)
         //   All Galaxy nexus ICS devices
         //   Sony Xperia Ion (LT28) ICS devices
         bool isWhitelisted =
@@ -452,8 +450,7 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
 
         if (cModel.Find("SGH-I717", true) != -1 ||
             cModel.Find("SGH-I727", true) != -1 ||
-            cModel.Find("SGH-I757", true) != -1 ||
-            cModel.Find("SGH-T989", true) != -1)
+            cModel.Find("SGH-I757", true) != -1)
         {
           isWhitelisted = false;
         }
@@ -470,8 +467,6 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
         // Blocklist:
         //   Samsung devices from bug 812881 and 853522.
         //   Motorola XT890 from bug 882342.
-        //   All Sony devices (Bug 845734)
-
         bool isBlocklisted =
           cModel.Find("GT-P3100", true) != -1 ||
           cModel.Find("GT-P3110", true) != -1 ||
@@ -479,8 +474,7 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
           cModel.Find("GT-P5100", true) != -1 ||
           cModel.Find("GT-P5110", true) != -1 ||
           cModel.Find("GT-P5113", true) != -1 ||
-          cModel.Find("XT890", true) != -1 ||
-          cManufacturer.Find("Sony", true) != -1;
+          cModel.Find("XT890", true) != -1;
 
         if (isBlocklisted) {
           *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;

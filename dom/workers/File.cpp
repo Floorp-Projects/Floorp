@@ -354,6 +354,29 @@ private:
   }
 
   static bool
+  GetPath(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aIdval,
+          JS::MutableHandle<JS::Value> aVp)
+  {
+    nsIDOMFile* file = GetInstancePrivate(aCx, aObj, "path");
+    if (!file) {
+      return false;
+    }
+
+    nsString path;
+    if (NS_FAILED(file->GetPath(path))) {
+      path.Truncate();
+    }
+
+    JSString* jsPath = JS_NewUCStringCopyN(aCx, path.get(), path.Length());
+    if (!jsPath) {
+      return false;
+    }
+
+    aVp.set(STRING_TO_JSVAL(jsPath));
+    return true;
+  }
+
+  static bool
   GetLastModifiedDate(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aIdval,
                       JS::MutableHandle<JS::Value> aVp)
   {
@@ -381,6 +404,8 @@ JSClass File::sClass = {
 
 const JSPropertySpec File::sProperties[] = {
   { "name", 0, PROPERTY_FLAGS, JSOP_WRAPPER(GetName),
+    JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
+  { "path", 0, PROPERTY_FLAGS, JSOP_WRAPPER(GetPath),
     JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
   { "lastModifiedDate", 0, PROPERTY_FLAGS, JSOP_WRAPPER(GetLastModifiedDate),
     JSOP_WRAPPER(js_GetterOnlyPropertyStub) },

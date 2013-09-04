@@ -7,11 +7,39 @@
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"></script>
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/NativeKeyCodes.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <style>
+    #a {
+      background-color: transparent;
+      transition: background-color 0.1s linear;
+    }
+    #a:focus {
+      background-color: red;
+    }
+    .slidin {
+      border: green 1px solid;
+      width: 10px;
+      height: 10px;
+      animation-name: slidein;
+      animation-duration: 1s;
+    }
+    @keyframes slidein {
+      from {
+        margin-left: 100%;
+      }
+      to {
+        margin-left: 0;
+      }
+    }
+  </style>
 </head>
 <body>
 <div id="display">
   <input id="input-text">
   <button id="button">button</button>
+  <a id="a" href="about:blank">hyper link</a>
+  <div id="scrollable-div" style="overflow: auto; width: 30px; height: 30px;"><div id="scrolled-div" style="width: 10px; height: 10px;"></div></div>
+  <form id="form"></form>
+  <div id="animated-div"></div>
 </div>
 <div id="content" style="display: none">
 </div>
@@ -28,6 +56,7 @@ const kIsWin = (navigator.platform.indexOf("Win") == 0);
 
 var gEvent = null;
 var gCopiedEvent = [];
+var gCallback = null;
 
 function onEvent(aEvent)
 {
@@ -39,6 +68,7 @@ function onEvent(aEvent)
       gCopiedEvent.push({ name: attr, value: aEvent[attr]});
     }
   }
+  setTimeout(gCallback, 0);
 }
 
 const WIN_KL_US = 0x409;
@@ -49,107 +79,452 @@ const NATIVE_CONTROL_RIGHT = 0x0800;
 const NATIVE_META_RIGHT    = 0x8000;
 
 const kTests = [
-  {  description: "nsKeyEvent (keydown of 'a' key without modifiers)",
-     targetID: "input-text", eventType: "keydown",
-     dispatchEvent: function () {
-       document.getElementById(this.targetID).value = "";
-       document.getElementById(this.targetID).focus();
-       if (kIsWin) {
-         gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_A, 0, "a", "a");
-       } else if (kIsMac) {
-         gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_A, 0, "a", "a");
-       }
-     },
-     canRun: function () {
-       return (kIsMac || kIsWin);
-     },
-     todoMismatch: [ "key" ],
+  { description: "nsScriptErrorEvent",
+    targetID: "input-text", eventType: "error",
+    dispatchEvent: function () {
+      return;
+    },
+    canRun: function () {
+      todo(false, "nsScriptErrorEvent isn't tested");
+      return false;
+    },
+    todoMismatch: [],
   },
-  {  description: "nsKeyEvent (keyup of 'a' key without modifiers)",
-     targetID: "input-text", eventType: "keydown",
-     dispatchEvent: function () {
-       document.getElementById(this.targetID).value = "";
-       document.getElementById(this.targetID).focus();
-       if (kIsWin) {
-         gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_A, 0, "a", "a");
-       } else if (kIsMac) {
-         gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_A, 0, "a", "a");
-       }
-     },
-     canRun: function () {
-       return (kIsMac || kIsWin);
-     },
-     todoMismatch: [ "key" ],
+  { description: "nsScrollPortEvent (overflow, vertical)",
+    targetID: "scrollable-div", eventType: "overflow",
+    dispatchEvent: function () {
+      document.getElementById("scrolled-div").style.height = "500px";
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
   },
-  {  description: "nsKeyEvent (keypress of 'b' key with Shift)",
-     targetID: "input-text", eventType: "keypress",
-     dispatchEvent: function () {
-       document.getElementById(this.targetID).value = "";
-       document.getElementById(this.targetID).focus();
-       if (kIsWin) {
-         gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_B, NATIVE_SHIFT_LEFT, "B", "B");
-       } else if (kIsMac) {
-         gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_B, NATIVE_SHIFT_LEFT, "B", "B");
-       }
-     },
-     canRun: function () {
-       return (kIsMac || kIsWin);
-     },
-     // "defaultPrevented" becomes true because the editor consumes the keypress event.
-     todoMismatch: [ "key", "defaultPrevented" ],
+  { description: "nsScrollPortEvent (overflow, horizontal)",
+    targetID: "scrollable-div", eventType: "overflow",
+    dispatchEvent: function () {
+      document.getElementById("scrolled-div").style.width = "500px";
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
   },
-  {  description: "nsKeyEvent (keypress of 'c' key with Accel)",
-     targetID: "input-text", eventType: "keypress",
-     dispatchEvent: function () {
-       document.getElementById(this.targetID).value = "";
-       document.getElementById(this.targetID).focus();
-       if (kIsWin) {
-         gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_C, NATIVE_CONTROL_RIGHT, "\u0003", "c");
-       } else if (kIsMac) {
-         gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_C, NATIVE_META_RIGHT, "c", "c");
-       }
-     },
-     canRun: function () {
-       return (kIsMac || kIsWin);
-     },
-     // "defaultPrevented" becomes true because the editor consumes the keypress event.
-     todoMismatch: [ "key", "defaultPrevented" ],
+  { description: "nsScrollAreaEvent (MozScrolledAreaChanged, spreading)",
+    target: function () { return document; }, eventType: "MozScrolledAreaChanged",
+    dispatchEvent: function () {
+      document.getElementById("scrollable-div").style.width = "50000px";
+      document.getElementById("scrollable-div").style.height = "50000px";
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
   },
-  {  description: "nsMouseEvent (mousedown of left button without modifier)",
-     targetID: "button", eventType: "mousedown",
-     dispatchEvent: function () {
-       synthesizeMouseAtCenter(document.getElementById(this.targetID),
-                               { button: 0 });
-     },
-     canRun: function () {
-       return true;
-     },
-     todoMismatch: [],
+  { description: "nsScrollAreaEvent (MozScrolledAreaChanged, shrinking)",
+    target: function () { return document; }, eventType: "MozScrolledAreaChanged",
+    dispatchEvent: function () {
+      document.getElementById("scrollable-div").style.width = "30px";
+      document.getElementById("scrollable-div").style.height = "30px";
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
   },
-  {  description: "nsMouseEvent (click of middle button with Shift)",
-     // XXX I'm not sure why middle click event isn't fired on button element.
-     targetID: "input-text", eventType: "click",
-     dispatchEvent: function () {
-       document.getElementById(this.targetID).value = "";
-       synthesizeMouseAtCenter(document.getElementById(this.targetID),
-                               { button: 1, shiftKey: true, pressure: 0.5 });
-     },
-     canRun: function () {
-       return true;
-     },
-     todoMismatch: [],
+  { description: "nsKeyEvent (keydown of 'a' key without modifiers)",
+    targetID: "input-text", eventType: "keydown",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      document.getElementById(this.targetID).focus();
+      if (kIsWin) {
+        gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_A, 0, "a", "a");
+      } else if (kIsMac) {
+        gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_A, 0, "a", "a");
+      }
+    },
+    canRun: function () {
+      return (kIsMac || kIsWin);
+    },
+    todoMismatch: [ "key" ],
   },
-  {  description: "nsMouseEvent (mouseup of right button with Alt)",
-     targetID: "button", eventType: "mouseup",
-     dispatchEvent: function () {
-       document.getElementById(this.targetID).value = "";
-       synthesizeMouseAtCenter(document.getElementById(this.targetID),
-                               { button: 2, altKey: true });
-     },
-     canRun: function () {
-       return true;
-     },
-     todoMismatch: [],
+  { description: "nsKeyEvent (keyup of 'a' key without modifiers)",
+    targetID: "input-text", eventType: "keydown",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      document.getElementById(this.targetID).focus();
+      if (kIsWin) {
+        gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_A, 0, "a", "a");
+      } else if (kIsMac) {
+        gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_A, 0, "a", "a");
+      }
+    },
+    canRun: function () {
+      return (kIsMac || kIsWin);
+    },
+    todoMismatch: [ "key" ],
+  },
+  { description: "nsKeyEvent (keypress of 'b' key with Shift)",
+    targetID: "input-text", eventType: "keypress",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      document.getElementById(this.targetID).focus();
+      if (kIsWin) {
+        gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_B, NATIVE_SHIFT_LEFT, "B", "B");
+      } else if (kIsMac) {
+        gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_B, NATIVE_SHIFT_LEFT, "B", "B");
+      }
+    },
+    canRun: function () {
+      return (kIsMac || kIsWin);
+    },
+    // "defaultPrevented" becomes true because the editor consumes the keypress event.
+    todoMismatch: [ "key", "defaultPrevented" ],
+  },
+  { description: "nsKeyEvent (keypress of 'c' key with Accel)",
+    targetID: "input-text", eventType: "keypress",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      document.getElementById(this.targetID).focus();
+      if (kIsWin) {
+        gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_C, NATIVE_CONTROL_RIGHT, "\u0003", "c");
+      } else if (kIsMac) {
+        gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_C, NATIVE_META_RIGHT, "c", "c");
+      }
+    },
+    canRun: function () {
+      return (kIsMac || kIsWin);
+    },
+    // "defaultPrevented" becomes true because the editor consumes the keypress event.
+    todoMismatch: [ "key", "defaultPrevented" ],
+  },
+  { description: "nsMouseEvent (mousedown of left button without modifier)",
+    targetID: "button", eventType: "mousedown",
+    dispatchEvent: function () {
+      synthesizeMouseAtCenter(document.getElementById(this.targetID),
+                              { button: 0 });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsMouseEvent (click of middle button with Shift)",
+    // XXX I'm not sure why middle click event isn't fired on button element.
+    targetID: "input-text", eventType: "click",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      synthesizeMouseAtCenter(document.getElementById(this.targetID),
+                              { button: 1, shiftKey: true, pressure: 0.5 });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsMouseEvent (mouseup of right button with Alt)",
+    targetID: "button", eventType: "mouseup",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      synthesizeMouseAtCenter(document.getElementById(this.targetID),
+                              { button: 2, altKey: true });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsDragEvent",
+    targetID: "input-text", eventType: "dragstart",
+    dispatchEvent: function () {
+      return;
+    },
+    canRun: function () {
+      todo(false, "nsDragEvent isn't tested");
+      return false;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsTextEvent (text)",
+    targetID: "input-text", eventType: "text",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      document.getElementById(this.targetID).focus();
+      synthesizeComposition({ type: "compositionstart" });
+      synthesizeComposition({ type: "compositionupdate", data: "\u306D" });
+      synthesizeText({ "composition":
+        { "string": "\u306D",
+          "clauses":
+          [
+            { "length": 0, "attr": 0 }
+          ]
+        },
+        "caret": { "start": 1, "length": 0 }
+      });
+      synthesizeComposition({ type: "compositionend", data: "\u732B" });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "nsCompositionEvent (compositionupdate)",
+    targetID: "input-text", eventType: "compositionupdate",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      document.getElementById(this.targetID).focus();
+      synthesizeComposition({ type: "compositionstart" });
+      synthesizeComposition({ type: "compositionupdate", data: "\u30E9\u30FC\u30E1\u30F3" });
+      synthesizeText({ "composition":
+        { "string": "\u30E9\u30FC\u30E1\u30F3",
+          "clauses":
+          [
+            { "length": 0, "attr": 0 }
+          ]
+        },
+        "caret": { "start": 4, "length": 0 }
+      });
+      synthesizeComposition({ type: "compositionend", data: "\u30E9\u30FC\u30E1\u30F3" });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "nsMouseScrollEvent (DOMMouseScroll, vertical)",
+    targetID: "input-text", eventType: "DOMMouseScroll",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      synthesizeWheel(document.getElementById(this.targetID), 3, 4,
+                      { deltaY: 30, lineOrPageDeltaY: 2 });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "nsMouseScrollEvent (DOMMouseScroll, horizontal)",
+    targetID: "input-text", eventType: "DOMMouseScroll",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      synthesizeWheel(document.getElementById(this.targetID), 4, 5,
+                      { deltaX: 30, lineOrPageDeltaX: 2, shiftKey: true });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "nsMouseScrollEvent (MozMousePixelScroll, vertical)",
+    targetID: "input-text", eventType: "MozMousePixelScroll",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      synthesizeWheel(document.getElementById(this.targetID), 3, 4,
+                      { deltaY: 20, lineOrPageDeltaY: 1, altKey: true });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "nsMouseScrollEvent (MozMousePixelScroll, horizontal)",
+    targetID: "input-text", eventType: "MozMousePixelScroll",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      synthesizeWheel(document.getElementById(this.targetID), 4, 5,
+                      { deltaX: 20, lineOrPageDeltaX: 1, ctrlKey: true });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "widget::WheelEvent (wheel, vertical)",
+    targetID: "input-text", eventType: "wheel",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      synthesizeWheel(document.getElementById(this.targetID), 3, 4,
+                      { deltaY: 20, lineOrPageDeltaY: 1, altKey: true });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "widget::WheelEvent (wheel, horizontal)",
+    targetID: "input-text", eventType: "wheel",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      synthesizeWheel(document.getElementById(this.targetID), 4, 5,
+                      { deltaX: 20, lineOrPageDeltaX: 1, ctrlKey: true });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "widget::WheelEvent (wheel, both)",
+    targetID: "input-text", eventType: "wheel",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).value = "";
+      synthesizeWheel(document.getElementById(this.targetID), 4, 5,
+                      { deltaX: 20, deltaY: 10,
+                        lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "nsTouchEvent (touchstart)",
+    target: function () { return document; }, eventType: "touchstart",
+    dispatchEvent: function () {
+      synthesizeTouchAtPoint(1, 2, { id: 10, rx: 4, ry: 3, angle: 0, force: 1, shiftKey: true});
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "nsTouchEvent (touchend)",
+    target: function () { return document; }, eventType: "touchend",
+    dispatchEvent: function () {
+      synthesizeTouchAtPoint(4, 6, { id: 5, rx: 1, ry: 2, angle: 0.5, force: 0.8, ctrlKey: true});
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "nsFormEvent (reset)",
+    targetID: "form", eventType: "reset",
+    dispatchEvent: function () {
+      document.getElementById("form").reset();
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "nsCommandEvent",
+    targetID: "input-text", eventType: "",
+    dispatchEvent: function () {
+      return;
+    },
+    canRun: function () {
+      todo(false, "nsCommandEvent isn't tested");
+      return false;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsClipboardEvent (copy)",
+    targetID: "input-text", eventType: "copy",
+    dispatchEvent: function () {
+      document.getElementById("input-text").value = "go to clipboard!";
+      document.getElementById("input-text").focus();
+      document.getElementById("input-text").select();
+      synthesizeKey("c", { accelKey: true });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [ ],
+  },
+  { description: "nsUIEvent (DOMActivate)",
+    targetID: "button", eventType: "DOMActivate",
+    dispatchEvent: function () {
+      synthesizeMouseAtCenter(document.getElementById(this.targetID),
+                              { button: 0, shiftKey: true });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsFocusEvent (focus)",
+    targetID: "input-text", eventType: "focus",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).focus();
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsFocusEvent (blur)",
+    targetID: "input-text", eventType: "blur",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).blur();
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsSimpleGestureEvent",
+    targetID: "", eventType: "",
+    dispatchEvent: function () {
+      return;
+    },
+    canRun: function () {
+      // Simple gesture event may be handled before it comes content.
+      // So, we cannot test it in this test.
+      todo(false, "nsSimpleGestureEvent isn't tested");
+      return false;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsTransitionEvent (transitionend)",
+    targetID: "a", eventType: "transitionend",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).focus();
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsAnimationEvent (animationend)",
+    targetID: "animated-div", eventType: "animationend",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).className = "slidin";
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsMutationEvent (DOMAttrModified)",
+    targetID: "animated-div", eventType: "DOMAttrModified",
+    dispatchEvent: function () {
+      document.getElementById(this.targetID).setAttribute("x-data", "foo");
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsMutationEvent (DOMNodeInserted)",
+    targetID: "animated-div", eventType: "DOMNodeInserted",
+    dispatchEvent: function () {
+      var div = document.createElement("div");
+      div.id = "inserted-div";
+      document.getElementById("animated-div").appendChild(div);
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
+  { description: "nsMutationEvent (DOMNodeRemoved)",
+    targetID: "animated-div", eventType: "DOMNodeRemoved",
+    dispatchEvent: function () {
+      document.getElementById("animated-div").removeChild(document.getElementById("inserted-div"));
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
   },
 ];
 
@@ -161,9 +536,9 @@ function doTest(aTest)
   }
   gEvent = null;
   gCopiedEvent = [];
-  var target = document.getElementById(aTest.targetID);
+  var target = aTest.target ? aTest.target() : document.getElementById(aTest.targetID);
   target.addEventListener(aTest.eventType, onEvent, true);
-  setTimeout(function () {
+  gCallback = function () {
     target.removeEventListener(aTest.eventType, onEvent, true);
     ok(gEvent !== null, aTest.description + ": failed to get duplicated event");
     ok(gCopiedEvent.length > 0, aTest.description + ": count of attribute of the event must be larger than 0");
@@ -182,7 +557,7 @@ function doTest(aTest)
       }
     }
     runNextTest();
-  }, 0);
+  };
   aTest.dispatchEvent();
 }
 
@@ -201,6 +576,16 @@ function init()
   SpecialPowers.setBoolPref("middlemouse.contentLoadURL", false);
   SpecialPowers.setBoolPref("middlemouse.paste", false);
   SpecialPowers.setBoolPref("general.autoScroll", false);
+  SpecialPowers.setIntPref("mousewheel.default.action", 0);
+  SpecialPowers.setIntPref("mousewheel.default.action.override_x", -1);
+  SpecialPowers.setIntPref("mousewheel.with_shift.action", 0);
+  SpecialPowers.setIntPref("mousewheel.with_shift.action.override_x", -1);
+  SpecialPowers.setIntPref("mousewheel.with_control.action", 0);
+  SpecialPowers.setIntPref("mousewheel.with_control.action.override_x", -1);
+  SpecialPowers.setIntPref("mousewheel.with_alt.action", 0);
+  SpecialPowers.setIntPref("mousewheel.with_alt.action.override_x", -1);
+  SpecialPowers.setIntPref("mousewheel.with_meta.action", 0);
+  SpecialPowers.setIntPref("mousewheel.with_meta.action.override_x", -1);
 
   runNextTest();
 }
@@ -210,6 +595,17 @@ function finish()
   SpecialPowers.clearUserPref("middlemouse.contentLoadURL");
   SpecialPowers.clearUserPref("middlemouse.paste");
   SpecialPowers.clearUserPref("general.autoScroll");
+  SpecialPowers.clearUserPref("mousewheel.default.action");
+  SpecialPowers.clearUserPref("mousewheel.default.action.override_x");
+  SpecialPowers.clearUserPref("mousewheel.with_shift.action");
+  SpecialPowers.clearUserPref("mousewheel.with_shift.action.override_x");
+  SpecialPowers.clearUserPref("mousewheel.with_control.action");
+  SpecialPowers.clearUserPref("mousewheel.with_control.action.override_x");
+  SpecialPowers.clearUserPref("mousewheel.with_alt.action");
+  SpecialPowers.clearUserPref("mousewheel.with_alt.action.override_x");
+  SpecialPowers.clearUserPref("mousewheel.with_meta.action");
+  SpecialPowers.clearUserPref("mousewheel.with_meta.action.override_x");
+
   SimpleTest.finish();
 }
 

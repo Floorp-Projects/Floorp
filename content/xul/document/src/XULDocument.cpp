@@ -3493,7 +3493,7 @@ XULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
     // transcluded script completes. Compile and execute the script
     // if the load was successful, then continue building content
     // from the prototype.
-    nsresult rv;
+    nsresult rv = aStatus;
 
     NS_ASSERTION(mCurrentScriptProto && mCurrentScriptProto->mSrcLoading,
                  "script source not loading on unichar stream complete?");

@@ -1,0 +1,234 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=677638
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 677638 - start/close</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=677638">Mozilla Bug 677638</a>
+<div id="content"></div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+
+  function runTests() {
+    if (!tests.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  function testOnMessage() {
+    var a = new MessageChannel();
+    ok(a, "MessageChannel created");
+
+    a.port1.postMessage(42);
+    a.port2.postMessage(43);
+    ok(true, "MessagePort{1,2}.postmessage() invoked");
+
+    var events = 2;
+
+    a.port1.onmessage = function(evt) {
+      ok(true, "This method should be called");
+      if (!--events) runTests();
+    }
+
+    a.port2.onmessage = function(evt) {
+      ok(true, "This method should be called");
+      if (!--events) runTests();
+    }
+  }
+
+  function testAddEventListener() {
+    var a = new MessageChannel();
+    ok(a, "MessageChannel created");
+
+    a.port1.postMessage(42);
+    a.port2.postMessage(43);
+    ok(true, "MessagePort{1,2}.postmessage() invoked");
+
+    a.port1.addEventListener('message', function(evt) {
+      ok(false, "This method should not be called");
+    }, false);
+
+    a.port2.addEventListener('message', function(evt) {
+      ok(false, "This method should not be called");
+    }, false);
+
+    setTimeout(runTests, 0);
+  }
+
+  function testAddEventListenerAndStart() {
+    var a = new MessageChannel();
+    ok(a, "MessageChannel created");
+
+    a.port1.postMessage(42);
+    a.port2.postMessage(43);
+    ok(true, "MessagePort{1,2}.postmessage() invoked");
+
+    var events = 2;
+
+    a.port1.addEventListener('message', function(evt) {
+      ok(true, "This method should be called");
+      if (!--events) runTests();
+    }, false);
+
+    a.port2.addEventListener('message', function(evt) {
+      ok(true, "This method should be called");
+      if (!--events) runTests();
+    }, false);
+
+    a.port1.start();
+    a.port2.start();
+  }
+
+  function testAddEventListener1AndStart() {
+    var a = new MessageChannel();
+    ok(a, "MessageChannel created");
+
+    a.port1.postMessage(42);
+    a.port2.postMessage(43);
+    ok(true, "MessagePort{1,2}.postmessage() invoked");
+
+    var events = 1;
+
+    a.port1.addEventListener('message', function(evt) {
+      ok(true, "This method should be called");
+      if (!--events) runTests();
+    }, false);
+
+    a.port2.addEventListener('message', function(evt) {
+      ok(false, "This method should not be called");
+    }, false);
+
+    a.port1.start();
+  }
+
+  function testAddEventListener2AndStart() {
+    var a = new MessageChannel();
+    ok(a, "MessageChannel created");
+
+    a.port1.postMessage(42);
+    a.port2.postMessage(43);
+    ok(true, "MessagePort{1,2}.postmessage() invoked");
+
+    var events = 1;
+
+    a.port1.addEventListener('message', function(evt) {
+      ok(false, "This method should not be called");
+    }, false);
+
+    a.port2.addEventListener('message', function(evt) {
+      ok(true, "This method should be called");
+      if (!--events) runTests();
+    }, false);
+
+    a.port2.start();
+  }
+
+  function testTimer() {
+    var a = new MessageChannel();
+    ok(a, "MessageChannel created");
+
+    a.port1.postMessage(42);
+    a.port2.postMessage(43);
+    ok(true, "MessagePort{1,2}.postmessage() invoked");
+
+    setTimeout(function() {
+      var events = 2;
+      a.port1.onmessage = function(evt) {
+        ok(true, "This method should be called");
+        if (!--events) runTests();
+      }
+
+      a.port2.onmessage = function(evt) {
+        ok(true, "This method should be called");
+        if (!--events) runTests();
+      }
+    }, 200);
+  }
+
+  function testAddEventListenerAndStartWrongOrder() {
+    var a = new MessageChannel();
+    ok(a, "MessageChannel created");
+
+    a.port1.postMessage(42);
+    a.port2.postMessage(43);
+    ok(true, "MessagePort{1,2}.postmessage() invoked");
+
+    var events = 2;
+
+    a.port1.start();
+    a.port1.addEventListener('message', function(evt) {
+      ok(true, "This method should be called");
+      if (!--events) runTests();
+    }, false);
+
+    a.port2.start();
+    a.port2.addEventListener('message', function(evt) {
+      ok(true, "This method should be called");
+      if (!--events) runTests();
+    }, false);
+  }
+
+  function testOnMessageClone() {
+    var a = new MessageChannel();
+    ok(a, "MessageChannel created");
+
+    a.port1.postMessage(42);
+    a.port2.postMessage(43);
+    ok(true, "MessagePort{1,2}.postmessage() invoked");
+
+    var events = 2;
+
+    addEventListener('message', testOnMessageCloneCb, false);
+    function testOnMessageCloneCb(evt) {
+      a.port1.onmessage = function(evt) {
+        ok(true, "This method should be called");
+        testOnMessageCloneFinish();
+      }
+
+      evt.data.onmessage = function(evt) {
+        ok(true, "This method should be called");
+        testOnMessageCloneFinish();
+      }
+
+      a.port2.onmessage = function(evt) {
+        ok(false, "This method should not be called");
+      }
+    }
+
+    function testOnMessageCloneFinish() {
+      if (!--events) {
+        removeEventListener('message', testOnMessageCloneCb);
+        runTests();
+      }
+    }
+
+    postMessage(a.port2, '*');
+  }
+
+  var tests = [
+    testOnMessage,
+    testAddEventListener,
+    testAddEventListenerAndStart,
+    testAddEventListener1AndStart,
+    testAddEventListener2AndStart,
+    testTimer,
+    testAddEventListenerAndStartWrongOrder,
+    testOnMessageClone,
+  ];
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [["dom.messageChannel.enabled", true]]}, runTests);
+  </script>
+</body>
+</html>

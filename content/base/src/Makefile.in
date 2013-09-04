@@ -27,6 +27,7 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/content/xbl/src \
   -I$(topsrcdir)/content/xml/content/src \
   -I$(topsrcdir)/content/xml/document/src \
+  -I$(topsrcdir)/content/xslt/src/xpath \
   -I$(topsrcdir)/content/xul/content/src \
   -I$(topsrcdir)/content/xul/document/src \
   -I$(topsrcdir)/dom/base \

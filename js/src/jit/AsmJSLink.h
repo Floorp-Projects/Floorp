@@ -7,7 +7,7 @@
 #ifndef jit_AsmJSLink_h
 #define jit_AsmJSLink_h
 
-#include "jsapi.h"
+#include "NamespaceImports.h"
 
 namespace js {
 
