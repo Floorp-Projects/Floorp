@@ -161,11 +161,13 @@ class Exports(SandboxDerived):
     this object fills that role. It just has a reference to the underlying
     HierarchicalStringList, which is created when parsing EXPORTS.
     """
-    __slots__ = ('exports')
+    __slots__ = ('exports', 'dist_install')
 
-    def __init__(self, sandbox, exports):
+    def __init__(self, sandbox, exports, dist_install=True):
         SandboxDerived.__init__(self, sandbox)
         self.exports = exports
+        self.dist_install = dist_install
+
 
 class IPDLFile(SandboxDerived):
     """Describes an individual .ipdl source file."""
