@@ -676,9 +676,7 @@ public class GeckoPreferences
 
     // Initialize preferences by requesting the preference values from Gecko
     private int getGeckoPreferences(final PreferenceGroup screen, ArrayList<String> prefs) {
-        JSONArray jsonPrefs = new JSONArray(prefs);
-
-        return PrefsHelper.getPrefs(jsonPrefs, new PrefsHelper.PrefHandlerBase() {
+        return PrefsHelper.getPrefs(prefs, new PrefsHelper.PrefHandlerBase() {
             private Preference getField(String prefName) {
                 return screen.findPreference(prefName);
             }
