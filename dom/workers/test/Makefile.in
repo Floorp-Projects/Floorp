@@ -106,8 +106,8 @@ MOCHITEST_FILES = \
   content_worker.js \
   test_url.html \
   url_worker.js \
-  test_bug911085.html \
-  bug911085_worker.js \
+  test_rvals.html \
+  rvals_worker.js \
   test_urlApi.html \
   urlApi_worker.js \
   $(NULL)
