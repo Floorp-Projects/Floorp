@@ -392,7 +392,7 @@ class RecursiveMakeBackend(CommonBackend):
         build_files = self._purge_manifests['xpidl']
 
         for p in ('Makefile', 'backend.mk', '.deps/.mkdir.done',
-            'headers/.mkdir.done', 'xpt/.mkdir.done'):
+            'xpt/.mkdir.done'):
             build_files.add(p)
 
         for idl in manager.idls.values():
@@ -400,13 +400,11 @@ class RecursiveMakeBackend(CommonBackend):
                 idl['basename'])
             self._install_manifests['dist_include'].add_optional_exists('%s.h'
                 % idl['root'])
-            build_files.add(mozpath.join('headers', '%s.h' % idl['root']))
 
         for module in manager.modules:
             build_files.add(mozpath.join('xpt', '%s.xpt' % module))
             build_files.add(mozpath.join('.deps', '%s.pp' % module))
 
-        headers = sorted('%s.h' % idl['root'] for idl in manager.idls.values())
         modules = manager.modules
         xpt_modules = sorted(modules.keys())
         rules = []
@@ -431,13 +429,6 @@ class RecursiveMakeBackend(CommonBackend):
                 '',
             ])
 
-            # Set up linkage so make knows headers come from $(idlprocess).
-            h = ['$(idl_headers_dir)/%s.h' % dep for dep in deps]
-            rules.extend([
-                '%s: $(idl_xpt_dir)/%s.xpt' % (' '.join(h), module),
-                '',
-            ])
-
         # Create dependency for output header so we force regeneration if the
         # header was deleted. This ideally should not be necessary. However,
         # some processes (such as PGO at the time this was implemented) wipe
@@ -448,7 +439,6 @@ class RecursiveMakeBackend(CommonBackend):
         result = self.environment.create_config_file(out_path, extra=dict(
             xpidl_rules='\n'.join(rules),
             xpidl_modules=' '.join(xpt_modules),
-            xpidl_headers=' '.join(headers),
         ))
         self._update_from_avoid_write(result)
         self.summary.managed_count += 1

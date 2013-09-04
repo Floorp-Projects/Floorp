@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 627487 - random test failures caused by bookmark JSON changes
+Bug 908977 - Generate XPIDL headers directly into dist/include
