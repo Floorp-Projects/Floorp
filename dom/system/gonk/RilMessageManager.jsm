@@ -27,7 +27,20 @@ this.RilMessageManager = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIMessageListener,
                                          Ci.nsIObserver]),
 
-  ril: null,
+  topicRegistrationNames: {
+    cellbroadcast:    "RIL:RegisterCellBroadcastMsg",
+    icc:              "RIL:RegisterIccMsg",
+    mobileconnection: "RIL:RegisterMobileConnectionMsg",
+    voicemail:        "RIL:RegisterVoicemailMsg",
+  },
+
+  /**
+   * this.callbacksByName[< A string message name>] = {
+   *   topic:    <A string topic>,
+   *   callback: <A callback that accepts two parameters -- topic and msg>,
+   * }
+   */
+  callbacksByName: {},
 
   // Manage message targets in terms of topic. Only the authorized and
   // registered contents can receive related messages.
@@ -37,55 +50,32 @@ this.RilMessageManager = {
   targetMessageQueue: [],
   ready: false,
 
-  init: function init(ril) {
-    this.ril = ril;
-
+  _init: function _init() {
     Services.obs.addObserver(this, "xpcom-shutdown", false);
     Services.obs.addObserver(this, kSysMsgListenerReadyObserverTopic, false);
-    this._registerMessageListeners();
+
+    ppmm.addMessageListener("child-process-shutdown", this);
+
+    let callback = this._registerMessageTarget.bind(this);
+    for (let topic in this.topicRegistrationNames) {
+      let name = this.topicRegistrationNames[topic];
+      this.registerMessageListeners(topic, [name], callback);
+    }
   },
 
   _shutdown: function _shutdown() {
-    this.ril = null;
-
     Services.obs.removeObserver(this, "xpcom-shutdown");
-    this._unregisterMessageListeners();
-  },
 
-  _registerMessageListeners: function _registerMessageListeners() {
-    ppmm.addMessageListener("child-process-shutdown", this);
-    for (let msgname of RIL_IPC_MOBILECONNECTION_MSG_NAMES) {
-      ppmm.addMessageListener(msgname, this);
+    for (let name in this.callbacksByName) {
+      ppmm.removeMessageListener(name, this);
     }
-    for (let msgName of RIL_IPC_ICCMANAGER_MSG_NAMES) {
-      ppmm.addMessageListener(msgName, this);
-    }
-    for (let msgname of RIL_IPC_VOICEMAIL_MSG_NAMES) {
-      ppmm.addMessageListener(msgname, this);
-    }
-    for (let msgname of RIL_IPC_CELLBROADCAST_MSG_NAMES) {
-      ppmm.addMessageListener(msgname, this);
-    }
-  },
+    this.callbacksByName = null;
 
-  _unregisterMessageListeners: function _unregisterMessageListeners() {
     ppmm.removeMessageListener("child-process-shutdown", this);
-    for (let msgname of RIL_IPC_MOBILECONNECTION_MSG_NAMES) {
-      ppmm.removeMessageListener(msgname, this);
-    }
-    for (let msgName of RIL_IPC_ICCMANAGER_MSG_NAMES) {
-      ppmm.removeMessageListener(msgName, this);
-    }
-    for (let msgname of RIL_IPC_VOICEMAIL_MSG_NAMES) {
-      ppmm.removeMessageListener(msgname, this);
-    }
-    for (let msgname of RIL_IPC_CELLBROADCAST_MSG_NAMES) {
-      ppmm.removeMessageListener(msgname, this);
-    }
     ppmm = null;
   },
 
-  _registerMessageTarget: function _registerMessageTarget(topic, target) {
+  _registerMessageTarget: function _registerMessageTarget(topic, msg) {
     let targets = this.targetsByTopic[topic];
     if (!targets) {
       targets = this.targetsByTopic[topic] = [];
@@ -95,6 +85,7 @@ this.RilMessageManager = {
       }
     }
 
+    let target = msg.target;
     if (targets.indexOf(target) != -1) {
       if (DEBUG) debug("Already registered this target!");
       return;
@@ -188,66 +179,21 @@ this.RilMessageManager = {
       return;
     }
 
-    if (RIL_IPC_MOBILECONNECTION_MSG_NAMES.indexOf(msg.name) != -1) {
-      if (!msg.target.assertPermission("mobileconnection")) {
-        if (DEBUG) {
-          debug("MobileConnection message " + msg.name +
-                " from a content process with no 'mobileconnection' privileges.");
-        }
-        return null;
-      }
-    } else if (RIL_IPC_ICCMANAGER_MSG_NAMES.indexOf(msg.name) != -1) {
-      if (!msg.target.assertPermission("mobileconnection")) {
-        if (DEBUG) {
-          debug("IccManager message " + msg.name +
-                " from a content process with no 'mobileconnection' privileges.");
-        }
-        return null;
-      }
-    } else if (RIL_IPC_VOICEMAIL_MSG_NAMES.indexOf(msg.name) != -1) {
-      if (!msg.target.assertPermission("voicemail")) {
-        if (DEBUG) {
-          debug("Voicemail message " + msg.name +
-                " from a content process with no 'voicemail' privileges.");
-        }
-        return null;
-      }
-    } else if (RIL_IPC_CELLBROADCAST_MSG_NAMES.indexOf(msg.name) != -1) {
-      if (!msg.target.assertPermission("cellbroadcast")) {
-        if (DEBUG) {
-          debug("Cell Broadcast message " + msg.name +
-                " from a content process with no 'cellbroadcast' privileges.");
-        }
-        return null;
-      }
-    } else {
+    let entry = this.callbacksByName[msg.name];
+    if (!entry) {
       if (DEBUG) debug("Ignoring unknown message type: " + msg.name);
       return null;
     }
 
-    switch (msg.name) {
-      case "RIL:RegisterMobileConnectionMsg":
-        this._registerMessageTarget("mobileconnection", msg.target);
-        return;
-      case "RIL:RegisterIccMsg":
-        this._registerMessageTarget("icc", msg.target);
-        return;
-      case "RIL:RegisterVoicemailMsg":
-        this._registerMessageTarget("voicemail", msg.target);
-        return;
-      case "RIL:RegisterCellBroadcastMsg":
-        this._registerMessageTarget("cellbroadcast", msg.target);
-        return;
-    }
-
-    let clientId = msg.json.clientId || 0;
-    let radioInterface = this.ril.getRadioInterface(clientId);
-    if (!radioInterface) {
-      if (DEBUG) debug("No such radio interface: " + clientId);
+    if (entry.topic && !msg.target.assertPermission(entry.topic)) {
+      if (DEBUG) {
+        debug("Message " + msg.name + " from a content process with no '" +
+              entry.topic + "' privileges.");
+      }
       return null;
     }
 
-    return radioInterface.receiveMessage(msg);
+    return entry.callback(entry.topic, msg);
   },
 
   /**
@@ -269,6 +215,49 @@ this.RilMessageManager = {
   /**
    * Public methods.
    */
+
+  /**
+   * @param topic
+   *        A string for the topic of the registrating names. Also the
+   *        permission to listen messages of these names.
+   * @param names
+   *        An array of string message names to listen.
+   * @param callback
+   *        A callback that accepts two parameters -- topic and msg.
+   */
+  registerMessageListeners: function registerMessageListeners(topic, names,
+                                                              callback) {
+    for (let name of names) {
+      if (this.callbacksByName[name]) {
+        if (DEBUG) {
+          debug("Message name '" + name + "' was already registered. Ignored.");
+        }
+        continue;
+      }
+
+      this.callbacksByName[name] = { topic: topic, callback: callback };
+      ppmm.addMessageListener(name, this);
+    }
+  },
+
+  /**
+   * Remove all listening names with specified callback.
+   *
+   * @param callback
+   *        The callback previously registered for messages.
+   */
+  unregisterMessageListeners: function unregisterMessageListeners(callback) {
+    let remains = {};
+    for (let name in this.callbacksByName) {
+      let entry = this.callbacksByName[name];
+      if (entry.callback != callback) {
+        remains[name] = entry;
+      } else {
+        ppmm.removeMessageListener(name, this);
+      }
+    }
+    this.callbacksByName = remains;
+  },
 
   sendMobileConnectionMessage: function sendMobileConnectionMessage(name, clientId, data) {
     this._sendTargetMessage("mobileconnection", name, {
@@ -298,5 +287,7 @@ this.RilMessageManager = {
     });
   }
 };
+
+RilMessageManager._init();
 
 this.EXPORTED_SYMBOLS = ["RilMessageManager"];
