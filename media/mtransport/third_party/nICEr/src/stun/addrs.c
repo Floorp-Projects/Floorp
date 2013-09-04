@@ -653,7 +653,11 @@ stun_get_siocgifconf_addrs(nr_local_addr addrs[], int maxaddrs, int *count)
              /* For wireless network, we won't get ethtool, it's a wired
                 connection */
              addrs[n].interface.type = NR_INTERFACE_TYPE_WIRED;
+#ifdef DONT_HAVE_ETHTOOL_SPEED_HI
+             addrs[n].interface.estimated_speed = ecmd.speed;
+#else
              addrs[n].interface.estimated_speed = ((ecmd.speed_hi << 16) | ecmd.speed) * 1000;
+#endif
           }
 
           strncpy(wrq.ifr_name, ifr->ifr_name, sizeof(wrq.ifr_name));
