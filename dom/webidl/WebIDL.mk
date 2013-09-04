@@ -180,6 +180,7 @@ webidl_files = \
   IDBVersionChangeEvent.webidl \
   ImageData.webidl \
   ImageDocument.webidl \
+  InputMethod.webidl \
   InspectorUtils.webidl \
   KeyboardEvent.webidl \
   KeyEvent.webidl \
@@ -540,10 +541,4 @@ test_webidl_files := \
   $(NULL)
 else
 test_webidl_files := $(NULL)
-endif
-
-ifdef MOZ_B2G
-webidl_files += \
-  InputMethod.webidl \
-  $(NULL)
 endif

@@ -72,7 +72,8 @@ PARALLEL_DIRS += [
     'camera',
     'audiochannel',
     'promise',
-    'wappush'
+    'wappush',
+    'inputmethod'
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
