@@ -177,6 +177,7 @@ MOZILLA_DTRACE_SRC = $(srcdir)/devtools/javascript-trace.d
 endif
 
 default::
+	$(call py_action,process_install_manifest,--no-remove $(DIST)/include _build_manifests/install/dist_include)
 
 ifneq (,$(CROSS_COMPILE)$(filter-out WINNT OS2,$(OS_ARCH)))
 # nsinstall doesn't get built until we enter config/ in the exports phase,
