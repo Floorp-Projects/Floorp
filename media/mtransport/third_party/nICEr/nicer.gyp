@@ -8,6 +8,7 @@
 {
   'variables' : {
     'build_with_gonk%': 0,
+    'have_ethtool_cmd_speed_hi%': 1
   },
   'targets' : [
       {
@@ -234,6 +235,11 @@
              ['build_with_gonk==1', {
                'defines': [
                   "USE_PLATFORM_NR_STUN_GET_ADDRS",
+               ]
+             }],
+             ['have_ethtool_cmd_speed_hi==0', {
+               'defines': [
+                  "DONT_HAVE_ETHTOOL_SPEED_HI",
                ]
              }]
           ],
