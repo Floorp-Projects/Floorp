@@ -870,6 +870,41 @@ xpc::SandboxProxyHandler::iterate(JSContext *cx, JS::Handle<JSObject*> proxy,
     return BaseProxyHandler::iterate(cx, proxy, flags, vp);
 }
 
+bool
+xpc::SandboxOptions::DOMConstructors::Parse(JSContext* cx, JS::HandleObject obj)
+{
+    NS_ENSURE_TRUE(JS_IsArrayObject(cx, obj), false);
+
+    uint32_t length;
+    bool ok = JS_GetArrayLength(cx, obj, &length);
+    NS_ENSURE_TRUE(ok, false);
+    for (uint32_t i = 0; i < length; i++) {
+        RootedValue nameValue(cx);
+        ok = JS_GetElement(cx, obj, i, &nameValue);
+        NS_ENSURE_TRUE(ok, false);
+        NS_ENSURE_TRUE(nameValue.isString(), false);
+        char *name = JS_EncodeString(cx, nameValue.toString());
+        NS_ENSURE_TRUE(name, false);
+        if (!strcmp(name, "XMLHttpRequest")) {
+            XMLHttpRequest = true;
+        } else {
+            // Reporting error, if one of the DOM constructor names is unknown.
+            return false;
+        }
+    }
+    return true;
+}
+
+bool
+xpc::SandboxOptions::DOMConstructors::Define(JSContext* cx, JS::HandleObject obj)
+{
+    if (XMLHttpRequest &&
+        !JS_DefineFunction(cx, obj, "XMLHttpRequest", CreateXMLHttpRequest, 0, JSFUN_CONSTRUCTOR))
+        return false;
+
+    return true;
+}
+
 nsresult
 xpc::CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, SandboxOptions& options)
 {
@@ -972,15 +1007,13 @@ xpc::CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandb
         if (!JS_DefineFunctions(cx, sandbox, SandboxFunctions))
             return NS_ERROR_XPC_UNEXPECTED;
 
-        if (options.wantXHRConstructor &&
-            !JS_DefineFunction(cx, sandbox, "XMLHttpRequest", CreateXMLHttpRequest, 0, JSFUN_CONSTRUCTOR))
-            return NS_ERROR_XPC_UNEXPECTED;
-
         if (options.wantExportHelpers &&
             (!JS_DefineFunction(cx, sandbox, "exportFunction", ExportFunction, 3, 0) ||
              !JS_DefineFunction(cx, sandbox, "evalInWindow", EvalInWindow, 2, 0)))
             return NS_ERROR_XPC_UNEXPECTED;
 
+        if (!options.DOMConstructors.Define(cx, sandbox))
+            return NS_ERROR_XPC_UNEXPECTED;
     }
 
     if (vp) {
@@ -1243,6 +1276,26 @@ GetStringPropFromOptions(JSContext *cx, HandleObject from, const char *name, nsC
 }
 
 /*
+ * Helper that tries to get a list of DOM constructors from the options object.
+ */
+static nsresult
+GetDOMConstructorsFromOptions(JSContext *cx, HandleObject from, SandboxOptions& options)
+{
+    RootedValue value(cx);
+    bool found;
+    nsresult rv = GetPropFromOptions(cx, from, "wantDOMConstructors", &value, &found);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!found)
+        return NS_OK;
+
+    NS_ENSURE_TRUE(value.isObject(), NS_ERROR_INVALID_ARG);
+    RootedObject ctors(cx, &value.toObject());
+    bool ok = options.DOMConstructors.Parse(cx, ctors);
+    NS_ENSURE_TRUE(ok, NS_ERROR_INVALID_ARG);
+    return NS_OK;
+}
+
+/*
  * Helper that parsing the sandbox options object (from) and sets the fields of the incoming options struct (options).
  */
 static nsresult
@@ -1263,10 +1316,6 @@ ParseOptionsObject(JSContext *cx, jsval from, SandboxOptions &options)
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = GetBoolPropFromOptions(cx, optionsObject,
-                                "wantXHRConstructor", &options.wantXHRConstructor);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = GetBoolPropFromOptions(cx, optionsObject,
                                 "wantExportHelpers", &options.wantExportHelpers);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1276,6 +1325,9 @@ ParseOptionsObject(JSContext *cx, jsval from, SandboxOptions &options)
 
     rv = GetObjPropFromOptions(cx, optionsObject,
                                "sameZoneAs", options.sameZoneAs.address());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = GetDOMConstructorsFromOptions(cx, optionsObject, options);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
