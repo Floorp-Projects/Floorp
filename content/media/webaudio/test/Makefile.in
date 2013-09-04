@@ -82,6 +82,7 @@ MOCHITEST_FILES := \
   test_oscillatorNode.html \
   test_oscillatorNodeStart.html \
   test_pannerNode.html \
+  test_pannerNodeAbove.html \
   test_pannerNode_equalPower.html \
   test_periodicWave.html \
   test_scriptProcessorNode.html \
