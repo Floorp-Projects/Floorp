@@ -7,7 +7,6 @@
 #ifndef builtin_ParallelArray_h
 #define builtin_ParallelArray_h
 
-#include "jsapi.h"
 #include "jsobj.h"
 
 #include "jit/Ion.h"

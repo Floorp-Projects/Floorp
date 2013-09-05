@@ -1,4 +1,5 @@
 #include "gdb-tests.h"
+#include "jsapi.h"
 
 FRAGMENT(JSObject, simple) {
   JS::Rooted<JSObject *> glob(cx, JS::CurrentGlobalOrNull(cx));
