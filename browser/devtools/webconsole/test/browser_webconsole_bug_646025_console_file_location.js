@@ -17,37 +17,40 @@ function test() {
 
 function onLoad(aEvent) {
   browser.removeEventListener(aEvent.type, onLoad, true);
-  openConsole(null, function(aHud) {
-    hud = aHud;
-    browser.addEventListener("load", testConsoleFileLocation, true);
+  openConsole(null, function(hud) {
     content.location = TEST_URI;
+    waitForMessages({
+      webconsole: hud,
+      messages: [{
+        text: "message for level log",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+        source: { url: "test-file-location.js", line: 5 },
+      },
+      {
+        text: "message for level info",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_INFO,
+        source: { url: "test-file-location.js", line: 6 },
+      },
+      {
+        text: "message for level warn",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_WARNING,
+        source: { url: "test-file-location.js", line: 7 },
+      },
+      {
+        text: "message for level error",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_ERROR,
+        source: { url: "test-file-location.js", line: 8 },
+      },
+      {
+        text: "message for level debug",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+        source: { url: "test-file-location.js", line: 9 },
+      }],
+    }).then(finishTest);
   });
 }
-
-function testConsoleFileLocation(aEvent) {
-  browser.removeEventListener(aEvent.type, testConsoleFileLocation, true);
-
-  outputNode = hud.outputNode;
-
-  waitForSuccess({
-    name: "console API messages",
-    validatorFn: function()
-    {
-      return outputNode.textContent.indexOf("message for level debug") > -1;
-    },
-    successFn: function()
-    {
-      findLogEntry("test-file-location.js");
-      findLogEntry("message for level");
-      findLogEntry("test-file-location.js:5");
-      findLogEntry("test-file-location.js:6");
-      findLogEntry("test-file-location.js:7");
-      findLogEntry("test-file-location.js:8");
-      findLogEntry("test-file-location.js:9");
-
-      finishTest();
-    },
-    failureFn: finishTest,
-  });
-}
-
