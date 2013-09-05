@@ -12,34 +12,12 @@ XPIDL_MODULE = 'dom_telephony'
 
 MODULE = 'dom'
 
-EXPORTS.mozilla.dom.telephony += [
-    'CallEvent.h',
-    'CallsList.h',
-    'Telephony.h',
-    'TelephonyCall.h',
-    'TelephonyCallGroup.h',
-    'TelephonyCommon.h',
-    'TelephonyFactory.h',
-    'ipc/TelephonyChild.h',
-    'ipc/TelephonyParent.h',
-]
-
 CPP_SOURCES += [
     'CallEvent.cpp',
     'CallsList.cpp',
     'Telephony.cpp',
     'TelephonyCall.cpp',
     'TelephonyCallGroup.cpp',
-    'TelephonyChild.cpp',
-    'TelephonyFactory.cpp',
-    'TelephonyIPCProvider.cpp',
-    'TelephonyParent.cpp',
-]
-
-IPDL_SOURCES += [
-    'ipc/PTelephony.ipdl',
-    'ipc/PTelephonyRequest.ipdl',
-    'ipc/TelephonyTypes.ipdlh'
 ]
 
 FAIL_ON_WARNINGS = True
@@ -47,3 +25,4 @@ FAIL_ON_WARNINGS = True
 LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'domtelephony_s'
+
