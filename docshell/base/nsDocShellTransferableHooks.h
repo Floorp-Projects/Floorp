@@ -5,14 +5,10 @@
 #ifndef nsDocShellTransferableHooks_h__
 #define nsDocShellTransferableHooks_h__
 
-#ifndef nsCOMPtr_h___
-#include "nsCOMPtr.h"
-#endif
-
-#include "nsIClipboardDragDropHooks.h"
 #include "nsIClipboardDragDropHookList.h"
 #include "nsCOMArray.h"
 
+class nsIClipboardDragDropHooks;
 
 class nsTransferableHookData : public nsIClipboardDragDropHookList
 {

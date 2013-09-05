@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IDBWrapperCache.h"
-#include "nsContentUtils.h"
+#include "nsCycleCollector.h"
 
 USING_INDEXEDDB_NAMESPACE
 
@@ -21,7 +21,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBWrapperCache,
                                                 nsDOMEventTargetHelper)
   if (tmp->mScriptOwner) {
     tmp->mScriptOwner = nullptr;
-    NS_DROP_JS_OBJECTS(tmp, IDBWrapperCache);
+    mozilla::DropJSObjects(tmp);
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -42,7 +42,7 @@ IDBWrapperCache::~IDBWrapperCache()
 {
   mScriptOwner = nullptr;
   ReleaseWrapper(this);
-  NS_DROP_JS_OBJECTS(this, IDBWrapperCache);
+  mozilla::DropJSObjects(this);
 }
 
 void
@@ -51,18 +51,14 @@ IDBWrapperCache::SetScriptOwner(JSObject* aScriptOwner)
   NS_ASSERTION(aScriptOwner, "This should never be null!");
 
   mScriptOwner = aScriptOwner;
-
-  nsISupports* thisSupports = NS_CYCLE_COLLECTION_UPCAST(this, IDBWrapperCache);
-  nsXPCOMCycleCollectionParticipant* participant;
-  CallQueryInterface(this, &participant);
-  nsContentUtils::HoldJSObjects(thisSupports, participant);
+  mozilla::HoldJSObjects(this);
 }
 
 #ifdef DEBUG
 void
 IDBWrapperCache::AssertIsRooted() const
 {
-  NS_ASSERTION(nsContentUtils::AreJSObjectsHeld(const_cast<IDBWrapperCache*>(this)),
-               "Why aren't we rooted?!");
+  MOZ_ASSERT(cyclecollector::IsJSHolder(const_cast<IDBWrapperCache*>(this)),
+             "Why aren't we rooted?!");
 }
 #endif

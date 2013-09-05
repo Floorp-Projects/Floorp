@@ -902,7 +902,7 @@ Service::Observe(nsISupports *, const char *aTopic, const PRUnichar *)
 
         // While it would be nice to close all connections, we only
         // check async ones for now.
-        if (conn->isAsyncClosing()) {
+        if (conn->isClosing()) {
           anyOpen = true;
           break;
         }

@@ -40,10 +40,10 @@ public:
     bool HasEverBeenBound() { return mHasEverBeenBound; }
     void SetHasEverBeenBound(bool x) { mHasEverBeenBound = x; }
     GLuint GLName() const { return mGLName; }
-    GLuint ByteLength() const { return mByteLength; }
+    WebGLsizeiptr ByteLength() const { return mByteLength; }
     GLenum Target() const { return mTarget; }
 
-    void SetByteLength(GLuint byteLength) { mByteLength = byteLength; }
+    void SetByteLength(WebGLsizeiptr byteLength) { mByteLength = byteLength; }
 
     void SetTarget(GLenum target);
 
@@ -51,7 +51,7 @@ public:
 
     void ElementArrayCacheBufferSubData(size_t pos, const void* ptr, size_t update_size_in_bytes);
 
-    bool Validate(WebGLenum type, uint32_t max_allowed, size_t first, size_t count) {
+    bool Validate(GLenum type, uint32_t max_allowed, size_t first, size_t count) {
         return mCache->Validate(type, max_allowed, first, count);
     }
 
@@ -67,9 +67,9 @@ public:
 
 protected:
 
-    WebGLuint mGLName;
+    GLuint mGLName;
     bool mHasEverBeenBound;
-    GLuint mByteLength;
+    WebGLsizeiptr mByteLength;
     GLenum mTarget;
 
     nsAutoPtr<WebGLElementArrayCache> mCache;

@@ -20,7 +20,7 @@
 #ifdef MOZ_WIDGET_ANDROID
 #include "nsAutoPtr.h"
 #include "nsIRunnable.h"
-#include "GLContext.h"
+#include "GLContextTypes.h"
 #include "nsSurfaceTexture.h"
 #include "AndroidBridge.h"
 #include <map>

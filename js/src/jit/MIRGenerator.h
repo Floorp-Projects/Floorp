@@ -18,9 +18,7 @@
 #include "jit/CompileInfo.h"
 #include "jit/IonAllocPolicy.h"
 #include "jit/IonCompartment.h"
-#if defined(JS_ION_PERF)
-# include "jit/PerfSpewer.h"
-#endif
+#include "jit/PerfSpewer.h"
 #include "jit/RegisterSets.h"
 
 namespace js {

@@ -6,6 +6,7 @@
 #include "WebGLContext.h"
 #include "WebGLExtensions.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "GLContext.h"
 
 using namespace mozilla;
 
@@ -21,22 +22,22 @@ WebGLExtensionInstancedArrays::~WebGLExtensionInstancedArrays()
 }
 
 void
-WebGLExtensionInstancedArrays::DrawArraysInstancedANGLE(WebGLenum mode, WebGLint first,
-                                                        WebGLsizei count, WebGLsizei primcount)
+WebGLExtensionInstancedArrays::DrawArraysInstancedANGLE(GLenum mode, GLint first,
+                                                        GLsizei count, GLsizei primcount)
 {
     mContext->DrawArraysInstanced(mode, first, count, primcount);
 }
 
 void
-WebGLExtensionInstancedArrays::DrawElementsInstancedANGLE(WebGLenum mode, WebGLsizei count,
-                                                          WebGLenum type, WebGLintptr offset,
-                                                          WebGLsizei primcount)
+WebGLExtensionInstancedArrays::DrawElementsInstancedANGLE(GLenum mode, GLsizei count,
+                                                          GLenum type, WebGLintptr offset,
+                                                          GLsizei primcount)
 {
     mContext->DrawElementsInstanced(mode, count, type, offset, primcount);
 }
 
 void
-WebGLExtensionInstancedArrays::VertexAttribDivisorANGLE(WebGLuint index, WebGLuint divisor)
+WebGLExtensionInstancedArrays::VertexAttribDivisorANGLE(GLuint index, GLuint divisor)
 {
     mContext->VertexAttribDivisor(index, divisor);
 }

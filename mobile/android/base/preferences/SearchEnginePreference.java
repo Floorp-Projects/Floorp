@@ -105,6 +105,10 @@ public class SearchEnginePreference extends Preference {
             // Create a drawable from the iconURI and assign it to this Preference for display.
             String iconURI = geckoEngineJSON.getString("iconURI");
             Bitmap iconBitmap = BitmapUtils.getBitmapFromDataURI(iconURI);
+            // The favicon provided may be null or corrupt, if there was a network error or similar.
+            if (iconBitmap == null) {
+                return;
+            }
             Bitmap scaledIconBitmap = Bitmap.createScaledBitmap(iconBitmap, sIconSize, sIconSize, false);
             BitmapDrawable drawable = new BitmapDrawable(scaledIconBitmap);
             setIcon(drawable);

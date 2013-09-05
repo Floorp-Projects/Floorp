@@ -37,6 +37,7 @@
 #include "nsDisplayList.h"
 
 #include "GLContextProvider.h"
+#include "GLContext.h"
 
 #include "gfxCrashReporterUtils.h"
 
@@ -184,7 +185,7 @@ WebGLContext::WebGLContext()
     mContextLossTimerRunning = false;
     mDrawSinceContextLossTimerSet = false;
     mContextRestorer = do_CreateInstance("@mozilla.org/timer;1");
-    mContextStatus = ContextStable;
+    mContextStatus = ContextNotLost;
     mContextLostErrorSet = false;
     mLoseContextOnHeapMinimize = false;
     mCanLoseContextInForeground = true;
@@ -530,9 +531,9 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
 
     // try the default provider, whatever that is
     if (!gl && useOpenGL) {
-        GLContext::ContextFlags flag = useMesaLlvmPipe
-                                       ? GLContext::ContextFlagsMesaLLVMPipe
-                                       : GLContext::ContextFlagsNone;
+        gl::ContextFlags flag = useMesaLlvmPipe
+                                ? gl::ContextFlagsMesaLLVMPipe
+                                : gl::ContextFlagsNone;
         gl = gl::GLContextProvider::CreateOffscreen(size, caps, flag);
         if (gl && !InitAndValidateGL()) {
             GenerateWarning("Error during %s initialization",
@@ -844,7 +845,7 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                              CanvasLayer *aOldLayer,
                              LayerManager *aManager)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return nullptr;
 
     if (!mResetLayer && aOldLayer &&
@@ -899,7 +900,7 @@ void
 WebGLContext::GetContextAttributes(Nullable<dom::WebGLContextAttributesInitializer> &retval)
 {
     retval.SetNull();
-    if (!IsContextStable())
+    if (IsContextLost())
         return;
 
     dom::WebGLContextAttributes& result = retval.SetValue();
@@ -914,11 +915,11 @@ WebGLContext::GetContextAttributes(Nullable<dom::WebGLContextAttributesInitializ
     result.mPreserveDrawingBuffer = mOptions.preserveDrawingBuffer;
 }
 
-/* [noscript] DOMString mozGetUnderlyingParamString(in WebGLenum pname); */
+/* [noscript] DOMString mozGetUnderlyingParamString(in GLenum pname); */
 NS_IMETHODIMP
 WebGLContext::MozGetUnderlyingParamString(uint32_t pname, nsAString& retval)
 {
-    if (!IsContextStable())
+    if (IsContextLost())
         return NS_OK;
 
     retval.SetIsVoid(true);
@@ -1156,7 +1157,7 @@ WebGLContext::PresentScreenBuffer()
 void
 WebGLContext::DummyFramebufferOperation(const char *info)
 {
-    WebGLenum status = CheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+    GLenum status = CheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (status == LOCAL_GL_FRAMEBUFFER_COMPLETE)
         return;
     else
@@ -1220,7 +1221,7 @@ WebGLContext::RobustnessTimerCallback(nsITimer* timer)
             SetupContextLossTimer();
             return;
         }
-        mContextStatus = ContextStable;
+        mContextStatus = ContextNotLost;
         nsContentUtils::DispatchTrustedEvent(mCanvasElement->OwnerDoc(),
                                              static_cast<nsIDOMHTMLCanvasElement*>(mCanvasElement),
                                              NS_LITERAL_STRING("webglcontextrestored"),
@@ -1240,10 +1241,10 @@ void
 WebGLContext::MaybeRestoreContext()
 {
     // Don't try to handle it if we already know it's busted.
-    if (mContextStatus != ContextStable || gl == nullptr)
+    if (mContextStatus != ContextNotLost || gl == nullptr)
         return;
 
-    bool isEGL = gl->GetContextType() == GLContext::ContextTypeEGL,
+    bool isEGL = gl->GetContextType() == gl::ContextTypeEGL,
          isANGLE = gl->IsANGLE();
 
     GLContext::ContextResetARB resetStatus = GLContext::CONTEXT_NO_ERROR;
@@ -1311,6 +1312,9 @@ WebGLContext::ForceRestoreContext()
     mContextStatus = ContextLostAwaitingRestore;
 }
 
+void
+WebGLContext::MakeContextCurrent() const { gl->MakeCurrent(); }
+
 //
 // XPCOM goop
 //
@@ -1318,7 +1322,7 @@ WebGLContext::ForceRestoreContext()
 NS_IMPL_CYCLE_COLLECTING_ADDREF(WebGLContext)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WebGLContext)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_12(WebGLContext,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_13(WebGLContext,
   mCanvasElement,
   mExtensions,
   mBound2DTextures,
@@ -1329,6 +1333,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_12(WebGLContext,
   mBoundFramebuffer,
   mBoundRenderbuffer,
   mBoundVertexArray,
+  mDefaultVertexArray,
   mActiveOcclusionQuery,
   mActiveTransformFeedbackQuery)
 

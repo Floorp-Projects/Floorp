@@ -2994,7 +2994,7 @@ nsJSArgArray::nsJSArgArray(JSContext *aContext, uint32_t argc, JS::Value *argv,
   }
 
   if (argc > 0) {
-    NS_HOLD_JS_OBJECTS(this, nsJSArgArray);
+    mozilla::HoldJSObjects(this);
   }
 
   *prv = NS_OK;
@@ -3013,7 +3013,7 @@ nsJSArgArray::ReleaseJSObjects()
   }
   if (mArgc > 0) {
     mArgc = 0;
-    NS_DROP_JS_OBJECTS(this, nsJSArgArray);
+    mozilla::DropJSObjects(this);
   }
 }
 

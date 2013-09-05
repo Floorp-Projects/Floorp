@@ -231,6 +231,18 @@ gfx::RectTyped<dst> operator/(const gfx::IntRectTyped<src>& aRect, const gfx::Sc
                              float(aRect.height) / aScale.scale);
 }
 
+template<class src, class dst>
+gfx::SizeTyped<dst> operator*(const gfx::SizeTyped<src>& aSize, const gfx::ScaleFactor<src, dst>& aScale) {
+  return gfx::SizeTyped<dst>(aSize.width * aScale.scale,
+                             aSize.height * aScale.scale);
+}
+
+template<class src, class dst>
+gfx::SizeTyped<dst> operator/(const gfx::SizeTyped<src>& aSize, const gfx::ScaleFactor<dst, src>& aScale) {
+  return gfx::SizeTyped<dst>(aSize.width / aScale.scale,
+                              aSize.height / aScale.scale);
+}
+
 };
 
 #endif

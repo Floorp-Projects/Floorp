@@ -312,35 +312,6 @@ SmsParent::RecvHasSupport(bool* aHasSupport)
 }
 
 bool
-SmsParent::RecvGetSegmentInfoForText(const nsString& aText,
-                                     SmsSegmentInfoData* aResult)
-{
-  aResult->segments() = 0;
-  aResult->charsPerSegment() = 0;
-  aResult->charsAvailableInLastSegment() = 0;
-
-  nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(smsService, true);
-
-  nsCOMPtr<nsIDOMMozSmsSegmentInfo> info;
-  nsresult rv = smsService->GetSegmentInfoForText(aText, getter_AddRefs(info));
-  NS_ENSURE_SUCCESS(rv, true);
-
-  int segments, charsPerSegment, charsAvailableInLastSegment;
-  if (NS_FAILED(info->GetSegments(&segments)) ||
-      NS_FAILED(info->GetCharsPerSegment(&charsPerSegment)) ||
-      NS_FAILED(info->GetCharsAvailableInLastSegment(&charsAvailableInLastSegment))) {
-    NS_ERROR("Can't get attribute values from nsIDOMMozSmsSegmentInfo");
-    return true;
-  }
-
-  aResult->segments() = segments;
-  aResult->charsPerSegment() = charsPerSegment;
-  aResult->charsAvailableInLastSegment() = charsAvailableInLastSegment;
-  return true;
-}
-
-bool
 SmsParent::RecvAddSilentNumber(const nsString& aNumber)
 {
   if (mSilentNumbers.Contains(aNumber)) {
@@ -393,6 +364,8 @@ SmsParent::RecvPSmsRequestConstructor(PSmsRequestParent* aActor,
       return actor->DoRequest(aRequest.get_DeleteMessageRequest());
     case IPCSmsRequest::TMarkMessageReadRequest:
       return actor->DoRequest(aRequest.get_MarkMessageReadRequest());
+    case IPCSmsRequest::TGetSegmentInfoForTextRequest:
+      return actor->DoRequest(aRequest.get_GetSegmentInfoForTextRequest());
     default:
       MOZ_CRASH("Unknown type!");
   }
@@ -577,6 +550,24 @@ SmsRequestParent::DoRequest(const MarkMessageReadRequest& aRequest)
   return true;
 }
 
+bool
+SmsRequestParent::DoRequest(const GetSegmentInfoForTextRequest& aRequest)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
+  if (smsService) {
+    rv = smsService->GetSegmentInfoForText(aRequest.text(), this);
+  }
+
+  if (NS_FAILED(rv)) {
+    return NS_SUCCEEDED(NotifyGetSegmentInfoForTextFailed(
+                          nsIMobileMessageCallback::INTERNAL_ERROR));
+  }
+
+  return true;
+}
+
 nsresult
 SmsRequestParent::SendReply(const MessageReply& aReply)
 {
@@ -672,6 +663,19 @@ NS_IMETHODIMP
 SmsRequestParent::NotifyMarkMessageReadFailed(int32_t aError)
 {
   return SendReply(ReplyMarkeMessageReadFail(aError));
+}
+
+NS_IMETHODIMP
+SmsRequestParent::NotifySegmentInfoForTextGot(nsIDOMMozSmsSegmentInfo *aInfo)
+{
+  SmsSegmentInfo* info = static_cast<SmsSegmentInfo*>(aInfo);
+  return SendReply(ReplyGetSegmentInfoForText(info->GetData()));
+}
+
+NS_IMETHODIMP
+SmsRequestParent::NotifyGetSegmentInfoForTextFailed(int32_t aError)
+{
+  return SendReply(ReplyGetSegmentInfoForTextFail(aError));
 }
 
 /*******************************************************************************

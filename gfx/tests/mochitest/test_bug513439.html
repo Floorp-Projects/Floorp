@@ -19,15 +19,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=513439
 
 /** Test for Bug 513439 **/
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                            .getService(Components.interfaces.nsIPrefService);
+var prefService = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
+                               .getService(SpecialPowers.Ci.nsIPrefService);
 var layoutCSSBranch = prefService.getBranch("layout.css.");
 var oldVal = layoutCSSBranch.getCharPref("devPixelsPerPx");
 
 try {
-  var domWindowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                             .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var domWindowUtils = window.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                             .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
   var devPxPerCSSPx = domWindowUtils.screenPixelsPerCSSPixel;
 
   layoutCSSBranch.setCharPref("devPixelsPerPx", "2");

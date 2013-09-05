@@ -35,12 +35,12 @@ var testData = [
 ];
 
 function createFileWithData(fileName, fileData) {
-  var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
-                         .getService(Components.interfaces.nsIProperties);
-  var testFile = dirSvc.get("ProfD", Components.interfaces.nsIFile);
+  var dirSvc = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"]
+                            .getService(SpecialPowers.Ci.nsIProperties);
+  var testFile = dirSvc.get("ProfD", SpecialPowers.Ci.nsIFile);
   testFile.append(fileName);
-  var outStream = Components.classes["@mozilla.org/network/file-output-stream;1"].
-                  createInstance(Components.interfaces.nsIFileOutputStream);
+  var outStream = SpecialPowers.Cc["@mozilla.org/network/file-output-stream;1"].
+                  createInstance(SpecialPowers.Ci.nsIFileOutputStream);
   outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
                  0666, 0);
   outStream.write(fileData, fileData.length);
@@ -60,10 +60,8 @@ for (var data of testData) {
   if (data[0] == 'checkbox' || data[0] == 'radio') {
     e.checked = data[1];
   } else if (data[0] == 'file') {
-    // Need privileges to set a filename with .value and create a file.
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var file = createFileWithData(data[1], "file content");
-    e.value = file.path;
+    SpecialPowers.wrap(e).value = file.path;
   } else {
     e.value = data[1];
   }
