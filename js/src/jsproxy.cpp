@@ -516,16 +516,6 @@ DirectProxyHandler::regexp_toShared(JSContext *cx, HandleObject proxy,
     return RegExpToShared(cx, target, g);
 }
 
-bool
-DirectProxyHandler::defaultValue(JSContext *cx, HandleObject proxy, JSType hint,
-                                 MutableHandleValue vp)
-{
-    vp.set(ObjectValue(*proxy->as<ProxyObject>().target()));
-    if (hint == JSTYPE_VOID)
-        return ToPrimitive(cx, vp);
-    return ToPrimitive(cx, hint, vp);
-}
-
 JSObject *
 DirectProxyHandler::weakmapKeyDelegate(JSObject *proxy)
 {
@@ -787,8 +777,6 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) MOZ_OVERRIDE;
     virtual JSString *fun_toString(JSContext *cx, HandleObject proxy, unsigned indent) MOZ_OVERRIDE;
-    virtual bool defaultValue(JSContext *cx, HandleObject obj, JSType hint,
-                              MutableHandleValue vp) MOZ_OVERRIDE;
 
     static ScriptedIndirectProxyHandler singleton;
 };
@@ -1047,17 +1035,6 @@ ScriptedIndirectProxyHandler::fun_toString(JSContext *cx, HandleObject proxy, un
     return fun_toStringHelper(cx, obj, indent);
 }
 
-bool
-ScriptedIndirectProxyHandler::defaultValue(JSContext *cx, HandleObject proxy, JSType hint,
-                                           MutableHandleValue vp)
-{
-    /*
-     * This function is only here to prevent bug 757063. It will be removed when
-     * the direct proxy refactor is complete.
-     */
-    return BaseProxyHandler::defaultValue(cx, proxy, hint, vp);
-}
-
 ScriptedIndirectProxyHandler ScriptedIndirectProxyHandler::singleton;
 
 static JSObject *
@@ -1097,6 +1074,7 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
     virtual bool iterate(JSContext *cx, HandleObject proxy, unsigned flags,
                          MutableHandleValue vp) MOZ_OVERRIDE;
 
+    /* Spidermonkey extensions. */
     virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
     virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
 
