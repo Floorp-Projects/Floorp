@@ -9,6 +9,7 @@
 
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
+#include "nsISupportsImpl.h"
 #include "gfxPoint.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"

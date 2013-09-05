@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_TextTrackCueList_h
 #define mozilla_dom_TextTrackCueList_h
 
-#include "nsTArray.h"
+#include "mozilla/dom/TextTrackCue.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
