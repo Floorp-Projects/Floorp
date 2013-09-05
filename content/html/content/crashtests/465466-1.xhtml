@@ -11,7 +11,7 @@
 function boom()
 {
   var f = document.getElementById("f");
-  var anon = document.getAnonymousNodes(f)[0];
+  var anon = SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes(f))[0];
   document.body.removeChild(f);
   anon.appendChild(document.createElement("label"));
 }

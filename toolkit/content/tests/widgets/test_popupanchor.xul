@@ -383,7 +383,7 @@ SimpleTest.waitForExplicitFinish();
 addEventListener("load", function() {
   // anchor is set by the test runner above
   panel = document.getElementById("testPanel");
-  arrow = document.getAnonymousElementByAttribute(panel, "anonid", "arrow");
+  arrow = SpecialPowers.wrap(document).getAnonymousElementByAttribute(panel, "anonid", "arrow");
   // Cancel the arrow panel slide-in transition (bug 767133) so the size and
   // position are "stable" enough to test without jumping through hoops...
   arrow.style.transition = "none";

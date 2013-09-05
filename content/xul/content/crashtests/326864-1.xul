@@ -6,13 +6,17 @@
 
 <script>
 
+function getAnonymousNodes(e) {
+  return SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes(e));
+}
+
 function init()
 {
   var tt = document.getElementById("textbox");
-  var hb = document.getAnonymousNodes(tt)[0]; // hbox
-  var men = document.getAnonymousNodes(hb)[1]; // menupopup
+  var hb = getAnonymousNodes(tt)[0]; // hbox
+  var men = getAnonymousNodes(hb)[1]; // menupopup
   var menitem = men.childNodes[0]; // menuitem
-  var hb2 = document.getAnonymousNodes(menitem)[1]; // hbox
+  var hb2 = getAnonymousNodes(menitem)[1]; // hbox
   var label2 = hb2.childNodes[0]; // label
 
   men.menu = null;
