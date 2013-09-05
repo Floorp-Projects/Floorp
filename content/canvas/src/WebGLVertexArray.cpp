@@ -7,6 +7,7 @@
 #include "WebGLBuffer.h"
 #include "WebGLVertexArray.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "GLContext.h"
 
 using namespace mozilla;
 
@@ -36,10 +37,10 @@ void WebGLVertexArray::Delete() {
     mAttribBuffers.Clear();
 }
 
-bool WebGLVertexArray::EnsureAttribIndex(WebGLuint index, const char *info)
+bool WebGLVertexArray::EnsureAttribIndex(GLuint index, const char *info)
 {
-    if (index >= WebGLuint(mContext->mGLMaxVertexAttribs)) {
-        if (index == WebGLuint(-1)) {
+    if (index >= GLuint(mContext->mGLMaxVertexAttribs)) {
+        if (index == GLuint(-1)) {
             mContext->ErrorInvalidValue("%s: index -1 is invalid. That probably comes from a getAttribLocation() call, "
                                         "where this return value -1 means that the passed name didn't correspond to an active attribute in "
                                         "the specified program.", info);
@@ -59,10 +60,5 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(WebGLVertexArray,
   mAttribBuffers,
   mBoundElementArrayBuffer)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(WebGLVertexArray)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(WebGLVertexArray)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebGLVertexArray)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLVertexArray, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLVertexArray, Release)

@@ -25,6 +25,8 @@ Dashboard::Dashboard()
 
 Dashboard::~Dashboard()
 {
+    if (mDnsup.cancel)
+        mDnsup.cancel->Cancel(NS_ERROR_ABORT);
 }
 
 NS_IMETHODIMP
@@ -403,66 +405,6 @@ Dashboard::RequestDNSInfo(NetDashboardCallback* cb)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-Dashboard::RequestDNSLookup(const nsACString &aHost, NetDashboardCallback* cb)
-{
-    if (mDnsup.cb)
-        return NS_ERROR_FAILURE;
-    mDnsup.cb = cb;
-    nsresult rv;
-    mDnsup.thread = NS_GetCurrentThread();
-
-    if (!mDnsup.serv) {
-        mDnsup.serv = do_GetService("@mozilla.org/network/dns-service;1", &rv);
-        if (NS_FAILED(rv)) {
-            mDnsup.cb = nullptr;
-            return rv;
-        }
-    }
-    mDnsup.serv->AsyncResolve(aHost, 0, this, mDnsup.thread, getter_AddRefs(mDnsup.mCancel));
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-Dashboard::OnLookupComplete(nsICancelable *aRequest, nsIDNSRecord *aRecord, nsresult aStatus)
-{
-    AutoSafeJSContext cx;
-
-    mozilla::dom::DNSLookupDict dict;
-    dict.mAddress.Construct();
-    dict.mError.Construct();
-    dict.mAnswer.Construct();
-
-    Sequence<nsString> &addresses = dict.mAddress.Value();
-    nsString &error = dict.mError.Value();
-    bool &answer = dict.mAnswer.Value();
-
-    if (!NS_FAILED(aStatus)) {
-        answer = true;
-        bool hasMore;
-        aRecord->HasMore(&hasMore);
-        while(hasMore) {
-           nsCString nextAddress;
-           aRecord->GetNextAddrAsString(nextAddress);
-           CopyASCIItoUTF16(nextAddress, *addresses.AppendElement());
-           aRecord->HasMore(&hasMore);
-        }
-    } else {
-        answer = false;
-        CopyASCIItoUTF16(GetErrorString(aStatus), error);
-    }
-
-    JS::RootedValue val(cx);
-    if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
-        mDnsup.cb = nullptr;
-        return NS_ERROR_FAILURE;
-    }
-    mDnsup.cb->OnDashboardDataAvailable(val);
-    mDnsup.cb = nullptr;
-
-    return NS_OK;
-}
-
 void
 Dashboard::GetDnsInfoDispatch()
 {
@@ -526,6 +468,72 @@ Dashboard::GetDNSCacheEntries()
     }
     mDns.cb->OnDashboardDataAvailable(val);
     mDns.cb = nullptr;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+Dashboard::RequestDNSLookup(const nsACString &aHost, NetDashboardCallback *cb)
+{
+    if (mDnsup.cb)
+        return NS_ERROR_FAILURE;
+    nsresult rv;
+
+    if (!mDnsup.serv) {
+        mDnsup.serv = do_GetService("@mozilla.org/network/dns-service;1", &rv);
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
+    mDnsup.cb = cb;
+    rv = mDnsup.serv->AsyncResolve(aHost, 0, this, NS_GetCurrentThread(), getter_AddRefs(mDnsup.cancel));
+    if (NS_FAILED(rv)) {
+        mDnsup.cb = nullptr;
+        return rv;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+Dashboard::OnLookupComplete(nsICancelable *aRequest, nsIDNSRecord *aRecord, nsresult aStatus)
+{
+    MOZ_ASSERT(aRequest == mDnsup.cancel);
+    mDnsup.cancel = nullptr;
+
+    AutoSafeJSContext cx;
+
+    mozilla::dom::DNSLookupDict dict;
+    dict.mAddress.Construct();
+    dict.mError.Construct();
+    dict.mAnswer.Construct();
+
+    Sequence<nsString> &addresses = dict.mAddress.Value();
+    nsString &error = dict.mError.Value();
+    bool &answer = dict.mAnswer.Value();
+
+    if (NS_SUCCEEDED(aStatus)) {
+        answer = true;
+        bool hasMore;
+        aRecord->HasMore(&hasMore);
+        while(hasMore) {
+           nsCString nextAddress;
+           aRecord->GetNextAddrAsString(nextAddress);
+           CopyASCIItoUTF16(nextAddress, *addresses.AppendElement());
+           aRecord->HasMore(&hasMore);
+        }
+    } else {
+        answer = false;
+        CopyASCIItoUTF16(GetErrorString(aStatus), error);
+    }
+
+    JS::RootedValue val(cx);
+    if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
+        mDnsup.cb = nullptr;
+        return NS_ERROR_FAILURE;
+    }
+    mDnsup.cb->OnDashboardDataAvailable(val);
+    mDnsup.cb = nullptr;
 
     return NS_OK;
 }

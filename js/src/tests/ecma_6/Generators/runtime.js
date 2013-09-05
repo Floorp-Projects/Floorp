@@ -8,28 +8,7 @@
 // See http://people.mozilla.org/~jorendorff/es6-draft.html#sec-15.19.3.
 
 function assertSyntaxError(str) {
-    var msg;
-    var evil = eval;
-    try {
-        // Non-direct eval.
-        evil(str);
-    } catch (exc) {
-        if (exc instanceof SyntaxError)
-            return;
-        msg = "Assertion failed: expected SyntaxError, got " + exc;
-    }
-    if (msg === undefined)
-        msg = "Assertion failed: expected SyntaxError, but no exception thrown";
-    throw new Error(msg + " - " + str);
-}
-
-function assertFalse(a) { assertEq(a, false) }
-function assertTrue(a) { assertEq(a, true) }
-function assertNotEq(found, not_expected) { assertFalse(found === expected) }
-function assertArrayEq(found, expected) {
-    assertEq(found.length, expected.length);
-    for (var i = 0; i < expected.length; i++)
-        assertEq(found[i], expected[i]);
+    assertThrowsInstanceOf(Function(str), SyntaxError);
 }
 
 
@@ -49,7 +28,7 @@ function TestGeneratorFunctionInstance() {
     f_own_property_names.sort();
     g_own_property_names.sort();
 
-    assertArrayEq(f_own_property_names, g_own_property_names);
+    assertDeepEq(f_own_property_names, g_own_property_names);
     var i;
     for (i = 0; i < f_own_property_names.length; i++) {
         var prop = f_own_property_names[i];
@@ -92,7 +71,7 @@ function TestGeneratorObjectPrototype() {
     expected_property_names.sort();
     found_property_names.sort();
 
-    assertArrayEq(found_property_names, expected_property_names);
+    assertDeepEq(found_property_names, expected_property_names);
 }
 TestGeneratorObjectPrototype();
 
@@ -141,7 +120,7 @@ function TestPerGeneratorPrototype() {
     assertFalse(g.prototype instanceof Function);
     assertEq(typeof (g.prototype), "object");
 
-    assertArrayEq(Object.getOwnPropertyNames(g.prototype), []);
+    assertDeepEq(Object.getOwnPropertyNames(g.prototype), []);
 }
 TestPerGeneratorPrototype();
 

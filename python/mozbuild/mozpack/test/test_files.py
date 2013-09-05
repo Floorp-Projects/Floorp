@@ -5,16 +5,16 @@
 from mozpack.errors import ErrorMessage
 from mozpack.files import (
     AbsoluteSymlinkFile,
+    DeflatedFile,
     Dest,
+    ExistingFile,
+    FileFinder,
     File,
     GeneratedFile,
-    DeflatedFile,
-    ManifestFile,
-    XPTFile,
-    MinifiedProperties,
-    FileFinder,
     JarFinder,
-    RequiredExistingFile,
+    ManifestFile,
+    MinifiedProperties,
+    XPTFile,
 )
 from mozpack.mozjar import (
     JarReader,
@@ -325,18 +325,30 @@ class TestAbsoluteSymlinkFile(TestWithTmpDir):
         self.assertEqual(link, source)
 
 
-class TestRequiredExistingFile(TestWithTmpDir):
-    def test_missing_dest(self):
+class TestExistingFile(TestWithTmpDir):
+    def test_required_missing_dest(self):
         with self.assertRaisesRegexp(ErrorMessage, 'Required existing file'):
-            f = RequiredExistingFile()
+            f = ExistingFile(required=True)
             f.copy(self.tmppath('dest'))
 
-    def test_existing_dest(self):
+    def test_required_existing_dest(self):
         p = self.tmppath('dest')
         with open(p, 'a'):
             pass
 
-        f = RequiredExistingFile()
+        f = ExistingFile(required=True)
+        f.copy(p)
+
+    def test_optional_missing_dest(self):
+        f = ExistingFile(required=False)
+        f.copy(self.tmppath('dest'))
+
+    def test_optional_existing_dest(self):
+        p = self.tmppath('dest')
+        with open(p, 'a'):
+            pass
+
+        f = ExistingFile(required=False)
         f.copy(p)
 
 

@@ -3699,10 +3699,18 @@ bool
 IsSandbox(JSObject *obj);
 
 struct SandboxOptions {
+    struct DOMConstructors {
+        DOMConstructors() { mozilla::PodZero(this); }
+        bool Parse(JSContext* cx, JS::HandleObject obj);
+        bool Define(JSContext* cx, JS::HandleObject obj);
+        bool XMLHttpRequest;
+        bool TextDecoder;
+        bool TextEncoder;
+    };
+
     SandboxOptions(JSContext *cx)
         : wantXrays(true)
         , wantComponents(true)
-        , wantXHRConstructor(false)
         , wantExportHelpers(false)
         , proto(xpc_GetSafeJSContext())
         , sameZoneAs(xpc_GetSafeJSContext())
@@ -3710,11 +3718,11 @@ struct SandboxOptions {
 
     bool wantXrays;
     bool wantComponents;
-    bool wantXHRConstructor;
     bool wantExportHelpers;
     JS::RootedObject proto;
     nsCString sandboxName;
     JS::RootedObject sameZoneAs;
+    DOMConstructors DOMConstructors;
 };
 
 JSObject *

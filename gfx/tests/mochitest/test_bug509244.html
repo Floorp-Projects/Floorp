@@ -31,9 +31,8 @@ text.style.fontFamily = "sans-serif";
 flush();
 
 // flush cache
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var os = Components.classes["@mozilla.org/observer-service;1"]
-         .getService(Components.interfaces.nsIObserverService);
+var os = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+         .getService(SpecialPowers.Ci.nsIObserverService);
 os.notifyObservers(null, "memory-pressure", "heap-minimize");
 
 // reuse font that was flushed from cache

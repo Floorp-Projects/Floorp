@@ -10,7 +10,6 @@ MODULE = 'cairo'
 
 EXPORTS.cairo += [
     'cairo-deprecated.h',
-    'cairo-features.h',
     'cairo-platform.h',
     'cairo-rename.h',
     'cairo-tee.h',

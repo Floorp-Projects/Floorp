@@ -6,10 +6,6 @@
 
 MODULE = 'accessibility'
 
-EXPORTS += [
-    'xpcAccEvents.h',
-]
-
 CPP_SOURCES += [
     'nsAccessibleRelation.cpp',
     'xpcAccEvents.cpp',

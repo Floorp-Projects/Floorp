@@ -1,0 +1,36 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+
+public class testBookmarkKeyword extends AboutHomeTest {
+
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
+    public void testBookmarkKeyword() {
+        blockForGeckoReady();
+
+        final String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
+        final String title = "Browser Blank Page 01";
+        final String keyword = "testkeyword";
+
+        // Add a bookmark, and update it to have a keyword.
+        addOrUpdateMobileBookmark(title, url);
+        updateBookmark(url, title, keyword);
+
+        // Enter the keyword in the urlbar.
+        inputAndLoadUrl(keyword);
+
+        // Wait for the page to load.
+        waitForText(title);
+
+        // Make sure the title of the page appeared.
+        verifyPageTitle(title);
+
+        // Delete the bookmark to clean up.
+        deleteBookmark(url);
+    }
+}

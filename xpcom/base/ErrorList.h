@@ -687,6 +687,8 @@
   ERROR(NS_PROPTABLE_PROP_NOT_THERE,            FAILURE(10)),
   /* Error code for XBL */
   ERROR(NS_ERROR_XBL_BLOCKED,                   FAILURE(15)),
+  /* Error code for when the content process crashed */
+  ERROR(NS_ERROR_CONTENT_CRASHED,               FAILURE(16)),
 
   /* XXX this is not really used */
   ERROR(NS_HTML_STYLE_PROPERTY_NOT_THERE,   SUCCESS(2)),

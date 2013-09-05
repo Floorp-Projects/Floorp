@@ -61,11 +61,13 @@ class TestInstallManifest(TestWithTmpDir):
         m.add_symlink('s_source', 's_dest')
         m.add_copy('c_source', 'c_dest')
         m.add_required_exists('e_dest')
+        m.add_optional_exists('o_dest')
 
-        self.assertEqual(len(m), 3)
+        self.assertEqual(len(m), 4)
         self.assertIn('s_dest', m)
         self.assertIn('c_dest', m)
         self.assertIn('e_dest', m)
+        self.assertIn('o_dest', m)
 
         with self.assertRaises(ValueError):
             m.add_symlink('s_other', 's_dest')
@@ -76,11 +78,15 @@ class TestInstallManifest(TestWithTmpDir):
         with self.assertRaises(ValueError):
             m.add_required_exists('e_dest')
 
+        with self.assertRaises(ValueError):
+            m.add_optional_exists('o_dest')
+
     def _get_test_manifest(self):
         m = InstallManifest()
         m.add_symlink(self.tmppath('s_source'), 's_dest')
         m.add_copy(self.tmppath('c_source'), 'c_dest')
         m.add_required_exists('e_dest')
+        m.add_optional_exists('o_dest')
 
         return m
 
@@ -94,16 +100,17 @@ class TestInstallManifest(TestWithTmpDir):
         with open(p, 'rb') as fh:
             c = fh.read()
 
-        self.assertEqual(c.count('\n'), 4)
+        self.assertEqual(c.count('\n'), 5)
 
         lines = c.splitlines()
-        self.assertEqual(len(lines), 4)
+        self.assertEqual(len(lines), 5)
 
-        self.assertEqual(lines[0], '1')
+        self.assertEqual(lines[0], '2')
         self.assertEqual(lines[1], '2\x1fc_dest\x1f%s' %
             self.tmppath('c_source'))
         self.assertEqual(lines[2], '3\x1fe_dest')
-        self.assertEqual(lines[3], '1\x1fs_dest\x1f%s' %
+        self.assertEqual(lines[3], '4\x1fo_dest')
+        self.assertEqual(lines[4], '1\x1fs_dest\x1f%s' %
             self.tmppath('s_source'))
 
         m2 = InstallManifest(path=p)
@@ -121,8 +128,8 @@ class TestInstallManifest(TestWithTmpDir):
         r = FileRegistry()
         m.populate_registry(r)
 
-        self.assertEqual(len(r), 3)
-        self.assertEqual(r.paths(), ['c_dest', 'e_dest', 's_dest'])
+        self.assertEqual(len(r), 4)
+        self.assertEqual(r.paths(), ['c_dest', 'e_dest', 'o_dest', 's_dest'])
 
     def test_or(self):
         m1 = self._get_test_manifest()
@@ -133,7 +140,7 @@ class TestInstallManifest(TestWithTmpDir):
         m1 |= m2
 
         self.assertEqual(len(m2), 2)
-        self.assertEqual(len(m1), 5)
+        self.assertEqual(len(m1), 6)
 
         self.assertIn('s_dest2', m1)
         self.assertIn('c_dest2', m1)
@@ -155,6 +162,9 @@ class TestInstallManifest(TestWithTmpDir):
         with open(self.tmppath('dest/e_dest'), 'a'):
             pass
 
+        with open(self.tmppath('dest/o_dest'), 'a'):
+            pass
+
         m = self._get_test_manifest()
         c = FileCopier()
         m.populate_registry(c)
@@ -163,6 +173,7 @@ class TestInstallManifest(TestWithTmpDir):
         self.assertTrue(os.path.exists(self.tmppath('dest/s_dest')))
         self.assertTrue(os.path.exists(self.tmppath('dest/c_dest')))
         self.assertTrue(os.path.exists(self.tmppath('dest/e_dest')))
+        self.assertTrue(os.path.exists(self.tmppath('dest/o_dest')))
         self.assertFalse(os.path.exists(to_delete))
 
         with open(self.tmppath('dest/s_dest'), 'rt') as fh:
@@ -174,7 +185,7 @@ class TestInstallManifest(TestWithTmpDir):
         self.assertEqual(result.updated_files, set(self.tmppath(p) for p in (
             'dest/s_dest', 'dest/c_dest')))
         self.assertEqual(result.existing_files,
-            set([self.tmppath('dest/e_dest')]))
+            set([self.tmppath('dest/e_dest'), self.tmppath('dest/o_dest')]))
         self.assertEqual(result.removed_files, {to_delete})
         self.assertEqual(result.removed_directories, set())
 

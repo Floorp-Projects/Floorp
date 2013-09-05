@@ -44,7 +44,6 @@ var cachedCutData, cachedCopyData, cachedPasteData;
 window.onfocus = function()
 {
   window.onfocus = null;
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
   // A list of test functions to run.  Before each test function is run, the
   // clipboard is initialized to clipboardInitialValue, and the contents of
@@ -98,21 +97,21 @@ SimpleTest.waitForExplicitFinish();
 window.focus();
 
 function getLoadContext() {
-  return window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-               .getInterface(Components.interfaces.nsIWebNavigation)
-               .QueryInterface(Components.interfaces.nsILoadContext);
+  return window.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+               .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+               .QueryInterface(SpecialPowers.Ci.nsILoadContext);
 }
 
 function getClipboardText() {
-  var trans = Components.classes["@mozilla.org/widget/transferable;1"]
+  var trans = SpecialPowers.Cc["@mozilla.org/widget/transferable;1"]
     .createInstance();
-  trans = trans.QueryInterface(Components.interfaces.nsITransferable);
+  trans = trans.QueryInterface(SpecialPowers.Ci.nsITransferable);
   trans.init(getLoadContext());
   trans.addDataFlavor("text/unicode");
 
-  var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
+  var clipboard = SpecialPowers.Cc["@mozilla.org/widget/clipboard;1"]
     .getService();
-  clipboard = clipboard.QueryInterface(Components.interfaces.nsIClipboard);
+  clipboard = clipboard.QueryInterface(SpecialPowers.Ci.nsIClipboard);
   clipboard.getData(trans, clipboard.kGlobalClipboard);
 
   var str = new Object();
@@ -123,8 +122,8 @@ function getClipboardText() {
   } catch(e) {
     // NS_ERROR_FAILURE will occur if the transferable object has no
     // text/unicode data in it.  In that case, it's not an error:
-    if (e instanceof Components.interfaces.nsIXPCException &&
-      e.result == Components.results.NS_ERROR_FAILURE) {
+    if (e instanceof SpecialPowers.Ci.nsIXPCException &&
+      e.result == SpecialPowers.Cr.NS_ERROR_FAILURE) {
       return null;
     } else {
       // if we don't know how to handle it then rethrow
@@ -134,7 +133,7 @@ function getClipboardText() {
 
   if (!str) return null;
 
-  str = str.value.QueryInterface(Components.interfaces.nsISupportsString);
+  str = str.value.QueryInterface(SpecialPowers.Ci.nsISupportsString);
   if (!str) return null;
 
   str = str.data.substring(0, strLen.value / 2);
@@ -145,8 +144,8 @@ function getClipboardText() {
 
 
 function setClipboardText(text) {
-  var helper = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
-    .getService(Components.interfaces.nsIClipboardHelper);
+  var helper = SpecialPowers.Cc["@mozilla.org/widget/clipboardhelper;1"]
+    .getService(SpecialPowers.Ci.nsIClipboardHelper);
   helper.copyString(text);
 }
 

@@ -49,6 +49,7 @@ PARALLEL_DIRS += [
     'devicestorage',
     'encoding',
     'file',
+    'fmradio',
     'media',
     'messages',
     'power',
@@ -85,9 +86,6 @@ if CONFIG['MOZ_B2G_RIL']:
         'cellbroadcast',
         'voicemail',
     ]
-
-if CONFIG['MOZ_B2G_FM']:
-    PARALLEL_DIRS += ['fm']
 
 if CONFIG['MOZ_PAY']:
     PARALLEL_DIRS += ['payment']

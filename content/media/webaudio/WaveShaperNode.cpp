@@ -258,7 +258,7 @@ WaveShaperNode::WaveShaperNode(AudioContext* aContext)
   , mCurve(nullptr)
   , mType(OverSampleType::None)
 {
-  NS_HOLD_JS_OBJECTS(this, WaveShaperNode);
+  mozilla::HoldJSObjects(this);
 
   WaveShaperNodeEngine* engine = new WaveShaperNodeEngine(this);
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
@@ -273,7 +273,7 @@ void
 WaveShaperNode::ClearCurve()
 {
   mCurve = nullptr;
-  NS_DROP_JS_OBJECTS(this, WaveShaperNode);
+  mozilla::DropJSObjects(this);
 }
 
 JSObject*

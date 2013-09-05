@@ -54,8 +54,8 @@
       }
 
       netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-      var fm = Components.classes["@mozilla.org/focus-manager;1"].
-                          getService(Components.interfaces.nsIFocusManager);
+      var fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"].
+                             getService(SpecialPowers.Ci.nsIFocusManager);
 
       waitForFocus(function() {
         // Make sure the plugin handled the focus event before checking.

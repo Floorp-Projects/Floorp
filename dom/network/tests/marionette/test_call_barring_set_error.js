@@ -53,7 +53,7 @@ function testSetCallBarringOptionError(option) {
        + JSON.stringify(option));
   };
   request.onerror = function(event) {
-    is(event.target.error.name, 'InvalidCallBarringOption', JSON.stringify(option));
+    is(event.target.error.name, 'InvalidParameter', JSON.stringify(option));
     nextTest();
   };
 }

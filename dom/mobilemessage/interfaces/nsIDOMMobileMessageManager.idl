@@ -11,10 +11,10 @@ interface nsIDOMDOMCursor;
 interface nsIDOMDOMRequest;
 interface nsIDOMBlob;
 
-[scriptable, builtinclass, uuid(efff5276-0f3f-4137-9b16-66e894400e01)]
+[scriptable, builtinclass, uuid(3f81dcbc-00cf-11e3-ae66-538115636543)]
 interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
 {
-  nsIDOMMozSmsSegmentInfo getSegmentInfoForText(in DOMString text);
+  nsIDOMDOMRequest getSegmentInfoForText(in DOMString text);
 
   // The first parameter can be either a DOMString (only one number) or an array
   // of DOMStrings.

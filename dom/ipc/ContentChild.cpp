@@ -98,6 +98,7 @@
 #include "mozilla/dom/mobilemessage/SmsChild.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
 #include "mozilla/dom/bluetooth/PBluetoothChild.h"
+#include "mozilla/dom/PFMRadioChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 
 #ifdef MOZ_WEBSPEECH
@@ -951,6 +952,30 @@ ContentChild::DeallocPBluetoothChild(PBluetoothChild* aActor)
     return true;
 #else
     MOZ_CRASH("No support for bluetooth on this platform!");
+#endif
+}
+
+PFMRadioChild*
+ContentChild::AllocPFMRadioChild()
+{
+#ifdef MOZ_B2G_FM
+    NS_RUNTIMEABORT("No one should be allocating PFMRadioChild actors");
+    return nullptr;
+#else
+    NS_RUNTIMEABORT("No support for FMRadio on this platform!");
+    return nullptr;
+#endif
+}
+
+bool
+ContentChild::DeallocPFMRadioChild(PFMRadioChild* aActor)
+{
+#ifdef MOZ_B2G_FM
+    delete aActor;
+    return true;
+#else
+    NS_RUNTIMEABORT("No support for FMRadio on this platform!");
+    return false;
 #endif
 }
 

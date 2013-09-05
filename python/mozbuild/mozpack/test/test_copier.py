@@ -155,6 +155,22 @@ class TestFileCopier(TestWithTmpDir):
         self.assertEqual(result.removed_files_count, 1)
         self.assertFalse(os.path.exists(p))
 
+    def test_no_remove(self):
+        copier = FileCopier()
+        copier.add('foo', GeneratedFile('foo'))
+
+        with open(self.tmppath('bar'), 'a'):
+            pass
+
+        os.mkdir(self.tmppath('emptydir'))
+
+        result = copier.copy(self.tmpdir, remove_unaccounted=False)
+
+        self.assertEqual(self.all_files(self.tmpdir), set(['foo', 'bar']))
+        self.assertEqual(result.removed_files, set())
+        self.assertEqual(result.removed_directories,
+            set([self.tmppath('emptydir')]))
+
 
 class TestFilePurger(TestWithTmpDir):
     def test_file_purger(self):

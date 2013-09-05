@@ -48,6 +48,7 @@ inline void* dtoa_malloc(size_t size) { return js_malloc(size); }
 inline void dtoa_free(void* p) { return js_free(p); }
 
 #define NO_GLOBAL_STATE
+#define NO_ERRNO
 #define MALLOC dtoa_malloc
 #define FREE dtoa_free
 #include "dtoa.c"

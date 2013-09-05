@@ -201,6 +201,16 @@ symverscript: symverscript.in
 EXTRA_DEPS += symverscript
 endif
 
+export_files = js-config.h
+ifdef HAVE_DTRACE
+export_files += $(CURDIR)/javascript-trace.h
+endif
+
+INSTALL_TARGETS += jsconfig
+jsconfig_FILES = $(export_files)
+jsconfig_DEST = $(DIST)/include
+jsconfig_TARGETS := export
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef JS_HAS_CTYPES

@@ -4,10 +4,17 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(a45c0fe0-c911-11e2-8b8b-0800200c9a66)]
+[scriptable, uuid(dd9f229c-e5a6-453a-8388-950af0ff9918)]
 interface nsIDOMMozIccInfo : nsISupports
 {
-   /**
+  /**
+   * Integrated Circuit Card Type.
+   *
+   * Possible values: "sim", "usim", "ruim".
+   */
+  readonly attribute DOMString iccType;
+
+  /**
    * Integrated Circuit Card Identifier.
    */
   readonly attribute DOMString iccid;
@@ -36,10 +43,28 @@ interface nsIDOMMozIccInfo : nsISupports
    * Service provider name must be a part of displayed carrier name.
    */
   readonly attribute boolean isDisplaySpnRequired;
+};
 
+[scriptable, uuid(3c237e39-7af3-4748-baf4-4a3b6c3e0e66)]
+interface nsIDOMMozGsmIccInfo : nsIDOMMozIccInfo
+{
   /**
-   * Mobile Station ISDN Number (MSISDN) of the subscriber's, aka
+   * Mobile Station ISDN Number (MSISDN) of the subscriber, aka
    * his phone number.
    */
   readonly attribute DOMString msisdn;
+};
+
+[scriptable, uuid(013e973e-8b56-4525-b634-d23166b86edb)]
+interface nsIDOMMozCdmaIccInfo : nsIDOMMozIccInfo
+{
+  /**
+   * Mobile Directory Number (MDN) of the subscriber, aka his phone number.
+   */
+  readonly attribute DOMString mdn;
+
+  /**
+   * Mobile Identification Number (MIN) of the subscriber.
+   */
+  readonly attribute DOMString min;
 };
