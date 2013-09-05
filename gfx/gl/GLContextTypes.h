@@ -6,14 +6,43 @@
 #ifndef GLCONTEXT_TYPES_H_
 #define GLCONTEXT_TYPES_H_
 
-typedef unsigned int GLenum;
-typedef unsigned int GLbitfield;
-typedef unsigned int GLuint;
-typedef int GLint;
-typedef int GLsizei;
+#include "GLTypes.h"
 
 namespace mozilla {
 namespace gl {
+
+class GLContext;
+
+typedef uintptr_t SharedTextureHandle;
+
+enum SharedTextureShareType {
+    SameProcess = 0,
+    CrossProcess
+};
+
+enum SharedTextureBufferType {
+    TextureID
+#ifdef MOZ_WIDGET_ANDROID
+    , SurfaceTexture
+#endif
+#ifdef XP_MACOSX
+    , IOSurface
+#endif
+};
+
+enum ContextFlags {
+    ContextFlagsNone = 0x0,
+    ContextFlagsGlobal = 0x1,
+    ContextFlagsMesaLLVMPipe = 0x2
+};
+
+enum GLContextType {
+    ContextTypeUnknown,
+    ContextTypeWGL,
+    ContextTypeCGL,
+    ContextTypeGLX,
+    ContextTypeEGL
+};
 
 struct GLFormats
 {

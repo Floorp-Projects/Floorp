@@ -23,7 +23,7 @@ function modifySelection(s) {
 }
 
 function getLoadContext() {
-  var Ci = SpecialPowers.wrap(Components).interfaces;
+  var Ci = SpecialPowers.Ci;
   return SpecialPowers.wrap(window).QueryInterface(Ci.nsIInterfaceRequestor)
                                    .getInterface(Ci.nsIWebNavigation)
                                    .QueryInterface(Ci.nsILoadContext);
@@ -35,16 +35,16 @@ function testCopyPaste (isXHTML) {
   var suppressUnicodeCheckIfHidden = !!isXHTML;
   var suppressHTMLCheck = !!isXHTML;
 
-  var webnav = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                     .getInterface(Components.interfaces.nsIWebNavigation)
+  var webnav = window.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                     .getInterface(SpecialPowers.Ci.nsIWebNavigation)
 
-  var docShell = webnav.QueryInterface(Components.interfaces.nsIDocShell);
+  var docShell = webnav.QueryInterface(SpecialPowers.Ci.nsIDocShell);
 
   var documentViewer = docShell.contentViewer
-                               .QueryInterface(Components.interfaces.nsIContentViewerEdit);
+                               .QueryInterface(SpecialPowers.Ci.nsIContentViewerEdit);
 
-  var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
-                            .getService(Components.interfaces.nsIClipboard);
+  var clipboard = SpecialPowers.Cc["@mozilla.org/widget/clipboard;1"]
+                            .getService(SpecialPowers.Ci.nsIClipboard);
 
   var textarea = SpecialPowers.wrap(document.getElementById('input'));
 
@@ -83,8 +83,8 @@ function testCopyPaste (isXHTML) {
     copySelectionToClipboard();
   }
   function getClipboardData(mime) {
-    var transferable = Components.classes['@mozilla.org/widget/transferable;1']
-                                 .createInstance(Components.interfaces.nsITransferable);
+    var transferable = SpecialPowers.Cc['@mozilla.org/widget/transferable;1']
+                                    .createInstance(SpecialPowers.Ci.nsITransferable);
     transferable.init(getLoadContext());
     transferable.addDataFlavor(mime);
     clipboard.getData(transferable, 1);
@@ -97,7 +97,7 @@ function testCopyPaste (isXHTML) {
       return null;
     var data = getClipboardData(mime);
     is (data.value == null ? data.value :
-        data.value.QueryInterface(Components.interfaces.nsISupportsString).data,
+        data.value.QueryInterface(SpecialPowers.Ci.nsISupportsString).data,
       expected,
       mime + " value in the clipboard");
     return data.value;
@@ -257,7 +257,6 @@ if (false) {
   setTimeout(function(){testSelectionToString("div11")},0);
 
   setTimeout(function(){
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     copyRangeToClipboard($("div12").childNodes[0],0, $("div12").childNodes[1],2);
     testClipboardValue("text/unicode", "Xdiv12");
     testClipboardValue("text/html", "<div><p>X<span>div</span>12</p></div>");

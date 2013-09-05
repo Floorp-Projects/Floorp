@@ -475,7 +475,8 @@ nsFSMultipartFormData::AddNameFilePair(const nsAString& aName,
         rv = file->GetPath(filepath16);
         NS_ENSURE_SUCCESS(rv, rv);
         if (!filepath16.IsEmpty()) {
-          filename16 = filepath16 + NS_LITERAL_STRING("/") + filename16;
+          // File.path includes trailing "/"
+          filename16 = filepath16 + filename16;
         }
       }
 

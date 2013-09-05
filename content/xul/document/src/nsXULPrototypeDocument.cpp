@@ -744,7 +744,7 @@ nsXULPDGlobalObject::GetCompilationGlobal()
                                  JS::DontFireOnNewGlobalHook, options);
   NS_ENSURE_TRUE(mJSObject, nullptr);
 
-  NS_HOLD_JS_OBJECTS(this, nsXULPDGlobalObject);
+  mozilla::HoldJSObjects(this);
 
   // Add an owning reference from JS back to us. This'll be
   // released when the JSObject is finalized.
@@ -779,7 +779,7 @@ nsXULPDGlobalObject::Destroy()
     return;
   }
   mJSObject = nullptr;
-  NS_DROP_JS_OBJECTS(this, nsXULPDGlobalObject);
+  mozilla::DropJSObjects(this);
 }
 
 nsIPrincipal*

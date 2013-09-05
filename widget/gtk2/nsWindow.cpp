@@ -67,6 +67,7 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "nsIIdleServiceInternal.h"
 #include "nsIPropertyBag2.h"
+#include "GLContext.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/Accessible.h"

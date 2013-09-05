@@ -24,9 +24,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=401662
 SimpleTest.waitForExplicitFinish();
 
 window.onload = function() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
+  const Cc = SpecialPowers.Cc;
+  const Ci = SpecialPowers.Ci;
 
   var encoder = Cc["@mozilla.org/layout/documentEncoder;1?type=text/html"]
                    .createInstance(Ci.nsIDocumentEncoder);

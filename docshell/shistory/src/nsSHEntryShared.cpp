@@ -14,8 +14,8 @@
 #include "nsDocShellEditorData.h"
 #include "nsThreadUtils.h"
 #include "nsILayoutHistoryState.h"
-#include "prprf.h"
 #include "mozilla/Attributes.h"
+#include "nsISupportsArray.h"
 
 namespace dom = mozilla::dom;
 

@@ -50,9 +50,10 @@ function installListener(next, aManifest) {
   let expectEvent = "onInstalling";
   let prefname = getManifestPrefname(aManifest);
   // wait for the actual removal to call next
-  SocialService.registerProviderListener(function providerListener(topic, data) {
-    if (topic == "provider-removed") {
+  SocialService.registerProviderListener(function providerListener(topic, origin, providers) {
+    if (topic == "provider-disabled") {
       SocialService.unregisterProviderListener(providerListener);
+      is(origin, aManifest.origin, "provider disabled");
       executeSoon(next);
     }
   });
@@ -295,14 +296,15 @@ var tests = {
           Social.enabled = true;
 
           // watch for the provider-update and test the new version
-          SocialService.registerProviderListener(function providerListener(topic, data) {
+          SocialService.registerProviderListener(function providerListener(topic, origin, providers) {
             if (topic != "provider-update")
               return;
+            is(origin, addonManifest.origin, "provider updated")
             SocialService.unregisterProviderListener(providerListener);
             Services.prefs.clearUserPref("social.whitelist");
-            let provider = Social._getProviderFromOrigin(addonManifest.origin);
+            let provider = Social._getProviderFromOrigin(origin);
             is(provider.manifest.version, 2, "manifest version is 2");
-            Social.uninstallProvider(addonManifest.origin, function() {
+            Social.uninstallProvider(origin, function() {
               gBrowser.removeTab(tab);
               next();
             });

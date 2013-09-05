@@ -47,9 +47,8 @@
       document.body.removeChild(document.getElementById('ifr_' + test));
 
     // clean up the STS state
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    const Cc = Components.classes;
-    const Ci = Components.interfaces;
+    const Cc = SpecialPowers.Cc;
+    const Ci = SpecialPowers.Ci;
     var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     var thehost = ios.newURI("http://example.com", null, null);
 

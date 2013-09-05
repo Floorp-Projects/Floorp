@@ -79,6 +79,9 @@ class Nursery
     ObjectElements *reallocateElements(JSContext *cx, JSObject *obj, ObjectElements *oldHeader,
                                        uint32_t oldCount, uint32_t newCount);
 
+    /* Free a slots array. */
+    void freeSlots(JSContext *cx, HeapSlot *slots);
+
     /* Add a slots to our tracking list if it is out-of-line. */
     void notifyInitialSlots(gc::Cell *cell, HeapSlot *slots);
 
