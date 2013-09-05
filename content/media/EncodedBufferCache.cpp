@@ -6,8 +6,7 @@
 
 #include "EncodedBufferCache.h"
 #include "nsAnonymousTemporaryFile.h"
-#include "nsDOMFile.h"
-#include "prio.h"
+#include "nsLocalFile.h"
 
 namespace mozilla {
 

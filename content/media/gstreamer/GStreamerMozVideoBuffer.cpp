@@ -7,7 +7,6 @@
 #include <string.h>
 #include "GStreamerReader.h"
 #include "GStreamerMozVideoBuffer.h"
-#include "ImageContainer.h"
 
 namespace mozilla {
 

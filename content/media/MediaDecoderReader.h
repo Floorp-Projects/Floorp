@@ -9,23 +9,15 @@
 #include <nsDeque.h>
 #include "nsSize.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "MediaStreamGraph.h"
 #include "SharedBuffer.h"
 #include "AudioSampleFormat.h"
-#include "AbstractMediaDecoder.h"
-#include "ImageTypes.h"
-
-struct nsIntRect;
+#include "MediaResource.h"
+#include "mozilla/dom/HTMLMediaElement.h"
 
 namespace mozilla {
 
-namespace layers {
-class Image;
-class ImageContainer;
-}
-
-namespace dom {
-class TimeRanges;
-}
+class AbstractMediaDecoder;
 
 // Stores info relevant to presenting media frames.
 class VideoInfo {

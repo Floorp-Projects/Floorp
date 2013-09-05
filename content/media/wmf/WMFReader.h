@@ -9,8 +9,6 @@
 #include "WMF.h"
 #include "MediaDecoderReader.h"
 #include "nsAutoPtr.h"
-#include "mozilla/RefPtr.h"
-#include "nsRect.h"
 
 namespace mozilla {
 

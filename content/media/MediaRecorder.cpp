@@ -7,15 +7,17 @@
 #include "MediaRecorder.h"
 #include "GeneratedEvents.h"
 #include "MediaEncoder.h"
+#include "mozilla/Util.h"
 #include "nsDOMEventTargetHelper.h"
+#include "nsDOMFile.h"
 #include "nsError.h"
 #include "nsIDocument.h"
 #include "nsIDOMBlobEvent.h"
 #include "nsIDOMRecordErrorEvent.h"
+#include "nsIScriptObjectPrincipal.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsAString.h"
 #include "nsTArray.h"
-#include "DOMMediaStream.h"
-#include "EncodedBufferCache.h"
-#include "nsIDOMFile.h"
 
 namespace mozilla {
 
@@ -148,7 +150,7 @@ MediaRecorder::ExtractEncodedData()
   do {
     nsTArray<nsTArray<uint8_t> > outputBufs;
     mEncoder->GetEncodedData(&outputBufs, mMimeType);
-    for (uint32_t i = 0; i < outputBufs.Length(); i++) {
+    for (uint i = 0; i < outputBufs.Length(); i++) {
       mEncodedBufferCache->AppendBuffer(outputBufs[i]);
     }
 

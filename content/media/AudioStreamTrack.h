@@ -7,7 +7,6 @@
 #define AUDIOSTREAMTRACK_H_
 
 #include "MediaStreamTrack.h"
-#include "DOMMediaStream.h"
 
 namespace mozilla {
 namespace dom {

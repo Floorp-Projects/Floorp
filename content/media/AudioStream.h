@@ -6,13 +6,11 @@
 #if !defined(AudioStream_h_)
 #define AudioStream_h_
 
+#include "nscore.h"
 #include "AudioSampleFormat.h"
 #include "AudioChannelCommon.h"
+#include "soundtouch/SoundTouch.h"
 #include "nsAutoPtr.h"
-
-namespace soundtouch {
-class SoundTouch;
-}
 
 namespace mozilla {
 
