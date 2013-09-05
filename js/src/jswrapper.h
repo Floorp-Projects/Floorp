@@ -37,6 +37,9 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
         LAST_USED_FLAG = CROSS_COMPARTMENT
     };
 
+    virtual bool defaultValue(JSContext *cx, HandleObject obj, JSType hint,
+                              MutableHandleValue vp) MOZ_OVERRIDE;
+
     /*
      * Wrappers can explicitly specify that they are unsafe to unwrap from a
      * security perspective (as is the case for SecurityWrappers). If a wrapper
