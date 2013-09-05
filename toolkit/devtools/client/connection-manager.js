@@ -138,6 +138,12 @@ Connection.Events = {
 Connection.prototype = {
   logs: "",
   log: function(str) {
+    let d = new Date();
+    let hours = ("0" + d.getHours()).slice(-2);
+    let minutes = ("0" + d.getMinutes()).slice(-2);
+    let seconds = ("0" + d.getSeconds()).slice(-2);
+    let timestamp = [hours, minutes, seconds].join(":") + ": ";
+    str = timestamp + str;
     this.logs +=  "\n" + str;
     this.emit(Connection.Events.NEW_LOG, str);
   },
@@ -212,10 +218,10 @@ Connection.prototype = {
 
   _clientConnect: function () {
     let transport;
-    if (!this._host) {
+    if (!this.host) {
       transport = DebuggerServer.connectPipe();
     } else {
-      transport = debuggerSocketConnect(this._host, this._port);
+      transport = debuggerSocketConnect(this.host, this.port);
     }
     this._client = new DebuggerClient(transport);
     this._client.addOneTimeListener("closed", this._onDisconnected);
@@ -243,12 +249,13 @@ Connection.prototype = {
     }
 
     clearTimeout(this._timeoutID);
+
     switch (this.status) {
       case Connection.Status.CONNECTED:
         this.log("disconnected (unexpected)");
         break;
       case Connection.Status.CONNECTING:
-        this.log("Connection error");
+        this.log("connection error. Possible causes: USB port not connected, port not forwarded (adb forward), wrong host or port, remote debugging not enabled on the device.");
         break;
       default:
         this.log("disconnected");
@@ -263,7 +270,7 @@ Connection.prototype = {
   },
 
   _onTimeout: function() {
-    this.log("connection timeout");
+    this.log("connection timeout. Possible causes: didn't click on 'accept' (prompt).");
     this.emit(Connection.Events.TIMEOUT);
     this.disconnect();
   },
