@@ -180,8 +180,8 @@ nsCounterList::RecalcAll()
 }
 
 nsCounterManager::nsCounterManager()
+    : mNames(16)
 {
-    mNames.Init(16);
 }
 
 bool

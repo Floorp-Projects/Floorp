@@ -47,8 +47,6 @@ ExternalHelperAppParent::Init(ContentParent *parent,
                               const bool& aForceSave,
                               const OptionalURIParams& aReferrer)
 {
-  nsHashPropertyBag::Init();
-
   nsCOMPtr<nsIExternalHelperAppService> helperAppService =
     do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID);
   NS_ASSERTION(helperAppService, "No Helper App Service!");

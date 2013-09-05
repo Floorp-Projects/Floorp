@@ -458,6 +458,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_getprop(HandlePropertyName name);
     bool jsop_setprop(HandlePropertyName name);
     bool jsop_delprop(HandlePropertyName name);
+    bool jsop_delelem();
     bool jsop_newarray(uint32_t count);
     bool jsop_newobject(HandleObject baseObj);
     bool jsop_initelem();

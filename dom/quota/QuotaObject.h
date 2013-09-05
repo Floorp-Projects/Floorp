@@ -58,7 +58,6 @@ public:
   OriginInfo(const nsACString& aOrigin, int64_t aLimit, int64_t aUsage)
   : mOrigin(aOrigin), mLimit(aLimit), mUsage(aUsage)
   {
-    mQuotaObjects.Init();
   }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OriginInfo)

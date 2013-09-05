@@ -95,7 +95,6 @@ nsConsoleService::Init()
     // Array elements should be 0 initially for circular buffer algorithm.
     memset(mMessages, 0, mBufferSize * sizeof(nsIConsoleMessage *));
 
-    mListeners.Init();
     NS_DispatchToMainThread(new AddConsolePrefWatchers(this));
 
     return NS_OK;

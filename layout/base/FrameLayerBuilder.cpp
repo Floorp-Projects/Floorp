@@ -169,7 +169,6 @@ public:
     , mInvalidateAllLayers(false)
   {
     MOZ_COUNT_CTOR(LayerManagerData);
-    mDisplayItems.Init();
   }
   ~LayerManagerData() {
     MOZ_COUNT_DTOR(LayerManagerData);
@@ -247,7 +246,6 @@ public:
     // will work.
     mSnappingEnabled = aManager->IsSnappingEffectiveTransforms() &&
       !mParameters.AllowResidualTranslation();
-    mRecycledMaskImageLayers.Init();
     CollectOldLayers();
   }
 

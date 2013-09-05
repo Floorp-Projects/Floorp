@@ -1017,6 +1017,13 @@ IonBuilder::maybeAddOsrTypeBarriers()
         headerPhi++;
 
     for (uint32_t i = info().startArgSlot(); i < osrBlock->stackDepth(); i++, headerPhi++) {
+
+        // Aliased slots are never accessed, since they need to go through
+        // the callobject. The typebarriers are added there and can be
+        // discared here.
+        if (info().isSlotAliased(i))
+            continue;
+
         MInstruction *def = osrBlock->getSlot(i)->toOsrValue();
 
         JS_ASSERT(headerPhi->slot() == i);
@@ -1611,6 +1618,9 @@ IonBuilder::inspectOpcode(JSOp op)
         RootedPropertyName name(cx, info().getAtom(pc)->asPropertyName());
         return jsop_delprop(name);
       }
+
+      case JSOP_DELELEM:
+        return jsop_delelem();
 
       case JSOP_REGEXP:
         return jsop_regexp(info().getRegExp(pc));
@@ -5796,6 +5806,11 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
         MDefinition *def = osrBlock->getSlot(i);
         JS_ASSERT(def->type() == MIRType_Value);
 
+        // Aliased slots are never accessed, since they need to go through
+        // the callobject. No need to type them here.
+        if (info().isSlotAliased(i))
+            continue;
+
         def->setResultType(existing->type());
         def->setResultTypeSet(existing->resultTypeSet());
     }
@@ -5830,37 +5845,40 @@ IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc, bool 
 
         // Unbox the MOsrValue if it is known to be unboxable.
         for (uint32_t i = info().startArgSlot(); i < block->stackDepth(); i++) {
+
+            // The value of aliased slots are in the callobject. So we can't
+            // the value from the baseline frame.
+            if (info().isSlotAliased(i))
+                continue;
+
+            // Don't bother with expression stack values. The stack should be
+            // empty except for let variables (not Ion-compiled) or iterators.
+            if (i >= info().firstStackSlot())
+                continue;
+
             MPhi *phi = block->getSlot(i)->toPhi();
 
-            bool haveValue = false;
+            // Get the value from the baseline frame.
             Value existingValue;
-            if (info().fun() && i == info().thisSlot()) {
-                haveValue = true;
+            uint32_t arg = i - info().firstArgSlot();
+            uint32_t var = i - info().firstLocalSlot();
+            if (info().fun() && i == info().thisSlot())
                 existingValue = baselineFrame_->thisValue();
-            } else {
-                uint32_t arg = i - info().firstArgSlot();
-                uint32_t var = i - info().firstLocalSlot();
-                if (arg < info().nargs()) {
-                    if (!script()->formalIsAliased(arg)) {
-                        haveValue = true;
-                        existingValue = baselineFrame_->unaliasedFormal(arg);
-                    }
-                } else if (var < info().nlocals()) {
-                    if (!script()->varIsAliased(var)) {
-                        haveValue = true;
-                        existingValue = baselineFrame_->unaliasedVar(var);
-                    }
-                }
-            }
-            if (haveValue) {
-                MIRType type = existingValue.isDouble()
-                             ? MIRType_Double
-                             : MIRTypeFromValueType(existingValue.extractNonDoubleType());
-                types::Type ntype = types::GetValueType(existingValue);
-                types::StackTypeSet *typeSet =
-                    GetIonContext()->temp->lifoAlloc()->new_<types::StackTypeSet>(ntype);
-                phi->addBackedgeType(type, typeSet);
-            }
+            else if (arg < info().nargs())
+                existingValue = baselineFrame_->unaliasedFormal(arg);
+            else
+                existingValue = baselineFrame_->unaliasedVar(var);
+
+            // Extract typeset from value.
+            MIRType type = existingValue.isDouble()
+                         ? MIRType_Double
+                         : MIRTypeFromValueType(existingValue.extractNonDoubleType());
+            types::Type ntype = types::GetValueType(existingValue);
+            types::StackTypeSet *typeSet =
+                GetIonContext()->temp->lifoAlloc()->new_<types::StackTypeSet>(ntype);
+            if (!typeSet)
+                return NULL;
+            phi->addBackedgeType(type, typeSet);
         }
     }
 
@@ -8720,6 +8738,19 @@ IonBuilder::jsop_delprop(HandlePropertyName name)
 
     MInstruction *ins = MDeleteProperty::New(obj, name);
 
+    current->add(ins);
+    current->push(ins);
+
+    return resumeAfter(ins);
+}
+
+bool
+IonBuilder::jsop_delelem()
+{
+    MDefinition *index = current->pop();
+    MDefinition *obj = current->pop();
+
+    MDeleteElement *ins = MDeleteElement::New(obj, index);
     current->add(ins);
     current->push(ins);
 
