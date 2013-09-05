@@ -166,9 +166,7 @@ function goUpdateConsoleCommands() {
       </toolbar>
 
       <hbox id="output-wrapper" flex="1" context="output-contextmenu" tooltip="aHTMLTooltip">
-        <div xmlns="http://www.w3.org/1999/xhtml" id="output-wrapper2">
-	  <div class="hud-output-node" tabindex="1"/>
-	</div>
+        <div xmlns="http://www.w3.org/1999/xhtml" id="output-container" tabindex="1" />
       </hbox>
 
       <hbox class="jsterm-input-container" style="direction:ltr">

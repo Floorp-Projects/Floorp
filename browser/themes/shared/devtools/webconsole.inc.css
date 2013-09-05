@@ -11,53 +11,42 @@ a {
   text-decoration: underline;
 }
 
-a:focus {
-  outline: 1px dashed gray;
-}
-
 /* Workaround for Bug 575675 - FindChildWithRules aRelevantLinkVisited
  * assertion when loading HTML page with links in XUL iframe */
 *:visited { }
 
-.webconsole-timestamp {
-  flex: 0 0 auto;
-  color: GrayText;
-  margin: 4px 0;
-  font-size: 0.9em;
-}
-
-.hud-msg-node {
+.message {
   display: flex;
+  flex: 0 0 auto;
   -moz-margin-start: 6px;
   -moz-margin-end: 8px;
   width: calc(100% - 6px - 8px);
 }
 
-.webconsole-msg-icon {
+.message > .timestamp {
+  flex: 0 0 auto;
+  color: GrayText;
+  margin: 4px 0;
+}
+
+.message > .icon {
   background: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 0, 1, 0, 0) no-repeat;
-  background-position: center 0.3em;
+  background-position: center 0.5em;
   flex: 0 0 auto;
   margin: 0 6px;
   padding: 0 4px;
   width: 8px;
 }
 
-.webconsole-msg-body {
+.message > .body {
   flex: 1 1 100%;
   white-space: pre-wrap;
   word-wrap: break-word;
+  margin-top: 4px;
 }
 
-.webconsole-msg-url {
-  flex: 1 1 auto;
-  min-width: 5em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Repeated messages */
-.webconsole-msg-repeat {
+/* The red bubble that shows the number of times a message is repeated */
+.message > .repeats {
   -moz-user-select: none;
   flex: 0 0 auto;
   margin: 2px 6px;
@@ -71,15 +60,16 @@ a:focus {
   font-weight: 600;
 }
 
-.webconsole-msg-repeat[value="1"] {
+.message > .repeats[value="1"] {
   display: none;
 }
 
-.webconsole-location {
+.message > .location {
   -moz-margin-start: 6px;
   flex: 0 0 auto;
   align-self: flex-start;
   width: 10em;
+  margin-top: 4px;
   text-align: end;
   color: -moz-nativehyperlinktext;
   text-overflow: ellipsis;
@@ -88,19 +78,9 @@ a:focus {
   white-space: nowrap;
 }
 
-.webconsole-location:hover,
-.webconsole-location:focus {
+.message > .location:hover,
+.message > .location:focus {
   text-decoration: underline;
-}
-
-.webconsole-mixed-content {
-  color: #FF0000;
-}
-
-.webconsole-mixed-content-link,
-.webconsole-learn-more-link {
-  color: #0000EE;
-  margin: 0 6px;
 }
 
 .jsterm-input-container {
@@ -112,26 +92,19 @@ a:focus {
   color: #000;
   direction: ltr;
   border-bottom: 1px solid ThreeDShadow;
+  overflow: auto;
 }
 
-#output-wrapper2 {
+#output-container {
   -moz-user-select: text;
   -moz-box-flex: 1;
-  overflow: auto;
-  /* Set dimensions to show scroll bars when needed. Actual size is changed by
-   * the flexbox. */
-  width: 1px;
-  height: 1px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
-.hud-output-node {
-  display: table;
-  table-layout: fixed;
-  width: 100%;
-}
-
-.hud-filtered-by-type,
-.hud-filtered-by-string {
+.filtered-by-type,
+.filtered-by-string {
   display: none;
 }
 
@@ -169,25 +142,44 @@ a:focus {
   border-color: #777;
 }
 
-.webconsole-msg-network > .webconsole-msg-icon {
+.message[category=network] > .icon {
   -moz-border-start: solid #000 6px;
 }
 
-.webconsole-msg-network.webconsole-msg-error > .webconsole-msg-icon {
+.message[category=network][severity=error] > .icon {
   background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 0, 16, 8, 8);
 }
 
-.webconsole-msg-network > .webconsole-msg-body {
+.message[category=network] > .body {
   display: flex;
 }
 
-.webconsole-msg-method {
+.message[category=network] .method {
   flex: 0 0 auto;
 }
 
-.webconsole-msg-status {
+.message[category=network]:not(.navigation-marker) .url {
+  flex: 1 1 auto;
+  /* Make sure the URL is very small initially, let flex change width as needed. */
+  width: 100px;
+  min-width: 5em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.message[category=network] .status {
   flex: 0 0 auto;
   -moz-margin-start: 6px;
+}
+
+.message[category=network].mixed-content .url {
+  color: #FF0000;
+}
+
+.message .learn-more-link {
+  color: #0000EE;
+  margin: 0 6px;
 }
 
 /* CSS styles */
@@ -196,15 +188,15 @@ a:focus {
   border-color: #1BA2CC;
 }
 
-.webconsole-msg-cssparser > .webconsole-msg-icon {
+.message[category=cssparser] > .icon {
   -moz-border-start: solid #00b6f0 6px;
 }
 
-.webconsole-msg-cssparser.webconsole-msg-error > .webconsole-msg-icon {
+.message[category=cssparser][severity=error] > .icon {
   background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 8, 16, 16, 8);
 }
 
-.webconsole-msg-cssparser.webconsole-msg-warn > .webconsole-msg-icon {
+.message[category=cssparser][severity=warn] > .icon {
   background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 8, 24, 16, 16);
 }
 
@@ -214,15 +206,15 @@ a:focus {
   border-color: #E98A00;
 }
 
-.webconsole-msg-exception > .webconsole-msg-icon {
+.message[category=exception] > .icon {
   -moz-border-start: solid #fb9500 6px;
 }
 
-.webconsole-msg-exception.webconsole-msg-error > .webconsole-msg-icon {
+.message[category=exception][severity=error] > .icon {
   background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 16, 16, 24, 8);
 }
 
-.webconsole-msg-exception.webconsole-msg-warn > .webconsole-msg-icon {
+.message[category=exception][severity=warn] > .icon {
   background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 16, 24, 24, 16);
 }
 
@@ -232,34 +224,34 @@ a:focus {
   border-color: #929292;
 }
 
-.webconsole-msg-console > .webconsole-msg-icon {
+.message[category=console] > .icon {
   -moz-border-start: solid #cbcbcb 6px;
 }
 
-.webconsole-msg-console.webconsole-msg-error > .webconsole-msg-icon,
-.webconsole-msg-output.webconsole-msg-error > .webconsole-msg-icon {
+.message[category=console][severity=error] > .icon,
+.message[category=output][severity=error] > .icon {
   background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 24, 16, 32, 8);
 }
 
-.webconsole-msg-console.webconsole-msg-warn > .webconsole-msg-icon {
+.message[category=console][severity=warn] > .icon {
   background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 24, 24, 32, 16);
 }
 
-.webconsole-msg-console.webconsole-msg-info > .webconsole-msg-icon {
+.message[category=console][severity=info] > .icon {
   background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 24, 32, 32, 24);
 }
 
 /* Input and output styles */
-.webconsole-msg-input > .webconsole-msg-icon,
-.webconsole-msg-output > .webconsole-msg-icon {
+.message[category=input] > .icon,
+.message[category=output] > .icon {
   -moz-border-start: solid #808080 6px;
 }
 
-.webconsole-msg-input > .webconsole-msg-icon {
+.message[category=input] > .icon {
   background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 24, 40, 32, 32);
 }
 
-.webconsole-msg-output > .webconsole-msg-icon {
+.message[category=output] > .icon {
   background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 24, 48, 32, 40);
 }
 
@@ -285,11 +277,11 @@ a:focus {
   color: GrayText;
 }
 
-.webconsole-msg-inspector .webconsole-msg-body {
+.inlined-variables-view .body {
   display: flex;
   flex-direction: column;
 }
-.webconsole-msg-inspector iframe {
+.inlined-variables-view iframe {
   display: block;
   flex: 1;
   margin-bottom: 15px;
@@ -306,7 +298,7 @@ a:focus {
 
 /* Security styles */
 
-.webconsole-msg-security > .webconsole-msg-icon {
+.message[category=security] > .icon {
   -moz-border-start: solid red 6px;
 }
 
@@ -315,11 +307,11 @@ a:focus {
   border-color: #D12C2C;
 }
 
-.webconsole-msg-security.webconsole-msg-error > .webconsole-msg-icon {
+.message[category=security][severity=error] > .icon {
   background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 32, 16, 40, 8);
 }
 
-.webconsole-msg-security.webconsole-msg-warn > .webconsole-msg-icon {
+.message[category=security][severity=warn] > .icon {
   background-image: -moz-image-rect(url(chrome://browser/skin/devtools/webconsole.png), 32, 24, 40, 16);
 }
 
