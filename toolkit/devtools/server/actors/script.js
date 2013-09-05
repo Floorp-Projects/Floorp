@@ -763,25 +763,15 @@ ThreadActor.prototype = {
       let createValueGrip = this.createValueGrip.bind(this);
 
       let startFrame = this.youngestFrame;
-      let script = startFrame.script;
-      let generatedLocation = {
-        url: script ? script.url : null,
-        line: script ? script.getOffsetLine(this.youngestFrame.offset) : null,
-        column: script ? getOffsetColumn(this.youngestFrame.offset, script) : null
-      };
+      const generatedLocation = getFrameLocation(this.youngestFrame);
       resumeLimitHandled = this.sources.getOriginalLocation(generatedLocation)
         .then((startLocation) => {
           // Define the JS hook functions for stepping.
 
           let onEnterFrame = aFrame => {
-            let script = aFrame.script;
-            let generatedLocation = {
-              url: script ? script.url : null,
-              line: script ? script.getOffsetLine(aFrame.offset) : null,
-              column: script ? getOffsetColumn(aFrame.offset, script) : null
-            };
-            let { url } = this.synchronize(
-              this.sources.getOriginalLocation(generatedLocation));
+            const generatedLocation = getFrameLocation(aFrame);
+            let { url } = this.synchronize(this.sources.getOriginalLocation(
+              generatedLocation));
 
             return this.sources.isBlackBoxed(url)
               ? undefined
@@ -793,14 +783,9 @@ ThreadActor.prototype = {
           let onPop = function TA_onPop(aCompletion) {
             // onPop is called with 'this' set to the current frame.
 
-            let script = this.script;
-            let generatedLocation = {
-              url: script ? script.url : null,
-              line: script ? script.getOffsetLine(this.offset) : null,
-              column: script ? getOffsetColumn(this.offset, script) : null
-            };
-            let { url } = thread.synchronize(
-              thread.sources.getOriginalLocation(generatedLocation));
+            const generatedLocation = getFrameLocation(this);
+            let { url } = thread.synchronize(thread.sources.getOriginalLocation(
+              generatedLocation));
 
             if (thread.sources.isBlackBoxed(url)) {
               return undefined;
@@ -828,13 +813,9 @@ ThreadActor.prototype = {
           let onStep = function TA_onStep() {
             // onStep is called with 'this' set to the current frame.
 
-            const script = this.script;
+            const generatedLocation = getFrameLocation(this);
             const newLocation = thread.synchronize(
-              thread.sources.getOriginalLocation({
-                url: script ? script.url : null,
-                line: script ? this.script.getOffsetLine(this.offset) : null,
-                column: script ? getOffsetColumn(this.offset, this.script) : null
-              }));
+              thread.sources.getOriginalLocation(generatedLocation));
 
             // Cases when we should pause because we have executed enough to
             // consider a "step" to have occured:
@@ -1982,11 +1963,9 @@ ThreadActor.prototype = {
   onDebuggerStatement: function TA_onDebuggerStatement(aFrame) {
     // Don't pause if we are currently stepping (in or over) or the frame is
     // black-boxed.
-    let { url } = this.synchronize(this.sources.getOriginalLocation({
-      url: aFrame.script.url,
-      line: aFrame.script.getOffsetLine(aFrame.offset),
-      column: getOffsetColumn(aFrame.offset, aFrame.script)
-    }));
+    const generatedLocation = getFrameLocation(aFrame);
+    const { url } = this.synchronize(this.sources.getOriginalLocation(
+      generatedLocation));
 
     return this.sources.isBlackBoxed(url) || aFrame.onStep
       ? undefined
@@ -2015,11 +1994,9 @@ ThreadActor.prototype = {
       return undefined;
     }
 
-    let { url } = this.synchronize(this.sources.getOriginalLocation({
-      url: aFrame.script.url,
-      line: aFrame.script.getOffsetLine(aFrame.offset),
-      column: getOffsetColumn(aFrame.offset, aFrame.script)
-    }));
+    const generatedLocation = getFrameLocation(aFrame);
+    const { url } = this.synchronize(this.sources.getOriginalLocation(
+      generatedLocation));
 
     if (this.sources.isBlackBoxed(url)) {
       return undefined;
@@ -2960,11 +2937,7 @@ FrameActor.prototype = {
     form.this = this.threadActor.createValueGrip(this.frame.this);
     form.arguments = this._args();
     if (this.frame.script) {
-      form.where = {
-        url: this.frame.script.url,
-        line: this.frame.script.getOffsetLine(this.frame.offset),
-        column: getOffsetColumn(this.frame.offset, this.frame.script)
-      };
+      form.where = getFrameLocation(this.frame);
     }
 
     if (!this.frame.older) {
@@ -3697,6 +3670,26 @@ function getOffsetColumn(aOffset, aScript) {
   }
 
   return bestOffsetMapping.columnNumber;
+}
+
+/**
+ * Return the non-source-mapped location of the given Debugger.Frame. If the
+ * frame does not have a script, the location's properties are all null.
+ *
+ * @param Debugger.Frame aFrame
+ *        The frame whose location we are getting.
+ * @returns Object
+ *          Returns an object of the form { url, line, column }
+ */
+function getFrameLocation(aFrame) {
+  if (!aFrame.script) {
+    return { url: null, line: null, column: null };
+  }
+  return {
+    url: aFrame.script.url,
+    line: aFrame.script.getOffsetLine(aFrame.offset),
+    column: getOffsetColumn(aFrame.offset, aFrame.script)
+  }
 }
 
 /**
