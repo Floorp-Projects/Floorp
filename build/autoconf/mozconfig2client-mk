@@ -43,15 +43,6 @@ mk_add_options() {
     # and substitute '@<word>@' with '$(<word>)'.
     _opt=`echo "$_opt" | sed -e 's/\([\"\\]\)/\\\\\1/g; s/@\([^@]*\)@/\$(\1)/g;'`
     echo $_opt;
-    opts="${opts:+$opts^}$_opt";
-  done
-}
-
-mk_echo_options() {
-  echo "Adding client.mk options from $FOUND_MOZCONFIG:" >&2
-  IFS=^
-  for _opt in $opts; do
-    echo "    $_opt" >&2
   done
 }
 
@@ -60,7 +51,6 @@ mk_echo_options() {
 
 scriptdir=`dirname $0`
 topsrcdir=$1
-opts=""
 
 # If the path changes, configure should be rerun
 echo "# PATH=$PATH"
@@ -81,10 +71,6 @@ if [ -n $isfoundset ]; then
   then
     print_header
     . "$FOUND_MOZCONFIG"
-  fi
-  echo "export FOUND_MOZCONFIG := $FOUND_MOZCONFIG"
-
-  if [ "$opts" ]; then
-    mk_echo_options
+    echo "FOUND_MOZCONFIG := $FOUND_MOZCONFIG"
   fi
 fi

@@ -2,13 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH     := @DEPTH@
-topsrcdir := @top_srcdir@
-srcdir    := @srcdir@
-VPATH     := @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 # Definitions used by constants.js.
 weave_version := 1.28.0
 weave_id      := {340c2bbc-ce74-4362-90b5-7c26312808ef}
@@ -82,5 +75,3 @@ INSTALL_TARGETS += SYNC_STAGES
 
 TESTING_JS_MODULES := $(addprefix modules-testing/,$(sync_testing_modules))
 TESTING_JS_MODULE_DIR := services/sync
-
-include $(topsrcdir)/config/rules.mk

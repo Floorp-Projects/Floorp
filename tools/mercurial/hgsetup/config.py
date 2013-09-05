@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 from configobj import ConfigObj
+import re
 
 
 BUGZILLA_FINGERPRINT = '45:77:35:fd:6f:2c:1c:c2:90:4b:f7:b4:4d:60:c6:97:c5:5c:47:27'
@@ -115,3 +116,30 @@ class MercurialConfig(object):
                 del self._c['mqext']['mqcommit']
             except KeyError:
                 pass
+
+
+    def have_qnew_currentuser_default(self):
+        if 'defaults' not in self._c:
+            return False
+        d = self._c['defaults']
+        if 'qnew' not in d:
+            return False
+        argv = d['qnew'].split(' ')
+        for arg in argv:
+            if arg == '--currentuser' or re.match("-[^-]*U.*", arg):
+                return True
+        return False
+
+    def ensure_qnew_currentuser_default(self):
+        if self.have_qnew_currentuser_default():
+            return
+        if 'defaults' not in self._c:
+            self._c['defaults'] = {}
+
+        d = self._c['defaults']
+        if 'qnew' not in d:
+          d['qnew'] = '-U'
+        else:
+          d['qnew'] = '-U ' + d['qnew']
+
+

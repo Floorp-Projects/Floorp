@@ -8,6 +8,10 @@
   <title>WMode Tests</title>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript" src="utils.js"></script>
+  <script type="application/javascript">
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+  </script>
 <body xmlns="http://www.w3.org/1999/xhtml" onload="runTests()">
 <embed id="plugin2" type="application/x-test" width="400" height="400" wmode="window"></embed>
 <embed id="plugin1" type="application/x-test" width="400" height="400"></embed>

@@ -2,14 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-relativesrcdir  = @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 MOCHITEST_FILES = \
         head_plain.js \
         bug364677-data.xml \
@@ -381,5 +373,3 @@ MOCHITEST_BROWSER_FILES += \
   browser_CTP_context_menu.js \
   $(NULL)
 endif
-
-include $(topsrcdir)/config/rules.mk

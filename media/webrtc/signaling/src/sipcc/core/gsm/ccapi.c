@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "timecard.h"
 #include "cpr_types.h"
 #include "cpr_stdio.h"
 #include "cpr_string.h"
@@ -1110,7 +1111,7 @@ cc_int_release_complete (cc_srcs_t src_id, cc_srcs_t dst_id,
 void
 cc_int_feature2 (cc_msgs_t msg_id, cc_srcs_t src_id, cc_srcs_t dst_id,
                  callid_t call_id, line_t line, cc_features_t feature_id,
-                 cc_feature_data_t *data)
+                 cc_feature_data_t *data, Timecard *timecard)
 {
     cc_feature_t *pmsg;
     cc_msgbody_info_t *msg_body;
@@ -1129,6 +1130,7 @@ cc_int_feature2 (cc_msgs_t msg_id, cc_srcs_t src_id, cc_srcs_t dst_id,
     pmsg->line       = line;
     pmsg->feature_id = feature_id;
     pmsg->data_valid = (data == NULL) ? (FALSE) : (TRUE);
+    pmsg->timecard   = timecard;
 
     if (pmsg->data_valid == TRUE) {
         pmsg->data = *data;
@@ -1183,7 +1185,8 @@ static void send_message_helper(
     cc_features_t feature_id,
     cc_feature_data_t *data,
     string_t sdp,
-    cc_jsep_action_t action)
+    cc_jsep_action_t action,
+    Timecard *timecard)
 {
     cc_feature_t *pmsg;
     cc_msgbody_info_t *msg_body;
@@ -1201,6 +1204,7 @@ static void send_message_helper(
     pmsg->line       = line;
     pmsg->feature_id = feature_id;
     pmsg->data_valid = (data == NULL) ? (FALSE) : (TRUE);
+    pmsg->timecard   = timecard;
 
     if (msg_id == CC_MSG_SETLOCALDESC || msg_id == CC_MSG_SETREMOTEDESC) {
         pmsg->action = action;
@@ -1231,6 +1235,7 @@ static void send_message_helper(
     CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, call_id, line, cc_feature_name(feature_id));
     CC_DEBUG(DEB_L_C_F_PREFIX "feature= %s, data= %p",
         DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), cc_feature_name(feature_id), data);
+    STAMP_TIMECARD(timecard, "Sending message to queue");
     if (cc_send_msg((cprBuffer_t) pmsg, sizeof(*pmsg), dst_id) != CC_RC_SUCCESS) {
         // nobody checks the return code, so generate error message
         GSM_ERR_MSG("%s: unable to send msg for feat=%s", __FUNCTION__,
@@ -1242,10 +1247,11 @@ static void send_message_helper(
 
 void
 cc_createoffer (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
-                line_t line, cc_features_t feature_id, cc_feature_data_t *data)
+                line_t line, cc_features_t feature_id, cc_feature_data_t *data,
+                Timecard *tc)
 {
     send_message_helper(CC_MSG_CREATEOFFER, src_id, dst_id, call_id, line,
-        feature_id, data, NULL, 0);
+        feature_id, data, NULL, 0, tc);
 
     return;
 }
@@ -1253,29 +1259,32 @@ cc_createoffer (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
 
 void
 cc_createanswer (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
-                line_t line, cc_features_t feature_id, string_t sdp, cc_feature_data_t *data)
+                line_t line, cc_features_t feature_id, string_t sdp, cc_feature_data_t *data,
+                Timecard *tc)
 {
     send_message_helper(CC_MSG_CREATEANSWER, src_id, dst_id, call_id, line,
-        feature_id, data, sdp, 0);
+        feature_id, data, sdp, 0, tc);
 
     return;
 }
 
 
 void cc_setlocaldesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line,
-                    cc_features_t feature_id, cc_jsep_action_t action, string_t sdp,  cc_feature_data_t *data)
+                    cc_features_t feature_id, cc_jsep_action_t action, string_t sdp,  cc_feature_data_t *data,
+                    Timecard *tc)
 {
     send_message_helper(CC_MSG_SETLOCALDESC, src_id, dst_id, call_id, line,
-        feature_id, data, sdp, action);
+        feature_id, data, sdp, action, tc);
 
     return;
 }
 
 void cc_setremotedesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line,
-                    cc_features_t feature_id, cc_jsep_action_t action, string_t sdp, cc_feature_data_t *data)
+                    cc_features_t feature_id, cc_jsep_action_t action, string_t sdp, cc_feature_data_t *data,
+                    Timecard *tc)
 {
     send_message_helper(CC_MSG_SETREMOTEDESC, src_id, dst_id, call_id, line,
-        feature_id, data, sdp, action);
+        feature_id, data, sdp, action, tc);
 
     return;
 }

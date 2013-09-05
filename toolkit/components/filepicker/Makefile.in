@@ -4,17 +4,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-DEPTH     = @DEPTH@
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 ifdef MOZ_XUL
 ifeq (,$(filter android qt os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 EXPORT_LIBRARY = 1
 endif
 endif
-
-include $(topsrcdir)/config/rules.mk

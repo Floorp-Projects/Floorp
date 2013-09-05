@@ -449,6 +449,11 @@ MediaStreamTable* CC_SIPCCCallInfo::getMediaStreams() const
 	return CCAPI_CallInfo_getMediaStreams(callinfo_ref);
 }
 
+Timecard *CC_SIPCCCallInfo::takeTimecard()
+{
+    return CCAPI_CallInfo_takeTimecard(callinfo_ref);
+}
+
 bool CC_SIPCCCallInfo::isMediaStateAvailable()
 {
     // for softphone it will always be possible to query the mute state and video direction

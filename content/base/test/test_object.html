@@ -11,6 +11,15 @@
       "use strict";
       SimpleTest.waitForExplicitFinish();
 
+      var pluginHost = SpecialPowers.Cc["@mozilla.org/plugin/host;1"]
+                        .getService(SpecialPowers.Ci.nsIPluginHost);
+      var pluginTags = pluginHost.getPluginTags();
+      for (var tag of pluginTags) {
+        if (tag.name == "Test Plug-in") {
+          tag.enabledState = SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED;;
+        }
+      }
+
       // This can go away once embed also is on WebIDL
       let OBJLC = SpecialPowers.Ci.nsIObjectLoadingContent;
 

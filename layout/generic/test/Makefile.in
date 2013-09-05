@@ -3,14 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-relativesrcdir  = @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 # in the list below, we make sure that the tests that require focus
 # run before test_plugin_clipping, which can steal focus for its window.
 MOCHITEST_FILES = \
@@ -106,6 +98,7 @@ MOCHITEST_FILES = \
   test_bug791616.html \
   test_bug831780.html \
   test_bug841361.html \
+  $(srcdir)/../../base/tests/enableTestPlugin.js \
   $(NULL)
 
 # Disable the caret movement by word test on Linux because the shortcut keys
@@ -130,5 +123,3 @@ MOCHITEST_CHROME_FILES = \
   file_bug514732_window.xul \
   test_selection_preventDefault.html \
   $(NULL)
-
-include $(topsrcdir)/config/rules.mk

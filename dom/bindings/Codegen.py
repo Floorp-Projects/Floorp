@@ -3396,15 +3396,23 @@ for (uint32_t i = 0; i < length; ++i) {
             return handleDefault(conversionCode, defaultCode)
 
         if isMember:
-            # We have to make a copy, because our jsval may well not
-            # live as long as our string needs to.
+            # We have to make a copy, except in the variadic case, because our
+            # jsval may well not live as long as our string needs to.
             declType = CGGeneric("nsString")
+            if isMember == "Variadic":
+                # The string is kept alive by the argument, so we can just
+                # depend on it.
+                assignString = "${declName}.Rebind(str.Data(), str.Length())"
+            else:
+                assignString = "${declName} = str"
             return JSToNativeConversionInfo(
                 "{\n"
                 "  FakeDependentString str;\n"
                 "%s\n"
-                "  ${declName} = str;\n"
-                "}\n" % CGIndenter(CGGeneric(getConversionCode("str"))).define(),
+                "  %s;\n"
+                "}\n" % (
+                    CGIndenter(CGGeneric(getConversionCode("str"))).define(),
+                    assignString),
                 declType=declType, dealWithOptional=isOptional)
 
         if isOptional:
