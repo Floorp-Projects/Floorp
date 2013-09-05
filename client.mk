@@ -114,8 +114,20 @@ endef
 
 # As $(shell) doesn't preserve newlines, use sed to replace them with an
 # unlikely sequence (||), which is then replaced back to newlines by make
-# before evaluation.
-$(eval $(subst ||,$(CR),$(shell _PYMAKE=$(.PYMAKE) $(TOPSRCDIR)/$(MOZCONFIG_LOADER) $(TOPSRCDIR) 2> $(TOPSRCDIR)/.mozconfig.out | sed 's/$$/||/')))
+# before evaluation. $(shell) replacing newlines with spaces, || is always
+# followed by a space (since sed doesn't remove newlines), except on the
+# last line, so replace both '|| ' and '||'.
+MOZCONFIG_CONTENT := $(subst ||,$(CR),$(subst || ,$(CR),$(shell _PYMAKE=$(.PYMAKE) $(TOPSRCDIR)/$(MOZCONFIG_LOADER) $(TOPSRCDIR) | sed 's/$$/||/')))
+$(eval $(MOZCONFIG_CONTENT))
+
+# As '||' was used as a newline separator, it means it's not occurring in
+# lines themselves. It can thus safely be used to replaces normal spaces,
+# to then replace newlines with normal spaces. This allows to get a list
+# of mozconfig output lines.
+MOZCONFIG_OUT_LINES := $(subst $(CR), ,$(subst $(NULL) $(NULL),||,$(MOZCONFIG_CONTENT)))
+# Filter-out comments from those lines.
+START_COMMENT = \#
+MOZCONFIG_OUT_FILTERED := $(filter-out $(START_COMMENT)%,$(MOZCONFIG_OUT_LINES))
 
 ifdef AUTOCLOBBER
 export AUTOCLOBBER=1
@@ -175,13 +187,35 @@ build::
 include $(TOPSRCDIR)/config/makefiles/makeutils.mk
 include $(TOPSRCDIR)/config/makefiles/autotargets.mk
 
+# Create a makefile containing the mk_add_options values from mozconfig,
+# but only do so when OBJDIR is defined (see further above).
+ifdef MOZ_BUILD_PROJECTS
+ifdef MOZ_CURRENT_PROJECT
+WANT_MOZCONFIG_MK = 1
+else
+WANT_MOZCONFIG_MK =
+endif
+else
+WANT_MOZCONFIG_MK = 1
+endif
+
+ifdef WANT_MOZCONFIG_MK
+# For now, only output "export" lines from mozconfig2client-mk output.
+$(OBJDIR)/.mozconfig.mk: $(FOUND_MOZCONFIG) $(call mkdir_deps,$(OBJDIR))
+	( $(foreach line,$(filter export||%,$(MOZCONFIG_OUT_LINES)), echo "$(subst ||, ,$(line))";) ) > $@
+
+# Include that makefile so that it is created. This should not actually change
+# the environment since MOZCONFIG_CONTENT, which MOZCONFIG_OUT_LINES derives
+# from, has already been eval'ed.
+-include $(OBJDIR)/.mozconfig.mk
+endif
+
 # Print out any options loaded from mozconfig.
 all realbuild clean depend distclean export libs install realclean::
-	@if test -f .mozconfig.out; then \
-	  cat .mozconfig.out; \
-	  rm -f .mozconfig.out; \
-	else true; \
-	fi
+ifneq (,$(strip $(MOZCONFIG_OUT_FILTERED)))
+	$(info Adding client.mk options from $(FOUND_MOZCONFIG):)
+	$(foreach line,$(MOZCONFIG_OUT_FILTERED),$(info $(NULL) $(NULL) $(NULL) $(NULL) $(subst ||, ,$(line))))
+endif
 
 # Windows equivalents
 build_all: build
