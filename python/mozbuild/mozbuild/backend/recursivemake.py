@@ -31,19 +31,6 @@ from ..frontend.data import (
 from ..util import FileAvoidWrite
 
 
-STUB_MAKEFILE = '''
-# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.
-
-DEPTH          := {depth}
-topsrcdir      := {topsrc}
-srcdir         := {src}
-VPATH          := {src}
-relativesrcdir := {relsrc}
-
-include {topsrc}/config/rules.mk
-'''.lstrip()
-
-
 class BackendMakeFile(object):
     """Represents a generated backend.mk file.
 
@@ -237,13 +224,10 @@ class RecursiveMakeBackend(CommonBackend):
 
             # If Makefile.in exists, use it as a template. Otherwise, create a
             # stub.
-            if os.path.exists(makefile_in):
+            stub = not os.path.exists(makefile_in)
+            if not stub:
                 self.log(logging.DEBUG, 'substitute_makefile',
                     {'path': makefile}, 'Substituting makefile: {path}')
-
-                self._update_from_avoid_write(
-                    bf.environment.create_config_file(makefile))
-                self.summary.managed_count += 1
 
                 # Adding the Makefile.in here has the desired side-effect that
                 # if the Makefile.in disappears, this will force moz.build
@@ -255,17 +239,9 @@ class RecursiveMakeBackend(CommonBackend):
                 self.log(logging.DEBUG, 'stub_makefile',
                     {'path': makefile}, 'Creating stub Makefile: {path}')
 
-                params = {
-                    'topsrc': bf.environment.get_top_srcdir(makefile),
-                    'src': bf.environment.get_file_srcdir(makefile),
-                    'depth': bf.environment.get_depth(makefile),
-                    'relsrc': bf.environment.get_relative_srcdir(makefile),
-                }
-
-                aw = FileAvoidWrite(makefile)
-                aw.write(STUB_MAKEFILE.format(**params))
-                self._update_from_avoid_write(aw.close())
-                self.summary.managed_count += 1
+            self._update_from_avoid_write(
+                bf.environment.create_makefile(makefile, stub=stub))
+            self.summary.managed_count += 1
 
             self._update_from_avoid_write(bf.close())
             self.summary.managed_count += 1

@@ -10,6 +10,12 @@ ifndef topsrcdir
 $(error topsrcdir was not set))
 endif
 
+# Define an include-at-most-once flag
+ifdef INCLUDED_RULES_MK
+$(error Do not include rules.mk twice!)
+endif
+INCLUDED_RULES_MK = 1
+
 # Integrate with mozbuild-generated make files. We first verify that no
 # variables provided by the automatically generated .mk files are
 # present. If they are, this is a violation of the separation of

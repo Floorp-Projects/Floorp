@@ -47,16 +47,20 @@ class TestRecursiveMakeBackend(BackendTester):
 
         p = os.path.join(env.topobjdir, 'Makefile')
 
-        lines = [l.strip() for l in open(p, 'rt').readlines()[3:]]
+        lines = [l.strip() for l in open(p, 'rt').readlines()[1:] if not l.startswith('#')]
         self.assertEqual(lines, [
             'DEPTH := .',
             'topsrcdir := %s' % env.topsrcdir,
             'srcdir := %s' % env.topsrcdir,
-            'VPATH = %s' % env.topsrcdir,
-            '',
+            'VPATH := %s' % env.topsrcdir,
+            'relativesrcdir := .',
             'include $(DEPTH)/config/autoconf.mk',
             '',
-            'include $(topsrcdir)/config/rules.mk'
+            'FOO := foo',
+            '',
+            'ifndef INCLUDED_RULES_MK',
+            'include $(topsrcdir)/config/rules.mk',
+            'endif',
         ])
 
     def test_missing_makefile_in(self):
@@ -67,7 +71,7 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertTrue(os.path.exists(p))
 
         lines = [l.strip() for l in open(p, 'rt').readlines()]
-        self.assertEqual(len(lines), 9)
+        self.assertEqual(len(lines), 11)
 
         self.assertTrue(lines[0].startswith('# THIS FILE WAS AUTOMATICALLY'))
 
