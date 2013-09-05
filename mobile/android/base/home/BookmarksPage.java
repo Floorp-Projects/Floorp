@@ -287,6 +287,7 @@ public class BookmarksPage extends HomeFragment {
         inflater.inflate(R.menu.top_bookmarks_contextmenu, menu);
 
         TopBookmarksContextMenuInfo info = (TopBookmarksContextMenuInfo) menuInfo;
+        menu.setHeaderTitle(info.getDisplayTitle());
 
         if (!TextUtils.isEmpty(info.url)) {
             if (info.isPinned) {
