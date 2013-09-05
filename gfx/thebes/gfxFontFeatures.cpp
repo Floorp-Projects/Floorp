@@ -10,8 +10,8 @@
 using namespace mozilla;
 
 gfxFontFeatureValueSet::gfxFontFeatureValueSet()
+    : mFontFeatureValues(10)
 {
-    mFontFeatureValues.Init(10);
 }
 
 bool

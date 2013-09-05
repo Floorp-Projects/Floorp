@@ -17,11 +17,10 @@ using namespace mozilla;
 
 XPTInterfaceInfoManager::xptiWorkingSet::xptiWorkingSet()
     : mTableReentrantMonitor("xptiWorkingSet::mTableReentrantMonitor")
+    , mIIDTable(XPTI_HASHTABLE_SIZE)
+    , mNameTable(XPTI_HASHTABLE_SIZE)
 {
     MOZ_COUNT_CTOR(xptiWorkingSet);
-
-    mIIDTable.Init(XPTI_HASHTABLE_SIZE);
-    mNameTable.Init(XPTI_HASHTABLE_SIZE);
 
     gXPTIStructArena = XPT_NewArena(XPTI_STRUCT_ARENA_BLOCK_SIZE, sizeof(double),
                                     "xptiWorkingSet structs");

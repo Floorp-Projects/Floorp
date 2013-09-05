@@ -47,4 +47,4 @@ bookmarks: bookmarks.inc
 	  -DAB_CD=$(AB_CD) \
 	  $(bookmarks-src) > ../bookmarks.json
 
-libs:: bookmarks
+export:: bookmarks

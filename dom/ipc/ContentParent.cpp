@@ -550,7 +550,6 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
     if (!sAppContentParents) {
         sAppContentParents =
             new nsDataHashtable<nsStringHashKey, ContentParent*>();
-        sAppContentParents->Init();
     }
 
     // Each app gets its own ContentParent instance.
@@ -1046,7 +1045,6 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
 
     if (obs) {
         nsRefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
-        props->Init();
 
         props->SetPropertyAsUint64(NS_LITERAL_STRING("childID"), mChildID);
 
