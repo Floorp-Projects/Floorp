@@ -54,13 +54,18 @@ public:
    * Helper methods for modifying and obtaining parts of the URI of the Link.
    */
   void SetProtocol(const nsAString &aProtocol);
+  void SetUsername(const nsAString &aUsername);
+  void SetPassword(const nsAString &aPassword);
   void SetHost(const nsAString &aHost);
   void SetHostname(const nsAString &aHostname);
   void SetPathname(const nsAString &aPathname);
   void SetSearch(const nsAString &aSearch);
   void SetPort(const nsAString &aPort);
   void SetHash(const nsAString &aHash);
+  void GetOrigin(nsAString &aOrigin);
   void GetProtocol(nsAString &_protocol);
+  void GetUsername(nsAString &aUsername);
+  void GetPassword(nsAString &aPassword);
   void GetHost(nsAString &_host);
   void GetHostname(nsAString &_hostname);
   void GetPathname(nsAString &_pathname);

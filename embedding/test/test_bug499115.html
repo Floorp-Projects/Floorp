@@ -38,9 +38,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=499115
         endPoint.collapse(false);
 
         var retRange = null;
-        netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-        var finder = Components.classes["@mozilla.org/embedcomp/rangefind;1"]
-                               .createInstance(Components.interfaces.nsIFind);
+        var finder = SpecialPowers.Cc["@mozilla.org/embedcomp/rangefind;1"]
+                                  .createInstance(SpecialPowers.Ci.nsIFind);
 
         finder.caseSensitive = false;
 

@@ -1,8 +1,6 @@
 // Utility functions for offline tests.
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-var Cc = Components.classes;
-var Ci = Components.interfaces;
+var Cc = SpecialPowers.Cc;
+var Ci = SpecialPowers.Ci;
 
 const kNetBase = 2152398848; // 0x804B0000
 var NS_ERROR_CACHE_KEY_NOT_FOUND = kNetBase + 61;
@@ -31,8 +29,8 @@ onCacheEntryAvailable: function(desc, accessGranted, status) {
     }
 
     var stream = desc.QueryInterface(Ci.nsICacheEntryDescriptor).openInputStream(0);
-    var sstream = Components.classes["@mozilla.org/scriptableinputstream;1"]
-                 .createInstance(Components.interfaces.nsIScriptableInputStream);
+    var sstream = SpecialPowers.Cc["@mozilla.org/scriptableinputstream;1"]
+                 .createInstance(SpecialPowers.Ci.nsIScriptableInputStream);
     sstream.init(stream);
     this.contents[desc.key] = sstream.read(sstream.available());
     sstream.close();
@@ -122,7 +120,7 @@ setup: function()
     var uri = Cc["@mozilla.org/network/io-service;1"]
       .getService(Ci.nsIIOService)
       .newURI(window.location.href, null, null);
-    var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+    var principal = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
                       .getService(Ci.nsIScriptSecurityManager)
                       .getNoAppCodebasePrincipal(uri);
 
@@ -162,7 +160,7 @@ teardown: function(callback)
     var uri = Cc["@mozilla.org/network/io-service;1"]
               .getService(Ci.nsIIOService)
               .newURI(window.location.href, null, null);
-    var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+    var principal = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
                       .getService(Ci.nsIScriptSecurityManager)
                       .getNoAppCodebasePrincipal(uri);
 
@@ -331,10 +329,10 @@ manifestURL: function(overload)
 
 loadContext: function()
 {
-  return SpecialPowers.wrap(window).QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                                   .getInterface(Components.interfaces.nsIWebNavigation)
-                                   .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                                   .getInterface(Components.interfaces.nsILoadContext);
+  return SpecialPowers.wrap(window).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                                   .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+                                   .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                                   .getInterface(SpecialPowers.Ci.nsILoadContext);
 },
 
 getActiveCache: function(overload)

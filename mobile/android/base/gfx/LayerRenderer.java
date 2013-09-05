@@ -10,6 +10,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.gfx.Layer.RenderContext;
+import org.mozilla.gecko.gfx.RenderTask;
 import org.mozilla.gecko.mozglue.DirectBufferAllocator;
 
 import android.content.Context;
@@ -50,6 +51,9 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
     private static final int FRAME_RATE_METER_WIDTH = 128;
     private static final int FRAME_RATE_METER_HEIGHT = 32;
 
+    private static final long NANOS_PER_MS = 1000000;
+    private static final int NANOS_PER_SECOND = 1000000000;
+
     private final LayerView mView;
     private final NinePatchTileLayer mShadowLayer;
     private TextLayer mFrameRateLayer;
@@ -62,6 +66,9 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
     private int mMaxTextureSize;
     private int mBackgroundColor;
     private int mOverscrollColor;
+
+    private long mLastFrameTime;
+    private final CopyOnWriteArrayList<RenderTask> mTasks;
 
     private CopyOnWriteArrayList<Layer> mExtraLayers = new CopyOnWriteArrayList<Layer>();
 
@@ -138,6 +145,10 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         Bitmap scrollbarImage = view.getScrollbarImage();
         IntSize size = new IntSize(scrollbarImage.getWidth(), scrollbarImage.getHeight());
         scrollbarImage = expandCanvasToPowerOfTwo(scrollbarImage, size);
+
+        mTasks = new CopyOnWriteArrayList<RenderTask>();
+        mLastFrameTime = System.nanoTime();
+
         mVertScrollLayer = new ScrollbarLayer(this, scrollbarImage, size, true);
         mHorizScrollLayer = new ScrollbarLayer(this, diagonalFlip(scrollbarImage), new IntSize(size.height, size.width), false);
         mFadeRunnable = new FadeRunnable();
@@ -241,6 +252,30 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         return mMaxTextureSize;
     }
 
+    public void postRenderTask(RenderTask aTask) {
+        mTasks.add(aTask);
+        mView.requestRender();
+    }
+
+    public void removeRenderTask(RenderTask aTask) {
+        mTasks.remove(aTask);
+    }
+
+    private void runRenderTasks(CopyOnWriteArrayList<RenderTask> tasks, boolean after, long frameStartTime) {
+        for (RenderTask task : tasks) {
+            if (task.runAfter != after) {
+                continue;
+            }
+
+            boolean stillRunning = task.run(frameStartTime - mLastFrameTime, frameStartTime);
+
+            // Remove the task from the list if its finished
+            if (!stillRunning) {
+                tasks.remove(task);
+            }
+        }
+    }
+
     public void addLayer(Layer layer) {
         synchronized (mExtraLayers) {
             if (mExtraLayers.contains(layer)) {
@@ -299,7 +334,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
     }
 
     private void updateDroppedFrames(long frameStartTime) {
-        int frameElapsedTime = (int)(SystemClock.uptimeMillis() - frameStartTime);
+        int frameElapsedTime = (int)((System.nanoTime() - frameStartTime) / NANOS_PER_MS);
 
         /* Update the running statistics. */
         mFrameTimingsSum -= mFrameTimings[mCurrentFrame];
@@ -456,7 +491,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
 
         /** This function is invoked via JNI; be careful when modifying signature. */
         public void beginDrawing() {
-            mFrameStartTime = SystemClock.uptimeMillis();
+            mFrameStartTime = System.nanoTime();
 
             TextureReaper.get().reap();
             TextureGenerator.get().fill();
@@ -464,6 +499,9 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             mUpdated = true;
 
             Layer rootLayer = mView.getLayerClient().getRoot();
+
+            // Run through pre-render tasks
+            runRenderTasks(mTasks, false, mFrameStartTime);
 
             if (!mPageContext.fuzzyEquals(mLastPageContext) && !mView.isFullScreen()) {
                 // The viewport or page changed, so show the scrollbars again
@@ -604,11 +642,13 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
                 mCompleteFramesRendered += 1.0f - checkerboard;
                 mFramesRendered ++;
 
-                if (mFrameStartTime - mProfileOutputTime > 1000) {
+                if (mFrameStartTime - mProfileOutputTime > NANOS_PER_SECOND) {
                     mProfileOutputTime = mFrameStartTime;
                     printCheckerboardStats();
                 }
             }
+
+            runRenderTasks(mTasks, true, mFrameStartTime);
 
             /* Draw the FPS. */
             if (mFrameRateLayer != null) {
@@ -652,6 +692,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
                 });
                 mView.setPaintState(LayerView.PAINT_AFTER_FIRST);
             }
+            mLastFrameTime = mFrameStartTime;
         }
     }
 

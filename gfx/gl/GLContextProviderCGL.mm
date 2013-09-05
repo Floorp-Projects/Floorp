@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GLContextProvider.h"
+#include "GLContext.h"
 #include "nsDebug.h"
 #include "nsIWidget.h"
 #include "OpenGL/OpenGL.h"
@@ -518,12 +519,12 @@ GLContextProviderCGL::GetGlobalContext(const ContextFlags)
 }
 
 SharedTextureHandle
-GLContextProviderCGL::CreateSharedHandle(GLContext::SharedTextureShareType shareType,
+GLContextProviderCGL::CreateSharedHandle(SharedTextureShareType shareType,
                                          void* buffer,
-                                         GLContext::SharedTextureBufferType bufferType)
+                                         SharedTextureBufferType bufferType)
 {
-    if (shareType != GLContext::SameProcess ||
-        bufferType != GLContext::IOSurface) {
+    if (shareType != SameProcess ||
+        bufferType != gl::IOSurface) {
         return 0;
     }
 
@@ -534,7 +535,7 @@ GLContextProviderCGL::CreateSharedHandle(GLContext::SharedTextureShareType share
 }
 
 already_AddRefed<gfxASurface>
-GLContextProviderCGL::GetSharedHandleAsSurface(GLContext::SharedTextureShareType shareType,
+GLContextProviderCGL::GetSharedHandleAsSurface(SharedTextureShareType shareType,
                                                SharedTextureHandle sharedHandle)
 {
   MacIOSurface* surf = reinterpret_cast<MacIOSurface*>(sharedHandle);

@@ -125,8 +125,7 @@ function nextTest() {
     gVideo.parentNode.removeChild(gVideo);
 
   gVideo = null;
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  Components.utils.forceGC();  
+  opener.SpecialPowers.forceGC();  
   
   gVideo = createVideo();
   gVideo.expectedResult = gTests[gTestNum].result;

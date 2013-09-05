@@ -31,15 +31,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=702949
 
   SimpleTest.waitForExplicitFinish();
   addLoadEvent(function() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    Components.utils.import("resource://gre/modules/FileUtils.jsm");
+    var FileUtils = SpecialPowers.Cu.import("resource://gre/modules/FileUtils.jsm").FileUtils;
 
     var i = document.getElementsByTagName('input')[0];
 
     var file = FileUtils.getFile("TmpD", ["testfile"]);
-    file.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0644);
+    file.createUnique(SpecialPowers.Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
 
-    i.value = file.path;
+    SpecialPowers.wrap(i).value = file.path;
     file.remove(/* recursive = */ false);
 
     document.getElementsByName('result')[0].addEventListener('load', function() {
