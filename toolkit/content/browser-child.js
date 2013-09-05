@@ -56,17 +56,17 @@ let WebProgressListener = {
   },
 
   onLocationChange: function onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
-    let spec = aLocationURI ? aLocationURI.spec : "";
-    let charset = content.document.characterSet;
-
     let json = this._setupJSON(aWebProgress, aRequest);
     let objects = this._setupObjects(aWebProgress);
 
-    json.documentURI = aWebProgress.DOMWindow.document.documentURIObject.spec;
-    json.location = spec;
-    json.canGoBack = docShell.canGoBack;
-    json.canGoForward = docShell.canGoForward;
-    json.charset = charset.toString();
+    json.location = aLocationURI ? aLocationURI.spec : "";
+
+    if (json.isTopLevel) {
+      json.canGoBack = docShell.canGoBack;
+      json.canGoForward = docShell.canGoForward;
+      json.documentURI = content.document.documentURIObject.spec;
+      json.charset = content.document.characterSet;
+    }
 
     sendAsyncMessage("Content:LocationChange", json, objects);
   },
