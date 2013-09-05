@@ -2,13 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 EXPORT_LIBRARY = 1
 
 # see also intl/locale/src/Makefile.in
@@ -39,5 +32,3 @@ SHARED_LIBRARY_LIBS = \
 			../locale/src/$(LOCALE_DIR)/$(LIB_PREFIX)platlocale_s.$(LIB_SUFFIX) \
 			../hyphenation/src/$(HYPHENATION_DIR)/$(LIB_PREFIX)hyphenation_s.$(LIB_SUFFIX) \
 			$(NULL)
-
-include $(topsrcdir)/config/rules.mk

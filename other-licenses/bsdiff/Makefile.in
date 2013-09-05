@@ -22,13 +22,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = @DEPTH@
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 # This program is output to dist/host/bin because it is only needed by the
 # build system and is not intended to be included in Mozilla distributions.
 HOST_PROGRAM = mbsdiff$(BIN_SUFFIX)

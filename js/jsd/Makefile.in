@@ -6,14 +6,6 @@
 
 
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
-srcdir		= @srcdir@
-relativesrcdir  = @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 EXPORT_LIBRARY = 1
 
 # REQUIRES	= java js

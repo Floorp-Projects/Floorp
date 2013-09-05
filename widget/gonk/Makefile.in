@@ -12,15 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-DEPTH           = @DEPTH@
-topsrcdir       = @top_srcdir@
-srcdir          = @srcdir@
 VPATH           = \
   $(srcdir) \
   $(srcdir)/libui \
   $(NULL)
-
-include $(DEPTH)/config/autoconf.mk
 
 EXPORT_LIBRARY  = 1
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a

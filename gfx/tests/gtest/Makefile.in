@@ -3,14 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH          = @DEPTH@
-topsrcdir      = @top_srcdir@
-srcdir         = @srcdir@
 VPATH          = @srcdir@ $(srcdir)/$(DEPTH)/gfx/2d/unittest
-relativesrcdir = @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS) $(TK_CFLAGS) 
 
 # Create a GTest library
@@ -24,4 +17,3 @@ LOCAL_INCLUDES = \
 
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
-

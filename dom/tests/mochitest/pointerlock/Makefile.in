@@ -2,14 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH	= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir	= @srcdir@
-VPATH	= @srcdir@
-relativesrcdir	= @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 MOCHITEST_FILES	= \
 		pointerlock_utils.js \
 		file_approval.html \
@@ -40,5 +32,3 @@ MOCHITEST_FILES += \
 else
 $(filter disabled-on-linux-for-intermittent-failures--bug-788164, test_pointerlock-api.html)
 endif
-
-include $(topsrcdir)/config/rules.mk

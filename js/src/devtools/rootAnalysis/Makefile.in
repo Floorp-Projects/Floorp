@@ -12,11 +12,6 @@
 # analysis scripts, written in JS, will run over those database files to
 # produce the final analysis output.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
 VPATH += $(srcdir)

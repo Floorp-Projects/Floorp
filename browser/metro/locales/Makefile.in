@@ -2,15 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH     = @DEPTH@
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
-
 # metrofx specific resources - this defines LOCALE_SRCDIR
 relativesrcdir = browser/metro/locales
 
-include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
 DEFINES += -DAB_CD=$(AB_CD)

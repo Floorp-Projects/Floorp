@@ -3,14 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-relativesrcdir  = @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 MOCHITEST_FILES = 	test_bug319374.xhtml \
 		test_bug440974.html \
 		test_bug427060.html \
@@ -26,5 +18,3 @@ MOCHITEST_FILES = 	test_bug319374.xhtml \
 		test_bug667315.html \
 		test_exslt_regex.html \
 		$(NULL)
-
-include $(topsrcdir)/config/rules.mk

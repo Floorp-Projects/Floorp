@@ -3,9 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH = @DEPTH@
-topsrcdir = @top_srcdir@
-srcdir = @srcdir@
 VPATH = \
   @srcdir@ \
   @srcdir@/srtp \
@@ -17,8 +14,6 @@ VPATH = \
   @srcdir@/crypto/replay \
   @srcdir@/crypto/rng \
   $(NULL)
-
-include $(DEPTH)/config/autoconf.mk
 
 LOCAL_INCLUDES = \
   -I$(srcdir)/include \
@@ -74,4 +69,3 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 ifdef GNU_CC
 CFLAGS += -std=gnu99
 endif
-
