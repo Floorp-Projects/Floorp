@@ -482,7 +482,7 @@ WebConsoleFrame.prototype = {
     let doc = this.document;
 
     this.filterBox = doc.querySelector(".hud-filter-box");
-    this.outputNode = doc.querySelector(".hud-output-node");
+    this.outputNode = doc.getElementById("output-container");
     this.completeNode = doc.querySelector(".jsterm-complete-node");
     this.inputNode = doc.querySelector(".jsterm-input-node");
 
@@ -843,21 +843,21 @@ WebConsoleFrame.prototype = {
     let outputNode = this.outputNode;
     let doc = this.document;
 
-    // Look for message nodes ("hud-msg-node") with the given preference key
-    // ("hud-msg-error", "hud-msg-cssparser", etc.) and add or remove the
-    // "hud-filtered-by-type" class, which turns on or off the display.
+    // Look for message nodes (".message") with the given preference key
+    // (filter="error", filter="cssparser", etc.) and add or remove the
+    // "filtered-by-type" class, which turns on or off the display.
 
-    let xpath = ".//*[contains(@class, 'hud-msg-node') and " +
-      "contains(concat(@class, ' '), 'hud-" + aPrefKey + " ')]";
+    let xpath = ".//*[contains(@class, 'message') and " +
+      "@filter='" + aPrefKey + "']";
     let result = doc.evaluate(xpath, outputNode, null,
       Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
     for (let i = 0; i < result.snapshotLength; i++) {
       let node = result.snapshotItem(i);
       if (aState) {
-        node.classList.remove("hud-filtered-by-type");
+        node.classList.remove("filtered-by-type");
       }
       else {
-        node.classList.add("hud-filtered-by-type");
+        node.classList.add("filtered-by-type");
       }
     }
   },
@@ -869,7 +869,7 @@ WebConsoleFrame.prototype = {
   adjustVisibilityOnSearchStringChange:
   function WCF_adjustVisibilityOnSearchStringChange()
   {
-    let nodes = this.outputNode.getElementsByClassName("hud-msg-node");
+    let nodes = this.outputNode.getElementsByClassName("message");
     let searchString = this.filterBox.value;
 
     for (let i = 0, n = nodes.length; i < n; ++i) {
@@ -880,10 +880,10 @@ WebConsoleFrame.prototype = {
 
       // if the text matches the words in aSearchString...
       if (this.stringMatchesFilters(text, searchString)) {
-        node.classList.remove("hud-filtered-by-string");
+        node.classList.remove("filtered-by-string");
       }
       else {
-        node.classList.add("hud-filtered-by-string");
+        node.classList.add("filtered-by-string");
       }
     }
   },
@@ -905,7 +905,7 @@ WebConsoleFrame.prototype = {
     let prefKey = MESSAGE_PREFERENCE_KEYS[aNode.category][aNode.severity];
     if (prefKey && !this.getFilterState(prefKey)) {
       // The node is filtered by type.
-      aNode.classList.add("hud-filtered-by-type");
+      aNode.classList.add("filtered-by-type");
       isFiltered = true;
     }
 
@@ -915,11 +915,11 @@ WebConsoleFrame.prototype = {
 
     // if string matches the filter text
     if (!this.stringMatchesFilters(text, search)) {
-      aNode.classList.add("hud-filtered-by-string");
+      aNode.classList.add("filtered-by-string");
       isFiltered = true;
     }
 
-    if (isFiltered && aNode.classList.contains("webconsole-msg-inspector")) {
+    if (isFiltered && aNode.classList.contains("inlined-variables-view")) {
       aNode.classList.add("hidden-message");
     }
 
@@ -938,7 +938,7 @@ WebConsoleFrame.prototype = {
   mergeFilteredMessageNode:
   function WCF_mergeFilteredMessageNode(aOriginal, aFiltered)
   {
-    let repeatNode = aOriginal.getElementsByClassName("webconsole-msg-repeat")[0];
+    let repeatNode = aOriginal.getElementsByClassName("repeats")[0];
     if (!repeatNode) {
       return; // no repeat node, return early.
     }
@@ -961,7 +961,7 @@ WebConsoleFrame.prototype = {
    */
   _filterRepeatedMessage: function WCF__filterRepeatedMessage(aNode)
   {
-    let repeatNode = aNode.getElementsByClassName("webconsole-msg-repeat")[0];
+    let repeatNode = aNode.getElementsByClassName("repeats")[0];
     if (!repeatNode) {
       return null;
     }
@@ -969,25 +969,23 @@ WebConsoleFrame.prototype = {
     let uid = repeatNode._uid;
     let dupeNode = null;
 
-    if (aNode.classList.contains("webconsole-msg-cssparser") ||
-        aNode.classList.contains("webconsole-msg-security")) {
+    if (aNode.category == CATEGORY_CSS ||
+        aNode.category == CATEGORY_SECURITY) {
       dupeNode = this._repeatNodes[uid];
       if (!dupeNode) {
         this._repeatNodes[uid] = aNode;
       }
     }
-    else if (!aNode.classList.contains("webconsole-msg-network") &&
-             !aNode.classList.contains("webconsole-msg-inspector") &&
-             (aNode.classList.contains("webconsole-msg-console") ||
-              aNode.classList.contains("webconsole-msg-exception") ||
-              aNode.classList.contains("webconsole-msg-error"))) {
+    else if ((aNode.category == CATEGORY_WEBDEV ||
+              aNode.category == CATEGORY_JS) &&
+             aNode.category != CATEGORY_NETWORK &&
+             !aNode.classList.contains("inlined-variables-view")) {
       let lastMessage = this.outputNode.lastChild;
       if (!lastMessage) {
         return null;
       }
 
-      let lastRepeatNode = lastMessage
-                           .getElementsByClassName("webconsole-msg-repeat")[0];
+      let lastRepeatNode = lastMessage.getElementsByClassName("repeats")[0];
       if (lastRepeatNode && lastRepeatNode._uid == uid) {
         dupeNode = lastMessage;
       }
@@ -1183,7 +1181,7 @@ WebConsoleFrame.prototype = {
     if (objectActors.size > 0) {
       node._objectActors = objectActors;
 
-      let repeatNode = node.getElementsByClassName("webconsole-msg-repeat")[0];
+      let repeatNode = node.getElementsByClassName("repeats")[0];
       repeatNode._uid += [...objectActors].join("-");
     }
 
@@ -1265,7 +1263,7 @@ WebConsoleFrame.prototype = {
                                       aScriptError.timeStamp);
 
     // Select the body of the message node that is displayed in the console
-    let msgBody = node.querySelector(".webconsole-msg-body");
+    let msgBody = node.getElementsByClassName("body")[0];
     // Add the more info link node to messages that belong to certain categories
     this.addMoreInfoLink(msgBody, aScriptError);
 
@@ -1355,7 +1353,7 @@ WebConsoleFrame.prototype = {
     }
 
     let methodNode = this.document.createElementNS(XHTML_NS, "span");
-    methodNode.className = "webconsole-msg-method";
+    methodNode.className = "method";
     methodNode.textContent = request.method + " ";
 
     let messageNode = this.createMessageNode(CATEGORY_NETWORK, severity,
@@ -1377,7 +1375,7 @@ WebConsoleFrame.prototype = {
     }
 
     let urlNode = this.document.createElementNS(XHTML_NS, "a");
-    urlNode.classList.add("webconsole-msg-url");
+    urlNode.className = "url";
     urlNode.setAttribute("title", request.url);
     urlNode.href = request.url;
     urlNode.textContent = displayUrl;
@@ -1386,12 +1384,12 @@ WebConsoleFrame.prototype = {
     body.appendChild(this.document.createTextNode(" "));
 
     if (mixedRequest) {
-      urlNode.classList.add("webconsole-mixed-content");
+      messageNode.classList.add("mixed-content");
       this.makeMixedContentNode(body);
     }
 
     let statusNode = this.document.createElementNS(XHTML_NS, "a");
-    statusNode.classList.add("webconsole-msg-status");
+    statusNode.className = "status";
     body.appendChild(statusNode);
 
     let onClick = () => {
@@ -1424,7 +1422,7 @@ WebConsoleFrame.prototype = {
     let mixedContentWarningNode = this.document.createElementNS(XHTML_NS, "a");
     mixedContentWarningNode.title = MIXED_CONTENT_LEARN_MORE;
     mixedContentWarningNode.href = MIXED_CONTENT_LEARN_MORE;
-    mixedContentWarningNode.classList.add("webconsole-mixed-content-link");
+    mixedContentWarningNode.className = "learn-more-link";
     mixedContentWarningNode.textContent = mixedContentWarning;
     mixedContentWarningNode.draggable = false;
 
@@ -1489,7 +1487,7 @@ WebConsoleFrame.prototype = {
     warningNode.href = aURL;
     warningNode.draggable = false;
     warningNode.textContent = moreInfoLabel;
-    warningNode.classList.add("webconsole-learn-more-link");
+    warningNode.className = "learn-more-link";
 
     this._addMessageLinkCallback(warningNode, (aNode, aEvent) => {
       aEvent.stopPropagation();
@@ -1511,7 +1509,7 @@ WebConsoleFrame.prototype = {
   {
     let urlNode = this.document.createElementNS(XHTML_NS, "a");
     urlNode.setAttribute("title", aFileURI);
-    urlNode.classList.add("webconsole-msg-url");
+    urlNode.className = "url";
     urlNode.textContent = aFileURI;
     urlNode.draggable = false;
     urlNode.href = aFileURI;
@@ -1682,7 +1680,7 @@ WebConsoleFrame.prototype = {
       }
       let statusText = "[" + status.join(" ") + "]";
 
-      let statusNode = messageNode.getElementsByClassName("webconsole-msg-status")[0];
+      let statusNode = messageNode.getElementsByClassName("status")[0];
       statusNode.textContent = statusText;
 
       messageNode.clipboardText = [request.method, request.url, statusText]
@@ -1992,8 +1990,8 @@ WebConsoleFrame.prototype = {
     }
 
     let isInputOutput = lastVisibleNode &&
-      (lastVisibleNode.classList.contains("webconsole-msg-input") ||
-       lastVisibleNode.classList.contains("webconsole-msg-output"));
+                        (lastVisibleNode.category == CATEGORY_INPUT ||
+                         lastVisibleNode.category == CATEGORY_OUTPUT);
 
     // Scroll to the new node if it is not filtered, and if the output node is
     // scrolled at the bottom or if the new node is a jsterm input/output
@@ -2214,11 +2212,9 @@ WebConsoleFrame.prototype = {
    */
   pruneOutputIfNecessary: function WCF_pruneOutputIfNecessary(aCategory)
   {
-    let outputNode = this.outputNode;
     let logLimit = Utils.logLimitForCategory(aCategory);
-
-    let messageNodes = outputNode.getElementsByClassName("webconsole-msg-" +
-        CATEGORY_CLASS_FRAGMENTS[aCategory]);
+    let messageNodes = this.outputNode.querySelectorAll(".message[category=" +
+                       CATEGORY_CLASS_FRAGMENTS[aCategory] + "]");
     let n = Math.max(0, messageNodes.length - logLimit);
     let toRemove = Array.prototype.slice.call(messageNodes, 0, n);
     toRemove.forEach(this.removeOutputMessage, this);
@@ -2241,19 +2237,19 @@ WebConsoleFrame.prototype = {
       aNode._objectActors.clear();
     }
 
-    if (aNode.classList.contains("webconsole-msg-cssparser") ||
-        aNode.classList.contains("webconsole-msg-security")) {
-      let repeatNode = aNode.getElementsByClassName("webconsole-msg-repeat")[0];
+    if (aNode.category == CATEGORY_CSS ||
+        aNode.category == CATEGORY_SECURITY) {
+      let repeatNode = aNode.getElementsByClassName("repeats")[0];
       if (repeatNode && repeatNode._uid) {
         delete this._repeatNodes[repeatNode._uid];
       }
     }
     else if (aNode._connectionId &&
-             aNode.classList.contains("webconsole-msg-network")) {
+             aNode.category == CATEGORY_NETWORK) {
       delete this._networkRequests[aNode._connectionId];
       this._releaseObject(aNode._connectionId);
     }
-    else if (aNode.classList.contains("webconsole-msg-inspector")) {
+    else if (aNode.classList.contains("inlined-variables-view")) {
       let view = aNode._variablesView;
       if (view) {
         view.controller.releaseActors();
@@ -2306,12 +2302,11 @@ WebConsoleFrame.prototype = {
     // ensure that the icon stays anchored at the top of the message even for
     // long multi-line messages.
     let iconContainer = this.document.createElementNS(XHTML_NS, "span");
-    iconContainer.className = "webconsole-msg-icon";
+    iconContainer.className = "icon";
 
     // Create the message body, which contains the actual text of the message.
     let bodyNode = this.document.createElementNS(XHTML_NS, "span");
-    bodyNode.classList.add("webconsole-msg-body");
-    bodyNode.classList.add("devtools-monospace");
+    bodyNode.className = "body devtools-monospace";
 
     // Store the body text, since it is needed later for the variables view.
     let body = aBody;
@@ -2326,7 +2321,7 @@ WebConsoleFrame.prototype = {
     // Create the containing node and append all its elements to it.
     let node = this.document.createElementNS(XHTML_NS, "div");
     node.id = "console-msg-" + gSequenceId();
-    node.className = "hud-msg-node";
+    node.className = "message";
     node.clipboardText = aClipboardText;
     node.timestamp = timestamp;
     this.setMessageType(node, aCategory, aSeverity);
@@ -2359,7 +2354,7 @@ WebConsoleFrame.prototype = {
         aCategory != CATEGORY_NETWORK) {
       repeatNode = this.document.createElementNS(XHTML_NS, "span");
       repeatNode.setAttribute("value", "1");
-      repeatNode.classList.add("webconsole-msg-repeat");
+      repeatNode.className = "repeats";
       repeatNode.textContent = 1;
       repeatNode._uid = [bodyNode.textContent, aCategory, aSeverity, aLevel,
                          aSourceURL, aSourceLine].join(":");
@@ -2367,8 +2362,7 @@ WebConsoleFrame.prototype = {
 
     // Create the timestamp.
     let timestampNode = this.document.createElementNS(XHTML_NS, "span");
-    timestampNode.classList.add("webconsole-timestamp");
-    timestampNode.classList.add("devtools-monospace");
+    timestampNode.className = "timestamp devtools-monospace";
     // Apply the current group by indenting appropriately.
     timestampNode.style.marginRight = this.groupDepth * GROUP_INDENT + "px";
 
@@ -2402,7 +2396,7 @@ WebConsoleFrame.prototype = {
         }
       });
 
-      node.classList.add("webconsole-msg-inspector");
+      node.classList.add("inlined-variables-view");
     }
 
     node.appendChild(bodyNode);
@@ -2577,8 +2571,7 @@ WebConsoleFrame.prototype = {
     locationNode.href = isScratchpad ? "#" : fullURL;
     locationNode.draggable = false;
     locationNode.setAttribute("title", aSourceURL);
-    locationNode.classList.add("webconsole-location");
-    locationNode.classList.add("devtools-monospace");
+    locationNode.className = "location devtools-monospace";
 
     // Make the location clickable.
     this._addMessageLinkCallback(locationNode, () => {
@@ -2610,41 +2603,24 @@ WebConsoleFrame.prototype = {
   },
 
   /**
-   * Adjusts the category and severity of the given message, clearing the old
-   * category and severity if present.
+   * Adjusts the category and severity of the given message.
    *
    * @param nsIDOMNode aMessageNode
    *        The message node to alter.
-   * @param number aNewCategory
-   *        The new category for the message; one of the CATEGORY_ constants.
-   * @param number aNewSeverity
-   *        The new severity for the message; one of the SEVERITY_ constants.
+   * @param number aCategory
+   *        The category for the message; one of the CATEGORY_ constants.
+   * @param number aSeverity
+   *        The severity for the message; one of the SEVERITY_ constants.
    * @return void
    */
   setMessageType:
-  function WCF_setMessageType(aMessageNode, aNewCategory, aNewSeverity)
+  function WCF_setMessageType(aMessageNode, aCategory, aSeverity)
   {
-    // Remove the old CSS classes, if applicable.
-    if ("category" in aMessageNode) {
-      let oldCategory = aMessageNode.category;
-      let oldSeverity = aMessageNode.severity;
-      aMessageNode.classList.remove("webconsole-msg-" +
-                                    CATEGORY_CLASS_FRAGMENTS[oldCategory]);
-      aMessageNode.classList.remove("webconsole-msg-" +
-                                    SEVERITY_CLASS_FRAGMENTS[oldSeverity]);
-      let key = "hud-" + MESSAGE_PREFERENCE_KEYS[oldCategory][oldSeverity];
-      aMessageNode.classList.remove(key);
-    }
-
-    // Add in the new CSS classes.
-    aMessageNode.category = aNewCategory;
-    aMessageNode.severity = aNewSeverity;
-    aMessageNode.classList.add("webconsole-msg-" +
-                               CATEGORY_CLASS_FRAGMENTS[aNewCategory]);
-    aMessageNode.classList.add("webconsole-msg-" +
-                               SEVERITY_CLASS_FRAGMENTS[aNewSeverity]);
-    let key = "hud-" + MESSAGE_PREFERENCE_KEYS[aNewCategory][aNewSeverity];
-    aMessageNode.classList.add(key);
+    aMessageNode.category = aCategory;
+    aMessageNode.severity = aSeverity;
+    aMessageNode.setAttribute("category", CATEGORY_CLASS_FRAGMENTS[aCategory]);
+    aMessageNode.setAttribute("severity", SEVERITY_CLASS_FRAGMENTS[aSeverity]);
+    aMessageNode.setAttribute("filter", MESSAGE_PREFERENCE_KEYS[aCategory][aSeverity]);
   },
 
   /**
@@ -2708,8 +2684,8 @@ WebConsoleFrame.prototype = {
 
     for (let item of children) {
       // Ensure the selected item hasn't been filtered by type or string.
-      if (!item.classList.contains("hud-filtered-by-type") &&
-          !item.classList.contains("hud-filtered-by-string")) {
+      if (!item.classList.contains("filtered-by-type") &&
+          !item.classList.contains("filtered-by-string")) {
         let timestampString = l10n.timestampString(item.timestamp);
         if (aOptions.linkOnly) {
           strings.push(item.url);
@@ -3146,7 +3122,7 @@ JSTerm.prototype = {
         // Add an ellipsis to expand the short string if the object is not
         // inspectable.
 
-        let body = node.getElementsByClassName("webconsole-msg-body")[0];
+        let body = node.getElementsByClassName("body")[0];
         let ellipsis = this.hud.document.createElementNS(XHTML_NS, "a");
         ellipsis.classList.add("longStringEllipsis");
         ellipsis.textContent = l10n.getStr("longStringEllipsis");
@@ -3755,7 +3731,7 @@ JSTerm.prototype = {
    */
   clearPrivateMessages: function JST_clearPrivateMessages()
   {
-    let nodes = this.hud.outputNode.querySelectorAll(".hud-msg-node[private]");
+    let nodes = this.hud.outputNode.querySelectorAll(".message[private]");
     for (let node of nodes) {
       this.hud.removeOutputMessage(node);
     }

@@ -173,7 +173,7 @@ ConsoleOutput.prototype = {
   getMessageForElement: function(elem)
   {
     while (elem && elem.parentNode) {
-      if (elem.classList && elem.classList.contains("hud-msg-node")) {
+      if (elem.classList && elem.classList.contains("message")) {
         return elem;
       }
       elem = elem.parentNode;
@@ -281,9 +281,11 @@ Messages.BaseMessage.prototype = {
 
   // Properties that allow compatibility with the current Web Console output
   // implementation.
-  _elementClassCompat: "",
   _categoryCompat: null,
   _severityCompat: null,
+  _categoryNameCompat: null,
+  _severityNameCompat: null,
+  _filterKeyCompat: null,
 
   /**
    * Initialize the message.
@@ -324,9 +326,12 @@ Messages.BaseMessage.prototype = {
     let doc = this.output.document;
     let container = doc.createElementNS(XHTML_NS, "div");
     container.id = "console-msg-" + gSequenceId();
-    container.className = "hud-msg-node " + this._elementClassCompat;
+    container.className = "message";
     container.category = this._categoryCompat;
     container.severity = this._severityCompat;
+    container.setAttribute("category", this._categoryNameCompat);
+    container.setAttribute("severity", this._severityNameCompat);
+    container.setAttribute("filter", this._filterKeyCompat);
     container.clipboardText = this.textContent;
     container.timestamp = this.timestamp;
     container._messageObject = this;
@@ -365,10 +370,11 @@ Messages.NavigationMarker.prototype = Heritage.extend(Messages.BaseMessage.proto
    */
   timestamp: 0,
 
-  // Class names in order: category, severity then the class for the filter.
-  _elementClassCompat: "webconsole-msg-network webconsole-msg-info hud-networkinfo",
   _categoryCompat: COMPAT.CATEGORIES.NETWORK,
   _severityCompat: COMPAT.SEVERITIES.LOG,
+  _categoryNameCompat: "network",
+  _severityNameCompat: "info",
+  _filterKeyCompat: "networkinfo",
 
   /**
    * Prepare the DOM element for this message.
