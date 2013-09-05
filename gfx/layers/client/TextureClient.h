@@ -8,7 +8,7 @@
 
 #include <stddef.h>                     // for size_t
 #include <stdint.h>                     // for uint32_t, uint8_t, uint64_t
-#include "GLContext.h"                  // for GLContext (ptr only), etc
+#include "GLContextTypes.h"             // for GLContext (ptr only), etc
 #include "GLTextureImage.h"             // for TextureImage
 #include "ImageContainer.h"             // for PlanarYCbCrImage, etc
 #include "ImageTypes.h"                 // for StereoMode

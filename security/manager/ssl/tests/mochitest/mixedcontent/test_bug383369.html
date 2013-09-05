@@ -15,27 +15,25 @@
 
   function runTest()
   {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  
     // Force download to be w/o user assistance for our testing mime type
-    const mimeSvc = Components.classes["@mozilla.org/mime;1"]
-      .getService(Components.interfaces.nsIMIMEService);
+    const mimeSvc = SpecialPowers.Cc["@mozilla.org/mime;1"]
+      .getService(SpecialPowers.Ci.nsIMIMEService);
     var handlerInfo = mimeSvc.getFromTypeAndExtension("application/x-auto-download", "auto");
-    handlerInfo.preferredAction = Components.interfaces.nsIHandlerInfo.saveToDisk;
+    handlerInfo.preferredAction = SpecialPowers.Ci.nsIHandlerInfo.saveToDisk;
     handlerInfo.alwaysAskBeforeHandling = false;
     handlerInfo.preferredApplicationHandler = null;
     
-    const handlerSvc = Components.classes["@mozilla.org/uriloader/handler-service;1"]
-      .getService(Components.interfaces.nsIHandlerService);
+    const handlerSvc = SpecialPowers.Cc["@mozilla.org/uriloader/handler-service;1"]
+      .getService(SpecialPowers.Ci.nsIHandlerService);
     handlerSvc.store(handlerInfo);
     
-    var dirProvider = Components.classes["@mozilla.org/file/directory_service;1"]
-      .getService(Components.interfaces.nsIProperties);
-    var profileDir = dirProvider.get("ProfDS", Components.interfaces.nsIFile);
+    var dirProvider = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"]
+      .getService(SpecialPowers.Ci.nsIProperties);
+    var profileDir = dirProvider.get("ProfDS", SpecialPowers.Ci.nsIFile);
     profileDir.append("downloads");
     
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-      .getService(Components.interfaces.nsIPrefService);
+    var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
+      .getService(SpecialPowers.Ci.nsIPrefService);
     prefs = prefs.getBranch("browser.download.");
         
     prefs.setCharPref("dir", profileDir.path);
@@ -52,25 +50,26 @@
     } catch (ex) { }
 
     if (useJSTransfer) {
-      Components.utils.import("resource://gre/modules/Downloads.jsm");
+      var Downloads = SpecialPowers.Cu.import("resource://gre/modules/Downloads.jsm").Downloads;
       Downloads.getPublicDownloadList().then(list => {
+        list = SpecialPowers.wrap(list);
         list.addView({
           onDownloadAdded: function (aDownload) {
             list.removeView(this);
-            aDownload.whenSucceeded().then(() => {
+            SpecialPowers.wrap(aDownload).whenSucceeded().then(() => {
               list.removeFinished();
               theWindow.location = "bug383369step2.html";
             });
           },
         });
         window.location = "download.auto";
-      }).then(null, Components.utils.reportError);
+      }).then(null, SpecialPowers.Cu.reportError);
 
       return;
     }
 
-    var downloadManager = Components.classes["@mozilla.org/download-manager;1"]
-      .getService(Components.interfaces.nsIDownloadManager);
+    var downloadManager = SpecialPowers.Cc["@mozilla.org/download-manager;1"]
+      .getService(SpecialPowers.Ci.nsIDownloadManager);
     var observer = {
       observe: function(subject, topic, data) {
         switch (topic) {
@@ -78,7 +77,6 @@
         case "dl-failed":
         case "dl-blocked":
         case "dl-dirty":
-          netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
           downloadManager.cleanUp();
           theWindow.location = "bug383369step2.html";
           observerService.removeObserver(this, "dl-done");
@@ -89,8 +87,8 @@
         }
       }
     };
-    var observerService = Components.classes["@mozilla.org/observer-service;1"]
-      .getService(Components.interfaces.nsIObserverService);
+    var observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+      .getService(SpecialPowers.Ci.nsIObserverService);
     observerService.addObserver(observer, "dl-done", false);
     observerService.addObserver(observer, "dl-failed", false);
     observerService.addObserver(observer, "dl-blocked", false);
@@ -105,18 +103,16 @@
   
   testCleanUp = function cleanup()
   {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-    const mimeSvc = Components.classes["@mozilla.org/mime;1"]
-      .getService(Components.interfaces.nsIMIMEService);
+    const mimeSvc = SpecialPowers.Cc["@mozilla.org/mime;1"]
+      .getService(SpecialPowers.Ci.nsIMIMEService);
     var handlerInfo = mimeSvc.getFromTypeAndExtension("application/x-auto-download", "auto");
     
-    const handlerSvc = Components.classes["@mozilla.org/uriloader/handler-service;1"]
-      .getService(Components.interfaces.nsIHandlerService);
+    const handlerSvc = SpecialPowers.Cc["@mozilla.org/uriloader/handler-service;1"]
+      .getService(SpecialPowers.Ci.nsIHandlerService);
     handlerSvc.remove(handlerInfo);
     
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-      .getService(Components.interfaces.nsIPrefService);
+    var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
+      .getService(SpecialPowers.Ci.nsIPrefService);
     prefs = prefs.getBranch("browser.download.");
 
     var prefKeys = ["dir", "useDownloadDir", "folderList", 

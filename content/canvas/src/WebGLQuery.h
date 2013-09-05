@@ -7,7 +7,6 @@
 #define WEBGLQUERY_H_
 
 #include "WebGLObjectModel.h"
-#include "WebGLContext.h"
 
 #include "nsWrapperCache.h"
 
@@ -16,11 +15,10 @@
 namespace mozilla {
 
 class WebGLQuery MOZ_FINAL
-    : public nsISupports
+    : public nsWrapperCache
     , public WebGLRefCountedObject<WebGLQuery>
     , public LinkedListElement<WebGLQuery>
     , public WebGLContextBoundObject
-    , public nsWrapperCache
 {
 // -----------------------------------------------------------------------------
 // PUBLIC
@@ -39,14 +37,7 @@ public:
     // -------------------------------------------------------------------------
     // MEMBER FUNCTIONS
 
-    bool IsActive() const
-    {
-        WebGLRefPtr<WebGLQuery>* targetSlot = mContext->GetQueryTargetSlot(mType, "WebGLQuery::IsActive()");
-
-        MOZ_ASSERT(targetSlot, "unknown query object's type");
-
-        return *targetSlot == this;
-    }
+    bool IsActive() const;
 
     bool HasEverBeenActive()
     {
@@ -70,8 +61,8 @@ public:
     virtual JSObject* WrapObject(JSContext *cx,
                                  JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLQuery)
+    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLQuery)
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLQuery)
 
 
 // -----------------------------------------------------------------------------
@@ -80,8 +71,8 @@ private:
 
     // -------------------------------------------------------------------------
     // MEMBERS
-    WebGLuint mGLName;
-    WebGLenum mType;
+    GLuint mGLName;
+    GLenum mType;
 
     // -------------------------------------------------------------------------
     // FRIENDSHIPS

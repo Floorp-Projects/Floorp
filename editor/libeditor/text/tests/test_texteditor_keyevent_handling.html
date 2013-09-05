@@ -35,10 +35,8 @@ const kIsLinux = navigator.platform.indexOf("Linux") == 0;
 
 function runTests()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  var fm = Components.classes["@mozilla.org/focus-manager;1"].
-    getService(Components.interfaces.nsIFocusManager);
+  var fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"].
+    getService(SpecialPowers.Ci.nsIFocusManager);
 
   var capturingPhase = { fired: false, prevented: false };
   var bubblingPhase = { fired: false, prevented: false };
@@ -113,7 +111,7 @@ function runTests()
     aDescription += ": "
 
     aElement.focus();
-    is(fm.focusedElement, aElement, aDescription + "failed to move focus");
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement, aDescription + "failed to move focus");
 
     // Modifier keys:
     //   Basically, modifier keys shouldn't cause keypress event.  However,
@@ -311,7 +309,7 @@ function runTests()
           true, true, !aIsTabbable && !aIsReadonly);
     is(aElement.value, !aIsTabbable && !aIsReadonly ? "a\t" : "a",
        aDescription + "Tab");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Tab)");
 
     // If the editor is not tabbable, make sure that it accepts tab characters
@@ -322,7 +320,7 @@ function runTests()
       check(aDescription + "Tab on empty textarea",
             true, true, !aIsReadonly);
       is(aElement.value, "\t", aDescription + "Tab on empty textarea");
-      is(fm.focusedElement, aElement,
+      is(SpecialPowers.unwrap(fm.focusedElement), aElement,
          aDescription + "focus moved unexpectedly (Tab on empty textarea");
     }
 
@@ -330,7 +328,7 @@ function runTests()
     synthesizeKey("VK_TAB", { shiftKey: true });
     check(aDescription + "Shift+Tab", true, true, false);
     is(aElement.value, "a", aDescription + "Shift+Tab");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab)");
 
     // Ctrl+Tab may be consumed by tabbrowser but editor shouldn't consume this.
@@ -338,28 +336,28 @@ function runTests()
     synthesizeKey("VK_TAB", { ctrlKey: true });
     check(aDescription + "Ctrl+Tab", true, true, false);
     is(aElement.value, "a", aDescription + "Ctrl+Tab");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Ctrl+Tab)");
 
     reset("a");
     synthesizeKey("VK_TAB", { altKey: true });
     check(aDescription + "Alt+Tab", true, true, false);
     is(aElement.value, "a", aDescription + "Alt+Tab");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Alt+Tab)");
 
     reset("a");
     synthesizeKey("VK_TAB", { metaKey: true });
     check(aDescription + "Meta+Tab", true, true, false);
     is(aElement.value, "a", aDescription + "Meta+Tab");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Meta+Tab)");
 
     reset("a");
     synthesizeKey("VK_TAB", { osKey: true });
     check(aDescription + "OS+Tab", true, true, false);
     is(aElement.value, "a", aDescription + "OS+Tab");
-    is(fm.focusedElement, aElement,
+    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (OS+Tab)");
 
     // Esc key:
@@ -427,8 +425,8 @@ function runTests()
 
   // make non-tabbable plaintext editor
   textarea.removeAttribute("readonly");
-  const nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
-  const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
+  const nsIPlaintextEditor = SpecialPowers.Ci.nsIPlaintextEditor;
+  const nsIDOMNSEditableElement = SpecialPowers.Ci.nsIDOMNSEditableElement;
   var editor = SpecialPowers.wrap(textarea).editor;
   var flags = editor.flags;
   editor.flags = flags & ~(nsIPlaintextEditor.eEditorWidgetMask |

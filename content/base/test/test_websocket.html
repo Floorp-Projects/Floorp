@@ -1225,15 +1225,15 @@ function test41()
         ok(true, "test 41c close");
 
         // clean up the STS state
-        netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-        const Cc = Components.classes;
-        const Ci = Components.interfaces;
+        const Cc = SpecialPowers.Cc;
+        const Ci = SpecialPowers.Ci;
         var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
         var thehost = ios.newURI("http://example.com", null, null);
         var sss = Cc["@mozilla.org/ssservice;1"].getService(Ci.nsISiteSecurityService);
-        var loadContext = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIWebNavigation)
-                                .QueryInterface(Ci.nsILoadContext);
+        var loadContext = SpecialPowers.wrap(window)
+                          .QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIWebNavigation)
+                          .QueryInterface(Ci.nsILoadContext);
         var flags = 0;
         if (loadContext.usePrivateBrowsing)
           flags |= Ci.nsISocketProvider.NO_PERMANENT_STORAGE;
@@ -1338,24 +1338,20 @@ function test44()
 
 function createDOMFile(fileName, fileData)
 {
-  // enablePrivilege is picky about where it's called? if I put it in global
-  // scope at start of  <script> it doesn't work...
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   // create File in profile dir 
-  var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
-                         .getService(Components.interfaces.nsIProperties);
-  var testFile = dirSvc.get("ProfD", Components.interfaces.nsIFile);
+  var dirSvc = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"]
+                         .getService(SpecialPowers.Ci.nsIProperties);
+  var testFile = dirSvc.get("ProfD", SpecialPowers.Ci.nsIFile);
   testFile.append(fileName);
-  var outStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
-                            .createInstance(Components.interfaces.nsIFileOutputStream);
+  var outStream = SpecialPowers.Cc["@mozilla.org/network/file-output-stream;1"]
+                            .createInstance(SpecialPowers.Ci.nsIFileOutputStream);
   outStream.init(testFile, 0x02 | 0x08 | 0x20, 0666, 0);
   outStream.write(fileData, fileData.length);
   outStream.close();
 
   // Set filename into DOM <input> field, as if selected by user 
   var fileList = document.getElementById('fileList');
-  fileList.value = testFile.path;
+  SpecialPowers.wrap(fileList).value = testFile.path;
 
   // return JS File object, aka Blob
   return fileList.files[0];

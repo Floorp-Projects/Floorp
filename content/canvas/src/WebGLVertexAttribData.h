@@ -24,9 +24,9 @@ struct WebGLVertexAttribData {
     { }
 
     WebGLRefPtr<WebGLBuffer> buf;
-    WebGLuint stride;
-    WebGLuint size;
-    WebGLuint divisor;
+    GLuint stride;
+    GLuint size;
+    GLuint divisor;
     GLuint byteOffset;
     GLenum type;
     bool enabled;

@@ -14,14 +14,18 @@
   -moz-user-select: none;
 }
 
-.ruleview-rule-inheritance {
+.ruleview-header {
   border-top-width: 1px;
   border-bottom-width: 1px;
   border-top-style: solid;
   border-bottom-style: solid;
   padding: 1px 4px;
-  margin-top: 4px;
   -moz-user-select: none;
+}
+
+.ruleview-rule-pseudo-element {
+  padding-left:20px;
+  border-left: solid 10px;
 }
 
 .ruleview-rule-source:hover {

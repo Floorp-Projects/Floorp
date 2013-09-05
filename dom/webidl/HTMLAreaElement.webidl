@@ -14,18 +14,13 @@
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-area-element
 interface HTMLAreaElement : HTMLElement {
+stringifier;
            [SetterThrows]
            attribute DOMString alt;
            [SetterThrows]
            attribute DOMString coords;
            [SetterThrows]
            attribute DOMString shape;
-  // No support for stringifier attributes yet
-  //[SetterThrows]
-  //stringifier attribute DOMString href;
-  stringifier;
-           [SetterThrows]
-           attribute DOMString href;
            [SetterThrows]
            attribute DOMString target;
            [SetterThrows]

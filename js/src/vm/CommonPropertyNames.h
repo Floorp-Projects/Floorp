@@ -46,6 +46,7 @@
     macro(defineSetter, defineSetter, "__defineSetter__") \
     macro(delete, delete_, "delete") \
     macro(deleteProperty, deleteProperty, "deleteProperty") \
+    macro(done, done, "done") \
     macro(each, each, "each") \
     macro(elementType, elementType, "elementType") \
     macro(empty, empty, "") \

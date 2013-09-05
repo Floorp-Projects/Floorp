@@ -408,6 +408,11 @@ IonCache::linkAndAttachStub(JSContext *cx, MacroAssembler &masm, StubAttacher &a
         IonSpew(IonSpew_InlineCaches, "Cache %p generated %s %s stub at %p",
                 this, attachKind, CacheName(kind()), code->raw());
     }
+
+#ifdef JS_ION_PERF
+    writePerfSpewerIonCodeProfile(code, "IonCache");
+#endif
+
     return true;
 }
 

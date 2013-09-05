@@ -333,6 +333,8 @@ Class DeclEnvObject::class_ = {
 DeclEnvObject *
 DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun, gc::InitialHeap heap)
 {
+    JS_ASSERT(IsNurseryAllocable(FINALIZE_KIND));
+
     RootedTypeObject type(cx, cx->getNewType(&class_, NULL));
     if (!type)
         return NULL;

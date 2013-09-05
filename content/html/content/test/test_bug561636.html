@@ -47,9 +47,8 @@ function runTest()
   var formSubmitted = [ false, false ];
   var invalidHandled = false;
 
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  var os = Components.classes['@mozilla.org/observer-service;1']
-                     .getService(Components.interfaces.nsIObserverService);
+  var os = SpecialPowers.Cc['@mozilla.org/observer-service;1']
+                        .getService(SpecialPowers.Ci.nsIObserverService);
   var observers = os.enumerateObservers("invalidformsubmit");
 
   // The following test should not be done if there is no observer for

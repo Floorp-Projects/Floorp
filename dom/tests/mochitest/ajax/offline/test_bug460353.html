@@ -28,16 +28,14 @@ function onUpdatePassed()
 
 function init()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
+  var Cc = SpecialPowers.Cc;
+  var Ci = SpecialPowers.Ci;
   var pm = Cc["@mozilla.org/permissionmanager;1"]
     .getService(Ci.nsIPermissionManager);
   var uri = Cc["@mozilla.org/network/io-service;1"]
     .getService(Ci.nsIIOService)
     .newURI(window.location.href, null, null);
-  var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+  var principal = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
                     .getService(Ci.nsIScriptSecurityManager)
                     .getNoAppCodebasePrincipal(uri);
   pm.addFromPrincipal(principal, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
@@ -81,16 +79,14 @@ function finish()
   SimpleTest.ok(result["noman"].updateOK == undefined, "Frame with no manifest cache update didn't pass");
   SimpleTest.is(result["noman"].cacheStatus || -1, -1, "Frame with no manifest cache status was undefined");
 
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
+  var Cc = SpecialPowers.Cc;
+  var Ci = SpecialPowers.Ci;
   var pm = Cc["@mozilla.org/permissionmanager;1"]
            .getService(Ci.nsIPermissionManager);
   var uri = Cc["@mozilla.org/network/io-service;1"]
             .getService(Ci.nsIIOService)
             .newURI(window.location.href, null, null);
-  var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+  var principal = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
                     .getService(Ci.nsIScriptSecurityManager)
                     .getNoAppCodebasePrincipal(uri);
   pm.removeFromPrincipal(principal, "offline-app");
@@ -105,8 +101,6 @@ function finish()
 
 function cleanCache(manifestURL)
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   var cache = OfflineTest.getActiveCache(manifestURL);
   dump("Discarding cache for " + manifestURL + " cache=" + cache + "\n");
   if (cache)

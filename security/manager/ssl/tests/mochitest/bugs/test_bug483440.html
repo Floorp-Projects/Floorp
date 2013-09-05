@@ -8,16 +8,14 @@
 
 <script class="testbody" type="text/javascript">
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-var certdb = Components.classes["@mozilla.org/security/x509certdb;1"]
-  .getService(Components.interfaces.nsIX509CertDB);
+var certdb = SpecialPowers.Cc["@mozilla.org/security/x509certdb;1"]
+  .getService(SpecialPowers.Ci.nsIX509CertDB);
 
 function test(certNick, expected)
 {
   var cert1 = certdb.findCertByNickname(null, certNick);
-  var certDumpTree1 = Components.classes["@mozilla.org/security/nsASN1Tree;1"]
-                     .createInstance(Components.interfaces.nsIASN1Tree);
+  var certDumpTree1 = SpecialPowers.Cc["@mozilla.org/security/nsASN1Tree;1"]
+                     .createInstance(SpecialPowers.Ci.nsIASN1Tree);
   certDumpTree1.loadASN1Structure(cert1.ASN1Structure);
   var value1 = certDumpTree1.getDisplayData(9);
   

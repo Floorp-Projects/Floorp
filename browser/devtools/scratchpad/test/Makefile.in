@@ -39,6 +39,7 @@ MOCHITEST_BROWSER_FILES = \
 		browser_scratchpad_bug807924_cannot_convert_to_string.js \
 		browser_scratchpad_long_string.js \
 		browser_scratchpad_open_error_console.js \
+		browser_scratchpad_pprint.js \
 		head.js \
 
 # Disable test due to bug 807234 becoming basically permanent

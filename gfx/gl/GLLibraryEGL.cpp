@@ -319,7 +319,7 @@ GLLibraryEGL::InitExtensions()
     const bool firstRun = false;
 #endif
 
-    mAvailableExtensions.Load(extensions, sExtensionNames, firstRun && debugMode);
+    GLContext::InitializeExtensionsBitSet(mAvailableExtensions, extensions, sExtensionNames, firstRun && debugMode);
 
 #ifdef DEBUG
     firstRun = false;
@@ -395,6 +395,25 @@ GLLibraryEGL::DumpEGLConfigs()
 
     delete [] ec;
 }
+
+#ifdef DEBUG
+/*static*/ void
+GLLibraryEGL::BeforeGLCall(const char* glFunction)
+{
+    if (GLContext::DebugMode()) {
+        if (GLContext::DebugMode() & GLContext::DebugTrace)
+            printf_stderr("[egl] > %s\n", glFunction);
+    }
+}
+
+/*static*/ void
+GLLibraryEGL::AfterGLCall(const char* glFunction)
+{
+    if (GLContext::DebugMode() & GLContext::DebugTrace) {
+        printf_stderr("[egl] < %s\n", glFunction);
+    }
+}
+#endif
 
 } /* namespace gl */
 } /* namespace mozilla */

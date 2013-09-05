@@ -80,7 +80,7 @@
   <script class="testbody" type="text/javascript">
 
   function hTest(node, validate) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var Microformats = SpecialPowers.Cu.import("resource://gre/modules/Microformats.js").Microformats;
     if (node)
       Microformats.parser.newMicroformat(this, node, "hTest", validate);
   }
@@ -149,7 +149,7 @@
   test_MicroformatsAPI();
 
   function doTest3_4_and5() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var Microformats = SpecialPowers.Cu.import("resource://gre/modules/Microformats.js").Microformats;
     ok(Microformats, "Make sure we still have a microformats object");
 
     var mfs = Microformats.get("hTest",
@@ -181,8 +181,7 @@
   }
 
   function test_MicroformatsAPI() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    Components.utils.import("resource://gre/modules/Microformats.js");
+    var Microformats = SpecialPowers.Cu.import("resource://gre/modules/Microformats.js").Microformats;
 
     // Make sure they aren't microformats yet
     is(Microformats.isMicroformat(document.getElementById("mftest-version1")),

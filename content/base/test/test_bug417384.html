@@ -21,8 +21,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=417384
 
 var expectedSerialization = "about:blank document";
 function testSerializer() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   var doc = document.getElementById('test_iframe').contentDocument;
   doc.body.textContent = expectedSerialization;
   var head1 = doc.createElement("head");
@@ -34,8 +32,8 @@ function testSerializer() {
   span.appendChild(doc.createTextNode("\nafter inner head"));
 
   var encoder =
-    Components.classes["@mozilla.org/layout/documentEncoder;1?type=text/html"]
-      .createInstance(Components.interfaces.nsIDocumentEncoder);
+    SpecialPowers.Cc["@mozilla.org/layout/documentEncoder;1?type=text/html"]
+      .createInstance(SpecialPowers.Ci.nsIDocumentEncoder);
   encoder.init(doc, "text/plain", 0);
   encoder.setCharset("UTF-8");
   var out = encoder.encodeToString();
