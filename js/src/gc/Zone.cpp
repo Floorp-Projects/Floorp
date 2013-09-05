@@ -234,3 +234,11 @@ Zone::discardJitCode(FreeOp *fop, bool discardConstraints)
     }
 #endif
 }
+
+JS::Zone *
+js::ZoneOfObject(const JSObject &obj)
+{
+    return obj.zone();
+}
+
+
