@@ -36,13 +36,13 @@
   let db = storage.openDatabase(file);
   db.close();
 
-  // Invoke all the reporters.  The SQLite multi-reporter is among
+  // Invoke all the multi-reporters.  The SQLite multi-reporter is among
   // them.  It shouldn't crash.
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
-  e = mgr.enumerateReporters();
+  e = mgr.enumerateMultiReporters();
   while (e.hasMoreElements()) {
-    let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
+    let r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
     r.collectReports(function(){}, null);
   }
 

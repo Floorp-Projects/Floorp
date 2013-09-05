@@ -36,12 +36,12 @@ static const PRLogModuleInfo *gUrlClassifierPrefixSetLog = nullptr;
 #define LOG_ENABLED() (false)
 #endif
 
-class PrefixSetReporter MOZ_FINAL : public MemoryUniReporter
+class PrefixSetReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
   PrefixSetReporter(nsUrlClassifierPrefixSet* aPrefixSet,
                     const nsACString& aName)
-    : MemoryUniReporter(
+    : MemoryReporterBase(
         nsPrintfCString(
           "explicit/storage/prefix-set/%s",
           (!aName.IsEmpty() ? PromiseFlatCString(aName).get() : "?!")
