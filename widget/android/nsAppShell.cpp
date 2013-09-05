@@ -538,6 +538,10 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         mObserversHash.Remove(curEvent->Characters());
         break;
 
+    case AndroidGeckoEvent::ADD_OBSERVER:
+        AddObserver(curEvent->Characters(), curEvent->Observer());
+        break;
+
     case AndroidGeckoEvent::LOW_MEMORY:
         // TODO hook in memory-reduction stuff for different levels here
         if (curEvent->MetaState() >= AndroidGeckoEvent::MEMORY_PRESSURE_MEDIUM) {
