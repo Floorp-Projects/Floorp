@@ -7,7 +7,6 @@
 #ifndef gc_GCInternals_h
 #define gc_GCInternals_h
 
-#include "jsapi.h"
 #include "jsworkers.h"
 
 #include "vm/Runtime.h"

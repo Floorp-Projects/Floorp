@@ -7,7 +7,6 @@
 #ifndef jsweakmap_h
 #define jsweakmap_h
 
-#include "jsapi.h"
 #include "jscompartment.h"
 #include "jsfriendapi.h"
 #include "jsobj.h"
