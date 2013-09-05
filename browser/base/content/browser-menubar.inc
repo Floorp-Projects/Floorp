@@ -520,6 +520,9 @@
                   <menuitem id="menu_devToolbar"
                             observes="devtoolsMenuBroadcaster_DevToolbar"
                             accesskey="&devToolbarMenu.accesskey;"/>
+                  <menuitem id="menu_devAppMgr"
+                            observes="devtoolsMenuBroadcaster_DevAppMgr"
+                            accesskey="&devAppMgrMenu.accesskey;"/>
                   <menuitem id="menu_chromeDebugger"
                             observes="devtoolsMenuBroadcaster_ChromeDebugger"/>
                   <menuitem id="menu_browserConsole"
