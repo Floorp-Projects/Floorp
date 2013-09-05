@@ -1060,8 +1060,6 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
 #endif
   }
 
-  CheckFloats(state);
-
   // Place the "marker" (bullet) frame if it is placed next to a block
   // child.
   //
@@ -1104,6 +1102,8 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     }
     // Otherwise just leave the bullet where it is, up against our top padding.
   }
+
+  CheckFloats(state);
 
   // Compute our final size
   nscoord bottomEdgeOfChildren;
