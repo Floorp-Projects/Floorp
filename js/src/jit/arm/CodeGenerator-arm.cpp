@@ -1779,32 +1779,68 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
     int size;
     bool isFloat = false;
     switch (mir->viewType()) {
-      case ArrayBufferView::TYPE_INT8:    isSigned = true; size = 8; break;
-      case ArrayBufferView::TYPE_UINT8:   isSigned = false; size = 8; break;
-      case ArrayBufferView::TYPE_INT16:   isSigned = true; size = 16; break;
+      case ArrayBufferView::TYPE_INT8:    isSigned = true;  size =  8; break;
+      case ArrayBufferView::TYPE_UINT8:   isSigned = false; size =  8; break;
+      case ArrayBufferView::TYPE_INT16:   isSigned = true;  size = 16; break;
       case ArrayBufferView::TYPE_UINT16:  isSigned = false; size = 16; break;
       case ArrayBufferView::TYPE_INT32:
       case ArrayBufferView::TYPE_UINT32:  isSigned = true;  size = 32; break;
       case ArrayBufferView::TYPE_FLOAT64: isFloat = true;   size = 64; break;
-      case ArrayBufferView::TYPE_FLOAT32:
-        isFloat = true;
-        size = 32;
-        break;
+      case ArrayBufferView::TYPE_FLOAT32: isFloat = true;   size = 32; break;
       default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
     }
-    Register index = ToRegister(ins->ptr());
-    BufferOffset bo = masm.ma_BoundsCheck(index);
+
+    const LAllocation *ptr = ins->ptr();
+
+    if (ptr->isConstant()) {
+        JS_ASSERT(mir->skipBoundsCheck());
+        int32_t ptrImm = ptr->toConstant()->toInt32();
+        JS_ASSERT(ptrImm >= 0);
+        if (isFloat) {
+            VFPRegister vd(ToFloatRegister(ins->output()));
+            if (size == 32) {
+                masm.ma_vldr(Operand(HeapReg, ptrImm), vd.singleOverlay(), Assembler::Always);
+                masm.as_vcvt(vd, vd.singleOverlay(), false, Assembler::Always);
+            } else {
+                masm.ma_vldr(Operand(HeapReg, ptrImm), vd, Assembler::Always);
+            }
+        }  else {
+            masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, Imm32(ptrImm),
+                                  ToRegister(ins->output()), Offset, Assembler::Always);
+        }
+        return true;
+    }
+
+    Register ptrReg = ToRegister(ptr);
+
+    if (mir->skipBoundsCheck()) {
+        if (isFloat) {
+            VFPRegister vd(ToFloatRegister(ins->output()));
+            if (size == 32) {
+                masm.ma_vldr(vd.singleOverlay(), HeapReg, ptrReg, 0, Assembler::Always);
+                masm.as_vcvt(vd, vd.singleOverlay(), false, Assembler::Always);
+            } else {
+                masm.ma_vldr(vd, HeapReg, ptrReg, 0, Assembler::Always);
+            }
+        } else {
+            masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, ptrReg,
+                                  ToRegister(ins->output()), Offset, Assembler::Always);
+        }
+        return true;
+    }
+
+    BufferOffset bo = masm.ma_BoundsCheck(ptrReg);
     if (isFloat) {
         VFPRegister vd(ToFloatRegister(ins->output()));
         if (size == 32) {
-            masm.ma_vldr(vd.singleOverlay(), HeapReg, index, 0, Assembler::Zero);
+            masm.ma_vldr(vd.singleOverlay(), HeapReg, ptrReg, 0, Assembler::Zero);
             masm.as_vcvt(vd, vd.singleOverlay(), false, Assembler::Zero);
         } else {
-            masm.ma_vldr(vd, HeapReg, index, 0, Assembler::Zero);
+            masm.ma_vldr(vd, HeapReg, ptrReg, 0, Assembler::Zero);
         }
         masm.ma_vmov(NANReg, ToFloatRegister(ins->output()), Assembler::NonZero);
-    }  else {
-        masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, index,
+    } else {
+        masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, ptrReg,
                               ToRegister(ins->output()), Offset, Assembler::Zero);
         masm.ma_mov(Imm32(0), ToRegister(ins->output()), NoSetCond, Assembler::NonZero);
     }
@@ -1825,25 +1861,56 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
       case ArrayBufferView::TYPE_UINT16:  isSigned = false; size = 16; break;
       case ArrayBufferView::TYPE_INT32:
       case ArrayBufferView::TYPE_UINT32:  isSigned = true;  size = 32; break;
-      case ArrayBufferView::TYPE_FLOAT64: isFloat = true;   size = 64; break;
-      case ArrayBufferView::TYPE_FLOAT32:
-        isFloat = true;
-        size = 32;
-        break;
+      case ArrayBufferView::TYPE_FLOAT64: isFloat  = true;  size = 64; break;
+      case ArrayBufferView::TYPE_FLOAT32: isFloat = true;   size = 32; break;
       default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
     }
-    Register index = ToRegister(ins->ptr());
+    const LAllocation *ptr = ins->ptr();
+    if (ptr->isConstant()) {
+        JS_ASSERT(mir->skipBoundsCheck());
+        int32_t ptrImm = ptr->toConstant()->toInt32();
+        JS_ASSERT(ptrImm >= 0);
+        if (isFloat) {
+            VFPRegister vd(ToFloatRegister(ins->value()));
+            if (size == 32) {
+                masm.as_vcvt(VFPRegister(ScratchFloatReg).singleOverlay(), vd, false, Assembler::Always);
+                masm.ma_vstr(VFPRegister(ScratchFloatReg).singleOverlay(), Operand(HeapReg, ptrImm), Assembler::Always);
+            } else {
+                masm.ma_vstr(vd, Operand(HeapReg, ptrImm), Assembler::Always);
+            }
+        } else {
+            masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, Imm32(ptrImm),
+                                  ToRegister(ins->value()), Offset, Assembler::Always);
+        }
+        return true;
+    }
 
-    BufferOffset bo = masm.ma_BoundsCheck(index);
+    Register ptrReg = ToRegister(ptr);
+
+    if (mir->skipBoundsCheck()) {
+        Register ptrReg = ToRegister(ptr);
+        if (isFloat) {
+            VFPRegister vd(ToFloatRegister(ins->value()));
+            if (size == 32)
+                masm.storeFloat(vd, HeapReg, ptrReg, Assembler::Always);
+            else
+                masm.ma_vstr(vd, HeapReg, ptrReg, 0, Assembler::Always);
+        } else {
+            masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, ptrReg,
+                                  ToRegister(ins->value()), Offset, Assembler::Always);
+        }
+        return true;
+    }
+
+    BufferOffset bo = masm.ma_BoundsCheck(ptrReg);
     if (isFloat) {
         VFPRegister vd(ToFloatRegister(ins->value()));
-        if (size == 32) {
-            masm.storeFloat(vd, HeapReg, index, Assembler::Zero);
-        } else {
-            masm.ma_vstr(vd, HeapReg, index, 0, Assembler::Zero);
-        }
-    }  else {
-        masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, index,
+        if (size == 32)
+            masm.storeFloat(vd, HeapReg, ptrReg, Assembler::Zero);
+        else
+            masm.ma_vstr(vd, HeapReg, ptrReg, 0, Assembler::Zero);
+    } else {
+        masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, ptrReg,
                               ToRegister(ins->value()), Offset, Assembler::Zero);
     }
     return gen->noteHeapAccess(AsmJSHeapAccess(bo.getOffset()));
