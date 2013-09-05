@@ -5853,8 +5853,7 @@ IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc, bool 
 
             // Don't bother with expression stack values. The stack should be
             // empty except for let variables (not Ion-compiled) or iterators.
-            uint32_t var = i - info().firstLocalSlot();
-            if (var >= info().nlocals())
+            if (i >= info().firstStackSlot())
                 continue;
 
             MPhi *phi = block->getSlot(i)->toPhi();
@@ -5862,6 +5861,7 @@ IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc, bool 
             // Get the value from the baseline frame.
             Value existingValue;
             uint32_t arg = i - info().firstArgSlot();
+            uint32_t var = i - info().firstLocalSlot();
             if (info().fun() && i == info().thisSlot())
                 existingValue = baselineFrame_->thisValue();
             else if (arg < info().nargs())
