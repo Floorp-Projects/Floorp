@@ -587,6 +587,7 @@
         './src/sipcc/include/ccapi_service.h',
         './src/sipcc/include/ccapi_types.h',
         './src/sipcc/include/ccsdp.h',
+        './src/sipcc/include/ccsdp_rtcp_fb.h',
         './src/sipcc/include/config_api.h',
         './src/sipcc/include/dns_util.h',
         './src/sipcc/include/plat_api.h',
