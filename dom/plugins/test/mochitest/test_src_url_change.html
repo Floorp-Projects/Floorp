@@ -4,17 +4,13 @@
   <title>Test changing src attribute</title>
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body onload="runTests()">
-  <p id="display"></p>
-
-  <embed id="plugin1" src="about:blank" type="application/x-test" width="200" height="200"></embed>
-
   <script type="application/javascript;version=1.8">
   SimpleTest.waitForExplicitFinish();
-
-  var p = document.getElementById('plugin1');
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   var destroyed = false;
   function onDestroy() {
@@ -22,6 +18,8 @@
   }
 
   function runTests() {
+    p = document.getElementById('plugin1');
+
     p.startWatchingInstanceCount();
     p.callOnDestroy(onDestroy);
 
@@ -35,6 +33,10 @@
     SimpleTest.finish();
   }
   </script>
+
+  <p id="display"></p>
+
+  <embed id="plugin1" src="about:blank" type="application/x-test" width="200" height="200"></embed>
 </body>
 </html>
 

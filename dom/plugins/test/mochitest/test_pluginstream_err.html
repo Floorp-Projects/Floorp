@@ -9,6 +9,7 @@ Tests for plugin stream error conditions.
   <title>NPAPI Stream Error Tests</title>
   <script type="text/javascript" 
           src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
   <link rel="stylesheet" type="text/css" 
         href="/tests/SimpleTest/test.css" />
 </head>
@@ -32,6 +33,7 @@ Tests for plugin stream error conditions.
 function $(id) { return document.getElementById(id); }
 
 SimpleTest.waitForExplicitFinish();
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
 
 var tests = [

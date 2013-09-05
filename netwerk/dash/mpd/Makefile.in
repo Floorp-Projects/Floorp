@@ -8,18 +8,8 @@
 # Contributor(s):
 #     Steve Workman <sworkman@mozilla.com>
 
-DEPTH     := @DEPTH@
-topsrcdir := @top_srcdir@
-srcdir    := @srcdir@
-VPATH     := @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 LOCAL_INCLUDES := \
   -I$(topsrcdir)/content/base/src \
   -I$(topsrcdir)/content/html/content/public \
   -I$(topsrcdir)/content/html/content/src \
   $(NULL)
-
-include $(topsrcdir)/config/rules.mk
-

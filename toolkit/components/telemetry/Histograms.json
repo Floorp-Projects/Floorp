@@ -3201,6 +3201,20 @@
     "n_buckets": 50,
     "description": "Time spent to display first page in PDF Viewer (ms)"
   },
+  "PLUGINS_NOTIFICATION_SHOWN": {
+    "kind": "boolean",
+    "description": "The number of times the click-to-activate notification was shown: false: shown by in-content activation true: shown by location bar activation"
+  },
+  "PLUGINS_NOTIFICATION_PLUGIN_COUNT": {
+    "kind": "enumerated",
+    "n_values": 5,
+    "description": "The number of plugins present in the click-to-activate notification, minus one (1, 2, 3, 4, more than 4)"
+  },
+  "PLUGINS_NOTIFICATION_USER_ACTION": {
+    "kind": "enumerated",
+    "n_values": 3,
+    "description": "User actions taken in the plugin notification: 0: allownow 1: allowalways 2: block"
+  },
   "POPUP_NOTIFICATION_MAINACTION_TRIGGERED_MS": {
     "kind": "linear",
     "low": 25,

@@ -37,23 +37,11 @@
   </style>
 </head>
 <body onload="initialize()">
-<p id="display"></p>
-<div id="container">
-  <embed id="paint-waiter" type="application/x-test"/>
-  <div id="clip">
-    <embed id="clipped" type="application/x-test"
-           drawmode="solid" color="FF808080"/>
-  </div>
-</div>
-<div id="content" style="display: none">
-
-</div>
-<pre id="test">
-</pre>
 
 <script type="application/javascript" src="utils.js"></script>
 <script type="application/javascript">
 SimpleTest.waitForExplicitFinish();
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
 var paint_waiter;
 var clip;
@@ -113,5 +101,20 @@ function waitForPaintHelper(func) {
 }
 
 </script>
+
+<p id="display"></p>
+<div id="container">
+  <embed id="paint-waiter" type="application/x-test"/>
+  <div id="clip">
+    <embed id="clipped" type="application/x-test"
+           drawmode="solid" color="FF808080"/>
+  </div>
+</div>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
 </body>
 </html>

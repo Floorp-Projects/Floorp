@@ -9,6 +9,12 @@
 
 #include <map>
 
+#if defined(__cplusplus) && __cplusplus >= 201103L
+typedef struct Timecard Timecard;
+#else
+#include "timecard.h"
+#endif
+
 #include "common/Wrapper.h"
 #include "common/csf_common.h"
 #include "mozilla/Mutex.h"
@@ -111,16 +117,16 @@ namespace CSF
         virtual void removeStream(int streamId);
         virtual bool setVolume(int volume);
         virtual void originateP2PCall (cc_sdp_direction_t video_pref, const std::string & digits, const std::string & ip);
-        virtual void createOffer(cc_media_constraints_t *constraints);
-        virtual void createAnswer(cc_media_constraints_t *constraints);
-        virtual void setLocalDescription(cc_jsep_action_t action, const std::string & sdp);
-        virtual void setRemoteDescription(cc_jsep_action_t action, const std::string & sdp);
+        virtual void createOffer(cc_media_constraints_t *constraints, Timecard *);
+        virtual void createAnswer(cc_media_constraints_t *constraints, Timecard *);
+        virtual void setLocalDescription(cc_jsep_action_t action, const std::string & sdp, Timecard *);
+        virtual void setRemoteDescription(cc_jsep_action_t action, const std::string & sdp, Timecard *);
         virtual void setPeerConnection(const std::string& handle);
         virtual const std::string& getPeerConnection() const;
         virtual void addStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type);
         virtual void removeStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type);
         virtual CC_SIPCCCallMediaDataPtr getMediaData();
-        virtual void addICECandidate(const std::string & candidate, const std::string & mid, unsigned short level);
+        virtual void addICECandidate(const std::string & candidate, const std::string & mid, unsigned short level, Timecard *);
 
     private:
         virtual bool setAudioMute(bool mute);

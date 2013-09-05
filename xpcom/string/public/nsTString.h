@@ -358,6 +358,18 @@ class nsTString_CharT : public nsTSubstring_CharT
 
 #endif // !MOZ_STRING_WITH_OBSOLETE_API
 
+      void Rebind( const char_type* data, size_type length );
+
+        /**
+         * verify restrictions for dependent strings
+         */
+      void AssertValidDepedentString()
+        {
+          NS_ASSERTION(mData, "nsTDependentString must wrap a non-NULL buffer");
+          NS_ASSERTION(mLength != size_type(-1), "nsTDependentString has bogus length");
+          NS_ASSERTION(mData[mLength] == 0, "nsTDependentString must wrap only null-terminated strings");
+        }
+
 
     protected:
 
@@ -368,7 +380,7 @@ class nsTString_CharT : public nsTSubstring_CharT
         // allow subclasses to initialize fields directly
       nsTString_CharT( char_type* data, size_type length, uint32_t flags )
         : substring_type(data, length, flags) {}
-  };
+};
 
 
 class nsTFixedString_CharT : public nsTString_CharT

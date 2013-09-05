@@ -1,19 +1,8 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-DEPTH     = @DEPTH@
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
-
-relativesrcdir = @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 MOCHITEST_BROWSER_FILES = \
   browser_basic_functionality.js \
   browser_first_download_panel.js \
   head.js \
   $(NULL)
-
-include $(topsrcdir)/config/rules.mk

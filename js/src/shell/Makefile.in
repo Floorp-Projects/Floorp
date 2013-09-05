@@ -4,13 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 ifdef _MSC_VER
 # unnecessary PGO for js shell.  But gcc cannot turn off pgo because it is
 # necessary to link PGO lib on gcc when a object/static lib are compiled

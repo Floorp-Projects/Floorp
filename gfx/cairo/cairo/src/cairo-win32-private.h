@@ -59,6 +59,8 @@ typedef struct _cairo_win32_surface {
 
     HDC dc;
 
+    struct IDirect3DSurface9 *d3d9surface;
+
     /* We create off-screen surfaces as DIBs or DDBs, based on what we created
      * originally*/
     HBITMAP bitmap;
