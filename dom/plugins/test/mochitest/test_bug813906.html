@@ -3,6 +3,7 @@
 <head>
   <title>Test for Bug 813906</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
@@ -16,17 +17,9 @@ function f() {
 }
 </script>
 
-<svg>
-  <symbol id="a">
-    <foreignObject>
-      <object bugmode="813906" frame="frame1"></object>
-    </foreignObject>
-  </symbol>
-  <use />
-</svg>
-
 <script type="application/javascript">
 SimpleTest.waitForExplicitFinish();
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
 // When the document is torn down or <svg> is removed, we hit bug 621618
 SimpleTest.expectAssertions(1);
@@ -48,6 +41,15 @@ function frameLoaded() {
   }
 }
 </script>
+
+<svg>
+  <symbol id="a">
+    <foreignObject>
+      <object bugmode="813906" frame="frame1"></object>
+    </foreignObject>
+  </symbol>
+  <use />
+</svg>
 
 <iframe name="frame1" onload="frameLoaded()"></iframe>
 </body>

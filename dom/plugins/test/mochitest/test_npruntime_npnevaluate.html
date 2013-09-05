@@ -3,18 +3,15 @@
   <title>NPN_Evaluate Tests</title>
   <script type="text/javascript" 
           src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
   <link rel="stylesheet" type="text/css" 
         href="/tests/SimpleTest/test.css" />
 </head>
 <body onload="runTests()">
-  <p id="display"></p>
-
-  <embed id="plugin1" type="application/x-test" width="400" height="100">
-  </embed>
-
   <script class="testbody" type="application/javascript">
   
   SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
   
   // global test function
   function testMe(arg) {
@@ -33,25 +30,26 @@
   // members:  the first is a string to eval, and the second is 
   // the expected result of the eval.
   //
-  var tests = [
-    ["3", 3],
-    ["3 + 3", 6],
-    ["'3'", "3"],
-    ["function test() { return 3; } test();", 3],
-    ["testMe(3)", 6],
-    ["testMe(new Object(3))", 6],
-    ["new Object(3)", new Object(3)],
-    ["new Array(1, 2, 3, 4)", [1, 2, 3, 4]],
-    ["document.getElementById('display')", 
-        document.getElementById("display")],
-    ["encodeURI('a = b')", "a%20=%20b"],
-    ["document.getElementById('testdiv').innerHTML = 'Hello world!'", 
-        "Hello world!"],
-    ["function test2() { var x = {a: '1', b: '2'}; return x; } test2();", 
-        {a: '1', b: '2'}],
-  ];
- 
+
   function runTests() {
+    var tests = [
+      ["3", 3],
+      ["3 + 3", 6],
+      ["'3'", "3"],
+      ["function test() { return 3; } test();", 3],
+      ["testMe(3)", 6],
+      ["testMe(new Object(3))", 6],
+      ["new Object(3)", new Object(3)],
+      ["new Array(1, 2, 3, 4)", [1, 2, 3, 4]],
+      ["document.getElementById('display')", 
+          document.getElementById("display")],
+      ["encodeURI('a = b')", "a%20=%20b"],
+      ["document.getElementById('testdiv').innerHTML = 'Hello world!'", 
+          "Hello world!"],
+      ["function test2() { var x = {a: '1', b: '2'}; return x; } test2();", 
+          {a: '1', b: '2'}],
+    ];
+
     var plugin = document.getElementById("plugin1");
 
     // Test calling NPN_Evaluate from within plugin code.
@@ -88,7 +86,12 @@
     SimpleTest.finish();
   }
   </script>
-  
+
+  <p id="display"></p>
+
+  <embed id="plugin1" type="application/x-test" width="400" height="100">
+  </embed>
+
   <div id="verbose">
   </div>
   <div id="testdiv">

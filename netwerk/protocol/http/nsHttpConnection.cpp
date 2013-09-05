@@ -120,7 +120,7 @@ nsHttpConnection::Init(nsHttpConnectionInfo *info,
     NS_ENSURE_TRUE(!mConnInfo, NS_ERROR_ALREADY_INITIALIZED);
 
     mConnInfo = info;
-    mLastReadTime = PR_IntervalNow();
+    mLastWriteTime = mLastReadTime = PR_IntervalNow();
     mSupportsPipelining =
         gHttpHandler->ConnMgr()->SupportsPipelining(mConnInfo);
     mRtt = rtt;
@@ -315,7 +315,7 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri
     NS_ENSURE_TRUE(!mTransaction, NS_ERROR_IN_PROGRESS);
 
     // reset the read timers to wash away any idle time
-    mLastReadTime = PR_IntervalNow();
+    mLastWriteTime = mLastReadTime = PR_IntervalNow();
 
     // Update security callbacks
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
@@ -702,17 +702,6 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
     NS_ENSURE_ARG_POINTER(trans);
     MOZ_ASSERT(responseHead, "No response head?");
 
-    // If the server issued an explicit timeout, then we need to close down the
-    // socket transport.  We pass an error code of NS_ERROR_NET_RESET to
-    // trigger the transactions 'restart' mechanism.  We tell it to reset its
-    // response headers so that it will be ready to receive the new response.
-    uint16_t responseStatus = responseHead->Status();
-    if (responseStatus == 408) {
-        Close(NS_ERROR_NET_RESET);
-        *reset = true;
-        return NS_OK;
-    }
-
     // we won't change our keep-alive policy unless the server has explicitly
     // told us to do so.
 
@@ -726,6 +715,27 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
     if (!explicitClose)
         explicitKeepAlive = responseHead->HasHeaderValue(nsHttp::Connection, "keep-alive") ||
             responseHead->HasHeaderValue(nsHttp::Proxy_Connection, "keep-alive");
+
+    // deal with 408 Server Timeouts
+    uint16_t responseStatus = responseHead->Status();
+    static const PRIntervalTime k1000ms  = PR_MillisecondsToInterval(1000);
+    if (responseStatus == 408) {
+        // If this error could be due to a persistent connection reuse then
+        // we pass an error code of NS_ERROR_NET_RESET to
+        // trigger the transaction 'restart' mechanism.  We tell it to reset its
+        // response headers so that it will be ready to receive the new response.
+        if (mIsReused && ((PR_IntervalNow() - mLastWriteTime) < k1000ms)) {
+            Close(NS_ERROR_NET_RESET);
+            *reset = true;
+            return NS_OK;
+        }
+
+        // timeouts that are not caused by persistent connection reuse should
+        // not be retried for browser compatibility reasons. bug 907800. The
+        // server driven close is implicit in the 408.
+        explicitClose = true;
+        explicitKeepAlive = false;
+    }
 
     // reset to default (the server may have changed since we last checked)
     mSupportsPipelining = false;
@@ -1219,6 +1229,7 @@ nsHttpConnection::OnReadSegment(const char *buf,
     else if (*countRead == 0)
         mSocketOutCondition = NS_BASE_STREAM_CLOSED;
     else {
+        mLastWriteTime = PR_IntervalNow();
         mSocketOutCondition = NS_OK; // reset condition
         if (!mProxyConnectInProgress)
             mTotalBytesWritten += *countRead;

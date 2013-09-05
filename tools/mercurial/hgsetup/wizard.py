@@ -71,6 +71,12 @@ import patches from Bugzilla using a friendly bz:// URL handler. e.g.
 |hg qimport bz://123456|.
 '''.strip()
 
+QNEWCURRENTUSER_INFO = '''
+The mercurial queues command |hg qnew|, which creates new patches in your patch
+queue does not set patch author information by default. Author information
+should be included when uploading for review.
+'''.strip()
+
 FINISHED = '''
 Your Mercurial should now be properly configured and recommended extensions
 should be up to date!
@@ -203,6 +209,14 @@ class MercurialSetupWizard(object):
                     os.path.join(self.ext_dir, 'qimportbz'),
                     'default',
                     'Ensuring qimportbz extension is up to date...')
+
+            if not c.have_qnew_currentuser_default():
+                print(QNEWCURRENTUSER_INFO)
+                if self._prompt_yn('Would you like qnew to set patch author by '
+                                   'default'):
+                    c.ensure_qnew_currentuser_default()
+                    print('Configured qnew to set patch author by default.')
+                    print('')
 
         c.add_mozilla_host_fingerprints()
 

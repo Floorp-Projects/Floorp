@@ -260,6 +260,7 @@ const load = iced(function load(loader, module) {
     let stack = error.stack || Error().stack;
     let frames = parseStack(stack).filter(isntLoaderFrame);
     let toString = String(error);
+    let file = sourceURI(fileName);
 
     // Note that `String(error)` where error is from subscript loader does
     // not puts `:` after `"Error"` unlike regular errors thrown by JS code.
@@ -271,6 +272,13 @@ const load = iced(function load(loader, module) {
       lineNumber = caller.lineNumber;
       message = "Module `" + module.id + "` is not found at " + module.uri;
       toString = message;
+    }
+    // Workaround for a Bug 910653. Errors thrown by subscript loader
+    // do not include `stack` field and above created error won't have
+    // fileName or lineNumber of the module being loaded, so we ensure
+    // it does.
+    else if (frames[frames.length - 1].fileName !== file) {
+      frames.push({ fileName: file, lineNumber: lineNumber, name: "" });
     }
 
     let prototype = typeof(error) === "object" ? error.constructor.prototype :

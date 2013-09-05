@@ -7,6 +7,7 @@
  */
 
 #include <stdarg.h>
+#include "timecard.h"
 #include "cpr.h"
 #include "cpr_in.h"
 #include "phone.h"
@@ -1555,6 +1556,7 @@ static void post_message_helper(group_call_event_t eventId,
                                 callid_t nCallId,
                                 uint16_t call_instance_id,
                                 string_t sdp,
+                                Timecard *timecard,
                                 pc_error error,
                                 const char *format,
                                 va_list args)
@@ -1568,6 +1570,8 @@ static void post_message_helper(group_call_event_t eventId,
         return;
     }
 
+    STAMP_TIMECARD(timecard, "Posting message to PC");
+
     msg.sessionID = createSessionId(nLine, nCallId);
 
     msg.eventID = eventId;
@@ -1577,6 +1581,7 @@ static void post_message_helper(group_call_event_t eventId,
     msg.update.ccSessionUpd.data.state_data.line_id = nLine;
     msg.update.ccSessionUpd.data.state_data.sdp = sdp;
     msg.update.ccSessionUpd.data.state_data.cause = error;
+    msg.update.ccSessionUpd.data.state_data.timecard = timecard;
 
     if (format) {
       flex_string_init(&fs);
@@ -1609,6 +1614,7 @@ void ui_create_offer(call_events event,
                      callid_t nCallID,
                      uint16_t call_instance_id,
                      string_t sdp,
+                     Timecard *timecard,
                      pc_error error,
                      const char *format, ...)
 {
@@ -1621,7 +1627,7 @@ void ui_create_offer(call_events event,
 
     va_start(ap, format);
     post_message_helper(CREATE_OFFER, event, new_state, nLine, nCallID,
-                        call_instance_id, sdp, error, format, ap);
+                        call_instance_id, sdp, timecard, error, format, ap);
     va_end(ap);
 
     return;
@@ -1639,6 +1645,7 @@ void ui_create_answer(call_events event,
                       callid_t nCallID,
                       uint16_t call_instance_id,
                       string_t sdp,
+                      Timecard *timecard,
                       pc_error error,
                       const char *format, ...)
 {
@@ -1648,7 +1655,7 @@ void ui_create_answer(call_events event,
 
     va_start(ap, format);
     post_message_helper(CREATE_ANSWER, event, new_state, nLine, nCallID,
-                        call_instance_id, sdp, error, format, ap);
+                        call_instance_id, sdp, timecard, error, format, ap);
     va_end(ap);
 
     return;
@@ -1666,6 +1673,7 @@ void ui_set_local_description(call_events event,
                               callid_t nCallID,
                               uint16_t call_instance_id,
                               string_t sdp,
+                              Timecard *timecard,
                               pc_error error,
                               const char *format, ...)
 {
@@ -1675,7 +1683,7 @@ void ui_set_local_description(call_events event,
 
     va_start(ap, format);
     post_message_helper(SET_LOCAL_DESC, event, new_state, nLine, nCallID,
-                        call_instance_id, sdp, error, format, ap);
+                        call_instance_id, sdp, timecard, error, format, ap);
     va_end(ap);
 
     return;
@@ -1693,6 +1701,7 @@ void ui_set_remote_description(call_events event,
                                callid_t nCallID,
                                uint16_t call_instance_id,
                                string_t sdp,
+                               Timecard *timecard,
                                pc_error error,
                                const char *format, ...)
 {
@@ -1702,7 +1711,7 @@ void ui_set_remote_description(call_events event,
 
     va_start(ap, format);
     post_message_helper(SET_REMOTE_DESC, event, new_state, nLine, nCallID,
-                        call_instance_id, sdp, error, format, ap);
+                        call_instance_id, sdp, timecard, error, format, ap);
     va_end(ap);
 
     return;
@@ -1720,6 +1729,7 @@ void ui_update_local_description(call_events event,
                                  callid_t nCallID,
                                  uint16_t call_instance_id,
                                  string_t sdp,
+                                 Timecard *timecard,
                                  pc_error error,
                                  const char *format, ...)
 {
@@ -1730,7 +1740,7 @@ void ui_update_local_description(call_events event,
 
     va_start(ap, format);
     post_message_helper(UPDATE_LOCAL_DESC, event, new_state, nLine, nCallID,
-                        call_instance_id, sdp, error, format, ap);
+                        call_instance_id, sdp, timecard, error, format, ap);
     va_end(ap);
 
     return;
@@ -1748,6 +1758,7 @@ void ui_ice_candidate_add(call_events event,
                           callid_t nCallID,
                           uint16_t call_instance_id,
                           string_t sdp,
+                          Timecard *timecard,
                           pc_error error,
                           const char *format, ...)
 {
@@ -1757,7 +1768,7 @@ void ui_ice_candidate_add(call_events event,
 
     va_start(ap, format);
     post_message_helper(ICE_CANDIDATE_ADD, event, new_state, nLine, nCallID,
-                        call_instance_id, sdp, error, format, ap);
+                        call_instance_id, sdp, timecard, error, format, ap);
     va_end(ap);
 }
 
@@ -1797,6 +1808,7 @@ void ui_on_remote_stream_added(call_events event,
     msg.update.ccSessionUpd.data.state_data.media_stream_track_id = media_track.track[0].media_stream_track_id;
     msg.update.ccSessionUpd.data.state_data.media_stream_id = (unsigned int)media_track.media_stream_id;
     msg.update.ccSessionUpd.data.state_data.cause = PC_NO_ERROR;
+    msg.update.ccSessionUpd.data.state_data.timecard = NULL;
 
     if ( ccappTaskPostMsg(CCAPP_SESSION_UPDATE, &msg, sizeof(session_update_t), CCAPP_CCPROVIER) != CPR_SUCCESS ) {
         CCAPP_ERROR(CCAPP_F_PREFIX"failed to send CALL_STATE(%d) msg", __FUNCTION__, event);
