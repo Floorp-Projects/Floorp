@@ -693,6 +693,7 @@ abstract public class BrowserApp extends GeckoApp
         Intent intent = new Intent(getBaseContext(), AwesomeBar.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         intent.putExtra(AwesomeBar.TARGET_KEY, aTarget.name());
+        intent.putExtra(AwesomeBar.GUEST_MODE_KEY, GeckoProfile.get(this).inGuestMode());
 
         // If we were passed in a URL, show it.
         if (aUrl != null && !TextUtils.isEmpty(aUrl)) {
