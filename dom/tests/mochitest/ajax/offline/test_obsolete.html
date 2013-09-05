@@ -3,15 +3,14 @@
 <title>Test obsolete application caches</title>
 
 <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
 <script type="text/javascript">
 
 var gTestWin;
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-var Cc = Components.classes;
-var Ci = Components.interfaces;
+var Cc = SpecialPowers.Cc;
+var Ci = SpecialPowers.Ci;
 
 // Enable the offline-app permission before loading the new window
 var pm = Cc["@mozilla.org/permissionmanager;1"]
@@ -19,7 +18,7 @@ var pm = Cc["@mozilla.org/permissionmanager;1"]
 var uri = Cc["@mozilla.org/network/io-service;1"]
          .getService(Ci.nsIIOService)
          .newURI(window.location.href, null, null);
-var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+var principal = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
                   .getService(Ci.nsIScriptSecurityManager)
                   .getNoAppCodebasePrincipal(uri);
 pm.addFromPrincipal(principal, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
@@ -38,7 +37,6 @@ req.onreadystatechange = function() {
 
 function finish()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   pm.removeFromPrincipal(principal, "offline-app");
 
   gTestWin.close();

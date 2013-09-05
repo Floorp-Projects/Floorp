@@ -22,8 +22,8 @@ SmsService::HasSupport(bool* aHasSupport)
 }
 
 NS_IMETHODIMP
-SmsService::GetSegmentInfoForText(const nsAString & aText,
-                                  nsIDOMMozSmsSegmentInfo** aResult)
+SmsService::GetSegmentInfoForText(const nsAString& aText,
+                                  nsIMobileMessageCallback* aRequest)
 {
   NS_ERROR("We should not be here!");
   return NS_ERROR_FAILURE;

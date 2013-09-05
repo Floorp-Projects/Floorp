@@ -13,8 +13,7 @@ class testElementTouch(MarionetteTestCase):
       button.tap()
       expected = "button1-touchstart-touchend-mousemove-mousedown-mouseup-click"
       self.wait_for_condition(lambda m: m.execute_script("return document.getElementById('button1').innerHTML;") == expected)
-      button = self.marionette.find_element("id", "button2")
-      button.tap()
+      button.tap(0, 300)
       expected = "button2-touchstart-touchend-mousemove-mousedown-mouseup-click"
       self.wait_for_condition(lambda m: m.execute_script("return document.getElementById('button2').innerHTML;") == expected)
 

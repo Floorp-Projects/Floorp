@@ -18,10 +18,9 @@
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
 
 var gNotificationIsAvailable;
 

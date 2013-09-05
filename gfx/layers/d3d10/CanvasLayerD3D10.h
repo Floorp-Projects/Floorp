@@ -7,29 +7,23 @@
 #define GFX_CANVASLAYERD3D10_H
 
 #include "LayerManagerD3D10.h"
-#include "GLContext.h"
 #include "gfxASurface.h"
 
 #include "mozilla/Preferences.h"
 
 namespace mozilla {
+
+namespace gl {
+class GLContext;
+}
+
 namespace layers {
 
 class CanvasLayerD3D10 : public CanvasLayer,
                          public LayerD3D10
 {
 public:
-  CanvasLayerD3D10(LayerManagerD3D10 *aManager)
-    : CanvasLayer(aManager, nullptr)
-    , LayerD3D10(aManager)
-    , mDataIsPremultiplied(false)
-    , mNeedsYFlip(false)
-    , mHasAlpha(true)
-  {
-      mImplData = static_cast<LayerD3D10*>(this);
-      mForceReadback = Preferences::GetBool("webgl.force-layers-readback", false);
-  }
-
+  CanvasLayerD3D10(LayerManagerD3D10 *aManager);
   ~CanvasLayerD3D10();
 
   // CanvasLayer implementation

@@ -134,27 +134,25 @@ function testHasRun() {
 }
 
 function createFileWithData(fileData) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
-  var testFile = dirSvc.get("ProfD", Components.interfaces.nsIFile);
+  var dirSvc = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"].getService(SpecialPowers.Ci.nsIProperties);
+  var testFile = dirSvc.get("ProfD", SpecialPowers.Ci.nsIFile);
   testFile.append("fileAPItestfile2-" + fileNum);
   fileNum++;
-  var outStream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
+  var outStream = SpecialPowers.Cc["@mozilla.org/network/file-output-stream;1"].createInstance(SpecialPowers.Ci.nsIFileOutputStream);
   outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
                  0666, 0);
   outStream.write(fileData, fileData.length);
   outStream.close();
 
   var fileList = document.getElementById('fileList');
-  fileList.value = testFile.path;
+  SpecialPowers.wrap(fileList).value = testFile.path;
 
   return fileList.files[0];
 }
 
 function gc() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-        .getInterface(Components.interfaces.nsIDOMWindowUtils)
+  window.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+        .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils)
         .garbageCollect();
 }
 

@@ -164,15 +164,17 @@ class FileCopier(FileRegistry):
     FileRegistry with the ability to copy the registered files to a separate
     directory.
     '''
-    def copy(self, destination, skip_if_older=True):
+    def copy(self, destination, skip_if_older=True, remove_unaccounted=True):
         '''
         Copy all registered files to the given destination path. The given
         destination can be an existing directory, or not exist at all. It
         can't be e.g. a file.
         The copy process acts a bit like rsync: files are not copied when they
-        don't need to (see mozpack.files for details on file.copy), and files
-        existing in the destination directory that aren't registered are
-        removed.
+        don't need to (see mozpack.files for details on file.copy).
+
+        By default, files in the destination directory that aren't registered
+        are removed and empty directories are deleted. To disable removing of
+        unregistered files, pass remove_unaccounted=False.
 
         Returns a FileCopyResult that details what changed.
         '''
@@ -195,15 +197,16 @@ class FileCopier(FileRegistry):
             for f in files:
                 actual_dest_files.add(os.path.normpath(os.path.join(root, f)))
 
-        for f in actual_dest_files - dest_files:
-            # Windows requires write access to remove files.
-            if os.name == 'nt' and not os.access(f, os.W_OK):
-                # It doesn't matter what we set the permissions to since we
-                # will remove this file shortly.
-                os.chmod(f, 0600)
+        if remove_unaccounted:
+            for f in actual_dest_files - dest_files:
+                # Windows requires write access to remove files.
+                if os.name == 'nt' and not os.access(f, os.W_OK):
+                    # It doesn't matter what we set the permissions to since we
+                    # will remove this file shortly.
+                    os.chmod(f, 0600)
 
-            os.remove(f)
-            result.removed_files.add(f)
+                os.remove(f)
+                result.removed_files.add(f)
 
         for root, dirs, files in os.walk(destination):
             if files or dirs:

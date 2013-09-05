@@ -187,17 +187,13 @@ test_Microformats();
 test_hCard();
 
 function test_Microformats() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  Components.utils.import("resource://gre/modules/Microformats.js");
+  var Microformats = SpecialPowers.Cu.import("resource://gre/modules/Microformats.js").Microformats;
 
   ok(Microformats, "Check global access to Microformats");
 };
 
 function test_hCard() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  Components.utils.import("resource://gre/modules/Microformats.js");
+  var hCalendar = SpecialPowers.Cu.import("resource://gre/modules/Microformats.js").hCalendar;
 
   var hcalendar;
 

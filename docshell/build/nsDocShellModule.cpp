@@ -10,8 +10,8 @@
 #include "nsDocShell.h"
 #include "nsDefaultURIFixup.h"
 #include "nsWebNavigationInfo.h"
-
 #include "nsAboutRedirector.h"
+#include "nsCDefaultURIFixup.h"
 
 // uriloader
 #include "nsURILoader.h"

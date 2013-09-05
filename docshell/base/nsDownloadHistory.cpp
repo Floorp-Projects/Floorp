@@ -10,9 +10,6 @@
 #include "nsIGlobalHistory2.h"
 #include "nsIObserverService.h"
 #include "nsIURI.h"
-#include "nsIComponentRegistrar.h"
-#include "nsDocShellCID.h"
-#include "nsNetCID.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsDownloadHistory

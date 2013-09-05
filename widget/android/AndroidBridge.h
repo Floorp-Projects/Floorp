@@ -356,7 +356,7 @@ public:
     void GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo);
 
     nsresult GetSegmentInfoForText(const nsAString& aText,
-                                   dom::mobilemessage::SmsSegmentInfoData* aData);
+                                   nsIMobileMessageCallback* aRequest);
     void SendMessage(const nsAString& aNumber, const nsAString& aText,
                      nsIMobileMessageCallback* aRequest);
     void GetMessage(int32_t aMessageId, nsIMobileMessageCallback* aRequest);

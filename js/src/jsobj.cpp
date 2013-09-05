@@ -2587,9 +2587,10 @@ FreeSlots(ExclusiveContext *cx, HeapSlot *slots)
 {
     // Note: threads without a JSContext do not have access to nursery allocated things.
 #ifdef JSGC_GENERATIONAL
-    if (!cx->isJSContext() || !cx->asJSContext()->runtime()->gcNursery.isInside(slots))
+    if (cx->isJSContext())
+        return cx->asJSContext()->runtime()->gcNursery.freeSlots(cx->asJSContext(), slots);
 #endif
-        js_free(slots);
+    js_free(slots);
 }
 
 /* static */ void

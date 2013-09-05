@@ -31,8 +31,8 @@ var promptState;
 function registerMockPromptService()
 {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-  var Ci = Components.interfaces;
+  var XPCOMUtils = SpecialPowers.Cu.import("resource://gre/modules/XPCOMUtils.jsm").XPCOMUtils;
+  var Ci = SpecialPowers.Ci;
 
   function MockPrompt(aDOMWindow) {
     this.domWindow = aDOMWindow;
@@ -220,18 +220,16 @@ function registerMockPromptService()
 
 function enableDialogLoopBlocking()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-    getService(Components.interfaces.nsIPrefBranch);
+  var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"].
+    getService(SpecialPowers.Ci.nsIPrefBranch);
 
   prefs.setIntPref("dom.successive_dialog_time_limit", 3);
 }
 
 function resetDialogLoopBlocking()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-    getService(Components.interfaces.nsIPrefBranch);
+  var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"].
+    getService(SpecialPowers.Ci.nsIPrefBranch);
 
   prefs.setIntPref("dom.successive_dialog_time_limit", 0);
 }

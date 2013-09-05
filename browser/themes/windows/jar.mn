@@ -20,6 +20,7 @@ browser.jar:
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/browser/aboutSyncTabs.css
 #endif
+        skin/classic/browser/aboutTabCrashed.css
         skin/classic/browser/actionicon-tab.png
 *       skin/classic/browser/browser.css
 *       skin/classic/browser/browser-lightweightTheme.css
@@ -294,6 +295,7 @@ browser.jar:
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/aero/browser/aboutSyncTabs.css
 #endif
+        skin/classic/aero/browser/aboutTabCrashed.css
         skin/classic/aero/browser/actionicon-tab.png
 *       skin/classic/aero/browser/browser.css                        (browser-aero.css)
 *       skin/classic/aero/browser/browser-lightweightTheme.css

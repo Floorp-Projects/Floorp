@@ -537,11 +537,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
 
-#ifdef MOZ_B2G_FM
-  NS_DEFINE_CLASSINFO_DATA(FMRadio, nsEventTargetSH,
-                           EVENTTARGET_SCRIPTABLE_FLAGS)
-#endif
-
 #ifdef MOZ_B2G_BT
   NS_DEFINE_CLASSINFO_DATA(BluetoothDevice, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
@@ -1397,13 +1392,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
-#endif
-
-#ifdef MOZ_B2G_FM
-  DOM_CLASSINFO_MAP_BEGIN(FMRadio, nsIFMRadio)
-    DOM_CLASSINFO_MAP_ENTRY(nsIFMRadio)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
 #endif
 
 #ifdef MOZ_B2G_BT

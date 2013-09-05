@@ -18,8 +18,7 @@
   }
 
   function test_MicroformatsAPI() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    Components.utils.import("resource://gre/modules/Microformats.js");
+    var Microformats = SpecialPowers.Cu.import("resource://gre/modules/Microformats.js").Microformats;
 
     count = Microformats.count("geo",
                               document.getElementById("contentbody"),

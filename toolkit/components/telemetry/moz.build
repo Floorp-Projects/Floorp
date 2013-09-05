@@ -16,7 +16,6 @@ MODULE = 'telemetry'
 EXPORTS.mozilla += [
     'ProcessedStack.h',
     'Telemetry.h',
-    'TelemetryHistogramEnums.h',
 ]
 
 CPP_SOURCES += [

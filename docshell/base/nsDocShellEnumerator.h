@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISimpleEnumerator.h"
-#include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsIWeakReferenceUtils.h"
 

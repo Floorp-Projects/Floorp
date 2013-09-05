@@ -29,9 +29,9 @@ private:
 
   nsRefPtr<DOMRequest> mDOMRequest;
 
-  nsresult NotifySuccess(JS::Handle<JS::Value> aResult);
-  nsresult NotifySuccess(nsISupports *aMessage);
-  nsresult NotifyError(int32_t aError);
+  nsresult NotifySuccess(JS::Handle<JS::Value> aResult, bool aAsync = false);
+  nsresult NotifySuccess(nsISupports *aMessage, bool aAsync = false);
+  nsresult NotifyError(int32_t aError, bool aAsync = false);
 };
 
 } // namespace mobilemessage

@@ -26,6 +26,8 @@ public interface PanZoomTarget {
 
     public boolean post(Runnable action);
     public boolean postDelayed(Runnable action, long delayMillis);
+    public void postRenderTask(RenderTask task);
+    public void removeRenderTask(RenderTask task);
     public Object getLock();
     public PointF convertViewPointToLayerPoint(PointF viewPoint);
 }

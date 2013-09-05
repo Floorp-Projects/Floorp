@@ -426,8 +426,11 @@ GonkGPSGeolocationProvider::RequestSetID(uint32_t flags)
       nsCOMPtr<nsIDOMMozIccInfo> iccInfo;
       rilCtx->GetIccInfo(getter_AddRefs(iccInfo));
       if (iccInfo) {
-        type = AGPS_SETID_TYPE_MSISDN;
-        iccInfo->GetMsisdn(id);
+        nsCOMPtr<nsIDOMMozGsmIccInfo> gsmIccInfo = do_QueryInterface(iccInfo);
+        if (gsmIccInfo) {
+          type = AGPS_SETID_TYPE_MSISDN;
+          gsmIccInfo->GetMsisdn(id);
+        }
       }
     }
 

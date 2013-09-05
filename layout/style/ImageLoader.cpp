@@ -12,6 +12,7 @@
 #include "nsError.h"
 #include "nsDisplayList.h"
 #include "FrameLayerBuilder.h"
+#include "nsSVGEffects.h"
 
 namespace mozilla {
 namespace css {
@@ -329,6 +330,13 @@ void InvalidateImagesCallback(nsIFrame* aFrame,
 
   aItem->Invalidate();
   aFrame->SchedulePaint();
+
+  // Update ancestor rendering observers (-moz-element etc)
+  nsIFrame *f = aFrame;
+  while (f && !f->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
+    nsSVGEffects::InvalidateDirectRenderingObservers(f);
+    f = nsLayoutUtils::GetCrossDocParentFrame(f);
+  }
 }
 
 void

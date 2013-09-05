@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=907503
+-->
+<head>
+  <title>Test for Bug 907503</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="application/javascript" src="imgutils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=610419">Mozilla Bug 907503</a>
+<p id="display"></p>
+<div id="content">
+  <div id="referenceDiv" style="height: 100px; width: 100px;
+                                display: none; background: lime"></div>
+  <img>
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+/** Test for Bug 907503**/
+
+SimpleTest.waitForExplicitFinish();
+
+const FAILURE_TIMEOUT = 120000; // Fail early after 120 seconds (2 minutes)
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const gImg = document.getElementsByTagName("img")[0];
+
+var gMyDecoderObserver; // value will be set in main()
+var gReferenceSnapshot; // value will be set in takeReferenceSnapshot()
+var gOnStopFrameCounter = 0;
+var gIsTestFinished = false;
+
+
+function takeReferenceSnapshot() {
+  // Take a snapshot of the initial (essentially blank) page
+  let blankSnapshot = snapshotWindow(window, false);
+
+  // Show reference div, & take a snapshot
+  let referenceDiv = document.getElementById("referenceDiv");
+  referenceDiv.style.display = "block";
+  gReferenceSnapshot = snapshotWindow(window, false);
+  ok(compareSnapshots(blankSnapshot, gReferenceSnapshot, false)[0],
+     "reference snapshot shouldn't match blank page snapshot");
+
+  // Re-hide reference div, and take another snapshot to be sure it's gone
+  referenceDiv.style.display = "none";
+  let blankSnapshot2 = snapshotWindow(window, false);
+  ok(compareSnapshots(blankSnapshot, blankSnapshot2, true)[0],
+     "reference div should disappear when it becomes display:none");
+}
+
+function myOnStopFrame(aRequest) {
+  gOnStopFrameCounter++;
+  ok(true, "myOnStopFrame called");
+  let currentSnapshot = snapshotWindow(window, false);
+  if (compareSnapshots(currentSnapshot, gReferenceSnapshot, true)[0]) {
+    // SUCCESS!
+    ok(true, "Animated image looks correct, " +
+             "at call #" + gOnStopFrameCounter + " to onStopFrame");
+    cleanUpAndFinish();
+  }
+  setTimeout(function() { myOnStopFrame(0, 0); }, 1000);
+}
+
+function failTest() {
+  ok(false, "timing out after " + FAILURE_TIMEOUT + "ms.  " +
+            "Animated image still doesn't look correct, " +
+            "after call #" + gOnStopFrameCounter + " to onStopFrame");
+  cleanUpAndFinish();
+}
+
+function cleanUpAndFinish() {
+  // On the off chance that failTest and myOnStopFrame are triggered
+  // back-to-back, use a flag to prevent multiple calls to SimpleTest.finish.
+  if (gIsTestFinished) {
+    return;
+  }
+  let imgLoadingContent = gImg.QueryInterface(Ci.nsIImageLoadingContent);
+  imgLoadingContent.removeObserver(gMyDecoderObserver);
+  SimpleTest.finish();
+  gIsTestFinished = true;
+}
+
+function main() {
+  takeReferenceSnapshot();
+
+  // Create, customize & attach decoder observer
+  observer = new ImageDecoderObserverStub();
+  observer.frameComplete = myOnStopFrame;
+  gMyDecoderObserver =
+    Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+      .createScriptedObserver(observer);
+  let imgLoadingContent = gImg.QueryInterface(Ci.nsIImageLoadingContent);
+  imgLoadingContent.addObserver(gMyDecoderObserver);
+
+  // We want to test the cold loading behavior, so clear cache in case an
+  // earlier test got our image in there already.
+  clearImageCache();
+
+  // kick off image-loading! myOnStopFrame handles the rest.
+  gImg.setAttribute("src", "lime-anim-100x100-2.svg");
+
+  // In case something goes wrong, fail earlier than mochitest timeout,
+  // and with more information.
+  setTimeout(failTest, FAILURE_TIMEOUT);
+}
+
+window.onload = main;
+
+</script>
+</pre>
+</body>
+</html>

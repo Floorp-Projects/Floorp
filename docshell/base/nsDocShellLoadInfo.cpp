@@ -6,7 +6,9 @@
 
 // Local Includes
 #include "nsDocShellLoadInfo.h"
-#include "nsReadableUtils.h"
+#include "nsISHEntry.h"
+#include "nsIInputStream.h"
+#include "nsIURI.h"
 
 //*****************************************************************************
 //***    nsDocShellLoadInfo: Object Management

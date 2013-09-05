@@ -19,9 +19,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=512435
 <script type="application/javascript">
 
 // Boilerplate
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-const Ci = Components.interfaces;
-const Cc = Components.classes;
+const Ci = SpecialPowers.Ci;
+const Cc = SpecialPowers.Cc;
 SimpleTest.waitForExplicitFinish();
 
 // We're relying on very particular behavior for certain images - clear the

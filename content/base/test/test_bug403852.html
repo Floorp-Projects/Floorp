@@ -23,8 +23,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=403852
 
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
-var testFile = dirSvc.get("ProfD", Components.interfaces.nsIFile);
+var dirSvc = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"].getService(SpecialPowers.Ci.nsIProperties);
+var testFile = dirSvc.get("ProfD", SpecialPowers.Ci.nsIFile);
 testFile.append("prefs.js");
 
 var fileList = document.getElementById('fileList');

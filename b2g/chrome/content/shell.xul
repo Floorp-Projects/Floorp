@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="shell"
+        windowtype="navigator:browser"
+#ifdef ANDROID
+        sizemode="fullscreen"
+#endif
+        style="background: black; overflow: hidden; width:320px; height:480px"
+        onunload="shell.stop();">
+
+  <script type="application/javascript" src="chrome://browser/content/settings.js"/>
+  <script type="application/javascript" src="chrome://browser/content/shell.js"/>
+
+#ifndef MOZ_WIDGET_GONK
+  <!-- this script handles the screen argument for desktop builds -->
+  <script type="application/javascript" src="chrome://browser/content/screen.js"/>
+  <!-- this script handles the "runapp" argument for desktop builds -->
+  <script type="application/javascript" src="chrome://browser/content/runapp.js"/>
+#endif
+  <!-- The html:iframe containing the UI is created here. -->
+</window>

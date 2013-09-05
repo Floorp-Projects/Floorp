@@ -208,7 +208,7 @@ class RecursiveMakeBackend(CommonBackend):
                 else:
                     backend_file.write('%s := %s\n' % (k, v))
         elif isinstance(obj, Exports):
-            self._process_exports(obj.exports, backend_file)
+            self._process_exports(obj, obj.exports, backend_file)
 
         elif isinstance(obj, IPDLFile):
             self._ipdl_sources.add(mozpath.join(obj.srcdir, obj.basename))
@@ -367,7 +367,7 @@ class RecursiveMakeBackend(CommonBackend):
             fh.write('PARALLEL_DIRS += %s\n' %
                 ' '.join(obj.parallel_external_make_dirs))
 
-    def _process_exports(self, exports, backend_file, namespace=""):
+    def _process_exports(self, obj, exports, backend_file, namespace=""):
         strings = exports.get_strings()
         if namespace:
             if strings:
@@ -383,13 +383,17 @@ class RecursiveMakeBackend(CommonBackend):
             backend_file.write('%s += %s\n' % (export_name, ' '.join(strings)))
 
             for s in strings:
+                source = os.path.normpath(os.path.join(obj.srcdir, s))
+                if not os.path.isfile(source):
+                    raise Exception('File listed in EXPORTS does not exist: %s' % source)
+
                 p = '%s%s' % (namespace, s)
                 self._purge_manifests['dist_include'].add(p)
 
         children = exports.get_children()
         for subdir in sorted(children):
-            self._process_exports(children[subdir], backend_file,
-                                  namespace=namespace + subdir)
+            self._process_exports(obj, children[subdir], backend_file,
+                namespace=namespace + subdir)
 
     def _handle_idl_manager(self, manager):
         build_files = self._purge_manifests['xpidl']

@@ -11,6 +11,11 @@ include $(DEPTH)/config/autoconf.mk
 
 EXTRA_MDDEPEND_FILES = xpcAccEvents.pp
 
+INSTALL_TARGETS += xpcaccevents
+xpcaccevents_FILES := xpcAccEvents.h
+xpcaccevents_DEST = $(DIST)/include
+xpcaccevents_TARGET := export
+
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES = \

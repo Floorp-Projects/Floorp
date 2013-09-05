@@ -8,9 +8,8 @@
 
 #include <stddef.h>                     // for size_t
 #include <stdint.h>                     // for uint64_t
-#include "GLContext.h"                  // for GLContext, etc
-#include "GLContextTypes.h"             // for GLenum, GLuint
-#include "GLDefs.h"                     // for LOCAL_GL_CLAMP_TO_EDGE, etc
+#include "GLContextTypes.h"             // for GLContext
+#include "GLDefs.h"                     // for GLenum, LOCAL_GL_CLAMP_TO_EDGE, etc
 #include "GLTextureImage.h"             // for TextureImage
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxASurface.h"                // for gfxASurface, etc
@@ -219,7 +218,7 @@ class SharedTextureSourceOGL : public NewTextureSource
                              , public TextureSourceOGL
 {
 public:
-  typedef gl::GLContext::SharedTextureShareType SharedTextureShareType;
+  typedef gl::SharedTextureShareType SharedTextureShareType;
 
   SharedTextureSourceOGL(CompositorOGL* aCompositor,
                          gl::SharedTextureHandle aHandle,
@@ -278,7 +277,7 @@ class SharedTextureHostOGL : public TextureHost
 public:
   SharedTextureHostOGL(uint64_t aID,
                        TextureFlags aFlags,
-                       gl::GLContext::SharedTextureShareType aShareType,
+                       gl::SharedTextureShareType aShareType,
                        gl::SharedTextureHandle aSharedhandle,
                        gfx::IntSize aSize,
                        bool inverted);
@@ -318,7 +317,7 @@ protected:
   gfx::IntSize mSize;
   CompositorOGL* mCompositor;
   gl::SharedTextureHandle mSharedHandle;
-  gl::GLContext::SharedTextureShareType mShareType;
+  gl::SharedTextureShareType mShareType;
 
   RefPtr<SharedTextureSourceOGL> mTextureSource;
 };
@@ -581,7 +580,7 @@ public:
     , mTextureHandle(0)
     , mWrapMode(LOCAL_GL_CLAMP_TO_EDGE)
     , mSharedHandle(0)
-    , mShareType(GLContext::SameProcess)
+    , mShareType(gl::SameProcess)
   {}
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
@@ -661,7 +660,7 @@ protected:
   GLenum mWrapMode;
   GLenum mTextureTarget;
   gl::SharedTextureHandle mSharedHandle;
-  gl::GLContext::SharedTextureShareType mShareType;
+  gl::SharedTextureShareType mShareType;
 };
 
 class SurfaceStreamHostOGL : public DeprecatedTextureHost
@@ -716,11 +715,7 @@ public:
     return mTextureTarget;
   }
 
-  void BindTexture(GLenum activetex) MOZ_OVERRIDE {
-    MOZ_ASSERT(mGL);
-    mGL->fActiveTexture(activetex);
-    mGL->fBindTexture(mTextureTarget, mTextureHandle);
-  }
+  void BindTexture(GLenum activetex) MOZ_OVERRIDE;
 
   void UnbindTexture() MOZ_OVERRIDE {}
 
@@ -784,11 +779,7 @@ public:
   virtual TextureSourceOGL* AsSourceOGL() MOZ_OVERRIDE { return this; }
   virtual bool IsValid() const MOZ_OVERRIDE { return true; }
   virtual GLenum GetWrapMode() const MOZ_OVERRIDE { return LOCAL_GL_CLAMP_TO_EDGE; }
-  virtual void BindTexture(GLenum aTextureUnit) MOZ_OVERRIDE
-  {
-    mGL->fActiveTexture(aTextureUnit);
-    mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextureHandle);
-  }
+  virtual void BindTexture(GLenum aTextureUnit);
   virtual void UnbindTexture() MOZ_OVERRIDE {}
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE
   {

@@ -21,9 +21,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=449141
 <script class="testbody" type="text/javascript">
 /** Test for Bug 449141 **/
 
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
 
 function getTempDir() {
     return Cc["@mozilla.org/file/directory_service;1"]
@@ -40,7 +39,6 @@ var progressListener = {
   },
   onStateChange: function(aProgress, aRequest, aStateFlag, aStatus) {
     if (aStateFlag & STATE_STOP) {
-      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
       var dirExists = false;
       var videoExists = false;
 
@@ -59,8 +57,6 @@ var progressListener = {
 };
 
 function persistDocument(aDoc) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
     const nsIWBP = Ci.nsIWebBrowserPersist;
     const persistFlags =
                   nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES
@@ -68,7 +64,7 @@ function persistDocument(aDoc) {
     const encodingFlags =
                   nsIWBP.ENCODE_FLAGS_ENCODE_BASIC_ENTITIES;
 
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+    var ioService = Cc["@mozilla.org/network/io-service;1"]
                     .getService(Ci.nsIIOService);
 
     var id = Math.round(Math.random() * 10000);

@@ -5,9 +5,9 @@
   -->
   <head>
     <title>Test for Bug 411966</title>
-    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-    <script type="text/javascript" src="mochitest/bug_411966/redirect.js"></script>
-    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="text/javascript" src="http://mochi.test:8888/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="http://mochi.test:8888/tests/toolkit/components/places/tests/mochitest/bug_411966/redirect.js"></script>
+    <link rel="stylesheet" type="text/css" href="http://mochi.test:8888/tests/SimpleTest/test.css" />
   </head>
   <body>
     <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=411966">
@@ -20,8 +20,6 @@
       <script class="testbody" type="text/javascript">
 
       /** Test for Bug 411966 **/
-      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
       addVisits(typedURI, function() {
         histsvc.markPageAsTyped(typedURI);
 
