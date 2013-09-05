@@ -10,7 +10,7 @@ var httpbody = "<?xml version='1.0' ?><root>0123456789</root>";
 
 var sb = cu.Sandbox(["http://www.example.com",
                      "http://localhost:4444/simple"],
-                     {wantXHRConstructor: true});
+                     { wantDOMConstructors: ["XMLHttpRequest"] });
 
 function createXHR(loc, async)
 {

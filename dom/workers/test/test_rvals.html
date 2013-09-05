@@ -1,0 +1,37 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for bug 911085</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+  var worker = new Worker("rvals_worker.js");
+
+  worker.onmessage = function(event) {
+    if (event.data == 'ignore') return;
+
+    if (event.data == 'finished') {
+      is(worker.terminate(), undefined, "Terminate() returns 'undefined'");
+      SimpleTest.finish();
+      return;
+    }
+
+    ok(event.data, "something good returns 'undefined' in workers");
+  };
+
+  is(worker.postMessage(42), undefined, "PostMessage() returns 'undefined' on main thread");
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
+
+

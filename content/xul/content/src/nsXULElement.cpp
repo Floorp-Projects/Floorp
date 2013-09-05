@@ -2664,7 +2664,7 @@ nsXULPrototypeScript::UnlinkJSObjects()
 {
     if (mScriptObject) {
         mScriptObject = nullptr;
-        nsContentUtils::DropJSObjects(this);
+        mozilla::DropJSObjects(this);
     }
 }
 
@@ -2678,8 +2678,7 @@ nsXULPrototypeScript::Set(JSScript* aObject)
     }
 
     mScriptObject = aObject;
-    nsContentUtils::HoldJSObjects(
-        this, NS_CYCLE_COLLECTION_PARTICIPANT(nsXULPrototypeNode));
+    mozilla::HoldJSObjects(this);
 }
 
 //----------------------------------------------------------------------

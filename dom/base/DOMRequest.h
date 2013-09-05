@@ -78,7 +78,7 @@ public:
   virtual ~DOMRequest()
   {
     mResult = JSVAL_VOID;
-    NS_DROP_JS_OBJECTS(this, DOMRequest);
+    mozilla::DropJSObjects(this);
   }
 
 protected:

@@ -13,17 +13,15 @@ var gGotNotHandlingDrop = false;
 SimpleTest.waitForExplicitFinish();
 
 function fireEvent(target, event) {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var utils =
-    window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-           getInterface(Components.interfaces.nsIDOMWindowUtils);
-  utils.dispatchDOMEventViaPresShell(target, event, true);
+    window.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
+           getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
+  SpecialPowers.wrap(utils).dispatchDOMEventViaPresShell(target, event, true);
 }
 
 function fireDrop(element, shouldAllowDrop, shouldAllowOnlyChromeDrop) {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  var ds = Components.classes["@mozilla.org/widget/dragservice;1"].
-    getService(Components.interfaces.nsIDragService);
+  var ds = SpecialPowers.Cc["@mozilla.org/widget/dragservice;1"].
+    getService(SpecialPowers.Ci.nsIDragService);
 
   var dataTransfer;
   var trapDrag = function(event) {

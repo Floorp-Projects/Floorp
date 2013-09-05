@@ -204,6 +204,7 @@ FENNEC_JAVA_FILES = \
   gfx/PointUtils.java \
   gfx/ProgressiveUpdateData.java \
   gfx/RectUtils.java \
+  gfx/RenderTask.java \
   gfx/ScrollbarLayer.java \
   gfx/SimpleScaleGestureDetector.java \
   gfx/SingleTileLayer.java \

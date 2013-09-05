@@ -5,7 +5,7 @@ function run_test() {
   // NB: We use an nsEP here so that we can have access to Components, but still
   // have Xray behavior from this scope.
   var contentSB = new Cu.Sandbox(['http://www.google.com'],
-                                 {wantXHRConstructor: true, wantComponents: true});
+                                 { wantDOMConstructors: ["XMLHttpRequest"], wantComponents: true });
 
   // Make an XHR in the content sandbox.
   Cu.evalInSandbox('xhr = new XMLHttpRequest();', contentSB);

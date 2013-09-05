@@ -318,7 +318,9 @@ DesktopNotificationRequest::GetWindow(nsIDOMWindow * *aRequestingWindow)
 NS_IMETHODIMP
 DesktopNotificationRequest::GetElement(nsIDOMElement * *aElement)
 {
-  return NS_ERROR_FAILURE;
+  NS_ENSURE_ARG_POINTER(aElement);
+  *aElement = nullptr;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

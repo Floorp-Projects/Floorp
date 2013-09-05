@@ -1687,18 +1687,22 @@ MmsService.prototype = {
     if (receivers.length != 0) {
       let headersTo = headers["to"] = [];
       for (let i = 0; i < receivers.length; i++) {
-        let normalizedAddress = PhoneNumberUtils.normalize(receivers[i], false);
-        if (DEBUG) debug("createSavableFromParams: normalize phone number " +
-                         "from " + receivers[i] + " to " + normalizedAddress);
-
-        headersTo.push({"address": normalizedAddress, "type": "PLMN"});
-
-        // Check if the address is valid to send MMS.
-        if (!PhoneNumberUtils.isPlainPhoneNumber(normalizedAddress)) {
-          if (DEBUG) debug("Error! Address is invalid to send MMS: " +
-                           normalizedAddress);
+        let receiver = receivers[i];
+        let type = MMS.Address.resolveType(receiver);
+        let address;
+        if (type == "PLMN") {
+          address = PhoneNumberUtils.normalize(receiver, false);
+          if (!PhoneNumberUtils.isPlainPhoneNumber(address)) {
+            isAddrValid = false;
+          }
+          if (DEBUG) debug("createSavableFromParams: normalize phone number " +
+                           "from " + receiver + " to " + address);
+        } else {
+          address = receiver;
           isAddrValid = false;
+          if (DEBUG) debug("Error! Address is invalid to send MMS: " + address);
         }
+        headersTo.push({"address": address, "type": type});
       }
     }
     if (aParams.subject) {

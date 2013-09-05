@@ -65,10 +65,10 @@ SimpleTest.waitForExplicitFinish();
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
 const HELPERAPP_DIALOG_CONTRACT = "@mozilla.org/helperapplauncherdialog;1";
-const HELPERAPP_DIALOG_CID = Components.ID(Components.classes[HELPERAPP_DIALOG_CONTRACT].number);
+const HELPERAPP_DIALOG_CID = SpecialPowers.wrap(SpecialPowers.Components).ID(SpecialPowers.Cc[HELPERAPP_DIALOG_CONTRACT].number);
 
-const FAKE_CID = Components.classes["@mozilla.org/uuid-generator;1"].
-  getService(Components.interfaces.nsIUUIDGenerator).generateUUID();
+const FAKE_CID = SpecialPowers.Cc["@mozilla.org/uuid-generator;1"].
+  getService(SpecialPowers.Ci.nsIUUIDGenerator).generateUUID();
 
 function HelperAppLauncherDialog() {}
 HelperAppLauncherDialog.prototype = {
@@ -87,10 +87,10 @@ HelperAppLauncherDialog.prototype = {
   },
   QueryInterface: function(aIID) {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    if (aIID.equals(Components.interfaces.nsISupports) ||
-        aIID.equals(Components.interfaces.nsIHelperAppLauncherDialog))
+    if (aIID.equals(SpecialPowers.Ci.nsISupports) ||
+        aIID.equals(SpecialPowers.Ci.nsIHelperAppLauncherDialog))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
   }
 };
 
@@ -98,22 +98,22 @@ var factory = {
   createInstance: function(aOuter, aIID) {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     if (aOuter != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
+      throw SpecialPowers.Cr.NS_ERROR_NO_AGGREGATION;
     return new HelperAppLauncherDialog().QueryInterface(aIID);
   }
 };
 
 dump("RegisterFactory...\n");
-Components.manager
-          .QueryInterface(Components.interfaces.nsIComponentRegistrar)
+SpecialPowers.wrap(SpecialPowers.Components).manager
+          .QueryInterface(SpecialPowers.Ci.nsIComponentRegistrar)
           .registerFactory(FAKE_CID, "",
                            HELPERAPP_DIALOG_CONTRACT,
                            factory);
 
 function finish_test() {
   dump("UnregisterFactory...\n");
-  Components.manager
-            .QueryInterface(Components.interfaces.nsIComponentRegistrar)
+  SpecialPowers.wrap(SpecialPowers.Components).manager
+            .QueryInterface(SpecialPowers.Ci.nsIComponentRegistrar)
             .registerFactory(HELPERAPP_DIALOG_CID, "",
                              HELPERAPP_DIALOG_CONTRACT,
                              null);

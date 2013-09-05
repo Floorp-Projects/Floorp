@@ -23,17 +23,17 @@ function loadFileContent(aFile, aCharset) {
     if(aCharset == undefined)
         aCharset = 'UTF-8';
 
-    var baseUri = Components.classes['@mozilla.org/network/standard-url;1']
-                   .createInstance(Components.interfaces.nsIURI);
+    var baseUri = SpecialPowers.Cc['@mozilla.org/network/standard-url;1']
+                   .createInstance(SpecialPowers.Ci.nsIURI);
     baseUri.spec = window.location.href;
 
-    var ios = Components.classes['@mozilla.org/network/io-service;1']
-            .getService(Components.interfaces.nsIIOService);
+    var ios = SpecialPowers.Cc['@mozilla.org/network/io-service;1']
+            .getService(SpecialPowers.Ci.nsIIOService);
     var chann = ios.newChannel(aFile, aCharset, baseUri);
 
-    var cis = Components.interfaces.nsIConverterInputStream;
+    var cis = SpecialPowers.Ci.nsIConverterInputStream;
 
-    var inputStream = Components.classes["@mozilla.org/intl/converter-input-stream;1"]
+    var inputStream = SpecialPowers.Cc["@mozilla.org/intl/converter-input-stream;1"]
                        .createInstance(cis);
     inputStream.init(chann.open(), aCharset, 1024, cis.DEFAULT_REPLACEMENT_CHARACTER);
     var str = {}, content = '';
@@ -45,10 +45,9 @@ function loadFileContent(aFile, aCharset) {
 
 
 function testHtmlSerializer_1 () {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  const de = Components.interfaces.nsIDocumentEncoder
-  var encoder = Components.classes["@mozilla.org/layout/documentEncoder;1?type=application/xhtml+xml"]
-                   .createInstance(Components.interfaces.nsIDocumentEncoder);
+  const de = SpecialPowers.Ci.nsIDocumentEncoder
+  var encoder = SpecialPowers.Cc["@mozilla.org/layout/documentEncoder;1?type=application/xhtml+xml"]
+                   .createInstance(SpecialPowers.Ci.nsIDocumentEncoder);
 
   var doc = $("testframe").contentDocument;
   var out, expected;

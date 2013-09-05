@@ -68,18 +68,15 @@ function assertArraysEqual(arr1, arr2) {
   }
 }
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var jsdIDebuggerService = Components.interfaces.jsdIDebuggerService;
-var jsd = Components.classes['@mozilla.org/js/jsd/debugger-service;1']
-                    .getService(jsdIDebuggerService);
+var jsdIDebuggerService = SpecialPowers.Ci.jsdIDebuggerService;
+var jsd = SpecialPowers.Cc['@mozilla.org/js/jsd/debugger-service;1']
+                       .getService(jsdIDebuggerService);
 var jsdOnAtStart = false;
 
 function setupJSD() {
   // This is somewhat unfortunate: jsd only deals with scripts that have a
   // nonzero line number, so we can't just createElement a script here.
   // So break the test up into three <script>s, of which the middle one has our test functions.
-
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   jsdOnAtStart = jsd.isOn;
   if (jsdOnAtStart) {
@@ -100,8 +97,6 @@ addLoadEvent(setupJSD);
 </script>
 <script>
 function testJSD() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   ok(jsd.isOn, "JSD needs to be running for this test.");
 
   var deferred = loadScript("bug507448.js");

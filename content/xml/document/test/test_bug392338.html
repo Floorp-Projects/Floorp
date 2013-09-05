@@ -20,8 +20,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=392338
 /** Test for Bug 392338 **/
 function obs () {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  this.observerService = Components.classes["@mozilla.org/observer-service;1"]
-                                     .getService(Components.interfaces.nsIObserverService);
+  this.observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+                                      .getService(SpecialPowers.Ci.nsIObserverService);
   this.observerService.addObserver(this,"http-on-modify-request", false);
   this.window = window;
 }
@@ -31,9 +31,7 @@ obs.prototype = {
   {
     this.timeToFinish = true;
     try{
-      this.window.netscape.security
-          .PrivilegeManager.enablePrivilege("UniversalXPConnect");
-      var ir = theSubject.QueryInterface(this.window.Components.interfaces
+      var ir = theSubject.QueryInterface(this.window.SpecialPowers.Ci
                                              .nsIChannel).notificationCallbacks;
       if (!ir) {
         this.timeToFinish = false;
@@ -42,16 +40,16 @@ obs.prototype = {
       this.window.ok(true, "No exception thrown");
 
       this.window.is(ir instanceof
-                       this.window.Components.interfaces.nsIInterfaceRequestor,
+                       this.window.SpecialPowers.Ci.nsIInterfaceRequestor,
                      true, "Must be an interface requestor");
 
-      if (ir instanceof this.window.Components.interfaces.nsIClassInfo) {
+      if (ir instanceof this.window.SpecialPowers.Ci.nsIClassInfo) {
         var count = {};
         var interfaces = ir.
-                     QueryInterface(this.window.Components.interfaces.nsIClassInfo).
+                     QueryInterface(this.window.SpecialPowers.Ci.nsIClassInfo).
                      getInterfaces(count).
                      map(function(id) {
-                                return this.window.Components.interfacesByID[id].toString();
+                                return this.window.SpecialPowers.CiByID[id].toString();
                          });
         this.window.isnot(interfaces.indexOf("nsIInterfaceRequestor"), -1,
                           "Must have interface requestor classinfo");
@@ -69,7 +67,6 @@ obs.prototype = {
 
   remove: function obs_remove()
   {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     this.observerService.removeObserver(this,"http-on-modify-request");
     this.observerService = null;
   }

@@ -23,6 +23,7 @@ EXPORTS += [
     'nsCategoryCache.h',
     'nsClassHashtable.h',
     'nsComponentManagerUtils.h',
+    'nsCycleCollectionHoldDrop.h',
     'nsCycleCollectionNoteChild.h',
     'nsCycleCollectionNoteRootCallback.h',
     'nsCycleCollectionParticipant.h',

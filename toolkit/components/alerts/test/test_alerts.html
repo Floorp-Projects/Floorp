@@ -18,7 +18,6 @@
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
 var observer = {
   alertShow: false,
@@ -37,8 +36,8 @@ var observer = {
 };
 
 function runTest() {
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
+  const Cc = SpecialPowers.Cc;
+  const Ci = SpecialPowers.Ci;
 
   if (!("@mozilla.org/alerts-service;1" in Cc)) {
     todo(false, "Alerts service does not exist in this application");
