@@ -1416,87 +1416,87 @@ Interpret(JSContext *cx, RunState &state)
     if (rt->profilingScripts || cx->runtime()->debugHooks.interruptHook)
         switchMask = -1; /* Enable interrupts. */
 
-    for (;;) {
-      advanceAndDoOp:
-        js::gc::MaybeVerifyBarriers(cx);
-        regs.pc += len;
-        op = (JSOp) *regs.pc;
+  advanceAndDoOp:
+    js::gc::MaybeVerifyBarriers(cx);
+    regs.pc += len;
+    op = (JSOp) *regs.pc;
 
-      do_op:
-        CHECK_PCCOUNT_INTERRUPTS();
-        switchOp = int(op) | switchMask;
-      do_switch:
-        switch (switchOp) {
+  do_op:
+    CHECK_PCCOUNT_INTERRUPTS();
+    switchOp = int(op) | switchMask;
+  do_switch:
+    switch (switchOp) {
 
-  case -1:
+case -1:
+{
     JS_ASSERT(switchMask == -1);
-    {
-        bool moreInterrupts = false;
 
-        if (cx->runtime()->profilingScripts) {
-            if (!script->hasScriptCounts)
-                script->initScriptCounts(cx);
-            moreInterrupts = true;
-        }
+    bool moreInterrupts = false;
 
-        if (script->hasScriptCounts) {
-            PCCounts counts = script->getPCCounts(regs.pc);
-            counts.get(PCCounts::BASE_INTERP)++;
-            moreInterrupts = true;
-        }
-
-        JSInterruptHook hook = cx->runtime()->debugHooks.interruptHook;
-        if (hook || script->stepModeEnabled()) {
-            RootedValue rval(cx);
-            JSTrapStatus status = JSTRAP_CONTINUE;
-            if (hook)
-                status = hook(cx, script, regs.pc, rval.address(), cx->runtime()->debugHooks.interruptHookData);
-            if (status == JSTRAP_CONTINUE && script->stepModeEnabled())
-                status = Debugger::onSingleStep(cx, &rval);
-            switch (status) {
-              case JSTRAP_ERROR:
-                goto error;
-              case JSTRAP_CONTINUE:
-                break;
-              case JSTRAP_RETURN:
-                regs.fp()->setReturnValue(rval);
-                interpReturnOK = true;
-                goto forced_return;
-              case JSTRAP_THROW:
-                cx->setPendingException(rval);
-                goto error;
-              default:;
-            }
-            moreInterrupts = true;
-        }
-
-        if (script->hasAnyBreakpointsOrStepMode())
-            moreInterrupts = true;
-
-        if (script->hasBreakpointsAt(regs.pc)) {
-            RootedValue rval(cx);
-            JSTrapStatus status = Debugger::onTrap(cx, &rval);
-            switch (status) {
-              case JSTRAP_ERROR:
-                goto error;
-              case JSTRAP_RETURN:
-                regs.fp()->setReturnValue(rval);
-                interpReturnOK = true;
-                goto forced_return;
-              case JSTRAP_THROW:
-                cx->setPendingException(rval);
-                goto error;
-              default:
-                break;
-            }
-            JS_ASSERT(status == JSTRAP_CONTINUE);
-            JS_ASSERT(rval.isInt32() && rval.toInt32() == op);
-        }
-
-        switchMask = moreInterrupts ? -1 : 0;
-        switchOp = int(op);
-        goto do_switch;
+    if (cx->runtime()->profilingScripts) {
+        if (!script->hasScriptCounts)
+            script->initScriptCounts(cx);
+        moreInterrupts = true;
     }
+
+    if (script->hasScriptCounts) {
+        PCCounts counts = script->getPCCounts(regs.pc);
+        counts.get(PCCounts::BASE_INTERP)++;
+        moreInterrupts = true;
+    }
+
+    JSInterruptHook hook = cx->runtime()->debugHooks.interruptHook;
+    if (hook || script->stepModeEnabled()) {
+        RootedValue rval(cx);
+        JSTrapStatus status = JSTRAP_CONTINUE;
+        if (hook)
+            status = hook(cx, script, regs.pc, rval.address(), cx->runtime()->debugHooks.interruptHookData);
+        if (status == JSTRAP_CONTINUE && script->stepModeEnabled())
+            status = Debugger::onSingleStep(cx, &rval);
+        switch (status) {
+          case JSTRAP_ERROR:
+            goto error;
+          case JSTRAP_CONTINUE:
+            break;
+          case JSTRAP_RETURN:
+            regs.fp()->setReturnValue(rval);
+            interpReturnOK = true;
+            goto forced_return;
+          case JSTRAP_THROW:
+            cx->setPendingException(rval);
+            goto error;
+          default:;
+        }
+        moreInterrupts = true;
+    }
+
+    if (script->hasAnyBreakpointsOrStepMode())
+        moreInterrupts = true;
+
+    if (script->hasBreakpointsAt(regs.pc)) {
+        RootedValue rval(cx);
+        JSTrapStatus status = Debugger::onTrap(cx, &rval);
+        switch (status) {
+          case JSTRAP_ERROR:
+            goto error;
+          case JSTRAP_RETURN:
+            regs.fp()->setReturnValue(rval);
+            interpReturnOK = true;
+            goto forced_return;
+          case JSTRAP_THROW:
+            cx->setPendingException(rval);
+            goto error;
+          default:
+            break;
+        }
+        JS_ASSERT(status == JSTRAP_CONTINUE);
+        JS_ASSERT(rval.isInt32() && rval.toInt32() == op);
+    }
+
+    switchMask = moreInterrupts ? -1 : 0;
+    switchOp = int(op);
+    goto do_switch;
+}
 
 /* Various 1-byte no-ops. */
 BEGIN_CASE(JSOP_NOP)
@@ -3254,17 +3254,18 @@ BEGIN_CASE(JSOP_ARRAYPUSH)
 }
 END_CASE(JSOP_ARRAYPUSH)
 
-          default:
-          {
-            char numBuf[12];
-            JS_snprintf(numBuf, sizeof numBuf, "%d", op);
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_BAD_BYTECODE, numBuf);
-            goto error;
-          }
+default:
+{
+    char numBuf[12];
+    JS_snprintf(numBuf, sizeof numBuf, "%d", op);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                         JSMSG_BAD_BYTECODE, numBuf);
+    goto error;
+}
 
-        } /* switch (op) */
-    } /* for (;;) */
+    } /* switch (op) */
+
+    MOZ_ASSUME_UNREACHABLE("Interpreter loop exited via fallthrough");
 
   error:
     JS_ASSERT(uint32_t(regs.pc - script->code) < script->length);
