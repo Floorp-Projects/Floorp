@@ -6,6 +6,17 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body onload="initialize()">
+<script type="application/javascript">
+var pluginHost = SpecialPowers.Cc["@mozilla.org/plugin/host;1"]
+                        .getService(SpecialPowers.Ci.nsIPluginHost);
+var pluginTags = pluginHost.getPluginTags();
+for (var tag of pluginTags) {
+  if (tag.name == "Test Plug-in") {
+    tag.enabledState = SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED;;
+  }
+}
+</script>
+
 <p id="display">
   <iframe id="i" src="plugin_scroll_invalidation.html"
    width="50" height="50" scrolling="no"></iframe>

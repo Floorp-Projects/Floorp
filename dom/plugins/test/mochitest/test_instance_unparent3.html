@@ -4,19 +4,13 @@
   <title>Test removing an instance's DOM node</title>
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body onload="startTest()">
-  <p id="display"></p>
-
-  <div id="div1">
-    <div id="div2">
-      <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
-    </div<
-  </div>
-
   <script type="application/javascript;version=1.8">
   SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   var destroyed = false;
   function onDestroy() {
@@ -40,5 +34,13 @@
     d1.removeChild(d2);
   }
   </script>
+
+  <p id="display"></p>
+
+  <div id="div1">
+    <div id="div2">
+      <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
+    </div<
+  </div>
 </body>
 </html>

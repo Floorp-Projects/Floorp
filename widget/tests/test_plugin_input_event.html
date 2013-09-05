@@ -12,6 +12,17 @@
           href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
 <body>
+<script type="application/javascript">
+var pluginHost = SpecialPowers.Cc["@mozilla.org/plugin/host;1"]
+                        .getService(SpecialPowers.Ci.nsIPluginHost);
+var pluginTags = pluginHost.getPluginTags();
+for (var tag of pluginTags) {
+  if (tag.name == "Test Plug-in") {
+    tag.enabledState = SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED;;
+  }
+}
+</script>
+
 <p id="display">
   <embed id="plugin" type="application/x-test" wmode="opaque">
 </p>

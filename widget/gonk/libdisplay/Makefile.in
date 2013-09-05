@@ -12,14 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-DEPTH           = @DEPTH@
-topsrcdir       = @top_srcdir@
-srcdir          = @srcdir@
 VPATH           = \
   $(srcdir) \
   $(NULL)
-
-include $(DEPTH)/config/autoconf.mk
 
 FORCE_STATIC_LIB= 1
 STL_FLAGS=

@@ -1,5 +1,3 @@
-INCLUDED_AUTOCONF_MK = 1
-
 installdir = $(libdir)/$(MOZ_APP_NAME)-$(MOZ_APP_VERSION)
 sdkdir = $(libdir)/$(MOZ_APP_NAME)-devel-$(MOZ_APP_VERSION)
 

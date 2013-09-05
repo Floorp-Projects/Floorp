@@ -2,14 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH          := @DEPTH@
-topsrcdir      := @top_srcdir@
-srcdir         := @srcdir@
-VPATH          := @srcdir@
-relativesrcdir := @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 MOCHITEST_FILES := \
   audioBufferSourceNodeNeutered_worker.js \
   webaudio.js \
@@ -82,6 +74,7 @@ MOCHITEST_FILES := \
   test_oscillatorNode.html \
   test_oscillatorNodeStart.html \
   test_pannerNode.html \
+  test_pannerNodeAbove.html \
   test_pannerNode_equalPower.html \
   test_periodicWave.html \
   test_scriptProcessorNode.html \
@@ -114,8 +107,13 @@ MOCHITEST_FILES := \
 
 ifneq ($(MOZ_DEBUG)+$(MOZ_WIDGET_TOOLKIT),+gtk2) # bug 911777
 MOCHITEST_FILES += \
+  test_convolverNodeChannelCount.html \
   test_delayNodeAtMax.html \
   $(NULL)
-endif
+endif # bug 911777
 
-include $(topsrcdir)/config/rules.mk
+ifneq ($(OS_TARGET),Android) # bug 912474
+MOCHITEST_FILES += \
+  test_pannerNodeChannelCount.html \
+  $(NULL)
+endif

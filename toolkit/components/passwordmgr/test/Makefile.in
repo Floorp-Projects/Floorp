@@ -3,12 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH          = @DEPTH@
-topsrcdir      = @top_srcdir@
-srcdir         = @srcdir@
-VPATH          = @srcdir@
-relativesrcdir = @relativesrcdir@
-
 include $(topsrcdir)/config/config.mk
 
 # Mochitest tests
@@ -91,5 +85,3 @@ MOCHITEST_CHROME_FILES += \
 # This test doesn't pass because we can't ensure a cross-platform
 # event that occurs between DOMContentLoaded and Pageload
 # test_bug_221634.html
-
-include $(topsrcdir)/config/rules.mk

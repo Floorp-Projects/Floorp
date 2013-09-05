@@ -3,6 +3,7 @@
 <head>
   <title>Test for Bug 784131</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
@@ -10,10 +11,15 @@
 </head>
 <body>
 
+<script type="text/javascript">
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+</script>
+
 <embed id="body" type="application/x-test">
 <div>
   <embed id="nested" type="application/x-test">
 </div>
+
 <script type="application/javascript">
   function getObjectValue(obj) {
     try {

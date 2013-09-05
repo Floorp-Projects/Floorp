@@ -3,13 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 FORCE_STATIC_LIB= 1
 ifeq ($(OS_ARCH),WINNT)
 VISIBILITY_FLAGS=
@@ -21,5 +14,3 @@ DEFINES += \
   $(NULL)
 
 FORCE_STATIC_LIB = 1
-
-include $(topsrcdir)/config/rules.mk

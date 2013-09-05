@@ -3,14 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH           = @DEPTH@
-topsrcdir       = @top_srcdir@
-srcdir          = @srcdir@
-VPATH           = @srcdir@
-relativesrcdir  = @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 NO_JS_MANIFEST = 1
 MOZ_CHROME_FILE_FORMAT = flat
 DIST_FILES = \
@@ -41,4 +33,3 @@ libs:: $(libs-preqs)
 	cp -RL $(DEPTH)/testing/specialpowers/specialpowers $(DEPTH)/_tests/testing/mochitest/extensions
 	$(NSINSTALL) -D $(DEPTH)/_tests/reftest/specialpowers
 	cp -RL $(DEPTH)/testing/specialpowers/specialpowers $(DEPTH)/_tests/reftest
-
