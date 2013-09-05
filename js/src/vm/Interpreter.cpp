@@ -2472,33 +2472,35 @@ BEGIN_CASE(JSOP_FUNCALL)
     TypeMonitorCall(cx, args, construct);
 
 #ifdef JS_ION
-    InvokeState state(cx, args, initial);
-    if (newType)
-        state.setUseNewType();
+    {
+        InvokeState state(cx, args, initial);
+        if (newType)
+            state.setUseNewType();
 
-    if (!newType && jit::IsIonEnabled(cx)) {
-        jit::MethodStatus status = jit::CanEnter(cx, state);
-        if (status == jit::Method_Error)
-            goto error;
-        if (status == jit::Method_Compiled) {
-            jit::IonExecStatus exec = jit::Cannon(cx, state);
-            CHECK_BRANCH();
-            regs.sp = args.spAfterCall();
-            interpReturnOK = !IsErrorStatus(exec);
-            goto jit_return;
+        if (!newType && jit::IsIonEnabled(cx)) {
+            jit::MethodStatus status = jit::CanEnter(cx, state);
+            if (status == jit::Method_Error)
+                goto error;
+            if (status == jit::Method_Compiled) {
+                jit::IonExecStatus exec = jit::Cannon(cx, state);
+                CHECK_BRANCH();
+                regs.sp = args.spAfterCall();
+                interpReturnOK = !IsErrorStatus(exec);
+                goto jit_return;
+            }
         }
-    }
 
-    if (jit::IsBaselineEnabled(cx)) {
-        jit::MethodStatus status = jit::CanEnterBaselineMethod(cx, state);
-        if (status == jit::Method_Error)
-            goto error;
-        if (status == jit::Method_Compiled) {
-            jit::IonExecStatus exec = jit::EnterBaselineMethod(cx, state);
-            CHECK_BRANCH();
-            regs.sp = args.spAfterCall();
-            interpReturnOK = !IsErrorStatus(exec);
-            goto jit_return;
+        if (jit::IsBaselineEnabled(cx)) {
+            jit::MethodStatus status = jit::CanEnterBaselineMethod(cx, state);
+            if (status == jit::Method_Error)
+                goto error;
+            if (status == jit::Method_Compiled) {
+                jit::IonExecStatus exec = jit::EnterBaselineMethod(cx, state);
+                CHECK_BRANCH();
+                regs.sp = args.spAfterCall();
+                interpReturnOK = !IsErrorStatus(exec);
+                goto jit_return;
+            }
         }
     }
 #endif
