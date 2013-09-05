@@ -9,7 +9,8 @@
 
 #include "base/basictypes.h"
 #include "ipc/IPCMessageUtils.h"
-#include "nsILoadContext.h"
+
+class nsILoadContext;
 
 /*
  *  This file contains the IPC::SerializedLoadContext class, which is used to

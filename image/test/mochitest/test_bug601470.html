@@ -22,15 +22,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=601470
 SimpleTest.waitForExplicitFinish();
 
 window.onload = function() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var mgr = Components.classes["@mozilla.org/memory-reporter-manager;1"]
-    .getService(Components.interfaces.nsIMemoryReporterManager);
+  var mgr = SpecialPowers.Cc["@mozilla.org/memory-reporter-manager;1"]
+    .getService(SpecialPowers.Ci.nsIMemoryReporterManager);
 
   var e = mgr.enumerateReporters();
   var memoryCounter = 0;
   while (e.hasMoreElements()) {
     var mr =
-      e.getNext().QueryInterface(Components.interfaces.nsIMemoryReporter);
+      e.getNext().QueryInterface(SpecialPowers.Ci.nsIMemoryReporter);
     memoryCounter += mr.amount;
   }
   ok(memoryCounter > 0, "we should be using a nonzero amount of memory");

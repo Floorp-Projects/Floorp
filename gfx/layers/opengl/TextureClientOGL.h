@@ -6,7 +6,7 @@
 #ifndef MOZILLA_GFX_TEXTURECLIENTOGL_H
 #define MOZILLA_GFX_TEXTURECLIENTOGL_H
 
-#include "GLContext.h"                  // for SharedTextureHandle, etc
+#include "GLContextTypes.h"             // for SharedTextureHandle, etc
 #include "gfxASurface.h"                // for gfxASurface, etc
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/gfx/Point.h"          // for IntSize
@@ -36,7 +36,7 @@ public:
 
   void InitWith(gl::SharedTextureHandle aHandle,
                 gfx::IntSize aSize,
-                gl::GLContext::SharedTextureShareType aShareType,
+                gl::SharedTextureShareType aShareType,
                 bool aInverted = false);
 
   virtual gfx::IntSize GetSize() const { return mSize; }
@@ -44,7 +44,7 @@ public:
 protected:
   gl::SharedTextureHandle mHandle;
   gfx::IntSize mSize;
-  gl::GLContext::SharedTextureShareType mShareType;
+  gl::SharedTextureShareType mShareType;
   bool mInverted;
 };
 

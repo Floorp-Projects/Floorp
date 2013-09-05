@@ -29,8 +29,8 @@ function runTest()
 {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-  var os = Components.classes["@mozilla.org/observer-service;1"].
-             getService(Components.interfaces.nsIObserverService);
+  var os = SpecialPowers.Cc["@mozilla.org/observer-service;1"].
+             getService(SpecialPowers.Ci.nsIObserverService);
 
   os.addObserver(onPromptLoad, "common-dialog-loaded", false);
   os.addObserver(onPromptLoad, "tabmodal-dialog-loaded", false);
@@ -47,7 +47,6 @@ function runTest()
 function onPromptLoad(subject, topic, data)
 {
   ok(true, "onPromptLoad is called");
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   gPromptInput = subject.Dialog.ui.loginTextbox;
   gPromptInput.addEventListener("focus", onPromptFocus, false);
   // shift focus to ensure it fires.
@@ -57,7 +56,6 @@ function onPromptLoad(subject, topic, data)
 
 function onPromptFocus() {
   ok(true, "onPromptFocus is called");
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   gPromptInput.removeEventListener("focus", onPromptFocus, false);
 
   var listener = {

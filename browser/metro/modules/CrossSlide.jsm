@@ -42,32 +42,28 @@ function isSelectable(aElement) {
   // placeholder logic
   return aElement.nodeName == 'richgriditem';
 }
-
 function withinCone(aLen, aHeight) {
   // check pt falls within 45deg either side of the cross axis
   return aLen > aHeight;
 }
-
 function getScrollAxisFromElement(aElement) {
-  let elem = aElement,
-      win = elem.ownerDocument.defaultView;
-  let scrollX, scrollY;
-  for (; elem && 1==elem.nodeType; elem = elem.parentNode) {
-    let cs = win.getComputedStyle(elem);
-    scrollX = (cs.overflowX=='scroll' || cs.overflowX=='auto');
-    scrollY = (cs.overflowX=='scroll' || cs.overflowX=='auto');
-    if (scrollX || scrollY) {
-      break;
-    }
-  }
-  return scrollX ? 'x' : 'y';
-}
+  // keeping it simple - just return apparent scroll axis for the document
+  let win = aElement.ownerDocument.defaultView;
+  let scrollX = win.scrollMaxX,
+      scrollY = win.scrollMaxY;
+  // determine scroll axis from scrollable content when possible
+  if (scrollX || scrollY)
+    return scrollX >= scrollY ? 'x' : 'y';
 
+  // fall back to guessing at scroll axis from document aspect ratio
+  let docElem = aElement.ownerDocument.documentElement;
+  return  docElem.clientWidth >= docElem.clientHeight ?
+          'x' : 'y';
+}
 function pointFromTouchEvent(aEvent) {
   let touch = aEvent.touches[0];
   return { x: touch.clientX, y: touch.clientY };
 }
-
 // This damping function has these important properties:
 // f(0) = 0
 // f'(0) = 1

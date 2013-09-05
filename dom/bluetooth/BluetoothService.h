@@ -47,7 +47,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  /** 
+  /**
    * Add a message handler object from message distribution observer.
    * Must be called from the main thread.
    *
@@ -58,7 +58,7 @@ public:
   RegisterBluetoothSignalHandler(const nsAString& aNodeName,
                                  BluetoothSignalObserver* aMsgHandler);
 
-  /** 
+  /**
    * Remove a message handler object from message distribution observer.
    * Must be called from the main thread.
    *
@@ -69,7 +69,7 @@ public:
   UnregisterBluetoothSignalHandler(const nsAString& aNodeName,
                                    BluetoothSignalObserver* aMsgHandler);
 
-  /** 
+  /**
    * Remove a message handlers for the given observer.
    * Must be called from the main thread.
    *
@@ -78,7 +78,7 @@ public:
   void
   UnregisterAllSignalHandlers(BluetoothSignalObserver* aMsgHandler);
 
-  /** 
+  /**
    * Distribute a signal to the observer list
    *
    * @param aSignal Signal object to distribute
@@ -150,7 +150,7 @@ public:
   virtual nsresult
   StopDiscoveryInternal(BluetoothReplyRunnable* aRunnable) = 0;
 
-  /** 
+  /**
    * Start device discovery (platform specific implementation)
    *
    * @return NS_OK if discovery stopped correctly, false otherwise
@@ -307,9 +307,6 @@ public:
   void
   RemoveObserverFromTable(const nsAString& key);
 
-  void
-  DispatchToCommandThread(nsRunnable* aRunnable);
-
 protected:
   BluetoothService()
   : mEnabled(false)
@@ -328,7 +325,7 @@ protected:
   nsresult
   StartStopBluetooth(bool aStart, bool aIsStartup);
 
-  /** 
+  /**
    * Platform specific startup functions go here. Usually deals with member
    * variables, so not static. Guaranteed to be called outside of main thread.
    *
@@ -387,26 +384,21 @@ protected:
   static BluetoothService*
   Create();
 
-  /**
-   * Due to the fact that some operations require multiple calls, a
-   * CommandThread is created that can run blocking, platform-specific calls
-   * where either no asynchronous equivilent exists, or else where multiple
-   * asynchronous calls would require excessive runnable bouncing between main
-   * thread and IO thread.
-   *
-   * For instance, when we retrieve an Adapter object, we would like it to come
-   * with all of its properties filled in and registered as an agent, which
-   * requires a minimum of 3 calls to platform specific code on some platforms.
-   *
-   */
-  nsCOMPtr<nsIThread> mBluetoothCommandThread;
-
   typedef nsClassHashtable<nsStringHashKey, BluetoothSignalObserverList >
   BluetoothSignalObserverTable;
 
   BluetoothSignalObserverTable mBluetoothSignalObserverTable;
 
   bool mEnabled;
+
+private:
+  /**
+   * Due to the fact that the startup and shutdown of the Bluetooth system
+   * can take an indefinite amount of time, a command thread is created
+   * that can run blocking calls. The thread is not intended for regular
+   * Bluetooth operations though.
+   */
+  nsCOMPtr<nsIThread> mBluetoothThread;
 };
 
 END_BLUETOOTH_NAMESPACE

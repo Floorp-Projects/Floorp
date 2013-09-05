@@ -12,6 +12,7 @@
 
 #include "mozilla/LinkedList.h"
 #include "mozilla/CheckedInt.h"
+#include <map>
 
 namespace mozilla {
 
@@ -40,7 +41,7 @@ public:
         mAttachedShaders.Clear();
     }
 
-    WebGLuint GLName() { return mGLName; }
+    GLuint GLName() { return mGLName; }
     const nsTArray<WebGLRefPtr<WebGLShader> >& AttachedShaders() const { return mAttachedShaders; }
     bool LinkStatus() { return mLinkStatus; }
     uint32_t Generation() const { return mGeneration.value(); }
@@ -114,7 +115,7 @@ public:
 
 protected:
 
-    WebGLuint mGLName;
+    GLuint mGLName;
     bool mLinkStatus;
     // attached shaders of the program object
     nsTArray<WebGLRefPtr<WebGLShader> > mAttachedShaders;

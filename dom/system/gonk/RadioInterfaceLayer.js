@@ -2222,21 +2222,14 @@ RadioInterface.prototype = {
     let oldIccInfo = this.rilContext.iccInfo;
     this.rilContext.iccInfo = message;
 
-    let iccInfoChanged = !oldIccInfo ||
-                          oldIccInfo.iccid != message.iccid ||
-                          oldIccInfo.mcc != message.mcc ||
-                          oldIccInfo.mnc != message.mnc ||
-                          oldIccInfo.spn != message.spn ||
-                          oldIccInfo.isDisplayNetworkNameRequired != message.isDisplayNetworkNameRequired ||
-                          oldIccInfo.isDisplaySpnRequired != message.isDisplaySpnRequired ||
-                          oldIccInfo.msisdn != message.msisdn;
-    if (!iccInfoChanged) {
+    if (!this.isInfoChanged(message, oldIccInfo)) {
       return;
     }
     // RIL:IccInfoChanged corresponds to a DOM event that gets fired only
-    // when the MCC or MNC codes have changed.
+    // when iccInfo has changed.
     gMessageManager.sendIccMessage("RIL:IccInfoChanged",
-                                   this.clientId, message);
+                                   this.clientId,
+                                   message.iccType ? message : null);
 
     // Update lastKnownSimMcc.
     if (message.mcc) {
@@ -2994,7 +2987,7 @@ RadioInterface.prototype = {
     return options;
   },
 
-  getSegmentInfoForText: function getSegmentInfoForText(text) {
+  getSegmentInfoForText: function getSegmentInfoForText(text, request) {
     let strict7BitEncoding;
     try {
       strict7BitEncoding = Services.prefs.getBoolPref("dom.sms.strict7BitEncoding");
@@ -3015,10 +3008,11 @@ RadioInterface.prototype = {
       charsInLastSegment = 0;
     }
 
-    let result = gMobileMessageService.createSmsSegmentInfo(options.segmentMaxSeq,
-                                                            options.segmentChars,
-                                                            options.segmentChars - charsInLastSegment);
-    return result;
+    let result = gMobileMessageService
+                 .createSmsSegmentInfo(options.segmentMaxSeq,
+                                       options.segmentChars,
+                                       options.segmentChars - charsInLastSegment);
+    request.notifySegmentInfoForTextGot(result);
   },
 
   sendSMS: function sendSMS(number, message, silent, request) {

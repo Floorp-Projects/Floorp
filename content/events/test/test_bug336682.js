@@ -64,9 +64,8 @@ function makeHandler(nameTemplate, eventName, expectedStates) {
 }
 
 function doTest() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var iosvc = Components.classes["@mozilla.org/network/io-service;1"]
-                        .getService(Components.interfaces.nsIIOService2);
+  var iosvc = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+                           .getService(SpecialPowers.Ci.nsIIOService2);
   iosvc.manageOfflineStatus = false;
   iosvc.offline = false;
   ok(navigator.onLine, "navigator.onLine should be true, since we've just " +

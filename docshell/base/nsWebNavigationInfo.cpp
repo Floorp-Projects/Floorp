@@ -5,7 +5,6 @@
 
 #include "nsWebNavigationInfo.h"
 #include "nsIWebNavigation.h"
-#include "nsString.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIPluginHost.h"

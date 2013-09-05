@@ -1,11 +1,10 @@
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
 const RETURN_CONTINUE = Ci.jsdIExecutionHook.RETURN_CONTINUE;
 const DebuggerService = Cc["@mozilla.org/js/jsd/debugger-service;1"];
 
-var jsd = Components.classes['@mozilla.org/js/jsd/debugger-service;1']
-                    .getService(Ci.jsdIDebuggerService);
+var jsd = Cc['@mozilla.org/js/jsd/debugger-service;1']
+          .getService(Ci.jsdIDebuggerService);
 var jsdOnAtStart = false;
 
 function setupJSD(test) {
@@ -107,7 +106,6 @@ function breakpointObserver(lines, interesting, callback) {
 }
 
 function dumpStack(frame, msg) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     dump(msg + ":\n");
     while(frame) {
         var callee = frame.callee;

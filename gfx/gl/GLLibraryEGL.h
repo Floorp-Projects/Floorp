@@ -9,11 +9,11 @@
 #include "mozilla/X11Util.h"
 #endif
 
-#include "GLContext.h"
 #include "GLLibraryLoader.h"
 
 #include "nsIFile.h"
 
+#include <bitset>
 
 #if defined(XP_WIN)
 
@@ -60,9 +60,20 @@ typedef void *EGLNativeWindowType;
 namespace mozilla {
 namespace gl {
 
-#ifdef DEBUG
 #undef BEFORE_GL_CALL
 #undef AFTER_GL_CALL
+
+#ifdef DEBUG
+
+#ifndef MOZ_FUNCTION_NAME
+# ifdef __GNUC__
+#  define MOZ_FUNCTION_NAME __PRETTY_FUNCTION__
+# elif defined(_MSC_VER)
+#  define MOZ_FUNCTION_NAME __FUNCTION__
+# else
+#  define MOZ_FUNCTION_NAME __func__  // defined in C99, supported in various C++ compilers. Just raw function name.
+# endif
+#endif
 
 #define BEFORE_GL_CALL do {          \
     BeforeGLCall(MOZ_FUNCTION_NAME); \
@@ -73,22 +84,10 @@ namespace gl {
 } while (0)
 // We rely on the fact that GLLibraryEGL.h #defines BEFORE_GL_CALL and
 // AFTER_GL_CALL to nothing if !defined(DEBUG).
+#else
+#define BEFORE_GL_CALL
+#define AFTER_GL_CALL
 #endif
-
-static inline void BeforeGLCall(const char* glFunction)
-{
-    if (GLContext::DebugMode()) {
-        if (GLContext::DebugMode() & GLContext::DebugTrace)
-            printf_stderr("[egl] > %s\n", glFunction);
-    }
-}
-
-static inline void AfterGLCall(const char* glFunction)
-{
-    if (GLContext::DebugMode() & GLContext::DebugTrace) {
-        printf_stderr("[egl] < %s\n", glFunction);
-    }
-}
 
 class GLLibraryEGL
 {
@@ -126,11 +125,11 @@ public:
     }
 
     void MarkExtensionUnsupported(EGLExtensions aKnownExtension) {
-        mAvailableExtensions[aKnownExtension] = 0;
+        mAvailableExtensions[aKnownExtension] = false;
     }
 
 protected:
-    GLContext::ExtensionBitset<Extensions_Max> mAvailableExtensions;
+    std::bitset<Extensions_Max> mAvailableExtensions;
 
 public:
 
@@ -517,6 +516,11 @@ public:
         typedef EGLBoolean (GLAPIENTRY * pfnGetSyncAttrib)(EGLDisplay dpy, EGLSync sync, EGLint attribute, EGLint *value);
         pfnGetSyncAttrib fGetSyncAttrib;
     } mSymbols;
+
+#ifdef DEBUG
+    static void BeforeGLCall(const char* glFunction);
+    static void AfterGLCall(const char* glFunction);
+#endif
 
 private:
     bool mInitialized;

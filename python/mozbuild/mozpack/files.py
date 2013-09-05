@@ -259,22 +259,33 @@ class AbsoluteSymlinkFile(File):
         return True
 
 
-class RequiredExistingFile(BaseFile):
+class ExistingFile(BaseFile):
     '''
-    File class that represents a file that must exist in the destination.
+    File class that represents a file that may exist but whose content comes
+    from elsewhere.
 
-    The purpose of this class is to account for files that are installed
-    via external means.
+    This purpose of this class is to account for files that are installed via
+    external means. It is typically only used in manifests or in registries to
+    account for files.
 
     When asked to copy, this class does nothing because nothing is known about
-    the source file/data. However, since this file is required, we do validate
-    that the destination path exists.
+    the source file/data.
+
+    Instances of this class come in two flavors: required and optional. If an
+    existing file is required, it must exist during copy() or an error is
+    raised.
     '''
+    def __init__(self, required):
+        self.required = required
+
     def copy(self, dest, skip_if_older=True):
         if isinstance(dest, basestring):
             dest = Dest(dest)
         else:
             assert isinstance(dest, Dest)
+
+        if not self.required:
+            return
 
         if not dest.exists():
             errors.fatal("Required existing file doesn't exist: %s" %

@@ -843,7 +843,6 @@ FileSystemDataSource::EndUpdateBatch()
 nsresult
 FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
 {
-    nsresult rv;
     nsCOMArray<nsIRDFResource> volumes;
     nsCOMPtr<nsIRDFResource> vol;
 
@@ -862,11 +861,11 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
         {
           nsAutoCString url;
           url.AppendPrintf("file:///%c|/", volNum + 'A');
-          rv = mRDFService->GetResource(url, getter_AddRefs(vol));
+          nsresult rv = mRDFService->GetResource(url, getter_AddRefs(vol));
           if (NS_FAILED(rv))
             return rv;
 
-                volumes.AppendObject(vol);
+          volumes.AppendObject(vol);
         }
     }
 #endif
@@ -880,7 +879,7 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
     ULONG ulDriveNo = 0;
     ULONG ulDriveMap = 0;
 
-    rv = DosQueryCurrentDisk(&ulDriveNo, &ulDriveMap);
+    nsresult rv = DosQueryCurrentDisk(&ulDriveNo, &ulDriveMap);
     if (NS_FAILED(rv))
         return rv;
 

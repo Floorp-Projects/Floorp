@@ -20,8 +20,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565392
 /** Test for Bug 565392 **/
 
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
+  const Cc = SpecialPowers.Cc;
+  const Ci = SpecialPowers.Ci;
   var ds = Cc["@mozilla.org/file/directory_service;1"]
              .getService(Ci.nsIProperties);
   var dir1 = ds.get("ProfD", Ci.nsIFile);
@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565392
                     .getService(Ci.nsIClipboard);
   
   function getLoadContext() {
-    return window.QueryInterface(Ci.nsIInterfaceRequestor)
+    return SpecialPowers.wrap(window).QueryInterface(Ci.nsIInterfaceRequestor)
                  .getInterface(Ci.nsIWebNavigation)
                  .QueryInterface(Ci.nsILoadContext);
   }

@@ -35,8 +35,3 @@ DIRS += ['build']
 TEST_TOOL_DIRS += ['test']
 
 MODULE = 'necko'
-
-EXPORTS += [
-    'necko-config.h',
-]
-

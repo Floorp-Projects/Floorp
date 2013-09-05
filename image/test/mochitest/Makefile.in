@@ -81,8 +81,10 @@ MOCHITEST_FILES =   imgutils.js \
 MOCHITEST_CHROME_FILES = imgutils.js \
                 animationPolling.js \
                 lime-anim-100x100.svg \
+                lime-anim-100x100-2.svg \
                 animation.svg \
                 test_animSVGImage.html \
+                test_animSVGImage2.html \
                 test_animation.html \
                 test_animation2.html \
                 animated-gif-finalframe.gif \

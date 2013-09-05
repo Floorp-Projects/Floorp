@@ -43,8 +43,6 @@ MODULE = 'xpcom'
 
 EXPORTS += [
     'ErrorList.h',
-    'ErrorListCDefines.h',
-    'ErrorListCxxDefines.h',
     'nsAgg.h',
     'nsAutoPtr.h',
     'nsAutoRef.h',

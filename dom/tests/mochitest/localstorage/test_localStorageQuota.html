@@ -8,11 +8,9 @@
 
 <script type="text/javascript">
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
 var currentTest = 1;
-var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-            .getService(Components.interfaces.nsIPrefBranch);
+var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
+            .getService(SpecialPowers.Ci.nsIPrefBranch);
 var quota;
 var origBlockDisplay;
 var origBlockActive;
@@ -20,8 +18,6 @@ var origBlockActive;
 function doNextTest()
 {
   slave = frame;
-
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   switch (currentTest)
   {

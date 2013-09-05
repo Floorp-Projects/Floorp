@@ -86,22 +86,22 @@ abstract class Axis {
     }
 
     static final float MS_PER_FRAME = 1000.0f / 60.0f;
+    static final long NS_PER_FRAME = Math.round(1000000000f / 60f);
     private static final float FRAMERATE_MULTIPLIER = (1000f/60f) / MS_PER_FRAME;
     private static final int FLING_VELOCITY_POINTS = 8;
 
-    //  The values we use for friction are based on a 16.6ms frame, adjust them to MS_PER_FRAME:
-    //  FRICTION^1 = FRICTION_ADJUSTED^(16/MS_PER_FRAME)
-    //  FRICTION_ADJUSTED = e ^ ((ln(FRICTION))/FRAMERATE_MULTIPLIER)
-    static float getFrameAdjustedFriction(float baseFriction) {
-        return (float)Math.pow(Math.E, (Math.log(baseFriction) / FRAMERATE_MULTIPLIER));
+    //  The values we use for friction are based on a 16.6ms frame, adjust them to currentNsPerFrame:
+    static float getFrameAdjustedFriction(float baseFriction, long currentNsPerFrame) {
+        float framerateMultiplier = currentNsPerFrame / NS_PER_FRAME;
+        return (float)Math.pow(Math.E, (Math.log(baseFriction) / framerateMultiplier));
     }
 
     static void setPrefs(Map<String, Integer> prefs) {
-        FRICTION_SLOW = getFrameAdjustedFriction(getFloatPref(prefs, PREF_SCROLLING_FRICTION_SLOW, 850));
-        FRICTION_FAST = getFrameAdjustedFriction(getFloatPref(prefs, PREF_SCROLLING_FRICTION_FAST, 970));
+        FRICTION_SLOW = getFloatPref(prefs, PREF_SCROLLING_FRICTION_SLOW, 850);
+        FRICTION_FAST = getFloatPref(prefs, PREF_SCROLLING_FRICTION_FAST, 970);
         VELOCITY_THRESHOLD = 10 / FRAMERATE_MULTIPLIER;
         MAX_EVENT_ACCELERATION = getFloatPref(prefs, PREF_SCROLLING_MAX_EVENT_ACCELERATION, GeckoAppShell.getDpi() > 300 ? 100 : 40);
-        OVERSCROLL_DECEL_RATE = getFrameAdjustedFriction(getFloatPref(prefs, PREF_SCROLLING_OVERSCROLL_DECEL_RATE, 40));
+        OVERSCROLL_DECEL_RATE = getFloatPref(prefs, PREF_SCROLLING_OVERSCROLL_DECEL_RATE, 40);
         SNAP_LIMIT = getFloatPref(prefs, PREF_SCROLLING_OVERSCROLL_SNAP_LIMIT, 300);
         MIN_SCROLLABLE_DISTANCE = getFloatPref(prefs, PREF_SCROLLING_MIN_SCROLLABLE_DISTANCE, 500);
         Log.i(LOGTAG, "Prefs: " + FRICTION_SLOW + "," + FRICTION_FAST + "," + VELOCITY_THRESHOLD + ","
@@ -314,7 +314,7 @@ abstract class Axis {
     }
 
     /* Advances a fling animation by one step. */
-    boolean advanceFling() {
+    boolean advanceFling(long realNsPerFrame) {
         if (mFlingState != FlingStates.FLINGING) {
             return false;
         }
@@ -337,18 +337,20 @@ abstract class Axis {
         if (mDisableSnap || FloatUtils.fuzzyEquals(excess, 0.0f) || decreasingOverscroll) {
             // If we aren't overscrolled, just apply friction.
             if (Math.abs(mVelocity) >= VELOCITY_THRESHOLD) {
-                mVelocity *= FRICTION_FAST;
+                mVelocity *= getFrameAdjustedFriction(FRICTION_FAST, realNsPerFrame);
             } else {
                 float t = mVelocity / VELOCITY_THRESHOLD;
-                mVelocity *= FloatUtils.interpolate(FRICTION_SLOW, FRICTION_FAST, t);
+                mVelocity *= FloatUtils.interpolate(getFrameAdjustedFriction(FRICTION_SLOW, realNsPerFrame),
+                                                    getFrameAdjustedFriction(FRICTION_FAST, realNsPerFrame), t);
             }
         } else {
             // Otherwise, decrease the velocity linearly.
             float elasticity = 1.0f - excess / (getViewportLength() * SNAP_LIMIT);
+            float overscrollDecelRate = getFrameAdjustedFriction(OVERSCROLL_DECEL_RATE, realNsPerFrame);
             if (overscroll == Overscroll.MINUS) {
-                mVelocity = Math.min((mVelocity + OVERSCROLL_DECEL_RATE) * elasticity, 0.0f);
+                mVelocity = Math.min((mVelocity + overscrollDecelRate) * elasticity, 0.0f);
             } else { // must be Overscroll.PLUS
-                mVelocity = Math.max((mVelocity - OVERSCROLL_DECEL_RATE) * elasticity, 0.0f);
+                mVelocity = Math.max((mVelocity - overscrollDecelRate) * elasticity, 0.0f);
             }
         }
 

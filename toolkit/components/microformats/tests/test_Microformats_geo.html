@@ -83,17 +83,13 @@ test_Microformats();
 test_geo();
 
 function test_Microformats() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  Components.utils.import("resource://gre/modules/Microformats.js");
+  var Microformats = SpecialPowers.Cu.import("resource://gre/modules/Microformats.js").Microformats;
 
   ok(Microformats, "Check global access to Microformats");
 };
 
 function test_geo() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  Components.utils.import("resource://gre/modules/Microformats.js");
+  var geo = SpecialPowers.Cu.import("resource://gre/modules/Microformats.js").geo;
 
   var Geo;
 

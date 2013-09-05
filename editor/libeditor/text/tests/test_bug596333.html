@@ -37,8 +37,6 @@ function getSpellCheckSelection() {
 }
 
 function append(str) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   var edit = document.getElementById("edit");
   edit.focus();
   edit.selectionStart = edit.selectionEnd = edit.value.length;
@@ -50,16 +48,15 @@ function append(str) {
 }
 
 function getLoadContext() {
-  return window.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIWebNavigation)
-               .QueryInterface(Ci.nsILoadContext);
+  return SpecialPowers.wrap(window)
+         .QueryInterface(Ci.nsIInterfaceRequestor)
+         .getInterface(Ci.nsIWebNavigation)
+         .QueryInterface(Ci.nsILoadContext);
 }
 
 function paste(str) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   var edit = document.getElementById("edit");
-  var Cc = Components.classes, Ci = Components.interfaces;
+  var Cc = SpecialPowers.Cc, Ci = SpecialPowers.Ci;
   var trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
   trans.init(getLoadContext());
   var s = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
@@ -120,8 +117,6 @@ function runTest()
 }
 
 function isSpellingCheckOk() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   var sel = getSpellCheckSelection();
   var numWords = sel.rangeCount;
 

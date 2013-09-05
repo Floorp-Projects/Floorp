@@ -8,13 +8,13 @@
 #define nsDSURIContentListener_h__
 
 #include "nsCOMPtr.h"
-#include "nsString.h"
 #include "nsIURIContentListener.h"
 #include "nsWeakReference.h"
 
 class nsDocShell;
 class nsIWebNavigationInfo;
 class nsIHttpChannel;
+class nsAString;
 
 class nsDSURIContentListener :
     public nsIURIContentListener,

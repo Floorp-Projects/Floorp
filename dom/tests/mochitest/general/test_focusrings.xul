@@ -22,10 +22,9 @@
 SimpleTest.waitForExplicitFinish();
 
 function setOrRestoreTabFocus(newValue) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   const prefSvcContractID = "@mozilla.org/preferences-service;1";
-  const prefSvcIID = Components.interfaces.nsIPrefService;
-  var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID)
+  const prefSvcIID = SpecialPowers.Ci.nsIPrefService;
+  var prefs = SpecialPowers.Cc[prefSvcContractID].getService(prefSvcIID)
                                                    .getBranch("accessibility.");
   if (!newValue) {
     if (prefs.prefHasUserValue("tabfocus")) {
@@ -75,10 +74,8 @@ function runTest()
   testHTMLElements(htmlElements, isMac, isWin && !expectedVisible);
 
   if (isMac) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                  getService(Components.interfaces.nsIPrefBranch);
+    var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"].
+                  getService(SpecialPowers.Ci.nsIPrefBranch);
     prefs.setBoolPref("accessibility.mouse_focuses_formcontrol", true);
 
     testHTMLElements(htmlElementsMacPrefSet, true, false);

@@ -108,8 +108,33 @@ public:
     SetHTMLAttr(nsGkAtoms::ping, aPing, aError);
   }
 
+  void GetOrigin(nsAString &aOrigin)
+  {
+    Link::GetOrigin(aOrigin);
+  }
+
   // The XPCOM GetProtocol is OK for us
   // The XPCOM SetProtocol is OK for us
+
+  void GetUsername(nsAString& aUsername)
+  {
+    Link::GetUsername(aUsername);
+  }
+
+  void SetUsername(const nsAString& aUsername)
+  {
+    Link::SetUsername(aUsername);
+  }
+
+  void GetPassword(nsAString& aPassword)
+  {
+    Link::GetPassword(aPassword);
+  }
+
+  void SetPassword(const nsAString& aPassword)
+  {
+    Link::SetPassword(aPassword);
+  }
 
   // The XPCOM GetHost is OK for us
   // The XPCOM SetHost is OK for us

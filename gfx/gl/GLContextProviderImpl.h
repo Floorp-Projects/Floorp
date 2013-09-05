@@ -14,7 +14,6 @@
 class GL_CONTEXT_PROVIDER_NAME
 {
 public:
-    typedef GLContext::ContextFlags ContextFlags;
     typedef gfx::SurfaceCaps SurfaceCaps;
     /**
      * Create a context that renders to the surface of the widget that is
@@ -61,13 +60,13 @@ public:
     static already_AddRefed<GLContext>
     CreateOffscreen(const gfxIntSize& size,
                     const SurfaceCaps& caps,
-                    ContextFlags flags = GLContext::ContextFlagsNone);
+                    ContextFlags flags = ContextFlagsNone);
 
     /**
      * Get a pointer to the global context, creating it if it doesn't exist.
      */
     static GLContext*
-    GetGlobalContext(ContextFlags flags = GLContext::ContextFlagsNone);
+    GetGlobalContext(ContextFlags flags = ContextFlagsNone);
     
     /*
      * Create a new shared GLContext content handle, using the passed buffer as a source.
@@ -75,11 +74,11 @@ public:
      * on handles created with this method, as the caller owns the source (the passed buffer)
      * and is responsible for updating it accordingly.
      */
-    static SharedTextureHandle CreateSharedHandle(GLContext::SharedTextureShareType shareType,
+    static SharedTextureHandle CreateSharedHandle(SharedTextureShareType shareType,
                                                   void* buffer,
-                                                  GLContext::SharedTextureBufferType bufferType);
+                                                  SharedTextureBufferType bufferType);
 
-    static already_AddRefed<gfxASurface> GetSharedHandleAsSurface(GLContext::SharedTextureShareType shareType,
+    static already_AddRefed<gfxASurface> GetSharedHandleAsSurface(SharedTextureShareType shareType,
                                                                   SharedTextureHandle sharedHandle);
 
     /**

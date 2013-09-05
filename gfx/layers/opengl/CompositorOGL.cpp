@@ -9,6 +9,7 @@
 #include <stdlib.h>                     // for free, malloc
 #include "FPSCounter.h"                 // for FPSState, FPSCounter
 #include "GLContextProvider.h"          // for GLContextProvider
+#include "GLContext.h"                  // for GLContext
 #include "LayerManagerOGL.h"            // for BUFFER_OFFSET
 #include "Layers.h"                     // for WriteSnapshotToDumpFile
 #include "gfx2DGlue.h"                  // for ThebesFilter
@@ -1445,6 +1446,95 @@ CompositorOGL::CreateDataTextureSource(TextureFlags aFlags)
                                      !(aFlags & TEXTURE_DISALLOW_BIGIMAGE));
   return result;
 }
+
+bool
+CompositorOGL::SupportsPartialTextureUpdate()
+{
+  return mGLContext->CanUploadSubTextures();
+}
+
+int32_t
+CompositorOGL::GetMaxTextureSize() const
+{
+  MOZ_ASSERT(mGLContext);
+  GLint texSize = 0;
+  mGLContext->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE,
+                            &texSize);
+  MOZ_ASSERT(texSize != 0);
+  return texSize;
+}
+
+void
+CompositorOGL::MakeCurrent(MakeCurrentFlags aFlags) {
+  if (mDestroyed) {
+    NS_WARNING("Call on destroyed layer manager");
+    return;
+  }
+  mGLContext->MakeCurrent(aFlags & ForceMakeCurrent);
+}
+
+void
+CompositorOGL::BindQuadVBO() {
+  mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mQuadVBO);
+}
+
+void
+CompositorOGL::QuadVBOVerticesAttrib(GLuint aAttribIndex) {
+  mGLContext->fVertexAttribPointer(aAttribIndex, 2,
+                                    LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
+                                    (GLvoid*) QuadVBOVertexOffset());
+}
+
+void
+CompositorOGL::QuadVBOTexCoordsAttrib(GLuint aAttribIndex) {
+  mGLContext->fVertexAttribPointer(aAttribIndex, 2,
+                                    LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
+                                    (GLvoid*) QuadVBOTexCoordOffset());
+}
+
+void
+CompositorOGL::QuadVBOFlippedTexCoordsAttrib(GLuint aAttribIndex) {
+  mGLContext->fVertexAttribPointer(aAttribIndex, 2,
+                                    LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
+                                    (GLvoid*) QuadVBOFlippedTexCoordOffset());
+}
+
+void
+CompositorOGL::BindAndDrawQuad(GLuint aVertAttribIndex,
+                               GLuint aTexCoordAttribIndex,
+                               bool aFlipped)
+{
+  BindQuadVBO();
+  QuadVBOVerticesAttrib(aVertAttribIndex);
+
+  if (aTexCoordAttribIndex != GLuint(-1)) {
+    if (aFlipped)
+      QuadVBOFlippedTexCoordsAttrib(aTexCoordAttribIndex);
+    else
+      QuadVBOTexCoordsAttrib(aTexCoordAttribIndex);
+
+    mGLContext->fEnableVertexAttribArray(aTexCoordAttribIndex);
+  }
+
+  mGLContext->fEnableVertexAttribArray(aVertAttribIndex);
+  mGLContext->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+  mGLContext->fDisableVertexAttribArray(aVertAttribIndex);
+
+  if (aTexCoordAttribIndex != GLuint(-1)) {
+    mGLContext->fDisableVertexAttribArray(aTexCoordAttribIndex);
+  }
+}
+
+void
+CompositorOGL::BindAndDrawQuad(ShaderProgramOGL *aProg,
+                               bool aFlipped)
+{
+  NS_ASSERTION(aProg->HasInitialized(), "Shader program not correctly initialized");
+  BindAndDrawQuad(aProg->AttribLocation(ShaderProgramOGL::VertexCoordAttrib),
+                  aProg->AttribLocation(ShaderProgramOGL::TexCoordAttrib),
+                  aFlipped);
+}
+
 
 } /* layers */
 } /* mozilla */

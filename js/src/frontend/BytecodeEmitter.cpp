@@ -1791,6 +1791,62 @@ BytecodeEmitter::reportStrictModeError(ParseNode *pn, unsigned errorNumber, ...)
 }
 
 static bool
+IteratorResultShape(ExclusiveContext *cx, BytecodeEmitter *bce, unsigned *shape)
+{
+    RootedObject obj(cx);
+    gc::AllocKind kind = GuessObjectGCKind(2);
+    obj = NewBuiltinClassInstance(cx, &JSObject::class_, kind);
+    if (!obj)
+        return false;
+
+    Rooted<jsid> value_id(cx, AtomToId(cx->names().value));
+    Rooted<jsid> done_id(cx, AtomToId(cx->names().done));
+    RootedValue undefined(cx, UndefinedValue());
+    if (!DefineNativeProperty(cx, obj, value_id, undefined, NULL, NULL, JSPROP_ENUMERATE, 0, 0))
+        return false;
+    if (!DefineNativeProperty(cx, obj, done_id, undefined, NULL, NULL, JSPROP_ENUMERATE, 0, 0))
+        return false;
+
+    ObjectBox *objbox = bce->parser->newObjectBox(obj);
+    if (!objbox)
+        return false;
+
+    *shape = bce->objectList.add(objbox);
+
+    return true;
+}
+
+static bool
+EmitPrepareIteratorResult(ExclusiveContext *cx, BytecodeEmitter *bce)
+{
+    unsigned shape;
+    if (!IteratorResultShape(cx, bce, &shape))
+        return false;
+    return EmitIndex32(cx, JSOP_NEWOBJECT, shape, bce);
+}
+
+static bool
+EmitFinishIteratorResult(ExclusiveContext *cx, BytecodeEmitter *bce, bool done)
+{
+    jsatomid value_id;
+    if (!bce->makeAtomIndex(cx->names().value, &value_id))
+        return UINT_MAX;
+    jsatomid done_id;
+    if (!bce->makeAtomIndex(cx->names().done, &done_id))
+        return UINT_MAX;
+
+    if (!EmitIndex32(cx, JSOP_INITPROP, value_id, bce))
+        return false;
+    if (Emit1(cx, bce, done ? JSOP_TRUE : JSOP_FALSE) < 0)
+        return false;
+    if (!EmitIndex32(cx, JSOP_INITPROP, done_id, bce))
+        return false;
+    if (Emit1(cx, bce, JSOP_ENDINIT) < 0)
+        return false;
+    return true;
+}
+
+static bool
 EmitNameOp(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool callContext)
 {
     JSOp op;
@@ -2572,6 +2628,21 @@ frontend::EmitFunctionScript(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNo
 
     if (!EmitTree(cx, bce, body))
         return false;
+
+    // If we fall off the end of an ES6 generator, return a boxed iterator
+    // result object of the form { value: undefined, done: true }.
+    if (bce->sc->isFunctionBox() && bce->sc->asFunctionBox()->isStarGenerator()) {
+        if (!EmitPrepareIteratorResult(cx, bce))
+            return false;
+        if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
+            return false;
+        if (!EmitFinishIteratorResult(cx, bce, true))
+            return false;
+
+        // No need to check for finally blocks, etc as in EmitReturn.
+        if (Emit1(cx, bce, JSOP_RETURN) < 0)
+            return false;
+    }
 
     /*
      * Always end the script with a JSOP_STOP. Some other parts of the codebase
@@ -4772,6 +4843,11 @@ EmitReturn(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (!UpdateSourceCoordNotes(cx, bce, pn->pn_pos.begin))
         return false;
 
+    if (bce->sc->isFunctionBox() && bce->sc->asFunctionBox()->isStarGenerator()) {
+        if (!EmitPrepareIteratorResult(cx, bce))
+            return false;
+    }
+
     /* Push a return value */
     if (ParseNode *pn2 = pn->pn_kid) {
         if (!EmitTree(cx, bce, pn2))
@@ -4779,6 +4855,11 @@ EmitReturn(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     } else {
         /* No explicit return value provided */
         if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
+            return false;
+    }
+
+    if (bce->sc->isFunctionBox() && bce->sc->asFunctionBox()->isStarGenerator()) {
+        if (!EmitFinishIteratorResult(cx, bce, true))
             return false;
     }
 
@@ -5793,11 +5874,19 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       case PNK_YIELD:
         JS_ASSERT(bce->sc->isFunctionBox());
+        if (bce->sc->asFunctionBox()->isStarGenerator()) {
+            if (!EmitPrepareIteratorResult(cx, bce))
+                return false;
+        }
         if (pn->pn_kid) {
             if (!EmitTree(cx, bce, pn->pn_kid))
                 return false;
         } else {
             if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
+                return false;
+        }
+        if (bce->sc->asFunctionBox()->isStarGenerator()) {
+            if (!EmitFinishIteratorResult(cx, bce, false))
                 return false;
         }
         if (pn->pn_hidden && NewSrcNote(cx, bce, SRC_HIDDEN) < 0)

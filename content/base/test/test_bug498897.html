@@ -23,23 +23,21 @@ var checkedLoad = false;
 
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
 
 // Content policy / factory implementation for the test
-var policyID = Components.ID("{65944d64-2390-422e-bea3-80d0af7f69ef}");
+var policyID = SpecialPowers.wrap(SpecialPowers.Components).ID("{65944d64-2390-422e-bea3-80d0af7f69ef}");
 var policyName = "@mozilla.org/498897_testpolicy;1";
 var policy = {
   // nsISupports implementation
   QueryInterface: function(iid) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
     if (iid.equals(Ci.nsISupports) ||
         iid.equals(Ci.nsIFactory) ||
         iid.equals(Ci.nsIContentPolicy))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
   },
 
   // nsIFactory implementation
@@ -50,8 +48,6 @@ var policy = {
   // nsIContentPolicy implementation
   shouldLoad: function(contentType, contentLocation, requestOrigin, context,
                        mimeTypeGuess, extra) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
     if (contentLocation instanceof Ci.nsIURL &&
         contentLocation.fileName == "file_bug498897.css" &&
         requestOrigin instanceof Ci.nsIURL &&
@@ -64,13 +60,11 @@ var policy = {
 
   shouldProcess: function(contentType, contentLocation, requestOrigin, context,
                           mimeTypeGuess, extra) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
     return Ci.nsIContentPolicy.ACCEPT;
   }
 }
 
-var componentManager = Components.manager
+var componentManager = SpecialPowers.wrap(SpecialPowers.Components).manager
                                  .QueryInterface(Ci.nsIComponentRegistrar);
 componentManager.registerFactory(policyID, "Test content policy for bug 498897",
                                  policyName, policy);
@@ -82,15 +76,11 @@ categoryManager.addCategoryEntry("content-policy", policyName, policyName,
 
 function testFinished()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   ok(checkedLoad, "Content policy didn't get called!");
 
   categoryManager.deleteCategoryEntry("content-policy", policyName, false);
 
   setTimeout(function() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
     componentManager.unregisterFactory(policyID, policy);
 
     SimpleTest.finish();

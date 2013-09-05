@@ -1316,7 +1316,7 @@
           <![CDATA[
             let isRemote = aBrowser.getAttribute("remote") == "true";
             if (isRemote == aRemote)
-              return;
+              return false;
 
             // Unhook our progress listener.
             let tab = this._getTabForBrowser(aBrowser);
@@ -1337,6 +1337,8 @@
               tab.setAttribute("remote", "true");
             else
               tab.removeAttribute("remote");
+
+            return true;
           ]]>
         </body>
       </method>
@@ -3114,6 +3116,22 @@
           var titleChanged = this.setTabTitle(tab);
           if (titleChanged && !tab.selected && !tab.hasAttribute("busy"))
             tab.setAttribute("titlechanged", "true");
+        ]]>
+      </handler>
+      <handler event="oop-browser-crashed">
+        <![CDATA[
+          if (!event.isTrusted)
+            return;
+
+          let browser = event.originalTarget;
+          let title = browser.contentTitle;
+          let uri = browser.currentURI;
+
+          this._updateBrowserRemoteness(browser, false);
+
+          browser.setAttribute("crashedPageTitle", title);
+          browser.docShell.displayLoadError(Cr.NS_ERROR_CONTENT_CRASHED, uri, null);
+          browser.removeAttribute("crashedPageTitle");
         ]]>
       </handler>
     </handlers>

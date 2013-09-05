@@ -9,10 +9,6 @@
 
 #include "nsIURIFixup.h"
 
-#include "nsCOMPtr.h"
-
-#include "nsCDefaultURIFixup.h"
-
 /* Header file */
 class nsDefaultURIFixup : public nsIURIFixup
 {

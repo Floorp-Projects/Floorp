@@ -6,10 +6,12 @@
 #include "mozilla/Assertions.h"
 #include <algorithm>
 
+using namespace mozilla;
+
 void
-nsViewportInfo::SetDefaultZoom(const double aDefaultZoom)
+nsViewportInfo::SetDefaultZoom(const CSSToScreenScale& aDefaultZoom)
 {
-  MOZ_ASSERT(aDefaultZoom >= 0.0f);
+  MOZ_ASSERT(aDefaultZoom.scale >= 0.0f);
   mDefaultZoom = aDefaultZoom;
 }
 
@@ -20,6 +22,6 @@ nsViewportInfo::ConstrainViewportValues()
   // dev.w3.org/csswg/css-device-adapt section 6.2
   mMaxZoom = std::max(mMinZoom, mMaxZoom);
 
-  mDefaultZoom = std::min(mDefaultZoom, mMaxZoom);
-  mDefaultZoom = std::max(mDefaultZoom, mMinZoom);
+  mDefaultZoom = mDefaultZoom < mMaxZoom ? mDefaultZoom : mMaxZoom;
+  mDefaultZoom = mDefaultZoom > mMinZoom ? mDefaultZoom : mMinZoom;
 }

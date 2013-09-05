@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGLContext.h"
+#include "GLContext.h"
 #include "WebGLQuery.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 #include "nsContentUtils.h"
@@ -33,13 +34,17 @@ void WebGLQuery::Delete() {
     LinkedListElement<WebGLQuery>::removeFrom(mContext->mQueries);
 }
 
+bool WebGLQuery::IsActive() const
+{
+    WebGLRefPtr<WebGLQuery>* targetSlot = mContext->GetQueryTargetSlot(mType, "WebGLQuery::IsActive()");
+
+    MOZ_ASSERT(targetSlot, "unknown query object's type");
+
+    return *targetSlot == this;
+}
+
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLQuery)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(WebGLQuery)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(WebGLQuery)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebGLQuery)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLQuery, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLQuery, Release)

@@ -56,6 +56,7 @@
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "GLTextureImage.h"
 #include "GLContextProvider.h"
+#include "GLContext.h"
 #include "mozilla/layers/GLManager.h"
 #include "mozilla/layers/CompositorCocoaWidgetHelper.h"
 #include "mozilla/layers/CompositorOGL.h"

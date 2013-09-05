@@ -280,16 +280,16 @@ public:
     WebGLRectangleObject()
         : mWidth(0), mHeight(0) { }
 
-    WebGLRectangleObject(WebGLsizei width, WebGLsizei height)
+    WebGLRectangleObject(GLsizei width, GLsizei height)
         : mWidth(width), mHeight(height) { }
 
-    WebGLsizei Width() const { return mWidth; }
-    void width(WebGLsizei value) { mWidth = value; }
+    GLsizei Width() const { return mWidth; }
+    void width(GLsizei value) { mWidth = value; }
 
-    WebGLsizei Height() const { return mHeight; }
-    void height(WebGLsizei value) { mHeight = value; }
+    GLsizei Height() const { return mHeight; }
+    void height(GLsizei value) { mHeight = value; }
 
-    void setDimensions(WebGLsizei width, WebGLsizei height) {
+    void setDimensions(GLsizei width, GLsizei height) {
         mWidth = width;
         mHeight = height;
     }
@@ -309,8 +309,8 @@ public:
     }
 
 protected:
-    WebGLsizei mWidth;
-    WebGLsizei mHeight;
+    GLsizei mWidth;
+    GLsizei mHeight;
 };
 
 }// namespace mozilla

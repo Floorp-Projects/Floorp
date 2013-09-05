@@ -62,17 +62,23 @@ extern bool gBluetoothDebugFlag;
 
 /**
  * When the connection status of a Bluetooth profile is changed, we'll
- * distribute one of the following events.
+ * dispatch one of the following events.
  */
 #define A2DP_STATUS_CHANGED_ID               "a2dpstatuschanged"
 #define HFP_STATUS_CHANGED_ID                "hfpstatuschanged"
 #define SCO_STATUS_CHANGED_ID                "scostatuschanged"
 
 /**
- * When the pair status of a Bluetooth device is changed, we'll distribute an
+ * When the pair status of a Bluetooth device is changed, we'll dispatch an
  * event.
  */
 #define PAIRED_STATUS_CHANGED_ID             "pairedstatuschanged"
+
+/**
+ * When receiving a query about current play status from remote device, we'll
+ * dispatch an event.
+ */
+#define REQUEST_MEDIA_PLAYSTATUS_ID          "requestmediaplaystatus"
 
 // Bluetooth address format: xx:xx:xx:xx:xx:xx (or xx_xx_xx_xx_xx_xx)
 #define BLUETOOTH_ADDRESS_LENGTH 17

@@ -8,31 +8,16 @@
 #ifndef nsDocShell_h__
 #define nsDocShell_h__
 
-#include "nsIDOMNode.h"
-#include "nsIDOMNodeList.h"
-#include "nsIContentViewer.h"
-#include "nsInterfaceHashtable.h"
-#include "nsIScriptContext.h"
 #include "nsITimer.h"
-
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIBaseWindow.h"
 #include "nsIScrollable.h"
 #include "nsITextScroll.h"
-#include "nsIDocShellTreeOwner.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIDOMStorageManager.h"
-
 #include "nsDocLoader.h"
-#include "nsIURILoader.h"
-
-#include "nsWeakReference.h"
-
-// Local Includes
-#include "nsDSURIContentListener.h"
-#include "nsDocShellEditorData.h"
 
 // Helper Classes
 #include "nsCOMPtr.h"
@@ -46,37 +31,22 @@
 
 // Interfaces Needed
 #include "nsIDocCharset.h"
-#include "nsIGlobalHistory2.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsIPrompt.h"
 #include "nsIRefreshURI.h"
 #include "nsIScriptGlobalObjectOwner.h"
-#include "nsISHistory.h"
-#include "nsILayoutHistoryState.h"
-#include "nsIStringBundle.h"
-#include "nsISupportsArray.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebPageDescriptor.h"
 #include "nsIWebProgressListener.h"
-#include "nsISHContainer.h"
 #include "nsIDocShellLoadInfo.h"
-#include "nsIURIFixup.h"
-#include "nsIWebBrowserFind.h"
-#include "nsIHttpChannel.h"
-#include "nsDocShellTransferableHooks.h"
 #include "nsIAuthPromptProvider.h"
-#include "nsISecureBrowserUI.h"
 #include "nsIObserver.h"
-#include "nsDocShellLoadTypes.h"
 #include "nsILoadContext.h"
-#include "nsIWidget.h"
 #include "nsIWebShellServices.h"
 #include "nsILinkHandler.h"
 #include "nsIClipboardCommands.h"
-#include "nsICommandManager.h"
 #include "nsCRT.h"
 #include "prtime.h"
+#include "nsRect.h"
 
 namespace mozilla {
 namespace dom {
@@ -90,6 +60,25 @@ class nsGlobalWindow;
 class nsIController;
 class nsIScrollableFrame;
 class OnLinkClickEvent;
+class nsDSURIContentListener;
+class nsDocShellEditorData;
+class nsIClipboardDragDropHookList;
+class nsICommandManager;
+class nsIContentViewer;
+class nsIDocument;
+class nsIDOMNode;
+class nsIDocShellTreeOwner;
+class nsIGlobalHistory2;
+class nsIHttpChannel;
+class nsIPrompt;
+class nsISHistory;
+class nsISecureBrowserUI;
+class nsIStringBundle;
+class nsISupportsArray;
+class nsIURIFixup;
+class nsIURILoader;
+class nsIWebBrowserFind;
+class nsIWidget;
 
 /* load commands were moved to nsIDocShell.h */
 /* load types were moved to nsDocShellLoadTypes.h */
@@ -520,9 +509,6 @@ protected:
     nsresult   EnsureTransferableHookData();
     NS_IMETHOD EnsureFind();
     nsresult   RefreshURIFromQueue();
-    NS_IMETHOD DisplayLoadError(nsresult aError, nsIURI *aURI,
-                                const PRUnichar *aURL,
-                                nsIChannel* aFailedChannel = nullptr);
     NS_IMETHOD LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
                              const char *aErrorPage,
                              const PRUnichar *aErrorType,

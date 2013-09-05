@@ -25,6 +25,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/ipc/UnixSocket.h"
+#include "mozilla/LazyIdleThread.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsIObserverService.h"
@@ -54,6 +55,7 @@
 
 #define PROP_BLUETOOTH_ENABLED      "bluetooth.isEnabled"
 
+#define DEFAULT_THREAD_TIMEOUT_MS 3000
 #define DEFAULT_SHUTDOWN_TIMER_MS 5000
 
 bool gBluetoothDebugFlag = false;
@@ -145,19 +147,8 @@ public:
       gBluetoothService->DistributeSignal(signal);
     }
 
-    if (!mEnabled || gInShutdown) {
-      // Shut down the command thread if it still exists.
-      if (gBluetoothService->mBluetoothCommandThread) {
-        nsCOMPtr<nsIThread> thread;
-        gBluetoothService->mBluetoothCommandThread.swap(thread);
-        if (NS_FAILED(thread->Shutdown())) {
-          NS_WARNING("Failed to shut down the bluetooth command thread!");
-        }
-      }
-
-      if (gInShutdown) {
-        gBluetoothService = nullptr;
-      }
+    if (gInShutdown) {
+      gBluetoothService = nullptr;
     }
 
     return NS_OK;
@@ -461,20 +452,11 @@ BluetoothService::StartStopBluetooth(bool aStart, bool aIsStartup)
       return NS_ERROR_FAILURE;
     }
 
-    if (!mBluetoothCommandThread) {
+    if (!mBluetoothThread) {
       // Don't create a new thread after we've begun shutdown since bluetooth
       // can't be running.
       return NS_OK;
     }
-  }
-
-  nsresult rv;
-  if (!mBluetoothCommandThread) {
-    MOZ_ASSERT(!gInShutdown);
-
-    rv = NS_NewNamedThread("BluetoothCmd",
-                           getter_AddRefs(mBluetoothCommandThread));
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (!aStart) {
@@ -485,8 +467,14 @@ BluetoothService::StartStopBluetooth(bool aStart, bool aIsStartup)
     opp->Disconnect();
   }
 
+  if (!mBluetoothThread) {
+    mBluetoothThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
+                                          NS_LITERAL_CSTRING("Bluetooth"),
+                                          LazyIdleThread::ManualShutdown);
+  }
+
   nsCOMPtr<nsIRunnable> runnable = new ToggleBtTask(aStart, aIsStartup);
-  rv = mBluetoothCommandThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+  nsresult rv = mBluetoothThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -813,14 +801,4 @@ BluetoothService::Notify(const BluetoothSignal& aData)
   systemMessenger->BroadcastMessage(type,
                                     OBJECT_TO_JSVAL(obj),
                                     JS::UndefinedValue());
-}
-
-void
-BluetoothService::DispatchToCommandThread(nsRunnable* aRunnable)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aRunnable);
-  MOZ_ASSERT(mBluetoothCommandThread);
-
-  mBluetoothCommandThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
 }
