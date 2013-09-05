@@ -686,14 +686,6 @@ default all::
 	$(MAKE) export
 	$(MAKE) libs
 	$(MAKE) tools
-
-# Do depend as well
-alldep::
-	$(MAKE) export
-	$(MAKE) depend
-	$(MAKE) libs
-	$(MAKE) tools
-
 endif # TIERS
 endif # SUPPRESS_DEFAULT_RULES
 
@@ -708,10 +700,7 @@ endif
 # Do everything from scratch
 everything::
 	$(MAKE) clean
-	$(MAKE) alldep
-
-# Add dummy depend target for tinderboxes
-depend::
+	$(MAKE) all
 
 # Target to only regenerate makefiles
 makefiles: $(SUBMAKEFILES)
