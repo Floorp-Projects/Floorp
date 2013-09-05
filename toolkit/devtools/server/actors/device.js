@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Cc, Ci, Cu} = require("chrome");
+const {Cc, Ci, Cu, CC} = require("chrome");
 const protocol = require("devtools/server/protocol");
 const {method, RetVal} = protocol;
 const promise = require("sdk/core/promise");
@@ -148,7 +148,6 @@ let DeviceActor = protocol.ActorClass({
   getWallpaper: method(function() {
     let deferred = promise.defer();
     this._getSetting("wallpaper.image").then((blob) => {
-      let CC = Components.Constructor;
       let FileReader = CC("@mozilla.org/files/filereader;1");
       let reader = new FileReader();
       let conn = this.conn;
