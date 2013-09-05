@@ -977,11 +977,11 @@ public:
 
 protected:
     class MemoryReporter MOZ_FINAL
-        : public nsIMemoryReporter
+        : public nsIMemoryMultiReporter
     {
     public:
         NS_DECL_ISUPPORTS
-        NS_DECL_NSIMEMORYREPORTER
+        NS_DECL_NSIMEMORYMULTIREPORTER
     };
 
     void DestroyFont(gfxFont *aFont);

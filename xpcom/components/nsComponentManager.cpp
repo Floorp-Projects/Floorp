@@ -280,11 +280,11 @@ CloneAndAppend(nsIFile* aBase, const nsACString& append)
 // nsComponentManagerImpl
 ////////////////////////////////////////////////////////////////////////////////
 
-class XPCOMComponentManagerReporter MOZ_FINAL : public MemoryUniReporter
+class XPCOMComponentManagerReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
     XPCOMComponentManagerReporter()
-      : MemoryUniReporter("explicit/xpcom/component-manager",
+      : MemoryReporterBase("explicit/xpcom/component-manager",
                            KIND_HEAP, UNITS_BYTES,
                            "Memory used for the XPCOM component manager.")
     {}

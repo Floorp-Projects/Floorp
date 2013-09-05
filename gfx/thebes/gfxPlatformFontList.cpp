@@ -70,7 +70,7 @@ gfxFontListPrefObserver::Observe(nsISupports     *aSubject,
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(gfxPlatformFontList::MemoryReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS1(gfxPlatformFontList::MemoryReporter, nsIMemoryMultiReporter)
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(FontListMallocSizeOf)
 
@@ -83,7 +83,7 @@ gfxPlatformFontList::MemoryReporter::GetName(nsACString &aName)
 
 NS_IMETHODIMP
 gfxPlatformFontList::MemoryReporter::CollectReports
-    (nsIMemoryReporterCallback* aCb,
+    (nsIMemoryMultiReporterCallback* aCb,
      nsISupports* aClosure)
 {
     FontListSizes sizes;
@@ -148,7 +148,7 @@ gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
 
     mSharedCmaps.Init(16);
 
-    NS_RegisterMemoryReporter(new MemoryReporter);
+    NS_RegisterMemoryMultiReporter(new MemoryReporter);
 }
 
 gfxPlatformFontList::~gfxPlatformFontList()
