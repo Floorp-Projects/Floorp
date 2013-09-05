@@ -1437,17 +1437,14 @@ nsresult nsSSLIOLayerHelpers::Init()
 
   mutex = new Mutex("nsSSLIOLayerHelpers.mutex");
 
-  mTLSIntolerantSites = new nsTHashtable<nsCStringHashKey>();
-  mTLSIntolerantSites->Init(1);
+  mTLSIntolerantSites = new nsTHashtable<nsCStringHashKey>(1);
 
-  mTLSTolerantSites = new nsTHashtable<nsCStringHashKey>();
   // Initialize the tolerant site hashtable to 16 items at the start seems
   // reasonable as most servers are TLS tolerant. We just want to lower 
   // the rate of hashtable array reallocation.
-  mTLSTolerantSites->Init(16);
+  mTLSTolerantSites = new nsTHashtable<nsCStringHashKey>(16);
 
-  mRenegoUnrestrictedSites = new nsTHashtable<nsCStringHashKey>();
-  mRenegoUnrestrictedSites->Init(1);
+  mRenegoUnrestrictedSites = new nsTHashtable<nsCStringHashKey>(1);
 
   nsCString unrestricted_hosts;
   Preferences::GetCString("security.ssl.renego_unrestricted_hosts", &unrestricted_hosts);
@@ -1518,11 +1515,9 @@ void nsSSLIOLayerHelpers::setRenegoUnrestrictedSites(const nsCString &str)
     mRenegoUnrestrictedSites = nullptr;
   }
 
-  mRenegoUnrestrictedSites = new nsTHashtable<nsCStringHashKey>();
+  mRenegoUnrestrictedSites = new nsTHashtable<nsCStringHashKey>(1);
   if (!mRenegoUnrestrictedSites)
     return;
-  
-  mRenegoUnrestrictedSites->Init(1);
   
   nsCCharSeparatedTokenizer toker(str, ',');
 

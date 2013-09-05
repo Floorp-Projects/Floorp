@@ -17,12 +17,6 @@ nsresult
 NS_NewHashPropertyBag(nsIWritablePropertyBag* *_retval)
 {
     nsRefPtr<nsHashPropertyBag> hpb = new nsHashPropertyBag();
-
-    nsresult rv = hpb->Init();
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
-
     hpb.forget(_retval);
     return NS_OK;
 }
@@ -40,13 +34,6 @@ NS_INTERFACE_MAP_BEGIN(nsHashPropertyBag)
   NS_INTERFACE_MAP_ENTRY(nsIPropertyBag2)
   NS_INTERFACE_MAP_ENTRY(nsIWritablePropertyBag2)
 NS_INTERFACE_MAP_END
-
-nsresult
-nsHashPropertyBag::Init()
-{
-    mPropertyHash.Init();
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 nsHashPropertyBag::HasKey(const nsAString& name, bool *aResult)

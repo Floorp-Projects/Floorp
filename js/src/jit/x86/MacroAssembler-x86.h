@@ -437,8 +437,17 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
                          Label *label)
     {
         JS_ASSERT(cond == Equal || cond == NotEqual);
-        branchPtr(cond, tagOf(valaddr), value.typeReg(), label);
-        branchPtr(cond, payloadOf(valaddr), value.payloadReg(), label);
+        // Check payload before tag, since payload is more likely to differ.
+        if (cond == NotEqual) {
+            branchPtr(NotEqual, payloadOf(valaddr), value.payloadReg(), label);
+            branchPtr(NotEqual, tagOf(valaddr), value.typeReg(), label);
+
+        } else {
+            Label fallthrough;
+            branchPtr(NotEqual, payloadOf(valaddr), value.payloadReg(), &fallthrough);
+            branchPtr(Equal, tagOf(valaddr), value.typeReg(), label);
+            bind(&fallthrough);
+        }
     }
 
     void cmpPtr(Register lhs, const ImmWord rhs) {

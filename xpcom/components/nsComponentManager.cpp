@@ -310,13 +310,15 @@ nsComponentManagerImpl::Create(nsISupports* aOuter, REFNSIID aIID, void** aResul
     return gComponentManager->QueryInterface(aIID, aResult);
 }
 
+static const int CONTRACTID_HASHTABLE_INITIAL_SIZE = 2048;
+
 nsComponentManagerImpl::nsComponentManagerImpl()
-    : mLock("nsComponentManagerImpl.mLock")
+    : mFactories(CONTRACTID_HASHTABLE_INITIAL_SIZE)
+    , mContractIDs(CONTRACTID_HASHTABLE_INITIAL_SIZE)
+    , mLock("nsComponentManagerImpl.mLock")
     , mStatus(NOT_INITIALIZED)
 {
 }
-
-#define CONTRACTID_HASHTABLE_INITIAL_SIZE   2048
 
 nsTArray<const mozilla::Module*>* nsComponentManagerImpl::sStaticModules;
 
@@ -355,11 +357,6 @@ nsresult nsComponentManagerImpl::Init()
 
     // Initialize our arena
     PL_INIT_ARENA_POOL(&mArena, "ComponentManagerArena", NS_CM_BLOCK_SIZE);
-
-    mFactories.Init(CONTRACTID_HASHTABLE_INITIAL_SIZE);
-    mContractIDs.Init(CONTRACTID_HASHTABLE_INITIAL_SIZE);
-    mLoaderMap.Init();
-    mKnownModules.Init();
 
     nsCOMPtr<nsIFile> greDir =
         GetLocationFromDirectoryService(NS_GRE_DIR);

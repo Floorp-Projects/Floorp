@@ -105,8 +105,6 @@ public:
   nsFormControlList(HTMLFormElement* aForm);
   virtual ~nsFormControlList();
 
-  nsresult Init();
-
   void DropFormReference();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -232,6 +230,9 @@ ShouldBeInElements(nsIFormControl* aFormControl)
 
 HTMLFormElement::HTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
+    mSelectedRadioButtons(4),
+    mRequiredRadioButtonCounts(4),
+    mValueMissingRadioGroups(4),
     mGeneratingSubmit(false),
     mGeneratingReset(false),
     mIsSubmitting(false),
@@ -245,11 +246,11 @@ HTMLFormElement::HTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     mDefaultSubmitElement(nullptr),
     mFirstSubmitInElements(nullptr),
     mFirstSubmitNotInElements(nullptr),
+    mImageNameLookupTable(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE),
+    mPastNameLookupTable(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE),
     mInvalidElementsCount(0),
     mEverTriedInvalidSubmit(false)
 {
-  mImageNameLookupTable.Init(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE);
-  mPastNameLookupTable.Init(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE);
 }
 
 HTMLFormElement::~HTMLFormElement()
@@ -265,19 +266,6 @@ nsresult
 HTMLFormElement::Init()
 {
   mControls = new nsFormControlList(this);
-
-  nsresult rv = mControls->Init();
-  
-  if (NS_FAILED(rv))
-  {
-    mControls = nullptr;
-    return rv;
-  }
-  
-  mSelectedRadioButtons.Init(4);
-  mRequiredRadioButtonCounts.Init(4);
-  mValueMissingRadioGroups.Init(4);
-
   return NS_OK;
 }
 
@@ -2351,7 +2339,8 @@ nsFormControlList::nsFormControlList(HTMLFormElement* aForm) :
   mForm(aForm),
   // Initialize the elements list to have an initial capacity
   // of 8 to reduce allocations on small forms.
-  mElements(8)
+  mElements(8),
+  mNameLookupTable(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE)
 {
   SetIsDOMBinding();
 }
@@ -2360,12 +2349,6 @@ nsFormControlList::~nsFormControlList()
 {
   mForm = nullptr;
   Clear();
-}
-
-nsresult nsFormControlList::Init()
-{
-  mNameLookupTable.Init(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE);
-  return NS_OK;
 }
 
 void

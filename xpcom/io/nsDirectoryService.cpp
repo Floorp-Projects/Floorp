@@ -220,8 +220,8 @@ nsDirectoryService::GetCurrentProcessDirectory(nsIFile** aFile)
 nsDirectoryService* nsDirectoryService::gService = nullptr;
 
 nsDirectoryService::nsDirectoryService()
+    : mHashtable(256)
 {
-    mHashtable.Init(256);
 }
 
 nsresult
