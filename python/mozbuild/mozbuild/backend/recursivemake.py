@@ -31,19 +31,6 @@ from ..frontend.data import (
 from ..util import FileAvoidWrite
 
 
-STUB_MAKEFILE = '''
-# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.
-
-DEPTH          := {depth}
-topsrcdir      := {topsrc}
-srcdir         := {src}
-VPATH          := {src}
-relativesrcdir := {relsrc}
-
-include {topsrc}/config/rules.mk
-'''.lstrip()
-
-
 class BackendMakeFile(object):
     """Represents a generated backend.mk file.
 
@@ -149,11 +136,8 @@ class RecursiveMakeBackend(CommonBackend):
         self.backend_input_files.add(os.path.join(self.environment.topobjdir,
             'config', 'autoconf.mk'))
 
-        self._install_manifests = dict()
-
         self._purge_manifests = dict(
             dist_bin=PurgeManifest(relpath='dist/bin'),
-            dist_include=PurgeManifest(relpath='dist/include'),
             dist_private=PurgeManifest(relpath='dist/private'),
             dist_public=PurgeManifest(relpath='dist/public'),
             dist_sdk=PurgeManifest(relpath='dist/sdk'),
@@ -163,6 +147,7 @@ class RecursiveMakeBackend(CommonBackend):
 
         self._install_manifests = dict(
             dist_idl=InstallManifest(),
+            dist_include=InstallManifest(),
         )
 
     def _update_from_avoid_write(self, result):
@@ -239,13 +224,10 @@ class RecursiveMakeBackend(CommonBackend):
 
             # If Makefile.in exists, use it as a template. Otherwise, create a
             # stub.
-            if os.path.exists(makefile_in):
+            stub = not os.path.exists(makefile_in)
+            if not stub:
                 self.log(logging.DEBUG, 'substitute_makefile',
                     {'path': makefile}, 'Substituting makefile: {path}')
-
-                self._update_from_avoid_write(
-                    bf.environment.create_config_file(makefile))
-                self.summary.managed_count += 1
 
                 # Adding the Makefile.in here has the desired side-effect that
                 # if the Makefile.in disappears, this will force moz.build
@@ -257,17 +239,9 @@ class RecursiveMakeBackend(CommonBackend):
                 self.log(logging.DEBUG, 'stub_makefile',
                     {'path': makefile}, 'Creating stub Makefile: {path}')
 
-                params = {
-                    'topsrc': bf.environment.get_top_srcdir(makefile),
-                    'src': bf.environment.get_file_srcdir(makefile),
-                    'depth': bf.environment.get_depth(makefile),
-                    'relsrc': bf.environment.get_relative_srcdir(makefile),
-                }
-
-                aw = FileAvoidWrite(makefile)
-                aw.write(STUB_MAKEFILE.format(**params))
-                self._update_from_avoid_write(aw.close())
-                self.summary.managed_count += 1
+            self._update_from_avoid_write(
+                bf.environment.create_makefile(makefile, stub=stub))
+            self.summary.managed_count += 1
 
             self._update_from_avoid_write(bf.close())
             self.summary.managed_count += 1
@@ -368,27 +342,22 @@ class RecursiveMakeBackend(CommonBackend):
                 ' '.join(obj.parallel_external_make_dirs))
 
     def _process_exports(self, obj, exports, backend_file, namespace=""):
+        # This may not be needed, but is present for backwards compatibility
+        # with the old make rules, just in case.
+        if not obj.dist_install:
+            return
+
         strings = exports.get_strings()
         if namespace:
-            if strings:
-                backend_file.write('EXPORTS_NAMESPACES += %s\n' % namespace)
-            export_name = 'EXPORTS_%s' % namespace
             namespace += '/'
-        else:
-            export_name = 'EXPORTS'
 
-        # Iterate over the list of export filenames, printing out an EXPORTS
-        # declaration for each.
-        if strings:
-            backend_file.write('%s += %s\n' % (export_name, ' '.join(strings)))
+        for s in strings:
+            source = os.path.normpath(os.path.join(obj.srcdir, s))
+            dest = '%s%s' % (namespace, os.path.basename(s))
+            self._install_manifests['dist_include'].add_symlink(source, dest)
 
-            for s in strings:
-                source = os.path.normpath(os.path.join(obj.srcdir, s))
-                if not os.path.isfile(source):
-                    raise Exception('File listed in EXPORTS does not exist: %s' % source)
-
-                p = '%s%s' % (namespace, s)
-                self._purge_manifests['dist_include'].add(p)
+            if not os.path.exists(source):
+                raise Exception('File listed in EXPORTS does not exist: %s' % source)
 
         children = exports.get_children()
         for subdir in sorted(children):
@@ -399,20 +368,19 @@ class RecursiveMakeBackend(CommonBackend):
         build_files = self._purge_manifests['xpidl']
 
         for p in ('Makefile', 'backend.mk', '.deps/.mkdir.done',
-            'headers/.mkdir.done', 'xpt/.mkdir.done'):
+            'xpt/.mkdir.done'):
             build_files.add(p)
 
         for idl in manager.idls.values():
             self._install_manifests['dist_idl'].add_symlink(idl['source'],
                 idl['basename'])
-            self._purge_manifests['dist_include'].add('%s.h' % idl['root'])
-            build_files.add(mozpath.join('headers', '%s.h' % idl['root']))
+            self._install_manifests['dist_include'].add_optional_exists('%s.h'
+                % idl['root'])
 
         for module in manager.modules:
             build_files.add(mozpath.join('xpt', '%s.xpt' % module))
             build_files.add(mozpath.join('.deps', '%s.pp' % module))
 
-        headers = sorted('%s.h' % idl['root'] for idl in manager.idls.values())
         modules = manager.modules
         xpt_modules = sorted(modules.keys())
         rules = []
@@ -437,13 +405,6 @@ class RecursiveMakeBackend(CommonBackend):
                 '',
             ])
 
-            # Set up linkage so make knows headers come from $(idlprocess).
-            h = ['$(idl_headers_dir)/%s.h' % dep for dep in deps]
-            rules.extend([
-                '%s: $(idl_xpt_dir)/%s.xpt' % (' '.join(h), module),
-                '',
-            ])
-
         # Create dependency for output header so we force regeneration if the
         # header was deleted. This ideally should not be necessary. However,
         # some processes (such as PGO at the time this was implemented) wipe
@@ -454,7 +415,6 @@ class RecursiveMakeBackend(CommonBackend):
         result = self.environment.create_config_file(out_path, extra=dict(
             xpidl_rules='\n'.join(rules),
             xpidl_modules=' '.join(xpt_modules),
-            xpidl_headers=' '.join(headers),
         ))
         self._update_from_avoid_write(result)
         self.summary.managed_count += 1

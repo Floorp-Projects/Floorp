@@ -2,13 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH     = @DEPTH@
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 # parameters for the Graphite2 files.mk fragment
 _NS =
 _BASE = $(srcdir)/..
@@ -45,4 +38,3 @@ DEFINES += -DGRAPHITE2_NFILEFACE -DGRAPHITE2_NTRACING -DGRAPHITE2_NSEGCACHE
 # provide a custom header that overrides malloc() and friends,
 # to ensure safe OOM handling
 DEFINES += -DGRAPHITE2_CUSTOM_HEADER="\"MozGrMalloc.h\""
-

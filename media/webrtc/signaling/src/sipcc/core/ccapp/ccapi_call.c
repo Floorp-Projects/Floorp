@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "timecard.h"
 #include "cpr_stdio.h"
 #include "ccapi_call.h"
 #include "sessionHash.h"
@@ -91,21 +92,29 @@ cc_return_t CCAPI_Call_originateCall(cc_call_handle_t handle, cc_sdp_direction_t
 }
 
 cc_return_t CCAPI_CreateOffer(cc_call_handle_t handle,
-                              cc_media_constraints_t *constraints) {
-	return CC_CallFeature_CreateOffer(handle, constraints);
+                              cc_media_constraints_t *constraints,
+                              Timecard *tc) {
+    return CC_CallFeature_CreateOffer(handle, constraints, tc);
 }
 
 cc_return_t CCAPI_CreateAnswer(cc_call_handle_t handle,
-                               cc_media_constraints_t *constraints) {
-	return CC_CallFeature_CreateAnswer(handle, constraints);
+                               cc_media_constraints_t *constraints,
+                               Timecard *tc) {
+    return CC_CallFeature_CreateAnswer(handle, constraints, tc);
 }
 
-cc_return_t CCAPI_SetLocalDescription(cc_call_handle_t handle, cc_jsep_action_t action, cc_string_t sdp) {
-	return CC_CallFeature_SetLocalDescription(handle, action, sdp);
+cc_return_t CCAPI_SetLocalDescription(cc_call_handle_t handle,
+                                      cc_jsep_action_t action,
+                                      cc_string_t sdp,
+                                      Timecard *tc) {
+    return CC_CallFeature_SetLocalDescription(handle, action, sdp, tc);
 }
 
-cc_return_t CCAPI_SetRemoteDescription(cc_call_handle_t handle, cc_jsep_action_t action, cc_string_t sdp) {
-    return CC_CallFeature_SetRemoteDescription(handle, action, sdp);
+cc_return_t CCAPI_SetRemoteDescription(cc_call_handle_t handle,
+                                       cc_jsep_action_t action,
+                                       cc_string_t sdp,
+                                       Timecard *tc) {
+    return CC_CallFeature_SetRemoteDescription(handle, action, sdp, tc);
 }
 
 cc_return_t CCAPI_SetPeerConnection(cc_call_handle_t handle, cc_peerconnection_t pc) {
@@ -120,8 +129,12 @@ cc_return_t CCAPI_RemoveStream(cc_call_handle_t handle, cc_media_stream_id_t str
   return CC_CallFeature_RemoveStream(handle, stream_id, track_id, media_type);
 }
 
-cc_return_t CCAPI_AddICECandidate(cc_call_handle_t handle, cc_string_t candidate, cc_string_t mid, cc_level_t level) {
-	return CC_CallFeature_AddICECandidate(handle, candidate, mid, level);
+cc_return_t CCAPI_AddICECandidate(cc_call_handle_t handle,
+                                  cc_string_t candidate,
+                                  cc_string_t mid,
+                                  cc_level_t level,
+                                  Timecard *tc) {
+    return CC_CallFeature_AddICECandidate(handle, candidate, mid, level, tc);
 }
 
 /**

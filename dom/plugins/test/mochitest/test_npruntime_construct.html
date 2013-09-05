@@ -3,9 +3,14 @@
 <head>
   <title>Test whether windowless plugins receive correct visible/invisible notifications.</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
 <body>
+  <script type="text/javascript">
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+  </script>
+
   <p id="display"></p>
 
   <embed id="theplugin" type="application/x-test"></embed>

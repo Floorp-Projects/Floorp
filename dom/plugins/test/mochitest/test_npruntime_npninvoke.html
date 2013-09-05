@@ -3,14 +3,11 @@
   <title>NPN_Invoke Tests</title>
   <script type="text/javascript" 
           src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
   <link rel="stylesheet" type="text/css" 
         href="/tests/SimpleTest/test.css" />
 </head>
 <body onload="runTests()">
-  <p id="display"></p>
-
-  <embed id="plugin1" type="application/x-test" width="400" height="100">
-  </embed>
 
   <script class="testbody" type="application/javascript">
   ////
@@ -22,6 +19,7 @@
   //
   
   SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   // This function returns all the arguments passed to it, either as a
   // single variable (in the caes of 1 argument), or as an array.
@@ -152,7 +150,12 @@
     SimpleTest.finish();
   }
   </script>
-  
+
+  <p id="display"></p>
+
+  <embed id="plugin1" type="application/x-test" width="400" height="100">
+  </embed>
+
   <div id="verbose">
   </div>
  </body>

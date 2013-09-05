@@ -2,13 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH := @DEPTH@
-topsrcdir := @top_srcdir@
-srcdir := @srcdir@
-VPATH := @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 SUPPRESS_DEFAULT_RULES := 1
 STANDALONE_MAKEFILE := 1
 NO_MAKEFILE_RULE := 1
@@ -44,9 +37,6 @@ include $(topsrcdir)/config/rules.mk
 # For dependency files.
 idl_deps_dir := .deps
 
-# Where generated headers go.
-idl_headers_dir := headers
-
 # Where we put our final, linked .xpt files.
 idl_xpt_dir := xpt
 
@@ -58,23 +48,18 @@ process_py := $(topsrcdir)/python/mozbuild/mozbuild/action/xpidl-process.py
 # in the virtualenv.
 idlprocess := $(PYTHON_PATH) $(PLY_INCLUDE) -I$(IDL_PARSER_DIR) -I$(IDL_PARSER_CACHE_DIR) \
     $(process_py) --cache-dir $(IDL_PARSER_CACHE_DIR) $(dist_idl_dir) \
-        $(idl_headers_dir) $(idl_xpt_dir) $(idl_deps_dir)
+        $(dist_include_dir) $(idl_xpt_dir) $(idl_deps_dir)
 
-xpidl_headers := @xpidl_headers@
 xpidl_modules := @xpidl_modules@
 
 @xpidl_rules@
 
-dist_headers := $(addprefix $(dist_include_dir)/,$(xpidl_headers))
 linked_xpt_files := $(addprefix $(idl_xpt_dir)/,$(addsuffix .xpt,$(xpidl_modules)))
 depends_files := $(foreach root,$(xpidl_modules),$(idl_deps_dir)/$(root).pp)
 
-$(dist_headers): $(dist_include_dir)/%.h: $(idl_headers_dir)/%.h
-	$(INSTALL) $< $(dist_include_dir)
+xpidl:: $(linked_xpt_files)
 
-xpidl:: $(linked_xpt_files) $(dist_headers)
-
-$(linked_xpt_files): $(process_py) $(call mkdir_deps,$(idl_deps_dir) $(idl_headers_dir) $(idl_xpt_dir))
+$(linked_xpt_files): $(process_py) $(call mkdir_deps,$(idl_deps_dir) $(dist_include_dir) $(idl_xpt_dir))
 
 $(call include_deps,$(depends_files))
 

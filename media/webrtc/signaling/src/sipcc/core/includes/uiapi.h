@@ -186,6 +186,7 @@ void ui_create_offer(call_events event,
                      callid_t nCallID,
                      uint16_t call_instance_id,
                      string_t sdp,
+                     Timecard *timecard,
                      pc_error error,
                      const char *format, ...);
 
@@ -195,6 +196,7 @@ void ui_create_answer(call_events event,
                       callid_t nCallID,
                       uint16_t call_instance_id,
                       string_t sdp,
+                      Timecard *timecard,
                       pc_error error,
                       const char *format, ...);
 
@@ -204,6 +206,7 @@ void ui_set_local_description(call_events event,
                               callid_t nCallID,
                               uint16_t call_instance_id,
                               string_t sdp,
+                              Timecard *timecard,
                               pc_error error,
                               const char *format, ...);
 
@@ -213,6 +216,7 @@ void ui_set_remote_description(call_events event,
                                callid_t nCallID,
                                uint16_t call_instance_id,
                                string_t sdp,
+                               Timecard *timecard,
                                pc_error error,
                                const char *format, ...);
 
@@ -222,6 +226,7 @@ void ui_update_local_description(call_events event,
                                  callid_t nCallID,
                                  uint16_t call_instance_id,
                                  string_t sdp,
+                                 Timecard *timecard,
                                  pc_error error,
                                  const char *format, ...);
 
@@ -231,6 +236,7 @@ void ui_ice_candidate_add(call_events event,
                           callid_t nCallID,
                           uint16_t call_instance_id,
                           string_t sdp,
+                          Timecard *timecard,
                           pc_error error,
                           const char *format, ...);
 

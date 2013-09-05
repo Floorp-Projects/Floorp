@@ -2,14 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH     = @DEPTH@
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
-relativesrcdir = @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 MOCHITEST_BROWSER_FILES = \
 		browser_sourceeditor_initialization.js \
 		browser_bug684862_paste_html.js \
@@ -33,5 +25,3 @@ MOCHITEST_BROWSER_FILES = \
 		browser_bug744021_next_prev_bracket_jump.js \
 		browser_bug725392_mouse_coords_char_offset.js \
 		head.js \
-
-include $(topsrcdir)/config/rules.mk

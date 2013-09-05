@@ -3,13 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH   = @DEPTH@
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH   = @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 # Don't use the jemalloc allocator on Android, because we can't guarantee
 # that Gecko will configure sqlite before it is first used (bug 730495).
 #
@@ -32,5 +25,3 @@ LOCAL_INCLUDES = \
 # This is the default value.  If we ever change it when compiling sqlite, we
 # will need to change it here as well.
 DEFINES += -DSQLITE_MAX_LIKE_PATTERN_LENGTH=50000
-
-include $(topsrcdir)/config/rules.mk

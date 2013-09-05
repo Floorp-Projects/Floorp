@@ -3,19 +3,18 @@
 <head>
   <title>Test whether windowed plugins with opacity:0 get their window set correctly</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
 <body onload="startTest()">
-  <p id="display"></p>
-
-  <embed id="theplugin" type="application/x-test" width="100" height="50" style="opacity:0" wmode="window"></embed>
-
   <script type="application/javascript;version=1.8">
   SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
-  var p = document.getElementById('theplugin');
+  var p = null;
 
   function startTest() {
+    p = document.getElementById('theplugin');
     if (!p.hasWidget()) {
       todo(false, "This test is only relevant for windowed plugins");
       SimpleTest.finish();
@@ -39,3 +38,7 @@
     is(p.getClipRegionRectEdge(0,3) - p.getClipRegionRectEdge(0,1), 50, "height of clip region rect");
   }
   </script>
+
+  <p id="display"></p>
+
+  <embed id="theplugin" type="application/x-test" width="100" height="50" style="opacity:0" wmode="window"></embed>
