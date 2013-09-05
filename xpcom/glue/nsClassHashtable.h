@@ -27,6 +27,14 @@ public:
   typedef T* UserDataType;
   typedef nsBaseHashtable< KeyClass, nsAutoPtr<T>, T* > base_type;
 
+  nsClassHashtable()
+  {
+  }
+  explicit nsClassHashtable(uint32_t aInitSize)
+    : nsBaseHashtable<KeyClass,nsAutoPtr<T>,T*>(aInitSize)
+  {
+  }
+
   /**
    * @copydoc nsBaseHashtable::Get
    * @param pData if the key doesn't exist, pData will be set to nullptr.

@@ -74,9 +74,6 @@ AudioChannelService::AudioChannelService()
 , mCurrentVisibleHigherChannel(AUDIO_CHANNEL_LAST)
 , mActiveContentChildIDsFrozen(false)
 {
-  // Creation of the hash table.
-  mAgents.Init();
-
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
@@ -313,7 +310,6 @@ AudioChannelService::SendAudioChannelChangedNotification(uint64_t aChildID)
   }
 
   nsRefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
-  props->Init();
   props->SetPropertyAsUint64(NS_LITERAL_STRING("childID"), aChildID);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
