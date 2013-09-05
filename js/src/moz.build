@@ -79,7 +79,7 @@ EXPORTS.js += [
 
 CPP_SOURCES += [
     'ArgumentsObject.cpp',
-    'TypedObject.cpp',
+    'Barrier.cpp',
     'BytecodeCompiler.cpp',
     'BytecodeEmitter.cpp',
     'CallNonGenericMethod.cpp',
@@ -136,6 +136,7 @@ CPP_SOURCES += [
     'Tracer.cpp',
     'TypeRepresentation.cpp',
     'TypedArrayObject.cpp',
+    'TypedObject.cpp',
     'Unicode.cpp',
     'Value.cpp',
     'Verifier.cpp',
