@@ -1,0 +1,428 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+* {
+  margin: 0;
+  padding: 0;
+  -moz-box-sizing: border-box;
+  font-size: 0.9rem;
+}
+
+html, body {
+  height: 100%;
+}
+
+template {
+  display: none;
+}
+
+body {
+  display: flex;
+  color: #333;
+  background-color: white;
+  font-family: Lucida Grande, Helvetica, Helvetica Neue, sans-serif;
+  display: flex;
+  overflow: hidden;
+}
+
+body:not(.connected) button.device-action {
+  display: none;
+}
+
+strong {
+  color: #111;
+}
+
+
+/********* SIDEBAR ***********/
+
+
+
+#sidebar {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 350px;
+  overflow: hidden;
+  z-index: 100;
+  background: #EEE;
+  position: relative;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.3);
+}
+
+#project-list {
+  height: 100%;
+  overflow: auto;
+}
+
+#project-list:not([projects-count="0"]) > #no-project {
+  display: none;
+}
+
+#no-project {
+  padding: 100px 20px 0;
+  font-weight: bold;
+  color: #BBB;
+  font-size: 22px;
+}
+
+
+/********* PROJECT MENU ***********/
+
+
+.project-item {
+  padding: 10px 0;
+  background-color: #F6F6F6;
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,0.1);
+  color: #666;
+  line-height: 120%;
+  cursor: pointer;
+  display: flex;
+}
+
+.project-item:hover {
+  background-color: #EEE;
+}
+
+.project-item > * {
+  flex-shrink: 0;
+}
+
+.project-item.selected {
+  background-color: #FFF;
+}
+
+.button-remove {
+  background-image: url('remove.svg');
+  background-size: 20px;
+  width: 20px;
+  height: 20px;
+  float: right;
+  margin-right: 10px;
+  visibility: hidden;
+}
+
+.project-item:hover .button-remove {
+  visibility: visible;
+}
+
+.project-item-status {
+  width: 10px;
+  margin: -10px 0;
+  border-right: 1px solid rgba(0,0,0,0.1);
+  box-shadow: inset 0 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 0px 0px rgba(0,0,0,0.2);
+}
+
+.project-item-status[status="warning"] {
+  background: linear-gradient(to bottom, #F5BD56, #E3A93D);
+}
+
+.project-item-status[status="error"] {
+  background: linear-gradient(to bottom, #E34F22, #B83C16);
+}
+
+.project-item-status[status="valid"] {
+  background: linear-gradient(to bottom, #90D11F, #77AD18);
+}
+
+.project-item-icon {
+  width: 32px;
+  height: 32px;
+  margin: 0 10px;
+}
+
+.project-item-meta {
+  flex-grow: 1;
+  flex-shrink: 1 !important;
+}
+
+.project-item-type {
+  font-size: 10px;
+  line-height: 20px;
+  float: right;
+  padding-right: 10px;
+  color: #AAA;
+  text-transform: uppercase;
+}
+
+.project-item-description {
+  color: #AAA;
+}
+
+/********* ADD PROJECT ***********/
+
+#new-packaged-project {
+  box-shadow: 0 -1px 10px rgba(0,0,0,0.3);
+  background-position: calc(100% - 10px) 10px;
+}
+
+#new-packaged-project,
+#new-hosted-project {
+  background-color: #EEE;
+  border: none;
+  border-top: 1px solid #DDD;
+  padding: 10px;
+  font-weight: bold;
+}
+
+#new-packaged-project:hover,
+#new-hosted-project:hover {
+  background-color: #DDD;
+}
+
+#new-hosted-project-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+#new-packaged-project,
+#new-hosted-project-click {
+  background-image: url('plus.svg');
+  background-size: 20px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+#new-hosted-project-click {
+  background-position: top right;
+  width: 20px;
+  height: 20px;
+  margin-left: 5px;
+}
+
+#url-input {
+  flex-grow: 1;
+  width: 90%;
+  box-shadow: none;
+  border-radius: 3px;
+  border: 1px solid #DDD;
+  padding: 4px;
+  margin-top: 4px;
+}
+
+
+/********* LENSE ***********/
+
+
+#lense {
+  height: 100%;
+  flex-grow: 1;
+  display: flex;
+  z-index: 1;
+  overflow: hidden;
+  background-color: rgb(225, 225, 225);
+  background-image: url('rocket.svg'), url('noise.png');
+  background-repeat: no-repeat, repeat;
+  background-size: 35%, auto;
+  background-position: center center, top left;
+}
+
+#lense > div {
+  display: flex;
+  flex-grow: 1;
+}
+
+
+/********* PROJECT ***********/
+
+
+.project-details {
+  background-color: rgb(225, 225, 225);
+  padding: 10px;
+  flex-grow: 1;
+  line-height: 160%;
+}
+
+.project-status {
+  display: flex;
+}
+
+.project-title {
+  flex-direction: row;
+  display: flex;
+  align-items: flex-start;
+}
+
+.project-title > h1 {
+  flex-grow: 1;
+  font-size: 24px;
+}
+
+.project-location {
+  color: gray;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.project-location:hover {
+  text-decoration: underline;
+}
+
+.project-header {
+  display: flex;
+  border-bottom: 1px solid #CCC;
+  margin: 10px 20px 10px 20px;
+  padding-bottom: 10px;
+}
+
+.project-icon {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+}
+
+.project-location {
+  font-size: 11px;
+  color: #999;
+}
+
+.project-description {
+  font-style: italic;
+  color: #333;
+}
+
+.project-status > p {
+  text-transform: uppercase;
+  font-size: 10px;
+  padding: 2px 10px;
+  border-radius: 2px;
+  margin-top: 6px;
+  line-height: 10px;
+}
+
+.project-validation {
+  color: #FFF;
+}
+
+[status="valid"] > .project-validation {
+  background-color: #82BD1B;
+}
+
+[status="warning"] > .project-validation {
+  background-color: #ECB51F;
+}
+
+[status="error"] > .project-validation {
+  background-color: #C24119;
+}
+
+
+
+/********* PROJECT BUTTONS ***********/
+
+
+
+.project-buttons {
+  display: flex;
+  margin-left: 20px;
+  color: #BBB;
+}
+
+.project-buttons > button {
+  margin: 0;
+  font-size: 11px;
+  border: 1px solid #CCC;
+  border-left-width: 0;
+  padding: 5px 15px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+}
+
+.project-buttons > button:first-child {
+  border-left-width: 1px;
+}
+
+.project-button-debug {
+  color: #3498DB;
+}
+
+.project-button-debug:hover {
+  background-color: #3498DB;
+  color: #FFF;
+}
+
+.project-button-install,
+.project-button-start {
+  color: #18BC9C
+}
+
+.project-button-install:hover,
+.project-button-start:hover {
+  background-color: #18BC9C;
+  color: #FFF;
+}
+
+.project-button-stop {
+  color: #E74C3C;
+}
+
+.project-button-stop:hover {
+  background-color: #E74C3C;
+  color: #FFF;
+}
+
+.project-button-refresh {
+  color: #777;
+}
+
+.project-button-refresh:hover {
+  background-color: #777;
+  color: #FFF;
+}
+
+
+
+/********* ERRORS AND WARNINGS ***********/
+
+.project-warnings,
+.project-errors,
+.project-item-warnings,
+.project-item-errors {
+  display: none;
+}
+
+[status="warning"] > .project-item-warnings,
+[status="error"] > .project-item-errors,
+[status="warning"] > .project-warnings,
+[status="error"] > .project-errors {
+  display: block;
+}
+
+.project-warnings {
+  margin: 20px 20px 0;
+  padding: 10px 10px;
+  border-left: 3px solid #ECB51E;
+  background-color: rgba(236, 181, 20, 0.1);
+}
+
+.project-errors {
+  margin: 20px;
+  padding: 10px 10px;
+  border-left: 3px solid #E34F22;
+  background-color: rgba(227,79,34,0.1);
+}
+
+.project-item-warnings {
+  background-image: url('warning.svg');
+}
+
+.project-item-errors {
+  background-image: url('error.svg');
+  color: rgb(227, 79, 34);
+}
+
+.project-item-warnings,
+.project-item-errors {
+  background-repeat: no-repeat;
+  background-size: 12px;
+  background-position: left center;
+  margin-top: 6px;
+}
+
+.project-item-warnings > span,
+.project-item-errors > span {
+  font-size: 11px;
+  padding-left: 16px;
+  font-weight: bold;
+}

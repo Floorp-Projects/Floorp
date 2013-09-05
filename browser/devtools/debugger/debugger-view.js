@@ -28,6 +28,8 @@ const SEARCH_TOKEN_FLAG = "#";
 const SEARCH_LINE_FLAG = ":";
 const SEARCH_VARIABLE_FLAG = "*";
 
+Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
+
 /**
  * Object defining the debugger view components.
  */
@@ -279,8 +281,10 @@ let DebuggerView = {
       window.dispatchEvent(document, "Debugger:SourceShown", aSource);
     },
     ([, aError]) => {
-      // Rejected. TODO: Bug 884484.
-      let msg = "Error loading: " + aSource.url + "\n" + aError;
+      // Rejected.
+      let msg = L10N.getStr("errorLoadingText") + DevToolsUtils.safeErrorString(aError);
+      this.editor.setText(msg);
+      window.dispatchEvent(document, "Debugger:SourceErrorShown", aError);
       dumpn(msg);
       Cu.reportError(msg);
     });

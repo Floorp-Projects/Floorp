@@ -1066,6 +1066,9 @@ pref("devtools.toolbar.visible", false);
 pref("devtools.gcli.allowSet", false);
 pref("devtools.commands.dir", "");
 
+// Disable the app manager
+pref("devtools.appmanager.enabled", false);
+
 // Toolbox preferences
 pref("devtools.toolbox.footer.height", 250);
 pref("devtools.toolbox.sidebar.width", 500);

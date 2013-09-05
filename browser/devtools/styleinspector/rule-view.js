@@ -67,7 +67,7 @@ function createDummyDocument() {
   docShell.createAboutBlankContentViewer(Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal));
   let window = docShell.contentViewer.DOMDocument.defaultView;
   window.location = "data:text/html,<html></html>";
-  let deferred = promise.defer()
+  let deferred = promise.defer();
   eventTarget.addEventListener("DOMContentLoaded", function handler(event) {
     eventTarget.removeEventListener("DOMContentLoaded", handler, false);
     deferred.resolve(window.document);
@@ -125,8 +125,6 @@ function ElementStyle(aElement, aStore, aPageStyle)
   if (!("disabled" in this.store)) {
     this.store.disabled = new WeakMap();
   }
-
-  let doc = aElement.ownerDocument;
 
   // To figure out how shorthand properties are interpreted by the
   // engine, we will set properties on a dummy element and observe
@@ -333,9 +331,9 @@ ElementStyle.prototype = {
     for (let computedProp of computedProps) {
       let earlier = taken[computedProp.name];
       let overridden;
-      if (earlier
-          && computedProp.priority === "important"
-          && earlier.priority !== "important") {
+      if (earlier &&
+          computedProp.priority === "important" &&
+          earlier.priority !== "important") {
         // New property is higher priority.  Mark the earlier property
         // overridden (which will reverse its dirty state).
         earlier._overriddenDirty = !earlier._overriddenDirty;
@@ -545,7 +543,6 @@ Rule.prototype = {
 
       aModifications.setProperty(prop.name, prop.value, prop.priority);
 
-
       prop.updateComputed();
     }
 
@@ -574,15 +571,14 @@ Rule.prototype = {
             name: textProp.name,
             value: "",
             priority: ""
-          }
+          };
         }
 
         if (aName && textProp.name == aName) {
           store.userProperties.setProperty(
-            this.style, textProp.name,
-            null,
-            cssProp.value,
-            textProp.value);
+            this.style,
+            textProp.name,
+            cssProp.value);
         }
         textProp.priority = cssProp.priority;
       }
@@ -998,7 +994,7 @@ TextProperty.prototype = {
 function CssRuleView(aDoc, aStore, aPageStyle)
 {
   this.doc = aDoc;
-  this.store = aStore;
+  this.store = aStore || {};
   this.pageStyle = aPageStyle;
   this.element = this.doc.createElementNS(HTML_NS, "div");
   this.element.className = "ruleview devtools-monospace";
@@ -1995,7 +1991,7 @@ TextPropertyEditor.prototype = {
  */
 function UserProperties()
 {
-  this.weakMap = new WeakMap();
+  this.map = new Map();
 }
 
 UserProperties.prototype = {
@@ -2006,28 +2002,26 @@ UserProperties.prototype = {
    *        The CSSStyleDeclaration against which the property is mapped.
    * @param {string} aName
    *        The name of the property to get.
-   * @param {string} aComputedValue
-   *        The computed value of the property.  The user value will only be
-   *        returned if the computed value hasn't changed since, and this will
-   *        be returned as the default if no user value is available.
+   * @param {string} aDefault
+   *        The value to return if the property is has been changed outside of
+   *        the rule view.
    * @return {string}
    *          The property value if it has previously been set by the user, null
    *          otherwise.
    */
-  getProperty: function UP_getProperty(aStyle, aName, aComputedValue) {
-    let entry = this.weakMap.get(aStyle, null);
+  getProperty: function(aStyle, aName, aDefault) {
+    let key = this.getKey(aStyle);
+    let entry = this.map.get(key, null);
 
     if (entry && aName in entry) {
       let item = entry[aName];
-      if (item.computed != aComputedValue) {
+      if (item != aDefault) {
         delete entry[aName];
-        return aComputedValue;
+        return aDefault;
       }
-
-      return item.user;
+      return item;
     }
-    return aComputedValue;
-
+    return aDefault;
   },
 
   /**
@@ -2037,20 +2031,18 @@ UserProperties.prototype = {
    *        The CSSStyleDeclaration against which the property is to be mapped.
    * @param {String} aName
    *        The name of the property to set.
-   * @param {String} aComputedValue
-   *        The computed property value.  The user value will not be used if the
-   *        computed value changes.
    * @param {String} aUserValue
    *        The value of the property to set.
    */
-  setProperty: function UP_setProperty(aStyle, aName, aComputedValue, aUserValue) {
-    let entry = this.weakMap.get(aStyle, null);
+  setProperty: function(aStyle, aName, aUserValue) {
+    let key = this.getKey(aStyle);
+    let entry = this.map.get(key, null);
     if (entry) {
-      entry[aName] = { computed: aComputedValue, user: aUserValue };
+      entry[aName] = aUserValue;
     } else {
       let props = {};
-      props[aName] = { computed: aComputedValue, user: aUserValue };
-      this.weakMap.set(aStyle, props);
+      props[aName] = aUserValue;
+      this.map.set(key, props);
     }
   },
 
@@ -2062,9 +2054,14 @@ UserProperties.prototype = {
    * @param {String} aName
    *        The name of the property to check.
    */
-  contains: function UP_contains(aStyle, aName) {
-    let entry = this.weakMap.get(aStyle, null);
+  contains: function(aStyle, aName) {
+    let key = this.getKey(aStyle);
+    let entry = this.map.get(key, null);
     return !!entry && aName in entry;
+  },
+
+  getKey: function(aStyle) {
+    return aStyle.href + ":" + aStyle.line;
   },
 };
 
