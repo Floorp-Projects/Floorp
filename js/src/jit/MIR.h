@@ -6651,6 +6651,33 @@ class MDeleteProperty
     }
 };
 
+class MDeleteElement
+  : public MBinaryInstruction,
+    public BoxInputsPolicy
+{
+    MDeleteElement(MDefinition *value, MDefinition *index)
+      : MBinaryInstruction(value, index)
+    {
+        setResultType(MIRType_Boolean);
+    }
+
+  public:
+    INSTRUCTION_HEADER(DeleteElement)
+
+    static MDeleteElement *New(MDefinition *value, MDefinition *index) {
+        return new MDeleteElement(value, index);
+    }
+    MDefinition *value() const {
+        return getOperand(0);
+    }
+    MDefinition *index() const {
+        return getOperand(1);
+    }
+    virtual TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
 // Note: This uses CallSetElementPolicy to always box its second input,
 // ensuring we don't need two LIR instructions to lower this.
 class MCallSetProperty
