@@ -24,12 +24,6 @@ const TEST_ID = "0203_svc";
 // launching a post update executable.
 const FILE_UPDATER_INI_BAK = "updater.ini.bak";
 
-// Number of milliseconds for each do_timeout call.
-const CHECK_TIMEOUT_MILLI = 1000;
-
-// How many of CHECK_TIMEOUT_MILLI to wait before we abort the test.
-const MAX_TIMEOUT_RUNS = 300;
-
 // Maximum number of milliseconds the process that is launched can run before
 // the test will try to kill it.
 const APP_TIMER_TIMEOUT = 120000;
@@ -261,7 +255,7 @@ function checkUpdateApplied() {
       do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting for update to be " +
                "applied, current state is: " + gUpdateManager.activeUpdate.state);
     else
-      do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateApplied);
+      do_timeout(TEST_CHECK_TIMEOUT, checkUpdateApplied);
     return;
   }
 
@@ -280,7 +274,7 @@ function checkUpdateApplied() {
       do_throw("Exceeded MAX_TIMEOUT_RUNS whist waiting for update log to be " +
                "created");
     else
-      do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateApplied);
+      do_timeout(TEST_CHECK_TIMEOUT, checkUpdateApplied);
     return;
   }
 
@@ -359,7 +353,7 @@ function checkUpdateApplied() {
   do_check_false(updatesDir.exists());
 
   // Now, switch the updated version of the app
-  do_timeout(CHECK_TIMEOUT_MILLI, switchApp);
+  do_timeout(TEST_CHECK_TIMEOUT, switchApp);
 }
 
 /**
@@ -376,7 +370,7 @@ function checkUpdateFinished() {
         do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting for state to " +
                  "change to succeeded, current status: " + status);
       else
-        do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
+        do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
       return;
     }
   } catch (e) {
@@ -394,7 +388,7 @@ function checkUpdateFinished() {
       else
         // This might happen on Windows in case the callback application has not
         // finished its job yet.  So, we'll wait some more.
-        do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
+        do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
       return;
     } else {
       do_throw("getAppConsoleLogPath threw: " + e);
