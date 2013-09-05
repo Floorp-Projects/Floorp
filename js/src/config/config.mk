@@ -679,7 +679,7 @@ endif
 EXPAND_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(topsrcdir)/$(1)/en-US,$(call core_realpath,$(L10NBASEDIR))/$(AB_CD)/$(subst /locales,,$(1)))
 
 ifdef relativesrcdir
-LOCALE_SRCDIR = $(call EXPAND_LOCALE_SRCDIR,$(relativesrcdir))
+LOCALE_SRCDIR ?= $(call EXPAND_LOCALE_SRCDIR,$(relativesrcdir))
 endif
 
 ifdef relativesrcdir
