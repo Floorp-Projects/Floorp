@@ -2,12 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http:mozilla.org/MPL/2.0/. */
 
-#include "mozilla/net/Dashboard.h"
-
-#include "jsapi.h"
 #include "mozilla/dom/NetDashboardBinding.h"
+#include "mozilla/net/Dashboard.h"
 #include "mozilla/net/HttpInfo.h"
 #include "nsCxPusher.h"
+#include "nsHttp.h"
+#include "nsIDNSService.h"
+#include "nsIThread.h"
+#include "nsSocketTransport2.h"
 
 using mozilla::AutoSafeJSContext;
 namespace mozilla {
@@ -17,6 +19,30 @@ NS_IMPL_ISUPPORTS5(Dashboard, nsIDashboard, nsIDashboardEventNotifier,
                               nsITransportEventSink, nsITimerCallback,
                               nsIDNSListener)
 using mozilla::dom::Sequence;
+
+struct ConnStatus
+{
+    nsString creationSts;
+};
+
+class DashConnStatusRunnable: public nsRunnable
+{
+public:
+    DashConnStatusRunnable(Dashboard * aDashboard, ConnStatus aStatus)
+    : mDashboard(aDashboard)
+    {
+        mStatus.creationSts = aStatus.creationSts;
+    }
+
+    NS_IMETHODIMP Run()
+    {
+        return mDashboard->GetConnectionStatus(mStatus);
+    }
+
+private:
+    ConnStatus mStatus;
+    Dashboard * mDashboard;
+};
 
 Dashboard::Dashboard()
 {
