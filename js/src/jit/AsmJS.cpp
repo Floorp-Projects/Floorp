@@ -909,6 +909,11 @@ TypedArrayStoreType(ArrayBufferView::ViewType viewType)
     MOZ_ASSUME_UNREACHABLE("Unexpected array type");
 }
 
+enum NeedsBoundsCheck {
+    NO_BOUNDS_CHECK,
+    NEEDS_BOUNDS_CHECK
+};
+
 /*****************************************************************************/
 
 namespace {
@@ -1473,6 +1478,15 @@ class MOZ_STACK_CLASS ModuleCompiler
         return globalAccesses_.append(access);
     }
 
+    // Note a constraint on the minimum size of the heap.  The heap size is
+    // constrained when linking to be at least the maximum of all such constraints.
+    void requireHeapLengthToBeAtLeast(uint32_t len) {
+        module_->requireHeapLengthToBeAtLeast(len);
+    }
+    uint32_t minHeapLength() const {
+        return module_->minHeapLength();
+    }
+
     bool collectAccesses(MIRGenerator &gen) {
         if (!module_->addHeapAccesses(gen.heapAccesses()))
             return false;
@@ -1951,20 +1965,25 @@ class FunctionCompiler
         curBlock_->setSlot(info().localSlot(local.slot), def);
     }
 
-    MDefinition *loadHeap(ArrayBufferView::ViewType vt, MDefinition *ptr)
+    MDefinition *loadHeap(ArrayBufferView::ViewType vt, MDefinition *ptr, NeedsBoundsCheck chk)
     {
         if (!curBlock_)
             return NULL;
         MAsmJSLoadHeap *load = MAsmJSLoadHeap::New(vt, ptr);
         curBlock_->add(load);
+        if (chk == NO_BOUNDS_CHECK)
+            load->setSkipBoundsCheck(true);
         return load;
     }
 
-    void storeHeap(ArrayBufferView::ViewType vt, MDefinition *ptr, MDefinition *v)
+    void storeHeap(ArrayBufferView::ViewType vt, MDefinition *ptr, MDefinition *v, NeedsBoundsCheck chk)
     {
         if (!curBlock_)
             return;
-        curBlock_->add(MAsmJSStoreHeap::New(vt, ptr, v));
+        MAsmJSStoreHeap *store = MAsmJSStoreHeap::New(vt, ptr, v);
+        curBlock_->add(store);
+        if (chk == NO_BOUNDS_CHECK)
+            store->setSkipBoundsCheck(true);
     }
 
     MDefinition *loadGlobalVar(const ModuleCompiler::Global &global)
@@ -3088,11 +3107,33 @@ CheckVarRef(FunctionCompiler &f, ParseNode *varRef, MDefinition **def, Type *typ
 }
 
 static bool
+FoldMaskedArrayIndex(FunctionCompiler &f, ParseNode **indexExpr, int32_t *mask,
+                     NeedsBoundsCheck *needsBoundsCheck)
+{
+    ParseNode *indexNode = BinaryLeft(*indexExpr);
+    ParseNode *maskNode = BinaryRight(*indexExpr);
+
+    uint32_t mask2;
+    if (IsLiteralUint32(maskNode, &mask2)) {
+        // Flag the access to skip the bounds check if the mask ensures that an 'out of
+        // bounds' access can not occur based on the current heap length constraint.
+        if (mozilla::CountLeadingZeroes32(f.m().minHeapLength() - 1) <= mozilla::CountLeadingZeroes32(mask2))
+            *needsBoundsCheck = NO_BOUNDS_CHECK;
+        *mask &= mask2;
+        *indexExpr = indexNode;
+        return true;
+    }
+
+    return false;
+}
+
+static bool
 CheckArrayAccess(FunctionCompiler &f, ParseNode *elem, ArrayBufferView::ViewType *viewType,
-                 MDefinition **def)
+                 MDefinition **def, NeedsBoundsCheck *needsBoundsCheck)
 {
     ParseNode *viewName = ElemBase(elem);
     ParseNode *indexExpr = ElemIndex(elem);
+    *needsBoundsCheck = NEEDS_BOUNDS_CHECK;
 
     if (!viewName->isKind(PNK_NAME))
         return f.fail(viewName, "base of array access must be a typed array view name");
@@ -3105,10 +3146,22 @@ CheckArrayAccess(FunctionCompiler &f, ParseNode *elem, ArrayBufferView::ViewType
 
     uint32_t pointer;
     if (IsLiteralUint32(indexExpr, &pointer)) {
+        if (pointer > (uint32_t(INT32_MAX) >> TypedArrayShift(*viewType)))
+            return f.fail(indexExpr, "constant index out of range");
         pointer <<= TypedArrayShift(*viewType);
+        // It is adequate to note pointer+1 rather than rounding up to the next
+        // access-size boundary because access is always aligned and the constraint
+        // will be rounded up to a larger alignment later.
+        f.m().requireHeapLengthToBeAtLeast(uint32_t(pointer) + 1);
+        *needsBoundsCheck = NO_BOUNDS_CHECK;
         *def = f.constant(Int32Value(pointer));
         return true;
     }
+
+    // Mask off the low bits to account for the clearing effect of a right shift
+    // followed by the left shift implicit in the array access. E.g., H32[i>>2]
+    // loses the low two bits.
+    int32_t mask = ~((uint32_t(1) << TypedArrayShift(*viewType)) - 1);
 
     MDefinition *pointerDef;
     if (indexExpr->isKind(PNK_RSH)) {
@@ -3123,6 +3176,21 @@ CheckArrayAccess(FunctionCompiler &f, ParseNode *elem, ArrayBufferView::ViewType
         if (shift != requiredShift)
             return f.failf(shiftNode, "shift amount must be %u", requiredShift);
 
+        if (pointerNode->isKind(PNK_BITAND))
+            FoldMaskedArrayIndex(f, &pointerNode, &mask, needsBoundsCheck);
+
+        // Fold a 'literal constant right shifted' now, and skip the bounds check if
+        // currently possible. This handles the optimization of many of these uses without
+        // the need for range analysis, and saves the generation of a MBitAnd op.
+        if (IsLiteralUint32(pointerNode, &pointer) && pointer <= uint32_t(INT32_MAX)) {
+            // Cases: b[c>>n], and b[(c&m)>>n]
+            pointer &= mask;
+            if (pointer < f.m().minHeapLength())
+                *needsBoundsCheck = NO_BOUNDS_CHECK;
+            *def = f.constant(Int32Value(pointer));
+            return true;
+        }
+
         Type pointerType;
         if (!CheckExpr(f, pointerNode, &pointerDef, &pointerType))
             return false;
@@ -3133,19 +3201,32 @@ CheckArrayAccess(FunctionCompiler &f, ParseNode *elem, ArrayBufferView::ViewType
         if (TypedArrayShift(*viewType) != 0)
             return f.fail(indexExpr, "index expression isn't shifted; must be an Int8/Uint8 access");
 
+        JS_ASSERT(mask == -1);
+        bool folded = false;
+
+        if (indexExpr->isKind(PNK_BITAND))
+            folded = FoldMaskedArrayIndex(f, &indexExpr, &mask, needsBoundsCheck);
+
         Type pointerType;
         if (!CheckExpr(f, indexExpr, &pointerDef, &pointerType))
             return false;
 
-        if (!pointerType.isInt())
-            return f.failf(indexExpr, "%s is not a subtype of int", pointerType.toChars());
+        if (folded) {
+            if (!pointerType.isIntish())
+                return f.failf(indexExpr, "%s is not a subtype of intish", pointerType.toChars());
+        } else {
+            if (!pointerType.isInt())
+                return f.failf(indexExpr, "%s is not a subtype of int", pointerType.toChars());
+        }
     }
 
-    // Mask off the low bits to account for clearing effect of a right shift
-    // followed by the left shift implicit in the array access. E.g., H32[i>>2]
-    // loses the low two bits.
-    int32_t mask = ~((uint32_t(1) << TypedArrayShift(*viewType)) - 1);
-    *def = f.bitwise<MBitAnd>(pointerDef, f.constant(Int32Value(mask)));
+    // Don't generate the mask op if there is no need for it which could happen for
+    // a shift of zero.
+    if (mask == -1)
+        *def = pointerDef;
+    else
+        *def = f.bitwise<MBitAnd>(pointerDef, f.constant(Int32Value(mask)));
+
     return true;
 }
 
@@ -3154,10 +3235,11 @@ CheckArrayLoad(FunctionCompiler &f, ParseNode *elem, MDefinition **def, Type *ty
 {
     ArrayBufferView::ViewType viewType;
     MDefinition *pointerDef;
-    if (!CheckArrayAccess(f, elem, &viewType, &pointerDef))
+    NeedsBoundsCheck needsBoundsCheck;
+    if (!CheckArrayAccess(f, elem, &viewType, &pointerDef, &needsBoundsCheck))
         return false;
 
-    *def = f.loadHeap(viewType, pointerDef);
+    *def = f.loadHeap(viewType, pointerDef, needsBoundsCheck);
     *type = TypedArrayLoadType(viewType);
     return true;
 }
@@ -3167,7 +3249,8 @@ CheckStoreArray(FunctionCompiler &f, ParseNode *lhs, ParseNode *rhs, MDefinition
 {
     ArrayBufferView::ViewType viewType;
     MDefinition *pointerDef;
-    if (!CheckArrayAccess(f, lhs, &viewType, &pointerDef))
+    NeedsBoundsCheck needsBoundsCheck;
+    if (!CheckArrayAccess(f, lhs, &viewType, &pointerDef, &needsBoundsCheck))
         return false;
 
     MDefinition *rhsDef;
@@ -3186,7 +3269,7 @@ CheckStoreArray(FunctionCompiler &f, ParseNode *lhs, ParseNode *rhs, MDefinition
         break;
     }
 
-    f.storeHeap(viewType, pointerDef, rhsDef);
+    f.storeHeap(viewType, pointerDef, rhsDef, needsBoundsCheck);
 
     *def = rhsDef;
     *type = rhsType;
@@ -4713,7 +4796,14 @@ CheckFunction(ModuleCompiler &m, LifoAlloc &lifo, MIRGenerator **mir, ModuleComp
 
     m.parser().release(mark);
 
+    // Copy the cumulative minimum heap size constraint to the MIR for use in analysis.  The length
+    // is also constrained to be a power of two, so firstly round up - a larger 'heap required
+    // length' can help range analysis to prove that bounds checks are not needed.
+    size_t len = mozilla::RoundUpPow2((size_t) m.minHeapLength());
+    m.requireHeapLengthToBeAtLeast(len);
+
     *mir = f.extractMIR();
+    (*mir)->noteMinAsmJSHeapLength(len);
     *funcOut = func;
     return true;
 }

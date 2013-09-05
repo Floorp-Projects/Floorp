@@ -12,6 +12,7 @@
 #include "jit/IonBuilder.h"
 #include "jit/IonSpewer.h"
 #include "jit/MIR.h"
+#include "jit/AsmJS.h"
 
 #include "jsinferinlines.h"
 
@@ -27,7 +28,8 @@ MIRGenerator::MIRGenerator(JSCompartment *compartment,
     error_(false),
     cancelBuild_(0),
     maxAsmJSStackArgBytes_(0),
-    performsAsmJSCall_(false)
+    performsAsmJSCall_(false),
+    minAsmJSHeapLength_(AsmJSAllocationGranularity)
 { }
 
 bool

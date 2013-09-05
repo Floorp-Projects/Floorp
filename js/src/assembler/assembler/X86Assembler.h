@@ -1496,6 +1496,24 @@ public:
         m_formatter.oneByteOp_disp32(OP_MOV_EvGv, src, base, offset);
     }
 
+    void movw_rm(RegisterID src, int offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("movw       %s, %d(%s,%s,%d)",
+             nameIReg(2, src), offset, nameIReg(base), nameIReg(index), 1<<scale);
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_MOV_EvGv, src, base, index, scale, offset);
+    }
+
+#if !WTF_CPU_X86_64
+    void movw_rm(RegisterID src, const void* addr)
+    {
+        spew("movw       %s, %p",
+             nameIReg(2, src), addr);
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_MOV_EvGv, src, addr);
+    }
+#endif
+
     void movl_rm(RegisterID src, int offset, RegisterID base)
     {
         spew("movl       %s, %s0x%x(%s)",
@@ -1507,14 +1525,6 @@ public:
     {
         FIXME_INSN_PRINTING;
         m_formatter.oneByteOp_disp32(OP_MOV_EvGv, src, base, offset);
-    }
-
-    void movw_rm(RegisterID src, int offset, RegisterID base, RegisterID index, int scale)
-    {
-        spew("movw       %s, %d(%s,%s,%d)",
-             nameIReg(2, src), offset, nameIReg(base), nameIReg(index), 1<<scale);
-        m_formatter.prefix(PRE_OPERAND_SIZE);
-        m_formatter.oneByteOp(OP_MOV_EvGv, src, base, index, scale, offset);
     }
 
     void movl_rm(RegisterID src, int offset, RegisterID base, RegisterID index, int scale)
@@ -1563,6 +1573,18 @@ public:
              offset, nameIReg(base), nameIReg(index), 1<<scale, nameIReg(4, dst));
         m_formatter.oneByteOp(OP_MOV_GvEv, dst, base, index, scale, offset);
     }
+
+#if !WTF_CPU_X86_64
+    void movl_mr(const void* addr, RegisterID dst)
+    {
+        spew("movl       %p, %s",
+             addr, nameIReg(4, dst));
+        if (dst == X86Registers::eax)
+            movl_mEAX(addr);
+        else
+            m_formatter.oneByteOp(OP_MOV_GvEv, dst, addr);
+    }
+#endif
 
     void movl_i32r(int imm, RegisterID dst)
     {
@@ -1780,16 +1802,6 @@ public:
             m_formatter.oneByteOp(OP_MOV_EvGv, src, addr);
     }
 
-    void movl_mr(const void* addr, RegisterID dst)
-    {
-        spew("movl       %p, %s",
-             addr, nameIReg(4, dst));
-        if (dst == X86Registers::eax)
-            movl_mEAX(addr);
-        else
-            m_formatter.oneByteOp(OP_MOV_GvEv, dst, addr);
-    }
-
     void movl_i32m(int imm, const void* addr)
     {
         FIXME_INSN_PRINTING;
@@ -1819,6 +1831,15 @@ public:
         m_formatter.oneByteOp8(OP_MOV_EbGv, src, base, index, scale, offset);
     }
 
+#if !WTF_CPU_X86_64
+    void movb_rm(RegisterID src, const void* addr)
+    {
+        spew("movb       %s, %p",
+             nameIReg(1, src), addr);
+        m_formatter.oneByteOp(OP_MOV_EbGv, src, addr);
+    }
+#endif
+
     void movzbl_mr(int offset, RegisterID base, RegisterID dst)
     {
         spew("movzbl     %s0x%x(%s), %s",
@@ -1839,6 +1860,15 @@ public:
              offset, nameIReg(base), nameIReg(index), 1<<scale, nameIReg(dst));
         m_formatter.twoByteOp(OP2_MOVZX_GvEb, dst, base, index, scale, offset);
     }
+
+#if !WTF_CPU_X86_64
+    void movzbl_mr(const void* addr, RegisterID dst)
+    {
+        spew("movzbl     %p, %s",
+             addr, nameIReg(dst));
+        m_formatter.twoByteOp(OP2_MOVZX_GvEb, dst, addr);
+    }
+#endif
 
     void movsbl_mr(int offset, RegisterID base, RegisterID dst)
     {
@@ -1861,6 +1891,15 @@ public:
         m_formatter.twoByteOp(OP2_MOVSX_GvEb, dst, base, index, scale, offset);
     }
 
+#if !WTF_CPU_X86_64
+    void movsbl_mr(const void* addr, RegisterID dst)
+    {
+        spew("movsbl     %p, %s",
+             addr, nameIReg(4, dst));
+        m_formatter.twoByteOp(OP2_MOVSX_GvEb, dst, addr);
+    }
+#endif
+
     void movzwl_mr(int offset, RegisterID base, RegisterID dst)
     {
         spew("movzwl     %s0x%x(%s), %s",
@@ -1882,6 +1921,15 @@ public:
         m_formatter.twoByteOp(OP2_MOVZX_GvEw, dst, base, index, scale, offset);
     }
 
+#if !WTF_CPU_X86_64
+    void movzwl_mr(const void* addr, RegisterID dst)
+    {
+        spew("movzwl     %p, %s",
+             addr, nameIReg(4, dst));
+        m_formatter.twoByteOp(OP2_MOVZX_GvEw, dst, addr);
+    }
+#endif
+
     void movswl_mr(int offset, RegisterID base, RegisterID dst)
     {
         spew("movswl     %s0x%x(%s), %s",
@@ -1902,6 +1950,15 @@ public:
              offset, nameIReg(base), nameIReg(index), 1<<scale, nameIReg(dst));
         m_formatter.twoByteOp(OP2_MOVSX_GvEw, dst, base, index, scale, offset);
     }
+
+#if !WTF_CPU_X86_64
+    void movswl_mr(const void* addr, RegisterID dst)
+    {
+        spew("movswl     %p, %s",
+             addr, nameIReg(4, dst));
+        m_formatter.twoByteOp(OP2_MOVSX_GvEw, dst, addr);
+    }
+#endif
 
     void movzbl_rr(RegisterID src, RegisterID dst)
     {
@@ -2334,6 +2391,16 @@ public:
         m_formatter.twoByteOp_disp32(OP2_MOVSD_WsdVsd, (RegisterID)src, base, offset);
     }
 
+#if !WTF_CPU_X86_64
+    void movss_rm(XMMRegisterID src, const void* addr)
+    {
+        spew("movss      %s, %p",
+             nameFPReg(src), addr);
+        m_formatter.prefix(PRE_SSE_F3);
+        m_formatter.twoByteOp(OP2_MOVSD_WsdVsd, (RegisterID)src, addr);
+    }
+#endif
+
     void movss_mr(int offset, RegisterID base, XMMRegisterID dst)
     {
         spew("movss      %s0x%x(%s), %s",
@@ -2349,6 +2416,16 @@ public:
         m_formatter.prefix(PRE_SSE_F3);
         m_formatter.twoByteOp_disp32(OP2_MOVSD_VsdWsd, (RegisterID)dst, base, offset);
     }
+
+#if !WTF_CPU_X86_64
+    void movss_mr(const void* addr, XMMRegisterID dst)
+    {
+        spew("movss      %p, %s",
+             addr, nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F3);
+        m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, addr);
+    }
+#endif
 
     void movsd_rm(XMMRegisterID src, int offset, RegisterID base, RegisterID index, int scale)
     {
