@@ -8,6 +8,7 @@
 #include "nsCxPusher.h"
 #include "nsIDOMMozSmsMessage.h"
 #include "nsIDOMMozMmsMessage.h"
+#include "nsIDOMSmsSegmentInfo.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
 #include "MmsMessage.h"
@@ -39,14 +40,22 @@ MobileMessageCallback::~MobileMessageCallback()
 
 
 nsresult
-MobileMessageCallback::NotifySuccess(JS::Handle<JS::Value> aResult)
+MobileMessageCallback::NotifySuccess(JS::Handle<JS::Value> aResult, bool aAsync)
 {
+  if (aAsync) {
+    nsCOMPtr<nsIDOMRequestService> rs =
+      do_GetService(DOMREQUEST_SERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(rs, NS_ERROR_FAILURE);
+
+    return rs->FireSuccessAsync(mDOMRequest, aResult);
+  }
+
   mDOMRequest->FireSuccess(aResult);
   return NS_OK;
 }
 
 nsresult
-MobileMessageCallback::NotifySuccess(nsISupports *aMessage)
+MobileMessageCallback::NotifySuccess(nsISupports *aMessage, bool aAsync)
 {
   nsresult rv;
   nsIScriptContext* scriptContext = mDOMRequest->GetContextForEventHandlers(&rv);
@@ -66,38 +75,48 @@ MobileMessageCallback::NotifySuccess(nsISupports *aMessage)
                                   wrappedMessage.address());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return NotifySuccess(wrappedMessage);
+  return NotifySuccess(wrappedMessage, aAsync);
 }
 
 nsresult
-MobileMessageCallback::NotifyError(int32_t aError)
+MobileMessageCallback::NotifyError(int32_t aError, bool aAsync)
 {
+  nsAutoString errorStr;
   switch (aError) {
     case nsIMobileMessageCallback::NO_SIGNAL_ERROR:
-      mDOMRequest->FireError(NS_LITERAL_STRING("NoSignalError"));
+      errorStr = NS_LITERAL_STRING("NoSignalError");
       break;
     case nsIMobileMessageCallback::NOT_FOUND_ERROR:
-      mDOMRequest->FireError(NS_LITERAL_STRING("NotFoundError"));
+      errorStr = NS_LITERAL_STRING("NotFoundError");
       break;
     case nsIMobileMessageCallback::UNKNOWN_ERROR:
-      mDOMRequest->FireError(NS_LITERAL_STRING("UnknownError"));
+      errorStr = NS_LITERAL_STRING("UnknownError");
       break;
     case nsIMobileMessageCallback::INTERNAL_ERROR:
-      mDOMRequest->FireError(NS_LITERAL_STRING("InternalError"));
+      errorStr = NS_LITERAL_STRING("InternalError");
       break;
     case nsIMobileMessageCallback::NO_SIM_CARD_ERROR:
-      mDOMRequest->FireError(NS_LITERAL_STRING("NoSimCardError"));
+      errorStr = NS_LITERAL_STRING("NoSimCardError");
       break;
     case nsIMobileMessageCallback::RADIO_DISABLED_ERROR:
-      mDOMRequest->FireError(NS_LITERAL_STRING("RadioDisabledError"));
+      errorStr = NS_LITERAL_STRING("RadioDisabledError");
       break;
     case nsIMobileMessageCallback::INVALID_ADDRESS_ERROR:
-      mDOMRequest->FireError(NS_LITERAL_STRING("InvalidAddressError"));
+      errorStr = NS_LITERAL_STRING("InvalidAddressError");
       break;
     default: // SUCCESS_NO_ERROR is handled above.
       MOZ_CRASH("Should never get here!");
   }
 
+  if (aAsync) {
+    nsCOMPtr<nsIDOMRequestService> rs =
+      do_GetService(DOMREQUEST_SERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(rs, NS_ERROR_FAILURE);
+
+    return rs->FireErrorAsync(mDOMRequest, errorStr);
+  }
+
+  mDOMRequest->FireError(errorStr);
   return NS_OK;
 }
 
@@ -171,6 +190,18 @@ NS_IMETHODIMP
 MobileMessageCallback::NotifyMarkMessageReadFailed(int32_t aError)
 {
   return NotifyError(aError);
+}
+
+NS_IMETHODIMP
+MobileMessageCallback::NotifySegmentInfoForTextGot(nsIDOMMozSmsSegmentInfo *aInfo)
+{
+  return NotifySuccess(aInfo, true);
+}
+
+NS_IMETHODIMP
+MobileMessageCallback::NotifyGetSegmentInfoForTextFailed(int32_t aError)
+{
+  return NotifyError(aError, true);
 }
 
 } // namesapce mobilemessage

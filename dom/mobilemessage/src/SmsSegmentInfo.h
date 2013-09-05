@@ -22,7 +22,10 @@ public:
   SmsSegmentInfo(int32_t aSegments,
                  int32_t aCharsPerSegment,
                  int32_t aCharsAvailableInLastSegment);
+
   SmsSegmentInfo(const mobilemessage::SmsSegmentInfoData& aData);
+
+  const mobilemessage::SmsSegmentInfoData& GetData() const;
 
 private:
   mobilemessage::SmsSegmentInfoData mData;
