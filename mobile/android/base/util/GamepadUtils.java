@@ -42,6 +42,10 @@ public final class GamepadUtils {
         return (isGamepadKey(event) && (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_B));
     }
 
+    public static void overrideDeadZoneThreshold(float threshold) {
+        sDeadZoneThresholdOverride = threshold;
+    }
+
     public static boolean isValueInDeadZone(MotionEvent event, int axis) {
         if (Build.VERSION.SDK_INT < 9) {
             return false;
