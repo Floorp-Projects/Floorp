@@ -14,9 +14,15 @@
 #include "nsIGfxInfo.h"
 #include "gfxCrashReporterUtils.h"
 #include "prmem.h"
+#include "prlink.h"
 #include "MediaResourceServer.h"
+#include "nsServiceManagerUtils.h"
 
 #include "MPAPI.h"
+
+#if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
+#include "nsIPropertyBag2.h"
+#endif
 
 #if defined(ANDROID) || defined(MOZ_WIDGET_GONK)
 #include "android/log.h"

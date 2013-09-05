@@ -11,10 +11,8 @@
  
 #include "mozilla/DebugOnly.h"
 #include <stdint.h>
-#include "mozilla/Util.h"
 
 #include "MediaDecoderStateMachine.h"
-#include <limits>
 #include "AudioStream.h"
 #include "nsTArray.h"
 #include "MediaDecoder.h"
@@ -26,6 +24,8 @@
 #include "AudioSegment.h"
 #include "VideoSegment.h"
 #include "ImageContainer.h"
+#include "nsComponentManagerUtils.h"
+#include "nsITimer.h"
 
 #include "prenv.h"
 #include "mozilla/Preferences.h"

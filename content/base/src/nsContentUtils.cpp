@@ -25,6 +25,8 @@
 #include "js/Value.h"
 #include "Layers.h"
 #include "MediaDecoder.h"
+// nsNPAPIPluginInstance must be included before nsIDocument.h, which is included in mozAutoDocUpdate.h.
+#include "nsNPAPIPluginInstance.h"
 #include "mozAutoDocUpdate.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
@@ -120,7 +122,6 @@
 #include "nsINode.h"
 #include "nsINodeInfo.h"
 #include "nsIObjectLoadingContent.h"
-#include "nsNPAPIPluginInstance.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIOfflineCacheUpdate.h"

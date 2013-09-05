@@ -8,6 +8,7 @@
 #include "RawReader.h"
 #include "RawDecoder.h"
 #include "VideoUtils.h"
+#include "nsISeekableStream.h"
 
 using namespace mozilla;
 

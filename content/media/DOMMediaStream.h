@@ -8,13 +8,12 @@
 
 #include "nsIDOMMediaStream.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIPrincipal.h"
 #include "nsWrapperCache.h"
-#include "nsIDOMWindow.h"
 #include "StreamBuffer.h"
-#include "nsIRunnable.h"
+#include "nsIDOMWindow.h"
 
 class nsXPCClassInfo;
+class nsIPrincipal;
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount() and conflicts with NS_DECL_NSIDOMMEDIASTREAM, containing

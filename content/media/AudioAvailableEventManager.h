@@ -7,12 +7,17 @@
 #ifndef AudioAvailableEventManager_h__
 #define AudioAvailableEventManager_h__
 
-#include "nsCOMPtr.h"
-#include "nsIRunnable.h"
-#include "MediaDecoder.h"
-#include "MediaDecoderReader.h"
+#include "nsAutoPtr.h"
+#include "nsTArray.h"
+#include "AudioSampleFormat.h"
+#include "mozilla/ReentrantMonitor.h"
+
+class nsIRunnable;
+template <class T> class nsCOMPtr;
 
 namespace mozilla {
+
+class MediaDecoder;
 
 class AudioAvailableEventManager
 {

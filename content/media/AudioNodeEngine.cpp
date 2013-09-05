@@ -4,9 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/arm.h"
 #include "AudioNodeEngine.h"
 #ifdef BUILD_ARM_NEON
+#include "mozilla/arm.h"
 #include "AudioNodeEngineNEON.h"
 #endif
 
