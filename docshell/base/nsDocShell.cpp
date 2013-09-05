@@ -1147,7 +1147,7 @@ ConvertDocShellLoadInfoToLoadType(nsDocShellInfoLoadType aDocShellLoadType)
     case nsIDocShellLoadInfo::loadReplaceBypassCache:
         loadType = LOAD_REPLACE_BYPASS_CACHE;
         break;
-    case nsIDocShellLoadInfo::loadMixedContent:
+    case nsIDocShellLoadInfo::loadReloadMixedContent:
         loadType = LOAD_RELOAD_ALLOW_MIXED_CONTENT;
         break;
     default:
@@ -1222,7 +1222,7 @@ nsDocShell::ConvertLoadTypeToDocShellLoadInfo(uint32_t aLoadType)
         docShellLoadType = nsIDocShellLoadInfo::loadReplaceBypassCache;
         break;
     case LOAD_RELOAD_ALLOW_MIXED_CONTENT:
-        docShellLoadType = nsIDocShellLoadInfo::loadMixedContent;
+        docShellLoadType = nsIDocShellLoadInfo::loadReloadMixedContent;
         break;
     default:
         NS_NOTREACHED("Unexpected load type value");
