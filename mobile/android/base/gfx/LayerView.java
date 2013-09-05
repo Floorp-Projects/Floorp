@@ -443,18 +443,20 @@ public class LayerView extends FrameLayout {
         return mGLController;
     }
 
-    private Bitmap getDrawable(int resId) {
+    private Bitmap getDrawable(String name) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inScaled = false;
-        return BitmapUtils.decodeResource(getContext(), resId, options);
+        Context context = getContext();
+        int resId = context.getResources().getIdentifier(name, "drawable", context.getPackageName());
+        return BitmapUtils.decodeResource(context, resId, options);
     }
 
     Bitmap getShadowPattern() {
-        return getDrawable(R.drawable.shadow);
+        return getDrawable("shadow");
     }
 
     Bitmap getScrollbarImage() {
-        return getDrawable(R.drawable.scrollbar);
+        return getDrawable("scrollbar");
     }
 
     /* When using a SurfaceView (mSurfaceView != null), resizing happens in two
