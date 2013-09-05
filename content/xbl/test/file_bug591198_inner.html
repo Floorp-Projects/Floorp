@@ -22,7 +22,7 @@ function sendResults() {
   
   try {
     res.anonChildCount =
-      SpecialPowers.wrap(document).getAnonymousNodes(document.getElementById('b')).length;
+      document.getAnonymousNodes(document.getElementById('b')).length;
   }
   catch (ex) {}
 

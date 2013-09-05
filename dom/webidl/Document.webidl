@@ -277,14 +277,11 @@ partial interface Document {
 partial interface Document {
   // nsIDOMDocumentXBL.  Wish we could make these [ChromeOnly], but
   // that would likely break bindings running with the page principal.
-  [Func="IsChromeOrXBL"]
   NodeList? getAnonymousNodes(Element elt);
-  [Func="IsChromeOrXBL"]
   Element? getAnonymousElementByAttribute(Element elt, DOMString attrName,
                                           DOMString attrValue);
-  [Func="IsChromeOrXBL"]
   Element? getBindingParent(Node node);
-  [Throws, Func="IsChromeOrXBL"]
+  [Throws]
   void loadBindingDocument(DOMString documentURL);
 
   // nsIDOMDocumentTouch
