@@ -8,6 +8,7 @@
 #include "WebGLVertexArray.h"
 #include "WebGLExtensions.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "GLContext.h"
 
 using namespace mozilla;
 

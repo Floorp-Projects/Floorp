@@ -10,7 +10,7 @@
 
 function manifestUpdated()
 {
-  var appCacheService = SpecialPowers.Components.classes["@mozilla.org/network/application-cache-service;1"]
+  var appCacheService = SpecialPowers.Cc["@mozilla.org/network/application-cache-service;1"]
     .getService(SpecialPowers.Ci.nsIApplicationCacheService);
 
   var foreign2cache = appCacheService.chooseApplicationCache(
@@ -29,7 +29,7 @@ function manifestUpdated()
 
 function onLoaded()
 {
-  var appCacheService = SpecialPowers.Components.classes["@mozilla.org/network/application-cache-service;1"]
+  var appCacheService = SpecialPowers.Cc["@mozilla.org/network/application-cache-service;1"]
     .getService(SpecialPowers.Ci.nsIApplicationCacheService);
 
   var foreign1cache = window.opener.OfflineTest.getActiveCache(

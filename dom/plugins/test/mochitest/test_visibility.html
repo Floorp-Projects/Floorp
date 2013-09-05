@@ -19,8 +19,6 @@
   var didPaint = function() {};
 
   function startTest() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
     if (SimpleTest.testPluginIsOOP()) {
       if (p.getPaintCount() < 1) {
         setTimeout(startTest, 0);

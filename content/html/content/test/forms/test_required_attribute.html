@@ -84,7 +84,7 @@ function checkTextareaRequiredValidity()
   var element = document.createElement('textarea');
   document.forms[0].appendChild(element);
 
-  element.value = '';
+  SpecialPowers.wrap(element).value = '';
   element.required = false;
   checkNotSufferingFromBeingMissing(element);
 
@@ -97,10 +97,10 @@ function checkTextareaRequiredValidity()
   element.readOnly = false;
   checkSufferingFromBeingMissing(element, true);
 
-  element.value = 'foo';
+  SpecialPowers.wrap(element).value = 'foo';
   checkNotSufferingFromBeingMissing(element);
 
-  element.value = '';
+  SpecialPowers.wrap(element).value = '';
   checkSufferingFromBeingMissing(element, true);
 
   element.required = false;
@@ -108,13 +108,13 @@ function checkTextareaRequiredValidity()
 
   element.focus();
   element.required = true;
-  element.value = 'foobar';
+  SpecialPowers.wrap(element).value = 'foobar';
   element.blur();
   element.form.reset();
   checkSufferingFromBeingMissing(element, false);
 
   // TODO: for the moment, a textarea outside of a document is mutable.
-  element.value = ''; // To make -moz-ui-valid apply.
+  SpecialPowers.wrap(element).value = ''; // To make -moz-ui-valid apply.
   element.required = false;
   document.forms[0].removeChild(element);
   checkNotSufferingFromBeingMissing(element);
@@ -126,7 +126,7 @@ function checkInputRequiredNotApply(type, isBarred)
   element.type = type;
   document.forms[0].appendChild(element);
 
-  element.value = '';
+  SpecialPowers.wrap(element).value = '';
   element.required = false;
   checkNotSufferingFromBeingMissing(element, isBarred);
 
@@ -145,7 +145,7 @@ function checkInputRequiredValidity(type)
   element.type = type;
   document.forms[0].appendChild(element);
 
-  element.value = '';
+  SpecialPowers.wrap(element).value = '';
   element.required = false;
   checkNotSufferingFromBeingMissing(element);
 
@@ -159,32 +159,32 @@ function checkInputRequiredValidity(type)
   checkSufferingFromBeingMissing(element, true);
 
   if (element.type == 'email') {
-    element.value = 'foo@bar.com';
+    SpecialPowers.wrap(element).value = 'foo@bar.com';
   } else if (element.type == 'url') {
-    element.value = 'http://mozilla.org/';
+    SpecialPowers.wrap(element).value = 'http://mozilla.org/';
   } else if (element.type == 'number') {
-    element.value = '42';
+    SpecialPowers.wrap(element).value = '42';
   } else if (element.type == 'date') {
-    element.value = '2010-10-10';
+    SpecialPowers.wrap(element).value = '2010-10-10';
   } else if (element.type == 'time') {
-    element.value = '21:21';
+    SpecialPowers.wrap(element).value = '21:21';
   } else {
-    element.value = 'foo';
+    SpecialPowers.wrap(element).value = 'foo';
   }
   checkNotSufferingFromBeingMissing(element);
 
-  element.value = '';
+  SpecialPowers.wrap(element).value = '';
   checkSufferingFromBeingMissing(element, true);
 
   element.focus();
   element.required = true;
-  element.value = 'foobar';
+  SpecialPowers.wrap(element).value = 'foobar';
   element.blur();
   element.form.reset();
   checkSufferingFromBeingMissing(element, false);
 
   element.required = true;
-  element.value = ''; // To make :-moz-ui-valid apply.
+  SpecialPowers.wrap(element).value = ''; // To make :-moz-ui-valid apply.
   document.forms[0].removeChild(element);
   checkNotSufferingFromBeingMissing(element);
 }
@@ -307,12 +307,12 @@ function checkInputRequiredValidityForFile()
   document.forms[0].appendChild(element);
 
   function createFileWithData(fileName, fileData) {
-    var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
-                           .getService(Components.interfaces.nsIProperties);
-    var testFile = dirSvc.get("ProfD", Components.interfaces.nsIFile);
+    var dirSvc = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"]
+                              .getService(SpecialPowers.Ci.nsIProperties);
+    var testFile = dirSvc.get("ProfD", SpecialPowers.Ci.nsIFile);
     testFile.append(fileName);
-    var outStream = Components.classes["@mozilla.org/network/file-output-stream;1"].
-                    createInstance(Components.interfaces.nsIFileOutputStream);
+    var outStream = SpecialPowers.Cc["@mozilla.org/network/file-output-stream;1"].
+                    createInstance(SpecialPowers.Ci.nsIFileOutputStream);
     outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
                    0666, 0);
     outStream.write(fileData, fileData.length);
@@ -321,36 +321,33 @@ function checkInputRequiredValidityForFile()
     return testFile;
   }
 
-  // Need privileges to set a filename with .value.
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   var file = createFileWithData("345822_file", "file content");
 
-  element.value = "";
+  SpecialPowers.wrap(element).value = "";
   element.required = false;
   checkNotSufferingFromBeingMissing(element);
 
   element.required = true;
   checkSufferingFromBeingMissing(element, true);
 
-  element.value = file.path;
+  SpecialPowers.wrap(element).value = file.path;
   checkNotSufferingFromBeingMissing(element);
 
-  element.value = "";
+  SpecialPowers.wrap(element).value = "";
   checkSufferingFromBeingMissing(element, true);
 
   element.required = false;
   checkNotSufferingFromBeingMissing(element);
 
   element.focus();
-  element.value = file.path;
+  SpecialPowers.wrap(element).value = file.path;
   element.required = true;
   element.blur();
   element.form.reset();
   checkSufferingFromBeingMissing(element, false);
 
   element.required = true;
-  element.value = '';
+  SpecialPowers.wrap(element).value = '';
   file.remove(false);
   document.forms[0].removeChild(element);
   checkNotSufferingFromBeingMissing(element);

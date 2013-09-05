@@ -12,6 +12,7 @@
 #include "Blob.h"
 #include "ContentChild.h"
 #include "IndexedDBChild.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/IntentionalCrash.h"
 #include "mozilla/docshell/OfflineCacheUpdateChild.h"

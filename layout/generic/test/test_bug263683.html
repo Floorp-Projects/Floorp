@@ -41,12 +41,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=263683
       var prefNameFG = "ui.textHighlightForeground";
 
       function onLoad() {
-        // Request security privileges
-        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
         // Get pref branch.
-        var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                              .getService(Components.interfaces.nsIPrefBranch);
+        var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
+                              .getService(SpecialPowers.Ci.nsIPrefBranch);
 
         // Check to see if this pref has a user-set value. If so, store it
         userSetFG = prefs.prefHasUserValue(prefNameFG);
@@ -69,15 +66,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=263683
 
         // Get docshell
         var docShell =
-          window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                .getInterface(Components.interfaces.nsIWebNavigation)
-                .QueryInterface(Components.interfaces.nsIDocShell);
+          SpecialPowers.wrap(window)
+                .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+                .QueryInterface(SpecialPowers.Ci.nsIDocShell);
 
         // Get selection controller from docshell
         var controller =
-          docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                  .getInterface(Components.interfaces.nsISelectionDisplay)
-                  .QueryInterface(Components.interfaces.nsISelectionController);
+          docShell.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                  .getInterface(SpecialPowers.Ci.nsISelectionDisplay)
+                  .QueryInterface(SpecialPowers.Ci.nsISelectionController);
 
         // Get selection
         var findSelection = controller.getSelection(controller.SELECTION_FIND);
@@ -113,11 +111,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=263683
 
       function onUnload() {
         // Restore any user values for ui.textHighlight* preferences
-        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-        // Get the pref branch
-        var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                              .getService(Components.interfaces.nsIPrefBranch);
+        var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
+                              .getService(SpecialPowers.Ci.nsIPrefBranch);
  
         if (prefs.prefHasUserValue(prefNameFG))
           prefs.clearUserPref(prefNameFG);

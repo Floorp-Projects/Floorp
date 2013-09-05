@@ -22,7 +22,9 @@
 #include "TextInputHandler.h"
 #include "nsCocoaUtils.h"
 #include "gfxQuartzSurface.h"
-#include "GLContext.h"
+#include "GLContextTypes.h"
+#include "mozilla/Mutex.h"
+#include "nsRegion.h"
 
 #include "nsString.h"
 #include "nsIDragService.h"

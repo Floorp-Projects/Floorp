@@ -8,18 +8,16 @@
 
 <script type="text/javascript">
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
 var currentTest = 1;
-var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-            .getService(Components.interfaces.nsIPrefBranch);
-var io = Components.classes["@mozilla.org/network/io-service;1"]
-  .getService(Components.interfaces.nsIIOService);
+var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
+            .getService(SpecialPowers.Ci.nsIPrefBranch);
+var io = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+  .getService(SpecialPowers.Ci.nsIIOService);
 var uri = io.newURI(window.location, "", null);
-var cp = Components.classes["@mozilla.org/cookie/permission;1"]
-  .getService(Components.interfaces.nsICookiePermission);
+var cp = SpecialPowers.Cc["@mozilla.org/cookie/permission;1"]
+  .getService(SpecialPowers.Ci.nsICookiePermission);
 
-cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_SESSION);
+cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION);
 
 var quota;
 var origBlockDisplay;
@@ -28,8 +26,6 @@ var origBlockActive;
 function doNextTest()
 {
   slave = frame;
-
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   switch (currentTest)
   {
@@ -118,7 +114,7 @@ function doNextTest()
       prefs.setIntPref("dom.storage.default_quota", quota);
       prefs.setBoolPref("security.mixed_content.block_display_content", origBlockDisplay);
       prefs.setBoolPref("security.mixed_content.block_active_content", origBlockActive);
-      cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_DEFAULT);
+      cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT);
       SimpleTest.finish();
   }
 

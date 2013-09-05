@@ -7,9 +7,9 @@ not get added to global history.
 -->
 <head>
   <title>Test for Bug 94515</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="http://mochi.test:8888/tests/SimpleTest/SimpleTest.js"></script>
 
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <link rel="stylesheet" type="text/css" href="http://mochi.test:8888/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=94514">Mozilla Bug 94514</a>
@@ -24,8 +24,6 @@ SimpleTest.waitForExplicitFinish();
 
 var startURI = "http://mochi.test:8888/tests/toolkit/components/places/tests/bug94514-postpage.html";
 var postedURI = startURI + "?posted=1";
-
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -44,7 +42,6 @@ var os = Cc["@mozilla.org/observer-service;1"].
 var visitObserver = {
   _visitCount: 0,
   observe: function(aSubject, aTopic, aData) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     if (!startPage.equals(aSubject.QueryInterface(Ci.nsIURI)) ||
         ++this._visitCount < 2) {
       return;

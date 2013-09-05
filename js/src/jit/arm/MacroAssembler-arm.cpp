@@ -2522,25 +2522,11 @@ MacroAssemblerARMCompat::branchTestValue(Condition cond, const Address &valaddr,
 {
     JS_ASSERT(cond == Equal || cond == NotEqual);
 
-    // Check payload before tag, since payload is more likely to differ.
-    if (cond == NotEqual) {
-        ma_ldr(payloadOf(valaddr), ScratchRegister);
-        branchPtr(NotEqual, ScratchRegister, value.payloadReg(), label);
+    ma_ldr(tagOf(valaddr), ScratchRegister);
+    branchPtr(cond, ScratchRegister, value.typeReg(), label);
 
-        ma_ldr(tagOf(valaddr), ScratchRegister);
-        branchPtr(NotEqual, ScratchRegister, value.typeReg(), label);
-
-    } else {
-        Label fallthrough;
-
-        ma_ldr(payloadOf(valaddr), ScratchRegister);
-        branchPtr(NotEqual, ScratchRegister, value.payloadReg(), &fallthrough);
-
-        ma_ldr(tagOf(valaddr), ScratchRegister);
-        branchPtr(Equal, ScratchRegister, value.typeReg(), label);
-
-        bind(&fallthrough);
-    }
+    ma_ldr(payloadOf(valaddr), ScratchRegister);
+    branchPtr(cond, ScratchRegister, value.payloadReg(), label);
 }
 
 // unboxing code
