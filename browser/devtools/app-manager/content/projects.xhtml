@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+     - License, v. 2.0. If a copy of the MPL was not distributed with this
+     - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html [
+  <!ENTITY % appMgrDTD SYSTEM "chrome://browser/locale/devtools/app-manager.dtd" >
+  %appMgrDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+  <head>
+    <meta charset="utf8"/>
+    <base href="chrome://browser/content/devtools/app-manager/"></base>
+    <title>&projects.title;</title>
+    <link rel="stylesheet" href="chrome://browser/skin/devtools/app-manager/projects.css" type="text/css"/>
+  </head>
+
+  <body onload="UI.onload()">
+    <aside id="sidebar">
+      <div id="project-list" template='{"type":"attribute","path":"projects.length","name":"projects-count"}'>
+        <div template-loop='{"arrayPath":"projects","childSelector":"#project-item-template"}'></div>
+        <div id="no-project">&projects.noProject;</div>
+      </div>
+      <div id="new-packaged-project" onclick="UI.addPackaged()">&projects.addPackaged;</div>
+      <div id="new-hosted-project">&projects.addHosted;
+        <form onsubmit="UI.addHosted(); return false;" id="new-hosted-project-wrapper">
+          <input value="" id="url-input" type="url" pattern="https?://.+" placeholder="&projects.hostedManifestPlaceHolder;" size="50" />
+          <div onclick="UI.addHosted()" id="new-hosted-project-click"></div>
+          <input type="submit" hidden="true"></input>
+        </form>
+      </div>
+    </aside>
+    <section id="lense"></section>
+  </body>
+
+  <template id="project-item-template">
+  <div class="project-item" template='{"type":"attribute","path":"location","name":"id"}' onclick="UI.selectProject(this.id)">
+    <div class="project-item-status" template='{"type":"attribute","path":"validationStatus","name":"status"}'></div>
+    <img class="project-item-icon" template='{"type":"attribute","path":"icon","name":"src"}' />
+    <div class="project-item-meta">
+      <div class="button-remove" onclick="UI.remove(this.dataset.location)" template='{"type":"attribute","path":"location","name":"data-location"}' title="&projects.removeApp;"></div>
+      <strong template='{"type":"textContent","path":"name"}'></strong>
+      <span class="project-item-type" template='{"type":"textContent","path":"type"}'></span>
+      <p class="project-item-description" template='{"type":"textContent","path":"manifest.description"}'></p>
+      <div template='{"type":"attribute","path":"validationStatus","name":"status"}'>
+        <div class="project-item-errors"><span template='{"type":"textContent","path":"errorsCount"}'></span></div>
+        <div class="project-item-warnings"><span template='{"type":"textContent","path":"warningsCount"}'></span></div>
+      </div>
+    </div>
+  </div>
+  </template>
+
+  <template id="lense-template">
+  <div>
+    <div class="project-details" template='{"type":"attribute","path":"validationStatus","name":"status"}'>
+      <div class="project-header">
+        <img class="project-icon" template='{"type":"attribute","path":"icon","name":"src"}'/>
+        <div class="project-details">
+          <div class="project-title">
+            <h1 template='{"type":"textContent","path":"name"}'></h1>
+            <div class="project-status" template='{"type":"attribute","path":"validationStatus","name":"status"}'>
+              <p class="project-validation" template='{"type":"textContent","path":"validationStatus"}'></p>
+              <p class="project-type" template='{"type":"textContent","path":"type"}'></p>
+            </div>
+          </div>
+          <span template='{"type":"textContent","path":"manifest.developer.name"}'></span>
+          <p class="project-location" template='{"type":"textContent","path":"location"}' onclick="UI.reveal(this.textContent)"></p>
+          <p class="project-description" template='{"type":"textContent","path":"manifest.description"}'></p>
+        </div>
+      </div>
+      <div class="project-buttons">
+        <button class="project-button-refresh" onclick="UI.update(this.dataset.location)" template='{"type":"attribute","path":"location","name":"data-location"}'>&projects.reloadFiles;</button>
+        <!-- Not available until bug 911785 is fixed
+        <button class="device-action project-button-install" onclick="UI.install(this, this.dataset.location)" template='{"type":"attribute","path":"location","name":"data-location"}'>&projects.installApp;</button>
+        -->
+        <button class="device-action project-button-start" onclick="UI.start(this.dataset.location)" template='{"type":"attribute","path":"location","name":"data-location"}'>&projects.startApp;</button>
+        <button class="device-action project-button-stop" onclick="UI.stop(this.dataset.location)" template='{"type":"attribute","path":"location","name":"data-location"}'>&projects.stopApp;</button>
+        <!-- Not available until bug 911785 is fixed
+        <button class="device-action project-button-debug" onclick="UI.openToolbox(this.dataset.location)" template='{"type":"attribute","path":"location","name":"data-location"}'>&projects.debugApp;</button>
+        -->
+      </div>
+      <div class="project-errors" template='{"type":"textContent","path":"errors"}'></div>
+      <div class="project-warnings" template='{"type":"textContent","path":"warnings"}'></div>
+    </div>
+  </div>
+  </template>
+
+
+  <script type="application/javascript;version=1.8" src="utils.js"></script>
+  <script type="application/javascript;version=1.8" src="projects.js"></script>
+  <script type="application/javascript;version=1.8" src="template.js"></script>
+</html>

@@ -145,6 +145,25 @@ let DeviceActor = protocol.ActorClass({
 
   }, {request: {},response: { value: RetVal("json")}}),
 
+  getWallpaper: method(function() {
+    let deferred = promise.defer();
+    this._getSetting("wallpaper.image").then((blob) => {
+      let CC = Components.Constructor;
+      let FileReader = CC("@mozilla.org/files/filereader;1");
+      let reader = new FileReader();
+      let conn = this.conn;
+      reader.addEventListener("load", function() {
+        let str = new LongStringActor(conn, reader.result);
+        deferred.resolve(str);
+      });
+      reader.addEventListener("error", function() {
+        deferred.reject(reader.error);
+      });
+      reader.readAsDataURL(blob);
+    });
+    return deferred.promise;
+  }, {request: {},response: { value: RetVal("longstring")}}),
+
   screenshotToDataURL: method(function() {
     let window = Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType);
     let canvas = window.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
