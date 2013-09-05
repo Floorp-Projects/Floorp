@@ -691,7 +691,7 @@ function checkVisible(el) {
   if (!elementInViewport(el)) {
     //check if scroll function exist. If so, call it.
     if (el.scrollIntoView) {
-      el.scrollIntoView(true);
+      el.scrollIntoView(false);
       if (!elementInViewport(el)) {
         return false;
       }
