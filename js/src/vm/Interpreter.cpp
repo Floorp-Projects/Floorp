@@ -1307,7 +1307,7 @@ Interpret(JSContext *cx, RunState &state)
         regs.pc += nlen;                                                      \
         op = (JSOp) *regs.pc;                                                 \
         if (nlen <= 0)                                                        \
-            goto check_backedge;                                              \
+            CHECK_BRANCH();                                                   \
         DO_OP();                                                              \
     JS_END_MACRO
 
@@ -1553,12 +1553,6 @@ END_CASE(JSOP_LOOPHEAD)
 
 BEGIN_CASE(JSOP_LABEL)
 END_CASE(JSOP_LABEL)
-
-check_backedge:
-{
-    CHECK_BRANCH();
-    DO_OP();
-}
 
 BEGIN_CASE(JSOP_LOOPENTRY)
 
