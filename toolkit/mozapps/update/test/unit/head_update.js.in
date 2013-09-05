@@ -111,6 +111,12 @@ var gDisableReplaceFallback = false;
 // Time to wait for the test helper process before continuing the test
 const TEST_HELPER_TIMEOUT = 100;
 
+// Time to wait for a check in the test before continuing the test
+const TEST_CHECK_TIMEOUT = 100;
+
+// How many of TEST_CHECK_TIMEOUT to wait before we abort the test.
+const MAX_TIMEOUT_RUNS = 300;
+
 // Use a copy of the main application executable for the test to avoid main
 // executable in use errors.
 const FILE_WIN_TEST_EXE = "_aus_test_app.exe";
@@ -1597,6 +1603,9 @@ function removeUpdater() {
         return;
       }
     }
+    else {
+      logTestInfo("updater doesn't exist, path: " + updater.path);
+    }
   }
   logTestInfo("calling do_test_finished");
   do_test_finished();
@@ -1628,7 +1637,7 @@ function waitForFilesInUse() {
         logTestInfo("file is not in use. path: " + file.path);
       }
       catch (e) {
-        logTestInfo("file in use, will try again after " + CHECK_TIMEOUT_MILLI +
+        logTestInfo("file in use, will try again after " + TEST_CHECK_TIMEOUT +
                     " ms, path: " + file.path + ", exception: " + e);
         try {
           if (fileBak.exists()) {
@@ -1639,7 +1648,7 @@ function waitForFilesInUse() {
           logTestInfo("unable to remove file, this should never happen! " +
                       "path: " + fileBak.path + ", exception: " + e);
         }
-        do_timeout(CHECK_TIMEOUT_MILLI, waitForFilesInUse);
+        do_timeout(TEST_CHECK_TIMEOUT, waitForFilesInUse);
         return;
       }
     }
@@ -2305,7 +2314,7 @@ let gProcessObserver = {
     if (topic != "process-finished" || gProcess.exitValue != 0) {
       do_throw("Failed to launch application");
     }
-    do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
+    do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
   },
   QueryInterface: XPCOMUtils.generateQI([AUS_Ci.nsIObserver])
 };

@@ -24,12 +24,6 @@ const TEST_ID = "0202_svc";
 // launching a post update executable.
 const FILE_UPDATER_INI_BAK = "updater.ini.bak";
 
-// Number of milliseconds for each do_timeout call.
-const CHECK_TIMEOUT_MILLI = 1000;
-
-// How many of CHECK_TIMEOUT_MILLI to wait before we abort the test.
-const MAX_TIMEOUT_RUNS = 300;
-
 let gActiveUpdate;
 let gTimeoutRuns = 0;
 
@@ -202,11 +196,11 @@ function checkUpdateApplied() {
     if (++gTimeoutRuns > MAX_TIMEOUT_RUNS)
       do_throw("Exceeded MAX_TIMEOUT_RUNS whist waiting for pending state to finish");
     else
-      do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateApplied);
+      do_timeout(TEST_CHECK_TIMEOUT, checkUpdateApplied);
     return;
   }
 
-  do_timeout(CHECK_TIMEOUT_MILLI, finishTest);
+  do_timeout(TEST_CHECK_TIMEOUT, finishTest);
 }
 
 function finishTest() {
