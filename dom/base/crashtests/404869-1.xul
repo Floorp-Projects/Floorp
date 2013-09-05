@@ -10,7 +10,7 @@
 function boom()
 {
   var menupopup = document.getElementById("menupopup");
-  var x = document.getAnonymousNodes(menupopup)[0];
+  var x = SpecialPowers.wrap(document).getAnonymousNodes(menupopup)[0];
   menupopup.style.MozBinding = "url('#empty')";
   for (var ppp in x) {
   }

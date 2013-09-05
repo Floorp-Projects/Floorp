@@ -11,7 +11,7 @@ function s()
   
   function boom()
   {
-    var nodes = document.getAnonymousNodes(x);
+    var nodes = SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes(x));
     if (!nodes) {
       setTimeout(boom, 10);
       return;
