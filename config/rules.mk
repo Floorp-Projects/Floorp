@@ -744,12 +744,12 @@ endef
 
 $(foreach subtier,export libs tools,$(eval $(call CREATE_SUBTIER_TRAVERSAL_RULE,$(subtier))))
 
-export:: $(SUBMAKEFILES) $(MAKE_DIRS)
+export:: $(SUBMAKEFILES)
 	$(LOOP_OVER_DIRS)
 	$(LOOP_OVER_TOOL_DIRS)
 
 
-tools:: $(SUBMAKEFILES) $(MAKE_DIRS)
+tools:: $(SUBMAKEFILES)
 	$(LOOP_OVER_DIRS)
 	$(foreach dir,$(TOOL_DIRS),$(call SUBMAKE,libs,$(dir)))
 
@@ -1754,7 +1754,7 @@ documentation:
 	$(DOXYGEN) $(DEPTH)/config/doxygen.cfg
 
 ifdef ENABLE_TESTS
-check:: $(SUBMAKEFILES) $(MAKE_DIRS)
+check:: $(SUBMAKEFILES)
 	$(LOOP_OVER_PARALLEL_DIRS)
 	$(LOOP_OVER_DIRS)
 	$(LOOP_OVER_TOOL_DIRS)
