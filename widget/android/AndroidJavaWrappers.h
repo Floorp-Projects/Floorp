@@ -15,6 +15,7 @@
 #include "nsRect.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "nsIObserver.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/dom/Touch.h"
 #include "InputData.h"
@@ -530,6 +531,14 @@ public:
         return event;
     }
 
+    static AndroidGeckoEvent* MakeAddObserver(const nsAString &key, nsIObserver *observer) {
+        AndroidGeckoEvent *event = new AndroidGeckoEvent();
+        event->Init(ADD_OBSERVER);
+        event->mCharacters.Assign(key);
+        event->mObserver = observer;
+        return event;
+    }
+
     int Action() { return mAction; }
     int Type() { return mType; }
     bool AckNeeded() { return mAckNeeded; }
@@ -580,6 +589,7 @@ public:
     nsTouchEvent MakeTouchEvent(nsIWidget* widget);
     MultiTouchInput MakeMultiTouchInput(nsIWidget* widget);
     void UnionRect(nsIntRect const& aRect);
+    nsIObserver *Observer() { return mObserver; }
 
 protected:
     int mAction;
@@ -612,6 +622,7 @@ protected:
     short mScreenOrientation;
     nsRefPtr<RefCountedJavaObject> mByteBuffer;
     int mWidth, mHeight;
+    nsCOMPtr<nsIObserver> mObserver;
 
     void ReadIntArray(nsTArray<int> &aVals,
                       JNIEnv *jenv,
@@ -716,6 +727,7 @@ public:
         REMOVE_OBSERVER = 34,
         LOW_MEMORY = 35,
         NETWORK_LINK_CHANGE = 36,
+        ADD_OBSERVER = 37,
         dummy_java_enum_list_end
     };
 
