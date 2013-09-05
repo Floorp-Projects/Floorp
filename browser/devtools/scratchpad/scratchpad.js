@@ -20,6 +20,7 @@ let { Cc, Ci, Cu } = require("chrome");
 let promise = require("sdk/core/promise");
 let Telemetry = require("devtools/shared/telemetry");
 let TargetFactory = require("devtools/framework/target").TargetFactory;
+const escodegen = require("escodegen/escodegen");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -31,6 +32,8 @@ Cu.import("resource://gre/modules/jsdebugger.jsm");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+Cu.import("resource://gre/modules/reflect.jsm");
+Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
   "resource:///modules/devtools/VariablesView.jsm");
@@ -519,6 +522,20 @@ var Scratchpad = {
     }, reject);
 
     return deferred.promise;
+  },
+
+  /**
+   * Pretty print the source text inside the scratchpad.
+   */
+  prettyPrint: function SP_prettyPrint() {
+    const uglyText = this.getText();
+    try {
+      const ast = Reflect.parse(uglyText);
+      const prettyText = escodegen.generate(ast);
+      this.setText(prettyText);
+    } catch (e) {
+      this.writeAsErrorComment(DevToolsUtils.safeErrorString(e));
+    }
   },
 
   /**

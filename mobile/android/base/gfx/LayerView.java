@@ -401,6 +401,14 @@ public class LayerView extends FrameLayout {
         mRenderer.removeLayer(layer);
     }
 
+    public void postRenderTask(RenderTask task) {
+        mRenderer.postRenderTask(task);
+    }
+
+    public void removeRenderTask(RenderTask task) {
+        mRenderer.removeRenderTask(task);
+    }
+
     public int getMaxTextureSize() {
         return mRenderer.getMaxTextureSize();
     }
