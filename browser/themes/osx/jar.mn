@@ -316,6 +316,17 @@ browser.jar:
   skin/classic/browser/devtools/responsiveui-rotate.png     (../shared/devtools/responsiveui-rotate.png)
   skin/classic/browser/devtools/responsiveui-touch.png      (../shared/devtools/responsiveui-touch.png)
   skin/classic/browser/devtools/responsiveui-screenshot.png (../shared/devtools/responsiveui-screenshot.png)
+  skin/classic/browser/devtools/app-manager/connection-footer.css     (../shared/devtools/app-manager/connection-footer.css)
+  skin/classic/browser/devtools/app-manager/index.css                 (../shared/devtools/app-manager/index.css)
+  skin/classic/browser/devtools/app-manager/device.css                (../shared/devtools/app-manager/device.css)
+  skin/classic/browser/devtools/app-manager/projects.css              (../shared/devtools/app-manager/projects.css)
+  skin/classic/browser/devtools/app-manager/warning.svg               (../shared/devtools/app-manager/images/warning.svg)
+  skin/classic/browser/devtools/app-manager/error.svg                 (../shared/devtools/app-manager/images/error.svg)
+  skin/classic/browser/devtools/app-manager/plus.svg                  (../shared/devtools/app-manager/images/plus.svg)
+  skin/classic/browser/devtools/app-manager/remove.svg                (../shared/devtools/app-manager/images/remove.svg)
+  skin/classic/browser/devtools/app-manager/index-icons.svg           (../shared/devtools/app-manager/images/index-icons.svg)
+  skin/classic/browser/devtools/app-manager/rocket.svg                (../shared/devtools/app-manager/images/rocket.svg)
+  skin/classic/browser/devtools/app-manager/noise.png                 (../shared/devtools/app-manager/images/noise.png)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-throbber.png
   skin/classic/browser/sync-16.png
