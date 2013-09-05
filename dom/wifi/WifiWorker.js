@@ -3333,11 +3333,15 @@ WifiWorker.prototype = {
       return;
     }
     // Make sure Wifi hotspot is idle before switching to Wifi mode.
-    if (enabled && (this.tetheringSettings[SETTINGS_WIFI_TETHERING_ENABLED] ||
-         WifiManager.tetheringState != "UNINITIALIZED")) {
+    if (enabled) {
       this.queueRequest(false, function(data) {
+        if (this.tetheringSettings[SETTINGS_WIFI_TETHERING_ENABLED] ||
+            WifiManager.tetheringState != "UNINITIALIZED") {
+          this.setWifiApEnabled(false, this.notifyTetheringOff.bind(this));
+        } else {
+          this.requestDone();
+        }
         this.disconnectedByWifi = true;
-        this.setWifiApEnabled(false, this.notifyTetheringOff.bind(this));
       }.bind(this));
     }
 
@@ -3345,21 +3349,28 @@ WifiWorker.prototype = {
       this.setWifiEnabled(enabled, this._setWifiEnabledCallback.bind(this));
     }.bind(this));
 
-    if (!enabled && this.disconnectedByWifi) {
+    if (!enabled) {
       this.queueRequest(true, function(data) {
+        if (this.disconnectedByWifi) {
+          this.setWifiApEnabled(true, this.notifyTetheringOn.bind(this));
+        } else {
+          this.requestDone();
+        }
         this.disconnectedByWifi = false;
-        this.setWifiApEnabled(true, this.notifyTetheringOn.bind(this));
       }.bind(this));
     }
   },
 
   handleWifiTetheringEnabled: function(enabled) {
     // Make sure Wifi is idle before switching to Wifi hotspot mode.
-    if (enabled && (WifiManager.enabled ||
-         WifiManager.state != "UNINITIALIZED")) {
+    if (enabled) {
       this.queueRequest(false, function(data) {
+        if (WifiManager.enabled || WifiManager.state != "UNINITIALIZED") {
+          this.setWifiEnabled(false, this._setWifiEnabledCallback.bind(this));
+        } else {
+          this.requestDone();
+        }
         this.disconnectedByWifiTethering = true;
-        this.setWifiEnabled(false, this._setWifiEnabledCallback.bind(this));
       }.bind(this));
     }
 
@@ -3367,10 +3378,14 @@ WifiWorker.prototype = {
       this.setWifiApEnabled(data, this.requestDone.bind(this));
     }.bind(this));
 
-    if (!enabled && this.disconnectedByWifiTethering) {
+    if (!enabled) {
       this.queueRequest(true, function(data) {
+        if (this.disconnectedByWifiTethering) {
+          this.setWifiEnabled(true, this._setWifiEnabledCallback.bind(this));
+        } else {
+          this.requestDone();
+        }
         this.disconnectedByWifiTethering = false;
-        this.setWifiEnabled(true, this._setWifiEnabledCallback.bind(this));
       }.bind(this));
     }
   },
