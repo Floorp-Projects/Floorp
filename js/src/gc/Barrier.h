@@ -424,13 +424,19 @@ class EncapsulatedValue : public ValueOperations<EncapsulatedValue>
     inline void pre();
     inline void pre(Zone *zone);
 
-    static inline JSRuntime *runtimeFromMainThread(const Value &v) {
+    static JSRuntime *runtimeFromMainThread(const Value &v) {
         JS_ASSERT(v.isMarkable());
         return static_cast<js::gc::Cell *>(v.toGCThing())->runtimeFromMainThread();
     }
-    static inline JSRuntime *runtimeFromAnyThread(const Value &v) {
+    static JSRuntime *runtimeFromAnyThread(const Value &v) {
         JS_ASSERT(v.isMarkable());
         return static_cast<js::gc::Cell *>(v.toGCThing())->runtimeFromAnyThread();
+    }
+    static JS::shadow::Runtime *shadowRuntimeFromMainThread(const Value &v) {
+        return reinterpret_cast<JS::shadow::Runtime*>(runtimeFromMainThread(v));
+    }
+    static JS::shadow::Runtime *shadowRuntimeFromAnyThread(const Value &v) {
+        return reinterpret_cast<JS::shadow::Runtime*>(runtimeFromAnyThread(v));
     }
 
   private:
