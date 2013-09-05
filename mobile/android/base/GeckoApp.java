@@ -2347,7 +2347,10 @@ abstract public class GeckoApp
             try {
                 obj.put("lac", gcl.getLac());
                 obj.put("cid", gcl.getCid());
-                obj.put("psc", gcl.getPsc());
+
+                int psc = (Build.VERSION.SDK_INT >= 9) ? gcl.getPsc() : -1;
+                obj.put("psc", psc);
+
                 switch(tm.getNetworkType()) {
                 case TelephonyManager.NETWORK_TYPE_GPRS:
                 case TelephonyManager.NETWORK_TYPE_EDGE:
