@@ -389,7 +389,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     streams_[i]->ParseAttributes(attributes);
   }
 
-  void DisableComponent(int stream, int component_id) {
+  void DisableComponent(size_t stream, int component_id) {
     ASSERT_LT(stream, streams_.size());
     nsresult res = streams_[stream]->DisableComponent(component_id);
     ASSERT_TRUE(NS_SUCCEEDED(res));
