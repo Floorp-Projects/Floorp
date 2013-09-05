@@ -20,7 +20,6 @@ include protocol PNecko;
 include protocol PSms;
 include protocol PSpeechSynthesis;
 include protocol PStorage;
-include protocol PTelephony;
 include protocol PTestShell;
 include protocol PJavaScript;
 include DOMTypes;
@@ -198,7 +197,6 @@ rpc protocol PContent
     manages PSms;
     manages PSpeechSynthesis;
     manages PStorage;
-    manages PTelephony;
     manages PTestShell;
     manages PJavaScript;
 
@@ -354,8 +352,6 @@ parent:
     PSpeechSynthesis();
 
     PStorage();
-
-    PTelephony();
 
     PBluetooth();
 
