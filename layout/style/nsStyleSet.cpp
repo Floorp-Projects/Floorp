@@ -303,7 +303,6 @@ SortStyleSheetsByScope(nsTArray<nsCSSStyleSheet*>& aSheets)
   }
 
   ScopeDepthCache cache;
-  cache.Init();
 
   nsTArray<ScopedSheetOrder> sheets;
   sheets.SetLength(n);

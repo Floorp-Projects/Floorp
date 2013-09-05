@@ -869,10 +869,7 @@ nsresult imgLoader::InitCache()
 
   mCacheTracker = new imgCacheExpirationTracker();
 
-  mCache.Init();
-  mChromeCache.Init();
-
-    return NS_OK;
+  return NS_OK;
 }
 
 nsresult imgLoader::Init()

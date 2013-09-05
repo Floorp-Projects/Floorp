@@ -89,14 +89,16 @@ const char* const TraceLogging::type_name[] = {
 TraceLogging* TraceLogging::_defaultLogger = NULL;
 
 TraceLogging::TraceLogging()
-  : loggingTime(0),
-    startupTime(rdtsc()),
+  : startupTime(rdtsc()),
+    loggingTime(0),
+    nextTextId(1),
     entries(NULL),
     curEntry(0),
     numEntries(1000000),
     fileno(0),
     out(NULL)
 {
+    textMap.init();
 }
 
 TraceLogging::~TraceLogging()
@@ -130,24 +132,36 @@ TraceLogging::grow()
 }
 
 void
-TraceLogging::log(Type type, const char* file, unsigned int lineno)
+TraceLogging::log(Type type, const char* text /* = NULL */, unsigned int number /* = 0 */)
 {
     uint64_t now = rdtsc() - startupTime;
 
     // Create array containing the entries if not existing.
-    if (entries == NULL) {
+    if (!entries) {
         entries = (Entry*) malloc(numEntries*sizeof(Entry));
-        if (entries == NULL)
+        if (!entries)
             return;
     }
 
-    // Copy the logging information,
-    // because original could already be freed before writing the log file.
-    char *copy = NULL;
-    if (file != NULL)
-        copy = strdup(file);
+    uint32_t textId = 0;
+    char *text_ = NULL;
 
-    entries[curEntry++] = Entry(now - loggingTime, copy, lineno, type);
+    if (text) {
+        TextHashMap::AddPtr p = textMap.lookupForAdd(text);
+        if (!p) {
+            // Copy the text, because original could already be freed before writing the log file.
+            text_ = strdup(text);
+            if (!text_)
+                return;
+            textId = nextTextId++;
+            if (!textMap.add(p, text, textId))
+                return;
+        } else {
+            textId = p->value;
+        }
+    }
+
+    entries[curEntry++] = Entry(now - loggingTime, text_, textId, number, type);
 
     // Increase length when not enough place in the array
     if (curEntry >= numEntries)
@@ -178,12 +192,6 @@ TraceLogging::log(const char* log)
 }
 
 void
-TraceLogging::log(Type type)
-{
-    this->log(type, NULL, 0);
-}
-
-void
 TraceLogging::flush()
 {
     // Open the logging file, when not opened yet.
@@ -192,20 +200,29 @@ TraceLogging::flush()
 
     // Print all log entries into the file
     for (unsigned int i = 0; i < curEntry; i++) {
+        Entry entry = entries[i];
         int written;
-        if (entries[i].type() == INFO) {
-            written = fprintf(out, "I,%s\n", entries[i].file());
+        if (entry.type() == INFO) {
+            written = fprintf(out, "I,%s\n", entry.text());
         } else {
-            if (entries[i].file() == NULL) {
-                written = fprintf(out, "%llu,%s\n",
-                                  (unsigned long long)entries[i].tick(),
-                                  type_name[entries[i].type()]);
+            if (entry.textId() > 0) {
+                if (entry.text()) {
+                    written = fprintf(out, "%llu,%s,%s,%d\n",
+                                      (unsigned long long)entry.tick(),
+                                      type_name[entry.type()],
+                                      entry.text(),
+                                      entry.lineno());
+                } else {
+                    written = fprintf(out, "%llu,%s,%d,%d\n",
+                                      (unsigned long long)entry.tick(),
+                                      type_name[entry.type()],
+                                      entry.textId(),
+                                      entry.lineno());
+                }
             } else {
-                written = fprintf(out, "%llu,%s,%s:%d\n",
-                                  (unsigned long long)entries[i].tick(),
-                                  type_name[entries[i].type()],
-                                  entries[i].file(),
-                                  entries[i].lineno());
+                written = fprintf(out, "%llu,%s\n",
+                                  (unsigned long long)entry.tick(),
+                                  type_name[entry.type()]);
             }
         }
 
@@ -224,9 +241,9 @@ TraceLogging::flush()
             continue;
         }
 
-        if (entries[i].file() != NULL) {
-            free(entries[i].file());
-            entries[i].file_ = NULL;
+        if (entries[i].text() != NULL) {
+            free(entries[i].text());
+            entries[i].text_ = NULL;
         }
     }
     curEntry = 0;

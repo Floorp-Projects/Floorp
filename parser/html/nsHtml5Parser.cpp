@@ -42,7 +42,6 @@ nsHtml5Parser::nsHtml5Parser()
   , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder, false))
   , mRootContextLineNumber(1)
 {
-  mAtomTable.Init(); // we aren't checking for OOM anyway...
   mTokenizer->setInterner(&mAtomTable);
   // There's a zeroing operator new for everything else
 }

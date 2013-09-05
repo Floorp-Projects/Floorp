@@ -121,22 +121,17 @@ gfxPlatformFontList::MemoryReporter::CollectReports
 }
 
 gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
-    : mNeedFullnamePostscriptNames(aNeedFullnamePostscriptNames),
+    : mFontFamilies(100), mOtherFamilyNames(30),
+      mPrefFonts(10), mBadUnderlineFamilyNames(10), mSharedCmaps(16),
       mStartIndex(0), mIncrement(1), mNumFamilies(0)
 {
-    mFontFamilies.Init(100);
-    mOtherFamilyNames.Init(30);
     mOtherFamilyNamesInitialized = false;
 
-    if (mNeedFullnamePostscriptNames) {
-        mFullnames.Init(100);
-        mPostscriptNames.Init(100);
+    if (aNeedFullnamePostscriptNames) {
+        mExtraNames = new ExtraNames();
     }
     mFaceNamesInitialized = false;
 
-    mPrefFonts.Init(10);
-
-    mBadUnderlineFamilyNames.Init(10);
     LoadBadUnderlineList();
 
     // pref changes notification setup
@@ -145,8 +140,6 @@ gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
     gFontListPrefObserver = new gfxFontListPrefObserver();
     NS_ADDREF(gFontListPrefObserver);
     Preferences::AddStrongObservers(gFontListPrefObserver, kObservedPrefs);
-
-    mSharedCmaps.Init(16);
 
     NS_RegisterMemoryMultiReporter(new MemoryReporter);
 }
@@ -165,9 +158,9 @@ gfxPlatformFontList::InitFontList()
     mFontFamilies.Clear();
     mOtherFamilyNames.Clear();
     mOtherFamilyNamesInitialized = false;
-    if (mNeedFullnamePostscriptNames) {
-        mFullnames.Clear();
-        mPostscriptNames.Clear();
+    if (mExtraNames) {
+        mExtraNames->mFullnames.Clear();
+        mExtraNames->mPostscriptNames.Clear();
     }
     mFaceNamesInitialized = false;
     mPrefFonts.Clear();
@@ -627,8 +620,8 @@ gfxPlatformFontList::AddOtherFamilyName(gfxFontFamily *aFamilyEntry, nsAString& 
 void
 gfxPlatformFontList::AddFullname(gfxFontEntry *aFontEntry, nsAString& aFullname)
 {
-    if (!mFullnames.GetWeak(aFullname)) {
-        mFullnames.Put(aFullname, aFontEntry);
+    if (!mExtraNames->mFullnames.GetWeak(aFullname)) {
+        mExtraNames->mFullnames.Put(aFullname, aFontEntry);
 #ifdef PR_LOGGING
         LOG_FONTLIST(("(fontlist-fullname) name: %s, fullname: %s\n",
                       NS_ConvertUTF16toUTF8(aFontEntry->Name()).get(),
@@ -640,8 +633,8 @@ gfxPlatformFontList::AddFullname(gfxFontEntry *aFontEntry, nsAString& aFullname)
 void
 gfxPlatformFontList::AddPostscriptName(gfxFontEntry *aFontEntry, nsAString& aPostscriptName)
 {
-    if (!mPostscriptNames.GetWeak(aPostscriptName)) {
-        mPostscriptNames.Put(aPostscriptName, aFontEntry);
+    if (!mExtraNames->mPostscriptNames.GetWeak(aPostscriptName)) {
+        mExtraNames->mPostscriptNames.Put(aPostscriptName, aFontEntry);
 #ifdef PR_LOGGING
         LOG_FONTLIST(("(fontlist-postscript) name: %s, psname: %s\n",
                       NS_ConvertUTF16toUTF8(aFontEntry->Name()).get(),
@@ -728,7 +721,7 @@ gfxPlatformFontList::RunLoader()
         }
 
         // read in face names
-        familyEntry->ReadFaceNames(this, mNeedFullnamePostscriptNames);
+        familyEntry->ReadFaceNames(this, NeedFullnamePostscriptNames());
 
         // check whether the family can be considered "simple" for style matching
         familyEntry->CheckForSimpleFamily();
@@ -850,13 +843,13 @@ gfxPlatformFontList::SizeOfExcludingThis(MallocSizeOf   aMallocSizeOf,
         mOtherFamilyNames.SizeOfExcludingThis(SizeOfFamilyNameEntryExcludingThis,
                                               aMallocSizeOf);
 
-    if (mNeedFullnamePostscriptNames) {
+    if (mExtraNames) {
         aSizes->mFontListSize +=
-            mFullnames.SizeOfExcludingThis(SizeOfFontNameEntryExcludingThis,
-                                           aMallocSizeOf);
+            mExtraNames->mFullnames.SizeOfExcludingThis(SizeOfFontNameEntryExcludingThis,
+                                                        aMallocSizeOf);
         aSizes->mFontListSize +=
-            mPostscriptNames.SizeOfExcludingThis(SizeOfFontNameEntryExcludingThis,
-                                                 aMallocSizeOf);
+            mExtraNames->mPostscriptNames.SizeOfExcludingThis(SizeOfFontNameEntryExcludingThis,
+                                                              aMallocSizeOf);
     }
 
     aSizes->mFontListSize +=

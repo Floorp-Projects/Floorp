@@ -716,35 +716,6 @@ ifneq (,$(DIRS)$(TOOL_DIRS)$(PARALLEL_DIRS))
 	$(LOOP_OVER_TOOL_DIRS)
 endif
 
-#########################
-# Tier traversal handling
-#########################
-define CREATE_SUBTIER_TRAVERSAL_RULE
-PARALLEL_DIRS_$(1) = $$(addsuffix _$(1),$$(PARALLEL_DIRS))
-
-.PHONY: $(1) $$(PARALLEL_DIRS_$(1))
-
-ifdef PARALLEL_DIRS
-$(1):: $$(PARALLEL_DIRS_$(1))
-
-$$(PARALLEL_DIRS_$(1)): %_$(1): %/Makefile
-	+@$$(call SUBMAKE,$(1),$$*)
-endif
-
-endef
-
-$(foreach subtier,export libs tools,$(eval $(call CREATE_SUBTIER_TRAVERSAL_RULE,$(subtier))))
-
-export:: $(SUBMAKEFILES)
-	$(LOOP_OVER_DIRS)
-	$(LOOP_OVER_TOOL_DIRS)
-
-
-tools:: $(SUBMAKEFILES)
-	$(LOOP_OVER_DIRS)
-	$(foreach dir,$(TOOL_DIRS),$(call SUBMAKE,libs,$(dir)))
-
-
 ifneq (,$(filter-out %.$(LIB_SUFFIX),$(SHARED_LIBRARY_LIBS)))
 $(error SHARED_LIBRARY_LIBS must contain .$(LIB_SUFFIX) files only)
 endif
