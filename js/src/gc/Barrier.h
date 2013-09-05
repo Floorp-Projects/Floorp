@@ -10,6 +10,7 @@
 #include "NamespaceImports.h"
 
 #include "gc/Heap.h"
+#include "gc/StoreBuffer.h"
 #include "js/HashTable.h"
 #include "js/Id.h"
 #include "js/RootingAPI.h"

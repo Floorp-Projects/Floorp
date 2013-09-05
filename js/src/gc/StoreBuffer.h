@@ -20,6 +20,7 @@
 
 #include "ds/LifoAlloc.h"
 #include "gc/Nursery.h"
+#include "js/Tracer.h"
 
 namespace js {
 namespace gc {
@@ -251,9 +252,9 @@ class StoreBuffer
         friend class StoreBuffer::MonoTypeBuffer<ValueEdge>;
         friend class StoreBuffer::RelocatableMonoTypeBuffer<ValueEdge>;
 
-        Value *edge;
+        JS::Value *edge;
 
-        explicit ValueEdge(Value *v) : edge(v) {}
+        explicit ValueEdge(JS::Value *v) : edge(v) {}
         bool operator==(const ValueEdge &other) const { return edge == other.edge; }
         bool operator!=(const ValueEdge &other) const { return edge != other.edge; }
 
@@ -270,8 +271,8 @@ class StoreBuffer
 
         void mark(JSTracer *trc);
 
-        ValueEdge tagged() const { return ValueEdge((Value *)(uintptr_t(edge) | 1)); }
-        ValueEdge untagged() const { return ValueEdge((Value *)(uintptr_t(edge) & ~1)); }
+        ValueEdge tagged() const { return ValueEdge((JS::Value *)(uintptr_t(edge) | 1)); }
+        ValueEdge untagged() const { return ValueEdge((JS::Value *)(uintptr_t(edge) & ~1)); }
         bool isTagged() const { return bool(uintptr_t(edge) & 1); }
     };
 
@@ -282,9 +283,9 @@ class StoreBuffer
 
         JSObject *object;
         uint32_t offset;
-        HeapSlot::Kind kind;
+        int kind; // this is really just HeapSlot::Kind, but we can't see that type easily here
 
-        SlotEdge(JSObject *object, HeapSlot::Kind kind, uint32_t offset)
+        SlotEdge(JSObject *object, int kind, uint32_t offset)
           : object(object), offset(offset), kind(kind)
         {}
 
@@ -383,7 +384,7 @@ class StoreBuffer
     bool isAboutToOverflow() const { return aboutToOverflow; }
 
     /* Insert a single edge into the buffer/remembered set. */
-    void putValue(Value *valuep) {
+    void putValue(JS::Value *valuep) {
         ValueEdge edge(valuep);
         if (!edge.inRememberedSet(nursery_))
             return;
@@ -395,7 +396,7 @@ class StoreBuffer
             return;
         bufferCell.put(edge);
     }
-    void putSlot(JSObject *obj, HeapSlot::Kind kind, uint32_t slot, void *target) {
+    void putSlot(JSObject *obj, int kind, uint32_t slot, void *target) {
         SlotEdge edge(obj, kind, slot);
         /* This is manually inlined because slotLocation cannot be defined here. */
         if (nursery_.isInside(obj) || !nursery_.isInside(target))
@@ -407,7 +408,7 @@ class StoreBuffer
     }
 
     /* Insert or update a single edge in the Relocatable buffer. */
-    void putRelocatableValue(Value *valuep) {
+    void putRelocatableValue(JS::Value *valuep) {
         ValueEdge edge(valuep);
         if (!edge.inRememberedSet(nursery_))
             return;
@@ -419,7 +420,7 @@ class StoreBuffer
             return;
         bufferRelocCell.put(edge);
     }
-    void removeRelocatableValue(Value *valuep) {
+    void removeRelocatableValue(JS::Value *valuep) {
         ValueEdge edge(valuep);
         if (!edge.inRememberedSet(nursery_))
             return;

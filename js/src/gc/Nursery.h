@@ -10,17 +10,27 @@
 
 #ifdef JSGC_GENERATIONAL
 
-#include "jsgc.h"
+#include "jsalloc.h"
 #include "jspubtd.h"
 
 #include "ds/BitArray.h"
+#include "gc/Heap.h"
+#include "js/GCAPI.h"
 #include "js/HashTable.h"
+#include "js/HeapAPI.h"
+#include "js/Value.h"
+
+namespace JS {
+struct Zone;
+}
 
 namespace js {
 
 class ObjectElements;
+class HeapSlot;
 
 namespace gc {
+class Cell;
 class MinorCollectionTracer;
 } /* namespace gc */
 
@@ -128,7 +138,7 @@ class Nursery
     HugeSlotsSet hugeSlots;
 
     /* The marking bitmap for the fallback marker. */
-    const static size_t ThingAlignment = sizeof(Value);
+    const static size_t ThingAlignment = sizeof(JS::Value);
     const static size_t FallbackBitmapBits = NurserySize / ThingAlignment;
     BitArray<FallbackBitmapBits> fallbackBitmap;
 
@@ -203,7 +213,7 @@ class Nursery
     HeapSlot *allocateHugeSlots(JSContext *cx, size_t nslots);
 
     /* Allocates a new GC thing from the tenured generation during minor GC. */
-    void *allocateFromTenured(Zone *zone, gc::AllocKind thingKind);
+    void *allocateFromTenured(JS::Zone *zone, gc::AllocKind thingKind);
 
     /*
      * Move the object at |src| in the Nursery to an already-allocated cell
