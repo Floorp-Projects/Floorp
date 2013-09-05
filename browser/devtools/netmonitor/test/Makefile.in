@@ -2,14 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH           = @DEPTH@
-topsrcdir       = @top_srcdir@
-srcdir          = @srcdir@
-VPATH           = @srcdir@
-relativesrcdir  = @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 MOCHITEST_BROWSER_TESTS = \
 	browser_net_aaa_leaktest.js \
 	browser_net_autoscroll.js \
@@ -72,5 +64,3 @@ MOCHITEST_BROWSER_PAGES = \
 	$(NULL)
 
 MOCHITEST_BROWSER_FILES_PARTS = MOCHITEST_BROWSER_TESTS MOCHITEST_BROWSER_PAGES
-
-include $(topsrcdir)/config/rules.mk
