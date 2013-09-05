@@ -223,7 +223,6 @@ OPDEF(JSOP_LEAVEFORLETIN, 105,"leaveforletin",NULL,   1,  0,  0,  JOF_BYTE)
 /* The argument is the offset to the next statement and is used by IonMonkey. */
 OPDEF(JSOP_LABEL,     106,"label",     NULL,          5,  0,  0,  JOF_JUMP)
 
-/* Performs the dynamic validation step of type-checked asm.js. */
 OPDEF(JSOP_UNUSED107, 107,"unused107",  NULL,         1,  0,  0,  JOF_BYTE)
 
 /* Like JSOP_FUNAPPLY but for f.call instead of f.apply. */
@@ -275,11 +274,6 @@ OPDEF(JSOP_EVAL,      123,"eval",       NULL,         3, -1,  1, JOF_UINT16|JOF_
  */
 OPDEF(JSOP_ENUMELEM,  124,"enumelem",   NULL,         1,  3,  0,  JOF_BYTE |JOF_SET|JOF_TMPSLOT)
 
-/*
- * Getter and setter prefix bytecodes.  These modify the next bytecode, either
- * an assignment or a property initializer code, which then defines a property
- * getter or setter.
- */
 OPDEF(JSOP_UNUSED125,  125, "unused125", NULL,      1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED126,  126, "unused126", NULL,      1,  0,  0,  JOF_BYTE)
 
