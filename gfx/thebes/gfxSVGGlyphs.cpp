@@ -63,9 +63,6 @@ gfxSVGGlyphs::gfxSVGGlyphs(hb_blob_t *aSVGTable)
             mDocIndex = docIndex;
         }
     }
-
-    mGlyphDocs.Init();
-    mGlyphIdMap.Init();
 }
 
 gfxSVGGlyphs::~gfxSVGGlyphs()
@@ -256,7 +253,6 @@ gfxSVGGlyphsDocument::GetGlyphElement(uint32_t aGlyphId)
 
 gfxSVGGlyphsDocument::gfxSVGGlyphsDocument(const uint8_t *aBuffer, uint32_t aBufLen)
 {
-    mGlyphIdMap.Init();
     ParseDocument(aBuffer, aBufLen);
     if (!mDocument) {
         NS_WARNING("Could not parse SVG glyphs document");

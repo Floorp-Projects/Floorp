@@ -363,7 +363,7 @@ private:
    */
   class BlockList {
   public:
-    BlockList() : mFirstBlock(-1), mCount(0) { mEntries.Init(); }
+    BlockList() : mFirstBlock(-1), mCount(0) {}
     ~BlockList() {
       NS_ASSERTION(mFirstBlock == -1 && mCount == 0,
                    "Destroying non-empty block list");

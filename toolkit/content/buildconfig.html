@@ -30,6 +30,9 @@
 <h2>Source</h2>
 <p>Built from <a href="@SOURCE_REPO@/rev/@SOURCE_CHANGESET@">@SOURCE_REPO@/rev/@SOURCE_CHANGESET@</a></p>
 #endif
+#else ifdef SOURCE_GIT_COMMIT
+<h2>Source</h2>
+<p>Built from git commit <a href="#">@SOURCE_GIT_COMMIT@</a></p>
 #endif
 <h2>Build platform</h2>
 <table>

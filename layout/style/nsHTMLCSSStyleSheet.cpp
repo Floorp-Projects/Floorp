@@ -42,7 +42,6 @@ ClearAttrCache(const nsAString& aKey, MiscContainer*& aValue, void*)
 
 nsHTMLCSSStyleSheet::nsHTMLCSSStyleSheet()
 {
-  mCachedStyleAttrs.Init();
 }
 
 nsHTMLCSSStyleSheet::~nsHTMLCSSStyleSheet()

@@ -35,10 +35,6 @@ public:
     mInClone(false)
   {
     MOZ_ASSERT(mDocument);
-
-    mRequestToFrameMap.Init();
-    mFrameToRequestMap.Init();
-    mImages.Init();
   }
 
   NS_DECL_ISUPPORTS

@@ -355,8 +355,6 @@ public:
     , mCameraManager(aCameraManager)
     , mWindowId(aWindowId)
   {
-	mVideoSources.Init();
-	mAudioSources.Init();
   }
 #else
   MediaEngineWebRTC()
@@ -366,8 +364,6 @@ public:
     , mVideoEngineInit(false)
     , mAudioEngineInit(false)
   {
-    mVideoSources.Init();
-    mAudioSources.Init();
   }
 #endif
   ~MediaEngineWebRTC() { Shutdown(); }

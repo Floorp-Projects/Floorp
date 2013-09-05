@@ -22,7 +22,6 @@ using namespace mozilla;
 nsWindowMemoryReporter::nsWindowMemoryReporter()
   : mCheckForGhostWindowsCallbackPending(false)
 {
-  mDetachedWindows.Init();
 }
 
 NS_IMPL_ISUPPORTS3(nsWindowMemoryReporter, nsIMemoryMultiReporter, nsIObserver,
@@ -334,14 +333,11 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
 
   // Get the IDs of all the "ghost" windows.
   nsTHashtable<nsUint64HashKey> ghostWindows;
-  ghostWindows.Init();
   CheckForGhostWindows(&ghostWindows);
 
   WindowPaths windowPaths;
-  windowPaths.Init();
 
   WindowPaths topWindowPaths;
-  topWindowPaths.Init();
 
   // Collect window memory usage.
   nsWindowSizes windowTotalSizes(NULL);
@@ -650,7 +646,6 @@ nsWindowMemoryReporter::CheckForGhostWindows(
   }
 
   nsTHashtable<nsCStringHashKey> nonDetachedWindowDomains;
-  nonDetachedWindowDomains.Init();
 
   // Populate nonDetachedWindowDomains.
   GetNonDetachedWindowDomainsEnumeratorData nonDetachedEnumData =
@@ -739,7 +734,6 @@ GhostURLsReporter::CollectReports(
 {
   // Get the IDs of all the ghost windows in existance.
   nsTHashtable<nsUint64HashKey> ghostWindows;
-  ghostWindows.Init();
   mWindowReporter->CheckForGhostWindows(&ghostWindows);
 
   ReportGhostWindowsEnumeratorData reportGhostWindowsEnumData =
@@ -775,7 +769,6 @@ int64_t
 nsWindowMemoryReporter::NumGhostsReporter::Amount()
 {
   nsTHashtable<nsUint64HashKey> ghostWindows;
-  ghostWindows.Init();
   mWindowReporter->CheckForGhostWindows(&ghostWindows);
   return ghostWindows.Count();
 }

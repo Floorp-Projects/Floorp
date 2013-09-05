@@ -479,10 +479,6 @@ QuotaManager::Init()
     gStorageQuotaMB = DEFAULT_QUOTA_MB;
   }
 
-  mOriginInfos.Init();
-  mCheckQuotaHelpers.Init();
-  mLiveStorages.Init();
-
   static_assert(Client::IDB == 0 && Client::TYPE_MAX == 1,
                 "Fix the registration!");
 

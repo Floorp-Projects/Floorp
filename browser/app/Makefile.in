@@ -170,7 +170,7 @@ endif
 MAC_BUNDLE_VERSION = $(shell $(PYTHON) $(srcdir)/macversion.py --version=$(MOZ_APP_VERSION) --buildid=$(DEPTH)/config/buildid)
 
 .PHONY: repackage
-libs repackage:: $(PROGRAM)
+tools repackage:: $(PROGRAM)
 	$(MKDIR) -p $(dist_dest)/Contents/MacOS
 	$(MKDIR) -p $(dist_dest)/Contents/Resources/$(AB).lproj
 	rsync -a --exclude "*.in" $(srcdir)/macbuild/Contents $(dist_dest) --exclude English.lproj

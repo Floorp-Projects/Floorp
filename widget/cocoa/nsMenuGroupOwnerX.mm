@@ -35,8 +35,6 @@ nsMenuGroupOwnerX::nsMenuGroupOwnerX()
 : mCurrentCommandID(eCommand_ID_Last),
   mDocument(nullptr)
 {
-  mContentToObserverTable.Init();
-  mCommandToMenuObjectTable.Init();
 }
 
 

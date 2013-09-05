@@ -577,7 +577,6 @@ WaveReader::LoadListChunk(uint32_t aChunkSize,
   const char* const end = chunk.get() + aChunkSize;
 
   aTags = new HTMLMediaElement::MetadataTags;
-  aTags->Init();
 
   while (p + 8 < end) {
     uint32_t id = ReadUint32BE(&p);

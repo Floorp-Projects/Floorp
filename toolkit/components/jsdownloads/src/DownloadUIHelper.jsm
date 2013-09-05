@@ -36,6 +36,11 @@ const kStringBundleUrl =
 
 const kStringsRequiringFormatting = {
   fileExecutableSecurityWarning: true,
+  cancelDownloadsOKTextMultiple: true,
+  quitCancelDownloadsAlertMsgMultiple: true,
+  quitCancelDownloadsAlertMsgMacMultiple: true,
+  offlineCancelDownloadsAlertMsgMultiple: true,
+  leavePrivateBrowsingWindowsCancelDownloadsAlertMsgMultiple: true
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -108,6 +113,13 @@ function DownloadPrompter(aParent)
 
 DownloadPrompter.prototype = {
   /**
+   * Constants with the different type of prompts.
+   */
+  ON_QUIT: "prompt-on-quit",
+  ON_OFFLINE: "prompt-on-offline",
+  ON_LEAVE_PRIVATE_BROWSING: "prompt-on-leave-private-browsing",
+
+  /**
    * nsIPrompt instance for displaying messages.
    */
   _prompter: null,
@@ -156,4 +168,67 @@ DownloadPrompter.prototype = {
       return Promise.reject(ex);
     }
   },
+
+  /**
+   * Displays a warning message box that informs that there are active
+   * downloads, and asks whether the user wants to cancel them or not.
+   *
+   * @param aDownloadsCount
+   *        The current downloads count.
+   * @param aPromptType
+   *        The type of prompt notification depending on the observer.
+   *
+   * @return True to cancel the downloads and continue, false to abort the
+   *         operation.
+   */
+  confirmCancelDownloads: function DP_confirmCancelDownload(aDownloadsCount,
+                                                            aPromptType)
+  {
+    // If there are no active downloads, then do nothing.
+    if (aDownloadsCount <= 0) {
+      return false;
+    }
+
+    let s = DownloadUIHelper.strings;
+    let buttonFlags = (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
+                      (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1);
+    let okButton = aDownloadsCount > 1 ? s.cancelDownloadsOKTextMultiple(aDownloadsCount)
+                                       : s.cancelDownloadsOKText;
+    let title, message, cancelButton;
+
+    switch (aPromptType) {
+      case this.ON_QUIT:
+        title = s.quitCancelDownloadsAlertTitle;
+#ifndef XP_MACOSX
+        message = aDownloadsCount > 1
+                  ? s.quitCancelDownloadsAlertMsgMultiple(aDownloadsCount)
+                  : s.quitCancelDownloadsAlertMsg;
+        cancelButton = s.dontQuitButtonWin;
+#else
+        message = aDownloadsCount > 1
+                  ? s.quitCancelDownloadsAlertMsgMacMultiple(aDownloadsCount)
+                  : s.quitCancelDownloadsAlertMsgMac;
+        cancelButton = s.dontQuitButtonMac;
+#endif
+        break;
+      case this.ON_OFFLINE:
+        title = s.offlineCancelDownloadsAlertTitle;
+        message = aDownloadsCount > 1
+                  ? s.offlineCancelDownloadsAlertMsgMultiple(aDownloadsCount)
+                  : s.offlineCancelDownloadsAlertMsg;
+        cancelButton = s.dontGoOfflineButton;
+        break;
+      case this.ON_LEAVE_PRIVATE_BROWSING:
+        title = s.leavePrivateBrowsingCancelDownloadsAlertTitle;
+        message = aDownloadsCount > 1
+                  ? s.leavePrivateBrowsingWindowsCancelDownloadsAlertMsgMultiple(aDownloadsCount)
+                  : s.leavePrivateBrowsingWindowsCancelDownloadsAlertMsg;
+        cancelButton = s.dontLeavePrivateBrowsingButton;
+        break;
+    }
+
+    let rv = this._prompter.confirmEx(title, message, buttonFlags, okButton,
+                                      cancelButton, null, null, {});
+    return (rv == 1);
+  }
 };

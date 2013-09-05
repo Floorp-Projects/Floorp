@@ -74,6 +74,10 @@ private:
 
 class NameSpaceManagerImpl : public nsINameSpaceManager {
 public:
+  NameSpaceManagerImpl()
+    : mURIToIDTable(32)
+  {
+  }
   virtual ~NameSpaceManagerImpl()
   {
   }
@@ -102,8 +106,6 @@ NS_IMPL_ISUPPORTS1(NameSpaceManagerImpl, nsINameSpaceManager)
 
 nsresult NameSpaceManagerImpl::Init()
 {
-  mURIToIDTable.Init(32);
-
   nsresult rv;
 #define REGISTER_NAMESPACE(uri, id) \
   rv = AddNameSpace(NS_LITERAL_STRING(uri), id); \

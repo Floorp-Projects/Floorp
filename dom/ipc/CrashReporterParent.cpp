@@ -31,14 +31,14 @@ CrashReporterParent::RecvAppendAppNotes(const nsCString& data)
 }
 
 CrashReporterParent::CrashReporterParent()
-: mStartTime(time(NULL))
-, mInitialized(false)
+    :
+#ifdef MOZ_CRASHREPORTER
+      mNotes(4),
+#endif
+      mStartTime(time(NULL))
+    , mInitialized(false)
 {
     MOZ_COUNT_CTOR(CrashReporterParent);
-
-#ifdef MOZ_CRASHREPORTER
-    mNotes.Init(4);
-#endif
 }
 
 CrashReporterParent::~CrashReporterParent()

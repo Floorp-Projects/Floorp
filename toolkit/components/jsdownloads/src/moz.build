@@ -24,11 +24,10 @@ EXTRA_JS_MODULES += [
     'DownloadImport.jsm',
     'DownloadList.jsm',
     'DownloadStore.jsm',
-    'DownloadUIHelper.jsm',
     'Downloads.jsm',
 ]
 
 EXTRA_PP_JS_MODULES += [
     'DownloadIntegration.jsm',
+    'DownloadUIHelper.jsm',
 ]
-
