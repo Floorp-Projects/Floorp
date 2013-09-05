@@ -25,7 +25,7 @@ function RuleViewTool(aInspector, aWindow, aIFrame)
   this.doc = aWindow.document;
   this.outerIFrame = aIFrame;
 
-  this.view = new RuleView.CssRuleView(this.doc, null);
+  this.view = new RuleView.CssRuleView(this.doc);
   this.doc.documentElement.appendChild(this.view.element);
 
   this._changeHandler = () => {
@@ -264,4 +264,4 @@ ComputedViewTool.prototype = {
     delete this.document;
     delete this.inspector;
   }
-}
+};
