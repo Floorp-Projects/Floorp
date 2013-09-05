@@ -345,8 +345,12 @@ INNER_ROBOCOP_PACKAGE=echo 'Testing is disabled - No Robocop for you'
 endif
 
 # Create geckoview_library/geckoview_{assets,library}.zip for third-party GeckoView consumers.
+ifndef MOZ_DISABLE_GECKOVIEW
 INNER_MAKE_GECKOVIEW_LIBRARY= \
   $(MAKE) -C ../mobile/android/geckoview_library package ABI_DIR=$(ABI_DIR)
+else
+INNER_MAKE_GECKOVIEW_LIBRARY=echo 'GeckoView library packaging is disabled'
+endif
 
 ifdef MOZ_OMX_PLUGIN
 DIST_FILES += libomxplugin.so libomxplugingb.so libomxplugingb235.so libomxpluginhc.so libomxpluginfroyo.so
