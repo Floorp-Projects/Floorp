@@ -45,8 +45,8 @@ function sync_httpd_setup(infoHandler) {
 
 function setUp(server) {
   setBasicCredentials("johndoe", "ilovejane", "aabcdeabcdeabcdeabcdeabcde");
-  Service.serverURL = TEST_SERVER_URL;
-  Service.clusterURL = TEST_CLUSTER_URL;
+  Service.serverURL = server.baseURI + "/";
+  Service.clusterURL = server.baseURI + "/";
   new FakeCryptoService();
 }
 
