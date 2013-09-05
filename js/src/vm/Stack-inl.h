@@ -840,7 +840,7 @@ Activation::~Activation()
 }
 
 InterpreterActivation::InterpreterActivation(JSContext *cx, StackFrame *entry, FrameRegs &regs,
-                                             int *const switchMask)
+                                             jsbytecode *const switchMask)
   : Activation(cx, Interpreter),
     entry_(entry),
     regs_(regs),
