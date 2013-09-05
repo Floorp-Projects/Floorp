@@ -4110,6 +4110,19 @@ class LCallDeleteProperty : public LCallInstructionHelper<1, BOX_PIECES, 0>
     }
 };
 
+class LCallDeleteElement : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(CallDeleteElement)
+
+    static const size_t Value = 0;
+    static const size_t Index = BOX_PIECES;
+
+    MDeleteElement *mir() const {
+        return mir_->toDeleteElement();
+    }
+};
+
 // Patchable jump to stubs generated for a SetProperty cache, which stores a
 // boxed value.
 class LSetPropertyCacheV : public LInstructionHelper<0, 1 + BOX_PIECES, 1>

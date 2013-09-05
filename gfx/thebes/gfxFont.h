@@ -653,7 +653,7 @@ private:
         hb_blob_t *mBlob;
     };
 
-    nsTHashtable<FontTableHashEntry> mFontTableCache;
+    nsAutoPtr<nsTHashtable<FontTableHashEntry> > mFontTableCache;
 
     gfxFontEntry(const gfxFontEntry&);
     gfxFontEntry& operator=(const gfxFontEntry&);
@@ -1155,7 +1155,6 @@ public:
     gfxGlyphExtents(int32_t aAppUnitsPerDevUnit) :
         mAppUnitsPerDevUnit(aAppUnitsPerDevUnit) {
         MOZ_COUNT_CTOR(gfxGlyphExtents);
-        mTightGlyphExtents.Init();
     }
     ~gfxGlyphExtents();
 
@@ -1676,23 +1675,23 @@ public:
     // Ensure the ShapedWord cache is initialized. This MUST be called before
     // any attempt to use GetShapedWord().
     void InitWordCache() {
-        if (!mWordCache.IsInitialized()) {
-            mWordCache.Init();
+        if (!mWordCache) {
+            mWordCache = new nsTHashtable<CacheHashEntry>;
         }
     }
 
     // Called by the gfxFontCache timer to increment the age of all the words,
     // so that they'll expire after a sufficient period of non-use
     void AgeCachedWords() {
-        if (mWordCache.IsInitialized()) {
-            (void)mWordCache.EnumerateEntries(AgeCacheEntry, this);
+        if (mWordCache) {
+            (void)mWordCache->EnumerateEntries(AgeCacheEntry, this);
         }
     }
 
     // Discard all cached word records; called on memory-pressure notification.
     void ClearCachedWords() {
-        if (mWordCache.IsInitialized()) {
-            mWordCache.Clear();
+        if (mWordCache) {
+            mWordCache->Clear();
         }
     }
 
@@ -1827,7 +1826,7 @@ protected:
     // font and the style. aFeatureOn set if resolved feature value is non-zero
     bool HasFeatureSet(uint32_t aFeature, bool& aFeatureOn);
 
-    static nsDataHashtable<nsUint32HashKey, int32_t> sScriptTagToCode;
+    static nsDataHashtable<nsUint32HashKey, int32_t> *sScriptTagToCode;
 
     nsRefPtr<gfxFontEntry> mFontEntry;
 
@@ -1909,7 +1908,7 @@ protected:
                                       mozilla::MallocSizeOf aMallocSizeOf,
                                       void*             aUserArg);
 
-    nsTHashtable<CacheHashEntry> mWordCache;
+    nsAutoPtr<nsTHashtable<CacheHashEntry> > mWordCache;
 
     static PLDHashOperator AgeCacheEntry(CacheHashEntry *aEntry, void *aUserData);
     static const uint32_t  kShapedWordCacheMaxAge = 3;

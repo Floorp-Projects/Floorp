@@ -364,7 +364,6 @@ nsRange::RegisterCommonAncestor(nsINode* aNode)
     static_cast<RangeHashTable*>(aNode->GetProperty(nsGkAtoms::range));
   if (!ranges) {
     ranges = new RangeHashTable;
-    ranges->Init();
     aNode->SetProperty(nsGkAtoms::range, ranges, RangeHashTableDtor, true);
   }
   ranges->PutEntry(this);

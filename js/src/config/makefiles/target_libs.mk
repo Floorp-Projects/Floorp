@@ -31,7 +31,6 @@ endif
 endif # IS_COMPONENT
 endif # SHARED_LIBRARY
 endif # !NO_DIST_INSTALL
-	$(LOOP_OVER_DIRS)
 
 ifndef NO_DIST_INSTALL
 

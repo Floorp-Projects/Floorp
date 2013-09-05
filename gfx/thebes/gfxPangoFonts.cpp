@@ -949,8 +949,7 @@ gfxFcFontSet::SortPreferredFonts(bool &aWaitForUserFont)
     double requestedSize = -1.0;
     FcPatternGetDouble(mSortPattern, FC_PIXEL_SIZE, 0, &requestedSize);
 
-    nsTHashtable<gfxFontconfigUtils::DepFcStrEntry> existingFamilies;
-    existingFamilies.Init(50);
+    nsTHashtable<gfxFontconfigUtils::DepFcStrEntry> existingFamilies(50);
     FcChar8 *family;
     for (int v = 0;
          FcPatternGetString(mSortPattern,
