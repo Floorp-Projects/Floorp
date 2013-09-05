@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsIDOMSmsSegmentInfo.idl"
 
 dictionary SmsThreadListItem
 {
@@ -13,7 +14,7 @@ dictionary SmsThreadListItem
   unsigned long long unreadCount;
 };
 
-[scriptable, uuid(ea5fb581-bee7-40a6-b2dc-c98b99a2dc49)]
+[scriptable, uuid(399125a8-00d2-11e3-8d12-3fba4465c097)]
 interface nsIMobileMessageCallback : nsISupports
 {
   /**
@@ -48,4 +49,7 @@ interface nsIMobileMessageCallback : nsISupports
 
   void notifyMessageMarkedRead(in boolean read);
   void notifyMarkMessageReadFailed(in long error);
+
+  void notifySegmentInfoForTextGot(in nsIDOMMozSmsSegmentInfo info);
+  void notifyGetSegmentInfoForTextFailed(in long error);
 };

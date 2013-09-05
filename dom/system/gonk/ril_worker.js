@@ -96,7 +96,99 @@ let RILQUIRKS_HAVE_QUERY_ICC_LOCK_RETRY_COUNT = libcutils.property_get("ro.moz.r
 // Marker object.
 let PENDING_NETWORK_TYPE = {};
 
-let Buf = require("resource://gre/modules/workers/worker_buf.js");
+let Buf = {
+  __proto__: (function(){
+    return require("resource://gre/modules/workers/worker_buf.js").Buf;
+  })(),
+
+  mToken: 0,
+  mTokenRequestMap: null,
+
+  init: function init() {
+    this._init();
+
+    // This gets incremented each time we send out a parcel.
+    this.mToken = 1;
+
+    // Maps tokens we send out with requests to the request type, so that
+    // when we get a response parcel back, we know what request it was for.
+    this.mTokenRequestMap = {};
+  },
+
+  /**
+   * Process one parcel.
+   */
+  processParcel: function processParcel() {
+    let response_type = this.readUint32();
+
+    let request_type, options;
+    if (response_type == RESPONSE_TYPE_SOLICITED) {
+      let token = this.readUint32();
+      let error = this.readUint32();
+
+      options = this.mTokenRequestMap[token];
+      if (!options) {
+        if (DEBUG) {
+          debug("Suspicious uninvited request found: " + token + ". Ignored!");
+        }
+        return;
+      }
+
+      delete this.mTokenRequestMap[token];
+      request_type = options.rilRequestType;
+
+      options.rilRequestError = error;
+      if (DEBUG) {
+        debug("Solicited response for request type " + request_type +
+              ", token " + token + ", error " + error);
+      }
+    } else if (response_type == RESPONSE_TYPE_UNSOLICITED) {
+      request_type = this.readUint32();
+      if (DEBUG) debug("Unsolicited response for request type " + request_type);
+    } else {
+      if (DEBUG) debug("Unknown response type: " + response_type);
+      return;
+    }
+
+    RIL.handleParcel(request_type, this.mReadAvailable, options);
+  },
+
+  /**
+   * Start a new outgoing parcel.
+   *
+   * @param type
+   *        Integer specifying the request type.
+   * @param options [optional]
+   *        Object containing information about the request, e.g. the
+   *        original main thread message object that led to the RIL request.
+   */
+  newParcel: function newParcel(type, options) {
+    if (DEBUG) debug("New outgoing parcel of type " + type);
+
+    // We're going to leave room for the parcel size at the beginning.
+    this.mOutgoingIndex = this.PARCEL_SIZE_SIZE;
+    this.writeUint32(type);
+    this.writeUint32(this.mToken);
+
+    if (!options) {
+      options = {};
+    }
+    options.rilRequestType = type;
+    options.rilRequestError = null;
+    this.mTokenRequestMap[this.mToken] = options;
+    this.mToken++;
+    return this.mToken;
+  },
+
+  simpleRequest: function simpleRequest(type, options) {
+    this.newParcel(type, options);
+    this.sendParcel();
+  },
+
+  onSendParcel: function onSendParcel(parcel) {
+    postRILMessage(CLIENT_ID, parcel);
+  }
+};
 
 /**
  * The RIL state machine.
@@ -1220,6 +1312,10 @@ let RIL = {
 
   sendExitEmergencyCbModeRequest: function sendExitEmergencyCbModeRequest(options) {
     Buf.simpleRequest(REQUEST_EXIT_EMERGENCY_CALLBACK_MODE, options);
+  },
+
+  getCdmaSubscription: function getCdmaSubscription() {
+    Buf.simpleRequest(REQUEST_CDMA_SUBSCRIPTION);
   },
 
   exitEmergencyCbMode: function exitEmergencyCbMode(options) {
@@ -2837,6 +2933,9 @@ let RIL = {
       if (newCardState == this.cardState) {
         return;
       }
+      this.iccInfo = {iccType: null};
+      ICCUtilsHelper.handleICCInfoChange();
+
       this.cardState = newCardState;
       this.sendChromeMessage({rilMessageType: "cardstatechange",
                               cardState: this.cardState});
@@ -2888,6 +2987,8 @@ let RIL = {
     // This was moved down from CARD_APPSTATE_READY
     this.requestNetworkInfo();
     if (newCardState == GECKO_CARDSTATE_READY) {
+      this.iccInfo.iccType = GECKO_CARD_TYPE[this.appType];
+
       // For type SIM, we need to check EF_phase first.
       // Other types of ICC we can send Terminal_Profile immediately.
       if (this.appType == CARD_APPTYPE_SIM) {
@@ -5671,7 +5772,21 @@ RIL[REQUEST_GSM_SMS_BROADCAST_ACTIVATION] = null;
 RIL[REQUEST_CDMA_GET_BROADCAST_SMS_CONFIG] = null;
 RIL[REQUEST_CDMA_SET_BROADCAST_SMS_CONFIG] = null;
 RIL[REQUEST_CDMA_SMS_BROADCAST_ACTIVATION] = null;
-RIL[REQUEST_CDMA_SUBSCRIPTION] = null;
+RIL[REQUEST_CDMA_SUBSCRIPTION] = function REQUEST_CDMA_SUBSCRIPTION(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
+  let result = Buf.readStringList();
+
+  this.iccInfo.mdn = result[0];
+  // The result[1] is Home SID. (Already be handled in readCDMAHome())
+  // The result[2] is Home NID. (Already be handled in readCDMAHome())
+  this.iccInfo.min = result[3];
+  // The result[4] is PRL version.
+
+  ICCUtilsHelper.handleICCInfoChange();
+};
 RIL[REQUEST_CDMA_WRITE_SMS_TO_RUIM] = null;
 RIL[REQUEST_CDMA_DELETE_SMS_ON_RUIM] = null;
 RIL[REQUEST_DEVICE_IDENTITY] = function REQUEST_DEVICE_IDENTITY(length, options) {
@@ -10985,11 +11100,11 @@ let ICCRecordHelper = {
     function callback(options) {
       let contact = GsmPDUHelper.readAlphaIdDiallingNumber(options.recordSize);
       if (!contact ||
-          (RIL.iccInfo.mbdn !== undefined &&
-           RIL.iccInfo.mbdn === contact.number)) {
+          (RIL.iccInfoPrivate.mbdn !== undefined &&
+           RIL.iccInfoPrivate.mbdn === contact.number)) {
         return;
       }
-      RIL.iccInfo.mbdn = contact.number;
+      RIL.iccInfoPrivate.mbdn = contact.number;
       if (DEBUG) {
         debug("MBDN, alphaId="+contact.alphaId+" number="+contact.number);
       }
@@ -12668,6 +12783,7 @@ let RuimRecordHelper = {
     RIL.getIMSI();
     this.readCST();
     this.readCDMAHome();
+    RIL.getCdmaSubscription();
   },
 
   /**
@@ -12792,9 +12908,6 @@ let RuimRecordHelper = {
 // Initialize buffers. This is a separate function so that unit tests can
 // re-initialize the buffers at will.
 Buf.init();
-Buf.setOutputStream(function (parcel) {
-  postRILMessage(CLIENT_ID, parcel);
-});
 
 function onRILMessage(data) {
   Buf.processIncoming(data);

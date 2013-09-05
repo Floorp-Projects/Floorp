@@ -31,12 +31,12 @@ SmsService::HasSupport(bool* aHasSupport)
 }
 
 NS_IMETHODIMP
-SmsService::GetSegmentInfoForText(const nsAString & aText,
-                                  nsIDOMMozSmsSegmentInfo** aResult)
+SmsService::GetSegmentInfoForText(const nsAString& aText,
+                                  nsIMobileMessageCallback* aRequest)
 {
   NS_ENSURE_TRUE(mRadioInterface, NS_ERROR_FAILURE);
 
-  return mRadioInterface->GetSegmentInfoForText(aText, aResult);
+  return mRadioInterface->GetSegmentInfoForText(aText, aRequest);
 }
 
 NS_IMETHODIMP

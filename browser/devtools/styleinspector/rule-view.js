@@ -11,7 +11,7 @@ const promise = require("sdk/core/promise");
 
 let {CssLogic} = require("devtools/styleinspector/css-logic");
 let {InplaceEditor, editableField, editableItem} = require("devtools/shared/inplace-editor");
-let {ELEMENT_STYLE} = require("devtools/server/actors/styles");
+let {ELEMENT_STYLE, PSEUDO_ELEMENTS} = require("devtools/server/actors/styles");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -203,7 +203,9 @@ ElementStyle.prototype = {
         }
 
         // Mark overridden computed styles.
-        this.markOverridden();
+        this.markOverriddenAll();
+
+        this._sortRulesForPseudoElement();
 
         // We're done with the previous list of rules.
         delete this._refreshRules;
@@ -214,6 +216,16 @@ ElementStyle.prototype = {
     this.populated = populated;
     return this.populated;
   },
+
+  /**
+   * Put pseudo elements in front of others.
+   */
+   _sortRulesForPseudoElement: function ElementStyle_sortRulesForPseudoElement()
+   {
+      this.rules = this.rules.sort((a, b) => {
+        return (a.pseudoElement || "z") > (b.pseudoElement || "z");
+      });
+   },
 
   /**
    * Add a rule if it's one we care about.  Filters out duplicates and
@@ -266,22 +278,38 @@ ElementStyle.prototype = {
   },
 
   /**
-   * Mark the properties listed in this.rules with an overridden flag
-   * if an earlier property overrides it.
+   * Calls markOverridden with all supported pseudo elements
    */
-  markOverridden: function ElementStyle_markOverridden()
+  markOverriddenAll: function ElementStyle_markOverriddenAll()
+  {
+    this.markOverridden();
+    for (let pseudo of PSEUDO_ELEMENTS) {
+      this.markOverridden(pseudo);
+    }
+  },
+
+  /**
+   * Mark the properties listed in this.rules for a given pseudo element
+   * with an overridden flag if an earlier property overrides it.
+   * @param {string} pseudo
+   *        Which pseudo element to flag as overridden.
+   *        Empty string or undefined will default to no pseudo element.
+   */
+  markOverridden: function ElementStyle_markOverridden(pseudo="")
   {
     // Gather all the text properties applied by these rules, ordered
     // from more- to less-specific.
     let textProps = [];
-    for each (let rule in this.rules) {
-      textProps = textProps.concat(rule.textProps.slice(0).reverse());
+    for (let rule of this.rules) {
+      if (rule.pseudoElement == pseudo) {
+        textProps = textProps.concat(rule.textProps.slice(0).reverse());
+      }
     }
 
     // Gather all the computed properties applied by those text
     // properties.
     let computedProps = [];
-    for each (let textProp in textProps) {
+    for (let textProp of textProps) {
       computedProps = computedProps.concat(textProp.computed);
     }
 
@@ -302,7 +330,7 @@ ElementStyle.prototype = {
     // _overriddenDirty will be set on each prop, indicating whether its
     // dirty status changed during this pass.
     let taken = {};
-    for each (let computedProp in computedProps) {
+    for (let computedProp of computedProps) {
       let earlier = taken[computedProp.name];
       let overridden;
       if (earlier
@@ -328,7 +356,7 @@ ElementStyle.prototype = {
     // computed properties are marked overridden.  Update the text
     // property's associated editor, if any.  This will clear the
     // _overriddenDirty state on all computed properties.
-    for each (let textProp in textProps) {
+    for (let textProp of textProps) {
       // _updatePropertyOverridden will return true if the
       // overridden state has changed for the text property.
       if (this._updatePropertyOverridden(textProp)) {
@@ -384,6 +412,7 @@ function Rule(aElementStyle, aOptions)
   this.domRule = aOptions.rule || null;
   this.style = aOptions.rule;
   this.matchedSelectors = aOptions.matchedSelectors || [];
+  this.pseudoElement = aOptions.pseudoElement || "";
 
   this.inherited = aOptions.inherited || null;
   this._modificationDepth = 0;
@@ -558,7 +587,7 @@ Rule.prototype = {
         textProp.priority = cssProp.priority;
       }
 
-      this.elementStyle.markOverridden();
+      this.elementStyle.markOverriddenAll();
 
       if (promise === this._applyingModifications) {
         this._applyingModifications = null;
@@ -642,7 +671,6 @@ Rule.prototype = {
     let props = [];
 
     for (let line of lines) {
-      dump("line: " + line + "\n");
       let [, name, value, priority] = CSS_PROP_RE.exec(line) || []
       if (!name || !value) {
         continue;
@@ -1078,6 +1106,7 @@ CssRuleView.prototype = {
       }
       this._createEditors();
 
+
       // Notify anyone that cares that we refreshed.
       var evt = this.doc.createEvent("Events");
       evt.initEvent("CssRuleViewRefreshed", true, false);
@@ -1133,6 +1162,59 @@ CssRuleView.prototype = {
   },
 
   /**
+   * Text for header that shows above rules for this element
+   */
+  get selectedElementLabel ()
+  {
+    if (this._selectedElementLabel) {
+      return this._selectedElementLabel;
+    }
+    this._selectedElementLabel = CssLogic.l10n("rule.selectedElement");
+    return this._selectedElementLabel;
+  },
+
+  /**
+   * Text for header that shows above rules for pseudo elements
+   */
+  get pseudoElementLabel ()
+  {
+    if (this._pseudoElementLabel) {
+      return this._pseudoElementLabel;
+    }
+    this._pseudoElementLabel = CssLogic.l10n("rule.pseudoElement");
+    return this._pseudoElementLabel;
+  },
+
+  togglePseudoElementVisibility: function(value)
+  {
+    this._showPseudoElements = !!value;
+    let isOpen = this.showPseudoElements;
+
+    Services.prefs.setBoolPref("devtools.inspector.show_pseudo_elements",
+      isOpen);
+
+    this.element.classList.toggle("show-pseudo-elements", isOpen);
+
+    if (this.pseudoElementTwisty) {
+      if (isOpen) {
+        this.pseudoElementTwisty.setAttribute("open", "true");
+      }
+      else {
+        this.pseudoElementTwisty.removeAttribute("open");
+      }
+    }
+  },
+
+  get showPseudoElements ()
+  {
+    if (this._showPseudoElements === undefined) {
+      this._showPseudoElements =
+        Services.prefs.getBoolPref("devtools.inspector.show_pseudo_elements");
+    }
+    return this._showPseudoElements;
+  },
+
+  /**
    * Creates editor UI for each of the rules in _elementStyle.
    */
   _createEditors: function CssRuleView_createEditors()
@@ -1140,18 +1222,48 @@ CssRuleView.prototype = {
     // Run through the current list of rules, attaching
     // their editors in order.  Create editors if needed.
     let lastInheritedSource = "";
+    let seenPseudoElement = false;
+    let seenNormalElement = false;
+
     for (let rule of this._elementStyle.rules) {
       if (rule.domRule.system) {
         continue;
       }
 
+      // Only print header for this element if there are pseudo elements
+      if (seenPseudoElement && !seenNormalElement && !rule.pseudoElement) {
+        seenNormalElement = true;
+        let div = this.doc.createElementNS(HTML_NS, "div");
+        div.className = "theme-gutter ruleview-header";
+        div.textContent = this.selectedElementLabel;
+        this.element.appendChild(div);
+      }
+
       let inheritedSource = rule.inheritedSource;
       if (inheritedSource != lastInheritedSource) {
-        let h2 = this.doc.createElementNS(HTML_NS, "div");
-        h2.className = "ruleview-rule-inheritance theme-gutter";
-        h2.textContent = inheritedSource;
+        let div = this.doc.createElementNS(HTML_NS, "div");
+        div.className = "theme-gutter ruleview-header";
+        div.textContent = inheritedSource;
         lastInheritedSource = inheritedSource;
-        this.element.appendChild(h2);
+        this.element.appendChild(div);
+      }
+
+      if (!seenPseudoElement && rule.pseudoElement) {
+        seenPseudoElement = true;
+
+        let div = this.doc.createElementNS(HTML_NS, "div");
+        div.className = "theme-gutter ruleview-header";
+        div.textContent = this.pseudoElementLabel;
+
+        let twisty = this.pseudoElementTwisty =
+          this.doc.createElementNS(HTML_NS, "span");
+        twisty.className = "ruleview-expander theme-twisty";
+        twisty.addEventListener("click", () => {
+          this.togglePseudoElementVisibility(!this.showPseudoElements);
+        }, false);
+
+        div.insertBefore(twisty, div.firstChild);
+        this.element.appendChild(div);
       }
 
       if (!rule.editor) {
@@ -1160,6 +1272,8 @@ CssRuleView.prototype = {
 
       this.element.appendChild(rule.editor.element);
     }
+
+    this.togglePseudoElementVisibility(this.showPseudoElements);
   },
 
   /**
@@ -1227,6 +1341,9 @@ RuleEditor.prototype = {
     this.element = this.doc.createElementNS(HTML_NS, "div");
     this.element.className = "ruleview-rule theme-separator";
     this.element._ruleEditor = this;
+    if (this.rule.pseudoElement) {
+      this.element.classList.add("ruleview-rule-pseudo-element");
+    }
 
     // Give a relative position for the inplace editor's measurement
     // span to be placed absolutely against.
@@ -1358,12 +1475,15 @@ RuleEditor.prototype = {
    *        Property value.
    * @param {string} aPriority
    *        Property priority.
+   * @return {TextProperty}
+   *        The new property
    */
   addProperty: function RuleEditor_addProperty(aName, aValue, aPriority)
   {
     let prop = this.rule.createProperty(aName, aValue, aPriority);
     let editor = new TextPropertyEditor(this, prop);
     this.propertyList.appendChild(editor.element);
+    return prop;
   },
 
   /**
