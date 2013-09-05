@@ -3,14 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-relativesrcdir	= @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 # NOTE: it is important that the first test of the test_tmpl_* tests here use
 #       datasources="rdf:null" to ensure that the real animals.rdf datasource
 #       can be synchronously loaded before the tests run.
@@ -242,5 +234,3 @@ MOCHITEST_CHROME_FILES += \
 endif
 
 # test_bug397148.xul is disabled because it leaks. See bug 879531.
-
-include $(topsrcdir)/config/rules.mk

@@ -2,14 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH     = @DEPTH@
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
-relativesrcdir  = @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 MOCHITEST_METRO_FILES = \
   head.js \
   helpers/BookmarksHelper.js \
@@ -67,5 +59,3 @@ MOCHITEST_METRO_FILES += \
   browser_selection_caretfocus.html \
   $(NULL)
 endif
-
-include $(topsrcdir)/config/rules.mk

@@ -3,14 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-relativesrcdir	= @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 MOCHITEST_FILES = \
         alloworigin.sjs \
         backward.html \
@@ -70,5 +62,3 @@ MOCHITEST_FILES = \
 
 #        test_dynUnsecureRedirect.html \ intermitently fails, quit often, bug 487402
 #        test_unsecureIframeMetaRedirect.html \ also intermittently fails, less often, bug 487632
-
-include $(topsrcdir)/config/rules.mk

@@ -12,10 +12,16 @@ extern "C"
 #include "fsmdef_states.h"
 }
 
+
 #include "CC_Common.h"
 #include "CC_CallTypes.h"
 #include "peer_connection_types.h"
 
+#if defined(__cplusplus) && __cplusplus >= 201103L
+typedef struct Timecard Timecard;
+#else
+#include "timecard.h"
+#endif
 
 namespace CSF
 {
@@ -350,5 +356,11 @@ namespace CSF
            the caller.
          */
         virtual MediaStreamTable* getMediaStreams() const = 0;
+
+        /**
+          Get the current operation's timecard (if any), and assume ownership
+          of its memory.
+         */
+        virtual Timecard *takeTimecard() = 0;
     };
 };
