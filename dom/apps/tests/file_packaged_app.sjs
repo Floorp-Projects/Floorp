@@ -32,33 +32,36 @@ function handleRequest(request, response) {
   if ("setVersion" in query) {
     var version = query.setVersion;
     setState("version", version);
+    var packageVersion = ("dontUpdatePackage" in query) ? version - 1 : version;
+    var packageName = "test_packaged_app_" + packageVersion + ".zip";
 
-    var packageName = "test_packaged_app_" + version + ".zip";
     setState("packageName", packageName);
     var packagePath = "/" + gBasePath + "file_packaged_app.sjs?getPackage=" +
                       packageName;
     setState("packagePath", packagePath);
 
-    // Create the application package.
-    var zipWriter = Cc["@mozilla.org/zipwriter;1"]
-                    .createInstance(Ci.nsIZipWriter);
-    var zipFile = FileUtils.getFile("TmpD", [packageName]);
-    zipWriter.open(zipFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
+    if (version == packageVersion) {
+      // Create the application package.
+      var zipWriter = Cc["@mozilla.org/zipwriter;1"]
+                        .createInstance(Ci.nsIZipWriter);
+      var zipFile = FileUtils.getFile("TmpD", [packageName]);
+      zipWriter.open(zipFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
 
-    // We want to run some tests without the manifest included in the zip.
-    if (version != "0") {
-      var manifestTemplate = gBasePath + gMiniManifestTemplate;
-      var manifest = makeResource(manifestTemplate, version, packagePath,
-                                  packageSize, appName, devName, devUrl);
-      addZipEntry(zipWriter, manifest, "manifest.webapp");
+      // We want to run some tests without the manifest included in the zip.
+      if (version != "0") {
+        var manifestTemplate = gBasePath + gMiniManifestTemplate;
+        var manifest = makeResource(manifestTemplate, version, packagePath,
+                                    packageSize, appName, devName, devUrl);
+        addZipEntry(zipWriter, manifest, "manifest.webapp");
+      }
+
+      var appTemplate = gBasePath + gAppTemplate;
+      var app = makeResource(appTemplate, version, packagePath, packageSize,
+                             appName, devName, devUrl);
+      addZipEntry(zipWriter, app, "index.html");
+
+      zipWriter.close();
     }
-
-    var appTemplate = gBasePath + gAppTemplate;
-    var app = makeResource(appTemplate, version, packagePath, packageSize,
-                           appName, devName, devUrl);
-    addZipEntry(zipWriter, app, "index.html");
-
-    zipWriter.close();
 
     response.setHeader("Content-Type", "text/html", false);
     response.write("OK");
