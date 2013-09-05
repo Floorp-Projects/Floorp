@@ -1303,9 +1303,10 @@ Interpret(JSContext *cx, RunState &state)
 
 #define BRANCH(n)                                                             \
     JS_BEGIN_MACRO                                                            \
-        regs.pc += (n);                                                       \
+        int32_t nlen = (n);                                                   \
+        regs.pc += nlen;                                                      \
         op = (JSOp) *regs.pc;                                                 \
-        if ((n) <= 0)                                                         \
+        if (nlen <= 0)                                                        \
             goto check_backedge;                                              \
         DO_OP();                                                              \
     JS_END_MACRO
@@ -1705,19 +1706,15 @@ BEGIN_CASE(JSOP_DEFAULT)
     /* FALL THROUGH */
 BEGIN_CASE(JSOP_GOTO)
 {
-    len = GET_JUMP_OFFSET(regs.pc);
-    BRANCH(len);
+    BRANCH(GET_JUMP_OFFSET(regs.pc));
 }
-END_CASE(JSOP_GOTO)
 
 BEGIN_CASE(JSOP_IFEQ)
 {
     bool cond = ToBooleanOp(regs);
     regs.sp--;
-    if (cond == false) {
-        len = GET_JUMP_OFFSET(regs.pc);
-        BRANCH(len);
-    }
+    if (!cond)
+        BRANCH(GET_JUMP_OFFSET(regs.pc));
 }
 END_CASE(JSOP_IFEQ)
 
@@ -1725,17 +1722,15 @@ BEGIN_CASE(JSOP_IFNE)
 {
     bool cond = ToBooleanOp(regs);
     regs.sp--;
-    if (cond != false) {
-        len = GET_JUMP_OFFSET(regs.pc);
-        BRANCH(len);
-    }
+    if (cond)
+        BRANCH(GET_JUMP_OFFSET(regs.pc));
 }
 END_CASE(JSOP_IFNE)
 
 BEGIN_CASE(JSOP_OR)
 {
     bool cond = ToBooleanOp(regs);
-    if (cond == true) {
+    if (cond) {
         len = GET_JUMP_OFFSET(regs.pc);
         goto advanceAndDoOp;
     }
@@ -1745,7 +1740,7 @@ END_CASE(JSOP_OR)
 BEGIN_CASE(JSOP_AND)
 {
     bool cond = ToBooleanOp(regs);
-    if (cond == false) {
+    if (!cond) {
         len = GET_JUMP_OFFSET(regs.pc);
         goto advanceAndDoOp;
     }
@@ -1766,8 +1761,7 @@ END_CASE(JSOP_AND)
             regs.sp -= (spdec);                                               \
             if ((cond) == (diff_ != 0)) {                                     \
                 ++regs.pc;                                                    \
-                len = GET_JUMP_OFFSET(regs.pc);                               \
-                BRANCH(len);                                                  \
+                BRANCH(GET_JUMP_OFFSET(regs.pc));                             \
             }                                                                 \
             len = 1 + JSOP_IFEQ_LENGTH;                                       \
             goto advanceAndDoOp;                                              \
@@ -2012,8 +2006,7 @@ BEGIN_CASE(JSOP_CASE)
     STRICT_EQUALITY_OP(==, cond);
     if (cond) {
         regs.sp--;
-        len = GET_JUMP_OFFSET(regs.pc);
-        BRANCH(len);
+        BRANCH(GET_JUMP_OFFSET(regs.pc));
     }
 }
 END_CASE(JSOP_CASE)
