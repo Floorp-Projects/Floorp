@@ -14,7 +14,7 @@ endif
 include $(topsrcdir)/dom/dom-config.mk
 
 # And need this for $(test_webidl_files)
-include $(topsrcdir)/dom/webidl/WebIDL.mk
+include ../webidlsrcs.mk
 
 # But the webidl actually lives in our parent dir
 test_webidl_files := $(addprefix ../,$(test_webidl_files))
