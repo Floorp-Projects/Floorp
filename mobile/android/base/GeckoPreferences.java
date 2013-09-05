@@ -307,6 +307,13 @@ public class GeckoPreferences
                     preferences.removePreference(pref);
                     i--;
                     continue;
+                } else if (PREFS_GEO_REPORTING.equals(key) &&
+                           ("release".equals(AppConstants.MOZ_UPDATE_CHANNEL) ||
+                            "beta".equals(AppConstants.MOZ_UPDATE_CHANNEL))) {
+                    // We don't build wifi/cell tower collection in release builds, so hide the UI.
+                    preferences.removePreference(pref);
+                    i--;
+                    continue;
                 } else if (PREFS_DEVTOOLS_REMOTE_ENABLED.equals(key)) {
                     final Context thisContext = this;
                     pref.setOnPreferenceClickListener(new OnPreferenceClickListener() {

@@ -56,7 +56,9 @@ public class testSettingsMenuItems extends PixelTest {
         { "Data choices" },
         { "Telemetry", "Shares performance, usage, hardware and customization data about your browser with Mozilla to help us make " + BRAND_NAME + " better" },
         { "Crash Reporter", BRAND_NAME + " submits crash reports to help Mozilla make your browser more stable and secure" },
+#ifndef RELEASE_BUILD
         { "Mozilla location services", "Help improve geolocation services for the Open Web by letting " + BRAND_NAME + " collect and send anonymous cellular tower data" },
+#endif
         { BRAND_NAME + " Health Report", "Shares data with Mozilla about your browser health and helps you understand your browser performance" },
         { "View my Health Report" },
     };
