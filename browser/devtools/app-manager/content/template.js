@@ -65,6 +65,7 @@ function Template(root, store, l10nResolver) {
 
   this._nodeListeners = new Map();
   this._loopListeners = new Map();
+  this._forListeners = new Map();
   this._root = root;
   this._doc = this._root.ownerDocument;
 
@@ -134,6 +135,14 @@ Template.prototype = {
       }
     }
 
+    // For:
+    set = this._forListeners.get(path);
+    if (set) {
+      for (let elt of set) {
+        this._processFor(elt);
+      }
+    }
+
     // Nodes:
     set = this._nodeListeners.get(path);
     if (set) {
@@ -173,6 +182,14 @@ Template.prototype = {
       this._loopListeners.set(path, new Set());
     }
     let set = this._loopListeners.get(path);
+    set.add(element);
+  },
+
+  _registerFor: function(path, element) {
+    if (!this._forListeners.has(path)) {
+      this._forListeners.set(path, new Set());
+    }
+    let set = this._forListeners.get(path);
     set.add(element);
   },
 
@@ -263,8 +280,8 @@ Template.prototype = {
     // through the array, and build one child per
     // item. The template for this child is pointed
     // by the childSelector property.
+    let e = element;
     try {
-      let e = element;
       let template, count;
       let str = e.getAttribute("template-loop");
       let json = JSON.parse(str);
@@ -304,11 +321,50 @@ Template.prototype = {
     }
   },
 
+  _processFor: function(element, rootPath="") {
+    let e = element;
+    try {
+      let template;
+      let str = e.getAttribute("template-for");
+      let json = JSON.parse(str);
+      if (!("path" in json) ||
+          !("childSelector" in json)) {
+        throw new Error("missing property");
+      }
+      if (rootPath) {
+        json.path = rootPath + "." + json.path;
+      }
+
+      let templateParent = this._doc.querySelector(json.childSelector);
+      if (!templateParent) {
+        throw new Error("can't find child");
+      }
+      let content = this._doc.createElement("div");
+      content.innerHTML = templateParent.innerHTML;
+      content = content.firstElementChild;
+
+      this._processTree(content, json.path);
+
+      this._unregisterNodes(e.querySelectorAll("[template]"));
+      this._registerFor(json.path, e);
+
+      e.innerHTML = "";
+      e.appendChild(content);
+
+    } catch(exception) {
+      console.error("Invalid template: " + e.outerHTML + " (" + exception + ")");
+    }
+  },
+
   _processTree: function(parent, rootPath="") {
     let loops = parent.querySelectorAll(":not(template) [template-loop]");
+    let fors = parent.querySelectorAll(":not(template) [template-for]");
     let nodes = parent.querySelectorAll(":not(template) [template]");
     for (let e of loops) {
       this._processLoop(e, rootPath);
+    }
+    for (let e of fors) {
+      this._processFor(e, rootPath);
     }
     for (let e of nodes) {
       this._processNode(e, rootPath);
