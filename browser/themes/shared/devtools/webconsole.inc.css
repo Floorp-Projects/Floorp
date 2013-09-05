@@ -42,11 +42,6 @@ a:focus {
   width: 8px;
 }
 
-.hud-clickable {
-  cursor: pointer;
-  text-decoration: underline;
-}
-
 .webconsole-msg-body {
   flex: 1 1 100%;
   white-space: pre-wrap;
