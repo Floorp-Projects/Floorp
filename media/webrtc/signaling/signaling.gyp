@@ -41,6 +41,7 @@
         './src/callcontrol',
         './src/common',
         './src/common/browser_logging',
+        './src/common/time_profiling',
         './src/media',
         './src/media-conduit',
         './src/mediapipeline',
@@ -94,6 +95,9 @@
         # Browser Logging
         './src/common/browser_logging/CSFLog.cpp',
         './src/common/browser_logging/CSFLog.h',
+        # Browser Logging
+        './src/common/time_profiling/timecard.c',
+        './src/common/time_profiling/timecard.h',
         # Call Control
         './src/callcontrol/CC_CallTypes.cpp',
         './src/callcontrol/CallControlManager.cpp',
@@ -267,6 +271,7 @@
       #
       'include_dirs': [
         './src/common/browser_logging',
+        './src/common/time_profiling',
         './src/sipcc/include',
         './src/sipcc/core/includes',
         './src/sipcc/cpr/include',

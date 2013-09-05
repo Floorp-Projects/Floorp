@@ -1220,20 +1220,6 @@ nsContentSink::Notify(nsITimer *timer)
     return NS_OK;
   }
   
-#ifdef MOZ_DEBUG
-  {
-    PRTime now = PR_Now();
-
-    int64_t interval = GetNotificationInterval();
-    delay = int32_t(now - mLastNotificationTime - interval) / PR_USEC_PER_MSEC;
-
-    mBackoffCount--;
-    SINK_TRACE(gContentSinkLogModuleInfo, SINK_TRACE_REFLOW,
-               ("nsContentSink::Notify: reflow on a timer: %d milliseconds "
-                "late, backoff count: %d", delay, mBackoffCount));
-  }
-#endif
-
   if (WaitForPendingSheets()) {
     mDeferredFlushTags = true;
   } else {

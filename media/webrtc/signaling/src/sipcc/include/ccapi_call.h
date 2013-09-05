@@ -5,6 +5,12 @@
 #ifndef _CCAPI_CALL_H_
 #define _CCAPI_CALL_H_
 
+#if defined(__cplusplus) && __cplusplus >= 201103L
+typedef struct Timecard Timecard;
+#else
+#include "timecard.h"
+#endif
+
 #include "ccapi_types.h"
 
 /**
@@ -49,14 +55,22 @@ cc_return_t CCAPI_Call_originateCall(cc_call_handle_t handle, cc_sdp_direction_t
 
 
 cc_return_t CCAPI_CreateOffer(cc_call_handle_t handle,
-                              cc_media_constraints_t *constraints);
+                              cc_media_constraints_t *constraints,
+                              Timecard *tc);
 
 cc_return_t CCAPI_CreateAnswer(cc_call_handle_t handle,
-                               cc_media_constraints_t *constraints);
+                               cc_media_constraints_t *constraints,
+                               Timecard *tc);
 
-cc_return_t CCAPI_SetLocalDescription(cc_call_handle_t handle, cc_jsep_action_t action, cc_string_t sdp);
+cc_return_t CCAPI_SetLocalDescription(cc_call_handle_t handle,
+                                      cc_jsep_action_t action,
+                                      cc_string_t sdp,
+                                      Timecard *tc);
 
-cc_return_t CCAPI_SetRemoteDescription(cc_call_handle_t handle, cc_jsep_action_t action, cc_string_t sdp);
+cc_return_t CCAPI_SetRemoteDescription(cc_call_handle_t handle,
+                                       cc_jsep_action_t action,
+                                       cc_string_t sdp,
+                                       Timecard *tc);
 
 cc_return_t CCAPI_SetPeerConnection(cc_call_handle_t handle, cc_peerconnection_t pc);
 
@@ -64,7 +78,11 @@ cc_return_t CCAPI_AddStream(cc_call_handle_t handle, cc_media_stream_id_t stream
 
 cc_return_t CCAPI_RemoveStream(cc_call_handle_t handle, cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type);
 
-cc_return_t CCAPI_AddICECandidate(cc_call_handle_t handle, cc_string_t candidate, cc_string_t mid, cc_level_t level);
+cc_return_t CCAPI_AddICECandidate(cc_call_handle_t handle,
+                                  cc_string_t candidate,
+                                  cc_string_t mid,
+                                  cc_level_t level,
+                                  Timecard *tc);
 
 /**
  * Send digits on the call - can be invoked either to dial additional digits or send DTMF

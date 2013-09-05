@@ -109,8 +109,8 @@ public:
   {
     switch (aIndex) {
     case PannerNode::LISTENER_POSITION: mListenerPosition = aParam; break;
-    case PannerNode::LISTENER_ORIENTATION: mListenerOrientation = aParam; break;
-    case PannerNode::LISTENER_UPVECTOR: mListenerUpVector = aParam; break;
+    case PannerNode::LISTENER_FRONT_VECTOR: mListenerFrontVector = aParam; break;
+    case PannerNode::LISTENER_RIGHT_VECTOR: mListenerRightVector = aParam; break;
     case PannerNode::LISTENER_VELOCITY: mListenerVelocity = aParam; break;
     case PannerNode::POSITION: mPosition = aParam; break;
     case PannerNode::ORIENTATION: mOrientation = aParam; break;
@@ -178,8 +178,8 @@ public:
   double mConeOuterAngle;
   double mConeOuterGain;
   ThreeDPoint mListenerPosition;
-  ThreeDPoint mListenerOrientation;
-  ThreeDPoint mListenerUpVector;
+  ThreeDPoint mListenerFrontVector;
+  ThreeDPoint mListenerRightVector;
   ThreeDPoint mListenerVelocity;
   double mListenerDopplerFactor;
   double mListenerSpeedOfSound;
@@ -376,7 +376,7 @@ PannerNodeEngine::DistanceAndConeGain(AudioChunk* aChunk, float aGain)
   AudioBufferInPlaceScale(samples, channelCount, aGain);
 }
 
-// This algorithm is specicied in the webaudio spec.
+// This algorithm is specified in the webaudio spec.
 void
 PannerNodeEngine::ComputeAzimuthAndElevation(float& aAzimuth, float& aElevation)
 {
@@ -391,26 +391,33 @@ PannerNodeEngine::ComputeAzimuthAndElevation(float& aAzimuth, float& aElevation)
   sourceListener.Normalize();
 
   // Project the source-listener vector on the x-z plane.
-  ThreeDPoint& listenerFront = mListenerOrientation;
-  ThreeDPoint listenerRightNorm = listenerFront.CrossProduct(mListenerUpVector);
-  listenerRightNorm.Normalize();
-
-  ThreeDPoint listenerFrontNorm(listenerFront);
-  listenerFrontNorm.Normalize();
-
-  ThreeDPoint up = listenerRightNorm.CrossProduct(listenerFrontNorm);
+  const ThreeDPoint& listenerFront = mListenerFrontVector;
+  const ThreeDPoint& listenerRight = mListenerRightVector;
+  ThreeDPoint up = listenerRight.CrossProduct(listenerFront);
 
   double upProjection = sourceListener.DotProduct(up);
+  aElevation = 90 - 180 * acos(upProjection) / M_PI;
+
+  if (aElevation > 90) {
+    aElevation = 180 - aElevation;
+  } else if (aElevation < -90) {
+    aElevation = -180 - aElevation;
+  }
 
   ThreeDPoint projectedSource = sourceListener - up * upProjection;
+  if (projectedSource.IsZero()) {
+    // source - listener direction is up or down.
+    aAzimuth = 0.0;
+    return;
+  }
   projectedSource.Normalize();
 
   // Actually compute the angle, and convert to degrees
-  double projection = projectedSource.DotProduct(listenerRightNorm);
+  double projection = projectedSource.DotProduct(listenerRight);
   aAzimuth = 180 * acos(projection) / M_PI;
 
   // Compute whether the source is in front or behind the listener.
-  double frontBack = projectedSource.DotProduct(listenerFrontNorm);
+  double frontBack = projectedSource.DotProduct(listenerFront);
   if (frontBack < 0) {
     aAzimuth = 360 - aAzimuth;
   }
@@ -420,14 +427,6 @@ PannerNodeEngine::ComputeAzimuthAndElevation(float& aAzimuth, float& aElevation)
     aAzimuth = 90 - aAzimuth;
   } else {
     aAzimuth = 450 - aAzimuth;
-  }
-
-  aElevation = 90 - 180 * acos(sourceListener.DotProduct(up)) / M_PI;
-
-  if (aElevation > 90) {
-    aElevation = 180 - aElevation;
-  } else if (aElevation < -90) {
-    aElevation = -180 - aElevation;
   }
 }
 

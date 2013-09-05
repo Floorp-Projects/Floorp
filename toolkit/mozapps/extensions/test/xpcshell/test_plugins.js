@@ -86,13 +86,13 @@ function run_test_1() {
       do_check_eq(p.creator, null);
       do_check_eq(p.version, "1.0.0.0");
       do_check_eq(p.type, "plugin");
-      do_check_false(p.userDisabled);
+      do_check_eq(p.userDisabled, "askToActivate");
       do_check_false(p.appDisabled);
       do_check_true(p.isActive);
       do_check_true(p.isCompatible);
       do_check_true(p.providesUpdatesSecurely);
       do_check_eq(p.blocklistState, 0);
-      do_check_eq(p.permissions, AddonManager.PERM_CAN_DISABLE | AddonManager.PERM_CAN_ASK_TO_ACTIVATE);
+      do_check_eq(p.permissions, AddonManager.PERM_CAN_DISABLE | AddonManager.PERM_CAN_ENABLE);
       do_check_eq(p.pendingOperations, 0);
       do_check_true(p.size > 0);
       do_check_eq(p.size, getFileSize(testPlugin));
@@ -112,7 +112,8 @@ function run_test_2(p) {
   let test = {};
   test[gID] = [
     ["onDisabling", false],
-    "onDisabled"
+    "onDisabled",
+    ["onPropertyChanged", ["userDisabled"]]
   ];
   prepare_test(test);
 

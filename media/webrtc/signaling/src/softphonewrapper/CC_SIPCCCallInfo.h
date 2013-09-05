@@ -82,6 +82,7 @@ namespace CSF
         virtual std::string getSDP();
         virtual cc_int32_t getStatusCode();
         virtual MediaStreamTable* getMediaStreams() const;
+        virtual Timecard *takeTimecard();
 
         virtual void setMediaData(CC_SIPCCCallMediaDataPtr  pMediaData);
 

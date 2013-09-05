@@ -4,13 +4,13 @@
 
 <script type="application/javascript"
 src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="utils.js"></script>
 
 <body onload="setTimeout(runTests, 2000)">
-  <embed id="plugin1" type="application/x-test" width="400"
-  height="400" src="large-pic.jpg" functiontofail="npp_write_rpc" streammode="normal"></embed>
 
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
 function runTests() {
   try {
@@ -23,3 +23,6 @@ function runTests() {
   SimpleTest.finish();
 }
 </script>
+
+<embed id="plugin1" type="application/x-test" width="400"
+  height="400" src="large-pic.jpg" functiontofail="npp_write_rpc" streammode="normal"></embed>

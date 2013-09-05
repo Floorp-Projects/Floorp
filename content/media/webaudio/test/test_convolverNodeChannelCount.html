@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test PannerNode directly above</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script src="webaudio.js" type="text/javascript"></script>
+<script class="testbody" type="text/javascript">
+
+const signalLength = 2048;
+const responseLength = 1000;
+const outputLength = 4096; // > signalLength + responseLength to work around bug 910171
+
+var gTest = {
+  length: outputLength,
+  numberOfChannels: 2,
+  createGraph: function(context) {
+    var buffer = context.createBuffer(2, signalLength, context.sampleRate);
+    for (var i = 0; i < signalLength; ++i) {
+      var sample = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
+      // When mixed into a single channel, this produces silence
+      buffer.getChannelData(0)[i] = sample;
+      buffer.getChannelData(1)[i] = -sample;
+    }
+
+    var response = context.createBuffer(2, responseLength, context.sampleRate);
+    for (var i = 0; i < responseLength; ++i) {
+      response.getChannelData(0)[i] = i / responseLength;
+      response.getChannelData(1)[i] = 1 - (i / responseLength);
+    }
+
+    var convolver = context.createConvolver();
+    convolver.buffer = response;
+    convolver.channelCount = 1;
+
+    expectException(function() { convolver.channelCount = 3; },
+                    DOMException.NOT_SUPPORTED_ERR);
+    convolver.channelCountMode = "explicit";
+    expectException(function() { convolver.channelCountMode = "max"; },
+                    DOMException.NOT_SUPPORTED_ERR);
+    convolver.channelInterpretation = "discrete";
+    convolver.channelInterpretation = "speakers";
+
+    var source = context.createBufferSource();
+    source.buffer = buffer;
+    source.connect(convolver);
+    source.start(0);
+
+    return convolver;
+  },
+};
+
+runTest();
+
+</script>
+</pre>
+</body>
+</html>

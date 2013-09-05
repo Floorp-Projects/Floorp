@@ -801,3 +801,23 @@ MediaStreamTable*  CCAPI_CallInfo_getMediaStreams(cc_callinfo_ref_t handle) {
 
   return table;
 }
+
+/**
+ * Assume ownership of timecard
+ * @param handle - call handle
+ * @return Timecard pointer
+ */
+Timecard*  CCAPI_CallInfo_takeTimecard(cc_callinfo_ref_t handle) {
+  session_data_t *data = (session_data_t *)handle;
+  Timecard *timecard = NULL;
+
+  CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV,
+              __FUNCTION__));
+
+  if (data) {
+    timecard = data->timecard;
+    data->timecard = NULL;
+  }
+
+  return timecard;
+}

@@ -5,18 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 void
-nsTDependentString_CharT::Rebind( const char_type* data, size_type length )
-  {
-    // If we currently own a buffer, release it.
-    Finalize();
-
-    mData = const_cast<char_type*>(data);
-    mLength = length;
-    SetDataFlags(F_TERMINATED);
-    AssertValid();
-  }
-
-void
 nsTDependentString_CharT::Rebind( const string_type& str, uint32_t startPos )
   {
     // If we currently own a buffer, release it.
