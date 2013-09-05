@@ -19,6 +19,13 @@ function test() {
 
 var tests = {
   testStatusIcons: function(next) {
+    let icon = {
+      name: "testIcon",
+      iconURL: "chrome://browser/skin/Info.png",
+      contentPanel: "https://example.com/browser/browser/base/content/test/social/social_panel.html",
+      counter: 1
+    };
+
     let iconsReady = false;
     let gotSidebarMessage = false;
 
@@ -71,7 +78,7 @@ var tests = {
           ok(true, "got sidebar message");
           gotSidebarMessage = true;
           // load a status panel
-          port.postMessage({topic: "test-ambient-notification"});
+          port.postMessage({topic: "test-ambient-notification", data: icon});
           checkNext();
           break;
       }

@@ -62,6 +62,11 @@ struct MarkMessageReadRequest
   bool value;
 };
 
+struct GetSegmentInfoForTextRequest
+{
+  nsString text;
+};
+
 struct CreateThreadCursorRequest
 {
 };
@@ -73,6 +78,7 @@ union IPCSmsRequest
   GetMessageRequest;
   DeleteMessageRequest;
   MarkMessageReadRequest;
+  GetSegmentInfoForTextRequest;
 };
 
 union IPCMobileMessageCursor
@@ -121,9 +127,6 @@ parent:
 
   sync HasSupport()
       returns (bool aHasSupport);
-
-  sync GetSegmentInfoForText(nsString aText)
-      returns (SmsSegmentInfoData aResult);
 
   AddSilentNumber(nsString aNumber);
   RemoveSilentNumber(nsString aNumber);

@@ -17,6 +17,8 @@ ifr.onload = function() {
 
   iccInfo = icc.iccInfo;
 
+  is(iccInfo.iccType, "sim");
+
   // The emulator's hard coded iccid value.
   // See it here {B2G_HOME}/external/qemu/telephony/sim_card.c#L299.
   is(iccInfo.iccid, 89014103211118510720);
@@ -30,15 +32,7 @@ ifr.onload = function() {
   // See {B2G_HOME}/external/qemu/telephony/sim_card.c, in asimcard_io()
   is(iccInfo.msisdn, "15555215554");
 
-  testDisplayConditionChange(testSPN, [
-    // [MCC, MNC, isDisplayNetworkNameRequired, isDisplaySpnRequired]
-    [123, 456, false, true], // Not in HPLMN.
-    [234, 136,  true, true], // Not in HPLMN, but in PLMN specified in SPDI.
-    [123, 456, false, true], // Not in HPLMN. Triggering iccinfochange
-    [466,  92,  true, true], // Not in HPLMN, but in another PLMN specified in SPDI.
-    [123, 456, false, true], // Not in HPLMN. Triggering iccinfochange
-    [310, 260,  true, true], // inside HPLMN.
-  ], finalize);
+  runNextTest();
 };
 document.body.appendChild(ifr);
 
@@ -60,6 +54,25 @@ function setEmulatorMccMnc(mcc, mnc) {
   });
 }
 
+function setAirplaneModeEnabled(enabled) {
+  let settings = ifr.contentWindow.navigator.mozSettings;
+  let setLock = settings.createLock();
+  let obj = {
+    "ril.radio.disabled": enabled
+  };
+  let setReq = setLock.set(obj);
+
+  log("set airplane mode to " + enabled);
+
+  setReq.addEventListener("success", function onSetSuccess() {
+    log("set 'ril.radio.disabled' to " + enabled);
+  });
+
+  setReq.addEventListener("error", function onSetError() {
+    ok(false, "cannot set 'ril.radio.disabled' to " + enabled);
+  });
+}
+
 function waitForIccInfoChange(callback) {
   icc.addEventListener("iccinfochange", function handler() {
     icc.removeEventListener("iccinfochange", handler);
@@ -67,9 +80,15 @@ function waitForIccInfoChange(callback) {
   });
 }
 
-function finalize() {
-  SpecialPowers.removePermission("mobileconnection", document);
-  finish();
+function waitForCardStateChange(expectedCardState, callback) {
+  icc.addEventListener("cardstatechange", function oncardstatechange() {
+    log("card state changes to " + icc.cardState);
+    if (icc.cardState === expectedCardState) {
+      log("got expected card state: " + icc.cardState);
+      icc.removeEventListener("cardstatechange", oncardstatechange);
+      callback();
+    }
+  });
 }
 
 // Test display condition change.
@@ -92,4 +111,46 @@ function testSPN(mcc, mnc, expectedIsDisplayNetworkNameRequired,
     window.setTimeout(callback, 100);
   });
   setEmulatorMccMnc(mcc, mnc);
+}
+
+// Test iccInfo when card is not ready
+function testCardIsNotReady() {
+  // Enable airplane mode
+  setAirplaneModeEnabled(true);
+
+  waitForCardStateChange(null, function callback() {
+    is(icc.iccInfo, null);
+
+    // Disable airplane mode
+    setAirplaneModeEnabled(false);
+    waitForCardStateChange("ready", runNextTest);
+  });
+}
+
+let tests = [
+  testDisplayConditionChange.bind(this, testSPN, [
+    // [MCC, MNC, isDisplayNetworkNameRequired, isDisplaySpnRequired]
+    [123, 456, false, true], // Not in HPLMN.
+    [234, 136,  true, true], // Not in HPLMN, but in PLMN specified in SPDI.
+    [123, 456, false, true], // Not in HPLMN. Triggering iccinfochange
+    [466,  92,  true, true], // Not in HPLMN, but in another PLMN specified in SPDI.
+    [123, 456, false, true], // Not in HPLMN. Triggering iccinfochange
+    [310, 260,  true, true], // inside HPLMN.
+  ], runNextTest),
+  testCardIsNotReady
+];
+
+function runNextTest() {
+  let test = tests.shift();
+  if (!test) {
+    finalize();
+    return;
+  }
+
+  test();
+}
+
+function finalize() {
+  SpecialPowers.removePermission("mobileconnection", document);
+  finish();
 }
