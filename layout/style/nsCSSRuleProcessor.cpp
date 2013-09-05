@@ -921,6 +921,7 @@ struct RuleCascadeData {
     : mRuleHash(aQuirksMode),
       mStateSelectors(),
       mSelectorDocumentStates(0),
+      mKeyframesRuleTable(16),
       mCacheKey(aMedium),
       mNext(nullptr),
       mQuirksMode(aQuirksMode)
@@ -944,7 +945,6 @@ struct RuleCascadeData {
     PL_DHashTableInit(&mXULTreeRules, &RuleHash_TagTable_Ops, nullptr,
                       sizeof(RuleHashTagTableEntry), 16);
 #endif
-    mKeyframesRuleTable.Init(16); // FIXME: make infallible!
   }
 
   ~RuleCascadeData()

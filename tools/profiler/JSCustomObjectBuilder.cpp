@@ -105,9 +105,7 @@ void EscapeToStream(std::ostream& stream, const char* str) {
 
 class JSCustomObject {
 public:
-  JSCustomObject() {
-    mProperties.Init();
-  }
+  JSCustomObject() {}
   ~JSCustomObject();
 
   friend std::ostream& operator<<(std::ostream& stream, JSCustomObject* entry);

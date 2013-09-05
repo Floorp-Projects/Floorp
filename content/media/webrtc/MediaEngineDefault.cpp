@@ -22,7 +22,7 @@
 
 #define VIDEO_RATE USECS_PER_S
 #define AUDIO_RATE 16000
-
+#define AUDIO_FRAME_LENGTH ((AUDIO_RATE * MediaEngine::DEFAULT_AUDIO_TIMER_MS) / 1000)
 namespace mozilla {
 
 NS_IMPL_ISUPPORTS1(MediaEngineDefaultVideoSource, nsITimerCallback)
@@ -258,6 +258,51 @@ MediaEngineDefaultVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   }
 }
 
+// generate 1k sine wave per second
+class SineWaveGenerator : public RefCounted<SineWaveGenerator>
+{
+public:
+  static const int bytesPerSample = 2;
+  static const int millisecondsPerSecond = 1000;
+  static const int frequency = 1000;
+
+  SineWaveGenerator(int aSampleRate) :
+    mTotalLength(aSampleRate / frequency),
+    mReadLength(0) {
+    MOZ_ASSERT(mTotalLength * frequency == aSampleRate);
+    mAudioBuffer = new int16_t[mTotalLength];
+    for(int i = 0; i < mTotalLength; i++) {
+      // Set volume to -20db. It's from 32768.0 * 10^(-20/20) = 3276.8
+      mAudioBuffer[i] = (3276.8f * sin(2 * M_PI * i / mTotalLength));
+    }
+  }
+
+  void generate(int16_t* aBuffer, int16_t aLengthInSamples) {
+    int16_t remaining = aLengthInSamples;
+
+    while (remaining) {
+      int16_t processSamples = 0;
+
+      if (mTotalLength - mReadLength >= remaining) {
+        processSamples = remaining;
+      } else {
+        processSamples = mTotalLength - mReadLength;
+      }
+      memcpy(aBuffer, mAudioBuffer + mReadLength, processSamples * bytesPerSample);
+      aBuffer += processSamples;
+      mReadLength += processSamples;
+      remaining -= processSamples;
+      if (mReadLength == mTotalLength) {
+        mReadLength = 0;
+      }
+    }
+  }
+
+private:
+  nsAutoArrayPtr<int16_t> mAudioBuffer;
+  int16_t mTotalLength;
+  int16_t mReadLength;
+};
 
 /**
  * Default audio source.
@@ -295,6 +340,8 @@ MediaEngineDefaultAudioSource::Allocate(const MediaEnginePrefs &aPrefs)
   }
 
   mState = kAllocated;
+  // generate 1Khz sine wave
+  mSineGenerator = new SineWaveGenerator(AUDIO_RATE);
   return NS_OK;
 }
 
@@ -334,7 +381,7 @@ MediaEngineDefaultAudioSource::Start(SourceMediaStream* aStream, TrackID aID)
 
   // 1 Audio frame per 10ms
   mTimer->InitWithCallback(this, MediaEngine::DEFAULT_AUDIO_TIMER_MS,
-                           nsITimer::TYPE_REPEATING_SLACK);
+                           nsITimer::TYPE_REPEATING_PRECISE);
   mState = kStarted;
 
   return NS_OK;
@@ -370,10 +417,13 @@ NS_IMETHODIMP
 MediaEngineDefaultAudioSource::Notify(nsITimer* aTimer)
 {
   AudioSegment segment;
+  nsRefPtr<SharedBuffer> buffer = SharedBuffer::Create(AUDIO_FRAME_LENGTH * sizeof(int16_t));
+  int16_t* dest = static_cast<int16_t*>(buffer->Data());
 
-  // Notify timer is set every DEFAULT_AUDIO_TIMER_MS milliseconds.
-  segment.InsertNullDataAtStart((AUDIO_RATE * MediaEngine::DEFAULT_AUDIO_TIMER_MS) / 1000);
-
+  mSineGenerator->generate(dest, AUDIO_FRAME_LENGTH);
+  nsAutoTArray<const int16_t*,1> channels;
+  channels.AppendElement(dest);
+  segment.AppendFrames(buffer.forget(), channels, AUDIO_FRAME_LENGTH);
   mSource->AppendToTrack(mTrackID, &segment);
 
   return NS_OK;

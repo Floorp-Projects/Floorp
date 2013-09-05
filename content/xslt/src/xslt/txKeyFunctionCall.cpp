@@ -239,8 +239,6 @@ txKeyHash::getKeyNodes(const txExpandedName& aKeyName,
 nsresult
 txKeyHash::init()
 {
-    mKeyValues.Init(8);
-    mIndexedKeys.Init(1);
     mEmptyNodeSet = new txNodeSet(nullptr);
 
     return NS_OK;

@@ -9,7 +9,7 @@
 
 #include "nsIChannel.h"
 #include "nsIParentChannel.h"
-#include "nsClassHashtable.h"
+#include "nsInterfaceHashtable.h"
 #include "mozilla/Attributes.h"
 
 namespace mozilla {
@@ -23,21 +23,9 @@ class RedirectChannelRegistrar MOZ_FINAL : public nsIRedirectChannelRegistrar
   RedirectChannelRegistrar();
 
 protected:
-  template<class KeyClass, class T>
-  class nsCOMPtrHashtable :
-    public nsBaseHashtable< KeyClass, nsCOMPtr<T>, T* >
-  {
-  public:
-    typedef typename KeyClass::KeyType KeyType;
-    typedef T* UserDataType;
-    typedef nsBaseHashtable< KeyClass, nsCOMPtr<T>, T* > base_type;
-
-    bool Get(KeyType aKey, UserDataType* pData) const;
-  };
-
-  typedef nsCOMPtrHashtable<nsUint32HashKey, nsIChannel>
+  typedef nsInterfaceHashtable<nsUint32HashKey, nsIChannel>
           ChannelHashtable;
-  typedef nsCOMPtrHashtable<nsUint32HashKey, nsIParentChannel>
+  typedef nsInterfaceHashtable<nsUint32HashKey, nsIParentChannel>
           ParentChannelHashtable;
 
   ChannelHashtable mRealChannels;

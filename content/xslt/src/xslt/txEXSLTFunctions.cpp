@@ -368,7 +368,6 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
             NS_ENSURE_SUCCESS(rv, rv);
 
             nsTHashtable<nsStringHashKey> hash;
-            hash.Init();
 
             int32_t i, len = nodes->size();
             for (i = 0; i < len; ++i) {

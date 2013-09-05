@@ -165,12 +165,10 @@ SpdyPushedStream3::GetBufferedData(char *buf,
 
 SpdyPushCache3::SpdyPushCache3()
 {
-  mHash.Init();
 }
 
 SpdyPushCache3::~SpdyPushCache3()
 {
-  mHash.Clear();
 }
 
 SpdyPushedStream3 *

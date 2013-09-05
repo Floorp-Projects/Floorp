@@ -574,11 +574,11 @@ nsContentUtils::InitializeEventTable() {
     { nullptr }
   };
 
-  sAtomEventTable = new nsDataHashtable<nsISupportsHashKey, EventNameMapping>;
-  sStringEventTable = new nsDataHashtable<nsStringHashKey, EventNameMapping>;
+  sAtomEventTable = new nsDataHashtable<nsISupportsHashKey, EventNameMapping>(
+      int(ArrayLength(eventArray) / 0.75) + 1);
+  sStringEventTable = new nsDataHashtable<nsStringHashKey, EventNameMapping>(
+      int(ArrayLength(eventArray) / 0.75) + 1);
   sUserDefinedEvents = new nsCOMArray<nsIAtom>(64);
-  sAtomEventTable->Init(int(ArrayLength(eventArray) / 0.75) + 1);
-  sStringEventTable->Init(int(ArrayLength(eventArray) / 0.75) + 1);
 
   // Subtract one from the length because of the trailing null
   for (uint32_t i = 0; i < ArrayLength(eventArray) - 1; ++i) {

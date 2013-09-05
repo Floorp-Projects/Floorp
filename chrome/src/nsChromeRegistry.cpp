@@ -140,8 +140,6 @@ nsChromeRegistry::GetService()
 nsresult
 nsChromeRegistry::Init()
 {
-  mOverrideTable.Init();
-
   // This initialization process is fairly complicated and may cause reentrant
   // getservice calls to resolve chrome URIs (especially locale files). We
   // don't want that, so we inform the protocol handler about our existence

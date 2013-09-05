@@ -256,18 +256,21 @@ PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsNavHistory, gHistoryService)
 
 
 nsNavHistory::nsNavHistory()
-: mBatchLevel(0)
-, mBatchDBTransaction(nullptr)
-, mCachedNow(0)
-, mExpireNowTimer(nullptr)
-, mHistoryEnabled(true)
-, mNumVisitsForFrecency(10)
-, mTagsFolder(-1)
-, mDaysOfHistory(-1)
-, mLastCachedStartOfDay(INT64_MAX)
-, mLastCachedEndOfDay(0)
-, mCanNotify(true)
-, mCacheObservers("history-observers")
+  : mBatchLevel(0)
+  , mBatchDBTransaction(nullptr)
+  , mCachedNow(0)
+  , mRecentTyped(RECENT_EVENTS_INITIAL_CACHE_SIZE)
+  , mRecentLink(RECENT_EVENTS_INITIAL_CACHE_SIZE)
+  , mRecentBookmark(RECENT_EVENTS_INITIAL_CACHE_SIZE)
+  , mEmbedVisits(EMBED_VISITS_INITIAL_CACHE_SIZE)
+  , mHistoryEnabled(true)
+  , mNumVisitsForFrecency(10)
+  , mTagsFolder(-1)
+  , mDaysOfHistory(-1)
+  , mLastCachedStartOfDay(INT64_MAX)
+  , mLastCachedEndOfDay(0)
+  , mCanNotify(true)
+  , mCacheObservers("history-observers")
 {
   NS_ASSERTION(!gHistoryService,
                "Attempting to create two instances of the service!");
@@ -293,14 +296,6 @@ nsNavHistory::Init()
 
   mDB = Database::GetDatabase();
   NS_ENSURE_STATE(mDB);
-
-  // recent events hash tables
-  mRecentTyped.Init(RECENT_EVENTS_INITIAL_CACHE_SIZE);
-  mRecentLink.Init(RECENT_EVENTS_INITIAL_CACHE_SIZE);
-  mRecentBookmark.Init(RECENT_EVENTS_INITIAL_CACHE_SIZE);
-
-  // Embed visits hash table.
-  mEmbedVisits.Init(EMBED_VISITS_INITIAL_CACHE_SIZE);
 
   /*****************************************************************************
    *** IMPORTANT NOTICE!
@@ -2100,8 +2095,7 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
 
   nsCString queryString;
   bool paramsPresent = false;
-  nsNavHistory::StringHash addParams;
-  addParams.Init(HISTORY_DATE_CONT_MAX);
+  nsNavHistory::StringHash addParams(HISTORY_DATE_CONT_MAX);
   nsresult rv = ConstructQueryString(aQueries, aOptions, queryString, 
                                      paramsPresent, addParams);
   NS_ENSURE_SUCCESS(rv,rv);
@@ -2943,8 +2937,7 @@ nsNavHistory::AsyncExecuteLegacyQueries(nsINavHistoryQuery** aQueries,
 
   nsCString queryString;
   bool paramsPresent = false;
-  nsNavHistory::StringHash addParams;
-  addParams.Init(HISTORY_DATE_CONT_MAX);
+  nsNavHistory::StringHash addParams(HISTORY_DATE_CONT_MAX);
   nsresult rv = ConstructQueryString(queries, options, queryString,
                                      paramsPresent, addParams);
   NS_ENSURE_SUCCESS(rv,rv);

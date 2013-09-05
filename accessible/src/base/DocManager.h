@@ -73,7 +73,7 @@ public:
 #endif
 
 protected:
-  DocManager() { }
+  DocManager();
 
   /**
    * Initialize the manager.
