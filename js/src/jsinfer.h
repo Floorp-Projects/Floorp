@@ -11,12 +11,14 @@
 
 #include "mozilla/MemoryReporting.h"
 
+#include "jsalloc.h"
 #include "jsfriendapi.h"
 
 #include "ds/IdValuePair.h"
 #include "ds/LifoAlloc.h"
 #include "gc/Barrier.h"
 #include "js/Utility.h"
+#include "js/Vector.h"
 
 namespace js {
 

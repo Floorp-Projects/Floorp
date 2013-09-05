@@ -11,7 +11,6 @@
  * JS boolean interface.
  */
 
-#include "jsapi.h"
 #include "NamespaceImports.h"
 
 extern JSObject *

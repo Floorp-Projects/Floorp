@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "gdb-tests.h"
+#include "jsapi.h"
 #include "jsfriendapi.h"
 
 using namespace JS;
