@@ -4,7 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['tlsserver']
+MODULE = 'tlsserver'
 
-MODULE = 'pipnss'
+FAIL_ON_WARNINGS = True
 
+sources = [
+    'OCSPStaplingServer',
+]
+
+CPP_SOURCES += [
+    '%s.cpp' % s for s in sources
+]
+
+bin_suffix = CONFIG['BIN_SUFFIX']
+SIMPLE_PROGRAMS += [
+    '%s%s' % (s, bin_suffix) for s in sources
+]
