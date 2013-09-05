@@ -33,6 +33,8 @@ endif
 source_repo ?= $(call getSourceRepo)
 ifneq (,$(filter http%,$(source_repo)))
   DEFINES += -DSOURCE_REPO="$(source_repo)"
+else ifneq (,$(strip $(source_repo)))
+  DEFINES += -DSOURCE_GIT_COMMIT="$(source_repo)"
 endif
 
 ifneq (,$(findstring stlport,$(STLPORT_LIBS)))
