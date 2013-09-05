@@ -3,7 +3,7 @@
 <head>
 <script type="text/javascript">
 
-document.getAnonymousNodes({__proto__: XPCNativeWrapper.prototype});
+SpecialPowers.wrap(document).getAnonymousNodes({__proto__: XPCNativeWrapper.prototype});
 
 </script>
 </head>
