@@ -4740,6 +4740,10 @@ if (SpecialPowers.getBoolPref("layout.css.osx-font-smoothing.enabled")) {
 	};
 }
 
+if (SpecialPowers.getBoolPref("layout.css.sticky.enabled")) {
+	gCSSProperties["position"].other_values.push("sticky");
+}
+
 if (SpecialPowers.getBoolPref("layout.css.mix-blend-mode.enabled")) {
         gCSSProperties["mix-blend-mode"] = {
         domProp: "mixBlendMode",
