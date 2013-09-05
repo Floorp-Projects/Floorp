@@ -8,15 +8,20 @@
 
 #include <ostream>
 #include <stdlib.h>
-#include "JSAObjectBuilder.h"
+#include "js/RootingAPI.h"
 
 class JSCustomObject;
 class JSCustomArray;
-class JSCustomObjectBuilder;
 
-class JSCustomObjectBuilder : public JSAObjectBuilder
+class JSCustomObjectBuilder
 {
 public:
+  typedef JSCustomObject* Object;
+  typedef JSCustomArray* Array;
+  typedef JSCustomObject* ObjectHandle;
+  typedef JSCustomArray* ArrayHandle;
+  typedef js::FakeRooted<JSCustomObject*> RootedObject;
+  typedef js::FakeRooted<JSCustomArray*> RootedArray;
 
   // We need to ensure that this object lives on the stack so that GC sees it properly
   JSCustomObjectBuilder();
@@ -37,6 +42,8 @@ public:
 
   // Delete this object and all of its descendant
   void DeleteObject(JSCustomObject* aObject);
+
+  JSContext *context() const { return nullptr; }
 
 private:
   // This class can't be copied

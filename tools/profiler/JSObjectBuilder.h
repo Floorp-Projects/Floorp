@@ -6,37 +6,43 @@
 #ifndef JSOBJECTBUILDER_H
 #define JSOBJECTBUILDER_H
 
-#include "JSAObjectBuilder.h"
 #include "js/TypeDecls.h"
+#include "js/RootingAPI.h"
 
+class JSCustomArray;
 class JSCustomObject;
 class JSCustomObjectBuilder;
 class nsAString;
 
 /* this is handy wrapper around JSAPI to make it more pleasant to use.
  * We collect the JSAPI errors and so that callers don't need to */
-class JSObjectBuilder : public JSAObjectBuilder
+class JSObjectBuilder
 {
 public:
+  typedef JS::Handle<JSObject*> ObjectHandle;
+  typedef JS::Handle<JSObject*> ArrayHandle;
+  typedef JS::Rooted<JSObject*> RootedObject;
+  typedef JS::Rooted<JSObject*> RootedArray;
+  typedef JSObject* Object;
+  typedef JSObject* Array;
+
   // We need to ensure that this object lives on the stack so that GC sees it properly
   explicit JSObjectBuilder(JSContext *aCx);
   ~JSObjectBuilder() {}
 
-  void DefineProperty(JSCustomObject *aObject, const char *name, JSCustomObject *aValue);
-  void DefineProperty(JSCustomObject *aObject, const char *name, JSCustomArray *aValue);
-  void DefineProperty(JSCustomObject *aObject, const char *name, int value);
-  void DefineProperty(JSCustomObject *aObject, const char *name, double value);
-  void DefineProperty(JSCustomObject *aObject, const char *name, nsAString &value);
-  void DefineProperty(JSCustomObject *aObject, const char *name, const char *value, size_t valueLength);
-  void DefineProperty(JSCustomObject *aObject, const char *name, const char *value);
-  void ArrayPush(JSCustomArray *aArray, int value);
-  void ArrayPush(JSCustomArray *aArray, const char *value);
-  void ArrayPush(JSCustomArray *aArray, JSCustomArray *aObject);
-  void ArrayPush(JSCustomArray *aArray, JSCustomObject *aObject);
-  JSCustomArray *CreateArray();
-  JSCustomObject *CreateObject();
+  void DefineProperty(JS::HandleObject aObject, const char *name, JS::HandleObject aValue);
+  void DefineProperty(JS::HandleObject aObject, const char *name, int value);
+  void DefineProperty(JS::HandleObject aObject, const char *name, double value);
+  void DefineProperty(JS::HandleObject aObject, const char *name, nsAString &value);
+  void DefineProperty(JS::HandleObject aObject, const char *name, const char *value, size_t valueLength);
+  void DefineProperty(JS::HandleObject aObject, const char *name, const char *value);
+  void ArrayPush(JS::HandleObject aArray, int value);
+  void ArrayPush(JS::HandleObject aArray, const char *value);
+  void ArrayPush(JS::HandleObject aArray, JS::HandleObject aObject);
+  JSObject *CreateArray();
+  JSObject *CreateObject();
 
-  JSObject* GetJSObject(JSCustomObject* aObject) { return (JSObject*)aObject; }
+  JSContext *context() const { return mCx; }
 
 private:
   JSObjectBuilder(const JSObjectBuilder&);
