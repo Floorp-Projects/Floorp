@@ -174,7 +174,7 @@ CONFIGURES := $(TOPSRCDIR)/configure
 CONFIGURES += $(TOPSRCDIR)/js/src/configure
 
 # Make targets that are going to be passed to the real build system
-OBJDIR_TARGETS = install export libs clean realclean distclean alldep maybe_clobber_profiledbuild upload sdk installer package fast-package package-compare stage-package source-package l10n-check
+OBJDIR_TARGETS = install export libs clean realclean distclean maybe_clobber_profiledbuild upload sdk installer package fast-package package-compare stage-package source-package l10n-check
 
 #######################################################################
 # Rules
@@ -211,7 +211,7 @@ $(OBJDIR)/.mozconfig.mk: $(FOUND_MOZCONFIG) $(call mkdir_deps,$(OBJDIR))
 endif
 
 # Print out any options loaded from mozconfig.
-all realbuild clean depend distclean export libs install realclean::
+all realbuild clean distclean export libs install realclean::
 ifneq (,$(strip $(MOZCONFIG_OUT_FILTERED)))
 	$(info Adding client.mk options from $(FOUND_MOZCONFIG):)
 	$(foreach line,$(MOZCONFIG_OUT_FILTERED),$(info $(NULL) $(NULL) $(NULL) $(NULL) $(subst ||, ,$(line))))
@@ -219,8 +219,6 @@ endif
 
 # Windows equivalents
 build_all: build
-build_all_dep: alldep
-build_all_depend: alldep
 clobber clobber_all: clean
 
 # helper target for mobile
@@ -263,7 +261,7 @@ endif
 #####################################################
 # Preflight, before building any project
 
-realbuild alldep preflight_all::
+realbuild preflight_all::
 ifeq (,$(MOZ_CURRENT_PROJECT)$(if $(MOZ_PREFLIGHT_ALL),,1))
 # Don't run preflight_all for individual projects in multi-project builds
 # (when MOZ_CURRENT_PROJECT is set.)
@@ -287,7 +285,7 @@ endif
 # loop through them.
 
 ifeq (,$(MOZ_CURRENT_PROJECT)$(if $(MOZ_BUILD_PROJECTS),,1))
-configure depend realbuild preflight postflight $(OBJDIR_TARGETS)::
+configure realbuild preflight postflight $(OBJDIR_TARGETS)::
 	set -e; \
 	for app in $(MOZ_BUILD_PROJECTS); do \
 	  $(MAKE) -f $(TOPSRCDIR)/client.mk $@ MOZ_CURRENT_PROJECT=$$app; \
@@ -383,15 +381,9 @@ endif
 
 
 ####################################
-# Depend
-
-depend:: $(OBJDIR)/Makefile $(OBJDIR)/config.status
-	$(MOZ_MAKE) export && $(MOZ_MAKE) depend
-
-####################################
 # Preflight
 
-realbuild alldep preflight::
+realbuild preflight::
 ifdef MOZ_PREFLIGHT
 	set -e; \
 	for mkfile in $(MOZ_PREFLIGHT); do \
@@ -415,7 +407,7 @@ $(OBJDIR_TARGETS):: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 ####################################
 # Postflight
 
-realbuild alldep postflight::
+realbuild postflight::
 ifdef MOZ_POSTFLIGHT
 	set -e; \
 	for mkfile in $(MOZ_POSTFLIGHT); do \
@@ -428,7 +420,7 @@ endif # MOZ_CURRENT_PROJECT
 ####################################
 # Postflight, after building all projects
 
-realbuild alldep postflight_all::
+realbuild postflight_all::
 ifeq (,$(MOZ_CURRENT_PROJECT)$(if $(MOZ_POSTFLIGHT_ALL),,1))
 # Don't run postflight_all for individual projects in multi-project builds
 # (when MOZ_CURRENT_PROJECT is set.)
@@ -489,7 +481,6 @@ echo-variable-%:
 
 .PHONY: checkout \
     real_checkout \
-    depend \
     realbuild \
     build \
     profiledbuild \
