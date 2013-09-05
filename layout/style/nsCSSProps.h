@@ -518,7 +518,9 @@ public:
   static const int32_t kPageSizeKTable[];
   static const int32_t kPitchKTable[];
   static const int32_t kPointerEventsKTable[];
-  static const int32_t kPositionKTable[];
+  // Not const because we modify its entries when the pref
+  // "layout.css.sticky.enabled" changes:
+  static int32_t kPositionKTable[];
   static const int32_t kRadialGradientShapeKTable[];
   static const int32_t kRadialGradientSizeKTable[];
   static const int32_t kRadialGradientLegacySizeKTable[];
