@@ -8,13 +8,10 @@
 #define mozilla_dom_TextTrack_h
 
 #include "mozilla/dom/TextTrackBinding.h"
-#include "mozilla/dom/TextTrackCue.h"
-#include "mozilla/dom/TextTrackCueList.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsString.h"
-#include "nsWrapperCache.h"
 
 namespace mozilla {
 namespace dom {

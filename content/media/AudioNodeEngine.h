@@ -8,13 +8,13 @@
 
 #include "AudioSegment.h"
 #include "mozilla/dom/AudioNode.h"
-#include "mozilla/dom/AudioParam.h"
 #include "mozilla/Mutex.h"
 
 namespace mozilla {
 
 namespace dom {
 struct ThreeDPoint;
+class AudioParamTimeline;
 }
 
 class AudioNodeStream;

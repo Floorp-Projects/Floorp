@@ -7,11 +7,13 @@
 #define MEDIASTREAMTRACK_H_
 
 #include "nsDOMEventTargetHelper.h"
-#include "DOMMediaStream.h"
 #include "nsID.h"
 #include "StreamBuffer.h"
 
 namespace mozilla {
+
+class DOMMediaStream;
+
 namespace dom {
 
 class AudioStreamTrack;

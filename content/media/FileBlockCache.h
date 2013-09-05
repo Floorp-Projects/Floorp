@@ -9,10 +9,12 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Monitor.h"
-#include "prio.h"
 #include "nsTArray.h"
 #include "MediaCache.h"
 #include "nsDeque.h"
+#include "nsThreadUtils.h"
+
+struct PRFileDesc;
 
 namespace mozilla {
 
