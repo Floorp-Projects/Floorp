@@ -2,14 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH     = @DEPTH@
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
-relativesrcdir  = @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 MOCHITEST_BROWSER_FILES = \
   browser_873501_handle_specials.js \
   browser_877006_missing_view.js \
@@ -25,5 +17,3 @@ MOCHITEST_BROWSER_FILES = \
   browser_888817_currentset_updating.js \
   head.js \
   $(NULL)
-
-include $(topsrcdir)/config/rules.mk
