@@ -5228,6 +5228,10 @@ if test -n "$MOZ_WEBRTC"; then
     esac
 fi
 
+AC_TRY_COMPILE([#include <linux/ethtool.h>],
+               [ struct ethtool_cmd cmd; cmd.speed_hi = 0; ],
+               MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI=1)
+
 # target_arch is from {ia32|x64|arm|ppc}
 case "$CPU_ARCH" in
 x86_64)
@@ -8443,6 +8447,7 @@ AC_SUBST(MOZ_METRO)
 AC_SUBST(MOZ_ANDROID_HISTORY)
 AC_SUBST(MOZ_WEBSMS_BACKEND)
 AC_SUBST(MOZ_ANDROID_BEAM)
+AC_SUBST(MOZ_DISABLE_GECKOVIEW)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(STRIP_FLAGS)
@@ -8976,6 +8981,12 @@ dnl so that regeneration via dependencies works correctly
       WEBRTC_CONFIG="${WEBRTC_CONFIG} -D have_clock_monotonic=1"
    else
       WEBRTC_CONFIG="${WEBRTC_CONFIG} -D have_clock_monotonic=0"
+   fi
+
+   if test -n "$MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI"; then
+      WEBRTC_CONFIG="${WEBRTC_CONFIG} -D have_ethtool_cmd_speed_hi=1"
+   else
+      WEBRTC_CONFIG="${WEBRTC_CONFIG} -D have_ethtool_cmd_speed_hi=0"
    fi
 
    GYP_WEBRTC_OPTIONS="--format=mozmake ${WEBRTC_CONFIG} -D target_arch=${WEBRTC_TARGET_ARCH} ${EXTRA_GYP_DEFINES} --depth=${srcdir}/media/webrtc/trunk --toplevel-dir=${srcdir} -G OBJDIR=${_objdir}"

@@ -8,12 +8,12 @@
   <title>NPAPI Set Undefined Value Test</title>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript" src="utils.js"></script>
 <body xmlns="http://www.w3.org/1999/xhtml" onload="runTests()">
-<embed id="plugin1" type="application/x-test" width="300" height="300"></embed>
-</body>
 <script class="testbody" type="application/javascript">
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
 function runTests() {
   var pluginElement1 = document.getElementById("plugin1");
@@ -32,4 +32,6 @@ function runTests() {
 }
 ]]>
 </script>
+<embed id="plugin1" type="application/x-test" width="300" height="300"></embed>
+</body>
 </window>

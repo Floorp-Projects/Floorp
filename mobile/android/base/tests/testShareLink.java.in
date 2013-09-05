@@ -21,7 +21,7 @@ import java.util.List;
  * This test covers the opening and content of the Share Link pop-up list
  * The test opens the Share menu from the app menu, the URL bar, a link context menu and the Awesomescreen tabs
  */
-public class testShareLink extends BaseTest {
+public class testShareLink extends AboutHomeTest {
     String url;
     String urlTitle = "Big Link";
 
@@ -36,7 +36,8 @@ public class testShareLink extends BaseTest {
         blockForGeckoReady();
 
         inputAndLoadUrl(url);
-        waitForText(urlTitle); // Waiting for page title to ensure the page is loaded
+        verifyPageTitle(urlTitle); // Waiting for page title to ensure the page is loaded
+
         selectMenuItem("Share");
         if (Build.VERSION.SDK_INT >= 14) {
             // Check for our own sync in the submenu.
@@ -66,47 +67,54 @@ public class testShareLink extends BaseTest {
         float top = mDriver.getGeckoTop() + 30 * dm.density;
         float left = mDriver.getGeckoLeft() + mDriver.getGeckoWidth() / 2;
         mSolo.clickLongOnScreen(left, top);
-        verifySharePopup(shareOptions,"Link");
+        verifySharePopup("Share Link",shareOptions,"Link");
 
-        /* FIXME: disabled on fig - bug 880060
-        //  Removed by Bug 896576 - [fig] Remove [getAllPagesList] from BaseTest
-        // Test share popup in Top Sites
-        ListView tslist = getAllPagesList(url);
+        // Test the share popup in the Bookmarks page
+        openAboutHomeTab(AboutHomeTabs.BOOKMARKS);
 
-        // Make sure the keyboard is closed since a back here would just close the Awesomebar
-        mSolo.clickOnText("Bookmarks");
-        mSolo.clickOnText("Sites");
-        waitForText("Big Link");
+        ListView bookmarksList = findListViewWithTag("bookmarks");
+        mAsserter.is(waitForListToLoad(bookmarksList), true, "list is properly loaded");
 
-        View allpages = tslist.getChildAt(1);
-        if (allpages != null) {
-            mSolo.clickLongOnView(allpages);
-            verifySharePopup(shareOptions,"Top Sites");
-        } else {
-            // The view should not be null but sometimes getChildAt fails
-            // TODO: Investigate why this fails
-            mAsserter.todo_isnot(allpages, null, "View should not be null but sometimes it is");
-        }
+        int width = mDriver.getGeckoWidth();
+        int height = mDriver.getGeckoHeight();
 
-        //  Removed by Bug 896576 - [fig] Remove [getBookmarksList] from BaseTest
-        // Test the share popup in the Bookmarks tab
-        ListView blist = getBookmarksList("about:firefox");
-        View bookmark = blist.getChildAt(1); // Getting child at 1 because 0 might be the Desktop folder
-        mSolo.clickLongOnView(bookmark);
+        // Scroll down a bit so that the bookmarks list has more
+        // items on screen.
+        mActions.drag(width / 2, width / 2, height - 10, height / 2);
+
+        View bookmarksItem = bookmarksList.getChildAt(bookmarksList.getHeaderViewsCount());
+        mSolo.clickLongOnView(bookmarksItem);
         verifySharePopup(shareOptions,"bookmarks");
 
-        //  Removed by Bug 896576 - [fig] Remove [getHistoryList] from BaseTest
-        // Test the share popup in the History tab
-        ListView hlist = getHistoryList("Today|Yesterday");
-        View history = hlist.getChildAt(1); // Getting child at 1 because 0 might be the "Today" label
-        mSolo.clickLongOnView(history);
-        verifySharePopup(shareOptions,"history");
-        */
+        // Test the share popup in the Most Visited tab
+        openAboutHomeTab(AboutHomeTabs.MOST_VISITED);
+
+        ListView mostVisitedList = findListViewWithTag("most_visited");
+        mAsserter.is(waitForListToLoad(mostVisitedList), true, "list is properly loaded");
+
+        View mostVisitedItem = mostVisitedList.getChildAt(mostVisitedList.getHeaderViewsCount());
+        mSolo.clickLongOnView(mostVisitedItem);
+        verifySharePopup(shareOptions,"most visited");
+
+        // Test the share popup in the Most Recent tab
+        openAboutHomeTab(AboutHomeTabs.MOST_RECENT);
+
+        ListView mostRecentList = findListViewWithTag("most_recent");
+        mAsserter.is(waitForListToLoad(mostRecentList), true, "list is properly loaded");
+
+        // Getting second child after header views because the first is the "Today" label
+        View mostRecentItem = mostRecentList.getChildAt(mostRecentList.getHeaderViewsCount() + 1);
+        mSolo.clickLongOnView(mostRecentItem);
+        verifySharePopup(shareOptions,"most recent");
     }
 
     public void verifySharePopup(ArrayList<String> shareOptions, String openedFrom) {
-        waitForText("Share");
-        mSolo.clickOnText("Share");
+        verifySharePopup("Share", shareOptions, openedFrom);
+    }
+
+    public void verifySharePopup(String shareItemText, ArrayList<String> shareOptions, String openedFrom) {
+        waitForText(shareItemText);
+        mSolo.clickOnText(shareItemText);
         waitForText("Share via");
         ArrayList<String> displayedOptions = getSharePopupOption();
         for (String option:shareOptions) {

@@ -2,6 +2,7 @@
   <title>Do plugin stream src requests send the Referer header correctly?</title>
   <script type="application/javascript"
 	  src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
   <link rel="stylesheet" type="text/css" 
         href="/tests/SimpleTest/test.css" />
 
@@ -10,6 +11,7 @@
 
   <script class="testbody" type="application/javascript">
   SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   function frameLoaded() {
     var testframe = document.getElementById('pluginframe');

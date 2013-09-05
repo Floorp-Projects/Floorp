@@ -59,6 +59,7 @@
 #include "cairo-private.h"
 #include <wchar.h>
 #include <windows.h>
+#include <D3D9.h>
 
 #if defined(__MINGW32__) && !defined(ETO_PDY)
 # define ETO_PDY 0x2000
@@ -389,6 +390,7 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
 	goto FAIL;
 
     surface->format = format;
+    surface->d3d9surface = NULL;
 
     surface->clip_rect.x = 0;
     surface->clip_rect.y = 0;
@@ -486,11 +488,58 @@ _cairo_win32_surface_finish (void *abstract_surface)
 	_cairo_win32_restore_initial_clip (surface);
     }
 
+    if (surface->d3d9surface) {
+        IDirect3DSurface9_ReleaseDC (surface->d3d9surface, surface->dc);
+        IDirect3DSurface9_Release (surface->d3d9surface);
+    }
+
     if (surface->initial_clip_rgn)
 	DeleteObject (surface->initial_clip_rgn);
 
     if (surface->font_subsets != NULL)
 	_cairo_scaled_font_subsets_destroy (surface->font_subsets);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_win32_surface_d3d9_lock_rect (cairo_win32_surface_t  *surface,
+				   int                     x,
+				   int                     y,
+				   int                     width,
+				   int                     height,
+				   cairo_image_surface_t **local_out)
+{
+    cairo_image_surface_t *local;
+    cairo_int_status_t status;
+
+    RECT rectin = { x, y, x+width, y+height };
+    D3DLOCKED_RECT rectout;
+    HRESULT hr;
+    hr = IDirect3DSurface9_ReleaseDC (surface->d3d9surface, surface->dc);
+    hr = IDirect3DSurface9_LockRect (surface->d3d9surface,
+	                             &rectout, &rectin, 0);
+    surface->dc = 0; // Don't use the DC when this is locked!
+    if (hr) {
+        IDirect3DSurface9_GetDC (surface->d3d9surface, &surface->dc);
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+    local = cairo_image_surface_create_for_data (rectout.pBits,
+	                                         surface->format,
+						 width, height,
+						 rectout.Pitch);
+    if (local == NULL) {
+	IDirect3DSurface9_UnlockRect (surface->d3d9surface);
+	IDirect3DSurface9_GetDC (surface->d3d9surface, &surface->dc);
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+    if (local->base.status) {
+	IDirect3DSurface9_UnlockRect (surface->d3d9surface);
+	IDirect3DSurface9_GetDC (surface->d3d9surface, &surface->dc);
+        return local->base.status;
+    }
+
+    *local_out = local;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -604,7 +653,6 @@ _cairo_win32_surface_acquire_source_image (void                    *abstract_sur
 					   void                   **image_extra)
 {
     cairo_win32_surface_t *surface = abstract_surface;
-    cairo_win32_surface_t *local;
     cairo_status_t status;
 
     if (!surface->image && !surface->is_dib && surface->bitmap &&
@@ -624,14 +672,30 @@ _cairo_win32_surface_acquire_source_image (void                    *abstract_sur
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    status = _cairo_win32_surface_get_subimage (abstract_surface, 0, 0,
-						surface->extents.width,
-						surface->extents.height, &local);
-    if (status)
-	return status;
+    if (surface->d3d9surface) {
+	cairo_image_surface_t *local;
+	status = _cairo_win32_surface_d3d9_lock_rect (abstract_surface, 0, 0,
+						      surface->extents.width,
+						      surface->extents.height, &local);
+	if (status)
+	    return status;
 
-    *image_out = (cairo_image_surface_t *)local->image;
-    *image_extra = local;
+	*image_out = local;
+	*image_extra = surface;
+    } else {
+	cairo_win32_surface_t *local;
+	status = _cairo_win32_surface_get_subimage (abstract_surface, 0, 0,
+						    surface->extents.width,
+						    surface->extents.height, &local);
+	if (status)
+	    return status;
+
+	*image_out = (cairo_image_surface_t *)local->image;
+	*image_extra = local;
+    }
+    // image_extra is always of type cairo_win32_surface_t. For d3d9surface it points
+    // to the original surface to get back the d3d9surface and properly unlock.
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -640,10 +704,16 @@ _cairo_win32_surface_release_source_image (void                   *abstract_surf
 					   cairo_image_surface_t  *image,
 					   void                   *image_extra)
 {
+    cairo_win32_surface_t *surface = abstract_surface;
     cairo_win32_surface_t *local = image_extra;
 
-    if (local)
+    if (local && local->d3d9surface) {
+	IDirect3DSurface9_UnlockRect (local->d3d9surface);
+	IDirect3DSurface9_GetDC (local->d3d9surface, &local->dc);
+	cairo_surface_destroy ((cairo_surface_t *)image);
+    } else {
 	cairo_surface_destroy ((cairo_surface_t *)local);
+    }
 }
 
 static cairo_status_t
@@ -654,7 +724,6 @@ _cairo_win32_surface_acquire_dest_image (void                    *abstract_surfa
 					 void                   **image_extra)
 {
     cairo_win32_surface_t *surface = abstract_surface;
-    cairo_win32_surface_t *local = NULL;
     cairo_status_t status;
 
     if (surface->image) {
@@ -666,17 +735,36 @@ _cairo_win32_surface_acquire_dest_image (void                    *abstract_surfa
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    status = _cairo_win32_surface_get_subimage (abstract_surface,
+    if (surface->d3d9surface) {
+	cairo_image_surface_t *local = NULL;
+	status = _cairo_win32_surface_d3d9_lock_rect (abstract_surface,
 						interest_rect->x,
 						interest_rect->y,
 						interest_rect->width,
-						interest_rect->height,
-						&local);
-    if (status)
-	return status;
+						interest_rect->height, &local);
 
-    *image_out = (cairo_image_surface_t *) local->image;
-    *image_extra = local;
+	if (status)
+	    return status;
+
+	*image_out = local;
+	*image_extra = surface;
+    } else {
+	cairo_win32_surface_t *local = NULL;
+	status = _cairo_win32_surface_get_subimage (abstract_surface,
+						interest_rect->x,
+						interest_rect->y,
+						interest_rect->width,
+						interest_rect->height, &local);
+
+	if (status)
+	    return status;
+
+	*image_out = (cairo_image_surface_t *) local->image;
+	*image_extra = local;
+    }
+    // image_extra is always of type cairo_win32_surface_t. For d3d9surface it points
+    // to the original surface to get back the d3d9surface and properly unlock.
+
     *image_rect = *interest_rect;
     return CAIRO_STATUS_SUCCESS;
 }
@@ -694,19 +782,27 @@ _cairo_win32_surface_release_dest_image (void                    *abstract_surfa
     if (!local)
 	return;
 
-    /* clear any clip that's currently set on the surface
-       so that we can blit uninhibited. */
-    _cairo_win32_surface_set_clip_region (surface, NULL);
+    if (local->d3d9surface) {
+	IDirect3DSurface9_UnlockRect (local->d3d9surface);
+	IDirect3DSurface9_GetDC (local->d3d9surface, &local->dc);
+	cairo_surface_destroy ((cairo_surface_t *)image);
+    } else {
 
-    if (!BitBlt (surface->dc,
-		 image_rect->x, image_rect->y,
-		 image_rect->width, image_rect->height,
-		 local->dc,
-		 0, 0,
-		 SRCCOPY))
-	_cairo_win32_print_gdi_error ("_cairo_win32_surface_release_dest_image");
+	/* clear any clip that's currently set on the surface
+	   so that we can blit uninhibited. */
+	_cairo_win32_surface_set_clip_region (surface, NULL);
 
-    cairo_surface_destroy ((cairo_surface_t *)local);
+	if (!BitBlt (surface->dc,
+		     image_rect->x, image_rect->y,
+		     image_rect->width, image_rect->height,
+		     local->dc,
+		     0, 0,
+		     SRCCOPY))
+	    _cairo_win32_print_gdi_error ("_cairo_win32_surface_release_dest_image");
+
+	cairo_surface_destroy ((cairo_surface_t *)local);
+    }
+
 }
 
 cairo_status_t
@@ -1854,6 +1950,7 @@ cairo_win32_surface_create_internal (HDC hdc, cairo_format_t format)
     surface->image = NULL;
     surface->format = format;
 
+    surface->d3d9surface = NULL;
     surface->dc = hdc;
     surface->bitmap = NULL;
     surface->is_dib = FALSE;
@@ -2014,6 +2111,19 @@ FINISH:
     return (cairo_surface_t*) new_surf;
 }
 
+cairo_public cairo_surface_t *
+cairo_win32_surface_create_with_d3dsurface9 (IDirect3DSurface9 *surface)
+{
+    HDC dc;
+    cairo_win32_surface_t *win_surface;
+
+    IDirect3DSurface9_AddRef (surface);
+    IDirect3DSurface9_GetDC (surface, &dc);
+    win_surface = cairo_win32_surface_create_internal(dc, CAIRO_FORMAT_RGB24);
+    win_surface->d3d9surface = surface;
+    return (cairo_surface_t*) win_surface;
+
+}
 /**
  * _cairo_surface_is_win32:
  * @surface: a #cairo_surface_t

@@ -40,6 +40,12 @@ namespace mozilla {
 }
 #endif
 
+#if defined(__cplusplus) && __cplusplus >= 201103L
+typedef struct Timecard Timecard;
+#else
+#include "timecard.h"
+#endif
+
 using namespace mozilla;
 
 namespace sipcc {
@@ -327,6 +333,11 @@ private:
 
   // ICE callbacks run on the right thread.
   nsresult IceStateChange_m(IceState aState);
+
+  // Timecard used to measure processing time. This should be the first class
+  // attribute so that we accurately measure the time required to instantiate
+  // any other attributes of this class.
+  Timecard *mTimeCard;
 
   // The role we are adopting
   Role mRole;

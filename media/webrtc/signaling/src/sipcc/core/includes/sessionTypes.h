@@ -5,6 +5,12 @@
 #ifndef _SESSIONTYPES_H_
 #define _SESSIONTYPES_H_
 
+#if defined(__cplusplus) && __cplusplus >= 201103L
+typedef struct Timecard Timecard;
+#else
+#include "timecard.h"
+#endif
+
 #include "string_lib.h"
 #include "sessionConstants.h"
 #include "ccsip_pmh.h"
@@ -48,6 +54,7 @@ typedef struct {
   cc_media_type_t           media_type;
   cc_level_t                level;
   cc_media_constraints_t *  constraints;
+  Timecard *                timecard;
 } ccSession_feature_t;
 
 typedef struct {
@@ -61,6 +68,7 @@ typedef struct {
   string_t     sdp;
   unsigned int media_stream_id;
   unsigned int media_stream_track_id;
+  Timecard *   timecard;
 } cc_call_state_data_t;
 /* CALL_SESSION_CREATED shall use the call_state as data*/
 
