@@ -16,6 +16,7 @@ let gSyncUI = {
          "weave:ui:sync:error",
          "weave:ui:sync:finish",
          "weave:ui:clear-error",
+         "weave:eol",
   ],
 
   _unloaded: false,
@@ -205,6 +206,36 @@ let gSyncUI = {
 
     let notification = new Weave.Notification(
       title, description, null, Weave.Notifications.PRIORITY_WARNING, buttons);
+    Weave.Notifications.replaceTitle(notification);
+  },
+
+  onEOLNotice: function (data) {
+    let code = data.code;
+    let kind = (code == "hard-eol") ? "error" : "warning";
+    let url = data.url || "https://www.mozilla.org/firefox/?utm_source=synceol";
+
+    let title = this._stringBundle.GetStringFromName("error.sync.needUpdate.label");
+    let description = this._stringBundle.GetStringFromName("error.sync.needUpdate.description");
+  
+    // Hack for uplift.
+    let browserStrings = Cc["@mozilla.org/intl/stringbundle;1"].
+                           getService(Ci.nsIStringBundleService).
+                           createBundle("chrome://browser/locale/browser.properties");
+    let learnMore = browserStrings.GetStringFromName("syncPromoNotification.learnMoreLinkText");
+
+    let buttons = [];
+    buttons.push(new Weave.NotificationButton(
+      learnMore,
+      null,          // No accesskey.
+      function() {
+        window.openUILinkIn(url, "tab");
+        return true;
+      }
+    ));
+
+    let priority = (kind == "error") ? Weave.Notifications.PRIORITY_WARNING :
+                                       Weave.Notifications.PRIORITY_INFO;
+    let notification = new Weave.Notification(title, description, null, priority, buttons);
     Weave.Notifications.replaceTitle(notification);
   },
 
@@ -405,6 +436,13 @@ let gSyncUI = {
       return;
     }
 
+    // Unwrap, just like Svc.Obs, but without pulling in that dependency.
+    if (subject && typeof subject == "object" &&
+        ("wrappedJSObject" in subject) &&
+        ("observersModuleSubjectWrapper" in subject.wrappedJSObject)) {
+      subject = subject.wrappedJSObject.object;
+    }
+
     switch (topic) {
       case "weave:service:sync:start":
         this.onActivityStart();
@@ -447,6 +485,9 @@ let gSyncUI = {
         break;
       case "weave:ui:clear-error":
         this.clearError();
+        break;
+      case "weave:eol":
+        this.onEOLNotice(subject);
         break;
     }
   },
