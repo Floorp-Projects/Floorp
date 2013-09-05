@@ -64,7 +64,10 @@ public class AwesomeBar extends GeckoActivity
     public static final String TITLE_KEY = "title";
     public static final String USER_ENTERED_KEY = "user_entered";
     public static final String READING_LIST_KEY = "reading_list";
+    public static final String GUEST_MODE_KEY = "guest_mode_enabled";
     public static enum Target { NEW_TAB, CURRENT_TAB, PICK_SITE };
+
+    public boolean inGuestMode = false;
 
     private String mTarget;
     private AwesomeBarTabs mAwesomeTabs;
@@ -159,6 +162,8 @@ public class AwesomeBar extends GeckoActivity
             }
         }
         mAwesomeTabs.setTarget(mTarget);
+
+        inGuestMode = intent.getBooleanExtra(GUEST_MODE_KEY, false);
 
         mText.setOnKeyPreImeListener(new CustomEditText.OnKeyPreImeListener() {
             @Override
