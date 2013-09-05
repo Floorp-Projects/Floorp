@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCRT.h"
-#include "EndianMacros.h"
+#include "mozilla/Endian.h"
 #include "nsBMPEncoder.h"
 #include "prprf.h"
 #include "nsString.h"
@@ -550,22 +550,15 @@ nsBMPEncoder::InitInfoHeader(Version aVersion, uint32_t aBPP, uint32_t aWidth,
   }
 }
 
-template<typename T>
-static inline void
-ConvertToLittle(T& value)
-{
-    value = NATIVE32_TO_LITTLE(value);
-}
-
 // Encodes the BMP file header mBMPFileHeader
 void 
 nsBMPEncoder::EncodeFileHeader() 
 {  
   mozilla::image::BMPFILEHEADER littleEndianBFH = mBMPFileHeader;
-  ConvertToLittle(littleEndianBFH.filesize);
-  ConvertToLittle(littleEndianBFH.reserved);
-  ConvertToLittle(littleEndianBFH.dataoffset);
-  ConvertToLittle(littleEndianBFH.bihsize);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianBFH.filesize, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianBFH.reserved, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianBFH.dataoffset, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianBFH.bihsize, 1);
 
   ENCODE(&mImageBufferCurr, littleEndianBFH.signature);
   ENCODE(&mImageBufferCurr, littleEndianBFH.filesize);
@@ -579,36 +572,36 @@ void
 nsBMPEncoder::EncodeInfoHeader()
 {
   mozilla::image::BITMAPV5HEADER littleEndianmBIH = mBMPInfoHeader;
-  ConvertToLittle(littleEndianmBIH.width);
-  ConvertToLittle(littleEndianmBIH.height);
-  ConvertToLittle(littleEndianmBIH.planes);
-  ConvertToLittle(littleEndianmBIH.bpp);
-  ConvertToLittle(littleEndianmBIH.compression);
-  ConvertToLittle(littleEndianmBIH.image_size);
-  ConvertToLittle(littleEndianmBIH.xppm);
-  ConvertToLittle(littleEndianmBIH.yppm);
-  ConvertToLittle(littleEndianmBIH.colors);
-  ConvertToLittle(littleEndianmBIH.important_colors);
-  ConvertToLittle(littleEndianmBIH.red_mask);
-  ConvertToLittle(littleEndianmBIH.green_mask);
-  ConvertToLittle(littleEndianmBIH.blue_mask);
-  ConvertToLittle(littleEndianmBIH.alpha_mask);
-  ConvertToLittle(littleEndianmBIH.color_space);
-  ConvertToLittle(littleEndianmBIH.white_point.r.x);
-  ConvertToLittle(littleEndianmBIH.white_point.r.y);
-  ConvertToLittle(littleEndianmBIH.white_point.r.z);
-  ConvertToLittle(littleEndianmBIH.white_point.g.x);
-  ConvertToLittle(littleEndianmBIH.white_point.g.y);
-  ConvertToLittle(littleEndianmBIH.white_point.g.z);
-  ConvertToLittle(littleEndianmBIH.white_point.b.x);
-  ConvertToLittle(littleEndianmBIH.white_point.b.y);
-  ConvertToLittle(littleEndianmBIH.white_point.b.z);
-  ConvertToLittle(littleEndianmBIH.gamma_red);
-  ConvertToLittle(littleEndianmBIH.gamma_green);
-  ConvertToLittle(littleEndianmBIH.gamma_blue);
-  ConvertToLittle(littleEndianmBIH.intent);
-  ConvertToLittle(littleEndianmBIH.profile_offset);
-  ConvertToLittle(littleEndianmBIH.profile_size);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.width, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.height, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.planes, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.bpp, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.compression, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.image_size, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.xppm, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.yppm, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.colors, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.important_colors, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.red_mask, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.green_mask, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.blue_mask, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.alpha_mask, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.color_space, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.white_point.r.x, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.white_point.r.y, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.white_point.r.z, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.white_point.g.x, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.white_point.g.y, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.white_point.g.z, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.white_point.b.x, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.white_point.b.y, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.white_point.b.z, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.gamma_red, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.gamma_green, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.gamma_blue, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.intent, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.profile_offset, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.profile_size, 1);
   
   if (mBMPFileHeader.bihsize == OS2_BIH_LENGTH) {
       uint16_t width = (uint16_t) littleEndianmBIH.width;
