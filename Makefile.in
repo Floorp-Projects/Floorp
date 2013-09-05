@@ -35,7 +35,7 @@ DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
    config/autoconf.mk \
    mozilla-config.h \
    netwerk/necko-config.h xpcom/xpcom-config.h xpcom/xpcom-private.h \
-   $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out
+   .mozconfig.mk
 
 ifndef MOZ_PROFILE_USE
 # One of the first things we do in the build is purge "unknown" files
