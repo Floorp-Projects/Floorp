@@ -5,7 +5,7 @@
     },
     "global": {
         "talos_repo": "http://hg.mozilla.org/build/talos",
-        "talos_revision": "63e4fcd8784d"
+        "talos_revision": "ca2229a32cb6"
     },
     "suites": {
         "chromez": {
