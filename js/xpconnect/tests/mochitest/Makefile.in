@@ -3,14 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-relativesrcdir  = @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 MOCHITEST_FILES =	chrome_wrappers_helper.html \
 		file_documentdomain.html \
 		file_doublewrappedcompartments.html \
@@ -100,6 +92,3 @@ MOCHITEST_FILES =	chrome_wrappers_helper.html \
 		test_asmjs.html \
 		file_asmjs.js \
 		$(NULL)
-
-include $(topsrcdir)/config/rules.mk
-

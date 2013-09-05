@@ -4,15 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-
 TOPLEVEL_BUILD := 1
 
 run_for_side_effects := $(shell echo "MAKE: $(MAKE)")
-include $(DEPTH)/config/autoconf.mk
-
 STATIC_LIBRARY_NAME = js_static
 LIBS		= $(NSPR_LIBS)
 
@@ -177,6 +171,7 @@ MOZILLA_DTRACE_SRC = $(srcdir)/devtools/javascript-trace.d
 endif
 
 default::
+	$(call py_action,process_install_manifest,--no-remove $(DIST)/include _build_manifests/install/dist_include)
 
 ifneq (,$(CROSS_COMPILE)$(filter-out WINNT OS2,$(OS_ARCH)))
 # nsinstall doesn't get built until we enter config/ in the exports phase,

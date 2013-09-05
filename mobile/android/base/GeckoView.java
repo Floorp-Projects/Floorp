@@ -9,6 +9,7 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.util.Clipboard;
+import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -53,6 +54,8 @@ public class GeckoView extends LayerView
             }
 
             Clipboard.init(context);
+            HardwareUtils.init(context);
+
             GeckoLoader.loadMozGlue();
             BrowserDB.setEnableContentProviders(false);
         }

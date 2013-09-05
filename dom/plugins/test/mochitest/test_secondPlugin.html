@@ -3,14 +3,15 @@
      <title>Second Test Plug-in Test</title>
 
     <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="utils.js"></script>
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   </head>
 
   <body onload="run()">
-    <object id="plugin" type="application/x-second-test" width=200 height=200></object>
-
     <script class="testbody" type="application/javascript">
       SimpleTest.waitForExplicitFinish();
+      setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+      setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
 
       function run() {
         var foundFirstPlugin = false;
@@ -29,5 +30,7 @@
         SimpleTest.finish();
       }
     </script>
+
+    <object id="plugin" type="application/x-second-test" width=200 height=200></object>
   </body>
 </html>

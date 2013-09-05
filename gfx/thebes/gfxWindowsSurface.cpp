@@ -34,6 +34,14 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, uint32_t flags) :
     InitWithDC(flags);
 }
 
+gfxWindowsSurface::gfxWindowsSurface(IDirect3DSurface9 *surface, uint32_t flags) :
+    mOwnsDC(false), mForPrinting(false), mDC(0), mWnd(nullptr)
+{
+    cairo_surface_t *surf = cairo_win32_surface_create_with_d3dsurface9(surface);
+    Init(surf);
+}
+
+
 void
 gfxWindowsSurface::MakeInvalid(gfxIntSize& size)
 {
@@ -160,6 +168,13 @@ gfxWindowsSurface::GetDCWithClip(gfxContext *ctx)
 {
     return cairo_win32_get_dc_with_clip (ctx->GetCairo());
 }
+
+HDC
+gfxWindowsSurface::GetDC()
+{
+    return cairo_win32_surface_get_dc (CairoSurface());
+}
+
 
 already_AddRefed<gfxImageSurface>
 gfxWindowsSurface::GetAsImageSurface()

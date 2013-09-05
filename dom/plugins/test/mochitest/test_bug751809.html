@@ -4,25 +4,11 @@
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="utils.js"></script>
   <script type="application/javascript;version=1.7">
-  function getTestPlugin() {
-    let ph = Components.classes["@mozilla.org/plugin/host;1"]
-               .getService(Components.interfaces.nsIPluginHost);
-    let tags = ph.getPluginTags();
-
-    // Find the test plugin
-    for (let i = 0; i < tags.length; i++) {
-      if (tags[i].name == "Test Plug-in")
-        return tags[i];
-    }
-      ok(false, "Unable to find plugin");
-      return null;
-    }
-
   Components.utils.import("resource://gre/modules/Services.jsm");
   Services.prefs.setBoolPref("plugins.click_to_play", true);
-  let plugin = getTestPlugin();
-  plugin.enabledState = Components.interfaces.nsIPluginTag.STATE_CLICKTOPLAY;
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_CLICKTOPLAY);
   </script>
 </head>
 
@@ -104,8 +90,6 @@
     }
 
     Services.prefs.clearUserPref("plugins.click_to_play");
-    let plugin = getTestPlugin();
-    plugin.enabledState = Components.interfaces.nsIPluginTag.STATE_ENABLED;
     SimpleTest.finish();
   }
 

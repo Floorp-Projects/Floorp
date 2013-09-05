@@ -213,10 +213,11 @@ public:
     , mSource(nullptr)
     , mDestination(static_cast<AudioNodeStream*> (aDestination->Stream()))
     , mBufferSize(aBufferSize)
-    , mDefaultNumberOfInputChannels(aNumberOfInputChannels)
     , mInputWriteIndex(0)
     , mSeenNonSilenceInput(false)
   {
+    mInputChannels.SetLength(aNumberOfInputChannels);
+    AllocateInputBlock();
   }
 
   void SetSourceStream(AudioNodeStream* aSource)
@@ -237,8 +238,6 @@ public:
       return;
     }
 
-    EnsureInputChannels(aInput.mChannelData.Length());
-
     // First, record our input buffer
     for (uint32_t i = 0; i < mInputChannels.Length(); ++i) {
       if (aInput.IsNull()) {
@@ -247,6 +246,7 @@ public:
       } else {
         mSeenNonSilenceInput = true;
         MOZ_ASSERT(aInput.GetDuration() == WEBAUDIO_BLOCK_SIZE, "sanity check");
+        MOZ_ASSERT(aInput.mChannelData.Length() == mInputChannels.Length());
         AudioBlockCopyChannelWithScale(static_cast<const float*>(aInput.mChannelData[i]),
                                        aInput.mVolume,
                                        mInputChannels[i] + mInputWriteIndex);
@@ -272,25 +272,6 @@ private:
   {
     for (unsigned i = 0; i < mInputChannels.Length(); ++i) {
       if (!mInputChannels[i]) {
-        mInputChannels[i] = new float[mBufferSize];
-      }
-    }
-  }
-
-  void EnsureInputChannels(uint32_t aNumberOfChannels)
-  {
-    if (aNumberOfChannels == 0) {
-      aNumberOfChannels = mDefaultNumberOfInputChannels;
-    }
-    if (mInputChannels.Length() == 0) {
-      mInputChannels.SetLength(aNumberOfChannels);
-      AllocateInputBlock();
-    } else if (aNumberOfChannels < mInputChannels.Length()) {
-      mInputChannels.SetLength(aNumberOfChannels);
-    } else if (aNumberOfChannels > mInputChannels.Length()) {
-      uint32_t oldLength = mInputChannels.Length();
-      mInputChannels.SetLength(aNumberOfChannels);
-      for (uint32_t i = oldLength; i < aNumberOfChannels; ++i) {
         mInputChannels[i] = new float[mBufferSize];
       }
     }
@@ -411,7 +392,6 @@ private:
   AudioNodeStream* mDestination;
   InputChannels mInputChannels;
   const uint32_t mBufferSize;
-  const uint32_t mDefaultNumberOfInputChannels;
   // The write index into the current input buffer
   uint32_t mInputWriteIndex;
   bool mSeenNonSilenceInput;

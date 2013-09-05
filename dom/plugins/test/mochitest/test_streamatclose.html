@@ -3,23 +3,21 @@
   <title>Stream open at NPP_Destroy</title>
   <script type="text/javascript"
 	  src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
   <link rel="stylesheet" type="text/css"
 	href="/tests/SimpleTest/test.css">
 
 <body onload="startTest()">
-  <p id="display"></p>
-
-  <embed id="embedtest"
-	 style="width: 400px; height: 100px;" type="application/x-test"></embed>
-
   <script type="text/javascript">
   SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   var urlnotified = false;
 
-  var p = document.getElementById('embedtest');
+  var p = null;
 
   function startTest() {
+    p = document.getElementById('embedtest');
     ok(p.streamTest("neverending.sjs", false, null, null,
                     function(r, t) {
                       is(r, 2, "Stream should have failed");
@@ -40,3 +38,8 @@
   }
 
   </script>
+
+  <p id="display"></p>
+
+  <embed id="embedtest"
+   style="width: 400px; height: 100px;" type="application/x-test"></embed>

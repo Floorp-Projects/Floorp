@@ -2,14 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH           = @DEPTH@
-topsrcdir       = @top_srcdir@
-srcdir          = @srcdir@
-VPATH           = @srcdir@
-relativesrcdir  = @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 MOCHITEST_CHROME_FILES := \
   test_osfile_back.xul \
   worker_handler.js \
@@ -23,5 +15,3 @@ MOCHITEST_CHROME_FILES := \
   test_osfile_async.xul \
   main_test_osfile_async.js \
   $(NULL)
-
-include $(topsrcdir)/config/rules.mk
