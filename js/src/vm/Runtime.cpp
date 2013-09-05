@@ -98,7 +98,12 @@ PerThreadData::removeFromThreadList()
 }
 
 JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
-  : mainThread(this),
+  : JS::shadow::Runtime(
+#ifdef JSGC_GENERATIONAL
+        &gcStoreBuffer
+#endif
+    ),
+    mainThread(this),
     interrupt(0),
     handlingSignal(false),
     operationCallback(NULL),
