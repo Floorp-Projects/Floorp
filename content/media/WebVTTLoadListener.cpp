@@ -5,7 +5,8 @@
 
 #include "WebVTTLoadListener.h"
 #include "mozilla/dom/TextTrackCue.h"
-#include "mozilla/dom/HTMLTrackElement.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
+#include "VideoUtils.h"
 
 namespace mozilla {
 namespace dom {

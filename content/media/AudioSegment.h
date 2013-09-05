@@ -7,6 +7,7 @@
 #define MOZILLA_AUDIOSEGMENT_H_
 
 #include "MediaSegment.h"
+#include "nsISupportsImpl.h"
 #include "AudioSampleFormat.h"
 #include "SharedBuffer.h"
 

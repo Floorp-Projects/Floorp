@@ -11,6 +11,7 @@
 #include "AudioStream.h"
 #include "nsTArray.h"
 #include "nsIRunnable.h"
+#include "nsISupportsImpl.h"
 #include "StreamBuffer.h"
 #include "TimeVarying.h"
 #include "VideoFrameContainer.h"

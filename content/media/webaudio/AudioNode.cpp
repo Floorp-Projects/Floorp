@@ -7,8 +7,6 @@
 #include "AudioNode.h"
 #include "mozilla/ErrorResult.h"
 #include "AudioNodeStream.h"
-#include "AudioNodeEngine.h"
-#include "mozilla/dom/AudioParam.h"
 
 namespace mozilla {
 namespace dom {
