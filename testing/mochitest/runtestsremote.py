@@ -313,9 +313,10 @@ class MochiRemote(Mochitest):
 
         xpcshell_path = os.path.join(options.utilityPath, xpcshell)
         if localAutomation.elf_arm(xpcshell_path):
-            self.error('xpcshell at %s is an ARM binary; please use '
-                       'the --utility-path argument to specify the path '
-                       'to a desktop version.' % xpcshell)
+            log.error('xpcshell at %s is an ARM binary; please use '
+                      'the --utility-path argument to specify the path '
+                      'to a desktop version.' % xpcshell_path)
+            sys.exit(1)
 
         options.profilePath = tempfile.mkdtemp()
         self.server = MochitestServer(localAutomation, options)
@@ -332,7 +333,8 @@ class MochiRemote(Mochitest):
         options.profilePath = remoteProfilePath
          
     def stopWebServer(self, options):
-        self.server.stop()
+        if hasattr(self, 'server'):
+            self.server.stop()
         
     def buildProfile(self, options):
         if self.localProfile:
