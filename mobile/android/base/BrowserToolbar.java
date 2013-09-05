@@ -289,6 +289,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
                     menu.findItem(R.id.add_to_launcher).setVisible(false);
                     menu.findItem(R.id.subscribe).setVisible(false);
                 }
+
+                menu.findItem(R.id.share).setVisible(!GeckoProfile.get(getContext()).inGuestMode());
             }
         });
 
