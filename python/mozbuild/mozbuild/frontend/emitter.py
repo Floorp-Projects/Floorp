@@ -15,13 +15,17 @@ from .data import (
     ConfigFileSubstitution,
     DirectoryTraversal,
     Exports,
+    GeneratedWebIDLFile,
     IPDLFile,
     LocalInclude,
+    PreprocessedWebIDLFile,
     Program,
     ReaderSummary,
+    TestWebIDLFile,
     VariablePassthru,
     XPIDLFile,
     XpcshellManifests,
+    WebIDLFile,
 )
 
 from .reader import (
@@ -170,6 +174,18 @@ class TreeMetadataEmitter(LoggingMixin):
 
         for local_include in sandbox.get('LOCAL_INCLUDES', []):
             yield LocalInclude(sandbox, local_include)
+
+        for webidl in sandbox.get('WEBIDL_FILES', []):
+            yield WebIDLFile(sandbox, webidl)
+
+        for webidl in sandbox.get('TEST_WEBIDL_FILES', []):
+            yield TestWebIDLFile(sandbox, webidl)
+
+        for webidl in sandbox.get('PREPROCESSED_WEBIDL_FILES', []):
+            yield PreprocessedWebIDLFile(sandbox, webidl)
+
+        for webidl in sandbox.get('GENERATED_WEBIDL_FILES', []):
+            yield GeneratedWebIDLFile(sandbox, webidl)
 
     def _emit_directory_traversal_from_sandbox(self, sandbox):
         o = DirectoryTraversal(sandbox)
