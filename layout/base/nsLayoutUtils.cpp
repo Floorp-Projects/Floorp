@@ -93,6 +93,7 @@ using mozilla::image::ImageOps;
 using mozilla::image::Orientation;
 
 #define FLEXBOX_ENABLED_PREF_NAME "layout.css.flexbox.enabled"
+#define STICKY_ENABLED_PREF_NAME "layout.css.sticky.enabled"
 
 #ifdef DEBUG
 // TODO: remove, see bug 598468.
@@ -119,6 +120,11 @@ static int32_t sIndexOfFlexInDisplayTable;
 static int32_t sIndexOfInlineFlexInDisplayTable;
 // This tracks whether those ^^ indices have been initialized
 static bool sAreFlexKeywordIndicesInitialized = false;
+
+// This is an index into kPositionKTable. It will be initialized
+// the first time that StickyEnabledPrefChangeCallback() is invoked.
+static int32_t sIndexOfStickyInPositionTable;
+static bool sIsStickyKeywordIndexInitialized = false;
 
 typedef nsDataHashtable<nsUint64HashKey, nsIContent*> ContentMap;
 static ContentMap* sContentMap = nullptr;
@@ -166,6 +172,38 @@ FlexboxEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
     nsCSSProps::kDisplayKTable[sIndexOfInlineFlexInDisplayTable] =
       isFlexboxEnabled ? eCSSKeyword_inline_flex : eCSSKeyword_UNKNOWN;
   }
+
+  return 0;
+}
+
+// When the pref "layout.css.sticky.enabled" changes, this function is invoked
+// to let us update kPositionKTable, to selectively disable or restore the
+// entry for "sticky" in that table.
+static int
+StickyEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
+{
+  MOZ_ASSERT(strncmp(aPrefName, STICKY_ENABLED_PREF_NAME,
+                     NS_ARRAY_LENGTH(STICKY_ENABLED_PREF_NAME)) == 0,
+             "We only registered this callback for a single pref, so it "
+             "should only be called for that pref");
+
+  bool isStickyEnabled =
+    Preferences::GetBool(STICKY_ENABLED_PREF_NAME, false);
+
+  if (!sIsStickyKeywordIndexInitialized) {
+    // First run: find the position of "sticky" in kPositionKTable.
+    sIndexOfStickyInPositionTable =
+      nsCSSProps::FindIndexOfKeyword(eCSSKeyword_sticky,
+                                     nsCSSProps::kPositionKTable);
+    MOZ_ASSERT(sIndexOfStickyInPositionTable >= 0,
+               "Couldn't find sticky in kPositionKTable");
+    sIsStickyKeywordIndexInitialized = true;
+  }
+
+  // OK -- now, stomp on or restore the "sticky" entry in kPositionKTable,
+  // depending on whether the sticky pref is enabled vs. disabled.
+  nsCSSProps::kPositionKTable[sIndexOfStickyInPositionTable] =
+    isStickyEnabled ? eCSSKeyword_sticky : eCSSKeyword_UNKNOWN;
 
   return 0;
 }
@@ -5002,6 +5040,9 @@ nsLayoutUtils::Initialize()
   Preferences::RegisterCallback(FlexboxEnabledPrefChangeCallback,
                                 FLEXBOX_ENABLED_PREF_NAME);
   FlexboxEnabledPrefChangeCallback(FLEXBOX_ENABLED_PREF_NAME, nullptr);
+  Preferences::RegisterCallback(StickyEnabledPrefChangeCallback,
+                                STICKY_ENABLED_PREF_NAME);
+  StickyEnabledPrefChangeCallback(STICKY_ENABLED_PREF_NAME, nullptr);
 }
 
 /* static */
@@ -5015,6 +5056,8 @@ nsLayoutUtils::Shutdown()
 
   Preferences::UnregisterCallback(FlexboxEnabledPrefChangeCallback,
                                   FLEXBOX_ENABLED_PREF_NAME);
+  Preferences::UnregisterCallback(StickyEnabledPrefChangeCallback,
+                                  STICKY_ENABLED_PREF_NAME);
 }
 
 /* static */
