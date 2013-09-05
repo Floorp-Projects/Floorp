@@ -2528,6 +2528,17 @@ LIRGenerator::visitDeleteProperty(MDeleteProperty *ins)
 }
 
 bool
+LIRGenerator::visitDeleteElement(MDeleteElement *ins)
+{
+    LCallDeleteElement *lir = new LCallDeleteElement();
+    if(!useBoxAtStart(lir, LCallDeleteElement::Value, ins->value()))
+        return false;
+    if(!useBoxAtStart(lir, LCallDeleteElement::Index, ins->index()))
+        return false;
+    return defineReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitSetPropertyCache(MSetPropertyCache *ins)
 {
     LUse obj = useRegisterAtStart(ins->obj());
