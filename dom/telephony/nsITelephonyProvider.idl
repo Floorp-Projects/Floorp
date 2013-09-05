@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(3aa42e77-7c2b-43a1-b105-7be094b0817a)]
+[scriptable, uuid(a5818719-e1b6-4fdc-8551-006055fa9996)]
 interface nsITelephonyListener : nsISupports
 {
   /**
@@ -67,14 +67,15 @@ interface nsITelephonyListener : nsISupports
    *        Indicates whether this call is outgoing or incoming.
    * @param isConference
    *        Indicates whether this call is a conference call.
+   * @return true to continue enumeration or false to cancel.
    */
-  void enumerateCallState(in unsigned long callIndex,
-                          in unsigned short callState,
-                          in AString number,
-                          in boolean isActive,
-                          in boolean isOutgoing,
-                          in boolean isEmergency,
-                          in boolean isConference);
+  boolean enumerateCallState(in unsigned long callIndex,
+                             in unsigned short callState,
+                             in AString number,
+                             in boolean isActive,
+                             in boolean isOutgoing,
+                             in boolean isEmergency,
+                             in boolean isConference);
 
   /**
    * Notify when RIL receives supplementary service notification.
@@ -107,18 +108,11 @@ interface nsITelephonyListener : nsISupports
   void notifyCdmaCallWaiting(in AString number);
 };
 
-%{C++
-#define TELEPHONY_PROVIDER_CID \
-  { 0x9cf8aa52, 0x7c1c, 0x4cde, { 0x97, 0x4e, 0xed, 0x2a, 0xa0, 0xe7, 0x35, 0xfa } }
-#define TELEPHONY_PROVIDER_CONTRACTID \
-  "@mozilla.org/telephony/telephonyprovider;1"
-%}
-
 /**
  * XPCOM component (in the content process) that provides the telephony
  * information.
  */
-[scriptable, uuid(effca006-1ca8-47f7-9bab-1323f90a14ec)]
+[scriptable, uuid(45a2f856-4e07-499a-94c6-624f90c3345b)]
 interface nsITelephonyProvider : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -141,8 +135,8 @@ interface nsITelephonyProvider : nsISupports
    * RadioInterfaceLayer in the chrome process. Only a content process that has
    * the 'telephony' permission is allowed to register.
    */
-  void registerListener(in nsITelephonyListener listener);
-  void unregisterListener(in nsITelephonyListener listener);
+  void registerTelephonyMsg(in nsITelephonyListener listener);
+  void unregisterTelephonyMsg(in nsITelephonyListener listener);
 
   /**
    * Will continue calling listener.enumerateCallState until the listener
@@ -153,8 +147,8 @@ interface nsITelephonyProvider : nsISupports
   /**
    * Functionality for making and managing phone calls.
    */
-  void dial(in DOMString number,
-            in boolean isEmergency);
+  void dial(in DOMString number);
+  void dialEmergency(in DOMString number);
   void hangUp(in unsigned long callIndex);
 
   void startTone(in DOMString dtmfChar);
