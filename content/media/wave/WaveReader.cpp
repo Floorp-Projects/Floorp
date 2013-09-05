@@ -10,6 +10,7 @@
 #include "mozilla/dom/TimeRanges.h"
 #include "MediaDecoderStateMachine.h"
 #include "VideoUtils.h"
+#include "nsISeekableStream.h"
 
 #include <stdint.h>
 #include "mozilla/Util.h"

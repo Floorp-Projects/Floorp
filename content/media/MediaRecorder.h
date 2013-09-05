@@ -7,18 +7,19 @@
 #ifndef MediaRecorder_h
 #define MediaRecorder_h
 
-#include "DOMMediaStream.h"
-#include "MediaEncoder.h"
 #include "mozilla/dom/MediaRecorderBinding.h"
 #include "nsDOMEventTargetHelper.h"
-#include "EncodedBufferCache.h"
-#include "TrackUnionStream.h"
 
 // Max size for allowing queue encoded data in memory
 #define MAX_ALLOW_MEMORY_BUFFER 1024000
 namespace mozilla {
 
 class ErrorResult;
+class DOMMediaStream;
+class EncodedBufferCache;
+class MediaEncoder;
+class ProcessedMediaStream;
+class MediaInputPort;
 
 namespace dom {
 

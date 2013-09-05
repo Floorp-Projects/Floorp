@@ -180,19 +180,12 @@ destroying the MediaDecoder object.
 
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
-#include "nsIThread.h"
-#include "nsIChannel.h"
 #include "nsIObserver.h"
 #include "nsAutoPtr.h"
-#include "nsSize.h"
-#include "prlog.h"
-#include "gfxContext.h"
-#include "gfxRect.h"
 #include "MediaResource.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/TimeStamp.h"
 #include "MediaStreamGraph.h"
-#include "MediaDecoderOwner.h"
 #include "AudioChannelCommon.h"
 #include "AbstractMediaDecoder.h"
 
@@ -214,9 +207,7 @@ namespace layers {
 class Image;
 } //namespace layers
 
-class MediaByteRange;
 class VideoFrameContainer;
-class AudioStream;
 class MediaDecoderStateMachine;
 class MediaDecoderOwner;
 

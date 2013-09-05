@@ -17,7 +17,10 @@
 #include "mozilla/RefPtr.h"
 #include "nsIThreadPool.h"
 #include "nsXPCOMCIDInternal.h"
+#include "nsComponentManagerUtils.h"
+#include "mozilla/DebugOnly.h"
 #include <algorithm>
+#include <cassert>
 
 namespace mozilla {
 
