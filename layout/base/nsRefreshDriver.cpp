@@ -687,9 +687,6 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
 {
   mMostRecentRefreshEpochTime = JS_Now();
   mMostRecentRefresh = TimeStamp::Now();
-
-  mRequests.Init();
-  mStartTable.Init();
 }
 
 nsRefreshDriver::~nsRefreshDriver()

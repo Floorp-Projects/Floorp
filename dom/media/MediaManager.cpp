@@ -919,9 +919,6 @@ MediaManager::MediaManager()
   }
   LOG(("%s: default prefs: %dx%d @%dfps (min %d)", __FUNCTION__,
        mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS, mPrefs.mMinFPS));
-
-  mActiveWindows.Init();
-  mActiveCallbacks.Init();
 }
 
 NS_IMPL_ISUPPORTS2(MediaManager, nsIMediaManagerService, nsIObserver)

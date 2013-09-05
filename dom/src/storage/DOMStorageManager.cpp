@@ -108,10 +108,10 @@ NS_IMPL_ISUPPORTS1(DOMStorageManager,
                    nsIDOMStorageManager)
 
 DOMStorageManager::DOMStorageManager(nsPIDOMStorage::StorageType aType)
-  : mType(aType)
+  : mCaches(10)
+  , mType(aType)
   , mLowDiskSpace(false)
 {
-  mCaches.Init(10);
   DOMStorageObserver* observer = DOMStorageObserver::Self();
   NS_ASSERTION(observer, "No DOMStorageObserver, cannot observe private data delete notifications!");
 

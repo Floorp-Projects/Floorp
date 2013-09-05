@@ -10,13 +10,14 @@ ifdef USE_RCS_MK #{
 
 ifndef INCLUDED_RCS_MK #{
 
-MOZ_RCS_TYPE ?= $(notdir $(wildcard $(topsrcdir)/.hg))
+MOZ_RCS_TYPE_HG ?= $(notdir $(wildcard $(topsrcdir)/.hg))
+MOZ_RCS_TYPE_GIT ?= $(notdir $(wildcard $(topsrcdir)/.git))
 
 
 ###########################################################################
 # HAVE_MERCURIAL_RCS
 ###########################################################################
-ifeq (.hg,$(MOZ_RCS_TYPE)) #{
+ifeq (.hg,$(MOZ_RCS_TYPE_HG)) #{
 
 # Intent: Retrieve the http:// repository path for a directory.
 # Usage: $(call getSourceRepo[,repo_dir|args])
@@ -33,7 +34,18 @@ FUNC_getSourceRepo = \
     $(firstword $(shell $(getargv) showconfig paths.default))\
     )))
 
-endif #} HAVE_MERCURIAL_RCS
+#} HAVE_MERCURIAL_RCS
+
+###########################################################################
+# HAVE_GIT_RCS
+###########################################################################
+else ifeq (.git,$(MOZ_RCS_TYPE_GIT)) #{
+
+GIT ?= git
+getSourceRepo = \
+  $(shell cd $(topsrcdir) && $(GIT) rev-parse --verify HEAD)
+
+endif #} HAVE_GIT_RCS
 
 
 INCLUDED_RCS_MK := 1

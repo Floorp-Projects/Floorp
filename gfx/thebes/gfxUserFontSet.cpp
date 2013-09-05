@@ -102,8 +102,8 @@ gfxProxyFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeed
 }
 
 gfxUserFontSet::gfxUserFontSet()
+    : mFontFamilies(5)
 {
-    mFontFamilies.Init(5);
     IncrementGeneration();
 }
 
@@ -866,7 +866,6 @@ gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry *aFontEntry)
                  "caching a font associated with no family yet");
     if (!sUserFonts) {
         sUserFonts = new nsTHashtable<Entry>;
-        sUserFonts->Init();
 
         nsCOMPtr<nsIObserverService> obs =
             mozilla::services::GetObserverService();

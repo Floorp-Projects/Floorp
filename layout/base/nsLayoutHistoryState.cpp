@@ -21,7 +21,6 @@ public:
   nsLayoutHistoryState()
     : mScrollPositionOnly(false)
   {
-    mStates.Init();
   }
 
   NS_DECL_ISUPPORTS

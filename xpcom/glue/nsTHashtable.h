@@ -13,6 +13,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/fallible.h"
+#include "mozilla/PodOperations.h"
 
 #include <new>
 
@@ -82,10 +83,16 @@ class nsTHashtable
   typedef mozilla::fallible_t fallible_t;
 
 public:
-  /**
-   * A dummy constructor; you must call Init() before using this class.
-   */
-  nsTHashtable();
+  // Separate constructors instead of default aInitSize parameter since
+  // otherwise the default no-arg constructor isn't found.
+  nsTHashtable()
+  {
+    Init(PL_DHASH_MIN_SIZE);
+  }
+  explicit nsTHashtable(uint32_t aInitSize)
+  {
+    Init(aInitSize);
+  }
 
   /**
    * destructor, cleans up and deallocates
@@ -93,27 +100,6 @@ public:
   ~nsTHashtable();
 
   nsTHashtable(nsTHashtable<EntryType>&& aOther);
-
-  /**
-   * Initialize the table.  This function must be called before any other
-   * class operations.  This can fail due to OOM conditions.
-   * @param initSize the initial number of buckets in the hashtable, default 16
-   * @return true if the class was initialized properly.
-   */
-  void Init(uint32_t initSize = PL_DHASH_MIN_SIZE)
-  {
-    if (!Init(initSize, fallible_t()))
-      NS_RUNTIMEABORT("OOM");
-  }
-  bool Init(const fallible_t&) NS_WARN_UNUSED_RESULT
-  { return Init(PL_DHASH_MIN_SIZE, fallible_t()); }
-  bool Init(uint32_t initSize, const fallible_t&) NS_WARN_UNUSED_RESULT;
-
-  /**
-   * Check whether the table has been initialized. This can be useful for static hashtables.
-   * @return the initialization state of the class.
-   */
-  bool IsInitialized() const { return !!mTable.entrySize; }
 
   /**
    * Return the generation number for the table. This increments whenever
@@ -281,9 +267,6 @@ public:
   size_t SizeOfExcludingThis(SizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
                              mozilla::MallocSizeOf mallocSizeOf, void *userArg = NULL) const
   {
-    if (!IsInitialized()) {
-      return 0;
-    }
     if (sizeOfEntryExcludingThis) {
       s_SizeOfArgs args = { sizeOfEntryExcludingThis, userArg };
       return PL_DHashTableSizeOfExcludingThis(&mTable, s_SizeOfStub, mallocSizeOf, &args);
@@ -367,23 +350,21 @@ protected:
 
 private:
   // copy constructor, not implemented
-  nsTHashtable(nsTHashtable<EntryType>& toCopy);
+  nsTHashtable(nsTHashtable<EntryType>& toCopy) MOZ_DELETE;
+
+  /**
+   * Initialize the table.
+   * @param initSize the initial number of buckets in the hashtable
+   */
+  void Init(uint32_t aInitSize);
 
   // assignment operator, not implemented
-  nsTHashtable<EntryType>& operator= (nsTHashtable<EntryType>& toEqual);
+  nsTHashtable<EntryType>& operator= (nsTHashtable<EntryType>& toEqual) MOZ_DELETE;
 };
 
 //
 // template definitions
 //
-
-template<class EntryType>
-nsTHashtable<EntryType>::nsTHashtable()
-{
-  // mTable.entrySize == 0 means we're not yet initialized.  In Init(), we set
-  // mTable.entrySize == sizeof(EntryType).
-  mTable.entrySize = 0;
-}
 
 template<class EntryType>
 nsTHashtable<EntryType>::nsTHashtable(
@@ -407,15 +388,9 @@ nsTHashtable<EntryType>::~nsTHashtable()
 }
 
 template<class EntryType>
-bool
-nsTHashtable<EntryType>::Init(uint32_t initSize, const fallible_t&)
+void
+nsTHashtable<EntryType>::Init(uint32_t aInitSize)
 {
-  if (mTable.entrySize)
-  {
-    NS_ERROR("nsTHashtable::Init() should not be called twice.");
-    return true;
-  }
-
   static PLDHashTableOps sOps = 
   {
     ::PL_DHashAllocTable,
@@ -428,19 +403,13 @@ nsTHashtable<EntryType>::Init(uint32_t initSize, const fallible_t&)
     s_InitEntry
   };
 
-  if (!EntryType::ALLOW_MEMMOVE)
-  {
+  if (!EntryType::ALLOW_MEMMOVE) {
     sOps.moveEntry = s_CopyEntry;
   }
   
-  if (!PL_DHashTableInit(&mTable, &sOps, nullptr, sizeof(EntryType), initSize))
-  {
-    // if failed, reset "flag"
-    mTable.entrySize = 0;
-    return false;
+  if (!PL_DHashTableInit(&mTable, &sOps, nullptr, sizeof(EntryType), aInitSize)) {
+    NS_RUNTIMEABORT("OOM");
   }
-
-  return true;
 }
 
 // static definitions

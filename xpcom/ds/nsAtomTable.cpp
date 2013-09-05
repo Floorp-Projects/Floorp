@@ -554,7 +554,6 @@ RegisterStaticAtoms(const nsStaticAtom* aAtoms, uint32_t aAtomCount)
   
   if (!gStaticAtomTable && !gStaticAtomTableSealed) {
     gStaticAtomTable = new nsDataHashtable<nsStringHashKey, nsIAtom*>();
-    gStaticAtomTable->Init();
   }
   
   for (uint32_t i=0; i<aAtomCount; i++) {

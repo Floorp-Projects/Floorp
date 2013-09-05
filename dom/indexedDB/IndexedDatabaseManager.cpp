@@ -130,8 +130,6 @@ IndexedDatabaseManager::IndexedDatabaseManager()
 : mFileMutex("IndexedDatabaseManager.mFileMutex")
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  mFileManagers.Init();
 }
 
 IndexedDatabaseManager::~IndexedDatabaseManager()
