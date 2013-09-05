@@ -2,14 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-relativesrcdir  = @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 MOCHITEST_BROWSER_FILES := \
                  browser_tabview_alltabs.js \
                  browser_tabview_apptabs.js \
@@ -167,5 +159,3 @@ MOCHITEST_BROWSER_FILES := \
 # browser_tabview_bug654941.js disabled for intermittent failures (bug 754222)
 # browser_tabview_bug673729.js disabled for intermittent failures (bug 749980)
 # browser_tabview_bug696602.js disabled for intermittent failures (bug 736425)
-
-include $(topsrcdir)/config/rules.mk

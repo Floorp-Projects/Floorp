@@ -3,13 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-relativesrcdir  = @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
 MOCHITEST_FILES = \
 	android.json \
 	test_canvas.html \
@@ -215,4 +208,3 @@ endif
 # test_2d.path.rect.zero.6.html
 
 # split up into groups to work around command-line length limits
-include $(topsrcdir)/config/rules.mk

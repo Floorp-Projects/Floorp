@@ -3,14 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-relativesrcdir  = @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 MOCHITEST_CHROME_FILES = \
 		MozEnteredDomFullscreen_chrome.xul \
 		fullscreen.xul \
@@ -88,5 +80,3 @@ MOCHITEST_CHROME_FILES += \
 else
 $(filter disabled-on-os-x-for-intermittent-failures--bug-798848, test_MozEnteredDomFullscreen_event.xul)
 endif
-
-include $(topsrcdir)/config/rules.mk

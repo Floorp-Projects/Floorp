@@ -3,14 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-relativesrcdir  = @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 MOCHITEST_FILES =	test_bug231389.html \
 		test_bug287446.html \
 		     bug287446_subframe.html \
@@ -56,5 +48,3 @@ MOCHITEST_CHROME_FILES = \
 		test_bug665540.html \
 		     bug665540_window.xul \
 		$(NULL)
-
-include $(topsrcdir)/config/rules.mk

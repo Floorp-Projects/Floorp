@@ -25,13 +25,6 @@
 #
 
 
-DEPTH     = @DEPTH@
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 ifeq (WINNT,$(OS_TARGET))
 VISIBILITY_FLAGS =
 FORCE_STATIC_LIB = 1
@@ -50,4 +43,3 @@ DEFINES += -DMOZ_OTS_REPORT_ERRORS
 ifeq (WINNT,$(OS_TARGET))
 DEFINES += -DOTS_DLL -DOTS_DLL_EXPORTS
 endif
-

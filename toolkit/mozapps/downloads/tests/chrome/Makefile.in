@@ -3,14 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH          = @DEPTH@
-topsrcdir      = @top_srcdir@
-srcdir         = @srcdir@
-VPATH          = @srcdir@
-relativesrcdir = @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 # temporarily disabled test (bug 483200)
 #  test_retention_is_0_closes.xul \
 
@@ -58,5 +50,3 @@ MOCHITEST_CHROME_FILES += \
   $(filter disabled-for-very-frequent-orange--bug-630567, test_taskbarprogress_service.xul) \
   $(NULL)
 endif
-
-include $(topsrcdir)/config/rules.mk

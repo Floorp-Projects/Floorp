@@ -2,14 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-relativesrcdir	= @relativesrcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 # Media tests should be backend independent, i.e., not conditioned on
 # MOZ_OGG, MOZ_WAVE etc. (The only exception is the can_play_type tests,
 # which necessarily depend on the backend(s) configured.) As far as possible,
@@ -402,5 +394,3 @@ MOCHITEST_FILES += \
 		test_can_play_type_no_wave.html \
 		$(NULL)
 endif
-
-include $(topsrcdir)/config/rules.mk

@@ -7,13 +7,6 @@
 # the application binaries. The fact that it's under mozilla/widget is a fluke
 # of tree history.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
 FORCE_STATIC_LIB = 1
 
 DEFINES += -DXPCOM_GLUE
@@ -37,5 +30,3 @@ PROGOBJS = $(PROGCPPSRCS:.cpp=.$(OBJ_SUFFIX))
 LIBS            = \
 		$(NSPR_LIBS) \
 		$(XLDFLAGS) $(XLIBS)
-
-include $(topsrcdir)/config/rules.mk
