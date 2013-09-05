@@ -124,6 +124,11 @@ abstract public class AwesomeBarTab {
         if (subject.id < 0) {
             menu.findItem(R.id.remove_history).setVisible(false);
         }
+
+        if ( ((AwesomeBar)mContext).inGuestMode ) {
+            menu.findItem(R.id.share).setVisible(false);
+        }
+
         menu.setHeaderTitle(subject.title);
     }
 
