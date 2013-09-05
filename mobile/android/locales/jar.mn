@@ -32,6 +32,7 @@
   locale/@AB_CD@/browser/feedback.dtd             (%chrome/feedback.dtd)
   locale/@AB_CD@/browser/phishing.dtd             (%chrome/phishing.dtd)
   locale/@AB_CD@/browser/payments.properties      (%chrome/payments.properties)
+  locale/@AB_CD@/browser/handling.properties      (%chrome/handling.properties)
 
 # overrides for toolkit l10n, also for en-US
 relativesrcdir toolkit/locales:
@@ -39,7 +40,6 @@ relativesrcdir toolkit/locales:
   locale/@AB_CD@/browser/overrides/aboutAbout.dtd                  (%chrome/global/aboutAbout.dtd)
   locale/@AB_CD@/browser/overrides/aboutRights.dtd                 (%chrome/global/aboutRights.dtd)
   locale/@AB_CD@/browser/overrides/commonDialogs.properties        (%chrome/global/commonDialogs.properties)
-  locale/@AB_CD@/browser/overrides/handling/handling.properties    (%chrome/mozapps/handling/handling.properties)
   locale/@AB_CD@/browser/overrides/intl.properties                 (%chrome/global/intl.properties)
   locale/@AB_CD@/browser/overrides/intl.css                        (%chrome/global/intl.css)
   locale/@AB_CD@/browser/overrides/passwordmgr.properties          (%chrome/passwordmgr/passwordmgr.properties)
@@ -61,7 +61,7 @@ relativesrcdir toolkit/locales:
 % override chrome://global/locale/aboutAbout.dtd chrome://browser/locale/overrides/aboutAbout.dtd
 % override chrome://global/locale/aboutRights.dtd chrome://browser/locale/overrides/aboutRights.dtd
 % override chrome://global/locale/commonDialogs.properties chrome://browser/locale/overrides/commonDialogs.properties
-% override chrome://mozapps/locale/handling/handling.properties chrome://browser/locale/overrides/handling/handling.properties
+% override chrome://mozapps/locale/handling/handling.properties chrome://browser/locale/handling.properties
 % override chrome://global/locale/intl.properties chrome://browser/locale/overrides/intl.properties
 % override chrome://global/locale/intl.css chrome://browser/locale/overrides/intl.css
 % override chrome://passwordmgr/locale/passwordmgr.properties chrome://browser/locale/overrides/passwordmgr/passwordmgr.properties
