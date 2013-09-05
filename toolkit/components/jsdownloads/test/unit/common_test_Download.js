@@ -1631,6 +1631,14 @@ add_task(function test_contentType() {
  */
 add_task(function test_platform_integration()
 {
+  let downloadFiles = [];
+  function cleanup() {
+    for (let file of downloadFiles) {
+      file.remove(true);
+    }
+  }
+  do_register_cleanup(cleanup);
+
   for (let isPrivate of [false, true]) {
     DownloadIntegration.downloadDoneCalled = false;
 
@@ -1641,6 +1649,7 @@ add_task(function test_platform_integration()
     let targetFile = yield DownloadIntegration.getSystemDownloadsDirectory();
     targetFile = targetFile.clone();
     targetFile.append("test" + (Math.floor(Math.random() * 1000000)));
+    downloadFiles.push(targetFile);
 
     let download;
     if (gUseLegacySaver) {
