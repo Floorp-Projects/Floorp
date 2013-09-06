@@ -29,6 +29,10 @@ class OverflowChangedTracker
 {
 public:
 
+  OverflowChangedTracker() :
+    mSubtreeRoot(nullptr)
+  {}
+
   ~OverflowChangedTracker()
   {
     NS_ASSERTION(mEntryList.empty(), "Need to flush before destroying!");
@@ -68,6 +72,15 @@ public:
   }
 
   /**
+   * Set the subtree root to limit overflow updates. This must be set if and
+   * only if currently reflowing aSubtreeRoot, to ensure overflow changes will
+   * still propagate correctly.
+   */
+  void SetSubtreeRoot(const nsIFrame* aSubtreeRoot) {
+    mSubtreeRoot = aSubtreeRoot;
+  }
+
+  /**
    * Update the overflow of all added frames, and clear the entry list.
    *
    * Start from those deepest in the frame tree and works upwards. This stops 
@@ -100,7 +113,7 @@ public:
       }
       if (updateParent) {
         nsIFrame *parent = frame->GetParent();
-        if (parent) {
+        if (parent && parent != mSubtreeRoot) {
           if (!mEntryList.contains(Entry(parent, entry->mDepth - 1, false))) {
             mEntryList.insert(new Entry(parent, entry->mDepth - 1, false));
           }
@@ -165,6 +178,9 @@ private:
 
   /* A list of frames to process, sorted by their depth in the frame tree */
   SplayTree<Entry, Entry> mEntryList;
+
+  /* Don't update overflow of this frame or its ancestors. */
+  const nsIFrame* mSubtreeRoot;
 };
 
 class RestyleTracker {

@@ -854,13 +854,13 @@ struct Property
 };
 
 struct TypeNewScript;
-struct TypeBinaryData;
+struct TypeTypedObject;
 
 struct TypeObjectAddendum
 {
     enum Kind {
         NewScript,
-        BinaryData
+        TypedObject
     };
 
     TypeObjectAddendum(Kind kind);
@@ -876,13 +876,13 @@ struct TypeObjectAddendum
         return (TypeNewScript*) this;
     }
 
-    bool isBinaryData() {
-        return kind == BinaryData;
+    bool isTypedObject() {
+        return kind == TypedObject;
     }
 
-    TypeBinaryData *asBinaryData() {
-        JS_ASSERT(isBinaryData());
-        return (TypeBinaryData*) this;
+    TypeTypedObject *asTypedObject() {
+        JS_ASSERT(isTypedObject());
+        return (TypeTypedObject*) this;
     }
 
     static inline void writeBarrierPre(TypeObjectAddendum *newScript);
@@ -939,9 +939,9 @@ struct TypeNewScript : public TypeObjectAddendum
     static inline void writeBarrierPre(TypeNewScript *newScript);
 };
 
-struct TypeBinaryData : public TypeObjectAddendum
+struct TypeTypedObject : public TypeObjectAddendum
 {
-    TypeBinaryData(TypeRepresentation *repr);
+    TypeTypedObject(TypeRepresentation *repr);
 
     TypeRepresentation *const typeRepr;
 };
@@ -1020,12 +1020,12 @@ struct TypeObject : gc::Cell
         return addendum->asNewScript();
     }
 
-    bool hasBinaryData() {
-        return addendum && addendum->isBinaryData();
+    bool hasTypedObject() {
+        return addendum && addendum->isTypedObject();
     }
 
-    TypeBinaryData *binaryData() {
-        return addendum->asBinaryData();
+    TypeTypedObject *typedObject() {
+        return addendum->asTypedObject();
     }
 
     /*
@@ -1035,7 +1035,7 @@ struct TypeObject : gc::Cell
      * this addendum must already be associated with the same TypeRepresentation,
      * and the method has no effect.
      */
-    bool addBinaryDataAddendum(JSContext *cx, TypeRepresentation *repr);
+    bool addTypedObjectAddendum(JSContext *cx, TypeRepresentation *repr);
 
     /*
      * Properties of this object. This may contain JSID_VOID, representing the
@@ -1131,7 +1131,7 @@ struct TypeObject : gc::Cell
     void markUnknown(ExclusiveContext *cx);
     void clearAddendum(ExclusiveContext *cx);
     void clearNewScriptAddendum(ExclusiveContext *cx);
-    void clearBinaryDataAddendum(ExclusiveContext *cx);
+    void clearTypedObjectAddendum(ExclusiveContext *cx);
     void getFromPrototypes(JSContext *cx, jsid id, HeapTypeSet *types, bool force = false);
 
     void print();

@@ -8,6 +8,7 @@
 
 #include "jsanalyze.h"
 
+#include "jit/AsmJS.h"
 #include "jit/Ion.h"
 #include "jit/IonBuilder.h"
 #include "jit/IonSpewer.h"
@@ -27,7 +28,8 @@ MIRGenerator::MIRGenerator(JSCompartment *compartment,
     error_(false),
     cancelBuild_(0),
     maxAsmJSStackArgBytes_(0),
-    performsAsmJSCall_(false)
+    performsAsmJSCall_(false),
+    minAsmJSHeapLength_(AsmJSAllocationGranularity)
 { }
 
 bool

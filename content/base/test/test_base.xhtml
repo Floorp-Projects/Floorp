@@ -40,7 +40,7 @@ addLoadEvent(function() {
      "http://mochi.test:8888/tests/content/base/test/file_base_xbl.xml",
      "http://mochi.test:8888/tests/content/base/test/file_base_xbl.xml#shesellsseashellsbytheseashore",
      ];
-  node = document.getAnonymousNodes(document.getElementById("bound"))[0];
+  node = SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes(document.getElementById("bound")))[0];
   while(node) {
     is(node.baseURI, svgExpected.shift(), "node base");
     node = node.firstChild;
