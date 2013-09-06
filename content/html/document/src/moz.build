@@ -11,10 +11,12 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.dom += [
+    'HTMLAllCollection.h',
     'ImageDocument.h',
 ]
 
 CPP_SOURCES += [
+    'HTMLAllCollection.cpp',
     'ImageDocument.cpp',
     'MediaDocument.cpp',
     'PluginDocument.cpp',
