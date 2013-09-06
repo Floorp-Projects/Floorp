@@ -400,12 +400,8 @@ class TypedRegisterSet
 #endif
     }
     T getAny() const {
-        // The choice of first or last here is mostly arbitrary, as they are
-        // about the same speed on popular architectures. We choose first, as
-        // it has the advantage of using the "lower" registers more often. These
-        // registers are sometimes more efficient (e.g. optimized encodings for
-        // EAX on x86).
-        return getFirst();
+        JS_ASSERT(!empty());
+        return T::FromCode(mozilla::FloorLog2(bits_));
     }
     T getFirst() const {
         JS_ASSERT(!empty());
