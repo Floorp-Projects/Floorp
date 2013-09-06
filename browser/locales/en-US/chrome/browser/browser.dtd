@@ -645,6 +645,11 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY social.chatBar.label "Focus chats">
 <!ENTITY social.chatBar.accesskey "c">
 
+<!ENTITY social.markpage.accesskey "P">
+<!ENTITY social.markpageMenu.label "Save Page To…">
+<!ENTITY social.marklink.accesskey "L">
+<!ENTITY social.marklinkMenu.label "Save Link To…">
+
 <!ENTITY getUserMedia.selectCamera.label "Camera to share:">
 <!ENTITY getUserMedia.selectCamera.accesskey "C">
 <!ENTITY getUserMedia.selectMicrophone.label "Microphone to share:">
