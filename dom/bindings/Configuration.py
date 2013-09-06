@@ -224,7 +224,7 @@ class Descriptor(DescriptorProvider):
 
         # Do something sane for JSObject
         if self.nativeType == "JSObject":
-            headerDefault = "jsapi.h"
+            headerDefault = "js/TypeDecls.h"
         elif self.interface.isCallback() or self.interface.isJSImplemented():
             # A copy of CGHeaders.getDeclarationFilename; we can't
             # import it here, sadly.

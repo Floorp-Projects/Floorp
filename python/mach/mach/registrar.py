@@ -38,6 +38,28 @@ class MachRegistrar(object):
         self.categories[name] = (title, description, priority)
         self.commands_by_category[name] = set()
 
+    def dispatch(self, name, context=None, **args):
+        """Dispatch/run a command.
+
+        Commands can use this to call other commands.
+        """
+
+        # TODO The logic in this function overlaps with code in
+        # mach.main.Main._run() and should be consolidated.
+        handler = self.command_handlers[name]
+        cls = handler.cls
+
+        if handler.pass_context and not context:
+            raise Exception('mach command class requires context.')
+
+        if handler.pass_context:
+            instance = cls(context)
+        else:
+            instance = cls()
+
+        fn = getattr(instance, handler.method)
+
+        return fn(**args) or 0
+
 
 Registrar = MachRegistrar()
-

@@ -70,6 +70,7 @@ private:
 protected:
     uint32_t                        mForegroundCount;
     uint32_t                        mLoadFlags;
+    uint32_t                        mDefaultLoadFlags;
 
     nsCOMPtr<nsILoadGroup>          mLoadGroup; // load groups can contain load groups
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;

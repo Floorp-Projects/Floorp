@@ -10,10 +10,12 @@ interface nsIRequestObserver;
 interface nsIInterfaceRequestor;
 interface nsILoadGroupConnectionInfo;
 
+typedef unsigned long nsLoadFlags;
+
 /**
  * A load group maintains a collection of nsIRequest objects. 
  */
-[scriptable, uuid(19501006-46e3-4634-b97d-26eff894b4d3)]
+[scriptable, uuid(afb57ac2-bce5-4ee3-bb34-385089a9ba5c)]
 interface nsILoadGroup : nsIRequest
 {
     /**
@@ -78,6 +80,19 @@ interface nsILoadGroup : nsIRequest
      * connection blocking, and per-tab connection grouping
      */
     readonly attribute nsILoadGroupConnectionInfo connectionInfo;
+
+    /**
+     * The set of load flags that will be added to all new requests added to
+     * this group. Any existing requests in the load group are not modified,
+     * so it is expected these flags will be added before requests are added
+     * to the group - typically via nsIDocShell::defaultLoadFlags on a new
+     * docShell.
+     * Note that these flags are *not* added to the default request for the
+     * load group; it is expected the default request will already have these
+     * flags (again, courtesy of setting nsIDocShell::defaultLoadFlags before
+     * the docShell has created the default request.)
+     */
+    attribute nsLoadFlags defaultLoadFlags;
 };
 
 %{C++

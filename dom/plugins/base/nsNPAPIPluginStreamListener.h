@@ -15,7 +15,6 @@
 #include "nsIOutputStream.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsString.h"
-#include "nsNPAPIPluginInstance.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "mozilla/PluginLibrary.h"
 
@@ -23,6 +22,8 @@
 
 class nsPluginStreamListenerPeer;
 class nsNPAPIPluginStreamListener;
+class nsNPAPIPluginInstance;
+class nsIChannel;
 
 class nsNPAPIStreamWrapper
 {

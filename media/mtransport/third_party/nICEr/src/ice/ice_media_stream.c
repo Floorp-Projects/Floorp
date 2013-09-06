@@ -155,10 +155,12 @@ int nr_ice_media_stream_get_attributes(nr_ice_media_stream *stream, char ***attr
     /* First find out how many attributes we need */
     comp=STAILQ_FIRST(&stream->components);
     while(comp){
-      if(r=nr_ice_component_prune_candidates(stream->ctx,comp))
-        ABORT(r);
+      if (comp->state != NR_ICE_COMPONENT_DISABLED) {
+        if(r=nr_ice_component_prune_candidates(stream->ctx,comp))
+          ABORT(r);
 
-      attrct+=comp->candidate_ct;
+        attrct+=comp->candidate_ct;
+      }
 
       comp=STAILQ_NEXT(comp,entry);
     }
@@ -180,18 +182,20 @@ int nr_ice_media_stream_get_attributes(nr_ice_media_stream *stream, char ***attr
     /* Now format the attributes */
     comp=STAILQ_FIRST(&stream->components);
     while(comp){
-      nr_ice_candidate *cand;
+      if (comp->state != NR_ICE_COMPONENT_DISABLED) {
+        nr_ice_candidate *cand;
 
-      cand=TAILQ_FIRST(&comp->candidates);
-      while(cand){
-        assert(index < attrct);
+        cand=TAILQ_FIRST(&comp->candidates);
+        while(cand){
+          assert(index < attrct);
 
-        if(r=nr_ice_format_candidate_attribute(cand, attrs[index],MAX_ATTRIBUTE_SIZE))
-          ABORT(r);
+          if(r=nr_ice_format_candidate_attribute(cand, attrs[index],MAX_ATTRIBUTE_SIZE))
+            ABORT(r);
 
-        index++;
+          index++;
 
-        cand=TAILQ_NEXT(cand,entry_comp);
+          cand=TAILQ_NEXT(cand,entry_comp);
+        }
       }
       comp=STAILQ_NEXT(comp,entry);
     }
@@ -274,8 +278,11 @@ int nr_ice_media_stream_pair_candidates(nr_ice_peer_ctx *pctx,nr_ice_media_strea
     pcomp=STAILQ_FIRST(&pstream->components);
     lcomp=STAILQ_FIRST(&lstream->components);
     while(pcomp){
-      if(r=nr_ice_component_pair_candidates(pctx,lcomp,pcomp))
-        ABORT(r);
+      if ((lcomp->state != NR_ICE_COMPONENT_DISABLED) &&
+          (pcomp->state != NR_ICE_COMPONENT_DISABLED)) {
+        if(r=nr_ice_component_pair_candidates(pctx,lcomp,pcomp))
+          ABORT(r);
+      }
 
       lcomp=STAILQ_NEXT(lcomp,entry);
       pcomp=STAILQ_NEXT(pcomp,entry);
@@ -567,7 +574,9 @@ int nr_ice_media_stream_component_nominated(nr_ice_media_stream *stream,nr_ice_c
 
     comp=STAILQ_FIRST(&stream->components);
     while(comp){
-      if(!comp->nominated)
+      if((comp->state != NR_ICE_COMPONENT_DISABLED) &&
+         (comp->local_component->state != NR_ICE_COMPONENT_DISABLED) &&
+         !comp->nominated)
         break;
 
       comp=STAILQ_NEXT(comp,entry);
@@ -578,7 +587,7 @@ int nr_ice_media_stream_component_nominated(nr_ice_media_stream *stream,nr_ice_c
       goto done;
 
     /* All done... */
-    r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/ICE-STREAM(%s): all components have nominated candidate pairs",stream->pctx->label,stream->label);
+    r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/ICE-STREAM(%s): all active components have nominated candidate pairs",stream->pctx->label,stream->label);
     nr_ice_media_stream_set_state(stream,NR_ICE_MEDIA_STREAM_CHECKS_COMPLETED);
 
     /* Cancel our timer */
@@ -724,6 +733,7 @@ int nr_ice_media_stream_send(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str, in
     return(_status);
   }
 
+/* Returns R_REJECTED if the component is unpaired or has been disabled. */
 int nr_ice_media_stream_get_active(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str, int component, nr_ice_candidate **local, nr_ice_candidate **remote)
   {
     int r,_status;
@@ -732,6 +742,10 @@ int nr_ice_media_stream_get_active(nr_ice_peer_ctx *pctx, nr_ice_media_stream *s
     /* First find the peer component */
     if(r=nr_ice_peer_ctx_find_component(pctx, str, component, &comp))
       ABORT(r);
+
+    if (comp->state == NR_ICE_COMPONENT_UNPAIRED ||
+        comp->state == NR_ICE_COMPONENT_DISABLED)
+      ABORT(R_REJECTED);
 
     if(!comp->active)
       ABORT(R_NOT_FOUND);
@@ -795,5 +809,28 @@ int nr_ice_media_stream_finalize(nr_ice_media_stream *lstr,nr_ice_media_stream *
     }
 
     return(0);
+  }
+
+
+int nr_ice_media_stream_disable_component(nr_ice_media_stream *stream, int component_id)
+  {
+    int r,_status;
+    nr_ice_component *comp;
+
+    if (stream->ice_state != NR_ICE_MEDIA_STREAM_UNPAIRED)
+      ABORT(R_FAILED);
+
+    if ((r=nr_ice_media_stream_find_component(stream, component_id, &comp)))
+      ABORT(r);
+
+    /* Can only disable before pairing */
+    if (comp->state != NR_ICE_COMPONENT_UNPAIRED)
+      ABORT(R_FAILED);
+
+    comp->state = NR_ICE_COMPONENT_DISABLED;
+
+    _status=0;
+ abort:
+    return(_status);
   }
 

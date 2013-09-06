@@ -31,4 +31,4 @@ skip-if(B2G) skip-if(gtk2Widget) == quotationmarks-cjk-1.html quotationmarks-cjk
 == url-2.html url-2-ref.html
 == url-3.html url-3-ref.html
 == winpath-1.html winpath-1-ref.html
-fuzzy-if(cocoaWidget,238,58) == zwnbsp-1.html zwnbsp-1-ref.html
+== zwnbsp-1.html zwnbsp-1-ref.html
