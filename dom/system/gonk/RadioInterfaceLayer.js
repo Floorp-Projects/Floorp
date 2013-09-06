@@ -3092,7 +3092,7 @@ RadioInterface.prototype = {
         if (response.errorMsg) {
           // Failed to send SMS out.
           let error = Ci.nsIMobileMessageCallback.UNKNOWN_ERROR;
-          switch (message.errorMsg) {
+          switch (response.errorMsg) {
             case RIL.ERROR_RADIO_NOT_AVAILABLE:
               error = Ci.nsIMobileMessageCallback.NO_SIGNAL_ERROR;
               break;
