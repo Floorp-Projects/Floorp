@@ -7,33 +7,18 @@
 
 SUPPRESS_DEFAULT_RULES := 1
 
-include $(topsrcdir)/config/rules.mk
-
-# We don't print the build status messages unless we're in a top level build
-# otherwise the output is unexpected and it confuses downstream parsers.
-define make_subtier_dir
-$(call BUILDSTATUS,SUBTIER_START precompile $(1))
-+$(MAKE) -C $(2) $(3)
-$(call BUILDSTATUS,SUBTIER_FINISH precompile $(1))
-
-endef
-
 default::
-	$(call BUILDSTATUS,TIER_START  precompile IPDL WebIDL XPIDL)
 	+$(MAKE) export
-	$(call BUILDSTATUS,TIER_FINISH precompile)
 
 export:: ipdl webidl xpidl
 
 ipdl:
-	$(call make_subtier_dir,IPDL,$(DEPTH)/ipc/ipdl,ipdl)
+	$(call SUBMAKE,ipdl,$(DEPTH)/ipc/ipdl)
 
 webidl:
-	$(call make_subtier_dir,WebIDL,$(DEPTH)/dom/bindings,webidl)
+	$(call SUBMAKE,webidl,$(DEPTH)/dom/bindings)
 
 xpidl:
-	$(call BUILDSTATUS,SUBTIER_START  precompile XPIDL)
-	+$(MAKE) -C $(DEPTH)/xpcom/idl-parser xpidl-parser
+	$(call SUBMAKE,xpidl-parser,$(DEPTH)/xpcom/idl-parser)
 	$(call py_action,process_install_manifest,$(DIST)/idl $(DEPTH)/_build_manifests/install/dist_idl)
-	+$(MAKE) -C $(DEPTH)/config/makefiles/xpidl xpidl
-	$(call BUILDSTATUS,SUBTIER_FINISH precompile XPIDL)
+	$(call SUBMAKE,xpidl,$(DEPTH)/config/makefiles/xpidl)
