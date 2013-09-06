@@ -936,11 +936,13 @@ public:
 
     void SetBeforeUnlinkCallback(CC_BeforeUnlinkCallback aBeforeUnlinkCB)
     {
+        CheckThreadSafety();
         mBeforeUnlinkCB = aBeforeUnlinkCB;
     }
 
     void SetForgetSkippableCallback(CC_ForgetSkippableCallback aForgetSkippableCB)
     {
+        CheckThreadSafety();
         mForgetSkippableCB = aForgetSkippableCB;
     }
 
@@ -2098,6 +2100,8 @@ nsPurpleBuffer::RemoveSkippable(nsCycleCollector* aCollector,
 bool
 nsCycleCollector::FreeSnowWhite(bool aUntilNoSWInPurpleBuffer)
 {
+    CheckThreadSafety();
+
     bool hadSnowWhiteObjects = false;
     do {
         SnowWhiteKiller visitor(mPurpleBuf.Count());
@@ -2115,6 +2119,7 @@ void
 nsCycleCollector::ForgetSkippable(bool aRemoveChildlessNodes,
                                   bool aAsyncSnowWhiteFreeing)
 {
+    CheckThreadSafety();
     if (mJSRuntime) {
         mJSRuntime->PrepareForForgetSkippable();
     }
@@ -2832,12 +2837,15 @@ nsCycleCollector::FinishCollection(nsICycleCollectorListener *aListener)
 uint32_t
 nsCycleCollector::SuspectedCount()
 {
+    CheckThreadSafety();
     return mPurpleBuf.Count();
 }
 
 void
 nsCycleCollector::Shutdown()
 {
+    CheckThreadSafety();
+
     // Always delete snow white objects.
     FreeSnowWhite(true);
 
@@ -3204,7 +3212,6 @@ nsCycleCollector_shutdown()
     if (data) {
         MOZ_ASSERT(data->mCollector);
         PROFILER_LABEL("CC", "nsCycleCollector_shutdown");
-        data->mCollector->CheckThreadSafety();
         data->mCollector->Shutdown();
         delete data->mCollector;
         data->mCollector = nullptr;
