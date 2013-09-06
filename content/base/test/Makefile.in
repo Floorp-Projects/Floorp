@@ -580,6 +580,7 @@ MOCHITEST_FILES_C= \
 		test_processing_instruction_update_stylesheet.xhtml \
 		test_bug907892.html \
 		file_bug907892.html \
+		test_bug902847.html \
 		$(NULL)
 
 # OOP tests don't work on Windows (bug 763081) or native-fennec
