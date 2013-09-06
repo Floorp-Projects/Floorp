@@ -21,3 +21,12 @@ LIBRARY_NAME = 'accessibility_html_s'
 
 LIBXUL_LIBRARY = True
 
+LOCAL_INCLUDES += [
+    '../../../layout/generic',
+    '../../../layout/tables',
+    '../../../layout/xul/base/src',
+    '../base',
+    '../generic',
+    '../xpcom',
+]
+

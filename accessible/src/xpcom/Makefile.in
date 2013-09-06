@@ -11,11 +11,6 @@ xpcaccevents_TARGET := export
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES = \
-  -I$(srcdir)/../base \
-  -I$(srcdir)/../generic \
-  $(NULL)
-
 ifdef MOZ_ENABLE_GTK
 LOCAL_INCLUDES += \
   -I$(srcdir)/../atk \

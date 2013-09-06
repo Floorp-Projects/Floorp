@@ -65,3 +65,17 @@ LIBRARY_NAME = 'accessibility_base_s'
 
 LIBXUL_LIBRARY = True
 
+LOCAL_INCLUDES += [
+    '../../../content/xbl/src',
+    '../../../ipc/chromium/src',
+    '../../../layout/generic',
+    '../../../layout/style',
+    '../../../layout/svg',
+    '../../../layout/xul/base/src',
+    '../../../layout/xul/tree/',
+    '../generic',
+    '../html',
+    '../xpcom',
+    '../xul',
+]
+

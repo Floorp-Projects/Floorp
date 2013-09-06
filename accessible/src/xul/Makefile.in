@@ -5,17 +5,6 @@
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES = \
-  -I$(srcdir) \
-  -I$(srcdir)/../base \
-  -I$(srcdir)/../generic \
-  -I$(srcdir)/../html \
-  -I$(srcdir)/../xpcom \
-  -I$(srcdir)/../../../layout/generic \
-  -I$(srcdir)/../../../layout/xul/base/src \
-  -I$(srcdir)/../../../layout/xul/tree// \
-  $(NULL)
-
 ifdef MOZ_ENABLE_GTK
 LOCAL_INCLUDES += \
   -I$(srcdir)/../atk \
