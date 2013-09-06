@@ -28,6 +28,14 @@ public:
   typedef nsBaseHashtable< KeyClass, nsCOMPtr<Interface> , Interface* >
           base_type;
 
+  nsInterfaceHashtable()
+  {
+  }
+  explicit nsInterfaceHashtable(uint32_t aInitSize)
+    : nsBaseHashtable<KeyClass,nsCOMPtr<Interface>,Interface*>(aInitSize)
+  {
+  }
+
   /**
    * @copydoc nsBaseHashtable::Get
    * @param pData This is an XPCOM getter, so pData is already_addrefed.
@@ -68,35 +76,6 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
   aField.EnumerateRead(ImplCycleCollectionTraverse_EnumFunc<typename K::KeyType,T*>,
                        &userData);
 }
-
-/**
- * Thread-safe version of nsInterfaceHashtable
- * @param KeyClass a wrapper-class for the hashtable key, see nsHashKeys.h
- *   for a complete specification.
- * @param Interface the interface-type being wrapped
- */
-template<class KeyClass,class Interface>
-class nsInterfaceHashtableMT :
-  public nsBaseHashtableMT< KeyClass, nsCOMPtr<Interface> , Interface* >
-{
-public:
-  typedef typename KeyClass::KeyType KeyType;
-  typedef Interface* UserDataType;
-  typedef nsBaseHashtableMT< KeyClass, nsCOMPtr<Interface> , Interface* >
-          base_type;
-
-  /**
-   * @copydoc nsBaseHashtable::Get
-   * @param pData This is an XPCOM getter, so pData is already_addrefed.
-   *   If the key doesn't exist, pData will be set to nullptr.
-   */
-  bool Get(KeyType aKey, UserDataType* pData) const;
-
-  // GetWeak does not make sense on a multi-threaded hashtable, where another
-  // thread may remove the entry (and hence release it) as soon as GetWeak
-  // returns
-};
-
 
 //
 // nsInterfaceHashtable definitions
@@ -160,43 +139,6 @@ nsInterfaceHashtable<KeyClass,Interface>::GetWeak
   if (aFound)
     *aFound = false;
   return nullptr;
-}
-
-//
-// nsInterfaceHashtableMT definitions
-//
-
-template<class KeyClass,class Interface>
-bool
-nsInterfaceHashtableMT<KeyClass,Interface>::Get
-  (KeyType aKey, UserDataType* pInterface) const
-{
-  PR_Lock(this->mLock);
-
-  typename base_type::EntryType* ent = this->GetEntry(aKey);
-
-  if (ent)
-  {
-    if (pInterface)
-    {
-      *pInterface = ent->mData;
-
-      NS_IF_ADDREF(*pInterface);
-    }
-
-    PR_Unlock(this->mLock);
-
-    return true;
-  }
-
-  // if the key doesn't exist, set *pInterface to null
-  // so that it is a valid XPCOM getter
-  if (pInterface)
-    *pInterface = nullptr;
-
-  PR_Unlock(this->mLock);
-
-  return false;
 }
 
 #endif // nsInterfaceHashtable_h__

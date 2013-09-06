@@ -34,7 +34,7 @@ function checkAllowed () {
    *   Content-Security-Policy: default-src 'self'
    *
    *   we load the xsl file using:
-   *   <?xml-stylesheet type="text/xsl" href="file_CSP_bug663467_allows.xsl"?>
+   *   <?xml-stylesheet type="text/xsl" href="file_CSP_bug663467.xsl"?>
    */
   try {
     var cspframe = document.getElementById('xsltframe');
@@ -49,11 +49,10 @@ function checkAllowed () {
 
 function checkBlocked () {
   /*   The policy for this test is:
-   *   Content-Security-Policy: default-src 'self'
+   *   Content-Security-Policy: default-src *.example.com
    *
    *   we load the xsl file using:
-   *   <?xml-stylesheet type="text/xsl"
-   *    href="http://example.org/tests/content/base/test/file_CSP_bug663467_blocks.xsl"?>
+   *   <?xml-stylesheet type="text/xsl" href="file_CSP_bug663467.xsl"?>
    */
   try {
     var cspframe = document.getElementById('xsltframe2');

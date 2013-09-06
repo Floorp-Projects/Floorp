@@ -255,7 +255,6 @@ Preferences::GetInstanceForService()
   gCacheData = new nsTArray<nsAutoPtr<CacheData> >();
 
   gObserverTable = new nsRefPtrHashtable<ValueObserverHashKey, ValueObserver>();
-  gObserverTable->Init();
 
   // Preferences::GetInstanceForService() can be called from GetService(), and
   // NS_RegisterMemoryReporter calls GetService(nsIMemoryReporter).  To avoid a

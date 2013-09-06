@@ -77,12 +77,10 @@ SpeechSynthesis::SpeechSynthesis(nsPIDOMWindow* aParent)
   : mParent(aParent)
 {
   SetIsDOMBinding();
-  mVoiceCache.Init();
 }
 
 SpeechSynthesis::~SpeechSynthesis()
 {
-  mVoiceCache.Clear();
 }
 
 JSObject*

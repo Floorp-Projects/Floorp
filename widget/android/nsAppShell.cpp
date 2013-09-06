@@ -181,8 +181,6 @@ nsAppShell::Init()
         gWidgetLog = PR_NewLogModule("Widget");
 #endif
 
-    mObserversHash.Init();
-
     nsresult rv = nsBaseAppShell::Init();
     AndroidBridge* bridge = AndroidBridge::Bridge();
 
