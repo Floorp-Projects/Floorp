@@ -221,6 +221,52 @@ ComparePolicy::adjustInputs(MInstruction *def)
 }
 
 bool
+TypeBarrierPolicy::adjustInputs(MInstruction *def)
+{
+    MTypeBarrier *ins = def->toTypeBarrier();
+    MIRType inputType = ins->getOperand(0)->type();
+    MIRType outputType = ins->type();
+
+    // Input and output type are already in accordance.
+    if (inputType == outputType)
+        return true;
+
+    // Output is a value, currently box the input.
+    // Optimization: decrease resultTypeSet to only include the inputType.
+    // This will remove the need for boxing.
+    if (outputType == MIRType_Value) {
+        JS_ASSERT(inputType != MIRType_Value);
+        ins->replaceOperand(0, boxAt(ins, ins->getOperand(0)));
+        return true;
+    }
+
+    // Input is a value. Unbox the input to the requested type.
+    if (inputType == MIRType_Value) {
+        JS_ASSERT(outputType != MIRType_Value);
+
+        // We can't unbox a value to null/undefined. So keep output also a value.
+        if (IsNullOrUndefined(outputType) || outputType == MIRType_Magic) {
+            ins->setResultType(MIRType_Value);
+            outputType = MIRType_Value;
+            return true;
+        }
+
+        MUnbox *unbox = MUnbox::New(ins->getOperand(0), outputType,
+                                    MUnbox::TypeBarrier, ins->bailoutKind());
+        ins->block()->insertBefore(ins, unbox);
+        ins->replaceOperand(0, unbox);
+        return true;
+    }
+
+    // In the remaining cases we will alway bail. OutputType doesn't matter.
+    // Take inputType so we can use redefine during lowering.
+    JS_ASSERT(ins->certainBail());
+    ins->setResultType(inputType);
+
+    return true;
+}
+
+bool
 TestPolicy::adjustInputs(MInstruction *ins)
 {
     MDefinition *op = ins->getOperand(0);

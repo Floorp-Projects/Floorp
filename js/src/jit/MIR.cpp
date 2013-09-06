@@ -620,11 +620,44 @@ MUnbox::printOpcode(FILE *fp) const
       case Fallible: fprintf(fp, " (fallible)"); break;
       case Infallible: fprintf(fp, " (infallible)"); break;
       case TypeBarrier: fprintf(fp, " (typebarrier)"); break;
-      case TypeGuard: fprintf(fp, " (typeguard)"); break;
+      default: break;
+    }
+
+    if (mode() == Infallible)
+        return;
+
+    switch(bailoutKind()) {
+      case Bailout_Normal: fprintf(fp, " (normal)"); break;
+      case Bailout_ArgumentCheck: fprintf(fp, " (args)"); break;
+      case Bailout_TypeBarrier: fprintf(fp, " (typebarrier)"); break;
+      case Bailout_Monitor: fprintf(fp, " (monitor)"); break;
+      case Bailout_BoundsCheck: fprintf(fp, " (boundscheck)"); break;
+      case Bailout_ShapeGuard: fprintf(fp, " (shapeguard)"); break;
+      case Bailout_CachedShapeGuard: fprintf(fp, " (cached shapeguard)"); break;
       default: break;
     }
 }
 
+void
+MTypeBarrier::printOpcode(FILE *fp) const
+{
+    PrintOpcodeName(fp, op());
+    fprintf(fp, " ");
+    getOperand(0)->printName(fp);
+    fprintf(fp, " ");
+
+    switch(bailoutKind()) {
+      case Bailout_Normal: fprintf(fp, " (normal)"); break;
+      case Bailout_ArgumentCheck: fprintf(fp, " (args)"); break;
+      case Bailout_TypeBarrier: fprintf(fp, " (typebarrier)"); break;
+      case Bailout_Monitor: fprintf(fp, " (monitor)"); break;
+      case Bailout_BoundsCheck: fprintf(fp, " (boundscheck)"); break;
+      case Bailout_ShapeGuard: fprintf(fp, " (shapeguard)"); break;
+      case Bailout_CachedShapeGuard: fprintf(fp, " (cached shapeguard)"); break;
+      default: break;
+     }
+ }
+ 
 void
 MPhi::removeOperand(size_t index)
 {
