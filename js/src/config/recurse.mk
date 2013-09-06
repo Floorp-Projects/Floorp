@@ -10,6 +10,19 @@ endif
 # Tier traversal handling
 #########################
 
+ifdef TIERS
+
+libs export tools::
+	$(call BUILDSTATUS,TIER_START $@ $(filter-out $(if $(filter export,$@),,precompile),$(TIERS)))
+	$(foreach tier,$(TIERS), $(if $(filter-out libs_precompile tools_precompile,$@_$(tier)), \
+		$(call BUILDSTATUS,SUBTIER_START $@ $(tier) $(if $(filter libs,$@),$(tier_$(tier)_staticdirs)) $(tier_$(tier)_dirs)) \
+		$(if $(filter libs,$@),$(foreach dir, $(tier_$(tier)_staticdirs), $(call TIER_DIR_SUBMAKE,$@,$(tier),$(dir),,1))) \
+		$(foreach dir, $(tier_$(tier)_dirs), $(call TIER_DIR_SUBMAKE,$@,$(tier),$(dir),$@)) \
+		$(call BUILDSTATUS,SUBTIER_FINISH $@ $(tier))))
+	$(call BUILDSTATUS,TIER_FINISH $@)
+
+else
+
 define CREATE_SUBTIER_TRAVERSAL_RULE
 PARALLEL_DIRS_$(1) = $$(addsuffix _$(1),$$(PARALLEL_DIRS))
 
@@ -35,3 +48,5 @@ export:: $(SUBMAKEFILES)
 
 tools:: $(SUBMAKEFILES)
 	$(foreach dir,$(TOOL_DIRS),$(call SUBMAKE,libs,$(dir)))
+
+endif
