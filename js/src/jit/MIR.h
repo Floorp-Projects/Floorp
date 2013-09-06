@@ -3929,6 +3929,40 @@ class MFromCharCode
     }
 };
 
+// Returns an object to use as |this| value. See also ComputeThis and
+// BoxNonStrictThis in Interpreter.h.
+class MComputeThis
+  : public MUnaryInstruction,
+    public BoxPolicy<0>
+{
+    MComputeThis(MDefinition *def)
+      : MUnaryInstruction(def)
+    {
+        setResultType(MIRType_Object);
+        setResultTypeSet(def->resultTypeSet());
+    }
+
+  public:
+    INSTRUCTION_HEADER(ComputeThis)
+
+    static MComputeThis *New(MDefinition *def) {
+        return new MComputeThis(def);
+    }
+
+    MDefinition *input() const {
+        return getOperand(0);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    bool possiblyCalls() const {
+        return true;
+    }
+
+    // Note: don't override getAliasSet: the thisObject hook can be
+    // effectful.
+};
+
 class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
 {
     js::Vector<MUse, 2, IonAllocPolicy> inputs_;

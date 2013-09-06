@@ -5143,7 +5143,7 @@ js_GetClassPrototype(ExclusiveContext *cx, JSProtoKey protoKey,
 }
 
 JSObject *
-PrimitiveToObject(JSContext *cx, const Value &v)
+js::PrimitiveToObject(JSContext *cx, const Value &v)
 {
     if (v.isString()) {
         Rooted<JSString*> str(cx, v.toString());
@@ -5154,17 +5154,6 @@ PrimitiveToObject(JSContext *cx, const Value &v)
 
     JS_ASSERT(v.isBoolean());
     return BooleanObject::create(cx, v.toBoolean());
-}
-
-bool
-js_PrimitiveToObject(JSContext *cx, Value *vp)
-{
-    JSObject *obj = PrimitiveToObject(cx, *vp);
-    if (!obj)
-        return false;
-
-    vp->setObject(*obj);
-    return true;
 }
 
 bool
