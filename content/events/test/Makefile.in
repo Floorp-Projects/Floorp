@@ -13,6 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 
 # Disabled due to timeouts.
 # 		test_bug563329.html
+
 MOCHITEST_FILES = \
 		test_bug226361.xhtml \
 		     bug226361_iframe.xhtml \
@@ -36,7 +37,7 @@ MOCHITEST_FILES = \
 		test_bug412567.html \
 		test_bug422132.html \
 		test_bug426082.html \
-		bug426082.html \
+		     bug426082.html \
 		test_bug427537.html \
 		test_bug432698.html \
 		test_bug443985.html \
@@ -71,8 +72,6 @@ MOCHITEST_FILES = \
 		test_bug641477.html \
 		test_bug648573.html \
 		test_bug615597.html \
-		test_bug656379-1.html \
-		bug656379-1.html \
 		test_bug656379-2.html \
 		test_bug656954.html \
 		test_bug659071.html \
@@ -105,6 +104,13 @@ MOCHITEST_FILES = \
 		test_bug847597.html \
 		test_bug855741.html \
 		$(NULL)
+
+# Disabled on Windows due to intermittent failures.
+ifneq ($(OS_ARCH), WINNT)
+MOCHITEST_FILES += \
+		test_bug656379-1.html \
+		     bug656379-1.html \
+endif
 
 MOCHITEST_CHROME_FILES = \
 		test_bug336682_2.xul \
