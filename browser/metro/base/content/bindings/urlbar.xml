@@ -490,13 +490,15 @@
         <xul:label class="meta-section-title"
                    value="&autocompleteResultsHeader.label;"/>
         <richgrid id="results-richgrid" anonid="results" rows="3" flex="1"
-                  seltype="single" deferlayout="true"/>
+                  seltype="single" deferlayout="true"
+                  suppressonselect="true"/>
       </xul:vbox>
 
       <xul:vbox id="searches-vbox" flex="1">
         <xul:label anonid="searches-header" class="meta-section-title"/>
         <richgrid id="searches-richgrid" anonid="searches" rows="3" flex="1"
-                  seltype="single" deferlayout="true"/>
+                  seltype="single" deferlayout="true"
+                  suppressonselect="true"/>
       </xul:vbox>
     </content>
 
