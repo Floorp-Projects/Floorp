@@ -45,6 +45,7 @@ EXPORTS.mozilla.layout += [
 CPP_SOURCES += [
     'FrameChildList.cpp',
     'ScrollbarActivity.cpp',
+    'StickyScrollContainer.cpp',
     'TextOverflow.cpp',
     'nsAbsoluteContainingBlock.cpp',
     'nsBRFrame.cpp',
