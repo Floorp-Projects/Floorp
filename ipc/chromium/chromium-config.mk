@@ -23,8 +23,6 @@ LOCAL_INCLUDES += \
 ifeq ($(OS_ARCH),WINNT) # {
 OS_LIBS += $(call EXPAND_LIBNAME,psapi shell32 dbghelp)
 
-OS_WIN = 1
-
 DEFINES += \
   -DUNICODE \
   -D_UNICODE \
@@ -34,7 +32,6 @@ DEFINES += \
   -D_SECURE_ATL \
   -DCHROMIUM_BUILD \
   -DU_STATIC_IMPLEMENTATION \
-  -DOS_WIN=1 \
   -DWIN32 \
   -D_WIN32 \
   -D_WINDOWS \
@@ -46,73 +43,11 @@ DEFINES += -DCOMPILER_MSVC
 endif
 
 else # } {
-OS_POSIX = 1
-DEFINES += -DOS_POSIX=1
 
-ifeq ($(OS_ARCH),Darwin) # {
+ifneq (,$(filter $(OS_ARCH),FreeBSD DragonFly NetBSD OpenBSD)) # {
 
-OS_MACOSX = 1
-DEFINES += \
-  -DOS_MACOSX=1 \
-  $(NULL)
-
-else # } {
-ifeq ($(OS_ARCH),DragonFly) # {
-
-OS_DRAGONFLY = 1
-OS_BSD = 1
 OS_LIBS += $(call EXPAND_LIBNAME,kvm)
-DEFINES += \
-  -DOS_DRAGONFLY=1 \
-  -DOS_BSD=1 \
-  $(NULL)
 
-else # } {
-ifneq (,$(filter $(OS_ARCH),FreeBSD GNU_kFreeBSD)) # {
-
-OS_FREEBSD = 1
-OS_BSD = 1
-ifneq ($(OS_ARCH),GNU_kFreeBSD)
-OS_LIBS += $(call EXPAND_LIBNAME,kvm)
-endif
-DEFINES += \
-  -DOS_FREEBSD=1 \
-  -DOS_BSD=1 \
-  $(NULL)
-
-else # } {
-ifeq ($(OS_ARCH),NetBSD) # {
-
-OS_NETBSD = 1
-OS_BSD = 1
-OS_LIBS += $(call EXPAND_LIBNAME,kvm)
-DEFINES += \
-  -DOS_NETBSD=1 \
-  -DOS_BSD=1 \
-  $(NULL)
-
-else # } {
-ifeq ($(OS_ARCH),OpenBSD) # {
-
-OS_OPENBSD = 1
-OS_BSD = 1
-OS_LIBS += $(call EXPAND_LIBNAME,kvm)
-DEFINES += \
-  -DOS_OPENBSD=1 \
-  -DOS_BSD=1 \
-  $(NULL)
-
-else # } {
-
-OS_LINUX = 1
-DEFINES += \
-  -DOS_LINUX=1 \
-  $(NULL)
-
-endif # }
-endif # }
-endif # }
-endif # }
 endif # }
 endif # }
 
