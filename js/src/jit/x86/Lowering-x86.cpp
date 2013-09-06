@@ -217,9 +217,52 @@ LIRGeneratorX86::visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins)
 }
 
 bool
+LIRGeneratorX86::visitAsmJSLoadHeap(MAsmJSLoadHeap *ins)
+{
+    MDefinition *ptr = ins->ptr();
+    LAllocation ptrAlloc;
+    JS_ASSERT(ptr->type() == MIRType_Int32);
+
+    // For the x86 it is best to keep the 'ptr' in a register if a bounds check is needed.
+    if (ptr->isConstant() && ins->skipBoundsCheck()) {
+        int32_t ptrValue = ptr->toConstant()->value().toInt32();
+        // A bounds check is only skipped for a positive index.
+        JS_ASSERT(ptrValue >= 0);
+        ptrAlloc = LAllocation(ptr->toConstant()->vp());
+    } else {
+        ptrAlloc = useRegisterAtStart(ptr);
+    }
+    LAsmJSLoadHeap *lir = new LAsmJSLoadHeap(ptrAlloc);
+    return define(lir, ins);
+}
+
+bool
 LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
 {
+    MDefinition *ptr = ins->ptr();
     LAsmJSStoreHeap *lir;
+    JS_ASSERT(ptr->type() == MIRType_Int32);
+
+    if (ptr->isConstant() && ins->skipBoundsCheck()) {
+        int32_t ptrValue = ptr->toConstant()->value().toInt32();
+        JS_ASSERT(ptrValue >= 0);
+        LAllocation ptrAlloc = LAllocation(ptr->toConstant()->vp());
+        switch (ins->viewType()) {
+          case ArrayBufferView::TYPE_INT8: case ArrayBufferView::TYPE_UINT8:
+            // See comment below.
+            lir = new LAsmJSStoreHeap(ptrAlloc, useFixed(ins->value(), eax));
+            break;
+          case ArrayBufferView::TYPE_INT16: case ArrayBufferView::TYPE_UINT16:
+          case ArrayBufferView::TYPE_INT32: case ArrayBufferView::TYPE_UINT32:
+          case ArrayBufferView::TYPE_FLOAT32: case ArrayBufferView::TYPE_FLOAT64:
+            // See comment below.
+            lir = new LAsmJSStoreHeap(ptrAlloc, useRegisterAtStart(ins->value()));
+            break;
+          default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
+        }
+        return add(lir, ins);
+    }
+
     switch (ins->viewType()) {
       case ArrayBufferView::TYPE_INT8: case ArrayBufferView::TYPE_UINT8:
         // It's a trap! On x86, the 1-byte store can only use one of
@@ -227,16 +270,14 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
         // gives us one of {edi,esi,ebp,esp}, we're out of luck. (The formatter
         // will assert on us.) Ideally, we'd just ask the register allocator to
         // give us one of {al,bl,cl,dl}. For now, just useFixed(al).
-        lir = new LAsmJSStoreHeap(useRegister(ins->ptr()),
-                                  useFixed(ins->value(), eax));
+        lir = new LAsmJSStoreHeap(useRegister(ins->ptr()), useFixed(ins->value(), eax));
         break;
       case ArrayBufferView::TYPE_INT16: case ArrayBufferView::TYPE_UINT16:
       case ArrayBufferView::TYPE_INT32: case ArrayBufferView::TYPE_UINT32:
       case ArrayBufferView::TYPE_FLOAT32: case ArrayBufferView::TYPE_FLOAT64:
-        // For now, don't allow constants. The immediate operand affects
-        // instruction layout which affects patching.
-        lir = new LAsmJSStoreHeap(useRegisterAtStart(ins->ptr()),
-                                  useRegisterAtStart(ins->value()));
+        // For now, don't allow constant values. The immediate operand
+        // affects instruction layout which affects patching.
+        lir = new LAsmJSStoreHeap(useRegisterAtStart(ptr), useRegisterAtStart(ins->value()));
         break;
       default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
     }

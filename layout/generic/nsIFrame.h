@@ -927,6 +927,7 @@ public:
   NS_DECLARE_FRAME_PROPERTY(IBSplitSpecialPrevSibling, nullptr)
 
   NS_DECLARE_FRAME_PROPERTY(NormalPositionProperty, DestroyPoint)
+  NS_DECLARE_FRAME_PROPERTY(ComputedStickyOffsetProperty, DestroyMargin)
 
   NS_DECLARE_FRAME_PROPERTY(OutlineInnerRectProperty, DestroyRect)
   NS_DECLARE_FRAME_PROPERTY(PreEffectsBBoxProperty, DestroyRect)

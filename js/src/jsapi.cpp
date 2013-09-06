@@ -48,12 +48,12 @@
 #if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
 #endif
-#include "builtin/BinaryData.h"
 #include "builtin/Eval.h"
 #include "builtin/Intl.h"
 #include "builtin/MapObject.h"
 #include "builtin/ParallelArray.h"
 #include "builtin/RegExp.h"
+#include "builtin/TypedObject.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/FullParseHandler.h"  // for JS_BufferIsCompileableUnit
 #include "frontend/Parser.h" // for JS_BufferIsCompileableUnit
@@ -1366,7 +1366,7 @@ static const JSStdName standard_class_atoms[] = {
     {js_InitIntlClass,                  EAGER_ATOM_AND_CLASP(Intl)},
 #endif
 #ifdef ENABLE_BINARYDATA
-    {js_InitBinaryDataClasses,          EAGER_ATOM_AND_CLASP(Type)},
+    {js_InitTypedObjectClasses,         EAGER_ATOM_AND_CLASP(Type)},
 #endif
     {NULL,                              0, NULL}
 };
@@ -1426,14 +1426,14 @@ static const JSStdName standard_class_names[] = {
 
     /* Binary Data */
 #ifdef ENABLE_BINARYDATA
-    {js_InitBinaryDataClasses,          EAGER_ATOM_AND_CLASP(Type)},
-    {js_InitBinaryDataClasses,          EAGER_ATOM_AND_CLASP(Data)},
+    {js_InitTypedObjectClasses,   EAGER_ATOM_AND_CLASP(Type)},
+    {js_InitTypedObjectClasses,   EAGER_ATOM_AND_CLASP(Data)},
 #define BINARYDATA_NUMERIC_NAMES(constant_, type_, name_) \
-    {js_InitBinaryDataClasses,          EAGER_CLASS_ATOM(name_),      &NumericTypeClasses[constant_]},
+    {js_InitTypedObjectClasses,   EAGER_CLASS_ATOM(name_),      &NumericTypeClasses[constant_]},
     JS_FOR_EACH_SCALAR_TYPE_REPR(BINARYDATA_NUMERIC_NAMES)
 #undef BINARYDATA_NUMERIC_NAMES
-    {js_InitBinaryDataClasses,          EAGER_CLASS_ATOM(ArrayType),  &js::ArrayType::class_},
-    {js_InitBinaryDataClasses,          EAGER_CLASS_ATOM(StructType), &js::StructType::class_},
+    {js_InitTypedObjectClasses,   EAGER_CLASS_ATOM(ArrayType),  &js::ArrayType::class_},
+    {js_InitTypedObjectClasses,   EAGER_CLASS_ATOM(StructType), &js::StructType::class_},
 #endif
     {NULL,                      0, NULL}
 };

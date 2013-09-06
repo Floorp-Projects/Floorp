@@ -5,10 +5,10 @@
 
 #include "mozilla/dom/HTMLCanvasElement.h"
 
-#include "Layers.h"
-#include "imgIEncoder.h"
+#include "ImageEncoder.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "Layers.h"
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
@@ -44,28 +44,6 @@ namespace {
 
 typedef mozilla::dom::HTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement
 HTMLImageOrCanvasOrVideoElement;
-
-class ToBlobRunnable : public nsRunnable
-{
-public:
-  ToBlobRunnable(nsIFileCallback* aCallback,
-                 nsIDOMBlob* aBlob)
-    : mCallback(aCallback),
-      mBlob(aBlob)
-  {
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  }
-
-  NS_IMETHOD Run()
-  {
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-    mCallback->Receive(mBlob);
-    return NS_OK;
-  }
-private:
-  nsCOMPtr<nsIFileCallback> mCallback;
-  nsCOMPtr<nsIDOMBlob> mBlob;
-};
 
 } // anonymous namespace
 
@@ -367,10 +345,10 @@ HTMLCanvasElement::MozFetchAsStream(nsIInputStreamCallback *aCallback,
     return NS_ERROR_FAILURE;
 
   nsresult rv;
-  bool fellBackToPNG = false;
   nsCOMPtr<nsIInputStream> inputData;
 
-  rv = ExtractData(aType, EmptyString(), getter_AddRefs(inputData), fellBackToPNG);
+  nsAutoString type(aType);
+  rv = ExtractData(type, EmptyString(), getter_AddRefs(inputData));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIAsyncInputStream> asyncData = do_QueryInterface(inputData, &rv);
@@ -410,68 +388,15 @@ HTMLCanvasElement::GetMozPrintCallback(nsIPrintCallback** aCallback)
 }
 
 nsresult
-HTMLCanvasElement::ExtractData(const nsAString& aType,
+HTMLCanvasElement::ExtractData(nsAString& aType,
                                const nsAString& aOptions,
-                               nsIInputStream** aStream,
-                               bool& aFellBackToPNG)
+                               nsIInputStream** aStream)
 {
-  // note that if we don't have a current context, the spec says we're
-  // supposed to just return transparent black pixels of the canvas
-  // dimensions.
-  nsRefPtr<gfxImageSurface> emptyCanvas;
-  nsIntSize size = GetWidthHeight();
-  if (!mCurrentContext) {
-    emptyCanvas = new gfxImageSurface(gfxIntSize(size.width, size.height), gfxASurface::ImageFormatARGB32);
-    if (emptyCanvas->CairoStatus()) {
-      return NS_ERROR_INVALID_ARG;
-    }
-  }
-
-  nsresult rv;
-
-  // get image bytes
-  nsCOMPtr<nsIInputStream> imgStream;
-  NS_ConvertUTF16toUTF8 encoderType(aType);
-
- try_again:
-  if (mCurrentContext) {
-    rv = mCurrentContext->GetInputStream(encoderType.get(),
-                                         nsPromiseFlatString(aOptions).get(),
-                                         getter_AddRefs(imgStream));
-  } else {
-    // no context, so we have to encode the empty image we created above
-    nsCString enccid("@mozilla.org/image/encoder;2?type=");
-    enccid += encoderType;
-
-    nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(enccid.get(), &rv);
-    if (NS_SUCCEEDED(rv) && encoder) {
-      rv = encoder->InitFromData(emptyCanvas->Data(),
-                                 size.width * size.height * 4,
-                                 size.width,
-                                 size.height,
-                                 size.width * 4,
-                                 imgIEncoder::INPUT_FORMAT_HOSTARGB,
-                                 aOptions);
-      if (NS_SUCCEEDED(rv)) {
-        imgStream = do_QueryInterface(encoder);
-      }
-    } else {
-      rv = NS_ERROR_FAILURE;
-    }
-  }
-
-  if (NS_FAILED(rv) && !aFellBackToPNG) {
-    // Try image/png instead.
-    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-    aFellBackToPNG = true;
-    encoderType.AssignLiteral("image/png");
-    goto try_again;
-  }
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  imgStream.forget(aStream);
-  return NS_OK;
+  return ImageEncoder::ExtractData(aType,
+                                   aOptions,
+                                   GetSize(),
+                                   mCurrentContext,
+                                   aStream);
 }
 
 nsresult
@@ -522,8 +447,6 @@ HTMLCanvasElement::ToDataURLImpl(JSContext* aCx,
                                  const JS::Value& aEncoderOptions,
                                  nsAString& aDataURL)
 {
-  bool fallbackToPNG = false;
-
   nsIntSize size = GetWidthHeight();
   if (size.height == 0 || size.width == 0) {
     aDataURL = NS_LITERAL_STRING("data:,");
@@ -544,23 +467,18 @@ HTMLCanvasElement::ToDataURLImpl(JSContext* aCx,
   }
 
   nsCOMPtr<nsIInputStream> stream;
-  rv = ExtractData(type, params, getter_AddRefs(stream), fallbackToPNG);
+  rv = ExtractData(type, params, getter_AddRefs(stream));
 
   // If there are unrecognized custom parse options, we should fall back to
   // the default values for the encoder without any options at all.
   if (rv == NS_ERROR_INVALID_ARG && usingCustomParseOptions) {
-    fallbackToPNG = false;
-    rv = ExtractData(type, EmptyString(), getter_AddRefs(stream), fallbackToPNG);
+    rv = ExtractData(type, EmptyString(), getter_AddRefs(stream));
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
 
   // build data URL string
-  if (fallbackToPNG)
-    aDataURL = NS_LITERAL_STRING("data:image/png;base64,");
-  else
-    aDataURL = NS_LITERAL_STRING("data:") + type +
-      NS_LITERAL_STRING(";base64,");
+  aDataURL = NS_LITERAL_STRING("data:") + type + NS_LITERAL_STRING(";base64,");
 
   uint64_t count;
   rv = stream->Available(&count);
@@ -570,7 +488,6 @@ HTMLCanvasElement::ToDataURLImpl(JSContext* aCx,
   return Base64EncodeInputStream(stream, aDataURL, (uint32_t)count, aDataURL.Length());
 }
 
-// XXXkhuey the encoding should be off the main thread, but we're lazy.
 NS_IMETHODIMP
 HTMLCanvasElement::ToBlob(nsIFileCallback* aCallback,
                           const nsAString& aType,
@@ -599,43 +516,24 @@ HTMLCanvasElement::ToBlob(nsIFileCallback* aCallback,
     return rv;
   }
 
-  bool fallbackToPNG = false;
-
-  nsCOMPtr<nsIInputStream> stream;
-  rv = ExtractData(type, params, getter_AddRefs(stream), fallbackToPNG);
-  // If there are unrecognized custom parse options, we should fall back to
-  // the default values for the encoder without any options at all.
-  if (rv == NS_ERROR_INVALID_ARG && usingCustomParseOptions) {
-    fallbackToPNG = false;
-    rv = ExtractData(type, EmptyString(), getter_AddRefs(stream), fallbackToPNG);
-  }
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (fallbackToPNG) {
-    type.AssignLiteral("image/png");
-  }
-
-  uint64_t imgSize;
-  rv = stream->Available(&imgSize);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(imgSize <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
-
-  void* imgData = nullptr;
-  rv = NS_ReadInputStreamToBuffer(stream, &imgData, imgSize);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // The DOMFile takes ownership of the buffer
-  nsRefPtr<nsDOMMemoryFile> blob =
-    new nsDOMMemoryFile(imgData, imgSize, type);
-
   JSContext* cx = nsContentUtils::GetCurrentJSContext();
-  if (cx) {
-    JS_updateMallocCounter(cx, imgSize);
+  nsCOMPtr<nsIThread> currentThread = NS_GetCurrentThread();
+
+  uint8_t* imageBuffer = nullptr;
+  int32_t format = 0;
+  if (mCurrentContext) {
+    mCurrentContext->GetImageBuffer(&imageBuffer, &format);
   }
 
-  nsRefPtr<ToBlobRunnable> runnable = new ToBlobRunnable(aCallback, blob);
-  return NS_DispatchToCurrentThread(runnable);
+  return ImageEncoder::ExtractDataAsync(type,
+                                        params,
+                                        usingCustomParseOptions,
+                                        imageBuffer,
+                                        format,
+                                        GetSize(),
+                                        mCurrentContext,
+                                        cx,
+                                        aCallback);
 }
 
 already_AddRefed<nsIDOMFile>
@@ -669,17 +567,10 @@ HTMLCanvasElement::MozGetAsFileImpl(const nsAString& aName,
                                     const nsAString& aType,
                                     nsIDOMFile** aResult)
 {
-  bool fallbackToPNG = false;
-
   nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = ExtractData(aType, EmptyString(), getter_AddRefs(stream),
-                            fallbackToPNG);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsAutoString type(aType);
-  if (fallbackToPNG) {
-    type.AssignLiteral("image/png");
-  }
+  nsresult rv = ExtractData(type, EmptyString(), getter_AddRefs(stream));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   uint64_t imgSize;
   rv = stream->Available(&imgSize);

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>CSS Test: Sticky Positioning - top, contained</title>
+    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <link rel="match" href="top-6-ref.html">
+    <meta name="flags" content="dom">
+    <meta name="assert" content="Sticky-top with too much scrolling: should stay within the containing block">
+    <style>
+      #scroll {
+        height: 100px;
+        overflow: hidden;
+      }
+      #contain {
+        height: 300px;
+        background-color: gray;
+        padding: 10px 0;
+        border-width: 10px 0;
+        border-style: solid;
+        border-color: #333;
+      }
+      #sticky {
+        position: sticky;
+        top: 10px;
+        height: 10px;
+        background-color: black;
+      }
+      #static {
+        height: 10px;
+        background-color: blue;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scroll">
+      <div style="height: 20px"></div>
+      <div id="contain">
+        <div id="sticky"></div>
+        <div id="static"></div>
+      </div>
+      <div style="height: 100px"></div>
+    </div>
+    <script type="application/javascript">
+      document.getElementById("scroll").scrollTop = 335;
+    </script>
+  </body>
+</html>

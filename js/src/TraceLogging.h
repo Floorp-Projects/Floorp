@@ -46,6 +46,12 @@ class TraceLogging
         INFO_ENGINE_IONMONKEY,
         INFO
     };
+    enum Logger {
+        DEFAULT,
+        ION_BACKGROUND_COMPILER,
+
+        LAST_LOGGER
+    };
 
   private:
     struct Entry {
@@ -74,7 +80,6 @@ class TraceLogging
                         PointerHasher<const char *, 3>,
                         SystemAllocPolicy> TextHashMap;
 
-    uint64_t startupTime;
     uint64_t loggingTime;
     TextHashMap textMap;
     uint32_t nextTextId;
@@ -83,11 +88,14 @@ class TraceLogging
     unsigned int numEntries;
     int fileno;
     FILE *out;
+    Logger id;
 
-    static const char * const type_name[];
-    static TraceLogging* _defaultLogger;
+    static bool atexitSet;
+    static const char * const typeName[];
+    static TraceLogging* loggers[];
+    static uint64_t startupTime;
   public:
-    TraceLogging();
+    TraceLogging(Logger id);
     ~TraceLogging();
 
     void log(Type type, const char* text = NULL, unsigned int number = 0);
@@ -96,8 +104,11 @@ class TraceLogging
     void log(const char* log);
     void flush();
 
-    static TraceLogging* defaultLogger();
-    static void releaseDefaultLogger();
+    static TraceLogging* getLogger(Logger id);
+    static TraceLogging* defaultLogger() {
+        return getLogger(DEFAULT);
+    }
+    static void releaseLoggers();
 
   private:
     void grow();
