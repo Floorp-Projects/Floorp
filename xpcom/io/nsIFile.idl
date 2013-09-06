@@ -28,7 +28,7 @@ interface nsISimpleEnumerator;
  *
  * A string containing characters encoded in the native charset cannot
  * be safely passed to javascript via xpconnect.  Therefore, the "native
- * methods" are not scriptable. 
+ * methods" are not scriptable.
  */
 [scriptable, uuid(272a5020-64f5-485c-a8c4-44b2882ae0a2), builtinclass]
 interface nsIFile : nsISupports

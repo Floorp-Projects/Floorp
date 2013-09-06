@@ -36,7 +36,7 @@ interface nsISocketTransportService : nsISupports
      *        specifies the transport-layer proxy type to use.  null if no
      *        proxy.  used for communicating information about proxies like
      *        SOCKS (which are transparent to upper protocols).
-     * 
+     *
      * @see nsIProxiedProtocolHandler
      * @see nsIProtocolProxyService::GetProxyInfo
      *
@@ -45,7 +45,7 @@ interface nsISocketTransportService : nsISupports
     nsISocketTransport createTransport([array, size_is(aTypeCount)]
                                        in string aSocketTypes,
                                        in unsigned long aTypeCount,
-                                       in AUTF8String aHost, 
+                                       in AUTF8String aHost,
                                        in long aPort,
                                        in nsIProxyInfo aProxyInfo);
 
