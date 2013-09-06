@@ -790,6 +790,13 @@ DrawTargetCG::FillRect(const Rect &aRect,
 void
 DrawTargetCG::StrokeLine(const Point &p1, const Point &p2, const Pattern &aPattern, const StrokeOptions &aStrokeOptions, const DrawOptions &aDrawOptions)
 {
+  if (!std::isfinite(p1.x) ||
+      !std::isfinite(p1.y) ||
+      !std::isfinite(p2.x) ||
+      !std::isfinite(p2.y)) {
+    return;
+  }
+
   MarkChanged();
 
   CGContextSaveGState(mCg);
@@ -829,6 +836,10 @@ DrawTargetCG::StrokeRect(const Rect &aRect,
                          const StrokeOptions &aStrokeOptions,
                          const DrawOptions &aDrawOptions)
 {
+  if (!aRect.IsFinite()) {
+    return;
+  }
+
   MarkChanged();
 
   CGContextSaveGState(mCg);
@@ -878,6 +889,10 @@ DrawTargetCG::ClearRect(const Rect &aRect)
 void
 DrawTargetCG::Stroke(const Path *aPath, const Pattern &aPattern, const StrokeOptions &aStrokeOptions, const DrawOptions &aDrawOptions)
 {
+  if (!aPath->GetBounds().IsFinite()) {
+    return;
+  }
+
   MarkChanged();
 
   CGContextSaveGState(mCg);
