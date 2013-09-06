@@ -385,5 +385,20 @@ class TestRecursiveMakeBackend(BackendTester):
         ]
         self.assertEqual(lines, expected)
 
+    def test_local_includes(self):
+        """Test that LOCAL_INCLUDES are written to backend.mk correctly."""
+        env = self._consume('local_includes', RecursiveMakeBackend)
+
+        backend_path = os.path.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        expected = [
+            'LOCAL_INCLUDES += -I$(topsrcdir)/bar/baz',
+            'LOCAL_INCLUDES += -I$(srcdir)/foo',
+        ]
+
+        found = [str for str in lines if str.startswith('LOCAL_INCLUDES')]
+        self.assertEqual(found, expected)
+
 if __name__ == '__main__':
     main()

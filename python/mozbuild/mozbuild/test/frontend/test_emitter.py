@@ -18,6 +18,7 @@ from mozbuild.frontend.data import (
     Program,
     XpcshellManifests,
     IPDLFile,
+    LocalInclude,
 )
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
@@ -250,6 +251,19 @@ class TestEmitterBasic(unittest.TestCase):
         ]
 
         self.assertEqual(ipdls, expected)
+
+    def test_local_includes(self):
+        """Test that LOCAL_INCLUDES is emitted correctly."""
+        reader = self.reader('local_includes')
+        objs = self.read_topsrcdir(reader)
+
+        local_includes = [o.path for o in objs if isinstance(o, LocalInclude)]
+        expected = [
+            '/bar/baz',
+            'foo',
+        ]
+
+        self.assertEqual(local_includes, expected)
 
 if __name__ == '__main__':
     main()

@@ -231,6 +231,10 @@ VARIABLES = {
         Implies MOZILLA_INTERNAL_API and FORCE_STATIC_LIB.
         """),
 
+    'LOCAL_INCLUDES': (StrictOrderingOnAppendList, list, [],
+        """Additional directories to be searched for include files by the compiler.
+        """),
+
     'MSVC_ENABLE_PGO': (bool, bool, False,
         """Whether profile-guided optimization is enabled in this directory.
         """),
