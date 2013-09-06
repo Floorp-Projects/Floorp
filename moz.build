@@ -7,7 +7,7 @@
 CONFIGURE_SUBST_FILES += ['tools/update-packaging/Makefile']
 
 if CONFIG['ENABLE_CLANG_PLUGIN']:
-  add_tier_dir('base', 'build/clang-plugin', static=True)
+  add_tier_dir('base', 'build/clang-plugin')
 
 add_tier_dir('base', ['config', 'build', 'probes', 'mfbt', 'python'])
 
