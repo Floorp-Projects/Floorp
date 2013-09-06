@@ -15,12 +15,12 @@
 #include "RasterImage.h"
 
 #include "gfxColor.h"
+#include "gfxColorManagement.h"
 #include "nsColor.h"
 
 #include "nspr.h"
 #include "png.h"
 
-#include "gfxPlatform.h"
 #include <algorithm>
 
 namespace mozilla {
@@ -207,7 +207,7 @@ nsPNGDecoder::InitInternal()
     return;
   }
 
-  mCMSMode = gfxPlatform::GetCMSMode();
+  mCMSMode = gfxColorManagement::Instance().GetMode();
   if ((mDecodeFlags & DECODER_NO_COLORSPACE_CONVERSION) != 0)
     mCMSMode = eCMSMode_Off;
   mDisablePremultipliedAlpha = (mDecodeFlags & DECODER_NO_PREMULTIPLY_ALPHA) != 0;
@@ -553,15 +553,16 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   qcms_data_type inType = QCMS_DATA_RGBA_8;
   uint32_t intent = -1;
   uint32_t pIntent;
+  const gfxColorManagement& colorManagement = gfxColorManagement::Instance();
   if (decoder->mCMSMode != eCMSMode_Off) {
-    intent = gfxPlatform::GetRenderingIntent();
+    intent = colorManagement.GetRenderingIntent();
     decoder->mInProfile = PNGGetColorProfile(png_ptr, info_ptr,
                                              color_type, &inType, &pIntent);
     /* If we're not mandating an intent, use the one from the image. */
     if (intent == uint32_t(-1))
       intent = pIntent;
   }
-  if (decoder->mInProfile && gfxPlatform::GetCMSOutputProfile()) {
+  if (decoder->mInProfile && colorManagement.GetOutputProfile()) {
     qcms_data_type outType;
 
     if (color_type & PNG_COLOR_MASK_ALPHA || num_trans)
@@ -571,7 +572,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 
     decoder->mTransform = qcms_transform_create(decoder->mInProfile,
                                            inType,
-                                           gfxPlatform::GetCMSOutputProfile(),
+                                           colorManagement.GetOutputProfile(),
                                            outType,
                                            (qcms_intent)intent);
   } else {
@@ -583,9 +584,9 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 
     if (decoder->mCMSMode == eCMSMode_All) {
       if (color_type & PNG_COLOR_MASK_ALPHA || num_trans)
-        decoder->mTransform = gfxPlatform::GetCMSRGBATransform();
+        decoder->mTransform = colorManagement.GetRGBATransform();
       else
-        decoder->mTransform = gfxPlatform::GetCMSRGBTransform();
+        decoder->mTransform = colorManagement.GetRGBTransform();
     }
   }
 

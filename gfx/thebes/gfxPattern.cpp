@@ -7,6 +7,7 @@
 #include "gfxPattern.h"
 #include "gfxASurface.h"
 #include "gfxPlatform.h"
+#include "gfxColorManagement.h"
 
 #include "cairo.h"
 
@@ -79,11 +80,13 @@ gfxPattern::AddColorStop(gfxFloat offset, const gfxRGBA& c)
 {
   if (mPattern) {
     mStops = nullptr;
-    if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
+    const gfxColorManagement& colorManagement = gfxColorManagement::Instance();
+    if (colorManagement.GetMode() == eCMSMode_All) {
         gfxRGBA cms;
-        qcms_transform *transform = gfxPlatform::GetCMSRGBTransform();
-        if (transform)
-          gfxPlatform::TransformPixel(c, cms, transform);
+        qcms_transform *transform = colorManagement.GetRGBTransform();
+        if (transform) {
+          colorManagement.TransformPixel(c, cms, transform);
+        }
 
         // Use the original alpha to avoid unnecessary float->byte->float
         // conversion errors

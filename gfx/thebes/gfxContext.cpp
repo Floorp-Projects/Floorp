@@ -16,6 +16,7 @@
 #include "gfxContext.h"
 
 #include "gfxColor.h"
+#include "gfxColorManagement.h"
 #include "gfxMatrix.h"
 #include "gfxASurface.h"
 #include "gfxPattern.h"
@@ -1297,13 +1298,15 @@ gfxContext::ClipContainsRect(const gfxRect& aRect)
 void
 gfxContext::SetColor(const gfxRGBA& c)
 {
+  const gfxColorManagement& colorManagement = gfxColorManagement::Instance();
   if (mCairo) {
-    if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
+    if (colorManagement.GetMode() == eCMSMode_All) {
 
         gfxRGBA cms;
-        qcms_transform *transform = gfxPlatform::GetCMSRGBTransform();
-        if (transform)
-          gfxPlatform::TransformPixel(c, cms, transform);
+        qcms_transform *transform = colorManagement.GetRGBTransform();
+        if (transform) {
+          colorManagement.TransformPixel(c, cms, transform);
+        }
 
         // Use the original alpha to avoid unnecessary float->byte->float
         // conversion errors
@@ -1316,12 +1319,13 @@ gfxContext::SetColor(const gfxRGBA& c)
     CurrentState().sourceSurfCairo = nullptr;
     CurrentState().sourceSurface = nullptr;
 
-    if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
+    if (colorManagement.GetMode() == eCMSMode_All) {
 
         gfxRGBA cms;
-        qcms_transform *transform = gfxPlatform::GetCMSRGBTransform();
-        if (transform)
-          gfxPlatform::TransformPixel(c, cms, transform);
+        qcms_transform *transform = colorManagement.GetRGBTransform();
+        if (transform) {
+          colorManagement.TransformPixel(c, cms, transform);
+        }
 
         // Use the original alpha to avoid unnecessary float->byte->float
         // conversion errors

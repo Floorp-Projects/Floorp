@@ -93,13 +93,6 @@ enum eFontPrefLang {
     eFontPrefLang_AllCount    = 33
 };
 
-enum eCMSMode {
-    eCMSMode_Off          = 0,     // No color management
-    eCMSMode_All          = 1,     // Color manage everything
-    eCMSMode_TaggedOnly   = 2,     // Color manage tagged Images Only
-    eCMSMode_AllCount     = 3
-};
-
 enum eGfxLog {
     // all font enumerations, localized names, fullname/psnames, cmap loads
     eGfxLog_fontlist         = 0,
@@ -501,55 +494,6 @@ public:
 
     static bool ComponentAlphaEnabled();
 
-    /**
-     * Are we going to try color management?
-     */
-    static eCMSMode GetCMSMode();
-
-    /**
-     * Determines the rendering intent for color management.
-     *
-     * If the value in the pref gfx.color_management.rendering_intent is a
-     * valid rendering intent as defined in gfx/qcms/qcms.h, that
-     * value is returned. Otherwise, -1 is returned and the embedded intent
-     * should be used.
-     *
-     * See bug 444014 for details.
-     */
-    static int GetRenderingIntent();
-
-    /**
-     * Convert a pixel using a cms transform in an endian-aware manner.
-     *
-     * Sets 'out' to 'in' if transform is nullptr.
-     */
-    static void TransformPixel(const gfxRGBA& in, gfxRGBA& out, qcms_transform *transform);
-
-    /**
-     * Return the output device ICC profile.
-     */
-    static qcms_profile* GetCMSOutputProfile();
-
-    /**
-     * Return the sRGB ICC profile.
-     */
-    static qcms_profile* GetCMSsRGBProfile();
-
-    /**
-     * Return sRGB -> output device transform.
-     */
-    static qcms_transform* GetCMSRGBTransform();
-
-    /**
-     * Return output -> sRGB device transform.
-     */
-    static qcms_transform* GetCMSInverseRGBTransform();
-
-    /**
-     * Return sRGBA -> output device transform.
-     */
-    static qcms_transform* GetCMSRGBATransform();
-
     virtual void FontsPrefsChanged(const char *aPref);
 
     void OrientationSyncPrefsObserverChanged();
@@ -678,8 +622,6 @@ private:
      */
     static void Init();
 
-    static void CreateCMSOutputProfile();
-
     friend int RecordingPrefChanged(const char *aPrefName, void *aClosure);
 
     virtual qcms_profile* GetPlatformCMSOutputProfile();
@@ -688,7 +630,6 @@ private:
 
     nsRefPtr<gfxASurface> mScreenReferenceSurface;
     nsTArray<uint32_t> mCJKPrefLangs;
-    nsCOMPtr<nsIObserver> mSRGBOverrideObserver;
     nsCOMPtr<nsIObserver> mFontPrefsObserver;
     nsCOMPtr<nsIObserver> mOrientationSyncPrefsObserver;
 
