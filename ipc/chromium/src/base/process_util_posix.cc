@@ -244,15 +244,6 @@ ProcessMetrics* ProcessMetrics::CreateProcessMetrics(ProcessHandle process) {
 
 ProcessMetrics::~ProcessMetrics() { }
 
-void EnableTerminationOnHeapCorruption() {
-  // On POSIX, there nothing to do AFAIK.
-}
-
-void RaiseProcessToHighPriority() {
-  // On POSIX, we don't actually do anything here.  We could try to nice() or
-  // setpriority() or sched_getscheduler, but these all require extra rights.
-}
-
 bool DidProcessCrash(bool* child_exited, ProcessHandle handle) {
   int status;
   const int result = HANDLE_EINTR(waitpid(handle, &status, WNOHANG));
@@ -304,91 +295,6 @@ bool WaitForExitCode(ProcessHandle handle, int* exit_code) {
   // If it didn't exit cleanly, it must have been signaled.
   DCHECK(WIFSIGNALED(status));
   return false;
-}
-
-namespace {
-
-int WaitpidWithTimeout(ProcessHandle handle, int wait_milliseconds,
-                       bool* success) {
-  // This POSIX version of this function only guarantees that we wait no less
-  // than |wait_milliseconds| for the proces to exit.  The child process may
-  // exit sometime before the timeout has ended but we may still block for
-  // up to 0.25 seconds after the fact.
-  //
-  // waitpid() has no direct support on POSIX for specifying a timeout, you can
-  // either ask it to block indefinitely or return immediately (WNOHANG).
-  // When a child process terminates a SIGCHLD signal is sent to the parent.
-  // Catching this signal would involve installing a signal handler which may
-  // affect other parts of the application and would be difficult to debug.
-  //
-  // Our strategy is to call waitpid() once up front to check if the process
-  // has already exited, otherwise to loop for wait_milliseconds, sleeping for
-  // at most 0.25 secs each time using usleep() and then calling waitpid().
-  //
-  // usleep() is speced to exit if a signal is received for which a handler
-  // has been installed.  This means that when a SIGCHLD is sent, it will exit
-  // depending on behavior external to this function.
-  //
-  // This function is used primarily for unit tests, if we want to use it in
-  // the application itself it would probably be best to examine other routes.
-  int status = -1;
-  pid_t ret_pid = HANDLE_EINTR(waitpid(handle, &status, WNOHANG));
-  static const int64_t kQuarterSecondInMicroseconds = kMicrosecondsPerSecond/4;
-
-  // If the process hasn't exited yet, then sleep and try again.
-  Time wakeup_time = Time::Now() + TimeDelta::FromMilliseconds(
-      wait_milliseconds);
-  while (ret_pid == 0) {
-    Time now = Time::Now();
-    if (now > wakeup_time)
-      break;
-    // Guaranteed to be non-negative!
-    int64_t sleep_time_usecs = (wakeup_time - now).InMicroseconds();
-    // Don't sleep for more than 0.25 secs at a time.
-    if (sleep_time_usecs > kQuarterSecondInMicroseconds) {
-      sleep_time_usecs = kQuarterSecondInMicroseconds;
-    }
-
-    // usleep() will return 0 and set errno to EINTR on receipt of a signal
-    // such as SIGCHLD.
-    usleep(sleep_time_usecs);
-    ret_pid = HANDLE_EINTR(waitpid(handle, &status, WNOHANG));
-  }
-
-  if (success)
-    *success = (ret_pid != -1);
-
-  return status;
-}
-
-}  // namespace
-
-bool WaitForSingleProcess(ProcessHandle handle, int wait_milliseconds) {
-  bool waitpid_success;
-  int status;
-  if (wait_milliseconds == base::kNoTimeout)
-    waitpid_success = (HANDLE_EINTR(waitpid(handle, &status, 0)) != -1);
-  else
-    status = WaitpidWithTimeout(handle, wait_milliseconds, &waitpid_success);
-  if (status != -1) {
-    DCHECK(waitpid_success);
-    return WIFEXITED(status);
-  } else {
-    return false;
-  }
-}
-
-bool CrashAwareSleep(ProcessHandle handle, int wait_milliseconds) {
-  bool waitpid_success;
-  int status = WaitpidWithTimeout(handle, wait_milliseconds, &waitpid_success);
-  if (status != -1) {
-    DCHECK(waitpid_success);
-    return !(WIFEXITED(status) || WIFSIGNALED(status));
-  } else {
-    // If waitpid returned with an error, then the process doesn't exist
-    // (which most probably means it didn't exist before our call).
-    return waitpid_success;
-  }
 }
 
 namespace {
