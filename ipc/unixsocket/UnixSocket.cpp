@@ -76,7 +76,7 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
     return mConsumer == nullptr;
   }
-  
+
   void ShutdownOnMainThread()
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -134,17 +134,17 @@ public:
     ClearDelayedConnectTask();
   }
 
-  /** 
+  /**
    * Connect to a socket
    */
   void Connect();
 
-  /** 
+  /**
    * Run bind/listen to prepare for further runs of accept()
    */
   void Listen();
 
-  /** 
+  /**
    * Accept an incoming connection
    */
   void Accept();
@@ -217,7 +217,7 @@ private:
    */
   ScopedClose mFd;
 
-  /** 
+  /**
    * Connector object used to create the connection we are currently using.
    */
   nsAutoPtr<UnixSocketConnector> mConnector;
@@ -480,7 +480,7 @@ void ShutdownSocketTask::Run()
   NS_ENSURE_SUCCESS_VOID(rv);
 }
 
-void  
+void
 UnixSocketImpl::Accept()
 {
   MOZ_ASSERT(!NS_IsMainThread());

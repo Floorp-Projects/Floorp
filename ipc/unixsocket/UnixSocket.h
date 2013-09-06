@@ -92,13 +92,13 @@ public:
    */
   virtual int Create() = 0;
 
-  /** 
+  /**
    * Since most socket specifics are related to address formation into a
    * sockaddr struct, this function is defined by subclasses and fills in the
    * structure as needed for whatever connection it is trying to build
    *
    * @param aIsServer True is we are acting as a server socket
-   * @param aAddrSize Size of the struct 
+   * @param aAddrSize Size of the struct
    * @param aAddr Struct to fill
    * @param aAddress If aIsServer is false, Address to connect to. nullptr otherwise.
    *
@@ -109,7 +109,7 @@ public:
                           sockaddr_any& aAddr,
                           const char* aAddress) = 0;
 
-  /** 
+  /**
    * Does any socket type specific setup that may be needed
    *
    * @param aFd File descriptor for opened socket
@@ -118,7 +118,7 @@ public:
    */
   virtual bool SetUp(int aFd) = 0;
 
-  /** 
+  /**
    * Get address of socket we're currently connected to. Return null string if
    * not connected.
    *
@@ -192,7 +192,7 @@ public:
                      const char* aAddress,
                      int aDelayMs = 0);
 
-  /** 
+  /**
    * Starts a task on the socket that will try to accept a new connection in a
    * non-blocking manner.
    *
@@ -208,33 +208,33 @@ public:
    */
   void CloseSocket();
 
-  /** 
+  /**
    * Callback for socket connect/accept success. Called after connect/accept has
    * finished. Will be run on main thread, before any reads take place.
    */
   virtual void OnConnectSuccess() = 0;
 
-  /** 
+  /**
    * Callback for socket connect/accept error. Will be run on main thread.
    */
   virtual void OnConnectError() = 0;
 
-  /** 
+  /**
    * Callback for socket disconnect. Will be run on main thread.
    */
   virtual void OnDisconnect() = 0;
 
-  /** 
+  /**
    * Called by implementation to notify consumer of success.
    */
   void NotifySuccess();
 
-  /** 
+  /**
    * Called by implementation to notify consumer of error.
    */
   void NotifyError();
 
-  /** 
+  /**
    * Called by implementation to notify consumer of disconnect.
    */
   void NotifyDisconnect();
