@@ -3662,6 +3662,13 @@ bool nsWindow::DispatchStandardEvent(uint32_t aMsg)
   return result;
 }
 
+bool nsWindow::DispatchKeyboardEvent(nsGUIEvent* event)
+{
+  nsEventStatus status;
+  DispatchEvent(event, status);
+  return ConvertStatus(status);
+}
+
 bool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
 {
   nsEventStatus status;
