@@ -41,66 +41,12 @@ static const char* kTempFileName = "com.google.chrome.XXXXXX";
 static const char* kTempFileName = "org.chromium.XXXXXX";
 #endif
 
-std::wstring GetDirectoryFromPath(const std::wstring& path) {
-  if (EndsWithSeparator(path)) {
-    std::wstring dir = path;
-    TrimTrailingSeparator(&dir);
-    return dir;
-  } else {
-    char full_path[PATH_MAX];
-    base::strlcpy(full_path, WideToUTF8(path).c_str(), arraysize(full_path));
-    return UTF8ToWide(dirname(full_path));
-  }
-}
-
 bool AbsolutePath(FilePath* path) {
   char full_path[PATH_MAX];
   if (realpath(path->value().c_str(), full_path) == NULL)
     return false;
   *path = FilePath(full_path);
   return true;
-}
-
-int CountFilesCreatedAfter(const FilePath& path,
-                           const base::Time& comparison_time) {
-  int file_count = 0;
-
-  DIR* dir = opendir(path.value().c_str());
-  if (dir) {
-    struct dirent ent_buf;
-    struct dirent* ent;
-    while (readdir_r(dir, &ent_buf, &ent) == 0 && ent) {
-      if ((strcmp(ent->d_name, ".") == 0) ||
-          (strcmp(ent->d_name, "..") == 0))
-        continue;
-
-      struct stat st;
-      int test = stat(path.Append(ent->d_name).value().c_str(), &st);
-      if (test != 0) {
-        LOG(ERROR) << "stat failed: " << strerror(errno);
-        continue;
-      }
-      // Here, we use Time::TimeT(), which discards microseconds. This
-      // means that files which are newer than |comparison_time| may
-      // be considered older. If we don't discard microseconds, it
-      // introduces another issue. Suppose the following case:
-      //
-      // 1. Get |comparison_time| by Time::Now() and the value is 10.1 (secs).
-      // 2. Create a file and the current time is 10.3 (secs).
-      //
-      // As POSIX doesn't have microsecond precision for |st_ctime|,
-      // the creation time of the file created in the step 2 is 10 and
-      // the file is considered older than |comparison_time|. After
-      // all, we may have to accept either of the two issues: 1. files
-      // which are older than |comparison_time| are considered newer
-      // (current implementation) 2. files newer than
-      // |comparison_time| are considered older.
-      if (st.st_ctime >= comparison_time.ToTimeT())
-        ++file_count;
-    }
-    closedir(dir);
-  }
-  return file_count;
 }
 
 // TODO(erikkay): The Windows version of this accepts paths like "foo/bar/*"
@@ -319,34 +265,6 @@ bool DirectoryExists(const FilePath& path) {
     return S_ISDIR(file_info.st_mode);
   return false;
 }
-
-// TODO(erikkay): implement
-#if 0
-bool GetFileCreationLocalTimeFromHandle(int fd,
-                                        LPSYSTEMTIME creation_time) {
-  if (!file_handle)
-    return false;
-
-  FILETIME utc_filetime;
-  if (!GetFileTime(file_handle, &utc_filetime, NULL, NULL))
-    return false;
-
-  FILETIME local_filetime;
-  if (!FileTimeToLocalFileTime(&utc_filetime, &local_filetime))
-    return false;
-
-  return !!FileTimeToSystemTime(&local_filetime, creation_time);
-}
-
-bool GetFileCreationLocalTime(const std::string& filename,
-                              LPSYSTEMTIME creation_time) {
-  ScopedHandle file_handle(
-      CreateFile(filename.c_str(), GENERIC_READ,
-                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
-                 OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
-  return GetFileCreationLocalTimeFromHandle(file_handle.Get(), creation_time);
-}
-#endif
 
 bool ReadFromFD(int fd, char* buffer, size_t bytes) {
   size_t total_read = 0;
@@ -582,154 +500,5 @@ bool CopyFile(const FilePath& from_path, const FilePath& to_path) {
   return result;
 }
 #endif // !defined(OS_MACOSX)
-
-///////////////////////////////////////////////
-// FileEnumerator
-
-FileEnumerator::FileEnumerator(const FilePath& root_path,
-                               bool recursive,
-                               FileEnumerator::FILE_TYPE file_type)
-    : recursive_(recursive),
-      file_type_(file_type),
-      is_in_find_op_(false),
-      fts_(NULL) {
-  pending_paths_.push(root_path);
-}
-
-FileEnumerator::FileEnumerator(const FilePath& root_path,
-                               bool recursive,
-                               FileEnumerator::FILE_TYPE file_type,
-                               const FilePath::StringType& pattern)
-    : recursive_(recursive),
-      file_type_(file_type),
-      pattern_(root_path.value()),
-      is_in_find_op_(false),
-      fts_(NULL) {
-  // The Windows version of this code only matches against items in the top-most
-  // directory, and we're comparing fnmatch against full paths, so this is the
-  // easiest way to get the right pattern.
-  pattern_ = pattern_.Append(pattern);
-  pending_paths_.push(root_path);
-}
-
-FileEnumerator::~FileEnumerator() {
-#ifndef ANDROID
-  if (fts_)
-    fts_close(fts_);
-#endif
-}
-
-void FileEnumerator::GetFindInfo(FindInfo* info) {
-  DCHECK(info);
-
-  if (!is_in_find_op_)
-    return;
-
-#ifndef ANDROID
-  memcpy(&(info->stat), fts_ent_->fts_statp, sizeof(info->stat));
-  info->filename.assign(fts_ent_->fts_name);
-#endif
-}
-
-// As it stands, this method calls itself recursively when the next item of
-// the fts enumeration doesn't match (type, pattern, etc.).  In the case of
-// large directories with many files this can be quite deep.
-// TODO(erikkay) - get rid of this recursive pattern
-FilePath FileEnumerator::Next() {
-#ifdef ANDROID
-  return FilePath();
-#else
-  if (!is_in_find_op_) {
-    if (pending_paths_.empty())
-      return FilePath();
-
-    // The last find FindFirstFile operation is done, prepare a new one.
-    root_path_ = pending_paths_.top();
-    root_path_ = root_path_.StripTrailingSeparators();
-    pending_paths_.pop();
-
-    // Start a new find operation.
-    int ftsflags = FTS_LOGICAL;
-    char top_dir[PATH_MAX];
-    base::strlcpy(top_dir, root_path_.value().c_str(), arraysize(top_dir));
-    char* dir_list[2] = { top_dir, NULL };
-    fts_ = fts_open(dir_list, ftsflags, NULL);
-    if (!fts_)
-      return Next();
-    is_in_find_op_ = true;
-  }
-
-  fts_ent_ = fts_read(fts_);
-  if (fts_ent_ == NULL) {
-    fts_close(fts_);
-    fts_ = NULL;
-    is_in_find_op_ = false;
-    return Next();
-  }
-
-  // Level 0 is the top, which is always skipped.
-  if (fts_ent_->fts_level == 0)
-    return Next();
-
-  // Patterns are only matched on the items in the top-most directory.
-  // (see Windows implementation)
-  if (fts_ent_->fts_level == 1 && pattern_.value().length() > 0) {
-    if (fnmatch(pattern_.value().c_str(), fts_ent_->fts_path, 0) != 0) {
-      if (fts_ent_->fts_info == FTS_D)
-        fts_set(fts_, fts_ent_, FTS_SKIP);
-      return Next();
-    }
-  }
-
-  FilePath cur_file(fts_ent_->fts_path);
-  if (fts_ent_->fts_info == FTS_D) {
-    // If not recursive, then prune children.
-    if (!recursive_)
-      fts_set(fts_, fts_ent_, FTS_SKIP);
-    return (file_type_ & FileEnumerator::DIRECTORIES) ? cur_file : Next();
-  } else if (fts_ent_->fts_info == FTS_F) {
-    return (file_type_ & FileEnumerator::FILES) ? cur_file : Next();
-  }
-  // TODO(erikkay) - verify that the other fts_info types aren't interesting
-  return Next();
-#endif
-}
-
-///////////////////////////////////////////////
-// MemoryMappedFile
-
-MemoryMappedFile::MemoryMappedFile()
-    : file_(-1),
-      data_(NULL),
-      length_(0) {
-}
-
-bool MemoryMappedFile::MapFileToMemory(const FilePath& file_name) {
-  file_ = open(file_name.value().c_str(), O_RDONLY);
-  if (file_ == -1)
-    return false;
-
-  struct stat file_stat;
-  if (fstat(file_, &file_stat) == -1)
-    return false;
-  length_ = file_stat.st_size;
-
-  data_ = static_cast<uint8_t*>(
-      mmap(NULL, length_, PROT_READ, MAP_SHARED, file_, 0));
-  if (data_ == MAP_FAILED)
-    data_ = NULL;
-  return data_ != NULL;
-}
-
-void MemoryMappedFile::CloseHandles() {
-  if (data_ != NULL)
-    munmap(data_, length_);
-  if (file_ != -1)
-    close(file_);
-
-  data_ = NULL;
-  length_ = 0;
-  file_ = -1;
-}
 
 } // namespace file_util
