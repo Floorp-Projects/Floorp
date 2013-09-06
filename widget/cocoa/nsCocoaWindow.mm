@@ -33,7 +33,7 @@
 #include "nsIWidgetListener.h"
 #include "nsIPresShell.h"
 
-#include "gfxPlatform.h"
+#include "gfxColorManagement.h"
 #include "qcms.h"
 
 #include "mozilla/Preferences.h"
@@ -1989,8 +1989,8 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, bool aActive
     // Transform from sRGBA to monitor RGBA. This seems like it would make trying
     // to match the system appearance lame, so probably we just shouldn't color 
     // correct chrome.
-    if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
-      qcms_transform *transform = gfxPlatform::GetCMSRGBATransform();
+    if (gfxColorManagement::Instance().GetMode() == eCMSMode_All) {
+      qcms_transform *transform = gfxColorManagement::Instance().GetRGBATransform();
       if (transform) {
         uint8_t color[3];
         color[0] = NS_GET_R(aColor);
