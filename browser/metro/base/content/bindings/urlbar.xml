@@ -485,7 +485,7 @@
   </binding>
 
   <binding id="urlbar-autocomplete">
-    <content orient="horizontal">
+    <content>
       <xul:vbox id="results-vbox" anonid="results-container" flex="1">
         <xul:label class="meta-section-title"
                    value="&autocompleteResultsHeader.label;"/>
