@@ -5,8 +5,7 @@
 #ifndef mozilla_net_DashboardTypes_h_
 #define mozilla_net_DashboardTypes_h_
 
-#include <stdint.h>
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -55,11 +54,6 @@ struct HttpRetParams
     uint16_t  port;
     bool      spdy;
     bool      ssl;
-};
-
-struct ConnStatus
-{
-    nsString creationSts;
 };
 
 } }
