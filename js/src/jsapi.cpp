@@ -3634,12 +3634,42 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned
 }
 
 JS_PUBLIC_API(bool)
+JS_GetOwnPropertyDescriptorById(JSContext *cx, JSObject *objArg, jsid idArg, unsigned flags,
+                                MutableHandle<JSPropertyDescriptor> desc)
+{
+    RootedObject obj(cx, objArg);
+    RootedId id(cx, idArg);
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+
+    return GetPropertyDescriptorById(cx, obj, id, flags, true, desc);
+}
+
+JS_PUBLIC_API(bool)
+JS_GetOwnPropertyDescriptor(JSContext *cx, JSObject *objArg, const char *name, unsigned flags,
+                            MutableHandle<JSPropertyDescriptor> desc)
+{
+    RootedObject obj(cx, objArg);
+    JSAtom *atom = Atomize(cx, name, strlen(name));
+    return atom && JS_GetOwnPropertyDescriptorById(cx, obj, AtomToId(atom), flags, desc);
+}
+
+JS_PUBLIC_API(bool)
 JS_GetPropertyDescriptorById(JSContext *cx, JSObject *objArg, jsid idArg, unsigned flags,
                              MutableHandle<JSPropertyDescriptor> desc)
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
     return GetPropertyDescriptorById(cx, obj, id, flags, false, desc);
+}
+
+JS_PUBLIC_API(bool)
+JS_GetPropertyDescriptor(JSContext *cx, JSObject *objArg, const char *name, unsigned flags,
+                         MutableHandle<JSPropertyDescriptor> desc)
+{
+    RootedObject obj(cx, objArg);
+    JSAtom *atom = Atomize(cx, name, strlen(name));
+    return atom && JS_GetPropertyDescriptorById(cx, obj, AtomToId(atom), flags, desc);
 }
 
 JS_PUBLIC_API(bool)
@@ -3703,17 +3733,6 @@ JS_GetUCPropertyAttrsGetterAndSetter(JSContext *cx, JSObject *objArg,
     JSAtom *atom = AtomizeChars<CanGC>(cx, name, AUTO_NAMELEN(name, namelen));
     return atom && JS_GetPropertyAttrsGetterAndSetterById(cx, obj, AtomToId(atom),
                                                           attrsp, foundp, getterp, setterp);
-}
-
-JS_PUBLIC_API(bool)
-JS_GetOwnPropertyDescriptor(JSContext *cx, JSObject *objArg, jsid idArg, MutableHandleValue vp)
-{
-    RootedObject obj(cx, objArg);
-    RootedId id(cx, idArg);
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-
-    return GetOwnPropertyDescriptor(cx, obj, id, vp);
 }
 
 static bool
@@ -6664,4 +6683,3 @@ JS_PreventExtensions(JSContext *cx, JS::HandleObject obj)
         return true;
     return JSObject::preventExtensions(cx, obj);
 }
-
