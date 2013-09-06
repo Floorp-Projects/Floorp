@@ -625,6 +625,61 @@ MetroWidget::DeliverNextScrollEvent()
   delete msg;
 }
 
+// defined in nsWiondowBase, called from shared module KeyboardLayout.
+bool
+MetroWidget::DispatchKeyboardEvent(nsGUIEvent* aEvent)
+{
+  MOZ_ASSERT(aEvent);
+  nsKeyEvent* oldKeyEvent = static_cast<nsKeyEvent*>(aEvent);
+  nsKeyEvent* keyEvent =
+    new nsKeyEvent(oldKeyEvent->mFlags.mIsTrusted, oldKeyEvent->message, oldKeyEvent->widget);
+  // XXX note this leaves pluginEvent null, which is fine for now.
+  keyEvent->AssignKeyEventData(*oldKeyEvent, true);
+  mKeyEventQueue.Push(keyEvent);
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NewRunnableMethod(this, &MetroWidget::DeliverNextKeyboardEvent);
+  NS_DispatchToCurrentThread(runnable);
+  return false;
+}
+
+// Used in conjunction with mKeyEventQueue to find a keypress event
+// that should not be delivered due to the return result of the
+// preceeding keydown.
+class KeyQueryIdAndCancel : public nsDequeFunctor {
+public:
+  KeyQueryIdAndCancel(uint32_t aIdToCancel) :
+    mId(aIdToCancel) {
+  }
+  virtual void* operator() (void* aObject) {
+    nsKeyEvent* event = static_cast<nsKeyEvent*>(aObject);
+    if (event->mUniqueId == mId) {
+      event->mFlags.mPropagationStopped = true;
+    }
+    return nullptr;
+  }
+protected:
+  uint32_t mId;
+};
+
+void
+MetroWidget::DeliverNextKeyboardEvent()
+{
+  nsKeyEvent* event = static_cast<nsKeyEvent*>(mKeyEventQueue.PopFront());
+  if (event->mFlags.mPropagationStopped) {
+    // This can happen if a keypress was previously cancelled.
+    delete event;
+    return;
+  }
+  
+  if (DispatchWindowEvent(event) && event->message == NS_KEY_DOWN) {
+    // keydown events may be followed by multiple keypress events which
+    // shouldn't be sent if preventDefault is called on keydown.
+    KeyQueryIdAndCancel query(event->mUniqueId);
+    mKeyEventQueue.ForEach(query);
+  }
+  delete event;
+}
+
 // static
 LRESULT CALLBACK
 MetroWidget::StaticWindowProcedure(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLParam)
@@ -690,6 +745,9 @@ MetroWidget::WindowProcedure(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLPara
       }
       break;
     }
+
+    // Keyboard handling is passed to KeyboardLayout, which delivers gecko events
+    // via DispatchKeyboardEvent.
 
     case WM_KEYDOWN:
     case WM_SYSKEYDOWN:
