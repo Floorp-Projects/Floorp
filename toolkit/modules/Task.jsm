@@ -97,6 +97,10 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 
+// The following error types are considered programmer errors, which should be
+// reported (possibly redundantly) so as to let programmers fix their code.
+const ERRORS_TO_REPORT = ["EvalError", "RangeError", "ReferenceError", "TypeError"];
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Task
 
@@ -226,6 +230,21 @@ TaskImpl.prototype = {
       this.deferred.resolve();
     } catch (ex) {
       // The generator function failed with an uncaught exception.
+
+      if (ex && typeof ex == "object" && "name" in ex &&
+          ERRORS_TO_REPORT.indexOf(ex.name) != -1) {
+
+        // We suspect that the exception is a programmer error, so we now
+        // display it using dump().  Note that we do not use Cu.reportError as
+        // we assume that this is a programming error, so we do not want end
+        // users to see it. Also, if the programmer handles errors correctly,
+        // they will either treat the error or log them somewhere.
+
+        dump("A coding exception was thrown and uncaught in a Task.\n");
+        dump("Full message: " + ex + "\n");
+        dump("Full stack: " + (("stack" in ex)?ex.stack:"not available") + "\n");
+      }
+
       this.deferred.reject(ex);
     }
   }

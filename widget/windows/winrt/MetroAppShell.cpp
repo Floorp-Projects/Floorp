@@ -8,10 +8,13 @@
 #include "mozilla/widget/AudioSession.h"
 #include "MetroUtils.h"
 #include "MetroApp.h"
+#include "FrameworkView.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/AutoRestore.h"
 #include "WinUtils.h"
 
+using namespace mozilla;
 using namespace mozilla::widget;
 using namespace mozilla::widget::winrt;
 using namespace Microsoft::WRL;
@@ -19,10 +22,14 @@ using namespace Microsoft::WRL::Wrappers;
 using namespace ABI::Windows::UI::Core;
 using namespace ABI::Windows::Foundation;
 
+// ProcessNextNativeEvent message wait timeout, see bug 907410.
+#define MSG_WAIT_TIMEOUT 250
+
 namespace mozilla {
 namespace widget {
 namespace winrt {
 extern ComPtr<MetroApp> sMetroApp;
+extern ComPtr<FrameworkView> sFrameworkView;
 } } }
 
 namespace mozilla {
@@ -32,6 +39,7 @@ extern UINT sAppShellGeckoMsgId;
 } }
 
 static ComPtr<ICoreWindowStatic> sCoreStatic;
+static bool sIsDispatching = false;
 
 MetroAppShell::~MetroAppShell()
 {
@@ -101,7 +109,16 @@ MetroAppShell::Run(void)
       rv = NS_ERROR_NOT_IMPLEMENTED;
     break;
     case GeckoProcessType_Default:
-      // Nothing to do, just return.
+      mozilla::widget::StartAudioSession();
+      sFrameworkView->ActivateView();
+      rv = nsBaseAppShell::Run();
+      mozilla::widget::StopAudioSession();
+      // This calls XRE_metroShutdown() in xre. This will also destroy
+      // MessagePump.
+      sMetroApp->ShutdownXPCOM();
+      // This will free the real main thread in CoreApplication::Run()
+      // once winrt cleans up this thread.
+      sMetroApp->CoreExit();
     break;
   }
 
@@ -128,50 +145,29 @@ ProcessNativeEvents(CoreProcessEventsOption eventOption)
 }
 
 // static
-void
+bool
 MetroAppShell::ProcessOneNativeEventIfPresent()
 {
+  if (sIsDispatching) {
+    NS_RUNTIMEABORT("Reentrant call into process events, this is not allowed in Winrt land. Goodbye!");
+  }
+  AutoRestore<bool> dispatching(sIsDispatching);
   ProcessNativeEvents(CoreProcessEventsOption::CoreProcessEventsOption_ProcessOneIfPresent);
-}
-
-// static
-void
-MetroAppShell::ProcessAllNativeEventsPresent()
-{
-  ProcessNativeEvents(CoreProcessEventsOption::CoreProcessEventsOption_ProcessAllIfPresent);
+  return !!HIWORD(::GetQueueStatus(MOZ_QS_ALLEVENT));
 }
 
 bool
 MetroAppShell::ProcessNextNativeEvent(bool mayWait)
 {
-  MSG msg;
-
+  if (ProcessOneNativeEventIfPresent()) {
+    return true;
+  }
   if (mayWait) {
-    if (!WinUtils::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
-      WinUtils::WaitForMessage();
-    }
-    ProcessOneNativeEventIfPresent();
-    return true;
+    DWORD result = ::MsgWaitForMultipleObjectsEx(0, NULL, MSG_WAIT_TIMEOUT, MOZ_QS_ALLEVENT,
+                                                 MWMO_INPUTAVAILABLE|MWMO_ALERTABLE);
+    NS_WARN_IF_FALSE(result != WAIT_FAILED, "Wait failed");
   }
-
-  if (WinUtils::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
-    ProcessOneNativeEventIfPresent();
-    return true;
-  }
-
-  return false;
-}
-
-// Results from a call to appstartup->quit, which fires a final nsAppExitEvent
-// event which calls us here. This is on the metro main thread. We want to
-// call xpcom shutdown here, but we need to wait until the runnable that fires
-// this is off the stack. See NativeEventCallback below.
-NS_IMETHODIMP
-MetroAppShell::Exit(void)
-{
-  LogFunction();
-  mExiting = true;
-  return NS_OK;
+  return ProcessOneNativeEventIfPresent();
 }
 
 void
@@ -179,22 +175,6 @@ MetroAppShell::NativeCallback()
 {
   NS_ASSERTION(NS_IsMainThread(), "Native callbacks must be on the metro main thread");
   NativeEventCallback();
-
-  // Handle shutdown after Exit() is called and unwinds.
-  if (mExiting) {
-    // shutdown fires events, don't recurse
-    static bool sShutdown = false;
-    if (sShutdown)
-      return;
-    sShutdown = true;
-    if (sMetroApp) {
-      // This calls XRE_metroShutdown() in xre
-      sMetroApp->ShutdownXPCOM();
-      // This will free the real main thread in CoreApplication::Run()
-      // once winrt cleans up this thread.
-      sMetroApp->CoreExit();
-    }
-  }
 }
 
 // static
