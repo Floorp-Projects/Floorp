@@ -202,7 +202,7 @@ function popupshown_step2(oldrect, panel, anchored)
 function popupshown_step3(oldrect, panel, anchored)
 {
   // skip this check on Linux for the same window positioning reasons as above
-  if (navigator.platform.indexOf("Linux") == -1 || panel.id != "panelanchored") {
+  if (navigator.platform.indexOf("Linux") == -1 || (panel.id != "panelanchored" && panel.id != "paneltop")) {
     // next, drag the titlebar in the panel
     var newrect = panel.getBoundingClientRect();
     SimpleTest.is(newrect.left, oldrect.left + 20, panel.id + " move popup horizontal");
