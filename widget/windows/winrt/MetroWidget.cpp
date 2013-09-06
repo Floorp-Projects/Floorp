@@ -604,7 +604,7 @@ MetroWidget::WindowProcedure(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLPara
       DeleteObject(rgn);
       if (region.IsEmpty())
         break;
-      mView->Render(region);
+      Paint(region);
       break;
     }
 
@@ -983,6 +983,8 @@ MetroWidget::GetPaintListener()
 
 void MetroWidget::Paint(const nsIntRegion& aInvalidRegion)
 {
+  gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
+
   nsIWidgetListener* listener = GetPaintListener();
   if (!listener)
     return;

@@ -23,8 +23,7 @@ public:
   void NativeCallback();
 
   static LRESULT CALLBACK EventWindowProc(HWND, UINT, WPARAM, LPARAM);
-  static void ProcessAllNativeEventsPresent();
-  static void ProcessOneNativeEventIfPresent();
+  static bool ProcessOneNativeEventIfPresent();
 
 protected:
   HWND mEventWnd;
