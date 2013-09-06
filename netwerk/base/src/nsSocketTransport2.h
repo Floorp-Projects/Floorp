@@ -130,7 +130,7 @@ public:
                                      const mozilla::net::NetAddr *addr);
 
     // nsASocketHandler methods:
-    void OnSocketReady(PRFileDesc *, int16_t outFlags); 
+    void OnSocketReady(PRFileDesc *, int16_t outFlags);
     void OnSocketDetached(PRFileDesc *);
     void IsLocal(bool *aIsLocal);
 
