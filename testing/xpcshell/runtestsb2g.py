@@ -19,14 +19,6 @@ from marionette import Marionette
 
 class B2GXPCShellTestThread(RemoteXPCShellTestThread):
     # Overridden
-    def setLD_LIBRARY_PATH(self, env):
-        if self.options.use_device_libs:
-            env['LD_LIBRARY_PATH'] = '/system/b2g'
-            env['LD_PRELOAD'] = '/system/b2g/libmozglue.so'
-        else:
-            XPCShellRemote.setLD_LIBRARY_PATH(self, env)
-
-    # Overridden
     def launchProcess(self, cmd, stdout, stderr, env, cwd):
         try:
             # This returns 1 even when tests pass - hardcode returncode to 0 (bug 773703)
@@ -41,6 +33,13 @@ class B2GXPCShellTestThread(RemoteXPCShellTestThread):
         return outputFile
 
 class B2GXPCShellRemote(XPCShellRemote):
+    # Overridden
+    def setLD_LIBRARY_PATH(self):
+        self.env['LD_LIBRARY_PATH'] = '/system/b2g'
+        if not self.options.use_device_libs:
+            # overwrite /system/b2g if necessary
+            XPCShellRemote.setLD_LIBRARY_PATH(self)
+
     # Overridden
     def setupUtilities(self):
         if self.options.clean:
@@ -69,7 +68,11 @@ class B2GXPCShellRemote(XPCShellRemote):
     # Overridden
     def pushLibs(self):
         if not self.options.use_device_libs:
-            XPCShellRemote.pushLibs(self)
+            count = XPCShellRemote.pushLibs(self)
+            if not count:
+                # couldn't find any libs, fallback to device libs
+                self.env['LD_LIBRARY_PATH'] = '/system/b2g'
+                self.options.use_device_libs = True
 
 class B2GOptions(RemoteXPCShellOptions):
 
