@@ -44,7 +44,6 @@ namespace ABI {
     namespace UI {
       namespace Core {
         struct ICoreWindow;
-        struct ICoreDispatcher;
         struct IAcceleratorKeyEventArgs;
         struct IKeyEventArgs;
         struct IPointerEventArgs;
@@ -84,7 +83,6 @@ private:
   typedef ABI::Windows::UI::Core::ICoreWindow ICoreWindow;
   typedef ABI::Windows::UI::Core::IAcceleratorKeyEventArgs \
                                   IAcceleratorKeyEventArgs;
-  typedef ABI::Windows::UI::Core::ICoreDispatcher ICoreDispatcher;
   typedef ABI::Windows::UI::Core::IKeyEventArgs IKeyEventArgs;
   typedef ABI::Windows::UI::Core::IPointerEventArgs IPointerEventArgs;
 
@@ -105,8 +103,7 @@ private:
 
 public:
   MetroInput(MetroWidget* aWidget,
-             ICoreWindow* aWindow,
-             ICoreDispatcher* aDispatcher);
+             ICoreWindow* aWindow);
   virtual ~MetroInput();
 
   // These input events are received from our window. These are basic
@@ -157,7 +154,6 @@ public:
 private:
   Microsoft::WRL::ComPtr<ICoreWindow> mWindow;
   Microsoft::WRL::ComPtr<MetroWidget> mWidget;
-  Microsoft::WRL::ComPtr<ICoreDispatcher> mDispatcher;
   Microsoft::WRL::ComPtr<IGestureRecognizer> mGestureRecognizer;
 
   ModifierKeyState mModifierKeyState;

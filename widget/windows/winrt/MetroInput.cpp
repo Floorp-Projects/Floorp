@@ -153,11 +153,9 @@ namespace widget {
 namespace winrt {
 
 MetroInput::MetroInput(MetroWidget* aWidget,
-                       UI::Core::ICoreWindow* aWindow,
-                       UI::Core::ICoreDispatcher* aDispatcher)
+                       UI::Core::ICoreWindow* aWindow)
               : mWidget(aWidget),
                 mWindow(aWindow),
-                mDispatcher(aDispatcher),
                 mTouchEvent(true, NS_TOUCH_MOVE, aWidget)
 {
   LogFunction();
@@ -1085,8 +1083,6 @@ MetroInput::RegisterInputEvents()
   NS_ASSERTION(mWindow, "Must have a window to register for input events!");
   NS_ASSERTION(mGestureRecognizer,
                "Must have a GestureRecognizer for input events!");
-  NS_ASSERTION(mDispatcher,
-               "Must have a CoreDispatcher to register for input events!");
   // Register for edge swipe
   WRL::ComPtr<UI::Input::IEdgeGestureStatics> edgeStatics;
   Foundation::GetActivationFactory(
