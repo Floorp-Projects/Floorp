@@ -979,7 +979,7 @@ public:
     void CleanupAfterCollection();
 
     // Start and finish an individual collection.
-    bool BeginCollection(ccType aCCType, nsICycleCollectorListener *aListener);
+    void BeginCollection(ccType aCCType, nsICycleCollectorListener *aListener);
     bool FinishCollection(nsICycleCollectorListener *aListener);
 
     bool FreeSnowWhite(bool aUntilNoSWInPurpleBuffer);
@@ -1564,7 +1564,6 @@ public:
                    nsICycleCollectorListener *aListener,
                    bool aMergeZones);
     ~GCGraphBuilder();
-    bool Initialized();
 
     bool WantAllTraces() const
     {
@@ -1658,8 +1657,7 @@ GCGraphBuilder::GCGraphBuilder(nsCycleCollector *aCollector,
 {
     if (!PL_DHashTableInit(&mPtrToNodeMap, &PtrNodeOps, nullptr,
                            sizeof(PtrToNodeEntry), 32768)) {
-        mPtrToNodeMap.ops = nullptr;
-        mRanOutOfMemory = true;
+        MOZ_CRASH();
     }
 
     if (aJSRuntime) {
@@ -1690,12 +1688,6 @@ GCGraphBuilder::~GCGraphBuilder()
 {
     if (mPtrToNodeMap.ops)
         PL_DHashTableFinish(&mPtrToNodeMap);
-}
-
-bool
-GCGraphBuilder::Initialized()
-{
-    return !!mPtrToNodeMap.ops;
 }
 
 PtrInfo*
@@ -2681,9 +2673,10 @@ nsCycleCollector::ShutdownCollect(nsICycleCollectorListener *aListener)
         if (aListener && NS_FAILED(aListener->Begin()))
             aListener = nullptr;
         FreeSnowWhite(true);
-        if (!(BeginCollection(ShutdownCC, aListener) &&
-              FinishCollection(aListener)))
+        BeginCollection(ShutdownCC, aListener);
+        if (!FinishCollection(aListener)) {
             break;
+        }
     }
 
     CleanupAfterCollection();
@@ -2716,10 +2709,7 @@ nsCycleCollector::Collect(ccType aCCType,
         aListener = nullptr;
     }
 
-    if (!BeginCollection(aCCType, aListener)) {
-        return;
-    }
-
+    BeginCollection(aCCType, aListener);
     FinishCollection(aListener);
     CleanupAfterCollection();
 }
@@ -2759,7 +2749,7 @@ nsCycleCollector::ShouldMergeZones(ccType aCCType)
     }
 }
 
-bool
+void
 nsCycleCollector::BeginCollection(ccType aCCType,
                                   nsICycleCollectorListener *aListener)
 {
@@ -2773,11 +2763,6 @@ nsCycleCollector::BeginCollection(ccType aCCType,
 
     GCGraphBuilder builder(this, mGraph, mJSRuntime, aListener,
                            mergeZones);
-    if (!builder.Initialized()) {
-        NS_ASSERTION(false, "Failed to initialize GCGraphBuilder, will probably leak.");
-        Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_OOM, true);
-        return false;
-    }
 
     if (mJSRuntime) {
         mJSRuntime->BeginCycleCollection(builder);
@@ -2816,8 +2801,6 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     } else {
         mScanInProgress = false;
     }
-
-    return true;
 }
 
 bool
