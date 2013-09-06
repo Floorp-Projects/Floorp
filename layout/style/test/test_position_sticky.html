@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=886646
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 886646</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=886646">Mozilla Bug 886646</a>
+<div id="display">
+  <iframe id="iframe" style="height: 200px; width: 200px"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 886646 - sticky positioning offsets **/
+
+/*
+ * This mochitest runs in an iframe so that we can selectively turn on the
+ * sticky about:config pref before its document is instantiated.
+ *
+ * See the iframe's source ("file_position_sticky.html") for the actual
+ * test code and for more documentation.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.setBoolPref("layout.css.sticky.enabled", true);
+document.getElementById("iframe").src = "file_position_sticky.html";
+
+function finish() {
+  SpecialPowers.clearUserPref("layout.css.sticky.enabled");
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

@@ -24,6 +24,7 @@ const { pb } = require('./private-browsing/helper');
 const { URL } = require('sdk/url');
 
 const SVG_URL = self.data.url('mofo_logo.SVG');
+const Isolate = fn => '(' + fn + ')()';
 
 function ignorePassingDOMNodeWarning(type, message) {
   if (type !== 'warn' || !message.startsWith('Passing a DOM node'))
@@ -166,54 +167,53 @@ exports["test Document Reload"] = function(assert, done) {
 exports["test Parent Resize Hack"] = function(assert, done) {
   const { Panel } = require('sdk/panel');
 
-  let browserWindow = Cc["@mozilla.org/appshell/window-mediator;1"].
-                      getService(Ci.nsIWindowMediator).
-                      getMostRecentWindow("navigator:browser");
-  let docShell = browserWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIWebNavigation)
-                  .QueryInterface(Ci.nsIDocShell);
-  if (!("allowWindowControl" in docShell)) {
-    // bug 635673 is not fixed in this firefox build
-    assert.pass("allowWindowControl attribute that allow to fix browser window " +
-              "resize is not available on this build.");
-    return;
-  }
+  let browserWindow = getMostRecentBrowserWindow();
 
-  let previousWidth = browserWindow.outerWidth, previousHeight = browserWindow.outerHeight;
+  let previousWidth = browserWindow.outerWidth;
+  let previousHeight = browserWindow.outerHeight;
 
   let content = "<script>" +
                 "function contentResize() {" +
                 "  resizeTo(200,200);" +
                 "  resizeBy(200,200);" +
+                "  window.postMessage('resize-attempt', '*');" +
                 "}" +
                 "</script>" +
                 "Try to resize browser window";
+
   let panel = Panel({
     contentURL: "data:text/html;charset=utf-8," + encodeURIComponent(content),
-    contentScript: "self.on('message', function(message){" +
-                   "  if (message=='resize') " +
-                   "    unsafeWindow.contentResize();" +
-                   "});",
     contentScriptWhen: "ready",
-    onMessage: function (message) {
+    contentScript: Isolate(() => {
+        self.on('message', message => {
+          if (message === 'resize') unsafeWindow.contentResize();
+        });
 
+        window.addEventListener('message', ({ data }) => self.postMessage(data));
+      }),
+    onMessage: function (message) {
+      if (message !== "resize-attempt") return;
+
+      assert.equal(browserWindow, getMostRecentBrowserWindow(),
+        "The browser window is still the same");
+      assert.equal(previousWidth, browserWindow.outerWidth,
+        "Size doesn't change by calling resizeTo/By/...");
+      assert.equal(previousHeight, browserWindow.outerHeight,
+        "Size doesn't change by calling resizeTo/By/...");
+
+      try {
+        panel.destroy();
+      }
+      catch (e) {
+        assert.fail(e);
+        throw e;
+      }
+
+      done();
     },
-    onShow: function () {
-      panel.postMessage('resize');
-      timer.setTimeout(function () {
-        assert.equal(previousWidth,browserWindow.outerWidth,"Size doesn't change by calling resizeTo/By/...");
-        assert.equal(previousHeight,browserWindow.outerHeight,"Size doesn't change by calling resizeTo/By/...");
-        try {
-          panel.destroy();
-        }
-        catch (e) {
-          console.exception(e);
-          throw e;
-        }
-        done();
-      },0);
-    }
+    onShow: () => panel.postMessage('resize')
   });
+
   panel.show();
 }
 
