@@ -1949,10 +1949,15 @@ this.DOMApplicationRegistry = {
           tmpDir.remove(true);
         } catch(e) { }
 
-        // Save the manifest
+        // Save the manifest and clear the manifest cache, since it may contain
+        // the update manifest.
         let manFile = dir.clone();
         manFile.append("manifest.webapp");
         this._writeFile(manFile, JSON.stringify(aManifest), function() { });
+        if (this._manifestCache[aId]) {
+          delete this._manifestCache[aId];
+        }
+
         // Set state and fire events.
         app.installState = "installed";
         app.downloading = false;
