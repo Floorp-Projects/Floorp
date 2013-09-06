@@ -13,6 +13,19 @@
   </binding>
   <binding id="empty2">
     <content><children/><div xmlns="http://www.w3.org/1999/xhtml">Kitty</div></content>
+    <implementation>
+      <constructor>
+        // We used to do this in an onload handler, but getAnonymousNodes is no
+        // longer accessible to content, and we can't use SpecialPowers in
+        // reftests. So we enable XBL scopes and take advantage of the fact that XBL
+        // scopes can access these functions. We apply this binding
+        // programatically to make absolutely sure this constructor runs after all the
+        // other bindings have been set up.
+        document.body.offsetHeight;
+        document.getAnonymousNodes(document.getElementById("d3"))[0].style.display = 'inline';
+        document.getAnonymousNodes(document.getElementById("d4"))[2].style.display = 'inline';
+      </constructor>
+    </implementation>
   </binding>
 </bindings>
 <style>
@@ -21,13 +34,10 @@ body > div { border:1px solid black; margin:1em;
 #d1 { -moz-binding:url(#before); }
 #d2 { -moz-binding:url(#after); }
 #d3 { -moz-binding:url(#empty1); }
-#d4 { -moz-binding:url(#empty2); }
 </style>
 <script>
 function loaded() {
-  document.body.offsetHeight;
-  document.getAnonymousNodes(document.getElementById("d3"))[0].style.display = 'inline';
-  document.getAnonymousNodes(document.getElementById("d4"))[2].style.display = 'inline';
+  document.getElementById('d4').style.MozBinding = "url(#empty2)";
 }
 </script>
 </head>

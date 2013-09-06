@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>CSS Test: Sticky Positioning - offsets reference</title>
+    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <link rel="match" href="padding-2-ref.html">
+    <meta name="flags" content="dom">
+    <meta name="assert" content="Offsets should position the element with respect to the content box of the scrolling container">
+    <style>
+      #scroll {
+        width: 80px;
+        height: 80px;
+        overflow: hidden;
+        border: 10px solid black;
+        padding: 10px;
+      }
+      #sticky {
+        position: sticky;
+        width: 10px;
+        height: 10px;
+        top: 20px;
+        background-color: black;
+      }
+      .fill {
+        width: 1000px;
+        height: 1000px;
+      }
+    </style>
+  <body>
+    <div id="scroll">
+      <div class="fill"></div>
+      <div id="sticky"></div>
+      <div class="fill"></div>
+    </div>
+    <script type="application/javascript">
+      document.getElementById('scroll').scrollTop = 1100;
+    </script>
+  </body>
+</html>
