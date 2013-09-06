@@ -82,20 +82,23 @@ struct PairedDevicePropertiesRequest
 {
   nsString[] addresses;
 };
+
 struct ConnectedDevicePropertiesRequest
 {
-  uint16_t profileId;
+  uint16_t serviceUuid;
 };
 
 struct ConnectRequest
 {
   nsString address;
-  uint16_t profileId;
+  uint32_t cod;
+  uint16_t serviceUuid;
 };
 
 struct DisconnectRequest
 {
-  uint16_t profileId;
+  nsString address;
+  uint16_t serviceUuid;
 };
 
 struct SendFileRequest
