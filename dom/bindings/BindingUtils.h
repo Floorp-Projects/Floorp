@@ -85,11 +85,12 @@ Throw(JSContext* cx, nsresult rv)
   return false;
 }
 
-template<bool mainThread, bool reportJSContentExceptions = false>
+template<bool mainThread>
 inline bool
 ThrowMethodFailedWithDetails(JSContext* cx, ErrorResult& rv,
                              const char* ifaceName,
-                             const char* memberName)
+                             const char* memberName,
+                             bool reportJSContentExceptions = false)
 {
   if (rv.IsTypeError()) {
     rv.ReportTypeError(cx);
