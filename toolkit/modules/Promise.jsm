@@ -114,6 +114,10 @@ const N_STATUS = Name("status");
 const N_VALUE = Name("value");
 const N_HANDLERS = Name("handlers");
 
+// The following error types are considered programmer errors, which should be
+// reported (possibly redundantly) so as to let programmers fix their code.
+const ERRORS_TO_REPORT = ["EvalError", "RangeError", "ReferenceError", "TypeError"];
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Promise
 
@@ -572,7 +576,27 @@ Handler.prototype = {
         nextStatus = STATUS_RESOLVED;
       }
     } catch (ex) {
-      // If an exception occurred in the handler, reject the next promise.
+
+      // An exception has occurred in the handler.
+
+      if (ex && typeof ex == "object" && "name" in ex &&
+          ERRORS_TO_REPORT.indexOf(ex.name) != -1) {
+
+        // We suspect that the exception is a programmer error, so we now
+        // display it using dump().  Note that we do not use Cu.reportError as
+        // we assume that this is a programming error, so we do not want end
+        // users to see it. Also, if the programmer handles errors correctly,
+        // they will either treat the error or log them somewhere.
+
+        dump("A coding exception was thrown in a Promise " +
+             ((nextStatus == STATUS_RESOLVED) ? "resolution":"rejection") +
+             " callback.\n");
+        dump("Full message: " + ex + "\n");
+        dump("See https://developer.mozilla.org/Mozilla/JavaScript_code_modules/Promise.jsm/Promise\n");
+        dump("Full stack: " + (("stack" in ex)?ex.stack:"not available") + "\n");
+      }
+
+      // Additionally, reject the next promise.
       nextStatus = STATUS_REJECTED;
       nextValue = ex;
     }
