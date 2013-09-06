@@ -10,6 +10,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import android.graphics.drawable.BitmapDrawable;
+import android.os.Build;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -77,7 +78,16 @@ public class ArrowPopup extends PopupWindow {
         // If there's no anchor or the anchor is out of the window bounds,
         // just show the popup at the top of the gecko app view.
         if (mAnchor == null || anchorLocation[1] < 0) {
-            showAtLocation(mActivity.getView(), Gravity.TOP, 0, 0);
+            final View view = mActivity.getView();
+
+            // Bug in android code causes the window layout parameters to be ignored
+            // when using showAtLocation() in Gingerbread phones.
+            if (Build.VERSION.SDK_INT < 11) {
+                setWidth(view.getWidth());
+                setHeight(view.getHeight());
+            }
+
+            showAtLocation(view, Gravity.TOP, 0, 0);
             return;
         }
 
