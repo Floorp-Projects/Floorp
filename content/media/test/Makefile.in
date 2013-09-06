@@ -117,7 +117,6 @@ MOCHITEST_FILES = \
 		test_mozHasAudio.html \
 		test_source_media.html \
 		test_autoplay_contentEditable.html \
-		test_bug448534.html \
 		test_bug463162.xhtml \
 		test_decoder_disable.html \
 		test_media_selection.html \
@@ -140,6 +139,7 @@ MOCHITEST_FILES = \
 # Disabled on Windows for frequent intermittent failures
 ifneq ($(OS_ARCH), WINNT)
 MOCHITEST_FILES += \
+		test_bug448534.html \
 		test_streams_element_capture.html \
 		test_streams_element_capture_reset.html \
 		test_streams_element_capture_createObjectURL.html \
