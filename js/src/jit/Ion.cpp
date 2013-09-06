@@ -2589,7 +2589,7 @@ void
 AutoFlushCache::updateTop(uintptr_t p, size_t len)
 {
     IonContext *ictx = GetIonContext();
-    IonRuntime *irt = ictx->runtime->ionRuntime();
+    IonRuntime *irt = (ictx != NULL) ? ictx->runtime->ionRuntime() : NULL;
     if (!irt || !irt->flusher())
         JSC::ExecutableAllocator::cacheFlush((void*)p, len);
     else
