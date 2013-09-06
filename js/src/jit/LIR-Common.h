@@ -904,6 +904,22 @@ class LReturnFromCtor : public LInstructionHelper<1, BOX_PIECES + 1, 0>
     static const size_t ObjectIndex = BOX_PIECES;
 };
 
+class LComputeThis : public LInstructionHelper<1, BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(ComputeThis)
+
+    static const size_t ValueIndex = 0;
+
+    const LDefinition *output() {
+        return getDef(0);
+    }
+
+    MComputeThis *mir() const {
+        return mir_->toComputeThis();
+    }
+};
+
 // Writes a typed argument for a function call to the frame's argument vector.
 class LStackArgT : public LInstructionHelper<0, 1, 0>
 {

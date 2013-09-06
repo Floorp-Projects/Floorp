@@ -3528,6 +3528,27 @@ CodeGenerator::visitReturnFromCtor(LReturnFromCtor *lir)
     return true;
 }
 
+typedef JSObject *(*BoxNonStrictThisFn)(JSContext *, HandleValue);
+static const VMFunction BoxNonStrictThisInfo = FunctionInfo<BoxNonStrictThisFn>(BoxNonStrictThis);
+
+bool
+CodeGenerator::visitComputeThis(LComputeThis *lir)
+{
+    ValueOperand value = ToValue(lir, LComputeThis::ValueIndex);
+    Register output = ToRegister(lir->output());
+
+    OutOfLineCode *ool = oolCallVM(BoxNonStrictThisInfo, lir, (ArgList(), value),
+                                   StoreRegisterTo(output));
+    if (!ool)
+        return false;
+
+    masm.branchTestObject(Assembler::NotEqual, value, ool->entry());
+    masm.unboxObject(value, output);
+
+    masm.bind(ool->rejoin());
+    return true;
+}
+
 bool
 CodeGenerator::visitArrayLength(LArrayLength *lir)
 {

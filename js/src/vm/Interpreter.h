@@ -84,8 +84,8 @@ DebugExceptionUnwind(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc);
 extern bool
 BoxNonStrictThis(JSContext *cx, const CallReceiver &call);
 
-extern bool
-BoxNonStrictThis(JSContext *cx, MutableHandleValue thisv, bool *modified);
+extern JSObject *
+BoxNonStrictThis(JSContext *cx, HandleValue thisv);
 
 /*
  * Ensure that fp->thisValue() is the correct value of |this| for the scripted

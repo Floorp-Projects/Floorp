@@ -378,6 +378,20 @@ LIRGenerator::visitReturnFromCtor(MReturnFromCtor *ins)
 }
 
 bool
+LIRGenerator::visitComputeThis(MComputeThis *ins)
+{
+    JS_ASSERT(ins->type() == MIRType_Object);
+    JS_ASSERT(ins->input()->type() == MIRType_Value);
+
+    LComputeThis *lir = new LComputeThis();
+    if (!useBoxAtStart(lir, LComputeThis::ValueIndex, ins->input()))
+        return false;
+
+    return define(lir, ins) && assignSafepoint(lir, ins);
+}
+
+
+bool
 LIRGenerator::visitCall(MCall *call)
 {
     JS_ASSERT(CallTempReg0 != CallTempReg1);

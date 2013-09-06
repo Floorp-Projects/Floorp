@@ -34,6 +34,7 @@ namespace jit {
     _(CreateArgumentsObject)                                                \
     _(GetArgumentsObjectArg)                                                \
     _(SetArgumentsObjectArg)                                                \
+    _(ComputeThis)                                                          \
     _(PrepareCall)                                                          \
     _(PassArg)                                                              \
     _(Call)                                                                 \
