@@ -69,18 +69,24 @@
   ALLOW_SYSCALL(munmap), \
   ALLOW_SYSCALL(mmap2), \
   ALLOW_SYSCALL(mprotect), \
+  ALLOW_SYSCALL(dup), \
+  ALLOW_SYSCALL(getuid32), \
+  ALLOW_SYSCALL(nanosleep), \
   /* Must remove all of the following in the future, when no longer used */ \
   /* open() is for some legacy APIs such as font loading. */ \
+  /* See bug 906996 for removing unlink(). */ \
   ALLOW_SYSCALL(open), \
   ALLOW_SYSCALL(fstat64), \
   ALLOW_SYSCALL(stat64), \
   ALLOW_SYSCALL(prctl), \
   ALLOW_SYSCALL(access), \
   ALLOW_SYSCALL(getdents64), \
+  ALLOW_SYSCALL(unlink), \
   /* Should remove all of the following in the future, if possible */ \
   ALLOW_SYSCALL(getpriority), \
   ALLOW_SYSCALL(setpriority), \
   ALLOW_SYSCALL(sigprocmask), \
+  ALLOW_SYSCALL(sched_setscheduler), \
   /* Always last and always OK calls */ \
   SECCOMP_WHITELIST_ADD \
   /* restart_syscall is called internally, generally when debugging */ \
