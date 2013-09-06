@@ -96,13 +96,32 @@ MacroAssembler::guardTypeSet(const Source &address, const TypeSet *types,
         JS_ASSERT(scratch != InvalidReg);
         branchTestObject(NotEqual, tag, miss);
         Register obj = extractObject(address, scratch);
+        guardObjectType(obj, types, scratch, matched, miss);
+    }
+}
 
-        unsigned count = types->getObjectCount();
-        for (unsigned i = 0; i < count; i++) {
-            if (JSObject *object = types->getSingleObject(i))
-                branchPtr(Equal, obj, ImmGCPtr(object), matched);
-        }
+template <typename TypeSet> void
+MacroAssembler::guardObjectType(Register obj, const TypeSet *types,
+                                Register scratch, Label *matched, Label *miss)
+{
+    JS_ASSERT(!types->unknown());
+    JS_ASSERT(!types->hasType(types::Type::AnyObjectType()));
+    JS_ASSERT(types->getObjectCount());
+    JS_ASSERT(scratch != InvalidReg);
 
+    // Note: Some platforms give the same register for obj and scratch.
+    // Make sure when writing to scratch, the obj register isn't used anymore!
+
+    bool hasTypeObjects = false;
+    unsigned count = types->getObjectCount();
+    for (unsigned i = 0; i < count; i++) {
+        if (JSObject *object = types->getSingleObject(i))
+            branchPtr(Equal, obj, ImmGCPtr(object), matched);
+        else if (types->getTypeObject(i))
+            hasTypeObjects = true;
+    }
+
+    if (hasTypeObjects) {
         loadPtr(Address(obj, JSObject::offsetOfType()), scratch);
 
         for (unsigned i = 0; i < count; i++) {
@@ -141,6 +160,13 @@ template void MacroAssembler::guardTypeSet(const Address &address, const TypeWra
                                            Register scratch, Label *matched, Label *miss);
 template void MacroAssembler::guardTypeSet(const ValueOperand &value, const TypeWrapper *types,
                                            Register scratch, Label *matched, Label *miss);
+
+template void MacroAssembler::guardObjectType(Register obj, const types::StackTypeSet *types,
+                                              Register scratch, Label *matched, Label *miss);
+template void MacroAssembler::guardObjectType(Register obj, const types::TypeSet *types,
+                                              Register scratch, Label *matched, Label *miss);
+template void MacroAssembler::guardObjectType(Register obj, const TypeWrapper *types,
+                                              Register scratch, Label *matched, Label *miss);
 
 template void MacroAssembler::guardType(const Address &address, types::Type type,
                                         Register scratch, Label *matched, Label *miss);

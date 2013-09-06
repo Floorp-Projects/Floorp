@@ -143,7 +143,8 @@
     _(GuardObjectType)              \
     _(GuardClass)                   \
     _(GuardThreadLocalObject)       \
-    _(TypeBarrier)                  \
+    _(TypeBarrierV)                 \
+    _(TypeBarrierO)                 \
     _(MonitorTypes)                 \
     _(PostWriteBarrierO)            \
     _(PostWriteBarrierV)            \

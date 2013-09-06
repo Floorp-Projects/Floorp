@@ -2129,14 +2129,14 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy
     enum Mode {
         Fallible,       // Check the type, and deoptimize if unexpected.
         Infallible,     // Type guard is not necessary.
-        TypeBarrier,    // Guard on the type, and act like a TypeBarrier on failure.
-        TypeGuard       // Guard on the type, and deoptimize otherwise.
+        TypeBarrier     // Guard on the type, and act like a TypeBarrier on failure.
     };
 
   private:
     Mode mode_;
+    BailoutKind bailoutKind_;
 
-    MUnbox(MDefinition *ins, MIRType type, Mode mode)
+    MUnbox(MDefinition *ins, MIRType type, Mode mode, BailoutKind kind)
       : MUnaryInstruction(ins),
         mode_(mode)
     {
@@ -2151,17 +2151,24 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy
         setResultTypeSet(ins->resultTypeSet());
         setMovable();
 
-        if (mode_ == TypeBarrier || mode_ == TypeGuard)
+        if (mode_ == TypeBarrier)
             setGuard();
-        if (mode_ == TypeGuard)
-            mode_ = Fallible;
-    }
 
+        bailoutKind_ = kind;
+    }
   public:
     INSTRUCTION_HEADER(Unbox)
     static MUnbox *New(MDefinition *ins, MIRType type, Mode mode)
     {
-        return new MUnbox(ins, type, mode);
+        BailoutKind kind = Bailout_Normal;
+        if (mode == TypeBarrier && ins->isEffectful())
+            kind = Bailout_TypeBarrier;
+        return new MUnbox(ins, type, mode, kind);
+    }
+
+    static MUnbox *New(MDefinition *ins, MIRType type, Mode mode, BailoutKind kind)
+    {
+        return new MUnbox(ins, type, mode, kind);
     }
 
     TypePolicy *typePolicy() {
@@ -2174,9 +2181,7 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy
     BailoutKind bailoutKind() const {
         // If infallible, no bailout should be generated.
         JS_ASSERT(fallible());
-        return mode() == Fallible
-               ? Bailout_Normal
-               : Bailout_TypeBarrier;
+        return bailoutKind_;
     }
     bool fallible() const {
         return mode() != Infallible;
@@ -7548,7 +7553,7 @@ class MGuardThreadLocalObject
 // that value.
 class MTypeBarrier
   : public MUnaryInstruction,
-    public BoxInputsPolicy
+    public TypeBarrierPolicy
 {
     BailoutKind bailoutKind_;
 
@@ -7556,8 +7561,11 @@ class MTypeBarrier
       : MUnaryInstruction(def)
     {
         JS_ASSERT(!types->unknown());
-        setResultType(MIRType_Value);
+
+        MIRType type = MIRTypeFromValueType(types->getKnownTypeTag());
+        setResultType(type);
         setResultTypeSet(types);
+
         setGuard();
         setMovable();
         bailoutKind_ = bailoutKind;
@@ -7567,15 +7575,15 @@ class MTypeBarrier
     INSTRUCTION_HEADER(TypeBarrier)
 
     static MTypeBarrier *New(MDefinition *def, types::StackTypeSet *types) {
-        BailoutKind bailoutKind = def->isEffectful()
-                                  ? Bailout_TypeBarrier
-                                  : Bailout_Normal;
-        return new MTypeBarrier(def, types, bailoutKind);
+        BailoutKind kind = def->isEffectful() ? Bailout_TypeBarrier : Bailout_Normal;
+        return new MTypeBarrier(def, types, kind);
     }
     static MTypeBarrier *New(MDefinition *def, types::StackTypeSet *types,
-                             BailoutKind bailoutKind) {
-        return new MTypeBarrier(def, types, bailoutKind);
+                             BailoutKind kind) {
+        return new MTypeBarrier(def, types, kind);
     }
+
+    void printOpcode(FILE *fp) const;
 
     TypePolicy *typePolicy() {
         return this;
@@ -7592,6 +7600,17 @@ class MTypeBarrier
     }
     virtual bool neverHoist() const {
         return resultTypeSet()->empty();
+    }
+
+    bool alwaysBails() const {
+        // If mirtype of input doesn't agree with mirtype of barrier,
+        // we will definitely bail.
+        MIRType type = MIRTypeFromValueType(resultTypeSet()->getKnownTypeTag());
+        if (type == MIRType_Value)
+            return false;
+        if (input()->type() == MIRType_Value)
+            return false;
+        return input()->type() != type;
     }
 };
 
