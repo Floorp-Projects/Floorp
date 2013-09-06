@@ -39,5 +39,5 @@ function handleRequest(request, response)
 
   // Send HTML to test allowed/blocked behaviors
   response.setHeader("Content-Type", "text/html", false);
-  response.write(loadHTMLFromFile("tests/content/base/test/file_CSP_bug888172.html"));
+  response.write(loadHTMLFromFile("tests/content/base/test/csp/file_CSP_bug888172.html"));
 }

@@ -11,7 +11,7 @@ function handleRequest(request, response)
 
   var thisSite = "http://mochi.test:8888";
   var otherSite = "http://example.com";
-  var resource = "/tests/content/base/test/file_csp_redirects_resource.sjs";
+  var resource = "/tests/content/base/test/csp/file_csp_redirects_resource.sjs";
 
   response.setHeader("Cache-Control", "no-cache", false);
 
