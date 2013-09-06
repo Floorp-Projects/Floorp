@@ -45,20 +45,6 @@ public:
   void ClientDataHandler(mozilla::ipc::UnixSocketRawData* aMessage);
   void ServerDataHandler(mozilla::ipc::UnixSocketRawData* aMessage);
 
-  /*
-   * If an application wants to send a file, first, it needs to
-   * call Connect() to create a valid RFCOMM connection. After
-   * that, call SendFile()/StopSendingFile() to control file-sharing
-   * process. During the file transfering process, the application
-   * will receive several system messages which contain the processed
-   * percentage of file. At the end, the application will get another
-   * system message indicating that the process is complete, then it can
-   * either call Disconnect() to close RFCOMM connection or start another
-   * file-sending thread via calling SendFile() again.
-   */
-  void Connect(const nsAString& aDeviceAddress,
-               BluetoothReplyRunnable* aRunnable);
-  void Disconnect();
   bool Listen();
 
   bool SendFile(const nsAString& aDeviceAddress, BlobParent* aBlob);
@@ -76,20 +62,38 @@ public:
   bool ExtractBlobHeaders();
   void CheckPutFinal(uint32_t aNumRead);
 
-  // Implement interface BluetoothSocketObserver
+  // The following functions are inherited from BluetoothSocketObserver
   void ReceiveSocketData(
     BluetoothSocket* aSocket,
     nsAutoPtr<mozilla::ipc::UnixSocketRawData>& aMessage) MOZ_OVERRIDE;
+  virtual void OnSocketConnectSuccess(BluetoothSocket* aSocket) MOZ_OVERRIDE;
+  virtual void OnSocketConnectError(BluetoothSocket* aSocket) MOZ_OVERRIDE;
+  virtual void OnSocketDisconnect(BluetoothSocket* aSocket) MOZ_OVERRIDE;
 
-  virtual void OnConnectSuccess(BluetoothSocket* aSocket) MOZ_OVERRIDE;
-  virtual void OnConnectError(BluetoothSocket* aSocket) MOZ_OVERRIDE;
-  virtual void OnDisconnect(BluetoothSocket* aSocket) MOZ_OVERRIDE;
+  // The following functions are inherited from BluetoothProfileManagerBase
   virtual void OnGetServiceChannel(const nsAString& aDeviceAddress,
                                    const nsAString& aServiceUuid,
                                    int aChannel) MOZ_OVERRIDE;
   virtual void OnUpdateSdpRecords(const nsAString& aDeviceAddress) MOZ_OVERRIDE;
   virtual void GetAddress(nsAString& aDeviceAddress) MOZ_OVERRIDE;
   virtual bool IsConnected() MOZ_OVERRIDE;
+
+  /*
+   * If an application wants to send a file, first, it needs to
+   * call Connect() to create a valid RFCOMM connection. After
+   * that, call SendFile()/StopSendingFile() to control file-sharing
+   * process. During the file transfering process, the application
+   * will receive several system messages which contain the processed
+   * percentage of file. At the end, the application will get another
+   * system message indicating that the process is complete, then it can
+   * either call Disconnect() to close RFCOMM connection or start another
+   * file-sending thread via calling SendFile() again.
+   */
+  virtual void Connect(const nsAString& aDeviceAddress,
+                       BluetoothProfileController* aController) MOZ_OVERRIDE;
+  virtual void Disconnect(BluetoothProfileController* aController) MOZ_OVERRIDE;
+  virtual void OnConnect(const nsAString& aErrorStr) MOZ_OVERRIDE;
+  virtual void OnDisconnect(const nsAString& aErrorStr) MOZ_OVERRIDE;
 
 private:
   BluetoothOppManager();
@@ -211,6 +215,7 @@ private:
   nsCOMPtr<nsIInputStream> mInputStream;
   nsCOMPtr<nsIVolumeMountLock> mMountLock;
   nsRefPtr<BluetoothReplyRunnable> mRunnable;
+  BluetoothProfileController* mController;
   nsRefPtr<DeviceStorageFile> mDsFile;
 
   // If a connection has been established, mSocket will be the socket
