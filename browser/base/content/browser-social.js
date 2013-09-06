@@ -6,7 +6,6 @@
 let SocialUI,
     SocialChatBar,
     SocialFlyout,
-    SocialMark,
     SocialShare,
     SocialMenu,
     SocialToolbar,
@@ -32,7 +31,6 @@ SocialUI = {
   init: function SocialUI_init() {
     Services.obs.addObserver(this, "social:ambient-notification-changed", false);
     Services.obs.addObserver(this, "social:profile-changed", false);
-    Services.obs.addObserver(this, "social:page-mark-config", false);
     Services.obs.addObserver(this, "social:frameworker-error", false);
     Services.obs.addObserver(this, "social:provider-set", false);
     Services.obs.addObserver(this, "social:providers-changed", false);
@@ -61,7 +59,6 @@ SocialUI = {
   uninit: function SocialUI_uninit() {
     Services.obs.removeObserver(this, "social:ambient-notification-changed");
     Services.obs.removeObserver(this, "social:profile-changed");
-    Services.obs.removeObserver(this, "social:page-mark-config");
     Services.obs.removeObserver(this, "social:frameworker-error");
     Services.obs.removeObserver(this, "social:provider-set");
     Services.obs.removeObserver(this, "social:providers-changed");
@@ -116,7 +113,6 @@ SocialUI = {
           SocialChatBar.update();
           SocialShare.update();
           SocialSidebar.update();
-          SocialMark.update();
           SocialToolbar.update();
           SocialStatus.populateToolbarPalette();
           SocialMenu.populate();
@@ -141,13 +137,7 @@ SocialUI = {
         case "social:profile-changed":
           if (this._matchesCurrentProvider(data)) {
             SocialToolbar.updateProvider();
-            SocialMark.update();
             SocialChatBar.update();
-          }
-          break;
-        case "social:page-mark-config":
-          if (this._matchesCurrentProvider(data)) {
-            SocialMark.updateMarkState();
           }
           break;
         case "social:frameworker-error":
@@ -861,81 +851,6 @@ SocialShare = {
   }
 };
 
-SocialMark = {
-  get button() {
-    return document.getElementById("social-mark-button");
-  },
-
-  canMarkPage: function SSB_canMarkPage(aURI) {
-    // We only allow sharing of http or https
-    return aURI && (aURI.schemeIs('http') || aURI.schemeIs('https'));
-  },
-
-  // Called when the Social.provider changes
-  update: function SSB_updateButtonState() {
-    let markButton = this.button;
-    // always show button if provider supports marks
-    markButton.hidden = !SocialUI.enabled || Social.provider.pageMarkInfo == null;
-    markButton.disabled = markButton.hidden || !this.canMarkPage(gBrowser.currentURI);
-
-    // also update the relevent command's disabled state so the keyboard
-    // shortcut only works when available.
-    let cmd = document.getElementById("Social:TogglePageMark");
-    cmd.setAttribute("disabled", markButton.disabled ? "true" : "false");
-  },
-
-  togglePageMark: function(aCallback) {
-    if (this.button.disabled)
-      return;
-    this.toggleURIMark(gBrowser.currentURI, aCallback)
-  },
-
-  toggleURIMark: function(aURI, aCallback) {
-    let update = function(marked) {
-      this._updateMarkState(marked);
-      if (aCallback)
-        aCallback(marked);
-    }.bind(this);
-    Social.isURIMarked(aURI, function(marked) {
-      if (marked) {
-        Social.unmarkURI(aURI, update);
-      } else {
-        Social.markURI(aURI, update);
-      }
-    });
-  },
-
-  updateMarkState: function SSB_updateMarkState() {
-    this.update();
-    if (!this.button.hidden)
-      Social.isURIMarked(gBrowser.currentURI, this._updateMarkState.bind(this));
-  },
-
-  _updateMarkState: function(currentPageMarked) {
-    // callback for isURIMarked
-    let markButton = this.button;
-    let pageMarkInfo = SocialUI.enabled ? Social.provider.pageMarkInfo : null;
-
-    // Update the mark button, if present
-    if (!markButton || markButton.hidden || !pageMarkInfo)
-      return;
-
-    let imageURL;
-    if (!markButton.disabled && currentPageMarked) {
-      markButton.setAttribute("marked", "true");
-      markButton.setAttribute("label", pageMarkInfo.messages.markedLabel);
-      markButton.setAttribute("tooltiptext", pageMarkInfo.messages.markedTooltip);
-      imageURL = pageMarkInfo.images.marked;
-    } else {
-      markButton.removeAttribute("marked");
-      markButton.setAttribute("label", pageMarkInfo.messages.unmarkedLabel);
-      markButton.setAttribute("tooltiptext", pageMarkInfo.messages.unmarkedTooltip);
-      imageURL = pageMarkInfo.images.unmarked;
-    }
-    markButton.style.listStyleImage = "url(" + imageURL + ")";
-  }
-};
-
 SocialMenu = {
   populate: function SocialMenu_populate() {
     let submenu = document.getElementById("menu_social-statusarea-popup");
@@ -1021,13 +936,11 @@ SocialToolbar = {
       parent.removeChild(frame);
     }
 
-    let tbi = document.getElementById("social-toolbar-item");
+    let tbi = document.getElementById("social-provider-button");
     if (tbi) {
-      // SocialMark is the last button allways
-      let next = SocialMark.button.previousSibling;
-      while (next != this.button) {
-        tbi.removeChild(next);
-        next = SocialMark.button.previousSibling;
+      // buttons after social-provider-button are ambient icons
+      while (tbi.nextSibling) {
+        tbi.parentNode.removeChild(tbi.nextSibling);
       }
     }
   },
@@ -1183,7 +1096,7 @@ SocialToolbar = {
       toolbarButton.setAttribute("aria-label", ariaLabel);
     }
     let socialToolbarItem = document.getElementById("social-toolbar-item");
-    socialToolbarItem.insertBefore(toolbarButtons, SocialMark.button);
+    socialToolbarItem.appendChild(toolbarButtons);
 
     for (let frame of createdFrames) {
       if (frame.socialErrorListener)

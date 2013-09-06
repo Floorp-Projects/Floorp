@@ -3445,7 +3445,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
     URLBarSetURI();
     XULBrowserWindow.asyncUpdateUI();
     BookmarkingUI.updateStarState();
-    SocialMark.updateMarkState();
     SocialShare.update();
   }
 
@@ -3915,7 +3914,6 @@ var XULBrowserWindow = {
         // Update starring UI
         BookmarkingUI.updateStarState();
         if (SocialUI.enabled) {
-          SocialMark.updateMarkState();
           SocialShare.update();
         }
       }
