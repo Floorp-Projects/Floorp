@@ -52,11 +52,9 @@ public:
   virtual bool AreItemsOperable() const;
   virtual Accessible* ContainerWidget() const;
 
+  virtual bool IsAcceptableChild(Accessible* aPossibleChild) const MOZ_OVERRIDE;
+
 protected:
-
-  // Accessible
-  virtual void CacheChildren();
-
   // XULButtonAccessible
   bool ContainsMenu();
 };
