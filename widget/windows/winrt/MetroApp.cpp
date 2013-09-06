@@ -60,28 +60,12 @@ MetroApp::CreateView(ABI::Windows::ApplicationModel::Core::IFrameworkView **aVie
 ////////////////////////////////////////////////////
 // MetroApp impl.
 
-// called after FrameworkView::Run() drops into the event dispatch loop
 void
-MetroApp::Initialize()
+MetroApp::Run()
 {
-  HRESULT hr;
   LogThread();
 
-  static bool xpcomInit;
-  if (!xpcomInit) {
-    xpcomInit = true;
-    Log("XPCOM startup initialization began");
-    nsresult rv = XRE_metroStartup(true);
-    Log("XPCOM startup initialization complete");
-    if (NS_FAILED(rv)) {
-      Log("XPCOM startup initialization failed, bailing. rv=%X", rv);
-      CoreExit();
-      return;
-    }
-  }
-
-  sFrameworkView->SetupContracts();
-
+  HRESULT hr;
   hr = sCoreApp->add_Suspending(Callback<__FIEventHandler_1_Windows__CApplicationModel__CSuspendingEventArgs_t>(
     this, &MetroApp::OnSuspending).Get(), &mSuspendEvent);
   AssertHRESULT(hr);
@@ -90,7 +74,13 @@ MetroApp::Initialize()
     this, &MetroApp::OnResuming).Get(), &mResumeEvent);
   AssertHRESULT(hr);
 
-  mozilla::widget::StartAudioSession();
+  Log("XPCOM startup initialization began");
+  nsresult rv = XRE_metroStartup(true);
+  Log("XPCOM startup initialization complete");
+  if (NS_FAILED(rv)) {
+    Log("XPCOM startup initialization failed, bailing. rv=%X", rv);
+    CoreExit();
+  }
 }
 
 // Free all xpcom related resources before calling the xre shutdown call.
@@ -99,8 +89,6 @@ void
 MetroApp::ShutdownXPCOM()
 {
   LogThread();
-
-  mozilla::widget::StopAudioSession();
 
   if (sCoreApp) {
     sCoreApp->remove_Suspending(mSuspendEvent);
