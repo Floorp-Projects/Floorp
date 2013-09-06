@@ -2089,7 +2089,8 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
   bool isPositioned = disp->IsPositioned(child);
   bool isStackingContext =
-    (isPositioned && pos->mZIndex.GetUnit() == eStyleUnit_Integer) ||
+    (isPositioned && (disp->mPosition == NS_STYLE_POSITION_STICKY ||
+                      pos->mZIndex.GetUnit() == eStyleUnit_Integer)) ||
      isVisuallyAtomic || (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
 
   if (isVisuallyAtomic || isPositioned || (!isSVG && disp->IsFloating(child)) ||
