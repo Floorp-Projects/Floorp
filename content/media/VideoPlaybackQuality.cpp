@@ -10,7 +10,6 @@
 #include "mozilla/dom/VideoPlaybackQualityBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
-#include "MediaDecoder.h"
 
 namespace mozilla {
 namespace dom {

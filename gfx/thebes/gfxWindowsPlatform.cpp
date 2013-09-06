@@ -73,11 +73,11 @@ static const int kSupportedFeatureLevels[] =
   { D3D10_FEATURE_LEVEL_10_1, D3D10_FEATURE_LEVEL_10_0,
     D3D10_FEATURE_LEVEL_9_3 };
 
-class GfxD2DSurfaceCacheReporter MOZ_FINAL : public MemoryUniReporter
+class GfxD2DSurfaceCacheReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
     GfxD2DSurfaceCacheReporter()
-      : MemoryUniReporter("gfx-d2d-surface-cache", KIND_OTHER, UNITS_BYTES,
+      : MemoryReporterBase("gfx-d2d-surface-cache", KIND_OTHER, UNITS_BYTES,
 "Memory used by the Direct2D internal surface cache.")
     {}
 private:
@@ -110,11 +110,11 @@ bool OncePreferenceDirect2DForceEnabled()
 
 } // anonymous namespace
 
-class GfxD2DSurfaceVramReporter MOZ_FINAL : public MemoryUniReporter
+class GfxD2DSurfaceVramReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
     GfxD2DSurfaceVramReporter()
-      : MemoryUniReporter("gfx-d2d-surface-vram", KIND_OTHER, UNITS_BYTES,
+      : MemoryReporterBase("gfx-d2d-surface-vram", KIND_OTHER, UNITS_BYTES,
                            "Video memory used by D2D surfaces.")
     {}
 private:
@@ -127,11 +127,11 @@ private:
 
 #endif
 
-class GfxD2DVramDrawTargetReporter MOZ_FINAL : public MemoryUniReporter
+class GfxD2DVramDrawTargetReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
     GfxD2DVramDrawTargetReporter()
-      : MemoryUniReporter("gfx-d2d-vram-draw-target", KIND_OTHER, UNITS_BYTES,
+      : MemoryReporterBase("gfx-d2d-vram-draw-target", KIND_OTHER, UNITS_BYTES,
                            "Video memory used by D2D DrawTargets.")
     {}
 private:
@@ -141,11 +141,11 @@ private:
     }
 };
 
-class GfxD2DVramSourceSurfaceReporter MOZ_FINAL : public MemoryUniReporter
+class GfxD2DVramSourceSurfaceReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
     GfxD2DVramSourceSurfaceReporter()
-      : MemoryUniReporter("gfx-d2d-vram-source-surface",
+      : MemoryReporterBase("gfx-d2d-vram-source-surface",
                            KIND_OTHER, UNITS_BYTES,
                            "Video memory used by D2D SourceSurfaces.")
     {}
@@ -206,7 +206,7 @@ typedef HRESULT (WINAPI*D3D11CreateDeviceFunc)(
   ID3D11DeviceContext *ppImmediateContext
 );
 
-class GPUAdapterReporter : public nsIMemoryReporter {
+class GPUAdapterMultiReporter : public nsIMemoryMultiReporter {
 
     // Callers must Release the DXGIAdapter after use or risk mem-leak
     static bool GetDXGIAdapter(IDXGIAdapter **DXGIAdapter)
@@ -228,7 +228,7 @@ class GPUAdapterReporter : public nsIMemoryReporter {
 public:
     NS_DECL_ISUPPORTS
 
-    // nsIMemoryReporter abstract method implementation
+    // nsIMemoryMultiReporter abstract method implementation
     NS_IMETHOD
     GetName(nsACString &aName)
     {
@@ -236,9 +236,9 @@ public:
         return NS_OK;
     }
     
-    // nsIMemoryReporter abstract method implementation
+    // nsIMemoryMultiReporter abstract method implementation
     NS_IMETHOD
-    CollectReports(nsIMemoryReporterCallback* aCb,
+    CollectReports(nsIMemoryMultiReporterCallback* aCb,
                    nsISupports* aClosure)
     {
         int32_t winVers, buildNum;
@@ -347,7 +347,7 @@ public:
         return NS_OK;
     }
 };
-NS_IMPL_ISUPPORTS1(GPUAdapterReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS1(GPUAdapterMultiReporter, nsIMemoryMultiReporter)
 
 static __inline void
 BuildKeyNameFromFontName(nsAString &aName)
@@ -360,9 +360,8 @@ BuildKeyNameFromFontName(nsAString &aName)
 gfxWindowsPlatform::gfxWindowsPlatform()
   : mD3D9DeviceInitialized(false)
   , mD3D11DeviceInitialized(false)
+  , mPrefFonts(50)
 {
-    mPrefFonts.Init(50);
-
     mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
     mUseClearTypeAlways = UNINITIALIZED_VALUE;
 
@@ -385,16 +384,16 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
     UpdateRenderMode();
 
-    mGPUAdapterReporter = new GPUAdapterReporter();
-    NS_RegisterMemoryReporter(mGPUAdapterReporter);
+    mGPUAdapterMultiReporter = new GPUAdapterMultiReporter();
+    NS_RegisterMemoryMultiReporter(mGPUAdapterMultiReporter);
 }
 
 gfxWindowsPlatform::~gfxWindowsPlatform()
 {
-    NS_UnregisterMemoryReporter(mGPUAdapterReporter);
-
-    mDeviceManager = nullptr;
-
+    NS_UnregisterMemoryMultiReporter(mGPUAdapterMultiReporter);
+    
+     mDeviceManager = nullptr;
+     
     ::ReleaseDC(nullptr, mScreenDC);
     // not calling FT_Done_FreeType because cairo may still hold references to
     // these FT_Faces.  See bug 458169.

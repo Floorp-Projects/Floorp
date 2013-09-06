@@ -378,12 +378,11 @@ SpdyStream3::ParseHttpRequestHeaders(const char *buf,
   else
     versionHeader = NS_LITERAL_CSTRING("HTTP/1.0");
 
-  nsClassHashtable<nsCStringHashKey, nsCString> hdrHash;
-
   // use mRequestHead() to get a sense of how big to make the hash,
   // even though we are parsing the actual text stream because
   // it is legit to append headers.
-  hdrHash.Init(1 + (mTransaction->RequestHead()->Headers().Count() * 2));
+  nsClassHashtable<nsCStringHashKey, nsCString>
+    hdrHash(1 + (mTransaction->RequestHead()->Headers().Count() * 2));
 
   const char *beginBuffer = mFlatHttpRequestHeaders.BeginReading();
 

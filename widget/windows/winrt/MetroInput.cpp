@@ -180,8 +180,6 @@ MetroInput::MetroInput(MetroWidget* aWidget,
   mTokenTapped.value = 0;
   mTokenRightTapped.value = 0;
 
-  mTouches.Init();
-
   // Create our Gesture Recognizer
   ActivateGenericInstance(RuntimeClass_Windows_UI_Input_GestureRecognizer,
                           mGestureRecognizer);

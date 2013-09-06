@@ -147,7 +147,9 @@ class JavaPanZoomController
 
         mMode = AxisLockMode.STANDARD;
 
-        String[] prefs = { "ui.scrolling.axis_lock_mode", "ui.scrolling.negate_wheel_scrollY" };
+        String[] prefs = { "ui.scrolling.axis_lock_mode",
+                           "ui.scrolling.negate_wheel_scrollY",
+                           "ui.scrolling.gamepad_dead_zone" };
         mNegateWheelScrollY = false;
         PrefsHelper.getPrefs(prefs, new PrefsHelper.PrefHandlerBase() {
             @Override public void prefValue(String pref, String value) {
@@ -161,6 +163,13 @@ class JavaPanZoomController
                     }
                 }
             }
+
+            @Override public void prefValue(String pref, int value) {
+                if (pref.equals("ui.scrolling.gamepad_dead_zone")) {
+                    GamepadUtils.overrideDeadZoneThreshold((float)value / 1000f);
+                }
+            }
+
             @Override public void prefValue(String pref, boolean value) {
                 if (pref.equals("ui.scrolling.negate_wheel_scrollY")) {
                     mNegateWheelScrollY = value;

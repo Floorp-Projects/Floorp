@@ -53,11 +53,11 @@
 namespace mozilla {
 namespace scache {
 
-class StartupCacheMappingReporter MOZ_FINAL : public MemoryUniReporter
+class StartupCacheMappingReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
   StartupCacheMappingReporter()
-    : MemoryUniReporter("explicit/startup-cache/mapping",
+    : MemoryReporterBase("explicit/startup-cache/mapping",
                          KIND_NONHEAP, UNITS_BYTES,
 "Memory used to hold the mapping of the startup cache from file.  This memory "
 "is likely to be swapped out shortly after start-up.")
@@ -71,11 +71,11 @@ private:
   }
 };
 
-class StartupCacheDataReporter MOZ_FINAL : public MemoryUniReporter
+class StartupCacheDataReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
   StartupCacheDataReporter()
-    : MemoryUniReporter("explicit/startup-cache/data", KIND_HEAP, UNITS_BYTES,
+    : MemoryReporterBase("explicit/startup-cache/data", KIND_HEAP, UNITS_BYTES,
 "Memory used by the startup cache for things other than the file mapping.")
   {}
 private:
@@ -165,10 +165,6 @@ StartupCache::Init()
   nsCOMPtr<nsIProtocolHandler> jarInitializer(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "jar"));
 
   nsresult rv;
-  mTable.Init();
-#ifdef DEBUG
-  mWriteObjectMap.Init();
-#endif
 
   // This allows to override the startup cache filename
   // which is useful from xpcshell, when there is no ProfLDS directory to keep cache in.
@@ -445,7 +441,7 @@ StartupCache::WriteToDisk()
   nsresult rv;
   mStartupWriteInitiated = true;
 
-  if (!mTable.IsInitialized() || mTable.Count() == 0)
+  if (mTable.Count() == 0)
     return;
 
   nsCOMPtr<nsIZipWriter> zipW = do_CreateInstance("@mozilla.org/zipwriter;1");

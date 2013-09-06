@@ -104,7 +104,6 @@ public:
     mMaxContainerLayerGeneration(0)
   {
     MOZ_COUNT_CTOR(FrameLayerBuilder);
-    mThebesLayerItems.Init();
   }
   ~FrameLayerBuilder()
   {

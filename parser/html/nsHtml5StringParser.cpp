@@ -19,7 +19,6 @@ nsHtml5StringParser::nsHtml5StringParser()
   , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder, false))
 {
   MOZ_COUNT_CTOR(nsHtml5StringParser);
-  mAtomTable.Init();
   mTokenizer->setInterner(&mAtomTable);
 }
 

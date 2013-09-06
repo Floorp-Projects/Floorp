@@ -6,8 +6,6 @@
 # shouldn't get 755 perms need $(IFLAGS1) for either way of calling nsinstall.
 NSDISTMODE = copy
 
-CMMSRCS = webapprt.mm
-
 # Don't create a dependency on mozglue, which is impossible (difficult?)
 # to dynamically link into our executable, as we copy it to arbitrary locations.
 MOZ_GLUE_LDFLAGS =

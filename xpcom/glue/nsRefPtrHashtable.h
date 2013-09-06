@@ -27,6 +27,14 @@ public:
   typedef RefPtr* UserDataType;
   typedef nsBaseHashtable< KeyClass, nsRefPtr<RefPtr> , RefPtr* > base_type;
 
+  nsRefPtrHashtable()
+  {
+  }
+  explicit nsRefPtrHashtable(uint32_t aInitSize)
+    : nsBaseHashtable<KeyClass,nsRefPtr<RefPtr>,RefPtr*>(aInitSize)
+  {
+  }
+
   /**
    * @copydoc nsBaseHashtable::Get
    * @param pData This is an XPCOM getter, so pData is already_addrefed.

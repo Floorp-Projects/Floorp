@@ -70,9 +70,6 @@ nsHyphenationManager::Shutdown()
 
 nsHyphenationManager::nsHyphenationManager()
 {
-  mHyphAliases.Init();
-  mPatternFiles.Init();
-  mHyphenators.Init();
   LoadPatternList();
   LoadAliases();
 }

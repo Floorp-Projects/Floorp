@@ -31,12 +31,15 @@ exports['test syntax errors'] = function(assert) {
     assert.equal(error.name, "SyntaxError", "throws syntax error");
     assert.equal(error.fileName.split("/").pop(), "error.js",
               "Error contains filename");
-    assert.equal(error.lineNumber, 7, "error is on line 7")
+    assert.equal(error.lineNumber, 11, "error is on line 11")
     let stack = parseStack(error.stack);
+
+    assert.equal(stack.pop().fileName, uri + "error.js",
+                 "last frame file containing syntax error");
     assert.equal(stack.pop().fileName, uri + "main.js",
-                 "loader stack is omitted");
+                 "previous frame is a requirer module");
     assert.equal(stack.pop().fileName, module.uri,
-                 "previous in the stack is test module");
+                 "previous to it is a test module");
 
   } finally {
     unload(loader);

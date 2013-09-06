@@ -208,6 +208,15 @@ static int nr_ice_ctx_parse_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_stream
       ABORT(R_BAD_DATA);
     }
 
+    if (comp->state == NR_ICE_COMPONENT_DISABLED) {
+      r_log(LOG_ICE,LOG_ERR,"Peer offered candidates for disabled remote component");
+      ABORT(R_BAD_DATA);
+    }
+    if (comp->local_component->state == NR_ICE_COMPONENT_DISABLED) {
+      r_log(LOG_ICE,LOG_ERR,"Peer offered candidates for disabled local component");
+      ABORT(R_BAD_DATA);
+    }
+
     cand->component=comp;
 
     TAILQ_INSERT_TAIL(&comp->candidates,cand,entry_comp);
@@ -220,7 +229,31 @@ static int nr_ice_ctx_parse_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_stream
     return(_status);
   }
 
+static int nr_ice_peer_ctx_find_pstream(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream, nr_ice_media_stream **pstreamp)
+  {
+    int _status;
+    nr_ice_media_stream *pstream;
 
+    /* Because we don't have forward pointers, iterate through all the
+       peer streams to find one that matches us */
+     pstream=STAILQ_FIRST(&pctx->peer_streams);
+     while(pstream) {
+       if (pstream->local_stream == stream)
+         break;
+
+       pstream = STAILQ_NEXT(pstream, entry);
+     }
+     if (!pstream) {
+       r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) has no stream matching stream %s",pctx->ctx->label,pctx->label,stream->label);
+       ABORT(R_NOT_FOUND);
+     }
+
+    *pstreamp = pstream;
+
+    _status=0;
+ abort:
+    return(_status);
+  }
 
 int nr_ice_peer_ctx_parse_trickle_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream, char *candidate)
   {
@@ -323,6 +356,31 @@ int nr_ice_peer_ctx_pair_candidates(nr_ice_peer_ctx *pctx)
 
     _status=0;
   abort:
+    return(_status);
+  }
+
+int nr_ice_peer_ctx_disable_component(nr_ice_peer_ctx *pctx, nr_ice_media_stream *lstream, int component_id)
+  {
+    int r, _status;
+    nr_ice_media_stream *pstream;
+    nr_ice_component *component;
+    int j;
+
+    if ((r=nr_ice_peer_ctx_find_pstream(pctx, lstream, &pstream)))
+      ABORT(r);
+
+    /* We shouldn't be calling this after we have started pairing */
+    if (pstream->ice_state != NR_ICE_MEDIA_STREAM_UNPAIRED)
+      ABORT(R_FAILED);
+
+    if ((r=nr_ice_media_stream_find_component(pstream, component_id,
+                                              &component)))
+      ABORT(r);
+
+    component->state = NR_ICE_COMPONENT_DISABLED;
+
+    _status=0;
+ abort:
     return(_status);
   }
 

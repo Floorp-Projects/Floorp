@@ -8,7 +8,7 @@
 
 #include <stdlib.h>
 
-#include "EndianMacros.h"
+#include "mozilla/Endian.h"
 #include "nsICODecoder.h"
 
 #include "RasterImage.h"
@@ -114,9 +114,9 @@ bool nsICODecoder::FillBitmapFileHeaderBuffer(int8_t *bfh)
                              GetRealHeight()) / 8;
   }
 
-  fileSize = NATIVE32_TO_LITTLE(fileSize);
+  NativeEndian::swapToLittleEndianInPlace(&fileSize, 1);
   memcpy(bfh + 2, &fileSize, sizeof(fileSize));
-  dataOffset = NATIVE32_TO_LITTLE(dataOffset);
+  NativeEndian::swapToLittleEndianInPlace(&dataOffset, 1);
   memcpy(bfh + 10, &dataOffset, sizeof(dataOffset));
   return true;
 }
@@ -130,7 +130,7 @@ nsICODecoder::FixBitmapHeight(int8_t *bih)
   // Get the height from the BMP file information header
   int32_t height;
   memcpy(&height, bih + 8, sizeof(height));
-  height = LITTLE_TO_NATIVE32(height);
+  NativeEndian::swapFromLittleEndianInPlace(&height, 1);
   // BMPs can be stored inverted by having a negative height
   height = abs(height);
 
@@ -151,7 +151,7 @@ nsICODecoder::FixBitmapHeight(int8_t *bih)
   }
 
   // Fix the BMP height in the BIH so that the BMP decoder can work properly
-  height = NATIVE32_TO_LITTLE(height);
+  NativeEndian::swapToLittleEndianInPlace(&height, 1);
   memcpy(bih + 8, &height, sizeof(height));
   return true;
 }
@@ -164,7 +164,7 @@ nsICODecoder::FixBitmapWidth(int8_t *bih)
   // Get the width from the BMP file information header
   int32_t width;
   memcpy(&width, bih + 4, sizeof(width));
-  width = LITTLE_TO_NATIVE32(width);
+  NativeEndian::swapFromLittleEndianInPlace(&width, 1);
   if (width > 256) {
     return false;
   }
@@ -186,7 +186,7 @@ nsICODecoder::ExtractBPPFromBitmap(int8_t *bih)
 {
   int32_t bitsPerPixel;
   memcpy(&bitsPerPixel, bih + 14, sizeof(bitsPerPixel));
-  bitsPerPixel = LITTLE_TO_NATIVE32(bitsPerPixel);
+  NativeEndian::swapFromLittleEndianInPlace(&bitsPerPixel, 1);
   return bitsPerPixel;
 }
 
@@ -195,7 +195,7 @@ nsICODecoder::ExtractBIHSizeFromBitmap(int8_t *bih)
 {
   int32_t headerSize;
   memcpy(&headerSize, bih, sizeof(headerSize));
-  headerSize = LITTLE_TO_NATIVE32(headerSize);
+  NativeEndian::swapFromLittleEndianInPlace(&headerSize, 1);
   return headerSize;
 }
 
@@ -232,7 +232,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
   }
 
   if (mPos == ICONCOUNTOFFSET && aCount >= 2) {
-    mNumIcons = LITTLE_TO_NATIVE16(((uint16_t*)aBuffer)[0]);
+    mNumIcons = LittleEndian::readUint16(reinterpret_cast<const uint16_t*>(aBuffer));
     aBuffer += 2;
     mPos += 2;
     aCount -= 2;
@@ -589,14 +589,14 @@ nsICODecoder::ProcessDirEntry(IconDirEntry& aTarget)
   memcpy(&aTarget.mColorCount, mDirEntryArray + 2, sizeof(aTarget.mColorCount));
   memcpy(&aTarget.mReserved, mDirEntryArray + 3, sizeof(aTarget.mReserved));
   memcpy(&aTarget.mPlanes, mDirEntryArray + 4, sizeof(aTarget.mPlanes));
-  aTarget.mPlanes = LITTLE_TO_NATIVE16(aTarget.mPlanes);
+  aTarget.mPlanes = LittleEndian::readUint16(&aTarget.mPlanes);
   memcpy(&aTarget.mBitCount, mDirEntryArray + 6, sizeof(aTarget.mBitCount));
-  aTarget.mBitCount = LITTLE_TO_NATIVE16(aTarget.mBitCount);
+  aTarget.mBitCount = LittleEndian::readUint16(&aTarget.mBitCount);
   memcpy(&aTarget.mBytesInRes, mDirEntryArray + 8, sizeof(aTarget.mBytesInRes));
-  aTarget.mBytesInRes = LITTLE_TO_NATIVE32(aTarget.mBytesInRes);
+  aTarget.mBytesInRes = LittleEndian::readUint32(&aTarget.mBytesInRes);
   memcpy(&aTarget.mImageOffset, mDirEntryArray + 12, 
          sizeof(aTarget.mImageOffset));
-  aTarget.mImageOffset = LITTLE_TO_NATIVE32(aTarget.mImageOffset);
+  aTarget.mImageOffset = LittleEndian::readUint32(&aTarget.mImageOffset);
 }
 
 bool

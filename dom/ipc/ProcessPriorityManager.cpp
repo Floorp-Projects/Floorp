@@ -373,8 +373,6 @@ ProcessPriorityManagerImpl::GetSingleton()
 ProcessPriorityManagerImpl::ProcessPriorityManagerImpl()
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
-  mParticularManagers.Init();
-  mHighPriorityChildIDs.Init();
 }
 
 void

@@ -98,8 +98,6 @@ nsSiteSecurityService::Init()
    if (mObserverService)
      mObserverService->AddObserver(this, "last-pb-context-exited", false);
 
-   mPrivateModeHostTable.Init();
-
    return NS_OK;
 }
 

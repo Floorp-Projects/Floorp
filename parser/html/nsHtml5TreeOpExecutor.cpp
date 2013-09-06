@@ -67,9 +67,9 @@ static mozilla::LinkedList<nsHtml5TreeOpExecutor>* gBackgroundFlushList = nullpt
 static nsITimer* gFlushTimer = nullptr;
 
 nsHtml5TreeOpExecutor::nsHtml5TreeOpExecutor(bool aRunsToCompletion)
+  : mPreloadedURLs(23)  // Mean # of preloadable resources per page on dmoz
 {
   mRunsToCompletion = aRunsToCompletion;
-  mPreloadedURLs.Init(23); // Mean # of preloadable resources per page on dmoz
   // zeroing operator new for everything else
 }
 

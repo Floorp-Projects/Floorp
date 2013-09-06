@@ -400,7 +400,6 @@ class GradientCache MOZ_FINAL : public nsExpirationTracker<GradientCacheData,4>
     GradientCache()
       : nsExpirationTracker<GradientCacheData, 4>(MAX_GENERATION_MS)
     {
-      mHashEntries.Init();
       srand(time(nullptr));
       mTimerPeriod = rand() % MAX_GENERATION_MS + 1;
       Telemetry::Accumulate(Telemetry::GRADIENT_RETENTION_TIME, mTimerPeriod);

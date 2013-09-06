@@ -1,0 +1,55 @@
+<html>
+  <head>
+    <link rel='stylesheet' type='text/css'
+          href='http://example.org/tests/content/base/test/csp/file_CSP.sjs?testid=style_spec_compliant_bad&type=text/css' />
+    <link rel='stylesheet' type='text/css'
+          href='file_CSP.sjs?testid=style_spec_compliant_good&type=text/css' />
+
+
+    <style>
+      /* CSS font embedding tests */
+      @font-face {
+        font-family: "arbitrary_good";
+        src: url('file_CSP.sjs?testid=font_spec_compliant_good&type=application/octet-stream');
+      }
+      @font-face {
+        font-family: "arbitrary_bad";
+        src: url('http://example.org/tests/content/base/test/csp/file_CSP.sjs?testid=font_spec_compliant_bad&type=application/octet-stream');
+      }
+
+      .div_arbitrary_good { font-family: "arbitrary_good"; }
+      .div_arbitrary_bad { font-family: "arbitrary_bad"; }
+    </style>
+  </head>
+  <body>
+    <!-- these should be stopped by CSP.  :) -->
+    <img src="http://example.org/tests/content/base/test/csp/file_CSP.sjs?testid=img_spec_compliant_bad&type=img/png"> </img>
+    <audio src="http://example.org/tests/content/base/test/csp/file_CSP.sjs?testid=media_spec_compliant_bad&type=audio/vorbis"></audio>
+    <script src='http://example.org/tests/content/base/test/csp/file_CSP.sjs?testid=script_spec_compliant_bad&type=text/javascript'></script>
+    <iframe src='http://example.org/tests/content/base/test/csp/file_CSP.sjs?testid=frame_spec_compliant_bad&content=FAIL'></iframe>
+    <object width="10" height="10">
+      <param name="movie" value="http://example.org/tests/content/base/test/csp/file_CSP.sjs?testid=object_spec_compliant_bad&type=application/x-shockwave-flash">
+      <embed src="http://example.org/tests/content/base/test/csp/file_CSP.sjs?testid=object_spec_compliant_bad&type=application/x-shockwave-flash"></embed>
+    </object>
+
+    <!-- these should load ok.  :) -->
+    <img src="file_CSP.sjs?testid=img_spec_compliant_good&type=img/png" />
+    <audio src="file_CSP.sjs?testid=media_spec_compliant_good&type=audio/vorbis"></audio>
+    <script src='file_CSP.sjs?testid=script_spec_compliant_good&type=text/javascript'></script>
+    <iframe src='file_CSP.sjs?testid=frame_spec_compliant_good&content=PASS'></iframe>
+
+    <object width="10" height="10">
+      <param name="movie" value="file_CSP.sjs?testid=object_spec_compliant_good&type=application/x-shockwave-flash">
+      <embed src="file_CSP.sjs?testid=object_spec_compliant_good&type=application/x-shockwave-flash"></embed>
+    </object>
+
+    <!-- XHR tests... they're taken care of in this script,
+         and since the URI doesn't have any 'testid' values,
+         it will just be ignored by the test framework.  -->
+    <script src='file_CSP_main_spec_compliant.js'></script>
+
+    <!-- Support elements for the @font-face test -->
+    <div class="div_arbitrary_good">arbitrary good</div>
+    <div class="div_arbitrary_bad">arbitrary_bad</div>
+  </body>
+</html>

@@ -2,28 +2,62 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const traceback = require("sdk/console/traceback");
+'use strict';
 
-exports.test_no_args = function(test) {
-  var passed = false;
+const traceback = require('sdk/console/traceback');
+const REQUIRE_LINE_NO = 30;
+
+exports.test_no_args = function(assert) {
+  let passed = tryRequireModule(assert);
+  assert.ok(passed, 'require() with no args should raise helpful error');
+};
+
+exports.test_invalid_sdk_module = function (assert) {
+  let passed = tryRequireModule(assert, 'sdk/does-not-exist');
+  assert.ok(passed, 'require() with an invalid sdk module should raise');
+};
+
+exports.test_invalid_relative_module = function (assert) {
+  let passed = tryRequireModule(assert, './does-not-exist');
+  assert.ok(passed, 'require() with an invalid relative module should raise');
+};
+
+
+function tryRequireModule(assert, module) {
+  let passed = false;
   try {
-    var oops = require(); // leave this on line 6!
+    // This line number is important, referenced in REQUIRE_LINE_NO
+    let doesNotExist = require(module);
   } catch(e) {
-    let msg = e.toString();
-    test.assertEqual(msg.indexOf("Error: you must provide a module name when calling require() from "), 0);
-    test.assertNotEqual(msg.indexOf("test-require"), -1, msg);
-    // we'd also like to assert that the right filename and linenumber is in
-    // the stack trace, but this currently doesn't work (see bugs 679591 and
-    // 551604)
-    if (0) {
-      let tb = traceback.fromException(e);
-      let lastFrame = tb[tb.length-1];
-      test.assertNotEqual(lastFrame.filename.indexOf("test-require.js"), -1,
-                          lastFrame.filename);
-      test.assertEqual(lastFrame.lineNo, 6);
-      test.assertEqual(lastFrame.funcName, "??");
-    }
+    checkError(assert, module, e);
     passed = true;
   }
-  test.assert(passed, 'require() with no args should raise helpful error');
-};
+  return passed;
+}
+
+function checkError (assert, name, e) {
+  let msg = e.toString();
+  if (name) {
+    assert.ok(/is not found at/.test(msg),
+      'Error message indicates module not found');
+    assert.ok(msg.indexOf(name.replace(/\./g,'')) > -1,
+      'Error message has the invalid module name in the message');
+  }
+  else {
+    assert.equal(msg.indexOf('Error: you must provide a module name when calling require() from '), 0);
+    assert.ok(msg.indexOf("test-require") !== -1, msg);
+  }
+
+  // we'd also like to assert that the right filename
+  // and linenumber is in the stacktrace
+  let tb = traceback.fromException(e);
+  // Get the second to last frame, as the last frame is inside
+  // toolkit/loader
+  let lastFrame = tb[tb.length-2];
+  assert.ok(lastFrame.fileName.indexOf("test-require.js") !== -1,
+                          'Filename found in stacktrace');
+  assert.equal(lastFrame.lineNumber, REQUIRE_LINE_NO,
+                          'stacktrace has correct line number');
+}
+
+require('test').run(exports);

@@ -1,0 +1,13 @@
+../mozbase/manifestdestiny
+../mozbase/mozcrash
+../mozbase/mozdevice
+../mozbase/mozfile
+../mozbase/mozhttpd
+../mozbase/mozinfo
+../mozbase/mozinstall
+../mozbase/mozlog
+../mozbase/moznetwork
+../mozbase/mozprocess
+../mozbase/mozprofile
+../mozbase/mozrunner
+../mozbase/moztest

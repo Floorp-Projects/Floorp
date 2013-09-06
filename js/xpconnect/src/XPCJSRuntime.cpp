@@ -1560,13 +1560,13 @@ GetCompartmentName(JSCompartment *c, nsCString &name, bool replaceSlashes)
     }
 }
 
-// Telemetry relies on this being a uni-reporter (rather than part of the "js"
-// reporter).
-class JSGCHeapReporter MOZ_FINAL : public MemoryUniReporter
+// Telemetry relies on this being a single reporter (rather than part of the
+// "js" multi-reporter).
+class JSGCHeapReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
     JSGCHeapReporter()
-      : MemoryUniReporter("js-gc-heap", KIND_OTHER, UNITS_BYTES,
+      : MemoryReporterBase("js-gc-heap", KIND_OTHER, UNITS_BYTES,
 "Memory used by the garbage-collected JavaScript heap.")
     {}
 private:
@@ -1578,17 +1578,19 @@ private:
     }
 };
 
-// Nb: js-compartments/system + js-compartments/user could be different to the
-// number of compartments reported by JSReporter if a garbage collection
-// occurred between them being consulted.  We could move these reporters into
-// JSReporter to avoid that problem, but then we couldn't easily report them
-// via telemetry, so we live with the small risk of inconsistencies.
+// Nb: js-compartments/system + js-compartments/user could be
+// different to the number of compartments reported by
+// JSMemoryMultiReporter if a garbage collection occurred
+// between them being consulted.  We could move these reporters into
+// XPConnectJSCompartmentCount to avoid that problem, but then we couldn't
+// easily report them via telemetry, so we live with the small risk of
+// inconsistencies.
 
-class JSCompartmentsSystemReporter MOZ_FINAL : public MemoryUniReporter
+class JSCompartmentsSystemReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
     JSCompartmentsSystemReporter()
-      : MemoryUniReporter("js-compartments/system", KIND_OTHER, UNITS_COUNT,
+      : MemoryReporterBase("js-compartments/system", KIND_OTHER, UNITS_COUNT,
 "The number of JavaScript compartments for system code.  The sum of this and "
 "'js-compartments/user' might not match the number of compartments listed "
 "in the 'explicit' tree if a garbage collection occurs at an inopportune "
@@ -1602,11 +1604,11 @@ private:
     }
 };
 
-class JSCompartmentsUserReporter MOZ_FINAL : public MemoryUniReporter
+class JSCompartmentsUserReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
     JSCompartmentsUserReporter()
-      : MemoryUniReporter("js-compartments/user", KIND_OTHER, UNITS_COUNT,
+      : MemoryReporterBase("js-compartments/user", KIND_OTHER, UNITS_COUNT,
 "The number of JavaScript compartments for user code.  The sum of this and "
 "'js-compartments/system' might not match the number of compartments listed "
 "under 'js' if a garbage collection occurs at an inopportune time, but such "
@@ -1621,11 +1623,11 @@ private:
 };
 
 // This is also a single reporter so it can be used by telemetry.
-class JSMainRuntimeTemporaryPeakReporter MOZ_FINAL : public MemoryUniReporter
+class JSMainRuntimeTemporaryPeakReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
     JSMainRuntimeTemporaryPeakReporter()
-      : MemoryUniReporter("js-main-runtime-temporary-peak",
+      : MemoryReporterBase("js-main-runtime-temporary-peak",
                            KIND_OTHER, UNITS_BYTES,
 "The peak size of the transient storage in the main JSRuntime (the current "
 "size of which is reported as 'explicit/js-non-window/runtime/temporary').")
@@ -1756,7 +1758,7 @@ namespace xpc {
 static nsresult
 ReportZoneStats(const JS::ZoneStats &zStats,
                 const xpc::ZoneStatsExtras &extras,
-                nsIMemoryReporterCallback *cb,
+                nsIMemoryMultiReporterCallback *cb,
                 nsISupports *closure, size_t *gcTotalOut = NULL)
 {
     const nsAutoCString& pathPrefix = extras.pathPrefix;
@@ -1940,7 +1942,7 @@ static nsresult
 ReportCompartmentStats(const JS::CompartmentStats &cStats,
                        const xpc::CompartmentStatsExtras &extras,
                        amIAddonManager *addonManager,
-                       nsIMemoryReporterCallback *cb,
+                       nsIMemoryMultiReporterCallback *cb,
                        nsISupports *closure, size_t *gcTotalOut = NULL)
 {
     static const nsDependentCString addonPrefix("explicit/add-ons/");
@@ -2082,8 +2084,8 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                    "Memory allocated on the malloc heap for data belonging to ctypes objects.");
 
     // Note that we use cDOMPathPrefix here.  This is because we measure orphan
-    // DOM nodes in the JS reporter, but we want to report them in a "dom"
-    // sub-tree rather than a "js" sub-tree.
+    // DOM nodes in the JS multi-reporter, but we want to report them in a
+    // "dom" sub-tree rather than a "js" sub-tree.
     ZCREPORT_BYTES(cDOMPathPrefix + NS_LITERAL_CSTRING("orphan-nodes"),
                    cStats.objectsExtra.private_,
                    "Memory used by orphan DOM nodes that are only reachable "
@@ -2205,7 +2207,7 @@ static nsresult
 ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                                  const nsACString &rtPath,
                                  amIAddonManager* addonManager,
-                                 nsIMemoryReporterCallback *cb,
+                                 nsIMemoryMultiReporterCallback *cb,
                                  nsISupports *closure, size_t *rtTotalOut)
 {
     nsresult rv;
@@ -2347,7 +2349,7 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
 nsresult
 ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                                  const nsACString &rtPath,
-                                 nsIMemoryReporterCallback *cb,
+                                 nsIMemoryMultiReporterCallback *cb,
                                  nsISupports *closure, size_t *rtTotalOut)
 {
     nsCOMPtr<amIAddonManager> am =
@@ -2359,7 +2361,7 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
 
 } // namespace xpc
 
-class JSCompartmentsReporter MOZ_FINAL : public nsIMemoryReporter
+class JSCompartmentsMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
 {
   public:
     NS_DECL_THREADSAFE_ISUPPORTS
@@ -2383,7 +2385,7 @@ class JSCompartmentsReporter MOZ_FINAL : public nsIMemoryReporter
         paths->append(path);
     }
 
-    NS_IMETHOD CollectReports(nsIMemoryReporterCallback *cb,
+    NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *cb,
                               nsISupports *closure)
     {
         // First we collect the compartment paths.  Then we report them.  Doing
@@ -2405,7 +2407,9 @@ class JSCompartmentsReporter MOZ_FINAL : public nsIMemoryReporter
     }
 };
 
-NS_IMPL_ISUPPORTS1(JSCompartmentsReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS1(JSCompartmentsMultiReporter
+                              , nsIMemoryMultiReporter
+                              )
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(OrphanMallocSizeOf)
 
@@ -2427,7 +2431,6 @@ class OrphanReporter : public JS::ObjectPrivateVisitor
     OrphanReporter(GetISupportsFun aGetISupports)
       : JS::ObjectPrivateVisitor(aGetISupports)
     {
-        mAlreadyMeasuredOrphanTrees.Init();
     }
 
     virtual size_t sizeOfIncludingThis(nsISupports *aSupports) {
@@ -2563,9 +2566,9 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
         // "<something>compartment(<cname>)/".
         //
         // extras->domPathPrefix is used for DOM orphan nodes, which are
-        // counted by the JS reporter but reported as part of the DOM
-        // measurements. At this point it has the form "<something>/dom/" if
-        // this compartment belongs to an nsGlobalWindow, and
+        // counted by the JS multi-reporter but reported as part of the
+        // DOM measurements. At this point it has the form "<something>/dom/"
+        // if this compartment belongs to an nsGlobalWindow, and
         // "explicit/dom/<something>?!/" otherwise (in which case it shouldn't
         // be used, because non-nsGlobalWindow compartments shouldn't have
         // orphan DOM nodes).
@@ -2575,10 +2578,10 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
 };
 
 nsresult
-JSReporter::CollectReports(WindowPaths *windowPaths,
-                           WindowPaths *topWindowPaths,
-                           nsIMemoryReporterCallback *cb,
-                           nsISupports *closure)
+JSMemoryMultiReporter::CollectReports(WindowPaths *windowPaths,
+                                      WindowPaths *topWindowPaths,
+                                      nsIMemoryMultiReporterCallback *cb,
+                                      nsISupports *closure)
 {
     XPCJSRuntime *xpcrt = nsXPConnect::GetRuntimeInstance();
 
@@ -3049,7 +3052,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     NS_RegisterMemoryReporter(new JSCompartmentsSystemReporter());
     NS_RegisterMemoryReporter(new JSCompartmentsUserReporter());
     NS_RegisterMemoryReporter(new JSMainRuntimeTemporaryPeakReporter());
-    NS_RegisterMemoryReporter(new JSCompartmentsReporter);
+    NS_RegisterMemoryMultiReporter(new JSCompartmentsMultiReporter);
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG

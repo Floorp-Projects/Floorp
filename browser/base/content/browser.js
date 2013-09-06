@@ -1184,6 +1184,14 @@ var gBrowserInit = {
       }
     }
 
+    // Enable App Manager?
+    let appMgrEnabled = gPrefService.getBoolPref("devtools.appmanager.enabled");
+    if (appMgrEnabled) {
+      let cmd = document.getElementById("Tools:DevAppMgr");
+      cmd.removeAttribute("disabled");
+      cmd.removeAttribute("hidden");
+    }
+
     // Enable Chrome Debugger?
     let chromeEnabled = gPrefService.getBoolPref("devtools.chrome.enabled");
     let remoteEnabled = chromeEnabled &&
@@ -6598,6 +6606,11 @@ var gIdentityHandler = {
         label: gNavigatorBundle.getString("mixedContentBlocked.unblock.label"),
         accessKey: gNavigatorBundle.getString("mixedContentBlocked.unblock.accesskey"),
         callback: function() {
+          // Use telemetry to measure how often unblocking happens
+          const kMIXED_CONTENT_UNBLOCK_EVENT = 2;
+          let histogram =
+            Services.telemetry.getHistogramById("MIXED_CONTENT_UNBLOCK_COUNTER");
+          histogram.add(kMIXED_CONTENT_UNBLOCK_EVENT);
           // Reload the page with the content unblocked
           BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_ALLOW_MIXED_CONTENT);
         }

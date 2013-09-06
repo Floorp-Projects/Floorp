@@ -78,7 +78,7 @@ public:
    * Cache for HWNDs of windows created for document accessibles in windows
    * emulation mode.
    */
-  static nsRefPtrHashtable<nsPtrHashKey<void>, DocAccessible> sHWNDCache;
+  static nsRefPtrHashtable<nsPtrHashKey<void>, DocAccessible>* sHWNDCache;
 };
 
 } // namespace a11y

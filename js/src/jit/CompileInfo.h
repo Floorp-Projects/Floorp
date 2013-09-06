@@ -213,6 +213,28 @@ class CompileInfo
         return 2 + (hasArguments() ? 1 : 0) + nargs() + nlocals();
     }
 
+    bool isSlotAliased(uint32_t index) const {
+        if (fun() && index == thisSlot())
+            return false;
+
+        uint32_t arg = index - firstArgSlot();
+        if (arg < nargs()) {
+            if (script()->formalIsAliased(arg))
+                return true;
+            return false;
+        }
+
+        uint32_t var = index - firstLocalSlot();
+        if (var < nlocals()) {
+            if (script()->varIsAliased(var))
+                return true;
+            return false;
+        }
+
+        JS_ASSERT(index >= firstStackSlot());
+        return false;
+    }
+
     bool hasArguments() const {
         return script()->argumentsHasVarBinding();
     }

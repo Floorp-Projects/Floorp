@@ -52,6 +52,8 @@
     locale/browser/devtools/connection-screen.dtd  (%chrome/browser/devtools/connection-screen.dtd)
     locale/browser/devtools/connection-screen.properties (%chrome/browser/devtools/connection-screen.properties)
     locale/browser/devtools/font-inspector.dtd     (%chrome/browser/devtools/font-inspector.dtd)
+    locale/browser/devtools/app-manager.dtd        (%chrome/browser/devtools/app-manager.dtd)
+    locale/browser/devtools/app-manager.properties (%chrome/browser/devtools/app-manager.properties)
     locale/browser/newTab.dtd                      (%chrome/browser/newTab.dtd)
     locale/browser/newTab.properties               (%chrome/browser/newTab.properties)
     locale/browser/openLocation.dtd                (%chrome/browser/openLocation.dtd)

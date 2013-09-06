@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/TextTrack.h"
 #include "mozilla/dom/TextTrackBinding.h"
+#include "mozilla/dom/TextTrackCueList.h"
 
 namespace mozilla {
 namespace dom {

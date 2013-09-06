@@ -61,7 +61,7 @@ using namespace mozilla::image;
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(ImagesMallocSizeOf)
 
 class imgMemoryReporter MOZ_FINAL :
-  public nsIMemoryReporter
+  public nsIMemoryMultiReporter
 {
 public:
   imgMemoryReporter()
@@ -76,7 +76,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD CollectReports(nsIMemoryReporterCallback *callback,
+  NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *callback,
                             nsISupports *closure)
   {
     AllSizes chrome;
@@ -233,15 +233,15 @@ private:
   }
 };
 
-NS_IMPL_ISUPPORTS1(imgMemoryReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS1(imgMemoryReporter, nsIMemoryMultiReporter)
 
 // This is used by telemetry.
 class ImagesContentUsedUncompressedReporter MOZ_FINAL
-  : public MemoryUniReporter
+  : public MemoryReporterBase
 {
 public:
   ImagesContentUsedUncompressedReporter()
-    : MemoryUniReporter("images-content-used-uncompressed",
+    : MemoryReporterBase("images-content-used-uncompressed",
                          KIND_OTHER, UNITS_BYTES,
 "This is the sum of the 'explicit/images/content/used/uncompressed-heap' "
 "and 'explicit/images/content/used/uncompressed-nonheap' numbers.  However, "
@@ -850,7 +850,7 @@ void imgLoader::GlobalInit()
     sCacheMaxSize = 5 * 1024 * 1024;
 
   sMemReporter = new imgMemoryReporter();
-  NS_RegisterMemoryReporter(sMemReporter);
+  NS_RegisterMemoryMultiReporter(sMemReporter);
   NS_RegisterMemoryReporter(new ImagesContentUsedUncompressedReporter());
 }
 
@@ -869,10 +869,7 @@ nsresult imgLoader::InitCache()
 
   mCacheTracker = new imgCacheExpirationTracker();
 
-  mCache.Init();
-  mChromeCache.Init();
-
-    return NS_OK;
+  return NS_OK;
 }
 
 nsresult imgLoader::Init()

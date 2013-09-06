@@ -9,8 +9,6 @@
 
 #include "mozilla/Attributes.h"
 
-#include "jsapi.h"
-
 #include "ds/IdValuePair.h"
 #include "vm/String.h"
 

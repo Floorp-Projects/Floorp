@@ -103,8 +103,8 @@ MOCHITEST_FILES = \
   urlApi_worker.js \
   $(NULL)
 
-# Bug 842386 - Disabled on OSX due to intermittent failures.
-ifneq ($(OS_ARCH), Darwin)
+# Bug 842344, 842386 - Disabled on Windows & OSX for intermittent failures.
+ifeq (,$(filter Darwin WINNT,$(OS_ARCH)))
 MOCHITEST_FILES += \
   test_xhr_timeout.html \
   $(NULL)

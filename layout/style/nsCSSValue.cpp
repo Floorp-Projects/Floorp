@@ -1810,8 +1810,6 @@ css::ImageValue::ImageValue(nsIURI* aURI, nsStringBuffer* aString,
     loadingDoc = aDocument;
   }
 
-  mRequests.Init();
-
   loadingDoc->StyleImageLoader()->LoadImage(aURI, aOriginPrincipal, aReferrer,
                                             this);
 

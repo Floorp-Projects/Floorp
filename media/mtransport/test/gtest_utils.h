@@ -53,7 +53,7 @@
   do { \
   for (PRIntervalTime start = PR_IntervalNow(); !(expression) &&        \
            ! ((PR_IntervalNow() - start) > PR_MillisecondsToInterval(timeout));) \
-    PR_Sleep(200); \
+    PR_Sleep(10); \
   } while(0)
 
 // Same as GTEST_WAIT, but stores the result in res. Used when
@@ -63,7 +63,7 @@
   do { \
   for (PRIntervalTime start = PR_IntervalNow(); !(res = (expression)) && \
            ! ((PR_IntervalNow() - start) > PR_MillisecondsToInterval(timeout));) \
-    PR_Sleep(200); \
+    PR_Sleep(10); \
   } while(0)
 
 #define ASSERT_TRUE_WAIT(expression, timeout) \

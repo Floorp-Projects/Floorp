@@ -298,7 +298,7 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
         else if (opt === "eval-script")
           aCSPR._allowEval = true;
         else
-          cspWarn(aCSPR, CSPLocalizer.getFormatStr("doNotUnderstandOption",
+          cspWarn(aCSPR, CSPLocalizer.getFormatStr("ignoringUnknownOption",
                                                    [opt]));
       }
       continue directive;
@@ -361,17 +361,17 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
             if (gETLDService.getBaseDomain(uri) !==
                 gETLDService.getBaseDomain(selfUri)) {
               cspWarn(aCSPR,
-                      CSPLocalizer.getFormatStr("notETLDPlus1",
-                                            [gETLDService.getBaseDomain(uri)]));
+                      CSPLocalizer.getFormatStr("reportURInotETLDPlus1",
+                                                [gETLDService.getBaseDomain(uri)]));
               continue;
             }
             if (!uri.schemeIs(selfUri.scheme)) {
-              cspWarn(aCSPR, CSPLocalizer.getFormatStr("notSameScheme",
+              cspWarn(aCSPR, CSPLocalizer.getFormatStr("reportURInotSameSchemeAsSelf",
                                                        [uri.asciiSpec]));
               continue;
             }
             if (uri.port && uri.port !== selfUri.port) {
-              cspWarn(aCSPR, CSPLocalizer.getFormatStr("notSamePort",
+              cspWarn(aCSPR, CSPLocalizer.getFormatStr("reportURInotSamePortAsSelf",
                                                        [uri.asciiSpec]));
               continue;
             }
@@ -620,19 +620,19 @@ CSPRep.fromStringSpecCompliant = function(aStr, self, docRequest, csp) {
             if (gETLDService.getBaseDomain(uri) !==
                 gETLDService.getBaseDomain(selfUri)) {
               cspWarn(aCSPR, 
-                      CSPLocalizer.getFormatStr("notETLDPlus1",
-                                            [gETLDService.getBaseDomain(uri)]));
+                      CSPLocalizer.getFormatStr("reportURInotETLDPlus1",
+                                                [gETLDService.getBaseDomain(uri)]));
               continue;
             }
             if (!uri.schemeIs(selfUri.scheme)) {
-              cspWarn(aCSPR, 
-                      CSPLocalizer.getFormatStr("notSameScheme",
+              cspWarn(aCSPR,
+                      CSPLocalizer.getFormatStr("reportURInotSameSchemeAsSelf",
                                                 [uri.asciiSpec]));
               continue;
             }
             if (uri.port && uri.port !== selfUri.port) {
-              cspWarn(aCSPR, 
-                      CSPLocalizer.getFormatStr("notSamePort",
+              cspWarn(aCSPR,
+                      CSPLocalizer.getFormatStr("reportURInotSamePortAsSelf",
                                                 [uri.asciiSpec]));
               continue;
             }

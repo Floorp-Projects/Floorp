@@ -150,7 +150,6 @@ struct DBState
 {
   DBState() : cookieCount(0), cookieOldestTime(INT64_MAX), corruptFlag(OK)
   {
-    hostTable.Init();
   }
 
   NS_INLINE_DECL_REFCOUNTING(DBState)

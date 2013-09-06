@@ -354,6 +354,14 @@ let RIL = {
     this._processingNetworkInfo = false;
 
     /**
+     * Multiple requestNetworkInfo() in a row before finishing the first
+     * request, hence we need to fire requestNetworkInfo() again after
+     * gathering all necessary stuffs. This is to make sure that ril_worker
+     * gets precise network information.
+     */
+    this._needRepollNetworkInfo = false;
+
+    /**
      * Pending messages to be send in batch from requestNetworkInfo()
      */
     this._pendingNetworkInfo = {rilMessageType: "networkinfochanged"};
@@ -1130,6 +1138,7 @@ let RIL = {
   requestNetworkInfo: function requestNetworkInfo() {
     if (this._processingNetworkInfo) {
       if (DEBUG) debug("Network info requested, but we're already requesting network info.");
+      this._needRepollNetworkInfo = true;
       return;
     }
 
@@ -3141,6 +3150,11 @@ let RIL = {
     RIL._processingNetworkInfo = false;
     for (let i = 0; i < NETWORK_INFO_MESSAGE_TYPES.length; i++) {
       delete RIL._pendingNetworkInfo[NETWORK_INFO_MESSAGE_TYPES[i]];
+    }
+
+    if (RIL._needRepollNetworkInfo) {
+      RIL._needRepollNetworkInfo = false;
+      RIL.requestNetworkInfo();
     }
   },
 

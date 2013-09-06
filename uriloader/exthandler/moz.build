@@ -66,8 +66,11 @@ CPP_SOURCES += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    # TODO: CMMSRCS go here
-    pass
+    CMMSRCS += [
+        'nsLocalHandlerAppMac.mm',
+        'nsMIMEInfoMac.mm',
+        'nsOSHelperAppService.mm',
+    ]
 else:
     CPP_SOURCES += [
         'nsOSHelperAppService.cpp',

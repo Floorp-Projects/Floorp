@@ -141,7 +141,7 @@ public:
 
     void AddPostscriptName(gfxFontEntry *aFontEntry, nsAString& aPostscriptName);
 
-    bool NeedFullnamePostscriptNames() { return mNeedFullnamePostscriptNames; }
+    bool NeedFullnamePostscriptNames() { return mExtraNames != nullptr; }
 
     // pure virtual functions, to be provided by concrete subclasses
 
@@ -179,11 +179,11 @@ public:
 
 protected:
     class MemoryReporter MOZ_FINAL
-        : public nsIMemoryReporter
+        : public nsIMemoryMultiReporter
     {
     public:
         NS_DECL_ISUPPORTS
-        NS_DECL_NSIMEMORYREPORTER
+        NS_DECL_NSIMEMORYMULTIREPORTER
     };
 
     gfxPlatformFontList(bool aNeedFullnamePostscriptNames = true);
@@ -269,14 +269,14 @@ protected:
     // flag set after fullname and Postcript name lists are populated
     bool mFaceNamesInitialized;
 
-    // whether these are needed for a given platform
-    bool mNeedFullnamePostscriptNames;
-
-    // fullname ==> font entry (unique, one name per font entry)
-    nsRefPtrHashtable<nsStringHashKey, gfxFontEntry> mFullnames;
-
-    // Postscript name ==> font entry (unique, one name per font entry)
-    nsRefPtrHashtable<nsStringHashKey, gfxFontEntry> mPostscriptNames;
+    struct ExtraNames {
+      ExtraNames() : mFullnames(100), mPostscriptNames(100) {}
+      // fullname ==> font entry (unique, one name per font entry)
+      nsRefPtrHashtable<nsStringHashKey, gfxFontEntry> mFullnames;
+      // Postscript name ==> font entry (unique, one name per font entry)
+      nsRefPtrHashtable<nsStringHashKey, gfxFontEntry> mPostscriptNames;
+    };
+    nsAutoPtr<ExtraNames> mExtraNames;
 
     // cached pref font lists
     // maps list of family names ==> array of family entries, one per lang group

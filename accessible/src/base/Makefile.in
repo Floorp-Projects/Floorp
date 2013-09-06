@@ -4,43 +4,8 @@
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES += \
-  -I$(srcdir) \
-  -I$(srcdir)/../generic \
-  -I$(srcdir)/../html \
-  -I$(srcdir)/../xpcom \
-  -I$(srcdir)/../xul \
-  -I$(srcdir)/../../../content/xbl/src \
-  -I$(srcdir)/../../../layout/generic \
-  -I$(srcdir)/../../../layout/style \
-  -I$(srcdir)/../../../layout/svg \
-  -I$(srcdir)/../../../layout/xul/base/src \
-  -I$(srcdir)/../../../layout/xul/tree/ \
-  -I$(srcdir)/../../../ipc/chromium/src \
-  $(NULL)
-
 ifdef MOZ_ENABLE_GTK
 CXXFLAGS        += $(MOZ_CAIRO_CFLAGS)
-LOCAL_INCLUDES += \
-  -I$(srcdir)/../atk \
-  $(NULL)
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-LOCAL_INCLUDES += \
-  -I$(srcdir)/../windows/msaa \
-  -I$(srcdir)/../windows/ia2 \
-  $(NULL)
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-LOCAL_INCLUDES += \
-  -I$(srcdir)/../mac \
-  $(NULL)
-else
-LOCAL_INCLUDES += \
-  -I$(srcdir)/../other \
-  $(NULL)
-endif
-endif
 endif
 
 ifneq ($(A11Y_LOG),0)

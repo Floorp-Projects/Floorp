@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Content Security Policy "no eval" in crypto.getCRMFRequest()</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+  
+</div>
+
+<iframe style="width:100%;height:300px;" id='cspframe'></iframe>
+<iframe style="width:100%;height:300px;" id='cspframe2'></iframe>
+<iframe style="width:100%;height:300px;" id='cspframe3'></iframe>
+<iframe style="width:100%;height:300px;" id='cspframe4'></iframe>
+<script class="testbody" type="text/javascript">
+
+var path = "/tests/content/base/test/csp/";
+
+var evalScriptsThatRan = 0;
+var evalScriptsBlocked = 0;
+var evalScriptsTotal = 4;
+
+
+// called by scripts that run
+var scriptRan = function(shouldrun, testname, data) {
+  evalScriptsThatRan++;
+  ok(shouldrun, 'EVAL SCRIPT RAN: ' + testname + '(' + data + ')');
+  checkTestResults();
+}
+
+// called when a script is blocked
+var scriptBlocked = function(shouldrun, testname, data) {
+  evalScriptsBlocked++;
+  ok(!shouldrun, 'EVAL SCRIPT BLOCKED: ' + testname + '(' + data + ')');
+  checkTestResults();
+}
+
+
+// Check to see if all the tests have run
+var checkTestResults = function() {
+  // if any test is incomplete, keep waiting
+  if (evalScriptsTotal - evalScriptsBlocked - evalScriptsThatRan > 0)
+    return;
+
+  // ... otherwise, finish
+  SimpleTest.finish();
+}
+
+//////////////////////////////////////////////////////////////////////
+// set up and go
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv(
+  {'set':[["security.csp.speccompliant", true]]},
+    function() {
+      // save this for last so that our listeners are registered.
+      // ... this loads the testbed of good and bad requests.
+      document.getElementById('cspframe').src = 'file_CSP_evalscript_main_getCRMFRequest.html';
+      document.getElementById('cspframe2').src = 'file_CSP_evalscript_main_spec_compliant_getCRMFRequest.html';
+      document.getElementById('cspframe3').src = 'file_CSP_evalscript_main_spec_compliant_allowed_getCRMFRequest.html';
+      document.getElementById('cspframe4').src = 'file_CSP_evalscript_no_CSP_at_all.html';
+    });
+</script>
+</pre>
+</body>
+</html>

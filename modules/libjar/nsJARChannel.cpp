@@ -230,10 +230,6 @@ nsresult
 nsJARChannel::Init(nsIURI *uri)
 {
     nsresult rv;
-    rv = nsHashPropertyBag::Init();
-    if (NS_FAILED(rv))
-        return rv;
-
     mJarURI = do_QueryInterface(uri, &rv);
     if (NS_FAILED(rv))
         return rv;

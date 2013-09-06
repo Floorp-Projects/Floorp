@@ -209,6 +209,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitAssertRange(MAssertRange *ins);
     bool visitCallGetProperty(MCallGetProperty *ins);
     bool visitDeleteProperty(MDeleteProperty *ins);
+    bool visitDeleteElement(MDeleteElement *ins);
     bool visitGetNameCache(MGetNameCache *ins);
     bool visitCallGetIntrinsicValue(MCallGetIntrinsicValue *ins);
     bool visitCallsiteCloneCache(MCallsiteCloneCache *ins);

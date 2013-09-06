@@ -3893,6 +3893,11 @@
     "n_values": 4,
     "description": "Accumulates type of content (mixed, mixed passive, unmixed) per page load"
   },
+  "MIXED_CONTENT_UNBLOCK_COUNTER": {
+    "kind": "enumerated",
+    "n_values": 3,
+    "description": "A simple counter of daily mixed-content unblock operations and top documents loaded"
+  },
   "NTLM_MODULE_USED": {
     "kind": "enumerated",
     "n_values": 8,
