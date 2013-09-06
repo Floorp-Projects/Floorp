@@ -428,6 +428,8 @@ SettingsListener.observe('app.reportCrashes', 'ask', function(value) {
   } else {
     Services.prefs.clearUserPref('app.reportCrashes');
   }
+  // This preference is consulted during startup.
+  Services.prefs.savePrefFile(null);
 });
 
 // ================ Updates ================
