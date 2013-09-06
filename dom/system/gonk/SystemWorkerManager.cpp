@@ -137,8 +137,7 @@ PostToRIL(JSContext *cx, unsigned argc, JS::Value *vp)
     return false;
   }
 
-  UnixSocketRawData* raw = new UnixSocketRawData(size);
-  memcpy(raw->mData, data, raw->mSize);
+  UnixSocketRawData* raw = new UnixSocketRawData(data, size);
 
   nsRefPtr<SendRilSocketDataTask> task = new SendRilSocketDataTask(clientId, raw);
   NS_DispatchToMainThread(task);
