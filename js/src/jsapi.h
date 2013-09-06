@@ -2791,45 +2791,6 @@ JS_DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
 extern JS_PUBLIC_API(bool)
 JS_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id, jsval descriptor, bool *bp);
 
-/*
- * Determine the attributes (JSPROP_* flags) of a property on a given object.
- *
- * If the object does not have a property by that name, *foundp will be
- * false and the value of *attrsp is undefined.
- */
-extern JS_PUBLIC_API(bool)
-JS_GetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
-                         unsigned *attrsp, bool *foundp);
-
-/*
- * The same, but if the property is native, return its getter and setter via
- * *getterp and *setterp, respectively (and only if the out parameter pointer
- * is not null).
- */
-extern JS_PUBLIC_API(bool)
-JS_GetPropertyAttrsGetterAndSetter(JSContext *cx, JSObject *obj,
-                                   const char *name,
-                                   unsigned *attrsp, bool *foundp,
-                                   JSPropertyOp *getterp,
-                                   JSStrictPropertyOp *setterp);
-
-extern JS_PUBLIC_API(bool)
-JS_GetPropertyAttrsGetterAndSetterById(JSContext *cx, JSObject *obj,
-                                       jsid id,
-                                       unsigned *attrsp, bool *foundp,
-                                       JSPropertyOp *getterp,
-                                       JSStrictPropertyOp *setterp);
-
-/*
- * Set the attributes of a property on a given object.
- *
- * If the object does not have a property by that name, *foundp will be
- * false and nothing will be altered.
- */
-extern JS_PUBLIC_API(bool)
-JS_SetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
-                         unsigned attrs, bool *foundp);
-
 extern JS_PUBLIC_API(bool)
 JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name,
                             int8_t tinyid, jsval value,
@@ -3075,41 +3036,6 @@ JS_DefineUCProperty(JSContext *cx, JSObject *obj,
                     const jschar *name, size_t namelen, jsval value,
                     JSPropertyOp getter, JSStrictPropertyOp setter,
                     unsigned attrs);
-
-/*
- * Determine the attributes (JSPROP_* flags) of a property on a given object.
- *
- * If the object does not have a property by that name, *foundp will be
- * false and the value of *attrsp is undefined.
- */
-extern JS_PUBLIC_API(bool)
-JS_GetUCPropertyAttributes(JSContext *cx, JSObject *obj,
-                           const jschar *name, size_t namelen,
-                           unsigned *attrsp, bool *foundp);
-
-/*
- * The same, but if the property is native, return its getter and setter via
- * *getterp and *setterp, respectively (and only if the out parameter pointer
- * is not null).
- */
-extern JS_PUBLIC_API(bool)
-JS_GetUCPropertyAttrsGetterAndSetter(JSContext *cx, JSObject *obj,
-                                     const jschar *name, size_t namelen,
-                                     unsigned *attrsp, bool *foundp,
-                                     JSPropertyOp *getterp,
-                                     JSStrictPropertyOp *setterp);
-
-/*
- * Set the attributes of a property on a given object.
- *
- * If the object does not have a property by that name, *foundp will be
- * false and nothing will be altered.
- */
-extern JS_PUBLIC_API(bool)
-JS_SetUCPropertyAttributes(JSContext *cx, JSObject *obj,
-                           const jschar *name, size_t namelen,
-                           unsigned attrs, bool *foundp);
-
 
 extern JS_PUBLIC_API(bool)
 JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,

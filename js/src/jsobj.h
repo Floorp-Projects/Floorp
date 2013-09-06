@@ -144,12 +144,6 @@ extern bool
 SetAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
 
 extern bool
-GetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp);
-
-extern bool
-SetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp);
-
-extern bool
 DeleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, bool *succeeded);
 
 extern bool
@@ -881,31 +875,8 @@ class JSObject : public js::ObjectImpl
         return (op ? op : js::baseops::GetAttributes)(cx, obj, id, attrsp);
     }
 
-    static bool getPropertyAttributes(JSContext *cx, js::HandleObject obj,
-                                      js::PropertyName *name, unsigned *attrsp)
-    {
-        JS::RootedId id(cx, js::NameToId(name));
-        return getGenericAttributes(cx, obj, id, attrsp);
-    }
-
-    static inline bool getElementAttributes(JSContext *cx, js::HandleObject obj,
-                                            uint32_t index, unsigned *attrsp);
-
-    static bool getSpecialAttributes(JSContext *cx, js::HandleObject obj,
-                                     js::SpecialId sid, unsigned *attrsp)
-    {
-        JS::RootedId id(cx, SPECIALID_TO_JSID(sid));
-        return getGenericAttributes(cx, obj, id, attrsp);
-    }
-
     static inline bool setGenericAttributes(JSContext *cx, js::HandleObject obj,
                                             js::HandleId id, unsigned *attrsp);
-    static inline bool setPropertyAttributes(JSContext *cx, js::HandleObject obj,
-                                             js::PropertyName *name, unsigned *attrsp);
-    static inline bool setElementAttributes(JSContext *cx, js::HandleObject obj,
-                                            uint32_t index, unsigned *attrsp);
-    static inline bool setSpecialAttributes(JSContext *cx, js::HandleObject obj,
-                                            js::SpecialId sid, unsigned *attrsp);
 
     static inline bool deleteProperty(JSContext *cx, js::HandleObject obj,
                                       js::HandlePropertyName name,
