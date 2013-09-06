@@ -944,7 +944,6 @@ public:
         mForgetSkippableCB = aForgetSkippableCB;
     }
 
-    void SelectPurple(GCGraphBuilder &builder);
     void MarkRoots(GCGraphBuilder &aBuilder);
     void ScanRoots();
     void ScanWeakMaps();
@@ -2113,12 +2112,6 @@ nsCycleCollector::FreeSnowWhite(bool aUntilNoSWInPurpleBuffer)
 }
 
 void
-nsCycleCollector::SelectPurple(GCGraphBuilder &builder)
-{
-    mPurpleBuf.SelectPointers(builder);
-}
-
-void
 nsCycleCollector::ForgetSkippable(bool aRemoveChildlessNodes,
                                   bool aAsyncSnowWhiteFreeing)
 {
@@ -2787,9 +2780,8 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     }
 
     mScanInProgress = true;
-    SelectPurple(builder);
-
-    timeLog.Checkpoint("SelectPurple()");
+    mPurpleBuf.SelectPointers(builder);
+    timeLog.Checkpoint("SelectPointers()");
 
     if (builder.Count() > 0) {
         // The main Bacon & Rajan collection algorithm.
