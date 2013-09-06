@@ -44,6 +44,8 @@ extern const char js_parseInt_str[];
 
 class JSAtom;
 
+namespace js {
+
 /*
  * When base == 10, this function implements ToString() as specified by
  * ECMA-262-5 section 9.8.1; but note that it handles integers specially for
@@ -51,9 +53,7 @@ class JSAtom;
  */
 template <js::AllowGC allowGC>
 extern JSString *
-js_NumberToString(js::ThreadSafeContext *cx, double d);
-
-namespace js {
+NumberToString(js::ThreadSafeContext *cx, double d);
 
 template <js::AllowGC allowGC>
 extern JSAtom *
