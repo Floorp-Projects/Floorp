@@ -1,6 +1,6 @@
 // |reftest| skip-if(!this.hasOwnProperty("Type"))
 var BUGNUMBER = 578700;
-var summary = 'BinaryData: indexed properties are illegal in a StructType';
+var summary = 'TypedObjects: indexed properties are illegal in a StructType';
 
 function runTests() {
   print(BUGNUMBER + ": " + summary);

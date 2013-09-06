@@ -1,6 +1,6 @@
 // |reftest| skip-if(!this.hasOwnProperty("Type"))
 var BUGNUMBER = 578700;
-var summary = 'BinaryData numeric types';
+var summary = 'TypedObjects numeric types';
 var actual = '';
 var expect = '';
 
@@ -171,7 +171,7 @@ function runTests()
 
     print("done");
 
-    reportCompare(0, TestFailCount, "BinaryData numeric type tests");
+    reportCompare(0, TestFailCount, "TypedObjects numeric type tests");
 }
 
 runTests();

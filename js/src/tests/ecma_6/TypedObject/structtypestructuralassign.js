@@ -1,6 +1,6 @@
 // |reftest| skip-if(!this.hasOwnProperty("Type"))
 var BUGNUMBER = 578700;
-var summary = 'BinaryData StructType structural assignment';
+var summary = 'TypedObjects StructType structural assignment';
 
 function assertEqColor(c1, c2) {
   assertEq(c1.r, c2.r);
