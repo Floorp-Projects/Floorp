@@ -22,6 +22,7 @@
 #include "BluetoothHfpManager.h"
 #include "BluetoothHidManager.h"
 #include "BluetoothOppManager.h"
+#include "BluetoothProfileController.h"
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothUnixSocketConnector.h"
 #include "BluetoothUtils.h"
@@ -179,6 +180,7 @@ static nsString sAdapterPath;
 static Atomic<int32_t> sIsPairing(0);
 static int sConnectedDeviceCount = 0;
 static StaticAutoPtr<Monitor> sStopBluetoothMonitor;
+StaticAutoPtr<BluetoothProfileController> sController;
 
 typedef void (*UnpackFunc)(DBusMessage*, DBusError*, BluetoothValue&, nsAString&);
 typedef bool (*FilterFunc)(const BluetoothValue&);
@@ -2166,7 +2168,7 @@ private:
 };
 
 nsresult
-BluetoothDBusService::GetConnectedDevicePropertiesInternal(uint16_t aProfileId,
+BluetoothDBusService::GetConnectedDevicePropertiesInternal(uint16_t aServiceUuid,
                                               BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -2181,12 +2183,12 @@ BluetoothDBusService::GetConnectedDevicePropertiesInternal(uint16_t aProfileId,
 
   nsTArray<nsString> deviceAddresses;
   BluetoothProfileManagerBase* profile;
-  if (aProfileId == BluetoothServiceClass::HANDSFREE ||
-      aProfileId == BluetoothServiceClass::HEADSET) {
+  if (aServiceUuid == BluetoothServiceClass::HANDSFREE ||
+      aServiceUuid == BluetoothServiceClass::HEADSET) {
     profile = BluetoothHfpManager::Get();
-  } else if (aProfileId == BluetoothServiceClass::HID) {
+  } else if (aServiceUuid == BluetoothServiceClass::HID) {
     profile = BluetoothHidManager::Get();
-  } else if (aProfileId == BluetoothServiceClass::OBJECT_PUSH) {
+  } else if (aServiceUuid == BluetoothServiceClass::OBJECT_PUSH) {
     profile = BluetoothOppManager::Get();
   } else {
     DispatchBluetoothReply(aRunnable, values,
@@ -2589,70 +2591,79 @@ BluetoothDBusService::SetPairingConfirmationInternal(
   return result;
 }
 
+static void
+DestroyBluetoothProfileController()
+{
+  sController = nullptr;
+}
+
 void
 BluetoothDBusService::Connect(const nsAString& aDeviceAddress,
-                              const uint16_t aProfileId,
+                              uint32_t aCod,
+                              uint16_t aServiceUuid,
                               BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
 
-  if (aProfileId == BluetoothServiceClass::HANDSFREE) {
-    BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
-    hfp->Connect(aDeviceAddress, true, aRunnable);
-  } else if (aProfileId == BluetoothServiceClass::HEADSET) {
-    BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
-    hfp->Connect(aDeviceAddress, false, aRunnable);
-  } else if (aProfileId == BluetoothServiceClass::HID) {
-    BluetoothHidManager* hid = BluetoothHidManager::Get();
-    hid->Connect(aDeviceAddress, aRunnable);
-  } else if (aProfileId == BluetoothServiceClass::OBJECT_PUSH) {
-    BluetoothOppManager* opp = BluetoothOppManager::Get();
-    opp->Connect(aDeviceAddress, aRunnable);
-  } else {
+  BluetoothServiceClass serviceClass =
+    BluetoothUuidHelper::GetBluetoothServiceClass(aServiceUuid);
+
+  if (sController) {
     DispatchBluetoothReply(aRunnable, BluetoothValue(),
-                           NS_LITERAL_STRING(ERR_UNKNOWN_PROFILE));
+                           NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
+    return;
+  }
+
+  sController =
+    new BluetoothProfileController(aDeviceAddress, aRunnable,
+                                   DestroyBluetoothProfileController);
+  if (aServiceUuid) {
+    sController->Connect(serviceClass);
+  } else {
+    sController->Connect(aCod);
   }
 }
 
 void
-BluetoothDBusService::Disconnect(const uint16_t aProfileId,
+BluetoothDBusService::Disconnect(const nsAString& aDeviceAddress,
+                                 uint16_t aServiceUuid,
                                  BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
 
-  if (aProfileId == BluetoothServiceClass::HANDSFREE ||
-      aProfileId == BluetoothServiceClass::HEADSET) {
-    BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
-    hfp->Disconnect();
-  } else if (aProfileId == BluetoothServiceClass::HID) {
-    BluetoothHidManager* hid = BluetoothHidManager::Get();
-    hid->Disconnect();
-  } else if (aProfileId == BluetoothServiceClass::OBJECT_PUSH) {
-    BluetoothOppManager* opp = BluetoothOppManager::Get();
-    opp->Disconnect();
-  } else {
-    BT_WARNING(ERR_UNKNOWN_PROFILE);
+  BluetoothServiceClass serviceClass =
+    BluetoothUuidHelper::GetBluetoothServiceClass(aServiceUuid);
+
+  if (sController) {
+    DispatchBluetoothReply(aRunnable, BluetoothValue(),
+                           NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
     return;
   }
 
-  // Currently, just fire success because Disconnect() doesn't fail,
-  // but we still make aRunnable pass into this function for future
-  // once Disconnect will fail.
-  DispatchBluetoothReply(aRunnable, BluetoothValue(true), EmptyString());
+  sController =
+    new BluetoothProfileController(aDeviceAddress, aRunnable,
+                                   DestroyBluetoothProfileController);
+  if (aServiceUuid) {
+    sController->Disconnect(serviceClass);
+  } else {
+    sController->Disconnect();
+  }
 }
 
 bool
-BluetoothDBusService::IsConnected(const uint16_t aProfileId)
+BluetoothDBusService::IsConnected(const uint16_t aServiceUuid)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   BluetoothProfileManagerBase* profile;
-  if (aProfileId == BluetoothServiceClass::HANDSFREE ||
-      aProfileId == BluetoothServiceClass::HEADSET) {
+  if (aServiceUuid == BluetoothServiceClass::HANDSFREE ||
+      aServiceUuid == BluetoothServiceClass::HEADSET) {
     profile = BluetoothHfpManager::Get();
-  } else if (aProfileId == BluetoothServiceClass::HID) {
+  } else if (aServiceUuid == BluetoothServiceClass::HID) {
     profile = BluetoothHidManager::Get();
-  } else if (aProfileId == BluetoothServiceClass::OBJECT_PUSH) {
+  } else if (aServiceUuid == BluetoothServiceClass::OBJECT_PUSH) {
     profile = BluetoothOppManager::Get();
   } else {
     NS_WARNING(ERR_UNKNOWN_PROFILE);
