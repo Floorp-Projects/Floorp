@@ -10,10 +10,12 @@
 #include "mozilla/dom/TimeRanges.h"
 #include "MediaDecoderStateMachine.h"
 #include "VideoUtils.h"
+#include "nsISeekableStream.h"
 
 #include <stdint.h>
 #include "mozilla/Util.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Endian.h"
 #include <algorithm>
 
 namespace mozilla {
@@ -69,11 +71,7 @@ namespace {
   uint32_t
   ReadUint32BE(const char** aBuffer)
   {
-    uint32_t result =
-      uint8_t((*aBuffer)[0]) << 24 |
-      uint8_t((*aBuffer)[1]) << 16 |
-      uint8_t((*aBuffer)[2]) << 8 |
-      uint8_t((*aBuffer)[3]);
+    uint32_t result = BigEndian::readUint32(*aBuffer);
     *aBuffer += sizeof(uint32_t);
     return result;
   }
@@ -81,11 +79,7 @@ namespace {
   uint32_t
   ReadUint32LE(const char** aBuffer)
   {
-    uint32_t result =
-      uint8_t((*aBuffer)[3]) << 24 |
-      uint8_t((*aBuffer)[2]) << 16 |
-      uint8_t((*aBuffer)[1]) << 8 |
-      uint8_t((*aBuffer)[0]);
+    uint32_t result = LittleEndian::readUint32(*aBuffer);
     *aBuffer += sizeof(uint32_t);
     return result;
   }
@@ -93,9 +87,7 @@ namespace {
   uint16_t
   ReadUint16LE(const char** aBuffer)
   {
-    uint16_t result =
-      uint8_t((*aBuffer)[1]) << 8 |
-      uint8_t((*aBuffer)[0]) << 0;
+    uint16_t result = LittleEndian::readUint16(*aBuffer);
     *aBuffer += sizeof(uint16_t);
     return result;
   }
@@ -103,7 +95,9 @@ namespace {
   int16_t
   ReadInt16LE(const char** aBuffer)
   {
-    return static_cast<int16_t>(ReadUint16LE(aBuffer));
+    uint16_t result = LittleEndian::readInt16(*aBuffer);
+    *aBuffer += sizeof(int16_t);
+    return result;
   }
 
   uint8_t
@@ -141,7 +135,7 @@ nsresult WaveReader::ReadMetadata(VideoInfo* aInfo,
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoPtr<HTMLMediaElement::MetadataTags> tags;
+  nsAutoPtr<dom::HTMLMediaElement::MetadataTags> tags;
 
   bool loadAllChunks = LoadAllChunks(tags);
   if (!loadAllChunks) {
@@ -278,7 +272,7 @@ static double RoundToUsecs(double aSeconds) {
   return floor(aSeconds * USECS_PER_S) / USECS_PER_S;
 }
 
-nsresult WaveReader::GetBuffered(TimeRanges* aBuffered, int64_t aStartTime)
+nsresult WaveReader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
 {
   if (!mInfo.mHasAudio) {
     return NS_OK;
@@ -542,7 +536,7 @@ WaveReader::GetNextChunk(uint32_t* aChunk, uint32_t* aChunkSize)
 
 bool
 WaveReader::LoadListChunk(uint32_t aChunkSize,
-    nsAutoPtr<HTMLMediaElement::MetadataTags> &aTags)
+                          nsAutoPtr<dom::HTMLMediaElement::MetadataTags> &aTags)
 {
   // List chunks are always word (two byte) aligned.
   NS_ABORT_IF_FALSE(mDecoder->GetResource()->Tell() % 2 == 0,
@@ -576,7 +570,7 @@ WaveReader::LoadListChunk(uint32_t aChunkSize,
 
   const char* const end = chunk.get() + aChunkSize;
 
-  aTags = new HTMLMediaElement::MetadataTags;
+  aTags = new dom::HTMLMediaElement::MetadataTags;
 
   while (p + 8 < end) {
     uint32_t id = ReadUint32BE(&p);
@@ -618,7 +612,7 @@ WaveReader::LoadListChunk(uint32_t aChunkSize,
 }
 
 bool
-WaveReader::LoadAllChunks(nsAutoPtr<HTMLMediaElement::MetadataTags> &aTags)
+WaveReader::LoadAllChunks(nsAutoPtr<dom::HTMLMediaElement::MetadataTags> &aTags)
 {
   // Chunks are always word (two byte) aligned.
   NS_ABORT_IF_FALSE(mDecoder->GetResource()->Tell() % 2 == 0,

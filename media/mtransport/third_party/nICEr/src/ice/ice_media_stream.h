@@ -94,6 +94,7 @@ int nr_ice_media_stream_find_component(nr_ice_media_stream *str, int comp_id, nr
 int nr_ice_media_stream_addrs(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str, int component, nr_transport_addr *local, nr_transport_addr *remote);
 int
 nr_ice_peer_ctx_parse_media_stream_attribute(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream, char *attr);
+int nr_ice_media_stream_disable_component(nr_ice_media_stream *stream, int component_id);
 
 
 #ifdef __cplusplus

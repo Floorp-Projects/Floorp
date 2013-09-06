@@ -15,7 +15,6 @@
 #include <string.h>
 
 #include "jsalloc.h"
-#include "jsapi.h"
 #include "jscntxt.h"
 #include "jsgc.h"
 

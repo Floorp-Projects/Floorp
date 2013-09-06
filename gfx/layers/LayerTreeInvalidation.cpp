@@ -168,7 +168,7 @@ struct LayerPropertiesBase : public LayerProperties
     AddTransformedRegion(result, visible, mTransform);
 
     AddRegion(result, ComputeChangeInternal(aCallback));
-    AddTransformedRegion(result, mLayer->GetInvalidRegion().GetBounds(), mTransform);
+    AddTransformedRegion(result, mLayer->GetInvalidRegion(), mTransform);
 
     if (mMaskLayer && otherMask) {
       AddTransformedRegion(result, mMaskLayer->ComputeChange(aCallback), mTransform);

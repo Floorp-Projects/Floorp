@@ -40,14 +40,6 @@ SmsService::Send(const nsAString& aNumber,
 }
 
 NS_IMETHODIMP
-SmsService::IsSilentNumber(const nsAString& aNumber,
-                           bool*            aIsSilent)
-{
-  NS_ERROR("We should not be here!");
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 SmsService::AddSilentNumber(const nsAString& aNumber)
 {
   NS_ERROR("We should not be here!");

@@ -13,10 +13,26 @@ import shutil
 import subprocess
 import sys
 
+from distutils.version import StrictVersion
+
 
 # Minimum version of Python required to build.
+MINIMUM_PYTHON_VERSION = StrictVersion('2.7.3')
 MINIMUM_PYTHON_MAJOR = 2
-MINIMUM_PYTHON_MINOR = 7
+
+
+UPGRADE_WINDOWS = '''
+Please upgrade to the latest MozillaBuild development environments. See
+https://developer.mozilla.org/en-US/docs/Developer_Guide/Build_Instructions/Windows_Prerequisites
+'''.lstrip()
+
+UPGRADE_OTHER = '''
+Run |mach bootstrap| to ensure your system is up to date.
+
+If you still receive this error, your shell environment is likely detecting
+another Python version. Ensure a modern Python can be found in the paths
+defined by the $PATH environment variable and try again.
+'''.lstrip()
 
 
 class VirtualenvManager(object):
@@ -343,13 +359,20 @@ class VirtualenvManager(object):
 
 def verify_python_version(log_handle):
     """Ensure the current version of Python is sufficient."""
-    major, minor = sys.version_info[:2]
+    major, minor, micro = sys.version_info[:3]
 
-    if major != MINIMUM_PYTHON_MAJOR or minor < MINIMUM_PYTHON_MINOR:
-        log_handle.write('Python %d.%d or greater (but not Python 3) is '
-            'required to build. ' %
-            (MINIMUM_PYTHON_MAJOR, MINIMUM_PYTHON_MINOR))
-        log_handle.write('You are running Python %d.%d.\n' % (major, minor))
+    our = StrictVersion('%d.%d.%d' % (major, minor, micro))
+
+    if major != MINIMUM_PYTHON_MAJOR or our < MINIMUM_PYTHON_VERSION:
+        log_handle.write('Python %s or greater (but not Python 3) is '
+            'required to build. ' % MINIMUM_PYTHON_VERSION)
+        log_handle.write('You are running Python %s.\n' % our)
+
+        if os.name in ('nt', 'ce'):
+            log_handle.write(UPGRADE_WINDOWS)
+        else:
+            log_handle.write(UPGRADE_OTHER)
+
         sys.exit(1)
 
 

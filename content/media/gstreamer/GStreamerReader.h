@@ -19,11 +19,16 @@
 #pragma GCC diagnostic pop
 #include <map>
 #include "MediaDecoderReader.h"
+#include "nsRect.h"
 
 namespace mozilla {
 
 namespace dom {
 class TimeRanges;
+}
+
+namespace layers {
+class PlanarYCbCrImage;
 }
 
 class AbstractMediaDecoder;

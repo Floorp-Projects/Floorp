@@ -223,6 +223,11 @@ interface nsIDocumentEncoder : nsISupports
   const unsigned long OutputNonTextContentAsPlaceholder = (1 << 23);
 
   /**
+   * Don't Strip ending spaces from a line (only for serializing to plaintext).
+   */
+  const unsigned long OutputDontRemoveLineEndingSpaces = (1 << 24);
+
+  /**
    * Initialize with a pointer to the document and the mime type.
    * @param aDocument Document to encode.
    * @param aMimeType MimeType to use. May also be set by SetMimeType.

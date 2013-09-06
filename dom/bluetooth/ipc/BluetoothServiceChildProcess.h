@@ -52,7 +52,7 @@ public:
                                     MOZ_OVERRIDE;
 
   virtual nsresult
-  GetConnectedDevicePropertiesInternal(uint16_t aProfileId,
+  GetConnectedDevicePropertiesInternal(uint16_t aServiceUuid,
                                        BluetoothReplyRunnable* aRunnable)
                                        MOZ_OVERRIDE;
   virtual nsresult
@@ -113,15 +113,17 @@ public:
 
   virtual void
   Connect(const nsAString& aDeviceAddress,
-          const uint16_t aProfileId,
+          uint32_t aCod,
+          uint16_t aServiceUuid,
           BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
   virtual void
-  Disconnect(const uint16_t aProfileId,
+  Disconnect(const nsAString& aDeviceAddress,
+             uint16_t aServiceUuid,
              BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
   virtual bool
-  IsConnected(uint16_t aProfileId) MOZ_OVERRIDE;
+  IsConnected(uint16_t aServiceUuid) MOZ_OVERRIDE;
 
   virtual void
   SendFile(const nsAString& aDeviceAddress,
@@ -173,8 +175,7 @@ public:
 
   virtual nsresult
   SendInputMessage(const nsAString& aDeviceAddresses,
-                   const nsAString& aMessage,
-                   BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+                   const nsAString& aMessage) MOZ_OVERRIDE;
 
 protected:
   BluetoothServiceChildProcess();
