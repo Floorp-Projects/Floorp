@@ -4,21 +4,6 @@
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES += \
-  -I$(srcdir) \
-  -I$(srcdir)/../generic \
-  -I$(srcdir)/../html \
-  -I$(srcdir)/../xpcom \
-  -I$(srcdir)/../xul \
-  -I$(srcdir)/../../../content/xbl/src \
-  -I$(srcdir)/../../../layout/generic \
-  -I$(srcdir)/../../../layout/style \
-  -I$(srcdir)/../../../layout/svg \
-  -I$(srcdir)/../../../layout/xul/base/src \
-  -I$(srcdir)/../../../layout/xul/tree/ \
-  -I$(srcdir)/../../../ipc/chromium/src \
-  $(NULL)
-
 ifdef MOZ_ENABLE_GTK
 CXXFLAGS        += $(MOZ_CAIRO_CFLAGS)
 LOCAL_INCLUDES += \
