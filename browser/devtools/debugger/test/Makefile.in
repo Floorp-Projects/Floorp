@@ -40,7 +40,6 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_propertyview-data-getset-01.js \
 	browser_dbg_propertyview-data-getset-02.js \
 	browser_dbg_propertyview-data.js \
-	browser_dbg_propertyview-filter-01.js \
 	browser_dbg_propertyview-filter-04.js \
 	browser_dbg_propertyview-filter-05.js \
 	browser_dbg_propertyview-filter-06.js \
@@ -143,8 +142,14 @@ MOCHITEST_BROWSER_PAGES = \
 	test-step-out.html \
 	$(NULL)
 
+# Bug 903750 - Disabled on OSX for intermittent failures
+ifneq ($(OS_ARCH), Darwin)
+MOCHITEST_BROWSER_TESTS += \
+	browser_dbg_propertyview-filter-01.js \
+endif
+
 # Bug 847588, bug 860349, bug 871713
-#   Disabled for intermittent failures
+#   Disabled on OSX and Linux for intermittent failures
 ifeq (,$(filter Darwin Linux,$(OS_ARCH)))
 MOCHITEST_BROWSER_TESTS += \
 	browser_dbg_createChrome.js \
