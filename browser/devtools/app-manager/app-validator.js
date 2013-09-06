@@ -60,7 +60,7 @@ AppValidator.prototype._fetchManifest = function (manifestURL) {
     try {
       manifest = JSON.parse(req.responseText);
     } catch(e) {
-      this.error(strings.formatStringFromName("validator.invalidManifestJSON", [manifestURL, e], 2));
+      this.error(strings.formatStringFromName("validator.invalidManifestJSON", [e, manifestURL], 2));
     }
     deferred.resolve(manifest);
   }).bind(this);
@@ -109,7 +109,7 @@ AppValidator.prototype.validateManifest = function (manifest) {
   if (!manifest.icons || Object.keys(manifest.icons).length == 0) {
     this.warning(strings.GetStringFromName("validator.missIconsManifestProperty"));
   } else if (!manifest.icons["128"]) {
-    this.warning(strings.GetStringFromName("validator.missIconForMarketplace"));
+    this.warning(strings.GetStringFromName("validator.missIconMarketplace"));
   }
 }
 
