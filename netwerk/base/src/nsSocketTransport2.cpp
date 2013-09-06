@@ -864,19 +864,45 @@ nsSocketTransport::Init(const char **types, uint32_t typeCount,
 }
 
 nsresult
+nsSocketTransport::InitWithFilename(const char *filename)
+{
+#if defined(XP_UNIX) || defined(XP_OS2)
+    size_t filenameLength = strlen(filename);
+
+    if (filenameLength > sizeof(mNetAddr.local.path) - 1)
+        return NS_ERROR_FILE_NAME_TOO_LONG;
+
+    mHost.Assign(filename);
+    mPort = 0;
+    mTypeCount = 0;
+
+    mNetAddr.local.family = AF_LOCAL;
+    memcpy(mNetAddr.local.path, filename, filenameLength);
+    mNetAddr.local.path[filenameLength] = '\0';
+    mNetAddrIsSet = true;
+
+    return NS_OK;
+#else
+    return NS_ERROR_SOCKET_ADDRESS_NOT_SUPPORTED;
+#endif
+}
+
+nsresult
 nsSocketTransport::InitWithConnectedSocket(PRFileDesc *fd, const NetAddr *addr)
 {
     NS_ASSERTION(!mFD, "already initialized");
 
-    char buf[kIPv6CStrBufSize];
+    char buf[kNetAddrMaxCStrBufSize];
     NetAddrToString(addr, buf, sizeof(buf));
     mHost.Assign(buf);
 
     uint16_t port;
     if (addr->raw.family == AF_INET)
         port = addr->inet.port;
-    else
+    else if (addr->raw.family == AF_INET6)
         port = addr->inet6.port;
+    else
+        port = 0;
     mPort = ntohs(port);
 
     memcpy(&mNetAddr, addr, sizeof(NetAddr));
@@ -951,6 +977,10 @@ nsSocketTransport::ResolveHost()
 
     if (!mProxyHost.IsEmpty()) {
         if (!mProxyTransparent || mProxyTransparentResolvesHost) {
+#if defined(XP_UNIX) || defined(XP_OS2)
+            NS_ABORT_IF_FALSE(!mNetAddrIsSet || mNetAddr.raw.family != AF_LOCAL,
+                              "Unix domain sockets can't be used with proxies");
+#endif
             // When not resolving mHost locally, we still want to ensure that
             // it only contains valid characters.  See bug 304904 for details.
             if (!net_IsValidHostName(mHost))
@@ -1014,6 +1044,11 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
         rv = fd ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     }
     else {
+#if defined(XP_UNIX) || defined(XP_OS2)
+        NS_ABORT_IF_FALSE(!mNetAddrIsSet || mNetAddr.raw.family != AF_LOCAL,
+                          "Unix domain sockets can't be used with socket types");
+#endif
+
         fd = nullptr;
 
         nsCOMPtr<nsISocketProviderService> spserv =
@@ -1117,9 +1152,13 @@ nsSocketTransport::InitiateSocket()
 
     nsresult rv;
 
-    if (gIOService->IsOffline() &&
-        !IsLoopBackAddress(&mNetAddr))
-        return NS_ERROR_OFFLINE;
+    if (gIOService->IsOffline()) {
+        bool isLocal;
+
+        IsLocal(&isLocal);
+        if (!isLocal)
+            return NS_ERROR_OFFLINE;
+    }
 
     //
     // find out if it is going to be ok to attach another socket to the STS.
@@ -1224,7 +1263,7 @@ nsSocketTransport::InitiateSocket()
 
 #if defined(PR_LOGGING)
     if (SOCKET_LOG_ENABLED()) {
-        char buf[kIPv6CStrBufSize];
+        char buf[kNetAddrMaxCStrBufSize];
         NetAddrToString(&mNetAddr, buf, sizeof(buf));
         SOCKET_LOG(("  trying address: %s\n", buf));
     }
@@ -1311,6 +1350,13 @@ nsSocketTransport::RecoverFromError()
 
     SOCKET_LOG(("nsSocketTransport::RecoverFromError [this=%p state=%x cond=%x]\n",
         this, mState, mCondition));
+
+#if defined(XP_UNIX) || defined(XP_OS2)
+    // Unix domain connections don't have multiple addresses to try,
+    // so the recovery techniques here don't apply.
+    if (mNetAddrIsSet && mNetAddr.raw.family == AF_LOCAL)
+        return false;
+#endif
 
     // can only recover from errors in these states
     if (mState != STATE_RESOLVING && mState != STATE_CONNECTING)
@@ -1516,6 +1562,7 @@ void
 nsSocketTransport::ReleaseFD_Locked(PRFileDesc *fd)
 {
     NS_ASSERTION(mFD == fd, "wrong fd");
+    SOCKET_LOG(("JIMB: ReleaseFD_Locked: mFDref = %d\n", mFDref));
 
     if (--mFDref == 0) {
         if (PR_GetCurrentThread() == gSocketThread) {
@@ -1556,9 +1603,18 @@ nsSocketTransport::OnSocketEvent(uint32_t type, nsresult status, nsISupports *pa
         // ensure that we have created a socket, attached it, and have a
         // connection.
         //
-        if (mState == STATE_CLOSED)
-            mCondition = ResolveHost();
-        else
+        if (mState == STATE_CLOSED) {
+            // Unix domain sockets are ready to connect; mNetAddr is all we
+            // need. Internet address families require a DNS lookup (or possibly
+            // several) before we can connect.
+#if defined(XP_UNIX) || defined(XP_OS2)
+            if (mNetAddrIsSet && mNetAddr.raw.family == AF_LOCAL)
+                mCondition = InitiateSocket();
+            else
+#endif
+                mCondition = ResolveHost();
+
+        } else
             SOCKET_LOG(("  ignoring redundant event\n"));
         break;
 
@@ -1789,6 +1845,16 @@ nsSocketTransport::IsLocal(bool *aIsLocal)
 {
     {
         MutexAutoLock lock(mLock);
+
+#if defined(XP_UNIX) || defined(XP_OS2)
+        // Unix-domain sockets are always local.
+        if (mNetAddr.raw.family == PR_AF_LOCAL)
+        {
+            *aIsLocal = true;
+            return;
+        }
+#endif
+
         *aIsLocal = IsLoopBackAddress(&mNetAddr);
     }
 }
@@ -2050,6 +2116,16 @@ nsSocketTransport::GetSelfAddr(NetAddr *addr)
     }
 
     PRNetAddr prAddr;
+
+    // NSPR doesn't tell us the socket address's length (as provided by
+    // the 'getsockname' system call), so we can't distinguish between
+    // named, unnamed, and abstract Unix domain socket names. (Server
+    // sockets are never unnamed, obviously, but client sockets can use
+    // any kind of address.) Clear prAddr first, so that the path for
+    // unnamed and abstract addresses will at least be reliably empty,
+    // and not garbage for unnamed sockets.
+    memset(&prAddr, 0, sizeof(prAddr));
+
     nsresult rv =
         (PR_GetSockName(fd, &prAddr) == PR_SUCCESS) ? NS_OK : NS_ERROR_FAILURE;
     PRNetAddrToNetAddr(&prAddr, addr);

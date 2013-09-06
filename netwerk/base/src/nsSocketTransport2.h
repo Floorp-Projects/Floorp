@@ -129,6 +129,11 @@ public:
     nsresult InitWithConnectedSocket(PRFileDesc *socketFD,
                                      const mozilla::net::NetAddr *addr);
 
+    // This method instructs the socket transport to open a socket
+    // connected to the given Unix domain address. We can only create
+    // unlayered, simple, stream sockets.
+    nsresult InitWithFilename(const char *filename);
+
     // nsASocketHandler methods:
     void OnSocketReady(PRFileDesc *, int16_t outFlags);
     void OnSocketDetached(PRFileDesc *);
