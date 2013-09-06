@@ -2663,11 +2663,11 @@ nsCycleCollector::ShutdownCollect(nsICycleCollectorListener *aListener)
 {
     nsAutoTArray<PtrInfo*, 4000> whiteNodes;
 
-    if (!PrepareForCollection(nullptr, &whiteNodes))
-        return;
-
     for (uint32_t i = 0; i < DEFAULT_SHUTDOWN_COLLECTIONS; ++i) {
         NS_ASSERTION(i < NORMAL_SHUTDOWN_COLLECTIONS, "Extra shutdown CC");
+
+        if (!PrepareForCollection(nullptr, &whiteNodes))
+            return;
 
         // Synchronous cycle collection. Always force a JS GC beforehand.
         FixGrayBits(true);
@@ -2678,12 +2678,12 @@ nsCycleCollector::ShutdownCollect(nsICycleCollectorListener *aListener)
             aListener = nullptr;
 
         BeginCollection(ShutdownCC, aListener);
-        if (!FinishCollection(aListener)) {
+        bool collectedAny = FinishCollection(aListener);
+        CleanupAfterCollection();
+        if (!collectedAny) {
             break;
         }
     }
-
-    CleanupAfterCollection();
 }
 
 bool
