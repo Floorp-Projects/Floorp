@@ -8,7 +8,7 @@ function createAllowedEvent() {
    * Creates a new EventSource using 'http://mochi.test:8888'. Since all mochitests run on
    * 'http://mochi.test', a default-src of 'self' allows this request.
    */
-  var src_event = new EventSource("http://mochi.test:8888/tests/content/base/test/file_CSP_bug802872.sjs");
+  var src_event = new EventSource("http://mochi.test:8888/tests/content/base/test/csp/file_CSP_bug802872.sjs");
 
   src_event.onmessage = function(e) {
     src_event.close();
@@ -26,7 +26,7 @@ function createBlockedEvent() {
    * creates a new EventSource using 'http://example.com'. This domain is not whitelisted by the 
    * CSP of this page, therefore the CSP blocks this request.
    */
-  var src_event = new EventSource("http://example.com/tests/content/base/test/file_CSP_bug802872.sjs");
+  var src_event = new EventSource("http://example.com/tests/content/base/test/csp/file_CSP_bug802872.sjs");
 
   src_event.onmessage = function(e) {
     src_event.close();
