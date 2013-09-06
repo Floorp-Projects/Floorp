@@ -714,7 +714,7 @@ struct AutoFlushCache
     void update(uintptr_t p, size_t len);
     static void updateTop(uintptr_t p, size_t len);
     ~AutoFlushCache();
-    AutoFlushCache(const char *nonce, IonRuntime *rt = NULL);
+    AutoFlushCache(const char *nonce, IonRuntime *rt);
     void flushAnyway();
 };
 
@@ -726,12 +726,13 @@ struct AutoFlushCache
 //   2) the called function can re-enter a compilation/modification path which
 //       will use your AFC, and thus not flush when his compilation is done
 
-struct AutoFlushInhibitor {
+struct AutoFlushInhibitor
+{
   private:
-    IonCompartment *ic_;
+    IonRuntime *runtime_;
     AutoFlushCache *afc;
   public:
-    AutoFlushInhibitor(IonCompartment *ic);
+    AutoFlushInhibitor(IonRuntime *rt);
     ~AutoFlushInhibitor();
 };
 } // namespace jit
