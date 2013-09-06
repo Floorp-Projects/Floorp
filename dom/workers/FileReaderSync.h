@@ -13,10 +13,18 @@
 #include "nsICharsetDetectionObserver.h"
 #include "nsStringGlue.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/BindingUtils.h"
 
 class nsIInputStream;
 class nsIDOMBlob;
+
+namespace mozilla {
+class ErrorResult;
+
+namespace dom {
+class GlobalObject;
+template<typename> class Optional;
+}
+}
 
 BEGIN_WORKERS_NAMESPACE
 
