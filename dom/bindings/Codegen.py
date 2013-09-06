@@ -4929,11 +4929,11 @@ if (!${obj}) {
         jsImplemented = ""
         if self.descriptor.interface.isJSImplemented():
             jsImplemented = ", true"
-        return CGGeneric('return ThrowMethodFailedWithDetails<%s%s>(cx, rv, "%s", "%s");'
+        return CGGeneric('return ThrowMethodFailedWithDetails<%s>(cx, rv, "%s", "%s"%s);'
                          % (toStringBool(not self.descriptor.workers),
-                            jsImplemented,
                             self.descriptor.interface.identifier.name,
-                            self.idlNode.identifier.name))
+                            self.idlNode.identifier.name,
+                            jsImplemented))
 
     def define(self):
         return (self.cgRoot.define() + "\n" + self.wrap_return_value())
