@@ -1652,6 +1652,11 @@ IonCompile(JSContext *cx, JSScript *script,
     IonSpewNewFunction(graph, builderScript);
 
     if (!builder->build()) {
+        if (cx->isExceptionPending()) {
+            IonSpew(IonSpew_Abort, "Builder raised exception.");
+            return AbortReason_Error;
+        }
+
         IonSpew(IonSpew_Abort, "Builder failed to build.");
         return builder->abortReason();
     }
@@ -1832,6 +1837,9 @@ Compile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode 
     }
 
     AbortReason reason = IonCompile(cx, script, osrFrame, osrPc, constructing, executionMode);
+    if (reason == AbortReason_Error)
+        return Method_Error;
+
     if (reason == AbortReason_Disable)
         return Method_CantCompile;
 
