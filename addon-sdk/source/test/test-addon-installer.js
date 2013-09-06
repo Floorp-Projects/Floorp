@@ -48,7 +48,7 @@ exports["test Install"] = function (assert, done) {
       done();
     }
   );
-}
+};
 
 exports["test Failing Install With Invalid Path"] = function (assert, done) {
   AddonInstaller.install("invalid-path").then(
@@ -62,7 +62,7 @@ exports["test Failing Install With Invalid Path"] = function (assert, done) {
       done();
     }
   );
-}
+};
 
 exports["test Failing Install With Invalid File"] = function (assert, done) {
   let directory = system.pathFor("ProfD");
@@ -131,6 +131,38 @@ exports["test Update"] = function (assert, done) {
   }
 
   next();
-}
+};
+
+exports['test Uninstall failure'] = function (assert, done) {
+  AddonInstaller.uninstall('invalid-addon-path').then(
+    () => assert.fail('Addon uninstall should not resolve successfully'),
+    () => assert.pass('Addon correctly rejected invalid uninstall')
+  ).then(done, assert.fail);
+};
+
+exports['test Addon Disable'] = function (assert, done) {
+  let ensureActive = (addonId) => AddonInstaller.isActive(addonId).then(state => {
+    assert.equal(state, true, 'Addon should be enabled by default');
+    return addonId;
+  });
+  let ensureInactive = (addonId) => AddonInstaller.isActive(addonId).then(state => {
+    assert.equal(state, false, 'Addon should be disabled after disabling');
+    return addonId;
+  });
+
+  AddonInstaller.install(ADDON_PATH)
+    .then(ensureActive)
+    .then(AddonInstaller.disable)
+    .then(ensureInactive)
+    .then(AddonInstaller.uninstall)
+    .then(done, assert.fail);
+};
+
+exports['test Disable failure'] = function (assert, done) {
+  AddonInstaller.disable('not-an-id').then(
+    () => assert.fail('Addon disable should not resolve successfully'),
+    () => assert.pass('Addon correctly rejected invalid disable')
+  ).then(done, assert.fail);
+};
 
 require("test").run(exports);
