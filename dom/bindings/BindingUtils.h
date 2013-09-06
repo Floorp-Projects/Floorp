@@ -28,6 +28,7 @@
 #include "nsTraceRefcnt.h"
 #include "qsObjectHelper.h"
 #include "xpcpublic.h"
+#include "nsIVariant.h"
 
 #include "nsWrapperCacheInlines.h"
 

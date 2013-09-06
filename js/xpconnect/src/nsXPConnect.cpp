@@ -53,6 +53,8 @@
 #include "nsICycleCollectorListener.h"
 #include "nsThread.h"
 #include "mozilla/XPTInterfaceInfoManager.h"
+#include "nsIObjectInputStream.h"
+#include "nsIObjectOutputStream.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
