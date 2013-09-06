@@ -1203,13 +1203,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JS::HandleObject obj);
         nullptr, /* setElement    */                                          \
         nullptr, /* setSpecial    */                                          \
         nullptr, /* getGenericAttributes  */                                  \
-        nullptr, /* getAttributes  */                                         \
-        nullptr, /* getElementAttributes  */                                  \
-        nullptr, /* getSpecialAttributes  */                                  \
         nullptr, /* setGenericAttributes  */                                  \
-        nullptr, /* setAttributes  */                                         \
-        nullptr, /* setElementAttributes  */                                  \
-        nullptr, /* setSpecialAttributes  */                                  \
         nullptr, /* deleteProperty */                                         \
         nullptr, /* deleteElement */                                          \
         nullptr, /* deleteSpecial */                                          \
@@ -1237,13 +1231,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JS::HandleObject obj);
         nullptr, /* setElement    */                                          \
         nullptr, /* setSpecial    */                                          \
         nullptr, /* getGenericAttributes  */                                  \
-        nullptr, /* getAttributes  */                                         \
-        nullptr, /* getElementAttributes  */                                  \
-        nullptr, /* getSpecialAttributes  */                                  \
         nullptr, /* setGenericAttributes  */                                  \
-        nullptr, /* setAttributes  */                                         \
-        nullptr, /* setElementAttributes  */                                  \
-        nullptr, /* setSpecialAttributes  */                                  \
         nullptr, /* deleteProperty */                                         \
         nullptr, /* deleteElement */                                          \
         nullptr, /* deleteSpecial */                                          \

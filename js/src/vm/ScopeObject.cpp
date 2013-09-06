@@ -512,52 +512,10 @@ with_GetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned
 }
 
 static bool
-with_GetPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp)
-{
-    RootedObject actual(cx, &obj->as<WithObject>().object());
-    return JSObject::getPropertyAttributes(cx, actual, name, attrsp);
-}
-
-static bool
-with_GetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp)
-{
-    RootedObject actual(cx, &obj->as<WithObject>().object());
-    return JSObject::getElementAttributes(cx, actual, index, attrsp);
-}
-
-static bool
-with_GetSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp)
-{
-    RootedObject actual(cx, &obj->as<WithObject>().object());
-    return JSObject::getSpecialAttributes(cx, actual, sid, attrsp);
-}
-
-static bool
 with_SetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
 {
     RootedObject actual(cx, &obj->as<WithObject>().object());
     return JSObject::setGenericAttributes(cx, actual, id, attrsp);
-}
-
-static bool
-with_SetPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp)
-{
-    RootedObject actual(cx, &obj->as<WithObject>().object());
-    return JSObject::setPropertyAttributes(cx, actual, name, attrsp);
-}
-
-static bool
-with_SetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp)
-{
-    RootedObject actual(cx, &obj->as<WithObject>().object());
-    return JSObject::setElementAttributes(cx, actual, index, attrsp);
-}
-
-static bool
-with_SetSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp)
-{
-    RootedObject actual(cx, &obj->as<WithObject>().object());
-    return JSObject::setSpecialAttributes(cx, actual, sid, attrsp);
 }
 
 static bool
@@ -635,13 +593,7 @@ Class WithObject::class_ = {
         with_SetElement,
         with_SetSpecial,
         with_GetGenericAttributes,
-        with_GetPropertyAttributes,
-        with_GetElementAttributes,
-        with_GetSpecialAttributes,
         with_SetGenericAttributes,
-        with_SetPropertyAttributes,
-        with_SetElementAttributes,
-        with_SetSpecialAttributes,
         with_DeleteProperty,
         with_DeleteElement,
         with_DeleteSpecial,
