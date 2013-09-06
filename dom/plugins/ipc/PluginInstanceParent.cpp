@@ -26,7 +26,6 @@
 #include "gfxContext.h"
 #include "gfxColor.h"
 #include "gfxUtils.h"
-#include "nsNPAPIPluginInstance.h"
 #include "Layers.h"
 #include "SharedTextureImage.h"
 #include "GLContext.h"
@@ -80,9 +79,6 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
     , mShColorSpace(nullptr)
 #endif
 {
-#ifdef OS_WIN
-    mTextureMap.Init();
-#endif
 }
 
 PluginInstanceParent::~PluginInstanceParent()
@@ -113,7 +109,6 @@ PluginInstanceParent::~PluginInstanceParent()
 bool
 PluginInstanceParent::Init()
 {
-    mScriptableObjects.Init();
     return true;
 }
 
@@ -1537,7 +1532,6 @@ PluginInstanceParent::RegisterNPObjectForActor(
                                            PluginScriptableObjectParent* aActor)
 {
     NS_ASSERTION(aObject && aActor, "Null pointers!");
-    NS_ASSERTION(mScriptableObjects.IsInitialized(), "Hash not initialized!");
     NS_ASSERTION(!mScriptableObjects.Get(aObject, nullptr), "Duplicate entry!");
     mScriptableObjects.Put(aObject, aActor);
     return true;
@@ -1547,7 +1541,6 @@ void
 PluginInstanceParent::UnregisterNPObject(NPObject* aObject)
 {
     NS_ASSERTION(aObject, "Null pointer!");
-    NS_ASSERTION(mScriptableObjects.IsInitialized(), "Hash not initialized!");
     NS_ASSERTION(mScriptableObjects.Get(aObject, nullptr), "Unknown entry!");
     mScriptableObjects.Remove(aObject);
 }

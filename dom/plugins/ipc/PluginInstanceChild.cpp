@@ -147,7 +147,6 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
     mWindow.type = NPWindowTypeWindow;
     mData.ndata = (void*) this;
     mData.pdata = nullptr;
-    mAsyncBitmaps.Init();
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     mWindow.ws_info = &mWsInfo;
     memset(&mWsInfo, 0, sizeof(mWsInfo));
@@ -3959,7 +3958,6 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
     ClearAllSurfaces();
 
     mDeletingHash = new nsTHashtable<DeletingObjectEntry>;
-    mDeletingHash->Init();
     PluginModuleChild::current()->FindNPObjectsForInstance(this);
 
     mDeletingHash->EnumerateEntries(InvalidateObject, NULL);

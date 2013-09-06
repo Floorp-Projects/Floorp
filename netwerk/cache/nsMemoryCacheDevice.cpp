@@ -29,11 +29,11 @@
 const char *gMemoryDeviceID      = "memory";
 
 class NetworkMemoryCacheReporter MOZ_FINAL :
-    public mozilla::MemoryUniReporter
+    public mozilla::MemoryReporterBase
 {
 public:
     NetworkMemoryCacheReporter(nsMemoryCacheDevice* aDevice)
-      : MemoryUniReporter(
+      : MemoryReporterBase(
             "explicit/network/memory-cache",
             KIND_HEAP,
             UNITS_BYTES,

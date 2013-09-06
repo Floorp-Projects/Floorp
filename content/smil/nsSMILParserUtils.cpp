@@ -474,46 +474,35 @@ nsSMILParserUtils::ParseSemicolonDelimitedProgressList(const nsAString& aSpec,
                                                        bool aNonDecreasing,
                                                        nsTArray<double>& aArray)
 {
-  nsresult rv = NS_OK;
-
-  NS_ConvertUTF16toUTF8 spec(aSpec);
-  const char* start = spec.BeginReading();
-  const char* end = spec.EndReading();
-
-  SkipBeginWsp(start, end);
+  nsCharSeparatedTokenizerTemplate<IsSpace> tokenizer(aSpec, ';');
 
   double previousValue = -1.0;
 
-  while (start != end) {
-    double value = GetFloat(start, end, &rv);
-    if (NS_FAILED(rv))
-      break;
+  while (tokenizer.hasMoreTokens()) {
+    NS_ConvertUTF16toUTF8 utf8Token(tokenizer.nextToken());
+    const char *token = utf8Token.get();
+    if (*token == '\0') {
+      return NS_ERROR_FAILURE; // empty string (e.g. two ';' in a row)
+    }
+
+    char *end;
+    double value = PR_strtod(token, &end);
+    if (*end != '\0') {
+      return NS_ERROR_FAILURE;
+    }
 
     if (value > 1.0 || value < 0.0 ||
         (aNonDecreasing && value < previousValue)) {
-      rv = NS_ERROR_FAILURE;
-      break;
+      return NS_ERROR_FAILURE;
     }
 
     if (!aArray.AppendElement(value)) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-      break;
+      return NS_ERROR_OUT_OF_MEMORY;
     }
     previousValue = value;
-
-    SkipBeginWsp(start, end);
-    if (start == end)
-      break;
-
-    if (*start++ != ';') {
-      rv = NS_ERROR_FAILURE;
-      break;
-    }
-
-    SkipBeginWsp(start, end);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 // Helper class for ParseValues
@@ -571,7 +560,7 @@ nsresult
 nsSMILParserUtils::ParseValuesGeneric(const nsAString& aSpec,
                                       GenericValueParser& aParser)
 {
-  nsCharSeparatedTokenizer tokenizer(aSpec, ';');
+  nsCharSeparatedTokenizerTemplate<IsSpace> tokenizer(aSpec, ';');
   if (!tokenizer.hasMoreTokens()) { // Empty list
     return NS_ERROR_FAILURE;
   }

@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "MediaEncoder.h"
 #include "MediaDecoder.h"
+#include "nsIPrincipal.h"
 #ifdef MOZ_OGG
 #include "OggWriter.h"
 #endif

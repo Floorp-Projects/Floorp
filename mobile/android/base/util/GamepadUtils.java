@@ -18,6 +18,7 @@ public final class GamepadUtils {
     private static final int SONY_XPERIA_GAMEPAD_DEVICE_ID = 196611;
 
     private static View.OnKeyListener sClickDispatcher;
+    private static float sDeadZoneThresholdOverride = 1e-2f;
 
     private GamepadUtils() {
     }
@@ -41,12 +42,24 @@ public final class GamepadUtils {
         return (isGamepadKey(event) && (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_B));
     }
 
+    public static void overrideDeadZoneThreshold(float threshold) {
+        sDeadZoneThresholdOverride = threshold;
+    }
+
     public static boolean isValueInDeadZone(MotionEvent event, int axis) {
+        if (Build.VERSION.SDK_INT < 9) {
+            return false;
+        }
+
+        float threshold;
+        if (sDeadZoneThresholdOverride >= 0) {
+            threshold = sDeadZoneThresholdOverride;
+        } else {
+            InputDevice.MotionRange range = event.getDevice().getMotionRange(axis);
+            threshold = range.getFlat() + range.getFuzz();
+        }
         float value = event.getAxisValue(axis);
-        // The 1e-2 here should really be range.getFlat() + range.getFuzz() (where range is
-        // event.getDevice().getMotionRange(axis)), but the values those functions return
-        // on the Ouya are zero so we're just hard-coding it for now.
-        return (Math.abs(value) < 1e-2);
+        return (Math.abs(value) < threshold);
     }
 
     public static boolean isPanningControl(MotionEvent event) {

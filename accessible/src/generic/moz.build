@@ -31,3 +31,28 @@ LIBRARY_NAME = 'accessibility_generic_s'
 
 LIBXUL_LIBRARY = True
 
+LOCAL_INCLUDES += [
+    '../../../layout/generic',
+    '../../../layout/xul/base/src',
+    '../base',
+    '../html',
+    '../xpcom',
+    '../xul',
+]
+
+if CONFIG['MOZ_ENABLE_GTK']:
+    LOCAL_INCLUDES += [
+        '../atk',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    LOCAL_INCLUDES += [
+        '../windows/msaa',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    LOCAL_INCLUDES += [
+        '../mac',
+    ]
+else:
+    LOCAL_INCLUDES += [
+        '../other',
+    ]

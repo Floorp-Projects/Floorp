@@ -21,6 +21,7 @@ EXPORTS += [
     'nsFrameMessageManager.h',
     'nsGkAtomList.h',
     'nsGkAtoms.h',
+    'nsImageLoadingContent.h',
     'nsMappedAttributeElement.h',
     'nsNodeInfoManager.h',
     'nsNodeUtils.h',

@@ -5,40 +5,6 @@
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES = \
-  -I$(srcdir)/../base \
-  -I$(srcdir)/../generic \
-  -I$(srcdir)/../xpcom \
-  -I$(srcdir)/../../../content/base/src \
-  -I$(srcdir)/../../../content/html/content/src \
-  -I$(srcdir)/../../../layout/generic \
-  -I$(srcdir)/../../../layout/tables \
-  -I$(srcdir)/../../../layout/xul/base/src \
-  $(NULL)
-
-ifdef MOZ_ENABLE_GTK
-LOCAL_INCLUDES += \
-  -I$(srcdir)/../atk \
-  $(NULL)
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-LOCAL_INCLUDES += \
-  -I$(srcdir)/../windows/msaa \
-  -I$(srcdir)/../windows/ia2 \
-  $(NULL)
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-LOCAL_INCLUDES += \
-  -I$(srcdir)/../mac \
-  $(NULL)
-else
-LOCAL_INCLUDES += \
-  -I$(srcdir)/../other \
-  $(NULL)
-endif
-endif
-endif
-
 ifneq ($(A11Y_LOG),0)
   DEFINES += -DA11Y_LOG
 endif

@@ -845,8 +845,6 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
     new nsDataHashtable<nsCStringHashKey,nsCString>();
   NS_ENSURE_TRUE(crashReporterAPIData_Hash, NS_ERROR_OUT_OF_MEMORY);
 
-  crashReporterAPIData_Hash->Init();
-
   notesField = new nsCString();
   NS_ENSURE_TRUE(notesField, NS_ERROR_OUT_OF_MEMORY);
 
@@ -2300,7 +2298,6 @@ OOPInit()
     NS_RUNTIMEABORT("can't start crash reporter server()");
 
   pidToMinidump = new ChildMinidumpMap();
-  pidToMinidump->Init();
 
   dumpMapLock = new Mutex("CrashReporter::dumpMapLock");
 

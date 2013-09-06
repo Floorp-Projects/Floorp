@@ -233,6 +233,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     UNSAFE_OP(CallInitElementArray)
     UNSAFE_OP(CallSetProperty)
     UNSAFE_OP(DeleteProperty)
+    UNSAFE_OP(DeleteElement)
     UNSAFE_OP(SetPropertyCache)
     UNSAFE_OP(IteratorStart)
     UNSAFE_OP(IteratorNext)

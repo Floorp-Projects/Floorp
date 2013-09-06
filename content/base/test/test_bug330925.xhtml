@@ -46,21 +46,20 @@ addLoadEvent(init);
 function init()
 {
   var t = document.getElementById("t");
-  var d = SpecialPowers.wrap(document);
 
-  is(SpecialPowers.unwrap(d.getBindingParent(d.getAnonymousNodes(t)[0])),
+  is(document.getBindingParent(document.getAnonymousNodes(t)[0]), 
      t,
      "Wrong binding parent for anonymous node");
      
-  is(SpecialPowers.unwrap(d.getBindingParent(d.getAnonymousNodes(t)[1].childNodes[0])),
+  is(document.getBindingParent(document.getAnonymousNodes(t)[1].childNodes[0]), 
      t,
      "Wrong binding parent for child of anonymous node");
      
-  is(d.getBindingParent(t), 
+  is(document.getBindingParent(t), 
      null,
      "Non-anonymous node should not have a binding parent");
      
-  is(d.getBindingParent(document.documentElement), 
+  is(document.getBindingParent(document.documentElement), 
      null,
      "Document element should not have a binding parent");
      

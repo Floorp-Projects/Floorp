@@ -12,14 +12,24 @@ const { make: makeWindow, getHiddenWindow } = require("../window/utils");
 const { create: makeFrame, getDocShell } = require("../frame/utils");
 const { defer } = require("../core/promise");
 const { when: unload } = require("../system/unload");
+const cfxArgs = require("@test/options");
 
 let addonPrincipal = Cc["@mozilla.org/systemprincipal;1"].
                      createInstance(Ci.nsIPrincipal);
 
+let hiddenWindow = getHiddenWindow();
+
+if (cfxArgs.parseable) {
+  console.info("hiddenWindow document.documentURI:" +
+    hiddenWindow.document.documentURI);
+  console.info("hiddenWindow document.readyState:" +
+    hiddenWindow.document.readyState);
+}
+
 // Once Bug 565388 is fixed and shipped we'll be able to make invisible,
 // permanent docShells. Meanwhile we create hidden top level window and
 // use it's docShell.
-let frame = makeFrame(getHiddenWindow().document, {
+let frame = makeFrame(hiddenWindow.document, {
   nodeName: "iframe",
   namespaceURI: "http://www.w3.org/1999/xhtml",
   allowJavascript: true,

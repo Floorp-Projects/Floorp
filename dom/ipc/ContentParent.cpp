@@ -159,53 +159,33 @@ namespace dom {
 
 #define NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC "ipc:network:set-offline"
 
-// This represents all the memory reports provided by a child process.
-class ChildReporter MOZ_FINAL : public nsIMemoryReporter
+// This represents a single measurement taken by a memory reporter in a child
+// process and passed to this one.  Its process is non-empty, and its amount is
+// fixed.
+class ChildMemoryReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
-    ChildReporter(const InfallibleTArray<MemoryReport>& childReports)
+    ChildMemoryReporter(const char* aProcess, const char* aPath, int32_t aKind,
+                        int32_t aUnits, int64_t aAmount,
+                        const char* aDescription)
+      : MemoryReporterBase(aPath, aKind, aUnits, aDescription)
+      , mProcess(aProcess)
+      , mAmount(aAmount)
     {
-        for (uint32_t i = 0; i < childReports.Length(); i++) {
-            MemoryReport r(childReports[i].process(),
-                           childReports[i].path(),
-                           childReports[i].kind(),
-                           childReports[i].units(),
-                           childReports[i].amount(),
-                           childReports[i].desc());
-
-            // Child reports have a non-empty process.
-            MOZ_ASSERT(!r.process().IsEmpty());
-
-            mChildReports.AppendElement(r);
-        }
     }
 
-    NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetName(nsACString& name)
+    NS_IMETHOD GetProcess(nsACString& aProcess)
     {
-        name.AssignLiteral("content-child");
-        return NS_OK;
+      aProcess.Assign(mProcess);
+      return NS_OK;
     }
 
-    NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCb,
-                              nsISupports* aClosure)
-    {
-        for (uint32_t i = 0; i < mChildReports.Length(); i++) {
-            nsresult rv;
-            MemoryReport r = mChildReports[i];
-            rv = aCb->Callback(r.process(), r.path(), r.kind(), r.units(),
-                               r.amount(), r.desc(), aClosure);
-            NS_ENSURE_SUCCESS(rv, rv);
-        }
-        return NS_OK;
-    }
+private:
+    int64_t Amount() { return mAmount; }
 
-  private:
-    InfallibleTArray<MemoryReport> mChildReports;
+    nsCString mProcess;
+    int64_t   mAmount;
 };
-
-NS_IMPL_ISUPPORTS1(ChildReporter, nsIMemoryReporter)
 
 class MemoryReportRequestParent : public PMemoryReportRequestParent
 {
@@ -227,9 +207,9 @@ MemoryReportRequestParent::MemoryReportRequestParent()
 }
 
 bool
-MemoryReportRequestParent::Recv__delete__(const InfallibleTArray<MemoryReport>& childReports)
+MemoryReportRequestParent::Recv__delete__(const InfallibleTArray<MemoryReport>& report)
 {
-    Owner()->SetChildMemoryReports(childReports);
+    Owner()->SetChildMemoryReporters(report);
     return true;
 }
 
@@ -241,15 +221,15 @@ MemoryReportRequestParent::~MemoryReportRequestParent()
 /**
  * A memory reporter for ContentParent objects themselves.
  */
-class ContentParentMemoryReporter MOZ_FINAL : public nsIMemoryReporter
+class ContentParentMemoryReporter MOZ_FINAL : public nsIMemoryMultiReporter
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIMEMORYREPORTER
+    NS_DECL_NSIMEMORYMULTIREPORTER
     NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(MallocSizeOf)
 };
 
-NS_IMPL_ISUPPORTS1(ContentParentMemoryReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS1(ContentParentMemoryReporter, nsIMemoryMultiReporter)
 
 NS_IMETHODIMP
 ContentParentMemoryReporter::GetName(nsACString& aName)
@@ -259,7 +239,7 @@ ContentParentMemoryReporter::GetName(nsACString& aName)
 }
 
 NS_IMETHODIMP
-ContentParentMemoryReporter::CollectReports(nsIMemoryReporterCallback* cb,
+ContentParentMemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* cb,
                                             nsISupports* aClosure)
 {
     nsAutoTArray<ContentParent*, 16> cps;
@@ -376,7 +356,7 @@ ContentParent::StartUp()
     }
 
     nsRefPtr<ContentParentMemoryReporter> mr = new ContentParentMemoryReporter();
-    NS_RegisterMemoryReporter(mr);
+    NS_RegisterMemoryMultiReporter(mr);
 
     sCanLaunchSubprocesses = true;
 
@@ -570,7 +550,6 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
     if (!sAppContentParents) {
         sAppContentParents =
             new nsDataHashtable<nsStringHashKey, ContentParent*>();
-        sAppContentParents->Init();
     }
 
     // Each app gets its own ContentParent instance.
@@ -896,7 +875,7 @@ ContentParent::ShutDownProcess(bool aCloseWithError)
     // shut down the cycle collector.  But by then it's too late to release any
     // CC'ed objects, so we need to null them out here, while we still can.  See
     // bug 899761.
-    mChildReporter = nullptr;
+    mMemoryReporters.Clear();
     if (mMessageManager) {
       mMessageManager->Disconnect();
       mMessageManager = nullptr;
@@ -1047,8 +1026,8 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
       ppm->Disconnect();
     }
 
-    // unregister the child memory reporter
-    UnregisterChildMemoryReporter();
+    // clear the child memory reporters
+    ClearChildMemoryReporters();
 
     // remove the global remote preferences observers
     Preferences::RemoveObserver(this, "");
@@ -1066,7 +1045,6 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
 
     if (obs) {
         nsRefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
-        props->Init();
 
         props->SetPropertyAsUint64(NS_LITERAL_STRING("childID"), mChildID);
 
@@ -2161,16 +2139,28 @@ ContentParent::DeallocPMemoryReportRequestParent(PMemoryReportRequestParent* act
 }
 
 void
-ContentParent::SetChildMemoryReports(const InfallibleTArray<MemoryReport>& childReports)
+ContentParent::SetChildMemoryReporters(const InfallibleTArray<MemoryReport>& report)
 {
     nsCOMPtr<nsIMemoryReporterManager> mgr =
         do_GetService("@mozilla.org/memory-reporter-manager;1");
+    for (int32_t i = 0; i < mMemoryReporters.Count(); i++)
+        mgr->UnregisterReporter(mMemoryReporters[i]);
 
-    if (mChildReporter)
-        mgr->UnregisterReporter(mChildReporter);
+    for (uint32_t i = 0; i < report.Length(); i++) {
+        nsCString process  = report[i].process();
+        nsCString path     = report[i].path();
+        int32_t   kind     = report[i].kind();
+        int32_t   units    = report[i].units();
+        int64_t   amount   = report[i].amount();
+        nsCString desc     = report[i].desc();
 
-    mChildReporter = new ChildReporter(childReports);
-    mgr->RegisterReporter(mChildReporter);
+        nsRefPtr<ChildMemoryReporter> r =
+            new ChildMemoryReporter(process.get(), path.get(), kind, units,
+                                    amount, desc.get());
+
+        mMemoryReporters.AppendObject(r);
+        mgr->RegisterReporter(r);
+    }
 
     nsCOMPtr<nsIObserverService> obs =
         do_GetService("@mozilla.org/observer-service;1");
@@ -2179,11 +2169,12 @@ ContentParent::SetChildMemoryReports(const InfallibleTArray<MemoryReport>& child
 }
 
 void
-ContentParent::UnregisterChildMemoryReporter()
+ContentParent::ClearChildMemoryReporters()
 {
     nsCOMPtr<nsIMemoryReporterManager> mgr =
         do_GetService("@mozilla.org/memory-reporter-manager;1");
-    mgr->UnregisterReporter(mChildReporter);
+    for (int32_t i = 0; i < mMemoryReporters.Count(); i++)
+        mgr->UnregisterReporter(mMemoryReporters[i]);
 }
 
 PTestShellParent*

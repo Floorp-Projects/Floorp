@@ -578,7 +578,6 @@ gfxDWriteFontEntry::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 gfxDWriteFontList::gfxDWriteFontList()
     : mInitialized(false), mForceGDIClassicMaxFontSize(0.0)
 {
-    mFontSubstitutes.Init();
 }
 
 // bug 602792 - CJK systems default to large CJK fonts which cause excessive
@@ -622,8 +621,8 @@ gfxDWriteFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
     }
 
     // lookup in name lookup tables, return null if not found
-    if (!(lookup = mPostscriptNames.GetWeak(aFullname)) &&
-        !(lookup = mFullnames.GetWeak(aFullname))) 
+    if (!(lookup = mExtraNames->mPostscriptNames.GetWeak(aFullname)) &&
+        !(lookup = mExtraNames->mFullnames.GetWeak(aFullname)))
     {
         return nullptr;
     }

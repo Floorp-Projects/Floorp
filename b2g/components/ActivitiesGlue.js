@@ -47,7 +47,9 @@ ActivitiesDialog.prototype = {
         return;
 
       content.removeEventListener("mozContentEvent", act_getChoice);
-      activity.callback.handleEvent(evt.detail.value ? evt.detail.value : -1);
+      activity.callback.handleEvent(evt.detail.value !== undefined
+                                      ? evt.detail.value
+                                      : -1);
     });
 
     browser.shell.sendChromeEvent(detail);

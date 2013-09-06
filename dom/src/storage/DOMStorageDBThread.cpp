@@ -35,7 +35,6 @@ namespace dom {
 
 DOMStorageDBBridge::DOMStorageDBBridge()
 {
-  mUsages.Init();
 }
 
 DOMStorageUsage*
@@ -66,7 +65,6 @@ DOMStorageDBThread::DOMStorageDBThread()
 , mFlushImmediately(false)
 , mPriorityCounter(0)
 {
-  mScopesHavingData.Init();
 }
 
 nsresult
@@ -1026,8 +1024,6 @@ DOMStorageDBThread::DBOperation::Finalize(nsresult aRv)
 DOMStorageDBThread::PendingOperations::PendingOperations()
 : mFlushFailureCount(0)
 {
-  mClears.Init();
-  mUpdates.Init();
 }
 
 bool

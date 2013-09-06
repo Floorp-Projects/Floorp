@@ -30,12 +30,12 @@ using namespace mozilla::gfx;
 
 static FT_Library gPlatformFTLibrary = nullptr;
 
-class FreetypeReporter MOZ_FINAL : public MemoryUniReporter
+class FreetypeReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
     FreetypeReporter()
-      : MemoryUniReporter("explicit/freetype", KIND_HEAP, UNITS_BYTES,
-                          "Memory used by Freetype.")
+      : MemoryReporterBase("explicit/freetype", KIND_HEAP, UNITS_BYTES,
+                           "Memory used by Freetype.")
     {
 #ifdef DEBUG
         // There must be only one instance of this class, due to |sAmount|

@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Content Security Policy Frame Ancestors directive</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<iframe style="width:100%;height:300px;" id='cspframe'></iframe>
+<iframe style="width:100%;height:300px;" id='cspframe2'></iframe>
+<iframe style="width:100%;height:300px;" id='cspframe3'></iframe>
+<script class="testbody" type="text/javascript">
+
+var path = "/tests/content/base/test/csp/";
+
+var inlineScriptsThatRan = 0;
+var inlineScriptsBlocked = 0;
+var inlineScriptsTotal = 12;
+
+// This is used to watch the blocked data bounce off CSP and allowed data
+// get sent out to the wire.
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+}
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    // subject should be an nsURI, and should be either allowed or blocked.
+    if (!SpecialPowers.can_QI(subject))
+      return;
+
+    if (topic === "csp-on-violate-policy") {
+      var what = null;
+      try {
+        //these were blocked... record that they were blocked
+        what = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
+      } catch(e) {
+        //if that fails, the subject is probably a string
+        what = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsISupportsCString"), "data");
+      }
+      window.scriptBlocked(what, data);
+    }
+  },
+
+  // must eventually call this to remove the listener,
+  // or mochitests might get borked.
+  remove: function() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+  }
+}
+
+// called by scripts that run
+// the first argument is whether the script expects to be allowed or not.
+var scriptRan = function(result, testname, data) {
+  inlineScriptsThatRan++;
+  ok(result, 'INLINE SCRIPT RAN: ' + testname + '(' + data + ')');
+  checkTestResults();
+}
+
+// called when a script is blocked
+// -- we can't determine *which* frame was blocked, but at least we can count them
+var scriptBlocked = function(testname, data) {
+  inlineScriptsBlocked++;
+  ok(true, 'INLINE SCRIPT BLOCKED: ' + testname + '(' + data + ')');
+  checkTestResults();
+}
+
+
+// Check to see if all the tests have run
+var checkTestResults = function() {
+  // if any test is incomplete, keep waiting
+  if (inlineScriptsThatRan + inlineScriptsBlocked < inlineScriptsTotal)
+    return;
+
+  // The four scripts in the page with 'unsafe-inline' should run.
+  is(inlineScriptsThatRan, 4, "there should be 4 inline scripts that ran");
+
+  // The other eight scripts in the other two pages should be blocked.
+  is(inlineScriptsBlocked, 8, "there should be 8 inline scripts that were blocked");
+
+  // ... otherwise, finish
+  window.examiner.remove();
+  SimpleTest.finish();
+}
+
+//////////////////////////////////////////////////////////////////////
+// set up and go
+window.examiner = new examiner();
+SimpleTest.waitForExplicitFinish();
+
+function clickit() {
+  var cspframe = document.getElementById('cspframe');
+  var a = cspframe.contentDocument.getElementById('anchortoclick');
+  sendMouseEvent({type:'click'}, a, cspframe.contentWindow);
+}
+
+function clickit2() {
+  var cspframe2 = document.getElementById('cspframe2');
+  var a = cspframe2.contentDocument.getElementById('anchortoclick');
+  sendMouseEvent({type:'click'}, a, cspframe2.contentWindow);
+}
+
+function clickit3() {
+  var cspframe3 = document.getElementById('cspframe3');
+  var a = cspframe3.contentDocument.getElementById('anchortoclick');
+  sendMouseEvent({type:'click'}, a, cspframe3.contentWindow);
+}
+
+SpecialPowers.pushPrefEnv(
+  {'set':[["security.csp.speccompliant", true]]},
+  function() {
+    // save this for last so that our listeners are registered.
+    // ... this loads the testbed of good and bad requests.
+    document.getElementById('cspframe').src = 'file_CSP_inlinescript_main.html';
+    document.getElementById('cspframe').addEventListener('load', clickit, false);
+    document.getElementById('cspframe2').src = 'file_CSP_inlinescript_main_spec_compliant.html';
+    document.getElementById('cspframe2').addEventListener('load', clickit2, false);
+    document.getElementById('cspframe3').src = 'file_CSP_inlinescript_main_spec_compliant_allowed.html';
+    document.getElementById('cspframe3').addEventListener('load', clickit3, false);
+  });
+</script>
+</pre>
+</body>
+</html>

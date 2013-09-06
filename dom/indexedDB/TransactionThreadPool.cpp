@@ -122,8 +122,6 @@ TransactionThreadPool::Init()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  mTransactionsInProgress.Init();
-
   nsresult rv;
   mThreadPool = do_CreateInstance(NS_THREADPOOL_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);

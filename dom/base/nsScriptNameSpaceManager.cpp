@@ -116,11 +116,11 @@ GlobalNameHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
   return true;
 }
 
-class ScriptNameSpaceManagerReporter MOZ_FINAL : public MemoryUniReporter
+class ScriptNameSpaceManagerReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
   ScriptNameSpaceManagerReporter(nsScriptNameSpaceManager* aManager)
-    : MemoryUniReporter(
+    : MemoryReporterBase(
         "explicit/script-namespace-manager",
         KIND_HEAP,
         nsIMemoryReporter::UNITS_BYTES,

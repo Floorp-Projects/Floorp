@@ -1140,7 +1140,9 @@ let CompositionManager =  {
     if (this._text !== text) {
       domWindowUtils.sendCompositionEvent('compositionupdate', text, '');
     }
-    domWindowUtils.sendTextEvent(text, 0, 0, 0, 0, 0, 0, 0, 0);
+    // Set the cursor position to |text.length| so that the text will be
+    // committed before the cursor position.
+    domWindowUtils.sendTextEvent(text, 0, 0, 0, 0, 0, 0, text.length, 0);
     domWindowUtils.sendCompositionEvent('compositionend', text, '');
     this._text = '';
     this._isStarted = false;

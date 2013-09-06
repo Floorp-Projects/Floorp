@@ -886,6 +886,8 @@ nsOfflineCacheDevice::nsOfflineCacheDevice()
   , mDeltaCounter(0)
   , mAutoShutdown(false)
   , mLock("nsOfflineCacheDevice.lock")
+  , mActiveCaches(5)
+  , mLockedEntries(64)
 {
 }
 
@@ -1349,13 +1351,6 @@ nsOfflineCacheDevice::InitActiveCaches()
 {
   MutexAutoLock lock(mLock);
 
-  mCaches.Init();
-  mActiveCachesByGroup.Init();
-
-  mActiveCaches.Init(5);
-
-  mLockedEntries.Init(64);
-
   AutoResetStatement statement(mStatement_EnumerateGroups);
 
   bool hasRows;
@@ -1402,8 +1397,7 @@ nsOfflineCacheDevice::Shutdown()
 
   {
     MutexAutoLock lock(mLock);
-    if (mCaches.IsInitialized())
-      mCaches.EnumerateRead(ShutdownApplicationCache, this);
+    mCaches.EnumerateRead(ShutdownApplicationCache, this);
   }
 
   {

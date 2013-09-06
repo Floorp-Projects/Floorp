@@ -7,10 +7,8 @@
 #define MOZILLA_AUDIONODESTREAM_H_
 
 #include "MediaStreamGraph.h"
-#include "AudioChannelFormat.h"
-#include "AudioNodeEngine.h"
 #include "mozilla/dom/AudioNodeBinding.h"
-#include "mozilla/dom/AudioParam.h"
+#include "AudioSegment.h"
 
 #ifdef PR_LOGGING
 #define LOG(type, msg) PR_LOG(gMediaStreamGraphLog, type, msg)
@@ -26,6 +24,7 @@ class AudioParamTimeline;
 }
 
 class ThreadSharedFloatArrayBufferList;
+class AudioNodeEngine;
 
 /**
  * An AudioNodeStream produces one audio track with ID AUDIO_TRACK.

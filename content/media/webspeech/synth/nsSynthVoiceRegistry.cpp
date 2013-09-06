@@ -102,8 +102,6 @@ NS_IMPL_ISUPPORTS1(nsSynthVoiceRegistry, nsISynthVoiceRegistry)
 nsSynthVoiceRegistry::nsSynthVoiceRegistry()
   : mSpeechSynthChild(nullptr)
 {
-  mUriVoiceMap.Init();
-
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
 
     mSpeechSynthChild = new SpeechSynthesisChild();

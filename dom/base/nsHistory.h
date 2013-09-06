@@ -8,16 +8,17 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/dom/BindingUtils.h"
+#include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsWrapperCache.h"
 #include "nsIDOMHistory.h"
-#include "nsString.h"
-#include "nsISHistory.h"
-#include "nsIWeakReference.h"
-#include "nsPIDOMWindow.h"
+#include "nsPIDOMWindow.h" // for GetParentObject
+#include "nsStringFwd.h"
+#include "nsWrapperCache.h"
 
 class nsIDocShell;
+class nsISHistory;
+class nsIWeakReference;
+class nsPIDOMWindow;
 
 // Script "History" object
 class nsHistory MOZ_FINAL : public nsIDOMHistory, // Empty, needed for extension
@@ -49,12 +50,7 @@ public:
                     mozilla::ErrorResult& aRv);
 
 protected:
-  nsIDocShell *GetDocShell() const {
-    nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
-    if (!win)
-      return nullptr;
-    return win->GetDocShell();
-  }
+  nsIDocShell* GetDocShell() const;
 
   void PushOrReplaceState(JSContext* aCx, JS::Handle<JS::Value> aData,
                           const nsAString& aTitle, const nsAString& aUrl,

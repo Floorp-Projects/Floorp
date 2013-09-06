@@ -653,6 +653,9 @@ pref("ui.scrolling.min_scrollable_distance", -1);
 pref("ui.scrolling.axis_lock_mode", "standard");
 // Negate scrollY, true will make the mouse scroll wheel move the screen the same direction as with most desktops or laptops.
 pref("ui.scrolling.negate_wheel_scrollY", true);
+// Determine the dead zone for gamepad joysticks. Higher values result in larger dead zones; use a negative value to
+// auto-detect based on reported hardware values
+pref("ui.scrolling.gamepad_dead_zone", 10);
 
 
 // Enable accessibility mode if platform accessibility is enabled.

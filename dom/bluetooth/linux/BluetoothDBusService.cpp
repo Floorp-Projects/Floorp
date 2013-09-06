@@ -173,7 +173,7 @@ static const char* sBluetoothDBusSignals[] =
  *
  */
 static nsRefPtr<RawDBusConnection> gThreadConnection;
-static nsDataHashtable<nsStringHashKey, DBusMessage* > sPairingReqTable;
+static nsDataHashtable<nsStringHashKey, DBusMessage* >* sPairingReqTable;
 static nsTArray<uint32_t> sAuthorizedServiceClass;
 static nsString sAdapterPath;
 static Atomic<int32_t> sIsPairing(0);
@@ -1093,7 +1093,7 @@ AgentEventFilter(DBusConnection *conn, DBusMessage *msg, void *data)
   signal.value() = v;
 
   if (isPairingReq) {
-    sPairingReqTable.Put(
+    sPairingReqTable->Put(
       GetAddressFromObjectPath(NS_ConvertUTF8toUTF16(objectPath)), msg);
 
     // Increase ref count here because we need this message later.
@@ -1669,8 +1669,8 @@ BluetoothDBusService::StartInternal()
     return NS_ERROR_FAILURE;
   }
 
-  if (!sPairingReqTable.IsInitialized()) {
-    sPairingReqTable.Init();
+  if (!sPairingReqTable) {
+    sPairingReqTable = new nsDataHashtable<nsStringHashKey, DBusMessage* >;
   }
 
   BluetoothValue v;
@@ -1744,8 +1744,8 @@ BluetoothDBusService::StopInternal()
   gThreadConnection = nullptr;
 
   // unref stored DBusMessages before clear the hashtable
-  sPairingReqTable.EnumerateRead(UnrefDBusMessages, nullptr);
-  sPairingReqTable.Clear();
+  sPairingReqTable->EnumerateRead(UnrefDBusMessages, nullptr);
+  sPairingReqTable->Clear();
 
   sIsPairing = 0;
   sConnectedDeviceCount = 0;
@@ -2458,7 +2458,7 @@ BluetoothDBusService::SetPinCodeInternal(const nsAString& aDeviceAddress,
   nsAutoString errorStr;
   BluetoothValue v = true;
   DBusMessage *msg;
-  if (!sPairingReqTable.Get(aDeviceAddress, &msg)) {
+  if (!sPairingReqTable->Get(aDeviceAddress, &msg)) {
     BT_WARNING("%s: Couldn't get original request message.", __FUNCTION__);
     errorStr.AssignLiteral("Couldn't get original request message.");
     DispatchBluetoothReply(aRunnable, v, errorStr);
@@ -2493,7 +2493,7 @@ BluetoothDBusService::SetPinCodeInternal(const nsAString& aDeviceAddress,
   dbus_message_unref(msg);
   dbus_message_unref(reply);
 
-  sPairingReqTable.Remove(aDeviceAddress);
+  sPairingReqTable->Remove(aDeviceAddress);
   DispatchBluetoothReply(aRunnable, v, errorStr);
   return result;
 }
@@ -2506,7 +2506,7 @@ BluetoothDBusService::SetPasskeyInternal(const nsAString& aDeviceAddress,
   nsAutoString errorStr;
   BluetoothValue v = true;
   DBusMessage *msg;
-  if (!sPairingReqTable.Get(aDeviceAddress, &msg)) {
+  if (!sPairingReqTable->Get(aDeviceAddress, &msg)) {
     BT_WARNING("%s: Couldn't get original request message.", __FUNCTION__);
     errorStr.AssignLiteral("Couldn't get original request message.");
     DispatchBluetoothReply(aRunnable, v, errorStr);
@@ -2539,7 +2539,7 @@ BluetoothDBusService::SetPasskeyInternal(const nsAString& aDeviceAddress,
   dbus_message_unref(msg);
   dbus_message_unref(reply);
 
-  sPairingReqTable.Remove(aDeviceAddress);
+  sPairingReqTable->Remove(aDeviceAddress);
   DispatchBluetoothReply(aRunnable, v, errorStr);
   return result;
 }
@@ -2553,7 +2553,7 @@ BluetoothDBusService::SetPairingConfirmationInternal(
   nsAutoString errorStr;
   BluetoothValue v = true;
   DBusMessage *msg;
-  if (!sPairingReqTable.Get(aDeviceAddress, &msg)) {
+  if (!sPairingReqTable->Get(aDeviceAddress, &msg)) {
     BT_WARNING("%s: Couldn't get original request message.", __FUNCTION__);
     errorStr.AssignLiteral("Couldn't get original request message.");
     DispatchBluetoothReply(aRunnable, v, errorStr);
@@ -2584,7 +2584,7 @@ BluetoothDBusService::SetPairingConfirmationInternal(
   dbus_message_unref(msg);
   dbus_message_unref(reply);
 
-  sPairingReqTable.Remove(aDeviceAddress);
+  sPairingReqTable->Remove(aDeviceAddress);
   DispatchBluetoothReply(aRunnable, v, errorStr);
   return result;
 }

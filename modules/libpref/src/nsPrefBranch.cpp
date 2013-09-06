@@ -72,7 +72,6 @@ nsPrefBranch::nsPrefBranch(const char *aPrefRoot, bool aDefaultBranch)
   mPrefRootLength = mPrefRoot.Length();
   mIsDefault = aDefaultBranch;
   mFreeingObserverList = false;
-  mObservers.Init();
 
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();

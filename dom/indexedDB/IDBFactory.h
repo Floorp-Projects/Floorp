@@ -7,26 +7,26 @@
 #ifndef mozilla_dom_indexeddb_idbfactory_h__
 #define mozilla_dom_indexeddb_idbfactory_h__
 
-#include "mozilla/dom/indexedDB/IndexedDatabase.h"
-
-#include "mozIStorageConnection.h"
-
-#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/BindingDeclarations.h" // for Optional
+#include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
+class mozIStorageConnection;
 class nsIAtom;
 class nsIFile;
 class nsIFileURL;
+class nsIPrincipal;
 class nsPIDOMWindow;
+template<typename> class nsRefPtr;
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 class ContentParent;
-}
-}
 
-BEGIN_INDEXEDDB_NAMESPACE
+namespace indexedDB {
 
 struct DatabaseInfo;
 class IDBDatabase;
@@ -187,6 +187,8 @@ private:
   bool mRootedOwningObject;
 };
 
-END_INDEXEDDB_NAMESPACE
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_indexeddb_idbfactory_h__

@@ -332,10 +332,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XULDocument, XMLDocument)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrototypes);
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocalStore)
 
-    if (tmp->mOverlayLoadObservers.IsInitialized())
-        tmp->mOverlayLoadObservers.EnumerateRead(TraverseObservers, &cb);
-    if (tmp->mPendingOverlayLoadNotifications.IsInitialized())
-        tmp->mPendingOverlayLoadNotifications.EnumerateRead(TraverseObservers, &cb);
+    if (tmp->mOverlayLoadObservers) {
+        tmp->mOverlayLoadObservers->EnumerateRead(TraverseObservers, &cb);
+    }
+    if (tmp->mPendingOverlayLoadNotifications) {
+        tmp->mPendingOverlayLoadNotifications->EnumerateRead(TraverseObservers, &cb);
+    }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XULDocument, XMLDocument)
@@ -1894,7 +1896,6 @@ XULDocument::SetTemplateBuilderFor(nsIContent* aContent,
             return NS_OK;
         }
         mTemplateBuilderTable = new BuilderTable;
-        mTemplateBuilderTable->Init();
     }
 
     if (aBuilder) {
@@ -1985,8 +1986,6 @@ XULDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 nsresult
 XULDocument::Init()
 {
-    mRefMap.Init();
-
     nsresult rv = XMLDocument::Init();
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2673,22 +2672,22 @@ XULDocument::LoadOverlay(const nsAString& aURL, nsIObserver* aObserver)
 
     if (aObserver) {
         nsIObserver* obs = nullptr;
-        if (!mOverlayLoadObservers.IsInitialized()) {
-            mOverlayLoadObservers.Init();
+        if (!mOverlayLoadObservers) {
+          mOverlayLoadObservers = new nsInterfaceHashtable<nsURIHashKey,nsIObserver>;
         }
-        obs = mOverlayLoadObservers.GetWeak(uri);
+        obs = mOverlayLoadObservers->GetWeak(uri);
 
         if (obs) {
             // We don't support loading the same overlay twice into the same
             // document - that doesn't make sense anyway.
             return NS_ERROR_FAILURE;
         }
-        mOverlayLoadObservers.Put(uri, aObserver);
+        mOverlayLoadObservers->Put(uri, aObserver);
     }
     bool shouldReturn, failureFromContent;
     rv = LoadOverlayInternal(uri, true, &shouldReturn, &failureFromContent);
-    if (NS_FAILED(rv) && mOverlayLoadObservers.IsInitialized())
-        mOverlayLoadObservers.Remove(uri); // remove the observer if LoadOverlayInternal generated an error
+    if (NS_FAILED(rv) && mOverlayLoadObservers)
+        mOverlayLoadObservers->Remove(uri); // remove the observer if LoadOverlayInternal generated an error
     return rv;
 }
 
@@ -2879,7 +2878,9 @@ FirePendingMergeNotification(nsIURI* aKey, nsCOMPtr<nsIObserver>& aObserver, voi
 
     typedef nsInterfaceHashtable<nsURIHashKey,nsIObserver> table;
     table* observers = static_cast<table*>(aClosure);
-    observers->Remove(aKey);
+    if (observers) {
+      observers->Remove(aKey);
+    }
 
     return PL_DHASH_REMOVE;
 }
@@ -3125,16 +3126,16 @@ XULDocument::ResumeWalk()
             continue;
         if (NS_FAILED(rv))
             return rv;
-        if (mOverlayLoadObservers.IsInitialized()) {
-            nsIObserver *obs = mOverlayLoadObservers.GetWeak(overlayURI);
+        if (mOverlayLoadObservers) {
+            nsIObserver *obs = mOverlayLoadObservers->GetWeak(overlayURI);
             if (obs) {
                 // This overlay has an unloaded overlay, so it will never
                 // notify. The best we can do is to notify for the unloaded
                 // overlay instead, assuming nobody is already notifiable
                 // for it. Note that this will confuse the observer.
-                if (!mOverlayLoadObservers.GetWeak(uri))
-                    mOverlayLoadObservers.Put(uri, obs);
-                mOverlayLoadObservers.Remove(overlayURI);
+                if (!mOverlayLoadObservers->GetWeak(uri))
+                    mOverlayLoadObservers->Put(uri, obs);
+                mOverlayLoadObservers->Remove(overlayURI);
             }
         }
         if (shouldReturn)
@@ -3226,19 +3227,20 @@ XULDocument::DoneWalking()
 
         // Walk the set of pending load notifications and notify any observers.
         // See below for detail.
-        if (mPendingOverlayLoadNotifications.IsInitialized())
-            mPendingOverlayLoadNotifications.Enumerate(FirePendingMergeNotification, (void*)&mOverlayLoadObservers);
+        if (mPendingOverlayLoadNotifications)
+            mPendingOverlayLoadNotifications->Enumerate(
+                FirePendingMergeNotification, mOverlayLoadObservers.get());
     }
     else {
-        if (mOverlayLoadObservers.IsInitialized()) {
+        if (mOverlayLoadObservers) {
             nsCOMPtr<nsIURI> overlayURI = mCurrentPrototype->GetURI();
             nsCOMPtr<nsIObserver> obs;
             if (mInitialLayoutComplete) {
                 // We have completed initial layout, so just send the notification.
-                mOverlayLoadObservers.Get(overlayURI, getter_AddRefs(obs));
+                mOverlayLoadObservers->Get(overlayURI, getter_AddRefs(obs));
                 if (obs)
                     obs->Observe(overlayURI, "xul-overlay-merged", EmptyString().get());
-                mOverlayLoadObservers.Remove(overlayURI);
+                mOverlayLoadObservers->Remove(overlayURI);
             }
             else {
                 // If we have not yet displayed the document for the first time 
@@ -3258,15 +3260,16 @@ XULDocument::DoneWalking()
                 // XXXbz really, we shouldn't be firing binding constructors
                 // until after StartLayout returns!
 
-                if (!mPendingOverlayLoadNotifications.IsInitialized()) {
-                    mPendingOverlayLoadNotifications.Init();
+                if (!mPendingOverlayLoadNotifications) {
+                    mPendingOverlayLoadNotifications =
+                        new nsInterfaceHashtable<nsURIHashKey,nsIObserver>;
                 }
                 
-                mPendingOverlayLoadNotifications.Get(overlayURI, getter_AddRefs(obs));
+                mPendingOverlayLoadNotifications->Get(overlayURI, getter_AddRefs(obs));
                 if (!obs) {
-                    mOverlayLoadObservers.Get(overlayURI, getter_AddRefs(obs));
+                    mOverlayLoadObservers->Get(overlayURI, getter_AddRefs(obs));
                     NS_ASSERTION(obs, "null overlay load observer?");
-                    mPendingOverlayLoadNotifications.Put(overlayURI, obs);
+                    mPendingOverlayLoadNotifications->Put(overlayURI, obs);
                 }
             }
         }

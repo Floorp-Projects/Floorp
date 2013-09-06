@@ -40,7 +40,8 @@ using namespace mozilla::a11y;
 XULTreeAccessible::
   XULTreeAccessible(nsIContent* aContent, DocAccessible* aDoc,
                     nsTreeBodyFrame* aTreeFrame) :
-  AccessibleWrap(aContent, aDoc)
+  AccessibleWrap(aContent, aDoc),
+  mAccessibleCache(kDefaultTreeCacheSize)
 {
   mType = eXULTreeType;
   mGenericTypes |= eSelect;
@@ -58,8 +59,6 @@ XULTreeAccessible::
     if (autoCompletePopupElm)
       mGenericTypes |= eAutoCompletePopup;
   }
-
-  mAccessibleCache.Init(kDefaultTreeCacheSize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

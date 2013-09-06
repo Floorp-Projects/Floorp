@@ -184,8 +184,7 @@ nsSVGFilterInstance::BuildPrimitives()
   }
 
   // Now fill in all the links
-  nsTHashtable<ImageAnalysisEntry> imageTable;
-  imageTable.Init(10);
+  nsTHashtable<ImageAnalysisEntry> imageTable(10);
 
   for (uint32_t i = 0; i < mPrimitives.Length(); ++i) {
     PrimitiveInfo* info = &mPrimitives[i];

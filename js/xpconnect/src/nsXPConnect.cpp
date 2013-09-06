@@ -1710,15 +1710,9 @@ bool
 IsChromeOrXBL(JSContext* cx, JSObject* /* unused */)
 {
     MOZ_ASSERT(NS_IsMainThread());
-    JSCompartment* c = js::GetContextCompartment(cx);
-
-    // For remote XUL, we run XBL in the XUL scope. Given that we care about
-    // compat and not security for remote XUL, we just always claim to be XBL.
-    //
-    // Note that, for performance, we don't check AllowXULXBLForPrincipal here,
-    // and instead rely on the fact that AllowXBLScope() only returns false in
-    // remote XUL situations.
-    return AccessCheck::isChrome(c) || IsXBLScope(c) || !AllowXBLScope(c);
+    JSCompartment* compartment = js::GetContextCompartment(cx);
+    return AccessCheck::isChrome(compartment) ||
+           IsXBLScope(compartment);
 }
 
 } // namespace dom

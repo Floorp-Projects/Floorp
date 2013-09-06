@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Content Security Policy Frame Ancestors directive</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+  
+</div>
+
+<iframe style="width:100%;height:300px;" id='cspframe'></iframe>
+<iframe style="width:100%;height:300px;" id='cspframe2'></iframe>
+<script class="testbody" type="text/javascript">
+
+var path = "/tests/content/base/test/csp/";
+
+// These are test results: -1 means it hasn't run, 
+// true/false is the pass/fail result.
+var framesThatShouldLoad = {
+  aa_allow: -1,    /* innermost frame allows a */
+  //aa_block: -1,    /* innermost frame denies a */
+  //aa2_block: -1,    /* innermost frame denies a */
+  ab_allow: -1,    /* innermost frame allows a */
+  //ab_block: -1,    /* innermost frame denies a */
+  aba_allow: -1,   /* innermost frame allows b,a */
+  //aba_block: -1,   /* innermost frame denies b */
+  //aba2_block: -1,  /* innermost frame denies a */
+  abb_allow: -1,   /* innermost frame allows b,a */
+  //abb_block: -1,   /* innermost frame denies b */
+  //abb2_block: -1,  /* innermost frame denies a */
+  aa_allow_spec_compliant: -1,    /* innermost frame allows a *
+  //aa_block_spec_compliant: -1,    /* innermost frame denies a */
+  //aa2_block_spec_compliant: -1,    /* innermost frame denies a */
+  ab_allow_spec_compliant: -1,    /* innermost frame allows a */
+  //ab_block_spec_compliant: -1,    /* innermost frame denies a */
+  aba_allow_spec_compliant: -1,   /* innermost frame allows b,a */
+  //aba_block_spec_compliant: -1,   /* innermost frame denies b */
+  //aba2_block_spec_compliant: -1,  /* innermost frame denies a */
+  abb_allow_spec_compliant: -1,   /* innermost frame allows b,a */
+  //abb_block_spec_compliant: -1,   /* innermost frame denies b */
+  //abb2_block_spec_compliant: -1,  /* innermost frame denies a */
+};
+
+var expectedViolationsLeft = 14;
+
+// This is used to watch the blocked data bounce off CSP and allowed data 
+// get sent out to the wire.
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+}
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    // subject should be an nsURI, and should be either allowed or blocked.
+    if (!SpecialPowers.can_QI(subject))
+      return;
+      
+    if (topic === "csp-on-violate-policy") {
+      //these were blocked... record that they were blocked
+      var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
+      window.frameBlocked(asciiSpec, data);
+    }
+  },
+
+  // must eventually call this to remove the listener, 
+  // or mochitests might get borked.
+  remove: function() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+  }
+}
+
+// called when a frame is loaded
+// -- if it's not enumerated above, it should not load!
+var frameLoaded = function(testname, uri) {
+  //test already complete.... forget it... remember the first result.
+  if (window.framesThatShouldLoad[testname] != -1)
+    return;
+
+  if (typeof window.framesThatShouldLoad[testname] === 'undefined') {
+    // uh-oh, we're not expecting this frame to load!
+    ok(false, testname + ' framed site should not have loaded: ' + uri);
+  } else {
+    framesThatShouldLoad[testname] = true;
+    ok(true, testname + ' framed site when allowed by csp (' + uri + ')');
+  }
+  checkTestResults();
+}
+
+// called when a frame is blocked
+// -- we can't determine *which* frame was blocked, but at least we can count them
+var frameBlocked = function(uri, policy) {
+  ok(true, 'a CSP policy blocked frame from being loaded: ' + policy);
+  expectedViolationsLeft--;
+  checkTestResults();
+}
+
+
+// Check to see if all the tests have run
+var checkTestResults = function() {
+  // if any test is incomplete, keep waiting
+  for (var v in framesThatShouldLoad)
+    if(window.framesThatShouldLoad[v] == -1)
+      return;
+
+  if (window.expectedViolationsLeft > 0)
+    return;
+
+  // ... otherwise, finish
+  window.examiner.remove();
+  SimpleTest.finish();
+}
+
+window.addEventListener("message", receiveMessage, false);
+
+function receiveMessage(event) {
+  if (event.data.call && event.data.call == 'frameLoaded')
+    frameLoaded(event.data.testname, event.data.uri);
+}
+
+//////////////////////////////////////////////////////////////////////
+// set up and go
+window.examiner = new examiner();
+SimpleTest.waitForExplicitFinish();
+
+// added this so the tests run even if we don't flip the pref on by default.
+SpecialPowers.pushPrefEnv(
+  {'set':[["security.csp.speccompliant", true]]},
+  function() {
+    // save this for last so that our listeners are registered.
+    // ... this loads the testbed of good and bad requests.
+    document.getElementById('cspframe').src = 'file_CSP_frameancestors_main.html';
+    document.getElementById('cspframe2').src = 'file_CSP_frameancestors_main_spec_compliant.html';
+  });
+
+</script>
+</pre>
+</body>
+</html>

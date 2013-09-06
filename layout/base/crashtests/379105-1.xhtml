@@ -25,7 +25,7 @@ function boom1()
 
 function boom2()
 {
-  var nodes = SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes(xbltarget));
+  var nodes = document.getAnonymousNodes(xbltarget);
   if (!nodes) {
     setTimeout(boom2, 10);
     return;

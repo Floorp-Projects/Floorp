@@ -20,3 +20,10 @@ LIBRARY_NAME = 'accessibility_toolkit_s'
 
 LIBXUL_LIBRARY = True
 
+LOCAL_INCLUDES += [
+    '../base',
+    '../generic',
+    '../html',
+    '../xul',
+]
+

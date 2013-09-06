@@ -191,7 +191,6 @@ public:
 
   void Init(RestyleManager* aRestyleManager) {
     mRestyleManager = aRestyleManager;
-    mPendingRestyles.Init();
   }
 
   uint32_t Count() const {

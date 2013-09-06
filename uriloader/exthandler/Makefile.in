@@ -27,13 +27,6 @@ endif
 
 VPATH		:= $(srcdir) $(srcdir)/$(OSDIR)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-
-CMMSRCS	= nsOSHelperAppService.mm \
-			nsMIMEInfoMac.mm \
-			nsLocalHandlerAppMac.mm \
-			$(NULL)
-endif
 
 LOCAL_INCLUDES = -I$(srcdir)
 

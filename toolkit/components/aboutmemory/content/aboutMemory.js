@@ -166,32 +166,49 @@ function onUnload()
 //---------------------------------------------------------------------------
 
 /**
- * Iterates over each reporter.
+ * Iterates over each reporter and multi-reporter.
  *
- * @param aIgnoreReporter
- *        Function that indicates if we should skip an entire reporter, based
- *        on its name.
- * @param aIgnoreReport
- *        Function that indicates if we should skip a single report from a
- *        reporter, based on its path.
+ * @param aIgnoreSingle
+ *        Function that indicates if we should skip a single reporter, based
+ *        on its path.
+ * @param aIgnoreMulti
+ *        Function that indicates if we should skip a multi-reporter, based on
+ *        its name.
  * @param aHandleReport
- *        The function that's called for each non-skipped report.
+ *        The function that's called for each report.
  */
-function processMemoryReporters(aIgnoreReporter, aIgnoreReport, aHandleReport)
+function processMemoryReporters(aIgnoreSingle, aIgnoreMulti, aHandleReport)
 {
-  let handleReport = function(aProcess, aUnsafePath, aKind, aUnits,
-                              aAmount, aDescription) {
-    if (!aIgnoreReport(aUnsafePath)) {
-      aHandleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount,
-                    aDescription, /* presence = */ undefined);
-    }
-  }
+  // Process each memory reporter with aHandleReport.
+  //
+  // - Note that copying rOrig.amount (which calls a C++ function under the
+  //   IDL covers) to r._amount for every reporter now means that the
+  //   results as consistent as possible -- measurements are made all at
+  //   once before most of the memory required to generate this page is
+  //   allocated.
+  //
+  // - After this point we never use the original memory report again.
 
   let e = gMgr.enumerateReporters();
   while (e.hasMoreElements()) {
-    let mr = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
-    if (!aIgnoreReporter(mr.name)) {
+    let rOrig = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
+    let unsafePath = rOrig.path;
+    if (!aIgnoreSingle(unsafePath)) {
+      aHandleReport(rOrig.process, unsafePath, rOrig.kind, rOrig.units,
+                    rOrig.amount, rOrig.description);
+    }
+  }
+
+  let e = gMgr.enumerateMultiReporters();
+  while (e.hasMoreElements()) {
+    let mr = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
+    if (!aIgnoreMulti(mr.name)) {
       // |collectReports| never passes in a |presence| argument.
+      let handleReport = function(aProcess, aUnsafePath, aKind, aUnits,
+                                  aAmount, aDescription) {
+        aHandleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount,
+                      aDescription, /* presence = */ undefined);
+      }
       mr.collectReports(handleReport, null);
     }
   }
@@ -202,19 +219,19 @@ function processMemoryReporters(aIgnoreReporter, aIgnoreReport, aHandleReport)
  *
  * @param aReports
  *        Array of reports, read from a file or the clipboard.
- * @param aIgnoreReport
- *        Function that indicates if we should skip a single report, based
+ * @param aIgnoreSingle
+ *        Function that indicates if we should skip a single reporter, based
  *        on its path.
  * @param aHandleReport
  *        The function that's called for each report.
  */
-function processMemoryReportsFromFile(aReports, aIgnoreReport, aHandleReport)
+function processMemoryReportsFromFile(aReports, aIgnoreSingle, aHandleReport)
 {
   // Process each memory reporter with aHandleReport.
 
   for (let i = 0; i < aReports.length; i++) {
     let r = aReports[i];
-    if (!aIgnoreReport(r.path)) {
+    if (!aIgnoreSingle(r.path)) {
       aHandleReport(r.process, r.path, r.kind, r.units, r.amount,
                     r.description, r._presence);
     }
@@ -574,7 +591,10 @@ function updateAboutMemoryFromReporters()
 
   try {
     // Process the reports from the memory reporters.
-    appendAboutMemoryMain(processMemoryReporters, gMgr.hasMozMallocUsableSize,
+    let process = function(aIgnoreSingle, aIgnoreMulti, aHandleReport) {
+      processMemoryReporters(aIgnoreSingle, aIgnoreMulti, aHandleReport);
+    }
+    appendAboutMemoryMain(process, gMgr.hasMozMallocUsableSize,
                           /* forceShowSmaps = */ false);
 
   } catch (ex) {
@@ -601,8 +621,8 @@ function updateAboutMemoryFromJSONObject(aObj)
                 "missing 'hasMozMallocUsableSize' property");
     assertInput(aObj.reports && aObj.reports instanceof Array,
                 "missing or non-array 'reports' property");
-    let process = function(aIgnoreReporter, aIgnoreReport, aHandleReport) {
-      processMemoryReportsFromFile(aObj.reports, aIgnoreReport, aHandleReport);
+    let process = function(aIgnoreSingle, aIgnoreMulti, aHandleReport) {
+      processMemoryReportsFromFile(aObj.reports, aIgnoreSingle, aHandleReport);
     }
     appendAboutMemoryMain(process, aObj.hasMozMallocUsableSize,
                           /* forceShowSmaps = */ true);
@@ -953,7 +973,7 @@ function PColl()
  * Processes reports (whether from reporters or from a file) and append the
  * main part of the page.
  *
- * @param aProcessReports
+ * @param aProcess
  *        Function that extracts the memory reports from the reporters or from
  *        file.
  * @param aHasMozMallocUsableSize
@@ -962,10 +982,10 @@ function PColl()
  *        True if we should show the smaps memory reporters even if we're not
  *        in verbose mode.
  */
-function appendAboutMemoryMain(aProcessReports, aHasMozMallocUsableSize,
+function appendAboutMemoryMain(aProcess, aHasMozMallocUsableSize,
                                aForceShowSmaps)
 {
-  let pcollsByProcess = getPCollsByProcess(aProcessReports, aForceShowSmaps);
+  let pcollsByProcess = getPCollsByProcess(aProcess, aForceShowSmaps);
 
   // Sort the processes.
   let processes = Object.keys(pcollsByProcess);
@@ -1023,7 +1043,7 @@ function appendAboutMemoryMain(aProcessReports, aHasMozMallocUsableSize,
  * This function reads all the memory reports, and puts that data in structures
  * that will be used to generate the page.
  *
- * @param aProcessReports
+ * @param aProcessMemoryReports
  *        Function that extracts the memory reports from the reporters or from
  *        file.
  * @param aForceShowSmaps
@@ -1031,7 +1051,7 @@ function appendAboutMemoryMain(aProcessReports, aHasMozMallocUsableSize,
  *        in verbose mode.
  * @return The table of PColls by process.
  */
-function getPCollsByProcess(aProcessReports, aForceShowSmaps)
+function getPCollsByProcess(aProcessMemoryReports, aForceShowSmaps)
 {
   let pcollsByProcess = {};
 
@@ -1040,33 +1060,35 @@ function getPCollsByProcess(aProcessReports, aForceShowSmaps)
   // be in parentheses, so a ')' might appear after the '.'.)
   const gSentenceRegExp = /^[A-Z].*\.\)?$/m;
 
-  // Ignore the "smaps" reporter in non-verbose mode unless we're reading from
-  // a file or the clipboard, and ignore the "compartments" and "ghost-windows"
-  // reporters all the time.  (Note that reports from these reporters can reach
-  // here via a "content-child" reporter if they were in a child process.)
+  // Ignore the "smaps" multi-reporter in non-verbose mode unless we're reading
+  // from a file or the clipboard, and ignore the "compartments" and
+  // "ghost-windows" multi-reporters all the time.  (Note that reports from
+  // these multi-reporters can reach here as single reports if they were in the
+  // child process.)
   //
-  // Also ignore the "resident-fast" reporter; we use the vanilla "resident"
+  // Also ignore the resident-fast reporter; we use the vanilla resident
   // reporter because it's more important that we get accurate results than
   // that we avoid the (small) possibility of a long pause when loading
-  // about:memory.  Furthermore, the "resident" reporter can purge pages on
-  // MacOS, which affects the results of the "resident-fast" reporter, and we
-  // don't want the measurements shown in about:memory to be affected by the
-  // (arbitrary) order of memory reporter execution.
+  // about:memory.
+  //
+  // We don't show both resident and resident-fast because running the resident
+  // reporter can purge pages on MacOS, which affects the results of the
+  // resident-fast reporter.  We don't want about:memory's results to be
+  // affected by the order of memory reporter execution.
 
-  function ignoreReporter(aName)
-  {
-    return (aName === "smaps" && !gVerbose.checked && !aForceShowSmaps) ||
-           aName === "compartments" ||
-           aName === "ghost-windows" ||
-           aName === "resident-fast";
-  }
-
-  function ignoreReport(aUnsafePath)
+  function ignoreSingle(aUnsafePath)
   {
     return (isSmapsPath(aUnsafePath) && !gVerbose.checked && !aForceShowSmaps) ||
            aUnsafePath.startsWith("compartments/") ||
            aUnsafePath.startsWith("ghost-windows/") ||
            aUnsafePath == "resident-fast";
+  }
+
+  function ignoreMulti(aMRName)
+  {
+    return (aMRName === "smaps" && !gVerbose.checked && !aForceShowSmaps) ||
+            aMRName === "compartments" ||
+            aMRName === "ghost-windows";
   }
 
   function handleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount,
@@ -1149,7 +1171,7 @@ function getPCollsByProcess(aProcessReports, aForceShowSmaps)
     }
   }
 
-  aProcessReports(ignoreReporter, ignoreReport, handleReport);
+  aProcessMemoryReports(ignoreSingle, ignoreMulti, handleReport);
 
   return pcollsByProcess;
 }
@@ -2085,18 +2107,18 @@ Compartment.prototype = {
 
 function getCompartmentsByProcess()
 {
-  // Ignore anything that didn't come from the "compartments" reporter.  (Note
-  // reports from this reporter can reach here via a "content-child" reporter
-  // if they were in a child process.)
+  // Ignore anything that didn't come from the "compartments" multi-reporter.
+  // (Note that some such reports can reach here as single reports if they were
+  // in the child process.)
 
-  function ignoreReporter(aName)
-  {
-    return !(aName == "compartments" || aName == "content-child");
-  }
-
-  function ignoreReport(aUnsafePath)
+  function ignoreSingle(aUnsafePath)
   {
     return !aUnsafePath.startsWith("compartments/");
+  }
+
+  function ignoreMulti(aMRName)
+  {
+    return aMRName !== "compartments";
   }
 
   let compartmentsByProcess = {};
@@ -2147,7 +2169,7 @@ function getCompartmentsByProcess()
     }
   }
 
-  processMemoryReporters(ignoreReporter, ignoreReport, handleReport);
+  processMemoryReporters(ignoreSingle, ignoreMulti, handleReport);
 
   return compartmentsByProcess;
 }
@@ -2169,14 +2191,14 @@ GhostWindow.prototype = {
 
 function getGhostWindowsByProcess()
 {
-  function ignoreReporter(aName)
-  {
-    return !(aName == "ghost-windows" || aName == "content-child");
-  }
-
-  function ignoreReport(aUnsafePath)
+  function ignoreSingle(aUnsafePath)
   {
     return !aUnsafePath.startsWith('ghost-windows/')
+  }
+
+  function ignoreMulti(aName)
+  {
+    return aName !== "ghost-windows";
   }
 
   let ghostWindowsByProcess = {};
@@ -2208,7 +2230,7 @@ function getGhostWindowsByProcess()
     }
   }
 
-  processMemoryReporters(ignoreReporter, ignoreReport, handleReport);
+  processMemoryReporters(ignoreSingle, ignoreMulti, handleReport);
 
   return ghostWindowsByProcess;
 }
