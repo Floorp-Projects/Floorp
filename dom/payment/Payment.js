@@ -16,13 +16,11 @@ const PAYMENTCONTENTHELPER_CID =
 const PAYMENT_IPC_MSG_NAMES = ["Payment:Success",
                                "Payment:Failed"];
 
+const PREF_DEBUG = "dom.payment.debug";
+
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
-
-function debug (s) {
-  //dump("-*- PaymentContentHelper: " + s + "\n");
-};
 
 function PaymentContentHelper() {
 };
@@ -52,8 +50,10 @@ PaymentContentHelper.prototype = {
                    .getInterface(Ci.nsIWebNavigation)
                    .QueryInterface(Ci.nsIDocShell);
     if (!docShell.isActive) {
-      debug("The caller application is a background app. No request " +
-            "will be sent");
+      if (this._debug) {
+        this.LOG("The caller application is a background app. No request " +
+                  "will be sent");
+      }
       let runnable = {
         run: function run() {
           Services.DOMRequest.fireError(request, "BACKGROUND_APP");
@@ -80,6 +80,15 @@ PaymentContentHelper.prototype = {
   init: function(aWindow) {
     this._window = aWindow;
     this.initDOMRequestHelper(aWindow, PAYMENT_IPC_MSG_NAMES);
+
+    try {
+      this._debug =
+        Services.prefs.getPrefType(PREF_DEBUG) == Ci.nsIPrefBranch.PREF_BOOL
+        && Services.prefs.getBoolPref(PREF_DEBUG);
+    } catch(e) {
+      this._debug = false;
+    }
+
     return this.pay.bind(this);
   },
 
@@ -88,7 +97,9 @@ PaymentContentHelper.prototype = {
   receiveMessage: function receiveMessage(aMessage) {
     let name = aMessage.name;
     let msg = aMessage.json;
-    debug("Received message '" + name + "': " + JSON.stringify(msg));
+    if (this._debug) {
+      this.LOG("Received message '" + name + "': " + JSON.stringify(msg));
+    }
     let requestId = msg.requestId;
     let request = this.takeRequest(requestId);
     if (!request) {
@@ -102,6 +113,13 @@ PaymentContentHelper.prototype = {
         Services.DOMRequest.fireError(request, msg.errorMsg);
         break;
     }
+  },
+
+  LOG: function LOG(s) {
+    if (!this._debug) {
+      return;
+    }
+    dump("-*- PaymentContentHelper: " + s + "\n");
   }
 };
 
