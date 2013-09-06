@@ -1699,7 +1699,7 @@ GetPropertyIC::update(JSContext *cx, size_t cacheIndex,
     GetPropertyIC &cache = ion->getCache(cacheIndex).toGetProperty();
     RootedPropertyName name(cx, cache.name());
 
-    AutoFlushCache afc ("GetPropertyCache");
+    AutoFlushCache afc ("GetPropertyCache", cx->runtime()->ionRuntime());
 
     // Override the return value if we are invalidated (bug 728188).
     AutoDetectInvalidation adi(cx, vp.address(), ion);
@@ -1861,7 +1861,7 @@ ParallelResult
 GetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex,
                          HandleObject obj, MutableHandleValue vp)
 {
-    AutoFlushCache afc("GetPropertyParCache");
+    AutoFlushCache afc("GetPropertyParCache", slice->runtime()->ionRuntime());
 
     IonScript *ion = GetTopIonJSScript(slice)->parallelIonScript();
     GetPropertyParIC &cache = ion->getCache(cacheIndex).toGetPropertyPar();
@@ -2695,7 +2695,7 @@ bool
 SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
                       HandleValue value)
 {
-    AutoFlushCache afc ("SetPropertyCache");
+    AutoFlushCache afc ("SetPropertyCache", cx->runtime()->ionRuntime());
 
     void *returnAddr;
     RootedScript script(cx, GetTopIonJSScript(cx, &returnAddr));
@@ -3168,7 +3168,7 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
     }
 
     // Override the return value if we are invalidated (bug 728188).
-    AutoFlushCache afc ("GetElementCache");
+    AutoFlushCache afc ("GetElementCache", cx->runtime()->ionRuntime());
     AutoDetectInvalidation adi(cx, res.address(), ion);
 
     RootedId id(cx);
@@ -3419,7 +3419,7 @@ ParallelResult
 GetElementParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
                         HandleValue idval, MutableHandleValue vp)
 {
-    AutoFlushCache afc("GetElementParCache");
+    AutoFlushCache afc("GetElementParCache", slice->runtime()->ionRuntime());
 
     IonScript *ion = GetTopIonJSScript(slice)->parallelIonScript();
     GetElementParIC &cache = ion->getCache(cacheIndex).toGetElementPar();
@@ -3615,7 +3615,7 @@ IsCacheableScopeChain(JSObject *scopeChain, JSObject *holder)
 JSObject *
 BindNameIC::update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain)
 {
-    AutoFlushCache afc ("BindNameCache");
+    AutoFlushCache afc ("BindNameCache", cx->runtime()->ionRuntime());
 
     IonScript *ion = GetTopIonJSScript(cx)->ionScript();
     BindNameIC &cache = ion->getCache(cacheIndex).toBindName();
@@ -3758,7 +3758,7 @@ bool
 NameIC::update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain,
                MutableHandleValue vp)
 {
-    AutoFlushCache afc ("GetNameCache");
+    AutoFlushCache afc ("GetNameCache", cx->runtime()->ionRuntime());
 
     void *returnAddr;
     IonScript *ion = GetTopIonJSScript(cx, &returnAddr)->ionScript();
@@ -3821,7 +3821,7 @@ CallsiteCloneIC::attach(JSContext *cx, IonScript *ion, HandleFunction original,
 JSObject *
 CallsiteCloneIC::update(JSContext *cx, size_t cacheIndex, HandleObject callee)
 {
-    AutoFlushCache afc ("CallsiteCloneCache");
+    AutoFlushCache afc ("CallsiteCloneCache", cx->runtime()->ionRuntime());
 
     // Act as the identity for functions that are not clone-at-callsite, as we
     // generate this cache as long as some callees are clone-at-callsite.
