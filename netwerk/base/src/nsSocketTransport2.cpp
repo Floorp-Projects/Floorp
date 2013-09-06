@@ -1230,8 +1230,8 @@ nsSocketTransport::InitiateSocket()
     }
 #endif
 
-    // 
-    // Initiate the connect() to the host...  
+    //
+    // Initiate the connect() to the host...
     //
     PRNetAddr prAddr;
     NetAddrToPRNetAddr(&mNetAddr, &prAddr);
