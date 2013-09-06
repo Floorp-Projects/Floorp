@@ -925,6 +925,18 @@ function legible_exception(exception)
   }
 }
 
+function do_check_instanceof(value, constructor,
+                             stack=Components.stack.caller, todo=false) {
+  do_report_result(value instanceof constructor,
+                   "value should be an instance of " + constructor.name,
+                   stack, todo);
+}
+
+function todo_check_instanceof(value, constructor,
+                             stack=Components.stack.caller) {
+  do_check_instanceof(value, constructor, stack, true);
+}
+
 function do_test_pending(aName) {
   ++_tests_pending;
 

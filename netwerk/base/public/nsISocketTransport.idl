@@ -27,12 +27,15 @@ native NetAddr(mozilla::net::NetAddr);
 interface nsISocketTransport : nsITransport 
 {
     /**
-     * Get the host for the underlying socket connection.
+     * Get the peer's host for the underlying socket connection.
+     * For Unix domain sockets, this is a pathname, or the empty string for
+     * unnamed and abstract socket addresses.
      */
     readonly attribute AUTF8String host;
 
     /**
      * Get the port for the underlying socket connection.
+     * For Unix domain sockets, this is zero.
      */
     readonly attribute long port;
 
