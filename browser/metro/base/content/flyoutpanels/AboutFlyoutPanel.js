@@ -47,7 +47,16 @@ let AboutFlyoutPanel = {
 #endif
   },
 
-  handleEvent: function Appbar_handleEvent(aEvent) {
+  onPolicyClick: function(aEvent) {
+    if (aEvent.button != 0) {
+      return;
+    }
+    FlyoutPanelsUI.hide();
+    let url = Services.urlFormatter.formatURLPref("app.privacyURL");
+    BrowserUI.addAndShowTab(url, Browser.selectedTab);
+  },
+
+  handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case 'MozFlyoutPanelShowing':
 #ifdef MOZ_UPDATER

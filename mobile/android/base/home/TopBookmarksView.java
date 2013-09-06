@@ -222,6 +222,10 @@ public class TopBookmarksView extends GridView {
      * A ContextMenuInfo for TopBoomarksView that adds details from the cursor.
      */
     public static class TopBookmarksContextMenuInfo extends AdapterContextMenuInfo {
+
+        // URL to Title replacement regex.
+        private static final String REGEX_URL_TO_TITLE = "^([a-z]+://)?(www\\.)?";
+
         public String url;
         public String title;
         public boolean isPinned;
@@ -236,6 +240,10 @@ public class TopBookmarksView extends GridView {
             url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
             title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
             isPinned = ((TopSitesCursorWrapper) cursor).isPinned();
+        }
+
+        public String getDisplayTitle() {
+            return TextUtils.isEmpty(title) ? url.replaceAll(REGEX_URL_TO_TITLE, "") : title;
         }
     }
 }
