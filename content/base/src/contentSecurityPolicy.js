@@ -180,19 +180,19 @@ ContentSecurityPolicy.prototype = {
     switch (aViolationType) {
     case Ci.nsIContentSecurityPolicy.VIOLATION_TYPE_INLINE_STYLE:
       if (!this._policy.allowsInlineStyles)
-        this._asyncReportViolation('self',null,'inline style base restriction',
+        this._asyncReportViolation('self', null, CSPLocalizer.getStr("inlineStyleBlocked"),
                                    'violated base restriction: Inline Stylesheets will not apply',
                                    aSourceFile, aScriptSample, aLineNum);
       break;
     case Ci.nsIContentSecurityPolicy.VIOLATION_TYPE_INLINE_SCRIPT:
       if (!this._policy.allowsInlineScripts)
-        this._asyncReportViolation('self', null, 'inline script base restriction',
+        this._asyncReportViolation('self', null, CSPLocalizer.getStr("inlineScriptBlocked"),
                                    'violated base restriction: Inline Scripts will not execute',
                                    aSourceFile, aScriptSample, aLineNum);
       break;
     case Ci.nsIContentSecurityPolicy.VIOLATION_TYPE_EVAL:
       if (!this._policy.allowsEvalInScripts)
-        this._asyncReportViolation('self', null, 'eval script base restriction',
+        this._asyncReportViolation('self', null, CSPLocalizer.getStr("scriptFromStringBlocked"),
                                    'violated base restriction: Code will not be created from strings',
                                    aSourceFile, aScriptSample, aLineNum);
       break;
@@ -362,9 +362,9 @@ ContentSecurityPolicy.prototype = {
 
       var violationMessage = null;
       if (blockedUri["asciiSpec"]) {
-         violationMessage = CSPLocalizer.getFormatStr("directiveViolatedWithURI", [violatedDirective, blockedUri.asciiSpec]);
+         violationMessage = CSPLocalizer.getFormatStr("CSPViolationWithURI", [violatedDirective, blockedUri.asciiSpec]);
       } else {
-         violationMessage = CSPLocalizer.getFormatStr("directiveViolated", [violatedDirective]);
+         violationMessage = CSPLocalizer.getFormatStr("CSPViolation", [violatedDirective]);
       }
       this._policy.log(WARN_FLAG, violationMessage,
                         (aSourceFile) ? aSourceFile : null,

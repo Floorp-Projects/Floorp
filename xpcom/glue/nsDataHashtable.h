@@ -20,6 +20,15 @@
 template<class KeyClass,class DataType>
 class nsDataHashtable :
   public nsBaseHashtable<KeyClass,DataType,DataType>
-{ };
+{
+public:
+  nsDataHashtable()
+  {
+  }
+  explicit nsDataHashtable(uint32_t aInitSize)
+    : nsBaseHashtable<KeyClass,DataType,DataType>(aInitSize)
+  {
+  }
+};
 
 #endif // nsDataHashtable_h__

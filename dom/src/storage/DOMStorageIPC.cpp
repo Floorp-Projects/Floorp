@@ -58,7 +58,6 @@ DOMStorageDBChild::DOMStorageDBChild(DOMLocalStorageManager* aManager)
   , mStatus(NS_OK)
   , mIPCOpen(false)
 {
-  mLoadingCaches.Init();
 }
 
 DOMStorageDBChild::~DOMStorageDBChild()
@@ -68,11 +67,11 @@ DOMStorageDBChild::~DOMStorageDBChild()
 nsTHashtable<nsCStringHashKey>&
 DOMStorageDBChild::ScopesHavingData()
 {
-  if (!mScopesHavingData.IsInitialized()) {
-    mScopesHavingData.Init();
+  if (!mScopesHavingData) {
+    mScopesHavingData = new nsTHashtable<nsCStringHashKey>;
   }
 
-  return mScopesHavingData;
+  return *mScopesHavingData;
 }
 
 nsresult
@@ -201,8 +200,7 @@ DOMStorageDBChild::ShouldPreloadScope(const nsACString& aScope)
   // Return true if we didn't receive the aScope list yet.
   // I tend to rather preserve a bit of early-after-start performance
   // then a bit of memory here.
-  return !mScopesHavingData.IsInitialized() ||
-         mScopesHavingData.Contains(aScope);
+  return !mScopesHavingData || mScopesHavingData->Contains(aScope);
 }
 
 bool

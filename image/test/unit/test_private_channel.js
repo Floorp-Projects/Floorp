@@ -1,6 +1,10 @@
-Components.utils.import("resource://testing-common/httpd.js");
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cr = Components.results;
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://testing-common/httpd.js");
 
 var server = new HttpServer();
 server.registerPathHandler('/image.png', imageHandler);
@@ -78,20 +82,24 @@ function loadImage(isPrivate, callback) {
 }
 
 function run_loadImage_tests() {
-  let cs = Cc["@mozilla.org/network/cache-service;1"].getService(Ci.nsICacheService);
-  cs.evictEntries(Ci.nsICache.STORE_ANYWHERE);
-
-  gHits = 0;
-  loadImage(false, function() {
+  function observer() {
+    Services.obs.removeObserver(observer, "cacheservice:empty-cache");
+    gHits = 0;
     loadImage(false, function() {
-      loadImage(true, function() {
+      loadImage(false, function() {
         loadImage(true, function() {
-          do_check_eq(gHits, 2);
-          server.stop(do_test_finished);
+          loadImage(true, function() {
+            do_check_eq(gHits, 2);
+            server.stop(do_test_finished);
+          });
         });
       });
     });
-  });
+  }
+
+  Services.obs.addObserver(observer, "cacheservice:empty-cache", false);
+  let cs = Cc["@mozilla.org/network/cache-service;1"].getService(Ci.nsICacheService);
+  cs.evictEntries(Ci.nsICache.STORE_ANYWHERE);
 }
 
 function cleanup()

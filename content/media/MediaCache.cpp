@@ -850,7 +850,6 @@ MediaCache::SwapBlocks(int32_t aBlockIndex1, int32_t aBlockIndex2)
   mFreeBlocks.NotifyBlockSwapped(aBlockIndex1, aBlockIndex2);
 
   nsTHashtable<nsPtrHashKey<MediaCacheStream> > visitedStreams;
-  visitedStreams.Init();
 
   for (int32_t i = 0; i < 2; ++i) {
     for (uint32_t j = 0; j < blocks[i]->mOwners.Length(); ++j) {

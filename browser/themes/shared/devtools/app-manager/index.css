@@ -1,0 +1,80 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+* {
+  margin: 0;
+  padding: 0;
+  -moz-box-sizing: border-box;
+  font-family: Lucida Grande, Helvetica, Helvetica Neue, sans-serif;
+}
+
+#tabs {
+  box-shadow: inset -1px 0 5px rgba(0,0,0,0.9);
+  background: #22272D;
+}
+
+.button {
+  width: 80px;
+  height: 80px;
+  -moz-appearance: none;
+  border: none;
+  border-top: 1px solid #323234;
+  border-bottom: 1px solid #121214;
+  background-color: transparent;
+  color: white;
+  cursor: pointer;
+  text-align: center;
+  -moz-box-align: end;
+  font-size: 10px;
+  text-shadow: 0 1px 2px #111;
+  color: #9FA6AD;
+}
+
+.button[selected] {
+  color: #26A6DE;
+  border-color: #191B1E;
+  box-shadow: inset -5px 0 5px #111;
+}
+
+.button::-moz-focus-inner {
+  border-width: 0;
+}
+
+.panel {
+  border-width: 0;
+}
+
+.panel:not([selected="true"]) {
+  display: none;
+}
+
+.projects-button {
+  background: url('chrome://browser/skin/devtools/app-manager/index-icons.svg') no-repeat;
+  background-position: left -5px;
+}
+
+.projects-button[selected] {
+  background-position: right -5px;
+}
+
+.device-button {
+  background-image: url('chrome://browser/skin/devtools/app-manager/index-icons.svg'), radial-gradient(at center left, red 40%, transparent);
+  background-position: left -85px, top left;
+  background-repeat: no-repeat, no-repeat;
+  background-size: 160px 160px, 2px 80px;
+}
+
+.connected .device-button {
+  background-image: url('chrome://browser/skin/devtools/app-manager/index-icons.svg'), radial-gradient(at center left, #B1FC0D 40%, transparent);
+}
+
+.device-button[selected] {
+  background-position: right -85px, top left;
+}
+
+#connection-footer {
+  border-width: 0;
+  height: 50px;
+  min-height: 50px;
+}

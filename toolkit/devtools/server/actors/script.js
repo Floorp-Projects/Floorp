@@ -3376,8 +3376,6 @@ function ThreadSources(aThreadActor, aUseSourceMaps, aAllowPredicate,
   this._allow = aAllowPredicate;
   this._onNewSource = aOnNewSource;
 
-  // source map URL --> promise of SourceMapConsumer
-  this._sourceMaps = Object.create(null);
   // generated source url --> promise of SourceMapConsumer
   this._sourceMapsByGeneratedSource = Object.create(null);
   // original source url --> promise of SourceMapConsumer
@@ -3450,7 +3448,6 @@ ThreadSources.prototype = {
       })
       .then(null, (e) => {
         reportError(e);
-        delete this._sourceMaps[this._normalize(aScript.sourceMapURL, aScript.url)];
         delete this._sourceMapsByGeneratedSource[aScript.url];
         return [this.source(aScript.url)];
       })
@@ -3465,9 +3462,6 @@ ThreadSources.prototype = {
    * |aScript| must have a non-null sourceMapURL.
    */
   sourceMap: function TS_sourceMap(aScript) {
-    if (aScript.url in this._sourceMapsByGeneratedSource) {
-      return this._sourceMapsByGeneratedSource[aScript.url];
-    }
     dbg_assert(aScript.sourceMapURL, "Script should have a sourceMapURL");
     let sourceMapURL = this._normalize(aScript.sourceMapURL, aScript.url);
     let map = this._fetchSourceMap(sourceMapURL, aScript.url)
@@ -3495,17 +3489,12 @@ ThreadSources.prototype = {
    *        them from aScriptURL.
    */
   _fetchSourceMap: function TS__fetchSourceMap(aAbsSourceMapURL, aScriptURL) {
-    if (aAbsSourceMapURL in this._sourceMaps) {
-      return this._sourceMaps[aAbsSourceMapURL];
-    }
-
-    let promise = fetch(aAbsSourceMapURL).then(({ content }) => {
-      let map = new SourceMapConsumer(content);
-      this._setSourceMapRoot(map, aAbsSourceMapURL, aScriptURL);
-      return map;
-    });
-    this._sourceMaps[aAbsSourceMapURL] = promise;
-    return promise;
+    return fetch(aAbsSourceMapURL, { loadFromCache: false })
+      .then(({ content }) => {
+        let map = new SourceMapConsumer(content);
+        this._setSourceMapRoot(map, aAbsSourceMapURL, aScriptURL);
+        return map;
+      });
   },
 
   /**
@@ -3731,7 +3720,10 @@ function fetch(aURL, aOptions={ loadFromCache: true }) {
       try {
         NetUtil.asyncFetch(url, function onFetch(aStream, aStatus, aRequest) {
           if (!Components.isSuccessCode(aStatus)) {
-            deferred.reject(new Error("Request failed: " + url));
+            deferred.reject(new Error("Request failed with status code = "
+                                      + aStatus
+                                      + " after NetUtil.asyncFetch for url = "
+                                      + url));
             return;
           }
 
@@ -3741,7 +3733,7 @@ function fetch(aURL, aOptions={ loadFromCache: true }) {
           aStream.close();
         });
       } catch (ex) {
-        deferred.reject(new Error("Request failed: " + url));
+        deferred.reject(ex);
       }
       break;
 
@@ -3759,7 +3751,10 @@ function fetch(aURL, aOptions={ loadFromCache: true }) {
       let streamListener = {
         onStartRequest: function(aRequest, aContext, aStatusCode) {
           if (!Components.isSuccessCode(aStatusCode)) {
-            deferred.reject(new Error("Request failed: " + url));
+            deferred.reject(new Error("Request failed with status code = "
+                                      + aStatusCode
+                                      + " in onStartRequest handler for url = "
+                                      + url));
           }
         },
         onDataAvailable: function(aRequest, aContext, aStream, aOffset, aCount) {
@@ -3767,7 +3762,10 @@ function fetch(aURL, aOptions={ loadFromCache: true }) {
         },
         onStopRequest: function(aRequest, aContext, aStatusCode) {
           if (!Components.isSuccessCode(aStatusCode)) {
-            deferred.reject(new Error("Request failed: " + url));
+            deferred.reject(new Error("Request failed with status code = "
+                                      + aStatusCode
+                                      + " in onStopRequest handler for url = "
+                                      + url));
             return;
           }
 

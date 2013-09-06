@@ -1,0 +1,200 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/************** LAYOUT **************/
+
+#connection-footer {
+  display: flex;
+  flex-direction: column;
+  height: 50px;
+}
+
+#banners-and-logs {
+  display: flex;
+}
+
+#logs {
+  display: flex;
+  width: 40%;
+  padding: 0;
+  width: 100%;
+}
+
+.banner {
+  display: none;
+  width: 60%;
+}
+
+#connection-footer[status="connected"]     #banner-connected,
+#connection-footer[status="connecting"]    #banner-connecting,
+#connection-footer[status="disconnected"]  #banner-disconnected,
+#connection-footer[status="disconnecting"] #banner-disconnecting {
+  display: flex;
+}
+
+body.edit-connection .banner {
+  display: none !important;
+}
+
+body.edit-connection #banner-editing {
+  display: flex !important;
+}
+
+#banner-logs {
+  width: 40%;
+  display: flex;
+}
+
+#logs > pre {
+  overflow: auto;
+  white-space: pre-line;
+}
+
+#status.banner-box {
+  width: 100% !important;
+}
+
+.banner-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+}
+
+#banner-connected > .banner-box {
+  align-items: flex-start;
+}
+
+#start-simulator-box {
+  display: inline;
+}
+
+#start-simulator-box[simulators-count="0"] {
+  display: none;
+}
+
+/************** PIXELS **************/
+
+* {
+  margin: 0;
+  padding: 0;
+  -moz-box-sizing: border-box;
+  font-size: 0.9rem;
+}
+
+body {
+  color: #333;
+  background-color: white;
+  font-family: Lucida Grande, Helvetica, Helvetica Neue, sans-serif;
+}
+
+button {
+  background: linear-gradient(to bottom, #49535C, #394148);
+  box-shadow: 0px 1px 1px #3C444D, inset 0 1px 0px rgba(255,255,255,0.1);
+  color: #9FA6AD;
+  text-shadow: 0px 1px 1px rgba(0,0,0,0.6);
+  border: 1px solid #111;
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 3px 10px;
+}
+
+button.left {
+  margin-right: 0px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+button.right {
+  margin-left: -6px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+button.action-primary {
+  background: linear-gradient(to bottom, #276DA3, #1E5580);
+  color: #EEE;
+}
+
+button.action-cancel {
+  background: linear-gradient(to bottom, #B32B02, #942300);
+  color: #EEE;
+}
+
+#banners-and-logs {
+  border-top: #111 solid;
+  border-width: 1px 0;
+  background: linear-gradient(to bottom, #323A42, #29313A);
+  color: #A8BABF;
+  box-shadow: inset 0 0 1px #424A51;
+}
+
+#status {
+  background: linear-gradient(to bottom, #454F59, #404952);
+  box-shadow: inset 0 0 1px #606D78, inset 0 1px 0 #5E6973;
+}
+
+#logs > pre {
+  border: 1px solid #111;
+  box-shadow: 0px 1px 1px #49525A, inset 0 0 5px rgba(0,0,0,0.3);
+  font-size: 10px;
+  background: #22272D;
+  padding: 5px;
+  height: 100%;
+  padding-left: 20px;
+  position: relative;
+}
+
+#logs > pre span{
+  text-shadow: 0 1px 2px #000;
+  color: #3195FB;
+  position: fixed;
+  right: calc(30% - 15px);
+  bottom: -1px;
+}
+
+#logs > pre b {
+  font-size: 10px;
+  color: #70C4FF;
+}
+
+.banner-box {
+  box-shadow: inset 0 0 1px #667480, inset 0 1px 0 #5E6973;
+  border-right: 1px solid #111;
+  background-position: center right;
+  background-size: 1px 100%;
+  background-repeat: no-repeat;
+  padding: 10px 20px;
+  position: relative;
+}
+
+.connected-status {
+  color: #B3BFC9;
+  text-shadow: 0px 1px 2px rgba(0,0,0,0.9);
+  padding-bottom: 10px;
+}
+
+.connected-status {
+  font-size: 150%;
+  top: 10%;
+  padding-right: 3px;
+  position: relative;
+}
+
+.connected-indicator {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 0px 1px rgba(255,255,255,0.3);
+  height: 100%;
+  flex: 0 0 10px;
+}
+
+#banner-connected .connected-indicator,
+#banner-connecting .connected-indicator {
+  background: linear-gradient(to bottom, #69B8FF, #339FFF );
+}
+
+#banner-disconnected .connected-indicator,
+#banner-editing .connected-indicator,
+#banner-disconnecting .connected-indicator {
+  background: linear-gradient(to bottom, #375A87, #1C4375 );
+}

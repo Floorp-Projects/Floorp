@@ -1122,7 +1122,7 @@ SourceScripts.prototype = {
         window.clearTimeout(fetchTimeout);
       }
       if (aResponse.error) {
-        deferred.reject([aSource, aResponse.message]);
+        deferred.reject([aSource, aResponse.message || aResponse.error]);
       } else {
         deferred.resolve([aSource, aResponse.source]);
       }

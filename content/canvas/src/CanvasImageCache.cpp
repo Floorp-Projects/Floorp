@@ -97,7 +97,6 @@ public:
       sPrefsInitialized = true;
       Preferences::AddIntVarCache(&sCanvasImageCacheLimit, "canvas.image.cache.limit", 0);
     }
-    mCache.Init();
   }
   ~ImageCache() {
     AgeAllGenerations();

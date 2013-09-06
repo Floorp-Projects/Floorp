@@ -58,9 +58,7 @@ class TestRecursiveMakeBackend(BackendTester):
             '',
             'FOO := foo',
             '',
-            'ifndef INCLUDED_RULES_MK',
-            'include $(topsrcdir)/config/rules.mk',
-            'endif',
+            'include $(topsrcdir)/config/recurse.mk',
         ])
 
     def test_missing_makefile_in(self):
@@ -71,7 +69,7 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertTrue(os.path.exists(p))
 
         lines = [l.strip() for l in open(p, 'rt').readlines()]
-        self.assertEqual(len(lines), 11)
+        self.assertEqual(len(lines), 9)
 
         self.assertTrue(lines[0].startswith('# THIS FILE WAS AUTOMATICALLY'))
 
