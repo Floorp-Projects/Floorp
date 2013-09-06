@@ -113,6 +113,12 @@ MetroAppShell::Run(void)
       sFrameworkView->ActivateView();
       rv = nsBaseAppShell::Run();
       mozilla::widget::StopAudioSession();
+      // This calls XRE_metroShutdown() in xre. This will also destroy
+      // MessagePump.
+      sMetroApp->ShutdownXPCOM();
+      // This will free the real main thread in CoreApplication::Run()
+      // once winrt cleans up this thread.
+      sMetroApp->CoreExit();
     break;
   }
 
@@ -164,39 +170,11 @@ MetroAppShell::ProcessNextNativeEvent(bool mayWait)
   return ProcessOneNativeEventIfPresent();
 }
 
-// Results from a call to appstartup->quit, which fires a final nsAppExitEvent
-// event which calls us here. This is on the metro main thread. We want to
-// call xpcom shutdown here, but we need to wait until the runnable that fires
-// this is off the stack. See NativeEventCallback below.
-NS_IMETHODIMP
-MetroAppShell::Exit(void)
-{
-  LogFunction();
-  mExiting = true;
-  return NS_OK;
-}
-
 void
 MetroAppShell::NativeCallback()
 {
   NS_ASSERTION(NS_IsMainThread(), "Native callbacks must be on the metro main thread");
   NativeEventCallback();
-
-  // Handle shutdown after Exit() is called and unwinds.
-  if (mExiting) {
-    // shutdown fires events, don't recurse
-    static bool sShutdown = false;
-    if (sShutdown)
-      return;
-    sShutdown = true;
-    if (sMetroApp) {
-      // This calls XRE_metroShutdown() in xre
-      sMetroApp->ShutdownXPCOM();
-      // This will free the real main thread in CoreApplication::Run()
-      // once winrt cleans up this thread.
-      sMetroApp->CoreExit();
-    }
-  }
 }
 
 // static
