@@ -145,12 +145,11 @@ MOCHITEST_BROWSER_PAGES = \
 	test-step-out.html \
 	$(NULL)
 
-ifneq (Linux,$(OS_ARCH))
+# Bug 847588, bug 860349 - Disabled for intermittent hangs
+ifeq (,$(filter Darwin Linux,$(OS_ARCH)))
 MOCHITEST_BROWSER_TESTS += \
 	browser_dbg_createChrome.js \
 	$(NULL)
-else
-$(browser_dbg_createChrome.js disabled to fix for ubuntu hangs, bug 847558)
 endif
 
 MOCHITEST_BROWSER_FILES_PARTS = MOCHITEST_BROWSER_TESTS MOCHITEST_BROWSER_PAGES
