@@ -1431,6 +1431,9 @@ nsDocument::~nsDocument()
     }
 
     if (!isAboutScheme) {
+      // Record the page load
+      uint32_t pageLoaded = 1;
+      Accumulate(Telemetry::MIXED_CONTENT_UNBLOCK_COUNTER, pageLoaded);
       // Record the mixed content status of the docshell in Telemetry
       enum {
         NO_MIXED_CONTENT = 0, // There is no Mixed Content on the page

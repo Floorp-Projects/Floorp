@@ -286,6 +286,10 @@ nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame,
                                                       const nsPoint& aToReferenceFrame,
                                                       const nsIntRect& aInvalidRect)
 {
+  if (aInvalidRect.IsEmpty()) {
+    return nsIntRect();
+  }
+
   // Don't bother calling GetEffectProperties; the filter property should
   // already have been set up during reflow/ComputeFrameEffectsRect
   nsIFrame* firstFrame =

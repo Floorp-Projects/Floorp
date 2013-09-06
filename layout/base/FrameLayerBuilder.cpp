@@ -2661,7 +2661,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
   }
   gfxMatrix transform2d;
   if (aContainerFrame &&
-      aState == LAYER_INACTIVE &&
+      (aState == LAYER_INACTIVE || aState == LAYER_SVG_EFFECTS) &&
       (!aTransform || (aTransform->Is2D(&transform2d) &&
                        !transform2d.HasNonTranslation()))) {
     // When we have an inactive ContainerLayer, translate the container by the offset to the
@@ -2674,8 +2674,8 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
     nsPoint appUnitOffset = aDisplayListBuilder->ToReferenceFrame(aContainerFrame);
     nscoord appUnitsPerDevPixel = aContainerFrame->PresContext()->AppUnitsPerDevPixel();
     offset = nsIntPoint(
-        int32_t(NSAppUnitsToDoublePixels(appUnitOffset.x, appUnitsPerDevPixel)*aIncomingScale.mXScale),
-        int32_t(NSAppUnitsToDoublePixels(appUnitOffset.y, appUnitsPerDevPixel)*aIncomingScale.mYScale));
+        NS_lround(NSAppUnitsToDoublePixels(appUnitOffset.x, appUnitsPerDevPixel)*aIncomingScale.mXScale),
+        NS_lround(NSAppUnitsToDoublePixels(appUnitOffset.y, appUnitsPerDevPixel)*aIncomingScale.mYScale));
   }
   transform = transform * gfx3DMatrix::Translation(offset.x + aIncomingScale.mOffset.x, offset.y + aIncomingScale.mOffset.y, 0);
 

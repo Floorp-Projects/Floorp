@@ -8,7 +8,6 @@
 #include "DOMMediaStream.h"
 #include "nsIUUIDGenerator.h"
 #include "nsServiceManagerUtils.h"
-#include "MediaStreamGraph.h"
 
 namespace mozilla {
 namespace dom {

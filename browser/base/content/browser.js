@@ -6606,6 +6606,11 @@ var gIdentityHandler = {
         label: gNavigatorBundle.getString("mixedContentBlocked.unblock.label"),
         accessKey: gNavigatorBundle.getString("mixedContentBlocked.unblock.accesskey"),
         callback: function() {
+          // Use telemetry to measure how often unblocking happens
+          const kMIXED_CONTENT_UNBLOCK_EVENT = 2;
+          let histogram =
+            Services.telemetry.getHistogramById("MIXED_CONTENT_UNBLOCK_COUNTER");
+          histogram.add(kMIXED_CONTENT_UNBLOCK_EVENT);
           // Reload the page with the content unblocked
           BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_ALLOW_MIXED_CONTENT);
         }

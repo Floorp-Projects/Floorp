@@ -78,6 +78,8 @@ int nr_ice_peer_ctx_log_state(nr_ice_peer_ctx *pctx);
 int nr_ice_peer_ctx_stream_done(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream);
 int nr_ice_peer_ctx_find_component(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str, int component_id, nr_ice_component **compp);
 int nr_ice_peer_ctx_deliver_packet_maybe(nr_ice_peer_ctx *pctx, nr_ice_component *comp, nr_transport_addr *source_addr, UCHAR *data, int len);
+int nr_ice_peer_ctx_disable_component(nr_ice_peer_ctx *pctx, nr_ice_media_stream *lstream, int component_id);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

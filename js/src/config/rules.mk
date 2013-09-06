@@ -436,7 +436,10 @@ endif
 
 ifdef MACH
 ifndef NO_BUILDSTATUS_MESSAGES
-BUILDSTATUS=@echo "BUILDSTATUS $1"
+define BUILDSTATUS
+@echo "BUILDSTATUS $1"
+
+endef
 endif
 endif
 
@@ -457,7 +460,6 @@ $(call SUBMAKE,$(4),$(3),$(5))
 $(call BUILDSTATUS,TIERDIR_FINISH $(1) $(2) $(3))
 
 endef # Ths empty line is important.
-
 
 ifneq (,$(strip $(DIRS)))
 LOOP_OVER_DIRS = \
@@ -688,12 +690,11 @@ SUBMAKEFILES += $(addsuffix /Makefile, $(DIRS) $(TOOL_DIRS) $(PARALLEL_DIRS))
 # of something else. Makefiles which use this var *must* provide a sensible
 # default rule before including rules.mk
 ifndef SUPPRESS_DEFAULT_RULES
-ifndef TIERS
 default all::
 	$(MAKE) export
+	$(MAKE) compile
 	$(MAKE) libs
 	$(MAKE) tools
-endif # TIERS
 endif # SUPPRESS_DEFAULT_RULES
 
 ifeq ($(findstring s,$(filter-out --%, $(MAKEFLAGS))),)
@@ -730,6 +731,8 @@ GLOBAL_DEPS += Makefile.in
 endif
 
 ##############################################
+compile:: $(OBJS) $(HOST_OBJS)
+
 include $(topsrcdir)/config/makefiles/target_libs.mk
 
 ##############################################
