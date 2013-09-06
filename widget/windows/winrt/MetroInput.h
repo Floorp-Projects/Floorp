@@ -220,10 +220,9 @@ private:
   // the updated touchpoint info and record the fact that the touchpoint
   // has changed.  If ever we try to update a touchpoint has already
   // changed, we dispatch a touch event containing all the changed touches.
-  nsEventStatus mTouchEventStatus;
   nsTouchEvent mTouchEvent;
-  void DispatchPendingTouchEvent(bool aDispatchToAPZC);
-  void DispatchPendingTouchEvent(nsEventStatus& status, bool aDispatchToAPZC);
+  void DispatchPendingTouchEvent();
+  void DispatchPendingTouchEvent(nsEventStatus& status);
   nsBaseHashtable<nsUint32HashKey,
                   nsRefPtr<mozilla::dom::Touch>,
                   nsRefPtr<mozilla::dom::Touch> > mTouches;
