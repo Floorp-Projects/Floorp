@@ -574,6 +574,31 @@ nsSocketTransportService::CreateTransport(const char **types,
 }
 
 NS_IMETHODIMP
+nsSocketTransportService::CreateUnixDomainTransport(nsIFile *aPath,
+                                                    nsISocketTransport **result)
+{
+    nsresult rv;
+
+    NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
+
+    nsAutoCString path;
+    rv = aPath->GetNativePath(path);
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsRefPtr<nsSocketTransport> trans = new nsSocketTransport();
+    if (!trans)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = trans->InitWithFilename(path.get());
+    if (NS_FAILED(rv))
+        return rv;
+
+    trans.forget(result);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSocketTransportService::GetAutodialEnabled(bool *value)
 {
     *value = mAutodialEnabled;

@@ -868,6 +868,75 @@ function format_pattern_match_failure(diagnosis, indent="") {
   return indent + a;
 }
 
+// Check that |func| throws an nsIException that has
+// |Components.results[resultName]| as the value of its 'result' property.
+function do_check_throws_nsIException(func, resultName,
+                                      stack=Components.stack.caller, todo=false)
+{
+  let expected = Components.results[resultName];
+  if (typeof expected !== 'number') {
+    do_throw("do_check_throws_nsIException requires a Components.results" +
+             " property name, not " + uneval(resultName), stack);
+  }
+
+  let msg = ("do_check_throws_nsIException: func should throw" +
+             " an nsIException whose 'result' is Components.results." +
+             resultName);
+
+  try {
+    func();
+  } catch (ex) {
+    if (!(ex instanceof Components.interfaces.nsIException) ||
+        ex.result !== expected) {
+      do_report_result(false, msg + ", threw " + legible_exception(ex) +
+                       " instead", stack, todo);
+    }
+
+    do_report_result(true, msg, stack, todo);
+    return;
+  }
+
+  // Call this here, not in the 'try' clause, so do_report_result's own
+  // throw doesn't get caught by our 'catch' clause.
+  do_report_result(false, msg + ", but returned normally", stack, todo);
+}
+
+// Produce a human-readable form of |exception|. This looks up
+// Components.results values, tries toString methods, and so on.
+function legible_exception(exception)
+{
+  switch (typeof exception) {
+    case 'object':
+    if (exception instanceof Components.interfaces.nsIException) {
+      return "nsIException instance: " + uneval(exception.toString());
+    }
+    return exception.toString();
+
+    case 'number':
+    for (let name in Components.results) {
+      if (exception === Components.results[name]) {
+        return "Components.results." + name;
+      }
+    }
+
+    // Fall through.
+    default:
+    return uneval(exception);
+  }
+}
+
+function do_check_instanceof(value, constructor,
+                             stack=Components.stack.caller, todo=false) {
+  do_report_result(value instanceof constructor,
+                   "value should be an instance of " + constructor.name,
+                   stack, todo);
+}
+
+function todo_check_instanceof(value, constructor,
+                             stack=Components.stack.caller) {
+  do_check_instanceof(value, constructor, stack, true);
+}
+
 function do_test_pending(aName) {
   ++_tests_pending;
 

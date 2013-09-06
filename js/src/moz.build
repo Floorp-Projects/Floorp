@@ -78,7 +78,7 @@ EXPORTS.js += [
 
 CPP_SOURCES += [
     'ArgumentsObject.cpp',
-    'BinaryData.cpp',
+    'TypedObject.cpp',
     'BytecodeCompiler.cpp',
     'BytecodeEmitter.cpp',
     'CallNonGenericMethod.cpp',
