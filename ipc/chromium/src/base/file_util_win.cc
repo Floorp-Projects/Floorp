@@ -19,53 +19,12 @@
 
 namespace file_util {
 
-std::wstring GetDirectoryFromPath(const std::wstring& path) {
-  wchar_t path_buffer[MAX_PATH];
-  wchar_t* file_ptr = NULL;
-  if (GetFullPathName(path.c_str(), MAX_PATH, path_buffer, &file_ptr) == 0)
-    return L"";
-
-  std::wstring::size_type length =
-      file_ptr ? file_ptr - path_buffer : path.length();
-  std::wstring directory(path, 0, length);
-  TrimTrailingSeparator(&directory);
-  return directory;
-}
-
 bool AbsolutePath(FilePath* path) {
   wchar_t file_path_buf[MAX_PATH];
   if (!_wfullpath(file_path_buf, path->value().c_str(), MAX_PATH))
     return false;
   *path = FilePath(file_path_buf);
   return true;
-}
-
-int CountFilesCreatedAfter(const FilePath& path,
-                           const base::Time& comparison_time) {
-  int file_count = 0;
-  FILETIME comparison_filetime(comparison_time.ToFileTime());
-
-  WIN32_FIND_DATA find_file_data;
-  // All files in given dir
-  std::wstring filename_spec = path.Append(L"*").value();
-  HANDLE find_handle = FindFirstFile(filename_spec.c_str(), &find_file_data);
-  if (find_handle != INVALID_HANDLE_VALUE) {
-    do {
-      // Don't count current or parent directories.
-      if ((wcscmp(find_file_data.cFileName, L"..") == 0) ||
-          (wcscmp(find_file_data.cFileName, L".") == 0))
-        continue;
-
-      long result = CompareFileTime(&find_file_data.ftCreationTime,
-                                    &comparison_filetime);
-      // File was created after or on comparison time
-      if ((result == 1) || (result == 0))
-        ++file_count;
-    } while (FindNextFile(find_handle,  &find_file_data));
-    FindClose(find_handle);
-  }
-
-  return file_count;
 }
 
 bool Delete(const FilePath& path, bool recursive) {
@@ -95,25 +54,6 @@ bool Delete(const FilePath& path, bool recursive) {
   // Some versions of Windows return ERROR_FILE_NOT_FOUND when
   // deleting an empty directory.
   return (err == 0 || err == ERROR_FILE_NOT_FOUND);
-}
-
-bool Move(const FilePath& from_path, const FilePath& to_path) {
-  // NOTE: I suspect we could support longer paths, but that would involve
-  // analyzing all our usage of files.
-  if (from_path.value().length() >= MAX_PATH ||
-      to_path.value().length() >= MAX_PATH) {
-    return false;
-  }
-  if (MoveFileEx(from_path.value().c_str(), to_path.value().c_str(),
-                 MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) != 0)
-    return true;
-  if (DirectoryExists(from_path)) {
-    // MoveFileEx fails if moving directory across volumes. We will simulate
-    // the move by using Copy and Delete. Ideally we could check whether
-    // from_path and to_path are indeed in different volumes.
-    return CopyAndDeleteDirectory(from_path, to_path);
-  }
-  return false;
 }
 
 bool CopyFile(const FilePath& from_path, const FilePath& to_path) {
@@ -178,21 +118,6 @@ bool CopyDirectory(const FilePath& from_path, const FilePath& to_path,
   return ShellCopy(directory, to_path, false);
 }
 
-bool CopyAndDeleteDirectory(const FilePath& from_path,
-                            const FilePath& to_path) {
-  if (CopyDirectory(from_path, to_path, true)) {
-    if (Delete(from_path, true)) {
-      return true;
-    }
-    // Like Move, this function is not transactional, so we just
-    // leave the copied bits behind if deleting from_path fails.
-    // If to_path exists previously then we have already overwritten
-    // it by now, we don't get better off by deleting the new bits.
-  }
-  return false;
-}
-
-
 bool PathExists(const FilePath& path) {
   return (GetFileAttributes(path.value().c_str()) != INVALID_FILE_ATTRIBUTES);
 }
@@ -214,203 +139,6 @@ bool DirectoryExists(const FilePath& path) {
   DWORD fileattr = GetFileAttributes(path.value().c_str());
   if (fileattr != INVALID_FILE_ATTRIBUTES)
     return (fileattr & FILE_ATTRIBUTE_DIRECTORY) != 0;
-  return false;
-}
-
-bool GetFileCreationLocalTimeFromHandle(HANDLE file_handle,
-                                        LPSYSTEMTIME creation_time) {
-  if (!file_handle)
-    return false;
-
-  FILETIME utc_filetime;
-  if (!GetFileTime(file_handle, &utc_filetime, NULL, NULL))
-    return false;
-
-  FILETIME local_filetime;
-  if (!FileTimeToLocalFileTime(&utc_filetime, &local_filetime))
-    return false;
-
-  return !!FileTimeToSystemTime(&local_filetime, creation_time);
-}
-
-bool GetFileCreationLocalTime(const std::wstring& filename,
-                              LPSYSTEMTIME creation_time) {
-  ScopedHandle file_handle(
-      CreateFile(filename.c_str(), GENERIC_READ,
-                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
-                 OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
-  return GetFileCreationLocalTimeFromHandle(file_handle.Get(), creation_time);
-}
-
-bool ResolveShortcut(std::wstring* path) {
-  FilePath file_path(*path);
-  bool result = ResolveShortcut(&file_path);
-  *path = file_path.value();
-  return result;
-}
-
-bool ResolveShortcut(FilePath* path) {
-  HRESULT result;
-  IShellLink *shell = NULL;
-  bool is_resolved = false;
-
-  // Get pointer to the IShellLink interface
-  result = CoCreateInstance(CLSID_ShellLink, NULL,
-                            CLSCTX_INPROC_SERVER, IID_IShellLink,
-                            reinterpret_cast<LPVOID*>(&shell));
-  if (SUCCEEDED(result)) {
-    IPersistFile *persist = NULL;
-    // Query IShellLink for the IPersistFile interface
-    result = shell->QueryInterface(IID_IPersistFile,
-                                   reinterpret_cast<LPVOID*>(&persist));
-    if (SUCCEEDED(result)) {
-      WCHAR temp_path[MAX_PATH];
-      // Load the shell link
-      result = persist->Load(path->value().c_str(), STGM_READ);
-      if (SUCCEEDED(result)) {
-        // Try to find the target of a shortcut
-        result = shell->Resolve(0, SLR_NO_UI);
-        if (SUCCEEDED(result)) {
-          result = shell->GetPath(temp_path, MAX_PATH,
-                                  NULL, SLGP_UNCPRIORITY);
-          *path = FilePath(temp_path);
-          is_resolved = true;
-        }
-      }
-    }
-    if (persist)
-      persist->Release();
-  }
-  if (shell)
-    shell->Release();
-
-  return is_resolved;
-}
-
-bool CreateShortcutLink(const wchar_t *source, const wchar_t *destination,
-                        const wchar_t *working_dir, const wchar_t *arguments,
-                        const wchar_t *description, const wchar_t *icon,
-                        int icon_index) {
-  IShellLink *i_shell_link = NULL;
-  IPersistFile *i_persist_file = NULL;
-
-  // Get pointer to the IShellLink interface
-  HRESULT result = CoCreateInstance(CLSID_ShellLink, NULL,
-                                    CLSCTX_INPROC_SERVER, IID_IShellLink,
-                                    reinterpret_cast<LPVOID*>(&i_shell_link));
-  if (FAILED(result))
-    return false;
-
-  // Query IShellLink for the IPersistFile interface
-  result = i_shell_link->QueryInterface(IID_IPersistFile,
-      reinterpret_cast<LPVOID*>(&i_persist_file));
-  if (FAILED(result)) {
-    i_shell_link->Release();
-    return false;
-  }
-
-  if (FAILED(i_shell_link->SetPath(source))) {
-    i_persist_file->Release();
-    i_shell_link->Release();
-    return false;
-  }
-
-  if (working_dir && FAILED(i_shell_link->SetWorkingDirectory(working_dir))) {
-    i_persist_file->Release();
-    i_shell_link->Release();
-    return false;
-  }
-
-  if (arguments && FAILED(i_shell_link->SetArguments(arguments))) {
-    i_persist_file->Release();
-    i_shell_link->Release();
-    return false;
-  }
-
-  if (description && FAILED(i_shell_link->SetDescription(description))) {
-    i_persist_file->Release();
-    i_shell_link->Release();
-    return false;
-  }
-
-  if (icon && FAILED(i_shell_link->SetIconLocation(icon, icon_index))) {
-    i_persist_file->Release();
-    i_shell_link->Release();
-    return false;
-  }
-
-  result = i_persist_file->Save(destination, TRUE);
-  i_persist_file->Release();
-  i_shell_link->Release();
-  return SUCCEEDED(result);
-}
-
-
-bool UpdateShortcutLink(const wchar_t *source, const wchar_t *destination,
-                        const wchar_t *working_dir, const wchar_t *arguments,
-                        const wchar_t *description, const wchar_t *icon,
-                        int icon_index) {
-  // Get pointer to the IPersistFile interface and load existing link
-  IShellLink *i_shell_link = NULL;
-  if (FAILED(CoCreateInstance(CLSID_ShellLink, NULL,
-                              CLSCTX_INPROC_SERVER, IID_IShellLink,
-                              reinterpret_cast<LPVOID*>(&i_shell_link))))
-    return false;
-
-  IPersistFile *i_persist_file = NULL;
-  if (FAILED(i_shell_link->QueryInterface(
-      IID_IPersistFile, reinterpret_cast<LPVOID*>(&i_persist_file)))) {
-    i_shell_link->Release();
-    return false;
-  }
-
-  if (FAILED(i_persist_file->Load(destination, 0))) {
-    i_persist_file->Release();
-    i_shell_link->Release();
-    return false;
-  }
-
-  if (source && FAILED(i_shell_link->SetPath(source))) {
-    i_persist_file->Release();
-    i_shell_link->Release();
-    return false;
-  }
-
-  if (working_dir && FAILED(i_shell_link->SetWorkingDirectory(working_dir))) {
-    i_persist_file->Release();
-    i_shell_link->Release();
-    return false;
-  }
-
-  if (arguments && FAILED(i_shell_link->SetArguments(arguments))) {
-    i_persist_file->Release();
-    i_shell_link->Release();
-    return false;
-  }
-
-  if (description && FAILED(i_shell_link->SetDescription(description))) {
-    i_persist_file->Release();
-    i_shell_link->Release();
-    return false;
-  }
-
-  if (icon && FAILED(i_shell_link->SetIconLocation(icon, icon_index))) {
-    i_persist_file->Release();
-    i_shell_link->Release();
-    return false;
-  }
-
-  HRESULT result = i_persist_file->Save(destination, TRUE);
-  i_persist_file->Release();
-  i_shell_link->Release();
-  return SUCCEEDED(result);
-}
-
-bool IsDirectoryEmpty(const std::wstring& dir_path) {
-  FileEnumerator files(FilePath(dir_path),
-                       false, FileEnumerator::FILES_AND_DIRECTORIES);
-  if (files.Next().value().empty())
-    return true;
   return false;
 }
 
@@ -609,28 +337,6 @@ int WriteFile(const FilePath& filename, const char* data, int size) {
   return -1;
 }
 
-bool RenameFileAndResetSecurityDescriptor(const FilePath& source_file_path,
-                                          const FilePath& target_file_path) {
-  // The parameters to SHFileOperation must be terminated with 2 NULL chars.
-  std::wstring source = source_file_path.value();
-  std::wstring target = target_file_path.value();
-
-  source.append(1, L'\0');
-  target.append(1, L'\0');
-
-  SHFILEOPSTRUCT move_info = {0};
-  move_info.wFunc = FO_MOVE;
-  move_info.pFrom = source.c_str();
-  move_info.pTo = target.c_str();
-  move_info.fFlags = FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI |
-                     FOF_NOCONFIRMMKDIR | FOF_NOCOPYSECURITYATTRIBS;
-
-  if (0 != SHFileOperation(&move_info))
-    return false;
-
-  return true;
-}
-
 // Gets the current working directory for the process.
 bool GetCurrentDirectory(FilePath* dir) {
   wchar_t system_buffer[MAX_PATH];
@@ -653,150 +359,6 @@ bool SetCurrentDirectory(const FilePath& directory) {
   return ret != 0;
 }
 
-///////////////////////////////////////////////
-// FileEnumerator
-
-FileEnumerator::FileEnumerator(const FilePath& root_path,
-                               bool recursive,
-                               FileEnumerator::FILE_TYPE file_type)
-    : recursive_(recursive),
-      file_type_(file_type),
-      is_in_find_op_(false),
-      find_handle_(INVALID_HANDLE_VALUE) {
-  pending_paths_.push(root_path);
-}
-
-FileEnumerator::FileEnumerator(const FilePath& root_path,
-                               bool recursive,
-                               FileEnumerator::FILE_TYPE file_type,
-                               const FilePath::StringType& pattern)
-    : recursive_(recursive),
-      file_type_(file_type),
-      is_in_find_op_(false),
-      pattern_(pattern),
-      find_handle_(INVALID_HANDLE_VALUE) {
-  pending_paths_.push(root_path);
-}
-
-FileEnumerator::~FileEnumerator() {
-  if (find_handle_ != INVALID_HANDLE_VALUE)
-    FindClose(find_handle_);
-}
-
-void FileEnumerator::GetFindInfo(FindInfo* info) {
-  DCHECK(info);
-
-  if (!is_in_find_op_)
-    return;
-
-  memcpy(info, &find_data_, sizeof(*info));
-}
-
-FilePath FileEnumerator::Next() {
-  if (!is_in_find_op_) {
-    if (pending_paths_.empty())
-      return FilePath();
-
-    // The last find FindFirstFile operation is done, prepare a new one.
-    root_path_ = pending_paths_.top();
-    pending_paths_.pop();
-
-    // Start a new find operation.
-    FilePath src = root_path_;
-
-    if (pattern_.value().empty())
-      src = src.Append(L"*");  // No pattern = match everything.
-    else
-      src = src.Append(pattern_);
-
-    find_handle_ = FindFirstFile(src.value().c_str(), &find_data_);
-    is_in_find_op_ = true;
-
-  } else {
-    // Search for the next file/directory.
-    if (!FindNextFile(find_handle_, &find_data_)) {
-      FindClose(find_handle_);
-      find_handle_ = INVALID_HANDLE_VALUE;
-    }
-  }
-
-  if (INVALID_HANDLE_VALUE == find_handle_) {
-    is_in_find_op_ = false;
-
-    // This is reached when we have finished a directory and are advancing to
-    // the next one in the queue. We applied the pattern (if any) to the files
-    // in the root search directory, but for those directories which were
-    // matched, we want to enumerate all files inside them. This will happen
-    // when the handle is empty.
-    pattern_ = FilePath();
-
-    return Next();
-  }
-
-  FilePath cur_file(find_data_.cFileName);
-  // Skip over . and ..
-  if (L"." == cur_file.value() || L".." == cur_file.value())
-    return Next();
-
-  // Construct the absolute filename.
-  cur_file = root_path_.Append(cur_file);
-
-  if (find_data_.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-    if (recursive_) {
-      // If |cur_file| is a directory, and we are doing recursive searching, add
-      // it to pending_paths_ so we scan it after we finish scanning this
-      // directory.
-      pending_paths_.push(cur_file);
-    }
-    return (file_type_ & FileEnumerator::DIRECTORIES) ? cur_file : Next();
-  }
-  return (file_type_ & FileEnumerator::FILES) ? cur_file : Next();
-}
-
-///////////////////////////////////////////////
-// MemoryMappedFile
-
-MemoryMappedFile::MemoryMappedFile()
-    : file_(INVALID_HANDLE_VALUE),
-      file_mapping_(INVALID_HANDLE_VALUE),
-      data_(NULL),
-      length_(INVALID_FILE_SIZE) {
-}
-
-bool MemoryMappedFile::MapFileToMemory(const FilePath& file_name) {
-  file_ = ::CreateFile(file_name.value().c_str(), GENERIC_READ,
-                       FILE_SHARE_READ, NULL, OPEN_EXISTING,
-                       FILE_ATTRIBUTE_NORMAL, NULL);
-  if (file_ == INVALID_HANDLE_VALUE)
-    return false;
-
-  length_ = ::GetFileSize(file_, NULL);
-  if (length_ == INVALID_FILE_SIZE)
-    return false;
-
-  file_mapping_ = ::CreateFileMapping(file_, NULL, PAGE_READONLY,
-                                      0, length_, NULL);
-  if (file_mapping_ == INVALID_HANDLE_VALUE)
-    return false;
-
-  data_ = static_cast<uint8_t*>(
-      ::MapViewOfFile(file_mapping_, FILE_MAP_READ, 0, 0, length_));
-  return data_ != NULL;
-}
-
-void MemoryMappedFile::CloseHandles() {
-  if (data_)
-    ::UnmapViewOfFile(data_);
-  if (file_mapping_ != INVALID_HANDLE_VALUE)
-    ::CloseHandle(file_mapping_);
-  if (file_ != INVALID_HANDLE_VALUE)
-    ::CloseHandle(file_);
-
-  data_ = NULL;
-  file_mapping_ = file_ = INVALID_HANDLE_VALUE;
-  length_ = INVALID_FILE_SIZE;
-}
-
 // Deprecated functions ----------------------------------------------------
 
 void InsertBeforeExtension(std::wstring* path_str,
@@ -804,10 +366,6 @@ void InsertBeforeExtension(std::wstring* path_str,
   FilePath path(*path_str);
   InsertBeforeExtension(&path, suffix);
   path_str->assign(path.value());
-}
-void PathComponents(const std::wstring& path,
-                    std::vector<std::wstring>* components) {
-  PathComponents(FilePath(path), components);
 }
 void ReplaceExtension(std::wstring* file_name, const std::wstring& extension) {
   FilePath path(*file_name);

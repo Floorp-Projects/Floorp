@@ -724,20 +724,6 @@ struct ParamTraitsIPC<base::FileDescriptor> {
 #endif // defined(OS_POSIX)
 
 template <>
-struct ParamTraitsIPC<string16> {
-  typedef string16 param_type;
-  static void Write(Message* m, const param_type& p) {
-    m->WriteString16(p);
-  }
-  static bool Read(const Message* m, void** iter, param_type* r) {
-    return m->ReadString16(iter, r);
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(UTF16ToWide(p));
-  }
-};
-
-template <>
 struct ParamTraitsIPC<FilePath> {
   typedef FilePath param_type;
   static void Write(Message* m, const param_type& p);
