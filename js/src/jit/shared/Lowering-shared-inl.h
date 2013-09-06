@@ -264,6 +264,14 @@ LIRGeneratorShared::useRegisterOrConstantAtStart(MDefinition *mir)
 }
 
 LAllocation
+LIRGeneratorShared::useRegisterOrNonNegativeConstantAtStart(MDefinition *mir)
+{
+    if (mir->isConstant() && mir->toConstant()->value().toInt32() >= 0)
+        return LAllocation(mir->toConstant()->vp());
+    return useRegisterAtStart(mir);
+}
+
+LAllocation
 LIRGeneratorShared::useRegisterOrNonDoubleConstant(MDefinition *mir)
 {
     if (mir->isConstant() && mir->type() != MIRType_Double)

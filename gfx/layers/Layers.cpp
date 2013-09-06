@@ -26,7 +26,7 @@
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite
-#include "mozilla/layers/LayerTransaction.h"  // for TransformFunction, etc
+#include "mozilla/layers/LayersMessages.h"  // for TransformFunction, etc
 #include "nsAString.h"
 #include "nsCSSValue.h"                 // for nsCSSValue::Array, etc
 #include "nsPrintfCString.h"            // for nsPrintfCString

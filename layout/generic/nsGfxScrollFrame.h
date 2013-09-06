@@ -276,6 +276,8 @@ public:
 
   bool UpdateOverflow();
 
+  void UpdateSticky();
+
   // adjust the scrollbar rectangle aRect to account for any visible resizer.
   // aHasResizer specifies if there is a content resizer, however this method
   // will also check if a widget resizer is present as well.
