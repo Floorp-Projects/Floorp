@@ -4449,12 +4449,12 @@ class LGuardThreadLocalObject : public LCallInstructionHelper<0, 2, 1>
 };
 
 // Guard that a value is in a TypeSet.
-class LTypeBarrier : public LInstructionHelper<0, BOX_PIECES, 1>
+class LTypeBarrierV : public LInstructionHelper<0, BOX_PIECES, 1>
 {
   public:
-    LIR_HEADER(TypeBarrier)
+    LIR_HEADER(TypeBarrierV)
 
-    LTypeBarrier(const LDefinition &temp) {
+    LTypeBarrierV(const LDefinition &temp) {
         setTemp(0, temp);
     }
 
@@ -4462,6 +4462,27 @@ class LTypeBarrier : public LInstructionHelper<0, BOX_PIECES, 1>
 
     const MTypeBarrier *mir() const {
         return mir_->toTypeBarrier();
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+};
+
+// Guard that a object is in a TypeSet.
+class LTypeBarrierO : public LInstructionHelper<0, 1, 1>
+{
+  public:
+    LIR_HEADER(TypeBarrierO)
+
+    LTypeBarrierO(const LAllocation &obj, const LDefinition &temp) {
+        setOperand(0, obj);
+        setTemp(0, temp);
+    }
+    const MTypeBarrier *mir() const {
+        return mir_->toTypeBarrier();
+    }
+    const LAllocation *object() {
+        return getOperand(0);
     }
     const LDefinition *temp() {
         return getTemp(0);

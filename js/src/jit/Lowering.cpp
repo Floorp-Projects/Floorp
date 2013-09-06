@@ -1838,14 +1838,47 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
 
     const types::StackTypeSet *types = ins->resultTypeSet();
     bool needTemp = !types->unknownObject() && types->getObjectCount() > 0;
-    LDefinition tmp = needTemp ? temp() : tempToUnbox();
 
-    LTypeBarrier *barrier = new LTypeBarrier(tmp);
-    if (!useBox(barrier, LTypeBarrier::Input, ins->input()))
-        return false;
-    if (!assignSnapshot(barrier, ins->bailoutKind()))
-        return false;
-    return redefine(ins, ins->input()) && add(barrier, ins);
+    MIRType inputType = ins->getOperand(0)->type();
+    MIRType outputType = ins->type();
+
+    JS_ASSERT(inputType == outputType);
+    JS_ASSERT_IF(ins->alwaysBails(), outputType == MIRType_Value);
+
+    // Handle typebarrier that will always bail.
+    // (Emit LBail for visibility).
+    if (ins->alwaysBails()) {
+        JS_ASSERT(outputType == MIRType_Value);
+
+        LBail *bail = new LBail();
+        if (!assignSnapshot(bail, ins->bailoutKind()))
+            return false;
+        return redefine(ins, ins->input()) && add(bail, ins);
+    }
+
+    // Handle typebarrier with Value as input.
+    if (inputType == MIRType_Value) {
+        LDefinition tmp = needTemp ? temp() : tempToUnbox();
+        LTypeBarrierV *barrier = new LTypeBarrierV(tmp);
+        if (!useBox(barrier, LTypeBarrierV::Input, ins->input()))
+            return false;
+        if (!assignSnapshot(barrier, ins->bailoutKind()))
+            return false;
+        return redefine(ins, ins->input()) && add(barrier, ins);
+    }
+
+    // Handle typebarrier with specific TypeObject/SingleObjects.
+    if (inputType == MIRType_Object && !types->hasType(types::Type::AnyObjectType()))
+    {
+        LDefinition tmp = needTemp ? temp() : LDefinition::BogusTemp();
+        LTypeBarrierO *barrier = new LTypeBarrierO(useRegister(ins->getOperand(0)), tmp);
+        if (!assignSnapshot(barrier, ins->bailoutKind()))
+            return false;
+        return redefine(ins, ins->getOperand(0)) && add(barrier, ins);
+    }
+
+    // Handle remaining cases: No-op, unbox did everything.
+    return redefine(ins, ins->getOperand(0));
 }
 
 bool
