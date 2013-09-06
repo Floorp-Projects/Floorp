@@ -1532,37 +1532,16 @@ MetroWidget::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
 void
 MetroWidget::HandleDoubleTap(const CSSIntPoint& aPoint)
 {
-  LogFunction();
-
-  if (!mMetroInput) {
-    return;
-  }
-
-  mMetroInput->HandleDoubleTap(CSSIntPointToLayoutDeviceIntPoint(aPoint));
 }
 
 void
 MetroWidget::HandleSingleTap(const CSSIntPoint& aPoint)
 {
-  LogFunction();
-
-  if (!mMetroInput) {
-    return;
-  }
-
-  mMetroInput->HandleSingleTap(CSSIntPointToLayoutDeviceIntPoint(aPoint));
 }
 
 void
 MetroWidget::HandleLongTap(const CSSIntPoint& aPoint)
 {
-  LogFunction();
-
-  if (!mMetroInput) {
-    return;
-  }
-
-  mMetroInput->HandleLongTap(CSSIntPointToLayoutDeviceIntPoint(aPoint));
 }
 
 void
