@@ -135,7 +135,7 @@ nsresult WaveReader::ReadMetadata(VideoInfo* aInfo,
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoPtr<HTMLMediaElement::MetadataTags> tags;
+  nsAutoPtr<dom::HTMLMediaElement::MetadataTags> tags;
 
   bool loadAllChunks = LoadAllChunks(tags);
   if (!loadAllChunks) {
@@ -272,7 +272,7 @@ static double RoundToUsecs(double aSeconds) {
   return floor(aSeconds * USECS_PER_S) / USECS_PER_S;
 }
 
-nsresult WaveReader::GetBuffered(TimeRanges* aBuffered, int64_t aStartTime)
+nsresult WaveReader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
 {
   if (!mInfo.mHasAudio) {
     return NS_OK;
@@ -536,7 +536,7 @@ WaveReader::GetNextChunk(uint32_t* aChunk, uint32_t* aChunkSize)
 
 bool
 WaveReader::LoadListChunk(uint32_t aChunkSize,
-    nsAutoPtr<HTMLMediaElement::MetadataTags> &aTags)
+                          nsAutoPtr<dom::HTMLMediaElement::MetadataTags> &aTags)
 {
   // List chunks are always word (two byte) aligned.
   NS_ABORT_IF_FALSE(mDecoder->GetResource()->Tell() % 2 == 0,
@@ -570,7 +570,7 @@ WaveReader::LoadListChunk(uint32_t aChunkSize,
 
   const char* const end = chunk.get() + aChunkSize;
 
-  aTags = new HTMLMediaElement::MetadataTags;
+  aTags = new dom::HTMLMediaElement::MetadataTags;
 
   while (p + 8 < end) {
     uint32_t id = ReadUint32BE(&p);
@@ -612,7 +612,7 @@ WaveReader::LoadListChunk(uint32_t aChunkSize,
 }
 
 bool
-WaveReader::LoadAllChunks(nsAutoPtr<HTMLMediaElement::MetadataTags> &aTags)
+WaveReader::LoadAllChunks(nsAutoPtr<dom::HTMLMediaElement::MetadataTags> &aTags)
 {
   // Chunks are always word (two byte) aligned.
   NS_ABORT_IF_FALSE(mDecoder->GetResource()->Tell() % 2 == 0,
