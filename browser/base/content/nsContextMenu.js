@@ -309,6 +309,24 @@ nsContextMenu.prototype = {
     this.showItem("context-bidi-page-direction-toggle",
                   !this.onTextInput && top.gBidiUI);
 
+    // SocialMarks. Marks does not work with text selections, only links. If
+    // there is more than MENU_LIMIT providers, we show a submenu for them,
+    // otherwise we have a menuitem per provider (added in SocialMarks class).
+    let markProviders = SocialMarks.getProviders();
+    let enablePageMarks = markProviders.length > 0 && !(this.onLink || this.onImage
+                            || this.onVideo || this.onAudio);
+    this.showItem("context-markpageMenu", enablePageMarks && markProviders.length > SocialMarks.MENU_LIMIT);
+    let enablePageMarkItems = enablePageMarks && markProviders.length <= SocialMarks.MENU_LIMIT;
+    let linkmenus = document.getElementsByClassName("context-markpage");
+    [m.hidden = !enablePageMarkItems for (m of linkmenus)];
+
+    let enableLinkMarks = markProviders.length > 0 &&
+                            ((this.onLink && !this.onMailtoLink) || this.onPlainTextLink);
+    this.showItem("context-marklinkMenu", enableLinkMarks && markProviders.length > SocialMarks.MENU_LIMIT);
+    let enableLinkMarkItems = enableLinkMarks && markProviders.length <= SocialMarks.MENU_LIMIT;
+    linkmenus = document.getElementsByClassName("context-marklink");
+    [m.hidden = !enableLinkMarkItems for (m of linkmenus)];
+
     // SocialShare
     let shareButton = SocialShare.shareButton;
     let shareEnabled = shareButton && !shareButton.disabled && !this.onSocial;
@@ -1570,6 +1588,10 @@ nsContextMenu.prototype = {
                                        , itemId: itemId
                                        }, window.top);
     }
+  },
+  markLink: function CM_markLink(origin) {
+    // send link to social, if it is the page url linkURI will be null
+    SocialMarks.markLink(origin, this.linkURI ? this.linkURI.spec : null);
   },
   shareLink: function CM_shareLink() {
     SocialShare.sharePage(null, { url: this.linkURI.spec });
