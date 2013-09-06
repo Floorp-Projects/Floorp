@@ -710,6 +710,13 @@ BrowserElementChild.prototype = {
           ", maxHeight=" + maxHeight +
           ", domRequestID=" + domRequestID + ".");
 
+    if (!content) {
+      // If content is not loaded yet, bail out since even sendAsyncMessage
+      // fails...
+      debug("No content yet!");
+      return;
+    }
+
     let scaleWidth = Math.min(1, maxWidth / content.innerWidth);
     let scaleHeight = Math.min(1, maxHeight / content.innerHeight);
 

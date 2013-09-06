@@ -38,6 +38,12 @@ let Keyboard = {
     this._messageManager = mm;
   },
 
+  sendAsyncMessage: function(name, data) {
+    try {
+      this.messageManager.sendAsyncMessage(name, data);
+    } catch(e) { }
+  },
+
   init: function keyboardInit() {
     Services.obs.addObserver(this, 'in-process-browser-or-app-frame-shown', false);
     Services.obs.addObserver(this, 'remote-browser-frame-shown', false);
@@ -186,28 +192,27 @@ let Keyboard = {
   },
 
   setSelectedOption: function keyboardSetSelectedOption(msg) {
-    this.messageManager.sendAsyncMessage('Forms:Select:Choice', msg.data);
+    this.sendAsyncMessage('Forms:Select:Choice', msg.data);
   },
 
   setSelectedOptions: function keyboardSetSelectedOptions(msg) {
-    this.messageManager.sendAsyncMessage('Forms:Select:Choice', msg.data);
+    this.sendAsyncMessage('Forms:Select:Choice', msg.data);
   },
 
   setSelectionRange: function keyboardSetSelectionRange(msg) {
-    this.messageManager.sendAsyncMessage('Forms:SetSelectionRange', msg.data);
+    this.sendAsyncMessage('Forms:SetSelectionRange', msg.data);
   },
 
   setValue: function keyboardSetValue(msg) {
-    this.messageManager.sendAsyncMessage('Forms:Input:Value', msg.data);
+    this.sendAsyncMessage('Forms:Input:Value', msg.data);
   },
 
   removeFocus: function keyboardRemoveFocus() {
-    this.messageManager.sendAsyncMessage('Forms:Select:Blur', {});
+    this.sendAsyncMessage('Forms:Select:Blur', {});
   },
 
   replaceSurroundingText: function keyboardReplaceSurroundingText(msg) {
-    this.messageManager.sendAsyncMessage('Forms:ReplaceSurroundingText',
-                                         msg.data);
+    this.sendAsyncMessage('Forms:ReplaceSurroundingText', msg.data);
   },
 
   showInputMethodPicker: function keyboardShowInputMethodPicker() {
@@ -225,23 +230,23 @@ let Keyboard = {
   },
 
   getText: function keyboardGetText(msg) {
-    this.messageManager.sendAsyncMessage('Forms:GetText', msg.data);
+    this.sendAsyncMessage('Forms:GetText', msg.data);
   },
 
   sendKey: function keyboardSendKey(msg) {
-    this.messageManager.sendAsyncMessage('Forms:Input:SendKey', msg.data);
+    this.sendAsyncMessage('Forms:Input:SendKey', msg.data);
   },
 
   getContext: function keyboardGetContext(msg) {
-    this.messageManager.sendAsyncMessage('Forms:GetContext', msg.data);
+    this.sendAsyncMessage('Forms:GetContext', msg.data);
   },
 
   setComposition: function keyboardSetComposition(msg) {
-    this.messageManager.sendAsyncMessage('Forms:SetComposition', msg.data);
+    this.sendAsyncMessage('Forms:SetComposition', msg.data);
   },
 
   endComposition: function keyboardEndComposition(msg) {
-    this.messageManager.sendAsyncMessage('Forms:EndComposition', msg.data);
+    this.sendAsyncMessage('Forms:EndComposition', msg.data);
   }
 };
 
