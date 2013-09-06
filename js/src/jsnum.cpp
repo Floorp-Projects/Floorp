@@ -1388,16 +1388,16 @@ js_NumberToStringWithBase(ThreadSafeContext *cx, double d, int base)
 
 template <AllowGC allowGC>
 JSString *
-js_NumberToString(ThreadSafeContext *cx, double d)
+js::NumberToString(ThreadSafeContext *cx, double d)
 {
     return js_NumberToStringWithBase<allowGC>(cx, d, 10);
 }
 
 template JSString *
-js_NumberToString<CanGC>(ThreadSafeContext *cx, double d);
+js::NumberToString<CanGC>(ThreadSafeContext *cx, double d);
 
 template JSString *
-js_NumberToString<NoGC>(ThreadSafeContext *cx, double d);
+js::NumberToString<NoGC>(ThreadSafeContext *cx, double d);
 
 template <AllowGC allowGC>
 JSAtom *

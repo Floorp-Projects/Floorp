@@ -623,7 +623,7 @@ CodeGenerator::visitIntToString(LIntToString *lir)
 typedef JSString *(*DoubleToStringFn)(ThreadSafeContext *, double);
 typedef ParallelResult (*DoubleToStringParFn)(ForkJoinSlice *, double, MutableHandleString);
 static const VMFunctionsModal DoubleToStringInfo = VMFunctionsModal(
-    FunctionInfo<DoubleToStringFn>(js_NumberToString<CanGC>),
+    FunctionInfo<DoubleToStringFn>(NumberToString<CanGC>),
     FunctionInfo<DoubleToStringParFn>(DoubleToStringPar));
 
 bool
