@@ -86,6 +86,12 @@ class TestPolicy : public BoxInputsPolicy
     bool adjustInputs(MInstruction *ins);
 };
 
+class TypeBarrierPolicy : public BoxInputsPolicy
+{
+  public:
+    bool adjustInputs(MInstruction *ins);
+};
+
 class CallPolicy : public BoxInputsPolicy
 {
   public:

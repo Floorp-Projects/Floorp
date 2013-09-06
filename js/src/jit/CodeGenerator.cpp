@@ -1312,13 +1312,28 @@ CodeGenerator::visitGuardThreadLocalObject(LGuardThreadLocalObject *lir)
 }
 
 bool
-CodeGenerator::visitTypeBarrier(LTypeBarrier *lir)
+CodeGenerator::visitTypeBarrierV(LTypeBarrierV *lir)
 {
-    ValueOperand operand = ToValue(lir, LTypeBarrier::Input);
+    ValueOperand operand = ToValue(lir, LTypeBarrierV::Input);
     Register scratch = ToTempUnboxRegister(lir->temp());
 
     Label matched, miss;
     masm.guardTypeSet(operand, lir->mir()->resultTypeSet(), scratch, &matched, &miss);
+    masm.jump(&miss);
+    if (!bailoutFrom(&miss, lir->snapshot()))
+        return false;
+    masm.bind(&matched);
+    return true;
+}
+
+bool
+CodeGenerator::visitTypeBarrierO(LTypeBarrierO *lir)
+{
+    Register obj = ToRegister(lir->object());
+    Register scratch = ToTempUnboxRegister(lir->temp());
+
+    Label matched, miss;
+    masm.guardObjectType(obj, lir->mir()->resultTypeSet(), scratch, &matched, &miss);
     masm.jump(&miss);
     if (!bailoutFrom(&miss, lir->snapshot()))
         return false;
