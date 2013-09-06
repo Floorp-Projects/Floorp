@@ -247,9 +247,8 @@ private:
   bool mInSnapshotMode;
   nsString* mSnapshotPath;
 
-  // These are in UTF-8 but webrtc api uses char arrays
-  char mDeviceName[KMaxDeviceNameLength];
-  char mUniqueId[KMaxUniqueIdLength];
+  nsString mDeviceName;
+  nsString mUniqueId;
 
   void ChooseCapability(const MediaEnginePrefs &aPrefs);
 };
