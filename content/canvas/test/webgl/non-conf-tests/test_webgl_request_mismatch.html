@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<title>WebGL test: Mismatched 'webgl' and 'experimental-webgl' context requests</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c1"></canvas>
+<canvas id="c2"></canvas>
+<canvas id="c3"></canvas>
+<canvas id="c4"></canvas>
+<script>
+
+function testContextRetrieval(canvasId, creationId, requestId) {
+  var canvas = document.getElementById(canvasId);
+  ok(canvas, 'Invalid `canvasId`: ' + canvasId);
+
+  var createdGL = canvas.getContext(creationId);
+  if (!createdGL)
+    return; // No WebGL on this machine?
+
+  var requestedGL = canvas.getContext(requestId);
+  if (creationId == requestId) {
+    ok(requestedGL, 'Request for \'' + requestId + '\' on from \'' + creationId + '\' should succeed.');
+    ok(requestedGL == createdGL, 'Request for \'' + requestId + '\' on from \'' + creationId + '\' should match.');
+  } else {
+    ok(!requestedGL, 'Request for \'' + requestId + '\' on from \'' + creationId + '\' should fail.');
+  }
+}
+
+testContextRetrieval('c1', 'experimental-webgl', 'webgl');
+testContextRetrieval('c2', 'webgl', 'experimental-webgl');
+testContextRetrieval('c3', 'experimental-webgl', 'experimental-webgl');
+testContextRetrieval('c4', 'webgl', 'webgl');
+
+</script>
+
