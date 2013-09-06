@@ -80,6 +80,11 @@ CONFIGS = {
         'non_global_defines': [],
         'substs': [],
     },
+    'local_includes': {
+        'defines': [],
+        'non_global_defines': [],
+        'substs': [],
+    },
 }
 
 

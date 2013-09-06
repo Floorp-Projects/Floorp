@@ -209,3 +209,15 @@ class XpcshellManifests(SandboxDerived):
     def __init__(self, sandbox, manifests):
         SandboxDerived.__init__(self, sandbox)
         self.xpcshell_manifests = manifests
+
+class LocalInclude(SandboxDerived):
+    """Describes an individual local include path."""
+
+    __slots__ = (
+        'path',
+    )
+
+    def __init__(self, sandbox, path):
+        SandboxDerived.__init__(self, sandbox)
+
+        self.path = path
