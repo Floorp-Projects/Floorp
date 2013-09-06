@@ -81,13 +81,16 @@ hardware (via AudioStream).
 #include "MediaDecoder.h"
 #include "AudioAvailableEventManager.h"
 #include "mozilla/ReentrantMonitor.h"
-#include "nsITimer.h"
-#include "AudioSegment.h"
-#include "VideoSegment.h"
+#include "MediaDecoderReader.h"
+#include "MediaDecoderOwner.h"
+#include "MediaMetadataManager.h"
+
+class nsITimer;
 
 namespace mozilla {
 
-class MediaDecoderReader;
+class AudioSegment;
+class VideoSegment;
 
 /*
   The state machine class. This manages the decoding and seeking in the

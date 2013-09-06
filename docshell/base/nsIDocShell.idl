@@ -42,7 +42,9 @@ interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 interface nsIReflowObserver;
 
-[scriptable, builtinclass, uuid(62f1b40d-1d15-4640-95dc-20caae775bd1)]
+typedef unsigned long nsLoadFlags;
+
+[scriptable, builtinclass, uuid(5f4d82fc-3220-4f7e-9b00-626f1033318a)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -351,6 +353,16 @@ interface nsIDocShell : nsIDocShellTreeItem
    * attribute to access the loadtype  for the document
    */
   attribute unsigned long  loadType;
+
+  /*
+   * Default load flags (as defined in nsIRequest) that will be set on all
+   * requests made by this docShell and propagated to all child docShells and
+   * to nsILoadGroup::defaultLoadFlags for the docShell's loadGroup.
+   * Default is no flags.  Once set, only future requests initiated by the
+   * docShell are affected, so in general, these flags should be set before
+   * the docShell loads any content.
+   */
+  attribute nsLoadFlags defaultLoadFlags;
 
   /*
    * returns true if the docshell is being destroyed, false otherwise

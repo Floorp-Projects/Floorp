@@ -40,3 +40,12 @@ TESTFLAGS := -fsyntax-only -Xclang -verify \
 
 $(TESTS): test-%: tests/%.cpp $(PLUGIN)
 	$(CXX) $(TESTFLAGS) $<
+
+compile libs export tools: all
+
+distclean clean:
+	rm -f $(OBJS) $(TESTS) $(PLUGIN)
+
+check:
+
+.PHONY: compile libs export tools distclean clean check

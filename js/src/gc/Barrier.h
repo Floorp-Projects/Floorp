@@ -7,11 +7,11 @@
 #ifndef gc_Barrier_h
 #define gc_Barrier_h
 
-#include "jsapi.h"
 #include "NamespaceImports.h"
 
 #include "gc/Heap.h"
 #include "js/HashTable.h"
+#include "js/Id.h"
 #include "js/RootingAPI.h"
 
 /*

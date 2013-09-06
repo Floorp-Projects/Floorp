@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCRT.h"
-#include "EndianMacros.h"
+#include "mozilla/Endian.h"
 #include "nsBMPEncoder.h"
 #include "nsPNGEncoder.h"
 #include "nsICOEncoder.h"
@@ -171,7 +171,7 @@ nsICOEncoder::AddImageFrame(const uint8_t* aData,
            BMPImageBufferSize - BFH_LENGTH);
     // We need to fix the BMP height to be *2 for the AND mask
     uint32_t fixedHeight = GetRealHeight() * 2;
-    fixedHeight = NATIVE32_TO_LITTLE(fixedHeight);
+    NativeEndian::swapToLittleEndianInPlace(&fixedHeight, 1);
     // The height is stored at an offset of 8 from the DIB header
     memcpy(mImageBufferCurr + 8, &fixedHeight, sizeof(fixedHeight));
     mImageBufferCurr += BMPImageBufferSize - BFH_LENGTH;
@@ -476,9 +476,9 @@ void
 nsICOEncoder::EncodeFileHeader() 
 {  
   IconFileHeader littleEndianIFH = mICOFileHeader;
-  littleEndianIFH.mReserved = NATIVE16_TO_LITTLE(littleEndianIFH.mReserved);
-  littleEndianIFH.mType = NATIVE16_TO_LITTLE(littleEndianIFH.mType);
-  littleEndianIFH.mCount = NATIVE16_TO_LITTLE(littleEndianIFH.mCount);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianIFH.mReserved, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianIFH.mType, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianIFH.mCount, 1);
 
   memcpy(mImageBufferCurr, &littleEndianIFH.mReserved, 
          sizeof(littleEndianIFH.mReserved));
@@ -497,12 +497,10 @@ nsICOEncoder::EncodeInfoHeader()
 {
   IconDirEntry littleEndianmIDE = mICODirEntry;
 
-  littleEndianmIDE.mPlanes = NATIVE16_TO_LITTLE(littleEndianmIDE.mPlanes);
-  littleEndianmIDE.mBitCount = NATIVE16_TO_LITTLE(littleEndianmIDE.mBitCount);
-  littleEndianmIDE.mBytesInRes = 
-    NATIVE32_TO_LITTLE(littleEndianmIDE.mBytesInRes);
-  littleEndianmIDE.mImageOffset  = 
-    NATIVE32_TO_LITTLE(littleEndianmIDE.mImageOffset);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmIDE.mPlanes, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmIDE.mBitCount, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmIDE.mBytesInRes, 1);
+  NativeEndian::swapToLittleEndianInPlace(&littleEndianmIDE.mImageOffset, 1);
 
   memcpy(mImageBufferCurr, &littleEndianmIDE.mWidth, 
          sizeof(littleEndianmIDE.mWidth));
