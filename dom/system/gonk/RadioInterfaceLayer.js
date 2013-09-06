@@ -79,7 +79,6 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:SelectNetworkAuto",
   "RIL:SendMMI",
   "RIL:CancelMMI",
-  "RIL:RegisterMobileConnectionMsg",
   "RIL:SetCallForwardingOption",
   "RIL:GetCallForwardingOption",
   "RIL:SetCallBarringOption",
@@ -109,17 +108,11 @@ const RIL_IPC_ICCMANAGER_MSG_NAMES = [
   "RIL:IccExchangeAPDU",
   "RIL:IccCloseChannel",
   "RIL:ReadIccContacts",
-  "RIL:UpdateIccContact",
-  "RIL:RegisterIccMsg"
+  "RIL:UpdateIccContact"
 ];
 
 const RIL_IPC_VOICEMAIL_MSG_NAMES = [
-  "RIL:RegisterVoicemailMsg",
   "RIL:GetVoicemailInfo"
-];
-
-const RIL_IPC_CELLBROADCAST_MSG_NAMES = [
-  "RIL:RegisterCellBroadcastMsg"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "gPowerManagerService",
@@ -181,7 +174,16 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
 });
 
 function RadioInterfaceLayer() {
-  gMessageManager.init(this);
+  let callback = this._receiveMessage.bind(this);
+  gMessageManager.registerMessageListeners("icc",
+                                           RIL_IPC_ICCMANAGER_MSG_NAMES,
+                                           callback);
+  gMessageManager.registerMessageListeners("mobileconnection",
+                                           RIL_IPC_MOBILECONNECTION_MSG_NAMES,
+                                           callback);
+  gMessageManager.registerMessageListeners("voicemail",
+                                           RIL_IPC_VOICEMAIL_MSG_NAMES,
+                                           callback);
 
   let options = {
     debug: debugPref,
@@ -215,6 +217,17 @@ RadioInterfaceLayer.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIRadioInterfaceLayer,
                                          Ci.nsIObserver]),
+
+  _receiveMessage: function _receiveMessage(topic, msg) {
+    let clientId = msg.json.clientId || 0;
+    let radioInterface = this.getRadioInterface(clientId);
+    if (!radioInterface) {
+      if (DEBUG) debug("No such radio interface: " + clientId);
+      return null;
+    }
+
+    return radioInterface.receiveMessage(msg);
+  },
 
   /**
    * nsIObserver interface methods.
