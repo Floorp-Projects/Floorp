@@ -181,21 +181,8 @@ class BinaryBlock
 
     static bool obj_getGenericAttributes(JSContext *cx, HandleObject obj,
                                            HandleId id, unsigned *attrsp);
-    static bool obj_getPropertyAttributes(JSContext *cx, HandleObject obj,
-                                            HandlePropertyName name, unsigned *attrsp);
-    static bool obj_getElementAttributes(JSContext *cx, HandleObject obj,
-                                           uint32_t index, unsigned *attrsp);
-    static bool obj_getSpecialAttributes(JSContext *cx, HandleObject obj,
-                                           HandleSpecialId sid, unsigned *attrsp);
-
     static bool obj_setGenericAttributes(JSContext *cx, HandleObject obj,
                                            HandleId id, unsigned *attrsp);
-    static bool obj_setPropertyAttributes(JSContext *cx, HandleObject obj,
-                                            HandlePropertyName name, unsigned *attrsp);
-    static bool obj_setElementAttributes(JSContext *cx, HandleObject obj,
-                                           uint32_t index, unsigned *attrsp);
-    static bool obj_setSpecialAttributes(JSContext *cx, HandleObject obj,
-                                           HandleSpecialId sid, unsigned *attrsp);
 
     static bool obj_deleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
                                      bool *succeeded);

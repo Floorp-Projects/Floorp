@@ -32,30 +32,6 @@ JSObject::setGenericAttributes(JSContext *cx, js::HandleObject obj,
 }
 
 /* static */ inline bool
-JSObject::setPropertyAttributes(JSContext *cx, js::HandleObject obj,
-                                js::PropertyName *name, unsigned *attrsp)
-{
-    JS::RootedId id(cx, js::NameToId(name));
-    return setGenericAttributes(cx, obj, id, attrsp);
-}
-
-/* static */ inline bool
-JSObject::setElementAttributes(JSContext *cx, js::HandleObject obj,
-                               uint32_t index, unsigned *attrsp)
-{
-    js::ElementAttributesOp op = obj->getOps()->setElementAttributes;
-    return (op ? op : js::baseops::SetElementAttributes)(cx, obj, index, attrsp);
-}
-
-/* static */ inline bool
-JSObject::setSpecialAttributes(JSContext *cx, js::HandleObject obj,
-                               js::SpecialId sid, unsigned *attrsp)
-{
-    JS::RootedId id(cx, SPECIALID_TO_JSID(sid));
-    return setGenericAttributes(cx, obj, id, attrsp);
-}
-
-/* static */ inline bool
 JSObject::changePropertyAttributes(JSContext *cx, js::HandleObject obj,
                                    js::HandleShape shape, unsigned attrs)
 {
@@ -745,16 +721,6 @@ JSObject::getElementIfPresent(JSContext *cx, js::HandleObject obj, js::HandleObj
 
     *present = true;
     return getGeneric(cx, obj, receiver, id, vp);
-}
-
-/* static */ inline bool
-JSObject::getElementAttributes(JSContext *cx, js::HandleObject obj,
-                               uint32_t index, unsigned *attrsp)
-{
-    JS::RootedId id(cx);
-    if (!js::IndexToId(cx, index, &id))
-        return false;
-    return getGenericAttributes(cx, obj, id, attrsp);
 }
 
 inline js::GlobalObject &
