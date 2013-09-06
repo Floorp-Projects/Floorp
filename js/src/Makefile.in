@@ -206,13 +206,15 @@ jsconfig_FILES = $(export_files)
 jsconfig_DEST = $(DIST)/include
 jsconfig_TARGET := export
 
+.PHONY: buildffi buildicu
+buildffi buildicu:
+compile:: buildffi buildicu
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef JS_HAS_CTYPES
 ifndef MOZ_NATIVE_FFI
-# Build libffi proper as part of the 'exports' target, so things get built
-# in the right order.
-export::
+buildffi:
 		$(call SUBMAKE,,ctypes/libffi)
 
 distclean clean::
@@ -252,14 +254,12 @@ ifeq ($(OS_ARCH),WINNT)
                      cp -p intl/icu/lib/s$(libname)$(ICU_LIB_SUFFIX).lib intl/icu/lib/$(libname).lib;)
 endif
 
-# - Build ICU as part of the "export" target, so things get built
-#   in the right order.
 # - ICU requires GNU make according to its readme.html. pymake can't be used
 #   because it doesn't support order only dependencies.
 # - Force ICU to use the standard suffix for object files because expandlibs
 #   will discard all files with a non-standard suffix (bug 857450).
 # - Options for genrb: -k strict parsing; -R omit collation tailoring rules.
-export::
+buildicu:
 	$(GMAKE) $(ICU_GMAKE_OPTIONS) -C intl/icu STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R'
 	$(ICU_LIB_RENAME)
 
