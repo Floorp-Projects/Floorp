@@ -5379,6 +5379,14 @@ NS_IMETHODIMP
 nsDocShell::SetDefaultLoadFlags(uint32_t aDefaultLoadFlags)
 {
     mDefaultLoadFlags = aDefaultLoadFlags;
+
+    // Tell the load group to set these flags all requests in the group
+    if (mLoadGroup) {
+        mLoadGroup->SetDefaultLoadFlags(aDefaultLoadFlags);
+    } else {
+        NS_WARNING("nsDocShell::SetDefaultLoadFlags has no loadGroup to propagate the flags to");
+    }
+
     // Recursively tell all of our children.  We *do not* skip
     // <iframe mozbrowser> children - if someone sticks custom flags in this
     // docShell then they too get the same flags.

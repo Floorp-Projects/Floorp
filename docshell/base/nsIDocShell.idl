@@ -356,7 +356,8 @@ interface nsIDocShell : nsIDocShellTreeItem
 
   /*
    * Default load flags (as defined in nsIRequest) that will be set on all
-   * requests made by this docShell and propagated to all child docShells.
+   * requests made by this docShell and propagated to all child docShells and
+   * to nsILoadGroup::defaultLoadFlags for the docShell's loadGroup.
    * Default is no flags.  Once set, only future requests initiated by the
    * docShell are affected, so in general, these flags should be set before
    * the docShell loads any content.
