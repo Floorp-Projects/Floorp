@@ -8,11 +8,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 #include <limits>
-#include "nsNetUtil.h"
-#include "AudioStream.h"
-#include "mozilla/dom/HTMLVideoElement.h"
 #include "nsIObserver.h"
-#include "nsIObserverService.h"
 #include "nsTArray.h"
 #include "VideoUtils.h"
 #include "MediaDecoderStateMachine.h"
@@ -22,6 +18,9 @@
 #include "MediaResource.h"
 #include "nsError.h"
 #include "mozilla/Preferences.h"
+#include "nsIMemoryReporter.h"
+#include "nsComponentManagerUtils.h"
+#include "nsITimer.h"
 #include <algorithm>
 
 #ifdef MOZ_WMF

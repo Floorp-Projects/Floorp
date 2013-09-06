@@ -157,4 +157,7 @@ extern JS_PUBLIC_DATA(const jsid) JSID_EMPTY;
 # define JSID_EMPTY ((jsid)JSID_TYPE_OBJECT)
 #endif
 
+extern JS_PUBLIC_DATA(const JS::Handle<jsid>) JSID_VOIDHANDLE;
+extern JS_PUBLIC_DATA(const JS::Handle<jsid>) JSID_EMPTYHANDLE;
+
 #endif /* js_Id_h */

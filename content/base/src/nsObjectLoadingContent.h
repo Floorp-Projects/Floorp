@@ -19,7 +19,6 @@
 #include "nsIChannelEventSink.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsIRunnable.h"
-#include "nsPluginInstanceOwner.h"
 #include "nsIThreadInternal.h"
 #include "nsIFrame.h"
 #include "nsIFrameLoader.h"
@@ -30,6 +29,7 @@ class AutoSetInstantiatingToFalse;
 class nsObjectFrame;
 class nsFrameLoader;
 class nsXULElement;
+class nsPluginInstanceOwner;
 
 class nsObjectLoadingContent : public nsImageLoadingContent
                              , public nsIStreamListener

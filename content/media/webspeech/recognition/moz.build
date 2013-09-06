@@ -27,7 +27,6 @@ EXPORTS.mozilla.dom += [
 
 CPP_SOURCES += [
     'EnableWebSpeechRecognitionCheck.cpp',
-    'FakeSpeechRecognitionService.cpp',
     'SpeechGrammar.cpp',
     'SpeechGrammarList.cpp',
     'SpeechRecognition.cpp',
@@ -38,6 +37,7 @@ CPP_SOURCES += [
     'endpointer.cc',
     'energy_endpointer.cc',
     'energy_endpointer_params.cc',
+    'test/FakeSpeechRecognitionService.cpp',
 ]
 
 LIBXUL_LIBRARY = True

@@ -550,7 +550,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   if (bit_depth == 16)
     png_set_scale_16(png_ptr);
 
-  qcms_data_type inType;
+  qcms_data_type inType = QCMS_DATA_RGBA_8;
   uint32_t intent = -1;
   uint32_t pIntent;
   if (decoder->mCMSMode != eCMSMode_Off) {

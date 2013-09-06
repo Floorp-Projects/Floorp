@@ -1,0 +1,127 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(test);
+
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+
+// The default flags we will stick on the docShell - every request made by the
+// docShell should include those flags.
+const TEST_FLAGS = Ci.nsIRequest.LOAD_ANONYMOUS |
+                   Ci.nsIRequest.LOAD_BYPASS_CACHE |
+                   Ci.nsIRequest.INHIBIT_CACHING |
+                   Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
+
+var TEST_URL = "http://mochi.test:8888/chrome/docshell/test/chrome/bug909218.html";
+
+// These are the requests we expect to see loading TEST_URL into our iframe.
+
+// The test entry-point.  The basic outline is:
+// * Create an iframe and set defaultLoadFlags on its docShell.
+// * Add a web progress listener to observe each request as the iframe is
+//   loaded, and check that each request has the flags we specified.
+// * Load our test URL into the iframe and wait for the load to complete.
+function test() {
+  var iframe = document.createElement("iframe");
+  document.body.appendChild(iframe);
+  var docShell = docshellForWindow(iframe.contentWindow);
+  // Add our progress listener - when it notices the top-level document is
+  // complete, the test will end.
+  RequestWatcher.init(docShell, SimpleTest.finish);
+  // Set the flags we care about, then load our test URL.
+  docShell.defaultLoadFlags = TEST_FLAGS;
+  iframe.setAttribute("src", TEST_URL);
+}
+
+// an nsIWebProgressListener that checks all requests made by the docShell
+// have the flags we expect.
+RequestWatcher = {
+  init: function(docShell, callback) {
+    this.callback = callback;
+    this.docShell = docShell;
+    docShell.
+          QueryInterface(Ci.nsIInterfaceRequestor).
+          getInterface(Ci.nsIWebProgress).
+          addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_REQUEST |
+                                    Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
+    // These are the requests we expect to see - initialize each to have a
+    // count of zero.
+    this.requestCounts = {};
+    for (var url of [
+        TEST_URL,
+        // content loaded by the above test html.
+        "http://mochi.test:8888/chrome/docshell/test/chrome/bug909218.js",
+        "http://mochi.test:8888/tests/SimpleTest/test.css",
+        "http://mochi.test:8888/tests/docshell/test/chrome/red.png",
+        // the content of an iframe in the test html.
+        "http://mochi.test:8888/chrome/docshell/test/chrome/generic.html"
+      ]) {
+      this.requestCounts[url] = 0;
+    }
+  },
+
+  // Finalize the test after we detect a completed load.  We check we saw the
+  // correct requests and make a callback to exit.
+  finalize: function() {
+    ok(Object.keys(this.requestCounts).length, "we expected some requests");
+    for (var url in this.requestCounts) {
+      var count = this.requestCounts[url];
+      // As we are looking at all request states, we expect more than 1 for
+      // each URL - 0 or 1 would imply something went wrong - >1 just means
+      // multiple states for each request were recorded, which we don't care
+      // about (we do care they all have the correct flags though - but we
+      // do that in onStateChange)
+      ok(count > 1, url + " saw " + count + " requests");
+    }
+    this.docShell.
+          QueryInterface(Ci.nsIInterfaceRequestor).
+          getInterface(Ci.nsIWebProgress).
+          removeProgressListener(this);
+    this.callback();
+  },
+
+  onStateChange: function (webProgress, req, flags, status) {
+    // We are checking requests - if there isn't one, ignore it.
+    if (!req) {
+      return;
+    }
+    // We will usually see requests for 'about:document-onload-blocker' not
+    // have the flag, so we just ignore them.
+    // We also see, eg, resource://gre-resources/loading-image.png, so
+    // skip resource:// URLs too.
+    if (req.name.startsWith("about:") || req.name.startsWith("resource:")) {
+      return;
+    }
+    is(req.loadFlags & TEST_FLAGS, TEST_FLAGS, "request " + req.name + " has the expected flags");
+    this.requestCounts[req.name] += 1;
+    var stopFlags = Ci.nsIWebProgressListener.STATE_STOP |
+                    Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
+    if (req.name == TEST_URL && (flags & stopFlags) == stopFlags) {
+      this.finalize();
+    }
+  },
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIWebProgressListener,
+    Ci.nsISupportsWeakReference,
+  ])
+}
+
+function docshellForWindow(win) {
+  return win.
+         QueryInterface(Ci.nsIInterfaceRequestor).
+         getInterface(Ci.nsIWebNavigation).
+         QueryInterface(Ci.nsIDocShell);
+}
+
+</script>
+</head>
+</html>
