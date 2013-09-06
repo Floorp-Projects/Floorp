@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include "mozilla/Util.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Endian.h"
 #include <algorithm>
 
 namespace mozilla {
@@ -70,11 +71,7 @@ namespace {
   uint32_t
   ReadUint32BE(const char** aBuffer)
   {
-    uint32_t result =
-      uint8_t((*aBuffer)[0]) << 24 |
-      uint8_t((*aBuffer)[1]) << 16 |
-      uint8_t((*aBuffer)[2]) << 8 |
-      uint8_t((*aBuffer)[3]);
+    uint32_t result = BigEndian::readUint32(*aBuffer);
     *aBuffer += sizeof(uint32_t);
     return result;
   }
@@ -82,11 +79,7 @@ namespace {
   uint32_t
   ReadUint32LE(const char** aBuffer)
   {
-    uint32_t result =
-      uint8_t((*aBuffer)[3]) << 24 |
-      uint8_t((*aBuffer)[2]) << 16 |
-      uint8_t((*aBuffer)[1]) << 8 |
-      uint8_t((*aBuffer)[0]);
+    uint32_t result = LittleEndian::readUint32(*aBuffer);
     *aBuffer += sizeof(uint32_t);
     return result;
   }
@@ -94,9 +87,7 @@ namespace {
   uint16_t
   ReadUint16LE(const char** aBuffer)
   {
-    uint16_t result =
-      uint8_t((*aBuffer)[1]) << 8 |
-      uint8_t((*aBuffer)[0]) << 0;
+    uint16_t result = LittleEndian::readUint16(*aBuffer);
     *aBuffer += sizeof(uint16_t);
     return result;
   }
@@ -104,7 +95,9 @@ namespace {
   int16_t
   ReadInt16LE(const char** aBuffer)
   {
-    return static_cast<int16_t>(ReadUint16LE(aBuffer));
+    uint16_t result = LittleEndian::readInt16(*aBuffer);
+    *aBuffer += sizeof(int16_t);
+    return result;
   }
 
   uint8_t
