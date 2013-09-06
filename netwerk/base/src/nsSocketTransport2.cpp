@@ -155,8 +155,13 @@ ErrorAccordingToNSPR(PRErrorCode errorCode)
         rv = NS_ERROR_NET_INTERRUPT;
         break;
     case PR_CONNECT_REFUSED_ERROR:
-    case PR_NETWORK_UNREACHABLE_ERROR: // XXX need new nsresult for this!
-    case PR_HOST_UNREACHABLE_ERROR:    // XXX and this!
+    // We lump the following NSPR codes in with PR_CONNECT_REFUSED_ERROR. We
+    // could get better diagnostics by adding distinct XPCOM error codes for
+    // each of these, but there are a lot of places in Gecko that check
+    // specifically for NS_ERROR_CONNECTION_REFUSED, all of which would need to
+    // be checked.
+    case PR_NETWORK_UNREACHABLE_ERROR:
+    case PR_HOST_UNREACHABLE_ERROR:
     case PR_ADDRESS_NOT_AVAILABLE_ERROR:
     // Treat EACCES as a soft error since (at least on Linux) connect() returns
     // EACCES when an IPv6 connection is blocked by a firewall. See bug 270784.
@@ -170,10 +175,68 @@ ErrorAccordingToNSPR(PRErrorCode errorCode)
     case PR_CONNECT_TIMEOUT_ERROR:
         rv = NS_ERROR_NET_TIMEOUT;
         break;
+    case PR_OUT_OF_MEMORY_ERROR:
+    // These really indicate that the descriptor table filled up, or that the
+    // kernel ran out of network buffers - but nobody really cares which part of
+    // the system ran out of memory.
+    case PR_PROC_DESC_TABLE_FULL_ERROR:
+    case PR_SYS_DESC_TABLE_FULL_ERROR:
+    case PR_INSUFFICIENT_RESOURCES_ERROR:
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        break;
+    case PR_ADDRESS_IN_USE_ERROR:
+        rv = NS_ERROR_SOCKET_ADDRESS_IN_USE;
+        break;
+    // These filename-related errors can arise when using Unix-domain sockets.
+    case PR_FILE_NOT_FOUND_ERROR:
+        rv = NS_ERROR_FILE_NOT_FOUND;
+        break;
+    case PR_IS_DIRECTORY_ERROR:
+        rv = NS_ERROR_FILE_IS_DIRECTORY;
+        break;
+    case PR_LOOP_ERROR:
+        rv = NS_ERROR_FILE_UNRESOLVABLE_SYMLINK;
+        break;
+    case PR_NAME_TOO_LONG_ERROR:
+        rv = NS_ERROR_FILE_NAME_TOO_LONG;
+        break;
+    case PR_NO_DEVICE_SPACE_ERROR:
+        rv = NS_ERROR_FILE_NO_DEVICE_SPACE;
+        break;
+    case PR_NOT_DIRECTORY_ERROR:
+        rv = NS_ERROR_FILE_NOT_DIRECTORY;
+        break;
+    case PR_READ_ONLY_FILESYSTEM_ERROR:
+        rv = NS_ERROR_FILE_READ_ONLY;
+        break;
     default:
         if (IsNSSErrorCode(errorCode))
             rv = GetXPCOMFromNSSError(errorCode);
         break;
+
+    // NSPR's socket code can return these, but they're not worth breaking out
+    // into their own error codes, distinct from NS_ERROR_FAILURE:
+    //
+    // PR_BAD_DESCRIPTOR_ERROR
+    // PR_INVALID_ARGUMENT_ERROR
+    // PR_NOT_SOCKET_ERROR
+    // PR_NOT_TCP_SOCKET_ERROR
+    //   These would indicate a bug internal to the component.
+    //
+    // PR_PROTOCOL_NOT_SUPPORTED_ERROR
+    //   This means that we can't use the given "protocol" (like
+    //   IPPROTO_TCP or IPPROTO_UDP) with a socket of the given type. As
+    //   above, this indicates an internal bug.
+    //
+    // PR_IS_CONNECTED_ERROR
+    //   This indicates that we've applied a system call like 'bind' or
+    //   'connect' to a socket that is already connected. The socket
+    //   components manage each file descriptor's state, and in some cases
+    //   handle this error result internally. We shouldn't be returning
+    //   this to our callers.
+    //
+    // PR_IO_ERROR
+    //   This is so vague that NS_ERROR_FAILURE is just as good.
     }
     SOCKET_LOG(("ErrorAccordingToNSPR [in=%d out=%x]\n", errorCode, rv));
     return rv;

@@ -289,7 +289,7 @@ nsServerSocket::InitWithAddress(const PRNetAddr *aAddr, int32_t aBackLog)
   if (!mFD)
   {
     NS_WARNING("unable to create server socket");
-    return NS_ERROR_FAILURE;
+    return ErrorAccordingToNSPR(PR_GetError());
   }
 
   PRSocketOptionData opt;
@@ -330,8 +330,9 @@ nsServerSocket::InitWithAddress(const PRNetAddr *aAddr, int32_t aBackLog)
   return NS_OK;
 
 fail:
+  nsresult rv = ErrorAccordingToNSPR(PR_GetError());
   Close();
-  return NS_ERROR_FAILURE;
+  return rv;
 }
 
 NS_IMETHODIMP
