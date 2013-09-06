@@ -144,14 +144,14 @@ nsresult GStreamerReader::Init(MediaDecoderReader* aCloneDonor)
 
   mAudioSink = gst_parse_bin_from_description("capsfilter name=filter ! "
 #ifdef MOZ_SAMPLE_TYPE_FLOAT32
-        "appsink name=audiosink max-buffers=2 sync=true caps=audio/x-raw-float,"
+        "appsink name=audiosink max-buffers=2 sync=false caps=audio/x-raw-float,"
 #ifdef IS_LITTLE_ENDIAN
         "channels={1,2},width=32,endianness=1234", TRUE, nullptr);
 #else
         "channels={1,2},width=32,endianness=4321", TRUE, nullptr);
 #endif
 #else
-        "appsink name=audiosink max-buffers=2 sync=true caps=audio/x-raw-int,"
+        "appsink name=audiosink max-buffers=2 sync=false caps=audio/x-raw-int,"
 #ifdef IS_LITTLE_ENDIAN
         "channels={1,2},width=16,endianness=1234", TRUE, nullptr);
 #else
