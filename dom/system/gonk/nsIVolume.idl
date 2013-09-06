@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 #include "nsIVolumeStat.idl"
 
-[scriptable, uuid(e476e7ea-5cde-4d5a-b00d-d60daad76398)]
+[scriptable, uuid(8c163fe4-5577-11e3-b3d0-10bf48d707fb)]
 interface nsIVolume : nsISupports
 {
   // These MUST match the states from android's system/vold/Volume.h header
@@ -62,7 +62,16 @@ interface nsIVolume : nsISupports
   // transitioning from mounted to sharing and back again.
   readonly attribute boolean isSharing;
 
+  // Determines if the volume is currently formatting. This sets true once 
+  // mFormatRequest == true and mState == STATE_MOUNTED, and sets false
+  // once the volume has been formatted and mounted again.
+  readonly attribute boolean isFormatting;
+
   nsIVolumeStat getStats();
+
+  // Formats the volume in IO thread, if the volume is ready to be formatted.
+  // Automounter will unmount it, format it and then mount it again.
+  void format();
 
   // Whether this is a fake volume.
   readonly attribute boolean isFake;
