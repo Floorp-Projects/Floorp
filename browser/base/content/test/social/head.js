@@ -235,10 +235,6 @@ function checkSocialUI(win) {
   isbool(win.SocialChatBar.isAvailable, enabled, "chatbar available?");
   isbool(!win.SocialChatBar.chatbar.hidden, enabled, "chatbar visible?");
 
-  let markVisible = enabled && provider.pageMarkInfo;
-  let canMark = markVisible && win.SocialMark.canMarkPage(win.gBrowser.currentURI);
-  isbool(!win.SocialMark.button.hidden, markVisible, "SocialMark button visible?");
-  isbool(!win.SocialMark.button.disabled, canMark, "SocialMark button enabled?");
   isbool(!doc.getElementById("social-toolbar-item").hidden, active, "toolbar items visible?");
   if (active) {
     if (!enabled) {
@@ -251,6 +247,42 @@ function checkSocialUI(win) {
   if (provider) {
     for (let id of ["menu_socialSidebar", "menu_socialAmbientMenu"])
       _is(document.getElementById(id).getAttribute("label"), Social.provider.name, "element has the provider name");
+
+    let contextMenus = [
+      {
+        type: "link",
+        id: "context-marklinkMenu",
+        label: "social.marklink.label"
+      },
+      {
+        type: "page",
+        id: "context-markpageMenu",
+        label: "social.markpage.label"
+      }
+    ];
+
+    for (let c of contextMenus) {
+      let leMenu = document.getElementById(c.id);
+      let parent, menus;
+      let markProviders = SocialMarks.getProviders();
+      if (markProviders.length > SocialMarks.MENU_LIMIT) {
+        // menus should be in a submenu, not in the top level of the context menu
+        parent = leMenu.firstChild;
+        menus = document.getElementsByClassName("context-mark" + c.type);
+        _is(menus.length, 0, "menu's are not in main context menu\n");
+        menus = parent.childNodes;
+        _is(menus.length, markProviders.length, c.id + " menu exists for each mark provider");
+      } else {
+        // menus should be in the top level of the context menu, not in a submenu
+        parent = leMenu.parentNode;
+        menus = document.getElementsByClassName("context-mark" + c.type);
+        _is(menus.length, markProviders.length, c.id + " menu exists for each mark provider");
+        menus = leMenu.firstChild.childNodes;
+        _is(menus.length, 0, "menu's are not in context submenu\n");
+      }
+      for (let m of menus)
+        _is(m.parentNode, parent, "menu has correct parent");
+    }
   }
 
   // and for good measure, check all the social commands.
@@ -259,7 +291,6 @@ function checkSocialUI(win) {
   isbool(!doc.getElementById("Social:ToggleNotifications").hidden, enabled, "Social:ToggleNotifications visible?");
   isbool(!doc.getElementById("Social:FocusChat").hidden, enabled, "Social:FocusChat visible?");
   isbool(doc.getElementById("Social:FocusChat").getAttribute("disabled"), enabled ? "false" : "true", "Social:FocusChat disabled?");
-  _is(doc.getElementById("Social:TogglePageMark").getAttribute("disabled"), canMark ? "false" : "true", "Social:TogglePageMark enabled?");
 
   // broadcasters.
   isbool(!doc.getElementById("socialActiveBroadcaster").hidden, active, "socialActiveBroadcaster hidden?");

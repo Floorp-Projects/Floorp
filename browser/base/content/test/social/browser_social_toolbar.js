@@ -124,12 +124,11 @@ var tests = {
     let numIcons = Object.keys(Social.provider.ambientNotificationIcons).length;
     ok(numIcons == 3, "prevent adding more than 3 ambient notification icons");
 
-    let mButton = document.getElementById("social-mark-button");
     let pButton = document.getElementById("social-provider-button");
     waitForCondition(function() {
       // wait for a new button to be inserted inbetween the provider and mark
       // button
-      return pButton.nextSibling != mButton;
+      return !!pButton.nextSibling;
     }, function () {
       let statusIcon = pButton.nextSibling;
       let badge = statusIcon.getAttribute("badge");

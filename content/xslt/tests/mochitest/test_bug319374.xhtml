@@ -31,6 +31,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
     //         cause non-anonymous XPath result to throw exceptions..
     var counter = 0;
     var error = null;
+    function getAnonymousNodes(e) {
+      return SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes(e));
+    }
     try {
       var xp = new XPathEvaluator();
       var result = xp.evaluate("*",
@@ -42,7 +45,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
       var res = null;
       while (res = result.iterateNext()) {
         ++counter; 
-        var anon = document.getAnonymousNodes(res);
+        var anon = getAnonymousNodes(res);
         anon[0].removeChild(anon[0].firstChild); // Removing a child node
         anon[0].removeAttribute("attr1"); // Removing an attribute
         anon[1].firstChild.data = "anon text changed" // Modifying text data
@@ -56,10 +59,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
     // Test 2: If the context node is in anonymous content, changing some
     //         other anonymous tree shouldn't cause XPath result to throw.
     var anonAttr1 =
-      document.getAnonymousNodes(document.getElementById('content').
+      getAnonymousNodes(document.getElementById('content').
         firstChild)[0].getAttributeNode('attr');
     var anonAttr2 =
-      document.getAnonymousNodes(document.getElementById('content').
+      getAnonymousNodes(document.getElementById('content').
         lastChild)[0].getAttributeNode('attr');
     var resultAttr = null;
     try {

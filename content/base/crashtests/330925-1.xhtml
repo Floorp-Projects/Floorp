@@ -10,7 +10,7 @@ function init()
   var emb = document.getElementById("emb");
 
   try {  
-    foopy.appendChild(document.getAnonymousNodes(emb)[0]);
+    foopy.appendChild(SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes(emb))[0]);
     emb.parentNode.removeChild(emb);
     foopy.parentNode.removeChild(foopy);
   } catch (e) {

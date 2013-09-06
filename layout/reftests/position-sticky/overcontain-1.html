@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>CSS Test: Sticky Positioning - containment and normal position</title>
+    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <link rel="match" href="overcontain-1-ref.html">
+    <meta name="assert" content="Keeping the element's margin box within the containing block's content box should never move the element back past its normal position">
+    <style>
+      body {
+        margin: 0;
+      }
+      #sticky {
+        position: sticky;
+        top: 10px;
+        height: 10px;
+        margin-bottom: 10px;
+        background-color: black;
+      }
+    </style>
+  <body>
+    <div id="sticky"></div>
+  </body>
+</html>

@@ -37,9 +37,6 @@
                 label="&bookmarkThisLinkCmd.label;"
                 accesskey="&bookmarkThisLinkCmd.accesskey;"
                 oncommand="gContextMenu.bookmarkLink();"/>
-      <menuitem id="context-marklink"
-                accesskey="&social.marklink.accesskey;"
-                oncommand="gContextMenu.markLink();"/>
       <menuitem id="context-sharelink"
                 label="&shareLinkCmd.label;"
                 accesskey="&shareLinkCmd.accesskey;"
@@ -48,6 +45,10 @@
                 label="&saveLinkCmd.label;"
                 accesskey="&saveLinkCmd.accesskey;"
                 oncommand="gContextMenu.saveLink();"/>
+      <menu id="context-marklinkMenu" label="&social.marklinkMenu.label;"
+            accesskey="&social.marklink.accesskey;">
+        <menupopup/>
+      </menu>
       <menuitem id="context-copyemail"
                 label="&copyEmailCmd.label;"
                 accesskey="&copyEmailCmd.accesskey;"
@@ -242,9 +243,6 @@
                 label="&bookmarkPageCmd2.label;"
                 accesskey="&bookmarkPageCmd2.accesskey;"
                 oncommand="gContextMenu.bookmarkThisPage();"/>
-      <menuitem id="context-markpage"
-                accesskey="&social.markpage.accesskey;"
-                command="Social:TogglePageMark"/>
       <menuitem id="context-sharepage"
                 label="&sharePageCmd.label;"
                 accesskey="&sharePageCmd.accesskey;"
@@ -253,6 +251,10 @@
                 label="&savePageCmd.label;"
                 accesskey="&savePageCmd.accesskey2;"
                 oncommand="gContextMenu.savePageAs();"/>
+      <menu id="context-markpageMenu" label="&social.markpageMenu.label;"
+            accesskey="&social.markpage.accesskey;">
+        <menupopup/>
+      </menu>
       <menuseparator id="context-sep-viewbgimage"/>
       <menuitem id="context-viewbgimage"
                 label="&viewBGImageCmd.label;"

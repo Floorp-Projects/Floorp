@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>CSS Test: Sticky Positioning - initial reflow</title>
+    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <link rel="match" href="initial-1-ref.html">
+    <meta name="assert" content="Sticky positioning should be calculated correctly on initial page reflow">
+    <style>
+      body {
+        height: 100px;
+        margin: 0;
+        /* Without this, we do multiple passes of reflow, and
+         * the sticky element ends up positioned correctly.
+         */
+        overflow-y: scroll;
+      }
+      #sticky {
+        position: sticky;
+        top: 10px;
+        height: 10px;
+        margin-bottom: 10px;
+        background-color: black;
+      }
+    </style>
+  <body>
+    <div id="sticky"></div>
+  </body>
+</html>

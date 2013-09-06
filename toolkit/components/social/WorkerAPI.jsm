@@ -72,9 +72,6 @@ WorkerAPI.prototype = {
     "social.ambient-notification": function (data) {
       this._provider.setAmbientNotification(data);
     },
-    "social.page-mark-config": function(data) {
-      this._provider.pageMarkInfo = data;
-    },
     "social.cookies-get": function(data) {
       // We don't want to trust provider.origin etc, just incase the provider
       // redirected away or something else bad is going on.  So we want to
