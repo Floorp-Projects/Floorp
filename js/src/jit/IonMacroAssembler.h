@@ -162,6 +162,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     template <typename Source, typename TypeSet>
     void guardTypeSet(const Source &address, const TypeSet *types, Register scratch,
                       Label *matched, Label *miss);
+    template <typename TypeSet>
+    void guardObjectType(Register obj, const TypeSet *types,
+                         Register scratch, Label *matched, Label *miss);
     template <typename Source>
     void guardType(const Source &address, types::Type type, Register scratch,
                    Label *matched, Label *miss);

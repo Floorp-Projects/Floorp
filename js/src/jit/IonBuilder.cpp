@@ -930,46 +930,48 @@ IonBuilder::addOsrValueTypeBarrier(uint32_t slot, MInstruction **def_,
         def = barrier;
     }
 
-    switch (type) {
-      case MIRType_Boolean:
-      case MIRType_Int32:
-      case MIRType_Double:
-      case MIRType_String:
-      case MIRType_Object:
-      {
-        MUnbox *unbox = MUnbox::New(def, type, MUnbox::Fallible);
-        osrBlock->insertBefore(osrBlock->lastIns(), unbox);
-        osrBlock->rewriteSlot(slot, unbox);
-        def = unbox;
-        break;
-      }
+    if (type != def->type()) {
+        switch (type) {
+          case MIRType_Boolean:
+          case MIRType_Int32:
+          case MIRType_Double:
+          case MIRType_String:
+          case MIRType_Object:
+          {
+            MUnbox *unbox = MUnbox::New(def, type, MUnbox::Fallible);
+            osrBlock->insertBefore(osrBlock->lastIns(), unbox);
+            osrBlock->rewriteSlot(slot, unbox);
+            def = unbox;
+            break;
+          }
 
-      case MIRType_Null:
-      {
-        MConstant *c = MConstant::New(NullValue());
-        osrBlock->insertBefore(osrBlock->lastIns(), c);
-        osrBlock->rewriteSlot(slot, c);
-        def = c;
-        break;
-      }
+          case MIRType_Null:
+          {
+            MConstant *c = MConstant::New(NullValue());
+            osrBlock->insertBefore(osrBlock->lastIns(), c);
+            osrBlock->rewriteSlot(slot, c);
+            def = c;
+            break;
+          }
 
-      case MIRType_Undefined:
-      {
-        MConstant *c = MConstant::New(UndefinedValue());
-        osrBlock->insertBefore(osrBlock->lastIns(), c);
-        osrBlock->rewriteSlot(slot, c);
-        def = c;
-        break;
-      }
+          case MIRType_Undefined:
+          {
+            MConstant *c = MConstant::New(UndefinedValue());
+            osrBlock->insertBefore(osrBlock->lastIns(), c);
+            osrBlock->rewriteSlot(slot, c);
+            def = c;
+            break;
+          }
 
-      case MIRType_Magic:
-        JS_ASSERT(lazyArguments_);
-        osrBlock->rewriteSlot(slot, lazyArguments_);
-        def = lazyArguments_;
-        break;
+          case MIRType_Magic:
+            JS_ASSERT(lazyArguments_);
+            osrBlock->rewriteSlot(slot, lazyArguments_);
+            def = lazyArguments_;
+            break;
 
-      default:
-        break;
+          default:
+            break;
+        }
     }
 
     JS_ASSERT(def == osrBlock->getSlot(slot));
@@ -3754,9 +3756,9 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
         if (!types->unknown()) {
             MTypeBarrier *barrier = MTypeBarrier::New(callInfo.thisArg(), cloneTypeSet(types), Bailout_Normal);
             current->add(barrier);
-            MUnbox *unbox = MUnbox::New(barrier, MIRType_Object, MUnbox::Infallible);
-            current->add(unbox);
-            callInfo.setThis(unbox);
+            callInfo.setThis(barrier);
+            // object or missing
+            JS_ASSERT(barrier->type() == MIRType_Object || barrier->type() == MIRType_Value);
         }
     }
 
@@ -4051,19 +4053,12 @@ IonBuilder::getInlineableGetPropertyCache(CallInfo &callInfo)
     }
 
     // Optimize away the following common pattern:
-    // MUnbox[MIRType_Object, Infallible] <- MTypeBarrier <- MGetPropertyCache
-    if (funcDef->isUnbox()) {
-        MUnbox *unbox = funcDef->toUnbox();
-        if (unbox->mode() != MUnbox::Infallible)
+    // MTypeBarrier[MIRType_Object] <- MGetPropertyCache
+    if (funcDef->isTypeBarrier()) {
+        MTypeBarrier *barrier = funcDef->toTypeBarrier();
+        if (barrier->hasUses())
             return NULL;
-        if (unbox->hasUses())
-            return NULL;
-        if (!unbox->input()->isTypeBarrier())
-            return NULL;
-
-        MTypeBarrier *barrier = unbox->input()->toTypeBarrier();
-        // Test if usecount() > 1
-        if (!barrier->hasOneUse())
+        if (barrier->type() != MIRType_Object)
             return NULL;
         if (!barrier->input()->isGetPropertyCache())
             return NULL;
@@ -4177,16 +4172,16 @@ IonBuilder::inlineTypeObjectFallback(CallInfo &callInfo, MBasicBlock *dispatchBl
 {
     // Getting here implies the following:
     // 1. The call function is an MGetPropertyCache, or an MGetPropertyCache
-    //    followed by an MTypeBarrier, followed by an MUnbox.
-    JS_ASSERT(callInfo.fun()->isGetPropertyCache() || callInfo.fun()->isUnbox());
+    //    followed by an MTypeBarrier.
+    JS_ASSERT(callInfo.fun()->isGetPropertyCache() || callInfo.fun()->isTypeBarrier());
 
     // 2. The MGetPropertyCache has inlineable cases by guarding on the TypeObject.
     JS_ASSERT(dispatch->numCases() > 0);
 
-    // 3. The MGetPropertyCache (and, if applicable, MTypeBarrier and MUnbox) only
+    // 3. The MGetPropertyCache (and, if applicable, MTypeBarrier) only
     //    have at most a single use.
     JS_ASSERT_IF(callInfo.fun()->isGetPropertyCache(), !cache->hasUses());
-    JS_ASSERT_IF(callInfo.fun()->isUnbox(), cache->hasOneUse());
+    JS_ASSERT_IF(callInfo.fun()->isTypeBarrier(), cache->hasOneUse());
 
     // This means that no resume points yet capture the MGetPropertyCache,
     // so everything from the MGetPropertyCache up until the call is movable.
@@ -4240,19 +4235,14 @@ IonBuilder::inlineTypeObjectFallback(CallInfo &callInfo, MBasicBlock *dispatchBl
         getPropBlock->addFromElsewhere(cache);
         getPropBlock->push(cache);
     } else {
-        MUnbox *unbox = callInfo.fun()->toUnbox();
-        JS_ASSERT(unbox->input()->isTypeBarrier());
-        JS_ASSERT(unbox->type() == MIRType_Object);
-        JS_ASSERT(unbox->mode() == MUnbox::Infallible);
-
-        MTypeBarrier *typeBarrier = unbox->input()->toTypeBarrier();
-        JS_ASSERT(typeBarrier->input()->isGetPropertyCache());
-        JS_ASSERT(typeBarrier->input()->toGetPropertyCache() == cache);
+        MTypeBarrier *barrier = callInfo.fun()->toTypeBarrier();
+        JS_ASSERT(barrier->type() == MIRType_Object);
+        JS_ASSERT(barrier->input()->isGetPropertyCache());
+        JS_ASSERT(barrier->input()->toGetPropertyCache() == cache);
 
         getPropBlock->addFromElsewhere(cache);
-        getPropBlock->addFromElsewhere(typeBarrier);
-        getPropBlock->addFromElsewhere(unbox);
-        getPropBlock->push(unbox);
+        getPropBlock->addFromElsewhere(barrier);
+        getPropBlock->push(barrier);
     }
 
     // Construct an end block with the correct resume point.
@@ -6207,38 +6197,14 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::StackTypeSet *observed, bo
 
     current->pop();
 
-    MInstruction *barrier;
-    JSValueType type = observed->getKnownTypeTag();
+    MInstruction *barrier = MTypeBarrier::New(ins, cloneTypeSet(observed));
+    current->add(barrier);
 
-    // An unbox instruction isn't enough to capture JSVAL_TYPE_OBJECT. Use a type
-    // barrier followed by an infallible unbox.
-    bool isObject = false;
-    if (type == JSVAL_TYPE_OBJECT && !observed->hasType(types::Type::AnyObjectType())) {
-        type = JSVAL_TYPE_UNKNOWN;
-        isObject = true;
-    }
+    if (barrier->type() == MIRType_Undefined)
+        return pushConstant(UndefinedValue());
+    if (barrier->type() == MIRType_Null)
+        return pushConstant(NullValue());
 
-    switch (type) {
-      case JSVAL_TYPE_UNKNOWN:
-      case JSVAL_TYPE_UNDEFINED:
-      case JSVAL_TYPE_NULL:
-        barrier = MTypeBarrier::New(ins, cloneTypeSet(observed));
-        current->add(barrier);
-
-        if (type == JSVAL_TYPE_UNDEFINED)
-            return pushConstant(UndefinedValue());
-        if (type == JSVAL_TYPE_NULL)
-            return pushConstant(NullValue());
-        if (isObject) {
-            barrier = MUnbox::New(barrier, MIRType_Object, MUnbox::Infallible);
-            current->add(barrier);
-        }
-        break;
-      default:
-        MUnbox::Mode mode = ins->isEffectful() ? MUnbox::TypeBarrier : MUnbox::TypeGuard;
-        barrier = MUnbox::New(ins, MIRTypeFromValueType(type), mode);
-        current->add(barrier);
-    }
     current->push(barrier);
     return true;
 }

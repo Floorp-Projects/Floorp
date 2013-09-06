@@ -86,7 +86,7 @@ jit::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
             // parameter passing might be live. Rewriting uses of these terms
             // in resume points may affect the interpreter's behavior. Rather
             // than doing a more sophisticated analysis, just ignore these.
-            if (ins->isUnbox() || ins->isParameter())
+            if (ins->isUnbox() || ins->isParameter() || ins->isTypeBarrier())
                 continue;
 
             // If the instruction's behavior has been constant folded into a
@@ -1286,7 +1286,13 @@ TryEliminateTypeBarrierFromTest(MTypeBarrier *barrier, bool filtersNull, bool fi
     // types that have been seen in the first access but not the second.
 
     // A test 'if (x.f)' filters both null and undefined.
-    if (test->getOperand(0) == barrier->input() && direction == TRUE_BRANCH) {
+
+    // Disregard the possible unbox added before the Typebarrier for checking.
+    MDefinition *input = barrier->input();
+    if (input->isUnbox() && input->toUnbox()->mode() == MUnbox::TypeBarrier)
+        input = input->toUnbox()->input();
+
+    if (test->getOperand(0) == input && direction == TRUE_BRANCH) {
         *eliminated = true;
         barrier->replaceAllUsesWith(barrier->input());
         return;
@@ -1300,7 +1306,7 @@ TryEliminateTypeBarrierFromTest(MTypeBarrier *barrier, bool filtersNull, bool fi
 
     if (compareType != MCompare::Compare_Undefined && compareType != MCompare::Compare_Null)
         return;
-    if (compare->getOperand(0) != barrier->input())
+    if (compare->getOperand(0) != input)
         return;
 
     JSOp op = compare->jsop();
@@ -1331,6 +1337,13 @@ TryEliminateTypeBarrier(MTypeBarrier *barrier, bool *eliminated)
 
     const types::StackTypeSet *barrierTypes = barrier->resultTypeSet();
     const types::StackTypeSet *inputTypes = barrier->input()->resultTypeSet();
+
+    // Disregard the possible unbox added before the Typebarrier.
+    if (barrier->input()->isUnbox() &&
+        barrier->input()->toUnbox()->mode() == MUnbox::TypeBarrier)
+    {
+        inputTypes = barrier->input()->toUnbox()->input()->resultTypeSet();
+    }
 
     if (!barrierTypes || !inputTypes)
         return true;
