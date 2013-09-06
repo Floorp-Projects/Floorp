@@ -40,3 +40,5 @@ TESTFLAGS := -fsyntax-only -Xclang -verify \
 
 $(TESTS): test-%: tests/%.cpp $(PLUGIN)
 	$(CXX) $(TESTFLAGS) $<
+
+compile libs export tools: all
