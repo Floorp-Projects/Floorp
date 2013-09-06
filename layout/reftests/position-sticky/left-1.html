@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>CSS Test: Sticky Positioning - left, normal position</title>
+    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <link rel="match" href="left-1-ref.html">
+    <meta name="flags" content="dom">
+    <meta name="assert" content="Sticky-left with not enough scrolling: should be in its normal position">
+    <style>
+      #scroll {
+        width: 100px;
+        height: 100px;
+        overflow: hidden;
+        border: 1px solid black;
+        white-space: nowrap;
+      }
+      #scroll div {
+        display: inline-block;
+      }
+      .fill {
+        width: 100px;
+        height: 1px;
+      }
+      #contain {
+        width: 200px;
+        height: 10px;
+        background-color: gray;
+      }
+      #sticky {
+        position: sticky;
+        left: 10px;
+        width: 10px;
+        height: 10px;
+        background-color: black;
+      }
+    </style>
+  <body>
+    <div id="scroll">
+      <div class="fill"></div
+      ><div id="contain">
+        <div id="sticky"></div>
+      </div
+      ><div class="fill"></div>
+    </div>
+    <script type="text/javascript">
+      document.getElementById("scroll").scrollLeft = 80;
+    </script>
+  </body>
+</html>

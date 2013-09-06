@@ -11,7 +11,7 @@
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ImageClient.h"  // for ImageClient, etc
-#include "mozilla/layers/LayerTransaction.h"  // for ImageLayerAttributes, etc
+#include "mozilla/layers/LayersMessages.h"  // for ImageLayerAttributes, etc
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nsAutoPtr.h"                  // for nsRefPtr, getter_AddRefs, etc
 #include "nsCOMPtr.h"                   // for already_AddRefed
