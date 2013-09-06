@@ -677,8 +677,8 @@ UnixSocketConsumer::SendSocketData(const nsACString& aStr)
   }
 
   MOZ_ASSERT(!mImpl->IsShutdownOnMainThread());
-  UnixSocketRawData* d = new UnixSocketRawData(aStr.Length());
-  memcpy(d->mData, aStr.BeginReading(), aStr.Length());
+  UnixSocketRawData* d = new UnixSocketRawData(aStr.BeginReading(),
+                                               aStr.Length());
   XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
                                    new SocketSendTask(this, mImpl, d));
   return true;
@@ -717,8 +717,9 @@ UnixSocketImpl::OnFileCanReadWithoutBlocking(int aFd)
   if (status == SOCKET_CONNECTED) {
     // Read all of the incoming data.
     while (true) {
-      uint8_t data[MAX_READ_SIZE];
-      ssize_t ret = read(aFd, data, MAX_READ_SIZE);
+      nsAutoPtr<UnixSocketRawData> incoming(new UnixSocketRawData(MAX_READ_SIZE));
+
+      ssize_t ret = read(aFd, incoming->mData, incoming->mSize);
       if (ret <= 0) {
         if (ret == -1) {
           if (errno == EINTR) {
@@ -743,13 +744,13 @@ UnixSocketImpl::OnFileCanReadWithoutBlocking(int aFd)
         return;
       }
 
-      UnixSocketRawData* incoming = new UnixSocketRawData(ret);
-      memcpy(incoming->mData, data, ret);
-      nsRefPtr<SocketReceiveTask> t = new SocketReceiveTask(this, incoming);
+      incoming->mSize = ret;
+      nsRefPtr<SocketReceiveTask> t =
+        new SocketReceiveTask(this, incoming.forget());
       NS_DispatchToMainThread(t);
 
-      // If ret is less than MAX_READ_SIZE, there's no more data in the socket
-      // for us to read now.
+      // If ret is less than MAX_READ_SIZE, there's no
+      // more data in the socket for us to read now.
       if (ret < ssize_t(MAX_READ_SIZE)) {
         return;
       }

@@ -42,25 +42,34 @@ union sockaddr_any {
 class UnixSocketRawData
 {
 public:
-  nsAutoArrayPtr<uint8_t> mData;
-
   // Number of octets in mData.
   size_t mSize;
   size_t mCurrentWriteOffset;
+  nsAutoArrayPtr<uint8_t> mData;
 
   /**
-   * Constructor for situations where size is known beforehand (for example,
-   * when being assigned strings)
-   *
+   * Constructor for situations where only size is known beforehand
+   * (for example, when being assigned strings)
    */
-  UnixSocketRawData(int aSize) :
+  UnixSocketRawData(size_t aSize) :
     mSize(aSize),
     mCurrentWriteOffset(0)
   {
-    mData = new uint8_t[aSize];
+    mData = new uint8_t[mSize];
   }
-private:
-  UnixSocketRawData() {}
+
+  /**
+   * Constructor for situations where size and data is known
+   * beforehand (for example, when being assigned strings)
+   */
+  UnixSocketRawData(const void* aData, size_t aSize)
+    : mSize(aSize),
+      mCurrentWriteOffset(0)
+  {
+    MOZ_ASSERT(aData || !mSize);
+    mData = new uint8_t[mSize];
+    memcpy(mData, aData, mSize);
+  }
 };
 
 class UnixSocketImpl;
