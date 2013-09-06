@@ -39,6 +39,7 @@ TextureClient::TextureClient(TextureFlags aFlags)
   : mID(0)
   , mFlags(aFlags)
   , mShared(false)
+  , mValid(true)
 {}
 
 TextureClient::~TextureClient()
@@ -64,6 +65,7 @@ TextureClient::ShouldDeallocateInDestructor() const
 bool
 ShmemTextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor)
 {
+  MOZ_ASSERT(IsValid());
   if (!IsAllocated() || GetFormat() == gfx::FORMAT_UNKNOWN) {
     return false;
   }
@@ -82,6 +84,7 @@ ShmemTextureClient::GetAllocator() const
 bool
 ShmemTextureClient::Allocate(uint32_t aSize)
 {
+  MOZ_ASSERT(IsValid());
   ipc::SharedMemory::SharedMemoryType memType = OptimalShmemType();
   mAllocated = GetAllocator()->AllocUnsafeShmem(aSize, memType, &mShmem);
   return mAllocated;
@@ -90,6 +93,7 @@ ShmemTextureClient::Allocate(uint32_t aSize)
 uint8_t*
 ShmemTextureClient::GetBuffer() const
 {
+  MOZ_ASSERT(IsValid());
   if (mAllocated) {
     return mShmem.get<uint8_t>();
   }
@@ -99,6 +103,7 @@ ShmemTextureClient::GetBuffer() const
 size_t
 ShmemTextureClient::GetBufferSize() const
 {
+  MOZ_ASSERT(IsValid());
   return mShmem.Size<uint8_t>();
 }
 
@@ -124,6 +129,7 @@ ShmemTextureClient::~ShmemTextureClient()
 bool
 MemoryTextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor)
 {
+  MOZ_ASSERT(IsValid());
   if (!IsAllocated() || GetFormat() == gfx::FORMAT_UNKNOWN) {
     return false;
   }
@@ -177,6 +183,7 @@ BufferTextureClient::UpdateSurface(gfxASurface* aSurface)
 {
   MOZ_ASSERT(aSurface);
   MOZ_ASSERT(!IsImmutable());
+  MOZ_ASSERT(IsValid());
 
   ImageDataSerializer serializer(GetBuffer());
   if (!serializer.IsValid()) {
@@ -204,6 +211,8 @@ BufferTextureClient::UpdateSurface(gfxASurface* aSurface)
 already_AddRefed<gfxASurface>
 BufferTextureClient::GetAsSurface()
 {
+  MOZ_ASSERT(IsValid());
+
   ImageDataSerializer serializer(GetBuffer());
   if (!serializer.IsValid()) {
     return nullptr;
@@ -217,6 +226,7 @@ BufferTextureClient::GetAsSurface()
 bool
 BufferTextureClient::AllocateForSurface(gfx::IntSize aSize)
 {
+  MOZ_ASSERT(IsValid());
   MOZ_ASSERT(mFormat != gfx::FORMAT_YUV, "This textureClient cannot use YCbCr data");
 
   int bufSize
@@ -235,6 +245,7 @@ BufferTextureClient::UpdateYCbCr(const PlanarYCbCrImage::Data& aData)
 {
   MOZ_ASSERT(mFormat == gfx::FORMAT_YUV, "This textureClient can only use YCbCr data");
   MOZ_ASSERT(!IsImmutable());
+  MOZ_ASSERT(IsValid());
   MOZ_ASSERT(aData.mCbSkip == aData.mCrSkip);
 
   YCbCrImageDataSerializer serializer(GetBuffer());
@@ -260,6 +271,8 @@ BufferTextureClient::AllocateForYCbCr(gfx::IntSize aYSize,
                                       gfx::IntSize aCbCrSize,
                                       StereoMode aStereoMode)
 {
+  MOZ_ASSERT(IsValid());
+
   size_t bufSize = YCbCrImageDataSerializer::ComputeMinBufferSize(aYSize,
                                                                   aCbCrSize);
   if (!Allocate(bufSize)) {

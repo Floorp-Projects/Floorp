@@ -48,6 +48,7 @@ GrallocTextureClientOGL::InitWith(GrallocBufferActor* aActor, gfx::IntSize aSize
 {
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(!IsAllocated());
+  MOZ_ASSERT(IsValid());
   mGrallocActor = aActor;
   mGraphicBuffer = aActor->GetGraphicBuffer();
   mSize = aSize;
@@ -56,6 +57,7 @@ GrallocTextureClientOGL::InitWith(GrallocBufferActor* aActor, gfx::IntSize aSize
 bool
 GrallocTextureClientOGL::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
 {
+  MOZ_ASSERT(IsValid());
   if (!IsAllocated()) {
     return false;
   }
@@ -67,6 +69,7 @@ GrallocTextureClientOGL::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
 bool
 GrallocTextureClientOGL::Lock(OpenMode aMode)
 {
+  MOZ_ASSERT(IsValid());
   // XXX- it would be cleaner to take the openMode into account or to check
   // that aMode is coherent with mGrallocFlags (which carries more information
   // than OpenMode).
@@ -87,6 +90,7 @@ GrallocTextureClientOGL::Unlock()
 uint8_t*
 GrallocTextureClientOGL::GetBuffer() const
 {
+  MOZ_ASSERT(IsValid());
   NS_WARN_IF_FALSE(mMappedBuffer, "Trying to get a gralloc buffer without getting the lock?");
   return mMappedBuffer;
 }
@@ -94,6 +98,7 @@ GrallocTextureClientOGL::GetBuffer() const
 bool
 GrallocTextureClientOGL::AllocateForSurface(gfx::IntSize aSize)
 {
+  MOZ_ASSERT(IsValid());
   MOZ_ASSERT(mCompositable);
   ISurfaceAllocator* allocator = mCompositable->GetForwarder();
 
@@ -130,6 +135,7 @@ GrallocTextureClientOGL::AllocateForSurface(gfx::IntSize aSize)
 bool
 GrallocTextureClientOGL::AllocateForYCbCr(gfx::IntSize aYSize, gfx::IntSize aCbCrSize, StereoMode aStereoMode)
 {
+  MOZ_ASSERT(IsValid());
   return AllocateGralloc(aYSize,
                          HAL_PIXEL_FORMAT_YV12,
                          android::GraphicBuffer::USAGE_SW_READ_OFTEN);
@@ -140,6 +146,7 @@ GrallocTextureClientOGL::AllocateGralloc(gfx::IntSize aSize,
                                          uint32_t aAndroidFormat,
                                          uint32_t aUsage)
 {
+  MOZ_ASSERT(IsValid());
   MOZ_ASSERT(mCompositable);
   ISurfaceAllocator* allocator = mCompositable->GetForwarder();
 
