@@ -57,10 +57,12 @@ MOCHITEST_FILES := \
   test_channelSplitterNode.html \
   test_channelSplitterNodeWithVolume.html \
   test_convolverNode.html \
+  test_convolverNodeChannelCount.html \
   test_convolverNodeWithGain.html \
   test_convolverNode_mono_mono.html \
   test_currentTime.html \
   test_delayNode.html \
+  test_delayNodeAtMax.html \
   test_delayNodeSmallMaxDelay.html \
   test_delayNodeWithGain.html \
   test_dynamicsCompressorNode.html \
@@ -112,13 +114,6 @@ MOCHITEST_FILES := \
   audio-mono-expected-2.wav \
   audio-quad.wav \
   $(NULL)
-
-ifneq ($(MOZ_DEBUG)+$(MOZ_WIDGET_TOOLKIT),+gtk2) # bug 911777
-MOCHITEST_FILES += \
-  test_convolverNodeChannelCount.html \
-  test_delayNodeAtMax.html \
-  $(NULL)
-endif # bug 911777
 
 ifneq ($(OS_TARGET),Android) # bug 912474
 MOCHITEST_FILES += \
