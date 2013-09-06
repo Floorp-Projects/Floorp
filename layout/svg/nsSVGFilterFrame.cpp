@@ -45,6 +45,9 @@ MapFrameRectToFilterSpace(const nsRect* aRect,
 {
   nsIntRect rect(0, 0, aFilterRes.width, aFilterRes.height);
   if (aRect) {
+    if (aRect->IsEmpty()) {
+      return nsIntRect();
+    }
     gfxRect rectInCSSPx =
       nsLayoutUtils::RectToGfxRect(*aRect, aAppUnitsPerCSSPx);
     gfxRect rectInFilterSpace =
@@ -456,6 +459,9 @@ static nsRect
 TransformFilterSpaceToFrameSpace(nsSVGFilterInstance *aInstance,
                                  nsIntRect *aRect)
 {
+  if (aRect->IsEmpty()) {
+    return nsRect();
+  }
   gfxMatrix m = aInstance->GetFilterSpaceToFrameSpaceInCSSPxTransform();
   gfxRect r(aRect->x, aRect->y, aRect->width, aRect->height);
   r = m.TransformBounds(r);
@@ -466,6 +472,10 @@ nsRect
 nsSVGFilterFrame::GetPostFilterDirtyArea(nsIFrame *aFilteredFrame,
                                          const nsRect& aPreFilterDirtyRect)
 {
+  if (aPreFilterDirtyRect.IsEmpty()) {
+    return nsRect();
+  }
+
   nsAutoFilterInstance instance(aFilteredFrame, this, nullptr, nullptr,
                                 &aPreFilterDirtyRect, nullptr);
   if (!instance.get()) {
