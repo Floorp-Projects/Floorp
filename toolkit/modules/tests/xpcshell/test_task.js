@@ -166,3 +166,67 @@ add_test(function test_yielded_primitive()
     do_throw("Unexpected error: " + ex);
   });
 });
+
+add_test(function test_star_normal()
+{
+  Task.spawn(function* () {
+    let result = yield Promise.resolve("Value");
+    for (let i = 0; i < 3; i++) {
+      result += yield promiseResolvedLater("!");
+    }
+    return "Task result: " + result;
+  }).then(function (result) {
+    do_check_eq("Task result: Value!!!", result);
+    run_next_test();
+  }, function (ex) {
+    do_throw("Unexpected error: " + ex);
+  });
+});
+
+add_test(function test_star_exceptions()
+{
+  Task.spawn(function* () {
+    try {
+      yield Promise.reject("Rejection result by promise.");
+      do_throw("Exception expected because the promise was rejected.");
+    } catch (ex) {
+      // We catch this exception now, we will throw a different one later.
+      do_check_eq("Rejection result by promise.", ex);
+    }
+    throw new Error("Exception uncaught by task.");
+  }).then(function (result) {
+    do_throw("Unexpected success!");
+  }, function (ex) {
+    do_check_eq("Exception uncaught by task.", ex.message);
+    run_next_test();
+  });
+});
+
+add_test(function test_star_recursion()
+{
+  function* task_fibonacci(n) {
+    return n < 2 ? n : (yield task_fibonacci(n - 1)) +
+                       (yield task_fibonacci(n - 2));
+  };
+
+  Task.spawn(task_fibonacci(6)).then(function (result) {
+    do_check_eq(8, result);
+    run_next_test();
+  }, function (ex) {
+    do_throw("Unexpected error: " + ex);
+  });
+});
+
+add_test(function test_mixed_legacy_and_star()
+{
+  Task.spawn(function* () {
+    return yield (function() {
+      throw new Task.Result(yield 5);
+    })();
+  }).then(function (result) {
+    do_check_eq(5, result);
+    run_next_test();
+  }, function (ex) {
+    do_throw("Unexpected error: " + ex);
+  });
+});
