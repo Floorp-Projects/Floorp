@@ -385,7 +385,7 @@ MetroInput::OnPointerPressed(UI::Core::ICoreWindow* aSender,
   // dispatch it now so we can see if preventDefault gets called on it.
   if (mTouches.Count() == 1) {
     nsEventStatus status;
-    DispatchPendingTouchEvent(status, true);
+    DispatchPendingTouchEvent(status);
     mTouchStartDefaultPrevented = (nsEventStatus_eConsumeNoDefault == status);
     // If the first touchstart event has preventDefault called on it, then
     // we will not perform any default actions associated with any touch
@@ -441,7 +441,7 @@ MetroInput::OnPointerReleased(UI::Core::ICoreWindow* aSender,
   // sure that we don't have a touchmove or touchstart sitting around for this
   // point.
   if (touch->mChanged) {
-    DispatchPendingTouchEvent(true);
+    DispatchPendingTouchEvent();
   }
   mTouches.Remove(pointerId);
 
@@ -526,7 +526,7 @@ MetroInput::OnPointerMoved(UI::Core::ICoreWindow* aSender,
   // If we're modifying a touch entry that has a pending update, go through
   // with the update.
   if (touch->mChanged) {
-    DispatchPendingTouchEvent(true);
+    DispatchPendingTouchEvent();
   }
 
   touch = CreateDOMTouch(currentPoint.Get());
@@ -537,7 +537,7 @@ MetroInput::OnPointerMoved(UI::Core::ICoreWindow* aSender,
   // and store our mTouchMoveDefaultPrevented value
   if (mIsFirstTouchMove) {
     nsEventStatus status;
-    DispatchPendingTouchEvent(status, true);
+    DispatchPendingTouchEvent(status);
     mTouchMoveDefaultPrevented = (nsEventStatus_eConsumeNoDefault == status);
     mIsFirstTouchMove = false;
   }
@@ -1019,7 +1019,7 @@ MetroInput::DispatchEventIgnoreStatus(nsGUIEvent *aEvent) {
 }
 
 void
-MetroInput::DispatchPendingTouchEvent(nsEventStatus& aStatus, bool aDispatchToAPZC) {
+MetroInput::DispatchPendingTouchEvent(nsEventStatus& aStatus) {
   mTouchEvent.touches.Clear();
   mTouches.Enumerate(&AppendToTouchList,
                      static_cast<void*>(&mTouchEvent.touches));
@@ -1028,7 +1028,7 @@ MetroInput::DispatchPendingTouchEvent(nsEventStatus& aStatus, bool aDispatchToAP
   mModifierKeyState.InitInputEvent(mTouchEvent);
 
   mWidget->DispatchEvent(&mTouchEvent, aStatus);
-  if (aStatus != nsEventStatus_eConsumeNoDefault && aDispatchToAPZC && MetroWidget::sAPZC) {
+  if (aStatus != nsEventStatus_eConsumeNoDefault && MetroWidget::sAPZC) {
     MultiTouchInput inputData(mTouchEvent);
     aStatus = MetroWidget::sAPZC->ReceiveInputEvent(inputData);
   }
@@ -1038,8 +1038,8 @@ MetroInput::DispatchPendingTouchEvent(nsEventStatus& aStatus, bool aDispatchToAP
 }
 
 void
-MetroInput::DispatchPendingTouchEvent(bool aDispatchToAPZC) {
-  DispatchPendingTouchEvent(sThrowawayStatus, aDispatchToAPZC);
+MetroInput::DispatchPendingTouchEvent() {
+  DispatchPendingTouchEvent(sThrowawayStatus);
 }
 
 void
