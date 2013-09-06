@@ -5,18 +5,6 @@
 EXPORT_LIBRARY = ..
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES += \
-  -I$(srcdir) \
-  -I$(srcdir)/../base \
-  -I$(srcdir)/../generic \
-  -I$(srcdir)/../html \
-  -I$(srcdir)/../xul \
-  -I$(topsrcdir)/widget/cocoa \
-  -I$(topsrcdir)/widget/xpwidgets \
-  -I$(topsrcdir)/layout/xul/base/src \
-  -I$(topsrcdir)/layout/generic \
-  $(NULL)
-
 ifneq ($(A11Y_LOG),0)
   DEFINES += -DA11Y_LOG
 endif
