@@ -172,9 +172,6 @@ private:
                                 uint32_t aMagEventType,
                                 uint32_t aRotEventType);
 
-  void DispatchEventIgnoreStatus(nsGUIEvent *aEvent);
-  static nsEventStatus sThrowawayStatus;
-
   // The W3C spec states that "whether preventDefault has been called" should
   // be tracked on a per-touchpoint basis, but it also states that touchstart
   // and touchmove events can contain multiple changed points.  At the time of
@@ -221,9 +218,7 @@ private:
   // the updated touchpoint info and record the fact that the touchpoint
   // has changed.  If ever we try to update a touchpoint has already
   // changed, we dispatch a touch event containing all the changed touches.
-  nsTouchEvent mTouchEvent;
-  void DispatchPendingTouchEvent();
-  void DispatchPendingTouchEvent(nsEventStatus& status);
+  void InitTouchEventTouchList(nsTouchEvent* aEvent);
   nsBaseHashtable<nsUint32HashKey,
                   nsRefPtr<mozilla::dom::Touch>,
                   nsRefPtr<mozilla::dom::Touch> > mTouches;
@@ -254,9 +249,33 @@ private:
   EventRegistrationToken mTokenTapped;
   EventRegistrationToken mTokenRightTapped;
 
-  void DispatchAsyncEventIgnoreStatus(nsGUIEvent* aEvent);
+  // Due to a limitation added in 8.1 the ui thread can't re-enter the main
+  // native event dispatcher in MetroAppShell. So all events delivered to us
+  // on the ui thread via a native event dispatch call get bounced through
+  // the gecko thread event queue using runnables. Most events can be sent
+  // async without the need to see the status result. Those that do have
+  // specialty callbacks. Note any event that arrives to us on the ui thread
+  // that originates from another thread is safe to send sync.
+
+  // Async event dispatching
+  void DispatchAsyncEventIgnoreStatus(nsInputEvent* aEvent);
+  void DispatchAsyncTouchEventIgnoreStatus(nsTouchEvent* aEvent);
+  void DispatchAsyncTouchEventWithCallback(nsTouchEvent* aEvent, void (MetroInput::*Callback)());
+
+  // Async event callbacks
   void DeliverNextQueuedEventIgnoreStatus();
-  nsDeque mInputEventQueue;
+  nsEventStatus DeliverNextQueuedEvent();
+  nsEventStatus DeliverNextQueuedTouchEvent();
+
+  // Misc. specialty async callbacks
+  void OnPointerPressedCallback();
+  void OnFirstPointerMoveCallback();
+
+  // Sync event dispatching
+  void DispatchEventIgnoreStatus(nsGUIEvent *aEvent);
+
+   nsDeque mInputEventQueue;
+  static nsEventStatus sThrowawayStatus;
 };
 
 } } }
