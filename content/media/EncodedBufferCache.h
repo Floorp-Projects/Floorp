@@ -45,7 +45,7 @@ private:
   // File handle for the temporary file
   PRFileDesc* mFD;
   // Used to protect the mEncodedBuffer for avoiding AppendBuffer/Consume on different thread at the same time.
-  Mutex mMutex;;
+  Mutex mMutex;
   // the current buffer size can be read
   uint64_t mDataSize;
   // The maximal buffer allowed in memory
