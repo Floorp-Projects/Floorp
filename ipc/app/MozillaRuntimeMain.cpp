@@ -8,7 +8,7 @@
 #include "nsXULAppAPI.h"
 
 // FIXME/cjones testing
-#if !defined(XP_WIN)
+#if !defined(OS_WIN)
 #include <unistd.h>
 #endif
 
