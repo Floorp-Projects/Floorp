@@ -3013,9 +3013,17 @@ class MutableHandleBase<JSPropertyDescriptor>
 
 } /* namespace js */
 
+extern JS_PUBLIC_API(bool)
+JS_GetOwnPropertyDescriptorById(JSContext *cx, JSObject *objArg, jsid id, unsigned flags,
+                                JS::MutableHandle<JSPropertyDescriptor> desc);
+
+extern JS_PUBLIC_API(bool)
+JS_GetOwnPropertyDescriptor(JSContext *cx, JSObject *objArg, const char *name, unsigned flags,
+                            JS::MutableHandle<JSPropertyDescriptor> desc);
+
 /*
- * Like JS_GetPropertyAttrsGetterAndSetterById but will return a property on
- * an object on the prototype chain (returned in objp). If data->obj is null,
+ * Like JS_GetOwnPropertyDescriptorById but will return a property on
+ * an object on the prototype chain (returned in desc->obj). If desc->obj is null,
  * then this property was not found on the prototype chain.
  */
 extern JS_PUBLIC_API(bool)
@@ -3023,7 +3031,8 @@ JS_GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, unsigned fla
                              JS::MutableHandle<JSPropertyDescriptor> desc);
 
 extern JS_PUBLIC_API(bool)
-JS_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, JS::MutableHandle<JS::Value> vp);
+JS_GetPropertyDescriptor(JSContext *cx, JSObject *obj, const char *name, unsigned flags,
+                         JS::MutableHandle<JSPropertyDescriptor> desc);
 
 extern JS_PUBLIC_API(bool)
 JS_GetProperty(JSContext *cx, JSObject *obj, const char *name, JS::MutableHandle<JS::Value> vp);
