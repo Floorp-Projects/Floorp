@@ -133,7 +133,6 @@ nsRDFXMLSerializer::Init(nsIRDFDataSource* aDataSource)
     prefix = do_GetAtom("NC");
     AddNameSpace(prefix, NS_LITERAL_STRING("http://home.netscape.com/NC-rdf#"));
 
-    mQNames.Init();
     mPrefixID = 0;
 
     return NS_OK;

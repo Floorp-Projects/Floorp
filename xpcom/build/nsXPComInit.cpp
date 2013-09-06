@@ -194,9 +194,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(VisualEventTracer)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsVariant)
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHashPropertyBag, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHashPropertyBag)
 
-NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(nsProperties, Init)
+NS_GENERIC_AGGREGATED_CONSTRUCTOR(nsProperties)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUUIDGenerator, Init)
 
@@ -334,11 +334,11 @@ NS_InitXPCOM(nsIServiceManager* *result,
     return NS_InitXPCOM2(result, binDirectory, nullptr);
 }
 
-class ICUReporter MOZ_FINAL : public MemoryUniReporter
+class ICUReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
     ICUReporter()
-      : MemoryUniReporter("explicit/icu", KIND_HEAP, UNITS_BYTES,
+      : MemoryReporterBase("explicit/icu", KIND_HEAP, UNITS_BYTES,
 "Memory used by ICU, a Unicode and globalization support library.")
     {
 #ifdef DEBUG

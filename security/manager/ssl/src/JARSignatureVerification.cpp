@@ -633,7 +633,6 @@ OpenSignedJARFile(nsIFile * aJarFile,
   ScopedAutoSECItem buf(128 * 1024);
 
   nsTHashtable<nsCStringHashKey> items;
-  items.Init();
 
   rv = ParseMF(char_ptr_cast(manifestBuffer.data), zip, items, buf);
   if (NS_FAILED(rv)) {

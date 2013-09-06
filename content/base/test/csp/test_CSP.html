@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Content Security Policy Connections</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+  
+</div>
+
+<iframe style="width:200px;height:200px;" id='cspframe'></iframe>
+<iframe style="width:200px;height:200px;" id='cspframe2'></iframe>
+<script class="testbody" type="text/javascript">
+
+var path = "/tests/content/base/test/csp/";
+
+// These are test results: -1 means it hasn't run, 
+// true/false is the pass/fail result.
+window.tests = {
+  img_good: -1,
+  img_bad: -1,
+  style_good: -1,
+  style_bad: -1,
+  frame_good: -1,
+  frame_bad: -1,
+  script_good: -1,
+  script_bad: -1,
+  xhr_good: -1,
+  xhr_bad: -1,
+  media_good: -1,
+  media_bad: -1,
+  font_good: -1,
+  font_bad: -1,
+  object_good: -1,
+  object_bad: -1,
+  img_spec_compliant_good: -1,
+  img_spec_compliant_bad: -1,
+  style_spec_compliant_good: -1,
+  style_spec_compliant_bad: -1,
+  frame_spec_compliant_good: -1,
+  frame_spec_compliant_bad: -1,
+  script_spec_compliant_good: -1,
+  script_spec_compliant_bad: -1,
+  xhr_spec_compliant_good: -1,
+  xhr_spec_compliant_bad: -1,
+  media_spec_compliant_good: -1,
+  media_spec_compliant_bad: -1,
+  font_spec_compliant_good: -1,
+  font_spec_compliant_bad: -1,
+  object_spec_compliant_good: -1,
+  object_spec_compliant_bad: -1,
+};
+
+
+// This is used to watch the blocked data bounce off CSP and allowed data 
+// get sent out to the wire.
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+  SpecialPowers.addObserver(this, "http-on-modify-request", false);
+}
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    // subject should be an nsURI, and should be either allowed or blocked.
+    if (!SpecialPowers.can_QI(subject))
+      return;
+      
+    var testpat = new RegExp("testid=([a-z0-9_]+)");
+
+    //_good things better be allowed!
+    //_bad things better be stopped!
+
+    if (topic === "http-on-modify-request") {
+      //these things were allowed by CSP
+      var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIHttpChannel"), "URI.asciiSpec");
+      if (!testpat.test(asciiSpec)) return;
+      var testid = testpat.exec(asciiSpec)[1];
+
+      window.testResult(testid,
+                        /_good/.test(testid),
+                        asciiSpec + " allowed by csp");
+    }
+
+    if(topic === "csp-on-violate-policy") {
+      //these were blocked... record that they were blocked
+      var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
+      if (!testpat.test(asciiSpec)) return;
+      var testid = testpat.exec(asciiSpec)[1];
+      window.testResult(testid,
+                        /_bad/.test(testid),
+                        asciiSpec + " blocked by \"" + data + "\"");
+    }
+  },
+
+  // must eventually call this to remove the listener, 
+  // or mochitests might get borked.
+  remove: function() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "http-on-modify-request");
+  }
+}
+
+window.examiner = new examiner();
+
+window.testResult = function(testname, result, msg) {
+  //test already complete.... forget it... remember the first result.
+  if (window.tests[testname] != -1)
+    return;
+
+  window.tests[testname] = result;
+  is(result, true, testname + ' test: ' + msg);
+
+  // if any test is incomplete, keep waiting
+  for (var v in window.tests)
+    if(tests[v] == -1)
+      return;
+
+  // ... otherwise, finish
+  window.examiner.remove();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv(
+  {'set':[["security.csp.speccompliant", true]]},
+    function() {
+      // save this for last so that our listeners are registered.
+      // ... this loads the testbed of good and bad requests.
+      document.getElementById('cspframe').src = 'file_CSP_main.html';
+      document.getElementById('cspframe2').src = 'file_CSP_main_spec_compliant.html';
+    });
+</script>
+</pre>
+</body>
+</html>

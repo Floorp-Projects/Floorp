@@ -122,7 +122,7 @@ public:
   class Data
   {
   public:
-    Data() : mOriginQuotaUsage(0) { mKeys.Init(); }
+    Data() : mOriginQuotaUsage(0) {}
     int64_t mOriginQuotaUsage;
     nsDataHashtable<nsStringHashKey, nsString> mKeys;
   };

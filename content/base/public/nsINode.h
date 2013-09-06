@@ -1739,6 +1739,18 @@ inline nsINode* NODE_FROM(C& aContent, D& aDocument)
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINode, NS_INODE_IID)
 
+inline nsISupports*
+ToSupports(nsINode* aPointer)
+{
+  return aPointer;
+}
+
+inline nsISupports*
+ToCanonicalSupports(nsINode* aPointer)
+{
+  return aPointer;
+}
+
 #define NS_FORWARD_NSIDOMNODE_TO_NSINODE_HELPER(...) \
   NS_IMETHOD GetNodeName(nsAString& aNodeName) __VA_ARGS__ \
   { \

@@ -26,11 +26,11 @@
 using namespace mozilla;
 
 class LayoutStyleSheetServiceReporter MOZ_FINAL
-  : public mozilla::MemoryUniReporter
+  : public mozilla::MemoryReporterBase
 {
 public:
   LayoutStyleSheetServiceReporter()
-    : MemoryUniReporter("explicit/layout/style-sheet-service",
+    : MemoryReporterBase("explicit/layout/style-sheet-service",
                          KIND_HEAP, UNITS_BYTES,
 "Memory used for style sheets held by the style sheet service.")
   {}

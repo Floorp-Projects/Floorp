@@ -10,6 +10,9 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "jsalloc.h"
+
+#include "js/HashTable.h"
 #include "js/TypeDecls.h"
 
 namespace JS {
@@ -47,21 +50,34 @@ class TraceLogging
   private:
     struct Entry {
         uint64_t tick_;
-        char* file_;
+        char* text_;
+        uint32_t textId_;
         uint32_t lineno_;
         uint8_t type_;
 
-        Entry(uint64_t tick, char* file, uint32_t lineno, Type type)
-            : tick_(tick), file_(file), lineno_(lineno), type_((uint8_t)type) {}
+        Entry(uint64_t tick, char* text, uint32_t textId, uint32_t lineno, Type type)
+            : tick_(tick),
+              text_(text),
+              textId_(textId),
+              lineno_(lineno),
+              type_((uint8_t)type) {}
 
         uint64_t tick() const { return tick_; }
-        char *file() const { return file_; }
+        char *text() const { return text_; }
+        uint32_t textId() const { return textId_; }
         uint32_t lineno() const { return lineno_; }
         Type type() const { return (Type) type_; }
     };
 
+    typedef HashMap<const char *,
+                        uint32_t,
+                        PointerHasher<const char *, 3>,
+                        SystemAllocPolicy> TextHashMap;
+
     uint64_t startupTime;
     uint64_t loggingTime;
+    TextHashMap textMap;
+    uint32_t nextTextId;
     Entry *entries;
     unsigned int curEntry;
     unsigned int numEntries;
@@ -74,11 +90,10 @@ class TraceLogging
     TraceLogging();
     ~TraceLogging();
 
-    void log(Type type, const char* filename, unsigned int line);
+    void log(Type type, const char* text = NULL, unsigned int number = 0);
     void log(Type type, const JS::CompileOptions &options);
     void log(Type type, JSScript* script);
     void log(const char* log);
-    void log(Type type);
     void flush();
 
     static TraceLogging* defaultLogger();

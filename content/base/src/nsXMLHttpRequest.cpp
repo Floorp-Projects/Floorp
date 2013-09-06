@@ -301,8 +301,6 @@ nsXMLHttpRequest::nsXMLHttpRequest()
     mResultArrayBuffer(nullptr),
     mXPCOMifier(nullptr)
 {
-  mAlreadySetHeaders.Init();
-
   SetIsDOMBinding();
 #ifdef DEBUG
   StaticAssertions();

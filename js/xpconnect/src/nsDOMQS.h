@@ -244,18 +244,6 @@ ToSupports(nsContentList *p)
 }
 
 inline nsISupports*
-ToCanonicalSupports(nsINode* p)
-{
-    return p;
-}
-
-inline nsISupports*
-ToSupports(nsINode* p)
-{
-  return p;
-}
-
-inline nsISupports*
 ToCanonicalSupports(nsContentList *p)
 {
     return static_cast<nsINodeList*>(p);

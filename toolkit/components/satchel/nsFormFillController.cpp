@@ -60,7 +60,6 @@ nsFormFillController::nsFormFillController() :
   mSuppressOnInput(false)
 {
   mController = do_GetService("@mozilla.org/autocomplete/controller;1");
-  mPwmgrInputs.Init();
 }
 
 struct PwmgrInputsEnumData

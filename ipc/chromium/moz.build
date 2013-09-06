@@ -176,7 +176,6 @@ if os_macosx:
         'mach_ipc_mac.mm',
         'message_pump_mac.mm',
         'platform_thread_mac.mm',
-        'platform_util_mac.mm',
         'process_util_mac.mm',
         'scoped_nsautorelease_pool.mm',
         'sys_string_conversions_mac.mm',

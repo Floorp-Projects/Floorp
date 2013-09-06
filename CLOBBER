@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 908977 - Generate XPIDL headers directly into dist/include
+Bug 912832 - Inverse tiers and subtiers for build traversal

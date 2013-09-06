@@ -540,12 +540,12 @@ gfxGDIFont::FillLogFont(LOGFONTW& aLogFont, gfxFloat aSize,
 int32_t
 gfxGDIFont::GetGlyphWidth(gfxContext *aCtx, uint16_t aGID)
 {
-    if (!mGlyphWidths.IsInitialized()) {
-        mGlyphWidths.Init(200);
+    if (!mGlyphWidths) {
+        mGlyphWidths = new nsDataHashtable<nsUint32HashKey,int32_t>(200);
     }
 
     int32_t width;
-    if (mGlyphWidths.Get(aGID, &width)) {
+    if (mGlyphWidths->Get(aGID, &width)) {
         return width;
     }
 
@@ -556,7 +556,7 @@ gfxGDIFont::GetGlyphWidth(gfxContext *aCtx, uint16_t aGID)
     if (GetCharWidthI(dc, aGID, 1, nullptr, &devWidth)) {
         // ensure width is positive, 16.16 fixed-point value
         width = (devWidth & 0x7fff) << 16;
-        mGlyphWidths.Put(aGID, width);
+        mGlyphWidths->Put(aGID, width);
         return width;
     }
 
@@ -568,8 +568,11 @@ gfxGDIFont::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                 FontCacheSizes*   aSizes) const
 {
     gfxFont::SizeOfExcludingThis(aMallocSizeOf, aSizes);
-    aSizes->mFontInstances += aMallocSizeOf(mMetrics) +
-        mGlyphWidths.SizeOfExcludingThis(nullptr, aMallocSizeOf);
+    aSizes->mFontInstances += aMallocSizeOf(mMetrics);
+    if (mGlyphWidths) {
+        aSizes->mFontInstances +=
+            mGlyphWidths->SizeOfExcludingThis(nullptr, aMallocSizeOf);
+    }
 }
 
 void

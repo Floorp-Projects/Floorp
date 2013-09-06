@@ -1845,7 +1845,6 @@ HTMLMediaElement::AddMediaElementToURITable()
     "Should not have entry for element in element table before addition");
   if (!gElementTable) {
     gElementTable = new MediaElementURITable();
-    gElementTable->Init();
   }
   MediaElementSetForURI* entry = gElementTable->PutEntry(mLoadingSrc);
   entry->mElements.AppendElement(this);

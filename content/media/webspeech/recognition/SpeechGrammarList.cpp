@@ -7,6 +7,7 @@
 #include "SpeechGrammarList.h"
 
 #include "mozilla/dom/SpeechGrammarListBinding.h"
+#include "mozilla/ErrorResult.h"
 
 namespace mozilla {
 namespace dom {

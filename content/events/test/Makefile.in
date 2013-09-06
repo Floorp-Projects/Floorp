@@ -95,6 +95,7 @@ MOCHITEST_FILES = \
 		test_bug847597.html \
 		test_bug855741.html \
 		test_dblclick_explicit_original_target.html \
+		test_all_synthetic_events.html \
 		$(NULL)
 
 ifeq (,$(filter gonk,$(MOZ_WIDGET_TOOLKIT)))

@@ -26,6 +26,7 @@ public:
 #endif
   virtual TemporaryRef<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget);
   virtual void CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder);
+  virtual bool GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton);
 
 private:
   friend class DrawTargetCG;

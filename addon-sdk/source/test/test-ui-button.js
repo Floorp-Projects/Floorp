@@ -20,8 +20,8 @@ function getWidget(buttonId, window = getMostRecentBrowserWindow()) {
   const { CustomizableUI } = Cu.import('resource:///modules/CustomizableUI.jsm', {});
   const { AREA_NAVBAR } = CustomizableUI;
 
-  let widgets = CustomizableUI.getWidgetsInArea(AREA_NAVBAR).
-    filter(({id}) => id.startsWith('button--') && id.endsWith(buttonId));
+  let widgets = CustomizableUI.getWidgetIdsInArea(AREA_NAVBAR).
+    filter((id) => id.startsWith('button--') && id.endsWith(buttonId));
 
   if (widgets.length === 0)
     throw new Error('Widget with id `' + id +'` not found.');
@@ -29,7 +29,7 @@ function getWidget(buttonId, window = getMostRecentBrowserWindow()) {
   if (widgets.length > 1)
     throw new Error('Unexpected number of widgets: ' + widgets.length)
 
-  return widgets[0].forWindow(window);
+  return CustomizableUI.getWidget(widgets[0]).forWindow(window);
 };
 
 exports['test basic constructor validation'] = function(assert) {

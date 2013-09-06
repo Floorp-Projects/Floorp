@@ -343,6 +343,10 @@ ReportOnCaller(JSCLContextHelper &helper,
 mozJSComponentLoader::mozJSComponentLoader()
     : mRuntime(nullptr),
       mContext(nullptr),
+      mModules(32),
+      mImports(32),
+      mInProgressImports(32),
+      mThisObjects(32),
       mInitialized(false),
       mReuseLoaderGlobal(false)
 {
@@ -412,11 +416,6 @@ mozJSComponentLoader::ReallyInit()
     rv = secman->GetSystemPrincipal(getter_AddRefs(mSystemPrincipal));
     if (NS_FAILED(rv) || !mSystemPrincipal)
         return NS_ERROR_FAILURE;
-
-    mModules.Init(32);
-    mImports.Init(32);
-    mInProgressImports.Init(32);
-    mThisObjects.Init(32);
 
     nsCOMPtr<nsIObserverService> obsSvc =
         do_GetService(kObserverServiceContractID, &rv);

@@ -160,7 +160,7 @@ protected:
 // MEMBER VARIABLES
 protected: 
   // A set of nsIContent that currently have a binding installed.
-  nsTHashtable<nsRefPtrHashKey<nsIContent> > mBoundContentSet;
+  nsAutoPtr<nsTHashtable<nsRefPtrHashKey<nsIContent> > > mBoundContentSet;
 
   // A mapping from nsIContent* to nsIXPWrappedJS* (an XPConnect
   // wrapper for JS objects).  For XBL bindings that implement XPIDL
@@ -174,12 +174,12 @@ protected:
   // A mapping from a URL (a string) to nsXBLDocumentInfo*.  This table
   // is the cache of all binding documents that have been loaded by a
   // given bound document.
-  nsRefPtrHashtable<nsURIHashKey,nsXBLDocumentInfo> mDocumentTable;
+  nsAutoPtr<nsRefPtrHashtable<nsURIHashKey,nsXBLDocumentInfo> > mDocumentTable;
 
   // A mapping from a URL (a string) to a nsIStreamListener. This
   // table is the currently loading binding docs.  If they're in this
   // table, they have not yet finished loading.
-  nsInterfaceHashtable<nsURIHashKey,nsIStreamListener> mLoadingDocTable;
+  nsAutoPtr<nsInterfaceHashtable<nsURIHashKey,nsIStreamListener> > mLoadingDocTable;
 
   // A queue of binding attached event handlers that are awaiting execution.
   nsBindingList mAttachedStack;

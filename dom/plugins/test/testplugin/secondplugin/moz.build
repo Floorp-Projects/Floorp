@@ -8,3 +8,5 @@ MODULE = 'npsecondtest'
 
 LIBRARY_NAME = 'npsecondtest'
 
+relative_path = '..'
+include('../testplugin.mozbuild')

@@ -180,7 +180,7 @@ xpc_UnmarkSkippableJSHolders();
 NS_EXPORT_(void)
 xpc_ActivateDebugMode();
 
-class nsIMemoryReporterCallback;
+class nsIMemoryMultiReporterCallback;
 
 // readable string conversions, static methods and members only
 class XPCStringConvert
@@ -376,7 +376,7 @@ private:
 nsresult
 ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                                  const nsACString &rtPath,
-                                 nsIMemoryReporterCallback *cb,
+                                 nsIMemoryMultiReporterCallback *cb,
                                  nsISupports *closure, size_t *rtTotal = NULL);
 
 /**

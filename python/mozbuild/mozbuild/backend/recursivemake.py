@@ -21,6 +21,7 @@ from ..frontend.data import (
     ConfigFileSubstitution,
     DirectoryTraversal,
     IPDLFile,
+    LocalInclude,
     SandboxDerived,
     VariablePassthru,
     Exports,
@@ -203,6 +204,9 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, XpcshellManifests):
             self._process_xpcshell_manifests(obj, backend_file)
+
+        elif isinstance(obj, LocalInclude):
+            self._process_local_include(obj.path, backend_file)
 
         self._backend_files[obj.srcdir] = backend_file
 
@@ -433,6 +437,13 @@ class RecursiveMakeBackend(CommonBackend):
         if obj.relativedir != '':
             manifest = '%s/%s' % (obj.relativedir, manifest)
         self.xpcshell_manifests.append(manifest)
+
+    def _process_local_include(self, local_include, backend_file):
+        if local_include.startswith('/'):
+            path = '$(topsrcdir)'
+        else:
+            path = '$(srcdir)/'
+        backend_file.write('LOCAL_INCLUDES += -I%s%s\n' % (path, local_include))
 
     def _write_manifests(self, dest, manifests):
         man_dir = os.path.join(self.environment.topobjdir, '_build_manifests',

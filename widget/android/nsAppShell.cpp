@@ -181,8 +181,6 @@ nsAppShell::Init()
         gWidgetLog = PR_NewLogModule("Widget");
 #endif
 
-    mObserversHash.Init();
-
     nsresult rv = nsBaseAppShell::Init();
     AndroidBridge* bridge = AndroidBridge::Bridge();
 
@@ -539,6 +537,10 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
 
     case AndroidGeckoEvent::REMOVE_OBSERVER:
         mObserversHash.Remove(curEvent->Characters());
+        break;
+
+    case AndroidGeckoEvent::ADD_OBSERVER:
+        AddObserver(curEvent->Characters(), curEvent->Observer());
         break;
 
     case AndroidGeckoEvent::LOW_MEMORY:

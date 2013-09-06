@@ -6210,6 +6210,24 @@ CodeGenerator::visitCallDeleteProperty(LCallDeleteProperty *lir)
     return callVM(DeletePropertyNonStrictInfo, lir);
 }
 
+typedef bool (*DeleteElementFn)(JSContext *, HandleValue, HandleValue, bool *);
+static const VMFunction DeleteElementStrictInfo =
+    FunctionInfo<DeleteElementFn>(DeleteElement<true>);
+static const VMFunction DeleteElementNonStrictInfo =
+    FunctionInfo<DeleteElementFn>(DeleteElement<false>);
+
+bool
+CodeGenerator::visitCallDeleteElement(LCallDeleteElement *lir)
+{
+    pushArg(ToValue(lir, LCallDeleteElement::Index));
+    pushArg(ToValue(lir, LCallDeleteElement::Value));
+
+    if (lir->mir()->block()->info().script()->strict)
+        return callVM(DeleteElementStrictInfo, lir);
+
+    return callVM(DeleteElementNonStrictInfo, lir);
+}
+
 bool
 CodeGenerator::visitSetPropertyCacheV(LSetPropertyCacheV *ins)
 {

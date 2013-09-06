@@ -168,7 +168,7 @@ CapturingContentInfo nsIPresShell::gCaptureInfo =
   { false /* mAllowed */, false /* mPointerLock */, false /* mRetargetToElement */,
     false /* mPreventDrag */, nullptr /* mContent */ };
 nsIContent* nsIPresShell::gKeyDownTarget;
-nsRefPtrHashtable<nsUint32HashKey, dom::Touch> nsIPresShell::gCaptureTouchList;
+nsRefPtrHashtable<nsUint32HashKey, dom::Touch>* nsIPresShell::gCaptureTouchList;
 bool nsIPresShell::gPreventMouseEvents = false;
 
 // convert a color value to a string, in the CSS format #RRGGBB
@@ -763,8 +763,6 @@ PresShell::Init(nsIDocument* aDocument,
   if (!aDocument || !aPresContext || !aViewManager || mDocument) {
     return;
   }
-
-  mFramesToDirty.Init();
 
   mDocument = aDocument;
   NS_ADDREF(mDocument);
@@ -6160,8 +6158,8 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
         // in the same document by taking the target of the events already in
         // the capture list
         nsCOMPtr<nsIContent> anyTarget;
-        if (gCaptureTouchList.Count() > 0) {
-          gCaptureTouchList.Enumerate(&FindAnyTarget, &anyTarget);
+        if (gCaptureTouchList->Count() > 0) {
+          gCaptureTouchList->Enumerate(&FindAnyTarget, &anyTarget);
         } else {
           gPreventMouseEvents = false;
         }
@@ -6171,7 +6169,7 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
           dom::Touch* touch = touchEvent->touches[i];
 
           int32_t id = touch->Identifier();
-          if (!gCaptureTouchList.Get(id, nullptr)) {
+          if (!gCaptureTouchList->Get(id, nullptr)) {
             // find the target for this touch
             eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
                                                               touch->mRefPoint,
@@ -6225,7 +6223,7 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
             touch->mChanged = false;
             int32_t id = touch->Identifier();
 
-            nsRefPtr<dom::Touch> oldTouch = gCaptureTouchList.GetWeak(id);
+            nsRefPtr<dom::Touch> oldTouch = gCaptureTouchList->GetWeak(id);
             if (oldTouch) {
               touch->SetTarget(oldTouch->mTarget);
             }
@@ -6296,7 +6294,7 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
           }
   
           nsRefPtr<dom::Touch> oldTouch =
-            gCaptureTouchList.GetWeak(touch->Identifier());
+            gCaptureTouchList->GetWeak(touch->Identifier());
           if (!oldTouch) {
             break;
           }
@@ -6682,7 +6680,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
         // queue
         if (touchEvent->touches.Length() == 1) {
           nsTArray< nsRefPtr<dom::Touch> > touches;
-          gCaptureTouchList.Enumerate(&AppendToTouchList, (void *)&touches);
+          gCaptureTouchList->Enumerate(&AppendToTouchList, (void *)&touches);
           for (uint32_t i = 0; i < touches.Length(); ++i) {
             EvictTouchPoint(touches[i]);
           }
@@ -6691,12 +6689,12 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
         for (uint32_t i = 0; i < touchEvent->touches.Length(); ++i) {
           dom::Touch* touch = touchEvent->touches[i];
           int32_t id = touch->Identifier();
-          if (!gCaptureTouchList.Get(id, nullptr)) {
+          if (!gCaptureTouchList->Get(id, nullptr)) {
             // If it is not already in the queue, it is a new touch
             touch->mChanged = true;
           }
           touch->mMessage = aEvent->message;
-          gCaptureTouchList.Put(id, touch);
+          gCaptureTouchList->Put(id, touch);
         }
         break;
       }
@@ -6715,7 +6713,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
           touch->mChanged = true;
 
           int32_t id = touch->Identifier();
-          nsRefPtr<dom::Touch> oldTouch = gCaptureTouchList.GetWeak(id);
+          nsRefPtr<dom::Touch> oldTouch = gCaptureTouchList->GetWeak(id);
           if (!oldTouch) {
             continue;
           }
@@ -6723,10 +6721,10 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
 
           mCurrentEventContent = do_QueryInterface(targetPtr);
           touch->SetTarget(targetPtr);
-          gCaptureTouchList.Remove(id);
+          gCaptureTouchList->Remove(id);
         }
         // add any touches left in the touch list, but ensure changed=false
-        gCaptureTouchList.Enumerate(&AppendToTouchList, (void *)&touches);
+        gCaptureTouchList->Enumerate(&AppendToTouchList, (void *)&touches);
         break;
       }
       case NS_TOUCH_MOVE: {
@@ -6743,7 +6741,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
           int32_t id = touch->Identifier();
           touch->mMessage = aEvent->message;
 
-          nsRefPtr<dom::Touch> oldTouch = gCaptureTouchList.GetWeak(id);
+          nsRefPtr<dom::Touch> oldTouch = gCaptureTouchList->GetWeak(id);
           if (!oldTouch) {
             touches.RemoveElementAt(i);
             continue;
@@ -6760,7 +6758,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
           }
           touch->SetTarget(targetPtr);
 
-          gCaptureTouchList.Put(id, touch);
+          gCaptureTouchList->Put(id, touch);
           // if we're moving from touchstart to touchmove for this touch
           // we allow preventDefault to prevent mouse events
           if (oldTouch->mMessage != touch->mMessage) {
@@ -9313,18 +9311,17 @@ nsIPresShell::AccService()
 }
 #endif
 
-static bool inited = false;
-
 void nsIPresShell::InitializeStatics()
 {
-  NS_ASSERTION(!inited, "InitializeStatics called multiple times!");
-  gCaptureTouchList.Init();
-  inited = true;
+  NS_ASSERTION(!gCaptureTouchList, "InitializeStatics called multiple times!");
+  gCaptureTouchList = new nsRefPtrHashtable<nsUint32HashKey, dom::Touch>;
 }
 
 void nsIPresShell::ReleaseStatics()
 {
-  NS_ASSERTION(inited, "ReleaseStatics called without Initialize!");
+  NS_ASSERTION(gCaptureTouchList, "ReleaseStatics called without Initialize!");
+  delete gCaptureTouchList;
+  gCaptureTouchList = nullptr;
 }
 
 // Asks our docshell whether we're active.

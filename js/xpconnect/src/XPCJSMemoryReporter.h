@@ -9,22 +9,22 @@
 #define XPCJSMemoryReporter_h
 
 class nsISupports;
-class nsIMemoryReporterCallback;
+class nsIMemoryMultiReporterCallback;
 
 namespace xpc {
 
 // The key is the window ID.
 typedef nsDataHashtable<nsUint64HashKey, nsCString> WindowPaths;
 
-// This is very nearly an instance of nsIMemoryReporter, but it's not,
+// This is very nearly an instance of nsIMemoryMultiReporter, but it's not,
 // because it's invoked by nsWindowMemoryReporter in order to get |windowPaths|
 // in CollectReports.
-class JSReporter
+class JSMemoryMultiReporter
 {
 public:
     static nsresult CollectReports(WindowPaths *windowPaths,
                                    WindowPaths *topWindowPaths,
-                                   nsIMemoryReporterCallback *cb,
+                                   nsIMemoryMultiReporterCallback *cb,
                                    nsISupports *closure);
 };
 

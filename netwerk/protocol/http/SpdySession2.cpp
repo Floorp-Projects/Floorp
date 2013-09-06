@@ -71,8 +71,6 @@ SpdySession2::SpdySession2(nsAHttpTransaction *aHttpTransaction,
   LOG3(("SpdySession2::SpdySession2 %p transaction 1 = %p",
         this, aHttpTransaction));
 
-  mStreamIDHash.Init();
-  mStreamTransactionHash.Init();
   mConnection = aHttpTransaction->Connection();
   mInputFrameBuffer = new char[mInputFrameBufferSize];
   mDecompressBuffer = new char[mDecompressBufferSize];

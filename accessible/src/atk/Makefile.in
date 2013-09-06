@@ -14,16 +14,6 @@ ifdef MOZ_ENABLE_DBUS
 CXXFLAGS += $(MOZ_DBUS_CFLAGS)
 endif
 
-LOCAL_INCLUDES += \
-  -I$(srcdir) \
-  -I$(srcdir)/../base \
-  -I$(srcdir)/../generic \
-  -I$(srcdir)/../html \
-  -I$(srcdir)/../xpcom \
-  -I$(srcdir)/../xul \
-  -I$(topsrcdir)/other-licenses/atk-1.0 \
-  $(NULL)
-
 ifneq ($(A11Y_LOG),0)
   DEFINES += -DA11Y_LOG
 endif

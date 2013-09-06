@@ -12,7 +12,6 @@
 
 nsChromeRegistryContent::nsChromeRegistryContent()
 {
-  mPackagesHash.Init();
 }
 
 void

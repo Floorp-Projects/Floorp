@@ -6,6 +6,7 @@
 
 #include "AudioBufferSourceNode.h"
 #include "mozilla/dom/AudioBufferSourceNodeBinding.h"
+#include "mozilla/dom/AudioParam.h"
 #include "nsMathUtils.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"

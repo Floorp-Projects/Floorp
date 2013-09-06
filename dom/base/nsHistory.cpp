@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsHistory.h"
+
+#include "jsapi.h"
 #include "mozilla/dom/HistoryBinding.h"
 #include "nsCOMPtr.h"
 #include "nsPIDOMWindow.h"
@@ -17,6 +19,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsReadableUtils.h"
 #include "nsContentUtils.h"
+#include "nsISHistory.h"
 #include "nsISHistoryInternal.h"
 #include "mozilla/Preferences.h"
 
@@ -291,6 +294,16 @@ nsHistory::PushOrReplaceState(JSContext* aCx, JS::Handle<JS::Value> aData,
   // history entry or modify the current one.
 
   aRv = docShell->AddState(aData, aTitle, aUrl, aReplace, aCx);
+}
+
+nsIDocShell*
+nsHistory::GetDocShell() const
+{
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mInnerWindow);
+  if (!win) {
+    return nullptr;
+  }
+  return win->GetDocShell();
 }
 
 already_AddRefed<nsISHistory>

@@ -136,6 +136,22 @@ bool SharedMemory::FilenameForMemoryName(const std::wstring &memname,
   return true;
 }
 
+namespace {
+
+// A class to handle auto-closing of FILE*'s.
+class ScopedFILEClose {
+ public:
+  inline void operator()(FILE* x) const {
+    if (x) {
+      fclose(x);
+    }
+  }
+};
+
+typedef scoped_ptr_malloc<FILE, ScopedFILEClose> ScopedFILE;
+
+}
+
 // Chromium mostly only use the unique/private shmem as specified by
 // "name == L"". The exception is in the StatsTable.
 // TODO(jrg): there is no way to "clean up" all unused named shmem if
@@ -146,7 +162,7 @@ bool SharedMemory::CreateOrOpen(const std::wstring &name,
                                 int posix_flags, size_t size) {
   DCHECK(mapped_file_ == -1);
 
-  file_util::ScopedFILE file_closer;
+  ScopedFILE file_closer;
   FILE *fp;
 
   if (name == L"") {

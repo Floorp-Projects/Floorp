@@ -86,16 +86,16 @@ nsSVGOuterSVGFrame::RegisterForeignObject(nsSVGForeignObjectFrame* aFrame)
 {
   NS_ASSERTION(aFrame, "Who on earth is calling us?!");
 
-  if (!mForeignObjectHash.IsInitialized()) {
-    mForeignObjectHash.Init();
+  if (!mForeignObjectHash) {
+    mForeignObjectHash = new nsTHashtable<nsPtrHashKey<nsSVGForeignObjectFrame> >();
   }
 
-  NS_ASSERTION(!mForeignObjectHash.GetEntry(aFrame),
+  NS_ASSERTION(!mForeignObjectHash->GetEntry(aFrame),
                "nsSVGForeignObjectFrame already registered!");
 
-  mForeignObjectHash.PutEntry(aFrame);
+  mForeignObjectHash->PutEntry(aFrame);
 
-  NS_ASSERTION(mForeignObjectHash.GetEntry(aFrame),
+  NS_ASSERTION(mForeignObjectHash->GetEntry(aFrame),
                "Failed to register nsSVGForeignObjectFrame!");
 }
 
@@ -103,9 +103,9 @@ void
 nsSVGOuterSVGFrame::UnregisterForeignObject(nsSVGForeignObjectFrame* aFrame)
 {
   NS_ASSERTION(aFrame, "Who on earth is calling us?!");
-  NS_ASSERTION(mForeignObjectHash.GetEntry(aFrame),
+  NS_ASSERTION(mForeignObjectHash && mForeignObjectHash->GetEntry(aFrame),
                "nsSVGForeignObjectFrame not in registry!");
-  return mForeignObjectHash.RemoveEntry(aFrame);
+  return mForeignObjectHash->RemoveEntry(aFrame);
 }
 
 void
@@ -665,8 +665,8 @@ nsRegion
 nsSVGOuterSVGFrame::FindInvalidatedForeignObjectFrameChildren(nsIFrame* aFrame)
 {
   nsRegion result;
-  if (mForeignObjectHash.Count()) {
-    mForeignObjectHash.EnumerateEntries(CheckForeignObjectInvalidatedArea, &result);
+  if (mForeignObjectHash && mForeignObjectHash->Count()) {
+    mForeignObjectHash->EnumerateEntries(CheckForeignObjectInvalidatedArea, &result);
   }
   return result;
 }

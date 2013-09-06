@@ -108,7 +108,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIEFFECTIVETLDSERVICE
 
-  nsEffectiveTLDService() { }
+  nsEffectiveTLDService();
   nsresult Init();
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);

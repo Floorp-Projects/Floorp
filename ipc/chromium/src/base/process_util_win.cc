@@ -601,16 +601,6 @@ bool WaitForProcessesToExit(const std::wstring& executable_name,
   return result;
 }
 
-bool WaitForSingleProcess(ProcessHandle handle, int wait_milliseconds) {
-  bool retval = WaitForSingleObject(handle, wait_milliseconds) == WAIT_OBJECT_0;
-  return retval;
-}
-
-bool CrashAwareSleep(ProcessHandle handle, int wait_milliseconds) {
-  bool retval = WaitForSingleObject(handle, wait_milliseconds) == WAIT_TIMEOUT;
-  return retval;
-}
-
 bool CleanupProcesses(const std::wstring& executable_name,
                       int wait_milliseconds,
                       int exit_code,
@@ -834,80 +824,6 @@ int ProcessMetrics::GetCPUUsage() {
   last_time_ = time;
 
   return cpu;
-}
-
-bool ProcessMetrics::GetIOCounters(IO_COUNTERS* io_counters) const {
-  return GetProcessIoCounters(process_, io_counters) != FALSE;
-}
-
-bool ProcessMetrics::CalculateFreeMemory(FreeMBytes* free) const {
-  const SIZE_T kTopAdress = 0x7F000000;
-  const SIZE_T kMegabyte = 1024 * 1024;
-  SIZE_T accumulated = 0;
-
-  MEMORY_BASIC_INFORMATION largest = {0};
-  UINT_PTR scan = 0;
-  while (scan < kTopAdress) {
-    MEMORY_BASIC_INFORMATION info;
-    if (!::VirtualQueryEx(process_, reinterpret_cast<void*>(scan),
-                          &info, sizeof(info)))
-      return false;
-    if (info.State == MEM_FREE) {
-      accumulated += info.RegionSize;
-      UINT_PTR end = scan + info.RegionSize;
-      if (info.RegionSize > (largest.RegionSize))
-        largest = info;
-    }
-    scan += info.RegionSize;
-  }
-  free->largest = largest.RegionSize / kMegabyte;
-  free->largest_ptr = largest.BaseAddress;
-  free->total = accumulated / kMegabyte;
-  return true;
-}
-
-bool EnableLowFragmentationHeap() {
-  HMODULE kernel32 = GetModuleHandle(L"kernel32.dll");
-  HeapSetFn heap_set = reinterpret_cast<HeapSetFn>(GetProcAddress(
-      kernel32,
-      "HeapSetInformation"));
-
-  // On Windows 2000, the function is not exported. This is not a reason to
-  // fail.
-  if (!heap_set)
-    return true;
-
-  unsigned number_heaps = GetProcessHeaps(0, NULL);
-  if (!number_heaps)
-    return false;
-
-  // Gives us some extra space in the array in case a thread is creating heaps
-  // at the same time we're querying them.
-  static const int MARGIN = 8;
-  scoped_array<HANDLE> heaps(new HANDLE[number_heaps + MARGIN]);
-  number_heaps = GetProcessHeaps(number_heaps + MARGIN, heaps.get());
-  if (!number_heaps)
-    return false;
-
-  for (unsigned i = 0; i < number_heaps; ++i) {
-    ULONG lfh_flag = 2;
-    // Don't bother with the result code. It may fails on heaps that have the
-    // HEAP_NO_SERIALIZE flag. This is expected and not a problem at all.
-    heap_set(heaps[i],
-             HeapCompatibilityInformation,
-             &lfh_flag,
-             sizeof(lfh_flag));
-  }
-  return true;
-}
-
-void EnableTerminationOnHeapCorruption() {
-  // Ignore the result code. Supported on XP SP3 and Vista.
-  HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
-}
-
-void RaiseProcessToHighPriority() {
-  SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 }
 
 }  // namespace base

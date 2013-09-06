@@ -126,8 +126,6 @@ Classifier::Open(nsIFile& aCacheDirectory)
   mCryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mTableFreshness.Init();
-
   // Build the list of know urlclassifier lists
   // XXX: Disk IO potentially on the main thread during startup
   RegenActiveTables();

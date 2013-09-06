@@ -260,15 +260,6 @@ bool WaitForProcessesToExit(const std::wstring& executable_name,
                             int wait_milliseconds,
                             const ProcessFilter* filter);
 
-// Wait for a single process to exit. Return true if it exited cleanly within
-// the given time limit.
-bool WaitForSingleProcess(ProcessHandle handle,
-                          int wait_milliseconds);
-
-// Returns true when |wait_milliseconds| have elapsed and the process
-// is still running.
-bool CrashAwareSleep(ProcessHandle handle, int wait_milliseconds);
-
 // Waits a certain amount of time (can be 0) for all the processes with a given
 // executable name to exit, then kills off any of them that are still around.
 // If filter is non-null, then only processes selected by the filter are waited
@@ -398,12 +389,6 @@ class ProcessMetrics {
   // usage in bytes, as per definition of WorkingSetBytes.
   bool GetWorkingSetKBytes(WorkingSetKBytes* ws_usage) const;
 
-  // Computes the current process available memory for allocation.
-  // It does a linear scan of the address space querying each memory region
-  // for its free (unallocated) status. It is useful for estimating the memory
-  // load and fragmentation.
-  bool CalculateFreeMemory(FreeMBytes* free) const;
-
   // Returns the CPU usage in percent since the last time this method was
   // called. The first time this method is called it returns 0 and will return
   // the actual CPU info on subsequent calls.
@@ -411,13 +396,6 @@ class ProcessMetrics {
   // CPUs. So if you have 2 CPUs and your process is using all the cycles
   // of 1 CPU and not the other CPU, this method returns 50.
   int GetCPUUsage();
-
-  // Retrieves accounting information for all I/O operations performed by the
-  // process.
-  // If IO information is retrieved successfully, the function returns true
-  // and fills in the IO_COUNTERS passed in. The function returns false
-  // otherwise.
-  bool GetIOCounters(IoCounters* io_counters) const;
 
  private:
   explicit ProcessMetrics(ProcessHandle process);
@@ -432,22 +410,6 @@ class ProcessMetrics {
 
   DISALLOW_EVIL_CONSTRUCTORS(ProcessMetrics);
 };
-
-// Enables low fragmentation heap (LFH) for every heaps of this process. This
-// won't have any effect on heaps created after this function call. It will not
-// modify data allocated in the heaps before calling this function. So it is
-// better to call this function early in initialization and again before
-// entering the main loop.
-// Note: Returns true on Windows 2000 without doing anything.
-bool EnableLowFragmentationHeap();
-
-// Enable 'terminate on heap corruption' flag. Helps protect against heap
-// overflow. Has no effect if the OS doesn't provide the necessary facility.
-void EnableTerminationOnHeapCorruption();
-
-// If supported on the platform, and the user has sufficent rights, increase
-// the current process's scheduling priority to a high priority.
-void RaiseProcessToHighPriority();
 
 }  // namespace base
 

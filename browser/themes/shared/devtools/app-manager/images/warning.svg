@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="64px" height="64px" viewBox="0 0 64 64" enable-background="new 0 0 64 64">
+  <path fill="#ECB51F" d="M61.689,51.121L36.437,7.384c-2.441-4.227-6.434-4.227-8.875,0L2.311,51.121
+    c-2.441,4.227-0.444,7.686,4.437,7.686h50.504C62.133,58.807,64.13,55.349,61.689,51.121z M35.968,47.68
+    c0,2.191-1.688,3.877-3.968,3.877s-3.968-1.686-3.968-3.877v-0.093c0-2.187,1.688-3.873,3.968-3.873s3.968,1.686,3.968,3.873V47.68z
+    M36.059,21.548l-1.961,17.146c-0.137,1.233-0.958,2.009-2.098,2.009s-1.961-0.776-2.098-2.009l-1.961-17.146
+    c-0.137-1.322,0.592-2.325,1.825-2.325h4.469C35.466,19.223,36.196,20.226,36.059,21.548z"/>
+</svg>

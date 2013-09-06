@@ -371,7 +371,6 @@ TestObserver::OnStateChange(uint32_t state_type)
     break;
   }
 
-  state = stateSuccess;
   lastStateType = state_type;
   return NS_OK;
 }
@@ -981,9 +980,15 @@ void CreateAnswer(sipcc::MediaConstraints& constraints, std::string offer,
     // We cannot yet test send/recv with video.
     if (!(flags & PIPELINE_VIDEO)) {
       if (flags & PIPELINE_SEND) {
+        ASSERT_TRUE_WAIT(pipeline->rtp_packets_sent() >= 40 &&
+                         pipeline->rtcp_packets_received() >= 1,
+                         kDefaultTimeout);
         ASSERT_GE(pipeline->rtp_packets_sent(), 40);
         ASSERT_GE(pipeline->rtcp_packets_received(), 1);
       } else {
+        ASSERT_TRUE_WAIT(pipeline->rtp_packets_received() >= 40 &&
+                         pipeline->rtcp_packets_sent() >= 1,
+                         kDefaultTimeout);
         ASSERT_GE(pipeline->rtp_packets_received(), 40);
         ASSERT_GE(pipeline->rtcp_packets_sent(), 1);
       }
@@ -1671,7 +1676,9 @@ TEST_F(SignalingTest, FullCall)
   OfferAnswer(constraints, constraints, OFFER_AV | ANSWER_AV,
               true, SHOULD_SENDRECV_AV, SHOULD_SENDRECV_AV);
 
-  PR_Sleep(kDefaultTimeout * 2); // Wait for some data to get written
+  // Wait for some data to get written
+  ASSERT_TRUE_WAIT(a1_.GetPacketsSent(0) >= 40 &&
+                   a2_.GetPacketsReceived(0) >= 40, kDefaultTimeout * 2);
 
   a1_.CloseSendStreams();
   a2_.CloseReceiveStreams();
@@ -1700,7 +1707,9 @@ TEST_F(SignalingTest, FullCallAudioOnly)
   OfferAnswer(constraints, constraints, OFFER_AUDIO | ANSWER_AUDIO,
               true, SHOULD_SENDRECV_AUDIO, SHOULD_SENDRECV_AUDIO);
 
-  PR_Sleep(kDefaultTimeout * 2); // Wait for some data to get written
+  // Wait for some data to get written
+  ASSERT_TRUE_WAIT(a1_.GetPacketsSent(0) >= 40 &&
+                   a2_.GetPacketsReceived(0) >= 40, kDefaultTimeout * 2);
 
   a1_.CloseSendStreams();
   a2_.CloseReceiveStreams();
@@ -1717,7 +1726,10 @@ TEST_F(SignalingTest, FullCallVideoOnly)
   OfferAnswer(constraints, constraints, OFFER_VIDEO | ANSWER_VIDEO,
               true, SHOULD_SENDRECV_VIDEO, SHOULD_SENDRECV_VIDEO);
 
-  PR_Sleep(kDefaultTimeout * 2); // Wait for some data to get written
+  // If we could check for video packets, we would wait for some to be written
+  // here. Since we can't, we don't.
+  // ASSERT_TRUE_WAIT(a1_.GetPacketsSent(0) >= 40 &&
+  //                 a2_.GetPacketsReceived(0) >= 40, kDefaultTimeout * 2);
 
   a1_.CloseSendStreams();
   a2_.CloseReceiveStreams();
@@ -1738,7 +1750,6 @@ TEST_F(SignalingTest, OfferModifiedAnswer)
   sipcc::MediaConstraints constraints;
   OfferModifiedAnswer(constraints, constraints, SHOULD_SENDRECV_AV,
                       SHOULD_SENDRECV_AV);
-  PR_Sleep(kDefaultTimeout * 2); // Wait for completion
   a1_.CloseSendStreams();
   a2_.CloseReceiveStreams();
 }
@@ -1750,7 +1761,10 @@ TEST_F(SignalingTest, FullCallTrickle)
                      SHOULD_SENDRECV_AV, SHOULD_SENDRECV_AV);
 
   std::cerr << "ICE handshake completed" << std::endl;
-  PR_Sleep(kDefaultTimeout * 2); // Wait for some data to get written
+
+  // Wait for some data to get written
+  ASSERT_TRUE_WAIT(a1_.GetPacketsSent(0) >= 40 &&
+                   a2_.GetPacketsReceived(0) >= 40, kDefaultTimeout * 2);
 
   a1_.CloseSendStreams();
   a2_.CloseReceiveStreams();
@@ -1766,7 +1780,10 @@ TEST_F(SignalingTest, FullCallTrickleChrome)
                            SHOULD_SENDRECV_AV, SHOULD_SENDRECV_AV);
 
   std::cerr << "ICE handshake completed" << std::endl;
-  PR_Sleep(kDefaultTimeout * 2); // Wait for some data to get written
+
+  // Wait for some data to get written
+  ASSERT_TRUE_WAIT(a1_.GetPacketsSent(0) >= 40 &&
+                   a2_.GetPacketsReceived(0) >= 40, kDefaultTimeout * 2);
 
   a1_.CloseSendStreams();
   a2_.CloseReceiveStreams();
@@ -2049,7 +2066,6 @@ TEST_F(SignalingTest, CheckTrickleSdpChange)
                      SHOULD_SENDRECV_AV, SHOULD_SENDRECV_AV);
   std::cerr << "ICE handshake completed" << std::endl;
 
-  PR_Sleep(kDefaultTimeout * 2); // Wait for some data to get written
   a1_.CloseSendStreams();
   a2_.CloseReceiveStreams();
 
@@ -2382,7 +2398,9 @@ TEST_F(SignalingTest, AudioOnlyCalleeNoRtcpMux)
   ASSERT_TRUE_WAIT(a1_.IceCompleted() == true, kDefaultTimeout);
   ASSERT_TRUE_WAIT(a2_.IceCompleted() == true, kDefaultTimeout);
 
-  PR_Sleep(kDefaultTimeout * 2); // Wait for some data to get written
+  // Wait for some data to get written
+  ASSERT_TRUE_WAIT(a1_.GetPacketsSent(0) >= 40 &&
+                   a2_.GetPacketsReceived(0) >= 40, kDefaultTimeout * 2);
 
   a1_.CloseSendStreams();
   a2_.CloseReceiveStreams();
@@ -2425,7 +2443,9 @@ TEST_F(SignalingTest, FullCallAudioNoMuxVideoMux)
   ASSERT_TRUE_WAIT(a1_.IceCompleted() == true, kDefaultTimeout);
   ASSERT_TRUE_WAIT(a2_.IceCompleted() == true, kDefaultTimeout);
 
-  PR_Sleep(kDefaultTimeout * 2); // Wait for some data to get written
+  // Wait for some data to get written
+  ASSERT_TRUE_WAIT(a1_.GetPacketsSent(0) >= 40 &&
+                   a2_.GetPacketsReceived(0) >= 40, kDefaultTimeout * 2);
 
   a1_.CloseSendStreams();
   a2_.CloseReceiveStreams();
