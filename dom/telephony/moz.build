@@ -12,17 +12,47 @@ XPIDL_MODULE = 'dom_telephony'
 
 MODULE = 'dom'
 
+EXPORTS.mozilla.dom.telephony += [
+    'CallEvent.h',
+    'CallsList.h',
+    'Telephony.h',
+    'TelephonyCall.h',
+    'TelephonyCallGroup.h',
+    'TelephonyCommon.h',
+    'TelephonyFactory.h',
+    'ipc/TelephonyChild.h',
+    'ipc/TelephonyParent.h',
+]
+
 CPP_SOURCES += [
     'CallEvent.cpp',
     'CallsList.cpp',
     'Telephony.cpp',
     'TelephonyCall.cpp',
     'TelephonyCallGroup.cpp',
+    'TelephonyFactory.cpp',
+    'ipc/TelephonyChild.cpp',
+    'ipc/TelephonyIPCProvider.cpp',
+    'ipc/TelephonyParent.cpp',
 ]
+
+IPDL_SOURCES += [
+    'ipc/PTelephony.ipdl',
+    'ipc/PTelephonyRequest.ipdl',
+    'ipc/TelephonyTypes.ipdlh'
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    XPIDL_SOURCES += [
+        'nsIGonkTelephonyProvider.idl',
+    ]
+    EXTRA_COMPONENTS += [
+        'gonk/TelephonyProvider.js',
+        'gonk/TelephonyProvider.manifest',
+    ]
 
 FAIL_ON_WARNINGS = True
 
 LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'domtelephony_s'
-

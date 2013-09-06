@@ -11,10 +11,8 @@
  
 #include "mozilla/DebugOnly.h"
 #include <stdint.h>
-#include "mozilla/Util.h"
 
 #include "MediaDecoderStateMachine.h"
-#include <limits>
 #include "AudioStream.h"
 #include "nsTArray.h"
 #include "MediaDecoder.h"
@@ -26,6 +24,8 @@
 #include "AudioSegment.h"
 #include "VideoSegment.h"
 #include "ImageContainer.h"
+#include "nsComponentManagerUtils.h"
+#include "nsITimer.h"
 
 #include "prenv.h"
 #include "mozilla/Preferences.h"
@@ -726,8 +726,6 @@ void MediaDecoderStateMachine::SendStreamData()
 
   if (mAudioCaptured) {
     // Discard audio packets that are no longer needed.
-    int64_t audioPacketTimeToDiscard =
-        std::min(minLastAudioPacketTime, mStartTime + mCurrentFrameTime);
     while (true) {
       nsAutoPtr<AudioData> a(mReader->AudioQueue().PopFront());
       if (!a)
@@ -738,7 +736,7 @@ void MediaDecoderStateMachine::SendStreamData()
       // very start. That's OK, we'll play silence instead for a brief moment.
       // That's OK. Seeking to this time would have a similar issue for such
       // badly muxed resources.
-      if (a->GetEnd() >= audioPacketTimeToDiscard) {
+      if (a->GetEnd() >= minLastAudioPacketTime) {
         mReader->AudioQueue().PushFront(a.forget());
         break;
       }

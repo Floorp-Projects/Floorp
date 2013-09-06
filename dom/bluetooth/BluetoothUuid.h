@@ -53,6 +53,9 @@ public:
    */
   static BluetoothServiceClass
   GetBluetoothServiceClass(const nsAString& aUuidStr);
+
+  static BluetoothServiceClass
+  GetBluetoothServiceClass(uint16_t aProfileId);
 };
 
 // TODO/qdot: Move these back into gonk and make the service handler deal with

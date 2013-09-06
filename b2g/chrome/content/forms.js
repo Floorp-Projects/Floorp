@@ -892,6 +892,8 @@ function getDocumentEncoder(element) {
                 .createInstance(Ci.nsIDocumentEncoder);
   let flags = Ci.nsIDocumentEncoder.SkipInvisibleContent |
               Ci.nsIDocumentEncoder.OutputRaw |
+              // Bug 902847. Don't trim trailing spaces of a line.
+              Ci.nsIDocumentEncoder.OutputDontRemoveLineEndingSpaces |
               Ci.nsIDocumentEncoder.OutputLFLineBreak |
               Ci.nsIDocumentEncoder.OutputNonTextContentAsPlaceholder;
   encoder.init(element.ownerDocument, "text/plain", flags);

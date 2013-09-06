@@ -34,6 +34,7 @@ SharedTextureClientOGL::~SharedTextureClientOGL()
 bool
 SharedTextureClientOGL::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
 {
+  MOZ_ASSERT(IsValid());
   if (!IsAllocated()) {
     return false;
   }
@@ -48,6 +49,7 @@ SharedTextureClientOGL::InitWith(gl::SharedTextureHandle aHandle,
                                  gl::SharedTextureShareType aShareType,
                                  bool aInverted)
 {
+  MOZ_ASSERT(IsValid());
   MOZ_ASSERT(!IsAllocated());
   mHandle = aHandle;
   mSize = aSize;

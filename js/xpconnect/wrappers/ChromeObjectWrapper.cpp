@@ -1,4 +1,5 @@
 #include "ChromeObjectWrapper.h"
+#include "jsapi.h"
 
 using namespace JS;
 

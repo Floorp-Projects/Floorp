@@ -6,11 +6,8 @@
 #ifndef MOZILLA_STREAMBUFFER_H_
 #define MOZILLA_STREAMBUFFER_H_
 
-#include "mozilla/DebugOnly.h"
-
 #include "MediaSegment.h"
 #include "nsAutoPtr.h"
-#include <algorithm>
 
 namespace mozilla {
 

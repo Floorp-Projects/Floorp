@@ -8,8 +8,15 @@
 #ifndef __FilteringWrapper_h__
 #define __FilteringWrapper_h__
 
-#include <jsapi.h>
-#include <jswrapper.h>
+#include "mozilla/Attributes.h"
+#include "jswrapper.h"
+#include "js/CallNonGenericMethod.h"
+
+struct JSPropertyDescriptor;
+
+namespace JS {
+class AutoIdVector;
+}
 
 namespace xpc {
 
@@ -28,11 +35,11 @@ class FilteringWrapper : public Base {
                                           JS::MutableHandle<JSPropertyDescriptor> desc,
                                           unsigned flags) MOZ_OVERRIDE;
     virtual bool getOwnPropertyNames(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                                     js::AutoIdVector &props) MOZ_OVERRIDE;
+                                     JS::AutoIdVector &props) MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                           js::AutoIdVector &props) MOZ_OVERRIDE;
+                           JS::AutoIdVector &props) MOZ_OVERRIDE;
     virtual bool keys(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                      js::AutoIdVector &props) MOZ_OVERRIDE;
+                      JS::AutoIdVector &props) MOZ_OVERRIDE;
     virtual bool iterate(JSContext *cx, JS::Handle<JSObject*> wrapper, unsigned flags,
                          JS::MutableHandle<JS::Value> vp) MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl,

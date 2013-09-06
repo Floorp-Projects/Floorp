@@ -9,6 +9,7 @@
 #include "BluetoothA2dpManager.h"
 
 #include "BluetoothCommon.h"
+#include "BluetoothProfileController.h"
 #include "BluetoothService.h"
 #include "BluetoothSocket.h"
 #include "BluetoothUtils.h"
@@ -78,8 +79,8 @@ void
 BluetoothA2dpManager::ResetA2dp()
 {
   mA2dpConnected = false;
-  mPlaying = false;
   mSinkState = SinkState::SINK_DISCONNECTED;
+  mController = nullptr;
 }
 
 void
@@ -140,111 +141,193 @@ BluetoothA2dpManager::HandleShutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
   sInShutdown = true;
-  Disconnect();
+  Disconnect(nullptr);
   sBluetoothA2dpManager = nullptr;
 }
 
-bool
-BluetoothA2dpManager::Connect(const nsAString& aDeviceAddress)
+void
+BluetoothA2dpManager::Connect(const nsAString& aDeviceAddress,
+                              BluetoothProfileController* aController)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!aDeviceAddress.IsEmpty());
-
-  NS_ENSURE_FALSE(sInShutdown, false);
-  NS_ENSURE_FALSE(mA2dpConnected, false);
-
-  mDeviceAddress = aDeviceAddress;
+  MOZ_ASSERT(aController && !mController);
 
   BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE(bs, false);
-  nsresult rv = bs->SendSinkMessage(aDeviceAddress,
-                                    NS_LITERAL_STRING("Connect"));
+  if (!bs || sInShutdown) {
+    aController->OnConnect(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
+    return;
+  }
 
-  return NS_SUCCEEDED(rv);
+  if (mA2dpConnected) {
+    aController->OnConnect(NS_LITERAL_STRING(ERR_ALREADY_CONNECTED));
+    return;
+  }
+
+  mDeviceAddress = aDeviceAddress;
+  mController = aController;
+
+  bs->SendSinkMessage(aDeviceAddress, NS_LITERAL_STRING("Connect"));
 }
 
 void
-BluetoothA2dpManager::Disconnect()
+BluetoothA2dpManager::Disconnect(BluetoothProfileController* aController)
 {
-  NS_ENSURE_TRUE_VOID(mA2dpConnected);
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    if (aController) {
+      aController->OnDisconnect(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
+    }
+    return;
+  }
+
+  if (!mA2dpConnected) {
+    if (aController) {
+      aController->OnDisconnect(NS_LITERAL_STRING(ERR_ALREADY_DISCONNECTED));
+    }
+    return;
+  }
 
   MOZ_ASSERT(!mDeviceAddress.IsEmpty());
+  MOZ_ASSERT(!mController);
 
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE_VOID(bs);
+  mController = aController;
+
   bs->SendSinkMessage(mDeviceAddress, NS_LITERAL_STRING("Disconnect"));
 }
 
+void
+BluetoothA2dpManager::OnConnect(const nsAString& aErrorStr)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  /**
+   * On the one hand, notify the controller that we've done for outbound
+   * connections. On the other hand, we do nothing for inbound connections.
+   */
+  NS_ENSURE_TRUE_VOID(mController);
+
+  mController->OnConnect(aErrorStr);
+  mController = nullptr;
+}
+
+void
+BluetoothA2dpManager::OnDisconnect(const nsAString& aErrorStr)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  /**
+   * On the one hand, notify the controller that we've done for outbound
+   * connections. On the other hand, we do nothing for inbound connections.
+   */
+  NS_ENSURE_TRUE_VOID(mController);
+
+  mController->OnDisconnect(aErrorStr);
+  mController = nullptr;
+}
+
+/* HandleSinkPropertyChanged update sink state in A2dp
+ *
+ * Possible values: "disconnected", "disconnecting",
+ *                  "connecting", "connected",
+ *                  "playing"
+ *
+ * 1. "disconnected" -> "connecting"
+ *    Either an incoming or outgoing connection attempt ongoing
+ * 2. "connecting" -> "disconnected"
+ *    Connection attempt failed
+ * 3. "connecting" -> "connected"
+ *    Successfully connected
+ * 4. "connected" -> "playing"
+ *    Audio stream active
+ * 5. "playing" -> "connected"
+ *    Audio stream suspended
+ * 6. "connected" -> "disconnected"
+ *    "playing" -> "disconnected"
+ *    Disconnected from the remote device
+ * 7. "disconnecting" -> "disconnected"
+ *    Disconnected from local
+ */
 void
 BluetoothA2dpManager::HandleSinkPropertyChanged(const BluetoothSignal& aSignal)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aSignal.value().type() == BluetoothValue::TArrayOfBluetoothNamedValue);
 
+  const nsString& address = aSignal.path();
   const InfallibleTArray<BluetoothNamedValue>& arr =
     aSignal.value().get_ArrayOfBluetoothNamedValue();
   MOZ_ASSERT(arr.Length() == 1);
 
+  /**
+   * There are three properties:
+   * - "State": a string
+   * - "Connected": a boolean value
+   * - "Playing": a boolean value
+   *
+   * Note that only "State" is handled in this function.
+   */
+
   const nsString& name = arr[0].name();
+  NS_ENSURE_TRUE_VOID(name.EqualsLiteral("State"));
+
   const BluetoothValue& value = arr[0].value();
-  if (name.EqualsLiteral("Connected")) {
-    // Indicates if a stream is setup to a A2DP sink on the remote device.
-    MOZ_ASSERT(value.type() == BluetoothValue::Tbool);
-    MOZ_ASSERT(mA2dpConnected != value.get_bool());
+  MOZ_ASSERT(value.type() == BluetoothValue::TnsString);
+  SinkState prevState = mSinkState;
+  mSinkState = StatusStringToSinkState(value.get_nsString());
 
-    mA2dpConnected = value.get_bool();
-    NotifyConnectionStatusChanged();
-    DispatchConnectionStatusChanged();
-  } else if (name.EqualsLiteral("Playing")) {
-    // Indicates if a stream is active to a A2DP sink on the remote device.
-    MOZ_ASSERT(value.type() == BluetoothValue::Tbool);
-    MOZ_ASSERT(mPlaying != value.get_bool());
+  NS_ENSURE_TRUE_VOID(mSinkState != prevState);
 
-    mPlaying = value.get_bool();
-  } else if (name.EqualsLiteral("State")) {
-    MOZ_ASSERT(value.type() == BluetoothValue::TnsString);
-    MOZ_ASSERT(mSinkState != StatusStringToSinkState(value.get_nsString()));
+  switch(mSinkState) {
+    case SinkState::SINK_CONNECTING:
+      // case 1: Either an incoming or outgoing connection attempt ongoing
+      MOZ_ASSERT(prevState == SinkState::SINK_DISCONNECTED);
+      break;
+    case SinkState::SINK_PLAYING:
+      // case 4: Audio stream active
+      MOZ_ASSERT(prevState == SinkState::SINK_CONNECTED);
+      break;
+    case SinkState::SINK_CONNECTED:
+      // case 5: Audio stream suspended
+      if (prevState == SinkState::SINK_PLAYING) {
+        break;
+      }
+      
+      // case 3: Successfully connected
+      MOZ_ASSERT(prevState == SinkState::SINK_CONNECTING);
 
-    HandleSinkStateChanged(StatusStringToSinkState(value.get_nsString()));
-  } else {
-    NS_WARNING("Unknown sink property");
+      mA2dpConnected = true;
+      mDeviceAddress = address;
+      NotifyConnectionStatusChanged();
+      DispatchConnectionStatusChanged();
+
+      OnConnect(EmptyString());
+      break;
+    case SinkState::SINK_DISCONNECTED:
+      // XXX
+      // case 2: Connection attempt failed
+      if (prevState == SinkState::SINK_CONNECTING) {  
+        OnConnect(NS_LITERAL_STRING("A2dpConnectionError"));
+        break;
+      }
+      
+      // case 6: Disconnected from the remote device
+      // case 7: Disconnected from local
+      MOZ_ASSERT(prevState == SinkState::SINK_CONNECTED ||
+                 prevState == SinkState::SINK_PLAYING ||
+                 prevState == SinkState::SINK_DISCONNECTING);
+  
+      mA2dpConnected = false;
+      NotifyConnectionStatusChanged();
+      DispatchConnectionStatusChanged();
+      mDeviceAddress.Truncate();
+
+      // case 7 only
+      if (prevState == SinkState::SINK_DISCONNECTING) {
+        OnDisconnect(EmptyString());
+      }
+      break;
   }
-}
-
-/* HandleSinkStateChanged updates sink state in A2dp
- *
- * Possible values: "disconnected", "connecting", "connected", "playing"
- *
- * 1. "disconnected" -> "connecting"
- * Either an incoming or outgoing connection attempt ongoing
- * 2. "connecting" -> "disconnected"
- * Connection attempt failed
- * 3. "connecting" -> "connected"
- * Successfully connected
- * 4. "connected" -> "playing"
- * Audio stream active
- * 5. "playing" -> "connected"
- * Audio stream suspended
- * 6. "connected" -> "disconnected"
- *    "playing" -> "disconnected"
- * Disconnected from the remote device
- * 7. "disconnecting" -> "disconnected"
- * Disconnected from local
- */
-void
-BluetoothA2dpManager::HandleSinkStateChanged(SinkState aState)
-{
-  MOZ_ASSERT_IF(aState == SinkState::SINK_CONNECTED,
-                mSinkState == SinkState::SINK_CONNECTING ||
-                mSinkState == SinkState::SINK_PLAYING);
-  MOZ_ASSERT_IF(aState == SinkState::SINK_PLAYING,
-                mSinkState == SinkState::SINK_CONNECTED);
-
-  if (aState == SinkState::SINK_DISCONNECTED) {
-    mDeviceAddress.Truncate();
-  }
-
-  mSinkState = aState;
 }
 
 void

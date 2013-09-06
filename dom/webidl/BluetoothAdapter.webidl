@@ -88,7 +88,7 @@ interface BluetoothAdapter : EventTarget {
   [Creator, Throws]
   DOMRequest getPairedDevices();
   [Creator, Throws]
-  DOMRequest getConnectedDevices(unsigned short profile);
+  DOMRequest getConnectedDevices(unsigned short serviceUuid);
   [Creator, Throws]
   DOMRequest setPinCode(DOMString deviceAddress, DOMString pinCode);
   [Creator, Throws]
@@ -101,13 +101,19 @@ interface BluetoothAdapter : EventTarget {
    * To check the value of service UUIDs, please check "Bluetooth Assigned
    * Numbers" / "Service Discovery Protocol" for more information.
    *
-   * @param deviceAddress Remote device address
-   * @param profile 2-octets service UUID
+   * Note that service UUID is optional. If it isn't passed when calling
+   * Connect, multiple profiles are tried sequentially based on the class of
+   * device (CoD). If it isn't passed when calling Disconnect, all connected
+   * profiles are going to be closed.
+   *
+   * @param device Remote device
+   * @param profile 2-octets service UUID. This is optional.
    */
   [Creator, Throws]
-  DOMRequest connect(DOMString deviceAddress, unsigned short profile);
+  DOMRequest connect(BluetoothDevice device, optional unsigned short serviceUuid);
+
   [Creator, Throws]
-  DOMRequest disconnect(unsigned short profile);
+  DOMRequest disconnect(BluetoothDevice device, optional unsigned short serviceUuid);
 
   // One device can only send one file at a time
   [Creator, Throws]
