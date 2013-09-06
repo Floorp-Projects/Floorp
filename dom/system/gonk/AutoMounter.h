@@ -60,6 +60,15 @@ void
 SetAutoMounterSharingMode(const nsCString& aVolumeName, bool aAllowSharing);
 
 /**
+ * Formats the volume with specified volume name.
+ *
+ * If the volume is ready to format, automounter
+ * will unmount it, format it and then mount it again.
+ */
+void
+AutoMounterFormatVolume(const nsCString& aVolumeName);
+
+/**
  * Shuts down the automounter.
  *
  * This leaves the volumes in whatever state they're in.

@@ -79,6 +79,12 @@ struct DeviceStorageAvailableParams
   nsString storageName;
 };
 
+struct DeviceStorageFormatParams
+{
+  nsString type;
+  nsString storageName;
+};
+
 struct DeviceStorageAddParams
 {
   nsString type;
@@ -119,6 +125,7 @@ union DeviceStorageParams
   DeviceStorageFreeSpaceParams;
   DeviceStorageUsedSpaceParams;
   DeviceStorageAvailableParams;
+  DeviceStorageFormatParams;
 };
 
 struct FMRadioRequestEnableParams
