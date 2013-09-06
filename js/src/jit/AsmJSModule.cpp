@@ -33,7 +33,6 @@ AsmJSModule::patchHeapAccesses(ArrayBufferObject *heap, JSContext *cx)
         JSC::X86Assembler::setPointer(heapAccesses_[i].patchOffsetAt(code_), heapOffset);
     }
 #elif defined(JS_CPU_ARM)
-
     uint32_t bits = mozilla::CeilingLog2(heap->byteLength());
     for (unsigned i = 0; i < heapAccesses_.length(); i++)
         jit::Assembler::updateBoundsCheck(bits, (jit::Instruction*)(heapAccesses_[i].offset() + code_));
