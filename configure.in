@@ -6483,7 +6483,8 @@ fi
 
 MOZ_ARG_ENABLE_BOOL(content-sandbox,
 [  --enable-content-sandbox        Enable sandboxing support for content-processes],
-    MOZ_CONTENT_SANDBOX=1)
+    MOZ_CONTENT_SANDBOX=1,
+    MOZ_CONTENT_SANDBOX=)
 
 if test -n "$MOZ_CONTENT_SANDBOX"; then
     AC_DEFINE(MOZ_CONTENT_SANDBOX)
@@ -6493,7 +6494,8 @@ AC_SUBST(MOZ_CONTENT_SANDBOX)
 
 MOZ_ARG_ENABLE_BOOL(content-sandbox-reporter,
 [ --enable-content-sandbox-reporter        Enable syscall reporter to troubleshoot syscalls denied by the content-processes sandbox],
-    MOZ_CONTENT_SANDBOX_REPORTER=1)
+    MOZ_CONTENT_SANDBOX_REPORTER=1,
+    MOZ_CONTENT_SANDBOX_REPORTER=)
 
 if test -n "$MOZ_CONTENT_SANDBOX_REPORTER"; then
     AC_DEFINE(MOZ_CONTENT_SANDBOX_REPORTER)
