@@ -21,9 +21,4 @@ EXPORT_LIBRARY  = 1
 # Uncomment for better debugging in opt builds
 #MOZ_OPTIMIZE_FLAGS += -O0 -g
 
-ifeq ($(OS_TARGET),Darwin)
-CMMSRCS += \
-  shim_mac_dump_syms.mm
-endif
-
 endif

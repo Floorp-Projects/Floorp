@@ -4,50 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORT_LIBRARY	= 1
-CMMSRCS = \
-  nsBidiKeyboard.mm \
-  nsClipboard.mm \
-  nsMenuX.mm \
-  nsMenuBarX.mm \
-  nsMenuItemX.mm \
-  nsMenuItemIconX.mm \
-  nsMenuUtilsX.mm \
-  nsMenuGroupOwnerX.mm \
-  nsFilePicker.mm \
-  nsDragService.mm \
-  nsToolkit.mm \
-  nsAppShell.mm \
-  nsCocoaFeatures.mm \
-  nsCocoaUtils.mm \
-  nsCocoaWindow.mm \
-  nsChildView.mm \
-  nsWindowMap.mm \
-  nsWidgetFactory.mm \
-  nsCursorManager.mm \
-  nsMacCursor.mm \
-  nsScreenCocoa.mm \
-  nsScreenManagerCocoa.mm \
-  nsSound.mm \
-  nsLookAndFeel.mm \
-  nsNativeThemeCocoa.mm \
-  nsDeviceContextSpecX.mm \
-  nsPrintDialogX.mm \
-  nsPrintOptionsX.mm \
-  nsPrintSettingsX.mm \
-  nsIdleServiceX.mm \
-  TextInputHandler.mm \
-  nsMacDockSupport.mm \
-  nsStandaloneNativeMenu.mm \
-  nsMacWebAppUtils.mm \
-  GfxInfo.mm \
-  WidgetTraceEvent.mm \
-  NativeKeyBindings.mm \
-  nsColorPicker.mm \
-  $(NULL)
-
-ifeq (x86_64,$(TARGET_CPU))
-CMMSRCS += ComplexTextInputPanel.mm
-endif
 
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 

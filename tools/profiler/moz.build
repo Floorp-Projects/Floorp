@@ -52,6 +52,9 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
             'shared-libraries-macos.cc',
             'platform-macos.cc',
         ]
+        CMMSRCS += [
+            'shim_mac_dump_syms.mm',
+        ]
     elif CONFIG['OS_TARGET'] == 'WINNT':
         CPP_SOURCES += [
             'shared-libraries-win32.cc',
