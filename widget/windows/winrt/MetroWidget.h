@@ -45,6 +45,8 @@ class FrameworkView;
 
 } } }
 
+class DispatchMsg;
+
 class MetroWidget : public nsWindowBase,
                     public mozilla::layers::GeckoContentController,
                     public nsIObserver
@@ -247,6 +249,13 @@ protected:
   Microsoft::WRL::ComPtr<mozilla::widget::winrt::MetroInput> mMetroInput;
   mozilla::layers::FrameMetrics mFrameMetrics;
   uint64_t mRootLayerTreeId;
+
+  // Async event dispatching
+  void DispatchAsyncScrollEvent(DispatchMsg* aEvent);
+  void DeliverNextScrollEvent();
+  DispatchMsg* CreateDispatchMsg(UINT aMsg, WPARAM aWParam, LPARAM aLParam);
+
+  nsDeque mMsgEventQueue;
 
 public:
   static nsRefPtr<mozilla::layers::APZCTreeManager> sAPZC;
