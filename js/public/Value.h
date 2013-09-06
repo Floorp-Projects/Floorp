@@ -1274,14 +1274,6 @@ DoubleValue(double dbl)
 }
 
 static inline Value
-Float32Value(float f)
-{
-    Value v;
-    v.setDouble(f);
-    return v;
-}
-
-static inline Value
 StringValue(JSString *str)
 {
     Value v;
