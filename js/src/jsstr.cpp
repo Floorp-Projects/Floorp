@@ -2162,16 +2162,9 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         RootedValue match(cx);
         if (!res->createLastMatch(cx, &match))
             return false;
-        JSString *str = match.toString();
-
-        JSAtom *atom;
-        if (str->isAtom()) {
-            atom = &str->asAtom();
-        } else {
-            atom = AtomizeString<CanGC>(cx, str);
-            if (!atom)
-                return false;
-        }
+        JSAtom *atom = ToAtom<CanGC>(cx, match);
+        if (!atom)
+            return false;
 
         RootedValue v(cx);
         if (HasDataProperty(cx, rdata.elembase, AtomToId(atom), v.address()) && v.isString()) {
