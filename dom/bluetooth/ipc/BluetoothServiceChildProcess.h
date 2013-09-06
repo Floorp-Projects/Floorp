@@ -175,8 +175,7 @@ public:
 
   virtual nsresult
   SendInputMessage(const nsAString& aDeviceAddresses,
-                   const nsAString& aMessage,
-                   BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+                   const nsAString& aMessage) MOZ_OVERRIDE;
 
 protected:
   BluetoothServiceChildProcess();
