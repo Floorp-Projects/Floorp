@@ -515,29 +515,10 @@ TypeAnalyzer::adjustPhiInputs(MPhi *phi)
 {
     MIRType phiType = phi->type();
 
-    if (phiType == MIRType_Double) {
-        // Convert int32 operands to double.
-        for (size_t i = 0, e = phi->numOperands(); i < e; i++) {
-            MDefinition *in = phi->getOperand(i);
-
-            if (in->type() == MIRType_Int32) {
-                MToDouble *toDouble = MToDouble::New(in);
-                in->block()->insertBefore(in->block()->lastIns(), toDouble);
-                phi->replaceOperand(i, toDouble);
-            } else if (in->type() == MIRType_Value) {
-                MUnbox *unbox = MUnbox::New(in, MIRType_Double, MUnbox::Fallible);
-                in->block()->insertBefore(in->block()->lastIns(), unbox);
-                phi->replaceOperand(i, unbox);
-            } else {
-                JS_ASSERT(in->type() == MIRType_Double);
-            }
-        }
-        return;
-    }
-
-    // If we specialized a type that's not Value, either every input is of
-    // that type or the input's typeset was unobserved (i.e. the opcode hasn't
-    // been executed yet.) Be optimistic and insert unboxes.
+    // If we specialized a type that's not Value, there are 3 cases:
+    // 1. Every input is of that type.
+    // 2. Every observed input is of that type (i.e., some inputs haven't been executed yet).
+    // 3. Inputs were doubles and int32s, and was specialized to double.
     if (phiType != MIRType_Value) {
         for (size_t i = 0, e = phi->numOperands(); i < e; i++) {
             MDefinition *in = phi->getOperand(i);
@@ -547,9 +528,28 @@ TypeAnalyzer::adjustPhiInputs(MPhi *phi)
             if (in->isBox() && in->toBox()->input()->type() == phiType) {
                 phi->replaceOperand(i, in->toBox()->input());
             } else {
-                MUnbox *unbox = MUnbox::New(in, phiType, MUnbox::Fallible);
-                in->block()->insertBefore(in->block()->lastIns(), unbox);
-                phi->replaceOperand(i, unbox);
+                MInstruction *replacement;
+
+                if (phiType == MIRType_Double && in->type() == MIRType_Int32) {
+                    // Convert int32 operands to double.
+                    replacement = MToDouble::New(in);
+                } else {
+                    // If we know this branch will fail to convert to phiType,
+                    // insert a box that'll immediately fail in the fallible unbox
+                    // below.
+                    if (in->type() != MIRType_Value) {
+                        MBox *box = MBox::New(in);
+                        in->block()->insertBefore(in->block()->lastIns(), box);
+                        in = box;
+                    }
+
+                    // Be optimistic and insert unboxes when the operand is a
+                    // value.
+                    replacement = MUnbox::New(in, phiType, MUnbox::Fallible);
+                }
+
+                in->block()->insertBefore(in->block()->lastIns(), replacement);
+                phi->replaceOperand(i, replacement);
             }
         }
 
