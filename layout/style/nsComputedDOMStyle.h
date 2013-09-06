@@ -125,6 +125,8 @@ private:
 
   mozilla::dom::CSSValue* GetRelativeOffset(mozilla::css::Side aSide);
 
+  mozilla::dom::CSSValue* GetStickyOffset(mozilla::css::Side aSide);
+
   mozilla::dom::CSSValue* GetStaticOffset(mozilla::css::Side aSide);
 
   mozilla::dom::CSSValue* GetPaddingWidthFor(mozilla::css::Side aSide);
@@ -491,6 +493,8 @@ private:
 
   bool GetCBContentWidth(nscoord& aWidth);
   bool GetCBContentHeight(nscoord& aWidth);
+  bool GetScrollFrameContentWidth(nscoord& aWidth);
+  bool GetScrollFrameContentHeight(nscoord& aHeight);
   bool GetFrameBoundsWidthForTransform(nscoord &aWidth);
   bool GetFrameBoundsHeightForTransform(nscoord &aHeight);
   bool GetFrameBorderRectWidth(nscoord& aWidth);

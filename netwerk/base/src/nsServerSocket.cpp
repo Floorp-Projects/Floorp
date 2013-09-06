@@ -173,6 +173,13 @@ nsServerSocket::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
   PRNetAddr prClientAddr;
   NetAddr clientAddr;
 
+  // NSPR doesn't tell us the peer address's length (as provided by the
+  // 'accept' system call), so we can't distinguish between named,
+  // unnamed, and abstract peer addresses. Clear prClientAddr first, so
+  // that the path will at least be reliably empty for unnamed and
+  // abstract addresses, and not garbage when the peer is unnamed.
+  memset(&prClientAddr, 0, sizeof(prClientAddr));
+
   clientFD = PR_Accept(mFD, &prClientAddr, PR_INTERVAL_NO_WAIT);
   PRNetAddrToNetAddr(&prClientAddr, &clientAddr);
   if (!clientFD)
@@ -230,6 +237,15 @@ nsServerSocket::OnSocketDetached(PRFileDesc *fd)
 void
 nsServerSocket::IsLocal(bool *aIsLocal)
 {
+#if defined(XP_UNIX) || defined(XP_OS2)
+  // Unix-domain sockets are always local.
+  if (mAddr.raw.family == PR_AF_LOCAL)
+  {
+    *aIsLocal = true;
+    return;
+  }
+#endif
+
   // If bound to loopback, this server socket only accepts local connections.
   *aIsLocal = PR_IsNetAddrType(&mAddr, PR_IpAddrLoopback);
 }
@@ -255,6 +271,35 @@ NS_IMETHODIMP
 nsServerSocket::Init(int32_t aPort, bool aLoopbackOnly, int32_t aBackLog)
 {
   return InitSpecialConnection(aPort, aLoopbackOnly ? LoopbackOnly : 0, aBackLog);
+}
+
+NS_IMETHODIMP
+nsServerSocket::InitWithFilename(nsIFile *aPath, uint32_t aPermissions, int32_t aBacklog)
+{
+#if defined(XP_UNIX) || defined(XP_OS2)
+  nsresult rv;
+
+  nsAutoCString path;
+  rv = aPath->GetNativePath(path);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // Create a Unix domain PRNetAddr referring to the given path.
+  PRNetAddr addr;
+  if (path.Length() > sizeof(addr.local.path) - 1)
+    return NS_ERROR_FILE_NAME_TOO_LONG;
+  addr.local.family = PR_AF_LOCAL;
+  memcpy(addr.local.path, path.get(), path.Length());
+  addr.local.path[path.Length()] = '\0';
+
+  rv = InitWithAddress(&addr, aBacklog);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return aPath->SetPermissions(aPermissions);
+#else
+  return NS_ERROR_SOCKET_ADDRESS_NOT_SUPPORTED;
+#endif
 }
 
 NS_IMETHODIMP
@@ -289,7 +334,7 @@ nsServerSocket::InitWithAddress(const PRNetAddr *aAddr, int32_t aBackLog)
   if (!mFD)
   {
     NS_WARNING("unable to create server socket");
-    return NS_ERROR_FAILURE;
+    return ErrorAccordingToNSPR(PR_GetError());
   }
 
   PRSocketOptionData opt;
@@ -330,8 +375,9 @@ nsServerSocket::InitWithAddress(const PRNetAddr *aAddr, int32_t aBackLog)
   return NS_OK;
 
 fail:
+  nsresult rv = ErrorAccordingToNSPR(PR_GetError());
   Close();
-  return NS_ERROR_FAILURE;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -468,8 +514,11 @@ nsServerSocket::GetPort(int32_t *aResult)
   uint16_t port;
   if (mAddr.raw.family == PR_AF_INET)
     port = mAddr.inet.port;
-  else
+  else if (mAddr.raw.family == PR_AF_INET6)
     port = mAddr.ipv6.port;
+  else
+    return NS_ERROR_FAILURE;
+
   *aResult = (int32_t) PR_ntohs(port);
   return NS_OK;
 }
