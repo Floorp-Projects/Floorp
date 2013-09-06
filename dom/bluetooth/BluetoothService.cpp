@@ -9,7 +9,9 @@
 #include "BluetoothService.h"
 
 #include "BluetoothCommon.h"
+#include "BluetoothA2dpManager.h"
 #include "BluetoothHfpManager.h"
+#include "BluetoothHidManager.h"
 #include "BluetoothManager.h"
 #include "BluetoothOppManager.h"
 #include "BluetoothParent.h"
@@ -460,11 +462,30 @@ BluetoothService::StartStopBluetooth(bool aStart, bool aIsStartup)
   }
 
   if (!aStart) {
-    BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
-    hfp->Disconnect();
+    BluetoothProfileManagerBase* profile;
+    profile = BluetoothHfpManager::Get();
+    NS_ENSURE_TRUE(profile, NS_ERROR_FAILURE);
+    if (profile->IsConnected()) {
+      profile->Disconnect(nullptr);
+    }
 
-    BluetoothOppManager* opp = BluetoothOppManager::Get();
-    opp->Disconnect();
+    profile = BluetoothOppManager::Get();
+    NS_ENSURE_TRUE(profile, NS_ERROR_FAILURE);
+    if (profile->IsConnected()) {
+      profile->Disconnect(nullptr);
+    }
+
+    profile = BluetoothA2dpManager::Get();
+    NS_ENSURE_TRUE(profile, NS_ERROR_FAILURE);
+    if (profile->IsConnected()) {
+      profile->Disconnect(nullptr);
+    }
+
+    profile = BluetoothHidManager::Get();
+    NS_ENSURE_TRUE(profile, NS_ERROR_FAILURE);
+    if (profile->IsConnected()) {
+      profile->Disconnect(nullptr);
+    }
   }
 
   if (!mBluetoothThread) {
