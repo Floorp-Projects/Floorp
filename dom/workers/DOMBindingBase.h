@@ -10,6 +10,7 @@
 
 #include "nsISupportsImpl.h"
 #include "nsWrapperCache.h"
+#include "nsWrapperCacheInlines.h"
 
 BEGIN_WORKERS_NAMESPACE
 
