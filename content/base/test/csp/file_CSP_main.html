@@ -1,7 +1,7 @@
 <html>
   <head>
     <link rel='stylesheet' type='text/css'
-          href='http://example.org/tests/content/base/test/file_CSP.sjs?testid=style_bad&type=text/css' />
+          href='http://example.org/tests/content/base/test/csp/file_CSP.sjs?testid=style_bad&type=text/css' />
     <link rel='stylesheet' type='text/css'
           href='file_CSP.sjs?testid=style_good&type=text/css' />
 
@@ -13,13 +13,13 @@
   </head>
   <body>
     <!-- these should be stopped by CSP.  :) -->
-    <img src="http://example.org/tests/content/base/test/file_CSP.sjs?testid=img_bad&type=img/png"> </img>
-    <audio src="http://example.org/tests/content/base/test/file_CSP.sjs?testid=media_bad&type=audio/vorbis"></audio>
-    <script src='http://example.org/tests/content/base/test/file_CSP.sjs?testid=script_bad&type=text/javascript'></script>
-    <iframe src='http://example.org/tests/content/base/test/file_CSP.sjs?testid=frame_bad&content=FAIL'></iframe>
+    <img src="http://example.org/tests/content/base/test/csp/file_CSP.sjs?testid=img_bad&type=img/png"> </img>
+    <audio src="http://example.org/tests/content/base/test/csp/file_CSP.sjs?testid=media_bad&type=audio/vorbis"></audio>
+    <script src='http://example.org/tests/content/base/test/csp/file_CSP.sjs?testid=script_bad&type=text/javascript'></script>
+    <iframe src='http://example.org/tests/content/base/test/csp/file_CSP.sjs?testid=frame_bad&content=FAIL'></iframe>
     <object width="10" height="10">
-      <param name="movie" value="http://example.org/tests/content/base/test/file_CSP.sjs?testid=object_bad&type=application/x-shockwave-flash">
-      <embed src="http://example.org/tests/content/base/test/file_CSP.sjs?testid=object_bad&type=application/x-shockwave-flash"></embed>
+      <param name="movie" value="http://example.org/tests/content/base/test/csp/file_CSP.sjs?testid=object_bad&type=application/x-shockwave-flash">
+      <embed src="http://example.org/tests/content/base/test/csp/file_CSP.sjs?testid=object_bad&type=application/x-shockwave-flash"></embed>
     </object>
 
     <!-- these should load ok.  :) -->

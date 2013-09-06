@@ -11,7 +11,7 @@ function handleRequest(request, response)
   response.setHeader("Cache-Control", "no-cache", false);
   response.setHeader("Content-Type", "text/html", false);
 
-  var resource = "/tests/content/base/test/file_csp_redirects_resource.sjs";
+  var resource = "/tests/content/base/test/csp/file_csp_redirects_resource.sjs";
 
   // CSP header value
   if (query["csp"] == 1) {
