@@ -398,15 +398,9 @@ XULTreeGridRowAccessible::GetCellAccessible(nsITreeColumn* aColumn)
   nsRefPtr<Accessible> cell =
     new XULTreeGridCellAccessibleWrap(mContent, mDoc, this, mTree,
                                       mTreeView, mRow, aColumn);
-  if (cell) {
-    mAccessibleCache.Put(key, cell);
-    if (Document()->BindToDocument(cell, nullptr))
-      return cell;
-
-    mAccessibleCache.Remove(key);
-  }
-
-  return nullptr;
+  mAccessibleCache.Put(key, cell);
+  Document()->BindToDocument(cell, nullptr);
+  return cell;
 }
 
 void
