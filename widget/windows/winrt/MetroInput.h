@@ -11,6 +11,7 @@
 #include "nsGUIEvent.h"       // mTouchEvent (nsTouchEvent)
 #include "nsHashKeys.h"       // type of key for mTouches
 #include "mozwrlbase.h"
+#include "nsDeque.h"
 
 // System headers (alphabetical)
 #include <EventToken.h>     // EventRegistrationToken
@@ -164,7 +165,7 @@ private:
 
   // Event processing helpers.  See function definitions for more info.
   void OnPointerNonTouch(IPointerPoint* aPoint);
-  void InitGeckoMouseEventFromPointerPoint(nsMouseEvent& aEvent,
+  void InitGeckoMouseEventFromPointerPoint(nsMouseEvent* aEvent,
                                            IPointerPoint* aPoint);
   void ProcessManipulationDelta(ManipulationDelta const& aDelta,
                                 Point const& aPosition,
@@ -252,6 +253,10 @@ private:
   EventRegistrationToken mTokenManipulationCompleted;
   EventRegistrationToken mTokenTapped;
   EventRegistrationToken mTokenRightTapped;
+
+  void DispatchAsyncEventIgnoreStatus(nsGUIEvent* aEvent);
+  void DeliverNextQueuedEventIgnoreStatus();
+  nsDeque mInputEventQueue;
 };
 
 } } }

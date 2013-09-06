@@ -218,6 +218,7 @@ MetroInput::OnEdgeGestureStarted(UI::Input::IEdgeGesture* sender,
 
   geckoEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
 
+  // Safe
   DispatchEventIgnoreStatus(&geckoEvent);
   return S_OK;
 }
@@ -249,6 +250,7 @@ MetroInput::OnEdgeGestureCanceled(UI::Input::IEdgeGesture* sender,
 
   geckoEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
 
+  // Safe
   DispatchEventIgnoreStatus(&geckoEvent);
   return S_OK;
 }
@@ -286,6 +288,7 @@ MetroInput::OnEdgeGestureCompleted(UI::Input::IEdgeGesture* sender,
     geckoEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
   }
 
+  // Safe
   DispatchEventIgnoreStatus(&geckoEvent);
   return S_OK;
 }
@@ -307,42 +310,43 @@ MetroInput::OnPointerNonTouch(UI::Input::IPointerPoint* aPoint) {
   aPoint->get_Properties(props.GetAddressOf());
   props->get_PointerUpdateKind(&pointerUpdateKind);
 
-  nsMouseEvent mouseEvent(true,
-                          NS_MOUSE_MOVE,
-                          mWidget.Get(),
-                          nsMouseEvent::eReal,
-                          nsMouseEvent::eNormal);
+  nsMouseEvent* event =
+    new nsMouseEvent(true,
+                     NS_MOUSE_MOVE,
+                     mWidget.Get(),
+                     nsMouseEvent::eReal,
+                     nsMouseEvent::eNormal);
 
   switch (pointerUpdateKind) {
     case UI::Input::PointerUpdateKind::PointerUpdateKind_LeftButtonPressed:
       // We don't bother setting mouseEvent.button because it is already
       // set to nsMouseEvent::buttonType::eLeftButton whose value is 0.
-      mouseEvent.message = NS_MOUSE_BUTTON_DOWN;
+      event->message = NS_MOUSE_BUTTON_DOWN;
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_MiddleButtonPressed:
-      mouseEvent.button = nsMouseEvent::buttonType::eMiddleButton;
-      mouseEvent.message = NS_MOUSE_BUTTON_DOWN;
+      event->button = nsMouseEvent::buttonType::eMiddleButton;
+      event->message = NS_MOUSE_BUTTON_DOWN;
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_RightButtonPressed:
-      mouseEvent.button = nsMouseEvent::buttonType::eRightButton;
-      mouseEvent.message = NS_MOUSE_BUTTON_DOWN;
+      event->button = nsMouseEvent::buttonType::eRightButton;
+      event->message = NS_MOUSE_BUTTON_DOWN;
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_LeftButtonReleased:
       // We don't bother setting mouseEvent.button because it is already
       // set to nsMouseEvent::buttonType::eLeftButton whose value is 0.
-      mouseEvent.message = NS_MOUSE_BUTTON_UP;
+      event->message = NS_MOUSE_BUTTON_UP;
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_MiddleButtonReleased:
-      mouseEvent.button = nsMouseEvent::buttonType::eMiddleButton;
-      mouseEvent.message = NS_MOUSE_BUTTON_UP;
+      event->button = nsMouseEvent::buttonType::eMiddleButton;
+      event->message = NS_MOUSE_BUTTON_UP;
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_RightButtonReleased:
-      mouseEvent.button = nsMouseEvent::buttonType::eRightButton;
-      mouseEvent.message = NS_MOUSE_BUTTON_UP;
+      event->button = nsMouseEvent::buttonType::eRightButton;
+      event->message = NS_MOUSE_BUTTON_UP;
       break;
   }
-  InitGeckoMouseEventFromPointerPoint(mouseEvent, aPoint);
-  DispatchEventIgnoreStatus(&mouseEvent);
+  InitGeckoMouseEventFromPointerPoint(event, aPoint);
+  DispatchAsyncEventIgnoreStatus(event);
   return;
 }
 
@@ -558,7 +562,7 @@ MetroInput::OnPointerMoved(UI::Core::ICoreWindow* aSender,
 
 void
 MetroInput::InitGeckoMouseEventFromPointerPoint(
-                                  nsMouseEvent& aEvent,
+                                  nsMouseEvent* aEvent,
                                   UI::Input::IPointerPoint* aPointerPoint) {
   NS_ASSERTION(aPointerPoint, "InitGeckoMouseEventFromPointerPoint "
                               "called with null PointerPoint!");
@@ -580,18 +584,18 @@ MetroInput::InitGeckoMouseEventFromPointerPoint(
   mGestureRecognizer->CanBeDoubleTap(aPointerPoint, &canBeDoubleTap);
 
   mModifierKeyState.Update();
-  mModifierKeyState.InitInputEvent(aEvent);
-  aEvent.refPoint = LayoutDeviceIntPoint::FromUntyped(MetroUtils::LogToPhys(position));
-  aEvent.time = timestamp;
+  mModifierKeyState.InitInputEvent(*aEvent);
+  aEvent->refPoint = LayoutDeviceIntPoint::FromUntyped(MetroUtils::LogToPhys(position));
+  aEvent->time = timestamp;
 
   if (!canBeDoubleTap) {
-    aEvent.clickCount = 1;
+    aEvent->clickCount = 1;
   } else {
-    aEvent.clickCount = 2;
+    aEvent->clickCount = 2;
   }
-  aEvent.pressure = pressure;
+  aEvent->pressure = pressure;
 
-  MozInputSourceFromDeviceType(deviceType, aEvent.inputSource);
+  MozInputSourceFromDeviceType(deviceType, aEvent->inputSource);
 }
 
 // This event is raised when a precise pointer moves into the bounding box of
@@ -616,13 +620,13 @@ MetroInput::OnPointerEntered(UI::Core::ICoreWindow* aSender,
   // We only dispatch mouseenter and mouseexit events for mouse and pen input.
   if (deviceType !=
           Devices::Input::PointerDeviceType::PointerDeviceType_Touch) {
-    nsMouseEvent mouseEvent(true,
-                            NS_MOUSE_ENTER,
-                            mWidget.Get(),
-                            nsMouseEvent::eReal,
-                            nsMouseEvent::eNormal);
-    InitGeckoMouseEventFromPointerPoint(mouseEvent, currentPoint.Get());
-    DispatchEventIgnoreStatus(&mouseEvent);
+    nsMouseEvent* event = new nsMouseEvent(true,
+                                           NS_MOUSE_ENTER,
+                                           mWidget.Get(),
+                                           nsMouseEvent::eReal,
+                                           nsMouseEvent::eNormal);
+    InitGeckoMouseEventFromPointerPoint(event, currentPoint.Get());
+    DispatchAsyncEventIgnoreStatus(event);
   }
   return S_OK;
 }
@@ -649,13 +653,13 @@ MetroInput::OnPointerExited(UI::Core::ICoreWindow* aSender,
   // We only dispatch mouseenter and mouseexit events for mouse and pen input.
   if (deviceType !=
           Devices::Input::PointerDeviceType::PointerDeviceType_Touch) {
-    nsMouseEvent mouseEvent(true,
-                            NS_MOUSE_EXIT,
-                            mWidget.Get(),
-                            nsMouseEvent::eReal,
-                            nsMouseEvent::eNormal);
-    InitGeckoMouseEventFromPointerPoint(mouseEvent, currentPoint.Get());
-    DispatchEventIgnoreStatus(&mouseEvent);
+    nsMouseEvent* event = new nsMouseEvent(true,
+                                           NS_MOUSE_EXIT,
+                                           mWidget.Get(),
+                                           nsMouseEvent::eReal,
+                                           nsMouseEvent::eNormal);
+    InitGeckoMouseEventFromPointerPoint(event, currentPoint.Get());
+    DispatchAsyncEventIgnoreStatus(event);
   }
   return S_OK;
 }
@@ -1009,10 +1013,24 @@ MetroInput::HandleLongTap(const LayoutDeviceIntPoint& aPoint)
  */
 nsEventStatus MetroInput::sThrowawayStatus;
 
-// This function allows us to call MetroWidget's DispatchEvent function
-// without passing in a status.  It uses a static nsEventStatus whose value
-// is never read.  This allows us to avoid the (admittedly small) overhead
-// of creating a new nsEventStatus every time we dispatch an event.
+void
+MetroInput::DispatchAsyncEventIgnoreStatus(nsGUIEvent* aEvent)
+{
+  mInputEventQueue.Push(aEvent);
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NewRunnableMethod(this, &MetroInput::DeliverNextQueuedEventIgnoreStatus);
+  NS_DispatchToCurrentThread(runnable);
+}
+
+void
+MetroInput::DeliverNextQueuedEventIgnoreStatus()
+{
+  nsGUIEvent* event = static_cast<nsGUIEvent*>(mInputEventQueue.PopFront());
+  MOZ_ASSERT(event);
+  DispatchEventIgnoreStatus(event);
+  delete event;
+}
+
 void
 MetroInput::DispatchEventIgnoreStatus(nsGUIEvent *aEvent) {
   mWidget->DispatchEvent(aEvent, sThrowawayStatus);
