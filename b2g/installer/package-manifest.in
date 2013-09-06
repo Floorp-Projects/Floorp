@@ -471,6 +471,8 @@
 @BINPATH@/components/NetworkStatsManager.manifest
 @BINPATH@/components/NetworkInterfaceListService.manifest
 @BINPATH@/components/NetworkInterfaceListService.js
+@BINPATH@/components/TelephonyProvider.manifest
+@BINPATH@/components/TelephonyProvider.js
 #endif
 #ifdef MOZ_ENABLE_DBUS
 @BINPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@
