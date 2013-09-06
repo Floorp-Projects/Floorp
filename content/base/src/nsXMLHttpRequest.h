@@ -48,6 +48,7 @@ class nsFormData;
 class nsIJARChannel;
 class nsILoadGroup;
 class nsIUnicodeDecoder;
+class nsIJSID;
 
 namespace mozilla {
 

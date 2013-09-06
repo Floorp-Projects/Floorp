@@ -18,6 +18,7 @@
 #include "AudioChannelCommon.h"
 #include <algorithm>
 #include "mozilla/Preferences.h"
+#include "nsComponentManagerUtils.h"
 
 static bool
 IsAudioAPIEnabled()

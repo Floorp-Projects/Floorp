@@ -160,6 +160,7 @@
 #include "SandboxPrivate.h"
 #include "BackstagePass.h"
 #include "nsCxPusher.h"
+#include "nsAXPCNativeCallContext.h"
 
 #ifdef XP_WIN
 // Nasty MS defines
