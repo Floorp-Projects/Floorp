@@ -1382,8 +1382,13 @@ abstract public class BrowserApp extends GeckoApp
         tab.setFaviconLoadId(Favicons.NOT_LOADING);
     }
 
+    /**
+     * Enters editing mode with the current tab's URL. There might be no
+     * tabs loaded by the time the user enters editing mode e.g. just after
+     * the app starts. In this case, we simply fallback to an empty URL.
+     */
     private void enterEditingMode() {
-        String url = null;
+        String url = "";
 
         final Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab != null) {
@@ -1398,8 +1403,8 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     /**
-     * Enters editing mode for the current tab. This method will
-     * always open the VISITED page on about:home.
+     * Enters editing mode with the specified URL. This method will
+     * always open the HISTORY page on about:home.
      */
     private void enterEditingMode(String url) {
         if (url == null) {
