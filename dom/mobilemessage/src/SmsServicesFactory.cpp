@@ -5,16 +5,18 @@
 
 #include "SmsServicesFactory.h"
 #include "nsXULAppAPI.h"
-#include "SmsService.h"
 #include "SmsIPCService.h"
 #ifndef MOZ_B2G_RIL
 #include "MobileMessageDatabaseService.h"
 #include "MmsService.h"
+#include "SmsService.h"
 #endif
 #include "nsServiceManagerUtils.h"
 
 #define RIL_MMSSERVICE_CONTRACTID "@mozilla.org/mms/rilmmsservice;1"
-#define RIL_MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID "@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1"
+#define RIL_MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID \
+  "@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1"
+#define RIL_SMSSERVICE_CONTRACTID "@mozilla.org/sms/rilsmsservice;1"
 
 namespace mozilla {
 namespace dom {
@@ -28,7 +30,11 @@ SmsServicesFactory::CreateSmsService()
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     smsService = new SmsIPCService();
   } else {
+#ifdef MOZ_B2G_RIL
+    smsService = do_GetService(RIL_SMSSERVICE_CONTRACTID);
+#else
     smsService = new SmsService();
+#endif
   }
 
   return smsService.forget();
@@ -42,7 +48,8 @@ SmsServicesFactory::CreateMobileMessageDatabaseService()
     mobileMessageDBService = new SmsIPCService();
   } else {
 #ifdef MOZ_B2G_RIL
-    mobileMessageDBService = do_GetService(RIL_MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
+    mobileMessageDBService =
+      do_GetService(RIL_MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
 #else
     mobileMessageDBService = new MobileMessageDatabaseService();
 #endif
