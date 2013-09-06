@@ -3857,6 +3857,8 @@ GetObjectScope(JSObject *obj)
 extern bool gDebugMode;
 extern bool gDesiredDebugMode;
 
+extern JSClass SafeJSContextGlobalClass;
+
 JSObject* NewOutObject(JSContext* cx, JSObject* scope);
 bool IsOutObject(JSContext* cx, JSObject* obj);
 
