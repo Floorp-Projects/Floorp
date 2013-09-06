@@ -253,6 +253,9 @@ function installCache(app) {
       let type = nsIApplicationCache.ITEM_FALLBACK;
       applicationCache.markEntry(url, type);
     });
+
+    storeCache(applicationCache, appcacheURL, cacheManifest,
+               nsIApplicationCache.ITEM_MANIFEST);
   });
 }
 

@@ -1,0 +1,49 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!ENTITY index.title "App Manager">
+<!ENTITY index.projects "My Apps">
+<!ENTITY index.device "My Device">
+
+<!ENTITY device.screenshot "Screenshot">
+<!ENTITY device.title "Device Control Center">
+<!ENTITY device.notConnected "Not connected. Please connect your device below.">
+<!ENTITY device.startApp "Start">
+<!ENTITY device.stopApp "Stop">
+<!ENTITY device.debugApp "Debug">
+<!ENTITY device.name "Name">
+<!ENTITY device.app "App">
+<!ENTITY device.privileged "Privileged">
+<!ENTITY device.certified "Certified">
+<!ENTITY device.allow "Allow">
+<!ENTITY device.prompt "Prompt">
+<!ENTITY device.deny "Deny">
+<!ENTITY device.installedApps "Installed Apps">
+<!ENTITY device.permissions "Permissions">
+
+<!ENTITY connection.disconnect "Disconnect">
+<!ENTITY connection.showDeviceCtrlCenter "Click for More Details">
+<!ENTITY connection.notConnected "Not Connected">
+<!ENTITY connection.changeHostAndPort "Change">
+<!ENTITY connection.startSimulator "Start Simulator">
+<!ENTITY connection.saveConnectionInfo "Save">
+<!ENTITY connection.connecting "Connecting…">
+<!ENTITY connection.disconnecting "Disconnecting…">
+<!ENTITY connection.cancel "Cancel">
+<!ENTITY connection.or "or">
+
+<!ENTITY projects.localApps "Local Apps">
+<!ENTITY projects.addApp "Add">
+<!ENTITY projects.addPackaged "Add Packaged App">
+<!ENTITY projects.addHosted "Add Hosted App">
+<!ENTITY projects.title "Local Apps">
+<!ENTITY projects.appDetails "App Details">
+<!ENTITY projects.removeApp "Remove">
+<!ENTITY projects.reloadFiles "Refresh">
+<!ENTITY projects.installApp "Install">
+<!ENTITY projects.startApp "Start">
+<!ENTITY projects.stopApp "Stop">
+<!ENTITY projects.debugApp "Debug">
+<!ENTITY projects.hostedManifestPlaceHolder "http://example.com/app/webapp.manifest">
+<!ENTITY projects.noProject "No project linked. Add a new packaged app below (a directory) or a hosted app (link to a manifest file).">

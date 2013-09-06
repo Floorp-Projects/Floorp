@@ -33,9 +33,6 @@ public:
   NS_DECL_NSIPROPERTIES
 
   nsProperties(nsISupports *aOuter) { NS_INIT_AGGREGATED(aOuter); }
-  nsresult Init() { nsProperties_HashBase::Init(); return NS_OK; }
-
-private:
   ~nsProperties() { }
 };
 

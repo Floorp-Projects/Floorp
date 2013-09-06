@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+     - License, v. 2.0. If a copy of the MPL was not distributed with this
+     - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE window [
+  <!ENTITY % appMgrDTD SYSTEM "chrome://browser/locale/devtools/app-manager.dtd" >
+  %appMgrDTD;
+]>
+
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/app-manager/index.css"?>
+
+<window id="app-manager-window"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&index.title;"
+        windowtype="devtools:app-manager"
+        macanimationtype="document"
+        fullscreenbutton="true"
+        screenX="4" screenY="4"
+        width="800" height="600"
+        persist="screenX screenY width height sizemode">
+
+  <vbox flex="1">
+    <hbox id="content" flex="1">
+      <vbox id="tabs">
+        <button class="button projects-button" onclick="selectTab('projects')">&index.projects;</button>
+        <button class="button device-button" onclick="selectTab('device')">&index.device;</button>
+      </vbox>
+      <hbox id="tab-panels" flex="1">
+        <iframe flex="1" class="panel projects-panel" src="chrome://browser/content/devtools/app-manager/projects.xhtml"/>
+        <iframe flex="1" class="panel device-panel" src="chrome://browser/content/devtools/app-manager/device.xhtml"/>
+      </hbox>
+    </hbox>
+    <iframe id="connection-footer" src="chrome://browser/content/devtools/app-manager/connection-footer.xhtml"></iframe>
+  </vbox>
+
+  <script type="application/javascript;version=1.8" src="chrome://browser/content/devtools/app-manager/index.js"></script>
+</window>

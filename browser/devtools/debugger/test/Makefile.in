@@ -67,6 +67,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_sources-cache.js \
 	browser_dbg_scripts-switching.js \
 	browser_dbg_scripts-switching-02.js \
+	browser_dbg_scripts-switching-03.js \
 	browser_dbg_scripts-sorting.js \
 	browser_dbg_scripts-searching-01.js \
 	browser_dbg_scripts-searching-02.js \

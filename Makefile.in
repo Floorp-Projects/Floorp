@@ -52,8 +52,10 @@ ifndef MOZ_PROFILE_USE
 #
 # We need to explicitly put backend.RecursiveMakeBackend.built here
 # otherwise the rule in rules.mk doesn't run early enough.
-default alldep all:: CLOBBER $(topsrcdir)/configure config.status backend.RecursiveMakeBackend.built
+default all export libs tools:: CLOBBER $(topsrcdir)/configure config.status backend.RecursiveMakeBackend.built
 	$(call SUBMAKE,backend.RecursiveMakeBackend.built,js/src,1)
+
+default all export::
 	$(call py_action,purge_manifests,-d _build_manifests/purge .)
 endif
 
@@ -77,8 +79,7 @@ config.status: $(topsrcdir)/configure
 	@echo "but your build might not succeed."
 	@exit 1
 
-# Build pseudo-external modules first when export is explicitly called
-export::
+default all export::
 	$(RM) -r $(DIST)/sdk
 
 ifdef ENABLE_TESTS
@@ -89,10 +90,12 @@ endif
 # Hacky way for precompile tier to bypass default tier traversal mechanism.
 TIER_precompile_CUSTOM := 1
 
+default all export::
+	$(call py_action,process_install_manifest,$(DIST)/include _build_manifests/install/dist_include js/src/_build_manifests/install/dist_include)
+
 include $(topsrcdir)/config/rules.mk
 
-default all alldep::
-	$(call py_action,process_install_manifest,$(DIST)/include _build_manifests/install/dist_include js/src/_build_manifests/install/dist_include)
+default all::
 	$(call BUILDSTATUS,TIERS $(TIERS))
 	$(foreach tier,$(TIERS),$(call SUBMAKE,tier_$(tier)))
 
