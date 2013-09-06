@@ -20,7 +20,6 @@
 #include "nsEventDispatcher.h"
 #include "nsError.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "nsDOMClassInfoID.h"
 #include "nsIURL.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIUnicodeEncoder.h"
@@ -45,6 +44,7 @@
 #include "nsWrapperCacheInlines.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsIObserverService.h"
+#include "nsIWebSocketChannel.h"
 #include "GeneratedEvents.h"
 
 namespace mozilla {
