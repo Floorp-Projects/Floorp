@@ -78,10 +78,10 @@ public:
   STDMETHODIMP Run();
   STDMETHODIMP Uninitialize();
 
+  HRESULT ActivateView();
+
   // Public apis for MetroWidget
   void ShutdownXPCOM();
-  bool Render();
-  bool Render(const nsIntRegion& aInvalidRegion);
   float GetDPI() { return mDPI; }
   ICoreWindow* GetCoreWindow() { return mWindow.Get(); }
   void SetWidget(MetroWidget* aWidget);
@@ -180,7 +180,6 @@ private:
   nsIntRect mWindowBounds; // in device-pixel coordinates
   float mDPI;
   bool mShuttingDown;
-  bool mPainting;
   nsAutoString mActivationURI;
   nsAutoString mActivationCommandLine;
   Microsoft::WRL::ComPtr<IInspectable> mAutomationProvider;
@@ -190,7 +189,6 @@ private:
   //Microsoft::WRL::ComPtr<IWICImagingFactory2> mWicFactory;
   Microsoft::WRL::ComPtr<MetroApp> mMetroApp;
   Microsoft::WRL::ComPtr<ICoreWindow> mWindow;
-  Microsoft::WRL::ComPtr<ICoreDispatcher> mDispatcher;
   Microsoft::WRL::ComPtr<MetroWidget> mWidget;
   Microsoft::WRL::ComPtr<MetroInput> mMetroInput;
   static bool sKeyboardIsVisible;

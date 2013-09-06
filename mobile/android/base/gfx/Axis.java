@@ -92,7 +92,7 @@ abstract class Axis {
 
     //  The values we use for friction are based on a 16.6ms frame, adjust them to currentNsPerFrame:
     static float getFrameAdjustedFriction(float baseFriction, long currentNsPerFrame) {
-        float framerateMultiplier = currentNsPerFrame / NS_PER_FRAME;
+        float framerateMultiplier = (float)currentNsPerFrame / NS_PER_FRAME;
         return (float)Math.pow(Math.E, (Math.log(baseFriction) / framerateMultiplier));
     }
 

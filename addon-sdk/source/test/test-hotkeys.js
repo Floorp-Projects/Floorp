@@ -16,6 +16,8 @@ exports["test hotkey: function key"] = function(assert, done) {
     combo: "f1",
     onPress: function() {
       assert.pass("first callback is called");
+      assert.equal(this, showHotKey,
+        'Context `this` in `onPress` should be the hotkey object');
       keyDown(element, "f2");
       showHotKey.destroy();
     }
