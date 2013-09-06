@@ -477,10 +477,7 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* nameStr)
     JSDProperty* jsdprop;
     JSDProperty* iter = NULL;
     JS::RootedObject obj(cx);
-    unsigned  attrs = 0;
     bool found;
-    const jschar * nameChars;
-    size_t nameLen;
     JS::RootedValue val(cx), nameval(cx);
     JS::RootedId nameid(cx);
     JS::RootedValue propId(cx);
@@ -504,24 +501,28 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* nameStr)
     }
     /* Not found in property list, look it up explicitly */
 
+    nameval = STRING_TO_JSVAL(name);
+    if(!JS_ValueToId(cx, nameval, nameid.address()))
+        return NULL;
+
     if(!(obj = JSVAL_TO_OBJECT(jsdval->val)))
         return NULL;
 
-    if (!(nameChars = JS_GetStringCharsZAndLength(cx, name, &nameLen)))
-        return NULL;
-
+    JS::Rooted<JSPropertyDescriptor> desc(cx);
     {
         JSAutoCompartment ac(cx, obj);
+        JS::RootedId id(cx, nameid);
 
-        JS_GetUCPropertyAttributes(cx, obj, nameChars, nameLen, &attrs, &found);
-        if (!found)
-        {
+        if(!JS_WrapId(cx, id.address()))
             return NULL;
-        }
+        if(!JS_GetOwnPropertyDescriptorById(cx, obj, id, 0, &desc))
+            return NULL;
+        if(!desc.object())
+            return NULL;
 
         JS_ClearPendingException(cx);
 
-        if(!JS_GetUCProperty(cx, obj, nameChars, nameLen, &val))
+        if(!JS_GetPropertyById(cx, obj, id, &val))
         {
             if (JS_IsExceptionPending(cx))
             {
@@ -543,16 +544,13 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* nameStr)
         }
     }
 
-    nameval = STRING_TO_JSVAL(name);
-    if (!JS_ValueToId(cx, nameval, nameid.address()) ||
-        !JS_IdToValue(cx, nameid, propId.address())) {
+    if (!JS_IdToValue(cx, nameid, propId.address()))
         return NULL;
-    }
 
     propAlias = JSVAL_NULL;
-    propFlags |= (attrs & JSPROP_ENUMERATE) ? JSPD_ENUMERATE : 0
-        | (attrs & JSPROP_READONLY)  ? JSPD_READONLY  : 0
-        | (attrs & JSPROP_PERMANENT) ? JSPD_PERMANENT : 0;
+    propFlags |= desc.isEnumerable() ? JSPD_ENUMERATE : 0
+        | desc.isReadonly() ? JSPD_READONLY  : 0
+        | desc.isPermanent() ? JSPD_PERMANENT : 0;
 
     return _newProperty(jsdc, propId, propValue, propAlias, propFlags, JSDPD_HINTED);
 }
