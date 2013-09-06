@@ -73,6 +73,7 @@
 #include "gfxContext.h"
 #include "nsRenderingContext.h"
 #include "nsAbsoluteContainingBlock.h"
+#include "StickyScrollContainer.h"
 #include "nsFontInflationData.h"
 #include "gfxASurface.h"
 #include "nsRegion.h"
@@ -510,6 +511,9 @@ nsFrame::Init(nsIContent*      aContent,
     // property, so we can set this bit here and then ignore it.
     mState |= NS_FRAME_MAY_BE_TRANSFORMED;
   }
+  if (disp->mPosition == NS_STYLE_POSITION_STICKY) {
+    StickyScrollContainer::StickyScrollContainerForFrame(this)->AddFrame(this);
+  }
 
   if (nsLayoutUtils::FontSizeInflationEnabled(PresContext()) || !GetParent()
 #ifdef DEBUG
@@ -587,6 +591,11 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
   MOZ_ASSERT(!HasAbsolutelyPositionedChildren());
 
   nsSVGEffects::InvalidateDirectRenderingObservers(this);
+
+  if (StyleDisplay()->mPosition == NS_STYLE_POSITION_STICKY) {
+    StickyScrollContainer::StickyScrollContainerForFrame(this)->
+      RemoveFrame(this);
+  }
 
   // Get the view pointer now before the frame properties disappear
   // when we call NotifyDestroyingFrame()
