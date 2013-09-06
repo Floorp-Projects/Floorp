@@ -24,7 +24,7 @@ const Hotkey = exports.Hotkey = function Hotkey(options) {
     throw new TypeError(INVALID_HOTKEY);
   }
 
-  this.onPress = options.onPress;
+  this.onPress = options.onPress && options.onPress.bind(this);
   this.toString = stringify.bind(null, hotkey);
   // Registering listener on keyboard combination enclosed by this hotkey.
   // Please note that `this.toString()` is a normalized version of

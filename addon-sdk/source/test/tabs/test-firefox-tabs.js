@@ -12,6 +12,8 @@ const { open, focus, close } = require('sdk/window/helpers');
 const { StringBundle } = require('sdk/deprecated/app-strings');
 const tabs = require('sdk/tabs');
 const { browserWindows } = require('sdk/windows');
+const { set: setPref } = require("sdk/preferences/service");
+const DEPRECATE_PREF = "devtools.errorconsole.deprecation_warnings";
 
 const base64png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAA";
 
@@ -904,6 +906,7 @@ exports.testOnLoadEventWithImage = function(assert, done) {
 };
 
 exports.testFaviconGetterDeprecation = function (assert, done) {
+  setPref(DEPRECATE_PREF, true);
   const { LoaderWithHookedConsole } = require("sdk/test/loader");
   let { loader, messages } = LoaderWithHookedConsole(module);
   let tabs = loader.require('sdk/tabs');
