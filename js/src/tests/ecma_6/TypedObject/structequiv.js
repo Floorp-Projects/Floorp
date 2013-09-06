@@ -1,6 +1,6 @@
 // |reftest| skip-if(!this.hasOwnProperty("Type"))
 var BUGNUMBER = 578700;
-var summary = 'BinaryData Equivalent StructTypes';
+var summary = 'TypedObjects Equivalent StructTypes';
 
 function assertEquivalent(t1, t2) {
   assertEq(true, t1.equivalent(t2));
