@@ -7,10 +7,12 @@
 #ifndef EncodedBufferCache_h_
 #define EncodedBufferCache_h_
 
+#include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "mozilla/Mutex.h"
-#include "prio.h"
-#include "nsDOMFile.h"
+
+struct PRFileDesc;
+class nsIDOMBlob;
 
 namespace mozilla {
 

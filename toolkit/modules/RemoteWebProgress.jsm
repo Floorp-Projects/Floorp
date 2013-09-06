@@ -19,8 +19,7 @@ function newURI(spec)
 
 function RemoteWebProgressRequest(spec)
 {
-  this.uri = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)
-                                                    .newURI(spec, null, null);
+  this.uri = newURI(spec);
 }
 
 RemoteWebProgressRequest.prototype = {
@@ -110,17 +109,19 @@ RemoteWebProgress.prototype = {
       break;
 
     case "Content:LocationChange":
-      let loc = newURI(aMessage.json.location);
+      let location = newURI(aMessage.json.location);
 
-      this._browser.webNavigation._currentURI = loc;
-      this._browser.webNavigation.canGoBack = aMessage.json.canGoBack;
-      this._browser.webNavigation.canGoForward = aMessage.json.canGoForward;
-      this._browser._characterSet = aMessage.json.charset;
-      this._browser._documentURI = newURI(aMessage.json.documentURI);
-      this._browser._imageDocument = null;
+      if (aMessage.json.isTopLevel) {
+        this._browser.webNavigation._currentURI = location;
+        this._browser.webNavigation.canGoBack = aMessage.json.canGoBack;
+        this._browser.webNavigation.canGoForward = aMessage.json.canGoForward;
+        this._browser._characterSet = aMessage.json.charset;
+        this._browser._documentURI = newURI(aMessage.json.documentURI);
+        this._browser._imageDocument = null;
+      }
 
       for each (let p in this._progressListeners) {
-        p.onLocationChange(this, req, loc);
+        p.onLocationChange(this, req, location);
       }
       break;
 

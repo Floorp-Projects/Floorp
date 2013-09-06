@@ -12,12 +12,13 @@
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsIPluginTag.h"
-#include "nsNPAPIPluginInstance.h"
 #include "nsITimer.h"
+#include "nsStringGlue.h"
 
 class nsPluginHost;
 struct PRLibrary;
 struct nsPluginInfo;
+class nsNPAPIPlugin;
 
 // A linked-list of plugin information that is used for instantiating plugins
 // and reflecting plugin information into JavaScript.

@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 #include "ImageLogging.h"
-#include "EndianMacros.h"
+#include "mozilla/Endian.h"
 #include "nsBMPDecoder.h"
 
 #include "nsIInputStream.h"
@@ -388,9 +388,9 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
     }
     if (mPos == WIN_V3_HEADER_LENGTH + BITFIELD_LENGTH && 
         mBIH.compression == BI_BITFIELDS) {
-        mBitFields.red = LITTLE_TO_NATIVE32(*(uint32_t*)mRawBuf);
-        mBitFields.green = LITTLE_TO_NATIVE32(*(uint32_t*)(mRawBuf + 4));
-        mBitFields.blue = LITTLE_TO_NATIVE32(*(uint32_t*)(mRawBuf + 8));
+        mBitFields.red = LittleEndian::readUint32(reinterpret_cast<uint32_t*>(mRawBuf));
+        mBitFields.green = LittleEndian::readUint32(reinterpret_cast<uint32_t*>(mRawBuf + 4));
+        mBitFields.blue = LittleEndian::readUint32(reinterpret_cast<uint32_t*>(mRawBuf + 8));
         CalcBitShift();
     }
     while (aCount && (mPos < mBFH.dataoffset)) { // Skip whatever is between header and data
@@ -448,7 +448,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
                         break;
                       case 16:
                         while (lpos > 0) {
-                          uint16_t val = LITTLE_TO_NATIVE16(*(uint16_t*)p);
+                          uint16_t val = LittleEndian::readUint16(reinterpret_cast<uint16_t*>(p));
                           SetPixel(d,
                                   (val & mBitFields.red) >> mBitFields.redRightShift << mBitFields.redLeftShift,
                                   (val & mBitFields.green) >> mBitFields.greenRightShift << mBitFields.greenLeftShift,
@@ -698,9 +698,9 @@ void nsBMPDecoder::ProcessFileHeader()
     memcpy(&mBFH.bihsize, mRawBuf + 14, sizeof(mBFH.bihsize));
 
     // Now correct the endianness of the header
-    mBFH.filesize = LITTLE_TO_NATIVE32(mBFH.filesize);
-    mBFH.dataoffset = LITTLE_TO_NATIVE32(mBFH.dataoffset);
-    mBFH.bihsize = LITTLE_TO_NATIVE32(mBFH.bihsize);
+    mBFH.filesize = LittleEndian::readUint32(&mBFH.filesize);
+    mBFH.dataoffset = LittleEndian::readUint32(&mBFH.dataoffset);
+    mBFH.bihsize = LittleEndian::readUint32(&mBFH.bihsize);
 }
 
 void nsBMPDecoder::ProcessInfoHeader()
@@ -726,17 +726,17 @@ void nsBMPDecoder::ProcessInfoHeader()
     }
 
     // Convert endianness
-    mBIH.width = LITTLE_TO_NATIVE32(mBIH.width);
-    mBIH.height = LITTLE_TO_NATIVE32(mBIH.height);
-    mBIH.planes = LITTLE_TO_NATIVE16(mBIH.planes);
-    mBIH.bpp = LITTLE_TO_NATIVE16(mBIH.bpp);
+    mBIH.width = LittleEndian::readUint32(&mBIH.width);
+    mBIH.height = LittleEndian::readUint32(&mBIH.height);
+    mBIH.planes = LittleEndian::readUint16(&mBIH.planes);
+    mBIH.bpp = LittleEndian::readUint16(&mBIH.bpp);
 
-    mBIH.compression = LITTLE_TO_NATIVE32(mBIH.compression);
-    mBIH.image_size = LITTLE_TO_NATIVE32(mBIH.image_size);
-    mBIH.xppm = LITTLE_TO_NATIVE32(mBIH.xppm);
-    mBIH.yppm = LITTLE_TO_NATIVE32(mBIH.yppm);
-    mBIH.colors = LITTLE_TO_NATIVE32(mBIH.colors);
-    mBIH.important_colors = LITTLE_TO_NATIVE32(mBIH.important_colors);
+    mBIH.compression = LittleEndian::readUint32(&mBIH.compression);
+    mBIH.image_size = LittleEndian::readUint32(&mBIH.image_size);
+    mBIH.xppm = LittleEndian::readUint32(&mBIH.xppm);
+    mBIH.yppm = LittleEndian::readUint32(&mBIH.yppm);
+    mBIH.colors = LittleEndian::readUint32(&mBIH.colors);
+    mBIH.important_colors = LittleEndian::readUint32(&mBIH.important_colors);
 }
 
 } // namespace image

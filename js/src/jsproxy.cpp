@@ -2362,7 +2362,7 @@ Proxy::getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &prop
 {
     JS_CHECK_RECURSION(cx, return false);
     BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
-    AutoEnterPolicy policy(cx, handler, proxy, JS::JSID_VOIDHANDLE, BaseProxyHandler::GET, true);
+    AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE, BaseProxyHandler::GET, true);
     if (!policy.allowed())
         return policy.returnValue();
     return proxy->as<ProxyObject>().handler()->getOwnPropertyNames(cx, proxy, props);
@@ -2405,7 +2405,7 @@ Proxy::enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
     JS_CHECK_RECURSION(cx, return false);
     BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
-    AutoEnterPolicy policy(cx, handler, proxy, JS::JSID_VOIDHANDLE, BaseProxyHandler::GET, true);
+    AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE, BaseProxyHandler::GET, true);
     if (!policy.allowed())
         return policy.returnValue();
     if (!handler->hasPrototype())
@@ -2543,7 +2543,7 @@ Proxy::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
     JS_CHECK_RECURSION(cx, return false);
     BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
-    AutoEnterPolicy policy(cx, handler, proxy, JS::JSID_VOIDHANDLE, BaseProxyHandler::GET, true);
+    AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE, BaseProxyHandler::GET, true);
     if (!policy.allowed())
         return policy.returnValue();
     return handler->keys(cx, proxy, props);
@@ -2556,7 +2556,7 @@ Proxy::iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleV
     BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     vp.setUndefined(); // default result if we refuse to perform this action
     if (!handler->hasPrototype()) {
-        AutoEnterPolicy policy(cx, handler, proxy, JS::JSID_VOIDHANDLE,
+        AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE,
                                BaseProxyHandler::GET, true);
         // If the policy denies access but wants us to return true, we need
         // to hand a valid (empty) iterator object to the caller.
@@ -2601,7 +2601,7 @@ Proxy::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
     // Because vp[0] is JS_CALLEE on the way in and JS_RVAL on the way out, we
     // can only set our default value once we're sure that we're not calling the
     // trap.
-    AutoEnterPolicy policy(cx, handler, proxy, JS::JSID_VOIDHANDLE,
+    AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE,
                            BaseProxyHandler::CALL, true);
     if (!policy.allowed()) {
         args.rval().setUndefined();
@@ -2620,7 +2620,7 @@ Proxy::construct(JSContext *cx, HandleObject proxy, const CallArgs &args)
     // Because vp[0] is JS_CALLEE on the way in and JS_RVAL on the way out, we
     // can only set our default value once we're sure that we're not calling the
     // trap.
-    AutoEnterPolicy policy(cx, handler, proxy, JS::JSID_VOIDHANDLE,
+    AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE,
                            BaseProxyHandler::CALL, true);
     if (!policy.allowed()) {
         args.rval().setUndefined();
@@ -2647,7 +2647,7 @@ Proxy::hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, bool
     JS_CHECK_RECURSION(cx, return false);
     BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     *bp = false; // default result if we refuse to perform this action
-    AutoEnterPolicy policy(cx, handler, proxy, JS::JSID_VOIDHANDLE, BaseProxyHandler::GET, true);
+    AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE, BaseProxyHandler::GET, true);
     if (!policy.allowed())
         return policy.returnValue();
     return proxy->as<ProxyObject>().handler()->hasInstance(cx, proxy, v, bp);
@@ -2670,7 +2670,7 @@ Proxy::className(JSContext *cx, HandleObject proxy)
         return "too much recursion";
 
     BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
-    AutoEnterPolicy policy(cx, handler, proxy, JS::JSID_VOIDHANDLE,
+    AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE,
                            BaseProxyHandler::GET, /* mayThrow = */ false);
     // Do the safe thing if the policy rejects.
     if (!policy.allowed()) {
@@ -2684,7 +2684,7 @@ Proxy::fun_toString(JSContext *cx, HandleObject proxy, unsigned indent)
 {
     JS_CHECK_RECURSION(cx, return NULL);
     BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
-    AutoEnterPolicy policy(cx, handler, proxy, JS::JSID_VOIDHANDLE,
+    AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE,
                            BaseProxyHandler::GET, /* mayThrow = */ false);
     // Do the safe thing if the policy rejects.
     if (!policy.allowed()) {
