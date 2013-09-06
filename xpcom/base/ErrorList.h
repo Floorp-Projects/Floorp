@@ -251,7 +251,8 @@
   ERROR(NS_ERROR_UNKNOWN_SOCKET_TYPE,   FAILURE(51)),
   /* The specified socket type could not be created. */
   ERROR(NS_ERROR_SOCKET_CREATE_FAILED,  FAILURE(52)),
-
+  /* The operating system doesn't support the given type of address. */
+  ERROR(NS_ERROR_SOCKET_ADDRESS_NOT_SUPPORTED, FAILURE(53)),
 
   /* Cache specific error codes: */
   ERROR(NS_ERROR_CACHE_KEY_NOT_FOUND,        FAILURE(61)),
