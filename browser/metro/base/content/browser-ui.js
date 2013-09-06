@@ -592,10 +592,6 @@ var BrowserUI = {
         this._adjustDOMforViewState(aData);
         if (aData == "snapped") {
           FlyoutPanelsUI.hide();
-          Elements.autocomplete.setAttribute("orient", "vertical");
-        }
-        else {
-          Elements.autocomplete.setAttribute("orient", "horizontal");
         }
 
         break;

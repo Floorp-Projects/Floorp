@@ -214,18 +214,14 @@ documenttab[selected] .documenttab-selection {
   padding-bottom: @toolbar_height@;
 }
 
+#urlbar-autocomplete[viewstate="snapped"],
+#urlbar-autocomplete[viewstate="portrait"],
 #start-container[viewstate="snapped"],
 #start-container[viewstate="portrait"] {
   -moz-box-orient: vertical;
 }
 
-/*Formatting for the limited horizontal space of snapped*/
-#start-autocomplete[viewstate="snapped"] .richgrid-item-content {
-  -moz-box-orient: horizontal;
-}
-
-#start-container,
-#start-autocomplete {
+#start-container {
   padding-left: 0;
   padding-right: 0;
 }
