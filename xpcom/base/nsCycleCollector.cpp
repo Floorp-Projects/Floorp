@@ -105,7 +105,6 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollectionNoteRootCallback.h"
-#include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
 #include "nsDeque.h"
 #include "nsCycleCollector.h"
@@ -841,7 +840,7 @@ public:
 };
 
 static bool
-AddPurpleRoot(GCGraphBuilder &builder, void *root, nsCycleCollectionParticipant *cp);
+AddPurpleRoot(GCGraphBuilder &aBuilder, void *aRoot, nsCycleCollectionParticipant *aParti);
 
 struct SelectPointersVisitor
 {
@@ -893,6 +892,7 @@ class nsCycleCollector
     friend class GCGraphBuilder;
 
     bool mCollectionInProgress;
+    // mScanInProgress should be false when we're collecting white objects.
     bool mScanInProgress;
     nsCycleCollectorResults *mResults;
     TimeStamp mCollectionStart;
@@ -945,7 +945,7 @@ public:
     }
 
     void SelectPurple(GCGraphBuilder &builder);
-    void MarkRoots(GCGraphBuilder &builder);
+    void MarkRoots(GCGraphBuilder &aBuilder);
     void ScanRoots();
     void ScanWeakMaps();
 
@@ -1896,12 +1896,12 @@ GCGraphBuilder::NoteWeakMapping(void *map, void *key, void *kdelegate, void *val
 }
 
 static bool
-AddPurpleRoot(GCGraphBuilder &builder, void *root, nsCycleCollectionParticipant *cp)
+AddPurpleRoot(GCGraphBuilder &aBuilder, void *aRoot, nsCycleCollectionParticipant *aParti)
 {
-    CanonicalizeParticipant(&root, &cp);
+    CanonicalizeParticipant(&aRoot, &aParti);
 
-    if (builder.WantAllTraces() || !cp->CanSkipInCC(root)) {
-        PtrInfo *pinfo = builder.AddNode(root, cp);
+    if (aBuilder.WantAllTraces() || !aParti->CanSkipInCC(aRoot)) {
+        PtrInfo *pinfo = aBuilder.AddNode(aRoot, aParti);
         if (!pinfo) {
             return false;
         }
@@ -2020,7 +2020,7 @@ public:
         }
     }
 
-    bool HasSnowWhiteObjects()
+    bool HasSnowWhiteObjects() const
     {
       return mObjects.Length() > 0;
     }
@@ -2130,23 +2130,25 @@ nsCycleCollector::ForgetSkippable(bool aRemoveChildlessNodes,
 }
 
 MOZ_NEVER_INLINE void
-nsCycleCollector::MarkRoots(GCGraphBuilder &builder)
+nsCycleCollector::MarkRoots(GCGraphBuilder &aBuilder)
 {
-    mGraph.mRootCount = builder.Count();
+    mGraph.mRootCount = aBuilder.Count();
 
     // read the PtrInfo out of the graph that we are building
     NodePool::Enumerator queue(mGraph.mNodes);
     while (!queue.IsDone()) {
         PtrInfo *pi = queue.GetNext();
         CC_AbortIfNull(pi);
-        builder.Traverse(pi);
-        if (queue.AtBlockEnd())
-            builder.SetLastChild();
+        aBuilder.Traverse(pi);
+        if (queue.AtBlockEnd()) {
+            aBuilder.SetLastChild();
+        }
     }
-    if (mGraph.mRootCount > 0)
-        builder.SetLastChild();
+    if (mGraph.mRootCount > 0) {
+        aBuilder.SetLastChild();
+    }
 
-    if (builder.RanOutOfMemory()) {
+    if (aBuilder.RanOutOfMemory()) {
         NS_ASSERTION(false,
                      "Ran out of memory while building cycle collector graph");
         Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_OOM, true);
@@ -2596,10 +2598,6 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
     }
 
     TimeLog timeLog;
-
-    // mJSRuntime->Collect() must be called from the main thread,
-    // because it invokes XPCJSRuntime::GCCallback(cx, JSGC_BEGIN)
-    // which returns false if not in the main thread.
     mJSRuntime->Collect(aForceGC ? JS::gcreason::SHUTDOWN_CC : JS::gcreason::CC_FORCED);
     timeLog.Checkpoint("GC()");
 }
