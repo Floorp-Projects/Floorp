@@ -41,8 +41,6 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_propertyview-data-getset-02.js \
 	browser_dbg_propertyview-data.js \
 	browser_dbg_propertyview-filter-01.js \
-	browser_dbg_propertyview-filter-02.js \
-	browser_dbg_propertyview-filter-03.js \
 	browser_dbg_propertyview-filter-04.js \
 	browser_dbg_propertyview-filter-05.js \
 	browser_dbg_propertyview-filter-06.js \
@@ -145,10 +143,13 @@ MOCHITEST_BROWSER_PAGES = \
 	test-step-out.html \
 	$(NULL)
 
-# Bug 847588, bug 860349 - Disabled for intermittent hangs
+# Bug 847588, bug 860349, bug 871713
+#   Disabled for intermittent failures
 ifeq (,$(filter Darwin Linux,$(OS_ARCH)))
 MOCHITEST_BROWSER_TESTS += \
 	browser_dbg_createChrome.js \
+	browser_dbg_propertyview-filter-02.js \
+	browser_dbg_propertyview-filter-03.js \
 	$(NULL)
 endif
 
