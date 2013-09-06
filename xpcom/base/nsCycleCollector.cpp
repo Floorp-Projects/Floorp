@@ -2665,22 +2665,7 @@ nsCycleCollector::ShutdownCollect(nsICycleCollectorListener *aListener)
 
     for (uint32_t i = 0; i < DEFAULT_SHUTDOWN_COLLECTIONS; ++i) {
         NS_ASSERTION(i < NORMAL_SHUTDOWN_COLLECTIONS, "Extra shutdown CC");
-
-        if (!PrepareForCollection(nullptr, &whiteNodes))
-            return;
-
-        // Synchronous cycle collection. Always force a JS GC beforehand.
-        FixGrayBits(true);
-
-        FreeSnowWhite(true);
-
-        if (aListener && NS_FAILED(aListener->Begin()))
-            aListener = nullptr;
-
-        BeginCollection(ShutdownCC, aListener);
-        bool collectedAny = FinishCollection(aListener);
-        CleanupAfterCollection();
-        if (!collectedAny) {
+        if (!Collect(ShutdownCC, &whiteNodes, nullptr, aListener)) {
             break;
         }
     }
