@@ -150,7 +150,7 @@ let Buf = {
       return;
     }
 
-    RIL.handleParcel(request_type, this.mReadAvailable, options);
+    RIL.handleParcel(request_type, this.readAvailable, options);
   },
 
   /**
@@ -166,7 +166,7 @@ let Buf = {
     if (DEBUG) debug("New outgoing parcel of type " + type);
 
     // We're going to leave room for the parcel size at the beginning.
-    this.mOutgoingIndex = this.PARCEL_SIZE_SIZE;
+    this.outgoingIndex = this.PARCEL_SIZE_SIZE;
     this.writeUint32(type);
     this.writeUint32(this.mToken);
 
