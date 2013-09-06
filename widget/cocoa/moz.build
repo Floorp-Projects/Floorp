@@ -23,3 +23,48 @@ LIBRARY_NAME = 'widget_mac'
 
 LIBXUL_LIBRARY = True
 
+CMMSRCS += [
+    'GfxInfo.mm',
+    'NativeKeyBindings.mm',
+    'TextInputHandler.mm',
+    'WidgetTraceEvent.mm',
+    'nsAppShell.mm',
+    'nsBidiKeyboard.mm',
+    'nsChildView.mm',
+    'nsClipboard.mm',
+    'nsCocoaFeatures.mm',
+    'nsCocoaUtils.mm',
+    'nsCocoaWindow.mm',
+    'nsColorPicker.mm',
+    'nsCursorManager.mm',
+    'nsDeviceContextSpecX.mm',
+    'nsDragService.mm',
+    'nsFilePicker.mm',
+    'nsIdleServiceX.mm',
+    'nsLookAndFeel.mm',
+    'nsMacCursor.mm',
+    'nsMacDockSupport.mm',
+    'nsMacWebAppUtils.mm',
+    'nsMenuBarX.mm',
+    'nsMenuGroupOwnerX.mm',
+    'nsMenuItemIconX.mm',
+    'nsMenuItemX.mm',
+    'nsMenuUtilsX.mm',
+    'nsMenuX.mm',
+    'nsNativeThemeCocoa.mm',
+    'nsPrintDialogX.mm',
+    'nsPrintOptionsX.mm',
+    'nsPrintSettingsX.mm',
+    'nsScreenCocoa.mm',
+    'nsScreenManagerCocoa.mm',
+    'nsSound.mm',
+    'nsStandaloneNativeMenu.mm',
+    'nsToolkit.mm',
+    'nsWidgetFactory.mm',
+    'nsWindowMap.mm',
+]
+
+if CONFIG['TARGET_CPU'] == 'x86_64':
+    CMMSRCS += [
+        'ComplexTextInputPanel.mm',
+    ]
