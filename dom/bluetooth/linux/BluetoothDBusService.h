@@ -162,8 +162,8 @@ public:
 
   virtual nsresult
   SendInputMessage(const nsAString& aDeviceAddresses,
-                   const nsAString& aMessage,
-                   BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+                   const nsAString& aMessage) MOZ_OVERRIDE;
+
 protected:
   BluetoothDBusService();
   ~BluetoothDBusService();
@@ -200,7 +200,10 @@ private:
 
   void UpdateNotification(ControlEventId aEventId, uint64_t aData);
 
-  void DisconnectAllAcls(const nsAString& aAdapterPath);
+  nsresult SendAsyncDBusMessage(const nsAString& aObjectPath,
+                                const char* aInterface,
+                                const nsAString& aMessage,
+                                void (*aCallback)(DBusMessage*, void*));
 };
 
 END_BLUETOOTH_NAMESPACE
