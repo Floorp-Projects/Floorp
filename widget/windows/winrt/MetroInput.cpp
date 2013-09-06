@@ -693,33 +693,33 @@ MetroInput::ProcessManipulationDelta(
   }
 
   // Send a gecko event indicating the magnification since the last update.
-  nsSimpleGestureEvent magEvent(true,
-                                aMagEventType,
-                                mWidget.Get(), 0, 0.0);
-  magEvent.delta = aDelta.Expansion;
+  nsSimpleGestureEvent* magEvent =
+    new nsSimpleGestureEvent(true, aMagEventType, mWidget.Get(), 0, 0.0);
+
+  magEvent->delta = aDelta.Expansion;
   mModifierKeyState.Update();
-  mModifierKeyState.InitInputEvent(magEvent);
-  magEvent.time = ::GetMessageTime();
-  magEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-  magEvent.refPoint = LayoutDeviceIntPoint::FromUntyped(MetroUtils::LogToPhys(aPosition));
-  DispatchEventIgnoreStatus(&magEvent);
+  mModifierKeyState.InitInputEvent(*magEvent);
+  magEvent->time = ::GetMessageTime();
+  magEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+  magEvent->refPoint = LayoutDeviceIntPoint::FromUntyped(MetroUtils::LogToPhys(aPosition));
+  DispatchAsyncEventIgnoreStatus(magEvent);
 
   // Send a gecko event indicating the rotation since the last update.
-  nsSimpleGestureEvent rotEvent(true,
-                                aRotEventType,
-                                mWidget.Get(), 0, 0.0);
-  rotEvent.delta = aDelta.Rotation;
+  nsSimpleGestureEvent* rotEvent =
+    new nsSimpleGestureEvent(true, aRotEventType, mWidget.Get(), 0, 0.0);
+
+  rotEvent->delta = aDelta.Rotation;
   mModifierKeyState.Update();
-  mModifierKeyState.InitInputEvent(rotEvent);
-  rotEvent.time = ::GetMessageTime();
-  rotEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-  rotEvent.refPoint = LayoutDeviceIntPoint::FromUntyped(MetroUtils::LogToPhys(aPosition));
-  if (rotEvent.delta >= 0) {
-    rotEvent.direction = nsIDOMSimpleGestureEvent::ROTATION_COUNTERCLOCKWISE;
+  mModifierKeyState.InitInputEvent(*rotEvent);
+  rotEvent->time = ::GetMessageTime();
+  rotEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+  rotEvent->refPoint = LayoutDeviceIntPoint::FromUntyped(MetroUtils::LogToPhys(aPosition));
+  if (rotEvent->delta >= 0) {
+    rotEvent->direction = nsIDOMSimpleGestureEvent::ROTATION_COUNTERCLOCKWISE;
   } else {
-    rotEvent.direction = nsIDOMSimpleGestureEvent::ROTATION_CLOCKWISE;
+    rotEvent->direction = nsIDOMSimpleGestureEvent::ROTATION_CLOCKWISE;
   }
-  DispatchEventIgnoreStatus(&rotEvent);
+  DispatchAsyncEventIgnoreStatus(rotEvent);
 }
 
 // This event is raised when a gesture is detected to have started.  The
@@ -839,33 +839,35 @@ MetroInput::OnManipulationCompleted(
   }
 
   if (isHorizontalSwipe) {
-    nsSimpleGestureEvent swipeEvent(true, NS_SIMPLE_GESTURE_SWIPE,
-                                    mWidget.Get(), 0, 0.0);
-    swipeEvent.direction = delta.Translation.X > 0
+    nsSimpleGestureEvent* swipeEvent =
+      new nsSimpleGestureEvent(true, NS_SIMPLE_GESTURE_SWIPE,
+                               mWidget.Get(), 0, 0.0);
+    swipeEvent->direction = delta.Translation.X > 0
                          ? nsIDOMSimpleGestureEvent::DIRECTION_RIGHT
                          : nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
-    swipeEvent.delta = delta.Translation.X;
+    swipeEvent->delta = delta.Translation.X;
     mModifierKeyState.Update();
-    mModifierKeyState.InitInputEvent(swipeEvent);
-    swipeEvent.time = ::GetMessageTime();
-    swipeEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-    swipeEvent.refPoint = LayoutDeviceIntPoint::FromUntyped(MetroUtils::LogToPhys(position));
-    DispatchEventIgnoreStatus(&swipeEvent);
+    mModifierKeyState.InitInputEvent(*swipeEvent);
+    swipeEvent->time = ::GetMessageTime();
+    swipeEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+    swipeEvent->refPoint = LayoutDeviceIntPoint::FromUntyped(MetroUtils::LogToPhys(position));
+    DispatchAsyncEventIgnoreStatus(swipeEvent);
   }
 
   if (isVerticalSwipe) {
-    nsSimpleGestureEvent swipeEvent(true, NS_SIMPLE_GESTURE_SWIPE,
-                                    mWidget.Get(), 0, 0.0);
-    swipeEvent.direction = delta.Translation.Y > 0
+    nsSimpleGestureEvent* swipeEvent =
+      new nsSimpleGestureEvent(true, NS_SIMPLE_GESTURE_SWIPE,
+                               mWidget.Get(), 0, 0.0);
+    swipeEvent->direction = delta.Translation.Y > 0
                          ? nsIDOMSimpleGestureEvent::DIRECTION_DOWN
                          : nsIDOMSimpleGestureEvent::DIRECTION_UP;
-    swipeEvent.delta = delta.Translation.Y;
+    swipeEvent->delta = delta.Translation.Y;
     mModifierKeyState.Update();
-    mModifierKeyState.InitInputEvent(swipeEvent);
-    swipeEvent.time = ::GetMessageTime();
-    swipeEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-    swipeEvent.refPoint = LayoutDeviceIntPoint::FromUntyped(MetroUtils::LogToPhys(position));
-    DispatchEventIgnoreStatus(&swipeEvent);
+    mModifierKeyState.InitInputEvent(*swipeEvent);
+    swipeEvent->time = ::GetMessageTime();
+    swipeEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+    swipeEvent->refPoint = LayoutDeviceIntPoint::FromUntyped(MetroUtils::LogToPhys(position));
+    DispatchAsyncEventIgnoreStatus(swipeEvent);
   }
 
   return S_OK;
@@ -929,15 +931,21 @@ MetroInput::HandleDoubleTap(const LayoutDeviceIntPoint& aPoint)
 #ifdef DEBUG_INPUT
   LogFunction();
 #endif
-  nsSimpleGestureEvent geckoEvent(true, NS_SIMPLE_GESTURE_TAP, mWidget.Get(), 0, 0.0);
+  nsSimpleGestureEvent* tapEvent =
+    new nsSimpleGestureEvent(true,
+                             NS_SIMPLE_GESTURE_TAP,
+                             mWidget.Get(),
+                             0,
+                             0.0);
+
   mModifierKeyState.Update();
-  mModifierKeyState.InitInputEvent(geckoEvent);
-  geckoEvent.time = ::GetMessageTime();
-  geckoEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-  geckoEvent.refPoint = aPoint;
-  geckoEvent.clickCount = 2;
-  geckoEvent.pressure = 1;
-  DispatchEventIgnoreStatus(&geckoEvent);
+  mModifierKeyState.InitInputEvent(*tapEvent);
+  tapEvent->time = ::GetMessageTime();
+  tapEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+  tapEvent->refPoint = aPoint;
+  tapEvent->clickCount = 2;
+  tapEvent->pressure = 1;
+  DispatchAsyncEventIgnoreStatus(tapEvent);
 }
 
 void
@@ -947,31 +955,46 @@ MetroInput::HandleSingleTap(const LayoutDeviceIntPoint& aPoint)
   LogFunction();
 #endif
 
-  // Set up the mouse event that we'll reuse for mousemove, mousedown, and
-  // mouseup
-  nsMouseEvent mouseEvent(true,
-                          NS_MOUSE_MOVE,
-                          mWidget.Get(),
-                          nsMouseEvent::eReal,
-                          nsMouseEvent::eNormal);
+  // send mousemove
+  nsMouseEvent* mouseEvent = new nsMouseEvent(true,
+                                              NS_MOUSE_MOVE,
+                                              mWidget.Get(),
+                                              nsMouseEvent::eReal,
+                                              nsMouseEvent::eNormal);
   mModifierKeyState.Update();
-  mModifierKeyState.InitInputEvent(mouseEvent);
-  mouseEvent.refPoint = aPoint;
-  mouseEvent.time = ::GetMessageTime();
-  mouseEvent.clickCount = 1;
-  mouseEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-
-  // Send the mousemove
-  DispatchEventIgnoreStatus(&mouseEvent);
+  mModifierKeyState.InitInputEvent(*mouseEvent);
+  mouseEvent->refPoint = aPoint;
+  mouseEvent->time = ::GetMessageTime();
+  mouseEvent->clickCount = 1;
+  mouseEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+  DispatchAsyncEventIgnoreStatus(mouseEvent);
 
   // Send the mousedown
-  mouseEvent.message = NS_MOUSE_BUTTON_DOWN;
-  mouseEvent.button = nsMouseEvent::buttonType::eLeftButton;
-  DispatchEventIgnoreStatus(&mouseEvent);
+  mouseEvent = new nsMouseEvent(true,
+                                NS_MOUSE_BUTTON_DOWN,
+                                mWidget.Get(),
+                                nsMouseEvent::eReal,
+                                nsMouseEvent::eNormal);
+  mModifierKeyState.InitInputEvent(*mouseEvent);
+  mouseEvent->refPoint = aPoint;
+  mouseEvent->time = ::GetMessageTime();
+  mouseEvent->clickCount = 1;
+  mouseEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+  mouseEvent->button = nsMouseEvent::buttonType::eLeftButton;
+  DispatchAsyncEventIgnoreStatus(mouseEvent);
 
-  // Send the mouseup
-  mouseEvent.message = NS_MOUSE_BUTTON_UP;
-  DispatchEventIgnoreStatus(&mouseEvent);
+  mouseEvent = new nsMouseEvent(true,
+                                NS_MOUSE_BUTTON_UP,
+                                mWidget.Get(),
+                                nsMouseEvent::eReal,
+                                nsMouseEvent::eNormal);
+  mModifierKeyState.InitInputEvent(*mouseEvent);
+  mouseEvent->refPoint = aPoint;
+  mouseEvent->time = ::GetMessageTime();
+  mouseEvent->clickCount = 1;
+  mouseEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+  mouseEvent->button = nsMouseEvent::buttonType::eLeftButton;
+  DispatchAsyncEventIgnoreStatus(mouseEvent);
 
   // Send one more mousemove to avoid getting a hover state.
   // In the Metro environment for any application, a tap does not imply a
@@ -980,10 +1003,17 @@ MetroInput::HandleSingleTap(const LayoutDeviceIntPoint& aPoint)
   POINT point;
   if (GetCursorPos(&point)) {
     ScreenToClient((HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW), &point);
-    mouseEvent.refPoint = LayoutDeviceIntPoint(point.x, point.y);
-    mouseEvent.message = NS_MOUSE_MOVE;
-    mouseEvent.button = 0;
-    DispatchEventIgnoreStatus(&mouseEvent);
+    mouseEvent = new nsMouseEvent(true,
+                                  NS_MOUSE_MOVE,
+                                  mWidget.Get(),
+                                  nsMouseEvent::eReal,
+                                  nsMouseEvent::eNormal);
+    mModifierKeyState.InitInputEvent(*mouseEvent);
+    mouseEvent->refPoint = LayoutDeviceIntPoint(point.x, point.y);
+    mouseEvent->time = ::GetMessageTime();
+    mouseEvent->clickCount = 1;
+    mouseEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+    DispatchAsyncEventIgnoreStatus(mouseEvent);
   }
 
 }
@@ -995,17 +1025,17 @@ MetroInput::HandleLongTap(const LayoutDeviceIntPoint& aPoint)
   LogFunction();
 #endif
 
-  nsMouseEvent contextMenu(true,
-                           NS_CONTEXTMENU,
-                           mWidget.Get(),
-                           nsMouseEvent::eReal,
-                           nsMouseEvent::eNormal);
+  nsMouseEvent* contextEvent = new nsMouseEvent(true,
+                                                NS_CONTEXTMENU,
+                                                mWidget.Get(),
+                                                nsMouseEvent::eReal,
+                                                nsMouseEvent::eNormal);
   mModifierKeyState.Update();
-  mModifierKeyState.InitInputEvent(contextMenu);
-  contextMenu.refPoint = aPoint;
-  contextMenu.time = ::GetMessageTime();
-  contextMenu.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-  DispatchEventIgnoreStatus(&contextMenu);
+  mModifierKeyState.InitInputEvent(*contextEvent);
+  contextEvent->refPoint = aPoint;
+  contextEvent->time = ::GetMessageTime();
+  contextEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+  DispatchAsyncEventIgnoreStatus(contextEvent);
 }
 
 /**
