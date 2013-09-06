@@ -8,10 +8,10 @@
 
 #include "jsanalyze.h"
 
+#include "jit/AsmJS.h"
 #include "jit/Ion.h"
 #include "jit/IonBuilder.h"
 #include "jit/IonSpewer.h"
-#include "jit/AsmJS.h"
 #include "jit/MIR.h"
 
 #include "jsinferinlines.h"
