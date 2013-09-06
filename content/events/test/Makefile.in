@@ -110,6 +110,7 @@ ifneq ($(OS_ARCH), WINNT)
 MOCHITEST_FILES += \
 		test_bug656379-1.html \
 		     bug656379-1.html \
+		$(NULL)
 endif
 
 MOCHITEST_CHROME_FILES = \

@@ -146,6 +146,7 @@ MOCHITEST_BROWSER_PAGES = \
 ifneq ($(OS_ARCH), Darwin)
 MOCHITEST_BROWSER_TESTS += \
 	browser_dbg_propertyview-filter-01.js \
+	$(NULL)
 endif
 
 # Bug 847588, bug 860349, bug 871713
