@@ -1,6 +1,6 @@
 // |reftest| skip-if(!this.hasOwnProperty("Type"))
 var BUGNUMBER = 578700;
-var summary = 'BinaryData ArrayType implementation';
+var summary = 'TypedObjects ArrayType implementation';
 
 function assertThrows(f) {
     var ok = false;

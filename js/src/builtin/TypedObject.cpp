@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "builtin/BinaryData.h"
+#include "builtin/TypedObject.h"
 
 #include "jscompartment.h"
 #include "jsfun.h"
@@ -289,7 +289,7 @@ TypeEquivalent(JSContext *cx, unsigned int argc, Value *vp)
 
     RootedObject otherObj(cx, ToObjectIfObject(args[0]));
     if (!otherObj || !IsBinaryType(otherObj)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BINARYDATA_NOT_TYPE_OBJECT);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TYPEDOBJECT_NOT_TYPE_OBJECT);
         return false;
     }
 
@@ -784,7 +784,7 @@ ArraySubarray(JSContext *cx, unsigned int argc, Value *vp)
 
     if (!args[0].isInt32()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BINARYDATA_SUBARRAY_INTEGER_ARG, "1");
+                             JSMSG_TYPEDOBJECT_SUBARRAY_INTEGER_ARG, "1");
         return false;
     }
 
@@ -804,7 +804,7 @@ ArraySubarray(JSContext *cx, unsigned int argc, Value *vp)
     if (args.length() >= 2) {
         if (!args[1].isInt32()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                    JSMSG_BINARYDATA_SUBARRAY_INTEGER_ARG, "2");
+                    JSMSG_TYPEDOBJECT_SUBARRAY_INTEGER_ARG, "2");
             return false;
         }
 
@@ -992,7 +992,7 @@ ArrayType::construct(JSContext *cx, unsigned argc, Value *vp)
         args[1].toNumber() < 0)
     {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BINARYDATA_ARRAYTYPE_BAD_ARGS);
+                             JSMSG_TYPEDOBJECT_ARRAYTYPE_BAD_ARGS);
         return false;
     }
 
@@ -1001,20 +1001,20 @@ ArrayType::construct(JSContext *cx, unsigned argc, Value *vp)
 
     if (!IsBinaryType(elementType)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BINARYDATA_ARRAYTYPE_BAD_ARGS);
+                             JSMSG_TYPEDOBJECT_ARRAYTYPE_BAD_ARGS);
         return false;
     }
 
     if (!args[1].isInt32()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BINARYDATA_ARRAYTYPE_BAD_ARGS);
+                             JSMSG_TYPEDOBJECT_ARRAYTYPE_BAD_ARGS);
         return false;
     }
 
     int32_t length = args[1].toInt32();
     if (length < 0) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BINARYDATA_ARRAYTYPE_BAD_ARGS);
+                             JSMSG_TYPEDOBJECT_ARRAYTYPE_BAD_ARGS);
         return false;
     }
 
@@ -1269,7 +1269,7 @@ StructType::construct(JSContext *cx, unsigned int argc, Value *vp)
     }
 
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                         JSMSG_BINARYDATA_STRUCTTYPE_BAD_ARGS);
+                         JSMSG_TYPEDOBJECT_STRUCTTYPE_BAD_ARGS);
     return false;
 }
 
@@ -1598,7 +1598,7 @@ DefineNumericClass(JSContext *cx,
 }
 
 JSObject *
-js_InitBinaryDataClasses(JSContext *cx, HandleObject obj)
+js_InitTypedObjectClasses(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(obj->is<GlobalObject>());
     Rooted<GlobalObject *> global(cx, &obj->as<GlobalObject>());
@@ -1748,7 +1748,7 @@ BinaryBlock::createNull(JSContext *cx, HandleObject type, HandleValue owner)
         RootedTypeObject typeObj(cx, obj->getType(cx));
         if (typeObj) {
             TypeRepresentation *typeRepr = typeRepresentation(type);
-            if (!typeObj->addBinaryDataAddendum(cx, typeRepr))
+            if (!typeObj->addTypedObjectAddendum(cx, typeRepr))
                 return NULL;
         }
     }
@@ -2142,7 +2142,7 @@ BinaryBlock::obj_setElement(JSContext *cx, HandleObject obj, uint32_t index,
 
         if (index >= arrayTypeRepr->length()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage,
-                                 NULL, JSMSG_BINARYDATA_BINARYARRAY_BAD_INDEX);
+                                 NULL, JSMSG_TYPEDOBJECT_BINARYARRAY_BAD_INDEX);
             return false;
         }
 

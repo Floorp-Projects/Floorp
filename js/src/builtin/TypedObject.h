@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef builtin_BinaryData_h
-#define builtin_BinaryData_h
+#ifndef builtin_TypedObject_h
+#define builtin_TypedObject_h
 
 #include "jsobj.h"
 
@@ -228,4 +228,4 @@ class BinaryBlock
 
 } // namespace js
 
-#endif /* builtin_BinaryData_h */
+#endif /* builtin_TypedObject_h */

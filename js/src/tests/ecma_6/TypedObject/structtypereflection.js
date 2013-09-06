@@ -1,6 +1,6 @@
 // |reftest| skip-if(!this.hasOwnProperty("Type"))
 var BUGNUMBER = 578700;
-var summary = 'BinaryData: check reflection on StructType objects';
+var summary = 'TypedObjects: check reflection on StructType objects';
 
 function runTests() {
     print(BUGNUMBER + ": " + summary);
