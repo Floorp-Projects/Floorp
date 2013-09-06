@@ -1168,7 +1168,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     for (uint32_t i = 0; i < imagesToRefresh.Length(); i++) {
       imagesToRefresh[i]->RequestRefresh(aNowTime);
     }
-    imagesToRefresh.Clear();
   }
 
   for (uint32_t i = 0; i < mPresShellsToInvalidateIfHidden.Length(); i++) {
