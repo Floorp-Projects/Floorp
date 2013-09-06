@@ -8,12 +8,12 @@
 #include "prlog.h"
 #include "prdtoa.h"
 #include "AudioStream.h"
-#include "nsAlgorithm.h"
 #include "VideoUtils.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
 #include <algorithm>
 #include "mozilla/Preferences.h"
+#include "soundtouch/SoundTouch.h"
 
 #if defined(MOZ_CUBEB)
 #include "nsAutoRef.h"

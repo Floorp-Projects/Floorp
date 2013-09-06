@@ -116,6 +116,12 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     // fast path: no need to allocate and/or copy image data
     RefPtr<TextureClient> texture = image->AsSharedImage()->GetTextureClient();
 
+    if (texture->IsSharedWithCompositor()) {
+      // XXX - temporary fix for bug 911941
+      // This will be changed with bug 912907
+      return false;
+    }
+
     if (mFrontBuffer) {
       RemoveTextureClient(mFrontBuffer);
     }

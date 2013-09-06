@@ -1024,7 +1024,7 @@ public:
                    JSContext* cx           = GetDefaultJSContext(),
                    JS::HandleObject obj    = JS::NullPtr(),
                    JS::HandleObject funobj = JS::NullPtr(),
-                   JS::HandleId id         = JS::JSID_VOIDHANDLE,
+                   JS::HandleId id         = JSID_VOIDHANDLE,
                    unsigned argc           = NO_ARGS,
                    jsval *argv             = nullptr,
                    jsval *rval             = nullptr);

@@ -11,6 +11,8 @@
 #include "SourceFilter.h"
 #include "DirectShowUtils.h"
 #include "SampleSink.h"
+#include "MediaResource.h"
+#include "VideoUtils.h"
 
 namespace mozilla {
 

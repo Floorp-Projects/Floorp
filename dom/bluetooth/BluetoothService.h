@@ -139,7 +139,7 @@ public:
    * @return NS_OK on success, NS_ERROR_FAILURE otherwise
    */
   virtual nsresult
-  GetConnectedDevicePropertiesInternal(uint16_t aProfileId,
+  GetConnectedDevicePropertiesInternal(uint16_t aServiceUuid,
                                        BluetoothReplyRunnable* aRunnable) = 0;
 
   /**
@@ -233,15 +233,15 @@ public:
                                  BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual void
-  Connect(const nsAString& aDeviceAddress,
-          uint16_t aProfileId,
+  Connect(const nsAString& aDeviceAddress, uint32_t aCod, uint16_t aServiceUuid,
           BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual void
-  Disconnect(uint16_t aProfileId, BluetoothReplyRunnable* aRunnable) = 0;
+  Disconnect(const nsAString& aDeviceAddress, uint16_t aServiceUuid,
+             BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual bool
-  IsConnected(uint16_t aProfileId) = 0;
+  IsConnected(uint16_t aServiceUuid) = 0;
 
   virtual void
   SendFile(const nsAString& aDeviceAddress,
@@ -292,8 +292,7 @@ public:
 
   virtual nsresult
   SendInputMessage(const nsAString& aDeviceAddresses,
-                   const nsAString& aMessage,
-                   BluetoothReplyRunnable* aRunnable) = 0;
+                   const nsAString& aMessage) = 0;
 
   bool
   IsEnabled() const

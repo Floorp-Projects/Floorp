@@ -1,4 +1,5 @@
 #include "gdb-tests.h"
+#include "jsapi.h"
 
 FRAGMENT(Root, null) {
   JS::Rooted<JSObject *> null(cx, NULL);

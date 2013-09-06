@@ -55,6 +55,7 @@ struct nr_ice_component_ {
 #define NR_ICE_COMPONENT_RUNNING            1
 #define NR_ICE_COMPONENT_NOMINATED          2
 #define NR_ICE_COMPONENT_FAILED             3
+#define NR_ICE_COMPONENT_DISABLED           4
   struct nr_ice_ctx_ *ctx;
   struct nr_ice_media_stream_ *stream;
   nr_ice_component *local_component;
