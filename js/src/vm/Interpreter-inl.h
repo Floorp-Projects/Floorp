@@ -48,11 +48,12 @@ ComputeThis(JSContext *cx, AbstractFramePtr frame)
          */
         JS_ASSERT_IF(frame.isEvalFrame(), thisv.isUndefined() || thisv.isNull());
     }
-    bool modified;
-    if (!BoxNonStrictThis(cx, &thisv, &modified))
+
+    JSObject *thisObj = BoxNonStrictThis(cx, thisv);
+    if (!thisObj)
         return false;
 
-    frame.thisValue() = thisv;
+    frame.thisValue().setObject(*thisObj);
     return true;
 }
 

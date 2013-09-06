@@ -106,33 +106,24 @@ LooseEqualityOp(JSContext *cx, FrameRegs &regs)
     return true;
 }
 
-bool
-js::BoxNonStrictThis(JSContext *cx, MutableHandleValue thisv, bool *modified)
+JSObject *
+js::BoxNonStrictThis(JSContext *cx, HandleValue thisv)
 {
     /*
      * Check for SynthesizeFrame poisoning and fast constructors which
      * didn't check their callee properly.
      */
     JS_ASSERT(!thisv.isMagic());
-    *modified = false;
 
     if (thisv.isNullOrUndefined()) {
         Rooted<GlobalObject*> global(cx, cx->global());
-        JSObject *thisp = JSObject::thisObject(cx, global);
-        if (!thisp)
-            return false;
-        thisv.set(ObjectValue(*thisp));
-        *modified = true;
-        return true;
+        return JSObject::thisObject(cx, global);
     }
 
-    if (!thisv.isObject()) {
-        if (!js_PrimitiveToObject(cx, thisv.address()))
-            return false;
-        *modified = true;
-    }
+    if (thisv.isObject())
+        return &thisv.toObject();
 
-    return true;
+    return PrimitiveToObject(cx, thisv);
 }
 
 /*
@@ -157,20 +148,18 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
      * Check for SynthesizeFrame poisoning and fast constructors which
      * didn't check their callee properly.
      */
-    RootedValue thisv(cx, call.thisv());
-    JS_ASSERT(!thisv.isMagic());
+    JS_ASSERT(!call.thisv().isMagic());
 
 #ifdef DEBUG
     JSFunction *fun = call.callee().is<JSFunction>() ? &call.callee().as<JSFunction>() : NULL;
     JS_ASSERT_IF(fun && fun->isInterpreted(), !fun->strict());
 #endif
 
-    bool modified;
-    if (!BoxNonStrictThis(cx, &thisv, &modified))
+    JSObject *thisObj = BoxNonStrictThis(cx, call.thisv());
+    if (!thisObj)
         return false;
-    if (modified)
-        call.setThis(thisv);
 
+    call.setThis(ObjectValue(*thisObj));
     return true;
 }
 

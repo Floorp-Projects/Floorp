@@ -1601,10 +1601,11 @@ DoThisFallback(JSContext *cx, ICThis_Fallback *stub, HandleValue thisv, MutableH
 {
     FallbackICSpew(cx, stub, "This");
 
-    ret.set(thisv);
-    bool modified;
-    if (!BoxNonStrictThis(cx, ret, &modified))
+    JSObject *thisObj = BoxNonStrictThis(cx, thisv);
+    if (!thisObj)
         return false;
+
+    ret.setObject(*thisObj);
     return true;
 }
 
