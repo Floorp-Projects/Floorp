@@ -6,6 +6,7 @@
 #include "WebVTTLoadListener.h"
 #include "mozilla/dom/TextTrackCue.h"
 #include "mozilla/dom/HTMLTrackElement.h"
+#include "nsIInputStream.h"
 
 namespace mozilla {
 namespace dom {

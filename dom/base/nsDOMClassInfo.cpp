@@ -190,6 +190,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Likely.h"
 #include "WindowNamedPropertiesHandler.h"
+#include "nsIInterfaceInfoManager.h"
 
 #ifdef MOZ_TIME_MANAGER
 #include "TimeManager.h"

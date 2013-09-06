@@ -55,6 +55,7 @@
 #include "StructuredCloneTags.h"
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/dom/ImageDataBinding.h"
+#include "nsAXPCNativeCallContext.h"
 
 #include "nsJSPrincipals.h"
 

@@ -23,6 +23,8 @@
 #define DEVICESTORAGE_SDCARD     "sdcard"
 #define DEVICESTORAGE_CRASHES    "crashes"
 
+class nsIInputStream;
+
 namespace mozilla {
 namespace dom {
 class DeviceStorageEnumerationParameters;
