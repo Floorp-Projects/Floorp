@@ -24,12 +24,6 @@ const TEST_ID = "0203";
 // launching a post update executable.
 const FILE_UPDATER_INI_BAK = "updater.ini.bak";
 
-// Number of milliseconds for each do_timeout call.
-const CHECK_TIMEOUT_MILLI = 1000;
-
-// How many of CHECK_TIMEOUT_MILLI to wait before we abort the test.
-const MAX_TIMEOUT_RUNS = 300;
-
 // Maximum number of milliseconds the process that is launched can run before
 // the test will try to kill it.
 const APP_TIMER_TIMEOUT = 120000;
@@ -40,73 +34,6 @@ let gAppTimer;
 let gProcess;
 let gActiveUpdate;
 let gTimeoutRuns = 0;
-
-// Override getUpdatesRootDir on Mac because we need to apply the update
-// inside the bundle directory.
-function symlinkUpdateFilesIntoBundleDirectory() {
-  if (!shouldAdjustPathsOnMac()) {
-    return;
-  }
-  // Symlink active-update.xml and updates/ inside the dist/bin directory
-  // to point to the bundle directory.
-  // This is necessary because in order to test the code which actually ships
-  // with Firefox, we need to perform the update inside the bundle directory,
-  // whereas xpcshell runs from dist/bin/, and the updater service code looks
-  // at the current process directory to find things like these two files.
-
-  Components.utils.import("resource://gre/modules/ctypes.jsm");
-  let libc = ctypes.open("/usr/lib/libc.dylib");
-  // We need these two low level APIs because their functionality is not
-  // provided in nsIFile APIs.
-  let symlink = libc.declare("symlink", ctypes.default_abi, ctypes.int,
-                             ctypes.char.ptr, ctypes.char.ptr);
-  let unlink = libc.declare("unlink", ctypes.default_abi, ctypes.int,
-                            ctypes.char.ptr);
-
-  // Symlink active-update.xml
-  let dest = getAppDir();
-  dest.append("active-update.xml");
-  if (!dest.exists()) {
-    dest.create(dest.NORMAL_FILE_TYPE, 0644);
-  }
-  do_check_true(dest.exists());
-  let source = getUpdatesRootDir();
-  source.append("active-update.xml");
-  unlink(source.path);
-  let ret = symlink(dest.path, source.path);
-  do_check_eq(ret, 0);
-  do_check_true(source.exists());
-
-  // Symlink updates/
-  let dest2 = getAppDir();
-  dest2.append("updates");
-  if (dest2.exists()) {
-    dest2.remove(true);
-  }
-  dest2.create(dest.DIRECTORY_TYPE, 0755);
-  do_check_true(dest2.exists());
-  let source2 = getUpdatesRootDir();
-  source2.append("updates");
-  if (source2.exists()) {
-    source2.remove(true);
-  }
-  ret = symlink(dest2.path, source2.path);
-  do_check_eq(ret, 0);
-  do_check_true(source2.exists());
-
-  // Cleanup the symlinks when the test is finished.
-  do_register_cleanup(function() {
-    let ret = unlink(source.path);
-    do_check_false(source.exists());
-    let ret = unlink(source2.path);
-    do_check_false(source2.exists());
-  });
-
-  // Now, make sure that getUpdatesRootDir returns the application bundle
-  // directory, to make the various stuff in the test framework to work
-  // correctly.
-  getUpdatesRootDir = getAppDir;
-}
 
 function run_test() {
   if (APP_BIN_NAME == "xulrunner") {
@@ -325,7 +252,7 @@ function checkUpdateApplied() {
       do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting for update to be " +
                "applied, current state is: " + gUpdateManager.activeUpdate.state);
     else
-      do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateApplied);
+      do_timeout(TEST_CHECK_TIMEOUT, checkUpdateApplied);
     return;
   }
 
@@ -350,7 +277,7 @@ function checkUpdateApplied() {
   }
   log.append(FILE_LAST_LOG);
   if (!log.exists()) {
-    do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateApplied);
+    do_timeout(TEST_CHECK_TIMEOUT, checkUpdateApplied);
     return;
   }
 
@@ -448,7 +375,7 @@ function checkUpdateApplied() {
   do_check_false(updatesDir.exists());
 
   // Now, switch the updated version of the app
-  do_timeout(CHECK_TIMEOUT_MILLI, switchApp);
+  do_timeout(TEST_CHECK_TIMEOUT, switchApp);
 }
 
 /**
@@ -465,7 +392,7 @@ function checkUpdateFinished() {
         do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting for state to " +
                  "change to succeeded, current status: " + status);
       else
-        do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
+        do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
       return;
     }
   } catch (e) {
@@ -482,7 +409,7 @@ function checkUpdateFinished() {
       if (gTimeoutRuns > MAX_TIMEOUT_RUNS)
         do_throw("Exceeded whilst waiting for file to be unlocked");
       else
-        do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
+        do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
       return;
     } else {
       do_throw("getAppConsoleLogPath threw: " + e);
@@ -498,7 +425,7 @@ function checkUpdateFinished() {
   updatedDir.append(UPDATED_DIR_SUFFIX.replace("/", ""));
   logTestInfo("testing " + updatedDir.path + " shouldn't exist");
   if (updatedDir.exists()) {
-    do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
+    do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
     return;
   }
 

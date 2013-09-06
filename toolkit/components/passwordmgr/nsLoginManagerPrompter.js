@@ -96,6 +96,9 @@ LoginManagerPromptFactory.prototype = {
                     ok = prompter.promptAuth(prompt.channel,
                                              prompt.level,
                                              prompt.authInfo);
+                } catch (e if (e instanceof Components.Exception) &&
+                               e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
+                    self.log("_doAsyncPrompt:run bypassed, UI is not available in this context");
                 } catch (e) {
                     Components.utils.reportError("LoginManagerPrompter: " +
                         "_doAsyncPrompt:run: " + e + "\n");

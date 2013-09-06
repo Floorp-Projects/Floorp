@@ -127,7 +127,7 @@ ContentPermissionPrompt.prototype = {
       let win = this.getChromeWindowForRequest(request);
       link.addEventListener("click", function() {
         let url = Services.urlFormatter.formatURLPref("browser.geolocation.warning.infoURL");
-        win.BrowserUI.newTab(url, win.Browser.selectedTab);
+        win.BrowserUI.addAndShowTab(url, win.Browser.selectedTab);
       });
     }
   }
