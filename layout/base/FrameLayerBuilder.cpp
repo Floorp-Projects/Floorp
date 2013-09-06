@@ -2661,7 +2661,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
   }
   gfxMatrix transform2d;
   if (aContainerFrame &&
-      aState == LAYER_INACTIVE &&
+      (aState == LAYER_INACTIVE || aState == LAYER_SVG_EFFECTS) &&
       (!aTransform || (aTransform->Is2D(&transform2d) &&
                        !transform2d.HasNonTranslation()))) {
     // When we have an inactive ContainerLayer, translate the container by the offset to the
