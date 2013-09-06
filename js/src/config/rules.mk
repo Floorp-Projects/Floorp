@@ -691,6 +691,7 @@ SUBMAKEFILES += $(addsuffix /Makefile, $(DIRS) $(TOOL_DIRS) $(PARALLEL_DIRS))
 ifndef SUPPRESS_DEFAULT_RULES
 default all::
 	$(MAKE) export
+	$(MAKE) compile
 	$(MAKE) libs
 	$(MAKE) tools
 endif # SUPPRESS_DEFAULT_RULES
@@ -729,6 +730,8 @@ GLOBAL_DEPS += Makefile.in
 endif
 
 ##############################################
+compile:: $(OBJS) $(HOST_OBJS)
+
 include $(topsrcdir)/config/makefiles/target_libs.mk
 
 ##############################################
