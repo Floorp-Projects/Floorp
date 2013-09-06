@@ -46,7 +46,8 @@ exports.TargetFactory = {
    *        The options object has the following properties:
    *        {
    *          form: the remote protocol form of a tab,
-   *          client: a DebuggerClient instance,
+   *          client: a DebuggerClient instance
+   *                  (caller owns this and is responsible for closing),
    *          chrome: true if the remote target is the whole process
    *        }
    *
@@ -446,10 +447,19 @@ TabTarget.prototype = {
       // resolved after the remote connection is closed.
       this._teardownRemoteListeners();
 
-      this._client.close(() => {
+      if (this.isLocalTab) {
+        // We started with a local tab and created the client ourselves, so we
+        // should close it.
+        this._client.close(() => {
+          this._cleanup();
+          this._destroyer.resolve(null);
+        });
+      } else {
+        // The client was handed to us, so we are not responsible for closing
+        // it.
         this._cleanup();
         this._destroyer.resolve(null);
-      });
+      }
     }
 
     return this._destroyer.promise;
