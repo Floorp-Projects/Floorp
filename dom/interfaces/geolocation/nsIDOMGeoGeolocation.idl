@@ -8,26 +8,23 @@ interface nsIDOMGeoPositionCallback;
 interface nsIDOMGeoPositionErrorCallback;
 
 %{C++
-#include "DictionaryHelpers.h"
+namespace mozilla {
+namespace dom {
+class PositionOptions;
+}
+}
 %}
 
-dictionary GeoPositionOptions
-{
-  boolean enableHighAccuracy;
-  long timeout;
-  long maximumAge;
-};
-
-[ptr] native NamespacedGeoPositionOptions(mozilla::idl::GeoPositionOptions);
+[ptr] native NamespacedPositionOptions(mozilla::dom::PositionOptions);
 
 [builtinclass, uuid(1bc7d103-c7ae-4467-881c-21a8dfa17938)]
 interface nsIDOMGeoGeolocation : nsISupports
 {
   int32_t watchPosition(in nsIDOMGeoPositionCallback callback,
                         in nsIDOMGeoPositionErrorCallback errorCallback,
-                        in NamespacedGeoPositionOptions options);
+                        in NamespacedPositionOptions options);
   void getCurrentPosition(in nsIDOMGeoPositionCallback callback,
                           in nsIDOMGeoPositionErrorCallback errorCallback,
-                          in NamespacedGeoPositionOptions options);
+                          in NamespacedPositionOptions options);
   void clearWatch(in long watchId);
 };
