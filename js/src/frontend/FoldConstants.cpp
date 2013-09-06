@@ -86,10 +86,7 @@ FoldType(ExclusiveContext *cx, ParseNode *pn, ParseNodeKind kind)
 
           case PNK_STRING:
             if (pn->isKind(PNK_NUMBER)) {
-                JSString *str = js_NumberToString<CanGC>(cx, pn->pn_dval);
-                if (!str)
-                    return false;
-                pn->pn_atom = AtomizeString<CanGC>(cx, str);
+                pn->pn_atom = NumberToAtom<CanGC>(cx, pn->pn_dval);
                 if (!pn->pn_atom)
                     return false;
                 pn->setKind(PNK_STRING);
