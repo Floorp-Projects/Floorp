@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1388829922358000);
+const PRTime gPreloadListExpirationTime = INT64_C(1389435858253000);
 
 class nsSTSPreload
 {
@@ -114,7 +114,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "webmail.gigahost.dk", false },
   { "webmail.mayfirst.org", false },
   { "webmail.onlime.ch", false },
-  { "whonix.org", true },
+  { "wiki.python.org", true },
   { "wiz.biz", true },
   { "writeapp.me", false },
   { "www.apollo-auto.com", true },
