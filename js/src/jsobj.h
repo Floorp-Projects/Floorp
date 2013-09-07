@@ -116,9 +116,6 @@ GetElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValue v
 }
 
 extern bool
-GetPropertyDefault(JSContext *cx, HandleObject obj, HandleId id, HandleValue def, MutableHandleValue vp);
-
-extern bool
 SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
                   unsigned defineHow, MutableHandleValue vp, bool strict);
 
