@@ -7,8 +7,6 @@
 #include "imgFrame.h"
 #include "DiscardTracker.h"
 
-#include <limits.h>
-
 #include "prenv.h"
 
 #include "gfxPlatform.h"

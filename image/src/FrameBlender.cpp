@@ -6,7 +6,6 @@
 #include "FrameBlender.h"
 
 #include "mozilla/MemoryReporting.h"
-#include "RasterImage.h"
 
 #include "pixman.h"
 

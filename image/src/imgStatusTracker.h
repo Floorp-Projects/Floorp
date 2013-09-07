@@ -7,21 +7,19 @@
 #ifndef imgStatusTracker_h__
 #define imgStatusTracker_h__
 
+class imgDecoderObserver;
 class imgIContainer;
 class imgRequestProxy;
 class imgStatusNotifyRunnable;
 class imgRequestNotifyRunnable;
 class imgStatusTrackerObserver;
 class imgStatusTrackerNotifyingObserver;
-struct nsIntRect;
+class nsIRunnable;
 
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTObserverArray.h"
-#include "nsIRunnable.h"
-#include "nscore.h"
-#include "imgDecoderObserver.h"
-#include "nsISupportsImpl.h"
+#include "nsRect.h"
 
 namespace mozilla {
 namespace image {
