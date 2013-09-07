@@ -650,6 +650,13 @@ WorkerThread::handleIonWorkload(WorkerThreadState &state)
     DebugOnly<jit::ExecutionMode> executionMode = ionBuilder->info().executionMode();
     JS_ASSERT(GetIonScript(ionBuilder->script(), executionMode) == ION_COMPILING_SCRIPT);
 
+#if JS_TRACE_LOGGING
+    AutoTraceLog logger(TraceLogging::getLogger(TraceLogging::ION_BACKGROUND_COMPILER),
+                        TraceLogging::ION_COMPILE_START,
+                        TraceLogging::ION_COMPILE_STOP,
+                        ionBuilder->script());
+#endif
+
     state.unlock();
     {
         jit::IonContext ictx(runtime, ionBuilder->script()->compartment(), &ionBuilder->temp());

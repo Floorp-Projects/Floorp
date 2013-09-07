@@ -16,6 +16,8 @@ const { setTimeout } = require("sdk/timers");
 const { LoaderWithHookedConsole } = require("sdk/test/loader");
 const { Worker } = require("sdk/content/worker");
 const { close } = require("sdk/window/helpers");
+const { set: setPref } = require("sdk/preferences/service");
+const DEPRECATE_PREF = "devtools.errorconsole.deprecation_warnings";
 
 const DEFAULT_CONTENT_URL = "data:text/html;charset=utf-8,foo";
 
@@ -658,6 +660,7 @@ exports["test:global postMessage"] = WorkerTest(
   DEFAULT_CONTENT_URL,
   function(assert, browser, done) {
     let { loader } = LoaderWithHookedConsole(module, onMessage);
+    setPref(DEPRECATE_PREF, true);
 
     // Intercept all console method calls
     let seenMessages = 0;

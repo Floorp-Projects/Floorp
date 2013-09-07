@@ -42,7 +42,7 @@ function run() {
         style_text.data = selector + "{ z-index: " + zi + " }";
 
         var doc_div = document.getElementById("display");
-        var anon_div = document.getAnonymousNodes(doc_div)[0];
+        var anon_div = SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes(doc_div))[0];
         var should_match = [];
         var should_not_match = [];
         (matches_docdiv ? should_match : should_not_match).push(doc_div);

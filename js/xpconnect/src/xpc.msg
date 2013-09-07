@@ -166,6 +166,8 @@ XPC_MSG_DEF(NS_ERROR_DNS_LOOKUP_QUEUE_FULL          , "The DNS lookup queue is f
 XPC_MSG_DEF(NS_ERROR_UNKNOWN_PROXY_HOST             , "The lookup of the proxy hostname failed")
 XPC_MSG_DEF(NS_ERROR_UNKNOWN_SOCKET_TYPE            , "The specified socket type does not exist")
 XPC_MSG_DEF(NS_ERROR_SOCKET_CREATE_FAILED           , "The specified socket type could not be created")
+XPC_MSG_DEF(NS_ERROR_SOCKET_ADDRESS_NOT_SUPPORTED   , "The specified socket address type is not supported")
+XPC_MSG_DEF(NS_ERROR_SOCKET_ADDRESS_IN_USE          , "Some other socket is already using the specified address.")
 XPC_MSG_DEF(NS_ERROR_CACHE_KEY_NOT_FOUND            , "Cache key could not be found")
 XPC_MSG_DEF(NS_ERROR_CACHE_DATA_IS_STREAM           , "Cache data is a stream")
 XPC_MSG_DEF(NS_ERROR_CACHE_DATA_IS_NOT_STREAM       , "Cache data is not a stream")

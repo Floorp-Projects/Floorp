@@ -13,7 +13,7 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Rect.h"           // for Rect, RectTyped
-#include "mozilla/layers/LayerTransaction.h"
+#include "mozilla/layers/LayersMessages.h"
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nsRect.h"                     // for nsIntRect
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc

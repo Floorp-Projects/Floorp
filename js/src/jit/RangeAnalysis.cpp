@@ -1619,6 +1619,26 @@ RangeAnalysis::analyze()
 
         if (block->isLoopHeader())
             analyzeLoop(block);
+
+        if (mir->compilingAsmJS()) {
+            for (MInstructionIterator i = block->begin(); i != block->end(); i++) {
+                if (i->isAsmJSLoadHeap()) {
+                    MAsmJSLoadHeap *ins = i->toAsmJSLoadHeap();
+                    Range *range = ins->ptr()->range();
+                    if (range && !range->isLowerInfinite() && range->lower() >= 0 &&
+                        !range->isUpperInfinite() &&
+                        (uint32_t) range->upper() < mir->minAsmJSHeapLength())
+                        ins->setSkipBoundsCheck(true);
+                } else if (i->isAsmJSStoreHeap()) {
+                    MAsmJSStoreHeap *ins = i->toAsmJSStoreHeap();
+                    Range *range = ins->ptr()->range();
+                    if (range && !range->isLowerInfinite() && range->lower() >= 0 &&
+                        !range->isUpperInfinite() &&
+                        (uint32_t) range->upper() < mir->minAsmJSHeapLength())
+                        ins->setSkipBoundsCheck(true);
+                }
+            }
+        }
     }
 
     return true;

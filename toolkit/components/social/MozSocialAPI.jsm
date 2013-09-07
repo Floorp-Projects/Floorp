@@ -230,10 +230,10 @@ function attachToWindow(provider, targetWindow) {
                 .QueryInterface(Ci.nsIDocShell)
                 .chromeEventHandler;
     while (elt) {
-      if (elt.nodeName == "panel") {
+      if (elt.localName == "panel") {
         elt.hidePopup();
         break;
-      } else if (elt.nodeName == "chatbox") {
+      } else if (elt.localName == "chatbox") {
         elt.close();
         break;
       }

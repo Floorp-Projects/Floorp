@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <style>
+      body {
+        height: 200px;
+        margin: 0;
+      }
+      #sticky {
+        position: relative;
+        top: 100px;
+        height: 10px;
+        background-color: black;
+      }
+      #absolute {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        width: 10px;
+        height: 10px;
+        background-color: blue;
+      }
+    </style>
+  <body>
+    <div id="sticky">
+      <div id="absolute"></div>
+    </div>
+  </body>
+</html>

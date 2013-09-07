@@ -28,7 +28,7 @@ extern JSObject *
 js_InitTypedArrayClasses(JSContext *cx, js::HandleObject obj);
 
 extern JSObject *
-js_InitBinaryDataClasses(JSContext *cx, js::HandleObject obj);
+js_InitTypedObjectClasses(JSContext *cx, js::HandleObject obj);
 
 namespace js {
 
@@ -458,7 +458,7 @@ class GlobalObject : public JSObject
     static bool initNumberFormatProto(JSContext *cx, Handle<GlobalObject*> global);
     static bool initDateTimeFormatProto(JSContext *cx, Handle<GlobalObject*> global);
 
-    // Implemented in builtin/BinaryData.cpp
+    // Implemented in builtin/TypedObject.cpp
     static bool initTypeObject(JSContext *cx, Handle<GlobalObject*> global);
     static bool initDataObject(JSContext *cx, Handle<GlobalObject*> global);
     static bool initArrayTypeObject(JSContext *cx, Handle<GlobalObject*> global);

@@ -12,7 +12,7 @@ function boom()
 
   var scrollbar = document.createElementNS(XUL_NS, 'scrollbar');
   document.documentElement.appendChild(scrollbar);
-  var sbb = document.getAnonymousNodes(scrollbar)[0];
+  var sbb = SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes(scrollbar))[0];
   var action = document.createElementNS(XUL_NS, 'action');
   action.setAttribute('datasources', "");
   sbb.appendChild(action);

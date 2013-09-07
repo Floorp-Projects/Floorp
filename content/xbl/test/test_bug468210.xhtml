@@ -32,7 +32,7 @@ addLoadEvent(function() {
   var div = $("d");
   var n = document.anchors.length;
   is(n, 1, "Unexpected number of anchors");
-  var anon = document.getAnonymousNodes(div)[0];
+  var anon = SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes(div))[0];
   is(anon instanceof HTMLSpanElement, true, "Unexpected node");
   is(anon.parentNode, div, "Unexpected parent");
   document.body.appendChild(div);

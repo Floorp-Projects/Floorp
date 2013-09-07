@@ -675,6 +675,14 @@ toolbarbutton[type="badged"] {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#toolbarbutton-badged");
 }
 
+toolbarbutton[type="socialmark"] {
+  -moz-binding: url("chrome://browser/content/socialmarks.xml#toolbarbutton-marks");
+}
+toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+}
+
 /* Note the chatbox 'width' values are duplicated in socialchat.xml */
 chatbox {
   -moz-binding: url("chrome://browser/content/socialchat.xml#chatbox");

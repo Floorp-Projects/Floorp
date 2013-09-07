@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>CSS Test: Sticky Positioning - bottom, contained</title>
+    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <link rel="match" href="bottom-3-ref.html">
+    <meta name="assert" content="Bottom-sticky with too much content above: should stay within the containing block">
+    <style>
+      #scroll {
+        height: 100px;
+        overflow: hidden;
+      }
+      #contain {
+        height: 200px;
+        background-color: gray;
+        padding: 10px 0;
+        border-width: 10px 0;
+        border-style: solid;
+        border-color: #333;
+      }
+      #sticky {
+        position: sticky;
+        bottom: 10px;
+        height: 10px;
+        margin-top: 2px;
+        background-color: black;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scroll">
+      <div style="height: 75px"></div>
+      <div id="contain">
+        <div style="height: 100px"></div>
+        <div id="sticky"></div>
+      </div>
+    </div>
+  </body>
+</html>

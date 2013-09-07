@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>CSS Test: Sticky Positioning - element margin</title>
+    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <link rel="match" href="margin-1-ref.html">
+    <meta name="flags" content="dom">
+    <meta name="assert" content="Sticky-top with margin-bottom on the sticky element: the element's margin box should stay within the containing block">
+    <style>
+      #scroll {
+        height: 100px;
+        overflow: hidden;
+      }
+      #contain {
+        height: 300px;
+        background-color: gray;
+      }
+      #sticky {
+        position: sticky;
+        top: 10px;
+        height: 10px;
+        margin-bottom: 5px;
+        background-color: black;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scroll">
+      <div style="height: 20px"></div>
+      <div id="contain">
+        <div id="sticky"></div>
+      </div>
+      <div style="height: 100px"></div>
+    </div>
+    <script type="application/javascript">
+      document.getElementById("scroll").scrollTop = 300;
+    </script>
+  </body>
+</html>

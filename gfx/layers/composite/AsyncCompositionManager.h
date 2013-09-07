@@ -14,7 +14,7 @@
 #include "mozilla/TimeStamp.h"          // for TimeStamp
 #include "mozilla/dom/ScreenOrientation.h"  // for ScreenOrientation
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
-#include "mozilla/layers/LayerTransaction.h"  // for TargetConfig
+#include "mozilla/layers/LayersMessages.h"  // for TargetConfig
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsISupportsImpl.h"            // for LayerManager::AddRef, etc
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc

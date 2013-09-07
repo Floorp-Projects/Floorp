@@ -65,7 +65,7 @@ rdtsc(void)
 }
 #endif
 
-const char* const TraceLogging::type_name[] = {
+const char* const TraceLogging::typeName[] = {
     "1,s",  // start script
     "0,s",  // stop script
     "1,c",  // start ion compilation
@@ -86,29 +86,31 @@ const char* const TraceLogging::type_name[] = {
     "e,b",  // engine baseline
     "e,o"   // engine ionmonkey
 };
-TraceLogging* TraceLogging::_defaultLogger = NULL;
+TraceLogging* TraceLogging::loggers[] = {NULL, NULL};
+bool TraceLogging::atexitSet = false;
+uint64_t TraceLogging::startupTime = 0;
 
-TraceLogging::TraceLogging()
-  : startupTime(rdtsc()),
-    loggingTime(0),
+TraceLogging::TraceLogging(Logger id)
+  : loggingTime(0),
     nextTextId(1),
     entries(NULL),
     curEntry(0),
     numEntries(1000000),
     fileno(0),
-    out(NULL)
+    out(NULL),
+    id(id)
 {
     textMap.init();
 }
 
 TraceLogging::~TraceLogging()
 {
-    if (out != NULL) {
+    if (out) {
         fclose(out);
         out = NULL;
     }
 
-    if (entries != NULL) {
+    if (entries) {
         flush();
         free(entries);
         entries = NULL;
@@ -122,7 +124,7 @@ TraceLogging::grow()
 
     // Allocating a bigger array failed.
     // Keep using the current storage, but remove all entries by flushing them.
-    if (nentries == NULL) {
+    if (!nentries) {
         flush();
         return;
     }
@@ -195,8 +197,19 @@ void
 TraceLogging::flush()
 {
     // Open the logging file, when not opened yet.
-    if (out == NULL)
-        out = fopen(TRACE_LOG_DIR "tracelogging.log", "w");
+    if (!out) {
+        switch(id) {
+          case DEFAULT:
+            out = fopen(TRACE_LOG_DIR "tracelogging.log", "w");
+            break;
+          case ION_BACKGROUND_COMPILER:
+            out = fopen(TRACE_LOG_DIR "tracelogging-compile.log", "w");
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("Bad trigger");
+            return;
+        }
+    }
 
     // Print all log entries into the file
     for (unsigned int i = 0; i < curEntry; i++) {
@@ -209,36 +222,29 @@ TraceLogging::flush()
                 if (entry.text()) {
                     written = fprintf(out, "%llu,%s,%s,%d\n",
                                       (unsigned long long)entry.tick(),
-                                      type_name[entry.type()],
+                                      typeName[entry.type()],
                                       entry.text(),
                                       entry.lineno());
                 } else {
                     written = fprintf(out, "%llu,%s,%d,%d\n",
                                       (unsigned long long)entry.tick(),
-                                      type_name[entry.type()],
+                                      typeName[entry.type()],
                                       entry.textId(),
                                       entry.lineno());
                 }
             } else {
                 written = fprintf(out, "%llu,%s\n",
                                   (unsigned long long)entry.tick(),
-                                  type_name[entry.type()]);
+                                  typeName[entry.type()]);
             }
         }
 
         // A logging file can only be 2GB of length (fwrite limit).
-        // When we exceed this limit, the writing will fail.
-        // In that case try creating a extra file to write the log entries.
         if (written < 0) {
+            fprintf(stderr, "Writing tracelog to disk failed,");
+            fprintf(stderr, "probably because the file would've exceeded the maximum size of 2GB");
             fclose(out);
-            if (fileno >= 9999)
-                exit(-1);
-
-            char filename[21 + sizeof(TRACE_LOG_DIR)];
-            sprintf (filename, TRACE_LOG_DIR "tracelogging-%d.log", ++fileno);
-            out = fopen(filename, "w");
-            i--; // Try to print message again
-            continue;
+            exit(-1);
         }
 
         if (entries[i].text() != NULL) {
@@ -250,21 +256,29 @@ TraceLogging::flush()
 }
 
 TraceLogging*
-TraceLogging::defaultLogger()
+TraceLogging::getLogger(Logger id)
 {
-    if (_defaultLogger == NULL) {
-        _defaultLogger = new TraceLogging();
-        atexit (releaseDefaultLogger);
+    if (!loggers[id]) {
+        loggers[id] = new TraceLogging(id);
+        if (!atexitSet) {
+            startupTime = rdtsc();
+            atexit (releaseLoggers);
+            atexitSet = true;
+        }
     }
-    return _defaultLogger;
+
+    return loggers[id];
 }
 
 void
-TraceLogging::releaseDefaultLogger()
+TraceLogging::releaseLoggers()
 {
-    if (_defaultLogger != NULL) {
-        delete _defaultLogger;
-        _defaultLogger = NULL;
+    for (size_t i = 0; i < LAST_LOGGER; i++) {
+        if (!loggers[i])
+            continue;
+
+        delete loggers[i];
+        loggers[i] = NULL;
     }
 }
 

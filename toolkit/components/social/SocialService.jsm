@@ -500,7 +500,7 @@ this.SocialService = {
   },
 
   _manifestFromData: function(type, data, principal) {
-    let sameOriginRequired = ['workerURL', 'sidebarURL', 'shareURL', 'statusURL'];
+    let sameOriginRequired = ['workerURL', 'sidebarURL', 'shareURL', 'statusURL', 'markURL'];
 
     if (type == 'directory') {
       // directory provided manifests must have origin in manifest, use that
@@ -728,6 +728,9 @@ function SocialProvider(input) {
   this.sidebarURL = input.sidebarURL;
   this.shareURL = input.shareURL;
   this.statusURL = input.statusURL;
+  this.markURL = input.markURL;
+  this.markedIcon = input.markedIcon;
+  this.unmarkedIcon = input.unmarkedIcon;
   this.origin = input.origin;
   let originUri = Services.io.newURI(input.origin, null, null);
   this.principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(originUri);
@@ -796,60 +799,6 @@ SocialProvider.prototype = {
   // 'undefined' means 'ok to use cached values' versus 'null' meaning 'cached
   // values aren't to be used as the user is logged out'.
   profile: undefined,
-
-  // Contains the information necessary to support our page mark feature.
-  // null means no info yet provided (which includes the case of the provider
-  // not supporting the feature) or the provided data is invalid.  Updated via
-  // the 'pageMarkInfo' setter and returned via the getter.
-  _pageMarkInfo: null,
-  get pageMarkInfo() {
-    return this._pageMarkInfo;
-  },
-  set pageMarkInfo(data) {
-    // Accept *and validate* the page-mark-config message from the provider.
-    let promptImages = {};
-    let promptMessages = {};
-    let self = this;
-    function reportError(reason) {
-      Cu.reportError("Invalid page-mark data from provider: " + reason + ": marking is disabled for this provider");
-      // and we explicitly reset the page-mark data to null to avoid stale
-      // data being used and notify our observers.
-      self._pageMarkInfo = null;
-      Services.obs.notifyObservers(null, "social:page-mark-config", self.origin);
-    }
-    if (!data ||
-        !data.images || typeof data.images != "object" ||
-        !data.messages || typeof data.messages != "object") {
-      reportError("data is missing valid 'images' or 'messages' elements");
-      return;
-    }
-    for (let sub of ["marked", "unmarked"]) {
-      let url = data.images[sub];
-      if (!url || typeof url != "string" || url.length == 0) {
-        reportError('images["' + sub + '"] is not a valid string');
-        return;
-      }
-      // resolve potentially relative URLs but there is no same-origin check
-      // for images to help providers utilize content delivery networks...
-      // Also note no scheme checks are necessary - even a javascript: URL
-      // is safe as gecko evaluates them in a sandbox.
-      let imgUri = this.resolveUri(url);
-      if (!imgUri) {
-        reportError('images["' + sub + '"] is an invalid URL');
-        return;
-      }
-      promptImages[sub] = imgUri.spec;
-    }
-    for (let sub of ["markedTooltip", "unmarkedTooltip", "markedLabel", "unmarkedLabel"]) {
-      if (typeof data.messages[sub] != "string" || data.messages[sub].length == 0) {
-        reportError('messages["' + sub + '"] is not a valid string');
-        return;
-      }
-      promptMessages[sub] = data.messages[sub];
-    }
-    this._pageMarkInfo = {images: promptImages, messages: promptMessages};
-    Services.obs.notifyObservers(null, "social:page-mark-config", this.origin);
-  },
 
   // Map of objects describing the provider's notification icons, whose
   // properties include:

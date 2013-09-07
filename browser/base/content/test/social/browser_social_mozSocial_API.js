@@ -35,15 +35,14 @@ var tests = {
     }
 
     function triggerIconPanel() {
+      let pButton = document.getElementById("social-provider-button");
       waitForCondition(function() {
-        let mButton = document.getElementById("social-mark-button");
-        let pButton = document.getElementById("social-provider-button");
         // wait for a new button to be inserted inbetween the provider and mark
         // button
-        return pButton.nextSibling != mButton;
+        return !!pButton.nextSibling;
       }, function() {
         // Click the button to trigger its contentPanel
-        let statusIcon = document.getElementById("social-provider-button").nextSibling;
+        let statusIcon = pButton.nextSibling;
         EventUtils.synthesizeMouseAtCenter(statusIcon, {});
       }, "Status icon didn't become non-hidden");
     }

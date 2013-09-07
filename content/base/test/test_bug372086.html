@@ -42,7 +42,7 @@ function runTest() {
   is(range.endOffset, 3, "Unexpected end offset");
   is(range.toString(), "bc", "Unexpected range serialization");
 
-  var anon = document.getAnonymousNodes($("d"))[0];
+  var anon = SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes($("d")))[0];
   // Should collapse the range, because can't determine order
   range.setEnd(anon, 2);
   is(range.startContainer, anon, "Unexpected collapsed start container");
@@ -59,7 +59,7 @@ function runTest() {
   is(range.endOffset, 2, "Unexpected end offset after");
   is(range.toString(), "de", "Unexpected range serialization after");
 
-  anon = document.getAnonymousNodes($("d"))[2];
+  anon = SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes($("d")))[2];
   // Collapses because one endpoint is anonymous from point of view of
   // the other.  
   range.setStart(anon, 1);

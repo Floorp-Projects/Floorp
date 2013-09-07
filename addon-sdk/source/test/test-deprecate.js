@@ -2,10 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+'use strict';
+
 const deprecate = require("sdk/util/deprecate");
 const { LoaderWithHookedConsole } = require("sdk/test/loader");
+const { get, set } = require("sdk/preferences/service");
+const PREFERENCE = "devtools.errorconsole.deprecation_warnings";
 
 exports["test Deprecate Usage"] = function testDeprecateUsage(assert) {
+  set(PREFERENCE, true);
   let { loader, messages } = LoaderWithHookedConsole(module);
   let deprecate = loader.require("sdk/util/deprecate");
 
@@ -31,6 +36,7 @@ exports["test Deprecate Usage"] = function testDeprecateUsage(assert) {
 }
 
 exports["test Deprecate Function"] = function testDeprecateFunction(assert) {
+  set(PREFERENCE, true);
   let { loader, messages } = LoaderWithHookedConsole(module);
   let deprecate = loader.require("sdk/util/deprecate");
 
@@ -63,6 +69,7 @@ exports["test Deprecate Function"] = function testDeprecateFunction(assert) {
 }
 
 exports.testDeprecateEvent = function(assert, done) {
+  set(PREFERENCE, true);
   let { loader, messages } = LoaderWithHookedConsole(module);
   let deprecate = loader.require("sdk/util/deprecate");
 
@@ -91,4 +98,63 @@ exports.testDeprecateEvent = function(assert, done) {
   emit(testObj, 'fire');
 }
 
+exports.testDeprecateSettingToggle = function (assert, done) {
+  let { loader, messages } = LoaderWithHookedConsole(module);
+  let deprecate = loader.require("sdk/util/deprecate");
+  
+  function fn () { deprecate.deprecateUsage("foo"); }
+
+  set(PREFERENCE, false);
+  fn();
+  assert.equal(messages.length, 0, 'no deprecation warnings');
+  
+  set(PREFERENCE, true);
+  fn();
+  assert.equal(messages.length, 1, 'deprecation warnings when toggled');
+
+  set(PREFERENCE, false);
+  fn();
+  assert.equal(messages.length, 1, 'no new deprecation warnings');
+  done();
+};
+
+exports.testDeprecateSetting = function (assert, done) {
+  // Set devtools.errorconsole.deprecation_warnings to false
+  set(PREFERENCE, false);
+
+  let { loader, messages } = LoaderWithHookedConsole(module);
+  let deprecate = loader.require("sdk/util/deprecate");
+
+  // deprecateUsage test
+  function functionIsDeprecated() {
+    deprecate.deprecateUsage("foo");
+  }
+  functionIsDeprecated();
+
+  assert.equal(messages.length, 0,
+    "no errors dispatched on deprecateUsage");
+
+  // deprecateFunction test
+  function originalFunction() {};
+
+  let deprecateFunction = deprecate.deprecateFunction(originalFunction,
+                                                       "bar");
+  deprecateFunction();
+
+  assert.equal(messages.length, 0,
+    "no errors dispatched on deprecateFunction");
+
+  // deprecateEvent
+  let { on, emit } = loader.require('sdk/event/core');
+  let testObj = {};
+  testObj.on = deprecate.deprecateEvent(on.bind(null, testObj), 'BAD', ['fire']);
+
+  testObj.on('fire', () => {
+    assert.equal(messages.length, 0,
+      "no errors dispatched on deprecateEvent");
+    done();
+  });
+
+  emit(testObj, 'fire');
+}
 require("test").run(exports);

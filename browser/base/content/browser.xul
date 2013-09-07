@@ -863,11 +863,6 @@
                         oncommand="SocialUI.showLearnMore();"/>
             </menupopup>
           </toolbarbutton>
-          <toolbarbutton id="social-mark-button"
-                         class="toolbarbutton-1"
-                         hidden="true"
-                         disabled="true"
-                         command="Social:TogglePageMark"/>
         </toolbaritem>
       </hbox>
 

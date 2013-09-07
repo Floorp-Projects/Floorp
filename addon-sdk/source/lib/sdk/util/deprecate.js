@@ -9,12 +9,16 @@ module.metadata = {
 };
 
 const { get, format } = require("../console/traceback");
+const { get: getPref } = require("../preferences/service");
+const PREFERENCE = "devtools.errorconsole.deprecation_warnings";
 
 function deprecateUsage(msg) {
   // Print caller stacktrace in order to help figuring out which code
   // does use deprecated thing
   let stack = get().slice(2);
-  console.error("DEPRECATED: " + msg + "\n" + format(stack));
+
+  if (getPref(PREFERENCE)) 
+    console.error("DEPRECATED: " + msg + "\n" + format(stack));
 }
 exports.deprecateUsage = deprecateUsage;
 

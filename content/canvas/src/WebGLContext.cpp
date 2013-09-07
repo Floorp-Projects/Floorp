@@ -27,7 +27,7 @@
 
 #include "nsIVariant.h"
 
-#include "imgIEncoder.h"
+#include "ImageEncoder.h"
 
 #include "gfxContext.h"
 #include "gfxPattern.h"
@@ -721,6 +721,54 @@ void WebGLContext::LoseOldestWebGLContextIfLimitExceeded()
     }
 }
 
+void
+WebGLContext::GetImageBuffer(uint8_t** aImageBuffer, int32_t* aFormat)
+{
+    *aImageBuffer = nullptr;
+    *aFormat = 0;
+
+    nsRefPtr<gfxImageSurface> imgsurf =
+        new gfxImageSurface(gfxIntSize(mWidth, mHeight),
+                            gfxASurface::ImageFormatARGB32);
+
+    if (!imgsurf || imgsurf->CairoStatus()) {
+        return;
+    }
+
+    nsRefPtr<gfxContext> ctx = new gfxContext(imgsurf);
+    if (!ctx || ctx->HasError()) {
+        return;
+    }
+
+    // Use Render() to make sure that appropriate y-flip gets applied
+    uint32_t flags = mOptions.premultipliedAlpha ? RenderFlagPremultAlpha : 0;
+    nsresult rv = Render(ctx, gfxPattern::FILTER_NEAREST, flags);
+    if (NS_FAILED(rv)) {
+        return;
+    }
+
+    int32_t format = imgIEncoder::INPUT_FORMAT_HOSTARGB;
+    if (!mOptions.premultipliedAlpha) {
+        // We need to convert to INPUT_FORMAT_RGBA, otherwise
+        // we are automatically considered premult, and unpremult'd.
+        // Yes, it is THAT silly.
+        // Except for different lossy conversions by color,
+        // we could probably just change the label, and not change the data.
+        gfxUtils::ConvertBGRAtoRGBA(imgsurf);
+        format = imgIEncoder::INPUT_FORMAT_RGBA;
+    }
+
+    static const fallible_t fallible = fallible_t();
+    uint8_t* imageBuffer = new (fallible) uint8_t[mWidth * mHeight * 4];
+    if (!imageBuffer) {
+        return;
+    }
+    memcpy(imageBuffer, imgsurf->Data(), mWidth * mHeight * 4);
+
+    *aImageBuffer = imageBuffer;
+    *aFormat = format;
+}
+
 NS_IMETHODIMP
 WebGLContext::GetInputStream(const char* aMimeType,
                              const PRUnichar* aEncoderOptions,
@@ -730,48 +778,22 @@ WebGLContext::GetInputStream(const char* aMimeType,
     if (!gl)
         return NS_ERROR_FAILURE;
 
-    nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(gfxIntSize(mWidth, mHeight),
-                                                         gfxASurface::ImageFormatARGB32);
-    if (surf->CairoStatus() != 0)
+    uint8_t* imageBuffer = nullptr;
+    int32_t format = 0;
+    GetImageBuffer(&imageBuffer, &format);
+    if (!imageBuffer) {
         return NS_ERROR_FAILURE;
-
-    nsRefPtr<gfxContext> tmpcx = new gfxContext(surf);
-    // Use Render() to make sure that appropriate y-flip gets applied
-    uint32_t flags = mOptions.premultipliedAlpha ? RenderFlagPremultAlpha : 0;
-    nsresult rv = Render(tmpcx, gfxPattern::FILTER_NEAREST, flags);
-    if (NS_FAILED(rv))
-        return rv;
-
-    const char encoderPrefix[] = "@mozilla.org/image/encoder;2?type=";
-    nsAutoArrayPtr<char> conid(new char[strlen(encoderPrefix) + strlen(aMimeType) + 1]);
-
-    strcpy(conid, encoderPrefix);
-    strcat(conid, aMimeType);
-
-    nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(conid);
-    if (!encoder)
-        return NS_ERROR_FAILURE;
-
-    int format = imgIEncoder::INPUT_FORMAT_HOSTARGB;
-    if (!mOptions.premultipliedAlpha) {
-        // We need to convert to INPUT_FORMAT_RGBA, otherwise
-        // we are automatically considered premult, and unpremult'd.
-        // Yes, it is THAT silly.
-        // Except for different lossy conversions by color,
-        // we could probably just change the label, and not change the data.
-        gfxUtils::ConvertBGRAtoRGBA(surf);
-        format = imgIEncoder::INPUT_FORMAT_RGBA;
     }
 
-    rv = encoder->InitFromData(surf->Data(),
-                               mWidth * mHeight * 4,
-                               mWidth, mHeight,
-                               surf->Stride(),
-                               format,
-                               nsDependentString(aEncoderOptions));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCString enccid("@mozilla.org/image/encoder;2?type=");
+    enccid += aMimeType;
+    nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(enccid.get());
+    if (!encoder) {
+        return NS_ERROR_FAILURE;
+    }
 
-    return CallQueryInterface(encoder, aStream);
+    return ImageEncoder::GetInputStream(mWidth, mHeight, imageBuffer, format,
+                                        encoder, aEncoderOptions, aStream);
 }
 
 NS_IMETHODIMP

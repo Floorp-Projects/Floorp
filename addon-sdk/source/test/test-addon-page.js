@@ -18,6 +18,8 @@ const { setTimeout } = require('sdk/timers');
 const { is } = require('sdk/system/xul-app');
 const tabs = require('sdk/tabs');
 const isAustralis = "gCustomizeMode" in windows.activeBrowserWindow;
+const { set: setPref } = require("sdk/preferences/service");
+const DEPRECATE_PREF = "devtools.errorconsole.deprecation_warnings";
 
 let uri = require('sdk/self').data.url('index.html');
 
@@ -29,6 +31,7 @@ function isChromeVisible(window) {
 exports['test add-on page deprecation message'] = function(assert) {
   let { loader, messages } = LoaderWithHookedConsole(module);
   loader.require('sdk/addon-page');
+  setPref(DEPRECATE_PREF, true);
 
   assert.equal(messages.length, 1, "only one error is dispatched");
   assert.equal(messages[0].type, "error", "the console message is an error");
