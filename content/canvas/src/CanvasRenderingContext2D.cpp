@@ -819,11 +819,10 @@ CanvasRenderingContext2D::RemoveDemotableContext(CanvasRenderingContext2D* conte
     DemotableContexts().erase(iter);
 }
 
-#define MIN_SKIA_GL_DIMENSION 16
-
 bool
 CheckSizeForSkiaGL(IntSize size) {
-  return size.width > MIN_SKIA_GL_DIMENSION && size.height > MIN_SKIA_GL_DIMENSION;
+  int minsize = Preferences::GetInt("gfx.canvas.min-size-for-skia-gl", 128);
+  return size.width >= minsize && size.height >= minsize;
 }
 
 #endif

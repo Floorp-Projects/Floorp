@@ -1483,7 +1483,7 @@ BluetoothHfpManager::OnSocketConnectSuccess(BluetoothSocket* aSocket)
   }
 
   nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+    do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
   NS_ENSURE_TRUE_VOID(provider);
   provider->EnumerateCalls(mListener->GetListener());
 
