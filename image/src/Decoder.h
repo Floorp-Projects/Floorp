@@ -11,6 +11,7 @@
 #include "mozilla/RefPtr.h"
 #include "ImageMetadata.h"
 #include "Orientation.h"
+#include "mozilla/Telemetry.h"
 
 namespace mozilla {
 namespace image {
