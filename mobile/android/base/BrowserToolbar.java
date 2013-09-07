@@ -861,11 +861,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
             return;
         }
 
-        // If toolbar is in edit mode, this means the entry is expanded and the
-        // tabs button is translated offscreen. Don't trigger tabs counter
+        // If toolbar is in edit mode on a phone, this means the entry is expanded
+        // and the tabs button is translated offscreen. Don't trigger tabs counter
         // updates until the tabs button is back on screen.
         // See stopEditing()
-        if (!isEditing()) {
+        if (!isEditing() || HardwareUtils.isTablet()) {
             mTabsCounter.setCount(count);
 
             mTabs.setContentDescription((count > 1) ?
@@ -875,11 +875,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
     }
 
     public void updateTabCount(int count) {
-        // If toolbar is in edit mode, this means the entry is expanded and the
-        // tabs button is translated offscreen. Don't trigger tabs counter
+        // If toolbar is in edit mode on a phone, this means the entry is expanded
+        // and the tabs button is translated offscreen. Don't trigger tabs counter
         // updates until the tabs button is back on screen.
         // See stopEditing()
-        if (isEditing()) {
+        if (isEditing() && !HardwareUtils.isTablet()) {
             return;
         }
 
@@ -1378,9 +1378,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         if (HardwareUtils.isTablet() || Build.VERSION.SDK_INT < 11) {
             hideUrlEditContainer();
-            updateTabCountAndAnimate(Tabs.getInstance().getDisplayCount());
 
             if (!HardwareUtils.isTablet()) {
+                updateTabCountAndAnimate(Tabs.getInstance().getDisplayCount());
+
                 if (mUrlBarRightEdge != null) {
                     ViewHelper.setTranslationX(mUrlBarRightEdge, 0);
                 }

@@ -15,6 +15,7 @@
 #include "nsIDocument.h"
 #include "nsString.h"
 #include "prprf.h"
+#include "nsIException.h"
 
 using namespace mozilla;
 

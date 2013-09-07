@@ -19,6 +19,7 @@ CPP_SOURCES += [
     'UIABridge.cpp',
     'nsMetroFilePicker.cpp',
     'nsWinMetroUtils.cpp',
+    'APZController.cpp',
 ]
 
 EXTRA_COMPONENTS += [

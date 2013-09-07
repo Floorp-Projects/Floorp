@@ -45,14 +45,13 @@ BEGIN_TEST(testDefineGetterSetterNonEnumerable)
                             JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, (JSObject*) funSetObj),
                             JSPROP_GETTER | JSPROP_SETTER | JSPROP_PERMANENT));
 
-    bool found = false;
-    unsigned attrs = 0;
-    CHECK(JS_GetPropertyAttributes(cx, vObject, PROPERTY_NAME, &attrs, &found));
-    CHECK(found);
-    CHECK(attrs & JSPROP_GETTER);
-    CHECK(attrs & JSPROP_SETTER);
-    CHECK(attrs & JSPROP_PERMANENT);
-    CHECK(!(attrs & JSPROP_ENUMERATE));
+    JS::Rooted<JSPropertyDescriptor> desc(cx);
+    CHECK(JS_GetOwnPropertyDescriptor(cx, vObject, PROPERTY_NAME, 0, &desc));
+    CHECK(desc.object());
+    CHECK(desc.hasGetterObject());
+    CHECK(desc.hasSetterObject());
+    CHECK(desc.isPermanent());
+    CHECK(!desc.isEnumerable());
 
     return true;
 }

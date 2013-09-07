@@ -1006,6 +1006,7 @@ lsm_rx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
                     dcb->peerconnection,
                     media->num_payloads,
                     media->payloads,
+                    media->setup,
                     FSM_NEGOTIATED_CRYPTO_DIGEST_ALGORITHM(media),
                     FSM_NEGOTIATED_CRYPTO_DIGEST(media),
                     &attrs);
@@ -1276,6 +1277,7 @@ lsm_tx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
                   dcb->peerconnection,
                   media->payloads,
                   (short)dscp,
+                  media->setup,
                   FSM_NEGOTIATED_CRYPTO_DIGEST_ALGORITHM(media),
                   FSM_NEGOTIATED_CRYPTO_DIGEST(media),
                   &attrs) == -1)

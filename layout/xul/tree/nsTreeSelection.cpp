@@ -18,6 +18,7 @@
 #include "nsAsyncDOMEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsAutoPtr.h"
+#include "nsComponentManagerUtils.h"
 
 // A helper class for managing our ranges of selection.
 struct nsTreeRange
