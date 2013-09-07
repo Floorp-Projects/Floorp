@@ -519,6 +519,14 @@ typedef enum {
     SDP_RTCP_FB_CCM_UNKNOWN
 } sdp_rtcp_fb_ccm_type_e;
 
+typedef enum {
+    SDP_CONNECTION_NOT_FOUND = -1,
+    SDP_CONNECTION_NEW = 0,
+    SDP_CONNECTION_EXISTING,
+    SDP_MAX_CONNECTION,
+    SDP_CONNECTION_UNKNOWN
+} sdp_connection_type_e;
+
 #define SDP_RTCP_FB_NACK_TO_BITMAP(type) (1 << (type))
 #define SDP_RTCP_FB_ACK_TO_BITMAP(type)  (1 << (SDP_MAX_RTCP_FB_NACK + (type)))
 #define SDP_RTCP_FB_CCM_TO_BITMAP(type)  (1 << (SDP_MAX_RTCP_FB_NACK + \
@@ -1017,6 +1025,8 @@ typedef struct sdp_attr {
         char                  unknown[SDP_MAX_STRING_LEN+1];
         sdp_source_filter_t   source_filter;
         sdp_fmtp_fb_t         rtcp_fb;
+        sdp_setup_type_e      setup;
+        sdp_connection_type_e connection;
     } attr;
     struct sdp_attr          *next_p;
 } sdp_attr_t;
@@ -2068,6 +2078,23 @@ sdp_attr_get_rtcp_mux_attribute (void *sdp_ptr, u16 level,
 sdp_result_e
 sdp_attr_set_rtcp_mux_attribute(void *sdp_ptr, u16 level,
                               u8 cap_num, sdp_attr_e sdp_attr, u16 inst_num, const tinybool rtcp_mux);
+
+
+sdp_result_e
+sdp_attr_get_setup_attribute (void *sdp_ptr, u16 level,
+    u8 cap_num, u16 inst_num, sdp_setup_type_e *setup_type);
+
+sdp_result_e
+sdp_attr_set_setup_attribute(void *sdp_ptr, u16 level,
+    u8 cap_num, u16 inst_num, sdp_setup_type_e setup_type);
+
+sdp_result_e
+sdp_attr_get_connection_attribute (void *sdp_ptr, u16 level,
+    u8 cap_num, u16 inst_num, sdp_connection_type_e *connection_type);
+
+sdp_result_e
+sdp_attr_set_connection_attribute(void *sdp_ptr, u16 level,
+    u8 cap_num, u16 inst_num, sdp_connection_type_e connection_type);
 
 sdp_result_e
 sdp_attr_get_dtls_fingerprint_attribute (void *sdp_ptr, u16 level,

@@ -49,6 +49,7 @@
 
 #include "mozilla/dom/EventTarget.h"
 #include "Units.h"
+#include "nsComponentManagerUtils.h"
 
 #ifdef MOZ_B2G
 #include "nsIDOMWindowB2G.h"

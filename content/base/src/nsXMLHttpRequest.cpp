@@ -67,6 +67,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsFormData.h"
 #include "nsStreamListenerWrapper.h"
+#include "xpcjsid.h"
 
 #include "nsWrapperCacheInlines.h"
 
