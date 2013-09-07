@@ -76,6 +76,7 @@ public class GeckoPreferences
     private static String PREFS_GEO_REPORTING = "app.geo.reportdata";
     private static String PREFS_HEALTHREPORT_LINK = NON_PREF_PREFIX + "healthreport.link";
     private static String PREFS_DEVTOOLS_REMOTE_ENABLED = "devtools.debugger.remote-enabled";
+    private static String PREFS_DISPLAY_REFLOW_ON_ZOOM = "browser.zoom.reflowOnZoom";
 
     // These values are chosen to be distinct from other Activity constants.
     private static int REQUEST_CODE_PREF_SCREEN = 5;
@@ -288,6 +289,12 @@ public class GeckoPreferences
                 pref.setOnPreferenceChangeListener(this);
                 if (!AppConstants.MOZ_UPDATER &&
                     PREFS_UPDATER_AUTODOWNLOAD.equals(key)) {
+                    preferences.removePreference(pref);
+                    i--;
+                    continue;
+                } else if (AppConstants.RELEASE_BUILD &&
+                           PREFS_DISPLAY_REFLOW_ON_ZOOM.equals(key)) {
+                    // Remove UI for reflow on release builds.
                     preferences.removePreference(pref);
                     i--;
                     continue;
