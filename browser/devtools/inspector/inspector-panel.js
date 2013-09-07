@@ -82,20 +82,6 @@ InspectorPanel.prototype = {
       this.scheduleLayoutChange = this.scheduleLayoutChange.bind(this);
       this.browser.addEventListener("resize", this.scheduleLayoutChange, true);
 
-      this.highlighter = new Highlighter(this.target, this, this._toolbox);
-      let button = this.panelDoc.getElementById("inspector-inspect-toolbutton");
-      button.hidden = false;
-      this.onLockStateChanged = function() {
-        if (this.highlighter.locked) {
-          button.removeAttribute("checked");
-          this._toolbox.raise();
-        } else {
-          button.setAttribute("checked", "true");
-        }
-      }.bind(this);
-      this.highlighter.on("locked", this.onLockStateChanged);
-      this.highlighter.on("unlocked", this.onLockStateChanged);
-
       // Show a warning when the debugger is paused.
       // We show the warning only when the inspector
       // is selected.
@@ -123,6 +109,19 @@ InspectorPanel.prototype = {
       this._toolbox.on("select", this.updateDebuggerPausedWarning);
       this.updateDebuggerPausedWarning();
     }
+
+    this.highlighter = new Highlighter(this.target, this, this._toolbox);
+    let button = this.panelDoc.getElementById("inspector-inspect-toolbutton");
+    this.onLockStateChanged = function() {
+      if (this.highlighter.locked) {
+        button.removeAttribute("checked");
+        this._toolbox.raise();
+      } else {
+        button.setAttribute("checked", "true");
+      }
+    }.bind(this);
+    this.highlighter.on("locked", this.onLockStateChanged);
+    this.highlighter.on("unlocked", this.onLockStateChanged);
 
     this._initMarkup();
     this.isReady = false;
