@@ -70,7 +70,8 @@ private:
   // Disallow copy constructor
   nsUrlClassifierDBService(nsUrlClassifierDBService&);
 
-  nsresult LookupURI(nsIPrincipal* aPrincipal, nsIUrlClassifierCallback* c,
+  nsresult LookupURI(nsIPrincipal* aPrincipal,
+                     nsIUrlClassifierCallback* c,
                      bool forceCheck, bool *didCheck);
 
   // Close db connection and join the background thread if it exists.
