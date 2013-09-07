@@ -28,6 +28,7 @@ DEFINES += -DHAVE_OFF64_T -DSK_BUILD_FOR_ANDROID_NDK
 LOCAL_INCLUDES += \
 	-I$(ANDROID_SOURCE)/hardware/libhardware/include \
 	-I$(ANDROID_SOURCE)/hardware/libhardware_legacy/include \
+	-I$(ANDROID_SOURCE)/frameworks/native/opengl/include \
 	-I$(topsrcdir)/widget/xpwidgets \
 	-I$(topsrcdir)/widget/shared \
 	-I$(topsrcdir)/dom/system/android \

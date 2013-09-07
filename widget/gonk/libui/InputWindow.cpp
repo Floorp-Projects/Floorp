@@ -25,11 +25,7 @@ namespace android {
 // --- InputWindowInfo ---
 
 bool InputWindowInfo::touchableRegionContainsPoint(int32_t x, int32_t y) const {
-#ifdef HAVE_ANDROID_OS
     return touchableRegion.contains(x, y);
-#else
-    return false;
-#endif
 }
 
 bool InputWindowInfo::frameContainsPoint(int32_t x, int32_t y) const {

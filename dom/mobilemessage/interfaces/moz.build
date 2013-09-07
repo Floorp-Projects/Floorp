@@ -25,7 +25,6 @@ XPIDL_SOURCES += [
 if CONFIG['MOZ_B2G_RIL']:
     XPIDL_SOURCES += [
         'nsIRilMobileMessageDatabaseService.idl',
-        'nsIRilSmsService.idl',
     ]
 
 XPIDL_MODULE = 'dom_mobilemessage'
