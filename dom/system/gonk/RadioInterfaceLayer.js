@@ -46,7 +46,17 @@ const RADIOINTERFACE_CID =
 const RILNETWORKINTERFACE_CID =
   Components.ID("{3bdd52a9-3965-4130-b569-0ac5afed045e}");
 
+const nsIAudioManager = Ci.nsIAudioManager;
+const nsITelephonyProvider = Ci.nsITelephonyProvider;
+
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
+const kSmsReceivedObserverTopic          = "sms-received";
+const kSilentSmsReceivedObserverTopic    = "silent-sms-received";
+const kSmsSendingObserverTopic           = "sms-sending";
+const kSmsSentObserverTopic              = "sms-sent";
+const kSmsFailedObserverTopic            = "sms-failed";
+const kSmsDeliverySuccessObserverTopic   = "sms-delivery-success";
+const kSmsDeliveryErrorObserverTopic     = "sms-delivery-error";
 const kMozSettingsChangedObserverTopic   = "mozsettings-changed";
 const kSysMsgListenerReadyObserverTopic  = "system-message-listener-ready";
 const kSysClockChangeObserverTopic       = "system-clock-change";
@@ -58,7 +68,35 @@ const kCellBroadcastDisabled             = "ril.cellbroadcast.disabled";
 const kPrefenceChangedObserverTopic      = "nsPref:changed";
 const kClirModePreference                = "ril.clirMode";
 
-const RADIO_POWER_OFF_TIMEOUT = 30000;
+const DOM_MOBILE_MESSAGE_DELIVERY_RECEIVED = "received";
+const DOM_MOBILE_MESSAGE_DELIVERY_SENDING  = "sending";
+const DOM_MOBILE_MESSAGE_DELIVERY_SENT     = "sent";
+const DOM_MOBILE_MESSAGE_DELIVERY_ERROR    = "error";
+
+const CALL_WAKELOCK_TIMEOUT              = 5000;
+const RADIO_POWER_OFF_TIMEOUT            = 30000;
+
+const RIL_IPC_TELEPHONY_MSG_NAMES = [
+  "RIL:EnumerateCalls",
+  "RIL:GetMicrophoneMuted",
+  "RIL:SetMicrophoneMuted",
+  "RIL:GetSpeakerEnabled",
+  "RIL:SetSpeakerEnabled",
+  "RIL:StartTone",
+  "RIL:StopTone",
+  "RIL:Dial",
+  "RIL:DialEmergency",
+  "RIL:HangUp",
+  "RIL:AnswerCall",
+  "RIL:RejectCall",
+  "RIL:HoldCall",
+  "RIL:ResumeCall",
+  "RIL:RegisterTelephonyMsg",
+  "RIL:ConferenceCall",
+  "RIL:SeparateCall",
+  "RIL:HoldConference",
+  "RIL:ResumeConference"
+];
 
 const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:GetRilContext",
@@ -67,6 +105,7 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:SelectNetworkAuto",
   "RIL:SendMMI",
   "RIL:CancelMMI",
+  "RIL:RegisterMobileConnectionMsg",
   "RIL:SetCallForwardingOption",
   "RIL:GetCallForwardingOption",
   "RIL:SetCallBarringOption",
@@ -96,16 +135,38 @@ const RIL_IPC_ICCMANAGER_MSG_NAMES = [
   "RIL:IccExchangeAPDU",
   "RIL:IccCloseChannel",
   "RIL:ReadIccContacts",
-  "RIL:UpdateIccContact"
+  "RIL:UpdateIccContact",
+  "RIL:RegisterIccMsg"
 ];
 
 const RIL_IPC_VOICEMAIL_MSG_NAMES = [
+  "RIL:RegisterVoicemailMsg",
   "RIL:GetVoicemailInfo"
 ];
 
+const RIL_IPC_CELLBROADCAST_MSG_NAMES = [
+  "RIL:RegisterCellBroadcastMsg"
+];
+
+XPCOMUtils.defineLazyServiceGetter(this, "gPowerManagerService",
+                                   "@mozilla.org/power/powermanagerservice;1",
+                                   "nsIPowerManagerService");
+
+XPCOMUtils.defineLazyServiceGetter(this, "gMobileMessageService",
+                                   "@mozilla.org/mobilemessage/mobilemessageservice;1",
+                                   "nsIMobileMessageService");
+
 XPCOMUtils.defineLazyServiceGetter(this, "gSmsService",
-                                   "@mozilla.org/sms/rilsmsservice;1",
-                                   "nsIRilSmsService");
+                                   "@mozilla.org/sms/smsservice;1",
+                                   "nsISmsService");
+
+XPCOMUtils.defineLazyServiceGetter(this, "gMobileMessageDatabaseService",
+                                   "@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1",
+                                   "nsIRilMobileMessageDatabaseService");
+
+XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
+                                   "@mozilla.org/parentprocessmessagemanager;1",
+                                   "nsIMessageBroadcaster");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
                                    "@mozilla.org/settingsService;1",
@@ -127,27 +188,376 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSystemWorkerManager",
                                    "@mozilla.org/telephony/system-worker-manager;1",
                                    "nsISystemWorkerManager");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gTelephonyProvider",
-                                   "@mozilla.org/telephony/telephonyprovider;1",
-                                   "nsIGonkTelephonyProvider");
+XPCOMUtils.defineLazyGetter(this, "WAP", function () {
+  let wap = {};
+  Cu.import("resource://gre/modules/WapPushManager.js", wap);
+  return wap;
+});
+
+XPCOMUtils.defineLazyGetter(this, "PhoneNumberUtils", function () {
+  let ns = {};
+  Cu.import("resource://gre/modules/PhoneNumberUtils.jsm", ns);
+  return ns.PhoneNumberUtils;
+});
+
+function convertRILCallState(state) {
+  switch (state) {
+    case RIL.CALL_STATE_ACTIVE:
+      return nsITelephonyProvider.CALL_STATE_CONNECTED;
+    case RIL.CALL_STATE_HOLDING:
+      return nsITelephonyProvider.CALL_STATE_HELD;
+    case RIL.CALL_STATE_DIALING:
+      return nsITelephonyProvider.CALL_STATE_DIALING;
+    case RIL.CALL_STATE_ALERTING:
+      return nsITelephonyProvider.CALL_STATE_ALERTING;
+    case RIL.CALL_STATE_INCOMING:
+    case RIL.CALL_STATE_WAITING:
+      return nsITelephonyProvider.CALL_STATE_INCOMING;
+    default:
+      throw new Error("Unknown rilCallState: " + state);
+  }
+}
+
+function convertRILSuppSvcNotification(notification) {
+  switch (notification) {
+    case RIL.GECKO_SUPP_SVC_NOTIFICATION_REMOTE_HELD:
+      return nsITelephonyProvider.NOTIFICATION_REMOTE_HELD;
+    case RIL.GECKO_SUPP_SVC_NOTIFICATION_REMOTE_RESUMED:
+      return nsITelephonyProvider.NOTIFICATION_REMOTE_RESUMED;
+    default:
+      throw new Error("Unknown rilSuppSvcNotification: " + notification);
+  }
+}
+
+/**
+ * Fake nsIAudioManager implementation so that we can run the telephony
+ * code in a non-Gonk build.
+ */
+let FakeAudioManager = {
+  microphoneMuted: false,
+  masterVolume: 1.0,
+  masterMuted: false,
+  phoneState: nsIAudioManager.PHONE_STATE_CURRENT,
+  _forceForUse: {},
+  setForceForUse: function setForceForUse(usage, force) {
+    this._forceForUse[usage] = force;
+  },
+  getForceForUse: function setForceForUse(usage) {
+    return this._forceForUse[usage] || nsIAudioManager.FORCE_NONE;
+  }
+};
+
+XPCOMUtils.defineLazyGetter(this, "gAudioManager", function getAudioManager() {
+  try {
+    return Cc["@mozilla.org/telephony/audiomanager;1"]
+             .getService(nsIAudioManager);
+  } catch (ex) {
+    //TODO on the phone this should not fall back as silently.
+    if (DEBUG) debug("Using fake audio manager.");
+    return FakeAudioManager;
+  }
+});
 
 XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
-  let ns = {};
-  Cu.import("resource://gre/modules/RilMessageManager.jsm", ns);
-  return ns.RilMessageManager;
+  return {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIMessageListener,
+                                           Ci.nsIObserver]),
+
+    ril: null,
+
+    // Manage message targets in terms of topic. Only the authorized and
+    // registered contents can receive related messages.
+    targetsByTopic: {},
+    topics: [],
+
+    targetMessageQueue: [],
+    ready: false,
+
+    init: function init(ril) {
+      this.ril = ril;
+
+      Services.obs.addObserver(this, "xpcom-shutdown", false);
+      Services.obs.addObserver(this, kSysMsgListenerReadyObserverTopic, false);
+      this._registerMessageListeners();
+    },
+
+    _shutdown: function _shutdown() {
+      this.ril = null;
+
+      Services.obs.removeObserver(this, "xpcom-shutdown");
+      this._unregisterMessageListeners();
+    },
+
+    _registerMessageListeners: function _registerMessageListeners() {
+      ppmm.addMessageListener("child-process-shutdown", this);
+      for (let msgname of RIL_IPC_TELEPHONY_MSG_NAMES) {
+        ppmm.addMessageListener(msgname, this);
+      }
+      for (let msgname of RIL_IPC_MOBILECONNECTION_MSG_NAMES) {
+        ppmm.addMessageListener(msgname, this);
+      }
+      for (let msgName of RIL_IPC_ICCMANAGER_MSG_NAMES) {
+        ppmm.addMessageListener(msgName, this);
+      }
+      for (let msgname of RIL_IPC_VOICEMAIL_MSG_NAMES) {
+        ppmm.addMessageListener(msgname, this);
+      }
+      for (let msgname of RIL_IPC_CELLBROADCAST_MSG_NAMES) {
+        ppmm.addMessageListener(msgname, this);
+      }
+    },
+
+    _unregisterMessageListeners: function _unregisterMessageListeners() {
+      ppmm.removeMessageListener("child-process-shutdown", this);
+      for (let msgname of RIL_IPC_TELEPHONY_MSG_NAMES) {
+        ppmm.removeMessageListener(msgname, this);
+      }
+      for (let msgname of RIL_IPC_MOBILECONNECTION_MSG_NAMES) {
+        ppmm.removeMessageListener(msgname, this);
+      }
+      for (let msgName of RIL_IPC_ICCMANAGER_MSG_NAMES) {
+        ppmm.removeMessageListener(msgName, this);
+      }
+      for (let msgname of RIL_IPC_VOICEMAIL_MSG_NAMES) {
+        ppmm.removeMessageListener(msgname, this);
+      }
+      for (let msgname of RIL_IPC_CELLBROADCAST_MSG_NAMES) {
+        ppmm.removeMessageListener(msgname, this);
+      }
+      ppmm = null;
+    },
+
+    _registerMessageTarget: function _registerMessageTarget(topic, target) {
+      let targets = this.targetsByTopic[topic];
+      if (!targets) {
+        targets = this.targetsByTopic[topic] = [];
+        let list = this.topics;
+        if (list.indexOf(topic) == -1) {
+          list.push(topic);
+        }
+      }
+
+      if (targets.indexOf(target) != -1) {
+        if (DEBUG) debug("Already registered this target!");
+        return;
+      }
+
+      targets.push(target);
+      if (DEBUG) debug("Registered " + topic + " target: " + target);
+    },
+
+    _unregisterMessageTarget: function _unregisterMessageTarget(topic, target) {
+      if (topic == null) {
+        // Unregister the target for every topic when no topic is specified.
+        for (let type of this.topics) {
+          this._unregisterMessageTarget(type, target);
+        }
+        return;
+      }
+
+      // Unregister the target for a specified topic.
+      let targets = this.targetsByTopic[topic];
+      if (!targets) {
+        return;
+      }
+
+      let index = targets.indexOf(target);
+      if (index != -1) {
+        targets.splice(index, 1);
+        if (DEBUG) debug("Unregistered " + topic + " target: " + target);
+      }
+    },
+
+    _enqueueTargetMessage: function _enqueueTargetMessage(topic, message, options) {
+      let msg = { topic : topic,
+                  message : message,
+                  options : options };
+      // Remove previous queued message of same message type, only one message
+      // per message type is allowed in queue.
+      let messageQueue = this.targetMessageQueue;
+      for(let i = 0; i < messageQueue.length; i++) {
+        if (messageQueue[i].message === message) {
+          messageQueue.splice(i, 1);
+          break;
+        }
+      }
+
+      messageQueue.push(msg);
+    },
+
+    _sendTargetMessage: function _sendTargetMessage(topic, message, options) {
+      if (!this.ready) {
+        this._enqueueTargetMessage(topic, message, options);
+        return;
+      }
+
+      let targets = this.targetsByTopic[topic];
+      if (!targets) {
+        return;
+      }
+
+      for (let target of targets) {
+        target.sendAsyncMessage(message, options);
+      }
+    },
+
+    _resendQueuedTargetMessage: function _resendQueuedTargetMessage() {
+      this.ready = true;
+
+      // Here uses this._sendTargetMessage() to resend message, which will
+      // enqueue message if listener is not ready.
+      // So only resend after listener is ready, or it will cause infinate loop and
+      // hang the system.
+
+      // Dequeue and resend messages.
+      for each (let msg in this.targetMessageQueue) {
+        this._sendTargetMessage(msg.topic, msg.message, msg.options);
+      }
+      this.targetMessageQueue = null;
+    },
+
+    /**
+     * nsIMessageListener interface methods.
+     */
+
+    receiveMessage: function receiveMessage(msg) {
+      if (DEBUG) debug("Received '" + msg.name + "' message from content process");
+      if (msg.name == "child-process-shutdown") {
+        // By the time we receive child-process-shutdown, the child process has
+        // already forgotten its permissions so we need to unregister the target
+        // for every permission.
+        this._unregisterMessageTarget(null, msg.target);
+        return;
+      }
+
+      if (RIL_IPC_TELEPHONY_MSG_NAMES.indexOf(msg.name) != -1) {
+        if (!msg.target.assertPermission("telephony")) {
+          if (DEBUG) {
+            debug("Telephony message " + msg.name +
+                  " from a content process with no 'telephony' privileges.");
+          }
+          return null;
+        }
+      } else if (RIL_IPC_MOBILECONNECTION_MSG_NAMES.indexOf(msg.name) != -1) {
+        if (!msg.target.assertPermission("mobileconnection")) {
+          if (DEBUG) {
+            debug("MobileConnection message " + msg.name +
+                  " from a content process with no 'mobileconnection' privileges.");
+          }
+          return null;
+        }
+      } else if (RIL_IPC_ICCMANAGER_MSG_NAMES.indexOf(msg.name) != -1) {
+        if (!msg.target.assertPermission("mobileconnection")) {
+          if (DEBUG) {
+            debug("IccManager message " + msg.name +
+                  " from a content process with no 'mobileconnection' privileges.");
+          }
+          return null;
+        }
+      } else if (RIL_IPC_VOICEMAIL_MSG_NAMES.indexOf(msg.name) != -1) {
+        if (!msg.target.assertPermission("voicemail")) {
+          if (DEBUG) {
+            debug("Voicemail message " + msg.name +
+                  " from a content process with no 'voicemail' privileges.");
+          }
+          return null;
+        }
+      } else if (RIL_IPC_CELLBROADCAST_MSG_NAMES.indexOf(msg.name) != -1) {
+        if (!msg.target.assertPermission("cellbroadcast")) {
+          if (DEBUG) {
+            debug("Cell Broadcast message " + msg.name +
+                  " from a content process with no 'cellbroadcast' privileges.");
+          }
+          return null;
+        }
+      } else {
+        if (DEBUG) debug("Ignoring unknown message type: " + msg.name);
+        return null;
+      }
+
+      switch (msg.name) {
+        case "RIL:RegisterTelephonyMsg":
+          this._registerMessageTarget("telephony", msg.target);
+          return;
+        case "RIL:RegisterMobileConnectionMsg":
+          this._registerMessageTarget("mobileconnection", msg.target);
+          return;
+        case "RIL:RegisterIccMsg":
+          this._registerMessageTarget("icc", msg.target);
+          return;
+        case "RIL:RegisterVoicemailMsg":
+          this._registerMessageTarget("voicemail", msg.target);
+          return;
+        case "RIL:RegisterCellBroadcastMsg":
+          this._registerMessageTarget("cellbroadcast", msg.target);
+          return;
+      }
+
+      let clientId = msg.json.clientId || 0;
+      let radioInterface = this.ril.getRadioInterface(clientId);
+      if (!radioInterface) {
+        if (DEBUG) debug("No such radio interface: " + clientId);
+        return null;
+      }
+
+      return radioInterface.receiveMessage(msg);
+    },
+
+    /**
+     * nsIObserver interface methods.
+     */
+
+    observe: function observe(subject, topic, data) {
+      switch (topic) {
+        case kSysMsgListenerReadyObserverTopic:
+          Services.obs.removeObserver(this, kSysMsgListenerReadyObserverTopic);
+          this._resendQueuedTargetMessage();
+          break;
+        case "xpcom-shutdown":
+          this._shutdown();
+          break;
+      }
+    },
+
+    sendTelephonyMessage: function sendTelephonyMessage(message, clientId, data) {
+      this._sendTargetMessage("telephony", message, {
+        clientId: clientId,
+        data: data
+      });
+    },
+
+    sendMobileConnectionMessage: function sendMobileConnectionMessage(message, clientId, data) {
+      this._sendTargetMessage("mobileconnection", message, {
+        clientId: clientId,
+        data: data
+      });
+    },
+
+    sendVoicemailMessage: function sendVoicemailMessage(message, clientId, data) {
+      this._sendTargetMessage("voicemail", message, {
+        clientId: clientId,
+        data: data
+      });
+    },
+
+    sendCellBroadcastMessage: function sendCellBroadcastMessage(message, clientId, data) {
+      this._sendTargetMessage("cellbroadcast", message, {
+        clientId: clientId,
+        data: data
+      });
+    },
+
+    sendIccMessage: function sendIccMessage(message, clientId, data) {
+      this._sendTargetMessage("icc", message, {
+        clientId: clientId,
+        data: data
+      });
+    }
+  };
 });
 
 function RadioInterfaceLayer() {
-  let callback = this._receiveMessage.bind(this);
-  gMessageManager.registerMessageListeners("icc",
-                                           RIL_IPC_ICCMANAGER_MSG_NAMES,
-                                           callback);
-  gMessageManager.registerMessageListeners("mobileconnection",
-                                           RIL_IPC_MOBILECONNECTION_MSG_NAMES,
-                                           callback);
-  gMessageManager.registerMessageListeners("voicemail",
-                                           RIL_IPC_VOICEMAIL_MSG_NAMES,
-                                           callback);
+  gMessageManager.init(this);
 
   let options = {
     debug: debugPref,
@@ -181,17 +591,6 @@ RadioInterfaceLayer.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIRadioInterfaceLayer,
                                          Ci.nsIObserver]),
-
-  _receiveMessage: function _receiveMessage(topic, msg) {
-    let clientId = msg.json.clientId || 0;
-    let radioInterface = this.getRadioInterface(clientId);
-    if (!radioInterface) {
-      if (DEBUG) debug("No such radio interface: " + clientId);
-      return null;
-    }
-
-    return radioInterface.receiveMessage(msg);
-  },
 
   /**
    * nsIObserver interface methods.
@@ -431,6 +830,9 @@ function RadioInterface(options) {
   Services.obs.addObserver(this, kScreenStateChangedTopic, false);
 
   Services.prefs.addObserver(kCellBroadcastDisabled, this, false);
+
+  this.portAddressedSmsApps = {};
+  this.portAddressedSmsApps[WAP.WDP_PORT_PUSH] = this.handleSmsWdpPortPush.bind(this);
 }
 RadioInterface.prototype = {
 
@@ -492,6 +894,61 @@ RadioInterface.prototype = {
       case "RIL:GetRilContext":
         // This message is sync.
         return this.rilContext;
+      case "RIL:EnumerateCalls":
+        this.enumerateCalls(msg.target, msg.json.data);
+        break;
+      case "RIL:GetMicrophoneMuted":
+        // This message is sync.
+        return this.microphoneMuted;
+      case "RIL:SetMicrophoneMuted":
+        this.microphoneMuted = msg.json.data;
+        break;
+      case "RIL:GetSpeakerEnabled":
+        // This message is sync.
+        return this.speakerEnabled;
+      case "RIL:SetSpeakerEnabled":
+        this.speakerEnabled = msg.json.data;
+        break;
+      case "RIL:StartTone":
+        this.workerMessenger.send("startTone", { dtmfChar: msg.json.data });
+        break;
+      case "RIL:StopTone":
+        this.workerMessenger.send("stopTone");
+        break;
+      case "RIL:Dial":
+        this.dial(msg.json.data);
+        break;
+      case "RIL:DialEmergency":
+        this.dialEmergency(msg.json.data);
+        break;
+      case "RIL:HangUp":
+        this.workerMessenger.send("hangUp", { callIndex: msg.json.data });
+        break;
+      case "RIL:AnswerCall":
+        this.workerMessenger.send("answerCall", { callIndex: msg.json.data });
+        break;
+      case "RIL:RejectCall":
+        this.workerMessenger.send("rejectCall", { callIndex: msg.json.data });
+        break;
+      case "RIL:HoldCall":
+        this.workerMessenger.send("holdCall", { callIndex: msg.json.data });
+        break;
+      case "RIL:ResumeCall":
+        this.workerMessenger.send("resumeCall", { callIndex: msg.json.data });
+        break;
+      case "RIL:ConferenceCall":
+        this.workerMessenger.send("conferenceCall");
+        break;
+      case "RIL:SeparateCall":
+        this.workerMessenger.send("separateCall",
+                                  { callIndex: msg.json.data });
+        break;
+      case "RIL:HoldConference":
+        this.workerMessenger.send("holdConference");
+        break;
+      case "RIL:ResumeConference":
+        this.workerMessenger.send("resumeConference");
+        break;
       case "RIL:GetAvailableNetworks":
         this.workerMessenger.sendWithIPCMessage(msg, "getAvailableNetworks");
         break;
@@ -601,26 +1058,28 @@ RadioInterface.prototype = {
   handleUnsolicitedWorkerMessage: function handleUnsolicitedWorkerMessage(message) {
     switch (message.rilMessageType) {
       case "callRing":
-        gTelephonyProvider.notifyCallRing();
+        this.handleCallRing();
         break;
       case "callStateChange":
-        gTelephonyProvider.notifyCallStateChanged(message.call);
+        // This one will handle its own notifications.
+        this.handleCallStateChange(message.call);
         break;
       case "callDisconnected":
-        gTelephonyProvider.notifyCallDisconnected(message.call);
+        // This one will handle its own notifications.
+        this.handleCallDisconnected(message.call);
         break;
       case "conferenceCallStateChanged":
-        gTelephonyProvider.notifyConferenceCallStateChanged(message.state);
+        this.handleConferenceCallStateChanged(message.state);
         break;
       case "cdmaCallWaiting":
-        gTelephonyProvider.notifyCdmaCallWaiting(message.number);
+        gMessageManager.sendTelephonyMessage("RIL:CdmaCallWaiting",
+                                             this.clientId, message.number);
         break;
       case "callError":
-        gTelephonyProvider.notifyCallError(message.callIndex, message.errorMsg);
+        this.handleCallError(message);
         break;
       case "suppSvcNotification":
-        gTelephonyProvider.notifySupplementaryService(message.callIndex,
-                                                      message.notification);
+        this.handleSuppSvcNotification(message);
         break;
       case "emergencyCbModeChange":
         this.handleEmergencyCbModeChange(message);
@@ -658,8 +1117,11 @@ RadioInterface.prototype = {
                                        this.clientId, message);
         break;
       case "sms-received":
-        gSmsService.notifyMessageReceived(message);
-        break;
+        let ackOk = this.handleSmsReceived(message);
+        if (ackOk) {
+          this.workerMessenger.send("ackSMS", { result: RIL.PDU_FCS_OK });
+        }
+        return;
       case "cellbroadcast-received":
         message.timestamp = Date.now();
         gMessageManager.sendCellBroadcastMessage("RIL:CellBroadcastReceived",
@@ -704,6 +1166,18 @@ RadioInterface.prototype = {
         throw new Error("Don't know about this message type: " +
                         message.rilMessageType);
     }
+  },
+
+  getMsisdn: function getMsisdn() {
+    let iccInfo = this.rilContext.iccInfo;
+    let number = iccInfo ? iccInfo.msisdn : null;
+
+    // Workaround an xpconnect issue with undefined string objects.
+    // See bug 808220
+    if (number === undefined || number === "undefined") {
+      return null;
+    }
+    return number;
   },
 
   updateNetworkInfo: function updateNetworkInfo(message) {
@@ -1254,6 +1728,165 @@ RadioInterface.prototype = {
   },
 
   /**
+   * Track the active call and update the audio system as its state changes.
+   */
+  _activeCall: null,
+  updateCallAudioState: function updateCallAudioState(options) {
+    if (options.conferenceState === nsITelephonyProvider.CALL_STATE_CONNECTED) {
+      gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_IN_CALL;
+      if (this.speakerEnabled) {
+        gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION,
+                                     nsIAudioManager.FORCE_SPEAKER);
+      }
+      return;
+    }
+    if (options.conferenceState === nsITelephonyProvider.CALL_STATE_UNKNOWN ||
+        options.conferenceState === nsITelephonyProvider.CALL_STATE_HELD) {
+      if (!this._activeCall) {
+        gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
+      }
+      return;
+    }
+
+    if (!options.call) {
+      return;
+    }
+
+    if (options.call.isConference) {
+      if (this._activeCall && this._activeCall.callIndex == options.call.callIndex) {
+        this._activeCall = null;
+      }
+      return;
+    }
+
+    let call = options.call;
+    switch (call.state) {
+      case nsITelephonyProvider.CALL_STATE_DIALING: // Fall through...
+      case nsITelephonyProvider.CALL_STATE_ALERTING:
+      case nsITelephonyProvider.CALL_STATE_CONNECTED:
+        call.isActive = true;
+        this._activeCall = call;
+        gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_IN_CALL;
+        if (this.speakerEnabled) {
+          gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION,
+                                       nsIAudioManager.FORCE_SPEAKER);
+        }
+        if (DEBUG) {
+          this.debug("Active call, put audio system into PHONE_STATE_IN_CALL: "
+                     + gAudioManager.phoneState);
+        }
+        break;
+      case nsITelephonyProvider.CALL_STATE_INCOMING:
+        call.isActive = false;
+        if (!this._activeCall) {
+          // We can change the phone state into RINGTONE only when there's
+          // no active call.
+          gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_RINGTONE;
+          if (DEBUG) {
+            this.debug("Incoming call, put audio system into " +
+                       "PHONE_STATE_RINGTONE: " + gAudioManager.phoneState);
+          }
+        }
+        break;
+      case nsITelephonyProvider.CALL_STATE_HELD: // Fall through...
+      case nsITelephonyProvider.CALL_STATE_DISCONNECTED:
+        call.isActive = false;
+        if (this._activeCall &&
+            this._activeCall.callIndex == call.callIndex) {
+          // Previously active call is not active now.
+          this._activeCall = null;
+        }
+
+        if (!this._activeCall) {
+          // No active call. Disable the audio.
+          gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
+          if (DEBUG) {
+            this.debug("No active call, put audio system into " +
+                       "PHONE_STATE_NORMAL: " + gAudioManager.phoneState);
+          }
+        }
+        break;
+    }
+  },
+
+  _callRingWakeLock: null,
+  _callRingWakeLockTimer: null,
+  _cancelCallRingWakeLockTimer: function _cancelCallRingWakeLockTimer() {
+    if (this._callRingWakeLockTimer) {
+      this._callRingWakeLockTimer.cancel();
+    }
+    if (this._callRingWakeLock) {
+      this._callRingWakeLock.unlock();
+      this._callRingWakeLock = null;
+    }
+  },
+
+  /**
+   * Handle an incoming call.
+   *
+   * Not much is known about this call at this point, but it's enough
+   * to start bringing up the Phone app already.
+   */
+  handleCallRing: function handleCallRing() {
+    if (!this._callRingWakeLock) {
+      this._callRingWakeLock = gPowerManagerService.newWakeLock("cpu");
+    }
+    if (!this._callRingWakeLockTimer) {
+      this._callRingWakeLockTimer =
+        Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    }
+    this._callRingWakeLockTimer
+        .initWithCallback(this._cancelCallRingWakeLockTimer.bind(this),
+                          CALL_WAKELOCK_TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
+
+    gSystemMessenger.broadcastMessage("telephony-new-call", {});
+  },
+
+  /**
+   * Handle call state changes by updating our current state and the audio
+   * system.
+   */
+  handleCallStateChange: function handleCallStateChange(call) {
+    if (DEBUG) this.debug("handleCallStateChange: " + JSON.stringify(call));
+    call.state = convertRILCallState(call.state);
+
+    if (call.state == nsITelephonyProvider.CALL_STATE_DIALING) {
+      gSystemMessenger.broadcastMessage("telephony-new-call", {});
+    }
+    this.updateCallAudioState({call: call});
+    gMessageManager.sendTelephonyMessage("RIL:CallStateChanged",
+                                         this.clientId, call);
+  },
+
+  /**
+   * Handle call disconnects by updating our current state and the audio system.
+   */
+  handleCallDisconnected: function handleCallDisconnected(call) {
+    if (DEBUG) this.debug("handleCallDisconnected: " + JSON.stringify(call));
+    call.state = nsITelephonyProvider.CALL_STATE_DISCONNECTED;
+    let duration = ("started" in call && typeof call.started == "number") ?
+      new Date().getTime() - call.started : 0;
+    let data = {
+      number: call.number,
+      duration: duration,
+      direction: call.isOutgoing ? "outgoing" : "incoming"
+    };
+    gSystemMessenger.broadcastMessage("telephony-call-ended", data);
+    this.updateCallAudioState({call: call});
+    gMessageManager.sendTelephonyMessage("RIL:CallStateChanged",
+                                         this.clientId, call);
+  },
+
+  handleConferenceCallStateChanged: function handleConferenceCallStateChanged(state) {
+    debug("handleConferenceCallStateChanged: " + state);
+    state = state != null ? convertRILCallState(state) :
+                            nsITelephonyProvider.CALL_STATE_UNKNOWN;
+    this.updateCallAudioState({conferenceState: state});
+    gMessageManager.sendTelephonyMessage("RIL:ConferenceCallStateChanged",
+                                         this.clientId, state);
+  },
+
+  /**
    * Update network selection mode
    */
   updateNetworkSelectionMode: function updateNetworkSelectionMode(message) {
@@ -1270,6 +1903,201 @@ RadioInterface.prototype = {
     if (DEBUG) this.debug("handleEmergencyCbModeChange: " + JSON.stringify(message));
     gMessageManager.sendMobileConnectionMessage("RIL:EmergencyCbModeChanged",
                                                 this.clientId, message);
+  },
+
+  /**
+   * Handle call error.
+   */
+  handleCallError: function handleCallError(message) {
+    gMessageManager.sendTelephonyMessage("RIL:CallError",
+                                         this.clientId, message);
+  },
+
+  /**
+   * Handle supplementary service notification.
+   */
+  handleSuppSvcNotification: function handleSuppSvcNotification(message) {
+    message.notification = convertRILSuppSvcNotification(message.notification);
+    gMessageManager.sendTelephonyMessage("RIL:SuppSvcNotification",
+                                         this.clientId, message);
+  },
+
+  /**
+   * Handle WDP port push PDU. Constructor WDP bearer information and deliver
+   * to WapPushManager.
+   *
+   * @param message
+   *        A SMS message.
+   */
+  handleSmsWdpPortPush: function handleSmsWdpPortPush(message) {
+    if (message.encoding != RIL.PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+      if (DEBUG) {
+        this.debug("Got port addressed SMS but not encoded in 8-bit alphabet." +
+                   " Drop!");
+      }
+      return;
+    }
+
+    let options = {
+      bearer: WAP.WDP_BEARER_GSM_SMS_GSM_MSISDN,
+      sourceAddress: message.sender,
+      sourcePort: message.header.originatorPort,
+      destinationAddress: this.rilContext.iccInfo.msisdn,
+      destinationPort: message.header.destinationPort,
+    };
+    WAP.WapPushManager.receiveWdpPDU(message.fullData, message.fullData.length,
+                                     0, options);
+  },
+
+  /**
+   * A helper to broadcast the system message to launch registered apps
+   * like Costcontrol, Notification and Message app... etc.
+   *
+   * @param aName
+   *        The system message name.
+   * @param aDomMessage
+   *        The nsIDOMMozSmsMessage object.
+   */
+  broadcastSmsSystemMessage: function broadcastSmsSystemMessage(aName, aDomMessage) {
+    if (DEBUG) this.debug("Broadcasting the SMS system message: " + aName);
+
+    // Sadly we cannot directly broadcast the aDomMessage object
+    // because the system message mechamism will rewrap the object
+    // based on the content window, which needs to know the properties.
+    gSystemMessenger.broadcastMessage(aName, {
+      type:           aDomMessage.type,
+      id:             aDomMessage.id,
+      threadId:       aDomMessage.threadId,
+      delivery:       aDomMessage.delivery,
+      deliveryStatus: aDomMessage.deliveryStatus,
+      sender:         aDomMessage.sender,
+      receiver:       aDomMessage.receiver,
+      body:           aDomMessage.body,
+      messageClass:   aDomMessage.messageClass,
+      timestamp:      aDomMessage.timestamp,
+      read:           aDomMessage.read
+    });
+  },
+
+  portAddressedSmsApps: null,
+  handleSmsReceived: function handleSmsReceived(message) {
+    if (DEBUG) this.debug("handleSmsReceived: " + JSON.stringify(message));
+
+    // FIXME: Bug 737202 - Typed arrays become normal arrays when sent to/from workers
+    if (message.encoding == RIL.PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+      message.fullData = new Uint8Array(message.fullData);
+    }
+
+    // Dispatch to registered handler if application port addressing is
+    // available. Note that the destination port can possibly be zero when
+    // representing a UDP/TCP port.
+    if (message.header && message.header.destinationPort != null) {
+      let handler = this.portAddressedSmsApps[message.header.destinationPort];
+      if (handler) {
+        handler(message);
+      }
+      return true;
+    }
+
+    if (message.encoding == RIL.PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+      // Don't know how to handle binary data yet.
+      return true;
+    }
+
+    message.type = "sms";
+    message.sender = message.sender || null;
+    message.receiver = this.getMsisdn();
+    message.body = message.fullBody = message.fullBody || null;
+    message.timestamp = Date.now();
+
+    if (gSmsService.isSilentNumber(message.sender)) {
+      message.id = -1;
+      message.threadId = 0;
+      message.delivery = DOM_MOBILE_MESSAGE_DELIVERY_RECEIVED;
+      message.deliveryStatus = RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS;
+      message.read = false;
+
+      let domMessage =
+        gMobileMessageService.createSmsMessage(message.id,
+                                               message.threadId,
+                                               message.delivery,
+                                               message.deliveryStatus,
+                                               message.sender,
+                                               message.receiver,
+                                               message.body,
+                                               message.messageClass,
+                                               message.timestamp,
+                                               message.read);
+
+      Services.obs.notifyObservers(domMessage,
+                                   kSilentSmsReceivedObserverTopic,
+                                   null);
+      return true;
+    }
+
+    // TODO: Bug #768441
+    // For now we don't store indicators persistently. When the mwi.discard
+    // flag is false, we'll need to persist the indicator to EFmwis.
+    // See TS 23.040 9.2.3.24.2
+
+    let mwi = message.mwi;
+    if (mwi) {
+      mwi.returnNumber = message.sender;
+      mwi.returnMessage = message.fullBody;
+      gMessageManager.sendVoicemailMessage("RIL:VoicemailNotification",
+                                           this.clientId, mwi);
+      return true;
+    }
+
+    let notifyReceived = function notifyReceived(rv, domMessage) {
+      let success = Components.isSuccessCode(rv);
+
+      // Acknowledge the reception of the SMS.
+      this.workerMessenger.send("ackSMS", {
+        result: (success ? RIL.PDU_FCS_OK
+                         : RIL.PDU_FCS_MEMORY_CAPACITY_EXCEEDED)
+      });
+
+      if (!success) {
+        // At this point we could send a message to content to notify the user
+        // that storing an incoming SMS failed, most likely due to a full disk.
+        if (DEBUG) {
+          this.debug("Could not store SMS " + message.id + ", error code " + rv);
+        }
+        return;
+      }
+
+      this.broadcastSmsSystemMessage("sms-received", domMessage);
+      Services.obs.notifyObservers(domMessage, kSmsReceivedObserverTopic, null);
+    }.bind(this);
+
+    if (message.messageClass != RIL.GECKO_SMS_MESSAGE_CLASSES[RIL.PDU_DCS_MSG_CLASS_0]) {
+      message.id = gMobileMessageDatabaseService.saveReceivedMessage(message,
+                                                                     notifyReceived);
+    } else {
+      message.id = -1;
+      message.threadId = 0;
+      message.delivery = DOM_MOBILE_MESSAGE_DELIVERY_RECEIVED;
+      message.deliveryStatus = RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS;
+      message.read = false;
+
+      let domMessage =
+        gMobileMessageService.createSmsMessage(message.id,
+                                               message.threadId,
+                                               message.delivery,
+                                               message.deliveryStatus,
+                                               message.sender,
+                                               message.receiver,
+                                               message.body,
+                                               message.messageClass,
+                                               message.timestamp,
+                                               message.read);
+
+      notifyReceived(Cr.NS_OK, domMessage);
+    }
+
+    // SMS ACK will be sent in notifyReceived. Return false here.
+    return false;
   },
 
   /**
@@ -1481,6 +2309,8 @@ RadioInterface.prototype = {
         }
         break;
       case "xpcom-shutdown":
+        // Cancel the timer for the call-ring wake lock.
+        this._cancelCallRingWakeLockTimer();
         // Shutdown all RIL network interfaces
         for each (let apnSetting in this.apnSettings.byAPN) {
           if (apnSetting.iface) {
@@ -1630,6 +2460,56 @@ RadioInterface.prototype = {
 
   // Handle phone functions of nsIRILContentHelper
 
+  enumerateCalls: function enumerateCalls(target, message) {
+    if (DEBUG) this.debug("Requesting enumeration of calls for callback");
+    this.workerMessenger.send("enumerateCalls", message, (function(response) {
+      for (let call of response.calls) {
+        call.state = convertRILCallState(call.state);
+        call.isActive = this._activeCall ?
+          call.callIndex == this._activeCall.callIndex : false;
+      }
+      target.sendAsyncMessage("RIL:EnumerateCalls", response);
+      return false;
+    }).bind(this));
+  },
+
+  _validateNumber: function _validateNumber(number) {
+    // note: isPlainPhoneNumber also accepts USSD and SS numbers
+    if (PhoneNumberUtils.isPlainPhoneNumber(number)) {
+      return true;
+    }
+
+    this.handleCallError({
+      callIndex: -1,
+      errorMsg: RIL.RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[RIL.CALL_FAIL_UNOBTAINABLE_NUMBER]
+    });
+    if (DEBUG) {
+      this.debug("Number '" + number + "' doesn't seem to be a viable number." +
+                 " Drop.");
+    }
+
+    return false;
+  },
+
+  dial: function dial(number) {
+    if (DEBUG) this.debug("Dialing " + number);
+    number = PhoneNumberUtils.normalize(number);
+    if (this._validateNumber(number)) {
+      this.workerMessenger.send("dial", { number: number,
+                                          isDialEmergency: false });
+    }
+  },
+
+  dialEmergency: function dialEmergency(number) {
+    if (DEBUG) this.debug("Dialing emergency " + number);
+    // we don't try to be too clever here, as the phone is probably in the
+    // locked state. Let's just check if it's a number without normalizing
+    if (this._validateNumber(number)) {
+      this.workerMessenger.send("dial", { number: number,
+                                          isDialEmergency: true });
+    }
+  },
+
   _sendCfStateChanged: function _sendCfStateChanged(message) {
     gMessageManager.sendMobileConnectionMessage("RIL:CfStateChanged",
                                                 this.clientId, message);
@@ -1682,6 +2562,654 @@ RadioInterface.prototype = {
       target.sendAsyncMessage("RIL:SetCallingLineIdRestriction", response);
       return false;
     }).bind(this));
+  },
+
+  get microphoneMuted() {
+    return gAudioManager.microphoneMuted;
+  },
+  set microphoneMuted(value) {
+    if (value == this.microphoneMuted) {
+      return;
+    }
+    gAudioManager.microphoneMuted = value;
+
+    if (!this._activeCall) {
+      gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
+    }
+  },
+
+  get speakerEnabled() {
+    return (gAudioManager.getForceForUse(nsIAudioManager.USE_COMMUNICATION) ==
+            nsIAudioManager.FORCE_SPEAKER);
+  },
+  set speakerEnabled(value) {
+    if (value == this.speakerEnabled) {
+      return;
+    }
+    let force = value ? nsIAudioManager.FORCE_SPEAKER :
+                        nsIAudioManager.FORCE_NONE;
+    gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION, force);
+
+    if (!this._activeCall) {
+      gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
+    }
+  },
+
+  /**
+   * List of tuples of national language identifier pairs.
+   *
+   * TODO: Support static/runtime settings, see bug 733331.
+   */
+  enabledGsmTableTuples: [
+    [RIL.PDU_NL_IDENTIFIER_DEFAULT, RIL.PDU_NL_IDENTIFIER_DEFAULT],
+  ],
+
+  /**
+   * Use 16-bit reference number for concatenated outgoint messages.
+   *
+   * TODO: Support static/runtime settings, see bug 733331.
+   */
+  segmentRef16Bit: false,
+
+  /**
+   * Get valid SMS concatenation reference number.
+   */
+  _segmentRef: 0,
+  get nextSegmentRef() {
+    let ref = this._segmentRef++;
+
+    this._segmentRef %= (this.segmentRef16Bit ? 65535 : 255);
+
+    // 0 is not a valid SMS concatenation reference number.
+    return ref + 1;
+  },
+
+  /**
+   * Calculate encoded length using specified locking/single shift table
+   *
+   * @param message
+   *        message string to be encoded.
+   * @param langTable
+   *        locking shift table string.
+   * @param langShiftTable
+   *        single shift table string.
+   * @param strict7BitEncoding
+   *        Optional. Enable Latin characters replacement with corresponding
+   *        ones in GSM SMS 7-bit default alphabet.
+   *
+   * @return encoded length in septets.
+   *
+   * @note that the algorithm used in this function must match exactly with
+   * GsmPDUHelper#writeStringAsSeptets.
+   */
+  _countGsm7BitSeptets: function _countGsm7BitSeptets(message, langTable, langShiftTable, strict7BitEncoding) {
+    let length = 0;
+    for (let msgIndex = 0; msgIndex < message.length; msgIndex++) {
+      let c = message.charAt(msgIndex);
+      if (strict7BitEncoding) {
+        c = RIL.GSM_SMS_STRICT_7BIT_CHARMAP[c] || c;
+      }
+
+      let septet = langTable.indexOf(c);
+
+      // According to 3GPP TS 23.038, section 6.1.1 General notes, "The
+      // characters marked '1)' are not used but are displayed as a space."
+      if (septet == RIL.PDU_NL_EXTENDED_ESCAPE) {
+        continue;
+      }
+
+      if (septet >= 0) {
+        length++;
+        continue;
+      }
+
+      septet = langShiftTable.indexOf(c);
+      if (septet < 0) {
+        if (!strict7BitEncoding) {
+          return -1;
+        }
+
+        // Bug 816082, when strict7BitEncoding is enabled, we should replace
+        // characters that can't be encoded with GSM 7-Bit alphabets with '*'.
+        c = '*';
+        if (langTable.indexOf(c) >= 0) {
+          length++;
+        } else if (langShiftTable.indexOf(c) >= 0) {
+          length += 2;
+        } else {
+          // We can't even encode a '*' character with current configuration.
+          return -1;
+        }
+
+        continue;
+      }
+
+      // According to 3GPP TS 23.038 B.2, "This code represents a control
+      // character and therefore must not be used for language specific
+      // characters."
+      if (septet == RIL.PDU_NL_RESERVED_CONTROL) {
+        continue;
+      }
+
+      // The character is not found in locking shfit table, but could be
+      // encoded as <escape><char> with single shift table. Note that it's
+      // still possible for septet to has the value of PDU_NL_EXTENDED_ESCAPE,
+      // but we can display it as a space in this case as said in previous
+      // comment.
+      length += 2;
+    }
+
+    return length;
+  },
+
+  /**
+   * Calculate user data length of specified message string encoded in GSM 7Bit
+   * alphabets.
+   *
+   * @param message
+   *        a message string to be encoded.
+   * @param strict7BitEncoding
+   *        Optional. Enable Latin characters replacement with corresponding
+   *        ones in GSM SMS 7-bit default alphabet.
+   *
+   * @return null or an options object with attributes `dcs`,
+   *         `userDataHeaderLength`, `encodedFullBodyLength`, `langIndex`,
+   *         `langShiftIndex`, `segmentMaxSeq` set.
+   *
+   * @see #_calculateUserDataLength().
+   */
+  _calculateUserDataLength7Bit: function _calculateUserDataLength7Bit(message, strict7BitEncoding) {
+    let options = null;
+    let minUserDataSeptets = Number.MAX_VALUE;
+    for (let i = 0; i < this.enabledGsmTableTuples.length; i++) {
+      let [langIndex, langShiftIndex] = this.enabledGsmTableTuples[i];
+
+      const langTable = RIL.PDU_NL_LOCKING_SHIFT_TABLES[langIndex];
+      const langShiftTable = RIL.PDU_NL_SINGLE_SHIFT_TABLES[langShiftIndex];
+
+      let bodySeptets = this._countGsm7BitSeptets(message,
+                                                  langTable,
+                                                  langShiftTable,
+                                                  strict7BitEncoding);
+      if (bodySeptets < 0) {
+        continue;
+      }
+
+      let headerLen = 0;
+      if (langIndex != RIL.PDU_NL_IDENTIFIER_DEFAULT) {
+        headerLen += 3; // IEI + len + langIndex
+      }
+      if (langShiftIndex != RIL.PDU_NL_IDENTIFIER_DEFAULT) {
+        headerLen += 3; // IEI + len + langShiftIndex
+      }
+
+      // Calculate full user data length, note the extra byte is for header len
+      let headerSeptets = Math.ceil((headerLen ? headerLen + 1 : 0) * 8 / 7);
+      let segmentSeptets = RIL.PDU_MAX_USER_DATA_7BIT;
+      if ((bodySeptets + headerSeptets) > segmentSeptets) {
+        headerLen += this.segmentRef16Bit ? 6 : 5;
+        headerSeptets = Math.ceil((headerLen + 1) * 8 / 7);
+        segmentSeptets -= headerSeptets;
+      }
+
+      let segments = Math.ceil(bodySeptets / segmentSeptets);
+      let userDataSeptets = bodySeptets + headerSeptets * segments;
+      if (userDataSeptets >= minUserDataSeptets) {
+        continue;
+      }
+
+      minUserDataSeptets = userDataSeptets;
+
+      options = {
+        dcs: RIL.PDU_DCS_MSG_CODING_7BITS_ALPHABET,
+        encodedFullBodyLength: bodySeptets,
+        userDataHeaderLength: headerLen,
+        langIndex: langIndex,
+        langShiftIndex: langShiftIndex,
+        segmentMaxSeq: segments,
+        segmentChars: segmentSeptets,
+      };
+    }
+
+    return options;
+  },
+
+  /**
+   * Calculate user data length of specified message string encoded in UCS2.
+   *
+   * @param message
+   *        a message string to be encoded.
+   *
+   * @return an options object with attributes `dcs`, `userDataHeaderLength`,
+   *         `encodedFullBodyLength`, `segmentMaxSeq` set.
+   *
+   * @see #_calculateUserDataLength().
+   */
+  _calculateUserDataLengthUCS2: function _calculateUserDataLengthUCS2(message) {
+    let bodyChars = message.length;
+    let headerLen = 0;
+    let headerChars = Math.ceil((headerLen ? headerLen + 1 : 0) / 2);
+    let segmentChars = RIL.PDU_MAX_USER_DATA_UCS2;
+    if ((bodyChars + headerChars) > segmentChars) {
+      headerLen += this.segmentRef16Bit ? 6 : 5;
+      headerChars = Math.ceil((headerLen + 1) / 2);
+      segmentChars -= headerChars;
+    }
+
+    let segments = Math.ceil(bodyChars / segmentChars);
+
+    return {
+      dcs: RIL.PDU_DCS_MSG_CODING_16BITS_ALPHABET,
+      encodedFullBodyLength: bodyChars * 2,
+      userDataHeaderLength: headerLen,
+      segmentMaxSeq: segments,
+      segmentChars: segmentChars,
+    };
+  },
+
+  /**
+   * Calculate user data length and its encoding.
+   *
+   * @param message
+   *        a message string to be encoded.
+   * @param strict7BitEncoding
+   *        Optional. Enable Latin characters replacement with corresponding
+   *        ones in GSM SMS 7-bit default alphabet.
+   *
+   * @return an options object with some or all of following attributes set:
+   *
+   * @param dcs
+   *        Data coding scheme. One of the PDU_DCS_MSG_CODING_*BITS_ALPHABET
+   *        constants.
+   * @param userDataHeaderLength
+   *        Length of embedded user data header, in bytes. The whole header
+   *        size will be userDataHeaderLength + 1; 0 for no header.
+   * @param encodedFullBodyLength
+   *        Length of the message body when encoded with the given DCS. For
+   *        UCS2, in bytes; for 7-bit, in septets.
+   * @param langIndex
+   *        Table index used for normal 7-bit encoded character lookup.
+   * @param langShiftIndex
+   *        Table index used for escaped 7-bit encoded character lookup.
+   * @param segmentMaxSeq
+   *        Max sequence number of a multi-part messages, or 1 for single one.
+   *        This number might not be accurate for a multi-part message until
+   *        it's processed by #_fragmentText() again.
+   */
+  _calculateUserDataLength: function _calculateUserDataLength(message, strict7BitEncoding) {
+    let options = this._calculateUserDataLength7Bit(message, strict7BitEncoding);
+    if (!options) {
+      options = this._calculateUserDataLengthUCS2(message);
+    }
+
+    if (DEBUG) this.debug("_calculateUserDataLength: " + JSON.stringify(options));
+    return options;
+  },
+
+  /**
+   * Fragment GSM 7-Bit encodable string for transmission.
+   *
+   * @param text
+   *        text string to be fragmented.
+   * @param langTable
+   *        locking shift table string.
+   * @param langShiftTable
+   *        single shift table string.
+   * @param segmentSeptets
+   *        Number of available spetets per segment.
+   * @param strict7BitEncoding
+   *        Optional. Enable Latin characters replacement with corresponding
+   *        ones in GSM SMS 7-bit default alphabet.
+   *
+   * @return an array of objects. See #_fragmentText() for detailed definition.
+   */
+  _fragmentText7Bit: function _fragmentText7Bit(text, langTable, langShiftTable, segmentSeptets, strict7BitEncoding) {
+    let ret = [];
+    let body = "", len = 0;
+    for (let i = 0, inc = 0; i < text.length; i++) {
+      let c = text.charAt(i);
+      if (strict7BitEncoding) {
+        c = RIL.GSM_SMS_STRICT_7BIT_CHARMAP[c] || c;
+      }
+
+      let septet = langTable.indexOf(c);
+      if (septet == RIL.PDU_NL_EXTENDED_ESCAPE) {
+        continue;
+      }
+
+      if (septet >= 0) {
+        inc = 1;
+      } else {
+        septet = langShiftTable.indexOf(c);
+        if (septet == RIL.PDU_NL_RESERVED_CONTROL) {
+          continue;
+        }
+
+        inc = 2;
+        if (septet < 0) {
+          if (!strict7BitEncoding) {
+            throw new Error("Given text cannot be encoded with GSM 7-bit Alphabet!");
+          }
+
+          // Bug 816082, when strict7BitEncoding is enabled, we should replace
+          // characters that can't be encoded with GSM 7-Bit alphabets with '*'.
+          c = '*';
+          if (langTable.indexOf(c) >= 0) {
+            inc = 1;
+          }
+        }
+      }
+
+      if ((len + inc) > segmentSeptets) {
+        ret.push({
+          body: body,
+          encodedBodyLength: len,
+        });
+        body = c;
+        len = inc;
+      } else {
+        body += c;
+        len += inc;
+      }
+    }
+
+    if (len) {
+      ret.push({
+        body: body,
+        encodedBodyLength: len,
+      });
+    }
+
+    return ret;
+  },
+
+  /**
+   * Fragment UCS2 encodable string for transmission.
+   *
+   * @param text
+   *        text string to be fragmented.
+   * @param segmentChars
+   *        Number of available characters per segment.
+   *
+   * @return an array of objects. See #_fragmentText() for detailed definition.
+   */
+  _fragmentTextUCS2: function _fragmentTextUCS2(text, segmentChars) {
+    let ret = [];
+    for (let offset = 0; offset < text.length; offset += segmentChars) {
+      let str = text.substr(offset, segmentChars);
+      ret.push({
+        body: str,
+        encodedBodyLength: str.length * 2,
+      });
+    }
+
+    return ret;
+  },
+
+  /**
+   * Fragment string for transmission.
+   *
+   * Fragment input text string into an array of objects that contains
+   * attributes `body`, substring for this segment, `encodedBodyLength`,
+   * length of the encoded segment body in septets.
+   *
+   * @param text
+   *        Text string to be fragmented.
+   * @param options
+   *        Optional pre-calculated option object. The output array will be
+   *        stored at options.segments if there are multiple segments.
+   * @param strict7BitEncoding
+   *        Optional. Enable Latin characters replacement with corresponding
+   *        ones in GSM SMS 7-bit default alphabet.
+   *
+   * @return Populated options object.
+   */
+  _fragmentText: function _fragmentText(text, options, strict7BitEncoding) {
+    if (!options) {
+      options = this._calculateUserDataLength(text, strict7BitEncoding);
+    }
+
+    if (options.dcs == RIL.PDU_DCS_MSG_CODING_7BITS_ALPHABET) {
+      const langTable = RIL.PDU_NL_LOCKING_SHIFT_TABLES[options.langIndex];
+      const langShiftTable = RIL.PDU_NL_SINGLE_SHIFT_TABLES[options.langShiftIndex];
+      options.segments = this._fragmentText7Bit(text,
+                                                langTable, langShiftTable,
+                                                options.segmentChars,
+                                                strict7BitEncoding);
+    } else {
+      options.segments = this._fragmentTextUCS2(text,
+                                                options.segmentChars);
+    }
+
+    // Re-sync options.segmentMaxSeq with actual length of returning array.
+    options.segmentMaxSeq = options.segments.length;
+
+    return options;
+  },
+
+  getSegmentInfoForText: function getSegmentInfoForText(text, request) {
+    let strict7BitEncoding;
+    try {
+      strict7BitEncoding = Services.prefs.getBoolPref("dom.sms.strict7BitEncoding");
+    } catch (e) {
+      strict7BitEncoding = false;
+    }
+
+    let options = this._fragmentText(text, null, strict7BitEncoding);
+    let charsInLastSegment;
+    if (options.segmentMaxSeq) {
+      let lastSegment = options.segments[options.segmentMaxSeq - 1];
+      charsInLastSegment = lastSegment.encodedBodyLength;
+      if (options.dcs == RIL.PDU_DCS_MSG_CODING_16BITS_ALPHABET) {
+        // In UCS2 encoding, encodedBodyLength is in octets.
+        charsInLastSegment /= 2;
+      }
+    } else {
+      charsInLastSegment = 0;
+    }
+
+    let result = gMobileMessageService
+                 .createSmsSegmentInfo(options.segmentMaxSeq,
+                                       options.segmentChars,
+                                       options.segmentChars - charsInLastSegment);
+    request.notifySegmentInfoForTextGot(result);
+  },
+
+  sendSMS: function sendSMS(number, message, silent, request) {
+    let strict7BitEncoding;
+    try {
+      strict7BitEncoding = Services.prefs.getBoolPref("dom.sms.strict7BitEncoding");
+    } catch (e) {
+      strict7BitEncoding = false;
+    }
+
+    let options = this._fragmentText(message, null, strict7BitEncoding);
+    options.number = PhoneNumberUtils.normalize(number);
+    let requestStatusReport;
+    try {
+      requestStatusReport =
+        Services.prefs.getBoolPref("dom.sms.requestStatusReport");
+    } catch (e) {
+      requestStatusReport = true;
+    }
+    options.requestStatusReport = requestStatusReport && !silent;
+    if (options.segmentMaxSeq > 1) {
+      options.segmentRef16Bit = this.segmentRef16Bit;
+      options.segmentRef = this.nextSegmentRef;
+    }
+
+    let notifyResult = (function notifyResult(rv, domMessage) {
+      // TODO bug 832140 handle !Components.isSuccessCode(rv)
+      if (!silent) {
+        Services.obs.notifyObservers(domMessage, kSmsSendingObserverTopic, null);
+      }
+
+      // If the radio is disabled or the SIM card is not ready, just directly
+      // return with the corresponding error code.
+      let errorCode;
+      if (!PhoneNumberUtils.isPlainPhoneNumber(options.number)) {
+        if (DEBUG) this.debug("Error! Address is invalid when sending SMS: " +
+                              options.number);
+        errorCode = Ci.nsIMobileMessageCallback.INVALID_ADDRESS_ERROR;
+      } else if (!this._radioEnabled) {
+        if (DEBUG) this.debug("Error! Radio is disabled when sending SMS.");
+        errorCode = Ci.nsIMobileMessageCallback.RADIO_DISABLED_ERROR;
+      } else if (this.rilContext.cardState != "ready") {
+        if (DEBUG) this.debug("Error! SIM card is not ready when sending SMS.");
+        errorCode = Ci.nsIMobileMessageCallback.NO_SIM_CARD_ERROR;
+      }
+      if (errorCode) {
+        if (silent) {
+          request.notifySendMessageFailed(errorCode);
+          return;
+        }
+
+        gMobileMessageDatabaseService
+          .setMessageDeliveryByMessageId(domMessage.id,
+                                         null,
+                                         DOM_MOBILE_MESSAGE_DELIVERY_ERROR,
+                                         RIL.GECKO_SMS_DELIVERY_STATUS_ERROR,
+                                         null,
+                                         function notifyResult(rv, domMessage) {
+          // TODO bug 832140 handle !Components.isSuccessCode(rv)
+          request.notifySendMessageFailed(errorCode);
+          Services.obs.notifyObservers(domMessage, kSmsFailedObserverTopic, null);
+        });
+        return;
+      }
+
+      // Keep current SMS message info for sent/delivered notifications
+      let context = {
+        request: request,
+        sms: domMessage,
+        requestStatusReport: options.requestStatusReport,
+        silent: silent
+      };
+
+      // This is the entry point starting to send SMS.
+      this.workerMessenger.send("sendSMS", options,
+                                (function(context, response) {
+        if (response.errorMsg) {
+          // Failed to send SMS out.
+          let error = Ci.nsIMobileMessageCallback.UNKNOWN_ERROR;
+          switch (response.errorMsg) {
+            case RIL.ERROR_RADIO_NOT_AVAILABLE:
+              error = Ci.nsIMobileMessageCallback.NO_SIGNAL_ERROR;
+              break;
+          }
+
+          if (context.silent) {
+            context.request.notifySendMessageFailed(error);
+            return false;
+          }
+
+          gMobileMessageDatabaseService
+            .setMessageDeliveryByMessageId(context.sms.id,
+                                           null,
+                                           DOM_MOBILE_MESSAGE_DELIVERY_ERROR,
+                                           RIL.GECKO_SMS_DELIVERY_STATUS_ERROR,
+                                           null,
+                                           function notifyResult(rv, domMessage) {
+            // TODO bug 832140 handle !Components.isSuccessCode(rv)
+            context.request.notifySendMessageFailed(error);
+            Services.obs.notifyObservers(domMessage, kSmsFailedObserverTopic, null);
+          });
+          return false;
+        } // End of send failure.
+
+        if (response.deliveryStatus) {
+          // Message delivery.
+          gMobileMessageDatabaseService
+            .setMessageDeliveryByMessageId(context.sms.id,
+                                           null,
+                                           context.sms.delivery,
+                                           response.deliveryStatus,
+                                           null,
+                                           function notifyResult(rv, domMessage) {
+            // TODO bug 832140 handle !Components.isSuccessCode(rv)
+            let topic = (response.deliveryStatus == RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS)
+                        ? kSmsDeliverySuccessObserverTopic
+                        : kSmsDeliveryErrorObserverTopic;
+            Services.obs.notifyObservers(domMessage, topic, null);
+          });
+
+          // Send transaction has ended completely.
+          return false;
+        } // End of message delivery.
+
+        // Message sent.
+        if (context.silent) {
+          // There is no way to modify nsIDOMMozSmsMessage attributes as they are
+          // read only so we just create a new sms instance to send along with
+          // the notification.
+          let sms = context.sms;
+          context.request.notifyMessageSent(
+            gMobileMessageService.createSmsMessage(sms.id,
+                                                   sms.threadId,
+                                                   DOM_MOBILE_MESSAGE_DELIVERY_SENT,
+                                                   sms.deliveryStatus,
+                                                   sms.sender,
+                                                   sms.receiver,
+                                                   sms.body,
+                                                   sms.messageClass,
+                                                   sms.timestamp,
+                                                   sms.read));
+          // We don't wait for SMS-DELIVER-REPORT for silent one.
+          return false;
+        }
+
+        gMobileMessageDatabaseService
+          .setMessageDeliveryByMessageId(context.sms.id,
+                                         null,
+                                         DOM_MOBILE_MESSAGE_DELIVERY_SENT,
+                                         context.sms.deliveryStatus,
+                                         null,
+                                         (function notifyResult(rv, domMessage) {
+          // TODO bug 832140 handle !Components.isSuccessCode(rv)
+          this.broadcastSmsSystemMessage("sms-sent", domMessage);
+
+          if (context.requestStatusReport) {
+            context.sms = domMessage;
+          }
+
+          context.request.notifyMessageSent(domMessage);
+          Services.obs.notifyObservers(domMessage, kSmsSentObserverTopic, null);
+        }).bind(this));
+
+        // Only keep current context if we have requested for delivery report.
+        return context.requestStatusReport;
+      }).bind(this, context)); // End of |workerMessenger.send| callback.
+    }).bind(this); // End of DB saveSendingMessage callback.
+
+    let sendingMessage = {
+      type: "sms",
+      sender: this.getMsisdn(),
+      receiver: number,
+      body: message,
+      deliveryStatusRequested: options.requestStatusReport,
+      timestamp: Date.now()
+    };
+
+    if (silent) {
+      let deliveryStatus = RIL.GECKO_SMS_DELIVERY_STATUS_PENDING;
+      let delivery = DOM_MOBILE_MESSAGE_DELIVERY_SENDING;
+      let domMessage =
+        gMobileMessageService.createSmsMessage(-1, // id
+                                               0,  // threadId
+                                               delivery,
+                                               deliveryStatus,
+                                               sendingMessage.sender,
+                                               sendingMessage.receiver,
+                                               sendingMessage.body,
+                                               "normal", // message class
+                                               sendingMessage.timestamp,
+                                               false);
+      notifyResult(Cr.NS_OK, domMessage);
+      return;
+    }
+
+    let id = gMobileMessageDatabaseService.saveSendingMessage(
+      sendingMessage, notifyResult);
   },
 
   registerDataCallCallback: function registerDataCallCallback(callback) {
@@ -1834,13 +3362,6 @@ RadioInterface.prototype = {
     this.workerMessenger.send("deactivateDataCall", { cid: cid,
                                                       reason: reason });
   },
-
-  sendWorkerMessage: function sendWorkerMessage(rilMessageType, message,
-                                                callback) {
-    this.workerMessenger.send(rilMessageType, message, function (response) {
-      return callback.handleResponse(response);
-    });
-  }
 };
 
 function RILNetworkInterface(radioInterface, apnSetting) {
