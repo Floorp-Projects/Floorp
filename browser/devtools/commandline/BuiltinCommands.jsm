@@ -1648,7 +1648,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppCacheUtils",
 
 (function(module) {
   XPCOMUtils.defineLazyModuleGetter(this, "LayoutHelpers",
-                                    "resource:///modules/devtools/LayoutHelpers.jsm");
+                                    "resource://gre/modules/devtools/LayoutHelpers.jsm");
 
   // String used as an indication to generate default file name in the following
   // format: "Screen Shot yyyy-mm-dd at HH.MM.SS.png"
