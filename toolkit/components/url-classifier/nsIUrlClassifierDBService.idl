@@ -79,9 +79,9 @@ interface nsIUrlClassifierUpdateObserver : nsISupports {
 interface nsIUrlClassifierDBService : nsISupports
 {
   /**
-   * Looks up a key in the database.
+   * Looks up a URI in the database.
    *
-   * @param key: The principal containing the information to search.
+   * @param principal: The principal containing the URI to search.
    * @param c: The callback will be called with a comma-separated list
    *        of tables to which the key belongs.
    */

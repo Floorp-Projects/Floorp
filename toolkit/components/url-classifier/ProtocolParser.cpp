@@ -222,6 +222,7 @@ ProtocolParser::ProcessControl(bool* aDone)
       rv = ProcessMAC(line);
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("i:"))) {
+      // Set the table name from the table header line.
       SetCurrentTable(Substring(line, 2));
     } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("n:"))) {
       if (PR_sscanf(line.get(), "n:%d", &mUpdateWait) != 1) {
@@ -330,12 +331,30 @@ ProtocolParser::ProcessChunkControl(const nsCString& aLine)
     return NS_ERROR_FAILURE;
   }
 
-  mChunkState.type = (command == 'a') ? CHUNK_ADD : CHUNK_SUB;
-
-  if (mChunkState.type == CHUNK_ADD) {
-    mTableUpdate->NewAddChunk(mChunkState.num);
-  } else {
-    mTableUpdate->NewSubChunk(mChunkState.num);
+  if (StringEndsWith(mTableUpdate->TableName(),
+                     NS_LITERAL_CSTRING("-shavar")) ||
+      StringEndsWith(mTableUpdate->TableName(),
+                     NS_LITERAL_CSTRING("-simple"))) {
+    // Accommodate test tables ending in -simple for now.
+    mChunkState.type = (command == 'a') ? CHUNK_ADD : CHUNK_SUB;
+  } else if (StringEndsWith(mTableUpdate->TableName(),
+    NS_LITERAL_CSTRING("-digest256"))) {
+    LOG(("Processing digest256 data"));
+    mChunkState.type = (command == 'a') ? CHUNK_ADD_DIGEST : CHUNK_SUB_DIGEST;
+  }
+  switch (mChunkState.type) {
+    case CHUNK_ADD:
+      mTableUpdate->NewAddChunk(mChunkState.num);
+      break;
+    case CHUNK_SUB:
+      mTableUpdate->NewSubChunk(mChunkState.num);
+      break;
+    case CHUNK_ADD_DIGEST:
+      mTableUpdate->NewAddChunk(mChunkState.num);
+      break;
+    case CHUNK_SUB_DIGEST:
+      mTableUpdate->NewSubChunk(mChunkState.num);
+      break;
   }
 
   return NS_OK;
@@ -406,11 +425,15 @@ ProtocolParser::ProcessChunk(bool* aDone)
   mState = PROTOCOL_STATE_CONTROL;
 
   //LOG(("Handling a %d-byte chunk", chunk.Length()));
-  if (StringEndsWith(mTableUpdate->TableName(), NS_LITERAL_CSTRING("-shavar"))) {
+  if (StringEndsWith(mTableUpdate->TableName(),
+                     NS_LITERAL_CSTRING("-shavar"))) {
     return ProcessShaChunk(chunk);
-  } else {
-    return ProcessPlaintextChunk(chunk);
   }
+  if (StringEndsWith(mTableUpdate->TableName(),
+             NS_LITERAL_CSTRING("-digest256"))) {
+    return ProcessDigestChunk(chunk);
+  }
+  return ProcessPlaintextChunk(chunk);
 }
 
 /**
@@ -508,6 +531,61 @@ ProtocolParser::ProcessShaChunk(const nsACString& aChunk)
 }
 
 nsresult
+ProtocolParser::ProcessDigestChunk(const nsACString& aChunk)
+{
+  if (mChunkState.type == CHUNK_ADD_DIGEST) {
+    return ProcessDigestAdd(aChunk);
+  }
+  if (mChunkState.type == CHUNK_SUB_DIGEST) {
+    return ProcessDigestSub(aChunk);
+  }
+  return NS_ERROR_UNEXPECTED;
+}
+
+nsresult
+ProtocolParser::ProcessDigestAdd(const nsACString& aChunk)
+{
+  // The ABNF format for add chunks is (HASH)+, where HASH is 32 bytes.
+  MOZ_ASSERT(aChunk.Length() % 32 == 0,
+             "Chunk length in bytes must be divisible by 4");
+  uint32_t start = 0;
+  while (start < aChunk.Length()) {
+    Completion hash;
+    hash.Assign(Substring(aChunk, start, COMPLETE_SIZE));
+    start += COMPLETE_SIZE;
+    mTableUpdate->NewAddComplete(mChunkState.num, hash);
+  }
+  return NS_OK;
+}
+
+nsresult
+ProtocolParser::ProcessDigestSub(const nsACString& aChunk)
+{
+  // The ABNF format for sub chunks is (ADDCHUNKNUM HASH)+, where ADDCHUNKNUM
+  // is a 4 byte chunk number, and HASH is 32 bytes.
+  MOZ_ASSERT(aChunk.Length() % 36 == 0,
+             "Chunk length in bytes must be divisible by 36");
+  uint32_t start = 0;
+  while (start < aChunk.Length()) {
+    // Read ADDCHUNKNUM
+    const nsCSubstring& addChunkStr = Substring(aChunk, start, 4);
+    start += 4;
+
+    uint32_t addChunk;
+    memcpy(&addChunk, addChunkStr.BeginReading(), 4);
+    addChunk = PR_ntohl(addChunk);
+
+    // Read the hash
+    Completion hash;
+    hash.Assign(Substring(aChunk, start, COMPLETE_SIZE));
+    start += COMPLETE_SIZE;
+
+    mTableUpdate->NewSubComplete(addChunk, hash, mChunkState.num);
+  }
+  return NS_OK;
+}
+
+nsresult
 ProtocolParser::ProcessHostAdd(const Prefix& aDomain, uint8_t aNumEntries,
                                const nsACString& aChunk, uint32_t* aStart)
 {
@@ -590,6 +668,7 @@ ProtocolParser::ProcessHostAddComplete(uint8_t aNumEntries,
 
   if (aNumEntries == 0) {
     // this is totally comprehensible.
+    // My sarcasm detector is going off!
     NS_WARNING("Expected > 0 entries for a 32-byte hash add.");
     return NS_OK;
   }
@@ -684,5 +763,5 @@ ProtocolParser::GetTableUpdate(const nsACString& aTable)
   return update;
 }
 
-}
-}
+} // namespace safebrowsing
+} // namespace mozilla
