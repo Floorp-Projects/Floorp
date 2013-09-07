@@ -1,5 +1,6 @@
+#include "precompiled.h"
 //
-// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -8,21 +9,21 @@
 // and related functionality. [OpenGL ES 2.0.24] section 2.10.3 page 28.
 
 #include "libGLESv2/BinaryStream.h"
-#include "libGLESv2/Program.h"
 #include "libGLESv2/ProgramBinary.h"
+#include "libGLESv2/renderer/ShaderExecutable.h"
 
 #include "common/debug.h"
 #include "common/version.h"
+#include "utilities.h"
 
 #include "libGLESv2/main.h"
 #include "libGLESv2/Shader.h"
-#include "libGLESv2/utilities.h"
+#include "libGLESv2/Program.h"
+#include "libGLESv2/renderer/Renderer.h"
+#include "libGLESv2/renderer/VertexDataManager.h"
 
-#include <string>
-
-#if !defined(ANGLE_COMPILE_OPTIMIZATION_LEVEL)
-#define ANGLE_COMPILE_OPTIMIZATION_LEVEL D3DCOMPILE_OPTIMIZATION_LEVEL3
-#endif
+#undef near
+#undef far
 
 namespace gl
 {
@@ -33,43 +34,18 @@ std::string str(int i)
     return buffer;
 }
 
-Uniform::Uniform(GLenum type, const std::string &_name, unsigned int arraySize)
-    : type(type), _name(_name), name(ProgramBinary::undecorateUniform(_name)), arraySize(arraySize)
-{
-    int bytes = UniformInternalSize(type) * arraySize;
-    data = new unsigned char[bytes];
-    memset(data, 0, bytes);
-    dirty = true;
-}
-
-Uniform::~Uniform()
-{
-    delete[] data;
-}
-
-bool Uniform::isArray()
-{
-    size_t dot = _name.find_last_of('.');
-    if (dot == std::string::npos) dot = -1;
-
-    return _name.compare(dot + 1, dot + 4, "ar_") == 0;
-}
-
-UniformLocation::UniformLocation(const std::string &_name, unsigned int element, unsigned int index) 
-    : name(ProgramBinary::undecorateUniform(_name)), element(element), index(index)
+UniformLocation::UniformLocation(const std::string &name, unsigned int element, unsigned int index) 
+    : name(name), element(element), index(index)
 {
 }
 
 unsigned int ProgramBinary::mCurrentSerial = 1;
 
-ProgramBinary::ProgramBinary() : RefCountObject(0), mSerial(issueSerial())
+ProgramBinary::ProgramBinary(rx::Renderer *renderer) : mRenderer(renderer), RefCountObject(0), mSerial(issueSerial())
 {
-    mDevice = getDevice();
-
     mPixelExecutable = NULL;
     mVertexExecutable = NULL;
-    mConstantTablePS = NULL;
-    mConstantTableVS = NULL;
+    mGeometryExecutable = NULL;
 
     mValidated = false;
 
@@ -83,36 +59,26 @@ ProgramBinary::ProgramBinary() : RefCountObject(0), mSerial(issueSerial())
         mSamplersPS[index].active = false;
     }
 
-    for (int index = 0; index < MAX_VERTEX_TEXTURE_IMAGE_UNITS_VTF; index++)
+    for (int index = 0; index < IMPLEMENTATION_MAX_VERTEX_TEXTURE_IMAGE_UNITS; index++)
     {
         mSamplersVS[index].active = false;
     }
 
     mUsedVertexSamplerRange = 0;
     mUsedPixelSamplerRange = 0;
-
-    mDxDepthRangeLocation = -1;
-    mDxDepthLocation = -1;
-    mDxCoordLocation = -1;
-    mDxHalfPixelSizeLocation = -1;
-    mDxFrontCCWLocation = -1;
-    mDxPointsOrLinesLocation = -1;
+    mUsesPointSize = false;
 }
 
 ProgramBinary::~ProgramBinary()
 {
-    if (mPixelExecutable)
-    {
-        mPixelExecutable->Release();
-    }
+    delete mPixelExecutable;
+    mPixelExecutable = NULL;
 
-    if (mVertexExecutable)
-    {
-        mVertexExecutable->Release();
-    }
+    delete mVertexExecutable;
+    mVertexExecutable = NULL;
 
-    delete mConstantTablePS;
-    delete mConstantTableVS;
+    delete mGeometryExecutable;
+    mGeometryExecutable = NULL;
 
     while (!mUniforms.empty())
     {
@@ -131,14 +97,19 @@ unsigned int ProgramBinary::issueSerial()
     return mCurrentSerial++;
 }
 
-IDirect3DPixelShader9 *ProgramBinary::getPixelShader()
+rx::ShaderExecutable *ProgramBinary::getPixelExecutable()
 {
     return mPixelExecutable;
 }
 
-IDirect3DVertexShader9 *ProgramBinary::getVertexShader()
+rx::ShaderExecutable *ProgramBinary::getVertexExecutable()
 {
     return mVertexExecutable;
+}
+
+rx::ShaderExecutable *ProgramBinary::getGeometryExecutable()
+{
+    return mGeometryExecutable;
 }
 
 GLuint ProgramBinary::getAttributeLocation(const char *name)
@@ -184,6 +155,16 @@ bool ProgramBinary::usesPointSize() const
     return mUsesPointSize;
 }
 
+bool ProgramBinary::usesPointSpriteEmulation() const
+{
+    return mUsesPointSize && mRenderer->getMajorShaderModel() >= 4;
+}
+
+bool ProgramBinary::usesGeometryShader() const
+{
+    return usesPointSpriteEmulation();
+}
+
 // Returns the index of the texture image unit (0-19) corresponding to a Direct3D 9 sampler
 // index (0-15 for the pixel shader and 0-3 for the vertex shader).
 GLint ProgramBinary::getSamplerMapping(SamplerType type, unsigned int samplerIndex)
@@ -211,7 +192,7 @@ GLint ProgramBinary::getSamplerMapping(SamplerType type, unsigned int samplerInd
       default: UNREACHABLE();
     }
 
-    if (logicalTextureUnit >= 0 && logicalTextureUnit < (GLint)getContext()->getMaximumCombinedTextureImageUnits())
+    if (logicalTextureUnit >= 0 && logicalTextureUnit < (GLint)mRenderer->getMaxCombinedTextureImageUnits())
     {
         return logicalTextureUnit;
     }
@@ -275,15 +256,15 @@ bool ProgramBinary::setUniform1fv(GLint location, GLsizei count, const GLfloat* 
     Uniform *targetUniform = mUniforms[mUniformIndex[location].index];
     targetUniform->dirty = true;
 
+    int elementCount = targetUniform->elementCount();
+
+    if (elementCount == 1 && count > 1)
+        return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
+
+    count = std::min(elementCount - (int)mUniformIndex[location].element, count);
+
     if (targetUniform->type == GL_FLOAT)
     {
-        int arraySize = targetUniform->arraySize;
-
-        if (arraySize == 1 && count > 1)
-            return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
-
-        count = std::min(arraySize - (int)mUniformIndex[location].element, count);
-
         GLfloat *target = (GLfloat*)targetUniform->data + mUniformIndex[location].element * 4;
 
         for (int i = 0; i < count; i++)
@@ -298,24 +279,16 @@ bool ProgramBinary::setUniform1fv(GLint location, GLsizei count, const GLfloat* 
     }
     else if (targetUniform->type == GL_BOOL)
     {
-        int arraySize = targetUniform->arraySize;
+        GLint *boolParams = (GLint*)targetUniform->data + mUniformIndex[location].element * 4;
 
-        if (arraySize == 1 && count > 1)
-            return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
-
-        count = std::min(arraySize - (int)mUniformIndex[location].element, count);
-        GLboolean *boolParams = (GLboolean*)targetUniform->data + mUniformIndex[location].element;
-
-        for (int i = 0; i < count; ++i)
+        for (int i = 0; i < count; i++)
         {
-            if (v[i] == 0.0f)
-            {
-                boolParams[i] = GL_FALSE;
-            }
-            else
-            {
-                boolParams[i] = GL_TRUE;
-            }
+            boolParams[0] = (v[0] == 0.0f) ? GL_FALSE : GL_TRUE;
+            boolParams[1] = GL_FALSE;
+            boolParams[2] = GL_FALSE;
+            boolParams[3] = GL_FALSE;
+            boolParams += 4;
+            v += 1;
         }
     }
     else
@@ -336,15 +309,15 @@ bool ProgramBinary::setUniform2fv(GLint location, GLsizei count, const GLfloat *
     Uniform *targetUniform = mUniforms[mUniformIndex[location].index];
     targetUniform->dirty = true;
 
+    int elementCount = targetUniform->elementCount();
+
+    if (elementCount == 1 && count > 1)
+        return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
+
+    count = std::min(elementCount - (int)mUniformIndex[location].element, count);
+
     if (targetUniform->type == GL_FLOAT_VEC2)
     {
-        int arraySize = targetUniform->arraySize;
-
-        if (arraySize == 1 && count > 1)
-            return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
-
-        count = std::min(arraySize - (int)mUniformIndex[location].element, count);
-
         GLfloat *target = (GLfloat*)targetUniform->data + mUniformIndex[location].element * 4;
 
         for (int i = 0; i < count; i++)
@@ -359,25 +332,16 @@ bool ProgramBinary::setUniform2fv(GLint location, GLsizei count, const GLfloat *
     }
     else if (targetUniform->type == GL_BOOL_VEC2)
     {
-        int arraySize = targetUniform->arraySize;
+        GLint *boolParams = (GLint*)targetUniform->data + mUniformIndex[location].element * 4;
 
-        if (arraySize == 1 && count > 1)
-            return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
-
-        count = std::min(arraySize - (int)mUniformIndex[location].element, count);
-
-        GLboolean *boolParams = (GLboolean*)targetUniform->data + mUniformIndex[location].element * 2;
-
-        for (int i = 0; i < count * 2; ++i)
+        for (int i = 0; i < count; i++)
         {
-            if (v[i] == 0.0f)
-            {
-                boolParams[i] = GL_FALSE;
-            }
-            else
-            {
-                boolParams[i] = GL_TRUE;
-            }
+            boolParams[0] = (v[0] == 0.0f) ? GL_FALSE : GL_TRUE;
+            boolParams[1] = (v[1] == 0.0f) ? GL_FALSE : GL_TRUE;
+            boolParams[2] = GL_FALSE;
+            boolParams[3] = GL_FALSE;
+            boolParams += 4;
+            v += 2;
         }
     }
     else 
@@ -398,15 +362,15 @@ bool ProgramBinary::setUniform3fv(GLint location, GLsizei count, const GLfloat *
     Uniform *targetUniform = mUniforms[mUniformIndex[location].index];
     targetUniform->dirty = true;
 
+    int elementCount = targetUniform->elementCount();
+
+    if (elementCount == 1 && count > 1)
+        return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
+
+    count = std::min(elementCount - (int)mUniformIndex[location].element, count);
+
     if (targetUniform->type == GL_FLOAT_VEC3)
     {
-        int arraySize = targetUniform->arraySize;
-
-        if (arraySize == 1 && count > 1)
-            return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
-
-        count = std::min(arraySize - (int)mUniformIndex[location].element, count);
-
         GLfloat *target = (GLfloat*)targetUniform->data + mUniformIndex[location].element * 4;
 
         for (int i = 0; i < count; i++)
@@ -421,24 +385,16 @@ bool ProgramBinary::setUniform3fv(GLint location, GLsizei count, const GLfloat *
     }
     else if (targetUniform->type == GL_BOOL_VEC3)
     {
-        int arraySize = targetUniform->arraySize;
+        GLint *boolParams = (GLint*)targetUniform->data + mUniformIndex[location].element * 4;
 
-        if (arraySize == 1 && count > 1)
-            return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
-
-        count = std::min(arraySize - (int)mUniformIndex[location].element, count);
-        GLboolean *boolParams = (GLboolean*)targetUniform->data + mUniformIndex[location].element * 3;
-
-        for (int i = 0; i < count * 3; ++i)
+        for (int i = 0; i < count; i++)
         {
-            if (v[i] == 0.0f)
-            {
-                boolParams[i] = GL_FALSE;
-            }
-            else
-            {
-                boolParams[i] = GL_TRUE;
-            }
+            boolParams[0] = (v[0] == 0.0f) ? GL_FALSE : GL_TRUE;
+            boolParams[1] = (v[1] == 0.0f) ? GL_FALSE : GL_TRUE;
+            boolParams[2] = (v[2] == 0.0f) ? GL_FALSE : GL_TRUE;
+            boolParams[3] = GL_FALSE;
+            boolParams += 4;
+            v += 3;
         }
     }
     else 
@@ -459,38 +415,39 @@ bool ProgramBinary::setUniform4fv(GLint location, GLsizei count, const GLfloat *
     Uniform *targetUniform = mUniforms[mUniformIndex[location].index];
     targetUniform->dirty = true;
 
+    int elementCount = targetUniform->elementCount();
+
+    if (elementCount == 1 && count > 1)
+        return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
+
+    count = std::min(elementCount - (int)mUniformIndex[location].element, count);
+
     if (targetUniform->type == GL_FLOAT_VEC4)
     {
-        int arraySize = targetUniform->arraySize;
+        GLfloat *target = (GLfloat*)targetUniform->data + mUniformIndex[location].element * 4;
 
-        if (arraySize == 1 && count > 1)
-            return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
-
-        count = std::min(arraySize - (int)mUniformIndex[location].element, count);
-
-        memcpy(targetUniform->data + mUniformIndex[location].element * sizeof(GLfloat) * 4,
-               v, 4 * sizeof(GLfloat) * count);
+        for (int i = 0; i < count; i++)
+        {
+            target[0] = v[0];
+            target[1] = v[1];
+            target[2] = v[2];
+            target[3] = v[3];
+            target += 4;
+            v += 4;
+        }
     }
     else if (targetUniform->type == GL_BOOL_VEC4)
     {
-        int arraySize = targetUniform->arraySize;
+        GLint *boolParams = (GLint*)targetUniform->data + mUniformIndex[location].element * 4;
 
-        if (arraySize == 1 && count > 1)
-            return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
-
-        count = std::min(arraySize - (int)mUniformIndex[location].element, count);
-        GLboolean *boolParams = (GLboolean*)targetUniform->data + mUniformIndex[location].element * 4;
-
-        for (int i = 0; i < count * 4; ++i)
+        for (int i = 0; i < count; i++)
         {
-            if (v[i] == 0.0f)
-            {
-                boolParams[i] = GL_FALSE;
-            }
-            else
-            {
-                boolParams[i] = GL_TRUE;
-            }
+            boolParams[0] = (v[0] == 0.0f) ? GL_FALSE : GL_TRUE;
+            boolParams[1] = (v[1] == 0.0f) ? GL_FALSE : GL_TRUE;
+            boolParams[2] = (v[2] == 0.0f) ? GL_FALSE : GL_TRUE;
+            boolParams[3] = (v[3] == 0.0f) ? GL_FALSE : GL_TRUE;
+            boolParams += 4;
+            v += 4;
         }
     }
     else 
@@ -547,14 +504,14 @@ bool ProgramBinary::setUniformMatrix2fv(GLint location, GLsizei count, const GLf
         return false;
     }
 
-    int arraySize = targetUniform->arraySize;
+    int elementCount = targetUniform->elementCount();
 
-    if (arraySize == 1 && count > 1)
+    if (elementCount == 1 && count > 1)
         return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
 
-    count = std::min(arraySize - (int)mUniformIndex[location].element, count);
-
+    count = std::min(elementCount - (int)mUniformIndex[location].element, count);
     GLfloat *target = (GLfloat*)targetUniform->data + mUniformIndex[location].element * 8;
+
     for (int i = 0; i < count; i++)
     {
         transposeMatrix<GLfloat,4,2,2,2>(target, value);
@@ -580,14 +537,14 @@ bool ProgramBinary::setUniformMatrix3fv(GLint location, GLsizei count, const GLf
         return false;
     }
 
-    int arraySize = targetUniform->arraySize;
+    int elementCount = targetUniform->elementCount();
 
-    if (arraySize == 1 && count > 1)
+    if (elementCount == 1 && count > 1)
         return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
 
-    count = std::min(arraySize - (int)mUniformIndex[location].element, count);
-
+    count = std::min(elementCount - (int)mUniformIndex[location].element, count);
     GLfloat *target = (GLfloat*)targetUniform->data + mUniformIndex[location].element * 12;
+
     for (int i = 0; i < count; i++)
     {
         transposeMatrix<GLfloat,4,3,3,3>(target, value);
@@ -614,14 +571,14 @@ bool ProgramBinary::setUniformMatrix4fv(GLint location, GLsizei count, const GLf
         return false;
     }
 
-    int arraySize = targetUniform->arraySize;
+    int elementCount = targetUniform->elementCount();
 
-    if (arraySize == 1 && count > 1)
+    if (elementCount == 1 && count > 1)
         return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
 
-    count = std::min(arraySize - (int)mUniformIndex[location].element, count);
-
+    count = std::min(elementCount - (int)mUniformIndex[location].element, count);
     GLfloat *target = (GLfloat*)(targetUniform->data + mUniformIndex[location].element * sizeof(GLfloat) * 16);
+
     for (int i = 0; i < count; i++)
     {
         transposeMatrix<GLfloat,4,4,4,4>(target, value);
@@ -642,40 +599,41 @@ bool ProgramBinary::setUniform1iv(GLint location, GLsizei count, const GLint *v)
     Uniform *targetUniform = mUniforms[mUniformIndex[location].index];
     targetUniform->dirty = true;
 
+    int elementCount = targetUniform->elementCount();
+
+    if (elementCount == 1 && count > 1)
+        return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
+
+    count = std::min(elementCount - (int)mUniformIndex[location].element, count);
+
     if (targetUniform->type == GL_INT ||
         targetUniform->type == GL_SAMPLER_2D ||
         targetUniform->type == GL_SAMPLER_CUBE)
     {
-        int arraySize = targetUniform->arraySize;
+        GLint *target = (GLint*)targetUniform->data + mUniformIndex[location].element * 4;
 
-        if (arraySize == 1 && count > 1)
-            return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
-
-        count = std::min(arraySize - (int)mUniformIndex[location].element, count);
-
-        memcpy(targetUniform->data + mUniformIndex[location].element * sizeof(GLint),
-               v, sizeof(GLint) * count);
+        for (int i = 0; i < count; i++)
+        {
+            target[0] = v[0];
+            target[1] = 0;
+            target[2] = 0;
+            target[3] = 0;
+            target += 4;
+            v += 1;
+        }
     }
     else if (targetUniform->type == GL_BOOL)
     {
-        int arraySize = targetUniform->arraySize;
+        GLint *boolParams = (GLint*)targetUniform->data + mUniformIndex[location].element * 4;
 
-        if (arraySize == 1 && count > 1)
-            return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
-
-        count = std::min(arraySize - (int)mUniformIndex[location].element, count);
-        GLboolean *boolParams = (GLboolean*)targetUniform->data + mUniformIndex[location].element;
-
-        for (int i = 0; i < count; ++i)
+        for (int i = 0; i < count; i++)
         {
-            if (v[i] == 0)
-            {
-                boolParams[i] = GL_FALSE;
-            }
-            else
-            {
-                boolParams[i] = GL_TRUE;
-            }
+            boolParams[0] = (v[0] == 0) ? GL_FALSE : GL_TRUE;
+            boolParams[1] = GL_FALSE;
+            boolParams[2] = GL_FALSE;
+            boolParams[3] = GL_FALSE;
+            boolParams += 4;
+            v += 1;
         }
     }
     else
@@ -696,38 +654,39 @@ bool ProgramBinary::setUniform2iv(GLint location, GLsizei count, const GLint *v)
     Uniform *targetUniform = mUniforms[mUniformIndex[location].index];
     targetUniform->dirty = true;
 
+    int elementCount = targetUniform->elementCount();
+
+    if (elementCount == 1 && count > 1)
+        return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
+
+    count = std::min(elementCount - (int)mUniformIndex[location].element, count);
+
     if (targetUniform->type == GL_INT_VEC2)
     {
-        int arraySize = targetUniform->arraySize;
+        GLint *target = (GLint*)targetUniform->data + mUniformIndex[location].element * 4;
 
-        if (arraySize == 1 && count > 1)
-            return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
-
-        count = std::min(arraySize - (int)mUniformIndex[location].element, count);
-
-        memcpy(targetUniform->data + mUniformIndex[location].element * sizeof(GLint) * 2,
-               v, 2 * sizeof(GLint) * count);
+        for (int i = 0; i < count; i++)
+        {
+            target[0] = v[0];
+            target[1] = v[1];
+            target[2] = 0;
+            target[3] = 0;
+            target += 4;
+            v += 2;
+        }
     }
     else if (targetUniform->type == GL_BOOL_VEC2)
     {
-        int arraySize = targetUniform->arraySize;
+        GLint *boolParams = (GLint*)targetUniform->data + mUniformIndex[location].element * 4;
 
-        if (arraySize == 1 && count > 1)
-            return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
-
-        count = std::min(arraySize - (int)mUniformIndex[location].element, count);
-        GLboolean *boolParams = (GLboolean*)targetUniform->data + mUniformIndex[location].element * 2;
-
-        for (int i = 0; i < count * 2; ++i)
+        for (int i = 0; i < count; i++)
         {
-            if (v[i] == 0)
-            {
-                boolParams[i] = GL_FALSE;
-            }
-            else
-            {
-                boolParams[i] = GL_TRUE;
-            }
+            boolParams[0] = (v[0] == 0) ? GL_FALSE : GL_TRUE;
+            boolParams[1] = (v[1] == 0) ? GL_FALSE : GL_TRUE;
+            boolParams[2] = GL_FALSE;
+            boolParams[3] = GL_FALSE;
+            boolParams += 4;
+            v += 2;
         }
     }
     else
@@ -748,38 +707,39 @@ bool ProgramBinary::setUniform3iv(GLint location, GLsizei count, const GLint *v)
     Uniform *targetUniform = mUniforms[mUniformIndex[location].index];
     targetUniform->dirty = true;
 
+    int elementCount = targetUniform->elementCount();
+
+    if (elementCount == 1 && count > 1)
+        return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
+
+    count = std::min(elementCount - (int)mUniformIndex[location].element, count);
+
     if (targetUniform->type == GL_INT_VEC3)
     {
-        int arraySize = targetUniform->arraySize;
+        GLint *target = (GLint*)targetUniform->data + mUniformIndex[location].element * 4;
 
-        if (arraySize == 1 && count > 1)
-            return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
-
-        count = std::min(arraySize - (int)mUniformIndex[location].element, count);
-
-        memcpy(targetUniform->data + mUniformIndex[location].element * sizeof(GLint) * 3,
-               v, 3 * sizeof(GLint) * count);
+        for (int i = 0; i < count; i++)
+        {
+            target[0] = v[0];
+            target[1] = v[1];
+            target[2] = v[2];
+            target[3] = 0;
+            target += 4;
+            v += 3;
+        }
     }
     else if (targetUniform->type == GL_BOOL_VEC3)
     {
-        int arraySize = targetUniform->arraySize;
+        GLint *boolParams = (GLint*)targetUniform->data + mUniformIndex[location].element * 4;
 
-        if (arraySize == 1 && count > 1)
-            return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
-
-        count = std::min(arraySize - (int)mUniformIndex[location].element, count);
-        GLboolean *boolParams = (GLboolean*)targetUniform->data + mUniformIndex[location].element * 3;
-
-        for (int i = 0; i < count * 3; ++i)
+        for (int i = 0; i < count; i++)
         {
-            if (v[i] == 0)
-            {
-                boolParams[i] = GL_FALSE;
-            }
-            else
-            {
-                boolParams[i] = GL_TRUE;
-            }
+            boolParams[0] = (v[0] == 0) ? GL_FALSE : GL_TRUE;
+            boolParams[1] = (v[1] == 0) ? GL_FALSE : GL_TRUE;
+            boolParams[2] = (v[2] == 0) ? GL_FALSE : GL_TRUE;
+            boolParams[3] = GL_FALSE;
+            boolParams += 4;
+            v += 3;
         }
     }
     else
@@ -800,38 +760,39 @@ bool ProgramBinary::setUniform4iv(GLint location, GLsizei count, const GLint *v)
     Uniform *targetUniform = mUniforms[mUniformIndex[location].index];
     targetUniform->dirty = true;
 
+    int elementCount = targetUniform->elementCount();
+
+    if (elementCount == 1 && count > 1)
+        return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
+
+    count = std::min(elementCount - (int)mUniformIndex[location].element, count);
+
     if (targetUniform->type == GL_INT_VEC4)
     {
-        int arraySize = targetUniform->arraySize;
+        GLint *target = (GLint*)targetUniform->data + mUniformIndex[location].element * 4;
 
-        if (arraySize == 1 && count > 1)
-            return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
-
-        count = std::min(arraySize - (int)mUniformIndex[location].element, count);
-
-        memcpy(targetUniform->data + mUniformIndex[location].element * sizeof(GLint) * 4,
-               v, 4 * sizeof(GLint) * count);
+        for (int i = 0; i < count; i++)
+        {
+            target[0] = v[0];
+            target[1] = v[1];
+            target[2] = v[2];
+            target[3] = v[3];
+            target += 4;
+            v += 4;
+        }
     }
     else if (targetUniform->type == GL_BOOL_VEC4)
     {
-        int arraySize = targetUniform->arraySize;
+        GLint *boolParams = (GLint*)targetUniform->data + mUniformIndex[location].element * 4;
 
-        if (arraySize == 1 && count > 1)
-            return false; // attempting to write an array to a non-array uniform is an INVALID_OPERATION
-
-        count = std::min(arraySize - (int)mUniformIndex[location].element, count);
-        GLboolean *boolParams = (GLboolean*)targetUniform->data + mUniformIndex[location].element * 4;
-
-        for (int i = 0; i < count * 4; ++i)
+        for (int i = 0; i < count; i++)
         {
-            if (v[i] == 0)
-            {
-                boolParams[i] = GL_FALSE;
-            }
-            else
-            {
-                boolParams[i] = GL_TRUE;
-            }
+            boolParams[0] = (v[0] == 0) ? GL_FALSE : GL_TRUE;
+            boolParams[1] = (v[1] == 0) ? GL_FALSE : GL_TRUE;
+            boolParams[2] = (v[2] == 0) ? GL_FALSE : GL_TRUE;
+            boolParams[3] = (v[3] == 0) ? GL_FALSE : GL_TRUE;
+            boolParams += 4;
+            v += 4;
         }
     }
     else
@@ -874,30 +835,29 @@ bool ProgramBinary::getUniformfv(GLint location, GLsizei *bufSize, GLfloat *para
         break;
       default:
         {
-            unsigned int count = UniformExternalComponentCount(targetUniform->type);
-            unsigned int internalCount = UniformInternalComponentCount(targetUniform->type);
+            unsigned int size = UniformComponentCount(targetUniform->type);
 
             switch (UniformComponentType(targetUniform->type))
             {
               case GL_BOOL:
                 {
-                    GLboolean *boolParams = (GLboolean*)targetUniform->data + mUniformIndex[location].element * internalCount;
+                    GLint *boolParams = (GLint*)targetUniform->data + mUniformIndex[location].element * 4;
 
-                    for (unsigned int i = 0; i < count; ++i)
+                    for (unsigned int i = 0; i < size; i++)
                     {
                         params[i] = (boolParams[i] == GL_FALSE) ? 0.0f : 1.0f;
                     }
                 }
                 break;
               case GL_FLOAT:
-                memcpy(params, targetUniform->data + mUniformIndex[location].element * internalCount * sizeof(GLfloat),
-                       count * sizeof(GLfloat));
+                memcpy(params, targetUniform->data + mUniformIndex[location].element * 4 * sizeof(GLfloat),
+                       size * sizeof(GLfloat));
                 break;
               case GL_INT:
                 {
-                    GLint *intParams = (GLint*)targetUniform->data + mUniformIndex[location].element * internalCount;
+                    GLint *intParams = (GLint*)targetUniform->data + mUniformIndex[location].element * 4;
 
-                    for (unsigned int i = 0; i < count; ++i)
+                    for (unsigned int i = 0; i < size; i++)
                     {
                         params[i] = (float)intParams[i];
                     }
@@ -933,50 +893,43 @@ bool ProgramBinary::getUniformiv(GLint location, GLsizei *bufSize, GLint *params
     switch (targetUniform->type)
     {
       case GL_FLOAT_MAT2:
-        {
-            transposeMatrix<GLint,2,2,4,2>(params, (GLfloat*)targetUniform->data + mUniformIndex[location].element * 8);
-        }
+        transposeMatrix<GLint,2,2,4,2>(params, (GLfloat*)targetUniform->data + mUniformIndex[location].element * 8);
         break;
       case GL_FLOAT_MAT3:
-        {
-            transposeMatrix<GLint,3,3,4,3>(params, (GLfloat*)targetUniform->data + mUniformIndex[location].element * 12);
-        }
+        transposeMatrix<GLint,3,3,4,3>(params, (GLfloat*)targetUniform->data + mUniformIndex[location].element * 12);
         break;
       case GL_FLOAT_MAT4:
-        {
-            transposeMatrix<GLint,4,4,4,4>(params, (GLfloat*)targetUniform->data + mUniformIndex[location].element * 16);
-        }
+        transposeMatrix<GLint,4,4,4,4>(params, (GLfloat*)targetUniform->data + mUniformIndex[location].element * 16);
         break;
       default:
         {
-            unsigned int count = UniformExternalComponentCount(targetUniform->type);
-            unsigned int internalCount = UniformInternalComponentCount(targetUniform->type);
+            unsigned int size = VariableColumnCount(targetUniform->type);
 
             switch (UniformComponentType(targetUniform->type))
             {
               case GL_BOOL:
                 {
-                    GLboolean *boolParams = targetUniform->data + mUniformIndex[location].element * internalCount;
+                    GLint *boolParams = (GLint*)targetUniform->data + mUniformIndex[location].element * 4;
 
-                    for (unsigned int i = 0; i < count; ++i)
+                    for (unsigned int i = 0; i < size; i++)
                     {
-                        params[i] = (GLint)boolParams[i];
+                        params[i] = boolParams[i];
                     }
                 }
                 break;
               case GL_FLOAT:
                 {
-                    GLfloat *floatParams = (GLfloat*)targetUniform->data + mUniformIndex[location].element * internalCount;
+                    GLfloat *floatParams = (GLfloat*)targetUniform->data + mUniformIndex[location].element * 4;
 
-                    for (unsigned int i = 0; i < count; ++i)
+                    for (unsigned int i = 0; i < size; i++)
                     {
                         params[i] = (GLint)floatParams[i];
                     }
                 }
                 break;
               case GL_INT:
-                memcpy(params, targetUniform->data + mUniformIndex[location].element * internalCount * sizeof(GLint),
-                       count * sizeof(GLint));
+                memcpy(params, targetUniform->data + mUniformIndex[location].element * 4 * sizeof(GLint),
+                    size * sizeof(GLint));
                 break;
               default: UNREACHABLE();
             }
@@ -995,152 +948,67 @@ void ProgramBinary::dirtyAllUniforms()
     }
 }
 
-// Applies all the uniforms set for this program object to the Direct3D 9 device
+// Applies all the uniforms set for this program object to the renderer
 void ProgramBinary::applyUniforms()
 {
-    for (std::vector<Uniform*>::iterator ub = mUniforms.begin(), ue = mUniforms.end(); ub != ue; ++ub) {
+    // Retrieve sampler uniform values
+    for (std::vector<Uniform*>::iterator ub = mUniforms.begin(), ue = mUniforms.end(); ub != ue; ++ub)
+    {
         Uniform *targetUniform = *ub;
 
         if (targetUniform->dirty)
         {
-            int arraySize = targetUniform->arraySize;
-            GLfloat *f = (GLfloat*)targetUniform->data;
-            GLint *i = (GLint*)targetUniform->data;
-            GLboolean *b = (GLboolean*)targetUniform->data;
-
-            switch (targetUniform->type)
+            if (targetUniform->type == GL_SAMPLER_2D || 
+                targetUniform->type == GL_SAMPLER_CUBE)
             {
-              case GL_BOOL:       applyUniformnbv(targetUniform, arraySize, 1, b);    break;
-              case GL_BOOL_VEC2:  applyUniformnbv(targetUniform, arraySize, 2, b);    break;
-              case GL_BOOL_VEC3:  applyUniformnbv(targetUniform, arraySize, 3, b);    break;
-              case GL_BOOL_VEC4:  applyUniformnbv(targetUniform, arraySize, 4, b);    break;
-              case GL_FLOAT:
-              case GL_FLOAT_VEC2:
-              case GL_FLOAT_VEC3:
-              case GL_FLOAT_VEC4:
-              case GL_FLOAT_MAT2:
-              case GL_FLOAT_MAT3:
-              case GL_FLOAT_MAT4: applyUniformnfv(targetUniform, f);                  break;
-              case GL_SAMPLER_2D:
-              case GL_SAMPLER_CUBE:
-              case GL_INT:        applyUniform1iv(targetUniform, arraySize, i);       break;
-              case GL_INT_VEC2:   applyUniform2iv(targetUniform, arraySize, i);       break;
-              case GL_INT_VEC3:   applyUniform3iv(targetUniform, arraySize, i);       break;
-              case GL_INT_VEC4:   applyUniform4iv(targetUniform, arraySize, i);       break;
-              default:
-                UNREACHABLE();
-            }
+                int count = targetUniform->elementCount();
+                GLint (*v)[4] = (GLint(*)[4])targetUniform->data;
 
-            targetUniform->dirty = false;
-        }
-    }
-}
+                if (targetUniform->psRegisterIndex >= 0)
+                {
+                    unsigned int firstIndex = targetUniform->psRegisterIndex;
 
-// Compiles the HLSL code of the attached shaders into executable binaries
-ID3D10Blob *ProgramBinary::compileToBinary(InfoLog &infoLog, const char *hlsl, const char *profile, D3DConstantTable **constantTable)
-{
-    if (!hlsl)
-    {
-        return NULL;
-    }
+                    for (int i = 0; i < count; i++)
+                    {
+                        unsigned int samplerIndex = firstIndex + i;
 
-    HRESULT result = S_OK;
-    UINT flags = 0;
-    std::string sourceText;
-    if (perfActive())
-    {
-        flags |= D3DCOMPILE_DEBUG;
-#ifdef NDEBUG
-        flags |= ANGLE_COMPILE_OPTIMIZATION_LEVEL;
-#else
-        flags |= D3DCOMPILE_SKIP_OPTIMIZATION;
-#endif
+                        if (samplerIndex < MAX_TEXTURE_IMAGE_UNITS)
+                        {
+                            ASSERT(mSamplersPS[samplerIndex].active);
+                            mSamplersPS[samplerIndex].logicalTextureUnit = v[i][0];
+                        }
+                    }
+                }
 
-        std::string sourcePath = getTempPath();
-        sourceText = std::string("#line 2 \"") + sourcePath + std::string("\"\n\n") + std::string(hlsl);
-        writeFile(sourcePath.c_str(), sourceText.c_str(), sourceText.size());
-    }
-    else
-    {
-        flags |= ANGLE_COMPILE_OPTIMIZATION_LEVEL;
-        sourceText = hlsl;
-    }
+                if (targetUniform->vsRegisterIndex >= 0)
+                {
+                    unsigned int firstIndex = targetUniform->vsRegisterIndex;
 
-    // Sometimes D3DCompile will fail with the default compilation flags for complicated shaders when it would otherwise pass with alternative options.
-    // Try the default flags first and if compilation fails, try some alternatives. 
-    const static UINT extraFlags[] =
-    {
-        0,
-        D3DCOMPILE_AVOID_FLOW_CONTROL,
-        D3DCOMPILE_PREFER_FLOW_CONTROL
-    };
+                    for (int i = 0; i < count; i++)
+                    {
+                        unsigned int samplerIndex = firstIndex + i;
 
-    const static char * const extraFlagNames[] =
-    {
-        "default",
-        "avoid flow control",
-        "prefer flow control"
-    };
-
-    for (int i = 0; i < sizeof(extraFlags) / sizeof(UINT); ++i)
-    {
-        ID3D10Blob *errorMessage = NULL;
-        ID3D10Blob *binary = NULL;
-        result = getDisplay()->compileShaderSource(hlsl, g_fakepath, profile, flags | extraFlags[i], &binary, &errorMessage);
-        if (errorMessage)
-        {
-            const char *message = (const char*)errorMessage->GetBufferPointer();
-
-            infoLog.appendSanitized(message);
-            TRACE("\n%s", hlsl);
-            TRACE("\n%s", message);
-
-            errorMessage->Release();
-            errorMessage = NULL;
-        }
-
-        if (SUCCEEDED(result))
-        {
-            D3DConstantTable *table = new D3DConstantTable(binary->GetBufferPointer(), binary->GetBufferSize());
-            if (table->error())
-            {
-                delete table;
-                binary->Release();
-                return NULL;
-            }
-
-            *constantTable = table;
-    
-            return binary;
-        }
-        else
-        {
-            if (result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY)
-            {
-                return error(GL_OUT_OF_MEMORY, (ID3D10Blob*) NULL);
-            }
-
-            infoLog.append("Warning: D3D shader compilation failed with ");
-            infoLog.append(extraFlagNames[i]);
-            infoLog.append(" flags.");
-            if (i + 1 < sizeof(extraFlagNames) / sizeof(char*))
-            {
-                infoLog.append(" Retrying with ");
-                infoLog.append(extraFlagNames[i + 1]);
-                infoLog.append(".\n");
+                        if (samplerIndex < IMPLEMENTATION_MAX_VERTEX_TEXTURE_IMAGE_UNITS)
+                        {
+                            ASSERT(mSamplersVS[samplerIndex].active);
+                            mSamplersVS[samplerIndex].logicalTextureUnit = v[i][0];
+                        }
+                    }
+                }
             }
         }
     }
 
-    return NULL;
+    mRenderer->applyUniforms(this, &mUniforms);
 }
 
 // Packs varyings into generic varying registers, using the algorithm from [OpenGL ES Shading Language 1.00 rev. 17] appendix A section 7 page 111
 // Returns the number of used varying registers, or -1 if unsuccesful
 int ProgramBinary::packVaryings(InfoLog &infoLog, const Varying *packing[][4], FragmentShader *fragmentShader)
 {
-    Context *context = getContext();
-    const int maxVaryingVectors = context->getMaximumVaryingVectors();
+    const int maxVaryingVectors = mRenderer->getMaxVaryingVectors();
+
+    fragmentShader->resetVaryingsRegisterAssignment();
 
     for (VaryingList::iterator varying = fragmentShader->mVaryings.begin(); varying != fragmentShader->mVaryings.end(); varying++)
     {
@@ -1285,46 +1153,42 @@ int ProgramBinary::packVaryings(InfoLog &infoLog, const Varying *packing[][4], F
     return registers;
 }
 
-bool ProgramBinary::linkVaryings(InfoLog &infoLog, std::string& pixelHLSL, std::string& vertexHLSL, FragmentShader *fragmentShader, VertexShader *vertexShader)
+bool ProgramBinary::linkVaryings(InfoLog &infoLog, int registers, const Varying *packing[][4],
+                                 std::string& pixelHLSL, std::string& vertexHLSL,
+                                 FragmentShader *fragmentShader, VertexShader *vertexShader)
 {
     if (pixelHLSL.empty() || vertexHLSL.empty())
     {
         return false;
     }
 
-    // Reset the varying register assignments
-    for (VaryingList::iterator fragVar = fragmentShader->mVaryings.begin(); fragVar != fragmentShader->mVaryings.end(); fragVar++)
+    bool usesMRT = fragmentShader->mUsesMultipleRenderTargets;
+    bool usesFragColor = fragmentShader->mUsesFragColor;
+    bool usesFragData = fragmentShader->mUsesFragData;
+    if (usesFragColor && usesFragData)
     {
-        fragVar->reg = -1;
-        fragVar->col = -1;
-    }
-
-    for (VaryingList::iterator vtxVar = vertexShader->mVaryings.begin(); vtxVar != vertexShader->mVaryings.end(); vtxVar++)
-    {
-        vtxVar->reg = -1;
-        vtxVar->col = -1;
-    }
-
-    // Map the varyings to the register file
-    const Varying *packing[MAX_VARYING_VECTORS_SM3][4] = {NULL};
-    int registers = packVaryings(infoLog, packing, fragmentShader);
-
-    if (registers < 0)
-    {
+        infoLog.append("Cannot use both gl_FragColor and gl_FragData in the same fragment shader.");
         return false;
     }
 
     // Write the HLSL input/output declarations
-    Context *context = getContext();
-    const bool sm3 = context->supportsShaderModel3();
-    const int maxVaryingVectors = context->getMaximumVaryingVectors();
+    const int shaderModel = mRenderer->getMajorShaderModel();
+    const int maxVaryingVectors = mRenderer->getMaxVaryingVectors();
 
-    if (registers == maxVaryingVectors && fragmentShader->mUsesFragCoord)
+    const int registersNeeded = registers + (fragmentShader->mUsesFragCoord ? 1 : 0) + (fragmentShader->mUsesPointCoord ? 1 : 0);
+
+    // The output color is broadcast to all enabled draw buffers when writing to gl_FragColor 
+    const bool broadcast = fragmentShader->mUsesFragColor;
+    const unsigned int numRenderTargets = (broadcast || usesMRT ? mRenderer->getMaxRenderTargets() : 1);
+
+    if (registersNeeded > maxVaryingVectors)
     {
-        infoLog.append("No varying registers left to support gl_FragCoord");
+        infoLog.append("No varying registers left to support gl_FragCoord/gl_PointCoord");
 
         return false;
     }
+
+    vertexShader->resetVaryingsRegisterAssignment();
 
     for (VaryingList::iterator input = fragmentShader->mVaryings.begin(); input != fragmentShader->mVaryings.end(); input++)
     {
@@ -1358,10 +1222,37 @@ bool ProgramBinary::linkVaryings(InfoLog &infoLog, std::string& pixelHLSL, std::
     }
 
     mUsesPointSize = vertexShader->mUsesPointSize;
-    std::string varyingSemantic = (mUsesPointSize && sm3) ? "COLOR" : "TEXCOORD";
+    std::string varyingSemantic = (mUsesPointSize && shaderModel == 3) ? "COLOR" : "TEXCOORD";
+    std::string targetSemantic = (shaderModel >= 4) ? "SV_Target" : "COLOR";
+    std::string positionSemantic = (shaderModel >= 4) ? "SV_Position" : "POSITION";
+    std::string depthSemantic = (shaderModel >= 4) ? "SV_Depth" : "DEPTH";
+
+    // special varyings that use reserved registers
+    int reservedRegisterIndex = registers;
+    std::string fragCoordSemantic;
+    std::string pointCoordSemantic;
+
+    if (fragmentShader->mUsesFragCoord)
+    {
+        fragCoordSemantic = varyingSemantic + str(reservedRegisterIndex++);
+    }
+
+    if (fragmentShader->mUsesPointCoord)
+    {
+        // Shader model 3 uses a special TEXCOORD semantic for point sprite texcoords.
+        // In DX11 we compute this in the GS.
+        if (shaderModel == 3)
+        {
+            pointCoordSemantic = "TEXCOORD0";
+        }
+        else if (shaderModel >= 4)
+        {
+            pointCoordSemantic = varyingSemantic + str(reservedRegisterIndex++); 
+        }
+    }
 
     vertexHLSL += "struct VS_INPUT\n"
-                   "{\n";
+                  "{\n";
 
     int semanticIndex = 0;
     for (AttributeArray::iterator attribute = vertexShader->mAttributes.begin(); attribute != vertexShader->mAttributes.end(); attribute++)
@@ -1384,10 +1275,14 @@ bool ProgramBinary::linkVaryings(InfoLog &infoLog, std::string& pixelHLSL, std::
     }
 
     vertexHLSL += "};\n"
-                   "\n"
-                   "struct VS_OUTPUT\n"
-                   "{\n"
-                   "    float4 gl_Position : POSITION;\n";
+                  "\n"
+                  "struct VS_OUTPUT\n"
+                  "{\n";
+
+    if (shaderModel < 4)
+    {
+        vertexHLSL += "    float4 gl_Position : " + positionSemantic + ";\n";
+    }
 
     for (int r = 0; r < registers; r++)
     {
@@ -1398,18 +1293,23 @@ bool ProgramBinary::linkVaryings(InfoLog &infoLog, std::string& pixelHLSL, std::
 
     if (fragmentShader->mUsesFragCoord)
     {
-        vertexHLSL += "    float4 gl_FragCoord : " + varyingSemantic + str(registers) + ";\n";
+        vertexHLSL += "    float4 gl_FragCoord : " + fragCoordSemantic + ";\n";
     }
 
-    if (vertexShader->mUsesPointSize && sm3)
+    if (vertexShader->mUsesPointSize && shaderModel >= 3)
     {
         vertexHLSL += "    float gl_PointSize : PSIZE;\n";
     }
 
+    if (shaderModel >= 4)
+    {
+        vertexHLSL += "    float4 gl_Position : " + positionSemantic + ";\n";
+    }
+
     vertexHLSL += "};\n"
-                   "\n"
-                   "VS_OUTPUT main(VS_INPUT input)\n"
-                   "{\n";
+                  "\n"
+                  "VS_OUTPUT main(VS_INPUT input)\n"
+                  "{\n";
 
     for (AttributeArray::iterator attribute = vertexShader->mAttributes.begin(); attribute != vertexShader->mAttributes.end(); attribute++)
     {
@@ -1423,16 +1323,30 @@ bool ProgramBinary::linkVaryings(InfoLog &infoLog, std::string& pixelHLSL, std::
         vertexHLSL += "(input." + decorateAttribute(attribute->name) + ");\n";
     }
 
-    vertexHLSL += "\n"
-                   "    gl_main();\n"
-                   "\n"
-                   "    VS_OUTPUT output;\n"
-                   "    output.gl_Position.x = gl_Position.x - dx_HalfPixelSize.x * gl_Position.w;\n"
-                   "    output.gl_Position.y = -(gl_Position.y + dx_HalfPixelSize.y * gl_Position.w);\n"
-                   "    output.gl_Position.z = (gl_Position.z + gl_Position.w) * 0.5;\n"
-                   "    output.gl_Position.w = gl_Position.w;\n";
+    if (shaderModel >= 4)
+    {
+        vertexHLSL += "\n"
+                      "    gl_main();\n"
+                      "\n"
+                      "    VS_OUTPUT output;\n"
+                      "    output.gl_Position.x = gl_Position.x;\n"
+                      "    output.gl_Position.y = -gl_Position.y;\n"
+                      "    output.gl_Position.z = (gl_Position.z + gl_Position.w) * 0.5;\n"
+                      "    output.gl_Position.w = gl_Position.w;\n";
+    }
+    else
+    {
+        vertexHLSL += "\n"
+                      "    gl_main();\n"
+                      "\n"
+                      "    VS_OUTPUT output;\n"
+                      "    output.gl_Position.x = gl_Position.x * dx_ViewAdjust.z + dx_ViewAdjust.x * gl_Position.w;\n"
+                      "    output.gl_Position.y = -(gl_Position.y * dx_ViewAdjust.w + dx_ViewAdjust.y * gl_Position.w);\n"
+                      "    output.gl_Position.z = (gl_Position.z + gl_Position.w) * 0.5;\n"
+                      "    output.gl_Position.w = gl_Position.w;\n";
+    }
 
-    if (vertexShader->mUsesPointSize && sm3)
+    if (vertexShader->mUsesPointSize && shaderModel >= 3)
     {
         vertexHLSL += "    output.gl_PointSize = gl_PointSize;\n";
     }
@@ -1504,11 +1418,11 @@ bool ProgramBinary::linkVaryings(InfoLog &infoLog, std::string& pixelHLSL, std::
     }
 
     vertexHLSL += "\n"
-                   "    return output;\n"
-                   "}\n";
+                  "    return output;\n"
+                  "}\n";
 
     pixelHLSL += "struct PS_INPUT\n"
-                  "{\n";
+                 "{\n";
     
     for (VaryingList::iterator varying = fragmentShader->mVaryings.begin(); varying != fragmentShader->mVaryings.end(); varying++)
     {
@@ -1520,7 +1434,7 @@ bool ProgramBinary::linkVaryings(InfoLog &infoLog, std::string& pixelHLSL, std::
                 for (int j = 0; j < rows; j++)
                 {
                     std::string n = str(varying->reg + i * rows + j);
-                    pixelHLSL += "    float4 v" + n + " : " + varyingSemantic + n + ";\n";
+                    pixelHLSL += "    float" + str(VariableColumnCount(varying->type)) + " v" + n + " : " + varyingSemantic + n + ";\n";
                 }
             }
         }
@@ -1529,53 +1443,96 @@ bool ProgramBinary::linkVaryings(InfoLog &infoLog, std::string& pixelHLSL, std::
 
     if (fragmentShader->mUsesFragCoord)
     {
-        pixelHLSL += "    float4 gl_FragCoord : " + varyingSemantic + str(registers) + ";\n";
-        if (sm3) {
+        pixelHLSL += "    float4 gl_FragCoord : " + fragCoordSemantic + ";\n";
+    }
+        
+    if (fragmentShader->mUsesPointCoord && shaderModel >= 3)
+    {
+        pixelHLSL += "    float2 gl_PointCoord : " + pointCoordSemantic + ";\n";
+    }
+
+    // Must consume the PSIZE element if the geometry shader is not active
+    // We won't know if we use a GS until we draw
+    if (vertexShader->mUsesPointSize && shaderModel >= 4)
+    {
+        pixelHLSL += "    float gl_PointSize : PSIZE;\n";
+    }
+
+    if (fragmentShader->mUsesFragCoord)
+    {
+        if (shaderModel >= 4)
+        {
+            pixelHLSL += "    float4 dx_VPos : SV_Position;\n";
+        }
+        else if (shaderModel >= 3)
+        {
             pixelHLSL += "    float2 dx_VPos : VPOS;\n";
         }
     }
 
-    if (fragmentShader->mUsesPointCoord && sm3)
+    pixelHLSL += "};\n"
+                 "\n"
+                 "struct PS_OUTPUT\n"
+                 "{\n";
+
+    for (unsigned int renderTargetIndex = 0; renderTargetIndex < numRenderTargets; renderTargetIndex++)
     {
-        pixelHLSL += "    float2 gl_PointCoord : TEXCOORD0;\n";
+        pixelHLSL += "    float4 gl_Color" + str(renderTargetIndex) + " : " + targetSemantic + str(renderTargetIndex) + ";\n";
     }
 
-    if (fragmentShader->mUsesFrontFacing)
+    if (fragmentShader->mUsesFragDepth)
     {
-        pixelHLSL += "    float vFace : VFACE;\n";
+        pixelHLSL += "    float gl_Depth : " + depthSemantic + ";\n";
     }
 
     pixelHLSL += "};\n"
-                  "\n"
-                  "struct PS_OUTPUT\n"
-                  "{\n"
-                  "    float4 gl_Color[1] : COLOR;\n"
-                  "};\n"
-                  "\n"
-                  "PS_OUTPUT main(PS_INPUT input)\n"
-                  "{\n";
+                 "\n";
+
+    if (fragmentShader->mUsesFrontFacing)
+    {
+        if (shaderModel >= 4)
+        {
+            pixelHLSL += "PS_OUTPUT main(PS_INPUT input, bool isFrontFace : SV_IsFrontFace)\n"
+                         "{\n";
+        }
+        else
+        {
+            pixelHLSL += "PS_OUTPUT main(PS_INPUT input, float vFace : VFACE)\n"
+                         "{\n";
+        }
+    }
+    else
+    {
+        pixelHLSL += "PS_OUTPUT main(PS_INPUT input)\n"
+                     "{\n";
+    }
 
     if (fragmentShader->mUsesFragCoord)
     {
         pixelHLSL += "    float rhw = 1.0 / input.gl_FragCoord.w;\n";
         
-        if (sm3)
+        if (shaderModel >= 4)
+        {
+            pixelHLSL += "    gl_FragCoord.x = input.dx_VPos.x;\n"
+                         "    gl_FragCoord.y = input.dx_VPos.y;\n";
+        }
+        else if (shaderModel >= 3)
         {
             pixelHLSL += "    gl_FragCoord.x = input.dx_VPos.x + 0.5;\n"
-                          "    gl_FragCoord.y = input.dx_VPos.y + 0.5;\n";
+                         "    gl_FragCoord.y = input.dx_VPos.y + 0.5;\n";
         }
         else
         {
-            // dx_Coord contains the viewport width/2, height/2, center.x and center.y. See Context::applyRenderTarget()
-            pixelHLSL += "    gl_FragCoord.x = (input.gl_FragCoord.x * rhw) * dx_Coord.x + dx_Coord.z;\n"
-                          "    gl_FragCoord.y = (input.gl_FragCoord.y * rhw) * dx_Coord.y + dx_Coord.w;\n";
+            // dx_ViewCoords contains the viewport width/2, height/2, center.x and center.y. See Renderer::setViewport()
+            pixelHLSL += "    gl_FragCoord.x = (input.gl_FragCoord.x * rhw) * dx_ViewCoords.x + dx_ViewCoords.z;\n"
+                         "    gl_FragCoord.y = (input.gl_FragCoord.y * rhw) * dx_ViewCoords.y + dx_ViewCoords.w;\n";
         }
         
-        pixelHLSL += "    gl_FragCoord.z = (input.gl_FragCoord.z * rhw) * dx_Depth.x + dx_Depth.y;\n"
-                      "    gl_FragCoord.w = rhw;\n";
+        pixelHLSL += "    gl_FragCoord.z = (input.gl_FragCoord.z * rhw) * dx_DepthFront.x + dx_DepthFront.y;\n"
+                     "    gl_FragCoord.w = rhw;\n";
     }
 
-    if (fragmentShader->mUsesPointCoord && sm3)
+    if (fragmentShader->mUsesPointCoord && shaderModel >= 3)
     {
         pixelHLSL += "    gl_PointCoord.x = input.gl_PointCoord.x;\n";
         pixelHLSL += "    gl_PointCoord.y = 1.0 - input.gl_PointCoord.y;\n";
@@ -1583,7 +1540,14 @@ bool ProgramBinary::linkVaryings(InfoLog &infoLog, std::string& pixelHLSL, std::
 
     if (fragmentShader->mUsesFrontFacing)
     {
-        pixelHLSL += "    gl_FrontFacing = dx_PointsOrLines || (dx_FrontCCW ? (input.vFace >= 0.0) : (input.vFace <= 0.0));\n";
+        if (shaderModel <= 3)
+        {
+            pixelHLSL += "    gl_FrontFacing = (vFace * dx_DepthFront.z >= 0.0);\n";
+        }
+        else
+        {
+            pixelHLSL += "    gl_FrontFacing = isFrontFace;\n";
+        }
     }
 
     for (VaryingList::iterator varying = fragmentShader->mVaryings.begin(); varying != fragmentShader->mVaryings.end(); varying++)
@@ -1623,13 +1587,25 @@ bool ProgramBinary::linkVaryings(InfoLog &infoLog, std::string& pixelHLSL, std::
     }
 
     pixelHLSL += "\n"
-                  "    gl_main();\n"
-                  "\n"
-                  "    PS_OUTPUT output;\n"                 
-                  "    output.gl_Color[0] = gl_Color[0];\n"
-                  "\n"
-                  "    return output;\n"
-                  "}\n";
+                 "    gl_main();\n"
+                 "\n"
+                 "    PS_OUTPUT output;\n";
+
+    for (unsigned int renderTargetIndex = 0; renderTargetIndex < numRenderTargets; renderTargetIndex++)
+    {
+        unsigned int sourceColorIndex = broadcast ? 0 : renderTargetIndex;
+
+        pixelHLSL += "    output.gl_Color" + str(renderTargetIndex) + " = gl_Color[" + str(sourceColorIndex) + "];\n";
+    }
+
+    if (fragmentShader->mUsesFragDepth)
+    {
+        pixelHLSL += "    output.gl_Depth = gl_Depth;\n";
+    }
+
+    pixelHLSL += "\n"
+                 "    return output;\n"
+                 "}\n";
 
     return true;
 }
@@ -1654,6 +1630,14 @@ bool ProgramBinary::load(InfoLog &infoLog, const void *binary, GLsizei length)
         return false;
     }
 
+    int compileFlags = 0;
+    stream.read(&compileFlags);
+    if (compileFlags != ANGLE_COMPILE_OPTIMIZATION_LEVEL)
+    {
+        infoLog.append("Mismatched compilation flags.");
+        return false;
+    }
+
     for (int i = 0; i < MAX_VERTEX_ATTRIBS; ++i)
     {
         stream.read(&mLinkedAttribute[i].type);
@@ -1673,7 +1657,7 @@ bool ProgramBinary::load(InfoLog &infoLog, const void *binary, GLsizei length)
         mSamplersPS[i].textureType = (TextureType) textureType;
     }
 
-    for (unsigned int i = 0; i < MAX_VERTEX_TEXTURE_IMAGE_UNITS_VTF; ++i)
+    for (unsigned int i = 0; i < IMPLEMENTATION_MAX_VERTEX_TEXTURE_IMAGE_UNITS; ++i)
     {
         stream.read(&mSamplersVS[i].active);
         stream.read(&mSamplersVS[i].logicalTextureUnit);
@@ -1699,24 +1683,20 @@ bool ProgramBinary::load(InfoLog &infoLog, const void *binary, GLsizei length)
     for (unsigned int i = 0; i < size; ++i)
     {
         GLenum type;
-        std::string _name;
+        GLenum precision;
+        std::string name;
         unsigned int arraySize;
 
         stream.read(&type);
-        stream.read(&_name);
+        stream.read(&precision);
+        stream.read(&name);
         stream.read(&arraySize);
 
-        mUniforms[i] = new Uniform(type, _name, arraySize);
+        mUniforms[i] = new Uniform(type, precision, name, arraySize);
         
-        stream.read(&mUniforms[i]->ps.float4Index);
-        stream.read(&mUniforms[i]->ps.samplerIndex);
-        stream.read(&mUniforms[i]->ps.boolIndex);
-        stream.read(&mUniforms[i]->ps.registerCount);
-
-        stream.read(&mUniforms[i]->vs.float4Index);
-        stream.read(&mUniforms[i]->vs.samplerIndex);
-        stream.read(&mUniforms[i]->vs.boolIndex);
-        stream.read(&mUniforms[i]->vs.registerCount);
+        stream.read(&mUniforms[i]->psRegisterIndex);
+        stream.read(&mUniforms[i]->vsRegisterIndex);
+        stream.read(&mUniforms[i]->registerCount);
     }
 
     stream.read(&size);
@@ -1734,26 +1714,22 @@ bool ProgramBinary::load(InfoLog &infoLog, const void *binary, GLsizei length)
         stream.read(&mUniformIndex[i].index);
     }
 
-    stream.read(&mDxDepthRangeLocation);
-    stream.read(&mDxDepthLocation);
-    stream.read(&mDxCoordLocation);
-    stream.read(&mDxHalfPixelSizeLocation);
-    stream.read(&mDxFrontCCWLocation);
-    stream.read(&mDxPointsOrLinesLocation);
-
     unsigned int pixelShaderSize;
     stream.read(&pixelShaderSize);
 
     unsigned int vertexShaderSize;
     stream.read(&vertexShaderSize);
 
+    unsigned int geometryShaderSize;
+    stream.read(&geometryShaderSize);
+
     const char *ptr = (const char*) binary + stream.offset();
 
-    const D3DCAPS9 *binaryIdentifier = (const D3DCAPS9*) ptr;
+    const GUID *binaryIdentifier = (const GUID *) ptr;
     ptr += sizeof(GUID);
 
-    D3DADAPTER_IDENTIFIER9 *currentIdentifier = getDisplay()->getAdapterIdentifier();
-    if (memcmp(&currentIdentifier->DeviceIdentifier, binaryIdentifier, sizeof(GUID)) != 0)
+    GUID identifier = mRenderer->getAdapterIdentifier();
+    if (memcmp(&identifier, binaryIdentifier, sizeof(GUID)) != 0)
     {
         infoLog.append("Invalid program binary.");
         return false;
@@ -1765,20 +1741,44 @@ bool ProgramBinary::load(InfoLog &infoLog, const void *binary, GLsizei length)
     const char *vertexShaderFunction = ptr;
     ptr += vertexShaderSize;
 
-    mPixelExecutable = getDisplay()->createPixelShader(reinterpret_cast<const DWORD*>(pixelShaderFunction), pixelShaderSize);
+    const char *geometryShaderFunction = geometryShaderSize > 0 ? ptr : NULL;
+    ptr += geometryShaderSize;
+
+    mPixelExecutable = mRenderer->loadExecutable(reinterpret_cast<const DWORD*>(pixelShaderFunction),
+                                                 pixelShaderSize, rx::SHADER_PIXEL);
     if (!mPixelExecutable)
     {
         infoLog.append("Could not create pixel shader.");
         return false;
     }
 
-    mVertexExecutable = getDisplay()->createVertexShader(reinterpret_cast<const DWORD*>(vertexShaderFunction), vertexShaderSize);
+    mVertexExecutable = mRenderer->loadExecutable(reinterpret_cast<const DWORD*>(vertexShaderFunction),
+                                                  vertexShaderSize, rx::SHADER_VERTEX);
     if (!mVertexExecutable)
     {
         infoLog.append("Could not create vertex shader.");
-        mPixelExecutable->Release();
+        delete mPixelExecutable;
         mPixelExecutable = NULL;
         return false;
+    }
+
+    if (geometryShaderFunction != NULL && geometryShaderSize > 0)
+    {
+        mGeometryExecutable = mRenderer->loadExecutable(reinterpret_cast<const DWORD*>(geometryShaderFunction),
+                                                        geometryShaderSize, rx::SHADER_GEOMETRY);
+        if (!mGeometryExecutable)
+        {
+            infoLog.append("Could not create geometry shader.");
+            delete mPixelExecutable;
+            mPixelExecutable = NULL;
+            delete mVertexExecutable;
+            mVertexExecutable = NULL;
+            return false;
+        }
+    }
+    else
+    {
+        mGeometryExecutable = NULL;
     }
 
     return true;
@@ -1790,6 +1790,7 @@ bool ProgramBinary::save(void* binary, GLsizei bufSize, GLsizei *length)
 
     stream.write(GL_PROGRAM_BINARY_ANGLE);
     stream.write(VERSION_DWORD);
+    stream.write(ANGLE_COMPILE_OPTIMIZATION_LEVEL);
 
     for (unsigned int i = 0; i < MAX_VERTEX_ATTRIBS; ++i)
     {
@@ -1805,7 +1806,7 @@ bool ProgramBinary::save(void* binary, GLsizei bufSize, GLsizei *length)
         stream.write((int) mSamplersPS[i].textureType);
     }
 
-    for (unsigned int i = 0; i < MAX_VERTEX_TEXTURE_IMAGE_UNITS_VTF; ++i)
+    for (unsigned int i = 0; i < IMPLEMENTATION_MAX_VERTEX_TEXTURE_IMAGE_UNITS; ++i)
     {
         stream.write(mSamplersVS[i].active);
         stream.write(mSamplersVS[i].logicalTextureUnit);
@@ -1820,18 +1821,13 @@ bool ProgramBinary::save(void* binary, GLsizei bufSize, GLsizei *length)
     for (unsigned int i = 0; i < mUniforms.size(); ++i)
     {
         stream.write(mUniforms[i]->type);
-        stream.write(mUniforms[i]->_name);
+        stream.write(mUniforms[i]->precision);
+        stream.write(mUniforms[i]->name);
         stream.write(mUniforms[i]->arraySize);
 
-        stream.write(mUniforms[i]->ps.float4Index);
-        stream.write(mUniforms[i]->ps.samplerIndex);
-        stream.write(mUniforms[i]->ps.boolIndex);
-        stream.write(mUniforms[i]->ps.registerCount);
-
-        stream.write(mUniforms[i]->vs.float4Index);
-        stream.write(mUniforms[i]->vs.samplerIndex);
-        stream.write(mUniforms[i]->vs.boolIndex);
-        stream.write(mUniforms[i]->vs.registerCount);
+        stream.write(mUniforms[i]->psRegisterIndex);
+        stream.write(mUniforms[i]->vsRegisterIndex);
+        stream.write(mUniforms[i]->registerCount);
     }
 
     stream.write(mUniformIndex.size());
@@ -1842,29 +1838,21 @@ bool ProgramBinary::save(void* binary, GLsizei bufSize, GLsizei *length)
         stream.write(mUniformIndex[i].index);
     }
 
-    stream.write(mDxDepthRangeLocation);
-    stream.write(mDxDepthLocation);
-    stream.write(mDxCoordLocation);
-    stream.write(mDxHalfPixelSizeLocation);
-    stream.write(mDxFrontCCWLocation);
-    stream.write(mDxPointsOrLinesLocation);
-
-    UINT pixelShaderSize;
-    HRESULT result = mPixelExecutable->GetFunction(NULL, &pixelShaderSize);
-    ASSERT(SUCCEEDED(result));
+    UINT pixelShaderSize = mPixelExecutable->getLength();
     stream.write(pixelShaderSize);
 
-    UINT vertexShaderSize;
-    result = mVertexExecutable->GetFunction(NULL, &vertexShaderSize);
-    ASSERT(SUCCEEDED(result));
+    UINT vertexShaderSize = mVertexExecutable->getLength();
     stream.write(vertexShaderSize);
 
-    D3DADAPTER_IDENTIFIER9 *identifier = getDisplay()->getAdapterIdentifier();
+    UINT geometryShaderSize = (mGeometryExecutable != NULL) ? mGeometryExecutable->getLength() : 0;
+    stream.write(geometryShaderSize);
+
+    GUID identifier = mRenderer->getAdapterIdentifier();
 
     GLsizei streamLength = stream.length();
     const void *streamData = stream.data();
 
-    GLsizei totalLength = streamLength + sizeof(GUID) + pixelShaderSize + vertexShaderSize;
+    GLsizei totalLength = streamLength + sizeof(GUID) + pixelShaderSize + vertexShaderSize + geometryShaderSize;
     if (totalLength > bufSize)
     {
         if (length)
@@ -1882,16 +1870,20 @@ bool ProgramBinary::save(void* binary, GLsizei bufSize, GLsizei *length)
         memcpy(ptr, streamData, streamLength);
         ptr += streamLength;
 
-        memcpy(ptr, &identifier->DeviceIdentifier, sizeof(GUID));
+        memcpy(ptr, &identifier, sizeof(GUID));
         ptr += sizeof(GUID);
 
-        result = mPixelExecutable->GetFunction(ptr, &pixelShaderSize);
-        ASSERT(SUCCEEDED(result));
+        memcpy(ptr, mPixelExecutable->getFunction(), pixelShaderSize);
         ptr += pixelShaderSize;
 
-        result = mVertexExecutable->GetFunction(ptr, &vertexShaderSize);
-        ASSERT(SUCCEEDED(result));
+        memcpy(ptr, mVertexExecutable->getFunction(), vertexShaderSize);
         ptr += vertexShaderSize;
+
+        if (mGeometryExecutable != NULL && geometryShaderSize > 0)
+        {
+            memcpy(ptr, mGeometryExecutable->getFunction(), geometryShaderSize);
+            ptr += geometryShaderSize;
+        }
 
         ASSERT(ptr - totalLength == binary);
     }
@@ -1932,69 +1924,66 @@ bool ProgramBinary::link(InfoLog &infoLog, const AttributeBindings &attributeBin
     std::string pixelHLSL = fragmentShader->getHLSL();
     std::string vertexHLSL = vertexShader->getHLSL();
 
-    if (!linkVaryings(infoLog, pixelHLSL, vertexHLSL, fragmentShader, vertexShader))
+    // Map the varyings to the register file
+    const Varying *packing[IMPLEMENTATION_MAX_VARYING_VECTORS][4] = {NULL};
+    int registers = packVaryings(infoLog, packing, fragmentShader);
+
+    if (registers < 0)
     {
         return false;
     }
 
-    Context *context = getContext();
-    const char *vertexProfile = context->supportsShaderModel3() ? "vs_3_0" : "vs_2_0";
-    const char *pixelProfile = context->supportsShaderModel3() ? "ps_3_0" : "ps_2_0";
-
-    ID3D10Blob *vertexBinary = compileToBinary(infoLog, vertexHLSL.c_str(), vertexProfile, &mConstantTableVS);
-    ID3D10Blob *pixelBinary = compileToBinary(infoLog, pixelHLSL.c_str(), pixelProfile, &mConstantTablePS);
-
-    if (vertexBinary && pixelBinary)
+    if (!linkVaryings(infoLog, registers, packing, pixelHLSL, vertexHLSL, fragmentShader, vertexShader))
     {
-        mVertexExecutable = getDisplay()->createVertexShader((DWORD*)vertexBinary->GetBufferPointer(), vertexBinary->GetBufferSize());
-        if (!mVertexExecutable)
-        {
-            return error(GL_OUT_OF_MEMORY, false);
-        }
-
-        mPixelExecutable = getDisplay()->createPixelShader((DWORD*)pixelBinary->GetBufferPointer(), pixelBinary->GetBufferSize());
-        if (!mPixelExecutable)
-        {
-            mVertexExecutable->Release();
-            mVertexExecutable = NULL;
-            return error(GL_OUT_OF_MEMORY, false);
-        }
-
-        vertexBinary->Release();
-        pixelBinary->Release();
-        vertexBinary = NULL;
-        pixelBinary = NULL;
-
-        if (!linkAttributes(infoLog, attributeBindings, fragmentShader, vertexShader))
-        {
-            return false;
-        }
-
-        if (!linkUniforms(infoLog, GL_FRAGMENT_SHADER, mConstantTablePS))
-        {
-            return false;
-        }
-
-        if (!linkUniforms(infoLog, GL_VERTEX_SHADER, mConstantTableVS))
-        {
-            return false;
-        }
-
-        // these uniforms are searched as already-decorated because gl_ and dx_
-        // are reserved prefixes, and do not receive additional decoration
-        mDxDepthRangeLocation = getUniformLocation("dx_DepthRange");
-        mDxDepthLocation = getUniformLocation("dx_Depth");
-        mDxCoordLocation = getUniformLocation("dx_Coord");
-        mDxHalfPixelSizeLocation = getUniformLocation("dx_HalfPixelSize");
-        mDxFrontCCWLocation = getUniformLocation("dx_FrontCCW");
-        mDxPointsOrLinesLocation = getUniformLocation("dx_PointsOrLines");
-
-        context->markDxUniformsDirty();
-
-        return true;
+        return false;
     }
 
-    return false;
+    bool success = true;
+
+    if (!linkAttributes(infoLog, attributeBindings, fragmentShader, vertexShader))
+    {
+        success = false;
+    }
+
+    if (!linkUniforms(infoLog, vertexShader->getUniforms(), fragmentShader->getUniforms()))
+    {
+        success = false;
+    }
+
+    // special case for gl_DepthRange, the only built-in uniform (also a struct)
+    if (vertexShader->mUsesDepthRange || fragmentShader->mUsesDepthRange)
+    {
+        mUniforms.push_back(new Uniform(GL_FLOAT, GL_HIGH_FLOAT, "gl_DepthRange.near", 0));
+        mUniforms.push_back(new Uniform(GL_FLOAT, GL_HIGH_FLOAT, "gl_DepthRange.far", 0));
+        mUniforms.push_back(new Uniform(GL_FLOAT, GL_HIGH_FLOAT, "gl_DepthRange.diff", 0));
+    }
+
+    if (success)
+    {
+        mVertexExecutable = mRenderer->compileToExecutable(infoLog, vertexHLSL.c_str(), rx::SHADER_VERTEX);
+        mPixelExecutable = mRenderer->compileToExecutable(infoLog, pixelHLSL.c_str(), rx::SHADER_PIXEL);
+
+        if (usesGeometryShader())
+        {
+            std::string geometryHLSL = generateGeometryShaderHLSL(registers, packing, fragmentShader, vertexShader);
+            mGeometryExecutable = mRenderer->compileToExecutable(infoLog, geometryHLSL.c_str(), rx::SHADER_GEOMETRY);
+        }
+
+        if (!mVertexExecutable || !mPixelExecutable || (usesGeometryShader() && !mGeometryExecutable))
+        {
+            infoLog.append("Failed to create D3D shaders.");
+            success = false;
+
+            delete mVertexExecutable;
+            mVertexExecutable = NULL;
+            delete mPixelExecutable;
+            mPixelExecutable = NULL;
+            delete mGeometryExecutable;
+            mGeometryExecutable = NULL;
+        }
+    }
+
+    return success;
 }
 
 // Determines the mapping between GL attributes and Direct3D 9 vertex stream usage indices
@@ -2067,13 +2056,19 @@ bool ProgramBinary::linkAttributes(InfoLog &infoLog, const AttributeBindings &at
     return true;
 }
 
-bool ProgramBinary::linkUniforms(InfoLog &infoLog, GLenum shader, D3DConstantTable *constantTable)
+bool ProgramBinary::linkUniforms(InfoLog &infoLog, const sh::ActiveUniforms &vertexUniforms, const sh::ActiveUniforms &fragmentUniforms)
 {
-    for (unsigned int constantIndex = 0; constantIndex < constantTable->constants(); constantIndex++)
+    for (sh::ActiveUniforms::const_iterator uniform = vertexUniforms.begin(); uniform != vertexUniforms.end(); uniform++)
     {
-        const D3DConstant *constant = constantTable->getConstant(constantIndex);
+        if (!defineUniform(GL_VERTEX_SHADER, *uniform, infoLog))
+        {
+            return false;
+        }
+    }
 
-        if (!defineUniform(infoLog, shader, constant))
+    for (sh::ActiveUniforms::const_iterator uniform = fragmentUniforms.begin(); uniform != fragmentUniforms.end(); uniform++)
+    {
+        if (!defineUniform(GL_FRAGMENT_SHADER, *uniform, infoLog))
         {
             return false;
         }
@@ -2082,25 +2077,36 @@ bool ProgramBinary::linkUniforms(InfoLog &infoLog, GLenum shader, D3DConstantTab
     return true;
 }
 
-// Adds the description of a constant found in the binary shader to the list of uniforms
-// Returns true if succesful (uniform not already defined)
-bool ProgramBinary::defineUniform(InfoLog &infoLog, GLenum shader, const D3DConstant *constant, std::string name)
+bool ProgramBinary::defineUniform(GLenum shader, const sh::Uniform &constant, InfoLog &infoLog)
 {
-    if (constant->registerSet == D3DConstant::RS_SAMPLER)
+    if (constant.type == GL_SAMPLER_2D ||
+        constant.type == GL_SAMPLER_CUBE)
     {
-        for (unsigned int i = 0; i < constant->registerCount; i++)
+        unsigned int samplerIndex = constant.registerIndex;
+            
+        do
         {
-            const D3DConstant *psConstant = mConstantTablePS->getConstantByName(constant->name.c_str());
-            const D3DConstant *vsConstant = mConstantTableVS->getConstantByName(constant->name.c_str());
-
-            if (psConstant)
+            if (shader == GL_VERTEX_SHADER)
             {
-                unsigned int samplerIndex = psConstant->registerIndex + i;
-
+                if (samplerIndex < mRenderer->getMaxVertexTextureImageUnits())
+                {
+                    mSamplersVS[samplerIndex].active = true;
+                    mSamplersVS[samplerIndex].textureType = (constant.type == GL_SAMPLER_CUBE) ? TEXTURE_CUBE : TEXTURE_2D;
+                    mSamplersVS[samplerIndex].logicalTextureUnit = 0;
+                    mUsedVertexSamplerRange = std::max(samplerIndex + 1, mUsedVertexSamplerRange);
+                }
+                else
+                {
+                    infoLog.append("Vertex shader sampler count exceeds the maximum vertex texture units (%d).", mRenderer->getMaxVertexTextureImageUnits());
+                    return false;
+                }
+            }
+            else if (shader == GL_FRAGMENT_SHADER)
+            {
                 if (samplerIndex < MAX_TEXTURE_IMAGE_UNITS)
                 {
                     mSamplersPS[samplerIndex].active = true;
-                    mSamplersPS[samplerIndex].textureType = (constant->type == D3DConstant::PT_SAMPLERCUBE) ? TEXTURE_CUBE : TEXTURE_2D;
+                    mSamplersPS[samplerIndex].textureType = (constant.type == GL_SAMPLER_CUBE) ? TEXTURE_CUBE : TEXTURE_2D;
                     mSamplersPS[samplerIndex].logicalTextureUnit = 0;
                     mUsedPixelSamplerRange = std::max(samplerIndex + 1, mUsedPixelSamplerRange);
                 }
@@ -2110,170 +2116,221 @@ bool ProgramBinary::defineUniform(InfoLog &infoLog, GLenum shader, const D3DCons
                     return false;
                 }
             }
-            
-            if (vsConstant)
-            {
-                unsigned int samplerIndex = vsConstant->registerIndex + i;
+            else UNREACHABLE();
 
-                if (samplerIndex < getContext()->getMaximumVertexTextureImageUnits())
-                {
-                    mSamplersVS[samplerIndex].active = true;
-                    mSamplersVS[samplerIndex].textureType = (constant->type == D3DConstant::PT_SAMPLERCUBE) ? TEXTURE_CUBE : TEXTURE_2D;
-                    mSamplersVS[samplerIndex].logicalTextureUnit = 0;
-                    mUsedVertexSamplerRange = std::max(samplerIndex + 1, mUsedVertexSamplerRange);
-                }
-                else
-                {
-                    infoLog.append("Vertex shader sampler count exceeds MAX_VERTEX_TEXTURE_IMAGE_UNITS (%d).", getContext()->getMaximumVertexTextureImageUnits());
-                    return false;
-                }
-            }
+            samplerIndex++;
         }
+        while (samplerIndex < constant.registerIndex + constant.arraySize);
     }
 
-    switch(constant->typeClass)
+    Uniform *uniform = NULL;
+    GLint location = getUniformLocation(constant.name);
+
+    if (location >= 0)   // Previously defined, type and precision must match
     {
-      case D3DConstant::CLASS_STRUCT:
-        {
-            for (unsigned int arrayIndex = 0; arrayIndex < constant->elements; arrayIndex++)
-            {
-                for (unsigned int field = 0; field < constant->structMembers[arrayIndex].size(); field++)
-                {
-                    const D3DConstant *fieldConstant = constant->structMembers[arrayIndex][field];
-
-                    std::string structIndex = (constant->elements > 1) ? ("[" + str(arrayIndex) + "]") : "";
-
-                    if (!defineUniform(infoLog, shader, fieldConstant, name + constant->name + structIndex + "."))
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        }
-      case D3DConstant::CLASS_SCALAR:
-      case D3DConstant::CLASS_VECTOR:
-      case D3DConstant::CLASS_MATRIX_COLUMNS:
-      case D3DConstant::CLASS_OBJECT:
-        return defineUniform(shader, constant, name + constant->name);
-      default:
-        UNREACHABLE();
-        return false;
-    }
-}
-
-bool ProgramBinary::defineUniform(GLenum shader, const D3DConstant *constant, const std::string &_name)
-{
-    Uniform *uniform = createUniform(constant, _name);
-
-    if(!uniform)
-    {
-        return false;
-    }
-
-    // Check if already defined
-    GLint location = getUniformLocation(uniform->name);
-    GLenum type = uniform->type;
-
-    if (location >= 0)
-    {
-        delete uniform;
         uniform = mUniforms[mUniformIndex[location].index];
+
+        if (uniform->type != constant.type)
+        {
+            infoLog.append("Types for uniform %s do not match between the vertex and fragment shader", uniform->name.c_str());
+            return false;
+        }
+
+        if (uniform->precision != constant.precision)
+        {
+            infoLog.append("Precisions for uniform %s do not match between the vertex and fragment shader", uniform->name.c_str());
+            return false;
+        }
+    }
+    else
+    {
+        uniform = new Uniform(constant.type, constant.precision, constant.name, constant.arraySize);
     }
 
-    if (shader == GL_FRAGMENT_SHADER) uniform->ps.set(constant);
-    if (shader == GL_VERTEX_SHADER)   uniform->vs.set(constant);
+    if (!uniform)
+    {
+        return false;
+    }
+
+    if (shader == GL_FRAGMENT_SHADER)
+    {
+        uniform->psRegisterIndex = constant.registerIndex;
+    }
+    else if (shader == GL_VERTEX_SHADER)
+    {
+        uniform->vsRegisterIndex = constant.registerIndex;
+    }
+    else UNREACHABLE();
 
     if (location >= 0)
     {
-        return uniform->type == type;
+        return uniform->type == constant.type;
     }
 
     mUniforms.push_back(uniform);
     unsigned int uniformIndex = mUniforms.size() - 1;
 
-    for (unsigned int i = 0; i < uniform->arraySize; ++i)
+    for (unsigned int i = 0; i < uniform->elementCount(); i++)
     {
-        mUniformIndex.push_back(UniformLocation(_name, i, uniformIndex));
+        mUniformIndex.push_back(UniformLocation(constant.name, i, uniformIndex));
     }
 
-    return true;
-}
-
-Uniform *ProgramBinary::createUniform(const D3DConstant *constant, const std::string &_name)
-{
-    if (constant->rows == 1)   // Vectors and scalars
+    if (shader == GL_VERTEX_SHADER)
     {
-        switch (constant->type)
+        if (constant.registerIndex + uniform->registerCount > mRenderer->getReservedVertexUniformVectors() + mRenderer->getMaxVertexUniformVectors())
         {
-          case D3DConstant::PT_SAMPLER2D:
-            switch (constant->columns)
-            {
-              case 1: return new Uniform(GL_SAMPLER_2D, _name, constant->elements);
-              default: UNREACHABLE();
-            }
-            break;
-          case D3DConstant::PT_SAMPLERCUBE:
-            switch (constant->columns)
-            {
-              case 1: return new Uniform(GL_SAMPLER_CUBE, _name, constant->elements);
-              default: UNREACHABLE();
-            }
-            break;
-          case D3DConstant::PT_BOOL:
-            switch (constant->columns)
-            {
-              case 1: return new Uniform(GL_BOOL, _name, constant->elements);
-              case 2: return new Uniform(GL_BOOL_VEC2, _name, constant->elements);
-              case 3: return new Uniform(GL_BOOL_VEC3, _name, constant->elements);
-              case 4: return new Uniform(GL_BOOL_VEC4, _name, constant->elements);
-              default: UNREACHABLE();
-            }
-            break;
-          case D3DConstant::PT_INT:
-            switch (constant->columns)
-            {
-              case 1: return new Uniform(GL_INT, _name, constant->elements);
-              case 2: return new Uniform(GL_INT_VEC2, _name, constant->elements);
-              case 3: return new Uniform(GL_INT_VEC3, _name, constant->elements);
-              case 4: return new Uniform(GL_INT_VEC4, _name, constant->elements);
-              default: UNREACHABLE();
-            }
-            break;
-          case D3DConstant::PT_FLOAT:
-            switch (constant->columns)
-            {
-              case 1: return new Uniform(GL_FLOAT, _name, constant->elements);
-              case 2: return new Uniform(GL_FLOAT_VEC2, _name, constant->elements);
-              case 3: return new Uniform(GL_FLOAT_VEC3, _name, constant->elements);
-              case 4: return new Uniform(GL_FLOAT_VEC4, _name, constant->elements);
-              default: UNREACHABLE();
-            }
-            break;
-          default:
-            UNREACHABLE();
+            infoLog.append("Vertex shader active uniforms exceed GL_MAX_VERTEX_UNIFORM_VECTORS (%u)", mRenderer->getMaxVertexUniformVectors());
+            return false;
         }
     }
-    else if (constant->rows == constant->columns)  // Square matrices
+    else if (shader == GL_FRAGMENT_SHADER)
     {
-        switch (constant->type)
+        if (constant.registerIndex + uniform->registerCount > mRenderer->getReservedFragmentUniformVectors() + mRenderer->getMaxFragmentUniformVectors())
         {
-          case D3DConstant::PT_FLOAT:
-            switch (constant->rows)
-            {
-              case 2: return new Uniform(GL_FLOAT_MAT2, _name, constant->elements);
-              case 3: return new Uniform(GL_FLOAT_MAT3, _name, constant->elements);
-              case 4: return new Uniform(GL_FLOAT_MAT4, _name, constant->elements);
-              default: UNREACHABLE();
-            }
-            break;
-          default: UNREACHABLE();
+            infoLog.append("Fragment shader active uniforms exceed GL_MAX_FRAGMENT_UNIFORM_VECTORS (%u)", mRenderer->getMaxFragmentUniformVectors());
+            return false;
         }
     }
     else UNREACHABLE();
 
-    return 0;
+    return true;
+}
+
+std::string ProgramBinary::generateGeometryShaderHLSL(int registers, const Varying *packing[][4], FragmentShader *fragmentShader, VertexShader *vertexShader) const
+{
+    // for now we only handle point sprite emulation
+    ASSERT(usesPointSpriteEmulation());
+    return generatePointSpriteHLSL(registers, packing, fragmentShader, vertexShader);
+}
+
+std::string ProgramBinary::generatePointSpriteHLSL(int registers, const Varying *packing[][4], FragmentShader *fragmentShader, VertexShader *vertexShader) const
+{
+    ASSERT(registers >= 0);
+    ASSERT(vertexShader->mUsesPointSize);
+    ASSERT(mRenderer->getMajorShaderModel() >= 4);
+
+    std::string geomHLSL;
+
+    std::string varyingSemantic = "TEXCOORD";
+
+    std::string fragCoordSemantic;
+    std::string pointCoordSemantic;
+
+    int reservedRegisterIndex = registers;
+
+    if (fragmentShader->mUsesFragCoord)
+    {
+        fragCoordSemantic = varyingSemantic + str(reservedRegisterIndex++);
+    }
+
+    if (fragmentShader->mUsesPointCoord)
+    {
+        pointCoordSemantic = varyingSemantic + str(reservedRegisterIndex++);
+    }
+
+    geomHLSL += "uniform float4 dx_ViewCoords : register(c1);\n"
+                "\n"
+                "struct GS_INPUT\n"
+                "{\n";
+
+    for (int r = 0; r < registers; r++)
+    {
+        int registerSize = packing[r][3] ? 4 : (packing[r][2] ? 3 : (packing[r][1] ? 2 : 1));
+
+        geomHLSL += "    float" + str(registerSize) + " v" + str(r) + " : " + varyingSemantic + str(r) + ";\n";
+    }
+
+    if (fragmentShader->mUsesFragCoord)
+    {
+        geomHLSL += "    float4 gl_FragCoord : " + fragCoordSemantic + ";\n";
+    }
+
+    geomHLSL += "    float gl_PointSize : PSIZE;\n"
+                "    float4 gl_Position : SV_Position;\n"
+                "};\n"
+                "\n"
+                "struct GS_OUTPUT\n"
+                "{\n";
+
+    for (int r = 0; r < registers; r++)
+    {
+        int registerSize = packing[r][3] ? 4 : (packing[r][2] ? 3 : (packing[r][1] ? 2 : 1));
+
+        geomHLSL += "    float" + str(registerSize) + " v" + str(r) + " : " + varyingSemantic + str(r) + ";\n";
+    }
+
+    if (fragmentShader->mUsesFragCoord)
+    {
+        geomHLSL += "    float4 gl_FragCoord : " + fragCoordSemantic + ";\n";
+    }
+
+    if (fragmentShader->mUsesPointCoord)
+    {
+        geomHLSL += "    float2 gl_PointCoord : " + pointCoordSemantic + ";\n";
+    }
+
+    geomHLSL +=   "    float gl_PointSize : PSIZE;\n"
+                  "    float4 gl_Position : SV_Position;\n"
+                  "};\n"
+                  "\n"
+                  "static float2 pointSpriteCorners[] = \n"
+                  "{\n"
+                  "    float2( 0.5f, -0.5f),\n"
+                  "    float2( 0.5f,  0.5f),\n"
+                  "    float2(-0.5f, -0.5f),\n"
+                  "    float2(-0.5f,  0.5f)\n"
+                  "};\n"
+                  "\n"
+                  "static float2 pointSpriteTexcoords[] = \n"
+                  "{\n"
+                  "    float2(1.0f, 1.0f),\n"
+                  "    float2(1.0f, 0.0f),\n"
+                  "    float2(0.0f, 1.0f),\n"
+                  "    float2(0.0f, 0.0f)\n"
+                  "};\n"
+                  "\n"
+                  "static float minPointSize = " + str(ALIASED_POINT_SIZE_RANGE_MIN) + ".0f;\n"
+                  "static float maxPointSize = " + str(mRenderer->getMaxPointSize()) + ".0f;\n"
+                  "\n"
+                  "[maxvertexcount(4)]\n"
+                  "void main(point GS_INPUT input[1], inout TriangleStream<GS_OUTPUT> outStream)\n"
+                  "{\n"
+                  "    GS_OUTPUT output = (GS_OUTPUT)0;\n"
+                  "    output.gl_PointSize = input[0].gl_PointSize;\n";
+
+    for (int r = 0; r < registers; r++)
+    {
+        geomHLSL += "    output.v" + str(r) + " = input[0].v" + str(r) + ";\n";
+    }
+
+    if (fragmentShader->mUsesFragCoord)
+    {
+        geomHLSL += "    output.gl_FragCoord = input[0].gl_FragCoord;\n";
+    }
+
+    geomHLSL += "    \n"
+                "    float gl_PointSize = clamp(input[0].gl_PointSize, minPointSize, maxPointSize);\n"
+                "    float4 gl_Position = input[0].gl_Position;\n"
+                "    float2 viewportScale = float2(1.0f / dx_ViewCoords.x, 1.0f / dx_ViewCoords.y) * gl_Position.w;\n";
+
+    for (int corner = 0; corner < 4; corner++)
+    {
+        geomHLSL += "    \n"
+                    "    output.gl_Position = gl_Position + float4(pointSpriteCorners[" + str(corner) + "] * viewportScale * gl_PointSize, 0.0f, 0.0f);\n";
+
+        if (fragmentShader->mUsesPointCoord)
+        {
+            geomHLSL += "    output.gl_PointCoord = pointSpriteTexcoords[" + str(corner) + "];\n";
+        }
+
+        geomHLSL += "    outStream.Append(output);\n";
+    }
+
+    geomHLSL += "    \n"
+                "    outStream.RestartStrip();\n"
+                "}\n";
+
+    return geomHLSL;
 }
 
 // This method needs to match OutputHLSL::decorate
@@ -2287,235 +2344,12 @@ std::string ProgramBinary::decorateAttribute(const std::string &name)
     return name;
 }
 
-std::string ProgramBinary::undecorateUniform(const std::string &_name)
-{
-    std::string name = _name;
-    
-    // Remove any structure field decoration
-    size_t pos = 0;
-    while ((pos = name.find("._", pos)) != std::string::npos)
-    {
-        name.replace(pos, 2, ".");
-    }
-
-    // Remove the leading decoration
-    if (name[0] == '_')
-    {
-        return name.substr(1);
-    }
-    else if (name.compare(0, 3, "ar_") == 0)
-    {
-        return name.substr(3);
-    }
-    
-    return name;
-}
-
-void ProgramBinary::applyUniformnbv(Uniform *targetUniform, GLsizei count, int width, const GLboolean *v)
-{
-    float vector[D3D9_MAX_FLOAT_CONSTANTS * 4];
-    BOOL boolVector[D3D9_MAX_BOOL_CONSTANTS];
-
-    if (targetUniform->ps.float4Index >= 0 || targetUniform->vs.float4Index >= 0)
-    {
-        ASSERT(count <= D3D9_MAX_FLOAT_CONSTANTS);
-        for (int i = 0; i < count; i++)
-        {
-            for (int j = 0; j < 4; j++)
-            {
-                if (j < width)
-                {
-                    vector[i * 4 + j] = (v[i * width + j] == GL_FALSE) ? 0.0f : 1.0f;
-                }
-                else
-                {
-                    vector[i * 4 + j] = 0.0f;
-                }
-            }
-        }
-    }
-
-    if (targetUniform->ps.boolIndex >= 0 || targetUniform->vs.boolIndex >= 0)
-    {
-        int psCount = targetUniform->ps.boolIndex >= 0 ? targetUniform->ps.registerCount : 0;
-        int vsCount = targetUniform->vs.boolIndex >= 0 ? targetUniform->vs.registerCount : 0;
-        int copyCount = std::min(count * width, std::max(psCount, vsCount));
-        ASSERT(copyCount <= D3D9_MAX_BOOL_CONSTANTS);
-        for (int i = 0; i < copyCount; i++)
-        {
-            boolVector[i] = v[i] != GL_FALSE;
-        }
-    }
-
-    if (targetUniform->ps.float4Index >= 0)
-    {
-        mDevice->SetPixelShaderConstantF(targetUniform->ps.float4Index, vector, targetUniform->ps.registerCount);
-    }
-        
-    if (targetUniform->ps.boolIndex >= 0)
-    {
-        mDevice->SetPixelShaderConstantB(targetUniform->ps.boolIndex, boolVector, targetUniform->ps.registerCount);
-    }
-    
-    if (targetUniform->vs.float4Index >= 0)
-    {
-        mDevice->SetVertexShaderConstantF(targetUniform->vs.float4Index, vector, targetUniform->vs.registerCount);
-    }
-        
-    if (targetUniform->vs.boolIndex >= 0)
-    {
-        mDevice->SetVertexShaderConstantB(targetUniform->vs.boolIndex, boolVector, targetUniform->vs.registerCount);
-    }
-}
-
-bool ProgramBinary::applyUniformnfv(Uniform *targetUniform, const GLfloat *v)
-{
-    if (targetUniform->ps.registerCount)
-    {
-        mDevice->SetPixelShaderConstantF(targetUniform->ps.float4Index, v, targetUniform->ps.registerCount);
-    }
-
-    if (targetUniform->vs.registerCount)
-    {
-        mDevice->SetVertexShaderConstantF(targetUniform->vs.float4Index, v, targetUniform->vs.registerCount);
-    }
-
-    return true;
-}
-
-bool ProgramBinary::applyUniform1iv(Uniform *targetUniform, GLsizei count, const GLint *v)
-{
-    ASSERT(count <= D3D9_MAX_FLOAT_CONSTANTS);
-    Vector4 vector[D3D9_MAX_FLOAT_CONSTANTS];
-
-    for (int i = 0; i < count; i++)
-    {
-        vector[i] = Vector4((float)v[i], 0, 0, 0);
-    }
-
-    if (targetUniform->ps.registerCount)
-    {
-        if (targetUniform->ps.samplerIndex >= 0)
-        {
-            unsigned int firstIndex = targetUniform->ps.samplerIndex;
-
-            for (int i = 0; i < count; i++)
-            {
-                unsigned int samplerIndex = firstIndex + i;
-
-                if (samplerIndex < MAX_TEXTURE_IMAGE_UNITS)
-                {
-                    ASSERT(mSamplersPS[samplerIndex].active);
-                    mSamplersPS[samplerIndex].logicalTextureUnit = v[i];
-                }
-            }
-        }
-        else
-        {
-            ASSERT(targetUniform->ps.float4Index >= 0);
-            mDevice->SetPixelShaderConstantF(targetUniform->ps.float4Index, (const float*)vector, targetUniform->ps.registerCount);
-        }
-    }
-
-    if (targetUniform->vs.registerCount)
-    {
-        if (targetUniform->vs.samplerIndex >= 0)
-        {
-            unsigned int firstIndex = targetUniform->vs.samplerIndex;
-
-            for (int i = 0; i < count; i++)
-            {
-                unsigned int samplerIndex = firstIndex + i;
-
-                if (samplerIndex < MAX_VERTEX_TEXTURE_IMAGE_UNITS_VTF)
-                {
-                    ASSERT(mSamplersVS[samplerIndex].active);
-                    mSamplersVS[samplerIndex].logicalTextureUnit = v[i];
-                }
-            }
-        }
-        else
-        {
-            ASSERT(targetUniform->vs.float4Index >= 0);
-            mDevice->SetVertexShaderConstantF(targetUniform->vs.float4Index, (const float *)vector, targetUniform->vs.registerCount);
-        }
-    }
-
-    return true;
-}
-
-bool ProgramBinary::applyUniform2iv(Uniform *targetUniform, GLsizei count, const GLint *v)
-{
-    ASSERT(count <= D3D9_MAX_FLOAT_CONSTANTS);
-    Vector4 vector[D3D9_MAX_FLOAT_CONSTANTS];
-
-    for (int i = 0; i < count; i++)
-    {
-        vector[i] = Vector4((float)v[0], (float)v[1], 0, 0);
-
-        v += 2;
-    }
-
-    applyUniformniv(targetUniform, count, vector);
-
-    return true;
-}
-
-bool ProgramBinary::applyUniform3iv(Uniform *targetUniform, GLsizei count, const GLint *v)
-{
-    ASSERT(count <= D3D9_MAX_FLOAT_CONSTANTS);
-    Vector4 vector[D3D9_MAX_FLOAT_CONSTANTS];
-
-    for (int i = 0; i < count; i++)
-    {
-        vector[i] = Vector4((float)v[0], (float)v[1], (float)v[2], 0);
-
-        v += 3;
-    }
-
-    applyUniformniv(targetUniform, count, vector);
-
-    return true;
-}
-
-bool ProgramBinary::applyUniform4iv(Uniform *targetUniform, GLsizei count, const GLint *v)
-{
-    ASSERT(count <= D3D9_MAX_FLOAT_CONSTANTS);
-    Vector4 vector[D3D9_MAX_FLOAT_CONSTANTS];
-
-    for (int i = 0; i < count; i++)
-    {
-        vector[i] = Vector4((float)v[0], (float)v[1], (float)v[2], (float)v[3]);
-
-        v += 4;
-    }
-
-    applyUniformniv(targetUniform, count, vector);
-
-    return true;
-}
-
-void ProgramBinary::applyUniformniv(Uniform *targetUniform, GLsizei count, const Vector4 *vector)
-{
-    if (targetUniform->ps.registerCount)
-    {
-        ASSERT(targetUniform->ps.float4Index >= 0);
-        mDevice->SetPixelShaderConstantF(targetUniform->ps.float4Index, (const float *)vector, targetUniform->ps.registerCount);
-    }
-
-    if (targetUniform->vs.registerCount)
-    {
-        ASSERT(targetUniform->vs.float4Index >= 0);
-        mDevice->SetVertexShaderConstantF(targetUniform->vs.float4Index, (const float *)vector, targetUniform->vs.registerCount);
-    }
-}
-
 bool ProgramBinary::isValidated() const 
 {
     return mValidated;
 }
 
-void ProgramBinary::getActiveAttribute(GLuint index, GLsizei bufsize, GLsizei *length, GLint *size, GLenum *type, GLchar *name)
+void ProgramBinary::getActiveAttribute(GLuint index, GLsizei bufsize, GLsizei *length, GLint *size, GLenum *type, GLchar *name) const
 {
     // Skip over inactive attributes
     unsigned int activeAttribute = 0;
@@ -2553,7 +2387,7 @@ void ProgramBinary::getActiveAttribute(GLuint index, GLsizei bufsize, GLsizei *l
     *type = mLinkedAttribute[attribute].type;
 }
 
-GLint ProgramBinary::getActiveAttributeCount()
+GLint ProgramBinary::getActiveAttributeCount() const
 {
     int count = 0;
 
@@ -2568,7 +2402,7 @@ GLint ProgramBinary::getActiveAttributeCount()
     return count;
 }
 
-GLint ProgramBinary::getActiveAttributeMaxLength()
+GLint ProgramBinary::getActiveAttributeMaxLength() const
 {
     int maxLength = 0;
 
@@ -2583,33 +2417,15 @@ GLint ProgramBinary::getActiveAttributeMaxLength()
     return maxLength;
 }
 
-void ProgramBinary::getActiveUniform(GLuint index, GLsizei bufsize, GLsizei *length, GLint *size, GLenum *type, GLchar *name)
+void ProgramBinary::getActiveUniform(GLuint index, GLsizei bufsize, GLsizei *length, GLint *size, GLenum *type, GLchar *name) const
 {
-    // Skip over internal uniforms
-    unsigned int activeUniform = 0;
-    unsigned int uniform;
-    for (uniform = 0; uniform < mUniforms.size(); uniform++)
-    {
-        if (mUniforms[uniform]->name.compare(0, 3, "dx_") == 0)
-        {
-            continue;
-        }
-
-        if (activeUniform == index)
-        {
-            break;
-        }
-
-        activeUniform++;
-    }
-
-    ASSERT(uniform < mUniforms.size());   // index must be smaller than getActiveUniformCount()
+    ASSERT(index < mUniforms.size());   // index must be smaller than getActiveUniformCount()
 
     if (bufsize > 0)
     {
-        std::string string = mUniforms[uniform]->name;
+        std::string string = mUniforms[index]->name;
 
-        if (mUniforms[uniform]->isArray())
+        if (mUniforms[index]->isArray())
         {
             string += "[0]";
         }
@@ -2623,35 +2439,24 @@ void ProgramBinary::getActiveUniform(GLuint index, GLsizei bufsize, GLsizei *len
         }
     }
 
-    *size = mUniforms[uniform]->arraySize;
+    *size = mUniforms[index]->elementCount();
 
-    *type = mUniforms[uniform]->type;
+    *type = mUniforms[index]->type;
 }
 
-GLint ProgramBinary::getActiveUniformCount()
+GLint ProgramBinary::getActiveUniformCount() const
 {
-    int count = 0;
-
-    unsigned int numUniforms = mUniforms.size();
-    for (unsigned int uniformIndex = 0; uniformIndex < numUniforms; uniformIndex++)
-    {
-        if (mUniforms[uniformIndex]->name.compare(0, 3, "dx_") != 0)
-        {
-            count++;
-        }
-    }
-
-    return count;
+    return mUniforms.size();
 }
 
-GLint ProgramBinary::getActiveUniformMaxLength()
+GLint ProgramBinary::getActiveUniformMaxLength() const
 {
     int maxLength = 0;
 
     unsigned int numUniforms = mUniforms.size();
     for (unsigned int uniformIndex = 0; uniformIndex < numUniforms; uniformIndex++)
     {
-        if (!mUniforms[uniformIndex]->name.empty() && mUniforms[uniformIndex]->name.compare(0, 3, "dx_") != 0)
+        if (!mUniforms[uniformIndex]->name.empty())
         {
             int length = (int)(mUniforms[uniformIndex]->name.length() + 1);
             if (mUniforms[uniformIndex]->isArray())
@@ -2684,10 +2489,10 @@ bool ProgramBinary::validateSamplers(InfoLog *infoLog)
     // texture image unit, and this is the current program, then ValidateProgram will fail, and
     // DrawArrays and DrawElements will issue the INVALID_OPERATION error.
 
-    const unsigned int maxCombinedTextureImageUnits = getContext()->getMaximumCombinedTextureImageUnits();
-    TextureType textureUnitType[MAX_COMBINED_TEXTURE_IMAGE_UNITS_VTF];
+    const unsigned int maxCombinedTextureImageUnits = mRenderer->getMaxCombinedTextureImageUnits();
+    TextureType textureUnitType[IMPLEMENTATION_MAX_COMBINED_TEXTURE_IMAGE_UNITS];
 
-    for (unsigned int i = 0; i < MAX_COMBINED_TEXTURE_IMAGE_UNITS_VTF; ++i)
+    for (unsigned int i = 0; i < IMPLEMENTATION_MAX_COMBINED_TEXTURE_IMAGE_UNITS; ++i)
     {
         textureUnitType[i] = TEXTURE_UNKNOWN;
     }
@@ -2702,7 +2507,7 @@ bool ProgramBinary::validateSamplers(InfoLog *infoLog)
             {
                 if (infoLog)
                 {
-                    infoLog->append("Sampler uniform (%d) exceeds MAX_COMBINED_TEXTURE_IMAGE_UNITS (%d)", unit, maxCombinedTextureImageUnits);
+                    infoLog->append("Sampler uniform (%d) exceeds IMPLEMENTATION_MAX_COMBINED_TEXTURE_IMAGE_UNITS (%d)", unit, maxCombinedTextureImageUnits);
                 }
 
                 return false;
@@ -2737,7 +2542,7 @@ bool ProgramBinary::validateSamplers(InfoLog *infoLog)
             {
                 if (infoLog)
                 {
-                    infoLog->append("Sampler uniform (%d) exceeds MAX_COMBINED_TEXTURE_IMAGE_UNITS (%d)", unit, maxCombinedTextureImageUnits);
+                    infoLog->append("Sampler uniform (%d) exceeds IMPLEMENTATION_MAX_COMBINED_TEXTURE_IMAGE_UNITS (%d)", unit, maxCombinedTextureImageUnits);
                 }
 
                 return false;
@@ -2765,38 +2570,51 @@ bool ProgramBinary::validateSamplers(InfoLog *infoLog)
     return true;
 }
 
-GLint ProgramBinary::getDxDepthRangeLocation() const
-{
-    return mDxDepthRangeLocation;
-}
-
-GLint ProgramBinary::getDxDepthLocation() const
-{
-    return mDxDepthLocation;
-}
-
-GLint ProgramBinary::getDxCoordLocation() const
-{
-    return mDxCoordLocation;
-}
-
-GLint ProgramBinary::getDxHalfPixelSizeLocation() const
-{
-    return mDxHalfPixelSizeLocation;
-}
-
-GLint ProgramBinary::getDxFrontCCWLocation() const
-{
-    return mDxFrontCCWLocation;
-}
-
-GLint ProgramBinary::getDxPointsOrLinesLocation() const
-{
-    return mDxPointsOrLinesLocation;
-}
-
 ProgramBinary::Sampler::Sampler() : active(false), logicalTextureUnit(0), textureType(TEXTURE_2D)
 {
+}
+
+struct AttributeSorter
+{
+    AttributeSorter(const int (&semanticIndices)[MAX_VERTEX_ATTRIBS])
+        : originalIndices(semanticIndices)
+    {
+        for (int i = 0; i < MAX_VERTEX_ATTRIBS; i++)
+        {
+            indices[i] = i;
+        }
+
+        std::sort(&indices[0], &indices[MAX_VERTEX_ATTRIBS], *this);
+    }
+
+    bool operator()(int a, int b)
+    {
+        return originalIndices[a] == -1 ? false : originalIndices[a] < originalIndices[b];
+    }
+
+    int indices[MAX_VERTEX_ATTRIBS];
+    const int (&originalIndices)[MAX_VERTEX_ATTRIBS];
+};
+
+void ProgramBinary::sortAttributesByLayout(rx::TranslatedAttribute attributes[MAX_VERTEX_ATTRIBS], int sortedSemanticIndices[MAX_VERTEX_ATTRIBS]) const
+{
+    AttributeSorter sorter(mSemanticIndex);
+
+    int oldIndices[MAX_VERTEX_ATTRIBS];
+    rx::TranslatedAttribute oldTranslatedAttributes[MAX_VERTEX_ATTRIBS];
+
+    for (int i = 0; i < MAX_VERTEX_ATTRIBS; i++)
+    {
+        oldIndices[i] = mSemanticIndex[i];
+        oldTranslatedAttributes[i] = attributes[i];
+    }
+
+    for (int i = 0; i < MAX_VERTEX_ATTRIBS; i++)
+    {
+        int oldIndex = sorter.indices[i];
+        sortedSemanticIndices[i] = oldIndices[oldIndex];
+        attributes[i] = oldTranslatedAttributes[oldIndex];
+    }
 }
 
 }

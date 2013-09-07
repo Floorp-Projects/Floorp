@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -8,18 +8,22 @@
 // such as the client area of a window, including any back buffers.
 // Implements EGLSurface and related functionality. [EGL 1.4] section 2.2 page 3.
 
-#ifndef INCLUDE_SURFACE_H_
-#define INCLUDE_SURFACE_H_
+#ifndef LIBEGL_SURFACE_H_
+#define LIBEGL_SURFACE_H_
 
 #define EGLAPI
 #include <EGL/egl.h>
-#include <d3d9.h>
 
 #include "common/angleutils.h"
 
 namespace gl
 {
 class Texture2D;
+}
+namespace rx
+{
+class Renderer;
+class SwapChain;
 }
 
 namespace egl
@@ -48,41 +52,32 @@ class Surface
 
     virtual EGLint isPostSubBufferSupported() const;
 
-    virtual IDirect3DSurface9 *getRenderTarget();
-    virtual IDirect3DSurface9 *getDepthStencil();
-    virtual IDirect3DTexture9 *getOffscreenTexture();
-
-    HANDLE getShareHandle() { return mShareHandle; }
+    virtual rx::SwapChain *getSwapChain() const;
 
     void setSwapInterval(EGLint interval);
     bool checkForOutOfDateSwapChain();   // Returns true if swapchain changed due to resize or interval update
 
     virtual EGLenum getTextureFormat() const;
     virtual EGLenum getTextureTarget() const;
-    virtual D3DFORMAT getFormat() const;
+    virtual EGLenum getFormat() const;
 
     virtual void setBoundTexture(gl::Texture2D *texture);
     virtual gl::Texture2D *getBoundTexture() const;
-
-    void recreateAdditionalSwapChain();
 
 private:
     DISALLOW_COPY_AND_ASSIGN(Surface);
 
     Display *const mDisplay;
-    IDirect3DSwapChain9 *mSwapChain;
-    IDirect3DSurface9 *mBackBuffer;
-    IDirect3DSurface9 *mDepthStencil;
-    IDirect3DSurface9* mRenderTarget;
-    IDirect3DTexture9* mOffscreenTexture;
+    rx::Renderer *mRenderer;
 
     HANDLE mShareHandle;
+    rx::SwapChain *mSwapChain;
 
     void subclassWindow();
     void unsubclassWindow();
+    bool resizeSwapChain(int backbufferWidth, int backbufferHeight);
     bool resetSwapChain(int backbufferWidth, int backbufferHeight);
     bool swapRect(EGLint x, EGLint y, EGLint width, EGLint height);
-    static DWORD convertInterval(EGLint interval);
 
     const HWND mWindow;            // Window that the surface is created for.
     bool mWindowSubclassed;        // Indicates whether we successfully subclassed mWindow for WM_RESIZE hooking
@@ -105,10 +100,9 @@ private:
     EGLint mSwapInterval;
     EGLint mPostSubBufferSupported;
     
-    DWORD mPresentInterval;
-    bool mPresentIntervalDirty;
+    bool mSwapIntervalDirty;
     gl::Texture2D *mTexture;
 };
 }
 
-#endif   // INCLUDE_SURFACE_H_
+#endif   // LIBEGL_SURFACE_H_

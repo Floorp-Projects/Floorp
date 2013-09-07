@@ -148,8 +148,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="length_limits.h" />
-    <ClInclude Include="Diagnostics.h" />
-    <ClInclude Include="DirectiveHandler.h" />
+    <ClInclude Include="DiagnosticsBase.h" />
+    <ClInclude Include="DirectiveHandlerBase.h" />
     <ClInclude Include="DirectiveParser.h" />
     <ClInclude Include="ExpressionParser.h" />
     <ClInclude Include="Input.h" />
@@ -162,6 +162,9 @@
     <ClInclude Include="SourceLocation.h" />
     <ClInclude Include="Token.h" />
     <ClInclude Include="Tokenizer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Tokenizer.l" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

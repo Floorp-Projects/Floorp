@@ -69,7 +69,7 @@ diff --git a/gfx/angle/src/compiler/OutputHLSL.cpp b/gfx/angle/src/compiler/Outp
 --- a/gfx/angle/src/compiler/OutputHLSL.cpp
 +++ b/gfx/angle/src/compiler/OutputHLSL.cpp
 @@ -2,17 +2,17 @@
- // Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
+ // Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
  // Use of this source code is governed by a BSD-style license that can be
  // found in the LICENSE file.
  //
@@ -90,25 +90,25 @@ diff --git a/gfx/angle/src/compiler/OutputHLSL.cpp b/gfx/angle/src/compiler/Outp
 diff --git a/gfx/angle/src/compiler/Types.h b/gfx/angle/src/compiler/Types.h
 --- a/gfx/angle/src/compiler/Types.h
 +++ b/gfx/angle/src/compiler/Types.h
-@@ -4,17 +4,17 @@
- // found in the LICENSE file.
- //
+@@ -6,17 +6,17 @@
  
  #ifndef _TYPES_INCLUDED
  #define _TYPES_INCLUDED
+ 
+ #include "common/angleutils.h"
  
  #include "compiler/BaseTypes.h"
  #include "compiler/Common.h"
 -#include "compiler/debug.h"
 +#include "compiler/compiler_debug.h"
  
- class TType;
  struct TPublicType;
+ class TType;
  
- //
- // Need to have association of line numbers to types in a list for building structs.
- //
- struct TTypeLine {
+ class TField
+ {
+ public:
+     POOL_ALLOCATOR_NEW_DELETE();
 diff --git a/gfx/angle/src/compiler/debug.cpp b/gfx/angle/src/compiler/compiler_debug.cpp
 rename from gfx/angle/src/compiler/debug.cpp
 rename to gfx/angle/src/compiler/compiler_debug.cpp

@@ -1,0 +1,137 @@
+From: Jeff Gilbert <jgilbert@mozilla.com>
+
+diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
+--- a/gfx/angle/Makefile.in
++++ b/gfx/angle/Makefile.in
+@@ -32,16 +32,17 @@ LOCAL_INCLUDES += \
+   -I$(srcdir)/src
+ 
+ DEFINES += -DCOMPILER_IMPLEMENTATION
+ 
+ VPATH += $(srcdir)/src/compiler
+ VPATH += $(srcdir)/src/compiler/depgraph
+ VPATH += $(srcdir)/src/compiler/timing
+ VPATH += $(srcdir)/src/third_party/compiler
++VPATH += $(srcdir)/src/third_party/murmurhash
+ 
+ # Target: 'translator_glsl'
+ #   Requires: 'translator_common'
+ # src/compiler:
+ ifdef MOZ_ANGLE_RENDERER
+ 
+ libs::
+ ifdef MOZ_D3DCOMPILER_CAB
+diff --git a/gfx/angle/moz.build b/gfx/angle/moz.build
+--- a/gfx/angle/moz.build
++++ b/gfx/angle/moz.build
+@@ -83,16 +83,21 @@ CPP_SOURCES += [
+     'RestrictVertexShaderTiming.cpp',
+ ]
+ 
+ # src/third_party/compiler:
+ CPP_SOURCES += [
+     'ArrayBoundsClamper.cpp',
+ ]
+ 
++# src/third_party/murmurhash:
++CPP_SOURCES += [
++    'MurmurHash3.cpp',
++]
++
+ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+     CPP_SOURCES += [
+         'ossource_win.cpp',
+     ]
+ else:
+     CPP_SOURCES += [
+         'ossource_posix.cpp',
+     ]
+diff --git a/gfx/angle/src/compiler/MapLongVariableNames.cpp b/gfx/angle/src/compiler/MapLongVariableNames.cpp
+--- a/gfx/angle/src/compiler/MapLongVariableNames.cpp
++++ b/gfx/angle/src/compiler/MapLongVariableNames.cpp
+@@ -1,29 +1,39 @@
+ //
+ // Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ //
+ 
+ #include "compiler/MapLongVariableNames.h"
+ 
++#include "third_party/murmurhash/MurmurHash3.h"
++
+ namespace {
+ 
+ TString mapLongName(size_t id, const TString& name, bool isGlobal)
+ {
+     ASSERT(name.size() > MAX_SHORTENED_IDENTIFIER_SIZE);
+     TStringStream stream;
+-    stream << "webgl_";
+-    if (isGlobal)
+-        stream << "g";
+-    stream << id;
+-    if (name[0] != '_')
+-        stream << "_";
+-    stream << name.substr(0, MAX_SHORTENED_IDENTIFIER_SIZE - stream.str().size());
++
++    uint64_t hash[2] = {0, 0};
++    MurmurHash3_x64_128(name.data(), name.length(), 0, hash);
++
++    // We want to avoid producing a string with a double underscore,
++    // which would be an illegal GLSL identifier. We can assume that the
++    // original identifier doesn't have a double underscore, otherwise
++    // it's illegal anyway.
++    stream << (name[0] == '_' ? "webgl" : "webgl_")
++           << name.substr(0, 9)
++           << (name[8] == '_' ? "" : "_")
++           << std::hex
++           << hash[0];
++    ASSERT(stream.str().length() <= MAX_SHORTENED_IDENTIFIER_SIZE);
++    ASSERT(stream.str().length() >= MAX_SHORTENED_IDENTIFIER_SIZE - 2);
+     return stream.str();
+ }
+ 
+ LongNameMap* gLongNameMapInstance = NULL;
+ 
+ }  // anonymous namespace
+ 
+ LongNameMap::LongNameMap()
+diff --git a/gfx/angle/src/libGLESv2/moz.build b/gfx/angle/src/libGLESv2/moz.build
+--- a/gfx/angle/src/libGLESv2/moz.build
++++ b/gfx/angle/src/libGLESv2/moz.build
+@@ -71,16 +71,21 @@ CPP_SOURCES += [
+     'RestrictVertexShaderTiming.cpp',
+ ]
+ 
+ # src/third_party/compiler:
+ CPP_SOURCES += [
+     'ArrayBoundsClamper.cpp',
+ ]
+ 
++# src/third_party/murmurhash:
++CPP_SOURCES += [
++    'MurmurHash3.cpp',
++]
++
+ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+     CPP_SOURCES += [
+         'ossource_win.cpp',
+     ]
+ else:
+     CPP_SOURCES += [
+         'ossource_posix.cpp',
+     ]
+@@ -165,13 +170,8 @@ CPP_SOURCES += [
+     'TextureStorage11.cpp',
+     'TextureStorage9.cpp',
+     'VertexBuffer.cpp',
+     'VertexBuffer9.cpp',
+     'VertexBuffer11.cpp',
+     'VertexDataManager.cpp',
+     'VertexDeclarationCache.cpp',
+ ]
+-
+-# src/third_party/murmurhash:
+-CPP_SOURCES += [
+-    'MurmurHash3.cpp',
+-]

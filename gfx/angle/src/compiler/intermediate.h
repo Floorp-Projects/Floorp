@@ -18,6 +18,7 @@
 
 #include "GLSLANG/ShaderLang.h"
 
+#include <algorithm>
 #include "compiler/Common.h"
 #include "compiler/Types.h"
 #include "compiler/ConstantUnion.h"
@@ -204,12 +205,17 @@ class TInfoSink;
 //
 class TIntermNode {
 public:
-    POOL_ALLOCATOR_NEW_DELETE(GlobalPoolAllocator)
+    POOL_ALLOCATOR_NEW_DELETE();
+    TIntermNode() {
+        // TODO: Move this to TSourceLoc constructor
+        // after getting rid of TPublicType.
+        line.first_file = line.last_file = 0;
+        line.first_line = line.last_line = 0;
+    }
+    virtual ~TIntermNode() { }
 
-    TIntermNode() : line(0) {}
-
-    TSourceLoc getLine() const { return line; }
-    void setLine(TSourceLoc l) { line = l; }
+    const TSourceLoc& getLine() const { return line; }
+    void setLine(const TSourceLoc& l) { line = l; }
 
     virtual void traverse(TIntermTraverser*) = 0;
     virtual TIntermTyped* getAsTyped() { return 0; }
@@ -220,7 +226,6 @@ public:
     virtual TIntermSelection* getAsSelectionNode() { return 0; }
     virtual TIntermSymbol* getAsSymbolNode() { return 0; }
     virtual TIntermLoop* getAsLoopNode() { return 0; }
-    virtual ~TIntermNode() { }
 
 protected:
     TSourceLoc line;
@@ -258,6 +263,10 @@ public:
     const char* getBasicString() const { return type.getBasicString(); }
     const char* getQualifierString() const { return type.getQualifierString(); }
     TString getCompleteString() const { return type.getCompleteString(); }
+
+    int totalRegisterCount() const { return type.totalRegisterCount(); }
+    int elementRegisterCount() const { return type.elementRegisterCount(); }
+    int getArraySize() const { return type.getArraySize(); }
 
 protected:
     TType type;
@@ -450,7 +459,7 @@ typedef TVector<int> TQualifierList;
 //
 class TIntermAggregate : public TIntermOperator {
 public:
-    TIntermAggregate() : TIntermOperator(EOpNull), userDefined(false), endLine(0), useEmulatedFunction(false) { }
+    TIntermAggregate() : TIntermOperator(EOpNull), userDefined(false), useEmulatedFunction(false) { }
     TIntermAggregate(TOperator o) : TIntermOperator(o), useEmulatedFunction(false) { }
     ~TIntermAggregate() { }
 
@@ -470,9 +479,6 @@ public:
     void setDebug(bool d) { debug = d; }
     bool getDebug() { return debug; }
 
-    void setEndLine(TSourceLoc line) { endLine = line; }
-    TSourceLoc getEndLine() const { return endLine; }
-
     void setUseEmulatedFunction() { useEmulatedFunction = true; }
     bool getUseEmulatedFunction() { return useEmulatedFunction; }
 
@@ -485,7 +491,6 @@ protected:
 
     bool optimize;
     bool debug;
-    TSourceLoc endLine;
 
     // If set to true, replace the built-in function call with an emulated one
     // to work around driver bugs.
@@ -534,14 +539,14 @@ enum Visit
 class TIntermTraverser
 {
 public:
-    POOL_ALLOCATOR_NEW_DELETE(GlobalPoolAllocator)
-
+    POOL_ALLOCATOR_NEW_DELETE();
     TIntermTraverser(bool preVisit = true, bool inVisit = false, bool postVisit = false, bool rightToLeft = false) : 
             preVisit(preVisit),
             inVisit(inVisit),
             postVisit(postVisit),
             rightToLeft(rightToLeft),
-            depth(0) {}
+            depth(0),
+            maxDepth(0) {}
     virtual ~TIntermTraverser() {};
 
     virtual void visitSymbol(TIntermSymbol*) {}
@@ -553,7 +558,8 @@ public:
     virtual bool visitLoop(Visit visit, TIntermLoop*) {return true;}
     virtual bool visitBranch(Visit visit, TIntermBranch*) {return true;}
 
-    void incrementDepth() {depth++;}
+    int getMaxDepth() const {return maxDepth;}
+    void incrementDepth() {depth++; maxDepth = std::max(maxDepth, depth); }
     void decrementDepth() {depth--;}
 
     // Return the original name if hash function pointer is NULL;
@@ -567,6 +573,7 @@ public:
 
 protected:
     int depth;
+    int maxDepth;
 };
 
 #endif // __INTERMEDIATE_H
