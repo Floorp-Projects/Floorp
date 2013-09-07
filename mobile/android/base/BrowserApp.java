@@ -13,6 +13,7 @@ import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
+import org.mozilla.gecko.health.BrowserHealthRecorder;
 import org.mozilla.gecko.health.BrowserHealthReporter;
 import org.mozilla.gecko.home.BrowserSearch;
 import org.mozilla.gecko.home.HomePager;
@@ -1464,11 +1465,35 @@ abstract public class BrowserApp extends GeckoApp
                     return;
                 }
 
+                recordSearch(null, "barkeyword");
+
                 // Otherwise, construct a search query from the bookmark keyword.
                 final String searchUrl = keywordUrl.replace("%s", URLEncoder.encode(keywordSearch));
                 Tabs.getInstance().loadUrl(searchUrl, Tabs.LOADURL_USER_ENTERED);
             }
         });
+    }
+
+    /**
+     * Record in Health Report that a search has occurred.
+     *
+     * @param identifier
+     *        a search identifier, such as "partnername". Can be null.
+     * @param where
+     *        where the search was initialized; one of the values in
+     *        {@link BrowserHealthRecorder#SEARCH_LOCATIONS}.
+     */
+    private static void recordSearch(String identifier, String where) {
+        Log.i(LOGTAG, "Recording search: " + identifier + ", " + where);
+        try {
+            JSONObject message = new JSONObject();
+            message.put("type", BrowserHealthRecorder.EVENT_SEARCH);
+            message.put("location", where);
+            message.put("identifier", identifier);
+            GeckoAppShell.getEventDispatcher().dispatchEvent(message);
+        } catch (Exception e) {
+            Log.w(LOGTAG, "Error recording search.", e);
+        }
     }
 
     boolean dismissEditingMode() {
@@ -2209,6 +2234,7 @@ abstract public class BrowserApp extends GeckoApp
     // BrowserSearch.OnSearchListener
     @Override
     public void onSearch(String engineId, String text) {
+        recordSearch(engineId, "barsuggest");
         openUrl(text, engineId);
     }
 
