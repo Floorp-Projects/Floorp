@@ -4449,23 +4449,6 @@ baseops::GetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint
     return GetPropertyHelperInline<CanGC>(cx, obj, receiver, id, 0, vp);
 }
 
-bool
-baseops::GetPropertyDefault(JSContext *cx, HandleObject obj, HandleId id, HandleValue def,
-                            MutableHandleValue vp)
-{
-    RootedShape prop(cx);
-    RootedObject obj2(cx);
-    if (!LookupPropertyWithFlags(cx, obj, id, 0, &obj2, &prop))
-        return false;
-
-    if (!prop) {
-        vp.set(def);
-        return true;
-    }
-
-    return baseops::GetProperty(cx, obj2, id, vp);
-}
-
 static bool
 MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
 {
