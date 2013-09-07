@@ -4,7 +4,7 @@
 // Tests that scrollIntoViewIfNeeded works properly.
 
 let imported = {};
-Components.utils.import("resource:///modules/devtools/LayoutHelpers.jsm",
+Components.utils.import("resource://gre/modules/devtools/LayoutHelpers.jsm",
     imported);
 registerCleanupFunction(function () {
   imported = {};

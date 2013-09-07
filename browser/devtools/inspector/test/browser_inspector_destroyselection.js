@@ -32,7 +32,7 @@ function test()
     iframe = null;
 
     let tmp = {};
-    Cu.import("resource:///modules/devtools/LayoutHelpers.jsm", tmp);
+    Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm", tmp);
     ok(!tmp.LayoutHelpers.isNodeConnected(node), "Node considered as disconnected.");
     ok(!inspector.selection.isConnected(), "Selection considered as disconnected");
 
