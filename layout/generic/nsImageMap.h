@@ -13,13 +13,13 @@
 #include "nsTArray.h"
 #include "nsStubMutationObserver.h"
 #include "nsIDOMEventListener.h"
-#include "nsRect.h"
 
 class Area;
 class nsRenderingContext;
 class nsImageFrame;
 class nsIFrame;
 class nsIContent;
+struct nsRect;
 
 class nsImageMap : public nsStubMutationObserver,
                    public nsIDOMEventListener
