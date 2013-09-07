@@ -1664,13 +1664,7 @@ Class BinaryBlock::class_ = {
         BinaryBlock::obj_setElement,
         BinaryBlock::obj_setSpecial,
         BinaryBlock::obj_getGenericAttributes,
-        BinaryBlock::obj_getPropertyAttributes,
-        BinaryBlock::obj_getElementAttributes,
-        BinaryBlock::obj_getSpecialAttributes,
         BinaryBlock::obj_setGenericAttributes,
-        BinaryBlock::obj_setPropertyAttributes,
-        BinaryBlock::obj_setElementAttributes,
-        BinaryBlock::obj_setSpecialAttributes,
         BinaryBlock::obj_deleteProperty,
         BinaryBlock::obj_deleteElement,
         BinaryBlock::obj_deleteSpecial,
@@ -2204,33 +2198,6 @@ BinaryBlock::obj_getGenericAttributes(JSContext *cx, HandleObject obj,
     return JSObject::getGenericAttributes(cx, proto, id, attrsp);
 }
 
-bool
-BinaryBlock::obj_getPropertyAttributes(JSContext *cx, HandleObject obj,
-                                        HandlePropertyName name,
-                                        unsigned *attrsp)
-{
-    RootedId id(cx, NameToId(name));
-    return obj_getGenericAttributes(cx, obj, id, attrsp);
-}
-
-bool
-BinaryBlock::obj_getElementAttributes(JSContext *cx, HandleObject obj,
-                                       uint32_t index, unsigned *attrsp)
-{
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return obj_getGenericAttributes(cx, obj, id, attrsp);
-}
-
-bool
-BinaryBlock::obj_getSpecialAttributes(JSContext *cx, HandleObject obj,
-                                       HandleSpecialId sid, unsigned *attrsp)
-{
-    RootedId id(cx, SPECIALID_TO_JSID(sid));
-    return obj_getGenericAttributes(cx, obj, id, attrsp);
-}
-
 static bool
 IsOwnId(JSContext *cx, HandleObject obj, HandleId id)
 {
@@ -2268,33 +2235,6 @@ BinaryBlock::obj_setGenericAttributes(JSContext *cx, HandleObject obj,
     }
 
     return JSObject::setGenericAttributes(cx, proto, id, attrsp);
-}
-
-bool
-BinaryBlock::obj_setPropertyAttributes(JSContext *cx, HandleObject obj,
-                                        HandlePropertyName name,
-                                        unsigned *attrsp)
-{
-    RootedId id(cx, NameToId(name));
-    return obj_setGenericAttributes(cx, obj, id, attrsp);
-}
-
-bool
-BinaryBlock::obj_setElementAttributes(JSContext *cx, HandleObject obj,
-                                       uint32_t index, unsigned *attrsp)
-{
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return obj_setGenericAttributes(cx, obj, id, attrsp);
-}
-
-bool
-BinaryBlock::obj_setSpecialAttributes(JSContext *cx, HandleObject obj,
-                                      HandleSpecialId sid, unsigned *attrsp)
-{
-    RootedId id(cx, SPECIALID_TO_JSID(sid));
-    return obj_setGenericAttributes(cx, obj, id, attrsp);
 }
 
 bool

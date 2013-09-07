@@ -18,6 +18,8 @@
 #include "nsWrapperCache.h"
 #include "nscore.h"
 
+class nsIInputStream;
+
 namespace mozilla {
 namespace dom {
 
