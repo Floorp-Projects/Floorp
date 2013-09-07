@@ -40,6 +40,7 @@
 #include "nsEventStates.h"
 #include "nsPresArena.h"
 #include "nsIImageLoadingContent.h"
+#include "nsMargin.h"
 
 class nsIContent;
 class nsIDocument;
