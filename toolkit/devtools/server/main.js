@@ -178,6 +178,19 @@ var DebuggerServer = {
   chromeWindowType: null,
 
   /**
+   * Set that to a function that will be called anytime a new connection
+   * is opened or one is closed.
+   */
+  onConnectionChange: null,
+
+  _fireConnectionChange: function(aWhat) {
+    if (this.onConnectionChange &&
+        typeof this.onConnectionChange === "function") {
+      this.onConnectionChange(aWhat);
+    }
+  },
+
+  /**
    * Prompt the user to accept or decline the incoming connection. This is the
    * default implementation that products embedding the debugger server may
    * choose to override.
@@ -275,6 +288,9 @@ var DebuggerServer = {
     delete this._allowConnection;
     this._transportInitialized = false;
     this._initialized = false;
+
+    this._fireConnectionChange("closed");
+
     dumpn("Debugger server is shut down.");
   },
 
@@ -546,6 +562,7 @@ var DebuggerServer = {
     }
     aTransport.ready();
 
+    this._fireConnectionChange("opened");
     return conn;
   },
 
@@ -554,6 +571,7 @@ var DebuggerServer = {
    */
   _connectionClosed: function DS_connectionClosed(aConnection) {
     delete this._connections[aConnection.prefix];
+    this._fireConnectionChange("closed");
   },
 
   // DebuggerServer extension API.
