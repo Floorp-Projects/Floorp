@@ -35,7 +35,6 @@ class BoxInputsPolicy : public TypePolicy
     static MDefinition *boxAt(MInstruction *at, MDefinition *operand);
 
   public:
-    static MDefinition *alwaysBoxAt(MInstruction *at, MDefinition *operand);
     virtual bool adjustInputs(MInstruction *def);
 };
 
@@ -131,45 +130,6 @@ class IntPolicy : public BoxInputsPolicy
 // Expect a double for operand Op. If the input is a Value, it is unboxed.
 template <unsigned Op>
 class DoublePolicy : public BoxInputsPolicy
-{
-  public:
-    static bool staticAdjustInputs(MInstruction *def);
-    bool adjustInputs(MInstruction *def) {
-        return staticAdjustInputs(def);
-    }
-};
-
-// Expect a float32 for operand Op. If the input is a Value, it is unboxed.
-template <unsigned Op>
-class Float32Policy : public BoxInputsPolicy
-{
-  public:
-    static bool staticAdjustInputs(MInstruction *def);
-    bool adjustInputs(MInstruction *def) {
-        return staticAdjustInputs(def);
-    }
-};
-
-// Expect a float32 OR a double for operand Op, but will prioritize Float32
-// if the result type is set as such. If the input is a Value, it is unboxed.
-template <unsigned Op>
-class RuntimePolicy : public TypePolicy
-{
-    MIRType policyType_;
-
-  public:
-    bool adjustInputs(MInstruction *def) {
-        if (policyType_ == MIRType_Double)
-            return DoublePolicy<Op>::staticAdjustInputs(def);
-        return Float32Policy<Op>::staticAdjustInputs(def);
-    }
-    void setPolicyType(MIRType type) {
-        policyType_ = type;
-    }
-};
-
-template <unsigned Op>
-class NoFloatPolicy
 {
   public:
     static bool staticAdjustInputs(MInstruction *def);
@@ -285,7 +245,7 @@ class ClampPolicy : public BoxInputsPolicy
 static inline bool
 CoercesToDouble(MIRType type)
 {
-    if (type == MIRType_Undefined || IsFloatingPointType(type))
+    if (type == MIRType_Undefined || type == MIRType_Double)
         return true;
     return false;
 }

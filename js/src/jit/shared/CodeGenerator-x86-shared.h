@@ -79,7 +79,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
   public:
     // Instruction visitors.
     virtual bool visitDouble(LDouble *ins);
-    virtual bool visitFloat32(LFloat32 *ins);
     virtual bool visitMinMaxD(LMinMaxD *ins);
     virtual bool visitAbsD(LAbsD *ins);
     virtual bool visitSqrtD(LSqrtD *ins);
@@ -106,7 +105,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitNotI(LNotI *comp);
     virtual bool visitNotD(LNotD *comp);
     virtual bool visitMathD(LMathD *math);
-    virtual bool visitMathF(LMathF *math);
     virtual bool visitFloor(LFloor *lir);
     virtual bool visitRound(LRound *lir);
     virtual bool visitGuardShape(LGuardShape *guard);
@@ -118,7 +116,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 
     bool visitNegI(LNegI *lir);
     bool visitNegD(LNegD *lir);
-    bool visitNegF(LNegF *lir);
 
     // Out of line visitors.
     bool visitOutOfLineBailout(OutOfLineBailout *ool);
