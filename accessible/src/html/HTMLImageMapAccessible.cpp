@@ -17,6 +17,7 @@
 #include "nsIFrame.h"
 #include "nsImageFrame.h"
 #include "nsImageMap.h"
+#include "nsIURI.h"
 
 using namespace mozilla::a11y;
 

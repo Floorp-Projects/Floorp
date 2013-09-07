@@ -16,6 +16,7 @@
 #include "nsRuleData.h"
 #include "nsMappedAttributes.h"
 #include "nsContentUtils.h"
+#include "nsIURI.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Shared)
 

@@ -8,7 +8,6 @@
 #define MOZILLA_IMAGELIB_IMAGEOPS_H_
 
 #include "nsCOMPtr.h"
-#include "Orientation.h"
 
 class imgIContainer;
 struct nsIntRect;
@@ -17,6 +16,7 @@ namespace mozilla {
 namespace image {
 
 class Image;
+class Orientation;
 
 class ImageOps
 {

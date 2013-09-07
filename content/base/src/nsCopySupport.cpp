@@ -38,6 +38,7 @@
 #include "nsGkAtoms.h"
 #include "nsGUIEvent.h"
 #include "nsIFrame.h"
+#include "nsIURI.h"
 
 // image copy stuff
 #include "nsIImageLoadingContent.h"
