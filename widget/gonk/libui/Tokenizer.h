@@ -20,7 +20,7 @@
 #include <assert.h>
 #include <utils/Errors.h>
 #include <utils/FileMap.h>
-#include "String8.h"
+#include <utils/String8.h>
 
 namespace android {
 
@@ -28,7 +28,8 @@ namespace android {
  * A simple tokenizer for loading and parsing ASCII text files line by line.
  */
 class Tokenizer {
-    Tokenizer(const String8& filename, FileMap* fileMap, char* buffer, size_t length);
+    Tokenizer(const String8& filename, FileMap* fileMap, char* buffer,
+            bool ownBuffer, size_t length);
 
 public:
     ~Tokenizer();
@@ -40,6 +41,15 @@ public:
      * Otherwise returns an error and sets outTokenizer to NULL.
      */
     static status_t open(const String8& filename, Tokenizer** outTokenizer);
+
+    /**
+     * Prepares to tokenize the contents of a string.
+     *
+     * Returns NO_ERROR and a tokenizer for the string, if successful.
+     * Otherwise returns an error and sets outTokenizer to NULL.
+     */
+    static status_t fromContents(const String8& filename,
+            const char* contents, Tokenizer** outTokenizer);
 
     /**
      * Returns true if at the end of the file.
@@ -111,6 +121,7 @@ private:
     String8 mFilename;
     FileMap* mFileMap;
     char* mBuffer;
+    bool mOwnBuffer;
     size_t mLength;
 
     const char* mCurrent;

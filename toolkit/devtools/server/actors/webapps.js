@@ -607,10 +607,11 @@ WebappsActor.prototype = {
     }
 
     let defer = promise.defer();
-    let reg = DOMApplicationRegistry;
-    reg.launch(
+
+    DOMApplicationRegistry.launch(
       aRequest.manifestURL,
       aRequest.startPoint || "",
+      Date.now(),
       function onsuccess() {
         defer.resolve({});
       },

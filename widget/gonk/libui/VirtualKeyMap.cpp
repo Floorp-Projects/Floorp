@@ -15,14 +15,14 @@
  */
 
 #define LOG_TAG "VirtualKeyMap"
+#include "cutils_log.h"
 
 #include <stdlib.h>
 #include <string.h>
-#include "utils_Log.h"
 #include "VirtualKeyMap.h"
 #include <utils/Errors.h>
 #include "Tokenizer.h"
-#include "Timers.h"
+#include <utils/Timers.h>
 
 // Enables debug output for the parser.
 #define DEBUG_PARSER 0

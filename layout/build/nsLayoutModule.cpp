@@ -230,9 +230,6 @@ static void Shutdown();
 #include "mozilla/dom/alarm/AlarmHalService.h"
 #include "mozilla/dom/time/TimeService.h"
 
-#include "mozilla/dom/telephony/TelephonyFactory.h"
-#include "nsITelephonyProvider.h"
-
 #ifdef MOZ_WIDGET_GONK
 #include "GonkGPSGeolocationProvider.h"
 #endif
@@ -241,7 +238,6 @@ static void Shutdown();
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::mobilemessage;
-using namespace mozilla::dom::telephony;
 using mozilla::dom::alarm::AlarmHalService;
 using mozilla::dom::indexedDB::IndexedDatabaseManager;
 using mozilla::dom::power::PowerManagerService;
@@ -342,8 +338,6 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsVolumeService,
 #endif
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIMediaManagerService,
                                          MediaManager::GetInstance)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITelephonyProvider,
-                                         TelephonyFactory::CreateTelephonyProvider)
 
 //-----------------------------------------------------------------------------
 
@@ -817,7 +811,6 @@ NS_DEFINE_NAMED_CID(NS_SYNTHVOICEREGISTRY_CID);
 #ifdef ACCESSIBILITY
 NS_DEFINE_NAMED_CID(NS_ACCESSIBILITY_SERVICE_CID);
 #endif
-NS_DEFINE_NAMED_CID(TELEPHONY_PROVIDER_CID);
 
 static nsresult
 CreateWindowCommandTableConstructor(nsISupports *aOuter,
@@ -1100,7 +1093,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 #ifdef ACCESSIBILITY
   { &kNS_ACCESSIBILITY_SERVICE_CID, false, NULL, CreateA11yService },
 #endif
-  { &kTELEPHONY_PROVIDER_CID, false, NULL, nsITelephonyProviderConstructor },
   { NULL }
 };
 
@@ -1256,7 +1248,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/accessibilityService;1", &kNS_ACCESSIBILITY_SERVICE_CID },
   { "@mozilla.org/accessibleRetrieval;1", &kNS_ACCESSIBILITY_SERVICE_CID },
 #endif
-  { TELEPHONY_PROVIDER_CONTRACTID, &kTELEPHONY_PROVIDER_CID },
   { NULL }
 };
 
