@@ -30,6 +30,7 @@
 
 #include "DOMBindingInlines.h"
 #include "mozilla/Attributes.h"
+#include "nsComponentManagerUtils.h"
 
 using namespace mozilla;
 

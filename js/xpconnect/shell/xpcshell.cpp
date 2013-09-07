@@ -1676,6 +1676,11 @@ main(int argc, char **argv, char **envp)
             return 1;
         }
 
+        // Force the SafeJSContext to be created. This is a workaround for our
+        // implicit dependency on keeping at least one JSContext alive until the
+        // end of shutdown. This can go away when we get bug 905926 landed.
+        xpc->GetSafeJSContext();
+
         nsCOMPtr<nsIPrincipal> systemprincipal;
         // Fetch the system principal and store it away in a global, to use for
         // script compilation in Load() and ProcessFile() (including interactive
