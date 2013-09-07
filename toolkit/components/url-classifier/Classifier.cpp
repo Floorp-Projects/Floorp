@@ -199,7 +199,9 @@ Classifier::Check(const nsACString& aSpec, LookupResultArray& aResults)
 {
   Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_CL_CHECK_TIME> timer;
 
-  // Get the set of fragments to look up.
+  // Get the set of fragments based on the url. This is necessary because we
+  // only look up at most 5 URLs per aSpec, even if aSpec has more than 5
+  // components.
   nsTArray<nsCString> fragments;
   nsresult rv = LookupCache::GetLookupFragments(aSpec, &fragments);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -226,15 +228,16 @@ Classifier::Check(const nsACString& aSpec, LookupResultArray& aResults)
     Completion hostKey;
     rv = LookupCache::GetKey(fragments[i], &hostKey, mCryptoHash);
     if (NS_FAILED(rv)) {
-      // Local host on the network
+      // Local host on the network.
       continue;
     }
 
 #if DEBUG && defined(PR_LOGGING)
     if (LOG_ENABLED()) {
       nsAutoCString checking;
-      lookupHash.ToString(checking);
-      LOG(("Checking %s (%X)", checking.get(), lookupHash.ToUint32()));
+      lookupHash.ToHexString(checking);
+      LOG(("Checking fragment %s, hash %s (%X)", fragments[i].get(),
+           checking.get(), lookupHash.ToUint32()));
     }
 #endif
     for (uint32_t i = 0; i < cacheArray.Length(); i++) {
@@ -542,8 +545,7 @@ nsresult
 Classifier::ApplyTableUpdates(nsTArray<TableUpdate*>* aUpdates,
                               const nsACString& aTable)
 {
-  LOG(("Classifier::ApplyTableUpdates(%s)",
-       PromiseFlatCString(aTable).get()));
+  LOG(("Classifier::ApplyTableUpdates(%s)", PromiseFlatCString(aTable).get()));
 
   nsAutoPtr<HashStore> store(new HashStore(aTable, mStoreDirectory));
 
@@ -567,6 +569,7 @@ Classifier::ApplyTableUpdates(nsTArray<TableUpdate*>* aUpdates,
   }
 
   if (!validupdates) {
+    // This can happen if the update was only valid for one table.
     return NS_OK;
   }
 
