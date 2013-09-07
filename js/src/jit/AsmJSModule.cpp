@@ -37,9 +37,11 @@ AsmJSModule::patchHeapAccesses(ArrayBufferObject *heap, JSContext *cx)
         JSC::X86Assembler::setPointer(addr, (void *)(heapOffset + disp));
     }
 #elif defined(JS_CPU_ARM)
-    uint32_t bits = mozilla::CeilingLog2(heap->byteLength());
-    for (unsigned i = 0; i < heapAccesses_.length(); i++)
-        jit::Assembler::updateBoundsCheck(bits, (jit::Instruction*)(heapAccesses_[i].offset() + code_));
+    uint32_t heapLength = heap->byteLength();
+    for (unsigned i = 0; i < heapAccesses_.length(); i++) {
+        jit::Assembler::updateBoundsCheck(heapLength,
+                                          (jit::Instruction*)(heapAccesses_[i].offset() + code_));
+    }
     // We already know the exact extent of areas that need to be patched, just make sure we
     // flush all of them at once.
     jit::AutoFlushCache::updateTop(uintptr_t(code_), pod.codeBytes_);
