@@ -18,6 +18,7 @@
 
 using namespace mozilla;
 using namespace xpc;
+using namespace JS;
 
 /***************************************************************************/
 
@@ -97,17 +98,24 @@ XPCWrappedNativeScope::GetNewOrUsed(JSContext *cx, JS::HandleObject aGlobal)
 }
 
 static bool
-RemoteXULForbidsXBLScope(nsIPrincipal *aPrincipal)
+RemoteXULForbidsXBLScope(nsIPrincipal *aPrincipal, HandleObject aGlobal)
 {
-  // We end up getting called during SSM bootstrapping to create the
-  // SafeJSContext. In that case, nsContentUtils isn't ready for us.
-  //
-  // Also check for random JSD scopes that don't have a principal.
-  if (!nsContentUtils::IsInitialized() || !aPrincipal)
+  // Check for random JSD scopes that don't have a principal.
+  if (!aPrincipal)
+      return false;
+
+  // The SafeJSContext is lazily created, and tends to be created at really
+  // weird times, at least for xpcshell (often very early in startup or late
+  // in shutdown). Its scope isn't system principal, so if we proceeded we'd
+  // end up calling into AllowXULXBLForPrincipal, which depends on all kinds
+  // of persistent storage and permission machinery that may or not be running.
+  // We know the answer to the question here, so just short-circuit.
+  if (JS_GetClass(aGlobal) == &SafeJSContextGlobalClass)
       return false;
 
   // AllowXULXBLForPrincipal will return true for system principal, but we
   // don't want that here.
+  MOZ_ASSERT(nsContentUtils::IsInitialized());
   if (nsContentUtils::IsSystemPrincipal(aPrincipal))
       return false;
 
@@ -161,7 +169,7 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
     // In addition to being pref-controlled, we also disable XBL scopes for
     // remote XUL domains, _except_ if we have an additional pref override set.
     nsIPrincipal *principal = GetPrincipal();
-    mAllowXBLScope = !RemoteXULForbidsXBLScope(principal);
+    mAllowXBLScope = !RemoteXULForbidsXBLScope(principal, aGlobal);
 
     // Determine whether to use an XBL scope.
     mUseXBLScope = mAllowXBLScope;

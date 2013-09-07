@@ -38,7 +38,7 @@
           <![CDATA[
             if (!this._remoteWebNavigation) {
               let jsm = "resource://gre/modules/RemoteWebNavigation.jsm";
-              let RemoteWebNavigation = Components.utils.import(jsm, {}).RemoteWebNavigation;
+              let RemoteWebNavigation = Cu.import(jsm, {}).RemoteWebNavigation;
               this._remoteWebNavigation = new RemoteWebNavigation(this);
             }
             return this._remoteWebNavigation;
@@ -53,8 +53,9 @@
       	  <![CDATA[
             if (!this._remoteWebProgress) {
               let jsm = "resource://gre/modules/RemoteWebProgress.jsm";
-              let RemoteWebProgress = Components.utils.import(jsm, {}).RemoteWebProgress;
-              this._remoteWebProgress = new RemoteWebProgress(this);
+              let RemoteWebProgressManager = Cu.import(jsm, {}).RemoteWebProgressManager;
+              this._remoteWebProgress = new RemoteWebProgressManager(this)
+                                         .topLevelWebProgress;
             }
             return this._remoteWebProgress;
       	  ]]>
@@ -106,8 +107,6 @@
             this.messageManager.addMessageListener("Forms:HideDropDown", this);
             this.messageManager.loadFrameScript("chrome://global/content/select-child.js", true);
           }
-
-          this.webProgress._init();
 
           let jsm = "resource://gre/modules/RemoteController.jsm";
           let RemoteController = Components.utils.import(jsm, {}).RemoteController;

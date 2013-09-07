@@ -6,6 +6,7 @@
 
 #include "nsISupports.idl"
 #include "nsIXPConnect.idl"
+#include "nsIClassInfo.idl"
 
 %{C++
 #ifdef XP_WIN
