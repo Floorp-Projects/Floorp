@@ -35,7 +35,9 @@ public class testSettingsMenuItems extends PixelTest {
         { "Text size" },
         { "Title bar", "Show page title", "Show page title", "Show page address" },
         { "Advanced" },
+#ifndef RELEASE_BUILD
         { "Text reflow" },
+#endif
         { "Character encoding", "Don't show menu", "Show menu", "Don't show menu" },
         { "Plugins", "Tap to play", "Enabled", "Tap to play", "Disabled" },
     };
