@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1377553788000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1378508419000">
   <emItems>
       <emItem  blockID="i350" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -303,6 +303,10 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i447" id="{B18B1E5C-4D81-11E1-9C00-AFEB4824019B}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i256" id="/^[0-9a-f]+@[0-9a-f]+\.info/">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -349,6 +353,10 @@
                   </emItem>
       <emItem  blockID="i115" id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i446" id="{E90FA778-C2B7-41D0-9FA9-3FEC1CA54D66}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i7" id="{2224e955-00e9-4613-a844-ce69fccaae91}">
@@ -655,6 +663,10 @@
                   </emItem>
       <emItem  blockID="i68" id="flashupdate@adobe.com">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i445" id="firefoxaddon@youtubeenhancer.com">
+                        <versionRange  minVersion="208.7.0" maxVersion="208.7.0" severity="3">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i441" id="{49c53dce-afa0-49a1-a08b-2eb8e8444128}">
