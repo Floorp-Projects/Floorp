@@ -829,13 +829,14 @@ fun_toSource(JSContext *cx, unsigned argc, Value *vp)
     if (!obj)
         return false;
 
-    if (!obj->is<JSFunction>() && !obj->is<FunctionProxyObject>())
-        return obj_toSource(cx, argc, vp);
+    RootedString str(cx);
+    if (obj->is<JSFunction>() || obj->is<FunctionProxyObject>())
+        str = fun_toStringHelper(cx, obj, JS_DONT_PRETTY_PRINT);
+    else
+        str = ObjectToSource(cx, obj);
 
-    RootedString str(cx, fun_toStringHelper(cx, obj, JS_DONT_PRETTY_PRINT));
     if (!str)
         return false;
-
     args.rval().setString(str);
     return true;
 }
