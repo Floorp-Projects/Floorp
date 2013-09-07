@@ -1170,14 +1170,13 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
             }
 
 
-            unsigned ignored;
             bool found;
 
             // heuristic to see if it might be usable as an xpcexception
-            if (!JS_GetPropertyAttributes(cx, obj, "message", &ignored, &found))
-               return NS_ERROR_FAILURE;
+            if (!JS_HasProperty(cx, obj, "message", &found))
+                return NS_ERROR_FAILURE;
 
-            if (found && !JS_GetPropertyAttributes(cx, obj, "result", &ignored, &found))
+            if (found && !JS_HasProperty(cx, obj, "result", &found))
                 return NS_ERROR_FAILURE;
 
             if (found) {

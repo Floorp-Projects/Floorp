@@ -2893,29 +2893,6 @@ proxy_GetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigne
 }
 
 static bool
-proxy_GetPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp)
-{
-    Rooted<jsid> id(cx, NameToId(name));
-    return proxy_GetGenericAttributes(cx, obj, id, attrsp);
-}
-
-static bool
-proxy_GetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp)
-{
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return proxy_GetGenericAttributes(cx, obj, id, attrsp);
-}
-
-static bool
-proxy_GetSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp)
-{
-    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
-    return proxy_GetGenericAttributes(cx, obj, id, attrsp);
-}
-
-static bool
 proxy_SetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
 {
     /* Lookup the current property descriptor so we have setter/getter/value. */
@@ -2924,29 +2901,6 @@ proxy_SetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigne
         return false;
     desc.setAttributes(*attrsp & (~JSPROP_SHORTID));
     return Proxy::defineProperty(cx, obj, id, &desc);
-}
-
-static bool
-proxy_SetPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp)
-{
-    Rooted<jsid> id(cx, NameToId(name));
-    return proxy_SetGenericAttributes(cx, obj, id, attrsp);
-}
-
-static bool
-proxy_SetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp)
-{
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return proxy_SetGenericAttributes(cx, obj, id, attrsp);
-}
-
-static bool
-proxy_SetSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp)
-{
-    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
-    return proxy_SetGenericAttributes(cx, obj, id, attrsp);
 }
 
 static bool
@@ -3103,13 +3057,7 @@ Class js::ObjectProxyObject::class_ = {
         proxy_SetElement,
         proxy_SetSpecial,
         proxy_GetGenericAttributes,
-        proxy_GetPropertyAttributes,
-        proxy_GetElementAttributes,
-        proxy_GetSpecialAttributes,
         proxy_SetGenericAttributes,
-        proxy_SetPropertyAttributes,
-        proxy_SetElementAttributes,
-        proxy_SetSpecialAttributes,
         proxy_DeleteProperty,
         proxy_DeleteElement,
         proxy_DeleteSpecial,
@@ -3162,13 +3110,7 @@ Class js::OuterWindowProxyObject::class_ = {
         proxy_SetElement,
         proxy_SetSpecial,
         proxy_GetGenericAttributes,
-        proxy_GetPropertyAttributes,
-        proxy_GetElementAttributes,
-        proxy_GetSpecialAttributes,
         proxy_SetGenericAttributes,
-        proxy_SetPropertyAttributes,
-        proxy_SetElementAttributes,
-        proxy_SetSpecialAttributes,
         proxy_DeleteProperty,
         proxy_DeleteElement,
         proxy_DeleteSpecial,
@@ -3233,13 +3175,7 @@ Class js::FunctionProxyObject::class_ = {
         proxy_SetElement,
         proxy_SetSpecial,
         proxy_GetGenericAttributes,
-        proxy_GetPropertyAttributes,
-        proxy_GetElementAttributes,
-        proxy_GetSpecialAttributes,
         proxy_SetGenericAttributes,
-        proxy_SetPropertyAttributes,
-        proxy_SetElementAttributes,
-        proxy_SetSpecialAttributes,
         proxy_DeleteProperty,
         proxy_DeleteElement,
         proxy_DeleteSpecial,
