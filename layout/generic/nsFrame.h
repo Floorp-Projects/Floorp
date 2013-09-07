@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "nsBox.h"
-#include "nsRect.h"
 #include "prlog.h"
 
 #include "nsIPresShell.h"
@@ -98,6 +97,7 @@
 
 struct nsBoxLayoutMetrics;
 class nsDisplayBackgroundImage;
+struct nsRect;
 
 /**
  * Implementation of a simple frame that's not splittable and has no
