@@ -54,7 +54,7 @@
 #include "MediaManager.h"
 #endif
 #ifdef MOZ_B2G_RIL
-#include "mozilla/dom/telephony/Telephony.h"
+#include "Telephony.h"
 #endif
 #ifdef MOZ_B2G_BT
 #include "BluetoothManager.h"

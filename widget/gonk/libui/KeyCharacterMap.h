@@ -14,17 +14,22 @@
  * limitations under the License.
  */
 
-#ifndef _UI_KEY_CHARACTER_MAP_H
-#define _UI_KEY_CHARACTER_MAP_H
+#ifndef _ANDROIDFW_KEY_CHARACTER_MAP_H
+#define _ANDROIDFW_KEY_CHARACTER_MAP_H
 
 #include <stdint.h>
+
+#if HAVE_ANDROID_OS
+#include <binder/IBinder.h>
+#endif
 
 #include "Input.h"
 #include <utils/Errors.h>
 #include <utils/KeyedVector.h>
 #include "Tokenizer.h"
-#include "String8.h"
-#include "Unicode.h"
+#include <utils/String8.h>
+#include <utils/Unicode.h>
+#include <utils/RefBase.h>
 
 namespace android {
 
@@ -32,8 +37,10 @@ namespace android {
  * Describes a mapping from Android key codes to characters.
  * Also specifies other functions of the keyboard such as the keyboard type
  * and key modifier semantics.
+ *
+ * This object is immutable after it has been loaded.
  */
-class KeyCharacterMap {
+class KeyCharacterMap : public RefBase {
 public:
     enum KeyboardType {
         KEYBOARD_TYPE_UNKNOWN = 0,
@@ -42,6 +49,17 @@ public:
         KEYBOARD_TYPE_ALPHA = 3,
         KEYBOARD_TYPE_FULL = 4,
         KEYBOARD_TYPE_SPECIAL_FUNCTION = 5,
+        KEYBOARD_TYPE_OVERLAY = 6,
+    };
+
+    enum Format {
+        // Base keyboard layout, may contain device-specific options, such as "type" declaration.
+        FORMAT_BASE = 0,
+        // Overlay keyboard layout, more restrictive, may be published by applications,
+        // cannot override device-specific options.
+        FORMAT_OVERLAY = 1,
+        // Either base or overlay layout ok.
+        FORMAT_ANY = 2,
     };
 
     // Substitute key code and meta state for fallback action.
@@ -50,9 +68,19 @@ public:
         int32_t metaState;
     };
 
-    ~KeyCharacterMap();
+    /* Loads a key character map from a file. */
+    static status_t load(const String8& filename, Format format, sp<KeyCharacterMap>* outMap);
 
-    static status_t load(const String8& filename, KeyCharacterMap** outMap);
+    /* Loads a key character map from its string contents. */
+    static status_t loadContents(const String8& filename,
+            const char* contents, Format format, sp<KeyCharacterMap>* outMap);
+
+    /* Combines a base key character map and an overlay. */
+    static sp<KeyCharacterMap> combine(const sp<KeyCharacterMap>& base,
+            const sp<KeyCharacterMap>& overlay);
+
+    /* Returns an empty key character map. */
+    static sp<KeyCharacterMap> empty();
 
     /* Gets the keyboard type. */
     int32_t getKeyboardType() const;
@@ -92,9 +120,25 @@ public:
     bool getEvents(int32_t deviceId, const char16_t* chars, size_t numChars,
             Vector<KeyEvent>& outEvents) const;
 
+    /* Maps a scan code and usage code to a key code, in case this key map overrides
+     * the mapping in some way. */
+    status_t mapKey(int32_t scanCode, int32_t usageCode, int32_t* outKeyCode) const;
+
+#if HAVE_ANDROID_OS
+    /* Reads a key map from a parcel. */
+    static sp<KeyCharacterMap> readFromParcel(Parcel* parcel);
+
+    /* Writes a key map to a parcel. */
+    void writeToParcel(Parcel* parcel) const;
+#endif
+
+protected:
+    virtual ~KeyCharacterMap();
+
 private:
     struct Behavior {
         Behavior();
+        Behavior(const Behavior& other);
 
         /* The next behavior in the list, or NULL if none. */
         Behavior* next;
@@ -111,6 +155,7 @@ private:
 
     struct Key {
         Key();
+        Key(const Key& other);
         ~Key();
 
         /* The single character label printed on the key, or 0 if none. */
@@ -146,32 +191,45 @@ private:
 
         KeyCharacterMap* mMap;
         Tokenizer* mTokenizer;
+        Format mFormat;
         State mState;
         int32_t mKeyCode;
 
     public:
-        Parser(KeyCharacterMap* map, Tokenizer* tokenizer);
+        Parser(KeyCharacterMap* map, Tokenizer* tokenizer, Format format);
         ~Parser();
         status_t parse();
 
     private:
         status_t parseType();
+        status_t parseMap();
+        status_t parseMapKey();
         status_t parseKey();
         status_t parseKeyProperty();
+        status_t finishKey(Key* key);
         status_t parseModifier(const String8& token, int32_t* outMetaState);
         status_t parseCharacterLiteral(char16_t* outCharacter);
     };
 
+    static sp<KeyCharacterMap> sEmpty;
+
     KeyedVector<int32_t, Key*> mKeys;
     int mType;
 
+    KeyedVector<int32_t, int32_t> mKeysByScanCode;
+    KeyedVector<int32_t, int32_t> mKeysByUsageCode;
+
     KeyCharacterMap();
+    KeyCharacterMap(const KeyCharacterMap& other);
 
     bool getKey(int32_t keyCode, const Key** outKey) const;
     bool getKeyBehavior(int32_t keyCode, int32_t metaState,
             const Key** outKey, const Behavior** outBehavior) const;
+    static bool matchesMetaState(int32_t eventMetaState, int32_t behaviorMetaState);
 
     bool findKey(char16_t ch, int32_t* outKeyCode, int32_t* outMetaState) const;
+
+    static status_t load(Tokenizer* tokenizer, Format format, sp<KeyCharacterMap>* outMap);
 
     static void addKey(Vector<KeyEvent>& outEvents,
             int32_t deviceId, int32_t keyCode, int32_t metaState, bool down, nsecs_t time);
@@ -196,4 +254,4 @@ private:
 
 } // namespace android
 
-#endif // _UI_KEY_CHARACTER_MAP_H
+#endif // _ANDROIDFW_KEY_CHARACTER_MAP_H

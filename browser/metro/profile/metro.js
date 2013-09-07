@@ -34,7 +34,7 @@ pref("prompts.tab_modal.enabled", true);
 
 // Enable off main thread compositing
 pref("layers.offmainthreadcomposition.enabled", true);
-pref("layers.async-pan-zoom.enabled", false);
+pref("layers.async-pan-zoom.enabled", true);
 pref("layers.componentalpha.enabled", false);
 pref("gfx.azpc.touch_start_tolerance", "0.1"); // dpi * tolerance = pixel threshold
 pref("gfx.axis.fling_friction", "0.002");
