@@ -27,6 +27,7 @@ VPATH += $(srcdir)/src/compiler
 VPATH += $(srcdir)/src/compiler/depgraph
 VPATH += $(srcdir)/src/compiler/timing
 VPATH += $(srcdir)/src/third_party/compiler
+VPATH += $(srcdir)/src/third_party/murmurhash
 
 # Target: 'translator_glsl'
 #   Requires: 'translator_common'
