@@ -34,6 +34,24 @@ struct KeyPair;
 namespace mozilla {
 namespace widget {
 
+// More complete QS definitions for MsgWaitForMultipleObjects() and
+// GetQueueStatus() that include newer win8 specific defines.
+
+#ifndef QS_RAWINPUT
+#define QS_RAWINPUT 0x0400
+#endif
+
+#ifndef QS_TOUCH
+#define QS_TOUCH    0x0800
+#define QS_POINTER  0x1000
+#endif
+
+#define MOZ_QS_ALLEVENT (QS_KEY | QS_MOUSEMOVE | QS_MOUSEBUTTON | \
+                         QS_POSTMESSAGE | QS_TIMER | QS_PAINT |   \
+                         QS_SENDMESSAGE | QS_HOTKEY |             \
+                         QS_ALLPOSTMESSAGE | QS_RAWINPUT |        \
+                         QS_TOUCH | QS_POINTER)
+
 class myDownloadObserver MOZ_FINAL : public nsIDownloadObserver
 {
 public:

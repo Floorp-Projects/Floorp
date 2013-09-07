@@ -17,15 +17,20 @@ const kPaymentShimFile = "chrome://browser/content/payment.js";
 const kOpenPaymentConfirmationEvent = "open-payment-confirmation-dialog";
 const kOpenPaymentFlowEvent = "open-payment-flow-dialog";
 
+const PREF_DEBUG = "dom.payment.debug";
+
 XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
-function debug (s) {
-  //dump("-*- PaymentGlue: " + s + "\n");
-};
-
 function PaymentUI() {
+  try {
+    this._debug =
+      Services.prefs.getPrefType(PREF_DEBUG) == Ci.nsIPrefBranch.PREF_BOOL
+      && Services.prefs.getBoolPref(PREF_DEBUG);
+  } catch(e) {
+    this._debug = false;
+  }
 }
 
 PaymentUI.prototype = {
@@ -129,7 +134,10 @@ PaymentUI.prototype = {
         mm.loadFrameScript(kPaymentShimFile, true);
         mm.sendAsyncMessage("Payment:LoadShim", { requestId: aRequestId });
       } catch (e) {
-        debug("Error loading " + kPaymentShimFile + " as a frame script: " + e);
+        if (this._debug) {
+          this.LOG("Error loading " + kPaymentShimFile + " as a frame script: "
+                    + e);
+        }
         _error("ERROR_LOADING_PAYMENT_SHIM");
       } finally {
         content.removeEventListener("mozContentEvent", loadPaymentShim);
@@ -166,6 +174,13 @@ PaymentUI.prototype = {
 
   getRandomId: function getRandomId() {
     return uuidgen.generateUUID().toString();
+  },
+
+  LOG: function LOG(s) {
+    if (!this._debug) {
+      return;
+    }
+    dump("-*- PaymentGlue: " + s + "\n");
   },
 
   classID: Components.ID("{8b83eabc-7929-47f4-8b48-4dea8d887e4b}"),

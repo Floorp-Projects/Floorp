@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!-- Percentage sticky offsets should be computed correctly when
+   - the scroll container is auto-sized -->
+<html>
+  <head>
+    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <link rel="match" href="scrollframe-auto-1-ref.html">
+    <style>
+      body {
+        /* even on initial reflow */
+        overflow: scroll;
+      }
+      #scroll {
+        height: auto;
+        overflow: hidden;
+        border: 1px solid black;
+      }
+      #sticky {
+        position: sticky;
+        height: 10px;
+        top: 50%;
+        background-color: black;
+      }
+      .fill {
+        height: 200px;
+      }
+    </style>
+  <body>
+    <div id="scroll">
+      <div id="sticky"></div>
+      <div class="fill"></div>
+    </div>
+  </body>
+</html>

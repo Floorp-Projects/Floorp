@@ -26,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=444030
 /** Test for Bug 444030 **/
 
 function doTest() {
-  var anonTextNode = document.getAnonymousNodes(document.getElementById("boundElement"))[0];
+  var anonTextNode = SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes(document.getElementById("boundElement")))[0];
   var hadException = false;
   try {
     var wholeText = anonTextNode.wholeText;

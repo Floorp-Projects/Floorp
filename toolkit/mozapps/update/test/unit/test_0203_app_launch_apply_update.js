@@ -32,7 +32,6 @@ Components.utils.import("resource://gre/modules/ctypes.jsm");
 
 let gAppTimer;
 let gProcess;
-let gActiveUpdate;
 let gTimeoutRuns = 0;
 
 function run_test() {
@@ -99,10 +98,6 @@ function run_test() {
   let mar = do_get_file("data/simple.mar");
   mar.copyTo(updatesPatchDir, FILE_UPDATE_ARCHIVE);
 
-  reloadUpdateManagerData();
-  gActiveUpdate = gUpdateManager.activeUpdate;
-  do_check_true(!!gActiveUpdate);
-
   // Backup the updater.ini file if it exists by moving it. This prevents the
   // post update executable from being launched if it is specified.
   let updaterIni = processDir.clone();
@@ -121,12 +116,15 @@ function run_test() {
   updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
   writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
 
+  reloadUpdateManagerData();
+  do_check_true(!!gUpdateManager.activeUpdate);
+
+  Services.obs.addObserver(gUpdateStagedObserver, "update-staged", false);
+
   // Initiate a background update.
   AUS_Cc["@mozilla.org/updates/update-processor;1"].
     createInstance(AUS_Ci.nsIUpdateProcessor).
-    processUpdate(gActiveUpdate);
-
-  checkUpdateApplied();
+    processUpdate(gUpdateManager.activeUpdate);
 }
 
 function switchApp() {

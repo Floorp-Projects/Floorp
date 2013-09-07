@@ -87,6 +87,7 @@ MOCHITEST_FILES =	chrome_wrappers_helper.html \
 		test_bug865260.html \
 		test_bug870423.html \
 		test_bug871887.html \
+		test_bug912322.html \
 		file_crosscompartment_weakmap.html \
 		test_crosscompartment_weakmap.html \
 		test_asmjs.html \

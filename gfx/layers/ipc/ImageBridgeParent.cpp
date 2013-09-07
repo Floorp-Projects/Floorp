@@ -18,7 +18,7 @@
 #include "mozilla/layers/CompositableTransactionParent.h"
 #include "mozilla/layers/CompositorParent.h"  // for CompositorParent
 #include "mozilla/layers/LayerManagerComposite.h"
-#include "mozilla/layers/LayerTransaction.h"  // for EditReply
+#include "mozilla/layers/LayersMessages.h"  // for EditReply
 #include "mozilla/layers/LayersSurfaces.h"  // for PGrallocBufferParent
 #include "mozilla/layers/PCompositableParent.h"
 #include "mozilla/layers/PImageBridgeParent.h"

@@ -7,5 +7,6 @@
     <text x="100" y="40">hello <tspan style="position: relative; left: 20px">there</tspan> everyone</text>
     <text x="100" y="60">hello <tspan style="position: absolute; top: 0; left: 0">there</tspan> everyone</text>
     <text x="100" y="80">hello <tspan style="position: fixed; top: 0; left: 0">there</tspan> everyone</text>
+    <text x="100" y="100">hello <tspan style="position: sticky; left: 500px">there</tspan> everyone</text>
   </g>
 </svg>

@@ -115,7 +115,7 @@ const TEST_HELPER_TIMEOUT = 100;
 const TEST_CHECK_TIMEOUT = 100;
 
 // How many of TEST_CHECK_TIMEOUT to wait before we abort the test.
-const MAX_TIMEOUT_RUNS = 300;
+const MAX_TIMEOUT_RUNS = 1000;
 
 // Use a copy of the main application executable for the test to avoid main
 // executable in use errors.
@@ -480,8 +480,8 @@ if (IS_WIN) {
 }
 
 /**
- * Copies a directory and its children. First it tries nsIFile::CopyTo on the
- * source directory and if that fails it will fall back to recursing.
+ * Copies the minimum files required by the application to be able to process
+ * an application update when the application is launched for a test.
  *
  * @param  aSrcDir
  *         nsIFile for the source directory to be copied from.
@@ -490,17 +490,7 @@ if (IS_WIN) {
  * @param  aDestLeafName
  *         the destination directory name.
  */
-function copyDirRecursive(aSrcDir, aDestDir, aDestLeafName) {
-  try {
-    aSrcDir.copyTo(aDestDir, aDestLeafName);
-    return;
-  }
-  catch (e) {
-    logTestInfo("copyTo error - src path: " + aSrcDir.path + ", dest path: " +
-                aDestDir.path + ", dir name: " + aDestLeafName +
-                ", exception: " + e);
-  }
-
+function copyMinimumAppFiles(aSrcDir, aDestDir, aDestLeafName) {
   let destDir = aDestDir.clone();
   destDir.append(aDestLeafName);
   if (!destDir.exists()) {
@@ -513,47 +503,43 @@ function copyDirRecursive(aSrcDir, aDestDir, aDestLeafName) {
       do_throw(e);
     }
   }
-  var dirEntries = aSrcDir.directoryEntries;
-  while (dirEntries.hasMoreElements()) {
-    let entry = dirEntries.getNext().QueryInterface(AUS_Ci.nsIFile);
 
-    if (entry.isDirectory()) {
-      copyDirRecursive(entry, destDir, entry.leafName);
+  // Required files for the application or the test that aren't listed in the
+  // dependentlibs.list file.
+  let fileLeafNames = [APP_BIN_NAME + APP_BIN_SUFFIX, UPDATER_BIN_FILE,
+                       FILE_UPDATE_SETTINGS_INI, "application.ini",
+                       "dependentlibs.list"];
+
+  // Read the dependent libs file leafnames from the dependentlibs.list file
+  // into the array.
+  let deplibsFile = aSrcDir.clone();
+  deplibsFile.append("dependentlibs.list");
+  let istream = AUS_Cc["@mozilla.org/network/file-input-stream;1"].
+                createInstance(AUS_Ci.nsIFileInputStream);
+  istream.init(deplibsFile, 0x01, 0444, 0);
+  istream.QueryInterface(AUS_Ci.nsILineInputStream);
+
+  let hasMore;
+  let line = {};
+  do {
+    hasMore = istream.readLine(line);
+    fileLeafNames.push(line.value);
+  } while(hasMore);
+
+  istream.close();
+
+  fileLeafNames.forEach(function CMAF_FLN_FE(aLeafName) {
+    let srcFile = aSrcDir.clone();
+    srcFile.append(aLeafName);
+    try {
+      srcFile.copyTo(destDir, aLeafName);
     }
-    else {
-      let destFile = destDir.clone();
-      destFile.append(entry.leafName);
-      if (destFile.exists()) {
-        try {
-          destFile.remove(false);
-        }
-        catch (e) {
-          logTestInfo("unable to remove file, path: " + destFile.path +
-                      ", exception: " + e);
-          let bakFile = destDir.clone();
-          bakFile.append(entry.leafName + ".bak");
-          logTestInfo("attempting moveTo of file, src path: " + destFile.path +
-                      ", dest path: " + bakFile.path + ", exception: " + e);
-          try {
-            destFile.moveTo(destDir, bakFile.leafName);
-          }
-          catch (e) {
-            logTestInfo("unable to move file, src path: " + destFile.path +
-                        ", dest path: " + bakFile.path + ", exception: " + e);
-            do_throw(e);
-          }
-        }
-      }
-      try {
-        entry.copyTo(destDir, entry.leafName);
-      }
-      catch (e) {
-        logTestInfo("unable to copy file, src path: " + entry.path +
-                    ", dest path: " + destFile.path + ", exception: " + e);
-        do_throw(e);
-      }
+    catch (e) {
+      logTestInfo("unable to copy file, src path: " + srcFile.path +
+                  ", dest path: " + destFile.path + ", exception: " + e);
+      do_throw(e);
     }
-  }
+  });
 }
 
 /**
@@ -722,7 +708,7 @@ function shouldRunServiceTest(aFirstTest) {
   // service should be anything but stopped, so be strict here and throw
   // an error.
   if (aFirstTest && process.exitValue != 0) {
-    do_throw("First test, check for service stopped state returned error " + 
+    do_throw("First test, check for service stopped state returned error " +
              process.exitValue);
   }
 
@@ -779,7 +765,7 @@ function attemptServiceInstall() {
   if (isVistaOrHigher) {
     return;
   }
-  
+
   let binDir = getGREDir();
   let installerFile = binDir.clone();
   installerFile.append(MAINTENANCE_SERVICE_INSTALLER_BIN_FILE);
@@ -830,13 +816,13 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
     waitForApplicationStop("maintenanceservice.exe");
   }
   function waitForServiceStop(aFailTest) {
-    waitServiceApps(); 
+    waitServiceApps();
     logTestInfo("Waiting for service to stop if necessary...");
     // Use the helper bin to ensure the service is stopped. If not
     // stopped then wait for the service to be stopped (at most 120 seconds)
     let helperBin = do_get_file(HELPER_BIN_FILE);
-    let helperBinArgs = ["wait-for-service-stop", 
-                         "MozillaMaintenance", 
+    let helperBinArgs = ["wait-for-service-stop",
+                         "MozillaMaintenance",
                          "120"];
     let helperBinProcess = AUS_Cc["@mozilla.org/process/util;1"].
                            createInstance(AUS_Ci.nsIProcess);
@@ -851,22 +837,22 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
         do_throw("maintenance service did not stop, last state: " +
                  helperBinProcess.exitValue + ". Forcing test failure.");
       } else {
-        logTestInfo("maintenance service did not stop, last state: " + 
+        logTestInfo("maintenance service did not stop, last state: " +
                     helperBinProcess.exitValue + ".  May cause failures.");
       }
     } else {
       logTestInfo("Service stopped.");
     }
-    waitServiceApps(); 
+    waitServiceApps();
   }
   function waitForApplicationStop(application) {
-    logTestInfo("Waiting for " + application + " to stop if " + 
+    logTestInfo("Waiting for " + application + " to stop if " +
                 "necessary...");
-    // Use the helper bin to ensure the application is stopped. 
+    // Use the helper bin to ensure the application is stopped.
     // If not, then wait for it to be stopped (at most 120 seconds)
     let helperBin = do_get_file(HELPER_BIN_FILE);
-    let helperBinArgs = ["wait-for-application-exit", 
-                         application, 
+    let helperBinArgs = ["wait-for-application-exit",
+                         application,
                          "120"];
     let helperBinProcess = AUS_Cc["@mozilla.org/process/util;1"].
                            createInstance(AUS_Ci.nsIProcess);
@@ -957,8 +943,8 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
 
   setEnvironment();
 
-  // There is a security check done by the service to make sure the updater 
-  // we are executing is the same as the one in the apply-to dir. 
+  // There is a security check done by the service to make sure the updater
+  // we are executing is the same as the one in the apply-to dir.
   // To make sure they match from tests we copy updater.exe to the apply-to dir.
   copyBinToApplyToDir(UPDATER_BIN_FILE);
 
@@ -998,13 +984,13 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
     // status will probably always be equal to STATE_APPLYING but there is a
     // race condition where it would be possible on slower machines where status
     // could be equal to STATE_PENDING_SVC.
-    if (status == STATE_APPLYING || 
+    if (status == STATE_APPLYING ||
         status == STATE_PENDING_SVC) {
       logTestInfo("Still waiting to see the " + aExpectedStatus +
                   " status, got " + status + " for now...");
       return;
     }
-    
+
     // Make sure all of the logs are written out.
     waitForServiceStop(false);
 
@@ -1022,7 +1008,7 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
 
     if (aCheckSvcLog) {
       checkServiceLogs(svcOriginalLog);
-    } 
+    }
     aCallback();
   }
 
@@ -1541,7 +1527,7 @@ function checkCallbackServiceLog() {
   let logFile = AUS_Cc["@mozilla.org/file/local;1"].createInstance(AUS_Ci.nsILocalFile);
   logFile.initWithPath(gServiceLaunchedCallbackLog);
   let logContents = readFile(logFile);
- 
+
   // It is possible for the log file contents check to occur before the log file
   // contents are completely written so wait until the contents are the expected
   // value. If the contents are never the expected value then the test will
@@ -1697,7 +1683,7 @@ function checkFilesInDirRecursive(aDir, aCallback) {
 }
 
 /**
- * Sets up the bare bones XMLHttpRequest implementation below. 
+ * Sets up the bare bones XMLHttpRequest implementation below.
  *
  * @param   callback
  *          The callback function that will call the nsIDomEventListener's
@@ -1946,7 +1932,7 @@ function createAppInfo(id, name, version, platformVersion) {
       throw AUS_Cr.NS_ERROR_NO_INTERFACE;
     }
   };
-  
+
   var XULAppInfoFactory = {
     createInstance: function (outer, iid) {
       if (outer == null)
@@ -2191,7 +2177,7 @@ function adjustPathsOnWindows() {
   tmpDir.createUnique(tmpDir.DIRECTORY_TYPE, 0755);
   let procDir = getCurrentProcessDir();
   logTestInfo("start - copy the process directory");
-  copyDirRecursive(procDir, tmpDir, "bin");
+  copyMinimumAppFiles(procDir, tmpDir, "bin");
   logTestInfo("finish - copy the process directory");
   let newDir = tmpDir.clone();
   newDir.append("bin");
@@ -2331,6 +2317,19 @@ let gTimerCallback = {
     do_throw("launch application timer expired");
   },
   QueryInterface: XPCOMUtils.generateQI([AUS_Ci.nsITimerCallback])
+};
+
+/**
+ * The update-staged observer for the call to nsIUpdateProcessor:processUpdate.
+ */
+let gUpdateStagedObserver = {
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == "update-staged") {
+      Services.obs.removeObserver(gUpdateStagedObserver, "update-staged");
+      checkUpdateApplied();
+    }
+  },
+  QueryInterface: XPCOMUtils.generateQI([AUS_Ci.nsIObserver])
 };
 
 // Environment related globals

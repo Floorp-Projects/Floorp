@@ -100,23 +100,6 @@ onconnect = function(e) {
           };
         }
         port.postMessage({topic: "social.user-profile", data: profile});
-        port.postMessage({
-          topic: "social.page-mark-config",
-          data: {
-            images: {
-              // this one is relative to test we handle relative ones.
-              marked: "/browser/browser/base/content/test/social/social_mark_image.png",
-              // absolute to check we handle them too.
-              unmarked: "https://example.com/browser/browser/base/content/test/social/social_mark_image.png"
-            },
-            messages: {
-              unmarkedTooltip: "Mark this page",
-              markedTooltip: "Unmark this page",
-              unmarkedLabel: "Mark",
-              markedLabel: "Unmark",
-            }
-          }
-        });
         break;
       case "test-ambient-notification":
         apiPort.postMessage({topic: "social.ambient-notification", data: event.data.data});

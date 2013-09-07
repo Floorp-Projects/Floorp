@@ -1306,7 +1306,7 @@ OptimizeMIR(MIRGenerator *mir)
     }
 
     if (js_IonOptions.rangeAnalysis) {
-        RangeAnalysis r(graph);
+        RangeAnalysis r(mir, graph);
         if (!r.addBetaNobes())
             return false;
         IonSpewPass("Beta");
