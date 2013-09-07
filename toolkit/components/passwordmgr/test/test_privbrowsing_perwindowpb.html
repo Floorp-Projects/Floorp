@@ -20,9 +20,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=248970
 /** Test for Bug 248970 **/
 // based on test_notifications.html
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cr = Components.results;
+const Ci = SpecialPowers.Ci;
+const Cc = SpecialPowers.Cc;
+const Cr = SpecialPowers.Cr;
 
 var testpath = "/tests/toolkit/components/passwordmgr/test/";
 var prefix = "http://test2.example.com" + testpath;
@@ -249,7 +249,7 @@ ok(pwmgr != null, "Access pwmgr");
 var url = "http://test2.example.com";
 is(pwmgr.countLogins(url, "", null), 0, "No logins should be stored for " + url);
 
-var nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
+var nsLoginInfo = new SpecialPowers.wrap(SpecialPowers.Components).Constructor("@mozilla.org/login-manager/loginInfo;1",
                                              Ci.nsILoginInfo, "init");
 var login = new nsLoginInfo(url, url, null, "notifyu1", "notifyp1", "user", "pass");
 

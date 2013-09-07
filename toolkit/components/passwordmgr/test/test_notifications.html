@@ -55,8 +55,6 @@ var subtests = [
 
 var ignoreLoad = false;
 function handleLoad(aEvent) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
     // ignore every other load event ... We get one for loading the subtest (which
     // we want to ignore), and another when the subtest's form submits itself
     // (which we want to handle, to start the next test).
@@ -151,7 +149,7 @@ function checkTest() {
         // existing loging that was submitted for this form.
         var logins = pwmgr.getAllLogins();
         is(logins.length, 1, "Should only have 1 login");
-        ok(logins[0] instanceof Ci.nsILoginMetaInfo, "metainfo QI");
+        ok(SpecialPowers.call_Instanceof(logins[0], Ci.nsILoginMetaInfo), "metainfo QI");
         is(logins[0].timesUsed, 2, "check .timesUsed for existing login submission");
         ok(logins[0].timeLastUsed > logins[0].timeCreated, "timeLastUsed bumped");
         ok(logins[0].timeCreated == logins[0].timePasswordChanged, "timeChanged not updated");
@@ -302,7 +300,7 @@ function checkTest() {
         // the login being changed with this form.
         var logins = pwmgr.getAllLogins();
         is(logins.length, 1, "Should only have 1 login");
-        ok(logins[0] instanceof Ci.nsILoginMetaInfo, "metainfo QI");
+        ok(SpecialPowers.call_Instanceof(logins[0], Ci.nsILoginMetaInfo), "metainfo QI");
         is(logins[0].timesUsed, 2, "check .timesUsed incremented on change");
         ok(logins[0].timeCreated < logins[0].timeLastUsed, "timeLastUsed bumped");
         ok(logins[0].timeLastUsed == logins[0].timePasswordChanged, "timeUsed == timeChanged");
@@ -388,11 +386,8 @@ function checkTest() {
     // * existing login test, form has different password --> change password, no save prompt
 }
 
-
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-const Ci = Components.interfaces;
-const Cc = Components.classes;
+const Ci = SpecialPowers.Ci;
+const Cc = SpecialPowers.Cc;
 ok(Ci != null, "Access Ci");
 ok(Cc != null, "Access Cc");
 
@@ -408,7 +403,7 @@ ok(prefs != null, "Access prefs");
 prefs = prefs.getBranch("signon.");
 ok(prefs != null, "Access pref branch");
 
-var nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
+var nsLoginInfo = new SpecialPowers.wrap(SpecialPowers.Components).Constructor("@mozilla.org/login-manager/loginInfo;1",
                                              Ci.nsILoginInfo, "init");
 var login1 = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
                              "notifyu1", "notifyp1", "user", "pass");
