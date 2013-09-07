@@ -11,9 +11,6 @@ Login Manager test: simple form with autocomplete off and notifying observers & 
 <script>
 const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-const Cu = Components.utils;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 commonInit();
 SimpleTest.waitForExplicitFinish();
@@ -52,9 +49,7 @@ var TestObserver = {
   receivedNotification2 : false,
   data1 : "",
   data2 : "",
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
   observe : function (subject, topic, data) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     var pwmgr = Cc["@mozilla.org/login-manager;1"].
                 getService(Ci.nsILoginManager);
     if (topic == "passwordmgr-found-form") {
@@ -72,12 +67,9 @@ var TestObserver = {
 };
 
 // Add the observer
-var os = Cc["@mozilla.org/observer-service;1"].
-         getService(Ci.nsIObserverService);
-os.addObserver(TestObserver, "passwordmgr-found-form", false);
+SpecialPowers.addObserver(TestObserver, "passwordmgr-found-form", false);
 
 function startTest(){
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   // Test that observer is notified & got correct data
   is(TestObserver.receivedNotification1, true, "Checking observer was notified");
   is(TestObserver.data1, "autocompleteOff", "Checking observer got correct data");
@@ -95,7 +87,11 @@ function startTest(){
   is($_(2, "pword").value, "testpass", "Checking for filled password 2");
 
   // Remove the observer
-  os.removeObserver(TestObserver, "passwordmgr-found-form");
+  try {
+    SpecialPowers.removeObserver(TestObserver, "passwordmgr-found-form");
+  } catch (e) {
+    ok(false, SpecialPowers.wrap(e));
+  }
 
   SimpleTest.finish();
 }

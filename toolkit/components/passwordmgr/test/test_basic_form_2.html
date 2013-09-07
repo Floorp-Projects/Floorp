@@ -39,7 +39,6 @@ SpecialPowers.setBoolPref("signon.autofillForms", false);
 /** Test for Login Manager: simple form fill with autofillForms disabled **/
 
 function startTest(){
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   // Ensure the form is empty at start
   is($_(1, "uname").value, "", "Checking for blank username");
   is($_(1, "pword").value, "", "Checking for blank password");
