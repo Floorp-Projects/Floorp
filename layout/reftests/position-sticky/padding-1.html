@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>CSS Test: Sticky Positioning - percentage offsets</title>
+    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <link rel="match" href="padding-1-ref.html">
+    <meta name="assert" content="Percentage offsets should be resolved against the content box of the scrolling container">
+    <style>
+      body {
+        /* Make sure it works on the first pass of reflow */
+        overflow: scroll;
+      }
+      #scroll {
+        width: 130px;
+        height: 80px;
+        overflow: scroll;
+        border: 10px solid black;
+        padding: 10px;
+      }
+      #sticky {
+        position: sticky;
+        top: 50%;
+        left: 50%;
+        width: 10px;
+        height: 10px;
+        background-color: black;
+      }
+    </style>
+  <body>
+    <div id="scroll">
+      <div id="sticky">
+      </div>
+    </div>
+  </body>
+</html>

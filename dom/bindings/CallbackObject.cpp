@@ -5,6 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/CallbackObject.h"
+#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/DOMError.h"
+#include "mozilla/dom/DOMErrorBinding.h"
 #include "jsfriendapi.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIXPConnect.h"
@@ -40,8 +43,10 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
                                      ErrorResult& aRv,
-                                     ExceptionHandling aExceptionHandling)
+                                     ExceptionHandling aExceptionHandling,
+                                     JSCompartment* aCompartment)
   : mCx(nullptr)
+  , mCompartment(aCompartment)
   , mErrorResult(aRv)
   , mExceptionHandling(aExceptionHandling)
 {
@@ -123,10 +128,38 @@ CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
   mCx = cx;
 
   // Make sure the JS engine doesn't report exceptions we want to re-throw
-  if (mExceptionHandling == eRethrowExceptions) {
+  if (mExceptionHandling == eRethrowContentExceptions ||
+      mExceptionHandling == eRethrowExceptions) {
     mSavedJSContextOptions = JS_GetOptions(cx);
     JS_SetOptions(cx, mSavedJSContextOptions | JSOPTION_DONT_REPORT_UNCAUGHT);
   }
+}
+
+bool
+CallbackObject::CallSetup::ShouldRethrowException(JS::Handle<JS::Value> aException)
+{
+  if (mExceptionHandling == eRethrowExceptions) {
+    return true;
+  }
+
+  MOZ_ASSERT(mExceptionHandling == eRethrowContentExceptions);
+
+  // For eRethrowContentExceptions we only want to throw an exception if the
+  // object that was thrown is a DOMError object in the caller compartment
+  // (which we stored in mCompartment).
+
+  if (!aException.isObject()) {
+    return false;
+  }
+
+  JS::Rooted<JSObject*> obj(mCx, &aException.toObject());
+  obj = js::UncheckedUnwrap(obj, /* stopAtOuter = */ false);
+  if (js::GetObjectCompartment(obj) != mCompartment) {
+    return false;
+  }
+
+  DOMError* domError;
+  return NS_SUCCEEDED(UNWRAP_OBJECT(DOMError, mCx, obj, domError));
 }
 
 CallbackObject::CallSetup::~CallSetup()
@@ -135,13 +168,15 @@ CallbackObject::CallSetup::~CallSetup()
   // errors on it, unless we were told to re-throw them.
   if (mCx) {
     bool dealtWithPendingException = false;
-    if (mExceptionHandling == eRethrowExceptions) {
+    if (mExceptionHandling == eRethrowContentExceptions ||
+        mExceptionHandling == eRethrowExceptions) {
       // Restore the old context options
       JS_SetOptions(mCx, mSavedJSContextOptions);
       mErrorResult.MightThrowJSException();
       if (JS_IsExceptionPending(mCx)) {
         JS::Rooted<JS::Value> exn(mCx);
-        if (JS_GetPendingException(mCx, exn.address())) {
+        if (JS_GetPendingException(mCx, exn.address()) &&
+            ShouldRethrowException(exn)) {
           mErrorResult.ThrowJSException(mCx, exn);
           JS_ClearPendingException(mCx);
           dealtWithPendingException = true;

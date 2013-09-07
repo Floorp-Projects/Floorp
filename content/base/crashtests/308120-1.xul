@@ -1,3 +1,3 @@
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="var button=document.getElementsByTagName('button')[0]; try { button.appendChild(document.getAnonymousNodes(button)[0]); } catch(e) { }">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="var button=document.getElementsByTagName('button')[0]; try { button.appendChild(SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes(button))[0]); } catch(e) { }">
   <button/>
 </window>

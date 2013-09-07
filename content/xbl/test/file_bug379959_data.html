@@ -11,7 +11,7 @@
 <div id="d"></div>
 <script>
 onload = function() {
-  nodes = document.getAnonymousNodes(document.getElementById('d'));
+  nodes = SpecialPowers.wrap(document).getAnonymousNodes(document.getElementById('d'));
   parent.postMessage(nodes ? nodes.length : 0, "http://mochi.test:8888");
 }
 </script>

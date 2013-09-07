@@ -12,7 +12,7 @@
 function boom()
 {
   var bo = document.getElementById("bo");
-  var anon = document.getAnonymousNodes(bo)[0];
+  var anon = SpecialPowers.wrap(document).getAnonymousNodes(bo)[0];
 
   bo.style.MozBinding = "url(#bar)";
 

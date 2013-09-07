@@ -149,6 +149,27 @@ MouseScrollHandler::~MouseScrollHandler()
 
 /* static */
 bool
+MouseScrollHandler::NeedsMessage(UINT aMsg)
+{
+  switch (aMsg) {
+    case WM_SETTINGCHANGE:
+    case WM_MOUSEWHEEL:
+    case WM_MOUSEHWHEEL:
+    case WM_HSCROLL:
+    case WM_VSCROLL:
+    case MOZ_WM_MOUSEVWHEEL:
+    case MOZ_WM_MOUSEHWHEEL:
+    case MOZ_WM_HSCROLL:
+    case MOZ_WM_VSCROLL:
+    case WM_KEYDOWN:
+    case WM_KEYUP:
+      return true;
+  }
+  return false;
+}
+
+/* static */
+bool
 MouseScrollHandler::ProcessMessage(nsWindowBase* aWidget, UINT msg,
                                    WPARAM wParam, LPARAM lParam,
                                    MSGResult& aResult)

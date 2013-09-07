@@ -18,6 +18,8 @@ const { getMode, isGlobalPBSupported,
         isWindowPBSupported, isTabPBSupported } = require('sdk/private-browsing/utils');
 const { pb } = require('./private-browsing/helper');
 const prefs = require('sdk/preferences/service');
+const { set: setPref } = require("sdk/preferences/service");
+const DEPRECATE_PREF = "devtools.errorconsole.deprecation_warnings";
 
 const kAutoStartPref = "browser.privatebrowsing.autostart";
 
@@ -55,6 +57,7 @@ exports.testIsPrivateDefaults = function(test) {
 };
 
 exports.testWindowDefaults = function(test) {
+  setPref(DEPRECATE_PREF, true);
   // Ensure that browserWindow still works while being deprecated
   let { loader, messages } = LoaderWithHookedConsole(module);
   let windows = loader.require("sdk/windows").browserWindows;

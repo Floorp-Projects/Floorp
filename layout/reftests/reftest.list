@@ -250,6 +250,9 @@ skip-if(Android&&AndroidVersion>=15) include scrolling/reftest.list
 # selection
 include selection/reftest.list
 
+# sticky positioning
+include position-sticky/reftest.list
+
 # svg/
 include svg/reftest.list
 

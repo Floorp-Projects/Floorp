@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>CSS Test: Sticky Positioning - top+bottom, at bottom</title>
+    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <link rel="match" href="top-bottom-3-ref.html">
+    <meta name="flags" content="dom">
+    <meta name="assert" content="Top+bottom sticky, scrolled to the bottom: should act as top-sticky">
+    <style>
+      #scroll {
+        height: 100px;
+        overflow: hidden;
+      }
+      #sticky {
+        position: sticky;
+        top: 10px;
+        bottom: 10px;
+        height: 10px;
+        background-color: black;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scroll">
+      <div style="height: 100px"></div>
+      <div id="sticky"></div>
+      <div style="height: 100px"></div>
+    </div>
+    <script type="application/javascript">
+      document.getElementById("scroll").scrollTop = 110;
+    </script>
+  </body>
+</html>

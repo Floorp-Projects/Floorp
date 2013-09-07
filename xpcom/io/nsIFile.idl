@@ -18,9 +18,21 @@
 interface nsISimpleEnumerator;
 
 /**
- * This is the only correct cross-platform way to specify a file.
- * Strings are not such a way. If you grew up on windows or unix, you
- * may think they are.  Welcome to reality.
+ * An nsIFile is an abstract representation of a filename. It manages
+ * filename encoding issues, pathname component separators ('/' vs. '\\'
+ * vs. ':') and weird stuff like differing volumes with identical names, as
+ * on pre-Darwin Macintoshes.
+ *
+ * This file has long introduced itself to new hackers with this opening
+ * paragraph:
+ *
+ *    This is the only correct cross-platform way to specify a file.
+ *    Strings are not such a way. If you grew up on windows or unix, you
+ *    may think they are.  Welcome to reality.
+ *
+ * While taking the pose struck here to heart would be uncalled for, one
+ * may safely conclude that writing cross-platform code is an embittering
+ * experience.
  *
  * All methods with string parameters have two forms.  The preferred
  * form operates on UCS-2 encoded characters strings.  An alternate
@@ -28,7 +40,7 @@ interface nsISimpleEnumerator;
  *
  * A string containing characters encoded in the native charset cannot
  * be safely passed to javascript via xpconnect.  Therefore, the "native
- * methods" are not scriptable. 
+ * methods" are not scriptable.
  */
 [scriptable, uuid(272a5020-64f5-485c-a8c4-44b2882ae0a2), builtinclass]
 interface nsIFile : nsISupports

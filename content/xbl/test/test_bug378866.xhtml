@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378866
 /** Test for Bug 378866 **/
 
 function runTest() {
-  var anon = document.getAnonymousNodes(document.getElementById('grandparent'));
+  var anon = SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes(document.getElementById('grandparent')));
   var child = document.getElementById('child');
   var insertionPoint = anon[0].childNodes[0];
   insertionPoint.parentNode.removeChild(insertionPoint);

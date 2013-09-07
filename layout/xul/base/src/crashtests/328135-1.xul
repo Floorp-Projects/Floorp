@@ -9,7 +9,7 @@
 
 function init() { 
   var pop = document.getElementsByTagName("popup")[0];
-  document.getAnonymousNodes(pop)[0];
+  SpecialPowers.wrap(document).getAnonymousNodes(pop)[0];
   eval.eee = document.documentElement;
 };
 
