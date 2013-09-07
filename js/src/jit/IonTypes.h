@@ -83,7 +83,6 @@ enum MIRType
     MIRType_Boolean,
     MIRType_Int32,
     MIRType_Double,
-    MIRType_Float32,
     MIRType_String,
     MIRType_Object,
     MIRType_Magic,
@@ -135,7 +134,6 @@ ValueTypeFromMIRType(MIRType type)
       return JSVAL_TYPE_BOOLEAN;
     case MIRType_Int32:
       return JSVAL_TYPE_INT32;
-    case MIRType_Float32: // Fall through, there's no JSVAL for Float32
     case MIRType_Double:
       return JSVAL_TYPE_DOUBLE;
     case MIRType_String:
@@ -168,8 +166,6 @@ StringFromMIRType(MIRType type)
       return "Int32";
     case MIRType_Double:
       return "Double";
-    case MIRType_Float32:
-      return "Float32";
     case MIRType_String:
       return "String";
     case MIRType_Object:
@@ -196,19 +192,7 @@ StringFromMIRType(MIRType type)
 static inline bool
 IsNumberType(MIRType type)
 {
-    return type == MIRType_Int32 || type == MIRType_Double || type == MIRType_Float32;
-}
-
-static inline bool
-IsFloatType(MIRType type)
-{
-    return type == MIRType_Int32 || type == MIRType_Float32;
-}
-
-static inline bool
-IsFloatingPointType(MIRType type)
-{
-    return type == MIRType_Double || type == MIRType_Float32;
+    return type == MIRType_Int32 || type == MIRType_Double;
 }
 
 static inline bool
