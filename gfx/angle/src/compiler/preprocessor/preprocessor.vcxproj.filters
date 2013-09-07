@@ -11,12 +11,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Diagnostics.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectiveHandler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DirectiveParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -44,14 +38,14 @@
     <ClCompile Include="Tokenizer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DiagnosticsBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectiveHandlerBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Diagnostics.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectiveHandler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DirectiveParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -91,5 +85,16 @@
     <ClInclude Include="length_limits.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DiagnosticsBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectiveHandlerBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Tokenizer.l">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

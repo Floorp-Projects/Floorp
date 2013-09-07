@@ -1,16 +1,16 @@
 From: Jeff Gilbert <jgilbert@mozilla.com>
 
-diff --git a/gfx/angle/src/libEGL/Display.cpp b/gfx/angle/src/libEGL/Display.cpp
---- a/gfx/angle/src/libEGL/Display.cpp
-+++ b/gfx/angle/src/libEGL/Display.cpp
-@@ -26,16 +26,22 @@
- // The "Debug This Pixel..." feature in PIX often fails when using the
- // D3D9Ex interfaces.  In order to get debug pixel to work on a Vista/Win 7
- // machine, define "ANGLE_ENABLE_D3D9EX=0" in your project file.
- #if !defined(ANGLE_ENABLE_D3D9EX)
- // Enables use of the IDirect3D9Ex interface, when available
- #define ANGLE_ENABLE_D3D9EX 1
- #endif // !defined(ANGLE_ENABLE_D3D9EX)
+diff --git a/gfx/angle/src/libGLESv2/renderer/Renderer.cpp b/gfx/angle/src/libGLESv2/renderer/Renderer.cpp
+--- a/gfx/angle/src/libGLESv2/renderer/Renderer.cpp
++++ b/gfx/angle/src/libGLESv2/renderer/Renderer.cpp
+@@ -15,16 +15,23 @@
+ #include "libGLESv2/renderer/Renderer11.h"
+ #include "libGLESv2/utilities.h"
+ 
+ #if !defined(ANGLE_ENABLE_D3D11)
+ // Enables use of the Direct3D 11 API for a default display, when available
+ #define ANGLE_ENABLE_D3D11 0
+ #endif
  
 +#define ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES \
 +    {                                            \
@@ -18,11 +18,24 @@ diff --git a/gfx/angle/src/libEGL/Display.cpp b/gfx/angle/src/libEGL/Display.cpp
 +        TEXT("d3dcompiler_43.dll")               \
 +    }
 +
- namespace egl
++
+ namespace rx
  {
- namespace
+ 
+ Renderer::Renderer(egl::Display *display) : mDisplay(display)
  {
-     typedef std::map<EGLNativeDisplayType, Display*> DisplayMap; 
-     DisplayMap displays;
+     mD3dCompilerModule = NULL;
+     mD3DCompileFunc = NULL;
+ }
+@@ -212,9 +219,9 @@ rx::Renderer *glCreateRenderer(egl::Disp
+     return NULL;
  }
  
+ void glDestroyRenderer(rx::Renderer *renderer)
+ {
+     delete renderer;
+ }
+ 
+-}
+\ No newline at end of file
++}

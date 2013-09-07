@@ -34,12 +34,15 @@ CPP_SOURCES += [
     'Tokenizer.cpp',
 ]
 
+
+# Target: 'translator_common'
+#   Requires: 'preprocessor'
 # src/compiler:
 CPP_SOURCES += [
     'BuiltInFunctionEmulator.cpp',
     'Compiler.cpp',
     'compiler_debug.cpp',
-    'DetectRecursion.cpp',
+    'DetectCallDepth.cpp',
     'Diagnostics.cpp',
     'DirectiveHandler.cpp',
     'ForLoopUnroll.cpp',
@@ -58,8 +61,8 @@ CPP_SOURCES += [
     'PoolAlloc.cpp',
     'QualifierAlive.cpp',
     'RemoveTree.cpp',
-    'spooky.cpp',
     'SymbolTable.cpp',
+    'CompilerUniform.cpp',
     'util.cpp',
     'ValidateLimitations.cpp',
     'VariableInfo.cpp',
@@ -85,6 +88,11 @@ CPP_SOURCES += [
     'ArrayBoundsClamper.cpp',
 ]
 
+# src/third_party/murmurhash:
+CPP_SOURCES += [
+    'MurmurHash3.cpp',
+]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     CPP_SOURCES += [
         'ossource_win.cpp',
@@ -93,6 +101,7 @@ else:
     CPP_SOURCES += [
         'ossource_posix.cpp',
     ]
+
 
 # Target: 'translator_glsl'
 #   Requires: 'translator_common'
@@ -109,8 +118,5 @@ CPP_SOURCES += [
 ]
 
 LIBRARY_NAME = 'angle'
-
 LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
-
