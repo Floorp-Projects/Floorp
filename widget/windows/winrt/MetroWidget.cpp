@@ -962,7 +962,8 @@ CompositorParent* MetroWidget::NewCompositorParent(int aSurfaceWidth, int aSurfa
 
   if (ShouldUseAPZC()) {
     mRootLayerTreeId = compositor->RootLayerTreeId();
-    CompositorParent::SetControllerForLayerTree(mRootLayerTreeId, this);
+    mController = new APZController();
+    CompositorParent::SetControllerForLayerTree(mRootLayerTreeId, mController);
 
     MetroWidget::sAPZC = CompositorParent::GetAPZCTreeManager(compositor->RootLayerTreeId());
     MetroWidget::sAPZC->SetDPI(GetDPI());
@@ -1472,124 +1473,6 @@ MetroWidget::HasPendingInputEvent()
   if (HIWORD(GetQueueStatus(QS_INPUT)))
     return true;
   return false;
-}
-
-// GeckoContentController interface impl
-
-class RequestContentRepaintEvent : public nsRunnable
-{
-public:
-    RequestContentRepaintEvent(const FrameMetrics& aFrameMetrics) : mFrameMetrics(aFrameMetrics)
-    {
-    }
-
-    NS_IMETHOD Run() {
-        // This event shuts down the worker thread and so must be main thread.
-        MOZ_ASSERT(NS_IsMainThread());
-
-        CSSToScreenScale resolution = mFrameMetrics.mZoom;
-        CSSRect compositedRect = mFrameMetrics.CalculateCompositedRectInCssPixels();
-
-        NS_ConvertASCIItoUTF16 data(nsPrintfCString("{ " \
-                                                    "  \"resolution\": %.2f, " \
-                                                    "  \"scrollId\": %d, " \
-                                                    "  \"compositedRect\": { \"width\": %d, \"height\": %d }, " \
-                                                    "  \"displayPort\":    { \"x\": %d, \"y\": %d, \"width\": %d, \"height\": %d }, " \
-                                                    "  \"scrollTo\":       { \"x\": %d, \"y\": %d }" \
-                                                    "}",
-                                                    (float)(resolution.scale / mFrameMetrics.mDevPixelsPerCSSPixel.scale),
-                                                    (int)mFrameMetrics.mScrollId,
-                                                    (int)compositedRect.width,
-                                                    (int)compositedRect.height,
-                                                    (int)mFrameMetrics.mDisplayPort.x,
-                                                    (int)mFrameMetrics.mDisplayPort.y,
-                                                    (int)mFrameMetrics.mDisplayPort.width,
-                                                    (int)mFrameMetrics.mDisplayPort.height,
-                                                    (int)mFrameMetrics.mScrollOffset.x,
-                                                    (int)mFrameMetrics.mScrollOffset.y));
-
-        MetroUtils::FireObserver("apzc-request-content-repaint", data.get());
-        return NS_OK;
-    }
-protected:
-    const FrameMetrics mFrameMetrics;
-};
-
-void
-MetroWidget::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
-{
-  LogFunction();
-
-  // Send the result back to the main thread so that it can shutdown
-  nsCOMPtr<nsIRunnable> r1 = new RequestContentRepaintEvent(aFrameMetrics);
-  if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(r1);
-  } else {
-    r1->Run();
-  }
-}
-
-void
-MetroWidget::HandleDoubleTap(const CSSIntPoint& aPoint)
-{
-  LogFunction();
-
-  if (!mMetroInput) {
-    return;
-  }
-
-  mMetroInput->HandleDoubleTap(CSSIntPointToLayoutDeviceIntPoint(aPoint));
-}
-
-void
-MetroWidget::HandleSingleTap(const CSSIntPoint& aPoint)
-{
-  LogFunction();
-
-  if (!mMetroInput) {
-    return;
-  }
-
-  mMetroInput->HandleSingleTap(CSSIntPointToLayoutDeviceIntPoint(aPoint));
-}
-
-void
-MetroWidget::HandleLongTap(const CSSIntPoint& aPoint)
-{
-  LogFunction();
-
-  if (!mMetroInput) {
-    return;
-  }
-
-  mMetroInput->HandleLongTap(CSSIntPointToLayoutDeviceIntPoint(aPoint));
-}
-
-void
-MetroWidget::SendAsyncScrollDOMEvent(FrameMetrics::ViewID aScrollId, const CSSRect &aContentRect, const CSSSize &aScrollableSize)
-{
-  LogFunction();
-}
-
-void
-MetroWidget::PostDelayedTask(Task* aTask, int aDelayMs)
-{
-  LogFunction();
-  MessageLoop::current()->PostDelayedTask(FROM_HERE, aTask, aDelayMs);
-}
-
-void
-MetroWidget::HandlePanBegin()
-{
-  LogFunction();
-  MetroUtils::FireObserver("apzc-handle-pan-begin", L"");
-}
-
-void
-MetroWidget::HandlePanEnd()
-{
-  LogFunction();
-  MetroUtils::FireObserver("apzc-handle-pan-end", L"");
 }
 
 NS_IMETHODIMP
