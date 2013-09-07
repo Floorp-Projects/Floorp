@@ -1,0 +1,3 @@
+# SmsService.js
+component {46a9ed78-3574-40a1-9f12-ea179942d67f} SmsService.js
+contract @mozilla.org/sms/rilsmsservice;1 {46a9ed78-3574-40a1-9f12-ea179942d67f}
