@@ -69,10 +69,6 @@ class RemoteOptions(ReftestOptions):
                     help = "Name of log file on the device relative to device root.  PLEASE USE ONLY A FILENAME.")
         defaults["remoteLogFile"] = None
 
-        self.add_option("--enable-privilege", action="store_true", dest = "enablePrivilege",
-                    help = "add webserver and port to the user.js file for remote script access and universalXPConnect")
-        defaults["enablePrivilege"] = False
-
         self.add_option("--pidfile", action = "store",
                     type = "string", dest = "pidFile",
                     help = "name of the pidfile to generate")
@@ -368,11 +364,6 @@ class RemoteReftest(RefTest):
         prefs["extensions.getAddons.search.url"] = "http://127.0.0.1:8888/extensions-dummy/repositorySearchURL"
         # Make sure that opening the plugins check page won't hit the network
         prefs["plugins.update.url"] = "http://127.0.0.1:8888/plugins-dummy/updateCheckURL"
-
-        # Workaround for jsreftests.
-        if options.enablePrivilege:
-            prefs["capability.principal.codebase.p2.granted"] = "UniversalXPConnect"
-            prefs["capability.principal.codebase.p2.id"] = "http://%s:%s" % (options.remoteWebServer, options.httpPort)
 
         # Set the extra prefs.
         profile.set_preferences(prefs)
