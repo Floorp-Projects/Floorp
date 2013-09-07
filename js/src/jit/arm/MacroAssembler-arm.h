@@ -1364,7 +1364,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_str(lr, dest);
     }
     BufferOffset ma_BoundsCheck(Register bounded) {
-        return as_mov(ScratchRegister, lsl(bounded, 0), SetCond);
+        return as_cmp(bounded, Imm8(0));
     }
 
     void storeFloat(VFPRegister src, Register base, Register index, Condition cond) {
