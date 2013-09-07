@@ -57,6 +57,18 @@ function onSidebarLoad(callback) {
   }, true);
 }
 
+function ensureWorkerLoaded(provider, callback) {
+  // once the worker responds to a ping we know it must be up.
+  let port = provider.getWorkerPort();
+  port.onmessage = function(msg) {
+    if (msg.data.topic == "pong") {
+      port.close();
+      callback();
+    }
+  }
+  port.postMessage({topic: "ping"})
+}
+
 let manifest = { // normal provider
   name: "provider 1",
   origin: "https://example.com",
@@ -99,9 +111,13 @@ var tests = {
       });
       sbrowser.contentDocument.getElementById("btnTryAgain").click();
     });
-    // go offline then attempt to load the sidebar - it should fail.
-    goOffline();
-    Services.prefs.setBoolPref("social.sidebar.open", true);
+    // we want the worker to be fully loaded before going offline, otherwise
+    // it might fail due to going offline.
+    ensureWorkerLoaded(Social.provider, function() {
+      // go offline then attempt to load the sidebar - it should fail.
+      goOffline();
+      Services.prefs.setBoolPref("social.sidebar.open", true);
+  });
   },
 
   testFlyout: function(next) {
