@@ -61,11 +61,13 @@ TelephonyListener::EnumerateCallState(uint32_t aCallIndex,
                                       bool aIsActive,
                                       bool aIsOutgoing,
                                       bool aIsEmergency,
-                                      bool aIsConference)
+                                      bool aIsConference,
+                                      bool* aResult)
 {
   BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
   hfp->HandleCallStateChanged(aCallIndex, aCallState, EmptyString(), aNumber,
                               aIsOutgoing, false);
+  *aResult = true;
   return NS_OK;
 }
 
@@ -115,10 +117,10 @@ bool
 BluetoothTelephonyListener::StartListening()
 {
   nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+    do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
   NS_ENSURE_TRUE(provider, false);
 
-  nsresult rv = provider->RegisterListener(mTelephonyListener);
+  nsresult rv = provider->RegisterTelephonyMsg(mTelephonyListener);
   NS_ENSURE_SUCCESS(rv, false);
 
   return true;
@@ -128,10 +130,10 @@ bool
 BluetoothTelephonyListener::StopListening()
 {
   nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+    do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
   NS_ENSURE_TRUE(provider, false);
 
-  nsresult rv = provider->UnregisterListener(mTelephonyListener);
+  nsresult rv = provider->UnregisterTelephonyMsg(mTelephonyListener);
 
   return NS_FAILED(rv) ? false : true;
 }

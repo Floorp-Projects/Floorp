@@ -18,18 +18,19 @@
 #ifndef _RUNTIME_EVENT_HUB_H
 #define _RUNTIME_EVENT_HUB_H
 
-#include "utils_Log.h"
 #include "Input.h"
+#include "InputDevice.h"
 #include "Keyboard.h"
 #include "KeyLayoutMap.h"
 #include "KeyCharacterMap.h"
 #include "VirtualKeyMap.h"
-#include "String8.h"
+#include <utils/String8.h>
 #include <utils/threads.h>
+#include "cutils_log.h"
 #include <utils/threads.h>
 #include <utils/List.h>
 #include <utils/Errors.h>
-#include "PropertyMap.h"
+#include <utils/PropertyMap.h>
 #include <utils/Vector.h>
 #include <utils/KeyedVector.h>
 
@@ -38,10 +39,31 @@
 
 /* Convenience constants. */
 
-#define BTN_FIRST 0x100  // first button scancode
-#define BTN_LAST 0x15f   // last button scancode
+#define BTN_FIRST 0x100  // first button code
+#define BTN_LAST 0x15f   // last button code
+
+/*
+ * These constants are used privately in Android to pass raw timestamps
+ * through evdev from uinput device drivers because there is currently no
+ * other way to transfer this information.  The evdev driver automatically
+ * timestamps all input events with the time they were posted and clobbers
+ * whatever information was passed in.
+ *
+ * For the purposes of this hack, the timestamp is specified in the
+ * CLOCK_MONOTONIC timebase and is split into two EV_MSC events specifying
+ * seconds and microseconds.
+ */
+#define MSC_ANDROID_TIME_SEC 0x6
+#define MSC_ANDROID_TIME_USEC 0x7
 
 namespace android {
+
+enum {
+    // Device id of a special "virtual" keyboard that is always present.
+    VIRTUAL_KEYBOARD_ID = -1,
+    // Device id of the "built-in" keyboard if there is one.
+    BUILT_IN_KEYBOARD_ID = 0,
+};
 
 /*
  * A raw event as retrieved from the EventHub.
@@ -50,10 +72,8 @@ struct RawEvent {
     nsecs_t when;
     int32_t deviceId;
     int32_t type;
-    int32_t scanCode;
-    int32_t keyCode;
+    int32_t code;
     int32_t value;
-    uint32_t flags;
 };
 
 /* Describes an absolute axis. */
@@ -107,6 +127,12 @@ enum {
     /* The input device is a joystick (implies gamepad, has joystick absolute axes). */
     INPUT_DEVICE_CLASS_JOYSTICK      = 0x00000100,
 
+    /* The input device has a vibrator (supports FF_RUMBLE). */
+    INPUT_DEVICE_CLASS_VIBRATOR      = 0x00000200,
+
+    /* The input device is virtual (not a real device, not part of UI configuration). */
+    INPUT_DEVICE_CLASS_VIRTUAL       = 0x40000000,
+
     /* The input device is external (not built-in). */
     INPUT_DEVICE_CLASS_EXTERNAL      = 0x80000000,
 };
@@ -151,7 +177,7 @@ public:
 
     virtual uint32_t getDeviceClasses(int32_t deviceId) const = 0;
 
-    virtual String8 getDeviceName(int32_t deviceId) const = 0;
+    virtual InputDeviceIdentifier getDeviceIdentifier(int32_t deviceId) const = 0;
 
     virtual void getConfiguration(int32_t deviceId, PropertyMap* outConfiguration) const = 0;
 
@@ -162,10 +188,10 @@ public:
 
     virtual bool hasInputProperty(int32_t deviceId, int property) const = 0;
 
-    virtual status_t mapKey(int32_t deviceId, int scancode,
+    virtual status_t mapKey(int32_t deviceId, int32_t scanCode, int32_t usageCode,
             int32_t* outKeycode, uint32_t* outFlags) const = 0;
 
-    virtual status_t mapAxis(int32_t deviceId, int scancode,
+    virtual status_t mapAxis(int32_t deviceId, int32_t scanCode,
             AxisInfo* outAxisInfo) const = 0;
 
     // Sets devices that are excluded from opening.
@@ -208,7 +234,12 @@ public:
     virtual void getVirtualKeyDefinitions(int32_t deviceId,
             Vector<VirtualKeyDefinition>& outVirtualKeys) const = 0;
 
-    virtual String8 getKeyCharacterMapFile(int32_t deviceId) const = 0;
+    virtual sp<KeyCharacterMap> getKeyCharacterMap(int32_t deviceId) const = 0;
+    virtual bool setKeyboardLayoutOverlay(int32_t deviceId, const sp<KeyCharacterMap>& map) = 0;
+
+    /* Control the vibrator. */
+    virtual void vibrate(int32_t deviceId, nsecs_t duration) = 0;
+    virtual void cancelVibrate(int32_t deviceId) = 0;
 
     /* Requests the EventHub to reopen all input devices on the next call to getEvents(). */
     virtual void requestReopenDevices() = 0;
@@ -230,7 +261,7 @@ public:
 
     virtual uint32_t getDeviceClasses(int32_t deviceId) const;
 
-    virtual String8 getDeviceName(int32_t deviceId) const;
+    virtual InputDeviceIdentifier getDeviceIdentifier(int32_t deviceId) const;
 
     virtual void getConfiguration(int32_t deviceId, PropertyMap* outConfiguration) const;
 
@@ -241,10 +272,10 @@ public:
 
     virtual bool hasInputProperty(int32_t deviceId, int property) const;
 
-    virtual status_t mapKey(int32_t deviceId, int scancode,
+    virtual status_t mapKey(int32_t deviceId, int32_t scanCode, int32_t usageCode,
             int32_t* outKeycode, uint32_t* outFlags) const;
 
-    virtual status_t mapAxis(int32_t deviceId, int scancode,
+    virtual status_t mapAxis(int32_t deviceId, int32_t scanCode,
             AxisInfo* outAxisInfo) const;
 
     virtual void setExcludedDevices(const Vector<String8>& devices);
@@ -266,7 +297,11 @@ public:
     virtual void getVirtualKeyDefinitions(int32_t deviceId,
             Vector<VirtualKeyDefinition>& outVirtualKeys) const;
 
-    virtual String8 getKeyCharacterMapFile(int32_t deviceId) const;
+    virtual sp<KeyCharacterMap> getKeyCharacterMap(int32_t deviceId) const;
+    virtual bool setKeyboardLayoutOverlay(int32_t deviceId, const sp<KeyCharacterMap>& map);
+
+    virtual void vibrate(int32_t deviceId, nsecs_t duration);
+    virtual void cancelVibrate(int32_t deviceId);
 
     virtual void requestReopenDevices();
 
@@ -282,7 +317,7 @@ private:
     struct Device {
         Device* next;
 
-        int fd;
+        int fd; // may be -1 if device is virtual
         const int32_t id;
         const String8 path;
         const InputDeviceIdentifier identifier;
@@ -294,6 +329,7 @@ private:
         uint8_t relBitmask[(REL_MAX + 1) / 8];
         uint8_t swBitmask[(SW_MAX + 1) / 8];
         uint8_t ledBitmask[(LED_MAX + 1) / 8];
+        uint8_t ffBitmask[(FF_MAX + 1) / 8];
         uint8_t propBitmask[(INPUT_PROP_MAX + 1) / 8];
 
         String8 configurationFile;
@@ -301,15 +337,35 @@ private:
         VirtualKeyMap* virtualKeyMap;
         KeyMap keyMap;
 
+        sp<KeyCharacterMap> overlayKeyMap;
+        sp<KeyCharacterMap> combinedKeyMap;
+
+        bool ffEffectPlaying;
+        int16_t ffEffectId; // initially -1
+
+        int32_t timestampOverrideSec;
+        int32_t timestampOverrideUsec;
+
         Device(int fd, int32_t id, const String8& path, const InputDeviceIdentifier& identifier);
         ~Device();
 
         void close();
+
+        inline bool isVirtual() const { return fd < 0; }
+
+        const sp<KeyCharacterMap>& getKeyCharacterMap() const {
+            if (combinedKeyMap != NULL) {
+                return combinedKeyMap;
+            }
+            return keyMap.keyCharacterMap;
+        }
     };
 
     status_t openDeviceLocked(const char *devicePath);
-    status_t closeDeviceByPathLocked(const char *devicePath);
+    void createVirtualKeyboardLocked();
+    void addDeviceLocked(Device* device);
 
+    status_t closeDeviceByPathLocked(const char *devicePath);
     void closeDeviceLocked(Device* device);
     void closeAllDevicesLocked();
 
@@ -331,8 +387,13 @@ private:
     // Protect all internal state.
     mutable Mutex mLock;
 
-    // The actual id of the built-in keyboard, or -1 if none.
+    // The actual id of the built-in keyboard, or NO_BUILT_IN_KEYBOARD if none.
     // EventHub remaps the built-in keyboard to id 0 externally as required by the API.
+    enum {
+        // Must not conflict with any other assigned device ids, including
+        // the virtual keyboard id (-1).
+        NO_BUILT_IN_KEYBOARD = -2,
+    };
     int32_t mBuiltInKeyboardId;
 
     int32_t mNextDeviceId;
@@ -367,9 +428,6 @@ private:
     size_t mPendingEventCount;
     size_t mPendingEventIndex;
     bool mPendingINotify;
-
-    // Set to the number of CPUs.
-    int32_t mNumCpus;
 };
 
 }; // namespace android

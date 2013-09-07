@@ -40,6 +40,7 @@ DOM_SRCDIRS = \
 ifdef MOZ_B2G_RIL
 DOM_SRCDIRS += \
   dom/system/gonk \
+  dom/telephony \
   dom/wifi \
   dom/icc/src \
   $(NULL)

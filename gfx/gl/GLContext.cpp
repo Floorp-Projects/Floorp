@@ -493,7 +493,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 "Adreno (TM) 320",
                 "PowerVR SGX 530",
                 "PowerVR SGX 540",
-                "NVIDIA Tegra"
+                "NVIDIA Tegra",
+                "Android Emulator"
         };
 
         mRenderer = RendererOther;
@@ -1041,6 +1042,14 @@ GLContext::InitExtensions()
 
         // Some Adreno drivers do not report GL_OES_EGL_sync, but they really do support it.
         MarkExtensionSupported(OES_EGL_sync);
+    }
+
+    if (WorkAroundDriverBugs() &&
+        Renderer() == RendererAndroidEmulator) {
+        // the Android emulator, which we use to run B2G reftests on,
+        // doesn't expose the OES_rgb8_rgba8 extension, but it seems to
+        // support it (tautologically, as it only runs on desktop GL).
+        MarkExtensionSupported(OES_rgb8_rgba8);
     }
 
 #ifdef DEBUG

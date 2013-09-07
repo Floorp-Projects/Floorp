@@ -21,12 +21,10 @@
 #include <utils/Looper.h>
 
 #ifdef HAVE_ANDROID_OS
-#include <surfaceflinger/Surface.h>
-#include <surfaceflinger/SurfaceComposerClient.h>
-#include <surfaceflinger/ISurfaceComposer.h>
+#include <gui/SurfaceComposerClient.h>
+#endif
 
 #include <SkBitmap.h>
-#endif
 
 namespace android {
 
@@ -151,11 +149,7 @@ public:
  *
  * Clients are responsible for animating sprites by periodically updating their properties.
  */
-#ifdef HAVE_ANDROID_OS
 class SpriteController : public MessageHandler {
-#else
-class SpriteController : public virtual RefBase {
-#endif
 protected:
     virtual ~SpriteController();
 

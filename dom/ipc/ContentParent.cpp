@@ -35,7 +35,6 @@
 #include "mozilla/dom/PFMRadioParent.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
 #include "mozilla/dom/GeolocationBinding.h"
-#include "mozilla/dom/telephony/TelephonyParent.h"
 #include "SmsParent.h"
 #include "mozilla/Hal.h"
 #include "mozilla/hal_sandbox/PHalParent.h"
@@ -149,7 +148,6 @@ using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::indexedDB;
 using namespace mozilla::dom::power;
 using namespace mozilla::dom::mobilemessage;
-using namespace mozilla::dom::telephony;
 using namespace mozilla::hal;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
@@ -2243,25 +2241,6 @@ bool
 ContentParent::DeallocPSmsParent(PSmsParent* aSms)
 {
     static_cast<SmsParent*>(aSms)->Release();
-    return true;
-}
-
-PTelephonyParent*
-ContentParent::AllocPTelephonyParent()
-{
-    if (!AssertAppProcessPermission(this, "telephony")) {
-        return nullptr;
-    }
-
-    TelephonyParent* actor = new TelephonyParent();
-    NS_ADDREF(actor);
-    return actor;
-}
-
-bool
-ContentParent::DeallocPTelephonyParent(PTelephonyParent* aActor)
-{
-    static_cast<TelephonyParent*>(aActor)->Release();
     return true;
 }
 
