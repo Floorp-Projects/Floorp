@@ -15,12 +15,14 @@ extern const JSFunctionSpec object_methods[];
 extern const JSFunctionSpec object_static_methods[];
 
 // Object constructor native. Exposed only so the JIT can know its address.
-extern bool
+bool
 obj_construct(JSContext *cx, unsigned argc, js::Value *vp);
 
-// Object.prototype.toSource. Exposed so that Function.prototype.toSource can chain up.
-extern bool
-obj_toSource(JSContext *cx, unsigned argc, js::Value *vp);
+#if JS_HAS_TOSOURCE
+// Object.prototype.toSource. Function.prototype.toSource and uneval use this.
+JSString *
+ObjectToSource(JSContext *cx, HandleObject obj);
+#endif // JS_HAS_TOSOURCE
 
 } /* namespace js */
 
