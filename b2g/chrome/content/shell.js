@@ -1025,6 +1025,10 @@ let RemoteDebugger = {
       DebuggerServer.addActors('chrome://browser/content/dbg-browser-actors.js');
       DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webapps.js");
       DebuggerServer.registerModule("devtools/server/actors/device");
+
+      DebuggerServer.onConnectionChange = function(what) {
+        AdbController.updateState();
+      }
     }
 
     let port = Services.prefs.getIntPref('devtools.debugger.remote-port') || 6000;
