@@ -136,6 +136,9 @@ CSS_STATE_PSEUDO_CLASS(target, ":target", "", NS_EVENT_STATE_URLTARGET)
 CSS_STATE_PSEUDO_CLASS(indeterminate, ":indeterminate", "",
                        NS_EVENT_STATE_INDETERMINATE)
 
+CSS_STATE_PSEUDO_CLASS(mozDevtoolsHighlighted, ":-moz-devtools-highlighted", "",
+                       NS_EVENT_STATE_DEVTOOLS_HIGHLIGHTED)
+
 // Matches the element which is being displayed full-screen, and
 // any containing frames.
 CSS_STATE_PSEUDO_CLASS(mozFullScreen, ":-moz-full-screen", "", NS_EVENT_STATE_FULL_SCREEN)
