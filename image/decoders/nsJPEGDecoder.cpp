@@ -14,9 +14,10 @@
 #include "nspr.h"
 #include "nsCRT.h"
 #include "gfxColor.h"
-#include "gfxColorManagement.h"
 
 #include "jerror.h"
+
+#include "gfxPlatform.h"
 
 extern "C" {
 #include "iccjpeg.h"
@@ -136,7 +137,7 @@ nsJPEGDecoder::SpeedHistogram()
 void
 nsJPEGDecoder::InitInternal()
 {
-  mCMSMode = gfxColorManagement::Instance().GetMode();
+  mCMSMode = gfxPlatform::GetCMSMode();
   if ((mDecodeFlags & DECODER_NO_COLORSPACE_CONVERSION) != 0)
     mCMSMode = eCMSMode_Off;
 
@@ -313,18 +314,17 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
           type |= FLAVOR_SH(mInfo.saw_Adobe_marker ? 1 : 0);
 #endif
 
-        const gfxColorManagement& colorManagement = gfxColorManagement::Instance();
-        if (colorManagement.GetOutputProfile()) {
+        if (gfxPlatform::GetCMSOutputProfile()) {
 
           /* Calculate rendering intent. */
-          int intent = colorManagement.GetRenderingIntent();
+          int intent = gfxPlatform::GetRenderingIntent();
           if (intent == -1)
               intent = qcms_profile_get_rendering_intent(mInProfile);
 
           /* Create the color management transform. */
           mTransform = qcms_transform_create(mInProfile,
                                           type,
-                                          colorManagement.GetOutputProfile(),
+                                          gfxPlatform::GetCMSOutputProfile(),
                                           QCMS_DATA_RGB_8,
                                           (qcms_intent)intent);
         }
@@ -621,7 +621,7 @@ nsJPEGDecoder::OutputScanlines(bool* suspend)
         }
         if (mCMSMode == eCMSMode_All) {
           /* No embedded ICC profile - treat as sRGB */
-          qcms_transform *transform = gfxColorManagement::Instance().GetRGBTransform();
+          qcms_transform *transform = gfxPlatform::GetCMSRGBTransform();
           if (transform) {
             qcms_transform_data(transform, sampleRow, sampleRow, mInfo.output_width);
           }

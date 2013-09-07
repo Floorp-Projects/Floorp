@@ -13,7 +13,7 @@
 #include "nsFont.h"
 #include "mozilla/Preferences.h"
 
-#include "gfxColorManagement.h"
+#include "gfxPlatform.h"
 #include "qcms.h"
 
 #ifdef DEBUG
@@ -616,9 +616,9 @@ nsXPLookAndFeel::GetColorImpl(ColorID aID, nscolor &aResult)
   }
 
   if (sUseNativeColors && NS_SUCCEEDED(NativeGetColor(aID, aResult))) {
-    if ((gfxColorManagement::Instance().GetMode() == eCMSMode_All) &&
+    if ((gfxPlatform::GetCMSMode() == eCMSMode_All) &&
          !IsSpecialColor(aID, aResult)) {
-      qcms_transform *transform = gfxColorManagement::Instance().GetInverseRGBTransform();
+      qcms_transform *transform = gfxPlatform::GetCMSInverseRGBTransform();
       if (transform) {
         uint8_t color[3];
         color[0] = NS_GET_R(aResult);

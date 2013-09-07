@@ -45,7 +45,7 @@ mailing address.
 #include "RasterImage.h"
 
 #include "gfxColor.h"
-#include "gfxColorManagement.h"
+#include "gfxPlatform.h"
 #include "qcms.h"
 #include <algorithm>
 
@@ -504,8 +504,8 @@ nsGIFDecoder2::DoLzw(const uint8_t *q)
 static void ConvertColormap(uint32_t *aColormap, uint32_t aColors)
 {
   // Apply CMS transformation if enabled and available
-  if (gfxColorManagement::Instance().GetMode() == eCMSMode_All) {
-    qcms_transform *transform = gfxColorManagement::Instance().GetRGBTransform();
+  if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
+    qcms_transform *transform = gfxPlatform::GetCMSRGBTransform();
     if (transform)
       qcms_transform_data(transform, aColormap, aColormap, aColors);
   }
