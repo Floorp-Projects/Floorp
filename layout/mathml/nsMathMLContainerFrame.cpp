@@ -911,7 +911,7 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
   while (childFrame) {
     nsHTMLReflowMetrics childDesiredSize(aDesiredSize.mFlags);
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                       childFrame, availSize);
+                                       childFrame, availSize, (uint32_t)0);
     nsresult rv = ReflowChild(childFrame, aPresContext, childDesiredSize,
                               childReflowState, childStatus);
     //NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
