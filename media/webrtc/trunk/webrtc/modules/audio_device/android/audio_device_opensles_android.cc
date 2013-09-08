@@ -36,6 +36,7 @@ namespace webrtc {
 AudioDeviceAndroidOpenSLES::AudioDeviceAndroidOpenSLES(const WebRtc_Word32 id)
     : voe_audio_buffer_(NULL),
       crit_sect_(*CriticalSectionWrapper::CreateCriticalSection()),
+      callback_crit_sect_(*CriticalSectionWrapper::CreateCriticalSection()),
       id_(id),
       sles_engine_(NULL),
       sles_player_(NULL),
@@ -277,6 +278,7 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::MicrophoneIsAvailable(
 
 WebRtc_Word32 AudioDeviceAndroidOpenSLES::InitMicrophone() {
   CriticalSectionScoped lock(&crit_sect_);
+  CriticalSectionScoped callback_lock(&callback_crit_sect_);
   if (is_recording_) {
     WEBRTC_OPENSL_TRACE(kTraceWarning, kTraceAudioDevice, id_,
                         "  Recording already started");
@@ -941,6 +943,7 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::InitRecording() {
 
 WebRtc_Word32 AudioDeviceAndroidOpenSLES::StartRecording() {
   CriticalSectionScoped lock(&crit_sect_);
+  CriticalSectionScoped callback_lock(&callback_crit_sect_);
 
   if (!is_rec_initialized_) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
@@ -1080,6 +1083,7 @@ WebRtc_Word32 AudioDeviceAndroidOpenSLES::StopRecording() {
   }
 
   CriticalSectionScoped lock(&crit_sect_);
+  CriticalSectionScoped callback_lock(&callback_crit_sect_);
   is_rec_initialized_ = false;
   is_recording_ = false;
   rec_warning_ = 0;
@@ -1093,6 +1097,7 @@ bool AudioDeviceAndroidOpenSLES::RecordingIsInitialized() const {
 }
 
 bool AudioDeviceAndroidOpenSLES::Recording() const {
+  CriticalSectionScoped callback_lock(&callback_crit_sect_);
   return is_recording_;
 }
 
@@ -1365,9 +1370,13 @@ bool AudioDeviceAndroidOpenSLES::RecThreadFuncImpl() {
   const unsigned int total_bytes = num_bytes;
   WebRtc_Word8 buf[REC_MAX_TEMP_BUF_SIZE_PER_10ms];
 
+  // Always grab crit_sect_ first, then callback_crit_sect_
+  // And vice-versa for releasing
   crit_sect_.Enter();
+  callback_crit_sect_.Enter();
   while (is_recording_) {
     if (rec_voe_audio_queue_.size() <= 0) {
+      callback_crit_sect_.Leave();
       crit_sect_.Leave();
       // Wait for max 40ms for incoming audio data before looping the
       // poll and checking for ::Stop() being called (which waits for us
@@ -1378,8 +1387,10 @@ bool AudioDeviceAndroidOpenSLES::RecThreadFuncImpl() {
       // exit after ::Stop().  This value of 40ms is arbitrary.
       rec_timer_.Wait(40);
       crit_sect_.Enter();
+      callback_crit_sect_.Enter();
       if (rec_voe_audio_queue_.size() <= 0) {
         // still no audio data; check for ::Stop()
+        callback_crit_sect_.Leave();
         crit_sect_.Leave();
         return true;
       }
@@ -1395,10 +1406,13 @@ bool AudioDeviceAndroidOpenSLES::RecThreadFuncImpl() {
     voe_audio_buffer_->SetVQEData(playout_delay_, recording_delay_, 0);
 
     // All other implementations UnLock around DeliverRecordedData() only
+    callback_crit_sect_.Leave();
     crit_sect_.Leave();
     voe_audio_buffer_->DeliverRecordedData();
     crit_sect_.Enter();
+    callback_crit_sect_.Enter();
   }
+  callback_crit_sect_.Leave();
   crit_sect_.Leave();
 
   // if is_recording is false, we either *just* were started, or for some reason
@@ -1419,7 +1433,10 @@ void AudioDeviceAndroidOpenSLES::RecorderSimpleBufferQueueCallbackHandler(
   WebRtc_Word8* audio;
 
   {
-    CriticalSectionScoped lock(&crit_sect_);
+    // use this instead of crit_sect_ to avoid race against StopRecording()
+    // (which holds crit_sect, and then waits for the thread that calls
+    // this to exit, leading to possible deadlock (bug 904784)
+    CriticalSectionScoped lock(&callback_crit_sect_);
     if (!is_recording_) {
       return;
     }
