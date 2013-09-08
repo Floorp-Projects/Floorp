@@ -39,6 +39,7 @@
 
 #include "jsfuninlines.h"
 #include "jsinferinlines.h"
+#include "jsobjinlines.h"
 
 #include "vm/Runtime-inl.h"
 #include "vm/ScopeObject-inl.h"

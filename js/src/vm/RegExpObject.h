@@ -366,13 +366,22 @@ class RegExpObject : public JSObject
     static unsigned lastIndexSlot() { return LAST_INDEX_SLOT; }
 
     const Value &getLastIndex() const { return getSlot(LAST_INDEX_SLOT); }
-    inline void setLastIndex(double d);
-    inline void zeroLastIndex();
+
+    void setLastIndex(double d) {
+        setSlot(LAST_INDEX_SLOT, NumberValue(d));
+    }
+
+    void zeroLastIndex() {
+        setSlot(LAST_INDEX_SLOT, Int32Value(0));
+    }
 
     JSFlatString *toString(JSContext *cx) const;
 
     JSAtom *getSource() const { return &getSlot(SOURCE_SLOT).toString()->asAtom(); }
-    inline void setSource(JSAtom *source);
+
+    void setSource(JSAtom *source) {
+        setSlot(SOURCE_SLOT, StringValue(source));
+    }
 
     RegExpFlag getFlags() const {
         unsigned flags = 0;
@@ -385,10 +394,22 @@ class RegExpObject : public JSObject
 
     /* Flags. */
 
-    inline void setIgnoreCase(bool enabled);
-    inline void setGlobal(bool enabled);
-    inline void setMultiline(bool enabled);
-    inline void setSticky(bool enabled);
+    void setIgnoreCase(bool enabled) {
+        setSlot(IGNORE_CASE_FLAG_SLOT, BooleanValue(enabled));
+    }
+
+    void setGlobal(bool enabled) {
+        setSlot(GLOBAL_FLAG_SLOT, BooleanValue(enabled));
+    }
+
+    void setMultiline(bool enabled) {
+        setSlot(MULTILINE_FLAG_SLOT, BooleanValue(enabled));
+    }
+
+    void setSticky(bool enabled) {
+        setSlot(STICKY_FLAG_SLOT, BooleanValue(enabled));
+    }
+
     bool ignoreCase() const { return getSlot(IGNORE_CASE_FLAG_SLOT).toBoolean(); }
     bool global() const     { return getSlot(GLOBAL_FLAG_SLOT).toBoolean(); }
     bool multiline() const  { return getSlot(MULTILINE_FLAG_SLOT).toBoolean(); }
@@ -406,6 +427,7 @@ class RegExpObject : public JSObject
         }
         return createShared(cx, g);
     }
+
     inline void setShared(ExclusiveContext *cx, RegExpShared &shared);
 
   private:

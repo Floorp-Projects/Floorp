@@ -67,68 +67,6 @@ js::ObjectImpl::isNative() const
     return lastProperty()->isNative();
 }
 
-#ifdef DEBUG
-inline bool
-IsObjectValueInCompartment(js::Value v, JSCompartment *comp)
-{
-    if (!v.isObject())
-        return true;
-    return v.toObject().compartment() == comp;
-}
-#endif
-
-inline void
-js::ObjectImpl::setSlot(uint32_t slot, const js::Value &value)
-{
-    MOZ_ASSERT(slotInRange(slot));
-    MOZ_ASSERT(IsObjectValueInCompartment(value, asObjectPtr()->compartment()));
-    getSlotRef(slot).set(this->asObjectPtr(), HeapSlot::Slot, slot, value);
-}
-
-inline void
-js::ObjectImpl::setCrossCompartmentSlot(uint32_t slot, const js::Value &value)
-{
-    MOZ_ASSERT(slotInRange(slot));
-    getSlotRef(slot).set(this->asObjectPtr(), HeapSlot::Slot, slot, value);
-}
-
-inline void
-js::ObjectImpl::initSlot(uint32_t slot, const js::Value &value)
-{
-    MOZ_ASSERT(getSlot(slot).isUndefined());
-    MOZ_ASSERT(slotInRange(slot));
-    MOZ_ASSERT(IsObjectValueInCompartment(value, asObjectPtr()->compartment()));
-    initSlotUnchecked(slot, value);
-}
-
-inline void
-js::ObjectImpl::initCrossCompartmentSlot(uint32_t slot, const js::Value &value)
-{
-    MOZ_ASSERT(getSlot(slot).isUndefined());
-    MOZ_ASSERT(slotInRange(slot));
-    initSlotUnchecked(slot, value);
-}
-
-inline void
-js::ObjectImpl::initSlotUnchecked(uint32_t slot, const js::Value &value)
-{
-    getSlotAddressUnchecked(slot)->init(this->asObjectPtr(), HeapSlot::Slot, slot, value);
-}
-
-inline void
-js::ObjectImpl::setFixedSlot(uint32_t slot, const js::Value &value)
-{
-    MOZ_ASSERT(slot < numFixedSlots());
-    fixedSlots()[slot].set(this->asObjectPtr(), HeapSlot::Slot, slot, value);
-}
-
-inline void
-js::ObjectImpl::initFixedSlot(uint32_t slot, const js::Value &value)
-{
-    MOZ_ASSERT(slot < numFixedSlots());
-    fixedSlots()[slot].init(this->asObjectPtr(), HeapSlot::Slot, slot, value);
-}
-
 inline uint32_t
 js::ObjectImpl::slotSpan() const
 {
@@ -188,14 +126,6 @@ js::ObjectImpl::privateWriteBarrierPre(void **old)
 #endif
 }
 
-inline void
-js::ObjectImpl::privateWriteBarrierPost(void **pprivate)
-{
-#ifdef JSGC_GENERATIONAL
-    runtimeFromAnyThread()->gcStoreBuffer.putCell(reinterpret_cast<js::gc::Cell **>(pprivate));
-#endif
-}
-
 /* static */ inline void
 js::ObjectImpl::writeBarrierPre(ObjectImpl *obj)
 {
@@ -214,32 +144,6 @@ js::ObjectImpl::writeBarrierPre(ObjectImpl *obj)
         MarkObjectUnbarriered(zone->barrierTracer(), &tmp, "write barrier");
         MOZ_ASSERT(tmp == obj->asObjectPtr());
     }
-#endif
-}
-
-/* static */ inline void
-js::ObjectImpl::writeBarrierPost(ObjectImpl *obj, void *addr)
-{
-#ifdef JSGC_GENERATIONAL
-    if (IsNullTaggedPointer(obj))
-        return;
-    obj->runtimeFromAnyThread()->gcStoreBuffer.putCell((Cell **)addr);
-#endif
-}
-
-/* static */ inline void
-js::ObjectImpl::writeBarrierPostRelocate(ObjectImpl *obj, void *addr)
-{
-#ifdef JSGC_GENERATIONAL
-    obj->runtimeFromAnyThread()->gcStoreBuffer.putRelocatableCell((Cell **)addr);
-#endif
-}
-
-/* static */ inline void
-js::ObjectImpl::writeBarrierPostRemove(ObjectImpl *obj, void *addr)
-{
-#ifdef JSGC_GENERATIONAL
-    obj->runtimeFromAnyThread()->gcStoreBuffer.removeRelocatableCell((Cell **)addr);
 #endif
 }
 
