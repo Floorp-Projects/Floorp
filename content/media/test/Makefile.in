@@ -230,6 +230,7 @@ MOCHITEST_FILES += \
 		multiple-bos.ogg \
 		no-cues.webm \
 		owl.mp3 \
+		owl-funnier-id3.mp3 \
 		owl-funny-id3.mp3 \
 		split.webm \
 		seek.ogv \
