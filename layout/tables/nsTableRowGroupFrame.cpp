@@ -371,8 +371,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
       nsSize kidAvailSize(aReflowState.availSize.width, NS_UNCONSTRAINEDSIZE);
       nsHTMLReflowState kidReflowState(aPresContext, aReflowState.reflowState,
                                        kidFrame, kidAvailSize,
-                                       -1, -1,
-                                       nsHTMLReflowState::CALLER_WILL_INIT);
+                                       -1, -1, false);
       InitChildReflowState(*aPresContext, borderCollapse, kidReflowState);
 
       // This can indicate that columns were resized.
@@ -934,8 +933,7 @@ nsTableRowGroupFrame::SplitSpanningCells(nsPresContext&           aPresContext,
         rowAvailSize.height = std::min(rowAvailSize.height, rowRect.height);
         nsHTMLReflowState rowReflowState(&aPresContext, aReflowState,
                                          row, rowAvailSize,
-                                         -1, -1,
-                                         nsHTMLReflowState::CALLER_WILL_INIT);
+                                         -1, -1, false);
         InitChildReflowState(aPresContext, borderCollapse, rowReflowState);
         rowReflowState.mFlags.mIsTopOfPage = isTopOfPage; // set top of page
 
@@ -1070,8 +1068,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
 
         nsHTMLReflowState rowReflowState(aPresContext, aReflowState,
                                          rowFrame, availSize,
-                                         -1, -1,
-                                         nsHTMLReflowState::CALLER_WILL_INIT);
+                                         -1, -1, false);
                                          
         InitChildReflowState(*aPresContext, borderCollapse, rowReflowState);
         rowReflowState.mFlags.mIsTopOfPage = isTopOfPage; // set top of page
