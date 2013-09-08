@@ -36,6 +36,7 @@ namespace webrtc {
 AudioDeviceAndroidOpenSLES::AudioDeviceAndroidOpenSLES(const int32_t id)
     : voe_audio_buffer_(NULL),
       crit_sect_(*CriticalSectionWrapper::CreateCriticalSection()),
+      callback_crit_sect_(*CriticalSectionWrapper::CreateCriticalSection()),
       id_(id),
       sles_engine_(NULL),
       sles_player_(NULL),
@@ -275,6 +276,7 @@ int32_t AudioDeviceAndroidOpenSLES::MicrophoneIsAvailable(
 
 int32_t AudioDeviceAndroidOpenSLES::InitMicrophone() {
   CriticalSectionScoped lock(&crit_sect_);
+  CriticalSectionScoped callback_lock(&callback_crit_sect_);
   if (is_recording_) {
     WEBRTC_OPENSL_TRACE(kTraceWarning, kTraceAudioDevice, id_,
                         "  Recording already started");
@@ -939,6 +941,7 @@ int32_t AudioDeviceAndroidOpenSLES::InitRecording() {
 
 int32_t AudioDeviceAndroidOpenSLES::StartRecording() {
   CriticalSectionScoped lock(&crit_sect_);
+  CriticalSectionScoped callback_lock(&callback_crit_sect_);
 
   if (!is_rec_initialized_) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
@@ -1078,6 +1081,7 @@ int32_t AudioDeviceAndroidOpenSLES::StopRecording() {
   }
 
   CriticalSectionScoped lock(&crit_sect_);
+  CriticalSectionScoped callback_lock(&callback_crit_sect_);
   is_rec_initialized_ = false;
   is_recording_ = false;
   rec_warning_ = 0;
@@ -1091,6 +1095,7 @@ bool AudioDeviceAndroidOpenSLES::RecordingIsInitialized() const {
 }
 
 bool AudioDeviceAndroidOpenSLES::Recording() const {
+  CriticalSectionScoped callback_lock(&callback_crit_sect_);
   return is_recording_;
 }
 
@@ -1349,79 +1354,87 @@ void AudioDeviceAndroidOpenSLES::RecorderSimpleBufferQueueCallback(
 }
 
 bool AudioDeviceAndroidOpenSLES::RecThreadFuncImpl() {
-  if (is_recording_) {
-    // TODO(leozwang): Add seting correct scheduling and thread priority.
+  // TODO(leozwang): Add seting correct scheduling and thread priority.
 
-    const unsigned int num_samples = mic_sampling_rate_ / 100;
-    const unsigned int num_bytes =
-        N_REC_CHANNELS * num_samples * sizeof(int16_t);
-    const unsigned int total_bytes = num_bytes;
-    int8_t buf[REC_MAX_TEMP_BUF_SIZE_PER_10ms];
+  const unsigned int num_samples = mic_sampling_rate_ / 100;
+  const unsigned int num_bytes =
+    N_REC_CHANNELS * num_samples * sizeof(int16_t);
+  const unsigned int total_bytes = num_bytes;
+  int8_t buf[REC_MAX_TEMP_BUF_SIZE_PER_10ms];
 
-    {
-      CriticalSectionScoped lock(&crit_sect_);
-      if (rec_voe_audio_queue_.size() <= 0) {
-        rec_timer_.Wait(1);
-        return true;
-      }
-
-      int8_t* audio = rec_voe_audio_queue_.front();
-      rec_voe_audio_queue_.pop();
-      memcpy(buf, audio, total_bytes);
-      memset(audio, 0, total_bytes);
-      rec_voe_ready_queue_.push(audio);
+  {
+    // Always grab crit_sect_ first, then callback_crit_sect_
+    // And vice-versa for releasing
+    CriticalSectionScoped lock(&crit_sect_);
+    CriticalSectionScoped callback_lock(&callback_crit_sect_);
+    if (!is_recording_) {
+      return true;
+    }
+    if (rec_voe_audio_queue_.size() <= 0) {
+      rec_timer_.Wait(1);
+      return true;
     }
 
-    UpdateRecordingDelay();
-    voe_audio_buffer_->SetRecordedBuffer(buf, num_samples);
-    voe_audio_buffer_->SetVQEData(playout_delay_, recording_delay_, 0);
-    voe_audio_buffer_->DeliverRecordedData();
+    int8_t* audio = rec_voe_audio_queue_.front();
+    rec_voe_audio_queue_.pop();
+    memcpy(buf, audio, total_bytes);
+    memset(audio, 0, total_bytes);
+    rec_voe_ready_queue_.push(audio);
   }
+
+  UpdateRecordingDelay();
+  voe_audio_buffer_->SetRecordedBuffer(buf, num_samples);
+  voe_audio_buffer_->SetVQEData(playout_delay_, recording_delay_, 0);
+  voe_audio_buffer_->DeliverRecordedData();
 
   return true;
 }
 
 void AudioDeviceAndroidOpenSLES::RecorderSimpleBufferQueueCallbackHandler(
-    SLAndroidSimpleBufferQueueItf queue_itf) {
-  if (is_recording_) {
-    const unsigned int num_samples = mic_sampling_rate_ / 100;
-    const unsigned int num_bytes =
-        N_REC_CHANNELS * num_samples * sizeof(int16_t);
-    const unsigned int total_bytes = num_bytes;
-    int8_t* audio;
+  SLAndroidSimpleBufferQueueItf queue_itf) {
+  const unsigned int num_samples = mic_sampling_rate_ / 100;
+  const unsigned int num_bytes =
+    N_REC_CHANNELS * num_samples * sizeof(int16_t);
+  const unsigned int total_bytes = num_bytes;
+  int8_t* audio;
 
-    {
-      CriticalSectionScoped lock(&crit_sect_);
-      audio = rec_queue_.front();
-      rec_queue_.pop();
-      rec_voe_audio_queue_.push(audio);
-
-      if (rec_voe_ready_queue_.size() <= 0) {
-        // Log Error.
-        rec_error_ = 1;
-        WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
-                            "  Audio Rec thread buffers underrun");
-      } else {
-        audio = rec_voe_ready_queue_.front();
-        rec_voe_ready_queue_.pop();
-      }
-    }
-
-    int32_t res = (*queue_itf)->Enqueue(queue_itf,
-                                              audio,
-                                              total_bytes);
-    if (res != SL_RESULT_SUCCESS) {
-      WEBRTC_OPENSL_TRACE(kTraceWarning, kTraceAudioDevice, id_,
-                          "  recorder callback Enqueue failed, %d", res);
-      rec_warning_ = 1;
+  {
+    // use this instead of crit_sect_ to avoid race against StopRecording()
+    // (which holds crit_sect, and then waits for the thread that calls
+    // this to exit, leading to possible deadlock (bug 904784)
+    CriticalSectionScoped lock(&callback_crit_sect_);
+    if (!is_recording_) {
       return;
-    } else {
-      rec_queue_.push(audio);
     }
+    audio = rec_queue_.front();
+    rec_queue_.pop();
+    rec_voe_audio_queue_.push(audio);
 
-    // TODO(leozwang): OpenSL ES doesn't support AudioRecorder
-    // volume control now, add it when it's ready.
+    if (rec_voe_ready_queue_.size() <= 0) {
+      // Log Error.
+      rec_error_ = 1;
+      WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
+                          "  Audio Rec thread buffers underrun");
+    } else {
+      audio = rec_voe_ready_queue_.front();
+      rec_voe_ready_queue_.pop();
+    }
   }
+
+  int32_t res = (*queue_itf)->Enqueue(queue_itf,
+                                      audio,
+                                      total_bytes);
+  if (res != SL_RESULT_SUCCESS) {
+    WEBRTC_OPENSL_TRACE(kTraceWarning, kTraceAudioDevice, id_,
+                        "  recorder callback Enqueue failed, %d", res);
+    rec_warning_ = 1;
+    return;
+  } else {
+    rec_queue_.push(audio);
+  }
+
+  // TODO(leozwang): OpenSL ES doesn't support AudioRecorder
+  // volume control now, add it when it's ready.
 }
 
 void AudioDeviceAndroidOpenSLES::CheckErr(SLresult res) {
