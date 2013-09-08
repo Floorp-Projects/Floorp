@@ -8,7 +8,7 @@ var gPane = null;
 var gTab = null;
 var gDebugger = null;
 var gView = null;
-var gLH = null;
+var gDH = null;
 var gL10N = null;
 
 function test() {
@@ -17,7 +17,7 @@ function test() {
     gPane = aPane;
     gDebugger = gPane.panelWin;
     gView = gDebugger.DebuggerView;
-    gLH = gDebugger.LayoutHelpers;
+    gDH = gDebugger.DevtoolsHelpers;
     gL10N = gDebugger.L10N;
 
     testPause();
@@ -31,7 +31,7 @@ function testPause() {
   let button = gDebugger.document.getElementById("resume");
   is(button.getAttribute("tooltiptext"),
      gL10N.getFormatStr("pauseButtonTooltip",
-      gLH.prettyKey(gDebugger.document.getElementById("resumeKey"))),
+      gDH.prettyKey(gDebugger.document.getElementById("resumeKey"))),
     "Button tooltip should be pause when running.");
 
   gDebugger.DebuggerController.activeThread.addOneTimeListener("paused", function() {
@@ -45,7 +45,7 @@ function testPause() {
 
       is(button.getAttribute("tooltiptext"),
          gL10N.getFormatStr("resumeButtonTooltip",
-          gLH.prettyKey(gDebugger.document.getElementById("resumeKey"))),
+          gDH.prettyKey(gDebugger.document.getElementById("resumeKey"))),
         "Button tooltip should be resume when paused.");
 
       is(frames.querySelectorAll(".dbg-stackframe").length, 0,
@@ -70,7 +70,7 @@ function testResume() {
       let button = gDebugger.document.getElementById("resume");
       is(button.getAttribute("tooltiptext"),
          gL10N.getFormatStr("pauseButtonTooltip",
-          gLH.prettyKey(gDebugger.document.getElementById("resumeKey"))),
+          gDH.prettyKey(gDebugger.document.getElementById("resumeKey"))),
         "Button tooltip should be pause when running.");
 
       closeDebuggerAndFinish();
@@ -88,6 +88,6 @@ registerCleanupFunction(function() {
   gTab = null;
   gDebugger = null;
   gView = null;
-  gLH = null;
+  gDH = null;
   gL10N = null;
 });
