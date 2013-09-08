@@ -11,60 +11,6 @@
 
 #include "vm/ScopeObject.h"
 
-inline void
-JSFunction::initAtom(JSAtom *atom)
-{
-    atom_.init(atom);
-}
-
-inline void
-JSFunction::setGuessedAtom(JSAtom *atom)
-{
-    JS_ASSERT(atom_ == NULL);
-    JS_ASSERT(atom != NULL);
-    JS_ASSERT(!hasGuessedAtom());
-    atom_ = atom;
-    flags |= HAS_GUESSED_ATOM;
-}
-
-inline void
-JSFunction::setEnvironment(JSObject *obj)
-{
-    JS_ASSERT(isInterpreted());
-    *(js::HeapPtrObject *)&u.i.env_ = obj;
-}
-
-inline void
-JSFunction::initEnvironment(JSObject *obj)
-{
-    JS_ASSERT(isInterpreted());
-    ((js::HeapPtrObject *)&u.i.env_)->init(obj);
-}
-
-inline void
-JSFunction::initializeExtended()
-{
-    JS_ASSERT(isExtended());
-
-    JS_ASSERT(mozilla::ArrayLength(toExtended()->extendedSlots) == 2);
-    toExtended()->extendedSlots[0].init(js::UndefinedValue());
-    toExtended()->extendedSlots[1].init(js::UndefinedValue());
-}
-
-inline void
-JSFunction::initExtendedSlot(size_t which, const js::Value &val)
-{
-    JS_ASSERT(which < mozilla::ArrayLength(toExtended()->extendedSlots));
-    toExtended()->extendedSlots[which].init(val);
-}
-
-inline void
-JSFunction::setExtendedSlot(size_t which, const js::Value &val)
-{
-    JS_ASSERT(which < mozilla::ArrayLength(toExtended()->extendedSlots));
-    toExtended()->extendedSlots[which] = val;
-}
-
 namespace js {
 
 inline const char *
@@ -173,15 +119,6 @@ JSFunction::initScript(JSScript *script_)
 {
     JS_ASSERT(isInterpreted());
     mutableScript().init(script_);
-}
-
-inline JSObject *
-JSFunction::getBoundFunctionTarget() const
-{
-    JS_ASSERT(isBoundFunction());
-
-    /* Bound functions abuse |parent| to store their target function. */
-    return getParent();
 }
 
 #endif /* jsfuninlines_h */

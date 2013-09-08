@@ -166,6 +166,14 @@ js::ScopeCoordinateFunctionScript(JSContext *cx, JSScript *script, jsbytecode *p
 
 /*****************************************************************************/
 
+inline void
+ScopeObject::setEnclosingScope(HandleObject obj)
+{
+    JS_ASSERT_IF(obj->is<CallObject>() || obj->is<DeclEnvObject>() || obj->is<BlockObject>(),
+                 obj->isDelegate());
+    setFixedSlot(SCOPE_CHAIN_SLOT, ObjectValue(*obj));
+}
+
 /*
  * Construct a bare-bones call object given a shape, type, and slots pointer.
  * The call object must be further initialized to be usable.
