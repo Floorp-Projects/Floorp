@@ -1,0 +1,22 @@
+From: Jeff Gilbert <jgilbert@mozilla.com>
+* * *
+Bug 840577 - Fix ANGLE cross compilation on case sensitive OSes, relanded
+
+diff --git a/gfx/angle/src/libGLESv2/precompiled.h b/gfx/angle/src/libGLESv2/precompiled.h
+--- a/gfx/angle/src/libGLESv2/precompiled.h
++++ b/gfx/angle/src/libGLESv2/precompiled.h
+@@ -30,13 +30,13 @@
+ #include <sstream>
+ #include <string>
+ #include <unordered_map>
+ #include <vector>
+ 
+ #include <d3d9.h>
+ #include <D3D11.h>
+ #include <dxgi.h>
+-#include <D3Dcompiler.h>
++#include <d3dcompiler.h>
+ 
+ #ifdef _MSC_VER
+ #include <hash_map>
+ #endif

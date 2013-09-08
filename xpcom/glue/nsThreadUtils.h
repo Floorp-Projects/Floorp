@@ -310,16 +310,29 @@ public:
   typedef typename ReturnTypeEnforcer<ReturnType>::ReturnTypeIsSafe check;
 };
 
-template <class ClassType, bool Owning>
+template <class ClassType, typename Arg, bool Owning>
 struct nsRunnableMethodReceiver {
   ClassType *mObj;
-  nsRunnableMethodReceiver(ClassType *obj) : mObj(obj) { NS_IF_ADDREF(mObj); }
- ~nsRunnableMethodReceiver() { Revoke(); }
+  Arg mArg;
+  nsRunnableMethodReceiver(ClassType *obj, Arg arg)
+    : mObj(obj)
+    , mArg(arg)
+  { NS_IF_ADDREF(mObj); }
+ ~nsRunnableMethodReceiver() {  Revoke(); }
+  void Revoke() { NS_IF_RELEASE(mObj); }
+};
+
+template <class ClassType, bool Owning>
+struct nsRunnableMethodReceiver<ClassType, void, Owning> {
+  ClassType *mObj;
+  nsRunnableMethodReceiver(ClassType *obj) : mObj(obj)
+    { NS_IF_ADDREF(mObj); }
+  ~nsRunnableMethodReceiver() { Revoke(); }
   void Revoke() { NS_IF_RELEASE(mObj); }
 };
 
 template <class ClassType>
-struct nsRunnableMethodReceiver<ClassType, false> {
+struct nsRunnableMethodReceiver<ClassType, void, false> {
   ClassType *mObj;
   nsRunnableMethodReceiver(ClassType *obj) : mObj(obj) {}
   void Revoke() { mObj = nullptr; }
@@ -327,28 +340,70 @@ struct nsRunnableMethodReceiver<ClassType, false> {
 
 template <typename Method, bool Owning> struct nsRunnableMethodTraits;
 
+template <class C, typename R, typename A, bool Owning>
+struct nsRunnableMethodTraits<R (C::*)(A), Owning> {
+  typedef C class_type;
+  typedef R return_type;
+  typedef A arg_type;
+  typedef nsRunnableMethod<C, R, Owning> base_type;
+};
+
 template <class C, typename R, bool Owning>
 struct nsRunnableMethodTraits<R (C::*)(), Owning> {
   typedef C class_type;
   typedef R return_type;
+  typedef void arg_type;
   typedef nsRunnableMethod<C, R, Owning> base_type;
 };
 
 #ifdef NS_HAVE_STDCALL
+template <class C, typename R, typename A, bool Owning>
+struct nsRunnableMethodTraits<R (__stdcall C::*)(A), Owning> {
+  typedef C class_type;
+  typedef R return_type;
+  typedef A arg_type;
+  typedef nsRunnableMethod<C, R, Owning> base_type;
+};
+
 template <class C, typename R, bool Owning>
 struct nsRunnableMethodTraits<R (NS_STDCALL C::*)(), Owning> {
   typedef C class_type;
   typedef R return_type;
+  typedef void arg_type;
   typedef nsRunnableMethod<C, R, Owning> base_type;
 };
 #endif
 
-template <typename Method, bool Owning>
+template <typename Method, typename Arg, bool Owning>
 class nsRunnableMethodImpl
   : public nsRunnableMethodTraits<Method, Owning>::base_type
 {
   typedef typename nsRunnableMethodTraits<Method, Owning>::class_type ClassType;
-  nsRunnableMethodReceiver<ClassType, Owning> mReceiver;
+  nsRunnableMethodReceiver<ClassType, Arg, Owning> mReceiver;
+  Method mMethod;
+public:
+  nsRunnableMethodImpl(ClassType *obj,
+                       Method method,
+                       Arg arg)
+    : mReceiver(obj, arg)
+    , mMethod(method)
+  {}
+  NS_IMETHOD Run() {
+    if (MOZ_LIKELY(mReceiver.mObj))
+      ((*mReceiver.mObj).*mMethod)(mReceiver.mArg);
+    return NS_OK;
+  }
+  void Revoke() {
+    mReceiver.Revoke();
+  }
+};
+
+template <typename Method, bool Owning>
+class nsRunnableMethodImpl<Method, void, Owning>
+  : public nsRunnableMethodTraits<Method, Owning>::base_type
+{
+  typedef typename nsRunnableMethodTraits<Method, Owning>::class_type ClassType;
+  nsRunnableMethodReceiver<ClassType, void, Owning> mReceiver;
   Method mMethod;
 
 public:
@@ -383,14 +438,32 @@ template<typename PtrType, typename Method>
 typename nsRunnableMethodTraits<Method, true>::base_type*
 NS_NewRunnableMethod(PtrType ptr, Method method)
 {
-  return new nsRunnableMethodImpl<Method, true>(ptr, method);
+  return new nsRunnableMethodImpl<Method, void, true>(ptr, method);
+}
+
+template<typename T>
+struct dependent_type
+{
+  typedef T type;
+};
+
+
+// Similar to NS_NewRunnableMethod. Call like so:
+// Type myArg;
+// nsCOMPtr<nsIRunnable> event =
+//   NS_NewRunnableMethodWithArg<Type>(myObject, &MyClass::HandleEvent, myArg);
+template<typename Arg, typename Method, typename PtrType>
+typename nsRunnableMethodTraits<Method, true>::base_type*
+NS_NewRunnableMethodWithArg(PtrType ptr, Method method, typename dependent_type<Arg>::type arg)
+{
+  return new nsRunnableMethodImpl<Method, Arg, true>(ptr, method, arg);
 }
 
 template<typename PtrType, typename Method>
 typename nsRunnableMethodTraits<Method, false>::base_type*
 NS_NewNonOwningRunnableMethod(PtrType ptr, Method method)
 {
-  return new nsRunnableMethodImpl<Method, false>(ptr, method);
+  return new nsRunnableMethodImpl<Method, void, false>(ptr, method);
 }
 
 #endif  // XPCOM_GLUE_AVOID_NSPR

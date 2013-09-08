@@ -6,7 +6,6 @@
 #include "SVGDocumentWrapper.h"
 
 #include "mozilla/dom/Element.h"
-#include "nsIAtom.h"
 #include "nsICategoryManager.h"
 #include "nsIChannel.h"
 #include "nsIContentViewer.h"
@@ -24,12 +23,10 @@
 #include "nsComponentManagerUtils.h"
 #include "nsSMILAnimationController.h"
 #include "nsServiceManagerUtils.h"
-#include "nsSize.h"
-#include "gfxRect.h"
 #include "mozilla/dom/SVGSVGElement.h"
-#include "nsSVGLength2.h"
 #include "nsSVGEffects.h"
 #include "mozilla/dom/SVGAnimatedLength.h"
+#include "nsMimeTypes.h"
 
 using namespace mozilla::dom;
 

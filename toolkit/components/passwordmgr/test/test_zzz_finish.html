@@ -17,14 +17,12 @@ Login Manager test: finalization.
 
 /** Test for Login Manager: finalization **/
 
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
 
 // Get the pwmgr service
-var Cc_pwmgr = Components.classes["@mozilla.org/login-manager;1"];
+var Cc_pwmgr = SpecialPowers.Cc["@mozilla.org/login-manager;1"];
 ok(Cc_pwmgr != null, "Access Cc[@mozilla.org/login-manager;1]");
 
-var Ci_pwmgr = Components.interfaces.nsILoginManager;
+var Ci_pwmgr = SpecialPowers.Ci.nsILoginManager;
 ok(Ci_pwmgr != null, "Access Ci.nsILoginManager");
 
 var pwmgr = Cc_pwmgr.getService(Ci_pwmgr);

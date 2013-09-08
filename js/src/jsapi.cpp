@@ -3696,17 +3696,6 @@ JS_ForwardGetPropertyTo(JSContext *cx, JSObject *objArg, jsid idArg, JSObject *o
 }
 
 JS_PUBLIC_API(bool)
-JS_GetPropertyByIdDefault(JSContext *cx, JSObject *objArg, jsid idArg, jsval defArg,
-                          MutableHandleValue vp)
-{
-    RootedObject obj(cx, objArg);
-    RootedId id(cx, idArg);
-    RootedValue def(cx, defArg);
-
-    return baseops::GetPropertyDefault(cx, obj, id, def, vp);
-}
-
-JS_PUBLIC_API(bool)
 JS_GetElement(JSContext *cx, JSObject *objArg, uint32_t index, MutableHandleValue vp)
 {
     return JS_ForwardGetElementTo(cx, objArg, index, objArg, vp);
@@ -3751,16 +3740,6 @@ JS_GetProperty(JSContext *cx, JSObject *objArg, const char *name, MutableHandleV
     RootedObject obj(cx, objArg);
     JSAtom *atom = Atomize(cx, name, strlen(name));
     return atom && JS_GetPropertyById(cx, obj, AtomToId(atom), vp);
-}
-
-JS_PUBLIC_API(bool)
-JS_GetPropertyDefault(JSContext *cx, JSObject *objArg, const char *name, jsval defArg,
-                      MutableHandleValue vp)
-{
-    RootedObject obj(cx, objArg);
-    RootedValue def(cx, defArg);
-    JSAtom *atom = Atomize(cx, name, strlen(name));
-    return atom && JS_GetPropertyByIdDefault(cx, obj, AtomToId(atom), def, vp);
 }
 
 JS_PUBLIC_API(bool)

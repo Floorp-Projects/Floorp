@@ -17,19 +17,17 @@
 #include "nsExpirationTracker.h"
 #include "nsAutoPtr.h"
 #include "imgRequest.h"
-#include "nsIObserverService.h"
-#include "nsIChannelPolicy.h"
 #include "nsIProgressEventSink.h"
 #include "nsIChannel.h"
+#include "imgIRequest.h"
 
 class imgLoader;
-class imgRequest;
 class imgRequestProxy;
-class imgIRequest;
 class imgINotificationObserver;
 class nsILoadGroup;
 class imgCacheExpirationTracker;
 class imgMemoryReporter;
+class nsIChannelPolicy;
 
 class imgCacheEntry
 {
@@ -199,8 +197,6 @@ private:
   bool mDirty;
   uint32_t mSize;
 };
-
-class imgMemoryReporter;
 
 class imgLoader : public imgILoader,
                   public nsIContentSniffer,

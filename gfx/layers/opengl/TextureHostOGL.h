@@ -28,8 +28,6 @@
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsISupportsImpl.h"            // for TextureImage::Release, etc
-#include "nsRect.h"                     // for nsIntRect
-#include "nsSize.h"                     // for nsIntSize
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 #include "LayerManagerOGLProgram.h"     // for ShaderProgramType, etc
 #ifdef MOZ_WIDGET_GONK
@@ -40,6 +38,8 @@ class gfxImageSurface;
 class gfxReusableSurfaceWrapper;
 class nsIntRegion;
 struct nsIntPoint;
+struct nsIntRect;
+struct nsIntSize;
 
 namespace mozilla {
 namespace gfx {

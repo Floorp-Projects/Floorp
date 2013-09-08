@@ -2999,15 +2999,7 @@ extern JS_PUBLIC_API(bool)
 JS_GetProperty(JSContext *cx, JSObject *obj, const char *name, JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(bool)
-JS_GetPropertyDefault(JSContext *cx, JSObject *obj, const char *name, jsval def,
-                      JS::MutableHandle<JS::Value> vp);
-
-extern JS_PUBLIC_API(bool)
 JS_GetPropertyById(JSContext *cx, JSObject *obj, jsid id, JS::MutableHandle<JS::Value> vp);
-
-extern JS_PUBLIC_API(bool)
-JS_GetPropertyByIdDefault(JSContext *cx, JSObject *obj, jsid id, jsval def,
-                          JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(bool)
 JS_ForwardGetPropertyTo(JSContext *cx, JSObject *obj, jsid id, JSObject *onBehalfOf,

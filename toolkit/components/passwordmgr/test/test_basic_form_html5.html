@@ -133,8 +133,6 @@ pwmgr.addLogin(login4);
   (Password manager not working with input type=email)
  */
 function startTest() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   checkForm(1, "testuser@example.com", "testpass1");
   checkForm(2, "555-555-5555", "testpass2");
   checkForm(3, "http://mozilla.org", "testpass3");
