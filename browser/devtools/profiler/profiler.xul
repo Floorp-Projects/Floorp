@@ -16,11 +16,13 @@
 ]>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="text/javascript" src="sidebar.js"/>
   <box flex="1" id="profiler-chrome" class="devtools-responsive-container">
     <vbox class="profiler-sidebar">
       <toolbar class="devtools-toolbar">
         <hbox id="profiler-controls">
           <toolbarbutton id="profiler-start"
+            tooltiptext="&startProfiler.tooltip;"
             class="devtools-toolbarbutton"
             disabled="true"/>
           <toolbarbutton id="profiler-import"
