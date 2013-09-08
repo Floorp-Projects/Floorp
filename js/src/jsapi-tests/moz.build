@@ -34,7 +34,6 @@ CPP_SOURCES += [
     'testGCExactRooting.cpp',
     'testGCFinalizeCallback.cpp',
     'testGCOutOfMemory.cpp',
-    'testGetPropertyDefault.cpp',
     'testHashTable.cpp',
     'testHashTableInit.cpp',
     'testIndexToString.cpp',

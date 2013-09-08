@@ -11,10 +11,15 @@
 
 #define GL_APICALL
 #include <GLES2/gl2.h>
-#include <d3d9.h>
 
 #include "common/angleutils.h"
 #include "common/RefCountObject.h"
+
+namespace rx
+{
+class Renderer;
+class QueryImpl;
+}
 
 namespace gl
 {
@@ -22,11 +27,12 @@ namespace gl
 class Query : public RefCountObject
 {
   public:
-    Query(GLuint id, GLenum type);
+    Query(rx::Renderer *renderer, GLenum type, GLuint id);
     virtual ~Query();
 
     void begin();
     void end();
+
     GLuint getResult();
     GLboolean isResultAvailable();
 
@@ -35,12 +41,7 @@ class Query : public RefCountObject
   private:
     DISALLOW_COPY_AND_ASSIGN(Query);
 
-    GLboolean testQuery();
-
-    IDirect3DQuery9* mQuery;
-    GLenum mType;
-    GLboolean mStatus;
-    GLint mResult;
+    rx::QueryImpl *mQuery;
 };
 
 }

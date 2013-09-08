@@ -9,7 +9,8 @@
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "mozilla/SSE.h"
-#include "nsRect.h"
+
+struct nsIntRect;
 
 class gfxAlphaRecovery {
 public:

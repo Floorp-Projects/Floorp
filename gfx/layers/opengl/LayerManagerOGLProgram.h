@@ -16,11 +16,11 @@
 #include "mozilla/gfx/Types.h"
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsPoint.h"                    // for nsIntPoint
-#include "nsRect.h"                     // for nsIntRect
 #include "nsTArray.h"                   // for nsTArray
 #include "mozilla/layers/CompositorTypes.h"
 
 struct gfxRGBA;
+struct nsIntRect;
 
 namespace mozilla {
 namespace gl {

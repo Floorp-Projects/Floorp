@@ -10,9 +10,9 @@
 #include "gfxASurface.h"
 #include "gfxContext.h"
 #include "gfxXlibSurface.h"
-#include "nsRect.h"
 
 class QRect;
+struct nsIntRect;
 
 /**
  * This class lets us take code that draws into an Xlib surface drawable and lets us

@@ -10,9 +10,10 @@
 #import <Carbon/Carbon.h>
 #endif
 
-#include "nsRect.h"
 #include "nsIWidget.h"
 #include "npapi.h"
+
+struct nsRect;
 
 // We use void pointers to avoid exporting native event types to cross-platform code.
 

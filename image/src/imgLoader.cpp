@@ -12,8 +12,6 @@
 #include "imgLoader.h"
 #include "imgRequestProxy.h"
 
-#include "RasterImage.h"
-
 #include "nsCOMPtr.h"
 
 #include "nsContentUtils.h"
@@ -27,31 +25,21 @@
 #include "nsIProgressEventSink.h"
 #include "nsIChannelEventSink.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
-#include "nsIServiceManager.h"
 #include "nsIFileURL.h"
-#include "nsThreadUtils.h"
-#include "nsXPIDLString.h"
 #include "nsCRT.h"
 #include "nsIDocument.h"
-#include "nsPIDOMWindow.h"
-
-#include "netCore.h"
-
-#include "nsURILoader.h"
-
-#include "nsIComponentRegistrar.h"
 
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheContainer.h"
 
 #include "nsIMemoryReporter.h"
+#include "Image.h"
+#include "DiscardTracker.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
 // until this point, we have an evil hack:
 #include "nsIHttpChannelInternal.h"
-#include "nsIContentSecurityPolicy.h"
-#include "nsIChannelPolicy.h"
 #include "nsILoadContext.h"
 #include "nsILoadGroupChild.h"
 
@@ -2032,7 +2020,6 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, uint32_t aLeng
 
 #include "nsIRequest.h"
 #include "nsIStreamConverterService.h"
-#include "nsXPIDLString.h"
 
 NS_IMPL_ISUPPORTS2(ProxyListener, nsIStreamListener, nsIRequestObserver)
 

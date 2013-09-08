@@ -1,0 +1,93 @@
+From: Jeff Gilbert <jgilbert@mozilla.com>
+
+diff --git a/gfx/angle/src/compiler/Uniform.cpp b/gfx/angle/src/compiler/CompilerUniform.cpp
+rename from gfx/angle/src/compiler/Uniform.cpp
+rename to gfx/angle/src/compiler/CompilerUniform.cpp
+--- a/gfx/angle/src/compiler/Uniform.cpp
++++ b/gfx/angle/src/compiler/CompilerUniform.cpp
+@@ -1,15 +1,15 @@
+ //
+ // Copyright (c) 2013 The ANGLE Project Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ //
+ 
+-#include "compiler/Uniform.h"
++#include "CompilerUniform.h"
+ 
+ namespace sh
+ {
+ 
+ Uniform::Uniform(GLenum type, GLenum precision, const char *name, int arraySize, int registerIndex)
+ {
+     this->type = type;
+     this->precision = precision;
+diff --git a/gfx/angle/src/compiler/Uniform.h b/gfx/angle/src/compiler/CompilerUniform.h
+rename from gfx/angle/src/compiler/Uniform.h
+rename to gfx/angle/src/compiler/CompilerUniform.h
+diff --git a/gfx/angle/src/compiler/OutputHLSL.h b/gfx/angle/src/compiler/OutputHLSL.h
+--- a/gfx/angle/src/compiler/OutputHLSL.h
++++ b/gfx/angle/src/compiler/OutputHLSL.h
+@@ -11,17 +11,17 @@
+ #include <set>
+ #include <map>
+ 
+ #define GL_APICALL
+ #include <GLES2/gl2.h>
+ 
+ #include "compiler/intermediate.h"
+ #include "compiler/ParseHelper.h"
+-#include "compiler/Uniform.h"
++#include "compiler/CompilerUniform.h"
+ 
+ namespace sh
+ {
+ class UnfoldShortCircuit;
+ 
+ class OutputHLSL : public TIntermTraverser
+ {
+   public:
+diff --git a/gfx/angle/src/compiler/TranslatorHLSL.h b/gfx/angle/src/compiler/TranslatorHLSL.h
+--- a/gfx/angle/src/compiler/TranslatorHLSL.h
++++ b/gfx/angle/src/compiler/TranslatorHLSL.h
+@@ -3,17 +3,17 @@
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ //
+ 
+ #ifndef COMPILER_TRANSLATORHLSL_H_
+ #define COMPILER_TRANSLATORHLSL_H_
+ 
+ #include "compiler/ShHandle.h"
+-#include "compiler/Uniform.h"
++#include "compiler/CompilerUniform.h"
+ 
+ class TranslatorHLSL : public TCompiler {
+ public:
+     TranslatorHLSL(ShShaderType type, ShShaderSpec spec, ShShaderOutput output);
+ 
+     virtual TranslatorHLSL *getAsTranslatorHLSL() { return this; }
+     const sh::ActiveUniforms &getUniforms() { return mActiveUniforms; }
+ 
+diff --git a/gfx/angle/src/libGLESv2/Shader.h b/gfx/angle/src/libGLESv2/Shader.h
+--- a/gfx/angle/src/libGLESv2/Shader.h
++++ b/gfx/angle/src/libGLESv2/Shader.h
+@@ -13,17 +13,17 @@
+ #define LIBGLESV2_SHADER_H_
+ 
+ #define GL_APICALL
+ #include <GLES2/gl2.h>
+ #include <string>
+ #include <list>
+ #include <vector>
+ 
+-#include "compiler/Uniform.h"
++#include "compiler/CompilerUniform.h"
+ #include "common/angleutils.h"
+ 
+ namespace rx
+ {
+ class Renderer;
+ }
+ 
+ namespace gl

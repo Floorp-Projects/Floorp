@@ -14,10 +14,6 @@ SimpleTest.waitForExplicitFinish();
 
 const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-const Cu = Components.utils;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // Assume that the pref starts out true, so set to false
 SpecialPowers.setBoolPref("signon.autofillForms", false);
@@ -27,9 +23,7 @@ var TestObserver = {
   receivedNotificationFoundLogins : false,
   dataFoundForm : "",
   dataFoundLogins : null,
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
   observe : function (subject, topic, data) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     var pwmgr = Cc["@mozilla.org/login-manager;1"].
                 getService(Ci.nsILoginManager);
     if (topic == "passwordmgr-found-form") {
@@ -47,10 +41,8 @@ var TestObserver = {
 };
 
 // Add the observer
-var os = Cc["@mozilla.org/observer-service;1"].
-         getService(Ci.nsIObserverService);
-os.addObserver(TestObserver, "passwordmgr-found-form", false);
-os.addObserver(TestObserver, "passwordmgr-found-logins", false);
+SpecialPowers.addObserver(TestObserver, "passwordmgr-found-form", false);
+SpecialPowers.addObserver(TestObserver, "passwordmgr-found-logins", false);
 </script>
 
 <p id="display"></p>
@@ -73,7 +65,6 @@ os.addObserver(TestObserver, "passwordmgr-found-logins", false);
 
 /** Test for Login Manager: simple form with autofillForms disabled and notifying observers **/
 function startTest(){
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   // Test that found-form observer is notified & got correct data
   is(TestObserver.receivedNotificationFoundForm, true, "Checking found-form observer was notified");
   is(TestObserver.dataFoundForm, "noAutofillForms", "Checking found-form observer got correct data");
@@ -85,8 +76,8 @@ function startTest(){
   // Test that found-logins observer is notified & got correct data
   is(TestObserver.receivedNotificationFoundLogins, true, "Checking found-logins observer was notified");
   is(TestObserver.dataFoundLogins.get("didntFillReason"), "noAutofillForms", "Checking didntFillReason is noAutofillForms");
-  is(TestObserver.dataFoundLogins.get("usernameField"), $_(1, "uname"), "Checking username field is correct");
-  is(TestObserver.dataFoundLogins.get("passwordField"), $_(1, "pword"), "Checking password field is correct");
+  is(SpecialPowers.unwrap(TestObserver.dataFoundLogins.get("usernameField")), $_(1, "uname"), "Checking username field is correct");
+  is(SpecialPowers.unwrap(TestObserver.dataFoundLogins.get("passwordField")), $_(1, "pword"), "Checking password field is correct");
   is(TestObserver.dataFoundLogins.get("foundLogins").constructor.name, "Array", "Checking foundLogins is array");
   is(TestObserver.dataFoundLogins.get("foundLogins").length, 1, "Checking foundLogins contains one login");
   ok(TestObserver.dataFoundLogins.get("selectedLogin").QueryInterface(Ci.nsILoginInfo), "Checking selectedLogin is nsILoginInfo");
@@ -97,8 +88,8 @@ function startTest(){
   SpecialPowers.setBoolPref("signon.autofillForms", true);
 
   // Remove the observer
-  os.removeObserver(TestObserver, "passwordmgr-found-form");
-  os.removeObserver(TestObserver, "passwordmgr-found-logins");
+  SpecialPowers.removeObserver(TestObserver, "passwordmgr-found-form");
+  SpecialPowers.removeObserver(TestObserver, "passwordmgr-found-logins");
 
   SimpleTest.finish();
 }

@@ -172,6 +172,7 @@ EXPORTS
     glDrawElementsInstancedANGLE    @174
     glProgramBinaryOES              @175
     glGetProgramBinaryOES           @176
+    glDrawBuffersEXT                @179
 
     ; EGL dependencies
     glCreateContext                 @144 NONAME
@@ -185,3 +186,5 @@ EXPORTS
     ; so we explicitly add aliases for APIs used by EGL.
     glGetProcAddress@4=glGetProcAddress
     glBindTexImage@4=glBindTexImage
+    glCreateRenderer                @177 NONAME
+    glDestroyRenderer               @178 NONAME

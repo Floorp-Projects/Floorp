@@ -10,17 +10,12 @@
 #include "nsError.h"
 #include "Decoder.h"
 #include "RasterImage.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsIMultiPartChannel.h"
 #include "nsAutoPtr.h"
-#include "nsStringStream.h"
 #include "prenv.h"
 #include "prsystem.h"
 #include "ImageContainer.h"
 #include "Layers.h"
 #include "nsPresContext.h"
-#include "nsThread.h"
 #include "nsIThreadPool.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsIObserverService.h"
@@ -45,9 +40,8 @@
 #include "mozilla/gfx/Scale.h"
 
 #include "GeckoProfiler.h"
+#include "gfx2DGlue.h"
 #include <algorithm>
-
-#include "pixman.h"
 
 using namespace mozilla;
 using namespace mozilla::image;

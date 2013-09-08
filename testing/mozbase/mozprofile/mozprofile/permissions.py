@@ -275,15 +275,7 @@ class Permissions(object):
         returns a tuple of prefs, user_prefs
         """
 
-        # Grant God-power to all the privileged servers on which tests run.
         prefs = []
-        privileged = [i for i in self._locations if "privileged" in i.options]
-        for (i, l) in itertools.izip(itertools.count(1), privileged):
-            prefs.append(("capability.principal.codebase.p%s.granted" % i, "UniversalXPConnect"))
-
-            prefs.append(("capability.principal.codebase.p%s.id" % i, "%s://%s:%s" %
-                        (l.scheme, l.host, l.port)))
-            prefs.append(("capability.principal.codebase.p%s.subjectName" % i, ""))
 
         if proxy:
             user_prefs = self.pac_prefs(proxy)

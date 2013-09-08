@@ -13,10 +13,10 @@
 
 #define EGLAPI
 #include <EGL/egl.h>
-#include <d3d9.h>
 
 #include <set>
 
+#include "libGLESv2/renderer/Renderer.h"
 #include "common/angleutils.h"
 
 namespace egl
@@ -26,16 +26,13 @@ class Display;
 class Config
 {
   public:
-    Config(D3DDISPLAYMODE displayMode, EGLint minSwapInterval, EGLint maxSwapInterval, D3DFORMAT renderTargetFormat, D3DFORMAT depthStencilFormat, EGLint multiSample, EGLint texWidth, EGLint texHeight);
+    Config(rx::ConfigDesc desc, EGLint minSwapInterval, EGLint maxSwapInterval, EGLint texWidth, EGLint texHeight);
 
-    void setDefaults();
-    void set(D3DDISPLAYMODE displayMode, EGLint minSwapInterval, EGLint maxSwapInterval, D3DFORMAT renderTargetFormat, D3DFORMAT depthStencilFormat, EGLint multiSample, EGLint texWidth, EGLint texHeight);
     EGLConfig getHandle() const;
 
-    const D3DDISPLAYMODE mDisplayMode;
-    const D3DFORMAT mRenderTargetFormat;
-    const D3DFORMAT mDepthStencilFormat;
-    const EGLint mMultiSample;
+    const GLenum mRenderTargetFormat;
+    const GLenum mDepthStencilFormat;
+    const GLint mMultiSample;
 
     EGLint mBufferSize;              // Depth of the color buffer
     EGLint mRedSize;                 // Bits of Red in the color buffer
@@ -99,7 +96,7 @@ class ConfigSet
   public:
     ConfigSet();
 
-    void add(D3DDISPLAYMODE displayMode, EGLint minSwapInterval, EGLint maxSwapInterval, D3DFORMAT renderTargetFormat, D3DFORMAT depthStencilFormat, EGLint multiSample, EGLint texWidth, EGLint texHeight);
+    void add(rx::ConfigDesc desc, EGLint minSwapInterval, EGLint maxSwapInterval, EGLint texWidth, EGLint texHeight);
     size_t size() const;
     bool getConfigs(EGLConfig *configs, const EGLint *attribList, EGLint configSize, EGLint *numConfig);
     const egl::Config *get(EGLConfig configHandle);

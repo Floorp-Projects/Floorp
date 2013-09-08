@@ -9,7 +9,7 @@
 #include "GLContext.h"
 
 #include "nsString.h"
-
+#include "mozilla/Preferences.h"
 #include "AccessCheck.h"
 
 using namespace mozilla;
