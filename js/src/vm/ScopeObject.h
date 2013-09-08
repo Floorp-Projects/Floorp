@@ -170,7 +170,8 @@ class ScopeObject : public JSObject
     inline JSObject &enclosingScope() const {
         return getReservedSlot(SCOPE_CHAIN_SLOT).toObject();
     }
-    void setEnclosingScope(HandleObject obj);
+
+    inline void setEnclosingScope(HandleObject obj);
 
     /*
      * Get or set an aliased variable contained in this scope. Unaliased
@@ -342,7 +343,9 @@ class BlockObject : public NestedScopeObject
         return getSlotRef(RESERVED_SLOTS + i);
     }
 
-    inline void setSlotValue(unsigned i, const Value &v);
+    void setSlotValue(unsigned i, const Value &v) {
+        setSlot(RESERVED_SLOTS + i, v);
+    }
 };
 
 class StaticBlockObject : public BlockObject
@@ -388,15 +391,34 @@ class StaticBlockObject : public BlockObject
     /* Frontend-only functions ***********************************************/
 
     /* Initialization functions for above fields. */
-    void setAliased(unsigned i, bool aliased);
-    void setStackDepth(uint32_t depth);
-    void initEnclosingStaticScope(JSObject *obj);
+    void setAliased(unsigned i, bool aliased) {
+        JS_ASSERT_IF(i > 0, slotValue(i-1).isBoolean());
+        setSlotValue(i, BooleanValue(aliased));
+        if (aliased && !needsClone()) {
+            setSlotValue(0, MagicValue(JS_BLOCK_NEEDS_CLONE));
+            JS_ASSERT(needsClone());
+        }
+    }
+
+    void setStackDepth(uint32_t depth) {
+        JS_ASSERT(getReservedSlot(DEPTH_SLOT).isUndefined());
+        initReservedSlot(DEPTH_SLOT, PrivateUint32Value(depth));
+    }
+
+    void initEnclosingStaticScope(JSObject *obj) {
+        JS_ASSERT(getReservedSlot(SCOPE_CHAIN_SLOT).isUndefined());
+        setReservedSlot(SCOPE_CHAIN_SLOT, ObjectOrNullValue(obj));
+    }
 
     /*
      * Frontend compilation temporarily uses the object's slots to link
      * a let var to its associated Definition parse node.
      */
-    void setDefinitionParseNode(unsigned i, frontend::Definition *def);
+    void setDefinitionParseNode(unsigned i, frontend::Definition *def) {
+        JS_ASSERT(slotValue(i).isUndefined());
+        setSlotValue(i, PrivateValue(def));
+    }
+
     frontend::Definition *maybeDefinitionParseNode(unsigned i) {
         Value v = slotValue(i);
         return v.isUndefined() ? NULL : reinterpret_cast<frontend::Definition *>(v.toPrivate());
@@ -408,8 +430,13 @@ class StaticBlockObject : public BlockObject
      * be the same as enclosingBlock, initEnclosingStaticScope must be called
      * separately in the emitter. 'reset' is just for asserting stackiness.
      */
-    void initPrevBlockChainFromParser(StaticBlockObject *prev);
-    void resetPrevBlockChainFromParser();
+    void initPrevBlockChainFromParser(StaticBlockObject *prev) {
+        setReservedSlot(SCOPE_CHAIN_SLOT, ObjectOrNullValue(prev));
+    }
+
+    void resetPrevBlockChainFromParser() {
+        setReservedSlot(SCOPE_CHAIN_SLOT, UndefinedValue());
+    }
 
     static Shape *addVar(ExclusiveContext *cx, Handle<StaticBlockObject*> block, HandleId id,
                          int index, bool *redeclared);
@@ -432,7 +459,10 @@ class ClonedBlockObject : public BlockObject
         return slotValue(i);
     }
 
-    void setVar(unsigned i, const Value &v, MaybeCheckAliasing checkAliasing = CHECK_ALIASING);
+    void setVar(unsigned i, const Value &v, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) {
+        JS_ASSERT_IF(checkAliasing, staticBlock().isAliased(i));
+        setSlotValue(i, v);
+    }
 
     /* Copy in all the unaliased formals and locals. */
     void copyUnaliasedValues(AbstractFramePtr frame);

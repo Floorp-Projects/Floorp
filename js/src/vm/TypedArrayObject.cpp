@@ -40,8 +40,6 @@
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
-#include "vm/GlobalObject-inl.h"
-
 #if JS_USE_NEW_OBJECT_REPRESENTATION
 // See the comment above OldObjectRepresentationHack.
 #  error "TypedArray support for new object representation unimplemented."
