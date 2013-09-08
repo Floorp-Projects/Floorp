@@ -6,7 +6,6 @@
 #include "ThebesLayerOGL.h"
 #include <stdint.h>                     // for uint32_t
 #include <sys/types.h>                  // for int32_t
-#include "mozilla-config.h"             // for MOZ_DUMP_PAINTING
 #include "GLContext.h"                  // for GLContext, etc
 #include "GLContextTypes.h"             // for GLenum
 #include "GLDefs.h"                     // for LOCAL_GL_ONE, LOCAL_GL_BGRA, etc
