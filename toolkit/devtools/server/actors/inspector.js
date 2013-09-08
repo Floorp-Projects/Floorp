@@ -58,6 +58,7 @@ const {LongStringActor, ShortLongString} = require("devtools/server/actors/strin
 const promise = require("sdk/core/promise");
 const object = require("sdk/util/object");
 const events = require("sdk/event/core");
+const {setTimeout, clearTimeout} = require('sdk/timers');
 const { Unknown } = require("sdk/platform/xpcom");
 const { Class } = require("sdk/core/heritage");
 const {PageStyleActor} = require("devtools/server/actors/styles");
@@ -66,9 +67,14 @@ const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
 
 const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
 
-const HELPER_SHEET = "." + HIDDEN_CLASS + " { visibility: hidden !important }";
+const HIGHLIGHTED_PSEUDO_CLASS = ":-moz-devtools-highlighted";
+const HIGHLIGHTED_TIMEOUT = 2000;
+
+let HELPER_SHEET = ".__fx-devtools-hide-shortcut__ { visibility: hidden !important } ";
+HELPER_SHEET += ":-moz-devtools-highlighted { outline: 2px dashed #F06!important; outline-offset: -2px!important } ";
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
 
 exports.register = function(handle) {
   handle.addTabActor(InspectorActor, "inspectorActor");
@@ -840,6 +846,94 @@ var WalkerActor = protocol.ActorClass({
     }
     return actor;
   },
+
+  /**
+   * Pick a node on click.
+   */
+  _pickDeferred: null,
+  pick: method(function() {
+    if (this._pickDeferred) {
+      return this._pickDeferred.promise;
+    }
+
+    this._pickDeferred = promise.defer();
+
+    let window = this.rootDoc.defaultView;
+    let isTouch = 'ontouchstart' in window;
+    let event = isTouch ? 'touchstart' : 'click';
+
+    this._onPick = function(e) {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      window.removeEventListener(event, this._onPick, true);
+      let u = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+
+      let x, y;
+      if (isTouch) {
+        x = e.touches[0].clientX;
+        y = e.touches[0].clientY;
+      } else {
+        x = e.clientX;
+        y = e.clientY;
+      }
+
+      let node = u.elementFromPoint(x, y, false, false);
+      node = this._ref(node);
+      let newParents = this.ensurePathToRoot(node);
+
+      this._pickDeferred.resolve({
+        node: node,
+        newParents: [parent for (parent of newParents)]
+      });
+      this._pickDeferred = null;
+
+    }.bind(this);
+
+    window.addEventListener(event, this._onPick, true);
+
+    return this._pickDeferred.promise;
+  }, { request: { }, response: RetVal("disconnectedNode") }),
+
+  cancelPick: method(function() {
+    if (this._pickDeferred) {
+      let window = this.rootDoc.defaultView;
+      let isTouch = 'ontouchstart' in window;
+      let event = isTouch ? 'touchstart' : 'click';
+      window.removeEventListener(event, this._onPick, true);
+      this._pickDeferred.resolve(null);
+      this._pickDeferred = null;
+    }
+  }),
+
+  /**
+   * Simple highlight mechanism.
+   */
+  _unhighlight: function() {
+    clearTimeout(this._highlightTimeout);
+    if (!this.rootDoc) {
+      return;
+    }
+    let nodes = this.rootDoc.querySelectorAll(HIGHLIGHTED_PSEUDO_CLASS);
+    for (let node of nodes) {
+      DOMUtils.removePseudoClassLock(node, HIGHLIGHTED_PSEUDO_CLASS);
+    }
+  },
+
+  highlight: method(function(node) {
+    this._installHelperSheet(node);
+    this._unhighlight();
+
+    if (!node ||
+        !node.rawNode ||
+         node.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
+      return;
+    }
+
+    LayoutHelpers.scrollIntoViewIfNeeded(node.rawNode);
+    DOMUtils.addPseudoClassLock(node.rawNode, HIGHLIGHTED_PSEUDO_CLASS);
+    this._highlightTimeout = setTimeout(this._unhighlight.bind(this), HIGHLIGHTED_TIMEOUT);
+
+  }, { request: { node: Arg(0, "nullable:domnode") }}),
 
   /**
    * Watch the given document node for mutations using the DOM observer
@@ -1741,6 +1835,14 @@ var WalkerActor = protocol.ActorClass({
 var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
   // Set to true if cleanup should be requested after every mutation list.
   autoCleanup: true,
+
+  pick: protocol.custom(function() {
+    return this._pick().then(response => {
+      return response.node;
+    });
+  }, {
+    impl: "_pick"
+  }),
 
   initialize: function(client, form) {
     this._rootNodeDeferred = promise.defer();

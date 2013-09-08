@@ -10,7 +10,7 @@ let TiltUtils = devtools.require("devtools/tilt/tilt-utils");
 let {TiltVisualizer} = devtools.require("devtools/tilt/tilt-visualizer");
 
 let tempScope = {};
-Components.utils.import("resource:///modules/devtools/LayoutHelpers.jsm", tempScope);
+Components.utils.import("resource://gre/modules/devtools/LayoutHelpers.jsm", tempScope);
 let LayoutHelpers = tempScope.LayoutHelpers;
 
 

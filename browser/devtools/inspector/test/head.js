@@ -13,7 +13,7 @@ SimpleTest.registerCleanupFunction(() => {
 
 
 let tempScope = {};
-Cu.import("resource:///modules/devtools/LayoutHelpers.jsm", tempScope);
+Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm", tempScope);
 let LayoutHelpers = tempScope.LayoutHelpers;
 
 let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", tempScope);
