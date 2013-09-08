@@ -410,7 +410,7 @@ void MP3FrameParser::Parse(const char* aBuffer, uint32_t aLength, int64_t aOffse
     // We have some data left over. Store trailing bytes in temporary buffer
     // to be parsed next time we receive more data.
     uint32_t trailing = aLength - bytesRead;
-    MOZ_ASSERT(trailing < (NS_ARRAY_LENGTH(mBuffer)*sizeof(*mBuffer[0])));
+    MOZ_ASSERT(trailing < (NS_ARRAY_LENGTH(mBuffer)*sizeof(mBuffer[0])));
     memcpy(mBuffer, buffer+(aLength-trailing), trailing);
     mBufferLength = trailing;
   }
