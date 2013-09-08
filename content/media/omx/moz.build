@@ -14,7 +14,6 @@ EXPORTS += [
 CPP_SOURCES += [
     'MediaOmxDecoder.cpp',
     'MediaOmxReader.cpp',
-    'MP3FrameParser.cpp',
     'OmxDecoder.cpp',
     'OMXCodecProxy.cpp',
 ]
