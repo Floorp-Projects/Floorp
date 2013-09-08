@@ -380,30 +380,59 @@ public:
   // can use that and then override specific values if you want, or you can
   // call Init as desired...
 
-  // Initialize a <b>root</b> reflow state with a rendering context to
-  // use for measuring things.
+  /**
+   * Initialize a ROOT reflow state.
+   *
+   * @param aPresContext Must be equal to aFrame->PresContext().
+   * @param aFrame The frame for whose reflow state is being constructed.
+   * @param aRenderingContext The rendering context to be used for measurements.
+   * @param aAvailableSpace See comments for availableHeight and availableWidth
+   *        members.
+   * @param aFlags A set of flags used for additional boolean parameters (see
+   *        below).
+   */
   nsHTMLReflowState(nsPresContext*           aPresContext,
                     nsIFrame*                aFrame,
-                    nsRenderingContext*     aRenderingContext,
+                    nsRenderingContext*      aRenderingContext,
                     const nsSize&            aAvailableSpace,
                     uint32_t                 aFlags = 0);
 
-  // Initialize a reflow state for a child frame's reflow. Some state
-  // is copied from the parent reflow state; the remaining state is
-  // computed. 
+  /**
+   * Initialize a reflow state for a child frame's reflow. Some parts of the
+   * state are copied from the parent's reflow state. The remainder is computed.
+   *
+   * @param aPresContext Must be equal to aFrame->PresContext().
+   * @param aParentReflowState A reference to an nsHTMLReflowState object that
+   *        is to be the parent of this object.
+   * @param aFrame The frame for whose reflow state is being constructed.
+   * @param aAvailableSpace See comments for availableHeight and availableWidth
+   *        members.
+   * @param aContainingBlockWidth An optional width, in app units, that is used
+   *        by absolute positioning code to override default containing block
+   *        width.
+   * @param aContainingBlockHeight An optional height, in app units, that is
+   *        used by absolute positioning code to override default containing
+   *        block height.
+   * @param aFlags A set of flags used for additional boolean parameters (see
+   *        below).
+   */
   nsHTMLReflowState(nsPresContext*           aPresContext,
                     const nsHTMLReflowState& aParentReflowState,
                     nsIFrame*                aFrame,
                     const nsSize&            aAvailableSpace,
-                    // These two are used by absolute positioning code
-                    // to override default containing block w & h:
                     nscoord                  aContainingBlockWidth = -1,
                     nscoord                  aContainingBlockHeight = -1,
-                    bool                     aInit = true);
+                    uint32_t                 aFlags = 0);
 
   // Values for |aFlags| passed to constructor
   enum {
-    DUMMY_PARENT_REFLOW_STATE = (1<<0)
+    // Indicates that the parent of this reflow state is "fake" (see
+    // mDummyParentReflowState in mFlags).
+    DUMMY_PARENT_REFLOW_STATE = (1<<0),
+
+    // Indicates that the calling function will initialize the reflow state, and
+    // that the constructor should not call Init().
+    CALLER_WILL_INIT = (1<<1)
   };
 
   // This method initializes various data members. It is automatically
