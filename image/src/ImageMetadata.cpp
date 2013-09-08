@@ -8,7 +8,7 @@
 
 #include "RasterImage.h"
 #include "nsComponentManagerUtils.h"
-#include "nsSupportsPrimitives.h"
+#include "nsISupportsPrimitives.h"
 
 using namespace mozilla::image;
 

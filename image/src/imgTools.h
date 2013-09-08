@@ -5,7 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "imgITools.h"
-#include "gfxContext.h"
+
+class gfxImageSurface;
 
 #define NS_IMGTOOLS_CID \
 { /* 4c2383a4-931c-484d-8c4a-973590f66e3f */         \

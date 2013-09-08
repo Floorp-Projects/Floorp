@@ -155,6 +155,7 @@ private:
   nsCOMPtr<nsICryptoHash> mCryptoHash;
 
   nsAutoPtr<Classifier> mClassifier;
+  // The class that actually parses the update chunks.
   nsAutoPtr<ProtocolParser> mProtocolParser;
 
   // Directory where to store the SB databases.
@@ -458,6 +459,7 @@ nsUrlClassifierDBServiceWorker::BeginUpdate(nsIUrlClassifierUpdateObserver *obse
   return NS_OK;
 }
 
+// Called from the stream updater.
 NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::BeginStream(const nsACString &table,
                                             const nsACString &serverMAC)
@@ -539,6 +541,7 @@ nsUrlClassifierDBServiceWorker::UpdateStream(const nsACString& chunk)
 
   HandlePendingLookups();
 
+  // Feed the chunk to the parser.
   return mProtocolParser->AppendStream(chunk);
 }
 
@@ -719,9 +722,9 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
     if (activeTable) {
       TableUpdate * tu = pParse->GetTableUpdate(resultsPtr->ElementAt(i).table);
       LOG(("CacheCompletion Addchunk %d hash %X", resultsPtr->ElementAt(i).entry.addChunk,
-           resultsPtr->ElementAt(i).entry.hash.prefix));
+           resultsPtr->ElementAt(i).entry.ToUint32()));
       tu->NewAddComplete(resultsPtr->ElementAt(i).entry.addChunk,
-                         resultsPtr->ElementAt(i).entry.hash.complete);
+                         resultsPtr->ElementAt(i).entry.complete);
       tu->NewAddChunk(resultsPtr->ElementAt(i).entry.addChunk);
       tu->SetLocalUpdate();
       updates.AppendElement(tu);
@@ -919,7 +922,7 @@ nsUrlClassifierLookupCallback::Completion(const nsACString& completeHash,
   if (verified) {
     CacheResult result;
     result.entry.addChunk = chunkId;
-    result.entry.hash.complete = hash;
+    result.entry.complete = hash;
     result.table = tableName;
 
     // OK if this fails, we just won't cache the item.
@@ -1300,6 +1303,7 @@ nsUrlClassifierDBService::LookupURI(nsIPrincipal* aPrincipal,
   rv = mWorker->QueueLookup(key, proxyCallback);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // This seems to just call HandlePendingLookups.
   return mWorkerProxy->Lookup(nullptr, nullptr);
 }
 

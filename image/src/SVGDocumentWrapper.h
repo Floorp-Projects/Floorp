@@ -15,7 +15,6 @@
 #include "nsIObserver.h"
 #include "nsIContentViewer.h"
 #include "nsWeakReference.h"
-#include "nsMimeTypes.h"
 
 class nsIAtom;
 class nsIPresShell;

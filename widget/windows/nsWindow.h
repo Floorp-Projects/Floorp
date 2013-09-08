@@ -25,6 +25,7 @@
 #include "nsITimer.h"
 #include "nsRegion.h"
 #include "mozilla/TimeStamp.h"
+#include "nsMargin.h"
 
 #ifdef CAIRO_HAS_D2D_SURFACE
 #include "gfxD2DSurface.h"

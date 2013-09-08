@@ -421,11 +421,6 @@ class B2GReftest(RefTest):
         prefs["toolkit.telemetry.prompted"] = 999
         prefs["toolkit.telemetry.notifiedOptOut"] = 999
 
-        # Workaround for jsreftests.
-        if getattr(options, 'enablePrivilege', False):
-            prefs["capability.principal.codebase.p2.granted"] = "UniversalXPConnect"
-            prefs["capability.principal.codebase.p2.id"] = "http://%s:%s" % (options.remoteWebServer, options.httpPort)
-
         # Set the extra prefs.
         profile.set_preferences(prefs)
 

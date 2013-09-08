@@ -9,6 +9,7 @@
 #include "SharedSurfaceGL.h"
 #include "SurfaceFactory.h"
 #include "GLLibraryEGL.h"
+#include "TextureGarbageBin.h"
 
 using namespace mozilla::gfx;
 
@@ -46,6 +47,31 @@ SharedSurface_EGLImage::HasExtensions(GLLibraryEGL* egl, GLContext* gl)
            egl->IsExtensionSupported(GLLibraryEGL::KHR_gl_texture_2D_image) &&
            gl->IsExtensionSupported(GLContext::OES_EGL_image);
 }
+
+SharedSurface_EGLImage::SharedSurface_EGLImage(GLContext* gl,
+                                               GLLibraryEGL* egl,
+                                               const gfxIntSize& size,
+                                               bool hasAlpha,
+                                               const GLFormats& formats,
+                                               GLuint prodTex)
+    : SharedSurface_GL(SharedSurfaceType::EGLImageShare,
+                        AttachmentType::GLTexture,
+                        gl,
+                        size,
+                        hasAlpha)
+    , mMutex("SharedSurface_EGLImage mutex")
+    , mEGL(egl)
+    , mFormats(formats)
+    , mProdTex(prodTex)
+    , mProdTexForPipe(0)
+    , mImage(0)
+    , mCurConsGL(nullptr)
+    , mConsTex(0)
+    , mSync(0)
+    , mPipeFailed(false)
+    , mPipeComplete(false)
+    , mPipeActive(false)
+{}
 
 SharedSurface_EGLImage::~SharedSurface_EGLImage()
 {

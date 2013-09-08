@@ -41,12 +41,14 @@ EXPORTS += [
     'GLScreenBuffer.h',
     'GLTextureImage.h',
     'GLTypes.h',
+    'GfxTexturesReporter.h',
     'SharedSurface.h',
     'SharedSurfaceEGL.h',
     'SharedSurfaceGL.h',
     'SurfaceFactory.h',
     'SurfaceStream.h',
     'SurfaceTypes.h',
+    'TextureGarbageBin.h',
     'VBOArena.h',
 ]
 
@@ -96,6 +98,7 @@ CPP_SOURCES += [
     'GLLibraryLoader.cpp',
     'GLScreenBuffer.cpp',
     'GLTextureImage.cpp',
+    'GfxTexturesReporter.cpp',
     'SharedSurface.cpp',
     'GLLibraryEGL.cpp',
     'SharedSurfaceEGL.cpp',
@@ -103,6 +106,7 @@ CPP_SOURCES += [
     'SurfaceFactory.cpp',
     'SurfaceStream.cpp',
     'VBOArena.cpp',
+    'TextureGarbageBin.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

@@ -7,11 +7,12 @@
 #define GFX_DEVICEMANAGERD3D9_H
 
 #include "gfxTypes.h"
-#include "nsRect.h"
 #include "nsAutoPtr.h"
 #include "d3d9.h"
 #include "nsTArray.h"
 #include "mozilla/layers/CompositorTypes.h"
+
+struct nsIntRect;
 
 namespace mozilla {
 namespace layers {

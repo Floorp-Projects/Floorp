@@ -110,6 +110,10 @@
             'LinkIncremental': '2',
           },
         },
+        'xcode_settings': {
+          'COPY_PHASE_STRIP': 'NO',
+          'GCC_OPTIMIZATION_LEVEL': '0',
+        },
       },  # Debug
       'Release': {
         'inherit_from': ['Common'],

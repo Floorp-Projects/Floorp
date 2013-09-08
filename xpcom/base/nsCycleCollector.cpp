@@ -967,7 +967,8 @@ private:
     void ShutdownCollect(nsICycleCollectorListener *aListener);
 
 public:
-    void Collect(ccType aCCType,
+    bool Collect(ccType aCCType,
+                 nsTArray<PtrInfo*> *aWhiteNodes,
                  nsCycleCollectorResults *aResults,
                  nsICycleCollectorListener *aListener);
 
@@ -2662,46 +2663,33 @@ nsCycleCollector::ShutdownCollect(nsICycleCollectorListener *aListener)
 {
     nsAutoTArray<PtrInfo*, 4000> whiteNodes;
 
-    if (!PrepareForCollection(nullptr, &whiteNodes))
-        return;
-
     for (uint32_t i = 0; i < DEFAULT_SHUTDOWN_COLLECTIONS; ++i) {
         NS_ASSERTION(i < NORMAL_SHUTDOWN_COLLECTIONS, "Extra shutdown CC");
-
-        // Synchronous cycle collection. Always force a JS GC beforehand.
-        FixGrayBits(true);
-        if (aListener && NS_FAILED(aListener->Begin()))
-            aListener = nullptr;
-        FreeSnowWhite(true);
-        BeginCollection(ShutdownCC, aListener);
-        if (!FinishCollection(aListener)) {
+        if (!Collect(ShutdownCC, &whiteNodes, nullptr, aListener)) {
             break;
         }
     }
-
-    CleanupAfterCollection();
 }
 
-void
+bool
 nsCycleCollector::Collect(ccType aCCType,
+                          nsTArray<PtrInfo*> *aWhiteNodes,
                           nsCycleCollectorResults *aResults,
                           nsICycleCollectorListener *aListener)
 {
     CheckThreadSafety();
 
-    // On a WantAllTraces CC, force a synchronous global GC to prevent
-    // hijinks from ForgetSkippable and compartmental GCs.
-    bool wantAllTraces = false;
-    if (aListener) {
-        aListener->GetWantAllTraces(&wantAllTraces);
+    if (!PrepareForCollection(aResults, aWhiteNodes)) {
+        return false;
     }
 
-    FixGrayBits(wantAllTraces);
-
-    nsAutoTArray<PtrInfo*, 4000> whiteNodes;
-    if (!PrepareForCollection(aResults, &whiteNodes)) {
-        return;
+    bool forceGC = (aCCType == ShutdownCC);
+    if (!forceGC && aListener) {
+        // On a WantAllTraces CC, force a synchronous global GC to prevent
+        // hijinks from ForgetSkippable and compartmental GCs.
+        aListener->GetWantAllTraces(&forceGC);
     }
+    FixGrayBits(forceGC);
 
     FreeSnowWhite(true);
 
@@ -2710,8 +2698,9 @@ nsCycleCollector::Collect(ccType aCCType,
     }
 
     BeginCollection(aCCType, aListener);
-    FinishCollection(aListener);
+    bool collectedAny = FinishCollection(aListener);
     CleanupAfterCollection();
+    return collectedAny;
 }
 
 // Don't merge too many times in a row, and do at least a minimum
@@ -3184,7 +3173,9 @@ nsCycleCollector_collect(bool aManuallyTriggered,
         listener = new nsCycleCollectorLogger();
     }
 
-    data->mCollector->Collect(aManuallyTriggered ? ManualCC : ScheduledCC, aResults, listener);
+    nsAutoTArray<PtrInfo*, 4000> whiteNodes;
+    data->mCollector->Collect(aManuallyTriggered ? ManualCC : ScheduledCC,
+                              &whiteNodes, aResults, listener);
 }
 
 void

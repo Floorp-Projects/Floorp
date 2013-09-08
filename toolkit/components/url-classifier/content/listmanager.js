@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+// This is the only implementation of nsIUrlListManager.
 // A class that manages lists, namely white and black lists for
 // phishing or malware protection. The ListManager knows how to fetch,
 // update, and store lists.

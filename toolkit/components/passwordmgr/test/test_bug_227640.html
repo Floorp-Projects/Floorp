@@ -231,8 +231,6 @@ function getFormSubmitButton(formNum) {
 
 // Counts the number of logins currently stored by password manager.
 function countLogins() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   var logins = pwmgr.getAllLogins();
 
   return logins.length;
