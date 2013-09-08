@@ -1041,7 +1041,9 @@ CssRuleView.prototype = {
       this.element.parentNode.removeChild(this.element);
     }
 
-    this.elementStyle.destroy();
+    if (this.elementStyle) {
+      this.elementStyle.destroy();
+    }
 
     this.popup.destroy();
   },
