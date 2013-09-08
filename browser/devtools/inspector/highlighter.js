@@ -93,6 +93,7 @@ function LocalHighlighter(aTarget, aInspector, aToolbox)
   this.chromeDoc = this.tab.ownerDocument;
   this.chromeWin = this.chromeDoc.defaultView;
   this.inspector = aInspector
+  this.layoutHelpers = new LayoutHelpers(this.browser.contentWindow);
 
   EventEmitter.decorate(this);
 
@@ -225,7 +226,7 @@ LocalHighlighter.prototype = {
       this.invalidateSize();
       if (!this._highlighting &&
           this.selection.reason != "highlighter") {
-        LayoutHelpers.scrollIntoViewIfNeeded(this.selection.node);
+        this.layoutHelpers.scrollIntoViewIfNeeded(this.selection.node);
       }
     } else {
       this.disabled = true;
@@ -255,7 +256,7 @@ LocalHighlighter.prototype = {
     }
 
     let clientRect = this.selection.node.getBoundingClientRect();
-    let rect = LayoutHelpers.getDirtyRect(this.selection.node);
+    let rect = this.layoutHelpers.getDirtyRect(this.selection.node);
     this.highlightRectangle(rect);
 
     this.moveInfobar();
@@ -461,7 +462,7 @@ LocalHighlighter.prototype = {
     texthbox.addEventListener("mousedown", function(aEvent) {
       // On click, show the node:
       if (this.selection.isElementNode()) {
-        LayoutHelpers.scrollIntoViewIfNeeded(this.selection.node);
+        this.layoutHelpers.scrollIntoViewIfNeeded(this.selection.node);
       }
     }.bind(this), true);
 
@@ -514,7 +515,7 @@ LocalHighlighter.prototype = {
       return; // same rectangle
     }
 
-    let aRectScaled = LayoutHelpers.getZoomedRect(this.win, aRect);
+    let aRectScaled = this.layoutHelpers.getZoomedRect(this.win, aRect);
 
     if (aRectScaled.left >= 0 && aRectScaled.top >= 0 &&
         aRectScaled.width > 0 && aRectScaled.height > 0) {
@@ -809,7 +810,7 @@ LocalHighlighter.prototype = {
     // This should never happen, but just in case, we don't let the
     // highlighter highlight browser nodes.
     if (doc && doc != this.chromeDoc) {
-      let element = LayoutHelpers.getElementFromPoint(aEvent.target.ownerDocument,
+      let element = this.layoutHelpers.getElementFromPoint(aEvent.target.ownerDocument,
         aEvent.clientX, aEvent.clientY);
       if (element && element != this.selection.node) {
         this.selection.setNode(element, "highlighter");

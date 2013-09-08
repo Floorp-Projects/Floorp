@@ -19,6 +19,7 @@ let require = Components.utils.import("resource://gre/modules/devtools/Loader.js
 let { Cc, Ci, Cu } = require("chrome");
 let promise = require("sdk/core/promise");
 let Telemetry = require("devtools/shared/telemetry");
+let DevtoolsHelpers = require("devtools/shared/helpers");
 let TargetFactory = require("devtools/framework/target").TargetFactory;
 const escodegen = require("escodegen/escodegen");
 
@@ -26,7 +27,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource:///modules/source-editor.jsm");
-Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource:///modules/devtools/scratchpad-manager.jsm");
 Cu.import("resource://gre/modules/jsdebugger.jsm");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
@@ -1284,9 +1284,9 @@ var Scratchpad = {
 
     let initialText = this.strings.formatStringFromName(
       "scratchpadIntro1",
-      [LayoutHelpers.prettyKey(document.getElementById("sp-key-run")),
-       LayoutHelpers.prettyKey(document.getElementById("sp-key-inspect")),
-       LayoutHelpers.prettyKey(document.getElementById("sp-key-display"))],
+      [DevtoolsHelpers.prettyKey(document.getElementById("sp-key-run")),
+       DevtoolsHelpers.prettyKey(document.getElementById("sp-key-inspect")),
+       DevtoolsHelpers.prettyKey(document.getElementById("sp-key-display"))],
       3);
 
     let args = window.arguments;
