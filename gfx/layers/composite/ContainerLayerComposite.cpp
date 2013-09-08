@@ -5,7 +5,6 @@
 
 #include "ContainerLayerComposite.h"
 #include <algorithm>                    // for min
-#include "mozilla-config.h"             // for MOZ_DUMP_PAINTING
 #include "FrameMetrics.h"               // for FrameMetrics
 #include "Units.h"                      // for LayerRect, LayerPixel, etc
 #include "gfx2DGlue.h"                  // for ToMatrix4x4
