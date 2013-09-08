@@ -242,6 +242,10 @@ class AudioDeviceAndroidOpenSLES: public AudioDeviceGeneric {
   // Misc
   AudioDeviceBuffer* voe_audio_buffer_;
   CriticalSectionWrapper& crit_sect_;
+  // callback_crit_sect_ is used to lock rec_queue and rec_voe_ready_queue
+  // and also for changing is_recording to false.  If you hold this and
+  // crit_sect_, you must grab crit_sect_ first
+  CriticalSectionWrapper& callback_crit_sect_;
   WebRtc_Word32 id_;
 
   // audio unit
