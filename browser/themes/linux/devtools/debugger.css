@@ -139,6 +139,13 @@
 .dbg-breakpoint-text {
   -moz-margin-start: 10px !important;
   font-style: italic;
+  font-size: 90%;
+}
+
+.dbg-breakpoint-checkbox {
+  width: 16px;
+  height: 16px;
+  margin: 2px;
 }
 
 /* Watch expressions view */
