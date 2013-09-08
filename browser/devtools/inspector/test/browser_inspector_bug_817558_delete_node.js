@@ -32,7 +32,7 @@ function test()
       parentNode.removeChild(node);
 
       let tmp = {};
-      Cu.import("resource:///modules/devtools/LayoutHelpers.jsm", tmp);
+      Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm", tmp);
       ok(!tmp.LayoutHelpers.isNodeConnected(node), "Node considered as disconnected.");
 
       // Wait for the inspector to process the mutation
