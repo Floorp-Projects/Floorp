@@ -80,26 +80,31 @@ public:
 };
 
 DrawTargetSkia::DrawTargetSkia()
-  : mSnapshot(nullptr)
 {
 }
 
 DrawTargetSkia::~DrawTargetSkia()
 {
+  if (mSnapshots.size()) {
+    for (std::vector<SourceSurfaceSkia*>::iterator iter = mSnapshots.begin();
+         iter != mSnapshots.end(); iter++) {
+      (*iter)->DrawTargetDestroyed();
+    }
+    // All snapshots will now have copied data.
+    mSnapshots.clear();
+  }
 }
 
 TemporaryRef<SourceSurface>
 DrawTargetSkia::Snapshot()
 {
-  RefPtr<SourceSurfaceSkia> snapshot = mSnapshot;
-  if (!snapshot) {
-    snapshot = new SourceSurfaceSkia();
-    mSnapshot = snapshot;
-    if (!snapshot->InitFromCanvas(mCanvas.get(), mFormat, this))
-      return nullptr;
-  }
+  RefPtr<SourceSurfaceSkia> source = new SourceSurfaceSkia();
 
-  return snapshot;
+  if (!source->InitFromCanvas(mCanvas.get(), mFormat, this))
+    return nullptr;
+
+  AppendSnapshot(source);
+  return source;
 }
 
 void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0)
@@ -714,18 +719,31 @@ DrawTargetSkia::CreateGradientStops(GradientStop *aStops, uint32_t aNumStops, Ex
 }
 
 void
-DrawTargetSkia::MarkChanged()
+DrawTargetSkia::AppendSnapshot(SourceSurfaceSkia* aSnapshot)
 {
-  if (mSnapshot) {
-    mSnapshot->DrawTargetWillChange();
-    mSnapshot = nullptr;
+  mSnapshots.push_back(aSnapshot);
+}
+
+void
+DrawTargetSkia::RemoveSnapshot(SourceSurfaceSkia* aSnapshot)
+{
+  std::vector<SourceSurfaceSkia*>::iterator iter = std::find(mSnapshots.begin(), mSnapshots.end(), aSnapshot);
+  if (iter != mSnapshots.end()) {
+    mSnapshots.erase(iter);
   }
 }
 
 void
-DrawTargetSkia::SnapshotDestroyed()
+DrawTargetSkia::MarkChanged()
 {
-  mSnapshot = nullptr;
+  if (mSnapshots.size()) {
+    for (std::vector<SourceSurfaceSkia*>::iterator iter = mSnapshots.begin();
+         iter != mSnapshots.end(); iter++) {
+      (*iter)->DrawTargetWillChange();
+    }
+    // All snapshots will now have copied data.
+    mSnapshots.clear();
+  }
 }
 
 }
