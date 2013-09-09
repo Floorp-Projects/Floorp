@@ -1597,7 +1597,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     size_t helperThreadCount() const {
 #ifdef JS_THREADSAFE
         if (requestedHelperThreadCount < 0)
-            return js::GetCPUCount();
+            return js::GetCPUCount() - 1;
         return requestedHelperThreadCount;
 #else
         return 0;
