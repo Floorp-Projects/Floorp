@@ -292,11 +292,6 @@ typedef bool
 typedef void
 (* JSTraceOp)(JSTracer *trc, JSObject *obj);
 
-// Callback that JSTraceOp implementation can provide to return a string
-// describing the reference traced with JS_CallTracer.
-typedef void
-(* JSTraceNamePrinter)(JSTracer *trc, char *buf, size_t bufsize);
-
 // A generic type for functions mapping an object to another object, or null
 // if an error or exception was thrown on cx.
 typedef JSObject *

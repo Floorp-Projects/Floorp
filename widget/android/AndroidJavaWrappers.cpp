@@ -5,6 +5,7 @@
 
 #include "AndroidJavaWrappers.h"
 #include "AndroidBridge.h"
+#include "AndroidBridgeUtilities.h"
 #include "nsIAndroidBridge.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIWidget.h"
@@ -131,69 +132,6 @@ jfieldID AndroidProgressiveUpdateData::jWidthField = 0;
 jfieldID AndroidProgressiveUpdateData::jHeightField = 0;
 jfieldID AndroidProgressiveUpdateData::jScaleField = 0;
 jfieldID AndroidProgressiveUpdateData::jShouldAbortField = 0;
-
-static jclass GetClassGlobalRef(JNIEnv* env, const char* className)
-{
-    jobject classLocalRef = env->FindClass(className);
-    if (!classLocalRef) {
-        ALOG(">>> FATAL JNI ERROR! FindClass(className=\"%s\") failed. Did "
-             "ProGuard optimize away a non-public class?", className);
-        env->ExceptionDescribe();
-        MOZ_CRASH();
-    }
-
-    jobject classGlobalRef = env->NewGlobalRef(classLocalRef);
-    if (!classGlobalRef) {
-        env->ExceptionDescribe();
-        MOZ_CRASH();
-    }
-
-    // Local ref no longer necessary because we have a global ref.
-    env->DeleteLocalRef(classLocalRef);
-    classLocalRef = NULL;
-
-    return static_cast<jclass>(classGlobalRef);
-}
-
-static jfieldID GetFieldID(JNIEnv* env, jclass jClass,
-                           const char* fieldName, const char* fieldType)
-{
-    jfieldID fieldID = env->GetFieldID(jClass, fieldName, fieldType);
-    if (!fieldID) {
-        ALOG(">>> FATAL JNI ERROR! GetFieldID(fieldName=\"%s\", "
-             "fieldType=\"%s\") failed. Did ProGuard optimize away a non-"
-             "public field?", fieldName, fieldType);
-        env->ExceptionDescribe();
-        MOZ_CRASH();
-    }
-    return fieldID;
-}
-
-static jmethodID GetMethodID(JNIEnv* env, jclass jClass,
-                             const char* methodName, const char* methodType)
-{
-    jmethodID methodID = env->GetMethodID(jClass, methodName, methodType);
-    if (!methodID) {
-        ALOG(">>> FATAL JNI ERROR! GetMethodID(methodName=\"%s\", "
-             "methodType=\"%s\") failed. Did ProGuard optimize away a non-"
-             "public method?", methodName, methodType);
-        env->ExceptionDescribe();
-        MOZ_CRASH();
-    }
-    return methodID;
-}
-
-#define initInit() jclass jClass
-
-// note that this also sets jClass
-#define getClassGlobalRef(cname) \
-    (jClass = GetClassGlobalRef(jEnv, cname))
-
-#define getField(fname, ftype) \
-    GetFieldID(jEnv, jClass, fname, ftype)
-
-#define getMethod(fname, ftype) \
-    GetMethodID(jEnv, jClass, fname, ftype)
 
 RefCountedJavaObject::~RefCountedJavaObject() {
     if (mObject)
@@ -357,6 +295,8 @@ AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
 
     jGeckoLayerClientClass = getClassGlobalRef("org/mozilla/gecko/gfx/GeckoLayerClient");
 
+    jProgressiveUpdateCallbackMethod = getMethod("progressiveUpdateCallback",
+                                                 "(ZFFFFFZ)Lorg/mozilla/gecko/gfx/ProgressiveUpdateData;");
     jSetFirstPaintViewport = getMethod("setFirstPaintViewport", "(FFFFFFF)V");
     jSetPageRect = getMethod("setPageRect", "(FFFF)V");
     jSyncViewportInfoMethod = getMethod("syncViewportInfo",
@@ -370,14 +310,12 @@ AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
     jContentDocumentChanged = getMethod("contentDocumentChanged", "()V");
     jIsContentDocumentDisplayed = getMethod("isContentDocumentDisplayed", "()Z");
 
-    jViewportClass = GetClassGlobalRef(jEnv, "org/mozilla/gecko/gfx/ImmutableViewportMetrics");
-    jViewportCtor = GetMethodID(jEnv, jViewportClass, "<init>", "(FFFFFFFFFFFFF)V");
+    jViewportClass = getClassGlobalRef("org/mozilla/gecko/gfx/ImmutableViewportMetrics");
+    jViewportCtor = getMethod("<init>", "(FFFFFFFFFFFFF)V");
 
-    jDisplayportClass = GetClassGlobalRef(jEnv, "org/mozilla/gecko/gfx/DisplayPortMetrics");
-    jDisplayportPosition = GetFieldID(jEnv, jDisplayportClass, "mPosition", "Landroid/graphics/RectF;");
-    jDisplayportResolution = GetFieldID(jEnv, jDisplayportClass, "resolution", "F");
-    jProgressiveUpdateCallbackMethod = getMethod("progressiveUpdateCallback",
-                                                 "(ZFFFFFZ)Lorg/mozilla/gecko/gfx/ProgressiveUpdateData;");
+    jDisplayportClass = getClassGlobalRef("org/mozilla/gecko/gfx/DisplayPortMetrics");
+    jDisplayportPosition = getField("mPosition", "Landroid/graphics/RectF;");
+    jDisplayportResolution = getField("resolution", "F");
 }
 
 void

@@ -29,6 +29,12 @@
       </popupnotificationcontent>
     </popupnotification>
 
+    <popupnotification id="webapps-install-progress-notification" hidden="true">
+      <popupnotificationcontent id="webapps-install-progress-content" orient="vertical" align="start">
+        <separator class="thin"/>
+      </popupnotificationcontent>
+    </popupnotification>
+
     <popupnotification id="geolocation-notification" hidden="true">
       <popupnotificationcontent orient="vertical" align="start">
         <separator class="thin"/>

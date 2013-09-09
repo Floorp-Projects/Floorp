@@ -71,7 +71,7 @@ nsAndroidHandlerApp::LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowC
   nsCString uriSpec;
   aURI->GetSpec(uriSpec);
   return mozilla::AndroidBridge::Bridge()->
-    OpenUriExternal(uriSpec, mMimeType, mPackageName, mClassName, mAction) ? 
+    OpenUriExternal(NS_ConvertUTF8toUTF16(uriSpec), NS_ConvertUTF8toUTF16(mMimeType), mPackageName, mClassName, mAction) ? 
     NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -82,7 +82,7 @@ nsAndroidHandlerApp::Share(const nsAString & data, const nsAString & title)
     return NS_ERROR_FAILURE;
 
   return mozilla::AndroidBridge::Bridge()->
-    OpenUriExternal(NS_ConvertUTF16toUTF8(data), mMimeType, mPackageName, 
+    OpenUriExternal(data, NS_ConvertUTF8toUTF16(mMimeType), mPackageName, 
                     mClassName, mAction) ? NS_OK : NS_ERROR_FAILURE;
 }
 

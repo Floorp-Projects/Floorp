@@ -70,6 +70,7 @@ EXPORTS.js += [
     '../public/RequiredDefines.h',
     '../public/RootingAPI.h',
     '../public/StructuredClone.h',
+    '../public/Tracer.h',
     '../public/TypeDecls.h',
     '../public/Utility.h',
     '../public/Value.h',
@@ -78,7 +79,7 @@ EXPORTS.js += [
 
 CPP_SOURCES += [
     'ArgumentsObject.cpp',
-    'TypedObject.cpp',
+    'Barrier.cpp',
     'BytecodeCompiler.cpp',
     'BytecodeEmitter.cpp',
     'CallNonGenericMethod.cpp',
@@ -132,8 +133,10 @@ CPP_SOURCES += [
     'TestingFunctions.cpp',
     'ThreadPool.cpp',
     'TokenStream.cpp',
+    'Tracer.cpp',
     'TypeRepresentation.cpp',
     'TypedArrayObject.cpp',
+    'TypedObject.cpp',
     'Unicode.cpp',
     'Value.cpp',
     'Verifier.cpp',
