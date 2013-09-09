@@ -640,11 +640,8 @@ SurfaceStreamHostOGL::UpdateImpl(const SurfaceDescriptor& aImage,
   const SurfaceStreamDescriptor& streamDesc =
       aImage.get_SurfaceStreamDescriptor();
 
-  SurfaceStream *stream = SurfaceStream::FromHandle(streamDesc.handle());
-  if (stream == mStream) {
-    return;
-  }
-  mStream = stream;
+
+  mStream = SurfaceStream::FromHandle(streamDesc.handle());
   MOZ_ASSERT(mStream);
   mStreamGL = dont_AddRef(mStream->GLContext());
 }
