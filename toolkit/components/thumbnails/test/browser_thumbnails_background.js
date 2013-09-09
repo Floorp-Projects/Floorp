@@ -140,12 +140,12 @@ let tests = [
     yield wait(2000);
     is(imports.BackgroundPageThumbs._thumbBrowser, undefined,
        "Thumb browser should be destroyed after timeout.");
+    imports.BackgroundPageThumbs._destroyBrowserTimeout = defaultTimeout;
 
     yield capture(url2);
     ok(file2.exists(), "Second file should exist after capture.");
     file2.remove(false);
 
-    imports.BackgroundPageThumbs._destroyBrowserTimeout = defaultTimeout;
     isnot(imports.BackgroundPageThumbs._thumbBrowser, undefined,
           "Thumb browser should exist immediately after capture.");
   },
