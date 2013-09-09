@@ -401,7 +401,7 @@ AndroidBridge::NotifyIMEContext(int aState, const nsAString& aTypeHint,
 }
 
 void
-AndroidBridge::NotifyIMEChange(const PRUnichar *aText, uint32_t aTextLen,
+AndroidBridge::NotifyIMEChange(const nsAString& aText,
                                int aStart, int aEnd, int aNewEnd)
 {
     ALOG_BRIDGE("AndroidBridge::NotifyIMEChange");
@@ -414,7 +414,7 @@ AndroidBridge::NotifyIMEChange(const PRUnichar *aText, uint32_t aTextLen,
     AutoLocalJNIFrame jniFrame(env);
 
     jvalue args[4];
-    args[0].l = NewJavaString(&jniFrame, aText, aTextLen);
+    args[0].l = NewJavaString(&jniFrame, aText);
     args[1].i = aStart;
     args[2].i = aEnd;
     args[3].i = aNewEnd;
@@ -537,7 +537,7 @@ getHandlersFromStringArray(JNIEnv *aJNIEnv, jobjectArray jArr, jsize aLen,
 }
 
 bool
-AndroidBridge::GetHandlersForMimeType(const char *aMimeType,
+AndroidBridge::GetHandlersForMimeType(const nsAString& aMimeType,
                                       nsIMutableArray *aHandlersArray,
                                       nsIHandlerApp **aDefaultApp,
                                       const nsAString& aAction)
@@ -570,12 +570,12 @@ AndroidBridge::GetHandlersForMimeType(const char *aMimeType,
 
     getHandlersFromStringArray(env, arr, len, aHandlersArray,
                                aDefaultApp, aAction,
-                               nsDependentCString(aMimeType));
+                               NS_ConvertUTF16toUTF8(aMimeType));
     return true;
 }
 
 bool
-AndroidBridge::GetHandlersForURL(const char *aURL,
+AndroidBridge::GetHandlersForURL(const nsAString& aURL,
                                  nsIMutableArray* aHandlersArray,
                                  nsIHandlerApp **aDefaultApp,
                                  const nsAString& aAction)
@@ -611,7 +611,7 @@ AndroidBridge::GetHandlersForURL(const char *aURL,
 }
 
 bool
-AndroidBridge::OpenUriExternal(const nsACString& aUriSpec, const nsACString& aMimeType,
+AndroidBridge::OpenUriExternal(const nsAString& aUriSpec, const nsAString& aMimeType,
                                const nsAString& aPackageName, const nsAString& aClassName,
                                const nsAString& aAction, const nsAString& aTitle)
 {
@@ -1351,7 +1351,7 @@ jclass GetGeckoAppShellClass()
 }
 
 void
-AndroidBridge::ScanMedia(const nsAString& aFile, const nsACString& aMimeType)
+AndroidBridge::ScanMedia(const nsAString& aFile, const nsAString& aMimeType)
 {
     JNIEnv *env = GetJNIEnv();
     if (!env)

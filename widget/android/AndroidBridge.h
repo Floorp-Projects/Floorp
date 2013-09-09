@@ -179,7 +179,7 @@ public:
     static void NotifyIMEContext(int aState, const nsAString& aTypeHint,
                                  const nsAString& aModeHint, const nsAString& aActionHint);
 
-    static void NotifyIMEChange(const PRUnichar *aText, uint32_t aTextLen, int aStart, int aEnd, int aNewEnd);
+    static void NotifyIMEChange(const nsAString& a0, int32_t a1, int32_t a2, int32_t a3);
 
     void StartJavaProfiling(int aInterval, int aSamples);
     void StopJavaProfiling();
@@ -213,21 +213,21 @@ public:
     void SetLayerClient(JNIEnv* env, jobject jobj);
     AndroidGeckoLayerClient &GetLayerClient() { return *mLayerClient; }
 
-    bool GetHandlersForURL(const char *aURL, 
-                             nsIMutableArray* handlersArray = nullptr,
-                             nsIHandlerApp **aDefaultApp = nullptr,
-                             const nsAString& aAction = EmptyString());
+    bool GetHandlersForURL(const nsAString& aURL,
+                           nsIMutableArray* handlersArray = nullptr,
+                           nsIHandlerApp **aDefaultApp = nullptr,
+                           const nsAString& aAction = EmptyString());
 
-    bool GetHandlersForMimeType(const char *aMimeType,
-                                  nsIMutableArray* handlersArray = nullptr,
-                                  nsIHandlerApp **aDefaultApp = nullptr,
-                                  const nsAString& aAction = EmptyString());
+    bool GetHandlersForMimeType(const nsAString& aMimeType,
+                                nsIMutableArray* handlersArray = nullptr,
+                                nsIHandlerApp **aDefaultApp = nullptr,
+                                const nsAString& aAction = EmptyString());
 
-    bool OpenUriExternal(const nsACString& aUriSpec, const nsACString& aMimeType,
-                           const nsAString& aPackageName = EmptyString(),
-                           const nsAString& aClassName = EmptyString(),
-                           const nsAString& aAction = EmptyString(),
-                           const nsAString& aTitle = EmptyString());
+    bool OpenUriExternal(const nsAString& aUriSpec, const nsAString& aMimeType,
+                         const nsAString& aPackageName = EmptyString(),
+                         const nsAString& aClassName = EmptyString(),
+                         const nsAString& aAction = EmptyString(),
+                         const nsAString& aTitle = EmptyString());
 
     void GetMimeTypeFromExtensions(const nsACString& aFileExt, nsCString& aMimeType);
     void GetExtensionFromMimeType(const nsACString& aMimeType, nsACString& aFileExt);
@@ -298,7 +298,7 @@ public:
 
     void SetKeepScreenOn(bool on);
 
-    void ScanMedia(const nsAString& aFile, const nsACString& aMimeType);
+    void ScanMedia(const nsAString& aFile, const nsAString& aMimeType);
 
     void CreateShortcut(const nsAString& aTitle, const nsAString& aURI, const nsAString& aIconData, const nsAString& aIntent);
 
