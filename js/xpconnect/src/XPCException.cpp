@@ -9,7 +9,10 @@
 #include "xpcprivate.h"
 #include "jsprf.h"
 #include "nsError.h"
-#include "nsIUnicodeDecoder.h"
+#include "mozilla/dom/DOMExceptionBinding.h"
+
+namespace ExceptionBinding = mozilla::dom::ExceptionBinding;
+using mozilla::DebugOnly;
 
 /***************************************************************************/
 /* Quick and dirty mapping of well known result codes to strings. We only
@@ -85,17 +88,95 @@ nsXPCException::GetNSResultCount()
 
 NS_IMPL_CLASSINFO(nsXPCException, NULL, nsIClassInfo::DOM_OBJECT,
                   NS_XPCEXCEPTION_CID)
-NS_INTERFACE_MAP_BEGIN(nsXPCException)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXPCException)
   NS_INTERFACE_MAP_ENTRY(nsIException)
   NS_INTERFACE_MAP_ENTRY(nsIXPCException)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIException)
   NS_IMPL_QUERY_CLASSINFO(nsXPCException)
-NS_INTERFACE_MAP_END_THREADSAFE
+NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsXPCException)
-NS_IMPL_RELEASE(nsXPCException)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXPCException)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXPCException)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXPCException)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXPCException)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(nsXPCException)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXPCException)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CI_INTERFACE_GETTER1(nsXPCException, nsIXPCException)
+
+nsXPCException::nsXPCException(const char *aMessage,
+                               nsresult aResult,
+                               const char *aName,
+                               nsIStackFrame *aLocation,
+                               nsISupports *aData)
+    : mMessage(nullptr),
+      mResult(NS_OK),
+      mName(nullptr),
+      mLocation(nullptr),
+      mData(nullptr),
+      mFilename(nullptr),
+      mLineNumber(0),
+      mInner(nullptr),
+      mInitialized(false)
+{
+    SetIsDOMBinding();
+
+    // A little hack... The nsIGenericModule nsIClassInfo scheme relies on there
+    // having been at least one instance made via the factory. Otherwise, the
+    // shared factory/classinsance object never gets created and our QI getter
+    // for our instance's pointer to our nsIClassInfo will always return null.
+    // This is bad because it means that wrapped exceptions will never have a
+    // shared prototype. So... We force one to be created via the factory
+    // *once* and then go about our business.
+    if (!sEverMadeOneFromFactory) {
+        nsCOMPtr<nsIXPCException> e =
+            do_CreateInstance(XPC_EXCEPTION_CONTRACTID);
+        sEverMadeOneFromFactory = true;
+    }
+
+    nsIStackFrame* location;
+    if (aLocation) {
+        location = aLocation;
+        NS_ADDREF(location);
+    } else {
+        nsXPConnect* xpc = nsXPConnect::XPConnect();
+        xpc->GetCurrentJSStack(&location);
+        // it is legal for there to be no active JS stack, if C++ code
+        // is operating on a JS-implemented interface pointer without
+        // having been called in turn by JS.  This happens in the JS
+        // component loader, and will become more common as additional
+        // components are implemented in JS.
+    }
+    // We want to trim off any leading native 'dataless' frames
+    if (location) {
+        while (1) {
+            uint32_t language;
+            int32_t lineNumber;
+            if (NS_FAILED(location->GetLanguage(&language)) ||
+                language == nsIProgrammingLanguage::JAVASCRIPT ||
+                NS_FAILED(location->GetLineNumber(&lineNumber)) ||
+                lineNumber) {
+                break;
+            }
+            nsCOMPtr<nsIStackFrame> caller;
+            if (NS_FAILED(location->GetCaller(getter_AddRefs(caller))) || !caller)
+                break;
+            NS_RELEASE(location);
+            caller->QueryInterface(NS_GET_IID(nsIStackFrame), (void **)&location);
+        }
+    }
+
+    Initialize(aMessage, aResult, aName, location, aData, nullptr);
+    NS_IF_RELEASE(location);
+}
 
 nsXPCException::nsXPCException()
     : mMessage(nullptr),
@@ -107,13 +188,10 @@ nsXPCException::nsXPCException()
       mLineNumber(0),
       mInner(nullptr),
       mInitialized(false)
-{
-    MOZ_COUNT_CTOR(nsXPCException);
-}
+{ }
 
 nsXPCException::~nsXPCException()
 {
-    MOZ_COUNT_DTOR(nsXPCException);
     Reset();
 }
 
@@ -366,79 +444,101 @@ nsXPCException::ToString(char **_retval)
     return final ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-bool nsXPCException::sEverMadeOneFromFactory = false;
-
-// static
-nsresult
-nsXPCException::NewException(const char *aMessage,
-                             nsresult aResult,
-                             nsIStackFrame *aLocation,
-                             nsISupports *aData,
-                             nsIException** exceptn)
+JSObject*
+nsXPCException::WrapObject(JSContext* cx, JS::Handle<JSObject*> scope)
 {
-    // A little hack... The nsIGenericModule nsIClassInfo scheme relies on there
-    // having been at least one instance made via the factory. Otherwise, the
-    // shared factory/classinsance object never gets created and our QI getter
-    // for our instance's pointer to our nsIClassInfo will always return null.
-    // This is bad because it means that wrapped exceptions will never have a
-    // shared prototype. So... We force one to be created via the factory
-    // *once* and then go about our business.
-    if (!sEverMadeOneFromFactory) {
-        nsCOMPtr<nsIXPCException> e =
-            do_CreateInstance(XPC_EXCEPTION_CONTRACTID);
-        sEverMadeOneFromFactory = true;
-    }
-
-    nsresult rv;
-    nsXPCException* e = new nsXPCException();
-    if (e) {
-        NS_ADDREF(e);
-
-        nsIStackFrame* location;
-        if (aLocation) {
-            location = aLocation;
-            NS_ADDREF(location);
-        } else {
-            nsXPConnect* xpc = nsXPConnect::XPConnect();
-            rv = xpc->GetCurrentJSStack(&location);
-            if (NS_FAILED(rv)) {
-                NS_RELEASE(e);
-                return NS_ERROR_FAILURE;
-            }
-            // it is legal for there to be no active JS stack, if C++ code
-            // is operating on a JS-implemented interface pointer without
-            // having been called in turn by JS.  This happens in the JS
-            // component loader, and will become more common as additional
-            // components are implemented in JS.
-        }
-        // We want to trim off any leading native 'dataless' frames
-        if (location)
-            while (1) {
-                uint32_t language;
-                int32_t lineNumber;
-                if (NS_FAILED(location->GetLanguage(&language)) ||
-                    language == nsIProgrammingLanguage::JAVASCRIPT ||
-                    NS_FAILED(location->GetLineNumber(&lineNumber)) ||
-                    lineNumber) {
-                    break;
-                }
-                nsCOMPtr<nsIStackFrame> caller;
-                if (NS_FAILED(location->GetCaller(getter_AddRefs(caller))) || !caller)
-                    break;
-                NS_RELEASE(location);
-                caller->QueryInterface(NS_GET_IID(nsIStackFrame), (void **)&location);
-            }
-        // at this point we have non-null location with one extra addref,
-        // or no location at all
-        rv = e->Initialize(aMessage, aResult, nullptr, location, aData, nullptr);
-        NS_IF_RELEASE(location);
-        if (NS_FAILED(rv))
-            NS_RELEASE(e);
-    }
-
-    if (!e)
-        return NS_ERROR_FAILURE;
-
-    *exceptn = static_cast<nsIXPCException*>(e);
-    return NS_OK;
+    return ExceptionBinding::Wrap(cx, scope, this);
 }
+
+void
+nsXPCException::GetMessageMoz(nsString& retval)
+{
+    char* str = nullptr;
+#ifdef DEBUG
+    DebugOnly<nsresult> rv = 
+#endif
+    GetMessageMoz(&str);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    CopyUTF8toUTF16(str, retval);
+    nsMemory::Free(str);
+}
+
+uint32_t
+nsXPCException::Result() const
+{
+    return (uint32_t)mResult;
+}
+
+void
+nsXPCException::GetName(nsString& retval)
+{
+    char* str = nullptr;
+#ifdef DEBUG
+    DebugOnly<nsresult> rv =
+#endif
+    GetName(&str);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    CopyUTF8toUTF16(str, retval);
+    nsMemory::Free(str);
+}
+
+void
+nsXPCException::GetFilename(nsString& retval)
+{
+    char* str = nullptr;
+#ifdef DEBUG
+    DebugOnly<nsresult> rv =
+#endif
+    GetFilename(&str);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    CopyUTF8toUTF16(str, retval);
+    nsMemory::Free(str);
+}
+
+uint32_t
+nsXPCException::LineNumber() const
+{
+    return mLineNumber;
+}
+
+uint32_t
+nsXPCException::ColumnNumber() const
+{
+    return 0;
+}
+
+already_AddRefed<nsIStackFrame>
+nsXPCException::GetLocation() const
+{
+    nsCOMPtr<nsIStackFrame> location = mLocation;
+    return location.forget();
+}
+
+already_AddRefed<nsISupports>
+nsXPCException::GetInner() const
+{
+    nsCOMPtr<nsISupports> inner = mInner;
+    return inner.forget();
+}
+
+already_AddRefed<nsISupports>
+nsXPCException::GetData() const
+{
+    nsCOMPtr<nsISupports> data = mData;
+    return data.forget();
+}
+
+void
+nsXPCException::Stringify(nsString& retval)
+{
+    char* str = nullptr;
+#ifdef DEBUG
+    DebugOnly<nsresult> rv =
+#endif
+    ToString(&str);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    CopyUTF8toUTF16(str, retval);
+    nsMemory::Free(str);
+}
+
+bool nsXPCException::sEverMadeOneFromFactory = false;

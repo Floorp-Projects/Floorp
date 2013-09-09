@@ -9,10 +9,14 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "mozilla/Util.h"
-#include "nsDOMException.h"
 #include "nsTraceRefcnt.h"
 
 #include "WorkerInlines.h"
+
+nsresult
+NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult, const char** aName,
+                                   const char** aMessage,
+                                   uint16_t* aCode = nullptr);
 
 #define PROPERTY_FLAGS \
   (JSPROP_ENUMERATE | JSPROP_SHARED)

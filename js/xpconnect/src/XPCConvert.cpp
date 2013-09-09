@@ -1080,9 +1080,9 @@ XPCConvert::ConstructException(nsresult rv, const char* message,
     if (ifaceName && methodName)
         msg = sz = JS_smprintf(format, msg, ifaceName, methodName);
 
-    nsresult res = nsXPCException::NewException(msg, rv, nullptr, data, exceptn);
+    nsCOMPtr<nsIException> e = new nsXPCException(msg, rv, nullptr, nullptr, data);
 
-    if (NS_SUCCEEDED(res) && cx && jsExceptionPtr && *exceptn) {
+    if (cx && jsExceptionPtr && *exceptn) {
         nsCOMPtr<nsIXPCException> xpcEx = do_QueryInterface(*exceptn);
         if (xpcEx)
             xpcEx->StowJSVal(cx, *jsExceptionPtr);
@@ -1090,7 +1090,7 @@ XPCConvert::ConstructException(nsresult rv, const char* message,
 
     if (sz)
         JS_smprintf_free(sz);
-    return res;
+    return NS_OK;
 }
 
 /********************************/

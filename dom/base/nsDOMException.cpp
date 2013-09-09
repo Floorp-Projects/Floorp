@@ -15,9 +15,10 @@
 #include "nsIDocument.h"
 #include "nsString.h"
 #include "prprf.h"
-#include "nsIException.h"
+#include "mozilla/dom/DOMExceptionBinding.h"
 
 using namespace mozilla;
+namespace DOMExceptionBinding = mozilla::dom::DOMExceptionBinding;
 
 enum DOM4ErrorTypeCodeMap {
   /* DOM4 errors from http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#domexception */
@@ -125,53 +126,35 @@ NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult, const char** aName,
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-
-class nsDOMException : public nsIException,
-                       public nsIDOMDOMException
-{
-public:
-  nsDOMException() {}
-  virtual ~nsDOMException() {}
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIEXCEPTION
-  NS_IMETHOD Init(nsresult aNSResult, const char* aName,
-                  const char* aMessage, uint16_t aCode,
-                  nsIException* aDefaultException);
-  NS_DECL_NSIDOMDOMEXCEPTION
-
-protected:
-  const char* mName;
-  const char* mMessage;
-  nsCOMPtr<nsIException> mInner;
-  nsresult mResult;
-  uint16_t mCode;
-};
-
 DOMCI_DATA(DOMException, nsDOMException) 
 
-NS_IMPL_ADDREF(nsDOMException)
-NS_IMPL_RELEASE(nsDOMException)
+NS_IMPL_ADDREF_INHERITED(nsDOMException, nsXPCException)
+NS_IMPL_RELEASE_INHERITED(nsDOMException, nsXPCException)
 NS_INTERFACE_MAP_BEGIN(nsDOMException)
-  NS_INTERFACE_MAP_ENTRY(nsIException)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDOMException)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIException)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DOMException)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(nsXPCException)
 
-nsresult
-NS_NewDOMException(nsresult aNSResult, nsIException* aDefaultException,
-                   nsIException** aException)
+nsDOMException::nsDOMException(nsresult aRv, const char* aMessage,
+                               const char* aName, uint16_t aCode)
+  : nsXPCException(nullptr, aRv, nullptr, nullptr, nullptr),
+    mName(aName),
+    mMessage(aMessage),
+    mCode(aCode)
+{
+  SetIsDOMBinding();
+}
+
+already_AddRefed<nsDOMException>
+NS_NewDOMException(nsresult aNSResult)
 {
   const char* name;
   const char* message;
   uint16_t code;
   NSResultToNameAndMessage(aNSResult, &name, &message, &code);
-  nsDOMException* inst = new nsDOMException();
-  inst->Init(aNSResult, name, message, code, aDefaultException);
-  *aException = inst;
-  NS_ADDREF(*aException);
-  return NS_OK;
+  nsRefPtr<nsDOMException> inst =
+    new nsDOMException(aNSResult, message, name, code);
+  return inst.forget();
 }
 
 NS_IMETHODIMP
@@ -188,122 +171,6 @@ nsDOMException::GetCode(uint16_t* aCode)
       doc->WarnOnceAbout(nsIDocument::eDOMExceptionCode);
     }
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMException::GetMessageMoz(char **aMessage)
-{
-  if (mMessage) {
-    *aMessage = NS_strdup(mMessage);
-  } else {
-    *aMessage = nullptr;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMException::GetResult(nsresult* aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  *aResult = mResult;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMException::GetName(char **aName)
-{
-  NS_ENSURE_ARG_POINTER(aName);
-
-  if (mName) {
-    *aName = NS_strdup(mName);
-  } else {
-    *aName = nullptr;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMException::GetFilename(char **aFilename)
-{
-  if (mInner) {
-    return mInner->GetFilename(aFilename);
-  }
-
-  NS_ENSURE_ARG_POINTER(aFilename);
-
-  *aFilename = nullptr;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMException::GetLineNumber(uint32_t *aLineNumber)
-{
-  if (mInner) {
-    return mInner->GetLineNumber(aLineNumber);
-  }
-
-  NS_ENSURE_ARG_POINTER(aLineNumber);
-
-  *aLineNumber = 0;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMException::GetColumnNumber(uint32_t *aColumnNumber)
-{
-  if (mInner) {
-    return mInner->GetColumnNumber(aColumnNumber);
-  }
-
-  NS_ENSURE_ARG_POINTER(aColumnNumber);
-
-  *aColumnNumber = 0;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMException::GetLocation(nsIStackFrame **aLocation)
-{
-  if (mInner) {
-    return mInner->GetLocation(aLocation);
-  }
-
-  NS_ENSURE_ARG_POINTER(aLocation);
-
-  *aLocation = nullptr;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMException::GetInner(nsIException **aInner)
-{
-  NS_ENSURE_ARG_POINTER(aInner);
-
-  *aInner = nullptr;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMException::GetData(nsISupports **aData)
-{
-  if (mInner) {
-    return mInner->GetData(aData);
-  }
-
-  NS_ENSURE_ARG_POINTER(aData);
-
-  *aData = nullptr;
 
   return NS_OK;
 }
@@ -352,15 +219,20 @@ nsDOMException::ToString(char **aReturn)
   return *aReturn ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-NS_IMETHODIMP
-nsDOMException::Init(nsresult aNSResult, const char* aName,
-                     const char* aMessage, uint16_t aCode,
-                     nsIException* aDefaultException)
+void
+nsDOMException::GetName(nsString& retval)
 {
-  mResult = aNSResult;
-  mName = aName;
-  mMessage = aMessage;
-  mCode = aCode;
-  mInner = aDefaultException;
-  return NS_OK;
+  CopyUTF8toUTF16(mName, retval);
+}
+
+void
+nsDOMException::GetMessageMoz(nsString& retval)
+{
+  CopyUTF8toUTF16(mMessage, retval);
+}
+
+JSObject*
+nsDOMException::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return DOMExceptionBinding::Wrap(aCx, aScope, this);
 }
