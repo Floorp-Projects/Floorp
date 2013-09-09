@@ -132,7 +132,7 @@
 
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
-#include "nsIExceptionService.h"
+#include "nsIException.h"
 
 #include "nsVariant.h"
 #include "nsIPropertyBag.h"
@@ -739,48 +739,15 @@ public:
 
     ~XPCJSRuntime();
 
-    nsresult GetPendingException(nsIException** aException)
+    already_AddRefed<nsIException> GetPendingException()
     {
-        if (EnsureExceptionManager())
-            return mExceptionManager->GetCurrentException(aException);
         nsCOMPtr<nsIException> out = mPendingException;
-        out.forget(aException);
-        return NS_OK;
+        return out.forget();
     }
 
-    nsresult SetPendingException(nsIException* aException)
+    void SetPendingException(nsIException* aException)
     {
-        if (EnsureExceptionManager())
-            return mExceptionManager->SetCurrentException(aException);
-
         mPendingException = aException;
-        return NS_OK;
-    }
-
-    nsIExceptionManager* GetExceptionManager()
-    {
-        if (EnsureExceptionManager())
-            return mExceptionManager;
-        return nullptr;
-    }
-
-    bool EnsureExceptionManager()
-    {
-        if (mExceptionManager)
-            return true;
-
-        if (mExceptionManagerNotAvailable)
-            return false;
-
-        nsCOMPtr<nsIExceptionService> xs =
-            do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
-        if (xs)
-            xs->GetCurrentExceptionManager(getter_AddRefs(mExceptionManager));
-        if (mExceptionManager)
-            return true;
-
-        mExceptionManagerNotAvailable = true;
-        return false;
     }
 
     XPCReadableJSStringWrapper *NewStringWrapper(const PRUnichar *str, uint32_t len);
@@ -865,8 +832,6 @@ private:
     mozilla::TimeStamp mSlowScriptCheckpoint;
 
     nsCOMPtr<nsIException>   mPendingException;
-    nsCOMPtr<nsIExceptionManager> mExceptionManager;
-    bool mExceptionManagerNotAvailable;
 
 #define XPCCCX_STRING_CACHE_SIZE 2
 

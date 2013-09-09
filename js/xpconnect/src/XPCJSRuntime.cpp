@@ -2898,8 +2898,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mObjectHolderRoots(nullptr),
    mWatchdogManager(new WatchdogManager(this)),
    mJunkScope(nullptr),
-   mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite()),
-   mExceptionManagerNotAvailable(false)
+   mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite())
 {
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
     DEBUG_WrappedNativeHashtable =
