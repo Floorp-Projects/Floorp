@@ -8,6 +8,7 @@
 #include "MediaResource.h"
 #include "mozilla/RefPtr.h"
 #include "DirectShowUtils.h"
+#include "MP3FrameParser.h"
 #include "prlog.h"
 
 using namespace mozilla::media;
@@ -659,62 +660,52 @@ SourceFilter::GetMediaType() const
   return &mMediaType;
 }
 
-// Gets the length of the ID3v2 tag which starts at aStartOffset.
-static nsresult
-GetID3TagLength(MediaResource* aResource,
-                int64_t aStartOffset,
-                int32_t* aLength)
+static uint32_t
+Read(MediaResource* aResource,
+     const int64_t aOffset,
+     char* aBuffer,
+     const uint32_t aBytesToRead)
 {
-  MOZ_ASSERT(aLength);
-  char header[10];
   uint32_t totalBytesRead = 0;
-  while (totalBytesRead < 10) {
+  while (totalBytesRead < aBytesToRead) {
     uint32_t bytesRead = 0;
-    nsresult rv = aResource->ReadAt(aStartOffset + totalBytesRead,
-                                    header+totalBytesRead,
-                                    10-totalBytesRead,
+    nsresult rv = aResource->ReadAt(aOffset + totalBytesRead,
+                                    aBuffer+totalBytesRead,
+                                    aBytesToRead-totalBytesRead,
                                     &bytesRead);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (bytesRead == 0) {
-      // Reached end of file?
-      return NS_ERROR_FAILURE;
+    if (NS_FAILED(rv) || bytesRead == 0) {
+      // Error or end of stream?
+      break;
     }
     totalBytesRead += bytesRead;
   }
-  if (strncmp("ID3", header, 3)) {
-    // No ID3v2 header
-    *aLength = 0;
-    return NS_OK;
-  }
-
-  int32_t id3Length =
-    10 +
-    (int32_t(0x7f & header[6]) << 21) +
-    (int32_t(0x7f & header[7]) << 14) +
-    (int32_t(0x7f & header[8]) << 7) +
-     int32_t(0x7f & header[9]);
-
-  *aLength = id3Length;
-  return NS_OK;
+  return totalBytesRead;
 }
 
-// Parses the ID3v2 headers in the resource and returns the offset of the
-// MP3 data after the ID3v2 headers. This is used to trim off the ID3v2 headers,
-// as DirectShow can't handle some ID3v2 tags (possibly ones that are large).
+// Parses the MP3 stream and returns the offset of the first MP3
+// sync frame after the ID3v2 headers. This is used to trim off
+// the ID3v2 headers, as DirectShow can't handle large ID3v2 tags.
 static nsresult
 GetMP3DataOffset(MediaResource* aResource, int64_t* aOutOffset)
 {
-  nsresult rv;
-  int64_t id3TagsEndOffset = 0;
-  int32_t length = 0;
+  MP3FrameParser parser;
+  int64_t offset = 0;
+  const uint32_t len = 1024;
+  char buffer[len];
   do {
-    rv = GetID3TagLength(aResource, id3TagsEndOffset, &length);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (length > 0) {
-      id3TagsEndOffset += length;
+    uint32_t bytesRead = Read(aResource, offset, buffer, len);
+    if (bytesRead == 0) {
+      break;
     }
-  } while (length > 0);
-  *aOutOffset = id3TagsEndOffset;
+    parser.Parse(buffer, bytesRead, offset);
+    offset += bytesRead;
+  } while (parser.GetMP3Offset() == -1 && parser.IsMP3());
+
+  if (!parser.IsMP3() || parser.GetMP3Offset() == -1) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aOutOffset = parser.GetMP3Offset();
   return NS_OK;
 }
 
@@ -730,6 +721,7 @@ SourceFilter::Init(MediaResource* aResource)
   int64_t mp3DataOffset = 0;
   nsresult rv = GetMP3DataOffset(aResource, &mp3DataOffset);
   NS_ENSURE_SUCCESS(rv, rv);
+  LOG("First MP3 sync/data frame lies at offset %lld", mp3DataOffset);
 
   mOutputPin = new OutputPin(aResource,
                              this,

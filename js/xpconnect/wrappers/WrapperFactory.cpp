@@ -59,7 +59,12 @@ WrapperFactory::GetXrayWaiver(JSObject *obj)
 
     if (!scope->mWaiverWrapperMap)
         return NULL;
-    return xpc_UnmarkGrayObject(scope->mWaiverWrapperMap->Find(obj));
+
+    JSObject* xrayWaiver = scope->mWaiverWrapperMap->Find(obj);
+    if (xrayWaiver)
+        JS::ExposeObjectToActiveJS(xrayWaiver);
+
+    return xrayWaiver;
 }
 
 JSObject *

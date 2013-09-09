@@ -39,11 +39,14 @@
 #include "mozilla/XPTInterfaceInfoManager.h"
 #include "nsDOMClassInfoID.h"
 #include "nsGlobalWindow.h"
+#include "mozilla/dom/DOMException.h"
+#include "mozilla/dom/DOMExceptionBinding.h"
 
 using namespace mozilla;
 using namespace JS;
 using namespace js;
 using namespace xpc;
+using mozilla::dom::Exception;
 
 /***************************************************************************/
 // stuff used by all
@@ -1945,7 +1948,7 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     // Do the security check if necessary
 
     nsIXPCSecurityManager* sm = xpc->GetDefaultSecurityManager();
-    if (sm && NS_FAILED(sm->CanCreateInstance(cx, nsXPCException::GetCID()))) {
+    if (sm && NS_FAILED(sm->CanCreateInstance(cx, Exception::GetCID()))) {
         // the security manager vetoed. It should have set an exception.
         *_retval = false;
         return NS_OK;
@@ -1956,11 +1959,9 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     if (!parser.parse(args))
         return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
 
-    nsCOMPtr<nsIException> e;
-    nsXPCException::NewException(parser.eMsg, parser.eResult, parser.eStack,
-                                 parser.eData, getter_AddRefs(e));
-    if (!e)
-        return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
+    nsCOMPtr<nsIException> e = new Exception(parser.eMsg, parser.eResult,
+                                             nullptr, parser.eStack,
+                                             parser.eData);
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     RootedObject newObj(cx);
@@ -1983,9 +1984,14 @@ nsXPCComponents_Exception::HasInstance(nsIXPConnectWrappedNative *wrapper,
                                        const jsval &val, bool *bp,
                                        bool *_retval)
 {
+    using namespace mozilla::dom;
+
     RootedValue v(cx, val);
-    if (bp)
-        *bp = JSValIsInterfaceOfType(cx, v, NS_GET_IID(nsIException));
+    if (bp) {
+        Exception* e;
+        *bp = NS_SUCCEEDED(UNWRAP_OBJECT(Exception, cx, v.toObjectOrNull(), e)) ||
+              JSValIsInterfaceOfType(cx, v, NS_GET_IID(nsIException));
+    }
     return NS_OK;
 }
 

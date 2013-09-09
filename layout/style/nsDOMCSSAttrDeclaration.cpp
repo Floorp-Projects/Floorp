@@ -43,10 +43,8 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsDOMCSSAttributeDeclaration, mElement)
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsDOMCSSAttributeDeclaration)
   if (tmp->mElement && Element::CanSkip(tmp->mElement, true)) {
     if (tmp->PreservingWrapper()) {
-      // Not relying on GetWrapper to unmark us gray because the
-      // side-effect thing is pretty weird.
-      JSObject* o = tmp->GetWrapperPreserveColor();
-      xpc_UnmarkGrayObject(o);
+      // This marks the wrapper black.
+      tmp->GetWrapper();
     }
     return true;
   }
