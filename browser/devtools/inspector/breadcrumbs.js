@@ -11,7 +11,6 @@ const ENSURE_SELECTION_VISIBLE_DELAY = 50; // ms
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/DOMHelpers.jsm");
-Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 let promise = require("sdk/core/promise");

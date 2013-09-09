@@ -170,6 +170,101 @@ function promiseTimeout(aTime)
 }
 
 /**
+ * Allows waiting for an observer notification once.
+ *
+ * @param aTopic
+ *        Notification topic to observe.
+ *
+ * @return {Promise}
+ * @resolves The array [aSubject, aData] from the observed notification.
+ * @rejects Never.
+ */
+function promiseTopicObserved(aTopic)
+{
+  let deferred = Promise.defer();
+
+  Services.obs.addObserver(
+    function PTO_observe(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(PTO_observe, aTopic);
+      deferred.resolve([aSubject, aData]);
+    }, aTopic, false);
+
+  return deferred.promise;
+}
+
+/**
+ * Clears history asynchronously.
+ *
+ * @return {Promise}
+ * @resolves When history has been cleared.
+ * @rejects Never.
+ */
+function promiseClearHistory()
+{
+  let promise = promiseTopicObserved(PlacesUtils.TOPIC_EXPIRATION_FINISHED);
+  do_execute_soon(function() PlacesUtils.bhistory.removeAllPages());
+  return promise;
+}
+
+/**
+ * Waits for a new history visit to be notified for the specified URI.
+ *
+ * @param aUrl
+ *        String containing the URI that will be visited.
+ *
+ * @return {Promise}
+ * @resolves Array [aTime, aTransitionType] from nsINavHistoryObserver.onVisit.
+ * @rejects Never.
+ */
+function promiseWaitForVisit(aUrl)
+{
+  let deferred = Promise.defer();
+
+  let uri = NetUtil.newURI(aUrl);
+
+  PlacesUtils.history.addObserver({
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver]),
+    onBeginUpdateBatch: function () {},
+    onEndUpdateBatch: function () {},
+    onVisit: function (aURI, aVisitID, aTime, aSessionID, aReferringID,
+                       aTransitionType, aGUID, aHidden) {
+      if (aURI.equals(uri)) {
+        PlacesUtils.history.removeObserver(this);
+        deferred.resolve([aTime, aTransitionType]);
+      }
+    },
+    onTitleChanged: function () {},
+    onDeleteURI: function () {},
+    onClearHistory: function () {},
+    onPageChanged: function () {},
+    onDeleteVisits: function () {},
+  }, false);
+
+  return deferred.promise;
+}
+
+/**
+ * Check browsing history to see whether the given URI has been visited.
+ *
+ * @param aUrl
+ *        String containing the URI that will be visited.
+ *
+ * @return {Promise}
+ * @resolves Boolean indicating whether the URI has been visited.
+ * @rejects JavaScript exception.
+ */
+function promiseIsURIVisited(aUrl) {
+  let deferred = Promise.defer();
+
+  PlacesUtils.asyncHistory.isURIVisited(NetUtil.newURI(aUrl),
+    function (aURI, aIsVisited) {
+      deferred.resolve(aIsVisited);
+    });
+
+  return deferred.promise;
+}
+
+/**
  * Creates a new Download object, setting a temporary file as the target.
  *
  * @param aSourceUrl
@@ -439,40 +534,6 @@ function promiseVerifyContents(aPath, aExpectedContents)
     });
     yield deferred.promise;
   });
-}
-
-/**
- * Adds entry for download.
- *
- * @param aSourceUrl
- *        String containing the URI for the download source, or null to use
- *        httpUrl("source.txt").
- *
- * @return {Promise}
- * @rejects JavaScript exception.
- */
-function promiseAddDownloadToHistory(aSourceUrl) {
-  let deferred = Promise.defer();
-  PlacesUtils.asyncHistory.updatePlaces(
-    {
-      uri: NetUtil.newURI(aSourceUrl || httpUrl("source.txt")),
-      visits: [{
-        transitionType: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
-        visitDate:  Date.now()
-      }]
-    },
-    {
-      handleError: function handleError(aResultCode, aPlaceInfo) {
-        let ex = new Components.Exception("Unexpected error in adding visits.",
-                                          aResultCode);
-        deferred.reject(ex);
-      },
-      handleResult: function () {},
-      handleCompletion: function handleCompletion() {
-        deferred.resolve();
-      }
-    });
-  return deferred.promise;
 }
 
 /**

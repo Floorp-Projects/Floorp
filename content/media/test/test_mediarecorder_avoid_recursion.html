@@ -15,15 +15,19 @@ function startTest() {
     var mediaRecorder = new MediaRecorder(stream);
     var count = 0;
     mediaRecorder.start();
+    info("mediaRecorder start");
     mediaRecorder.ondataavailable = function (e) {
       if (count++ == 30) {
         stream.stop();
       }
       if (mediaRecorder.state == 'recording') {
+        info("get data again");
         mediaRecorder.requestData();
       }
+      info("got ondataavailable data size = " + e.data.size);
     }
     mediaRecorder.requestData();
+    info("mediaRecorder requestData");
     mediaRecorder.onstop = function () {
       ok(true, "requestData within ondataavailable successfully avoided infinite recursion");
       SimpleTest.finish();

@@ -311,8 +311,15 @@ var TouchModule = {
     if (this._isCancellable) {
       // only the first touchmove is cancellable.
       this._isCancellable = false;
-      if (aEvent.defaultPrevented)
+      if (aEvent.defaultPrevented) {
         this._isCancelled = true;
+      }
+      // Help out chrome ui elements that want input.js vs. apz scrolling: call
+      // preventDefault when apz is enabled on anything that isn't in the
+      // browser.
+      if (APZCObserver.enabled && aEvent.target.ownerDocument == document) {
+        aEvent.preventDefault();
+      }
     }
 
     if (this._isCancelled)
@@ -352,8 +359,6 @@ var TouchModule = {
 
         // Let everyone know when mousemove begins a pan
         if (!oldIsPan && dragData.isPan()) {
-          //this._longClickTimeout.clear();
-
           let event = document.createEvent("Events");
           event.initEvent("PanBegin", true, false);
           this._targetScrollbox.dispatchEvent(event);
