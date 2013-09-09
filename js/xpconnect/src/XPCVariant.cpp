@@ -7,11 +7,11 @@
 /* nsIVariant implementation for xpconnect. */
 
 #include "xpcprivate.h"
-#include "XPCWrapper.h"
 #include "nsCxPusher.h"
 
 #include "jsfriendapi.h"
 #include "jsprf.h"
+#include "jswrapper.h"
 
 using namespace JS;
 using namespace mozilla;
