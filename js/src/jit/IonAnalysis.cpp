@@ -1764,6 +1764,10 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
     // which will definitely be added to the created object before it has a
     // chance to escape and be accessed elsewhere.
 
+    if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx)) {
+        return false;
+    }
+
     if (!fun->nonLazyScript()->compileAndGo)
         return true;
 
