@@ -620,6 +620,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     Register extractObject(const TypedOrValueRegister &reg, Register scratch) {
         if (reg.hasValue())
             return extractObject(reg.valueReg(), scratch);
+        JS_ASSERT(reg.type() == MIRType_Object);
         return reg.typedReg().gpr();
     }
 
