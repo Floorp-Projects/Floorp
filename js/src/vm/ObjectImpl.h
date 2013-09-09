@@ -980,7 +980,16 @@ class ObjectImpl : public gc::Cell
     // This method really shouldn't exist -- but there are a few internal
     // places that want it (JITs and the like), and it'd be a pain to mark them
     // all as friends.
-    inline bool nonProxyIsExtensible() const;
+    bool nonProxyIsExtensible() const {
+        MOZ_ASSERT(!isProxy());
+
+        // [[Extensible]] for ordinary non-proxy objects is an object flag.
+        return !lastProperty()->hasObjectFlag(BaseShape::NOT_EXTENSIBLE);
+    }
+
+#ifdef DEBUG
+    bool isProxy() const;
+#endif
 
     // Attempt to change the [[Extensible]] bit on |obj| to false.  Callers
     // must ensure that |obj| is currently extensible before calling this!
@@ -988,24 +997,24 @@ class ObjectImpl : public gc::Cell
     preventExtensions(JSContext *cx, Handle<ObjectImpl*> obj);
 
     HeapSlotArray getDenseElements() {
-        JS_ASSERT(uninlinedIsNative());
+        JS_ASSERT(isNative());
         return HeapSlotArray(elements);
     }
     const Value &getDenseElement(uint32_t idx) {
-        JS_ASSERT(uninlinedIsNative());
+        JS_ASSERT(isNative());
         MOZ_ASSERT(idx < getDenseInitializedLength());
         return elements[idx];
     }
     bool containsDenseElement(uint32_t idx) {
-        JS_ASSERT(uninlinedIsNative());
+        JS_ASSERT(isNative());
         return idx < getDenseInitializedLength() && !elements[idx].isMagic(JS_ELEMENTS_HOLE);
     }
     uint32_t getDenseInitializedLength() {
-        JS_ASSERT(uninlinedIsNative());
+        JS_ASSERT(isNative());
         return getElementsHeader()->initializedLength;
     }
     uint32_t getDenseCapacity() {
-        JS_ASSERT(uninlinedIsNative());
+        JS_ASSERT(isNative());
         return getElementsHeader()->capacity;
     }
 
@@ -1161,13 +1170,13 @@ class ObjectImpl : public gc::Cell
         return replaceWithNewEquivalentShape(cx, lastProperty(), newShape);
     }
 
-    // uninlinedCompartment() is equivalent to compartment(), but isn't inlined.
-    inline JSCompartment *compartment() const;
-    JSCompartment *uninlinedCompartment() const;
+    JSCompartment *compartment() const {
+        return lastProperty()->base()->compartment();
+    }
 
-    // uninlinedIsNative() is equivalent to isNative(), but isn't inlined.
-    inline bool isNative() const;
-    bool uninlinedIsNative() const;
+    bool isNative() const {
+        return lastProperty()->isNative();
+    }
 
     types::TypeObject *type() const {
         MOZ_ASSERT(!hasLazyType());
@@ -1190,12 +1199,16 @@ class ObjectImpl : public gc::Cell
      */
     bool hasLazyType() const { return type_->lazy(); }
 
-    // uninlinedSlotSpan() is the same as slotSpan(), but isn't inlined.
-    inline uint32_t slotSpan() const;
-    uint32_t uninlinedSlotSpan() const;
+    uint32_t slotSpan() const {
+        if (inDictionaryMode())
+            return lastProperty()->base()->slotSpan();
+        return lastProperty()->slotSpan();
+    }
 
     /* Compute dynamicSlotsCount() for this object. */
-    inline uint32_t numDynamicSlots() const;
+    uint32_t numDynamicSlots() const {
+        return dynamicSlotsCount(numFixedSlots(), slotSpan());
+    }
 
     Shape *nativeLookup(ExclusiveContext *cx, jsid id);
     Shape *nativeLookup(ExclusiveContext *cx, PropertyId pid) {
@@ -1211,7 +1224,9 @@ class ObjectImpl : public gc::Cell
     bool nativeContains(ExclusiveContext *cx, PropertyName* name) {
         return nativeLookup(cx, name) != NULL;
     }
-    inline bool nativeContains(ExclusiveContext *cx, Shape* shape);
+    bool nativeContains(ExclusiveContext *cx, Shape* shape) {
+        return nativeLookup(cx, shape->propid()) == shape;
+    }
 
     /*
      * Contextless; can be called from parallel code. Returns false if the
@@ -1231,7 +1246,9 @@ class ObjectImpl : public gc::Cell
     bool nativeContainsPure(PropertyName* name) {
         return nativeContainsPure(NameToId(name));
     }
-    bool nativeContainsPure(Shape* shape);
+    bool nativeContainsPure(Shape* shape) {
+        return nativeLookupPure(shape->propid()) == shape;
+    }
 
     JSClass *getJSClass() const {
         return Jsvalify(getClass());
@@ -1252,14 +1269,18 @@ class ObjectImpl : public gc::Cell
      * definition helps to optimize shape-based property cache invalidation
      * (see Purge{Scope,Proto}Chain in jsobj.cpp).
      */
-    inline bool isDelegate() const;
+    bool isDelegate() const {
+        return lastProperty()->hasObjectFlag(BaseShape::DELEGATE);
+    }
 
     /*
      * Return true if this object is a native one that has been converted from
      * shared-immutable prototype-rooted shape storage to dictionary-shapes in
      * a doubly-linked list.
      */
-    inline bool inDictionaryMode() const;
+    bool inDictionaryMode() const {
+        return lastProperty()->inDictionary();
+    }
 
     const Value &getSlot(uint32_t slot) const {
         MOZ_ASSERT(slotInRange(slot));
@@ -1292,17 +1313,17 @@ class ObjectImpl : public gc::Cell
     }
 
     HeapSlot &nativeGetSlotRef(uint32_t slot) {
-        JS_ASSERT(uninlinedIsNative() && slot < uninlinedSlotSpan());
+        JS_ASSERT(isNative() && slot < slotSpan());
         return getSlotRef(slot);
     }
     const Value &nativeGetSlot(uint32_t slot) const {
-        JS_ASSERT(uninlinedIsNative() && slot < uninlinedSlotSpan());
+        JS_ASSERT(isNative() && slot < slotSpan());
         return getSlot(slot);
     }
 
     void setSlot(uint32_t slot, const Value &value) {
         MOZ_ASSERT(slotInRange(slot));
-        MOZ_ASSERT(IsObjectValueInCompartment(value, uninlinedCompartment()));
+        MOZ_ASSERT(IsObjectValueInCompartment(value, compartment()));
         getSlotRef(slot).set(this->asObjectPtr(), HeapSlot::Slot, slot, value);
     }
 
@@ -1314,7 +1335,7 @@ class ObjectImpl : public gc::Cell
     void initSlot(uint32_t slot, const Value &value) {
         MOZ_ASSERT(getSlot(slot).isUndefined());
         MOZ_ASSERT(slotInRange(slot));
-        MOZ_ASSERT(IsObjectValueInCompartment(value, uninlinedCompartment()));
+        MOZ_ASSERT(IsObjectValueInCompartment(value, compartment()));
         initSlotUnchecked(slot, value);
     }
 
@@ -1413,11 +1434,47 @@ class ObjectImpl : public gc::Cell
     }
 
     /* GC support. */
-    JS_ALWAYS_INLINE Zone *zone() const;
+    JS_ALWAYS_INLINE Zone *zone() const {
+        JS_ASSERT(CurrentThreadCanAccessZone(shape_->zone()));
+        return shape_->zone();
+    }
+
+    JS_ALWAYS_INLINE JS::shadow::Zone *shadowZone() const {
+        return JS::shadow::Zone::asShadowZone(zone());
+    }
+
     static ThingRootKind rootKind() { return THING_ROOT_OBJECT; }
 
-    static inline void readBarrier(ObjectImpl *obj);
-    static inline void writeBarrierPre(ObjectImpl *obj);
+    static void readBarrier(ObjectImpl *obj) {
+#ifdef JSGC_INCREMENTAL
+        JS::shadow::Zone *shadowZone = obj->shadowZone();
+        if (shadowZone->needsBarrier()) {
+            MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone));
+            JSObject *tmp = obj->asObjectPtr();
+            js::gc::MarkObjectUnbarriered(shadowZone->barrierTracer(), &tmp, "read barrier");
+            MOZ_ASSERT(tmp == obj->asObjectPtr());
+        }
+#endif
+    }
+
+    static void writeBarrierPre(ObjectImpl *obj) {
+#ifdef JSGC_INCREMENTAL
+        /*
+         * This would normally be a null test, but TypeScript::global uses 0x1 as a
+         * special value.
+         */
+        if (IsNullTaggedPointer(obj) || !obj->shadowRuntimeFromMainThread()->needsBarrier())
+            return;
+
+        JS::shadow::Zone *shadowZone = obj->shadowZone();
+        if (shadowZone->needsBarrier()) {
+            MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone));
+            JSObject *tmp = obj->asObjectPtr();
+            js::gc::MarkObjectUnbarriered(shadowZone->barrierTracer(), &tmp, "write barrier");
+            MOZ_ASSERT(tmp == obj->asObjectPtr());
+        }
+#endif
+    }
 
     static void writeBarrierPost(ObjectImpl *obj, void *addr) {
 #ifdef JSGC_GENERATIONAL
@@ -1439,7 +1496,15 @@ class ObjectImpl : public gc::Cell
 #endif
     }
 
-    inline void privateWriteBarrierPre(void **oldval);
+    void privateWriteBarrierPre(void **oldval) {
+#ifdef JSGC_INCREMENTAL
+        JS::shadow::Zone *shadowZone = this->shadowZone();
+        if (shadowZone->needsBarrier()) {
+            if (*oldval && getClass()->trace)
+                getClass()->trace(shadowZone->barrierTracer(), this->asObjectPtr());
+        }
+#endif
+    }
 
     void privateWriteBarrierPost(void **pprivate) {
 #ifdef JSGC_GENERATIONAL
@@ -1463,14 +1528,25 @@ class ObjectImpl : public gc::Cell
         return *reinterpret_cast<void**>(end);
     }
 
-    inline bool hasPrivate() const {
+    bool hasPrivate() const {
         return getClass()->hasPrivate();
     }
-    inline void *getPrivate() const {
+    void *getPrivate() const {
         return privateRef(numFixedSlots());
     }
-    inline void setPrivate(void *data);
-    inline void setPrivateGCThing(gc::Cell *cell);
+    void setPrivate(void *data) {
+        void **pprivate = &privateRef(numFixedSlots());
+        privateWriteBarrierPre(pprivate);
+        *pprivate = data;
+    }
+
+    void setPrivateGCThing(gc::Cell *cell) {
+        void **pprivate = &privateRef(numFixedSlots());
+        privateWriteBarrierPre(pprivate);
+        *pprivate = reinterpret_cast<void *>(cell);
+        privateWriteBarrierPost(pprivate);
+    }
+
     void setPrivateUnbarriered(void *data) {
         void **pprivate = &privateRef(numFixedSlots());
         *pprivate = data;
@@ -1523,7 +1599,7 @@ IsObjectValueInCompartment(js::Value v, JSCompartment *comp)
 {
     if (!v.isObject())
         return true;
-    return reinterpret_cast<ObjectImpl*>(&v.toObject())->uninlinedCompartment() == comp;
+    return reinterpret_cast<ObjectImpl*>(&v.toObject())->compartment() == comp;
 }
 #endif
 
