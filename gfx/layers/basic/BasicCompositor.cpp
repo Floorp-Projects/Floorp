@@ -480,11 +480,9 @@ BasicCompositor::EndFrame()
     // Most platforms require us to buffer drawing to the widget surface.
     // That's why we don't draw to mDrawTarget directly.
     RefPtr<SourceSurface> source = mRenderTarget->mDrawTarget->Snapshot();
-    mDrawTarget->DrawSurface(source,
-                             Rect(0, 0, mWidgetSize.width, mWidgetSize.height),
-                             Rect(0, 0, mWidgetSize.width, mWidgetSize.height),
-                             DrawSurfaceOptions(),
-                             DrawOptions());
+    mDrawTarget->CopySurface(source,
+	                     IntRect(0, 0, mWidgetSize.width, mWidgetSize.height),
+			     IntPoint(0, 0));
     mWidget->EndRemoteDrawing();
   }
   mDrawTarget = nullptr;
