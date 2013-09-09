@@ -5,24 +5,25 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'inspector',
-    'markupview',
-    'webconsole',
+    'app-manager',
     'commandline',
+    'debugger',
+    'fontinspector',
+    'framework',
+    'inspector',
+    'layoutview',
+    'markupview',
+    'netmonitor',
+    'profiler',
+    'responsivedesign',
+    'scratchpad',
+    'shadereditor',
+    'shared',
     'sourceeditor',
     'styleeditor',
     'styleinspector',
     'tilt',
-    'scratchpad',
-    'debugger',
-    'netmonitor',
-    'layoutview',
-    'shared',
-    'responsivedesign',
-    'framework',
-    'profiler',
-    'fontinspector',
-    'app-manager',
+    'webconsole',
 ]
 
 EXTRA_COMPONENTS += [
