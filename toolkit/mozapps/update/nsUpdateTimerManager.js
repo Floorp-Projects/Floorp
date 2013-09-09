@@ -222,7 +222,7 @@ TimerManager.prototype = {
         Services.prefs.setIntPref(prefLastUpdate, timerData.lastUpdateTime);
       }
       tryFire(function() {
-        if (timerData.callback instanceof Ci.nsITimerCallback) {
+        if (timerData.callback && timerData.callback.notify) {
           try {
             timerData.callback.notify(timer);
             LOG("TimerManager:notify - notified timerID: " + timerID);
@@ -272,7 +272,7 @@ TimerManager.prototype = {
       this.lastTimerReset = Date.now();
     } else {
       if (Date.now() + interval < this.lastTimerReset + this._timer.delay) 
-        this._timer.delay = this.lastTimerReset + interval - Date.now();
+        this._timer.delay = Math.max(this.lastTimerReset + interval - Date.now(), 0);
     }
   },
 
