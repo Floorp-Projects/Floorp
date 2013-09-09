@@ -107,6 +107,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     streams_.push_back(stream);
     stream->SignalCandidate.connect(this, &IceTestPeer::GotCandidate);
     stream->SignalReady.connect(this, &IceTestPeer::StreamReady);
+    stream->SignalFailed.connect(this, &IceTestPeer::StreamFailed);
     stream->SignalPacketReceived.connect(this, &IceTestPeer::PacketReceived);
   }
 
@@ -353,9 +354,35 @@ class IceTestPeer : public sigslot::has_slots<> {
     candidates_[stream->name()].push_back(candidate);
   }
 
+  void DumpCandidatePairs(NrIceMediaStream *stream) {
+    std::vector<NrIceCandidatePair> pairs;
+    nsresult r = stream->GetCandidatePairs(&pairs);
+    ASSERT_TRUE(NS_SUCCEEDED(r));
+
+    std::cerr << "Begin list of candidate pairs [" << std::endl;
+
+    for (std::vector<NrIceCandidatePair>::iterator p = pairs.begin();
+         p != pairs.end(); ++p) {
+      std::cerr << std::endl;
+      DumpCandidate("Local", p->local);
+      DumpCandidate("Remote", p->remote);
+      std::cerr << "state = " << p->state
+                << " priority = " << p->priority
+                << " nominated = " << p->nominated
+                << " selected = " << p->selected << std::endl;
+    }
+    std::cerr << "]" << std::endl;
+  }
+
   void StreamReady(NrIceMediaStream *stream) {
     ++ready_ct_;
     std::cerr << "Stream ready " << stream->name() << " ct=" << ready_ct_ << std::endl;
+    DumpCandidatePairs(stream);
+  }
+
+  void StreamFailed(NrIceMediaStream *stream) {
+    std::cerr << "Stream failed " << stream->name() << " ct=" << ready_ct_ << std::endl;
+    DumpCandidatePairs(stream);
   }
 
   void IceCompleted(NrIceCtx *ctx) {
