@@ -15,9 +15,10 @@ namespace mozilla {
 namespace safebrowsing {
 
 /**
- * Store the chunks as an array of uint32_t.
- * XXX: We should optimize this further to compress the
- * many consecutive numbers.
+ * Store the chunk numbers as an array of uint32_t. We need chunk numbers in
+ * order to ask for incremental updates from the server.
+ * XXX: We should optimize this further to compress the many consecutive
+ * numbers.
  */
 class ChunkSet {
 public:

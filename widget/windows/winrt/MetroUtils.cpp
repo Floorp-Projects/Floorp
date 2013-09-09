@@ -21,6 +21,7 @@
 #include "nsIURI.h"
 #include "prlog.h"
 #include "nsIObserverService.h"
+#include "nsRect.h"
 
 #include <wrl/wrappers/corewrappers.h>
 #include <windows.ui.applicationsettings.h>

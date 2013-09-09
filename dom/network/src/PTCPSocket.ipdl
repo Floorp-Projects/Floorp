@@ -37,7 +37,6 @@ protocol PTCPSocket
 parent:
   Open(nsString host, uint16_t port, bool useSSL, nsString binaryType);
   Data(SendableData data);
-  StartTLS();
   Suspend();
   Resume();
   Close();

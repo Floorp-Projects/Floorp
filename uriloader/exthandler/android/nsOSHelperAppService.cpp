@@ -43,7 +43,7 @@ nsresult
 nsOSHelperAppService::OSProtocolHandlerExists(const char* aScheme,
                                               bool* aExists)
 {
-    *aExists = mozilla::AndroidBridge::Bridge()->GetHandlersForURL(aScheme);    
+    *aExists = mozilla::AndroidBridge::Bridge()->GetHandlersForURL(NS_ConvertUTF8toUTF16(aScheme));    
     return NS_OK;
 }
 

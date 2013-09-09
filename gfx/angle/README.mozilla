@@ -1,64 +1,77 @@
 This is the ANGLE project, from http://code.google.com/p/angleproject/
 
-Current revision: r2042
-
+Current revision: f3fc6571dca9832876e09c63b0958d413737757b
+Date of revision: 2013-08-02
 
 == Applied local patches ==
 In this order:
   angle-build-stdcall-alias.patch:
     Fix an issue GCC has with linking to undecorated stdcalls.
-    
+
   angle-build-dedupe-debug-cpp-h.patch:
     Rename: "src/compiler/debug.{cpp,h}"
     To:     "src/compiler/compiler_debug.{cpp,h}"
     Repair includes accordingly.
-    
+
   angle-build-d3dcompiler-list.patch:
     Move `ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES` define from make files to
-    Display.cpp, where it's used.
-    
+    Renderer.cpp, where it's used.
+
   angle-build-khrplatform-h-path.patch:
     Fix include path for khrplatform.h.
-  
-  angle-long-ident-spooky-hash.patch:
-    Use Spooky Hash for long identifier hashing. See bug 676071.
-  
+
+  angle-build-case-sensitive.patch
+    Fixes cross compilation on case sensitive OSes.
+
+  angle-build-dedupe-uniform-cpp-h.patch:
+    Rename: "src/compiler/Uniform.{cpp,h}"
+    To:     "src/compiler/CompilerUniform.{cpp,h}"
+    Repair includes accordingly.
+
+  angle-build-ttype.patch:
+    Remove bit-field markings for TType, since GCC4.7 emits a default
+    copy constructor which fails to compile.
+
+  angle-long-ident-hash.patch:
+    Use MurmurHash3 for long identifier hashing. See bug 676071, where we used
+    Spooky Hash, before ANGLE came with MurmurHash3.
+
   angle-faceforward-emu.patch:
     Adds emulation for faceforward(float,float,float), which is needed to
     prevent crashing on Mac+Intel. See bug 771406.
-  
+
   angle-default-clamp-strat.patch:
     Fixes TCompiler::Init to treat `resources.ArrayIndexClampingStrategy`
     as a request for the default strategy.
 
-  angle-cross-compilation.patch
-    Fixes cross compilation on case sensitive OSes.
+  angle-tex-pool-default.patch:
+    Don't use D3DPOOL_MANAGED on D3D9. Just use D3DPOOL_DEFAULT.
 
-  angle-line-loop-overflow.patch
-    Fixes a forgotten overflow check on drawing line loop
-    ANGLE bug : http://code.google.com/p/angleproject/issues/detail?id=444
-    ANGLE revision : 07dda9519cf4
-
-In addition to these patches, the Makefile.in files are ours, they're not present in
-upsteam ANGLE. Therefore, changes made to the Makefile.in files should not be stored
-in the local .patch files.
+In addition to these patches, the Makefile.in and moz.build build files are ours,
+they're not present in upsteam ANGLE. Therefore, changes made to the build files
+should not be stored in the local .patch files.
 
 
 == How to do a clean-slate upgrade ==
 1.  Backup our moz-specific files:
       README.mozilla
       Makefile.in
+      moz.build
       *.patch
       src/libEGL/Makefile.in
+      src/libEGL/moz.build
       src/libGLESv2/Makefile.in
+      src/libGLESv2/moz.build
 
 2.  $ rm -rf gfx/angle
 
 3.  Copy the folder containing the angle rev you want onto gfx/angle.
-    $ svn export -r <rev> <src> <moz-central>/gfx/angle 
+    $ svn export -r <rev> <src> <moz-central>/gfx/angle
+    Or:
+    $ git checkout-index --prefix <moz-central>/gfx/angle/ -a
 
 4.  Fold our moz-specific files into this new angle folder. (Makefiles, README)
-4a. Remove the unused directories. (test/, samples/, etc)
+4a. Remove the unused files. (test/, samples/, msvc files)
 
 5.  Clear out the "Applied Local Patches" section above, since we're going to
     repopulate it.

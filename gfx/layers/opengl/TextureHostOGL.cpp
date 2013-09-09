@@ -24,6 +24,7 @@
 #include "mozilla/layers/GrallocTextureHost.h"
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsRegion.h"                   // for nsIntRegion
+#include "GfxTexturesReporter.h"        // for GfxTexturesReporter
 #ifdef XP_MACOSX
 #include "SharedSurfaceIO.h"
 #endif
@@ -639,11 +640,8 @@ SurfaceStreamHostOGL::UpdateImpl(const SurfaceDescriptor& aImage,
   const SurfaceStreamDescriptor& streamDesc =
       aImage.get_SurfaceStreamDescriptor();
 
-  SurfaceStream *stream = SurfaceStream::FromHandle(streamDesc.handle());
-  if (stream == mStream) {
-    return;
-  }
-  mStream = stream;
+
+  mStream = SurfaceStream::FromHandle(streamDesc.handle());
   MOZ_ASSERT(mStream);
   mStreamGL = dont_AddRef(mStream->GLContext());
 }

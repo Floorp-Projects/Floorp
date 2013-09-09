@@ -793,8 +793,9 @@ NS_FillArray(FallibleTArray<char>& aDest, nsIInputStream *aInput,
     *aNewBytes = 0;
   }
   // NOTE: we rely on the fact that the new slots are NOT initialized by
-  // SetLength here, see nsTArrayElementTraits::Construct() in nsTArray.h:
-  aDest.SetLength(aKeep + *aNewBytes);
+  // SetLengthAndRetainStorage here, see nsTArrayElementTraits::Construct()
+  // in nsTArray.h:
+  aDest.SetLengthAndRetainStorage(aKeep + *aNewBytes);
 
   MOZ_ASSERT(aDest.Length() <= aDest.Capacity(), "buffer overflow");
   return rv;

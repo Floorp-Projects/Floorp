@@ -7,5 +7,6 @@ MOCHITEST_CHROME_FILES = \
 		test_connection_store.html \
 		test_device_store.html \
 		test_projects_store.html \
+		test_remain_connected.html \
 		hosted_app.manifest \
 		$(NULL)

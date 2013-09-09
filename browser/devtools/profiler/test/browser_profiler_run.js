@@ -40,6 +40,7 @@ function startRecording() {
     let item = gPanel.sidebar.getItemByProfile(gPanel.recordingProfile);
     is(item.attachment.name, "Profile 1");
     is(item.attachment.state, PROFILE_RUNNING);
+    is(record.getAttribute("tooltiptext"), "Stop profiling");
 
     gPanel.controller.isActive(function (err, isActive) {
       ok(isActive, "Profiler is running");
@@ -53,10 +54,12 @@ function startRecording() {
 
 function stopRecording() {
   let deferred = promise.defer();
+  let record = gPanel.controls.record;
 
   gPanel.once("parsed", () => {
     let item = gPanel.sidebar.getItemByProfile(gPanel.activeProfile);
     is(item.attachment.state, PROFILE_COMPLETED);
+    is(record.getAttribute("tooltiptext"), "Start profiling");
 
     function assertSample() {
       let [ win, doc ] = getProfileInternals();
@@ -91,6 +94,7 @@ function startRecordingAgain() {
     let item = gPanel.sidebar.getItemByProfile(gPanel.recordingProfile);
     is(item.attachment.name, "Profile 2");
     is(item.attachment.state, PROFILE_RUNNING);
+    is(record.getAttribute("tooltiptext"), "Stop profiling");
 
     deferred.resolve();
   });

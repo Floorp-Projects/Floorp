@@ -15,6 +15,7 @@ let Cr = Components.results;
  */
 
 var APZCObserver = {
+  _debugEvents: false,
   init: function() {
     this._enabled = Services.prefs.getBoolPref(kAsyncPanZoomEnabled);
     if (!this._enabled) {
@@ -95,25 +96,23 @@ var APZCObserver = {
         id: scrollId
       });
 
-      Util.dumpLn("APZC scrollId: " + scrollId);
-      Util.dumpLn("APZC scrollTo.x: " + scrollTo.x + ", scrollTo.y: " + scrollTo.y);
-      Util.dumpLn("APZC setResolution: " + resolution);
-      Util.dumpLn("APZC setDisplayPortForElement: displayPort.x: " +
-                  displayPort.x + ", displayPort.y: " + displayPort.y +
-                  ", displayPort.width: " + displayPort.width +
-                  ", displayort.height: " + displayPort.height);
+      if (this._debugEvents) {
+        Util.dumpLn("APZC scrollId: " + scrollId);
+        Util.dumpLn("APZC scrollTo.x: " + scrollTo.x + ", scrollTo.y: " + scrollTo.y);
+        Util.dumpLn("APZC setResolution: " + resolution);
+        Util.dumpLn("APZC setDisplayPortForElement: displayPort.x: " +
+                    displayPort.x + ", displayPort.y: " + displayPort.y +
+                    ", displayPort.width: " + displayPort.width +
+                    ", displayort.height: " + displayPort.height);
+      }
     } else if (aTopic == "apzc-handle-pan-begin") {
       // When we're panning, hide the main scrollbars by setting imprecise
       // input (which sets a property on the browser which hides the scrollbar
       // via CSS).  This reduces jittering from left to right. We may be able
       // to get rid of this once we implement axis locking in /gfx APZC.
-      Util.dumpLn("APZC pan-begin");
       if (InputSourceHelper.isPrecise) {
         InputSourceHelper._imprecise();
       }
-
-    } else if (aTopic == "apzc-handle-pan-end") {
-      Util.dumpLn("APZC pan-end");
     }
   },
 

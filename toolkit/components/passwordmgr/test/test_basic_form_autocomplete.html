@@ -21,8 +21,8 @@ ok(pwmgr != null, "nsLoginManager service");
 
 // Create some logins just for this form, since we'll be deleting them.
 var nsLoginInfo =
-SpecialPowers.wrap(Components).Constructor("@mozilla.org/login-manager/loginInfo;1",
-                          Components.interfaces.nsILoginInfo, "init");
+SpecialPowers.wrap(SpecialPowers.Components).Constructor("@mozilla.org/login-manager/loginInfo;1",
+                          SpecialPowers.Ci.nsILoginInfo, "init");
 ok(nsLoginInfo != null, "nsLoginInfo constructor");
 
 
@@ -167,7 +167,7 @@ try {
 
 var uname = $_(1, "uname");
 var pword = $_(1, "pword");
-const shiftModifier = Components.interfaces.nsIDOMEvent.SHIFT_MASK;
+const shiftModifier = SpecialPowers.Ci.nsIDOMEvent.SHIFT_MASK;
 
 // Restore the form to the default state.
 function restoreForm() {
@@ -410,20 +410,12 @@ function runTest(testNum) {
         gNextTestWillOpenPopup = false;
         break;
 
-    /* The previous comments said that test 14 was special and needed to not
-     * have enablePrivilege, or else dispatchEvent will send a trusted event
-     * (we're testing to see if we ignore untrusted events, so don't want
-     * that).
-     * We should file a bug to look into this.
-     */
     case 14:
-    /*
         // Send a fake (untrusted) event.
         checkACForm("", "");
         uname.value = "zzzuser4";
         sendFakeAutocompleteEvent(uname);
         checkACForm("zzzuser4", "");
-    */
         gNextTestWillOpenPopup = true;
         break;
 
@@ -799,7 +791,7 @@ function getMenuEntries() {
 }
 
 function startTest() {
-    var Ci = Components.interfaces;
+    var Ci = SpecialPowers.Ci;
     chromeWin = SpecialPowers.wrap(window)
                     .QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIWebNavigation)

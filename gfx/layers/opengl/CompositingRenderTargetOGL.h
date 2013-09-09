@@ -6,7 +6,6 @@
 #ifndef MOZILLA_GFX_COMPOSITINGRENDERTARGETOGL_H
 #define MOZILLA_GFX_COMPOSITINGRENDERTARGETOGL_H
 
-#include "mozilla-config.h"             // for MOZ_DUMP_PAINTING
 #include "GLContextTypes.h"             // for GLContext
 #include "GLDefs.h"                     // for GLenum, LOCAL_GL_FRAMEBUFFER, etc
 #include "gfxMatrix.h"                  // for gfxMatrix

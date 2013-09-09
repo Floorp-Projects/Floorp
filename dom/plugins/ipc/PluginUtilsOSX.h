@@ -8,8 +8,9 @@
 #define dom_plugins_PluginUtilsOSX_h 1
 
 #include "npapi.h"
-#include "nsRect.h"
 #include "mozilla/gfx/QuartzSupport.h"
+
+struct nsIntRect;
 
 namespace mozilla {
 namespace plugins {

@@ -17,6 +17,7 @@ const PAYMENT_IPC_MSG_NAMES = ["Payment:Pay",
 
 const PREF_PAYMENTPROVIDERS_BRANCH = "dom.payment.provider.";
 const PREF_PAYMENT_BRANCH = "dom.payment.";
+const PREF_DEBUG = "dom.payment.debug";
 
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
@@ -25,10 +26,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
 XPCOMUtils.defineLazyServiceGetter(this, "prefService",
                                    "@mozilla.org/preferences-service;1",
                                    "nsIPrefService");
-
-function debug (s) {
-  //dump("-*- PaymentManager: " + s + "\n");
-};
 
 let PaymentManager =  {
   init: function init() {
@@ -53,6 +50,14 @@ let PaymentManager =  {
     }
 
     Services.obs.addObserver(this, "xpcom-shutdown", false);
+
+    try {
+      this._debug =
+        Services.prefs.getPrefType(PREF_DEBUG) == Ci.nsIPrefBranch.PREF_BOOL
+        && Services.prefs.getBoolPref(PREF_DEBUG);
+    } catch(e) {
+      this._debug = false;
+    }
   },
 
   /**
@@ -61,7 +66,9 @@ let PaymentManager =  {
   receiveMessage: function receiveMessage(aMessage) {
     let name = aMessage.name;
     let msg = aMessage.json;
-    debug("Received '" + name + "' message from content process");
+    if (this._debug) {
+      this.LOG("Received '" + name + "' message from content process");
+    }
 
     switch (name) {
       case "Payment:Pay": {
@@ -112,7 +119,9 @@ let PaymentManager =  {
         let glue = Cc["@mozilla.org/payment/ui-glue;1"]
                    .createInstance(Ci.nsIPaymentUIGlue);
         if (!glue) {
-          debug("Could not create nsIPaymentUIGlue instance");
+          if (this._debug) {
+            this.LOG("Could not create nsIPaymentUIGlue instance");
+          }
           this.paymentFailed(requestId,
                              "INTERNAL_ERROR_CREATE_PAYMENT_GLUE_FAILED");
           return;
@@ -123,8 +132,10 @@ let PaymentManager =  {
           // Get the appropriate payment provider data based on user's choice.
           let selectedProvider = this.registeredProviders[aResult];
           if (!selectedProvider || !selectedProvider.uri) {
-            debug("Could not retrieve a valid provider based on user's " +
-                  "selection");
+            if (this._debug) {
+              this.LOG("Could not retrieve a valid provider based on user's " +
+                        "selection");
+            }
             this.paymentFailed(aRequestId,
                                "INTERNAL_ERROR_NO_VALID_SELECTED_PROVIDER");
             return;
@@ -138,7 +149,10 @@ let PaymentManager =  {
             }
           }
           if (!jwt) {
-            debug("The selected request has no JWT information associated");
+            if (this._debug) {
+              this.LOG("The selected request has no JWT information " +
+                        "associated");
+            }
             this.paymentFailed(aRequestId,
                                "INTERNAL_ERROR_NO_JWT_ASSOCIATED_TO_REQUEST");
             return;
@@ -206,10 +220,14 @@ let PaymentManager =  {
           description: branch.getCharPref("description"),
           requestMethod: branch.getCharPref("requestMethod")
         };
-        debug("Registered Payment Providers: " +
-              JSON.stringify(this.registeredProviders[type]));
+        if (this._debug) {
+          this.LOG("Registered Payment Providers: " +
+                    JSON.stringify(this.registeredProviders[type]));
+        }
       } catch (ex) {
-        debug("An error ocurred registering a payment provider. " + ex);
+        if (this._debug) {
+          this.LOG("An error ocurred registering a payment provider. " + ex);
+        }
       }
     }
   },
@@ -242,8 +260,10 @@ let PaymentManager =  {
     // payload and signature.
     let segments = aJwt.split('.');
     if (segments.length !== 3) {
-      debug("Error getting payment provider's uri. " +
-            "Not enough or too many segments");
+      if (this._debug) {
+        this.LOG("Error getting payment provider's uri. " +
+                  "Not enough or too many segments");
+      }
       this.paymentFailed(aRequestId,
                          "PAY_REQUEST_ERROR_WRONG_SEGMENTS_COUNT");
       return true;
@@ -258,7 +278,9 @@ let PaymentManager =  {
       // with RFC 4648.
       segments[1] = segments[1].replace("-", "+", "g").replace("_", "/", "g");
       let payload = atob(segments[1]);
-      debug("Payload " + payload);
+      if (this._debug) {
+        this.LOG("Payload " + payload);
+      }
       if (!payload.length) {
         this.paymentFailed(aRequestId, "PAY_REQUEST_ERROR_EMPTY_PAYLOAD");
         return true;
@@ -295,8 +317,10 @@ let PaymentManager =  {
     // devices with a different set of allowed payment providers.
     let provider = this.registeredProviders[payloadObject.typ];
     if (!provider) {
-      debug("Not registered payment provider for jwt type: " +
-            payloadObject.typ);
+      if (this._debug) {
+        this.LOG("Not registered payment provider for jwt type: " +
+                  payloadObject.typ);
+      }
       return false;
     }
 
@@ -309,7 +333,9 @@ let PaymentManager =  {
     // We only allow https for payment providers uris.
     if (this.checkHttps && !/^https/.exec(provider.uri.toLowerCase())) {
       // We should never get this far.
-      debug("Payment provider uris must be https: " + provider.uri);
+      if (this._debug) {
+        this.LOG("Payment provider uris must be https: " + provider.uri);
+      }
       this.paymentFailed(aRequestId,
                          "INTERNAL_ERROR_NON_HTTPS_PROVIDER_URI");
       return true;
@@ -341,7 +367,9 @@ let PaymentManager =  {
     let glue = Cc["@mozilla.org/payment/ui-glue;1"]
                .createInstance(Ci.nsIPaymentUIGlue);
     if (!glue) {
-      debug("Could not create nsIPaymentUIGlue instance");
+      if (this._debug) {
+        this.LOG("Could not create nsIPaymentUIGlue instance");
+      }
       this.paymentFailed(aRequestId,
                          "INTERNAL_ERROR_CREATE_PAYMENT_GLUE_FAILED");
       return false;
@@ -364,6 +392,13 @@ let PaymentManager =  {
       Services.obs.removeObserver(this, "xpcom-shutdown");
     }
   },
+
+  LOG: function LOG(s) {
+    if (!this._debug) {
+      return;
+    }
+    dump("-*- PaymentManager: " + s + "\n");
+  }
 };
 
 PaymentManager.init();

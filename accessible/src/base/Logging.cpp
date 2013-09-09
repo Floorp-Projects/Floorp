@@ -21,6 +21,7 @@
 #include "nsIWebProgress.h"
 #include "prenv.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIURI.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

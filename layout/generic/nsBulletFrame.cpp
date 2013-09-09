@@ -20,6 +20,7 @@
 
 #include "imgIContainer.h"
 #include "imgRequestProxy.h"
+#include "nsIURI.h"
 
 #include <algorithm>
 

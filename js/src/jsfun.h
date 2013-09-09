@@ -204,10 +204,16 @@ class JSFunction : public JSObject
 
     JSAtom *atom() const { return hasGuessedAtom() ? NULL : atom_.get(); }
     js::PropertyName *name() const { return hasGuessedAtom() || !atom_ ? NULL : atom_->asPropertyName(); }
-    inline void initAtom(JSAtom *atom);
+    void initAtom(JSAtom *atom) { atom_.init(atom); }
     JSAtom *displayAtom() const { return atom_; }
 
-    inline void setGuessedAtom(JSAtom *atom);
+    void setGuessedAtom(JSAtom *atom) {
+        JS_ASSERT(atom_ == NULL);
+        JS_ASSERT(atom != NULL);
+        JS_ASSERT(!hasGuessedAtom());
+        atom_ = atom;
+        flags |= HAS_GUESSED_ATOM;
+    }
 
     /* uint16_t representation bounds number of call object dynamic slots. */
     enum { MAX_ARGS_AND_VARS = 2 * ((1U << 16) - 1) };
@@ -220,8 +226,16 @@ class JSFunction : public JSObject
         JS_ASSERT(isInterpreted());
         return u.i.env_;
     }
-    inline void setEnvironment(JSObject *obj);
-    inline void initEnvironment(JSObject *obj);
+
+    void setEnvironment(JSObject *obj) {
+        JS_ASSERT(isInterpreted());
+        *(js::HeapPtrObject *)&u.i.env_ = obj;
+    }
+
+    void initEnvironment(JSObject *obj) {
+        JS_ASSERT(isInterpreted());
+        ((js::HeapPtrObject *)&u.i.env_)->init(obj);
+    }
 
     static inline size_t offsetOfEnvironment() { return offsetof(JSFunction, u.i.env_); }
     static inline size_t offsetOfAtom() { return offsetof(JSFunction, atom_); }
@@ -304,6 +318,7 @@ class JSFunction : public JSObject
 
     inline void setScript(JSScript *script_);
     inline void initScript(JSScript *script_);
+
     void initLazyScript(js::LazyScript *lazy) {
         JS_ASSERT(isInterpreted());
         flags &= ~INTERPRETED;
@@ -366,7 +381,13 @@ class JSFunction : public JSObject
     inline bool initBoundFunction(JSContext *cx, js::HandleValue thisArg,
                                   const js::Value *args, unsigned argslen);
 
-    inline JSObject *getBoundFunctionTarget() const;
+    JSObject *getBoundFunctionTarget() const {
+        JS_ASSERT(isBoundFunction());
+
+        /* Bound functions abuse |parent| to store their target function. */
+        return getParent();
+    }
+
     inline const js::Value &getBoundFunctionThis() const;
     inline const js::Value &getBoundFunctionArgument(unsigned which) const;
     inline size_t getBoundFunctionArgumentCount() const;
@@ -487,6 +508,30 @@ JSFunction::toExtended() const
 {
     JS_ASSERT(isExtended());
     return static_cast<const js::FunctionExtended *>(this);
+}
+
+inline void
+JSFunction::initializeExtended()
+{
+    JS_ASSERT(isExtended());
+
+    JS_ASSERT(mozilla::ArrayLength(toExtended()->extendedSlots) == 2);
+    toExtended()->extendedSlots[0].init(js::UndefinedValue());
+    toExtended()->extendedSlots[1].init(js::UndefinedValue());
+}
+
+inline void
+JSFunction::initExtendedSlot(size_t which, const js::Value &val)
+{
+    JS_ASSERT(which < mozilla::ArrayLength(toExtended()->extendedSlots));
+    toExtended()->extendedSlots[which].init(val);
+}
+
+inline void
+JSFunction::setExtendedSlot(size_t which, const js::Value &val)
+{
+    JS_ASSERT(which < mozilla::ArrayLength(toExtended()->extendedSlots));
+    toExtended()->extendedSlots[which] = val;
 }
 
 inline const js::Value &

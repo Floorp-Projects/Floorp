@@ -7,9 +7,10 @@
 #define AndroidDirectTexture_h_
 
 #include "gfxASurface.h"
-#include "nsRect.h"
 #include "mozilla/Mutex.h"
 #include "AndroidGraphicBuffer.h"
+
+struct nsIntRect;
 
 namespace mozilla {
 

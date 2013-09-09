@@ -6,7 +6,6 @@
 #ifndef MOZILLA_GFX_COMPOSITOR_H
 #define MOZILLA_GFX_COMPOSITOR_H
 
-#include "mozilla-config.h"             // for MOZ_DUMP_PAINTING
 #include "Units.h"                      // for ScreenPoint
 #include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc

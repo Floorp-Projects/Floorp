@@ -7,6 +7,9 @@ package org.mozilla.gecko;
 
 import android.os.SystemClock;
 import android.util.Log;
+
+import org.mozilla.gecko.mozglue.GeneratableAndroidBridgeTarget;
+
 import java.lang.Thread;
 import java.util.HashMap;
 import java.util.Map;
@@ -122,6 +125,8 @@ public class GeckoJavaSampler {
         }
     }
 
+
+    @GeneratableAndroidBridgeTarget(allowMultithread = true, stubName = "GetThreadNameJavaProfilingWrapper")
     public synchronized static String getThreadName(int aThreadId) {
         if (aThreadId == 0 && sMainThread != null) {
             return sMainThread.getName();
@@ -133,6 +138,7 @@ public class GeckoJavaSampler {
         return sSamplingRunnable.getSample(aThreadId, aSampleId);
     }
 
+    @GeneratableAndroidBridgeTarget(allowMultithread = true, stubName = "GetSampleTimeJavaProfiling")
     public synchronized static double getSampleTime(int aThreadId, int aSampleId) {
         Sample sample = getSample(aThreadId, aSampleId);
         if (sample != null) {
@@ -145,6 +151,8 @@ public class GeckoJavaSampler {
         }
         return 0;
     }
+
+    @GeneratableAndroidBridgeTarget(allowMultithread = true, stubName = "GetFrameNameJavaProfilingWrapper")
     public synchronized static String getFrameName(int aThreadId, int aSampleId, int aFrameId) {
         Sample sample = getSample(aThreadId, aSampleId);
         if (sample != null && aFrameId < sample.mFrames.length) {
@@ -157,6 +165,7 @@ public class GeckoJavaSampler {
         return null;
     }
 
+    @GeneratableAndroidBridgeTarget(allowMultithread = true, stubName = "StartJavaProfiling")
     public static void start(int aInterval, int aSamples) {
         synchronized (GeckoJavaSampler.class) {
             if (sSamplingRunnable != null) {
@@ -168,18 +177,21 @@ public class GeckoJavaSampler {
         }
     }
 
+    @GeneratableAndroidBridgeTarget(allowMultithread = true, stubName = "PauseJavaProfiling")
     public static void pause() {
         synchronized (GeckoJavaSampler.class) {
             sSamplingRunnable.mPauseSampler = true;
         }
     }
 
+    @GeneratableAndroidBridgeTarget(allowMultithread = true, stubName = "UnpauseJavaProfiling")
     public static void unpause() {
         synchronized (GeckoJavaSampler.class) {
             sSamplingRunnable.mPauseSampler = false;
         }
     }
 
+    @GeneratableAndroidBridgeTarget(allowMultithread = true, stubName = "StopJavaProfiling")
     public static void stop() {
         synchronized (GeckoJavaSampler.class) {
             if (sSamplingThread == null) {

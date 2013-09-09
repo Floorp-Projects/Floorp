@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "GLContext.h"
 
@@ -15,12 +16,13 @@
 #include "gfxUtils.h"
 #include "GLContextProvider.h"
 #include "GLTextureImage.h"
-#include "nsIMemoryReporter.h"
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
 #include "prenv.h"
 #include "prlink.h"
 #include "SurfaceStream.h"
+#include "GfxTexturesReporter.h"
+#include "TextureGarbageBin.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
@@ -113,21 +115,6 @@ static const char *sExtensionNames[] = {
     "GL_NV_transform_feedback",
     nullptr
 };
-
-int64_t GfxTexturesReporter::sAmount = 0;
-
-/* static */ void
-GfxTexturesReporter::UpdateAmount(MemoryUse action, GLenum format,
-                                  GLenum type, uint16_t tileSize)
-{
-    uint32_t bytesPerTexel = mozilla::gl::GetBitsPerTexel(format, type) / 8;
-    int64_t bytes = (int64_t)(tileSize * tileSize * bytesPerTexel);
-    if (action == MemoryFreed) {
-        sAmount -= bytes;
-    } else {
-        sAmount += bytes;
-    }
-}
 
 static bool
 ParseGLVersion(GLContext* gl, unsigned int* version)
@@ -245,6 +232,62 @@ ParseGLVersion(GLContext* gl, unsigned int* version)
 
     *version = (unsigned int)(majorVersion * 100 + minorVersion * 10);
     return true;
+}
+
+GLContext::GLContext(const SurfaceCaps& caps,
+          GLContext* sharedContext,
+          bool isOffscreen)
+  : mInitialized(false),
+    mIsOffscreen(isOffscreen),
+    mIsGlobalSharedContext(false),
+    mContextLost(false),
+    mVersion(0),
+    mProfile(ContextProfile::Unknown),
+    mVendor(-1),
+    mRenderer(-1),
+    mHasRobustness(false),
+#ifdef DEBUG
+    mGLError(LOCAL_GL_NO_ERROR),
+#endif
+    mTexBlit_Buffer(0),
+    mTexBlit_VertShader(0),
+    mTex2DBlit_FragShader(0),
+    mTex2DRectBlit_FragShader(0),
+    mTex2DBlit_Program(0),
+    mTex2DRectBlit_Program(0),
+    mTexBlit_UseDrawNotCopy(false),
+    mSharedContext(sharedContext),
+    mFlipped(false),
+    mBlitProgram(0),
+    mBlitFramebuffer(0),
+    mCaps(caps),
+    mScreen(nullptr),
+    mLockedSurface(nullptr),
+    mMaxTextureSize(0),
+    mMaxCubeMapTextureSize(0),
+    mMaxTextureImageSize(0),
+    mMaxRenderbufferSize(0),
+    mNeedsTextureSizeChecks(false),
+    mWorkAroundDriverBugs(true)
+{
+    mOwningThread = NS_GetCurrentThread();
+
+    mTexBlit_UseDrawNotCopy = Preferences::GetBool("gl.blit-draw-not-copy", false);
+}
+
+GLContext::~GLContext() {
+    NS_ASSERTION(IsDestroyed(), "GLContext implementation must call MarkDestroyed in destructor!");
+#ifdef DEBUG
+    if (mSharedContext) {
+        GLContext *tip = mSharedContext;
+        while (tip->mSharedContext)
+            tip = tip->mSharedContext;
+        tip->SharedContextDestroyed(this);
+        tip->ReportOutstandingNames();
+    } else {
+        ReportOutstandingNames();
+    }
+#endif
 }
 
 bool
@@ -493,7 +536,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 "Adreno (TM) 320",
                 "PowerVR SGX 530",
                 "PowerVR SGX 540",
-                "NVIDIA Tegra"
+                "NVIDIA Tegra",
+                "Android Emulator"
         };
 
         mRenderer = RendererOther;
@@ -1041,6 +1085,14 @@ GLContext::InitExtensions()
 
         // Some Adreno drivers do not report GL_OES_EGL_sync, but they really do support it.
         MarkExtensionSupported(OES_EGL_sync);
+    }
+
+    if (WorkAroundDriverBugs() &&
+        Renderer() == RendererAndroidEmulator) {
+        // the Android emulator, which we use to run B2G reftests on,
+        // doesn't expose the OES_rgb8_rgba8 extension, but it seems to
+        // support it (tautologically, as it only runs on desktop GL).
+        MarkExtensionSupported(OES_rgb8_rgba8);
     }
 
 #ifdef DEBUG
@@ -3389,38 +3441,54 @@ GLContext::EmptyTexGarbageBin()
    TexGarbageBin()->EmptyGarbage();
 }
 
+bool
+GLContext::IsOffscreenSizeAllowed(const gfxIntSize& aSize) const {
+  int32_t biggerDimension = std::max(aSize.width, aSize.height);
+  int32_t maxAllowed = std::min(mMaxRenderbufferSize, mMaxTextureSize);
+  return biggerDimension <= maxAllowed;
+}
 
-void
-TextureGarbageBin::GLContextTeardown()
+bool
+GLContext::IsOwningThreadCurrent()
 {
-    EmptyGarbage();
-
-    MutexAutoLock lock(mMutex);
-    mGL = nullptr;
+  return NS_GetCurrentThread() == mOwningThread;
 }
 
 void
-TextureGarbageBin::Trash(GLuint tex)
+GLContext::DispatchToOwningThread(nsIRunnable *event)
 {
-    MutexAutoLock lock(mMutex);
-    if (!mGL)
-        return;
-
-    mGarbageTextures.push(tex);
-}
-
-void
-TextureGarbageBin::EmptyGarbage()
-{
-    MutexAutoLock lock(mMutex);
-    if (!mGL)
-        return;
-
-    while (!mGarbageTextures.empty()) {
-        GLuint tex = mGarbageTextures.top();
-        mGarbageTextures.pop();
-        mGL->fDeleteTextures(1, &tex);
+    // Before dispatching, we need to ensure we're not in the middle of
+    // shutting down. Dispatching runnables in the middle of shutdown
+    // (that is, when the main thread is no longer get-able) can cause them
+    // to leak. See Bug 741319, and Bug 744115.
+    nsCOMPtr<nsIThread> mainThread;
+    if (NS_SUCCEEDED(NS_GetMainThread(getter_AddRefs(mainThread)))) {
+        mOwningThread->Dispatch(event, NS_DISPATCH_NORMAL);
     }
+}
+
+bool
+DoesStringMatch(const char* aString, const char *aWantedString)
+{
+    if (!aString || !aWantedString)
+        return false;
+
+    const char *occurrence = strstr(aString, aWantedString);
+
+    // aWanted not found
+    if (!occurrence)
+        return false;
+
+    // aWantedString preceded by alpha character
+    if (occurrence != aString && isalpha(*(occurrence-1)))
+        return false;
+
+    // aWantedVendor followed by alpha character
+    const char *afterOccurrence = occurrence + strlen(aWantedString);
+    if (isalpha(*afterOccurrence))
+        return false;
+
+    return true;
 }
 
 } /* namespace gl */

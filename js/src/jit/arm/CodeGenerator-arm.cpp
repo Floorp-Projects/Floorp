@@ -1831,18 +1831,19 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
 
     BufferOffset bo = masm.ma_BoundsCheck(ptrReg);
     if (isFloat) {
-        VFPRegister vd(ToFloatRegister(ins->output()));
+        FloatRegister dst = ToFloatRegister(ins->output());
+        masm.ma_vmov(NANReg, dst, Assembler::AboveOrEqual);
+        VFPRegister vd(dst);
         if (size == 32) {
-            masm.ma_vldr(vd.singleOverlay(), HeapReg, ptrReg, 0, Assembler::Zero);
-            masm.as_vcvt(vd, vd.singleOverlay(), false, Assembler::Zero);
+            masm.ma_vldr(vd.singleOverlay(), HeapReg, ptrReg, 0, Assembler::Below);
+            masm.as_vcvt(vd, vd.singleOverlay(), false, Assembler::Below);
         } else {
-            masm.ma_vldr(vd, HeapReg, ptrReg, 0, Assembler::Zero);
+            masm.ma_vldr(vd, HeapReg, ptrReg, 0, Assembler::Below);
         }
-        masm.ma_vmov(NANReg, ToFloatRegister(ins->output()), Assembler::NonZero);
     } else {
-        masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, ptrReg,
-                              ToRegister(ins->output()), Offset, Assembler::Zero);
-        masm.ma_mov(Imm32(0), ToRegister(ins->output()), NoSetCond, Assembler::NonZero);
+        Register d = ToRegister(ins->output());
+        masm.ma_mov(Imm32(0), d, NoSetCond, Assembler::AboveOrEqual);
+        masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, ptrReg, d, Offset, Assembler::Below);
     }
     return gen->noteHeapAccess(AsmJSHeapAccess(bo.getOffset()));
 }
@@ -1906,12 +1907,12 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
     if (isFloat) {
         VFPRegister vd(ToFloatRegister(ins->value()));
         if (size == 32)
-            masm.storeFloat(vd, HeapReg, ptrReg, Assembler::Zero);
+            masm.storeFloat(vd, HeapReg, ptrReg, Assembler::Below);
         else
-            masm.ma_vstr(vd, HeapReg, ptrReg, 0, Assembler::Zero);
+            masm.ma_vstr(vd, HeapReg, ptrReg, 0, Assembler::Below);
     } else {
         masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, ptrReg,
-                              ToRegister(ins->value()), Offset, Assembler::Zero);
+                              ToRegister(ins->value()), Offset, Assembler::Below);
     }
     return gen->noteHeapAccess(AsmJSHeapAccess(bo.getOffset()));
 }

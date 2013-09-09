@@ -6,10 +6,10 @@
 #include "gfxDrawable.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
-#include "mozilla/dom/SVGSVGElement.h"
 
 #include "ClippedImage.h"
 #include "Orientation.h"
+#include "SVGImageContext.h"
 
 using mozilla::layers::LayerManager;
 using mozilla::layers::ImageContainer;

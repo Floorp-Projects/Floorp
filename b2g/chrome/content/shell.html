@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+
+<html xmlns="http://www.w3.org/1999/xhtml "
+      id="shell"
+      windowtype="navigator:browser"
+#ifdef ANDROID
+      sizemode="fullscreen"
+#endif
+      style="background: black; overflow: hidden; width:100%; height:100%; padding: 0px !important"
+      onunload="shell.stop();">
+
+<head>
+  <script type="application/javascript;version=1.8"
+          src="chrome://browser/content/settings.js"> </script>
+  <script type="application/javascript;version=1.8"
+          src="chrome://browser/content/shell.js"> </script>
+
+#ifndef MOZ_WIDGET_GONK
+
+  <!-- this script handles the screen argument for desktop builds -->
+  <script type="application/javascript;version=1.8"
+          src="chrome://browser/content/screen.js"> </script>
+  <!-- this script handles the "runapp" argument for desktop builds -->
+  <script type="application/javascript;version=1.8"
+          src="chrome://browser/content/runapp.js"> </script>
+#endif
+</head>
+  <body id="container" style="margin: 0px; width:100%; height:100%;">
+#ifdef MOZ_WIDGET_COCOA
+    <!--
+     If the document is empty at startup, we don't display the window
+     at all on Mac OS...
+    -->
+    <h1 id="placeholder">wtf mac os!</h1>
+#endif
+    <!-- The html:iframe containing the UI is created here. -->
+  </body>
+</html>

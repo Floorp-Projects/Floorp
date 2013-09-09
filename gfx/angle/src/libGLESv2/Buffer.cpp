@@ -1,5 +1,6 @@
+#include "precompiled.h"
 //
-// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -10,19 +11,20 @@
 
 #include "libGLESv2/Buffer.h"
 
-#include "libGLESv2/main.h"
-#include "libGLESv2/VertexDataManager.h"
-#include "libGLESv2/IndexDataManager.h"
+#include "libGLESv2/renderer/VertexBuffer.h"
+#include "libGLESv2/renderer/IndexBuffer.h"
+#include "libGLESv2/renderer/BufferStorage.h"
+#include "libGLESv2/renderer/Renderer.h"
 
 namespace gl
 {
 
-Buffer::Buffer(GLuint id) : RefCountObject(id)
+Buffer::Buffer(rx::Renderer *renderer, GLuint id) : RefCountObject(id)
 {
-    mContents = NULL;
-    mSize = 0;
+    mRenderer = renderer;
     mUsage = GL_DYNAMIC_DRAW;
 
+    mBufferStorage = renderer->createBufferStorage();
     mStaticVertexBuffer = NULL;
     mStaticIndexBuffer = NULL;
     mUnmodifiedDataUse = 0;
@@ -30,47 +32,34 @@ Buffer::Buffer(GLuint id) : RefCountObject(id)
 
 Buffer::~Buffer()
 {
-    delete[] mContents;
+    delete mBufferStorage;
     delete mStaticVertexBuffer;
     delete mStaticIndexBuffer;
 }
 
 void Buffer::bufferData(const void *data, GLsizeiptr size, GLenum usage)
 {
-    if (size == 0)
-    {
-        delete[] mContents;
-        mContents = NULL;
-    }
-    else if (size != mSize)
-    {
-        delete[] mContents;
-        mContents = new GLubyte[size];
-        memset(mContents, 0, size);
-    }
+    mBufferStorage->clear();
+    mIndexRangeCache.clear();
+    mBufferStorage->setData(data, size, 0);
 
-    if (data != NULL && size > 0)
-    {
-        memcpy(mContents, data, size);
-    }
-
-    mSize = size;
     mUsage = usage;
 
     invalidateStaticData();
 
     if (usage == GL_STATIC_DRAW)
     {
-        mStaticVertexBuffer = new StaticVertexBuffer(getDevice());
-        mStaticIndexBuffer = new StaticIndexBuffer(getDevice());
+        mStaticVertexBuffer = new rx::StaticVertexBufferInterface(mRenderer);
+        mStaticIndexBuffer = new rx::StaticIndexBufferInterface(mRenderer);
     }
 }
 
 void Buffer::bufferSubData(const void *data, GLsizeiptr size, GLintptr offset)
 {
-    memcpy(mContents + offset, data, size);
-    
-    if ((mStaticVertexBuffer && mStaticVertexBuffer->size() != 0) || (mStaticIndexBuffer && mStaticIndexBuffer->size() != 0))
+    mBufferStorage->setData(data, size, offset);
+    mIndexRangeCache.invalidateRange(offset, size);
+
+    if ((mStaticVertexBuffer && mStaticVertexBuffer->getBufferSize() != 0) || (mStaticIndexBuffer && mStaticIndexBuffer->getBufferSize() != 0))
     {
         invalidateStaticData();
     }
@@ -78,12 +67,27 @@ void Buffer::bufferSubData(const void *data, GLsizeiptr size, GLintptr offset)
     mUnmodifiedDataUse = 0;
 }
 
-StaticVertexBuffer *Buffer::getStaticVertexBuffer()
+rx::BufferStorage *Buffer::getStorage() const
+{
+    return mBufferStorage;
+}
+
+unsigned int Buffer::size()
+{
+    return mBufferStorage->getSize();
+}
+
+GLenum Buffer::usage() const
+{
+    return mUsage;
+}
+
+rx::StaticVertexBufferInterface *Buffer::getStaticVertexBuffer()
 {
     return mStaticVertexBuffer;
 }
 
-StaticIndexBuffer *Buffer::getStaticIndexBuffer()
+rx::StaticIndexBufferInterface *Buffer::getStaticIndexBuffer()
 {
     return mStaticIndexBuffer;
 }
@@ -106,12 +110,17 @@ void Buffer::promoteStaticUsage(int dataSize)
     {
         mUnmodifiedDataUse += dataSize;
 
-        if (mUnmodifiedDataUse > 3 * mSize)
+        if (mUnmodifiedDataUse > 3 * mBufferStorage->getSize())
         {
-            mStaticVertexBuffer = new StaticVertexBuffer(getDevice());
-            mStaticIndexBuffer = new StaticIndexBuffer(getDevice());
+            mStaticVertexBuffer = new rx::StaticVertexBufferInterface(mRenderer);
+            mStaticIndexBuffer = new rx::StaticIndexBufferInterface(mRenderer);
         }
     }
+}
+
+rx::IndexRangeCache *Buffer::getIndexRangeCache()
+{
+    return &mIndexRangeCache;
 }
 
 }

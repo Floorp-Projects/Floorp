@@ -40,6 +40,7 @@
 #include "nsDOMClassInfoID.h"
 #include "mozilla/Likely.h"
 #include "mozilla/dom/CSSStyleSheetBinding.h"
+#include "nsComponentManagerUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

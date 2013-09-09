@@ -17,55 +17,32 @@
 
 OS_TLSIndex PoolIndex = OS_INVALID_TLS_INDEX;
 
-void InitializeGlobalPools()
-{
-    TThreadGlobalPools* globalPools= static_cast<TThreadGlobalPools*>(OS_GetTLSValue(PoolIndex));    
-    if (globalPools)
-        return;
-
-    TThreadGlobalPools* threadData = new TThreadGlobalPools();
-    threadData->globalPoolAllocator = 0;
-
-    OS_SetTLSValue(PoolIndex, threadData);
-}
-
-void FreeGlobalPools()
-{
-    // Release the allocated memory for this thread.
-    TThreadGlobalPools* globalPools= static_cast<TThreadGlobalPools*>(OS_GetTLSValue(PoolIndex));    
-    if (!globalPools)
-        return;
- 
-    delete globalPools;
-}
-
 bool InitializePoolIndex()
 {
-    // Allocate a TLS index.
-    if ((PoolIndex = OS_AllocTLSIndex()) == OS_INVALID_TLS_INDEX)
-        return false;
+    assert(PoolIndex == OS_INVALID_TLS_INDEX);
 
-    return true;
+    PoolIndex = OS_AllocTLSIndex();
+    return PoolIndex != OS_INVALID_TLS_INDEX;
 }
 
 void FreePoolIndex()
 {
-    // Release the TLS index.
+    assert(PoolIndex != OS_INVALID_TLS_INDEX);
+
     OS_FreeTLSIndex(PoolIndex);
+    PoolIndex = OS_INVALID_TLS_INDEX;
 }
 
-TPoolAllocator& GetGlobalPoolAllocator()
+TPoolAllocator* GetGlobalPoolAllocator()
 {
-    TThreadGlobalPools* threadData = static_cast<TThreadGlobalPools*>(OS_GetTLSValue(PoolIndex));
-
-    return *threadData->globalPoolAllocator;
+    assert(PoolIndex != OS_INVALID_TLS_INDEX);
+    return static_cast<TPoolAllocator*>(OS_GetTLSValue(PoolIndex));
 }
 
 void SetGlobalPoolAllocator(TPoolAllocator* poolAllocator)
 {
-    TThreadGlobalPools* threadData = static_cast<TThreadGlobalPools*>(OS_GetTLSValue(PoolIndex));
-
-    threadData->globalPoolAllocator = poolAllocator;
+    assert(PoolIndex != OS_INVALID_TLS_INDEX);
+    OS_SetTLSValue(PoolIndex, poolAllocator);
 }
 
 //
@@ -228,24 +205,27 @@ void TPoolAllocator::popAll()
 
 void* TPoolAllocator::allocate(size_t numBytes)
 {
-    // If we are using guard blocks, all allocations are bracketed by
-    // them: [guardblock][allocation][guardblock].  numBytes is how
-    // much memory the caller asked for.  allocationSize is the total
-    // size including guard blocks.  In release build,
-    // guardBlockSize=0 and this all gets optimized away.
-    size_t allocationSize = TAllocation::allocationSize(numBytes);
-    
     //
     // Just keep some interesting statistics.
     //
     ++numCalls;
     totalBytes += numBytes;
 
+    // If we are using guard blocks, all allocations are bracketed by
+    // them: [guardblock][allocation][guardblock].  numBytes is how
+    // much memory the caller asked for.  allocationSize is the total
+    // size including guard blocks.  In release build,
+    // guardBlockSize=0 and this all gets optimized away.
+    size_t allocationSize = TAllocation::allocationSize(numBytes);
+    // Detect integer overflow.
+    if (allocationSize < numBytes)
+        return 0;
+
     //
     // Do the allocation, most likely case first, for efficiency.
     // This step could be moved to be inline sometime.
     //
-    if (currentPageOffset + allocationSize <= pageSize) {
+    if (allocationSize <= pageSize - currentPageOffset) {
         //
         // Safe to allocate from currentPageOffset.
         //
@@ -256,12 +236,16 @@ void* TPoolAllocator::allocate(size_t numBytes)
         return initializeAllocation(inUseList, memory, numBytes);
     }
 
-    if (allocationSize + headerSkip > pageSize) {
+    if (allocationSize > pageSize - headerSkip) {
         //
         // Do a multi-page allocation.  Don't mix these with the others.
         // The OS is efficient and allocating and free-ing multiple pages.
         //
         size_t numBytesToAlloc = allocationSize + headerSkip;
+        // Detect integer overflow.
+        if (numBytesToAlloc < allocationSize)
+            return 0;
+
         tHeader* memory = reinterpret_cast<tHeader*>(::new char[numBytesToAlloc]);
         if (memory == 0)
             return 0;

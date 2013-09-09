@@ -27,8 +27,7 @@
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
 
-  // Remove all the real reporters and multi-reporters;  save them to
-  // restore at the end.
+  // Remove all the real reporters;  save them to restore at the end.
   mgr.blockRegistration();
   let e = mgr.enumerateReporters();
   let realReporters = [];
@@ -36,13 +35,6 @@
     let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
     mgr.unregisterReporter(r);
     realReporters.push(r);
-  }
-  e = mgr.enumerateMultiReporters();
-  let realMultiReporters = [];
-  while (e.hasMoreElements()) {
-    let r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
-    mgr.unregisterMultiReporter(r);
-    realMultiReporters.push(r);
   }
 
   // Setup various fake-but-deterministic reporters.
@@ -57,71 +49,60 @@
   const COUNT_CUMULATIVE = Ci.nsIMemoryReporter.UNITS_COUNT_CUMULATIVE;
   const PERCENTAGE = Ci.nsIMemoryReporter.UNITS_PERCENTAGE;
 
-  function f2(aProcess, aPath, aKind, aUnits, aAmount) {
-    return {
-      process:     aProcess,
-      path:        aPath,
-      kind:        aKind,
-      units:       aUnits,
-      description: "Desc.",
-      amount:      aAmount 
-    };
-  }
-
-  function f(aProcess, aPath, aKind, aAmount) {
-    return f2(aProcess, aPath, aKind, BYTES, aAmount);
-  }
-
   let fakeReporters = [
-    f("", "heap-allocated",     OTHER,   500 * MB),
-    f("", "heap-unallocated",   OTHER,   100 * MB),
-    f("", "explicit/a",         HEAP,    222 * MB),
-    f("", "explicit/b/a",       HEAP,     85 * MB),
-    f("", "explicit/b/b",       HEAP,     75 * MB),
-    f("", "explicit/b/c/a",     HEAP,     70 * MB),
-    f("", "explicit/b/c/b",     HEAP,      2 * MB), // omitted
-    f("", "explicit/g/a",       HEAP,      6 * MB),
-    f("", "explicit/g/b",       HEAP,      5 * MB),
-    f("", "explicit/g/other",   HEAP,      4 * MB),
-    // A degenerate tree with the same name as a non-degenerate tree should
-    // work ok.
-    f("", "explicit",           OTHER,   888 * MB),
-    f("", "other1/a/b",         OTHER,   111 * MB),
-    f("", "other1/c/d",         OTHER,    22 * MB),
-    f("", "other1/c/e",         OTHER,    33 * MB),
-    f2("", "other4",            OTHER,   COUNT_CUMULATIVE, 777),
-    f2("", "other4",            OTHER,   COUNT_CUMULATIVE, 111),
-    f2("", "other3/a/b/c/d/e",  OTHER,   PERCENTAGE, 2000),
-    f2("", "other3/a/b/c/d/f",  OTHER,   PERCENTAGE, 10),
-    f2("", "other3/a/b/c/d/g",  OTHER,   PERCENTAGE, 5),
-    f2("", "other3/a/b/c/d/g",  OTHER,   PERCENTAGE, 5),
-    // Check that a rounded-up-to-100.00% value is shown as "100.0%" (i.e. one
-    // decimal point).
-    f2("", "other6/big",        OTHER,   COUNT, 99999),
-    f2("", "other6/small",      OTHER,   COUNT, 1),
-    // Check that a 0 / 0 is handled correctly.
-    f("", "other7/zero",        OTHER,   0),
-    // These compartments ones shouldn't be displayed.
-    f2("", "compartments/user/foo",   OTHER, COUNT, 1),
-    f2("", "compartments/system/foo", OTHER, COUNT, 1)
-  ];
-  let fakeMultiReporters = [
+    { name: "fake0",
+      collectReports: function(aCbObj, aClosure) {
+        function f(aP, aK, aU, aA) {
+          aCbObj.callback("", aP, aK, aU, aA, "Desc.", aClosure);
+        }
+        f("heap-allocated",     OTHER,   BYTES, 500 * MB);
+        f("heap-unallocated",   OTHER,   BYTES, 100 * MB);
+        f("explicit/a",         HEAP,    BYTES, 222 * MB);
+        f("explicit/b/a",       HEAP,    BYTES,  85 * MB);
+        f("explicit/b/b",       HEAP,    BYTES,  75 * MB);
+        f("explicit/b/c/a",     HEAP,    BYTES,  70 * MB);
+        f("explicit/b/c/b",     HEAP,    BYTES,   2 * MB); // omitted
+        f("explicit/g/a",       HEAP,    BYTES,   6 * MB);
+        f("explicit/g/b",       HEAP,    BYTES,   5 * MB);
+        f("explicit/g/other",   HEAP,    BYTES,   4 * MB);
+        // A degenerate tree with the same name as a non-degenerate tree should
+        // work ok.
+        f("explicit",           OTHER,   BYTES, 888 * MB);
+        f("other1/a/b",         OTHER,   BYTES, 111 * MB);
+        f("other1/c/d",         OTHER,   BYTES,  22 * MB);
+        f("other1/c/e",         OTHER,   BYTES,  33 * MB);
+        f("other4",             OTHER,   COUNT_CUMULATIVE, 777);
+        f("other4",             OTHER,   COUNT_CUMULATIVE, 111);
+        f("other3/a/b/c/d/e",   OTHER,   PERCENTAGE, 2000);
+        f("other3/a/b/c/d/f",   OTHER,   PERCENTAGE, 10);
+        f("other3/a/b/c/d/g",   OTHER,   PERCENTAGE, 5);
+        f("other3/a/b/c/d/g",   OTHER,   PERCENTAGE, 5);
+        // Check that a rounded-up-to-100.00% value is shown as "100.0%" (i.e. one
+        // decimal point).
+        f("other6/big",         OTHER,   COUNT, 99999);
+        f("other6/small",       OTHER,   COUNT, 1);
+        // Check that a 0 / 0 is handled correctly.
+        f("other7/zero",        OTHER,   BYTES, 0);
+        // These compartments ones shouldn't be displayed.
+        f("compartments/user/foo",   OTHER, COUNT, 1);
+        f("compartments/system/foo", OTHER, COUNT, 1);
+      }
+    },
     { name: "fake1",
       collectReports: function(aCbObj, aClosure) {
         function f(aP, aK, aU, aA) {
           aCbObj.callback("", aP, aK, aU, aA, "Desc.", aClosure);
         }
-        f("explicit/c/d",     NONHEAP, BYTES,  13 * MB),
-        f("explicit/c/d",     NONHEAP, BYTES,  10 * MB), // dup
-        f("explicit/c/other", NONHEAP, BYTES,  77 * MB),
+        f("explicit/c/d",     NONHEAP, BYTES,  13 * MB);
+        f("explicit/c/d",     NONHEAP, BYTES,  10 * MB); // dup
+        f("explicit/c/other", NONHEAP, BYTES,  77 * MB);
         f("explicit/cc",      NONHEAP, BYTES,  13 * MB);
         f("explicit/cc",      NONHEAP, BYTES,  10 * MB); // dup
         f("explicit/d",       NONHEAP, BYTES, 499 * KB); // omitted
         f("explicit/e",       NONHEAP, BYTES, 100 * KB); // omitted
         f("explicit/f/g/h/i", HEAP,    BYTES,  10 * MB);
         f("explicit/f/g/h/j", HEAP,    BYTES,  10 * MB);
-      },
-      explicitNonHeap: (100 + 13 + 10)*MB + (499 + 100)*KB
+      }
     },
     { name: "fake2",
       collectReports: function(aCbObj, aClosure) {
@@ -132,8 +113,7 @@
         f("other2",           OTHER,   BYTES, 222 * MB);
         f("perc2",            OTHER,   PERCENTAGE, 10000);
         f("perc1",            OTHER,   PERCENTAGE, 4567);
-      },
-      explicitNonHeap: 0
+      }
     },
     { name: "smaps",
       collectReports: function(aCbObj, aClosure) {
@@ -148,8 +128,7 @@
         f("swap/b/c",     10);
         f("rss/a",        42);
         f("pss/a",        43);
-      },
-      explicitNonHeap: 0
+      }
     },
     { name: "compartments",
       collectReports: function(aCbObj, aClosure) {
@@ -158,15 +137,11 @@
         }
         f("compartments/user/bar");
         f("compartments/system/bar");
-      },
-      explicitNonHeap: 0
+      }
     }
   ];
   for (let i = 0; i < fakeReporters.length; i++) {
     mgr.registerReporterEvenIfBlocked(fakeReporters[i]);
-  }
-  for (let i = 0; i < fakeMultiReporters.length; i++) {
-    mgr.registerMultiReporterEvenIfBlocked(fakeMultiReporters[i]);
   }
 
   // mgr.explicit sums "heap-allocated" and all the appropriate NONHEAP ones:
@@ -189,59 +164,74 @@
   // the largest).  Processes without a |resident| memory reporter are saved
   // for the end.
   let fakeReporters2 = [
-    f("2nd", "heap-allocated",  OTHER,  1000 * MB),
-    f("2nd", "heap-unallocated",OTHER,   100 * MB),
-    f("2nd", "explicit/a/b/c",  HEAP,    497 * MB),
-    f("2nd", "explicit/a/b/c",  HEAP,      1 * MB), // dup: merge
-    f("2nd", "explicit/a/b/c",  HEAP,      1 * MB), // dup: merge
-    f("2nd", "explicit/flip\\the\\backslashes",
-                                HEAP,    200 * MB),
-    f("2nd", "explicit/compartment(compartment-url)",
-                                HEAP,    200 * MB),
-    f("2nd", "other0",          OTHER,   666 * MB),
-    f("2nd", "other1",          OTHER,   111 * MB),
-    // Even though the "smaps" reporter is a multi-reporter, if its in a
-    // child process it'll be passed to the main process as single reports.
-    // The fact that we skip the "smaps" multi-reporter in the main
-    // process won't cause these to be skipped;  the fall-back skipping will
-    // be hit instead.
-    f("2nd", "size/e",          NONHEAP, 24*4*KB),
-    f("2nd", "size/f",          NONHEAP, 24*4*KB),
+    { name: "resident-fast",
+      collectReports: function(aCbObj, aClosure) {
+        // Shouldn't reach here;  aboutMemory.js should skip the reporter.
+        // (Nb: this must come after |mgr.explicit| is accessed, otherwise it
+        // *will* be run by nsMemoryReporterManager::GetExplicit()).
+        ok(false, "'resident-fast' reporter was run");
+      }
+    },
+    { name: "fake3",
+      collectReports: function(aCbObj, aClosure) {
+        function f(aP1, aP2, aK, aU, aA) {
+          aCbObj.callback(aP1, aP2, aK, aU, aA, "Desc.", aClosure);
+        }
+        f("2nd", "heap-allocated",  OTHER,   BYTES,1000* MB);
+        f("2nd", "heap-unallocated",OTHER,   BYTES,100 * MB);
+        f("2nd", "explicit/a/b/c",  HEAP,    BYTES,497 * MB);
+        f("2nd", "explicit/a/b/c",  HEAP,    BYTES,  1 * MB); // dup: merge
+        f("2nd", "explicit/a/b/c",  HEAP,    BYTES,  1 * MB); // dup: merge
+        f("2nd", "explicit/flip\\the\\backslashes",
+                                    HEAP,    BYTES,200 * MB);
+        f("2nd", "explicit/compartment(compartment-url)",
+                                    HEAP,    BYTES,200 * MB);
+        f("2nd", "other0",          OTHER,   BYTES,666 * MB);
+        f("2nd", "other1",          OTHER,   BYTES,111 * MB);
+        // If the "smaps" reporter is in a child process it'll be passed to
+        // the main process under a different name.  The fact that we skip
+        // the "smaps" reporter in the main process won't cause these
+        // to be skipped;  the report-level skipping will be hit instead.
+        f("2nd", "size/e",          NONHEAP, BYTES,24*4*KB);
+        f("2nd", "size/f",          NONHEAP, BYTES,24*4*KB);
+        f("2nd", "resident-fast",   NONHEAP, BYTES,24*4*KB); // ignored!
 
-    // Check that we can handle "heap-allocated" not being present.
-    f("3rd", "explicit/a/b",    HEAP,    333 * MB),
-    f("3rd", "explicit/a/c",    HEAP,    444 * MB),
-    f("3rd", "other1",          OTHER,     1 * MB),
-    f("3rd", "resident",        OTHER,   100 * MB),
+        // Check that we can handle "heap-allocated" not being present.
+        f("3rd", "explicit/a/b",    HEAP,    BYTES,333 * MB);
+        f("3rd", "explicit/a/c",    HEAP,    BYTES,444 * MB);
+        f("3rd", "other1",          OTHER,   BYTES,  1 * MB);
+        f("3rd", "resident",        OTHER,   BYTES,100 * MB);
 
-    // Invalid values (negative, too-big) should be identified.
-    f("4th", "heap-allocated",   OTHER,   100 * MB),
-    f("4th", "resident",         OTHER,   200 * MB),
-    f("4th", "explicit/js/compartment(http:\\\\too-big.com\\)/stuff",
-                                 HEAP,    150 * MB),
-    f("4th", "explicit/ok",      HEAP,      5 * MB),
-    f("4th", "explicit/neg1",    NONHEAP,  -2 * MB),
-    // -111 becomes "-0.00MB" in non-verbose mode, and getting the negative
-    // sign in there correctly is non-trivial.
-    f("4th",  "other1",          OTHER,   -111),
-    f("4th",  "other2",          OTHER,   -222 * MB),
-    f2("4th", "other3",          OTHER,   COUNT, -333),
-    f2("4th", "other4",          OTHER,   COUNT_CUMULATIVE, -444),
-    f2("4th", "other5",          OTHER,   PERCENTAGE, -555),
-    f2("4th", "other6",          OTHER,   PERCENTAGE, 66666),
+        // Invalid values (negative, too-big) should be identified.
+        f("4th", "heap-allocated",   OTHER,   BYTES,100 * MB);
+        f("4th", "resident",         OTHER,   BYTES,200 * MB);
+        f("4th", "explicit/js/compartment(http:\\\\too-big.com\\)/stuff",
+                                     HEAP,    BYTES,150 * MB);
+        f("4th", "explicit/ok",      HEAP,    BYTES,  5 * MB);
+        f("4th", "explicit/neg1",    NONHEAP, BYTES, -2 * MB);
+        // -111 becomes "-0.00MB" in non-verbose mode, and getting the negative
+        // sign in there correctly is non-trivial.
+        f("4th",  "other1",          OTHER,   BYTES,-111);
+        f("4th",  "other2",          OTHER,   BYTES,-222 * MB);
+        f("4th",  "other3",          OTHER,   COUNT, -333);
+        f("4th",  "other4",          OTHER,   COUNT_CUMULATIVE, -444);
+        f("4th",  "other5",          OTHER,   PERCENTAGE, -555);
+        f("4th",  "other6",          OTHER,   PERCENTAGE, 66666);
 
-    // If a negative value is within a collapsed sub-tree in non-verbose mode,
-    // we should get the warning at the top and the relevant sub-trees should
-    // be expanded, even in non-verbose mode.
-    f("5th", "heap-allocated",   OTHER,   100 * MB),
-    f("5th", "explicit/big",     HEAP,     99 * MB),
-    f("5th", "explicit/a/pos",   HEAP,     40 * KB),
-    f("5th", "explicit/a/neg1",  NONHEAP, -20 * KB),
-    f("5th", "explicit/a/neg2",  NONHEAP, -10 * KB),
-    f("5th", "explicit/b/c/d/e", NONHEAP,  20 * KB),
-    f("5th", "explicit/b/c/d/f", NONHEAP, -60 * KB),
-    f("5th", "explicit/b/c/g/h", NONHEAP,  10 * KB),
-    f("5th", "explicit/b/c/i/j", NONHEAP,   5 * KB)
+        // If a negative value is within a collapsed sub-tree in non-verbose mode,
+        // we should get the warning at the top and the relevant sub-trees should
+        // be expanded, even in non-verbose mode.
+        f("5th", "heap-allocated",   OTHER,   BYTES,100 * MB);
+        f("5th", "explicit/big",     HEAP,    BYTES, 99 * MB);
+        f("5th", "explicit/a/pos",   HEAP,    BYTES, 40 * KB);
+        f("5th", "explicit/a/neg1",  NONHEAP, BYTES,-20 * KB);
+        f("5th", "explicit/a/neg2",  NONHEAP, BYTES,-10 * KB);
+        f("5th", "explicit/b/c/d/e", NONHEAP, BYTES, 20 * KB);
+        f("5th", "explicit/b/c/d/f", NONHEAP, BYTES,-60 * KB);
+        f("5th", "explicit/b/c/g/h", NONHEAP, BYTES, 10 * KB);
+        f("5th", "explicit/b/c/i/j", NONHEAP, BYTES,  5 * KB);
+      }
+    }
   ];
   for (let i = 0; i < fakeReporters2.length; i++) {
     mgr.registerReporterEvenIfBlocked(fakeReporters2[i]);
@@ -586,20 +576,13 @@ Other Measurements\n\
 
   function finish()
   {
-    // Unregister fake reporters and multi-reporters, re-register the real
-    // reporters and multi-reporters, just in case subsequent tests rely on
-    // them.
+    // Unregister fake reporters and re-register the real reporters, just in
+    // case subsequent tests rely on them.
     for (let i = 0; i < fakeReporters.length; i++) {
       mgr.unregisterReporter(fakeReporters[i]);
     }
-    for (let i = 0; i < fakeMultiReporters.length; i++) {
-      mgr.unregisterMultiReporter(fakeMultiReporters[i]);
-    }
     for (let i = 0; i < realReporters.length; i++) {
       mgr.registerReporterEvenIfBlocked(realReporters[i]);
-    }
-    for (let i = 0; i < realMultiReporters.length; i++) {
-      mgr.registerMultiReporterEvenIfBlocked(realMultiReporters[i]);
     }
     mgr.unblockRegistration();
 

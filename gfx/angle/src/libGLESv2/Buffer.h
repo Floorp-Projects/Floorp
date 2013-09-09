@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -11,49 +11,56 @@
 #ifndef LIBGLESV2_BUFFER_H_
 #define LIBGLESV2_BUFFER_H_
 
-#include <cstddef>
-#include <vector>
-
-#define GL_APICALL
-#include <GLES2/gl2.h>
-
 #include "common/angleutils.h"
 #include "common/RefCountObject.h"
+#include "libGLESv2/renderer/IndexRangeCache.h"
+
+namespace rx
+{
+class Renderer;
+class BufferStorage;
+class StaticIndexBufferInterface;
+class StaticVertexBufferInterface;
+};
 
 namespace gl
 {
-class StaticVertexBuffer;
-class StaticIndexBuffer;
 
 class Buffer : public RefCountObject
 {
   public:
-    explicit Buffer(GLuint id);
+    Buffer(rx::Renderer *renderer, GLuint id);
 
     virtual ~Buffer();
 
     void bufferData(const void *data, GLsizeiptr size, GLenum usage);
     void bufferSubData(const void *data, GLsizeiptr size, GLintptr offset);
 
-    void *data() { return mContents; }
-    size_t size() const { return mSize; }
-    GLenum usage() const { return mUsage; }
+    GLenum usage() const;
 
-    StaticVertexBuffer *getStaticVertexBuffer();
-    StaticIndexBuffer *getStaticIndexBuffer();
+    rx::BufferStorage *getStorage() const;
+    unsigned int size();
+
+    rx::StaticVertexBufferInterface *getStaticVertexBuffer();
+    rx::StaticIndexBufferInterface *getStaticIndexBuffer();
     void invalidateStaticData();
     void promoteStaticUsage(int dataSize);
+
+    rx::IndexRangeCache *getIndexRangeCache();
 
   private:
     DISALLOW_COPY_AND_ASSIGN(Buffer);
 
-    GLubyte *mContents;
-    GLsizeiptr mSize;
+    rx::Renderer *mRenderer;
     GLenum mUsage;
 
-    StaticVertexBuffer *mStaticVertexBuffer;
-    StaticIndexBuffer *mStaticIndexBuffer;
-    GLsizeiptr mUnmodifiedDataUse;
+    rx::BufferStorage *mBufferStorage;
+
+    rx::IndexRangeCache mIndexRangeCache;
+
+    rx::StaticVertexBufferInterface *mStaticVertexBuffer;
+    rx::StaticIndexBufferInterface *mStaticIndexBuffer;
+    unsigned int mUnmodifiedDataUse;
 };
 
 }

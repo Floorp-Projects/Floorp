@@ -1044,7 +1044,7 @@ public:
   //
   // This method call the destructor on each element of the array, empties it,
   // but does not shrink the array's capacity.
-  //
+  // See also SetLengthAndRetainStorage.
   // Make sure to call Compact() if needed to avoid keeping a huge array
   // around.
   void ClearAndRetainStorage() {
@@ -1056,6 +1056,26 @@ public:
     base_type::mHdr->mLength = 0;
   }
 
+  // This method modifies the length of the array, but unlike SetLength
+  // it doesn't deallocate/reallocate the current internal storage.
+  // The new length MUST be shorter than or equal to the current capacity.
+  // If the new length is larger than the existing length of the array,
+  // then new elements will be constructed using elem_type's default
+  // constructor.  If shorter, elements will be destructed and removed.
+  // See also ClearAndRetainStorage.
+  // @param newLen  The desired length of this array.
+  void SetLengthAndRetainStorage(size_type newLen) {
+    MOZ_ASSERT(newLen <= base_type::Capacity());
+    size_type oldLen = Length();
+    if (newLen > oldLen) {
+      InsertElementsAt(oldLen, newLen - oldLen);
+      return;
+    }
+    if (newLen < oldLen) {
+      DestructRange(newLen, oldLen - newLen);
+      base_type::mHdr->mLength = newLen;
+    }
+  }
 
   // This method replaces a range of elements in this array.
   // @param start     The starting index of the elements to replace.

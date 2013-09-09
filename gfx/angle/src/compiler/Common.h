@@ -14,36 +14,24 @@
 
 #include "compiler/PoolAlloc.h"
 
-// We need two pieces of information to report errors/warnings - string and
-// line number. We encode these into a single int so that it can be easily
-// incremented/decremented by lexer. The right SOURCE_LOC_LINE_SIZE bits store
-// line number while the rest store the string number. Since the shaders are
-// usually small, we should not run out of memory. SOURCE_LOC_LINE_SIZE
-// can be increased to alleviate this issue.
-typedef int TSourceLoc;
-const unsigned int SOURCE_LOC_LINE_SIZE = 16;  // in bits.
-const unsigned int SOURCE_LOC_LINE_MASK = (1 << SOURCE_LOC_LINE_SIZE) - 1;
-
-inline TSourceLoc EncodeSourceLoc(int string, int line) {
-    return (string << SOURCE_LOC_LINE_SIZE) | (line & SOURCE_LOC_LINE_MASK);
-}
-
-inline void DecodeSourceLoc(TSourceLoc loc, int* string, int* line) {
-    if (string) *string = loc >> SOURCE_LOC_LINE_SIZE;
-    if (line) *line = loc & SOURCE_LOC_LINE_MASK;
-}
+struct TSourceLoc {
+    int first_file;
+    int first_line;
+    int last_file;
+    int last_line;
+};
 
 //
 // Put POOL_ALLOCATOR_NEW_DELETE in base classes to make them use this scheme.
 //
-#define POOL_ALLOCATOR_NEW_DELETE(A)                                  \
-    void* operator new(size_t s) { return (A).allocate(s); }          \
-    void* operator new(size_t, void *_Where) { return (_Where);	}     \
-    void operator delete(void*) { }                                   \
-    void operator delete(void *, void *) { }                          \
-    void* operator new[](size_t s) { return (A).allocate(s); }        \
-    void* operator new[](size_t, void *_Where) { return (_Where);	} \
-    void operator delete[](void*) { }                                 \
+#define POOL_ALLOCATOR_NEW_DELETE()                                                  \
+    void* operator new(size_t s) { return GetGlobalPoolAllocator()->allocate(s); }   \
+    void* operator new(size_t, void *_Where) { return (_Where); }                    \
+    void operator delete(void*) { }                                                  \
+    void operator delete(void *, void *) { }                                         \
+    void* operator new[](size_t s) { return GetGlobalPoolAllocator()->allocate(s); } \
+    void* operator new[](size_t, void *_Where) { return (_Where); }                  \
+    void operator delete[](void*) { }                                                \
     void operator delete[](void *, void *) { }
 
 //
@@ -54,7 +42,7 @@ typedef std::basic_string <char, std::char_traits<char>, TStringAllocator> TStri
 typedef std::basic_ostringstream<char, std::char_traits<char>, TStringAllocator> TStringStream;
 inline TString* NewPoolTString(const char* s)
 {
-	void* memory = GlobalPoolAllocator.allocate(sizeof(TString));
+	void* memory = GetGlobalPoolAllocator()->allocate(sizeof(TString));
 	return new(memory) TString(s);
 }
 

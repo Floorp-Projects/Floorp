@@ -1221,7 +1221,9 @@ void
 FragmentOrElement::MarkNodeChildren(nsINode* aNode)
 {
   JSObject* o = GetJSObjectChild(aNode);
-  xpc_UnmarkGrayObject(o);
+  if (o) {
+    JS::ExposeObjectToActiveJS(o);
+  }
 
   nsEventListenerManager* elm = aNode->GetListenerManager(false);
   if (elm) {

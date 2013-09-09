@@ -52,7 +52,7 @@ class IDirect3DDevice9;
 class ID3D11Device;
 class IDXGIAdapter1;
 
-class nsIMemoryMultiReporter;
+class nsIMemoryReporter;
 
 // Utility to get a Windows HDC from a thebes context,
 // used by both GDI and Uniscribe font shapers
@@ -315,7 +315,7 @@ private:
     // TODO: unify this with mPrefFonts (NB: holds families, not fonts) in gfxPlatformFontList
     nsDataHashtable<nsCStringHashKey, nsTArray<nsRefPtr<gfxFontEntry> > > mPrefFonts;
 
-    nsIMemoryMultiReporter* mGPUAdapterMultiReporter;
+    nsIMemoryReporter* mGPUAdapterReporter;
 };
 
 #endif /* GFX_WINDOWS_PLATFORM_H */

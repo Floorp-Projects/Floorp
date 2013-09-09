@@ -20,6 +20,7 @@
 #include "mozAutoDocUpdate.h"
 #include "nsIScriptError.h"
 #include "nsContentUtils.h"
+#include "nsIURI.h"
 
 #include "mozilla/dom/ElementBinding.h"
 

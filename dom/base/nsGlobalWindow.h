@@ -29,12 +29,12 @@
 #include "nsIDOMJSWindow.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptObjectPrincipal.h"
 #include "nsITimer.h"
 #include "nsIDOMModalContentWindow.h"
 #include "nsEventListenerManager.h"
 #include "nsIPrincipal.h"
 #include "nsSize.h"
-#include "nsRect.h"
 #include "mozFlushType.h"
 #include "prclist.h"
 #include "nsIDOMStorageEvent.h"
@@ -49,6 +49,7 @@
 
 #include "mozilla/dom/EventTarget.h"
 #include "Units.h"
+#include "nsComponentManagerUtils.h"
 
 #ifdef MOZ_B2G
 #include "nsIDOMWindowB2G.h"
@@ -97,7 +98,8 @@ class nsGlobalWindow;
 class nsDOMEventTargetHelper;
 class nsDOMWindowUtils;
 class nsIIdleService;
-class nsIntSize;
+struct nsIntSize;
+struct nsRect;
 
 class nsWindowSizes;
 
@@ -286,6 +288,7 @@ private:
 class nsGlobalWindow : public mozilla::dom::EventTarget,
                        public nsPIDOMWindow,
                        public nsIScriptGlobalObject,
+                       public nsIScriptObjectPrincipal,
                        public nsIDOMJSWindow,
                        public nsSupportsWeakReference,
                        public nsIInterfaceRequestor,
