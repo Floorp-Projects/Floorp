@@ -5,14 +5,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIXPConnect.idl"
 #include "nsIClassInfo.idl"
 
 %{C++
 #ifdef XP_WIN
 #undef GetClassName
 #endif
+
+#include "js/TypeDecls.h"
+
+struct JSFreeOp;
 %}
+
+interface nsIXPConnectWrappedNative;
+
+[ptr] native JSContextPtr(JSContext);
+[ptr] native JSObjectPtr(JSObject);
+[ptr] native JSValPtr(JS::Value);
+[ptr] native JSFreeOpPtr(JSFreeOp);
+[ref] native JSCallArgsRef(const JS::CallArgs);
 
 /**
  * Note: This is not really an XPCOM interface.  For example, callers must

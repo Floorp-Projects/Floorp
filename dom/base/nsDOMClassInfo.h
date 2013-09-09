@@ -12,6 +12,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "js/Id.h"
+#include "nsIXPConnect.h"
 
 #ifdef XP_WIN
 #undef GetClassName
