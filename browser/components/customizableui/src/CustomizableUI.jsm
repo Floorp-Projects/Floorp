@@ -355,6 +355,10 @@ let CustomizableUIInternal = {
 
     let currentNode = container.firstChild;
     for (let id of aPlacements) {
+      while (currentNode && currentNode.getAttribute("skipintoolbarset") == "true") {
+        currentNode = currentNode.nextSibling;
+      }
+
       if (currentNode && currentNode.id == id) {
         currentNode = currentNode.nextSibling;
         continue;
