@@ -10,6 +10,7 @@
 #include "xpcpublic.h"
 #include "XPCWrapper.h"
 #include "jsprf.h"
+#include "nsDOMException.h"
 
 bool XPCThrower::sVerbose = true;
 
@@ -45,8 +46,7 @@ Throw(JSContext *cx, nsresult rv)
 bool
 XPCThrower::CheckForPendingException(nsresult result, JSContext *cx)
 {
-    nsCOMPtr<nsIException> e;
-    XPCJSRuntime::Get()->GetPendingException(getter_AddRefs(e));
+    nsCOMPtr<nsIException> e = XPCJSRuntime::Get()->GetPendingException();
     if (!e)
         return false;
     XPCJSRuntime::Get()->SetPendingException(nullptr);
@@ -178,32 +178,52 @@ XPCThrower::BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz)
     /* no need to set an expection if the security manager already has */
     if (rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO && JS_IsExceptionPending(cx))
         return;
-    nsCOMPtr<nsIException> finalException;
-    nsCOMPtr<nsIException> defaultException;
-    nsXPCException::NewException(sz, rv, nullptr, nullptr, getter_AddRefs(defaultException));
 
-    nsIExceptionManager * exceptionManager = XPCJSRuntime::Get()->GetExceptionManager();
-    if (exceptionManager) {
-        // Ask the provider for the exception, if there is no provider
-        // we expect it to set e to null
-        exceptionManager->GetExceptionFromProvider(rv,
-                                                   defaultException,
-                                                   getter_AddRefs(finalException));
-        // We should get at least the defaultException back,
-        // but just in case
-        if (finalException == nullptr) {
-            finalException = defaultException;
+    XPCJSRuntime* runtime = XPCJSRuntime::Get();
+    nsCOMPtr<nsIException> existingException = runtime->GetPendingException();
+    if (existingException) {
+        nsresult nr;
+        if (NS_SUCCEEDED(existingException->GetResult(&nr)) && 
+            rv == nr) {
+            // Just reuse the existing exception.
+            return;
         }
     }
 
-    // XXX Should we put the following test and call to JS_ReportOutOfMemory
-    // inside this test?
-    if (finalException)
-        success = ThrowExceptionObject(cx, finalException);
-    // If we weren't able to build or throw an exception we're
+    nsCOMPtr<nsIException> finalException;
+    nsCOMPtr<nsIException> defaultException;
+    nsXPCException::NewException(sz, rv, nullptr, nullptr,
+                                 getter_AddRefs(defaultException));
+
+    // Do we use DOM exceptions for this error code?
+    switch (NS_ERROR_GET_MODULE(rv)) {
+    case NS_ERROR_MODULE_DOM:
+    case NS_ERROR_MODULE_SVG:
+    case NS_ERROR_MODULE_DOM_XPATH:
+    case NS_ERROR_MODULE_DOM_INDEXEDDB:
+    case NS_ERROR_MODULE_DOM_FILEHANDLE:
+        if (NS_IsMainThread()) {
+            NS_NewDOMException(rv, defaultException,
+                               getter_AddRefs(finalException));
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    // If not, use the default.
+    if (finalException == nullptr) {
+        finalException = defaultException;
+    }
+
+    MOZ_ASSERT(finalException);
+    success = ThrowExceptionObject(cx, finalException);
+    // If we weren't able to throw an exception we're
     // most likely out of memory
-    if (!success)
+    if (!success) {
         JS_ReportOutOfMemory(cx);
+    }
 }
 
 static bool
