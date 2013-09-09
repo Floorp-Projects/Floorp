@@ -97,11 +97,11 @@ NS_IMPL_CYCLE_COLLECTION_3(mozHunspell,
                            mEncoder,
                            mDecoder)
 
-class SpellCheckReporter MOZ_FINAL : public mozilla::MemoryUniReporter
+class SpellCheckReporter MOZ_FINAL : public mozilla::MemoryReporterBase
 {
 public:
   SpellCheckReporter()
-    : MemoryUniReporter("explicit/spell-check", KIND_HEAP, UNITS_BYTES,
+    : MemoryReporterBase("explicit/spell-check", KIND_HEAP, UNITS_BYTES,
 "Memory used by the Hunspell spell checking engine's internal data structures.")
   {
 #ifdef DEBUG

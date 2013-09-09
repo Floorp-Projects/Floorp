@@ -10,12 +10,12 @@
 namespace mozilla {
 namespace gl {
 
-class GfxTexturesReporter MOZ_FINAL : public MemoryUniReporter
+class GfxTexturesReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
     GfxTexturesReporter()
-      : MemoryUniReporter("gfx-textures", KIND_OTHER, UNITS_BYTES,
-                          "Memory used for storing GL textures.")
+      : MemoryReporterBase("gfx-textures", KIND_OTHER, UNITS_BYTES,
+                           "Memory used for storing GL textures.")
     {
 #ifdef DEBUG
         // There must be only one instance of this class, due to |sAmount|
