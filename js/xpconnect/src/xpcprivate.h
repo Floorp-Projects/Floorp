@@ -2931,6 +2931,8 @@ private:
 /***************************************************************************/
 // code for throwing exceptions into JS
 
+class nsXPCException;
+
 class XPCThrower
 {
 public:
@@ -2948,7 +2950,7 @@ private:
     static void Verbosify(XPCCallContext& ccx,
                           char** psz, bool own);
 
-    static bool ThrowExceptionObject(JSContext* cx, nsIException* e);
+    static bool ThrowExceptionObject(JSContext* cx, nsXPCException* e);
 
 private:
     static bool sVerbose;
@@ -2977,20 +2979,17 @@ private:
 /***************************************************************************/
 
 class nsXPCException :
-            public nsIXPCException
+            public nsIXPCException,
+            public nsWrapperCache
 {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_XPCEXCEPTION_CID)
 
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsXPCException)
+
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_NSIEXCEPTION
     NS_DECL_NSIXPCEXCEPTION
-
-    static nsresult NewException(const char *aMessage,
-                                 nsresult aResult,
-                                 nsIStackFrame *aLocation,
-                                 nsISupports *aData,
-                                 nsIException** exception);
 
     static bool NameAndFormatForNSResult(nsresult rv,
                                          const char** name,
@@ -3003,14 +3002,43 @@ public:
 
     static uint32_t GetNSResultCount();
 
+    nsXPCException(const char *aMessage,
+                   nsresult aResult,
+                   const char *aName,
+                   nsIStackFrame *aLocation,
+                   nsISupports *aData);
+    // XPCOM factory ctor.
     nsXPCException();
     virtual ~nsXPCException();
 
-    static void InitStatics() { sEverMadeOneFromFactory = false; }
+    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> scope)
+      MOZ_OVERRIDE;
+
+    nsISupports* GetParentObject() const { return nullptr; }
+
+    void GetMessageMoz(nsString& retval);
+
+    uint32_t Result() const;
+
+    void GetName(nsString& retval);
+
+    void GetFilename(nsString& retval);
+
+    uint32_t LineNumber() const;
+
+    uint32_t ColumnNumber() const;
+
+    already_AddRefed<nsIStackFrame> GetLocation() const;
+
+    already_AddRefed<nsISupports> GetInner() const;
+
+    already_AddRefed<nsISupports> GetData() const;
+
+    void Stringify(nsString& retval);
 
 protected:
     void Reset();
-private:
+
     char*           mMessage;
     nsresult        mResult;
     char*           mName;
@@ -3023,6 +3051,7 @@ private:
 
     nsAutoJSValHolder mThrownJSVal;
 
+private:
     static bool sEverMadeOneFromFactory;
 };
 
