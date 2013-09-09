@@ -22,7 +22,10 @@ function spawnNextTest() {
     finish();
     return;
   }
-  imports.Task.spawn(tests.shift()).then(spawnNextTest, function onError(err) {
+
+  let nextTest = tests.shift();
+  info("starting sub-test " + nextTest.name);
+  imports.Task.spawn(nextTest).then(spawnNextTest, function onError(err) {
     ok(false, err);
     spawnNextTest();
   });
@@ -158,8 +161,9 @@ let tests = [
     let win = yield openPrivateWindow();
     let capturedURL = yield capture(url);
     is(capturedURL, url, "Captured URL should be URL passed to capture.");
-    ok(!file.exists(),
-       "Thumbnail file should not exist because a private window is open.");
+    ok(file.exists(),
+       "Thumbnail file should be created even when a private window is open.");
+    file.remove(false);
 
     win.close();
   },
@@ -180,9 +184,10 @@ let tests = [
     imports.BackgroundPageThumbs.capture(url, {
       onDone: function (capturedURL) {
         is(capturedURL, url, "Captured URL should be URL passed to capture.");
-        ok(!file.exists(),
-           "Thumbnail file should not exist because a private window " +
+        ok(file.exists(),
+           "Thumbnail file should be created even though a private window " +
            "was opened during the capture.");
+        file.remove(false);
         maybeFinish();
       },
     });
