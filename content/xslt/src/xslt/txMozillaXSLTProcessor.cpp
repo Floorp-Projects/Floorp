@@ -35,6 +35,7 @@
 #include "nsIErrorService.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsJSUtils.h"
+#include "nsIXPConnect.h"
 
 using namespace mozilla::dom;
 
