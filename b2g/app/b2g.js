@@ -744,7 +744,7 @@ pref("ping.manifestURL", "https://marketplace.firefox.com/packaged.webapp");
 pref("disk_space_watcher.enabled", true);
 
 // Enable promise
-pref("dom.promise.enabled", false);
+pref("dom.promise.enabled", true);
 
 // Allow ADB to run for this many hours before disabling
 // (only applies when marionette is disabled)
