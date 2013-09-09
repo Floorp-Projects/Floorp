@@ -1559,7 +1559,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsGlobalWindow)
 static PLDHashOperator
 MarkXBLHandlers(nsXBLPrototypeHandler* aKey, JS::Heap<JSObject*>& aData, void* aClosure)
 {
-  xpc_UnmarkGrayObject(aData);
+  JS::ExposeObjectToActiveJS(aData);
   return PL_DHASH_NEXT;
 }
 
@@ -2248,13 +2248,13 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
     if (aDocument != oldDoc) {
       JS::Rooted<JSObject*> obj(cx, currentInner->mJSObject);
-      xpc_UnmarkGrayObject(obj);
+      JS::ExposeObjectToActiveJS(obj);
     }
 
     // We're reusing the inner window, but this still counts as a navigation,
     // so all expandos and such defined on the outer window should go away. Force
     // all Xray wrappers to be recomputed.
-    xpc_UnmarkGrayObject(mJSObject);
+    JS::ExposeObjectToActiveJS(mJSObject);
     if (!JS_RefreshCrossCompartmentWrappers(cx, mJSObject)) {
       return NS_ERROR_FAILURE;
     }
@@ -2359,8 +2359,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       mJSObject = mContext->GetWindowProxy();
       SetWrapper(mJSObject);
     } else {
-      JS::Rooted<JSObject*> global(cx,
-        xpc_UnmarkGrayObject(newInnerWindow->mJSObject));
+      JS::ExposeObjectToActiveJS(newInnerWindow->mJSObject);
+      JS::Rooted<JSObject*> global(cx, newInnerWindow->mJSObject);
       JS::Rooted<JSObject*> outerObject(cx,
         NewOuterWindowProxy(cx, global, thisChrome));
       if (!outerObject) {

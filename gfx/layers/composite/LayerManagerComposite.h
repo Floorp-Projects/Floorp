@@ -185,12 +185,6 @@ public:
   void SetWorldTransform(const gfxMatrix& aMatrix);
   gfxMatrix& GetWorldTransform(void);
 
-  static bool AddMaskEffect(Layer* aMaskLayer,
-                            EffectChain& aEffect,
-                            bool aIs3D = false);
-
-  static void RemoveMaskEffect(Layer* aMaskLayer);
-
   /**
    * RAII helper class to add a mask effect with the compositable from aMaskLayer
    * to the EffectChain aEffect and notify the compositable when we are done.
