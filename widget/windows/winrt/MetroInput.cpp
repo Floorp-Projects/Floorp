@@ -99,6 +99,38 @@ namespace {
   }
 
   /**
+   * Test if a touchpoint position has moved. See Touch.Equals for
+   * criteria.
+   *
+   * @param aTouch previous touch point
+   * @param aPoint new winrt touch point
+   * @return true if the point has moved
+   */
+  bool
+  HasPointMoved(Touch* aTouch, UI::Input::IPointerPoint* aPoint) {
+    WRL::ComPtr<UI::Input::IPointerPointProperties> props;
+    Foundation::Point position;
+    Foundation::Rect contactRect;
+    float pressure;
+
+    aPoint->get_Properties(props.GetAddressOf());
+    aPoint->get_Position(&position);
+    props->get_ContactRect(&contactRect);
+    props->get_Pressure(&pressure);
+    nsIntPoint touchPoint = MetroUtils::LogToPhys(position);
+    nsIntPoint touchRadius;
+    touchRadius.x = MetroUtils::LogToPhys(contactRect.Width) / 2;
+    touchRadius.y = MetroUtils::LogToPhys(contactRect.Height) / 2;
+
+    // from Touch.Equals
+    return touchPoint != aTouch->mRefPoint ||
+           pressure != aTouch->Force() ||
+           /* mRotationAngle == aTouch->RotationAngle() || */
+           touchRadius.x != aTouch->RadiusX() ||
+           touchRadius.y != aTouch->RadiusY();
+  }
+
+  /**
    * Converts from the Devices::Input::PointerDeviceType enumeration
    * to a nsIDOMMouseEvent::MOZ_SOURCE_* value.
    *
@@ -468,9 +500,16 @@ MetroInput::OnPointerMoved(UI::Core::ICoreWindow* aSender,
     return S_OK;
   }
 
+  // If the point hasn't moved, filter it out per the spec. Pres shell does
+  // this as well, but we need to know when our first touchmove is going to
+  // get delivered so we can check the result.
+  if (!HasPointMoved(touch, currentPoint.Get())) {
+    return S_OK;
+  }
+
   // If we've accumulated a batch of pointer moves and we're now on a new batch
   // at a new position send the previous batch. (perf opt)
-  if (touch->mChanged) {
+  if (!mIsFirstTouchMove && touch->mChanged) {
     nsTouchEvent* touchEvent =
       new nsTouchEvent(true, NS_TOUCH_MOVE, mWidget.Get());
     InitTouchEventTouchList(touchEvent);
@@ -1061,7 +1100,8 @@ MetroInput::DeliverNextQueuedTouchEvent()
   MOZ_ASSERT(event);
   nsEventStatus status;
   mWidget->DispatchEvent(event, status);
-  if (status != nsEventStatus_eConsumeNoDefault && MetroWidget::sAPZC) {
+  // Deliver to the apz if content has *not* cancelled touchstart or the first touchmove.
+  if (!mTouchStartDefaultPrevented && !mTouchMoveDefaultPrevented && MetroWidget::sAPZC) {
     MultiTouchInput inputData(*event);
     MetroWidget::sAPZC->ReceiveInputEvent(inputData);
   }

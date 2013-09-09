@@ -77,7 +77,8 @@ function getHighlitNode()
   // Get midpoint of diagonal line.
   let midpoint = midPoint(a, b);
 
-  return LayoutHelpers.getElementFromPoint(h.win.document, midpoint.x,
+  let lh = new LayoutHelpers(window.content);
+  return lh.getElementFromPoint(h.win.document, midpoint.x,
     midpoint.y);
 }
 

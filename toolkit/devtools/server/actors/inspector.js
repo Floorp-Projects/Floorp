@@ -768,10 +768,13 @@ var WalkerActor = protocol.ActorClass({
    */
   initialize: function(conn, tabActor, options) {
     protocol.Actor.prototype.initialize.call(this, conn);
-    this.rootDoc = tabActor.window.document;
+    this.rootWin = tabActor.window;
+    this.rootDoc = this.rootWin.document;
     this._refMap = new Map();
     this._pendingMutations = [];
     this._activePseudoClassLocks = new Set();
+
+    this.layoutHelpers = new LayoutHelpers(this.rootWin);
 
     // Nodes which have been removed from the client's known
     // ownership tree are considered "orphaned", and stored in
@@ -929,7 +932,7 @@ var WalkerActor = protocol.ActorClass({
       return;
     }
 
-    LayoutHelpers.scrollIntoViewIfNeeded(node.rawNode);
+    this.layoutHelpers.scrollIntoViewIfNeeded(node.rawNode);
     DOMUtils.addPseudoClassLock(node.rawNode, HIGHLIGHTED_PSEUDO_CLASS);
     this._highlightTimeout = setTimeout(this._unhighlight.bind(this), HIGHLIGHTED_TIMEOUT);
 
@@ -993,7 +996,7 @@ var WalkerActor = protocol.ActorClass({
    *      document as the node.
    */
   parents: method(function(node, options={}) {
-    let walker = documentWalker(node.rawNode);
+    let walker = documentWalker(node.rawNode, this.rootWin);
     let parents = [];
     let cur;
     while((cur = walker.parentNode())) {
@@ -1014,7 +1017,7 @@ var WalkerActor = protocol.ActorClass({
   }),
 
   parentNode: function(node) {
-    let walker = documentWalker(node.rawNode);
+    let walker = documentWalker(node.rawNode, this.rootWin);
     let parent = walker.parentNode();
     if (parent) {
       return this._ref(parent);
@@ -1075,7 +1078,7 @@ var WalkerActor = protocol.ActorClass({
       this._retainedOrphans.delete(node);
     }
 
-    let walker = documentWalker(node.rawNode);
+    let walker = documentWalker(node.rawNode, this.rootWin);
 
     let child = walker.firstChild();
     while (child) {
@@ -1102,7 +1105,7 @@ var WalkerActor = protocol.ActorClass({
     if (!node) {
       return newParents;
     }
-    let walker = documentWalker(node.rawNode);
+    let walker = documentWalker(node.rawNode, this.rootWin);
     let cur;
     while ((cur = walker.parentNode())) {
       let parent = this._refMap.get(cur);
@@ -1152,8 +1155,8 @@ var WalkerActor = protocol.ActorClass({
 
     // We're going to create a few document walkers with the same filter,
     // make it easier.
-    let filteredWalker = function(node) {
-      return documentWalker(node, options.whatToShow);
+    let filteredWalker = (node) => {
+      return documentWalker(node, this.rootWin, options.whatToShow);
     }
 
     // Need to know the first and last child.
@@ -1236,7 +1239,7 @@ var WalkerActor = protocol.ActorClass({
    *    nodes: Child nodes returned by the request.
    */
   siblings: method(function(node, options={}) {
-    let parentNode = documentWalker(node.rawNode).parentNode();
+    let parentNode = documentWalker(node.rawNode, this.rootWin).parentNode();
     if (!parentNode) {
       return {
         hasFirst: true,
@@ -1262,7 +1265,7 @@ var WalkerActor = protocol.ActorClass({
    *       https://developer.mozilla.org/en-US/docs/Web/API/NodeFilter.
    */
   nextSibling: method(function(node, options={}) {
-    let walker = documentWalker(node.rawNode, options.whatToShow || Ci.nsIDOMNodeFilter.SHOW_ALL);
+    let walker = documentWalker(node.rawNode, this.rootWin, options.whatToShow || Ci.nsIDOMNodeFilter.SHOW_ALL);
     let sibling = walker.nextSibling();
     return sibling ? this._ref(sibling) : null;
   }, traversalMethod),
@@ -1277,7 +1280,7 @@ var WalkerActor = protocol.ActorClass({
    *       https://developer.mozilla.org/en-US/docs/Web/API/NodeFilter.
    */
   previousSibling: method(function(node, options={}) {
-    let walker = documentWalker(node.rawNode, options.whatToShow || Ci.nsIDOMNodeFilter.SHOW_ALL);
+    let walker = documentWalker(node.rawNode, this.rootWin, options.whatToShow || Ci.nsIDOMNodeFilter.SHOW_ALL);
     let sibling = walker.previousSibling();
     return sibling ? this._ref(sibling) : null;
   }, traversalMethod),
@@ -1382,7 +1385,7 @@ var WalkerActor = protocol.ActorClass({
       return;
     }
 
-    let walker = documentWalker(node.rawNode);
+    let walker = documentWalker(node.rawNode, this.rootWin);
     let cur;
     while ((cur = walker.parentNode())) {
       let curNode = this._ref(cur);
@@ -1463,7 +1466,7 @@ var WalkerActor = protocol.ActorClass({
       return;
     }
 
-    let walker = documentWalker(node.rawNode);
+    let walker = documentWalker(node.rawNode, this.rootWin);
     let cur;
     while ((cur = walker.parentNode())) {
       let curNode = this._ref(cur);
@@ -1731,7 +1734,7 @@ var WalkerActor = protocol.ActorClass({
   },
 
   onFrameLoad: function(window) {
-    let frame = window.frameElement;
+    let frame = this.layoutHelpers.getFrameElement(window);
     if (!frame && !this.rootDoc) {
       this.rootDoc = window.document;
       this.rootNode = this.document();
@@ -1766,7 +1769,7 @@ var WalkerActor = protocol.ActorClass({
       if (win === window) {
         return true;
       }
-      win = win.frameElement;
+      win = this.layoutHelpers.getFrameElement(win);
     }
     return false;
   },
@@ -1810,7 +1813,7 @@ var WalkerActor = protocol.ActorClass({
       target: documentActor.actorID
     });
 
-    let walker = documentWalker(doc);
+    let walker = documentWalker(doc, this.rootWin);
     let parentNode = walker.parentNode();
     if (parentNode) {
       // Send a childList mutation on the frame so that clients know
@@ -2267,8 +2270,8 @@ var InspectorFront = exports.InspectorFront = protocol.FrontClass(InspectorActor
   })
 });
 
-function documentWalker(node, whatToShow=Ci.nsIDOMNodeFilter.SHOW_ALL) {
-  return new DocumentWalker(node, whatToShow, whitespaceTextFilter, false);
+function documentWalker(node, rootWin, whatToShow=Ci.nsIDOMNodeFilter.SHOW_ALL) {
+  return new DocumentWalker(node, rootWin, whatToShow, whitespaceTextFilter, false);
 }
 
 // Exported for test purposes.
@@ -2284,9 +2287,10 @@ function nodeDocument(node) {
  *
  * See TreeWalker documentation for explanations of the methods.
  */
-function DocumentWalker(aNode, aShow, aFilter, aExpandEntityReferences)
+function DocumentWalker(aNode, aRootWin, aShow, aFilter, aExpandEntityReferences)
 {
   let doc = nodeDocument(aNode);
+  this.layoutHelpers = new LayoutHelpers(aRootWin);
   this.walker = doc.createTreeWalker(doc,
     aShow, aFilter, aExpandEntityReferences);
   this.walker.currentNode = aNode;
@@ -2325,9 +2329,11 @@ DocumentWalker.prototype = {
     if (!parentNode) {
       if (currentNode && currentNode.nodeType == Ci.nsIDOMNode.DOCUMENT_NODE
           && currentNode.defaultView) {
-        let embeddingFrame = currentNode.defaultView.frameElement;
-        if (embeddingFrame) {
-          return this._reparentWalker(embeddingFrame);
+
+        let window = currentNode.defaultView;
+        let frame = this.layoutHelpers.getFrameElement(window);
+        if (frame) {
+          return this._reparentWalker(frame);
         }
       }
       return null;

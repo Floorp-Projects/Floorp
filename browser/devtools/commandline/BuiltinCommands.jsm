@@ -1747,7 +1747,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppCacheUtils",
           width = window.innerWidth;
           height = window.innerHeight;
         } else {
-          let rect = LayoutHelpers.getRect(node, window);
+          let lh = new LayoutHelpers(window);
+          let rect = lh.getRect(node, window);
           top = rect.top;
           left = rect.left;
           width = rect.width;
