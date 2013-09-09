@@ -290,6 +290,12 @@ ExposeValueToActiveJS(const Value &v)
         ExposeGCThingToActiveJS(v.toGCThing(), v.gcKind());
 }
 
+static JS_ALWAYS_INLINE void
+ExposeObjectToActiveJS(JSObject *obj)
+{
+    ExposeGCThingToActiveJS(obj, JSTRACE_OBJECT);
+}
+
 } /* namespace JS */
 
 #endif /* js_GCAPI_h */

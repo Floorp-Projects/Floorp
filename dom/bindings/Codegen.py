@@ -1147,7 +1147,7 @@ class CGConstructNavigatorObject(CGAbstractMethod):
   nsRefPtr<mozilla::dom::${descriptorName}> result = ConstructNavigatorObjectHelper(aCx, global, rv);
   rv.WouldReportJSException();
   if (rv.Failed()) {
-    ThrowMethodFailedWithDetails<${mainThread}>(aCx, rv, "${descriptorName}", "navigatorConstructor");
+    ThrowMethodFailedWithDetails(aCx, rv, "${descriptorName}", "navigatorConstructor");
     return nullptr;
   }
   JS::Rooted<JS::Value> v(aCx);
@@ -1158,7 +1158,6 @@ class CGConstructNavigatorObject(CGAbstractMethod):
   return &v.toObject();""").substitute(
     {
         'descriptorName' : self.descriptor.name,
-        'mainThread' : toStringBool(not self.descriptor.workers),
     })
 
 class CGClassConstructHookHolder(CGGeneric):
@@ -2136,13 +2135,7 @@ def GetAccessCheck(descriptor, object):
 
     returns a string
     """
-    accessCheck = "xpc::AccessCheck::isChrome(%s)" % object
-    if descriptor.workers:
-        # We sometimes set up worker things on the main thread, in which case we
-        # want to use the main-thread accessCheck above.  Otherwise, we want to
-        # check for a ChromeWorker.
-        accessCheck = "(NS_IsMainThread() ? %s : mozilla::dom::workers::GetWorkerPrivateFromContext(aCx)->IsChromeWorker())" % accessCheck
-    return accessCheck
+    return "ThreadsafeCheckIsChrome(aCx, %s)" % object
 
 def InitUnforgeablePropertiesOnObject(descriptor, obj, properties, failureReturnValue=""):
     """
@@ -4929,9 +4922,8 @@ if (!${obj}) {
         jsImplemented = ""
         if self.descriptor.interface.isJSImplemented():
             jsImplemented = ", true"
-        return CGGeneric('return ThrowMethodFailedWithDetails<%s>(cx, rv, "%s", "%s"%s);'
-                         % (toStringBool(not self.descriptor.workers),
-                            self.descriptor.interface.identifier.name,
+        return CGGeneric('return ThrowMethodFailedWithDetails(cx, rv, "%s", "%s"%s);'
+                         % (self.descriptor.interface.identifier.name,
                             self.idlNode.identifier.name,
                             jsImplemented))
 
@@ -5576,7 +5568,7 @@ class CGEnumerateHook(CGAbstractBindingMethod):
                 "self->GetOwnPropertyNames(cx, names, rv);\n"
                 "rv.WouldReportJSException();\n"
                 "if (rv.Failed()) {\n"
-                '  return ThrowMethodFailedWithDetails<true>(cx, rv, "%s", "enumerate");\n'
+                '  return ThrowMethodFailedWithDetails(cx, rv, "%s", "enumerate");\n'
                 "}\n"
                 "JS::Rooted<JS::Value> dummy(cx);\n"
                 "for (uint32_t i = 0; i < names.Length(); ++i) {\n"
@@ -6997,7 +6989,7 @@ class CGEnumerateOwnPropertiesViaGetOwnPropertyNames(CGAbstractBindingMethod):
                 "self->GetOwnPropertyNames(cx, names, rv);\n"
                 "rv.WouldReportJSException();\n"
                 "if (rv.Failed()) {\n"
-                '  return ThrowMethodFailedWithDetails<true>(cx, rv, "%s", "enumerate");\n'
+                '  return ThrowMethodFailedWithDetails(cx, rv, "%s", "enumerate");\n'
                 "}\n"
                 '// OK to pass null as "proxy" because it\'s ignored if\n'
                 "// shadowPrototypeProperties is true\n"
