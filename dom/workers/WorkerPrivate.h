@@ -34,7 +34,6 @@
 class JSAutoStructuredCloneBuffer;
 class nsIChannel;
 class nsIDocument;
-class nsIMemoryMultiReporter;
 class nsIPrincipal;
 class nsIScriptContext;
 class nsIURI;
@@ -970,6 +969,9 @@ GetWorkerPrivateFromContext(JSContext* aCx);
 
 bool
 IsCurrentThreadRunningChromeWorker();
+
+JSContext*
+GetCurrentThreadJSContext();
 
 enum WorkerStructuredDataType
 {

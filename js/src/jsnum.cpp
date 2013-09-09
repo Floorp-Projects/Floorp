@@ -537,45 +537,79 @@ ToCStringBuf::~ToCStringBuf()
     js_free(dbuf);
 }
 
+JS_ALWAYS_INLINE
+static JSFlatString *
+LookupDtoaCache(ThreadSafeContext *cx, double d)
+{
+    if (!cx->isExclusiveContext())
+        return NULL;
+
+    if (JSCompartment *comp = cx->asExclusiveContext()->compartment()) {
+        if (JSFlatString *str = comp->dtoaCache.lookup(10, d))
+            return str;
+    }
+
+    return NULL;
+}
+
+JS_ALWAYS_INLINE
+static void
+CacheNumber(ThreadSafeContext *cx, double d, JSFlatString *str)
+{
+    if (!cx->isExclusiveContext())
+        return;
+
+    if (JSCompartment *comp = cx->asExclusiveContext()->compartment())
+        comp->dtoaCache.cache(10, d, str);
+}
+
+JS_ALWAYS_INLINE
+static JSFlatString *
+LookupInt32ToString(ThreadSafeContext *cx, int32_t si)
+{
+    if (si >= 0 && StaticStrings::hasInt(si))
+        return cx->staticStrings().getInt(si);
+
+    return LookupDtoaCache(cx, si);
+}
+
+template <typename T>
+JS_ALWAYS_INLINE
+static T *
+BackfillInt32InBuffer(int32_t si, T *buffer, size_t size, size_t *length)
+{
+    uint32_t ui = mozilla::Abs(si);
+    JS_ASSERT_IF(si == INT32_MIN, ui == uint32_t(INT32_MAX) + 1);
+
+    RangedPtr<T> end(buffer + size - 1, buffer, size);
+    *end = '\0';
+    RangedPtr<T> start = BackfillIndexInCharBuffer(ui, end);
+    if (si < 0)
+        *--start = '-';
+
+    *length = end - start;
+    return start.get();
+}
+
 template <AllowGC allowGC>
 JSFlatString *
 js::Int32ToString(ThreadSafeContext *cx, int32_t si)
 {
-    uint32_t ui;
-    if (si >= 0) {
-        if (StaticStrings::hasInt(si))
-            return cx->staticStrings().getInt(si);
-        ui = si;
-    } else {
-        ui = uint32_t(-si);
-        JS_ASSERT_IF(si == INT32_MIN, ui == uint32_t(INT32_MAX) + 1);
-    }
-
-    JSCompartment *comp = cx->isExclusiveContext()
-                          ? cx->asExclusiveContext()->compartment()
-                          : NULL;
-    if (comp) {
-        if (JSFlatString *str = comp->dtoaCache.lookup(10, si))
-            return str;
-    }
+    if (JSFlatString *str = LookupInt32ToString(cx, si))
+        return str;
 
     JSShortString *str = js_NewGCShortString<allowGC>(cx);
     if (!str)
         return NULL;
 
     jschar buffer[JSShortString::MAX_SHORT_LENGTH + 1];
-    RangedPtr<jschar> end(buffer + JSShortString::MAX_SHORT_LENGTH,
-                          buffer, JSShortString::MAX_SHORT_LENGTH + 1);
-    *end = '\0';
-    RangedPtr<jschar> start = BackfillIndexInCharBuffer(ui, end);
-    if (si < 0)
-        *--start = '-';
+    size_t length;
+    jschar *start = BackfillInt32InBuffer(si, buffer,
+                                          JSShortString::MAX_SHORT_LENGTH + 1, &length);
 
-    jschar *dst = str->init(end - start);
-    PodCopy(dst, start.get(), end - start + 1);
+    PodCopy(str->init(length), start, length + 1);
 
-    if (comp)
-        comp->dtoaCache.cache(10, si, str);
+    CacheNumber(cx, si, str);
     return str;
 }
 
@@ -584,6 +618,31 @@ js::Int32ToString<CanGC>(ThreadSafeContext *cx, int32_t si);
 
 template JSFlatString *
 js::Int32ToString<NoGC>(ThreadSafeContext *cx, int32_t si);
+
+template <AllowGC allowGC>
+JSAtom *
+js::Int32ToAtom(ExclusiveContext *cx, int32_t si)
+{
+    if (JSFlatString *str = LookupInt32ToString(cx, si))
+        return js::AtomizeString<allowGC>(cx, str);
+
+    char buffer[JSShortString::MAX_SHORT_LENGTH + 1];
+    size_t length;
+    char *start = BackfillInt32InBuffer(si, buffer, JSShortString::MAX_SHORT_LENGTH + 1, &length);
+
+    JSAtom *atom = AtomizeMaybeGC<allowGC>(cx, start, length);
+    if (!atom)
+        return NULL;
+
+    CacheNumber(cx, si, atom);
+    return atom;
+}
+
+template JSAtom *
+js::Int32ToAtom<CanGC>(ExclusiveContext *cx, int32_t si);
+
+template JSAtom *
+js::Int32ToAtom<NoGC>(ExclusiveContext *cx, int32_t si);
 
 /* Returns a non-NULL pointer to inside cbuf.  */
 static char *
@@ -1329,16 +1388,51 @@ js_NumberToStringWithBase(ThreadSafeContext *cx, double d, int base)
 
 template <AllowGC allowGC>
 JSString *
-js_NumberToString(ThreadSafeContext *cx, double d)
+js::NumberToString(ThreadSafeContext *cx, double d)
 {
     return js_NumberToStringWithBase<allowGC>(cx, d, 10);
 }
 
 template JSString *
-js_NumberToString<CanGC>(ThreadSafeContext *cx, double d);
+js::NumberToString<CanGC>(ThreadSafeContext *cx, double d);
 
 template JSString *
-js_NumberToString<NoGC>(ThreadSafeContext *cx, double d);
+js::NumberToString<NoGC>(ThreadSafeContext *cx, double d);
+
+template <AllowGC allowGC>
+JSAtom *
+js::NumberToAtom(ExclusiveContext *cx, double d)
+{
+    int32_t si;
+    if (mozilla::DoubleIsInt32(d, &si))
+        return Int32ToAtom<allowGC>(cx, si);
+
+    if (JSFlatString *str = LookupDtoaCache(cx, d))
+        return AtomizeString<allowGC>(cx, str);
+
+    ToCStringBuf cbuf;
+    char *numStr = FracNumberToCString(cx, &cbuf, d);
+    if (!numStr) {
+        js_ReportOutOfMemory(cx);
+        return NULL;
+    }
+    JS_ASSERT(!cbuf.dbuf && numStr >= cbuf.sbuf && numStr < cbuf.sbuf + cbuf.sbufSize);
+
+    size_t length = strlen(numStr);
+    JSAtom *atom = AtomizeMaybeGC<allowGC>(cx, numStr, length);
+    if (!atom)
+        return NULL;
+
+    CacheNumber(cx, d, atom);
+
+    return atom;
+}
+
+template JSAtom *
+js::NumberToAtom<CanGC>(ExclusiveContext *cx, double d);
+
+template JSAtom *
+js::NumberToAtom<NoGC>(ExclusiveContext *cx, double d);
 
 JSFlatString *
 js::NumberToString(JSContext *cx, double d)

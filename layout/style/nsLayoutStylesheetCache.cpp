@@ -18,11 +18,11 @@
 #include "nsCSSStyleSheet.h"
 
 class LayoutStyleSheetCacheReporter MOZ_FINAL
-  : public mozilla::MemoryReporterBase
+  : public mozilla::MemoryUniReporter
 {
 public:
   LayoutStyleSheetCacheReporter()
-    : MemoryReporterBase("explicit/layout/style-sheet-cache",
+    : MemoryUniReporter("explicit/layout/style-sheet-cache",
                          KIND_HEAP, UNITS_BYTES,
                          "Memory used for some built-in style sheets.")
   {}

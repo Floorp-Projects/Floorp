@@ -159,13 +159,6 @@ TCPSocketChild::RecvCallback(const nsString& aType,
 }
 
 NS_IMETHODIMP
-TCPSocketChild::StartTLS()
-{
-  SendStartTLS();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 TCPSocketChild::Suspend()
 {
   SendSuspend();

@@ -4,7 +4,7 @@
 
 #filter substitution
 
-pref("toolkit.defaultChromeURI", "chrome://browser/content/shell.xul");
+pref("toolkit.defaultChromeURI", "chrome://browser/content/shell.html");
 pref("browser.chromeURL", "chrome://browser/content/");
 
 // Device pixel to CSS px ratio, in percent. Set to -1 to calculate based on display density.
@@ -750,3 +750,8 @@ pref("dom.promise.enabled", false);
 // (only applies when marionette is disabled)
 // 0 disables the timer.
 pref("b2g.adb.timeout-hours", 12);
+
+// enable Skia/GL (OpenGL-accelerated 2D drawing) for large enough 2d canvases,
+// falling back to Skia/software for smaller canvases
+pref("gfx.canvas.azure.backends", "skia");
+pref("gfx.canvas.azure.accelerated", true);

@@ -19,16 +19,16 @@ endif
 OS_COMPILE_CFLAGS   = $(OS_CPPFLAGS)
 OS_COMPILE_CXXFLAGS = $(OS_CPPFLAGS)
 
-DEFINES += -DANGLE_BUILD -DNOMINMAX -DLIBEGL_EXPORTS -D_CRT_SECURE_NO_DEPRECATE
-
-DEFINES += -DANGLE_DISABLE_TRACE
-DEFINES += -DANGLE_COMPILE_OPTIMIZATION_LEVEL=D3DCOMPILE_OPTIMIZATION_LEVEL1
+DEFINES += -DLIBEGL_EXPORTS
+DEFINES += -DANGLE_BUILD -DNOMINMAX -D_CRT_SECURE_NO_DEPRECATE
 
 ifndef MOZ_DEBUG
 DEFINES += -D_SECURE_SCL=0
 endif
 
 # Below is a transcription of the EGL target from build_angle.gypi.
+DEFINES += -DANGLE_DISABLE_TRACE
+DEFINES += -DANGLE_COMPILE_OPTIMIZATION_LEVEL=D3DCOMPILE_OPTIMIZATION_LEVEL1
 
 # Target: 'libEGL'
 #   Links with: 'libGLESv2'
@@ -36,30 +36,29 @@ LOCAL_INCLUDES = \
   -I$(srcdir)/../../include \
   -I$(srcdir)/../../include/KHR \
   -I$(srcdir)/.. \
-  -I"$(MOZ_DIRECTX_SDK_PATH)/include"
+  -I$(srcdir)/../libGLESv2
+#  -I"$(MOZ_DIRECTX_SDK_PATH)/include"
 
-VPATH += $(srcdir)/../common
 # src/common:
-VPATH += $(srcdir)/../libEGL
+VPATH += $(srcdir)/../common
 # src/libEGL:
+VPATH += $(srcdir)/../libEGL
 DEFFILE = $(srcdir)/libEGL.def
 RCFILE  = $(srcdir)/libEGL.rc
 
 include $(topsrcdir)/config/rules.mk
 
-OS_LIBS += $(call EXPAND_LIBNAME,dwmapi)
+#OS_LIBS += $(call EXPAND_LIBNAME,dwmapi)
 
 ifdef GNU_CC
 
 OS_CXXFLAGS := $(filter-out -fno-exceptions,$(OS_CXXFLAGS)) -fexceptions
-OS_LIBS += -ld3d9 -ldxguid -llibGLESv2
+OS_LIBS += -ld3d9 -llibGLESv2
 
 else
 
 EXTRA_DSO_LDOPTS = "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/d3d9.lib" \
-                   "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/dxguid.lib" \
-		   "$(DIST)/lib/libGLESv2.lib" \
-		   delayimp.lib \
-		   /delayload:dwmapi.dll
+                   "$(DIST)/lib/libGLESv2.lib" \
+                   delayimp.lib
 
 endif

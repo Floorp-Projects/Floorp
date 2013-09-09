@@ -36,6 +36,7 @@
 #include "mozilla/dom/CSSStyleDeclarationBinding.h"
 #include "StyleRule.h"
 #include "nsFont.h"
+#include "nsIURI.h"
 
 using namespace mozilla;
 

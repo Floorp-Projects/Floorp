@@ -12,7 +12,7 @@
 #include "gfxWindowsPlatform.h"
 #include "SurfaceStream.h"
 #include "SharedSurfaceGL.h"
-
+#include "GLContext.h"
 #include "CanvasLayerD3D9.h"
 
 using namespace mozilla::gfx;
@@ -20,6 +20,17 @@ using namespace mozilla::gl;
 
 namespace mozilla {
 namespace layers {
+
+CanvasLayerD3D9::CanvasLayerD3D9(LayerManagerD3D9 *aManager)
+  : CanvasLayer(aManager, nullptr)
+  , LayerD3D9(aManager)
+  , mDataIsPremultiplied(false)
+  , mNeedsYFlip(false)
+  , mHasAlpha(true)
+{
+    mImplData = static_cast<LayerD3D9*>(this);
+    aManager->deviceManager()->mLayersWithResources.AppendElement(this);
+}
 
 CanvasLayerD3D9::~CanvasLayerD3D9()
 {

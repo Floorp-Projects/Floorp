@@ -6,7 +6,6 @@
 #ifndef GFX_SHAREDTEXTUREIMAGE_H
 #define GFX_SHAREDTEXTUREIMAGE_H
 
-#include "GLContext.h"                  // for GLContext, etc
 #include "GLContextProvider.h"          // for GLContextProvider
 #include "ImageContainer.h"             // for Image
 #include "ImageTypes.h"                 // for ImageFormat::SHARED_TEXTURE

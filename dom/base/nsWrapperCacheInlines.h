@@ -7,13 +7,16 @@
 #define nsWrapperCacheInline_h___
 
 #include "nsWrapperCache.h"
-#include "xpcpublic.h"
+#include "js/GCAPI.h"
+#include "js/Tracer.h"
 
 inline JSObject*
 nsWrapperCache::GetWrapper() const
 {
     JSObject* obj = GetWrapperPreserveColor();
-    xpc_UnmarkGrayObject(obj);
+    if (obj) {
+      JS::ExposeObjectToActiveJS(obj);
+    }
     return obj;
 }
 
@@ -21,14 +24,14 @@ inline bool
 nsWrapperCache::IsBlack()
 {
   JSObject* o = GetWrapperPreserveColor();
-  return o && !xpc_IsGrayGCThing(o);
+  return o && !JS::GCThingIsMarkedGray(o);
 }
 
 static void
 SearchGray(void* aGCThing, const char* aName, void* aClosure)
 {
   bool* hasGrayObjects = static_cast<bool*>(aClosure);
-  if (!*hasGrayObjects && aGCThing && xpc_IsGrayGCThing(aGCThing)) {
+  if (!*hasGrayObjects && aGCThing && JS::GCThingIsMarkedGray(aGCThing)) {
     *hasGrayObjects = true;
   }
 }

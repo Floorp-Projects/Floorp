@@ -27,6 +27,7 @@
 #include "JavaScriptParent.h"
 
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/PrimitiveConversions.h"
 
 using namespace xpc;
@@ -1080,17 +1081,17 @@ XPCConvert::ConstructException(nsresult rv, const char* message,
     if (ifaceName && methodName)
         msg = sz = JS_smprintf(format, msg, ifaceName, methodName);
 
-    nsresult res = nsXPCException::NewException(msg, rv, nullptr, data, exceptn);
+    nsRefPtr<Exception> e = new Exception(msg, rv, nullptr, nullptr, data);
 
-    if (NS_SUCCEEDED(res) && cx && jsExceptionPtr && *exceptn) {
-        nsCOMPtr<nsIXPCException> xpcEx = do_QueryInterface(*exceptn);
-        if (xpcEx)
-            xpcEx->StowJSVal(cx, *jsExceptionPtr);
+    if (cx && jsExceptionPtr) {
+        e->StowJSVal(*jsExceptionPtr);
     }
+
+    e.forget(exceptn);
 
     if (sz)
         JS_smprintf_free(sz);
-    return res;
+    return NS_OK;
 }
 
 /********************************/
@@ -1170,14 +1171,13 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
             }
 
 
-            unsigned ignored;
             bool found;
 
             // heuristic to see if it might be usable as an xpcexception
-            if (!JS_GetPropertyAttributes(cx, obj, "message", &ignored, &found))
-               return NS_ERROR_FAILURE;
+            if (!JS_HasProperty(cx, obj, "message", &found))
+                return NS_ERROR_FAILURE;
 
-            if (found && !JS_GetPropertyAttributes(cx, obj, "result", &ignored, &found))
+            if (found && !JS_HasProperty(cx, obj, "result", &found))
                 return NS_ERROR_FAILURE;
 
             if (found) {

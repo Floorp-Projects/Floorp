@@ -20,16 +20,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=291377
 /* Do something that causes an XPConnect exception */
 var threw = true;
 try {
-  SpecialPowers.Cc["@mozilla.org/network/io-service;1"].getService(SpecialPowers.Ci.nsIIOService).newURI();  /* Not enough arguments */
+  window.location.port = -2;
   threw = false;
 } catch (e) {
   /* Check that we can touch various properties */
   isnot(e.lineNumber, undefined, "Unexpected line number"); //This line number is dependent on the implementation of the SpecialPowers API
-  is(e.name, "NS_ERROR_XPC_NOT_ENOUGH_ARGS", "Unexpected exception name");
+  is(e.name, "NS_ERROR_MALFORMED_URI", "Unexpected exception name");
   isnot(e.message, "", "Should have a message");
   isnot(e.result, 0, "Should have a result");
   
-  is(e.result, SpecialPowers.Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS);
+  is(e.result, SpecialPowers.Cr.NS_ERROR_MALFORMED_URI);
 }
 
 is(threw, true, "Not enough arguments to a call should throw");

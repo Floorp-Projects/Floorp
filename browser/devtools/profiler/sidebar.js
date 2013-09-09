@@ -19,6 +19,9 @@ const {
 
 loader.lazyGetter(this, "L10N", () => new ViewHelpers.L10N(L10N_BUNDLE));
 
+let stopProfilingString = L10N.getStr("profiler.stopProfilerString");
+let startProfilingString = L10N.getStr("profiler.startProfilerString");
+
 function Sidebar(el) {
   EventEmitter.decorate(this);
 
@@ -93,7 +96,9 @@ Sidebar.prototype = Heritage.extend(WidgetMethods, {
 
   setProfileState: function (profile, state) {
     let item = this.getItemByProfile(profile);
+    let doc = this.document;
     let label = item.target.querySelector(".profiler-sidebar-item > hbox > span");
+    let toggleButton = doc.getElementById("profiler-start");
 
     switch (state) {
       case PROFILE_IDLE:
@@ -103,10 +108,12 @@ Sidebar.prototype = Heritage.extend(WidgetMethods, {
       case PROFILE_RUNNING:
         item.target.setAttribute("state", "running");
         label.textContent = L10N.getStr("profiler.stateRunning");
+        toggleButton.setAttribute("tooltiptext",stopProfilingString);
         break;
       case PROFILE_COMPLETED:
         item.target.setAttribute("state", "completed");
         label.textContent = L10N.getStr("profiler.stateCompleted");
+        toggleButton.setAttribute("tooltiptext",startProfilingString);
         break;
       default: // Wrong state, do nothing.
         return;

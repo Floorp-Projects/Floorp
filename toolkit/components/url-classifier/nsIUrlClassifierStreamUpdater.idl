@@ -23,6 +23,7 @@ interface nsIUrlClassifierStreamUpdater : nsISupports
    * Try to download updates from updateUrl.  Only one instance of this
    * runs at a time, so we return false if another instance is already
    * running.
+   * This is used in nsIUrlListManager as well as in testing.
    * @param aRequestTables Comma-separated list of tables included in this
    *        update.
    * @param aRequestBody The body for the request.

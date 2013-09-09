@@ -69,11 +69,13 @@ int VcmSIPCCBinding::gAudioCodecMask = 0;
 int VcmSIPCCBinding::gVideoCodecMask = 0;
 nsIThread *VcmSIPCCBinding::gMainThread = NULL;
 
-static mozilla::RefPtr<TransportFlow> vcmCreateTransportFlow(sipcc::PeerConnectionImpl *pc,
-                                                             int level, bool rtcp,
-                                                             const char *fingerprint_alg,
-                                                             const char *fingerprint
-                                                             );
+static mozilla::RefPtr<TransportFlow> vcmCreateTransportFlow(
+    sipcc::PeerConnectionImpl *pc,
+    int level,
+    bool rtcp,
+    sdp_setup_type_e setup_type,
+    const char *fingerprint_alg,
+    const char *fingerprint);
 
 // Convenience macro to acquire PC
 
@@ -1349,6 +1351,7 @@ int vcmRxStart(cc_mcapid_t mcap_id,
  *  @param[in]   peerconnection - the peerconnection in use
  *  @param[in]   num_payloads   - number of negotiated payloads
  *  @param[in]   payloads       - negotiated codec details list
+ *  @param[in]   setup          - whether playing client or server role
  *  @param[in]   fingerprint_alg - the DTLS fingerprint algorithm
  *  @param[in]   fingerprint  - the DTLS fingerprint
  *  @param[in]   attrs        - media attributes
@@ -1366,6 +1369,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
         const char *peerconnection,
         int num_payloads,
         const vcm_payload_info_t* payloads,
+        sdp_setup_type_e setup_type,
         const char *fingerprint_alg,
         const char *fingerprint,
         vcm_mediaAttrs_t *attrs)
@@ -1378,7 +1382,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
 
   // Datachannel will use this though not for RTP
   mozilla::RefPtr<TransportFlow> rtp_flow =
-    vcmCreateTransportFlow(pc.impl(), level, false,
+    vcmCreateTransportFlow(pc.impl(), level, false, setup_type,
                            fingerprint_alg, fingerprint);
   if (!rtp_flow) {
     CSFLogError( logTag, "Could not create RTP flow");
@@ -1407,7 +1411,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
 
   mozilla::RefPtr<TransportFlow> rtcp_flow = nullptr;
   if(!attrs->rtcp_mux) {
-    rtcp_flow = vcmCreateTransportFlow(pc.impl(), level, true,
+    rtcp_flow = vcmCreateTransportFlow(pc.impl(), level, true, setup_type,
                                        fingerprint_alg, fingerprint);
     if (!rtcp_flow) {
       CSFLogError( logTag, "Could not create RTCP flow");
@@ -1535,6 +1539,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
  *  @param[in]  peerconnection - the peerconnection in use
  *  @param[in]  num_payloads   - number of negotiated payloads
  *  @param[in]  payloads       - negotiated codec details list
+ *  @param[in]   setup_type    - whether playing client or server role
  *  @param[in]   fingerprint_alg - the DTLS fingerprint algorithm
  *  @param[in]   fingerprint  - the DTLS fingerprint
  *  @param[in]   attrs        - media attributes
@@ -1552,6 +1557,7 @@ int vcmRxStartICE(cc_mcapid_t mcap_id,
                   const char *peerconnection,
                   int num_payloads,
                   const vcm_payload_info_t* payloads,
+                  sdp_setup_type_e setup_type,
                   const char *fingerprint_alg,
                   const char *fingerprint,
                   vcm_mediaAttrs_t *attrs)
@@ -1570,6 +1576,7 @@ int vcmRxStartICE(cc_mcapid_t mcap_id,
                         peerconnection,
                         num_payloads,
                         payloads,
+                        setup_type,
                         fingerprint_alg,
                         fingerprint,
                         attrs,
@@ -2009,6 +2016,7 @@ int vcmTxStart(cc_mcapid_t mcap_id,
  *  @param[in]   peerconnection - the peerconnection in use
  *  @param[in]   payload      - payload information
  *  @param[in]   tos          - bit marking
+ *  @param[in]   setup_type   - whether playing the client or server role
  *  @param[in]   fingerprint_alg - the DTLS fingerprint algorithm
  *  @param[in]   fingerprint  - the DTLS fingerprint
  *  @param[in]   attrs        - media attributes
@@ -2028,6 +2036,7 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
         const char *peerconnection,
         const vcm_payload_info_t *payload,
         short tos,
+        sdp_setup_type_e setup_type,
         const char *fingerprint_alg,
         const char *fingerprint,
         vcm_mediaAttrs_t *attrs)
@@ -2042,7 +2051,7 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
 
   // Create the transport flows
   mozilla::RefPtr<TransportFlow> rtp_flow =
-      vcmCreateTransportFlow(pc.impl(), level, false,
+      vcmCreateTransportFlow(pc.impl(), level, false, setup_type,
                              fingerprint_alg, fingerprint);
   if (!rtp_flow) {
       CSFLogError( logTag, "Could not create RTP flow");
@@ -2050,7 +2059,7 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
   }
   mozilla::RefPtr<TransportFlow> rtcp_flow = nullptr;
   if(!attrs->rtcp_mux) {
-    rtcp_flow = vcmCreateTransportFlow(pc.impl(), level, true,
+    rtcp_flow = vcmCreateTransportFlow(pc.impl(), level, true, setup_type,
                                        fingerprint_alg, fingerprint);
     if (!rtcp_flow) {
       CSFLogError( logTag, "Could not create RTCP flow");
@@ -2166,6 +2175,7 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
  *  @param[in]  peerconnection - the peerconnection in use
  *  @param[in]   payload      - payload type
  *  @param[in]   tos          - bit marking
+ *  @param[in]   setup_type   - whether playing client or server role.
  *  @param[in]   fingerprint_alg - the DTLS fingerprint algorithm
  *  @param[in]   fingerprint  - the DTLS fingerprint
  *  @param[in]   attrs        - media attributes
@@ -2185,6 +2195,7 @@ int vcmTxStartICE(cc_mcapid_t mcap_id,
                   const char *peerconnection,
                   const vcm_payload_info_t *payload,
                   short tos,
+                  sdp_setup_type_e setup_type,
                   const char *fingerprint_alg,
                   const char *fingerprint,
                   vcm_mediaAttrs_t *attrs)
@@ -2203,6 +2214,7 @@ int vcmTxStartICE(cc_mcapid_t mcap_id,
                         peerconnection,
                         payload,
                         tos,
+                        setup_type,
                         fingerprint_alg,
                         fingerprint,
                         attrs,
@@ -2700,8 +2712,8 @@ int vcmGetILBCMode()
 
 static mozilla::RefPtr<TransportFlow>
 vcmCreateTransportFlow(sipcc::PeerConnectionImpl *pc, int level, bool rtcp,
-                       const char *fingerprint_alg,
-                       const char *fingerprint) {
+  sdp_setup_type_e setup_type, const char *fingerprint_alg,
+  const char *fingerprint) {
 
   // TODO(ekr@rtfm.com): Check that if the flow already exists the digest
   // is the same. The only way that can happen is if
@@ -2743,13 +2755,14 @@ vcmCreateTransportFlow(sipcc::PeerConnectionImpl *pc, int level, bool rtcp,
     //   party is active MUST initiate a DTLS handshake by sending a
     //   ClientHello over each flow (host/port quartet).
     //
-    // Currently we just hardwire the roles to be that the offerer is the
-    // server, which is what you would expect from the "recommended"
-    // behavior above.
-    //
-    // TODO(ekr@rtfm.com): implement the actpass logic above.
-    dtls->SetRole(pc->GetRole() == sipcc::PeerConnectionImpl::kRoleOfferer ?
-                  TransportLayerDtls::SERVER : TransportLayerDtls::CLIENT);
+
+    // setup_type should at this point be either PASSIVE or ACTIVE
+    // other a=setup values should have been negotiated out.
+    MOZ_ASSERT(setup_type == SDP_SETUP_PASSIVE ||
+               setup_type == SDP_SETUP_ACTIVE);
+    dtls->SetRole(
+      setup_type == SDP_SETUP_PASSIVE ?
+      TransportLayerDtls::SERVER : TransportLayerDtls::CLIENT);
     mozilla::RefPtr<DtlsIdentity> pcid = pc->GetIdentity();
     if (!pcid) {
       return nullptr;
@@ -2859,4 +2872,52 @@ int vcmOnSdpParseError(const char *peerconnection, const char *message) {
   return 0;
 }
 
+/**
+ * vcmDisableRtcpComponent_m
+ *
+ * If we are doing rtcp-mux we need to disable component number 2 in the ICE
+ * layer.  Otherwise we will wait for it to connect when it is unused
+ */
+static int vcmDisableRtcpComponent_m(const char *peerconnection, int level) {
+#ifdef MOZILLA_INTERNAL_API
+  MOZ_ASSERT(NS_IsMainThread());
+#endif
+  MOZ_ASSERT(level > 0);
+
+  sipcc::PeerConnectionWrapper pc(peerconnection);
+  ENSURE_PC(pc, VCM_ERROR);
+
+  CSFLogDebug( logTag, "%s: disabling rtcp component %d", __FUNCTION__, level);
+  mozilla::RefPtr<NrIceMediaStream> stream = pc.impl()->media()->
+    ice_media_stream(level-1);
+  MOZ_ASSERT(stream);
+  if (!stream) {
+    return VCM_ERROR;
+  }
+
+  // The second component is for RTCP
+  nsresult res = stream->DisableComponent(2);
+  MOZ_ASSERT(NS_SUCCEEDED(res));
+  if (!NS_SUCCEEDED(res)) {
+    return VCM_ERROR;
+  }
+
+  return 0;
+}
+
+/**
+ * vcmDisableRtcpComponent
+ *
+ * If we are doing rtcp-mux we need to disable component number 2 in the ICE
+ * layer.  Otherwise we will wait for it to connect when it is unused
+ */
+int vcmDisableRtcpComponent(const char *peerconnection, int level) {
+  int ret;
+  mozilla::SyncRunnable::DispatchToThread(VcmSIPCCBinding::getMainThread(),
+      WrapRunnableNMRet(&vcmDisableRtcpComponent_m,
+                        peerconnection,
+                        level,
+                        &ret));
+  return ret;
+}
 

@@ -1407,20 +1407,28 @@ TypeSet::getTypeObject(unsigned i) const
     return (key && !(uintptr_t(key) & 1)) ? (TypeObject *) key : NULL;
 }
 
-inline TypeObject *
-TypeSet::getTypeOrSingleObject(JSContext *cx, unsigned i) const
+inline bool
+TypeSet::getTypeOrSingleObject(JSContext *cx, unsigned i, TypeObject **result) const
 {
+    JS_ASSERT(result);
     JS_ASSERT(cx->compartment()->activeAnalysis);
+
+    *result = NULL;
+
     TypeObject *type = getTypeObject(i);
     if (!type) {
         JSObject *singleton = getSingleObject(i);
         if (!singleton)
-            return NULL;
+            return true;
+
         type = singleton->uninlinedGetType(cx);
-        if (!type)
+        if (!type) {
             cx->compartment()->types.setPendingNukeTypes(cx);
+            return false;
+        }
     }
-    return type;
+    *result = type;
+    return true;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1594,8 +1602,8 @@ TypeObjectAddendum::writeBarrierPre(TypeObjectAddendum *type)
       case NewScript:
         return TypeNewScript::writeBarrierPre(type->asNewScript());
 
-      case BinaryData:
-        return TypeBinaryData::writeBarrierPre(type->asNewScript());
+      case TypedObject:
+        return TypeTypedObject::writeBarrierPre(type->asTypedObject());
     }
 #endif
 }

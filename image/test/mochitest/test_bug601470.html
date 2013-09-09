@@ -25,14 +25,18 @@ window.onload = function() {
   var mgr = SpecialPowers.Cc["@mozilla.org/memory-reporter-manager;1"]
     .getService(SpecialPowers.Ci.nsIMemoryReporterManager);
 
-  var e = mgr.enumerateReporters();
-  var memoryCounter = 0;
-  while (e.hasMoreElements()) {
-    var mr =
-      e.getNext().QueryInterface(SpecialPowers.Ci.nsIMemoryReporter);
-    memoryCounter += mr.amount;
+  var amount = 0;
+  var handleReport = function(aProcess, aPath, aKind, aUnits, aAmount, aDesc) {
+    amount += aAmount;
   }
-  ok(memoryCounter > 0, "we should be using a nonzero amount of memory");
+
+  var e = mgr.enumerateReporters();
+  while (e.hasMoreElements()) {
+    var mr = e.getNext().QueryInterface(SpecialPowers.Ci.nsIMemoryReporter);
+    mr.collectReports(handleReport, null);
+  }
+
+  ok(amount > 0, "we should be using a nonzero amount of memory");
   ok(true, "yay, didn't crash!");
 
   SimpleTest.finish();

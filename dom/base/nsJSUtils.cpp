@@ -177,7 +177,9 @@ nsJSUtils::CompileFunction(JSContext* aCx,
   aOptions.setPrincipals(p);
 
   // Do the junk Gecko is supposed to do before calling into JSAPI.
-  xpc_UnmarkGrayObject(aTarget);
+  if (aTarget) {
+    JS::ExposeObjectToActiveJS(aTarget);
+  }
 
   // Compile.
   JSFunction* fun = JS::CompileFunction(aCx, aTarget, aOptions,
@@ -238,7 +240,7 @@ nsJSUtils::EvaluateString(JSContext* aCx,
     *aRetValue = JSVAL_VOID;
   }
 
-  xpc_UnmarkGrayObject(aScopeObject);
+  JS::ExposeObjectToActiveJS(aScopeObject);
   nsAutoMicroTask mt;
 
   JSPrincipals* p = JS_GetCompartmentPrincipals(js::GetObjectCompartment(aScopeObject));

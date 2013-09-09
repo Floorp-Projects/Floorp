@@ -119,19 +119,7 @@ http://127.0.0.1:8888           privileged
         prefs, user_prefs = perms.network_prefs(False)
 
         self.assertEqual(len(user_prefs), 0)
-        self.assertEqual(len(prefs), 6)
-
-        self.assertEqual(prefs[0], ('capability.principal.codebase.p1.granted',
-                                    'UniversalXPConnect'))
-        self.assertEqual(prefs[1], ('capability.principal.codebase.p1.id',
-                                    'http://mochi.test:8888'))
-        self.assertEqual(prefs[2], ('capability.principal.codebase.p1.subjectName', ''))
-
-        self.assertEqual(prefs[3], ('capability.principal.codebase.p2.granted',
-                                    'UniversalXPConnect'))
-        self.assertEqual(prefs[4], ('capability.principal.codebase.p2.id',
-                                    'http://127.0.0.1:8888'))
-        self.assertEqual(prefs[5], ('capability.principal.codebase.p2.subjectName', ''))
+        self.assertEqual(len(prefs), 0)
 
         prefs, user_prefs = perms.network_prefs(True)
         self.assertEqual(len(user_prefs), 2)

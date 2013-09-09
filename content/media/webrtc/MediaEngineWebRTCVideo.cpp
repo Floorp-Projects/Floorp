@@ -6,6 +6,7 @@
 #include "Layers.h"
 #include "ImageTypes.h"
 #include "ImageContainer.h"
+#include "nsMemory.h"
 #include "mtransport/runnable_utils.h"
 
 namespace mozilla {
@@ -160,7 +161,8 @@ MediaEngineWebRTCVideoSource::ChooseCapability(const MediaEnginePrefs &aPrefs)
   mCapability.width  = aPrefs.mWidth;
   mCapability.height = aPrefs.mHeight;
 #else
-  int num = mViECapture->NumberOfCapabilities(mUniqueId, KMaxUniqueIdLength);
+  int num = mViECapture->NumberOfCapabilities(NS_ConvertUTF16toUTF8(mUniqueId).get(),
+                                              KMaxUniqueIdLength);
 
   LOG(("ChooseCapability: prefs: %dx%d @%d-%dfps", aPrefs.mWidth, aPrefs.mHeight, aPrefs.mFPS, aPrefs.mMinFPS));
 
@@ -180,7 +182,8 @@ MediaEngineWebRTCVideoSource::ChooseCapability(const MediaEnginePrefs &aPrefs)
   webrtc::CaptureCapability cap;
   bool higher = true;
   for (int i = 0; i < num; i++) {
-    mViECapture->GetCaptureCapability(mUniqueId, KMaxUniqueIdLength, i, cap);
+    mViECapture->GetCaptureCapability(NS_ConvertUTF16toUTF8(mUniqueId).get(),
+                                      KMaxUniqueIdLength, i, cap);
     if (higher) {
       if (i == 0 ||
           (mCapability.width > cap.width && mCapability.height > cap.height)) {
@@ -209,15 +212,13 @@ MediaEngineWebRTCVideoSource::ChooseCapability(const MediaEnginePrefs &aPrefs)
 void
 MediaEngineWebRTCVideoSource::GetName(nsAString& aName)
 {
-  // mDeviceName is UTF8
-  CopyUTF8toUTF16(mDeviceName, aName);
+  aName = mDeviceName;
 }
 
 void
 MediaEngineWebRTCVideoSource::GetUUID(nsAString& aUUID)
 {
-  // mUniqueId is UTF8
-  CopyUTF8toUTF16(mUniqueId, aUUID);
+  aUUID = mUniqueId;
 }
 
 nsresult
@@ -242,7 +243,8 @@ MediaEngineWebRTCVideoSource::Allocate(const MediaEnginePrefs &aPrefs)
 
     ChooseCapability(aPrefs);
 
-    if (mViECapture->AllocateCaptureDevice(mUniqueId, KMaxUniqueIdLength, mCaptureIndex)) {
+    if (mViECapture->AllocateCaptureDevice(NS_ConvertUTF16toUTF8(mUniqueId).get(),
+                                           KMaxUniqueIdLength, mCaptureIndex)) {
       return NS_ERROR_FAILURE;
     }
     mState = kAllocated;
@@ -527,18 +529,11 @@ MediaEngineWebRTCVideoSource::Snapshot(uint32_t aDuration, nsIDOMFile** aFile)
 void
 MediaEngineWebRTCVideoSource::Init()
 {
-  mDeviceName[0] = '\0'; // paranoia
-  mUniqueId[0] = '\0';
 #ifdef MOZ_B2G_CAMERA
-  nsCString deviceName;
+  nsAutoCString deviceName;
   mCameraManager->GetCameraName(mCaptureIndex, deviceName);
-
-  nsString deviceNameUTF16;
-  deviceNameUTF16.AssignASCII(deviceName.get());
-  char* UTF8Name = ToNewUTF8String(deviceNameUTF16);
-  memcpy(mDeviceName, UTF8Name, strlen(UTF8Name));
-  memcpy(mUniqueId, UTF8Name, strlen(UTF8Name));
-  NS_Free(UTF8Name);
+  CopyUTF8toUTF16(deviceName, mDeviceName);
+  CopyUTF8toUTF16(deviceName, mUniqueId);
 #else
   // fix compile warning for these being unused. (remove once used)
   (void) mFps;
@@ -562,11 +557,18 @@ MediaEngineWebRTCVideoSource::Init()
     return;
   }
 
+  const uint32_t KMaxDeviceNameLength = 128;
+  const uint32_t KMaxUniqueIdLength = 256;
+  char deviceName[KMaxDeviceNameLength];
+  char uniqueId[KMaxUniqueIdLength];
   if (mViECapture->GetCaptureDevice(mCaptureIndex,
-                                    mDeviceName, sizeof(mDeviceName),
-                                    mUniqueId, sizeof(mUniqueId))) {
+                                    deviceName, KMaxDeviceNameLength,
+                                    uniqueId, KMaxUniqueIdLength)) {
     return;
   }
+
+  CopyUTF8toUTF16(deviceName, mDeviceName);
+  CopyUTF8toUTF16(uniqueId, mUniqueId);
 #endif
 
   mInitDone = true;

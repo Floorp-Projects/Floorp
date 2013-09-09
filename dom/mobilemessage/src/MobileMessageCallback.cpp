@@ -104,6 +104,9 @@ MobileMessageCallback::NotifyError(int32_t aError, bool aAsync)
     case nsIMobileMessageCallback::INVALID_ADDRESS_ERROR:
       errorStr = NS_LITERAL_STRING("InvalidAddressError");
       break;
+    case nsIMobileMessageCallback::FDN_CHECK_ERROR:
+      errorStr = NS_LITERAL_STRING("FdnCheckError");
+      break;
     default: // SUCCESS_NO_ERROR is handled above.
       MOZ_CRASH("Should never get here!");
   }

@@ -8,11 +8,12 @@
 #define mozilla_imagelib_FrameAnimator_h_
 
 #include "mozilla/TimeStamp.h"
-#include "FrameBlender.h"
 #include "nsRect.h"
 
 namespace mozilla {
 namespace image {
+
+class FrameBlender;
 
 class FrameAnimator
 {

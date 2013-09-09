@@ -16,7 +16,7 @@
 #include "nsJSUtils.h"
 #include "nsStringGlue.h"
 
-#include "Exceptions.h"
+#include "mozilla/dom/Exceptions.h"
 #include "WorkerInlines.h"
 #include "WorkerPrivate.h"
 
@@ -24,8 +24,7 @@
   (JSPROP_ENUMERATE | JSPROP_SHARED)
 
 USING_WORKERS_NAMESPACE
-
-using mozilla::dom::workers::exceptions::ThrowDOMExceptionForNSResult;
+using mozilla::dom::Throw;
 
 namespace {
 
@@ -90,8 +89,7 @@ private:
     nsRefPtr<nsDOMMultipartFile> file = new nsDOMMultipartFile();
     nsresult rv = file->InitBlob(aCx, aArgc, JS_ARGV(aCx, aVp), Unwrap);
     if (NS_FAILED(rv)) {
-      ThrowDOMExceptionForNSResult(aCx, rv);
-      return false;
+      return Throw(aCx, rv);
     }
 
     JSObject* obj = file::CreateBlob(aCx, file);
@@ -123,8 +121,7 @@ private:
 
     uint64_t size;
     if (NS_FAILED(blob->GetSize(&size))) {
-      ThrowDOMExceptionForNSResult(aCx, NS_ERROR_DOM_FILE_NOT_READABLE_ERR);
-      return false;
+      return Throw(aCx, NS_ERROR_DOM_FILE_NOT_READABLE_ERR);
     }
 
     aVp.set(JS_NumberValue(double(size)));
@@ -143,8 +140,7 @@ private:
 
     nsString type;
     if (NS_FAILED(blob->GetType(type))) {
-      ThrowDOMExceptionForNSResult(aCx, NS_ERROR_DOM_FILE_NOT_READABLE_ERR);
-      return false;
+      return Throw(aCx, NS_ERROR_DOM_FILE_NOT_READABLE_ERR);
     }
 
     JSString* jsType = JS_NewUCStringCopyN(aCx, type.get(), type.Length());
@@ -188,8 +184,7 @@ private:
                               static_cast<uint64_t>(end),
                               contentType, optionalArgc,
                               getter_AddRefs(rtnBlob)))) {
-      ThrowDOMExceptionForNSResult(aCx, NS_ERROR_DOM_FILE_NOT_READABLE_ERR);
-      return false;
+      return Throw(aCx, NS_ERROR_DOM_FILE_NOT_READABLE_ERR);
     }
 
     JSObject* rtnObj = file::CreateBlob(aCx, rtnBlob);
@@ -316,8 +311,7 @@ private:
 
     if (GetWorkerPrivateFromContext(aCx)->UsesSystemPrincipal() &&
         NS_FAILED(file->GetMozFullPathInternal(fullPath))) {
-      ThrowDOMExceptionForNSResult(aCx, NS_ERROR_DOM_FILE_NOT_READABLE_ERR);
-      return false;
+      return Throw(aCx, NS_ERROR_DOM_FILE_NOT_READABLE_ERR);
     }
 
     JSString* jsFullPath = JS_NewUCStringCopyN(aCx, fullPath.get(),

@@ -206,17 +206,13 @@ DeprecatedCanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLaye
 #endif
   } else {
     SurfaceStreamHandle handle = stream->GetShareHandle();
-    SurfaceDescriptor *desc = mDeprecatedTextureClient->GetDescriptor();
-    if (desc->type() != SurfaceDescriptor::TSurfaceStreamDescriptor ||
-        desc->get_SurfaceStreamDescriptor().handle() != handle) {
-      *desc = SurfaceStreamDescriptor(handle, false);
+    mDeprecatedTextureClient->SetDescriptor(SurfaceStreamDescriptor(handle, false));
 
-      // Bug 894405
-      //
-      // Ref this so the SurfaceStream doesn't disappear unexpectedly. The
-      // Compositor will need to unref it when finished.
-      aLayer->mGLContext->AddRef();
-    }
+    // Bug 894405
+    //
+    // Ref this so the SurfaceStream doesn't disappear unexpectedly. The
+    // Compositor will need to unref it when finished.
+    aLayer->mGLContext->AddRef();
   }
 
   aLayer->Painted();

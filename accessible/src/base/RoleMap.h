@@ -619,7 +619,7 @@ ROLE(FONT_CHOOSER,
 ROLE(CHROME_WINDOW,
      "chrome window",
      ATK_ROLE_FRAME,
-     NSAccessibilityUnknownRole,  //Unused on OS X
+     NSAccessibilityGroupRole,  //Contains the main Firefox UI
      ROLE_SYSTEM_APPLICATION,
      IA2_ROLE_FRAME,
      eNoNameRule)

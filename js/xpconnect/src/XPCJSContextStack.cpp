@@ -125,7 +125,7 @@ SafeFinalize(JSFreeOp *fop, JSObject* obj)
     DestroyProtoAndIfaceCache(obj);
 }
 
-static JSClass global_class = {
+JSClass xpc::SafeJSContextGlobalClass = {
     "global_for_XPCJSContextStack_SafeJSContext",
     XPCONNECT_GLOBAL_FLAGS,
     JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
@@ -161,7 +161,7 @@ XPCJSContextStack::GetSafeJSContext()
 
     JS::CompartmentOptions options;
     options.setZone(JS::SystemZone);
-    glob = xpc::CreateGlobalObject(mSafeJSContext, &global_class, principal, options);
+    glob = xpc::CreateGlobalObject(mSafeJSContext, &SafeJSContextGlobalClass, principal, options);
     if (!glob)
         MOZ_CRASH();
 
@@ -171,8 +171,8 @@ XPCJSContextStack::GetSafeJSContext()
 
     // Note: make sure to set the private before calling
     // InitClasses
-    nsCOMPtr<nsIScriptObjectPrincipal> sop = new SandboxPrivate(principal, glob);
-    JS_SetPrivate(glob, sop.forget().get());
+    nsRefPtr<SandboxPrivate> sp = new SandboxPrivate(principal, glob);
+    JS_SetPrivate(glob, sp.forget().get());
 
     // After this point either glob is null and the
     // nsIScriptObjectPrincipal ownership is either handled by the

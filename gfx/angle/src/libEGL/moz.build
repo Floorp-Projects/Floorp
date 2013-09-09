@@ -6,15 +6,21 @@
 
 MODULE = 'libegl'
 
+# Target: 'libEGL'
+#   Requires: 'libGLESv2'
+# src/common:
+CPP_SOURCES += [
+    'debug.cpp',
+    'RefCountObject.cpp',
+]
+
+# src/libEGL
 CPP_SOURCES += [
     'Config.cpp',
     'Display.cpp',
-    'RefCountObject.cpp',
-    'Surface.cpp',
-    'debug.cpp',
     'libEGL.cpp',
     'main.cpp',
+    'Surface.cpp',
 ]
 
 LIBRARY_NAME = 'libEGL'
-

@@ -22,8 +22,7 @@
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
 
-  // Remove all the real reporters and multi-reporters;  save them to
-  // restore at the end.
+  // Remove all the real reporters;  save them to restore at the end.
   mgr.blockRegistration();
   let e = mgr.enumerateReporters();
   let realReporters = [];
@@ -31,13 +30,6 @@
     let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
     mgr.unregisterReporter(r);
     realReporters.push(r);
-  }
-  e = mgr.enumerateMultiReporters();
-  let realMultiReporters = [];
-  while (e.hasMoreElements()) {
-    let r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
-    mgr.unregisterMultiReporter(r);
-    realMultiReporters.push(r);
   }
 
   // Setup various fake-but-deterministic reporters.
@@ -47,35 +39,31 @@
   const OTHER = Ci.nsIMemoryReporter.KIND_OTHER;
   const BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
 
-  function f(aPath, aKind, aAmount) {
-    return {
-      process:     "",
-      path:        aPath,
-      kind:        aKind,
-      units:       BYTES,
-      description: "Desc.",
-      amount:      aAmount
-    };
-  }
-
-  let hiReport  = f("explicit/h/i",  HEAP,  10 * MB);
-  let hi2Report = f("explicit/h/i2", HEAP,   9 * MB);
-  let jkReport  = f("explicit/j/k",  HEAP, 0.5 * MB);
-  let jk2Report = f("explicit/j/k2", HEAP, 0.3 * MB);
+  let hiPath  = "explicit/h/i";
+  let hi2Path = "explicit/h/i2";
+  let jkPath  = "explicit/j/k";
+  let jk2Path = "explicit/j/k2";
 
   let fakeReporters = [
-    f("heap-allocated",     OTHER,   250 * MB),
-    f("explicit/a/b",       HEAP,     50 * MB),
-    f("explicit/a/c/d",     HEAP,     25 * MB),
-    f("explicit/a/c/e",     HEAP,     15 * MB),
-    f("explicit/a/f",       HEAP,     30 * MB),
-    f("explicit/g",         HEAP,    100 * MB),
-    hiReport,
-    hi2Report,
-    jkReport,
-    jk2Report,
-    f("explicit/a/l/m",     HEAP,    0.1 * MB),
-    f("explicit/a/l/n",     HEAP,    0.1 * MB),
+    { name: "fake1",
+      collectReports: function(aCbObj, aClosure) {
+        function f(aP, aK, aA) {
+          aCbObj.callback("", aP, aK, BYTES, aA, "Desc.", aClosure);
+        }
+        f("heap-allocated",     OTHER,   250 * MB);
+        f("explicit/a/b",       HEAP,     50 * MB);
+        f("explicit/a/c/d",     HEAP,     25 * MB);
+        f("explicit/a/c/e",     HEAP,     15 * MB);
+        f("explicit/a/f",       HEAP,     30 * MB);
+        f("explicit/g",         HEAP,    100 * MB);
+        f(hiPath,               HEAP,     10 * MB);
+        f(hi2Path,              HEAP,      9 * MB);
+        f(jkPath,               HEAP,    0.5 * MB);
+        f(jk2Path,              HEAP,    0.3 * MB);
+        f("explicit/a/l/m",     HEAP,    0.1 * MB);
+        f("explicit/a/l/n",     HEAP,    0.1 * MB);
+      }
+    }
   ];
 
   for (let i = 0; i < fakeReporters.length; i++) {
@@ -91,17 +79,13 @@
   <![CDATA[
   function finish()
   {
-    // Unregister fake reporters and multi-reporters, re-register the real
-    // reporters and multi-reporters, just in case subsequent tests rely on
-    // them.
+    // Unregister fake reporters and re-register the real reporters, just in
+    // case subsequent tests rely on them.
     for (let i = 0; i < fakeReporters.length; i++) {
       mgr.unregisterReporter(fakeReporters[i]);
     }
     for (let i = 0; i < realReporters.length; i++) {
       mgr.registerReporterEvenIfBlocked(realReporters[i]);
-    }
-    for (let i = 0; i < realMultiReporters.length; i++) {
-      mgr.registerMultiReporterEvenIfBlocked(realMultiReporters[i]);
     }
     mgr.unblockRegistration();
 
@@ -119,13 +103,13 @@
       // click on a child of the span identified via |id|.
       if (node.nodeName === "button") {
         if (aSwap) {
-          // We swap the paths of hiReport/hi2Report and jkReport/jk2Report
-          // just before updating, to test what happens when significant nodes
-          // become insignificant and vice versa.
-          hiReport.path  = "explicit/j/k";
-          hi2Report.path = "explicit/j/k2";
-          jkReport.path  = "explicit/h/i";
-          jk2Report.path = "explicit/h/i2";
+          // We swap hipath/hi2Path and jkPath/jk2Path just before updating, to
+          // test what happens when significant nodes become insignificant and
+          // vice versa.
+          hiPath  = "explicit/j/k";
+          hi2Path = "explicit/j/k2";
+          jkPath  = "explicit/h/i";
+          jk2Path = "explicit/h/i2";
         }
         node.click();
       } else {

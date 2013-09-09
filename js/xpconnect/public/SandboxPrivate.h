@@ -6,6 +6,7 @@
 #define __SANDBOXPRIVATE_H__
 
 #include "nsIGlobalObject.h"
+#include "nsIScriptObjectPrincipal.h"
 #include "nsIPrincipal.h"
 #include "nsWeakReference.h"
 
@@ -13,6 +14,7 @@
 // Once jsd is gone this file should be moved back to xpconnect/src.
 
 class SandboxPrivate : public nsIGlobalObject,
+                       public nsIScriptObjectPrincipal,
                        public nsSupportsWeakReference
 {
 public:

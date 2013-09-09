@@ -1135,8 +1135,8 @@ ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
             PushMarkStack(gcmarker, type->newScript()->shape.get());
             break;
 
-          case types::TypeObjectAddendum::BinaryData:
-            PushMarkStack(gcmarker, type->binaryData()->typeRepr->ownerObject());
+          case types::TypeObjectAddendum::TypedObject:
+            PushMarkStack(gcmarker, type->typedObject()->typeRepr->ownerObject());
             break;
         }
     }
@@ -1168,8 +1168,8 @@ gc::MarkChildren(JSTracer *trc, types::TypeObject *type)
             MarkShape(trc, &type->newScript()->shape, "type_new_shape");
             break;
 
-          case types::TypeObjectAddendum::BinaryData:
-            type->binaryData()->typeRepr->mark(trc);
+          case types::TypeObjectAddendum::TypedObject:
+            type->typedObject()->typeRepr->mark(trc);
             break;
         }
     }

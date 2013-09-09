@@ -369,11 +369,6 @@ class RemoteReftest(RefTest):
         # Make sure that opening the plugins check page won't hit the network
         prefs["plugins.update.url"] = "http://127.0.0.1:8888/plugins-dummy/updateCheckURL"
 
-        # Workaround for jsreftests.
-        if options.enablePrivilege:
-            prefs["capability.principal.codebase.p2.granted"] = "UniversalXPConnect"
-            prefs["capability.principal.codebase.p2.id"] = "http://%s:%s" % (options.remoteWebServer, options.httpPort)
-
         # Set the extra prefs.
         profile.set_preferences(prefs)
 

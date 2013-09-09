@@ -19,11 +19,12 @@
 
 #include "SpriteController.h"
 
-#include "DisplayInfo.h"
+#include <ui/DisplayInfo.h>
 #include "Input.h"
+#include <utils/BitSet.h>
 #include <utils/RefBase.h>
 #include <utils/Looper.h>
-#include "String8.h"
+#include <utils/String8.h>
 
 #include <SkBitmap.h>
 
@@ -141,11 +142,7 @@ public:
  *
  * Handles pointer acceleration and animation.
  */
-#ifdef HAVE_ANDROID_OS
 class PointerController : public PointerControllerInterface, public MessageHandler {
-#else
-class PointerController : public PointerControllerInterface {
-#endif
 protected:
     virtual ~PointerController();
 
@@ -173,8 +170,7 @@ public:
             const uint32_t* spotIdToIndex, BitSet32 spotIdBits);
     virtual void clearSpots();
 
-    void setDisplaySize(int32_t width, int32_t height);
-    void setDisplayOrientation(int32_t orientation);
+    void setDisplayViewport(int32_t width, int32_t height, int32_t orientation);
     void setPointerIcon(const SpriteIcon& icon);
     void setInactivityTimeout(InactivityTimeout inactivityTimeout);
 
@@ -211,9 +207,7 @@ private:
     sp<PointerControllerPolicyInterface> mPolicy;
     sp<Looper> mLooper;
     sp<SpriteController> mSpriteController;
-#ifdef HAVE_ANDROID_OS
     sp<WeakMessageHandler> mHandler;
-#endif
 
     PointerResources mResources;
 
@@ -247,9 +241,7 @@ private:
     bool getBoundsLocked(float* outMinX, float* outMinY, float* outMaxX, float* outMaxY) const;
     void setPositionLocked(float x, float y);
 
-#ifdef HAVE_ANDROID_OS
     void handleMessage(const Message& message);
-#endif
     void doAnimate();
     void doInactivityTimeout();
 
