@@ -163,26 +163,16 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
 Components.utils.import('resource://gre/modules/XPCOMUtils.jsm');
 Components.utils.import('resource://gre/modules/ctypes.jsm');
 (function DeviceInfoToSettings() {
-  XPCOMUtils.defineLazyServiceGetter(this, 'gSettingsService',
-                                     '@mozilla.org/settingsService;1',
-                                     'nsISettingsService');
-  let lock = gSettingsService.createLock();
   // MOZ_B2G_VERSION is set in b2g/confvars.sh, and is output as a #define value
   // from configure.in, defaults to 1.0.0 if this value is not exist.
 #filter attemptSubstitution
   let os_version = '@MOZ_B2G_VERSION@';
   let os_name = '@MOZ_B2G_OS_NAME@';
 #unfilter attemptSubstitution
-  lock.set('deviceinfo.os', os_version, null, null);
-  lock.set('deviceinfo.software', os_name + ' ' + os_version, null, null);
 
   let appInfo = Cc["@mozilla.org/xre/app-info;1"]
                   .getService(Ci.nsIXULAppInfo);
-  lock.set('deviceinfo.platform_version', appInfo.platformVersion, null, null);
-  lock.set('deviceinfo.platform_build_id', appInfo.platformBuildID, null, null);
-
   let update_channel = Services.prefs.getCharPref('app.update.channel');
-  lock.set('deviceinfo.update_channel', update_channel, null, null);
 
   // Get the hardware info and firmware revision from device properties.
   let hardware_info = null;
@@ -193,9 +183,19 @@ Components.utils.import('resource://gre/modules/ctypes.jsm');
     firmware_revision = libcutils.property_get('ro.firmware_revision');
     product_model = libcutils.property_get('ro.product.model');
 #endif
-  lock.set('deviceinfo.hardware', hardware_info, null, null);
-  lock.set('deviceinfo.firmware_revision', firmware_revision, null, null);
-  lock.set('deviceinfo.product_model', product_model, null, null);
+
+  let software = os_name + ' ' + os_version;
+  let setting = {
+    'deviceinfo.os': os_version,
+    'deviceinfo.software': software,
+    'deviceinfo.platform_version': appInfo.platformVersion,
+    'deviceinfo.platform_build_id': appInfo.platformBuildID,
+    'deviceinfo.update_channel': update_channel,
+    'deviceinfo.hardware': hardware_info,
+    'deviceinfo.firmware_revision': firmware_revision,
+    'deviceinfo.product_model': product_model
+  }
+  window.navigator.mozSettings.createLock().set(setting);
 })();
 
 // =================== Debugger / ADB ====================
