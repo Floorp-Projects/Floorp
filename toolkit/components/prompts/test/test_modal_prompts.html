@@ -17,14 +17,10 @@ Prompter tests: modal prompts
 <pre id="test">
 <script class="testbody" type="text/javascript;version=1.8">
 
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-var isOSX = ("nsILocalFileMac" in Components.interfaces);
-var isLinux = ("@mozilla.org/gnome-gconf-service;1" in Components.classes);
+var isOSX = ("nsILocalFileMac" in SpecialPowers.Ci);
+var isLinux = ("@mozilla.org/gnome-gconf-service;1" in SpecialPowers.Cc);
 
 function pollDialog(okButton) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
     if (okButton.disabled)
         return;
 
@@ -56,11 +52,11 @@ function checkExpectedState(ui, state) {
     }
 
     let shouldBeDefault;
-    shouldBeDefault = (state.defButton == ui.button0);
+    shouldBeDefault = SpecialPowers.compare(state.defButton, ui.button0);
     is(isDefaultButton(ui.button0), shouldBeDefault, "checking button0 default");
-    shouldBeDefault = (state.defButton == ui.button1);
+    shouldBeDefault = SpecialPowers.compare(state.defButton, ui.button1);
     is(isDefaultButton(ui.button1), shouldBeDefault, "checking button1 default");
-    shouldBeDefault = (state.defButton == ui.button2);
+    shouldBeDefault = SpecialPowers.compare(state.defButton, ui.button2);
     is(isDefaultButton(ui.button2), shouldBeDefault, "checking button2 default");
 
     let fm = Cc["@mozilla.org/focus-manager;1"].
@@ -73,9 +69,9 @@ function checkExpectedState(ui, state) {
     }
 
     if (isOSX && state.focused && state.focused.localName == "button")
-        ok(ui.infoBody == e, "buttons don't focus on OS X");
+        ok(SpecialPowers.compare(ui.infoBody, e), "buttons don't focus on OS X");
     else if (state.focused)
-        ok(state.focused == e, "Checking focused element");
+        ok(SpecialPowers.compare(state.focused, e), "Checking focused element");
     else
         is(e, null, "Not expecting a focused element");
 }
@@ -90,7 +86,6 @@ function checkExpectedState(ui, state) {
  * timer is a one-shot).
  */
 function handleDialog(ui, testNum) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     ok(true, "--- handleDialog for test " + testNum +
              " --- (isTabModal=" + isTabModal + ", usePromptService=" + usePromptService + ")");
 
@@ -758,10 +753,9 @@ function handleDialog(ui, testNum) {
         // Can't use setInterval here, because the window's in a modal state
         // and thus DOM events are suppressed.
         pollTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-        pollTimer.initWithCallback(function() {
-          netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+        pollTimer.initWithCallback(SpecialPowers.wrapCallback(function() {
           pollDialog(ui.button0);
-        },
+        }),
                                    100, Ci.nsITimer.TYPE_REPEATING_SLACK);
         return;
     } else {
@@ -1189,10 +1183,7 @@ function runTests() {
     if (usePromptService) {
         startCallbackTimer();
         checkVal.value = false;
-        promptArgs = [channel, level, authinfo, "Check me out!", checkVal];
-        if (usePromptService)
-            promptArgs.unshift(window);
-        isOK = prompter.promptAuth.apply(null, promptArgs);
+        isOK = prompter.promptAuth(window, channel, level, authinfo, "Check me out!", checkVal);
         is(isOK, true, "checked expected retval");
         is(authinfo.username, "username", "checking filled username");
         is(authinfo.password, "password", "checking filled password");
@@ -1213,10 +1204,7 @@ function runTests() {
         authinfo.realm = longString;
         authinfo.username = "";
         authinfo.password = "";
-        promptArgs = [channel, level, authinfo, "Check me out!", checkVal];
-        if (usePromptService)
-            promptArgs.unshift(window);
-        isOK = prompter.promptAuth.apply(null, promptArgs);
+        isOK = prompter.promptAuth(window, channel, level, authinfo, "Check me out!", checkVal);
         is(isOK, true, "checked expected retval");
         is(authinfo.username, "username", "checking filled username");
         is(authinfo.password, "password", "checking filled password");
