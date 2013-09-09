@@ -153,6 +153,26 @@ function openAndLoadWindow(aOptions) {
   return deferred.promise;
 }
 
+function waitForCondition(aConditionFn, aMaxTries=50, aCheckInterval=100) {
+  function tryNow() {
+    tries++;
+    if (aConditionFn()) {
+      deferred.resolve();
+    } else if (tries < aMaxTries) {
+      tryAgain();
+    } else {
+      deferred.reject("Condition timed out: " + aConditionFn.toSource());
+    }
+  }
+  function tryAgain() {
+    setTimeout(tryNow, aCheckInterval);
+  }
+  let deferred = Promise.defer();
+  let tries = 0;
+  tryAgain();
+  return deferred.promise;
+}
+
 function testRunner(testAry, asyncCleanup) {
   for (let test of testAry) {
     info(test.desc);
