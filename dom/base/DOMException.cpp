@@ -9,6 +9,7 @@
 #include "jsprf.h"
 #include "js/OldDebugAPI.h"
 #include "mozilla/Util.h"
+#include "mozilla/dom/Exceptions.h"
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionHoldDrop.h"
@@ -199,8 +200,7 @@ Exception::Exception(const char *aMessage,
   if (aLocation) {
     location = aLocation;
   } else {
-    nsXPConnect* xpc = nsXPConnect::XPConnect();
-    xpc->GetCurrentJSStack(getter_AddRefs(location));
+    location = GetCurrentJSStack();
     // it is legal for there to be no active JS stack, if C++ code
     // is operating on a JS-implemented interface pointer without
     // having been called in turn by JS.  This happens in the JS
@@ -269,7 +269,7 @@ Exception::StealJSVal(JS::Value* aVp)
 
   if (mHoldingJSVal) {
     *aVp = mThrownJSVal;
-    mThrownJSVal = JSVAL_NULL;
+    mThrownJSVal.setNull();
 
     mozilla::DropJSObjects(this);
     mHoldingJSVal = false;

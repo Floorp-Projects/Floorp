@@ -879,25 +879,10 @@ NS_IMETHODIMP
 nsXPConnect::GetCurrentJSStack(nsIStackFrame * *aCurrentJSStack)
 {
     MOZ_ASSERT(aCurrentJSStack, "bad param");
-    *aCurrentJSStack = nullptr;
 
-    // is there a current context available?
-    if (JSContext *cx = GetCurrentJSContext()) {
-        nsCOMPtr<nsIStackFrame> stack = exceptions::CreateStack(cx);
-        if (stack) {
-            // peel off native frames...
-            uint32_t language;
-            nsCOMPtr<nsIStackFrame> caller;
-            while (stack &&
-                   NS_SUCCEEDED(stack->GetLanguage(&language)) &&
-                   language != nsIProgrammingLanguage::JAVASCRIPT &&
-                   NS_SUCCEEDED(stack->GetCaller(getter_AddRefs(caller))) &&
-                   caller) {
-                stack = caller;
-            }
-            NS_IF_ADDREF(*aCurrentJSStack = stack);
-        }
-    }
+    nsCOMPtr<nsIStackFrame> currentStack = dom::GetCurrentJSStack();
+    currentStack.forget(aCurrentJSStack);
+
     return NS_OK;
 }
 
