@@ -1116,7 +1116,7 @@ bool
 IsCurrentThreadRunningChromeWorker()
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-  CycleCollectedJSRuntime* ccrt = nsCycleCollector_currentJSRuntime();
+  CycleCollectedJSRuntime* ccrt = CycleCollectedJSRuntime::Get();
   if (!ccrt) {
     return false;
   }

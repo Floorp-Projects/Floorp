@@ -27,6 +27,7 @@
 #include "JavaScriptParent.h"
 
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/PrimitiveConversions.h"
 
 using namespace xpc;
@@ -1080,13 +1081,13 @@ XPCConvert::ConstructException(nsresult rv, const char* message,
     if (ifaceName && methodName)
         msg = sz = JS_smprintf(format, msg, ifaceName, methodName);
 
-    nsCOMPtr<nsIException> e = new nsXPCException(msg, rv, nullptr, nullptr, data);
+    nsRefPtr<Exception> e = new Exception(msg, rv, nullptr, nullptr, data);
 
-    if (cx && jsExceptionPtr && *exceptn) {
-        nsCOMPtr<nsIXPCException> xpcEx = do_QueryInterface(*exceptn);
-        if (xpcEx)
-            xpcEx->StowJSVal(cx, *jsExceptionPtr);
+    if (cx && jsExceptionPtr) {
+        e->StowJSVal(*jsExceptionPtr);
     }
+
+    e.forget(exceptn);
 
     if (sz)
         JS_smprintf_free(sz);

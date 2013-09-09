@@ -739,17 +739,6 @@ public:
 
     ~XPCJSRuntime();
 
-    already_AddRefed<nsIException> GetPendingException()
-    {
-        nsCOMPtr<nsIException> out = mPendingException;
-        return out.forget();
-    }
-
-    void SetPendingException(nsIException* aException)
-    {
-        mPendingException = aException;
-    }
-
     XPCReadableJSStringWrapper *NewStringWrapper(const PRUnichar *str, uint32_t len);
     void DeleteString(nsAString *string);
 
@@ -830,8 +819,6 @@ private:
     nsRefPtr<AsyncFreeSnowWhite> mAsyncSnowWhiteFreer;
 
     mozilla::TimeStamp mSlowScriptCheckpoint;
-
-    nsCOMPtr<nsIException>   mPendingException;
 
 #define XPCCCX_STRING_CACHE_SIZE 2
 
@@ -2943,54 +2930,21 @@ public:
     static bool SetVerbosity(bool state)
         {bool old = sVerbose; sVerbose = state; return old;}
 
-    static void BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz);
     static bool CheckForPendingException(nsresult result, JSContext *cx);
 
 private:
     static void Verbosify(XPCCallContext& ccx,
                           char** psz, bool own);
 
-    static bool ThrowExceptionObject(JSContext* cx, nsXPCException* e);
-
 private:
     static bool sVerbose;
 };
 
-
 /***************************************************************************/
 
-class XPCJSStack
+class nsXPCException
 {
 public:
-    static nsresult
-    CreateStack(JSContext* cx, nsIStackFrame** stack);
-
-    static nsresult
-    CreateStackFrameLocation(uint32_t aLanguage,
-                             const char* aFilename,
-                             const char* aFunctionName,
-                             int32_t aLineNumber,
-                             nsIStackFrame* aCaller,
-                             nsIStackFrame** stack);
-private:
-    XPCJSStack();   // not implemented
-};
-
-/***************************************************************************/
-
-class nsXPCException :
-            public nsIXPCException,
-            public nsWrapperCache
-{
-public:
-    NS_DEFINE_STATIC_CID_ACCESSOR(NS_XPCEXCEPTION_CID)
-
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsXPCException)
-
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_NSIEXCEPTION
-    NS_DECL_NSIXPCEXCEPTION
-
     static bool NameAndFormatForNSResult(nsresult rv,
                                          const char** name,
                                          const char** format);
@@ -3001,58 +2955,6 @@ public:
                                         const void** iterp);
 
     static uint32_t GetNSResultCount();
-
-    nsXPCException(const char *aMessage,
-                   nsresult aResult,
-                   const char *aName,
-                   nsIStackFrame *aLocation,
-                   nsISupports *aData);
-    // XPCOM factory ctor.
-    nsXPCException();
-    virtual ~nsXPCException();
-
-    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> scope)
-      MOZ_OVERRIDE;
-
-    nsISupports* GetParentObject() const { return nullptr; }
-
-    void GetMessageMoz(nsString& retval);
-
-    uint32_t Result() const;
-
-    void GetName(nsString& retval);
-
-    void GetFilename(nsString& retval);
-
-    uint32_t LineNumber() const;
-
-    uint32_t ColumnNumber() const;
-
-    already_AddRefed<nsIStackFrame> GetLocation() const;
-
-    already_AddRefed<nsISupports> GetInner() const;
-
-    already_AddRefed<nsISupports> GetData() const;
-
-    void Stringify(nsString& retval);
-
-protected:
-    void Reset();
-
-    char*           mMessage;
-    nsresult        mResult;
-    char*           mName;
-    nsIStackFrame*  mLocation;
-    nsISupports*    mData;
-    char*           mFilename;
-    int             mLineNumber;
-    nsIException*   mInner;
-    bool            mInitialized;
-
-    nsAutoJSValHolder mThrownJSVal;
-
-private:
-    static bool sEverMadeOneFromFactory;
 };
 
 /***************************************************************************/

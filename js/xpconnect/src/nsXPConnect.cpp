@@ -36,6 +36,7 @@
 #include "XPCQuickStubs.h"
 
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/IDBIndexBinding.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
 #include "mozilla/dom/IDBOpenDBRequestBinding.h"
@@ -863,12 +864,14 @@ nsXPConnect::CreateStackFrameLocation(uint32_t aLanguage,
 {
     MOZ_ASSERT(_retval, "bad param");
 
-    return XPCJSStack::CreateStackFrameLocation(aLanguage,
-                                                aFilename,
-                                                aFunctionName,
-                                                aLineNumber,
-                                                aCaller,
-                                                _retval);
+    nsCOMPtr<nsIStackFrame> stackFrame =
+        exceptions::CreateStackFrameLocation(aLanguage,
+                                             aFilename,
+                                             aFunctionName,
+                                             aLineNumber,
+                                             aCaller);
+    stackFrame.forget(_retval);
+    return NS_OK;
 }
 
 /* readonly attribute nsIStackFrame CurrentJSStack; */
@@ -880,8 +883,7 @@ nsXPConnect::GetCurrentJSStack(nsIStackFrame * *aCurrentJSStack)
 
     // is there a current context available?
     if (JSContext *cx = GetCurrentJSContext()) {
-        nsCOMPtr<nsIStackFrame> stack;
-        XPCJSStack::CreateStack(cx, getter_AddRefs(stack));
+        nsCOMPtr<nsIStackFrame> stack = exceptions::CreateStack(cx);
         if (stack) {
             // peel off native frames...
             uint32_t language;

@@ -17,7 +17,6 @@ class XPCContext;
 class XPCCallContext;
 
 class XPCJSThrower;
-class XPCJSStack;
 
 class nsXPCWrappedJS;
 class nsXPCWrappedJSClass;
