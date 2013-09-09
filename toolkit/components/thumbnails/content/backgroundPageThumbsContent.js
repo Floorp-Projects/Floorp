@@ -29,6 +29,11 @@ const backgroundPageThumbsContent = {
     docShell.allowMedia = false;
     docShell.allowPlugins = false;
     docShell.allowContentRetargeting = false;
+    let defaultFlags = Ci.nsIRequest.LOAD_ANONYMOUS |
+                       Ci.nsIRequest.LOAD_BYPASS_CACHE |
+                       Ci.nsIRequest.INHIBIT_CACHING |
+                       Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
+    docShell.defaultLoadFlags = defaultFlags;
 
     addMessageListener("BackgroundPageThumbs:capture",
                        this._onCapture.bind(this));
