@@ -183,12 +183,14 @@ function testRunner(testAry, asyncCleanup) {
     info("Running test");
     yield test.run();
     info("Cleanup");
+    ok(!document.getElementById(CustomizableUI.AREA_NAVBAR).hasAttribute("overflowing"), "Shouldn't overflow");
     if (test.teardown)
       yield test.teardown();
   }
   if (asyncCleanup) {
     yield asyncCleanup();
   }
+  ok(CustomizableUI.inDefaultState, "Should remain in default state");
 }
 
 function runTests(testAry, asyncCleanup) {
