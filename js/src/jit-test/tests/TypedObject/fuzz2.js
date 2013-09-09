@@ -1,4 +1,4 @@
-if (!this.hasOwnProperty("Type"))
+if (!this.hasOwnProperty("TypedObject"))
   quit();
 
-new StructType([])
+new TypedObject.StructType([]);

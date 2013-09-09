@@ -29,6 +29,18 @@ using mozilla::DebugOnly;
 
 using namespace js;
 
+const Class js::TypedObjectClass = {
+    "TypedObject",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_TypedObject),
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub
+};
+
 /*
  * Reify() converts a binary value into a JS Object.
  *
@@ -52,18 +64,6 @@ static bool Reify(JSContext *cx, TypeRepresentation *typeRepr, HandleObject type
  */
 static bool ConvertAndCopyTo(JSContext *cx, TypeRepresentation *typeRepr,
                              HandleValue from, uint8_t *mem);
-
-static bool
-TypeThrowError(JSContext *cx, unsigned argc, Value *vp)
-{
-    return ReportIsNotFunction(cx, *vp);
-}
-
-static bool
-DataThrowError(JSContext *cx, unsigned argc, Value *vp)
-{
-    return ReportIsNotFunction(cx, *vp);
-}
 
 static void
 ReportCannotConvertTo(JSContext *cx, HandleValue fromValue, const char *toType)
@@ -239,29 +239,11 @@ IsBinaryArray(JSContext *cx, HandleObject obj)
     return IsBlockOfKind(cx, obj, TypeRepresentation::Array);
 }
 
-const Class js::DataClass = {
-    "Data",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Data),
-    JS_PropertyStub,
-    JS_DeletePropertyStub,
-    JS_PropertyStub,
-    JS_StrictPropertyStub,
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub
-};
-
-const Class js::TypeClass = {
-    "Type",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Type),
-    JS_PropertyStub,
-    JS_DeletePropertyStub,
-    JS_PropertyStub,
-    JS_StrictPropertyStub,
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub
-};
+static inline bool
+IsBinaryStruct(JSContext *cx, HandleObject obj)
+{
+    return IsBlockOfKind(cx, obj, TypeRepresentation::Struct);
+}
 
 static bool
 TypeEquivalent(JSContext *cx, unsigned int argc, Value *vp)
@@ -298,8 +280,7 @@ TypeEquivalent(JSContext *cx, unsigned int argc, Value *vp)
 #define BINARYDATA_NUMERIC_CLASSES(constant_, type_, name_)                   \
 {                                                                             \
     #name_,                                                                   \
-    JSCLASS_HAS_RESERVED_SLOTS(1) |                                           \
-    JSCLASS_HAS_CACHED_PROTO(JSProto_##name_),                                \
+    JSCLASS_HAS_RESERVED_SLOTS(TYPE_RESERVED_SLOTS),                          \
     JS_PropertyStub,       /* addProperty */                                  \
     JS_DeletePropertyStub, /* delProperty */                                  \
     JS_PropertyStub,       /* getProperty */                                  \
@@ -385,8 +366,20 @@ NumericType<ScalarTypeRepresentation::TYPE_UINT8_CLAMPED, uint8_t>::convert(
     return true;
 }
 
-
 } // namespace js
+
+template<ScalarTypeRepresentation::Type N>
+static bool
+NumericTypeToString(JSContext *cx, unsigned int argc, Value *vp)
+{
+    static_assert(N < ScalarTypeRepresentation::TYPE_MAX, "bad numeric type");
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSString *s = JS_NewStringCopyZ(cx, ScalarTypeRepresentation::typeName(N));
+    if (!s)
+        return false;
+    args.rval().setString(s);
+    return true;
+}
 
 static bool
 ConvertAndCopyScalarTo(JSContext *cx, ScalarTypeRepresentation *typeRepr,
@@ -452,68 +445,131 @@ NumericType<type, T>::call(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-template<ScalarTypeRepresentation::Type N>
-bool
-NumericTypeToString(JSContext *cx, unsigned int argc, Value *vp)
-{
-    JS_STATIC_ASSERT(N < ScalarTypeRepresentation::TYPE_MAX);
-    CallArgs args = CallArgsFromVp(argc, vp);
-    JSString *s = JS_NewStringCopyZ(cx, ScalarTypeRepresentation::typeName(N));
-    if (!s)
-        return false;
-    args.rval().set(StringValue(s));
-    return true;
-}
-
 /*
- * When creating:
- *   var A = new ArrayType(uint8, 10)
- * or
- *   var S = new StructType({...})
+ * For code like:
  *
- * A.prototype.__proto__ === ArrayType.prototype.prototype (and similar for
- * StructType).
+ *   var A = new TypedObject.ArrayType(uint8, 10);
+ *   var S = new TypedObject.StructType({...});
  *
- * This function takes a reference to either ArrayType or StructType and
- * returns a JSObject which can be set as A.prototype.
+ * As usual, the [[Prototype]] of A is
+ * TypedObject.ArrayType.prototype.  This permits adding methods to
+ * all ArrayType types, by setting
+ * TypedObject.ArrayType.prototype.methodName = function() { ... }.
+ * The same holds for S with respect to TypedObject.StructType.
+ *
+ * We may also want to add methods to *instances* of an ArrayType:
+ *
+ *   var a = new A();
+ *   var s = new S();
+ *
+ * As usual, the [[Prototype]] of a is A.prototype.  What's
+ * A.prototype?  It's an empty object, and you can set
+ * A.prototype.methodName = function() { ... } to add a method to all
+ * A instances.  (And the same with respect to s and S.)
+ *
+ * But what if you want to add a method to all ArrayType instances,
+ * not just all A instances?  (Or to all StructType instances.)  The
+ * [[Prototype]] of the A.prototype empty object is
+ * TypedObject.ArrayType.prototype.prototype (two .prototype levels!).
+ * So just set TypedObject.ArrayType.prototype.prototype.methodName =
+ * function() { ... } to add a method to all ArrayType instances.
+ * (And, again, same with respect to s and S.)
+ *
+ * This function creates the A.prototype/S.prototype object.  It takes
+ * as an argument either the TypedObject.ArrayType or the
+ * TypedObject.StructType constructor function, then returns an empty
+ * object with the .prototype.prototype object as its [[Prototype]].
  */
 static JSObject *
-SetupAndGetPrototypeObjectForComplexTypeInstance(JSContext *cx,
-                                                 HandleObject complexTypeGlobal)
+CreateComplexTypeInstancePrototype(JSContext *cx,
+                                   HandleObject typeObjectCtor)
 {
-    RootedObject global(cx, cx->compartment()->maybeGlobal());
-    RootedValue complexTypePrototypeVal(cx);
-    RootedValue complexTypePrototypePrototypeVal(cx);
-
-    if (!JSObject::getProperty(cx, complexTypeGlobal, complexTypeGlobal,
-                               cx->names().prototype, &complexTypePrototypeVal))
-        return nullptr;
-
-    JS_ASSERT(complexTypePrototypeVal.isObject()); // immutable binding
-    RootedObject complexTypePrototypeObj(cx,
-        &complexTypePrototypeVal.toObject());
-
-    if (!JSObject::getProperty(cx, complexTypePrototypeObj,
-                               complexTypePrototypeObj,
+    RootedValue ctorPrototypeVal(cx);
+    if (!JSObject::getProperty(cx, typeObjectCtor, typeObjectCtor,
                                cx->names().prototype,
-                               &complexTypePrototypePrototypeVal))
+                               &ctorPrototypeVal))
+    {
+        return nullptr;
+    }
+    JS_ASSERT(ctorPrototypeVal.isObject()); // immutable binding
+    RootedObject ctorPrototypeObj(cx, &ctorPrototypeVal.toObject());
+
+    RootedValue ctorPrototypePrototypeVal(cx);
+    if (!JSObject::getProperty(cx, ctorPrototypeObj, ctorPrototypeObj,
+                               cx->names().prototype,
+                               &ctorPrototypePrototypeVal))
+    {
+        return nullptr;
+    }
+
+    JS_ASSERT(ctorPrototypePrototypeVal.isObject()); // immutable binding
+    RootedObject proto(cx, &ctorPrototypePrototypeVal.toObject());
+    return NewObjectWithGivenProto(cx, &JSObject::class_, proto,
+                                   &typeObjectCtor->global());
+}
+
+template<typename T>
+static JSObject *
+CreateMetaTypeObject(JSContext *cx,
+                     Handle<GlobalObject*> global)
+{
+    RootedAtom className(cx, Atomize(cx, T::class_.name,
+                                     strlen(T::class_.name)));
+    if (!className)
         return nullptr;
 
-    RootedObject prototypeObj(cx,
-        NewObjectWithGivenProto(cx, &JSObject::class_, nullptr, global));
-
-    JS_ASSERT(complexTypePrototypePrototypeVal.isObject()); // immutable binding
-    RootedObject proto(cx, &complexTypePrototypePrototypeVal.toObject());
-    if (!JS_SetPrototype(cx, prototypeObj, proto))
+    RootedObject funcProto(cx, global->getOrCreateFunctionPrototype(cx));
+    if (!funcProto)
         return nullptr;
 
-    return prototypeObj;
+    // Create ctor.prototype, which inherits from Function.prototype
+
+    RootedObject proto(
+        cx, NewObjectWithGivenProto(cx, &JSObject::class_, funcProto,
+                                    global, SingletonObject));
+    if (!proto)
+        return nullptr;
+
+    // Create ctor.prototype.prototype, which inherits from Object.__proto__
+
+    RootedObject objProto(cx, global->getOrCreateObjectPrototype(cx));
+    if (!objProto)
+        return nullptr;
+    RootedObject protoProto(
+        cx, NewObjectWithGivenProto(cx, &JSObject::class_, objProto,
+                                    global, SingletonObject));
+    if (!proto)
+        return nullptr;
+
+    RootedValue protoProtoValue(cx, ObjectValue(*protoProto));
+    if (!JSObject::defineProperty(cx, proto, cx->names().prototype,
+                                  protoProtoValue,
+                                  nullptr, nullptr,
+                                  JSPROP_READONLY | JSPROP_PERMANENT))
+        return nullptr;
+
+    // Create ctor itself
+
+    RootedFunction ctor(
+        cx, global->createConstructor(cx, T::construct, className, 2));
+    if (!ctor ||
+        !LinkConstructorAndPrototype(cx, ctor, proto) ||
+        !DefinePropertiesAndBrand(cx, proto,
+                                  T::typeObjectProperties,
+                                  T::typeObjectMethods) ||
+        !DefinePropertiesAndBrand(cx, protoProto,
+                                  T::typedObjectProperties,
+                                  T::typedObjectMethods))
+    {
+        return nullptr;
+    }
+
+    return ctor;
 }
 
 const Class ArrayType::class_ = {
     "ArrayType",
-    JSCLASS_HAS_RESERVED_SLOTS(ARRAY_TYPE_RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayType),
+    JSCLASS_HAS_RESERVED_SLOTS(ARRAY_TYPE_RESERVED_SLOTS),
     JS_PropertyStub,
     JS_DeletePropertyStub,
     JS_PropertyStub,
@@ -527,6 +583,26 @@ const Class ArrayType::class_ = {
     nullptr,
     BinaryBlock::construct,
     nullptr
+};
+
+const JSPropertySpec ArrayType::typeObjectProperties[] = {
+    JS_PS_END
+};
+
+const JSFunctionSpec ArrayType::typeObjectMethods[] = {
+    JS_FN("repeat", ArrayType::repeat, 1, 0),
+    JS_FN("toSource", ArrayType::toSource, 0, 0),
+    JS_FS_END
+};
+
+const JSPropertySpec ArrayType::typedObjectProperties[] = {
+    JS_PS_END
+};
+
+const JSFunctionSpec ArrayType::typedObjectMethods[] = {
+    JS_FN("subarray", ArrayType::subarray, 2, 0),
+    {"forEach", {nullptr, nullptr}, 1, 0, "ArrayForEach"},
+    JS_FS_END
 };
 
 static JSObject *
@@ -597,35 +673,6 @@ ConvertAndCopyArrayTo(JSContext *cx, ArrayTypeRepresentation *typeRepr,
 }
 
 static bool
-DataInstanceUpdate(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage,
-                             nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             "update()", "0", "s");
-        return false;
-    }
-
-    RootedObject thisObj(cx, ToObjectIfObject(args.thisv()));
-    if (!thisObj || !IsBlock(thisObj)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
-                             JSMSG_INCOMPATIBLE_PROTO,
-                             "Data", "update",
-                             InformalValueTypeName(args.thisv()));
-        return false;
-    }
-
-    RootedValue val(cx, args[0]);
-    if (!ConvertAndCopyTo(cx, val, thisObj))
-        return false;
-
-    args.rval().setUndefined();
-    return true;
-}
-
-static bool
 FillBinaryArrayWithValue(JSContext *cx, HandleObject array, HandleValue val)
 {
     JS_ASSERT(IsBinaryArray(cx, array));
@@ -647,8 +694,8 @@ FillBinaryArrayWithValue(JSContext *cx, HandleObject array, HandleValue val)
     return true;
 }
 
-static bool
-ArrayRepeat(JSContext *cx, unsigned int argc, Value *vp)
+bool
+ArrayType::repeat(JSContext *cx, unsigned int argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -726,8 +773,8 @@ ArrayType::toSource(JSContext *cx, unsigned int argc, Value *vp)
  * see: http://www.khronos.org/registry/typedarray/specs/latest/#7
  *
  */
-static bool
-ArraySubarray(JSContext *cx, unsigned int argc, Value *vp)
+/* static */ bool
+ArrayType::subarray(JSContext *cx, unsigned int argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -781,7 +828,7 @@ ArraySubarray(JSContext *cx, unsigned int argc, Value *vp)
     RootedObject globalObj(cx, cx->compartment()->maybeGlobal());
     JS_ASSERT(globalObj);
     Rooted<GlobalObject*> global(cx, &globalObj->as<GlobalObject>());
-    RootedObject arrayTypeGlobal(cx, global->getOrCreateArrayTypeObject(cx));
+    RootedObject arrayTypeGlobal(cx, global->getArrayType(cx));
 
     RootedObject elementType(cx, ArrayElementType(type));
     RootedObject subArrayType(cx, ArrayType::create(cx, arrayTypeGlobal,
@@ -829,8 +876,8 @@ ArrayFillSubarray(JSContext *cx, unsigned int argc, Value *vp)
     RootedObject funArrayType(cx, &funArrayTypeVal.toObject());
     TypeRepresentation *funArrayTypeRepr = typeRepresentation(funArrayType);
     if (typeRepr != funArrayTypeRepr) {
-        RootedValue thisObjVal(cx, ObjectValue(*thisObj));
-        ReportCannotConvertTo(cx, thisObjVal, funArrayTypeRepr);
+        RootedValue thisObjValue(cx, ObjectValue(*thisObj));
+        ReportCannotConvertTo(cx, thisObjValue, funArrayTypeRepr);
         return false;
     }
 
@@ -847,13 +894,22 @@ InitializeCommonTypeDescriptorProperties(JSContext *cx,
     TypeRepresentation *typeRepr =
         TypeRepresentation::fromOwnerObject(typeReprOwnerObj);
 
+    // equivalent()
+    if (!JS_DefineFunction(cx, obj, "equivalent",
+                           TypeEquivalent, 1, 0))
+    {
+        return false;
+    }
+
     // byteLength
     RootedValue typeByteLength(cx, NumberValue(typeRepr->size()));
     if (!JSObject::defineProperty(cx, obj, cx->names().byteLength,
                                   typeByteLength,
                                   nullptr, nullptr,
                                   JSPROP_READONLY | JSPROP_PERMANENT))
+    {
         return false;
+    }
 
     // byteAlignment
     RootedValue typeByteAlignment(cx, NumberValue(typeRepr->alignment()));
@@ -861,7 +917,9 @@ InitializeCommonTypeDescriptorProperties(JSContext *cx,
                                   typeByteAlignment,
                                   nullptr, nullptr,
                                   JSPROP_READONLY | JSPROP_PERMANENT))
+    {
         return false;
+    }
 
     // variable -- always false since we do not yet support variable-size types
     RootedValue variable(cx, JSVAL_FALSE);
@@ -869,26 +927,40 @@ InitializeCommonTypeDescriptorProperties(JSContext *cx,
                                   variable,
                                   nullptr, nullptr,
                                   JSPROP_READONLY | JSPROP_PERMANENT))
+    {
         return false;
+    }
 
     return true;
 }
 
 JSObject *
-ArrayType::create(JSContext *cx, HandleObject arrayTypeGlobal,
-                  HandleObject elementType, size_t length)
+ArrayType::create(JSContext *cx,
+                  HandleObject metaTypeObject,
+                  HandleObject elementType,
+                  size_t length)
 {
     JS_ASSERT(elementType);
     JS_ASSERT(IsBinaryType(elementType));
 
     TypeRepresentation *elementTypeRepr = typeRepresentation(elementType);
     RootedObject typeReprObj(
-        cx,
-        ArrayTypeRepresentation::Create(cx, elementTypeRepr, length));
+        cx, ArrayTypeRepresentation::Create(cx, elementTypeRepr, length));
     if (!typeReprObj)
         return nullptr;
 
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &ArrayType::class_));
+    RootedValue prototypeVal(cx);
+    if (!JSObject::getProperty(cx, metaTypeObject, metaTypeObject,
+                               cx->names().prototype,
+                               &prototypeVal))
+    {
+        return nullptr;
+    }
+    JS_ASSERT(prototypeVal.isObject()); // immutable binding
+
+    RootedObject obj(
+        cx, NewObjectWithClassProto(cx, &ArrayType::class_,
+                                    &prototypeVal.toObject(), cx->global()));
     if (!obj)
         return nullptr;
     obj->initFixedSlot(SLOT_TYPE_REPR, ObjectValue(*typeReprObj));
@@ -910,9 +982,8 @@ ArrayType::create(JSContext *cx, HandleObject arrayTypeGlobal,
     if (!InitializeCommonTypeDescriptorProperties(cx, obj, typeReprObj))
         return nullptr;
 
-    RootedObject prototypeObj(cx,
-        SetupAndGetPrototypeObjectForComplexTypeInstance(cx, arrayTypeGlobal));
-
+    RootedObject prototypeObj(
+        cx, CreateComplexTypeInstancePrototype(cx, metaTypeObject));
     if (!prototypeObj)
         return nullptr;
 
@@ -984,11 +1055,11 @@ ArrayType::construct(JSContext *cx, unsigned argc, Value *vp)
 /*********************************
  * Structs
  *********************************/
+
 const Class StructType::class_ = {
     "StructType",
     JSCLASS_HAS_RESERVED_SLOTS(STRUCT_TYPE_RESERVED_SLOTS) |
-    JSCLASS_HAS_PRIVATE | // used to store FieldList
-    JSCLASS_HAS_CACHED_PROTO(JSProto_StructType),
+    JSCLASS_HAS_PRIVATE, // used to store FieldList
     JS_PropertyStub,
     JS_DeletePropertyStub,
     JS_PropertyStub,
@@ -1002,6 +1073,23 @@ const Class StructType::class_ = {
     nullptr, /* hasInstance */
     BinaryBlock::construct,
     nullptr  /* trace */
+};
+
+const JSPropertySpec StructType::typeObjectProperties[] = {
+    JS_PS_END
+};
+
+const JSFunctionSpec StructType::typeObjectMethods[] = {
+    JS_FN("toSource", StructType::toSource, 0, 0),
+    JS_FS_END
+};
+
+const JSPropertySpec StructType::typedObjectProperties[] = {
+    JS_PS_END
+};
+
+const JSFunctionSpec StructType::typedObjectMethods[] = {
+    JS_FS_END
 };
 
 static bool
@@ -1092,18 +1180,17 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
 
     // Construct the `TypeRepresentation*`.
     RootedObject typeReprObj(
-        cx,
-        StructTypeRepresentation::Create(cx, ids, fieldTypeReprObjs));
+        cx, StructTypeRepresentation::Create(cx, ids, fieldTypeReprObjs));
     if (!typeReprObj)
         return false;
     StructTypeRepresentation *typeRepr =
         TypeRepresentation::fromOwnerObject(typeReprObj)->asStruct();
-    structType->initFixedSlot(SLOT_TYPE_REPR, ObjectValue(*typeReprObj));
+    structType->initReservedSlot(SLOT_TYPE_REPR, ObjectValue(*typeReprObj));
 
     // Construct for internal use an array with the type object for each field.
     RootedObject fieldTypeVec(
-        cx,
-        NewDenseCopiedArray(cx, fieldTypeObjs.length(), fieldTypeObjs.begin()));
+        cx, NewDenseCopiedArray(cx, fieldTypeObjs.length(),
+                                fieldTypeObjs.begin()));
     if (!fieldTypeVec)
         return false;
 
@@ -1118,9 +1205,8 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
             return false;
     }
     RootedObject fieldNamesVec(
-        cx,
-        NewDenseCopiedArray(cx, fieldNameValues.length(),
-                            fieldNameValues.begin()));
+        cx, NewDenseCopiedArray(cx, fieldNameValues.length(),
+                                fieldNameValues.begin()));
     if (!fieldNamesVec)
         return false;
     RootedValue fieldNamesVecValue(cx, ObjectValue(*fieldNamesVec));
@@ -1152,8 +1238,7 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
 
         // fieldTypes[id] = typeObj
         if (!JSObject::defineGeneric(cx, fieldTypes, fieldId,
-                                     fieldTypeObjs.handleAt(i),
-                                     nullptr, nullptr,
+                                     fieldTypeObjs.handleAt(i), nullptr, nullptr,
                                      JSPROP_READONLY | JSPROP_PERMANENT))
             return false;
     }
@@ -1174,10 +1259,19 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
 }
 
 JSObject *
-StructType::create(JSContext *cx, HandleObject structTypeGlobal,
+StructType::create(JSContext *cx, HandleObject metaTypeObject,
                    HandleObject fields)
 {
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &StructType::class_));
+    RootedValue prototypeVal(cx);
+    if (!JSObject::getProperty(cx, metaTypeObject, metaTypeObject,
+                               cx->names().prototype,
+                               &prototypeVal))
+        return nullptr;
+    JS_ASSERT(prototypeVal.isObject()); // immutable binding
+
+    RootedObject obj(
+        cx, NewObjectWithClassProto(cx, &StructType::class_,
+                                    &prototypeVal.toObject(), cx->global()));
     if (!obj)
         return nullptr;
 
@@ -1192,9 +1286,8 @@ StructType::create(JSContext *cx, HandleObject structTypeGlobal,
     if (!InitializeCommonTypeDescriptorProperties(cx, obj, typeReprObj))
         return nullptr;
 
-    RootedObject prototypeObj(cx,
-        SetupAndGetPrototypeObjectForComplexTypeInstance(cx, structTypeGlobal));
-
+    RootedObject prototypeObj(
+        cx, CreateComplexTypeInstancePrototype(cx, metaTypeObject));
     if (!prototypeObj)
         return nullptr;
 
@@ -1216,9 +1309,9 @@ StructType::construct(JSContext *cx, unsigned int argc, Value *vp)
     }
 
     if (args.length() >= 1 && args[0].isObject()) {
-        RootedObject structTypeGlobal(cx, &args.callee());
+        RootedObject metaTypeObject(cx, &args.callee());
         RootedObject fields(cx, &args[0].toObject());
-        RootedObject obj(cx, create(cx, structTypeGlobal, fields));
+        RootedObject obj(cx, create(cx, metaTypeObject, fields));
         if (!obj)
             return false;
         args.rval().setObject(*obj);
@@ -1305,233 +1398,159 @@ Reify(JSContext *cx, TypeRepresentation *typeRepr, HandleObject type,
     MOZ_ASSUME_UNREACHABLE("Invalid typeRepr kind");
 }
 
-bool
-GlobalObject::initDataObject(JSContext *cx, Handle<GlobalObject *> global)
-{
-    RootedObject DataProto(cx);
-    DataProto = NewObjectWithGivenProto(cx, &DataClass,
-                                        global->getOrCreateObjectPrototype(cx),
-                                        global, SingletonObject);
-    if (!DataProto)
-        return false;
+///////////////////////////////////////////////////////////////////////////
+// Creating the TypedObject "module"
+//
+// We create one global, `TypedObject`, which contains the following
+// members:
+//
+// 1. uint8, uint16, etc
+// 2. ArrayType
+// 3. StructType
+//
+// These are all callable/constructable objects whose [[Prototype]]s
+// are Function.prototype, but they are not functions in the JSAPI
+// sense (as in having the class JSFunction::class_).
+//
+// Each type object also has its own `prototype` field. Therefore,
+// using `StructType` as an example, the basic setup is as shown here
+// (each edge is labeled with a property name, and [[P]] is short for
+// [[Prototype]]):
+//
+//   StructType --[[P]]--> Function.[[P]]
+//        |
+//    prototype
+//        |
+//        v
+//       { } -----[[P]]--> Function.[[P]]
+//        |
+//    prototype
+//        |
+//        v
+//       { } -----[[P]]--> Object.[[P]]
+//
+// When a new type object (e.g., an instance of StructType) is created,
+// it will look as follows:
+//
+//   MyStruct -[[P]]-> StructType.prototype -[[P]]-> Function.[[P]]
+//        |
+//    prototype
+//        |
+//        v
+//       { } --[[P]]-> StructType.prototype.prototype
+//
+// Finally, when an instance of `MyStruct` is created, its
+// structure is as follows:
+//
+//    object -[[P]]--> MyStruct.prototype
+//
+// This structure permits users to install methods for all struct
+// types (by modifying StructType.prototype); for all struct instances
+// (by modifying StructType.prototype.prototype); or for all instances
+// of `MyStruct` specifically (MyStruct.prototype).
 
-    RootedAtom DataName(cx, ClassName(JSProto_Data, cx));
-    RootedFunction DataCtor(cx,
-            global->createConstructor(cx, DataThrowError, DataName,
-                                      1, JSFunction::ExtendedFinalizeKind));
-
-    if (!DataCtor)
-        return false;
-
-    if (!JS_DefineFunction(cx, DataProto, "update", DataInstanceUpdate, 1, 0))
-        return false;
-
-    if (!LinkConstructorAndPrototype(cx, DataCtor, DataProto))
-        return false;
-
-    if (!DefineConstructorAndPrototype(cx, global, JSProto_Data,
-                                       DataCtor, DataProto))
-        return false;
-
-    global->setConstructor(JSProto_Data, ObjectValue(*DataCtor));
-    return true;
-}
-
-bool
-GlobalObject::initTypeObject(JSContext *cx, Handle<GlobalObject *> global)
-{
-    RootedObject TypeProto(cx, global->getOrCreateDataObject(cx));
-    if (!TypeProto)
-        return false;
-
-    RootedAtom TypeName(cx, ClassName(JSProto_Type, cx));
-    RootedFunction TypeCtor(cx,
-            global->createConstructor(cx, TypeThrowError, TypeName,
-                                      1, JSFunction::ExtendedFinalizeKind));
-    if (!TypeCtor)
-        return false;
-
-    if (!LinkConstructorAndPrototype(cx, TypeCtor, TypeProto))
-        return false;
-
-    if (!DefineConstructorAndPrototype(cx, global, JSProto_Type,
-                                       TypeCtor, TypeProto))
-        return false;
-
-    global->setConstructor(JSProto_Type, ObjectValue(*TypeCtor));
-    return true;
-}
-
-bool
-GlobalObject::initArrayTypeObject(JSContext *cx, Handle<GlobalObject *> global)
-{
-    RootedFunction ctor(cx,
-        global->createConstructor(cx, ArrayType::construct,
-                                  cx->names().ArrayType, 2));
-
-    global->setConstructor(JSProto_ArrayTypeObject, ObjectValue(*ctor));
-    return true;
-}
-
-static JSObject *
-SetupComplexHeirarchy(JSContext *cx, Handle<GlobalObject*> global, JSProtoKey protoKey,
-                      HandleObject complexObject, MutableHandleObject proto,
-                      MutableHandleObject protoProto)
-{
-    // get the 'Type' constructor
-    RootedObject TypeObject(cx, global->getOrCreateTypeObject(cx));
-    if (!TypeObject)
-        return nullptr;
-
-    // Set complexObject.__proto__ = Type
-    if (!JS_SetPrototype(cx, complexObject, TypeObject))
-        return nullptr;
-
-    RootedObject DataObject(cx, global->getOrCreateDataObject(cx));
-    if (!DataObject)
-        return nullptr;
-
-    RootedValue DataProtoVal(cx);
-    if (!JSObject::getProperty(cx, DataObject, DataObject,
-                               cx->names().prototype, &DataProtoVal))
-        return nullptr;
-
-    RootedObject DataProto(cx, &DataProtoVal.toObject());
-    if (!DataProto)
-        return nullptr;
-
-    RootedObject prototypeObj(cx,
-        NewObjectWithGivenProto(cx, &JSObject::class_, nullptr, global));
-    if (!prototypeObj)
-        return nullptr;
-    if (!LinkConstructorAndPrototype(cx, complexObject, prototypeObj))
-        return nullptr;
-    if (!DefineConstructorAndPrototype(cx, global, protoKey,
-                                       complexObject, prototypeObj))
-        return nullptr;
-
-    // Set complexObject.prototype.__proto__ = Data
-    if (!JS_SetPrototype(cx, prototypeObj, DataObject))
-        return nullptr;
-
-    proto.set(prototypeObj);
-
-    // Set complexObject.prototype.prototype.__proto__ = Data.prototype
-    RootedObject prototypePrototypeObj(cx, JS_NewObject(cx, nullptr, nullptr,
-                                       global));
-
-    if (!LinkConstructorAndPrototype(cx, prototypeObj,
-                                     prototypePrototypeObj))
-        return nullptr;
-
-    if (!JS_SetPrototype(cx, prototypePrototypeObj, DataProto))
-        return nullptr;
-
-    protoProto.set(prototypePrototypeObj);
-
-    return complexObject;
-}
-
+template<ScalarTypeRepresentation::Type type>
 static bool
-InitType(JSContext *cx, HandleObject globalObj)
+DefineNumericClass(JSContext *cx, Handle<GlobalObject*> global,
+                   HandleObject module, HandlePropertyName className);
+
+JSObject *
+js_InitTypedObjectClass(JSContext *cx, HandleObject obj)
 {
-    JS_ASSERT(globalObj->isNative());
-    Rooted<GlobalObject*> global(cx, &globalObj->as<GlobalObject>());
-    RootedObject ctor(cx, global->getOrCreateTypeObject(cx));
-    if (!ctor)
-        return false;
+    /*
+     * The initialization strategy for TypedObjects is mildly unusual
+     * compared to other classes. Because all of the types are members
+     * of a single global, `TypedObject`, we basically make the
+     * initialized for the `TypedObject` class populate the
+     * `TypedObject` global (which is referred to as "module" herein).
+     */
 
-    RootedValue protoVal(cx);
-    if (!JSObject::getProperty(cx, ctor, ctor,
-                               cx->names().prototype, &protoVal))
-        return false;
+    JS_ASSERT(obj->is<GlobalObject>());
+    Rooted<GlobalObject *> global(cx, &obj->as<GlobalObject>());
 
-    JS_ASSERT(protoVal.isObject());
-    RootedObject protoObj(cx, &protoVal.toObject());
+    RootedObject objProto(cx, global->getOrCreateObjectPrototype(cx));
+    if (!objProto)
+        return nullptr;
 
-    if (!JS_DefineFunction(cx, protoObj, "equivalent", TypeEquivalent, 0, 0))
-        return false;
+    RootedObject module(cx, NewObjectWithClassProto(cx, &JSObject::class_,
+                                                    objProto, global));
 
-    return true;
+    // Define TypedObject global.
+
+    RootedValue moduleValue(cx, ObjectValue(*module));
+
+    // uint8, uint16, etc
+
+#define BINARYDATA_NUMERIC_DEFINE(constant_, type_, name_)                      \
+    if (!DefineNumericClass<constant_>(cx, global, module, cx->names().name_))  \
+        return nullptr;
+    JS_FOR_EACH_SCALAR_TYPE_REPR(BINARYDATA_NUMERIC_DEFINE)
+#undef BINARYDATA_NUMERIC_DEFINE
+
+    // ArrayType.
+
+    RootedObject arrayType(cx, CreateMetaTypeObject<ArrayType>(cx, global));
+    if (!arrayType)
+        return nullptr;
+
+    RootedValue arrayTypeValue(cx, ObjectValue(*arrayType));
+    if (!JSObject::defineProperty(cx, module, cx->names().ArrayType,
+                                  arrayTypeValue,
+                                  nullptr, nullptr,
+                                  JSPROP_READONLY | JSPROP_PERMANENT))
+        return nullptr;
+
+    // StructType.
+
+    RootedObject structType(cx, CreateMetaTypeObject<StructType>(cx, global));
+    if (!structType)
+        return nullptr;
+
+    RootedValue structTypeValue(cx, ObjectValue(*structType));
+    if (!JSObject::defineProperty(cx, module, cx->names().StructType,
+                                  structTypeValue,
+                                  nullptr, nullptr,
+                                  JSPROP_READONLY | JSPROP_PERMANENT))
+        return nullptr;
+
+    // Everything is setup, install module on the global object:
+    if (!JSObject::defineProperty(cx, global, cx->names().TypedObject,
+                                  moduleValue,
+                                  nullptr, nullptr,
+                                  0))
+        return nullptr;
+    global->setReservedSlot(JSProto_TypedObject, moduleValue);
+    global->setArrayType(arrayType);
+    global->markStandardClassInitializedNoProto(&TypedObjectClass);
+
+    return module;
 }
 
-static bool
-InitArrayType(JSContext *cx, HandleObject globalObj)
+JSObject *
+js_InitTypedObjectDummy(JSContext *cx, HandleObject obj)
 {
-    JS_ASSERT(globalObj->isNative());
-    Rooted<GlobalObject*> global(cx, &globalObj->as<GlobalObject>());
-    RootedObject ctor(cx, global->getOrCreateArrayTypeObject(cx));
-    if (!ctor)
-        return false;
+    /*
+     * This function is entered into the jsprototypes.h table
+     * as the initializer for `TypedObject`. It should not
+     * be executed via the `standard_class_atoms` mechanism.
+     */
 
-    RootedObject proto(cx);
-    RootedObject protoProto(cx);
-    if (!SetupComplexHeirarchy(cx, global, JSProto_ArrayType,
-                               ctor, &proto, &protoProto))
-        return false;
-
-    if (!JS_DefineFunction(cx, proto, "repeat", ArrayRepeat, 1, 0))
-        return false;
-
-    if (!JS_DefineFunction(cx, proto, "toSource", ArrayType::toSource, 0, 0))
-        return false;
-
-    RootedObject arrayProto(cx);
-    if (!FindProto(cx, &ArrayObject::class_, &arrayProto))
-        return false;
-
-    RootedValue forEachFunVal(cx);
-    RootedAtom forEachAtom(cx, Atomize(cx, "forEach", 7));
-    RootedId forEachId(cx, AtomToId(forEachAtom));
-    if (!JSObject::getProperty(cx, arrayProto, arrayProto, forEachAtom->asPropertyName(), &forEachFunVal))
-        return false;
-
-    if (!JSObject::defineGeneric(cx, protoProto, forEachId, forEachFunVal, nullptr, nullptr, 0))
-        return false;
-
-    if (!JS_DefineFunction(cx, protoProto, "subarray",
-                           ArraySubarray, 1, 0))
-        return false;
-
-    return true;
-}
-
-static bool
-InitStructType(JSContext *cx, HandleObject obj)
-{
-    JS_ASSERT(obj->isNative());
-    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
-    RootedFunction ctor(cx,
-        global->createConstructor(cx, StructType::construct,
-                                  cx->names().StructType, 1));
-
-    if (!ctor)
-        return false;
-
-    RootedObject proto(cx);
-    RootedObject protoProto(cx);
-    if (!SetupComplexHeirarchy(cx, global, JSProto_StructType,
-                               ctor, &proto, &protoProto))
-        return false;
-
-    if (!JS_DefineFunction(cx, proto, "toSource", StructType::toSource, 0, 0))
-        return false;
-
-    return true;
+    MOZ_ASSUME_UNREACHABLE("shouldn't be initializing TypedObject via the JSProtoKey initializer mechanism");
 }
 
 template<ScalarTypeRepresentation::Type type>
 static bool
 DefineNumericClass(JSContext *cx,
-                   HandleObject global,
-                   const char *name)
+                   Handle<GlobalObject*> global,
+                   HandleObject module,
+                   HandlePropertyName className)
 {
-    RootedObject globalProto(cx, JS_GetFunctionPrototype(cx, global));
-    RootedObject numFun(
-        cx,
-        JS_DefineObject(cx, global, name,
-                        (const JSClass *) &NumericTypeClasses[type],
-                        globalProto, 0));
+    RootedObject funcProto(cx, global->getOrCreateFunctionPrototype(cx));
+    if (!funcProto)
+        return false;
+
+    RootedObject numFun(cx, NewObjectWithClassProto(cx, &NumericTypeClasses[type],
+                                                    funcProto, global));
     if (!numFun)
         return false;
 
@@ -1550,33 +1569,16 @@ DefineNumericClass(JSContext *cx,
 
     if (!JS_DefineFunction(cx, numFun, "toSource",
                            NumericTypeToString<type>, 0, 0))
+    {
+        return false;
+    }
+
+    RootedValue numFunValue(cx, ObjectValue(*numFun));
+    if (!JSObject::defineProperty(cx, module, className,
+                                  numFunValue, nullptr, nullptr, 0))
         return false;
 
     return true;
-}
-
-JSObject *
-js_InitTypedObjectClasses(JSContext *cx, HandleObject obj)
-{
-    JS_ASSERT(obj->is<GlobalObject>());
-    Rooted<GlobalObject *> global(cx, &obj->as<GlobalObject>());
-
-    if (!InitType(cx, obj))
-        return nullptr;
-
-#define BINARYDATA_NUMERIC_DEFINE(constant_, type_, name_)                    \
-    if (!DefineNumericClass<constant_>(cx, global, #name_))                   \
-        return nullptr;
-    JS_FOR_EACH_SCALAR_TYPE_REPR(BINARYDATA_NUMERIC_DEFINE)
-#undef BINARYDATA_NUMERIC_DEFINE
-
-    if (!InitArrayType(cx, obj))
-        return nullptr;
-
-    if (!InitStructType(cx, obj))
-        return nullptr;
-
-    return global;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1587,8 +1589,7 @@ const Class BinaryBlock::class_ = {
     Class::NON_NATIVE |
     JSCLASS_HAS_RESERVED_SLOTS(BLOCK_RESERVED_SLOTS) |
     JSCLASS_HAS_PRIVATE |
-    JSCLASS_IMPLEMENTS_BARRIERS |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayType),
+    JSCLASS_IMPLEMENTS_BARRIERS,
     JS_PropertyStub,
     JS_DeletePropertyStub,
     JS_PropertyStub,
@@ -1660,7 +1661,7 @@ ReportBlockTypeError(JSContext *cx,
     return false;
 }
 
-/*static*/ void
+/* static */ void
 BinaryBlock::obj_trace(JSTracer *trace, JSObject *object)
 {
     JS_ASSERT(object->hasClass(&class_));
@@ -1669,7 +1670,7 @@ BinaryBlock::obj_trace(JSTracer *trace, JSObject *object)
         gc::MarkSlot(trace, &object->getReservedSlotRef(i), "BinaryBlockSlot");
 }
 
-/*static*/ void
+/* static */ void
 BinaryBlock::obj_finalize(js::FreeOp *op, JSObject *obj)
 {
     if (!obj->getFixedSlot(SLOT_BLOCKREFOWNER).isNull())
@@ -1679,7 +1680,7 @@ BinaryBlock::obj_finalize(js::FreeOp *op, JSObject *obj)
         op->free_(mem);
 }
 
-/*static*/ JSObject *
+/* static */ JSObject *
 BinaryBlock::createNull(JSContext *cx, HandleObject type, HandleValue owner)
 {
     JS_ASSERT(IsBinaryType(type));
@@ -1708,7 +1709,7 @@ BinaryBlock::createNull(JSContext *cx, HandleObject type, HandleValue owner)
     return obj;
 }
 
-/*static*/ JSObject *
+/* static */ JSObject *
 BinaryBlock::createZeroed(JSContext *cx, HandleObject type)
 {
     RootedValue owner(cx, NullValue());
@@ -1726,7 +1727,7 @@ BinaryBlock::createZeroed(JSContext *cx, HandleObject type)
     return obj;
 }
 
-/*static*/ JSObject *
+/* static */ JSObject *
 BinaryBlock::createDerived(JSContext *cx, HandleObject type,
                            HandleObject owner, size_t offset)
 {
@@ -1743,7 +1744,7 @@ BinaryBlock::createDerived(JSContext *cx, HandleObject type,
     return obj;
 }
 
-/*static*/ bool
+/* static */ bool
 BinaryBlock::construct(JSContext *cx, unsigned int argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -2274,7 +2275,7 @@ BinaryBlock::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
           case JSENUMERATE_INIT_ALL:
           case JSENUMERATE_INIT:
             statep.setInt32(0);
-            idp.set(INT_TO_JSID(typeRepr->asArray()->length() + 1));
+            idp.set(INT_TO_JSID(typeRepr->asArray()->length()));
             break;
 
           case JSENUMERATE_NEXT:
@@ -2283,11 +2284,8 @@ BinaryBlock::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
             if (index < typeRepr->asArray()->length()) {
                 idp.set(INT_TO_JSID(index));
                 statep.setInt32(index + 1);
-            } else if (index == typeRepr->asArray()->length()) {
-                idp.set(NameToId(cx->names().length));
-                statep.setInt32(index + 1);
             } else {
-                JS_ASSERT(index == typeRepr->asArray()->length() + 1);
+                JS_ASSERT(index == typeRepr->asArray()->length());
                 statep.setNull();
             }
 
@@ -2334,4 +2332,3 @@ BinaryBlock::dataOffset()
 {
     return JSObject::getPrivateDataOffset(BLOCK_RESERVED_SLOTS + 1);
 }
-
