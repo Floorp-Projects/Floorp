@@ -250,6 +250,7 @@ let tests = [
     yield capture(url);
     let file = fileForURL(url);
     ok(file.exists(), "Thumbnail file should exist after capture.");
+    file.remove(false);
     // now load it up in a browser - it should *not* be red, otherwise the
     // cookie above was saved.
     let tab = gBrowser.loadOneTab(url, { inBackground: false });
