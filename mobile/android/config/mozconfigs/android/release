@@ -25,6 +25,6 @@ export MOZILLA_OFFICIAL=1
 export MOZ_TELEMETRY_REPORTING=1
 
 ac_add_options --enable-official-branding
-ac_add_options --with-branding=mobile/android/branding/beta
+ac_add_options --with-branding=mobile/android/branding/official
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"
