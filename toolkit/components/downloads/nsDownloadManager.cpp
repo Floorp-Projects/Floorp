@@ -2775,7 +2775,7 @@ nsDownload::SetState(DownloadState aState)
         if (mimeInfo)
           mimeInfo->GetMIMEType(contentType);
 
-        mozilla::AndroidBridge::Bridge()->ScanMedia(path, contentType);
+        mozilla::AndroidBridge::Bridge()->ScanMedia(path, NS_ConvertUTF8toUTF16(contentType));
 #endif
       }
 
