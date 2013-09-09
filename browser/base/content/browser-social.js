@@ -10,7 +10,8 @@ let SocialUI,
     SocialShare,
     SocialMenu,
     SocialToolbar,
-    SocialSidebar;
+    SocialSidebar,
+    SocialStatus;
 
 (function() {
 
