@@ -1128,7 +1128,7 @@ class Assembler
 {
   public:
     // ARM conditional constants
-    typedef enum {
+    enum ARMCondition {
         EQ = 0x00000000, // Zero
         NE = 0x10000000, // Non-zero
         CS = 0x20000000,
@@ -1144,7 +1144,7 @@ class Assembler
         GT = 0xc0000000,
         LE = 0xd0000000,
         AL = 0xe0000000
-    } ARMCondition;
+    };
 
     enum Condition {
         Equal = EQ,
