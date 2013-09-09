@@ -57,18 +57,18 @@ namespace storage {
 // the multi-reporter provides reports that add up to the total.  But it's
 // useful to have the total in the "Other Measurements" list in about:memory,
 // and more importantly, we also gather the total via telemetry.
-class StorageSQLiteUniReporter MOZ_FINAL : public MemoryUniReporter
+class StorageSQLiteReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
-  StorageSQLiteUniReporter()
-    : MemoryUniReporter("storage-sqlite", KIND_OTHER, UNITS_BYTES,
+  StorageSQLiteReporter()
+    : MemoryReporterBase("storage-sqlite", KIND_OTHER, UNITS_BYTES,
                          "Memory used by SQLite.")
   {}
 private:
   int64_t Amount() MOZ_OVERRIDE { return ::sqlite3_memory_used(); }
 };
 
-class StorageSQLiteMultiReporter MOZ_FINAL : public nsIMemoryReporter
+class StorageSQLiteMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
 {
 private:
   Service *mService;    // a weakref because Service contains a strongref to this
@@ -97,7 +97,7 @@ public:
 
   NS_IMETHOD GetName(nsACString &aName)
   {
-      aName.AssignLiteral("storage-sqlite-multi");
+      aName.AssignLiteral("storage-sqlite");
       return NS_OK;
   }
 
@@ -107,7 +107,7 @@ public:
   // main thread!  But at the time of writing this function is only called when
   // about:memory is loaded (not, for example, when telemetry pings occur) and
   // any delays in that case aren't so bad.
-  NS_IMETHOD CollectReports(nsIMemoryReporterCallback *aCb,
+  NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *aCb,
                             nsISupports *aClosure)
   {
     nsresult rv;
@@ -164,7 +164,8 @@ public:
 
 private:
   /**
-   * Passes a single SQLite memory statistic to a memory reporter callback.
+   * Passes a single SQLite memory statistic to a memory multi-reporter
+   * callback.
    *
    * @param aCallback
    *        The callback.
@@ -184,7 +185,7 @@ private:
    * @param aTotal
    *        The accumulator for the measurement.
    */
-  nsresult reportConn(nsIMemoryReporterCallback *aCb,
+  nsresult reportConn(nsIMemoryMultiReporterCallback *aCb,
                       nsISupports *aClosure,
                       sqlite3 *aConn,
                       const nsACString &aPathHead,
@@ -215,7 +216,7 @@ private:
 
 NS_IMPL_ISUPPORTS1(
   StorageSQLiteMultiReporter,
-  nsIMemoryReporter
+  nsIMemoryMultiReporter
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -307,8 +308,8 @@ Service::Service()
 
 Service::~Service()
 {
-  (void)::NS_UnregisterMemoryReporter(mStorageSQLiteUniReporter);
-  (void)::NS_UnregisterMemoryReporter(mStorageSQLiteMultiReporter);
+  (void)::NS_UnregisterMemoryReporter(mStorageSQLiteReporter);
+  (void)::NS_UnregisterMemoryMultiReporter(mStorageSQLiteMultiReporter);
 
   int rc = sqlite3_vfs_unregister(mSqliteVFS);
   if (rc != SQLITE_OK)
@@ -540,10 +541,10 @@ Service::initialize()
 
   // Create and register our SQLite memory reporters.  Registration can only
   // happen on the main thread (otherwise you'll get cryptic crashes).
-  mStorageSQLiteUniReporter = new StorageSQLiteUniReporter();
+  mStorageSQLiteReporter = new StorageSQLiteReporter();
   mStorageSQLiteMultiReporter = new StorageSQLiteMultiReporter(this);
-  (void)::NS_RegisterMemoryReporter(mStorageSQLiteUniReporter);
-  (void)::NS_RegisterMemoryReporter(mStorageSQLiteMultiReporter);
+  (void)::NS_RegisterMemoryReporter(mStorageSQLiteReporter);
+  (void)::NS_RegisterMemoryMultiReporter(mStorageSQLiteMultiReporter);
 
   return NS_OK;
 }

@@ -73,7 +73,7 @@ class MediaMemoryTracker
 
   DecodersArray mDecoders;
 
-  nsCOMPtr<nsIMemoryReporter> mReporter;
+  nsCOMPtr<nsIMemoryMultiReporter> mReporter;
 
 public:
   static void AddMediaDecoder(MediaDecoder* aDecoder)
@@ -1724,7 +1724,7 @@ MediaDecoder::IsWMFEnabled()
 }
 #endif
 
-class MediaReporter MOZ_FINAL : public nsIMemoryReporter
+class MediaReporter MOZ_FINAL : public nsIMemoryMultiReporter
 {
 public:
   NS_DECL_ISUPPORTS
@@ -1735,7 +1735,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCb,
+  NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback* aCb,
                             nsISupports* aClosure)
   {
     int64_t video, audio;
@@ -1761,7 +1761,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(MediaReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS1(MediaReporter, nsIMemoryMultiReporter)
 
 MediaDecoderOwner*
 MediaDecoder::GetOwner()
@@ -1773,12 +1773,12 @@ MediaDecoder::GetOwner()
 MediaMemoryTracker::MediaMemoryTracker()
   : mReporter(new MediaReporter())
 {
-  NS_RegisterMemoryReporter(mReporter);
+  NS_RegisterMemoryMultiReporter(mReporter);
 }
 
 MediaMemoryTracker::~MediaMemoryTracker()
 {
-  NS_UnregisterMemoryReporter(mReporter);
+  NS_UnregisterMemoryMultiReporter(mReporter);
 }
 
 } // namespace mozilla

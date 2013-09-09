@@ -53,11 +53,11 @@
 namespace mozilla {
 namespace scache {
 
-class StartupCacheMappingReporter MOZ_FINAL : public MemoryUniReporter
+class StartupCacheMappingReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
   StartupCacheMappingReporter()
-    : MemoryUniReporter("explicit/startup-cache/mapping",
+    : MemoryReporterBase("explicit/startup-cache/mapping",
                          KIND_NONHEAP, UNITS_BYTES,
 "Memory used to hold the mapping of the startup cache from file.  This memory "
 "is likely to be swapped out shortly after start-up.")
@@ -71,11 +71,11 @@ private:
   }
 };
 
-class StartupCacheDataReporter MOZ_FINAL : public MemoryUniReporter
+class StartupCacheDataReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
   StartupCacheDataReporter()
-    : MemoryUniReporter("explicit/startup-cache/data", KIND_HEAP, UNITS_BYTES,
+    : MemoryReporterBase("explicit/startup-cache/data", KIND_HEAP, UNITS_BYTES,
 "Memory used by the startup cache for things other than the file mapping.")
   {}
 private:
