@@ -106,7 +106,7 @@ CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
   //
   // We can do this even though we're not in the right compartment yet, because
   // Rooted<> does not care about compartments.
-  xpc_UnmarkGrayObject(aCallback);
+  JS::ExposeObjectToActiveJS(aCallback);
   mRootedCallable.construct(cx, aCallback);
 
   // Check that it's ok to run this callback at all.

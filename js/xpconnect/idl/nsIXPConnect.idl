@@ -7,26 +7,15 @@
 /* The core XPConnect public interfaces. */
 
 #include "nsISupports.idl"
-#include "nsIClassInfo.idl"
-#include "xpccomponents.idl"
-#include "xpcjsid.idl"
-#include "xpcexception.idl"
-#include "nsIInterfaceInfo.idl"
-#include "nsIInterfaceInfoManager.idl"
-#include "nsIExceptionService.idl"
-#include "nsIVariant.idl"
-#include "nsIObjectOutputStream.idl"
-#include "nsIObjectInputStream.idl"
 
 %{ C++
 #include "jspubtd.h"
 #include "js/TypeDecls.h"
-#include "xptinfo.h"
-#include "nsAXPCNativeCallContext.h"
 
 struct JSFreeOp;
 
 class nsWrapperCache;
+class nsAXPCNativeCallContext;
 %}
 
 /***************************************************************************/
@@ -58,6 +47,11 @@ interface nsIXPConnectWrappedNative;
 interface nsIInterfaceInfo;
 interface nsIXPCSecurityManager;
 interface nsIPrincipal;
+interface nsIClassInfo;
+interface nsIVariant;
+interface nsIStackFrame;
+interface nsIObjectInputStream;
+interface nsIObjectOutputStream;
 
 /***************************************************************************/
 [uuid(909e8641-7c54-4dff-9b94-ba631f057b33)]

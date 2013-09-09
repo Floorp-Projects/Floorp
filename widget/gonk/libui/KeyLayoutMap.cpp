@@ -15,15 +15,15 @@
  */
 
 #define LOG_TAG "KeyLayoutMap"
+#include "cutils_log.h"
 
 #include <stdlib.h>
-#include "utils_Log.h"
 #include "android_keycodes.h"
 #include "Keyboard.h"
 #include "KeyLayoutMap.h"
 #include <utils/Errors.h>
 #include "Tokenizer.h"
-#include "Timers.h"
+#include <utils/Timers.h>
 
 // Enables debug output for the parser.
 #define DEBUG_PARSER 0
@@ -47,23 +47,23 @@ KeyLayoutMap::KeyLayoutMap() {
 KeyLayoutMap::~KeyLayoutMap() {
 }
 
-status_t KeyLayoutMap::load(const String8& filename, KeyLayoutMap** outMap) {
-    *outMap = NULL;
+status_t KeyLayoutMap::load(const String8& filename, sp<KeyLayoutMap>* outMap) {
+    outMap->clear();
 
     Tokenizer* tokenizer;
     status_t status = Tokenizer::open(filename, &tokenizer);
     if (status) {
         ALOGE("Error %d opening key layout map file %s.", status, filename.string());
     } else {
-        KeyLayoutMap* map = new KeyLayoutMap();
-        if (!map) {
+        sp<KeyLayoutMap> map = new KeyLayoutMap();
+        if (!map.get()) {
             ALOGE("Error allocating key layout map.");
             status = NO_MEMORY;
         } else {
 #if DEBUG_PARSER_PERFORMANCE
             nsecs_t startTime = systemTime(SYSTEM_TIME_MONOTONIC);
 #endif
-            Parser parser(map, tokenizer);
+            Parser parser(map.get(), tokenizer);
             status = parser.parse();
 #if DEBUG_PARSER_PERFORMANCE
             nsecs_t elapsedTime = systemTime(SYSTEM_TIME_MONOTONIC) - startTime;
@@ -71,9 +71,7 @@ status_t KeyLayoutMap::load(const String8& filename, KeyLayoutMap** outMap) {
                     tokenizer->getFilename().string(), tokenizer->getLineNumber(),
                     elapsedTime / 1000000.0);
 #endif
-            if (status) {
-                delete map;
-            } else {
+            if (!status) {
                 *outMap = map;
             }
         }
@@ -82,32 +80,49 @@ status_t KeyLayoutMap::load(const String8& filename, KeyLayoutMap** outMap) {
     return status;
 }
 
-status_t KeyLayoutMap::mapKey(int32_t scanCode, int32_t* keyCode, uint32_t* flags) const {
-    ssize_t index = mKeys.indexOfKey(scanCode);
-    if (index < 0) {
+status_t KeyLayoutMap::mapKey(int32_t scanCode, int32_t usageCode,
+        int32_t* outKeyCode, uint32_t* outFlags) const {
+    const Key* key = getKey(scanCode, usageCode);
+    if (!key) {
 #if DEBUG_MAPPING
-        ALOGD("mapKey: scanCode=%d ~ Failed.", scanCode);
+        ALOGD("mapKey: scanCode=%d, usageCode=0x%08x ~ Failed.", scanCode, usageCode);
 #endif
-        *keyCode = AKEYCODE_UNKNOWN;
-        *flags = 0;
+        *outKeyCode = AKEYCODE_UNKNOWN;
+        *outFlags = 0;
         return NAME_NOT_FOUND;
     }
 
-    const Key& k = mKeys.valueAt(index);
-    *keyCode = k.keyCode;
-    *flags = k.flags;
+    *outKeyCode = key->keyCode;
+    *outFlags = key->flags;
 
 #if DEBUG_MAPPING
-    ALOGD("mapKey: scanCode=%d ~ Result keyCode=%d, flags=0x%08x.", scanCode, *keyCode, *flags);
+    ALOGD("mapKey: scanCode=%d, usageCode=0x%08x ~ Result keyCode=%d, outFlags=0x%08x.",
+            scanCode, usageCode, *outKeyCode, *outFlags);
 #endif
     return NO_ERROR;
 }
 
+const KeyLayoutMap::Key* KeyLayoutMap::getKey(int32_t scanCode, int32_t usageCode) const {
+    if (usageCode) {
+        ssize_t index = mKeysByUsageCode.indexOfKey(usageCode);
+        if (index >= 0) {
+            return &mKeysByUsageCode.valueAt(index);
+        }
+    }
+    if (scanCode) {
+        ssize_t index = mKeysByScanCode.indexOfKey(scanCode);
+        if (index >= 0) {
+            return &mKeysByScanCode.valueAt(index);
+        }
+    }
+    return NULL;
+}
+
 status_t KeyLayoutMap::findScanCodesForKey(int32_t keyCode, Vector<int32_t>* outScanCodes) const {
-    const size_t N = mKeys.size();
+    const size_t N = mKeysByScanCode.size();
     for (size_t i=0; i<N; i++) {
-        if (mKeys.valueAt(i).keyCode == keyCode) {
-            outScanCodes->add(mKeys.keyAt(i));
+        if (mKeysByScanCode.valueAt(i).keyCode == keyCode) {
+            outScanCodes->add(mKeysByScanCode.keyAt(i));
         }
     }
     return NO_ERROR;
@@ -170,8 +185,8 @@ status_t KeyLayoutMap::Parser::parse() {
             }
 
             mTokenizer->skipDelimiters(WHITESPACE);
-            if (!mTokenizer->isEol()) {
-                ALOGE("%s: Expected end of line, got '%s'.",
+            if (!mTokenizer->isEol() && mTokenizer->peekChar() != '#') {
+                ALOGE("%s: Expected end of line or trailing comment, got '%s'.",
                         mTokenizer->getLocation().string(),
                         mTokenizer->peekRemainderOfLine().string());
                 return BAD_VALUE;
@@ -184,17 +199,26 @@ status_t KeyLayoutMap::Parser::parse() {
 }
 
 status_t KeyLayoutMap::Parser::parseKey() {
-    String8 scanCodeToken = mTokenizer->nextToken(WHITESPACE);
+    String8 codeToken = mTokenizer->nextToken(WHITESPACE);
+    bool mapUsage = false;
+    if (codeToken == "usage") {
+        mapUsage = true;
+        mTokenizer->skipDelimiters(WHITESPACE);
+        codeToken = mTokenizer->nextToken(WHITESPACE);
+    }
+
     char* end;
-    int32_t scanCode = int32_t(strtol(scanCodeToken.string(), &end, 0));
+    int32_t code = int32_t(strtol(codeToken.string(), &end, 0));
     if (*end) {
-        ALOGE("%s: Expected key scan code number, got '%s'.", mTokenizer->getLocation().string(),
-                scanCodeToken.string());
+        ALOGE("%s: Expected key %s number, got '%s'.", mTokenizer->getLocation().string(),
+                mapUsage ? "usage" : "scan code", codeToken.string());
         return BAD_VALUE;
     }
-    if (mMap->mKeys.indexOfKey(scanCode) >= 0) {
-        ALOGE("%s: Duplicate entry for key scan code '%s'.", mTokenizer->getLocation().string(),
-                scanCodeToken.string());
+    KeyedVector<int32_t, Key>& map =
+            mapUsage ? mMap->mKeysByUsageCode : mMap->mKeysByScanCode;
+    if (map.indexOfKey(code) >= 0) {
+        ALOGE("%s: Duplicate entry for key %s '%s'.", mTokenizer->getLocation().string(),
+                mapUsage ? "usage" : "scan code", codeToken.string());
         return BAD_VALUE;
     }
 
@@ -210,7 +234,7 @@ status_t KeyLayoutMap::Parser::parseKey() {
     uint32_t flags = 0;
     for (;;) {
         mTokenizer->skipDelimiters(WHITESPACE);
-        if (mTokenizer->isEol()) break;
+        if (mTokenizer->isEol() || mTokenizer->peekChar() == '#') break;
 
         String8 flagToken = mTokenizer->nextToken(WHITESPACE);
         uint32_t flag = getKeyFlagByLabel(flagToken.string());
@@ -228,12 +252,13 @@ status_t KeyLayoutMap::Parser::parseKey() {
     }
 
 #if DEBUG_PARSER
-    ALOGD("Parsed key: scanCode=%d, keyCode=%d, flags=0x%08x.", scanCode, keyCode, flags);
+    ALOGD("Parsed key %s: code=%d, keyCode=%d, flags=0x%08x.",
+            mapUsage ? "usage" : "scan code", code, keyCode, flags);
 #endif
     Key key;
     key.keyCode = keyCode;
     key.flags = flags;
-    mMap->mKeys.add(scanCode, key);
+    map.add(code, key);
     return NO_ERROR;
 }
 
@@ -307,7 +332,7 @@ status_t KeyLayoutMap::Parser::parseAxis() {
 
     for (;;) {
         mTokenizer->skipDelimiters(WHITESPACE);
-        if (mTokenizer->isEol()) {
+        if (mTokenizer->isEol() || mTokenizer->peekChar() == '#') {
             break;
         }
         String8 keywordToken = mTokenizer->nextToken(WHITESPACE);

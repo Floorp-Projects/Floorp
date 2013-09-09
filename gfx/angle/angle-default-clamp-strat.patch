@@ -3,7 +3,7 @@ From: Jeff Gilbert <jgilbert@mozilla.com>
 diff --git a/gfx/angle/src/compiler/Compiler.cpp b/gfx/angle/src/compiler/Compiler.cpp
 --- a/gfx/angle/src/compiler/Compiler.cpp
 +++ b/gfx/angle/src/compiler/Compiler.cpp
-@@ -124,18 +124,21 @@ bool TCompiler::Init(const ShBuiltInReso
+@@ -130,18 +130,21 @@ bool TCompiler::Init(const ShBuiltInReso
      TScopedPoolAllocator scopedAlloc(&allocator, false);
  
      // Generate built-in symbol table.

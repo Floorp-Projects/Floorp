@@ -8,12 +8,14 @@
 
 #include "gfxColor.h"
 #include "nsAutoPtr.h"
-#include "nsRect.h"
 #include <X11/Xlib.h>
 
 class gfxASurface;
 class gfxXlibSurface;
 class gfxContext;
+struct nsIntRect;
+struct nsIntPoint;
+struct nsIntSize;
 
 /**
  * This class lets us take code that draws into an X drawable and lets us

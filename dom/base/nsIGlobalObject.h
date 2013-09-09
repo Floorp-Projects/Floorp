@@ -7,14 +7,13 @@
 #define nsIGlobalObject_h__
 
 #include "nsISupports.h"
-#include "nsIScriptObjectPrincipal.h"
 #include "js/TypeDecls.h"
 
 #define NS_IGLOBALOBJECT_IID \
-{ 0x8503e9a9, 0x530, 0x4b26,  \
-{ 0xae, 0x24, 0x18, 0xca, 0x38, 0xe5, 0xed, 0x17 } }
+{ 0xe2538ded, 0x13ef, 0x4f4d, \
+{ 0x94, 0x6b, 0x65, 0xd3, 0x33, 0xb4, 0xf0, 0x3c } }
 
-class nsIGlobalObject : public nsIScriptObjectPrincipal
+class nsIGlobalObject : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IGLOBALOBJECT_IID)

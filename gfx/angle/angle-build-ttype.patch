@@ -1,0 +1,52 @@
+From: Jeff Gilbert <jgilbert@mozilla.com>
+
+diff --git a/gfx/angle/src/compiler/Types.h b/gfx/angle/src/compiler/Types.h
+--- a/gfx/angle/src/compiler/Types.h
++++ b/gfx/angle/src/compiler/Types.h
+@@ -90,17 +90,17 @@ private:
+ //
+ // Base class for things that have a type.
+ //
+ class TType
+ {
+ public:
+     POOL_ALLOCATOR_NEW_DELETE();
+     TType() {}
+-    TType(TBasicType t, TPrecision p, TQualifier q = EvqTemporary, int s = 1, bool m = false, bool a = false) :
++    TType(TBasicType t, TPrecision p, TQualifier q = EvqTemporary, char s = 1, bool m = false, bool a = false) :
+             type(t), precision(p), qualifier(q), size(s), matrix(m), array(a), arraySize(0), structure(0)
+     {
+     }
+     explicit TType(const TPublicType &p);
+     TType(TStructure* userDef, TPrecision p = EbpUndefined) :
+             type(EbtStruct), precision(p), qualifier(EvqTemporary), size(1), matrix(false), array(false), arraySize(0), structure(userDef)
+     {
+     }
+@@ -229,22 +229,22 @@ public:
+ 
+     bool isStructureContainingArrays() const {
+         return structure ? structure->containsArrays() : false;
+     }
+ 
+ private:
+     TString buildMangledName() const;
+ 
+-    TBasicType type      : 6;
++    TBasicType type;
+     TPrecision precision;
+-    TQualifier qualifier : 7;
+-    int size             : 8; // size of vector or matrix, not size of array
+-    unsigned int matrix  : 1;
+-    unsigned int array   : 1;
++    TQualifier qualifier;
++    char size; // size of vector or matrix, not size of array
++    bool matrix;
++    bool array;
+     int arraySize;
+ 
+     TStructure* structure;      // 0 unless this is a struct
+ 
+     mutable TString mangled;
+ };
+ 
+ //

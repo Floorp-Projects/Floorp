@@ -17,6 +17,9 @@
 namespace mozilla {
 namespace safebrowsing {
 
+// A table update is built from a single update chunk from the server. As the
+// protocol parser processes each chunk, it constructs a table update with the
+// new hashes.
 class TableUpdate {
 public:
   TableUpdate(const nsACString& aTable)
@@ -34,6 +37,8 @@ public:
       mSubCompletes.Length() == 0;
   }
 
+  // Throughout, uint32_t aChunk refers only to the chunk number. Chunk data is
+  // stored in the Prefix structures.
   void NewAddChunk(uint32_t aChunk) { mAddChunks.Set(aChunk); }
   void NewSubChunk(uint32_t aChunk) { mSubChunks.Set(aChunk); }
 
@@ -42,6 +47,7 @@ public:
 
   void NewAddPrefix(uint32_t aAddChunk, const Prefix& aPrefix);
   void NewSubPrefix(uint32_t aAddChunk, const Prefix& aPrefix, uint32_t aSubChunk);
+
   void NewAddComplete(uint32_t aChunk, const Completion& aCompletion);
   void NewSubComplete(uint32_t aAddChunk, const Completion& aCompletion,
                       uint32_t aSubChunk);
@@ -51,9 +57,11 @@ public:
   ChunkSet& AddChunks() { return mAddChunks; }
   ChunkSet& SubChunks() { return mSubChunks; }
 
+  // Expirations for chunks.
   ChunkSet& AddExpirations() { return mAddExpirations; }
   ChunkSet& SubExpirations() { return mSubExpirations; }
 
+  // Hashes associated with this chunk.
   AddPrefixArray& AddPrefixes() { return mAddPrefixes; }
   SubPrefixArray& SubPrefixes() { return mSubPrefixes; }
   AddCompleteArray& AddCompletes() { return mAddCompletes; }
@@ -64,16 +72,22 @@ private:
   // Update not from the remote server (no freshness)
   bool mLocalUpdate;
 
+  // The list of chunk numbers that we have for each of the type of chunks.
   ChunkSet mAddChunks;
   ChunkSet mSubChunks;
   ChunkSet mAddExpirations;
   ChunkSet mSubExpirations;
+
+  // 4-byte sha256 prefixes.
   AddPrefixArray mAddPrefixes;
   SubPrefixArray mSubPrefixes;
+
+  // 32-byte hashes.
   AddCompleteArray mAddCompletes;
   SubCompleteArray mSubCompletes;
 };
 
+// There is one hash store per table.
 class HashStore {
 public:
   HashStore(const nsACString& aTableName, nsIFile* aStoreFile);
@@ -82,6 +96,11 @@ public:
   const nsCString& TableName() const { return mTableName; }
 
   nsresult Open();
+  // Add Prefixes are stored partly in the PrefixSet (contains the
+  // Prefix data organized for fast lookup/low RAM usage) and partly in the
+  // HashStore (Add Chunk numbers - only used for updates, slow retrieval).
+  // AugmentAdds function joins the separate datasets into one complete
+  // prefixes+chunknumbers dataset.
   nsresult AugmentAdds(const nsTArray<uint32_t>& aPrefixes);
 
   ChunkSet& AddChunks() { return mAddChunks; }
@@ -126,6 +145,7 @@ private:
 
   nsresult ReadChunkNumbers();
   nsresult ReadHashes();
+
   nsresult ReadAddPrefixes();
   nsresult ReadSubPrefixes();
 
@@ -134,6 +154,8 @@ private:
 
   nsresult ProcessSubs();
 
+ // This is used for checking that the database is correct and for figuring out
+ // the number of chunks, etc. to read from disk on restart.
   struct Header {
     uint32_t magic;
     uint32_t version;
@@ -147,6 +169,8 @@ private:
 
   Header mHeader;
 
+  // The name of the table (must end in -shavar or -digest256, or evidently
+  // -simple for unittesting.
   nsCString mTableName;
   nsCOMPtr<nsIFile> mStoreDirectory;
 
@@ -154,19 +178,23 @@ private:
 
   nsCOMPtr<nsIInputStream> mInputStream;
 
+  // Chunk numbers, stored as uint32_t arrays.
   ChunkSet mAddChunks;
   ChunkSet mSubChunks;
 
   ChunkSet mAddExpirations;
   ChunkSet mSubExpirations;
 
+  // Chunk data for shavar tables. See Entries.h for format.
   AddPrefixArray mAddPrefixes;
-  AddCompleteArray mAddCompletes;
   SubPrefixArray mSubPrefixes;
+
+  // See bug 806422 for background. We must be able to distinguish between
+  // updates from the completion server and updates from the regular server.
+  AddCompleteArray mAddCompletes;
   SubCompleteArray mSubCompletes;
 };
 
 }
 }
-
 #endif

@@ -157,10 +157,6 @@ TCPSocket.prototype = {
   // IPC socket actor
   _socketBridge: null,
 
-  // StartTLS
-  _waitingForStartTLS: false,
-  _pendingDataAfterStartTLS: [],
-
   // Public accessors.
   get readyState() {
     return this._readyState;
@@ -214,23 +210,19 @@ TCPSocket.prototype = {
     this._onclose = f;
   },
 
-  _activateTLS: function() {
-    let securityInfo = this._transport.securityInfo
-          .QueryInterface(Ci.nsISSLSocketControl);
-    securityInfo.StartTLS();
-  },
-
   // Helper methods.
   _createTransport: function ts_createTransport(host, port, sslMode) {
-    let options;
-    if (sslMode === 'ssl') {
-      options = ['ssl'];
+    let options, optlen;
+    if (sslMode) {
+      options = [sslMode];
+      optlen = 1;
     } else {
-      options = ['starttls'];
+      options = null;
+      optlen = 0;
     }
     return Cc["@mozilla.org/network/socket-transport-service;1"]
              .getService(Ci.nsISocketTransportService)
-             .createTransport(options, 1, host, port, null);
+             .createTransport(options, optlen, host, port, null);
   },
 
   _ensureCopying: function ts_ensureCopying() {
@@ -256,21 +248,6 @@ TCPSocket.prototype = {
         if (self._multiplexStream.count) {
           self._ensureCopying();
         } else {
-          // If we are waiting for initiating starttls, we can begin to
-          // activate tls now.
-          if (self._waitingForStartTLS && self._readyState == kOPEN) {
-            self._activateTLS();
-            self._waitingForStartTLS = false;
-            // If we have pending data, we should send them, or fire
-            // a drain event if we are waiting for it.
-            if (self._pendingDataAfterStartTLS.length > 0) {
-              while (self._pendingDataAfterStartTLS.length)
-                self._multiplexStream.appendStream(self._pendingDataAfterStartTLS.shift());
-              self._ensureCopying();
-              return;
-            }
-          }
-
           if (self._waitingForDrain) {
             self._waitingForDrain = false;
             self.callListener("drain");
@@ -458,7 +435,7 @@ TCPSocket.prototype = {
     that._host = host;
     that._port = port;
     if (options !== undefined) {
-      if (options.useSecureTransport) {
+      if (options.useSSL) {
           that._ssl = 'ssl';
       } else {
           that._ssl = false;
@@ -481,30 +458,7 @@ TCPSocket.prototype = {
     that._initStream(that._binaryType);
     return that;
   },
-
-  upgradeToSecure: function ts_upgradeToSecure() {
-    if (this._readyState !== kOPEN) {
-      throw new Error("Socket not open.");
-    }
-    if (this._ssl == 'ssl') {
-      // Already SSL
-      return;
-    }
-
-    this._ssl = 'ssl';
-
-    if (this._inChild) {
-      this._socketBridge.startTLS();
-      return;
-    }
-
-    if (this._multiplexStream.count == 0) {
-      this._activateTLS();
-    } else {
-      this._waitingForStartTLS = true;
-    }
-  },
-
+  
   listen: function ts_listen(localPort, options, backlog) {
     if (!this.initWindowless())
       return null;
@@ -570,14 +524,7 @@ TCPSocket.prototype = {
       new_stream = new StringInputStream();
       new_stream.setData(data, length);
     }
-
-    if (this._waitingForStartTLS) {
-      // When we are waiting for starttls, new_stream is added to pendingData
-      // and will be appended to multiplexStream after tls had been set up.
-      this._pendingDataAfterStartTLS.push(new_stream);
-    } else {
-      this._multiplexStream.appendStream(new_stream);
-    }
+    this._multiplexStream.appendStream(new_stream);
 
     if (newBufferedAmount >= BUFFER_SIZE) {
       // If we buffered more than some arbitrary amount of data,

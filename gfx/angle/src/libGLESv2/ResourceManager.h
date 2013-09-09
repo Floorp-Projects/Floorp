@@ -20,7 +20,13 @@
 #endif
 
 #include "common/angleutils.h"
+#include "libGLESv2/angletypes.h"
 #include "libGLESv2/HandleAllocator.h"
+
+namespace rx
+{
+class Renderer;
+}
 
 namespace gl
 {
@@ -30,25 +36,10 @@ class Program;
 class Texture;
 class Renderbuffer;
 
-enum TextureType
-{
-    TEXTURE_2D,
-    TEXTURE_CUBE,
-
-    TEXTURE_TYPE_COUNT,
-    TEXTURE_UNKNOWN
-};
-
-enum SamplerType
-{
-    SAMPLER_PIXEL,
-    SAMPLER_VERTEX
-};
-
 class ResourceManager
 {
   public:
-    ResourceManager();
+    explicit ResourceManager(rx::Renderer *renderer);
     ~ResourceManager();
 
     void addRef();
@@ -82,6 +73,7 @@ class ResourceManager
     DISALLOW_COPY_AND_ASSIGN(ResourceManager);
 
     std::size_t mRefCount;
+    rx::Renderer *mRenderer;
 
 #ifndef HASH_MAP
 # ifdef _MSC_VER

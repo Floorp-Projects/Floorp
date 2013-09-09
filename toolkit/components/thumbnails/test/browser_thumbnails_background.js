@@ -22,7 +22,10 @@ function spawnNextTest() {
     finish();
     return;
   }
-  imports.Task.spawn(tests.shift()).then(spawnNextTest, function onError(err) {
+
+  let nextTest = tests.shift();
+  info("starting sub-test " + nextTest.name);
+  imports.Task.spawn(nextTest).then(spawnNextTest, function onError(err) {
     ok(false, err);
     spawnNextTest();
   });
@@ -140,12 +143,12 @@ let tests = [
     yield wait(2000);
     is(imports.BackgroundPageThumbs._thumbBrowser, undefined,
        "Thumb browser should be destroyed after timeout.");
+    imports.BackgroundPageThumbs._destroyBrowserTimeout = defaultTimeout;
 
     yield capture(url2);
     ok(file2.exists(), "Second file should exist after capture.");
     file2.remove(false);
 
-    imports.BackgroundPageThumbs._destroyBrowserTimeout = defaultTimeout;
     isnot(imports.BackgroundPageThumbs._thumbBrowser, undefined,
           "Thumb browser should exist immediately after capture.");
   },
@@ -158,8 +161,9 @@ let tests = [
     let win = yield openPrivateWindow();
     let capturedURL = yield capture(url);
     is(capturedURL, url, "Captured URL should be URL passed to capture.");
-    ok(!file.exists(),
-       "Thumbnail file should not exist because a private window is open.");
+    ok(file.exists(),
+       "Thumbnail file should be created even when a private window is open.");
+    file.remove(false);
 
     win.close();
   },
@@ -180,9 +184,10 @@ let tests = [
     imports.BackgroundPageThumbs.capture(url, {
       onDone: function (capturedURL) {
         is(capturedURL, url, "Captured URL should be URL passed to capture.");
-        ok(!file.exists(),
-           "Thumbnail file should not exist because a private window " +
+        ok(file.exists(),
+           "Thumbnail file should be created even though a private window " +
            "was opened during the capture.");
+        file.remove(false);
         maybeFinish();
       },
     });
@@ -200,7 +205,7 @@ let tests = [
     yield deferred.promise;
   },
 
-  function noCookies() {
+  function noCookiesSent() {
     // Visit the test page in the browser and tell it to set a cookie.
     let url = testPageURL({ setGreenCookie: true });
     let tab = gBrowser.loadOneTab(url, { inBackground: false });
@@ -236,6 +241,29 @@ let tests = [
       deferred.resolve();
     });
     yield deferred.promise;
+  },
+
+  // check that if a page captured in the background attempts to set a cookie,
+  // that cookie is not saved for subsequent requests.
+  function noCookiesStored() {
+    let url = testPageURL({ setRedCookie: true });
+    let file = fileForURL(url);
+    ok(!file.exists(), "Thumbnail file should not exist before capture.");
+    yield capture(url);
+    ok(file.exists(), "Thumbnail file should exist after capture.");
+    file.remove(false);
+    // now load it up in a browser - it should *not* be red, otherwise the
+    // cookie above was saved.
+    let tab = gBrowser.loadOneTab(url, { inBackground: false });
+    let browser = tab.linkedBrowser;
+    yield onPageLoad(browser);
+
+    // The root element of the page shouldn't be red.
+    let redStr = "rgb(255, 0, 0)";
+    isnot(browser.contentDocument.documentElement.style.backgroundColor,
+          redStr,
+          "The page shouldn't be red.");
+    gBrowser.removeTab(tab);
   },
 
   // the following tests attempt to display modal dialogs.  The test just

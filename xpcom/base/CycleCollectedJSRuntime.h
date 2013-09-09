@@ -19,6 +19,7 @@
 
 class nsCycleCollectionNoteRootCallback;
 class nsScriptObjectTracer;
+class nsIException;
 
 namespace mozilla {
 
@@ -172,6 +173,9 @@ public:
   void AssertNoObjectsToTrace(void* aPossibleJSHolder);
 #endif
 
+  already_AddRefed<nsIException> GetPendingException() const;
+  void SetPendingException(nsIException* aException);
+
   nsCycleCollectionParticipant* GCThingParticipant();
   nsCycleCollectionParticipant* ZoneParticipant();
 
@@ -198,6 +202,11 @@ public:
     MOZ_ASSERT(mJSRuntime);
     return mJSRuntime;
   }
+
+  // Get the current thread's CycleCollectedJSRuntime.  Returns null if there
+  // isn't one.
+  static CycleCollectedJSRuntime* Get();
+
 private:
   JSGCThingParticipant mGCThingCycleCollectorGlobal;
 
@@ -213,6 +222,8 @@ private:
   DeferredFinalizerTable mDeferredFinalizerTable;
 
   nsRefPtr<IncrementalFinalizeRunnable> mFinalizeRunnable;
+
+  nsCOMPtr<nsIException> mPendingException;
 
 #ifdef DEBUG
   void* mObjectToUnlink;

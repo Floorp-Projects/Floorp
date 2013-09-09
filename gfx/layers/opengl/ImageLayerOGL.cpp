@@ -6,7 +6,7 @@
 #include "ImageLayerOGL.h"
 #include <stdint.h>                     // for uint32_t
 #include "mozilla-config.h"             // for GL_PROVIDER_GLX
-#include "GLDefs.h"                     // for LOCAL_GL_TEXTURE_2D, etc
+#include "GLContext.h"                  // for GLContext, etc
 #include "ImageContainer.h"             // for CairoImage, etc
 #include "ImageTypes.h"                 // for ImageFormat::CAIRO_SURFACE, etc
 #include "SharedTextureImage.h"         // for SharedTextureImage::Data, etc
@@ -65,6 +65,16 @@ public:
   nsRefPtr<GLContext> mContext;
   GLuint mTexture;
 };
+
+GLTexture::GLTexture()
+  : mTexture(0)
+{
+}
+
+GLTexture::~GLTexture()
+{
+  Release();
+}
 
 void
 GLTexture::Allocate(GLContext *aContext)

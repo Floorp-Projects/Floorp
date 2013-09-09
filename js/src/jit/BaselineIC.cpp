@@ -4466,7 +4466,7 @@ ICGetElem_Arguments::Compiler::generateStubCode(MacroAssembler &masm)
     regs = availableGeneralRegs(0);
     regs.takeUnchecked(objReg);
     regs.takeUnchecked(idxReg);
-    regs.takeUnchecked(scratchReg);
+    regs.take(scratchReg);
     Register argData = regs.takeAny();
     Register tempReg = regs.takeAny();
 
@@ -4488,6 +4488,7 @@ ICGetElem_Arguments::Compiler::generateStubCode(MacroAssembler &masm)
     masm.addPtr(Imm32(ArgumentsData::offsetOfArgs()), argData);
     regs.add(scratchReg);
     regs.add(tempReg);
+    regs.add(argData);
     ValueOperand tempVal = regs.takeAnyValue();
     masm.loadValue(BaseIndex(argData, idxReg, ScaleFromElemWidth(sizeof(Value))), tempVal);
 

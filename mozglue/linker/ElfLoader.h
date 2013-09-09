@@ -70,7 +70,7 @@ class LibHandle;
 namespace mozilla {
 namespace detail {
 
-template <> inline void RefCounted<LibHandle, AtomicRefCount>::Release();
+template <> inline void RefCounted<LibHandle, AtomicRefCount>::Release() const;
 
 template <> inline RefCounted<LibHandle, AtomicRefCount>::~RefCounted()
 {
@@ -215,7 +215,7 @@ private:
 namespace mozilla {
 namespace detail {
 
-template <> inline void RefCounted<LibHandle, AtomicRefCount>::Release() {
+template <> inline void RefCounted<LibHandle, AtomicRefCount>::Release() const {
 #ifdef DEBUG
   if (refCnt > 0x7fff0000)
     MOZ_ASSERT(refCnt > 0x7fffdead);
@@ -228,7 +228,7 @@ template <> inline void RefCounted<LibHandle, AtomicRefCount>::Release() {
 #else
       refCnt = 1;
 #endif
-      delete static_cast<LibHandle*>(this);
+      delete static_cast<const LibHandle*>(this);
     }
   }
 }

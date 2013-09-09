@@ -9,9 +9,6 @@
 #ifndef LIBGLESV2_BINARYSTREAM_H_
 #define LIBGLESV2_BINARYSTREAM_H_
 
-#include <string>
-#include <vector>
-
 #include "common/angleutils.h"
 
 namespace gl

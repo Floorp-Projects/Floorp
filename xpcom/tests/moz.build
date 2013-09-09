@@ -78,6 +78,7 @@ CPP_UNIT_TESTS += [
     'TestRefPtr.cpp',
     'TestTArray.cpp',
     'TestTextFormatter.cpp',
+    'TestThreadUtils.cpp'
 ]
 
 if CONFIG['MOZ_MEMORY']:

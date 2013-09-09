@@ -3668,7 +3668,10 @@ XULDocument::ExecuteScript(nsIScriptContext * aContext,
     JSContext *cx = aContext->GetNativeContext();
     AutoCxPusher pusher(cx);
     JS::Rooted<JSObject*> global(cx, mScriptGlobalObject->GetGlobalJSObject());
-    xpc_UnmarkGrayObject(global);
+    // XXXkhuey can this ever be null?
+    if (global) {
+      JS::ExposeObjectToActiveJS(global);
+    }
     xpc_UnmarkGrayScript(aScriptObject);
     JSAutoCompartment ac(cx, global);
     JS::Rooted<JS::Value> unused(cx);

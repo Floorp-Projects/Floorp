@@ -9,8 +9,10 @@ include $(topsrcdir)/mobile/android/base/android-services-files.mk
 MOZGLUE_JAVA_FILES := \
   mozglue/ByteBufferInputStream.java \
   mozglue/DirectBufferAllocator.java \
+  mozglue/GeneratableAndroidBridgeTarget.java \
   mozglue/NativeReference.java \
   mozglue/NativeZip.java \
+  mozglue/OptionalGeneratedParameter.java \
   $(NULL)
 
 MOZGLUE_PP_JAVA_FILES := \
@@ -405,6 +407,8 @@ GARBAGE += \
   Manifest.java \
   javah.out \
   jni-stubs.inc \
+  GeneratedJNIWrappers.cpp \
+  GeneratedJNIWrappers.h \
   $(NULL)
 
 GARBAGE_DIRS += classes db jars res sync services
@@ -1264,10 +1268,10 @@ jars/websockets.jar: $(addprefix $(srcdir)/, $(WEBSOCKETS_JAVA_FILES)) jars
 	$(JAR) cMf jars/websockets.jar -C classes/websockets .
 
 ifdef MOZ_WEBRTC
-jars/webrtc.jar: $(addprefix $(srcdir)/, $(WEBRTC_JAVA_FILES)) jars jars/gecko-browser.jar jars/gecko-util.jar
+jars/webrtc.jar: $(addprefix $(srcdir)/, $(WEBRTC_JAVA_FILES)) jars jars/gecko-browser.jar jars/gecko-util.jar jars/gecko-mozglue.jar
 	@echo "JAR webrtc.jar"
 	$(NSINSTALL) -D classes/webrtc
-	$(JAVAC) $(JAVAC_FLAGS) -d classes/webrtc -classpath classes/gecko-browser:classes/gecko-util $(addprefix $(srcdir)/,$(WEBRTC_JAVA_FILES))
+	$(JAVAC) $(JAVAC_FLAGS) -d classes/webrtc -classpath classes/gecko-browser:classes/gecko-util:classes/gecko-mozglue $(addprefix $(srcdir)/,$(WEBRTC_JAVA_FILES))
 	$(JAR) cMf jars/webrtc.jar -C classes/webrtc .
 endif
 
@@ -1294,6 +1298,21 @@ endif
 jni-stubs.inc: jars/gecko-browser.jar jars/gecko-mozglue.jar jars/gecko-util.jar jars/sync-thirdparty.jar
 	$(JAVAH) -o javah.out -bootclasspath $(JAVA_BOOTCLASSPATH) -classpath $(subst $(NULL) $(NULL),:,$^) $(CLASSES_WITH_JNI)
 	$(PYTHON) $(topsrcdir)/mobile/android/base/jni-generator.py javah.out $@
+
+ANNOTATION_PROCESSOR_JAVA_FILES = \
+  build/annotationProcessors/AnnotationProcessor.java \
+  build/annotationProcessors/CodeGenerator.java \
+  build/annotationProcessors/MethodWithAnnotationInfo.java \
+  build/annotationProcessors/classloader/IterableJarLoadingURLClassLoader.java \
+  build/annotationProcessors/classloader/JarClassIterator.java \
+  build/annotationProcessors/utils/AlphabeticMethodComparator.java \
+  build/annotationProcessors/utils/GeneratableEntryPointIterator.java \
+  build/annotationProcessors/utils/Utils.java \
+  $(NULL)
+
+GeneratedJNIWrappers.cpp: jars/gecko-browser.jar jars/gecko-mozglue.jar jars/gecko-util.jar jars/sync-thirdparty.jar
+	$(JAVAC) $(addprefix $(topsrcdir)/,$(ANNOTATION_PROCESSOR_JAVA_FILES)) -d $(CURDIR)
+	$(JAVA) -classpath $(JAVA_BOOTCLASSPATH):$(CURDIR) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $^
 
 PP_RES_XML= \
   $(SYNC_PP_RES_XML) \
@@ -1402,8 +1421,8 @@ gecko.ap_: $(all_resources)
 fennec_ids.txt: fennec-ids-generator.py R.java
 	$(PYTHON) $(topsrcdir)/mobile/android/base/fennec-ids-generator.py -i R.java -o $@
 
-libs:: classes.dex package-name.txt jni-stubs.inc fennec_ids.txt
+libs:: classes.dex package-name.txt jni-stubs.inc GeneratedJNIWrappers.cpp fennec_ids.txt
 	$(INSTALL) classes.dex $(FINAL_TARGET)
 	$(INSTALL) package-name.txt $(FINAL_TARGET)
-	@(diff jni-stubs.inc $(topsrcdir)/mozglue/android/jni-stubs.inc >/dev/null) || \
-	 (echo "*** Error: The jni-stubs have changed. Copy $(CURDIR)/jni-stubs.inc to $(topsrcdir)/mozglue/android" && exit 1)
+	@(diff jni-stubs.inc $(topsrcdir)/mozglue/android/jni-stubs.inc >/dev/null && diff GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp >/dev/null) || \
+	 (echo "*** Error: The generated JNI code has changed. Please run cp $(CURDIR)/jni-stubs.inc $(topsrcdir)/mozglue/android && cp $(CURDIR)/GeneratedJNIWrappers.* $(topsrcdir)/widget/android and repeat the build." && exit 1)

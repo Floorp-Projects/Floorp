@@ -1,4 +1,3 @@
-# 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -20,7 +19,8 @@ endif
 OS_COMPILE_CFLAGS   = $(OS_CPPFLAGS)
 OS_COMPILE_CXXFLAGS = $(OS_CPPFLAGS)
 
-DEFINES += -DANGLE_BUILD -DNOMINMAX -DLIBGLESV2_EXPORTS -D_CRT_SECURE_NO_DEPRECATE
+DEFINES += -DLIBGLESV2_EXPORTS
+DEFINES += -DANGLE_BUILD -DNOMINMAX -D_CRT_SECURE_NO_DEPRECATE
 
 ifndef MOZ_DEBUG
 DEFINES += -D_SECURE_SCL=0
@@ -28,7 +28,6 @@ endif
 
 # The below is a rough translation of build_angle.gypi,
 # copied from src/Makefile.in.
-
 DEFINES += -DANGLE_DISABLE_TRACE
 DEFINES += -DANGLE_COMPILE_OPTIMIZATION_LEVEL=D3DCOMPILE_OPTIMIZATION_LEVEL1
 
@@ -45,21 +44,15 @@ LOCAL_INCLUDES += \
 
 DEFINES += -DCOMPILER_IMPLEMENTATION
 
+VPATH += $(srcdir)/renderer
+VPATH += $(srcdir)/..
 VPATH += $(srcdir)/../compiler
 VPATH += $(srcdir)/../compiler/depgraph
 VPATH += $(srcdir)/../compiler/timing
 VPATH += $(srcdir)/../third_party/compiler
+VPATH += $(srcdir)/../third_party/murmurhash
 
 # Above should match the relevant targets from angle/Makefile.in.
-
-# Below is a transcription of more targets from build_angle.gypi.
-
-# Target: 'translator_hlsl'
-#   Requires: 'translator_common'
-
-# Target: 'libGLESv2'
-#   Requires: 'translator_hlsl'
-LOCAL_INCLUDES += -I"$(MOZ_DIRECTX_SDK_PATH)/include"
 
 VPATH += $(srcdir)/../common
 # src/common:
@@ -75,10 +68,12 @@ ifdef GNU_CC
 TextureSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
 
 OS_CXXFLAGS := $(filter-out -fno-exceptions,$(OS_CXXFLAGS)) -fexceptions
-OS_LIBS += -ld3d9
+OS_LIBS += -ld3d9 -ldxguid
 
 else
 
-EXTRA_DSO_LDOPTS = "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/d3d9.lib"
+EXTRA_DSO_LDOPTS = "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/d3d9.lib" \
+                   "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/dxguid.lib" \
+                   delayimp.lib
 
 endif

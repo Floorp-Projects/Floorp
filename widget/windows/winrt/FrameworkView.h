@@ -7,6 +7,7 @@
 
 #include "nsGUIEvent.h"
 #include "MetroWidget.h"
+#include "MetroInput.h"
 #include "gfxWindowsPlatform.h"
 #include "gfxD2DSurface.h"
 #include "nsDataHashtable.h"
@@ -78,10 +79,10 @@ public:
   STDMETHODIMP Run();
   STDMETHODIMP Uninitialize();
 
+  HRESULT ActivateView();
+
   // Public apis for MetroWidget
   void ShutdownXPCOM();
-  bool Render();
-  bool Render(const nsIntRegion& aInvalidRegion);
   float GetDPI() { return mDPI; }
   ICoreWindow* GetCoreWindow() { return mWindow.Get(); }
   void SetWidget(MetroWidget* aWidget);
@@ -176,11 +177,9 @@ private:
   EventRegistrationToken mPrintManager;
 
 private:
-  nsRefPtr<gfxD2DSurface> mD2DWindowSurface;
   nsIntRect mWindowBounds; // in device-pixel coordinates
   float mDPI;
   bool mShuttingDown;
-  bool mPainting;
   nsAutoString mActivationURI;
   nsAutoString mActivationCommandLine;
   Microsoft::WRL::ComPtr<IInspectable> mAutomationProvider;
@@ -190,7 +189,6 @@ private:
   //Microsoft::WRL::ComPtr<IWICImagingFactory2> mWicFactory;
   Microsoft::WRL::ComPtr<MetroApp> mMetroApp;
   Microsoft::WRL::ComPtr<ICoreWindow> mWindow;
-  Microsoft::WRL::ComPtr<ICoreDispatcher> mDispatcher;
   Microsoft::WRL::ComPtr<MetroWidget> mWidget;
   Microsoft::WRL::ComPtr<MetroInput> mMetroInput;
   static bool sKeyboardIsVisible;

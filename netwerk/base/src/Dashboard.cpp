@@ -25,25 +25,6 @@ struct ConnStatus
     nsString creationSts;
 };
 
-class DashConnStatusRunnable: public nsRunnable
-{
-public:
-    DashConnStatusRunnable(Dashboard * aDashboard, ConnStatus aStatus)
-    : mDashboard(aDashboard)
-    {
-        mStatus.creationSts = aStatus.creationSts;
-    }
-
-    NS_IMETHODIMP Run()
-    {
-        return mDashboard->GetConnectionStatus(mStatus);
-    }
-
-private:
-    ConnStatus mStatus;
-    Dashboard * mDashboard;
-};
-
 Dashboard::Dashboard()
 {
     mEnableLogging = false;
@@ -604,7 +585,8 @@ Dashboard::RequestConnection(const nsACString& aHost, uint32_t aPort,
     if (NS_FAILED(rv)) {
         ConnStatus status;
         CopyASCIItoUTF16(GetErrorString(rv), status.creationSts);
-        nsCOMPtr<nsIRunnable> event = new DashConnStatusRunnable(this, status);
+        nsCOMPtr<nsIRunnable> event =
+            NS_NewRunnableMethodWithArg<ConnStatus>(this, &Dashboard::GetConnectionStatus, status);
         mConn.thread->Dispatch(event, NS_DISPATCH_NORMAL);
         return rv;
     }
@@ -674,7 +656,7 @@ Dashboard::OnTransportStatus(nsITransport *aTransport, nsresult aStatus,
 
     ConnStatus status;
     CopyASCIItoUTF16(GetErrorString(aStatus), status.creationSts);
-    nsCOMPtr<nsIRunnable> event = new DashConnStatusRunnable(this, status);
+    nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethodWithArg<ConnStatus>(this, &Dashboard::GetConnectionStatus, status);
     mConn.thread->Dispatch(event, NS_DISPATCH_NORMAL);
 
     return NS_OK;
@@ -693,7 +675,7 @@ Dashboard::Notify(nsITimer *timer)
 
     ConnStatus status;
     status.creationSts.Assign(NS_LITERAL_STRING("NS_ERROR_NET_TIMEOUT"));
-    nsCOMPtr<nsIRunnable> event = new DashConnStatusRunnable(this, status);
+    nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethodWithArg<ConnStatus>(this, &Dashboard::GetConnectionStatus, status);
     mConn.thread->Dispatch(event, NS_DISPATCH_NORMAL);
 
     return NS_OK;

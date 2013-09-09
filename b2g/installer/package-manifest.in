@@ -460,8 +460,6 @@
 @BINPATH@/components/RadioInterfaceLayer.js
 @BINPATH@/components/MmsService.manifest
 @BINPATH@/components/MmsService.js
-@BINPATH@/components/SmsService.manifest
-@BINPATH@/components/SmsService.js
 @BINPATH@/components/RILContentHelper.js
 @BINPATH@/components/MobileMessageDatabaseService.manifest
 @BINPATH@/components/MobileMessageDatabaseService.js
