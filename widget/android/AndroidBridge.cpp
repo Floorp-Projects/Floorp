@@ -14,9 +14,9 @@
 #include "nsXULAppAPI.h"
 #include <prthread.h>
 #include "nsXPCOMStrings.h"
-
 #include "AndroidBridge.h"
 #include "AndroidJNIWrapper.h"
+#include "AndroidBridgeUtilities.h"
 #include "nsAppShell.h"
 #include "nsOSHelperAppService.h"
 #include "nsWindow.h"
@@ -60,6 +60,82 @@ class AndroidRefable {
 // This isn't in AndroidBridge.h because including StrongPointer.h there is gross
 static android::sp<AndroidRefable> (*android_SurfaceTexture_getNativeWindow)(JNIEnv* env, jobject surfaceTexture) = nullptr;
 
+jclass AndroidBridge::GetClassGlobalRef(JNIEnv* env, const char* className)
+{
+    jobject classLocalRef = env->FindClass(className);
+    if (!classLocalRef) {
+        ALOG(">>> FATAL JNI ERROR! FindClass(className=\"%s\") failed. Did "
+             "ProGuard optimize away a non-public class?", className);
+        env->ExceptionDescribe();
+        MOZ_CRASH();
+    }
+    jobject classGlobalRef = env->NewGlobalRef(classLocalRef);
+    if (!classGlobalRef) {
+        env->ExceptionDescribe();
+        MOZ_CRASH();
+    }
+    // Local ref no longer necessary because we have a global ref.
+    env->DeleteLocalRef(classLocalRef);
+    classLocalRef = NULL;
+    return static_cast<jclass>(classGlobalRef);
+}
+
+jmethodID AndroidBridge::GetMethodID(JNIEnv* env, jclass jClass,
+                              const char* methodName, const char* methodType)
+{
+   jmethodID methodID = env->GetMethodID(jClass, methodName, methodType);
+   if (!methodID) {
+       ALOG(">>> FATAL JNI ERROR! GetMethodID(methodName=\"%s\", "
+            "methodType=\"%s\") failed. Did ProGuard optimize away a non-"
+            "public method?", methodName, methodType);
+       env->ExceptionDescribe();
+       MOZ_CRASH();
+   }
+   return methodID;
+}
+
+jmethodID AndroidBridge::GetStaticMethodID(JNIEnv* env, jclass jClass,
+                               const char* methodName, const char* methodType)
+{
+  jmethodID methodID = env->GetStaticMethodID(jClass, methodName, methodType);
+  if (!methodID) {
+      ALOG(">>> FATAL JNI ERROR! GetStaticMethodID(methodName=\"%s\", "
+           "methodType=\"%s\") failed. Did ProGuard optimize away a non-"
+           "public method?", methodName, methodType);
+      env->ExceptionDescribe();
+      MOZ_CRASH();
+  }
+  return methodID;
+}
+
+jfieldID AndroidBridge::GetFieldID(JNIEnv* env, jclass jClass,
+                           const char* fieldName, const char* fieldType)
+{
+    jfieldID fieldID = env->GetFieldID(jClass, fieldName, fieldType);
+    if (!fieldID) {
+        ALOG(">>> FATAL JNI ERROR! GetFieldID(fieldName=\"%s\", "
+             "fieldType=\"%s\") failed. Did ProGuard optimize away a non-"
+             "public field?", fieldName, fieldType);
+        env->ExceptionDescribe();
+        MOZ_CRASH();
+    }
+    return fieldID;
+}
+
+jfieldID AndroidBridge::GetStaticFieldID(JNIEnv* env, jclass jClass,
+                           const char* fieldName, const char* fieldType)
+{
+    jfieldID fieldID = env->GetStaticFieldID(jClass, fieldName, fieldType);
+    if (!fieldID) {
+        ALOG(">>> FATAL JNI ERROR! GetStaticFieldID(fieldName=\"%s\", "
+             "fieldType=\"%s\") failed. Did ProGuard optimize away a non-"
+             "public field?", fieldName, fieldType);
+        env->ExceptionDescribe();
+        MOZ_CRASH();
+    }
+    return fieldID;
+}
+
 void
 AndroidBridge::ConstructBridge(JNIEnv *jEnv)
 {
@@ -96,112 +172,124 @@ AndroidBridge::Init(JNIEnv *jEnv)
     mHasNativeWindowAccess = false;
     mHasNativeWindowFallback = false;
 
-    jclass jGeckoAppShellClass = jEnv->FindClass("org/mozilla/gecko/GeckoAppShell");
+    initInit();
+    mGeckoAppShellClass = getClassGlobalRef("org/mozilla/gecko/GeckoAppShell");
 
-    mGeckoAppShellClass = (jclass) jEnv->NewGlobalRef(jGeckoAppShellClass);
+    jNotifyIME = getStaticMethod("notifyIME", "(I)V");
+    jNotifyIMEContext = getStaticMethod("notifyIMEContext", "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+    jNotifyIMEChange = getStaticMethod("notifyIMEChange", "(Ljava/lang/String;III)V");
+    jAcknowledgeEvent = getStaticMethod("acknowledgeEvent", "()V");
+
+    jEnableLocation = getStaticMethod("enableLocation", "(Z)V");
+    jEnableLocationHighAccuracy = getStaticMethod("enableLocationHighAccuracy", "(Z)V");
+    jEnableSensor = getStaticMethod("enableSensor", "(I)V");
+    jDisableSensor = getStaticMethod("disableSensor", "(I)V");
+    jScheduleRestart = getStaticMethod("scheduleRestart", "()V");
+    jNotifyXreExit = getStaticMethod("onXreExit", "()V");
+    jGetHandlersForMimeType = getStaticMethod("getHandlersForMimeType", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
+    jGetHandlersForURL = getStaticMethod("getHandlersForURL", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
+    jOpenUriExternal = getStaticMethod("openUriExternal", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
+    jGetMimeTypeFromExtensions = getStaticMethod("getMimeTypeFromExtensions", "(Ljava/lang/String;)Ljava/lang/String;");
+    jGetExtensionFromMimeType = getStaticMethod("getExtensionFromMimeType", "(Ljava/lang/String;)Ljava/lang/String;");
+    jMoveTaskToBack = getStaticMethod("moveTaskToBack", "()V");
+    jShowAlertNotification = getStaticMethod("showAlertNotification", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+    jShowFilePickerForExtensions = getStaticMethod("showFilePickerForExtensions", "(Ljava/lang/String;)Ljava/lang/String;");
+    jShowFilePickerForMimeType = getStaticMethod("showFilePickerForMimeType", "(Ljava/lang/String;)Ljava/lang/String;");
+    jShowFilePickerAsync = getStaticMethod("showFilePickerAsync", "(Ljava/lang/String;J)V");
+    jUnlockProfile = getStaticMethod("unlockProfile", "()Z");
+    jKillAnyZombies = getStaticMethod("killAnyZombies", "()V");
+    jAlertsProgressListener_OnProgress = getStaticMethod("alertsProgressListener_OnProgress", "(Ljava/lang/String;JJLjava/lang/String;)V");
+    jCloseNotification = getStaticMethod("closeNotification", "(Ljava/lang/String;)V");
+    jGetDpi = getStaticMethod("getDpi", "()I");
+    jGetScreenDepth = getStaticMethod("getScreenDepth", "()I");
+    jSetFullScreen = getStaticMethod("setFullScreen", "(Z)V");
+    jShowInputMethodPicker = getStaticMethod("showInputMethodPicker", "()V");
+    jNotifyDefaultPrevented = getStaticMethod("notifyDefaultPrevented", "(Z)V");
+    jHideProgressDialog = getStaticMethod("hideProgressDialog", "()V");
+    jPerformHapticFeedback = getStaticMethod("performHapticFeedback", "(Z)V");
+    jVibrate1 = getStaticMethod("vibrate", "(J)V");
+    jVibrateA = getStaticMethod("vibrate", "([JI)V");
+    jCancelVibrate = getStaticMethod("cancelVibrate", "()V");
+    jSetKeepScreenOn = getStaticMethod("setKeepScreenOn", "(Z)V");
+    jIsNetworkLinkUp = getStaticMethod("isNetworkLinkUp", "()Z");
+    jIsNetworkLinkKnown = getStaticMethod("isNetworkLinkKnown", "()Z");
+    jSetSelectedLocale = getStaticMethod("setSelectedLocale", "(Ljava/lang/String;)V");
+    jScanMedia = getStaticMethod("scanMedia", "(Ljava/lang/String;Ljava/lang/String;)V");
+    jGetSystemColors = getStaticMethod("getSystemColors", "()[I");
+    jGetIconForExtension = getStaticMethod("getIconForExtension", "(Ljava/lang/String;I)[B");
+    jCreateShortcut = getStaticMethod("createShortcut", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+    jGetShowPasswordSetting = getStaticMethod("getShowPasswordSetting", "()Z");
+    jInitCamera = getStaticMethod("initCamera", "(Ljava/lang/String;III)[I");
+    jCloseCamera = getStaticMethod("closeCamera", "()V");
+    jIsTablet = getStaticMethod("isTablet", "()Z");
+    jEnableBatteryNotifications = getStaticMethod("enableBatteryNotifications", "()V");
+    jDisableBatteryNotifications = getStaticMethod("disableBatteryNotifications", "()V");
+    jGetCurrentBatteryInformation = getStaticMethod("getCurrentBatteryInformation", "()[D");
+
+    jHandleGeckoMessage = getStaticMethod("handleGeckoMessage", "(Ljava/lang/String;)Ljava/lang/String;");
+    jCheckUriVisited = getStaticMethod("checkUriVisited", "(Ljava/lang/String;)V");
+    jMarkUriVisited = getStaticMethod("markUriVisited", "(Ljava/lang/String;)V");
+    jSetUriTitle = getStaticMethod("setUriTitle", "(Ljava/lang/String;Ljava/lang/String;)V");
+
+    jSendMessage = getStaticMethod("sendMessage", "(Ljava/lang/String;Ljava/lang/String;I)V");
+    jGetMessage = getStaticMethod("getMessage", "(II)V");
+    jDeleteMessage = getStaticMethod("deleteMessage", "(II)V");
+    jCreateMessageList = getStaticMethod("createMessageList", "(JJ[Ljava/lang/String;IIZI)V");
+    jGetNextMessageinList = getStaticMethod("getNextMessageInList", "(II)V");
+    jClearMessageList = getStaticMethod("clearMessageList", "(I)V");
+
+    jGetCurrentNetworkInformation = getStaticMethod("getCurrentNetworkInformation", "()[D");
+    jEnableNetworkNotifications = getStaticMethod("enableNetworkNotifications", "()V");
+    jDisableNetworkNotifications = getStaticMethod("disableNetworkNotifications", "()V");
+
+    jGetScreenOrientation = getStaticMethod("getScreenOrientation", "()S");
+    jEnableScreenOrientationNotifications = getStaticMethod("enableScreenOrientationNotifications", "()V");
+    jDisableScreenOrientationNotifications = getStaticMethod("disableScreenOrientationNotifications", "()V");
+    jLockScreenOrientation = getStaticMethod("lockScreenOrientation", "(I)V");
+    jUnlockScreenOrientation = getStaticMethod("unlockScreenOrientation", "()V");
+
+    jNotifyWakeLockChanged = getStaticMethod("notifyWakeLockChanged", "(Ljava/lang/String;Ljava/lang/String;)V");
+
+    jGetGfxInfoData = getStaticMethod("getGfxInfoData", "()Ljava/lang/String;");
+    jGetProxyForURI = getStaticMethod("getProxyForURI", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)Ljava/lang/String;");
+    jRegisterSurfaceTextureFrameListener = getStaticMethod("registerSurfaceTextureFrameListener", "(Ljava/lang/Object;I)V");
+    jUnregisterSurfaceTextureFrameListener = getStaticMethod("unregisterSurfaceTextureFrameListener", "(Ljava/lang/Object;)V");
+
+    jPumpMessageLoop = getStaticMethod("pumpMessageLoop", "()Z");
+
+    jAddPluginView = getStaticMethod("addPluginView", "(Landroid/view/View;FFFFZ)V");
+    jRemovePluginView = getStaticMethod("removePluginView", "(Landroid/view/View;Z)V");
+    jGetContext = getStaticMethod("getContext", "()Landroid/content/Context;");
+
 
 #ifdef MOZ_WEBSMS_BACKEND
-    jclass jAndroidSmsMessageClass = jEnv->FindClass("android/telephony/SmsMessage");
-    mAndroidSmsMessageClass = (jclass) jEnv->NewGlobalRef(jAndroidSmsMessageClass);
-    jCalculateLength = (jmethodID) jEnv->GetStaticMethodID(jAndroidSmsMessageClass, "calculateLength", "(Ljava/lang/CharSequence;Z)[I");
+    mAndroidSmsMessageClass = getClassGlobalRef("android/telephony/SmsMessage");
+    jCalculateLength = getStaticMethod("calculateLength", "(Ljava/lang/CharSequence;Z)[I");
 #endif
 
-    jNotifyIME = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIME", "(I)V");
-    jNotifyIMEContext = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIMEContext", "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
-    jNotifyIMEChange = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIMEChange", "(Ljava/lang/String;III)V");
-    jAcknowledgeEvent = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "acknowledgeEvent", "()V");
+    jGeckoJavaSamplerClass = getClassGlobalRef("org/mozilla/gecko/GeckoJavaSampler");
+    jStart = getStaticMethod("start", "(II)V");
+    jStop = getStaticMethod("stop", "()V");
+    jPause = getStaticMethod("pause", "()V");
+    jUnpause = getStaticMethod("unpause", "()V");
+    jGetThreadName = getStaticMethod("getThreadName", "(I)Ljava/lang/String;");
+    jGetFrameName = getStaticMethod("getFrameName", "(III)Ljava/lang/String;");
+    jGetSampleTime = getStaticMethod("getSampleTime", "(II)D");
 
-    jEnableLocation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableLocation", "(Z)V");
-    jEnableLocationHighAccuracy = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableLocationHighAccuracy", "(Z)V");
-    jEnableSensor = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableSensor", "(I)V");
-    jDisableSensor = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "disableSensor", "(I)V");
-    jScheduleRestart = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "scheduleRestart", "()V");
-    jNotifyXreExit = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "onXreExit", "()V");
-    jGetHandlersForMimeType = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getHandlersForMimeType", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
-    jGetHandlersForURL = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getHandlersForURL", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
-    jOpenUriExternal = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "openUriExternal", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
-    jGetMimeTypeFromExtensions = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getMimeTypeFromExtensions", "(Ljava/lang/String;)Ljava/lang/String;");
-    jGetExtensionFromMimeType = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getExtensionFromMimeType", "(Ljava/lang/String;)Ljava/lang/String;");
-    jMoveTaskToBack = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "moveTaskToBack", "()V");
-    jShowAlertNotification = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showAlertNotification", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
-    jShowFilePickerForExtensions = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showFilePickerForExtensions", "(Ljava/lang/String;)Ljava/lang/String;");
-    jShowFilePickerForMimeType = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showFilePickerForMimeType", "(Ljava/lang/String;)Ljava/lang/String;");
-    jShowFilePickerAsync = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showFilePickerAsync", "(Ljava/lang/String;J)V");
-    jUnlockProfile = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "unlockProfile", "()Z");
-    jKillAnyZombies = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "killAnyZombies", "()V");
-    jAlertsProgressListener_OnProgress = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "alertsProgressListener_OnProgress", "(Ljava/lang/String;JJLjava/lang/String;)V");
-    jCloseNotification = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "closeNotification", "(Ljava/lang/String;)V");
-    jGetDpi = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getDpi", "()I");
-    jGetScreenDepth = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getScreenDepth", "()I");
-    jSetFullScreen = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setFullScreen", "(Z)V");
-    jShowInputMethodPicker = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showInputMethodPicker", "()V");
-    jNotifyDefaultPrevented = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyDefaultPrevented", "(Z)V");
-    jHideProgressDialog = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "hideProgressDialog", "()V");
-    jPerformHapticFeedback = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "performHapticFeedback", "(Z)V");
-    jVibrate1 = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "vibrate", "(J)V");
-    jVibrateA = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "vibrate", "([JI)V");
-    jCancelVibrate = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "cancelVibrate", "()V");
-    jSetKeepScreenOn = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setKeepScreenOn", "(Z)V");
-    jIsNetworkLinkUp = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "isNetworkLinkUp", "()Z");
-    jIsNetworkLinkKnown = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "isNetworkLinkKnown", "()Z");
-    jSetSelectedLocale = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setSelectedLocale", "(Ljava/lang/String;)V");
-    jScanMedia = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "scanMedia", "(Ljava/lang/String;Ljava/lang/String;)V");
-    jGetSystemColors = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getSystemColors", "()[I");
-    jGetIconForExtension = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getIconForExtension", "(Ljava/lang/String;I)[B");
-    jCreateShortcut = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "createShortcut", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
-    jGetShowPasswordSetting = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getShowPasswordSetting", "()Z");
-    jInitCamera = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "initCamera", "(Ljava/lang/String;III)[I");
-    jCloseCamera = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "closeCamera", "()V");
-    jIsTablet = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "isTablet", "()Z");
-    jEnableBatteryNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableBatteryNotifications", "()V");
-    jDisableBatteryNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "disableBatteryNotifications", "()V");
-    jGetCurrentBatteryInformation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getCurrentBatteryInformation", "()[D");
+    jThumbnailHelperClass = getClassGlobalRef("org/mozilla/gecko/ThumbnailHelper");
+    jNotifyThumbnail = getStaticMethod("notifyThumbnail", "(Ljava/nio/ByteBuffer;IZ)V");
 
-    jHandleGeckoMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "handleGeckoMessage", "(Ljava/lang/String;)Ljava/lang/String;");
-    jCheckUriVisited = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "checkUriVisited", "(Ljava/lang/String;)V");
-    jMarkUriVisited = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "markUriVisited", "(Ljava/lang/String;)V");
-    jSetUriTitle = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setUriTitle", "(Ljava/lang/String;Ljava/lang/String;)V");
+    jStringClass = getClassGlobalRef("java/lang/String");
 
-    jSendMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "sendMessage", "(Ljava/lang/String;Ljava/lang/String;I)V");
-    jGetMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getMessage", "(II)V");
-    jDeleteMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "deleteMessage", "(II)V");
-    jCreateMessageList = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "createMessageList", "(JJ[Ljava/lang/String;IIZI)V");
-    jGetNextMessageinList = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getNextMessageInList", "(II)V");
-    jClearMessageList = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "clearMessageList", "(I)V");
-
-    jGetCurrentNetworkInformation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getCurrentNetworkInformation", "()[D");
-    jEnableNetworkNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableNetworkNotifications", "()V");
-    jDisableNetworkNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "disableNetworkNotifications", "()V");
-
-    jGetScreenOrientation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getScreenOrientation", "()S");
-    jEnableScreenOrientationNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableScreenOrientationNotifications", "()V");
-    jDisableScreenOrientationNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "disableScreenOrientationNotifications", "()V");
-    jLockScreenOrientation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "lockScreenOrientation", "(I)V");
-    jUnlockScreenOrientation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "unlockScreenOrientation", "()V");
-
-    jGeckoJavaSamplerClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("org/mozilla/gecko/GeckoJavaSampler"));
-    jStart = jEnv->GetStaticMethodID(jGeckoJavaSamplerClass, "start", "(II)V");
-    jStop = jEnv->GetStaticMethodID(jGeckoJavaSamplerClass, "stop", "()V");
-    jPause = jEnv->GetStaticMethodID(jGeckoJavaSamplerClass, "pause", "()V");
-    jUnpause = jEnv->GetStaticMethodID(jGeckoJavaSamplerClass, "unpause", "()V");
-    jGetThreadName = jEnv->GetStaticMethodID(jGeckoJavaSamplerClass, "getThreadName", "(I)Ljava/lang/String;");
-    jGetFrameName = jEnv->GetStaticMethodID(jGeckoJavaSamplerClass, "getFrameName", "(III)Ljava/lang/String;");
-    jGetSampleTime = jEnv->GetStaticMethodID(jGeckoJavaSamplerClass, "getSampleTime", "(II)D");
-
-    jThumbnailHelperClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("org/mozilla/gecko/ThumbnailHelper"));
-    jNotifyThumbnail = jEnv->GetStaticMethodID(jThumbnailHelperClass, "notifyThumbnail", "(Ljava/nio/ByteBuffer;IZ)V");
-
-    jStringClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("java/lang/String"));
-
-    jSurfaceClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("android/view/Surface"));
-
-    if (!GetStaticIntField("android/os/Build$VERSION", "SDK_INT", &mAPIVersion, jEnv))
+    if (!GetStaticIntField("android/os/Build$VERSION", "SDK_INT", &mAPIVersion, jEnv)) {
         ALOG_BRIDGE("Failed to find API version");
+    }
 
+    jSurfaceClass = getClassGlobalRef("android/view/Surface");
     if (mAPIVersion <= 8 /* Froyo */) {
-        jSurfacePointerField = jEnv->GetFieldID(jSurfaceClass, "mSurface", "I");
+        jSurfacePointerField = getField("mSurface", "I");
     } else {
-        jSurfacePointerField = jEnv->GetFieldID(jSurfaceClass, "mNativeSurface", "I");
+        jSurfacePointerField = getField("mNativeSurface", "I");
 
         // Apparently mNativeSurface doesn't exist in Key Lime Pie, so just clear the
         // exception if we have one and move on.
@@ -210,40 +298,26 @@ AndroidBridge::Init(JNIEnv *jEnv)
         }
     }
 
-    jNotifyWakeLockChanged = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyWakeLockChanged", "(Ljava/lang/String;Ljava/lang/String;)V");
 
-    jGetGfxInfoData = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getGfxInfoData", "()Ljava/lang/String;");
-    jGetProxyForURI = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getProxyForURI", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)Ljava/lang/String;");
-    jRegisterSurfaceTextureFrameListener = jEnv->GetStaticMethodID(jGeckoAppShellClass, "registerSurfaceTextureFrameListener", "(Ljava/lang/Object;I)V");
-    jUnregisterSurfaceTextureFrameListener = jEnv->GetStaticMethodID(jGeckoAppShellClass, "unregisterSurfaceTextureFrameListener", "(Ljava/lang/Object;)V");
+    jLayerView = getClassGlobalRef("org/mozilla/gecko/gfx/LayerView");
 
-    jPumpMessageLoop = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "pumpMessageLoop", "()Z");
+    getClassGlobalRef("org/mozilla/gecko/gfx/GLController");
+    jProvideEGLSurfaceMethod = getMethod("provideEGLSurface", "()Ljavax/microedition/khronos/egl/EGLSurface;");
 
-    jAddPluginView = jEnv->GetStaticMethodID(jGeckoAppShellClass, "addPluginView", "(Landroid/view/View;FFFFZ)V");
-    jRemovePluginView = jEnv->GetStaticMethodID(jGeckoAppShellClass, "removePluginView", "(Landroid/view/View;Z)V");
+    getClassGlobalRef("org/mozilla/gecko/gfx/NativePanZoomController");
+    jRequestContentRepaint = getMethod("requestContentRepaint", "(FFFFF)V");
+    jPostDelayedCallback = getMethod("postDelayedCallback", "(J)V");
 
-    jLayerView = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("org/mozilla/gecko/gfx/LayerView"));
-
-    jclass glControllerClass = jEnv->FindClass("org/mozilla/gecko/gfx/GLController");
-    jProvideEGLSurfaceMethod = jEnv->GetMethodID(glControllerClass, "provideEGLSurface",
-                                                  "()Ljavax/microedition/khronos/egl/EGLSurface;");
-
-    jclass nativePanZoomControllerClass = jEnv->FindClass("org/mozilla/gecko/gfx/NativePanZoomController");
-    jRequestContentRepaint = jEnv->GetMethodID(nativePanZoomControllerClass, "requestContentRepaint", "(FFFFF)V");
-    jPostDelayedCallback = jEnv->GetMethodID(nativePanZoomControllerClass, "postDelayedCallback", "(J)V");
-
-    jclass eglClass = jEnv->FindClass("com/google/android/gles_jni/EGLSurfaceImpl");
+    jclass eglClass = getClassGlobalRef("com/google/android/gles_jni/EGLSurfaceImpl");
     if (eglClass) {
-        jEGLSurfacePointerField = jEnv->GetFieldID(eglClass, "mEGLSurface", "I");
+        jEGLSurfacePointerField = getField("mEGLSurface", "I");
     } else {
         jEGLSurfacePointerField = 0;
     }
 
-    jGetContext = (jmethodID)jEnv->GetStaticMethodID(jGeckoAppShellClass, "getContext", "()Landroid/content/Context;");
-
-    jClipboardClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("org/mozilla/gecko/util/Clipboard"));
-    jClipboardGetText = (jmethodID) jEnv->GetStaticMethodID(jClipboardClass, "getText", "()Ljava/lang/String;");
-    jClipboardSetText = (jmethodID) jEnv->GetStaticMethodID(jClipboardClass, "setText", "(Ljava/lang/CharSequence;)V");
+    jClipboardClass = getClassGlobalRef("org/mozilla/gecko/util/Clipboard");
+    jClipboardGetText = getStaticMethod("getText", "()Ljava/lang/String;");
+    jClipboardSetText = getStaticMethod("setText", "(Ljava/lang/CharSequence;)V");
 
     InitAndroidJavaWrappers(jEnv);
 
@@ -1196,55 +1270,57 @@ AndroidBridge::ProvideEGLSurface()
 }
 
 bool
-AndroidBridge::GetStaticIntField(const char *className, const char *fieldName, int32_t* aInt, JNIEnv* env /* = nullptr */)
+AndroidBridge::GetStaticIntField(const char *className, const char *fieldName, int32_t* aInt, JNIEnv* jEnv /* = nullptr */)
 {
     ALOG_BRIDGE("AndroidBridge::GetStaticIntField %s", fieldName);
 
-    if (!env) {
-        env = GetJNIEnv();
-        if (!env)
+    if (!jEnv) {
+        jEnv = GetJNIEnv();
+        if (!jEnv)
             return false;
     }
 
-    AutoLocalJNIFrame jniFrame(env);
-    jclass cls = env->FindClass(className);
-    if (!cls)
+    initInit();
+    getClassGlobalRef(className);
+    jfieldID field = getStaticField(fieldName, "I");
+
+    if (!field) {
+        jEnv->DeleteGlobalRef(jClass);
         return false;
+    }
 
-    jfieldID field = env->GetStaticFieldID(cls, fieldName, "I");
-    if (!field)
-        return false;
+    *aInt = static_cast<int32_t>(jEnv->GetStaticIntField(jClass, field));
 
-    *aInt = static_cast<int32_t>(env->GetStaticIntField(cls, field));
-
+    jEnv->DeleteGlobalRef(jClass);
     return true;
 }
 
 bool
-AndroidBridge::GetStaticStringField(const char *className, const char *fieldName, nsAString &result, JNIEnv* env /* = nullptr */)
+AndroidBridge::GetStaticStringField(const char *className, const char *fieldName, nsAString &result, JNIEnv* jEnv /* = nullptr */)
 {
     ALOG_BRIDGE("AndroidBridge::GetStaticStringField %s", fieldName);
 
-    if (!env) {
-        env = GetJNIEnv();
-        if (!env)
+    if (!jEnv) {
+        jEnv = GetJNIEnv();
+        if (!jEnv)
             return false;
     }
 
-    AutoLocalJNIFrame jniFrame(env);
-    jclass cls = env->FindClass(className);
-    if (!cls)
-        return false;
+    initInit();
+    getClassGlobalRef(className);
+    jfieldID field = getStaticField(fieldName, "Ljava/lang/String;");
 
-    jfieldID field = env->GetStaticFieldID(cls, fieldName, "Ljava/lang/String;");
-    if (!field)
+    if (!field) {
+        jEnv->DeleteGlobalRef(jClass);
         return false;
+    }
 
-    jstring jstr = (jstring) env->GetStaticObjectField(cls, field);
+    jstring jstr = (jstring) jEnv->GetStaticObjectField(jClass, field);
+    jEnv->DeleteGlobalRef(jClass);
     if (!jstr)
         return false;
 
-    result.Assign(nsJNIString(jstr, env));
+    result.Assign(nsJNIString(jstr, jEnv));
     return true;
 }
 
