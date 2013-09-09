@@ -14,7 +14,7 @@ dictionary SmsThreadListItem
   unsigned long long unreadCount;
 };
 
-[scriptable, uuid(399125a8-00d2-11e3-8d12-3fba4465c097)]
+[scriptable, uuid(5f82f826-1956-11e3-a2bb-9b043b33de27)]
 interface nsIMobileMessageCallback : nsISupports
 {
   /**
@@ -30,6 +30,7 @@ interface nsIMobileMessageCallback : nsISupports
   const unsigned short NO_SIM_CARD_ERROR         = 5;
   const unsigned short RADIO_DISABLED_ERROR      = 6;
   const unsigned short INVALID_ADDRESS_ERROR     = 7;
+  const unsigned short FDN_CHECK_ERROR           = 8;
 
   /**
    * |message| can be nsIDOMMoz{Mms,Sms}Message.
