@@ -51,6 +51,7 @@
 #include "nsIDOMCryptoDialogs.h"
 #include "nsIFormSigningDialog.h"
 #include "nsIContentSecurityPolicy.h"
+#include "nsIURI.h"
 #include "jsapi.h"
 #include "js/OldDebugAPI.h"
 #include <ctype.h>

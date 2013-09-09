@@ -213,7 +213,9 @@ nsXBLDocGlobalObject::ClearGlobalObjectOwner()
 void
 nsXBLDocGlobalObject::UnmarkCompilationGlobal()
 {
-  xpc_UnmarkGrayObject(mJSObject);
+  if (mJSObject) {
+    JS::ExposeObjectToActiveJS(mJSObject);
+  }
 }
 
 JSObject *
@@ -357,7 +359,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 static void
 UnmarkXBLJSObject(void* aP, const char* aName, void* aClosure)
 {
-  xpc_UnmarkGrayObject(static_cast<JSObject*>(aP));
+  JS::ExposeObjectToActiveJS(static_cast<JSObject*>(aP));
 }
 
 static bool
