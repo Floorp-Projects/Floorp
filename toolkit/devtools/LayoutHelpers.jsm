@@ -13,15 +13,14 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "PlatformKeys", function() {
+  return Services.strings.createBundle(
+    "chrome://global-platform/locale/platformKeys.properties");
+});
+
 this.EXPORTED_SYMBOLS = ["LayoutHelpers"];
 
-this.LayoutHelpers = LayoutHelpers = function(aTopLevelWindow) {
-  this._topDocShell = aTopLevelWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                     .getInterface(Ci.nsIWebNavigation)
-                                     .QueryInterface(Ci.nsIDocShell);
-}
-
-LayoutHelpers.prototype = {
+this.LayoutHelpers = LayoutHelpers = {
 
   /**
    * Compute the position and the dimensions for the visible portion
@@ -71,27 +70,22 @@ LayoutHelpers.prototype = {
       // Selection has been clipped to fit in its own window.
 
       // Are we in the top-level window?
-      if (this.isTopLevelWindow(frameWin)) {
-        break;
-      }
-
-      let frameElement = this.getFrameElement(frameWin);
-      if (!frameElement) {
+      if (frameWin.parent === frameWin || !frameWin.frameElement) {
         break;
       }
 
       // We are in an iframe.
       // We take into account the parent iframe position and its
       // offset (borders and padding).
-      let frameRect = frameElement.getBoundingClientRect();
+      let frameRect = frameWin.frameElement.getBoundingClientRect();
 
       let [offsetTop, offsetLeft] =
-        this.getIframeContentOffset(frameElement);
+        this.getIframeContentOffset(frameWin.frameElement);
 
       rect.top += frameRect.top + offsetTop;
       rect.left += frameRect.left + offsetLeft;
 
-      frameWin = this.getParentWindow(frameWin);
+      frameWin = frameWin.parent;
     }
 
     return rect;
@@ -121,27 +115,22 @@ LayoutHelpers.prototype = {
     while (true) {
 
       // Are we in the top-level window?
-      if (this.isTopLevelWindow(frameWin)) {
-        break;
-      }
-
-      let frameElement = this.getFrameElement(frameWin);
-      if (!frameElement) {
+      if (frameWin.parent === frameWin || !frameWin.frameElement) {
         break;
       }
 
       // We are in an iframe.
       // We take into account the parent iframe position and its
       // offset (borders and padding).
-      let frameRect = frameElement.getBoundingClientRect();
+      let frameRect = frameWin.frameElement.getBoundingClientRect();
 
       let [offsetTop, offsetLeft] =
-        this.getIframeContentOffset(frameElement);
+        this.getIframeContentOffset(frameWin.frameElement);
 
       rect.top += frameRect.top + offsetTop;
       rect.left += frameRect.left + offsetLeft;
 
-      frameWin = this.getParentWindow(frameWin);
+      frameWin = frameWin.parent;
     }
 
     return rect;
@@ -214,7 +203,7 @@ LayoutHelpers.prototype = {
         let rect = node.getBoundingClientRect();
 
         // Gap between the iframe and its content window.
-        let [offsetTop, offsetLeft] = this.getIframeContentOffset(node);
+        let [offsetTop, offsetLeft] = LayoutHelpers.getIframeContentOffset(node);
 
         aX -= rect.left + offsetLeft;
         aY -= rect.top + offsetTop;
@@ -307,10 +296,9 @@ LayoutHelpers.prototype = {
       }
     }
 
-    if (!this.isTopLevelWindow(win)) {
+    if (win.parent !== win) {
       // We are inside an iframe.
-      let frameElement = this.getFrameElement(win);
-      this.scrollIntoViewIfNeeded(frameElement, centered);
+      LH_scrollIntoViewIfNeeded(win.frameElement, centered);
     }
   },
 
@@ -334,60 +322,63 @@ LayoutHelpers.prototype = {
   },
 
   /**
-   * like win.parent === win, but goes through mozbrowsers and mozapps iframes.
+   * Prettifies the modifier keys for an element.
+   *
+   * @param Node aElemKey
+   *        The key element to get the modifiers from.
+   * @param boolean aAllowCloverleaf
+   *        Pass true to use the cloverleaf symbol instead of a descriptive string.
+   * @return string
+   *         A prettified and properly separated modifier keys string.
    */
-  isTopLevelWindow: function LH_isTopLevelWindow(win) {
-    let docShell = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIWebNavigation)
-                   .QueryInterface(Ci.nsIDocShell);
+  prettyKey: function LH_prettyKey(aElemKey, aAllowCloverleaf)
+  {
+    let elemString = "";
+    let elemMod = aElemKey.getAttribute("modifiers");
 
-    return docShell === this._topDocShell;
-  },
-
-  /**
-   * like win.parent, but goes through mozbrowsers and mozapps iframes.
-   */
-  getParentWindow: function LH_getParentWindow(win) {
-    if (this.isTopLevelWindow(win)) {
-      return null;
-    }
-
-    let docShell = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIWebNavigation)
-                   .QueryInterface(Ci.nsIDocShell);
-
-    if (docShell.isBrowserOrApp) {
-      let parentDocShell = docShell.getSameTypeParentIgnoreBrowserAndAppBoundaries();
-      return parentDocShell.contentViewer.DOMDocument.defaultView;
-    } else {
-      return win.parent;
-    }
-  },
-
-  /**
-   * like win.frameElement, but goes through mozbrowsers and mozapps iframes.
-   */
-  getFrameElement: function LH_getFrameElement(win) {
-    if (this.isTopLevelWindow(win)) {
-      return null;
-    }
-
-    let docShell = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIWebNavigation)
-                   .QueryInterface(Ci.nsIDocShell);
-
-    if (docShell.isBrowserOrApp) {
-      let parentDocShell = docShell.getSameTypeParentIgnoreBrowserAndAppBoundaries();
-      let parentDoc = parentDocShell.contentViewer.DOMDocument;
-      let allIframes = parentDoc.querySelectorAll("iframe");
-      for (let f of allIframes) {
-        if (f.contentWindow === win) {
-          return f;
+    if (elemMod.match("accel")) {
+      if (Services.appinfo.OS == "Darwin") {
+        // XXX bug 779642 Use "Cmd-" literal vs. cloverleaf meta-key until
+        // Orion adds variable height lines.
+        if (!aAllowCloverleaf) {
+          elemString += "Cmd-";
+        } else {
+          elemString += PlatformKeys.GetStringFromName("VK_META") +
+                        PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
         }
+      } else {
+        elemString += PlatformKeys.GetStringFromName("VK_CONTROL") +
+                      PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
       }
-      return null;
-    } else {
-      return win.frameElement;
     }
-  },
+    if (elemMod.match("access")) {
+      if (Services.appinfo.OS == "Darwin") {
+        elemString += PlatformKeys.GetStringFromName("VK_CONTROL") +
+                      PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+      } else {
+        elemString += PlatformKeys.GetStringFromName("VK_ALT") +
+                      PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+      }
+    }
+    if (elemMod.match("shift")) {
+      elemString += PlatformKeys.GetStringFromName("VK_SHIFT") +
+                    PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+    }
+    if (elemMod.match("alt")) {
+      elemString += PlatformKeys.GetStringFromName("VK_ALT") +
+                    PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+    }
+    if (elemMod.match("ctrl") || elemMod.match("control")) {
+      elemString += PlatformKeys.GetStringFromName("VK_CONTROL") +
+                    PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+    }
+    if (elemMod.match("meta")) {
+      elemString += PlatformKeys.GetStringFromName("VK_META") +
+                    PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+    }
+
+    return elemString +
+      (aElemKey.getAttribute("keycode").replace(/^.*VK_/, "") ||
+       aElemKey.getAttribute("key")).toUpperCase();
+  }
 };
