@@ -171,8 +171,8 @@ XPCJSContextStack::GetSafeJSContext()
 
     // Note: make sure to set the private before calling
     // InitClasses
-    nsCOMPtr<nsIScriptObjectPrincipal> sop = new SandboxPrivate(principal, glob);
-    JS_SetPrivate(glob, sop.forget().get());
+    nsRefPtr<SandboxPrivate> sp = new SandboxPrivate(principal, glob);
+    JS_SetPrivate(glob, sp.forget().get());
 
     // After this point either glob is null and the
     // nsIScriptObjectPrincipal ownership is either handled by the
