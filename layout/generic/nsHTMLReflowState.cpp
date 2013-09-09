@@ -121,7 +121,7 @@ FontSizeInflationListMarginAdjustment(const nsIFrame* aFrame)
 
   return 0;
 }
-// Initialize a reflow state for a child frames reflow. Some state
+// Initialize a reflow state for a child frame's reflow. Some state
 // is copied from the parent reflow state; the remaining state is
 // computed.
 nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,

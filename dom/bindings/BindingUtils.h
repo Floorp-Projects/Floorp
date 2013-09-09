@@ -16,6 +16,7 @@
 #include "mozilla/dom/CallbackObject.h"
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
+#include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/workers/Workers.h"
@@ -69,24 +70,6 @@ ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
                  const ErrNum aErrorNumber,
                  const char* aInterfaceName);
 
-template<bool mainThread>
-inline bool
-Throw(JSContext* cx, nsresult rv)
-{
-  using mozilla::dom::workers::exceptions::ThrowDOMExceptionForNSResult;
-
-  // XXX Introduce exception machinery.
-  if (mainThread) {
-    xpc::Throw(cx, rv);
-  } else {
-    if (!JS_IsExceptionPending(cx)) {
-      ThrowDOMExceptionForNSResult(cx, rv);
-    }
-  }
-  return false;
-}
-
-template<bool mainThread>
 inline bool
 ThrowMethodFailedWithDetails(JSContext* cx, ErrorResult& rv,
                              const char* ifaceName,
@@ -108,7 +91,7 @@ ThrowMethodFailedWithDetails(JSContext* cx, ErrorResult& rv,
   if (rv.IsNotEnoughArgsError()) {
     rv.ReportNotEnoughArgsError(cx, ifaceName, memberName);
   }
-  return Throw<mainThread>(cx, rv.ErrorCode());
+  return Throw(cx, rv.ErrorCode());
 }
 
 // Returns true if the JSClass is used for DOM objects.
@@ -652,7 +635,7 @@ WrapNewBindingObject(JSContext* cx, JS::Handle<JSObject*> scope, T* value,
   JSObject* obj = value->GetWrapperPreserveColor();
   bool couldBeDOMBinding = CouldBeDOMBinding(value);
   if (obj) {
-    xpc_UnmarkNonNullGrayObject(obj);
+    JS::ExposeObjectToActiveJS(obj);
   } else {
     // Inline this here while we have non-dom objects in wrapper caches.
     if (!couldBeDOMBinding) {
@@ -2351,6 +2334,9 @@ public:
     return nullptr;
   }
 };
+
+bool
+ThreadsafeCheckIsChrome(JSContext* aCx, JSObject* aObj);
 
 } // namespace dom
 } // namespace mozilla

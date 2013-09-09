@@ -421,7 +421,8 @@ BluetoothAdapter::GetDevices(JSContext* aContext, ErrorResult& aRv)
     return JS::NullValue();
   }
 
-  return JS::ObjectValue(*xpc_UnmarkGrayObject(mJsDeviceAddresses));
+  JS::ExposeObjectToActiveJS(mJsDeviceAddresses);
+  return JS::ObjectValue(*mJsDeviceAddresses);
 }
 
 JS::Value
@@ -433,7 +434,8 @@ BluetoothAdapter::GetUuids(JSContext* aContext, ErrorResult& aRv)
     return JS::NullValue();
   }
 
-  return JS::ObjectValue(*xpc_UnmarkGrayObject(mJsUuids));
+  JS::ExposeObjectToActiveJS(mJsUuids);
+  return JS::ObjectValue(*mJsUuids);
 }
 
 already_AddRefed<DOMRequest>
