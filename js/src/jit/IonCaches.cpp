@@ -2059,6 +2059,13 @@ IsCacheableSetPropCallPropertyOp(HandleObject obj, HandleObject holder,
     if (shape->hasSetterValue())
         return false;
 
+    // Despite the vehement claims of Shape.h that writable() is only
+    // relevant for data descriptors, some PropertyOp setters care
+    // desperately about its value. The flag should be always true, apart
+    // from these rare instances.
+    if (!shape->writable())
+        return false;
+
     return true;
 }
 
