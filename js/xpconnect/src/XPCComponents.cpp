@@ -39,6 +39,7 @@
 #include "mozilla/XPTInterfaceInfoManager.h"
 #include "nsDOMClassInfoID.h"
 #include "nsGlobalWindow.h"
+#include "mozilla/dom/DOMExceptionBinding.h"
 
 using namespace mozilla;
 using namespace JS;
@@ -1956,9 +1957,9 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     if (!parser.parse(args))
         return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
 
-    nsCOMPtr<nsIException> e;
-    nsXPCException::NewException(parser.eMsg, parser.eResult, parser.eStack,
-                                 parser.eData, getter_AddRefs(e));
+    nsCOMPtr<nsIException> e = new nsXPCException(parser.eMsg, parser.eResult,
+                                                  nullptr, parser.eStack,
+                                                  parser.eData);
     if (!e)
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
 
@@ -1983,9 +1984,14 @@ nsXPCComponents_Exception::HasInstance(nsIXPConnectWrappedNative *wrapper,
                                        const jsval &val, bool *bp,
                                        bool *_retval)
 {
+    using namespace mozilla::dom;
+
     RootedValue v(cx, val);
-    if (bp)
-        *bp = JSValIsInterfaceOfType(cx, v, NS_GET_IID(nsIException));
+    if (bp) {
+        nsXPCException* e;
+        *bp = NS_SUCCEEDED(UNWRAP_OBJECT(Exception, cx, v.toObjectOrNull(), e)) ||
+              JSValIsInterfaceOfType(cx, v, NS_GET_IID(nsIException));
+    }
     return NS_OK;
 }
 
