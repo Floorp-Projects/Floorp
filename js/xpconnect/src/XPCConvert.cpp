@@ -827,7 +827,7 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
         return false;
 
     // First, see if this object supports the wrapper cache.
-    // Note: If |cache->IsProxy()| is true, then it means that the object
+    // Note: If |cache->IsDOMBinding()| is true, then it means that the object
     // implementing it doesn't want a wrapped native as its JS Object, but
     // instead it provides its own proxy object. In that case, the object
     // to use is found as cache->GetWrapper(). If that is null, then the
@@ -862,7 +862,7 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
     if (cpow) {
         if (!JS_WrapObject(cx, cpow.address()))
             return false;
-        *d = OBJECT_TO_JSVAL(cpow);
+        *d = JS::ObjectValue(*cpow);
         return true;
     }
 
