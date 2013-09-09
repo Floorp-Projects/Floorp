@@ -1855,18 +1855,24 @@ let CustomizableUIInternal = {
       let buildAreaNodes = gBuildAreas.get(areaId);
       if (buildAreaNodes && buildAreaNodes.size) {
         let container = [...buildAreaNodes][0];
-        // Clone the array so we don't modify the actual placements...
-        currentPlacements = [...currentPlacements];
-        // Loop backwards through the placements so we can easily remove items:
-        let itemIndex = currentPlacements.length;
-        while (itemIndex--) {
-          if (!container.querySelector(idToSelector(currentPlacements[itemIndex]))) {
-            currentPlacements.splice(itemIndex, 1);
+        // Toolbars have a currentSet property which also deals correctly with overflown
+        // widgets (if any) - use that instead:
+        if (props.get("type") == CustomizableUI.TYPE_TOOLBAR) {
+          currentPlacements = container.currentSet.split(',');
+        } else {
+          // Clone the array so we don't modify the actual placements...
+          currentPlacements = [...currentPlacements];
+          // Loop backwards through the placements so we can easily remove items:
+          let itemIndex = currentPlacements.length;
+          while (itemIndex--) {
+            if (!container.querySelector(idToSelector(currentPlacements[itemIndex]))) {
+              currentPlacements.splice(itemIndex, 1);
+            }
           }
         }
       }
-      LOG("Checking default state for " + areaId + ":\n" + currentPlacements.join("\n") +
-          " vs. " + defaultPlacements.join("\n"));
+      LOG("Checking default state for " + areaId + ":\n" + currentPlacements.join(",") +
+          "\nvs.\n" + defaultPlacements.join(","));
 
       if (currentPlacements.length != defaultPlacements.length) {
         return false;

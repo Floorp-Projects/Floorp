@@ -145,25 +145,25 @@
 
       <property name="currentSet">
         <getter><![CDATA[
-          if (!this._customizationTarget)
-            return "";
-
-          let rv = [];
-          for (let node of this._customizationTarget.children) {
-            if (node.getAttribute("skipintoolbarset") != "true") {
-              rv.push(node.id);
+          let currentWidgets = new Set();
+          for (let node of this.customizationTarget.children) {
+            let realNode = node.localName == "toolbarpaletteitem" ? node.firstChild : node;
+            if (realNode.getAttribute("skipintoolbarset") != "true") {
+              currentWidgets.add(realNode.id);
             }
           }
           if (this.getAttribute("overflowing") == "true") {
             let overflowTarget = this.getAttribute("overflowtarget");
             let overflowList = this.ownerDocument.getElementById(overflowTarget);
             for (let node of overflowList.children) {
-              if (node.getAttribute("skipintoolbarset") != "true") {
-                rv.push(node.id);
+              let realNode = node.localName == "toolbarpaletteitem" ? node.firstChild : node;
+              if (realNode.getAttribute("skipintoolbarset") != "true") {
+                currentWidgets.add(realNode.id);
               }
             }
           }
-          return rv.join(',');
+          let orderedPlacements = CustomizableUI.getWidgetIdsInArea(this.id);
+          return orderedPlacements.filter((x) => currentWidgets.has(x)).join(',');
         ]]></getter>
         <setter><![CDATA[
           // Get list of new and old ids:

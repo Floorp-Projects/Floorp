@@ -15,5 +15,6 @@ MOCHITEST_BROWSER_FILES = \
   browser_892955_isWidgetRemovable_for_removed_widgets.js \
   browser_892956_destroyWidget_defaultPlacements.js \
   browser_888817_currentset_updating.js \
+  browser_913972_currentset_overflow.js \
   head.js \
   $(NULL)
