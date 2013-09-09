@@ -46,8 +46,9 @@ const PREF_UPDATES_URL = PREF_UPDATES + "url";
 const PREF_UPDATES_INTERVAL = PREF_UPDATES + "interval";
 const PREF_UPDATES_RETRY = PREF_UPDATES + "retry";
 const PREF_UPDATES_TIMEOUT = PREF_UPDATES + "timeout";
+const PREF_UPDATES_LASTUPDATED = PREF_UPDATES + "lastupdated";
 
-const KEY_PROFILEDIR = "ProfD";
+const KEY_PREFDIR = "PrefD";
 const KEY_APPDIR = "XCurProcD";
 const FILE_UPDATES = "ua-update.json";
 
@@ -64,6 +65,7 @@ this.UserAgentUpdates = {
     gInitialized = true;
 
     this._callback = callback;
+    this._lastUpdated = 0;
     this._applySavedUpdate();
 
     Services.prefs.addObserver(PREF_UPDATES, this, false);
@@ -88,7 +90,7 @@ this.UserAgentUpdates = {
       return;
     }
     // try loading from profile dir, then from app dir
-    let dirs = [KEY_PROFILEDIR, KEY_APPDIR];
+    let dirs = [KEY_PREFDIR, KEY_APPDIR];
     dirs.reduce((prevLoad, dir) => {
       let file = FileUtils.getFile(dir, [FILE_UPDATES], true).path;
       // tryNext returns promise to read file under dir and parse it
@@ -105,10 +107,23 @@ this.UserAgentUpdates = {
   },
 
   _saveToFile: function(update) {
-    let file = OS.Path.join(OS.Constants.Path.profileDir, FILE_UPDATES);
+    let file = FileUtils.getFile(KEY_PREFDIR, [FILE_UPDATES], true);
+    let path = file.path;
     let bytes = gEncoder.encode(JSON.stringify(update));
-    OS.File.writeAtomic(file, bytes, {tmpPath: file + ".tmp"}).then(
-      null, Cu.reportError
+    OS.File.writeAtomic(path, bytes, {tmpPath: path + ".tmp"}).then(
+      () => {
+        if (gApp.widgetToolkit === 'gonk') {
+          // B2G content processes run under different users;
+          // so we need to separately set more open permissions
+          file.permissions = OS.Constants.libc.S_IRUSR |
+            OS.Constants.libc.S_IWUSR | OS.Constants.libc.S_IRGRP |
+            OS.Constants.libc.S_IROTH;
+        }
+        this._lastUpdated = Date.now();
+        Services.prefs.setCharPref(
+          PREF_UPDATES_LASTUPDATED, this._lastUpdated.toString());
+      },
+      Cu.reportError
     );
   },
 
@@ -175,6 +190,10 @@ this.UserAgentUpdates = {
   },
 
   _scheduleUpdate: function(retry) {
+    // only schedule updates in the main process
+    if (gApp.processType !== Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+      return;
+    }
     let interval = this._getPref(PREF_UPDATES_INTERVAL, 604800 /* 1 week */);
     if (retry) {
       interval = this._getPref(PREF_UPDATES_RETRY, interval);
@@ -196,6 +215,14 @@ this.UserAgentUpdates = {
           this._applySavedUpdate();
         } else if (data === PREF_UPDATES_INTERVAL) {
           this._scheduleUpdate();
+        } else if (data === PREF_UPDATES_LASTUPDATED) {
+          // reload from file if there has been an update
+          let lastUpdated = parseInt(
+            this._getPref(PREF_UPDATES_LASTUPDATED, "0"), 0);
+          if (lastUpdated > this._lastUpdated) {
+            this._applySavedUpdate();
+            this._lastUpdated = lastUpdated;
+          }
         }
         break;
     }
