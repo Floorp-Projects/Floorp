@@ -1734,7 +1734,7 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
   autoCleanup: true,
 
   initialize: function(client, form) {
-    this._rootNodeDeferred = promise.defer();
+    this._createRootNodePromise();
     protocol.Front.prototype.initialize.call(this, client, form);
     this._orphaned = new Set();
     this._retainedOrphans = new Set();
@@ -1759,6 +1759,17 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
    */
   getRootNode: function() {
     return this._rootNodeDeferred.promise;
+  },
+
+  /**
+   * Create the root node promise, triggering the "new-root" notification
+   * on resolution.
+   */
+  _createRootNodePromise: function() {
+    this._rootNodeDeferred = promise.defer();
+    this._rootNodeDeferred.promise.then(() => {
+      events.emit(this, "new-root");
+    });
   },
 
   /**
@@ -1933,8 +1944,7 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
           }
         } else if (change.type === "documentUnload") {
           if (targetFront === this.rootNode) {
-            this.rootNode = null;
-            this._rootNodeDeferred = promise.defer();
+            this._createRootNodePromise();
           }
 
           // We try to give fronts instead of actorIDs, but these fronts need
