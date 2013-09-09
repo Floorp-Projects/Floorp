@@ -2328,6 +2328,9 @@ OverflowableToolbar.prototype = {
       }
       child = prevChild;
     };
+
+    let win = this._target.ownerDocument.defaultView;
+    win.UpdateUrlbarSearchSplitterState();
   },
 
   _onResize: function(aEvent) {
@@ -2352,6 +2355,9 @@ OverflowableToolbar.prototype = {
       child.removeAttribute("customizableui-anchorid");
       child.classList.remove("overflowedItem");
     }
+
+    let win = this._target.ownerDocument.defaultView;
+    win.UpdateUrlbarSearchSplitterState();
 
     if (!this._collapsed.length) {
       this._toolbar.removeAttribute("overflowing");
