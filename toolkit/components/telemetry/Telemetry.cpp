@@ -363,11 +363,11 @@ TelemetryImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   return n;
 }
 
-class TelemetryReporter MOZ_FINAL : public MemoryUniReporter
+class TelemetryReporter MOZ_FINAL : public MemoryReporterBase
 {
 public:
   TelemetryReporter()
-    : MemoryUniReporter("explicit/telemetry", KIND_HEAP, UNITS_BYTES,
+    : MemoryReporterBase("explicit/telemetry", KIND_HEAP, UNITS_BYTES,
                          "Memory used by the telemetry system.")
   {}
 private:
