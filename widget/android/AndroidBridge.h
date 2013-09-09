@@ -42,7 +42,7 @@ class nsIDOMMozSmsMessage;
 /* See the comment in AndroidBridge about this function before using it */
 extern "C" JNIEnv * GetJNIForThread();
 
-extern bool mozilla_AndroidBridge_SetMainThread(void *);
+extern bool mozilla_AndroidBridge_SetMainThread(pthread_t);
 extern jclass GetGeckoAppShellClass();
 
 namespace base {
@@ -149,7 +149,7 @@ public:
 
     static JNIEnv *GetJNIEnv() {
         if (MOZ_LIKELY(sBridge)) {
-            if ((void*)pthread_self() != sBridge->mThread) {
+            if (!pthread_equal(pthread_self(), sBridge->mThread)) {
                 __android_log_print(ANDROID_LOG_INFO, "AndroidBridge",
                                     "###!!!!!!! Something's grabbing the JNIEnv from the wrong thread! (thr %p should be %p)",
                                     (void*)pthread_self(), (void*)sBridge->mThread);
@@ -171,7 +171,7 @@ public:
     // SetMainThread should be called which will create the JNIEnv for
     // us to use.  toolkit/xre/nsAndroidStartup.cpp calls
     // SetMainThread.
-    bool SetMainThread(void *thr);
+    bool SetMainThread(pthread_t thr);
 
     /* These are all implemented in Java */
     bool GetThreadNameJavaProfiling(uint32_t aThreadId, nsCString & aResult);
@@ -341,7 +341,7 @@ protected:
 
     // the JNIEnv for the main thread
     JNIEnv *mJNIEnv;
-    void *mThread;
+    pthread_t mThread;
 
     AndroidGeckoLayerClient *mLayerClient;
 
