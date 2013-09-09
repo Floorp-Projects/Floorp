@@ -623,7 +623,7 @@ void OmxDecoder::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_
     return;
   }
 
-  mMP3FrameParser.NotifyDataArrived(aBuffer, aLength, aOffset);
+  mMP3FrameParser.Parse(aBuffer, aLength, aOffset);
 
   int64_t durationUs = mMP3FrameParser.GetDuration();
 

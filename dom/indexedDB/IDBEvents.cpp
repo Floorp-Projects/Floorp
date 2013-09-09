@@ -6,7 +6,6 @@
 
 #include "IDBEvents.h"
 
-#include "nsDOMException.h"
 #include "nsJSON.h"
 #include "nsThreadUtils.h"
 

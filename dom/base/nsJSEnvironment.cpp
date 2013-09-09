@@ -1044,11 +1044,14 @@ nsJSContext::JSObjectFromInterface(nsISupports* aTarget,
   NS_ASSERTION(native == targetSupp, "Native should be the target!");
 #endif
 
-  *aRet = xpc_UnmarkGrayObject(JSVAL_TO_OBJECT(v));
+  JSObject* obj = v.toObjectOrNull();
+  if (obj) {
+    JS::ExposeObjectToActiveJS(obj);
+  }
 
+  *aRet = obj;
   return NS_OK;
 }
-
 
 nsresult
 nsJSContext::BindCompiledEventHandler(nsISupports* aTarget,
@@ -1060,8 +1063,10 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget,
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
   NS_PRECONDITION(!aBoundHandler, "Shouldn't already have a bound handler!");
 
-  xpc_UnmarkGrayObject(aScope);
-  xpc_UnmarkGrayObject(aHandler);
+  if (aScope) {
+    JS::ExposeObjectToActiveJS(aScope);
+  }
+  JS::ExposeObjectToActiveJS(aHandler);
   AutoPushJSContext cx(mContext);
 
   // Get the jsobject associated with this target
@@ -2602,7 +2607,12 @@ nsJSContext::SetWindowProxy(JS::Handle<JSObject*> aWindowProxy)
 JSObject*
 nsJSContext::GetWindowProxy()
 {
-  return xpc_UnmarkGrayObject(GetWindowProxyPreserveColor());
+  JSObject* windowProxy = GetWindowProxyPreserveColor();
+  if (windowProxy) {
+    JS::ExposeObjectToActiveJS(windowProxy);
+  }
+
+  return windowProxy;
 }
 
 JSObject*

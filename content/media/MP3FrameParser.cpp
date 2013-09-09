@@ -32,7 +32,7 @@ public:
 
   nsresult Parse();
 
-  int64_t GetMP3Offset() const {
+  int64_t Length() const {
     return ID3_HEADER_LENGTH + mSize;
   }
 
@@ -84,13 +84,10 @@ public:
     mDurationUs(0),
     mNumFrames(0),
     mBitRateSum(0),
-    mFrameSizeSum(0),
-    mTrailing(0)
+    mFrameSizeSum(0)
   {
     MOZ_ASSERT(mBuffer || !mLength);
   }
-
-  static const uint8_t* FindNextHeader(const uint8_t* aBuffer, uint32_t aLength);
 
   nsresult Parse();
 
@@ -108,10 +105,6 @@ public:
 
   int64_t GetFrameSizeSum() const {
     return mFrameSizeSum;
-  }
-
-  int64_t GetTrailing() const {
-    return mTrailing;
   }
 
 private:
@@ -138,9 +131,9 @@ private:
                                           enum MP3FrameHeaderField aField);
   static uint32_t ExtractFrameHeader(const uint8_t* aBuffer);
   static nsresult DecodeFrameHeader(const uint8_t* aBuffer,
-                                          size_t* aFrameSize,
-                                          uint32_t* aBitRate,
-                                          uint64_t* aDuration);
+                                    uint32_t* aFrameSize,
+                                    uint32_t* aBitRate,
+                                    uint64_t* aDuration);
 
   static const uint16_t sBitRate[16];
   static const uint16_t sSampleRate[4];
@@ -159,9 +152,6 @@ private:
 
   // The sum of all frame's sizes in byte.
   int32_t mFrameSizeSum;
-
-  // The number of trailing bytes.
-  int32_t mTrailing;
 };
 
 const uint16_t MP3Buffer::sBitRate[16] = {
@@ -214,24 +204,6 @@ uint32_t MP3Buffer::ExtractFrameHeader(const uint8_t* aBuffer)
          (layer == uint32_t(MP3_HDR_CONST_LAYER)) * !!bitRate * !!sampleRate * header;
 }
 
-const uint8_t* MP3Buffer::FindNextHeader(const uint8_t* aBuffer, uint32_t aLength)
-{
-  MOZ_ASSERT(aBuffer || !aLength);
-
-  // Find MP3's frame-sync marker while there are at least 4 bytes
-  // left to contain the MP3 frame header
-
-  while (aLength >= MP3_HEADER_LENGTH) {
-    if (ExtractFrameHeader(aBuffer)) {
-      break;
-    }
-    ++aBuffer;
-    --aLength;
-  }
-
-  return aBuffer;
-}
-
 nsresult MP3Buffer::DecodeFrameHeader(const uint8_t* aBuffer,
                                       uint32_t* aFrameSize,
                                       uint32_t* aBitRate,
@@ -268,7 +240,7 @@ nsresult MP3Buffer::Parse()
   // MP3 frames.
 
   const uint8_t* buffer = mBuffer;
-  uint32_t       length = mLength;
+  uint32_t length = mLength;
 
   while (length >= MP3_HEADER_LENGTH) {
 
@@ -277,7 +249,9 @@ nsresult MP3Buffer::Parse()
     uint64_t duration;
 
     nsresult rv = DecodeFrameHeader(buffer, &frameSize, &bitRate, &duration);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     mBitRateSum += bitRate;
     mDurationUs += duration;
@@ -294,10 +268,13 @@ nsresult MP3Buffer::Parse()
     buffer += frameSize;
   }
 
-  mTrailing = length;
-
   return NS_OK;
 }
+
+// Some MP3's have large ID3v2 tags, up to 150KB, so we allow lots of
+// skipped bytes to be read, just in case, before we give up and assume
+// we're not parsing an MP3 stream.
+static const uint32_t MAX_SKIPPED_BYTES = 200 * 1024;
 
 MP3FrameParser::MP3FrameParser(int64_t aLength)
 : mBufferLength(0),
@@ -308,161 +285,139 @@ MP3FrameParser::MP3FrameParser(int64_t aLength)
   mOffset(0),
   mUnhandled(0),
   mLength(aLength),
-  mTrailing(0),
-  mIsMP3(true)
+  mMP3Offset(-1),
+  mSkippedBytes(0),
+  mIsMP3(MAYBE_MP3)
 { }
 
-size_t MP3FrameParser::ParseInternalBuffer(const uint8_t* aBuffer, uint32_t aLength, int64_t aOffset)
+nsresult MP3FrameParser::ParseBuffer(const uint8_t* aBuffer,
+                                     uint32_t aLength,
+                                     int64_t aStreamOffset,
+                                     uint32_t* aOutBytesRead)
 {
-  if (mOffset != aOffset) {
-    // If we don't append, we throw away our temporary buffer.
-    mBufferLength = 0;
-    return 0;
-  }
-
-  size_t copyLength = 0;
-
-  if (mBufferLength || !mOffset) {
-
-    // We have some data in our temporary buffer and append to it, or
-    // we are at the beginning of the stream. We both cases, we append
-    // some data to our temporary buffer and try to parse it.
-    copyLength = std::min<size_t>(NS_ARRAY_LENGTH(mBuffer)-mBufferLength, aLength);
-    memcpy(mBuffer+mBufferLength, aBuffer, copyLength*sizeof(*mBuffer));
-    mBufferLength += copyLength;
-  }
-
-  if ((mBufferLength >= ID3Buffer::ID3_HEADER_LENGTH) && (mOffset < ID3Buffer::ID3_HEADER_LENGTH)) {
-
-    // There might be an ID3 header at the very beginning of the stream.
-    ID3Buffer id3Buffer(mBuffer, mBufferLength);
-    nsresult rv = id3Buffer.Parse();
-
-    if (rv == NS_OK) {
-      mOffset += id3Buffer.GetMP3Offset()-(mBufferLength-copyLength);
-      mBufferLength = 0;
+  // Iterate forwards over the buffer, looking for ID3 tag, or MP3
+  // Frame headers.
+  uint32_t bufferOffset = 0;
+  uint32_t headersParsed = 0;
+  while (bufferOffset < aLength) {
+    const uint8_t* buffer = aBuffer + bufferOffset;
+    const uint32_t length = aLength - bufferOffset;
+    if (mMP3Offset == -1) {
+      // We've not found any MP3 frames yet, there may still be ID3 tags in
+      // the stream, so test for them.
+      if (length < ID3Buffer::ID3_HEADER_LENGTH) {
+        // We don't have enough data to get a complete ID3 header, bail.
+        break;
+      }
+      ID3Buffer id3Buffer(buffer, length);
+      if (NS_SUCCEEDED(id3Buffer.Parse())) {
+        bufferOffset += id3Buffer.Length();
+        // Try to parse the next chunk.
+        headersParsed++;
+        continue;
+      }
     }
-  }
-
-  if (mBufferLength >= MP3Buffer::MP3_HEADER_LENGTH) {
-
-    // Or there could be a regular frame header somewhere
-    // in the stream.
-    MP3Buffer mp3Buffer(mBuffer, mBufferLength);
-    nsresult rv = mp3Buffer.Parse();
-
-    if (rv == NS_OK) {
+    if (length < MP3Buffer::MP3_HEADER_LENGTH) {
+      // We don't have enough data to get a complete MP3 frame header, bail.
+      break;
+    }
+    MP3Buffer mp3Buffer(buffer, length);
+    if (NS_SUCCEEDED(mp3Buffer.Parse())) {
+      headersParsed++;
+      if (mMP3Offset == -1) {
+        mMP3Offset = aStreamOffset + bufferOffset;
+      }
       mDurationUs += mp3Buffer.GetDuration();
       mBitRateSum += mp3Buffer.GetBitRateSum();
-      mNumFrames  += mp3Buffer.GetNumberOfFrames();
-      mOffset     += mp3Buffer.GetFrameSizeSum()-(mBufferLength-copyLength);
-      mBufferLength = 0;
+      mNumFrames += mp3Buffer.GetNumberOfFrames();
+      bufferOffset += mp3Buffer.GetFrameSizeSum();
+    } else {
+      // No ID3 or MP3 frame header here. Try the next byte.
+      ++bufferOffset;
     }
   }
-
-  if (mBufferLength) {
-    // We have not been able to successfully parse the
-    // content of the temporary buffer. If the buffer is
-    // full already, the stream does not contain MP3.
-    mOffset += copyLength;
-    mIsMP3   = (mBufferLength < NS_ARRAY_LENGTH(mBuffer));
+  if (headersParsed == 0) {
+    if (mIsMP3 == MAYBE_MP3) {
+      mSkippedBytes += aLength;
+      if (mSkippedBytes > MAX_SKIPPED_BYTES) {
+        mIsMP3 = NOT_MP3;
+        return NS_ERROR_FAILURE;
+      }
+    }
   } else {
-    // We parsed the temporary buffer. The parser code
-    // will update the input data.
-    copyLength = 0;
+    mIsMP3 = DEFINITELY_MP3;
+    mSkippedBytes = 0;
   }
-
-  if (mOffset > mLength) {
-    mLength = mOffset;
-  }
-
-  return copyLength;
+  *aOutBytesRead = bufferOffset;
+  return NS_OK;
 }
 
-void MP3FrameParser::Parse(const uint8_t* aBuffer, uint32_t aLength, int64_t aOffset)
+void MP3FrameParser::Parse(const char* aBuffer, uint32_t aLength, int64_t aOffset)
 {
   MutexAutoLock mon(mLock);
 
-  // We first try to parse the remaining data from the last call that
-  // is stored in an internal buffer.
-  size_t bufferIncr = ParseInternalBuffer(aBuffer, aLength, aOffset);
-
-  aBuffer += bufferIncr;
-  aLength -= bufferIncr;
-  aOffset += bufferIncr;
-
-  // The number of attempts to parse the data. This should be 1 of we
-  // append to the end of the existing data.
-  int retries = 1;
-
-  if (aOffset+aLength <= mOffset) {
+  const uint8_t* buffer = reinterpret_cast<const uint8_t*>(aBuffer);
+  const int64_t lastChunkEnd = mOffset + mBufferLength;
+  if (aOffset + aLength <= lastChunkEnd) {
     // We already processed this fragment.
     return;
-  } else if (aOffset < mOffset) {
+  } else if (aOffset < lastChunkEnd) {
     // mOffset is within the new fragment, shorten range.
-    aLength -= mOffset-aOffset;
-    aBuffer += mOffset-aOffset;
-    aOffset  = mOffset;
-  } else if (aOffset > mOffset) {
+    aLength -= lastChunkEnd - aOffset;
+    buffer += lastChunkEnd - aOffset;
+    aOffset = lastChunkEnd;
+  } else if (aOffset > lastChunkEnd) {
     // Fragment comes after current position, store difference.
-    mUnhandled += aOffset-mOffset;
-
-    // We might start in the middle of a frame and have find the next
-    // frame header. As our detection heuristics might return false
-    // positives, we simply try multiple times. The current value comes
-    // from experimentation with MP3 files. If you encounter false positives
-    // and incorrectly parsed MP3 files, try incrementing this value.
-    retries = 5;
+    mUnhandled += aOffset - lastChunkEnd;
+    mSkippedBytes = 0;
   }
 
-  uint32_t trailing = 0;
-
-  while (retries) {
-
-    MP3Buffer mp3Buffer(aBuffer, aLength);
-    nsresult rv = mp3Buffer.Parse();
-
-    if (rv != NS_OK) {
-      --retries;
-
-      if (!retries) {
-        mIsMP3 = false;
-        return;
-      }
-
-      // We might be in the middle of a frame, find next frame header
-      const uint8_t *buffer = MP3Buffer::FindNextHeader(aBuffer+1, aLength-1);
-
-      mUnhandled += buffer-aBuffer;
-      mOffset     = aOffset + buffer-aBuffer;
-      aLength    -= buffer-aBuffer;
-      aBuffer     = buffer;
-    } else {
-      mDurationUs += mp3Buffer.GetDuration();
-      mBitRateSum += mp3Buffer.GetBitRateSum();
-      mNumFrames  += mp3Buffer.GetNumberOfFrames();
-      mOffset     += mp3Buffer.GetFrameSizeSum();
-
-      trailing = mp3Buffer.GetTrailing();
-      retries = 0;
+  if (mBufferLength > 0) {
+    // We have some data which was left over from the last buffer we received.
+    // Append to it, so that we have enough data to parse a complete header, and
+    // try to parse it.
+    uint32_t copyLength = std::min<size_t>(NS_ARRAY_LENGTH(mBuffer)-mBufferLength, aLength);
+    memcpy(mBuffer+mBufferLength, buffer, copyLength*sizeof(*mBuffer));
+    // Caculate the offset of the data in the start of the buffer.
+    int64_t streamOffset = mOffset - mBufferLength;
+    uint32_t bufferLength = mBufferLength + copyLength;
+    uint32_t bytesRead = 0;
+    if (NS_FAILED(ParseBuffer(mBuffer,
+                              bufferLength,
+                              streamOffset,
+                              &bytesRead))) {
+      return;
     }
+    MOZ_ASSERT(bytesRead >= mBufferLength, "Parse should leave original buffer");
+    // Adjust the incoming buffer pointer/length so that it reflects that we may have
+    // consumed data from buffer.
+    uint32_t adjust = bytesRead - mBufferLength;
+    aOffset += adjust;
+    aLength -= adjust;
+    mBufferLength = 0;
   }
 
-  if (trailing) {
-    // Store trailing bytes in temporary buffer.
-    MOZ_ASSERT(trailing < (NS_ARRAY_LENGTH(mBuffer)*sizeof(*mBuffer)));
-    memcpy(mBuffer, aBuffer+(aLength-trailing), trailing);
+  uint32_t bytesRead = 0;
+  if (NS_FAILED(ParseBuffer(buffer,
+                            aLength,
+                            aOffset,
+                            &bytesRead))) {
+    return;
+  }
+  mOffset += bytesRead;
+
+  if (bytesRead < aLength) {
+    // We have some data left over. Store trailing bytes in temporary buffer
+    // to be parsed next time we receive more data.
+    uint32_t trailing = aLength - bytesRead;
+    MOZ_ASSERT(trailing < (NS_ARRAY_LENGTH(mBuffer)*sizeof(mBuffer[0])));
+    memcpy(mBuffer, buffer+(aLength-trailing), trailing);
     mBufferLength = trailing;
   }
 
   if (mOffset > mLength) {
     mLength = mOffset;
   }
-}
-
-void MP3FrameParser::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
-{
-  Parse(reinterpret_cast<const uint8_t*>(aBuffer), aLength, aOffset);
 }
 
 int64_t MP3FrameParser::GetDuration()
@@ -482,6 +437,12 @@ int64_t MP3FrameParser::GetDuration()
   int64_t unhandled = mUnhandled + (mLength-mOffset);
 
   return mDurationUs + (uint64_t(MP3Buffer::MP3_DURATION_CONST) * unhandled) / avgBitRate;
+}
+
+int64_t MP3FrameParser::GetMP3Offset()
+{
+  MutexAutoLock mon(mLock);
+  return mMP3Offset;
 }
 
 }
