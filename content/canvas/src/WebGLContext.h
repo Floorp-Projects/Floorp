@@ -76,7 +76,7 @@ class ImageData;
 
 struct WebGLContextAttributes;
 struct WebGLContextAttributesInitializer;
-template<typename> class Nullable;
+template<typename> struct Nullable;
 }
 
 using WebGLTexelConversions::WebGLTexelFormat;
