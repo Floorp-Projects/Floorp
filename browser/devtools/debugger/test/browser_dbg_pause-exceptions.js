@@ -58,6 +58,10 @@ function testWithFrame()
       is(gDebugger.DebuggerView.Options._pauseOnExceptionsItem.getAttribute("checked"), "true",
         "Pause on exceptions should be enabled from startup. ")
 
+      // Disable ignore caught exceptions
+      gDebugger.DebuggerView.Options._ignoreCaughtExceptionsItem.setAttribute("checked", "false");
+      gDebugger.DebuggerView.Options._toggleIgnoreCaughtExceptions();
+
       count = 0;
       gPane.panelWin.gClient.addOneTimeListener("resumed", function() {
         gDebugger.addEventListener("Debugger:FetchedVariables", function testB() {
@@ -93,6 +97,9 @@ function testWithFrame()
             // Disable pause on exceptions.
             gDebugger.DebuggerView.Options._pauseOnExceptionsItem.setAttribute("checked", "false");
             gDebugger.DebuggerView.Options._togglePauseOnExceptions();
+
+            gDebugger.DebuggerView.Options._ignoreCaughtExceptionsItem.setAttribute("checked", "true");
+            gDebugger.DebuggerView.Options._toggleIgnoreCaughtExceptions();
 
             is(gDebugger.Prefs.pauseOnExceptions, false,
               "The pause-on-exceptions pref should have been set to false.");
