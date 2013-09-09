@@ -76,10 +76,6 @@
   list-style-image: url(chrome://browser/skin/identity-icons-https-mixed-display.png);
 }
 
-.mixedDisplayContent2 > #page-proxy-favicon[pageproxystate="valid"] {
-  list-style-image: url(chrome://browser/skin/identity-icons-https-mixed-display.png);
-}
-
 #page-proxy-favicon[pageproxystate="invalid"] {
   opacity: 0.3;
 }
