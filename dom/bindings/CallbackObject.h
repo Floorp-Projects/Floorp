@@ -58,7 +58,7 @@ public:
 
   JS::Handle<JSObject*> Callback() const
   {
-    xpc_UnmarkGrayObject(mCallback);
+    JS::ExposeObjectToActiveJS(mCallback);
     return CallbackPreserveColor();
   }
 

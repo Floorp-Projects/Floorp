@@ -1300,8 +1300,10 @@ public:
     GetComponentsJSObject();
 
     JSObject*
-    GetGlobalJSObject() const
-        {return xpc_UnmarkGrayObject(mGlobalJSObject);}
+    GetGlobalJSObject() const {
+        JS::ExposeObjectToActiveJS(mGlobalJSObject);
+        return mGlobalJSObject;
+    }
 
     JSObject*
     GetGlobalJSObjectPreserveColor() const {return mGlobalJSObject;}
@@ -2029,7 +2031,10 @@ public:
     GetRuntime() const {return mScope->GetRuntime();}
 
     JSObject*
-    GetJSProtoObject() const {return xpc_UnmarkGrayObject(mJSProtoObject);}
+    GetJSProtoObject() const {
+        JS::ExposeObjectToActiveJS(mJSProtoObject);
+        return mJSProtoObject;
+    }
 
     nsIClassInfo*
     GetClassInfo()     const {return mClassInfo;}
@@ -2295,8 +2300,10 @@ public:
      */
     JSObject*
     GetFlatJSObject() const
-        {xpc_UnmarkGrayObject(mFlatJSObject);
-         return mFlatJSObject;}
+    {
+        JS::ExposeObjectToActiveJS(mFlatJSObject);
+        return mFlatJSObject;
+    }
 
     /**
      * This getter does not change the color of the JSObject meaning that the
@@ -2485,7 +2492,7 @@ public:
     {
         JSObject* wrapper = GetWrapperPreserveColor();
         if (wrapper) {
-            xpc_UnmarkGrayObject(wrapper);
+            JS::ExposeObjectToActiveJS(wrapper);
             // Call this to unmark mFlatJSObject.
             GetFlatJSObject();
         }
@@ -3571,10 +3578,11 @@ public:
      * represents a JSObject. That means that the object is guaranteed to be
      * kept alive past the next CC.
      */
-    jsval GetJSVal() const
-        {if (!JSVAL_IS_PRIMITIVE(mJSVal))
-             xpc_UnmarkGrayObject(JSVAL_TO_OBJECT(mJSVal));
-         return mJSVal;}
+    jsval GetJSVal() const {
+        if (!JSVAL_IS_PRIMITIVE(mJSVal))
+            JS::ExposeObjectToActiveJS(&mJSVal.toObject());
+        return mJSVal;
+    }
 
     /**
      * This getter does not change the color of the jsval (if it represents a
