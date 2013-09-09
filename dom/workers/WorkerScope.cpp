@@ -23,6 +23,7 @@
 #include "mozilla/dom/WorkerLocationBinding.h"
 #include "mozilla/dom/WorkerNavigatorBinding.h"
 #include "mozilla/OSFileConstants.h"
+#include "nsIGlobalObject.h"
 #include "nsTraceRefcnt.h"
 #include "xpcpublic.h"
 
@@ -59,7 +60,8 @@ USING_WORKERS_NAMESPACE
 
 namespace {
 
-class WorkerGlobalScope : public workers::EventTarget
+class WorkerGlobalScope : public workers::EventTarget,
+                          public nsIGlobalObject
 {
   static JSClass sClass;
   static const JSPropertySpec sProperties[];
@@ -125,6 +127,15 @@ protected:
   ~WorkerGlobalScope()
   {
     MOZ_COUNT_DTOR(mozilla::dom::workers::WorkerGlobalScope);
+  }
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIGlobalObject
+  virtual JSObject* GetGlobalJSObject() MOZ_OVERRIDE
+  {
+    mWorker->AssertIsOnWorkerThread();
+    return GetJSObject();
   }
 
   virtual void
@@ -609,6 +620,14 @@ private:
     return true;
   }
 };
+
+NS_IMPL_ADDREF_INHERITED(WorkerGlobalScope, workers::EventTarget)
+NS_IMPL_RELEASE_INHERITED(WorkerGlobalScope, workers::EventTarget)
+
+NS_INTERFACE_MAP_BEGIN(WorkerGlobalScope)
+  NS_INTERFACE_MAP_ENTRY(nsIGlobalObject)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, DOMBindingBase)
+NS_INTERFACE_MAP_END
 
 JSClass WorkerGlobalScope::sClass = {
   "WorkerGlobalScope",
