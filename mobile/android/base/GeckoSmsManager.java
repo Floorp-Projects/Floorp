@@ -303,7 +303,7 @@ public class GeckoSmsManager
   public final static int kNoSimCardError      = 5;
   public final static int kRadioDisabledError  = 6;
   public final static int kInvalidAddressError = 7;
-
+  public final static int kFdnCheckError       = 8;
 
   private final static int kMaxMessageSize    = 160;
 

@@ -16,6 +16,12 @@
 
 using namespace js;
 
+JSCompartment *
+js::ObjectImpl::uninlinedCompartment() const
+{
+    return compartment();
+}
+
 bool
 js::ObjectImpl::uninlinedIsNative() const
 {

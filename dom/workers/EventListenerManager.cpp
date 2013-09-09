@@ -7,8 +7,9 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "js/Vector.h"
 #include "js/GCAPI.h"
+#include "js/Tracer.h"
+#include "js/Vector.h"
 #include "mozilla/Util.h"
 #include "nsAutoJSValHolder.h"
 
