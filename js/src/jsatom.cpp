@@ -24,6 +24,7 @@
 
 #include "jscntxtinlines.h"
 #include "jscompartmentinlines.h"
+#include "jsobjinlines.h"
 
 #include "vm/String-inl.h"
 
@@ -225,17 +226,12 @@ AtomIsInterned(JSContext *cx, JSAtom *atom)
     return p->isTagged();
 }
 
-enum OwnCharsBehavior
-{
-    CopyChars, /* in other words, do not take ownership */
-    TakeCharOwnership
-};
-
 /*
  * When the jschars reside in a freshly allocated buffer the memory can be used
  * as a new JSAtom's storage without copying. The contract is that the caller no
  * longer owns the memory and this method is responsible for freeing the memory.
  */
+template <AllowGC allowGC>
 JS_ALWAYS_INLINE
 static JSAtom *
 AtomizeAndTakeOwnership(ExclusiveContext *cx, jschar *tbchars, size_t length, InternBehavior ib)
@@ -267,7 +263,7 @@ AtomizeAndTakeOwnership(ExclusiveContext *cx, jschar *tbchars, size_t length, In
 
     AutoCompartment ac(cx, cx->atomsCompartment());
 
-    JSFlatString *flat = js_NewString<CanGC>(cx, tbchars, length);
+    JSFlatString *flat = js_NewString<allowGC>(cx, tbchars, length);
     if (!flat) {
         js_free(tbchars);
         return NULL;
@@ -374,8 +370,9 @@ js::AtomizeString<CanGC>(ExclusiveContext *cx, JSString *str, InternBehavior ib)
 template JSAtom *
 js::AtomizeString<NoGC>(ExclusiveContext *cx, JSString *str, InternBehavior ib);
 
+template <AllowGC allowGC>
 JSAtom *
-js::Atomize(ExclusiveContext *cx, const char *bytes, size_t length, InternBehavior ib)
+js::AtomizeMaybeGC(ExclusiveContext *cx, const char *bytes, size_t length, InternBehavior ib)
 {
     CHECK_REQUEST(cx);
 
@@ -398,13 +395,27 @@ js::Atomize(ExclusiveContext *cx, const char *bytes, size_t length, InternBehavi
         {
             return NULL;
         }
-        return AtomizeAndCopyChars<CanGC>(cx, inflated, inflatedLength, ib);
+        return AtomizeAndCopyChars<allowGC>(cx, inflated, inflatedLength, ib);
     }
 
     jschar *tbcharsZ = InflateString(cx, bytes, &length);
     if (!tbcharsZ)
         return NULL;
-    return AtomizeAndTakeOwnership(cx, tbcharsZ, length, ib);
+    return AtomizeAndTakeOwnership<allowGC>(cx, tbcharsZ, length, ib);
+}
+
+template JSAtom *
+js::AtomizeMaybeGC<CanGC>(ExclusiveContext *cx, const char *bytes, size_t length,
+                          InternBehavior ib);
+
+template JSAtom *
+js::AtomizeMaybeGC<NoGC>(ExclusiveContext *cx, const char *bytes, size_t length,
+                         InternBehavior ib);
+
+JSAtom *
+js::Atomize(ExclusiveContext *cx, const char *bytes, size_t length, InternBehavior ib)
+{
+    return AtomizeMaybeGC<CanGC>(cx, bytes, length, ib);
 }
 
 template <AllowGC allowGC>
@@ -453,16 +464,40 @@ template bool
 js::IndexToIdSlow<NoGC>(ExclusiveContext *cx, uint32_t index, FakeMutableHandle<jsid> idp);
 
 template <AllowGC allowGC>
+static JSAtom *
+ToAtomSlow(ExclusiveContext *cx, typename MaybeRooted<Value, allowGC>::HandleType arg)
+{
+    JS_ASSERT(!arg.isString());
+
+    Value v = arg;
+    if (!v.isPrimitive()) {
+        if (!cx->shouldBeJSContext() || !allowGC)
+            return NULL;
+        RootedValue v2(cx, v);
+        if (!ToPrimitive(cx->asJSContext(), JSTYPE_STRING, &v2))
+            return NULL;
+        v = v2;
+    }
+
+    if (v.isString())
+        return AtomizeString<allowGC>(cx, v.toString());
+    if (v.isInt32())
+        return Int32ToAtom<allowGC>(cx, v.toInt32());
+    if (v.isDouble())
+        return NumberToAtom<allowGC>(cx, v.toDouble());
+    if (v.isBoolean())
+        return v.toBoolean() ? cx->names().true_ : cx->names().false_;
+    if (v.isNull())
+        return cx->names().null;
+    return cx->names().undefined;
+}
+
+template <AllowGC allowGC>
 JSAtom *
 js::ToAtom(ExclusiveContext *cx, typename MaybeRooted<Value, allowGC>::HandleType v)
 {
-    if (!v.isString()) {
-        JSString *str = js::ToStringSlow<allowGC>(cx, v);
-        if (!str)
-            return NULL;
-        JS::Anchor<JSString *> anchor(str);
-        return AtomizeString<allowGC>(cx, str);
-    }
+    if (!v.isString())
+        return ToAtomSlow<allowGC>(cx, v);
 
     JSString *str = v.toString();
     if (str->isAtom())

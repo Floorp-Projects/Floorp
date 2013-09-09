@@ -24,7 +24,7 @@ using namespace js;
 using namespace js::gc;
 
 JS::Zone::Zone(JSRuntime *rt)
-  : runtime_(rt),
+  : JS::shadow::Zone(rt, &rt->gcMarker),
     allocator(this),
     hold(false),
     ionUsingBarriers_(false),
@@ -234,3 +234,11 @@ Zone::discardJitCode(FreeOp *fop, bool discardConstraints)
     }
 #endif
 }
+
+JS::Zone *
+js::ZoneOfObject(const JSObject &obj)
+{
+    return obj.zone();
+}
+
+

@@ -2676,6 +2676,9 @@ RadioInterface.prototype = {
             case RIL.ERROR_RADIO_NOT_AVAILABLE:
               error = Ci.nsIMobileMessageCallback.NO_SIGNAL_ERROR;
               break;
+            case RIL.ERROR_FDN_CHECK_FAILURE:
+              error = Ci.nsIMobileMessageCallback.FDN_CHECK_ERROR;
+              break;
           }
 
           if (context.silent) {

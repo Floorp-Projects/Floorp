@@ -2162,16 +2162,9 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         RootedValue match(cx);
         if (!res->createLastMatch(cx, &match))
             return false;
-        JSString *str = match.toString();
-
-        JSAtom *atom;
-        if (str->isAtom()) {
-            atom = &str->asAtom();
-        } else {
-            atom = AtomizeString<CanGC>(cx, str);
-            if (!atom)
-                return false;
-        }
+        JSAtom *atom = ToAtom<CanGC>(cx, match);
+        if (!atom)
+            return false;
 
         RootedValue v(cx);
         if (HasDataProperty(cx, rdata.elembase, AtomToId(atom), v.address()) && v.isString()) {
@@ -3869,7 +3862,7 @@ js::ToStringSlow(ExclusiveContext *cx, typename MaybeRooted<Value, allowGC>::Han
     } else if (v.isInt32()) {
         str = Int32ToString<allowGC>(cx, v.toInt32());
     } else if (v.isDouble()) {
-        str = js_NumberToString<allowGC>(cx, v.toDouble());
+        str = NumberToString<allowGC>(cx, v.toDouble());
     } else if (v.isBoolean()) {
         str = js_BooleanToString(cx, v.toBoolean());
     } else if (v.isNull()) {

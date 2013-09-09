@@ -70,6 +70,8 @@
              oncommand="DebuggerView.WatchExpressions._onCmdRemoveAllExpressions()"/>
     <command id="togglePauseOnExceptions"
              oncommand="DebuggerView.Options._togglePauseOnExceptions()"/>
+    <command id="toggleIgnoreCaughtExceptions"
+             oncommand="DebuggerView.Options._toggleIgnoreCaughtExceptions()"/>
     <command id="toggleShowPanesOnStartup"
              oncommand="DebuggerView.Options._toggleShowPanesOnStartup()"/>
     <command id="toggleShowOnlyEnum"
@@ -160,6 +162,11 @@
                 label="&debuggerUI.pauseExceptions;"
                 accesskey="&debuggerUI.pauseExceptions.key;"
                 command="togglePauseOnExceptions"/>
+      <menuitem id="ignore-caught-exceptions"
+                type="checkbox"
+                label="&debuggerUI.ignoreCaughtExceptions;"
+                accesskey="&debuggerUI.ignoreCaughtExceptions.key;"
+                command="toggleIgnoreCaughtExceptions"/>
       <menuitem id="show-panes-on-startup"
                 type="checkbox"
                 label="&debuggerUI.showPanesOnInit;"

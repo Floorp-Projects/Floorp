@@ -3128,12 +3128,15 @@
           let browser = event.originalTarget;
           let title = browser.contentTitle;
           let uri = browser.currentURI;
+          let icon = browser.mIconURL;
 
           this._updateBrowserRemoteness(browser, false);
 
           browser.setAttribute("crashedPageTitle", title);
           browser.docShell.displayLoadError(Cr.NS_ERROR_CONTENT_CRASHED, uri, null);
           browser.removeAttribute("crashedPageTitle");
+          let tab = this._getTabForBrowser(browser);
+          this.setIcon(tab, icon);
         ]]>
       </handler>
     </handlers>
