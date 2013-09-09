@@ -9,8 +9,10 @@ include $(topsrcdir)/mobile/android/base/android-services-files.mk
 MOZGLUE_JAVA_FILES := \
   mozglue/ByteBufferInputStream.java \
   mozglue/DirectBufferAllocator.java \
+  mozglue/GeneratableAndroidBridgeTarget.java \
   mozglue/NativeReference.java \
   mozglue/NativeZip.java \
+  mozglue/OptionalGeneratedParameter.java \
   $(NULL)
 
 MOZGLUE_PP_JAVA_FILES := \
@@ -1264,10 +1266,10 @@ jars/websockets.jar: $(addprefix $(srcdir)/, $(WEBSOCKETS_JAVA_FILES)) jars
 	$(JAR) cMf jars/websockets.jar -C classes/websockets .
 
 ifdef MOZ_WEBRTC
-jars/webrtc.jar: $(addprefix $(srcdir)/, $(WEBRTC_JAVA_FILES)) jars jars/gecko-browser.jar jars/gecko-util.jar
+jars/webrtc.jar: $(addprefix $(srcdir)/, $(WEBRTC_JAVA_FILES)) jars jars/gecko-browser.jar jars/gecko-util.jar jars/gecko-mozglue.jar
 	@echo "JAR webrtc.jar"
 	$(NSINSTALL) -D classes/webrtc
-	$(JAVAC) $(JAVAC_FLAGS) -d classes/webrtc -classpath classes/gecko-browser:classes/gecko-util $(addprefix $(srcdir)/,$(WEBRTC_JAVA_FILES))
+	$(JAVAC) $(JAVAC_FLAGS) -d classes/webrtc -classpath classes/gecko-browser:classes/gecko-util:classes/gecko-mozglue $(addprefix $(srcdir)/,$(WEBRTC_JAVA_FILES))
 	$(JAR) cMf jars/webrtc.jar -C classes/webrtc .
 endif
 
