@@ -1404,10 +1404,6 @@ toolbar[mode="icons"] #zoom-in-button {
     list-style-image: url(chrome://browser/skin/identity-icons-https-mixed-display@2x.png);
   }
 
-  .mixedDisplayContent2 > #page-proxy-favicon[pageproxystate="valid"] {
-    list-style-image: url(chrome://browser/skin/identity-icons-https-mixed-display@2x.png);
-  }
-
   #identity-box:hover:active > #page-proxy-favicon,
   #identity-box[open=true] > #page-proxy-favicon {
     -moz-image-region: rect(0, 64px, 32px, 32px);
