@@ -61,8 +61,7 @@ class AndroidRefable {
 static android::sp<AndroidRefable> (*android_SurfaceTexture_getNativeWindow)(JNIEnv* env, jobject surfaceTexture) = nullptr;
 
 void
-AndroidBridge::ConstructBridge(JNIEnv *jEnv,
-                               jclass jGeckoAppShellClass)
+AndroidBridge::ConstructBridge(JNIEnv *jEnv)
 {
     /* NSS hack -- bionic doesn't handle recursive unloads correctly,
      * because library finalizer functions are called with the dynamic
@@ -75,15 +74,14 @@ AndroidBridge::ConstructBridge(JNIEnv *jEnv,
     PR_NewThreadPrivateIndex(&sJavaEnvThreadIndex, JavaThreadDetachFunc);
 
     AndroidBridge *bridge = new AndroidBridge();
-    if (!bridge->Init(jEnv, jGeckoAppShellClass)) {
+    if (!bridge->Init(jEnv)) {
         delete bridge;
     }
     sBridge = bridge;
 }
 
 bool
-AndroidBridge::Init(JNIEnv *jEnv,
-                    jclass jGeckoAppShellClass)
+AndroidBridge::Init(JNIEnv *jEnv)
 {
     ALOG_BRIDGE("AndroidBridge::Init");
     jEnv->GetJavaVM(&mJavaVM);
@@ -97,6 +95,8 @@ AndroidBridge::Init(JNIEnv *jEnv,
     mHasNativeBitmapAccess = false;
     mHasNativeWindowAccess = false;
     mHasNativeWindowFallback = false;
+
+    jclass jGeckoAppShellClass = jEnv->FindClass("org/mozilla/gecko/GeckoAppShell");
 
     mGeckoAppShellClass = (jclass) jEnv->NewGlobalRef(jGeckoAppShellClass);
 

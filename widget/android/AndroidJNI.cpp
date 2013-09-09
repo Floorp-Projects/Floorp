@@ -58,7 +58,7 @@ extern "C" {
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_nativeInit(JNIEnv *jenv, jclass jc)
 {
-    AndroidBridge::ConstructBridge(jenv, jc);
+    AndroidBridge::ConstructBridge(jenv);
 }
 
 NS_EXPORT void JNICALL
