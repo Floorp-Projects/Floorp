@@ -33,8 +33,7 @@ function test()
 
       let tmp = {};
       Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm", tmp);
-      let lh = new tmp.LayoutHelpers(window.content);
-      ok(!lh.isNodeConnected(node), "Node considered as disconnected.");
+      ok(!tmp.LayoutHelpers.isNodeConnected(node), "Node considered as disconnected.");
 
       // Wait for the inspector to process the mutation
       inspector.once("inspector-updated", () => {

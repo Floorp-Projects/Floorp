@@ -53,8 +53,6 @@ function MarkupView(aInspector, aFrame, aControllerWindow)
   this.doc = this._frame.contentDocument;
   this._elt = this.doc.querySelector("#root");
 
-  this.layoutHelpers = new LayoutHelpers(this.doc.defaultView);
-
   try {
     this.maxChildren = Services.prefs.getIntPref("devtools.markup.pagesize");
   } catch(ex) {
@@ -408,7 +406,7 @@ MarkupView.prototype = {
       return this._ensureVisible(aNode);
     }).then(() => {
       // Why is this not working?
-      this.layoutHelpers.scrollIntoViewIfNeeded(this._containers.get(aNode).editor.elt, centered);
+      LayoutHelpers.scrollIntoViewIfNeeded(this._containers.get(aNode).editor.elt, centered);
     });
   },
 
@@ -1233,7 +1231,7 @@ ElementEditor.prototype = {
     // Double quotes need to be handled specially to prevent DOMParser failing.
     // name="v"a"l"u"e" when editing -> name='v"a"l"u"e"'
     // name="v'a"l'u"e" when editing -> name="v'a&quot;l'u&quot;e"
-    let editValueDisplayed = aAttr.value || "";
+    let editValueDisplayed = aAttr.value;
     let hasDoubleQuote = editValueDisplayed.contains('"');
     let hasSingleQuote = editValueDisplayed.contains("'");
     let initial = aAttr.name + '="' + editValueDisplayed + '"';
