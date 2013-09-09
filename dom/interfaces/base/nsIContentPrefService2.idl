@@ -67,7 +67,7 @@ interface nsIContentPref;
  * See nsIContentPrefCallback2 below for more information about callbacks.
  */
 
-[scriptable, uuid(86279644-6b86-4875-a228-2d2ff2f3e33b)]
+[scriptable, uuid(133608c7-f812-41ca-bc1c-62a4eb95e52a)]
 interface nsIContentPrefService2 : nsISupports
 {
   /**
@@ -153,7 +153,7 @@ interface nsIContentPrefService2 : nsISupports
   void getCachedBySubdomainAndName(in AString domain,
                                    in AString name,
                                    in nsILoadContext context,
-                                   [optional] out unsigned long len,
+                                   out unsigned long len,
                                    [retval,array,size_is(len)] out nsIContentPref prefs);
 
   /**
