@@ -91,16 +91,21 @@ DownloadLegacyTransfer.prototype = {
         (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK)) {
       // The main request has just started.  Wait for the associated Download
       // object to be available before notifying.
-      this._deferDownload.promise.then(function (aDownload) {
-        aDownload.saver.onTransferStarted(aRequest);
+      this._deferDownload.promise.then(download => {
+        download.saver.onTransferStarted(
+                         aRequest,
+                         this._cancelable instanceof Ci.nsIHelperAppLauncher);
       }).then(null, Cu.reportError);
     } else if ((aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) &&
         (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK)) {
       // The last file has been received, or the download failed.  Wait for the
       // associated Download object to be available before notifying.
-      this._deferDownload.promise.then(function DLT_OSC_onDownload(aDownload) {
-        aDownload.saver.onTransferFinished(aRequest, aStatus);
+      this._deferDownload.promise.then(download => {
+        download.saver.onTransferFinished(aRequest, aStatus);
       }).then(null, Cu.reportError);
+
+      // Release the reference to the component executing the download.
+      this._cancelable = null;
     }
   },
 
@@ -164,6 +169,8 @@ DownloadLegacyTransfer.prototype = {
   init: function DLT_init(aSource, aTarget, aDisplayName, aMIMEInfo, aStartTime,
                           aTempFile, aCancelable, aIsPrivate)
   {
+    this._cancelable = aCancelable;
+
     let launchWhenSucceeded = false, contentType = null, launcherPath = null;
 
     if (aMIMEInfo instanceof Ci.nsIMIMEInfo) {
@@ -232,6 +239,12 @@ DownloadLegacyTransfer.prototype = {
    * object associated with this nsITransfer instance, when it is available.
    */
   _deferDownload: null,
+
+  /**
+   * Reference to the component that is executing the download.  This component
+   * allows cancellation through its nsICancelable interface.
+   */
+  _cancelable: null,
 
   /**
    * Indicates that the component that executes the download has notified a
