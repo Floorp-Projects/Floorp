@@ -1117,15 +1117,12 @@ CanAttachNativeGetProp(typename GetPropCache::Context cx, const GetPropCache &ca
     if (!obj || !obj->isNative())
         return GetPropertyIC::CanAttachNone;
 
-    // If the cache is idempotent or parallel, watch out for resolve hooks or
-    // non-native objects on the proto chain. We check this before calling
-    // lookupProperty, to make sure no effectful lookup hooks or resolve hooks
-    // are called.
-    if (cache.lookupNeedsIdempotentChain() && !obj->hasIdempotentProtoChain())
+    // The lookup needs to be universally pure, otherwise we risk calling hooks out
+    // of turn. We don't mind doing this even when purity isn't required, because we
+    // only miss out on shape hashification, which is only a temporary perf cost.
+    // The limits were arbitrarily set, anyways.
+    if (!LookupPropertyPure(obj, NameToId(name), holder.address(), shape.address()))
         return GetPropertyIC::CanAttachNone;
-
-    if (!GetPropCache::doPropertyLookup(cx, obj, name, holder, shape))
-        return GetPropertyIC::CanAttachError;
 
     RootedScript script(cx);
     jsbytecode *pc;
@@ -1209,8 +1206,6 @@ GetPropertyIC::tryAttachNative(JSContext *cx, IonScript *ion, HandleObject obj,
 
     NativeGetPropCacheability type =
         CanAttachNativeGetProp(cx, *this, obj, name, &holder, &shape);
-    if (type == CanAttachError)
-        return false;
     if (type == CanAttachNone)
         return true;
 
@@ -1424,8 +1419,6 @@ GetPropertyIC::tryAttachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, Handle
     NativeGetPropCacheability canCache =
         CanAttachNativeGetProp(cx, *this, checkObj, name, &holder, &shape);
 
-    if (canCache == CanAttachError)
-        return false;
     if (canCache == CanAttachNone)
         return true;
 
@@ -1898,7 +1891,6 @@ GetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex,
 
                 GetPropertyIC::NativeGetPropCacheability canCache =
                     CanAttachNativeGetProp(cx, cache, obj, name, &holder, &shape);
-                JS_ASSERT(canCache != GetPropertyIC::CanAttachError);
 
                 if (canCache == GetPropertyIC::CanAttachReadSlot) {
                     if (!cache.attachReadSlot(cx, ion, obj, holder, shape))
@@ -2833,9 +2825,6 @@ GetElementIC::attachGetProp(JSContext *cx, IonScript *ion, HandleObject obj,
     GetPropertyIC::NativeGetPropCacheability canCache =
         CanAttachNativeGetProp(cx, *this, obj, name, &holder, &shape);
 
-    if (canCache == GetPropertyIC::CanAttachError)
-        return false;
-
     if (canCache != GetPropertyIC::CanAttachReadSlot) {
         IonSpew(IonSpew_InlineCaches, "GETELEM uncacheable property");
         return true;
@@ -3484,7 +3473,6 @@ GetElementParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject ob
 
                 GetPropertyIC::NativeGetPropCacheability canCache =
                     CanAttachNativeGetProp(cx, cache, obj, name, &holder, &shape);
-                JS_ASSERT(canCache != GetPropertyIC::CanAttachError);
 
                 if (canCache == GetPropertyIC::CanAttachReadSlot)
                 {
