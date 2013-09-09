@@ -21,14 +21,17 @@ namespace dom {
 
 class Exception;
 
-void
-Throw(JSContext* cx, nsresult rv, const char* sz);
+bool
+Throw(JSContext* cx, nsresult rv, const char* sz = nullptr);
 
 bool
 ThrowExceptionObject(JSContext* aCx, Exception* aException);
 
 bool
 ThrowExceptionObject(JSContext* aCx, nsIException* aException);
+
+already_AddRefed<nsIStackFrame>
+GetCurrentJSStack();
 
 // Internal stuff not intended to be widely used.
 namespace exceptions {

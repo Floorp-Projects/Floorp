@@ -205,8 +205,7 @@ public:
 
   // Get the current thread's CycleCollectedJSRuntime.  Returns null if there
   // isn't one.
-  static CycleCollectedJSRuntime*
-  Get();
+  static CycleCollectedJSRuntime* Get();
 
 private:
   JSGCThingParticipant mGCThingCycleCollectorGlobal;
