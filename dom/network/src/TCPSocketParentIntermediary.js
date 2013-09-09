@@ -32,7 +32,7 @@ TCPSocketParentIntermediary.prototype = {
 
   open: function(aParentSide, aHost, aPort, aUseSSL, aBinaryType) {
     let baseSocket = Cc["@mozilla.org/tcp-socket;1"].createInstance(Ci.nsIDOMTCPSocket);
-    let socket = baseSocket.open(aHost, aPort, {useSSL: aUseSSL, binaryType: aBinaryType});
+    let socket = baseSocket.open(aHost, aPort, {useSecureTransport: aUseSSL, binaryType: aBinaryType});
     if (!socket)
       return null;
 

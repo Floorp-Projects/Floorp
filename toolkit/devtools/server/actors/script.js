@@ -1396,18 +1396,23 @@ ThreadActor.prototype = {
   _findClosestOffsetMappings: function TA__findClosestOffsetMappings(aTargetLocation,
                                                                      aScript,
                                                                      aScriptsAndOffsetMappings) {
-    let offsetMappings = aScript.getAllColumnOffsets()
-      .filter(({ lineNumber }) => lineNumber === aTargetLocation.line);
-
     // If we are given a column, we will try and break only at that location,
     // otherwise we will break anytime we get on that line.
 
     if (aTargetLocation.column == null) {
+      let offsetMappings = aScript.getLineOffsets(aTargetLocation.line)
+        .map(o => ({
+          line: aTargetLocation.line,
+          offset: o
+        }));
       if (offsetMappings.length) {
         aScriptsAndOffsetMappings.set(aScript, offsetMappings);
       }
       return;
     }
+
+    let offsetMappings = aScript.getAllColumnOffsets()
+      .filter(({ lineNumber }) => lineNumber === aTargetLocation.line);
 
     // Attempt to find the current closest offset distance from the target
     // location by grabbing any offset mapping in the map by doing one iteration
