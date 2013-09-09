@@ -13,6 +13,12 @@
 
 /* These values are private to the JS engine. */
 namespace js {
+
+// Whether the current thread is permitted access to any part of the specified
+// runtime or zone.
+extern bool CurrentThreadCanAccessRuntime(JSRuntime *rt);
+extern bool CurrentThreadCanAccessZone(JS::Zone *zone);
+
 namespace gc {
 
 const size_t ArenaShift = 12;
@@ -57,9 +63,43 @@ struct ArenaHeader
 
 struct Zone
 {
+  protected:
+    JSRuntime *const runtime_;
+    JSTracer *const barrierTracer_;     // A pointer to the JSRuntime's |gcMarker|.
+
+  public:
     bool needsBarrier_;
 
-    Zone() : needsBarrier_(false) {}
+    Zone(JSRuntime *runtime, JSTracer *barrierTracerArg)
+      : runtime_(runtime),
+        barrierTracer_(barrierTracerArg),
+        needsBarrier_(false)
+    {}
+
+    bool needsBarrier() const {
+        return needsBarrier_;
+    }
+
+    JSTracer *barrierTracer() {
+        JS_ASSERT(needsBarrier_);
+        JS_ASSERT(js::CurrentThreadCanAccessRuntime(runtime_));
+        return barrierTracer_;
+    }
+
+    JSRuntime *runtimeFromMainThread() const {
+        JS_ASSERT(js::CurrentThreadCanAccessRuntime(runtime_));
+        return runtime_;
+    }
+
+    // Note: Unrestricted access to the zone's runtime from an arbitrary
+    // thread can easily lead to races. Use this method very carefully.
+    JSRuntime *runtimeFromAnyThread() const {
+        return runtime_;
+    }
+
+    static JS::shadow::Zone *asShadowZone(JS::Zone *zone) {
+        return reinterpret_cast<JS::shadow::Zone*>(zone);
+    }
 };
 
 } /* namespace shadow */

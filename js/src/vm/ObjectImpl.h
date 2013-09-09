@@ -18,6 +18,7 @@
 
 #include "gc/Barrier.h"
 #include "gc/Heap.h"
+#include "gc/Marking.h"
 #include "js/Value.h"
 #include "vm/NumericConversions.h"
 #include "vm/String.h"
@@ -1145,6 +1146,11 @@ class TaggedProto;
 inline Value
 ObjectValue(ObjectImpl &obj);
 
+#ifdef DEBUG
+static inline bool
+IsObjectValueInCompartment(js::Value v, JSCompartment *comp);
+#endif
+
 /*
  * ObjectImpl specifies the internal implementation of an object.  (In contrast
  * JSObject specifies an "external" interface, at the conceptual level of that
@@ -1197,7 +1203,7 @@ class ObjectImpl : public gc::Cell
   protected:
     /*
      * Shape of the object, encodes the layout of the object's properties and
-     * all other information about its structure. See jsscope.h.
+     * all other information about its structure. See vm/Shape.h.
      */
     HeapPtrShape shape_;
 
@@ -1436,7 +1442,9 @@ class ObjectImpl : public gc::Cell
         return replaceWithNewEquivalentShape(cx, lastProperty(), newShape);
     }
 
+    // uninlinedCompartment() is equivalent to compartment(), but isn't inlined.
     inline JSCompartment *compartment() const;
+    JSCompartment *uninlinedCompartment() const;
 
     // uninlinedIsNative() is equivalent to isNative(), but isn't inlined.
     inline bool isNative() const;
@@ -1573,11 +1581,33 @@ class ObjectImpl : public gc::Cell
         return getSlot(slot);
     }
 
-    inline void setSlot(uint32_t slot, const Value &value);
-    inline void setCrossCompartmentSlot(uint32_t slot, const Value &value);
-    inline void initSlot(uint32_t slot, const Value &value);
-    inline void initCrossCompartmentSlot(uint32_t slot, const Value &value);
-    inline void initSlotUnchecked(uint32_t slot, const Value &value);
+    void setSlot(uint32_t slot, const Value &value) {
+        MOZ_ASSERT(slotInRange(slot));
+        MOZ_ASSERT(IsObjectValueInCompartment(value, uninlinedCompartment()));
+        getSlotRef(slot).set(this->asObjectPtr(), HeapSlot::Slot, slot, value);
+    }
+
+    inline void setCrossCompartmentSlot(uint32_t slot, const Value &value) {
+        MOZ_ASSERT(slotInRange(slot));
+        getSlotRef(slot).set(this->asObjectPtr(), HeapSlot::Slot, slot, value);
+    }
+
+    void initSlot(uint32_t slot, const Value &value) {
+        MOZ_ASSERT(getSlot(slot).isUndefined());
+        MOZ_ASSERT(slotInRange(slot));
+        MOZ_ASSERT(IsObjectValueInCompartment(value, uninlinedCompartment()));
+        initSlotUnchecked(slot, value);
+    }
+
+    void initCrossCompartmentSlot(uint32_t slot, const Value &value) {
+        MOZ_ASSERT(getSlot(slot).isUndefined());
+        MOZ_ASSERT(slotInRange(slot));
+        initSlotUnchecked(slot, value);
+    }
+
+    void initSlotUnchecked(uint32_t slot, const Value &value) {
+        getSlotAddressUnchecked(slot)->init(this->asObjectPtr(), HeapSlot::Slot, slot, value);
+    }
 
     /* For slots which are known to always be fixed, due to the way they are allocated. */
 
@@ -1591,8 +1621,15 @@ class ObjectImpl : public gc::Cell
         return fixedSlots()[slot];
     }
 
-    inline void setFixedSlot(uint32_t slot, const Value &value);
-    inline void initFixedSlot(uint32_t slot, const Value &value);
+    void setFixedSlot(uint32_t slot, const Value &value) {
+        MOZ_ASSERT(slot < numFixedSlots());
+        fixedSlots()[slot].set(this->asObjectPtr(), HeapSlot::Slot, slot, value);
+    }
+
+    void initFixedSlot(uint32_t slot, const Value &value) {
+        MOZ_ASSERT(slot < numFixedSlots());
+        fixedSlots()[slot].init(this->asObjectPtr(), HeapSlot::Slot, slot, value);
+    }
 
     /*
      * Get the number of dynamic slots to allocate to cover the properties in
@@ -1658,14 +1695,39 @@ class ObjectImpl : public gc::Cell
 
     /* GC support. */
     JS_ALWAYS_INLINE Zone *zone() const;
-    static inline ThingRootKind rootKind() { return THING_ROOT_OBJECT; }
+    static ThingRootKind rootKind() { return THING_ROOT_OBJECT; }
+
     static inline void readBarrier(ObjectImpl *obj);
     static inline void writeBarrierPre(ObjectImpl *obj);
-    static inline void writeBarrierPost(ObjectImpl *obj, void *addr);
-    static inline void writeBarrierPostRelocate(ObjectImpl *obj, void *addr);
-    static inline void writeBarrierPostRemove(ObjectImpl *obj, void *addr);
+
+    static void writeBarrierPost(ObjectImpl *obj, void *addr) {
+#ifdef JSGC_GENERATIONAL
+        if (IsNullTaggedPointer(obj))
+            return;
+        obj->shadowRuntimeFromAnyThread()->gcStoreBufferPtr()->putCell((Cell **)addr);
+#endif
+    }
+
+    static void writeBarrierPostRelocate(ObjectImpl *obj, void *addr) {
+#ifdef JSGC_GENERATIONAL
+        obj->shadowRuntimeFromAnyThread()->gcStoreBufferPtr()->putRelocatableCell((Cell **)addr);
+#endif
+    }
+
+    static void writeBarrierPostRemove(ObjectImpl *obj, void *addr) {
+#ifdef JSGC_GENERATIONAL
+        obj->shadowRuntimeFromAnyThread()->gcStoreBufferPtr()->removeRelocatableCell((Cell **)addr);
+#endif
+    }
+
     inline void privateWriteBarrierPre(void **oldval);
-    inline void privateWriteBarrierPost(void **pprivate);
+
+    void privateWriteBarrierPost(void **pprivate) {
+#ifdef JSGC_GENERATIONAL
+        shadowRuntimeFromAnyThread()->gcStoreBufferPtr()->putCell(reinterpret_cast<js::gc::Cell **>(pprivate));
+#endif
+    }
+
     void markChildren(JSTracer *trc);
 
     /* Private data accessors. */
@@ -1735,6 +1797,16 @@ Downcast(Handle<ObjectImpl*> obj)
 {
     return Handle<JSObject*>::fromMarkedLocation(reinterpret_cast<JSObject* const*>(obj.address()));
 }
+
+#ifdef DEBUG
+static inline bool
+IsObjectValueInCompartment(js::Value v, JSCompartment *comp)
+{
+    if (!v.isObject())
+        return true;
+    return reinterpret_cast<ObjectImpl*>(&v.toObject())->uninlinedCompartment() == comp;
+}
+#endif
 
 extern JSObject *
 ArrayBufferDelegate(JSContext *cx, Handle<ObjectImpl*> obj);
