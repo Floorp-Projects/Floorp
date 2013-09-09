@@ -117,13 +117,31 @@ this.webappsUI = {
                          .getInterface(Ci.nsIWebNavigation)
                          .QueryInterface(Ci.nsIDocShell)
                          .chromeEventHandler;
-    let chromeWin = browser.ownerDocument.defaultView;
+    let chromeDoc = browser.ownerDocument;
+    let chromeWin = chromeDoc.defaultView;
+    let popupProgressContent =
+      chromeDoc.getElementById("webapps-install-progress-content");
+
     let bundle = chromeWin.gNavigatorBundle;
+
+    let notification;
 
     let mainAction = {
       label: bundle.getString("webapps.install"),
       accessKey: bundle.getString("webapps.install.accesskey"),
       callback: () => {
+        notification.remove();
+
+        notification = chromeWin.PopupNotifications.
+                        show(browser,
+                             "webapps-install-progress",
+                             bundle.getString("webapps.install.inprogress"),
+                             "webapps-notification-icon");
+
+        let progressMeter = chromeDoc.createElement("progressmeter");
+        progressMeter.setAttribute("mode", "undetermined");
+        popupProgressContent.appendChild(progressMeter);
+
         let manifestURL = aData.app.manifestURL;
         if (aData.app.manifest && aData.app.manifest.appcache_path) {
           this.downloads[manifestURL] = Promise.defer();
@@ -150,6 +168,8 @@ this.webappsUI = {
                   Cu.reportError("Error installing webapp: " + ex);
                   // TODO: Notify user that the installation has failed
                 } finally {
+                  popupProgressContent.removeChild(progressMeter);
+                  notification.remove();
                   delete this.downloads[manifestURL];
                 }
               }.bind(this));
@@ -174,8 +194,11 @@ this.webappsUI = {
     let message = bundle.getFormattedString("webapps.requestInstall",
                                             [manifest.name, host], 2);
 
-    chromeWin.PopupNotifications.show(browser, "webapps-install", message,
-                                    "webapps-notification-icon", mainAction);
+    notification = chromeWin.PopupNotifications.show(browser,
+                                                     "webapps-install",
+                                                     message,
+                                                     "webapps-notification-icon",
+                                                     mainAction);
 
   }
 }
