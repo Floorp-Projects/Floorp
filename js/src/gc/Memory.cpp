@@ -143,7 +143,7 @@ gc::UnmapPages(JSRuntime *rt, void *addr, size_t size)
 }
 
 static void *
-gc::MapAlignedPagesRecursively(JSRuntime *rt, size_t size, size_t alignment, int& recursions)
+MapAlignedPagesRecursively(JSRuntime *rt, size_t size, size_t alignment, int& recursions)
 {
     if (++recursions >= OS2_MAX_RECURSIONS)
         return NULL;
@@ -309,6 +309,40 @@ gc::InitMemorySubsystem(JSRuntime *rt)
     rt->gcSystemPageSize = rt->gcSystemAllocGranularity = size_t(sysconf(_SC_PAGESIZE));
 }
 
+static inline void *
+MapMemory(size_t length, int prot, int flags, int fd, off_t offset)
+{
+#if defined(__ia64__)
+    /*
+     * The JS engine assumes that all allocated pointers have their high 17 bits clear,
+     * which ia64's mmap doesn't support directly. However, we can emulate it by passing
+     * mmap an "addr" parameter with those bits clear. The mmap will return that address,
+     * or the nearest available memory above that address, providing a near-guarantee
+     * that those bits are clear. If they are not, we return NULL below to indicate
+     * out-of-memory.
+     *
+     * The addr is chosen as 0x0000070000000000, which still allows about 120TB of virtual
+     * address space.
+     *
+     * See Bug 589735 for more information.
+     */
+    void *region = mmap((void*)0x0000070000000000, length, prot, flags, fd, offset);
+    if (region == MAP_FAILED)
+        return MAP_FAILED;
+    /* 
+     * If the allocated memory doesn't have its upper 17 bits clear, consider it
+     * as out of memory.
+     */
+    if ((uintptr_t(region) + (length - 1)) & 0xffff800000000000) {
+        JS_ALWAYS_TRUE(0 == munmap(region, length));
+        return MAP_FAILED;
+    }
+    return region;
+#else
+    return mmap(NULL, length, prot, flags, fd, offset);
+#endif
+}
+
 void *
 gc::MapAlignedPages(JSRuntime *rt, size_t size, size_t alignment)
 {
@@ -322,12 +356,15 @@ gc::MapAlignedPages(JSRuntime *rt, size_t size, size_t alignment)
 
     /* Special case: If we want page alignment, no further work is needed. */
     if (alignment == rt->gcSystemAllocGranularity) {
-        return mmap(NULL, size, prot, flags, -1, 0);
+        void *region = MapMemory(size, prot, flags, -1, 0);
+        if (region == MAP_FAILED)
+            return NULL;
+        return region;
     }
 
     /* Overallocate and unmap the region's edges. */
     size_t reqSize = Min(size + 2 * alignment, 2 * size);
-    void *region = mmap(NULL, reqSize, prot, flags, -1, 0);
+    void *region = MapMemory(reqSize, prot, flags, -1, 0);
     if (region == MAP_FAILED)
         return NULL;
 
