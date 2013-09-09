@@ -165,7 +165,7 @@ AndroidBridge::Init(JNIEnv *jEnv)
     AutoLocalJNIFrame jniFrame(jEnv);
 
     mJNIEnv = nullptr;
-    mThread = nullptr;
+    mThread = -1;
     mGLControllerObj = nullptr;
     mOpenedGraphicsLibraries = false;
     mHasNativeBitmapAccess = false;
@@ -216,7 +216,7 @@ AndroidBridge::Init(JNIEnv *jEnv)
 }
 
 bool
-AndroidBridge::SetMainThread(void *thr)
+AndroidBridge::SetMainThread(pthread_t thr)
 {
     ALOG_BRIDGE("AndroidBridge::SetMainThread");
     if (thr) {
@@ -226,7 +226,7 @@ AndroidBridge::SetMainThread(void *thr)
     }
 
     mJNIEnv = nullptr;
-    mThread = nullptr;
+    mThread = -1;
     return true;
 }
 
@@ -801,7 +801,7 @@ AndroidBridge::GetStaticStringField(const char *className, const char *fieldName
 
 // Available for places elsewhere in the code to link to.
 bool
-mozilla_AndroidBridge_SetMainThread(void *thr)
+mozilla_AndroidBridge_SetMainThread(pthread_t thr)
 {
     return AndroidBridge::Bridge()->SetMainThread(thr);
 }
