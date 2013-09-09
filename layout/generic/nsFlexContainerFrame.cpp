@@ -684,7 +684,7 @@ nsFlexContainerFrame::AppendFlexItemForChild(
                                   aChildFrame,
                                   nsSize(aParentReflowState.ComputedWidth(),
                                          NS_UNCONSTRAINEDSIZE),
-                                  -1, -1, false);
+                                  -1, -1, nsHTMLReflowState::CALLER_WILL_INIT);
       childRSForMeasuringHeight.mFlags.mIsFlexContainerMeasuringHeight = true;
       childRSForMeasuringHeight.Init(aPresContext);
 

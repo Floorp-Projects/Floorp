@@ -49,7 +49,7 @@ static eNormalLineHeightControl sNormalLineHeightControl = eUninitialized;
 // use for measuring things.
 nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
                                      nsIFrame*            aFrame,
-                                     nsRenderingContext* aRenderingContext,
+                                     nsRenderingContext*  aRenderingContext,
                                      const nsSize&        aAvailableSpace,
                                      uint32_t             aFlags)
   : nsCSSOffsetState(aFrame, aRenderingContext)
@@ -72,7 +72,9 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
     mFlags.mDummyParentReflowState = true;
   }
 
-  Init(aPresContext);
+  if (!(aFlags & CALLER_WILL_INIT)) {
+    Init(aPresContext);
+  }
 }
 
 static bool CheckNextInFlowParenthood(nsIFrame* aFrame, nsIFrame* aParent)
@@ -121,6 +123,7 @@ FontSizeInflationListMarginAdjustment(const nsIFrame* aFrame)
 
   return 0;
 }
+
 // Initialize a reflow state for a child frame's reflow. Some state
 // is copied from the parent reflow state; the remaining state is
 // computed.
@@ -130,7 +133,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
                                      const nsSize&            aAvailableSpace,
                                      nscoord                  aContainingBlockWidth,
                                      nscoord                  aContainingBlockHeight,
-                                     bool                     aInit)
+                                     uint32_t                 aFlags)
   : nsCSSOffsetState(aFrame, aParentReflowState.rendContext)
   , mBlockDelta(0)
   , mReflowDepth(aParentReflowState.mReflowDepth + 1)
@@ -175,11 +178,15 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
   mFlags.mDummyParentReflowState = false;
 
   mDiscoveredClearance = nullptr;
-  mPercentHeightObserver = (aParentReflowState.mPercentHeightObserver && 
-                            aParentReflowState.mPercentHeightObserver->NeedsToObserve(*this)) 
+  mPercentHeightObserver = (aParentReflowState.mPercentHeightObserver &&
+                            aParentReflowState.mPercentHeightObserver->NeedsToObserve(*this))
                            ? aParentReflowState.mPercentHeightObserver : nullptr;
 
-  if (aInit) {
+  if (aFlags & DUMMY_PARENT_REFLOW_STATE) {
+    mFlags.mDummyParentReflowState = true;
+  }
+
+  if (!(aFlags & CALLER_WILL_INIT)) {
     Init(aPresContext, aContainingBlockWidth, aContainingBlockHeight);
   }
 }
