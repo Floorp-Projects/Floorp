@@ -442,6 +442,14 @@ assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'functi
 assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { return +f64[(8191&8191)>>3]; } return f'), this, null, buf)(),-1.0);
 assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { f64[(8192&8191)>>3] = -1.0; f64[0] = 0.0; return +f64[(8192&8191)>>3]; } return f'), this, null, buf)(),0.0);
 
+// Bug 913867
+var buf = new ArrayBuffer(8192);
+new Int32Array(buf)[0] = 0x55aa5a5a;
+assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { return i32[(0&0)>>2]|0; } return f'), this, null, buf)(),0x55aa5a5a);
+assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { return i32[(4&0)>>2]|0; } return f'), this, null, buf)(),0x55aa5a5a);
+assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f1() { i32[0] = 1; return 8; }; function f() { return i32[((f1()|0)&0)>>2]|0; } return f'), this, null, buf)(),1);
+assertEq(new Int32Array(buf)[0], 1);
+
 
 // Bug 882012
 assertEq(asmLink(asmCompile('stdlib', 'foreign', 'heap', USE_ASM + "var id=foreign.id;var doubles=new stdlib.Float64Array(heap);function g(){doubles[0]=+id(2.0);return +doubles[0];}return g"), this, {id: function(x){return x;}}, BUF_64KB)(), 2.0);
