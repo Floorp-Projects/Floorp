@@ -223,10 +223,6 @@ MarkCrossCompartmentSlot(JSTracer *trc, JSObject *src, HeapSlot *dst_slot, const
 void
 MarkObject(JSTracer *trc, HeapPtr<GlobalObject, JSScript *> *thingp, const char *name);
 
-/* Direct value access used by the write barriers and the methodjit. */
-void
-MarkValueUnbarriered(JSTracer *trc, Value *v, const char *name);
-
 /*
  * MarkChildren<JSObject> is exposed solely for preWriteBarrier on
  * JSObject::TradeGuts. It should not be considered external interface.

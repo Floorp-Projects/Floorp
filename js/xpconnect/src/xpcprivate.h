@@ -92,6 +92,7 @@
 #include <string.h>
 
 #include "xpcpublic.h"
+#include "js/Tracer.h"
 #include "pldhash.h"
 #include "nscore.h"
 #include "nsXPCOM.h"

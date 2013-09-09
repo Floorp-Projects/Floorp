@@ -88,6 +88,7 @@ Tester.prototype = {
   currentTestIndex: -1,
   lastStartTime: null,
   openedWindows: null,
+  lastAssertionCount: 0,
 
   get currentTest() {
     return this.tests[this.currentTestIndex];
@@ -315,6 +316,39 @@ Tester.prototype = {
         this.currentTest.addResult(new testResult(false, msg, "", false));
       }
 
+      // If we're in a debug build, check assertion counts.  This code
+      // is similar to the code in TestRunner.testUnloaded in
+      // TestRunner.js used for all other types of mochitests.
+      let debugsvc = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
+      if (debugsvc.isDebugBuild) {
+        let newAssertionCount = debugsvc.assertionCount;
+        let numAsserts = newAssertionCount - this.lastAssertionCount;
+        this.lastAssertionCount = newAssertionCount;
+
+        let max = testScope.__expectedMaxAsserts;
+        let min = testScope.__expectedMinAsserts;
+        if (numAsserts > max) {
+          let msg = "Assertion count " + numAsserts +
+                    " is greater than expected range " +
+                    min + "-" + max + " assertions.";
+          // TEST-UNEXPECTED-FAIL (TEMPORARILY TEST-KNOWN-FAIL)
+          //this.currentTest.addResult(new testResult(false, msg, "", false));
+          this.currentTest.addResult(new testResult(true, msg, "", true));
+        } else if (numAsserts < min) {
+          let msg = "Assertion count " + numAsserts +
+                    " is less than expected range " +
+                    min + "-" + max + " assertions.";
+          // TEST-UNEXPECTED-PASS
+          this.currentTest.addResult(new testResult(false, msg, "", true));
+        } else if (numAsserts > 0) {
+          let msg = "Assertion count " + numAsserts +
+                    " is within expected range " +
+                    min + "-" + max + " assertions.";
+          // TEST-KNOWN-FAIL
+          this.currentTest.addResult(new testResult(true, msg, "", true));
+        }
+      }
+
       // Note the test run time
       let time = Date.now() - this.lastStartTime;
       this.dumper.dump("INFO TEST-END | " + this.currentTest.path + " | finished in " + time + "ms\n");
@@ -406,7 +440,7 @@ Tester.prototype = {
     this.currentTest.scope.Promise = this.Promise;
 
     // Override SimpleTest methods with ours.
-    ["ok", "is", "isnot", "ise", "todo", "todo_is", "todo_isnot", "info"].forEach(function(m) {
+    ["ok", "is", "isnot", "ise", "todo", "todo_is", "todo_isnot", "info", "expectAssertions"].forEach(function(m) {
       this.SimpleTest[m] = this[m];
     }, this.currentTest.scope);
 
@@ -683,6 +717,20 @@ function testScope(aTester, aTest) {
     self.SimpleTest.ignoreAllUncaughtExceptions(aIgnoring);
   };
 
+  this.expectAssertions = function test_expectAssertions(aMin, aMax) {
+    let min = aMin;
+    let max = aMax;
+    if (typeof(max) == "undefined") {
+      max = min;
+    }
+    if (typeof(min) != "number" || typeof(max) != "number" ||
+        min < 0 || max < min) {
+      throw "bad parameter to expectAssertions";
+    }
+    self.__expectedMinAsserts = min;
+    self.__expectedMaxAsserts = max;
+  };
+
   this.finish = function test_finish() {
     self.__done = true;
     if (self.__waitTimer) {
@@ -703,6 +751,8 @@ testScope.prototype = {
   __waitTimer: null,
   __cleanupFunctions: [],
   __timeoutFactor: 1,
+  __expectedMinAsserts: 0,
+  __expectedMaxAsserts: 0,
 
   EventUtils: {},
   SimpleTest: {},

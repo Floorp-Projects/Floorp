@@ -130,79 +130,10 @@ JSObject::canRemoveLastProperty()
 }
 
 inline void
-JSObject::setReservedSlot(uint32_t index, const js::Value &v)
-{
-    JS_ASSERT(index < JSSLOT_FREE(getClass()));
-    setSlot(index, v);
-}
-
-inline void
-JSObject::initReservedSlot(uint32_t index, const js::Value &v)
-{
-    JS_ASSERT(index < JSSLOT_FREE(getClass()));
-    initSlot(index, v);
-}
-
-inline void
-JSObject::prepareSlotRangeForOverwrite(size_t start, size_t end)
-{
-    for (size_t i = start; i < end; i++)
-        getSlotAddressUnchecked(i)->js::HeapSlot::~HeapSlot();
-}
-
-inline void
-JSObject::prepareElementRangeForOverwrite(size_t start, size_t end)
-{
-    JS_ASSERT(end <= getDenseInitializedLength());
-    for (size_t i = start; i < end; i++)
-        elements[i].js::HeapSlot::~HeapSlot();
-}
-
-inline void
-JSObject::setDenseInitializedLength(uint32_t length)
-{
-    JS_ASSERT(isNative());
-    JS_ASSERT(length <= getDenseCapacity());
-    prepareElementRangeForOverwrite(length, getElementsHeader()->initializedLength);
-    getElementsHeader()->initializedLength = length;
-}
-
-inline void
 JSObject::setShouldConvertDoubleElements()
 {
     JS_ASSERT(is<js::ArrayObject>() && !hasEmptyElements());
     getElementsHeader()->setShouldConvertDoubleElements();
-}
-
-inline bool
-JSObject::ensureElements(js::ThreadSafeContext *cx, uint32_t capacity)
-{
-    if (capacity > getDenseCapacity())
-        return growElements(cx, capacity);
-    return true;
-}
-
-inline void
-JSObject::setDenseElement(uint32_t index, const js::Value &val)
-{
-    JS_ASSERT(isNative() && index < getDenseInitializedLength());
-    elements[index].set(this, js::HeapSlot::Element, index, val);
-}
-
-inline void
-JSObject::setDenseElementMaybeConvertDouble(uint32_t index, const js::Value &val)
-{
-    if (val.isInt32() && shouldConvertDoubleElements())
-        setDenseElement(index, js::DoubleValue(val.toInt32()));
-    else
-        setDenseElement(index, val);
-}
-
-inline void
-JSObject::initDenseElement(uint32_t index, const js::Value &val)
-{
-    JS_ASSERT(isNative() && index < getDenseInitializedLength());
-    elements[index].init(this, js::HeapSlot::Element, index, val);
 }
 
 /* static */ inline void
@@ -247,15 +178,6 @@ JSObject::copyDenseElements(uint32_t dstStart, const js::Value *src, uint32_t co
     JS::Zone *zone = this->zone();
     for (uint32_t i = 0; i < count; ++i)
         elements[dstStart + i].set(zone, this, js::HeapSlot::Element, dstStart + i, src[i]);
-}
-
-inline void
-JSObject::initDenseElements(uint32_t dstStart, const js::Value *src, uint32_t count)
-{
-    JS_ASSERT(dstStart + count <= getDenseCapacity());
-    JSRuntime *rt = runtimeFromMainThread();
-    for (uint32_t i = 0; i < count; ++i)
-        elements[dstStart + i].init(rt, this, js::HeapSlot::Element, dstStart + i, src[i]);
 }
 
 inline void
@@ -645,14 +567,6 @@ JSObject::hasProperty(JSContext *cx, js::HandleObject obj,
     }
     *foundp = !!prop;
     return true;
-}
-
-inline void
-JSObject::nativeSetSlot(uint32_t slot, const js::Value &value)
-{
-    JS_ASSERT(isNative());
-    JS_ASSERT(slot < slotSpan());
-    return setSlot(slot, value);
 }
 
 /* static */ inline void
