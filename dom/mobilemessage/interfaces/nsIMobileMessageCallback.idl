@@ -30,7 +30,6 @@ interface nsIMobileMessageCallback : nsISupports
   const unsigned short NO_SIM_CARD_ERROR         = 5;
   const unsigned short RADIO_DISABLED_ERROR      = 6;
   const unsigned short INVALID_ADDRESS_ERROR     = 7;
-  const unsigned short FDN_CHECK_ERROR           = 8;
 
   /**
    * |message| can be nsIDOMMoz{Mms,Sms}Message.
