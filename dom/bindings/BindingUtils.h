@@ -1635,6 +1635,9 @@ public:
       new (storage.addr()) T(t1, t2);
       return *storage.addr();
     }
+    T& Value() {
+      return *storage.addr();
+    }
     const T& Value() const {
       return *storage.addr();
     }

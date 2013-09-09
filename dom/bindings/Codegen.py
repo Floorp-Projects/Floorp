@@ -2897,14 +2897,11 @@ for (uint32_t i = 0; i < length; ++i) {
                                         holderArgs=holderArgs)
 
     if type.isUnion():
-        if isMember:
-            raise TypeError("Can't handle unions as members, we have a "
-                            "holderType")
         nullable = type.nullable();
         if nullable:
             type = type.inner
 
-        unionArgumentObj = "${holderName}"
+        unionArgumentObj = "${declName}" if isMember else "${holderName}"
         if nullable:
             unionArgumentObj += ".ref()"
 
@@ -3067,7 +3064,7 @@ for (uint32_t i = 0; i < length; ++i) {
                                  exceptionCodeIndented.define()))
         templateBody = CGWrapper(CGIndenter(CGList([templateBody, throw], "\n")), pre="{\n", post="\n}")
 
-        typeName = type.name
+        typeName = type.name + ("ReturnValue" if isMember else "")
         argumentTypeName = typeName + "Argument"
         if nullable:
             typeName = "Nullable<" + typeName + " >"
@@ -3083,7 +3080,7 @@ for (uint32_t i = 0; i < length; ++i) {
             templateBody = handleNull(templateBody, unionArgumentObj)
 
         declType = CGGeneric(typeName)
-        holderType = CGGeneric(argumentTypeName)
+        holderType = CGGeneric(argumentTypeName) if not isMember else None
 
         # If we're isOptional and not nullable the normal optional handling will
         # handle lazy construction of our holder.  If we're nullable we do it
@@ -3416,10 +3413,16 @@ for (uint32_t i = 0; i < length; ++i) {
             declType = "NonNull<nsAString>"
 
         # No need to deal with optional here; we handled it already
+        decl = ""
+        if isInUnionReturnValue:
+            decl += "FakeDependentString str;\n"
         return JSToNativeConversionInfo(
+            "%s"
             "%s\n"
-            "${declName} = &${holderName};" %
-            getConversionCode("${holderName}"),
+            "${declName} = %s" %
+              (decl,
+               getConversionCode("str" if isInUnionReturnValue else "${holderName}"),
+               ("str;" if isInUnionReturnValue else "&${holderName};")),
             declType=CGGeneric(declType),
             holderType=CGGeneric("FakeDependentString"))
 
@@ -4628,6 +4631,15 @@ class CGCallGenerator(CGThing):
     def define(self):
         return self.cgRoot.define()
 
+def getUnionMemberName(type):
+    if type.isGeckoInterface():
+        return type.inner.identifier.name
+    if type.isEnum():
+        return type.inner.identifier.name
+    if type.isArray() or type.isSequence():
+        return str(type)
+    return type.name
+
 class MethodNotCreatorError(Exception):
     def __init__(self, typename):
         self.typename = typename
@@ -4710,8 +4722,15 @@ def wrapTypeIntoCurrentCompartment(type, value, isMember=True):
         return CGList(memberWraps, "\n") if len(memberWraps) != 0 else None
 
     if type.isUnion():
-        raise TypeError("Can't handle wrapping of unions in constructor "
-                        "arguments yet")
+        memberWraps = []
+        for member in type.flatMemberTypes:
+            memberWrap = wrapTypeIntoCurrentCompartment(
+               member,
+               "%s.%s" % (value, getUnionMemberName(member)))
+            if memberWrap:
+                memberWrap = CGIfWrapper(memberWrap, "mType == %s" % member)
+                memberWraps.append(memberWrap)
+        return CGList(memberWraps, "else ") if len(memberWraps) != 0 else None
 
     if (type.isString() or type.isPrimitive() or type.isEnum() or
         type.isGeckoInterface() or type.isCallback() or type.isDate()):
@@ -6122,23 +6141,17 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider, isReturnValue=
     if type.isDictionary() or type.isSequence():
         raise TypeError("Can't handle dictionaries or sequences in unions")
 
-    if type.isGeckoInterface():
-        name = type.inner.identifier.name
-    elif type.isEnum():
-        name = type.inner.identifier.name
-    elif type.isArray() or type.isSequence():
-        name = str(type)
-    else:
-        name = type.name
+    name = getUnionMemberName(type)
 
     ctorArgs = "cx" if type.isSpiderMonkeyInterface() else ""
 
     tryNextCode = ("tryNext = true;\n"
                    "return true;")
     if type.isGeckoInterface():
-         tryNextCode = ("if (mUnion.mType != mUnion.eUninitialized) {"
-                        "  mUnion.Destroy%s();"
-                        "}" % name) + tryNextCode
+         prefix = "" if isReturnValue else "mUnion."
+         tryNextCode = ("if (%smType != %seUninitialized) {"
+                        "  %sDestroy%s();"
+                        "}") % (prefix, prefix, prefix, name) + tryNextCode
     conversionInfo = getJSToNativeConversionInfo(
         type, descriptorProvider, failureCode=tryNextCode,
         isDefinitelyObject=True, isInUnionReturnValue=isReturnValue,
@@ -6154,11 +6167,11 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider, isReturnValue=
     if type.isObject():
         body = ("mUnion.mValue.mObject.SetValue(cx, obj);\n"
                 "mUnion.mType = mUnion.eObject;")
-        setters = [ClassMethod("SetToObject", "void",
-                               [Argument("JSContext*", "cx"),
-                                Argument("JSObject*", "obj")],
-                               inline=True, bodyInHeader=True,
-                               body=body)]
+        setter = ClassMethod("SetToObject", "void",
+                             [Argument("JSContext*", "cx"),
+                              Argument("JSObject*", "obj")],
+                             inline=True, bodyInHeader=True,
+                             body=body)
 
     else:
         jsConversion = string.Template(conversionInfo.template).substitute(
@@ -6173,25 +6186,20 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider, isReturnValue=
                                  pre="tryNext = false;\n",
                                  post="\n"
                                       "return true;")
-        setters = [ClassMethod("TrySetTo" + name, "bool",
-                               [Argument("JSContext*", "cx"),
-                                Argument("JS::Handle<JS::Value>", "value"),
-                                Argument("JS::MutableHandle<JS::Value>", "pvalue"),
-                                Argument("bool&", "tryNext")],
-                               inline=True, bodyInHeader=True,
-                               body=jsConversion.define())]
-        if type.isString():
-            setters.append(ClassMethod("SetStringData", "void",
-                [Argument("const nsDependentString::char_type*", "aData"),
-                 Argument("nsDependentString::size_type", "aLength")],
-                inline=True, bodyInHeader=True,
-                body="mStringHolder.SetData(aData, aLength);"))
+        setter = ClassMethod("TrySetTo" + name, "bool",
+                              [Argument("JSContext*", "cx"),
+                               Argument("JS::Handle<JS::Value>", "value"),
+                               Argument("JS::MutableHandle<JS::Value>", "pvalue"),
+                               Argument("bool&", "tryNext")],
+                              inline=not isReturnValue,
+                              bodyInHeader=not isReturnValue,
+                              body=jsConversion.define())
 
     return {
                 "name": name,
                 "structType": structType,
                 "externalType": externalType,
-                "setters": setters,
+                "setter": setter,
                 "holderType": conversionInfo.holderType.define() if conversionInfo.holderType else None,
                 "ctorArgs": ctorArgs,
                 "ctorArgList": [Argument("JSContext*", "cx")] if type.isSpiderMonkeyInterface() else []
@@ -6254,6 +6262,16 @@ class CGUnionStruct(CGThing):
                                            vars["ctorArgList"],
                                            bodyInHeader=not self.isReturnValue,
                                            body=body))
+                if self.isReturnValue:
+                    methods.append(vars["setter"])
+                    if t.isString():
+                        methods.append(
+                            ClassMethod("SetStringData", "void",
+                                [Argument("const nsString::char_type*", "aData"),
+                                 Argument("nsString::size_type", "aLength")],
+                                inline=True, bodyInHeader=True,
+                                body="mValue.mString.Value().Assign(aData, aLength);"))
+
             body = string.Template('MOZ_ASSERT(Is${name}(), "Wrong type!");\n'
                                    'mValue.m${name}.Destroy();\n'
                                    'mType = eUninitialized;').substitute(vars)
@@ -6352,7 +6370,7 @@ class CGUnionConversionStruct(CGThing):
         for t in self.type.flatMemberTypes:
             vars = getUnionTypeTemplateVars(self.type,
                                             t, self.descriptorProvider)
-            methods.extend(vars["setters"])
+            methods.append(vars["setter"])
             if vars["name"] != "Object":
                 body=string.Template("mUnion.mType = mUnion.e${name};\n"
                                      "return mUnion.mValue.m${name}.SetValue(${ctorArgs});").substitute(vars)
@@ -6362,6 +6380,13 @@ class CGUnionConversionStruct(CGThing):
                                            bodyInHeader=True,
                                            body=body,
                                            visibility="private"))
+                if t.isString():
+                    methods.append(ClassMethod("SetStringData", "void",
+                                     [Argument("const nsDependentString::char_type*", "aData"),
+                                      Argument("nsDependentString::size_type", "aLength")],
+                                     inline=True, bodyInHeader=True,
+                                     body="mStringHolder.SetData(aData, aLength);"))
+
             if vars["holderType"] is not None:
                 members.append(ClassMember("m%sHolder" % vars["name"],
                                            vars["holderType"]))
@@ -8117,6 +8142,8 @@ class CGDictionary(CGThing):
                             descriptorProvider,
                             isMember="Dictionary",
                             isOptional=(not member.defaultValue),
+                            # Set this to true so that we get an owning union.
+                            isInUnionReturnValue=True,
                             defaultValue=member.defaultValue,
                             sourceDescription=("'%s' member of %s" %
                                                (member.identifier.name,
@@ -10522,6 +10549,7 @@ struct PrototypeTraits;
                                             config.getCallbacks(),
                                             config)
         includes.add("mozilla/dom/BindingUtils.h")
+        implincludes.add("mozilla/dom/PrimitiveConversions.h")
 
         # Wrap all of that in our namespaces.
         curr = CGNamespace.build(['mozilla', 'dom'], unions)

@@ -736,6 +736,8 @@ dictionary Dict : ParentDict {
   unrestricted double  negativeInfUrDouble = -Infinity;
   unrestricted double  nanUrDouble = NaN;
 
+  (float or DOMString) floatOrString = "str";
+
   ArrayBuffer arrayBuffer;
   ArrayBuffer? nullableArrayBuffer;
   Uint8Array uint8Array;
@@ -764,6 +766,7 @@ dictionary DictContainingSequence {
   sequence<object?>? ourSequence7;
   sequence<object>? ourSequence8 = null;
   sequence<object?>? ourSequence9 = null;
+  sequence<(float or DOMString)> ourSequence10;
 };
 
 dictionary DictForConstructor {
