@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_DOMException_h__
 #define mozilla_dom_DOMException_h__
 
+// We intentionally shadow non-virtual methods, but gcc gets confused.
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
@@ -32,7 +33,7 @@ NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult, const char** aName,
 namespace mozilla {
 namespace dom {
 
-#define MOZILLA_DOM_EXCEPTION_IID \
+#define MOZILLA_EXCEPTION_IID \
 { 0x55eda557, 0xeba0, 0x4fe3, \
   { 0xae, 0x2e, 0xf3, 0x94, 0x49, 0x23, 0x62, 0xd6 } }
 
@@ -40,7 +41,7 @@ class Exception : public nsIXPCException,
                   public nsWrapperCache
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOM_EXCEPTION_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_EXCEPTION_IID)
 
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_XPCEXCEPTION_CID)
 
@@ -110,7 +111,7 @@ private:
   static bool sEverMadeOneFromFactory;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(Exception, MOZILLA_DOM_EXCEPTION_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(Exception, MOZILLA_EXCEPTION_IID)
 
 class DOMException : public Exception,
                      public nsIDOMDOMException

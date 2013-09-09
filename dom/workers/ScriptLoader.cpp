@@ -31,7 +31,7 @@
 #include "nsXPCOM.h"
 #include "xpcpublic.h"
 
-#include "Exceptions.h"
+#include "mozilla/dom/Exceptions.h"
 #include "Principal.h"
 #include "WorkerFeature.h"
 #include "WorkerPrivate.h"
@@ -59,7 +59,7 @@ END_WORKERS_NAMESPACE
 
 USING_WORKERS_NAMESPACE
 
-using mozilla::dom::workers::exceptions::ThrowDOMExceptionForNSResult;
+using mozilla::dom::Throw;
 
 namespace {
 
@@ -880,12 +880,7 @@ void ReportLoadError(JSContext* aCx, const nsString& aURL,
 
     case NS_ERROR_DOM_SECURITY_ERR:
     case NS_ERROR_DOM_SYNTAX_ERR:
-      if (aIsMainThread) {
-        AssertIsOnMainThread();
-        xpc::Throw(aCx, aLoadResult);
-      } else {
-        ThrowDOMExceptionForNSResult(aCx, aLoadResult);
-      }
+      Throw(aCx, aLoadResult);
       break;
 
     default:
