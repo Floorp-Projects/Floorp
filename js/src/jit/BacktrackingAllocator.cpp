@@ -1197,10 +1197,12 @@ BacktrackingAllocator::dumpLiveness()
         for (size_t i = 0; i < block->numPhis(); i++) {
             LPhi *phi = block->getPhi(i);
 
-            fprintf(stderr, "Phi v%u <-", phi->getDef(0)->virtualRegister());
+            fprintf(stderr, "[%u,%u Phi v%u <-",
+                    inputOf(phi).pos(), outputOf(phi).pos(),
+                    phi->getDef(0)->virtualRegister());
             for (size_t j = 0; j < phi->numOperands(); j++)
                 fprintf(stderr, " v%u", phi->getOperand(j)->toUse()->virtualRegister());
-            fprintf(stderr, "\n");
+            fprintf(stderr, "]\n");
         }
 
         for (LInstructionIterator iter = block->begin(); iter != block->end(); iter++) {
