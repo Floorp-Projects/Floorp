@@ -24,7 +24,6 @@
 #include "nsIObserverService.h"
 #include "nsJSEnvironment.h"
 #include "nsGlobalWindow.h"
-#include "nsDOMException.h"
 #include "nsCRT.h"
 #ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
