@@ -134,7 +134,8 @@ bool
 ElementTransitions::HasAnimationOfProperty(nsCSSProperty aProperty) const
 {
   for (uint32_t tranIdx = mPropertyTransitions.Length(); tranIdx-- != 0; ) {
-    if (aProperty == mPropertyTransitions[tranIdx].mProperty) {
+    const ElementPropertyTransition& pt = mPropertyTransitions[tranIdx];
+    if (aProperty == pt.mProperty && !pt.IsRemovedSentinel()) {
       return true;
     }
   }
