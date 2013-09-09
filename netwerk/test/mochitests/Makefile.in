@@ -9,6 +9,4 @@ MOCHITEST_FILES = \
   test_partially_cached_content.html \
   user_agent.sjs \
   test_user_agent_overrides.html \
-  user_agent_update.sjs \
-  test_user_agent_updates.html \
   $(NULL)
