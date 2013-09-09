@@ -1766,6 +1766,7 @@ namespace mozilla {
 namespace dom {
 namespace workers {
 extern bool IsCurrentThreadRunningChromeWorker();
+extern JSContext* GetCurrentThreadJSContext();
 }
 }
 }
@@ -5195,6 +5196,17 @@ nsContentUtils::GetSafeJSContext()
 {
   MOZ_ASSERT(NS_IsMainThread());
   return sXPConnect->GetSafeJSContext();
+}
+
+/* static */
+JSContext *
+nsContentUtils::GetDefaultJSContextForThread()
+{
+  if (MOZ_LIKELY(NS_IsMainThread())) {
+    return GetSafeJSContext();
+  } else {
+    return workers::GetCurrentThreadJSContext();
+  }
 }
 
 /* static */
