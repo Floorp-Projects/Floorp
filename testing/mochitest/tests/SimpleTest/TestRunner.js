@@ -462,6 +462,9 @@ TestRunner.testFinished = function(tests) {
 };
 
 TestRunner.testUnloaded = function() {
+    // If we're in a debug build, check assertion counts.  This code is
+    // similar to the code in Tester_nextTest in browser-test.js used
+    // for browser-chrome mochitests.
     if (SpecialPowers.isDebugBuild) {
         var newAssertionCount = SpecialPowers.assertionCount();
         var numAsserts = newAssertionCount - TestRunner._lastAssertionCount;
