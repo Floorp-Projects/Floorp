@@ -687,7 +687,8 @@ class SetPropertyIC : public RepatchIonCache
         return hasGenericProxyStub_;
     }
 
-    bool attachNativeExisting(JSContext *cx, IonScript *ion, HandleObject obj, HandleShape shape);
+    bool attachNativeExisting(JSContext *cx, IonScript *ion, HandleObject obj,
+                              HandleShape shape, bool checkTypeset);
     bool attachSetterCall(JSContext *cx, IonScript *ion, HandleObject obj,
                           HandleObject holder, HandleShape shape, void *returnAddr);
     bool attachNativeAdding(JSContext *cx, IonScript *ion, JSObject *obj, HandleShape oldshape,
