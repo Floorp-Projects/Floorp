@@ -2352,6 +2352,7 @@ OverflowableToolbar.prototype = {
   },
 
   _moveItemsBackToTheirOrigin: function(shouldMoveAllItems) {
+    let placements = gPlacements.get(this._toolbar.id);
     for (let i = this._collapsed.length - 1; i >= 0; i--) {
       let {child, minSize} = this._collapsed[i];
 
@@ -2361,7 +2362,19 @@ OverflowableToolbar.prototype = {
       }
 
       this._collapsed.pop();
-      this._target.appendChild(child);
+      let beforeNodeIndex = placements.indexOf(child.id) + 1;
+      let inserted = false;
+      for (; beforeNodeIndex < placements.length; beforeNodeIndex++) {
+        let beforeNode = this._target.querySelector(idToSelector(placements[beforeNodeIndex]));
+        if (beforeNode) {
+          this._target.insertBefore(child, beforeNode);
+          inserted = true;
+          break;
+        }
+      }
+      if (!inserted) {
+        this._target.appendChild(child);
+      }
       child.removeAttribute("customizableui-anchorid");
       child.classList.remove("overflowedItem");
     }
