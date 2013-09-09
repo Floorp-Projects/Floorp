@@ -47,7 +47,6 @@
   <script type="application/javascript" src="chrome://browser/content/Util.js"/>
   <script type="application/javascript" src="chrome://browser/content/input.js"/>
   <script type="application/javascript" src="chrome://browser/content/appbar.js"/>
-  <script type="application/javascript" src="chrome://browser/content/apzc.js"/>
   <broadcasterset id="broadcasterset">
     <broadcaster id="bcast_contentShowing" disabled="false"/>
     <broadcaster id="bcast_urlbarState" mode="editing"/>
