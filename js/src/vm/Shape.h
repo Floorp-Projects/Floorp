@@ -14,14 +14,15 @@
 #include "mozilla/TemplateLib.h"
 
 #include "jsapi.h"
-#include "jsinfer.h"
 #include "jsfriendapi.h"
+#include "jsinfer.h"
 #include "jspropertytree.h"
 #include "jstypes.h"
 #include "NamespaceImports.h"
 
 #include "gc/Barrier.h"
 #include "gc/Heap.h"
+#include "gc/Marking.h"
 #include "gc/Rooting.h"
 #include "js/HashTable.h"
 #include "js/RootingAPI.h"
@@ -630,6 +631,7 @@ class BaseShape : public js::gc::Cell
 
     JSCompartment *compartment() const { return compartment_; }
     JS::Zone *zone() const { return tenuredZone(); }
+    JS::shadow::Zone *shadowZone() const { return JS::shadow::Zone::asShadowZone(zone()); }
 
     /* Lookup base shapes from the compartment's baseShapes table. */
     static UnownedBaseShape* getUnowned(ExclusiveContext *cx, const StackBaseShape &base);
@@ -650,9 +652,32 @@ class BaseShape : public js::gc::Cell
     static inline size_t offsetOfParent() { return offsetof(BaseShape, parent); }
     static inline size_t offsetOfFlags() { return offsetof(BaseShape, flags); }
 
-    static inline void writeBarrierPre(BaseShape *shape);
-    static void writeBarrierPost(BaseShape *shape, void *addr) {}
-    static inline void readBarrier(BaseShape *shape);
+    static void writeBarrierPre(BaseShape *base) {
+#ifdef JSGC_INCREMENTAL
+        if (!base || !base->shadowRuntimeFromAnyThread()->needsBarrier())
+            return;
+
+        JS::shadow::Zone *shadowZone = base->shadowZone();
+        if (shadowZone->needsBarrier()) {
+            BaseShape *tmp = base;
+            js::gc::MarkBaseShapeUnbarriered(shadowZone->barrierTracer(), &tmp, "write barrier");
+            JS_ASSERT(tmp == base);
+        }
+#endif
+    }
+
+    static void writeBarrierPost(BaseShape *base, void *addr) {}
+
+    static inline void readBarrier(BaseShape *base) {
+#ifdef JSGC_INCREMENTAL
+        JS::shadow::Zone *shadowZone = base->shadowZone();
+        if (shadowZone->needsBarrier()) {
+            BaseShape *tmp = base;
+            js::gc::MarkBaseShapeUnbarriered(shadowZone->barrierTracer(), &tmp, "read barrier");
+            JS_ASSERT(tmp == base);
+        }
+#endif
+    }
 
     static inline ThingRootKind rootKind() { return THING_ROOT_BASE_SHAPE; }
 
@@ -1136,8 +1161,22 @@ class Shape : public js::gc::Cell
     void removeChild(Shape *child);
 
     JS::Zone *zone() const { return tenuredZone(); }
+    JS::shadow::Zone *shadowZone() const { return JS::shadow::Zone::asShadowZone(zone()); }
 
-    static inline void writeBarrierPre(Shape *shape);
+    static void writeBarrierPre(Shape *shape) {
+#ifdef JSGC_INCREMENTAL
+        if (!shape || !shape->shadowRuntimeFromAnyThread()->needsBarrier())
+            return;
+
+        JS::shadow::Zone *shadowZone = shape->shadowZone();
+        if (shadowZone->needsBarrier()) {
+            Shape *tmp = shape;
+            js::gc::MarkShapeUnbarriered(shadowZone->barrierTracer(), &tmp, "write barrier");
+            JS_ASSERT(tmp == shape);
+        }
+#endif
+    }
+
     static void writeBarrierPost(Shape *shape, void *addr) {}
 
     /*
@@ -1145,7 +1184,16 @@ class Shape : public js::gc::Cell
      * method implements the read barrier. It's used to obtain initial shapes
      * from the compartment.
      */
-    static inline void readBarrier(Shape *shape);
+    static inline void readBarrier(Shape *shape) {
+#ifdef JSGC_INCREMENTAL
+        JS::shadow::Zone *shadowZone = shape->shadowZone();
+        if (shadowZone->needsBarrier()) {
+            Shape *tmp = shape;
+            js::gc::MarkShapeUnbarriered(shadowZone->barrierTracer(), &tmp, "read barrier");
+            JS_ASSERT(tmp == shape);
+        }
+#endif
+    }
 
     static inline ThingRootKind rootKind() { return THING_ROOT_SHAPE; }
 

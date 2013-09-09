@@ -16,6 +16,7 @@
 
 #include "gc/Barrier.h"
 #include "gc/Heap.h"
+#include "gc/Marking.h"
 #include "gc/Rooting.h"
 #include "js/CharacterEncoding.h"
 #include "js/RootingAPI.h"
@@ -427,15 +428,47 @@ class JSString : public js::gc::Cell
     }
 
     JS::Zone *zone() const { return tenuredZone(); }
+    JS::shadow::Zone *shadowZone() const { return JS::shadow::Zone::asShadowZone(zone()); }
+
     bool isInsideZone(JS::Zone *zone_) { return tenuredIsInsideZone(zone_); }
     js::gc::AllocKind getAllocKind() const { return tenuredGetAllocKind(); }
 
-    static inline void writeBarrierPre(JSString *str);
+    static void writeBarrierPre(JSString *str) {
+#ifdef JSGC_INCREMENTAL
+        if (!str || !str->shadowRuntimeFromAnyThread()->needsBarrier())
+            return;
+
+        JS::shadow::Zone *shadowZone = str->shadowZone();
+        if (shadowZone->needsBarrier()) {
+            JSString *tmp = str;
+            js::gc::MarkStringUnbarriered(shadowZone->barrierTracer(), &tmp, "write barrier");
+            JS_ASSERT(tmp == str);
+        }
+#endif
+    }
+
     static void writeBarrierPost(JSString *str, void *addr) {}
     static void writeBarrierPostRelocate(JSString *str, void *addr) {}
     static void writeBarrierPostRemove(JSString *str, void *addr) {}
-    static inline bool needWriteBarrierPre(JS::Zone *zone);
-    static inline void readBarrier(JSString *str);
+
+    static bool needWriteBarrierPre(JS::Zone *zone) {
+#ifdef JSGC_INCREMENTAL
+        return JS::shadow::Zone::asShadowZone(zone)->needsBarrier();
+#else
+        return false;
+#endif
+    }
+
+    static void readBarrier(JSString *str) {
+#ifdef JSGC_INCREMENTAL
+        JS::shadow::Zone *shadowZone = str->shadowZone();
+        if (shadowZone->needsBarrier()) {
+            JSString *tmp = str;
+            js::gc::MarkStringUnbarriered(shadowZone->barrierTracer(), &tmp, "read barrier");
+            JS_ASSERT(tmp == str);
+        }
+#endif
+    }
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_STRING; }
 

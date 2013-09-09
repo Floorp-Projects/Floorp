@@ -101,40 +101,6 @@ JSScript::global() const
     return *compartment()->maybeGlobal();
 }
 
-inline void
-JSScript::writeBarrierPre(JSScript *script)
-{
-#ifdef JSGC_INCREMENTAL
-    if (!script || !script->runtimeFromAnyThread()->needsBarrier())
-        return;
-
-    JS::Zone *zone = script->zone();
-    if (zone->needsBarrier()) {
-        JS_ASSERT(!zone->runtimeFromMainThread()->isHeapMajorCollecting());
-        JSScript *tmp = script;
-        MarkScriptUnbarriered(zone->barrierTracer(), &tmp, "write barrier");
-        JS_ASSERT(tmp == script);
-    }
-#endif
-}
-
-/* static */ inline void
-js::LazyScript::writeBarrierPre(js::LazyScript *lazy)
-{
-#ifdef JSGC_INCREMENTAL
-    if (!lazy || !lazy->runtimeFromAnyThread()->needsBarrier())
-        return;
-
-    JS::Zone *zone = lazy->zone();
-    if (zone->needsBarrier()) {
-        JS_ASSERT(!zone->runtimeFromMainThread()->isHeapMajorCollecting());
-        js::LazyScript *tmp = lazy;
-        MarkLazyScriptUnbarriered(zone->barrierTracer(), &tmp, "write barrier");
-        JS_ASSERT(tmp == lazy);
-    }
-#endif
-}
-
 inline JSPrincipals *
 JSScript::principals()
 {
@@ -153,21 +119,6 @@ JSScript::setOriginalFunctionObject(JSObject *fun) {
     JS_ASSERT(isCallsiteClone);
     JS_ASSERT(fun->is<JSFunction>());
     enclosingScopeOrOriginalFunction_ = fun;
-}
-
-inline void
-JSScript::setIonScript(js::jit::IonScript *ionScript) {
-    if (hasIonScript())
-        js::jit::IonScript::writeBarrierPre(tenuredZone(), ion);
-    ion = ionScript;
-    updateBaselineOrIonRaw();
-}
-
-inline void
-JSScript::setParallelIonScript(js::jit::IonScript *ionScript) {
-    if (hasParallelIonScript())
-        js::jit::IonScript::writeBarrierPre(tenuredZone(), parallelIon);
-    parallelIon = ionScript;
 }
 
 inline void
