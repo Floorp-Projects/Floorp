@@ -2903,8 +2903,8 @@ nsCycleCollector_forgetJSRuntime()
     }
 }
 
-mozilla::CycleCollectedJSRuntime*
-nsCycleCollector_currentJSRuntime()
+/* static */ CycleCollectedJSRuntime*
+CycleCollectedJSRuntime::Get()
 {
     CollectorData* data = sCollectorData.get();
     if (data) {

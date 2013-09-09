@@ -1330,9 +1330,11 @@ nsEventListenerManager::MarkForCC()
     nsIJSEventListener* jsl = ls.GetJSListener();
     if (jsl) {
       if (jsl->GetHandler().HasEventHandler()) {
-        xpc_UnmarkGrayObject(jsl->GetHandler().Ptr()->Callable());
+        JS::ExposeObjectToActiveJS(jsl->GetHandler().Ptr()->Callable());
       }
-      xpc_UnmarkGrayObject(jsl->GetEventScope());
+      if (JSObject* scope = jsl->GetEventScope()) {
+        JS::ExposeObjectToActiveJS(scope);
+      }
     } else if (ls.mListenerType == eWrappedJSListener) {
       xpc_TryUnmarkWrappedGrayObject(ls.mListener.GetXPCOMCallback());
     } else if (ls.mListenerType == eWebIDLListener) {
