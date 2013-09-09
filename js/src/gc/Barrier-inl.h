@@ -18,32 +18,6 @@
 
 namespace js {
 
-template <typename T, typename Unioned>
-void
-EncapsulatedPtr<T, Unioned>::pre()
-{
-    T::writeBarrierPre(value);
-}
-
-template <typename T>
-inline void
-RelocatablePtr<T>::post()
-{
-#ifdef JSGC_GENERATIONAL
-    JS_ASSERT(this->value);
-    T::writeBarrierPostRelocate(this->value, &this->value);
-#endif
-}
-
-template <typename T>
-inline void
-RelocatablePtr<T>::relocate(JSRuntime *rt)
-{
-#ifdef JSGC_GENERATIONAL
-    T::writeBarrierPostRemove(this->value, &this->value);
-#endif
-}
-
 #ifdef JSGC_GENERATIONAL
 class DenseRangeRef : public gc::BufferableRef
 {

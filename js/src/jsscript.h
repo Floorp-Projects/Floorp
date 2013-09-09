@@ -21,12 +21,12 @@
 
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"
+#include "jit/IonCode.h"
 #include "vm/Shape.h"
 
 namespace js {
 
 namespace jit {
-    struct IonScript;
     struct BaselineScript;
     struct IonScriptCounts;
 }
@@ -725,7 +725,12 @@ class JSScript : public js::gc::Cell
     js::jit::IonScript *const *addressOfIonScript() const {
         return &ion;
     }
-    inline void setIonScript(js::jit::IonScript *ionScript);
+    void setIonScript(js::jit::IonScript *ionScript) {
+        if (hasIonScript())
+            js::jit::IonScript::writeBarrierPre(tenuredZone(), ion);
+        ion = ionScript;
+        updateBaselineOrIonRaw();
+    }
 
     bool hasBaselineScript() const {
         return baseline && baseline != BASELINE_DISABLED_SCRIPT;
@@ -760,7 +765,11 @@ class JSScript : public js::gc::Cell
     js::jit::IonScript *maybeParallelIonScript() const {
         return parallelIon;
     }
-    inline void setParallelIonScript(js::jit::IonScript *ionScript);
+    void setParallelIonScript(js::jit::IonScript *ionScript) {
+        if (hasParallelIonScript())
+            js::jit::IonScript::writeBarrierPre(tenuredZone(), parallelIon);
+        parallelIon = ionScript;
+    }
 
     static size_t offsetOfBaselineScript() {
         return offsetof(JSScript, baseline);
@@ -1054,8 +1063,23 @@ class JSScript : public js::gc::Cell
     void finalize(js::FreeOp *fop);
 
     JS::Zone *zone() const { return tenuredZone(); }
+    JS::shadow::Zone *shadowZone() const { return JS::shadow::Zone::asShadowZone(zone()); }
 
-    static inline void writeBarrierPre(JSScript *script);
+    static void writeBarrierPre(JSScript *script) {
+#ifdef JSGC_INCREMENTAL
+        if (!script || !script->shadowRuntimeFromAnyThread()->needsBarrier())
+            return;
+
+        JS::shadow::Zone *shadowZone = script->shadowZone();
+        if (shadowZone->needsBarrier()) {
+            MOZ_ASSERT(!js::RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone));
+            JSScript *tmp = script;
+            js::gc::MarkScriptUnbarriered(shadowZone->barrierTracer(), &tmp, "write barrier");
+            JS_ASSERT(tmp == script);
+        }
+#endif
+    }
+
     static void writeBarrierPost(JSScript *script, void *addr) {}
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_SCRIPT; }
@@ -1314,9 +1338,8 @@ class LazyScript : public js::gc::Cell
 
     uint32_t staticLevel(JSContext *cx) const;
 
-    Zone *zone() const {
-        return Cell::tenuredZone();
-    }
+    Zone *zone() const { return tenuredZone(); }
+    JS::shadow::Zone *shadowZone() const { return JS::shadow::Zone::asShadowZone(zone()); }
 
     void markChildren(JSTracer *trc);
     void finalize(js::FreeOp *fop);
@@ -1326,7 +1349,20 @@ class LazyScript : public js::gc::Cell
         return mallocSizeOf(table_);
     }
 
-    static inline void writeBarrierPre(LazyScript *lazy);
+    static void writeBarrierPre(LazyScript *lazy) {
+#ifdef JSGC_INCREMENTAL
+        if (!lazy || !lazy->shadowRuntimeFromAnyThread()->needsBarrier())
+            return;
+
+        JS::shadow::Zone *shadowZone = lazy->shadowZone();
+        if (shadowZone->needsBarrier()) {
+            MOZ_ASSERT(!js::RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone));
+            js::LazyScript *tmp = lazy;
+            MarkLazyScriptUnbarriered(shadowZone->barrierTracer(), &tmp, "write barrier");
+            JS_ASSERT(tmp == lazy);
+        }
+#endif
+    }
 };
 
 /* If this fails, add/remove padding within LazyScript. */

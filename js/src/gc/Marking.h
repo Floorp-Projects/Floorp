@@ -8,7 +8,6 @@
 #define gc_Marking_h
 
 #include "gc/Barrier.h"
-#include "jit/IonCode.h"
 #include "js/TypeDecls.h"
 
 class JSAtom;
@@ -29,6 +28,16 @@ class Shape;
 class UnownedBaseShape;
 
 template<class, typename> class HeapPtr;
+
+namespace jit {
+class IonCode;
+class IonScript;
+class VMFunction;
+}
+
+namespace types {
+class Type;
+}
 
 namespace gc {
 

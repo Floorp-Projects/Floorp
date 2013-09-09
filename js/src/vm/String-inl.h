@@ -101,45 +101,6 @@ StringWriteBarrierPostRemove(js::ThreadSafeContext *maybecx, JSString **strp)
 
 } /* namespace js */
 
-inline void
-JSString::writeBarrierPre(JSString *str)
-{
-#ifdef JSGC_INCREMENTAL
-    if (!str || !str->runtimeFromAnyThread()->needsBarrier())
-        return;
-
-    JS::Zone *zone = str->zone();
-    if (zone->needsBarrier()) {
-        JSString *tmp = str;
-        MarkStringUnbarriered(zone->barrierTracer(), &tmp, "write barrier");
-        JS_ASSERT(tmp == str);
-    }
-#endif
-}
-
-inline bool
-JSString::needWriteBarrierPre(JS::Zone *zone)
-{
-#ifdef JSGC_INCREMENTAL
-    return zone->needsBarrier();
-#else
-    return false;
-#endif
-}
-
-inline void
-JSString::readBarrier(JSString *str)
-{
-#ifdef JSGC_INCREMENTAL
-    JS::Zone *zone = str->zone();
-    if (zone->needsBarrier()) {
-        JSString *tmp = str;
-        MarkStringUnbarriered(zone->barrierTracer(), &tmp, "read barrier");
-        JS_ASSERT(tmp == str);
-    }
-#endif
-}
-
 JS_ALWAYS_INLINE bool
 JSString::validateLength(js::ThreadSafeContext *maybecx, size_t length)
 {
