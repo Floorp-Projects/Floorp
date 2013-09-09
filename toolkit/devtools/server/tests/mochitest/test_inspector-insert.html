@@ -65,7 +65,7 @@ addTest(function testRearrange() {
     nextNode = response.nodes[13];
     return gWalker.insertBefore(nodeA, longlist, nextNode);
   }).then(response => {
-    let sibling = inspector._documentWalker(gInspectee.querySelector("#a")).nextSibling();
+    let sibling = inspector._documentWalker(gInspectee.querySelector("#a"), window).nextSibling();
     is(sibling, nextNode.rawNode(), "Node should match the expected next node.");
     return gWalker.children(longlist);
   }).then(response => {
