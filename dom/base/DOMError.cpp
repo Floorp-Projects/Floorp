@@ -6,8 +6,13 @@
 
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/DOMErrorBinding.h"
-#include "nsDOMException.h"
 #include "nsPIDOMWindow.h"
+
+// Implemented in DOMException.cpp
+nsresult
+NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult, const char** aName,
+                                   const char** aMessage,
+                                   uint16_t* aCode = nullptr);
 
 namespace mozilla {
 namespace dom {
