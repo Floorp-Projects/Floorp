@@ -169,7 +169,12 @@ function openToolbox(form, chrome=false) {
     chrome: chrome
   };
   devtools.TargetFactory.forRemoteTab(options).then((target) => {
-    gDevTools.showToolbox(target, "webconsole", devtools.Toolbox.HostType.WINDOW);
+    let hostType = devtools.Toolbox.HostType.WINDOW;
+    gDevTools.showToolbox(target, "webconsole", hostType).then((toolbox) => {
+      toolbox.once("destroyed", function() {
+        gClient.close();
+      });
+    });
     window.close();
   });
 }
