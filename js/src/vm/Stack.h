@@ -236,7 +236,22 @@ class StackFrame
 
         /* Frame subtypes */
         EVAL               =        0x4,  /* frame pushed for eval() or debugger eval */
-        DEBUGGER           =        0x8,  /* frame pushed for debugger eval */
+
+
+        /*
+         * Frame pushed for debugger eval.
+         * - Don't bother to JIT it, because it's probably short-lived.
+         * - It is required to have a scope chain object outside the
+         *   js::ScopeObject hierarchy: either a global object, or a
+         *   DebugScopeObject (not a ScopeObject, despite the name)
+         * - If evalInFramePrev_ is set, then this frame was created for an
+         *   "eval in frame" call, which can push a successor to any live
+         *   frame; so its logical "prev" frame is not necessarily the
+         *   previous frame in memory. Iteration should treat
+         *   evalInFramePrev_ as this frame's previous frame.
+         */
+        DEBUGGER           =        0x8,
+
         GENERATOR          =       0x10,  /* frame is associated with a generator */
         CONSTRUCTING       =       0x20,  /* frame is for a constructor invocation */
 
@@ -302,7 +317,13 @@ class StackFrame
     Value               *prevsp_;
 
     void                *hookData_;     /* if HAS_HOOK_DATA, closure returned by call hook */
-    AbstractFramePtr    evalInFramePrev_; /* for an eval/debugger frame, the prev frame */
+
+    /*
+     * For an eval-in-frame DEBUGGER frame, the frame in whose scope we're
+     * evaluating code. Iteration treats this as our previous frame.
+     */
+    AbstractFramePtr    evalInFramePrev_;
+
     Value               *argv_;         /* If hasArgs(), points to frame's arguments. */
     LifoAlloc::Mark     mark_;          /* Used to release memory for this frame. */
 
