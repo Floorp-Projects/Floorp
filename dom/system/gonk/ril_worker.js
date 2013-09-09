@@ -3797,24 +3797,16 @@ let RIL = {
   },
 
   _handleChangedEmergencyCbMode: function _handleChangedEmergencyCbMode(active) {
-    if (this._isInEmergencyCbMode === active) {
-      return;
-    }
-
-    if (active) {
-      // Start a new timeout event when enter the mode.
-      let ril = this;
-      this._cancelEmergencyCbModeTimeout();
-      this._exitEmergencyCbModeTimeoutID = setTimeout(function() {
-          ril.exitEmergencyCbMode();
-      }, EMERGENCY_CB_MODE_TIMEOUT_MS);
-    } else {
-      // Clear the timeout event when exit mode.
-      this._cancelEmergencyCbModeTimeout();
-    }
-
-    // Keep current mode and write to property.
     this._isInEmergencyCbMode = active;
+
+    // Clear the existed timeout event.
+    this._cancelEmergencyCbModeTimeout();
+
+    // Start a new timeout event when entering the mode.
+    if (active) {
+      this._exitEmergencyCbModeTimeoutID = setTimeout(
+          this.exitEmergencyCbMode.bind(this), EMERGENCY_CB_MODE_TIMEOUT_MS);
+    }
 
     let message = {rilMessageType: "emergencyCbModeChange",
                    active: active,
