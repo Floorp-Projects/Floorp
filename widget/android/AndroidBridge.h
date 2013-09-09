@@ -421,6 +421,13 @@ public:
                             const nsACString & aHost,
                             const int32_t      aPort,
                             nsACString & aResult);
+
+    // Utility methods.
+    static jclass GetClassGlobalRef(JNIEnv* env, const char* className);
+    static jfieldID GetFieldID(JNIEnv* env, jclass jClass, const char* fieldName, const char* fieldType);
+    static jfieldID GetStaticFieldID(JNIEnv* env, jclass jClass, const char* fieldName, const char* fieldType);
+    static jmethodID GetMethodID(JNIEnv* env, jclass jClass, const char* methodName, const char* methodType);
+    static jmethodID GetStaticMethodID(JNIEnv* env, jclass jClass, const char* methodName, const char* methodType);
 protected:
     static StaticRefPtr<AndroidBridge> sBridge;
     nsTArray<nsCOMPtr<nsIMobileMessageCallback> > mSmsRequests;
