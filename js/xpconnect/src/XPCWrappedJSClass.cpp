@@ -12,7 +12,6 @@
 #include "nsArrayEnumerator.h"
 #include "nsContentUtils.h"
 #include "nsWrapperCache.h"
-#include "XPCWrapper.h"
 #include "AccessCheck.h"
 #include "nsJSUtils.h"
 #include "mozilla/Attributes.h"

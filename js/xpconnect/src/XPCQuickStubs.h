@@ -7,16 +7,18 @@
 #ifndef xpcquickstubs_h___
 #define xpcquickstubs_h___
 
-#include "xpcpublic.h"
 #include "XPCForwards.h"
-#include "qsObjectHelper.h"
-#include "mozilla/dom/BindingUtils.h"
+
+class qsObjectHelper;
+namespace mozilla {
+namespace dom {
+class NativeProperties;
+}
+}
 
 /* XPCQuickStubs.h - Support functions used only by quick stubs. */
 
 class XPCCallContext;
-class XPCLazyCallContext;
-class XPCWrappedNativeJSClass;
 
 #define XPC_QS_NULL_INDEX  ((uint16_t) -1)
 
