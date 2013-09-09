@@ -1571,35 +1571,6 @@ TypeObject::getTypedArrayType()
 }
 
 inline void
-TypeObject::writeBarrierPre(TypeObject *type)
-{
-#ifdef JSGC_INCREMENTAL
-    if (!type || !type->runtimeFromAnyThread()->needsBarrier())
-        return;
-
-    JS::Zone *zone = type->zone();
-    if (zone->needsBarrier()) {
-        TypeObject *tmp = type;
-        MarkTypeObjectUnbarriered(zone->barrierTracer(), &tmp, "write barrier");
-        JS_ASSERT(tmp == type);
-    }
-#endif
-}
-
-inline void
-TypeObject::readBarrier(TypeObject *type)
-{
-#ifdef JSGC_INCREMENTAL
-    JS::Zone *zone = type->zone();
-    if (zone->needsBarrier()) {
-        TypeObject *tmp = type;
-        MarkTypeObjectUnbarriered(zone->barrierTracer(), &tmp, "read barrier");
-        JS_ASSERT(tmp == type);
-    }
-#endif
-}
-
-inline void
 TypeObjectAddendum::writeBarrierPre(TypeObjectAddendum *type)
 {
 #ifdef JSGC_INCREMENTAL
