@@ -586,6 +586,23 @@ for (prop in supported_properties) {
      "property " + prop + " must have at least one test function");
 }
 
+// Return a consistent sampling of |count| values out of |array|.
+function sample_array(array, count) {
+  if (count <= 0) {
+    ok(false, "unexpected count");
+    return [];
+  }
+  var ratio = array.length / count;
+  if (ratio <= 1) {
+    return array;
+  }
+  var result = new Array(count);
+  for (var i = 0; i < count; ++i) {
+    result[i] = array[Math.floor(i * ratio)];
+  }
+  return result;
+}
+
 // Test that transitions don't do anything (i.e., aren't supported) on
 // the properties not in our test list above (and not transition
 // properties themselves).
@@ -606,6 +623,26 @@ for (prop in gCSSProperties) {
     }
 
     var all_values = info.initial_values.concat(info.other_values);
+
+    if (all_values.length > 50) {
+      // Since we're using an O(N^2) algorithm here, reduce the list of
+      // values that we want to test.  (This test is really only testing
+      // that somebody didn't make a property animatable without
+      // modifying this test.  The odds of somebody doing that without
+      // making at least one of the many pairs of values we have left
+      // animatable seems pretty low, at least relative to the chance
+      // that any pair of the values listed in property_database.js is
+      // animatable.)
+      //
+      // That said, we still try to use all of the start of the list on
+      // the assumption that the more basic values are likely to be at
+      // the beginning of the list.
+      all_values = [].concat(info.initial_values.slice(0,2),
+                             sample_array(info.initial_values.slice(2), 6),
+                             info.other_values.slice(0, 10),
+                             sample_array(info.other_values.slice(10), 40));
+    }
+
     var all_computed = [];
     for (var idx in all_values) {
       var val = all_values[idx];
