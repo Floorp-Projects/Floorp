@@ -43,9 +43,7 @@ Types = (
 
 HeaderIncludes = (
     'mozilla/Attributes.h',
-    'base/basictypes.h',
     'prtime.h',
-    'nscore.h',
     'IPCMessageStart.h',
     'ipc/IPCMessageUtils.h',
     'nsAutoPtr.h',
