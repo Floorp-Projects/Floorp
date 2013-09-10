@@ -266,14 +266,10 @@ pref("editor.singleLine.pasteNewlines", 2);
 pref("ui.dragThresholdX", 25);
 pref("ui.dragThresholdY", 25);
 
-// Layers Acceleration.  We can only have nice things on gonk, because
-// they're not maintained anywhere else.
 pref("layers.offmainthreadcomposition.enabled", true);
-#ifndef MOZ_WIDGET_GONK
-pref("dom.ipc.tabs.disabled", true);
-pref("layers.offmainthreadcomposition.async-animations", false);
-pref("layers.async-video.enabled", false);
-#else
+// OOP and layers acceleration are only available on gonk,
+// linux and mac desktop.
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_COCOA)
 pref("dom.ipc.tabs.disabled", false);
 pref("layers.acceleration.disabled", false);
 pref("layers.offmainthreadcomposition.async-animations", true);
@@ -281,6 +277,11 @@ pref("layers.async-video.enabled", true);
 pref("layers.async-pan-zoom.enabled", true);
 pref("gfx.content.azure.backends", "cairo");
 pref("layers.composer2d.enabled", true);
+#else
+pref("dom.ipc.tabs.disabled", true);
+pref("layers.offmainthreadcomposition.enabled", false);
+pref("layers.offmainthreadcomposition.async-animations", false);
+pref("layers.async-video.enabled", false);
 #endif
 
 // Web Notifications
