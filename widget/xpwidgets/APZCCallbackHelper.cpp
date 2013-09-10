@@ -4,10 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "APZCCallbackHelper.h"
+#include "mozilla/Preferences.h"
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsIDOMElement.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "TiledLayerBuffer.h" // For TILEDLAYERBUFFER_TILE_SIZE
 
 namespace mozilla {
 namespace widget {
@@ -24,9 +26,69 @@ APZCCallbackHelper::HasValidPresShellId(nsIDOMWindowUtils* aUtils,
     return NS_SUCCEEDED(rv) && aMetrics.mPresShellId == presShellId;
 }
 
+/**
+ * Expands a given rectangle to the next tile boundary. Note, this will
+ * expand the rectangle if it is already on tile boundaries.
+ */
+static CSSRect ExpandDisplayPortToTileBoundaries(
+  const CSSRect& aDisplayPort,
+  const CSSToLayerScale& aLayerPixelsPerCSSPixel)
+{
+  // Convert the given rect to layer coordinates so we can inflate to tile
+  // boundaries (layer space corresponds to texture pixel space here).
+  LayerRect displayPortInLayerSpace = aDisplayPort * aLayerPixelsPerCSSPixel;
+
+  // Inflate the rectangle by 1 so that we always push to the next tile
+  // boundary. This is desirable to stop from having a rectangle with a
+  // moving origin occasionally being smaller when it coincidentally lines
+  // up to tile boundaries.
+  displayPortInLayerSpace.Inflate(1);
+
+  // Now nudge the rectangle to the nearest equal or larger tile boundary.
+  gfxFloat left = TILEDLAYERBUFFER_TILE_SIZE
+    * floor(displayPortInLayerSpace.x / TILEDLAYERBUFFER_TILE_SIZE);
+  gfxFloat top = TILEDLAYERBUFFER_TILE_SIZE
+    * floor(displayPortInLayerSpace.y / TILEDLAYERBUFFER_TILE_SIZE);
+  gfxFloat right = TILEDLAYERBUFFER_TILE_SIZE
+    * ceil(displayPortInLayerSpace.XMost() / TILEDLAYERBUFFER_TILE_SIZE);
+  gfxFloat bottom = TILEDLAYERBUFFER_TILE_SIZE
+    * ceil(displayPortInLayerSpace.YMost() / TILEDLAYERBUFFER_TILE_SIZE);
+
+  displayPortInLayerSpace = LayerRect(left, top, right - left, bottom - top);
+  CSSRect displayPort = displayPortInLayerSpace / aLayerPixelsPerCSSPixel;
+
+  return displayPort;
+}
+
+static void
+MaybeAlignAndClampDisplayPort(mozilla::layers::FrameMetrics& aFrameMetrics,
+                              const CSSPoint& aActualScrollOffset)
+{
+  // Correct the display-port by the difference between the requested scroll
+  // offset and the resulting scroll offset after setting the requested value.
+  CSSRect& displayPort = aFrameMetrics.mDisplayPort;
+  displayPort += aActualScrollOffset - aFrameMetrics.mScrollOffset;
+
+  // Expand the display port to the next tile boundaries, if tiled thebes layers
+  // are enabled.
+  if (Preferences::GetBool("layers.force-tiles")) {
+    // aFrameMetrics.mZoom is the zoom amount reported by the APZC,
+    // scale by ScreenToLayerScale to get the gecko zoom amount
+    displayPort =
+      ExpandDisplayPortToTileBoundaries(displayPort + aActualScrollOffset,
+                                        aFrameMetrics.mZoom * ScreenToLayerScale(1))
+      - aActualScrollOffset;
+  }
+
+  // Finally, clamp the display port to the scrollable rect.
+  CSSRect scrollableRect = aFrameMetrics.mScrollableRect;
+  displayPort = scrollableRect.ClampRect(displayPort + aActualScrollOffset)
+    - aActualScrollOffset;
+}
+
 void
 APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
-                                    const FrameMetrics& aMetrics)
+                                    FrameMetrics& aMetrics)
 {
     // Precondition checks
     MOZ_ASSERT(aUtils);
@@ -46,6 +108,17 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
 
     // Scroll the window to the desired spot
     aUtils->ScrollToCSSPixelsApproximate(aMetrics.mScrollOffset.x, aMetrics.mScrollOffset.y, nullptr);
+
+    // Re-query the scroll position after setting it so that anything that relies on it
+    // can have an accurate value.
+    CSSPoint actualScrollOffset;
+    aUtils->GetScrollXYFloat(false, &actualScrollOffset.x, &actualScrollOffset.y);
+
+    // Correct the display port due to the difference between mScrollOffset and the
+    // actual scroll offset, possibly align it to tile boundaries (if tiled layers are
+    // enabled), and clamp it to the scrollable rect.
+    MaybeAlignAndClampDisplayPort(aMetrics, actualScrollOffset);
+    aMetrics.mScrollOffset = actualScrollOffset;
 
     // The mZoom variable on the frame metrics stores the CSS-to-screen scale for this
     // frame. This scale includes all of the (cumulative) resolutions set on the presShells
