@@ -32,9 +32,6 @@ void GetNonClientMetrics(NONCLIENTMETRICS* metrics);
 // Returns the running version of Windows.
 WinVersion GetWinVersion();
 
-// Returns the major and minor version of the service pack installed.
-void GetServicePackLevel(int* major, int* minor);
-
 // Returns true if the shift key is currently pressed.
 bool IsShiftPressed();
 
