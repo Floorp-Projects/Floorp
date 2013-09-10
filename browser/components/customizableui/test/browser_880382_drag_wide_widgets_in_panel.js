@@ -403,10 +403,12 @@ let gTests = [
 ];
 
 function asyncCleanup() {
+  Services.prefs.clearUserPref("browser.uiCustomization.skipSourceNodeCheck");
   yield resetCustomization();
 }
 
 function test() {
+  Services.prefs.setBoolPref("browser.uiCustomization.skipSourceNodeCheck", true);
   waitForExplicitFinish();
   requestLongerTimeout(5);
   runTests(gTests, asyncCleanup);
