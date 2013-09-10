@@ -3154,10 +3154,8 @@ for (uint32_t i = 0; i < length; ++i) {
             return handleJSObjectType(type, isMember, failureCode)
 
         if (descriptor.interface.isCallback() and
-            descriptor.interface.identifier.name != "EventListener"):
-            if descriptor.workers:
-                return handleJSObjectType(type, isMember, failureCode)
-
+            (descriptor.interface.identifier.name != "EventListener" or
+             descriptorProvider.workers)):
             name = descriptor.interface.identifier.name
             if type.nullable() or isCallbackReturnValue:
                 declType = CGGeneric("nsRefPtr<%s>" % name);
@@ -4125,7 +4123,8 @@ if (!returnArray) {
 
     if (type.isGeckoInterface() and
         (not type.isCallbackInterface() or
-         type.unroll().inner.identifier.name == "EventListener")):
+         (type.unroll().inner.identifier.name == "EventListener" and
+          not descriptorProvider.workers))):
         descriptor = descriptorProvider.getDescriptor(type.unroll().inner.identifier.name)
         if type.nullable():
             wrappingCode = ("if (!%s) {\n" % (result) +
