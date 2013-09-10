@@ -480,14 +480,15 @@ class Build(MachCommandBase):
         try:
             self.remove_objdir()
             return 0
-        except WindowsError as e:
-            if e.winerror in (5, 32):
-                self.log(logging.ERROR, 'file_access_error', {'error': e},
-                    "Could not clobber because a file was in use. If the "
-                    "application is running, try closing it. {error}")
-                return 1
-            else:
-                raise
+        except OSError as e:
+            if sys.platform.startswith('win'):
+                if isinstance(e, WindowsError) and e.winerror in (5,32):
+                    self.log(logging.ERROR, 'file_access_error', {'error': e},
+                        "Could not clobber because a file was in use. If the "
+                        "application is running, try closing it. {error}")
+                    return 1
+
+            raise
 
 
 @CommandProvider
