@@ -212,9 +212,30 @@ UpdatePrompt.prototype = {
       return;
     }
 
+#ifdef MOZ_B2G_RIL
+    let window = Services.wm.getMostRecentWindow("navigator:browser");
+    let pinReq = window.navigator.mozIccManager.getCardLock("pin");
+    pinReq.onsuccess = function(e) {
+      if (e.target.result.enabled) {
+        // The SIM is pin locked. Don't use a fallback timer. This means that
+        // the user has to press Install to apply the update. If we use the
+        // timer, and the timer reboots the phone, then the phone will be
+        // unusable until the SIM is unlocked.
+        log("SIM is pin locked. Not starting fallback timer.");
+      } else {
+        // This means that no pin lock is enabled, so we go ahead and start
+        // the fallback timer.
+        this._applyPromptTimer = this.createTimer(this.applyPromptTimeout);
+      }
+    }.bind(this);
+    pinReq.onerror = function(e) {
+      this._applyPromptTimer = this.createTimer(this.applyPromptTimeout);
+    }.bind(this);
+#else
     // Schedule a fallback timeout in case the UI is unable to respond or show
     // a prompt for some reason.
     this._applyPromptTimer = this.createTimer(this.applyPromptTimeout);
+#endif
   },
 
   _copyProperties: ["appVersion", "buildID", "detailsURL", "displayVersion",
