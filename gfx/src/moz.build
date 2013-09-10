@@ -34,6 +34,10 @@ EXPORTS += [
     'nsTransform2D.h',
 ]
 
+EXPORTS.mozilla += [
+    'AppUnits.h',
+]
+
 if CONFIG['MOZ_X11']:
     EXPORTS.mozilla += ['X11Util.h']
     CPP_SOURCES += [

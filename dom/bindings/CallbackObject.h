@@ -151,10 +151,6 @@ protected:
 
     // And now members whose construction/destruction order we need to control.
 
-    // Put our nsAutoMicrotask first, so it gets destroyed after everything else
-    // is gone
-    nsAutoMicroTask mMt;
-
     nsCxPusher mCxPusher;
 
     // Constructed the rooter within the scope of mCxPusher above, so that it's
@@ -172,6 +168,7 @@ protected:
     ErrorResult& mErrorResult;
     const ExceptionHandling mExceptionHandling;
     uint32_t mSavedJSContextOptions;
+    const bool mIsMainThread;
   };
 };
 
