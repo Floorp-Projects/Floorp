@@ -1387,24 +1387,26 @@ abstract public class GeckoApp
         initializeChrome();
 
         // If we are doing a restore, read the session data and send it to Gecko
-        String restoreMessage = null;
-        if (mRestoreMode != RESTORE_NONE && !mIsRestoringActivity) {
-            try {
-                // restoreSessionTabs() will create simple tab stubs with the
-                // URL and title for each page, but we also need to restore
-                // session history. restoreSessionTabs() will inject the IDs
-                // of the tab stubs into the JSON data (which holds the session
-                // history). This JSON data is then sent to Gecko so session
-                // history can be restored for each tab.
-                restoreMessage = restoreSessionTabs(isExternalURL);
-            } catch (SessionRestoreException e) {
-                // If restore failed, do a normal startup
-                Log.e(LOGTAG, "An error occurred during restore", e);
-                mRestoreMode = RESTORE_NONE;
+        if (!mIsRestoringActivity) {
+            String restoreMessage = null;
+            if (mRestoreMode != RESTORE_NONE) {
+                try {
+                    // restoreSessionTabs() will create simple tab stubs with the
+                    // URL and title for each page, but we also need to restore
+                    // session history. restoreSessionTabs() will inject the IDs
+                    // of the tab stubs into the JSON data (which holds the session
+                    // history). This JSON data is then sent to Gecko so session
+                    // history can be restored for each tab.
+                    restoreMessage = restoreSessionTabs(isExternalURL);
+                } catch (SessionRestoreException e) {
+                    // If restore failed, do a normal startup
+                    Log.e(LOGTAG, "An error occurred during restore", e);
+                    mRestoreMode = RESTORE_NONE;
+                }
             }
-        }
 
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Session:Restore", restoreMessage));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Session:Restore", restoreMessage));
+        }
 
         // External URLs should always be loaded regardless of whether Gecko is
         // already running.
