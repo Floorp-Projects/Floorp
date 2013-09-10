@@ -27,8 +27,6 @@ enum WinVersion {
   WINVERSION_WIN7 = 6
 };
 
-void GetNonClientMetrics(NONCLIENTMETRICS* metrics);
-
 // Returns the running version of Windows.
 WinVersion GetWinVersion();
 
