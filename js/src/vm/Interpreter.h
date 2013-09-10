@@ -84,8 +84,8 @@ DebugExceptionUnwind(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc);
 extern bool
 BoxNonStrictThis(JSContext *cx, const CallReceiver &call);
 
-extern bool
-BoxNonStrictThis(JSContext *cx, MutableHandleValue thisv, bool *modified);
+extern JSObject *
+BoxNonStrictThis(JSContext *cx, HandleValue thisv);
 
 /*
  * Ensure that fp->thisValue() is the correct value of |this| for the scripted
@@ -308,7 +308,10 @@ extern bool
 SameValue(JSContext *cx, const Value &v1, const Value &v2, bool *same);
 
 extern JSType
-TypeOfValue(JSContext *cx, const Value &v);
+TypeOfObject(JSObject *obj);
+
+extern JSType
+TypeOfValue(const Value &v);
 
 extern bool
 HasInstance(JSContext *cx, HandleObject obj, HandleValue v, bool *bp);

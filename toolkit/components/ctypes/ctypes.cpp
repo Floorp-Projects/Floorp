@@ -11,6 +11,7 @@
 #include "nsNativeCharsetUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozJSComponentLoader.h"
+#include "nsZipArchive.h"
 
 #define JSCTYPES_CONTRACTID \
   "@mozilla.org/jsctypes;1"

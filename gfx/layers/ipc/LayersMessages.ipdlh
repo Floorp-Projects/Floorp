@@ -392,7 +392,7 @@ struct OpTextureSwap {
 
 struct ReplyTextureRemoved {
   PCompositable compositable;
-  uint32_t textureId;
+  uint64_t textureId;
 };
 
 // Unit of a "changeset reply".  This is a weird abstraction, probably

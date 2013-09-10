@@ -6,8 +6,6 @@
 /* Class used to manage the wrapped native objects within a JS scope. */
 
 #include "xpcprivate.h"
-#include "XPCWrapper.h"
-#include "jsproxy.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsPrincipal.h"

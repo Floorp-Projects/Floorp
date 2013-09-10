@@ -7,7 +7,6 @@
 /* Per JSRuntime object */
 
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Util.h"
 
 #include "xpcprivate.h"
 #include "xpcpublic.h"
@@ -21,7 +20,6 @@
 #include "amIAddonManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
-#include "prsystem.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Services.h"
@@ -35,7 +33,7 @@
 #include "jsprf.h"
 #include "js/MemoryMetrics.h"
 #include "js/OldDebugAPI.h"
-#include "mozilla/dom/AtomList.h"
+#include "mozilla/dom/GeneratedAtomList.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Attributes.h"
@@ -44,7 +42,6 @@
 
 #include "GeckoProfiler.h"
 #include "nsJSPrincipals.h"
-#include <algorithm>
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
