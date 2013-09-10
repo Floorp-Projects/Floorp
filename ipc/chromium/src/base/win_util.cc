@@ -258,16 +258,6 @@ WNDPROC SetWindowProc(HWND hwnd, WNDPROC proc) {
   return oldwindow_proc;
 }
 
-void* SetWindowUserData(HWND hwnd, void* user_data) {
-  return
-      reinterpret_cast<void*>(SetWindowLongPtr(hwnd, GWLP_USERDATA,
-          reinterpret_cast<LONG_PTR>(user_data)));
-}
-
-void* GetWindowUserData(HWND hwnd) {
-  return reinterpret_cast<void*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-}
-
 // Maps to the WNDPROC for a window that was active before the subclass was
 // installed.
 static const wchar_t* const kHandlerKey = L"__ORIGINAL_MESSAGE_HANDLER__";

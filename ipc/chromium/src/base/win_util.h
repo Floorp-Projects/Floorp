@@ -73,11 +73,6 @@ bool Unsubclass(HWND window, WNDPROC subclass_proc);
 // SubclassWindow.
 WNDPROC GetSuperclassWNDPROC(HWND window);
 
-// Pointer-friendly wrappers around Get/SetWindowLong(..., GWLP_USERDATA, ...)
-// Returns the previously set value.
-void* SetWindowUserData(HWND hwnd, void* user_data);
-void* GetWindowUserData(HWND hwnd);
-
 // Returns true if the shift key is currently pressed.
 bool IsShiftPressed();
 
