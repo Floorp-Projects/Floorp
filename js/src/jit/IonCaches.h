@@ -849,11 +849,10 @@ class SetElementIC : public RepatchIonCache
         hasDenseStub_ = true;
     }
 
-    static bool canAttachTypedArrayElement(JSObject *obj, const Value &idval);
+    static bool canAttachTypedArrayElement(JSObject *obj, const Value &idval, const Value &value);
 
     bool attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, const Value &idval);
-    bool attachTypedArrayElement(JSContext *cx, IonScript *ion, TypedArrayObject *tarr,
-                                 const Value &idval);
+    bool attachTypedArrayElement(JSContext *cx, IonScript *ion, TypedArrayObject *tarr);
 
     static bool
     update(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue idval,

@@ -3012,6 +3012,11 @@ jit::PropertyWriteNeedsTypeBarrier(JSContext *cx, MBasicBlock *current, MDefinit
         if (!object || object->unknownProperties())
             continue;
 
+        // TI doesn't track TypedArray objects and should never insert a type
+        // barrier for them.
+        if (object->getTypedArrayType() < ScalarTypeRepresentation::TYPE_MAX)
+            continue;
+
         types::HeapTypeSet *property = object->getProperty(cx, id, false);
         if (!property) {
             success = false;
@@ -3050,6 +3055,8 @@ jit::PropertyWriteNeedsTypeBarrier(JSContext *cx, MBasicBlock *current, MDefinit
             return false;
 
         if (!object || object->unknownProperties())
+            continue;
+        if (object->getTypedArrayType() < ScalarTypeRepresentation::TYPE_MAX)
             continue;
 
         types::HeapTypeSet *property = object->getProperty(cx, id, false);

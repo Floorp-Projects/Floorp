@@ -1109,6 +1109,9 @@ struct TypeObject : gc::Cell
     inline unsigned getPropertyCount();
     inline Property *getProperty(unsigned i);
 
+    /* Get the typed array element type if clasp is a typed array. */
+    inline int getTypedArrayType();
+
     /*
      * Get the global object which all objects of this type are parented to,
      * or NULL if there is none known.

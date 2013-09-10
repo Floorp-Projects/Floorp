@@ -3367,12 +3367,10 @@ SetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, c
 
 static bool
 GenerateSetTypedArrayElement(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
-                             TypedArrayObject *tarr, const Value &idval, Register object,
+                             TypedArrayObject *tarr, Register object,
                              ValueOperand indexVal, ConstantOrRegister value,
                              Register tempUnbox, Register temp, FloatRegister tempFloat)
 {
-    JS_ASSERT(SetElementIC::canAttachTypedArrayElement(tarr, idval));
-
     Label failures, done, popObjectAndFail;
 
     // Guard on the shape.
@@ -3444,18 +3442,19 @@ GenerateSetTypedArrayElement(JSContext *cx, MacroAssembler &masm, IonCache::Stub
 }
 
 /* static */ bool
-SetElementIC::canAttachTypedArrayElement(JSObject *obj, const Value &idval)
+SetElementIC::canAttachTypedArrayElement(JSObject *obj, const Value &idval, const Value &value)
 {
-    return obj->is<TypedArrayObject>() && idval.isInt32();
+    // Don't bother attaching stubs for assigning strings and objects.
+    return (obj->is<TypedArrayObject>() && idval.isInt32() &&
+            !value.isString() && !value.isObject());
 }
 
 bool
-SetElementIC::attachTypedArrayElement(JSContext *cx, IonScript *ion,
-                                      TypedArrayObject *tarr, const Value &idval)
+SetElementIC::attachTypedArrayElement(JSContext *cx, IonScript *ion, TypedArrayObject *tarr)
 {
     MacroAssembler masm(cx);
     RepatchStubAppender attacher(*this);
-    if (!GenerateSetTypedArrayElement(cx, masm, attacher, tarr, idval,
+    if (!GenerateSetTypedArrayElement(cx, masm, attacher, tarr,
                                       object(), index(), value(),
                                       tempToUnboxIndex(), temp(), tempFloat()))
     {
@@ -3479,9 +3478,9 @@ SetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
                 return false;
             attachedStub = true;
         }
-        if (!attachedStub && canAttachTypedArrayElement(obj, idval)) {
+        if (!attachedStub && canAttachTypedArrayElement(obj, idval, value)) {
             TypedArrayObject *tarr = &obj->as<TypedArrayObject>();
-            if (!cache.attachTypedArrayElement(cx, ion, tarr, idval))
+            if (!cache.attachTypedArrayElement(cx, ion, tarr))
                 return false;
         }
     }
