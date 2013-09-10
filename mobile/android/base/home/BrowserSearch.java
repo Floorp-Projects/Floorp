@@ -457,6 +457,12 @@ public class BrowserSearch extends HomeFragment
     }
 
     private void showSuggestionsOptIn() {
+        // Return if the ViewStub was already inflated - an inflated ViewStub is removed from the
+        // View hierarchy so a second call to findViewById will return null.
+        if (mSuggestionsOptInPrompt != null) {
+            return;
+        }
+
         mSuggestionsOptInPrompt = ((ViewStub) mView.findViewById(R.id.suggestions_opt_in_prompt)).inflate();
 
         TextView promptText = (TextView) mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_title);
