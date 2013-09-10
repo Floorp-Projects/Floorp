@@ -13,15 +13,6 @@
 #include "base/basictypes.h"
 #include "base/string16.h"
 
-#if defined(OS_MACOSX)
-#include <CoreFoundation/CoreFoundation.h>
-#ifdef __OBJC__
-@class NSString;
-#else
-class NSString;
-#endif
-#endif  // OS_MACOSX
-
 class StringPiece;
 
 namespace base {
@@ -48,35 +39,6 @@ std::wstring SysMultiByteToWide(const StringPiece& mb, uint32_t code_page);
 std::string SysWideToMultiByte(const std::wstring& wide, uint32_t code_page);
 
 #endif  // defined(OS_WIN)
-
-// Mac-specific ----------------------------------------------------------------
-
-#if defined(OS_MACOSX)
-
-// Converts between STL strings and CFStringRefs/NSStrings.
-
-// Creates a string, and returns it with a refcount of 1. You are responsible
-// for releasing it. Returns NULL on failure.
-CFStringRef SysUTF8ToCFStringRef(const std::string& utf8);
-CFStringRef SysUTF16ToCFStringRef(const string16& utf16);
-CFStringRef SysWideToCFStringRef(const std::wstring& wide);
-
-// Same, but returns an autoreleased NSString.
-NSString* SysUTF8ToNSString(const std::string& utf8);
-NSString* SysUTF16ToNSString(const string16& utf16);
-NSString* SysWideToNSString(const std::wstring& wide);
-
-// Converts a CFStringRef to an STL string. Returns an empty string on failure.
-std::string SysCFStringRefToUTF8(CFStringRef ref);
-string16 SysCFStringRefToUTF16(CFStringRef ref);
-std::wstring SysCFStringRefToWide(CFStringRef ref);
-
-// Same, but accepts NSString input.
-std::string SysNSStringToUTF8(NSString* ref);
-string16 SysNSStringToUTF16(NSString* ref);
-std::wstring SysNSStringToWide(NSString* ref);
-
-#endif  // defined(OS_MACOSX)
 
 }  // namespace base
 

@@ -12,8 +12,9 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
-    'BackgroundPageThumbs.jsm',
     'PageThumbs.jsm',
     'PageThumbsWorker.js',
 ]
 
+if not CONFIG['RELEASE_BUILD']:
+    EXTRA_JS_MODULES += ['BackgroundPageThumbs.jsm']

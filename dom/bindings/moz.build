@@ -25,8 +25,10 @@ EXPORTS.mozilla.dom += [
     'JSSlots.h',
     'NonRefcountedDOMObject.h',
     'Nullable.h',
+    'OwningNonNull.h',
     'PrimitiveConversions.h',
     'TypedArray.h',
+    'UnionMember.h',
 ]
 
 FAIL_ON_WARNINGS = True
