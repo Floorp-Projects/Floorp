@@ -4,6 +4,7 @@
 
 MOCHITEST_BROWSER_FILES := \
 	browser_thumbnails_background.js \
+	browser_thumbnails_background_crash.js \
 	browser_thumbnails_capture.js \
 	browser_thumbnails_expiration.js \
 	browser_thumbnails_privacy.js \
@@ -20,5 +21,6 @@ MOCHITEST_BROWSER_FILES := \
 	background_red_redirect.sjs \
 	privacy_cache_control.sjs \
 	thumbnails_background.sjs \
+	thumbnails_crash_content_helper.js \
 	thumbnails_update.sjs \
 	$(NULL)
