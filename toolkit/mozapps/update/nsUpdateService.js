@@ -750,7 +750,7 @@ function getCanStageUpdates() {
 XPCOMUtils.defineLazyGetter(this, "gMetroUpdatesEnabled", function aus_gMetroUpdatesEnabled() {
 #ifdef XP_WIN
 #ifdef MOZ_METRO
-  if (Services.metro.immersive) {
+  if (Services.metro && Services.metro.immersive) {
     let metroUpdate = getPref("getBoolPref", PREF_APP_UPDATE_METRO_ENABLED, true);
     if (!metroUpdate) {
       LOG("gMetroUpdatesEnabled - unable to automatically check for metro " +
@@ -2074,7 +2074,17 @@ UpdateService.prototype = {
    * notify the user of install success.
    */
   _postUpdateProcessing: function AUS__postUpdateProcessing() {
-    if (!this.canCheckForUpdates) {
+    // canCheckForUpdates will return false when metro-only updates are disabled
+    // from within metro.  In that case we still want _postUpdateProcessing to
+    // run.  gMetroUpdatesEnabled returns true on non Windows 8 platforms.
+    // We want _postUpdateProcessing to run so that it will update the history
+    // XML. Without updating the history XML, the about flyout will continue to
+    // have the "Restart to Apply Update" button (history xml indicates update
+    // is applied).
+    // TODO: I think this whole if-block should be removed since updates can
+    // always be applied via the about dialog, we should be running post update
+    // in those cases.
+    if (!this.canCheckForUpdates && gMetroUpdatesEnabled) {
       LOG("UpdateService:_postUpdateProcessing - unable to check for " +
           "updates... returning early");
       return;
