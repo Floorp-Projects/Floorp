@@ -39,16 +39,6 @@ NewObjectCache::fillGlobal(EntryIndex entry, Class *clasp, js::GlobalObject *glo
     return fill(entry, clasp, global, kind, obj);
 }
 
-inline void
-NewObjectCache::copyCachedToObject(JSObject *dst, JSObject *src, gc::AllocKind kind)
-{
-    js_memcpy(dst, src, gc::Arena::thingSize(kind));
-#ifdef JSGC_GENERATIONAL
-    Shape::writeBarrierPost(dst->shape_, &dst->shape_);
-    types::TypeObject::writeBarrierPost(dst->type_, &dst->type_);
-#endif
-}
-
 inline JSObject *
 NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_, js::gc::InitialHeap heap)
 {
@@ -66,17 +56,6 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_, js::gc::Initi
     }
 
     return NULL;
-}
-
-inline
-ThreadDataIter::ThreadDataIter(JSRuntime *rt)
-{
-#ifdef JS_WORKER_THREADS
-    // Only allow iteration over a runtime's threads when those threads are
-    // paused, to avoid racing when reading data from the PerThreadData.
-    JS_ASSERT(rt->exclusiveThreadsPaused);
-#endif
-    iter = rt->threadList.getFirst();
 }
 
 }  /* namespace js */

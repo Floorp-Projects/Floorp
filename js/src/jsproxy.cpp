@@ -21,6 +21,8 @@
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
+#include "vm/ObjectImpl-inl.h"
+
 using namespace js;
 using namespace js::gc;
 using mozilla::ArrayLength;

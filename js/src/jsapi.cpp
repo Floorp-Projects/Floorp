@@ -70,6 +70,7 @@
 #include "vm/ErrorObject.h"
 #include "vm/Interpreter.h"
 #include "vm/NumericConversions.h"
+#include "vm/RegExpStatics.h"
 #include "vm/Runtime.h"
 #include "vm/Shape.h"
 #include "vm/StopIterationObject.h"
@@ -87,7 +88,6 @@
 
 #include "vm/Interpreter-inl.h"
 #include "vm/ObjectImpl-inl.h"
-#include "vm/RegExpStatics-inl.h"
 #include "vm/Shape-inl.h"
 #include "vm/String-inl.h"
 

@@ -26,6 +26,8 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
+#include "vm/ObjectImpl-inl.h"
+
 using namespace js;
 
 JSObject *
