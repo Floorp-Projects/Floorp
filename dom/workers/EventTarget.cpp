@@ -9,6 +9,7 @@
 USING_WORKERS_NAMESPACE
 using mozilla::ErrorResult;
 using mozilla::dom::EventListener;
+using mozilla::dom::Nullable;
 
 void
 EventTarget::_trace(JSTracer* aTrc)
