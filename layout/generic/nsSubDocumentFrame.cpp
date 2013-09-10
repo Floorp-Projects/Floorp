@@ -36,6 +36,7 @@
 #include "nsObjectFrame.h"
 #include "nsContentUtils.h"
 #include "nsIPermissionManager.h"
+#include "nsServiceManagerUtils.h"
 
 using namespace mozilla;
 using mozilla::layout::RenderFrameParent;

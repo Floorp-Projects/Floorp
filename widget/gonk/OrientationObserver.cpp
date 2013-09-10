@@ -24,6 +24,7 @@
 #include "OrientationObserver.h"
 #include "mozilla/HalSensor.h"
 #include "ProcessOrientation.h"
+#include "nsServiceManagerUtils.h"
 
 using namespace mozilla;
 using namespace dom;

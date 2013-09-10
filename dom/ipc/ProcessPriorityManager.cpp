@@ -24,6 +24,7 @@
 #include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsIPropertyBag2.h"
+#include "nsComponentManagerUtils.h"
 
 #ifdef XP_WIN
 #include <process.h>
