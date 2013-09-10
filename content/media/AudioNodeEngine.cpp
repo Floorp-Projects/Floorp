@@ -125,6 +125,19 @@ BufferComplexMultiply(const float* aInput,
   }
 }
 
+float
+AudioBufferPeakValue(const float *aInput, uint32_t aSize)
+{
+  float max = 0.0f;
+  for (uint32_t i = 0; i < aSize; i++) {
+    float mag = fabs(aInput[i]);
+    if (mag > max) {
+      max = mag;
+    }
+  }
+  return max;
+}
+
 void
 AudioBlockCopyChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
                                const float aScale[WEBAUDIO_BLOCK_SIZE],
