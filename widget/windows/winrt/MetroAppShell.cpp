@@ -13,6 +13,8 @@
 #include "nsServiceManagerUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "WinUtils.h"
+#include "nsIAppStartup.h"
+#include "nsToolkitCompsCID.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -88,6 +90,82 @@ MetroAppShell::Init()
   return nsBaseAppShell::Init();
 }
 
+HRESULT SHCreateShellItemArrayFromShellItemDynamic(IShellItem *psi, REFIID riid, void **ppv)
+{
+  HMODULE shell32DLL = LoadLibraryW(L"shell32.dll");
+  if (!shell32DLL) {
+    return E_FAIL;
+  }
+
+  typedef BOOL (WINAPI* SHFn)(IShellItem *psi, REFIID riid, void **ppv);
+
+  HRESULT hr = E_FAIL;
+  SHFn SHCreateShellItemArrayFromShellItemDynamicPtr =
+    (SHFn)GetProcAddress(shell32DLL, "SHCreateShellItemArrayFromShellItem");
+  FreeLibrary(shell32DLL);
+  if (SHCreateShellItemArrayFromShellItemDynamicPtr) {
+    hr = SHCreateShellItemArrayFromShellItemDynamicPtr(psi, riid, ppv);
+  }
+
+  FreeLibrary(shell32DLL);
+  return hr;
+}
+
+BOOL
+WinLaunchDeferredMetroFirefox()
+{
+  // Create an instance of the Firefox Metro DEH which is used to launch the browser
+  const CLSID CLSID_FirefoxMetroDEH = {0x5100FEC1,0x212B, 0x4BF5 ,{0x9B,0xF8, 0x3E,0x65, 0x0F,0xD7,0x94,0xA3}};
+
+  nsRefPtr<IExecuteCommand> executeCommand;
+  HRESULT hr = CoCreateInstance(CLSID_FirefoxMetroDEH,
+                                NULL,
+                                CLSCTX_LOCAL_SERVER,
+                                IID_IExecuteCommand,
+                                getter_AddRefs(executeCommand));
+  if (FAILED(hr))
+    return FALSE;
+
+  // Get the currently running exe path
+  WCHAR exePath[MAX_PATH + 1] = { L'\0' };
+  if (!::GetModuleFileNameW(0, exePath, MAX_PATH))
+    return FALSE;
+
+  // Convert the path to a long path since GetModuleFileNameW returns the path
+  // that was used to launch Firefox which is not necessarily a long path.
+  if (!::GetLongPathNameW(exePath, exePath, MAX_PATH))
+    return FALSE;
+
+  // Create an IShellItem for the current browser path
+  nsRefPtr<IShellItem> shellItem;
+  hr = WinUtils::SHCreateItemFromParsingName(exePath, NULL, IID_IShellItem, getter_AddRefs(shellItem));
+  if (FAILED(hr))
+    return FALSE;
+
+  // Convert to an IShellItemArray which is used for the path to launch
+  nsRefPtr<IShellItemArray> shellItemArray;
+  hr = SHCreateShellItemArrayFromShellItemDynamic(shellItem, IID_IShellItemArray, getter_AddRefs(shellItemArray));
+  if (FAILED(hr))
+    return FALSE;
+
+  // Set the path to launch and parameters needed
+  nsRefPtr<IObjectWithSelection> selection;
+  hr = executeCommand->QueryInterface(IID_IObjectWithSelection, getter_AddRefs(selection));
+  if (FAILED(hr))
+    return FALSE;
+  hr = selection->SetSelection(shellItemArray);
+  if (FAILED(hr))
+    return FALSE;
+
+  hr = executeCommand->SetParameters(L"--metro-restart");
+  if (FAILED(hr))
+    return FALSE;
+
+  // Run the default browser through the DEH
+  hr = executeCommand->Execute();
+  return SUCCEEDED(hr);
+}
+
 // Called by appstartup->run in xre, which is initiated by a call to
 // XRE_metroStartup in MetroApp. This call is on the metro main thread.
 NS_IMETHODIMP
@@ -108,17 +186,28 @@ MetroAppShell::Run(void)
       // Just exit
       rv = NS_ERROR_NOT_IMPLEMENTED;
     break;
-    case GeckoProcessType_Default:
+    case GeckoProcessType_Default: {
       mozilla::widget::StartAudioSession();
       sFrameworkView->ActivateView();
       rv = nsBaseAppShell::Run();
       mozilla::widget::StopAudioSession();
+
+      nsCOMPtr<nsIAppStartup> appStartup (do_GetService(NS_APPSTARTUP_CONTRACTID));
+      bool restarting;
+      if (appStartup && NS_SUCCEEDED(appStartup->GetRestarting(&restarting)) && restarting) {
+        if (!WinLaunchDeferredMetroFirefox()) {
+          NS_WARNING("Couldn't deferred launch Metro Firefox.");
+        }
+      }
+
       // This calls XRE_metroShutdown() in xre. This will also destroy
       // MessagePump.
       sMetroApp->ShutdownXPCOM();
+
       // This will free the real main thread in CoreApplication::Run()
       // once winrt cleans up this thread.
       sMetroApp->CoreExit();
+    }
     break;
   }
 
