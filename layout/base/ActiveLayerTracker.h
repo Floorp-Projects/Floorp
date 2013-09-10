@@ -63,7 +63,7 @@ public:
    * Return true if any of aFrame's offset property styles should be considered
    * as being animated for constructing active layers.
    */
-  static bool IsOffsetStyleAnimated(nsIFrame* aFrame);
+  static bool IsOffsetOrMarginStyleAnimated(nsIFrame* aFrame);
 
   /*
    * We track modifications to the content of certain frames (i.e. canvas frames)
