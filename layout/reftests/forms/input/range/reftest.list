@@ -23,6 +23,7 @@ default-preferences pref(dom.experimental_forms_range,true)
 == stepDown.html 75pct-common-ref.html
 == stepUp-unthemed.html 75pct-unthemed-common-ref.html
 == stepUp.html 75pct-common-ref.html
+== max-prop.html 100pct-common-ref.html
 
 # 'direction' property:
 == direction-unthemed-1.html direction-unthemed-1-ref.html
