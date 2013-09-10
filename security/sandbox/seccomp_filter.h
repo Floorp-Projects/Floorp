@@ -22,6 +22,21 @@
 #define SECCOMP_WHITELIST_ADD
 #endif
 
+/**
+ * Bug 909658: no __NR_recv, __NR_msgget, __NR_semget in emulator-x86.
+ *
+ * These system calls are not defined on i386.
+ */
+#if defined(__i386__)
+#define SECCOMP_WHITELIST_ADD_i386 \
+  ALLOW_SYSCALL(ipc),
+#else
+#define SECCOMP_WHITELIST_ADD_i386 \
+  ALLOW_SYSCALL(recv), \
+  ALLOW_SYSCALL(msgget), \
+  ALLOW_SYSCALL(msgget),
+#endif
+
 /* Most used system calls should be at the top of the whitelist
  * for performance reasons. The whitelist BPF filter exits after
  * processing any ALLOW_SYSCALL macro.
@@ -40,9 +55,7 @@
  */
 #define SECCOMP_WHITELIST \
   /* These are calls we're ok to allow */ \
-  ALLOW_SYSCALL(recv), \
-  ALLOW_SYSCALL(msgget), \
-  ALLOW_SYSCALL(semget), \
+  SECCOMP_WHITELIST_ADD_i386 \
   ALLOW_SYSCALL(read), \
   ALLOW_SYSCALL(write), \
   ALLOW_SYSCALL(brk), \
