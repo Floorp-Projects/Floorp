@@ -664,11 +664,12 @@ selfhosting_srcs := \
   $(srcdir)/builtin/Intl.js \
   $(srcdir)/builtin/IntlData.js \
   $(srcdir)/builtin/Iterator.js \
+  $(srcdir)/builtin/Map.js \
   $(srcdir)/builtin/Number.js \
   $(srcdir)/builtin/ParallelArray.js \
   $(srcdir)/builtin/String.js \
   $(srcdir)/builtin/Set.js \
-  $(srcdir)/builtin/Map.js \
+  $(srcdir)/builtin/TypedObject.js \
   $(NULL)
 
 selfhosted_out_h_deps := \

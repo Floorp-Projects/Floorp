@@ -12,6 +12,7 @@
 
 #include "builtin/Intl.h"
 #include "builtin/ParallelArray.h"
+#include "builtin/TypedObject.h"
 #include "gc/Marking.h"
 #include "vm/ForkJoin.h"
 #include "vm/Interpreter.h"
@@ -588,6 +589,23 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ShouldForceSequential",   intrinsic_ShouldForceSequential,   0,0),
     JS_FN("ParallelTestsShouldPass", intrinsic_ParallelTestsShouldPass, 0,0),
 
+    // See builtin/TypedObject.h for descriptors of the typedobj functions.
+    JS_FNINFO("ClampToUint8",
+              JSNativeThreadSafeWrapper<js::ClampToUint8>,
+              &js::ClampToUint8JitInfo, 1, 0),
+    JS_FNINFO("Memcpy",
+              JSNativeThreadSafeWrapper<js::Memcpy>,
+              &js::MemcpyJitInfo, 5, 0),
+
+#define LOAD_AND_STORE_FN_DECLS(_constant, _type, _name)                      \
+    JS_FNINFO("Store_" #_name,                                                \
+              JSNativeThreadSafeWrapper<js::StoreScalar##_type::Func>,        \
+              &js::StoreScalar##_type::JitInfo, 3, 0),                        \
+    JS_FNINFO("Load_" #_name,                                                 \
+              JSNativeThreadSafeWrapper<js::LoadScalar##_type::Func>,         \
+              &js::LoadScalar##_type::JitInfo, 3, 0),
+    JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(LOAD_AND_STORE_FN_DECLS)
+
     // See builtin/Intl.h for descriptions of the intl_* functions.
     JS_FN("intl_availableCalendars", intl_availableCalendars, 1,0),
     JS_FN("intl_availableCollations", intl_availableCollations, 1,0),
@@ -910,4 +928,16 @@ JSRuntime::maybeWrappedSelfHostedFunction(JSContext *cx, HandleId id, MutableHan
     }
 
     return cx->compartment()->wrap(cx, funVal);
+}
+
+JSFunction *
+js::SelfHostedFunction(JSContext *cx, HandlePropertyName propName)
+{
+    RootedValue func(cx);
+    if (!cx->global()->getIntrinsicValue(cx, propName, &func))
+        return NULL;
+
+    JS_ASSERT(func.isObject());
+    JS_ASSERT(func.toObject().is<JSFunction>());
+    return &func.toObject().as<JSFunction>();
 }

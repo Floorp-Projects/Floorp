@@ -9510,7 +9510,8 @@ IonBuilder::loadTypedObjectType(MDefinition *typedObj)
     if (typedObj->isNewDerivedTypedObject())
         return typedObj->toNewDerivedTypedObject()->type();
 
-    MInstruction *load = MLoadFixedSlot::New(typedObj, js::SLOT_DATATYPE);
+    MInstruction *load = MLoadFixedSlot::New(typedObj,
+                                             JS_TYPEDOBJ_SLOT_TYPE_OBJ);
     current->add(load);
     return load;
 }
@@ -9598,7 +9599,7 @@ IonBuilder::typeObjectForFieldFromStructType(MDefinition *typeObj,
 {
     // Load list of field type objects.
 
-    MInstruction *fieldTypes = MLoadFixedSlot::New(typeObj, SLOT_STRUCT_FIELD_TYPES);
+    MInstruction *fieldTypes = MLoadFixedSlot::New(typeObj, JS_TYPEOBJ_SLOT_STRUCT_FIELD_TYPES);
     current->add(fieldTypes);
 
     // Index into list with index of field.

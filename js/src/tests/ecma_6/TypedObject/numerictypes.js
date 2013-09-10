@@ -113,7 +113,7 @@ function runTests()
         check(function() type.toString() === floatStrings[i]);
         check(function() type(null) == 0);
         check(function() Number.isNaN(type(undefined)));
-        check(function() Number.isNaN(type([])));
+        check(function() type([]) == 0);
         check(function() Number.isNaN(type({})));
         check(function() Number.isNaN(type(/abcd/)));
 

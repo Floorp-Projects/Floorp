@@ -51,6 +51,7 @@
 #include "jscntxt.h"
 #include "jspubtd.h"
 
+#include "builtin/TypedObjectConstants.h"
 #include "gc/Barrier.h"
 #include "js/HashTable.h"
 
@@ -90,9 +91,9 @@ typedef js::HashSet<TypeRepresentation *,
 class TypeRepresentation {
   public:
     enum Kind {
-        Scalar,
-        Struct,
-        Array
+        Scalar = JS_TYPEREPR_SCALAR_KIND,
+        Struct = JS_TYPEREPR_STRUCT_KIND,
+        Array = JS_TYPEREPR_ARRAY_KIND
     };
 
   protected:
@@ -109,7 +110,7 @@ class TypeRepresentation {
     static void obj_trace(JSTracer *trace, JSObject *object);
     static void obj_finalize(js::FreeOp *fop, JSObject *object);
 
-    js::HeapPtrObject ownerObject_;
+    HeapPtrObject ownerObject_;
     void traceFields(JSTracer *tracer);
 
   public:
@@ -159,20 +160,20 @@ class ScalarTypeRepresentation : public TypeRepresentation {
   public:
     // Must match order of JS_FOR_EACH_SCALAR_TYPE_REPR below
     enum Type {
-        TYPE_INT8 = 0,
-        TYPE_UINT8,
-        TYPE_INT16,
-        TYPE_UINT16,
-        TYPE_INT32,
-        TYPE_UINT32,
-        TYPE_FLOAT32,
-        TYPE_FLOAT64,
+        TYPE_INT8 = JS_SCALARTYPEREPR_INT8,
+        TYPE_UINT8 = JS_SCALARTYPEREPR_UINT8,
+        TYPE_INT16 = JS_SCALARTYPEREPR_INT16,
+        TYPE_UINT16 = JS_SCALARTYPEREPR_UINT16,
+        TYPE_INT32 = JS_SCALARTYPEREPR_INT32,
+        TYPE_UINT32 = JS_SCALARTYPEREPR_UINT32,
+        TYPE_FLOAT32 = JS_SCALARTYPEREPR_FLOAT32,
+        TYPE_FLOAT64 = JS_SCALARTYPEREPR_FLOAT64,
 
         /*
          * Special type that's a uint8_t, but assignments are clamped to 0 .. 255.
          * Treat the raw data type as a uint8_t.
          */
-        TYPE_UINT8_CLAMPED,
+        TYPE_UINT8_CLAMPED = JS_SCALARTYPEREPR_UINT8_CLAMPED,
     };
     static const int32_t TYPE_MAX = TYPE_UINT8_CLAMPED + 1;
 
@@ -198,16 +199,22 @@ class ScalarTypeRepresentation : public TypeRepresentation {
     static JSObject *Create(JSContext *cx, Type type);
 };
 
-// Must be in same order as the enum:
+// Enumerates the cases of ScalarTypeRepresentation::Type which have
+// unique C representation. In particular, omits Uint8Clamped since it
+// is just a Uint8.
+#define JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(macro_)                     \
+    macro_(ScalarTypeRepresentation::TYPE_INT8,    int8_t,   int8)            \
+    macro_(ScalarTypeRepresentation::TYPE_UINT8,   uint8_t,  uint8)           \
+    macro_(ScalarTypeRepresentation::TYPE_INT16,   int16_t,  int16)           \
+    macro_(ScalarTypeRepresentation::TYPE_UINT16,  uint16_t, uint16)          \
+    macro_(ScalarTypeRepresentation::TYPE_INT32,   int32_t,  int32)           \
+    macro_(ScalarTypeRepresentation::TYPE_UINT32,  uint32_t, uint32)          \
+    macro_(ScalarTypeRepresentation::TYPE_FLOAT32, float,    float32)         \
+    macro_(ScalarTypeRepresentation::TYPE_FLOAT64, double,   float64)
+
+// Must be in same order as the enum ScalarTypeRepresentation::Type:
 #define JS_FOR_EACH_SCALAR_TYPE_REPR(macro_)                                    \
-    macro_(ScalarTypeRepresentation::TYPE_INT8,    int8_t,   int8)              \
-    macro_(ScalarTypeRepresentation::TYPE_UINT8,   uint8_t,  uint8)             \
-    macro_(ScalarTypeRepresentation::TYPE_INT16,   int16_t,  int16)             \
-    macro_(ScalarTypeRepresentation::TYPE_UINT16,  uint16_t, uint16)            \
-    macro_(ScalarTypeRepresentation::TYPE_INT32,   int32_t,  int32)             \
-    macro_(ScalarTypeRepresentation::TYPE_UINT32,  uint32_t, uint32)            \
-    macro_(ScalarTypeRepresentation::TYPE_FLOAT32, float,    float32)           \
-    macro_(ScalarTypeRepresentation::TYPE_FLOAT64, double,   float64)           \
+    JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(macro_)                           \
     macro_(ScalarTypeRepresentation::TYPE_UINT8_CLAMPED, uint8_t, uint8Clamped)
 
 class ArrayTypeRepresentation : public TypeRepresentation {
