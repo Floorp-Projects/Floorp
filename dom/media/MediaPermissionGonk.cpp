@@ -10,7 +10,9 @@
 #include "nsIContentPermissionPrompt.h"
 #include "nsIDocument.h"
 #include "nsIDOMNavigatorUserMedia.h"
+#include "nsIStringEnumerator.h"
 #include "nsISupportsArray.h"
+#include "nsJSUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsTArray.h"
 #include "GetUserMediaRequest.h"
@@ -45,9 +47,52 @@ ConvertArrayToPermissionRequest(nsIArray* aSrcArray,
     nsAutoCString access;
     cpt->GetType(type);
     cpt->GetAccess(access);
-    aDesArray.AppendElement(PermissionRequest(type, access));
+
+    nsCOMPtr<nsIArray> optionArray;
+    cpt->GetOptions(getter_AddRefs(optionArray));
+    uint32_t optionsLength = 0;
+    optionArray->GetLength(&optionsLength);
+    nsTArray<nsString> options;
+    for (uint32_t j = 0; j < optionsLength; ++j) {
+      nsCOMPtr<nsISupportsString> isupportsString = do_QueryElementAt(optionArray, j);
+      if (isupportsString) {
+        nsString option;
+        isupportsString->GetData(option);
+        options.AppendElement(option);
+      }
+    }
+
+    aDesArray.AppendElement(PermissionRequest(type, access, options));
   }
   return len;
+}
+
+static void
+CreateDeviceNameList(nsTArray<nsCOMPtr<nsIMediaDevice> > &aDevices,
+                     nsTArray<nsString> &aDeviceNameList)
+{
+  for (uint32_t i = 0; i < aDevices.Length(); ++i) {
+     nsString name;
+     nsresult rv = aDevices[i]->GetName(name);
+     NS_ENSURE_SUCCESS_VOID(rv);
+     aDeviceNameList.AppendElement(name);
+  }
+}
+
+static already_AddRefed<nsIMediaDevice>
+FindDeviceByName(nsTArray<nsCOMPtr<nsIMediaDevice> > &aDevices,
+                 const nsAString &aDeviceName)
+{
+  for (uint32_t i = 0; i < aDevices.Length(); ++i) {
+    nsCOMPtr<nsIMediaDevice> device = aDevices[i];
+    nsString deviceName;
+    device->GetName(deviceName);
+    if (deviceName.Equals(aDeviceName)) {
+      return device.forget();
+    }
+  }
+
+  return nullptr;
 }
 
 // Helper function for notifying permission granted
@@ -108,16 +153,20 @@ public:
   virtual ~MediaPermissionRequest() {}
 
   // It will be called when prompt dismissed.
-  virtual bool Recv__delete__(const bool &allow) MOZ_OVERRIDE;
+  virtual bool Recv__delete__(const bool &allow,
+                              const InfallibleTArray<PermissionChoice>& choices) MOZ_OVERRIDE;
   virtual void IPDLRelease() MOZ_OVERRIDE { Release(); }
 
   already_AddRefed<nsPIDOMWindow> GetOwner();
 
 private:
+  nsresult DoAllow(const nsString &audioDevice, const nsString &videoDevice);
+
   bool mAudio; // Request for audio permission
   bool mVideo; // Request for video permission
   nsRefPtr<dom::GetUserMediaRequest> mRequest;
-  nsTArray<nsCOMPtr<nsIMediaDevice> > mDevices; // candiate device list
+  nsTArray<nsCOMPtr<nsIMediaDevice> > mAudioDevices; // candidate audio devices
+  nsTArray<nsCOMPtr<nsIMediaDevice> > mVideoDevices; // candidate video devices
 };
 
 // MediaPermissionRequest
@@ -138,10 +187,10 @@ MediaPermissionRequest::MediaPermissionRequest(nsRefPtr<dom::GetUserMediaRequest
     nsAutoString deviceType;
     device->GetType(deviceType);
     if (mAudio && deviceType.EqualsLiteral("audio")) {
-      mDevices.AppendElement(device);
+      mAudioDevices.AppendElement(device);
     }
     if (mVideo && deviceType.EqualsLiteral("video")) {
-      mDevices.AppendElement(device);
+      mVideoDevices.AppendElement(device);
     }
   }
 }
@@ -151,16 +200,23 @@ NS_IMETHODIMP
 MediaPermissionRequest::GetTypes(nsIArray** aTypes)
 {
   nsCOMPtr<nsIMutableArray> types = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  //XXX append device list
   if (mAudio) {
+    nsTArray<nsString> audioDeviceNames;
+    CreateDeviceNameList(mAudioDevices, audioDeviceNames);
     nsCOMPtr<ContentPermissionType> AudioType =
       new ContentPermissionType(NS_LITERAL_CSTRING(AUDIO_PERMISSION_NAME),
-                                NS_LITERAL_CSTRING("unused"));
+                                NS_LITERAL_CSTRING("unused"),
+                                audioDeviceNames);
     types->AppendElement(AudioType, false);
   }
   if (mVideo) {
+    nsTArray<nsString> videoDeviceNames;
+    CreateDeviceNameList(mVideoDevices, videoDeviceNames);
     nsCOMPtr<ContentPermissionType> VideoType =
       new ContentPermissionType(NS_LITERAL_CSTRING(VIDEO_PERMISSION_NAME),
-                                NS_LITERAL_CSTRING("unused"));
+                                NS_LITERAL_CSTRING("unused"),
+                                videoDeviceNames);
     types->AppendElement(VideoType, false);
   }
   NS_IF_ADDREF(*aTypes = types);
@@ -212,12 +268,74 @@ MediaPermissionRequest::Cancel()
 }
 
 NS_IMETHODIMP
-MediaPermissionRequest::Allow()
+MediaPermissionRequest::Allow(JS::HandleValue aChoices)
 {
+  // check if JS object
+  if (!aChoices.isObject()) {
+    MOZ_ASSERT(false, "Not a correct format of PermissionChoice");
+    return NS_ERROR_INVALID_ARG;
+  }
+  // iterate through audio-capture and video-capture
+  AutoSafeJSContext cx;
+  JS::Rooted<JSObject*> obj(cx, &aChoices.toObject());
+  JSAutoCompartment ac(cx, obj);
+  JS::Rooted<JS::Value> v(cx);
+
+  // get selected audio device name
+  nsString audioDevice;
+  if (mAudio) {
+    if (!JS_GetProperty(cx, obj, AUDIO_PERMISSION_NAME, &v) || !v.isString()) {
+      return NS_ERROR_FAILURE;
+    }
+    nsDependentJSString deviceName;
+    if (!deviceName.init(cx, v)) {
+      MOZ_ASSERT(false, "Couldn't initialize string from aChoices");
+      return NS_ERROR_FAILURE;
+    }
+    audioDevice = deviceName;
+  }
+
+  // get selected video device name
+  nsString videoDevice;
+  if (mVideo) {
+    if (!JS_GetProperty(cx, obj, VIDEO_PERMISSION_NAME, &v) || !v.isString()) {
+      return NS_ERROR_FAILURE;
+    }
+    nsDependentJSString deviceName;
+    if (!deviceName.init(cx, v)) {
+      MOZ_ASSERT(false, "Couldn't initialize string from aChoices");
+      return NS_ERROR_FAILURE;
+    }
+    videoDevice = deviceName;
+  }
+
+  return DoAllow(audioDevice, videoDevice);
+}
+
+nsresult
+MediaPermissionRequest::DoAllow(const nsString &audioDevice,
+                                const nsString &videoDevice)
+{
+  nsTArray<nsCOMPtr<nsIMediaDevice> > selectedDevices;
+  if (mAudio) {
+    nsCOMPtr<nsIMediaDevice> device =
+      FindDeviceByName(mAudioDevices, audioDevice);
+    if (device) {
+      selectedDevices.AppendElement(device);
+    }
+  }
+
+  if (mVideo) {
+    nsCOMPtr<nsIMediaDevice> device =
+      FindDeviceByName(mVideoDevices, videoDevice);
+    if (device) {
+      selectedDevices.AppendElement(device);
+    }
+  }
+
   nsString callID;
   mRequest->GetCallID(callID);
-  NotifyPermissionAllow(callID, mDevices);
-  return NS_OK;
+  return NotifyPermissionAllow(callID, selectedDevices);
 }
 
 already_AddRefed<nsPIDOMWindow>
@@ -230,10 +348,21 @@ MediaPermissionRequest::GetOwner()
 
 //PCOMContentPermissionRequestChild
 bool
-MediaPermissionRequest::Recv__delete__(const bool& allow)
+MediaPermissionRequest::Recv__delete__(const bool& allow,
+                                       const InfallibleTArray<PermissionChoice>& choices)
 {
   if (allow) {
-    (void) Allow();
+    // get selected device name for audio and video
+    nsString audioDevice, videoDevice;
+    for (uint32_t i = 0; i < choices.Length(); ++i) {
+      const nsString &choice = choices[i].choice();
+      if (choices[i].type().EqualsLiteral(AUDIO_PERMISSION_NAME)) {
+        audioDevice = choice;
+      } else if (choices[i].type().EqualsLiteral(VIDEO_PERMISSION_NAME)) {
+        videoDevice = choice;
+      }
+    }
+    (void) DoAllow(audioDevice, videoDevice);
   } else {
     (void) Cancel();
   }
