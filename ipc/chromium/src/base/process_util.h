@@ -190,21 +190,6 @@ void SetCurrentProcessPrivileges(ChildPrivileges privs);
 bool LaunchApp(const CommandLine& cl,
                bool wait, bool start_hidden, ProcessHandle* process_handle);
 
-#if defined(OS_WIN)
-// Executes the application specified by |cmd_line| and copies the contents
-// printed to the standard output to |output|, which should be non NULL.
-// Blocks until the started process terminates.
-// Returns true if the application was run successfully, false otherwise.
-bool GetAppOutput(const std::wstring& cmd_line, std::string* output);
-#elif defined(OS_POSIX)
-// Executes the application specified by |cl| and wait for it to exit. Stores
-// the output (stdout) in |output|. Redirects stderr to /dev/null. Returns true
-// on success (application launched and exited cleanly, with exit code
-// indicating success). |output| is modified only when the function finished
-// successfully.
-bool GetAppOutput(const CommandLine& cl, std::string* output);
-#endif
-
 // Used to filter processes by process ID.
 class ProcessFilter {
  public:
@@ -228,12 +213,6 @@ bool KillProcess(ProcessHandle process, int exit_code, bool wait);
 // yet. On POSIX, |child_exited| is set correctly since we detect terminate in
 // a different manner on POSIX.
 bool DidProcessCrash(bool* child_exited, ProcessHandle handle);
-
-// Waits for process to exit. In POSIX systems, if the process hasn't been
-// signaled then puts the exit code in |exit_code|; otherwise it's considered
-// a failure. On Windows |exit_code| is always filled. Returns true on success,
-// and closes |handle| in any case.
-bool WaitForExitCode(ProcessHandle handle, int* exit_code);
 
 // This class provides a way to iterate through the list of processes
 // on the current machine that were started from the given executable
