@@ -71,6 +71,10 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitMoveGroup(LMoveGroup *group);
     bool visitValueToInt32(LValueToInt32 *lir);
     bool visitValueToDouble(LValueToDouble *lir);
+    bool visitValueToFloat32(LValueToFloat32 *lir);
+    bool visitFloat32ToDouble(LFloat32ToDouble *lir);
+    bool visitDoubleToFloat32(LDoubleToFloat32 *lir);
+    bool visitInt32ToFloat32(LInt32ToFloat32 *lir);
     bool visitInt32ToDouble(LInt32ToDouble *lir);
     void emitOOLTestObject(Register objreg, Label *ifTruthy, Label *ifFalsy, Register scratch);
     bool visitTestOAndBranch(LTestOAndBranch *lir);
@@ -91,7 +95,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitElements(LElements *lir);
     bool visitConvertElementsToDoubles(LConvertElementsToDoubles *lir);
     bool visitMaybeToDoubleElement(LMaybeToDoubleElement *lir);
-    bool visitTypeBarrier(LTypeBarrier *lir);
+    bool visitTypeBarrierV(LTypeBarrierV *lir);
+    bool visitTypeBarrierO(LTypeBarrierO *lir);
     bool visitMonitorTypes(LMonitorTypes *lir);
     bool visitPostWriteBarrierO(LPostWriteBarrierO *lir);
     bool visitPostWriteBarrierV(LPostWriteBarrierV *lir);
@@ -304,6 +309,7 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     bool visitAssertRangeI(LAssertRangeI *ins);
     bool visitAssertRangeD(LAssertRangeD *ins);
+    bool visitAssertRangeF(LAssertRangeF *ins);
     bool visitAssertRangeV(LAssertRangeV *ins);
 
     IonScriptCounts *extractUnassociatedScriptCounts() {

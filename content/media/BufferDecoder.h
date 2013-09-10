@@ -50,7 +50,7 @@ public:
 
   void SetMediaDuration(int64_t aDuration) MOZ_OVERRIDE;
 
-  void UpdateMediaDuration(int64_t aDuration) MOZ_OVERRIDE;
+  void UpdateEstimatedMediaDuration(int64_t aDuration) MOZ_OVERRIDE;
 
   void SetMediaSeekable(bool aMediaSeekable) MOZ_OVERRIDE;
 

@@ -37,6 +37,18 @@ LIRGeneratorX64::useBoxFixed(LInstruction *lir, size_t n, MDefinition *mir, Regi
     return true;
 }
 
+LAllocation
+LIRGeneratorX64::useByteOpRegister(MDefinition *mir)
+{
+    return useRegister(mir);
+}
+
+LAllocation
+LIRGeneratorX64::useByteOpRegisterOrNonDoubleConstant(MDefinition *mir)
+{
+    return useRegisterOrNonDoubleConstant(mir);
+}
+
 LDefinition
 LIRGeneratorX64::tempToUnbox()
 {
@@ -96,42 +108,6 @@ void
 LIRGeneratorX64::lowerUntypedPhiInput(MPhi *phi, uint32_t inputPosition, LBlock *block, size_t lirIndex)
 {
     lowerTypedPhiInput(phi, inputPosition, block, lirIndex);
-}
-
-bool
-LIRGeneratorX64::visitStoreTypedArrayElement(MStoreTypedArrayElement *ins)
-{
-    JS_ASSERT(ins->elements()->type() == MIRType_Elements);
-    JS_ASSERT(ins->index()->type() == MIRType_Int32);
-
-    if (ins->isFloatArray())
-        JS_ASSERT(ins->value()->type() == MIRType_Double);
-    else
-        JS_ASSERT(ins->value()->type() == MIRType_Int32);
-
-    LUse elements = useRegister(ins->elements());
-    LAllocation index = useRegisterOrConstant(ins->index());
-    LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
-    return add(new LStoreTypedArrayElement(elements, index, value), ins);
-}
-
-bool
-LIRGeneratorX64::visitStoreTypedArrayElementHole(MStoreTypedArrayElementHole *ins)
-{
-    JS_ASSERT(ins->elements()->type() == MIRType_Elements);
-    JS_ASSERT(ins->index()->type() == MIRType_Int32);
-    JS_ASSERT(ins->length()->type() == MIRType_Int32);
-
-    if (ins->isFloatArray())
-        JS_ASSERT(ins->value()->type() == MIRType_Double);
-    else
-        JS_ASSERT(ins->value()->type() == MIRType_Int32);
-
-    LUse elements = useRegister(ins->elements());
-    LAllocation length = useAnyOrConstant(ins->length());
-    LAllocation index = useRegisterOrConstant(ins->index());
-    LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
-    return add(new LStoreTypedArrayElementHole(elements, length, index, value), ins);
 }
 
 bool

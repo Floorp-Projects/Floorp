@@ -4,6 +4,7 @@
 
 #include "PCOMContentPermissionRequestChild.h"
 #include "mozilla/dom/Notification.h"
+#include "mozilla/dom/OwningNonNull.h"
 #include "mozilla/Preferences.h"
 #include "TabChild.h"
 #include "nsContentUtils.h"

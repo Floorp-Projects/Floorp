@@ -1241,6 +1241,12 @@ LIRGenerator::visitAdd(MAdd *ins)
         return lowerForFPU(new LMathD(JSOP_ADD), ins, lhs, rhs);
     }
 
+    if (ins->specialization() == MIRType_Float32) {
+        JS_ASSERT(lhs->type() == MIRType_Float32);
+        ReorderCommutative(&lhs, &rhs);
+        return lowerForFPU(new LMathF(JSOP_ADD), ins, lhs, rhs);
+    }
+
     return lowerBinaryV(JSOP_ADD, ins);
 }
 
@@ -1269,6 +1275,10 @@ LIRGenerator::visitSub(MSub *ins)
         JS_ASSERT(lhs->type() == MIRType_Double);
         return lowerForFPU(new LMathD(JSOP_SUB), ins, lhs, rhs);
     }
+    if (ins->specialization() == MIRType_Float32) {
+        JS_ASSERT(lhs->type() == MIRType_Float32);
+        return lowerForFPU(new LMathF(JSOP_SUB), ins, lhs, rhs);
+    }
 
     return lowerBinaryV(JSOP_SUB, ins);
 }
@@ -1295,6 +1305,18 @@ LIRGenerator::visitMul(MMul *ins)
 
         return lowerForFPU(new LMathD(JSOP_MUL), ins, lhs, rhs);
     }
+    if (ins->specialization() == MIRType_Float32) {
+        JS_ASSERT(lhs->type() == MIRType_Float32);
+        ReorderCommutative(&lhs, &rhs);
+
+        // We apply the same optimizations as for doubles
+        if (lhs->isConstant() && lhs->toConstant()->value() == JS::Float32Value(-1.0f))
+            return defineReuseInput(new LNegF(useRegisterAtStart(rhs)), ins, 0);
+        if (rhs->isConstant() && rhs->toConstant()->value() == JS::Float32Value(-1.0f))
+            return defineReuseInput(new LNegF(useRegisterAtStart(lhs)), ins, 0);
+
+        return lowerForFPU(new LMathF(JSOP_MUL), ins, lhs, rhs);
+    }
 
     return lowerBinaryV(JSOP_MUL, ins);
 }
@@ -1313,6 +1335,10 @@ LIRGenerator::visitDiv(MDiv *ins)
     if (ins->specialization() == MIRType_Double) {
         JS_ASSERT(lhs->type() == MIRType_Double);
         return lowerForFPU(new LMathD(JSOP_DIV), ins, lhs, rhs);
+    }
+    if (ins->specialization() == MIRType_Float32) {
+        JS_ASSERT(lhs->type() == MIRType_Float32);
+        return lowerForFPU(new LMathF(JSOP_DIV), ins, lhs, rhs);
     }
 
     return lowerBinaryV(JSOP_DIV, ins);
@@ -1506,6 +1532,12 @@ LIRGenerator::visitToDouble(MToDouble *convert)
         return define(lir, convert);
       }
 
+      case MIRType_Float32:
+      {
+        LFloat32ToDouble *lir = new LFloat32ToDouble(useRegister(opd));
+        return define(lir, convert);
+      }
+
       case MIRType_Double:
         return redefine(convert, opd);
 
@@ -1513,6 +1545,56 @@ LIRGenerator::visitToDouble(MToDouble *convert)
         // Objects might be effectful.
         // Strings are complicated - we don't handle them yet.
         MOZ_ASSUME_UNREACHABLE("unexpected type");
+    }
+}
+
+bool
+LIRGenerator::visitToFloat32(MToFloat32 *convert)
+{
+    MDefinition *opd = convert->input();
+    mozilla::DebugOnly<MToFloat32::ConversionKind> conversion = convert->conversion();
+
+    switch (opd->type()) {
+      case MIRType_Value:
+      {
+        LValueToFloat32 *lir = new LValueToFloat32();
+        if (!useBox(lir, LValueToFloat32::Input, opd))
+            return false;
+        return assignSnapshot(lir) && define(lir, convert);
+      }
+
+      case MIRType_Null:
+        JS_ASSERT(conversion != MToFloat32::NonStringPrimitives);
+        return lowerConstantFloat32(0, convert);
+
+      case MIRType_Undefined:
+        JS_ASSERT(conversion != MToFloat32::NumbersOnly);
+        return lowerConstantFloat32(js_NaN, convert);
+
+      case MIRType_Boolean:
+        JS_ASSERT(conversion != MToFloat32::NumbersOnly);
+        /* FALLTHROUGH */
+
+      case MIRType_Int32:
+      {
+        LInt32ToFloat32 *lir = new LInt32ToFloat32(useRegister(opd));
+        return define(lir, convert);
+      }
+
+      case MIRType_Double:
+      {
+        LDoubleToFloat32 *lir = new LDoubleToFloat32(useRegister(opd));
+        return define(lir, convert);
+      }
+
+      case MIRType_Float32:
+        return redefine(convert, opd);
+
+      default:
+        // Objects might be effectful.
+        // Strings are complicated - we don't handle them yet.
+        MOZ_ASSUME_UNREACHABLE("unexpected type");
+        return false;
     }
 }
 
@@ -1822,6 +1904,9 @@ LIRGenerator::visitStoreSlot(MStoreSlot *ins)
       case MIRType_Double:
         return add(new LStoreSlotT(useRegister(ins->slots()), useRegister(ins->value())), ins);
 
+      case MIRType_Float32:
+        MOZ_ASSUME_UNREACHABLE("Float32 shouldn't be stored in a slot.");
+
       default:
         return add(new LStoreSlotT(useRegister(ins->slots()), useRegisterOrConstant(ins->value())),
                    ins);
@@ -1838,14 +1923,47 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
 
     const types::StackTypeSet *types = ins->resultTypeSet();
     bool needTemp = !types->unknownObject() && types->getObjectCount() > 0;
-    LDefinition tmp = needTemp ? temp() : tempToUnbox();
 
-    LTypeBarrier *barrier = new LTypeBarrier(tmp);
-    if (!useBox(barrier, LTypeBarrier::Input, ins->input()))
-        return false;
-    if (!assignSnapshot(barrier, ins->bailoutKind()))
-        return false;
-    return redefine(ins, ins->input()) && add(barrier, ins);
+    MIRType inputType = ins->getOperand(0)->type();
+    MIRType outputType = ins->type();
+
+    JS_ASSERT(inputType == outputType);
+    JS_ASSERT_IF(ins->alwaysBails(), outputType == MIRType_Value);
+
+    // Handle typebarrier that will always bail.
+    // (Emit LBail for visibility).
+    if (ins->alwaysBails()) {
+        JS_ASSERT(outputType == MIRType_Value);
+
+        LBail *bail = new LBail();
+        if (!assignSnapshot(bail, ins->bailoutKind()))
+            return false;
+        return redefine(ins, ins->input()) && add(bail, ins);
+    }
+
+    // Handle typebarrier with Value as input.
+    if (inputType == MIRType_Value) {
+        LDefinition tmp = needTemp ? temp() : tempToUnbox();
+        LTypeBarrierV *barrier = new LTypeBarrierV(tmp);
+        if (!useBox(barrier, LTypeBarrierV::Input, ins->input()))
+            return false;
+        if (!assignSnapshot(barrier, ins->bailoutKind()))
+            return false;
+        return redefine(ins, ins->input()) && add(barrier, ins);
+    }
+
+    // Handle typebarrier with specific TypeObject/SingleObjects.
+    if (inputType == MIRType_Object && !types->hasType(types::Type::AnyObjectType()))
+    {
+        LDefinition tmp = needTemp ? temp() : LDefinition::BogusTemp();
+        LTypeBarrierO *barrier = new LTypeBarrierO(useRegister(ins->getOperand(0)), tmp);
+        if (!assignSnapshot(barrier, ins->bailoutKind()))
+            return false;
+        return redefine(ins, ins->getOperand(0)) && add(barrier, ins);
+    }
+
+    // Handle remaining cases: No-op, unbox did everything.
+    return redefine(ins, ins->getOperand(0));
 }
 
 bool
@@ -2219,7 +2337,7 @@ LIRGenerator::visitLoadTypedArrayElement(MLoadTypedArrayElement *ins)
 
     // We need a temp register for Uint32Array with known double result.
     LDefinition tempDef = LDefinition::BogusTemp();
-    if (ins->arrayType() == ScalarTypeRepresentation::TYPE_UINT32 && ins->type() == MIRType_Double)
+    if (ins->arrayType() == ScalarTypeRepresentation::TYPE_UINT32 && IsFloatingPointType(ins->type()))
         tempDef = temp();
 
     LLoadTypedArrayElement *lir = new LLoadTypedArrayElement(elements, index, tempDef);
@@ -2248,7 +2366,7 @@ LIRGenerator::visitClampToUint8(MClampToUint8 *ins)
         LClampVToUint8 *lir = new LClampVToUint8(tempFloat());
         if (!useBox(lir, LClampVToUint8::Input, in))
             return false;
-        return assignSnapshot(lir) && define(lir, ins);
+        return assignSnapshot(lir) && define(lir, ins) && assignSafepoint(lir, ins);
       }
 
       default:
@@ -2282,6 +2400,58 @@ LIRGenerator::visitLoadTypedArrayElementStatic(MLoadTypedArrayElementStatic *ins
     if (ins->fallible() && !assignSnapshot(lir))
         return false;
     return define(lir, ins);
+}
+
+bool
+LIRGenerator::visitStoreTypedArrayElement(MStoreTypedArrayElement *ins)
+{
+    JS_ASSERT(ins->elements()->type() == MIRType_Elements);
+    JS_ASSERT(ins->index()->type() == MIRType_Int32);
+
+    if (ins->isFloatArray()) {
+        JS_ASSERT_IF(ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT32, ins->value()->type() == MIRType_Float32);
+        JS_ASSERT_IF(ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT64, ins->value()->type() == MIRType_Double);
+    } else {
+        JS_ASSERT(ins->value()->type() == MIRType_Int32);
+    }
+
+    LUse elements = useRegister(ins->elements());
+    LAllocation index = useRegisterOrConstant(ins->index());
+    LAllocation value;
+
+    // For byte arrays, the value has to be in a byte register on x86.
+    if (ins->isByteArray())
+        value = useByteOpRegisterOrNonDoubleConstant(ins->value());
+    else
+        value = useRegisterOrNonDoubleConstant(ins->value());
+    return add(new LStoreTypedArrayElement(elements, index, value), ins);
+}
+
+bool
+LIRGenerator::visitStoreTypedArrayElementHole(MStoreTypedArrayElementHole *ins)
+{
+    JS_ASSERT(ins->elements()->type() == MIRType_Elements);
+    JS_ASSERT(ins->index()->type() == MIRType_Int32);
+    JS_ASSERT(ins->length()->type() == MIRType_Int32);
+
+    if (ins->isFloatArray()) {
+        JS_ASSERT_IF(ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT32, ins->value()->type() == MIRType_Float32);
+        JS_ASSERT_IF(ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT64, ins->value()->type() == MIRType_Double);
+    } else {
+        JS_ASSERT(ins->value()->type() == MIRType_Int32);
+    }
+
+    LUse elements = useRegister(ins->elements());
+    LAllocation length = useAnyOrConstant(ins->length());
+    LAllocation index = useRegisterOrConstant(ins->index());
+    LAllocation value;
+
+    // For byte arrays, the value has to be in a byte register on x86.
+    if (ins->isByteArray())
+        value = useByteOpRegisterOrNonDoubleConstant(ins->value());
+    else
+        value = useRegisterOrNonDoubleConstant(ins->value());
+    return add(new LStoreTypedArrayElementHole(elements, length, index, value), ins);
 }
 
 bool
@@ -2467,6 +2637,10 @@ LIRGenerator::visitAssertRange(MAssertRange *ins)
         lir = new LAssertRangeD(useRegister(input), tempFloat());
         break;
 
+      case MIRType_Float32:
+        lir = new LAssertRangeF(useRegister(input), tempFloat());
+        break;
+
       case MIRType_Value:
         lir = new LAssertRangeV(tempToUnbox(), tempFloat(), tempFloat());
         if (!useBox(lir, LAssertRangeV::Input, input))
@@ -2566,9 +2740,14 @@ LIRGenerator::visitSetElementCache(MSetElementCache *ins)
     JS_ASSERT(ins->object()->type() == MIRType_Object);
     JS_ASSERT(ins->index()->type() == MIRType_Value);
 
+    // Due to lack of registers on x86, we reuse the object register as a
+    // temporary. This register may be used in a 1-byte store, which on x86
+    // again has constraints; thus the use of |useByteOpRegister| over
+    // |useRegister| below.
     LInstruction *lir;
     if (ins->value()->type() == MIRType_Value) {
-        lir = new LSetElementCacheV(useRegister(ins->object()), tempToUnbox(), temp());
+        lir = new LSetElementCacheV(useByteOpRegister(ins->object()), tempToUnbox(),
+                                    temp(), tempFloat());
 
         if (!useBox(lir, LSetElementCacheV::Index, ins->index()))
             return false;
@@ -2576,9 +2755,9 @@ LIRGenerator::visitSetElementCache(MSetElementCache *ins)
             return false;
     } else {
         lir = new LSetElementCacheT(
-            useRegister(ins->object()),
+            useByteOpRegister(ins->object()),
             useRegisterOrConstant(ins->value()),
-            tempToUnbox(), temp());
+            tempToUnbox(), temp(), tempFloat());
 
         if (!useBox(lir, LSetElementCacheT::Index, ins->index()))
             return false;

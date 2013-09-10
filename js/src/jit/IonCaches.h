@@ -594,7 +594,6 @@ class GetPropertyIC : public RepatchIonCache
     }
 
     enum NativeGetPropCacheability {
-        CanAttachError,
         CanAttachNone,
         CanAttachReadSlot,
         CanAttachArrayLength,
@@ -603,13 +602,6 @@ class GetPropertyIC : public RepatchIonCache
 
     // Helpers for CanAttachNativeGetProp
     typedef JSContext * Context;
-    static bool doPropertyLookup(Context cx, HandleObject obj, HandlePropertyName name,
-                                 MutableHandleObject holder, MutableHandleShape shape) {
-        return JSObject::lookupProperty(cx, obj, name, holder, shape);
-    }
-    bool lookupNeedsIdempotentChain() const {
-        return idempotent();
-    }
     bool canMonitorSingletonUndefinedSlot(HandleObject holder, HandleShape shape) const;
     bool allowArrayLength(Context cx, HandleObject obj) const;
 
@@ -687,7 +679,8 @@ class SetPropertyIC : public RepatchIonCache
         return hasGenericProxyStub_;
     }
 
-    bool attachNativeExisting(JSContext *cx, IonScript *ion, HandleObject obj, HandleShape shape);
+    bool attachNativeExisting(JSContext *cx, IonScript *ion, HandleObject obj,
+                              HandleShape shape, bool checkTypeset);
     bool attachSetterCall(JSContext *cx, IonScript *ion, HandleObject obj,
                           HandleObject holder, HandleShape shape, void *returnAddr);
     bool attachNativeAdding(JSContext *cx, IonScript *ion, JSObject *obj, HandleShape oldshape,
@@ -761,13 +754,8 @@ class GetElementIC : public RepatchIonCache
 
     // Helpers for CanAttachNativeGetProp
     typedef JSContext * Context;
-    static bool doPropertyLookup(Context cx, HandleObject obj, HandlePropertyName name,
-                                 MutableHandleObject holder, MutableHandleShape shape) {
-        return JSObject::lookupProperty(cx, obj, name, holder, shape);
-    }
     bool allowGetters() const { return false; }
     bool allowArrayLength(Context, HandleObject) const { return false; }
-    bool lookupNeedsIdempotentChain() const { return false; }
     bool canMonitorSingletonUndefinedSlot(HandleObject holder, HandleShape shape) const {
         return monitoredResult();
     }
@@ -805,6 +793,7 @@ class SetElementIC : public RepatchIonCache
     Register object_;
     Register tempToUnboxIndex_;
     Register temp_;
+    FloatRegister tempFloat_;
     ValueOperand index_;
     ConstantOrRegister value_;
     bool strict_;
@@ -813,11 +802,12 @@ class SetElementIC : public RepatchIonCache
 
   public:
     SetElementIC(Register object, Register tempToUnboxIndex, Register temp,
-                 ValueOperand index, ConstantOrRegister value,
+                 FloatRegister tempFloat, ValueOperand index, ConstantOrRegister value,
                  bool strict)
       : object_(object),
         tempToUnboxIndex_(tempToUnboxIndex),
         temp_(temp),
+        tempFloat_(tempFloat),
         index_(index),
         value_(value),
         strict_(strict),
@@ -838,6 +828,9 @@ class SetElementIC : public RepatchIonCache
     Register temp() const {
         return temp_;
     }
+    FloatRegister tempFloat() const {
+        return tempFloat_;
+    }
     ValueOperand index() const {
         return index_;
     }
@@ -856,11 +849,14 @@ class SetElementIC : public RepatchIonCache
         hasDenseStub_ = true;
     }
 
+    static bool canAttachTypedArrayElement(JSObject *obj, const Value &idval, const Value &value);
+
     bool attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, const Value &idval);
+    bool attachTypedArrayElement(JSContext *cx, IonScript *ion, TypedArrayObject *tarr);
 
     static bool
     update(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue idval,
-                HandleValue value);
+           HandleValue value);
 };
 
 class BindNameIC : public RepatchIonCache
@@ -1045,11 +1041,6 @@ class GetPropertyParIC : public ParallelIonCache
 
     // CanAttachNativeGetProp Helpers
     typedef LockedJSContext & Context;
-    static bool doPropertyLookup(Context cx, HandleObject obj, HandlePropertyName name,
-                                 MutableHandleObject holder, MutableHandleShape shape) {
-        return LookupPropertyPure(obj, NameToId(name), holder.address(), shape.address());
-    }
-    bool lookupNeedsIdempotentChain() const { return true; }
     bool canMonitorSingletonUndefinedSlot(HandleObject, HandleShape) const { return true; }
     bool allowGetters() const { return false; }
     bool allowArrayLength(Context, HandleObject) const { return true; }
@@ -1105,11 +1096,6 @@ class GetElementParIC : public ParallelIonCache
 
     // CanAttachNativeGetProp Helpers
     typedef LockedJSContext & Context;
-    static bool doPropertyLookup(Context cx, HandleObject obj, HandlePropertyName name,
-                                 MutableHandleObject holder, MutableHandleShape shape) {
-        return LookupPropertyPure(obj, NameToId(name), holder.address(), shape.address());
-    }
-    bool lookupNeedsIdempotentChain() const { return true; }
     bool canMonitorSingletonUndefinedSlot(HandleObject, HandleShape) const { return true; }
     bool allowGetters() const { return false; }
     bool allowArrayLength(Context, HandleObject) const { return false; }

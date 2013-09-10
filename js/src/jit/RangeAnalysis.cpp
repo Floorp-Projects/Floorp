@@ -1106,6 +1106,12 @@ MToDouble::computeRange()
 }
 
 void
+MToFloat32::computeRange()
+{
+    setRange(new Range(getOperand(0)));
+}
+
+void
 MTruncateToInt32::computeRange()
 {
     Range *output = new Range(getOperand(0));
@@ -1830,6 +1836,20 @@ MToDouble::truncate()
 }
 
 bool
+MToFloat32::truncate()
+{
+    JS_ASSERT(type() == MIRType_Float32);
+
+    // We use the return type to flag that this MToFloat32 sould be replaced by a
+    // MTruncateToInt32 when modifying the graph.
+    setResultType(MIRType_Int32);
+    if (range())
+        range()->wrapAroundToInt32();
+
+    return true;
+}
+
+bool
 MLoadTypedArrayElementStatic::truncate()
 {
     setInfallible();
@@ -1876,6 +1896,14 @@ bool
 MToDouble::isOperandTruncated(size_t index) const
 {
     // The return type is used to flag that we are replacing this Double by a
+    // Truncate of its operand if needed.
+    return type() == MIRType_Int32;
+}
+
+bool
+MToFloat32::isOperandTruncated(size_t index) const
+{
+    // The return type is used to flag that we are replacing this Float32 by a
     // Truncate of its operand if needed.
     return type() == MIRType_Int32;
 }

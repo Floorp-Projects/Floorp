@@ -1562,33 +1562,12 @@ TypeObject::getProperty(unsigned i)
     return propertySet[i];
 }
 
-inline void
-TypeObject::writeBarrierPre(TypeObject *type)
+inline int
+TypeObject::getTypedArrayType()
 {
-#ifdef JSGC_INCREMENTAL
-    if (!type || !type->runtimeFromAnyThread()->needsBarrier())
-        return;
-
-    JS::Zone *zone = type->zone();
-    if (zone->needsBarrier()) {
-        TypeObject *tmp = type;
-        MarkTypeObjectUnbarriered(zone->barrierTracer(), &tmp, "write barrier");
-        JS_ASSERT(tmp == type);
-    }
-#endif
-}
-
-inline void
-TypeObject::readBarrier(TypeObject *type)
-{
-#ifdef JSGC_INCREMENTAL
-    JS::Zone *zone = type->zone();
-    if (zone->needsBarrier()) {
-        TypeObject *tmp = type;
-        MarkTypeObjectUnbarriered(zone->barrierTracer(), &tmp, "read barrier");
-        JS_ASSERT(tmp == type);
-    }
-#endif
+    if (IsTypedArrayClass(clasp))
+        return clasp - &TypedArrayObject::classes[0];
+    return ScalarTypeRepresentation::TYPE_MAX;
 }
 
 inline void

@@ -489,6 +489,8 @@ class MachCommandBase(MozbuildObject):
         MozbuildObject.__init__(self, context.topdir, context.settings,
             context.log_manager)
 
+        self._mach_context = context
+
         # Incur mozconfig processing so we have unified error handling for
         # errors. Otherwise, the exceptions could bubble back to mach's error
         # handler.
