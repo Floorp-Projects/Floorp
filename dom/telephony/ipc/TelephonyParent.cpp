@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/telephony/TelephonyParent.h"
+#include "nsServiceManagerUtils.h"
 
 USING_TELEPHONY_NAMESPACE
 
