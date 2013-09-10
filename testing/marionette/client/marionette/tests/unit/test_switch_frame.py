@@ -15,6 +15,7 @@ def switch_to_window_verify(test, start_url, frame, verify_title, verify_url):
     test.assertEqual(test.marionette.get_active_frame(), None)
     test.assertNotEqual("about:blank", test.marionette.execute_script("return window.location.href;"))
     test.assertEqual(verify_title, test.marionette.title)
+    test.marionette.switch_to_default_content()
     test.marionette.switch_to_frame(frame)
     test.assertTrue(verify_url in test.marionette.get_url())
     inner_frame_element = test.marionette.get_active_frame()
@@ -65,4 +66,12 @@ class TestSwitchFrame(MarionetteTestCase):
         self.marionette.switch_to_frame("iframe1");
 
         self.marionette.find_element("id", "checkbox")
+
+    def testShouldAllowAUserToSwitchFromAnIframeBackToTheMainContentOfThePage(self):
+        test_iframe = self.marionette.absolute_url("test_iframe.html")
+        self.marionette.navigate(test_iframe)
+        self.marionette.switch_to_frame(0)
+        self.marionette.switch_to_default_content()
+        header = self.marionette.find_element("id", "iframe_page_heading")
+        self.assertEqual(header.text, "This is the heading")
 
