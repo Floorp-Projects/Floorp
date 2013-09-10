@@ -10,6 +10,7 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 INCLUDES	+= \
 		-I$(topsrcdir)/dom/base \
+		-I$(topsrcdir)/dom/ \
 		-I$(topsrcdir)/dom/ipc \
 		-I$(topsrcdir)/content/base/src \
 		$(NULL)
