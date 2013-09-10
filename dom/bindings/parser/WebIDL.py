@@ -2564,6 +2564,8 @@ class IDLAttribute(IDLInterfaceMember):
         self.lenientThis = False
         self._unforgeable = False
         self.stringifier = stringifier
+        self.enforceRange = False
+        self.clamp = False
 
         if static and identifier.name == "prototype":
             raise WebIDLError("The identifier of a static attribute must not be 'prototype'",
@@ -2687,6 +2689,16 @@ class IDLAttribute(IDLInterfaceMember):
                 raise WebIDLError("[LenientFloat] used on an attribute with a "
                                   "non-restricted-float type",
                                   [attr.location, self.location])
+        elif identifier == "EnforceRange":
+            if self.readonly:
+                raise WebIDLError("[EnforceRange] used on a readonly attribute",
+                                  [attr.location, self.location])
+            self.enforceRange = True
+        elif identifier == "Clamp":
+            if self.readonly:
+                raise WebIDLError("[Clamp] used on a readonly attribute",
+                                  [attr.location, self.location])
+            self.clamp = True
         elif (identifier == "Pref" or
               identifier == "SetterThrows" or
               identifier == "Pure" or
