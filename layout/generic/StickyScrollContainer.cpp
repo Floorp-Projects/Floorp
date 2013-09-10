@@ -116,11 +116,11 @@ StickyScrollContainer::ComputeStickyOffsets(nsIFrame* aFrame)
   // Store the offset
   FrameProperties props = aFrame->Properties();
   nsMargin* offsets = static_cast<nsMargin*>
-    (props.Get(nsIFrame::ComputedStickyOffsetProperty()));
+    (props.Get(nsIFrame::ComputedOffsetProperty()));
   if (offsets) {
     *offsets = computedOffsets;
   } else {
-    props.Set(nsIFrame::ComputedStickyOffsetProperty(),
+    props.Set(nsIFrame::ComputedOffsetProperty(),
               new nsMargin(computedOffsets));
   }
 }
@@ -133,7 +133,7 @@ StickyScrollContainer::ComputeStickyLimits(nsIFrame* aFrame, nsRect* aStick,
   aContain->SetRect(nscoord_MIN/2, nscoord_MIN/2, nscoord_MAX, nscoord_MAX);
 
   const nsMargin* computedOffsets = static_cast<nsMargin*>(
-    aFrame->Properties().Get(nsIFrame::ComputedStickyOffsetProperty()));
+    aFrame->Properties().Get(nsIFrame::ComputedOffsetProperty()));
   if (!computedOffsets) {
     // We haven't reflowed the scroll frame yet, so offsets haven't been
     // computed. Bail.
