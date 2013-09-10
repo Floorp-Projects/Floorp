@@ -981,16 +981,13 @@ public:
                  nsCycleCollectorResults *aResults,
                  nsICycleCollectorListener *aListener);
 
-    // Prepare for and cleanup after one or more collection(s).
     bool PrepareForCollection(nsCycleCollectorResults *aResults,
                               nsTArray<PtrInfo*> *aWhiteNodes);
     void FixGrayBits(bool aForceGC);
     bool ShouldMergeZones(ccType aCCType);
     void CleanupAfterCollection();
 
-    // Start and finish an individual collection.
     void BeginCollection(ccType aCCType, nsICycleCollectorListener *aListener);
-    bool FinishCollection(nsICycleCollectorListener *aListener);
 
     bool FreeSnowWhite(bool aUntilNoSWInPurpleBuffer);
 
@@ -2317,7 +2314,7 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
     TimeLog timeLog;
 
     MOZ_ASSERT(mWhiteNodes->IsEmpty(),
-               "FinishCollection wasn't called?");
+               "CleanupAfterCollection wasn't called?");
 
     mWhiteNodes->SetCapacity(mWhiteNodeCount);
     uint32_t numWhiteGCed = 0;
@@ -2633,7 +2630,9 @@ nsCycleCollector::PrepareForCollection(nsCycleCollectorResults *aResults,
 void
 nsCycleCollector::CleanupAfterCollection()
 {
+    mWhiteNodes->Clear();
     mWhiteNodes = nullptr;
+    ClearGraph();
     mCollectionInProgress = false;
 
 #ifdef XP_OS2
@@ -2707,7 +2706,7 @@ nsCycleCollector::Collect(ccType aCCType,
     }
 
     BeginCollection(aCCType, aListener);
-    bool collectedAny = FinishCollection(aListener);
+    bool collectedAny = CollectWhite(aListener);
     CleanupAfterCollection();
     return collectedAny;
 }
@@ -2799,20 +2798,6 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     } else {
         mScanInProgress = false;
     }
-}
-
-bool
-nsCycleCollector::FinishCollection(nsICycleCollectorListener *aListener)
-{
-    TimeLog timeLog;
-    bool collected = CollectWhite(aListener);
-    timeLog.Checkpoint("CollectWhite()");
-
-    mWhiteNodes->Clear();
-    ClearGraph();
-    timeLog.Checkpoint("ClearGraph()");
-
-    return collected;
 }
 
 uint32_t
