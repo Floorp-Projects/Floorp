@@ -235,6 +235,19 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   mStream = graph->CreateAudioNodeStream(engine, MediaStreamGraph::EXTERNAL_STREAM);
 }
 
+void
+AudioDestinationNode::DestroyMediaStream()
+{
+  if (!mStream)
+    return;
+
+  MediaStreamGraph* graph = mStream->Graph();
+  if (graph->IsNonRealtime()) {
+    MediaStreamGraph::DestroyNonRealtimeInstance(graph);
+  }
+  AudioNode::DestroyMediaStream();
+}
+
 uint32_t
 AudioDestinationNode::MaxChannelCount() const
 {
