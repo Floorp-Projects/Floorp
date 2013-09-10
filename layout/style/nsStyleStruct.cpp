@@ -1278,6 +1278,18 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
   memcpy((nsStylePosition*)this, &aSource, sizeof(nsStylePosition));
 }
 
+static bool
+IsAutonessEqual(const nsStyleSides& aSides1, const nsStyleSides& aSides2)
+{
+  NS_FOR_CSS_SIDES(side) {
+    if ((aSides1.GetUnit(side) == eStyleUnit_Auto) !=
+        (aSides2.GetUnit(side) == eStyleUnit_Auto)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) const
 {
   nsChangeHint hint =
@@ -1346,9 +1358,15 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
   // Note that it is possible that we'll need to reflow when processing
   // restyles, but we don't have enough information to make a good decision
   // right now.
+  // Don't try to handle changes between "auto" and non-auto efficiently;
+  // that's tricky to do and will hardly ever be able to avoid a reflow.
   if (mOffset != aOther.mOffset) {
-    NS_UpdateHint(hint, nsChangeHint(nsChangeHint_RecomputePosition |
-                                     nsChangeHint_UpdateOverflow));
+    if (IsAutonessEqual(mOffset, aOther.mOffset)) {
+      NS_UpdateHint(hint, nsChangeHint(nsChangeHint_RecomputePosition |
+                                       nsChangeHint_UpdateOverflow));
+    } else {
+      return NS_CombineHint(hint, nsChangeHint_AllReflowHints);
+    }
   }
   return hint;
 }
