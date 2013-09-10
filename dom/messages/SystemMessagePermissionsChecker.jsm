@@ -99,6 +99,9 @@ this.SystemMessagePermissionsTable = {
   "wappush-received": {
     "wappush": []
   },
+  "cdma-info-rec-received": {
+    "mobileconnection": []
+  },
 };
 
 this.SystemMessagePermissionsChecker = {

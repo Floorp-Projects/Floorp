@@ -1002,6 +1002,10 @@ RadioInterface.prototype = {
       case "exitEmergencyCbMode":
         this.handleExitEmergencyCbMode(message);
         break;
+      case "cdma-info-rec-received":
+        if (DEBUG) this.debug("cdma-info-rec-received: " + JSON.stringify(message));
+        gSystemMessenger.broadcastMessage("cdma-info-rec-received", message);
+        break;
       default:
         throw new Error("Don't know about this message type: " +
                         message.rilMessageType);
