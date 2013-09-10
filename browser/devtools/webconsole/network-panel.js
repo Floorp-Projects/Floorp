@@ -675,9 +675,7 @@ NetworkPanel.prototype =
    */
   update: function NP_update()
   {
-    // After the iframe's contentWindow is ready, the document object is set.
-    // If the document object is not available yet nothing needs to be updated.
-    if (!this.document || !this.document.getElementById("headUrl")) {
+    if (!this.document || this.document.readyState != "complete") {
       return;
     }
 
