@@ -130,6 +130,7 @@ public:
         if (!context) {
           return NS_OK;
         }
+        context->Shutdown();
 
         AutoPushJSContext cx(context->GetJSContext());
         if (cx) {
