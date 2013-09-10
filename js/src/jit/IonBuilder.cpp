@@ -7270,8 +7270,8 @@ IonBuilder::setElemTryCache(bool *emitted, MDefinition *object,
         return true;
 
     bool needsBarrier;
-    if (PropertyWriteNeedsTypeBarrier(cx, current, &object, NULL, &value, /* canModify = */ true,
-                                      &needsBarrier))
+    if (!PropertyWriteNeedsTypeBarrier(cx, current, &object, NULL, &value, /* canModify = */ true,
+                                       &needsBarrier))
     {
         return false;
     }
