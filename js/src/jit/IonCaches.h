@@ -793,6 +793,7 @@ class SetElementIC : public RepatchIonCache
     Register object_;
     Register tempToUnboxIndex_;
     Register temp_;
+    FloatRegister tempFloat_;
     ValueOperand index_;
     ConstantOrRegister value_;
     bool strict_;
@@ -801,11 +802,12 @@ class SetElementIC : public RepatchIonCache
 
   public:
     SetElementIC(Register object, Register tempToUnboxIndex, Register temp,
-                 ValueOperand index, ConstantOrRegister value,
+                 FloatRegister tempFloat, ValueOperand index, ConstantOrRegister value,
                  bool strict)
       : object_(object),
         tempToUnboxIndex_(tempToUnboxIndex),
         temp_(temp),
+        tempFloat_(tempFloat),
         index_(index),
         value_(value),
         strict_(strict),
@@ -826,6 +828,9 @@ class SetElementIC : public RepatchIonCache
     Register temp() const {
         return temp_;
     }
+    FloatRegister tempFloat() const {
+        return tempFloat_;
+    }
     ValueOperand index() const {
         return index_;
     }
@@ -844,11 +849,15 @@ class SetElementIC : public RepatchIonCache
         hasDenseStub_ = true;
     }
 
+    static bool canAttachTypedArrayElement(JSObject *obj, const Value &idval);
+
     bool attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, const Value &idval);
+    bool attachTypedArrayElement(JSContext *cx, IonScript *ion, TypedArrayObject *tarr,
+                                 const Value &idval);
 
     static bool
     update(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue idval,
-                HandleValue value);
+           HandleValue value);
 };
 
 class BindNameIC : public RepatchIonCache

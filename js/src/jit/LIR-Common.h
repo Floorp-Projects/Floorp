@@ -4259,7 +4259,7 @@ class LSetPropertyCacheT : public LInstructionHelper<0, 2, 1>
     }
 };
 
-class LSetElementCacheV : public LInstructionHelper<0, 1 + 2 * BOX_PIECES, 2>
+class LSetElementCacheV : public LInstructionHelper<0, 1 + 2 * BOX_PIECES, 3>
 {
   public:
     LIR_HEADER(SetElementCacheV);
@@ -4268,11 +4268,12 @@ class LSetElementCacheV : public LInstructionHelper<0, 1 + 2 * BOX_PIECES, 2>
     static const size_t Value = 1 + BOX_PIECES;
 
     LSetElementCacheV(const LAllocation &object, const LDefinition &tempToUnboxIndex,
-                      const LDefinition &temp)
+                      const LDefinition &temp, const LDefinition &tempFloat)
     {
         setOperand(0, object);
         setTemp(0, tempToUnboxIndex);
         setTemp(1, temp);
+        setTemp(2, tempFloat);
     }
     const MSetElementCache *mir() const {
         return mir_->toSetElementCache();
@@ -4287,9 +4288,12 @@ class LSetElementCacheV : public LInstructionHelper<0, 1 + 2 * BOX_PIECES, 2>
     const LDefinition *temp() {
         return getTemp(1);
     }
+    const LDefinition *tempFloat() {
+        return getTemp(2);
+    }
 };
 
-class LSetElementCacheT : public LInstructionHelper<0, 2 + BOX_PIECES, 2>
+class LSetElementCacheT : public LInstructionHelper<0, 2 + BOX_PIECES, 3>
 {
   public:
     LIR_HEADER(SetElementCacheT);
@@ -4297,11 +4301,13 @@ class LSetElementCacheT : public LInstructionHelper<0, 2 + BOX_PIECES, 2>
     static const size_t Index = 2;
 
     LSetElementCacheT(const LAllocation &object, const LAllocation &value,
-                      const LDefinition &tempToUnboxIndex, const LDefinition &temp) {
+                      const LDefinition &tempToUnboxIndex,
+                      const LDefinition &temp, const LDefinition &tempFloat) {
         setOperand(0, object);
         setOperand(1, value);
         setTemp(0, tempToUnboxIndex);
         setTemp(1, temp);
+        setTemp(2, tempFloat);
     }
     const MSetElementCache *mir() const {
         return mir_->toSetElementCache();
@@ -4318,6 +4324,9 @@ class LSetElementCacheT : public LInstructionHelper<0, 2 + BOX_PIECES, 2>
     }
     const LDefinition *temp() {
         return getTemp(1);
+    }
+    const LDefinition *tempFloat() {
+        return getTemp(2);
     }
 };
 
