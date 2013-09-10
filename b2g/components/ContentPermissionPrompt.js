@@ -222,11 +222,20 @@ ContentPermissionPrompt.prototype = {
         permission: perm.type,
         access: (perm.access && perm.access !== "unused") ?
                   perm.type + "-" + perm.access : perm.type,
+        options: [],
         deny: true,
         action: Ci.nsIPermissionManager.UNKNOWN_ACTION
       };
+
+      // Append available options, if any.
+      let options = perm.options.QueryInterface(Ci.nsIArray);
+      for (let i = 0; i < options.length; i++) {
+        let option = options.queryElementAt(i, Ci.nsISupportsString).data;
+        tmp.options.push(option);
+      }
       typesInfo.push(tmp);
     }
+
     if (typesInfo.length == 0) {
       request.cancel();
       return;
@@ -309,13 +318,13 @@ ContentPermissionPrompt.prototype = {
   delegatePrompt: function(request, requestId, typesInfo, callback) {
 
     this.sendToBrowserWindow("permission-prompt", request, requestId, typesInfo,
-                             function(type, remember) {
+                             function(type, remember, choices) {
       if (type == "permission-allow") {
         rememberPermission(typesInfo, request.principal, !remember);
         if (callback) {
           callback();
         }
-        request.allow();
+        request.allow(choices);
         return;
       }
 
@@ -354,7 +363,7 @@ ContentPermissionPrompt.prototype = {
           return;
         evt.target.removeEventListener(evt.type, contentEvent);
 
-        callback(detail.type, detail.remember);
+        callback(detail.type, detail.remember, detail.choices);
       })
     }
 
@@ -367,7 +376,7 @@ ContentPermissionPrompt.prototype = {
     let permissions = {};
     for (let i in typesInfo) {
       debug("prompt " + typesInfo[i].permission);
-      permissions[typesInfo[i].permission] = [];
+      permissions[typesInfo[i].permission] = typesInfo[i].options;
     }
 
     let details = {
