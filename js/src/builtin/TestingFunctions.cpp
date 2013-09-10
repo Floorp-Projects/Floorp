@@ -19,9 +19,11 @@
 #include "jit/AsmJS.h"
 #include "jit/AsmJSLink.h"
 #include "vm/ForkJoin.h"
+#include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/ProxyObject.h"
 
-#include "vm/ObjectImpl-inl.h"
+#include "jscntxtinlines.h"
 
 using namespace js;
 using namespace JS;
