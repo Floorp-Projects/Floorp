@@ -8140,6 +8140,8 @@ class CGDictionary(CGThing):
              getJSToNativeConversionInfo(
                             member.type,
                             descriptorProvider,
+                            isEnforceRange=member.enforceRange,
+                            isClamp=member.clamp,
                             isMember="Dictionary",
                             isOptional=(not member.defaultValue),
                             # Set this to true so that we get an owning union.
