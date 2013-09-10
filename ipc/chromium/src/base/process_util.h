@@ -267,18 +267,6 @@ class NamedProcessIterator {
   DISALLOW_EVIL_CONSTRUCTORS(NamedProcessIterator);
 };
 
-// Committed (resident + paged) memory usage broken down by
-// private: These pages cannot be shared with any other process.
-// mapped:  These pages are mapped into the view of a section (backed by
-//          pagefile.sys)
-// image:   These pages are mapped into the view of an image section (backed by
-//          file system)
-struct CommittedKBytes {
-  size_t priv;
-  size_t mapped;
-  size_t image;
-};
-
 // Free memory (Megabytes marked as free) in the 2G process address space.
 // total : total amount in megabytes marked as free. Maximum value is 2048.
 // largest : size of the largest contiguous amount of memory found. It is
@@ -313,9 +301,6 @@ class ProcessMetrics {
   // of memory currently allocated to a process that cannot be shared.
   // Note: returns 0 on unsupported OSes: prior to XP SP2.
   size_t GetPrivateBytes() const;
-  // Fills a CommittedKBytes with both resident and paged
-  // memory usage as per definition of CommittedBytes.
-  void GetCommittedKBytes(CommittedKBytes* usage) const;
 
   // Returns the CPU usage in percent since the last time this method was
   // called. The first time this method is called it returns 0 and will return
