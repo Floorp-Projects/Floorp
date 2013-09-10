@@ -34,6 +34,12 @@
     "n_buckets": 50,
     "description": "Time spent on one cycle collection (ms)"
   },
+  "CYCLE_COLLECTOR_WORKER": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time spent on one cycle collection in a worker (ms)"
+  },
   "CYCLE_COLLECTOR_FULL": {
     "kind": "exponential",
     "high": "10000",
@@ -54,11 +60,23 @@
     "n_buckets": 50,
     "description": "Number of ref counted objects visited by the cycle collector"
   },
+  "CYCLE_COLLECTOR_WORKER_VISITED_REF_COUNTED": {
+    "kind": "exponential",
+    "high": "300000",
+    "n_buckets": 50,
+    "description": "Number of ref counted objects visited by the cycle collector in a worker"
+  },
   "CYCLE_COLLECTOR_VISITED_GCED": {
     "kind": "exponential",
     "high": "300000",
     "n_buckets": 50,
     "description": "Number of JS objects visited by the cycle collector"
+  },
+  "CYCLE_COLLECTOR_WORKER_VISITED_GCED": {
+    "kind": "exponential",
+    "high": "300000",
+    "n_buckets": 50,
+    "description": "Number of JS objects visited by the cycle collector in a worker"
   },
   "CYCLE_COLLECTOR_COLLECTED": {
     "kind": "exponential",
@@ -66,9 +84,19 @@
     "n_buckets": 50,
     "description": "Number of objects collected by the cycle collector"
   },
+  "CYCLE_COLLECTOR_WORKER_COLLECTED": {
+    "kind": "exponential",
+    "high": "100000",
+    "n_buckets": 50,
+    "description": "Number of objects collected by the cycle collector in a worker"
+  },
   "CYCLE_COLLECTOR_NEED_GC": {
     "kind": "boolean",
     "description": "Needed garbage collection before cycle collection."
+  },
+  "CYCLE_COLLECTOR_WORKER_NEED_GC": {
+    "kind": "boolean",
+    "description": "Needed garbage collection before cycle collection in a worker."
   },
   "CYCLE_COLLECTOR_TIME_BETWEEN": {
     "kind": "exponential",
@@ -85,6 +113,10 @@
   "CYCLE_COLLECTOR_OOM": {
     "kind": "flag",
     "description": "Set if the cycle collector ran out of memory at some point"
+  },
+  "CYCLE_COLLECTOR_WORKER_OOM": {
+    "kind": "flag",
+    "description": "Set if the cycle collector in a worker ran out of memory at some point"
   },
   "CYCLE_COLLECTOR_ASYNC_SNOW_WHITE_FREEING": {
     "kind": "exponential",
