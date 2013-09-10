@@ -355,21 +355,6 @@ bool LaunchApp(const CommandLine& cl,
                    start_hidden, process_handle);
 }
 
-// Attempts to kill the process identified by the given process
-// entry structure, giving it the specified exit code.
-// Returns true if this is successful, false otherwise.
-bool KillProcessById(ProcessId process_id, int exit_code, bool wait) {
-  HANDLE process = OpenProcess(PROCESS_TERMINATE | SYNCHRONIZE,
-                               FALSE,  // Don't inherit handle
-                               process_id);
-  if (!process)
-    return false;
-
-  bool ret = KillProcess(process, exit_code, wait);
-  CloseHandle(process);
-  return ret;
-}
-
 bool GetAppOutput(const std::wstring& cmd_line, std::string* output) {
   if (!output) {
     NOTREACHED();
@@ -562,55 +547,6 @@ int GetProcessCount(const std::wstring& executable_name,
   while (iter.NextProcessEntry())
     ++count;
   return count;
-}
-
-bool KillProcesses(const std::wstring& executable_name, int exit_code,
-                   const ProcessFilter* filter) {
-  bool result = true;
-  const ProcessEntry* entry;
-
-  NamedProcessIterator iter(executable_name, filter);
-  while (entry = iter.NextProcessEntry()) {
-    if (!KillProcessById((*entry).th32ProcessID, exit_code, true))
-      result = false;
-  }
-
-  return result;
-}
-
-bool WaitForProcessesToExit(const std::wstring& executable_name,
-                            int wait_milliseconds,
-                            const ProcessFilter* filter) {
-  const ProcessEntry* entry;
-  bool result = true;
-  DWORD start_time = GetTickCount();
-
-  NamedProcessIterator iter(executable_name, filter);
-  while (entry = iter.NextProcessEntry()) {
-    DWORD remaining_wait =
-      std::max(0, wait_milliseconds -
-          static_cast<int>(GetTickCount() - start_time));
-    HANDLE process = OpenProcess(SYNCHRONIZE,
-                                 FALSE,
-                                 entry->th32ProcessID);
-    DWORD wait_result = WaitForSingleObject(process, remaining_wait);
-    CloseHandle(process);
-    result = result && (wait_result == WAIT_OBJECT_0);
-  }
-
-  return result;
-}
-
-bool CleanupProcesses(const std::wstring& executable_name,
-                      int wait_milliseconds,
-                      int exit_code,
-                      const ProcessFilter* filter) {
-  bool exited_cleanly = WaitForProcessesToExit(executable_name,
-                                               wait_milliseconds,
-                                               filter);
-  if (!exited_cleanly)
-    KillProcesses(executable_name, exit_code, filter);
-  return exited_cleanly;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
