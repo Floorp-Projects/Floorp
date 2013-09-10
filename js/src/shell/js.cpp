@@ -3605,12 +3605,12 @@ NewGlobal(JSContext *cx, unsigned argc, jsval *vp)
         if (!JS_GetProperty(cx, opts, "sameZoneAs", &v))
             return false;
         if (v.isObject())
-            options.zoneSpec = JS::SameZoneAs(UncheckedUnwrap(&v.toObject()));
+            options.setSameZoneAs(UncheckedUnwrap(&v.toObject()));
 
         if (!JS_GetProperty(cx, opts, "invisibleToDebugger", &v))
             return false;
         if (v.isBoolean())
-            options.invisibleToDebugger = v.toBoolean();
+            options.setInvisibleToDebugger(v.toBoolean());
     }
 
     RootedObject global(cx, NewGlobalObject(cx, options));
