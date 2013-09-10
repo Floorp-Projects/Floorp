@@ -2666,10 +2666,24 @@ class AutoHoldZone
 
 } /* anonymous namespace */
 
+JS::CompartmentOptions &
+JS::CompartmentOptions::setZone(ZoneSpecifier spec)
+{
+    zone_.spec = spec;
+    return *this;
+}
+
+JS::CompartmentOptions &
+JS::CompartmentOptions::setSameZoneAs(JSObject *obj)
+{
+    zone_.pointer = static_cast<void *>(obj->zone());
+    return *this;
+}
+
 JS_PUBLIC_API(JSObject *)
 JS_NewGlobalObject(JSContext *cx, const JSClass *clasp, JSPrincipals *principals,
                    JS::OnNewGlobalHookOption hookOption,
-                   const JS::CompartmentOptions &options)
+                   const JS::CompartmentOptions &options /* = JS::CompartmentOptions() */)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -2679,18 +2693,19 @@ JS_NewGlobalObject(JSContext *cx, const JSClass *clasp, JSPrincipals *principals
     JSRuntime *rt = cx->runtime();
 
     Zone *zone;
-    if (options.zoneSpec == JS::SystemZone)
+    if (options.zoneSpecifier() == JS::SystemZone)
         zone = rt->systemZone;
-    else if (options.zoneSpec == JS::FreshZone)
+    else if (options.zoneSpecifier() == JS::FreshZone)
         zone = NULL;
     else
-        zone = ((JSObject *)options.zoneSpec)->zone();
+        zone = static_cast<Zone *>(options.zonePointer());
 
     JSCompartment *compartment = NewCompartment(cx, zone, principals, options);
     if (!compartment)
         return NULL;
 
-    if (options.zoneSpec == JS::SystemZone) {
+    // Lazily create the system zone.
+    if (!rt->systemZone && options.zoneSpecifier() == JS::SystemZone) {
         rt->systemZone = compartment->zone();
         rt->systemZone->isSystem = true;
     }
