@@ -185,7 +185,8 @@ WebappsActor.prototype = {
         }
       });
       // Cleanup by removing the temporary directory.
-      aDir.remove(true);
+      if (aDir.exists())
+        aDir.remove(true);
     });
   },
 
