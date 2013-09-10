@@ -214,12 +214,6 @@ class ProcessFilter {
   virtual ~ProcessFilter() { }
 };
 
-// Returns the number of processes on the machine that are running from the
-// given executable name.  If filter is non-null, then only processes selected
-// by the filter will be counted.
-int GetProcessCount(const std::wstring& executable_name,
-                    const ProcessFilter* filter);
-
 // Attempts to kill the process identified by the given process
 // entry structure, giving it the specified exit code. If |wait| is true, wait
 // for the process to be actually terminated before returning.
