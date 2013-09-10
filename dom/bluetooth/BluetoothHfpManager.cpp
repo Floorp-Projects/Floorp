@@ -54,8 +54,6 @@
 #define CR_LF "\xd\xa";
 
 #define MOZSETTINGS_CHANGED_ID               "mozsettings-changed"
-#define MOBILE_CONNECTION_ICCINFO_CHANGED_ID "mobile-connection-iccinfo-changed"
-#define MOBILE_CONNECTION_VOICE_CHANGED_ID   "mobile-connection-voice-changed"
 #define AUDIO_VOLUME_BT_SCO_ID               "audio.volume.bt_sco"
 
 using namespace mozilla;
@@ -203,10 +201,6 @@ BluetoothHfpManager::Observe(nsISupports* aSubject,
     HandleVolumeChanged(nsDependentString(aData));
   } else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     HandleShutdown();
-  } else if (!strcmp(aTopic, MOBILE_CONNECTION_ICCINFO_CHANGED_ID)) {
-    HandleIccInfoChanged();
-  } else if (!strcmp(aTopic, MOBILE_CONNECTION_VOICE_CHANGED_ID)) {
-    HandleVoiceConnectionChanged();
   } else {
     MOZ_ASSERT(false, "BluetoothHfpManager got unexpected topic!");
     return NS_ERROR_UNEXPECTED;
@@ -372,16 +366,14 @@ BluetoothHfpManager::Init()
   NS_ENSURE_TRUE(obs, false);
 
   if (NS_FAILED(obs->AddObserver(this, MOZSETTINGS_CHANGED_ID, false)) ||
-      NS_FAILED(obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false)) ||
-      NS_FAILED(obs->AddObserver(this, MOBILE_CONNECTION_ICCINFO_CHANGED_ID, false)) ||
-      NS_FAILED(obs->AddObserver(this, MOBILE_CONNECTION_VOICE_CHANGED_ID, false))) {
+      NS_FAILED(obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false))) {
     BT_WARNING("Failed to add observers!");
     return false;
   }
 
   hal::RegisterBatteryObserver(this);
 
-  mListener = new BluetoothTelephonyListener();
+  mListener = new BluetoothRilListener();
   if (!mListener->StartListening()) {
     NS_WARNING("Failed to start listening RIL");
     return false;
@@ -421,9 +413,7 @@ BluetoothHfpManager::~BluetoothHfpManager()
   NS_ENSURE_TRUE_VOID(obs);
 
   if (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) ||
-      NS_FAILED(obs->RemoveObserver(this, MOZSETTINGS_CHANGED_ID)) ||
-      NS_FAILED(obs->RemoveObserver(this, MOBILE_CONNECTION_ICCINFO_CHANGED_ID)) ||
-      NS_FAILED(obs->RemoveObserver(this, MOBILE_CONNECTION_VOICE_CHANGED_ID))) {
+      NS_FAILED(obs->RemoveObserver(this, MOZSETTINGS_CHANGED_ID))) {
     BT_WARNING("Failed to remove observers!");
   }
 
@@ -1454,6 +1444,7 @@ void
 BluetoothHfpManager::OnSocketConnectSuccess(BluetoothSocket* aSocket)
 {
   MOZ_ASSERT(aSocket);
+  MOZ_ASSERT(mListener);
 
   // Success to create a SCO socket
   if (aSocket == mScoSocket) {
@@ -1482,10 +1473,8 @@ BluetoothHfpManager::OnSocketConnectSuccess(BluetoothSocket* aSocket)
     mHandsfreeSocket = nullptr;
   }
 
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
-  NS_ENSURE_TRUE_VOID(provider);
-  provider->EnumerateCalls(mListener->GetListener());
+  // Enumerate current calls
+  mListener->EnumerateCalls();
 
   mFirstCKPD = true;
 
