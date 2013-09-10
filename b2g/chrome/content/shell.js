@@ -1030,9 +1030,10 @@ let RemoteDebugger = {
       }
     }
 
-    let port = Services.prefs.getIntPref('devtools.debugger.remote-port') || 6000;
+    let path = Services.prefs.getCharPref("devtools.debugger.unix-domain-socket") ||
+               "/data/local/debugger-socket";
     try {
-      DebuggerServer.openListener(port);
+      DebuggerServer.openListener(path);
     } catch (e) {
       dump('Unable to start debugger server: ' + e + '\n');
     }
