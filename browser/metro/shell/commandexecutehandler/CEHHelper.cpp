@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CEHHelper.h"
+#include <tlhelp32.h>
 
 #ifdef SHOW_CONSOLE
 #include <io.h> // _open_osfhandle
@@ -56,6 +57,53 @@ SetupConsole()
   setvbuf(stdout, nullptr, _IONBF, 0);
 }
 #endif
+
+bool
+IsImmersiveProcessDynamic(HANDLE process)
+{
+  HMODULE user32DLL = LoadLibraryW(L"user32.dll");
+  if (!user32DLL) {
+    return false;
+  }
+
+  typedef BOOL (WINAPI* IsImmersiveProcessFunc)(HANDLE process);
+  IsImmersiveProcessFunc IsImmersiveProcessPtr =
+    (IsImmersiveProcessFunc)GetProcAddress(user32DLL,
+                                           "IsImmersiveProcess");
+  if (!IsImmersiveProcessPtr) {
+    FreeLibrary(user32DLL);
+    return false;
+  }
+
+  BOOL bImmersiveProcess = IsImmersiveProcessPtr(process);
+  FreeLibrary(user32DLL);
+  return bImmersiveProcess;
+}
+
+bool
+IsImmersiveProcessRunning(const wchar_t *processName)
+{
+  bool exists = false;
+  PROCESSENTRY32W entry;
+  entry.dwSize = sizeof(PROCESSENTRY32W);
+
+  HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+
+  if (Process32First(snapshot, &entry)) {
+    while (!exists && Process32Next(snapshot, &entry)) {
+      if (!_wcsicmp(entry.szExeFile, processName)) {
+        HANDLE process = OpenProcess(GENERIC_READ, FALSE, entry.th32ProcessID);
+        if (IsImmersiveProcessDynamic(process)) {
+          exists = true;
+        }
+        CloseHandle(process);
+      }
+    }
+  }
+
+  CloseHandle(snapshot);
+  return exists;
+}
 
 bool
 IsDX10Available()
