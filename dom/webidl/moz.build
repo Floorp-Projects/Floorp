@@ -448,11 +448,8 @@ if CONFIG['MOZ_GAMEPAD']:
 
 if CONFIG['MOZ_B2G_RIL']:
     WEBIDL_FILES += [
-        'CallsList.webidl',
         'MozStkCommandEvent.webidl',
-        'Telephony.webidl',
-        'TelephonyCall.webidl',
-        'TelephonyCallGroup.webidl',
+        'MozVoicemail.webidl',
     ]
 
 WEBIDL_FILES += [
@@ -495,7 +492,6 @@ if CONFIG['MOZ_B2G_BT']:
 
 if CONFIG['MOZ_B2G_RIL']:
     WEBIDL_FILES += [
-        'CallEvent.webidl',
         'CFStateChangeEvent.webidl',
         'DataErrorEvent.webidl',
         'IccCardLockErrorEvent.webidl',
