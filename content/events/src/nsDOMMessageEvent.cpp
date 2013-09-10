@@ -5,7 +5,7 @@
 
 #include "nsDOMMessageEvent.h"
 
-#include "nsCycleCollectionHoldDrop.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "jsapi.h"
 
 using namespace mozilla;

@@ -8,7 +8,7 @@
 
 #include "jsproxy.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
-#include "nsCycleCollectionHoldDrop.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "nsCycleCollectionTraversalCallback.h"
 #include "nsCycleCollector.h"
 
