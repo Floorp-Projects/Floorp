@@ -109,7 +109,7 @@ BufferDecoder::SetMediaDuration(int64_t aDuration)
 }
 
 void
-BufferDecoder::UpdateMediaDuration(int64_t aDuration)
+BufferDecoder::UpdateEstimatedMediaDuration(int64_t aDuration)
 {
   // ignore
 }
