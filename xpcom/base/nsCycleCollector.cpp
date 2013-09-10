@@ -2770,33 +2770,28 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     mPurpleBuf.SelectPointers(builder);
     timeLog.Checkpoint("SelectPointers()");
 
-    if (builder.Count() > 0) {
-        // The main Bacon & Rajan collection algorithm.
+    // The main Bacon & Rajan collection algorithm.
+    MarkRoots(builder);
+    timeLog.Checkpoint("MarkRoots()");
 
-        MarkRoots(builder);
-        timeLog.Checkpoint("MarkRoots()");
+    ScanRoots();
+    timeLog.Checkpoint("ScanRoots()");
 
-        ScanRoots();
-        timeLog.Checkpoint("ScanRoots()");
+    mScanInProgress = false;
 
-        mScanInProgress = false;
+    if (aListener) {
+        aListener->BeginResults();
 
-        if (aListener) {
-            aListener->BeginResults();
-
-            NodePool::Enumerator etor(mGraph.mNodes);
-            while (!etor.IsDone()) {
-                PtrInfo *pi = etor.GetNext();
-                if (pi->mColor == black &&
-                    pi->mRefCount > 0 && pi->mRefCount < UINT32_MAX &&
-                    pi->mInternalRefs != pi->mRefCount) {
-                    aListener->DescribeRoot((uint64_t)pi->mPointer,
-                                            pi->mInternalRefs);
-                }
+        NodePool::Enumerator etor(mGraph.mNodes);
+        while (!etor.IsDone()) {
+            PtrInfo *pi = etor.GetNext();
+            if (pi->mColor == black &&
+                pi->mRefCount > 0 && pi->mRefCount < UINT32_MAX &&
+                pi->mInternalRefs != pi->mRefCount) {
+                aListener->DescribeRoot((uint64_t)pi->mPointer,
+                                        pi->mInternalRefs);
             }
         }
-    } else {
-        mScanInProgress = false;
     }
 }
 
