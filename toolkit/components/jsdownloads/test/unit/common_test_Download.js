@@ -1726,8 +1726,9 @@ add_task(function test_history_tryToKeepPartialData()
   do_check_eq(transitionType, Ci.nsINavHistoryService.TRANSITION_DOWNLOAD);
 
   // The time set by nsIHelperAppService may be different than the start time in
-  // the download object, thus we only check that it is a meaningful time.
-  do_check_true(time >= beforeStartTimeMs * 1000);
+  // the download object, thus we only check that it is a meaningful time.  Note
+  // that we subtract one second from the earliest time to account for rounding.
+  do_check_true(time >= beforeStartTimeMs * 1000 - 1000000);
 
   // Complete the download before finishing the test.
   continueResponses();
