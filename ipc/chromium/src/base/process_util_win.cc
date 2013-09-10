@@ -468,14 +468,6 @@ ProcessMetrics* ProcessMetrics::CreateProcessMetrics(ProcessHandle process) {
 
 ProcessMetrics::~ProcessMetrics() { }
 
-size_t ProcessMetrics::GetPagefileUsage() const {
-  PROCESS_MEMORY_COUNTERS pmc;
-  if (GetProcessMemoryInfo(process_, &pmc, sizeof(pmc))) {
-    return pmc.PagefileUsage;
-  }
-  return 0;
-}
-
 static uint64_t FileTimeToUTC(const FILETIME& ftime) {
   LARGE_INTEGER li;
   li.LowPart = ftime.dwLowDateTime;

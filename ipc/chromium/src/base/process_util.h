@@ -279,10 +279,6 @@ class ProcessMetrics {
 
   ~ProcessMetrics();
 
-  // Returns the current space allocated for the pagefile, in bytes (these pages
-  // may or may not be in memory).
-  size_t GetPagefileUsage() const;
-
   // Returns the CPU usage in percent since the last time this method was
   // called. The first time this method is called it returns 0 and will return
   // the actual CPU info on subsequent calls.
