@@ -539,16 +539,6 @@ void NamedProcessIterator::InitProcessEntry(ProcessEntry* entry) {
   entry->dwSize = sizeof(*entry);
 }
 
-int GetProcessCount(const std::wstring& executable_name,
-                    const ProcessFilter* filter) {
-  int count = 0;
-
-  NamedProcessIterator iter(executable_name, filter);
-  while (iter.NextProcessEntry())
-    ++count;
-  return count;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // ProcesMetrics
 
