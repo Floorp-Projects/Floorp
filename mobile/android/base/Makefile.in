@@ -1395,7 +1395,7 @@ $(RESOURCES): $(call mkdir_deps,$(RES_DIRS)) $(subst res/,$(srcdir)/resources/,$
 	@echo "creating $@"
 	$(NSINSTALL) $(subst res/,$(srcdir)/resources/,$@) $(dir $@)
 
-res/values/strings.xml: $(call mkdir_deps,$(RES_DIRS))
+res/values/strings.xml: $(call mkdir_deps,res/values)
 	$(MAKE) -C locales
 
 # With multilocale builds, there will be multiple strings.xml files. We need to
