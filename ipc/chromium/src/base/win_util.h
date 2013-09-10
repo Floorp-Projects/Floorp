@@ -42,9 +42,6 @@ void GetServicePackLevel(int* major, int* minor);
 bool AddAccessToKernelObject(HANDLE handle, WELL_KNOWN_SID_TYPE known_sid,
                              ACCESS_MASK access);
 
-// Returns the string representing the current user sid.
-bool GetUserSidString(std::wstring* user_sid);
-
 // Returns true if the shift key is currently pressed.
 bool IsShiftPressed();
 
