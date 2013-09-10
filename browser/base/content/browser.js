@@ -922,10 +922,6 @@ var gBrowserInit = {
       goSetCommandEnabled("cmd_newNavigatorTab", false);
     }
 
-#ifdef CAN_DRAW_IN_TITLEBAR
-    updateTitlebarDisplay();
-#endif
-
     // Misc. inits.
     CombinedStopReload.init();
     gPrivateBrowsingUI.init();
@@ -2636,9 +2632,7 @@ var PrintPreviewListener = {
     if (this._chromeState.sidebarOpen)
       toggleSidebar(this._sidebarCommand);
 
-#ifdef CAN_DRAW_IN_TITLEBAR
-    updateTitlebarDisplay();
-#endif
+    TabsInTitlebar.allowedBy("print-preview", !gInPrintPreviewMode);
   },
   _hideChrome: function () {
     this._chromeState = {};
@@ -4365,6 +4359,7 @@ var TabsInTitlebar = {
       // We set the tabsintitlebar attribute first so that our CSS for
       // tabsintitlebar manifests before we do our measurements.
       document.documentElement.setAttribute("tabsintitlebar", "true");
+      updateTitlebarDisplay();
 
       // Try to avoid reflows in this code by calculating dimensions first and
       // then later set the properties affecting layout together in a batch.
@@ -4480,6 +4475,8 @@ var TabsInTitlebar = {
       }
     } else {
       document.documentElement.removeAttribute("tabsintitlebar");
+      updateTitlebarDisplay();
+
       // Reset the margins and padding that might have been modified:
       titlebarContent.style.marginBottom = "";
       titlebar.style.marginBottom = "";
@@ -4504,10 +4501,9 @@ var TabsInTitlebar = {
 
 #ifdef CAN_DRAW_IN_TITLEBAR
 function updateTitlebarDisplay() {
-  let drawInTitlebar = !gInPrintPreviewMode && window.toolbar.visible;
-  document.getElementById("titlebar").hidden = !drawInTitlebar;
+  document.getElementById("titlebar").hidden = !TabsInTitlebar.enabled;
 
-  if (drawInTitlebar)
+  if (TabsInTitlebar.enabled)
 #ifdef XP_WIN
     document.documentElement.setAttribute("chromemargin", "0,2,2,2");
 #else
@@ -4515,8 +4511,6 @@ function updateTitlebarDisplay() {
 #endif
   else
     document.documentElement.removeAttribute("chromemargin");
-
-  TabsInTitlebar.allowedBy("drawing-in-titlebar", drawInTitlebar);
 }
 #endif
 
