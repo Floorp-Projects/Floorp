@@ -12,6 +12,11 @@ let gWebConsole, gJSTerm, gVariablesView;
 
 function test()
 {
+  // This test is slightly more involved: it opens the web console, then the
+  // variables view for a given object, it updates a property in the view and
+  // checks the result. We can get a timeout with debug builds on slower machines.
+  requestLongerTimeout(2);
+
   addTab("data:text/html;charset=utf8,<p>hello");
   browser.addEventListener("load", function onLoad() {
     browser.removeEventListener("load", onLoad, true);

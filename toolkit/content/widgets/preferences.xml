@@ -730,7 +730,7 @@
 
           this._selector.selectedItem = document.getAnonymousElementByAttribute(this, "pane", aPaneElement.id);
           if (!aPaneElement.loaded) {
-            function OverlayLoadObserver(aPane)
+            let OverlayLoadObserver = function(aPane)
             {
               this._pane = aPane;
             }
