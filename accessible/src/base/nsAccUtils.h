@@ -7,23 +7,21 @@
 #define nsAccUtils_h_
 
 #include "mozilla/a11y/Accessible.h"
-#include "nsIAccessibleText.h"
 
 #include "nsAccessibilityService.h"
 #include "nsCoreUtils.h"
 
-#include "mozilla/dom/Element.h"
 #include "nsIDocShell.h"
-#include "nsIPersistentProperties2.h"
-#include "nsIPresShell.h"
 #include "nsPoint.h"
 
-struct nsRoleMapEntry;
-
 namespace mozilla {
+
+namespace dom {
+class Element;
+}
+
 namespace a11y {
 
-class Accessible;
 class HyperTextAccessible;
 class DocAccessible;
 

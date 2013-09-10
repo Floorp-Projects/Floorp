@@ -7,7 +7,6 @@
 
 #include "ARIAMap.h"
 
-#include "Accessible.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "Role.h"
