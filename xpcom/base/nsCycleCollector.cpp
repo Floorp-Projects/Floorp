@@ -1568,7 +1568,7 @@ public:
 
     uint32_t Count() const { return mPtrToNodeMap.entryCount; }
 
-    PtrInfo* AddNode(void *s, nsCycleCollectionParticipant *aParticipant);
+    PtrInfo* AddNode(void *aPtr, nsCycleCollectionParticipant *aParticipant);
     PtrInfo* AddWeakMapNode(void* node);
     void Traverse(PtrInfo* aPtrInfo);
     void SetLastChild();
@@ -1687,9 +1687,9 @@ GCGraphBuilder::~GCGraphBuilder()
 }
 
 PtrInfo*
-GCGraphBuilder::AddNode(void *s, nsCycleCollectionParticipant *aParticipant)
+GCGraphBuilder::AddNode(void *aPtr, nsCycleCollectionParticipant *aParticipant)
 {
-    PtrToNodeEntry *e = static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, s, PL_DHASH_ADD));
+    PtrToNodeEntry *e = static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, aPtr, PL_DHASH_ADD));
     if (!e) {
         mRanOutOfMemory = true;
         return nullptr;
@@ -1698,7 +1698,7 @@ GCGraphBuilder::AddNode(void *s, nsCycleCollectionParticipant *aParticipant)
     PtrInfo *result;
     if (!e->mNode) {
         // New entry.
-        result = mNodeBuilder.Add(s, aParticipant);
+        result = mNodeBuilder.Add(aPtr, aParticipant);
         e->mNode = result;
         NS_ASSERTION(result, "mNodeBuilder.Add returned null");
     } else {
