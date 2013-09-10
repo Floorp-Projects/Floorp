@@ -13,7 +13,7 @@
 // Blocker to the Security Pane in the Web Console
 
 const TEST_URI = "https://example.com/browser/browser/devtools/webconsole/test/test-mixedcontent-securityerrors.html";
-const LEARN_MORE_URI = "https://developer.mozilla.org/Security/MixedContent";
+const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Security/MixedContent";
 
 function test()
 {
@@ -34,17 +34,19 @@ function blockMixedContentTest1()
             name: "Logged blocking mixed active content",
             text: "Blocked loading mixed active content \"http://example.com/\"",
             category: CATEGORY_SECURITY,
-            severity: SEVERITY_ERROR
+            severity: SEVERITY_ERROR,
+            objects: true,
           },
           {
             name: "Logged blocking mixed passive content - image",
             text: "Blocked loading mixed active content \"http://example.com/\"",
             category: CATEGORY_SECURITY,
-            severity: SEVERITY_ERROR
+            severity: SEVERITY_ERROR,
+            objects: true,
           },
         ],
-      }).then(() => {
-        testClickOpenNewTab(hud);
+      }).then(([result]) => {
+        testClickOpenNewTab(hud, result);
         // Call the second (MCB override) test.
         mixedContentOverrideTest2(hud);
       });
@@ -63,42 +65,46 @@ function mixedContentOverrideTest2(hud)
     webconsole: hud,
     messages: [
       {
-      name: "Logged blocking mixed active content",
-      text: "Loading mixed (insecure) active content on a secure"+
-        " page \"http://example.com/\"",
-      category: CATEGORY_SECURITY,
-      severity: SEVERITY_WARNING
-    },
-    {
-      name: "Logged blocking mixed passive content - image",
-      text: "Loading mixed (insecure) display content on a secure page"+
-        " \"http://example.com/tests/image/test/mochitest/blue.png\"",
-      category: CATEGORY_SECURITY,
-      severity: SEVERITY_WARNING
-    },
+        name: "Logged blocking mixed active content",
+        text: "Loading mixed (insecure) active content on a secure"+
+          " page \"http://example.com/\"",
+        category: CATEGORY_SECURITY,
+        severity: SEVERITY_WARNING,
+        objects: true,
+      },
+      {
+        name: "Logged blocking mixed passive content - image",
+        text: "Loading mixed (insecure) display content on a secure page"+
+          " \"http://example.com/tests/image/test/mochitest/blue.png\"",
+        category: CATEGORY_SECURITY,
+        severity: SEVERITY_WARNING,
+        objects: true,
+      },
     ],
-  }).then(() => {
-    testClickOpenNewTab(hud);
+  }).then(([result]) => {
+    testClickOpenNewTab(hud, result);
     finishTest();
   });
 }
 
-function testClickOpenNewTab(hud) {
-  let warningNode = hud.outputNode.querySelector(".webconsole-learn-more-link");
+function testClickOpenNewTab(hud, match) {
+  let warningNode = match.clickableElements[0];
+  ok(warningNode, "link element");
+  ok(warningNode.classList.contains("learn-more-link"), "link class name");
 
-    // Invoke the click event and check if a new tab would
-    // open to the correct page.
-    let linkOpened = false;
-    let oldOpenUILinkIn = window.openUILinkIn;
-    window.openUILinkIn = function(aLink) {
-      if (aLink == LEARN_MORE_URI) {
-        linkOpened = true;
-      }
+  // Invoke the click event and check if a new tab would
+  // open to the correct page.
+  let linkOpened = false;
+  let oldOpenUILinkIn = window.openUILinkIn;
+  window.openUILinkIn = function(aLink) {
+    if (aLink == LEARN_MORE_URI) {
+      linkOpened = true;
     }
+  }
 
-    EventUtils.synthesizeMouse(warningNode, 2, 2, {},
-                               warningNode.ownerDocument.defaultView);
-    ok(linkOpened, "Clicking the Learn More Warning node opens the desired page");
-    window.openUILinkIn = oldOpenUILinkIn;
+  EventUtils.synthesizeMouse(warningNode, 2, 2, {},
+                             warningNode.ownerDocument.defaultView);
+  ok(linkOpened, "Clicking the Learn More Warning node opens the desired page");
+  window.openUILinkIn = oldOpenUILinkIn;
 
 }
