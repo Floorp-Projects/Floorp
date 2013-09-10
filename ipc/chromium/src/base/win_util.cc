@@ -344,66 +344,6 @@ std::wstring FormatLastWin32Error() {
   return FormatMessage(GetLastError());
 }
 
-typedef std::map<HWND, tracked_objects::Location> HWNDInfoMap;
-struct HWNDBirthMapTrait : public DefaultSingletonTraits<HWNDInfoMap> {
-};
-struct HWNDDeathMapTrait : public DefaultSingletonTraits<HWNDInfoMap> {
-};
-
-void NotifyHWNDCreation(const tracked_objects::Location& from_here, HWND hwnd) {
-  HWNDInfoMap* birth_map = Singleton<HWNDInfoMap, HWNDBirthMapTrait>::get();
-  HWNDInfoMap::iterator birth_iter = birth_map->find(hwnd);
-  if (birth_iter != birth_map->end()) {
-    birth_map->erase(birth_iter);
-
-    // We have already seen this HWND, was it destroyed?
-    HWNDInfoMap* death_map = Singleton<HWNDInfoMap, HWNDDeathMapTrait>::get();
-    HWNDInfoMap::iterator death_iter = death_map->find(hwnd);
-    if (death_iter == death_map->end()) {
-      // We did not get a destruction notification.  The code is probably not
-      // calling NotifyHWNDDestruction for that HWND.
-      NOTREACHED() << "Creation of HWND reported for already tracked HWND. The "
-                      "HWND destruction is probably not tracked properly. "
-                      "Fix it!";
-    } else {
-      death_map->erase(death_iter);
-    }
-  }
-  birth_map->insert(std::pair<HWND, tracked_objects::Location>(hwnd,
-                                                              from_here));
-}
-
-void NotifyHWNDDestruction(const tracked_objects::Location& from_here,
-                           HWND hwnd) {
-  HWNDInfoMap* death_map = Singleton<HWNDInfoMap, HWNDDeathMapTrait>::get();
-  HWNDInfoMap::iterator death_iter = death_map->find(hwnd);
-
-  HWNDInfoMap* birth_map = Singleton<HWNDInfoMap, HWNDBirthMapTrait>::get();
-  HWNDInfoMap::iterator birth_iter = birth_map->find(hwnd);
-
-  if (death_iter != death_map->end()) {
-    std::string allocation, first_delete, second_delete;
-    if (birth_iter != birth_map->end())
-      birth_iter->second.Write(true, true, &allocation);
-    death_iter->second.Write(true, true, &first_delete);
-    from_here.Write(true, true, &second_delete);
-    LOG(FATAL) << "Double delete of an HWND. Please file a bug with info on "
-        "how you got that assertion and the following information:\n"
-        "Double delete of HWND 0x" << hwnd << "\n" <<
-        "Allocated at " << allocation << "\n" <<
-        "Deleted first at " << first_delete << "\n" <<
-        "Deleted again at " << second_delete;
-    death_map->erase(death_iter);
-  }
-
-  if (birth_iter == birth_map->end()) {
-    NOTREACHED() << "Destruction of HWND reported for unknown HWND. The HWND "
-                    "construction is probably not tracked properly. Fix it!";
-  }
-  death_map->insert(std::pair<HWND, tracked_objects::Location>(hwnd,
-                                                               from_here));
-}
-
 }  // namespace win_util
 
 #ifdef _MSC_VER
