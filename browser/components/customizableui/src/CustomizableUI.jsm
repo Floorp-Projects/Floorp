@@ -157,7 +157,6 @@ let CustomizableUIInternal = {
     });
     this.registerArea(CustomizableUI.AREA_NAVBAR, {
       legacy: true,
-      anchor: "nav-bar-overflow-button",
       type: CustomizableUI.TYPE_TOOLBAR,
       overflowable: true,
       defaultPlacements: [
@@ -740,7 +739,10 @@ let CustomizableUIInternal = {
     }
 
     aNode.setAttribute("customizableui-areatype", props.get("type") || "");
-    aNode.setAttribute("customizableui-anchorid", props.get("anchor") || "");
+    let anchor = props.get("anchor");
+    if (anchor) {
+      aNode.setAttribute("customizableui-anchorid", anchor);
+    }
   },
 
   removeLocationAttributes: function(aNode) {

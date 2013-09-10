@@ -555,7 +555,6 @@
         <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
                      forwarddisabled="true" title="&locationItem.title;" removable="false"
                      customizableui-areatype="toolbar"
-                     customizableui-anchorid="nav-bar-overflow-button"
                      class="chromeclass-location" nooverflow="true">
           <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                          label="&backCmd.label;"
@@ -665,7 +664,6 @@
         <toolbaritem id="search-container" title="&searchItem.title;"
                      align="center" class="chromeclass-toolbar-additional"
                      customizableui-areatype="toolbar"
-                     customizableui-anchorid="nav-bar-overflow-button"
                      flex="100" persist="width" removable="true">
           <searchbar id="searchbar" flex="1"/>
         </toolbaritem>
@@ -678,7 +676,6 @@
                        label="&webrtcIndicatorButton.label;"
                        tooltiptext="&webrtcIndicatorButton.tooltip;"
                        customizableui-areatype="toolbar"
-                       customizableui-anchorid="nav-bar-overflow-button"
                        nooverflow="true">
           <menupopup onpopupshowing="WebrtcIndicator.fillPopup(this);"
                      onpopuphiding="WebrtcIndicator.clearPopup(this);"
@@ -697,7 +694,6 @@
                        ondragleave="PlacesMenuDNDHandler.onDragLeave(event);"
                        ondrop="PlacesMenuDNDHandler.onDrop(event);"
                        customizableui-areatype="toolbar"
-                       customizableui-anchorid="nav-bar-overflow-button"
                        oncommand="BookmarkingUI.onCommand(event);">
           <menupopup id="BMB_bookmarksPopup"
                      placespopup="true"
@@ -786,7 +782,6 @@
                        label="&downloads.label;"
                        removable="true"
                        customizableui-areatype="toolbar"
-                       customizableui-anchorid="nav-bar-overflow-button"
                        tooltiptext="&downloads.tooltip;"/>
 
         <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
@@ -798,7 +793,6 @@
                        ondragexit="homeButtonObserver.onDragExit(event)"
                        onclick="BrowserGoHome(event);"
                        customizableui-areatype="toolbar"
-                       customizableui-anchorid="nav-bar-overflow-button"
                        aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
 
 
@@ -809,7 +803,6 @@
                        label="&sharePageCmd.label;"
                        tooltiptext="&sharePageCmd.label;"
                        customizableui-areatype="toolbar"
-                       customizableui-anchorid="nav-bar-overflow-button"
                        command="Social:SharePage"/>
 
         <toolbaritem id="social-toolbar-item"
@@ -819,7 +812,6 @@
                      hidden="true"
                      nooverflow="true"
                      customizableui-areatype="toolbar"
-                     customizableui-anchorid="nav-bar-overflow-button"
                      observes="socialActiveBroadcaster">
         <toolbarbutton id="social-notification-icon" class="default-notification-icon toolbarbutton-1 notification-anchor-icon"
                    oncommand="PopupNotifications._reshowNotifications(this,
