@@ -518,6 +518,11 @@ if CONFIG['MOZ_WEBSPEECH']:
         'SpeechRecognitionEvent.webidl',
     ]
 
+if CONFIG['MOZ_B2G_FM']:
+    WEBIDL_FILES += [
+        'FMRadio.webidl',
+    ]
+
 if CONFIG['ENABLE_TESTS']:
     TEST_WEBIDL_FILES += [
         'TestCodeGen.webidl',
