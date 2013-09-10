@@ -22,50 +22,45 @@ function nextTest() {
   testDriver.next();
 }
 
-function checkResult(msg, desc, lines) {
-  waitForSuccess({
-    name: "correct number of results shown for " + desc,
-    validatorFn: function()
-    {
-      let nodes = jsterm.outputNode.querySelectorAll(".webconsole-msg-output");
-      return nodes.length == lines;
-    },
-    successFn: function()
-    {
-      let labels = jsterm.outputNode.querySelectorAll(".webconsole-msg-output");
-      if (typeof msg == "string") {
-        is(labels[lines-1].textContent.trim(), msg,
-           "correct message shown for " + desc);
-      }
-      else if (typeof msg == "function") {
-        ok(msg(labels), "correct message shown for " + desc);
-      }
+function checkResult(msg, desc) {
+  waitForMessages({
+    webconsole: jsterm.hud.owner,
+    messages: [{
+      name: desc,
+      category: CATEGORY_OUTPUT,
+    }],
+  }).then(([result]) => {
+    let node = [...result.matched][0].querySelector(".body");
+    if (typeof msg == "string") {
+      is(node.textContent.trim(), msg,
+        "correct message shown for " + desc);
+    }
+    else if (typeof msg == "function") {
+      ok(msg(node), "correct message shown for " + desc);
+    }
 
-      nextTest();
-    },
-    failureFn: nextTest,
+    nextTest();
   });
 }
 
 function testJSTerm(hud)
 {
   jsterm = hud.jsterm;
+  const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
 
   jsterm.clearOutput();
-  jsterm.execute("'id=' + $('#header').getAttribute('id')");
-  checkResult('"id=header"', "$() worked", 1);
+  jsterm.execute("$('#header').getAttribute('id')");
+  checkResult('"header"', "$() worked");
   yield undefined;
 
   jsterm.clearOutput();
-  jsterm.execute("headerQuery = $$('h1')");
-  jsterm.execute("'length=' + headerQuery.length");
-  checkResult('"length=1"', "$$() worked", 2);
+  jsterm.execute("$$('h1').length");
+  checkResult("1", "$$() worked");
   yield undefined;
 
   jsterm.clearOutput();
-  jsterm.execute("xpathQuery = $x('.//*', document.body);");
-  jsterm.execute("'headerFound='  + (xpathQuery[0] == headerQuery[0])");
-  checkResult('"headerFound=true"', "$x() worked", 2);
+  jsterm.execute("$x('.//*', document.body)[0] == $$('h1')[0]");
+  checkResult("true", "$x() worked");
   yield undefined;
 
   // no jsterm.clearOutput() here as we clear the output using the clear() fn.
@@ -84,108 +79,101 @@ function testJSTerm(hud)
   yield undefined;
 
   jsterm.clearOutput();
-  jsterm.execute("'keysResult=' + (keys({b:1})[0] == 'b')");
-  checkResult('"keysResult=true"', "keys() worked", 1);
+  jsterm.execute("keys({b:1})[0] == 'b'");
+  checkResult("true", "keys() worked", 1);
   yield undefined;
 
   jsterm.clearOutput();
-  jsterm.execute("'valuesResult=' + (values({b:1})[0] == 1)");
-  checkResult('"valuesResult=true"', "values() worked", 1);
+  jsterm.execute("values({b:1})[0] == 1");
+  checkResult("true", "values() worked", 1);
   yield undefined;
 
   jsterm.clearOutput();
 
-  let tabs = gBrowser.tabs.length;
+  let openedLinks = 0;
+  let onExecuteCalls = 0;
+  let oldOpenLink = hud.openLink;
+  hud.openLink = (url) => {
+    if (url == HELP_URL) {
+      openedLinks++;
+    }
+  };
 
-  jsterm.execute("help()");
-  let output = jsterm.outputNode.querySelector(".webconsole-msg-output");
-  ok(!output, "help() worked");
-
-  jsterm.execute("help");
-  output = jsterm.outputNode.querySelector(".webconsole-msg-output");
-  ok(!output, "help worked");
-
-  jsterm.execute("?");
-  output = jsterm.outputNode.querySelector(".webconsole-msg-output");
-  ok(!output, "? worked");
-
-  let foundTab = null;
-  waitForSuccess({
-    name: "help tabs opened",
-    validatorFn: function()
-    {
-      let newTabOpen = gBrowser.tabs.length == tabs + 3;
-      if (!newTabOpen) {
-        return false;
-      }
-
-      foundTab = gBrowser.tabs[tabs];
-      return true;
-    },
-    successFn: function()
-    {
-      gBrowser.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
-      gBrowser.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
-      gBrowser.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
+  function onExecute() {
+    onExecuteCalls++;
+    if (onExecuteCalls == 3) {
       nextTest();
-    },
-    failureFn: nextTest,
-  });
+    }
+  }
+
+  jsterm.execute("help()", onExecute);
+  jsterm.execute("help", onExecute);
+  jsterm.execute("?", onExecute);
   yield undefined;
+
+  let output = jsterm.outputNode.querySelector(".message[category='output']");
+  ok(!output, "no output for help() calls");
+  is(openedLinks, 3, "correct number of pages opened by the help calls");
+  hud.openLink = oldOpenLink;
 
   jsterm.clearOutput();
   jsterm.execute("pprint({b:2, a:1})");
-  checkResult('"  b: 2\n  a: 1"', "pprint()", 1);
+  checkResult('"  b: 2\n  a: 1"', "pprint()");
   yield undefined;
 
   // check instanceof correctness, bug 599940
   jsterm.clearOutput();
   jsterm.execute("[] instanceof Array");
-  checkResult("true", "[] instanceof Array == true", 1);
+  checkResult("true", "[] instanceof Array == true");
   yield undefined;
 
   jsterm.clearOutput();
   jsterm.execute("({}) instanceof Object");
-  checkResult("true", "({}) instanceof Object == true", 1);
+  checkResult("true", "({}) instanceof Object == true");
   yield undefined;
 
   // check for occurrences of Object XRayWrapper, bug 604430
   jsterm.clearOutput();
   jsterm.execute("document");
-  checkResult(function(nodes) {
-    return nodes[0].textContent.search(/\[object xraywrapper/i) == -1;
-  }, "document - no XrayWrapper", 1);
+  checkResult(function(node) {
+    return node.textContent.search(/\[object xraywrapper/i) == -1;
+  }, "document - no XrayWrapper");
   yield undefined;
 
   // check that pprint(window) and keys(window) don't throw, bug 608358
   jsterm.clearOutput();
   jsterm.execute("pprint(window)");
-  checkResult(null, "pprint(window)", 1);
+  checkResult(null, "pprint(window)");
   yield undefined;
 
   jsterm.clearOutput();
   jsterm.execute("keys(window)");
-  checkResult(null, "keys(window)", 1);
+  checkResult(null, "keys(window)");
   yield undefined;
 
   // bug 614561
   jsterm.clearOutput();
   jsterm.execute("pprint('hi')");
-  checkResult('"  0: "h"\n  1: "i""', "pprint('hi')", 1);
+  checkResult('"  0: "h"\n  1: "i""', "pprint('hi')");
   yield undefined;
 
   // check that pprint(function) shows function source, bug 618344
   jsterm.clearOutput();
   jsterm.execute("pprint(print)");
-  checkResult(function(nodes) {
-    return nodes[0].textContent.indexOf("aOwner.helperResult") > -1;
-  }, "pprint(function) shows source", 1);
+  checkResult(function(node) {
+    return node.textContent.indexOf("aOwner.helperResult") > -1;
+  }, "pprint(function) shows source");
   yield undefined;
 
   // check that an evaluated null produces "null", bug 650780
   jsterm.clearOutput();
   jsterm.execute("null");
-  checkResult("null", "null is null", 1);
+  checkResult("null", "null is null");
+  yield undefined;
+
+  jsterm.clearOutput();
+  jsterm.execute("undefined");
+  checkResult("undefined", "undefined is printed");
   yield undefined;
 
   jsterm = testDriver = null;

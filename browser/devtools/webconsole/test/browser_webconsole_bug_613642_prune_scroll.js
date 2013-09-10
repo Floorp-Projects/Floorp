@@ -17,39 +17,36 @@ function testGen() {
   hud.jsterm.clearOutput();
 
   let outputNode = hud.outputNode;
-  let oldPref = Services.prefs.getIntPref("devtools.hud.loglimit.console");
 
   Services.prefs.setIntPref("devtools.hud.loglimit.console", 140);
-  let scrollBoxElement = outputNode.scrollBoxObject.element;
-  let boxObject = outputNode.scrollBoxObject;
+  let scrollBoxElement = outputNode.parentNode;
 
   for (let i = 0; i < 150; i++) {
     content.console.log("test message " + i);
   }
 
-  waitForSuccess({
-    name: "150 console.log messages displayed",
-    validatorFn: function()
-    {
-      return outputNode.querySelectorAll(".hud-log").length == 140;
-    },
-    successFn: testNext,
-    failureFn: finishTest,
-  });
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "test message 149",
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+    }],
+  }).then(testNext);
 
   yield undefined;
 
   let oldScrollTop = scrollBoxElement.scrollTop;
-  ok(oldScrollTop > 0, "scroll location is not at the top");
+  isnot(oldScrollTop, 0, "scroll location is not at the top");
 
   let firstNode = outputNode.firstChild;
   ok(firstNode, "found the first message");
 
-  let msgNode = outputNode.querySelectorAll("richlistitem")[80];
+  let msgNode = outputNode.children[80];
   ok(msgNode, "found the 80th message");
 
   // scroll to the middle message node
-  boxObject.ensureElementIsVisible(msgNode);
+  msgNode.scrollIntoView(false);
 
   isnot(scrollBoxElement.scrollTop, oldScrollTop,
         "scroll location updated (scrolled to message)");
@@ -59,15 +56,14 @@ function testGen() {
   // add a message
   content.console.log("hello world");
 
-  waitForSuccess({
-    name: "console.log message #151 displayed",
-    validatorFn: function()
-    {
-      return outputNode.textContent.indexOf("hello world") > -1;
-    },
-    successFn: testNext,
-    failureFn: finishTest,
-  });
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "hello world",
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+    }],
+  }).then(testNext);
 
   yield undefined;
 
@@ -79,7 +75,7 @@ function testGen() {
   isnot(outputNode.firstChild, firstNode,
         "first message removed");
 
-  Services.prefs.setIntPref("devtools.hud.loglimit.console", oldPref);
+  Services.prefs.clearUserPref("devtools.hud.loglimit.console");
 
   hud = testDriver = null;
   finishTest();

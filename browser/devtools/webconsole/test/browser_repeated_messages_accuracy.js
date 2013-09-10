@@ -4,7 +4,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Tests that makes sure messages are not considered repeated when coming from
+// Test that makes sure messages are not considered repeated when coming from
 // different lines of code, or from different severities, etc.
 // See bugs 720180 and 800510.
 
@@ -101,13 +101,11 @@ function testConsoleRepeats(hud) {
         name: "'undefined' jsterm input message",
         text: "undefined",
         category: CATEGORY_INPUT,
-        repeats: 1,
       },
       {
         name: "'undefined' jsterm output message",
         text: "undefined",
         category: CATEGORY_OUTPUT,
-        repeats: 1,
       },
       {
         name: "'undefined' console.log message",
