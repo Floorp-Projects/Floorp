@@ -286,10 +286,6 @@ class ProcessMetrics {
   size_t GetPeakPagefileUsage() const;
   // Returns the current working set size, in bytes.
   size_t GetWorkingSetSize() const;
-  // Returns private usage, in bytes. Private bytes is the amount
-  // of memory currently allocated to a process that cannot be shared.
-  // Note: returns 0 on unsupported OSes: prior to XP SP2.
-  size_t GetPrivateBytes() const;
 
   // Returns the CPU usage in percent since the last time this method was
   // called. The first time this method is called it returns 0 and will return
