@@ -485,15 +485,6 @@ size_t ProcessMetrics::GetPeakPagefileUsage() const {
   return 0;
 }
 
-// Returns the current working set size, in bytes.
-size_t ProcessMetrics::GetWorkingSetSize() const {
-  PROCESS_MEMORY_COUNTERS pmc;
-  if (GetProcessMemoryInfo(process_, &pmc, sizeof(pmc))) {
-    return pmc.WorkingSetSize;
-  }
-  return 0;
-}
-
 static uint64_t FileTimeToUTC(const FILETIME& ftime) {
   LARGE_INTEGER li;
   li.LowPart = ftime.dwLowDateTime;

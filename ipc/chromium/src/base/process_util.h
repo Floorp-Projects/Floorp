@@ -284,8 +284,6 @@ class ProcessMetrics {
   size_t GetPagefileUsage() const;
   // Returns the peak space allocated for the pagefile, in bytes.
   size_t GetPeakPagefileUsage() const;
-  // Returns the current working set size, in bytes.
-  size_t GetWorkingSetSize() const;
 
   // Returns the CPU usage in percent since the last time this method was
   // called. The first time this method is called it returns 0 and will return
