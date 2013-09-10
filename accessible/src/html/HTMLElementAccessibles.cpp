@@ -8,6 +8,7 @@
 #include "DocAccessible.h"
 #include "nsAccUtils.h"
 #include "nsIAccessibleRelation.h"
+#include "nsIPersistentProperties2.h"
 #include "nsTextEquivUtils.h"
 #include "Relation.h"
 #include "Role.h"
