@@ -1212,6 +1212,11 @@ CssRuleView.prototype = {
     return this._showPseudoElements;
   },
 
+  _getRuleViewHeaderClassName: function(isPseudo) {
+    let baseClassName = "theme-gutter ruleview-header";
+    return isPseudo ? baseClassName + " ruleview-expandable-header" : baseClassName;
+  },
+
   /**
    * Creates editor UI for each of the rules in _elementStyle.
    */
@@ -1232,7 +1237,7 @@ CssRuleView.prototype = {
       if (seenPseudoElement && !seenNormalElement && !rule.pseudoElement) {
         seenNormalElement = true;
         let div = this.doc.createElementNS(HTML_NS, "div");
-        div.className = "theme-gutter ruleview-header";
+        div.className = this._getRuleViewHeaderClassName();
         div.textContent = this.selectedElementLabel;
         this.element.appendChild(div);
       }
@@ -1240,7 +1245,7 @@ CssRuleView.prototype = {
       let inheritedSource = rule.inheritedSource;
       if (inheritedSource != lastInheritedSource) {
         let div = this.doc.createElementNS(HTML_NS, "div");
-        div.className = "theme-gutter ruleview-header";
+        div.className = this._getRuleViewHeaderClassName();
         div.textContent = inheritedSource;
         lastInheritedSource = inheritedSource;
         this.element.appendChild(div);
@@ -1250,8 +1255,11 @@ CssRuleView.prototype = {
         seenPseudoElement = true;
 
         let div = this.doc.createElementNS(HTML_NS, "div");
-        div.className = "theme-gutter ruleview-header";
+        div.className = this._getRuleViewHeaderClassName(true);
         div.textContent = this.pseudoElementLabel;
+        div.addEventListener("dblclick", () => {
+          this.togglePseudoElementVisibility(!this.showPseudoElements);
+        }, false);
 
         let twisty = this.pseudoElementTwisty =
           this.doc.createElementNS(HTML_NS, "span");
