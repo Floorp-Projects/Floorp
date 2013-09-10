@@ -29,36 +29,40 @@
 #ifndef PeriodicWave_h
 #define PeriodicWave_h
 
-#include "bindings/v8/ScriptWrappable.h"
-#include "core/platform/audio/AudioArray.h"
-#include "wtf/Float32Array.h"
-#include "wtf/OwnPtr.h"
-#include "wtf/PassRefPtr.h"
-#include "wtf/RefCounted.h"
-#include "wtf/RefPtr.h"
-#include "wtf/Vector.h"
+#include "mozilla/dom/OscillatorNodeBinding.h"
+#include <nsAutoPtr.h>
+#include <nsTArray.h>
 
 namespace WebCore {
 
-class PeriodicWave : public ScriptWrappable, public RefCounted<PeriodicWave> {
+typedef nsTArray<float> AudioFloatArray;
+
+class PeriodicWave {
 public:
-    static PassRefPtr<PeriodicWave> createSine(float sampleRate);
-    static PassRefPtr<PeriodicWave> createSquare(float sampleRate);
-    static PassRefPtr<PeriodicWave> createSawtooth(float sampleRate);
-    static PassRefPtr<PeriodicWave> createTriangle(float sampleRate);
+    static PeriodicWave* createSine(float sampleRate);
+    static PeriodicWave* createSquare(float sampleRate);
+    static PeriodicWave* createSawtooth(float sampleRate);
+    static PeriodicWave* createTriangle(float sampleRate);
 
-    // Creates an arbitrary periodic wave given the frequency components (Fourier coefficients).
-    static PassRefPtr<PeriodicWave> create(float sampleRate, Float32Array* real, Float32Array* imag);
+    // Creates an arbitrary periodic wave given the frequency components
+    // (Fourier coefficients).
+    static PeriodicWave* create(float sampleRate,
+                                const float* real,
+                                const float* imag,
+                                size_t numberOfComponents);
 
-    // Returns pointers to the lower and higher wave data for the pitch range containing
-    // the given fundamental frequency. These two tables are in adjacent "pitch" ranges
-    // where the higher table will have the maximum number of partials which won't alias when played back
-    // at this fundamental frequency. The lower wave is the next range containing fewer partials than the higher wave.
-    // Interpolation between these two tables can be made according to tableInterpolationFactor.
-    // Where values from 0 -> 1 interpolate between lower -> higher.
+    // Returns pointers to the lower and higher wave data for the pitch range
+    // containing the given fundamental frequency. These two tables are in
+    // adjacent "pitch" ranges where the higher table will have the maximum
+    // number of partials which won't alias when played back at this
+    // fundamental frequency. The lower wave is the next range containing fewer
+    // partials than the higher wave. Interpolation between these two tables
+    // can be made according to tableInterpolationFactor. Where values
+    // from 0 -> 1 interpolate between lower -> higher.
     void waveDataForFundamentalFrequency(float, float* &lowerWaveData, float* &higherWaveData, float& tableInterpolationFactor);
 
-    // Returns the scalar multiplier to the oscillator frequency to calculate wave buffer phase increment.
+    // Returns the scalar multiplier to the oscillator frequency to calculate
+    // wave buffer phase increment.
     float rateScale() const { return m_rateScale; }
 
     unsigned periodicWaveSize() const { return m_periodicWaveSize; }
@@ -67,16 +71,17 @@ public:
 private:
     explicit PeriodicWave(float sampleRate);
 
-    void generateBasicWaveform(int);
+    void generateBasicWaveform(mozilla::dom::OscillatorType);
 
     float m_sampleRate;
     unsigned m_periodicWaveSize;
     unsigned m_numberOfRanges;
     float m_centsPerRange;
 
-    // The lowest frequency (in Hertz) where playback will include all of the partials.
-    // Playing back lower than this frequency will gradually lose more high-frequency information.
-    // This frequency is quite low (~10Hz @ 44.1KHz)
+    // The lowest frequency (in Hertz) where playback will include all of the
+    // partials.  Playing back lower than this frequency will gradually lose
+    // more high-frequency information.
+    // This frequency is quite low (~10Hz @ // 44.1KHz)
     float m_lowestFundamentalFrequency;
 
     float m_rateScale;
@@ -90,7 +95,7 @@ private:
 
     // Creates tables based on numberOfComponents Fourier coefficients.
     void createBandLimitedTables(const float* real, const float* imag, unsigned numberOfComponents);
-    Vector<OwnPtr<AudioFloatArray> > m_bandLimitedTables;
+    nsTArray<nsAutoPtr<AudioFloatArray> > m_bandLimitedTables;
 };
 
 } // namespace WebCore
