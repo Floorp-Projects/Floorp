@@ -1676,3 +1676,60 @@ add_task(function test_platform_integration()
     yield promiseVerifyContents(download.target.path, TEST_DATA_SHORT);
   }
 });
+
+/**
+ * Checks that downloads are added to browsing history when they start.
+ */
+add_task(function test_history()
+{
+  mustInterruptResponses();
+
+  // We will wait for the visit to be notified during the download.
+  yield promiseClearHistory();
+  let promiseVisit = promiseWaitForVisit(httpUrl("interruptible.txt"));
+
+  // Start a download that is not allowed to finish yet.
+  let download = yield promiseStartDownload(httpUrl("interruptible.txt"));
+
+  // The history notifications should be received before the download completes.
+  let [time, transitionType] = yield promiseVisit;
+  do_check_eq(time, download.startTime.getTime() * 1000);
+  do_check_eq(transitionType, Ci.nsINavHistoryService.TRANSITION_DOWNLOAD);
+
+  // Restart and complete the download after clearing history.
+  yield promiseClearHistory();
+  download.cancel();
+  continueResponses();
+  yield download.start();
+
+  // The restart should not have added a new history visit.
+  do_check_false(yield promiseIsURIVisited(httpUrl("interruptible.txt")));
+});
+
+/**
+ * Checks that downloads started by nsIHelperAppService are added to the
+ * browsing history when they start.
+ */
+add_task(function test_history_tryToKeepPartialData()
+{
+  // We will wait for the visit to be notified during the download.
+  yield promiseClearHistory();
+  let promiseVisit =
+      promiseWaitForVisit(httpUrl("interruptible_resumable.txt"));
+
+  // Start a download that is not allowed to finish yet.
+  let beforeStartTimeMs = Date.now();
+  let download = yield promiseStartDownload_tryToKeepPartialData();
+
+  // The history notifications should be received before the download completes.
+  let [time, transitionType] = yield promiseVisit;
+  do_check_eq(transitionType, Ci.nsINavHistoryService.TRANSITION_DOWNLOAD);
+
+  // The time set by nsIHelperAppService may be different than the start time in
+  // the download object, thus we only check that it is a meaningful time.
+  do_check_true(time >= beforeStartTimeMs * 1000);
+
+  // Complete the download before finishing the test.
+  continueResponses();
+  yield promiseDownloadStopped(download);
+});
