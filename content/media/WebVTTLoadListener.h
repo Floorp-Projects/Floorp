@@ -13,27 +13,14 @@
 #include "nsAutoRef.h"
 #include "nsCycleCollectionParticipant.h"
 
-struct webvtt_parser_t;
-struct webvtt_cue;
-typedef int webvtt_error;
-
-template <>
-class nsAutoRefTraits<webvtt_parser_t> : public nsPointerRefTraits<webvtt_parser_t>
-{
-public:
-  static void Release(webvtt_parser_t* aParser) {
-    // Call parser dtor here.
-  }
-};
-
 namespace mozilla {
 namespace dom {
 
 class HTMLTrackElement;
 
 /**
- * Class that manages the libwebvtt parsing library and functions as an
- * interface between Gecko and libwebvtt.
+ * Class that manages the WebVTT parsing library and functions as an
+ * interface between Gecko and WebVTT.
  *
  * Currently it's only designed to work with an HTMLTrackElement. The
  * HTMLTrackElement controls the lifetime of the WebVTTLoadListener.
@@ -41,11 +28,10 @@ class HTMLTrackElement;
  * The workflow of this class is as follows:
  *  - Gets Loaded via an HTMLTrackElement class.
  *  - As the HTMLTrackElement class gets new data WebVTTLoadListener's
- *    OnDataAvailable() function is called and data is passed to the libwebvtt
+ *    OnDataAvailable() function is called and data is passed to the WebVTT
  *    parser.
- *  - When the libwebvtt parser has finished a cue it will call the callbacks
- *    that are exposed by the WebVTTLoadListener -- OnParsedCueWebVTTCallBack or
- *    OnReportErrorWebVTTCallBack if it has encountered an error.
+ *  - When the WebVTT parser has finished a cue it will call the callbacks
+ *    that are exposed by the WebVTTLoadListener.
  *  - When it has returned a cue successfully the WebVTTLoadListener will create
  *    a new TextTrackCue and add it to the HTMLTrackElement's TextTrack.
  */
@@ -66,7 +52,7 @@ public:
   WebVTTLoadListener(HTMLTrackElement* aElement);
   ~WebVTTLoadListener();
 
-  // Loads the libwebvtt parser. Must call this function in order to the
+  // Loads the WebVTT parser. Must call this function in order to the
   // WebVTTLoadListener to be ready to accept data.
   nsresult LoadResource();
 
@@ -76,10 +62,6 @@ private:
                               uint32_t aCount, uint32_t* aWriteCount);
 
   nsRefPtr<HTMLTrackElement> mElement;
-  nsAutoRef<webvtt_parser_t> mParser;
-
-  void OnParsedCue(webvtt_cue* aCue);
-  int OnReportError(uint32_t aLine, uint32_t aCol, webvtt_error aError);
 };
 
 
