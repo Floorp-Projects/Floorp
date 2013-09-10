@@ -163,34 +163,6 @@ bool AddAccessToKernelObject(HANDLE handle, WELL_KNOWN_SID_TYPE known_sid,
   return true;
 }
 
-bool GetUserSidString(std::wstring* user_sid) {
-  // Get the current token.
-  HANDLE token = NULL;
-  if (!::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token))
-    return false;
-  ScopedHandle token_scoped(token);
-
-  DWORD size = sizeof(TOKEN_USER) + SECURITY_MAX_SID_SIZE;
-  scoped_ptr<TOKEN_USER> user(reinterpret_cast<TOKEN_USER*>(new BYTE[size]));
-
-  if (!::GetTokenInformation(token, TokenUser, user.get(), size, &size))
-    return false;
-
-  if (!user->User.Sid)
-    return false;
-
-  // Convert the data to a string.
-  wchar_t* sid_string;
-  if (!::ConvertSidToStringSid(user->User.Sid, &sid_string))
-    return false;
-
-  *user_sid = sid_string;
-
-  ::LocalFree(sid_string);
-
-  return true;
-}
-
 bool IsShiftPressed() {
   return (::GetKeyState(VK_SHIFT) & 0x80) == 0x80;
 }
