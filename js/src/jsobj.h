@@ -365,8 +365,8 @@ class JSObject : public js::ObjectImpl
     void rollbackProperties(js::ExclusiveContext *cx, uint32_t slotSpan);
 
     void nativeSetSlot(uint32_t slot, const js::Value &value) {
-        JS_ASSERT(uninlinedIsNative());
-        JS_ASSERT(slot < uninlinedSlotSpan());
+        JS_ASSERT(isNative());
+        JS_ASSERT(slot < slotSpan());
         return setSlot(slot, value);
     }
 
@@ -563,13 +563,13 @@ class JSObject : public js::ObjectImpl
     }
 
     uint32_t getDenseCapacity() {
-        JS_ASSERT(uninlinedIsNative());
+        JS_ASSERT(isNative());
         JS_ASSERT(getElementsHeader()->capacity >= getElementsHeader()->initializedLength);
         return getElementsHeader()->capacity;
     }
 
     void setDenseInitializedLength(uint32_t length) {
-        JS_ASSERT(uninlinedIsNative());
+        JS_ASSERT(isNative());
         JS_ASSERT(length <= getDenseCapacity());
         prepareElementRangeForOverwrite(length, getElementsHeader()->initializedLength);
         getElementsHeader()->initializedLength = length;
@@ -578,12 +578,12 @@ class JSObject : public js::ObjectImpl
     inline void ensureDenseInitializedLength(js::ExclusiveContext *cx,
                                              uint32_t index, uint32_t extra);
     void setDenseElement(uint32_t index, const js::Value &val) {
-        JS_ASSERT(uninlinedIsNative() && index < getDenseInitializedLength());
+        JS_ASSERT(isNative() && index < getDenseInitializedLength());
         elements[index].set(this, js::HeapSlot::Element, index, val);
     }
 
     void initDenseElement(uint32_t index, const js::Value &val) {
-        JS_ASSERT(uninlinedIsNative() && index < getDenseInitializedLength());
+        JS_ASSERT(isNative() && index < getDenseInitializedLength());
         elements[index].init(this, js::HeapSlot::Element, index, val);
     }
 
@@ -615,7 +615,7 @@ class JSObject : public js::ObjectImpl
     inline void moveDenseElementsUnbarriered(uint32_t dstStart, uint32_t srcStart, uint32_t count);
 
     bool shouldConvertDoubleElements() {
-        JS_ASSERT(uninlinedIsNative());
+        JS_ASSERT(isNative());
         return getElementsHeader()->shouldConvertDoubleElements();
     }
 

@@ -10,6 +10,7 @@
 #include "Windows.h" // HRESULT, DWORD
 #include "MediaDecoderReader.h"
 #include "mozilla/RefPtr.h"
+#include "MP3FrameParser.h"
 
 class IGraphBuilder;
 class IMediaControl;
@@ -70,6 +71,10 @@ public:
   void OnDecodeThreadStart() MOZ_OVERRIDE;
   void OnDecodeThreadFinish() MOZ_OVERRIDE;
 
+  void NotifyDataArrived(const char* aBuffer,
+                         uint32_t aLength,
+                         int64_t aOffset) MOZ_OVERRIDE;
+
 private:
 
   // Calls mAudioQueue.Finish(), and notifies the filter graph that playback
@@ -91,6 +96,11 @@ private:
   // The graph will block while this is blocked, i.e. it will pause decoding.
   RefPtr<AudioSinkFilter> mAudioSinkFilter;
 
+  // Some MP3s are variable bitrate, so DirectShow's duration estimation
+  // can make its duration estimation based on the wrong bitrate. So we parse
+  // the MP3 frames to get a more accuate estimate of the duration.
+  MP3FrameParser mMP3FrameParser;
+
 #ifdef DEBUG
   // Used to add/remove the filter graph to the Running Object Table. You can
   // connect GraphEdit/GraphStudio to the graph to observe and/or debug its
@@ -106,6 +116,9 @@ private:
 
   // Number of bytes per sample. Can be either 1 or 2.
   uint32_t mBytesPerSample;
+
+  // Duration of the stream, in microseconds.
+  int64_t mDuration;
 };
 
 } // namespace mozilla

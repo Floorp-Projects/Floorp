@@ -162,6 +162,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     template <typename Source, typename TypeSet>
     void guardTypeSet(const Source &address, const TypeSet *types, Register scratch,
                       Label *matched, Label *miss);
+    template <typename TypeSet>
+    void guardObjectType(Register obj, const TypeSet *types,
+                         Register scratch, Label *matched, Label *miss);
     template <typename Source>
     void guardType(const Source &address, types::Type type, Register scratch,
                    Label *matched, Label *miss);
@@ -427,7 +430,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void Push(TypedOrValueRegister v) {
         if (v.hasValue())
             Push(v.valueReg());
-        else if (v.type() == MIRType_Double)
+        else if (IsFloatingPointType(v.type()))
             Push(v.typedReg().fpu());
         else
             Push(ValueTypeFromMIRType(v.type()), v.typedReg().gpr());
@@ -558,6 +561,14 @@ class MacroAssembler : public MacroAssemblerSpecific
         bind(&notNaN);
     }
 
+    void canonicalizeFloat(FloatRegister reg) {
+        static float js_NaN_float = js_NaN;
+        Label notNaN;
+        branchFloat(DoubleOrdered, reg, reg, &notNaN);
+        loadStaticFloat32(&js_NaN_float, reg);
+        bind(&notNaN);
+    }
+
     template<typename T>
     void loadFromTypedArray(int arrayType, const T &src, AnyRegister dest, Register temp, Label *fail);
 
@@ -586,24 +597,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         }
     }
 
-    template<typename T>
-    void storeToTypedFloatArray(int arrayType, FloatRegister value, const T &dest) {
-#ifdef JS_MORE_DETERMINISTIC
-        // See the comment in ToDoubleForTypedArray.
-        canonicalizeDouble(value);
-#endif
-        switch (arrayType) {
-          case ScalarTypeRepresentation::TYPE_FLOAT32:
-            convertDoubleToFloat(value, ScratchFloatReg);
-            storeFloat(ScratchFloatReg, dest);
-            break;
-          case ScalarTypeRepresentation::TYPE_FLOAT64:
-            storeDouble(value, dest);
-            break;
-          default:
-            MOZ_ASSUME_UNREACHABLE("Invalid typed array type");
-        }
-    }
+    void storeToTypedFloatArray(int arrayType, const FloatRegister &value, const BaseIndex &dest);
+    void storeToTypedFloatArray(int arrayType, const FloatRegister &value, const Address &dest);
 
     Register extractString(const Address &address, Register scratch) {
         return extractObject(address, scratch);
@@ -625,6 +620,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     Register extractObject(const TypedOrValueRegister &reg, Register scratch) {
         if (reg.hasValue())
             return extractObject(reg.valueReg(), scratch);
+        JS_ASSERT(reg.type() == MIRType_Object);
         return reg.typedReg().gpr();
     }
 
@@ -634,7 +630,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     using MacroAssemblerSpecific::ensureDouble;
 
-    void ensureDouble(const Address &source, FloatRegister dest, Label *failure) {
+    template <typename S>
+    void ensureDouble(const S &source, FloatRegister dest, Label *failure) {
         Label isDouble, done;
         branchTestDouble(Assembler::Equal, source, &isDouble);
         branchTestInt32(Assembler::NotEqual, source, failure);
@@ -650,7 +647,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // Emit type case branch on tag matching if the type tag in the definition
     // might actually be that type.
-    void branchEqualTypeIfNeeded(MIRType type, MDefinition *def, const Register &tag,
+    void branchEqualTypeIfNeeded(MIRType type, MDefinition *maybeDef, const Register &tag,
                                  Label *label);
 
     // Inline allocation.
@@ -1001,7 +998,151 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void convertInt32ValueToDouble(const Address &address, Register scratch, Label *done);
     void convertValueToDouble(ValueOperand value, FloatRegister output, Label *fail);
-    void convertValueToInt32(ValueOperand value, FloatRegister temp, Register output, Label *fail);
+    bool convertValueToDouble(JSContext *cx, const Value &v, FloatRegister output, Label *fail);
+    bool convertConstantOrRegisterToDouble(JSContext *cx, ConstantOrRegister src,
+                                           FloatRegister output, Label *fail);
+    void convertTypedOrValueToDouble(TypedOrValueRegister src, FloatRegister output, Label *fail);
+
+    enum IntConversionBehavior {
+        IntConversion_Normal,
+        IntConversion_NegativeZeroCheck,
+        IntConversion_Truncate,
+        IntConversion_ClampToUint8,
+    };
+
+    //
+    // Functions for converting values to int.
+    //
+    void convertDoubleToInt(FloatRegister src, Register output, Label *fail,
+                            IntConversionBehavior behavior);
+
+    // Strings may be handled by providing labels to jump to when the behavior
+    // is truncation or clamping. The subroutine, usually an OOL call, is
+    // passed the unboxed string in |stringReg| and should convert it to a
+    // double store into |temp|.
+    void convertValueToInt(ValueOperand value, MDefinition *input,
+                           Label *handleStringEntry, Label *handleStringRejoin,
+                           Register stringReg, FloatRegister temp, Register output,
+                           Label *fail, IntConversionBehavior behavior);
+    void convertValueToInt(ValueOperand value, FloatRegister temp, Register output, Label *fail,
+                           IntConversionBehavior behavior)
+    {
+        convertValueToInt(value, NULL, NULL, NULL, InvalidReg, temp, output, fail, behavior);
+    }
+    bool convertValueToInt(JSContext *cx, const Value &v, Register output, Label *fail,
+                           IntConversionBehavior behavior);
+    bool convertConstantOrRegisterToInt(JSContext *cx, ConstantOrRegister src, FloatRegister temp,
+                                        Register output, Label *fail, IntConversionBehavior behavior);
+    void convertTypedOrValueToInt(TypedOrValueRegister src, FloatRegister temp, Register output,
+                                  Label *fail, IntConversionBehavior behavior);
+
+    //
+    // Convenience functions for converting values to int32.
+    //
+    void convertValueToInt32(ValueOperand value, FloatRegister temp, Register output, Label *fail,
+                             bool negativeZeroCheck)
+    {
+        convertValueToInt(value, temp, output, fail, negativeZeroCheck
+                          ? IntConversion_NegativeZeroCheck
+                          : IntConversion_Normal);
+    }
+    void convertValueToInt32(ValueOperand value, MDefinition *input,
+                             FloatRegister temp, Register output, Label *fail,
+                             bool negativeZeroCheck)
+    {
+        convertValueToInt(value, input, NULL, NULL, InvalidReg, temp, output, fail,
+                          negativeZeroCheck
+                          ? IntConversion_NegativeZeroCheck
+                          : IntConversion_Normal);
+    }
+    bool convertValueToInt32(JSContext *cx, const Value &v, Register output, Label *fail,
+                             bool negativeZeroCheck)
+    {
+        return convertValueToInt(cx, v, output, fail, negativeZeroCheck
+                                 ? IntConversion_NegativeZeroCheck
+                                 : IntConversion_Normal);
+    }
+    bool convertConstantOrRegisterToInt32(JSContext *cx, ConstantOrRegister src, FloatRegister temp,
+                                          Register output, Label *fail, bool negativeZeroCheck)
+    {
+        return convertConstantOrRegisterToInt(cx, src, temp, output, fail, negativeZeroCheck
+                                              ? IntConversion_NegativeZeroCheck
+                                              : IntConversion_Normal);
+    }
+    void convertTypedOrValueToInt32(TypedOrValueRegister src, FloatRegister temp, Register output,
+                                    Label *fail, bool negativeZeroCheck)
+    {
+        convertTypedOrValueToInt(src, temp, output, fail, negativeZeroCheck
+                                 ? IntConversion_NegativeZeroCheck
+                                 : IntConversion_Normal);
+    }
+
+    //
+    // Convenience functions for truncating values to int32.
+    //
+    void truncateValueToInt32(ValueOperand value, FloatRegister temp, Register output, Label *fail) {
+        convertValueToInt(value, temp, output, fail, IntConversion_Truncate);
+    }
+    void truncateValueToInt32(ValueOperand value, MDefinition *input,
+                              Label *handleStringEntry, Label *handleStringRejoin,
+                              Register stringReg, FloatRegister temp, Register output,
+                              Label *fail)
+    {
+        convertValueToInt(value, input, handleStringEntry, handleStringRejoin,
+                          stringReg, temp, output, fail, IntConversion_Truncate);
+    }
+    void truncateValueToInt32(ValueOperand value, MDefinition *input,
+                              FloatRegister temp, Register output, Label *fail)
+    {
+        convertValueToInt(value, input, NULL, NULL, InvalidReg, temp, output, fail,
+                          IntConversion_Truncate);
+    }
+    bool truncateValueToInt32(JSContext *cx, const Value &v, Register output, Label *fail) {
+        return convertValueToInt(cx, v, output, fail, IntConversion_Truncate);
+    }
+    bool truncateConstantOrRegisterToInt32(JSContext *cx, ConstantOrRegister src, FloatRegister temp,
+                                           Register output, Label *fail)
+    {
+        return convertConstantOrRegisterToInt(cx, src, temp, output, fail, IntConversion_Truncate);
+    }
+    void truncateTypedOrValueToInt32(TypedOrValueRegister src, FloatRegister temp, Register output,
+                                     Label *fail)
+    {
+        convertTypedOrValueToInt(src, temp, output, fail, IntConversion_Truncate);
+    }
+
+    // Convenience functions for clamping values to uint8.
+    void clampValueToUint8(ValueOperand value, FloatRegister temp, Register output, Label *fail) {
+        convertValueToInt(value, temp, output, fail, IntConversion_ClampToUint8);
+    }
+    void clampValueToUint8(ValueOperand value, MDefinition *input,
+                           Label *handleStringEntry, Label *handleStringRejoin,
+                           Register stringReg, FloatRegister temp, Register output,
+                           Label *fail)
+    {
+        convertValueToInt(value, input, handleStringEntry, handleStringRejoin,
+                          stringReg, temp, output, fail, IntConversion_ClampToUint8);
+    }
+    void clampValueToUint8(ValueOperand value, MDefinition *input,
+                           FloatRegister temp, Register output, Label *fail)
+    {
+        convertValueToInt(value, input, NULL, NULL, InvalidReg, temp, output, fail,
+                          IntConversion_ClampToUint8);
+    }
+    bool clampValueToUint8(JSContext *cx, const Value &v, Register output, Label *fail) {
+        return convertValueToInt(cx, v, output, fail, IntConversion_ClampToUint8);
+    }
+    bool clampConstantOrRegisterToUint8(JSContext *cx, ConstantOrRegister src, FloatRegister temp,
+                                        Register output, Label *fail)
+    {
+        return convertConstantOrRegisterToInt(cx, src, temp, output, fail,
+                                              IntConversion_ClampToUint8);
+    }
+    void clampTypedOrValueToUint8(TypedOrValueRegister src, FloatRegister temp, Register output,
+                                  Label *fail)
+    {
+        convertTypedOrValueToInt(src, temp, output, fail, IntConversion_ClampToUint8);
+    }
 };
 
 static inline Assembler::DoubleCondition

@@ -428,7 +428,10 @@ class RegExpObject : public JSObject
         return createShared(cx, g);
     }
 
-    inline void setShared(ExclusiveContext *cx, RegExpShared &shared);
+    void setShared(ExclusiveContext *cx, RegExpShared &shared) {
+        shared.prepareForUse(cx);
+        JSObject::setPrivate(&shared);
+    }
 
   private:
     friend class RegExpObjectBuilder;

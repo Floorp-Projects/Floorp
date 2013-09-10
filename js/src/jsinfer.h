@@ -17,6 +17,7 @@
 #include "ds/IdValuePair.h"
 #include "ds/LifoAlloc.h"
 #include "gc/Barrier.h"
+#include "gc/Marking.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
 
@@ -885,7 +886,8 @@ struct TypeObjectAddendum
         return (TypeTypedObject*) this;
     }
 
-    static inline void writeBarrierPre(TypeObjectAddendum *newScript);
+    static inline void writeBarrierPre(TypeObjectAddendum *type);
+
     static void writeBarrierPost(TypeObjectAddendum *newScript, void *addr) {}
 };
 
@@ -1109,6 +1111,9 @@ struct TypeObject : gc::Cell
     inline unsigned getPropertyCount();
     inline Property *getProperty(unsigned i);
 
+    /* Get the typed array element type if clasp is a typed array. */
+    inline int getTypedArrayType();
+
     /*
      * Get the global object which all objects of this type are parented to,
      * or NULL if there is none known.
@@ -1149,10 +1154,34 @@ struct TypeObject : gc::Cell
     void finalize(FreeOp *fop) {}
 
     JS::Zone *zone() const { return tenuredZone(); }
+    JS::shadow::Zone *shadowZone() const { return JS::shadow::Zone::asShadowZone(zone()); }
 
-    static inline void writeBarrierPre(TypeObject *type);
+    static void writeBarrierPre(TypeObject *type) {
+#ifdef JSGC_INCREMENTAL
+        if (!type || !type->shadowRuntimeFromAnyThread()->needsBarrier())
+            return;
+
+        JS::shadow::Zone *shadowZone = type->shadowZone();
+        if (shadowZone->needsBarrier()) {
+            TypeObject *tmp = type;
+            js::gc::MarkTypeObjectUnbarriered(shadowZone->barrierTracer(), &tmp, "write barrier");
+            JS_ASSERT(tmp == type);
+        }
+#endif
+    }
+
     static void writeBarrierPost(TypeObject *type, void *addr) {}
-    static inline void readBarrier(TypeObject *type);
+
+    static void readBarrier(TypeObject *type) {
+#ifdef JSGC_INCREMENTAL
+        JS::shadow::Zone *shadowZone = type->shadowZone();
+        if (shadowZone->needsBarrier()) {
+            TypeObject *tmp = type;
+            MarkTypeObjectUnbarriered(shadowZone->barrierTracer(), &tmp, "read barrier");
+            JS_ASSERT(tmp == type);
+        }
+#endif
+    }
 
     static inline ThingRootKind rootKind() { return THING_ROOT_TYPE_OBJECT; }
 

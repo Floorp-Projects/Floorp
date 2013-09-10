@@ -453,6 +453,13 @@ class MDefinition : public MNode
         return !resultTypeSet() || resultTypeSet()->mightBeType(ValueTypeFromMIRType(type));
     }
 
+    // Float32 specialization operations (see big comment in IonAnalysis before the Float32
+    // specialization algorithm).
+    virtual bool isFloat32Commutative() const { return false; }
+    virtual bool canProduceFloat32() const { return false; }
+    virtual bool canConsumeFloat32() const { return false; }
+    virtual void trySpecializeFloat32() {}
+
     // Returns the beginning of this definition's use chain.
     MUseIterator usesBegin() const {
         return uses_.begin();
@@ -948,8 +955,21 @@ class MConstant : public MNullaryInstruction
         return AliasSet::None();
     }
 
+    bool updateForReplacement(MDefinition *def) {
+        MConstant *c = def->toConstant();
+        // During constant folding, we don't want to replace a float32
+        // value by a double value.
+        if (type() == MIRType_Float32)
+            return c->type() == MIRType_Float32;
+        if (type() == MIRType_Double)
+            return c->type() != MIRType_Float32;
+        return true;
+    }
+
     void computeRange();
     bool truncate();
+
+    bool canProduceFloat32() const;
 };
 
 class MParameter : public MNullaryInstruction
@@ -1723,6 +1743,10 @@ class MCall
         return getOperand(NumNonArgumentOperands + index);
     }
 
+    void replaceArg(uint32_t index, MDefinition *def) {
+        replaceOperand(NumNonArgumentOperands + index, def);
+    }
+
     void rootTargetScript(JSFunction *target) {
         targetScript_.setRoot(target->nonLazyScript());
     }
@@ -2129,14 +2153,14 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy
     enum Mode {
         Fallible,       // Check the type, and deoptimize if unexpected.
         Infallible,     // Type guard is not necessary.
-        TypeBarrier,    // Guard on the type, and act like a TypeBarrier on failure.
-        TypeGuard       // Guard on the type, and deoptimize otherwise.
+        TypeBarrier     // Guard on the type, and act like a TypeBarrier on failure.
     };
 
   private:
     Mode mode_;
+    BailoutKind bailoutKind_;
 
-    MUnbox(MDefinition *ins, MIRType type, Mode mode)
+    MUnbox(MDefinition *ins, MIRType type, Mode mode, BailoutKind kind)
       : MUnaryInstruction(ins),
         mode_(mode)
     {
@@ -2151,17 +2175,24 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy
         setResultTypeSet(ins->resultTypeSet());
         setMovable();
 
-        if (mode_ == TypeBarrier || mode_ == TypeGuard)
+        if (mode_ == TypeBarrier)
             setGuard();
-        if (mode_ == TypeGuard)
-            mode_ = Fallible;
-    }
 
+        bailoutKind_ = kind;
+    }
   public:
     INSTRUCTION_HEADER(Unbox)
     static MUnbox *New(MDefinition *ins, MIRType type, Mode mode)
     {
-        return new MUnbox(ins, type, mode);
+        BailoutKind kind = Bailout_Normal;
+        if (mode == TypeBarrier && ins->isEffectful())
+            kind = Bailout_TypeBarrier;
+        return new MUnbox(ins, type, mode, kind);
+    }
+
+    static MUnbox *New(MDefinition *ins, MIRType type, Mode mode, BailoutKind kind)
+    {
+        return new MUnbox(ins, type, mode, kind);
     }
 
     TypePolicy *typePolicy() {
@@ -2174,9 +2205,7 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy
     BailoutKind bailoutKind() const {
         // If infallible, no bailout should be generated.
         JS_ASSERT(fallible());
-        return mode() == Fallible
-               ? Bailout_Normal
-               : Bailout_TypeBarrier;
+        return bailoutKind_;
     }
     bool fallible() const {
         return mode() != Infallible;
@@ -2634,6 +2663,65 @@ class MToDouble
     void computeRange();
     bool truncate();
     bool isOperandTruncated(size_t index) const;
+};
+
+// Converts a primitive (either typed or untyped) to a float32. If the input is
+// not primitive at runtime, a bailout occurs.
+class MToFloat32
+  : public MUnaryInstruction,
+    public ToDoublePolicy
+{
+  public:
+    // Types of values which can be converted.
+    enum ConversionKind {
+        NonStringPrimitives,
+        NonNullNonStringPrimitives,
+        NumbersOnly
+    };
+
+  protected:
+    ConversionKind conversion_;
+
+    MToFloat32(MDefinition *def, ConversionKind conversion)
+      : MUnaryInstruction(def), conversion_(conversion)
+    {
+        setResultType(MIRType_Float32);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(ToFloat32)
+    static MToFloat32 *New(MDefinition *def, ConversionKind conversion = NonStringPrimitives) {
+        return new MToFloat32(def, conversion);
+    }
+    static MToFloat32 *NewAsmJS(MDefinition *def) {
+        return new MToFloat32(def, NonStringPrimitives);
+    }
+
+    ConversionKind conversion() const {
+        return conversion_;
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
+    virtual MDefinition *foldsTo(bool useValueNumbers);
+    bool congruentTo(MDefinition *ins) const {
+        if (!ins->isToFloat32() || ins->toToFloat32()->conversion() != conversion())
+            return false;
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+
+    void computeRange();
+    bool truncate();
+    bool isOperandTruncated(size_t index) const;
+
+    bool canConsumeFloat32() const { return true; }
+    bool canProduceFloat32() const { return true; }
 };
 
 // Converts a uint32 to a double (coming from asm.js).
@@ -3101,6 +3189,8 @@ class MBinaryArithInstruction
         setResultType(MIRType_Int32);
     }
 
+    virtual void trySpecializeFloat32();
+
     bool congruentTo(MDefinition *ins) const {
         return MBinaryInstruction::congruentTo(ins);
     }
@@ -3476,6 +3566,8 @@ class MAdd : public MBinaryArithInstruction
         return add;
     }
 
+    bool isFloat32Commutative() const { return true; }
+
     double getIdentity() {
         return 0;
     }
@@ -3511,6 +3603,8 @@ class MSub : public MBinaryArithInstruction
     double getIdentity() {
         return 0;
     }
+
+    bool isFloat32Commutative() const { return true; }
 
     bool fallible();
     void computeRange();
@@ -3584,6 +3678,8 @@ class MMul : public MBinaryArithInstruction
         return canBeNegativeZero_ || canOverflow();
     }
 
+    bool isFloat32Commutative() const { return true; }
+
     void computeRange();
     bool truncate();
     bool isOperandTruncated(size_t index) const;
@@ -3651,6 +3747,8 @@ class MDiv : public MBinaryArithInstruction
     bool isUnsigned() {
         return unsigned_;
     }
+
+    bool isFloat32Commutative() const { return true; }
 
     bool fallible();
     bool truncate();
@@ -3839,6 +3937,8 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
     bool hasBackedgeType_;
     bool triedToSpecialize_;
     bool isIterator_;
+    bool canProduceFloat32_;
+    bool canConsumeFloat32_;
 
 #if DEBUG
     bool specialized_;
@@ -3849,7 +3949,9 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
       : slot_(slot),
         hasBackedgeType_(false),
         triedToSpecialize_(false),
-        isIterator_(false)
+        isIterator_(false),
+        canProduceFloat32_(false),
+        canConsumeFloat32_(false)
 #if DEBUG
         , specialized_(false)
         , capacity_(0)
@@ -3946,6 +4048,22 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
                 return NULL;
         }
         return first;
+    }
+
+    bool canProduceFloat32() const {
+        return canProduceFloat32_;
+    }
+
+    void setCanProduceFloat32(bool can) {
+        canProduceFloat32_ = can;
+    }
+
+    bool canConsumeFloat32() const {
+        return canConsumeFloat32_;
+    }
+
+    void setCanConsumeFloat32(bool can) {
+        canConsumeFloat32_ = can;
     }
 };
 
@@ -4951,7 +5069,7 @@ class MStoreElementCommon
 class MStoreElement
   : public MAryInstruction<3>,
     public MStoreElementCommon,
-    public SingleObjectPolicy
+    public MixPolicy<SingleObjectPolicy, NoFloatPolicy<2> >
 {
     bool needsHoleCheck_;
 
@@ -5001,7 +5119,7 @@ class MStoreElement
 class MStoreElementHole
   : public MAryInstruction<4>,
     public MStoreElementCommon,
-    public SingleObjectPolicy
+    public MixPolicy<SingleObjectPolicy, NoFloatPolicy<3> >
 {
     MStoreElementHole(MDefinition *object, MDefinition *elements,
                       MDefinition *index, MDefinition *value) {
@@ -5201,6 +5319,8 @@ class MLoadTypedArrayElement
     }
 
     void computeRange();
+
+    bool canProduceFloat32() const { return arrayType_ == ScalarTypeRepresentation::TYPE_FLOAT32; }
 };
 
 // Load a value from a typed array. Out-of-bounds accesses are handled using
@@ -5249,6 +5369,7 @@ class MLoadTypedArrayElementHole
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::TypedArrayElement);
     }
+    bool canProduceFloat32() const { return arrayType_ == ScalarTypeRepresentation::TYPE_FLOAT32; }
 };
 
 // Load a value fallibly or infallibly from a statically known typed array.
@@ -5260,7 +5381,9 @@ class MLoadTypedArrayElementStatic
       : MUnaryInstruction(ptr), typedArray_(typedArray), fallible_(true)
     {
         int type = typedArray_->type();
-        if (type == ScalarTypeRepresentation::TYPE_FLOAT32 || type == ScalarTypeRepresentation::TYPE_FLOAT64)
+        if (type == ScalarTypeRepresentation::TYPE_FLOAT32)
+            setResultType(MIRType_Float32);
+        else if (type == ScalarTypeRepresentation::TYPE_FLOAT64)
             setResultType(MIRType_Double);
         else
             setResultType(MIRType_Int32);
@@ -5299,6 +5422,7 @@ class MLoadTypedArrayElementStatic
 
     void computeRange();
     bool truncate();
+    bool canProduceFloat32() const { return typedArray_->type() == ScalarTypeRepresentation::TYPE_FLOAT32; }
 };
 
 class MStoreTypedArrayElement
@@ -5362,6 +5486,8 @@ class MStoreTypedArrayElement
         racy_ = true;
     }
     bool isOperandTruncated(size_t index) const;
+
+    bool canConsumeFloat32() const { return arrayType_ == ScalarTypeRepresentation::TYPE_FLOAT32; }
 };
 
 class MStoreTypedArrayElementHole
@@ -5425,6 +5551,8 @@ class MStoreTypedArrayElementHole
         return AliasSet::Store(AliasSet::TypedArrayElement);
     }
     bool isOperandTruncated(size_t index) const;
+
+    bool canConsumeFloat32() const { return arrayType_ == ScalarTypeRepresentation::TYPE_FLOAT32; }
 };
 
 // Store a value infallibly to a statically known typed array.
@@ -5466,6 +5594,8 @@ class MStoreTypedArrayElementStatic :
         return AliasSet::Store(AliasSet::TypedArrayElement);
     }
     bool isOperandTruncated(size_t index) const;
+
+    bool canConsumeFloat32() const { return typedArray_->type() == ScalarTypeRepresentation::TYPE_FLOAT32; }
 };
 
 // Compute an "effective address", i.e., a compound computation of the form:
@@ -5585,7 +5715,7 @@ class MLoadFixedSlot
 
 class MStoreFixedSlot
   : public MBinaryInstruction,
-    public SingleObjectPolicy
+    public MixPolicy<SingleObjectPolicy, NoFloatPolicy<1> >
 {
     bool needsBarrier_;
     size_t slot_;
@@ -6406,7 +6536,7 @@ class MForkJoinSlice
 // Store to vp[slot] (slots that are not inline in an object).
 class MStoreSlot
   : public MBinaryInstruction,
-    public SingleObjectPolicy
+    public MixPolicy<ObjectPolicy<0>, NoFloatPolicy<1> >
 {
     uint32_t slot_;
     MIRType slotType_;
@@ -6706,7 +6836,7 @@ class MCallSetProperty
 
 class MSetPropertyCache
   : public MSetPropertyInstruction,
-    public SingleObjectPolicy
+    public MixPolicy<SingleObjectPolicy, NoFloatPolicy<1> >
 {
     bool needsTypeBarrier_;
 
@@ -7548,7 +7678,7 @@ class MGuardThreadLocalObject
 // that value.
 class MTypeBarrier
   : public MUnaryInstruction,
-    public BoxInputsPolicy
+    public TypeBarrierPolicy
 {
     BailoutKind bailoutKind_;
 
@@ -7556,8 +7686,11 @@ class MTypeBarrier
       : MUnaryInstruction(def)
     {
         JS_ASSERT(!types->unknown());
-        setResultType(MIRType_Value);
+
+        MIRType type = MIRTypeFromValueType(types->getKnownTypeTag());
+        setResultType(type);
         setResultTypeSet(types);
+
         setGuard();
         setMovable();
         bailoutKind_ = bailoutKind;
@@ -7567,15 +7700,15 @@ class MTypeBarrier
     INSTRUCTION_HEADER(TypeBarrier)
 
     static MTypeBarrier *New(MDefinition *def, types::StackTypeSet *types) {
-        BailoutKind bailoutKind = def->isEffectful()
-                                  ? Bailout_TypeBarrier
-                                  : Bailout_Normal;
-        return new MTypeBarrier(def, types, bailoutKind);
+        BailoutKind kind = def->isEffectful() ? Bailout_TypeBarrier : Bailout_Normal;
+        return new MTypeBarrier(def, types, kind);
     }
     static MTypeBarrier *New(MDefinition *def, types::StackTypeSet *types,
-                             BailoutKind bailoutKind) {
-        return new MTypeBarrier(def, types, bailoutKind);
+                             BailoutKind kind) {
+        return new MTypeBarrier(def, types, kind);
     }
+
+    void printOpcode(FILE *fp) const;
 
     TypePolicy *typePolicy() {
         return this;
@@ -7592,6 +7725,17 @@ class MTypeBarrier
     }
     virtual bool neverHoist() const {
         return resultTypeSet()->empty();
+    }
+
+    bool alwaysBails() const {
+        // If mirtype of input doesn't agree with mirtype of barrier,
+        // we will definitely bail.
+        MIRType type = MIRTypeFromValueType(resultTypeSet()->getKnownTypeTag());
+        if (type == MIRType_Value)
+            return false;
+        if (input()->type() == MIRType_Value)
+            return false;
+        return input()->type() != type;
     }
 };
 

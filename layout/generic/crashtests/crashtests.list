@@ -466,6 +466,7 @@ load 769303-2.html
 load 769120.html
 load 786740-1.html
 asserts(0-4) test-pref(font.size.inflation.emPerLine,15) load 791601.xhtml # 3 counts of bug 871327, 1 bug 367185
+test-pref(font.size.inflation.minTwips,120) load 794693.html
 asserts(8) test-pref(layout.css.flexbox.enabled,true) load 798020-1.html
 test-pref(layout.css.flexbox.enabled,true) load 798235-1.html
 test-pref(layout.css.flexbox.enabled,true) load 799207-1.html

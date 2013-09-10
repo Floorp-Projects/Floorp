@@ -33,7 +33,7 @@ typedef JS::Rooted<Shape*>             RootedShape;
 typedef JS::Rooted<types::TypeObject*> RootedTypeObject;
 typedef JS::Rooted<JSAtom*>            RootedAtom;
 typedef JS::Rooted<PropertyName*>      RootedPropertyName;
-typedef Rooted<js::ScriptSourceObject*> RootedScriptSource;
+typedef JS::Rooted<js::ScriptSourceObject*> RootedScriptSource;
 
 } /* namespace js */
 

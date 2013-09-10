@@ -4,10 +4,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EventTarget.h"
+#include "mozilla/dom/EventListenerBinding.h"
 
 USING_WORKERS_NAMESPACE
 using mozilla::ErrorResult;
-using namespace mozilla::dom;
+using mozilla::dom::EventListener;
+using mozilla::dom::Nullable;
 
 void
 EventTarget::_trace(JSTracer* aTrc)
@@ -58,7 +60,7 @@ EventTarget::SetEventListener(const nsAString& aType,
 
 void
 EventTarget::AddEventListener(const nsAString& aType,
-                              JS::Handle<JSObject*> aListener,
+                              EventListener* aListener,
                               bool aCapturing, Nullable<bool> aWantsUntrusted,
                               ErrorResult& aRv)
 {
@@ -77,13 +79,13 @@ EventTarget::AddEventListener(const nsAString& aType,
 
   bool wantsUntrusted = !aWantsUntrusted.IsNull() && aWantsUntrusted.Value();
   mListenerManager.AddEventListener(cx, INTERNED_STRING_TO_JSID(cx, type),
-                                    aListener, aCapturing, wantsUntrusted,
-                                    aRv);
+                                    aListener->Callback(), aCapturing,
+                                    wantsUntrusted, aRv);
 }
 
 void
 EventTarget::RemoveEventListener(const nsAString& aType,
-                                 JS::Handle<JSObject*> aListener,
+                                 EventListener* aListener,
                                  bool aCapturing, ErrorResult& aRv)
 {
   if (!aListener) {
@@ -100,5 +102,5 @@ EventTarget::RemoveEventListener(const nsAString& aType,
   }
 
   mListenerManager.RemoveEventListener(cx, INTERNED_STRING_TO_JSID(cx, type),
-                                       aListener, aCapturing);
+                                       aListener->Callback(), aCapturing);
 }

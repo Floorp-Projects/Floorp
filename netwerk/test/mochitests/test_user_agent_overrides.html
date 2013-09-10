@@ -181,6 +181,45 @@ function testInactive(callback) {
   });
 }
 
+function testPriority(callback) {
+  // foo.bar.com override should have priority over bar.com override
+  var tests = [
+    ['example.org', 'test1.example.org', 'sub1.test1.example.org'],
+    ['example.org', 'test1.example.org', 'sub2.test1.example.org'],
+    ['example.org', 'test2.example.org', 'sub1.test2.example.org'],
+    ['example.org', 'test2.example.org', 'sub2.test2.example.org'],
+  ];
+  (function nextTest() {
+    var [level0, level1, level2] = tests.shift();
+    var host = 'http://' + level2;
+    SpecialPowers.pushPrefEnv({
+      set: [
+        [PREF_OVERRIDES_ENABLED, true],
+        [PREF_OVERRIDES_BRANCH + level1, UA_WHOLE_OVERRIDE]
+      ]
+    }, function () {
+      // should use first override at this point
+      is(getUA(host),
+        UA_WHOLE_EXPECTED, 'UA not overridden');
+      // add a second override that should be used
+      testUA({
+        domain: level2,
+        override: UA_PARTIAL_OVERRIDE,
+        test_hosts: [host],
+        expected: UA_PARTIAL_EXPECTED
+      }, function () {
+        // add a third override that should not be used
+        testUA({
+          domain: level0,
+          override: UA_PARTIAL_OVERRIDE,
+          test_hosts: [host],
+          expected: UA_WHOLE_EXPECTED
+        }, tests.length ? nextTest : callback);
+      });
+    });
+  })();
+}
+
 function testOverrides(callback) {
   SpecialPowers.pushPrefEnv({
     set: [[PREF_OVERRIDES_ENABLED, true]]
@@ -195,7 +234,9 @@ SpecialPowers.wrap(UserAgentOverrides).init();
 SimpleTest.waitForExplicitFinish();
 
 testOverrides(function ()
-  testInactive(SimpleTest.finish)
+  testInactive(function ()
+    testPriority(SimpleTest.finish)
+  )
 );
 
 </script>

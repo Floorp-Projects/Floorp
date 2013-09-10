@@ -195,6 +195,7 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
                             "once. This limitation should be removed in a future release. To "
                             "work around this, compile a second module (e.g., using the "
                             "Function constructor).");
+    module.setIsLinked();
 
     RootedValue globalVal(cx, UndefinedValue());
     if (args.length() > 0)
@@ -227,7 +228,7 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
         if (!ArrayBufferObject::prepareForAsmJS(cx, heap))
             return LinkFail(cx, "Unable to prepare ArrayBuffer for asm.js use");
 
-        module.patchHeapAccesses(heap, cx);
+        module.initHeap(heap, cx);
     }
 
     AutoObjectVector ffis(cx);
@@ -263,7 +264,6 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
     for (unsigned i = 0; i < module.numExits(); i++)
         module.exitIndexToGlobalDatum(i).fun = &ffis[module.exit(i).ffiIndex()]->as<JSFunction>();
 
-    module.setIsLinked(heap);
     return true;
 }
 
