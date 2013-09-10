@@ -345,10 +345,12 @@ void Sampler::Start() {
   // Sending the signal ourselves instead of relying on itimer provides
   // much better accuracy.
   SetActive(true);
+
   if (pthread_create(
         &signal_sender_thread_, NULL, SignalSender, NULL) == 0) {
     signal_sender_launched_ = true;
   }
+  pthread_setname_np(signal_sender_thread_, "SamplerThread");
   LOG("Profiler thread started");
 }
 
