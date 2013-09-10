@@ -426,14 +426,4 @@ bool GetAppOutput(const CommandLine& cl, std::string* output) {
   }
 }
 
-int GetProcessCount(const std::wstring& executable_name,
-                    const ProcessFilter* filter) {
-  int count = 0;
-
-  NamedProcessIterator iter(executable_name, filter);
-  while (iter.NextProcessEntry())
-    ++count;
-  return count;
-}
-
 }  // namespace base
