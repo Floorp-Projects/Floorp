@@ -607,6 +607,14 @@ struct GCGraph
     ~GCGraph() {
     }
 
+    void Clear()
+    {
+        mNodes.Clear();
+        mEdges.Clear();
+        mWeakMaps.Clear();
+        mRootCount = 0;
+    }
+
     void SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                              size_t *aNodesSize, size_t *aEdgesSize) const {
         *aNodesSize = mNodes.SizeOfExcludingThis(aMallocSizeOf);
@@ -989,14 +997,6 @@ private:
     bool CollectWhite(nsICycleCollectorListener *aListener);
 
     void CleanupAfterCollection();
-
-    void ClearGraph()
-    {
-        mGraph.mNodes.Clear();
-        mGraph.mEdges.Clear();
-        mGraph.mWeakMaps.Clear();
-        mGraph.mRootCount = 0;
-    }
 };
 
 /**
@@ -2615,7 +2615,7 @@ nsCycleCollector::CleanupAfterCollection()
 {
     mWhiteNodes->Clear();
     mWhiteNodes = nullptr;
-    ClearGraph();
+    mGraph.Clear();
     mCollectionInProgress = false;
 
 #ifdef XP_OS2
