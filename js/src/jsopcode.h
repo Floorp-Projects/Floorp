@@ -591,17 +591,31 @@ IsEqualityOp(JSOp op)
 }
 
 inline bool
-IsGetterPC(jsbytecode *pc)
+IsGetPropPC(jsbytecode *pc)
 {
     JSOp op = JSOp(*pc);
     return op == JSOP_LENGTH  || op == JSOP_GETPROP || op == JSOP_CALLPROP;
 }
 
 inline bool
-IsSetterPC(jsbytecode *pc)
+IsSetPropPC(jsbytecode *pc)
 {
     JSOp op = JSOp(*pc);
     return op == JSOP_SETPROP || op == JSOP_SETNAME || op == JSOP_SETGNAME;
+}
+
+inline bool
+IsGetElemPC(jsbytecode *pc)
+{
+    JSOp op = JSOp(*pc);
+    return op == JSOP_GETELEM || op == JSOP_CALLELEM;
+}
+
+inline bool
+IsSetElemPC(jsbytecode *pc)
+{
+    JSOp op = JSOp(*pc);
+    return op == JSOP_SETELEM;
 }
 
 inline bool
