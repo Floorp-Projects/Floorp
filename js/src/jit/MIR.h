@@ -2919,11 +2919,7 @@ class MTypeOf
     MDefinition *foldsTo(bool useValueNumbers);
 
     AliasSet getAliasSet() const {
-        if (inputType_ <= MIRType_String)
-            return AliasSet::None();
-
-        // For objects, typeof may invoke an effectful typeof hook.
-        return AliasSet::Store(AliasSet::Any);
+        return AliasSet::None();
     }
 };
 
