@@ -255,12 +255,4 @@ void SplitString(const std::string& str,
                  char s,
                  std::vector<std::string>* r);
 
-// Returns true if the string passed in matches the pattern. The pattern
-// string can contain wildcards like * and ?
-// TODO(iyengar) This function may not work correctly for CJK strings as
-// it does individual character matches.
-// The backslash character (\) is an escape character for * and ?
-bool MatchPattern(const std::wstring& string, const std::wstring& pattern);
-bool MatchPattern(const std::string& string, const std::string& pattern);
-
 #endif  // BASE_STRING_UTIL_H_
