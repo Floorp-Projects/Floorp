@@ -211,6 +211,7 @@ WEBIDL_FILES = [
     'MozActivity.webidl',
     'MozMmsMessage.webidl',
     'MozNamedAttrMap.webidl',
+    'MozPowerManager.webidl',
     'MozTimeManager.webidl',
     'MutationEvent.webidl',
     'MutationObserver.webidl',
