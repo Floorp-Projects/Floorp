@@ -10522,7 +10522,6 @@ struct PrototypeTraits;
                                             config.getDictionaries(),
                                             config.getCallbacks(),
                                             config)
-        includes.add("mozilla/dom/BindingUtils.h")
         includes.add("mozilla/dom/OwningNonNull.h")
         includes.add("mozilla/dom/UnionMember.h")
 
