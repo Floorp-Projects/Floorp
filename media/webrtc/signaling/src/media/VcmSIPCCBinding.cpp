@@ -1486,8 +1486,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
     {
       config_raw = new mozilla::VideoCodecConfig(
         payloads[i].remote_rtp_pt,
-        ccsdpCodecName(payloads[i].codec_type),
-        payloads[i].video.rtcp_fb_types);
+        ccsdpCodecName(payloads[i].codec_type));
       configs.push_back(config_raw);
     }
 
@@ -2118,8 +2117,7 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
     mozilla::VideoCodecConfig *config_raw;
     config_raw = new mozilla::VideoCodecConfig(
       payload->remote_rtp_pt,
-      ccsdpCodecName(payload->codec_type),
-      payload->video.rtcp_fb_types);
+      ccsdpCodecName(payload->codec_type));
 
     // Take possession of this pointer
     mozilla::ScopedDeletePtr<mozilla::VideoCodecConfig> config(config_raw);
