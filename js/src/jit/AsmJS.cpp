@@ -5981,7 +5981,8 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
       case RetType::Void:
         break;
       case RetType::Signed:
-        masm.convertValueToInt32(JSReturnOperand, ReturnFloatReg, ReturnReg, &oolConvert);
+        masm.convertValueToInt32(JSReturnOperand, ReturnFloatReg, ReturnReg, &oolConvert,
+                                 /* -0 check */ false);
         break;
       case RetType::Double:
         masm.convertValueToDouble(JSReturnOperand, ReturnFloatReg, &oolConvert);

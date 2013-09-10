@@ -718,6 +718,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void unboxBoolean(const Address &src, const Register &dest);
     void unboxDouble(const ValueOperand &operand, const FloatRegister &dest);
     void unboxDouble(const Address &src, const FloatRegister &dest);
+    void unboxString(const ValueOperand &operand, const Register &dest);
+    void unboxString(const Address &src, const Register &dest);
     void unboxValue(const ValueOperand &src, AnyRegister dest);
     void unboxPrivate(const ValueOperand &src, Register dest);
 
@@ -1176,6 +1178,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void addPtr(const Address &src, Register dest);
 
     void move32(const Imm32 &imm, const Register &dest);
+    void move32(const Register &src, const Register &dest);
 
     void movePtr(const Register &src, const Register &dest);
     void movePtr(const ImmWord &imm, const Register &dest);
