@@ -7264,9 +7264,9 @@ IonBuilder::setElemTryCache(bool *emitted, MDefinition *object,
 
     // TODO: Bug 876650: remove this check:
     // Temporary disable the cache if non dense native,
-    // untill the cache supports more ics
+    // until the cache supports more ics
     SetElemICInspector icInspect(inspector->setElemICInspector(pc));
-    if (!icInspect.sawDenseWrite())
+    if (!icInspect.sawDenseWrite() && !icInspect.sawTypedArrayWrite())
         return true;
 
     bool needsBarrier;
