@@ -724,7 +724,7 @@ CycleCollectedJSRuntime::ContextCallback(JSContext* aContext,
 
   MOZ_ASSERT(JS_GetRuntime(aContext) == self->Runtime());
 
-  return self->OnContext(aContext, aOperation);
+  return self->CustomContextCallback(aContext, aOperation);
 }
 
 struct JsGcTracer : public TraceCallbacks
@@ -1132,10 +1132,4 @@ CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
   }
 
   CustomGCCallback(aStatus);
-}
-
-bool
-CycleCollectedJSRuntime::OnContext(JSContext* aCx, unsigned aOperation)
-{
-  return CustomContextCallback(aCx, aOperation);
 }
