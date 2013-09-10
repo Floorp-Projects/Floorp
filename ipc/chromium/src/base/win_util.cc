@@ -17,25 +17,6 @@
 
 namespace win_util {
 
-#define SIZEOF_STRUCT_WITH_SPECIFIED_LAST_MEMBER(struct_name, member) \
-    offsetof(struct_name, member) + \
-    (sizeof static_cast<struct_name*>(NULL)->member)
-#define NONCLIENTMETRICS_SIZE_PRE_VISTA \
-    SIZEOF_STRUCT_WITH_SPECIFIED_LAST_MEMBER(NONCLIENTMETRICS, lfMessageFont)
-
-void GetNonClientMetrics(NONCLIENTMETRICS* metrics) {
-  DCHECK(metrics);
-
-  static const UINT SIZEOF_NONCLIENTMETRICS =
-      (GetWinVersion() >= WINVERSION_VISTA) ?
-      sizeof(NONCLIENTMETRICS) : NONCLIENTMETRICS_SIZE_PRE_VISTA;
-  metrics->cbSize = SIZEOF_NONCLIENTMETRICS;
-  const bool success = !!SystemParametersInfo(SPI_GETNONCLIENTMETRICS,
-                                              SIZEOF_NONCLIENTMETRICS, metrics,
-                                              0);
-  DCHECK(success);
-}
-
 WinVersion GetWinVersion() {
   static bool checked_version = false;
   static WinVersion win_version = WINVERSION_PRE_2000;
