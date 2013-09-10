@@ -6,14 +6,9 @@
 
 #include "nsAccessiblePivot.h"
 
-#include "DocAccessible.h"
 #include "HyperTextAccessible.h"
 #include "nsAccUtils.h"
 #include "States.h"
-
-#include "nsArrayUtils.h"
-#include "nsComponentManagerUtils.h"
-#include "nsISupportsPrimitives.h"
 
 using namespace mozilla::a11y;
 
