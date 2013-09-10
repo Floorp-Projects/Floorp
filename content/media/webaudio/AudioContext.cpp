@@ -552,7 +552,7 @@ AudioContext::Shutdown()
 
   // For offline contexts, we can destroy the MediaStreamGraph at this point.
   if (mIsOffline) {
-    mDestination->DestroyGraph();
+    mDestination->OfflineShutdown();
   }
 }
 
