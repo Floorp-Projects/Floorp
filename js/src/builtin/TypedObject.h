@@ -9,6 +9,7 @@
 
 #include "jsobj.h"
 
+#include "builtin/TypedObjectConstants.h"
 #include "builtin/TypeRepresentation.h"
 
 namespace js {
@@ -20,47 +21,12 @@ namespace js {
  */
 extern const Class TypedObjectClass;
 
-// Slots common to all type descriptors:
-enum TypeCommonSlots {
-    // Canonical type representation of this type (see TypeRepresentation.h).
-    SLOT_TYPE_REPR=0,
-    TYPE_RESERVED_SLOTS
-};
-
-// Slots for ArrayType type descriptors:
-enum ArrayTypeCommonSlots {
-    // Type descriptor for the element type.
-    SLOT_ARRAY_ELEM_TYPE = TYPE_RESERVED_SLOTS,
-    ARRAY_TYPE_RESERVED_SLOTS
-};
-
-// Slots for StructType type descriptors:
-enum StructTypeCommonSlots {
-    // JS array containing type descriptors for each field, in order.
-    SLOT_STRUCT_FIELD_TYPES = TYPE_RESERVED_SLOTS,
-    STRUCT_TYPE_RESERVED_SLOTS
-};
-
-// Slots for data blocks:
-enum BlockCommonSlots {
-    // The type descriptor with which this block is associated.
-    SLOT_DATATYPE = 0,
-
-    // If this value is nullptr, then the block instance owns the
-    // uint8_t* in its priate data. Otherwise, this field contains the
-    // owner, and thus keeps the owner alive.
-    SLOT_BLOCKREFOWNER,
-
-    BLOCK_RESERVED_SLOTS
-};
-
 template <ScalarTypeRepresentation::Type type, typename T>
 class NumericType
 {
   private:
     static const Class * typeToClass();
   public:
-    static bool convert(JSContext *cx, HandleValue val, T* converted);
     static bool reify(JSContext *cx, void *mem, MutableHandleValue vp);
     static bool call(JSContext *cx, unsigned argc, Value *vp);
 };
@@ -251,6 +217,54 @@ class BinaryBlock
 };
 
 
+// Usage: ClampToUint8(v)
+//
+// Same as the C function ClampDoubleToUint8. `v` must be a number.
+bool ClampToUint8(ThreadSafeContext *cx, unsigned argc, Value *vp);
+extern const JSJitInfo ClampToUint8JitInfo;
+
+// Usage: Memcpy(targetTypedObj, targetOffset,
+//               sourceTypedObj, sourceOffset,
+//               size)
+//
+// Intrinsic function. Copies size bytes from the data for
+// `sourceTypedObj` at `sourceOffset` into the data for
+// `targetTypedObj` at `targetOffset`.
+bool Memcpy(ThreadSafeContext *cx, unsigned argc, Value *vp);
+
+extern const JSJitInfo MemcpyJitInfo;
+
+// Usage: StoreScalar(targetTypedObj, targetOffset, value)
+//
+// Intrinsic function. Stores value (which must be an int32 or uint32)
+// by `scalarTypeRepr` (which must be a type repr obj) and stores the
+// value at the memory for `targetTypedObj` at offset `targetOffset`.
+#define JS_STORE_SCALAR_CLASS_DEFN(_constant, T, _name)                       \
+class StoreScalar##T {                                                        \
+  public:                                                                     \
+    static bool Func(ThreadSafeContext *cx, unsigned argc, Value *vp);        \
+    static const JSJitInfo JitInfo;                                           \
+};
+
+// Usage: LoadScalar(targetTypedObj, targetOffset, value)
+//
+// Intrinsic function. Loads value (which must be an int32 or uint32)
+// by `scalarTypeRepr` (which must be a type repr obj) and loads the
+// value at the memory for `targetTypedObj` at offset `targetOffset`.
+// `targetTypedObj` must be attached.
+#define JS_LOAD_SCALAR_CLASS_DEFN(_constant, T, _name)                        \
+class LoadScalar##T {                                                         \
+  public:                                                                     \
+    static bool Func(ThreadSafeContext *cx, unsigned argc, Value *vp);        \
+    static const JSJitInfo JitInfo;                                           \
+};
+
+// I was using templates for this stuff instead of macros, but ran
+// into problems with the Unagi compiler.
+JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(JS_STORE_SCALAR_CLASS_DEFN)
+JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(JS_LOAD_SCALAR_CLASS_DEFN)
+
 } // namespace js
 
 #endif /* builtin_TypedObject_h */
+
