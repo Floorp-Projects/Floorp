@@ -1374,9 +1374,9 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
         if (JSOp(*pc_) == JSOP_FUNCALL) {
             JS_ASSERT(GET_ARGC(pc_) > 0);
             numActualArgs_ = GET_ARGC(pc_) - 1;
-        } else if (IsGetterPC(pc_)) {
+        } else if (IsGetPropPC(pc_)) {
             numActualArgs_ = 0;
-        } else if (IsSetterPC(pc_)) {
+        } else if (IsSetPropPC(pc_)) {
             numActualArgs_ = 1;
         }
 
@@ -1443,7 +1443,7 @@ InlineFrameIteratorMaybeGC<allowGC>::isConstructing() const
         ++parent;
 
         // Inlined Getters and Setters are never constructing.
-        if (IsGetterPC(parent.pc()) || IsSetterPC(parent.pc()))
+        if (IsGetPropPC(parent.pc()) || IsSetPropPC(parent.pc()))
             return false;
 
         // In the case of a JS frame, look up the pc from the snapshot.
@@ -1472,7 +1472,7 @@ IonFrameIterator::isConstructing() const
         InlineFrameIterator inlinedParent(GetIonContext()->cx, &parent);
 
         //Inlined Getters and Setters are never constructing.
-        if (IsGetterPC(inlinedParent.pc()) || IsSetterPC(inlinedParent.pc()))
+        if (IsGetPropPC(inlinedParent.pc()) || IsSetPropPC(inlinedParent.pc()))
             return false;
 
         JS_ASSERT(IsCallPC(inlinedParent.pc()));
@@ -1484,8 +1484,9 @@ IonFrameIterator::isConstructing() const
         jsbytecode *pc;
         parent.baselineScriptAndPc(NULL, &pc);
 
-        //Inlined Getters and Setters are never constructing.
-        if (IsGetterPC(pc) || IsSetterPC(pc))
+        // Inlined Getters and Setters are never constructing.
+        // Baseline may call getters from [GET|SET]PROP or [GET|SET]ELEM ops.
+        if (IsGetPropPC(pc) || IsSetPropPC(pc) || IsGetElemPC(pc) || IsSetElemPC(pc))
             return false;
 
         JS_ASSERT(IsCallPC(pc));
