@@ -41,7 +41,7 @@ Types = (
 )
 
 
-Includes = (
+HeaderIncludes = (
     'mozilla/Attributes.h',
     'base/basictypes.h',
     'prtime.h',
