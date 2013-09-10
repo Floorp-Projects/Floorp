@@ -1562,6 +1562,14 @@ TypeObject::getProperty(unsigned i)
     return propertySet[i];
 }
 
+inline int
+TypeObject::getTypedArrayType()
+{
+    if (IsTypedArrayClass(clasp))
+        return clasp - &TypedArrayObject::classes[0];
+    return ScalarTypeRepresentation::TYPE_MAX;
+}
+
 inline void
 TypeObject::writeBarrierPre(TypeObject *type)
 {
