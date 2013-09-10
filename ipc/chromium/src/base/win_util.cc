@@ -322,27 +322,6 @@ bool IsAltPressed() {
   return (::GetKeyState(VK_MENU) & 0x80) == 0x80;
 }
 
-std::wstring GetClassName(HWND window) {
-  // GetClassNameW will return a truncated result (properly null terminated) if
-  // the given buffer is not large enough.  So, it is not possible to determine
-  // that we got the entire class name if the result is exactly equal to the
-  // size of the buffer minus one.
-  DWORD buffer_size = MAX_PATH;
-  while (true) {
-    std::wstring output;
-    DWORD size_ret =
-        GetClassNameW(window, WriteInto(&output, buffer_size), buffer_size);
-    if (size_ret == 0)
-      break;
-    if (size_ret < (buffer_size - 1)) {
-      output.resize(size_ret);
-      return output;
-    }
-    buffer_size *= 2;
-  }
-  return std::wstring();  // error
-}
-
 bool UserAccountControlIsEnabled() {
   RegKey key(HKEY_LOCAL_MACHINE,
       L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System");

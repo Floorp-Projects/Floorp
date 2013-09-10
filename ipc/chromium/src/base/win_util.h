@@ -87,10 +87,6 @@ bool IsCtrlPressed();
 // Returns true if the alt key is currently pressed.
 bool IsAltPressed();
 
-// A version of the GetClassNameW API that returns the class name in an
-// std::wstring.  An empty result indicates a failure to get the class name.
-std::wstring GetClassName(HWND window);
-
 // Returns false if user account control (UAC) has been disabled with the
 // EnableLUA registry flag. Returns true if user account control is enabled.
 // NOTE: The EnableLUA registry flag, which is ignored on Windows XP
