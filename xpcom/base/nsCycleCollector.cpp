@@ -997,7 +997,7 @@ private:
     void ScanWeakMaps();
 
     // returns whether anything was collected
-    bool CollectWhite(nsICycleCollectorListener *aListener);
+    bool CollectWhite();
 
     void CleanupAfterCollection();
 };
@@ -2286,13 +2286,25 @@ nsCycleCollector::ScanRoots(nsICycleCollectorListener *aListener)
         NodePool::Enumerator etor(mGraph.mNodes);
         while (!etor.IsDone()) {
             PtrInfo *pi = etor.GetNext();
-            if (pi->mColor == black &&
-                pi->mRefCount > 0 && pi->mRefCount < UINT32_MAX &&
-                pi->mInternalRefs != pi->mRefCount) {
-                aListener->DescribeRoot((uint64_t)pi->mPointer,
-                                        pi->mInternalRefs);
+            switch (pi->mColor) {
+            case black:
+                if (pi->mRefCount > 0 && pi->mRefCount < UINT32_MAX &&
+                    pi->mInternalRefs != pi->mRefCount) {
+                    aListener->DescribeRoot((uint64_t)pi->mPointer,
+                                            pi->mInternalRefs);
+                }
+                break;
+            case white:
+                aListener->DescribeGarbage((uint64_t)pi->mPointer);
+                break;
+            case grey:
+                // With incremental CC, we can end up with a grey object after
+                // scanning if it is only reachable from an object that gets freed.
+                break;
             }
         }
+
+        aListener->End();
     }
 }
 
@@ -2302,7 +2314,7 @@ nsCycleCollector::ScanRoots(nsICycleCollectorListener *aListener)
 ////////////////////////////////////////////////////////////////////////
 
 bool
-nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
+nsCycleCollector::CollectWhite()
 {
     // Explanation of "somewhat modified": we have no way to collect the
     // set of whites "all at once", we have to ask each of them to drop
@@ -2357,14 +2369,6 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
     if (mBeforeUnlinkCB) {
         mBeforeUnlinkCB();
         timeLog.Checkpoint("CollectWhite::BeforeUnlinkCB");
-    }
-
-    if (aListener) {
-        for (uint32_t i = 0; i < count; ++i) {
-            PtrInfo *pinfo = mWhiteNodes->ElementAt(i);
-            aListener->DescribeGarbage((uint64_t)pinfo->mPointer);
-        }
-        aListener->End();
     }
 
     for (uint32_t i = 0; i < count; ++i) {
@@ -2718,7 +2722,7 @@ nsCycleCollector::Collect(ccType aCCType,
     }
 
     BeginCollection(aCCType, aListener);
-    bool collectedAny = CollectWhite(aListener);
+    bool collectedAny = CollectWhite();
     CleanupAfterCollection();
     return collectedAny;
 }
