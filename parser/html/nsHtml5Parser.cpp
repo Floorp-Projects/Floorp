@@ -12,7 +12,7 @@
 #include "nsHtml5TreeBuilder.h"
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5DependentUTF16Buffer.h"
-#include "nsIInputStreamChannel.h"
+#include "nsNetUtil.h"
 
 NS_INTERFACE_TABLE_HEAD(nsHtml5Parser)
   NS_INTERFACE_TABLE2(nsHtml5Parser, nsIParser, nsISupportsWeakReference)
@@ -218,7 +218,13 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     mExecutor->SetParser(this);
     mTreeBuilder->setScriptingEnabled(mExecutor->IsScriptEnabled());
 
-    mTreeBuilder->setIsSrcdocDocument(IsSrcdocDocument());
+    bool isSrcdoc = false;
+    nsCOMPtr<nsIChannel> channel;
+    rv = GetChannel(getter_AddRefs(channel));
+    if (NS_SUCCEEDED(rv)) {
+      isSrcdoc = NS_IsSrcdocChannel(channel);
+    }
+    mTreeBuilder->setIsSrcdocDocument(isSrcdoc);
 
     mTokenizer->start();
     mExecutor->Start();
@@ -682,7 +688,13 @@ nsHtml5Parser::Initialize(nsIDocument* aDoc,
 void
 nsHtml5Parser::StartTokenizer(bool aScriptingEnabled) {
 
-  mTreeBuilder->setIsSrcdocDocument(IsSrcdocDocument());
+  bool isSrcdoc = false;
+  nsCOMPtr<nsIChannel> channel;
+  nsresult rv = GetChannel(getter_AddRefs(channel));
+  if (NS_SUCCEEDED(rv)) {
+    isSrcdoc = NS_IsSrcdocChannel(channel);
+  }
+  mTreeBuilder->setIsSrcdocDocument(isSrcdoc);
 
   mTreeBuilder->SetPreventScriptExecution(!aScriptingEnabled);
   mTreeBuilder->setScriptingEnabled(aScriptingEnabled);
@@ -706,22 +718,5 @@ nsHtml5Parser::ContinueAfterFailedCharsetSwitch()
   NS_PRECONDITION(mStreamParser, 
     "Tried to continue after failed charset switch without a stream parser");
   mStreamParser->ContinueAfterFailedCharsetSwitch();
-}
-
-bool
-nsHtml5Parser::IsSrcdocDocument()
-{
-  nsresult rv;
-
-  bool isSrcdoc = false;
-  nsCOMPtr<nsIChannel> channel;
-  rv = GetChannel(getter_AddRefs(channel));
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIInputStreamChannel> isr = do_QueryInterface(channel);
-    if (isr) {
-      isr->GetIsSrcdocChannel(&isSrcdoc);
-    }
-  }
-  return isSrcdoc;
 }
 
