@@ -8937,8 +8937,6 @@ IonBuilder::jsop_typeof()
     current->add(ins);
     current->push(ins);
 
-    if (ins->isEffectful() && !resumeAfter(ins))
-        return false;
     return true;
 }
 
