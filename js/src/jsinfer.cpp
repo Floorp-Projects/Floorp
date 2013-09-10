@@ -1106,6 +1106,32 @@ StackTypeSet::isDOMClass()
     return true;
 }
 
+bool
+StackTypeSet::maybeCallable()
+{
+    if (!maybeObject())
+        return false;
+
+    if (unknownObject())
+        return true;
+
+    unsigned count = getObjectCount();
+    for (unsigned i = 0; i < count; i++) {
+        Class *clasp;
+        if (JSObject *object = getSingleObject(i))
+            clasp = object->getClass();
+        else if (TypeObject *object = getTypeObject(i))
+            clasp = object->clasp;
+        else
+            continue;
+
+        if (clasp->isCallable())
+            return true;
+    }
+
+    return false;
+}
+
 JSObject *
 StackTypeSet::getCommonPrototype()
 {
