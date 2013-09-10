@@ -15,29 +15,33 @@
 #include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
 #include "nsError.h"
-
-DOMCI_DATA(MozPowerManager, mozilla::dom::power::PowerManager)
+#include "mozilla/dom/MozPowerManagerBinding.h"
 
 namespace mozilla {
 namespace dom {
 namespace power {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PowerManager)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMozPowerManager)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMozPowerManager)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozWakeLockListener)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozPowerManager)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_1(PowerManager, mListeners)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(PowerManager, mListeners, mWindow)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PowerManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PowerManager)
 
+/* virtual */ JSObject*
+PowerManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return MozPowerManagerBinding::Wrap(aCx, aScope, this);
+}
+
 nsresult
 PowerManager::Init(nsIDOMWindow *aWindow)
 {
-  mWindow = do_GetWeakReference(aWindow);
+  mWindow = aWindow;
 
   nsCOMPtr<nsIPowerManagerService> pmService =
     do_GetService(POWERMANAGERSERVICE_CONTRACTID);
@@ -60,63 +64,62 @@ PowerManager::Shutdown()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-PowerManager::Reboot()
+void
+PowerManager::Reboot(ErrorResult& aRv)
 {
   nsCOMPtr<nsIPowerManagerService> pmService =
     do_GetService(POWERMANAGERSERVICE_CONTRACTID);
-  NS_ENSURE_STATE(pmService);
-
-  pmService->Reboot();
-
-  return NS_OK;
+  if (pmService) {
+    pmService->Reboot();
+  } else {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+  }
 }
 
-NS_IMETHODIMP
+void
 PowerManager::FactoryReset()
 {
   hal::FactoryReset();
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-PowerManager::PowerOff()
+void
+PowerManager::PowerOff(ErrorResult& aRv)
 {
   nsCOMPtr<nsIPowerManagerService> pmService =
     do_GetService(POWERMANAGERSERVICE_CONTRACTID);
-  NS_ENSURE_STATE(pmService);
-
-  pmService->PowerOff();
-
-  return NS_OK;
+  if (pmService) {
+    pmService->PowerOff();
+  } else {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+  }
 }
 
-NS_IMETHODIMP
+void
 PowerManager::AddWakeLockListener(nsIDOMMozWakeLockListener *aListener)
 {
-  // already added? bail out.
-  if (mListeners.Contains(aListener))
-    return NS_OK;
-
-  mListeners.AppendElement(aListener);
-  return NS_OK;
+  if (!mListeners.Contains(aListener)) {
+    mListeners.AppendElement(aListener);
+  }
 }
 
-NS_IMETHODIMP
+void
 PowerManager::RemoveWakeLockListener(nsIDOMMozWakeLockListener *aListener)
 {
   mListeners.RemoveElement(aListener);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-PowerManager::GetWakeLockState(const nsAString &aTopic, nsAString &aState)
+void
+PowerManager::GetWakeLockState(const nsAString& aTopic,
+                               nsAString& aState,
+                               ErrorResult& aRv)
 {
   nsCOMPtr<nsIPowerManagerService> pmService =
     do_GetService(POWERMANAGERSERVICE_CONTRACTID);
-  NS_ENSURE_STATE(pmService);
-
-  return pmService->GetWakeLockState(aTopic, aState);
+  if (pmService) {
+    aRv = pmService->GetWakeLockState(aTopic, aState);
+  } else {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+  }
 }
 
 NS_IMETHODIMP
@@ -138,47 +141,44 @@ PowerManager::Callback(const nsAString &aTopic, const nsAString &aState)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-PowerManager::GetScreenEnabled(bool *aEnabled)
+bool
+PowerManager::ScreenEnabled()
 {
-  *aEnabled = hal::GetScreenEnabled();
-  return NS_OK;
+  return hal::GetScreenEnabled();
 }
 
-NS_IMETHODIMP
+void
 PowerManager::SetScreenEnabled(bool aEnabled)
 {
   hal::SetScreenEnabled(aEnabled);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-PowerManager::GetScreenBrightness(double *aBrightness)
+double
+PowerManager::ScreenBrightness()
 {
-  *aBrightness = hal::GetScreenBrightness();
-  return NS_OK;
+  return hal::GetScreenBrightness();
 }
 
-NS_IMETHODIMP
-PowerManager::SetScreenBrightness(double aBrightness)
+void
+PowerManager::SetScreenBrightness(double aBrightness, ErrorResult& aRv)
 {
-  NS_ENSURE_TRUE(0 <= aBrightness && aBrightness <= 1, NS_ERROR_INVALID_ARG);
-  hal::SetScreenBrightness(aBrightness);
-  return NS_OK;
+  if (0 <= aBrightness && aBrightness <= 1) {
+    hal::SetScreenBrightness(aBrightness);
+  } else {
+    aRv.Throw(NS_ERROR_INVALID_ARG);
+  }
 }
 
-NS_IMETHODIMP
-PowerManager::GetCpuSleepAllowed(bool *aAllowed)
+bool
+PowerManager::CpuSleepAllowed()
 {
-  *aAllowed = hal::GetCpuSleepAllowed();
-  return NS_OK;
+  return hal::GetCpuSleepAllowed();
 }
 
-NS_IMETHODIMP
+void
 PowerManager::SetCpuSleepAllowed(bool aAllowed)
 {
   hal::SetCpuSleepAllowed(aAllowed);
-  return NS_OK;
 }
 
 bool
