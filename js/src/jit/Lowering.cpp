@@ -941,10 +941,10 @@ LIRGenerator::visitTypeOf(MTypeOf *ins)
     MDefinition *opd = ins->input();
     JS_ASSERT(opd->type() == MIRType_Value);
 
-    LTypeOfV *lir = new LTypeOfV();
+    LTypeOfV *lir = new LTypeOfV(tempToUnbox());
     if (!useBox(lir, LTypeOfV::Input, opd))
         return false;
-    return define(lir, ins) && assignSafepoint(lir, ins);
+    return define(lir, ins);
 }
 
 bool
