@@ -209,10 +209,7 @@ class Descriptor(DescriptorProvider):
             else:
                 nativeTypeDefault = "nsIDOM" + ifaceName
         elif self.interface.isCallback():
-            if self.workers:
-                nativeTypeDefault = "JSObject"
-            else:
-                nativeTypeDefault = "mozilla::dom::" + ifaceName
+            nativeTypeDefault = "mozilla::dom::" + ifaceName
         else:
             if self.workers:
                 nativeTypeDefault = "mozilla::dom::workers::" + ifaceName

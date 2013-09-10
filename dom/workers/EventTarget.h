@@ -14,6 +14,11 @@
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/ErrorResult.h"
 
+namespace mozilla {
+namespace dom {
+class EventListener;
+} // namespace mozilla
+} // namespace dom
 
 BEGIN_WORKERS_NAMESPACE
 
@@ -37,12 +42,12 @@ public:
   _finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
 
   void
-  AddEventListener(const nsAString& aType, JS::Handle<JSObject*> aListener,
+  AddEventListener(const nsAString& aType, EventListener* aListener,
                    bool aCapture, Nullable<bool> aWantsUntrusted,
                    ErrorResult& aRv);
 
   void
-  RemoveEventListener(const nsAString& aType, JS::Handle<JSObject*> aListener,
+  RemoveEventListener(const nsAString& aType, EventListener* aListener,
                       bool aCapture, ErrorResult& aRv);
 
   bool
