@@ -82,6 +82,7 @@
 #include "nsIContentSniffer.h"
 #include "nsCategoryCache.h"
 #include "nsStringStream.h"
+#include "nsIViewSourceChannel.h"
 
 #include <limits>
 
@@ -2332,6 +2333,28 @@ NS_SniffContent(const char* aSnifferType, nsIRequest* aRequest,
   }
 
   aSniffedType.Truncate();
+}
+
+/**
+ * Whether the channel was created to load a srcdoc document.
+ * Note that view-source:about:srcdoc is classified as a srcdoc document by 
+ * this function, which may not be applicable everywhere.
+ */
+inline bool
+NS_IsSrcdocChannel(nsIChannel *aChannel)
+{
+  bool isSrcdoc;
+  nsCOMPtr<nsIInputStreamChannel> isr = do_QueryInterface(aChannel);
+  if (isr) {
+    isr->GetIsSrcdocChannel(&isSrcdoc);
+    return isSrcdoc;
+  }
+  nsCOMPtr<nsIViewSourceChannel> vsc = do_QueryInterface(aChannel);
+  if (vsc) {
+    vsc->GetIsSrcdocChannel(&isSrcdoc);
+    return isSrcdoc;
+  }
+  return false;
 }
 
 #endif // !nsNetUtil_h__
