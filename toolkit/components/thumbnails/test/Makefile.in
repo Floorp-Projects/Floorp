@@ -25,7 +25,6 @@ MOCHITEST_BROWSER_FILES += \
 	browser_thumbnails_background_crash.js \
 	browser_thumbnails_update.js \
 	thumbnails_background.sjs \
-	thumbnails_crash_content_helper.js \
 	thumbnails_update.sjs \
 	$(NULL)
 endif
