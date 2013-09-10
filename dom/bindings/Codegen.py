@@ -9289,7 +9289,7 @@ class CGBindingImplClass(CGClass):
     """
     Common codegen for generating a C++ implementation of a WebIDL interface
     """
-    def __init__(self, descriptor, cgMethod, cgGetter, cgSetter):
+    def __init__(self, descriptor, cgMethod, cgGetter, cgSetter, wantGetParent=True):
         """
         cgMethod, cgGetter and cgSetter are classes used to codegen methods,
         getters and setters.
@@ -9404,12 +9404,13 @@ class CGBindingImplClass(CGClass):
                                             breakAfterReturnDecl=" ",
                                             override=descriptor.wrapperCache,
                                             body=self.getWrapObjectBody()))
-        self.methodDecls.insert(0,
-                                ClassMethod("GetParentObject",
-                                            self.getGetParentObjectReturnType(),
-                                            [], const=True,
-                                            breakAfterReturnDecl=" ",
-                                            body=self.getGetParentObjectBody()))
+        if wantGetParent:
+            self.methodDecls.insert(0,
+                                    ClassMethod("GetParentObject",
+                                                self.getGetParentObjectReturnType(),
+                                                [], const=True,
+                                                breakAfterReturnDecl=" ",
+                                                body=self.getGetParentObjectBody()))
 
         # Invoke  CGClass.__init__ in any subclasses afterwards to do the actual codegen.
 
@@ -10606,4 +10607,371 @@ struct PrototypeTraits;
 
         # Done.
         return curr
+
+# Code generator for simple events
+
+class CGEventGetter(CGNativeMember):
+    def __init__(self, descriptor, attr):
+        ea = descriptor.getExtendedAttributes(attr, getter=True)
+        ea.append('resultNotAddRefed')
+        CGNativeMember.__init__(self, descriptor, attr,
+                                CGSpecializedGetter.makeNativeName(descriptor,
+                                                                   attr),
+                                (attr.type, []),
+                                ea)
+
+    def retval(self, type):
+        if type.isPrimitive() and type.tag() in builtinNames:
+            result = CGGeneric(builtinNames[type.tag()])
+            if type.nullable():
+                result = CGTemplatedType("Nullable", result)
+            return result.define()
+        if type.isDOMString():
+            return "void"
+        if type.isByteString():
+            return "void"
+        if type.isEnum():
+            enumName = type.unroll().inner.identifier.name
+            if type.nullable():
+                enumName = CGTemplatedType("Nullable",
+                                           CGGeneric(enumName)).define()
+            return enumName
+        if type.isGeckoInterface():
+            iface = type.unroll().inner;
+            nativeType = self.descriptorProvider.getDescriptor(
+                iface.identifier.name).nativeType
+            # Now trim off unnecessary namespaces
+            nativeType = nativeType.split("::")
+            if nativeType[0] == "mozilla":
+                nativeType.pop(0)
+                if nativeType[0] == "dom":
+                    nativeType.pop(0)
+            return CGWrapper(CGGeneric("::".join(nativeType)), post="*").define()
+        if type.isAny():
+            return "JS::Value"
+        if type.isObject():
+            return "JSObject*"
+        if type.isSpiderMonkeyInterface():
+            return "JSObject*"
+        raise TypeError("Don't know how to declare return value for %s" %
+                        type)
+
+    def getArgs(self, returnType, argList):
+        args = [self.getArg(arg) for arg in argList]
+        if returnType.isDOMString():
+            args.append(Argument("nsString&", "aRetVal"))
+        elif returnType.isByteString():
+            args.append(Argument("nsCString&", "aRetVal"))
+        if needCx(returnType, argList, self.extendedAttrs,
+                  self.descriptorProvider, True):
+            args.insert(0, Argument("JSContext*", "aCx"))
+        if not 'infallible' in self.extendedAttrs:
+            raise TypeError("Event code generator does not support [Throws]!")
+        return args
+
+    def getMethodBody(self):
+        type = self.member.type
+        memberName = CGDictionary.makeMemberName(self.member.identifier.name)
+        if (type.isPrimitive() and type.tag() in builtinNames) or type.isEnum() or type.isGeckoInterface():
+            return "  return " + memberName + ";"
+        if type.isDOMString() or type.isByteString():
+            return "  aRetVal = " + memberName + ";";
+        if type.isSpiderMonkeyInterface() or type.isObject():
+            ret =  "  if (%s) {\n" % memberName
+            ret += "    JS::ExposeObjectToActiveJS(%s);\n" % memberName
+            ret += "  }\n"
+            ret += "  return " + memberName + ";"
+            return ret;
+        if type.isAny():
+            ret =  "  JS::ExposeValueToActiveJS("+ memberName + ");\n"
+            ret += "  return " + memberName + ";"
+            return ret;
+        raise TypeError("Event code generator does not support this type!")
+
+    def define(self, cgClass):
+        ret = self.retval(self.member.type);
+        methodName = self.descriptorProvider.name + '::' + self.name
+        args = (', '.join([a.declare() for a in self.args]))
+        body = self.getMethodBody()
+        return ret + "\n" + methodName + '(' + args + ') const\n{\n' + body + "\n}\n"
+
+class CGEventSetter(CGNativeMember):
+    def __init__(self):
+        raise TypeError("Event code generator does not support setters!")
+
+class CGEventMethod(CGNativeMember):
+    def __init__(self, descriptor, method, signature, isConstructor, breakAfter=True):
+        if not isConstructor:
+            raise TypeError("Event code generator does not support methods!")
+        self.wantsConstructorForNativeCaller = True
+        CGNativeMember.__init__(self, descriptor, method,
+                                CGSpecializedMethod.makeNativeName(descriptor,
+                                                                   method),
+                                signature,
+                                descriptor.getExtendedAttributes(method),
+                                breakAfter=breakAfter,
+                                variadicIsSequence=True)
+        self.originalArgs = list(self.args)
+
+    def getArgs(self, returnType, argList):
+        args = [self.getArg(arg) for arg in argList]
+        return args
+
+    def getArg(self, arg):
+        (decl, ref) = self.getArgType(arg.type,
+                                      arg.optional and not arg.defaultValue,
+                                      "Variadic" if arg.variadic else False)
+        if ref:
+            decl = CGWrapper(decl, pre="const ", post="&")
+
+        name = arg.identifier.name
+        name = "a" + name[0].upper() + name[1:]
+        return Argument(decl.define(), name)
+
+    def declare(self, cgClass):
+        self.args = list(self.originalArgs)
+        self.args.insert(0, Argument("mozilla::dom::EventTarget*", "aOwner"))
+        constructorForNativeCaller = CGNativeMember.declare(self, cgClass) + "\n"
+        self.args = list(self.originalArgs)
+        if needCx(None, self.descriptorProvider.interface.members, [], self.descriptorProvider, True):
+            self.args.insert(0, Argument("JSContext*", "aCx"))
+        self.args.insert(0, Argument("const GlobalObject&", "aGlobal"))
+        self.args.append(Argument('ErrorResult&', 'aRv'))
+        return constructorForNativeCaller + CGNativeMember.declare(self, cgClass)
+
+    def define(self, cgClass):
+        self.args = list(self.originalArgs)
+        members = ""
+        holdJS = ""
+        for m in self.descriptorProvider.interface.members:
+            if m.isAttr():
+                name = CGDictionary.makeMemberName(m.identifier.name)
+                members += "e->%s = %s.%s;\n" % (name, self.args[1].name, name)
+                if m.type.isAny() or m.type.isObject() or m.type.isSpiderMonkeyInterface():
+                    holdJS = "mozilla::HoldJSObjects(e.get());\n"
+
+        self.body = (
+            "nsRefPtr<${nativeType}> e = new ${nativeType}(aOwner);\n"
+            "bool trusted = e->Init(aOwner);\n"
+            "e->InitEvent(${eventType}, ${eventInit}.mBubbles, ${eventInit}.mCancelable);\n"
+            "${members}"
+            "e->SetTrusted(trusted);\n"
+            "${holdJS}"
+            "return e.forget();"
+            )
+        self.body = string.Template(self.body).substitute(
+            {
+              "nativeType": self.descriptorProvider.nativeType.split('::')[-1],
+              "eventType": self.args[0].name,
+              "eventInit": self.args[1].name,
+              "members": members,
+              "holdJS": holdJS
+            })
+
+        self.args.insert(0, Argument("mozilla::dom::EventTarget*", "aOwner"))
+        constructorForNativeCaller = CGNativeMember.define(self, cgClass) + "\n"
+        self.args = list(self.originalArgs)
+        self.body = (
+            "nsCOMPtr<mozilla::dom::EventTarget> owner = do_QueryInterface(aGlobal.GetAsSupports());\n"
+            "return Constructor(owner, %s, %s);" % (self.args[0].name, self.args[1].name)
+            )
+        if needCx(None, self.descriptorProvider.interface.members, [], self.descriptorProvider, True):
+            self.args.insert(0, Argument("JSContext*", "aCx"))
+        self.args.insert(0, Argument("const GlobalObject&", "aGlobal"))
+        self.args.append(Argument('ErrorResult&', 'aRv'))
+        return constructorForNativeCaller + CGNativeMember.define(self, cgClass)
+
+class CGEventClass(CGBindingImplClass):
+    """
+    Codegen for the actual Event class implementation for this descriptor
+    """
+    def __init__(self, descriptor):
+        CGBindingImplClass.__init__(self, descriptor, CGEventMethod, CGEventGetter, CGEventSetter, False)
+        members = []
+        for m in descriptor.interface.members:
+            if m.isAttr():
+                if m.type.isPrimitive() and m.type.tag() in builtinNames:
+                    nativeType = CGGeneric(builtinNames[m.type.tag()])
+                    if m.type.nullable():
+                        nativeType = CGTemplatedType("Nullable", nativeType)
+                    nativeType = nativeType.define()
+                elif m.type.isEnum():
+                    nativeType = m.type.unroll().inner.identifier.name
+                    if m.type.nullable():
+                        nativeType = CGTemplatedType("Nullable",
+                                                     CGGeneric(nativeType)).define()
+                elif m.type.isDOMString():
+                    nativeType = "nsString"
+                elif m.type.isByteString():
+                    nativeType = "nsCString"
+                elif m.type.isGeckoInterface():
+                    iface = m.type.unroll().inner;
+                    nativeType = self.descriptor.getDescriptor(
+                        iface.identifier.name).nativeType
+                    # Now trim off unnecessary namespaces
+                    nativeType = nativeType.split("::")
+                    if nativeType[0] == "mozilla":
+                        nativeType.pop(0)
+                        if nativeType[0] == "dom":
+                            nativeType.pop(0)
+                    nativeType = CGWrapper(CGGeneric("::".join(nativeType)), pre="nsRefPtr<", post=">").define()
+                elif m.type.isAny():
+                    nativeType = "JS::Heap<JS::Value>"
+                elif m.type.isObject() or m.type.isSpiderMonkeyInterface():
+                    nativeType = "JS::Heap<JSObject*>"
+                members.append(ClassMember(CGDictionary.makeMemberName(m.identifier.name),
+                               nativeType,
+                               visibility="private",
+                               body="body"))
+
+        baseDeclarations=(
+            "public:\n"
+            "  NS_DECL_ISUPPORTS_INHERITED\n"
+            "  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(${nativeType}, nsDOMEvent)\n"
+            "  virtual ~${nativeType}();\n"
+            "protected:\n"
+            "  ${nativeType}(mozilla::dom::EventTarget* aOwner);\n\n")
+
+        baseDeclarations = string.Template(baseDeclarations).substitute(
+            {
+              "nativeType": self.descriptor.nativeType.split('::')[-1]
+            })
+
+        CGClass.__init__(self, descriptor.nativeType.split('::')[-1],
+                         bases=[ClassBase("nsDOMEvent")],
+                         methods=self.methodDecls,
+                         members=members,
+                         extradeclarations=baseDeclarations)
+
+    def getWrapObjectBody(self):
+        return "return %sBinding::Wrap(aCx, aScope, this);" % self.descriptor.name
+
+    def implTraverse(self):
+        retVal = ""
+        for m in self.descriptor.interface.members:
+            if m.isAttr() and m.type.isGeckoInterface():
+                retVal += ("  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(" +
+                           CGDictionary.makeMemberName(m.identifier.name) +
+                          ")\n")
+        return retVal
+
+    def implUnlink(self):
+        retVal = ""
+        for m in self.descriptor.interface.members:
+            if m.isAttr():
+                name = CGDictionary.makeMemberName(m.identifier.name)
+                if m.type.isGeckoInterface():
+                    retVal += "  NS_IMPL_CYCLE_COLLECTION_UNLINK(" + name + ")\n"
+                elif m.type.isAny():
+                    retVal += "  tmp->" + name + ".setUndefined();\n"
+                elif m.type.isObject() or m.type.isSpiderMonkeyInterface():
+                    retVal += "  tmp->" + name + " = nullptr;\n"
+        return retVal
+
+    def implTrace(self):
+        retVal = ""
+        for m in self.descriptor.interface.members:
+            if m.isAttr():
+                name = CGDictionary.makeMemberName(m.identifier.name)
+                if m.type.isAny():
+                    retVal += "  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(" + name + ")\n"
+                elif m.type.isObject() or m.type.isSpiderMonkeyInterface():
+                    retVal += "  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(" + name + ")\n"
+        return retVal
+
+    def define(self):
+        dropJS = ""
+        for m in self.descriptor.interface.members:
+            if m.isAttr():
+                member = CGDictionary.makeMemberName(m.identifier.name);
+                if m.type.isAny():
+                    dropJS += "  " + member + " = JS::UndefinedValue();\n"
+                elif m.type.isObject() or m.type.isSpiderMonkeyInterface():
+                    dropJS += "  " + member + " = nullptr;\n"
+        if dropJS != "":
+            dropJS += "  mozilla::DropJSObjects(this);\n"
+        # Just override CGClass and do our own thing
+        classImpl = """
+NS_IMPL_CYCLE_COLLECTION_CLASS(${nativeType})
+
+NS_IMPL_ADDREF_INHERITED(${nativeType}, nsDOMEvent)
+NS_IMPL_RELEASE_INHERITED(${nativeType}, nsDOMEvent)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(${nativeType}, nsDOMEvent)
+${traverse}NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(${nativeType}, nsDOMEvent)
+${trace}NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(${nativeType}, nsDOMEvent)
+${unlink}NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(${nativeType})
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+
+${nativeType}::${nativeType}(mozilla::dom::EventTarget* aOwner)
+  : nsDOMEvent(aOwner, nullptr, nullptr)
+{
+}
+
+${nativeType}::~${nativeType}()
+{
+${dropJS}}
+
+"""
+        return string.Template(classImpl).substitute(
+            { "ifaceName": self.descriptor.name,
+              "nativeType": self.descriptor.nativeType.split('::')[-1],
+              "traverse": self.implTraverse(),
+              "unlink": self.implUnlink(),
+              "trace": self.implTrace(),
+              "dropJS": dropJS}
+            ) + CGBindingImplClass.define(self)
+
+
+class CGEventRoot(CGThing):
+    def __init__(self, config, interfaceName):
+        # Let's assume we're not doing workers stuff, for now
+        descriptor = config.getDescriptor(interfaceName, False)
+
+        self.root = CGWrapper(CGEventClass(descriptor),
+                              pre="\n", post="\n")
+
+        self.root = CGNamespace.build(["mozilla", "dom"], self.root)
+
+        self.root = CGList([CGClassForwardDeclare("JSContext", isStruct=True),
+                            self.root], "\n")
+
+        # Throw in our #includes
+        self.root = CGHeaders([descriptor], [], [], [],
+                              [ "nsDOMEvent.h",
+                                "mozilla/Attributes.h",
+                                "mozilla/ErrorResult.h" ,
+                                "mozilla/dom/%sBinding.h" % interfaceName,
+                                'mozilla/dom/BindingUtils.h',
+                              ],
+                              [ "%s.h" % interfaceName,
+                                "js/GCAPI.h",
+                                'mozilla/dom/Nullable.h',
+                                'nsDOMQS.h'
+                              ], "", self.root);
+
+        # And now some include guards
+        self.root = CGIncludeGuard(interfaceName, self.root)
+
+        self.root = CGWrapper(self.root, pre=AUTOGENERATED_WARNING_COMMENT)
+
+        self.root = CGWrapper(self.root, pre="""/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+""")
+
+    def declare(self):
+        return self.root.declare()
+
+    def define(self):
+        return self.root.define()
 
