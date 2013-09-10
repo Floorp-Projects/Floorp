@@ -92,7 +92,8 @@ DesktopNotification::PostDesktopNotification()
       return appNotifier->ShowAppNotification(mIconURL, mTitle, mDescription,
                                               true,
                                               manifestUrl,
-                                              mObserver);
+                                              mObserver,
+                                              EmptyString());
     }
   }
 #endif

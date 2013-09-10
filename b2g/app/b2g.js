@@ -73,6 +73,7 @@ pref("mozilla.widget.force-24bpp", true);
 pref("mozilla.widget.use-buffer-pixmap", true);
 pref("mozilla.widget.disable-native-theme", true);
 pref("layout.reflow.synthMouseMove", false);
+pref("layers.force-tiles", false);
 
 /* download manager (don't show the window or alert) */
 pref("browser.download.useDownloadDir", true);
@@ -750,6 +751,10 @@ pref("dom.promise.enabled", false);
 // (only applies when marionette is disabled)
 // 0 disables the timer.
 pref("b2g.adb.timeout-hours", 12);
+
+// Absolute path to the devtool unix domain socket file used
+// to communicate with a usb cable via adb forward
+pref("devtools.debugger.unix-domain-socket", "/data/local/debugger-socket");
 
 // enable Skia/GL (OpenGL-accelerated 2D drawing) for large enough 2d canvases,
 // falling back to Skia/software for smaller canvases

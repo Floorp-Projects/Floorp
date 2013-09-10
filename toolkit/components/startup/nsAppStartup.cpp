@@ -516,6 +516,13 @@ nsAppStartup::GetShuttingDown(bool *aResult)
 }
 
 NS_IMETHODIMP
+nsAppStartup::GetRestarting(bool *aResult)
+{
+  *aResult = mRestart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsAppStartup::SetInterrupted(bool aInterrupted)
 {
   mInterrupted = aInterrupted;
