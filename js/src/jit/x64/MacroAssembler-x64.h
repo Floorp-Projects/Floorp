@@ -962,9 +962,28 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cvtsi2sd(operand.valueReg(), dest);
     }
 
+    void boolValueToFloat32(const ValueOperand &operand, const FloatRegister &dest) {
+        cvtsi2ss(operand.valueReg(), dest);
+    }
+    void int32ValueToFloat32(const ValueOperand &operand, const FloatRegister &dest) {
+        cvtsi2ss(operand.valueReg(), dest);
+    }
+
     void loadConstantDouble(double d, const FloatRegister &dest);
+    void loadConstantFloat32(float f, const FloatRegister &dest) {
+        union FloatPun {
+            uint32_t u;
+            float f;
+        } pun;
+        pun.f = f;
+        mov(ImmWord(pun.u), ScratchReg);
+        movq(ScratchReg, dest);
+    }
     void loadStaticDouble(const double *dp, const FloatRegister &dest) {
         loadConstantDouble(*dp, dest);
+    }
+    void loadStaticFloat32(const float *fp, const FloatRegister &dest) {
+        loadConstantFloat32(*fp, dest);
     }
 
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail) {

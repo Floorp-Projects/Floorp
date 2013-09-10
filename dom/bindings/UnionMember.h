@@ -39,6 +39,10 @@ public:
     new (mStorage.addr()) T(aValue1, aValue2);
     return *mStorage.addr();
   }
+  T& Value()
+  {
+    return *mStorage.addr();
+  }
   const T& Value() const
   {
     return *mStorage.addr();

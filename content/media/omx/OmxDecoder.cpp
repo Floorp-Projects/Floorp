@@ -632,7 +632,7 @@ void OmxDecoder::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_
 
     MOZ_ASSERT(mDecoder);
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    mDecoder->UpdateMediaDuration(mDurationUs);
+    mDecoder->UpdateEstimatedMediaDuration(mDurationUs);
   }
 }
 

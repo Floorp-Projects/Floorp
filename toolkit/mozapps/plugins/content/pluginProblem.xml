@@ -48,7 +48,7 @@
                 </html:div>
                 <html:div class="msg msgManagePlugins"><html:a class="action-link" anonid="managePluginsLink" href="">&managePlugins;</html:a></html:div>
                 <html:div class="submitStatus" anonid="submitStatus">
-                    <html:div class="msg msgPleaseSubmit">
+                    <html:div class="msg msgPleaseSubmit" anonid="pleaseSubmit">
                         <html:textarea class="submitComment"
                                        anonid="submitComment"
                                        placeholder="&report.comment;"/>

@@ -61,7 +61,7 @@ function runtest()
 
 function handleDialog(ui, testNum)
 {
-  synthesizeMouse(ui.button0, 5, 5, { }, ui.button0.ownerDocument.defaultView);
+  synthesizeMouse(ui.button0, 5, 5, { }, SpecialPowers.unwrap(ui.button0.ownerDocument.defaultView));
 }
 </script>
 
