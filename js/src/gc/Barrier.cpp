@@ -49,6 +49,11 @@ HeapSlot::preconditionForWriteBarrierPost(JSObject *obj, Kind kind, uint32_t slo
                  static_cast<HeapSlot *>(obj->getDenseElements() + slot)->get() == target);
 }
 
+bool
+RuntimeFromMainThreadIsHeapMajorCollecting(JS::shadow::Zone *shadowZone)
+{
+    return shadowZone->runtimeFromMainThread()->isHeapMajorCollecting();
+}
 #endif // DEBUG
 
 } // namespace js

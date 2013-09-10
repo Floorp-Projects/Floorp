@@ -4,15 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMMutationObserver.h"        
-#include "nsDOMClassInfoID.h"
+#include "nsDOMMutationObserver.h"
+
+#include "mozilla/dom/OwningNonNull.h"
 #include "nsError.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsTextFragment.h"
-#include "jsapi.h"
 #include "nsServiceManagerUtils.h"
 
 nsTArray<nsRefPtr<nsDOMMutationObserver> >*

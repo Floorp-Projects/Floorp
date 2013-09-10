@@ -218,29 +218,6 @@ const std::wstring& SStringPrintf(std::wstring* dst,
 void StringAppendF(std::string* dst, const char* format, ...);
 void StringAppendF(std::wstring* dst, const wchar_t* format, ...);
 
-// This is mpcomplete's pattern for saving a string copy when dealing with
-// a function that writes results into a wchar_t[] and wanting the result to
-// end up in a std::wstring.  It ensures that the std::wstring's internal
-// buffer has enough room to store the characters to be written into it, and
-// sets its .length() attribute to the right value.
-//
-// The reserve() call allocates the memory required to hold the string
-// plus a terminating null.  This is done because resize() isn't
-// guaranteed to reserve space for the null.  The resize() call is
-// simply the only way to change the string's 'length' member.
-//
-// XXX-performance: the call to wide.resize() takes linear time, since it fills
-// the string's buffer with nulls.  I call it to change the length of the
-// string (needed because writing directly to the buffer doesn't do this).
-// Perhaps there's a constant-time way to change the string's length.
-template <class string_type>
-inline typename string_type::value_type* WriteInto(string_type* str,
-                                                   size_t length_with_null) {
-  str->reserve(length_with_null);
-  str->resize(length_with_null - 1);
-  return &((*str)[0]);
-}
-
 //-----------------------------------------------------------------------------
 
 // Splits |str| into a vector of strings delimited by |s|. Append the results
@@ -254,13 +231,5 @@ void SplitString(const std::wstring& str,
 void SplitString(const std::string& str,
                  char s,
                  std::vector<std::string>* r);
-
-// Returns true if the string passed in matches the pattern. The pattern
-// string can contain wildcards like * and ?
-// TODO(iyengar) This function may not work correctly for CJK strings as
-// it does individual character matches.
-// The backslash character (\) is an escape character for * and ?
-bool MatchPattern(const std::wstring& string, const std::wstring& pattern);
-bool MatchPattern(const std::string& string, const std::string& pattern);
 
 #endif  // BASE_STRING_UTIL_H_

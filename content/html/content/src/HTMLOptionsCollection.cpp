@@ -7,6 +7,7 @@
 
 #include "HTMLOptGroupElement.h"
 #include "mozAutoDocUpdate.h"
+#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLOptionsCollectionBinding.h"

@@ -65,20 +65,6 @@ class Process {
   // Returns true if the priority was changed, false otherwise.
   bool SetProcessBackgrounded(bool value);
 
-  // Reduces the working set of memory used by the process.
-  // The algorithm used by this function is intentionally vague.  Repeated calls
-  // to this function consider the process' previous required Working Set sizes
-  // to determine a reasonable reduction.  This helps give memory back to the OS
-  // in increments without over releasing memory.
-  // When the WorkingSet is reduced, it is permanent, until the caller calls
-  // UnReduceWorkingSet.
-  // Returns true if successful, false otherwise.
-  bool ReduceWorkingSet();
-
-  // Undoes the effects of prior calls to ReduceWorkingSet().
-  // Returns true if successful, false otherwise.
-  bool UnReduceWorkingSet();
-
   // Releases as much of the working set back to the OS as possible.
   // Returns true if successful, false otherwise.
   bool EmptyWorkingSet();

@@ -33,16 +33,13 @@ var dialogNum = 0;
 
 function hasTabModalPrompts() {
   var prefName = "prompts.tab_modal.enabled";
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  Components.utils.import("resource://gre/modules/Services.jsm");
+  var Services = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm").Services;
   return Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
          Services.prefs.getBoolPref(prefName);
 }
 
 function runtest()
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   isTabModal = hasTabModalPrompts();
 
   // This test depends on tab modal prompts being enabled.
@@ -60,7 +57,7 @@ function runtest()
   startCallbackTimer();
 
   var iframe = document.getElementById("iframe_diff_origin");
-  button = iframe.contentWindow.document.getElementById("btn1");
+  button = SpecialPowers.wrap(iframe.contentWindow).document.getElementById("btn1");
   dispatchMouseEvent(button, "click");
 
   startCallbackTimer();
@@ -87,17 +84,17 @@ function handleDialog(ui)
     ok(!ui.infoTitle.hasAttribute("hidden"),
        "dialog #" + dialogNum + ": the tabprompt infoTitle element is not hidden");
 
-  synthesizeMouse(ui.button0, 2, 2, {}, ui.button0.ownerDocument.defaultView);
+  synthesizeMouse(ui.button0, 2, 2, {}, SpecialPowers.unwrap(ui.button0.ownerDocument.defaultView));
 }
 
 function dispatchMouseEvent(target, type)
 {
-  var win = target.ownerDocument.defaultView;
+  var win = SpecialPowers.unwrap(target.ownerDocument.defaultView);
   var e = document.createEvent("MouseEvent");
   e.initEvent(type, false, false, win, 0, 1, 1, 1, 1,
               false, false, false, false, 0, null);
   var utils = SpecialPowers.getDOMWindowUtils(win);
-  utils.dispatchDOMEventViaPresShell(target, e, true);
+  utils.dispatchDOMEventViaPresShell(SpecialPowers.unwrap(target), e, true);
 }
 </script>
 </body>

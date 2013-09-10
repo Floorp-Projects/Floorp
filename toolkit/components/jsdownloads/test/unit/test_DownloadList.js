@@ -10,62 +10,6 @@
 "use strict";
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Globals
-
-/**
- * Returns a PRTime in the past usable to add expirable visits.
- *
- * @note Expiration ignores any visit added in the last 7 days, but it's
- *       better be safe against DST issues, by going back one day more.
- */
-function getExpirablePRTime()
-{
-  let dateObj = new Date();
-  // Normalize to midnight
-  dateObj.setHours(0);
-  dateObj.setMinutes(0);
-  dateObj.setSeconds(0);
-  dateObj.setMilliseconds(0);
-  dateObj = new Date(dateObj.getTime() - 8 * 86400000);
-  return dateObj.getTime() * 1000;
-}
-
-/**
- * Adds an expirable history visit for a download.
- *
- * @param aSourceUrl
- *        String containing the URI for the download source, or null to use
- *        httpUrl("source.txt").
- *
- * @return {Promise}
- * @rejects JavaScript exception.
- */
-function promiseExpirableDownloadVisit(aSourceUrl)
-{
-  let deferred = Promise.defer();
-  PlacesUtils.asyncHistory.updatePlaces(
-    {
-      uri: NetUtil.newURI(aSourceUrl || httpUrl("source.txt")),
-      visits: [{
-        transitionType: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
-        visitDate: getExpirablePRTime(),
-      }]
-    },
-    {
-      handleError: function handleError(aResultCode, aPlaceInfo) {
-        let ex = new Components.Exception("Unexpected error in adding visits.",
-                                          aResultCode);
-        deferred.reject(ex);
-      },
-      handleResult: function () {},
-      handleCompletion: function handleCompletion() {
-        deferred.resolve();
-      }
-    });
-  return deferred.promise;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 //// Tests
 
 /**
@@ -261,8 +205,6 @@ add_task(function test_notifications_this()
  */
 add_task(function test_history_expiration()
 {
-  mustInterruptResponses();
-
   function cleanup() {
     Services.prefs.clearUserPref("places.history.expiration.max_pages");
   }
@@ -271,9 +213,15 @@ add_task(function test_history_expiration()
   // Set max pages to 0 to make the download expire.
   Services.prefs.setIntPref("places.history.expiration.max_pages", 0);
 
+  // Add expirable visit for downloads.
+  yield promiseAddDownloadToHistory();
+  yield promiseAddDownloadToHistory(httpUrl("interruptible.txt"));
+
   let list = yield promiseNewDownloadList();
   let downloadOne = yield promiseNewDownload();
   let downloadTwo = yield promiseNewDownload(httpUrl("interruptible.txt"));
+  list.add(downloadOne);
+  list.add(downloadTwo);
 
   let deferred = Promise.defer();
   let removeNotifications = 0;
@@ -286,27 +234,18 @@ add_task(function test_history_expiration()
   };
   list.addView(downloadView);
 
-  // Work with one finished download and one canceled download.
+  // Start download one.
   yield downloadOne.start();
+
+  // Start download two and then cancel it.
   downloadTwo.start();
   yield downloadTwo.cancel();
-
-  // We must replace the visits added while executing the downloads with visits
-  // that are older than 7 days, otherwise they will not be expired.
-  yield promiseClearHistory();
-  yield promiseExpirableDownloadVisit();
-  yield promiseExpirableDownloadVisit(httpUrl("interruptible.txt"));
-
-  // After clearing history, we can add the downloads to be removed to the list.
-  list.add(downloadOne);
-  list.add(downloadTwo);
 
   // Force a history expiration.
   let expire = Cc["@mozilla.org/places/expiration;1"]
                  .getService(Ci.nsIObserver);
   expire.observe(null, "places-debug-start-expiration", -1);
 
-  // Wait for both downloads to be removed.
   yield deferred.promise;
 
   cleanup();
@@ -317,6 +256,10 @@ add_task(function test_history_expiration()
  */
 add_task(function test_history_clear()
 {
+  // Add expirable visit for downloads.
+  yield promiseAddDownloadToHistory();
+  yield promiseAddDownloadToHistory();
+
   let list = yield promiseNewDownloadList();
   let downloadOne = yield promiseNewDownload();
   let downloadTwo = yield promiseNewDownload();
@@ -337,9 +280,8 @@ add_task(function test_history_clear()
   yield downloadOne.start();
   yield downloadTwo.start();
 
-  yield promiseClearHistory();
+  PlacesUtils.history.removeAllPages();
 
-  // Wait for the removal notifications that may still be pending.
   yield deferred.promise;
 });
 

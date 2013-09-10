@@ -17,6 +17,7 @@
 #include "nsCxPusher.h"
 #include "nsIScriptSecurityManager.h"
 #include "xpcprivate.h"
+#include "WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {
@@ -49,7 +50,11 @@ CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
   , mCompartment(aCompartment)
   , mErrorResult(aRv)
   , mExceptionHandling(aExceptionHandling)
+  , mIsMainThread(NS_IsMainThread())
 {
+  if (mIsMainThread) {
+    nsContentUtils::EnterMicroTask();
+  }
   // We need to produce a useful JSContext here.  Ideally one that the callback
   // is in some sense associated with, so that we can sort of treat it as a
   // "script entry point".  Though once we actually have script entry points,
@@ -58,45 +63,49 @@ CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
 
   // First, find the real underlying callback.
   JSObject* realCallback = js::UncheckedUnwrap(aCallback);
-
-  // Now get the nsIScriptGlobalObject for this callback.
   JSContext* cx = nullptr;
-  nsIScriptContext* ctx = nullptr;
-  nsIScriptGlobalObject* sgo = nsJSUtils::GetStaticScriptGlobal(realCallback);
-  if (sgo) {
-    // Make sure that if this is a window it's the current inner, since the
-    // nsIScriptContext and hence JSContext are associated with the outer
-    // window.  Which means that if someone holds on to a function from a
-    // now-unloaded document we'd have the new document as the script entry
-    // point...
-    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(sgo);
-    if (win) {
-      MOZ_ASSERT(win->IsInnerWindow());
-      nsPIDOMWindow* outer = win->GetOuterWindow();
-      if (!outer || win != outer->GetCurrentInnerWindow()) {
-        // Just bail out from here
-        return;
+
+  if (mIsMainThread) {
+    // Now get the nsIScriptGlobalObject for this callback.
+    nsIScriptContext* ctx = nullptr;
+    nsIScriptGlobalObject* sgo = nsJSUtils::GetStaticScriptGlobal(realCallback);
+    if (sgo) {
+      // Make sure that if this is a window it's the current inner, since the
+      // nsIScriptContext and hence JSContext are associated with the outer
+      // window.  Which means that if someone holds on to a function from a
+      // now-unloaded document we'd have the new document as the script entry
+      // point...
+      nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(sgo);
+      if (win) {
+        MOZ_ASSERT(win->IsInnerWindow());
+        nsPIDOMWindow* outer = win->GetOuterWindow();
+        if (!outer || win != outer->GetCurrentInnerWindow()) {
+          // Just bail out from here
+          return;
+        }
+      }
+      // if not a window at all, just press on
+
+      ctx = sgo->GetContext();
+      if (ctx) {
+        // We don't check whether scripts are enabled on ctx, because
+        // CheckFunctionAccess will do that anyway... and because we ignore them
+        // being disabled if the callee is system.
+        cx = ctx->GetNativeContext();
       }
     }
-    // if not a window at all, just press on
 
-    ctx = sgo->GetContext();
-    if (ctx) {
-      // We don't check whether scripts are enabled on ctx, because
-      // CheckFunctionAccess will do that anyway... and because we ignore them
-      // being disabled if the callee is system.
-      cx = ctx->GetNativeContext();
+    if (!cx) {
+      // We didn't manage to hunt down a script global to work with.  Just fall
+      // back on using the safe context.
+      cx = nsContentUtils::GetSafeJSContext();
     }
-  }
 
-  if (!cx) {
-    // We didn't manage to hunt down a script global to work with.  Just fall
-    // back on using the safe context.
-    cx = nsContentUtils::GetSafeJSContext();
+    // Make sure our JSContext is pushed on the stack.
+    mCxPusher.Push(cx);
+  } else {
+    cx = workers::GetCurrentThreadJSContext();
   }
-
-  // Make sure our JSContext is pushed on the stack.
-  mCxPusher.Push(cx);
 
   // Unmark the callable, and stick it in a Rooted before it can go gray again.
   // Nothing before us in this function can trigger a CC, so it's safe to wait
@@ -109,16 +118,18 @@ CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
   JS::ExposeObjectToActiveJS(aCallback);
   mRootedCallable.construct(cx, aCallback);
 
-  // Check that it's ok to run this callback at all.
-  // FIXME: Bug 807371: we want a less silly check here.
-  // Make sure to unwrap aCallback before passing it in, because
-  // getting principals from wrappers is silly.
-  nsresult rv = nsContentUtils::GetSecurityManager()->
-    CheckFunctionAccess(cx, js::UncheckedUnwrap(aCallback), nullptr);
+  if (mIsMainThread) {
+    // Check that it's ok to run this callback at all.
+    // FIXME: Bug 807371: we want a less silly check here.
+    // Make sure to unwrap aCallback before passing it in, because
+    // getting principals from wrappers is silly.
+    nsresult rv = nsContentUtils::GetSecurityManager()->
+      CheckFunctionAccess(cx, js::UncheckedUnwrap(aCallback), nullptr);
 
-  if (NS_FAILED(rv)) {
-    // Security check failed.  We're done here.
-    return;
+    if (NS_FAILED(rv)) {
+      // Security check failed.  We're done here.
+      return;
+    }
   }
 
   // Enter the compartment of our callback, so we can actually work with it.
@@ -204,12 +215,19 @@ CallbackObject::CallSetup::~CallSetup()
 
   // Popping an nsCxPusher is safe even if it never got pushed.
   mCxPusher.Pop();
+
+  // It is important that this is the last thing we do, after leaving the
+  // compartment and popping the context.
+  if (mIsMainThread) {
+    nsContentUtils::LeaveMicroTask();
+  }
 }
 
 already_AddRefed<nsISupports>
 CallbackObjectHolderBase::ToXPCOMCallback(CallbackObject* aCallback,
                                           const nsIID& aIID) const
 {
+  MOZ_ASSERT(NS_IsMainThread());
   if (!aCallback) {
     return nullptr;
   }

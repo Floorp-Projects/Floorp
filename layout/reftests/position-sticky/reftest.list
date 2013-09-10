@@ -4,7 +4,7 @@ default-preferences pref(layout.css.sticky.enabled,true)
 
 == top-1.html top-1-ref.html
 fuzzy-if(Android,6,914) == top-2.html top-2-ref.html
-fuzzy-if(Android,4,2729) == top-3.html top-3-ref.html
+fuzzy-if(Android,5,2729) == top-3.html top-3-ref.html
 == top-4.html top-4-ref.html
 == top-5.html top-5-ref.html
 == top-6.html top-6-ref.html

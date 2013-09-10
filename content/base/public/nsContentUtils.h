@@ -1534,6 +1534,7 @@ public:
 
   static JSContext *GetCurrentJSContext();
   static JSContext *GetSafeJSContext();
+  static JSContext *GetDefaultJSContextForThread();
 
   /**
    * Case insensitive comparison between two strings. However it only ignores
