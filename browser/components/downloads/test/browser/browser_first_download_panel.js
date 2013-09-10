@@ -10,6 +10,14 @@
  */
 function test_task()
 {
+  // Clear the download panel has shown preference first as this test is used to
+  // verify this preference's behaviour.
+  let oldPrefValue = true;
+  try {
+    oldPrefValue = Services.prefs.getBoolPref("browser.download.panel.shown");
+  } catch(ex) { }
+  Services.prefs.setBoolPref("browser.download.panel.shown", false);
+
   try {
     // Ensure that state is reset in case previous tests didn't finish.
     yield task_resetState();
@@ -49,5 +57,9 @@ function test_task()
   } finally {
     // Clean up when the test finishes.
     yield task_resetState();
+    // Set the preference instead of clearing it afterwards to ensure the
+    // right value is used no matter what the default was. This ensures the
+    // panel doesn't appear and affect other tests.
+    Services.prefs.setBoolPref("browser.download.panel.shown", oldPrefValue);
   }
 }
