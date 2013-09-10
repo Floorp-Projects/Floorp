@@ -2704,38 +2704,7 @@ nsCycleCollector::Collect(ccType aCCType,
     }
 
     PrepareForCollection(aResults, aWhiteNodes);
-
-    bool isShutdown = (aCCType == ShutdownCC);
-
-    // Set up the listener for this CC.
-    MOZ_ASSERT_IF(isShutdown, !aListener);
-    nsCOMPtr<nsICycleCollectorListener> listener(aListener);
-    aListener = nullptr;
-    if (!listener) {
-        if (mParams.mLogAll || (isShutdown && mParams.mLogShutdown)) {
-            nsRefPtr<nsCycleCollectorLogger> logger = new nsCycleCollectorLogger();
-            if (isShutdown && mParams.mAllTracesAtShutdown) {
-                logger->SetAllTraces();
-            }
-            listener = logger.forget();
-        }
-    }
-
-    bool forceGC = isShutdown;
-    if (!forceGC && listener) {
-        // On a WantAllTraces CC, force a synchronous global GC to prevent
-        // hijinks from ForgetSkippable and compartmental GCs.
-        listener->GetWantAllTraces(&forceGC);
-    }
-    FixGrayBits(forceGC);
-
-    FreeSnowWhite(true);
-
-    if (listener && NS_FAILED(listener->Begin())) {
-        listener = nullptr;
-    }
-
-    BeginCollection(aCCType, listener);
+    BeginCollection(aCCType, aListener);
     bool collectedAny = CollectWhite();
     CleanupAfterCollection();
     return collectedAny;
@@ -2780,15 +2749,44 @@ void
 nsCycleCollector::BeginCollection(ccType aCCType,
                                   nsICycleCollectorListener *aListener)
 {
-    // aListener should be Begin()'d before this
     TimeLog timeLog;
+    bool isShutdown = (aCCType == ShutdownCC);
 
+    // Set up the listener for this CC.
+    MOZ_ASSERT_IF(isShutdown, !aListener);
+    nsCOMPtr<nsICycleCollectorListener> listener(aListener);
+    aListener = nullptr;
+    if (!listener) {
+        if (mParams.mLogAll || (isShutdown && mParams.mLogShutdown)) {
+            nsRefPtr<nsCycleCollectorLogger> logger = new nsCycleCollectorLogger();
+            if (isShutdown && mParams.mAllTracesAtShutdown) {
+                logger->SetAllTraces();
+            }
+            listener = logger.forget();
+        }
+    }
+
+    bool forceGC = isShutdown;
+    if (!forceGC && listener) {
+        // On a WantAllTraces CC, force a synchronous global GC to prevent
+        // hijinks from ForgetSkippable and compartmental GCs.
+        listener->GetWantAllTraces(&forceGC);
+    }
+    FixGrayBits(forceGC);
+
+    FreeSnowWhite(true);
+
+    if (listener && NS_FAILED(listener->Begin())) {
+        listener = nullptr;
+    }
+
+    // Set up the data structures for building the graph.
     bool mergeZones = ShouldMergeZones(aCCType);
     if (mResults) {
         mResults->mMergedZones = mergeZones;
     }
 
-    GCGraphBuilder builder(this, mGraph, mJSRuntime, aListener,
+    GCGraphBuilder builder(this, mGraph, mJSRuntime, listener,
                            mergeZones);
 
     if (mJSRuntime) {
@@ -2804,7 +2802,7 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     MarkRoots(builder);
     timeLog.Checkpoint("MarkRoots()");
 
-    ScanRoots(aListener);
+    ScanRoots(listener);
     timeLog.Checkpoint("ScanRoots()");
 
     mScanInProgress = false;
