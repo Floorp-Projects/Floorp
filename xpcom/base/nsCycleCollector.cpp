@@ -937,12 +937,6 @@ public:
     void RegisterJSRuntime(CycleCollectedJSRuntime *aJSRuntime);
     void ForgetJSRuntime();
 
-    inline CycleCollectedJSRuntime*
-    JSRuntime() const
-    {
-        return mJSRuntime;
-    }
-
     void SetBeforeUnlinkCallback(CC_BeforeUnlinkCallback aBeforeUnlinkCB)
     {
         CheckThreadSafety();
