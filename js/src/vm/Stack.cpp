@@ -16,6 +16,8 @@
 #include "jit/BaselineFrame.h"
 #include "jit/IonCompartment.h"
 #endif
+
+#include "jit/IonFrameIterator-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/Probes-inl.h"
 

@@ -23,9 +23,7 @@
 #include "builtin/TestingFunctions.h"
 #include "vm/WrapperObject.h"
 
-#include "jsfuninlines.h"
 #include "jsobjinlines.h"
-#include "jsscriptinlines.h"
 
 using namespace js;
 using namespace JS;

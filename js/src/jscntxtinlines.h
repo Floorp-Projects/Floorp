@@ -18,7 +18,7 @@
 #include "vm/Interpreter.h"
 #include "vm/ProxyObject.h"
 
-#include "vm/ObjectImpl-inl.h"
+#include "gc/Barrier-inl.h"
 
 namespace js {
 

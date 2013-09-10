@@ -33,7 +33,6 @@
 #include "js/OldDebugAPI.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Debugger.h"
-#include "vm/Interpreter.h"
 #include "vm/Shape.h"
 #include "vm/Xdr.h"
 
@@ -41,7 +40,6 @@
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
-#include "vm/Runtime-inl.h"
 #include "vm/ScopeObject-inl.h"
 #include "vm/Stack-inl.h"
 

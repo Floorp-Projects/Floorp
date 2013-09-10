@@ -18,6 +18,7 @@
 
 #include "mozilla/MemoryReporting.h"
 
+#include "gc/Marking.h"
 #include "vm/ObjectImpl.h"
 #include "vm/Shape.h"
 
@@ -162,6 +163,41 @@ class NewObjectCache;
 class NormalArgumentsObject;
 class SetObject;
 class StrictArgumentsObject;
+
+#ifdef JSGC_GENERATIONAL
+class DenseRangeRef : public gc::BufferableRef
+{
+    JSObject *owner;
+    uint32_t start;
+    uint32_t end;
+
+  public:
+    DenseRangeRef(JSObject *obj, uint32_t start, uint32_t end)
+      : owner(obj), start(start), end(end)
+    {
+        JS_ASSERT(start < end);
+    }
+
+    inline void mark(JSTracer *trc);
+};
+#endif
+
+/*
+ * NOTE: This is a placeholder for bug 619558.
+ *
+ * Run a post write barrier that encompasses multiple contiguous slots in a
+ * single step.
+ */
+inline void
+DenseRangeWriteBarrierPost(JSRuntime *rt, JSObject *obj, uint32_t start, uint32_t count)
+{
+#ifdef JSGC_GENERATIONAL
+    if (count > 0) {
+        JS::shadow::Runtime *shadowRuntime = JS::shadow::Runtime::asShadowRuntime(rt);
+        shadowRuntime->gcStoreBufferPtr()->putGeneric(DenseRangeRef(obj, start, start + count));
+    }
+#endif
+}
 
 }  /* namespace js */
 
@@ -599,7 +635,13 @@ class JSObject : public js::ObjectImpl
                                            js::HandleObject obj, uint32_t index);
     static inline void removeDenseElementForSparseIndex(js::ExclusiveContext *cx,
                                                         js::HandleObject obj, uint32_t index);
-    inline void copyDenseElements(uint32_t dstStart, const js::Value *src, uint32_t count);
+
+    void copyDenseElements(uint32_t dstStart, const js::Value *src, uint32_t count) {
+        JS_ASSERT(dstStart + count <= getDenseCapacity());
+        JS::Zone *zone = this->zone();
+        for (uint32_t i = 0; i < count; ++i)
+            elements[dstStart + i].set(zone, this, js::HeapSlot::Element, dstStart + i, src[i]);
+    }
 
     void initDenseElements(uint32_t dstStart, const js::Value *src, uint32_t count) {
         JS_ASSERT(dstStart + count <= getDenseCapacity());
@@ -608,8 +650,50 @@ class JSObject : public js::ObjectImpl
             elements[dstStart + i].init(rt, this, js::HeapSlot::Element, dstStart + i, src[i]);
     }
 
-    inline void moveDenseElements(uint32_t dstStart, uint32_t srcStart, uint32_t count);
-    inline void moveDenseElementsUnbarriered(uint32_t dstStart, uint32_t srcStart, uint32_t count);
+    void moveDenseElements(uint32_t dstStart, uint32_t srcStart, uint32_t count) {
+        JS_ASSERT(dstStart + count <= getDenseCapacity());
+        JS_ASSERT(srcStart + count <= getDenseInitializedLength());
+
+        /*
+         * Using memmove here would skip write barriers. Also, we need to consider
+         * an array containing [A, B, C], in the following situation:
+         *
+         * 1. Incremental GC marks slot 0 of array (i.e., A), then returns to JS code.
+         * 2. JS code moves slots 1..2 into slots 0..1, so it contains [B, C, C].
+         * 3. Incremental GC finishes by marking slots 1 and 2 (i.e., C).
+         *
+         * Since normal marking never happens on B, it is very important that the
+         * write barrier is invoked here on B, despite the fact that it exists in
+         * the array before and after the move.
+        */
+        JS::Zone *zone = this->zone();
+        JS::shadow::Zone *shadowZone = JS::shadow::Zone::asShadowZone(zone);
+        if (shadowZone->needsBarrier()) {
+            if (dstStart < srcStart) {
+                js::HeapSlot *dst = elements + dstStart;
+                js::HeapSlot *src = elements + srcStart;
+                for (uint32_t i = 0; i < count; i++, dst++, src++)
+                    dst->set(zone, this, js::HeapSlot::Element, dst - elements, *src);
+            } else {
+                js::HeapSlot *dst = elements + dstStart + count - 1;
+                js::HeapSlot *src = elements + srcStart + count - 1;
+                for (uint32_t i = 0; i < count; i++, dst--, src--)
+                    dst->set(zone, this, js::HeapSlot::Element, dst - elements, *src);
+            }
+        } else {
+            memmove(elements + dstStart, elements + srcStart, count * sizeof(js::HeapSlot));
+            DenseRangeWriteBarrierPost(runtimeFromMainThread(), this, dstStart, count);
+        }
+    }
+
+    void moveDenseElementsUnbarriered(uint32_t dstStart, uint32_t srcStart, uint32_t count) {
+        JS_ASSERT(!shadowZone()->needsBarrier());
+
+        JS_ASSERT(dstStart + count <= getDenseCapacity());
+        JS_ASSERT(srcStart + count <= getDenseCapacity());
+
+        memmove(elements + dstStart, elements + srcStart, count * sizeof(js::Value));
+    }
 
     bool shouldConvertDoubleElements() {
         JS_ASSERT(isNative());
@@ -1087,6 +1171,19 @@ class ValueArray {
 };
 
 namespace js {
+
+#ifdef JSGC_GENERATIONAL
+inline void
+DenseRangeRef::mark(JSTracer *trc)
+{
+    /* Apply forwarding, if we have already visited owner. */
+    js::gc::IsObjectMarked(&owner);
+    uint32_t initLen = owner->getDenseInitializedLength();
+    uint32_t clampedStart = Min(start, initLen);
+    gc::MarkArraySlots(trc, Min(end, initLen) - clampedStart,
+                       owner->getDenseElements() + clampedStart, "element");
+}
+#endif
 
 template <AllowGC allowGC>
 extern bool

@@ -172,63 +172,6 @@ JSObject::removeDenseElementForSparseIndex(js::ExclusiveContext *cx,
 }
 
 inline void
-JSObject::copyDenseElements(uint32_t dstStart, const js::Value *src, uint32_t count)
-{
-    JS_ASSERT(dstStart + count <= getDenseCapacity());
-    JS::Zone *zone = this->zone();
-    for (uint32_t i = 0; i < count; ++i)
-        elements[dstStart + i].set(zone, this, js::HeapSlot::Element, dstStart + i, src[i]);
-}
-
-inline void
-JSObject::moveDenseElements(uint32_t dstStart, uint32_t srcStart, uint32_t count)
-{
-    JS_ASSERT(dstStart + count <= getDenseCapacity());
-    JS_ASSERT(srcStart + count <= getDenseInitializedLength());
-
-    /*
-     * Using memmove here would skip write barriers. Also, we need to consider
-     * an array containing [A, B, C], in the following situation:
-     *
-     * 1. Incremental GC marks slot 0 of array (i.e., A), then returns to JS code.
-     * 2. JS code moves slots 1..2 into slots 0..1, so it contains [B, C, C].
-     * 3. Incremental GC finishes by marking slots 1 and 2 (i.e., C).
-     *
-     * Since normal marking never happens on B, it is very important that the
-     * write barrier is invoked here on B, despite the fact that it exists in
-     * the array before and after the move.
-    */
-    JS::Zone *zone = this->zone();
-    if (zone->needsBarrier()) {
-        if (dstStart < srcStart) {
-            js::HeapSlot *dst = elements + dstStart;
-            js::HeapSlot *src = elements + srcStart;
-            for (uint32_t i = 0; i < count; i++, dst++, src++)
-                dst->set(zone, this, js::HeapSlot::Element, dst - elements, *src);
-        } else {
-            js::HeapSlot *dst = elements + dstStart + count - 1;
-            js::HeapSlot *src = elements + srcStart + count - 1;
-            for (uint32_t i = 0; i < count; i++, dst--, src--)
-                dst->set(zone, this, js::HeapSlot::Element, dst - elements, *src);
-        }
-    } else {
-        memmove(elements + dstStart, elements + srcStart, count * sizeof(js::HeapSlot));
-        DenseRangeWriteBarrierPost(runtimeFromMainThread(), this, dstStart, count);
-    }
-}
-
-inline void
-JSObject::moveDenseElementsUnbarriered(uint32_t dstStart, uint32_t srcStart, uint32_t count)
-{
-    JS_ASSERT(!zone()->needsBarrier());
-
-    JS_ASSERT(dstStart + count <= getDenseCapacity());
-    JS_ASSERT(srcStart + count <= getDenseCapacity());
-
-    memmove(elements + dstStart, elements + srcStart, count * sizeof(js::Value));
-}
-
-inline void
 JSObject::markDenseElementsNotPacked(js::ExclusiveContext *cx)
 {
     JS_ASSERT(isNative());

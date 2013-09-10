@@ -782,15 +782,6 @@ class HeapSlot : public EncapsulatedValue
     }
 };
 
-/*
- * NOTE: This is a placeholder for bug 619558.
- *
- * Run a post write barrier that encompasses multiple contiguous slots in a
- * single step.
- */
-inline void
-DenseRangeWriteBarrierPost(JSRuntime *rt, JSObject *obj, uint32_t start, uint32_t count);
-
 static inline const Value *
 Valueify(const EncapsulatedValue *array)
 {
