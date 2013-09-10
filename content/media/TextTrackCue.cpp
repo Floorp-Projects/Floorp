@@ -7,6 +7,7 @@
 #include "mozilla/dom/TextTrackCue.h"
 #include "nsIFrame.h"
 #include "nsVideoFrame.h"
+#include "nsComponentManagerUtils.h"
 
 // Alternate value for the 'auto' keyword.
 #define WEBVTT_AUTO -1
@@ -25,6 +26,8 @@ NS_IMPL_ADDREF_INHERITED(TextTrackCue, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(TextTrackCue, nsDOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TextTrackCue)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+
+StaticRefPtr<nsIWebVTTParserWrapper> TextTrackCue::sParserWrapper;
 
 // Set cue setting defaults based on step 19 & seq.
 // in http://dev.w3.org/html5/webvtt/#parsing
@@ -150,9 +153,39 @@ already_AddRefed<DocumentFragment>
 TextTrackCue::GetCueAsHTML()
 {
   MOZ_ASSERT(mDocument);
-  nsRefPtr<DocumentFragment> frag = mDocument->CreateDocumentFragment();
 
-  return frag.forget();
+  if (!sParserWrapper) {
+    nsresult rv;
+    nsCOMPtr<nsIWebVTTParserWrapper> parserWrapper =
+      do_CreateInstance(NS_WEBVTTPARSERWRAPPER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) {
+      return mDocument->CreateDocumentFragment();
+    }
+    sParserWrapper = parserWrapper;
+  }
+
+  nsPIDOMWindow* window = mDocument->GetWindow();
+  if (!window) {
+    return mDocument->CreateDocumentFragment();
+  }
+
+  nsCOMPtr<nsIDOMHTMLElement> div;
+  sParserWrapper->ConvertCueToDOMTree(window, this,
+                                      getter_AddRefs(div));
+  if (!div) {
+    return mDocument->CreateDocumentFragment();
+  }
+  nsRefPtr<DocumentFragment> docFrag = mDocument->CreateDocumentFragment();
+  nsCOMPtr<nsIDOMNode> throwAway;
+  docFrag->AppendChild(div, getter_AddRefs(throwAway));
+
+  return docFrag.forget();
+}
+
+void
+TextTrackCue::SetTrackElement(HTMLTrackElement* aTrackElement)
+{
+  mTrackElement = aTrackElement;
 }
 
 JSObject*
