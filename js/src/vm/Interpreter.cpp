@@ -800,9 +800,18 @@ js::SameValue(JSContext *cx, const Value &v1, const Value &v2, bool *same)
 }
 
 JSType
-js::TypeOfValue(JSContext *cx, const Value &vref)
+js::TypeOfObject(JSObject *obj)
 {
-    Value v = vref;
+    if (EmulatesUndefined(obj))
+        return JSTYPE_VOID;
+    if (obj->isCallable())
+        return JSTYPE_FUNCTION;
+    return JSTYPE_OBJECT;
+}
+
+JSType
+js::TypeOfValue(const Value &v)
+{
     if (v.isNumber())
         return JSTYPE_NUMBER;
     if (v.isString())
@@ -811,10 +820,8 @@ js::TypeOfValue(JSContext *cx, const Value &vref)
         return JSTYPE_OBJECT;
     if (v.isUndefined())
         return JSTYPE_VOID;
-    if (v.isObject()) {
-        RootedObject obj(cx, &v.toObject());
-        return baseops::TypeOf(cx, obj);
-    }
+    if (v.isObject())
+        return TypeOfObject(&v.toObject());
     JS_ASSERT(v.isBoolean());
     return JSTYPE_BOOLEAN;
 }
@@ -2262,8 +2269,7 @@ END_CASE(JSOP_TOID)
 BEGIN_CASE(JSOP_TYPEOFEXPR)
 BEGIN_CASE(JSOP_TYPEOF)
 {
-    HandleValue ref = regs.stackHandleAt(-1);
-    regs.sp[-1].setString(TypeOfOperation(cx, ref));
+    regs.sp[-1].setString(TypeOfOperation(regs.sp[-1], rt));
 }
 END_CASE(JSOP_TYPEOF)
 

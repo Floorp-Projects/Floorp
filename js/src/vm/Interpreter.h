@@ -308,7 +308,10 @@ extern bool
 SameValue(JSContext *cx, const Value &v1, const Value &v2, bool *same);
 
 extern JSType
-TypeOfValue(JSContext *cx, const Value &v);
+TypeOfObject(JSObject *obj);
+
+extern JSType
+TypeOfValue(const Value &v);
 
 extern bool
 HasInstance(JSContext *cx, HandleObject obj, HandleValue v, bool *bp);
