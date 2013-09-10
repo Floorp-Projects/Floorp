@@ -50,6 +50,13 @@ typedef enum {
     SDP_RTCP_FB_CCM_UNKNOWN
 } sdp_rtcp_fb_ccm_type_e;
 
+#if defined(__has_extension) && __has_extension(cxx_static_assert)
+static_assert(SDP_MAX_RTCP_FB_NACK +
+              SDP_MAX_RTCP_FB_ACK +
+              SDP_MAX_RTCP_FB_CCM < 32,
+              "rtcp-fb Bitmap is larger than 32 bits");
+#endif
+
 static inline int32_t
 sdp_rtcp_fb_nack_to_bitmap(sdp_rtcp_fb_nack_type_e type)
 {
