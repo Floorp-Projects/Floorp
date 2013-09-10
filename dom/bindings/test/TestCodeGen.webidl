@@ -707,6 +707,8 @@ dictionary Dict : ParentDict {
   long a;
   long b = 8;
   long z = 9;
+  [EnforceRange] unsigned long enforcedUnsignedLong;
+  [Clamp] unsigned long clampedUnsignedLong;
   DOMString str;
   DOMString empty = "";
   TestEnum otherEnum = "b";
