@@ -934,6 +934,9 @@ private:
     uint32_t mMergedInARow;
 
 public:
+    nsCycleCollector();
+    ~nsCycleCollector();
+
     void RegisterJSRuntime(CycleCollectedJSRuntime *aJSRuntime);
     void ForgetJSRuntime();
 
@@ -949,44 +952,43 @@ public:
         mForgetSkippableCB = aForgetSkippableCB;
     }
 
-    void MarkRoots(GCGraphBuilder &aBuilder);
-    void ScanRoots();
-    void ScanWeakMaps();
-
-    void ForgetSkippable(bool aRemoveChildlessNodes, bool aAsyncSnowWhiteFreeing);
-
-    // returns whether anything was collected
-    bool CollectWhite(nsICycleCollectorListener *aListener);
-
-    nsCycleCollector();
-    ~nsCycleCollector();
-
     void Suspect(void *n, nsCycleCollectionParticipant *cp,
                  nsCycleCollectingAutoRefCnt *aRefCnt);
+    uint32_t SuspectedCount();
+    void ForgetSkippable(bool aRemoveChildlessNodes, bool aAsyncSnowWhiteFreeing);
+    bool FreeSnowWhite(bool aUntilNoSWInPurpleBuffer);
 
-    void CheckThreadSafety();
-
-private:
-    void ShutdownCollect(nsICycleCollectorListener *aListener);
-
-public:
     bool Collect(ccType aCCType,
                  nsTArray<PtrInfo*> *aWhiteNodes,
                  nsCycleCollectorResults *aResults,
                  nsICycleCollectorListener *aListener);
+    void Shutdown();
+
+    void SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
+                             size_t *aObjectSize,
+                             size_t *aGraphNodesSize,
+                             size_t *aGraphEdgesSize,
+                             size_t *aWhiteNodeSize,
+                             size_t *aPurpleBufferSize) const;
+
+private:
+    void CheckThreadSafety();
+    void ShutdownCollect(nsICycleCollectorListener *aListener);
 
     void PrepareForCollection(nsCycleCollectorResults *aResults,
                               nsTArray<PtrInfo*> *aWhiteNodes);
     void FixGrayBits(bool aForceGC);
     bool ShouldMergeZones(ccType aCCType);
-    void CleanupAfterCollection();
 
     void BeginCollection(ccType aCCType, nsICycleCollectorListener *aListener);
+    void MarkRoots(GCGraphBuilder &aBuilder);
+    void ScanRoots();
+    void ScanWeakMaps();
 
-    bool FreeSnowWhite(bool aUntilNoSWInPurpleBuffer);
+    // returns whether anything was collected
+    bool CollectWhite(nsICycleCollectorListener *aListener);
 
-    uint32_t SuspectedCount();
-    void Shutdown();
+    void CleanupAfterCollection();
 
     void ClearGraph()
     {
@@ -995,13 +997,6 @@ public:
         mGraph.mWeakMaps.Clear();
         mGraph.mRootCount = 0;
     }
-
-    void SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
-                             size_t *aObjectSize,
-                             size_t *aGraphNodesSize,
-                             size_t *aGraphEdgesSize,
-                             size_t *aWhiteNodeSize,
-                             size_t *aPurpleBufferSize) const;
 };
 
 /**
