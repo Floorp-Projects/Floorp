@@ -2,6 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * WARNING: BackgroundPageThumbs.jsm is currently excluded from release builds.
+ * If you use it, you must also exclude your caller when RELEASE_BUILD is
+ * defined, as described here:
+ * https://wiki.mozilla.org/Platform/Channel-specific_build_defines
+ */
+
 const EXPORTED_SYMBOLS = [
   "BackgroundPageThumbs",
 ];
@@ -9,6 +16,11 @@ const EXPORTED_SYMBOLS = [
 const DEFAULT_CAPTURE_TIMEOUT = 30000; // ms
 const DESTROY_BROWSER_TIMEOUT = 60000; // ms
 const FRAME_SCRIPT_URL = "chrome://global/content/backgroundPageThumbsContent.js";
+
+// If a request for a thumbnail comes in and we find one that is "stale"
+// (or don't find one at all) we automatically queue a request to generate a
+// new one.
+const MAX_THUMBNAIL_AGE_SECS = 172800; // 2 days == 60*60*24*2 == 172800 secs.
 
 const TELEMETRY_HISTOGRAM_ID_PREFIX = "FX_THUMBNAILS_BG_";
 
@@ -33,6 +45,11 @@ const BackgroundPageThumbs = {
    * Asynchronously captures a thumbnail of the given URL.
    *
    * The page is loaded anonymously, and plug-ins are disabled.
+   *
+   * WARNING: BackgroundPageThumbs.jsm is currently excluded from release
+   * builds.  If you use it, you must also exclude your caller when
+   * RELEASE_BUILD is defined, as described here:
+   * https://wiki.mozilla.org/Platform/Channel-specific_build_defines
    *
    * @param url      The URL to capture.
    * @param options  An optional object that configures the capture.  Its
@@ -69,6 +86,37 @@ const BackgroundPageThumbs = {
     this._captureQueue.push(cap);
     this._capturesByURL.set(url, cap);
     this._processCaptureQueue();
+  },
+
+  /**
+   * Checks if an existing thumbnail for the specified URL is either missing
+   * or stale, and if so, queues a background request to capture it.  That
+   * capture process will send a notification via the observer service on
+   * capture, so consumers should watch for such observations if they want to
+   * be notified of an updated thumbnail.
+   *
+   * WARNING: BackgroundPageThumbs.jsm is currently excluded from release
+   * builds.  If you use it, you must also exclude your caller when
+   * RELEASE_BUILD is defined, as described here:
+   * https://wiki.mozilla.org/Platform/Channel-specific_build_defines
+   *
+   * @param url      The URL to capture.
+   * @param options  An optional object that configures the capture.  See
+   *                 capture() for description.
+   */
+  captureIfStale: function PageThumbs_captureIfStale(url, options={}) {
+    PageThumbsStorage.isFileRecentForURL(url, MAX_THUMBNAIL_AGE_SECS).then(
+      result => {
+        if (result.ok) {
+          if (options.onDone)
+            options.onDone(url);
+          return;
+        }
+        this.capture(url, options);
+      }, err => {
+        if (options.onDone)
+          options.onDone(url);
+      });
   },
 
   /**
