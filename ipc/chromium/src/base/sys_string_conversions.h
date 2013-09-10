@@ -13,15 +13,6 @@
 #include "base/basictypes.h"
 #include "base/string16.h"
 
-#if defined(OS_MACOSX)
-#include <CoreFoundation/CoreFoundation.h>
-#ifdef __OBJC__
-@class NSString;
-#else
-class NSString;
-#endif
-#endif  // OS_MACOSX
-
 class StringPiece;
 
 namespace base {
@@ -48,24 +39,6 @@ std::wstring SysMultiByteToWide(const StringPiece& mb, uint32_t code_page);
 std::string SysWideToMultiByte(const std::wstring& wide, uint32_t code_page);
 
 #endif  // defined(OS_WIN)
-
-// Mac-specific ----------------------------------------------------------------
-
-#if defined(OS_MACOSX)
-
-// Converts between STL strings and CFStringRefs/NSStrings.
-
-// Converts a CFStringRef to an STL string. Returns an empty string on failure.
-std::string SysCFStringRefToUTF8(CFStringRef ref);
-string16 SysCFStringRefToUTF16(CFStringRef ref);
-std::wstring SysCFStringRefToWide(CFStringRef ref);
-
-// Same, but accepts NSString input.
-std::string SysNSStringToUTF8(NSString* ref);
-string16 SysNSStringToUTF16(NSString* ref);
-std::wstring SysNSStringToWide(NSString* ref);
-
-#endif  // defined(OS_MACOSX)
 
 }  // namespace base
 
