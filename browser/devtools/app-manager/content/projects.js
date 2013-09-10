@@ -223,8 +223,11 @@ let UI = {
     this._getTargetForApp(manifest).then((target) => {
       gDevTools.showToolbox(target,
                             null,
-                            devtools.Toolbox.HostType.WINDOW,
-                            this.connection.uid);
+                            devtools.Toolbox.HostType.WINDOW).then(toolbox => {
+        this.connection.once(Connection.Events.DISCONNECTED, () => {
+          toolbox.destroy();
+        });
+      });
     }, console.error);
   },
 
