@@ -2613,6 +2613,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             CppDirective('include', '"'+ p.channelHeaderFile() +'"'),
             Whitespace.NL ])
 
+        if ptype.isToplevel() and self.side is 'parent':
+            self.hdrfile.addthings([
+                    _makeForwardDeclForQClass('nsIFile', []),
+                    Whitespace.NL
+                    ])
+
         self.cls = Class(
             self.clsname,
             inherits=[ Inherit(Type(p.fqListenerName()), viz='protected'),
