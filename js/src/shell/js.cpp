@@ -32,18 +32,12 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsdate.h"
 #include "jsfun.h"
-#include "jsgc.h"
-#include "jsiter.h"
 #ifdef JS_THREADSAFE
 #include "jslock.h"
 #endif
-#include "jsnum.h"
 #include "jsobj.h"
-#include "json.h"
 #include "jsprf.h"
-#include "jsreflect.h"
 #include "jsscript.h"
 #include "jstypes.h"
 #include "jsutil.h"
@@ -58,7 +52,6 @@
 #endif
 
 #include "builtin/TestingFunctions.h"
-#include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "jit/Ion.h"
 #include "js/OldDebugAPI.h"
@@ -66,15 +59,13 @@
 #include "perf/jsperf.h"
 #include "shell/jsheaptools.h"
 #include "shell/jsoptparse.h"
+#include "vm/ArgumentsObject.h"
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
 
-#include "jsfuninlines.h"
-#include "jsinferinlines.h"
-#include "jsscriptinlines.h"
-
-#include "vm/Interpreter-inl.h"
+#include "jscompartmentinlines.h"
+#include "jsobjinlines.h"
 
 #ifdef XP_WIN
 # define PATH_MAX (MAX_PATH > _MAX_DIR ? MAX_PATH : _MAX_DIR)
