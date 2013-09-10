@@ -267,18 +267,6 @@ class NamedProcessIterator {
   DISALLOW_EVIL_CONSTRUCTORS(NamedProcessIterator);
 };
 
-// Working Set (resident) memory usage broken down by
-// priv (private): These pages (kbytes) cannot be shared with any other process.
-// shareable:      These pages (kbytes) can be shared with other processes under
-//                 the right circumstances.
-// shared :        These pages (kbytes) are currently shared with at least one
-//                 other process.
-struct WorkingSetKBytes {
-  size_t priv;
-  size_t shareable;
-  size_t shared;
-};
-
 // Committed (resident + paged) memory usage broken down by
 // private: These pages cannot be shared with any other process.
 // mapped:  These pages are mapped into the view of a section (backed by
@@ -328,9 +316,6 @@ class ProcessMetrics {
   // Fills a CommittedKBytes with both resident and paged
   // memory usage as per definition of CommittedBytes.
   void GetCommittedKBytes(CommittedKBytes* usage) const;
-  // Fills a WorkingSetKBytes containing resident private and shared memory
-  // usage in bytes, as per definition of WorkingSetBytes.
-  bool GetWorkingSetKBytes(WorkingSetKBytes* ws_usage) const;
 
   // Returns the CPU usage in percent since the last time this method was
   // called. The first time this method is called it returns 0 and will return
