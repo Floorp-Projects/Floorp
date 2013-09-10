@@ -27,6 +27,7 @@ EXPORTS.mozilla.dom += [
     'Nullable.h',
     'PrimitiveConversions.h',
     'TypedArray.h',
+    'UnionMember.h',
 ]
 
 FAIL_ON_WARNINGS = True

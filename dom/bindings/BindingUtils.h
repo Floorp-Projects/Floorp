@@ -1612,37 +1612,6 @@ ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
                            JS::MutableHandle<JS::Value> pval, bool nullable,
                            nsACString& result);
 
-// Class for holding the type of members of a union. The union type has an enum
-// to keep track of which of its UnionMembers has been constructed.
-template<class T>
-class UnionMember {
-    AlignedStorage2<T> storage;
-
-public:
-    T& SetValue() {
-      new (storage.addr()) T();
-      return *storage.addr();
-    }
-    template <typename T1>
-    T& SetValue(const T1 &t1)
-    {
-      new (storage.addr()) T(t1);
-      return *storage.addr();
-    }
-    template <typename T1, typename T2>
-    T& SetValue(const T1 &t1, const T2 &t2)
-    {
-      new (storage.addr()) T(t1, t2);
-      return *storage.addr();
-    }
-    const T& Value() const {
-      return *storage.addr();
-    }
-    void Destroy() {
-      storage.addr()->~T();
-    }
-};
-
 template<typename T>
 void DoTraceSequence(JSTracer* trc, FallibleTArray<T>& seq);
 template<typename T>
