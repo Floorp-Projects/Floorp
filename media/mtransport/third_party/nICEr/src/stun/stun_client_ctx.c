@@ -404,6 +404,17 @@ static int nr_stun_client_get_password(void *arg, nr_stun_message *msg, Data **p
     return(0);
 }
 
+int nr_stun_transport_addr_check(nr_transport_addr* addr)
+  {
+    if(nr_transport_addr_is_wildcard(addr))
+      return(R_BAD_DATA);
+
+    if (nr_transport_addr_is_loopback(addr))
+      return(R_BAD_DATA);
+
+    return(0);
+  }
+
 int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len, nr_transport_addr *peer_addr)
   {
     int r,_status;
@@ -622,6 +633,9 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
         if (!nr_stun_message_has_attribute(ctx->response, NR_STUN_ATTR_XOR_RELAY_ADDRESS, &attr))
           ABORT(R_BAD_DATA);
 
+        if ((r=nr_stun_transport_addr_check(&attr->u.relay_address.unmasked)))
+          ABORT(r);
+
         if ((r=nr_transport_addr_copy(
                 &ctx->results.allocate_response.relay_addr,
                 &attr->u.relay_address.unmasked)))
@@ -663,10 +677,16 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
 
     if (mapped_addr) {
         if (nr_stun_message_has_attribute(ctx->response, NR_STUN_ATTR_XOR_MAPPED_ADDRESS, &attr)) {
+            if ((r=nr_stun_transport_addr_check(&attr->u.xor_mapped_address.unmasked)))
+                ABORT(r);
+
             if ((r=nr_transport_addr_copy(mapped_addr, &attr->u.xor_mapped_address.unmasked)))
                 ABORT(r);
         }
         else if (nr_stun_message_has_attribute(ctx->response, NR_STUN_ATTR_MAPPED_ADDRESS, &attr)) {
+            if ((r=nr_stun_transport_addr_check(&attr->u.mapped_address)))
+                ABORT(r);
+
             if ((r=nr_transport_addr_copy(mapped_addr, &attr->u.mapped_address)))
                 ABORT(r);
         }
