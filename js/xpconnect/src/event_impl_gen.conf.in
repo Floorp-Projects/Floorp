@@ -51,7 +51,6 @@ simple_events = [
 #endif
     'DeviceStorageChangeEvent',
     'PopupBlockedEvent',
-    'BlobEvent',
     'RecordErrorEvent',
 #ifdef MOZ_GAMEPAD
     'GamepadEvent',
