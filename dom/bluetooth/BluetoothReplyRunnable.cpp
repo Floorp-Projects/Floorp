@@ -8,6 +8,7 @@
 #include "BluetoothReplyRunnable.h"
 #include "DOMRequest.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
+#include "nsServiceManagerUtils.h"
 
 USING_BLUETOOTH_NAMESPACE
 
