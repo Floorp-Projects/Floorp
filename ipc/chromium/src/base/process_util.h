@@ -267,17 +267,6 @@ class NamedProcessIterator {
   DISALLOW_EVIL_CONSTRUCTORS(NamedProcessIterator);
 };
 
-// Free memory (Megabytes marked as free) in the 2G process address space.
-// total : total amount in megabytes marked as free. Maximum value is 2048.
-// largest : size of the largest contiguous amount of memory found. It is
-//   always smaller or equal to FreeMBytes::total.
-// largest_ptr: starting address of the largest memory block.
-struct FreeMBytes {
-  size_t total;
-  size_t largest;
-  void* largest_ptr;
-};
-
 // Provides performance metrics for a specified process (CPU usage, memory and
 // IO counters). To use it, invoke CreateProcessMetrics() to get an instance
 // for a specific process, then access the information with the different get
