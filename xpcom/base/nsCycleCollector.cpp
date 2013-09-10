@@ -993,7 +993,7 @@ private:
 
     void BeginCollection(ccType aCCType, nsICycleCollectorListener *aListener);
     void MarkRoots(GCGraphBuilder &aBuilder);
-    void ScanRoots();
+    void ScanRoots(nsICycleCollectorListener *aListener);
     void ScanWeakMaps();
 
     // returns whether anything was collected
@@ -2263,7 +2263,7 @@ nsCycleCollector::ScanWeakMaps()
 }
 
 void
-nsCycleCollector::ScanRoots()
+nsCycleCollector::ScanRoots(nsICycleCollectorListener *aListener)
 {
     mWhiteNodeCount = 0;
 
@@ -2279,6 +2279,21 @@ nsCycleCollector::ScanRoots()
     }
 
     ScanWeakMaps();
+
+    if (aListener) {
+        aListener->BeginResults();
+
+        NodePool::Enumerator etor(mGraph.mNodes);
+        while (!etor.IsDone()) {
+            PtrInfo *pi = etor.GetNext();
+            if (pi->mColor == black &&
+                pi->mRefCount > 0 && pi->mRefCount < UINT32_MAX &&
+                pi->mInternalRefs != pi->mRefCount) {
+                aListener->DescribeRoot((uint64_t)pi->mPointer,
+                                        pi->mInternalRefs);
+            }
+        }
+    }
 }
 
 
@@ -2771,25 +2786,10 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     MarkRoots(builder);
     timeLog.Checkpoint("MarkRoots()");
 
-    ScanRoots();
+    ScanRoots(aListener);
     timeLog.Checkpoint("ScanRoots()");
 
     mScanInProgress = false;
-
-    if (aListener) {
-        aListener->BeginResults();
-
-        NodePool::Enumerator etor(mGraph.mNodes);
-        while (!etor.IsDone()) {
-            PtrInfo *pi = etor.GetNext();
-            if (pi->mColor == black &&
-                pi->mRefCount > 0 && pi->mRefCount < UINT32_MAX &&
-                pi->mInternalRefs != pi->mRefCount) {
-                aListener->DescribeRoot((uint64_t)pi->mPointer,
-                                        pi->mInternalRefs);
-            }
-        }
-    }
 }
 
 uint32_t
