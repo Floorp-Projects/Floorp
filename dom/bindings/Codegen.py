@@ -8835,11 +8835,12 @@ class CGBindingRoot(CGThing):
         enums = config.getEnums(webIDLFile)
         cgthings = [ CGEnum(e) for e in enums ]
 
-        bindingHeaders["mozilla/dom/BindingUtils.h"] = (
-            descriptors or callbackDescriptors or dictionaries or
-            mainCallbacks or workerCallbacks)
+        hasCode = (descriptors or callbackDescriptors or dictionaries or
+                   mainCallbacks or workerCallbacks)
+        bindingHeaders["mozilla/dom/BindingUtils.h"] = hasCode
+        bindingHeaders["mozilla/dom/OwningNonNull.h"] = hasCode
         bindingHeaders["mozilla/dom/BindingDeclarations.h"] = (
-            not bindingHeaders["mozilla/dom/BindingUtils.h"] and enums)
+            not hasCode and enums)
 
         bindingHeaders["WrapperFactory.h"] = descriptors
         bindingHeaders["mozilla/dom/DOMJSClass.h"] = descriptors
@@ -10553,7 +10554,8 @@ struct PrototypeTraits;
                                             config.getDictionaries(),
                                             config.getCallbacks(),
                                             config)
-        includes.add("mozilla/dom/BindingUtils.h")
+        includes.add("mozilla/dom/OwningNonNull.h")
+        includes.add("mozilla/dom/UnionMember.h")
         implincludes.add("mozilla/dom/PrimitiveConversions.h")
 
         # Wrap all of that in our namespaces.

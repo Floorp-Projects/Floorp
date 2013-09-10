@@ -3079,6 +3079,16 @@ BluetoothDBusService::SendMetaData(const nsAString& aTitle,
   const char* totalMediaCount = tempTotalMediaCount.get();
   const char* duration = tempDuration.get();
 
+  nsAutoString prevTitle, prevAlbum;
+  a2dp->GetTitle(prevTitle);
+  a2dp->GetAlbum(prevAlbum);
+
+  if (aMediaNumber != a2dp->GetMediaNumber() ||
+      !aTitle.Equals(prevTitle) ||
+      !aAlbum.Equals(prevAlbum)) {
+    UpdateNotification(ControlEventId::EVENT_TRACK_CHANGED, aMediaNumber);
+  }
+
   nsRefPtr<BluetoothReplyRunnable> runnable(aRunnable);
 
   bool ret = dbus_func_args_async(mConnection,
@@ -3098,16 +3108,6 @@ BluetoothDBusService::SendMetaData(const nsAString& aTitle,
   NS_ENSURE_TRUE_VOID(ret);
 
   runnable.forget();
-
-  nsAutoString prevTitle, prevAlbum;
-  a2dp->GetTitle(prevTitle);
-  a2dp->GetAlbum(prevAlbum);
-
-  if (aMediaNumber != a2dp->GetMediaNumber() ||
-      !aTitle.Equals(prevTitle) ||
-      !aAlbum.Equals(prevAlbum)) {
-    UpdateNotification(ControlEventId::EVENT_TRACK_CHANGED, aMediaNumber);
-  }
 
   a2dp->UpdateMetaData(aTitle, aArtist, aAlbum,
                        aMediaNumber, aTotalMediaCount, aDuration);
@@ -3177,6 +3177,14 @@ BluetoothDBusService::SendPlayStatus(int64_t aDuration,
     return;
   }
 
+  uint32_t tempPlayStatus = playStatus;
+  if (playStatus != a2dp->GetPlayStatus()) {
+    UpdateNotification(ControlEventId::EVENT_PLAYBACK_STATUS_CHANGED,
+                       tempPlayStatus);
+  } else if (aPosition != a2dp->GetPosition()) {
+    UpdateNotification(ControlEventId::EVENT_PLAYBACK_POS_CHANGED, aPosition);
+  }
+
   nsAutoString address;
   a2dp->GetAddress(address);
   nsString objectPath =
@@ -3184,7 +3192,6 @@ BluetoothDBusService::SendPlayStatus(int64_t aDuration,
 
   nsRefPtr<BluetoothReplyRunnable> runnable(aRunnable);
 
-  uint32_t tempPlayStatus = playStatus;
   bool ret = dbus_func_args_async(mConnection,
                                   -1,
                                   GetVoidCallback,
@@ -3199,20 +3206,6 @@ BluetoothDBusService::SendPlayStatus(int64_t aDuration,
   NS_ENSURE_TRUE_VOID(ret);
 
   runnable.forget();
-
-  ControlEventId eventId = ControlEventId::EVENT_UNKNOWN;
-  uint64_t data;
-  if (aPosition != a2dp->GetPosition()) {
-    eventId = ControlEventId::EVENT_PLAYBACK_POS_CHANGED;
-    data = aPosition;
-  } else if (playStatus != a2dp->GetPlayStatus()) {
-    eventId = ControlEventId::EVENT_PLAYBACK_STATUS_CHANGED;
-    data = tempPlayStatus;
-  }
-
-  if (eventId != ControlEventId::EVENT_UNKNOWN) {
-    UpdateNotification(eventId, data);
-  }
 
   a2dp->UpdatePlayStatus(aDuration, aPosition, playStatus);
 }

@@ -190,21 +190,6 @@ void SetCurrentProcessPrivileges(ChildPrivileges privs);
 bool LaunchApp(const CommandLine& cl,
                bool wait, bool start_hidden, ProcessHandle* process_handle);
 
-#if defined(OS_WIN)
-// Executes the application specified by |cmd_line| and copies the contents
-// printed to the standard output to |output|, which should be non NULL.
-// Blocks until the started process terminates.
-// Returns true if the application was run successfully, false otherwise.
-bool GetAppOutput(const std::wstring& cmd_line, std::string* output);
-#elif defined(OS_POSIX)
-// Executes the application specified by |cl| and wait for it to exit. Stores
-// the output (stdout) in |output|. Redirects stderr to /dev/null. Returns true
-// on success (application launched and exited cleanly, with exit code
-// indicating success). |output| is modified only when the function finished
-// successfully.
-bool GetAppOutput(const CommandLine& cl, std::string* output);
-#endif
-
 // Used to filter processes by process ID.
 class ProcessFilter {
  public:
@@ -214,28 +199,11 @@ class ProcessFilter {
   virtual ~ProcessFilter() { }
 };
 
-// Returns the number of processes on the machine that are running from the
-// given executable name.  If filter is non-null, then only processes selected
-// by the filter will be counted.
-int GetProcessCount(const std::wstring& executable_name,
-                    const ProcessFilter* filter);
-
-// Attempts to kill all the processes on the current machine that were launched
-// from the given executable name, ending them with the given exit code.  If
-// filter is non-null, then only processes selected by the filter are killed.
-// Returns false if all processes were able to be killed off, false if at least
-// one couldn't be killed.
-bool KillProcesses(const std::wstring& executable_name, int exit_code,
-                   const ProcessFilter* filter);
-
 // Attempts to kill the process identified by the given process
 // entry structure, giving it the specified exit code. If |wait| is true, wait
 // for the process to be actually terminated before returning.
 // Returns true if this is successful, false otherwise.
 bool KillProcess(ProcessHandle process, int exit_code, bool wait);
-#if defined(OS_WIN)
-bool KillProcessById(ProcessId process_id, int exit_code, bool wait);
-#endif
 
 // Get the termination status (exit code) of the process and return true if the
 // status indicates the process crashed. |child_exited| is set to true iff the
@@ -245,31 +213,6 @@ bool KillProcessById(ProcessId process_id, int exit_code, bool wait);
 // yet. On POSIX, |child_exited| is set correctly since we detect terminate in
 // a different manner on POSIX.
 bool DidProcessCrash(bool* child_exited, ProcessHandle handle);
-
-// Waits for process to exit. In POSIX systems, if the process hasn't been
-// signaled then puts the exit code in |exit_code|; otherwise it's considered
-// a failure. On Windows |exit_code| is always filled. Returns true on success,
-// and closes |handle| in any case.
-bool WaitForExitCode(ProcessHandle handle, int* exit_code);
-
-// Wait for all the processes based on the named executable to exit.  If filter
-// is non-null, then only processes selected by the filter are waited on.
-// Returns after all processes have exited or wait_milliseconds have expired.
-// Returns true if all the processes exited, false otherwise.
-bool WaitForProcessesToExit(const std::wstring& executable_name,
-                            int wait_milliseconds,
-                            const ProcessFilter* filter);
-
-// Waits a certain amount of time (can be 0) for all the processes with a given
-// executable name to exit, then kills off any of them that are still around.
-// If filter is non-null, then only processes selected by the filter are waited
-// on.  Killed processes are ended with the given exit code.  Returns false if
-// any processes needed to be killed, true if they all exited cleanly within
-// the wait_milliseconds delay.
-bool CleanupProcesses(const std::wstring& executable_name,
-                      int wait_milliseconds,
-                      int exit_code,
-                      const ProcessFilter* filter);
 
 // This class provides a way to iterate through the list of processes
 // on the current machine that were started from the given executable
@@ -324,41 +267,6 @@ class NamedProcessIterator {
   DISALLOW_EVIL_CONSTRUCTORS(NamedProcessIterator);
 };
 
-// Working Set (resident) memory usage broken down by
-// priv (private): These pages (kbytes) cannot be shared with any other process.
-// shareable:      These pages (kbytes) can be shared with other processes under
-//                 the right circumstances.
-// shared :        These pages (kbytes) are currently shared with at least one
-//                 other process.
-struct WorkingSetKBytes {
-  size_t priv;
-  size_t shareable;
-  size_t shared;
-};
-
-// Committed (resident + paged) memory usage broken down by
-// private: These pages cannot be shared with any other process.
-// mapped:  These pages are mapped into the view of a section (backed by
-//          pagefile.sys)
-// image:   These pages are mapped into the view of an image section (backed by
-//          file system)
-struct CommittedKBytes {
-  size_t priv;
-  size_t mapped;
-  size_t image;
-};
-
-// Free memory (Megabytes marked as free) in the 2G process address space.
-// total : total amount in megabytes marked as free. Maximum value is 2048.
-// largest : size of the largest contiguous amount of memory found. It is
-//   always smaller or equal to FreeMBytes::total.
-// largest_ptr: starting address of the largest memory block.
-struct FreeMBytes {
-  size_t total;
-  size_t largest;
-  void* largest_ptr;
-};
-
 // Provides performance metrics for a specified process (CPU usage, memory and
 // IO counters). To use it, invoke CreateProcessMetrics() to get an instance
 // for a specific process, then access the information with the different get
@@ -370,24 +278,6 @@ class ProcessMetrics {
   static ProcessMetrics* CreateProcessMetrics(ProcessHandle process);
 
   ~ProcessMetrics();
-
-  // Returns the current space allocated for the pagefile, in bytes (these pages
-  // may or may not be in memory).
-  size_t GetPagefileUsage() const;
-  // Returns the peak space allocated for the pagefile, in bytes.
-  size_t GetPeakPagefileUsage() const;
-  // Returns the current working set size, in bytes.
-  size_t GetWorkingSetSize() const;
-  // Returns private usage, in bytes. Private bytes is the amount
-  // of memory currently allocated to a process that cannot be shared.
-  // Note: returns 0 on unsupported OSes: prior to XP SP2.
-  size_t GetPrivateBytes() const;
-  // Fills a CommittedKBytes with both resident and paged
-  // memory usage as per definition of CommittedBytes.
-  void GetCommittedKBytes(CommittedKBytes* usage) const;
-  // Fills a WorkingSetKBytes containing resident private and shared memory
-  // usage in bytes, as per definition of WorkingSetBytes.
-  bool GetWorkingSetKBytes(WorkingSetKBytes* ws_usage) const;
 
   // Returns the CPU usage in percent since the last time this method was
   // called. The first time this method is called it returns 0 and will return

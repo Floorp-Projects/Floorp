@@ -23,6 +23,10 @@ EXTRA_MAKE_FLAGS := SHARED_LIBRARY= IMPORT_LIBRARY= SHARED_LIB_PDB=
 # Work around libVersionPoint conflict between all three libraries.
 # See bug #838566.
 EXTRA_MAKE_FLAGS += XP_DEFINE=-DlibVersionPoint='libVersionPoint$$(LIBRARY_NAME)'
+else
+# nspr's make export compiles and links everything, but linking can't happen
+# during export on platforms where nspr is linked against mozcrt/mozglue.
+export:: EXTRA_MAKE_FLAGS := SHARED_LIBRARY= IMPORT_LIBRARY= SHARED_LIB_PDB=
 endif
 
 libs export clean distclean::

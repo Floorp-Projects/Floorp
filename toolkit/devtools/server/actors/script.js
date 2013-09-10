@@ -716,6 +716,210 @@ ThreadActor.prototype = {
   },
 
   /**
+   * Handle resume requests that include a forceCompletion request.
+   *
+   * @param Object aRequest
+   *        The request packet received over the RDP.
+   * @returns A response packet.
+   */
+  _forceCompletion: function TA__forceCompletion(aRequest) {
+    // TODO: remove this when Debugger.Frame.prototype.pop is implemented in
+    // bug 736733.
+    return {
+      error: "notImplemented",
+      message: "forced completion is not yet implemented."
+    };
+  },
+
+  _makeOnEnterFrame: function TA__makeOnEnterFrame({ pauseAndRespond }) {
+    return aFrame => {
+      const generatedLocation = getFrameLocation(aFrame);
+      let { url } = this.synchronize(this.sources.getOriginalLocation(
+        generatedLocation));
+
+      return this.sources.isBlackBoxed(url)
+        ? undefined
+        : pauseAndRespond(aFrame);
+    };
+  },
+
+  _makeOnPop: function TA__makeOnPop({ thread, pauseAndRespond, createValueGrip }) {
+    return function (aCompletion) {
+      // onPop is called with 'this' set to the current frame.
+
+      const generatedLocation = getFrameLocation(this);
+      const { url } = thread.synchronize(thread.sources.getOriginalLocation(
+        generatedLocation));
+
+      if (thread.sources.isBlackBoxed(url)) {
+        return undefined;
+      }
+
+      // Note that we're popping this frame; we need to watch for
+      // subsequent step events on its caller.
+      this.reportedPop = true;
+
+      return pauseAndRespond(this, aPacket => {
+        aPacket.why.frameFinished = {};
+        if (!aCompletion) {
+          aPacket.why.frameFinished.terminated = true;
+        } else if (aCompletion.hasOwnProperty("return")) {
+          aPacket.why.frameFinished.return = createValueGrip(aCompletion.return);
+        } else if (aCompletion.hasOwnProperty("yield")) {
+          aPacket.why.frameFinished.return = createValueGrip(aCompletion.yield);
+        } else {
+          aPacket.why.frameFinished.throw = createValueGrip(aCompletion.throw);
+        }
+        return aPacket;
+      });
+    };
+  },
+
+  _makeOnStep: function TA__makeOnStep({ thread, pauseAndRespond, startFrame,
+                                         startLocation }) {
+    return function () {
+      // onStep is called with 'this' set to the current frame.
+
+      const generatedLocation = getFrameLocation(this);
+      const newLocation = thread.synchronize(thread.sources.getOriginalLocation(
+        generatedLocation));
+
+      // Cases when we should pause because we have executed enough to consider
+      // a "step" to have occured:
+      //
+      // 1.1. We change frames.
+      // 1.2. We change URLs (can happen without changing frames thanks to
+      //      source mapping).
+      // 1.3. We change lines.
+      //
+      // Cases when we should always continue execution, even if one of the
+      // above cases is true:
+      //
+      // 2.1. We are in a source mapped region, but inside a null mapping
+      //      (doesn't correlate to any region of original source)
+      // 2.2. The source we are in is black boxed.
+
+      // Cases 2.1 and 2.2
+      if (newLocation.url == null
+          || thread.sources.isBlackBoxed(newLocation.url)) {
+        return undefined;
+      }
+
+      // Cases 1.1, 1.2 and 1.3
+      if (this !== startFrame
+          || startLocation.url !== newLocation.url
+          || startLocation.line !== newLocation.line) {
+        return pauseAndRespond(this);
+      }
+
+      // Otherwise, let execution continue (we haven't executed enough code to
+      // consider this a "step" yet).
+      return undefined;
+    };
+  },
+
+  /**
+   * Define the JS hook functions for stepping.
+   */
+  _makeSteppingHooks: function TA__makeSteppingHooks(aStartLocation) {
+    // Bind these methods and state because some of the hooks are called
+    // with 'this' set to the current frame. Rather than repeating the
+    // binding in each _makeOnX method, just do it once here and pass it
+    // in to each function.
+    const steppingHookState = {
+      pauseAndRespond: (aFrame, onPacket=(k)=>k) => {
+        this._pauseAndRespond(aFrame, { type: "resumeLimit" }, onPacket);
+      },
+      createValueGrip: this.createValueGrip.bind(this),
+      thread: this,
+      startFrame: this.youngestFrame,
+      startLocation: aStartLocation
+    };
+
+    return {
+      onEnterFrame: this._makeOnEnterFrame(steppingHookState),
+      onPop: this._makeOnPop(steppingHookState),
+      onStep: this._makeOnStep(steppingHookState)
+    };
+  },
+
+  /**
+   * Handle attaching the various stepping hooks we need to attach when we
+   * receive a resume request with a resumeLimit property.
+   *
+   * @param Object aRequest
+   *        The request packet received over the RDP.
+   * @returns A promise that resolves to true once the hooks are attached, or is
+   *          rejected with an error packet.
+   */
+  _handleResumeLimit: function TA__handleResumeLimit(aRequest) {
+    let steppingType = aRequest.resumeLimit.type;
+    if (["step", "next", "finish"].indexOf(steppingType) == -1) {
+      return reject({ error: "badParameterType",
+                      message: "Unknown resumeLimit type" });
+    }
+
+    const generatedLocation = getFrameLocation(this.youngestFrame);
+    return this.sources.getOriginalLocation(generatedLocation)
+      .then(originalLocation => {
+        const { onEnterFrame, onPop, onStep } = this._makeSteppingHooks(originalLocation);
+
+        // Make sure there is still a frame on the stack if we are to continue
+        // stepping.
+        let stepFrame = this._getNextStepFrame(this.youngestFrame);
+        if (stepFrame) {
+          switch (steppingType) {
+            case "step":
+              this.dbg.onEnterFrame = onEnterFrame;
+              // Fall through.
+            case "next":
+              stepFrame.onStep = onStep;
+              stepFrame.onPop = onPop;
+              break;
+            case "finish":
+              stepFrame.onPop = onPop;
+          }
+        }
+
+        return true;
+      });
+  },
+
+  /**
+   * Clear the onStep and onPop hooks from the given frame and all of the frames
+   * below it.
+   *
+   * @param Debugger.Frame aFrame
+   *        The frame we want to clear the stepping hooks from.
+   */
+  _clearSteppingHooks: function TA__clearSteppingHooks(aFrame) {
+    while (aFrame) {
+      aFrame.onStep = undefined;
+      aFrame.onPop = undefined;
+      aFrame = aFrame.older;
+    }
+  },
+
+  /**
+   * Listen to the debuggee's DOM events if we received a request to do so.
+   *
+   * @param Object aRequest
+   *        The resume request packet received over the RDP.
+   */
+  _maybeListenToEvents: function TA__maybeListenToEvents(aRequest) {
+    // Break-on-DOMEvents is only supported in content debugging.
+    let events = aRequest.pauseOnDOMEvents;
+    if (this.global && events &&
+        (events == "*" ||
+        (Array.isArray(events) && events.length))) {
+      this._pauseOnDOMEvents = events;
+      let els = Cc["@mozilla.org/eventlistenerservice;1"]
+                .getService(Ci.nsIEventListenerService);
+      els.addListenerForAllEvents(this.global, this._allEventsListener, true);
+    }
+  },
+
+  /**
    * Handle a protocol request to resume execution of the debuggee.
    */
   onResume: function TA_onResume(aRequest) {
@@ -740,147 +944,14 @@ ThreadActor.prototype = {
     }
 
     if (aRequest && aRequest.forceCompletion) {
-      // TODO: remove this when Debugger.Frame.prototype.pop is implemented in
-      // bug 736733.
-      if (typeof this.frame.pop != "function") {
-        return { error: "notImplemented",
-                 message: "forced completion is not yet implemented." };
-      }
-
-      this.dbg.getNewestFrame().pop(aRequest.completionValue);
-      let packet = this._resumed();
-      this._popThreadPause();
-      return { type: "resumeLimit", frameFinished: aRequest.forceCompletion };
+      return this._forceCompletion(aRequest);
     }
 
     let resumeLimitHandled;
     if (aRequest && aRequest.resumeLimit) {
-      // Bind these methods because some of the hooks are called with 'this'
-      // set to the current frame.
-      let pauseAndRespond = (aFrame, onPacket=function (k) k) => {
-        this._pauseAndRespond(aFrame, { type: "resumeLimit" }, onPacket);
-      };
-      let createValueGrip = this.createValueGrip.bind(this);
-
-      let startFrame = this.youngestFrame;
-      const generatedLocation = getFrameLocation(this.youngestFrame);
-      resumeLimitHandled = this.sources.getOriginalLocation(generatedLocation)
-        .then((startLocation) => {
-          // Define the JS hook functions for stepping.
-
-          let onEnterFrame = aFrame => {
-            const generatedLocation = getFrameLocation(aFrame);
-            let { url } = this.synchronize(this.sources.getOriginalLocation(
-              generatedLocation));
-
-            return this.sources.isBlackBoxed(url)
-              ? undefined
-              : pauseAndRespond(aFrame);
-          };
-
-          let thread = this;
-
-          let onPop = function TA_onPop(aCompletion) {
-            // onPop is called with 'this' set to the current frame.
-
-            const generatedLocation = getFrameLocation(this);
-            let { url } = thread.synchronize(thread.sources.getOriginalLocation(
-              generatedLocation));
-
-            if (thread.sources.isBlackBoxed(url)) {
-              return undefined;
-            }
-
-            // Note that we're popping this frame; we need to watch for
-            // subsequent step events on its caller.
-            this.reportedPop = true;
-
-            return pauseAndRespond(this, aPacket => {
-              aPacket.why.frameFinished = {};
-              if (!aCompletion) {
-                aPacket.why.frameFinished.terminated = true;
-              } else if (aCompletion.hasOwnProperty("return")) {
-                aPacket.why.frameFinished.return = createValueGrip(aCompletion.return);
-              } else if (aCompletion.hasOwnProperty("yield")) {
-                aPacket.why.frameFinished.return = createValueGrip(aCompletion.yield);
-              } else {
-                aPacket.why.frameFinished.throw = createValueGrip(aCompletion.throw);
-              }
-              return aPacket;
-            });
-          };
-
-          let onStep = function TA_onStep() {
-            // onStep is called with 'this' set to the current frame.
-
-            const generatedLocation = getFrameLocation(this);
-            const newLocation = thread.synchronize(
-              thread.sources.getOriginalLocation(generatedLocation));
-
-            // Cases when we should pause because we have executed enough to
-            // consider a "step" to have occured:
-            //
-            // 1.1. We change frames.
-            // 1.2. We change URLs (can happen without changing frames thanks to
-            //      source mapping).
-            // 1.3. We change lines.
-            //
-            // Cases when we should always continue execution, even if one of the
-            // above cases is true:
-            //
-            // 2.1. We are in a source mapped region, but inside a null mapping
-            //      (doesn't correlate to any region of original source)
-            // 2.2. The source we are in is black boxed.
-
-            // Cases 2.1 and 2.2
-            if (newLocation.url == null
-                || thread.sources.isBlackBoxed(newLocation.url)) {
-              return undefined;
-            }
-
-            // Cases 1.1, 1.2 and 1.3
-            if (this !== startFrame
-                || startLocation.url !== newLocation.url
-                || startLocation.line !== newLocation.line) {
-              return pauseAndRespond(this);
-            }
-
-            // Otherwise, let execution continue (we haven't executed enough code to
-            // consider this a "step" yet).
-            return undefined;
-          };
-
-          let steppingType = aRequest.resumeLimit.type;
-          if (["step", "next", "finish"].indexOf(steppingType) == -1) {
-            throw { error: "badParameterType",
-                    message: "Unknown resumeLimit type" };
-          }
-          // Make sure there is still a frame on the stack if we are to continue
-          // stepping.
-          let stepFrame = this._getNextStepFrame(startFrame);
-          if (stepFrame) {
-            switch (steppingType) {
-              case "step":
-                this.dbg.onEnterFrame = onEnterFrame;
-                // Fall through.
-              case "next":
-                stepFrame.onStep = onStep;
-                stepFrame.onPop = onPop;
-                break;
-              case "finish":
-                stepFrame.onPop = onPop;
-            }
-          }
-          return true;
-        });
+      resumeLimitHandled = this._handleResumeLimit(aRequest)
     } else {
-      // Clear any previous stepping hooks on a plain resumption.
-      let frame = this.youngestFrame;
-      while (frame) {
-        frame.onStep = undefined;
-        frame.onPop = undefined;
-        frame = frame.older;
-      }
+      this._clearSteppingHooks(this.youngestFrame);
       resumeLimitHandled = resolve(true);
     }
 
@@ -889,16 +960,7 @@ ThreadActor.prototype = {
         this._options.pauseOnExceptions = aRequest.pauseOnExceptions;
         this._options.ignoreCaughtExceptions = aRequest.ignoreCaughtExceptions;
         this.maybePauseOnExceptions();
-        // Break-on-DOMEvents is only supported in content debugging.
-        let events = aRequest.pauseOnDOMEvents;
-        if (this.global && events &&
-            (events == "*" ||
-             (Array.isArray(events) && events.length))) {
-          this._pauseOnDOMEvents = events;
-          let els = Cc["@mozilla.org/eventlistenerservice;1"]
-            .getService(Ci.nsIEventListenerService);
-          els.addListenerForAllEvents(this.global, this._allEventsListener, true);
-        }
+        this._maybeListenToEvents(aRequest);
       }
 
       let packet = this._resumed();
