@@ -3364,7 +3364,8 @@ IonBuilder::jsop_try()
         return abort("Try-catch support disabled");
 
     // Try-finally is not yet supported.
-    JS_ASSERT(!script()->analysis()->hasTryFinally());
+    if (script()->analysis()->hasTryFinally())
+        return abort("Has try-finally");
 
     graph().setHasTryBlock();
 
