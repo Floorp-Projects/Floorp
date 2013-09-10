@@ -75,24 +75,6 @@ WinVersion GetWinVersion() {
   return win_version;
 }
 
-void GetServicePackLevel(int* major, int* minor) {
-  DCHECK(major && minor);
-  static bool checked_version = false;
-  static int service_pack_major = -1;
-  static int service_pack_minor = -1;
-  if (!checked_version) {
-    OSVERSIONINFOEX version_info = {0};
-    version_info.dwOSVersionInfoSize = sizeof(version_info);
-    GetVersionEx(reinterpret_cast<OSVERSIONINFOW*>(&version_info));
-    service_pack_major = version_info.wServicePackMajor;
-    service_pack_minor = version_info.wServicePackMinor;
-    checked_version = true;
-  }
-
-  *major = service_pack_major;
-  *minor = service_pack_minor;
-}
-
 bool IsShiftPressed() {
   return (::GetKeyState(VK_SHIFT) & 0x80) == 0x80;
 }
