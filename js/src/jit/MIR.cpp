@@ -215,6 +215,19 @@ MaybeEmulatesUndefined(JSContext *cx, MDefinition *op)
     return types->hasObjectFlags(cx, types::OBJECT_FLAG_EMULATES_UNDEFINED);
 }
 
+static bool
+MaybeCallable(JSContext *cx, MDefinition *op)
+{
+    if (!op->mightBeType(MIRType_Object))
+        return false;
+
+    types::StackTypeSet *types = op->resultTypeSet();
+    if (!types)
+        return true;
+
+    return types->maybeCallable();
+}
+
 void
 MTest::infer(JSContext *cx)
 {
@@ -1881,6 +1894,15 @@ MTypeOf::foldsTo(bool useValueNumbers)
 
     JSRuntime *rt = GetIonContext()->runtime;
     return MConstant::New(StringValue(TypeName(type, rt)));
+}
+
+void
+MTypeOf::infer(JSContext *cx)
+{
+    JS_ASSERT(inputMaybeCallableOrEmulatesUndefined());
+
+    if (!MaybeEmulatesUndefined(cx, input()) && !MaybeCallable(cx, input()))
+        markInputNotCallableOrEmulatesUndefined();
 }
 
 MBitAnd *
