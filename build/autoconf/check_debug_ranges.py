@@ -19,7 +19,7 @@ def get_range_for(compilation_unit, debug_info):
         if 'DW_TAG_compile_unit' in nfo:
             search_cu = True
         elif 'DW_TAG_' in nfo or not nfo.strip():
-            if name == compilation_unit:
+            if name == compilation_unit and ranges != '':
                 return int(ranges, 16)
             name = ranges = ''
             search_cu = False
