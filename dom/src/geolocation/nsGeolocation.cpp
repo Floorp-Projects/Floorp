@@ -86,7 +86,8 @@ class nsGeolocationRequest
 
   ~nsGeolocationRequest();
 
-  virtual bool Recv__delete__(const bool& allow) MOZ_OVERRIDE;
+  virtual bool Recv__delete__(const bool& allow,
+                              const InfallibleTArray<PermissionChoice>& choices) MOZ_OVERRIDE;
   virtual void IPDLRelease() MOZ_OVERRIDE { Release(); }
 
   bool IsWatch() { return mIsWatchPositionRequest; }
@@ -195,7 +196,7 @@ public:
 
   NS_IMETHOD Run() {
     if (mAllow) {
-      mRequest->Allow();
+      mRequest->Allow(JS::UndefinedHandleValue);
     } else {
       mRequest->Cancel();
     }
@@ -381,8 +382,10 @@ nsGeolocationRequest::GetPrincipal(nsIPrincipal * *aRequestingPrincipal)
 NS_IMETHODIMP
 nsGeolocationRequest::GetTypes(nsIArray** aTypes)
 {
+  nsTArray<nsString> emptyOptions;
   return CreatePermissionArray(NS_LITERAL_CSTRING("geolocation"),
                                NS_LITERAL_CSTRING("unused"),
+                               emptyOptions,
                                aTypes);
 }
 
@@ -413,8 +416,10 @@ nsGeolocationRequest::Cancel()
 }
 
 NS_IMETHODIMP
-nsGeolocationRequest::Allow()
+nsGeolocationRequest::Allow(JS::HandleValue aChoices)
 {
+  MOZ_ASSERT(aChoices.isUndefined());
+
   // Kick off the geo device, if it isn't already running
   nsRefPtr<nsGeolocationService> gs = nsGeolocationService::GetGeolocationService();
   nsresult rv = gs->StartDevice(GetPrincipal());
@@ -600,10 +605,13 @@ nsGeolocationRequest::Shutdown()
   }
 }
 
-bool nsGeolocationRequest::Recv__delete__(const bool& allow)
+bool nsGeolocationRequest::Recv__delete__(const bool& allow,
+                                          const InfallibleTArray<PermissionChoice>& choices)
 {
+  MOZ_ASSERT(choices.IsEmpty(), "Geolocation doesn't support permission choice");
+
   if (allow) {
-    (void) Allow();
+    (void) Allow(JS::UndefinedHandleValue);
   } else {
     (void) Cancel();
   }
@@ -1361,7 +1369,7 @@ Geolocation::WatchPositionReady(nsGeolocationRequest* aRequest)
     return NS_ERROR_FAILURE;
   }
 
-  aRequest->Allow();
+  aRequest->Allow(JS::UndefinedHandleValue);
 
   return NS_OK;
 }
@@ -1472,8 +1480,10 @@ Geolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
     }
 
     nsTArray<PermissionRequest> permArray;
+    nsTArray<nsString> emptyOptions;
     permArray.AppendElement(PermissionRequest(NS_LITERAL_CSTRING("geolocation"),
-                                              NS_LITERAL_CSTRING("unused")));
+                                              NS_LITERAL_CSTRING("unused"),
+                                              emptyOptions));
 
     // Retain a reference so the object isn't deleted without IPDL's knowledge.
     // Corresponding release occurs in DeallocPContentPermissionRequest.
