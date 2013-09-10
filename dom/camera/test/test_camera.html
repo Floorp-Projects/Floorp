@@ -1,0 +1,200 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for mozCameras</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<video id="viewfinder" |width = "200" height = "200| autoplay></video>
+<img src="#" alt="This image is going to load" id="testimage"/>
+<script class="testbody" type="text/javascript;version=1.7">
+
+var options = {
+  camera: navigator.mozCameras.getListOfCameras()[0]
+};
+
+var config = {
+  dateTime: Date.now() / 1000,
+  pictureSize: null,
+  fileFormat: 'jpeg',
+  rotation: 90
+};
+
+function onError(e) {
+  ok(false, "Error" + JSON.stringify(e));
+}
+
+var capabilities = [ 'previewSizes', 'pictureSizes', 'fileFormats', 'maxFocusAreas', 'minExposureCompensation',
+                     'maxExposureCompensation', 'stepExposureCompensation', 'maxMeteringAreas', 'videoSizes', 
+                     'recorderProfiles'];
+
+var Camera = {
+  cameraObj: null,
+  _recording: false,
+  _currentTest: null,
+  _autoFocusSupported: 0,
+  _manuallyFocused: false,
+  _flashmodes: null,
+  _pictureSizes: null,
+  _previewSizes: null,
+  _whiteBalanceModes: null,
+  _zoomRatios: null,
+  _sceneModes: null,
+  _focusModes: null,
+  _testsCompleted: 0,
+  _shutter: 0,
+  _config: {
+    dateTime: Date.now() / 1000,
+    pictureSize: null,
+    fileFormat: 'jpeg',
+    rotation: 90
+  },
+  _tests: null,
+  get viewfinder() {
+    return document.getElementById('viewfinder');
+  },
+  setFlashMode: function camera_setFlash(mode) {
+    this.cameraObj.flashMode = mode;
+  },
+  setFocus: function camera_setfocus(mode) {
+    this.cameraObj.focus = mode;
+  },
+  getFileFormats: function camera_formats() {
+    this._fileFormats = this.cameraObj.capabilities.fileFormats;
+  },
+  getFlashModes: function camera_getFlash() {
+    this._flashmodes = this.cameraObj.capabilities.flashModes;
+  },
+  getFocusModes: function camera_getFocus() {
+    this._focusModes = this.cameraObj.capabilities.focusModes;
+  },
+  getSceneModes: function camera_getScene() {
+    this._sceneModes = this.cameraObj.capabilities.sceneModes;
+  },
+  getZoomRatios: function camera_getZoom() {
+    this._zoomRatios = this.cameraObj.capabilities.zoomRatios;
+  },
+  getWhiteBalance: function camera_white() {
+    this._whitebalanceModes = this.cameraObj.capabilities.whiteBalanceModes;
+  },
+  getPictureSizes: function camera_sizes() {
+    this._pictureSizes = this.cameraObj.capabilities.pictureSizes;
+  },
+  getPreviewSizes: function camera_preview() {
+    this._previewSizes = this.cameraObj.capabilities.previewSizes;
+  },
+  takePictureSuccess: function taken_foto(blob) {
+    var img = new Image();
+    var test = this._currentTest;
+    img.onload = function Imgsize() {
+      ok(this.width == test.pictureSize.width, "The image taken has the width " + 
+                                              this.width + " pictureSize width = " + test.pictureSize.width);
+      ok(this.height == test.pictureSize.height, "The image taken has the height " + 
+                                              this.height + " picturesize height = " + test.pictureSize.height);
+      Camera._testsCompleted++;
+      if(Camera._testsCompleted == Camera._tests.length) {
+        ok(true, "test finishing");
+        Camera.cameraObj.release();
+        Camera.viewfinder.mozSrcObject = null;
+        SimpleTest.finish();
+      } else {
+        Camera.runTests();
+      }
+    }
+    ok(blob.size > 100 , "Blob Size Gathered = " + blob.size);
+    ok("image/" + test.fileFormat ==  blob.type, "Blob Type = " + blob.type);
+    img.src = window.URL.createObjectURL(blob);
+  },
+  shutter: function onShutter () {
+    Camera._shutter++;
+    
+    ok(Camera._shutter == (Camera._testsCompleted + 1), "on Shutter has been called " +
+                           Camera._shutter + " times");
+
+  },
+  streamReady: function onStreamReady (stream) {
+    Camera.viewfinder.mozSrcObject = stream;
+    Camera.viewfinder.play();
+    ok(true, "on Stream is ready and playing");
+    Camera.cameraObj.onPreviewStateChange = function(state) {
+      if (state === 'started') {
+        Camera.cameraObj.onPreviewStateChange = null;
+        Camera.onReady();
+      }
+    };
+
+    //window.setTimeout(Camera.onReady, 500);
+  },
+  onReady: function onReady() {
+    var camcap = Camera.cameraObj.capabilities;
+    var tests = {};
+    for (var prop in capabilities) {
+      prop = capabilities[prop];
+      ok(camcap[prop] || isFinite(camcap[prop]) || camcap[prop] == null, "Camera Capability: " +
+                    prop + " is exposed, value = " +JSON.stringify(camcap[prop]));
+    } 
+    for (var prop in camcap) {
+      if(camcap[prop] && camcap[prop].length > 1)  {
+        tests[prop] = camcap[prop];
+      }
+    }
+    Camera.getPictureSizes();
+    Camera.getPreviewSizes();
+    Camera.getFileFormats();
+    Camera.getFocusModes();
+    ok(Camera._previewSizes.length > 0, "previewSizes length = " + Camera._previewSizes.length);
+    ok(Camera._pictureSizes.length > 0, "picturesizes length = " + Camera._pictureSizes.length);
+    ok(Camera._fileFormats.length > 0, "file formats length = " + Camera._fileFormats.length);
+    Camera._tests = new Array();
+    for (var i in Camera._pictureSizes) {
+      for (var l in Camera._fileFormats) {
+        var config = {
+          pictureSize: Camera._pictureSizes[i],
+          fileFormat: Camera._fileFormats[l]
+        };
+        Camera._tests.push(config);
+      }
+    }
+    Camera.runTests();
+  },
+  runTests: function run_tests() {
+    var test = this._tests[this._testsCompleted];
+    this._currentTest = test;
+    Camera.setFlashMode(test.flashMode);
+    config.fileFormat = test.fileFormat;
+    config.pictureSize = test.pictureSize;
+    ok(true, JSON.stringify(config.pictureSize));
+    Camera.cameraObj.takePicture(config, this.takePictureSuccess.bind(this), onError);
+  },
+  setUp: function setup_tests() {
+    function onSuccess(camera) {
+      Camera.cameraObj = camera;
+      var size = {
+        profile: 'cif',
+        rotation: 0,
+        width: 352,
+        height: 288
+      };
+      SimpleTest.expectAssertions(34);
+      ok(true, "Camera Control object has been successfully initialized");
+      Camera.cameraObj.getPreviewStream(size, Camera.streamReady);
+      Camera.cameraObj.onShutter = Camera.shutter;
+    };
+    navigator.mozCameras.getCamera(options, onSuccess, onError);
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+window.addEventListener('beforeunload', function() {
+  Camera.viewfinder.mozSrcObject = null;
+});
+
+Camera.setUp();
+
+</script>
+</body>
+
+</html>
