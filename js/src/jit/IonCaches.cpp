@@ -2943,9 +2943,9 @@ GetElementIC::canAttachTypedArrayElement(JSObject *obj, const Value &idval,
 }
 
 static void
-GenerateTypedArrayElement(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
-                          TypedArrayObject *tarr, const Value &idval, Register object,
-                          ConstantOrRegister index, TypedOrValueRegister output)
+GenerateGetTypedArrayElement(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
+                             TypedArrayObject *tarr, const Value &idval, Register object,
+                             ConstantOrRegister index, TypedOrValueRegister output)
 {
     JS_ASSERT(GetElementIC::canAttachTypedArrayElement(tarr, idval, output));
 
@@ -3051,7 +3051,7 @@ GetElementIC::attachTypedArrayElement(JSContext *cx, IonScript *ion, TypedArrayO
 {
     MacroAssembler masm(cx);
     RepatchStubAppender attacher(*this);
-    GenerateTypedArrayElement(cx, masm, attacher, tarr, idval, object(), index(), output());
+    GenerateGetTypedArrayElement(cx, masm, attacher, tarr, idval, object(), index(), output());
     return linkAndAttachStub(cx, masm, attacher, ion, "typed array");
 }
 
@@ -3365,6 +3365,106 @@ SetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, c
     return linkAndAttachStub(cx, masm, attacher, ion, "dense array");
 }
 
+static bool
+GenerateSetTypedArrayElement(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
+                             TypedArrayObject *tarr, const Value &idval, Register object,
+                             ValueOperand indexVal, ConstantOrRegister value,
+                             Register tempUnbox, Register temp, FloatRegister tempFloat)
+{
+    JS_ASSERT(SetElementIC::canAttachTypedArrayElement(tarr, idval));
+
+    Label failures, done, popObjectAndFail;
+
+    // Guard on the shape.
+    Shape *shape = tarr->lastProperty();
+    if (!shape)
+        return false;
+    masm.branchTestObjShape(Assembler::NotEqual, object, shape, &failures);
+
+    // Ensure the index is an int32.
+    masm.branchTestInt32(Assembler::NotEqual, indexVal, &failures);
+    Register index = masm.extractInt32(indexVal, tempUnbox);
+
+    // Guard on the length.
+    Address length(object, TypedArrayObject::lengthOffset());
+    masm.unboxInt32(length, temp);
+    masm.branch32(Assembler::BelowOrEqual, temp, index, &done);
+
+    // Load the elements vector.
+    Register elements = temp;
+    masm.loadPtr(Address(object, TypedArrayObject::dataOffset()), elements);
+
+    // Set the value.
+    int arrayType = tarr->type();
+    int width = TypedArrayObject::slotWidth(arrayType);
+    BaseIndex target(elements, index, ScaleFromElemWidth(width));
+
+    if (arrayType == ScalarTypeRepresentation::TYPE_FLOAT32 ||
+        arrayType == ScalarTypeRepresentation::TYPE_FLOAT64)
+    {
+        if (!masm.convertConstantOrRegisterToDouble(cx, value, tempFloat, &failures))
+            return false;
+        masm.storeToTypedFloatArray(arrayType, tempFloat, target);
+    } else {
+        // On x86 we only have 6 registers available to use, so reuse the object
+        // register to compute the intermediate value to store and restore it
+        // afterwards.
+        masm.push(object);
+
+        if (arrayType == ScalarTypeRepresentation::TYPE_UINT8_CLAMPED) {
+            if (!masm.clampConstantOrRegisterToUint8(cx, value, tempFloat, object,
+                                                     &popObjectAndFail))
+            {
+                return false;
+            }
+        } else {
+            if (!masm.truncateConstantOrRegisterToInt32(cx, value, tempFloat, object,
+                                                        &popObjectAndFail))
+            {
+                return false;
+            }
+        }
+        masm.storeToTypedIntArray(arrayType, object, target);
+
+        masm.pop(object);
+    }
+
+    // Out-of-bound writes jump here as they are no-ops.
+    masm.bind(&done);
+    attacher.jumpRejoin(masm);
+
+    if (popObjectAndFail.used()) {
+        masm.bind(&popObjectAndFail);
+        masm.pop(object);
+    }
+
+    masm.bind(&failures);
+    attacher.jumpNextStub(masm);
+    return true;
+}
+
+/* static */ bool
+SetElementIC::canAttachTypedArrayElement(JSObject *obj, const Value &idval)
+{
+    return obj->is<TypedArrayObject>() && idval.isInt32();
+}
+
+bool
+SetElementIC::attachTypedArrayElement(JSContext *cx, IonScript *ion,
+                                      TypedArrayObject *tarr, const Value &idval)
+{
+    MacroAssembler masm(cx);
+    RepatchStubAppender attacher(*this);
+    if (!GenerateSetTypedArrayElement(cx, masm, attacher, tarr, idval,
+                                      object(), index(), value(),
+                                      tempToUnboxIndex(), temp(), tempFloat()))
+    {
+        return false;
+    }
+
+    return linkAndAttachStub(cx, masm, attacher, ion, "typed array");
+}
+
 bool
 SetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
                      HandleValue idval, HandleValue value)
@@ -3372,9 +3472,18 @@ SetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
     IonScript *ion = GetTopIonJSScript(cx)->ionScript();
     SetElementIC &cache = ion->getCache(cacheIndex).toSetElement();
 
-    if (cache.canAttachStub() && !cache.hasDenseStub() && IsElementSetInlineable(obj, idval)) {
-        if (!cache.attachDenseElement(cx, ion, obj, idval))
-            return false;
+    bool attachedStub = false;
+    if (cache.canAttachStub()) {
+        if (!cache.hasDenseStub() && IsElementSetInlineable(obj, idval)) {
+            if (!cache.attachDenseElement(cx, ion, obj, idval))
+                return false;
+            attachedStub = true;
+        }
+        if (!attachedStub && canAttachTypedArrayElement(obj, idval)) {
+            TypedArrayObject *tarr = &obj->as<TypedArrayObject>();
+            if (!cache.attachTypedArrayElement(cx, ion, tarr, idval))
+                return false;
+        }
     }
 
     if (!SetObjectElement(cx, obj, idval, value, cache.strict()))
@@ -3426,7 +3535,7 @@ GetElementParIC::attachTypedArrayElement(LockedJSContext &cx, IonScript *ion,
 {
     MacroAssembler masm(cx);
     DispatchStubPrepender attacher(*this);
-    GenerateTypedArrayElement(cx, masm, attacher, tarr, idval, object(), index(), output());
+    GenerateGetTypedArrayElement(cx, masm, attacher, tarr, idval, object(), index(), output());
     return linkAndAttachStub(cx, masm, attacher, ion, "parallel typed array");
 }
 
