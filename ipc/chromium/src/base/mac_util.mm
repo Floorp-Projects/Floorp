@@ -44,26 +44,4 @@ bool AmIBundled() {
   return info.nodeFlags & kFSNodeIsDirectoryMask;
 }
 
-// No threading worries since NSBundle isn't thread safe.
-static NSBundle* g_override_app_bundle = nil;
-
-NSBundle* MainAppBundle() {
-  if (g_override_app_bundle)
-    return g_override_app_bundle;
-  return [NSBundle mainBundle];
-}
-
-void SetOverrideAppBundle(NSBundle* bundle) {
-  [g_override_app_bundle release];
-  g_override_app_bundle = [bundle retain];
-}
-
-void SetOverrideAppBundlePath(const FilePath& file_path) {
-  NSString* path = base::SysUTF8ToNSString(file_path.value());
-  NSBundle* bundle = [NSBundle bundleWithPath:path];
-  DCHECK(bundle) << "failed to load the bundle: " << file_path.value();
-
-  SetOverrideAppBundle(bundle);
-}
-
 }  // namespace mac_util
