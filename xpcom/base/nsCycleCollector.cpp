@@ -616,12 +616,14 @@ struct GCGraph
     }
 
     void SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
-                             size_t *aNodesSize, size_t *aEdgesSize) const {
+                             size_t *aNodesSize, size_t *aEdgesSize,
+                             size_t *aWeakMapsSize) const {
         *aNodesSize = mNodes.SizeOfExcludingThis(aMallocSizeOf);
         *aEdgesSize = mEdges.SizeOfExcludingThis(aMallocSizeOf);
 
-        // These fields are deliberately not measured:
-        // - mWeakMaps entries, because the pointers are non-owning
+        // We don't measure what the WeakMappings point to, because the
+        // pointers are non-owning.
+        *aWeakMapsSize = mWeakMaps.SizeOfExcludingThis(aMallocSizeOf);
     }
 };
 
@@ -976,6 +978,7 @@ public:
                              size_t *aObjectSize,
                              size_t *aGraphNodesSize,
                              size_t *aGraphEdgesSize,
+                             size_t *aWeakMapsSize,
                              size_t *aWhiteNodeSize,
                              size_t *aPurpleBufferSize) const;
 
@@ -2405,11 +2408,13 @@ class CycleCollectorMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
     NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback* aCb,
                               nsISupports* aClosure)
     {
-        size_t objectSize, graphNodesSize, graphEdgesSize, whiteNodesSize,
-               purpleBufferSize;
+        size_t objectSize, graphNodesSize, graphEdgesSize, weakMapsSize,
+            whiteNodesSize, purpleBufferSize;
         mCollector->SizeOfIncludingThis(MallocSizeOf,
-                                        &objectSize, &graphNodesSize,
-                                        &graphEdgesSize, &whiteNodesSize,
+                                        &objectSize,
+                                        &graphNodesSize, &graphEdgesSize,
+                                        &weakMapsSize,
+                                        &whiteNodesSize,
                                         &purpleBufferSize);
 
     #define REPORT(_path, _amount, _desc)                                     \
@@ -2434,6 +2439,11 @@ class CycleCollectorMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
 
         REPORT("explicit/cycle-collector/graph-edges", graphEdgesSize,
                "Memory used for the edges of the cycle collector's graph. "
+               "This should be zero when the collector is idle.");
+
+        REPORT("explicit/cycle-collector/weak-maps", weakMapsSize,
+               "Memory used for the representation of weak maps in the "
+               "cycle collector's graph. "
                "This should be zero when the collector is idle.");
 
         REPORT("explicit/cycle-collector/white-nodes", whiteNodesSize,
@@ -2817,12 +2827,14 @@ nsCycleCollector::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
                                       size_t *aObjectSize,
                                       size_t *aGraphNodesSize,
                                       size_t *aGraphEdgesSize,
+                                      size_t *aWeakMapsSize,
                                       size_t *aWhiteNodeSize,
                                       size_t *aPurpleBufferSize) const
 {
     *aObjectSize = aMallocSizeOf(this);
 
-    mGraph.SizeOfExcludingThis(aMallocSizeOf, aGraphNodesSize, aGraphEdgesSize);
+    mGraph.SizeOfExcludingThis(aMallocSizeOf, aGraphNodesSize, aGraphEdgesSize,
+                               aWeakMapsSize);
 
     // No need to measure what the entries point to; the pointers are
     // non-owning.
