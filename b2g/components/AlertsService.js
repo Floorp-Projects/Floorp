@@ -67,8 +67,9 @@ AlertsService.prototype = {
                                                     aText,
                                                     aTextClickable,
                                                     aManifestURL,
-                                                    aAlertListener) {
-    let uid = "app-notif-" + uuidGenerator.generateUUID();
+                                                    aAlertListener,
+                                                    aId) {
+    let uid = (aId == "") ? "app-notif-" + uuidGenerator.generateUUID() : aId;
 
     this._listeners[uid] = {
       observer: aAlertListener,

@@ -9,7 +9,7 @@
 
 BEGIN_FMRADIO_NAMESPACE
 
-FMRadioRequestChild::FMRadioRequestChild(ReplyRunnable* aReplyRunnable)
+FMRadioRequestChild::FMRadioRequestChild(FMRadioReplyRunnable* aReplyRunnable)
   : mReplyRunnable(aReplyRunnable)
 {
   MOZ_COUNT_CTOR(FMRadioRequestChild);
