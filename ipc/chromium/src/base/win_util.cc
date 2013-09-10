@@ -246,60 +246,6 @@ bool GetLogonSessionOnlyDACL(SECURITY_DESCRIPTOR** security_descriptor) {
   return true;
 }
 
-#pragma warning(push)
-#pragma warning(disable:4312 4244)
-WNDPROC SetWindowProc(HWND hwnd, WNDPROC proc) {
-  // The reason we don't return the SetwindowLongPtr() value is that it returns
-  // the orignal window procedure and not the current one. I don't know if it is
-  // a bug or an intended feature.
-  WNDPROC oldwindow_proc =
-      reinterpret_cast<WNDPROC>(GetWindowLongPtr(hwnd, GWLP_WNDPROC));
-  SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(proc));
-  return oldwindow_proc;
-}
-
-// Maps to the WNDPROC for a window that was active before the subclass was
-// installed.
-static const wchar_t* const kHandlerKey = L"__ORIGINAL_MESSAGE_HANDLER__";
-
-bool IsSubclassed(HWND window, WNDPROC subclass_proc) {
-  WNDPROC original_handler =
-      reinterpret_cast<WNDPROC>(GetWindowLongPtr(window, GWLP_WNDPROC));
-  return original_handler == subclass_proc;
-}
-
-bool Subclass(HWND window, WNDPROC subclass_proc) {
-  WNDPROC original_handler =
-      reinterpret_cast<WNDPROC>(GetWindowLongPtr(window, GWLP_WNDPROC));
-  if (original_handler != subclass_proc) {
-    win_util::SetWindowProc(window, subclass_proc);
-    SetProp(window, kHandlerKey, (void*)original_handler);
-    return true;
-  }
-  return false;
-}
-
-bool Unsubclass(HWND window, WNDPROC subclass_proc) {
-  WNDPROC current_handler =
-      reinterpret_cast<WNDPROC>(GetWindowLongPtr(window, GWLP_WNDPROC));
-  if (current_handler == subclass_proc) {
-    HANDLE original_handler = GetProp(window, kHandlerKey);
-    if (original_handler) {
-      RemoveProp(window, kHandlerKey);
-      win_util::SetWindowProc(window,
-                              reinterpret_cast<WNDPROC>(original_handler));
-      return true;
-    }
-  }
-  return false;
-}
-
-WNDPROC GetSuperclassWNDPROC(HWND window) {
-  return reinterpret_cast<WNDPROC>(GetProp(window, kHandlerKey));
-}
-
-#pragma warning(pop)
-
 bool IsShiftPressed() {
   return (::GetKeyState(VK_SHIFT) & 0x80) == 0x80;
 }

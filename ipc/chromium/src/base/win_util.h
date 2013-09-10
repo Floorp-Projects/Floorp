@@ -51,28 +51,6 @@ bool GetUserSidString(std::wstring* user_sid);
 // The function returns true if it succeeds, false otherwise.
 bool GetLogonSessionOnlyDACL(SECURITY_DESCRIPTOR** security_descriptor);
 
-// Useful for subclassing a HWND.  Returns the previous window procedure.
-WNDPROC SetWindowProc(HWND hwnd, WNDPROC wndproc);
-
-// Returns true if the existing window procedure is the same as |subclass_proc|.
-bool IsSubclassed(HWND window, WNDPROC subclass_proc);
-
-// Subclasses a window, replacing its existing window procedure with the
-// specified one. Returns true if the current window procedure was replaced,
-// false if the window has already been subclassed with the specified
-// subclass procedure.
-bool Subclass(HWND window, WNDPROC subclass_proc);
-
-// Unsubclasses a window subclassed using Subclass. Returns true if
-// the window was subclassed with the specified |subclass_proc| and the window
-// was successfully unsubclassed, false if the window's window procedure is not
-// |subclass_proc|.
-bool Unsubclass(HWND window, WNDPROC subclass_proc);
-
-// Retrieves the original WNDPROC of a window subclassed using
-// SubclassWindow.
-WNDPROC GetSuperclassWNDPROC(HWND window);
-
 // Returns true if the shift key is currently pressed.
 bool IsShiftPressed();
 
