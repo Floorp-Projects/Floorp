@@ -1792,7 +1792,9 @@ GlobalObject::GlobalObject(JSContext* aCx, JSObject* aObject)
 nsISupports*
 GlobalObject::GetAsSupports() const
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  if (!NS_IsMainThread()) {
+    return nullptr;
+  }
 
   if (mGlobalObject) {
     return mGlobalObject;

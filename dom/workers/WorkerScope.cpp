@@ -10,6 +10,7 @@
 #include "js/OldDebugAPI.h"
 #include "mozilla/Util.h"
 #include "mozilla/dom/DOMJSClass.h"
+#include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
@@ -1097,6 +1098,7 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
 
   // Init other paris-bindings.
   if (!DOMExceptionBinding::GetConstructorObject(aCx, global) ||
+      !EventBinding::GetConstructorObject(aCx, global) ||
       !FileReaderSyncBinding_workers::GetConstructorObject(aCx, global) ||
       !ImageDataBinding::GetConstructorObject(aCx, global) ||
       !TextDecoderBinding::GetConstructorObject(aCx, global) ||
