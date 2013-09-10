@@ -1067,7 +1067,7 @@ pref("devtools.gcli.allowSet", false);
 pref("devtools.commands.dir", "");
 
 // Disable the app manager
-pref("devtools.appmanager.enabled", false);
+pref("devtools.appmanager.enabled", true);
 pref("devtools.appmanager.simulatorInstallPage", "https://addons.mozilla.org/firefox/addon/firefox-os-simulator/");
 
 // Toolbox preferences
