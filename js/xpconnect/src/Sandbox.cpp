@@ -945,9 +945,10 @@ xpc::CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandb
     }
 
     JS::CompartmentOptions compartmentOptions;
-    compartmentOptions.setZone(options.sameZoneAs
-                                 ? JS::SameZoneAs(js::UncheckedUnwrap(options.sameZoneAs))
-                                 : JS::SystemZone);
+    if (options.sameZoneAs)
+        compartmentOptions.setSameZoneAs(js::UncheckedUnwrap(options.sameZoneAs));
+    else
+        compartmentOptions.setZone(JS::SystemZone);
     RootedObject sandbox(cx, xpc::CreateGlobalObject(cx, &SandboxClass,
                                                      principal, compartmentOptions));
     if (!sandbox)

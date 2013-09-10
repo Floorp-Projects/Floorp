@@ -2473,35 +2473,36 @@ JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp);
 
 namespace JS {
 
-enum {
-    FreshZone,
-    SystemZone,
-    SpecificZones
+enum ZoneSpecifier {
+    FreshZone = 0,
+    SystemZone = 1
 };
 
-typedef uintptr_t ZoneSpecifier;
-
-inline ZoneSpecifier
-SameZoneAs(JSObject *obj)
+class JS_PUBLIC_API(CompartmentOptions)
 {
-    JS_ASSERT(uintptr_t(obj) > SpecificZones);
-    return ZoneSpecifier(obj);
-}
+    union {
+        ZoneSpecifier spec;
+        void *pointer; // js::Zone* is not exposed in the API.
+    } zone_;
+    JSVersion version_;
 
-struct JS_PUBLIC_API(CompartmentOptions) {
-    ZoneSpecifier zoneSpec;
-    JSVersion version;
+  public:
     bool invisibleToDebugger;
 
-    explicit CompartmentOptions() : zoneSpec(JS::FreshZone)
-                                  , version(JSVERSION_UNKNOWN)
-                                  , invisibleToDebugger(false)
-    {}
+    explicit CompartmentOptions()
+      : version_(JSVERSION_UNKNOWN)
+      , invisibleToDebugger(false)
+    {
+        zone_.spec = JS::FreshZone;
+    }
 
-    CompartmentOptions &setZone(ZoneSpecifier spec) { zoneSpec = spec; return *this; }
-    CompartmentOptions &setVersion(JSVersion version_) {
-        JS_ASSERT(version_ != JSVERSION_UNKNOWN);
-        version = version_;
+    CompartmentOptions &setZone(ZoneSpecifier spec);
+
+    CompartmentOptions &setSameZoneAs(JSObject *obj);
+
+    CompartmentOptions &setVersion(JSVersion aVersion) {
+        MOZ_ASSERT(aVersion != JSVERSION_UNKNOWN);
+        version_ = aVersion;
         return *this;
     }
 
@@ -2512,6 +2513,15 @@ struct JS_PUBLIC_API(CompartmentOptions) {
     CompartmentOptions &setInvisibleToDebugger(bool invisible) {
         invisibleToDebugger = invisible;
         return *this;
+    }
+
+    ZoneSpecifier zoneSpecifier() const { return zone_.spec; }
+
+    JSVersion version() const { return version_; }
+
+    void *zonePointer() const {
+        JS_ASSERT(uintptr_t(zone_.pointer) > uintptr_t(JS::SystemZone));
+        return zone_.pointer;
     }
 };
 

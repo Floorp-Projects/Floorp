@@ -2094,7 +2094,7 @@ CreateNativeGlobalForInner(JSContext* aCx,
   JS::CompartmentOptions options;
   if (top) {
     if (top->GetGlobalJSObject()) {
-      options.zoneSpec = JS::SameZoneAs(top->GetGlobalJSObject());
+      options.setSameZoneAs(top->GetGlobalJSObject());
     }
   }
 
