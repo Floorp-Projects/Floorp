@@ -2,8 +2,15 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * These tests check the auto-update facility of the thumbnail service.
+ * These tests check the auto-update facility of the background thumbnail
+ * service.
  */
+
+const imports = {};
+Cu.import("resource://gre/modules/BackgroundPageThumbs.jsm", imports);
+registerCleanupFunction(function () {
+  imports.BackgroundPageThumbs._destroy();
+});
 
 function runTests() {
   // A "trampoline" - a generator that iterates over sub-iterators
@@ -68,12 +75,12 @@ function simpleCaptureTest() {
     is(numNotifications, 1, "got notification of item being created.");
     // The capture is now "fresh" - so requesting the URL should not cause
     // a new capture.
-    PageThumbs.captureIfStale(URL);
+    imports.BackgroundPageThumbs.captureIfStale(URL);
     is(numNotifications, 1, "still only 1 notification of item being created.");
 
     ensureThumbnailStale(URL);
     // Ask for it to be updated.
-    PageThumbs.captureIfStale(URL);
+    imports.BackgroundPageThumbs.captureIfStale(URL);
     // But it's async, so wait - our observer above will call next() when
     // the notification comes.
   });
@@ -99,13 +106,13 @@ function errorResponseUpdateTest() {
   // As we set the thumbnail very stale, allowing 1 second of "slop" here
   // works around this while still keeping the test valid.
   let now = Date.now() - 1000 ;
-  PageThumbs.captureIfStale(URL).then(() => {
+  imports.BackgroundPageThumbs.captureIfStale(URL, { onDone: () => {
     ok(getThumbnailModifiedTime(URL) >= now, "modified time should be >= now");
     retrieveImageDataForURL(URL, function ([r, g, b]) {
       is("" + [r,g,b], "" + [0, 255, 0], "thumbnail is still green");
       next();
     });
-  }).then(null, err => {ok(false, "Error in captureIfStale: " + err)});
+  }});
   yield undefined; // wait for callback to call 'next'...
 }
 
@@ -127,7 +134,7 @@ function goodResponseUpdateTest() {
   // As we set the thumbnail very stale, allowing 1 second of "slop" here
   // works around this while still keeping the test valid.
   let now = Date.now() - 1000 ;
-  PageThumbs.captureIfStale(URL).then(() => {
+  imports.BackgroundPageThumbs.captureIfStale(URL, { onDone: () => {
     ok(getThumbnailModifiedTime(URL) >= now, "modified time should be >= now");
     // the captureIfStale request saw a 200 response with the red body, so we
     // expect to see the red version here.
@@ -135,7 +142,7 @@ function goodResponseUpdateTest() {
       is("" + [r,g,b], "" + [255, 0, 0], "thumbnail is now red");
       next();
     });
-  }).then(null, err => {ok(false, "Error in captureIfStale: " + err)});
+  }});
   yield undefined; // wait for callback to call 'next'...
 }
 
