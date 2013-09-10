@@ -37,18 +37,16 @@ function testMixedContent(hud) {
   }).then((results) => {
     let msg = [...results[0].matched][0];
     ok(msg, "page load logged");
+    ok(msg.classList.contains("mixed-content"), ".mixed-content element");
 
-    let mixedContent = msg.querySelector(".webconsole-mixed-content");
-    ok(mixedContent, ".webconsole-mixed-content element");
-
-    let link = msg.querySelector(".webconsole-mixed-content-link");
+    let link = msg.querySelector(".learn-more-link");
     ok(link, "mixed content link element");
-    is(link.value, "[Mixed Content]", "link text is accurate");
+    is(link.textContent, "[Mixed Content]", "link text is accurate");
 
     let oldOpenLink = hud.openLink;
     let linkOpened = false;
     hud.openLink = (url) => {
-      is(url, "https://developer.mozilla.org/Security/MixedContent",
+      is(url, "https://developer.mozilla.org/docs/Security/MixedContent",
          "url opened");
       linkOpened = true;
     };
@@ -59,11 +57,11 @@ function testMixedContent(hud) {
 
     hud.openLink = oldOpenLink;
 
-    ok(!msg.classList.contains("hud-filtered-by-type"), "message is not filtered");
+    ok(!msg.classList.contains("filtered-by-type"), "message is not filtered");
 
     hud.setFilterState("netwarn", false);
 
-    ok(msg.classList.contains("hud-filtered-by-type"), "message is filtered");
+    ok(msg.classList.contains("filtered-by-type"), "message is filtered");
 
     hud.setFilterState("netwarn", true);
 

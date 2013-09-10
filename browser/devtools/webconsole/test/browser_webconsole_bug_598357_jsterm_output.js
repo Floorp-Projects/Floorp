@@ -148,47 +148,35 @@ function testGen() {
 
   // Test the console.log() output.
 
+  let outputItem;
+  function onExecute(msg) {
+    outputItem = msg;
+    subtestNext();
+  }
+
   HUD.jsterm.execute("console.log(" + consoleTest + ")");
 
-  waitForSuccess({
-    name: "console.log message for test #" + cpos,
-    validatorFn: function()
-    {
-      return HUD.outputNode.querySelector(".hud-log");
-    },
-    successFn: subtestNext,
-    failureFn: testNext,
-  });
+  waitForMessages({
+    webconsole: HUD,
+    messages: [{
+      name: "console API output is correct for inputValues[" + cpos + "]",
+      text: consoleOutput,
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+    }],
+  }).then(subtestNext);
 
   yield undefined;
-
-  let outputItem = HUD.outputNode.querySelector(".hud-log:last-child");
-  ok(outputItem,
-    "found the window.console output line for inputValues[" + cpos + "]");
-  ok(outputItem.textContent.indexOf(consoleOutput) > -1,
-    "console API output is correct for inputValues[" + cpos + "]");
 
   HUD.jsterm.clearOutput();
 
   // Test jsterm print() output.
 
   HUD.jsterm.setInputValue("print(" + inputValue + ")");
-  HUD.jsterm.execute();
-
-  waitForSuccess({
-    name: "jsterm print() output for test #" + cpos,
-    validatorFn: function()
-    {
-      return HUD.outputNode.querySelector(".webconsole-msg-output:last-child");
-    },
-    successFn: subtestNext,
-    failureFn: testNext,
-  });
+  HUD.jsterm.execute(null, onExecute);
 
   yield undefined;
 
-  outputItem = HUD.outputNode.querySelector(".webconsole-msg-output:" +
-                                            "last-child");
   ok(outputItem,
     "found the jsterm print() output line for inputValues[" + cpos + "]");
   ok(outputItem.textContent.indexOf(printOutput) > -1,
@@ -198,27 +186,16 @@ function testGen() {
 
   HUD.jsterm.clearOutput();
   HUD.jsterm.setInputValue(inputValue);
-  HUD.jsterm.execute();
-
-  waitForSuccess({
-    name: "jsterm output for test #" + cpos,
-    validatorFn: function()
-    {
-      return HUD.outputNode.querySelector(".webconsole-msg-output:last-child");
-    },
-    successFn: subtestNext,
-    failureFn: testNext,
-  });
+  HUD.jsterm.execute(null, onExecute);
 
   yield undefined;
 
-  outputItem = HUD.outputNode.querySelector(".webconsole-msg-output:" +
-                                            "last-child");
   ok(outputItem, "found the jsterm output line for inputValues[" + cpos + "]");
   ok(outputItem.textContent.indexOf(expectedOutput) > -1,
     "jsterm output is correct for inputValues[" + cpos + "]");
 
-  let messageBody = outputItem.querySelector(".webconsole-msg-body");
+  let messageBody = outputItem.querySelector(".body a") ||
+                    outputItem.querySelector(".body");
   ok(messageBody, "we have the message body for inputValues[" + cpos + "]");
 
   // Test click on output.

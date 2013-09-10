@@ -28,28 +28,13 @@ function loadDocument(theHud) {
 
 function onLoad(aEvent) {
   browser.removeEventListener("load", onLoad, true);
-  testPolicyURIMessage();
-}
 
-function testPolicyURIMessage() {
-  let aOutputNode = hud.outputNode;
- 
-  waitForSuccess(
-    {
-      name: "CSP policy URI warning displayed successfully",
-      validatorFn: function() {
-        return aOutputNode.querySelector(".webconsole-msg-error");
-      },
-
-      successFn: function() {
-        //tests on the urlnode
-        let node = aOutputNode.querySelector(".webconsole-msg-error");
-        isnot(node.textContent.indexOf("can't fetch policy"), -1,
-                                       "CSP Policy URI message found");
-        finishTest();
-      },
-
-      failureFn: finishTest,
-    }
-  );
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "can't fetch policy",
+      category: CATEGORY_SECURITY,
+      severity: SEVERITY_ERROR,
+    }],
+  }).then(finishTest);
 }

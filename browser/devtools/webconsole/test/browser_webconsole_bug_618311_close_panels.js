@@ -31,7 +31,7 @@ function performTest(results) {
   let networkMessage = [...results[0].matched][0];
   ok(networkMessage, "network message element");
 
-  let networkLink = networkMessage.querySelector(".webconsole-msg-link");
+  let networkLink = networkMessage.querySelector(".url");
   ok(networkLink, "found network message link");
 
   let popupset = document.getElementById("mainPopupSet");

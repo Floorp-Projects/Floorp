@@ -22,28 +22,20 @@ function performTest(hud)
 {
   hud.jsterm.clearOutput(true);
 
-  hud.jsterm.execute("document.querySelector('p')");
-  waitForSuccess({
-    name: "eval result shown",
-    validatorFn: function()
-    {
-      return hud.outputNode.querySelector(".webconsole-msg-output");
-    },
-    successFn: function()
-    {
-      is(hud.outputNode.textContent.indexOf("bug772506_content"), -1,
-            "no content element found");
-      ok(!hud.outputNode.querySelector("div"), "no div element found");
+  hud.jsterm.execute("document.querySelector('p')", (msg) => {
+    is(hud.outputNode.textContent.indexOf("bug772506_content"), -1,
+       "no content element found");
+    ok(!hud.outputNode.querySelector("#foobar"), "no #foobar element found");
 
-      let msg = hud.outputNode.querySelector(".webconsole-msg-output");
-      ok(msg, "eval output node found");
-      is(msg.textContent.indexOf("HTMLDivElement"), -1,
-         "HTMLDivElement string not displayed");
-      EventUtils.synthesizeMouseAtCenter(msg, {type: "mousemove"});
-      ok(!gBrowser._bug772506, "no content variable");
+    ok(msg, "eval output node found");
+    is(msg.textContent.indexOf("HTMLDivElement"), -1,
+       "HTMLDivElement string is not displayed");
+    isnot(msg.textContent.indexOf("HTMLParagraphElement"), -1,
+          "HTMLParagraphElement string is displayed");
 
-      finishTest();
-    },
-    failureFn: finishTest,
+    EventUtils.synthesizeMouseAtCenter(msg, {type: "mousemove"});
+    ok(!gBrowser._bug772506, "no content variable");
+
+    finishTest();
   });
 }

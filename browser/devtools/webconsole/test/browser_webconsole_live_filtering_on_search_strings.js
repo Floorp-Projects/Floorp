@@ -37,7 +37,7 @@ function consoleOpened(aHud) {
 }
 
 function testLiveFilteringOnSearchStrings() {
-  is(hud.outputNode.itemCount, 50, "number of messages");
+  is(hud.outputNode.children.length, 50, "number of messages");
 
   setStringFilter("http");
   isnot(countMessageNodes(), 0, "the log nodes are not hidden when the " +
@@ -85,7 +85,7 @@ function testLiveFilteringOnSearchStrings() {
 function countMessageNodes() {
   let outputNode = hud.outputNode;
 
-  let messageNodes = outputNode.querySelectorAll(".hud-log");
+  let messageNodes = outputNode.querySelectorAll(".message");
   let displayedMessageNodes = 0;
   let view = hud.iframeWindow;
   for (let i = 0; i < messageNodes.length; i++) {
