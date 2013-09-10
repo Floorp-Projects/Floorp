@@ -377,6 +377,15 @@ public:
 #define CC_GRAPH_ASSERT(b)
 #endif
 
+#define CC_TELEMETRY(_name, _value)                                            \
+    PR_BEGIN_MACRO                                                             \
+    if (NS_IsMainThread()) {                                                   \
+      Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR##_name, _value);        \
+    } else {                                                                   \
+      Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_WORKER##_name, _value); \
+    }                                                                          \
+    PR_END_MACRO
+
 enum NodeColor { black, white, grey };
 
 // This structure should be kept as small as possible; we may expect
@@ -2142,7 +2151,7 @@ nsCycleCollector::MarkRoots(GCGraphBuilder &aBuilder)
     if (aBuilder.RanOutOfMemory()) {
         NS_ASSERTION(false,
                      "Ran out of memory while building cycle collector graph");
-        Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_OOM, true);
+        CC_TELEMETRY(_OOM, true);
     }
 }
 
@@ -2259,7 +2268,7 @@ nsCycleCollector::ScanWeakMaps()
 
     if (failed) {
         NS_ASSERTION(false, "Ran out of memory in ScanWeakMaps");
-        Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_OOM, true);
+        CC_TELEMETRY(_OOM, true);
     }
 }
 
@@ -2276,7 +2285,7 @@ nsCycleCollector::ScanRoots()
 
     if (failed) {
         NS_ASSERTION(false, "Ran out of memory in ScanRoots");
-        Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_OOM, true);
+        CC_TELEMETRY(_OOM, true);
     }
 
     ScanWeakMaps();
@@ -2581,7 +2590,7 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
 
         bool needGC = mJSRuntime->NeedCollect();
         // Only do a telemetry ping for non-shutdown CCs.
-        Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_NEED_GC, needGC);
+        CC_TELEMETRY(_NEED_GC, needGC);
         if (!needGC)
             return;
         if (mResults)
@@ -2652,10 +2661,10 @@ nsCycleCollector::CleanupAfterCollection()
         mResults->mVisitedGCed = mVisitedGCed;
         mResults = nullptr;
     }
-    Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR, interval);
-    Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_VISITED_REF_COUNTED, mVisitedRefCounted);
-    Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_VISITED_GCED, mVisitedGCed);
-    Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_COLLECTED, mWhiteNodeCount);
+    CC_TELEMETRY( , interval);
+    CC_TELEMETRY(_VISITED_REF_COUNTED, mVisitedRefCounted);
+    CC_TELEMETRY(_VISITED_GCED, mVisitedGCed);
+    CC_TELEMETRY(_COLLECTED, mWhiteNodeCount);
 }
 
 void
