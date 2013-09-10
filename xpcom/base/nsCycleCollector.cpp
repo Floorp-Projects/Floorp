@@ -2111,6 +2111,7 @@ nsCycleCollector::ForgetSkippable(bool aRemoveChildlessNodes,
     if (mJSRuntime) {
         mJSRuntime->PrepareForForgetSkippable();
     }
+    MOZ_ASSERT(!mScanInProgress, "Don't forget skippable or free snow-white while scan is in progress.");
     mPurpleBuf.RemoveSkippable(this, aRemoveChildlessNodes,
                                aAsyncSnowWhiteFreeing, mForgetSkippableCB);
 }
