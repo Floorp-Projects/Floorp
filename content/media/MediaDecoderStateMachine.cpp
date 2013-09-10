@@ -118,6 +118,12 @@ PR_STATIC_ASSERT(QUICK_BUFFERING_LOW_DATA_USECS <= AMPLE_AUDIO_USECS);
 // This value has been chosen empirically.
 static const uint32_t AUDIOSTREAM_MIN_WRITE_BEFORE_START_USECS = 200000;
 
+// The amount of instability we tollerate in calls to
+// MediaDecoderStateMachine::UpdateEstimatedDuration(); changes of duration
+// less than this are ignored, as they're assumed to be the result of
+// instability in the duration estimation.
+static const int64_t ESTIMATED_DURATION_FUZZ_FACTOR_USECS = USECS_PER_S / 2;
+
 static TimeDuration UsecsToDuration(int64_t aUsecs) {
   return TimeDuration::FromMilliseconds(static_cast<double>(aUsecs) / USECS_PER_MS);
 }
@@ -1444,9 +1450,12 @@ void MediaDecoderStateMachine::SetDuration(int64_t aDuration)
   }
 }
 
-void MediaDecoderStateMachine::UpdateDuration(int64_t aDuration)
+void MediaDecoderStateMachine::UpdateEstimatedDuration(int64_t aDuration)
 {
-  if (aDuration != GetDuration()) {
+  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+  int64_t duration = GetDuration();
+  if (aDuration != duration &&
+      abs(aDuration - duration) > ESTIMATED_DURATION_FUZZ_FACTOR_USECS) {
     SetDuration(aDuration);
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(mDecoder, &MediaDecoder::DurationChanged);
