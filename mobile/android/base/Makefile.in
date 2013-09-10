@@ -1386,16 +1386,15 @@ res/drawable-xxhdpi/icon.png: $(ICON_PATH_XXHDPI)
 	$(NSINSTALL) -D res/drawable-xxhdpi
 	cp $(ICON_PATH_XXHDPI) $@
 
-$(call mkdir_deps,$(RES_DIRS)): $(subst res/,$(srcdir)/resources/,$(RESOURCES))
-	$(RM) -r $(@D)
-	$(NSINSTALL) -D $(@D)
-	$(TOUCH) -t 198001030000 $@
+$(RES_DIRS): $(subst res/,$(srcdir)/resources/,$(RESOURCES))
+	$(RM) -r $@
+	$(NSINSTALL) -D $@
 
-$(RESOURCES): $(call mkdir_deps,$(RES_DIRS)) $(subst res/,$(srcdir)/resources/,$(RESOURCES))
+$(RESOURCES): $(RES_DIRS) $(subst res/,$(srcdir)/resources/,$(RESOURCES))
 	@echo "creating $@"
 	$(NSINSTALL) $(subst res/,$(srcdir)/resources/,$@) $(dir $@)
 
-res/values/strings.xml: $(call mkdir_deps,$(RES_DIRS))
+res/values/strings.xml: $(RES_DIRS)
 	$(MAKE) -C locales
 
 # With multilocale builds, there will be multiple strings.xml files. We need to
