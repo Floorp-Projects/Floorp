@@ -191,61 +191,6 @@ bool GetUserSidString(std::wstring* user_sid) {
   return true;
 }
 
-bool GetLogonSessionOnlyDACL(SECURITY_DESCRIPTOR** security_descriptor) {
-  // Get the current token.
-  HANDLE token = NULL;
-  if (!OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token))
-    return false;
-  ScopedHandle token_scoped(token);
-
-  // Get the size of the TokenGroups structure.
-  DWORD size = 0;
-  BOOL result = GetTokenInformation(token, TokenGroups, NULL,  0, &size);
-  if (result != FALSE && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-    return false;
-
-  // Get the data.
-  scoped_ptr<TOKEN_GROUPS> token_groups;
-  token_groups.reset(reinterpret_cast<TOKEN_GROUPS*>(new char[size]));
-
-  if (!GetTokenInformation(token, TokenGroups, token_groups.get(), size, &size))
-    return false;
-
-  // Look for the logon sid.
-  SID* logon_sid = NULL;
-  for (unsigned int i = 0; i < token_groups->GroupCount ; ++i) {
-    if ((token_groups->Groups[i].Attributes & SE_GROUP_LOGON_ID) != 0) {
-        logon_sid = static_cast<SID*>(token_groups->Groups[i].Sid);
-        break;
-    }
-  }
-
-  if (!logon_sid)
-    return false;
-
-  // Convert the data to a string.
-  wchar_t* sid_string;
-  if (!ConvertSidToStringSid(logon_sid, &sid_string))
-    return false;
-
-  static const wchar_t dacl_format[] = L"D:(A;OICI;GA;;;%ls)";
-  wchar_t dacl[SECURITY_MAX_SID_SIZE + arraysize(dacl_format) + 1] = {0};
-  wsprintf(dacl, dacl_format, sid_string);
-
-  LocalFree(sid_string);
-
-  // Convert the string to a security descriptor
-  if (!ConvertStringSecurityDescriptorToSecurityDescriptor(
-      dacl,
-      SDDL_REVISION_1,
-      reinterpret_cast<PSECURITY_DESCRIPTOR*>(security_descriptor),
-      NULL)) {
-    return false;
-  }
-
-  return true;
-}
-
 bool IsShiftPressed() {
   return (::GetKeyState(VK_SHIFT) & 0x80) == 0x80;
 }

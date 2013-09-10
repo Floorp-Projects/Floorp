@@ -45,12 +45,6 @@ bool AddAccessToKernelObject(HANDLE handle, WELL_KNOWN_SID_TYPE known_sid,
 // Returns the string representing the current user sid.
 bool GetUserSidString(std::wstring* user_sid);
 
-// Creates a security descriptor with a DACL that has one ace giving full
-// access to the current logon session.
-// The security descriptor returned must be freed using LocalFree.
-// The function returns true if it succeeds, false otherwise.
-bool GetLogonSessionOnlyDACL(SECURITY_DESCRIPTOR** security_descriptor);
-
 // Returns true if the shift key is currently pressed.
 bool IsShiftPressed();
 
