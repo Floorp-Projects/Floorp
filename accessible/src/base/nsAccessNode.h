@@ -10,14 +10,10 @@
 #ifndef _nsAccessNode_H_
 #define _nsAccessNode_H_
 
-#include "nsIAccessibleTypes.h"
 #include "nsINode.h"
 
 class nsIContent;
-class nsIDocShellTreeItem;
 class nsIFrame;
-class nsIPresShell;
-class nsPresContext;
 
 namespace mozilla {
 namespace a11y {

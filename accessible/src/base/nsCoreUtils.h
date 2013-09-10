@@ -7,7 +7,6 @@
 #define nsCoreUtils_h_
 
 #include "nsIContent.h"
-#include "nsIBoxObject.h"
 #include "nsIPresShell.h"
 
 #include "nsIDOMDOMStringList.h"
@@ -15,6 +14,7 @@
 #include "nsTArray.h"
 
 class nsRange;
+class nsIBoxObject;
 class nsIFrame;
 class nsIDocShell;
 class nsITreeColumn;

@@ -9,13 +9,8 @@
 
 #include "Accessible-inl.h"
 #include "AccIterator.h"
-#include "nsAccessibilityService.h"
-#include "nsAccUtils.h"
-#include "nsStyleStructInlines.h"
-
+#include "nsCoreUtils.h"
 #include "nsIDOMXULLabeledControlEl.h"
-
-#include "nsArrayUtils.h"
 
 using namespace mozilla::a11y;
 

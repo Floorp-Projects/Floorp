@@ -13,6 +13,7 @@
 #include "HyperTextAccessibleWrap.h"
 
 #include "nsIPersistentProperties2.h"
+#include "nsIAccessibleTypes.h"
 
 using namespace mozilla::a11y;
 
