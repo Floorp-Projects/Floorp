@@ -6,6 +6,7 @@ import os, re, sys
 from copy import deepcopy
 
 import ipdl.ast
+import ipdl.builtin
 from ipdl.cxx.ast import *
 from ipdl.type import Actor, ActorType, ProcessGraph, TypeVisitor
 
@@ -2553,6 +2554,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 CppDirective('endif')
             ])
 
+        cppheaders = [CppDirective('include', '"%s"' % filename)
+                      for filename in ipdl.builtin.CppIncludes]
+
         cf.addthings((
             [ Whitespace.NL ]
             + self.protocolCxxIncludes
@@ -2560,6 +2564,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + self.standardTypedefs()
             + tu.protocol.decl.cxxtypedefs
             + self.includedActorUsings
+            + [ Whitespace.NL ]
+            + cppheaders
             + [ Whitespace.NL ]))
 
         cppns = makeNamespace(self.protocol, cf)
