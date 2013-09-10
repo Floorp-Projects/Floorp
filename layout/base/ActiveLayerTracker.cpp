@@ -29,6 +29,14 @@ public:
     : mFrame(aFrame)
     , mOpacityRestyleCount(0)
     , mTransformRestyleCount(0)
+    , mLeftRestyleCount(0)
+    , mTopRestyleCount(0)
+    , mRightRestyleCount(0)
+    , mBottomRestyleCount(0)
+    , mMarginLeftRestyleCount(0)
+    , mMarginTopRestyleCount(0)
+    , mMarginRightRestyleCount(0)
+    , mMarginBottomRestyleCount(0)
     , mContentActive(false)
   {}
   ~LayerActivity();
@@ -42,6 +50,10 @@ public:
     case eCSSProperty_top: return mTopRestyleCount;
     case eCSSProperty_right: return mRightRestyleCount;
     case eCSSProperty_bottom: return mBottomRestyleCount;
+    case eCSSProperty_margin_left: return mMarginLeftRestyleCount;
+    case eCSSProperty_margin_top: return mMarginTopRestyleCount;
+    case eCSSProperty_margin_right: return mMarginRightRestyleCount;
+    case eCSSProperty_margin_bottom: return mMarginBottomRestyleCount;
     default: MOZ_ASSERT(false); return mOpacityRestyleCount;
     }
   }
@@ -55,6 +67,10 @@ public:
   uint8_t mTopRestyleCount;
   uint8_t mRightRestyleCount;
   uint8_t mBottomRestyleCount;
+  uint8_t mMarginLeftRestyleCount;
+  uint8_t mMarginTopRestyleCount;
+  uint8_t mMarginRightRestyleCount;
+  uint8_t mMarginBottomRestyleCount;
   bool mContentActive;
 };
 
@@ -203,14 +219,18 @@ ActiveLayerTracker::IsStyleAnimated(nsIFrame* aFrame, nsCSSProperty aProperty)
 }
 
 /* static */ bool
-ActiveLayerTracker::IsOffsetStyleAnimated(nsIFrame* aFrame)
+ActiveLayerTracker::IsOffsetOrMarginStyleAnimated(nsIFrame* aFrame)
 {
   LayerActivity* layerActivity = GetLayerActivity(aFrame);
   if (layerActivity) {
     if (layerActivity->mLeftRestyleCount >= 2 ||
         layerActivity->mTopRestyleCount >= 2 ||
         layerActivity->mRightRestyleCount >= 2 ||
-        layerActivity->mBottomRestyleCount >= 2) {
+        layerActivity->mBottomRestyleCount >= 2 ||
+        layerActivity->mMarginLeftRestyleCount >= 2 ||
+        layerActivity->mMarginTopRestyleCount >= 2 ||
+        layerActivity->mMarginRightRestyleCount >= 2 ||
+        layerActivity->mMarginBottomRestyleCount >= 2) {
       return true;
     }
   }
