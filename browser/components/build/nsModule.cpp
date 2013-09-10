@@ -109,6 +109,7 @@ static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
 #ifdef MOZ_SERVICES_HEALTHREPORT
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "healthreport", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
 #endif
+    { NS_ABOUT_MODULE_CONTRACTID_PREFIX "app-manager", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
 #if defined(XP_WIN)
     { NS_IEHISTORYENUMERATOR_CONTRACTID, &kNS_WINIEHISTORYENUMERATOR_CID },
 #elif defined(XP_MACOSX)
