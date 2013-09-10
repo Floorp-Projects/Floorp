@@ -167,7 +167,13 @@ let UI = {
 
   openToolbox: function(manifest) {
     this._getTargetForApp(manifest).then((target) => {
-      gDevTools.showToolbox(target, "webconsole", devtools.Toolbox.HostType.WINDOW);
+      gDevTools.showToolbox(target,
+                            null,
+                            devtools.Toolbox.HostType.WINDOW).then(toolbox => {
+        this.connection.once(Connection.Events.DISCONNECTED, () => {
+          toolbox.destroy();
+        });
+      });
     }, console.error);
   },
 
