@@ -108,9 +108,6 @@ abstract public class BrowserApp extends GeckoApp
     private View mHomePagerContainer;
     protected Telemetry.Timer mAboutHomeStartupTimer = null;
 
-    // Set the default session restore value
-    private int mSessionRestore = -1;
-
     private static final int GECKO_TOOLS_MENU = -1;
     private static final int ADDON_MENU_OFFSET = 1000;
     private class MenuItemInfo {
@@ -386,23 +383,14 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     @Override
-    protected int getSessionRestoreState(Bundle savedInstanceState) {
-        if (mSessionRestore > -1) {
-            return mSessionRestore;
-        }
-
-        return super.getSessionRestoreState(savedInstanceState);
-    }
-
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         mAboutHomeStartupTimer = new Telemetry.Timer("FENNEC_STARTUP_TIME_ABOUTHOME");
 
         String args = getIntent().getStringExtra("args");
         if (args != null && args.contains(GUEST_BROWSING_ARG)) {
             mProfile = GeckoProfile.createGuestProfile(this);
-        } else if (GeckoProfile.maybeCleanupGuestProfile(this)) {
-            mSessionRestore = RESTORE_NORMAL;
+        } else {
+            GeckoProfile.maybeCleanupGuestProfile(this);
         }
 
         super.onCreate(savedInstanceState);
@@ -826,7 +814,7 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     protected void loadStartupTab(String url) {
         // We aren't showing about:home, so cancel the telemetry timer
-        if (url != null || mRestoreMode != RESTORE_NONE) {
+        if (url != null || mShouldRestore) {
             mAboutHomeStartupTimer.cancel();
         }
 

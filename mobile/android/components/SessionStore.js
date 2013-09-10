@@ -44,7 +44,6 @@ SessionStore.prototype = {
   _lastSaveTime: 0,
   _interval: 10000,
   _maxTabsUndo: 1,
-  _shouldRestore: false,
 
   init: function ss_init() {
     // Get file references
@@ -57,12 +56,6 @@ SessionStore.prototype = {
 
     this._interval = Services.prefs.getIntPref("browser.sessionstore.interval");
     this._maxTabsUndo = Services.prefs.getIntPref("browser.sessionstore.max_tabs_undo");
-
-    // Do we need to restore session just this once, in case of a restart?
-    if (this._sessionFileBackup.exists() && Services.prefs.getBoolPref("browser.sessionstore.resume_session_once")) {
-      Services.prefs.setBoolPref("browser.sessionstore.resume_session_once", false);
-      this._shouldRestore = true;
-    }
   },
 
   _clearDisk: function ss_clearDisk() {
@@ -132,25 +125,8 @@ SessionStore.prototype = {
         this._loadState = STATE_QUITTING;
         break;
       case "quit-application":
-        // If we are restarting, lets restore the tabs
-        if (aData == "restart") {
-          Services.prefs.setBoolPref("browser.sessionstore.resume_session_once", true);
-
-          // Ignore purges when restarting. The notification is fired after "quit-application".
-          Services.obs.removeObserver(this, "browser:purge-session-history");
-        }
-
         // Freeze the data at what we've got (ignoring closing windows)
         this._loadState = STATE_QUITTING;
-
-        // Move this session to sessionstore.bak so that:
-        //   1) we can get "tabs from last time" from sessionstore.bak
-        //   2) if sessionstore.js exists on next start, we know we crashed
-        OS.File.move(this._sessionFile.path, this._sessionFileBackup.path).then(null, function onError(reason) {
-          if (!(reason instanceof OS.File.Error && reason.becauseNoSuchFile)) {
-            Cu.reportError("Error moving sessionstore files: " + reason);
-          }
-        });
 
         observerService.removeObserver(this, "domwindowopened");
         observerService.removeObserver(this, "domwindowclosed");
@@ -217,13 +193,7 @@ SessionStore.prototype = {
 
           // Do a restore, triggered by Java
           let data = JSON.parse(aData);
-          this.restoreLastSession(data.normalRestore, data.sessionString);
-        } else if (this._shouldRestore) {
-          // Do a restore triggered by Gecko (e.g., if
-          // browser.sessionstore.resume_session_once is true). In these cases,
-          // our Java front-end doesn't know we're doing a restore, so it has
-          // already opened an about:home tab.
-          this.restoreLastSession(false, null);
+          this.restoreLastSession(data.sessionString);
         } else {
           // Not doing a restore; just send restore message
           Services.obs.notifyObservers(null, "sessionstore-windows-restored", "");
@@ -939,11 +909,7 @@ SessionStore.prototype = {
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
   },
 
-  shouldRestore: function ss_shouldRestore() {
-    return this._shouldRestore;
-  },
-
-  restoreLastSession: function ss_restoreLastSession(aNormalRestore, aSessionString) {
+  restoreLastSession: function ss_restoreLastSession(aSessionString) {
     let self = this;
 
     function restoreWindow(data) {
@@ -959,31 +925,6 @@ SessionStore.prototype = {
     }
 
     try {
-      if (!aNormalRestore && !this._shouldRestore) {
-        // If we're here, it means we're restoring from a crash. Check prefs
-        // and other conditions to make sure we want to continue with the
-        // restore.
-        // TODO: Since the tabs have already been created as stubs after
-        // crashing, it's too late to try to abort the restore here. This logic
-        // should be moved to Java; see bug 889722.
-
-        // Disable crash recovery if it has been turned off.
-        if (!Services.prefs.getBoolPref("browser.sessionstore.resume_from_crash")) {
-          throw "Restore is disabled via prefs";
-        }
-
-        // Check to see if we've exceeded the maximum number of crashes to
-        // avoid a crash loop
-        let maxCrashes = Services.prefs.getIntPref("browser.sessionstore.max_resumed_crashes");
-        let recentCrashes = Services.prefs.getIntPref("browser.sessionstore.recent_crashes") + 1;
-        Services.prefs.setIntPref("browser.sessionstore.recent_crashes", recentCrashes);
-        Services.prefs.savePrefFile(null);
-
-        if (recentCrashes > maxCrashes) {
-          throw "Exceeded maximum number of allowed restores";
-        }
-      }
-
       // Normally, we'll receive the session string from Java, but there are
       // cases where we may want to restore that Java cannot detect (e.g., if
       // browser.sessionstore.resume_session_once is true). In these cases, the
