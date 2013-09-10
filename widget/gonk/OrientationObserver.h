@@ -20,6 +20,7 @@
 
 #include "mozilla/Observer.h"
 #include "mozilla/dom/ScreenOrientation.h"
+#include "mozilla/Scoped.h"
 
 namespace mozilla {
 class ProcessOrientation;
