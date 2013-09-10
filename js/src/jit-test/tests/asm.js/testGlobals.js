@@ -22,26 +22,22 @@ assertAsmTypeFail('global', USE_ASM + "var j=0;var i=j.i|0; function f() { retur
 assertAsmTypeFail('global', USE_ASM + "var i=global.i|0; function f() { return i|0 } return f");
 assertAsmTypeFail('global', USE_ASM + "var i=global.i|0; function f() { return i|0 } return f");
 assertAsmTypeFail('global', USE_ASM + 'var i=global.Infinity; function f() { i = 0.0 } return f');
-var code = asmCompile('global', USE_ASM + 'var i=global.Infinity; function f() { return +i } return f');
-assertAsmLinkAlwaysFail(code, undefined);
-assertAsmLinkAlwaysFail(code, null);
-assertAsmLinkFail(code, 3);
-assertAsmLinkFail(code, {});
-assertAsmLinkFail(code, {Infinity:NaN});
-assertAsmLinkFail(code, {Infinity:-Infinity});
-assertEq(asmLink(code, {Infinity:Infinity})(), Infinity);
-var code = asmCompile('global', USE_ASM + 'var i=global.Infinity; function f() { return +i } return f');
-assertEq(asmLink(code, this)(), Infinity);
-var code = asmCompile('global', USE_ASM + 'var i=global.NaN; function f() { return +i } return f');
-assertAsmLinkAlwaysFail(code, undefined);
-assertAsmLinkAlwaysFail(code, null);
-assertAsmLinkFail(code, 3);
-assertAsmLinkFail(code, {});
-assertAsmLinkFail(code, {Infinity:Infinity});
-assertAsmLinkFail(code, {Infinity:-Infinity});
-assertEq(asmLink(code, {NaN:NaN})(), NaN);
-var code = asmCompile('global', USE_ASM + 'var i=global.NaN; function f() { return +i } return f');
-assertEq(asmLink(code, this)(), NaN);
+assertAsmLinkAlwaysFail(asmCompile('global', USE_ASM + 'var i=global.Infinity; function f() { return +i } return f'), undefined);
+assertAsmLinkAlwaysFail(asmCompile('global', USE_ASM + 'var i=global.Infinity; function f() { return +i } return f'), null);
+assertAsmLinkFail(asmCompile('global', USE_ASM + 'var i=global.Infinity; function f() { return +i } return f'), 3);
+assertAsmLinkFail(asmCompile('global', USE_ASM + 'var i=global.Infinity; function f() { return +i } return f'), {});
+assertAsmLinkFail(asmCompile('global', USE_ASM + 'var i=global.Infinity; function f() { return +i } return f'), {Infinity:NaN});
+assertAsmLinkFail(asmCompile('global', USE_ASM + 'var i=global.Infinity; function f() { return +i } return f'), {Infinity:-Infinity});
+assertEq(asmLink(asmCompile('global', USE_ASM + 'var i=global.Infinity; function f() { return +i } return f'), {Infinity:Infinity})(), Infinity);
+assertEq(asmLink(asmCompile('global', USE_ASM + 'var i=global.Infinity; function f() { return +i } return f'), this)(), Infinity);
+assertAsmLinkAlwaysFail(asmCompile('global', USE_ASM + 'var i=global.NaN; function f() { return +i } return f'), undefined);
+assertAsmLinkAlwaysFail(asmCompile('global', USE_ASM + 'var i=global.NaN; function f() { return +i } return f'), null);
+assertAsmLinkFail(asmCompile('global', USE_ASM + 'var i=global.NaN; function f() { return +i } return f'), 3);
+assertAsmLinkFail(asmCompile('global', USE_ASM + 'var i=global.NaN; function f() { return +i } return f'), {});
+assertAsmLinkFail(asmCompile('global', USE_ASM + 'var i=global.NaN; function f() { return +i } return f'), {Infinity:Infinity});
+assertAsmLinkFail(asmCompile('global', USE_ASM + 'var i=global.NaN; function f() { return +i } return f'), {Infinity:-Infinity});
+assertEq(asmLink(asmCompile('global', USE_ASM + 'var i=global.NaN; function f() { return +i } return f'), {NaN:NaN})(), NaN);
+assertEq(asmLink(asmCompile('global', USE_ASM + 'var i=global.NaN; function f() { return +i } return f'), this)(), NaN);
 
 assertAsmLinkFail(asmCompile('glob','foreign','buf', USE_ASM + 'var t = new glob.Int32Array(buf); function f() {} return f'), {get Int32Array(){return Int32Array}}, null, new ArrayBuffer(4096))
 assertAsmLinkFail(asmCompile('glob','foreign','buf', USE_ASM + 'var t = new glob.Int32Array(buf); function f() {} return f'), new Proxy({}, {get:function() {return Int32Array}}), null, new ArrayBuffer(4096))
@@ -69,3 +65,12 @@ assertEq(asmLink(asmCompile('global', 'imp', USE_ASM + "var i=imp.i|0; function 
 assertEq(asmLink(asmCompile('global', 'imp', USE_ASM + "var i=+imp.i; function f() { return +i } return f")(null, {i:42})), 42);
 assertEq(asmLink(asmCompile('global', 'imp', USE_ASM + "var i=+imp.i; function f() { return +i } return f")(this, {i:1.4})), 1.4);
 assertEq(asmLink(asmCompile(USE_ASM + "var g=0; function f() { var i=42; while (1) { break; } g = i; return g|0 } return f"))(), 42);
+
+var f1 = asmCompile('global', 'foreign', 'heap', USE_ASM + 'var i32 = new global.Int32Array(heap); function g() { return i32[4]|0 } return g');
+var global = this;
+var ab = new ArrayBuffer(4096);
+var p = new Proxy(global,
+                  {has:function(name) { f1(global, null, ab); return true},
+                   getOwnPropertyDescriptor:function(name) { return {value:Int32Array}}});
+new Int32Array(ab)[4] = 42;
+assertEq(f1(p, null, ab)(), 42);
