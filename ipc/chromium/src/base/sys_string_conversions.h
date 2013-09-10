@@ -55,17 +55,6 @@ std::string SysWideToMultiByte(const std::wstring& wide, uint32_t code_page);
 
 // Converts between STL strings and CFStringRefs/NSStrings.
 
-// Creates a string, and returns it with a refcount of 1. You are responsible
-// for releasing it. Returns NULL on failure.
-CFStringRef SysUTF8ToCFStringRef(const std::string& utf8);
-CFStringRef SysUTF16ToCFStringRef(const string16& utf16);
-CFStringRef SysWideToCFStringRef(const std::wstring& wide);
-
-// Same, but returns an autoreleased NSString.
-NSString* SysUTF8ToNSString(const std::string& utf8);
-NSString* SysUTF16ToNSString(const string16& utf16);
-NSString* SysWideToNSString(const std::wstring& wide);
-
 // Converts a CFStringRef to an STL string. Returns an empty string on failure.
 std::string SysCFStringRefToUTF8(CFStringRef ref);
 string16 SysCFStringRefToUTF16(CFStringRef ref);
