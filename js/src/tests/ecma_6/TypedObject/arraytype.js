@@ -97,7 +97,7 @@ function runTests() {
     assertEq(mario[0][2], 0);
 
     assertThrows(function() mario[1] = 5);
-    mario[1][1] = [];
+    mario[1][1] = {};
     assertEq(Number.isNaN(mario[1][1]), true);
 
     // ok this is just for kicks
