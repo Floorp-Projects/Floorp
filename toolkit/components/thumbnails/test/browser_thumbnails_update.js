@@ -2,8 +2,15 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * These tests check the auto-update facility of the thumbnail service.
+ * These tests check the auto-update facility of the background thumbnail
+ * service.
  */
+
+const imports = {};
+Cu.import("resource://gre/modules/BackgroundPageThumbs.jsm", imports);
+registerCleanupFunction(function () {
+  imports.BackgroundPageThumbs._destroy();
+});
 
 function runTests() {
   let numNotifications = 0;
@@ -30,7 +37,7 @@ function runTests() {
     is(numNotifications, 1, "got notification of item being created.");
     // The capture is now "fresh" - so requesting the URL should not cause
     // a new capture.
-    PageThumbs.captureIfStale(URL);
+    imports.BackgroundPageThumbs.captureIfStale(URL);
     is(numNotifications, 1, "still only 1 notification of item being created.");
 
     // Now we will go behind the back of the thumbnail service and change the
@@ -42,7 +49,7 @@ function runTests() {
     // Set it as very stale...
     file.lastModifiedTime = Date.now() - 1000000000;
     // Ask for it to be updated.
-    PageThumbs.captureIfStale(URL);
+    imports.BackgroundPageThumbs.captureIfStale(URL);
     // But it's async, so wait - our observer above will call next() when
     // the notification comes.
   });
