@@ -43,7 +43,7 @@ interface nsIDOMEventTarget;
 interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 
-[scriptable, uuid(e12df416-e3e0-4177-b936-fa106f62ae3f)]
+[scriptable, uuid(3772df78-905f-40cf-952f-e4954c63d0ec)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -651,6 +651,14 @@ interface nsIDOMWindowUtils : nsISupports {
    * @see nsIDOMWindow::scrollX/Y
    */
   void getScrollXY(in boolean aFlushLayout, out long aScrollX, out long aScrollY);
+
+  /**
+   * Returns the scroll position of the window's currently loaded document.
+   *
+   * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
+   * @see nsIDOMWindow::scrollX/Y
+   */
+  void getScrollXYFloat(in boolean aFlushLayout, out float aScrollX, out float aScrollY);
 
   /**
    * Sets the scroll position of the root scroll frame of the window.
