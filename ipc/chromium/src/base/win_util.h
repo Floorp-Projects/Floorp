@@ -87,14 +87,6 @@ bool IsCtrlPressed();
 // Returns true if the alt key is currently pressed.
 bool IsAltPressed();
 
-// Returns false if user account control (UAC) has been disabled with the
-// EnableLUA registry flag. Returns true if user account control is enabled.
-// NOTE: The EnableLUA registry flag, which is ignored on Windows XP
-// machines, might still exist and be set to 0 (UAC disabled), in which case
-// this function will return false. You should therefore check this flag only
-// if the OS is Vista.
-bool UserAccountControlIsEnabled();
-
 // Use the Win32 API FormatMessage() function to generate a string, using
 // Windows's default Message Compiled resources; ignoring the inserts.
 std::wstring FormatMessage(unsigned messageid);
