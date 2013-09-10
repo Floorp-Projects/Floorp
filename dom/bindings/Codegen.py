@@ -10522,6 +10522,7 @@ struct PrototypeTraits;
                                             config.getCallbacks(),
                                             config)
         includes.add("mozilla/dom/BindingUtils.h")
+        includes.add("mozilla/dom/UnionMember.h")
 
         # Wrap all of that in our namespaces.
         curr = CGNamespace.build(['mozilla', 'dom'], unions)
