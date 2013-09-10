@@ -67,6 +67,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gDownloadHistory",
+           "@mozilla.org/browser/download-history;1",
+           Ci.nsIDownloadHistory);
 XPCOMUtils.defineLazyServiceGetter(this, "gExternalHelperAppService",
            "@mozilla.org/uriloader/external-helper-app-service;1",
            Ci.nsIExternalHelperAppService);
@@ -1206,6 +1209,30 @@ DownloadSaver.prototype = {
   },
 
   /**
+   * This can be called by the saver implementation when the download is already
+   * started, to add it to the browsing history.  This method has no effect if
+   * the download is private.
+   */
+  addToHistory: function ()
+  {
+    if (this.download.source.isPrivate) {
+      return;
+    }
+
+    let sourceUri = NetUtil.newURI(this.download.source.url);
+    let referrer = this.download.source.referrer;
+    let referrerUri = referrer ? NetUtil.newURI(referrer) : null;
+    let targetUri = NetUtil.newURI(new FileUtils.File(
+                                       this.download.target.path));
+
+    // The start time is always available when we reach this point.
+    let startPRTime = this.download.startTime.getTime() * 1000;
+
+    gDownloadHistory.addDownload(sourceUri, referrerUri, startPRTime,
+                                 targetUri);
+  },
+
+  /**
    * Returns a static representation of the current object state.
    *
    * @return A JavaScript object that can be serialized to JSON.
@@ -1267,6 +1294,11 @@ DownloadCopySaver.prototype = {
   _canceled: false,
 
   /**
+   * True if the associated download has already been added to browsing history.
+   */
+  alreadyAddedToHistory: false,
+
+  /**
    * String corresponding to the entityID property of the nsIResumableChannel
    * used to execute the download, or null if the channel was not resumable or
    * the saver was instructed not to keep partially downloaded data.
@@ -1288,6 +1320,16 @@ DownloadCopySaver.prototype = {
     let keepPartialData = download.tryToKeepPartialData;
 
     return Task.spawn(function task_DCS_execute() {
+      // Add the download to history the first time it is started in this
+      // session.  If the download is restarted in a different session, a new
+      // history visit will be added.  We do this just to avoid the complexity
+      // of serializing this state between sessions, since adding a new visit
+      // does not have any noticeable side effect.
+      if (!this.alreadyAddedToHistory) {
+        this.addToHistory();
+        this.alreadyAddedToHistory = true;
+      }
+
       // To reduce the chance that other downloads reuse the same final target
       // file name, we should create a placeholder as soon as possible, before
       // starting the network request.  The placeholder is also required in case
@@ -1633,8 +1675,14 @@ DownloadLegacySaver.prototype = {
    *
    * @param aRequest
    *        nsIRequest associated to the status update.
+   * @param aAlreadyAddedToHistory
+   *        Indicates that the nsIExternalHelperAppService component already
+   *        added the download to the browsing history, unless it was started
+   *        from a private browsing window.  When this parameter is false, the
+   *        download is added to the browsing history here.  Private downloads
+   *        are never added to history even if this parameter is false.
    */
-  onTransferStarted: function (aRequest)
+  onTransferStarted: function (aRequest, aAlreadyAddedToHistory)
   {
     // Store the entity ID to use for resuming if required.
     if (this.download.tryToKeepPartialData &&
@@ -1644,6 +1692,15 @@ DownloadLegacySaver.prototype = {
         this.entityID = aRequest.entityID;
       } catch (ex if ex instanceof Components.Exception &&
                      ex.result == Cr.NS_ERROR_NOT_RESUMABLE) { }
+    }
+
+    // For legacy downloads, we must update the referrer at this time.
+    if (aRequest instanceof Ci.nsIHttpChannel && aRequest.referrer) {
+      this.download.source.referrer = aRequest.referrer.spec;
+    }
+
+    if (!aAlreadyAddedToHistory) {
+      this.addToHistory();
     }
   },
 
@@ -1702,6 +1759,7 @@ DownloadLegacySaver.prototype = {
         this.copySaver = new DownloadCopySaver();
         this.copySaver.download = this.download;
         this.copySaver.entityID = this.entityID;
+        this.copySaver.alreadyAddedToHistory = true;
       }
       return this.copySaver.execute.apply(this.copySaver, arguments);
     }
