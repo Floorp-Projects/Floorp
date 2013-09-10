@@ -44,7 +44,7 @@ HelperAppLauncherDialog.prototype = {
 
   _getDownloadSize: function dv__getDownloadSize (aSize) {
     let displaySize = DownloadUtils.convertByteUnits(aSize);
-    if (displaySize[0] > 0) // [0] is size, [1] is units
+    if (!isNaN(displaySize[0]) && displaySize[0] > 0) // [0] is size, [1] is units
       return displaySize.join("");
     else {
       let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
