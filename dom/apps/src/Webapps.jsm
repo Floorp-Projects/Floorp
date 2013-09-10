@@ -1352,6 +1352,7 @@ this.DOMApplicationRegistry = {
               if (array.length == CHUNK_SIZE) {
                 readChunk();
               } else {
+                file.close();
                 // We're passing false to get the binary hash and not base64.
                 let hash = hasher.finish(false);
                 // convert the binary hash data to a hex string.
