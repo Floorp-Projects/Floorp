@@ -46,9 +46,10 @@ public:
 
   void StartRendering();
 
-  void DestroyGraph();
+  void OfflineShutdown();
 
 private:
+  SelfReference<AudioDestinationNode> mOfflineRenderingRef;
   uint32_t mFramesToProduce;
 };
 
