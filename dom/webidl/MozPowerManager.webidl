@@ -3,17 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsISupports.idl"
-
-interface nsIDOMMozWakeLockListener;
+interface MozWakeLockListener;
 
 /**
  * This interface implements navigator.mozPower
  */
-[scriptable, uuid(7b181fef-2757-4198-89a0-8c426b8439ea)]
-interface nsIDOMMozPowerManager : nsISupports
+interface MozPowerManager
 {
+    [Throws]
     void    powerOff();
+    [Throws]
     void    reboot();
     void    factoryReset();
 
@@ -23,8 +22,8 @@ interface nsIDOMMozPowerManager : nsISupports
      *  - locked but not visible
      *  - locked and visible
      */
-    void    addWakeLockListener(in nsIDOMMozWakeLockListener aListener);
-    void    removeWakeLockListener(in nsIDOMMozWakeLockListener aListener);
+    void    addWakeLockListener(MozWakeLockListener aListener);
+    void    removeWakeLockListener(MozWakeLockListener aListener);
 
     /**
      * Query the wake lock state of the topic.
@@ -41,7 +40,8 @@ interface nsIDOMMozPowerManager : nsISupports
      *
      * @param aTopic The resource name related to the wake lock.
      */
-    DOMString getWakeLockState(in DOMString aTopic);
+    [Throws]
+    DOMString getWakeLockState(DOMString aTopic);
 
     /**
      * Is the device's screen currently enabled?  This attribute controls the
@@ -64,6 +64,7 @@ interface nsIDOMMozPowerManager : nsISupports
      *
      * @throw NS_ERROR_INVALID_ARG if brightness is not in the range [0, 1].
      */
+    [SetterThrows]
     attribute double screenBrightness;
 
     /**
