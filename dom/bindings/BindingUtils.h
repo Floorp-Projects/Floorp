@@ -1423,60 +1423,6 @@ AppendNamedPropertyIds(JSContext* cx, JS::Handle<JSObject*> proxy,
                        nsTArray<nsString>& names,
                        bool shadowPrototypeProperties, JS::AutoIdVector& props);
 
-template<class T>
-class OwningNonNull
-{
-public:
-  OwningNonNull()
-#ifdef DEBUG
-    : inited(false)
-#endif
-  {}
-
-  operator T&() {
-    MOZ_ASSERT(inited);
-    MOZ_ASSERT(ptr, "OwningNonNull<T> was set to null");
-    return *ptr;
-  }
-
-  void operator=(T* t) {
-    init(t);
-  }
-
-  void operator=(const already_AddRefed<T>& t) {
-    init(t);
-  }
-
-  already_AddRefed<T> forget() {
-#ifdef DEBUG
-    inited = false;
-#endif
-    return ptr.forget();
-  }
-
-  // Make us work with smart-ptr helpers that expect a get()
-  T* get() const {
-    MOZ_ASSERT(inited);
-    MOZ_ASSERT(ptr);
-    return ptr;
-  }
-
-protected:
-  template<typename U>
-  void init(U t) {
-    ptr = t;
-    MOZ_ASSERT(ptr);
-#ifdef DEBUG
-    inited = true;
-#endif
-  }
-
-  nsRefPtr<T> ptr;
-#ifdef DEBUG
-  bool inited;
-#endif
-};
-
 // A struct that has the same layout as an nsDependentString but much
 // faster constructor and destructor behavior
 struct FakeDependentString {
