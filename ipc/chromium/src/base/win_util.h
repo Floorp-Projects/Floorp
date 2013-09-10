@@ -35,13 +35,6 @@ WinVersion GetWinVersion();
 // Returns the major and minor version of the service pack installed.
 void GetServicePackLevel(int* major, int* minor);
 
-// Adds an ACE in the DACL of the object referenced by handle. The ACE is
-// granting |access| to the user |known_sid|.
-// If |known_sid| is WinSelfSid, the sid of the current user will be added to
-// the DACL.
-bool AddAccessToKernelObject(HANDLE handle, WELL_KNOWN_SID_TYPE known_sid,
-                             ACCESS_MASK access);
-
 // Returns true if the shift key is currently pressed.
 bool IsShiftPressed();
 
