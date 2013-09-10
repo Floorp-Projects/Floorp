@@ -4,15 +4,12 @@
 
 #include "AccIterator.h"
 
-#include "nsAccessibilityService.h"
 #include "AccGroupInfo.h"
-#include "Accessible-inl.h"
 #ifdef MOZ_XUL
 #include "XULTreeAccessible.h"
 #endif
 
 #include "mozilla/dom/Element.h"
-#include "nsBindingManager.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
