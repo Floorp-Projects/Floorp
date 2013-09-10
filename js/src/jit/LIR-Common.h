@@ -3647,6 +3647,9 @@ class LClampVToUint8 : public LInstructionHelper<1, BOX_PIECES, 1>
     const LDefinition *tempFloat() {
         return getTemp(0);
     }
+    const MClampToUint8 *mir() const {
+        return mir_->toClampToUint8();
+    }
 };
 
 // Load a boxed value from an object's fixed slot.

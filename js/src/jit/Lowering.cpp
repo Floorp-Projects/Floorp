@@ -2366,7 +2366,7 @@ LIRGenerator::visitClampToUint8(MClampToUint8 *ins)
         LClampVToUint8 *lir = new LClampVToUint8(tempFloat());
         if (!useBox(lir, LClampVToUint8::Input, in))
             return false;
-        return assignSnapshot(lir) && define(lir, ins);
+        return assignSnapshot(lir) && define(lir, ins) && assignSafepoint(lir, ins);
       }
 
       default:

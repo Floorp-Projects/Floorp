@@ -1734,6 +1734,12 @@ MacroAssemblerARMCompat::move32(const Imm32 &imm, const Register &dest)
 {
     ma_mov(imm, dest);
 }
+
+void
+MacroAssemblerARMCompat::move32(const Register &src, const Register &dest) {
+    ma_mov(src, dest);
+}
+
 void
 MacroAssemblerARMCompat::movePtr(const Register &src, const Register &dest)
 {
@@ -2580,6 +2586,16 @@ void
 MacroAssemblerARMCompat::unboxDouble(const Address &src, const FloatRegister &dest)
 {
     ma_vldr(Operand(src), dest);
+}
+
+void
+MacroAssemblerARMCompat::unboxString(const ValueOperand &operand, const Register &dest) {
+    ma_mov(operand.payloadReg(), dest);
+}
+
+void
+MacroAssemblerARMCompat::unboxString(const Address &src, const Register &dest) {
+    ma_ldr(payloadOf(src), dest);
 }
 
 void

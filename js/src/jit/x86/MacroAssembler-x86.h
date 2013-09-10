@@ -774,6 +774,12 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
             unpcklps(ScratchFloatReg, dest);
         }
     }
+    void unboxString(const ValueOperand &src, const Register &dest) {
+        movl(src.payloadReg(), dest);
+    }
+    void unboxString(const Address &src, const Register &dest) {
+        movl(payloadOf(src), dest);
+    }
     void unboxValue(const ValueOperand &src, AnyRegister dest) {
         if (dest.isFloat()) {
             Label notInt32, end;

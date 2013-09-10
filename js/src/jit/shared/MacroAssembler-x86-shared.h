@@ -99,6 +99,9 @@ class MacroAssemblerX86Shared : public Assembler
     void move32(const Imm32 &imm, const Operand &dest) {
         movl(imm, dest);
     }
+    void move32(const Register &src, const Register &dest) {
+        movl(src, dest);
+    }
     void and32(const Imm32 &imm, const Register &dest) {
         andl(imm, dest);
     }
