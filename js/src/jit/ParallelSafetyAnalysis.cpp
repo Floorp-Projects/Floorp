@@ -163,6 +163,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(Unbox)
     SAFE_OP(GuardObject)
     SAFE_OP(ToDouble)
+    SAFE_OP(ToFloat32)
     SAFE_OP(ToInt32)
     SAFE_OP(TruncateToInt32)
     SAFE_OP(MaybeToDoubleElement)

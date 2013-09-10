@@ -24,6 +24,7 @@
 #include "mozStoragePrivateHelpers.h"
 #include "mozStorageStatementRow.h"
 #include "mozStorageStatement.h"
+#include "nsDOMClassInfo.h"
 
 #include "prlog.h"
 
