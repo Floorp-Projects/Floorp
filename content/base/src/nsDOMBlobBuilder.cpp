@@ -256,6 +256,22 @@ nsDOMMultipartFile::InitBlob(JSContext* aCx,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMMultipartFile::GetMozFullPathInternal(nsAString &aFilename)
+{
+  if (!mIsFromNsiFile || mBlobs.Length() == 0) {
+    return nsDOMFile::GetMozFullPathInternal(aFilename);
+  }
+
+  nsIDOMBlob* blob = mBlobs.ElementAt(0).get();
+  nsDOMFileFile* file = static_cast<nsDOMFileFile*>(blob);
+  if (!file) {
+    return nsDOMFile::GetMozFullPathInternal(aFilename);
+  }
+
+  return file->GetMozFullPathInternal(aFilename);
+}
+
 nsresult
 nsDOMMultipartFile::InitFile(JSContext* aCx,
                              uint32_t aArgc,
@@ -305,6 +321,8 @@ nsDOMMultipartFile::InitFile(JSContext* aCx,
     if (!blob && !file) {
       return NS_ERROR_UNEXPECTED;
     }
+
+    mIsFromNsiFile = true;
   } else {
     // It's a string
     JSString* str = JS_ValueToString(aCx, aArgv[0]);
