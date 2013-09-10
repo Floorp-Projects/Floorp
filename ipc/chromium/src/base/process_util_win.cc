@@ -494,20 +494,6 @@ size_t ProcessMetrics::GetWorkingSetSize() const {
   return 0;
 }
 
-size_t ProcessMetrics::GetPrivateBytes() const {
-  // PROCESS_MEMORY_COUNTERS_EX is not supported until XP SP2.
-  // GetProcessMemoryInfo() will simply fail on prior OS. So the requested
-  // information is simply not available. Hence, we will return 0 on unsupported
-  // OSes. Unlike most Win32 API, we don't need to initialize the "cb" member.
-  PROCESS_MEMORY_COUNTERS_EX pmcx;
-  if (GetProcessMemoryInfo(process_,
-                          reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmcx),
-                          sizeof(pmcx))) {
-      return pmcx.PrivateUsage;
-  }
-  return 0;
-}
-
 static uint64_t FileTimeToUTC(const FILETIME& ftime) {
   LARGE_INTEGER li;
   li.LowPart = ftime.dwLowDateTime;
