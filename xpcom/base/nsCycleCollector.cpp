@@ -969,7 +969,7 @@ public:
     bool Collect(ccType aCCType,
                  nsTArray<PtrInfo*> *aWhiteNodes,
                  nsCycleCollectorResults *aResults,
-                 nsICycleCollectorListener *aListener);
+                 nsICycleCollectorListener *aManualListener);
     void Shutdown();
 
     void SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
@@ -989,7 +989,7 @@ private:
     void FixGrayBits(bool aForceGC);
     bool ShouldMergeZones(ccType aCCType);
 
-    void BeginCollection(ccType aCCType, nsICycleCollectorListener *aListener);
+    void BeginCollection(ccType aCCType, nsICycleCollectorListener *aManualListener);
     void MarkRoots(GCGraphBuilder &aBuilder);
     void ScanRoots(nsICycleCollectorListener *aListener);
     void ScanWeakMaps();
@@ -2694,7 +2694,7 @@ bool
 nsCycleCollector::Collect(ccType aCCType,
                           nsTArray<PtrInfo*> *aWhiteNodes,
                           nsCycleCollectorResults *aResults,
-                          nsICycleCollectorListener *aListener)
+                          nsICycleCollectorListener *aManualListener)
 {
     CheckThreadSafety();
 
@@ -2704,7 +2704,7 @@ nsCycleCollector::Collect(ccType aCCType,
     }
 
     PrepareForCollection(aResults, aWhiteNodes);
-    BeginCollection(aCCType, aListener);
+    BeginCollection(aCCType, aManualListener);
     bool collectedAny = CollectWhite();
     CleanupAfterCollection();
     return collectedAny;
@@ -2747,15 +2747,15 @@ nsCycleCollector::ShouldMergeZones(ccType aCCType)
 
 void
 nsCycleCollector::BeginCollection(ccType aCCType,
-                                  nsICycleCollectorListener *aListener)
+                                  nsICycleCollectorListener *aManualListener)
 {
     TimeLog timeLog;
     bool isShutdown = (aCCType == ShutdownCC);
 
     // Set up the listener for this CC.
-    MOZ_ASSERT_IF(isShutdown, !aListener);
-    nsCOMPtr<nsICycleCollectorListener> listener(aListener);
-    aListener = nullptr;
+    MOZ_ASSERT_IF(isShutdown, !aManualListener);
+    nsCOMPtr<nsICycleCollectorListener> listener(aManualListener);
+    aManualListener = nullptr;
     if (!listener) {
         if (mParams.mLogAll || (isShutdown && mParams.mLogShutdown)) {
             nsRefPtr<nsCycleCollectorLogger> logger = new nsCycleCollectorLogger();
@@ -3156,7 +3156,7 @@ nsCycleCollector_doDeferredDeletion()
 void
 nsCycleCollector_collect(bool aManuallyTriggered,
                          nsCycleCollectorResults *aResults,
-                         nsICycleCollectorListener *aListener)
+                         nsICycleCollectorListener *aManualListener)
 {
     CollectorData *data = sCollectorData.get();
 
@@ -3166,9 +3166,10 @@ nsCycleCollector_collect(bool aManuallyTriggered,
 
     PROFILER_LABEL("CC", "nsCycleCollector_collect");
 
+    MOZ_ASSERT_IF(aManualListener, aManuallyTriggered);
     nsAutoTArray<PtrInfo*, 4000> whiteNodes;
     data->mCollector->Collect(aManuallyTriggered ? ManualCC : ScheduledCC,
-                              &whiteNodes, aResults, aListener);
+                              &whiteNodes, aResults, aManualListener);
 }
 
 void
