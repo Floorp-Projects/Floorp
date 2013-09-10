@@ -19,7 +19,7 @@
 #include "vm/Debugger.h"
 #include "vm/TypedArrayObject.h"
 
-#include "vm/ObjectImpl-inl.h"
+#include "jsgcinlines.h"
 
 using namespace js;
 using namespace gc;
