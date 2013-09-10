@@ -1255,7 +1255,7 @@ nsLayoutUtils::GetActiveScrolledRootFor(nsIFrame* aFrame,
   while (f != aStopAtAncestor) {
     if (IsPopup(f))
       break;
-    if (ActiveLayerTracker::IsOffsetStyleAnimated(f))
+    if (ActiveLayerTracker::IsOffsetOrMarginStyleAnimated(f))
       break;
     nsIFrame* parent = GetCrossDocParentFrame(f);
     if (!parent)
