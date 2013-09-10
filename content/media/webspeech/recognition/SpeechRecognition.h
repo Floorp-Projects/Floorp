@@ -248,7 +248,6 @@ private:
   void GetRecognitionServiceCID(nsACString& aResultCID);
 
   FSMState mCurrentState;
-  nsTArray<nsRefPtr<SpeechEvent> > mPriorityEvents;
 
   Endpointer mEndpointer;
   uint32_t mEstimationSamples;
