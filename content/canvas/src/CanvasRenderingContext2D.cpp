@@ -3,12 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "base/basictypes.h"
 #include "CanvasRenderingContext2D.h"
 
 #include "nsXULElement.h"
-
-#include "prenv.h"
 
 #include "nsIServiceManager.h"
 #include "nsMathUtils.h"
@@ -20,12 +17,10 @@
 #include "nsSVGEffects.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIVariant.h"
 
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIFrame.h"
 #include "nsError.h"
-#include "nsIScriptError.h"
 
 #include "nsCSSParser.h"
 #include "mozilla/css/StyleRule.h"
@@ -39,11 +34,9 @@
 
 #include "nsColor.h"
 #include "nsGfxCIID.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsIDocShell.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
-#include "nsIXPConnect.h"
 #include "nsDisplayList.h"
 
 #include "nsTArray.h"
@@ -90,9 +83,6 @@
 #include "mozilla/unused.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsWrapperCacheInlines.h"
-#include "nsJSUtils.h"
-#include "XPCQuickStubs.h"
-#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLVideoElement.h"
