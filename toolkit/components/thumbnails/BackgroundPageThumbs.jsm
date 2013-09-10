@@ -69,6 +69,30 @@ const BackgroundPageThumbs = {
     this._processCaptureQueue();
   },
 
+  observe: function(subject, topic, data) {
+    // oop-frameloader-crashed - see if it was ours?
+    if (this._thumbBrowser) {
+      let frameLoader = subject.QueryInterface(Ci.nsIFrameLoader);
+      if (this._thumbBrowser.messageManager == frameLoader.messageManager) {
+        Cu.reportError("BackgroundThumbnails remote process crashed - recovering");
+        this._destroyBrowser();
+        let curCapture = this._captureQueue.length ? this._captureQueue[0] : null;
+        // we could retry the pending capture, but it's possible the crash
+        // was due directly to it, so trying again might just crash again.
+        // We could keep a flag to indicate if it previously crashed, but
+        // "resetting" the capture requires more work - so for now, we just
+        // discard it.
+        if (curCapture && curCapture.pending) {
+          curCapture._done(null);
+          // _done automatically continues queue processing.
+        }
+        // else: we must have been idle and not currently doing a capture (eg,
+        // maybe a GC or similar crashed) - so there's no need to attempt a
+        // queue restart - the next capture request will set everything up.
+      }
+    }
+  },
+
   /**
    * Ensures that initialization of the thumbnail browser's parent window has
    * begun.
@@ -149,11 +173,18 @@ const BackgroundPageThumbs = {
 
     browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
     this._thumbBrowser = browser;
+    // an observer to notice if the remote process crashes.  There is also an
+    // "ipc:browser-destroyed" sent both for normal and abnormal terminations,
+    // but it's not currently possible to determine what browser it was for
+    // (although nsITabParent is probably going to grow a way of determining
+    // it at some point)
+    Services.obs.addObserver(this, "oop-frameloader-crashed", false);
   },
 
   _destroyBrowser: function () {
     if (!this._thumbBrowser)
       return;
+    Services.obs.removeObserver(this, "oop-frameloader-crashed");
     this._thumbBrowser.remove();
     delete this._thumbBrowser;
   },
@@ -178,7 +209,8 @@ const BackgroundPageThumbs = {
   },
 
   /**
-   * Called when the current capture completes or times out.
+   * Called when the current capture completes or fails (eg, times out, remote
+   * process crashes.)
    */
   _onCaptureOrTimeout: function (capture) {
     // Since timeouts start as an item is being processed, only the first
