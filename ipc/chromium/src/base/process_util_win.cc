@@ -476,15 +476,6 @@ size_t ProcessMetrics::GetPagefileUsage() const {
   return 0;
 }
 
-// Returns the peak space allocated for the pagefile, in bytes.
-size_t ProcessMetrics::GetPeakPagefileUsage() const {
-  PROCESS_MEMORY_COUNTERS pmc;
-  if (GetProcessMemoryInfo(process_, &pmc, sizeof(pmc))) {
-    return pmc.PeakPagefileUsage;
-  }
-  return 0;
-}
-
 static uint64_t FileTimeToUTC(const FILETIME& ftime) {
   LARGE_INTEGER li;
   li.LowPart = ftime.dwLowDateTime;
