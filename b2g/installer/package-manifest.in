@@ -451,6 +451,9 @@
 @BINPATH@/components/SettingsManager.manifest
 @BINPATH@/components/SettingsService.js
 @BINPATH@/components/SettingsService.manifest
+@BINPATH@/components/webvtt.xpt
+@BINPATH@/components/WebVTT.manifest
+@BINPATH@/components/WebVTTParserWrapper.js
 #ifdef MOZ_B2G_RIL
 @BINPATH@/components/NetworkManager.manifest
 @BINPATH@/components/NetworkManager.js
