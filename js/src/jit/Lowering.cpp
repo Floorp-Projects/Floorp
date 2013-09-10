@@ -2403,6 +2403,58 @@ LIRGenerator::visitLoadTypedArrayElementStatic(MLoadTypedArrayElementStatic *ins
 }
 
 bool
+LIRGenerator::visitStoreTypedArrayElement(MStoreTypedArrayElement *ins)
+{
+    JS_ASSERT(ins->elements()->type() == MIRType_Elements);
+    JS_ASSERT(ins->index()->type() == MIRType_Int32);
+
+    if (ins->isFloatArray()) {
+        JS_ASSERT_IF(ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT32, ins->value()->type() == MIRType_Float32);
+        JS_ASSERT_IF(ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT64, ins->value()->type() == MIRType_Double);
+    } else {
+        JS_ASSERT(ins->value()->type() == MIRType_Int32);
+    }
+
+    LUse elements = useRegister(ins->elements());
+    LAllocation index = useRegisterOrConstant(ins->index());
+    LAllocation value;
+
+    // For byte arrays, the value has to be in a byte register on x86.
+    if (ins->isByteArray())
+        value = useByteOpRegisterOrNonDoubleConstant(ins->value());
+    else
+        value = useRegisterOrNonDoubleConstant(ins->value());
+    return add(new LStoreTypedArrayElement(elements, index, value), ins);
+}
+
+bool
+LIRGenerator::visitStoreTypedArrayElementHole(MStoreTypedArrayElementHole *ins)
+{
+    JS_ASSERT(ins->elements()->type() == MIRType_Elements);
+    JS_ASSERT(ins->index()->type() == MIRType_Int32);
+    JS_ASSERT(ins->length()->type() == MIRType_Int32);
+
+    if (ins->isFloatArray()) {
+        JS_ASSERT_IF(ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT32, ins->value()->type() == MIRType_Float32);
+        JS_ASSERT_IF(ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT64, ins->value()->type() == MIRType_Double);
+    } else {
+        JS_ASSERT(ins->value()->type() == MIRType_Int32);
+    }
+
+    LUse elements = useRegister(ins->elements());
+    LAllocation length = useAnyOrConstant(ins->length());
+    LAllocation index = useRegisterOrConstant(ins->index());
+    LAllocation value;
+
+    // For byte arrays, the value has to be in a byte register on x86.
+    if (ins->isByteArray())
+        value = useByteOpRegisterOrNonDoubleConstant(ins->value());
+    else
+        value = useRegisterOrNonDoubleConstant(ins->value());
+    return add(new LStoreTypedArrayElementHole(elements, length, index, value), ins);
+}
+
+bool
 LIRGenerator::visitLoadFixedSlot(MLoadFixedSlot *ins)
 {
     JS_ASSERT(ins->object()->type() == MIRType_Object);
@@ -2688,9 +2740,13 @@ LIRGenerator::visitSetElementCache(MSetElementCache *ins)
     JS_ASSERT(ins->object()->type() == MIRType_Object);
     JS_ASSERT(ins->index()->type() == MIRType_Value);
 
+    // Due to lack of registers on x86, we reuse the object register as a
+    // temporary. This register may be used in a 1-byte store, which on x86
+    // again has constraints; thus the use of |useByteOpRegister| over
+    // |useRegister| below.
     LInstruction *lir;
     if (ins->value()->type() == MIRType_Value) {
-        lir = new LSetElementCacheV(useRegister(ins->object()), tempToUnbox(),
+        lir = new LSetElementCacheV(useByteOpRegister(ins->object()), tempToUnbox(),
                                     temp(), tempFloat());
 
         if (!useBox(lir, LSetElementCacheV::Index, ins->index()))
@@ -2699,7 +2755,7 @@ LIRGenerator::visitSetElementCache(MSetElementCache *ins)
             return false;
     } else {
         lir = new LSetElementCacheT(
-            useRegister(ins->object()),
+            useByteOpRegister(ins->object()),
             useRegisterOrConstant(ins->value()),
             tempToUnbox(), temp(), tempFloat());
 
