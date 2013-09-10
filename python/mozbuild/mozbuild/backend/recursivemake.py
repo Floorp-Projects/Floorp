@@ -21,6 +21,7 @@ from ..frontend.data import (
     ConfigFileSubstitution,
     DirectoryTraversal,
     Exports,
+    GeneratedEventWebIDLFile,
     GeneratedWebIDLFile,
     IPDLFile,
     LocalInclude,
@@ -127,6 +128,7 @@ class RecursiveMakeBackend(CommonBackend):
         self._backend_files = {}
         self._ipdl_sources = set()
         self._webidl_sources = set()
+        self._generated_events_webidl_sources = set()
         self._test_webidl_sources = set()
         self._preprocessed_webidl_sources = set()
         self._generated_webidl_sources = set()
@@ -209,6 +211,9 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, WebIDLFile):
             self._webidl_sources.add(mozpath.join(obj.srcdir, obj.basename))
+
+        elif isinstance(obj, GeneratedEventWebIDLFile):
+            self._generated_events_webidl_sources.add(mozpath.join(obj.srcdir, obj.basename))
 
         elif isinstance(obj, TestWebIDLFile):
             self._test_webidl_sources.add(mozpath.join(obj.srcdir,
@@ -301,6 +306,8 @@ class RecursiveMakeBackend(CommonBackend):
 
         for webidl in sorted(self._webidl_sources):
             webidls.write('webidl_files += %s\n' % os.path.basename(webidl))
+        for webidl in sorted(self._generated_events_webidl_sources):
+            webidls.write('generated_events_webidl_files += %s\n' % os.path.basename(webidl))
         for webidl in sorted(self._test_webidl_sources):
             webidls.write('test_webidl_files += %s\n' % os.path.basename(webidl))
         for webidl in sorted(self._generated_webidl_sources):

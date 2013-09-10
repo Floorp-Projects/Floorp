@@ -10,12 +10,12 @@
 #include "nsDOMEventTargetHelper.h"
 #include "nsError.h"
 #include "nsIDocument.h"
-#include "nsIDOMBlobEvent.h"
 #include "nsIDOMRecordErrorEvent.h"
 #include "nsTArray.h"
 #include "DOMMediaStream.h"
 #include "EncodedBufferCache.h"
 #include "nsIDOMFile.h"
+#include "mozilla/dom/BlobEvent.h"
 
 namespace mozilla {
 
@@ -310,20 +310,14 @@ MediaRecorder::CreateAndDispatchBlobEvent()
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsCOMPtr<nsIDOMBlob> blob;
-  blob = mEncodedBufferCache->ExtractBlob(mMimeType);
-
-  // create an event that uses the MessageEvent interface,
-  // which does not bubble, is not cancelable, and has no default action
-  nsCOMPtr<nsIDOMEvent> event;
-  nsresult rv = NS_NewDOMBlobEvent(getter_AddRefs(event), this, nullptr, nullptr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMBlobEvent> blobEvent = do_QueryInterface(event);
-  rv = blobEvent->InitBlobEvent(NS_LITERAL_STRING("dataavailable"),
-    false, false, blob);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  BlobEventInitInitializer init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mData = mEncodedBufferCache->ExtractBlob(mMimeType);
+  nsRefPtr<BlobEvent> event =
+    BlobEvent::Constructor(this,
+                           NS_LITERAL_STRING("dataavailable"),
+                           init);
   event->SetTrusted(true);
   return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }

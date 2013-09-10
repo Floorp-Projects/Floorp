@@ -15,6 +15,7 @@ from .data import (
     ConfigFileSubstitution,
     DirectoryTraversal,
     Exports,
+    GeneratedEventWebIDLFile,
     GeneratedWebIDLFile,
     IPDLFile,
     LocalInclude,
@@ -177,6 +178,9 @@ class TreeMetadataEmitter(LoggingMixin):
 
         for webidl in sandbox.get('WEBIDL_FILES', []):
             yield WebIDLFile(sandbox, webidl)
+
+        for webidl in sandbox.get('GENERATED_EVENTS_WEBIDL_FILES', []):
+            yield GeneratedEventWebIDLFile(sandbox, webidl)
 
         for webidl in sandbox.get('TEST_WEBIDL_FILES', []):
             yield TestWebIDLFile(sandbox, webidl)
