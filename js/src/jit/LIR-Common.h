@@ -722,12 +722,20 @@ class LDefFun : public LCallInstructionHelper<0, 1, 0>
     }
 };
 
-class LTypeOfV : public LInstructionHelper<1, BOX_PIECES, 0>
+class LTypeOfV : public LInstructionHelper<1, BOX_PIECES, 1>
 {
   public:
     LIR_HEADER(TypeOfV)
 
+    LTypeOfV(const LDefinition &tempToUnbox) {
+        setTemp(0, tempToUnbox);
+    }
+
     static const size_t Input = 0;
+
+    const LDefinition *tempToUnbox() {
+        return getTemp(0);
+    }
 
     MTypeOf *mir() const {
         return mir_->toTypeOf();

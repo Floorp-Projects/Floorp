@@ -131,9 +131,6 @@ extern bool
 SetElementHelper(JSContext *cx, HandleObject obj, HandleObject Receiver, uint32_t index,
                  unsigned defineHow, MutableHandleValue vp, bool strict);
 
-extern JSType
-TypeOf(JSContext *cx, HandleObject obj);
-
 extern bool
 GetAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
 

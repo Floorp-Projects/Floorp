@@ -8830,8 +8830,8 @@ DoTypeOfFallback(JSContext *cx, BaselineFrame *frame, ICTypeOf_Fallback *stub, H
                  MutableHandleValue res)
 {
     FallbackICSpew(cx, stub, "TypeOf");
-    JSType type = JS_TypeOfValue(cx, val);
-    RootedString string(cx, TypeName(type, cx));
+    JSType type = js::TypeOfValue(val);
+    RootedString string(cx, TypeName(type, cx->runtime()));
 
     res.setString(string);
 
