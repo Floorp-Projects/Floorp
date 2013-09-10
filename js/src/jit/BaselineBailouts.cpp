@@ -379,9 +379,9 @@ IsInlinableFallback(ICFallbackStub *icEntry)
 static inline void*
 GetStubReturnAddress(JSContext *cx, jsbytecode *pc)
 {
-    if (IsGetterPC(pc))
+    if (IsGetPropPC(pc))
         return cx->compartment()->ionCompartment()->baselineGetPropReturnAddr();
-    if (IsSetterPC(pc))
+    if (IsSetPropPC(pc))
         return cx->compartment()->ionCompartment()->baselineSetPropReturnAddr();
     // This should be a call op of some kind, now.
     JS_ASSERT(IsCallPC(pc));
@@ -661,7 +661,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     // On the caller side this must represent like the function wasn't inlined.
     uint32_t pushedSlots = 0;
     AutoValueVector savedCallerArgs(cx);
-    bool needToSaveArgs = op == JSOP_FUNAPPLY || IsGetterPC(pc) || IsSetterPC(pc);
+    bool needToSaveArgs = op == JSOP_FUNAPPLY || IsGetPropPC(pc) || IsSetPropPC(pc);
     if (iter.moreFrames() && (op == JSOP_FUNCALL || needToSaveArgs))
     {
         uint32_t inlined_args = 0;
@@ -670,7 +670,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         else if (op == JSOP_FUNAPPLY)
             inlined_args = 2 + blFrame->numActualArgs();
         else
-            inlined_args = 2 + IsSetterPC(pc);
+            inlined_args = 2 + IsSetPropPC(pc);
 
         JS_ASSERT(exprStackSlots >= inlined_args);
         pushedSlots = exprStackSlots - inlined_args;
@@ -725,7 +725,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             for (uint32_t i = 0; i < inlined_args; i++)
                 savedCallerArgs[i] = iter.read();
 
-            if (IsSetterPC(pc)) {
+            if (IsSetPropPC(pc)) {
                 // We would love to just save all the arguments and leave them
                 // in the stub frame pushed below, but we will lose the inital
                 // argument which the function was called with, which we must
@@ -793,7 +793,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             // include the this. When inlining that is not included.
             // So the exprStackSlots will be one less.
             JS_ASSERT(expectedDepth - exprStackSlots <= 1);
-        } else if (iter.moreFrames() && (IsGetterPC(pc) || IsSetterPC(pc))) {
+        } else if (iter.moreFrames() && (IsGetPropPC(pc) || IsSetPropPC(pc))) {
             // Accessors coming out of ion are inlined via a complete
             // lie perpetrated by the compiler internally. Ion just rearranges
             // the stack, and pretends that it looked like a call all along.
@@ -1028,7 +1028,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         if (op == JSOP_FUNAPPLY)
             actualArgc = blFrame->numActualArgs();
         else
-            actualArgc = IsSetterPC(pc);
+            actualArgc = IsSetPropPC(pc);
 
         JS_ASSERT(actualArgc + 2 <= exprStackSlots);
         JS_ASSERT(savedCallerArgs.length() == actualArgc + 2);
