@@ -922,10 +922,8 @@ class nsCycleCollector
 
     nsIThread* mThread;
 
-public:
     nsCycleCollectorParams mParams;
 
-private:
     nsTArray<PtrInfo*> *mWhiteNodes;
     uint32_t mWhiteNodeCount;
 
@@ -984,7 +982,7 @@ public:
 
 private:
     void CheckThreadSafety();
-    void ShutdownCollect(nsICycleCollectorListener *aListener);
+    void ShutdownCollect();
 
     void PrepareForCollection(nsCycleCollectorResults *aResults,
                               nsTArray<PtrInfo*> *aWhiteNodes);
@@ -2680,13 +2678,13 @@ nsCycleCollector::CleanupAfterCollection()
 }
 
 void
-nsCycleCollector::ShutdownCollect(nsICycleCollectorListener *aListener)
+nsCycleCollector::ShutdownCollect()
 {
     nsAutoTArray<PtrInfo*, 4000> whiteNodes;
 
     for (uint32_t i = 0; i < DEFAULT_SHUTDOWN_COLLECTIONS; ++i) {
         NS_ASSERTION(i < NORMAL_SHUTDOWN_COLLECTIONS, "Extra shutdown CC");
-        if (!Collect(ShutdownCC, &whiteNodes, nullptr, aListener)) {
+        if (!Collect(ShutdownCC, &whiteNodes, nullptr, nullptr)) {
             break;
         }
     }
@@ -2707,21 +2705,37 @@ nsCycleCollector::Collect(ccType aCCType,
 
     PrepareForCollection(aResults, aWhiteNodes);
 
-    bool forceGC = (aCCType == ShutdownCC);
-    if (!forceGC && aListener) {
+    bool isShutdown = (aCCType == ShutdownCC);
+
+    // Set up the listener for this CC.
+    MOZ_ASSERT_IF(isShutdown, !aListener);
+    nsCOMPtr<nsICycleCollectorListener> listener(aListener);
+    aListener = nullptr;
+    if (!listener) {
+        if (mParams.mLogAll || (isShutdown && mParams.mLogShutdown)) {
+            nsRefPtr<nsCycleCollectorLogger> logger = new nsCycleCollectorLogger();
+            if (isShutdown && mParams.mAllTracesAtShutdown) {
+                logger->SetAllTraces();
+            }
+            listener = logger.forget();
+        }
+    }
+
+    bool forceGC = isShutdown;
+    if (!forceGC && listener) {
         // On a WantAllTraces CC, force a synchronous global GC to prevent
         // hijinks from ForgetSkippable and compartmental GCs.
-        aListener->GetWantAllTraces(&forceGC);
+        listener->GetWantAllTraces(&forceGC);
     }
     FixGrayBits(forceGC);
 
     FreeSnowWhite(true);
 
-    if (aListener && NS_FAILED(aListener->Begin())) {
-        aListener = nullptr;
+    if (listener && NS_FAILED(listener->Begin())) {
+        listener = nullptr;
     }
 
-    BeginCollection(aCCType, aListener);
+    BeginCollection(aCCType, listener);
     bool collectedAny = CollectWhite();
     CleanupAfterCollection();
     return collectedAny;
@@ -2815,14 +2829,7 @@ nsCycleCollector::Shutdown()
     if (PR_GetEnv("XPCOM_CC_RUN_DURING_SHUTDOWN"))
 #endif
     {
-        nsCOMPtr<nsCycleCollectorLogger> listener;
-        if (mParams.mLogAll || mParams.mLogShutdown) {
-            listener = new nsCycleCollectorLogger();
-            if (mParams.mAllTracesAtShutdown) {
-                listener->SetAllTraces();
-            }
-        }
-        ShutdownCollect(listener);
+        ShutdownCollect();
     }
 }
 
@@ -3160,14 +3167,10 @@ nsCycleCollector_collect(bool aManuallyTriggered,
     MOZ_ASSERT(data->mCollector);
 
     PROFILER_LABEL("CC", "nsCycleCollector_collect");
-    nsCOMPtr<nsICycleCollectorListener> listener(aListener);
-    if (!aListener && data->mCollector->mParams.mLogAll) {
-        listener = new nsCycleCollectorLogger();
-    }
 
     nsAutoTArray<PtrInfo*, 4000> whiteNodes;
     data->mCollector->Collect(aManuallyTriggered ? ManualCC : ScheduledCC,
-                              &whiteNodes, aResults, listener);
+                              &whiteNodes, aResults, aListener);
 }
 
 void
