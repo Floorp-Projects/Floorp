@@ -11,6 +11,7 @@
 #include "nsImageLoadingContent.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsITextControlElement.h"
+#include "nsITimer.h"
 #include "nsIPhonetic.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsCOMPtr.h"
@@ -82,6 +83,7 @@ class HTMLInputElement MOZ_FINAL : public nsGenericHTMLFormElementWithState,
                                    public nsITextControlElement,
                                    public nsIPhonetic,
                                    public nsIDOMNSEditableElement,
+                                   public nsITimerCallback,
                                    public nsIConstraintValidation
 {
 public:
@@ -224,6 +226,14 @@ public:
   static void DestroyUploadLastDir();
 
   void MaybeLoadImage();
+
+  // nsITimerCallback
+  NS_DECL_NSITIMERCALLBACK
+
+  // Avoid warning about the implementation of nsITimerCallback::Notify hiding
+  // our nsImageLoadingContent base class' implementation of
+  // imgINotificationObserver::Notify:
+  using nsImageLoadingContent::Notify;
 
   // nsIConstraintValidation
   bool     IsTooLong();
@@ -391,6 +401,17 @@ public:
   nsDOMFileList* GetFiles();
 
   void OpenDirectoryPicker(ErrorResult& aRv);
+
+  void ResetProgressCounters()
+  {
+    mFileListProgress = 0;
+    mLastFileListProgress = 0;
+  }
+  void StartProgressEventTimer();
+  void MaybeDispatchProgressEvent(bool aFinalProgress);
+  void DispatchProgressEvent(const nsAString& aType,
+                             bool aLengthComputable,
+                             uint64_t aLoaded, uint64_t aTotal);
 
   // XPCOM GetFormAction() is OK
   void SetFormAction(const nsAString& aValue, ErrorResult& aRv)
@@ -647,6 +668,13 @@ public:
   // XPCOM SetUserInput() is OK
 
   // XPCOM GetPhonetic() is OK
+
+  void SetFileListProgress(uint32_t mFileCount)
+  {
+    MOZ_ASSERT(!NS_IsMainThread(),
+               "Why are we calling this on the main thread?");
+    mFileListProgress = mFileCount;
+  }
 
 protected:
   virtual JSObject* WrapNode(JSContext* aCx,
@@ -1144,6 +1172,13 @@ protected:
    */
   Decimal mRangeThumbDragStartValue;
 
+  /**
+   * Timer that is used when mType == NS_FORM_INPUT_FILE and the user selects a
+   * directory. It is used to fire progress events while the list of files
+   * under that directory tree is built.
+   */
+  nsCOMPtr<nsITimer> mProgressTimer;
+
   // Step scale factor values, for input types that have one.
   static const Decimal kStepScaleFactorDate;
   static const Decimal kStepScaleFactorNumberRange;
@@ -1158,6 +1193,19 @@ protected:
 
   // Float value returned by GetStep() when the step attribute is set to 'any'.
   static const Decimal kStepAny;
+
+  /**
+   * The number of files added to the FileList being built off-main-thread when
+   * mType == NS_FORM_INPUT_FILE and the user selects a directory. This is set
+   * off the main thread, read on main thread.
+   */
+  mozilla::Atomic<uint32_t> mFileListProgress;
+
+  /**
+   * The number of files added to the FileList at the time the last progress
+   * event was fired.
+   */
+  uint32_t mLastFileListProgress;
 
   /**
    * The type of this input (<input type=...>) as an integer.
@@ -1179,6 +1227,7 @@ protected:
   bool                     mCanShowInvalidUI    : 1;
   bool                     mHasRange            : 1;
   bool                     mIsDraggingRange     : 1;
+  bool                     mProgressTimerIsActive : 1;
 
 private:
 

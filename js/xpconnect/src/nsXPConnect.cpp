@@ -10,22 +10,15 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Likely.h"
-#include "mozilla/Util.h"
 
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
-#include "nsBaseHashtable.h"
-#include "nsHashKeys.h"
 #include "jsfriendapi.h"
 #include "js/OldDebugAPI.h"
-#include "dom_quickstubs.h"
-#include "nsNullPrincipal.h"
-#include "nsIURI.h"
 #include "nsJSEnvironment.h"
 #include "nsThreadUtils.h"
 #include "nsDOMJSUtils.h"
 
-#include "XrayWrapper.h"
 #include "WrapperFactory.h"
 #include "AccessCheck.h"
 
@@ -47,9 +40,6 @@
 #include "mozilla/dom/TextEncoderBinding.h"
 #include "mozilla/dom/DOMErrorBinding.h"
 
-#include "nsWrapperCacheInlines.h"
-#include "nsCycleCollectionNoteRootCallback.h"
-#include "nsCycleCollector.h"
 #include "nsDOMMutationObserver.h"
 #include "nsICycleCollectorListener.h"
 #include "nsThread.h"

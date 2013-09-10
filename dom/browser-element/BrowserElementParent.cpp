@@ -27,6 +27,7 @@ using namespace mozilla::dom;
 
 namespace {
 
+using mozilla::BrowserElementParent;
 /**
  * Create an <iframe mozbrowser> owned by the same document as
  * aOpenerFrameElement.
@@ -72,7 +73,8 @@ CreateIframe(Element* aOpenerFrameElement, const nsAString& aName, bool aRemote)
 
 bool
 DispatchCustomDOMEvent(Element* aFrameElement, const nsAString& aEventName,
-                       JSContext* cx, JS::Handle<JS::Value> aDetailValue)
+                       JSContext* cx, JS::Handle<JS::Value> aDetailValue,
+                       nsEventStatus *aStatus)
 {
   NS_ENSURE_TRUE(aFrameElement, false);
   nsIPresShell *shell = aFrameElement->OwnerDoc()->GetShell();
@@ -94,7 +96,7 @@ DispatchCustomDOMEvent(Element* aFrameElement, const nsAString& aEventName,
   event->InitCustomEvent(cx,
                          aEventName,
                          /* bubbles = */ true,
-                         /* cancelable = */ false,
+                         /* cancelable = */ true,
                          aDetailValue,
                          res);
   if (res.Failed()) {
@@ -102,11 +104,15 @@ DispatchCustomDOMEvent(Element* aFrameElement, const nsAString& aEventName,
   }
   customEvent->SetTrusted(true);
   // Dispatch the event.
-  nsEventStatus status = nsEventStatus_eIgnore;
+  *aStatus = nsEventStatus_eConsumeNoDefault;
   nsresult rv = nsEventDispatcher::DispatchDOMEvent(aFrameElement, nullptr,
-                                                    domEvent, presContext, &status);
+                                                    domEvent, presContext, aStatus);
   return NS_SUCCEEDED(rv);
 }
+
+} // anonymous namespace
+
+namespace mozilla {
 
 /**
  * Dispatch a mozbrowseropenwindow event to the given opener frame element.
@@ -115,8 +121,9 @@ DispatchCustomDOMEvent(Element* aFrameElement, const nsAString& aEventName,
  * Returns true iff there were no unexpected failures and the window.open call
  * was accepted by the embedder.
  */
-bool
-DispatchOpenWindowEvent(Element* aOpenerFrameElement,
+/*static*/
+BrowserElementParent::OpenWindowResult
+BrowserElementParent::DispatchOpenWindowEvent(Element* aOpenerFrameElement,
                         Element* aPopupFrameElement,
                         const nsAString& aURL,
                         const nsAString& aName,
@@ -138,32 +145,38 @@ DispatchOpenWindowEvent(Element* aOpenerFrameElement,
 
   nsIGlobalObject* sgo = aPopupFrameElement->OwnerDoc()->GetScopeObject();
   if (!sgo) {
-    return false;
+    return BrowserElementParent::OPEN_WINDOW_IGNORED;
   }
 
   JS::Rooted<JSObject*> global(cx, sgo->GetGlobalJSObject());
   JSAutoCompartment ac(cx, global);
   if (!detail.ToObject(cx, global, &val)) {
     MOZ_CRASH("Failed to convert dictionary to JS::Value due to OOM.");
-    return false;
+    return BrowserElementParent::OPEN_WINDOW_IGNORED;
   }
 
+  nsEventStatus status;
   bool dispatchSucceeded =
     DispatchCustomDOMEvent(aOpenerFrameElement,
                            NS_LITERAL_STRING("mozbrowseropenwindow"),
                            cx,
-                           val);
+                           val, &status);
 
-  // If the iframe is not in some document's DOM at this point, the embedder
-  // has "blocked" the popup.
-  return (dispatchSucceeded && aPopupFrameElement->IsInDoc());
+  if (dispatchSucceeded) {
+    if (aPopupFrameElement->IsInDoc()) {
+      return BrowserElementParent::OPEN_WINDOW_ADDED;
+    } else if (status == nsEventStatus_eConsumeNoDefault) {
+      // If the frame was not added to a document, report to callers whether
+      // preventDefault was called on or not
+      return BrowserElementParent::OPEN_WINDOW_CANCELLED;
+    }
+  }
+
+  return BrowserElementParent::OPEN_WINDOW_IGNORED;
 }
 
-} // anonymous namespace
-
-namespace mozilla {
-
-/*static*/ bool
+/*static*/
+BrowserElementParent::OpenWindowResult
 BrowserElementParent::OpenWindowOOP(TabParent* aOpenerTabParent,
                                     TabParent* aPopupTabParent,
                                     const nsAString& aURL,
@@ -172,7 +185,8 @@ BrowserElementParent::OpenWindowOOP(TabParent* aOpenerTabParent,
 {
   // Create an iframe owned by the same document which owns openerFrameElement.
   nsCOMPtr<Element> openerFrameElement = aOpenerTabParent->GetOwnerElement();
-  NS_ENSURE_TRUE(openerFrameElement, false);
+  NS_ENSURE_TRUE(openerFrameElement,
+                 BrowserElementParent::OPEN_WINDOW_IGNORED);
   nsRefPtr<HTMLIFrameElement> popupFrameElement =
     CreateIframe(openerFrameElement, aName, /* aRemote = */ true);
 
@@ -188,11 +202,12 @@ BrowserElementParent::OpenWindowOOP(TabParent* aOpenerTabParent,
   // allowed.
   popupFrameElement->DisallowCreateFrameLoader();
 
-  bool dispatchSucceeded =
+  OpenWindowResult opened =
     DispatchOpenWindowEvent(openerFrameElement, popupFrameElement,
                             aURL, aName, aFeatures);
-  if (!dispatchSucceeded) {
-    return false;
+
+  if (opened != BrowserElementParent::OPEN_WINDOW_ADDED) {
+    return opened;
   }
 
   // The popup was not blocked, so hook up the frame element and the popup tab
@@ -200,11 +215,11 @@ BrowserElementParent::OpenWindowOOP(TabParent* aOpenerTabParent,
   aPopupTabParent->SetOwnerElement(popupFrameElement);
   popupFrameElement->AllowCreateFrameLoader();
   popupFrameElement->CreateRemoteFrameLoader(aPopupTabParent);
-
-  return true;
+  return opened;
 }
 
-/* static */ bool
+/* static */
+BrowserElementParent::OpenWindowResult
 BrowserElementParent::OpenWindowInProcess(nsIDOMWindow* aOpenerWindow,
                                           nsIURI* aURI,
                                           const nsAString& aName,
@@ -226,40 +241,43 @@ BrowserElementParent::OpenWindowInProcess(nsIDOMWindow* aOpenerWindow,
 
   nsCOMPtr<nsIDOMElement> openerFrameDOMElement;
   topWindow->GetFrameElement(getter_AddRefs(openerFrameDOMElement));
-  NS_ENSURE_TRUE(openerFrameDOMElement, false);
+  NS_ENSURE_TRUE(openerFrameDOMElement, BrowserElementParent::OPEN_WINDOW_IGNORED);
 
   nsCOMPtr<Element> openerFrameElement =
     do_QueryInterface(openerFrameDOMElement);
 
   nsRefPtr<HTMLIFrameElement> popupFrameElement =
     CreateIframe(openerFrameElement, aName, /* aRemote = */ false);
-  NS_ENSURE_TRUE(popupFrameElement, false);
+  NS_ENSURE_TRUE(popupFrameElement, BrowserElementParent::OPEN_WINDOW_IGNORED);
 
   nsAutoCString spec;
   if (aURI) {
     aURI->GetSpec(spec);
   }
-  bool dispatchSucceeded =
+
+  OpenWindowResult opened =
     DispatchOpenWindowEvent(openerFrameElement, popupFrameElement,
                             NS_ConvertUTF8toUTF16(spec),
                             aName,
                             NS_ConvertUTF8toUTF16(aFeatures));
-  if (!dispatchSucceeded) {
-    return false;
+
+  if (opened != BrowserElementParent::OPEN_WINDOW_ADDED) {
+    return opened;
   }
 
   // Return popupFrameElement's window.
   nsCOMPtr<nsIFrameLoader> frameLoader;
   popupFrameElement->GetFrameLoader(getter_AddRefs(frameLoader));
-  NS_ENSURE_TRUE(frameLoader, false);
+  NS_ENSURE_TRUE(frameLoader, BrowserElementParent::OPEN_WINDOW_IGNORED);
 
   nsCOMPtr<nsIDocShell> docshell;
   frameLoader->GetDocShell(getter_AddRefs(docshell));
-  NS_ENSURE_TRUE(docshell, false);
+  NS_ENSURE_TRUE(docshell, BrowserElementParent::OPEN_WINDOW_IGNORED);
 
   nsCOMPtr<nsIDOMWindow> window = do_GetInterface(docshell);
   window.forget(aReturnWindow);
-  return !!*aReturnWindow;
+
+  return !!*aReturnWindow ? opened : BrowserElementParent::OPEN_WINDOW_CANCELLED;
 }
 
 class DispatchAsyncScrollEventRunnable : public nsRunnable
@@ -302,10 +320,11 @@ NS_IMETHODIMP DispatchAsyncScrollEventRunnable::Run()
     return NS_ERROR_FAILURE;
   }
 
+  nsEventStatus status = nsEventStatus_eIgnore;
   DispatchCustomDOMEvent(frameElement,
                          NS_LITERAL_STRING("mozbrowserasyncscroll"),
                          cx,
-                         val);
+                         val, &status);
   return NS_OK;
 }
 
