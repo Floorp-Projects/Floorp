@@ -18,6 +18,8 @@
 
 #include "nsThreadUtils.h"
 #include "nsHashPropertyBag.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsJSUtils.h"

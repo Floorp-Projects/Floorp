@@ -30,6 +30,7 @@
 #include "nsPrintfCString.h"
 #include "PluginIdentifierParent.h"
 #include "prsystem.h"
+#include "GeckoProfiler.h"
 
 #ifdef XP_WIN
 #include "PluginHangUIParent.h"
