@@ -981,7 +981,7 @@ public:
                  nsCycleCollectorResults *aResults,
                  nsICycleCollectorListener *aListener);
 
-    bool PrepareForCollection(nsCycleCollectorResults *aResults,
+    void PrepareForCollection(nsCycleCollectorResults *aResults,
                               nsTArray<PtrInfo*> *aWhiteNodes);
     void FixGrayBits(bool aForceGC);
     bool ShouldMergeZones(ccType aCCType);
@@ -2599,14 +2599,10 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
     timeLog.Checkpoint("GC()");
 }
 
-bool
+void
 nsCycleCollector::PrepareForCollection(nsCycleCollectorResults *aResults,
                                        nsTArray<PtrInfo*> *aWhiteNodes)
 {
-    // This can legitimately happen in a few cases. See bug 383651.
-    if (mCollectionInProgress)
-        return false;
-
     TimeLog timeLog;
 
     mCollectionStart = TimeStamp::Now();
@@ -2623,8 +2619,6 @@ nsCycleCollector::PrepareForCollection(nsCycleCollectorResults *aResults,
     mWhiteNodes = aWhiteNodes;
 
     timeLog.Checkpoint("PrepareForCollection()");
-
-    return true;
 }
 
 void
@@ -2687,9 +2681,12 @@ nsCycleCollector::Collect(ccType aCCType,
 {
     CheckThreadSafety();
 
-    if (!PrepareForCollection(aResults, aWhiteNodes)) {
+    // This can legitimately happen in a few cases. See bug 383651.
+    if (mCollectionInProgress) {
         return false;
     }
+
+    PrepareForCollection(aResults, aWhiteNodes);
 
     bool forceGC = (aCCType == ShutdownCC);
     if (!forceGC && aListener) {
