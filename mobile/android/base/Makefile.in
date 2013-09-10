@@ -1386,15 +1386,16 @@ res/drawable-xxhdpi/icon.png: $(ICON_PATH_XXHDPI)
 	$(NSINSTALL) -D res/drawable-xxhdpi
 	cp $(ICON_PATH_XXHDPI) $@
 
-$(RES_DIRS): $(subst res/,$(srcdir)/resources/,$(RESOURCES))
-	$(RM) -r $@
-	$(NSINSTALL) -D $@
+$(call mkdir_deps,$(RES_DIRS)): $(subst res/,$(srcdir)/resources/,$(RESOURCES)) Makefile
+	$(RM) -r $(@D)
+	$(NSINSTALL) -D $(@D)
+	$(TOUCH) $@
 
-$(RESOURCES): $(RES_DIRS) $(subst res/,$(srcdir)/resources/,$(RESOURCES))
+$(RESOURCES): $(call mkdir_deps,$(RES_DIRS)) $(subst res/,$(srcdir)/resources/,$(RESOURCES))
 	@echo "creating $@"
 	$(NSINSTALL) $(subst res/,$(srcdir)/resources/,$@) $(dir $@)
 
-res/values/strings.xml: $(RES_DIRS)
+res/values/strings.xml: $(call mkdir_deps,$(RES_DIRS))
 	$(MAKE) -C locales
 
 # With multilocale builds, there will be multiple strings.xml files. We need to

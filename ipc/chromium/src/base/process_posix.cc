@@ -36,16 +36,6 @@ bool Process::SetProcessBackgrounded(bool value) {
   return true;
 }
 
-bool Process::ReduceWorkingSet() {
-  // http://code.google.com/p/chromium/issues/detail?id=8083
-  return false;
-}
-
-bool Process::UnReduceWorkingSet() {
-  // http://code.google.com/p/chromium/issues/detail?id=8083
-  return false;
-}
-
 bool Process::EmptyWorkingSet() {
   // http://code.google.com/p/chromium/issues/detail?id=8083
   return false;

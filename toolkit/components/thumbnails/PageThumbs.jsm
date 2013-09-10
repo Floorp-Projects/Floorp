@@ -17,11 +17,6 @@ const LATEST_STORAGE_VERSION = 3;
 const EXPIRATION_MIN_CHUNK_SIZE = 50;
 const EXPIRATION_INTERVAL_SECS = 3600;
 
-// If a request for a thumbnail comes in and we find one that is "stale"
-// (or don't find one at all) we automatically queue a request to generate a
-// new one.
-const MAX_THUMBNAIL_AGE_SECS = 172800; // 2 days == 60*60*24*2 == 172800 secs.
-
 /**
  * Name of the directory in the profile that contains the thumbnails.
  */
@@ -196,32 +191,6 @@ this.PageThumbs = {
    getThumbnailPath: function PageThumbs_getThumbnailPath(aUrl) {
      return PageThumbsStorage.getFilePathForURL(aUrl);
    },
-
-  /**
-   * Checks if an existing thumbnail for the specified URL is either missing
-   * or stale, and if so, queues a background request to capture it.  That
-   * capture process will send a notification via the observer service on
-   * capture, so consumers should watch for such observations if they want to
-   * be notified of an updated thumbnail.
-   *
-   * @return {Promise} that's resolved on completion.
-   */
-  captureIfStale: function PageThumbs_captureIfStale(aUrl) {
-    let deferredResult = Promise.defer();
-    let filePath = PageThumbsStorage.getFilePathForURL(aUrl);
-    PageThumbsWorker.post(
-      "isFileRecent",
-      [filePath, MAX_THUMBNAIL_AGE_SECS]
-    ).then(result => {
-      if (!result.ok) {
-        // Sadly there is currently a circular dependency between this module
-        // and BackgroundPageThumbs, so do the import locally.
-        let BPT = Cu.import("resource://gre/modules/BackgroundPageThumbs.jsm", {}).BackgroundPageThumbs;
-        BPT.capture(aUrl, {onDone: deferredResult.resolve});
-      }
-    });
-    return deferredResult.promise;
-  },
 
   /**
    * Captures a thumbnail for the given window.
@@ -624,6 +593,11 @@ this.PageThumbsStorage = {
    */
   touchIfExists: function Storage_touchIfExists(aURL) {
     return PageThumbsWorker.post("touchIfExists", [this.getFilePathForURL(aURL)]);
+  },
+
+  isFileRecentForURL: function Storage_isFileRecentForURL(aURL, aMaxSecs) {
+    return PageThumbsWorker.post("isFileRecent",
+                                 [this.getFilePathForURL(aURL), aMaxSecs]);
   },
 
   _calculateMD5Hash: function Storage_calculateMD5Hash(aValue) {

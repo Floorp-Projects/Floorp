@@ -131,10 +131,12 @@ Site.prototype = {
 
     if (this.isPinned())
       this._updateAttributes(true);
+#ifndef RELEASE_BUILD
     // request a staleness check for the thumbnail, which will cause page.js
     // to be notified and call our refreshThumbnail() method.
-    PageThumbs.captureIfStale(this.url);
+    BackgroundPageThumbs.captureIfStale(this.url);
     // but still display whatever thumbnail might be available now.
+#endif
     this.refreshThumbnail();
   },
 
