@@ -402,6 +402,27 @@ toolbarbutton.bookmark-item > menupopup {
   margin: 0 4px;
 }
 
+#nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker::before,
+#nav-bar toolbaritem > .toolbarbutton-1 + .toolbarbutton-1::before {
+  content: "";
+  display: -moz-box;
+  position: absolute;
+  top: calc(50% - 9px);
+  width: 1px;
+  height: 18px;
+  -moz-margin-end: -1px;
+  background-image: linear-gradient(hsla(210,54%,20%,.2) 0, hsla(210,54%,20%,.2) 18px);
+  background-clip: padding-box;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 1px 18px;
+  box-shadow: 0 0 0 1px hsla(0,0%,100%,.2);
+}
+
+#nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+  -moz-margin-start: 10px;
+}
+
 @media not all and (min-resolution: 2dppx) {
 %include ../shared/toolbarbuttons.inc.css
 %include ../shared/menupanel.inc.css
