@@ -148,3 +148,7 @@ user_pref("geo.provider.testing", true);
 // Background thumbnails in particular cause grief, and disabling thumbnails
 // in general can't hurt - we re-enable them when tests need them.
 user_pref("browser.pagethumbnails.capturing_disabled", true);
+
+// Indicate that the download panel has been shown once so that whichever
+// download test runs first doesn't show the popup inconsistently.
+user_pref("browser.download.panel.shown", true);
