@@ -6433,17 +6433,27 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
     Register output = ToRegister(lir->output());
     Register tag = masm.splitTagForTest(value);
 
-    OutOfLineTypeOfV *ool = new OutOfLineTypeOfV(lir);
-    if (!addOutOfLineCode(ool))
-        return false;
-
     JSRuntime *rt = GetIonContext()->runtime;
-
-    // Jump to the OOL path if the value is an object. Objects are complicated
-    // since they may have a typeof hook.
-    masm.branchTestObject(Assembler::Equal, tag, ool->entry());
-
     Label done;
+
+    OutOfLineTypeOfV *ool = NULL;
+    if (lir->mir()->inputMaybeCallableOrEmulatesUndefined()) {
+        // The input may be a callable object (result is "function") or may
+        // emulate undefined (result is "undefined"). Use an OOL path.
+        ool = new OutOfLineTypeOfV(lir);
+        if (!addOutOfLineCode(ool))
+            return false;
+
+        masm.branchTestObject(Assembler::Equal, tag, ool->entry());
+    } else {
+        // Input is not callable and does not emulate undefined, so if
+        // it's an object the result is always "object".
+        Label notObject;
+        masm.branchTestObject(Assembler::NotEqual, tag, &notObject);
+        masm.movePtr(ImmGCPtr(rt->atomState.object), output);
+        masm.jump(&done);
+        masm.bind(&notObject);
+    }
 
     Label notNumber;
     masm.branchTestNumber(Assembler::NotEqual, tag, &notNumber);
@@ -6472,7 +6482,8 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
     masm.movePtr(ImmGCPtr(rt->atomState.string), output);
 
     masm.bind(&done);
-    masm.bind(ool->rejoin());
+    if (ool)
+        masm.bind(ool->rejoin());
     return true;
 }
 

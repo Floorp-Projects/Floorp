@@ -8934,6 +8934,8 @@ IonBuilder::jsop_typeof()
     MDefinition *input = current->pop();
     MTypeOf *ins = MTypeOf::New(input, input->type());
 
+    ins->infer(cx);
+
     current->add(ins);
     current->push(ins);
 
