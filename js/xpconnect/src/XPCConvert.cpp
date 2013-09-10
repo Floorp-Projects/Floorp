@@ -10,12 +10,8 @@
 #include "mozilla/Util.h"
 
 #include "xpcprivate.h"
-#include "nsString.h"
 #include "nsIAtom.h"
-#include "XPCWrapper.h"
-#include "nsJSPrincipals.h"
 #include "nsWrapperCache.h"
-#include "AccessCheck.h"
 #include "nsJSUtils.h"
 #include "WrapperFactory.h"
 

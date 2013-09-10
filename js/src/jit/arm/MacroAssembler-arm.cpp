@@ -2589,13 +2589,21 @@ MacroAssemblerARMCompat::unboxDouble(const Address &src, const FloatRegister &de
 }
 
 void
-MacroAssemblerARMCompat::unboxString(const ValueOperand &operand, const Register &dest) {
+MacroAssemblerARMCompat::unboxString(const ValueOperand &operand, const Register &dest)
+{
     ma_mov(operand.payloadReg(), dest);
 }
 
 void
-MacroAssemblerARMCompat::unboxString(const Address &src, const Register &dest) {
+MacroAssemblerARMCompat::unboxString(const Address &src, const Register &dest)
+{
     ma_ldr(payloadOf(src), dest);
+}
+
+void
+MacroAssemblerARMCompat::unboxObject(const ValueOperand &src, const Register &dest)
+{
+    ma_mov(src.payloadReg(), dest);
 }
 
 void

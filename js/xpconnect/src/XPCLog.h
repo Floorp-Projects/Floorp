@@ -9,8 +9,6 @@
 #ifndef xpclog_h___
 #define xpclog_h___
 
-#include "nsIXPConnect.h"
-#include "prtypes.h"
 #include "prlog.h"
 
 /*

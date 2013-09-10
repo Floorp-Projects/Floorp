@@ -8,9 +8,7 @@
 
 #include "nsIScriptContext.h"
 #include "mozilla/dom/EventTarget.h"
-#include "nsJSUtils.h"
 #include "nsDOMJSUtils.h"
-#include "mozilla/Util.h"
 #include "xpcprivate.h"
 
 using mozilla::dom::EventTarget;

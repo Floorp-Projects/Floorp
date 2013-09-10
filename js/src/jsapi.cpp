@@ -519,7 +519,7 @@ JS_TypeOfValue(JSContext *cx, jsval valueArg)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
-    return TypeOfValue(cx, value);
+    return TypeOfValue(value);
 }
 
 JS_PUBLIC_API(const char *)

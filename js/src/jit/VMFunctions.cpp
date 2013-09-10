@@ -123,6 +123,22 @@ CheckOverRecursed(JSContext *cx)
 }
 
 bool
+CheckOverRecursedWithExtra(JSContext *cx, uint32_t extra)
+{
+    // See |CheckOverRecursed| above.  This is a variant of that function which
+    // accepts an argument holding the extra stack space needed for the Baseline
+    // frame that's about to be pushed.
+    uint8_t spDummy;
+    uint8_t *checkSp = (&spDummy) - extra;
+    JS_CHECK_RECURSION_WITH_SP(cx, checkSp, return false);
+
+    if (cx->runtime()->interrupt)
+        return InterruptCheck(cx);
+
+    return true;
+}
+
+bool
 DefVarOrConst(JSContext *cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain)
 {
     // Given the ScopeChain, extract the VarObj.

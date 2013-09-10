@@ -9,6 +9,7 @@
 #include "nsMemory.h"
 #include "mozilla/Preferences.h"
 #include "mozJSComponentLoader.h"
+#include "nsZipArchive.h"
 
 #define JSPERF_CONTRACTID \
   "@mozilla.org/jsperf;1"

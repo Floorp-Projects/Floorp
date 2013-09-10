@@ -131,9 +131,6 @@ extern bool
 SetElementHelper(JSContext *cx, HandleObject obj, HandleObject Receiver, uint32_t index,
                  unsigned defineHow, MutableHandleValue vp, bool strict);
 
-extern JSType
-TypeOf(JSContext *cx, HandleObject obj);
-
 extern bool
 GetAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
 
@@ -1374,14 +1371,11 @@ IsDelegate(JSContext *cx, HandleObject obj, const Value &v, bool *result);
 bool
 GetObjectElementOperationPure(ThreadSafeContext *cx, JSObject *obj, const Value &prop, Value *vp);
 
-} /* namespace js */
+/* Wrap boolean, number or string as Boolean, Number or String object. */
+extern JSObject *
+PrimitiveToObject(JSContext *cx, const Value &v);
 
-/*
- * Wrap boolean, number or string as Boolean, Number or String object.
- * *vp must not be an object, null or undefined.
- */
-extern bool
-js_PrimitiveToObject(JSContext *cx, js::Value *vp);
+} /* namespace js */
 
 extern bool
 js_ValueToObjectOrNull(JSContext *cx, const js::Value &v, JS::MutableHandleObject objp);
