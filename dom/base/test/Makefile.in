@@ -35,6 +35,7 @@ MOCHITEST_FILES = \
   test_messageChannel_unshipped.html \
   test_messageChannel_pref.html \
   test_url.html \
+  test_bug913761.html \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \
