@@ -220,22 +220,11 @@ class ProcessFilter {
 int GetProcessCount(const std::wstring& executable_name,
                     const ProcessFilter* filter);
 
-// Attempts to kill all the processes on the current machine that were launched
-// from the given executable name, ending them with the given exit code.  If
-// filter is non-null, then only processes selected by the filter are killed.
-// Returns false if all processes were able to be killed off, false if at least
-// one couldn't be killed.
-bool KillProcesses(const std::wstring& executable_name, int exit_code,
-                   const ProcessFilter* filter);
-
 // Attempts to kill the process identified by the given process
 // entry structure, giving it the specified exit code. If |wait| is true, wait
 // for the process to be actually terminated before returning.
 // Returns true if this is successful, false otherwise.
 bool KillProcess(ProcessHandle process, int exit_code, bool wait);
-#if defined(OS_WIN)
-bool KillProcessById(ProcessId process_id, int exit_code, bool wait);
-#endif
 
 // Get the termination status (exit code) of the process and return true if the
 // status indicates the process crashed. |child_exited| is set to true iff the
@@ -251,25 +240,6 @@ bool DidProcessCrash(bool* child_exited, ProcessHandle handle);
 // a failure. On Windows |exit_code| is always filled. Returns true on success,
 // and closes |handle| in any case.
 bool WaitForExitCode(ProcessHandle handle, int* exit_code);
-
-// Wait for all the processes based on the named executable to exit.  If filter
-// is non-null, then only processes selected by the filter are waited on.
-// Returns after all processes have exited or wait_milliseconds have expired.
-// Returns true if all the processes exited, false otherwise.
-bool WaitForProcessesToExit(const std::wstring& executable_name,
-                            int wait_milliseconds,
-                            const ProcessFilter* filter);
-
-// Waits a certain amount of time (can be 0) for all the processes with a given
-// executable name to exit, then kills off any of them that are still around.
-// If filter is non-null, then only processes selected by the filter are waited
-// on.  Killed processes are ended with the given exit code.  Returns false if
-// any processes needed to be killed, true if they all exited cleanly within
-// the wait_milliseconds delay.
-bool CleanupProcesses(const std::wstring& executable_name,
-                      int wait_milliseconds,
-                      int exit_code,
-                      const ProcessFilter* filter);
 
 // This class provides a way to iterate through the list of processes
 // on the current machine that were started from the given executable
