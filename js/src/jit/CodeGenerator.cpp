@@ -6756,9 +6756,9 @@ CodeGenerator::visitStoreTypedArrayElementHole(LStoreTypedArrayElementHole *lir)
 bool
 CodeGenerator::visitClampIToUint8(LClampIToUint8 *lir)
 {
-    Register input = ToRegister(lir->input());
     Register output = ToRegister(lir->output());
-    masm.clampIntToUint8(input, output);
+    JS_ASSERT(output == ToRegister(lir->input()));
+    masm.clampIntToUint8(output);
     return true;
 }
 
