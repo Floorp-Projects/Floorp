@@ -195,6 +195,26 @@ const BackgroundPageThumbs = {
 
     this._parentWin.document.documentElement.appendChild(browser);
 
+    // an event that is sent if the remote process crashes - no need to remove
+    // it as we want it to be there as long as the browser itself lives.
+    browser.addEventListener("oop-browser-crashed", () => {
+      Cu.reportError("BackgroundThumbnails remote process crashed - recovering");
+      this._destroyBrowser();
+      let curCapture = this._captureQueue.length ? this._captureQueue[0] : null;
+      // we could retry the pending capture, but it's possible the crash
+      // was due directly to it, so trying again might just crash again.
+      // We could keep a flag to indicate if it previously crashed, but
+      // "resetting" the capture requires more work - so for now, we just
+      // discard it.
+      if (curCapture && curCapture.pending) {
+        curCapture._done(null);
+        // _done automatically continues queue processing.
+      }
+      // else: we must have been idle and not currently doing a capture (eg,
+      // maybe a GC or similar crashed) - so there's no need to attempt a
+      // queue restart - the next capture request will set everything up.
+    });
+
     browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
     this._thumbBrowser = browser;
   },
@@ -226,7 +246,8 @@ const BackgroundPageThumbs = {
   },
 
   /**
-   * Called when the current capture completes or times out.
+   * Called when the current capture completes or fails (eg, times out, remote
+   * process crashes.)
    */
   _onCaptureOrTimeout: function (capture) {
     // Since timeouts start as an item is being processed, only the first
