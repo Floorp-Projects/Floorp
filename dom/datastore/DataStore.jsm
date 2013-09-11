@@ -6,7 +6,7 @@
 
 'use strict'
 
-var EXPORTED_SYMBOLS = ["DataStore"];
+var EXPORTED_SYMBOLS = ["DataStore", "DataStoreAccess"];
 
 function debug(s) {
   // dump('DEBUG DataStore: ' + s + '\n');
@@ -204,7 +204,7 @@ DataStore.prototype = {
       new aWindow.DOMError("ReadOnlyError", "DataStore in readonly mode"));
   },
 
-  exposeObject: function(aWindow) {
+  exposeObject: function(aWindow, aReadOnly) {
     let self = this;
     let object = {
 
@@ -219,7 +219,7 @@ DataStore.prototype = {
       },
 
       get readOnly() {
-        return self.readOnly;
+        return aReadOnly;
       },
 
       get: function DS_get(aId) {
@@ -242,7 +242,7 @@ DataStore.prototype = {
           return self.throwInvalidArg(aWindow);
         }
 
-        if (self.readOnly) {
+        if (aReadOnly) {
           return self.throwReadOnly(aWindow);
         }
 
@@ -255,7 +255,7 @@ DataStore.prototype = {
       },
 
       add: function DS_add(aObj) {
-        if (self.readOnly) {
+        if (aReadOnly) {
           return self.throwReadOnly(aWindow);
         }
 
@@ -273,7 +273,7 @@ DataStore.prototype = {
           return self.throwInvalidArg(aWindow);
         }
 
-        if (self.readOnly) {
+        if (aReadOnly) {
           return self.throwReadOnly(aWindow);
         }
 
@@ -286,7 +286,7 @@ DataStore.prototype = {
       },
 
       clear: function DS_clear() {
-        if (self.readOnly) {
+        if (aReadOnly) {
           return self.throwReadOnly(aWindow);
         }
 
@@ -424,3 +424,15 @@ DataStore.prototype = {
     this.db.delete();
   }
 };
+
+/* DataStoreAccess */
+
+function DataStoreAccess(aAppId, aName, aOrigin, aReadOnly) {
+  this.appId = aAppId;
+  this.name = aName;
+  this.origin = aOrigin;
+  this.readOnly = aReadOnly;
+}
+
+DataStoreAccess.prototype = {};
+

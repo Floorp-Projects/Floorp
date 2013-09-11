@@ -15,7 +15,7 @@
   <script type="application/javascript;version=1.7">
 
   var gBaseURL = 'http://test/tests/dom/datastore/tests/';
-  var gHostedManifestURL = gBaseURL + 'file_app.sjs';
+  var gHostedManifestURL = gBaseURL + 'file_app.sjs?testToken=file_revision.html';
   var gApp;
   var gStore;
   var gPreviousRevisionId = '';
@@ -34,70 +34,9 @@
     }
   }
 
-  function testGetDataStores() {
-    navigator.getDataStores('foo').then(function(stores) {
-      is(stores.length, 1, "getDataStores('foo') returns 1 element");
-      is(stores[0].name, 'foo', 'The dataStore.name is foo');
-      is(stores[0].readOnly, false, 'The dataStore foo is not in readonly');
-
-      gStore = stores[0];
-
-      runTest();
-    }, cbError);
-  }
-
-  function testStoreAdd(value, expectedId) {
-    return gStore.add(value).then(function(id) {
-      is(id, expectedId, "store.add() is called");
-      runTest();
-    }, cbError);
-  }
-
-  function testStoreUpdate(id, value) {
-    return gStore.update(id, value).then(function(retId) {
-      is(id, retId, "store.update() is called with the right id");
-      runTest();
-    }, cbError);
-  }
-
-  function testStoreRemove(id, expectedSuccess) {
-    return gStore.remove(id).then(function(success) {
-      is(success, expectedSuccess, "store.remove() returns the right value");
-      runTest();
-    }, cbError);
-  }
-
-  function testStoreRevisionId() {
-    is(/[0-9a-zA-Z]{8}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{12}/.test(gStore.revisionId), true, "store.revisionId returns something");
-    runTest();
-  }
-
-  function testStoreWrongRevisions(id) {
-    return gStore.getChanges(id).then(
-      function(what) {
-        is(what, undefined, "Wrong revisionId == undefined object");
-        runTest();
-      }, cbError);
-  }
-
-  function testStoreRevisions(id, changes) {
-    return gStore.getChanges(id).then(function(what) {
-      is(JSON.stringify(changes.addedIds),
-         JSON.stringify(what.addedIds), "store.revisions - addedIds: " +
-         JSON.stringify(what.addedIds) + " | " + JSON.stringify(changes.addedIds));
-      is(JSON.stringify(changes.updatedIds),
-         JSON.stringify(what.updatedIds), "store.revisions - updatedIds: " +
-         JSON.stringify(what.updatedIds) + " | " + JSON.stringify(changes.updatedIds));
-      is(JSON.stringify(changes.removedIds),
-         JSON.stringify(what.removedIds), "store.revisions - removedIds: " +
-         JSON.stringify(what.removedIds) + " | " + JSON.stringify(changes.removedIds));
-      runTest();
-    }, cbError);
-  }
-
   function uninstallApp() {
     // Uninstall the app.
-    request = navigator.mozApps.mgmt.uninstall(gApp);
+    var request = navigator.mozApps.mgmt.uninstall(gApp);
     request.onerror = cbError;
     request.onsuccess = function() {
       // All done.
@@ -106,15 +45,31 @@
     }
   }
 
-  function testStoreRevisionIdChanged() {
-    isnot(gStore.revisionId, gPreviousRevisionId, "Revision changed");
-    gPreviousRevisionId = gStore.revisionId;
-    runTest();
-  }
+  function testApp() {
+    var ifr = document.createElement('iframe');
+    ifr.setAttribute('mozbrowser', 'true');
+    ifr.setAttribute('mozapp', gApp.manifestURL);
+    ifr.setAttribute('src', gApp.manifest.launch_path);
+    var domParent = document.getElementById('content');
 
-  function testStoreRevisionIdNotChanged() {
-    is(gStore.revisionId, gPreviousRevisionId, "Revision changed");
-    runTest();
+    // Set us up to listen for messages from the app.
+    var listener = function(e) {
+      var message = e.detail.message;
+      if (/^OK/.exec(message)) {
+        ok(true, "Message from app: " + message);
+      } else if (/KO/.exec(message)) {
+        ok(false, "Message from app: " + message);
+      } else if (/DONE/.exec(message)) {
+        ok(true, "Messaging from app complete");
+        ifr.removeEventListener('mozbrowsershowmodalprompt', listener);
+        domParent.removeChild(ifr);
+        runTest();
+      }
+    }
+
+    // This event is triggered when the app calls "alert".
+    ifr.addEventListener('mozbrowsershowmodalprompt', listener, false);
+    domParent.appendChild(ifr);
   }
 
   var revisions = [];
@@ -133,6 +88,11 @@
       SpecialPowers.pushPrefEnv({"set": [["dom.promise.enabled", true]]}, runTest);
     },
 
+    // Enabling mozBrowser
+    function() {
+      SpecialPowers.pushPrefEnv({"set": [["dom.mozBrowserFramesEnabled", true]]}, runTest);
+    },
+
     // No confirmation needed when an app is installed
     function() {
       SpecialPowers.autoConfirmAppInstall(runTest);
@@ -141,72 +101,8 @@
     // Installing the app
     installApp,
 
-    // Test for GetDataStore
-    testGetDataStores,
-
-    // The first revision is not empty
-    testStoreRevisionIdChanged,
-
-    // wrong revision ID
-    function() { testStoreWrongRevisions('foobar'); },
-
-    // Add
-    function() { testStoreAdd({ number: 42 }, 1); },
-    function() { revisions.push(gStore.revisionId); testStoreRevisionId(); },
-    testStoreRevisionIdChanged,
-    function() { testStoreRevisions(revisions[0], { addedIds: [], updatedIds: [], removedIds: [] }); },
-
-    // Add
-    function() { testStoreAdd({ number: 42 }, 2); },
-    function() { revisions.push(gStore.revisionId); runTest(); },
-    testStoreRevisionIdChanged,
-    function() { testStoreRevisions(revisions[0], { addedIds: [2], updatedIds: [], removedIds: [] }); },
-    function() { testStoreRevisions(revisions[1], { addedIds: [], updatedIds: [], removedIds: [] }); },
-
-    // Add
-    function() { testStoreAdd({ number: 42 }, 3); },
-    function() { revisions.push(gStore.revisionId); runTest(); },
-    testStoreRevisionIdChanged,
-    function() { testStoreRevisions(revisions[0], { addedIds: [2,3], updatedIds: [], removedIds: [] }); },
-    function() { testStoreRevisions(revisions[1], { addedIds: [3], updatedIds: [], removedIds: [] }); },
-    function() { testStoreRevisions(revisions[2], { addedIds: [], updatedIds: [], removedIds: [] }); },
-
-    // Update
-    function() { testStoreUpdate(3, { number: 43 }); },
-    function() { revisions.push(gStore.revisionId); runTest(); },
-    testStoreRevisionIdChanged,
-    function() { testStoreRevisions(revisions[0], { addedIds: [2,3], updatedIds: [], removedIds: [] }); },
-    function() { testStoreRevisions(revisions[1], { addedIds: [3], updatedIds: [], removedIds: [] }); },
-    function() { testStoreRevisions(revisions[2], { addedIds: [], updatedIds: [3], removedIds: [] }); },
-    function() { testStoreRevisions(revisions[3], { addedIds: [], updatedIds: [], removedIds: [] }); },
-
-    // Update
-    function() { testStoreUpdate(3, { number: 42 }); },
-    function() { revisions.push(gStore.revisionId); runTest(); },
-    testStoreRevisionIdChanged,
-    function() { testStoreRevisions(revisions[0], { addedIds: [2,3], updatedIds: [], removedIds: [] }); },
-    function() { testStoreRevisions(revisions[1], { addedIds: [3], updatedIds: [], removedIds: [] }); },
-    function() { testStoreRevisions(revisions[2], { addedIds: [], updatedIds: [3], removedIds: [] }); },
-    function() { testStoreRevisions(revisions[3], { addedIds: [], updatedIds: [3], removedIds: [] }); },
-    function() { testStoreRevisions(revisions[4], { addedIds: [], updatedIds: [], removedIds: [] }); },
-
-    // Remove
-    function() { testStoreRemove(3, true); },
-    function() { revisions.push(gStore.revisionId); runTest(); },
-    testStoreRevisionIdChanged,
-    function() { testStoreRevisions(revisions[0], { addedIds: [2], updatedIds: [], removedIds: [] }); },
-    function() { testStoreRevisions(revisions[1], { addedIds: [], updatedIds: [], removedIds: [] }); },
-    function() { testStoreRevisions(revisions[2], { addedIds: [], updatedIds: [], removedIds: [3] }); },
-    function() { testStoreRevisions(revisions[3], { addedIds: [], updatedIds: [], removedIds: [3] }); },
-    function() { testStoreRevisions(revisions[4], { addedIds: [], updatedIds: [], removedIds: [3] }); },
-    function() { testStoreRevisions(revisions[5], { addedIds: [], updatedIds: [], removedIds: [] }); },
-
-    function() { testStoreRemove(3, false); },
-    testStoreRevisionIdNotChanged,
-
-    // Remove
-    function() { testStoreRemove(42, false); },
-    testStoreRevisionIdNotChanged,
+    // Run tests in app
+    testApp,
 
     // Uninstall the app
     uninstallApp
