@@ -82,17 +82,6 @@ function _Worker(browserPromise, options) {
 }
 
 _Worker.prototype = {
-  reload: function() {
-    // In the future, it would be nice to just throw away the browser element
-    // and re-create from scratch.  The complication there would be the need
-    // to reconnect existing ports - but even that might be managable.
-    // However, bug 899908 calls for 'reload' to be dropped, so let's do that
-    // instead!
-    this.browserPromise.then(browser => {
-      browser.messageManager.sendAsyncMessage("frameworker:reload");
-    });
-  },
-
   // Message handler.
   receiveMessage: function(msg) {
     switch (msg.name) {
