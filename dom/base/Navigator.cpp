@@ -25,7 +25,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "BatteryManager.h"
-#include "PowerManager.h"
+#include "mozilla/dom/PowerManager.h"
 #include "nsIDOMWakeLock.h"
 #include "nsIPowerManagerService.h"
 #include "mozilla/dom/MobileMessageManager.h"
@@ -77,8 +77,6 @@
 
 #include "mozilla/dom/NavigatorBinding.h"
 #include "mozilla/dom/Promise.h"
-
-using namespace mozilla::dom::power;
 
 // This should not be in the namespace.
 DOMCI_DATA(Navigator, mozilla::dom::Navigator)
@@ -1124,7 +1122,7 @@ Navigator::GetDataStores(const nsAString& aName, ErrorResult& aRv)
   return p.forget();
 }
 
-power::PowerManager*
+PowerManager*
 Navigator::GetMozPower(ErrorResult& aRv)
 {
   if (!mPowerManager) {
