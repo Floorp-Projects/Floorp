@@ -39,6 +39,7 @@
 #include <sys/resource.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
+#include <sys/prctl.h> // set name
 #include <stdlib.h>
 #include <sched.h>
 #ifdef ANDROID
@@ -241,6 +242,8 @@ Sampler::FreePlatformData(PlatformData* aData)
 }
 
 static void* SignalSender(void* arg) {
+  // Taken from platform_thread_posix.cc
+  prctl(PR_SET_NAME, "SamplerThread", 0, 0, 0);
 # if defined(ANDROID)
   // pthread_atfork isn't available on Android.
   void* initialize_atfork = NULL;
