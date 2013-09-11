@@ -73,6 +73,7 @@ var ignoreCallees = {
     "icu_50::UObject.__deleting_dtor" : true, // destructors in ICU code can't cause GC
     "mozilla::CycleCollectedJSRuntime.DescribeCustomObjects" : true, // During tracing, cannot GC.
     "mozilla::CycleCollectedJSRuntime.NoteCustomGCThingXPCOMChildren" : true, // During tracing, cannot GC.
+    "nsIThreadManager.GetIsMainThread" : true,
 };
 
 function fieldCallCannotGC(csu, fullfield)
@@ -138,6 +139,7 @@ var ignoreFunctions = {
     "PR_ErrorInstallTable" : true,
     "PR_SetThreadPrivate" : true,
     "JSObject* js::GetWeakmapKeyDelegate(JSObject*)" : true, // FIXME: mark with AutoAssertNoGC instead
+    "uint8 NS_IsMainThread()" : true,
 
     // These are a little overzealous -- these destructors *can* GC if they end
     // up wrapping a pending exception. See bug 898815 for the heavyweight fix.
