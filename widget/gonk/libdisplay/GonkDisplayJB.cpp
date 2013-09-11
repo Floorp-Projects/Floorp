@@ -171,6 +171,12 @@ GonkDisplayJB::GetHWCDevice()
     return mHwc;
 }
 
+void*
+GonkDisplayJB::GetFBSurface()
+{
+    return mFBSurface.get();
+}
+
 bool
 GonkDisplayJB::SwapBuffers(EGLDisplay dpy, EGLSurface sur)
 {
