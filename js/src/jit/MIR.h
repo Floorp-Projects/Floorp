@@ -3946,7 +3946,6 @@ class MComputeThis
       : MUnaryInstruction(def)
     {
         setResultType(MIRType_Object);
-        setResultTypeSet(def->resultTypeSet());
     }
 
   public:
