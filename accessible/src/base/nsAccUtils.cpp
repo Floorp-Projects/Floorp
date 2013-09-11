@@ -15,10 +15,13 @@
 #include "Role.h"
 #include "States.h"
 #include "TextLeafAccessible.h"
+#include "nsIMutableArray.h"
 
 #include "nsIDOMXULContainerElement.h"
-#include "nsIPersistentProperties2.h"
-#include "mozilla/dom/Element.h"
+#include "nsIDOMXULSelectCntrlEl.h"
+#include "nsIDOMXULSelectCntrlItemEl.h"
+#include "nsWhitespaceTokenizer.h"
+#include "nsComponentManagerUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

@@ -12,7 +12,6 @@
 #include "States.h"
 
 #include "nsIMutableArray.h"
-#include "nsIPersistentProperties2.h"
 #include "nsComponentManagerUtils.h"
 
 using namespace mozilla;

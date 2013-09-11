@@ -28,7 +28,6 @@
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDocument.h"
 #include "nsIMutableArray.h"
-#include "nsIPersistentProperties2.h"
 #include "nsIPresShell.h"
 #include "nsITableCellLayout.h"
 #include "nsFrameSelection.h"

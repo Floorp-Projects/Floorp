@@ -14,9 +14,7 @@
 #include "Role.h"
 #include "States.h"
 
-#include "nsIBoxObject.h"
 #include "nsIMutableArray.h"
-#include "nsIPersistentProperties2.h"
 #include "nsITreeSelection.h"
 #include "nsComponentManagerUtils.h"
 

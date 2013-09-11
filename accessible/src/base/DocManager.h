@@ -8,6 +8,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMEventListener.h"
 #include "nsRefPtrHashtable.h"
+#include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 #include "nsIPresShell.h"
