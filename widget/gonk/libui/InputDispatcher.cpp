@@ -47,7 +47,7 @@
 #include "InputDispatcher.h"
 
 #include "Trace.h"
-#include "mozilla/dom/PowerManager.h"
+#include "PowerManager.h"
 
 #include <stddef.h>
 #include <unistd.h>
