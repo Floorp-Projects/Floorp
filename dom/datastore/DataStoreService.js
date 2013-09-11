@@ -137,9 +137,9 @@ DataStoreService.prototype = {
               resolver.resolve(results);
             }
           },
-          function() {
-            resolver.reject();
-          }
+          // if the revision is already known, we don't need to retrieve it
+          // again.
+          false
         );
       }
     });

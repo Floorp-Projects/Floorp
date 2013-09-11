@@ -1,5 +1,4 @@
 var gBasePath = "tests/dom/datastore/tests/";
-var gAppTemplatePath = "tests/dom/datastore/tests/file_app.template.webapp";
 
 function handleRequest(request, response) {
   var query = getQuery(request);
@@ -9,7 +8,11 @@ function handleRequest(request, response) {
     testToken = query.testToken;
   }
 
-  var template = gBasePath + 'file_app.template.webapp';
+  var template = 'file_app.template.webapp';
+  if ('template' in query) {
+    template = query.template;
+  }
+  var template = gBasePath + template;
   response.setHeader("Content-Type", "application/x-web-app-manifest+json", false);
   response.write(readTemplate(template).replace(/TESTTOKEN/g, testToken));
 }
