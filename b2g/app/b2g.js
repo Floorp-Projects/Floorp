@@ -523,6 +523,9 @@ pref("app.update.log", true);
 pref("shutdown.watchdog.timeoutSecs", -1);
 #endif
 
+// Check daily for apps updates.
+pref("webapps.update.interval", 86400);
+
 // Extensions preferences
 pref("extensions.update.enabled", false);
 pref("extensions.getAddons.cache.enabled", false);

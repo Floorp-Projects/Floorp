@@ -73,3 +73,8 @@ contract @mozilla.org/network/protocol/about;1?what=certerror {920400b1-cf8f-476
 # FilePicker.js
 component {436ff8f9-0acc-4b11-8ec7-e293efba3141} FilePicker.js
 contract @mozilla.org/filepicker;1 {436ff8f9-0acc-4b11-8ec7-e293efba3141}
+
+# WebappsUpdateTimer.js
+component {637b0f77-2429-49a0-915f-abf5d0db8b9a} WebappsUpdateTimer.js
+contract @mozilla.org/b2g/webapps-update-timer;1 {637b0f77-2429-49a0-915f-abf5d0db8b9a}
+category update-timer WebappsUpdateTimer @mozilla.org/b2g/webapps-update-timer;1,getService,background-update-timer,webapps.update.interval,86400
