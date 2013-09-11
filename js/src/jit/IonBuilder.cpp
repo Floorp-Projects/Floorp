@@ -9559,7 +9559,7 @@ IonBuilder::loadTypedObjectType(MDefinition *typedObj)
         return typedObj->toNewDerivedTypedObject()->type();
 
     MInstruction *load = MLoadFixedSlot::New(typedObj,
-                                             JS_TYPEDOBJ_SLOT_TYPE_OBJ);
+                                             JS_DATUM_SLOT_TYPE_OBJ);
     current->add(load);
     return load;
 }
