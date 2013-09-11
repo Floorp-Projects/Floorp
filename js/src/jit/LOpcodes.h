@@ -58,6 +58,7 @@
     _(GetArgumentsObjectArg)        \
     _(SetArgumentsObjectArg)        \
     _(ReturnFromCtor)               \
+    _(ComputeThis)                  \
     _(BitNotI)                      \
     _(BitNotV)                      \
     _(BitOpI)                       \

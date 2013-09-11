@@ -9,9 +9,7 @@
 
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
-#include "mozilla/Mutex.h"
 #include "nsDOMJSUtils.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsNullPrincipal.h"
 #include "mozilla/dom/BindingUtils.h"
 

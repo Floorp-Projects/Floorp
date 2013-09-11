@@ -3364,7 +3364,8 @@ IonBuilder::jsop_try()
         return abort("Try-catch support disabled");
 
     // Try-finally is not yet supported.
-    JS_ASSERT(!script()->analysis()->hasTryFinally());
+    if (script()->analysis()->hasTryFinally())
+        return abort("Has try-finally");
 
     graph().setHasTryBlock();
 
@@ -7270,8 +7271,8 @@ IonBuilder::setElemTryCache(bool *emitted, MDefinition *object,
         return true;
 
     bool needsBarrier;
-    if (PropertyWriteNeedsTypeBarrier(cx, current, &object, NULL, &value, /* canModify = */ true,
-                                      &needsBarrier))
+    if (!PropertyWriteNeedsTypeBarrier(cx, current, &object, NULL, &value, /* canModify = */ true,
+                                       &needsBarrier))
     {
         return false;
     }
@@ -8884,7 +8885,8 @@ IonBuilder::jsop_this()
     if (!info().fun())
         return abort("JSOP_THIS outside of a JSFunction.");
 
-    if (script()->strict) {
+    if (script()->strict || info().fun()->isSelfHostedBuiltin()) {
+        // No need to wrap primitive |this| in strict mode or self-hosted code.
         current->pushSlot(info().thisSlot());
         return true;
     }
@@ -8909,7 +8911,22 @@ IonBuilder::jsop_this()
         return true;
     }
 
-    return abort("JSOP_THIS hard case not yet handled");
+    // Hard case: |this| may be a primitive we have to wrap.
+    MDefinition *def = current->getSlot(info().thisSlot());
+
+    if (def->type() == MIRType_Object) {
+        // If we already computed a |this| object, we can reuse it.
+        current->push(def);
+        return true;
+    }
+
+    MComputeThis *thisObj = MComputeThis::New(def);
+    current->add(thisObj);
+    current->push(thisObj);
+
+    current->setSlot(info().thisSlot(), thisObj);
+
+    return resumeAfter(thisObj);
 }
 
 bool
@@ -8918,11 +8935,11 @@ IonBuilder::jsop_typeof()
     MDefinition *input = current->pop();
     MTypeOf *ins = MTypeOf::New(input, input->type());
 
+    ins->infer(cx);
+
     current->add(ins);
     current->push(ins);
 
-    if (ins->isEffectful() && !resumeAfter(ins))
-        return false;
     return true;
 }
 

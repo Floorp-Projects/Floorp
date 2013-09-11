@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Attributes.h"
-#include "mozilla/GuardObjects.h"
 
 #include "jswrapper.h"
 
@@ -15,8 +14,6 @@
 // Because they work so differently from the rest of the wrapper hierarchy,
 // we pull them out of the Wrapper inheritance hierarchy and create a
 // little world around them.
-
-class XPCWrappedNative;
 
 namespace xpc {
 
@@ -48,7 +45,6 @@ HasNativeProperty(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id,
 
 class XrayTraits;
 class XPCWrappedNativeXrayTraits;
-class ProxyXrayTraits;
 class DOMXrayTraits;
 
 

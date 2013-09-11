@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsCycleCollectionHoldDrop_h_
-#define nsCycleCollectionHoldDrop_h_
+#ifndef mozilla_HoldDropJSObjects_h
+#define mozilla_HoldDropJSObjects_h
 
 #include "mozilla/TypeTraits.h"
 #include "nsCycleCollectionParticipant.h"
@@ -68,4 +68,4 @@ void DropJSObjects(T* aHolder)
 
 } // namespace mozilla
 
-#endif // nsCycleCollectionHoldDrop_h_
+#endif // mozilla_HoldDropJSObjects_h

@@ -60,11 +60,18 @@ CompositableHost::AddTextureHost(TextureHost* aTexture)
 void
 CompositableHost::RemoveTextureHost(uint64_t aTextureID)
 {
+  if (mFirstTexture && mFirstTexture->GetID() == aTextureID) {
+    RefPtr<TextureHost> toRemove = mFirstTexture;
+    mFirstTexture = mFirstTexture->GetNextSibling();
+    toRemove->SetNextSibling(nullptr);
+  }
   RefPtr<TextureHost> it = mFirstTexture;
   while (it) {
     if (it->GetNextSibling() &&
         it->GetNextSibling()->GetID() == aTextureID) {
+      RefPtr<TextureHost> toRemove = it->GetNextSibling();
       it->SetNextSibling(it->GetNextSibling()->GetNextSibling());
+      toRemove->SetNextSibling(nullptr);
     }
     it = it->GetNextSibling();
   }

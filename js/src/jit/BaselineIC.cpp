@@ -1601,10 +1601,11 @@ DoThisFallback(JSContext *cx, ICThis_Fallback *stub, HandleValue thisv, MutableH
 {
     FallbackICSpew(cx, stub, "This");
 
-    ret.set(thisv);
-    bool modified;
-    if (!BoxNonStrictThis(cx, ret, &modified))
+    JSObject *thisObj = BoxNonStrictThis(cx, thisv);
+    if (!thisObj)
         return false;
+
+    ret.setObject(*thisObj);
     return true;
 }
 
@@ -8829,8 +8830,8 @@ DoTypeOfFallback(JSContext *cx, BaselineFrame *frame, ICTypeOf_Fallback *stub, H
                  MutableHandleValue res)
 {
     FallbackICSpew(cx, stub, "TypeOf");
-    JSType type = JS_TypeOfValue(cx, val);
-    RootedString string(cx, TypeName(type, cx));
+    JSType type = js::TypeOfValue(val);
+    RootedString string(cx, TypeName(type, cx->runtime()));
 
     res.setString(string);
 

@@ -283,12 +283,15 @@ class Build(MachCommandBase):
     @CommandArgument('--jobs', '-j', default='0', metavar='jobs', type=int,
         help='Number of concurrent jobs to run. Default is the number of CPUs.')
     @CommandArgument('what', default=None, nargs='*', help=BUILD_WHAT_HELP)
+    @CommandArgument('-p', '--pymake', action='store_true',
+        help='Force using pymake over GNU make.')
     @CommandArgument('-X', '--disable-extra-make-dependencies',
                      default=False, action='store_true',
                      help='Do not add extra make dependencies.')
     @CommandArgument('-v', '--verbose', action='store_true',
         help='Verbose output for what commands the build is running.')
-    def build(self, what=None, disable_extra_make_dependencies=None, jobs=0, verbose=False):
+    def build(self, what=None, pymake=False,
+        disable_extra_make_dependencies=None, jobs=0, verbose=False):
         import which
         from mozbuild.controller.building import BuildMonitor
         from mozbuild.util import resolve_target_to_make
@@ -358,7 +361,8 @@ class Build(MachCommandBase):
                     status = self._run_make(directory=make_dir, target=make_target,
                         line_handler=output.on_line, log=False, print_directory=False,
                         ensure_exit_code=False, num_jobs=jobs, silent=not verbose,
-                        append_env={b'NO_BUILDSTATUS_MESSAGES': b'1'})
+                        append_env={b'NO_BUILDSTATUS_MESSAGES': b'1'},
+                        force_pymake=pymake)
 
                     if status != 0:
                         break
@@ -367,7 +371,7 @@ class Build(MachCommandBase):
                 status = self._run_make(srcdir=True, filename='client.mk',
                     line_handler=output.on_line, log=False, print_directory=False,
                     allow_parallel=False, ensure_exit_code=False, num_jobs=jobs,
-                    silent=not verbose)
+                    silent=not verbose, force_pymake=pymake)
 
                 self.log(logging.WARNING, 'warning_summary',
                     {'count': len(monitor.warnings_database)},
@@ -476,14 +480,15 @@ class Build(MachCommandBase):
         try:
             self.remove_objdir()
             return 0
-        except WindowsError as e:
-            if e.winerror in (5, 32):
-                self.log(logging.ERROR, 'file_access_error', {'error': e},
-                    "Could not clobber because a file was in use. If the "
-                    "application is running, try closing it. {error}")
-                return 1
-            else:
-                raise
+        except OSError as e:
+            if sys.platform.startswith('win'):
+                if isinstance(e, WindowsError) and e.winerror in (5,32):
+                    self.log(logging.ERROR, 'file_access_error', {'error': e},
+                        "Could not clobber because a file was in use. If the "
+                        "application is running, try closing it. {error}")
+                    return 1
+
+            raise
 
 
 @CommandProvider

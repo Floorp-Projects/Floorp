@@ -18,8 +18,11 @@
  * well as providing refcounting support.
  */
 
-#include "xpcprivate.h"
+#include "nscore.h"
+#include "nsStringGlue.h"
 #include "nsStringBuffer.h"
+#include "jsapi.h"
+#include "xpcpublic.h"
 
 // One-slot cache, because it turns out it's common for web pages to
 // get the same string a few times in a row.  We get about a 40% cache

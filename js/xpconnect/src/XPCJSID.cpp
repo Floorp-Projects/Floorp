@@ -9,7 +9,6 @@
 #include "xpcprivate.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Attributes.h"
-#include "XPCWrapper.h"
 #include "JavaScriptParent.h"
 
 using namespace mozilla::dom;

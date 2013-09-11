@@ -6,12 +6,8 @@
 
 #include "FilteringWrapper.h"
 #include "AccessCheck.h"
-#include "WaiveXrayWrapper.h"
 #include "ChromeObjectWrapper.h"
 #include "XrayWrapper.h"
-#include "WrapperFactory.h"
-
-#include "XPCWrapper.h"
 
 #include "jsapi.h"
 

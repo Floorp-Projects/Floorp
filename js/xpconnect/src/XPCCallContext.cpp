@@ -7,10 +7,8 @@
 
 /* Call context. */
 
-#include "mozilla/Util.h"
-#include "AccessCheck.h"
-
 #include "xpcprivate.h"
+#include "jswrapper.h"
 
 using namespace mozilla;
 using namespace xpc;

@@ -5,7 +5,7 @@
 
 #include "nsIChannel.idl"
 
-[uuid(8b77d6e2-2ae9-11d5-be57-000064657374)]
+[uuid(0d92a16a-8235-4c4c-81c9-a4fa65c65f5c)]
 interface nsIViewSourceChannel : nsIChannel
 {
     /**
@@ -19,6 +19,11 @@ interface nsIViewSourceChannel : nsIChannel
      * actual content type can utilize this attribute.
      */
     attribute ACString originalContentType;
+
+    /**
+     * Whether the channel was created to view the source of a srcdoc document.
+     */
+    readonly attribute boolean isSrcdocChannel;
 };
 
 

@@ -1,0 +1,43 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=913761
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 913761 - basic support</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=913761">Mozilla Bug 913761</a>
+<script type="application/javascript">
+
+  function runTest() {
+    var transportChannel = new MessageChannel();
+    transportChannel.port1.onmessage = function (event) {
+      ok(true, 'Port Returned.');
+      var portToService = event.data.port;
+      portToService.onmessage = function (event) {
+        ok(true, "message received");
+        SimpleTest.finish();
+      };
+      portToService.postMessage('READY?');
+    }
+    
+    var serviceChannel = new MessageChannel();
+    serviceChannel.port1.onmessage = function (event) {
+      if (event.data == 'READY?') {
+        this.postMessage('READY!');
+      }
+    }
+    
+    transportChannel.port2.postMessage({ port: serviceChannel.port2} /* TODO: [serviceChannel.port2] */);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [["dom.messageChannel.enabled", true]]}, runTest);
+</script>
+</body>
+</html>

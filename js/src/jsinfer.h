@@ -625,6 +625,9 @@ class StackTypeSet : public TypeSet
     /* Whether all objects have JSCLASS_IS_DOMJSCLASS set. */
     bool isDOMClass();
 
+    /* Whether clasp->isCallable() is true for one or more objects in this set. */
+    bool maybeCallable();
+
     /* Get the single value which can appear in this type set, otherwise NULL. */
     JSObject *getSingleton();
 

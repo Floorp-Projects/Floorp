@@ -6,8 +6,8 @@
 
 #include "mozilla/dom/ImageData.h"
 
+#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/ImageDataBinding.h"
-#include "nsCycleCollectionHoldDrop.h"
 
 #include "jsapi.h"
 

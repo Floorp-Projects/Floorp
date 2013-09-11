@@ -110,6 +110,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitGetArgumentsObjectArg(MGetArgumentsObjectArg *ins);
     bool visitSetArgumentsObjectArg(MSetArgumentsObjectArg *ins);
     bool visitReturnFromCtor(MReturnFromCtor *ins);
+    bool visitComputeThis(MComputeThis *ins);
     bool visitCall(MCall *call);
     bool visitApplyArgs(MApplyArgs *apply);
     bool visitBail(MBail *bail);
