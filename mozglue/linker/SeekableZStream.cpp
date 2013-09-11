@@ -180,7 +180,7 @@ BCJ_X86_filter(off_t offset, SeekableZStream::FilterDirection dir,
   uint32_t prev_mask = 0;
   uint32_t prev_pos = 0;
 
-  for (size_t i = 0; i <= size - 5;) {
+  for (size_t i = 0; i + 5 <= size;) {
     uint8_t b = buf[i];
     if (b != 0xe8 && b != 0xe9) {
       ++i;
