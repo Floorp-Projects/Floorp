@@ -49,7 +49,7 @@ function test(code, debugStmts, followupStmts) {
     var val = nextval++;
     var hits = 0;
 
-    var g = newGlobal('new-compartment');
+    var g = newGlobal();
     g.eval("function debugMe() { var x = 'wrong-x'; debugger; }");
     g.capture = null;
 

@@ -1,6 +1,6 @@
 // enterFrame test with recursive debuggee function.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var N = g.N = 9;
 g.eval("function f(i) { if (i < N) f(i + 1); }");
 

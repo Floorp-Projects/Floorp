@@ -20,7 +20,7 @@ function completionString(c) {
     return '?';
 }
 
-var g = newGlobal('new-compartment'); // poor thing
+var g = newGlobal(); // poor thing
 g.eval('function f() { debugger; return "1"; }');
 
 // We create a bunch of debuggers, but they all consult this global variable

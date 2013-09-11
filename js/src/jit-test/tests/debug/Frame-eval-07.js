@@ -1,6 +1,6 @@
 // test frame.eval in non-top frames
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var N = g.N = 12; // must be even
 assertEq(N % 2, 0);
 var dbg = new Debugger(g);

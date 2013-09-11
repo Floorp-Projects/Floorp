@@ -1,6 +1,6 @@
 // The last Environment on the environment chain always has .type == "object" and .object === the global object.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);
 g.eval("function h() { debugger; }");

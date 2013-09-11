@@ -1,5 +1,5 @@
 // Setting onPop handlers from breakpoint handlers works.
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.eval("function f(){ return 'to normalcy'; }");
 var dbg = new Debugger();
 var gw = dbg.addDebuggee(g);

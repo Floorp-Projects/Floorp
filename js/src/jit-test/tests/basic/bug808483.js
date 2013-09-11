@@ -1,4 +1,4 @@
-pSandbox = newGlobal('new-compartment');
+pSandbox = newGlobal();
 evalcx("\
     x = ArrayBuffer;\
     y = Map();\

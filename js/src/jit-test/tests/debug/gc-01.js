@@ -1,7 +1,7 @@
 // Debuggers with enabled hooks should not be GC'd even if they are otherwise
 // unreachable.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var actual = 0;
 var expected = 0;
 

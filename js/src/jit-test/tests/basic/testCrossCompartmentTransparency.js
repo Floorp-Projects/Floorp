@@ -1,7 +1,7 @@
 // |jit-test| error: done
 
 var g1 = newGlobal('same-compartment');
-var g2 = newGlobal('new-compartment');
+var g2 = newGlobal();
 var proxyStr = "Proxy.create(                                    "+
 "  { getOwnPropertyDescriptor: function() assertEq(true,false),  "+
 "    getPropertyDescriptor: function() assertEq(true,false),     "+

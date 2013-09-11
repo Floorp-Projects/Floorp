@@ -1,5 +1,5 @@
 function f() {
-    newGlobal('new-compartment').eval('\
+    newGlobal().eval('\
         try {\
           if (typeof gczeal === "function") \
               gczeal(2,1); \

@@ -1,7 +1,7 @@
 // Upon returning to a frame with an onStep hook, the hook is called before the
 // next line.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.log = '';
 g.eval("function f() { debugger; }");
 

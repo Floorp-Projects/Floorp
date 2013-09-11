@@ -1,6 +1,6 @@
 load(libdir + 'array-compare.js');
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 var hits = 0;
 dbg.onDebuggerStatement = function (frame) {
