@@ -5070,6 +5070,22 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame,
   return r;
 }
 
+void
+nsIFrame::MovePositionBy(const nsPoint& aTranslation)
+{
+  nsPoint position = GetNormalPosition() + aTranslation;
+
+  const nsMargin* computedOffsets = nullptr;
+  if (IsRelativelyPositioned()) {
+    computedOffsets = static_cast<nsMargin*>
+      (Properties().Get(nsIFrame::ComputedOffsetProperty()));
+  }
+  nsHTMLReflowState::ApplyRelativePositioning(this, computedOffsets ?
+                                              *computedOffsets : nsMargin(),
+                                              &position);
+  SetPosition(position);
+}
+
 nsPoint
 nsIFrame::GetNormalPosition() const
 {
