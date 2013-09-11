@@ -23,13 +23,6 @@ SimpleTest.waitForExplicitFinish();
 var img1loaded = false;
 var img1errored = false;
 
-function gc() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-        .getInterface(Components.interfaces.nsIDOMWindowUtils)
-        .garbageCollect();
-}
-
 // Our test image
 function loadTestImage() {
   var img1 = new Image();
@@ -46,7 +39,7 @@ function loadTestImage() {
 loadTestImage();
 
 // Probably overkill to gc() more than once, but let's be safe
-gc(); gc(); gc();
+SpecialPowers.gc(); SpecialPowers.gc(); SpecialPowers.gc();
 
 function finishTest() {
   is(img1errored, true, "Image 1 should error");

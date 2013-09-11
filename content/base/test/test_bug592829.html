@@ -19,12 +19,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=592829
 // If we ever change how DOMParser initilization works, just update this code
 // to create a DOMParser which is not allowed to parse XUL.
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
 var isXUL = true;
 try {
   var x =
-    Components.classes["@mozilla.org/xmlextras/domparser;1"]
+    SpecialPowers.Cc
       .getService(Components.interfaces.nsIDOMParser)
       .parseFromString('<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>', "text/xml");
   isXUL = x.documentElement.namespaceURI ==

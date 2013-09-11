@@ -77,9 +77,7 @@ function link123HrefIs(href, testNum) {
 var gGen;
 
 function visitedDependentComputedStyle(win, elem, property) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var utils = SpecialPowers.getDOMWindowUtils(window);
   return utils.getVisitedDependentComputedStyle(elem, "", property);
 }
 
