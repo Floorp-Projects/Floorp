@@ -44,10 +44,20 @@ public:
 
   NS_DECL_QUERYFRAME_TARGET(nsISVGChildFrame)
 
-  // Paint this frame - aDirtyRect is the area being redrawn, in frame
-  // offset pixel coordinates
+  // Paint this frame.
+  // aDirtyRect is the area being redrawn, in frame offset pixel coordinates.
+  // aTransformRoot (if non-null) is the frame at which we stop looking up
+  // transforms, when painting content that is part of an SVG glyph. (See
+  // bug 875329.)
+  // For normal SVG graphics using display-list rendering, any transforms on
+  // the element or its parents will have already been set up in the context
+  // before PaintSVG is called. When painting SVG glyphs, this is not the case,
+  // so the element's full transform needs to be applied; but we don't want to
+  // apply transforms from outside the actual glyph element, so we need to know
+  // how far up the ancestor chain to go.
   NS_IMETHOD PaintSVG(nsRenderingContext* aContext,
-                      const nsIntRect *aDirtyRect)=0;
+                      const nsIntRect *aDirtyRect,
+                      nsIFrame* aTransformRoot = nullptr) = 0;
 
   // Check if this frame or children contain the given point,
   // specified in app units relative to the origin of the outer

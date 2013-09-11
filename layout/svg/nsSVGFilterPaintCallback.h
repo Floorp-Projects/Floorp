@@ -22,9 +22,12 @@ public:
    * The context will be configured to use the "user space" coordinate
    * system.
    * @param aDirtyRect the dirty rect *in user space pixels*
+   * @param aTransformRoot the outermost frame whose transform should be taken
+   *                       into account when painting an SVG glyph
    */
   virtual void Paint(nsRenderingContext *aContext, nsIFrame *aTarget,
-                     const nsIntRect *aDirtyRect) = 0;
+                     const nsIntRect *aDirtyRect,
+                     nsIFrame* aTransformRoot) = 0;
 };
 
 #endif

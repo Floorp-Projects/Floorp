@@ -358,7 +358,8 @@ nsSVGGlyphFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 NS_IMETHODIMP
 nsSVGGlyphFrame::PaintSVG(nsRenderingContext *aContext,
-                          const nsIntRect *aDirtyRect)
+                          const nsIntRect *aDirtyRect,
+                          nsIFrame* aTransformRoot)
 {
   if (!StyleVisibility()->IsVisible())
     return NS_OK;
@@ -387,7 +388,7 @@ nsSVGGlyphFrame::PaintSVG(nsRenderingContext *aContext,
                       renderMode == SVGAutoRenderState::CLIP_MASK,
                       "Unknown render mode");
     gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(gfx);
-    SetupGlobalTransform(gfx, FOR_PAINTING);
+    SetupGlobalTransform(gfx, FOR_PAINTING, aTransformRoot);
 
     CharacterIterator iter(this, true);
     if (!iter.SetInitialMatrix(gfx)) {
@@ -407,7 +408,7 @@ nsSVGGlyphFrame::PaintSVG(nsRenderingContext *aContext,
   // We are adding patterns or gradients to the context. Save
   // it so we don't leak them into the next object we draw
   gfx->Save();
-  SetupGlobalTransform(gfx, FOR_PAINTING);
+  SetupGlobalTransform(gfx, FOR_PAINTING, aTransformRoot);
 
   CharacterIterator iter(this, true);
   if (!iter.SetInitialMatrix(gfx)) {
@@ -672,19 +673,20 @@ nsSVGGlyphFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
 // nsSVGGeometryFrame methods:
 
 gfxMatrix
-nsSVGGlyphFrame::GetCanvasTM(uint32_t aFor)
+nsSVGGlyphFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
 {
   if (mOverrideCanvasTM) {
     return *mOverrideCanvasTM;
   }
-  if (!(GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
+  if (!(GetStateBits() & NS_FRAME_IS_NONDISPLAY) && !aTransformRoot) {
     if ((aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) ||
         (aFor == FOR_HIT_TESTING && NS_SVGDisplayListHitTestingEnabled())) {
       return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(this);
     }
   }
   NS_ASSERTION(mParent, "null parent");
-  return static_cast<nsSVGContainerFrame*>(mParent)->GetCanvasTM(aFor);
+  return static_cast<nsSVGContainerFrame*>(mParent)->
+      GetCanvasTM(aFor, aTransformRoot);
 }
 
 //----------------------------------------------------------------------
@@ -1601,9 +1603,10 @@ nsSVGGlyphFrame::NotifyGlyphMetricsChange()
 }
 
 void
-nsSVGGlyphFrame::SetupGlobalTransform(gfxContext *aContext, uint32_t aFor)
+nsSVGGlyphFrame::SetupGlobalTransform(gfxContext *aContext, uint32_t aFor,
+                                      nsIFrame* aTransformRoot)
 {
-  gfxMatrix matrix = GetCanvasTM(aFor);
+  gfxMatrix matrix = GetCanvasTM(aFor, aTransformRoot);
   if (!matrix.IsSingular()) {
     aContext->Multiply(matrix);
   }

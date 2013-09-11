@@ -349,7 +349,8 @@ nsSVGFilterInstance::BuildSourcePaint(PrimitiveInfo *aPrimitive)
   gfx->Save();
 
   gfxMatrix matrix =
-    nsSVGUtils::GetCanvasTM(mTargetFrame, nsISVGChildFrame::FOR_PAINTING);
+    nsSVGUtils::GetCanvasTM(mTargetFrame, nsISVGChildFrame::FOR_PAINTING,
+                            mTransformRoot);
   if (!matrix.IsSingular()) {
     gfx->Multiply(matrix);
     gfx->Rectangle(r);
@@ -439,7 +440,7 @@ nsSVGFilterInstance::BuildSourceImages()
     // subtle bugs, and in practice it probably makes no real difference.)
     gfxMatrix deviceToFilterSpace = GetFilterSpaceToDeviceSpaceTransform().Invert();
     tmpCtx.ThebesContext()->Multiply(deviceToFilterSpace);
-    mPaintCallback->Paint(&tmpCtx, mTargetFrame, &dirty);
+    mPaintCallback->Paint(&tmpCtx, mTargetFrame, &dirty, mTransformRoot);
 
     gfxContext copyContext(sourceColorAlpha);
     copyContext.SetSource(offscreen);
