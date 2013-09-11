@@ -60,6 +60,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
 
+XPCOMUtils.defineLazyServiceGetter(this, "dataStoreService",
+                                   "@mozilla.org/datastore-service;1",
+                                   "nsIDataStoreService");
+
 XPCOMUtils.defineLazyGetter(this, "msgmgr", function() {
   return Cc["@mozilla.org/system-message-internal;1"]
          .getService(Ci.nsISystemMessagesInternal);
@@ -258,6 +262,19 @@ this.DOMApplicationRegistry = {
       // Nothing else to do but notifying we're ready.
       this.notifyAppsRegistryReady();
     }
+  },
+
+  updateDataStoreForApp: function(aId) {
+    if (!this.webapps[aId]) {
+      return;
+    }
+
+    // Create or Update the DataStore for this app
+    this._readManifests([{ id: aId }], (function(aResult) {
+      this.updateDataStore(this.webapps[aId].localId,
+                           this.webapps[aId].manifestURL,
+                           aResult[0]);
+    }).bind(this));
   },
 
   updatePermissionsForApp: function updatePermissionsForApp(aId) {
@@ -501,6 +518,7 @@ this.DOMApplicationRegistry = {
           }
           this.updateOfflineCacheForApp(id);
           this.updatePermissionsForApp(id);
+          this.updateDataStoreForApp(id);
         }
         // Need to update the persisted list of apps since
         // installPreinstalledApp() removes the ones failing to install.
@@ -520,6 +538,20 @@ this.DOMApplicationRegistry = {
       onAppsLoaded();
 #endif
     }).bind(this));
+  },
+
+  updateDataStore: function(aId, aManifestURL, aManifest) {
+    if (!("datastores" in aManifest)) {
+      return;
+    }
+
+    for (let name in aManifest.datastores) {
+      let readonly = ("readonly" in aManifest.datastores[name]) &&
+                     !aManifest.datastores[name].readonly
+                       ? false : true;
+
+      dataStoreService.installDataStore(aId, name, aManifestURL, readonly);
+    }
   },
 
   // |aEntryPoint| is either the entry_point name or the null in which case we
@@ -1271,7 +1303,7 @@ this.DOMApplicationRegistry = {
                 manifestURL: app.manifestURL },
               true);
           }
-
+          this.updateDataStore(this.webapps[id].localId, app.manifestURL, aData);
           this.broadcastMessage("Webapps:PackageEvent",
                                 { type: "applied",
                                   manifestURL: app.manifestURL,
@@ -1474,6 +1506,8 @@ this.DOMApplicationRegistry = {
             manifestURL: aData.manifestURL
           }, true);
         }
+
+        this.updateDataStore(this.webapps[id].localId, app.manifestURL, app.manifest);
 
         app.name = manifest.name;
         app.csp = manifest.csp || "";
@@ -1973,6 +2007,10 @@ this.DOMApplicationRegistry = {
                                                       manifestURL: appObject.manifestURL },
                                                     true);
           }
+
+          this.updateDataStore(this.webapps[aId].localId, appObject.manifestURL,
+                               aManifest);
+
           debug("About to fire Webapps:PackageEvent 'installed'");
           this.broadcastMessage("Webapps:PackageEvent",
                                 { type: "installed",
@@ -2074,6 +2112,9 @@ this.DOMApplicationRegistry = {
           this.uninstall(aData, aData.mm);
         }).bind(this));
       }
+
+      this.updateDataStore(this.webapps[id].localId, this.webapps[id].manifestURL,
+                           jsonManifest);
     }
 
     ["installState", "downloadAvailable",
