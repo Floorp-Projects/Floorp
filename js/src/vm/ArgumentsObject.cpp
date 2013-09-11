@@ -16,6 +16,7 @@
 
 #include "jsobjinlines.h"
 
+#include "gc/Barrier-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;

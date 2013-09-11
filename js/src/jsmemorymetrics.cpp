@@ -22,6 +22,8 @@
 #include "vm/String.h"
 #include "vm/WrapperObject.h"
 
+#include "vm/ObjectImpl-inl.h"
+
 using mozilla::DebugOnly;
 using mozilla::OldMove;
 using mozilla::MoveRef;

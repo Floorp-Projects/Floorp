@@ -16,6 +16,7 @@
 #include "jit/MIRGraph.h"
 
 #include "jsinferinlines.h"
+#include "jsscriptinlines.h"
 
 using namespace js;
 using namespace js::jit;
