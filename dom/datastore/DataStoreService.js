@@ -8,18 +8,17 @@
 
 /* static functions */
 
-let DEBUG = 0;
-let debug;
-if (DEBUG)
-  debug = function (s) { dump('DEBUG DataStore: ' + s + '\n'); }
-else
-  debug = function (s) {}
+function debug(s) {
+  // dump('DEBUG DataStoreService: ' + s + '\n');
+}
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/DataStore.jsm');
+
+const GLOBAL_SCOPE = this;
 
 /* DataStoreService */
 
@@ -35,6 +34,14 @@ function DataStoreService() {
   }
 
   obs.addObserver(this, 'webapps-clear-data', false);
+
+  let idbManager = Cc["@mozilla.org/dom/indexeddb/manager;1"]
+                     .getService(Ci.nsIIndexedDatabaseManager);
+  if (!idbManager) {
+    debug("DataStore Error: indexedDb Manager is null!");
+  }
+
+  idbManager.initWindowless(GLOBAL_SCOPE);
 }
 
 DataStoreService.prototype = {
@@ -42,15 +49,16 @@ DataStoreService.prototype = {
   stores: {},
 
   installDataStore: function(aAppId, aName, aOwner, aReadOnly) {
-    debug('installDataStore - appId: ' + aAppId + ', aName: ' + aName +
-          ', aOwner:' + aOwner + ', aReadOnly: ' + aReadOnly);
+    debug('installDataStore - appId: ' + aAppId + ', aName: ' +
+          aName + ', aOwner:' + aOwner + ', aReadOnly: ' +
+          aReadOnly);
 
     if (aName in this.stores && aAppId in this.stores[aName]) {
       debug('This should not happen');
       return;
     }
 
-    let store = new DataStore(aAppId, aName, aOwner, aReadOnly);
+    let store = new DataStore(aAppId, aName, aOwner, aReadOnly, GLOBAL_SCOPE);
 
     if (!(aName in this.stores)) {
       this.stores[aName] = {};
@@ -92,6 +100,7 @@ DataStoreService.prototype = {
 
     for (let key in this.stores) {
       if (params.appId in this.stores[key]) {
+        this.stores[key][params.appId].delete();
         delete this.stores[key][params.appId];
       }
 
