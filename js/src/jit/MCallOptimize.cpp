@@ -1479,7 +1479,7 @@ IonBuilder::inlineHaveSameClass(CallInfo &callInfo)
     types::StackTypeSet *arg1Types = callInfo.getArg(0)->resultTypeSet();
     types::StackTypeSet *arg2Types = callInfo.getArg(1)->resultTypeSet();
     Class *arg1Clasp = arg1Types ? arg1Types->getKnownClass() : NULL;
-    Class *arg2Clasp = arg2Types ? arg1Types->getKnownClass() : NULL;
+    Class *arg2Clasp = arg2Types ? arg2Types->getKnownClass() : NULL;
     if (arg1Clasp && arg2Clasp) {
         MConstant *constant = MConstant::New(BooleanValue(arg1Clasp == arg2Clasp));
         current->add(constant);
