@@ -44,7 +44,7 @@ function test() {
   }
 }
 try {
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.eval("(" + function () {
         dbg = new Debugger(debuggeeGlobal);
     } + ")();");

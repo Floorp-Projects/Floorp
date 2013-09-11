@@ -1,5 +1,5 @@
 // Debugger.Object.prototype.proto
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbgeval = function () {
         var dbg = new Debugger(g);
         var hits = 0;

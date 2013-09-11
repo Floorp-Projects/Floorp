@@ -1,6 +1,6 @@
 // env.names() lists nonenumerable names in with-statement environments.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var hits = 0;
 g.h = function () {

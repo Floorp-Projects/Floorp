@@ -1,8 +1,8 @@
 // obj.defineProperty throws if a value, getter, or setter is in a different compartment than obj
 
 load(libdir + "asserts.js");
-var g1 = newGlobal('new-compartment');
-var g2 = newGlobal('new-compartment');
+var g1 = newGlobal();
+var g2 = newGlobal();
 var dbg = new Debugger;
 var g1w = dbg.addDebuggee(g1);
 var g2w = dbg.addDebuggee(g2);

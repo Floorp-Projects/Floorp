@@ -4,7 +4,7 @@ function classOf(obj) {
     return Object.prototype.toString.call(obj).match(/^\[object (.*)\]$/)[1];
 }
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 var hits = 0;
 dbg.onDebuggerStatement = function (frame) {

@@ -1,6 +1,6 @@
 // frame.offset gives different values at different points in a script.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var s = undefined, a = []
 dbg.onDebuggerStatement = function (frame) {

@@ -15,7 +15,7 @@ if (typeof newGlobal == 'function') {
     g = gsame.g;
     assertEq(g(), undefined);
 
-    var gnew = newGlobal('new-compartment');
+    var gnew = newGlobal();
 
     gnew.eval("function f() { return this; }");
     f = gnew.f;

@@ -2,7 +2,7 @@
  * Script.prototype.source should be an object. Moreover, it should be the
  * same object for each child script within the same debugger.
  */
-let g = newGlobal('new-compartment');
+let g = newGlobal();
 let dbg = new Debugger(g);
 
 let count = 0;

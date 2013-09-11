@@ -1,6 +1,6 @@
 // reentering the debugger several times via onDebuggerStatement and apply/call on a single stack
 
-var g = newGlobal("new-compartment");
+var g = newGlobal();
 var dbg = Debugger(g);
 
 function test(usingApply) {

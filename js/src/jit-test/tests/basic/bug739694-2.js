@@ -1,7 +1,7 @@
 try {
     ({
-        f: evalcx("evalcx(\"e\",newGlobal('new-compartment'))",
-                  newGlobal('new-compartment'))
+        f: evalcx("evalcx(\"e\",newGlobal())",
+                  newGlobal())
     })
 } catch (e) {}
 gc()

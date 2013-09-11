@@ -1,7 +1,7 @@
 // |jit-test| debug
 // null resumption value means terminate the debuggee
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.debuggeeGlobal = this;
 g.eval("(" + function () { 
         var dbg = new Debugger(debuggeeGlobal);
