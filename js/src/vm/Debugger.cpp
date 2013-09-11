@@ -3542,7 +3542,8 @@ DebuggerScript_isInCatchScope(JSContext *cx, unsigned argc, Value* vp)
         JSTryNote* tnBegin = script->trynotes()->vector;
         JSTryNote* tnEnd = tnBegin + script->trynotes()->length;
         while (tnBegin != tnEnd) {
-            if (offset - tnBegin->start < tnBegin->length &&
+            if (tnBegin->start <= offset &&
+                offset <= tnBegin->start + tnBegin->length &&
                 tnBegin->kind == JSTRY_CATCH)
             {
                 args.rval().setBoolean(true);
