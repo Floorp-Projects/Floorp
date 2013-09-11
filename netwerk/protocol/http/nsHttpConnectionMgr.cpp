@@ -547,6 +547,7 @@ nsHttpConnectionMgr::ReportSpdyConnection(nsHttpConnection *conn,
     // check at this point because the cert is never part of the hash
     // lookup. Filtering on that has to be done at the time of use
     // rather than the time of registration (i.e. now).
+    nsConnectionEntry *joinedConnection;
     nsConnectionEntry *preferred =
         mSpdyPreferredHash.Get(ent->mCoalescingKey);
 
@@ -560,19 +561,23 @@ nsHttpConnectionMgr::ReportSpdyConnection(nsHttpConnection *conn,
             ent->mSpdyPreferred = true;
             preferred = ent;
         }
-    }
-    else if (preferred != ent) {
-        // A different hostname is the preferred spdy host for this
-        // IP address. That preferred mapping must have been setup while
-        // this connection was negotiating NPN.
+    } else if ((preferred != ent) &&
+               (joinedConnection = GetSpdyPreferredEnt(ent)) &&
+               (joinedConnection != ent)) {
+        //
+        // A connection entry (e.g. made with a different hostname) with
+        // the same IP address is preferred for future transactions over this
+        // connection entry. Gracefully close down the connection to help
+        // new transactions migrate over.
 
-        // Call don't reuse on the current connection to shut it down as soon
-        // as possible without causing any errors.
-        // i.e. the current transaction(s) on this connection will be processed
-        // normally, but then it will go away and future connections will be
-        // coalesced through the preferred entry.
+        LOG(("ReportSpdyConnection graceful close of conn=%p ent=%p to "
+                 "migrate to preferred\n", conn, ent));
 
         conn->DontReuse();
+    } else if (preferred != ent) {
+        LOG (("ReportSpdyConnection preferred host may be in false start or "
+              "may have insufficient cert. Leave mapping in place but do not "
+              "abandon this connection yet."));
     }
 
     PostEvent(&nsHttpConnectionMgr::OnMsgProcessAllSpdyPendingQ);
