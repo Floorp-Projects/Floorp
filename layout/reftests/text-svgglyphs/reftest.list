@@ -19,3 +19,4 @@ pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-cachedopacity
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-objectvalue.svg svg-glyph-objectvalue-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    fails == svg-glyph-mask.svg svg-glyph-mask-ref.svg # bug 872483
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-paint-server.svg svg-glyph-paint-server-ref.svg # bug 801467
+pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-transform.svg svg-glyph-transform-ref.svg # bug 875329
