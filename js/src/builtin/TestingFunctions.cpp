@@ -790,7 +790,7 @@ finalize_counter_finalize(JSFreeOp *fop, JSObject *obj)
     ++finalizeCount;
 }
 
-static JSClass FinalizeCounterClass = {
+static const JSClass FinalizeCounterClass = {
     "FinalizeCounter", JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,       /* addProperty */
     JS_DeletePropertyStub, /* delProperty */

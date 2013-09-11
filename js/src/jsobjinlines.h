@@ -84,7 +84,7 @@ JSObject::finalize(js::FreeOp *fop)
         JS_ASSERT(CurrentThreadCanAccessRuntime(fop->runtime()));
     }
 #endif
-    js::Class *clasp = getClass();
+    const js::Class *clasp = getClass();
     if (clasp->finalize)
         clasp->finalize(fop, this);
 
@@ -654,7 +654,7 @@ IsNativeFunction(const js::Value &v, JSNative native)
  * TODO: a per-thread shape-based cache would be faster and simpler.
  */
 static JS_ALWAYS_INLINE bool
-ClassMethodIsNative(JSContext *cx, JSObject *obj, Class *clasp, jsid methodid, JSNative native)
+ClassMethodIsNative(JSContext *cx, JSObject *obj, const Class *clasp, jsid methodid, JSNative native)
 {
     JS_ASSERT(!obj->is<ProxyObject>());
     JS_ASSERT(obj->getClass() == clasp);
@@ -757,11 +757,11 @@ class AutoPropDescArrayRooter : private AutoGCRooter
  * default to the prototype's global if the prototype is non-null.
  */
 JSObject *
-NewObjectWithGivenProto(ExclusiveContext *cx, js::Class *clasp, TaggedProto proto, JSObject *parent,
+NewObjectWithGivenProto(ExclusiveContext *cx, const js::Class *clasp, TaggedProto proto, JSObject *parent,
                         gc::AllocKind allocKind, NewObjectKind newKind);
 
 inline JSObject *
-NewObjectWithGivenProto(ExclusiveContext *cx, js::Class *clasp, TaggedProto proto, JSObject *parent,
+NewObjectWithGivenProto(ExclusiveContext *cx, const js::Class *clasp, TaggedProto proto, JSObject *parent,
                         NewObjectKind newKind = GenericObject)
 {
     gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
@@ -769,14 +769,14 @@ NewObjectWithGivenProto(ExclusiveContext *cx, js::Class *clasp, TaggedProto prot
 }
 
 inline JSObject *
-NewObjectWithGivenProto(ExclusiveContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
+NewObjectWithGivenProto(ExclusiveContext *cx, const js::Class *clasp, JSObject *proto, JSObject *parent,
                         NewObjectKind newKind = GenericObject)
 {
     return NewObjectWithGivenProto(cx, clasp, TaggedProto(proto), parent, newKind);
 }
 
 inline JSProtoKey
-GetClassProtoKey(js::Class *clasp)
+GetClassProtoKey(const js::Class *clasp)
 {
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
     if (key != JSProto_Null)
@@ -787,7 +787,7 @@ GetClassProtoKey(js::Class *clasp)
 }
 
 inline bool
-FindProto(ExclusiveContext *cx, js::Class *clasp, MutableHandleObject proto)
+FindProto(ExclusiveContext *cx, const js::Class *clasp, MutableHandleObject proto)
 {
     JSProtoKey protoKey = GetClassProtoKey(clasp);
     if (!js_GetClassPrototype(cx, protoKey, proto, clasp))
@@ -815,18 +815,18 @@ FindProto(ExclusiveContext *cx, js::Class *clasp, MutableHandleObject proto)
  * parent will be that global.
  */
 JSObject *
-NewObjectWithClassProtoCommon(ExclusiveContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
+NewObjectWithClassProtoCommon(ExclusiveContext *cx, const js::Class *clasp, JSObject *proto, JSObject *parent,
                               gc::AllocKind allocKind, NewObjectKind newKind);
 
 inline JSObject *
-NewObjectWithClassProto(ExclusiveContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
+NewObjectWithClassProto(ExclusiveContext *cx, const js::Class *clasp, JSObject *proto, JSObject *parent,
                         gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
     return NewObjectWithClassProtoCommon(cx, clasp, proto, parent, allocKind, newKind);
 }
 
 inline JSObject *
-NewObjectWithClassProto(ExclusiveContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
+NewObjectWithClassProto(ExclusiveContext *cx, const js::Class *clasp, JSObject *proto, JSObject *parent,
                         NewObjectKind newKind = GenericObject)
 {
     gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
@@ -838,14 +838,14 @@ NewObjectWithClassProto(ExclusiveContext *cx, js::Class *clasp, JSObject *proto,
  * according to the context's active global.
  */
 inline JSObject *
-NewBuiltinClassInstance(ExclusiveContext *cx, Class *clasp, gc::AllocKind allocKind,
+NewBuiltinClassInstance(ExclusiveContext *cx, const Class *clasp, gc::AllocKind allocKind,
                         NewObjectKind newKind = GenericObject)
 {
     return NewObjectWithClassProto(cx, clasp, NULL, NULL, allocKind, newKind);
 }
 
 inline JSObject *
-NewBuiltinClassInstance(ExclusiveContext *cx, Class *clasp, NewObjectKind newKind = GenericObject)
+NewBuiltinClassInstance(ExclusiveContext *cx, const Class *clasp, NewObjectKind newKind = GenericObject)
 {
     gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
     return NewBuiltinClassInstance(cx, clasp, allocKind, newKind);
@@ -974,7 +974,7 @@ ValueIsSpecial(JSObject *obj, MutableHandleValue propval, MutableHandle<SpecialI
 
 JSObject *
 DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, HandleAtom atom,
-                              JSObject *protoProto, Class *clasp,
+                              JSObject *protoProto, const Class *clasp,
                               Native constructor, unsigned nargs,
                               const JSPropertySpec *ps, const JSFunctionSpec *fs,
                               const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,
@@ -1041,7 +1041,7 @@ DefineProperty(ExclusiveContext *cx, HandleObject obj, PropertyName *name, Handl
 
 extern JSObject *
 js_InitClass(JSContext *cx, js::HandleObject obj, JSObject *parent_proto,
-             js::Class *clasp, JSNative constructor, unsigned nargs,
+             const js::Class *clasp, JSNative constructor, unsigned nargs,
              const JSPropertySpec *ps, const JSFunctionSpec *fs,
              const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,
              JSObject **ctorp = NULL,

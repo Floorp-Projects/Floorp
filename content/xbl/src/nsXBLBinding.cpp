@@ -786,7 +786,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
               break;
             }
 
-            JSClass* clazz = ::JS_GetClass(proto);
+            const JSClass* clazz = ::JS_GetClass(proto);
             if (!clazz ||
                 (~clazz->flags &
                  (JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS)) ||

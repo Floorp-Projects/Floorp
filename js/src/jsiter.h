@@ -117,7 +117,7 @@ struct NativeIterator
 class PropertyIteratorObject : public JSObject
 {
   public:
-    static Class class_;
+    static const Class class_;
 
     NativeIterator *getNativeIterator() const {
         return static_cast<js::NativeIterator *>(getPrivate());
@@ -147,7 +147,7 @@ class PropertyIteratorObject : public JSObject
 class ElementIteratorObject : public JSObject
 {
   public:
-    static Class class_;
+    static const Class class_;
 
     static JSObject *create(JSContext *cx, Handle<Value> target);
     static const JSFunctionSpec methods[];

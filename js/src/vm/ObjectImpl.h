@@ -969,7 +969,7 @@ class ObjectImpl : public gc::Cell
         return type_->proto;
     }
 
-    Class *getClass() const {
+    const Class *getClass() const {
         return type_->clasp;
     }
 
@@ -1250,7 +1250,7 @@ class ObjectImpl : public gc::Cell
         return nativeLookupPure(shape->propid()) == shape;
     }
 
-    JSClass *getJSClass() const {
+    const JSClass *getJSClass() const {
         return Jsvalify(getClass());
     }
     bool hasClass(const Class *c) const {

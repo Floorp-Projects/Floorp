@@ -1332,7 +1332,7 @@ InitialShapeEntry::match(const InitialShapeEntry &key, const Lookup &lookup)
 }
 
 /* static */ Shape *
-EmptyShape::getInitialShape(ExclusiveContext *cx, Class *clasp, TaggedProto proto,
+EmptyShape::getInitialShape(ExclusiveContext *cx, const Class *clasp, TaggedProto proto,
                             JSObject *parent, JSObject *metadata,
                             size_t nfixed, uint32_t objectFlags)
 {
@@ -1376,7 +1376,7 @@ EmptyShape::getInitialShape(ExclusiveContext *cx, Class *clasp, TaggedProto prot
 }
 
 /* static */ Shape *
-EmptyShape::getInitialShape(ExclusiveContext *cx, Class *clasp, TaggedProto proto,
+EmptyShape::getInitialShape(ExclusiveContext *cx, const Class *clasp, TaggedProto proto,
                             JSObject *parent, JSObject *metadata,
                             AllocKind kind, uint32_t objectFlags)
 {
@@ -1386,7 +1386,7 @@ EmptyShape::getInitialShape(ExclusiveContext *cx, Class *clasp, TaggedProto prot
 void
 NewObjectCache::invalidateEntriesForShape(JSContext *cx, HandleShape shape, HandleObject proto)
 {
-    Class *clasp = shape->getObjectClass();
+    const Class *clasp = shape->getObjectClass();
 
     gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
     if (CanBeFinalizedInBackground(kind, clasp))

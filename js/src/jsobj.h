@@ -152,9 +152,9 @@ DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded);
 
 } /* namespace js::baseops */
 
-extern Class IntlClass;
-extern Class JSONClass;
-extern Class MathClass;
+extern const Class IntlClass;
+extern const Class JSONClass;
+extern const Class MathClass;
 
 class ArrayBufferObject;
 class GlobalObject;
@@ -223,7 +223,7 @@ class JSObject : public js::ObjectImpl
     static js::types::TypeObject *makeLazyType(JSContext *cx, js::HandleObject obj);
 
   public:
-    static js::Class class_;
+    static const js::Class class_;
 
     /*
      * Update the last property, keeping the number of allocated slots in sync
@@ -467,7 +467,7 @@ class JSObject : public js::ObjectImpl
     void uninlinedSetType(js::types::TypeObject *newType);
 
 #ifdef DEBUG
-    bool hasNewType(js::Class *clasp, js::types::TypeObject *newType);
+    bool hasNewType(const js::Class *clasp, js::types::TypeObject *newType);
 #endif
 
     /*
@@ -483,10 +483,10 @@ class JSObject : public js::ObjectImpl
      * Mark an object as requiring its default 'new' type to have unknown
      * properties.
      */
-    static bool setNewTypeUnknown(JSContext *cx, js::Class *clasp, JS::HandleObject obj);
+    static bool setNewTypeUnknown(JSContext *cx, const js::Class *clasp, JS::HandleObject obj);
 
     /* Set a new prototype for an object with a singleton type. */
-    bool splicePrototype(JSContext *cx, js::Class *clasp, js::Handle<js::TaggedProto> proto);
+    bool splicePrototype(JSContext *cx, const js::Class *clasp, js::Handle<js::TaggedProto> proto);
 
     /*
      * For bootstrapping, whether to splice a prototype for Function.prototype
@@ -1194,10 +1194,10 @@ HasOwnProperty(JSContext *cx, LookupGenericOp lookup,
                typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp);
 
 bool
-IsStandardClassResolved(JSObject *obj, js::Class *clasp);
+IsStandardClassResolved(JSObject *obj, const js::Class *clasp);
 
 void
-MarkStandardClassInitializedNoProto(JSObject *obj, js::Class *clasp);
+MarkStandardClassInitializedNoProto(JSObject *obj, const js::Class *clasp);
 
 typedef JSObject *(*ClassInitializerOp)(JSContext *cx, JS::HandleObject obj);
 
@@ -1242,7 +1242,7 @@ js_IdentifyClassPrototype(JSObject *obj);
  */
 bool
 js_FindClassObject(js::ExclusiveContext *cx, JSProtoKey protoKey, js::MutableHandleValue vp,
-                   js::Class *clasp = NULL);
+                   const js::Class *clasp = NULL);
 
 /*
  * Find or create a property named by id in obj's scope, with the given getter
@@ -1313,7 +1313,7 @@ CreateThisForFunction(JSContext *cx, js::HandleObject callee, bool newType);
 
 // Generic call for constructing |this|.
 extern JSObject *
-CreateThis(JSContext *cx, js::Class *clasp, js::HandleObject callee);
+CreateThis(JSContext *cx, const js::Class *clasp, js::HandleObject callee);
 
 extern JSObject *
 CloneObject(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto, HandleObject parent);
@@ -1533,7 +1533,7 @@ js_InferFlags(JSContext *cx, unsigned defaultFlags);
  */
 extern bool
 js_GetClassPrototype(js::ExclusiveContext *cx, JSProtoKey protoKey, js::MutableHandleObject protop,
-                     js::Class *clasp = NULL);
+                     const js::Class *clasp = NULL);
 
 namespace js {
 
@@ -1542,7 +1542,7 @@ GetClassPrototypePure(GlobalObject *global, JSProtoKey protoKey);
 
 extern bool
 SetClassAndProto(JSContext *cx, HandleObject obj,
-                 Class *clasp, Handle<TaggedProto> proto, bool checkForCycles);
+                 const Class *clasp, Handle<TaggedProto> proto, bool checkForCycles);
 
 extern JSObject *
 NonNullObject(JSContext *cx, const Value &v);

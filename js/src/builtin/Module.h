@@ -23,7 +23,7 @@ class Module : public JSObject {
         return (JSScript *) getReservedSlot(SCRIPT_SLOT).toPrivate();
     }
 
-    static Class class_;
+    static const Class class_;
 
   private:
     inline void setAtom(JSAtom *atom);

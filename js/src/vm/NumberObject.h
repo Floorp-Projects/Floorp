@@ -19,7 +19,7 @@ class NumberObject : public JSObject
   public:
     static const unsigned RESERVED_SLOTS = 1;
 
-    static Class class_;
+    static const Class class_;
 
     /*
      * Creates a new Number object boxing the given number.  The object's

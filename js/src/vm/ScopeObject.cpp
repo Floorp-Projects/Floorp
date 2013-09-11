@@ -308,7 +308,7 @@ CallObject::createForStrictEval(JSContext *cx, AbstractFramePtr frame)
     return create(cx, script, scopeChain, callee);
 }
 
-Class CallObject::class_ = {
+const Class CallObject::class_ = {
     "Call",
     JSCLASS_IS_ANONYMOUS | JSCLASS_HAS_RESERVED_SLOTS(CallObject::RESERVED_SLOTS),
     JS_PropertyStub,         /* addProperty */
@@ -320,7 +320,7 @@ Class CallObject::class_ = {
     NULL                     /* convert: Leave it NULL so we notice if calls ever escape */
 };
 
-Class DeclEnvObject::class_ = {
+const Class DeclEnvObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(DeclEnvObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
@@ -360,7 +360,7 @@ DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun, gc::Initi
 
     // Assign a fixed slot to a property with the same name as the lambda.
     Rooted<jsid> id(cx, AtomToId(fun->atom()));
-    Class *clasp = obj->getClass();
+    const Class *clasp = obj->getClass();
     unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY;
     if (!JSObject::putProperty(cx, obj, id, clasp->getProperty, clasp->setProperty,
                                lambdaSlot(), attrs, 0, 0))
@@ -564,7 +564,7 @@ with_ThisObject(JSContext *cx, HandleObject obj)
     return &obj->as<WithObject>().withThis();
 }
 
-Class WithObject::class_ = {
+const Class WithObject::class_ = {
     "With",
     JSCLASS_HAS_RESERVED_SLOTS(WithObject::RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS,
@@ -715,7 +715,7 @@ StaticBlockObject::addVar(ExclusiveContext *cx, Handle<StaticBlockObject*> block
                                          /* allowDictionary = */ false);
 }
 
-Class BlockObject::class_ = {
+const Class BlockObject::class_ = {
     "Block",
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(BlockObject::RESERVED_SLOTS) |

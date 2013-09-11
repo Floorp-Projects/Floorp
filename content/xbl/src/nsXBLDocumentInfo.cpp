@@ -60,7 +60,7 @@ public:
 
   void ClearGlobalObjectOwner();
 
-  static JSClass gSharedGlobalClass;
+  static const JSClass gSharedGlobalClass;
 
 protected:
   virtual ~nsXBLDocGlobalObject();
@@ -151,7 +151,7 @@ nsXBLDocGlobalObject_resolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handl
 }
 
 
-JSClass nsXBLDocGlobalObject::gSharedGlobalClass = {
+const JSClass nsXBLDocGlobalObject::gSharedGlobalClass = {
     "nsXBLPrototypeScript compilation scope",
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS |
     JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(0),

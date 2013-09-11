@@ -767,7 +767,7 @@ js::ObjectMayHaveExtraIndexedProperties(JSObject *obj)
     return false;
 }
 
-Class ArrayObject::class_ = {
+const Class ArrayObject::class_ = {
     "Array",
     JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
     array_addProperty,

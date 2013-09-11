@@ -162,11 +162,19 @@ public:
   nsrefcnt AddRef() { return Hold(); }
   nsrefcnt Release() { return Drop(); }
 
-  // Downcast from a pointer to JSClass to a pointer to nsXBLJSClass.
+  // Downcast from a pointer to const JSClass to a pointer to non-const
+  // nsXBLJSClass.
+  //
+  // The const_cast is safe because nsXBLJSClass instances are never actually
+  // const. It's necessary because we pass pointers to nsXBLJSClass to code
+  // which uses pointers to const JSClass, and returns them back to us that
+  // way, and we need to convert them back to pointers to non-const
+  // nsXBLJSClass so that we can modify the reference count and add them to
+  // the gClassLRUList list.
   static nsXBLJSClass*
-  fromJSClass(JSClass* c)
+  fromJSClass(const JSClass* c)
   {
-    nsXBLJSClass* x = static_cast<nsXBLJSClass*>(c);
+    nsXBLJSClass* x = const_cast<nsXBLJSClass*>(static_cast<const nsXBLJSClass*>(c));
     MOZ_ASSERT(nsXBLService::getClass(x->mKey) == x);
     return x;
   }

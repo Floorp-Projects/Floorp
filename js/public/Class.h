@@ -35,7 +35,7 @@ class SpecialId;
 
 // This is equal to JSFunction::class_.  Use it in places where you don't want
 // to #include jsfun.h.
-extern JS_FRIEND_DATA(js::Class* const) FunctionClassPtr;
+extern JS_FRIEND_DATA(const js::Class* const) FunctionClassPtr;
 
 static JS_ALWAYS_INLINE jsid
 SPECIALID_TO_JSID(const SpecialId &sid);
@@ -629,22 +629,12 @@ JS_STATIC_ASSERT(offsetof(JSClass, hasInstance) == offsetof(Class, hasInstance))
 JS_STATIC_ASSERT(offsetof(JSClass, trace) == offsetof(Class, trace));
 JS_STATIC_ASSERT(sizeof(JSClass) == sizeof(Class));
 
-static JS_ALWAYS_INLINE JSClass *
-Jsvalify(Class *c)
-{
-    return (JSClass *)c;
-}
 static JS_ALWAYS_INLINE const JSClass *
 Jsvalify(const Class *c)
 {
     return (const JSClass *)c;
 }
 
-static JS_ALWAYS_INLINE Class *
-Valueify(JSClass *c)
-{
-    return (Class *)c;
-}
 static JS_ALWAYS_INLINE const Class *
 Valueify(const JSClass *c)
 {

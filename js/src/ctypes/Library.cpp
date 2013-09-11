@@ -33,7 +33,7 @@ namespace Library
 
 typedef Rooted<JSFlatString*>    RootedFlatString;
 
-static JSClass sLibraryClass = {
+static const JSClass sLibraryClass = {
   "Library",
   JSCLASS_HAS_RESERVED_SLOTS(LIBRARY_SLOTS),
   JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
