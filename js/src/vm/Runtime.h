@@ -386,13 +386,7 @@ class NewObjectCache
         js_memcpy(&entry->templateObject, obj, entry->nbytes);
     }
 
-    static void copyCachedToObject(JSObject *dst, JSObject *src, gc::AllocKind kind) {
-        js_memcpy(dst, src, gc::Arena::thingSize(kind));
-#ifdef JSGC_GENERATIONAL
-        Shape::writeBarrierPost(dst->shape_, &dst->shape_);
-        types::TypeObject::writeBarrierPost(dst->type_, &dst->type_);
-#endif
-    }
+    static inline void copyCachedToObject(JSObject *dst, JSObject *src, gc::AllocKind kind);
 };
 
 /*
@@ -1876,14 +1870,7 @@ class ThreadDataIter {
     PerThreadData *iter;
 
 public:
-    explicit ThreadDataIter(JSRuntime *rt) {
-#ifdef JS_WORKER_THREADS
-        // Only allow iteration over a runtime's threads when those threads are
-        // paused, to avoid racing when reading data from the PerThreadData.
-        JS_ASSERT(rt->exclusiveThreadsPaused);
-#endif
-        iter = rt->threadList.getFirst();
-    }
+    explicit inline ThreadDataIter(JSRuntime *rt);
 
     bool done() const {
         return !iter;

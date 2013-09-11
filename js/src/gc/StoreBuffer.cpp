@@ -12,7 +12,7 @@
 
 #include "vm/ForkJoin.h"
 
-#include "jsgcinlines.h"
+#include "vm/ObjectImpl-inl.h"
 
 using namespace js;
 using namespace js::gc;

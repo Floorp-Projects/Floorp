@@ -15,6 +15,7 @@
 #include "jsgcinlines.h"
 
 #include "gc/Barrier-inl.h"
+#include "vm/ObjectImpl-inl.h"
 
 using namespace js;
 using namespace js::gc;

@@ -19,6 +19,7 @@
 #include "jsobjinlines.h"
 
 #include "jit/BaselineFrame-inl.h"
+#include "jit/IonFrameIterator-inl.h"
 
 namespace js {
 

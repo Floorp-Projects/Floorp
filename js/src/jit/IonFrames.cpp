@@ -25,6 +25,7 @@
 #include "vm/Interpreter.h"
 
 #include "jsfuninlines.h"
+#include "jsscriptinlines.h"
 
 #include "jit/IonFrameIterator-inl.h"
 #include "vm/Probes-inl.h"
