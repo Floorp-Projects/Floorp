@@ -4401,6 +4401,3 @@ pref("dom.forms.inputmode", false);
 #else
 pref("dom.forms.inputmode", true);
 #endif
-
-// DataStore is disabled by default
-pref("dom.datastore.enabled", false);
