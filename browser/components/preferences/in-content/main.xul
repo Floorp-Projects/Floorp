@@ -49,6 +49,47 @@
                 name="browser.download.folderList"
                 type="int"/>
 
+    <!-- Tab preferences 
+    Preferences:
+
+    browser.link.open_newwindow
+        1 opens such links in the most recent window or tab,
+        2 opens such links in a new window,
+        3 opens such links in a new tab
+    browser.tabs.loadInBackground
+    - true if display should switch to a new tab which has been opened from a
+      link, false if display shouldn't switch
+    browser.tabs.warnOnClose
+    - true if when closing a window with multiple tabs the user is warned and
+      allowed to cancel the action, false to just close the window
+    browser.tabs.warnOnOpen
+    - true if the user should be warned if he attempts to open a lot of tabs at
+      once (e.g. a large folder of bookmarks), false otherwise
+    browser.taskbar.previews.enable
+    - true if tabs are to be shown in the Windows 7 taskbar    
+    -->
+
+    <preference id="browser.link.open_newwindow"
+                name="browser.link.open_newwindow"
+                type="int"/>
+    <preference id="browser.tabs.loadInBackground"
+                name="browser.tabs.loadInBackground"
+                type="bool"
+                inverted="true"/>
+    <preference id="browser.tabs.warnOnClose"
+                name="browser.tabs.warnOnClose"
+                type="bool"/>
+    <preference id="browser.tabs.warnOnOpen"
+                name="browser.tabs.warnOnOpen"
+                type="bool"/>
+    <preference id="browser.sessionstore.restore_on_demand"
+                name="browser.sessionstore.restore_on_demand"
+                type="bool"/>
+#ifdef XP_WIN
+    <preference id="browser.taskbar.previews.enable"
+                name="browser.taskbar.previews.enable"
+                type="bool"/>
+#endif
 </preferences>
 
 <hbox class="heading" data-category="paneGeneral" hidden="true">
@@ -165,4 +206,43 @@
            label="&alwaysAsk.label;"
            accesskey="&alwaysAsk.accesskey;"/>
   </radiogroup>
+</groupbox>
+
+<!-- Tab preferences -->
+<groupbox data-category="paneGeneral" hidden="true">
+    <caption label="&tabsGroup.label;"/>
+    <checkbox id="linkTargeting" label="&newWindowsAsTabs.label;"
+              accesskey="&newWindowsAsTabs.accesskey;"
+              preference="browser.link.open_newwindow"
+              onsyncfrompreference="return gMainPane.readLinkTarget();"
+              onsynctopreference="return gMainPane.writeLinkTarget();"
+              class="indent"/>
+
+    <checkbox id="warnCloseMultiple" label="&warnCloseMultipleTabs.label;"
+              accesskey="&warnCloseMultipleTabs.accesskey;"
+              preference="browser.tabs.warnOnClose"
+              class="indent"/>
+
+    <checkbox id="warnOpenMany" label="&warnOpenManyTabs.label;"
+              accesskey="&warnOpenManyTabs.accesskey;"
+              preference="browser.tabs.warnOnOpen"
+              class="indent"/>
+
+    <checkbox id="restoreOnDemand" label="&restoreTabsOnDemand.label;"
+              accesskey="&restoreTabsOnDemand.accesskey;"
+              preference="browser.sessionstore.restore_on_demand"
+              class="indent"/>
+
+    <checkbox id="switchToNewTabs" label="&switchToNewTabs.label;"
+              accesskey="&switchToNewTabs.accesskey;"
+              preference="browser.tabs.loadInBackground"
+              class="indent"/>
+
+#ifdef XP_WIN
+    <checkbox id="showTabsInTaskbar" label="&showTabsInTaskbar.label;"
+              accesskey="&showTabsInTaskbar.accesskey;"
+              preference="browser.taskbar.previews.enable"
+              class="indent"/>
+#endif
+
 </groupbox>
