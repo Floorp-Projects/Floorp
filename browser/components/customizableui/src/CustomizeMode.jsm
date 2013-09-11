@@ -755,7 +755,22 @@ CustomizeMode.prototype = {
       atEnd = true;
     } else {
       let position = Array.indexOf(targetParent.children, targetNode);
-      dragOverItem = position == -1 ? targetParent.lastChild : targetParent.children[position];
+      if (position == -1) {
+        dragOverItem = targetParent.lastChild;
+      } else {
+        dragOverItem = targetParent.children[position];
+        // Check if the aDraggedItem is hovered past the first half of dragOverItem
+        let window = dragOverItem.ownerDocument.defaultView;
+        if (targetParent == window.PanelUI.contents) {
+          let direction = window.getComputedStyle(dragOverItem, null).direction;
+          let dropTargetCenter = dragOverItem.boxObject.x + (dragOverItem.boxObject.width / 2);
+          if (direction == "ltr" && aEvent.clientX > dropTargetCenter)
+            position++;
+          else if (direction == "rtl" && aEvent.clientX < dropTargetCenter)
+            position--;
+          dragOverItem = position == -1 ? targetParent.firstChild : targetParent.children[position];
+        }
+      }
     }
 
     if (this._dragOverItem && dragOverItem != this._dragOverItem) {
@@ -793,6 +808,10 @@ CustomizeMode.prototype = {
       return;
     }
     let targetNode = this._getDragOverNode(aEvent.target, targetArea);
+    // If the target node is a placeholder, get its sibling as the real target.
+    while (targetNode.classList.contains(kPlaceholderClass) && targetNode.nextSibling) {
+      targetNode = targetNode.nextSibling;
+    }
     if (targetNode.tagName == "toolbarpaletteitem") {
       targetNode = targetNode.firstChild;
     }
@@ -967,7 +986,7 @@ CustomizeMode.prototype = {
     let direction = window.getComputedStyle(aItem, null).direction;
     let value = direction == "ltr" ? "left" : "right";
     if (aItem.localName == "toolbar" || aAtEnd) {
-      value = direction == "ltr"? "right" : "left";
+      value = direction == "ltr" ? "right" : "left";
       if (aItem.localName == "toolbar") {
         node = aItem.lastChild;
       }
@@ -985,10 +1004,12 @@ CustomizeMode.prototype = {
         let draggedItem = window.document.getElementById(aDraggedItemId);
         let width = this._getDragItemWidth(node, draggedItem);
         if (width) {
-          if (value == "left") {
-            node.style.borderLeftWidth = width;
+          let panelContents = window.PanelUI.contents;
+          if (node.parentNode == panelContents) {
+            this._setPanelDragActive(node, draggedItem, width);
           } else {
-            node.style.borderRightWidth = width;
+            let prop = value == "left" ? "borderLeftWidth" : "borderRightWidth";
+            node.style[prop] = width;
           }
         }
       }
@@ -998,6 +1019,87 @@ CustomizeMode.prototype = {
       // had been set.
       node.style.removeProperty("border-left-width");
       node.style.removeProperty("border-right-width");
+    }
+  },
+
+  _setPanelDragActive: function(aDragOverNode, aDraggedItem, aWidth) {
+    let document = aDragOverNode.ownerDocument;
+    let window = document.defaultView;
+    let panelContents = window.PanelUI.contents;
+    while (!aDragOverNode.id && aDragOverNode.parentNode != panelContents)
+        aDragOverNode = aDragOverNode.parentNode;
+    if (!aDragOverNode.id)
+      return;
+
+    if (!aDragOverNode.previousSibling ||
+        !aDragOverNode.previousSibling.classList.contains(kPlaceholderClass)) {
+      let isPlaceholderAtEnd = function(aPlaceholder) {
+        do {
+          aPlaceholder = aPlaceholder.nextSibling;
+          if (!aPlaceholder)
+            return true;
+          if (!aPlaceholder.classList.contains(kPlaceholderClass))
+            return false;
+        } while (aPlaceholder.nextSibling)
+        return true;
+      }
+
+      let resetAnimAttributes = function(aPlaceholder) {
+        if (!aPlaceholder)
+          return;
+        aPlaceholder.removeAttribute("expand");
+        aPlaceholder.removeAttribute("contract");
+        aPlaceholder.removeAttribute("hidden");
+        aPlaceholder.style.removeProperty("width");
+      }
+
+      let placeholders = Array.slice(panelContents.getElementsByClassName(
+        kPlaceholderClass));
+
+      let toContract = placeholders.shift();
+      if (isPlaceholderAtEnd(toContract))
+        toContract = null;
+      let toExpand = placeholders.shift();
+      // Seek to find hidden placeholders first to use for the expand transition.
+      while (toExpand.getAttribute("hidden") != "true" && placeholders.length)
+        toExpand = placeholders.shift();
+
+      if (toExpand.transitioning || (toContract && toContract.transitioning))
+        return;
+
+      let wasHidden = (toContract && toContract.getAttribute("hidden") == "true") ||
+                      toExpand.getAttribute("hidden") == "true";
+      resetAnimAttributes(toContract);
+      resetAnimAttributes(toExpand);
+
+      aDragOverNode.parentNode.insertBefore(toExpand, aDragOverNode);
+      toExpand.style.width = "0px";
+      toExpand.setAttribute("expand", "true");
+      toExpand.transitioning = true;
+      if (toContract) {
+        toContract.style.width = aWidth;
+        toContract.setAttribute("contract", "true");
+        toContract.transitioning = true;
+      }
+
+      window.mozRequestAnimationFrame(() => {
+        if (toContract)
+          toContract.style.width = "0px";
+        toExpand.style.width = aWidth;
+      });
+      toExpand.addEventListener("transitionend", function expandTransitionEnd() {
+        toExpand.removeEventListener("transitionend", expandTransitionEnd, false);
+        toExpand.transitioning = false;
+      });
+      if (toContract) {
+        toContract.addEventListener("transitionend", function contractTransitionEnd() {
+          toContract.removeEventListener("transitionend", contractTransitionEnd, false);
+          panelContents.appendChild(toContract);
+          if (wasHidden)
+            toContract.setAttribute("hidden", "true");
+          toContract.transitioning = false;
+        });
+      }
     }
   },
 
@@ -1110,7 +1212,8 @@ CustomizeMode.prototype = {
     // TODO(bug 885578): Still doesn't handle a hole when there is a wide
     //                   widget located at the bottom of the panel.
     let hangingItems = (visibleChildren.length - visibleCombinedButtons.length) % kColumnsInMenuPanel;
-    let newPlaceholders = kColumnsInMenuPanel - hangingItems;
+    let newPlaceholders = kColumnsInMenuPanel;
+    let visiblePlaceholders = kColumnsInMenuPanel - hangingItems;
     while (newPlaceholders--) {
       let placeholder = doc.createElement("toolbarpaletteitem");
       placeholder.classList.add(kPlaceholderClass);
@@ -1119,6 +1222,8 @@ CustomizeMode.prototype = {
       let placeholderChild = doc.createElement("toolbarbutton");
       placeholderChild.classList.add(kPlaceholderClass + "-child");
       placeholder.appendChild(placeholderChild);
+      // Always have at least 1 placeholder visible.
+      placeholder.setAttribute("hidden", --visiblePlaceholders < 0);
       contents.appendChild(placeholder);
     }
   },
