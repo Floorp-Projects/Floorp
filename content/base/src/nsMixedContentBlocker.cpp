@@ -300,6 +300,7 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
     case TYPE_SUBDOCUMENT:
     case TYPE_XBL:
     case TYPE_XMLHTTPREQUEST:
+    case TYPE_XSLT:
     case TYPE_OTHER:
       break;
 
