@@ -850,8 +850,13 @@ struct Property
     /* Possible types for this property, including types inherited from prototypes. */
     HeapTypeSet types;
 
-    inline Property(jsid id);
-    inline Property(const Property &o);
+    Property(jsid id)
+      : id(id)
+    {}
+
+    Property(const Property &o)
+      : id(o.id.get()), types(o.types)
+    {}
 
     static uint32_t keyBits(jsid id) { return uint32_t(JSID_BITS(id)); }
     static jsid getKey(Property *p) { return p->id; }

@@ -1602,18 +1602,6 @@ TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
 #endif
 }
 
-inline
-Property::Property(jsid id)
-  : id(id)
-{
-}
-
-inline
-Property::Property(const Property &o)
-  : id(o.id.get()), types(o.types)
-{
-}
-
 inline bool
 IterationValuesMustBeStrings(JSScript *script)
 {
