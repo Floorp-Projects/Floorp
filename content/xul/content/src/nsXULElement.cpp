@@ -2579,10 +2579,11 @@ NotifyOffThreadScriptCompletedRunnable::Run()
     nsCOMPtr<nsIJSRuntimeService> svc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
     NS_ENSURE_TRUE(svc, NS_ERROR_FAILURE);
 
-    JSRuntime *rt;
-    svc->GetRuntime(&rt);
-    NS_ENSURE_TRUE(svc, NS_ERROR_FAILURE);
-    JSScript *script = JS::FinishOffThreadScript(NULL, rt, mToken);
+    JSScript *script;
+    {
+        AutoSafeJSContext cx;
+        script = JS::FinishOffThreadScript(cx, JS_GetRuntime(cx), mToken);
+    }
 
     return mReceiver->OnScriptCompileComplete(script, script ? NS_OK : NS_ERROR_FAILURE);
 }

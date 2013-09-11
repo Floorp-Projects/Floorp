@@ -28,6 +28,7 @@
 #ifdef XP_MACOSX
 #include "SharedSurfaceIO.h"
 #endif
+#include "GeckoProfiler.h"
 
 using namespace mozilla::gl;
 using namespace mozilla::gfx;
@@ -1090,6 +1091,7 @@ GrallocDeprecatedTextureHostOGL::gl() const
 
 void GrallocDeprecatedTextureHostOGL::BindTexture(GLenum aTextureUnit)
 {
+  PROFILER_LABEL("Gralloc", "BindTexture");
   /*
    * The job of this function is to ensure that the texture is tied to the
    * android::GraphicBuffer, so that texturing will source the GraphicBuffer.
