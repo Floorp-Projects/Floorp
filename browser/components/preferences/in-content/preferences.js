@@ -18,9 +18,6 @@ function init_all() {
   window.addEventListener("popstate", onStatePopped, true);
   updateCommands();
   gMainPane.init();
-#ifdef XP_WIN
-  gTabsPane.init();
-#endif
   gPrivacyPane.init();
   gAdvancedPane.init();
   gApplicationsPane.init();
