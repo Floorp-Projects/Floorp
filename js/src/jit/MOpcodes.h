@@ -40,6 +40,7 @@ namespace jit {
     _(Call)                                                                 \
     _(ApplyArgs)                                                            \
     _(Bail)                                                                 \
+    _(AssertFloat32)                                                        \
     _(GetDynamicName)                                                       \
     _(FilterArguments)                                                      \
     _(CallDirectEval)                                                       \

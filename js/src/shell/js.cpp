@@ -4021,6 +4021,10 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
 "trap([fun, [pc,]] exp)",
 "  Trap bytecode execution."),
 
+    JS_FN_HELP("assertFloat32", testingFunc_assertFloat32, 2, 0,
+"assertFloat32(value, isFloat32)",
+"  In IonMonkey only, asserts that value has (resp. hasn't) the MIRType_Float32 if isFloat32 is true (resp. false)."),
+
     JS_FN_HELP("untrap", Untrap, 2, 0,
 "untrap(fun[, pc])",
 "  Remove a trap."),
