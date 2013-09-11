@@ -3242,6 +3242,8 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
     }
 
     InitWordCache();
+    uint32_t wordCacheCharLimit =
+        gfxPlatform::GetPlatform()->WordCacheCharLimit();
 
     // the only flags we care about for ShapedWord construction/caching
     uint32_t flags = aTextRun->GetFlags();
@@ -3279,9 +3281,9 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
 
         // We've decided to break here (i.e. we're at the end of a "word");
         // shape the word and add it to the textrun.
-        // For words longer than gfxShapedWord::kMaxLength, we don't use the
+        // For words longer than the limit, we don't use the
         // font's word cache but just shape directly into the textrun.
-        if (length > gfxShapedWord::kMaxLength) {
+        if (length > wordCacheCharLimit) {
             bool ok = ShapeFragmentWithoutWordCache(aContext,
                                                     text + wordStart,
                                                     aRunStart + wordStart,
