@@ -12,12 +12,10 @@ MODULE = 'dom'
 
 EXPORTS.mozilla.dom += [
     'Promise.h',
-    'PromiseResolver.h',
 ]
 
 CPP_SOURCES += [
     'Promise.cpp',
-    'PromiseResolver.cpp',
     'PromiseCallback.cpp',
 ]
 
