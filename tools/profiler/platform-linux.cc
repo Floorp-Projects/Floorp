@@ -42,6 +42,8 @@
 #include <sys/prctl.h> // set name
 #include <stdlib.h>
 #include <sched.h>
+#include <iostream>
+#include <fstream>
 #ifdef ANDROID
 #include <android/log.h>
 #else
@@ -429,12 +431,39 @@ void Sampler::UnregisterCurrentThread()
 
 #ifdef ANDROID
 static struct sigaction old_sigstart_signal_handler;
-const int SIGSTART = SIGUSR1;
+const int SIGSTART = SIGUSR2;
 
 static void StartSignalHandler(int signal, siginfo_t* info, void* context) {
-  profiler_start(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL,
-                 PROFILE_DEFAULT_FEATURES, PROFILE_DEFAULT_FEATURE_COUNT,
-                 NULL, 0);
+
+  // XXX: Everything we do here is NOT async signal safe. We risk nasty things
+  // like deadlocks but we typically only do this once so it tends to be ok.
+  // See bug 909403
+  const char* threadName = NULL;
+  uint32_t threadCount = 0;
+  char thread[256];
+
+  // TODO support selecting features from profiler.options
+  const char* features[2] = {NULL, NULL};
+  uint32_t featureCount = 0;
+  features[0] = "leaf";
+  featureCount++;
+  const char* threadFeature = "threads";
+
+  std::ifstream infile;
+  infile.open("/data/local/tmp/profiler.options");
+  if (infile.is_open()) {
+    infile.getline(thread, 256);
+    threadName = thread;
+    threadCount = 1;
+    features[featureCount] = threadFeature;
+    featureCount++;
+    printf_stderr("Profiling only %s\n", threadName);
+  }
+  infile.close();
+
+  profiler_start(PROFILE_DEFAULT_ENTRY, 1,
+                 features, featureCount,
+                 &threadName, threadCount);
 }
 
 void OS::RegisterStartHandler()
