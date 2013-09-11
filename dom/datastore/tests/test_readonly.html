@@ -9,9 +9,8 @@
 <body>
   <div id="container"></div>
   <script type="application/javascript;version=1.7">
-  var gBaseURL = 'http://test/tests/dom/datastore/tests/';
-  var gHostedManifestURL = gBaseURL + 'file_app.sjs?testToken=file_readonly.html';
-  var gHostedManifestURL2 = 'http://example.com/tests/dom/datastore/tests/file_app2.template.webapp';
+  var gHostedManifestURL = 'http://test/tests/dom/datastore/tests/file_app.sjs?testToken=file_readonly.html';
+  var gHostedManifestURL2 = 'http://example.com/tests/dom/datastore/tests/file_app.sjs?testToken=file_readonly.html&template=file_app2.template.webapp';
   var gGenerator = runTest();
 
   SpecialPowers.pushPermissions(
@@ -53,7 +52,7 @@
     var ifr = document.createElement('iframe');
     ifr.setAttribute('mozbrowser', 'true');
     ifr.setAttribute('mozapp', app2.manifestURL);
-    ifr.setAttribute('src', 'http://example.com/tests/dom/datastore/tests/file_readonly.html');
+    ifr.setAttribute('src', app2.manifest.launch_path);
     var domParent = document.getElementById('container');
 
     // Set us up to listen for messages from the app.
@@ -95,6 +94,7 @@
     SimpleTest.finish();
   }
 
+  SpecialPowers.Cu.import("resource://gre/modules/DataStoreChangeNotifier.jsm");
   SimpleTest.waitForExplicitFinish();
   SpecialPowers.pushPrefEnv({"set": [["dom.promise.enabled", true]]}, runTest);
   </script>
