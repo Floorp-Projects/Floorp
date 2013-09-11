@@ -391,7 +391,8 @@ public:
   static void
   PaintFrameWithEffects(nsRenderingContext *aContext,
                         const nsIntRect *aDirtyRect,
-                        nsIFrame *aFrame);
+                        nsIFrame *aFrame,
+                        nsIFrame* aTransformRoot = nullptr);
 
   /* Hit testing - check if point hits the clipPath of indicated
    * frame.  Returns true if no clipPath set. */
@@ -408,7 +409,8 @@ public:
    * child SVG frame, container SVG frame, or a regular frame.
    * For regular frames, we just return an identity matrix.
    */
-  static gfxMatrix GetCanvasTM(nsIFrame* aFrame, uint32_t aFor);
+  static gfxMatrix GetCanvasTM(nsIFrame* aFrame, uint32_t aFor,
+                               nsIFrame* aTransformRoot = nullptr);
 
   /**
    * Returns the transform from aFrame's user space to canvas space. Only call
