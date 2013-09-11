@@ -92,7 +92,7 @@ BEGIN_TEST(testNewObject_1)
     CHECK_SAME(v, INT_TO_JSVAL(N - 1));
 
     // With JSClass.construct.
-    static JSClass cls = {
+    static const JSClass cls = {
         "testNewObject_1",
         0,
         JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,

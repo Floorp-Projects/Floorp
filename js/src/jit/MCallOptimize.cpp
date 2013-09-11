@@ -1002,7 +1002,7 @@ IonBuilder::inlineRegExpTest(CallInfo &callInfo)
     if (callInfo.thisArg()->type() != MIRType_Object)
         return InliningStatus_NotInlined;
     types::StackTypeSet *thisTypes = callInfo.thisArg()->resultTypeSet();
-    Class *clasp = thisTypes ? thisTypes->getKnownClass() : NULL;
+    const Class *clasp = thisTypes ? thisTypes->getKnownClass() : NULL;
     if (clasp != &RegExpObject::class_)
         return InliningStatus_NotInlined;
     if (callInfo.getArg(0)->type() != MIRType_String)
@@ -1478,8 +1478,8 @@ IonBuilder::inlineHaveSameClass(CallInfo &callInfo)
 
     types::StackTypeSet *arg1Types = callInfo.getArg(0)->resultTypeSet();
     types::StackTypeSet *arg2Types = callInfo.getArg(1)->resultTypeSet();
-    Class *arg1Clasp = arg1Types ? arg1Types->getKnownClass() : NULL;
-    Class *arg2Clasp = arg2Types ? arg2Types->getKnownClass() : NULL;
+    const Class *arg1Clasp = arg1Types ? arg1Types->getKnownClass() : NULL;
+    const Class *arg2Clasp = arg2Types ? arg2Types->getKnownClass() : NULL;
     if (arg1Clasp && arg2Clasp) {
         MConstant *constant = MConstant::New(BooleanValue(arg1Clasp == arg2Clasp));
         current->add(constant);
@@ -1516,7 +1516,7 @@ IonBuilder::inlineIsCallable(CallInfo &callInfo)
         isCallableConstant = false;
     } else {
         types::StackTypeSet *types = callInfo.getArg(0)->resultTypeSet();
-        Class *clasp = types ? types->getKnownClass() : NULL;
+        const Class *clasp = types ? types->getKnownClass() : NULL;
         if (clasp) {
             isCallableKnown = true;
             isCallableConstant = clasp->isCallable();

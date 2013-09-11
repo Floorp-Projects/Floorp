@@ -942,7 +942,7 @@ ScriptSourceObject::finalize(FreeOp *fop, JSObject *obj)
     obj->as<ScriptSourceObject>().setSource(NULL);
 }
 
-Class ScriptSourceObject::class_ = {
+const Class ScriptSourceObject::class_ = {
     "ScriptSource",
     JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,        /* addProperty */

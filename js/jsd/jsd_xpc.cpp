@@ -3343,7 +3343,7 @@ global_finalize(JSFreeOp *aFop, JSObject *aObj)
 }
 
 JSObject *
-CreateJSDGlobal(JSContext *aCx, JSClass *aClasp)
+CreateJSDGlobal(JSContext *aCx, const JSClass *aClasp)
 {
     nsresult rv;
     nsCOMPtr<nsIPrincipal> nullPrin = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);

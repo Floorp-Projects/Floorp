@@ -282,7 +282,7 @@ class NewObjectCache
     struct Entry
     {
         /* Class of the constructed object. */
-        Class *clasp;
+        const Class *clasp;
 
         /*
          * Key with one of three possible values:
@@ -328,11 +328,11 @@ class NewObjectCache
      * Get the entry index for the given lookup, return whether there was a hit
      * on an existing entry.
      */
-    inline bool lookupProto(Class *clasp, JSObject *proto, gc::AllocKind kind, EntryIndex *pentry);
-    inline bool lookupGlobal(Class *clasp, js::GlobalObject *global, gc::AllocKind kind,
+    inline bool lookupProto(const Class *clasp, JSObject *proto, gc::AllocKind kind, EntryIndex *pentry);
+    inline bool lookupGlobal(const Class *clasp, js::GlobalObject *global, gc::AllocKind kind,
                              EntryIndex *pentry);
 
-    bool lookupType(Class *clasp, js::types::TypeObject *type, gc::AllocKind kind,
+    bool lookupType(const Class *clasp, js::types::TypeObject *type, gc::AllocKind kind,
                     EntryIndex *pentry)
     {
         return lookup(clasp, type, kind, pentry);
@@ -346,12 +346,12 @@ class NewObjectCache
     inline JSObject *newObjectFromHit(JSContext *cx, EntryIndex entry, js::gc::InitialHeap heap);
 
     /* Fill an entry after a cache miss. */
-    void fillProto(EntryIndex entry, Class *clasp, js::TaggedProto proto, gc::AllocKind kind, JSObject *obj);
+    void fillProto(EntryIndex entry, const Class *clasp, js::TaggedProto proto, gc::AllocKind kind, JSObject *obj);
 
-    inline void fillGlobal(EntryIndex entry, Class *clasp, js::GlobalObject *global,
+    inline void fillGlobal(EntryIndex entry, const Class *clasp, js::GlobalObject *global,
                            gc::AllocKind kind, JSObject *obj);
 
-    void fillType(EntryIndex entry, Class *clasp, js::types::TypeObject *type, gc::AllocKind kind,
+    void fillType(EntryIndex entry, const Class *clasp, js::types::TypeObject *type, gc::AllocKind kind,
                   JSObject *obj)
     {
         JS_ASSERT(obj->type() == type);
@@ -362,7 +362,7 @@ class NewObjectCache
     void invalidateEntriesForShape(JSContext *cx, HandleShape shape, HandleObject proto);
 
   private:
-    bool lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryIndex *pentry) {
+    bool lookup(const Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryIndex *pentry) {
         uintptr_t hash = (uintptr_t(clasp) ^ uintptr_t(key)) + kind;
         *pentry = hash % mozilla::ArrayLength(entries);
 
@@ -372,7 +372,7 @@ class NewObjectCache
         return (entry->clasp == clasp && entry->key == key);
     }
 
-    void fill(EntryIndex entry_, Class *clasp, gc::Cell *key, gc::AllocKind kind, JSObject *obj) {
+    void fill(EntryIndex entry_, const Class *clasp, gc::Cell *key, gc::AllocKind kind, JSObject *obj) {
         JS_ASSERT(unsigned(entry_) < mozilla::ArrayLength(entries));
         Entry *entry = &entries[entry_];
 

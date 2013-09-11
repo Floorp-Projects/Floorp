@@ -1045,17 +1045,17 @@ HeapTypeSet::knownSubset(JSContext *cx, TypeSet *other)
     return true;
 }
 
-Class *
+const Class *
 StackTypeSet::getKnownClass()
 {
     if (unknownObject())
         return NULL;
 
-    Class *clasp = NULL;
+    const Class *clasp = NULL;
     unsigned count = getObjectCount();
 
     for (unsigned i = 0; i < count; i++) {
-        Class *nclasp;
+        const Class *nclasp;
         if (JSObject *object = getSingleObject(i))
             nclasp = object->getClass();
         else if (TypeObject *object = getTypeObject(i))
@@ -1074,7 +1074,7 @@ StackTypeSet::getKnownClass()
 int
 StackTypeSet::getTypedArrayType()
 {
-    Class *clasp = getKnownClass();
+    const Class *clasp = getKnownClass();
 
     if (clasp && IsTypedArrayClass(clasp))
         return clasp - &TypedArrayObject::classes[0];
@@ -1089,7 +1089,7 @@ StackTypeSet::isDOMClass()
 
     unsigned count = getObjectCount();
     for (unsigned i = 0; i < count; i++) {
-        Class *clasp;
+        const Class *clasp;
         if (JSObject *object = getSingleObject(i))
             clasp = object->getClass();
         else if (TypeObject *object = getTypeObject(i))
@@ -1115,7 +1115,7 @@ StackTypeSet::maybeCallable()
 
     unsigned count = getObjectCount();
     for (unsigned i = 0; i < count; i++) {
-        Class *clasp;
+        const Class *clasp;
         if (JSObject *object = getSingleObject(i))
             clasp = object->getClass();
         else if (TypeObject *object = getTypeObject(i))
@@ -1285,7 +1285,7 @@ TypeZone::init(JSContext *cx)
 }
 
 TypeObject *
-TypeCompartment::newTypeObject(ExclusiveContext *cx, Class *clasp, Handle<TaggedProto> proto, bool unknown)
+TypeCompartment::newTypeObject(ExclusiveContext *cx, const Class *clasp, Handle<TaggedProto> proto, bool unknown)
 {
     JS_ASSERT_IF(proto.isObject(), cx->isInsideCurrentCompartment(proto.toObject()));
 
@@ -1530,13 +1530,13 @@ types::UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc,
 }
 
 NewObjectKind
-types::UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc, Class *clasp)
+types::UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc, const Class *clasp)
 {
     return UseNewTypeForInitializer(cx, script, pc, JSCLASS_CACHED_PROTO_KEY(clasp));
 }
 
 static inline bool
-ClassCanHaveExtraProperties(Class *clasp)
+ClassCanHaveExtraProperties(const Class *clasp)
 {
     JS_ASSERT(clasp->resolve);
     return clasp->resolve != JS_ResolveStub || clasp->ops.lookupGeneric || clasp->ops.getGeneric;
@@ -1578,7 +1578,7 @@ types::ArrayPrototypeHasIndexedProperty(JSContext *cx, HandleScript script)
 bool
 types::TypeCanHaveExtraIndexedProperties(JSContext *cx, StackTypeSet *types)
 {
-    Class *clasp = types->getKnownClass();
+    const Class *clasp = types->getKnownClass();
 
     // Note: typed arrays have indexed properties not accounted for by type
     // information, though these are all in bounds and will be accounted for
@@ -3482,7 +3482,7 @@ JSObject::shouldSplicePrototype(JSContext *cx)
 }
 
 bool
-JSObject::splicePrototype(JSContext *cx, Class *clasp, Handle<TaggedProto> proto)
+JSObject::splicePrototype(JSContext *cx, const Class *clasp, Handle<TaggedProto> proto)
 {
     JS_ASSERT(cx->compartment() == compartment());
 
@@ -3611,7 +3611,7 @@ JSObject::makeLazyType(JSContext *cx, HandleObject obj)
 TypeObjectEntry::hash(const Lookup &lookup)
 {
     return PointerHasher<JSObject *, 3>::hash(lookup.proto.raw()) ^
-           PointerHasher<Class *, 3>::hash(lookup.clasp);
+           PointerHasher<const Class *, 3>::hash(lookup.clasp);
 }
 
 /* static */ inline bool
@@ -3622,7 +3622,7 @@ TypeObjectEntry::match(TypeObject *key, const Lookup &lookup)
 
 #ifdef DEBUG
 bool
-JSObject::hasNewType(Class *clasp, TypeObject *type)
+JSObject::hasNewType(const Class *clasp, TypeObject *type)
 {
     TypeObjectSet &table = compartment()->newTypeObjects;
 
@@ -3635,7 +3635,7 @@ JSObject::hasNewType(Class *clasp, TypeObject *type)
 #endif /* DEBUG */
 
 /* static */ bool
-JSObject::setNewTypeUnknown(JSContext *cx, Class *clasp, HandleObject obj)
+JSObject::setNewTypeUnknown(JSContext *cx, const Class *clasp, HandleObject obj)
 {
     if (!obj->setFlag(cx, js::BaseShape::NEW_TYPE_UNKNOWN))
         return false;
@@ -3655,7 +3655,7 @@ JSObject::setNewTypeUnknown(JSContext *cx, Class *clasp, HandleObject obj)
 }
 
 TypeObject *
-ExclusiveContext::getNewType(Class *clasp, TaggedProto proto_, JSFunction *fun_)
+ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto_, JSFunction *fun_)
 {
     JS_ASSERT_IF(fun_, proto_.isObject());
     JS_ASSERT_IF(proto_.isObject(), isInsideCurrentCompartment(proto_.toObject()));
@@ -3758,7 +3758,7 @@ ExclusiveContext::getNewType(Class *clasp, TaggedProto proto_, JSFunction *fun_)
 }
 
 TypeObject *
-ExclusiveContext::getLazyType(Class *clasp, TaggedProto proto)
+ExclusiveContext::getLazyType(const Class *clasp, TaggedProto proto)
 {
     JS_ASSERT_IF(proto.isObject(), compartment() == proto.toObject()->compartment());
 

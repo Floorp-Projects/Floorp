@@ -231,7 +231,7 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapperArg, j
         return false;
 
     const char *name;
-    js::Class *clasp = js::GetObjectClass(obj);
+    const js::Class *clasp = js::GetObjectClass(obj);
     MOZ_ASSERT(Jsvalify(clasp) != &XrayUtils::HolderClass, "shouldn't have a holder here");
     if (clasp->ext.innerObject)
         name = "Window";

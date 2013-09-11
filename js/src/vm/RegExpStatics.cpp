@@ -35,7 +35,7 @@ resc_trace(JSTracer *trc, JSObject *obj)
     res->mark(trc);
 }
 
-Class RegExpStaticsObject::class_ = {
+const Class RegExpStaticsObject::class_ = {
     "RegExpStatics",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS,
     JS_PropertyStub,         /* addProperty */

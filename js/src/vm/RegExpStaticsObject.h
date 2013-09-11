@@ -14,7 +14,7 @@ namespace js {
 class RegExpStaticsObject : public JSObject
 {
   public:
-    static Class class_;
+    static const Class class_;
 
     size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf) {
         return mallocSizeOf(getPrivate());

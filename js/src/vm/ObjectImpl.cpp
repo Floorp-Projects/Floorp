@@ -338,7 +338,7 @@ js::ObjectImpl::markChildren(JSTracer *trc)
 
     MarkShape(trc, &shape_, "shape");
 
-    Class *clasp = type_->clasp;
+    const Class *clasp = type_->clasp;
     JSObject *obj = asObjectPtr();
     if (clasp->trace)
         clasp->trace(trc, obj);
@@ -565,7 +565,7 @@ js::GetOwnProperty(JSContext *cx, Handle<ObjectImpl*> obj, PropertyId pid_, unsi
     RootedShape shape(cx, obj->nativeLookup(cx, pid));
     if (!shape) {
         /* Not found: attempt to resolve it. */
-        Class *clasp = obj->getClass();
+        const Class *clasp = obj->getClass();
         JSResolveOp resolve = clasp->resolve;
         if (resolve != JS_ResolveStub) {
             Rooted<jsid> id(cx, pid.get().asId());

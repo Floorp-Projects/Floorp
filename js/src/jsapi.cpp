@@ -1328,7 +1328,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *objArg)
 typedef struct JSStdName {
     ClassInitializerOp init;
     size_t      atomOffset;     /* offset of atom pointer in JSAtomState */
-    Class       *clasp;
+    const Class *clasp;
 } JSStdName;
 
 static Handle<PropertyName*>
@@ -2492,7 +2492,7 @@ JS_ConvertStub(JSContext *cx, HandleObject obj, JSType type, MutableHandleValue 
 
 JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, JSObject *objArg, JSObject *parent_protoArg,
-             JSClass *clasp, JSNative constructor, unsigned nargs,
+             const JSClass *clasp, JSNative constructor, unsigned nargs,
              const JSPropertySpec *ps, const JSFunctionSpec *fs,
              const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs)
 {
@@ -2513,14 +2513,14 @@ JS_LinkConstructorAndPrototype(JSContext *cx, JSObject *ctorArg, JSObject *proto
     return LinkConstructorAndPrototype(cx, ctor, proto);
 }
 
-JS_PUBLIC_API(JSClass *)
+JS_PUBLIC_API(const JSClass *)
 JS_GetClass(JSObject *obj)
 {
     return obj->getJSClass();
 }
 
 JS_PUBLIC_API(bool)
-JS_InstanceOf(JSContext *cx, JSObject *objArg, JSClass *clasp, jsval *argv)
+JS_InstanceOf(JSContext *cx, JSObject *objArg, const JSClass *clasp, jsval *argv)
 {
     RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
@@ -2565,7 +2565,7 @@ JS_SetPrivate(JSObject *obj, void *data)
 }
 
 JS_PUBLIC_API(void *)
-JS_GetInstancePrivate(JSContext *cx, JSObject *objArg, JSClass *clasp, jsval *argv)
+JS_GetInstancePrivate(JSContext *cx, JSObject *objArg, const JSClass *clasp, jsval *argv)
 {
     RootedObject obj(cx, objArg);
     if (!JS_InstanceOf(cx, obj, clasp, argv))
@@ -2667,7 +2667,7 @@ class AutoHoldZone
 } /* anonymous namespace */
 
 JS_PUBLIC_API(JSObject *)
-JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals,
+JS_NewGlobalObject(JSContext *cx, const JSClass *clasp, JSPrincipals *principals,
                    JS::OnNewGlobalHookOption hookOption,
                    const JS::CompartmentOptions &options)
 {
@@ -2724,7 +2724,7 @@ JS_FireOnNewGlobalObject(JSContext *cx, JS::HandleObject global)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *protoArg, JSObject *parentArg)
+JS_NewObject(JSContext *cx, const JSClass *jsclasp, JSObject *protoArg, JSObject *parentArg)
 {
     RootedObject proto(cx, protoArg);
     RootedObject parent(cx, parentArg);
@@ -2733,7 +2733,7 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *protoArg, JSObject *pare
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, proto, parent);
 
-    Class *clasp = Valueify(jsclasp);
+    const Class *clasp = Valueify(jsclasp);
     if (!clasp)
         clasp = &JSObject::class_;    /* default class is Object */
 
@@ -2754,7 +2754,7 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *protoArg, JSObject *pare
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *protoArg, JSObject *parentArg)
+JS_NewObjectWithGivenProto(JSContext *cx, const JSClass *jsclasp, JSObject *protoArg, JSObject *parentArg)
 {
     RootedObject proto(cx, protoArg);
     RootedObject parent(cx, parentArg);
@@ -2763,7 +2763,7 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *protoArg, 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, proto, parent);
 
-    Class *clasp = Valueify(jsclasp);
+    const Class *clasp = Valueify(jsclasp);
     if (!clasp)
         clasp = &JSObject::class_;    /* default class is Object */
 
@@ -2777,7 +2777,7 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *protoArg, 
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_NewObjectForConstructor(JSContext *cx, JSClass *clasp, const jsval *vp)
+JS_NewObjectForConstructor(JSContext *cx, const JSClass *clasp, const jsval *vp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -3290,7 +3290,7 @@ JS_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg, jsval descript
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_DefineObject(JSContext *cx, JSObject *objArg, const char *name, JSClass *jsclasp,
+JS_DefineObject(JSContext *cx, JSObject *objArg, const char *name, const JSClass *jsclasp,
                 JSObject *protoArg, unsigned attrs)
 {
     RootedObject obj(cx, objArg);
@@ -3299,7 +3299,7 @@ JS_DefineObject(JSContext *cx, JSObject *objArg, const char *name, JSClass *jscl
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, proto);
 
-    Class *clasp = Valueify(jsclasp);
+    const Class *clasp = Valueify(jsclasp);
     if (!clasp)
         clasp = &JSObject::class_;    /* default class is Object */
 
@@ -3716,7 +3716,7 @@ JS_SetAllNonReservedSlotsToUndefined(JSContext *cx, JSObject *objArg)
     if (!obj->isNative())
         return;
 
-    Class *clasp = obj->getClass();
+    const Class *clasp = obj->getClass();
     unsigned numReserved = JSCLASS_RESERVED_SLOTS(clasp);
     unsigned numSlots = obj->slotSpan();
     for (unsigned i = numReserved; i < numSlots; i++)
@@ -3784,7 +3784,7 @@ prop_iter_trace(JSTracer *trc, JSObject *obj)
     }
 }
 
-static Class prop_iter_class = {
+static const Class prop_iter_class = {
     "PropertyIterator",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(1),
     JS_PropertyStub,         /* addProperty */

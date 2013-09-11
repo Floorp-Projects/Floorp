@@ -20,20 +20,20 @@
 namespace js {
 
 inline bool
-NewObjectCache::lookupProto(Class *clasp, JSObject *proto, gc::AllocKind kind, EntryIndex *pentry)
+NewObjectCache::lookupProto(const Class *clasp, JSObject *proto, gc::AllocKind kind, EntryIndex *pentry)
 {
     JS_ASSERT(!proto->is<GlobalObject>());
     return lookup(clasp, proto, kind, pentry);
 }
 
 inline bool
-NewObjectCache::lookupGlobal(Class *clasp, js::GlobalObject *global, gc::AllocKind kind, EntryIndex *pentry)
+NewObjectCache::lookupGlobal(const Class *clasp, js::GlobalObject *global, gc::AllocKind kind, EntryIndex *pentry)
 {
     return lookup(clasp, global, kind, pentry);
 }
 
 inline void
-NewObjectCache::fillGlobal(EntryIndex entry, Class *clasp, js::GlobalObject *global, gc::AllocKind kind, JSObject *obj)
+NewObjectCache::fillGlobal(EntryIndex entry, const Class *clasp, js::GlobalObject *global, gc::AllocKind kind, JSObject *obj)
 {
     //JS_ASSERT(global == obj->getGlobal());
     return fill(entry, clasp, global, kind, obj);

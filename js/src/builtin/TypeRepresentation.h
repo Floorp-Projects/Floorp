@@ -105,7 +105,7 @@ class TypeRepresentation {
     JSObject *addToTableOrFree(JSContext *cx, TypeRepresentationSet::AddPtr &p);
 
   private:
-    static Class class_;
+    static const Class class_;
     static void obj_trace(JSTracer *trace, JSObject *object);
     static void obj_finalize(js::FreeOp *fop, JSObject *object);
 
