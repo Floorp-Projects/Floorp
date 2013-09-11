@@ -1217,7 +1217,9 @@ BOffImm::getDest(Instruction *src)
     return &src[(((int32_t)data<<8)>>8) + 2];
 }
 
-js::jit::DoubleEncoder js::jit::DoubleEncoder::_this;
+const js::jit::DoubleEncoder::DoubleEntry js::jit::DoubleEncoder::table[256] = {
+#include "DoubleEntryTable.inc"
+};
 
 //VFPRegister implementation
 VFPRegister
