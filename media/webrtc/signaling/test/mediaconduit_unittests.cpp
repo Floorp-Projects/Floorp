@@ -270,7 +270,7 @@ void AudioSendAndReceive::GenerateAndReadSamples()
    int16_t audioOutput[PLAYOUT_SAMPLE_LENGTH];
    short* inbuf;
    int sampleLengthDecoded = 0;
-   int SAMPLES = (PLAYOUT_SAMPLE_FREQUENCY * 10); //10 seconds
+   unsigned int SAMPLES = (PLAYOUT_SAMPLE_FREQUENCY * 10); //10 seconds
    int CHANNELS = 1; //mono audio
    int sampleLengthInBytes = sizeof(audioInput);
    //generated audio buffer
@@ -299,7 +299,7 @@ void AudioSendAndReceive::GenerateAndReadSamples()
    fclose(inFile);
 
    WriteWaveHeader(PLAYOUT_SAMPLE_FREQUENCY, 1, outFile);
-   int numSamplesReadFromInput = 0;
+   unsigned int numSamplesReadFromInput = 0;
    do
    {
     if(!memcpy(audioInput, inbuf, sampleLengthInBytes))
