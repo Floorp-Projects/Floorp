@@ -3015,8 +3015,10 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
         nativeFile = fileManager->GetFileForId(directory, id);
         NS_ENSURE_TRUE(nativeFile, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-        nsRefPtr<FileOutputStream> outputStream = FileOutputStream::Create(
-          mObjectStore->Transaction()->Database()->Origin(), nativeFile);
+        IDBDatabase* database = mObjectStore->Transaction()->Database();
+        nsRefPtr<FileOutputStream> outputStream =
+          FileOutputStream::Create(database->Type(), database->Group(),
+                                   database->Origin(), nativeFile);
         NS_ENSURE_TRUE(outputStream, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
         rv = CopyData(inputStream, outputStream);

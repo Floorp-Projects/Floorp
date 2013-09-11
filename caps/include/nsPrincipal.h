@@ -65,7 +65,7 @@ public:
   NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD SubsumesIgnoringDomain(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal);
-  NS_IMETHOD GetExtendedOrigin(nsACString& aExtendedOrigin);
+  NS_IMETHOD GetJarPrefix(nsACString& aJarPrefix);
   NS_IMETHOD GetAppStatus(uint16_t* aAppStatus);
   NS_IMETHOD GetAppId(uint32_t* aAppStatus);
   NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement);
@@ -148,7 +148,7 @@ public:
   NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD SubsumesIgnoringDomain(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal);
-  NS_IMETHOD GetExtendedOrigin(nsACString& aExtendedOrigin);
+  NS_IMETHOD GetJarPrefix(nsACString& aJarPrefix);
   NS_IMETHOD GetAppStatus(uint16_t* aAppStatus);
   NS_IMETHOD GetAppId(uint32_t* aAppStatus);
   NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement);

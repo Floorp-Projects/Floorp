@@ -79,6 +79,7 @@ MOCHITEST_FILES = \
   test_open_objectStore.html \
   test_optionalArguments.html \
   test_overlapping_transactions.html \
+  test_persistenceType.html \
   test_put_get_values.html \
   test_put_get_values_autoIncrement.html \
   test_readonly_transactions.html \
