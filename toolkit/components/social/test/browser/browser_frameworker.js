@@ -559,33 +559,6 @@ let tests = {
     }
   },
 
-  testReloadAndNewPort: function(cbnext) {
-    let run = function () {
-      onconnect = function(e) {
-        e.ports[0].postMessage({topic: "ready"});
-      }
-    }
-    let doneReload = false;
-    let worker = getFrameWorkerHandle(makeWorkerUrl(run),
-                                      undefined, "testReloadAndNewPort");
-    worker.port.onmessage = function(e) {
-      if (e.data.topic == "ready" && !doneReload) {
-        // do the "reload"
-        doneReload = true;
-        worker._worker.reload();
-        let worker2 = getFrameWorkerHandle(makeWorkerUrl(run),
-                                           undefined, "testReloadAndNewPort");
-        worker2.port.onmessage = function(e) {
-          if (e.data.topic == "ready") {
-            // "worker" and "worker2" are handles to the same worker
-            worker2.terminate();
-            cbnext();
-          }
-        }
-      }
-    }
-  },
-
   // This will create the worker, then send a message to the port, then close
   // the port - all before the worker has actually initialized.
   testCloseFirstSend: function(cbnext) {
