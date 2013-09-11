@@ -9,6 +9,8 @@
 
 %{C++
 #include "js/TypeDecls.h"
+
+class nsAXPCNativeCallContext;
 %}
 
 [ptr] native JSObjectPtr(JSObject);

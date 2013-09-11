@@ -162,7 +162,6 @@ private:
   void FinalizeDeferredThings(DeferredFinalizeType aType);
 
   void OnGC(JSGCStatus aStatus);
-  bool OnContext(JSContext* aCx, unsigned aOperation);
 
 public:
   void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);

@@ -44,6 +44,7 @@
 
 #include "OSFileConstants.h"
 #include "nsIOSFileConstantsService.h"
+#include "nsZipArchive.h"
 
 #if defined(__DragonFly__) || defined(__FreeBSD__) \
   || defined(__NetBSD__) || defined(__OpenBSD__)

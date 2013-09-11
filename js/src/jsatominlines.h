@@ -187,12 +187,6 @@ TypeName(JSType type, JSRuntime *rt)
 }
 
 inline Handle<PropertyName*>
-TypeName(JSType type, JSContext *cx)
-{
-    return TypeName(type, cx->runtime());
-}
-
-inline Handle<PropertyName*>
 ClassName(JSProtoKey key, JSAtomState &atomState)
 {
     JS_ASSERT(key < JSProto_LIMIT);

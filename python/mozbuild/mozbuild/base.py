@@ -359,7 +359,7 @@ class MozbuildObject(ProcessExecutionMixin):
             srcdir=False, allow_parallel=True, line_handler=None,
             append_env=None, explicit_env=None, ignore_errors=False,
             ensure_exit_code=0, silent=True, print_directory=True,
-            pass_thru=False, num_jobs=0):
+            pass_thru=False, num_jobs=0, force_pymake=False):
         """Invoke make.
 
         directory -- Relative directory to look for Makefile in.
@@ -371,11 +371,11 @@ class MozbuildObject(ProcessExecutionMixin):
         silent -- If True (the default), run make in silent mode.
         print_directory -- If True (the default), have make print directories
         while doing traversal.
+        force_pymake -- If True, pymake will be used instead of GNU make.
         """
         self._ensure_objdir_exists()
 
-        # Need to copy list since we modify it.
-        args = list(self._make_path)
+        args = [self._make_path(force_pymake=force_pymake)]
 
         if directory:
             args.extend(['-C', directory])
@@ -436,26 +436,18 @@ class MozbuildObject(ProcessExecutionMixin):
 
         return fn(**params)
 
-    @property
-    def _make_path(self):
-        if self._make is None:
-            if self._is_windows():
-                make_py = os.path.join(self.topsrcdir, 'build', 'pymake',
-                    'make.py').replace(os.sep, '/')
-                self._make = [sys.executable, make_py]
+    def _make_path(self, force_pymake=False):
+        if self._is_windows() or force_pymake:
+            return os.path.join(self.topsrcdir, 'build', 'pymake',
+                'make.py').replace(os.sep, '/')
 
-            else:
-                for test in ['gmake', 'make']:
-                    try:
-                        self._make = [which.which(test)]
-                        break
-                    except which.WhichError:
-                        continue
+        for test in ['gmake', 'make']:
+            try:
+                return which.which(test)
+            except which.WhichError:
+                continue
 
-        if self._make is None:
-            raise Exception('Could not find suitable make binary!')
-
-        return self._make
+        raise Exception('Could not find a suitable make implementation.')
 
     def _run_command_in_srcdir(self, **args):
         return self.run_process(cwd=self.topsrcdir, **args)

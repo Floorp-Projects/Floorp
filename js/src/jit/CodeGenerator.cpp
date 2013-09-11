@@ -3528,6 +3528,27 @@ CodeGenerator::visitReturnFromCtor(LReturnFromCtor *lir)
     return true;
 }
 
+typedef JSObject *(*BoxNonStrictThisFn)(JSContext *, HandleValue);
+static const VMFunction BoxNonStrictThisInfo = FunctionInfo<BoxNonStrictThisFn>(BoxNonStrictThis);
+
+bool
+CodeGenerator::visitComputeThis(LComputeThis *lir)
+{
+    ValueOperand value = ToValue(lir, LComputeThis::ValueIndex);
+    Register output = ToRegister(lir->output());
+
+    OutOfLineCode *ool = oolCallVM(BoxNonStrictThisInfo, lir, (ArgList(), value),
+                                   StoreRegisterTo(output));
+    if (!ool)
+        return false;
+
+    masm.branchTestObject(Assembler::NotEqual, value, ool->entry());
+    masm.unboxObject(value, output);
+
+    masm.bind(ool->rejoin());
+    return true;
+}
+
 bool
 CodeGenerator::visitArrayLength(LArrayLength *lir)
 {
@@ -6412,17 +6433,27 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
     Register output = ToRegister(lir->output());
     Register tag = masm.splitTagForTest(value);
 
-    OutOfLineTypeOfV *ool = new OutOfLineTypeOfV(lir);
-    if (!addOutOfLineCode(ool))
-        return false;
-
     JSRuntime *rt = GetIonContext()->runtime;
-
-    // Jump to the OOL path if the value is an object. Objects are complicated
-    // since they may have a typeof hook.
-    masm.branchTestObject(Assembler::Equal, tag, ool->entry());
-
     Label done;
+
+    OutOfLineTypeOfV *ool = NULL;
+    if (lir->mir()->inputMaybeCallableOrEmulatesUndefined()) {
+        // The input may be a callable object (result is "function") or may
+        // emulate undefined (result is "undefined"). Use an OOL path.
+        ool = new OutOfLineTypeOfV(lir);
+        if (!addOutOfLineCode(ool))
+            return false;
+
+        masm.branchTestObject(Assembler::Equal, tag, ool->entry());
+    } else {
+        // Input is not callable and does not emulate undefined, so if
+        // it's an object the result is always "object".
+        Label notObject;
+        masm.branchTestObject(Assembler::NotEqual, tag, &notObject);
+        masm.movePtr(ImmGCPtr(rt->atomState.object), output);
+        masm.jump(&done);
+        masm.bind(&notObject);
+    }
 
     Label notNumber;
     masm.branchTestNumber(Assembler::NotEqual, tag, &notNumber);
@@ -6451,25 +6482,30 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
     masm.movePtr(ImmGCPtr(rt->atomState.string), output);
 
     masm.bind(&done);
-    masm.bind(ool->rejoin());
+    if (ool)
+        masm.bind(ool->rejoin());
     return true;
 }
-
-typedef JSString *(*TypeOfFn)(JSContext *, HandleValue);
-static const VMFunction TypeOfInfo = FunctionInfo<TypeOfFn>(TypeOfOperation);
 
 bool
 CodeGenerator::visitOutOfLineTypeOfV(OutOfLineTypeOfV *ool)
 {
     LTypeOfV *ins = ool->ins();
-    saveLive(ins);
 
-    pushArg(ToValue(ins, LTypeOfV::Input));
-    if (!callVM(TypeOfInfo, ins))
-        return false;
+    ValueOperand input = ToValue(ins, LTypeOfV::Input);
+    Register temp = ToTempUnboxRegister(ins->tempToUnbox());
+    Register output = ToRegister(ins->output());
 
-    masm.storeCallResult(ToRegister(ins->output()));
-    restoreLive(ins);
+    Register obj = masm.extractObject(input, temp);
+
+    saveVolatile(output);
+    masm.setupUnalignedABICall(2, output);
+    masm.passABIArg(obj);
+    masm.movePtr(ImmWord(GetIonContext()->runtime), output);
+    masm.passABIArg(output);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::TypeOfObjectOperation));
+    masm.storeCallResult(output);
+    restoreVolatile(output);
 
     masm.jump(ool->rejoin());
     return true;

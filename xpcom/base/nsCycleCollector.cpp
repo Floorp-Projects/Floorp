@@ -377,6 +377,15 @@ public:
 #define CC_GRAPH_ASSERT(b)
 #endif
 
+#define CC_TELEMETRY(_name, _value)                                            \
+    PR_BEGIN_MACRO                                                             \
+    if (NS_IsMainThread()) {                                                   \
+      Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR##_name, _value);        \
+    } else {                                                                   \
+      Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_WORKER##_name, _value); \
+    }                                                                          \
+    PR_END_MACRO
+
 enum NodeColor { black, white, grey };
 
 // This structure should be kept as small as possible; we may expect
@@ -598,13 +607,23 @@ struct GCGraph
     ~GCGraph() {
     }
 
+    void Clear()
+    {
+        mNodes.Clear();
+        mEdges.Clear();
+        mWeakMaps.Clear();
+        mRootCount = 0;
+    }
+
     void SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
-                             size_t *aNodesSize, size_t *aEdgesSize) const {
+                             size_t *aNodesSize, size_t *aEdgesSize,
+                             size_t *aWeakMapsSize) const {
         *aNodesSize = mNodes.SizeOfExcludingThis(aMallocSizeOf);
         *aEdgesSize = mEdges.SizeOfExcludingThis(aMallocSizeOf);
 
-        // These fields are deliberately not measured:
-        // - mWeakMaps entries, because the pointers are non-owning
+        // We don't measure what the WeakMappings point to, because the
+        // pointers are non-owning.
+        *aWeakMapsSize = mWeakMaps.SizeOfExcludingThis(aMallocSizeOf);
     }
 };
 
@@ -925,14 +944,11 @@ private:
     uint32_t mMergedInARow;
 
 public:
+    nsCycleCollector();
+    ~nsCycleCollector();
+
     void RegisterJSRuntime(CycleCollectedJSRuntime *aJSRuntime);
     void ForgetJSRuntime();
-
-    inline CycleCollectedJSRuntime*
-    JSRuntime() const
-    {
-        return mJSRuntime;
-    }
 
     void SetBeforeUnlinkCallback(CC_BeforeUnlinkCallback aBeforeUnlinkCB)
     {
@@ -946,62 +962,44 @@ public:
         mForgetSkippableCB = aForgetSkippableCB;
     }
 
-    void MarkRoots(GCGraphBuilder &aBuilder);
-    void ScanRoots();
-    void ScanWeakMaps();
-
-    void ForgetSkippable(bool aRemoveChildlessNodes, bool aAsyncSnowWhiteFreeing);
-
-    // returns whether anything was collected
-    bool CollectWhite(nsICycleCollectorListener *aListener);
-
-    nsCycleCollector();
-    ~nsCycleCollector();
-
     void Suspect(void *n, nsCycleCollectionParticipant *cp,
                  nsCycleCollectingAutoRefCnt *aRefCnt);
+    uint32_t SuspectedCount();
+    void ForgetSkippable(bool aRemoveChildlessNodes, bool aAsyncSnowWhiteFreeing);
+    bool FreeSnowWhite(bool aUntilNoSWInPurpleBuffer);
 
-    void CheckThreadSafety();
-
-private:
-    void ShutdownCollect(nsICycleCollectorListener *aListener);
-
-public:
     bool Collect(ccType aCCType,
                  nsTArray<PtrInfo*> *aWhiteNodes,
                  nsCycleCollectorResults *aResults,
                  nsICycleCollectorListener *aListener);
-
-    // Prepare for and cleanup after one or more collection(s).
-    bool PrepareForCollection(nsCycleCollectorResults *aResults,
-                              nsTArray<PtrInfo*> *aWhiteNodes);
-    void FixGrayBits(bool aForceGC);
-    bool ShouldMergeZones(ccType aCCType);
-    void CleanupAfterCollection();
-
-    // Start and finish an individual collection.
-    void BeginCollection(ccType aCCType, nsICycleCollectorListener *aListener);
-    bool FinishCollection(nsICycleCollectorListener *aListener);
-
-    bool FreeSnowWhite(bool aUntilNoSWInPurpleBuffer);
-
-    uint32_t SuspectedCount();
     void Shutdown();
-
-    void ClearGraph()
-    {
-        mGraph.mNodes.Clear();
-        mGraph.mEdges.Clear();
-        mGraph.mWeakMaps.Clear();
-        mGraph.mRootCount = 0;
-    }
 
     void SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
                              size_t *aObjectSize,
                              size_t *aGraphNodesSize,
                              size_t *aGraphEdgesSize,
+                             size_t *aWeakMapsSize,
                              size_t *aWhiteNodeSize,
                              size_t *aPurpleBufferSize) const;
+
+private:
+    void CheckThreadSafety();
+    void ShutdownCollect(nsICycleCollectorListener *aListener);
+
+    void PrepareForCollection(nsCycleCollectorResults *aResults,
+                              nsTArray<PtrInfo*> *aWhiteNodes);
+    void FixGrayBits(bool aForceGC);
+    bool ShouldMergeZones(ccType aCCType);
+
+    void BeginCollection(ccType aCCType, nsICycleCollectorListener *aListener);
+    void MarkRoots(GCGraphBuilder &aBuilder);
+    void ScanRoots();
+    void ScanWeakMaps();
+
+    // returns whether anything was collected
+    bool CollectWhite(nsICycleCollectorListener *aListener);
+
+    void CleanupAfterCollection();
 };
 
 /**
@@ -1573,7 +1571,7 @@ public:
 
     uint32_t Count() const { return mPtrToNodeMap.entryCount; }
 
-    PtrInfo* AddNode(void *s, nsCycleCollectionParticipant *aParticipant);
+    PtrInfo* AddNode(void *aPtr, nsCycleCollectionParticipant *aParticipant);
     PtrInfo* AddWeakMapNode(void* node);
     void Traverse(PtrInfo* aPtrInfo);
     void SetLastChild();
@@ -1692,9 +1690,9 @@ GCGraphBuilder::~GCGraphBuilder()
 }
 
 PtrInfo*
-GCGraphBuilder::AddNode(void *s, nsCycleCollectionParticipant *aParticipant)
+GCGraphBuilder::AddNode(void *aPtr, nsCycleCollectionParticipant *aParticipant)
 {
-    PtrToNodeEntry *e = static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, s, PL_DHASH_ADD));
+    PtrToNodeEntry *e = static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, aPtr, PL_DHASH_ADD));
     if (!e) {
         mRanOutOfMemory = true;
         return nullptr;
@@ -1703,7 +1701,7 @@ GCGraphBuilder::AddNode(void *s, nsCycleCollectionParticipant *aParticipant)
     PtrInfo *result;
     if (!e->mNode) {
         // New entry.
-        result = mNodeBuilder.Add(s, aParticipant);
+        result = mNodeBuilder.Add(aPtr, aParticipant);
         e->mNode = result;
         NS_ASSERTION(result, "mNodeBuilder.Add returned null");
     } else {
@@ -2116,6 +2114,7 @@ nsCycleCollector::ForgetSkippable(bool aRemoveChildlessNodes,
     if (mJSRuntime) {
         mJSRuntime->PrepareForForgetSkippable();
     }
+    MOZ_ASSERT(!mScanInProgress, "Don't forget skippable or free snow-white while scan is in progress.");
     mPurpleBuf.RemoveSkippable(this, aRemoveChildlessNodes,
                                aAsyncSnowWhiteFreeing, mForgetSkippableCB);
 }
@@ -2142,7 +2141,7 @@ nsCycleCollector::MarkRoots(GCGraphBuilder &aBuilder)
     if (aBuilder.RanOutOfMemory()) {
         NS_ASSERTION(false,
                      "Ran out of memory while building cycle collector graph");
-        Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_OOM, true);
+        CC_TELEMETRY(_OOM, true);
     }
 }
 
@@ -2259,7 +2258,7 @@ nsCycleCollector::ScanWeakMaps()
 
     if (failed) {
         NS_ASSERTION(false, "Ran out of memory in ScanWeakMaps");
-        Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_OOM, true);
+        CC_TELEMETRY(_OOM, true);
     }
 }
 
@@ -2276,7 +2275,7 @@ nsCycleCollector::ScanRoots()
 
     if (failed) {
         NS_ASSERTION(false, "Ran out of memory in ScanRoots");
-        Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_OOM, true);
+        CC_TELEMETRY(_OOM, true);
     }
 
     ScanWeakMaps();
@@ -2308,7 +2307,7 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
     TimeLog timeLog;
 
     MOZ_ASSERT(mWhiteNodes->IsEmpty(),
-               "FinishCollection wasn't called?");
+               "CleanupAfterCollection wasn't called?");
 
     mWhiteNodes->SetCapacity(mWhiteNodeCount);
     uint32_t numWhiteGCed = 0;
@@ -2409,11 +2408,13 @@ class CycleCollectorMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
     NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback* aCb,
                               nsISupports* aClosure)
     {
-        size_t objectSize, graphNodesSize, graphEdgesSize, whiteNodesSize,
-               purpleBufferSize;
+        size_t objectSize, graphNodesSize, graphEdgesSize, weakMapsSize,
+            whiteNodesSize, purpleBufferSize;
         mCollector->SizeOfIncludingThis(MallocSizeOf,
-                                        &objectSize, &graphNodesSize,
-                                        &graphEdgesSize, &whiteNodesSize,
+                                        &objectSize,
+                                        &graphNodesSize, &graphEdgesSize,
+                                        &weakMapsSize,
+                                        &whiteNodesSize,
                                         &purpleBufferSize);
 
     #define REPORT(_path, _amount, _desc)                                     \
@@ -2438,6 +2439,11 @@ class CycleCollectorMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
 
         REPORT("explicit/cycle-collector/graph-edges", graphEdgesSize,
                "Memory used for the edges of the cycle collector's graph. "
+               "This should be zero when the collector is idle.");
+
+        REPORT("explicit/cycle-collector/weak-maps", weakMapsSize,
+               "Memory used for the representation of weak maps in the "
+               "cycle collector's graph. "
                "This should be zero when the collector is idle.");
 
         REPORT("explicit/cycle-collector/white-nodes", whiteNodesSize,
@@ -2581,7 +2587,7 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
 
         bool needGC = mJSRuntime->NeedCollect();
         // Only do a telemetry ping for non-shutdown CCs.
-        Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_NEED_GC, needGC);
+        CC_TELEMETRY(_NEED_GC, needGC);
         if (!needGC)
             return;
         if (mResults)
@@ -2593,14 +2599,10 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
     timeLog.Checkpoint("GC()");
 }
 
-bool
+void
 nsCycleCollector::PrepareForCollection(nsCycleCollectorResults *aResults,
                                        nsTArray<PtrInfo*> *aWhiteNodes)
 {
-    // This can legitimately happen in a few cases. See bug 383651.
-    if (mCollectionInProgress)
-        return false;
-
     TimeLog timeLog;
 
     mCollectionStart = TimeStamp::Now();
@@ -2617,14 +2619,14 @@ nsCycleCollector::PrepareForCollection(nsCycleCollectorResults *aResults,
     mWhiteNodes = aWhiteNodes;
 
     timeLog.Checkpoint("PrepareForCollection()");
-
-    return true;
 }
 
 void
 nsCycleCollector::CleanupAfterCollection()
 {
+    mWhiteNodes->Clear();
     mWhiteNodes = nullptr;
+    mGraph.Clear();
     mCollectionInProgress = false;
 
 #ifdef XP_OS2
@@ -2652,10 +2654,10 @@ nsCycleCollector::CleanupAfterCollection()
         mResults->mVisitedGCed = mVisitedGCed;
         mResults = nullptr;
     }
-    Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR, interval);
-    Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_VISITED_REF_COUNTED, mVisitedRefCounted);
-    Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_VISITED_GCED, mVisitedGCed);
-    Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_COLLECTED, mWhiteNodeCount);
+    CC_TELEMETRY( , interval);
+    CC_TELEMETRY(_VISITED_REF_COUNTED, mVisitedRefCounted);
+    CC_TELEMETRY(_VISITED_GCED, mVisitedGCed);
+    CC_TELEMETRY(_COLLECTED, mWhiteNodeCount);
 }
 
 void
@@ -2679,9 +2681,12 @@ nsCycleCollector::Collect(ccType aCCType,
 {
     CheckThreadSafety();
 
-    if (!PrepareForCollection(aResults, aWhiteNodes)) {
+    // This can legitimately happen in a few cases. See bug 383651.
+    if (mCollectionInProgress) {
         return false;
     }
+
+    PrepareForCollection(aResults, aWhiteNodes);
 
     bool forceGC = (aCCType == ShutdownCC);
     if (!forceGC && aListener) {
@@ -2698,7 +2703,7 @@ nsCycleCollector::Collect(ccType aCCType,
     }
 
     BeginCollection(aCCType, aListener);
-    bool collectedAny = FinishCollection(aListener);
+    bool collectedAny = CollectWhite(aListener);
     CleanupAfterCollection();
     return collectedAny;
 }
@@ -2762,48 +2767,29 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     mPurpleBuf.SelectPointers(builder);
     timeLog.Checkpoint("SelectPointers()");
 
-    if (builder.Count() > 0) {
-        // The main Bacon & Rajan collection algorithm.
+    // The main Bacon & Rajan collection algorithm.
+    MarkRoots(builder);
+    timeLog.Checkpoint("MarkRoots()");
 
-        MarkRoots(builder);
-        timeLog.Checkpoint("MarkRoots()");
+    ScanRoots();
+    timeLog.Checkpoint("ScanRoots()");
 
-        ScanRoots();
-        timeLog.Checkpoint("ScanRoots()");
+    mScanInProgress = false;
 
-        mScanInProgress = false;
+    if (aListener) {
+        aListener->BeginResults();
 
-        if (aListener) {
-            aListener->BeginResults();
-
-            NodePool::Enumerator etor(mGraph.mNodes);
-            while (!etor.IsDone()) {
-                PtrInfo *pi = etor.GetNext();
-                if (pi->mColor == black &&
-                    pi->mRefCount > 0 && pi->mRefCount < UINT32_MAX &&
-                    pi->mInternalRefs != pi->mRefCount) {
-                    aListener->DescribeRoot((uint64_t)pi->mPointer,
-                                            pi->mInternalRefs);
-                }
+        NodePool::Enumerator etor(mGraph.mNodes);
+        while (!etor.IsDone()) {
+            PtrInfo *pi = etor.GetNext();
+            if (pi->mColor == black &&
+                pi->mRefCount > 0 && pi->mRefCount < UINT32_MAX &&
+                pi->mInternalRefs != pi->mRefCount) {
+                aListener->DescribeRoot((uint64_t)pi->mPointer,
+                                        pi->mInternalRefs);
             }
         }
-    } else {
-        mScanInProgress = false;
     }
-}
-
-bool
-nsCycleCollector::FinishCollection(nsICycleCollectorListener *aListener)
-{
-    TimeLog timeLog;
-    bool collected = CollectWhite(aListener);
-    timeLog.Checkpoint("CollectWhite()");
-
-    mWhiteNodes->Clear();
-    ClearGraph();
-    timeLog.Checkpoint("ClearGraph()");
-
-    return collected;
 }
 
 uint32_t
@@ -2841,12 +2827,14 @@ nsCycleCollector::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
                                       size_t *aObjectSize,
                                       size_t *aGraphNodesSize,
                                       size_t *aGraphEdgesSize,
+                                      size_t *aWeakMapsSize,
                                       size_t *aWhiteNodeSize,
                                       size_t *aPurpleBufferSize) const
 {
     *aObjectSize = aMallocSizeOf(this);
 
-    mGraph.SizeOfExcludingThis(aMallocSizeOf, aGraphNodesSize, aGraphEdgesSize);
+    mGraph.SizeOfExcludingThis(aMallocSizeOf, aGraphNodesSize, aGraphEdgesSize,
+                               aWeakMapsSize);
 
     // No need to measure what the entries point to; the pointers are
     // non-owning.

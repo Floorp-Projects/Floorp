@@ -641,6 +641,14 @@ GetNativeStackLimit(JSContext *cx)
         }                                                                       \
     JS_END_MACRO
 
+#define JS_CHECK_RECURSION_WITH_SP(cx, sp, onerror)                             \
+    JS_BEGIN_MACRO                                                              \
+        if (!JS_CHECK_STACK_SIZE(js::GetNativeStackLimit(cx), sp)) {            \
+            js_ReportOverRecursed(cx);                                          \
+            onerror;                                                            \
+        }                                                                       \
+    JS_END_MACRO
+
 #define JS_CHECK_CHROME_RECURSION(cx, onerror)                                  \
     JS_BEGIN_MACRO                                                              \
         int stackDummy_;                                                        \

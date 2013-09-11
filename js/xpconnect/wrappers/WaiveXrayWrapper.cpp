@@ -5,13 +5,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsJSPrincipals.h"
-
-#include "XPCWrapper.h"
-
 #include "WaiveXrayWrapper.h"
-#include "AccessCheck.h"
 #include "WrapperFactory.h"
+#include "jsapi.h"
 
 using namespace JS;
 

@@ -230,11 +230,47 @@ BaselineCompiler::emitPrologue()
     if (script->isForEval())
         masm.storePtr(ImmGCPtr(script), frame.addressOfEvalScript());
 
+    // Handle scope chain pre-initialization (in case GC gets run
+    // during stack check).  For global and eval scripts, the scope
+    // chain is in R1.  For function scripts, the scope chain is in
+    // the callee, NULL is stored for now so that GC doesn't choke on
+    // a bogus ScopeChain value in the frame.
+    if (function())
+        masm.storePtr(ImmWord((uintptr_t)0), frame.addressOfScopeChain());
+    else
+        masm.storePtr(R1.scratchReg(), frame.addressOfScopeChain());
+
+    if (!emitStackCheck())
+        return false;
+
     // Initialize locals to |undefined|. Use R0 to minimize code size.
+    // If the number of locals to push is < LOOP_UNROLL_FACTOR, then the
+    // initialization pushes are emitted directly and inline.  Otherwise,
+    // they're emitted in a partially unrolled loop.
     if (frame.nlocals() > 0) {
+        size_t LOOP_UNROLL_FACTOR = 4;
+        size_t toPushExtra = frame.nlocals() % LOOP_UNROLL_FACTOR;
+
         masm.moveValue(UndefinedValue(), R0);
-        for (size_t i = 0; i < frame.nlocals(); i++)
+
+        // Handle any extra pushes left over by the optional unrolled loop below.
+        for (size_t i = 0; i < toPushExtra; i++)
             masm.pushValue(R0);
+
+        // Partially unrolled loop of pushes.
+        if (frame.nlocals() >= LOOP_UNROLL_FACTOR) {
+            size_t toPush = frame.nlocals() - toPushExtra;
+            JS_ASSERT(toPush % LOOP_UNROLL_FACTOR == 0);
+            JS_ASSERT(toPush >= LOOP_UNROLL_FACTOR);
+            masm.move32(Imm32(toPush), R1.scratchReg());
+            // Emit unrolled loop with 4 pushes per iteration.
+            Label pushLoop;
+            masm.bind(&pushLoop);
+            for (size_t i = 0; i < LOOP_UNROLL_FACTOR; i++)
+                masm.pushValue(R0);
+            masm.sub32(Imm32(LOOP_UNROLL_FACTOR), R1.scratchReg());
+            masm.j(Assembler::NonZero, &pushLoop);
+        }
     }
 
 #if JS_TRACE_LOGGING
@@ -249,9 +285,6 @@ BaselineCompiler::emitPrologue()
     // Initialize the scope chain before any operation that may
     // call into the VM and trigger a GC.
     if (!initScopeChain())
-        return false;
-
-    if (!emitStackCheck())
         return false;
 
     if (!emitDebugPrologue())
@@ -338,6 +371,30 @@ BaselineCompiler::emitIC(ICStub *stub, bool isForOp)
     return true;
 }
 
+typedef bool (*CheckOverRecursedWithExtraFn)(JSContext *, uint32_t);
+static const VMFunction CheckOverRecursedWithExtraInfo =
+    FunctionInfo<CheckOverRecursedWithExtraFn>(CheckOverRecursedWithExtra);
+
+bool
+BaselineCompiler::emitStackCheck()
+{
+    Label skipCall;
+    uintptr_t *limitAddr = &cx->runtime()->mainThread.ionStackLimit;
+    uint32_t tolerance = script->nslots * sizeof(Value);
+    masm.movePtr(BaselineStackReg, R1.scratchReg());
+    masm.subPtr(Imm32(tolerance), R1.scratchReg());
+    masm.branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(limitAddr), R1.scratchReg(),
+                   &skipCall);
+
+    prepareVMCall();
+    pushArg(Imm32(tolerance));
+    if (!callVM(CheckOverRecursedWithExtraInfo, /*preInitialize=*/true))
+        return false;
+
+    masm.bind(&skipCall);
+    return true;
+}
+
 typedef bool (*DebugPrologueFn)(JSContext *, BaselineFrame *, bool *);
 static const VMFunction DebugPrologueInfo = FunctionInfo<DebugPrologueFn>(jit::DebugPrologue);
 
@@ -400,8 +457,8 @@ BaselineCompiler::initScopeChain()
                 return false;
         }
     } else {
-        // For global and eval scripts, the scope chain is in R1.
-        masm.storePtr(R1.scratchReg(), frame.addressOfScopeChain());
+        // ScopeChain pointer in BaselineFrame has already been initialized
+        // in prologue.
 
         if (script->isForEval() && script->strict) {
             // Strict eval needs its own call object.
@@ -415,26 +472,6 @@ BaselineCompiler::initScopeChain()
         }
     }
 
-    return true;
-}
-
-typedef bool (*ReportOverRecursedFn)(JSContext *);
-static const VMFunction CheckOverRecursedInfo =
-    FunctionInfo<ReportOverRecursedFn>(CheckOverRecursed);
-
-bool
-BaselineCompiler::emitStackCheck()
-{
-    Label skipCall;
-    uintptr_t *limitAddr = &cx->runtime()->mainThread.ionStackLimit;
-    masm.branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(limitAddr), BaselineStackReg,
-                   &skipCall);
-
-    prepareVMCall();
-    if (!callVM(CheckOverRecursedInfo))
-        return false;
-
-    masm.bind(&skipCall);
     return true;
 }
 

@@ -143,6 +143,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitGetArgumentsObjectArg(LGetArgumentsObjectArg *lir);
     bool visitSetArgumentsObjectArg(LSetArgumentsObjectArg *lir);
     bool visitReturnFromCtor(LReturnFromCtor *lir);
+    bool visitComputeThis(LComputeThis *lir);
     bool visitArrayLength(LArrayLength *lir);
     bool visitTypedArrayLength(LTypedArrayLength *lir);
     bool visitTypedArrayElements(LTypedArrayElements *lir);

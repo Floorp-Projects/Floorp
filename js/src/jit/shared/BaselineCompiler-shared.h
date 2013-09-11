@@ -128,7 +128,7 @@ class BaselineCompilerShared
         masm.Push(BaselineFrameReg);
     }
 
-    bool callVM(const VMFunction &fun);
+    bool callVM(const VMFunction &fun, bool preInitialize=false);
 
   public:
     BytecodeAnalysis &analysis() {

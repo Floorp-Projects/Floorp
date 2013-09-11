@@ -57,6 +57,7 @@ DOMStorageDBThread::DOMStorageDBThread()
 : mThread(nullptr)
 , mMonitor("DOMStorageThreadMonitor")
 , mStopIOThread(false)
+, mWALModeEnabled(false)
 , mDBReady(false)
 , mStatus(NS_OK)
 , mWorkerStatements(mWorkerConnection)
@@ -140,7 +141,7 @@ DOMStorageDBThread::SyncPreload(DOMStorageCacheBridge* aCache, bool aForceSync)
   // Bypass sync load when an update is pending in the queue to write, we would
   // get incosistent data in the cache.  Also don't allow sync main-thread preload
   // when DB open and init is still pending on the background thread.
-  if (mWALModeEnabled && mDBReady) {
+  if (mDBReady && mWALModeEnabled) {
     bool pendingTasks;
     {
       MonitorAutoLock monitor(mMonitor);
