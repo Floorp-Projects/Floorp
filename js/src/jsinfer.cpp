@@ -2882,7 +2882,7 @@ types::AddClearDefiniteFunctionUsesInScript(JSContext *cx, TypeObject *type,
 
     for (unsigned i = 0; i < count; i++) {
         TypeSet *types = &typeArray[i];
-        if (types->getObjectCount() == 1) {
+        if (!types->unknownObject() && types->getObjectCount() == 1) {
             if (calleeKey != types->getObject(0)) {
                 // Also check if the object is the Function.call or
                 // Function.apply native. IonBuilder uses the presence of these
