@@ -372,6 +372,9 @@ def parsefile(pathname):
     pathname = os.path.realpath(pathname)
     return _parsecache.get(pathname)
 
+# colon followed by anything except a slash (Windows path detection)
+_depfilesplitter = re.compile(r':(?![\\/])')
+
 def parsedepfile(pathname):
     """
     Parse a filename listing only depencencies into a parserdata.StatementList.
@@ -394,7 +397,7 @@ def parsedepfile(pathname):
     pathname = os.path.realpath(pathname)
     stmts = parserdata.StatementList()
     for line in continuation_iter(open(pathname).readlines()):
-        target, deps = line.split(":", 1)
+        target, deps = _depfilesplitter.split(line, 1)
         stmts.append(parserdata.Rule(data.StringExpansion(target, None),
                                      data.StringExpansion(deps, None), False))
     return stmts
