@@ -378,13 +378,14 @@ class Sampler {
 
 class ThreadInfo {
  public:
-  ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread, PseudoStack* aPseudoStack)
+  ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread, PseudoStack* aPseudoStack, void* aStackTop)
     : mName(strdup(aName))
     , mThreadId(aThreadId)
     , mIsMainThread(aIsMainThread)
     , mPseudoStack(aPseudoStack)
     , mPlatformData(Sampler::AllocPlatformData(aThreadId))
-    , mProfile(NULL) {}
+    , mProfile(NULL)
+    , mStackTop(aStackTop) {}
 
   virtual ~ThreadInfo();
 
@@ -398,6 +399,7 @@ class ThreadInfo {
   ThreadProfile* Profile() const { return mProfile; }
 
   PlatformData* GetPlatformData() const { return mPlatformData; }
+  void* StackTop() const { return mStackTop; }
  private:
   char* mName;
   int mThreadId;
@@ -405,6 +407,7 @@ class ThreadInfo {
   PseudoStack* mPseudoStack;
   PlatformData* mPlatformData;
   ThreadProfile* mProfile;
+  void* const mStackTop;
 };
 
 #endif /* ndef TOOLS_PLATFORM_H_ */
