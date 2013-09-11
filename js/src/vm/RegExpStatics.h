@@ -88,27 +88,12 @@ class RegExpStatics
     inline void updateLazily(JSContext *cx, JSLinearString *input,
                              RegExpShared *shared, size_t lastIndex);
     inline bool updateFromMatchPairs(JSContext *cx, JSLinearString *input, MatchPairs &newPairs);
-
-    void setMultiline(JSContext *cx, bool enabled) {
-        aboutToWrite();
-        if (enabled) {
-            flags = RegExpFlag(flags | MultilineFlag);
-            markFlagsSet(cx);
-        } else {
-            flags = RegExpFlag(flags & ~MultilineFlag);
-        }
-    }
+    inline void setMultiline(JSContext *cx, bool enabled);
 
     inline void clear();
 
     /* Corresponds to JSAPI functionality to set the pending RegExp input. */
-    void reset(JSContext *cx, JSString *newInput, bool newMultiline) {
-        aboutToWrite();
-        clear();
-        pendingInput = newInput;
-        setMultiline(cx, newMultiline);
-        checkInvariants();
-    }
+    inline void reset(JSContext *cx, JSString *newInput, bool newMultiline);
 
     inline void setPendingInput(JSString *newInput);
 
