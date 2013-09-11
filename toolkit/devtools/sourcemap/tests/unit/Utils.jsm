@@ -259,6 +259,7 @@ define('lib/source-map/util', ['require', 'exports', 'module' , ], function(requ
   exports.getArg = getArg;
 
   var urlRegexp = /([\w+\-.]+):\/\/((\w+:\w+)@)?([\w.]+)?(:(\d+))?(\S+)?/;
+  var dataUrlRegexp = /^data:.+\,.+/;
 
   function urlParse(aUrl) {
     var match = aUrl.match(urlRegexp);
@@ -296,7 +297,7 @@ define('lib/source-map/util', ['require', 'exports', 'module' , ], function(requ
   function join(aRoot, aPath) {
     var url;
 
-    if (aPath.match(urlRegexp)) {
+    if (aPath.match(urlRegexp) || aPath.match(dataUrlRegexp)) {
       return aPath;
     }
 
