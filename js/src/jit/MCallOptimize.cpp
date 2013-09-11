@@ -9,6 +9,7 @@
 #include "builtin/ParallelArray.h"
 #include "builtin/TestingFunctions.h"
 #include "jit/IonBuilder.h"
+#include "jit/Lowering.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 
@@ -55,6 +56,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineMathRandom(callInfo);
     if (native == js::math_imul)
         return inlineMathImul(callInfo);
+    if (native == js::math_fround)
+        return inlineMathFRound(callInfo);
     if (native == js::math_sin)
         return inlineMathFunction(callInfo, MMathFunction::Sin);
     if (native == js::math_cos)
@@ -806,6 +809,33 @@ IonBuilder::inlineMathImul(CallInfo &callInfo)
     current->add(second);
 
     MMul *ins = MMul::New(first, second, MIRType_Int32, MMul::Integer);
+    current->add(ins);
+    current->push(ins);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineMathFRound(CallInfo &callInfo)
+{
+    if (!LIRGenerator::allowFloat32Optimizations())
+        return InliningStatus_NotInlined;
+
+    if (callInfo.argc() != 1 || callInfo.constructing())
+        return InliningStatus_NotInlined;
+
+    // MIRType can't be Float32, as this point, as getInlineReturnType uses JSVal types
+    // to infer the returned MIR type.
+    MIRType returnType = getInlineReturnType();
+    if (!IsNumberType(returnType))
+        return InliningStatus_NotInlined;
+
+    MIRType arg = callInfo.getArg(0)->type();
+    if (!IsNumberType(arg))
+        return InliningStatus_NotInlined;
+
+    callInfo.unwrapArgs();
+
+    MToFloat32 *ins = MToFloat32::New(callInfo.getArg(0));
     current->add(ins);
     current->push(ins);
     return InliningStatus_Inlined;
