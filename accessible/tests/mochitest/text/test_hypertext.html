@@ -74,7 +74,7 @@
       testCharacterCount(IDs, 5);
       testText(IDs, 0, 5, "1.foo");
 
-      testText(["testbr"], 0, 4, "foo\n");
+      testText(["testbr"], 0, 3, "foo");
 
       testTextAtOffset(2, nsIAccessibleText.BOUNDARY_CHAR, "o", 2, 3, "testbr",
                        kOk, kOk, kOk);
