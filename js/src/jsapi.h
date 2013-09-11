@@ -3849,7 +3849,7 @@ class JSAutoByteString
         return mBytes;
     }
 
-    char *encodeLatin1(js::ContextFriendFields *cx, JSString *str);
+    char *encodeLatin1(js::ExclusiveContext *cx, JSString *str);
 
     char *encodeUtf8(JSContext *cx, JSString *str) {
         JS_ASSERT(!mBytes);

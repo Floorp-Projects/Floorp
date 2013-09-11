@@ -44,7 +44,8 @@ public:
                                   JS::Handle<JSObject*> aScopeObject,
                                   JS::CompileOptions &aOptions,
                                   bool aCoerceToString,
-                                  JS::Value* aRetValue) MOZ_OVERRIDE;
+                                  JS::Value* aRetValue,
+                                  void **aOffThreadToken = nullptr) MOZ_OVERRIDE;
 
   virtual nsresult BindCompiledEventHandler(nsISupports *aTarget,
                                             JS::Handle<JSObject*> aScope,
