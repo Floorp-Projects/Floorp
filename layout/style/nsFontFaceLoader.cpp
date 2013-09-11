@@ -622,7 +622,12 @@ nsUserFontSet::InsertRule(nsCSSFontFaceRule *aRule, uint8_t aSheetType,
       case eCSSUnit_URL:
         face->mIsLocal = false;
         face->mURI = val.GetURLValue();
-        NS_ASSERTION(face->mURI, "null url in @font-face rule");
+        if (!face->mURI) {
+          // if URI not valid, omit from src array
+          srcArray.RemoveElementAt(srcArray.Length() - 1);
+          NS_WARNING("null url in @font-face rule");
+          continue;
+        }
         face->mReferrer = val.GetURLStructValue()->mReferrer;
         face->mOriginPrincipal = val.GetURLStructValue()->mOriginPrincipal;
         NS_ASSERTION(face->mOriginPrincipal, "null origin principal in @font-face rule");
