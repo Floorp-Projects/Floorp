@@ -190,6 +190,11 @@ this.DOMApplicationRegistry = {
               this.webapps[id].storeVersion = 0;
             }
 
+            // Default role to "".
+            if (this.webapps[id].role === undefined) {
+              this.webapps[id].role = "";
+            }
+
             // At startup we can't be downloading, and the $TMP directory
             // will be empty so we can't just apply a staged update.
             app.downloading = false;
@@ -242,13 +247,14 @@ this.DOMApplicationRegistry = {
     if (supportSystemMessages()) {
       this._processManifestForIds(ids, aRunUpdate);
     } else {
-      // Read the CSPs. If MOZ_SYS_MSG is defined this is done on
+      // Read the CSPs and roles. If MOZ_SYS_MSG is defined this is done on
       // _processManifestForIds so as to not reading the manifests
       // twice
       this._readManifests(ids, (function readCSPs(aResults) {
         aResults.forEach(function registerManifest(aResult) {
           let app = this.webapps[aResult.id];
           app.csp = aResult.manifest.csp || "";
+          app.role = aResult.manifest.role || "";
           if (app.appStatus >= Ci.nsIPrincipal.APP_STATUS_PRIVILEGED) {
             app.redirects = this.sanitizeRedirects(aResult.redirects);
           }
@@ -734,6 +740,7 @@ this.DOMApplicationRegistry = {
         let manifest = aResult.manifest;
         app.name = manifest.name;
         app.csp = manifest.csp || "";
+        app.role = manifest.role || "";
         if (app.appStatus >= Ci.nsIPrincipal.APP_STATUS_PRIVILEGED) {
           app.redirects = this.sanitizeRedirects(manifest.redirects);
         }
@@ -1477,6 +1484,7 @@ this.DOMApplicationRegistry = {
 
         app.name = manifest.name;
         app.csp = manifest.csp || "";
+        app.role = manifest.role || "";
         app.updateTime = Date.now();
       } else {
         manifest = new ManifestHelper(aOldManifest, app.origin);
@@ -2057,6 +2065,7 @@ this.DOMApplicationRegistry = {
 
     appObject.name = manifest.name;
     appObject.csp = manifest.csp || "";
+    appObject.role = manifest.role || "";
 
     appObject.installerAppId = aData.appId;
     appObject.installerIsBrowser = aData.isBrowser;
