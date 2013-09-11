@@ -496,6 +496,22 @@ LIRGenerator::visitBail(MBail *bail)
 }
 
 bool
+LIRGenerator::visitAssertFloat32(MAssertFloat32 *assertion)
+{
+    MIRType type = assertion->input()->type();
+    bool checkIsFloat32 = assertion->mustBeFloat32();
+
+    if (!allowFloat32Optimizations())
+        return true;
+
+    if (type != MIRType_Value && !js_IonOptions.eagerCompilation) {
+        JS_ASSERT_IF(checkIsFloat32, type == MIRType_Float32);
+        JS_ASSERT_IF(!checkIsFloat32, type != MIRType_Float32);
+    }
+    return true;
+}
+
+bool
 LIRGenerator::visitGetDynamicName(MGetDynamicName *ins)
 {
     MDefinition *scopeChain = ins->getScopeChain();

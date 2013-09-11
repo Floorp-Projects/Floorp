@@ -1007,6 +1007,14 @@ js::testingFunc_bailout(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+bool
+js::testingFunc_assertFloat32(JSContext *cx, unsigned argc, jsval *vp)
+{
+    // NOP when not in IonMonkey
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return true;
+}
+
 static bool
 SetJitCompilerOption(JSContext *cx, unsigned argc, jsval *vp)
 {

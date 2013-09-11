@@ -20,6 +20,9 @@ testingFunc_inParallelSection(JSContext *cx, unsigned argc, Value *vp);
 bool
 testingFunc_bailout(JSContext *cx, unsigned argc, Value *vp);
 
+bool
+testingFunc_assertFloat32(JSContext *cx, unsigned argc, Value *vp);
+
 } /* namespace js */
 
 #endif /* builtin_TestingFunctions_h */
