@@ -1287,9 +1287,9 @@ CompositorOGL::EndFrame()
   }
 
   if (mFPS) {
-    double fillRatio = 0;
-    if (mPixelsFilled > 0.0f && mPixelsPerFrame > 0.0f) {
-      fillRatio = 100.0f * double(mPixelsFilled) / double(mPixelsPerFrame);
+    float fillRatio = 0;
+    if (mPixelsFilled > 0 && mPixelsPerFrame > 0) {
+      fillRatio = 100.0f * float(mPixelsFilled) / float(mPixelsPerFrame);
       if (fillRatio > 999.0f)
         fillRatio = 999.0f;
     }
