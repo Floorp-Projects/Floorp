@@ -689,7 +689,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
                     Log.d(LOG_TAG, "Ignoring search without location.");
                     return;
                 }
-                recordSearch(message.getString("identifier"), message.getString("location"));
+                recordSearch(message.optString("identifier", null), message.getString("location"));
                 return;
             }
         } catch (Exception e) {
