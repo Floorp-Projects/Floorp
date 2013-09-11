@@ -10,7 +10,6 @@
 simple_events = [
     'ProgressEvent',
     'StorageEvent',
-    'DeviceProximityEvent',
     'MozSettingsEvent',
     'UserProximityEvent',
     'CustomEvent',
