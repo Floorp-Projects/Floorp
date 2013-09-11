@@ -11,15 +11,9 @@ interface nsIBrowserTab : nsISupports {
   readonly attribute float scale;
 };
 
-[scriptable, uuid(6455c49b-7497-4eb6-b137-c9e9b68462ec)]
+[scriptable, uuid(d10377b4-1c90-493a-a532-63cb3f16ee2b)]
 interface nsIAndroidBrowserApp : nsISupports {
   nsIBrowserTab getBrowserTab(in int32_t tabId);
-  void getPreferences(in int32_t requestId,
-                      [array, size_is(count)] in wstring prefNames,
-                      in unsigned long count);
-  void observePreferences(in int32_t requestId,
-                          [array, size_is(count)] in wstring prefNames,
-                          in unsigned long count);
 };
 [scriptable, uuid(59cfcb35-69b7-47b2-8155-32b193272666)]
 interface nsIAndroidViewport : nsISupports {
