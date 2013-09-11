@@ -42,16 +42,6 @@
 
 SimpleTest.waitForExplicitFinish();
 
-function get_pref()
-{
-    return SpecialPowers.getBoolPref("browser.display.use_document_colors");
-}
-
-function set_pref(val)
-{
-    SpecialPowers.setBoolPref("browser.display.use_document_colors", val);
-}
-
 var cs1 = getComputedStyle(document.getElementById("one"), "");
 var cs2 = getComputedStyle(document.getElementById("two"), "");
 var cs3 = getComputedStyle(document.getElementById("three"), "");
@@ -60,10 +50,7 @@ var cs5 = getComputedStyle(document.getElementById("five"), "");
 var cs6 = getComputedStyle(document.getElementById("six"), "");
 var cs7 = getComputedStyle(document.getElementById("seven"), "");
 
-
-var oldVal = get_pref();
-set_pref(true);
-setTimeout(part1, 0);
+SpecialPowers.pushPrefEnv({'set': [['browser.display.use_document_colors', true]]}, part1);
 
 var transparentBackgroundColor;
 var inputBackgroundColor, inputColor, inputBorderTopColor;
@@ -134,8 +121,7 @@ function part1()
     inputBorderRightColor = cs4.borderRightColor;
     inputBorderLeftColor = cs4.borderLeftColor;
     inputBorderBottomColor = cs4.borderBottomColor;
-    set_pref(false);
-    setTimeout(part2, 0);
+    SpecialPowers.pushPrefEnv({'set': [['browser.display.use_document_colors', false]]}, part2);
 }
 
 function part2()
@@ -191,7 +177,6 @@ function part2()
     is(cs4.borderBottomColor, inputBorderBottomColor,
        "border-bottom-color not broken on inputs");
 
-    set_pref(oldVal);
     SimpleTest.finish();
 }
 
