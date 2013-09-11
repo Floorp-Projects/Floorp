@@ -6337,3 +6337,14 @@ JS_PreventExtensions(JSContext *cx, JS::HandleObject obj)
         return true;
     return JSObject::preventExtensions(cx, obj);
 }
+
+char *
+JSAutoByteString::encodeLatin1(ExclusiveContext *cx, JSString *str)
+{
+    JSLinearString *linear = str->ensureLinear(cx);
+    if (!linear)
+        return NULL;
+
+    mBytes = LossyTwoByteCharsToNewLatin1CharsZ(cx, linear->range()).c_str();
+    return mBytes;
+}
