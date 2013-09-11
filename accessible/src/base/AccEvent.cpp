@@ -6,12 +6,19 @@
 
 #include "AccEvent.h"
 
+#include "ApplicationAccessibleWrap.h"
+#include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "DocAccessible.h"
+#include "nsIAccessibleText.h"
 #include "xpcAccEvents.h"
 #include "States.h"
 
 #include "nsEventStateManager.h"
+#include "nsIServiceManager.h"
+#ifdef MOZ_XUL
+#include "nsIDOMXULMultSelectCntrlEl.h"
+#endif
 
 using namespace mozilla;
 using namespace mozilla::a11y;

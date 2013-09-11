@@ -8,13 +8,12 @@
 #define mozilla_a11y_logs_h__
 
 #include "nscore.h"
-#include "nsStringFwd.h"
+#include "nsAString.h"
 
 class nsIDocument;
 class nsINode;
 class nsIRequest;
 class nsISelection;
-class nsISupports;
 class nsIWebProgress;
 
 namespace mozilla {

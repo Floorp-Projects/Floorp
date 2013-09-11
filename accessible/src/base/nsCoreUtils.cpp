@@ -7,6 +7,8 @@
 
 #include "nsIAccessibleTypes.h"
 
+#include "nsAccessNode.h"
+
 #include "nsIBaseWindow.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocument.h"
@@ -14,9 +16,10 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsRange.h"
-#include "nsIBoxObject.h"
+#include "nsIDOMWindow.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDocShell.h"
+#include "nsIContentViewer.h"
 #include "nsEventListenerManager.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -24,12 +27,16 @@
 #include "nsEventStateManager.h"
 #include "nsISelectionPrivate.h"
 #include "nsISelectionController.h"
+#include "nsPIDOMWindow.h"
 #include "nsGUIEvent.h"
 #include "nsView.h"
+#include "nsLayoutUtils.h"
 #include "nsGkAtoms.h"
 #include "nsDOMTouchEvent.h"
 
 #include "nsComponentManagerUtils.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "mozilla/dom/Element.h"
 
 #include "nsITreeBoxObject.h"
 #include "nsITreeColumns.h"

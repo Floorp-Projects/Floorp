@@ -5,11 +5,14 @@
 
 #include "DocManager.h"
 
+#include "Accessible-inl.h"
 #include "ApplicationAccessible.h"
 #include "ARIAMap.h"
 #include "DocAccessible-inl.h"
 #include "nsAccessibilityService.h"
+#include "nsAccUtils.h"
 #include "RootAccessibleWrap.h"
+#include "States.h"
 
 #ifdef A11Y_LOG
 #include "Logging.h"
@@ -19,14 +22,13 @@
 #include "nsDocShellLoadTypes.h"
 #include "nsDOMEvent.h"
 #include "nsIChannel.h"
+#include "nsIContentViewer.h"
 #include "nsIDOMDocument.h"
 #include "nsEventListenerManager.h"
 #include "nsIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebNavigation.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIWebProgress.h"
-#include "nsCoreUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
