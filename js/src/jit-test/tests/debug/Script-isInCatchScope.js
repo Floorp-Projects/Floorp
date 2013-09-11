@@ -62,3 +62,7 @@ test("function f() { throw new Error(); } try { f(); } catch (e) {}", [true, tru
 test("function f() { throw new Error(); } try { f(); } catch (e) { throw e; }", [true, true, false]);
 test("try { eval('throw new Error()'); } catch (e) {}", [true, true]);
 test("try { eval('throw new Error()'); } catch (e) { throw e; }", [true, true, false]);
+
+// Should correctly detect catch blocks just before and just after throws
+test("throw new Error; try {} catch (e) {}", [false]);
+test("try {} catch (e) {} throw new Error();", [false]);
