@@ -3374,7 +3374,7 @@ CSS_PROP_SVGRESET(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Custom)
 CSS_PROP_SVGRESET(
     flood-color,
     flood_color,
