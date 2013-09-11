@@ -460,7 +460,6 @@ WEBIDL_FILES += [
     'CustomEvent.webidl',
     'DeviceLightEvent.webidl',
     'DeviceOrientationEvent.webidl',
-    'DeviceProximityEvent.webidl',
     'DeviceStorageChangeEvent.webidl',
     'DOMTransactionEvent.webidl',
     'ElementReplaceEvent.webidl',
@@ -542,4 +541,5 @@ if CONFIG['MOZ_B2G']:
 
 GENERATED_EVENTS_WEBIDL_FILES = [
     'BlobEvent.webidl',
+    'DeviceProximityEvent.webidl',
 ]
