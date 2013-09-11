@@ -91,7 +91,6 @@
     <prefpane flex="1" id="mainPrefPane">
 #include landing.xul
 #include main.xul
-#include tabs.xul
 #include privacy.xul
 #include advanced.xul
 #include applications.xul

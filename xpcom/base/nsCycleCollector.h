@@ -57,7 +57,7 @@ bool nsCycleCollector_doDeferredDeletion();
 
 void nsCycleCollector_collect(bool aManuallyTriggered,
                               nsCycleCollectorResults *aResults,
-                              nsICycleCollectorListener *aListener);
+                              nsICycleCollectorListener *aManualListener);
 uint32_t nsCycleCollector_suspectedCount();
 void nsCycleCollector_shutdown();
 

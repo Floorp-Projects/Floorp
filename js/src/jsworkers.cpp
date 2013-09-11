@@ -14,6 +14,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "jit/ExecutionModeInlines.h"
 #include "jit/IonBuilder.h"
+#include "vm/Debugger.h"
 
 #include "jscntxtinlines.h"
 #include "jscompartmentinlines.h"
@@ -499,12 +500,40 @@ WorkerThreadState::canStartCompressionTask()
     return !compressionWorklist.empty();
 }
 
+static void
+CallNewScriptHookForAllScripts(JSContext *cx, HandleScript script)
+{
+    // We should never hit this, since nested scripts are also constructed via
+    // BytecodeEmitter instances on the stack.
+    JS_CHECK_RECURSION(cx, return);
+
+    // Recurse to any nested scripts.
+    if (script->hasObjects()) {
+        ObjectArray *objects = script->objects();
+        for (size_t i = 0; i < objects->length; i++) {
+            JSObject *obj = objects->vector[i];
+            if (obj->is<JSFunction>()) {
+                JSFunction *fun = &obj->as<JSFunction>();
+                if (fun->hasScript()) {
+                    RootedScript nested(cx, fun->nonLazyScript());
+                    CallNewScriptHookForAllScripts(cx, nested);
+                }
+            }
+        }
+    }
+
+    // The global new script hook is called on every script that was compiled.
+    RootedFunction function(cx, script->function());
+    CallNewScriptHook(cx, script, function);
+}
+
 JSScript *
 WorkerThreadState::finishParseTask(JSContext *maybecx, JSRuntime *rt, void *token)
 {
     ParseTask *parseTask = NULL;
 
     // The token is a ParseTask* which should be in the finished list.
+    // Find and remove its entry.
     {
         AutoLockWorkerThreadState lock(*rt->workerThreadState);
         for (size_t i = 0; i < parseFinishedList.length(); i++) {
@@ -548,15 +577,27 @@ WorkerThreadState::finishParseTask(JSContext *maybecx, JSRuntime *rt, void *toke
     // Move the parsed script and all its contents into the desired compartment.
     gc::MergeCompartments(parseTask->cx->compartment(), parseTask->scopeChain->compartment());
 
+    RootedScript script(rt, parseTask->script);
+
     // If we have a context, report any error or warnings generated during the
-    // parse.
+    // parse, and inform the debugger about the compiled scripts.
     if (maybecx) {
         AutoCompartment ac(maybecx, parseTask->scopeChain);
         for (size_t i = 0; i < parseTask->errors.length(); i++)
             parseTask->errors[i]->throwError(maybecx);
+
+        if (script) {
+            // The Debugger only needs to be told about the topmost script that was compiled.
+            GlobalObject *compileAndGoGlobal = NULL;
+            if (script->compileAndGo)
+                compileAndGoGlobal = &script->global();
+            Debugger::onNewScript(maybecx, script, compileAndGoGlobal);
+
+            // The NewScript hook needs to be called for all compiled scripts.
+            CallNewScriptHookForAllScripts(maybecx, script);
+        }
     }
 
-    JSScript *script = parseTask->script;
     js_delete(parseTask);
     return script;
 }

@@ -1,6 +1,7 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.tests;
 
+import com.jayway.android.robotium.solo.Condition;
 import com.jayway.android.robotium.solo.Solo;
 import @ANDROID_PACKAGE_NAME@.*;
 
@@ -196,12 +197,13 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
      */
     protected final void focusUrlBar() {
         // Click on the browser toolbar to enter editing mode
-        mDriver.findElement(mActivity, BROWSER_TOOLBAR_ID).click();
+        final View toolbarView = mSolo.getView(BROWSER_TOOLBAR_ID);
+        mSolo.clickOnView(toolbarView);
 
         // Wait for highlighed text to gain focus
-        boolean success = waitForTest(new BooleanTest() {
+        boolean success = waitForCondition(new Condition() {
             @Override
-            public boolean test() {
+            public boolean isSatisfied() {
                 EditText urlEditText = mSolo.getEditText(0);
                 if (urlEditText.isInputMethodTarget()) {
                     return true;
@@ -222,7 +224,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mActions.sendKeys(url);
 
         // Get the URL text from the URL bar EditText view
-        String urlBarText = mDriver.findElement(mActivity, URL_EDIT_TEXT_ID).getText();
+        String urlBarText = ((EditText) mSolo.getView(URL_EDIT_TEXT_ID)).getText().toString();
         mAsserter.is(url, urlBarText, "URL typed properly");
     }
 
@@ -272,32 +274,30 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     public final void verifyUrl(String url) {
-        Element urlEditText = mDriver.findElement(mActivity, URL_EDIT_TEXT_ID);
+        final EditText urlEditText = (EditText) mSolo.getView(URL_EDIT_TEXT_ID);
         String urlBarText = null;
         if (urlEditText != null) {
             // wait for a short time for the expected text, in case there is a delay
             // in updating the view
-            waitForTest(new VerifyUrlTest(urlEditText, url), VERIFY_URL_TIMEOUT);
-            urlBarText = urlEditText.getText();
+            waitForCondition(new VerifyTextViewText(urlEditText, url), VERIFY_URL_TIMEOUT);
+            urlBarText = urlEditText.getText().toString();
+
         }
         mAsserter.is(urlBarText, url, "Browser toolbar URL stayed the same");
     }
 
-    class VerifyUrlTest implements BooleanTest {
-        private Element mUrlEditText;
-        private String mUrl;
-        public VerifyUrlTest(Element urlEditText, String url) {
-            mUrlEditText = urlEditText;
-            mUrl = url;
+    class VerifyTextViewText implements Condition {
+        private TextView mTextView;
+        private String mExpected;
+        public VerifyTextViewText(TextView textView, String expected) {
+            mTextView = textView;
+            mExpected = expected;
         }
 
         @Override
-        public boolean test() {
-            String urlbarText = mUrlEditText.getText();
-            if (urlbarText.equals(mUrl)) {
-                return true;
-            }
-            return false;
+        public boolean isSatisfied() {
+            String textValue = mTextView.getText().toString();
+            return mExpected.equals(textValue);
         }
     }
 
@@ -309,6 +309,21 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         return mRawBaseUrl + "/" + url.replaceAll("(^/)", "");
     }
 
+    /*
+     * Wrapper method for mSolo.waitForCondition with additional logging.
+     */
+    protected final boolean waitForCondition(Condition condition, int timeout) {
+        boolean result = mSolo.waitForCondition(condition, timeout);
+        if (!result) {
+            // Log timeout failure for diagnostic purposes only; a failed wait may
+            // be normal and does not necessarily warrant a test asssertion/failure.
+            mAsserter.dumpLog("waitForCondition timeout after " + timeout + " ms.");
+        }
+        return result;
+    }
+
+    // TODO: With Robotium 4.2, we should use Condition and waitForCondition instead.
+    // Future boolean tests should not use this method.
     protected final boolean waitForTest(BooleanTest t, int timeout) {
         long end = SystemClock.uptimeMillis() + timeout;
         while (SystemClock.uptimeMillis() < end) {
@@ -324,6 +339,8 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         return false;
     }
 
+    // TODO: With Robotium 4.2, we should use Condition and waitForCondition instead.
+    // Future boolean tests should not implement this interface.
     protected interface BooleanTest {
         public boolean test();
     }
@@ -413,9 +430,9 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
      */
     public boolean waitForEnabledText(String text) {
         final String testText = text;
-        boolean rc = waitForTest(new BooleanTest() {
+        boolean rc = waitForCondition(new Condition() {
             @Override
-            public boolean test() {
+            public boolean isSatisfied() {
                 // Solo.getText() could be used here, except that it sometimes
                 // hits an assertion when the requested text is not found.
                 ArrayList<View> views = mSolo.getCurrentViews();
@@ -485,12 +502,11 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     public final void verifyHomePagerHidden() {
-        final Element homePagerElement = mDriver.findElement(mActivity, "home_pager");
-        final View homePagerView = mActivity.findViewById(homePagerElement.getId());
+        final View homePagerView = mSolo.getView("home_pager");
 
-        boolean rc = waitForTest(new BooleanTest() {
+        boolean rc = waitForCondition(new Condition() {
             @Override
-            public boolean test() {
+            public boolean isSatisfied() {
                 return homePagerView.getVisibility() != View.VISIBLE;
             }
         }, MAX_WAIT_HOME_PAGER_HIDDEN_MS);
@@ -501,33 +517,15 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     public final void verifyPageTitle(String title) {
-        Element urlBarTitle = mDriver.findElement(getActivity(), URL_BAR_TITLE_ID);
+        final TextView urlBarTitle = (TextView) mSolo.getView(URL_BAR_TITLE_ID);
         String pageTitle = null;
         if (urlBarTitle != null) {
             // Wait for the title to make sure it has been displayed in case the view
             // does not update fast enough
-            waitForTest(new VerifyTitle(urlBarTitle, title), MAX_WAIT_MS);
-            pageTitle = urlBarTitle.getText();
+            waitForCondition(new VerifyTextViewText(urlBarTitle, title), MAX_WAIT_MS);
+            pageTitle = urlBarTitle.getText().toString();
         }
         mAsserter.is(pageTitle, title, "Page title is correct");
-    }
-
-    class VerifyTitle implements BooleanTest {
-        private Element mUrlBarTitle;
-        private String mTitle;
-        public VerifyTitle(Element urlBarTitle, String title) {
-            mUrlBarTitle = urlBarTitle;
-            mTitle = title;
-        }
-
-        @Override
-        public boolean test() {
-            String pageTitle = mUrlBarTitle.getText();
-            if (pageTitle.equals(mTitle)) {
-                return true;
-            }
-            return false;
-        }
     }
 
     public final void verifyTabCount(int expectedTabCount) {
@@ -560,18 +558,12 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     public void addTab(String url) {
-        Element tabs = null;
-        Element addTab = null;
-        Activity activity = getActivity();
-        tabs = mDriver.findElement(activity, "tabs");
-        addTab = mDriver.findElement(activity, "add_tab");
-        final int addTabId = addTab.getId();
-        mAsserter.ok(tabs.click(), "checking that tabs clicked", "tabs element clicked");
+        mSolo.clickOnView(mSolo.getView("tabs"));
         // wait for addTab to appear (this is usually immediate)
-        boolean success = waitForTest(new BooleanTest() {
+        boolean success = waitForCondition(new Condition() {
             @Override
-            public boolean test() {
-                View addTabView = getActivity().findViewById(addTabId);
+            public boolean isSatisfied() {
+                View addTabView = mSolo.getView("add_tab");
                 if (addTabView == null) {
                     return false;
                 }
@@ -579,7 +571,8 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             }
         }, MAX_WAIT_MS);
         mAsserter.ok(success, "waiting for add tab view", "add tab view available");
-        mAsserter.ok(addTab.click(), "checking that add_tab clicked", "add_tab element clicked");
+        final View addTabView = mSolo.getView("add_tab");
+        mSolo.clickOnView(mSolo.getView("add_tab"));
 
         // Adding a new tab opens about:home, so now we just need to load the url in it.
         inputAndLoadUrl(url);
