@@ -5,13 +5,14 @@
 import os
 import cPickle
 from Configuration import Configuration
-from Codegen import CGBindingRoot, replaceFileIfChanged
+from Codegen import CGBindingRoot, replaceFileIfChanged, CGEventRoot
 from mozbuild.makeutil import Makefile
 from mozbuild.pythonutil import iter_modules_in_path
 from buildconfig import topsrcdir
 
 
-def generate_binding_files(config, outputprefix, srcprefix, webidlfile):
+def generate_binding_files(config, outputprefix, srcprefix, webidlfile,
+                           generatedEventsWebIDLFiles):
     """
     |config| Is the configuration object.
     |outputprefix| is a prefix to use for the header guards and filename.
@@ -21,6 +22,12 @@ def generate_binding_files(config, outputprefix, srcprefix, webidlfile):
     root = CGBindingRoot(config, outputprefix, webidlfile)
     replaceFileIfChanged(outputprefix + ".h", root.declare())
     replaceFileIfChanged(outputprefix + ".cpp", root.define())
+
+    if webidlfile in generatedEventsWebIDLFiles:
+        eventName = webidlfile[:-len(".webidl")]
+        generatedEvent = CGEventRoot(config, eventName)
+        replaceFileIfChanged(eventName + ".h", generatedEvent.declare())
+        replaceFileIfChanged(eventName + ".cpp", generatedEvent.define())
 
     mk = Makefile()
     # NOTE: it's VERY important that we output dependencies for the FooBinding
@@ -59,7 +66,8 @@ def main():
             file.close()
         return contents
     allWebIDLFiles = readFile(args[2]).split()
-    changedDeps = readFile(args[3]).split()
+    generatedEventsWebIDLFiles = readFile(args[3]).split()
+    changedDeps = readFile(args[4]).split()
 
     if all(f.endswith("Binding") or f == "ParserResults.pkl" for f in changedDeps):
         toRegenerate = filter(lambda f: f.endswith("Binding"), changedDeps)
@@ -83,7 +91,8 @@ def main():
     for webIDLFile in toRegenerate:
         assert webIDLFile.endswith(".webidl")
         outputPrefix = webIDLFile[:-len(".webidl")] + "Binding"
-        generate_binding_files(config, outputPrefix, srcPrefix, webIDLFile);
+        generate_binding_files(config, outputPrefix, srcPrefix, webIDLFile,
+                               generatedEventsWebIDLFiles);
 
 if __name__ == '__main__':
     main()

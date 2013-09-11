@@ -2467,8 +2467,6 @@ protected:
 class gfxShapedWord : public gfxShapedText
 {
 public:
-    static const uint32_t kMaxLength = 32;
-
     // Create a ShapedWord that can hold glyphs for aLength characters,
     // with mCharacterGlyphs sized appropriately.
     //
@@ -2482,7 +2480,8 @@ public:
                                  int32_t aRunScript,
                                  int32_t aAppUnitsPerDevUnit,
                                  uint32_t aFlags) {
-        NS_ASSERTION(aLength <= kMaxLength, "excessive length for gfxShapedWord!");
+        NS_ASSERTION(aLength <= gfxPlatform::GetPlatform()->WordCacheCharLimit(),
+                     "excessive length for gfxShapedWord!");
 
         // Compute size needed including the mCharacterGlyphs array
         // and a copy of the original text
@@ -2503,7 +2502,8 @@ public:
                                  int32_t aRunScript,
                                  int32_t aAppUnitsPerDevUnit,
                                  uint32_t aFlags) {
-        NS_ASSERTION(aLength <= kMaxLength, "excessive length for gfxShapedWord!");
+        NS_ASSERTION(aLength <= gfxPlatform::GetPlatform()->WordCacheCharLimit(),
+                     "excessive length for gfxShapedWord!");
 
         // In the 16-bit version of Create, if the TEXT_IS_8BIT flag is set,
         // then we convert the text to an 8-bit version and call the 8-bit

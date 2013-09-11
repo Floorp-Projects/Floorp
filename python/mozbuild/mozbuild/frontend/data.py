@@ -193,6 +193,18 @@ class WebIDLFile(SandboxDerived):
 
         self.basename = path
 
+class GeneratedEventWebIDLFile(SandboxDerived):
+    """Describes an individual .webidl source file."""
+
+    __slots__ = (
+        'basename',
+    )
+
+    def __init__(self, sandbox, path):
+        SandboxDerived.__init__(self, sandbox)
+
+        self.basename = path
+
 class TestWebIDLFile(SandboxDerived):
     """Describes an individual test-only .webidl source file."""
 

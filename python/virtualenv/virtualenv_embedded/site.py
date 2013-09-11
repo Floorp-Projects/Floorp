@@ -83,6 +83,7 @@ ENABLE_USER_SITE = None
 USER_SITE = None
 USER_BASE = None
 
+_is_64bit = (getattr(sys, 'maxsize', None) or getattr(sys, 'maxint')) > 2**32
 _is_pypy = hasattr(sys, 'pypy_version_info')
 _is_jython = sys.platform[:4] == 'java'
 if _is_jython:
@@ -236,9 +237,9 @@ def addsitepackages(known_paths, sys_prefix=sys.prefix, exec_prefix=sys.exec_pre
                             os.path.join(prefix, "lib", "site-python"),
                             os.path.join(prefix, "python" + sys.version[:3], "lib-dynload")]
                 lib64_dir = os.path.join(prefix, "lib64", "python" + sys.version[:3], "site-packages")
-                if (os.path.exists(lib64_dir) and 
+                if (os.path.exists(lib64_dir) and
                     os.path.realpath(lib64_dir) not in [os.path.realpath(p) for p in sitedirs]):
-                    if sys.maxsize > 2**32:
+                    if _is_64bit:
                         sitedirs.insert(0, lib64_dir)
                     else:
                         sitedirs.append(lib64_dir)
@@ -559,13 +560,17 @@ def virtual_install_main_packages():
     if _is_jython:
         paths = [os.path.join(sys.real_prefix, 'Lib')]
     elif _is_pypy:
-        if sys.pypy_version_info >= (1, 5):
+        if sys.version_info > (3, 2):
+            cpyver = '%d' % sys.version_info[0]
+        elif sys.pypy_version_info >= (1, 5):
             cpyver = '%d.%d' % sys.version_info[:2]
         else:
             cpyver = '%d.%d.%d' % sys.version_info[:3]
         paths = [os.path.join(sys.real_prefix, 'lib_pypy'),
-                 os.path.join(sys.real_prefix, 'lib-python', 'modified-%s' % cpyver),
                  os.path.join(sys.real_prefix, 'lib-python', cpyver)]
+        if sys.pypy_version_info < (1, 9):
+            paths.insert(1, os.path.join(sys.real_prefix,
+                                         'lib-python', 'modified-%s' % cpyver))
         hardcoded_relative_dirs = paths[:] # for the special 'darwin' case below
         #
         # This is hardcoded in the Python executable, but relative to sys.prefix:
@@ -580,7 +585,7 @@ def virtual_install_main_packages():
         hardcoded_relative_dirs = paths[:] # for the special 'darwin' case below
         lib64_path = os.path.join(sys.real_prefix, 'lib64', 'python'+sys.version[:3])
         if os.path.exists(lib64_path):
-            if sys.maxsize > 2**32:
+            if _is_64bit:
                 paths.insert(0, lib64_path)
             else:
                 paths.append(lib64_path)
@@ -594,7 +599,7 @@ def virtual_install_main_packages():
         except AttributeError:
             # This is a non-multiarch aware Python.  Fallback to the old way.
             arch = sys.platform
-        plat_path = os.path.join(sys.real_prefix, 'lib', 
+        plat_path = os.path.join(sys.real_prefix, 'lib',
                                  'python'+sys.version[:3],
                                  'plat-%s' % arch)
         if os.path.exists(plat_path):
@@ -626,14 +631,14 @@ def force_global_eggs_after_local_site_packages():
     maintains the "least surprise" result that packages in the
     virtualenv always mask global packages, never the other way
     around.
-    
+
     """
     egginsert = getattr(sys, '__egginsert', 0)
     for i, path in enumerate(sys.path):
         if i > egginsert and path.startswith(sys.prefix):
             egginsert = i
     sys.__egginsert = egginsert + 1
-    
+
 def virtual_addsitepackages(known_paths):
     force_global_eggs_after_local_site_packages()
     return addsitepackages(known_paths, sys_prefix=sys.real_prefix)

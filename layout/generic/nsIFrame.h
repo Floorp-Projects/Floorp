@@ -435,7 +435,7 @@ typedef uint32_t nsReflowStatus;
 #define NS_FRAME_IS_FULLY_COMPLETE(status) \
   (NS_FRAME_IS_COMPLETE(status) && !NS_FRAME_OVERFLOW_IS_INCOMPLETE(status))
 
-// These macros set or switch incompete statuses without touching th
+// These macros set or switch incomplete statuses without touching the
 // NS_FRAME_REFLOW_NEXTINFLOW bit.
 #define NS_FRAME_SET_INCOMPLETE(status) \
   status = (status & ~NS_FRAME_OVERFLOW_INCOMPLETE) | NS_FRAME_NOT_COMPLETE

@@ -1395,7 +1395,7 @@ WantsQueryInterface<T, true>
 {
   static bool Enabled(JSContext* aCx, JSObject* aGlobal)
   {
-    return IsChromeOrXBL(aCx, aGlobal);
+    return NS_IsMainThread() && IsChromeOrXBL(aCx, aGlobal);
   }
 };
 
