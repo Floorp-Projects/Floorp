@@ -606,7 +606,7 @@ NetworkManager.prototype = {
       dns2_str: this.active.dns2
     };
     this.worker.postMessage(options);
-    this.setNetworkProxy();
+    this.setNetworkProxy(this.active);
   },
 
   removeDefaultRoute: function removeDefaultRoute(ifname) {
@@ -689,9 +689,9 @@ NetworkManager.prototype = {
     this.worker.postMessage(options);
   },
 
-  setNetworkProxy: function setNetworkProxy() {
+  setNetworkProxy: function setNetworkProxy(network) {
     try {
-      if (!this.active.httpProxyHost || this.active.httpProxyHost == "") {
+      if (!network.httpProxyHost || network.httpProxyHost == "") {
         // Sets direct connection to internet.
         Services.prefs.clearUserPref("network.proxy.type");
         Services.prefs.clearUserPref("network.proxy.share_proxy_settings");
@@ -699,23 +699,23 @@ NetworkManager.prototype = {
         Services.prefs.clearUserPref("network.proxy.http_port");
         Services.prefs.clearUserPref("network.proxy.ssl");
         Services.prefs.clearUserPref("network.proxy.ssl_port");
-        debug("No proxy support for " + this.active.name + " network interface.");
+        debug("No proxy support for " + network.name + " network interface.");
         return;
       }
 
-      debug("Going to set proxy settings for " + this.active.name + " network interface.");
+      debug("Going to set proxy settings for " + network.name + " network interface.");
       // Sets manual proxy configuration.
       Services.prefs.setIntPref("network.proxy.type", MANUAL_PROXY_CONFIGURATION);
       // Do not use this proxy server for all protocols.
       Services.prefs.setBoolPref("network.proxy.share_proxy_settings", false);
-      Services.prefs.setCharPref("network.proxy.http", this.active.httpProxyHost);
-      Services.prefs.setCharPref("network.proxy.ssl", this.active.httpProxyHost);
-      let port = this.active.httpProxyPort == "" ? 8080 : this.active.httpProxyPort;
+      Services.prefs.setCharPref("network.proxy.http", network.httpProxyHost);
+      Services.prefs.setCharPref("network.proxy.ssl", network.httpProxyHost);
+      let port = network.httpProxyPort == 0 ? 8080 : network.httpProxyPort;
       Services.prefs.setIntPref("network.proxy.http_port", port);
       Services.prefs.setIntPref("network.proxy.ssl_port", port);
     } catch (ex) {
        debug("Exception " + ex + ". Unable to set proxy setting for "
-             + this.active.name + " network interface.");
+             + network.name + " network interface.");
        return;
     }
   },
