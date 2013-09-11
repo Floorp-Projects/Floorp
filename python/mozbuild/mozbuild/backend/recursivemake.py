@@ -588,18 +588,15 @@ class RecursiveMakeBackend(CommonBackend):
         webidls = FileAvoidWrite(os.path.join(self.environment.topobjdir,
               'dom', 'bindings', 'webidlsrcs.mk'))
 
-        for webidl in sorted(self._webidl_sources):
-            webidls.write('webidl_files += %s\n' % os.path.basename(webidl))
-        for webidl in sorted(self._generated_events_webidl_sources):
-            webidls.write('generated_events_webidl_files += %s\n' % os.path.basename(webidl))
-        for webidl in sorted(self._test_webidl_sources):
-            webidls.write('test_webidl_files += %s\n' % os.path.basename(webidl))
-        for webidl in sorted(self._preprocessed_test_webidl_sources):
-            webidls.write('preprocessed_test_webidl_files += %s\n' % os.path.basename(webidl))
-        for webidl in sorted(self._generated_webidl_sources):
-            webidls.write('generated_webidl_files += %s\n' % os.path.basename(webidl))
-        for webidl in sorted(self._preprocessed_webidl_sources):
-            webidls.write('preprocessed_webidl_files += %s\n' % os.path.basename(webidl))
+        def write_var(variable, sources):
+            files = [os.path.basename(f) for f in sorted(sources)]
+            webidls.write('%s += %s\n' % (variable, ' '.join(files)))
+        write_var('webidl_files', self._webidl_sources)
+        write_var('generated_events_webidl_files', self._generated_events_webidl_sources)
+        write_var('test_webidl_files', self._test_webidl_sources)
+        write_var('preprocessed_test_webidl_files', self._preprocessed_test_webidl_sources)
+        write_var('generated_webidl_files', self._generated_webidl_sources)
+        write_var('preprocessed_webidl_files', self._preprocessed_webidl_sources)
 
         self._update_from_avoid_write(webidls.close())
         self.summary.managed_count += 1
