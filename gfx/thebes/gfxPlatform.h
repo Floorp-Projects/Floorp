@@ -409,6 +409,11 @@ public:
     uint32_t WordCacheCharLimit();
 
     /**
+     * Max number of entries in word cache
+     */
+    uint32_t WordCacheMaxEntries();
+
+    /**
      * Whether to use the SIL Graphite rendering engine
      * (for fonts that include Graphite tables)
      */
@@ -679,6 +684,9 @@ protected:
 
     // max character limit for words in word cache
     int32_t mWordCacheCharLimit;
+
+    // max number of entries in word cache
+    int32_t mWordCacheMaxEntries;
 
 private:
     /**
