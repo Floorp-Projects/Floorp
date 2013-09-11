@@ -1785,16 +1785,8 @@ SecurityXrayDOM SecurityXrayDOM::singleton(0);
 template class SecurityXrayDOM;
 
 template<>
-SCPermissiveXrayXPCWN SCPermissiveXrayXPCWN::singleton(0);
-template class SCPermissiveXrayXPCWN;
-
-template<>
 SCSecurityXrayXPCWN SCSecurityXrayXPCWN::singleton(0);
 template class SCSecurityXrayXPCWN;
-
-template<>
-SCPermissiveXrayDOM SCPermissiveXrayDOM::singleton(0);
-template class SCPermissiveXrayDOM;
 
 static nsQueryInterface
 do_QueryInterfaceNative(JSContext* cx, HandleObject wrapper)
