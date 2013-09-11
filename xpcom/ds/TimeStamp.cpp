@@ -9,7 +9,9 @@
  */
 
 #include "mozilla/TimeStamp.h"
-#include "prenv.h"
+#include "nsCOMPtr.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIAppStartup.h"
 
 namespace mozilla {
 
@@ -22,17 +24,18 @@ TimeStamp::ProcessCreation(bool& aIsInconsistent)
   aIsInconsistent = false;
 
   if (sProcessCreation.IsNull()) {
-    char *mozAppRestart = PR_GetEnv("MOZ_APP_RESTART");
     TimeStamp ts;
 
-    /* When calling PR_SetEnv() with an empty value the existing variable may
-     * be unset or set to the empty string depending on the underlying platform
-     * thus we have to check if the variable is present and not empty. */
-    if (mozAppRestart && (strcmp(mozAppRestart, "") != 0)) {
-      /* Firefox was restarted, use the first time-stamp we've taken as the new
-       * process startup time and unset MOZ_APP_RESTART. */
+    // Ask the startup service whether the app was restarted.
+    nsCOMPtr<nsIAppStartup> appService =
+      do_GetService("@mozilla.org/toolkit/app-startup;1");
+    bool wasRestarted;
+    appService->GetWasRestarted(&wasRestarted);
+
+    if (wasRestarted) {
+      /* Firefox was restarted, use the first time-stamp we've
+       * taken as the new process startup time. */
       ts = sFirstTimeStamp;
-      PR_SetEnv("MOZ_APP_RESTART=");
     } else {
       TimeStamp now = Now();
       uint64_t uptime = ComputeProcessUptime();
@@ -57,7 +60,6 @@ TimeStamp::ProcessCreation(bool& aIsInconsistent)
 void
 TimeStamp::RecordProcessRestart()
 {
-  PR_SetEnv("MOZ_APP_RESTART=1");
   sProcessCreation = TimeStamp();
 }
 
