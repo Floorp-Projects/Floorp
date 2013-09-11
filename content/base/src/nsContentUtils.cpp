@@ -665,7 +665,25 @@ nsContentUtils::Atob(const nsAString& aAsciiBase64String,
     return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
   }
 
-  nsresult rv = Base64Decode(aAsciiBase64String, aBinaryData);
+  const PRUnichar* start = aAsciiBase64String.BeginReading();
+  const PRUnichar* iter = start;
+  const PRUnichar* end = aAsciiBase64String.EndReading();
+  nsString trimmedString;
+  if (!trimmedString.SetCapacity(aAsciiBase64String.Length(), fallible_t())) {
+    return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+  }
+  bool needTrimming = false;
+  while (iter < end) {
+    if (!nsContentUtils::IsHTMLWhitespace(*iter)) {
+      if (!needTrimming) {
+        needTrimming = true;
+        trimmedString.Append(start, iter - start);
+      }
+      trimmedString.Append(*iter);
+    }
+    iter++;
+  }
+  nsresult rv = Base64Decode(trimmedString, aBinaryData);
   if (NS_FAILED(rv) && rv == NS_ERROR_INVALID_ARG) {
     return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
   }
