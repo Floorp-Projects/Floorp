@@ -19,7 +19,6 @@ namespace mozilla {
 class ErrorResult;
 
 namespace dom {
-namespace power {
 
 class PowerManager MOZ_FINAL : public nsIDOMMozWakeLockListener
                              , public nsWrapperCache
@@ -66,7 +65,6 @@ private:
   nsTArray<nsCOMPtr<nsIDOMMozWakeLockListener> > mListeners;
 };
 
-} // namespace power
 } // namespace dom
 } // namespace mozilla
 
