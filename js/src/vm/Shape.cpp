@@ -69,6 +69,41 @@ ShapeTable::init(ExclusiveContext *cx, Shape *lastProp)
     return true;
 }
 
+void
+Shape::removeFromDictionary(ObjectImpl *obj)
+{
+    JS_ASSERT(inDictionary());
+    JS_ASSERT(obj->inDictionaryMode());
+    JS_ASSERT(listp);
+
+    JS_ASSERT(obj->shape_->inDictionary());
+    JS_ASSERT(obj->shape_->listp == &obj->shape_);
+
+    if (parent)
+        parent->listp = listp;
+    *listp = parent;
+    listp = NULL;
+}
+
+void
+Shape::insertIntoDictionary(HeapPtrShape *dictp)
+{
+    // Don't assert inDictionaryMode() here because we may be called from
+    // JSObject::toDictionaryMode via JSObject::newDictionaryShape.
+    JS_ASSERT(inDictionary());
+    JS_ASSERT(!listp);
+
+    JS_ASSERT_IF(*dictp, (*dictp)->inDictionary());
+    JS_ASSERT_IF(*dictp, (*dictp)->listp == dictp);
+    JS_ASSERT_IF(*dictp, compartment() == (*dictp)->compartment());
+
+    setParent(dictp->get());
+    if (parent)
+        parent->listp = &parent;
+    listp = (HeapPtrShape *) dictp;
+    *dictp = this;
+}
+
 bool
 Shape::makeOwnBaseShape(ExclusiveContext *cx)
 {
@@ -1266,6 +1301,23 @@ BaseShape::getUnowned(ExclusiveContext *cx, const StackBaseShape &base)
         return NULL;
 
     return nbase;
+}
+
+void
+BaseShape::assertConsistency()
+{
+#ifdef DEBUG
+    if (isOwned()) {
+        UnownedBaseShape *unowned = baseUnowned();
+        JS_ASSERT(hasGetterObject() == unowned->hasGetterObject());
+        JS_ASSERT(hasSetterObject() == unowned->hasSetterObject());
+        JS_ASSERT_IF(hasGetterObject(), getterObject() == unowned->getterObject());
+        JS_ASSERT_IF(hasSetterObject(), setterObject() == unowned->setterObject());
+        JS_ASSERT(getObjectParent() == unowned->getObjectParent());
+        JS_ASSERT(getObjectMetadata() == unowned->getObjectMetadata());
+        JS_ASSERT(getObjectFlags() == unowned->getObjectFlags());
+    }
+#endif
 }
 
 void
