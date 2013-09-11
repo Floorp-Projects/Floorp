@@ -388,7 +388,7 @@ WeakMap_construct(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-Class WeakMapObject::class_ = {
+const Class WeakMapObject::class_ = {
     "WeakMap",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_WeakMap),

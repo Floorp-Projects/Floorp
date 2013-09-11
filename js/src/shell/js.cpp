@@ -611,7 +611,7 @@ MapContextOptionNameToFlag(JSContext* cx, const char* name)
     return 0;
 }
 
-extern JSClass global_class;
+extern const JSClass global_class;
 
 static bool
 Version(JSContext *cx, unsigned argc, jsval *vp)
@@ -2482,7 +2482,7 @@ sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     return true;
 }
 
-static JSClass sandbox_class = {
+static const JSClass sandbox_class = {
     "sandbox",
     JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,   JS_DeletePropertyStub,
@@ -2745,7 +2745,7 @@ resolver_enumerate(JSContext *cx, HandleObject obj)
     return ok;
 }
 
-static JSClass resolver_class = {
+static const JSClass resolver_class = {
     "resolver",
     JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1),
     JS_PropertyStub,   JS_DeletePropertyStub,
@@ -3651,7 +3651,7 @@ GetMaxArgs(JSContext *cx, unsigned arg, jsval *vp)
 static bool
 ObjectEmulatingUndefined(JSContext *cx, unsigned argc, jsval *vp)
 {
-    static JSClass cls = {
+    static const JSClass cls = {
         "ObjectEmulatingUndefined",
         JSCLASS_EMULATES_UNDEFINED,
         JS_PropertyStub,
@@ -4308,7 +4308,7 @@ its_finalize(JSFreeOp *fop, JSObject *obj)
         fprintf(gOutFile, "finalizing it\n");
 }
 
-static JSClass its_class = {
+static const JSClass its_class = {
     "It", JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE | JSCLASS_HAS_RESERVED_SLOTS(1),
     its_addProperty,  its_delProperty,  its_getProperty,  its_setProperty,
     (JSEnumerateOp)its_enumerate, (JSResolveOp)its_resolve,
@@ -4541,7 +4541,7 @@ global_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 #endif
 }
 
-JSClass global_class = {
+const JSClass global_class = {
     "global", JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,  JS_DeletePropertyStub,
     JS_PropertyStub,  JS_StrictPropertyStub,
@@ -4647,7 +4647,7 @@ env_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     return true;
 }
 
-static JSClass env_class = {
+static const JSClass env_class = {
     "environment", JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
     JS_PropertyStub,  JS_DeletePropertyStub,
     JS_PropertyStub,  env_setProperty,
@@ -4672,7 +4672,7 @@ static bool
 dom_genericMethod(JSContext *cx, unsigned argc, JS::Value *vp);
 
 #ifdef DEBUG
-static JSClass *GetDomClass();
+static const JSClass *GetDomClass();
 #endif
 
 static bool
@@ -4744,7 +4744,7 @@ static const JSFunctionSpec dom_methods[] = {
     JS_FS_END
 };
 
-static JSClass dom_class = {
+static const JSClass dom_class = {
     "FakeDOMObject", JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(2),
     JS_PropertyStub,       /* addProperty */
     JS_DeletePropertyStub, /* delProperty */
@@ -4763,7 +4763,7 @@ static JSClass dom_class = {
 };
 
 #ifdef DEBUG
-static JSClass *GetDomClass() {
+static const JSClass *GetDomClass() {
     return &dom_class;
 }
 #endif
@@ -5325,7 +5325,7 @@ CheckObjectAccess(JSContext *cx, HandleObject obj, HandleId id, JSAccessMode mod
     return true;
 }
 
-JSSecurityCallbacks securityCallbacks = {
+const JSSecurityCallbacks securityCallbacks = {
     CheckObjectAccess,
     NULL
 };

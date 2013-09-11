@@ -513,7 +513,7 @@ private:
   JSObject  *mGlobal;
   bool      mOK;
 
-  static JSClass sGlobalClass;
+  static const JSClass sGlobalClass;
 
   JSRuntimeWrapper()
     : mRuntime(nullptr), mContext(nullptr), mGlobal(nullptr), mOK(false)
@@ -560,7 +560,7 @@ private:
   }
 };
 
-JSClass JSRuntimeWrapper::sGlobalClass = {
+const JSClass JSRuntimeWrapper::sGlobalClass = {
   "PACResolutionThreadGlobal",
   JSCLASS_GLOBAL_FLAGS,
   JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,

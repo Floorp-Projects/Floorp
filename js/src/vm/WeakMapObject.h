@@ -17,7 +17,7 @@ typedef WeakMap<EncapsulatedPtrObject, RelocatableValue> ObjectValueMap;
 class WeakMapObject : public JSObject
 {
   public:
-    static Class class_;
+    static const Class class_;
 
     ObjectValueMap *getMap() { return static_cast<ObjectValueMap*>(getPrivate()); }
 };

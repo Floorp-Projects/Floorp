@@ -39,7 +39,7 @@ class DateObject : public JSObject
     static const uint32_t RESERVED_SLOTS = LOCAL_SECONDS_SLOT + 1;
 
   public:
-    static Class class_;
+    static const Class class_;
 
     inline const js::Value &UTCTime() const {
         return getFixedSlot(UTC_TIME_SLOT);

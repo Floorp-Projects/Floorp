@@ -168,27 +168,20 @@ struct DOMJSClass
   // It would be nice to just inherit from JSClass, but that precludes pure
   // compile-time initialization of the form |DOMJSClass = {...};|, since C++
   // only allows brace initialization for aggregate/POD types.
-  JSClass mBase;
+  const JSClass mBase;
 
-  DOMClass mClass;
+  const DOMClass mClass;
 
-  static DOMJSClass* FromJSClass(JSClass* base) {
-    MOZ_ASSERT(base->flags & JSCLASS_IS_DOMJSCLASS);
-    return reinterpret_cast<DOMJSClass*>(base);
-  }
   static const DOMJSClass* FromJSClass(const JSClass* base) {
     MOZ_ASSERT(base->flags & JSCLASS_IS_DOMJSCLASS);
     return reinterpret_cast<const DOMJSClass*>(base);
   }
 
-  static DOMJSClass* FromJSClass(js::Class* base) {
-    return FromJSClass(Jsvalify(base));
-  }
   static const DOMJSClass* FromJSClass(const js::Class* base) {
     return FromJSClass(Jsvalify(base));
   }
 
-  JSClass* ToJSClass() { return &mBase; }
+  const JSClass* ToJSClass() const { return &mBase; }
 };
 
 // Special JSClass for DOM interface and interface prototype objects.
@@ -198,7 +191,7 @@ struct DOMIfaceAndProtoJSClass
   // compile-time initialization of the form
   // |DOMJSInterfaceAndPrototypeClass = {...};|, since C++ only allows brace
   // initialization for aggregate/POD types.
-  JSClass mBase;
+  const JSClass mBase;
 
   // Either eInterface or eInterfacePrototype
   DOMObjectType mType;
@@ -220,7 +213,7 @@ struct DOMIfaceAndProtoJSClass
     return FromJSClass(Jsvalify(base));
   }
 
-  JSClass* ToJSClass() { return &mBase; }
+  const JSClass* ToJSClass() const { return &mBase; }
 };
 
 inline bool

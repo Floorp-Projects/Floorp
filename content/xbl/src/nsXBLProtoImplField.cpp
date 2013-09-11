@@ -116,7 +116,7 @@ ValueHasISupportsPrivate(JS::Handle<JS::Value> v)
     return domClass->mDOMObjectIsISupports;
   }
 
-  JSClass* clasp = ::JS_GetClass(&v.toObject());
+  const JSClass* clasp = ::JS_GetClass(&v.toObject());
   const uint32_t HAS_PRIVATE_NSISUPPORTS =
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS;
   return (clasp->flags & HAS_PRIVATE_NSISUPPORTS) == HAS_PRIVATE_NSISUPPORTS;

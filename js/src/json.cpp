@@ -33,7 +33,7 @@ using namespace js::types;
 using mozilla::IsFinite;
 using mozilla::Maybe;
 
-Class js::JSONClass = {
+const Class js::JSONClass = {
     js_JSON_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_JSON),
     JS_PropertyStub,        /* addProperty */

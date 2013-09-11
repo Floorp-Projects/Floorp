@@ -27,8 +27,8 @@ namespace {
 
 class Event : public PrivatizableBase
 {
-  static JSClass sClass;
-  static JSClass sMainRuntimeClass;
+  static const JSClass sClass;
+  static const JSClass sMainRuntimeClass;
 
   static const JSPropertySpec sProperties[];
   static const JSFunctionSpec sFunctions[];
@@ -40,7 +40,7 @@ protected:
 
 public:
   static bool
-  IsThisClass(JSClass* aClass)
+  IsThisClass(const JSClass* aClass)
   {
     return aClass == &sClass || aClass == &sMainRuntimeClass;
   }
@@ -69,7 +69,7 @@ public:
       }
     }
 
-    JSClass* clasp = parentProto ? &sMainRuntimeClass : &sClass;
+    const JSClass* clasp = parentProto ? &sMainRuntimeClass : &sClass;
 
     JS::Rooted<JSObject*> proto(aCx, JS_InitClass(aCx, aObj, parentProto, clasp, Construct, 0,
                                                   sProperties, sFunctions, nullptr, nullptr));
@@ -94,7 +94,7 @@ public:
   Create(JSContext* aCx, JS::Handle<JSObject*> aParent, JS::Handle<JSString*> aType,
          bool aBubbles, bool aCancelable, bool aMainRuntime)
   {
-    JSClass* clasp = aMainRuntime ? &sMainRuntimeClass : &sClass;
+    const JSClass* clasp = aMainRuntime ? &sMainRuntimeClass : &sClass;
 
     JSObject* obj = JS_NewObject(aCx, clasp, NULL, aParent);
     if (obj) {
@@ -334,7 +334,7 @@ private:
 };
 
 #define DECL_EVENT_CLASS(_varname, _name) \
-  JSClass _varname = { \
+  const JSClass _varname = { \
     _name, \
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(SLOT_COUNT), \
     JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub, \
@@ -385,8 +385,8 @@ const dom::ConstantSpec Event::sStaticConstants[] = {
 
 class MessageEvent : public Event
 {
-  static JSClass sClass;
-  static JSClass sMainRuntimeClass;
+  static const JSClass sClass;
+  static const JSClass sMainRuntimeClass;
 
   static const JSPropertySpec sProperties[];
   static const JSFunctionSpec sFunctions[];
@@ -398,7 +398,7 @@ protected:
 
 public:
   static bool
-  IsThisClass(JSClass* aClass)
+  IsThisClass(const JSClass* aClass)
   {
     return aClass == &sClass || aClass == &sMainRuntimeClass;
   }
@@ -407,7 +407,7 @@ public:
   InitClass(JSContext* aCx, JSObject* aObj, JSObject* aParentProto,
             bool aMainRuntime)
   {
-    JSClass* clasp = aMainRuntime ? &sMainRuntimeClass : &sClass;
+    const JSClass* clasp = aMainRuntime ? &sMainRuntimeClass : &sClass;
 
     return JS_InitClass(aCx, aObj, aParentProto, clasp, Construct, 0,
                         sProperties, sFunctions, NULL, NULL);
@@ -422,7 +422,7 @@ public:
       return NULL;
     }
 
-    JSClass* clasp = aMainRuntime ? &sMainRuntimeClass : &sClass;
+    const JSClass* clasp = aMainRuntime ? &sMainRuntimeClass : &sClass;
 
     JS::Rooted<JSObject*> obj(aCx, JS_NewObject(aCx, clasp, NULL, aParent));
     if (!obj) {
@@ -464,7 +464,7 @@ private:
   static MessageEvent*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    JSClass* classPtr = JS_GetClass(aObj);
+    const JSClass* classPtr = JS_GetClass(aObj);
     if (IsThisClass(classPtr)) {
       return GetJSPrivateSafeish<MessageEvent>(aObj);
     }
@@ -597,7 +597,7 @@ private:
 };
 
 #define DECL_MESSAGEEVENT_CLASS(_varname, _name) \
-  JSClass _varname = { \
+  const JSClass _varname = { \
     _name, \
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(SLOT_COUNT), \
     JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub, \
@@ -626,15 +626,15 @@ const JSFunctionSpec MessageEvent::sFunctions[] = {
 
 class ErrorEvent : public Event
 {
-  static JSClass sClass;
-  static JSClass sMainRuntimeClass;
+  static const JSClass sClass;
+  static const JSClass sMainRuntimeClass;
 
   static const JSPropertySpec sProperties[];
   static const JSFunctionSpec sFunctions[];
 
 public:
   static bool
-  IsThisClass(JSClass* aClass)
+  IsThisClass(const JSClass* aClass)
   {
     return aClass == &sClass || aClass == &sMainRuntimeClass;
   }
@@ -643,7 +643,7 @@ public:
   InitClass(JSContext* aCx, JSObject* aObj, JSObject* aParentProto,
             bool aMainRuntime)
   {
-    JSClass* clasp = aMainRuntime ? &sMainRuntimeClass : &sClass;
+    const JSClass* clasp = aMainRuntime ? &sMainRuntimeClass : &sClass;
 
     return JS_InitClass(aCx, aObj, aParentProto, clasp, Construct, 0,
                         sProperties, sFunctions, NULL, NULL);
@@ -658,7 +658,7 @@ public:
       return NULL;
     }
 
-    JSClass* clasp = aMainRuntime ? &sMainRuntimeClass : &sClass;
+    const JSClass* clasp = aMainRuntime ? &sMainRuntimeClass : &sClass;
 
     JS::Rooted<JSObject*> obj(aCx, JS_NewObject(aCx, clasp, NULL, aParent));
     if (!obj) {
@@ -696,7 +696,7 @@ private:
   static ErrorEvent*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    JSClass* classPtr = JS_GetClass(aObj);
+    const JSClass* classPtr = JS_GetClass(aObj);
     if (IsThisClass(classPtr)) {
       return GetJSPrivateSafeish<ErrorEvent>(aObj);
     }
@@ -797,7 +797,7 @@ private:
 };
 
 #define DECL_ERROREVENT_CLASS(_varname, _name) \
-  JSClass _varname = { \
+  const JSClass _varname = { \
     _name, \
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(SLOT_COUNT), \
     JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub, \
@@ -826,11 +826,11 @@ const JSFunctionSpec ErrorEvent::sFunctions[] = {
 
 class ProgressEvent : public Event
 {
-  static JSClass sClass;
+  static const JSClass sClass;
   static const JSPropertySpec sProperties[];
 
 public:
-  static JSClass*
+  static const JSClass*
   Class()
   {
     return &sClass;
@@ -888,7 +888,7 @@ private:
   static ProgressEvent*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    JSClass* classPtr = JS_GetClass(aObj);
+    const JSClass* classPtr = JS_GetClass(aObj);
     if (classPtr == &sClass) {
       return GetJSPrivateSafeish<ProgressEvent>(aObj);
     }
@@ -962,7 +962,7 @@ private:
   };
 };
 
-JSClass ProgressEvent::sClass = {
+const JSClass ProgressEvent::sClass = {
   "WorkerProgressEvent",
   JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(SLOT_COUNT),
   JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
@@ -983,7 +983,7 @@ Event*
 Event::GetPrivate(JSObject* aObj)
 {
   if (aObj) {
-    JSClass* classPtr = JS_GetClass(aObj);
+    const JSClass* classPtr = JS_GetClass(aObj);
     if (IsThisClass(classPtr) ||
         MessageEvent::IsThisClass(classPtr) ||
         ErrorEvent::IsThisClass(classPtr) ||

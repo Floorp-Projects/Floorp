@@ -305,7 +305,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static void finalize(FreeOp *fop, JSObject *obj);
     void markKeysInCompartment(JSTracer *tracer);
 
-    static Class jsclass;
+    static const Class jsclass;
 
     static Debugger *fromThisValue(JSContext *cx, const CallArgs &ca, const char *fnname);
     static bool getEnabled(JSContext *cx, unsigned argc, Value *vp);

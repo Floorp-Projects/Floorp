@@ -138,7 +138,7 @@ UnwrapDOMObject(JSObject* obj)
 inline const DOMClass*
 GetDOMClass(JSObject* obj)
 {
-  js::Class* clasp = js::GetObjectClass(obj);
+  const js::Class* clasp = js::GetObjectClass(obj);
   if (IsDOMClass(clasp)) {
     return &DOMJSClass::FromJSClass(clasp)->mClass;
   }
@@ -167,7 +167,7 @@ UnwrapDOMObjectToISupports(JSObject* aObject)
 inline bool
 IsDOMObject(JSObject* obj)
 {
-  js::Class* clasp = js::GetObjectClass(obj);
+  const js::Class* clasp = js::GetObjectClass(obj);
   return IsDOMClass(clasp) || IsDOMProxy(obj, clasp);
 }
 
@@ -364,9 +364,9 @@ struct NamedConstructor
 void
 CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                        JS::Handle<JSObject*> protoProto,
-                       JSClass* protoClass, JS::Heap<JSObject*>* protoCache,
+                       const JSClass* protoClass, JS::Heap<JSObject*>* protoCache,
                        JS::Handle<JSObject*> interfaceProto,
-                       JSClass* constructorClass, const JSNativeHolder* constructor,
+                       const JSClass* constructorClass, const JSNativeHolder* constructor,
                        unsigned ctorNargs, const NamedConstructor* namedConstructors,
                        JS::Heap<JSObject*>* constructorCache, const DOMClass* domClass,
                        const NativeProperties* regularProperties,
@@ -483,7 +483,7 @@ SetSystemOnlyWrapperSlot(JSObject* obj, const JS::Value& v)
 inline bool
 GetSameCompartmentWrapperForDOMBinding(JSObject*& obj)
 {
-  js::Class* clasp = js::GetObjectClass(obj);
+  const js::Class* clasp = js::GetObjectClass(obj);
   if (dom::IsDOMClass(clasp)) {
     if (!(clasp->flags & JSCLASS_DOM_GLOBAL)) {
       JS::Value v = GetSystemOnlyWrapperSlot(obj);

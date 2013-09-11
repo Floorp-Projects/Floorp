@@ -3124,7 +3124,7 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
 }
 
 bool
-XPCJSRuntime::DescribeCustomObjects(JSObject* obj, js::Class* clasp,
+XPCJSRuntime::DescribeCustomObjects(JSObject* obj, const js::Class* clasp,
                                     char (&name)[72]) const
 {
     XPCNativeScriptableInfo *si = nullptr;
@@ -3147,7 +3147,7 @@ XPCJSRuntime::DescribeCustomObjects(JSObject* obj, js::Class* clasp,
 }
 
 bool
-XPCJSRuntime::NoteCustomGCThingXPCOMChildren(js::Class* clasp, JSObject* obj,
+XPCJSRuntime::NoteCustomGCThingXPCOMChildren(const js::Class* clasp, JSObject* obj,
                                              nsCycleCollectionTraversalCallback& cb) const
 {
     if (clasp != &XPC_WN_Tearoff_JSClass) {

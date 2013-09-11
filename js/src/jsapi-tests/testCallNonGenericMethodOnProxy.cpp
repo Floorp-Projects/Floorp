@@ -6,7 +6,7 @@
 
 using namespace JS;
 
-static JSClass CustomClass = {
+static const JSClass CustomClass = {
   "CustomClass",
   JSCLASS_HAS_RESERVED_SLOTS(1),
   JS_PropertyStub,

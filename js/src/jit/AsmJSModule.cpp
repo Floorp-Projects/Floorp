@@ -165,7 +165,7 @@ AsmJSModuleObject_trace(JSTracer *trc, JSObject *obj)
     obj->as<AsmJSModuleObject>().module().trace(trc);
 }
 
-Class AsmJSModuleObject::class_ = {
+const Class AsmJSModuleObject::class_ = {
     "AsmJSModuleObject",
     JSCLASS_IS_ANONYMOUS | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(AsmJSModuleObject::RESERVED_SLOTS),

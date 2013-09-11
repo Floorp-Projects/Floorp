@@ -14,7 +14,7 @@ JSObject*
 CreateDedicatedWorkerGlobalScope(JSContext* aCx);
 
 bool
-ClassIsWorkerGlobalScope(JSClass* aClass);
+ClassIsWorkerGlobalScope(const JSClass* aClass);
 
 END_WORKERS_NAMESPACE
 

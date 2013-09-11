@@ -404,7 +404,7 @@ TraceXPCGlobal(JSTracer *trc, JSObject *obj)
 #include "mozilla/Preferences.h"
 #include "nsIXULRuntime.h"
 static void
-CheckTypeInference(JSContext *cx, JSClass *clasp, nsIPrincipal *principal)
+CheckTypeInference(JSContext *cx, const JSClass *clasp, nsIPrincipal *principal)
 {
     // Check that the global class isn't whitelisted.
     if (strcmp(clasp->name, "Sandbox") ||
@@ -443,7 +443,7 @@ CheckTypeInference(JSContext *cx, JSClass *clasp, nsIPrincipal *principal)
 namespace xpc {
 
 JSObject*
-CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
+CreateGlobalObject(JSContext *cx, const JSClass *clasp, nsIPrincipal *principal,
                    JS::CompartmentOptions& aOptions)
 {
     // Make sure that Type Inference is enabled for everything non-chrome.
@@ -467,7 +467,7 @@ CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
     // Verify that the right trace hook is called. Note that this doesn't
     // work right for wrapped globals, since the tracing situation there is
     // more complicated. Manual inspection shows that they do the right thing.
-    if (!((js::Class*)clasp)->ext.isWrappedNative)
+    if (!((const js::Class*)clasp)->ext.isWrappedNative)
     {
         VerifyTraceXPCGlobalCalledTracer trc;
         JS_TracerInit(&trc.base, JS_GetRuntime(cx), VerifyTraceXPCGlobalCalled);

@@ -168,7 +168,7 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
 static const uint32_t JSSLOT_FOUND_FUNCTION = 0;
 static const uint32_t JSSLOT_SAVED_ID = 1;
 
-static Class js_NoSuchMethodClass = {
+static const Class js_NoSuchMethodClass = {
     "NoSuchMethod",
     JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
@@ -457,7 +457,7 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
         return ReportIsNotFunction(cx, args.calleev().get(), args.length() + 1, construct);
 
     JSObject &callee = args.callee();
-    Class *clasp = callee.getClass();
+    const Class *clasp = callee.getClass();
 
     /* Invoke non-functions. */
     if (JS_UNLIKELY(clasp != &JSFunction::class_)) {
@@ -561,7 +561,7 @@ js::InvokeConstructor(JSContext *cx, CallArgs args)
         return true;
     }
 
-    Class *clasp = callee.getClass();
+    const Class *clasp = callee.getClass();
     if (!clasp->construct)
         return ReportIsNotFunction(cx, args.calleev().get(), args.length() + 1, CONSTRUCT);
 
@@ -659,7 +659,7 @@ js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *
 bool
 js::HasInstance(JSContext *cx, HandleObject obj, HandleValue v, bool *bp)
 {
-    Class *clasp = obj->getClass();
+    const Class *clasp = obj->getClass();
     RootedValue local(cx, v);
     if (clasp->hasInstance)
         return clasp->hasInstance(cx, obj, &local, bp);

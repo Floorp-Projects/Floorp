@@ -94,7 +94,7 @@ xpc_DelocalizeRuntime(JSRuntime *rt);
 // If IS_WN_CLASS for the JSClass of an object is true, the object is a
 // wrappednative wrapper, holding the XPCWrappedNative in its private slot.
 
-static inline bool IS_WN_CLASS(js::Class* clazz)
+static inline bool IS_WN_CLASS(const js::Class* clazz)
 {
     return clazz->ext.isWrappedNative;
 }

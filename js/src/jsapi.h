@@ -2418,7 +2418,7 @@ struct JSFunctionSpec {
 
 extern JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
-             JSClass *clasp, JSNative constructor, unsigned nargs,
+             const JSClass *clasp, JSNative constructor, unsigned nargs,
              const JSPropertySpec *ps, const JSFunctionSpec *fs,
              const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs);
 
@@ -2429,11 +2429,11 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 extern JS_PUBLIC_API(bool)
 JS_LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto);
 
-extern JS_PUBLIC_API(JSClass *)
+extern JS_PUBLIC_API(const JSClass *)
 JS_GetClass(JSObject *obj);
 
 extern JS_PUBLIC_API(bool)
-JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv);
+JS_InstanceOf(JSContext *cx, JSObject *obj, const JSClass *clasp, jsval *argv);
 
 extern JS_PUBLIC_API(bool)
 JS_HasInstance(JSContext *cx, JSObject *obj, jsval v, bool *bp);
@@ -2445,7 +2445,7 @@ extern JS_PUBLIC_API(void)
 JS_SetPrivate(JSObject *obj, void *data);
 
 extern JS_PUBLIC_API(void *)
-JS_GetInstancePrivate(JSContext *cx, JSObject *obj, JSClass *clasp,
+JS_GetInstancePrivate(JSContext *cx, JSObject *obj, const JSClass *clasp,
                       jsval *argv);
 
 extern JS_PUBLIC_API(bool)
@@ -2543,7 +2543,7 @@ enum OnNewGlobalHookOption {
 } /* namespace JS */
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals,
+JS_NewGlobalObject(JSContext *cx, const JSClass *clasp, JSPrincipals *principals,
                    JS::OnNewGlobalHookOption hookOption,
                    const JS::CompartmentOptions &options = JS::CompartmentOptions());
 
@@ -2551,7 +2551,7 @@ extern JS_PUBLIC_API(void)
 JS_FireOnNewGlobalObject(JSContext *cx, JS::HandleObject global);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
+JS_NewObject(JSContext *cx, const JSClass *clasp, JSObject *proto, JSObject *parent);
 
 /* Queries the [[Extensible]] property of the object. */
 extern JS_PUBLIC_API(bool)
@@ -2568,7 +2568,7 @@ JS_GetObjectRuntime(JSObject *obj);
  * proto if proto's actual parameter value is null.
  */
 extern JS_PUBLIC_API(JSObject *)
-JS_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
+JS_NewObjectWithGivenProto(JSContext *cx, const JSClass *clasp, JSObject *proto,
                            JSObject *parent);
 
 /*
@@ -2592,7 +2592,7 @@ extern JS_PUBLIC_API(JSObject *)
 JS_New(JSContext *cx, JSObject *ctor, unsigned argc, jsval *argv);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *clasp,
+JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, const JSClass *clasp,
                 JSObject *proto, unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
@@ -4245,7 +4245,7 @@ JS_IsConstructing(JSContext *cx, const jsval *vp)
  * [[Prototype]].
  */
 extern JS_PUBLIC_API(JSObject *)
-JS_NewObjectForConstructor(JSContext *cx, JSClass *clasp, const jsval *vp);
+JS_NewObjectForConstructor(JSContext *cx, const JSClass *clasp, const jsval *vp);
 
 /************************************************************************/
 

@@ -361,7 +361,7 @@ js::Nursery::collectToFixedPoint(MinorCollectionTracer *trc)
 JS_ALWAYS_INLINE void
 js::Nursery::traceObject(MinorCollectionTracer *trc, JSObject *obj)
 {
-    Class *clasp = obj->getClass();
+    const Class *clasp = obj->getClass();
     if (clasp->trace)
         clasp->trace(trc, obj);
 
