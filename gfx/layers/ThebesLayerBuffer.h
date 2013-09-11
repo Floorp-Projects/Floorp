@@ -87,7 +87,6 @@ public:
 
   void DrawBufferWithRotation(gfx::DrawTarget* aTarget, ContextSource aSource,
                               float aOpacity = 1.0,
-                              gfx::CompositionOp aOperator = gfx::OP_OVER,
                               gfx::SourceSurface* aMask = nullptr,
                               const gfx::Matrix* aMaskTransform = nullptr) const;
 
@@ -125,7 +124,6 @@ protected:
   void DrawBufferQuadrant(gfx::DrawTarget* aTarget, XSide aXSide, YSide aYSide,
                           ContextSource aSource,
                           float aOpacity,
-                          gfx::CompositionOp aOperator,
                           gfx::SourceSurface* aMask,
                           const gfx::Matrix* aMaskTransform) const;
 
