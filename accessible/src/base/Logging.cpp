@@ -22,7 +22,6 @@
 #include "prenv.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIURI.h"
-#include "mozilla/dom/Element.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

@@ -6,6 +6,7 @@
 #define AccGroupInfo_h_
 
 #include "Accessible-inl.h"
+#include "nsAccUtils.h"
 
 namespace mozilla {
 namespace a11y {

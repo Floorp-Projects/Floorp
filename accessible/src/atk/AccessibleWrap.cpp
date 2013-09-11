@@ -27,7 +27,6 @@
 #include "mozilla/Util.h"
 #include "nsXPCOMStrings.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIPersistentProperties2.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

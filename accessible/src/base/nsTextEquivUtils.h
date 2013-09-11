@@ -9,6 +9,7 @@
 #define _nsTextEquivUtils_H_
 
 #include "Accessible.h"
+#include "nsIStringBundle.h"
 #include "Role.h"
 
 class nsIContent;

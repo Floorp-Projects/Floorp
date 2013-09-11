@@ -9,8 +9,7 @@
 
 #include "DocAccessible.h"
 #include "Filters.h"
-
-class nsITreeView;
+#include "nsAccessibilityService.h"
 
 namespace mozilla {
 namespace a11y {

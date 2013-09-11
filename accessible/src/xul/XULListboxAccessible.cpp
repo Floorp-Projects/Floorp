@@ -21,7 +21,6 @@
 #include "nsIDOMXULPopupElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIMutableArray.h"
-#include "nsIPersistentProperties2.h"
 
 using namespace mozilla::a11y;
 
