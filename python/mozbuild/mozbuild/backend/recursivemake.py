@@ -211,6 +211,7 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, WebIDLFile):
             self._webidl_sources.add(mozpath.join(obj.srcdir, obj.basename))
+            self._process_webidl_basename(obj.basename)
 
         elif isinstance(obj, GeneratedEventWebIDLFile):
             self._generated_events_webidl_sources.add(mozpath.join(obj.srcdir, obj.basename))
@@ -218,14 +219,17 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, TestWebIDLFile):
             self._test_webidl_sources.add(mozpath.join(obj.srcdir,
                                                        obj.basename))
+            # Test WebIDL files are not exported.
 
         elif isinstance(obj, GeneratedWebIDLFile):
             self._generated_webidl_sources.add(mozpath.join(obj.srcdir,
                                                             obj.basename))
+            self._process_webidl_basename(obj.basename)
 
         elif isinstance(obj, PreprocessedWebIDLFile):
             self._preprocessed_webidl_sources.add(mozpath.join(obj.srcdir,
                                                                obj.basename))
+            self._process_webidl_basename(obj.basename)
 
         elif isinstance(obj, Program):
             self._process_program(obj.program, backend_file)
@@ -476,6 +480,10 @@ class RecursiveMakeBackend(CommonBackend):
 
     def _process_program(self, program, backend_file):
         backend_file.write('PROGRAM = %s\n' % program)
+
+    def _process_webidl_basename(self, basename):
+        header = 'mozilla/dom/%sBinding.h' % os.path.splitext(basename)[0]
+        self._install_manifests['dist_include'].add_optional_exists(header)
 
     def _process_xpcshell_manifests(self, obj, backend_file, namespace=""):
         manifest = obj.xpcshell_manifests
