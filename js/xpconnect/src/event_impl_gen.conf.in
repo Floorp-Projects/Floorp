@@ -51,11 +51,6 @@ simple_events = [
     'DeviceStorageChangeEvent',
     'PopupBlockedEvent',
     'RecordErrorEvent',
-#ifdef MOZ_GAMEPAD
-    'GamepadEvent',
-    'GamepadButtonEvent',
-    'GamepadAxisMoveEvent',
-#endif
 #ifdef MOZ_WEBSPEECH
     'SpeechRecognitionEvent',
 #endif
@@ -81,6 +76,5 @@ xpidl_to_native = [
     ['nsIDOMDocument', 'nsIDocument', 'nsIDocument'],
     ['nsIDOMElement', 'mozilla::dom::Element', 'mozilla::dom::Element'],
     ['nsIDOMCSSStyleSheet', 'nsCSSStyleSheet', 'nsIStyleSheet'],
-    ['nsIDOMGamepad', 'Gamepad', 'nsIDOMGamepad']
   ]
 
