@@ -49,6 +49,14 @@
  #include "nsStackWalk.h"
 #endif
 
+#if defined(SPS_ARCH_arm) && defined(MOZ_WIDGET_GONK)
+ // Should also work on other Android and ARM Linux, but not tested there yet.
+ #define USE_EHABI_STACKWALK
+#endif
+#ifdef USE_EHABI_STACKWALK
+ #include "EHABIStackWalk.h"
+#endif
+
 using std::string;
 using namespace mozilla;
 
@@ -337,7 +345,7 @@ void addProfileEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
   }
 }
 
-#ifdef USE_NS_STACKWALK
+#if defined(USE_NS_STACKWALK) || defined(USE_EHABI_STACKWALK)
 typedef struct {
   void** array;
   void** sp_array;
@@ -440,6 +448,26 @@ void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample
 }
 #endif
 
+#ifdef USE_EHABI_STACKWALK
+void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
+{
+  void *pc_array[1000];
+  void *sp_array[1000];
+  PCArray array = {
+    pc_array,
+    sp_array,
+    mozilla::ArrayLength(pc_array),
+    0
+  };
+
+  ucontext_t *ucontext = reinterpret_cast<ucontext_t *>(aSample->context);
+  array.count = EHABIStackWalk(ucontext->uc_mcontext, aProfile.GetStackTop(),
+                               sp_array, pc_array, array.size);
+  mergeNativeBacktrace(aProfile, array);
+}
+
+#endif
+
 static
 void doSampleStackTrace(PseudoStack *aStack, ThreadProfile &aProfile, TickSample *sample)
 {
@@ -502,7 +530,7 @@ void TableTicker::InplaceTick(TickSample* sample)
     }
   }
 
-#if defined(USE_NS_STACKWALK)
+#if defined(USE_NS_STACKWALK) || defined(USE_EHABI_STACKWALK)
   if (mUseStackWalk) {
     doNativeBacktrace(currThreadProfile, sample);
   } else {

@@ -47,6 +47,10 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
             'shared-libraries-linux.cc',
             'platform-linux.cc',
         ]
+        if CONFIG['CPU_ARCH'] == 'arm':
+            CPP_SOURCES += [
+                'EHABIStackWalk.cpp',
+            ]
     elif CONFIG['OS_TARGET'] == 'Darwin':
         CPP_SOURCES += [
             'shared-libraries-macos.cc',

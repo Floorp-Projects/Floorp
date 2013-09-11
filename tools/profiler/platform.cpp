@@ -316,7 +316,7 @@ void mozilla_sampler_init(void* stackTop)
 
   const char* features[] = {"js"
                          , "leaf"
-#if defined(XP_WIN) || defined(XP_MACOSX)
+#if defined(XP_WIN) || defined(XP_MACOSX) || (defined(SPS_ARCH_arm) && defined(linux))
                          , "stackwalk"
 #endif
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
