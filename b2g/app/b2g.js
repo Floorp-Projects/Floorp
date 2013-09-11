@@ -747,6 +747,8 @@ pref("disk_space_watcher.enabled", true);
 // Enable promise
 pref("dom.promise.enabled", false);
 
+pref("dom.datastore.enabled", true);
+
 // Allow ADB to run for this many hours before disabling
 // (only applies when marionette is disabled)
 // 0 disables the timer.
