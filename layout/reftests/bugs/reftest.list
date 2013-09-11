@@ -1340,7 +1340,7 @@ random-if(winWidget) == 482659-1a.html 482659-1-ref.html
 == 487539-1.html about:blank
 == 488390-1.html 488390-1-ref.html
 == 488649-1.html 488649-1-ref.html
-fails-if(Android) == 488685-1.html 488685-1-ref.html
+== 488685-1.html 488685-1-ref.html
 == 488692-1.html 488692-1-ref.html
 == 489868-1.svg 489868-1-ref.svg
 == 490173-1.html 490173-1-ref.html
