@@ -1,6 +1,7 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.tests;
 
+import com.jayway.android.robotium.solo.Condition;
 import @ANDROID_PACKAGE_NAME@.*;
 
 import android.content.ContentResolver;
@@ -79,12 +80,12 @@ abstract class AboutHomeTest extends BaseTest {
     /**
      * Waits for the given ListView to have a non-empty adapter.
      *
-     * This method will fail if the given ListView or its adapter are null.
+     * This method will return false if the given ListView or its adapter are null.
      */
     protected boolean waitForListToLoad(final ListView listView) {
-        boolean result = waitForTest(new BooleanTest() {
+        Condition listWaitCondition = new Condition() {
             @Override
-            public boolean test() {
+            public boolean isSatisfied() {
                 if (listView == null) {
                     return false;
                 }
@@ -96,9 +97,8 @@ abstract class AboutHomeTest extends BaseTest {
 
                 return (adapter.getCount() > 0);
             }
-        }, MAX_WAIT_MS);
-
-        return result;
+        };
+        return waitForCondition(listWaitCondition, MAX_WAIT_MS);
     }
 
     /**
@@ -331,9 +331,9 @@ abstract class AboutHomeTest extends BaseTest {
 
    // A wait in order for the about:home tab to be rendered after drag/tab selection
     private void waitForAboutHomeTab(final int tabIndex) {
-        boolean correctTab = waitForTest(new BooleanTest() {
+        boolean correctTab = waitForCondition(new Condition() {
             @Override
-            public boolean test() {
+            public boolean isSatisfied() {
               ViewPager pager = (ViewPager)mSolo.getView(ViewPager.class, 0);
               return (pager.getCurrentItem() == tabIndex);
             }
