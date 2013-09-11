@@ -66,7 +66,6 @@ NS_IMPL_RELEASE(nsMutationReceiver)
 NS_INTERFACE_MAP_BEGIN(nsMutationReceiver)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
-  NS_INTERFACE_MAP_ENTRY(nsMutationReceiver)
 NS_INTERFACE_MAP_END
 
 nsMutationReceiver::nsMutationReceiver(nsINode* aTarget,
@@ -321,6 +320,7 @@ void nsMutationReceiver::NodeWillBeDestroyed(const nsINode *aNode)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMMutationObserver)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsDOMMutationObserver)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMMutationObserver)
@@ -523,6 +523,32 @@ nsDOMMutationObserver::TakeRecords(
 {
   aRetVal.Clear();
   mPendingMutations.SwapElements(aRetVal);
+}
+
+void
+nsDOMMutationObserver::GetObservingInfo(nsTArray<Nullable<MutationObservingInfoInitializer> >& aResult)
+{
+  aResult.SetCapacity(mReceivers.Count());
+  for (int32_t i = 0; i < mReceivers.Count(); ++i) {
+    MutationObservingInfoInitializer& info = aResult.AppendElement()->SetValue();
+    nsMutationReceiver* mr = mReceivers[i];
+    info.mChildList = mr->ChildList();
+    info.mAttributes = mr->Attributes();
+    info.mCharacterData = mr->CharacterData();
+    info.mSubtree = mr->Subtree();
+    info.mAttributeOldValue = mr->AttributeOldValue();
+    info.mCharacterDataOldValue = mr->CharacterDataOldValue();
+    nsCOMArray<nsIAtom>& filters = mr->AttributeFilter();
+    if (filters.Count()) {
+      info.mAttributeFilter.Construct();
+      mozilla::dom::Sequence<nsString>& filtersAsStrings =
+        info.mAttributeFilter.Value();
+      for (int32_t j = 0; j < filters.Count(); ++j) {
+        filtersAsStrings.AppendElement(nsDependentAtomString(filters[j]));
+      }
+    }
+    info.mObservedNode = mr->Target();
+  }
 }
 
 // static
