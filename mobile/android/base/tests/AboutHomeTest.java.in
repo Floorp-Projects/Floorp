@@ -27,11 +27,11 @@ abstract class AboutHomeTest extends BaseTest {
     protected enum BrowserDataType {BOOKMARKS, HISTORY};
     protected enum AboutHomeTabs {MOST_VISITED, MOST_RECENT, TABS_FROM_LAST_TIME, BOOKMARKS, READING_LIST};
     protected ArrayList<String> aboutHomeTabs = new ArrayList<String>() {{
-                  add(HISTORY_LABEL);
-                  add(BOOKMARKS_LABEL);
-                  add(READING_LIST_LABEL);
+                  add("HISTORY");
+                  add("BOOKMARKS");
+                  add("READING_LIST");
               }};
-
+    
     // Labels for the about:home tabs
     protected static final String HISTORY_LABEL = "HISTORY";
     protected static final String BOOKMARKS_LABEL = "BOOKMARKS";
@@ -330,7 +330,7 @@ abstract class AboutHomeTest extends BaseTest {
     }
 
    // A wait in order for the about:home tab to be rendered after drag/tab selection
-    protected void waitForAboutHomeTab(final int tabIndex) {
+    private void waitForAboutHomeTab(final int tabIndex) {
         boolean correctTab = waitForCondition(new Condition() {
             @Override
             public boolean isSatisfied() {
