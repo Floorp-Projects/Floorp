@@ -73,7 +73,7 @@ var FeedHandler = {
       let feedIndex = -1;
       if (feeds.length > 1) {
         let p = new Prompt({
-          window: browser.contentWindow,
+          window: browser.contentWindow
         }).setSingleChoiceItems(feeds.map(function(feed) {
           return { label: feed.title || feed.href }
         })).show((function(data) {
@@ -91,29 +91,28 @@ var FeedHandler = {
   },
 
   loadFeed: function fh_loadFeed(aFeed, aBrowser) {
-      let feedURL = aFeed.href;
+    let feedURL = aFeed.href;
 
-      // Next, we decide on which service to send the feed
-      let handlers = this.getContentHandlers(this.TYPE_MAYBE_FEED);
-      if (handlers.length == 0)
+    // Next, we decide on which service to send the feed
+    let handlers = this.getContentHandlers(this.TYPE_MAYBE_FEED);
+    if (handlers.length == 0)
+      return;
+
+    // JSON for Prompt
+    let p = new Prompt({
+      window: aBrowser.contentWindow
+    }).setSingleChoiceItems(handlers.map(function(handler) {
+      return { label: handler.name };
+    })).show(function(data) {
+      if (data.button == -1)
         return;
 
-      // JSON for Prompt
-      let p = new Prompt({
-        window: aBrowser.contentWindow
-      }).setSingleChoiceItems(handlers.map(function(handler) {
-        return { label: handler.name };
-      })).show(function(data) {
-        if (data.button == -1)
-          return;
+      // Merge the handler URL and the feed URL
+      let readerURL = handlers[data.button].uri;
+      readerURL = readerURL.replace(/%s/gi, encodeURIComponent(feedURL));
 
-        // Merge the handler URL and the feed URL
-        let readerURL = handlers[data.button].uri;
-        readerURL = readerURL.replace(/%s/gi, encodeURIComponent(feedURL));
-
-        // Open the resultant URL in a new tab
-        BrowserApp.addTab(readerURL, { parentId: BrowserApp.selectedTab.id });
-      });
-
+      // Open the resultant URL in a new tab
+      BrowserApp.addTab(readerURL, { parentId: BrowserApp.selectedTab.id });
+    });
   }
 };
