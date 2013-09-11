@@ -84,7 +84,7 @@ class CommonTestCase(unittest.TestCase):
 
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
-        self.loglines = None
+        self.loglines = []
         self.duration = 0
 
     def _addSkip(self, result, reason):
@@ -253,7 +253,7 @@ permissions.forEach(function (perm) {
         if hasattr(self.marionette, 'session'):
             if self.marionette.session is not None:
                 try:
-                    self.loglines = self.marionette.get_logs()
+                    self.loglines.extend(self.marionette.get_logs())
                 except Exception, inst:
                     self.loglines = [['Error getting log: %s' % inst]]
                 try:
@@ -300,12 +300,12 @@ class MarionetteTestCase(CommonTestCase):
     def setUp(self):
         CommonTestCase.setUp(self)
         self.marionette.test_name = self.test_name
-        self.marionette.execute_script("log('TEST-START: %s:%s')" % 
+        self.marionette.execute_script("log('TEST-START: %s:%s')" %
                                        (self.filepath.replace('\\', '\\\\'), self.methodName))
 
     def tearDown(self):
         self.marionette.set_context("content")
-        self.marionette.execute_script("log('TEST-END: %s:%s')" % 
+        self.marionette.execute_script("log('TEST-END: %s:%s')" %
                                        (self.filepath.replace('\\', '\\\\'), self.methodName))
         self.marionette.test_name = None
         CommonTestCase.tearDown(self)
