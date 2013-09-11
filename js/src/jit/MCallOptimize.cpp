@@ -152,6 +152,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineForceSequentialOrInParallelSection(callInfo);
     if (native == testingFunc_bailout)
         return inlineBailout(callInfo);
+    if (native == testingFunc_assertFloat32)
+        return inlineAssertFloat32(callInfo);
 
     return InliningStatus_NotInlined;
 }
@@ -1562,6 +1564,25 @@ IonBuilder::inlineBailout(CallInfo &callInfo)
     callInfo.unwrapArgs();
 
     current->add(MBail::New());
+
+    MConstant *undefined = MConstant::New(UndefinedValue());
+    current->add(undefined);
+    current->push(undefined);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineAssertFloat32(CallInfo &callInfo)
+{
+    callInfo.unwrapArgs();
+
+    MDefinition *secondArg = callInfo.getArg(1);
+
+    JS_ASSERT(secondArg->type() == MIRType_Boolean);
+    JS_ASSERT(secondArg->isConstant());
+
+    bool mustBeFloat32 = JSVAL_TO_BOOLEAN(secondArg->toConstant()->value());
+    current->add(MAssertFloat32::New(callInfo.getArg(0), mustBeFloat32));
 
     MConstant *undefined = MConstant::New(UndefinedValue());
     current->add(undefined);

@@ -560,6 +560,7 @@ class IonBuilder : public MIRGenerator
     // Testing functions.
     InliningStatus inlineForceSequentialOrInParallelSection(CallInfo &callInfo);
     InliningStatus inlineBailout(CallInfo &callInfo);
+    InliningStatus inlineAssertFloat32(CallInfo &callInfo);
 
     // Main inlining functions
     InliningStatus inlineNativeCall(CallInfo &callInfo, JSNative native);
