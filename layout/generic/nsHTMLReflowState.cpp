@@ -852,8 +852,11 @@ nsHTMLReflowState::ApplyRelativePositioning(nsIFrame* aFrame,
   if (NS_STYLE_POSITION_RELATIVE == display->mPosition) {
     *aPosition += nsPoint(aComputedOffsets.left, aComputedOffsets.top);
   } else if (NS_STYLE_POSITION_STICKY == display->mPosition) {
-    *aPosition = StickyScrollContainer::StickyScrollContainerForFrame(aFrame)->
-      ComputePosition(aFrame);
+    StickyScrollContainer* ssc =
+      StickyScrollContainer::GetStickyScrollContainerForFrame(aFrame);
+    if (ssc) {
+      *aPosition = ssc->ComputePosition(aFrame);
+    }
   }
 }
 

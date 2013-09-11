@@ -512,7 +512,11 @@ nsFrame::Init(nsIContent*      aContent,
     mState |= NS_FRAME_MAY_BE_TRANSFORMED;
   }
   if (disp->mPosition == NS_STYLE_POSITION_STICKY) {
-    StickyScrollContainer::StickyScrollContainerForFrame(this)->AddFrame(this);
+    StickyScrollContainer* ssc =
+      StickyScrollContainer::GetStickyScrollContainerForFrame(this);
+    if (ssc) {
+      ssc->AddFrame(this);
+    }
   }
 
   if (nsLayoutUtils::FontSizeInflationEnabled(PresContext()) || !GetParent()
@@ -593,8 +597,11 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsSVGEffects::InvalidateDirectRenderingObservers(this);
 
   if (StyleDisplay()->mPosition == NS_STYLE_POSITION_STICKY) {
-    StickyScrollContainer::StickyScrollContainerForFrame(this)->
-      RemoveFrame(this);
+    StickyScrollContainer* ssc =
+      StickyScrollContainer::GetStickyScrollContainerForFrame(this);
+    if (ssc) {
+      ssc->RemoveFrame(this);
+    }
   }
 
   // Get the view pointer now before the frame properties disappear
