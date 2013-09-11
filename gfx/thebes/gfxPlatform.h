@@ -404,6 +404,11 @@ public:
     bool OpenTypeSVGEnabled();
 
     /**
+     * Max character length of words in the word cache
+     */
+    uint32_t WordCacheCharLimit();
+
+    /**
      * Whether to use the SIL Graphite rendering engine
      * (for fonts that include Graphite tables)
      */
@@ -671,6 +676,9 @@ protected:
 
     // which scripts should be shaped with harfbuzz
     int32_t mUseHarfBuzzScripts;
+
+    // max character limit for words in word cache
+    int32_t mWordCacheCharLimit;
 
 private:
     /**
