@@ -36,6 +36,8 @@ MOCHITEST_METRO_FILES = \
   browser_tilegrid.xul \
   browser_topsites.js \
   browser_urlbar.js \
+  browser_urlbar_highlightURLs.js \
+  browser_urlbar_trimURLs.js \
   $(NULL)
 
 ifndef MOZ_DEBUG

@@ -51,6 +51,9 @@ pref("dom.always_allow_move_resize_window", true);
 
 pref("plugin.allowed_types", "application/x-shockwave-flash,application/futuresplash");
 
+pref("devtools.debugger.remote-enabled", true);
+pref("devtools.debugger.force-local", true);
+
 // The default for this pref reflects whether the build is capable of IPC.
 // (Turning it on in a no-IPC build will have no effect.)
 #ifdef XP_MACOSX

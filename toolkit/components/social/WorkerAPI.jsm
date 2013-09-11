@@ -60,11 +60,7 @@ WorkerAPI.prototype = {
       SocialService.updateProvider(origin, data);
     },
     "social.reload-worker": function(data) {
-      getFrameWorkerHandle(this._provider.workerURL, null)._worker.reload();
-      // the frameworker is going to be reloaded, send the initialization
-      // so it can have the same startup sequence as if it were loaded
-      // the first time.  This will be queued until the frameworker is ready.
-      this._port.postMessage({topic: "social.initialize"});
+      this._provider.reload();
     },
     "social.user-profile": function (data) {
       this._provider.updateUserProfile(data);
