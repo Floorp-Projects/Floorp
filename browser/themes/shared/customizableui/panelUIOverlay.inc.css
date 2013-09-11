@@ -121,6 +121,16 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton,
   max-height: 6em;
 }
 
+.panel-customization-placeholder[expand],
+.panel-customization-placeholder[contract] {
+  transition-property: width;
+  transition-duration: 170ms;
+  transition-delay: 20ms;
+  transition-timing-function: ease-in-out;
+  min-width: 0;
+  max-width: none;
+}
+
 #edit-controls:not([customizableui-areatype="toolbar"]) > toolbarbutton,
 #zoom-controls:not([customizableui-areatype="toolbar"]) > toolbarbutton {
   -moz-box-orient: horizontal;
