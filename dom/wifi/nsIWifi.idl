@@ -59,7 +59,7 @@ interface nsIWifi : nsISupports
     void getWifiScanResults(in nsIWifiScanResultsReady callback);
 };
 
-[scriptable, uuid(3f21012d-6e75-4632-b87c-acdd7c57fbf3)]
+[scriptable, uuid(e5a72295-1c5f-4848-9cbb-f1d3785c16c1)]
 interface nsIDOMWifiManager : nsISupports
 {
     /**
@@ -144,6 +144,19 @@ interface nsIDOMWifiManager : nsISupports
      */
     nsIDOMDOMRequest setStaticIpMode(in jsval network,
                                      in jsval info);
+
+    /**
+     * Given a network, configure http proxy when using wifi.
+     * @param network A network object with the SSID of the network to set http proxy.
+     * @param info info should have following field:
+     *        - httpProxyHost ip address of http proxy.
+     *        - httpProxyPort port of http proxy, set 0 to use default port 8080.
+     *        set info to null to clear http proxy.
+     * onsuccess: We have successfully configure http proxy.
+     * onerror: We have failed to configure http proxy.
+     */
+    nsIDOMDOMRequest setHttpProxy(in jsval network,
+                                  in jsval info);
 
     /**
      * Returns whether or not wifi is currently enabled.

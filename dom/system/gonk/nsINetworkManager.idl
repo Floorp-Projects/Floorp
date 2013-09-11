@@ -119,7 +119,7 @@ interface nsIWifiOperationModeCallback : nsISupports
 /**
  * Manage network interfaces.
  */
-[scriptable, uuid(5b22c620-f8b9-11e2-b778-0800200c9a66)]
+[scriptable, uuid(fad3fb08-664f-48e3-bba3-423186988c61)]
 interface nsINetworkManager : nsISupports
 {
   /**
@@ -231,4 +231,12 @@ interface nsINetworkManager : nsISupports
    *        Callback to notify Wifi firmware reload result.
    */
   void setWifiOperationMode(in DOMString interfaceName, in DOMString mode, in nsIWifiOperationModeCallback callback);
+
+  /**
+   * Set http proxy for specific network
+   *
+   * @param network
+   *        Network interface to register.
+   */
+  void setNetworkProxy(in nsINetworkInterface network);
 };
