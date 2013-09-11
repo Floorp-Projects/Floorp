@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef TEXTUREGARBAGEBIN_H_
+#define TEXTUREGARBAGEBIN_H_
+
 #include <stack>
 
 #include "mozilla/Mutex.h"
@@ -35,3 +38,5 @@ public:
 
 }
 }
+
+#endif // TEXTUREGARBAGEBIN_H_

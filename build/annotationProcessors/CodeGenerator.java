@@ -44,7 +44,6 @@ public class CodeGenerator {
                 "\n" +
                 "using namespace mozilla;\n" +
                 "void AndroidBridge::InitStubs(JNIEnv *jEnv) {\n" +
-                "    ALOG_BRIDGE(\"%s\", __PRETTY_FUNCTION__);\n" +
                 "    initInit();\n");
         // Now we write the various GetStaticMethodID calls here...
 
@@ -124,8 +123,7 @@ public class CodeGenerator {
         wrapperMethodBodies.append('\n');
         wrapperMethodBodies.append(methodSignature);
 
-        wrapperMethodBodies.append(" {\n" +
-                                   "    ALOG_BRIDGE(\"%s\", __PRETTY_FUNCTION__);\n");
+        wrapperMethodBodies.append(" {\n");
 
         // Static stubs check the bridge instance has been created before trying to run.
         if (aIsStaticBridgeMethod) {
@@ -267,18 +265,15 @@ public class CodeGenerator {
             wrapperMethodBodies.append("    ");
             wrapperMethodBodies.append(Utils.getCReturnType(returnType));
             wrapperMethodBodies.append(" ret = static_cast<").append(Utils.getCReturnType(returnType)).append(">(env->PopLocalFrame(temp));\n" +
-                                       "    ALOG_BRIDGE(\"Exit of: %s\", __PRETTY_FUNCTION__);\n" +
                                        "    return ret;\n");
         } else if (!returnType.getCanonicalName().equals("void")) {
             // If we're a primitive-returning function, just return the directly-obtained primative
             // from the call to Java.
             wrapperMethodBodies.append("    env->PopLocalFrame(NULL);\n" +
-                                       "    ALOG_BRIDGE(\"Exit of: %s\", __PRETTY_FUNCTION__);\n" +
                                        "    return temp;\n");
         } else {
             // If we don't return anything, just pop the stack frame and move on with life.
-            wrapperMethodBodies.append("    ALOG_BRIDGE(\"Exit of: %s\", __PRETTY_FUNCTION__);\n" +
-                                       "    env->PopLocalFrame(NULL);\n");
+            wrapperMethodBodies.append("    env->PopLocalFrame(NULL);\n");
         }
         wrapperMethodBodies.append("}\n");
     }

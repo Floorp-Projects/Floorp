@@ -15,8 +15,8 @@ import java.util.HashMap;
  *  default values for them
  */
 public class testSettingsMenuItems extends PixelTest {
-    int midWidth;
-    int midHeight;
+    int mMidWidth;
+    int mMidHeight;
     String BRAND_NAME = "(Fennec|Nightly|Aurora|Firefox|Firefox Beta)";
 
     /**
@@ -91,8 +91,8 @@ public class testSettingsMenuItems extends PixelTest {
 
     public void testSettingsMenuItems() {
         blockForGeckoReady();
-        midWidth = mDriver.getGeckoWidth()/2;
-        midHeight = mDriver.getGeckoHeight()/2;
+        mMidWidth = mDriver.getGeckoWidth()/2;
+        mMidHeight = mDriver.getGeckoHeight()/2;
 
         Map<String, List<String[]>> settingsMenuItems = new HashMap<String, List<String[]>>();
         setupSettingsMap(settingsMenuItems);
@@ -212,40 +212,35 @@ public class testSettingsMenuItems extends PixelTest {
 
                 // Check item title.
                 String itemTitle = "^" + item[0] + "$";
-                if (!waitForText(itemTitle)) {
-                    // If we don't see the item, scroll down once in case it's off-screen.
-                    scrollDown();
-                }
-                mAsserter.ok(mSolo.waitForText(itemTitle), "Waiting for settings item " + itemTitle + " in section " + section,
+                boolean foundText = waitExtraForText(itemTitle);
+                mAsserter.ok(foundText, "Waiting for settings item " + itemTitle + " in section " + section,
                              "The " + itemTitle + " option is present in section " + section);
                 // Check item default, if it exists.
                 if (itemLen > 1) {
                     String itemDefault = "^" + item[1] + "$";
-                    mAsserter.ok(mSolo.waitForText(itemDefault), "Waiting for settings item default " + itemDefault
+                    foundText = waitExtraForText(itemDefault);
+                    mAsserter.ok(foundText, "Waiting for settings item default " + itemDefault
                                  + " in section " + section,
                                  "The " + itemDefault + " default is present in section " + section);
                 }
                 // Check item choices, if they exist.
                 if (itemLen > 2) {
-                  waitForEnabledText(itemTitle);
-                  mSolo.clickOnText(itemTitle);
-                  for (int i = 2; i < itemLen; i++) {
-                      String itemChoice = "^" + item[i] + "$";
-                      if (!waitForText(itemChoice)) {
-                          // If we don't see the item, scroll down once in case it's off-screen.
-                          scrollDown();
-                      }
-                      mAsserter.ok(mSolo.waitForText(itemChoice), "Waiting for settings item choice " + itemChoice
-                                   + " in section " + section,
-                                   "The " + itemChoice + " choice is present in section " + section);
-                  }
-                  // Leave submenu after checking.
-                  if (waitForText("^Cancel$")) {
-                      mSolo.clickOnText("^Cancel$");
-                  } else {
-                      // Some submenus aren't dialogs, but are nested screens; exit using "back".
-                      mActions.sendSpecialKey(Actions.SpecialKey.BACK);
-                  }
+                    waitForEnabledText(itemTitle);
+                    mSolo.clickOnText(itemTitle);
+                    for (int i = 2; i < itemLen; i++) {
+                        String itemChoice = "^" + item[i] + "$";
+                        foundText = waitExtraForText(itemChoice);
+                        mAsserter.ok(foundText, "Waiting for settings item choice " + itemChoice
+                                     + " in section " + section,
+                                     "The " + itemChoice + " choice is present in section " + section);
+                    }
+                    // Leave submenu after checking.
+                    if (waitForText("^Cancel$")) {
+                        mSolo.clickOnText("^Cancel$");
+                    } else {
+                        // Some submenus aren't dialogs, but are nested screens; exit using "back".
+                        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+                    }
                 }
             }
             // Navigate back a screen if on a phone.
@@ -256,13 +251,19 @@ public class testSettingsMenuItems extends PixelTest {
         }
     }
 
-    /**
-     * Hacky way to scroll down.
-     *
-     * solo.scroll* does not work in dialogs.
-     */
-    private void scrollDown() {
-        MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
-        meh.dragSync(midWidth, midHeight+100, midWidth, midHeight-100);
+    // Solo.waitForText usually scrolls down in a view when text is not visible.
+    // In this test, Solo.waitForText scrolling does not work, so we use this
+    // hack to do the same thing.
+    private boolean waitExtraForText(String txt) {
+        boolean foundText = waitForText(txt);
+        if (!foundText) {
+            // If we don't see the item, scroll down once in case it's off-screen.
+            // Hacky way to scroll down.  solo.scroll* does not work in dialogs.
+            MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
+            meh.dragSync(mMidWidth, mMidHeight+100, mMidWidth, mMidHeight-100);
+
+            foundText = mSolo.waitForText(txt);
+        }
+        return foundText;
     }
 }
