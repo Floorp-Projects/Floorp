@@ -680,6 +680,15 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     nsPresContext* parentContext = curPresShell->GetPresContext()->GetParentPresContext();
     curPresShell = parentContext ? parentContext->GetPresShell() : nullptr;
   }
+#ifdef MOZ_WIDGET_ANDROID
+  if (presContext->IsRootContentDocument() && aScrollFrame == presShell->GetRootScrollFrame()) {
+    // On Android we set the resolution on a different presshell (bug 732971) so we
+    // need some special handling here to make things work properly. Once bug 732971 is
+    // fixed we should remove this ifdef block, and adjust any other pieces that need
+    // adjusting to make this work properly.
+    metrics.mResolution.scale = metrics.mCumulativeResolution.scale;
+  }
+#endif
 
   metrics.mDevPixelsPerCSSPixel = CSSToLayoutDeviceScale(
     (float)nsPresContext::AppUnitsPerCSSPixel() / auPerDevPixel);
