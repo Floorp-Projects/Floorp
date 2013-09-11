@@ -474,7 +474,7 @@ pref("devtools.debugger.force-local", true);
 // Display a prompt when a new connection starts to accept/reject it
 pref("devtools.debugger.prompt-connection", true);
 // Temporary setting to enable webapps actors
-pref("devtools.debugger.enable-content-actors", false);
+pref("devtools.debugger.enable-content-actors", true);
 
 // view source
 pref("view_source.syntax_highlight", true);
