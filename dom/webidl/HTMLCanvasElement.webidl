@@ -11,10 +11,8 @@
  */
 
 interface Blob;
-interface FileCallback;
 interface nsIInputStreamCallback;
 interface nsISupports;
-interface PrintCallback;
 interface Variant;
 
 interface HTMLCanvasElement : HTMLElement {
@@ -47,3 +45,17 @@ partial interface HTMLCanvasElement {
   void mozFetchAsStream(nsIInputStreamCallback callback, optional DOMString? type = null);
            attribute PrintCallback? mozPrintCallback;
 };
+
+[ChromeOnly]
+interface MozCanvasPrintState
+{
+  // A canvas rendering context.
+  readonly attribute nsISupports context;
+
+  // To be called when rendering to the context is done.
+  void done();
+};
+
+callback PrintCallback = void(MozCanvasPrintState ctx);
+
+callback FileCallback = void(Blob file);
