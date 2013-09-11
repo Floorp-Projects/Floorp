@@ -528,14 +528,13 @@ struct Imm8VFPImmData
     int32_t isInvalid : 12;
 
   public:
-    Imm8VFPImmData()
-      : imm4L(-1U & 0xf), imm4H(-1U & 0xf), isInvalid(-1)
+    MOZ_CONSTEXPR Imm8VFPImmData()
+      : imm4L(-1U & 0xf), pad(0), imm4H(-1U & 0xf), isInvalid(-1)
     { }
 
-    Imm8VFPImmData(uint32_t imm)
-      : imm4L(imm&0xf), imm4H(imm>>4), isInvalid(0)
+    MOZ_CONSTEXPR Imm8VFPImmData(uint8_t imm)
+      : imm4L(imm&0xf), pad(0), imm4H(imm>>4), isInvalid(0)
     {
-        JS_ASSERT(imm <= 0xff);
     }
 
     uint32_t encode() {
@@ -2212,7 +2211,7 @@ class DoubleEncoder {
         DoubleEntry()
           : dblTop(-1)
         { }
-        DoubleEntry(uint32_t dblTop_, datastore::Imm8VFPImmData data_)
+        MOZ_CONSTEXPR DoubleEntry(uint32_t dblTop_, datastore::Imm8VFPImmData data_)
           : dblTop(dblTop_), data(data_)
         { }
     };
