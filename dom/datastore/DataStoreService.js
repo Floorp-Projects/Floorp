@@ -71,16 +71,38 @@ DataStoreService.prototype = {
     debug('getDataStores - aName: ' + aName);
     let self = this;
     return new aWindow.Promise(function(resolver) {
-      let results = [];
+      let matchingStores = [];
 
       if (aName in self.stores) {
         for (let appId in self.stores[aName]) {
-          let obj = self.stores[aName][appId].exposeObject(aWindow);
-          results.push(obj);
+          matchingStores.push(self.stores[aName][appId]);
         }
       }
 
-      resolver.resolve(results);
+      let callbackPending = matchingStores.length;
+      let results = [];
+
+      if (!callbackPending) {
+        resolver.resolve(results);
+        return;
+      }
+
+      for (let i = 0; i < matchingStores.length; ++i) {
+        let obj = matchingStores[i].exposeObject(aWindow);
+        results.push(obj);
+
+        matchingStores[i].retrieveRevisionId(
+          function() {
+            --callbackPending;
+            if (!callbackPending) {
+              resolver.resolve(results);
+            }
+          },
+          function() {
+            resolver.reject();
+          }
+        );
+      }
     });
   },
 
