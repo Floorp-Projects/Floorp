@@ -1602,8 +1602,10 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Number of helper threads which should be created for this runtime. */
     size_t helperThreadCount() const {
 #ifdef JS_WORKER_THREADS
-        if (requestedHelperThreadCount < 0)
-            return js::GetCPUCount();
+        if (requestedHelperThreadCount < 0) {
+            unsigned ncpus = js::GetCPUCount();
+            return ncpus == 1 ? 0 : ncpus;
+        }
         return requestedHelperThreadCount;
 #else
         return 0;
