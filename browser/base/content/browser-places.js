@@ -571,7 +571,7 @@ HistoryMenu.prototype = {
     m.setAttribute("label", strings.getString("menuRestoreAllTabs.label"));
     m.addEventListener("command", function() {
       for (var i = 0; i < undoItems.length; i++)
-        undoCloseTab(0);
+        undoCloseTab();
     }, false);
   },
 

@@ -6297,31 +6297,15 @@ function undoCloseTab(aIndex) {
   var tab = null;
   var ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
-  let numberOfTabsToUndoClose = 0;
-  if (Number.isInteger(aIndex)) {
-    if (ss.getClosedTabCount(window) > aIndex) {
-      numberOfTabsToUndoClose = 1;
-    } else {
-      return tab;
-    }
-  } else {
-    numberOfTabsToUndoClose = ss.getNumberOfTabsClosedLast(window);
-    aIndex = 0;
-  }
-
-  while (numberOfTabsToUndoClose > 0 &&
-         numberOfTabsToUndoClose--) {
+  if (ss.getClosedTabCount(window) > (aIndex || 0)) {
     TabView.prepareUndoCloseTab(blankTabToRemove);
-    tab = ss.undoCloseTab(window, aIndex);
+    tab = ss.undoCloseTab(window, aIndex || 0);
     TabView.afterUndoCloseTab();
-    if (blankTabToRemove) {
+
+    if (blankTabToRemove)
       gBrowser.removeTab(blankTabToRemove);
-      blankTabToRemove = null;
-    }
   }
 
-  // Reset the number of tabs closed last time to the default.
-  ss.setNumberOfTabsClosedLast(window, 1);
   return tab;
 }
 
@@ -7120,15 +7104,10 @@ var TabContextMenu = {
       menuItem.disabled = disabled;
 
     // Session store
-    let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-               getService(Ci.nsISessionStore);
-    let undoCloseTabElement = document.getElementById("context_undoCloseTab");
-    let closedTabCount = ss.getNumberOfTabsClosedLast(window);
-    undoCloseTabElement.disabled = closedTabCount == 0;
-    // Change the label of "Undo Close Tab" to specify if it will undo a batch-close
-    // or a single close.
-    let visibleLabel = closedTabCount <= 1 ? "singletablabel" : "multipletablabel";
-    undoCloseTabElement.setAttribute("label", undoCloseTabElement.getAttribute(visibleLabel));
+    document.getElementById("context_undoCloseTab").disabled =
+      Cc["@mozilla.org/browser/sessionstore;1"].
+      getService(Ci.nsISessionStore).
+      getClosedTabCount(window) == 0;
 
     // Only one of pin/unpin should be visible
     document.getElementById("context_pinTab").hidden = this.contextTab.pinned;
