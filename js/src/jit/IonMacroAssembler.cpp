@@ -1629,7 +1629,7 @@ MacroAssembler::convertValueToInt(ValueOperand value, MDefinition *maybeInput,
         bind(&isInt32);
         unboxInt32(value, output);
         if (behavior == IntConversion_ClampToUint8)
-            clampIntToUint8(output, output);
+            clampIntToUint8(output);
     }
 
     bind(&done);
