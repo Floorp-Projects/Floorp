@@ -13,8 +13,6 @@
 namespace mozilla {
 namespace dom {
 
-class PromiseResolver;
-
 // This is the base class for any PromiseCallback.
 // It's a logical step in the promise chain of callbacks.
 class PromiseCallback : public nsISupports
@@ -35,13 +33,12 @@ public:
 
   // This factory returns a PromiseCallback object with refcount of 0.
   static PromiseCallback*
-  Factory(PromiseResolver* aNextResolver, AnyCallback* aCallback,
-          Task aTask);
+  Factory(Promise* aNextPromise, AnyCallback* aCallback, Task aTask);
 };
 
 // WrapperPromiseCallback execs a JS Callback with a value, and then the return
-// value is sent to the aNextResolver->resolve() or to aNextResolver->Reject()
-// if the JS Callback throws.
+// value is sent to the aNextPromise->resolveFunction() or to
+// aNextPromise->RejectFunction() if the JS Callback throws.
 class WrapperPromiseCallback MOZ_FINAL : public PromiseCallback
 {
 public:
@@ -51,12 +48,11 @@ public:
 
   void Call(const Optional<JS::Handle<JS::Value> >& aValue) MOZ_OVERRIDE;
 
-  WrapperPromiseCallback(PromiseResolver* aNextResolver,
-                         AnyCallback* aCallback);
+  WrapperPromiseCallback(Promise* aNextPromise, AnyCallback* aCallback);
   ~WrapperPromiseCallback();
 
 private:
-  nsRefPtr<PromiseResolver> mNextResolver;
+  nsRefPtr<Promise> mNextPromise;
   nsRefPtr<AnyCallback> mCallback;
 };
 
@@ -79,8 +75,8 @@ private:
   nsRefPtr<AnyCallback> mCallback;
 };
 
-// ResolvePromiseCallback calls aResolver->Resolve() with the value received by
-// Call().
+// ResolvePromiseCallback calls aPromise->ResolveFunction() with the value
+// received by Call().
 class ResolvePromiseCallback MOZ_FINAL : public PromiseCallback
 {
 public:
@@ -90,15 +86,15 @@ public:
 
   void Call(const Optional<JS::Handle<JS::Value> >& aValue) MOZ_OVERRIDE;
 
-  ResolvePromiseCallback(PromiseResolver* aResolver);
+  ResolvePromiseCallback(Promise* aPromise);
   ~ResolvePromiseCallback();
 
 private:
-  nsRefPtr<PromiseResolver> mResolver;
+  nsRefPtr<Promise> mPromise;
 };
 
-// RejectPromiseCallback calls aResolver->Reject() with the value received by
-// Call().
+// RejectPromiseCallback calls aPromise->RejectFunction() with the value
+// received by Call().
 class RejectPromiseCallback MOZ_FINAL : public PromiseCallback
 {
 public:
@@ -108,11 +104,11 @@ public:
 
   void Call(const Optional<JS::Handle<JS::Value> >& aValue) MOZ_OVERRIDE;
 
-  RejectPromiseCallback(PromiseResolver* aResolver);
+  RejectPromiseCallback(Promise* aPromise);
   ~RejectPromiseCallback();
 
 private:
-  nsRefPtr<PromiseResolver> mResolver;
+  nsRefPtr<Promise> mPromise;
 };
 
 } // namespace dom
