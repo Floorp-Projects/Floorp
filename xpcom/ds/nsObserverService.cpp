@@ -75,8 +75,9 @@ struct SuspectObserver {
     size_t referentCount;
 };
 
-struct ReferentCount {
-    ReferentCount() : numStrong(0), numWeakAlive(0), numWeakDead(0) {}
+struct ObserverServiceReferentCount {
+    ObserverServiceReferentCount()
+        : numStrong(0), numWeakAlive(0), numWeakDead(0) {}
     size_t numStrong;
     size_t numWeakAlive;
     size_t numWeakDead;
@@ -91,7 +92,8 @@ ObserverServiceReporter::CountReferents(nsObserverList* aObserverList,
         return PL_DHASH_NEXT;
     }
 
-    ReferentCount* referentCount = static_cast<ReferentCount*>(aClosure);
+    ObserverServiceReferentCount* referentCount =
+        static_cast<ObserverServiceReferentCount*>(aClosure);
 
     size_t numStrong = 0;
     size_t numWeakAlive = 0;
@@ -137,7 +139,7 @@ ObserverServiceReporter::CollectReports(nsIMemoryReporterCallback* cb,
         return NS_OK;
     }
 
-    ReferentCount referentCount;
+    ObserverServiceReferentCount referentCount;
     service->mObserverTopicTable.EnumerateEntries(CountReferents,
                                                   &referentCount);
 
