@@ -69,14 +69,14 @@ function test() {
   });
 
   testOnWindow({}, function(win) {
-    testPopupBlockerMenuItem(false, win,
+    testPopupBlockerMenuItem(false, win, function() {
       testOnWindow({private: true}, function(win) {
-        testPopupBlockerMenuItem(true, win,
+        testPopupBlockerMenuItem(true, win, function() {
           testOnWindow({}, function(win) {
             testPopupBlockerMenuItem(false, win, finishTest);
           })
-        );
+        });
       })
-    );
+    });
   });
 }
