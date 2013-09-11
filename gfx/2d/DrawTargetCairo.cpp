@@ -27,6 +27,10 @@
 #include "cairo-xlib.h"
 #endif
 
+#ifdef CAIRO_HAS_WIN32_SURFACE
+#include "cairo-win32.h"
+#endif
+
 #include <algorithm>
 
 namespace mozilla {
@@ -103,6 +107,15 @@ GetCairoSurfaceSize(cairo_surface_t* surface, IntSize& size)
       // contexts; they'll just return 0 in that case.
       size.width = CGBitmapContextGetWidth(cgc);
       size.height = CGBitmapContextGetWidth(cgc);
+      return true;
+    }
+#endif
+#ifdef CAIRO_HAS_WIN32_SURFACE
+    case CAIRO_SURFACE_TYPE_WIN32:
+    case CAIRO_SURFACE_TYPE_WIN32_PRINTING:
+    {
+      size.width = cairo_win32_surface_get_width(surface);
+      size.height = cairo_win32_surface_get_height(surface);
       return true;
     }
 #endif
