@@ -49,15 +49,6 @@
         "svgr": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx"]
         },
-        "rafx": {
-            "tests": ["tscrollr", "tsvgr"],
-            "talos_options": [
-                "--filter",
-                "ignore_first:5",
-                "--filter",
-                "median"
-            ]
-        },
         "tpn": {
             "tests": ["tp5n"],
             "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
