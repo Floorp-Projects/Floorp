@@ -26,6 +26,12 @@ public:
     return OriginOrPatternString(aPattern, false);
   }
 
+  static OriginOrPatternString
+  FromNull()
+  {
+    return OriginOrPatternString();
+  }
+
   bool
   IsOrigin() const
   {
@@ -35,18 +41,31 @@ public:
   bool
   IsPattern() const
   {
-    return !mIsOrigin;
+    return mIsPattern;
+  }
+
+  bool
+  IsNull() const
+  {
+    return mIsNull;
   }
 
 private:
   OriginOrPatternString(const nsACString& aOriginOrPattern, bool aIsOrigin)
-  : nsCString(aOriginOrPattern), mIsOrigin(aIsOrigin)
+  : nsCString(aOriginOrPattern),
+    mIsOrigin(aIsOrigin), mIsPattern(!aIsOrigin), mIsNull(false)
+  { }
+
+  OriginOrPatternString()
+  : mIsOrigin(false), mIsPattern(false), mIsNull(true)
   { }
 
   bool
   operator==(const OriginOrPatternString& aOther) MOZ_DELETE;
 
   bool mIsOrigin;
+  bool mIsPattern;
+  bool mIsNull;
 };
 
 END_QUOTA_NAMESPACE

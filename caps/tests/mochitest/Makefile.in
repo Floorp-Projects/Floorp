@@ -11,8 +11,8 @@ MOCHITEST_FILES = 	test_bug423375.html \
                 test_app_principal_equality.html \
                 $(NULL)
 
-# extendedOrigin test doesn't work on Windows, see bug 776296.
+# jarPrefix test doesn't work on Windows, see bug 776296.
 ifneq ($(OS_ARCH),WINNT)
-MOCHITEST_CHROME_FILES = test_principal_extendedorigin_appid_appstatus.html \
+MOCHITEST_CHROME_FILES = test_principal_jarprefix_origin_appid_appstatus.html \
                          $(NULL)
 endif

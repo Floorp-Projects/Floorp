@@ -10,7 +10,7 @@ interface nsIURI;
 interface nsIChannel;
 interface nsIDocShell;
 
-[scriptable, uuid(ae486501-ec57-4ec8-a565-6880ca4ae6c4)]
+[scriptable, uuid(d6475e53-9ece-4dc0-940c-095ac3d85363)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -229,13 +229,12 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     const unsigned long UNKNOWN_APP_ID = 4294967295; // UINT32_MAX
 
     /**
-     * Returns the extended origin for the uri.
+     * Returns the jar prefix for the app.
      * appId can be NO_APP_ID or a valid app id. appId should not be
      * UNKNOWN_APP_ID.
-     * inMozBrowser has to be true if the uri is inside a mozbrowser iframe.
+     * inMozBrowser has to be true if the app is inside a mozbrowser iframe.
      */
-    AUTF8String getExtendedOrigin(in nsIURI uri, in unsigned long appId,
-                                  in boolean inMozBrowser);
+    AUTF8String getJarPrefix(in unsigned long appId, in boolean inMozBrowser);
 };
 
 %{C++

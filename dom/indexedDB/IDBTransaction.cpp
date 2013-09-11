@@ -361,8 +361,8 @@ IDBTransaction::GetOrCreateConnection(mozIStorageConnection** aResult)
 
   if (!mConnection) {
     nsCOMPtr<mozIStorageConnection> connection =
-      IDBFactory::GetConnection(mDatabase->FilePath(),
-                                mDatabase->Origin());
+      IDBFactory::GetConnection(mDatabase->FilePath(), mDatabase->Type(),
+                                mDatabase->Group(), mDatabase->Origin());
     NS_ENSURE_TRUE(connection, NS_ERROR_FAILURE);
 
     nsresult rv;

@@ -64,6 +64,28 @@ public:
     return mIsNull;
   }
 
+  bool Equals(const Nullable<T>& aOtherNullable) const
+  {
+    return (mIsNull && aOtherNullable.mIsNull) ||
+           (!mIsNull && !aOtherNullable.mIsNull &&
+            mValue == aOtherNullable.mValue);
+  }
+
+  bool operator==(const Nullable<T>& aOtherNullable) const
+  {
+    return Equals(aOtherNullable);
+  }
+
+  bool operator!=(const Nullable<T>& aOtherNullable) const
+  {
+    return !Equals(aOtherNullable);
+  }
+
+  operator bool() const
+  {
+    return !mIsNull;
+  }
+
   // Make it possible to use a const Nullable of an array type with other
   // array types.
   template<typename U>

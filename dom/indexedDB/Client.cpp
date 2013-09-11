@@ -7,7 +7,7 @@
 #include "Client.h"
 
 #include "mozilla/dom/quota/QuotaManager.h"
-#include "mozilla/dom/quota/UsageRunnable.h"
+#include "mozilla/dom/quota/UsageInfo.h"
 #include "mozilla/dom/quota/Utilities.h"
 
 #include "IDBDatabase.h"
@@ -45,12 +45,14 @@ NS_IMPL_ADDREF(mozilla::dom::indexedDB::Client)
 NS_IMPL_RELEASE(mozilla::dom::indexedDB::Client)
 
 nsresult
-Client::InitOrigin(const nsACString& aOrigin, UsageRunnable* aUsageRunnable)
+Client::InitOrigin(PersistenceType aPersistenceType, const nsACString& aGroup,
+                   const nsACString& aOrigin, UsageInfo* aUsageInfo)
 {
   AssertIsOnIOThread();
 
   nsCOMPtr<nsIFile> directory;
-  nsresult rv = GetDirectory(aOrigin, getter_AddRefs(directory));
+  nsresult rv =
+    GetDirectory(aPersistenceType, aOrigin, getter_AddRefs(directory));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We need to see if there are any files in the directory already. If they
@@ -67,7 +69,7 @@ Client::InitOrigin(const nsACString& aOrigin, UsageRunnable* aUsageRunnable)
 
   bool hasMore;
   while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) &&
-         hasMore && (!aUsageRunnable || !aUsageRunnable->Canceled())) {
+         hasMore && (!aUsageInfo || !aUsageInfo->Canceled())) {
     nsCOMPtr<nsISupports> entry;
     rv = entries->GetNext(getter_AddRefs(entry));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -83,11 +85,9 @@ Client::InitOrigin(const nsACString& aOrigin, UsageRunnable* aUsageRunnable)
       continue;
     }
 
-#ifdef XP_MACOSX
     if (leafName.EqualsLiteral(DSSTORE_FILE_NAME)) {
       continue;
     }
-#endif
 
     bool isDirectory;
     rv = file->IsDirectory(&isDirectory);
@@ -113,21 +113,24 @@ Client::InitOrigin(const nsACString& aOrigin, UsageRunnable* aUsageRunnable)
     rv = fmDirectory->Append(dbBaseFilename);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = FileManager::InitDirectory(fmDirectory, file, aOrigin);
+    rv = FileManager::InitDirectory(fmDirectory, file, aPersistenceType, aGroup,
+                                    aOrigin);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (aUsageRunnable) {
+    if (aUsageInfo) {
       int64_t fileSize;
       rv = file->GetFileSize(&fileSize);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      aUsageRunnable->AppendToDatabaseUsage(uint64_t(fileSize));
+      NS_ASSERTION(fileSize >= 0, "Negative size?!");
+
+      aUsageInfo->AppendToDatabaseUsage(uint64_t(fileSize));
 
       uint64_t usage;
       rv = FileManager::GetUsage(fmDirectory, &usage);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      aUsageRunnable->AppendToFileUsage(usage);
+      aUsageInfo->AppendToFileUsage(usage);
     }
 
     validSubdirs.PutEntry(dbBaseFilename);
@@ -167,30 +170,33 @@ Client::InitOrigin(const nsACString& aOrigin, UsageRunnable* aUsageRunnable)
 }
 
 nsresult
-Client::GetUsageForOrigin(const nsACString& aOrigin,
-                          UsageRunnable* aUsageRunnable)
+Client::GetUsageForOrigin(PersistenceType aPersistenceType,
+                          const nsACString& aGroup, const nsACString& aOrigin,
+                          UsageInfo* aUsageInfo)
 {
   AssertIsOnIOThread();
-  NS_ASSERTION(aUsageRunnable, "Null pointer!");
+  NS_ASSERTION(aUsageInfo, "Null pointer!");
 
   nsCOMPtr<nsIFile> directory;
-  nsresult rv = GetDirectory(aOrigin, getter_AddRefs(directory));
+  nsresult rv =
+    GetDirectory(aPersistenceType, aOrigin, getter_AddRefs(directory));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = GetUsageForDirectoryInternal(directory, aUsageRunnable, true);
+  rv = GetUsageForDirectoryInternal(directory, aUsageInfo, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
 
 void
-Client::OnOriginClearCompleted(const nsACString& aPattern)
+Client::OnOriginClearCompleted(PersistenceType aPersistenceType,
+                               const OriginOrPatternString& aOriginOrPattern)
 {
   AssertIsOnIOThread();
 
   IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
   if (mgr) {
-    mgr->InvalidateFileManagersForPattern(aPattern);
+    mgr->InvalidateFileManagers(aPersistenceType, aOriginOrPattern);
   }
 }
 
@@ -275,14 +281,15 @@ Client::ShutdownTransactionService()
 }
 
 nsresult
-Client::GetDirectory(const nsACString& aOrigin, nsIFile** aDirectory)
+Client::GetDirectory(PersistenceType aPersistenceType,
+                     const nsACString& aOrigin, nsIFile** aDirectory)
 {
   QuotaManager* quotaManager = QuotaManager::Get();
   NS_ASSERTION(quotaManager, "This should never fail!");
 
   nsCOMPtr<nsIFile> directory;
-  nsresult rv =
-    quotaManager->GetDirectoryForOrigin(aOrigin, getter_AddRefs(directory));
+  nsresult rv = quotaManager->GetDirectoryForOrigin(aPersistenceType, aOrigin,
+                                                    getter_AddRefs(directory));
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ASSERTION(directory, "What?");
@@ -296,11 +303,11 @@ Client::GetDirectory(const nsACString& aOrigin, nsIFile** aDirectory)
 
 nsresult
 Client::GetUsageForDirectoryInternal(nsIFile* aDirectory,
-                                     UsageRunnable* aUsageRunnable,
+                                     UsageInfo* aUsageInfo,
                                      bool aDatabaseFiles)
 {
   NS_ASSERTION(aDirectory, "Null pointer!");
-  NS_ASSERTION(aUsageRunnable, "Null pointer!");
+  NS_ASSERTION(aUsageInfo, "Null pointer!");
 
   nsCOMPtr<nsISimpleEnumerator> entries;
   nsresult rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
@@ -312,7 +319,7 @@ Client::GetUsageForDirectoryInternal(nsIFile* aDirectory,
 
   bool hasMore;
   while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) &&
-         hasMore && !aUsageRunnable->Canceled()) {
+         hasMore && !aUsageInfo->Canceled()) {
     nsCOMPtr<nsISupports> entry;
     rv = entries->GetNext(getter_AddRefs(entry));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -326,7 +333,7 @@ Client::GetUsageForDirectoryInternal(nsIFile* aDirectory,
 
     if (isDirectory) {
       if (aDatabaseFiles) {
-        rv = GetUsageForDirectoryInternal(file, aUsageRunnable, false);
+        rv = GetUsageForDirectoryInternal(file, aUsageInfo, false);
         NS_ENSURE_SUCCESS(rv, rv);
       }
       else {
@@ -349,10 +356,10 @@ Client::GetUsageForDirectoryInternal(nsIFile* aDirectory,
     NS_ASSERTION(fileSize >= 0, "Negative size?!");
 
     if (aDatabaseFiles) {
-      aUsageRunnable->AppendToDatabaseUsage(uint64_t(fileSize));
+      aUsageInfo->AppendToDatabaseUsage(uint64_t(fileSize));
     }
     else {
-      aUsageRunnable->AppendToFileUsage(uint64_t(fileSize));
+      aUsageInfo->AppendToFileUsage(uint64_t(fileSize));
     }
   }
   NS_ENSURE_SUCCESS(rv, rv);

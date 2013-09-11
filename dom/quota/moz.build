@@ -24,11 +24,12 @@ EXPORTS.mozilla.dom.quota += [
     'Client.h',
     'FileStreams.h',
     'OriginOrPatternString.h',
+    'PersistenceType.h',
     'QuotaCommon.h',
     'QuotaManager.h',
     'QuotaObject.h',
     'StoragePrivilege.h',
-    'UsageRunnable.h',
+    'UsageInfo.h',
     'Utilities.h',
 ]
 

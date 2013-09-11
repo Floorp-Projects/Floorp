@@ -5,7 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758258
 -->
 <head>
   <meta charset="utf-8">
-  <title>Test for nsIPrincipal extendedOrigin, appStatus and appId</title>
+  <title>Test for nsIPrincipal jarPrefix, origin, appStatus and appId</title>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
 </head>
@@ -294,20 +294,20 @@ function checkIFrame(aFrame, data) {
   }
 
   if (!data.isapp && !data.browser) {
-    is(principal.extendedOrigin, principal.origin,
-       'extendedOrigin should return the origin for non-app and non-browsers principals');
+    is(principal.jarPrefix, "",
+       'jarPrefix should return an empty string for non-app and non-browsers principals');
   } else {
-    isnot(principal.extendedOrigin, principal.origin,
-          'extendedOrigin should not return the origin for apps or mozbrowsers');
+    isnot(principal.jarPrefix, "",
+          'jarPrefix should not return an empty string for apps or mozbrowsers');
   }
 
   if (data.test.indexOf("eo-unique") != -1) {
-    is(eoList.indexOf(principal.extendedOrigin), -1,
-       "extendedOrigin should be unique");
+    is(eoList.indexOf(principal.jarPrefix + principal.origin), -1,
+       "extended origin should be unique");
   }
   if (data.test.indexOf("eo-as-last") != -1) {
-    is(principal.extendedOrigin, eoList[eoList.length-1],
-       "extendedOrigin should be the same as the last inserted one");
+    is(principal.jarPrefix + principal.origin, eoList[eoList.length-1],
+       "extended origin should be the same as the last inserted one");
   }
 
   is(principal.isInBrowserElement, !!data.browser,
@@ -325,17 +325,19 @@ function checkIFrame(aFrame, data) {
        "check childPrincipal.isInBrowserElement");
 
     if (data.test.indexOf("child-has-same-eo") != -1) {
-      is(childPrincipal.extendedOrigin, principal.extendedOrigin,
-         "child should have the same extendedOrigin as parent");
+      is(childPrincipal.jarPrefix + childPrincipal.origin,
+         principal.jarPrefix + principal.origin,
+         "child should have the same extended origin as parent");
       is(childPrincipal.appStatus, principal.appStatus,
-         "child should have the same appStatus if it has the same extendedOrigin");
+         "child should have the same appStatus if it has the same extended origin");
       is(childPrincipal.appId, principal.appId,
-         "child should have the same appId if it has the same extendedOrigin");
+         "child should have the same appId if it has the same extended origin");
     }
 
     if (data.test.indexOf("child-has-different-eo") != -1) {
-      isnot(childPrincipal.extendedOrigin, principal.extendedOrigin,
-            "child should not have the same extendedOrigin as parent");
+      isnot(childPrincipal.jarPrefix + childPrincipal.origin,
+            principal.jarPrefix + principal.origin,
+            "child should not have the same extended origin as parent");
     }
 
     if (data.test.indexOf("child-has-same-appstatus") != -1) {
@@ -359,7 +361,7 @@ function checkIFrame(aFrame, data) {
     }
   }
 
-  eoList.push(principal.extendedOrigin);
+  eoList.push(principal.jarPrefix + principal.origin);
 
   checkedCount++;
   if (checkedCount == checksTodo) {
@@ -373,8 +375,10 @@ function checkIFrame(aFrame, data) {
 
 is('appStatus' in document.nodePrincipal, true,
    'appStatus should be present in nsIPrincipal');
-is('extendedOrigin' in document.nodePrincipal, true,
-   'extendedOrigin should be present in nsIPrincipal');
+is('jarPrefix' in document.nodePrincipal, true,
+   'jarPrefix should be present in nsIPrincipal');
+is('origin' in document.nodePrincipal, true,
+   'origin should be present in nsIPrincipal');
 is('appId' in document.nodePrincipal, true,
    'appId should be present in nsIPrincipal');
 

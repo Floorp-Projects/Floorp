@@ -77,18 +77,22 @@ IDBFileHandle::CreateStream(nsIFile* aFile, bool aReadOnly)
   nsCOMPtr<nsIOfflineStorage> storage = do_QueryInterface(mFileStorage);
   NS_ASSERTION(storage, "This should always succeed!");
 
+  PersistenceType persistenceType = storage->Type();
+  const nsACString& group = storage->Group();
   const nsACString& origin = storage->Origin();
 
   nsCOMPtr<nsISupports> result;
 
   if (aReadOnly) {
-    nsRefPtr<FileInputStream> stream = FileInputStream::Create(
-      origin, aFile, -1, -1, nsIFileInputStream::DEFER_OPEN);
+    nsRefPtr<FileInputStream> stream =
+      FileInputStream::Create(persistenceType, group, origin, aFile, -1, -1,
+                              nsIFileInputStream::DEFER_OPEN);
     result = NS_ISUPPORTS_CAST(nsIFileInputStream*, stream);
   }
   else {
-    nsRefPtr<FileStream> stream = FileStream::Create(
-      origin, aFile, -1, -1, nsIFileStream::DEFER_OPEN);
+    nsRefPtr<FileStream> stream =
+      FileStream::Create(persistenceType, group, origin, aFile, -1, -1,
+                         nsIFileStream::DEFER_OPEN);
     result = NS_ISUPPORTS_CAST(nsIFileStream*, stream);
   }
   NS_ENSURE_TRUE(result, nullptr);
