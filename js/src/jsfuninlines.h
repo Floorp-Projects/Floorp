@@ -87,38 +87,4 @@ CloneFunctionObjectIfNotSingleton(JSContext *cx, HandleFunction fun, HandleObjec
 
 } /* namespace js */
 
-inline JSScript *
-JSFunction::existingScript()
-{
-    JS_ASSERT(isInterpreted());
-    if (isInterpretedLazy()) {
-        js::LazyScript *lazy = lazyScript();
-        JSScript *script = lazy->maybeScript();
-        JS_ASSERT(script);
-
-        if (zone()->needsBarrier())
-            js::LazyScript::writeBarrierPre(lazy);
-
-        flags &= ~INTERPRETED_LAZY;
-        flags |= INTERPRETED;
-        initScript(script);
-    }
-    JS_ASSERT(hasScript());
-    return u.i.s.script_;
-}
-
-inline void
-JSFunction::setScript(JSScript *script_)
-{
-    JS_ASSERT(isInterpreted());
-    mutableScript() = script_;
-}
-
-inline void
-JSFunction::initScript(JSScript *script_)
-{
-    JS_ASSERT(isInterpreted());
-    mutableScript().init(script_);
-}
-
 #endif /* jsfuninlines_h */
