@@ -1,6 +1,6 @@
 // Referents of Debugger.Objects in other compartments always survive per-compartment GC.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var arr = [];
 dbg.onDebuggerStatement = function (frame) { arr.push(frame.eval("[]").return); };

@@ -1,7 +1,7 @@
 // |jit-test| debug
 // Forced return from a generator frame.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.debuggeeGlobal = this;
 g.eval("var dbg = new Debugger(debuggeeGlobal);" +
        "dbg.onDebuggerStatement = function () { return {return: '!'}; };");

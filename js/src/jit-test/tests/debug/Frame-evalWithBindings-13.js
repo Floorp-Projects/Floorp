@@ -1,5 +1,5 @@
 // evalWithBindings correctly handles optional lineNumber option
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 var count = 0;
 

@@ -1,6 +1,6 @@
 // The argument to setVariable can be a Debugger.Object.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);
 dbg.onDebuggerStatement = function (frame) {

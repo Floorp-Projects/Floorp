@@ -1,6 +1,6 @@
 // Bug 744731 - findScripts() finds active debugger frame.eval scripts.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);
 var hits = 0;

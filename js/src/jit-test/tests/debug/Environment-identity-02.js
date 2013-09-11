@@ -1,6 +1,6 @@
 // frame.environment is different for different activations of a scope.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 g.eval("function h() { debugger; }");
 var arr;

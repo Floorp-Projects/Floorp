@@ -2,7 +2,7 @@
 // fires the next time the generator yields.
 // This is not the behavior the spec requests, but it's what we do for the
 // moment, and it's good to check that at least we don't crash.
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 var log;
 

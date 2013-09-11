@@ -1,6 +1,6 @@
 // Script.prototype.getBreakpoints returns breakpoints for the current Debugger object only.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 
 var debuggers = [];
 var hits = 0;

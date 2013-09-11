@@ -1,6 +1,6 @@
 // Frame.prototype.arguments with primitive values
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.args = null;
 var dbg = new Debugger(g);
 var hits;

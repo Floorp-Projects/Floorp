@@ -1,6 +1,6 @@
 // Ensure that ScriptDebugEpilogue gets called when onExceptionUnwind
 // terminates execution.
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var frame;
 dbg.onExceptionUnwind = function (f, x) {

@@ -1,7 +1,7 @@
 // map.iterator() and iter.next() are non-generic but work on cross-compartment wrappers.
 
 load(libdir + "asserts.js");
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 
 var iterator_fn = Set.prototype.iterator;
 assertThrowsInstanceOf(function () { iterator_fn.call({}); }, TypeError);

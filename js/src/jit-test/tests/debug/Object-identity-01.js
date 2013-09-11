@@ -1,5 +1,5 @@
 // Two references to the same object get the same Debugger.Object wrapper.
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var hits = 0;
 dbg.onDebuggerStatement = function (frame) {

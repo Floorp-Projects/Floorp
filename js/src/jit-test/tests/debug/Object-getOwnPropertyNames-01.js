@@ -1,6 +1,6 @@
 // Basic getOwnPropertyNames tests.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger();
 var gobj = dbg.addDebuggee(g);
 

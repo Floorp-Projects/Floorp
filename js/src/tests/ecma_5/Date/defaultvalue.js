@@ -178,7 +178,7 @@ allTests();
 
 if (typeof newGlobal === "function")
 {
-  Date = newGlobal("new-compartment").Date;
+  Date = newGlobal().Date;
   allTests();
 }
 

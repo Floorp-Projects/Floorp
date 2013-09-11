@@ -1,6 +1,6 @@
 // Test .type and .generator fields of topmost stack frame passed to onDebuggerStatement.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var expected, hits;
 dbg.onDebuggerStatement = function (f) {

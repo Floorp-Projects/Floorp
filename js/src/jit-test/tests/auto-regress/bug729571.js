@@ -24,7 +24,7 @@ lfcode.push("\
     try {    } catch (actual) {    }\
         var props = {};\
   function test(which) {\
-    var g = newGlobal(\"new-compartment\");\
+    var g = newGlobal();\
     function addDebugger(g, i) {\
         var dbg = Debugger(g);\
         dbg.onDebuggerStatement = function (frame) { };\

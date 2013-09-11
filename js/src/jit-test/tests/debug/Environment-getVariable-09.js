@@ -1,6 +1,6 @@
 // getVariable works on ancestors of frame.environment.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var log = '';
 dbg.onDebuggerStatement = function (frame) {

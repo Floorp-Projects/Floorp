@@ -1,6 +1,6 @@
 // Creating a new script with any number of subscripts triggers the newScript hook exactly once.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var seen = WeakMap();
 var hits;

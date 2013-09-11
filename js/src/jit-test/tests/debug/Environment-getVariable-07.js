@@ -1,6 +1,6 @@
 // getVariable can get properties from with-block scopes.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var v;
 dbg.onDebuggerStatement = function (frame) {
