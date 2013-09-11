@@ -359,7 +359,7 @@ function newWindowWithState(state, callback) {
 function restoreTab(callback, index, win) {
   win = win || window;
 
-  let tab = win.undoCloseTab(index);
+  let tab = win.undoCloseTab(index || 0);
   let tabItem = tab._tabViewTabItem;
 
   let finalize = function () {

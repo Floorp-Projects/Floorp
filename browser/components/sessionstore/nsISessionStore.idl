@@ -101,20 +101,6 @@ interface nsISessionStore : nsISupports
                           [optional] in long aDelta);
 
   /**
-   * Set the number of tabs that was closed during the last close-tabs
-   * operation. This helps us keep track of batch-close operations so
-   * we can restore multiple tabs at once.
-   */
-  void setNumberOfTabsClosedLast(in nsIDOMWindow aWindow, in unsigned long aNumber);
-
-  /**
-   * Get the number of tabs that was closed during the last close-tabs
-   * operation. This helps us keep track of batch-close operations so
-   * we can restore multiple tabs at once.
-   */
-  unsigned long getNumberOfTabsClosedLast(in nsIDOMWindow aWindow);
-
-  /**
    * Get the number of restore-able tabs for a browser window
    */
   unsigned long getClosedTabCount(in nsIDOMWindow aWindow);

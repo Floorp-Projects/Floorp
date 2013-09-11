@@ -103,8 +103,7 @@
                 oncommand="gBrowser.removeAllTabsBut(TabContextMenu.contextTab);"/>
       <menuseparator/>
       <menuitem id="context_undoCloseTab"
-                singletablabel="&undoCloseTab.label;"
-                multipletablabel="&undoCloseTabs.label;"
+                label="&undoCloseTab.label;"
                 accesskey="&undoCloseTab.accesskey;"
                 observes="History:UndoCloseTab"/>
       <menuitem id="context_closeTab" label="&closeTab.label;" accesskey="&closeTab.accesskey;"
