@@ -122,6 +122,7 @@ var supported_properties = {
                        // opacity is clamped in computed style
                        // (not parsing/interpolation)
                        test_float_zeroToOne_clamped ],
+    "filter" : [ test_filter_transition ],
     "flood-color": [ test_color_transition ],
     "flood-opacity" : [ test_float_zeroToOne_transition,
                         // opacity is clamped in computed style
@@ -576,6 +577,156 @@ var transformTests = [
     round_error_ok: true },
 ];
 
+var filterTests = [
+  { start: "none", end: "none",
+    expected: ["none"] },
+  // function from none (number/length)
+  { start: "none", end: "brightness(0.5)",
+    expected: ["brightness", 0.875] },
+  { start: "none", end: "contrast(0.5)",
+    expected: ["contrast", 0.875] },
+  { start: "none", end: "grayscale(0.5)",
+    expected: ["grayscale", 0.125] },
+  { start: "none", end: "invert(0.5)",
+    expected: ["invert", 0.125] },
+  { start: "none", end: "opacity(0.5)",
+    expected: ["opacity", 0.875] },
+  { start: "none", end: "saturate(0.5)",
+    expected: ["saturate", 0.875] },
+  { start: "none", end: "sepia(0.5)",
+    expected: ["sepia", 0.125] },
+  { start: "none", end: "blur(50px)",
+    expected: ["blur", 12.5] },
+  // function to none (number/length)
+  { start: "brightness(0.5)", end: "none",
+    expected: ["brightness", 0.625] },
+  { start: "contrast(0.5)", end: "none",
+    expected: ["contrast", 0.625] },
+  { start: "grayscale(0.5)", end: "none",
+    expected: ["grayscale", 0.375] },
+  { start: "invert(0.5)", end: "none",
+    expected: ["invert", 0.375] },
+  { start: "opacity(0.5)", end: "none",
+    expected: ["opacity", 0.625] },
+  { start: "saturate(0.5)", end: "none",
+    expected: ["saturate", 0.625] },
+  { start: "sepia(0.5)", end: "none",
+    expected: ["sepia", 0.375] },
+  { start: "blur(50px)", end: "none",
+    expected: ["blur", 37.5] },
+  // function to same function (number/length)
+  { start: "brightness(0.25)", end: "brightness(0.75)",
+    expected: ["brightness", 0.375] },
+  { start: "contrast(0.25)", end: "contrast(0.75)",
+    expected: ["contrast", 0.375] },
+  { start: "grayscale(0.25)", end: "grayscale(0.75)",
+    expected: ["grayscale", 0.375] },
+  { start: "invert(0.25)", end: "invert(0.75)",
+    expected: ["invert", 0.375] },
+  { start: "opacity(0.25)", end: "opacity(0.75)",
+    expected: ["opacity", 0.375] },
+  { start: "saturate(0.25)", end: "saturate(0.75)",
+    expected: ["saturate", 0.375] },
+  { start: "sepia(0.25)", end: "sepia(0.75)",
+    expected: ["sepia", 0.375] },
+  { start: "blur(25px)", end: "blur(75px)",
+    expected: ["blur", 37.5] },
+  // function to same function (percent)
+  { start: "brightness(25%)", end: "brightness(75%)",
+    expected: ["brightness", 0.375] },
+  { start: "contrast(25%)", end: "contrast(75%)",
+    expected: ["contrast", 0.375] },
+  { start: "grayscale(25%)", end: "grayscale(75%)",
+    expected: ["grayscale", 0.375] },
+  { start: "invert(25%)", end: "invert(75%)",
+    expected: ["invert", 0.375] },
+  { start: "opacity(25%)", end: "opacity(75%)",
+    expected: ["opacity", 0.375] },
+  { start: "saturate(25%)", end: "saturate(75%)",
+    expected: ["saturate", 0.375] },
+  { start: "sepia(25%)", end: "sepia(75%)",
+    expected: ["sepia", 0.375] },
+  // function to same function (percent, number/length)
+  { start: "brightness(0.25)", end: "brightness(75%)",
+    expected: ["brightness", 0.375] },
+  { start: "contrast(25%)", end: "contrast(0.75)",
+    expected: ["contrast", 0.375] },
+  // hue-rotate with different angle values
+  { start: "hue-rotate(0deg)", end: "hue-rotate(720deg)",
+    expected: ["hue-rotate", Math.PI.toFixed(5)] },
+  { start: "hue-rotate(0rad)", end: "hue-rotate("+4*Math.PI+"rad)",
+    expected: ["hue-rotate", Math.PI.toFixed(5)] },
+  { start: "hue-rotate(0grad)", end: "hue-rotate(800grad)",
+    expected: ["hue-rotate", Math.PI.toFixed(5)] },
+  { start: "hue-rotate(0turn)", end: "hue-rotate(2turn)",
+    expected: ["hue-rotate", Math.PI.toFixed(5)] },
+  { start: "hue-rotate(0deg)", end: "hue-rotate("+4*Math.PI+"rad)",
+    expected: ["hue-rotate", Math.PI.toFixed(5)] },
+  { start: "hue-rotate(0turn)", end: "hue-rotate(800grad)",
+    expected: ["hue-rotate", Math.PI.toFixed(5)] },
+  { start: "hue-rotate(0grad)", end: "hue-rotate("+4*Math.PI+"rad)",
+    expected: ["hue-rotate", Math.PI.toFixed(5)] },
+  { start: "hue-rotate(0grad)", end: "hue-rotate(0turn)",
+    expected: ["hue-rotate", 0] },
+  // multiple matching functions, same length
+  { start: "contrast(25%) brightness(0.25) blur(25px) sepia(75%)",
+    end: "contrast(75%) brightness(0.75) blur(75px) sepia(25%)",
+    expected: ["contrast", 0.375, "brightness", 0.375, "blur", 37.5, "sepia", 0.625] },
+  { start: "invert(25%) brightness(0.25) blur(25px) invert(50%) brightness(0.5) blur(50px)",
+    end: "invert(75%) brightness(0.75) blur(75px)",
+    expected: ["invert", 0.375, "brightness", 0.375, "blur", 37.5, "invert", 0.375, "brightness", 0.625, "blur", 37.5] },
+  // multiple matching functions, different length
+  { start: "contrast(25%) brightness(0.5) blur(50px)",
+    end: "contrast(75%)",
+    expected: ["contrast", 0.375, "brightness", 0.625, "blur", 37.5] },
+  // mismatching filter functions
+  { start: "contrast(0%)", end: "blur(10px)",
+    expected: ["blur", 10] },
+  // not supported interpolations
+  { start: "none", end: "url('#b')",
+    expected: ["url", "\""+document.URL+"#b\""] },
+  { start: "url('#a')", end: "none",
+    expected: ["none"] },
+  { start: "url('#a')", end: "url('#b')",
+    expected: ["url", "\""+document.URL+"#b\""] },
+  { start: "url('#a')", end: "blur(10px)",
+    expected: ["blur", 10] },
+  { start: "blur(10px)", end: "url('#a')",
+    expected: ["url", "\""+document.URL+"#a\""] },
+  { start: "blur(0px) url('#a')", end: "blur(20px)",
+    expected: ["blur", 20] },
+  { start: "blur(0px)", end: "blur(20px) url('#a')",
+    expected: ["blur", 20, "url", "\""+document.URL+"#a\""] },
+  { start: "contrast(0.25) brightness(0.25) blur(25px)",
+    end: "contrast(0.75) url('#a')",
+    expected: ["contrast", 0.75, "url", "\""+document.URL+"#a\""] },
+  { start: "contrast(0.25) brightness(0.25) blur(75px)",
+    end: "brightness(0.75) contrast(0.75) blur(25px)",
+    expected: ["brightness", 0.75, "contrast", 0.75, "blur", 25] },
+  { start: "contrast(0.25) brightness(0.25) blur(25px)",
+    end: "contrast(0.75) brightness(0.75) contrast(0.75)",
+    expected: ["contrast", 0.75, "brightness", 0.75, "contrast", 0.75] },
+  // drop-shadow animation
+  { start: "none",
+    end: "drop-shadow(rgb(0, 0, 0) 4px 4px 0px)",
+    expected: ["drop-shadow", "rgba(0, 0, 0, 0.25) 1px 1px 0px"] },
+  { start: "drop-shadow(rgb(0, 0, 0) 0px 0px 0px)",
+    end: "drop-shadow(rgb(0, 0, 0) 4px 4px 0px)",
+    expected: ["drop-shadow", "rgb(0, 0, 0) 1px 1px 0px"] },
+  { start: "drop-shadow(#038000 4px 4px)",
+    end: "drop-shadow(8px 8px 8px red)",
+    expected: ["drop-shadow", "rgb(66, 96, 0) 5px 5px 2px"] },
+  { start: "blur(25px) drop-shadow(8px 8px)",
+    end: "blur(75px)",
+    expected: ["blur", 37.5, "drop-shadow", "rgb(0, 0, 0) 6px 6px 0px"] },
+  { start: "blur(75px)",
+    end: "blur(25px) drop-shadow(8px 8px)",
+    expected: ["blur", 62.5, "drop-shadow", "rgb(0, 0, 0) 2px 2px 0px"] },
+  { start: "drop-shadow(2px 2px blue)",
+    end: "none",
+    expected: ["drop-shadow", "rgba(0, 0, 255, 0.75) 1.5px 1.5px 0px"] },
+];
+
 var prop;
 for (prop in supported_properties) {
   // Test that prop is in the property database.
@@ -993,6 +1144,85 @@ function test_border_color_transition(prop) {
   check_distance(prop, "rgb(128, 64, 0)", "rgb(96, 48, 32)", "initial");
 
   div.style.removeProperty("color");
+}
+
+function filter_function_list_equals(string, expectedList)
+{
+  // Check simple case "none"
+  if (string == "none" && string == expectedList[0]) {
+    return true;
+  }
+  // The regular expression does not filter out the last parenthesis.
+  // Remove last character for now.
+  is(string.substring(string.length - 1, string.length), ')', "Check if last character is close-paren.")
+  string = string.substring(0, string.length - 1);
+  var reg = /\)*\s*(blur|brightness|contrast|grayscale|hue\-rotate|invert|opacity|saturate|sepia|drop\-shadow|url)\(/
+  var matches = string.split(reg);
+  // First item must be empty. All other items are of functionName, functionValue.
+  if (!matches || matches.shift() != "") {
+    ok(false, "computed style of 'filter' isn't in the format we expect");
+    return false;
+  }
+
+  // Odd items are the function name, even items the function value.
+  if (!matches.length || matches.length % 2 ||
+      expectedList.length != matches.length) {
+    ok(false, "computed style of 'filter' isn't in the format we expect");
+    return false;
+  }
+  for (var i = 0; i < matches.length; i += 2) {
+    var functionName = matches[i];
+    var functionValue = matches[i+1];
+    var expected = expectedList[i+1]
+    var tolerance = 0;
+    // Check if we have the expected function.
+    if (functionName != expectedList[i]) {
+      return false;
+    }
+    if (functionName == "blur") {
+      // Last two characters must be "px".
+      if (functionValue.search("px") != functionValue.length - 2) {
+        return false;
+      }
+      functionValue = functionValue.substring(0, functionValue.length - 2);
+    } else if (functionName == "hue-rotate") {
+      // Last two characters must be "rad".
+      if (functionValue.search("rad") != functionValue.length - 3) {
+        return false;
+      }
+      tolerance = 0.001;
+      functionValue = functionValue.substring(0, functionValue.length - 3);
+    } else if (functionName == "drop-shadow" || functionName == "url") {
+      if (functionValue != expected) {
+        return false;
+      }
+      continue;
+    }
+    // Check if string is not a number or difference is not in tolerance level.
+    if (isNaN(functionValue) ||
+      Math.abs(parseFloat(functionValue) - expected) > tolerance) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function test_filter_transition(prop) {
+  if (!SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
+    return;
+  }
+  for (var i in filterTests) {
+    var test = filterTests[i];
+    div.style.setProperty("transition-property", "none", "");
+    div.style.setProperty(prop, test.start, "");
+    cs.getPropertyValue(prop);
+    div.style.setProperty("transition-property", prop, "");
+    div.style.setProperty(prop, test.end, "");
+    var actual = cs.getPropertyValue(prop);
+    ok(filter_function_list_equals(actual, test.expected),
+                                   "Filter property is " + actual + " expected values of " +
+                                   test.expected);
+  }
 }
 
 function test_shadow_transition(prop) {
