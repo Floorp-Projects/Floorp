@@ -516,6 +516,7 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineMathPow(CallInfo &callInfo);
     InliningStatus inlineMathRandom(CallInfo &callInfo);
     InliningStatus inlineMathImul(CallInfo &callInfo);
+    InliningStatus inlineMathFRound(CallInfo &callInfo);
     InliningStatus inlineMathFunction(CallInfo &callInfo, MMathFunction::Function function);
 
     // String natives.
