@@ -55,8 +55,6 @@ class BatteryManager;
 class FMRadio;
 #endif
 
-class Promise;
-
 class DesktopNotificationCenter;
 class MobileMessageManager;
 class MozIdleObserver;
@@ -99,7 +97,9 @@ class BluetoothManager;
 class Voicemail;
 #endif
 
+namespace power {
 class PowerManager;
+} // namespace power
 
 namespace time {
 class TimeManager;
@@ -181,8 +181,6 @@ public:
   // The XPCOM GetDoNotTrack is ok
   Geolocation* GetGeolocation(ErrorResult& aRv);
   battery::BatteryManager* GetBattery(ErrorResult& aRv);
-  already_AddRefed<Promise> GetDataStores(const nsAString &aName,
-                                          ErrorResult& aRv);
   void Vibrate(uint32_t aDuration, ErrorResult& aRv);
   void Vibrate(const nsTArray<uint32_t>& aDuration, ErrorResult& aRv);
   void GetAppCodeName(nsString& aAppCodeName, ErrorResult& aRv)
@@ -201,7 +199,7 @@ public:
   {
     aRv = GetBuildID(aBuildID);
   }
-  PowerManager* GetMozPower(ErrorResult& aRv);
+  power::PowerManager* GetMozPower(ErrorResult& aRv);
   bool JavaEnabled(ErrorResult& aRv);
   bool TaintEnabled()
   {
@@ -329,7 +327,7 @@ private:
 #ifdef MOZ_B2G_FM
   nsRefPtr<FMRadio> mFMRadio;
 #endif
-  nsRefPtr<PowerManager> mPowerManager;
+  nsRefPtr<power::PowerManager> mPowerManager;
   nsRefPtr<MobileMessageManager> mMobileMessageManager;
 #ifdef MOZ_B2G_RIL
   nsRefPtr<telephony::Telephony> mTelephony;

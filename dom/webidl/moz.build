@@ -62,7 +62,6 @@ WEBIDL_FILES = [
     'CSSValue.webidl',
     'CSSValueList.webidl',
     'DataContainerEvent.webidl',
-    'DataStore.webidl',
     'DelayNode.webidl',
     'DesktopNotification.webidl',
     'DeviceMotionEvent.webidl',
@@ -543,5 +542,4 @@ if CONFIG['MOZ_B2G']:
 
 GENERATED_EVENTS_WEBIDL_FILES = [
     'BlobEvent.webidl',
-    'DataStoreChangeEvent.webidl',
 ]

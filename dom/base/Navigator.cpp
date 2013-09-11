@@ -25,7 +25,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "BatteryManager.h"
-#include "mozilla/dom/PowerManager.h"
+#include "PowerManager.h"
 #include "nsIDOMWakeLock.h"
 #include "nsIPowerManagerService.h"
 #include "mozilla/dom/MobileMessageManager.h"
@@ -70,13 +70,13 @@
 #endif
 
 #include "nsIDOMGlobalPropertyInitializer.h"
-#include "nsIDataStoreService.h"
 #include "nsJSUtils.h"
 
 #include "nsScriptNameSpaceManager.h"
 
 #include "mozilla/dom/NavigatorBinding.h"
-#include "mozilla/dom/Promise.h"
+
+using namespace mozilla::dom::power;
 
 // This should not be in the namespace.
 DOMCI_DATA(Navigator, mozilla::dom::Navigator)
@@ -1100,29 +1100,7 @@ Navigator::GetBattery(ErrorResult& aRv)
   return mBatteryManager;
 }
 
-already_AddRefed<Promise>
-Navigator::GetDataStores(const nsAString& aName, ErrorResult& aRv)
-{
-  if (!mWindow || !mWindow->GetDocShell()) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIDataStoreService> service =
-    do_GetService("@mozilla.org/datastore-service;1");
-  if (!service) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsISupports> promise;
-  aRv = service->GetDataStores(mWindow, aName, getter_AddRefs(promise));
-
-  nsRefPtr<Promise> p = static_cast<Promise*>(promise.get());
-  return p.forget();
-}
-
-PowerManager*
+power::PowerManager*
 Navigator::GetMozPower(ErrorResult& aRv)
 {
   if (!mPowerManager) {
