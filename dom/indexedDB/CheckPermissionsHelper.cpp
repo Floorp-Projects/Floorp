@@ -19,7 +19,6 @@
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
-#include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 
@@ -165,10 +164,7 @@ CheckPermissionsHelper::Run()
       }
     }
 
-    quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
-    NS_ASSERTION(quotaManager, "This should never be null!");
-
-    return helper->Dispatch(quotaManager->IOThread());
+    return helper->DispatchToIOThread();
   }
 
   NS_ASSERTION(permission == PERMISSION_PROMPT ||

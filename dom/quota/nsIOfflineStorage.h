@@ -9,9 +9,13 @@
 
 #include "nsIFileStorage.h"
 
+#include "mozilla/dom/quota/PersistenceType.h"
+
 #define NS_OFFLINESTORAGE_IID \
-  {0xe531b6e0, 0x55b8, 0x4f39, \
-  { 0x95, 0xbb, 0x97, 0x21, 0x4c, 0xb0, 0xf6, 0x1a } }
+  {0xec7e878d, 0xc8c1, 0x402e, \
+  { 0xa2, 0xc4, 0xf6, 0x82, 0x29, 0x4e, 0x3c, 0xb1 } }
+
+class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {
@@ -25,6 +29,7 @@ class nsIOfflineStorage : public nsIFileStorage
 {
 public:
   typedef mozilla::dom::quota::Client Client;
+  typedef mozilla::dom::quota::PersistenceType PersistenceType;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_OFFLINESTORAGE_IID)
 
@@ -33,6 +38,18 @@ public:
 
   NS_IMETHOD_(bool)
   IsOwned(nsPIDOMWindow* aOwner) = 0;
+
+  NS_IMETHOD_(PersistenceType)
+  Type()
+  {
+    return mPersistenceType;
+  }
+
+  NS_IMETHOD_(const nsACString&)
+  Group()
+  {
+    return mGroup;
+  }
 
   NS_IMETHOD_(const nsACString&)
   Origin() = 0;
@@ -50,6 +67,17 @@ public:
   // operations should be aborted and pending operations should be discarded.
   NS_IMETHOD_(void)
   Invalidate() = 0;
+
+protected:
+  nsIOfflineStorage()
+  : mPersistenceType(mozilla::dom::quota::PERSISTENCE_TYPE_INVALID)
+  { }
+
+  virtual ~nsIOfflineStorage()
+  { }
+
+  PersistenceType mPersistenceType;
+  nsCString mGroup;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIOfflineStorage, NS_OFFLINESTORAGE_IID)

@@ -42,7 +42,7 @@ interface nsIURI;
 interface nsIDOMEventTarget;
 interface nsIRunnable;
 
-[scriptable, uuid(d6e733ef-492b-4e67-b723-28571c2959f0)]
+[scriptable, uuid(d18a8d69-7609-4165-ae20-af8aead36833)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1229,7 +1229,9 @@ interface nsIDOMWindowUtils : nsISupports {
    * Get file ref count info for given database and file id.
    *
    */
+  [implicit_jscontext]
   boolean getFileReferences(in AString aDatabaseName, in long long aId,
+                            [optional] in jsval aOptions,
                             [optional] out long aRefCnt,
                             [optional] out long aDBRefCnt,
                             [optional] out long aSliceRefCnt);

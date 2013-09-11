@@ -259,6 +259,7 @@ WEBIDL_FILES = [
     'SimpleGestureEvent.webidl',
     'SourceBuffer.webidl',
     'SourceBufferList.webidl',
+    'StorageType.webidl',
     'StyleSheet.webidl',
     'SVGAElement.webidl',
     'SVGAltGlyphElement.webidl',

@@ -266,6 +266,8 @@ FileManager::GetFileForId(nsIFile* aDirectory, int64_t aId)
 nsresult
 FileManager::InitDirectory(nsIFile* aDirectory,
                            nsIFile* aDatabaseFile,
+                           PersistenceType aPersistenceType,
+                           const nsACString& aGroup,
                            const nsACString& aOrigin)
 {
   AssertIsOnIOThread();
@@ -311,7 +313,8 @@ FileManager::InitDirectory(nsIFile* aDirectory,
     if (hasElements) {
       nsCOMPtr<mozIStorageConnection> connection;
       rv = OpenDatabaseHelper::CreateDatabaseConnection(aDatabaseFile,
-        aDirectory, NullString(), aOrigin, getter_AddRefs(connection));
+        aDirectory, NullString(), aPersistenceType, aGroup, aOrigin,
+        getter_AddRefs(connection));
       NS_ENSURE_SUCCESS(rv, rv);
 
       mozStorageTransaction transaction(connection, false);
