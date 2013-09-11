@@ -21,9 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=421640
 /** Test for Bug 421640 **/
 
 function test(click, focus, nextFocus) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var wu =  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                  .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var wu = SpecialPowers.getDOMWindowUtils(window);
 
   var selection = window.getSelection();
   var edit = document.getElementById("edit");

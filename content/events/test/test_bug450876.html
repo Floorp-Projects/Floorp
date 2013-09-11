@@ -20,14 +20,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=450876
 /** Test for Bug 450876 **/
 
 function doTest() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   is(document.activeElement, document.body, "body element should be focused");
   document.getElementById('a').focus();
   is(document.activeElement, document.getElementById('a'), "link should have focus");
-  var wu =  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                .getInterface(Components.interfaces.nsIDOMWindowUtils);
   is(document.hasFocus(), true, "document should be focused");
-  wu.sendKeyEvent('keypress',  9, 0, 0);
+  SpecialPowers.DOMWindowUtils.sendKeyEvent('keypress',  9, 0, 0);
   is(document.activeElement, document.getElementById('a'), "body element should be focused");
   is(document.hasFocus(), false, "document should not be focused");
 

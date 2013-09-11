@@ -33,10 +33,7 @@ function runTest() {
   xhr.open("GET", "test_bug382871.html");
   xhr.send();
   xhr = null;
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-        .getInterface(Components.interfaces.nsIDOMWindowUtils)
-        .garbageCollect();
+  SpecialPowers.gc();
 }
 
 SimpleTest.waitForExplicitFinish();
