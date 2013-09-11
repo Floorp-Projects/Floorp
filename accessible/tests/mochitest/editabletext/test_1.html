@@ -70,7 +70,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
       var testRun = new editableTextTestRun();
 
       addTestEditable("input", testRun);
-      addTestEditable("div", testRun, '\n');
+      addTestEditable("div", testRun);
       addTestEditable(getNode("frame").contentDocument, testRun, '\n');
 
       testRun.run(); // Will call SimpleTest.finish();
