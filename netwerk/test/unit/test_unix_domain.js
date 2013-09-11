@@ -91,12 +91,19 @@ function test_echo()
       do_check_eq(connectionPeerAddr.family, Ci.nsINetAddr.FAMILY_LOCAL);
       do_check_eq(connectionPeerAddr.address, '');
 
-      let serverInput = new ScriptableInputStream(connection.openInputStream(0, 0, 0));
+      let serverAsyncInput = connection.openInputStream(0, 0, 0).QueryInterface(Ci.nsIAsyncInputStream);
       let serverOutput = connection.openOutputStream(0, 0, 0);
 
-      // Receive data from the client, and send back a response.
-      do_check_eq(serverInput.readBytes(17), "Mervyn Murgatroyd");
-      serverOutput.write("Ruthven Murgatroyd", 18);
+      serverAsyncInput.asyncWait(function (aStream) {
+        do_print("called test_echo's server's onInputStreamReady");
+        let serverScriptableInput = new ScriptableInputStream(aStream);
+
+        // Receive data from the client, and send back a response.
+        do_check_eq(serverScriptableInput.readBytes(17), "Mervyn Murgatroyd");
+        do_print("server has read message from client");
+        serverOutput.write("Ruthven Murgatroyd", 18);
+        do_print("server has written to client");
+      }, 0, 0, threadManager.currentThread);
     },
 
     onStopListening: function(aServ, aStatus) {
@@ -120,8 +127,10 @@ function test_echo()
   let clientOutput = client.openOutputStream(0, 0, 0);
 
   clientOutput.write("Mervyn Murgatroyd", 17);
+  do_print("client has written to server");
+
   clientAsyncInput.asyncWait(function (aStream) {
-    do_print("called test_echo's onInputStreamReady");
+    do_print("called test_echo's client's onInputStreamReady");
     log += 'c';
 
     do_check_eq(aStream, clientAsyncInput);
@@ -138,6 +147,7 @@ function test_echo()
     do_check_eq(clientPeerAddr.address, socketName.path);
 
     do_check_eq(clientInput.readBytes(18), "Ruthven Murgatroyd");
+    do_print("client has read message from server");
 
     server.close();
   }, 0, 0, threadManager.currentThread);
@@ -359,12 +369,18 @@ function test_connect_permission()
     do_print("called test_connect_permission's onSocketAccepted");
     log += 'a';
 
-    let serverInput = new ScriptableInputStream(aTransport.openInputStream(0, 0, 0));
+    let serverInput = aTransport.openInputStream(0, 0, 0).QueryInterface(Ci.nsIAsyncInputStream);
     let serverOutput = aTransport.openOutputStream(0, 0, 0);
 
-    // Receive data from the client, and send back a response.
-    do_check_eq(serverInput.readBytes(8), "Hanratty");
-    serverOutput.write("Ferlingatti", 11);
+    serverInput.asyncWait(function (aStream) {
+      do_print("called test_connect_permission's socketAccepted's onInputStreamReady");
+      log += 'i';
+
+      // Receive data from the client, and send back a response.
+      let serverScriptableInput = new ScriptableInputStream(serverInput);
+      do_check_eq(serverScriptableInput.readBytes(8), "Hanratty");
+      serverOutput.write("Ferlingatti", 11);
+    }, 0, 0, threadManager.currentThread);
   }
 
   function client3InputStreamReady(aStream) {
@@ -375,7 +391,6 @@ function test_connect_permission()
 
     do_check_eq(client3Input.readBytes(11), "Ferlingatti");
 
-    aStream.close();
     client3.close(Cr.NS_OK);
     server.close();
   }
@@ -384,7 +399,7 @@ function test_connect_permission()
     do_print("called test_connect_permission's server's stopListening");
     log += 's';
 
-    do_check_eq(log, '12a3s');
+    do_check_eq(log, '12ai3s');
 
     run_next_test();
   }
