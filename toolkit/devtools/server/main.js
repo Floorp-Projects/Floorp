@@ -385,7 +385,7 @@ var DebuggerServer = {
       this.addActors("resource://gre/modules/devtools/server/actors/styleeditor.js");
       this.registerModule("devtools/server/actors/inspector");
     }
-    if (!("ContentTabActor" in DebuggerServer)) {
+    if (!("ContentAppActor" in DebuggerServer)) {
       this.addActors("resource://gre/modules/devtools/server/actors/childtab.js");
     }
   },
