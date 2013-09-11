@@ -7,4 +7,5 @@ nosvg.woff is derived from the "Liberation" font. It contains no SVG table.
 
 svg.woff is nosvg.woff with an SVG table added. The
 table contains the glyph documents glyphs-base.svg, glyphs-invalid.svg,
-glyphs-objectcolor.svg, glyphs-objectopacity.svg and glyphs-objectstroke.svg.
+glyphs-objectcolor.svg, glyphs-objectopacity.svg, glyphs-objectstroke.svg,
+glyphs-paintservers.svg and glyphs-transforms.svg.
