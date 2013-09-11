@@ -4402,8 +4402,5 @@ pref("dom.forms.inputmode", false);
 pref("dom.forms.inputmode", true);
 #endif
 
-#ifdef RELEASE_BUILD
+// DataStore is disabled by default
 pref("dom.datastore.enabled", false);
-#else
-pref("dom.datastore.enabled", true);
-#endif
