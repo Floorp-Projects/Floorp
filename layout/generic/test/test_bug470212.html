@@ -19,9 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=470212
 <script>
 function doShiftDrag(){
   setTimeout(function() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var wu =  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
+    var wu = SpecialPowers.DOMWindowUtils;
     wu.sendMouseEvent('mousedown',  0, 50, 0, 1, 4);
     wu.sendMouseEvent('mousemove',  70, 70, 0, 0, 4);
     wu.sendMouseEvent('mousemove',  80, 500, 0, 0, 4);
