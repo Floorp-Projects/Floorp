@@ -1625,6 +1625,25 @@ add_task(function test_contentType() {
 });
 
 /**
+ * Tests that the serialization/deserialization of the startTime Date
+ * object works correctly.
+ */
+add_task(function test_toSerializable_startTime()
+{
+  let download1 = yield promiseStartDownload(httpUrl("source.txt"));
+  yield promiseDownloadStopped(download1);
+
+  let serializable = download1.toSerializable();
+  let reserialized = JSON.parse(JSON.stringify(serializable));
+
+  let download2 = yield Downloads.createDownload(reserialized);
+
+  do_check_eq(download1.startTime.constructor.name, "Date");
+  do_check_eq(download2.startTime.constructor.name, "Date");
+  do_check_eq(download1.startTime.toJSON(), download2.startTime.toJSON());
+});
+
+/**
  * This test will call the platform specific operations within
  * DownloadPlatform::DownloadDone. While there is no test to verify the
  * specific behaviours, this at least ensures that there is no error or crash.
