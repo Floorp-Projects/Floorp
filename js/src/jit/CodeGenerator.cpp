@@ -3659,7 +3659,7 @@ CodeGenerator::visitTypedObjectElements(LTypedObjectElements *lir)
 {
     Register obj = ToRegister(lir->object());
     Register out = ToRegister(lir->output());
-    masm.loadPtr(Address(obj, BinaryBlock::dataOffset()), out);
+    masm.loadPtr(Address(obj, TypedObject::dataOffset()), out);
     return true;
 }
 
