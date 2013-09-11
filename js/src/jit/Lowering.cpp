@@ -2386,7 +2386,7 @@ LIRGenerator::visitClampToUint8(MClampToUint8 *ins)
         return redefine(ins, in);
 
       case MIRType_Int32:
-        return define(new LClampIToUint8(useRegisterAtStart(in)), ins);
+        return defineReuseInput(new LClampIToUint8(useRegisterAtStart(in)), ins, 0);
 
       case MIRType_Double:
         return define(new LClampDToUint8(useRegisterAtStart(in), tempCopy(in, 0)), ins);

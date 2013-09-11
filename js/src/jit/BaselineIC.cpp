@@ -5183,7 +5183,7 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
         Label notInt32;
         masm.branchTestInt32(Assembler::NotEqual, value, &notInt32);
         masm.unboxInt32(value, secondScratch);
-        masm.clampIntToUint8(secondScratch, secondScratch);
+        masm.clampIntToUint8(secondScratch);
 
         Label clamped;
         masm.bind(&clamped);
