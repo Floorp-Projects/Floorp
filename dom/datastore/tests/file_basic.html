@@ -45,36 +45,6 @@
     }, cbError);
   }
 
-  function testStoreErrorGet(id) {
-    gStore.get(id).then(function(what) {
-      ok(false, "store.get(" + id + ") retrieves data");
-    }, function(error) {
-      ok(true, "store.get() failed properly because the id is non-valid");
-      ok(error instanceof DOMError, "error is a DOMError");
-      is(error.name, "SyntaxError", "Error is a syntax error");
-    }).then(runTest, cbError);
-  }
-
-  function testStoreErrorUpdate(id) {
-    gStore.update(id, "foo").then(function(what) {
-      ok(false, "store.update(" + id + ") retrieves data");
-    }, function(error) {
-      ok(true, "store.update() failed properly because the id is non-valid");
-      ok(error instanceof DOMError, "error is a DOMError");
-      is(error.name, "SyntaxError", "Error is a syntax error");
-    }).then(runTest, cbError);
-  }
-
-  function testStoreErrorRemove(id) {
-    gStore.remove(id).then(function(what) {
-      ok(false, "store.remove(" + id + ") retrieves data");
-    }, function(error) {
-      ok(true, "store.remove() failed properly because the id is non-valid");
-      ok(error instanceof DOMError, "error is a DOMError");
-      is(error.name, "SyntaxError", "Error is a syntax error");
-    }).then(runTest, cbError);
-  }
-
   function testStoreGet(id, value) {
     gStore.get(id).then(function(what) {
       ok(true, "store.get() retrieves data");
@@ -120,11 +90,6 @@
     // Test for GetDataStore
     testGetDataStores,
 
-    // Broken ID
-    function() { testStoreErrorGet('hello world'); },
-    function() { testStoreErrorGet(true); },
-    function() { testStoreErrorGet(null); },
-
     // Unknown ID
     function() { testStoreGet(42, undefined); },
     function() { testStoreGet(42, undefined); }, // twice
@@ -145,11 +110,6 @@
                    gId = id; runTest(); }, cbError); },
     function() { testStoreGet(gId, "hello world"); },
 
-    // Broken update
-    function() { testStoreErrorUpdate('hello world'); },
-    function() { testStoreErrorUpdate(true); },
-    function() { testStoreErrorUpdate(null); },
-
     // Update + Get - string
     function() { testStoreUpdate(gId, "hello world 2").then(function() {
                    runTest(); }, cbError); },
@@ -157,11 +117,6 @@
 
     // getLength
     function() { testStoreGetLength(3).then(function() { runTest(); }, cbError); },
-
-    // Broken remove
-    function() { testStoreErrorRemove('hello world'); },
-    function() { testStoreErrorRemove(true); },
-    function() { testStoreErrorRemove(null); },
 
     // Remove
     function() { testStoreRemove(gId).then(function(what) {
