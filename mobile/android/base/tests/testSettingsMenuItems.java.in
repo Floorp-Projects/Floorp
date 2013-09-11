@@ -212,23 +212,13 @@ public class testSettingsMenuItems extends PixelTest {
 
                 // Check item title.
                 String itemTitle = "^" + item[0] + "$";
-                boolean foundText = waitForText(itemTitle);
-                if (!foundText) {
-                    // If we don't see the item, scroll down once in case it's off-screen.
-                    scrollDown();
-                    foundText = mSolo.waitForText(itemTitle);
-                }
+                boolean foundText = waitExtraForText(itemTitle);
                 mAsserter.ok(foundText, "Waiting for settings item " + itemTitle + " in section " + section,
                              "The " + itemTitle + " option is present in section " + section);
                 // Check item default, if it exists.
                 if (itemLen > 1) {
                     String itemDefault = "^" + item[1] + "$";
-                    foundText = waitForText(itemDefault);
-                    if (!foundText) {
-                        // If we don't see the item, scroll down once in case it's off-screen.
-                        scrollDown();
-                        foundText = mSolo.waitForText(itemDefault);
-                    }
+                    foundText = waitExtraForText(itemDefault);
                     mAsserter.ok(foundText, "Waiting for settings item default " + itemDefault
                                  + " in section " + section,
                                  "The " + itemDefault + " default is present in section " + section);
@@ -239,12 +229,7 @@ public class testSettingsMenuItems extends PixelTest {
                     mSolo.clickOnText(itemTitle);
                     for (int i = 2; i < itemLen; i++) {
                         String itemChoice = "^" + item[i] + "$";
-                        foundText = waitForText(itemChoice);
-                        if (!foundText) {
-                            // If we don't see the item, scroll down once in case it's off-screen.
-                            scrollDown();
-                            foundText = mSolo.waitForText(itemChoice);
-                        }
+                        foundText = waitExtraForText(itemChoice);
                         mAsserter.ok(foundText, "Waiting for settings item choice " + itemChoice
                                      + " in section " + section,
                                      "The " + itemChoice + " choice is present in section " + section);
@@ -266,13 +251,19 @@ public class testSettingsMenuItems extends PixelTest {
         }
     }
 
-    /**
-     * Hacky way to scroll down.
-     *
-     * solo.scroll* does not work in dialogs.
-     */
-    private void scrollDown() {
-        MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
-        meh.dragSync(mMidWidth, mMidHeight+100, mMidWidth, mMidHeight-100);
+    // Solo.waitForText usually scrolls down in a view when text is not visible.
+    // In this test, Solo.waitForText scrolling does not work, so we use this
+    // hack to do the same thing.
+    private boolean waitExtraForText(String txt) {
+        boolean foundText = waitForText(txt);
+        if (!foundText) {
+            // If we don't see the item, scroll down once in case it's off-screen.
+            // Hacky way to scroll down.  solo.scroll* does not work in dialogs.
+            MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
+            meh.dragSync(mMidWidth, mMidHeight+100, mMidWidth, mMidHeight-100);
+
+            foundText = mSolo.waitForText(txt);
+        }
+        return foundText;
     }
 }
