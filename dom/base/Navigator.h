@@ -99,9 +99,7 @@ class BluetoothManager;
 class Voicemail;
 #endif
 
-namespace power {
 class PowerManager;
-} // namespace power
 
 namespace time {
 class TimeManager;
@@ -203,7 +201,7 @@ public:
   {
     aRv = GetBuildID(aBuildID);
   }
-  power::PowerManager* GetMozPower(ErrorResult& aRv);
+  PowerManager* GetMozPower(ErrorResult& aRv);
   bool JavaEnabled(ErrorResult& aRv);
   bool TaintEnabled()
   {
@@ -331,7 +329,7 @@ private:
 #ifdef MOZ_B2G_FM
   nsRefPtr<FMRadio> mFMRadio;
 #endif
-  nsRefPtr<power::PowerManager> mPowerManager;
+  nsRefPtr<PowerManager> mPowerManager;
   nsRefPtr<MobileMessageManager> mMobileMessageManager;
 #ifdef MOZ_B2G_RIL
   nsRefPtr<telephony::Telephony> mTelephony;
