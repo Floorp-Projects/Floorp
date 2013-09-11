@@ -73,8 +73,8 @@ load 645142.html
 load 611922-1.html
 == 645951-1.html 645951-1-ref.html
 load 665209-1.html
-asserts(2) load 671799-1.html
-asserts(2) load 671799-2.html
+load 671799-1.html
+load 671799-2.html
 load 690990-1.html
 load 696188-1.html
 load 700116.html
