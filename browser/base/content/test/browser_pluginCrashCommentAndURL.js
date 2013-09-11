@@ -89,7 +89,7 @@ function onCrash() {
     let plugin = gBrowser.contentDocument.getElementById("plugin");
     let elt = gPluginHandler.getPluginUI.bind(gPluginHandler, plugin);
     let style =
-      gBrowser.contentWindow.getComputedStyle(elt("msg msgPleaseSubmit"));
+      gBrowser.contentWindow.getComputedStyle(elt("pleaseSubmit"));
     is(style.display,
        currentRun.shouldSubmissionUIBeVisible ? "block" : "none",
        "Submission UI visibility should be correct");
