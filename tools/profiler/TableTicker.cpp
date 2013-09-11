@@ -345,6 +345,48 @@ typedef struct {
   size_t count;
 } PCArray;
 
+static void mergeNativeBacktrace(ThreadProfile &aProfile, const PCArray &array) {
+  aProfile.addTag(ProfileEntry('s', "(root)"));
+
+  PseudoStack* stack = aProfile.GetPseudoStack();
+  uint32_t pseudoStackPos = 0;
+
+  /* We have two stacks, the native C stack we extracted from unwinding,
+   * and the pseudostack we managed during execution. We want to consolidate
+   * the two in order. We do so by merging using the approximate stack address
+   * when each entry was push. When pushing JS entry we may not now the stack
+   * address in which case we have a NULL stack address in which case we assume
+   * that it follows immediatly the previous element.
+   *
+   *  C Stack | Address    --  Pseudo Stack | Address
+   *  main()  | 0x100          run_js()     | 0x40
+   *  start() | 0x80           jsCanvas()   | NULL
+   *  timer() | 0x50           drawLine()   | NULL
+   *  azure() | 0x10
+   *
+   * Merged: main(), start(), timer(), run_js(), jsCanvas(), drawLine(), azure()
+   */
+  // i is the index in C stack starting at main and decreasing
+  // pseudoStackPos is the position in the Pseudo stack starting
+  // at the first frame (run_js in the example) and increasing.
+  for (size_t i = array.count; i > 0; --i) {
+    while (pseudoStackPos < stack->stackSize()) {
+      volatile StackEntry& entry = stack->mStack[pseudoStackPos];
+
+      if (entry.stackAddress() < array.sp_array[i-1] && entry.stackAddress())
+        break;
+
+      addProfileEntry(entry, aProfile, stack, array.array[0]);
+      pseudoStackPos++;
+    }
+
+    aProfile.addTag(ProfileEntry('l', (void*)array.array[i-1]));
+  }
+}
+
+#endif
+
+#ifdef USE_NS_STACKWALK
 static
 void StackWalkCallback(void* aPC, void* aSP, void* aClosure)
 {
@@ -393,44 +435,8 @@ void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample
   nsresult rv = NS_StackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames,
                              &array, thread, platformData);
 #endif
-  if (NS_SUCCEEDED(rv)) {
-    aProfile.addTag(ProfileEntry('s', "(root)"));
-
-    PseudoStack* stack = aProfile.GetPseudoStack();
-    uint32_t pseudoStackPos = 0;
-
-    /* We have two stacks, the native C stack we extracted from unwinding,
-     * and the pseudostack we managed during execution. We want to consolidate
-     * the two in order. We do so by merging using the approximate stack address
-     * when each entry was push. When pushing JS entry we may not now the stack
-     * address in which case we have a NULL stack address in which case we assume
-     * that it follows immediatly the previous element.
-     *
-     *  C Stack | Address    --  Pseudo Stack | Address
-     *  main()  | 0x100          run_js()     | 0x40
-     *  start() | 0x80           jsCanvas()   | NULL
-     *  timer() | 0x50           drawLine()   | NULL
-     *  azure() | 0x10
-     *
-     * Merged: main(), start(), timer(), run_js(), jsCanvas(), drawLine(), azure()
-     */
-    // i is the index in C stack starting at main and decreasing
-    // pseudoStackPos is the position in the Pseudo stack starting
-    // at the first frame (run_js in the example) and increasing.
-    for (size_t i = array.count; i > 0; --i) {
-      while (pseudoStackPos < stack->stackSize()) {
-        volatile StackEntry& entry = stack->mStack[pseudoStackPos];
-
-        if (entry.stackAddress() < array.sp_array[i-1] && entry.stackAddress())
-          break;
-
-        addProfileEntry(entry, aProfile, stack, array.array[0]);
-        pseudoStackPos++;
-      }
-
-      aProfile.addTag(ProfileEntry('l', (void*)array.array[i-1]));
-    }
-  }
+  if (NS_SUCCEEDED(rv))
+    mergeNativeBacktrace(aProfile, array);
 }
 #endif
 
