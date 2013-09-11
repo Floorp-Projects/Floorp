@@ -1146,18 +1146,21 @@ function test_border_color_transition(prop) {
   div.style.removeProperty("color");
 }
 
-function filter_function_list_equals(string, expectedList)
+function filter_function_list_equals(computedValStr, expectedList)
 {
   // Check simple case "none"
-  if (string == "none" && string == expectedList[0]) {
+  if (computedValStr == "none" && computedValStr == expectedList[0]) {
     return true;
   }
+
   // The regular expression does not filter out the last parenthesis.
   // Remove last character for now.
-  is(string.substring(string.length - 1, string.length), ')', "Check if last character is close-paren.")
-  string = string.substring(0, string.length - 1);
+  is(computedValStr.substring(computedValStr.length - 1, computedValStr.length),
+                              ')', "Check if last character is close-paren");
+  computedValStr = computedValStr.substring(0, computedValStr.length - 1);
+
   var reg = /\)*\s*(blur|brightness|contrast|grayscale|hue\-rotate|invert|opacity|saturate|sepia|drop\-shadow|url)\(/
-  var matches = string.split(reg);
+  var matches = computedValStr.split(reg);
   // First item must be empty. All other items are of functionName, functionValue.
   if (!matches || matches.shift() != "") {
     ok(false, "computed style of 'filter' isn't in the format we expect");
