@@ -7,8 +7,6 @@
 
 #include "mozilla/Assertions.h"
 
-#include "plstr.h"
-
 #include "jsapi.h"
 
 #include "nsCollationCID.h"
@@ -17,8 +15,9 @@
 #include "nsIPlatformCharset.h"
 #include "nsILocaleService.h"
 #include "nsICollation.h"
-#include "nsIServiceManager.h"
 #include "nsUnicharUtils.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #include "xpcpublic.h"
 

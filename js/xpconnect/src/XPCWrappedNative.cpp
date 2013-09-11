@@ -8,14 +8,9 @@
 /* Wrapper object for reflecting native xpcom objects into JavaScript. */
 
 #include "xpcprivate.h"
-#include "nsCRT.h"
-#include "XPCWrapper.h"
 #include "nsWrapperCacheInlines.h"
 #include "XPCLog.h"
-#include "nsINode.h"
-#include "XPCQuickStubs.h"
 #include "jsprf.h"
-#include "jsproxy.h"
 #include "AccessCheck.h"
 #include "WrapperFactory.h"
 #include "XrayWrapper.h"
@@ -24,8 +19,8 @@
 #include "nsCxPusher.h"
 
 #include <stdint.h>
-#include "mozilla/Util.h"
 #include "mozilla/Likely.h"
+#include "mozilla/dom/BindingUtils.h"
 #include <algorithm>
 
 using namespace xpc;

@@ -9,6 +9,7 @@
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Rect.h"
 #include "Units.h"
+#include "mozilla/dom/Element.h"
 
 class nsIDOMWindow;
 class nsIURI;
@@ -33,6 +34,22 @@ class TabParent;
 class BrowserElementParent
 {
 public:
+
+  /**
+   * Possible results from a window.open call.
+   * ADDED     - The frame was added to a document (i.e. handled by the embedder).
+   * IGNORED   - The frame was not added to a document and the embedder didn't
+   *             call preventDefault() to prevent the platform from handling the call.
+   * CANCELLED - The frame was not added to a document, but the embedder still
+   *             called preventDefault() to prevent the platform from handling the call.
+   */
+
+  enum OpenWindowResult {
+    OPEN_WINDOW_ADDED,
+    OPEN_WINDOW_IGNORED,
+    OPEN_WINDOW_CANCELLED
+  };
+
   /**
    * Handle a window.open call from an out-of-process <iframe mozbrowser>.
    *
@@ -61,11 +78,11 @@ public:
    * @param aOpenerTabParent the TabParent whose TabChild called window.open.
    * @param aPopupTabParent the TabParent inside which the opened window will
    *                        live.
-   * @return true on success, false otherwise.  Failure is not (necessarily)
-   *         an error; it may indicate that the embedder simply rejected the
-   *         window.open request.
+   * @return an OpenWindowresult that describes whether the embedder added the
+   *         frame to a document and whether it called preventDefault to prevent
+   *         the platform from handling the open request.
    */
-  static bool
+  static OpenWindowResult
   OpenWindowOOP(dom::TabParent* aOpenerTabParent,
                 dom::TabParent* aPopupTabParent,
                 const nsAString& aURL,
@@ -75,15 +92,15 @@ public:
   /**
    * Handle a window.open call from an in-process <iframe mozbrowser>.
    *
-   * As with OpenWindowOOP, we return true if the window.open request
-   * succeeded, and return false if the embedder denied the request.
-   *
    * (These parameter types are silly, but they match what our caller has in
    * hand.  Feel free to add an override, if they are inconvenient to you.)
    *
    * @param aURI the URI the new window should load.  May be null.
+   * @return an OpenWindowResult that describes whether the browser added the
+   *         frame to a document or whether they called preventDefault to prevent
+   *         the platform from handling the open request
    */
-  static bool
+  static OpenWindowResult
   OpenWindowInProcess(nsIDOMWindow* aOpenerWindow,
                       nsIURI* aURI,
                       const nsAString& aName,
@@ -109,6 +126,14 @@ public:
   DispatchAsyncScrollEvent(dom::TabParent* aTabParent,
                            const CSSRect& aContentRect,
                            const CSSSize& aContentSize);
+
+private:
+  static OpenWindowResult
+  DispatchOpenWindowEvent(dom::Element* aOpenerFrameElement,
+                          dom::Element* aPopupFrameElement,
+                          const nsAString& aURL,
+                          const nsAString& aName,
+                          const nsAString& aFeatures);
 };
 
 } // namespace mozilla

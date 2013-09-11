@@ -6,10 +6,8 @@
 
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
-#include "AccessCheck.h"
 #include "WrapperFactory.h"
 #include "AccessCheck.h"
-#include "nsCxPusher.h"
 
 using namespace xpc;
 using namespace mozilla;

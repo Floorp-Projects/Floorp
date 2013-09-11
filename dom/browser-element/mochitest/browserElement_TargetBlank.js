@@ -15,6 +15,7 @@ function runTest() {
 
   iframe.addEventListener('mozbrowseropenwindow', function(e) {
     is(e.detail.url, 'http://example.com/');
+    e.preventDefault();
     SimpleTest.finish();
   });
 

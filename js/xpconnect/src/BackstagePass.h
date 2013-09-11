@@ -10,6 +10,7 @@
 #include "nsWeakReference.h"
 #include "nsIGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
+#include "nsIXPCScriptable.h"
 
 class BackstagePass : public nsIGlobalObject,
                       public nsIScriptObjectPrincipal,

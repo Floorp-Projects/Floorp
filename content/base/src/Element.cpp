@@ -2451,6 +2451,11 @@ Element::MozRequestFullScreen()
 // Try to keep the size of StringBuilder close to a jemalloc bucket size.
 #define STRING_BUFFER_UNITS 1020
 
+namespace {
+
+// We put StringBuilder in the anonymous namespace to prevent anything outside
+// this file from accidentally being linked against it.
+
 class StringBuilder
 {
 private:
@@ -2713,6 +2718,8 @@ private:
   // mLength is used only in the first StringBuilder object in the linked list.
   uint32_t                                mLength;
 };
+
+} // anonymous namespace
 
 static void
 AppendEncodedCharacters(const nsTextFragment* aText, StringBuilder& aBuilder)

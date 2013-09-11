@@ -1524,9 +1524,10 @@ TabParent::RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
                                       const nsString& aFeatures,
                                       bool* aOutWindowOpened)
 {
-  *aOutWindowOpened =
+  BrowserElementParent::OpenWindowResult opened =
     BrowserElementParent::OpenWindowOOP(static_cast<TabParent*>(aOpener),
                                         this, aURL, aName, aFeatures);
+  *aOutWindowOpened = (opened != BrowserElementParent::OPEN_WINDOW_CANCELLED);
   return true;
 }
 

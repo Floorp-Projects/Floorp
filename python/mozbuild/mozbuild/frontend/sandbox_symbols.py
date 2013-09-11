@@ -393,6 +393,31 @@ VARIABLES = {
         These are .ipdl files that will be parsed and converted to .cpp files.
         """),
 
+    'WEBIDL_FILES': (list, list, [],
+        """WebIDL source files.
+
+        These will be parsed and converted to .cpp and .h files.
+        """),
+
+    'TEST_WEBIDL_FILES': (StrictOrderingOnAppendList, list, [],
+         """Test WebIDL source files.
+
+         These will be parsed and converted to .cpp and .h files if tests are
+         enabled.
+         """),
+
+    'GENERATED_WEBIDL_FILES': (StrictOrderingOnAppendList, list, [],
+         """Generated WebIDL source files.
+
+         These will be generated from some other files.
+         """),
+
+    'PREPROCESSED_WEBIDL_FILES': (StrictOrderingOnAppendList, list, [],
+         """Preprocessed WebIDL source files.
+
+         These will be preprocessed before being parsed and converted.
+         """),
+
     'XPCSHELL_TESTS_MANIFESTS': (StrictOrderingOnAppendList, list, [],
         """XPCSHELL Test Manifest list
 

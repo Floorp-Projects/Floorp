@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/HTMLAllCollection.h"
 
-#include "nsCycleCollectionHoldDrop.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "nsDOMClassInfo.h"
 #include "nsHTMLDocument.h"
 

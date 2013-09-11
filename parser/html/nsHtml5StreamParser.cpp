@@ -26,9 +26,9 @@
 #include "nsINestedURI.h"
 #include "nsCharsetSource.h"
 #include "nsIWyciwygChannel.h"
-#include "nsIInputStreamChannel.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsPrintfCString.h"
+#include "nsNetUtil.h"
 
 #include "mozilla/dom/EncodingUtils.h"
 
@@ -877,7 +877,14 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   bool scriptingEnabled = mMode == LOAD_AS_DATA ?
                                    false : mExecutor->IsScriptEnabled();
   mOwner->StartTokenizer(scriptingEnabled);
-  mTreeBuilder->setIsSrcdocDocument(IsSrcdocDocument());
+
+  bool isSrcdoc = false;
+  nsCOMPtr<nsIChannel> channel;
+  nsresult rv = GetChannel(getter_AddRefs(channel));
+  if (NS_SUCCEEDED(rv)) {
+    isSrcdoc = NS_IsSrcdocChannel(channel);
+  }
+  mTreeBuilder->setIsSrcdocDocument(isSrcdoc);
   mTreeBuilder->setScriptingEnabled(scriptingEnabled);
   mTreeBuilder->SetPreventScriptExecution(!((mMode == NORMAL) &&
                                             scriptingEnabled));
@@ -913,7 +920,7 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   NS_ASSERTION(!mLastBuffer, "How come we have the last buffer set?");
   mFirstBuffer = mLastBuffer = newBuf;
 
-  nsresult rv = NS_OK;
+  rv = NS_OK;
 
   // The line below means that the encoding can end up being wrong if
   // a view-source URL is loaded without having the encoding hint from a
@@ -1671,21 +1678,4 @@ nsHtml5StreamParser::MarkAsBroken()
   if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
     NS_WARNING("failed to dispatch executor flush event");
   }
-}
-
-bool
-nsHtml5StreamParser::IsSrcdocDocument()
-{
-  nsresult rv;
-
-  bool isSrcdoc = false;
-  nsCOMPtr<nsIChannel> channel;
-  rv = GetChannel(getter_AddRefs(channel));
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIInputStreamChannel> isr = do_QueryInterface(channel);
-    if (isr) {
-      isr->GetIsSrcdocChannel(&isSrcdoc);
-    }
-  }
-  return isSrcdoc;
 }

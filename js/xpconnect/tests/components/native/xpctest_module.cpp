@@ -6,11 +6,7 @@
 
 /* module registration and factory code. */
 
-#include "nsCOMPtr.h"
-#include "nsIModule.h"
 #include "mozilla/ModuleUtils.h"
-#include "nsCRT.h"
-#include "nsIClassInfoImpl.h"
 #include "xpctest_private.h"
 
 #define NS_XPCTESTOBJECTREADONLY_CID                                          \
