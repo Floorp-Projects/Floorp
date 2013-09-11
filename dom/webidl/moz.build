@@ -506,13 +506,6 @@ if CONFIG['MOZ_B2G_RIL']:
         'USSDReceivedEvent.webidl',
     ]
 
-if CONFIG['MOZ_GAMEPAD']:
-    WEBIDL_FILES += [
-        'GamepadAxisMoveEvent.webidl',
-        'GamepadButtonEvent.webidl',
-        'GamepadEvent.webidl',
-    ]
-
 if CONFIG['MOZ_WEBSPEECH']:
     WEBIDL_FILES += [
         'SpeechRecognitionError.webidl',
@@ -543,3 +536,12 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'BlobEvent.webidl',
     'DeviceProximityEvent.webidl',
 ]
+
+if CONFIG['MOZ_GAMEPAD']:
+    GENERATED_EVENTS_WEBIDL_FILES += [
+        'GamepadAxisMoveEvent.webidl',
+        'GamepadButtonEvent.webidl',
+        'GamepadEvent.webidl',
+    ]
+
+
