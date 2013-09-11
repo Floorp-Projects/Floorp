@@ -9,6 +9,7 @@
 #ifndef mozilla_android_signal_defs_h__
 #define mozilla_android_signal_defs_h__
 
+#include <signal.h>
 #include <android/api-level.h>
 
 // All NDK platform versions have asm/sigcontext.h for ARM
