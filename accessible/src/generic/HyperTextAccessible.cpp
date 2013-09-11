@@ -13,6 +13,7 @@
 #include "Role.h"
 #include "States.h"
 #include "TextAttrs.h"
+#include "TreeWalker.h"
 
 #include "nsIClipboard.h"
 #include "nsContentUtils.h"
@@ -2060,6 +2061,31 @@ HyperTextAccessible::RemoveChild(Accessible* aAccessible)
     mOffsets.RemoveElementsAt(childIndex, count);
 
   return Accessible::RemoveChild(aAccessible);
+}
+
+void
+HyperTextAccessible::CacheChildren()
+{
+  // Trailing HTML br element don't play any difference. We don't need to expose
+  // it to AT (see bug https://bugzilla.mozilla.org/show_bug.cgi?id=899433#c16
+  // for details).
+
+  TreeWalker walker(this, mContent);
+  Accessible* child = nullptr;
+  Accessible* lastChild = nullptr;
+  while ((child = walker.NextChild())) {
+    if (lastChild)
+      AppendChild(lastChild);
+
+    lastChild = child;
+  }
+
+  if (lastChild) {
+    if (lastChild->IsHTMLBr())
+      Document()->UnbindFromDocument(lastChild);
+    else
+      AppendChild(lastChild);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
