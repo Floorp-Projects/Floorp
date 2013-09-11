@@ -295,6 +295,9 @@ pref("gfx.font_rendering.fallback.always_use_cmaps", false);
 // cache shaped word results
 pref("gfx.font_rendering.wordcache.charlimit", 32);
 
+// cache shaped word results
+pref("gfx.font_rendering.wordcache.maxentries", 10000);
+
 pref("gfx.font_rendering.graphite.enabled", true);
 
 // Check intl/unicharutil/util/nsUnicodeProperties.h for definitions of script bits
