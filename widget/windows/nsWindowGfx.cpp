@@ -367,12 +367,10 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 
           nsRefPtr<gfxContext> thebesContext;
           if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(mozilla::gfx::BACKEND_CAIRO)) {
-            RECT paintRect;
-            ::GetClientRect(mWnd, &paintRect);
             RefPtr<mozilla::gfx::DrawTarget> dt =
               gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(targetSurface,
-                                                                     mozilla::gfx::IntSize(paintRect.right - paintRect.left,
-                                                                                           paintRect.bottom - paintRect.top));
+                                                                     mozilla::gfx::IntSize(targetSurface->GetSize().width,
+                                                                                           targetSurface->GetSize().height));
             thebesContext = new gfxContext(dt);
           } else {
             thebesContext = new gfxContext(targetSurface);
