@@ -17,7 +17,6 @@
  * and create derivative works of this document.
  */
 
-interface MozPowerManager;
 interface MozWakeLock;
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-navigator-object

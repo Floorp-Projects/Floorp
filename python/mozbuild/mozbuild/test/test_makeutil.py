@@ -22,19 +22,13 @@ class TestMakefile(unittest.TestCase):
 
         rule.add_targets(['foo', 'bar'])
         rule.dump(out)
-        self.assertEqual(out.getvalue(), 'bar foo:\n')
+        self.assertEqual(out.getvalue(), 'foo bar:\n')
         out.truncate(0)
 
         rule.add_targets(['baz'])
         rule.add_dependencies(['qux', 'hoge', 'piyo'])
         rule.dump(out)
-        self.assertEqual(out.getvalue(), 'bar baz foo: hoge piyo qux\n')
-        out.truncate(0)
-
-        rule.add_targets(['baz'])
-        rule.add_dependencies(['qux', 'hoge', 'piyo'])
-        rule.dump(out)
-        self.assertEqual(out.getvalue(), 'bar baz foo: hoge piyo qux\n')
+        self.assertEqual(out.getvalue(), 'foo bar baz: qux hoge piyo\n')
         out.truncate(0)
 
         rule = Rule(['foo', 'bar'])
@@ -43,7 +37,7 @@ class TestMakefile(unittest.TestCase):
         rule.add_commands(['$(BAZ) -o $@ $<', '$(TOUCH) $@'])
         rule.dump(out)
         self.assertEqual(out.getvalue(),
-            'bar foo: baz\n' +
+            'foo bar: baz\n' +
             '\techo $@\n' +
             '\t$(BAZ) -o $@ $<\n' +
             '\t$(TOUCH) $@\n')
@@ -72,6 +66,21 @@ class TestMakefile(unittest.TestCase):
             'bar baz: hoge\n' +
             '\techo $@\n' +
             'hoge qux:\n')
+
+    def test_statement(self):
+        out = StringIO()
+        mk = Makefile()
+        mk.create_rule(['foo']).add_dependencies(['bar']) \
+                               .add_commands(['echo foo'])
+        mk.add_statement('BAR = bar')
+        mk.create_rule(['$(BAR)']).add_commands(['echo $@'])
+        mk.dump(out, removal_guard=False)
+        self.assertEqual(out.getvalue(),
+            'foo: bar\n' +
+            '\techo foo\n' +
+            'BAR = bar\n' +
+            '$(BAR):\n' +
+            '\techo $@\n')
 
     @unittest.skipIf(os.name != 'nt', 'Test only applicable on Windows.')
     def test_path_normalization(self):

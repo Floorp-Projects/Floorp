@@ -12,11 +12,16 @@ webidl_base = $(topsrcdir)/dom/webidl
 include webidlsrcs.mk
 
 binding_include_path := mozilla/dom
+webidl_files += $(generated_events_webidl_files)
 all_webidl_files = $(webidl_files) $(generated_webidl_files) $(preprocessed_webidl_files)
+
 # Set exported_binding_headers before adding the test IDL to the mix
 exported_binding_headers := $(subst .webidl,Binding.h,$(all_webidl_files))
+exported_generated_events_headers := $(subst .webidl,.h,$(generated_events_webidl_files))
+
 # Set linked_binding_cpp_files before adding the test IDL to the mix
 linked_binding_cpp_files := $(subst .webidl,Binding.cpp,$(all_webidl_files))
+linked_generated_events_cpp_files := $(subst .webidl,.cpp,$(generated_events_webidl_files))
 
 all_webidl_files += $(test_webidl_files)
 
@@ -56,6 +61,7 @@ globalgen_targets := \
 ifneq (export TestExampleInterface-example TestExampleProxyInterface-example,$(MAKECMDGOALS))
 CPPSRCS = \
   $(linked_binding_cpp_files) \
+  $(linked_generated_events_cpp_files) \
   $(filter %.cpp, $(globalgen_targets)) \
   BindingUtils.cpp \
   CallbackInterface.cpp \
@@ -97,7 +103,7 @@ endif
 
 EXTRA_EXPORT_MDDEPEND_FILES := $(addsuffix .pp,$(binding_dependency_trackers))
 
-EXPORTS_GENERATED_FILES := $(exported_binding_headers)
+EXPORTS_GENERATED_FILES := $(exported_binding_headers) $(exported_generated_events_headers)
 EXPORTS_GENERATED_DEST := $(DIST)/include/$(binding_include_path)
 EXPORTS_GENERATED_TARGET := export
 INSTALL_TARGETS += EXPORTS_GENERATED
@@ -229,6 +235,7 @@ $(globalgen_headers_FILES): ParserResults.pkl
 	$(info Generating WebIDL bindings)
 	$(MKDIR) -p .deps
 	echo $(all_webidl_files) > .all-webidl-file-list
+	echo $(generated_events_webidl_files) > .generated-events-webidl-files
 	echo $? > .changed-dependency-list
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) -I$(srcdir)/parser \
@@ -236,6 +243,7 @@ $(globalgen_headers_FILES): ParserResults.pkl
 	  $(srcdir)/Bindings.conf \
 	  $(CURDIR) \
 	  .all-webidl-file-list \
+	  .generated-events-webidl-files \
 	  .changed-dependency-list
 	@$(TOUCH) $@
 
@@ -246,6 +254,7 @@ GARBAGE += \
   $(wildcard *-example.cpp) \
   .BindingGen \
   .all-webidl-file-list \
+  .generated-events-webidl-files \
   .changed-dependency-list \
   $(binding_dependency_trackers) \
   $(NULL)

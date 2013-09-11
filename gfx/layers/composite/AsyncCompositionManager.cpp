@@ -38,6 +38,7 @@
 # include <android/log.h>
 # include "AndroidBridge.h"
 #endif
+#include "GeckoProfiler.h"
 
 struct nsCSSValueList;
 
@@ -639,6 +640,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const LayoutDev
 bool
 AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame)
 {
+  PROFILER_LABEL("AsyncCompositionManager", "TransformShadowTree");
   Layer* root = mLayerManager->GetRoot();
   if (!root) {
     return false;

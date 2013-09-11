@@ -14,6 +14,68 @@ Changes & News
    ``$ENV/bin/python`` and re-running virtualenv on the same target directory
    with the upgraded Python.
 
+1.10.1 (2013-08-07)
+~~~~~~~~~~~~~~~~~~~
+
+* **New Signing Key** Release 1.10.1 is using a different key than normal with
+  fingerprint: 7C6B 7C5D 5E2B 6356 A926 F04F 6E3C BCE9 3372 DCFA
+* Upgraded pip to v1.4.1
+* Upgraded setuptools to v0.9.8
+
+
+1.10 (2013-07-23)
+~~~~~~~~~~~~~~~~~
+
+* **BACKWARDS INCOMPATIBLE** Dropped support for Python 2.5. The minimum
+  supported Python version is now Python 2.6.
+
+* **BACKWARDS INCOMPATIBLE** Using ``virtualenv.py`` as an isolated script
+  (i.e. without an associated ``virtualenv_support`` directory) is no longer
+  supported for security reasons and will fail with an error.
+
+  Along with this, ``--never-download`` is now always pinned to ``True``, and
+  is only being maintained in the short term for backward compatibility
+  (Pull #412).
+
+* **IMPORTANT** Switched to the new setuptools (v0.9.7) which has been merged
+  with Distribute_ again and works for Python 2 and 3 with one codebase.
+  The ``--distribute`` and ``--setuptools`` options are now no-op.
+
+* Updated to pip 1.4.
+
+* Added support for PyPy3k
+
+* Added the option to use a version number with the ``-p`` option to get the
+  system copy of that Python version (Windows only)
+
+* Removed embedded ``ez_setup.py``, ``distribute_setup.py`` and
+  ``distribute_from_egg.py`` files as part of switching to merged setuptools.
+
+* Fixed ``--relocatable`` to work better on Windows.
+
+* Fixed issue with readline on Windows.
+
+.. _Distribute: https://pypi.python.org/pypi/distribute
+
+1.9.1 (2013-03-08)
+~~~~~~~~~~~~~~~~~~
+
+* Updated to pip 1.3.1 that fixed a major backward incompatible change of
+  parsing URLs to externally hosted packages that got accidentily included
+  in pip 1.3.
+
+1.9 (2013-03-07)
+~~~~~~~~~~~~~~~~
+
+* Unset VIRTUAL_ENV environment variable in deactivate.bat (Pull #364)
+* Upgraded distribute to 0.6.34.
+* Added ``--no-setuptools`` and ``--no-pip`` options (Pull #336).
+* Fixed Issue #373. virtualenv-1.8.4 was failing in cygwin (Pull #382).
+* Fixed Issue #378. virtualenv is now "multiarch" aware on debian/ubuntu (Pull #379).
+* Fixed issue with readline module path on pypy and OSX (Pull #374).
+* Made 64bit detection compatible with Python 2.5 (Pull #393).
+
+
 1.8.4 (2012-11-25)
 ~~~~~~~~~~~~~~~~~~
 
@@ -25,6 +87,9 @@ Changes & News
   the distribute setup script won't understand. Fixes #358.
 
 * Added some more integration tests.
+
+* Removed the unsupported embedded setuptools egg for Python 2.4 to reduce
+  file size.
 
 1.8.3 (2012-11-21)
 ~~~~~~~~~~~~~~~~~~

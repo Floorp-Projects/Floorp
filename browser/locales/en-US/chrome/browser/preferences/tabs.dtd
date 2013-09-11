@@ -19,3 +19,4 @@
 
 <!ENTITY showTabsInTaskbar.label          "Show tab previews in the Windows taskbar">
 <!ENTITY showTabsInTaskbar.accesskey      "k">
+<!ENTITY tabsGroup.label          "Tabs">
