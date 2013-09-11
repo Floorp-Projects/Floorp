@@ -2024,7 +2024,8 @@ IsCacheableSetPropCallNative(HandleObject obj, HandleObject holder, HandleShape 
     if (!shape || !IsCacheableProtoChain(obj, holder))
         return false;
 
-    return shape->hasSetterValue() && shape->setterObject()->is<JSFunction>() &&
+    return shape->hasSetterValue() && shape->setterObject() &&
+           shape->setterObject()->is<JSFunction>() &&
            shape->setterObject()->as<JSFunction>().isNative();
 }
 

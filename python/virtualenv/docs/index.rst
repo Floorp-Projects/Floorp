@@ -1,30 +1,14 @@
 virtualenv
 ==========
 
-* `Discussion list <http://groups.google.com/group/python-virtualenv/>`_
-* `Bugs <https://github.com/pypa/virtualenv/issues/>`_
-
-.. contents::
-
-.. toctree::
-   :maxdepth: 1
-
-   news
+`Changes & News <news.html>`_ `|`
+`Mailing list <http://groups.google.com/group/python-virtualenv>`_ `|`
+`Issues <https://github.com/pypa/virtualenv/issues>`_ `|`
+`Github <https://github.com/pypa/virtualenv>`_ `|`
+`PyPI <https://pypi.python.org/pypi/virtualenv/>`_ `|`
+IRC: #pip on Freenode
 
 .. comment: split here
-
-Installation
-------------
-
-You can install virtualenv with ``pip install virtualenv``, or the `latest
-development version <https://github.com/pypa/virtualenv/tarball/develop>`_
-with ``pip install https://github.com/pypa/virtualenv/tarball/develop``.
-
-You can also use ``easy_install``, or if you have no Python package manager
-available at all, you can just grab the single file `virtualenv.py`_ and run
-it with ``python virtualenv.py``.
-
-.. _virtualenv.py: https://raw.github.com/pypa/virtualenv/master/virtualenv.py
 
 What It Does
 ------------
@@ -32,9 +16,9 @@ What It Does
 ``virtualenv`` is a tool to create isolated Python environments.
 
 The basic problem being addressed is one of dependencies and versions,
-and indirectly permissions.  Imagine you have an application that
+and indirectly permissions. Imagine you have an application that
 needs version 1 of LibFoo, but another application requires version
-2.  How can you use both these applications?  If you install
+2. How can you use both these applications?  If you install
 everything into ``/usr/lib/python2.7/site-packages`` (or whatever your
 platform's standard location is), it's easy to end up in a situation
 where you unintentionally upgrade an application that shouldn't be
@@ -47,39 +31,99 @@ the versions of those libraries can break the application.
 Also, what if you can't install packages into the global
 ``site-packages`` directory?  For instance, on a shared host.
 
-In all these cases, ``virtualenv`` can help you.  It creates an
+In all these cases, ``virtualenv`` can help you. It creates an
 environment that has its own installation directories, that doesn't
 share libraries with other virtualenv environments (and optionally
 doesn't access the globally installed libraries either).
+
+
+Installation
+------------
+
+.. warning::
+
+    We advise installing virtualenv-1.9 or greater. Prior to version 1.9, the
+    pip included in virtualenv did not not download from PyPI over SSL.
+
+.. warning::
+
+    When using pip to install virtualenv, we advise using pip 1.3 or greater.
+    Prior to version 1.3, pip did not not download from PyPI over SSL.
+
+.. warning::
+
+    We advise against using easy_install to install virtualenv when using
+    setuptools < 0.9.7, because easy_install didn't download from PyPI over SSL
+    and was broken in some subtle ways.
+
+To install globally with `pip` (if you have pip 1.3 or greater installed globally):
+
+::
+
+ $ [sudo] pip install virtualenv
+
+Or to get the latest unreleased dev version:
+
+::
+
+ $ [sudo] pip install https://github.com/pypa/virtualenv/tarball/develop
+
+
+To install globally from source:
+
+::
+
+ $ curl -O https://pypi.python.org/packages/source/v/virtualenv/virtualenv-X.X.tar.gz
+ $ tar xvfz virtualenv-X.X.tar.gz
+ $ cd virtualenv-X.X
+ $ [sudo] python setup.py install
+
+
+To *use* locally from source:
+
+::
+
+ $ curl -O https://pypi.python.org/packages/source/v/virtualenv/virtualenv-X.X.tar.gz
+ $ tar xvfz virtualenv-X.X.tar.gz
+ $ cd virtualenv-X.X
+ $ python virtualenv.py myVE
+
+.. note::
+
+    The ``virtualenv.py`` script is *not* supported if run without the
+    necessary pip/setuptools/virtualenv distributions available locally. All
+    of the installation methods above include a ``virtualenv_support``
+    directory alongside ``virtualenv.py`` which contains a complete set of
+    pip and setuptools distributions, and so are fully supported.
 
 Usage
 -----
 
 The basic usage is::
 
-    $ python virtualenv.py ENV
-
-If you install it you can also just do ``virtualenv ENV``.
+    $ virtualenv ENV
 
 This creates ``ENV/lib/pythonX.X/site-packages``, where any libraries you
-install will go.  It also creates ``ENV/bin/python``, which is a Python
-interpreter that uses this environment.  Anytime you use that interpreter
+install will go. It also creates ``ENV/bin/python``, which is a Python
+interpreter that uses this environment. Anytime you use that interpreter
 (including when a script has ``#!/path/to/ENV/bin/python`` in it) the libraries
 in that environment will be used.
 
 It also installs either `Setuptools
-<http://peak.telecommunity.com/DevCenter/setuptools>`_ or `distribute
-<http://pypi.python.org/pypi/distribute>`_ into the environment. To use
-Distribute instead of setuptools, just call virtualenv like this::
+<http://peak.telecommunity.com/DevCenter/setuptools>`_ into the environment.
 
-    $ python virtualenv.py --distribute ENV
+.. note::
 
-You can also set the environment variable VIRTUALENV_DISTRIBUTE.
+  Virtualenv (<1.10) used to provide a ``--distribute`` option to use the
+  setuptools fork Distribute_. Since Distribute has been merged back into
+  setuptools this option is now no-op, it will always use the improved
+  setuptools releases.
 
 A new virtualenv also includes the `pip <http://pypi.python.org/pypi/pip>`_
 installer, so you can use ``ENV/bin/pip`` to install additional packages into
 the environment.
 
+.. _Distribute: https://pypi.python.org/pypi/distribute
 
 activate script
 ~~~~~~~~~~~~~~~
@@ -93,10 +137,10 @@ On Posix systems you can do::
     $ source bin/activate
 
 This will change your ``$PATH`` so its first entry is the virtualenv's
-``bin/`` directory.  (You have to use ``source`` because it changes your
+``bin/`` directory. (You have to use ``source`` because it changes your
 shell environment in-place.) This is all it does; it's purely a
-convenience.  If you directly run a script or the python interpreter
-from the virtualenv's ``bin/`` directory (e.g.  ``path/to/env/bin/pip``
+convenience. If you directly run a script or the python interpreter
+from the virtualenv's ``bin/`` directory (e.g. ``path/to/env/bin/pip``
 or ``/path/to/env/bin/python script.py``) there's no need for
 activation.
 
@@ -104,9 +148,9 @@ After activating an environment you can use the function ``deactivate`` to
 undo the changes to your ``$PATH``.
 
 The ``activate`` script will also modify your shell prompt to indicate
-which environment is currently active.  You can disable this behavior,
+which environment is currently active. You can disable this behavior,
 which can be useful if you have your own custom prompt that already
-displays the active environment name.  To do so, set the
+displays the active environment name. To do so, set the
 ``VIRTUAL_ENV_DISABLE_PROMPT`` environment variable to any non-empty
 value before running the ``activate`` script.
 
@@ -180,7 +224,7 @@ environment will inherit packages from ``/usr/lib/python2.7/site-packages``
 (or wherever your global site-packages directory is).
 
 This can be used if you have control over the global site-packages directory,
-and you want to depend on the packages there.  If you want isolation from the
+and you want to depend on the packages there. If you want isolation from the
 global system, do not use this flag.
 
 
@@ -188,7 +232,7 @@ Environment variables and configuration files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 virtualenv can not only be configured by passing command line options such as
-``--distribute`` but also by two other means:
+``--python`` but also by two other means:
 
 - Environment variables
 
@@ -197,15 +241,15 @@ virtualenv can not only be configured by passing command line options such as
   the name of the command line options are capitalized and have dashes
   (``'-'``) replaced with underscores (``'_'``).
 
-  For example, to automatically install Distribute instead of setuptools
-  you can also set an environment variable::
+  For example, to automatically use a custom Python binary instead of the
+  one virtualenv is run with you can also set an environment variable::
 
-      $ export VIRTUALENV_DISTRIBUTE=true
-      $ python virtualenv.py ENV
+      $ export VIRTUALENV_PYTHON=/opt/python-3.3/bin/python
+      $ virtualenv ENV
 
   It's the same as passing the option to virtualenv directly::
 
-      $ python virtualenv.py --distribute ENV
+      $ virtualenv --python=/opt/python-3.3/bin/python ENV
 
   This also works for appending command line options, like ``--find-links``.
   Just leave an empty space between the passsed values, e.g.::
@@ -215,7 +259,7 @@ virtualenv can not only be configured by passing command line options such as
 
   is the same as calling::
 
-      $ python virtualenv.py --extra-search-dir=/path/to/dists --extra-search-dir=/path/to/other/dists ENV
+      $ virtualenv --extra-search-dir=/path/to/dists --extra-search-dir=/path/to/other/dists ENV
 
 - Config files
 
@@ -224,10 +268,10 @@ virtualenv can not only be configured by passing command line options such as
   ``%APPDATA%\virtualenv\virtualenv.ini``.
 
   The names of the settings are derived from the long command line option,
-  e.g. the option ``--distribute`` would look like this::
+  e.g. the option ``--python`` would look like this::
 
       [virtualenv]
-      distribute = true
+      python = /opt/python-3.3/bin/python
 
   Appending options like ``--extra-search-dir`` can be written on multiple
   lines::
@@ -261,20 +305,20 @@ Creating Your Own Bootstrap Scripts
 -----------------------------------
 
 While this creates an environment, it doesn't put anything into the
-environment.  Developers may find it useful to distribute a script
+environment. Developers may find it useful to distribute a script
 that sets up a particular environment, for example a script that
 installs a particular web application.
 
 To create a script like this, call
 ``virtualenv.create_bootstrap_script(extra_text)``, and write the
-result to your new bootstrapping script.  Here's the documentation
+result to your new bootstrapping script. Here's the documentation
 from the docstring:
 
 Creates a bootstrap script, which is like this script but with
 extend_parser, adjust_options, and after_install hooks.
 
 This returns a string that (written to disk of course) can be used
-as a bootstrap script with your own customizations.  The script
+as a bootstrap script with your own customizations. The script
 will be the standard virtualenv.py script, with your extra text
 added (your extra text should be Python code).
 
@@ -290,8 +334,8 @@ If you include these functions, they will be called:
 
 ``after_install(options, home_dir)``:
 
-    After everything is installed, this function is called.  This
-    is probably the function you are most likely to use.  An
+    After everything is installed, this function is called. This
+    is probably the function you are most likely to use. An
     example would be::
 
         def after_install(options, home_dir):
@@ -337,23 +381,23 @@ Using Virtualenv without ``bin/python``
 ---------------------------------------
 
 Sometimes you can't or don't want to use the Python interpreter
-created by the virtualenv.  For instance, in a `mod_python
+created by the virtualenv. For instance, in a `mod_python
 <http://www.modpython.org/>`_ or `mod_wsgi <http://www.modwsgi.org/>`_
 environment, there is only one interpreter.
 
-Luckily, it's easy.  You must use the custom Python interpreter to
-*install* libraries.  But to *use* libraries, you just have to be sure
-the path is correct.  A script is available to correct the path.  You
+Luckily, it's easy. You must use the custom Python interpreter to
+*install* libraries. But to *use* libraries, you just have to be sure
+the path is correct. A script is available to correct the path. You
 can setup the environment like::
 
     activate_this = '/path/to/env/bin/activate_this.py'
     execfile(activate_this, dict(__file__=activate_this))
 
 This will change ``sys.path`` and even change ``sys.prefix``, but also allow
-you to use an existing interpreter.  Items in your environment will show up
-first on ``sys.path``, before global items.  However, global items will
+you to use an existing interpreter. Items in your environment will show up
+first on ``sys.path``, before global items. However, global items will
 always be accessible (as if the ``--system-site-packages`` flag had been used
-in creating the environment, whether it was or not).  Also, this cannot undo
+in creating the environment, whether it was or not). Also, this cannot undo
 the activation of other environments, or modules that have been imported.
 You shouldn't try to, for instance, activate an environment before a web
 request; you should activate *one* environment as early as possible, and not
@@ -363,29 +407,39 @@ Making Environments Relocatable
 -------------------------------
 
 Note: this option is somewhat experimental, and there are probably
-caveats that have not yet been identified.  Also this does not
-currently work on Windows.
+caveats that have not yet been identified.
 
-Normally environments are tied to a specific path.  That means that
+.. warning::
+
+    The ``--relocatable`` option currently has a number of issues,
+    and is not guaranteed to work in all circumstances. It is possible
+    that the option will be deprecated in a future version of ``virtualenv``.
+
+Normally environments are tied to a specific path. That means that
 you cannot move an environment around or copy it to another computer.
 You can fix up an environment to make it relocatable with the
 command::
 
     $ virtualenv --relocatable ENV
 
-This will make some of the files created by setuptools or distribute
-use relative paths, and will change all the scripts to use ``activate_this.py``
-instead of using the location of the Python interpreter to select the
-environment.
+This will make some of the files created by setuptools use relative paths,
+and will change all the scripts to use ``activate_this.py`` instead of using
+the location of the Python interpreter to select the environment.
+
+**Note:** scripts which have been made relocatable will only work if
+the virtualenv is activated, specifically the python executable from
+the virtualenv must be the first one on the system PATH. Also note that
+the activate scripts are not currently made relocatable by
+``virtualenv --relocatable``.
 
 **Note:** you must run this after you've installed *any* packages into
-the environment.  If you make an environment relocatable, then
+the environment. If you make an environment relocatable, then
 install a new package, you must run ``virtualenv --relocatable``
 again.
 
-Also, this **does not make your packages cross-platform**.  You can
+Also, this **does not make your packages cross-platform**. You can
 move the directory around, but it can only be used on other similar
-computers.  Some known environmental differences that can cause
+computers. Some known environmental differences that can cause
 incompatibilities: a different version of Python, when one platform
 uses UCS2 for its internal unicode representation and another uses
 UCS4 (a compile-time option), obvious platform changes like Windows
@@ -400,50 +454,38 @@ If you use this flag to create an environment, currently, the
 The ``--extra-search-dir`` option
 ---------------------------------
 
-When it creates a new environment, virtualenv installs either setuptools
-or distribute, and pip.  In normal operation when virtualenv is
-installed, the bundled version of these packages included in the
-``virtualenv_support`` directory is used. When ``virtualenv.py`` is run
-standalone and ``virtualenv_support`` is not available, the latest
-releases of these packages are fetched from the `Python Package Index
-<http://pypi.python.org>`_ (PyPI).
+.. note::
 
-As an alternative, you can provide your own versions of setuptools,
-distribute and/or pip on the filesystem, and tell virtualenv to use
-those distributions instead of downloading them from the Internet.  To
-use this feature, pass one or more ``--extra-search-dir`` options to
+    Currently, this feature only partially works for pip, and not at
+    all for setuptools. For details,
+    see `Issue #327 <https://github.com/pypa/virtualenv/issues/327>`_
+
+This option allows you to provide your own versions of setuptools
+and/or pip on the filesystem, and tell virtualenv to use those distributions
+instead of the ones in ``virtualenv_support``.
+
+To use this feature, pass one or more ``--extra-search-dir`` options to
 virtualenv like this::
 
     $ virtualenv --extra-search-dir=/path/to/distributions ENV
 
 The ``/path/to/distributions`` path should point to a directory that
-contains setuptools, distribute and/or pip distributions.  Setuptools
-distributions must be ``.egg`` files; pip distributions should be
-`.tar.gz` source distributions, and distribute distributions may be
-either (if found an egg will be used preferentially).
+contains setuptools and/or pip distributions. Setuptools distributions
+must be ``.egg`` files; pip distributions should be `.tar.gz` source
+distributions.
 
-Virtualenv will still download these packages if no satisfactory local
-distributions are found.
+If no satisfactory local distributions are found, virtualenv will fail. Virtualenv will never download packages.
 
-If you are really concerned about virtualenv fetching these packages
-from the Internet and want to ensure that it never will, you can also
-provide an option ``--never-download`` like so::
+The distribution lookup is done in the following locations, with the most
+recent version found used:
 
-    $ virtualenv --extra-search-dir=/path/to/distributions --never-download ENV
-
-If this option is provided, virtualenv will never try to download
-setuptools/distribute or pip. Instead, it will exit with status code 1
-if it fails to find local distributions for any of these required
-packages. The local distribution lookup is done in the following
-locations, with the most recent version found used:
-
-    #. The current directory.
-    #. The directory where virtualenv.py is located.
-    #. A ``virtualenv_support`` directory relative to the directory where
-       virtualenv.py is located.
-    #. If the file being executed is not named virtualenv.py (i.e. is a boot
-       script), a ``virtualenv_support`` directory relative to wherever
-       virtualenv.py is actually installed.
+#. The current directory.
+#. The directory where virtualenv.py is located.
+#. A ``virtualenv_support`` directory relative to the directory where
+   virtualenv.py is located.
+#. If the file being executed is not named virtualenv.py (i.e. is a boot
+   script), a ``virtualenv_support`` directory relative to wherever
+   virtualenv.py is actually installed.
 
 
 Compare & Contrast with Alternatives
@@ -452,33 +494,33 @@ Compare & Contrast with Alternatives
 There are several alternatives that create isolated environments:
 
 * ``workingenv`` (which I do not suggest you use anymore) is the
-  predecessor to this library.  It used the main Python interpreter,
+  predecessor to this library. It used the main Python interpreter,
   but relied on setting ``$PYTHONPATH`` to activate the environment.
   This causes problems when running Python scripts that aren't part of
-  the environment (e.g., a globally installed ``hg`` or ``bzr``).  It
+  the environment (e.g., a globally installed ``hg`` or ``bzr``). It
   also conflicted a lot with Setuptools.
 
 * `virtual-python
   <http://peak.telecommunity.com/DevCenter/EasyInstall#creating-a-virtual-python>`_
-  is also a predecessor to this library.  It uses only symlinks, so it
-  couldn't work on Windows.  It also symlinks over the *entire*
-  standard library and global ``site-packages``.  As a result, it
+  is also a predecessor to this library. It uses only symlinks, so it
+  couldn't work on Windows. It also symlinks over the *entire*
+  standard library and global ``site-packages``. As a result, it
   won't see new additions to the global ``site-packages``.
 
   This script only symlinks a small portion of the standard library
   into the environment, and so on Windows it is feasible to simply
-  copy these files over.  Also, it creates a new/empty
+  copy these files over. Also, it creates a new/empty
   ``site-packages`` and also adds the global ``site-packages`` to the
-  path, so updates are tracked separately.  This script also installs
+  path, so updates are tracked separately. This script also installs
   Setuptools automatically, saving a step and avoiding the need for
   network access.
 
 * `zc.buildout <http://pypi.python.org/pypi/zc.buildout>`_ doesn't
   create an isolated Python environment in the same style, but
   achieves similar results through a declarative config file that sets
-  up scripts with very particular packages.  As a declarative system,
+  up scripts with very particular packages. As a declarative system,
   it is somewhat easier to repeat and manage, but more difficult to
-  experiment with.  ``zc.buildout`` includes the ability to setup
+  experiment with. ``zc.buildout`` includes the ability to setup
   non-Python systems (e.g., a database server or an Apache instance).
 
 I *strongly* recommend anyone doing application development or
@@ -544,7 +586,7 @@ Other Documentation and Links
   using virtualenv (virtualenvwrapper)
   <http://www.doughellmann.com/articles/CompletelyDifferent-2008-05-virtualenvwrapper/index.html>`_
   including some handy scripts to make working with multiple
-  environments easier.  He also wrote `an example of using virtualenv
+  environments easier. He also wrote `an example of using virtualenv
   to try IPython
   <http://www.doughellmann.com/articles/CompletelyDifferent-2008-02-ipython-and-virtualenv/index.html>`_.
 

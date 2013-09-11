@@ -195,14 +195,18 @@ class OSXBootstrapper(BaseBootstrapper):
         packages = [
             # We need to install Python because Mercurial requires the Python
             # development headers which are missing from OS X (at least on
-            # 10.8).
+            # 10.8) and because the build system wants a version newer than
+            # what Apple ships.
             ('python', 'python'),
             ('mercurial', 'mercurial'),
             ('git', 'git'),
             ('yasm', 'yasm'),
             ('autoconf213', HOMEBREW_AUTOCONF213),
-            ('terminal-notifier', 'terminal-notifier'),
         ]
+
+        # terminal-notifier is only available in Mountain Lion or newer.
+        if self.os_version >= StrictVersion('10.8'):
+            packages.append(('terminal-notifier', 'terminal-notifier'))
 
         printed = False
 

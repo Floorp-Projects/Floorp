@@ -211,6 +211,7 @@ WEBIDL_FILES = [
     'MozActivity.webidl',
     'MozMmsMessage.webidl',
     'MozNamedAttrMap.webidl',
+    'MozPowerManager.webidl',
     'MozTimeManager.webidl',
     'MutationEvent.webidl',
     'MutationObserver.webidl',
@@ -453,7 +454,6 @@ if CONFIG['MOZ_B2G_RIL']:
     ]
 
 WEBIDL_FILES += [
-    'BlobEvent.webidl',
     'CloseEvent.webidl',
     'CustomEvent.webidl',
     'DeviceLightEvent.webidl',
@@ -537,3 +537,7 @@ if CONFIG['MOZ_B2G']:
     WEBIDL_FILES += [
         'InputMethod.webidl',
     ]
+
+GENERATED_EVENTS_WEBIDL_FILES = [
+    'BlobEvent.webidl',
+]

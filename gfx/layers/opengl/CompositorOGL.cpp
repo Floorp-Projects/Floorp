@@ -44,6 +44,7 @@
 #if MOZ_ANDROID_OMTC
 #include "TexturePoolOGL.h"
 #endif
+#include "GeckoProfiler.h"
 
 
 namespace mozilla {
@@ -780,6 +781,7 @@ CompositorOGL::BeginFrame(const Rect *aClipRectIn, const gfxMatrix& aTransform,
                           const Rect& aRenderBounds, Rect *aClipRectOut,
                           Rect *aRenderBoundsOut)
 {
+  PROFILER_LABEL("CompositorOGL", "BeginFrame");
   MOZ_ASSERT(!mFrameInProgress, "frame still in progress (should have called EndFrame or AbortFrame");
 
   mVBOs.Reset();
@@ -1010,6 +1012,7 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
                         Float aOpacity, const gfx::Matrix4x4 &aTransform,
                         const Point& aOffset)
 {
+  PROFILER_LABEL("CompositorOGL", "DrawQuad");
   MOZ_ASSERT(mFrameInProgress, "frame not started");
 
   IntRect intClipRect;
@@ -1274,6 +1277,7 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
 void
 CompositorOGL::EndFrame()
 {
+  PROFILER_LABEL("CompositorOGL", "BeginFrame");
   MOZ_ASSERT(mCurrentRenderTarget == mWindowRenderTarget, "Rendering target not properly restored");
 
 #ifdef MOZ_DUMP_PAINTING

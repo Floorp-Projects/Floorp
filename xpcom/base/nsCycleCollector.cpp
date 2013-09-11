@@ -922,10 +922,8 @@ class nsCycleCollector
 
     nsIThread* mThread;
 
-public:
     nsCycleCollectorParams mParams;
 
-private:
     nsTArray<PtrInfo*> *mWhiteNodes;
     uint32_t mWhiteNodeCount;
 
@@ -971,7 +969,7 @@ public:
     bool Collect(ccType aCCType,
                  nsTArray<PtrInfo*> *aWhiteNodes,
                  nsCycleCollectorResults *aResults,
-                 nsICycleCollectorListener *aListener);
+                 nsICycleCollectorListener *aManualListener);
     void Shutdown();
 
     void SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
@@ -984,20 +982,20 @@ public:
 
 private:
     void CheckThreadSafety();
-    void ShutdownCollect(nsICycleCollectorListener *aListener);
+    void ShutdownCollect();
 
     void PrepareForCollection(nsCycleCollectorResults *aResults,
                               nsTArray<PtrInfo*> *aWhiteNodes);
     void FixGrayBits(bool aForceGC);
     bool ShouldMergeZones(ccType aCCType);
 
-    void BeginCollection(ccType aCCType, nsICycleCollectorListener *aListener);
+    void BeginCollection(ccType aCCType, nsICycleCollectorListener *aManualListener);
     void MarkRoots(GCGraphBuilder &aBuilder);
-    void ScanRoots();
+    void ScanRoots(nsICycleCollectorListener *aListener);
     void ScanWeakMaps();
 
     // returns whether anything was collected
-    bool CollectWhite(nsICycleCollectorListener *aListener);
+    bool CollectWhite();
 
     void CleanupAfterCollection();
 };
@@ -2263,7 +2261,7 @@ nsCycleCollector::ScanWeakMaps()
 }
 
 void
-nsCycleCollector::ScanRoots()
+nsCycleCollector::ScanRoots(nsICycleCollectorListener *aListener)
 {
     mWhiteNodeCount = 0;
 
@@ -2279,6 +2277,33 @@ nsCycleCollector::ScanRoots()
     }
 
     ScanWeakMaps();
+
+    if (aListener) {
+        aListener->BeginResults();
+
+        NodePool::Enumerator etor(mGraph.mNodes);
+        while (!etor.IsDone()) {
+            PtrInfo *pi = etor.GetNext();
+            switch (pi->mColor) {
+            case black:
+                if (pi->mRefCount > 0 && pi->mRefCount < UINT32_MAX &&
+                    pi->mInternalRefs != pi->mRefCount) {
+                    aListener->DescribeRoot((uint64_t)pi->mPointer,
+                                            pi->mInternalRefs);
+                }
+                break;
+            case white:
+                aListener->DescribeGarbage((uint64_t)pi->mPointer);
+                break;
+            case grey:
+                // With incremental CC, we can end up with a grey object after
+                // scanning if it is only reachable from an object that gets freed.
+                break;
+            }
+        }
+
+        aListener->End();
+    }
 }
 
 
@@ -2287,7 +2312,7 @@ nsCycleCollector::ScanRoots()
 ////////////////////////////////////////////////////////////////////////
 
 bool
-nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
+nsCycleCollector::CollectWhite()
 {
     // Explanation of "somewhat modified": we have no way to collect the
     // set of whites "all at once", we have to ask each of them to drop
@@ -2342,14 +2367,6 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
     if (mBeforeUnlinkCB) {
         mBeforeUnlinkCB();
         timeLog.Checkpoint("CollectWhite::BeforeUnlinkCB");
-    }
-
-    if (aListener) {
-        for (uint32_t i = 0; i < count; ++i) {
-            PtrInfo *pinfo = mWhiteNodes->ElementAt(i);
-            aListener->DescribeGarbage((uint64_t)pinfo->mPointer);
-        }
-        aListener->End();
     }
 
     for (uint32_t i = 0; i < count; ++i) {
@@ -2661,13 +2678,13 @@ nsCycleCollector::CleanupAfterCollection()
 }
 
 void
-nsCycleCollector::ShutdownCollect(nsICycleCollectorListener *aListener)
+nsCycleCollector::ShutdownCollect()
 {
     nsAutoTArray<PtrInfo*, 4000> whiteNodes;
 
     for (uint32_t i = 0; i < DEFAULT_SHUTDOWN_COLLECTIONS; ++i) {
         NS_ASSERTION(i < NORMAL_SHUTDOWN_COLLECTIONS, "Extra shutdown CC");
-        if (!Collect(ShutdownCC, &whiteNodes, nullptr, aListener)) {
+        if (!Collect(ShutdownCC, &whiteNodes, nullptr, nullptr)) {
             break;
         }
     }
@@ -2677,7 +2694,7 @@ bool
 nsCycleCollector::Collect(ccType aCCType,
                           nsTArray<PtrInfo*> *aWhiteNodes,
                           nsCycleCollectorResults *aResults,
-                          nsICycleCollectorListener *aListener)
+                          nsICycleCollectorListener *aManualListener)
 {
     CheckThreadSafety();
 
@@ -2687,23 +2704,8 @@ nsCycleCollector::Collect(ccType aCCType,
     }
 
     PrepareForCollection(aResults, aWhiteNodes);
-
-    bool forceGC = (aCCType == ShutdownCC);
-    if (!forceGC && aListener) {
-        // On a WantAllTraces CC, force a synchronous global GC to prevent
-        // hijinks from ForgetSkippable and compartmental GCs.
-        aListener->GetWantAllTraces(&forceGC);
-    }
-    FixGrayBits(forceGC);
-
-    FreeSnowWhite(true);
-
-    if (aListener && NS_FAILED(aListener->Begin())) {
-        aListener = nullptr;
-    }
-
-    BeginCollection(aCCType, aListener);
-    bool collectedAny = CollectWhite(aListener);
+    BeginCollection(aCCType, aManualListener);
+    bool collectedAny = CollectWhite();
     CleanupAfterCollection();
     return collectedAny;
 }
@@ -2745,17 +2747,46 @@ nsCycleCollector::ShouldMergeZones(ccType aCCType)
 
 void
 nsCycleCollector::BeginCollection(ccType aCCType,
-                                  nsICycleCollectorListener *aListener)
+                                  nsICycleCollectorListener *aManualListener)
 {
-    // aListener should be Begin()'d before this
     TimeLog timeLog;
+    bool isShutdown = (aCCType == ShutdownCC);
 
+    // Set up the listener for this CC.
+    MOZ_ASSERT_IF(isShutdown, !aManualListener);
+    nsCOMPtr<nsICycleCollectorListener> listener(aManualListener);
+    aManualListener = nullptr;
+    if (!listener) {
+        if (mParams.mLogAll || (isShutdown && mParams.mLogShutdown)) {
+            nsRefPtr<nsCycleCollectorLogger> logger = new nsCycleCollectorLogger();
+            if (isShutdown && mParams.mAllTracesAtShutdown) {
+                logger->SetAllTraces();
+            }
+            listener = logger.forget();
+        }
+    }
+
+    bool forceGC = isShutdown;
+    if (!forceGC && listener) {
+        // On a WantAllTraces CC, force a synchronous global GC to prevent
+        // hijinks from ForgetSkippable and compartmental GCs.
+        listener->GetWantAllTraces(&forceGC);
+    }
+    FixGrayBits(forceGC);
+
+    FreeSnowWhite(true);
+
+    if (listener && NS_FAILED(listener->Begin())) {
+        listener = nullptr;
+    }
+
+    // Set up the data structures for building the graph.
     bool mergeZones = ShouldMergeZones(aCCType);
     if (mResults) {
         mResults->mMergedZones = mergeZones;
     }
 
-    GCGraphBuilder builder(this, mGraph, mJSRuntime, aListener,
+    GCGraphBuilder builder(this, mGraph, mJSRuntime, listener,
                            mergeZones);
 
     if (mJSRuntime) {
@@ -2771,25 +2802,10 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     MarkRoots(builder);
     timeLog.Checkpoint("MarkRoots()");
 
-    ScanRoots();
+    ScanRoots(listener);
     timeLog.Checkpoint("ScanRoots()");
 
     mScanInProgress = false;
-
-    if (aListener) {
-        aListener->BeginResults();
-
-        NodePool::Enumerator etor(mGraph.mNodes);
-        while (!etor.IsDone()) {
-            PtrInfo *pi = etor.GetNext();
-            if (pi->mColor == black &&
-                pi->mRefCount > 0 && pi->mRefCount < UINT32_MAX &&
-                pi->mInternalRefs != pi->mRefCount) {
-                aListener->DescribeRoot((uint64_t)pi->mPointer,
-                                        pi->mInternalRefs);
-            }
-        }
-    }
 }
 
 uint32_t
@@ -2811,14 +2827,7 @@ nsCycleCollector::Shutdown()
     if (PR_GetEnv("XPCOM_CC_RUN_DURING_SHUTDOWN"))
 #endif
     {
-        nsCOMPtr<nsCycleCollectorLogger> listener;
-        if (mParams.mLogAll || mParams.mLogShutdown) {
-            listener = new nsCycleCollectorLogger();
-            if (mParams.mAllTracesAtShutdown) {
-                listener->SetAllTraces();
-            }
-        }
-        ShutdownCollect(listener);
+        ShutdownCollect();
     }
 }
 
@@ -3147,7 +3156,7 @@ nsCycleCollector_doDeferredDeletion()
 void
 nsCycleCollector_collect(bool aManuallyTriggered,
                          nsCycleCollectorResults *aResults,
-                         nsICycleCollectorListener *aListener)
+                         nsICycleCollectorListener *aManualListener)
 {
     CollectorData *data = sCollectorData.get();
 
@@ -3156,14 +3165,11 @@ nsCycleCollector_collect(bool aManuallyTriggered,
     MOZ_ASSERT(data->mCollector);
 
     PROFILER_LABEL("CC", "nsCycleCollector_collect");
-    nsCOMPtr<nsICycleCollectorListener> listener(aListener);
-    if (!aListener && data->mCollector->mParams.mLogAll) {
-        listener = new nsCycleCollectorLogger();
-    }
 
+    MOZ_ASSERT_IF(aManualListener, aManuallyTriggered);
     nsAutoTArray<PtrInfo*, 4000> whiteNodes;
     data->mCollector->Collect(aManuallyTriggered ? ManualCC : ScheduledCC,
-                              &whiteNodes, aResults, listener);
+                              &whiteNodes, aResults, aManualListener);
 }
 
 void

@@ -28,4 +28,8 @@ MOCHITEST_WEBAPPRT_CHROME_FILES = \
     geolocation-prompt-noperm.webapp^headers^ \
     geolocation-prompt-perm.html \
     geolocation-prompt-noperm.html \
+  browser_debugger.js \
+    debugger.webapp \
+    debugger.webapp^headers^ \
+    debugger.html \
   $(NULL)
