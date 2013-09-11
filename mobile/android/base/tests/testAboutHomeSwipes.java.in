@@ -1,0 +1,84 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import com.jayway.android.robotium.solo.Solo;
+
+import android.app.Activity;
+import android.text.TextUtils;
+import android.view.ViewGroup;
+import android.widget.ListView;
+import android.widget.TabWidget;
+import android.support.v4.view.PagerTabStrip;
+import android.support.v4.view.ViewPager;
+
+import @ANDROID_PACKAGE_NAME@.*;
+
+/* Tests swiping between tabs on the awesome bar and other basic
+   awesome bar tab selections.
+*/
+
+public class testAboutHomeSwipes extends AboutHomeTest {
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
+    public void testAboutHomeSwipes() {
+        blockForGeckoReady();
+
+        // Test normal sliding of the list left and right
+        dragTo(Solo.LEFT, aboutHomeTabs.indexOf(HISTORY_LABEL));
+        dragTo(Solo.RIGHT, aboutHomeTabs.indexOf(BOOKMARKS_LABEL));
+        dragTo(Solo.RIGHT, aboutHomeTabs.indexOf(READING_LIST_LABEL));
+        dragTo(Solo.LEFT, aboutHomeTabs.indexOf(BOOKMARKS_LABEL));
+
+        // Test tapping on the tab strip changes tabs
+        ViewPager pager = (ViewPager) mSolo.getView(ViewPager.class, 0);
+        ViewGroup tabStrip = getTabStripView();
+
+        selectOnTabsStrip(pager, tabStrip, Solo.LEFT, aboutHomeTabs.indexOf(HISTORY_LABEL));
+        selectOnTabsStrip(pager, tabStrip, Solo.RIGHT, aboutHomeTabs.indexOf(BOOKMARKS_LABEL));
+        selectOnTabsStrip(pager, tabStrip, Solo.RIGHT, aboutHomeTabs.indexOf(READING_LIST_LABEL));
+        selectOnTabsStrip(pager, tabStrip, Solo.LEFT, aboutHomeTabs.indexOf(BOOKMARKS_LABEL));
+    }
+
+    private void dragTo(int direction, int expectedPage) {
+        final int centerX = mDriver.getGeckoWidth() / 2;
+        final int centerY = mDriver.getGeckoHeight() / 2;
+
+        mActions.drag(direction == Solo.LEFT ? 0 : centerX,
+                      direction == Solo.LEFT ? centerX : 0,
+                      centerY, centerY);
+
+        waitForAboutHomeTab(expectedPage);
+    }
+
+    private ViewGroup getTabStripView() {
+        if (TextUtils.equals(mDevice.type, "phone")) {
+            // On phones, fetch tab strip by class type
+            return (ViewGroup) mSolo.getView(PagerTabStrip.class, 0);
+        } else {
+            // On tablets, fetch tab strip by id to avoid using reflection
+            final Activity activity = getActivity();
+            final int tabStripId = mDriver.findElement(activity, "home_pager_tabs").getId();
+            return (ViewGroup) activity.findViewById(tabStripId);
+        }
+    }
+
+    private void selectOnTabsStrip(ViewPager pager, ViewGroup tabStrip, int direction, int expectedPage) {
+        // On phones, we use a pager strip, first child points to previous page,
+        // last child points to next page. On tablets, we use a tab strip where
+        // each child's position matches the corresponding page position in the
+        // ViewPager.
+        final int childIndex;
+        if (TextUtils.equals(mDevice.type, "phone")) {
+            childIndex = (direction == Solo.LEFT ? 0 : 2);
+        } else {
+            childIndex = pager.getCurrentItem() + (direction == Solo.LEFT ?  -1 : 1);
+        }
+
+        // Tap on the tab strip
+        mSolo.clickOnView(tabStrip.getChildAt(childIndex));
+        waitForAboutHomeTab(expectedPage);
+    }
+}
