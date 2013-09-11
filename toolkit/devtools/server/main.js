@@ -350,8 +350,8 @@ var DebuggerServer = {
   /**
    * Install Firefox-specific actors.
    */
-  addBrowserActors: function DS_addBrowserActors() {
-    this.chromeWindowType = "navigator:browser";
+  addBrowserActors: function(aWindowType) {
+    this.chromeWindowType = aWindowType ? aWindowType : "navigator:browser";
     this.addActors("resource://gre/modules/devtools/server/actors/webbrowser.js");
     this.addActors("resource://gre/modules/devtools/server/actors/script.js");
     this.addGlobalActor(this.ChromeDebuggerActor, "chromeDebugger");
