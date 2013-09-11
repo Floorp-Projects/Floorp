@@ -696,10 +696,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   if (scrollableFrame && !LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars)) {
     nsMargin sizes = scrollableFrame->GetActualScrollbarSizes();
     // Scrollbars are not subject to scaling, so CSS pixels = screen pixels for them.
-    ScreenIntMargin boundMargins(nsPresContext::AppUnitsToIntCSSPixels(sizes.top),
-                                 nsPresContext::AppUnitsToIntCSSPixels(sizes.right),
-                                 nsPresContext::AppUnitsToIntCSSPixels(sizes.bottom),
-                                 nsPresContext::AppUnitsToIntCSSPixels(sizes.left));
+    ScreenIntMargin boundMargins = RoundedToInt(CSSMargin::FromAppUnits(sizes) * CSSToScreenScale(1.0f));
     metrics.mCompositionBounds.Deflate(boundMargins);
   }
 
