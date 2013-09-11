@@ -1669,7 +1669,7 @@
 
           // don't set the pref unless they press OK and it's false
           if (reallyClose && !warnOnClose.value)
-            Services.prefs.setBoolPref("browser.tabs.warnOnClose", false);
+            Services.prefs.setBoolPref(pref, false);
 
           return reallyClose;
         ]]>
