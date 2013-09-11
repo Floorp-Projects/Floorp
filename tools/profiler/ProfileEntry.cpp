@@ -138,7 +138,7 @@ std::ostream& operator<<(std::ostream& stream, const ProfileEntry& entry)
 ThreadProfile::ThreadProfile(const char* aName, int aEntrySize,
                              PseudoStack *aStack, int aThreadId,
                              PlatformData* aPlatform,
-                             bool aIsMainThread)
+                             bool aIsMainThread, void *aStackTop)
   : mWritePos(0)
   , mLastFlushPos(0)
   , mReadPos(0)
@@ -149,6 +149,7 @@ ThreadProfile::ThreadProfile(const char* aName, int aEntrySize,
   , mThreadId(aThreadId)
   , mIsMainThread(aIsMainThread)
   , mPlatformData(aPlatform)
+  , mStackTop(aStackTop)
 {
   mEntries = new ProfileEntry[mEntrySize];
 }
