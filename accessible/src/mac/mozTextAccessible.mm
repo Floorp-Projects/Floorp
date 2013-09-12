@@ -6,6 +6,7 @@
 #include "Accessible-inl.h"
 #include "AccessibleWrap.h"
 #include "TextLeafAccessible.h"
+#include "nsIAccessibleTypes.h"
 
 #include "nsCocoaUtils.h"
 #include "nsObjCExceptions.h"

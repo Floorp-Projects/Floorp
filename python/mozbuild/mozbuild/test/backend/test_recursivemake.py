@@ -212,6 +212,11 @@ class TestRecursiveMakeBackend(BackendTester):
             'MSVC_ENABLE_PGO': [
                 'MSVC_ENABLE_PGO := 1',
             ],
+            'OS_LIBS': [
+                'OS_LIBS += foo.so',
+                'OS_LIBS += -l123',
+                'OS_LIBS += bar.a',
+            ],
             'SDK_LIBRARY': [
                 'SDK_LIBRARY += bar.sdk',
                 'SDK_LIBRARY += foo.sdk',

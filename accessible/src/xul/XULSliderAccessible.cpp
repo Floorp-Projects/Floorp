@@ -10,6 +10,7 @@
 #include "States.h"
 
 #include "nsIFrame.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla::a11y;
 

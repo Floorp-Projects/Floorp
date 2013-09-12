@@ -10,6 +10,10 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+// Work around bug 911777
+SpecialPowers.forceGC();
+SpecialPowers.forceCC();
+
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   var ac = new AudioContext();
