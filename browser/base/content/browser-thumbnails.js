@@ -102,7 +102,7 @@ let gBrowserThumbnails = {
 
   _capture: function Thumbnails_capture(aBrowser) {
     if (this._shouldCapture(aBrowser))
-      PageThumbs.captureAndStore(aBrowser);
+      PageThumbs.captureAndStoreIfStale(aBrowser);
   },
 
   _delayedCapture: function Thumbnails_delayedCapture(aBrowser) {
