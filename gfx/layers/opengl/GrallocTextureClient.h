@@ -15,6 +15,8 @@
 namespace mozilla {
 namespace layers {
 
+class GraphicBufferLocked;
+
 /**
  * A TextureClient implementation based on android::GraphicBuffer (also referred to
  * as "gralloc").
@@ -49,6 +51,8 @@ public:
   virtual bool IsAllocated() const MOZ_OVERRIDE;
 
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
+
+  virtual TextureClientData* DropTextureData() MOZ_OVERRIDE;
 
   void InitWith(GrallocBufferActor* aActor, gfx::IntSize aSize);
 
@@ -88,12 +92,16 @@ public:
 
   virtual size_t GetBufferSize() const MOZ_OVERRIDE;
 
+  void SetGraphicBufferLocked(GraphicBufferLocked* aBufferLocked);
+
 protected:
 
   /**
    * Unfortunately, until bug 879681 is fixed we need to use a GrallocBufferActor.
    */
   GrallocBufferActor* mGrallocActor;
+
+  RefPtr<GraphicBufferLocked> mBufferLocked;
 
   android::sp<android::GraphicBuffer> mGraphicBuffer;
 
