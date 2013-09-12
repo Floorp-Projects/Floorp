@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * This file is used for both about:memory and about:compartments.
- *
  * The version used for mobile is located at
  * mobile/android/themes/core/aboutMemory.css.
  * Desktop-specific stuff is at the bottom of this file.

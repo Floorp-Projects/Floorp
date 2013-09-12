@@ -867,6 +867,13 @@ public:
   void SetPosition(const nsPoint& aPt) { mRect.MoveTo(aPt); }
 
   /**
+   * Move the frame, accounting for relative positioning. Use this when
+   * adjusting the frame's position by a known amount, to properly update its
+   * saved normal position (see GetNormalPosition below).
+   */
+  void MovePositionBy(const nsPoint& aTranslation);
+
+  /**
    * Return frame's position without relative positioning
    */
   nsPoint GetNormalPosition() const;
@@ -927,7 +934,7 @@ public:
   NS_DECLARE_FRAME_PROPERTY(IBSplitSpecialPrevSibling, nullptr)
 
   NS_DECLARE_FRAME_PROPERTY(NormalPositionProperty, DestroyPoint)
-  NS_DECLARE_FRAME_PROPERTY(ComputedStickyOffsetProperty, DestroyMargin)
+  NS_DECLARE_FRAME_PROPERTY(ComputedOffsetProperty, DestroyMargin)
 
   NS_DECLARE_FRAME_PROPERTY(OutlineInnerRectProperty, DestroyRect)
   NS_DECLARE_FRAME_PROPERTY(PreEffectsBBoxProperty, DestroyRect)

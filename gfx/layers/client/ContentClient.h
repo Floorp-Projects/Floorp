@@ -152,14 +152,9 @@ public:
     ThebesLayerBuffer::DrawTo(aLayer, aTarget, aOpacity, aMask, aMaskTransform);
   }
 
-  virtual already_AddRefed<gfxASurface> CreateBuffer(ContentType aType,
-                                                     const nsIntRect& aRect,
-                                                     uint32_t aFlags,
-                                                     gfxASurface**) MOZ_OVERRIDE;
-  virtual TemporaryRef<gfx::DrawTarget> CreateDTBuffer(ContentType aType,
-                                                       const nsIntRect& aRect,
-                                                       uint32_t aFlags,
-                                                       RefPtr<gfx::DrawTarget>* aWhiteDT);
+  virtual void CreateBuffer(ContentType aType, const nsIntRect& aRect, uint32_t aFlags,
+                            gfxASurface** aBlackSurface, gfxASurface** aWhiteSurface,
+                            RefPtr<gfx::DrawTarget>* aBlackDT, RefPtr<gfx::DrawTarget>* aWhiteDT) MOZ_OVERRIDE;
   virtual bool SupportsAzureContent() const;
 
   virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE
@@ -238,14 +233,9 @@ public:
     return ThebesLayerBuffer::BufferRotation();
   }
 
-  virtual already_AddRefed<gfxASurface> CreateBuffer(ContentType aType,
-                                                     const nsIntRect& aRect,
-                                                     uint32_t aFlags,
-                                                     gfxASurface** aWhiteSurface) MOZ_OVERRIDE;
-  virtual TemporaryRef<gfx::DrawTarget> CreateDTBuffer(ContentType aType,
-                                                       const nsIntRect& aRect,
-                                                       uint32_t aFlags,
-                                                       RefPtr<gfx::DrawTarget>* aWhiteDT) MOZ_OVERRIDE;
+  virtual void CreateBuffer(ContentType aType, const nsIntRect& aRect, uint32_t aFlags,
+                            gfxASurface** aBlackSurface, gfxASurface** aWhiteSurface,
+                            RefPtr<gfx::DrawTarget>* aBlackDT, RefPtr<gfx::DrawTarget>* aWhiteDT) MOZ_OVERRIDE;
 
   virtual bool SupportsAzureContent() const MOZ_OVERRIDE;
 

@@ -32,6 +32,7 @@
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsINameSpaceManager.h"
+#include "nsIPersistentProperties2.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "nsViewManager.h"
