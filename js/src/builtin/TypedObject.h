@@ -427,6 +427,17 @@ bool Memcpy(ThreadSafeContext *cx, unsigned argc, Value *vp);
 extern const JSJitInfo MemcpyJitInfo;
 
 /*
+ * Usage: StandardTypeObjectDescriptors()
+ *
+ * Returns the global "typed object" object, which provides access
+ * to the various builtin type descriptors. These are currently
+ * exported as immutable properties so it is safe for self-hosted code
+ * to access them; eventually this should be linked into the module
+ * system.
+ */
+bool StandardTypeObjectDescriptors(JSContext *cx, unsigned argc, Value *vp);
+
+/*
  * Usage: Store_int8(targetDatum, targetOffset, value)
  *        ...
  *        Store_uint8(targetDatum, targetOffset, value)

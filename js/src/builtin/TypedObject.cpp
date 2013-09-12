@@ -41,6 +41,11 @@ const Class js::TypedObjectClass = {
     JS_ConvertStub
 };
 
+static const JSFunctionSpec TypedObjectMethods[] = {
+    JS_SELF_HOSTED_FN("objectType", "TypeOfTypedDatum", 1, 0),
+    JS_FS_END
+};
+
 static void
 ReportCannotConvertTo(JSContext *cx, HandleValue fromValue, const char *toType)
 {
@@ -1349,6 +1354,9 @@ js_InitTypedObjectClass(JSContext *cx, HandleObject obj)
     if (!module)
         return nullptr;
 
+    if (!JS_DefineFunctions(cx, module, TypedObjectMethods))
+        return nullptr;
+
     // Define TypedObject global.
 
     RootedValue moduleValue(cx, ObjectValue(*module));
@@ -2517,6 +2525,15 @@ js::Memcpy(ThreadSafeContext *, unsigned argc, Value *vp)
 const JSJitInfo js::MemcpyJitInfo =
     JS_JITINFO_NATIVE_PARALLEL(
         JSParallelNativeThreadSafeWrapper<js::Memcpy>);
+
+bool
+js::StandardTypeObjectDescriptors(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    Rooted<GlobalObject*> global(cx, cx->global());
+    args.rval().setObject(global->getTypedObject());
+    return true;
+}
 
 #define JS_STORE_SCALAR_CLASS_IMPL(_constant, T, _name)                       \
 bool                                                                          \
