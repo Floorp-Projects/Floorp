@@ -1335,7 +1335,7 @@ abstract public class BrowserApp extends GeckoApp
         maybeCancelFaviconLoad(tab);
 
         int flags = LoadFaviconTask.FLAG_SCALE | ( (tab.isPrivate() || tab.getErrorType() != Tab.ErrorType.NONE) ? 0 : LoadFaviconTask.FLAG_PERSIST);
-        long id = Favicons.loadFavicon(tab.getURL(), tab.getFaviconURL(), flags,
+        int id = Favicons.loadFavicon(tab.getURL(), tab.getFaviconURL(), flags,
                         new OnFaviconLoadedListener() {
 
             @Override
@@ -1361,7 +1361,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void maybeCancelFaviconLoad(Tab tab) {
-        long faviconLoadId = tab.getFaviconLoadId();
+        int faviconLoadId = tab.getFaviconLoadId();
 
         if (faviconLoadId == Favicons.NOT_LOADING)
             return;

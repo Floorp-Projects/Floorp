@@ -24,8 +24,8 @@ import java.util.Set;
 public class Favicons {
     private static final String LOGTAG = "GeckoFavicons";
 
-    public static final long NOT_LOADING = 0;
-    public static final long FAILED_EXPIRY_NEVER = -1;
+    public static final int NOT_LOADING = 0;
+    public static final int FAILED_EXPIRY_NEVER = -1;
     public static final int FLAG_PERSIST = 1;
     public static final int FLAG_SCALE = 2;
 
@@ -34,7 +34,7 @@ public class Favicons {
 
     protected static Context sContext;
 
-    private static final Map<Long,LoadFaviconTask> sLoadTasks = Collections.synchronizedMap(new HashMap<Long, LoadFaviconTask>());
+    private static final Map<Integer, LoadFaviconTask> sLoadTasks = Collections.synchronizedMap(new HashMap<Integer, LoadFaviconTask>());
     private static final LruCache<String, Bitmap> sFaviconCache = new LruCache<String, Bitmap>(1024 * 1024) {
         @Override
         protected int sizeOf(String url, Bitmap image) {
@@ -68,7 +68,7 @@ public class Favicons {
         return BrowserDB.getFaviconUrlForHistoryUrl(sContext.getContentResolver(), pageUrl);
     }
 
-    public static long loadFavicon(String pageUrl, String faviconUrl, int flags,
+    public static int loadFavicon(String pageUrl, String faviconUrl, int flags,
             OnFaviconLoadedListener listener) {
 
         // Handle the case where page url is empty
@@ -92,7 +92,7 @@ public class Favicons {
 
         LoadFaviconTask task = new LoadFaviconTask(ThreadUtils.getBackgroundHandler(), pageUrl, faviconUrl, flags, listener);
 
-        long taskId = task.getmId();
+        int taskId = task.getId();
         sLoadTasks.put(taskId, task);
 
         task.execute();
@@ -134,7 +134,7 @@ public class Favicons {
         sFailedCache.evictAll();
     }
 
-    public static boolean cancelFaviconLoad(long taskId) {
+    public static boolean cancelFaviconLoad(int taskId) {
         Log.d(LOGTAG, "Requesting cancelation of favicon load (" + taskId + ")");
 
         boolean cancelled = false;
@@ -155,10 +155,10 @@ public class Favicons {
 
         // Cancel any pending tasks
         synchronized (sLoadTasks) {
-            Set<Long> taskIds = sLoadTasks.keySet();
-            Iterator<Long> iter = taskIds.iterator();
+            Set<Integer> taskIds = sLoadTasks.keySet();
+            Iterator<Integer> iter = taskIds.iterator();
             while (iter.hasNext()) {
-                long taskId = iter.next();
+                int taskId = iter.next();
                 cancelFaviconLoad(taskId);
             }
         }
