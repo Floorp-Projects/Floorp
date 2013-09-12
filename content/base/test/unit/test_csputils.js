@@ -680,7 +680,7 @@ test(function test_FrameAncestor_ignores_userpass_bug779918() {
       function testPermits(aChildUri, aParentUri, aContentType) {
         let cspObj = Cc["@mozilla.org/contentsecuritypolicy;1"]
                        .createInstance(Ci.nsIContentSecurityPolicy);
-        cspObj.refinePolicy(testPolicy, aChildUri, false);
+        cspObj.appendPolicy(testPolicy, aChildUri, false, false);
         let docshellparent = Cc["@mozilla.org/docshell;1"]
                                .createInstance(Ci.nsIDocShell);
         let docshellchild  = Cc["@mozilla.org/docshell;1"]
@@ -909,56 +909,6 @@ test(
       do_check_false(p_none.permits("http://bar.com"));
     });
 
-test(
-    function test_bug783497_refinePolicyIssues() {
-
-      const firstPolicy = "allow 'self'; img-src 'self'; script-src 'self'; options 'bogus-option'";
-      const secondPolicy = "default-src 'none'; script-src 'self'";
-      var cspObj = Cc["@mozilla.org/contentsecuritypolicy;1"]
-                     .createInstance(Ci.nsIContentSecurityPolicy);
-      var selfURI = URI("http://self.com/");
-
-      function testPermits(aUri, aContentType) {
-        return cspObj.shouldLoad(aContentType, aUri, null, null, null, null)
-               == Ci.nsIContentPolicy.ACCEPT;
-      };
-
-      // everything is allowed by the default policy
-      do_check_true(testPermits(URI("http://self.com/foo.js"),
-                    Ci.nsIContentPolicy.TYPE_SCRIPT));
-      do_check_true(testPermits(URI("http://other.com/foo.js"),
-                    Ci.nsIContentPolicy.TYPE_SCRIPT));
-      do_check_true(testPermits(URI("http://self.com/foo.png"),
-                    Ci.nsIContentPolicy.TYPE_IMAGE));
-      do_check_true(testPermits(URI("http://other.com/foo.png"),
-                    Ci.nsIContentPolicy.TYPE_IMAGE));
-
-      // fold in the first policy
-      cspObj.refinePolicy(firstPolicy, selfURI, false);
-
-      // script-src and img-src are limited to self after the first policy
-      do_check_true(testPermits(URI("http://self.com/foo.js"),
-                    Ci.nsIContentPolicy.TYPE_SCRIPT));
-      do_check_false(testPermits(URI("http://other.com/foo.js"),
-                     Ci.nsIContentPolicy.TYPE_SCRIPT));
-      do_check_true(testPermits(URI("http://self.com/foo.png"),
-                    Ci.nsIContentPolicy.TYPE_IMAGE));
-      do_check_false(testPermits(URI("http://other.com/foo.png"),
-                     Ci.nsIContentPolicy.TYPE_IMAGE));
-
-      // fold in the second policy
-      cspObj.refinePolicy(secondPolicy, selfURI, false);
-
-      // script-src is self and img-src is none after the merge
-      do_check_true(testPermits(URI("http://self.com/foo.js"),
-                    Ci.nsIContentPolicy.TYPE_SCRIPT));
-      do_check_false(testPermits(URI("http://other.com/foo.js"),
-                     Ci.nsIContentPolicy.TYPE_SCRIPT));
-      do_check_false(testPermits(URI("http://self.com/foo.png"),
-                     Ci.nsIContentPolicy.TYPE_IMAGE));
-      do_check_false(testPermits(URI("http://other.com/foo.png"),
-                     Ci.nsIContentPolicy.TYPE_IMAGE));
-    });
 
 test(
     function test_bug764937_defaultSrcMissing() {
@@ -974,7 +924,7 @@ test(
       };
 
       const policy = "script-src 'self'";
-      cspObjSpecCompliant.refinePolicy(policy, selfURI, true);
+      cspObjSpecCompliant.appendPolicy(policy, selfURI, false, true);
 
       // Spec-Compliant policy default-src defaults to *.
       // This means all images are allowed, and only 'self'
@@ -992,7 +942,7 @@ test(
                                  URI("http://bar.com/foo.js"),
                                  Ci.nsIContentPolicy.TYPE_SCRIPT));
 
-      cspObjOld.refinePolicy(policy, selfURI, false);
+      cspObjOld.appendPolicy(policy, selfURI, false, false);
 
       // non-Spec-Compliant policy default-src defaults to 'none'
       // This means all images are blocked, and so are all scripts (because the

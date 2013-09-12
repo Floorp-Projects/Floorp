@@ -254,7 +254,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
         NS_ENSURE_SUCCESS(rv, rv);
 
         if (reportViolation) {
-          // TODO : FIX DATA in violation report.
+          // TODO : need actual script sample in violation report.
           NS_NAMED_LITERAL_STRING(scriptSample, "call to eval() or related function blocked by CSP");
 
           // Get the calling location.
@@ -268,9 +268,9 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
           }
 
           csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
-                                  NS_ConvertUTF8toUTF16(aFileName),
-                                  scriptSample,
-                                  lineNum);
+                                   NS_ConvertUTF8toUTF16(aFileName),
+                                   scriptSample,
+                                   lineNum);
         }
 
         if (!allowsEval) {
