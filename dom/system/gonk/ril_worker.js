@@ -3629,12 +3629,12 @@ let RIL = {
     delete this.currentConference.cache;
 
     // Update the conference call's state.
-    let state = null;
+    let state = CALL_STATE_UNKNOWN;
     for each (let call in this.currentConference.participants) {
-      if (state && state != call.state) {
+      if (state != CALL_STATE_UNKNOWN && state != call.state) {
         // Each participant should have the same state, otherwise something
         // wrong happens.
-        state = null;
+        state = CALL_STATE_UNKNOWN;
         break;
       }
       state = call.state;
