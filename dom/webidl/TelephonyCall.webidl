@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+[Func="Navigator::HasTelephonySupport"]
 interface TelephonyCall : EventTarget {
   readonly attribute DOMString number;
 
