@@ -111,7 +111,7 @@ interface nsIContentViewManager : nsISupports
   readonly attribute nsIContentView rootContentView;
 };
 
-[scriptable, builtinclass, uuid(e4333e51-f2fa-4fdd-becd-75d000703355)]
+[scriptable, builtinclass, uuid(5b9949dc-56f1-47b6-b6d2-3785bb90ed6d)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -256,6 +256,13 @@ interface nsIFrameLoader : nsISupports
    * returns the iframe element.
    */
   readonly attribute nsIDOMElement ownerElement;
+
+
+  /**
+   * Cached childID of the ContentParent owning the TabParent in this frame
+   * loader. This can be used to obtain the childID after the TabParent died.
+   */
+  readonly attribute unsigned long long childID;
 
   /**
    * Get or set this frame loader's visibility.

@@ -23,6 +23,16 @@ p {
   font-weight: bold;
 }
 
+#report-box {
+  text-align: center;
+  width: 75%;
+  margin: 0 auto;
+  display: none;
+}
+
+.crashDumpAvaible #report-box {
+  display: block
+}
 
 #button-box {
   text-align: center;

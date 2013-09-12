@@ -673,6 +673,7 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 
 <!ENTITY tabCrashed.header "Tab crashed">
 <!ENTITY tabCrashed.message "Well, this is embarrassing. We tried to display this Web page, but it's not responding.">
+<!ENTITY tabCrashed.checkSendReport "Tell &vendorShortName; about this crash so they can fix it.">
 <!ENTITY tabCrashed.tryAgain "Try Again">
 
 <!-- LOCALIZATION NOTE: the following strings are unused in Australis, they're
