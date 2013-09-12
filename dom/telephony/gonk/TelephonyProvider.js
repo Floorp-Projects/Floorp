@@ -216,6 +216,8 @@ TelephonyProvider.prototype = {
 
   _convertRILCallState: function _convertRILCallState(aState) {
     switch (aState) {
+      case RIL.CALL_STATE_UNKNOWN:
+        return nsITelephonyProvider.CALL_STATE_UNKNOWN;
       case RIL.CALL_STATE_ACTIVE:
         return nsITelephonyProvider.CALL_STATE_CONNECTED;
       case RIL.CALL_STATE_HOLDING:
@@ -492,8 +494,7 @@ TelephonyProvider.prototype = {
 
   notifyConferenceCallStateChanged: function notifyConferenceCallStateChanged(aState) {
     if (DEBUG) debug("handleConferenceCallStateChanged: " + aState);
-    aState = aState != null ? this._convertRILCallState(aState) :
-                              nsITelephonyProvider.CALL_STATE_UNKNOWN;
+    aState = this._convertRILCallState(aState);
     this._updateCallAudioState(null, aState);
 
     this._notifyAllListeners("conferenceCallStateChanged", [aState]);
