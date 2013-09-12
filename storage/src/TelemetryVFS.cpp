@@ -14,7 +14,6 @@
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/QuotaObject.h"
 #include "mozilla/IOInterposer.h"
-#include "mozilla/SQLiteInterposer.h"
 
 /**
  * This preference is a workaround to allow users/sysadmins to identify
