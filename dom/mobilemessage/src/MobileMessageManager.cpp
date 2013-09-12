@@ -11,7 +11,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "Constants.h"
+#include "mozilla/dom/mobilemessage/Constants.h" // For MessageType
 #include "nsIDOMMozSmsEvent.h"
 #include "nsIDOMMozMmsEvent.h"
 #include "nsIDOMMozSmsMessage.h"

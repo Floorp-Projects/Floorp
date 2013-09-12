@@ -6,10 +6,10 @@
 #include "SmsMessage.h"
 #include "MmsMessage.h"
 #include "SmsSegmentInfo.h"
-#include "Constants.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/mobilemessage/Constants.h" // For MessageType
 #include "MobileMessageThread.h"
 
 using namespace mozilla;
