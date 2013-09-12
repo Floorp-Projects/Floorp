@@ -175,11 +175,12 @@ class Operand
         REG,
         MEM_REG_DISP,
         FPREG,
-        MEM_SCALE
+        MEM_SCALE,
+        MEM_ADDRESS32
     };
 
   private:
-    Kind kind_ : 3;
+    Kind kind_ : 4;
     int32_t base_ : 5;
     Scale scale_ : 3;
     int32_t index_ : 5;
@@ -218,6 +219,11 @@ class Operand
         base_(reg.code()),
         disp_(disp)
     { }
+    explicit Operand(const AbsoluteAddress &address)
+      : kind_(MEM_ADDRESS32)
+    {
+        disp_ = JSC::X86Assembler::addressImmediate(address.addr);
+    }
 
     Address toAddress() const {
         JS_ASSERT(kind() == MEM_REG_DISP);
@@ -255,6 +261,10 @@ class Operand
     int32_t disp() const {
         JS_ASSERT(kind() == MEM_REG_DISP || kind() == MEM_SCALE);
         return disp_;
+    }
+    void *address() const {
+        JS_ASSERT(kind() == MEM_ADDRESS32);
+        return reinterpret_cast<void *>(intptr_t(disp_));
     }
 };
 
@@ -410,6 +420,9 @@ class Assembler : public AssemblerX86Shared
           case Operand::MEM_SCALE:
             masm.movq_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
             break;
+          case Operand::MEM_ADDRESS32:
+            masm.movq_mr(src.address(), dest.code());
+            break;
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
@@ -425,6 +438,9 @@ class Assembler : public AssemblerX86Shared
           case Operand::MEM_SCALE:
             masm.movq_rm(src.code(), dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
+          case Operand::MEM_ADDRESS32:
+            masm.movq_rm(src.code(), dest.address());
+            break;
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
@@ -439,6 +455,9 @@ class Assembler : public AssemblerX86Shared
             break;
           case Operand::MEM_SCALE:
             masm.movq_i32m(imm32.value, dest.disp(), dest.base(), dest.index(), dest.scale());
+            break;
+          case Operand::MEM_ADDRESS32:
+            masm.movq_i32m(imm32.value, dest.address());
             break;
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
@@ -476,6 +495,9 @@ class Assembler : public AssemblerX86Shared
           case Operand::MEM_REG_DISP:
             masm.addq_im(imm.value, dest.disp(), dest.base());
             break;
+          case Operand::MEM_ADDRESS32:
+            masm.addq_im(imm.value, dest.address());
+            break;
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
@@ -490,6 +512,9 @@ class Assembler : public AssemblerX86Shared
             break;
           case Operand::MEM_REG_DISP:
             masm.addq_mr(src.disp(), src.base(), dest.code());
+            break;
+          case Operand::MEM_ADDRESS32:
+            masm.addq_mr(src.address(), dest.code());
             break;
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
@@ -509,6 +534,9 @@ class Assembler : public AssemblerX86Shared
             break;
           case Operand::MEM_REG_DISP:
             masm.subq_mr(src.disp(), src.base(), dest.code());
+            break;
+          case Operand::MEM_ADDRESS32:
+            masm.subq_mr(src.address(), dest.code());
             break;
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
@@ -536,6 +564,9 @@ class Assembler : public AssemblerX86Shared
             break;
           case Operand::MEM_REG_DISP:
             masm.orq_mr(src.disp(), src.base(), dest.code());
+            break;
+          case Operand::MEM_ADDRESS32:
+            masm.orq_mr(src.address(), dest.code());
             break;
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
@@ -622,6 +653,9 @@ class Assembler : public AssemblerX86Shared
           case Operand::MEM_REG_DISP:
             masm.cmpq_rm(rhs.code(), lhs.disp(), lhs.base());
             break;
+          case Operand::MEM_ADDRESS32:
+            masm.cmpq_rm(rhs.code(), lhs.address());
+            break;
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
@@ -633,6 +667,9 @@ class Assembler : public AssemblerX86Shared
             break;
           case Operand::MEM_REG_DISP:
             masm.cmpq_im(rhs.value, lhs.disp(), lhs.base());
+            break;
+          case Operand::MEM_ADDRESS32:
+            masm.cmpq_im(rhs.value, lhs.address());
             break;
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
