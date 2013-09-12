@@ -106,10 +106,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // On x86_64, the upper 32 bits do not necessarily only contain the type.
     Operand ToUpper32(Operand base) {
         switch (base.kind()) {
-          case Operand::REG_DISP:
+          case Operand::MEM_REG_DISP:
             return Operand(Register::FromCode(base.base()), base.disp() + 4);
 
-          case Operand::SCALE:
+          case Operand::MEM_SCALE:
             return Operand(Register::FromCode(base.base()), Register::FromCode(base.index()),
                            base.scale(), base.disp() + 4);
 
