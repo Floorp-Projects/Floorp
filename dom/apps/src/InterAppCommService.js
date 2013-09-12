@@ -10,8 +10,9 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 
+const DEBUG = false;
 function debug(aMsg) {
-  // dump("-- InterAppCommService: " + Date.now() + ": " + aMsg + "\n");
+  dump("-- InterAppCommService: " + Date.now() + ": " + aMsg + "\n");
 }
 
 XPCOMUtils.defineLazyServiceGetter(this, "appsService",
@@ -217,12 +218,14 @@ InterAppCommService.prototype = {
     let manifestURL = aManifestURI.spec;
     let pageURL = aHandlerPageURI.spec;
 
-    debug("registerConnection: aKeyword: " + aKeyword +
-          " manifestURL: " + manifestURL + " pageURL: " + pageURL +
-          " aDescription: " + aDescription + " aAppStatus: " + aAppStatus +
-          " aRules.minimumAccessLevel: " + aRules.minimumAccessLevel +
-          " aRules.manifestURLs: " + aRules.manifestURLs +
-          " aRules.installOrigins: " + aRules.installOrigins);
+    if (DEBUG) {
+      debug("registerConnection: aKeyword: " + aKeyword +
+            " manifestURL: " + manifestURL + " pageURL: " + pageURL +
+            " aDescription: " + aDescription + " aAppStatus: " + aAppStatus +
+            " aRules.minimumAccessLevel: " + aRules.minimumAccessLevel +
+            " aRules.manifestURLs: " + aRules.manifestURLs +
+            " aRules.installOrigins: " + aRules.installOrigins);
+    }
 
     let subAppManifestURLs = this._registeredConnections[aKeyword];
     if (!subAppManifestURLs) {
@@ -240,7 +243,9 @@ InterAppCommService.prototype = {
 
   _matchMinimumAccessLevel: function(aRules, aAppStatus) {
     if (!aRules || !aRules.minimumAccessLevel) {
-      debug("rules.minimumAccessLevel is not available. No need to match.");
+      if (DEBUG) {
+        debug("rules.minimumAccessLevel is not available. No need to match.");
+      }
       return true;
     }
 
@@ -266,14 +271,19 @@ InterAppCommService.prototype = {
         break;
     }
 
-    debug("rules.minimumAccessLevel is not matched! " +
-          "minAccessLevel: " + minAccessLevel + " aAppStatus : " + aAppStatus);
+    if (DEBUG) {
+      debug("rules.minimumAccessLevel is not matched!" +
+            " minAccessLevel: " + minAccessLevel +
+            " aAppStatus : " + aAppStatus);
+    }
     return false;
   },
 
   _matchManifestURLs: function(aRules, aManifestURL) {
     if (!aRules || !Array.isArray(aRules.manifestURLs)) {
-      debug("rules.manifestURLs is not available. No need to match.");
+      if (DEBUG) {
+        debug("rules.manifestURLs is not available. No need to match.");
+      }
       return true;
     }
 
@@ -282,14 +292,19 @@ InterAppCommService.prototype = {
       return true;
     }
 
-    debug("rules.manifestURLs is not matched! " +
-          "manifestURLs: " + manifestURLs + " aManifestURL : " + aManifestURL);
+    if (DEBUG) {
+      debug("rules.manifestURLs is not matched!" +
+            " manifestURLs: " + manifestURLs +
+            " aManifestURL : " + aManifestURL);
+    }
     return false;
   },
 
   _matchInstallOrigins: function(aRules, aManifestURL) {
     if (!aRules || !Array.isArray(aRules.installOrigins)) {
-      debug("rules.installOrigins is not available. No need to match.");
+      if (DEBUG) {
+        debug("rules.installOrigins is not available. No need to match.");
+      }
       return true;
     }
 
@@ -301,8 +316,12 @@ InterAppCommService.prototype = {
       return true;
     }
 
-    debug("rules.installOrigins is not matched! aManifestURL: " + aManifestURL +
-          " installOrigins: " + installOrigins + " installOrigin : " + installOrigin);
+    if (DEBUG) {
+      debug("rules.installOrigins is not matched!" +
+            " aManifestURL: " + aManifestURL +
+            " installOrigins: " + installOrigins +
+            " installOrigin : " + installOrigin);
+    }
     return false;
   },
 
@@ -314,12 +333,16 @@ InterAppCommService.prototype = {
     // certified apps can match the rules.
     if (aPubAppStatus != Ci.nsIPrincipal.APP_STATUS_CERTIFIED ||
         aSubAppStatus != Ci.nsIPrincipal.APP_STATUS_CERTIFIED) {
-      debug("Only certified apps are allowed to do connections.");
+      if (DEBUG) {
+        debug("Only certified apps are allowed to do connections.");
+      }
       return false;
     }
 
     if (!aPubRules && !aSubRules) {
-      debug("Rules of publisher and subscriber are absent. No need to match.");
+      if (DEBUG) {
+        debug("No rules for publisher and subscriber. No need to match.");
+      }
       return true;
     }
 
@@ -344,19 +367,21 @@ InterAppCommService.prototype = {
     // Check developers.
     // TODO Do we really want to check this? This one seems naive.
 
-    debug("All rules are matched.");
+    if (DEBUG) debug("All rules are matched.");
     return true;
   },
 
   _dispatchMessagePorts: function(aKeyword, aPubAppManifestURL,
                                   aAllowedSubAppManifestURLs,
                                   aTarget, aOuterWindowID, aRequestID) {
-    debug("_dispatchMessagePorts: aKeyword: " + aKeyword +
-          " aPubAppManifestURL: " + aPubAppManifestURL +
-          " aAllowedSubAppManifestURLs: " + aAllowedSubAppManifestURLs);
+    if (DEBUG) {
+      debug("_dispatchMessagePorts: aKeyword: " + aKeyword +
+            " aPubAppManifestURL: " + aPubAppManifestURL +
+            " aAllowedSubAppManifestURLs: " + aAllowedSubAppManifestURLs);
+    }
 
     if (aAllowedSubAppManifestURLs.length == 0) {
-      debug("No apps are allowed to connect. Returning.");
+      if (DEBUG) debug("No apps are allowed to connect. Returning.");
       aTarget.sendAsyncMessage("Webapps:Connect:Return:KO",
                                { oid: aOuterWindowID, requestID: aRequestID });
       return;
@@ -364,7 +389,7 @@ InterAppCommService.prototype = {
 
     let subAppManifestURLs = this._registeredConnections[aKeyword];
     if (!subAppManifestURLs) {
-      debug("No apps are subscribed to connect. Returning.");
+      if (DEBUG) debug("No apps are subscribed to connect. Returning.");
       aTarget.sendAsyncMessage("Webapps:Connect:Return:KO",
                                { oid: aOuterWindowID, requestID: aRequestID });
       return;
@@ -374,8 +399,10 @@ InterAppCommService.prototype = {
     aAllowedSubAppManifestURLs.forEach(function(aAllowedSubAppManifestURL) {
       let subscribedInfo = subAppManifestURLs[aAllowedSubAppManifestURL];
       if (!subscribedInfo) {
-        debug("The sunscribed info is not available. Skipping: " +
-               aAllowedSubAppManifestURL);
+        if (DEBUG) {
+          debug("The sunscribed info is not available. Skipping: " +
+                aAllowedSubAppManifestURL);
+        }
         return;
       }
 
@@ -405,14 +432,14 @@ InterAppCommService.prototype = {
     }, this);
 
     if (messagePortIDs.length == 0) {
-      debug("No apps are subscribed to connect. Returning.");
+      if (DEBUG) debug("No apps are subscribed to connect. Returning.");
       aTarget.sendAsyncMessage("Webapps:Connect:Return:KO",
                                { oid: aOuterWindowID, requestID: aRequestID });
       return;
     }
 
     // Return the message port IDs to open the message ports for the publisher.
-    debug("messagePortIDs: " + messagePortIDs);
+    if (DEBUG) debug("messagePortIDs: " + messagePortIDs);
     aTarget.sendAsyncMessage("Webapps:Connect:Return:OK",
                              { keyword: aKeyword,
                                messagePortIDs: messagePortIDs,
@@ -429,7 +456,9 @@ InterAppCommService.prototype = {
 
     let subAppManifestURLs = this._registeredConnections[keyword];
     if (!subAppManifestURLs) {
-      debug("No apps are subscribed for this connection. Returning.")
+      if (DEBUG) {
+        debug("No apps are subscribed for this connection. Returning.");
+      }
       this._dispatchMessagePorts(keyword, pubAppManifestURL, [],
                                  aTarget, outerWindowID, requestID);
       return;
@@ -449,7 +478,9 @@ InterAppCommService.prototype = {
     let appsToSelect = [];
     for (let subAppManifestURL in subAppManifestURLs) {
       if (allowedSubAppManifestURLs.indexOf(subAppManifestURL) != -1) {
-        debug("Don't need to select again. Skipping: " + subAppManifestURL);
+        if (DEBUG) {
+          debug("Don't need to select again. Skipping: " + subAppManifestURL);
+        }
         continue;
       }
 
@@ -462,7 +493,9 @@ InterAppCommService.prototype = {
         this._matchRules(pubAppManifestURL, pubAppStatus, pubRules,
                          subAppManifestURL, subAppStatus, subRules);
       if (!matched) {
-        debug("Rules are not matched. Skipping: " + subAppManifestURL);
+        if (DEBUG) {
+          debug("Rules are not matched. Skipping: " + subAppManifestURL);
+        }
         continue;
       }
 
@@ -473,8 +506,11 @@ InterAppCommService.prototype = {
     }
 
     if (appsToSelect.length == 0) {
-      debug("No additional apps need to be selected for this connection. " +
-            "Just dispatch message ports for the existing connections.");
+      if (DEBUG) {
+        debug("No additional apps need to be selected for this connection. " +
+              "Just dispatch message ports for the existing connections.");
+      }
+
       this._dispatchMessagePorts(keyword, pubAppManifestURL,
                                  allowedSubAppManifestURLs,
                                  aTarget, outerWindowID, requestID);
@@ -497,7 +533,7 @@ InterAppCommService.prototype = {
     // run-time prompt from observer notification to xpcom-interface caller.
     //
     /*
-    debug("appsToSelect: " + appsToSelect);
+    if (DEBUG) debug("appsToSelect: " + appsToSelect);
     Services.obs.notifyObservers(null, "inter-app-comm-select-app",
       JSON.stringify({ callerID: callerID,
                        manifestURL: pubAppManifestURL,
@@ -508,7 +544,7 @@ InterAppCommService.prototype = {
     // TODO Bug 897169 Simulate the return of the app-selected result by
     // the prompt, which always allows the connection. This dummy codes
     // will be removed when the UX/UI for the prompt is ready.
-    debug("appsToSelect: " + appsToSelect);
+    if (DEBUG) debug("appsToSelect: " + appsToSelect);
     Services.obs.notifyObservers(null, 'inter-app-comm-select-app-result',
       JSON.stringify({ callerID: callerID,
                        manifestURL: pubAppManifestURL,
@@ -546,24 +582,24 @@ InterAppCommService.prototype = {
 
     let allowedPubAppManifestURLs = this._allowedConnections[keyword];
     if (!allowedPubAppManifestURLs) {
-      debug("keyword is not found: " + keyword);
+      if (DEBUG) debug("keyword is not found: " + keyword);
       return;
     }
 
     let allowedSubAppManifestURLs =
       allowedPubAppManifestURLs[pubAppManifestURL];
     if (!allowedSubAppManifestURLs) {
-      debug("publisher is not found: " + pubAppManifestURL);
+      if (DEBUG) debug("publisher is not found: " + pubAppManifestURL);
       return;
     }
 
     let index = allowedSubAppManifestURLs.indexOf(subAppManifestURL);
     if (index == -1) {
-      debug("subscriber is not found: " + subAppManifestURL);
+      if (DEBUG) debug("subscriber is not found: " + subAppManifestURL);
       return;
     }
 
-    debug("Cancelling the connection.");
+    if (DEBUG) debug("Cancelling the connection.");
     allowedSubAppManifestURLs.splice(index, 1);
 
     // Clean up the parent entries if needed.
@@ -574,7 +610,7 @@ InterAppCommService.prototype = {
       }
     }
 
-    debug("Unregistering message ports based on this connection.");
+    if (DEBUG) debug("Unregistering message ports based on this connection.");
     let messagePortIDs = [];
     for (let messagePortID in this._messagePortPairs) {
       let pair = this._messagePortPairs[messagePortID];
@@ -592,8 +628,10 @@ InterAppCommService.prototype = {
   _identifyMessagePort: function(aMessagePortID, aManifestURL) {
     let pair = this._messagePortPairs[aMessagePortID];
     if (!pair) {
-      debug("Error! The message port ID is invalid: " + aMessagePortID +
-            ", which should have been generated by parent.");
+      if (DEBUG) {
+        debug("Error! The message port ID is invalid: " + aMessagePortID +
+              ", which should have been generated by parent.");
+      }
       return null;
     }
 
@@ -607,8 +645,10 @@ InterAppCommService.prototype = {
       return { pair: pair, isPublisher: false };
     }
 
-    debug("Error! The manifest URL is invalid: " + aManifestURL +
-          ", which might be a hacked app.");
+    if (DEBUG) {
+      debug("Error! The manifest URL is invalid: " + aManifestURL +
+            ", which might be a hacked app.");
+    }
     return null;
   },
 
@@ -619,11 +659,13 @@ InterAppCommService.prototype = {
 
     let identity = this._identifyMessagePort(messagePortID, manifestURL);
     if (!identity) {
-      debug("Cannot identify the message port. Failed to register.");
+      if (DEBUG) {
+        debug("Cannot identify the message port. Failed to register.");
+      }
       return;
     }
 
-    debug("Registering message port for " + manifestURL);
+    if (DEBUG) debug("Registering message port for " + manifestURL);
     let pair = identity.pair;
     let isPublisher = identity.isPublisher;
 
@@ -633,12 +675,14 @@ InterAppCommService.prototype = {
     sender.messageQueue = [];
 
     // Check if the other port has queued messages. Deliver them if needed.
-    debug("Checking if the other port used to send messages but queued.");
+    if (DEBUG) {
+      debug("Checking if the other port used to send messages but queued.");
+    }
     let receiver = isPublisher ? pair.subscriber : pair.publisher;
     if (receiver.messageQueue) {
       while (receiver.messageQueue.length) {
         let message = receiver.messageQueue.shift();
-        debug("Delivering message: " + JSON.stringify(message));
+        if (DEBUG) debug("Delivering message: " + JSON.stringify(message));
         sender.target.sendAsyncMessage("InterAppMessagePort:OnMessage",
                                        { message: message,
                                          manifestURL: sender.manifestURL,
@@ -654,21 +698,25 @@ InterAppCommService.prototype = {
 
     let identity = this._identifyMessagePort(messagePortID, manifestURL);
     if (!identity) {
-      debug("Cannot identify the message port. Failed to unregister.");
+      if (DEBUG) {
+        debug("Cannot identify the message port. Failed to unregister.");
+      }
       return;
     }
 
-    debug("Unregistering message port for " + manifestURL);
+    if (DEBUG) {
+      debug("Unregistering message port for " + manifestURL);
+    }
     delete this._messagePortPairs[messagePortID];
   },
 
   _removeTarget: function(aTarget) {
     if (!aTarget) {
-      debug("Error! aTarget cannot be null/undefined in any way.");
+      if (DEBUG) debug("Error! aTarget cannot be null/undefined in any way.");
       return
     }
 
-    debug("Unregistering message ports based on this target.");
+    if (DEBUG) debug("Unregistering message ports based on this target.");
     let messagePortIDs = [];
     for (let messagePortID in this._messagePortPairs) {
       let pair = this._messagePortPairs[messagePortID];
@@ -689,7 +737,7 @@ InterAppCommService.prototype = {
 
     let identity = this._identifyMessagePort(messagePortID, manifestURL);
     if (!identity) {
-      debug("Cannot identify the message port. Failed to post.");
+      if (DEBUG) debug("Cannot identify the message port. Failed to post.");
       return;
     }
 
@@ -698,13 +746,15 @@ InterAppCommService.prototype = {
 
     let receiver = isPublisher ? pair.subscriber : pair.publisher;
     if (!receiver.target) {
-      debug("The receiver's target is not ready yet. Queuing the message.");
+      if (DEBUG) {
+        debug("The receiver's target is not ready yet. Queuing the message.");
+      }
       let sender = isPublisher ? pair.publisher : pair.subscriber;
       sender.messageQueue.push(message);
       return;
     }
 
-    debug("Delivering message: " + JSON.stringify(message));
+    if (DEBUG) debug("Delivering message: " + JSON.stringify(message));
     receiver.target.sendAsyncMessage("InterAppMessagePort:OnMessage",
                                      { manifestURL: receiver.manifestURL,
                                        pageURL: receiver.pageURL,
@@ -716,7 +766,7 @@ InterAppCommService.prototype = {
     let callerID = aData.callerID;
     let caller = this._promptUICallers[callerID];
     if (!caller) {
-      debug("Error! Cannot find the caller.");
+      if (DEBUG) debug("Error! Cannot find the caller.");
       return;
     }
 
@@ -731,7 +781,7 @@ InterAppCommService.prototype = {
     let selectedApps = aData.selectedApps;
 
     if (selectedApps.length == 0) {
-      debug("No apps are selected to connect.")
+      if (DEBUG) debug("No apps are selected to connect.")
       this._dispatchMessagePorts(keyword, manifestURL, [],
                                  target, outerWindowID, requestID);
       return;
@@ -762,7 +812,7 @@ InterAppCommService.prototype = {
   },
 
   receiveMessage: function(aMessage) {
-    debug("receiveMessage: name: " + aMessage.name);
+    if (DEBUG) debug("receiveMessage: name: " + aMessage.name);
     let message = aMessage.json;
     let target = aMessage.target;
 
@@ -771,7 +821,9 @@ InterAppCommService.prototype = {
     if (aMessage.name !== "child-process-shutdown" &&
         kMessages.indexOf(aMessage.name) != -1) {
       if (!target.assertContainApp(message.manifestURL)) {
-        debug("Got message from a child process carrying illegal manifest URL.");
+        if (DEBUG) {
+          debug("Got message from a process carrying illegal manifest URL.");
+        }
         return null;
       }
     }
@@ -812,7 +864,7 @@ InterAppCommService.prototype = {
         ppmm = null;
         break;
       case "inter-app-comm-select-app-result":
-        debug("inter-app-comm-select-app-result: " + aData);
+        if (DEBUG) debug("inter-app-comm-select-app-result: " + aData);
         this._handleSelectcedApps(JSON.parse(aData));
         break;
     }

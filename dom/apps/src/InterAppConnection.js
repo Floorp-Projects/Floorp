@@ -18,8 +18,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "appsService",
                                    "@mozilla.org/AppsService;1",
                                    "nsIAppsService");
 
+const DEBUG = false;
 function debug(aMsg) {
-  // dump("-- InterAppConnection: " + Date.now() + ": " + aMsg + "\n");
+  dump("-- InterAppConnection: " + Date.now() + ": " + aMsg + "\n");
 }
 
 /**
@@ -27,7 +28,7 @@ function debug(aMsg) {
  */
 
 function InterAppConnection() {
-  debug("InterAppConnection()");
+  if (DEBUG) debug("InterAppConnection()");
   this.keyword = null;
   this.publisher = null;
   this.subscriber = null;
@@ -46,8 +47,10 @@ InterAppConnection.prototype = {
                                          Ci.nsISupportsWeakReference]),
 
   __init: function(aKeyword, aPublisher, aSubscriber) {
-    debug("__init: aKeyword: " + aKeyword +
-          " aPublisher: " + aPublisher + " aSubscriber: " + aSubscriber);
+    if (DEBUG) {
+      debug("__init: aKeyword: " + aKeyword +
+            " aPublisher: " + aPublisher + " aSubscriber: " + aSubscriber);
+    }
     this.keyword = aKeyword;
     this.publisher = aPublisher;
     this.subscriber = aSubscriber;
@@ -55,7 +58,7 @@ InterAppConnection.prototype = {
 
   // Ci.nsIDOMGlobalPropertyInitializer implementation.
   init: function(aWindow) {
-    debug("init");
+    if (DEBUG) debug("init");
 
     this.initDOMRequestHelper(aWindow, []);
     let principal = aWindow.document.nodePrincipal;
@@ -63,7 +66,7 @@ InterAppConnection.prototype = {
   },
 
   cancel: function() {
-    debug("cancel");
+    if (DEBUG) debug("cancel");
 
     cpmm.sendAsyncMessage("InterAppConnection:Cancel",
                           { keyword: this.keyword,
@@ -79,7 +82,7 @@ InterAppConnection.prototype = {
  */
 
 function InterAppConnectionRequest() {
-  debug("InterAppConnectionRequest()");
+  if (DEBUG) debug("InterAppConnectionRequest()");
   this.keyword = null;
   this.port = null;
 };
@@ -94,7 +97,7 @@ InterAppConnectionRequest.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
 
   __init: function(aKeyword, aPort) {
-    debug("__init: aKeyword: " + aKeyword + " aPort: " + aPort);
+    if (DEBUG) debug("__init: aKeyword: " + aKeyword + " aPort: " + aPort);
     this.keyword = aKeyword;
     this.port = aPort;
   }
@@ -110,13 +113,13 @@ InterAppConnectionRequest.prototype = {
  */
 
 function InterAppConnectionRequestWrapper() {
-  debug("InterAppConnectionRequestWrapper()");
+  if (DEBUG) debug("InterAppConnectionRequestWrapper()");
 }
 
 InterAppConnectionRequestWrapper.prototype = {
   // nsISystemMessagesWrapper implementation.
   wrapMessage: function(aMessage, aWindow) {
-    debug("wrapMessage: " + JSON.stringify(aMessage));
+    if (DEBUG) debug("wrapMessage: " + JSON.stringify(aMessage));
 
     let port = new aWindow.MozInterAppMessagePort(aMessage.keyword,
                                                   aMessage.messagePortID, false);
