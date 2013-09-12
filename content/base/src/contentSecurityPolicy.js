@@ -28,6 +28,10 @@ const CSP_TYPE_WEBSOCKET_SPEC_COMPLIANT = "csp_type_websocket_spec_compliant";
 const WARN_FLAG = Ci.nsIScriptError.warningFlag;
 const ERROR_FLAG = Ci.nsIScriptError.ERROR_FLAG;
 
+const INLINE_STYLE_VIOLATION_OBSERVER_SUBJECT = 'violated base restriction: Inline Stylesheets will not apply';
+const INLINE_SCRIPT_VIOLATION_OBSERVER_SUBJECT = 'violated base restriction: Inline Scripts will not execute';
+const EVAL_VIOLATION_OBSERVER_SUBJECT = 'violated base restriction: Code will not be created from strings';
+
 // The cutoff length of content location in creating CSP cache key.
 const CSP_CACHE_URI_CUTOFF_SIZE = 512;
 
@@ -159,6 +163,14 @@ ContentSecurityPolicy.prototype = {
     return this._reportOnlyMode || this._policy.allowsInlineStyles;
   },
 
+  _buildViolatedDirectiveString:
+  function(aDirectiveName) {
+    var SD = CSPRep.SRC_DIRECTIVES_NEW;
+    var cspContext = (SD[aDirectiveName] in this._policy._directives) ? SD[aDirectiveName] : SD.DEFAULT_SRC;
+    var directive = this._policy._directives[cspContext];
+    return cspContext + ' ' + directive.toString();
+  },
+
   /**
    * Log policy violation on the Error Console and send a report if a report-uri
    * is present in the policy
@@ -179,22 +191,25 @@ ContentSecurityPolicy.prototype = {
     // check that the policy was in fact violated before logging any violations
     switch (aViolationType) {
     case Ci.nsIContentSecurityPolicy.VIOLATION_TYPE_INLINE_STYLE:
-      if (!this._policy.allowsInlineStyles)
-        this._asyncReportViolation('self', null, CSPLocalizer.getStr("inlineStyleBlocked"),
-                                   'violated base restriction: Inline Stylesheets will not apply',
+      if (!this._policy.allowsInlineStyles) {
+        var violatedDirective = this._buildViolatedDirectiveString('STYLE_SRC');
+        this._asyncReportViolation('self', null, violatedDirective, INLINE_STYLE_VIOLATION_OBSERVER_SUBJECT,
                                    aSourceFile, aScriptSample, aLineNum);
+      }
       break;
     case Ci.nsIContentSecurityPolicy.VIOLATION_TYPE_INLINE_SCRIPT:
-      if (!this._policy.allowsInlineScripts)
-        this._asyncReportViolation('self', null, CSPLocalizer.getStr("inlineScriptBlocked"),
-                                   'violated base restriction: Inline Scripts will not execute',
-                                   aSourceFile, aScriptSample, aLineNum);
+      if (!this._policy.allowsInlineScripts)    {
+        var violatedDirective = this._buildViolatedDirectiveString('SCRIPT_SRC');
+        this._asyncReportViolation('self', null, violatedDirective, INLINE_SCRIPT_VIOLATION_OBSERVER_SUBJECT,
+                                    aSourceFile, aScriptSample, aLineNum);
+        }
       break;
     case Ci.nsIContentSecurityPolicy.VIOLATION_TYPE_EVAL:
-      if (!this._policy.allowsEvalInScripts)
-        this._asyncReportViolation('self', null, CSPLocalizer.getStr("scriptFromStringBlocked"),
-                                   'violated base restriction: Code will not be created from strings',
+      if (!this._policy.allowsEvalInScripts) {
+        var violatedDirective = this._buildViolatedDirectiveString('SCRIPT_SRC');
+        this._asyncReportViolation('self', null, violatedDirective, EVAL_VIOLATION_OBSERVER_SUBJECT,
                                    aSourceFile, aScriptSample, aLineNum);
+      }
       break;
     }
   },
@@ -360,17 +375,6 @@ ContentSecurityPolicy.prototype = {
       var reportString = JSON.stringify(report);
       CSPdebug("Constructed violation report:\n" + reportString);
 
-      var violationMessage = null;
-      if (blockedUri["asciiSpec"]) {
-         violationMessage = CSPLocalizer.getFormatStr("CSPViolationWithURI", [violatedDirective, blockedUri.asciiSpec]);
-      } else {
-         violationMessage = CSPLocalizer.getFormatStr("CSPViolation", [violatedDirective]);
-      }
-      this._policy.log(WARN_FLAG, violationMessage,
-                        (aSourceFile) ? aSourceFile : null,
-                        (aScriptSample) ? decodeURIComponent(aScriptSample) : null,
-                        (aLineNum) ? aLineNum : null);
-
       // For each URI in the report list, send out a report.
       // We make the assumption that all of the URIs are absolute URIs; this
       // should be taken care of in CSPRep.fromString (where it converts any
@@ -439,6 +443,35 @@ ContentSecurityPolicy.prototype = {
   },
 
   /**
+   * Logs a meaningful CSP warning to the developer console.
+   */
+  logToConsole:
+  function(blockedUri, originalUri, violatedDirective,
+           aSourceFile, aScriptSample, aLineNum, aObserverSubject) {
+     switch(aObserverSubject.data) {
+      case INLINE_STYLE_VIOLATION_OBSERVER_SUBJECT:
+        violatedDirective = CSPLocalizer.getStr("inlineStyleBlocked");
+        break;
+      case INLINE_SCRIPT_VIOLATION_OBSERVER_SUBJECT:
+        violatedDirective = CSPLocalizer.getStr("inlineScriptBlocked");
+        break;
+      case EVAL_VIOLATION_OBSERVER_SUBJECT:
+        violatedDirective = CSPLocalizer.getStr("scriptFromStringBlocked");
+        break;
+    }
+    var violationMessage = null;
+    if (blockedUri["asciiSpec"]) {
+      violationMessage = CSPLocalizer.getFormatStr("CSPViolationWithURI", [violatedDirective, blockedUri.asciiSpec]);
+    } else {
+      violationMessage = CSPLocalizer.getFormatStr("CSPViolation", [violatedDirective]);
+    }
+    this._policy.log(WARN_FLAG, violationMessage,
+      (aSourceFile) ? aSourceFile : null,
+      (aScriptSample) ? decodeURIComponent(aScriptSample) : null,
+      (aLineNum) ? aLineNum : null);
+  },
+
+/**
    * Exposed Method to analyze docShell for approved frame ancestry.
    * Also sends violation reports if necessary.
    * @param docShell
@@ -629,14 +662,14 @@ ContentSecurityPolicy.prototype = {
    * topic that a violation occurred.  Also triggers report sending.  All
    * asynchronous on the main thread.
    *
-   * @param blockedContentSource
+   * @param aBlockedContentSource
    *        Either a CSP Source (like 'self', as string) or nsIURI: the source
    *        of the violation.
-   * @param originalUri
+   * @param aOriginalUri
    *        The original URI if the blocked content is a redirect, else null
-   * @param violatedDirective
+   * @param aViolatedDirective
    *        the directive that was violated (string).
-   * @param observerSubject
+   * @param aObserverSubject
    *        optional, subject sent to the nsIObservers listening to the CSP
    *        violation topic.
    * @param aSourceFile
@@ -647,32 +680,36 @@ ContentSecurityPolicy.prototype = {
    *        source line number of the violation (if available)
    */
   _asyncReportViolation:
-  function(blockedContentSource, originalUri, violatedDirective, observerSubject,
+  function(aBlockedContentSource, aOriginalUri, aViolatedDirective, aObserverSubject,
            aSourceFile, aScriptSample, aLineNum) {
     // if optional observerSubject isn't specified, default to the source of
     // the violation.
-    if (!observerSubject)
-      observerSubject = blockedContentSource;
+    if (!aObserverSubject)
+      aObserverSubject = aBlockedContentSource;
 
     // gotta wrap things that aren't nsISupports, since it's sent out to
     // observers as such.  Objects that are not nsISupports are converted to
     // strings and then wrapped into a nsISupportsCString.
-    if (!(observerSubject instanceof Ci.nsISupports)) {
-      let d = observerSubject;
-      observerSubject = Cc["@mozilla.org/supports-cstring;1"]
+    if (!(aObserverSubject instanceof Ci.nsISupports)) {
+      let d = aObserverSubject;
+      aObserverSubject = Cc["@mozilla.org/supports-cstring;1"]
                           .createInstance(Ci.nsISupportsCString);
-      observerSubject.data = d;
+      aObserverSubject.data = d;
     }
 
     var reportSender = this;
     Services.tm.mainThread.dispatch(
       function() {
-        Services.obs.notifyObservers(observerSubject,
+        Services.obs.notifyObservers(aObserverSubject,
                                      CSP_VIOLATION_TOPIC,
-                                     violatedDirective);
-        reportSender.sendReports(blockedContentSource, originalUri,
-                                 violatedDirective,
+                                     aViolatedDirective);
+        reportSender.sendReports(aBlockedContentSource, aOriginalUri,
+                                 aViolatedDirective,
                                  aSourceFile, aScriptSample, aLineNum);
+        reportSender.logToConsole(aBlockedContentSource, aOriginalUri,
+                                  aViolatedDirective, aSourceFile, aScriptSample,
+                                  aLineNum, aObserverSubject);
+
       }, Ci.nsIThread.DISPATCH_NORMAL);
   },
 };
