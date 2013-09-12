@@ -141,6 +141,7 @@ public:
 
   void OnReplyTextureRemoved(uint64_t aTextureID);
 
+  void FlushTexturesToRemoveCallbacks();
 protected:
   struct TextureIDAndFlags {
     TextureIDAndFlags(uint64_t aID, TextureFlags aFlags)
