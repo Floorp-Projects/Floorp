@@ -5,20 +5,11 @@
 
 #include "nsAccessNode.h"
 
-#include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "RootAccessible.h"
 
 #include "nsIDocShell.h"
-#include "nsIDOMWindow.h"
-#include "nsIFrame.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsIPresShell.h"
-#include "nsIServiceManager.h"
-#include "nsFocusManager.h"
-#include "nsPresContext.h"
-#include "mozilla/Services.h"
 
 using namespace mozilla::a11y;
 

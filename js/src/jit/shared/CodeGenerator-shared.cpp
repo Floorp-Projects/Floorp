@@ -675,11 +675,20 @@ class OutOfLineTruncateSlow : public OutOfLineCodeBase<CodeGeneratorShared>
     }
 };
 
-bool
-CodeGeneratorShared::emitTruncateDouble(const FloatRegister &src, const Register &dest)
+OutOfLineCode *
+CodeGeneratorShared::oolTruncateDouble(const FloatRegister &src, const Register &dest)
 {
     OutOfLineTruncateSlow *ool = new OutOfLineTruncateSlow(src, dest);
     if (!addOutOfLineCode(ool))
+        return NULL;
+    return ool;
+}
+
+bool
+CodeGeneratorShared::emitTruncateDouble(const FloatRegister &src, const Register &dest)
+{
+    OutOfLineCode *ool = oolTruncateDouble(src, dest);
+    if (!ool)
         return false;
 
     masm.branchTruncateDouble(src, dest, ool->entry());
