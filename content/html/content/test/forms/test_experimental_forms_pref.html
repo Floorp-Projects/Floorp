@@ -21,17 +21,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=764481
 
   SimpleTest.waitForExplicitFinish();
   SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", false]]}, function() {
-    input.type = "number";
-    is(input.type, "text", "input type shouldn't be number when the experimental forms are disabled");
-    is(input.getAttribute('type'), "number", "input 'type' attribute should not change");
+    input.type = "date";
+    is(input.type, "text", "input type shouldn't be date when the experimental forms are disabled");
+    is(input.getAttribute('type'), "date", "input 'type' attribute should not change");
 
     SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms",true]]}, function() {
-      // Change the type of input to text and then back to number, 
+      // Change the type of input to text and then back to date, 
       // so that HTMLInputElement::ParseAttribute gets called with the pref enabled.
       input.type = "text";
-      input.type = "number";
-      is(input.type, "number", "input type should be number when the experimental forms are enabled");
-      is(input.getAttribute('type'), "number", "input 'type' attribute should not change");
+      input.type = "date";
+      is(input.type, "date", "input type should be date when the experimental forms are enabled");
+      is(input.getAttribute('type'), "date", "input 'type' attribute should not change");
     
       SimpleTest.finish();
     });
