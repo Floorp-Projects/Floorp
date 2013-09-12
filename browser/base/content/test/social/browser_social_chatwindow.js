@@ -439,8 +439,38 @@ var tests = {
           openChat(function() {
             ok(!window.SocialChatBar.hasChats, "first window has no chats");
             ok(secondWindow.SocialChatBar.hasChats, "second window has a chat");
-            secondWindow.close();
-            next();
+
+            // focus the first window, and open yet another chat - it
+            // should open in the first window.
+            waitForFocus(function() {
+              openChat(function() {
+                ok(window.SocialChatBar.hasChats, "first window has chats");
+                window.SocialChatBar.chatbar.removeAll();
+                ok(!window.SocialChatBar.hasChats, "first window has no chats");
+
+                let privateWindow = OpenBrowserWindow({private: true});
+                privateWindow.addEventListener("load", function loadListener() {
+                  privateWindow.removeEventListener("load", loadListener);
+
+                  // open a last chat - the focused window can't accept
+                  // chats (it's a private window), so the chat should open
+                  // in the window that was selected before. This is known
+                  // to be broken on Linux.
+                  openChat(function() {
+                    let os = Services.appinfo.OS;
+                    const BROKEN_WM_Z_ORDER = os != "WINNT" && os != "Darwin";
+                    let fn = BROKEN_WM_Z_ORDER ? todo : ok;
+                    fn(window.SocialChatBar.hasChats, "first window has a chat");
+                    window.SocialChatBar.chatbar.removeAll();
+
+                    privateWindow.close();
+                    secondWindow.close();
+                    next();
+                  });
+                });
+              });
+            });
+            window.focus();
           });
         });
       })

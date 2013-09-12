@@ -273,12 +273,23 @@ function findChromeWindowForChats(preferredWindow) {
   // no good - we just use the "most recent" browser window which can host
   // chats (we used to try and "group" all chats in the same browser window,
   // but that didn't work out so well - see bug 835111
+
+  // Try first the most recent window as getMostRecentWindow works
+  // even on platforms where getZOrderDOMWindowEnumerator is broken
+  // (ie. Linux).  This will handle most cases, but won't work if the
+  // foreground window is a popup.
+
+  let mostRecent = Services.wm.getMostRecentWindow("navigator:browser");
+  if (isWindowGoodForChats(mostRecent))
+    return mostRecent;
+
   let topMost, enumerator;
-  // *sigh* - getZOrderDOMWindowEnumerator is broken everywhere other than
-  // Windows.  We use BROKEN_WM_Z_ORDER as that is what the c++ code uses
+  // *sigh* - getZOrderDOMWindowEnumerator is broken except on Mac and
+  // Windows.  We use BROKEN_WM_Z_ORDER as that is what some other code uses
   // and a few bugs recommend searching mxr for this symbol to identify the
   // workarounds - we want this code to be hit in such searches.
-  const BROKEN_WM_Z_ORDER = Services.appinfo.OS != "WINNT";
+  let os = Services.appinfo.OS;
+  const BROKEN_WM_Z_ORDER = os != "WINNT" && os != "Darwin";
   if (BROKEN_WM_Z_ORDER) {
     // this is oldest to newest and no way to change the order.
     enumerator = Services.wm.getEnumerator("navigator:browser");
