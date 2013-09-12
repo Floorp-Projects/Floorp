@@ -4725,6 +4725,8 @@ class MInitializedLength
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::ObjectFields);
     }
+
+    void computeRange();
 };
 
 // Set a dense array's initialized length to an elements vector.
@@ -4778,6 +4780,8 @@ class MArrayLength
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::ObjectFields);
     }
+
+    void computeRange();
 };
 
 // Read the length of a typed array.
@@ -4813,6 +4817,8 @@ class MTypedArrayLength
         // implicit dependency.
         return AliasSet::None();
     }
+
+    void computeRange();
 };
 
 // Load a typed array's elements vector.
@@ -7262,6 +7268,8 @@ class MStringLength
         // implicit dependency.
         return AliasSet::None();
     }
+
+    void computeRange();
 };
 
 // Inlined version of Math.floor().
@@ -7569,6 +7577,8 @@ class MArgumentsLength : public MNullaryInstruction
         // Arguments |length| cannot be mutated by Ion Code.
         return AliasSet::None();
    }
+
+    void computeRange();
 };
 
 // This MIR instruction is used to get an argument from the actual arguments.
