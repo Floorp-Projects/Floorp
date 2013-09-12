@@ -1,6 +1,6 @@
 // hasDebuggee tests.
 
-var g1 = newGlobal('new-compartment'), g1w;
+var g1 = newGlobal(), g1w;
 g1.eval("var g2 = newGlobal('same-compartment')");
 var g2 = g1.g2;
 var g1w, g2w;

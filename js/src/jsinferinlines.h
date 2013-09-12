@@ -429,7 +429,7 @@ struct AutoEnterCompilation
  * a type function on JSScript to perform inference operations.
  */
 
-inline Class *
+inline const Class *
 GetClassForProtoKey(JSProtoKey key)
 {
     switch (key) {
@@ -788,7 +788,7 @@ js::NewObjectKind
 UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoKey key);
 
 js::NewObjectKind
-UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc, Class *clasp);
+UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc, const Class *clasp);
 
 /* static */ inline TypeObject *
 TypeScript::InitObject(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoKey kind)
@@ -1449,7 +1449,7 @@ TypeCallsite::TypeCallsite(JSContext *cx, JSScript *script, jsbytecode *pc,
 // TypeObject
 /////////////////////////////////////////////////////////////////////
 
-inline TypeObject::TypeObject(Class *clasp, TaggedProto proto, bool function, bool unknown)
+inline TypeObject::TypeObject(const Class *clasp, TaggedProto proto, bool function, bool unknown)
 {
     mozilla::PodZero(this);
 

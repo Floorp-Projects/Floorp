@@ -1,6 +1,6 @@
 {
     "talos.zip": {
-        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.2a32cc64e7ff.zip",
+        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.ca2229a32cb6.zip",
         "path": ""
     },
     "global": {
@@ -48,15 +48,6 @@
         },
         "svgr": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx"]
-        },
-        "rafx": {
-            "tests": ["tscrollr", "tsvgr"],
-            "talos_options": [
-                "--filter",
-                "ignore_first:5",
-                "--filter",
-                "median"
-            ]
         },
         "tpn": {
             "tests": ["tp5n"],

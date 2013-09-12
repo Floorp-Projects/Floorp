@@ -66,7 +66,8 @@ public:
   nsresult PaintFilteredFrame(nsRenderingContext *aContext,
                               nsIFrame *aFilteredFrame,
                               nsSVGFilterPaintCallback *aPaintCallback,
-                              const nsRect* aDirtyArea);
+                              const nsRect* aDirtyArea,
+                              nsIFrame* aTransformRoot);
 
   /**
    * Returns the post-filter area that could be dirtied when the given

@@ -1,4 +1,4 @@
-var global = newGlobal('new-compartment');
+var global = newGlobal();
 global.eval("function f(b) { if (b) { new Error }; }");
 
 function f(b) { global.f(b) }

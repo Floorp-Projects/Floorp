@@ -36,7 +36,7 @@ struct WrapPrototypeTraits
   template <>                                                                  \
   struct WrapPrototypeTraits<_class>                                           \
   {                                                                            \
-    static inline JSClass*                                                     \
+    static inline const JSClass*                                               \
     GetJSClass()                                                               \
     {                                                                          \
       using namespace mozilla::dom;                                            \

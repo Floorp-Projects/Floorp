@@ -1,7 +1,7 @@
 // getChildScripts on a direct eval script returns the right scripts.
 // (A bug had it also returning the script for the calling function.)
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var hits = 0;
 dbg.onDebuggerStatement = function (frame) {

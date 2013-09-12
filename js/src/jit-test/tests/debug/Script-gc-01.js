@@ -2,7 +2,7 @@
 // Debugger.Script instances with live referents stay alive.
 
 var N = 4;
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 var i;
 dbg.onDebuggerStatement = function (frame) {

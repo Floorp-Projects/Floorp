@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WEBGLMEMORYMULTIREPORTWRAPER_H_
-#define WEBGLMEMORYMULTIREPORTWRAPER_H_
+#ifndef WEBGLMEMORYREPORTERWRAPPER_H_
+#define WEBGLMEMORYREPORTERWRAPPER_H_
 
 #include "WebGLContext.h"
 #include "WebGLBuffer.h"
@@ -17,21 +17,21 @@
 
 namespace mozilla {
 
-class WebGLMemoryMultiReporterWrapper
+class WebGLMemoryReporterWrapper
 {
-    WebGLMemoryMultiReporterWrapper();
-    ~WebGLMemoryMultiReporterWrapper();
-    static WebGLMemoryMultiReporterWrapper* sUniqueInstance;
+    WebGLMemoryReporterWrapper();
+    ~WebGLMemoryReporterWrapper();
+    static WebGLMemoryReporterWrapper* sUniqueInstance;
 
-    // here we store plain pointers, not RefPtrs: we don't want the 
-    // WebGLMemoryMultiReporterWrapper unique instance to keep alive all		
+    // here we store plain pointers, not RefPtrs: we don't want the
+    // WebGLMemoryReporterWrapper unique instance to keep alive all
     // WebGLContexts ever created.
     typedef nsTArray<const WebGLContext*> ContextsArrayType;
     ContextsArrayType mContexts;
 
-    nsCOMPtr<nsIMemoryMultiReporter> mReporter;
+    nsCOMPtr<nsIMemoryReporter> mReporter;
 
-    static WebGLMemoryMultiReporterWrapper* UniqueInstance();
+    static WebGLMemoryReporterWrapper* UniqueInstance();
 
     static ContextsArrayType & Contexts() { return UniqueInstance()->mContexts; }
 

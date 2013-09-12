@@ -30,8 +30,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=673468
   };
 
   let wrappers_as_keys_test = function () {
-    let e = document.createEvent("MessageEvent");
-    e.initMessageEvent("foo", false, false, { dummy: document.createElement("foo") }, null, null, null);
+    let e = new MessageEvent("foo", { bubbles: false, cancellable: false,
+                                      data: { dummy: document.createElement("foo") }});
     window.eeeevent = e;
 
     let live_dom = e.data.dummy;

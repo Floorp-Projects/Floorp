@@ -641,7 +641,7 @@ nsDOMMemoryFile::DataOwner::sMemoryReporterRegistered;
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(DOMMemoryFileDataOwnerMallocSizeOf)
 
 class nsDOMMemoryFileDataOwnerMemoryReporter MOZ_FINAL
-  : public nsIMemoryMultiReporter
+  : public nsIMemoryReporter
 {
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -651,7 +651,7 @@ class nsDOMMemoryFileDataOwnerMemoryReporter MOZ_FINAL
     return NS_OK;
   }
 
-  NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *aCallback,
+  NS_IMETHOD CollectReports(nsIMemoryReporterCallback *aCallback,
                             nsISupports *aClosure)
   {
     typedef nsDOMMemoryFile::DataOwner DataOwner;
@@ -725,7 +725,7 @@ class nsDOMMemoryFileDataOwnerMemoryReporter MOZ_FINAL
 };
 
 NS_IMPL_ISUPPORTS1(nsDOMMemoryFileDataOwnerMemoryReporter,
-                   nsIMemoryMultiReporter)
+                   nsIMemoryReporter)
 
 /* static */ void
 nsDOMMemoryFile::DataOwner::EnsureMemoryReporterRegistered()
@@ -737,7 +737,7 @@ nsDOMMemoryFile::DataOwner::EnsureMemoryReporterRegistered()
 
   nsRefPtr<nsDOMMemoryFileDataOwnerMemoryReporter> reporter = new
     nsDOMMemoryFileDataOwnerMemoryReporter();
-  NS_RegisterMemoryMultiReporter(reporter);
+  NS_RegisterMemoryReporter(reporter);
 
   sMemoryReporterRegistered = true;
 }

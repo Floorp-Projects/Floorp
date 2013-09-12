@@ -1,7 +1,7 @@
 // If one Debugger's onPop handler causes another Debugger to create a
 // Debugger.Frame instance referring to the same frame, that frame still
 // gets marked as not live after all the onPop handlers have run.
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg1 = new Debugger(g);
 var dbg2 = new Debugger(g);
 

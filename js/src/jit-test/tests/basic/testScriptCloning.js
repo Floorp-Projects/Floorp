@@ -1,4 +1,4 @@
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 
 function cloneableFunction(body) {
     return evaluate("(function () { " + body + " })", {compileAndGo: false});

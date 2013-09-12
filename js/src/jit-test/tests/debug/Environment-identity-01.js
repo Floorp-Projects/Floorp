@@ -1,7 +1,7 @@
 // The value of frame.environment is the same Environment object at different
 // times within a single visit to a scope.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 g.eval("function h() { debugger; }");
 var hits, env;

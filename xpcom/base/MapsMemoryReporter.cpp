@@ -111,7 +111,7 @@ struct CategoriesSeen {
 
 } // anonymous namespace
 
-class MapsReporter MOZ_FINAL : public nsIMemoryMultiReporter
+class MapsReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
   MapsReporter();
@@ -125,7 +125,7 @@ public:
   }
 
   NS_IMETHOD
-  CollectReports(nsIMemoryMultiReporterCallback *aCb,
+  CollectReports(nsIMemoryReporterCallback *aCb,
                  nsISupports *aClosure);
 
 private:
@@ -135,7 +135,7 @@ private:
 
   nsresult
   ParseMapping(FILE *aFile,
-               nsIMemoryMultiReporterCallback *aCb,
+               nsIMemoryReporterCallback *aCb,
                nsISupports *aClosure,
                CategoriesSeen *aCategoriesSeen);
 
@@ -149,7 +149,7 @@ private:
   ParseMapBody(FILE *aFile,
                const nsACString &aName,
                const nsACString &aDescription,
-               nsIMemoryMultiReporterCallback *aCb,
+               nsIMemoryReporterCallback *aCb,
                nsISupports *aClosure,
                CategoriesSeen *aCategoriesSeen);
 
@@ -158,7 +158,7 @@ private:
   nsTHashtable<nsCStringHashKey> mMozillaLibraries;
 };
 
-NS_IMPL_ISUPPORTS1(MapsReporter, nsIMemoryMultiReporter)
+NS_IMPL_ISUPPORTS1(MapsReporter, nsIMemoryReporter)
 
 MapsReporter::MapsReporter()
   : mSearchedForLibxul(false)
@@ -173,7 +173,7 @@ MapsReporter::MapsReporter()
 }
 
 NS_IMETHODIMP
-MapsReporter::CollectReports(nsIMemoryMultiReporterCallback *aCb,
+MapsReporter::CollectReports(nsIMemoryReporterCallback *aCb,
                              nsISupports *aClosure)
 {
   CategoriesSeen categoriesSeen;
@@ -258,7 +258,7 @@ MapsReporter::FindLibxul()
 nsresult
 MapsReporter::ParseMapping(
   FILE *aFile,
-  nsIMemoryMultiReporterCallback *aCb,
+  nsIMemoryReporterCallback *aCb,
   nsISupports *aClosure,
   CategoriesSeen *aCategoriesSeen)
 {
@@ -461,7 +461,7 @@ MapsReporter::ParseMapBody(
   FILE *aFile,
   const nsACString &aName,
   const nsACString &aDescription,
-  nsIMemoryMultiReporterCallback *aCb,
+  nsIMemoryReporterCallback *aCb,
   nsISupports *aClosure,
   CategoriesSeen *aCategoriesSeen)
 {
@@ -520,11 +520,11 @@ MapsReporter::ParseMapBody(
   return NS_OK;
 }
 
-class ResidentUniqueReporter MOZ_FINAL : public MemoryReporterBase
+class ResidentUniqueReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
   ResidentUniqueReporter()
-    : MemoryReporterBase("resident-unique", KIND_OTHER, UNITS_BYTES,
+    : MemoryUniReporter("resident-unique", KIND_OTHER, UNITS_BYTES,
 "Memory mapped by the process that is present in physical memory and not "
 "shared with any other processes.  This is also known as the process's unique "
 "set size (USS).  This is the amount of RAM we'd expect to be freed if we "
@@ -540,9 +540,9 @@ private:
     // little to do with whether the pages are actually shared.  smaps on the
     // other hand appears to give us the correct information.
     //
-    // We could calculate this data during the smaps multi-reporter, but the
-    // overhead of the smaps reporter is considerable (we don't even run the
-    // smaps reporter in normal about:memory operation).  Hopefully this
+    // We could calculate this data within the smaps reporter, but the overhead
+    // of the smaps reporter is considerable (we don't even run the smaps
+    // reporter in normal about:memory operation).  Hopefully this
     // implementation is fast enough not to matter.
 
     *aAmount = 0;
@@ -568,8 +568,8 @@ private:
 
 void Init()
 {
-  nsCOMPtr<nsIMemoryMultiReporter> reporter = new MapsReporter();
-  NS_RegisterMemoryMultiReporter(reporter);
+  nsCOMPtr<nsIMemoryReporter> reporter = new MapsReporter();
+  NS_RegisterMemoryReporter(reporter);
 
   NS_RegisterMemoryReporter(new ResidentUniqueReporter());
 }

@@ -27,6 +27,24 @@ function testSteps()
     is(e.name, "TypeError", "Good error name.");
   }
 
+  try {
+    indexedDB.open(name, { version: 0 });
+    ok(false, "Should have thrown!");
+  }
+  catch (e) {
+    ok(e instanceof TypeError, "Got TypeError.");
+    is(e.name, "TypeError", "Good error name.");
+  }
+
+  try {
+    indexedDB.open(name, { version: -1 });
+    ok(false, "Should have thrown!");
+  }
+  catch (e) {
+    ok(e instanceof TypeError, "Got TypeError.");
+    is(e.name, "TypeError", "Good error name.");
+  }
+
   finishTest();
   yield undefined;
 }

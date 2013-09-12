@@ -1,4 +1,4 @@
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 function test(code, expected) {
     var actual = '';

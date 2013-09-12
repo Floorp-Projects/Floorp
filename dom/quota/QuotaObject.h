@@ -11,8 +11,12 @@
 
 #include "nsDataHashtable.h"
 
+#include "PersistenceType.h"
+
 BEGIN_QUOTA_NAMESPACE
 
+class GroupInfo;
+class GroupInfoPair;
 class OriginInfo;
 class QuotaManager;
 
@@ -37,10 +41,14 @@ public:
 private:
   QuotaObject(OriginInfo* aOriginInfo, const nsAString& aPath, int64_t aSize)
   : mOriginInfo(aOriginInfo), mPath(aPath), mSize(aSize)
-  { }
+  {
+    MOZ_COUNT_CTOR(QuotaObject);
+  }
 
-  virtual ~QuotaObject()
-  { }
+  ~QuotaObject()
+  {
+    MOZ_COUNT_DTOR(QuotaObject);
+  }
 
   mozilla::ThreadSafeAutoRefCnt mRefCnt;
 
@@ -51,27 +59,51 @@ private:
 
 class OriginInfo
 {
+  friend class GroupInfo;
   friend class QuotaManager;
   friend class QuotaObject;
 
 public:
-  OriginInfo(const nsACString& aOrigin, int64_t aLimit, int64_t aUsage)
-  : mOrigin(aOrigin), mLimit(aLimit), mUsage(aUsage)
+  OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin, uint64_t aLimit,
+             uint64_t aUsage, int64_t aAccessTime)
+  : mGroupInfo(aGroupInfo), mOrigin(aOrigin), mLimit(aLimit), mUsage(aUsage),
+    mAccessTime(aAccessTime)
   {
+    MOZ_COUNT_CTOR(OriginInfo);
+  }
+
+  ~OriginInfo()
+  {
+    MOZ_COUNT_DTOR(OriginInfo);
   }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OriginInfo)
 
+  int64_t
+  AccessTime() const
+  {
+    return mAccessTime;
+  }
+
 private:
   void
-#ifdef DEBUG
-  LockedClearOriginInfos();
-#else
+  LockedDecreaseUsage(int64_t aSize);
+
+  void
+  LockedUpdateAccessTime(int64_t aAccessTime)
+  {
+    AssertCurrentThreadOwnsQuotaMutex();
+
+    mAccessTime = aAccessTime;
+  }
+
+  void
   LockedClearOriginInfos()
   {
+    AssertCurrentThreadOwnsQuotaMutex();
+
     mQuotaObjects.EnumerateRead(ClearOriginInfoCallback, nullptr);
   }
-#endif
 
   static PLDHashOperator
   ClearOriginInfoCallback(const nsAString& aKey,
@@ -79,9 +111,153 @@ private:
 
   nsDataHashtable<nsStringHashKey, QuotaObject*> mQuotaObjects;
 
+  GroupInfo* mGroupInfo;
   nsCString mOrigin;
-  int64_t mLimit;
-  int64_t mUsage;
+  uint64_t mLimit;
+  uint64_t mUsage;
+  int64_t mAccessTime;
+};
+
+class OriginInfoLRUComparator
+{
+public:
+  bool
+  Equals(const OriginInfo* a, const OriginInfo* b) const
+  {
+    return
+      a && b ? a->AccessTime() == b->AccessTime() : !a && !b ? true : false;
+  }
+
+  bool
+  LessThan(const OriginInfo* a, const OriginInfo* b) const
+  {
+    return a && b ? a->AccessTime() < b->AccessTime() : b ? true : false;
+  }
+};
+
+class GroupInfo
+{
+  friend class GroupInfoPair;
+  friend class OriginInfo;
+  friend class QuotaManager;
+  friend class QuotaObject;
+
+public:
+  GroupInfo(PersistenceType aPersistenceType, const nsACString& aGroup)
+  : mPersistenceType(aPersistenceType), mGroup(aGroup), mUsage(0)
+  {
+    MOZ_COUNT_CTOR(GroupInfo);
+  }
+
+  ~GroupInfo()
+  {
+    MOZ_COUNT_DTOR(GroupInfo);
+  }
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GroupInfo)
+
+  bool
+  IsForPersistentStorage() const
+  {
+    return mPersistenceType == PERSISTENCE_TYPE_PERSISTENT;
+  }
+
+  bool
+  IsForTemporaryStorage() const
+  {
+    return mPersistenceType == PERSISTENCE_TYPE_TEMPORARY;
+  }
+
+private:
+  already_AddRefed<OriginInfo>
+  LockedGetOriginInfo(const nsACString& aOrigin);
+
+  void
+  LockedAddOriginInfo(OriginInfo* aOriginInfo);
+
+  void
+  LockedRemoveOriginInfo(const nsACString& aOrigin);
+
+  void
+  LockedRemoveOriginInfos();
+
+  void
+  LockedRemoveOriginInfosForPattern(const nsACString& aPattern);
+
+  bool
+  LockedHasOriginInfos()
+  {
+    AssertCurrentThreadOwnsQuotaMutex();
+
+    return !mOriginInfos.IsEmpty();
+  }
+
+  nsTArray<nsRefPtr<OriginInfo> > mOriginInfos;
+
+  PersistenceType mPersistenceType;
+  nsCString mGroup;
+  uint64_t mUsage;
+};
+
+class GroupInfoPair
+{
+  friend class QuotaManager;
+
+public:
+  GroupInfoPair()
+  {
+    MOZ_COUNT_CTOR(GroupInfoPair);
+  }
+
+  ~GroupInfoPair()
+  {
+    MOZ_COUNT_DTOR(GroupInfoPair);
+  }
+
+private:
+  already_AddRefed<GroupInfo>
+  LockedGetGroupInfo(PersistenceType aPersistenceType)
+  {
+    AssertCurrentThreadOwnsQuotaMutex();
+
+    nsRefPtr<GroupInfo> groupInfo =
+      GetGroupInfoForPersistenceType(aPersistenceType);
+    return groupInfo.forget();
+  }
+
+  void
+  LockedSetGroupInfo(GroupInfo* aGroupInfo)
+  {
+    AssertCurrentThreadOwnsQuotaMutex();
+
+    nsRefPtr<GroupInfo>& groupInfo =
+      GetGroupInfoForPersistenceType(aGroupInfo->mPersistenceType);
+    groupInfo = aGroupInfo;
+  }
+
+  void
+  LockedClearGroupInfo(PersistenceType aPersistenceType)
+  {
+    AssertCurrentThreadOwnsQuotaMutex();
+
+    nsRefPtr<GroupInfo>& groupInfo =
+      GetGroupInfoForPersistenceType(aPersistenceType);
+    groupInfo = nullptr;
+  }
+
+  bool
+  LockedHasGroupInfos()
+  {
+    AssertCurrentThreadOwnsQuotaMutex();
+
+    return mPersistentStorageGroupInfo || mTemporaryStorageGroupInfo;
+  }
+
+  nsRefPtr<GroupInfo>&
+  GetGroupInfoForPersistenceType(PersistenceType aPersistenceType);
+
+  nsRefPtr<GroupInfo> mPersistentStorageGroupInfo;
+  nsRefPtr<GroupInfo> mTemporaryStorageGroupInfo;
 };
 
 END_QUOTA_NAMESPACE

@@ -1,6 +1,6 @@
 // Direct eval code under evalWithBindings sees both the bindings and the enclosing scope.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 var hits = 0;
 dbg.onDebuggerStatement = function (frame) {

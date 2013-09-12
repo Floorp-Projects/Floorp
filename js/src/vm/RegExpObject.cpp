@@ -209,7 +209,7 @@ regexp_trace(JSTracer *trc, JSObject *obj)
         obj->setPrivate(NULL);
 }
 
-Class RegExpObject::class_ = {
+const Class RegExpObject::class_ = {
     js_RegExp_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(RegExpObject::RESERVED_SLOTS) |

@@ -11,7 +11,7 @@ if (typeof setDebugMode === 'function') {
 }
 
 if (!canEnable) {
-    var g = newGlobal('new-compartment');
+    var g = newGlobal();
     g.libdir = libdir;
     g.eval("load(libdir + 'asserts.js');");
     g.parent = this;

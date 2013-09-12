@@ -1,6 +1,6 @@
 // Basic Script.prototype.getBreakpoints tests.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.eval("var line0 = Error().lineNumber;\n" +
        "function f(x) {\n" +        // line0 + 1
        "    if (x < 0)\n" +         // line0 + 2

@@ -1,6 +1,6 @@
 // obj.getOwnPropertyDescriptor presents getters and setters as Debugger.Object objects.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.S = function foreignFunction(v) {};
 g.eval("var a = {};\n" +
        "function G() {}\n" +

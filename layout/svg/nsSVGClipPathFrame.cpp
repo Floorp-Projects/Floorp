@@ -315,7 +315,7 @@ nsSVGClipPathFrame::GetType() const
 }
 
 gfxMatrix
-nsSVGClipPathFrame::GetCanvasTM(uint32_t aFor)
+nsSVGClipPathFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
 {
   SVGClipPathElement *content = static_cast<SVGClipPathElement*>(mContent);
 

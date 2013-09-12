@@ -120,7 +120,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(35d5b0e5-9b29-48de-9f79-d2534b497435)]
+[scriptable, uuid(3b3b5adc-dce0-4d4e-a04e-06b2c8b5acfe)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -135,22 +135,6 @@ interface nsIXPCComponents_Utils : nsISupports
      * is converted to a string and reported as a new error.
      */
     [implicit_jscontext] void reportError(in jsval error);
-
-    /* lookupMethod is designed to be called from JavaScript only.
-     *
-     * It returns a method looking only at the idl interfaces and
-     * ignores any overrides or resolvers that might be in place for
-     * a given scriptable wrapped native.
-     * It must be called with two params: an object and a method name.
-     * It returns a function object or throws an exception on error.
-     * This method exists only to solve mozilla browser problems
-     * when chrome attempts to lookup and call methods in content
-     * and *must* not get confused by method properties that have been
-     * replaced in the content JS code. This method is not recommended for
-     * any other use.
-     */
-    [implicit_jscontext]
-    jsval lookupMethod(in jsval obj, in jsval name);
 
     readonly attribute nsIXPCComponents_utils_Sandbox Sandbox;
 
@@ -444,7 +428,7 @@ interface nsIXPCComponents_Utils : nsISupports
 /**
 * interface of JavaScript's 'Components' object
 */
-[scriptable, uuid(8406dedb-23cc-42db-9f69-1f18785091b5)]
+[scriptable, uuid(4229848f-f49e-40e5-90cc-66968aaf4e1b)]
 interface nsIXPCComponents : nsISupports
 {
     readonly attribute nsIXPCComponents_Interfaces      interfaces;
@@ -461,13 +445,6 @@ interface nsIXPCComponents : nsISupports
     readonly attribute nsIXPCComponents_Constructor     Constructor;
 
     boolean isSuccessCode(in nsresult result);
-
-    /* @deprecated Use Components.utils.lookupMethod instead.
-     * (But are you sure you really want this method any more?
-     *  See http://developer-test.mozilla.org/en/docs/XPCNativeWrapper )
-     */
-    [deprecated,implicit_jscontext]
-    jsval lookupMethod(in jsval obj, in jsval name);
 
     /* @deprecated Use Components.utils.reportError instead. */
     [deprecated, implicit_jscontext] void reportError(in jsval error);

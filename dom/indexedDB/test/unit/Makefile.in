@@ -46,6 +46,7 @@ MOCHITEST_FILES = \
   test_open_objectStore.js \
   test_optionalArguments.js \
   test_overlapping_transactions.js \
+  test_persistenceType.js \
   test_put_get_values.js \
   test_put_get_values_autoIncrement.js \
   test_readonly_transactions.js \
@@ -57,6 +58,7 @@ MOCHITEST_FILES = \
   test_setVersion_events.js \
   test_setVersion_exclusion.js \
   test_success_events_after_abort.js \
+  test_temporary_storage.js \
   test_traffic_jam.js \
   test_transaction_abort.js \
   test_transaction_abort_hang.js \

@@ -12,8 +12,13 @@
 BEGIN_QUOTA_NAMESPACE
 
 enum StoragePrivilege {
-  Content,
-  Chrome
+  // Quota not tracked, persistence type is always "persistent".
+  Chrome,
+
+  // Quota tracked, persistence type can be either "persistent" or "temporary".
+  // The permission "defaul-persistent-storage" is used to determine the
+  // default persistence type.
+  Content
 };
 
 END_QUOTA_NAMESPACE

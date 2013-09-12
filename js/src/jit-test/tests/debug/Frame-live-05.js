@@ -1,7 +1,7 @@
 // frame.live is false for frames removed after their compartments stopped being debuggees.
 
-var g1 = newGlobal('new-compartment');
-var g2 = newGlobal('new-compartment');
+var g1 = newGlobal();
+var g2 = newGlobal();
 var dbg = Debugger(g1, g2);
 var hits = 0;
 var snapshot = [];

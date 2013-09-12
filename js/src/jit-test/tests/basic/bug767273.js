@@ -4,4 +4,4 @@ var prox = Proxy.create({
 });
 
 // Don't crash.
-newGlobal("new-compartment").__lookupSetter__.call(prox, "e");
+newGlobal().__lookupSetter__.call(prox, "e");

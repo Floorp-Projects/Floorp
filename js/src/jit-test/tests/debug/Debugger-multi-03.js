@@ -3,7 +3,7 @@
 var log = '';
 
 function addDebug(g, id) {
-    var debuggerGlobal = newGlobal('new-compartment');
+    var debuggerGlobal = newGlobal();
     debuggerGlobal.debuggee = g;
     debuggerGlobal.id = id;
     debuggerGlobal.print = function (s) { log += s; };
@@ -13,7 +13,7 @@ function addDebug(g, id) {
     return debuggerGlobal;
 }
 
-var base = newGlobal('new-compartment');
+var base = newGlobal();
 var top = base;
 for (var i = 0; i < 8; i++)  // why have 2 debuggers when you can have 8
     top = addDebug(top, i);

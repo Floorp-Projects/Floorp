@@ -21,7 +21,7 @@ static bool test_prop_get( JSContext *cx, JS::HandleObject obj, JS::HandleId id,
 static bool
 PTest(JSContext* cx, unsigned argc, jsval *vp);
 
-static JSClass ptestClass = {
+static const JSClass ptestClass = {
     "PTest",
     JSCLASS_HAS_PRIVATE,
 

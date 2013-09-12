@@ -101,7 +101,7 @@ MathCache::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
     return mallocSizeOf(this);
 }
 
-Class js::MathClass = {
+const Class js::MathClass = {
     js_Math_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Math),
     JS_PropertyStub,         /* addProperty */

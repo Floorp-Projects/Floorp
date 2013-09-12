@@ -1,6 +1,6 @@
 // env.find() finds noneumerable properties in with statements.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var hits = 0;
 g.h = function () {

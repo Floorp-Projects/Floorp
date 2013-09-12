@@ -7,7 +7,7 @@
 function f() {
     frame = dbg.getNewestFrame();
 }
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.f = function (a, b) { return a + "/" + this . f( ) ; };
 var dbg = Debugger(g);
 dbg.onDebuggerStatement = function (frame) {

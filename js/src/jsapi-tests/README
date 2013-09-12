@@ -129,7 +129,7 @@ function, which populates the rt, cx, and global member variables.
 A test can customize the test setup process by overloading virtual member
 functions, like this:
 
-    JSClass globalClassWithResolve = { ... };
+    const JSClass globalClassWithResolve = { ... };
 
     BEGIN_TEST(testGlobalResolveHook)
         {

@@ -47,16 +47,20 @@ function runTest()
                    getService(Ci.nsIIndexedDatabaseManager);
   idbManager.initWindowless(this);
 
+  enableExperimental();
+
   do_test_pending();
   testGenerator.next();
 }
 
 function finishTest()
 {
+  resetExperimental();
+  SpecialPowers.notifyObserversInParentProcess(null, "disk-space-watcher",
+                                               "free");
+
   do_execute_soon(function(){
     testGenerator.close();
-    SpecialPowers.notifyObserversInParentProcess(null, "disk-space-watcher",
-                                                 "free");
     do_test_finished();
   })
 }
@@ -179,10 +183,25 @@ function disallowUnlimitedQuota(url)
   throw "disallowUnlimitedQuota";
 }
 
+function enableExperimental()
+{
+  SpecialPowers.setBoolPref("dom.indexedDB.experimental", true);
+}
+
+function resetExperimental()
+{
+  SpecialPowers.clearUserPref("dom.indexedDB.experimental");
+}
+
 function gc()
 {
   Components.utils.forceGC();
   Components.utils.forceCC();
+}
+
+function scheduleGC()
+{
+  SpecialPowers.exactGC(null, continueToNextStep);
 }
 
 function setTimeout(fun, timeout) {
@@ -214,5 +233,43 @@ var SpecialPowers = {
       throw new Error("Can't send subject to another process!");
     }
     return this.notifyObservers(subject, topic, data);
+  },
+  getBoolPref: function(prefName) {
+    return this._getPrefs().getBoolPref(prefName);
+  },
+  setBoolPref: function(prefName, value) {
+    this._getPrefs().setBoolPref(prefName, value);
+  },
+  setIntPref: function(prefName, value) {
+    this._getPrefs().setIntPref(prefName, value);
+  },
+  clearUserPref: function(prefName) {
+    this._getPrefs().clearUserPref(prefName);
+  },
+  // Copied (and slightly adjusted) from specialpowersAPI.js
+  exactGC: function(win, callback) {
+    let count = 0;
+
+    function doPreciseGCandCC() {
+      function scheduledGCCallback() {
+        Components.utils.forceCC();
+
+        if (++count < 2) {
+          doPreciseGCandCC();
+        } else {
+          callback();
+        }
+      }
+
+      Components.utils.schedulePreciseGC(scheduledGCCallback);
+    }
+
+    doPreciseGCandCC();
+  },
+
+  _getPrefs: function() {
+    var prefService =
+      Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
+    return prefService.getBranch(null);
   }
 };

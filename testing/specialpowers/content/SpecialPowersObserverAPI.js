@@ -4,6 +4,10 @@
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
+if (typeof(Ci) == 'undefined') {
+  var Ci = Components.interfaces;
+}
+
 /**
  * Special Powers Exception - used to throw exceptions nicely
  **/
