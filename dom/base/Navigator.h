@@ -86,9 +86,9 @@ class BluetoothManager;
 } // namespace bluetooth
 #endif // MOZ_B2G_BT
 
-class Telephony;
 #ifdef MOZ_B2G_RIL
 class CellBroadcast;
+class Telephony;
 class Voicemail;
 #endif
 
@@ -268,9 +268,9 @@ public:
                                       JSObject* aGlobal);
   static bool HasCameraSupport(JSContext* /* unused */,
                                JSObject* aGlobal);
+#ifdef MOZ_B2G_RIL
   static bool HasTelephonySupport(JSContext* /* unused */,
                                   JSObject* aGlobal);
-#ifdef MOZ_B2G_RIL
   static bool HasMobileConnectionSupport(JSContext* /* unused */,
                                          JSObject* aGlobal);
   static bool HasCellBroadcastSupport(JSContext* /* unused */,
