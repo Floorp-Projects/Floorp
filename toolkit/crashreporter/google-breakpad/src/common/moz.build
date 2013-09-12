@@ -52,9 +52,23 @@ else:
 
 if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_CRASHREPORTER']:
     HOST_CSRCS += CSRCS
-
-if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_CRASHREPORTER']:
     HOST_LIBRARY_NAME = 'host_breakpad_common_s'
+    HOST_CPPSRCS += [
+        'arm_ex_reader.cc',
+        'arm_ex_to_module.cc',
+        'dwarf_cfi_to_module.cc',
+        'dwarf_cu_to_module.cc',
+        'dwarf_line_to_module.cc',
+        'language.cc',
+        'logging.cc',
+        'md5.cc',
+        'module.cc',
+        'pathname_stripper.cc',
+        'stabs_reader.cc',
+        'stabs_to_module.cc',
+        'string_conversion.cc',
+        'unique_string.cc',
+    ]
 
 if CONFIG['OS_ARCH'] == 'Darwin':
     CMMSRCS += [
