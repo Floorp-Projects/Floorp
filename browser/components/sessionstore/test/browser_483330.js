@@ -28,6 +28,9 @@ function test() {
       is(newBrowser.contentWindow.scrollY, 1200, "still scrolled vertically");
 
       gBrowser.removeTab(newTab);
+      // Call stopPropagation on the event so we won't fire the
+      // tabbrowser's SSTabRestored listeners.
+      e.stopPropagation();
 
       finish();
     }, true);

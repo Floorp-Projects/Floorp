@@ -10,6 +10,7 @@
 #include "imgIContainer.h"
 #include "imgStatusTracker.h"
 #include "nsIURI.h"
+#include "nsProxyRelease.h" // for nsMainThreadPtrHolder and nsMainThreadPtrHandle
 
 class nsIRequest;
 class nsIInputStream;
@@ -156,8 +157,9 @@ public:
 
   /*
    * Returns a non-AddRefed pointer to the URI associated with this image.
+   * Illegal to use off-main-thread.
    */
-  virtual nsIURI* GetURI() MOZ_OVERRIDE { return mURI; }
+  virtual nsIURI* GetURI() MOZ_OVERRIDE { return mURI.get(); }
 
 protected:
   ImageResource(imgStatusTracker* aStatusTracker, nsIURI* aURI);
@@ -185,14 +187,14 @@ protected:
   virtual nsresult StopAnimation() = 0;
 
   // Member data shared by all implementations of this abstract class
-  nsRefPtr<imgStatusTracker>  mStatusTracker;
-  nsCOMPtr<nsIURI>            mURI;
-  uint64_t                    mInnerWindowId;
-  uint32_t                    mAnimationConsumers;
-  uint16_t                    mAnimationMode;   // Enum values in imgIContainer
-  bool                        mInitialized:1;   // Have we been initalized?
-  bool                        mAnimating:1;     // Are we currently animating?
-  bool                        mError:1;         // Error handling
+  nsRefPtr<imgStatusTracker>    mStatusTracker;
+  nsMainThreadPtrHandle<nsIURI> mURI;
+  uint64_t                      mInnerWindowId;
+  uint32_t                      mAnimationConsumers;
+  uint16_t                      mAnimationMode; // Enum values in imgIContainer
+  bool                          mInitialized:1; // Have we been initalized?
+  bool                          mAnimating:1;   // Are we currently animating?
+  bool                          mError:1;       // Error handling
 };
 
 } // namespace image

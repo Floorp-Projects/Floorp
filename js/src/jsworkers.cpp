@@ -721,8 +721,8 @@ WorkerThread::handleIonWorkload(WorkerThreadState &state)
 void
 ExclusiveContext::setWorkerThread(WorkerThread *workerThread)
 {
-    this->workerThread = workerThread;
-    this->perThreadData = workerThread->threadData.addr();
+    workerThread_ = workerThread;
+    perThreadData = workerThread->threadData.addr();
 }
 
 frontend::CompileError &
@@ -731,7 +731,7 @@ ExclusiveContext::addPendingCompileError()
     frontend::CompileError *error = js_new<frontend::CompileError>();
     if (!error)
         MOZ_CRASH();
-    if (!workerThread->parseTask->errors.append(error))
+    if (!workerThread()->parseTask->errors.append(error))
         MOZ_CRASH();
     return *error;
 }
@@ -829,8 +829,24 @@ SourceCompressionTask::complete()
         WorkerThreadState &state = *cx->workerThreadState();
         AutoLockWorkerThreadState lock(state);
 
+        // If this compression task is itself being completed on a worker
+        // thread, treat the thread as paused while waiting for the completion.
+        // Otherwise we will not wake up and mark this as paused due to the
+        // loop in AutoPauseWorkersForGC.
+        if (cx->workerThread()) {
+            state.numPaused++;
+            if (state.numPaused == state.numThreads)
+                state.notify(WorkerThreadState::MAIN);
+        }
+
         while (state.compressionInProgress(this))
             state.wait(WorkerThreadState::MAIN);
+
+        if (cx->workerThread()) {
+            state.numPaused--;
+            if (state.shouldPause)
+                cx->workerThread()->pause();
+        }
 
         ss->ready_ = true;
 

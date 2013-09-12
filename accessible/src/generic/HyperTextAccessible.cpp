@@ -25,6 +25,7 @@
 #include "nsFrameSelection.h"
 #include "nsILineIterator.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIPersistentProperties2.h"
 #include "nsIPlaintextEditor.h"
 #include "nsIScrollableFrame.h"
 #include "nsIServiceManager.h"

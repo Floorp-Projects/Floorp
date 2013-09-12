@@ -187,6 +187,10 @@ documenttab[selected] .documenttab-selection {
 
 /* Start UI ----------------------------------------------------------------- */
 
+#content-viewport[startpage] browser {
+  padding-bottom: @toolbar_height@;
+}
+
 #startui-page {
   overflow-x: scroll;
   overflow-y: hidden;
@@ -199,59 +203,23 @@ documenttab[selected] .documenttab-selection {
 }
 
 #start-container {
-  display: -moz-box;
-  min-width: @grid_double_column_width@;
   height: 100%;
-  width: 100%;
-}
-
-#start-topsites {
-  /* allot space for 3 tile columns for the topsites grid */
-  min-width: calc(3 * @grid_double_column_width@);
-}
-
-#content-viewport[startpage] browser {
-  padding-bottom: @toolbar_height@;
 }
 
 #urlbar-autocomplete[viewstate="snapped"],
-#urlbar-autocomplete[viewstate="portrait"],
-#start-container[viewstate="snapped"],
-#start-container[viewstate="portrait"] {
+#urlbar-autocomplete[viewstate="portrait"]{
   -moz-box-orient: vertical;
 }
 
-#start-container {
-  padding-left: 0;
-  padding-right: 0;
+#start-container[viewstate="snapped"],
+#start-container[viewstate="portrait"] {
+  width: 100%;
+  max-width: 100%; /* ensure page doesn't expand, messing up @media rules */
+  height: auto;
 }
 
-#start-container[viewstate="snapped"] > .meta-section {
-  margin: 0 @metro_spacing_xnormal@;
-  min-width: @grid_double_column_width@;
-}
-
-#start-container[viewstate="snapped"] richgrid {
+#start-container[viewstate="snapped"] .meta-section:not([expanded]) > richgrid {
   visibility: collapse;
-}
-
-#start-container[viewstate="snapped"] .meta-section[expanded] > richgrid {
-  visibility: visible;
-}
-
-#start-container[viewstate="snapped"] {
-  padding-top: 0;
-}
-
-#start-container[viewstate="snapped"] .meta-section-title,
-#start-container[viewstate="snapped"] richgrid {
-  margin-top: @metro_spacing_xnormal@;
-  padding: 0;
-}
-
-#start-container:not([viewstate="snapped"]) .meta-section-title.narrow-title,
-#start-container[viewstate="snapped"] .meta-section-title.wide-title {
-  display: none;
 }
 
 /* Browser Content Areas ==================================================== */
@@ -525,6 +493,22 @@ documenttab[selected] .documenttab-selection {
   background-color: @panel_light_color@;
 }
 
+#urlbar-autocomplete {
+  padding-top: 0;
+}
+
+#toolbar {
+  padding: 0 @toolbar_horizontal_padding@;
+}
+
+#toolbar[viewstate="snapped"] {
+  padding: 0 @toolbar_snapped_horizontal_padding@;
+}
+
+#toolbar[viewstate="snapped"] > toolbarbutton {
+  margin: 0 @toolbar_snapped_horizontal_spacing@;
+}
+
 /* Combined back/forward buttons */
 
 #back-button {
@@ -547,7 +531,7 @@ documenttab[selected] .documenttab-selection {
 }
 
 #forward-button[disabled] {
-  -moz-margin-start: -@forward_spacing@;
+  -moz-margin-start: -@forward_spacing@ !important;
   visibility: hidden;
   opacity: 0;
   pointer-events: none;
@@ -720,10 +704,6 @@ documenttab[selected] .documenttab-selection {
   visibility: visible;
 }
 
-#toolbar[viewstate="snapped"] > #urlbar ~ toolbarbutton {
-  visibility: collapse;
-}
-
 /* Contextual toolbar controls */
 
 #toolbar-context-autocomplete,
@@ -834,20 +814,6 @@ documenttab[selected] .documenttab-selection {
   #panel-close-button {
     list-style-image: url(chrome://browser/skin/images/navbar-back@1.8x.png);
   }
-}
-
-#panel-view-switcher {
-  border: 0 none !important;
-  color: #000 !important;
-  background: transparent;
-  padding: 0;
-  font-size: @metro_font_xlarge@;
-  font-weight: 100;
-  margin: 0;
-}
-
-#panel-container[viewstate="snapped"] #panel-view-switcher {
-  font-size: @metro_font_large@;
 }
 
 #panel-items {

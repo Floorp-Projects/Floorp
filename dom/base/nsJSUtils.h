@@ -85,7 +85,8 @@ public:
                                  JS::Handle<JSObject*> aScopeObject,
                                  JS::CompileOptions &aCompileOptions,
                                  EvaluateOptions& aEvaluateOptions,
-                                 JS::Value* aRetValue);
+                                 JS::Value* aRetValue,
+                                 void **aOffThreadToken = nullptr);
 
 };
 

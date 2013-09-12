@@ -104,4 +104,6 @@ interface Node : EventTarget {
   readonly attribute Principal nodePrincipal;
   [ChromeOnly]
   readonly attribute URI? baseURIObject;
+  [ChromeOnly]
+  sequence<MutationObserver> getBoundMutationObservers();
 };

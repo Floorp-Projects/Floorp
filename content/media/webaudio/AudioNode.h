@@ -102,11 +102,9 @@ private:
  * real-time processing and output of this AudioNode.
  *
  * We track the incoming and outgoing connections to other AudioNodes.
- * All connections are strong and thus rely on cycle collection to break them.
- * However, we also track whether an AudioNode is capable of producing output
- * in the future. If it isn't, then we break its connections to its inputs
- * and outputs, allowing nodes to be immediately disconnected. This
- * disconnection is done internally, invisible to DOM users.
+ * Outgoing connections have strong ownership.  Also, AudioNodes add self
+ * references if they produce sound on their output even when they have silent
+ * or no input.
  */
 class AudioNode : public nsDOMEventTargetHelper,
                   public EnableWebAudioCheck

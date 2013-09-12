@@ -420,6 +420,14 @@ protected:
   uint32_t mCompositorID;
   static LayersBackend sBackend;
   DiagnosticTypes mDiagnosticTypes;
+
+  /**
+   * We keep track of the total number of pixels filled as we composite the
+   * current frame. This value is an approximation and is not accurate,
+   * especially in the presence of transforms.
+   */
+  size_t mPixelsPerFrame;
+  size_t mPixelsFilled;
 };
 
 } // namespace layers

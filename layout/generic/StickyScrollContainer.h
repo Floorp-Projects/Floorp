@@ -26,10 +26,10 @@ class StickyScrollContainer MOZ_FINAL : public nsIScrollPositionListener
 {
 public:
   /**
-   * Find the StickyScrollContainer associated with the scroll container of
-   * the given frame, creating it if necessary.
+   * Find (and create if necessary) the StickyScrollContainer associated with
+   * the scroll container of the given frame, if a scroll container exists.
    */
-  static StickyScrollContainer* StickyScrollContainerForFrame(nsIFrame* aFrame);
+  static StickyScrollContainer* GetStickyScrollContainerForFrame(nsIFrame* aFrame);
 
   /**
    * Find the StickyScrollContainer associated with the given scroll frame,
