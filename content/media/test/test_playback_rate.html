@@ -10,6 +10,8 @@
 <pre id="test">
 <script class="testbody" type='application/javascript;version=1.8'>
 
+SimpleTest.expectAssertions(0, 2);
+
 if (navigator.platform.startsWith("Win")) {
   SimpleTest.expectAssertions(0, 1);
 } else if (navigator.platform.startsWith("Mac")) {
