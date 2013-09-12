@@ -1435,6 +1435,12 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
     return accessible.forget();
   }
 
+  if (tag == nsGkAtoms::label) {
+    nsRefPtr<Accessible> accessible =
+      new HTMLLabelAccessible(aContent, document);
+    return accessible.forget();
+  }
+
   if (tag == nsGkAtoms::output) {
     nsRefPtr<Accessible> accessible =
       new HTMLOutputAccessible(aContent, document);
@@ -1493,9 +1499,6 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       break;
     case eHTMLImageMapType:
       newAcc = new HTMLImageMapAccessible(aContent, document);
-      break;
-    case eHTMLLabelType:
-      newAcc = new HTMLLabelAccessible(aContent, document);
       break;
     case eHTMLLiType:
       if (aContext->IsList() &&
