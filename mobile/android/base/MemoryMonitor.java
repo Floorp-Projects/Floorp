@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.BroadcastReceiver;

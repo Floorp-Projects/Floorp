@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.Favicons;
+import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
