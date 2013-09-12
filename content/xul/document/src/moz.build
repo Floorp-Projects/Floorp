@@ -27,3 +27,17 @@ LIBXUL_LIBRARY = True
 
 MSVC_ENABLE_PGO = True
 
+LOCAL_INCLUDES += [
+    '/content/base/src',
+    '/content/events/src',
+    '/content/xbl/src',
+    '/content/xml/document/src',
+    '/content/xul/content/src',
+    '/content/xul/templates/src',
+    '/dom/base',
+    '/layout/base',
+    '/layout/generic',
+    '/layout/style',
+    '/layout/xul/base/src',
+    '/xpcom/ds',
+]
