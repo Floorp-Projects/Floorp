@@ -25,6 +25,8 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
+                                  "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadStore",
                                   "resource://gre/modules/DownloadStore.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadImport",
@@ -124,6 +126,7 @@ this.DownloadIntegration = {
   downloadDoneCalled: false,
   _deferTestOpenFile: null,
   _deferTestShowDir: null,
+  _deferTestClearPrivateList: null,
 
   /**
    * Main DownloadStore object for loading and saving the list of persistent
@@ -683,6 +686,7 @@ this.DownloadIntegration = {
       Services.obs.addObserver(DownloadObserver, "quit-application-requested", true);
       Services.obs.addObserver(DownloadObserver, "offline-requested", true);
       Services.obs.addObserver(DownloadObserver, "last-pb-context-exiting", true);
+      Services.obs.addObserver(DownloadObserver, "last-pb-context-exited", true);
     }
     return Promise.resolve();
   },
@@ -809,6 +813,22 @@ this.DownloadObserver = {
         downloadsCount = this._privateInProgressDownloads.size;
         this._confirmCancelDownloads(aSubject, downloadsCount, p,
                                      p.ON_LEAVE_PRIVATE_BROWSING);
+        break;
+      case "last-pb-context-exited":
+        let deferred = Task.spawn(function() {
+          let list = yield Downloads.getPrivateDownloadList();
+          let downloads = yield list.getAll();
+
+          for (let download of downloads) {
+            list.remove(download);
+            download.finalize(true).then(null, Cu.reportError);
+          }
+        });
+        // Handle test mode
+        if (DownloadIntegration.testMode) {
+          deferred.then((value) => { DownloadIntegration._deferTestClearPrivateList.resolve("success"); },
+                        (error) => { DownloadIntegration._deferTestClearPrivateList.reject(error); });
+        }
         break;
     }
   },
