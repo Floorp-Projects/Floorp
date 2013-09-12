@@ -25,3 +25,7 @@ LIBRARY_NAME = 'gkconmediaplugins_s'
 
 LIBXUL_LIBRARY = True
 
+LOCAL_INCLUDES += [
+    '/content/base/src',
+    '/content/html/content/src',
+    ]

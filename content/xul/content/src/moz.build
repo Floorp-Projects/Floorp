@@ -19,3 +19,17 @@ if CONFIG['MOZ_XUL']:
 
 FAIL_ON_WARNINGS = True
 
+LOCAL_INCLUDES += [
+    '../../document/src',
+    '../../templates/src',
+    '/content/base/src',
+    '/content/events/src',
+    '/content/html/content/src',
+    '/content/xbl/src',
+    '/content/xml/content/src',
+    '/content/xml/document/src',
+    '/layout/generic',
+    '/layout/style',
+    '/layout/xul/base/src',
+    '/xpcom/ds',
+]
