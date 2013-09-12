@@ -9,6 +9,21 @@ function test()
   const expectScrollBoth = 3;
 
   var allTests = [
+    {dataUri: 'data:text/html,<body><style type="text/css">div { display: inline-block; }</style>\
+      <div id="a" style="width: 100px; height: 100px; overflow: hidden;"><div style="width: 200px; height: 200px;"></div></div>\
+      <div id="b" style="width: 100px; height: 100px; overflow: auto;"><div style="width: 200px; height: 200px;"></div></div>\
+      <div id="c" style="width: 100px; height: 100px; overflow-x: auto; overflow-y: hidden;"><div style="width: 200px; height: 200px;"></div></div>\
+      <div id="d" style="width: 100px; height: 100px; overflow-y: auto; overflow-x: hidden;"><div style="width: 200px; height: 200px;"></div></div>\
+      <select id="e" style="width: 100px; height: 100px;" multiple="multiple"><option>aaaaaaaaaaaaaaaaaaaaaaaa</option><option>a</option><option>a</option>\
+      <option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option>\
+      <option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option></select>\
+      <select id="f" style="width: 100px; height: 100px;"><option>a</option><option>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</option><option>a</option>\
+      <option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option>\
+      <option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option></select>\
+      <div id="g" style="width: 99px; height: 99px; border: 10px solid black; margin: 10px; overflow: auto;"><div style="width: 100px; height: 100px;"></div></div>\
+      <div id="h" style="width: 100px; height: 100px; overflow: -moz-hidden-unscrollable;"><div style="width: 200px; height: 200px;"></div></div>\
+      <iframe id="iframe" style="display: none;"></iframe>\
+      </body>'},
     {elem: 'a', expected: expectScrollNone},
     {elem: 'b', expected: expectScrollBoth},
     {elem: 'c', expected: expectScrollHori},
@@ -16,7 +31,16 @@ function test()
     {elem: 'e', expected: expectScrollVert},
     {elem: 'f', expected: expectScrollNone},
     {elem: 'g', expected: expectScrollBoth},
-    {elem: 'h', expected: expectScrollNone}
+    {elem: 'h', expected: expectScrollNone},
+    {dataUri: 'data:text/html,<html><body id="i" style="overflow-y: scroll"><div style="height: 2000px"></div>\
+      <iframe id="iframe" style="display: none;"></iframe>\
+      </body></html>'},
+    {elem: 'i', expected: expectScrollVert}, // bug 695121
+    {dataUri: 'data:text/html,<html><style>html, body { width: 100%; height: 100%; overflow-x: hidden; overflow-y: scroll; }</style>\
+      <body id="j"><div style="height: 2000px"></div>\
+      <iframe id="iframe" style="display: none;"></iframe>\
+      </body></html>'},
+    {elem: 'j', expected: expectScrollVert}  // bug 914251
   ];
 
   var doc;
@@ -25,6 +49,11 @@ function test()
     var test = allTests.shift();
     if (!test) {
       endTest();
+      return;
+    }
+
+    if (test.dataUri) {
+      startLoad(test.dataUri);
       return;
     }
 
@@ -69,23 +98,13 @@ function test()
   }
 
   waitForExplicitFinish();
-  var dataUri = 'data:text/html,<body><style type="text/css">div { display: inline-block; }</style>\
-    <div id="a" style="width: 100px; height: 100px; overflow: hidden;"><div style="width: 200px; height: 200px;"></div></div>\
-    <div id="b" style="width: 100px; height: 100px; overflow: auto;"><div style="width: 200px; height: 200px;"></div></div>\
-    <div id="c" style="width: 100px; height: 100px; overflow-x: auto; overflow-y: hidden;"><div style="width: 200px; height: 200px;"></div></div>\
-    <div id="d" style="width: 100px; height: 100px; overflow-y: auto; overflow-x: hidden;"><div style="width: 200px; height: 200px;"></div></div>\
-    <select id="e" style="width: 100px; height: 100px;" multiple="multiple"><option>aaaaaaaaaaaaaaaaaaaaaaaa</option><option>a</option><option>a</option>\
-    <option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option>\
-    <option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option></select>\
-    <select id="f" style="width: 100px; height: 100px;"><option>a</option><option>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</option><option>a</option>\
-    <option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option>\
-    <option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option></select>\
-    <div id="g" style="width: 99px; height: 99px; border: 10px solid black; margin: 10px; overflow: auto;"><div style="width: 100px; height: 100px;"></div></div>\
-    <div id="h" style="width: 100px; height: 100px; overflow: -moz-hidden-unscrollable;"><div style="width: 200px; height: 200px;"></div></div>\
-    <iframe id="iframe" style="display: none;"></iframe>\
-    </body>';
-  gBrowser.selectedBrowser.addEventListener("pageshow", onLoad, false);
-  gBrowser.loadURI(dataUri);
+
+  nextTest();
+
+  function startLoad(dataUri) {
+    gBrowser.selectedBrowser.addEventListener("pageshow", onLoad, false);
+    gBrowser.loadURI(dataUri);
+  }
 
   function onLoad() {
     gBrowser.selectedBrowser.removeEventListener("pageshow", onLoad, false);

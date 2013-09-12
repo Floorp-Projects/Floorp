@@ -969,7 +969,7 @@ BaselineCompiler::emit_JSOP_THIS()
     frame.pushThis();
 
     // In strict mode function or self-hosted function, |this| is left alone.
-    if (!function() || function()->strict() || function()->isSelfHostedBuiltin())
+    if (function() && (function()->strict() || function()->isSelfHostedBuiltin()))
         return true;
 
     Label skipIC;
