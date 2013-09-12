@@ -39,7 +39,6 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         'IOInterposer.cpp',
         'NSPRInterposer.cpp',
         'ProfilerIOInterposeObserver.cpp',
-        'SQLiteInterposer.cpp',
     ]
 
     if CONFIG['OS_TARGET'] in ('Android', 'Linux'):
@@ -71,7 +70,6 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'IOInterposer.h',
-    'SQLiteInterposer.h',
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
