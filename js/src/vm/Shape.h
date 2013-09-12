@@ -559,7 +559,7 @@ class BaseShape : public js::gc::Cell
     };
 
   private:
-    Class               *clasp;         /* Class of referring object. */
+    const Class         *clasp;         /* Class of referring object. */
     HeapPtrObject       parent;         /* Parent of referring object. */
     HeapPtrObject       metadata;       /* Optional holder of metadata about
                                          * the referring object. */
@@ -591,9 +591,9 @@ class BaseShape : public js::gc::Cell
   public:
     void finalize(FreeOp *fop);
 
-    inline BaseShape(JSCompartment *comp, Class *clasp, JSObject *parent, JSObject *metadata,
+    inline BaseShape(JSCompartment *comp, const Class *clasp, JSObject *parent, JSObject *metadata,
                      uint32_t objectFlags);
-    inline BaseShape(JSCompartment *comp, Class *clasp, JSObject *parent, JSObject *metadata,
+    inline BaseShape(JSCompartment *comp, const Class *clasp, JSObject *parent, JSObject *metadata,
                      uint32_t objectFlags, uint8_t attrs,
                      PropertyOp rawGetter, StrictPropertyOp rawSetter);
     inline BaseShape(const StackBaseShape &base);
@@ -715,7 +715,7 @@ struct StackBaseShape
     typedef const StackBaseShape *Lookup;
 
     uint32_t flags;
-    Class *clasp;
+    const Class *clasp;
     JSObject *parent;
     JSObject *metadata;
     PropertyOp rawGetter;
@@ -732,7 +732,7 @@ struct StackBaseShape
         compartment(base->compartment())
     {}
 
-    inline StackBaseShape(ExclusiveContext *cx, Class *clasp,
+    inline StackBaseShape(ExclusiveContext *cx, const Class *clasp,
                           JSObject *parent, JSObject *metadata, uint32_t objectFlags);
     inline StackBaseShape(Shape *shape);
 
@@ -912,7 +912,7 @@ class Shape : public js::gc::Cell
         }
     };
 
-    Class *getObjectClass() const { return base()->clasp; }
+    const Class *getObjectClass() const { return base()->clasp; }
     JSObject *getObjectParent() const { return base()->parent; }
     JSObject *getObjectMetadata() const { return base()->metadata; }
 
@@ -1250,10 +1250,10 @@ struct EmptyShape : public js::Shape
      * Lookup an initial shape matching the given parameters, creating an empty
      * shape if none was found.
      */
-    static Shape *getInitialShape(ExclusiveContext *cx, Class *clasp,
+    static Shape *getInitialShape(ExclusiveContext *cx, const Class *clasp,
                                   TaggedProto proto, JSObject *metadata,
                                   JSObject *parent, size_t nfixed, uint32_t objectFlags = 0);
-    static Shape *getInitialShape(ExclusiveContext *cx, Class *clasp,
+    static Shape *getInitialShape(ExclusiveContext *cx, const Class *clasp,
                                   TaggedProto proto, JSObject *metadata,
                                   JSObject *parent, gc::AllocKind kind, uint32_t objectFlags = 0);
 
@@ -1286,13 +1286,13 @@ struct InitialShapeEntry
 
     /* State used to determine a match on an initial shape. */
     struct Lookup {
-        Class *clasp;
+        const Class *clasp;
         TaggedProto proto;
         JSObject *parent;
         JSObject *metadata;
         uint32_t nfixed;
         uint32_t baseFlags;
-        Lookup(Class *clasp, TaggedProto proto, JSObject *parent, JSObject *metadata,
+        Lookup(const Class *clasp, TaggedProto proto, JSObject *parent, JSObject *metadata,
                uint32_t nfixed, uint32_t baseFlags)
           : clasp(clasp), proto(proto), parent(parent), metadata(metadata),
             nfixed(nfixed), baseFlags(baseFlags)

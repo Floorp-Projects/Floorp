@@ -1,7 +1,7 @@
 // setVariable can create a new property on a with block's bindings object, if
 // it is shadowing an existing property on the prototype chain.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 dbg.onDebuggerStatement = function (frame) {
     var env = frame.environment.find("x");

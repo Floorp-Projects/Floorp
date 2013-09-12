@@ -6,9 +6,10 @@
 
 #include "gc/Barrier.h"
 
+#include "jscompartment.h"
 #include "jsobj.h"
 
-#include "vm/ObjectImpl-inl.h"
+#include "gc/Zone.h"
 
 namespace js {
 

@@ -37,7 +37,7 @@ BEGIN_TEST(testLookup_bug522590)
 }
 END_TEST(testLookup_bug522590)
 
-static JSClass DocumentAllClass = {
+static const JSClass DocumentAllClass = {
     "DocumentAll",
     JSCLASS_EMULATES_UNDEFINED,
     JS_PropertyStub,
@@ -76,7 +76,7 @@ document_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned 
     return true;
 }
 
-static JSClass document_class = {
+static const JSClass document_class = {
     "document", JSCLASS_NEW_RESOLVE,
     JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, (JSResolveOp) document_resolve, JS_ConvertStub

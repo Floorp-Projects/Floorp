@@ -46,9 +46,10 @@ nsSVGGenericContainerFrame::GetType() const
 // nsSVGContainerFrame methods:
 
 gfxMatrix
-nsSVGGenericContainerFrame::GetCanvasTM(uint32_t aFor)
+nsSVGGenericContainerFrame::GetCanvasTM(uint32_t aFor,
+                                        nsIFrame* aTransformRoot)
 {
-  if (!(GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
+  if (!(GetStateBits() & NS_FRAME_IS_NONDISPLAY) && !aTransformRoot) {
     if ((aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) ||
         (aFor == FOR_HIT_TESTING && NS_SVGDisplayListHitTestingEnabled())) {
       return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(this);
@@ -57,5 +58,6 @@ nsSVGGenericContainerFrame::GetCanvasTM(uint32_t aFor)
 
   NS_ASSERTION(mParent, "null parent");
   
-  return static_cast<nsSVGContainerFrame*>(mParent)->GetCanvasTM(aFor);
+  return static_cast<nsSVGContainerFrame*>(mParent)->
+      GetCanvasTM(aFor, aTransformRoot);
 }

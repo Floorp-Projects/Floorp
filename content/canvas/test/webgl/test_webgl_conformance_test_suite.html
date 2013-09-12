@@ -90,10 +90,7 @@ function start() {
     kOS = OS_WINDOWS;
     
     // code borrowed from browser/modules/test/browser_taskbar_preview.js
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    var version = SpecialPowers.Cc['@mozilla.org/system-info;1']
-                               .getService(SpecialPowers.Ci.nsIPropertyBag2)
-                               .getProperty('version');
+    var version = SpecialPowers.Services.sysinfo.getProperty('version');
     kOSVersion = parseFloat(version);
     // Version 6.0 is Vista, 6.1 is 7.
   } else if (navigator.platform.indexOf('Mac') == 0) {
@@ -139,7 +136,6 @@ function start() {
     requestLongerTimeoutLen = 6;
 
   function getEnv(env) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var envsvc = SpecialPowers.Cc["@mozilla.org/process/environment;1"].getService(SpecialPowers.Ci.nsIEnvironment);
     var val = envsvc.get(env);
     if (val == "")

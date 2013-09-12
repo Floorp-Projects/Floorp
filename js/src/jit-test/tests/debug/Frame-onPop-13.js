@@ -1,5 +1,5 @@
 // One can set onPop handlers on some frames but not others.
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.eval("function f(n) { if (n > 0) f(n-1); else debugger; }");
 var dbg = new Debugger(g);
 var log;

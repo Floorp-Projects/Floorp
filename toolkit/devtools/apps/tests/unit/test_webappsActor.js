@@ -2,6 +2,9 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://gre/modules/osfile.jsm");
+const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const {require} = devtools;
+const {installHosted, installPackaged} = require("devtools/app-actor-front");
 
 let gAppId = "actor-test";
 const APP_ORIGIN = "app://" + gAppId;
@@ -177,105 +180,35 @@ add_test(function testUninstall() {
 });
 
 add_test(function testFileUploadInstall() {
-  function createUpload() {
-    let request = {
-      type: "uploadPackage"
-    };
-    webappActorRequest(request, function (aResponse) {
-      getPackageContent(aResponse.actor);
-    });
-  }
-  function getPackageContent(uploadActor) {
-    let packageFile = do_get_file("data/app.zip");
-    OS.File.read(packageFile.path)
-      .then(function (bytes) {
-        // To work around the fact that JSON.stringify translates the typed
-        // array to object, we are encoding the typed array here into a string
-        let content = String.fromCharCode.apply(null, bytes);
-        uploadChunk(uploadActor, content);
-      });
-  }
-  function uploadChunk(uploadActor, content) {
-    let request = {
-      to: uploadActor,
-      type: "chunk",
-      chunk: content
-    };
-    gClient.request(request, function (aResponse) {
-      endsUpload(uploadActor);
-    });
-  }
-  function endsUpload(uploadActor, content) {
-    let request = {
-      to: uploadActor,
-      type: "done"
-    };
-    gClient.request(request, function (aResponse) {
-      installApp(uploadActor);
-    });
-  }
-  function installApp(uploadActor) {
-    let request = {type: "install", appId: gAppId, upload: uploadActor};
-    webappActorRequest(request, function (aResponse) {
-      do_check_eq(aResponse.appId, gAppId);
-    });
-    gClient.addOneTimeListener("webappsEvent", function listener(aState, aType, aPacket) {
-      do_check_eq(aType.appId, gAppId);
-      if ("error" in aType) {
-        do_print("Error: " + aType.error);
-      }
-      if ("message" in aType) {
-        do_print("Error message: " + aType.message);
-      }
-      do_check_eq("error" in aType, false);
-
-      removeUpload(uploadActor);
-    });
-  }
-  function removeUpload(uploadActor, content) {
-    let request = {
-      to: uploadActor,
-      type: "remove"
-    };
-    gClient.request(request, function (aResponse) {
+  let packageFile = do_get_file("data/app.zip");
+  installPackaged(gClient, gActor, packageFile.path, gAppId)
+    .then(function ({ appId }) {
+      do_check_eq(appId, gAppId);
       run_next_test();
+    }, function (e) {
+      do_throw("Failed install uploaded packaged app: " + e.error + ": " + e.message);
     });
-  }
-  createUpload();
 });
 
 add_test(function testInstallHosted() {
   gAppId = "hosted-app";
-  let request = {
-    type: "install",
-    appId: gAppId,
-    manifest: {
-      name: "My hosted app"
-    },
-    metadata: {
-      origin: "http://foo.com",
-      installOrigin: "http://metadata.foo.com",
-      manifestURL: "http://foo.com/metadata/manifest.webapp"
-    }
+  let metadata = {
+    origin: "http://foo.com",
+    installOrigin: "http://metadata.foo.com",
+    manifestURL: "http://foo.com/metadata/manifest.webapp"
   };
-  webappActorRequest(request, function (aResponse) {
-    do_check_eq(aResponse.appId, gAppId);
-  });
-
-  // The install request is asynchronous and send back an event to tell
-  // if the installation succeed or failed
-  gClient.addOneTimeListener("webappsEvent", function listener(aState, aType, aPacket) {
-    do_check_eq(aType.appId, gAppId);
-    if ("error" in aType) {
-      do_print("Error: " + aType.error);
+  let manifest = {
+    name: "My hosted app"
+  };
+  installHosted(gClient, gActor, gAppId, metadata, manifest).then(
+    function ({ appId }) {
+      do_check_eq(appId, gAppId);
+      run_next_test();
+    },
+    function (e) {
+      do_throw("Failed installing hosted app: " + e.error + ": " + e.message);
     }
-    if ("message" in aType) {
-      do_print("Error message: " + aType.message);
-    }
-    do_check_eq("error" in aType, false);
-
-    run_next_test();
-  });
+  );
 });
 
 add_test(function testCheckHostedApp() {

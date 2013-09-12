@@ -1,6 +1,6 @@
 // Observably different visits to the same with-statement produce distinct Environments.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.eval("function f(a, obj) { with (obj) return function () { return a; }; }");
 var dbg = Debugger(g);
 var hits = 0;

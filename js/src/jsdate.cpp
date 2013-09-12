@@ -524,7 +524,7 @@ date_convert(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp
  * Other Support routines and definitions
  */
 
-Class DateObject::class_ = {
+const Class DateObject::class_ = {
     js_Date_str,
     JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Date),

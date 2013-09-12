@@ -2,7 +2,7 @@ var desc = Object.getOwnPropertyDescriptor(Debugger.prototype, "enabled");
 assertEq(typeof desc.get, 'function');
 assertEq(typeof desc.set, 'function');
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var hits;
 var dbg = new Debugger(g);
 assertEq(dbg.enabled, true);

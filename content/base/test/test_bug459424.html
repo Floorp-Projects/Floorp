@@ -20,16 +20,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=459424
 /** Test for Bug 459424 **/
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  var viewer =
-    window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-          .getInterface(Components.interfaces.nsIWebNavigation)
-          .QueryInterface(Components.interfaces.nsIDocShell)
-          .contentViewer
-          .QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
-  viewer.fullZoom = 2;
+  SpecialPowers.setFullZoom(window, 2);
   is(true, true, "Gotta test something");
-  viewer.fullZoom = 1;
+  SpecialPowers.setFullZoom(window, 1);
   SimpleTest.finish();
 });
 </script>

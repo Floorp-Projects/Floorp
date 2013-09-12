@@ -45,7 +45,6 @@ function FrameWorker(url, name, origin, exposeLocalStorage) {
   this.name = name || url;
   this.ports = new Map(); // all unclosed ports, including ones yet to be entangled
   this.loaded = false;
-  this.reloading = false;
   this.origin = origin;
   this._injectController = null;
   this.exposeLocalStorage = exposeLocalStorage;
@@ -76,22 +75,6 @@ FrameWorker.prototype = {
       Services.obs.removeObserver(this._injectController, "document-element-inserted");
       this._injectController = null;
     }
-  },
-
-  reload: function FrameWorker_reloadWorker() {
-    // reset all ports as not entangled; they will then be re-entangled during
-    // the call to createSandbox after the document is reloaded
-    for (let [, port] of this.ports) {
-      port._entangled = false;
-    }
-    // Mark the provider as unloaded now, so that any new ports created after
-    // this point but before the unload has fired are properly queued up.
-    this.loaded = false;
-    // reset the content to about:blank - this will fire the unload event
-    // but not remove our browser from the DOM.  Our unload handler will
-    // see this.reloading is true and reload for us.
-    this.reloading = true;
-    navigate("about:blank");
   },
 
   createSandbox: function createSandbox() {
@@ -246,29 +229,13 @@ FrameWorker.prototype = {
     workerWindow.addEventListener("unload", function unloadListener() {
       workerWindow.removeEventListener("unload", unloadListener);
       worker.loaded = false;
-      // If the worker is reloading, when we don't actually close any ports as
-      // they need to be re-entangled.
-      // If content is already null, we can't send a close message, so skip it.
-      if (!worker.reloading && content) {
-        for (let [, port] of worker.ports) {
-          try {
-            port.close();
-          } catch (ex) {
-            Cu.reportError("FrameWorker: failed to close port. " + ex);
-          }
-        }
-        worker.ports.clear();
-      }
-
+      // No need to close ports - the worker probably wont see a
+      // social.port-closing message and certainly isn't going to have time to
+      // do anything if it did see it.
+      worker.ports.clear();
       if (sandbox) {
         Cu.nukeSandbox(sandbox);
         sandbox = null;
-      }
-      if (worker.reloading) {
-        Services.tm.mainThread.dispatch(function doReload() {
-          worker.reloading = false;
-          worker.load();
-        }, Ci.nsIThread.DISPATCH_NORMAL);
       }
     });
   },
@@ -285,7 +252,6 @@ const FrameWorkerManager = {
 
     addMessageListener("frameworker:init", this._onInit);
     addMessageListener("frameworker:connect", this._onConnect);
-    addMessageListener("frameworker:reload", this._onReload);
     addMessageListener("frameworker:port-message", this._onPortMessage);
     addMessageListener("frameworker:cookie-get", this._onCookieGet);
   },
@@ -302,10 +268,6 @@ const FrameWorkerManager = {
     frameworker.ports.set(msg.data.portId, port);
     if (frameworker.loaded && !frameworker.reloading)
       port._createWorkerAndEntangle(frameworker);
-  },
-
-  _onReload: function(msg) {
-    frameworker.reload();
   },
 
   // A message related to a port.

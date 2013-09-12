@@ -38,7 +38,7 @@ assertEq(res[0] !== res[1], true);
 assertEq(res[0], this);
 assertEq(res[1], otherGlobalSameCompartment);
 
-var otherGlobalDifferentCompartment = newGlobal("new-compartment");
+var otherGlobalDifferentCompartment = newGlobal();
 
 eval = otherGlobalDifferentCompartment.eval;
 res = new f();

@@ -19,13 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=448993
 
 /** Test for Bug 448993 **/
 
-function gc() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-        .getInterface(Components.interfaces.nsIDOMWindowUtils)
-        .garbageCollect();
-}
-
 function runTest() {
   var a = document.getElementById("a");
   var b = document.getElementById("b");
@@ -37,7 +30,7 @@ function runTest() {
   r.extractContents();
   var s = document.createRange();
   s.setEnd(b, 0); 
-  gc();
+  SpecialPowers.gc();
   s.deleteContents();
   ok(true, "test did not crash");
   SimpleTest.finish();

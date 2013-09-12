@@ -49,7 +49,7 @@
 
       function nativeCallback() {
         SpecialPowers.pushPrefEnv({"set": [["dom.promise.enabled", true]]}, function() {
-          new Promise(r => r.resolve(42)).then(console.log);
+          new Promise(function(resolve, reject) { resolve(42); }).then(console.log);
         });
       }
     </script>

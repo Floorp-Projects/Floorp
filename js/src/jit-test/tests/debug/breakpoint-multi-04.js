@@ -1,7 +1,7 @@
 // After clearing one breakpoint, another breakpoint from a different Debugger object at the same instruction still works.
 
 function test(which) {
-    var g = newGlobal('new-compartment');
+    var g = newGlobal();
     g.eval("var line0 = Error().lineNumber;\n" +
            "function f() {\n" +             // line0 + 1
            "    return " + which + ";\n" +  // line0 + 2

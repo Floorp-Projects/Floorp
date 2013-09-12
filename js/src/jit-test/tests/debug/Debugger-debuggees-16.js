@@ -5,7 +5,7 @@ var nonDebugGlobals = [];
 var f = gc;
 for (var i = 0; i < 4; i++) {
     // Create two globals, one debuggee.
-    var g1 = newGlobal('new-compartment');
+    var g1 = newGlobal();
     var g2 = g1.eval("newGlobal('same-compartment')");
     var dbg = Debugger(g1);
     dbg.onDebuggerStatement = function () {};

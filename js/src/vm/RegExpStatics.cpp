@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "vm/RegExpStatics-inl.h"
+#include "vm/RegExpStatics.h"
 
 #include "vm/RegExpStaticsObject.h"
 
@@ -35,7 +35,7 @@ resc_trace(JSTracer *trc, JSObject *obj)
     res->mark(trc);
 }
 
-Class RegExpStaticsObject::class_ = {
+const Class RegExpStaticsObject::class_ = {
     "RegExpStatics",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS,
     JS_PropertyStub,         /* addProperty */
@@ -64,6 +64,20 @@ RegExpStatics::create(JSContext *cx, GlobalObject *parent)
         return NULL;
     obj->setPrivate(static_cast<void *>(res));
     return obj;
+}
+
+void
+RegExpStatics::markFlagsSet(JSContext *cx)
+{
+    // Flags set on the RegExp function get propagated to constructed RegExp
+    // objects, which interferes with optimizations that inline RegExp cloning
+    // or avoid cloning entirely. Scripts making this assumption listen to
+    // type changes on RegExp.prototype, so mark a state change to trigger
+    // recompilation of all such code (when recompiling, a stub call will
+    // always be performed).
+    JS_ASSERT(this == cx->global()->getRegExpStatics());
+
+    types::MarkTypeObjectFlags(cx, cx->global(), types::OBJECT_FLAG_REGEXP_FLAGS_SET);
 }
 
 bool

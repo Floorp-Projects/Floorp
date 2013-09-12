@@ -31,18 +31,22 @@ class OpenDatabaseHelper : public HelperBase
 {
   friend class CheckPermissionsHelper;
 
+  typedef mozilla::dom::quota::PersistenceType PersistenceType;
   typedef mozilla::dom::quota::StoragePrivilege StoragePrivilege;
 
 public:
   OpenDatabaseHelper(IDBOpenDBRequest* aRequest,
                      const nsAString& aName,
+                     const nsACString& aGroup,
                      const nsACString& aASCIIOrigin,
                      uint64_t aRequestedVersion,
+                     PersistenceType aPersistenceType,
                      bool aForDeletion,
                      mozilla::dom::ContentParent* aContentParent,
                      StoragePrivilege aPrivilege)
     : HelperBase(aRequest), mOpenDBRequest(aRequest), mName(aName),
-      mASCIIOrigin(aASCIIOrigin), mRequestedVersion(aRequestedVersion),
+      mGroup(aGroup), mASCIIOrigin(aASCIIOrigin),
+      mRequestedVersion(aRequestedVersion), mPersistenceType(aPersistenceType),
       mForDeletion(aForDeletion), mPrivilege(aPrivilege), mDatabaseId(nullptr),
       mContentParent(aContentParent), mCurrentVersion(0), mLastObjectStoreId(0),
       mLastIndexId(0), mState(eCreated), mResultCode(NS_OK),
@@ -58,7 +62,9 @@ public:
 
   nsresult Init();
 
+  nsresult WaitForOpenAllowed();
   nsresult Dispatch(nsIEventTarget* aDatabaseThread);
+  nsresult DispatchToIOThread();
   nsresult RunImmediately();
 
   void SetError(nsresult rv)
@@ -96,6 +102,8 @@ public:
   nsresult CreateDatabaseConnection(nsIFile* aDBFile,
                                     nsIFile* aFMDirectory,
                                     const nsAString& aName,
+                                    PersistenceType aPersistenceType,
+                                    const nsACString& aGroup,
                                     const nsACString& aOrigin,
                                     mozIStorageConnection** aConnection);
 
@@ -122,8 +130,10 @@ protected:
   // In-params.
   nsRefPtr<IDBOpenDBRequest> mOpenDBRequest;
   nsString mName;
+  nsCString mGroup;
   nsCString mASCIIOrigin;
   uint64_t mRequestedVersion;
+  PersistenceType mPersistenceType;
   bool mForDeletion;
   StoragePrivilege mPrivilege;
   nsCOMPtr<nsIAtom> mDatabaseId;
@@ -140,6 +150,7 @@ protected:
   // State variables
   enum OpenDatabaseState {
     eCreated = 0, // Not yet dispatched to the DB thread
+    eOpenPending, // Waiting for open allowed/open allowed
     eDBWork, // Waiting to do/doing work on the DB thread
     eFiringEvents, // Waiting to fire/firing events on the main thread
     eSetVersionPending, // Waiting on a SetVersionHelper

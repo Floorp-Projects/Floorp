@@ -19,7 +19,7 @@ addProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHan
   return true;
 }
 
-JSClass addPropertyClass = {
+const JSClass addPropertyClass = {
     "AddPropertyTester",
     0,
     addProperty,

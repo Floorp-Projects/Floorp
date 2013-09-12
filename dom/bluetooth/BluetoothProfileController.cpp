@@ -21,9 +21,10 @@ BluetoothProfileController::BluetoothProfileController(
                                    const nsAString& aDeviceAddress,
                                    BluetoothReplyRunnable* aRunnable,
                                    BluetoothProfileControllerCallback aCallback)
-  : mDeviceAddress(aDeviceAddress)
+  : mCallback(aCallback)
+  , mDeviceAddress(aDeviceAddress)
   , mRunnable(aRunnable)
-  , mCallback(aCallback)
+  , mSuccess(false)
 {
   MOZ_ASSERT(!aDeviceAddress.IsEmpty());
   MOZ_ASSERT(aRunnable);
@@ -152,7 +153,12 @@ BluetoothProfileController::ConnectNext()
 
   // The action has been completed, so the dom request is replied and then
   // the callback is invoked
-  DispatchBluetoothReply(mRunnable, BluetoothValue(true), EmptyString());
+  if (mSuccess) {
+    DispatchBluetoothReply(mRunnable, BluetoothValue(true), EmptyString());
+  } else {
+    DispatchBluetoothReply(mRunnable, BluetoothValue(),
+                           NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
+  }
   mCallback();
 }
 
@@ -163,6 +169,8 @@ BluetoothProfileController::OnConnect(const nsAString& aErrorStr)
 
   if (!aErrorStr.IsEmpty()) {
     BT_WARNING(NS_ConvertUTF16toUTF8(aErrorStr).get());
+  } else {
+    mSuccess = true;
   }
 
   ConnectNext();
@@ -203,7 +211,12 @@ BluetoothProfileController::DisconnectNext()
 
   // The action has been completed, so the dom request is replied and then
   // the callback is invoked
-  DispatchBluetoothReply(mRunnable, BluetoothValue(true), EmptyString());
+  if (mSuccess) {
+    DispatchBluetoothReply(mRunnable, BluetoothValue(true), EmptyString());
+  } else {
+    DispatchBluetoothReply(mRunnable, BluetoothValue(),
+                           NS_LITERAL_STRING(ERR_DISCONNECTION_FAILED));
+  }
   mCallback();
 }
 
@@ -214,6 +227,8 @@ BluetoothProfileController::OnDisconnect(const nsAString& aErrorStr)
 
   if (!aErrorStr.IsEmpty()) {
     BT_WARNING(NS_ConvertUTF16toUTF8(aErrorStr).get());
+  } else {
+    mSuccess = true;
   }
 
   DisconnectNext();

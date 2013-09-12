@@ -1,7 +1,7 @@
 // Debugger.Environment.prototype.callee reveals the callee of environments
 // that have them.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);
 

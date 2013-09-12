@@ -1,6 +1,6 @@
 // After clearing one breakpoint, another breakpoint at the same instruction still works.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var script = null;
 var handlers = [];

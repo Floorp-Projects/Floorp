@@ -2,7 +2,7 @@
 // onPop fires when frames throw an exception.
 
 load(libdir + "asserts.js");
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 
 function test(type, provocation) {

@@ -1,5 +1,5 @@
 // Different objects get different Debugger.Object wrappers.
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var hits = 0;
 dbg.onDebuggerStatement = function (frame) {

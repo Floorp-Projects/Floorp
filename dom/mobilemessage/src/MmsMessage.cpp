@@ -8,11 +8,11 @@
 #include "jsapi.h" // For OBJECT_TO_JSVAL and JS_NewDateObjectMsec
 #include "jsfriendapi.h" // For js_DateGetMsecSinceEpoch
 #include "nsJSUtils.h"
-#include "Constants.h"
 #include "nsContentUtils.h"
 #include "nsIDOMFile.h"
 #include "nsTArrayHelpers.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/mobilemessage/Constants.h" // For MessageType
 #include "mozilla/dom/mobilemessage/SmsTypes.h"
 #include "nsDOMFile.h"
 

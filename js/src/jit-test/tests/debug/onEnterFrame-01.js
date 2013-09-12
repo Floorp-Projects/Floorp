@@ -1,6 +1,6 @@
 // Basic enterFrame hook tests.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var type;
 dbg.onEnterFrame = function (frame) {

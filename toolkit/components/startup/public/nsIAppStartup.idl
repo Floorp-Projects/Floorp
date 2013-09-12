@@ -7,7 +7,7 @@
 
 interface nsICmdLineService;
 
-[scriptable, uuid(380618f8-479a-435b-b58e-7398ab937531)]
+[scriptable, uuid(744d6ec0-115f-11e3-9c94-68fd99890b3c)]
 interface nsIAppStartup : nsISupports
 {
     /**
@@ -139,6 +139,12 @@ interface nsIAppStartup : nsISupports
      * True if the application is being restarted
      */
     readonly attribute boolean restarting;
+
+    /**
+     * True if this is the startup following restart, i.e. if the application
+     * was restarted using quit(eRestart*).
+     */
+    readonly attribute boolean wasRestarted;
 
     /** 
      * Returns an object with main, process, firstPaint, sessionRestored properties.

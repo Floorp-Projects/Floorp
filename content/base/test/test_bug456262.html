@@ -20,14 +20,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=456262
 /** Test for Bug 456262 **/
 
 function runTest() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   document.expando = document;
   document.documentElement.expando = document;
   document.documentElement.setAttribute("foo", "bar");
   document.documentElement.getAttributeNode("foo").expando = document;
-  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-        .getInterface(Components.interfaces.nsIDOMWindowUtils)
-        .garbageCollect();
+  SpecialPowers.gc();
   ok(document.expando, "Should have preserved the expando!");
   ok(document.documentElement.expando, "Should have preserved the expando!");
   ok(document.documentElement.getAttributeNode('foo').expando,

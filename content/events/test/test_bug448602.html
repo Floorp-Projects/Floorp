@@ -151,8 +151,7 @@ function runTests() {
 }
 
 function dispatchTrusted(t, o) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  t.dispatchEvent(new Event("testevent", o));
+  SpecialPowers.dispatchEvent(window, t, new Event("testevent", o));
 }
 
 function testAllListener() {

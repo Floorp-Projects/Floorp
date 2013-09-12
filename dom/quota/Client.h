@@ -9,12 +9,15 @@
 
 #include "mozilla/dom/quota/QuotaCommon.h"
 
+#include "PersistenceType.h"
+
 class nsIOfflineStorage;
 class nsIRunnable;
 
 BEGIN_QUOTA_NAMESPACE
 
-class UsageRunnable;
+class OriginOrPatternString;
+class UsageInfo;
 
 // An abstract interface for quota manager clients.
 // Each storage API must provide an implementation of this interface in order
@@ -70,14 +73,20 @@ public:
 
   // Methods which are called on the IO thred.
   virtual nsresult
-  InitOrigin(const nsACString& aOrigin, UsageRunnable* aUsageRunnable) = 0;
+  InitOrigin(PersistenceType aPersistenceType,
+             const nsACString& aGroup,
+             const nsACString& aOrigin,
+             UsageInfo* aUsageInfo) = 0;
 
   virtual nsresult
-  GetUsageForOrigin(const nsACString& aOrigin,
-                    UsageRunnable* aUsageRunnable) = 0;
+  GetUsageForOrigin(PersistenceType aPersistenceType,
+                    const nsACString& aGroup,
+                    const nsACString& aOrigin,
+                    UsageInfo* aUsageInfo) = 0;
 
   virtual void
-  OnOriginClearCompleted(const nsACString& aPattern) = 0;
+  OnOriginClearCompleted(PersistenceType aPersistenceType,
+                         const OriginOrPatternString& aOriginOrPattern) = 0;
 
   virtual void
   ReleaseIOThreadObjects() = 0;

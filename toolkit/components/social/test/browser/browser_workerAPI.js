@@ -128,103 +128,41 @@ let tests = {
     let fw = {};
     Cu.import("resource://gre/modules/FrameWorker.jsm", fw);
 
-    // get a real handle to the worker so we can watch the unload event
-    // we watch for the unload of the worker to know it is infact being
-    // unloaded, after that if we get worker.connected we know that
-    // the worker was loaded again and ports reconnected.
-
-    // Given our <browser remote="true"> model, we have to some of this in a
-    // content script.  We turn this function into a data: URL...
-    // (and note that this code only makes sense in the context of
-    //  FrameWorkerContent.js...)
-    let contentScript = function() {
-      // the content script may be executed while there are pending messages,
-      // such as ports from the previous test being closed, which screws us up.
-      // By only doing this work on a message, we ensure previous messages have
-      // all been delivered.
-      addMessageListener("frameworker-test:ready", function onready() {
-        removeMessageListener("frameworker-test:ready", onready);
-        // first, find our test's port - it will be the last one.
-        let port, id
-        for ([id, port] of frameworker.ports) {
-          ; // nothing to do - we just want to get the last...
-        }
-        let unloadHasFired = false,
-            haveNoPendingMessagesBefore = true,
-            havePendingMessagesAfter = false;
-        content.addEventListener("unload", function workerUnload(e) {
-          content.removeEventListener("unload", workerUnload);
-          // There should be no "pending" messages with one subtle exception -
-          // there *might* be a social.initialize message - the reload process
-          // posts a message to do the reload, then posts the init message - it
-          // may or maynot have arrived here by now - but there certainly should
-          // be no other messages.
-          for (let [temp_id, temp_port] of frameworker.ports) {
-            if (temp_port._pendingMessagesOutgoing.length == 0)
-              continue;
-            if (temp_port._pendingMessagesOutgoing.length == 1 &&
-                temp_port._pendingMessagesOutgoing[0].data &&
-                JSON.parse(temp_port._pendingMessagesOutgoing[0].data).topic == "social.initialize")
-              continue;
-            // we found something we aren't expecting...
-            haveNoPendingMessagesBefore = false;
-          }
-          unloadHasFired = true; // at the end, so errors above aren't masked.
-        });
-        addEventListener("DOMWindowCreated", function workerLoaded(e) {
-          removeEventListener("DOMWindowCreated", workerLoaded);
-          // send a message which should end up pending
-          port.postMessage({topic: "test-pending-msg"});
-          for (let [temp_id, temp_port] of frameworker.ports) {
-            if (temp_port._pendingMessagesOutgoing.length >= 0) {
-              havePendingMessagesAfter = true;
-            }
-          }
-          let ok = unloadHasFired && haveNoPendingMessagesBefore && havePendingMessagesAfter;
-          sendAsyncMessage("test-result", {ok: ok});
-        });
-      });
-    };
-
-    let reloading = false;
     let worker = fw.getFrameWorkerHandle(provider.workerURL, undefined, "testWorkerReload");
     let port = provider.getWorkerPort();
-    worker._worker.browserPromise.then(browser => {
-      browser.messageManager.loadFrameScript("data:," + encodeURI(contentScript.toSource()) + "();", false);
-      browser.messageManager.sendAsyncMessage("frameworker-test:ready");
-      let seenTestResult = false;
-      browser.messageManager.addMessageListener("test-result", function _onTestResult(msg) {
-        browser.messageManager.removeMessageListener("test-result", _onTestResult);
-        ok(msg.json.ok, "test result from content-script is ok");
-        seenTestResult = true;
-      });
-
-      port.onmessage = function (e) {
+    // this observer will be fired when the worker reloads - it ensures the
+    // old port was closed and the new worker is functioning.
+    Services.obs.addObserver(function reloadObserver() {
+      Services.obs.removeObserver(reloadObserver, "social:provider-reload");
+      ok(port._closed, "old port was closed by the reload");
+      let newWorker = fw.getFrameWorkerHandle(provider.workerURL, undefined, "testWorkerReload - worker2");
+      let newPort = provider.getWorkerPort();
+      newPort.onmessage = function (e) {
         let topic = e.data.topic;
         switch (topic) {
           case "test-initialization-complete":
-            // tell the worker to send the reload msg - that will trigger the
-            // frameworker to unload and for our content script's unload
-            // handler to post a "test-pending" message, which in-turn causes
-            // the worker to send the test-pending-response.
-            // All of which goes to prove that if a message is delivered while
-            // the frameworker is unloaded due to a reload, that message still
-            // gets delivered.
-            port.postMessage({topic: "test-reload-init"});
-            break;
-          case "test-pending-response":
-            ok(e.data.data.seenInit, "worker has seen the social.initialize message");
-            // now we've been reloaded, check that our worker is still the same
-            let newWorker = fw.getFrameWorkerHandle(provider.workerURL, undefined, "testWorkerReload");
-            is(worker._worker, newWorker._worker, "worker is the same after reload");
-            ok(true, "worker reloaded and testPort was reconnected");
-            ok(seenTestResult, "saw result message from content");
+            // and we are done.
+            newPort.close();
             next();
             break;
         }
       }
-      port.postMessage({topic: "test-initialization"});
-    });
+      newPort.postMessage({topic: "test-initialization"});
+    }, "social:provider-reload", false);
+
+    port.onmessage = function (e) {
+      let topic = e.data.topic;
+      switch (topic) {
+        case "test-initialization-complete":
+          // tell the worker to send the reload msg - that will trigger the
+          // frameworker to unload and for our content script's unload
+          // handler to post a "test-result" message.
+          port.postMessage({topic: "test-reload-init"});
+          // and the "social:provider-reload" observer should fire...
+          break;
+      }
+    }
+    port.postMessage({topic: "test-initialization"});
   },
 
   testNotificationLinks: function(next) {

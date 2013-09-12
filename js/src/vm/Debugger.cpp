@@ -20,12 +20,12 @@
 #include "vm/ArgumentsObject.h"
 #include "vm/WrapperObject.h"
 
-#include "jsfuninlines.h"
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
 #include "jsscriptinlines.h"
 
+#include "vm/ObjectImpl-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -37,7 +37,7 @@ using mozilla::Maybe;
 
 /*** Forward declarations ************************************************************************/
 
-extern Class DebuggerFrame_class;
+extern const Class DebuggerFrame_class;
 
 enum {
     JSSLOT_DEBUGFRAME_OWNER,
@@ -47,35 +47,35 @@ enum {
     JSSLOT_DEBUGFRAME_COUNT
 };
 
-extern Class DebuggerArguments_class;
+extern const Class DebuggerArguments_class;
 
 enum {
     JSSLOT_DEBUGARGUMENTS_FRAME,
     JSSLOT_DEBUGARGUMENTS_COUNT
 };
 
-extern Class DebuggerEnv_class;
+extern const Class DebuggerEnv_class;
 
 enum {
     JSSLOT_DEBUGENV_OWNER,
     JSSLOT_DEBUGENV_COUNT
 };
 
-extern Class DebuggerObject_class;
+extern const Class DebuggerObject_class;
 
 enum {
     JSSLOT_DEBUGOBJECT_OWNER,
     JSSLOT_DEBUGOBJECT_COUNT
 };
 
-extern Class DebuggerScript_class;
+extern const Class DebuggerScript_class;
 
 enum {
     JSSLOT_DEBUGSCRIPT_OWNER,
     JSSLOT_DEBUGSCRIPT_COUNT
 };
 
-extern Class DebuggerSource_class;
+extern const Class DebuggerSource_class;
 
 enum {
     JSSLOT_DEBUGSOURCE_OWNER,
@@ -1673,7 +1673,7 @@ Debugger::finalize(FreeOp *fop, JSObject *obj)
     fop->delete_(dbg);
 }
 
-Class Debugger::jsclass = {
+const Class Debugger::jsclass = {
     "Debugger",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUG_COUNT),
@@ -2720,7 +2720,7 @@ DebuggerScript_trace(JSTracer *trc, JSObject *obj)
     }
 }
 
-Class DebuggerScript_class = {
+const Class DebuggerScript_class = {
     "Script",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGSCRIPT_COUNT),
@@ -3542,7 +3542,8 @@ DebuggerScript_isInCatchScope(JSContext *cx, unsigned argc, Value* vp)
         JSTryNote* tnBegin = script->trynotes()->vector;
         JSTryNote* tnEnd = tnBegin + script->trynotes()->length;
         while (tnBegin != tnEnd) {
-            if (offset - tnBegin->start < tnBegin->length &&
+            if (tnBegin->start <= offset &&
+                offset <= tnBegin->start + tnBegin->length &&
                 tnBegin->kind == JSTRY_CATCH)
             {
                 args.rval().setBoolean(true);
@@ -3610,7 +3611,7 @@ DebuggerSource_trace(JSTracer *trc, JSObject *obj)
     }
 }
 
-Class DebuggerSource_class = {
+const Class DebuggerSource_class = {
     "Source",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGSOURCE_COUNT),
@@ -3765,7 +3766,7 @@ DebuggerFrame_finalize(FreeOp *fop, JSObject *obj)
     DebuggerFrame_freeScriptFrameIterData(fop, obj);
 }
 
-Class DebuggerFrame_class = {
+const Class DebuggerFrame_class = {
     "Frame", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGFRAME_COUNT),
     JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, DebuggerFrame_finalize
@@ -3910,7 +3911,7 @@ DebuggerFrame_getOlder(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-Class DebuggerArguments_class = {
+const Class DebuggerArguments_class = {
     "Arguments", JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGARGUMENTS_COUNT),
     JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
@@ -4395,7 +4396,7 @@ DebuggerObject_trace(JSTracer *trc, JSObject *obj)
     }
 }
 
-Class DebuggerObject_class = {
+const Class DebuggerObject_class = {
     "Object",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGOBJECT_COUNT),
@@ -5212,7 +5213,7 @@ DebuggerEnv_trace(JSTracer *trc, JSObject *obj)
     }
 }
 
-Class DebuggerEnv_class = {
+const Class DebuggerEnv_class = {
     "Environment",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGENV_COUNT),

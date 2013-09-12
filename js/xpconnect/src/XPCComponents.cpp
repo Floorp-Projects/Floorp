@@ -2622,70 +2622,6 @@ nsXPCComponents_Utils::GetSandbox(nsIXPCComponents_utils_Sandbox **aSandbox)
     return NS_OK;
 }
 
-/* void lookupMethod (); */
-NS_IMETHODIMP
-nsXPCComponents_Utils::LookupMethod(const JS::Value& object,
-                                    const JS::Value& name,
-                                    JSContext *cx,
-                                    JS::Value *retval)
-{
-    // first param must be a JSObject
-    if (!object.isObject())
-        return NS_ERROR_XPC_BAD_CONVERT_JS;
-    JS::RootedObject obj(cx, &object.toObject());
-
-    // second param must be a string.
-    if (!JSVAL_IS_STRING(name))
-        return NS_ERROR_XPC_BAD_CONVERT_JS;
-    JSString *methodName = name.toString();
-    RootedId methodId(cx, INTERNED_STRING_TO_JSID(cx, JS_InternJSString(cx, methodName)));
-
-    // If |obj| is a security wrapper, try to unwrap it. If this fails, we
-    // don't have full acccess to the object, in which case we throw.
-    // Otherwise, enter a compartment, since we may have just unwrapped a CCW.
-    obj = js::CheckedUnwrap(obj);
-    if (!obj) {
-        JS_ReportError(cx, "Permission denied to unwrap object");
-        return NS_ERROR_XPC_BAD_CONVERT_JS;
-    }
-    {
-        // Enter the target compartment.
-        JSAutoCompartment ac(cx, obj);
-
-        // Now, try to create an Xray wrapper around the object. This won't work
-        // if the object isn't Xray-able. In that case, we throw.
-        JSObject *xray = WrapperFactory::WrapForSameCompartmentXray(cx, obj);
-        if (!xray)
-            return NS_ERROR_XPC_BAD_CONVERT_JS;
-
-        // Alright, now do the lookup.
-        *retval = UndefinedValue();
-        Rooted<JSPropertyDescriptor> desc(cx);
-        if (!JS_GetPropertyDescriptorById(cx, xray, methodId, 0, &desc))
-            return NS_ERROR_FAILURE;
-
-        // First look for a method value. If that's not there, try a getter,
-        // since historically lookupMethod also works for getters.
-        JSObject *methodObj = desc.value().isObject() ? &desc.value().toObject() : NULL;
-        if (!methodObj && desc.hasGetterObject())
-            methodObj = desc.getterObject();
-
-        // Callers of this function seem to expect bound methods. Make it happen.
-        // Note that this is unnecessary until bug 658909 is fixed.
-        if (methodObj && JS_ObjectIsCallable(cx, methodObj))
-            methodObj = JS_BindCallable(cx, methodObj, obj);
-
-        // Set the return value if appropriate.
-        *retval = methodObj ? ObjectValue(*methodObj) : UndefinedValue();
-    }
-
-    // Now that we've left the target compartment, wrap for the caller.
-    if (!JS_WrapValue(cx, retval))
-        return NS_ERROR_FAILURE;;
-
-    return NS_OK;
-}
-
 /* void reportError (); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::ReportError(const JS::Value &errorArg, JSContext *cx)
@@ -2827,6 +2763,46 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
                                      jsVersion, false, &rval);
     NS_ENSURE_SUCCESS(rv, rv);
     *retval = rval;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetSandboxMetadata(const JS::Value &sandboxVal,
+                                          JSContext *cx, JS::Value *rval)
+{
+    if (!sandboxVal.isObject())
+        return NS_ERROR_INVALID_ARG;
+
+    RootedObject sandbox(cx, &sandboxVal.toObject());
+    sandbox = js::CheckedUnwrap(sandbox);
+    if (!sandbox || !xpc::IsSandbox(sandbox))
+        return NS_ERROR_INVALID_ARG;
+
+    RootedValue metadata(cx);
+    nsresult rv = xpc::GetSandboxMetadata(cx, sandbox, &metadata);
+    NS_ENSURE_SUCCESS(rv, rv);
+    *rval = metadata;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::SetSandboxMetadata(const JS::Value &sandboxVal,
+                                          const JS::Value &metadataVal,
+                                          JSContext *cx)
+{
+    if (!sandboxVal.isObject())
+        return NS_ERROR_INVALID_ARG;
+
+    RootedObject sandbox(cx, &sandboxVal.toObject());
+    sandbox = js::CheckedUnwrap(sandbox);
+    if (!sandbox || !xpc::IsSandbox(sandbox))
+        return NS_ERROR_INVALID_ARG;
+
+    RootedValue metadata(cx, metadataVal);
+    nsresult rv = xpc::SetSandboxMetadata(cx, sandbox, metadata);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     return NS_OK;
 }
 
@@ -3240,7 +3216,7 @@ nsXPCComponents_Utils::CanCreateWrapper(const nsIID * iid, char **_retval)
 NS_IMETHODIMP
 nsXPCComponents_Utils::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
 {
-    static const char* const allowed[] = { "lookupMethod", "evalInSandbox", nullptr };
+    static const char* const allowed[] = { "evalInSandbox", nullptr };
     *_retval = CheckAccessList(methodName, allowed);
     return NS_OK;
 }
@@ -3706,23 +3682,6 @@ nsXPCComponents::AttachComponentsObject(JSContext* aCx,
                                  nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
-/* void lookupMethod (); */
-NS_IMETHODIMP
-nsXPCComponents::LookupMethod(const JS::Value& object,
-                              const JS::Value& name,
-                              JSContext *cx,
-                              JS::Value *retval)
-{
-    NS_WARNING("Components.lookupMethod deprecated, use Components.utils.lookupMethod");
-
-    nsCOMPtr<nsIXPCComponents_Utils> utils;
-    nsresult rv = GetUtils(getter_AddRefs(utils));
-    if (NS_FAILED(rv))
-        return rv;
-
-    return utils->LookupMethod(object, name, cx, retval);
-}
-
 /* void reportError (); */
 NS_IMETHODIMP nsXPCComponents::ReportError(const JS::Value &error, JSContext *cx)
 {
@@ -3749,7 +3708,7 @@ nsXPCComponents::CanCreateWrapper(const nsIID * iid, char **_retval)
 NS_IMETHODIMP
 nsXPCComponents::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
 {
-    static const char* const allowed[] = { "isSuccessCode", "lookupMethod", nullptr };
+    static const char* const allowed[] = { "isSuccessCode", nullptr };
     *_retval = CheckAccessList(methodName, allowed);
     return NS_OK;
 }

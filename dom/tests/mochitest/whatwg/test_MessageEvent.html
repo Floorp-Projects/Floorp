@@ -37,23 +37,10 @@ function sendMsg()
 {
   try
   {
-    var evt = document.createEvent("MessageEvent");
+    var evt = new MessageEvent('message', {
+      bubbles: bubbles, cancelable: cancelable, data: data,
+      origin: origin, lastEventId: lastEventId, source: window});
     ok(evt instanceof MessageEvent, "I ordered a MessageEvent!");
-  
-    if (isMozilla)
-    {
-      is(evt.source, null,
-         "not initialized yet, so null in our implementation");
-      is(evt.lastEventId, "",
-         "not initialized yet, so empty string in our implementation");
-    }
-  
-    evt.initMessageEvent("message", bubbles, cancelable, data, origin,
-                         lastEventId, null);
-    ok(evt.source === null, "null source is fine for a MessageEvent");
-  
-    evt.initMessageEvent("message", bubbles, cancelable, data, origin,
-                         lastEventId, window);
   
     is(evt.data, data, "unexpected data");
     is(evt.origin, origin, "unexpected origin");

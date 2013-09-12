@@ -1,6 +1,6 @@
 // Activity in the debugger compartment should not trigger debug hooks.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var hit = false;
 
 var dbg = Debugger(g);
@@ -17,6 +17,6 @@ g.outerEval = eval;
 g.eval("outerEval('debugger;');");
 assertEq(hit, false, "debugger statement in debugger compartment eval code should not hit");
 
-var g2 = newGlobal('new-compartment');
+var g2 = newGlobal();
 g2.eval("debugger;");
 assertEq(hit, false, "debugger statement in unrelated non-debuggee compartment should not hit");

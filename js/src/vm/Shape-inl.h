@@ -40,7 +40,7 @@ GetterSetterWriteBarrierPostRemove(JSRuntime *rt, JSObject **objp)
 }
 
 inline
-BaseShape::BaseShape(JSCompartment *comp, Class *clasp, JSObject *parent, JSObject *metadata,
+BaseShape::BaseShape(JSCompartment *comp, const Class *clasp, JSObject *parent, JSObject *metadata,
                      uint32_t objectFlags)
 {
     JS_ASSERT(!(objectFlags & ~OBJECT_FLAG_MASK));
@@ -53,7 +53,7 @@ BaseShape::BaseShape(JSCompartment *comp, Class *clasp, JSObject *parent, JSObje
 }
 
 inline
-BaseShape::BaseShape(JSCompartment *comp, Class *clasp, JSObject *parent, JSObject *metadata,
+BaseShape::BaseShape(JSCompartment *comp, const Class *clasp, JSObject *parent, JSObject *metadata,
                      uint32_t objectFlags, uint8_t attrs,
                      PropertyOp rawGetter, StrictPropertyOp rawSetter)
 {
@@ -122,7 +122,7 @@ BaseShape::operator=(const BaseShape &other)
 }
 
 inline
-StackBaseShape::StackBaseShape(ExclusiveContext *cx, Class *clasp,
+StackBaseShape::StackBaseShape(ExclusiveContext *cx, const Class *clasp,
                                JSObject *parent, JSObject *metadata, uint32_t objectFlags)
   : flags(objectFlags),
     clasp(clasp),

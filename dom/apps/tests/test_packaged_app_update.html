@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id={900533}
+-->
+<head>
+  <title>Test for Bug {900533} Packaged app update tests</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="test_packaged_app_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={900533}">Mozilla Bug {900533}</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+"use strict";
+
+function debug(aMsg) {
+  //dump("== Tests debug == " + aMsg + "\n");
+}
+
+var miniManifestURL;
+
+SimpleTest.waitForExplicitFinish();
+
+function checkForUpdate(aExpected, aOnSuccess, aOnApplied, aLaunchDownload, aOnError) {
+  var lApp = PackagedTestHelper.gApp;
+
+  lApp.ondownloadsuccess = aOnSuccess || null;
+  lApp.ondownloadapplied = aOnApplied || null;
+
+  var request = lApp.checkForUpdate();
+  request.onerror = aOnError ? aOnError.bind(undefined, request) :
+                               PackagedTestHelper.mozAppsError;
+  request.onsuccess = function(event) {
+    var expectingDownload = aExpected ? "": "not ";
+    ok(lApp.downloadAvailable === aExpected,
+       "Download should " + expectingDownload + "be available");
+    if (aLaunchDownload && lApp.downloadAvailable) {
+      lApp.download();
+    } else {
+      PackagedTestHelper.next();
+    }
+  };
+}
+
+function checkLastAppState(aMiniManifestURL, aExpectedReady, aExpectedDownload,
+                           aExpectedVersion, aCb) {
+  ok(true, aExpectedReady ? "App downloaded" : "App download applied");
+  var expected = {
+    name: PackagedTestHelper.gAppName,
+    manifestURL: aMiniManifestURL,
+    installOrigin: PackagedTestHelper.gInstallOrigin,
+    progress: 0,
+    installState: aExpectedReady ? "updating" : "installed",
+    downloadAvailable: aExpectedDownload,
+    downloading: false,
+    size: 0,
+    readyToApplyDownload: aExpectedReady
+  };
+
+  PackagedTestHelper.checkAppState(PackagedTestHelper.gApp, aExpectedVersion,
+                                   expected, true, false, aCb);
+}
+
+function updateApp(aExpectedReady, aPreviousVersion, aNextVersion) {
+  var lApp = PackagedTestHelper.gApp;
+
+  var ondownloadappliedhandler =
+    checkLastAppState.bind(PackagedTestHelper, miniManifestURL, false, false,
+                           aNextVersion, PackagedTestHelper.next);
+
+    var ondownloadsuccesshandler =
+      checkLastAppState.bind(undefined, miniManifestURL,
+                             aExpectedReady, false, aPreviousVersion,
+                             function() {
+        navigator.mozApps.mgmt.applyDownload(lApp);
+    });
+
+    checkForUpdate(true, ondownloadsuccesshandler, ondownloadappliedhandler,
+                   true);
+
+}
+
+
+var steps = [
+  function() {
+    // Set up
+    PackagedTestHelper.launchableValue =
+      SpecialPowers.setAllAppsLaunchable(true);
+    SpecialPowers.addPermission("webapps-manage", true, document);
+    ok(true, "Set up");
+    PackagedTestHelper.next();
+  },
+  function() {
+    ok(true, "autoConfirmAppInstall");
+    SpecialPowers.autoConfirmAppInstall(PackagedTestHelper.next);
+  },
+  function() {
+    PackagedTestHelper.setAppVersion(2, PackagedTestHelper.next);
+  },
+  function() {
+    ok(true, "== TEST == Install packaged app");
+    navigator.mozApps.mgmt.oninstall = function(evt) {
+      ok(true, "Got oninstall event");
+      PackagedTestHelper.gApp = evt.application;
+      PackagedTestHelper.gApp.ondownloaderror = function() {
+        ok(false, "Download error " + PackagedTestHelper.gApp.downloadError.name);
+        PackagedTestHelper.finish();
+      };
+      PackagedTestHelper.gApp.ondownloadsuccess =
+        checkLastAppState.bind(undefined, miniManifestURL, false, false,
+                               2, PackagedTestHelper.next);
+    };
+
+    var request = navigator.mozApps.installPackage(miniManifestURL);
+    request.onerror = PackagedTestHelper.mozAppsError;
+    request.onsuccess = function() {
+      ok(true, "Application installed");
+    };
+  },
+  function() {
+    PackagedTestHelper.setAppVersion(3, PackagedTestHelper.next);
+  },
+  function() {
+    ok(true, "== TEST == Update packaged app");
+    updateApp(true, 2, 3);
+  },
+  function() {
+    ok(true, "== TEST == Check for Update after getting a new package");
+    checkForUpdate(false);
+  },
+  function() {
+    PackagedTestHelper.setAppVersion(4, PackagedTestHelper.next, true);
+  },
+  function() {
+    ok(true, "== TEST == Update packaged app - same package");
+    updateApp(false, 3, 4);
+  },
+  function() {
+    ok(true, "== TEST == Check for Update after getting the same package");
+    checkForUpdate(false);
+  },
+  function() {
+    PackagedTestHelper.setAppVersion(1, PackagedTestHelper.next);
+  },
+  function() {
+    ok(true, "== TEST == Update packaged app - Updating a pending app");
+    miniManifestURL = PackagedTestHelper.gSJS +
+                      "?getManifest=true" +
+                      "&appName=arandomname" +
+                      "&appToFail1";
+    PackagedTestHelper.checkAppDownloadError(miniManifestURL,
+                                            "MANIFEST_MISMATCH", 2, false, true,
+                                             "arandomname",
+                                             function () {
+      checkForUpdate(false, null, null, false,
+                     function (request) {
+        if (request.error.name === "PENDING_APP_NOT_UPDATABLE") {
+          ok(true, "Got expected PENDING_APP_NOT_UPDATEABLE");
+        } else {
+          ok(false, "Got unexpected " + request.error.name);
+        }
+        PackagedTestHelper.next();
+      });
+    });
+  },
+  function() {
+    ok(true, "all done!\n");
+    PackagedTestHelper.finish();
+  }
+];
+
+PackagedTestHelper.setSteps(steps);
+// appToUpdate added to the URL so we get a unique URL for this app.
+// Unique in this case meaning different from the ones used on the
+// install tests
+miniManifestURL = PackagedTestHelper.gSJS + "?getManifest=true&appToUpdate";
+
+addLoadEvent(PackagedTestHelper.start);
+
+</script>
+</pre>
+</body>
+</html>

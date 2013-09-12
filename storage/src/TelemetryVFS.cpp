@@ -10,6 +10,7 @@
 #include "sqlite3.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Util.h"
+#include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/QuotaObject.h"
 #include "mozilla/SQLiteInterposer.h"
@@ -349,15 +350,19 @@ xOpen(sqlite3_vfs* vfs, const char *zName, sqlite3_file* pFile,
   }
   p->histograms = h;
 
+  const char* persistenceType;
+  const char* group;
   const char* origin;
   if ((flags & SQLITE_OPEN_URI) &&
+      (persistenceType = sqlite3_uri_parameter(zName, "persistenceType")) &&
+      (group = sqlite3_uri_parameter(zName, "group")) &&
       (origin = sqlite3_uri_parameter(zName, "origin"))) {
     QuotaManager* quotaManager = QuotaManager::Get();
     MOZ_ASSERT(quotaManager);
 
-    p->quotaObject = quotaManager->GetQuotaObject(nsDependentCString(origin),
-                                                  NS_ConvertUTF8toUTF16(zName));
-
+    p->quotaObject = quotaManager->GetQuotaObject(PersistenceTypeFromText(
+      nsDependentCString(persistenceType)), nsDependentCString(group),
+      nsDependentCString(origin), NS_ConvertUTF8toUTF16(zName));
   }
 
   rc = orig_vfs->xOpen(orig_vfs, zName, p->pReal, flags, pOutFlags);

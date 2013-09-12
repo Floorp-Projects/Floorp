@@ -1,6 +1,6 @@
 // A frame's onPop handler is called only once, even if it is for a function
 // called from a loop.
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 var log;
 

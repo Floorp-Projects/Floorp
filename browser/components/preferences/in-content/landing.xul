@@ -13,11 +13,7 @@
       <label class="landingButton-label">&paneGeneral.title;</label>
     </button>
 
-    <button label="&paneTabs.title;" class="landingButton"
-            oncommand="gotoPref('paneTabs');">
-      <image class="landingButton-icon" type="tabs"/>
-      <label class="landingButton-label">&paneTabs.title;</label>
-    </button>
+
 
     <button label="&paneContent.title;" class="landingButton"
             oncommand="gotoPref('paneContent');">

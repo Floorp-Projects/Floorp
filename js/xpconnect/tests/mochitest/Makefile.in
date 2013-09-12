@@ -16,7 +16,6 @@ MOCHITEST_FILES =	chrome_wrappers_helper.html \
 		file_wrappers-2.html \
 		inner.html \
 		test_frameWrapping.html \
-		test_lookupMethod.html \
 		test_bug92773.html \
 		bug92773_helper.html \
 		test_bug384632.html \
@@ -70,7 +69,6 @@ MOCHITEST_FILES =	chrome_wrappers_helper.html \
 		test_bug772288.html \
 		test_bug781476.html \
 		file_bug781476.html \
-		test_bug785096.html \
 		test_bug789713.html \
 		test_bug790732.html \
 		test_bug793969.html \

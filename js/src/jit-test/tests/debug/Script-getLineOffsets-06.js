@@ -1,6 +1,6 @@
 // getLineOffsets works with extended instructions, such as JSOP_GOTOX.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.line0 = null;
 var dbg = Debugger(g);
 var where;

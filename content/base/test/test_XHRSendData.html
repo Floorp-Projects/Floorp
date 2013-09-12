@@ -38,8 +38,6 @@ testDoc2.appendChild(testDoc2.createElement("res"));
 testDoc2.documentElement.appendChild(testDoc2.createTextNode("text"));
 is(testDoc2.inputEncoding, null, "wrong encoding");
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
 var testData = "blahblahblahblahblahblahblaaaaaaaah. blah.";
 var extensions = [".txt",".png",".jpg",".gif",".xml", "noext"];
 var fileTypes = ["text/plain", "image/png", "image/jpeg", "image/gif", "text/xml", null];
@@ -72,14 +70,13 @@ extensions.forEach(
       testFiles.push(testFile);
 
       var fileList = document.getElementById('fileList');
-      fileList.value = testFile.path;
+      SpecialPowers.wrap(fileList).value = testFile.path;
       testDOMFiles.push(fileList.files[0]);
     }
 );
 
 function createFileWithDataExt(fileData, extension) {
-  var dirSvc = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"].getService(SpecialPowers.Ci.nsIProperties);
-  var testFile = dirSvc.get("ProfD", SpecialPowers.Ci.nsIFile);
+  var testFile = SpecialPowers.Services.dirsvc.get("ProfD", SpecialPowers.Ci.nsIFile);
   testFile.append("testfile" + extension);
   var outStream = SpecialPowers.Cc["@mozilla.org/network/file-output-stream;1"].createInstance(SpecialPowers.Ci.nsIFileOutputStream);
   outStream.init(testFile, 0x02 | 0x08 | 0x20, 0666, 0);

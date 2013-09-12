@@ -32,18 +32,12 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsdate.h"
 #include "jsfun.h"
-#include "jsgc.h"
-#include "jsiter.h"
 #ifdef JS_THREADSAFE
 #include "jslock.h"
 #endif
-#include "jsnum.h"
 #include "jsobj.h"
-#include "json.h"
 #include "jsprf.h"
-#include "jsreflect.h"
 #include "jsscript.h"
 #include "jstypes.h"
 #include "jsutil.h"
@@ -58,7 +52,6 @@
 #endif
 
 #include "builtin/TestingFunctions.h"
-#include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "jit/Ion.h"
 #include "js/OldDebugAPI.h"
@@ -66,15 +59,13 @@
 #include "perf/jsperf.h"
 #include "shell/jsheaptools.h"
 #include "shell/jsoptparse.h"
+#include "vm/ArgumentsObject.h"
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
 
-#include "jsfuninlines.h"
-#include "jsinferinlines.h"
-#include "jsscriptinlines.h"
-
-#include "vm/Interpreter-inl.h"
+#include "jscompartmentinlines.h"
+#include "jsobjinlines.h"
 
 #ifdef XP_WIN
 # define PATH_MAX (MAX_PATH > _MAX_DIR ? MAX_PATH : _MAX_DIR)
@@ -620,7 +611,7 @@ MapContextOptionNameToFlag(JSContext* cx, const char* name)
     return 0;
 }
 
-extern JSClass global_class;
+extern const JSClass global_class;
 
 static bool
 Version(JSContext *cx, unsigned argc, jsval *vp)
@@ -2491,7 +2482,7 @@ sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     return true;
 }
 
-static JSClass sandbox_class = {
+static const JSClass sandbox_class = {
     "sandbox",
     JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,   JS_DeletePropertyStub,
@@ -2754,7 +2745,7 @@ resolver_enumerate(JSContext *cx, HandleObject obj)
     return ok;
 }
 
-static JSClass resolver_class = {
+static const JSClass resolver_class = {
     "resolver",
     JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1),
     JS_PropertyStub,   JS_DeletePropertyStub,
@@ -3614,12 +3605,12 @@ NewGlobal(JSContext *cx, unsigned argc, jsval *vp)
         if (!JS_GetProperty(cx, opts, "sameZoneAs", &v))
             return false;
         if (v.isObject())
-            options.zoneSpec = JS::SameZoneAs(UncheckedUnwrap(&v.toObject()));
+            options.setSameZoneAs(UncheckedUnwrap(&v.toObject()));
 
         if (!JS_GetProperty(cx, opts, "invisibleToDebugger", &v))
             return false;
         if (v.isBoolean())
-            options.invisibleToDebugger = v.toBoolean();
+            options.setInvisibleToDebugger(v.toBoolean());
     }
 
     RootedObject global(cx, NewGlobalObject(cx, options));
@@ -3660,7 +3651,7 @@ GetMaxArgs(JSContext *cx, unsigned arg, jsval *vp)
 static bool
 ObjectEmulatingUndefined(JSContext *cx, unsigned argc, jsval *vp)
 {
-    static JSClass cls = {
+    static const JSClass cls = {
         "ObjectEmulatingUndefined",
         JSCLASS_EMULATES_UNDEFINED,
         JS_PropertyStub,
@@ -4030,6 +4021,10 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
 "trap([fun, [pc,]] exp)",
 "  Trap bytecode execution."),
 
+    JS_FN_HELP("assertFloat32", testingFunc_assertFloat32, 2, 0,
+"assertFloat32(value, isFloat32)",
+"  In IonMonkey only, asserts that value has (resp. hasn't) the MIRType_Float32 if isFloat32 is true (resp. false)."),
+
     JS_FN_HELP("untrap", Untrap, 2, 0,
 "untrap(fun[, pc])",
 "  Remove a trap."),
@@ -4313,7 +4308,7 @@ its_finalize(JSFreeOp *fop, JSObject *obj)
         fprintf(gOutFile, "finalizing it\n");
 }
 
-static JSClass its_class = {
+static const JSClass its_class = {
     "It", JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE | JSCLASS_HAS_RESERVED_SLOTS(1),
     its_addProperty,  its_delProperty,  its_getProperty,  its_setProperty,
     (JSEnumerateOp)its_enumerate, (JSResolveOp)its_resolve,
@@ -4546,7 +4541,7 @@ global_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 #endif
 }
 
-JSClass global_class = {
+const JSClass global_class = {
     "global", JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,  JS_DeletePropertyStub,
     JS_PropertyStub,  JS_StrictPropertyStub,
@@ -4652,7 +4647,7 @@ env_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     return true;
 }
 
-static JSClass env_class = {
+static const JSClass env_class = {
     "environment", JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
     JS_PropertyStub,  JS_DeletePropertyStub,
     JS_PropertyStub,  env_setProperty,
@@ -4677,7 +4672,7 @@ static bool
 dom_genericMethod(JSContext *cx, unsigned argc, JS::Value *vp);
 
 #ifdef DEBUG
-static JSClass *GetDomClass();
+static const JSClass *GetDomClass();
 #endif
 
 static bool
@@ -4749,7 +4744,7 @@ static const JSFunctionSpec dom_methods[] = {
     JS_FS_END
 };
 
-static JSClass dom_class = {
+static const JSClass dom_class = {
     "FakeDOMObject", JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(2),
     JS_PropertyStub,       /* addProperty */
     JS_DeletePropertyStub, /* delProperty */
@@ -4768,7 +4763,7 @@ static JSClass dom_class = {
 };
 
 #ifdef DEBUG
-static JSClass *GetDomClass() {
+static const JSClass *GetDomClass() {
     return &dom_class;
 }
 #endif
@@ -5330,7 +5325,7 @@ CheckObjectAccess(JSContext *cx, HandleObject obj, HandleId id, JSAccessMode mod
     return true;
 }
 
-JSSecurityCallbacks securityCallbacks = {
+const JSSecurityCallbacks securityCallbacks = {
     CheckObjectAccess,
     NULL
 };
