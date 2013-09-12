@@ -153,7 +153,7 @@ this.DownloadImport.prototype = {
                 type: "copy",
                 entityID: entityID
               },
-              startTime: new Date(startTime / 1000),
+              startTime: startTime,
               totalBytes: maxBytes,
               hasPartialData: !!tempPath,
               tryToKeepPartialData: true,
