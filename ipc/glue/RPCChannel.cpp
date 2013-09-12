@@ -51,6 +51,7 @@ RPCChannel::~RPCChannel()
 {
     MOZ_COUNT_DTOR(RPCChannel);
     RPC_ASSERT(mCxxStackFrames.empty(), "mismatched CxxStackFrame ctor/dtors");
+    Clear();
 }
 
 void
