@@ -23,8 +23,8 @@
   <vbox flex="1">
     <hbox id="content" flex="1">
       <vbox id="tabs">
-        <button class="button projects-button" onclick="selectTab('projects')">&index.projects;</button>
-        <button class="button device-button" onclick="selectTab('device')">&index.device;</button>
+        <button class="button projects-button" onclick="selectTab('projects')">&index.projects2;</button>
+        <button class="button device-button" onclick="selectTab('device')">&index.device2;</button>
       </vbox>
       <hbox id="tab-panels" flex="1">
         <iframe flex="1" class="panel projects-panel" src="chrome://browser/content/devtools/app-manager/projects.xhtml"/>
