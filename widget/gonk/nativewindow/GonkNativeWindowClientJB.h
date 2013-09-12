@@ -19,8 +19,6 @@
 #define NATIVEWINDOW_GONKNATIVEWINDOWCLIENT_JB_H
 
 #include <gui/IGraphicBufferProducer.h>
-#include <gui/GLConsumer.h>
-#include <gui/BufferQueue.h>
 
 #include <ui/ANativeObjectBase.h>
 #include <ui/Region.h>
@@ -28,6 +26,8 @@
 #include <utils/RefBase.h>
 #include <utils/threads.h>
 #include <utils/KeyedVector.h>
+
+#include "GonkBufferQueue.h"
 
 struct ANativeWindow_Buffer;
 
@@ -148,7 +148,7 @@ public:
     virtual int unlockAndPost();
 
 protected:
-    enum { NUM_BUFFER_SLOTS = BufferQueue::NUM_BUFFER_SLOTS };
+    enum { NUM_BUFFER_SLOTS = GonkBufferQueue::NUM_BUFFER_SLOTS };
     enum { DEFAULT_FORMAT = PIXEL_FORMAT_RGBA_8888 };
 
 private:

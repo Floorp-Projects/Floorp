@@ -18,9 +18,6 @@
 #ifndef NATIVEWINDOW_GONKBUFFERQUEUE_H
 #define NATIVEWINDOW_GONKBUFFERQUEUE_H
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-
 #include <gui/IGraphicBufferAlloc.h>
 #include <gui/IGraphicBufferProducer.h>
 
@@ -31,10 +28,14 @@
 #include <utils/Vector.h>
 #include <utils/threads.h>
 
+#include "mozilla/layers/LayersSurfaces.h"
+
 namespace android {
 // ----------------------------------------------------------------------------
 
 class GonkBufferQueue : public BnGraphicBufferProducer {
+    typedef mozilla::layers::SurfaceDescriptor SurfaceDescriptor;
+
 public:
     enum { MIN_UNDEQUEUED_BUFFERS = 2 };
     enum { NUM_BUFFER_SLOTS = 32 };
@@ -237,6 +238,7 @@ public:
 
         BufferItem()
          :
+           mSurfaceDescriptor(SurfaceDescriptor()),
            mTransform(0),
            mScalingMode(NATIVE_WINDOW_SCALING_MODE_FREEZE),
            mTimestamp(0),
@@ -248,6 +250,9 @@ public:
         // if the buffer in this slot has been acquired in the past (see
         // BufferSlot.mAcquireCalled).
         sp<GraphicBuffer> mGraphicBuffer;
+
+        // mSurfaceDescriptor is the token to remotely allocated GraphicBuffer.
+        SurfaceDescriptor mSurfaceDescriptor;
 
         // mCrop is the current crop rectangle for this buffer slot.
         Rect mCrop;
@@ -295,8 +300,7 @@ public:
     //
     // Note that the dependencies on EGL will be removed once we switch to using
     // the Android HW Sync HAL.
-    status_t releaseBuffer(int buf, EGLDisplay display, EGLSyncKHR fence,
-            const sp<Fence>& releaseFence);
+    status_t releaseBuffer(int buf, const sp<Fence>& releaseFence);
 
     // consumerConnect connects a consumer to the GonkBufferQueue.  Only one
     // consumer may be connected, and when that consumer disconnects the
@@ -360,29 +364,23 @@ public:
     // NATIVE_WINDOW_TRANSFORM_ROT_90.  The default is 0 (no transform).
     status_t setTransformHint(uint32_t hint);
 
+    int getGeneration();
+
+    SurfaceDescriptor *getSurfaceDescriptorFromBuffer(ANativeWindowBuffer* buffer);
+
 private:
+    // releaseBufferFreeListUnlocked releases the resources in the freeList;
+    // this must be called with mMutex unlocked.
+    void releaseBufferFreeListUnlocked(nsTArray<SurfaceDescriptor>& freeList);
+
     // freeBufferLocked frees the GraphicBuffer and sync resources for the
     // given slot.
-    void freeBufferLocked(int index);
+    //void freeBufferLocked(int index);
 
     // freeAllBuffersLocked frees the GraphicBuffer and sync resources for
     // all slots.
-    void freeAllBuffersLocked();
-
-    // freeAllBuffersExceptHeadLocked frees the GraphicBuffer and sync
-    // resources for all slots except the head of mQueue.
-    void freeAllBuffersExceptHeadLocked();
-
-    // drainQueueLocked waits for the buffer queue to empty if we're in
-    // synchronous mode, or returns immediately otherwise. It returns NO_INIT
-    // if the GonkBufferQueue is abandoned (consumer disconnected) or disconnected
-    // (producer disconnected) during the call.
-    status_t drainQueueLocked();
-
-    // drainQueueAndFreeBuffersLocked drains the buffer queue if we're in
-    // synchronous mode and free all buffers. In asynchronous mode, all buffers
-    // are freed except the currently queued buffer (if it exists).
-    status_t drainQueueAndFreeBuffersLocked();
+    //void freeAllBuffersLocked();
+    void freeAllBuffersLocked(nsTArray<SurfaceDescriptor>& freeList);
 
     // setDefaultMaxBufferCountLocked sets the maximum number of buffer slots
     // that will be used if the producer does not override the buffer slot
@@ -414,14 +412,13 @@ private:
     struct BufferSlot {
 
         BufferSlot()
-        : mEglDisplay(EGL_NO_DISPLAY),
+        : mSurfaceDescriptor(SurfaceDescriptor()),
           mBufferState(BufferSlot::FREE),
           mRequestBufferCalled(false),
           mTransform(0),
           mScalingMode(NATIVE_WINDOW_SCALING_MODE_FREEZE),
           mTimestamp(0),
           mFrameNumber(0),
-          mEglFence(EGL_NO_SYNC_KHR),
           mAcquireCalled(false),
           mNeedsCleanupOnRelease(false) {
             mCrop.makeInvalid();
@@ -431,8 +428,8 @@ private:
         // if no buffer has been allocated.
         sp<GraphicBuffer> mGraphicBuffer;
 
-        // mEglDisplay is the EGLDisplay used to create EGLSyncKHR objects.
-        EGLDisplay mEglDisplay;
+        // mSurfaceDescriptor is the token to remotely allocated GraphicBuffer.
+        SurfaceDescriptor mSurfaceDescriptor;
 
         // BufferState represents the different states in which a buffer slot
         // can be.  All slots are initially FREE.
@@ -508,7 +505,7 @@ private:
         // to EGL_NO_SYNC_KHR when the buffer is created and may be set to a
         // new sync object in releaseBuffer.  (This is deprecated in favor of
         // mFence, below.)
-        EGLSyncKHR mEglFence;
+        //EGLSyncKHR mEglFence;
 
         // mFence is a fence which will signal when work initiated by the
         // previous owner of the buffer is finished. When the buffer is FREE,
@@ -631,6 +628,9 @@ private:
 
     // mTransformHint is used to optimize for screen rotations
     uint32_t mTransformHint;
+
+    // mGeneration is the current generation of buffer slots
+    uint32_t mGeneration;
 };
 
 // ----------------------------------------------------------------------------

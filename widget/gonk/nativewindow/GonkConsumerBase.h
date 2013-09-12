@@ -18,13 +18,13 @@
 #ifndef NATIVEWINDOW_GONKCONSUMERBASE_H
 #define NATIVEWINDOW_GONKCONSUMERBASE_H
 
-#include <gui/BufferQueue.h>
-
 #include <ui/GraphicBuffer.h>
 
 #include <utils/String8.h>
 #include <utils/Vector.h>
 #include <utils/threads.h>
+
+#include "GonkBufferQueue.h"
 
 namespace android {
 // ----------------------------------------------------------------------------
@@ -163,8 +163,7 @@ protected:
     // must take place when a buffer is released back to the GonkBufferQueue.  If
     // it is overridden the derived class's implementation must call
     // GonkConsumerBase::releaseBufferLocked.
-    virtual status_t releaseBufferLocked(int buf, EGLDisplay display,
-           EGLSyncKHR eglFence);
+    virtual status_t releaseBufferLocked(int buf);
 
     // addReleaseFence* adds the sync points associated with a fence to the set
     // of sync points that must be reached before the buffer in the given slot
@@ -215,7 +214,7 @@ protected:
 
     // The GonkConsumerBase has-a GonkBufferQueue and is responsible for creating this object
     // if none is supplied
-    sp<GonkBufferQueue> mGonkBufferQueue;
+    sp<GonkBufferQueue> mBufferQueue;
 
     // mMutex is the mutex used to prevent concurrent access to the member
     // variables of GonkConsumerBase objects. It must be locked whenever the
