@@ -7,13 +7,14 @@
 #ifndef mozilla_dom_telephony_telephonycall_h__
 #define mozilla_dom_telephony_telephonycall_h__
 
-#include "TelephonyCommon.h"
+#include "mozilla/dom/telephony/TelephonyCommon.h"
 
 #include "mozilla/dom/DOMError.h"
 
 class nsPIDOMWindow;
 
-BEGIN_TELEPHONY_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 class TelephonyCall MOZ_FINAL : public nsDOMEventTargetHelper
 {
@@ -24,7 +25,7 @@ class TelephonyCall MOZ_FINAL : public nsDOMEventTargetHelper
   nsString mSecondNumber;
   nsString mState;
   bool mEmergency;
-  nsRefPtr<mozilla::dom::DOMError> mError;
+  nsRefPtr<DOMError> mError;
 
   uint32_t mCallIndex;
   uint16_t mCallState;
@@ -107,7 +108,7 @@ public:
 
   static already_AddRefed<TelephonyCall>
   Create(Telephony* aTelephony, const nsAString& aNumber, uint16_t aCallState,
-         uint32_t aCallIndex = kOutgoingPlaceholderCallIndex,
+         uint32_t aCallIndex = telephony::kOutgoingPlaceholderCallIndex,
          bool aEmergency = false, bool aIsConference = false);
 
   void
@@ -125,7 +126,7 @@ public:
   void
   UpdateCallIndex(uint32_t aCallIndex)
   {
-    NS_ASSERTION(mCallIndex == kOutgoingPlaceholderCallIndex,
+    NS_ASSERTION(mCallIndex == telephony::kOutgoingPlaceholderCallIndex,
                  "Call index should not be set!");
     mCallIndex = aCallIndex;
   }
@@ -173,6 +174,7 @@ private:
                     TelephonyCall* aCall);
 };
 
-END_TELEPHONY_NAMESPACE
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_telephony_telephonycall_h__
