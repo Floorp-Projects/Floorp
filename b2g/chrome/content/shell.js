@@ -700,6 +700,9 @@ var CustomEventManager = {
       case 'captive-portal-login-cancel':
         CaptivePortalLoginHelper.handleEvent(detail);
         break;
+      case 'inputmethod-update-layouts':
+        KeyboardHelper.handleEvent(detail);
+        break;
     }
   }
 }
@@ -1051,6 +1054,14 @@ let RemoteDebugger = {
     }
   }
 }
+
+let KeyboardHelper = {
+  handleEvent: function keyboard_handleEvent(aMessage) {
+    let data = aMessage.data;
+
+    Keyboard.setLayouts(data.layouts);
+  }
+};
 
 // This is the backend for Gaia's screenshot feature.  Gaia requests a
 // screenshot by sending a mozContentEvent with detail.type set to
