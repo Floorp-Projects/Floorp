@@ -38,8 +38,7 @@ const EXPECTED_REFLOWS = [
     "TabItem__reconnect@chrome://browser/content/tabview.js|" +
     "TabItem@chrome://browser/content/tabview.js|" +
     "TabItems_link@chrome://browser/content/tabview.js|" +
-    "@chrome://browser/content/tabview.js|" +
-    "addTab@chrome://browser/content/tabbrowser.xml|",
+    "@chrome://browser/content/tabview.js|",
 
   // SessionStore.getWindowDimensions()
   "ssi_getWindowDimension@resource:///modules/sessionstore/SessionStore.jsm|" +
@@ -88,6 +87,7 @@ let observer = {
     let path = (new Error().stack).split("\n").slice(1).map(line => {
       return line.replace(/:\d+$/, "");
     }).join("|");
+    let pathWithLineNumbers = (new Error().stack).split("\n").slice(1).join("|");
 
     // Stack trace is empty. Reflow was triggered by native code.
     if (path === "") {
@@ -102,7 +102,7 @@ let observer = {
       }
     }
 
-    ok(false, "unexpected uninterruptible reflow '" + path + "'");
+    ok(false, "unexpected uninterruptible reflow '" + pathWithLineNumbers + "'");
   },
 
   reflowInterruptible: function (start, end) {
