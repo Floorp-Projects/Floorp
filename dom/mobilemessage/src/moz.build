@@ -4,38 +4,42 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    mmsdir = 'android'
-elif CONFIG['MOZ_B2G_RIL']:
-    mmsdir = 'gonk'
-else:
-    mmsdir = 'fallback'
-
 EXPORTS.mozilla.dom.mobilemessage += [
-    'Constants.h',
-    'MobileMessageCallback.h',
-    'MobileMessageService.h',
-    'SmsServicesFactory.h',
-    'Types.h',
+    'Constants.h',            # Required by almost all cpp files
+    'MobileMessageService.h', # Required by nsLayoutModule.cpp
+    'SmsServicesFactory.h',   # Required by nsLayoutModule.cpp
+    'Types.h',                # Required by IPDL SmsTypes.h
     'ipc/SmsChild.h',
     'ipc/SmsParent.h',
 ]
 
-if CONFIG['MOZ_B2G_RIL']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    CPP_SOURCES += [
+        'android/MobileMessageDatabaseService.cpp',
+        'android/SmsService.cpp',
+        'android/MmsService.cpp',
+    ]
+elif CONFIG['MOZ_B2G_RIL']:
     EXTRA_JS_MODULES = [
         'gonk/MmsPduHelper.jsm',
         'gonk/WspPduHelper.jsm',
         'gonk/mms_consts.js',
         'gonk/wap_consts.js',
     ]
-else:
-    EXPORTS.mozilla.dom.mobilemessage += [
-        "%s/%s" % (mmsdir, 'MmsService.h'),
-        "%s/%s" % (mmsdir, 'MobileMessageDatabaseService.h'),
+    EXTRA_COMPONENTS += [
+        'gonk/MmsService.js',
+        'gonk/MmsService.manifest',
+        'gonk/MobileMessageDatabaseService.js',
+        'gonk/MobileMessageDatabaseService.manifest',
     ]
     CPP_SOURCES += [
-        'MobileMessageDatabaseService.cpp',
-        'MmsService.cpp',
+        'gonk/SmsService.cpp',
+    ]
+else:
+    CPP_SOURCES += [
+        'fallback/MobileMessageDatabaseService.cpp',
+        'fallback/MmsService.cpp',
+        'fallback/SmsService.cpp',
     ]
 
 EXPORTS.mozilla.dom += [
@@ -54,23 +58,14 @@ CPP_SOURCES += [
     'MobileMessageManager.cpp',
     'MobileMessageService.cpp',
     'MobileMessageThread.cpp',
-    'SmsChild.cpp',
     'SmsFilter.cpp',
-    'SmsIPCService.cpp',
     'SmsMessage.cpp',
-    'SmsParent.cpp',
     'SmsSegmentInfo.cpp',
-    'SmsService.cpp',
     'SmsServicesFactory.cpp',
+    'ipc/SmsChild.cpp',
+    'ipc/SmsIPCService.cpp',
+    'ipc/SmsParent.cpp',
 ]
-
-if CONFIG['MOZ_B2G_RIL']:
-    EXTRA_COMPONENTS += [
-        'gonk/MmsService.js',
-        'gonk/MmsService.manifest',
-        'gonk/MobileMessageDatabaseService.js',
-        'gonk/MobileMessageDatabaseService.manifest',
-    ]
 
 IPDL_SOURCES += [
     'ipc/PMobileMessageCursor.ipdl',
