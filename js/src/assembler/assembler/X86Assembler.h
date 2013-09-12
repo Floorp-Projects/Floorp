@@ -1561,7 +1561,7 @@ public:
 #if WTF_CPU_X86
     void movl_mr(const void* base, RegisterID index, int scale, RegisterID dst)
     {
-        spew("movl       %d(%s,%d), %s",
+        spew("movl       %d(,%s,%d), %s",
              int(base), nameIReg(index), scale, nameIReg(dst));
         m_formatter.oneByteOp_disp32(OP_MOV_GvEv, dst, index, scale, int(base));
     }
@@ -2074,6 +2074,7 @@ public:
 
     void immediate64(int64_t imm)
     {
+        spew(".quad      %lld", (long long)imm);
         m_formatter.immediate64(imm);
     }
 #endif
@@ -2897,7 +2898,7 @@ public:
 
     JmpDst align(int alignment)
     {
-        spew(".balign %d", alignment);
+        spew(".balign %d, 0x%x   # hlt", alignment, OP_HLT);
         while (!m_formatter.isAligned(alignment))
             m_formatter.oneByteOp(OP_HLT);
 
