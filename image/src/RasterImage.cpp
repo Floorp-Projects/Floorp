@@ -401,6 +401,7 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
   mFinishing(false),
   mInUpdateImageContainer(false),
   mWantFullDecode(false),
+  mPendingError(false),
   mScaleRequest(nullptr)
 {
   // Set up the discard tracker node.
@@ -2822,13 +2823,19 @@ RasterImage::DoError()
   if (mError)
     return;
 
+  // We can't safely handle errors off-main-thread, so dispatch a worker to do it.
+  if (!NS_IsMainThread()) {
+    HandleErrorWorker::DispatchIfNeeded(this);
+    return;
+  }
+
   // If we're mid-decode, shut down the decoder.
   if (mDecoder) {
     MutexAutoLock lock(mDecodingMutex);
     FinishedSomeDecoding(eShutdownIntent_Error);
   }
 
-  // Put the container in an error state
+  // Put the container in an error state.
   mError = true;
 
   if (mDecodeRequest) {
@@ -2839,6 +2846,30 @@ RasterImage::DoError()
 
   // Log our error
   LOG_CONTAINER_ERROR;
+}
+
+/* static */ void
+RasterImage::HandleErrorWorker::DispatchIfNeeded(RasterImage* aImage)
+{
+  if (!aImage->mPendingError) {
+    aImage->mPendingError = true;
+    nsRefPtr<HandleErrorWorker> worker = new HandleErrorWorker(aImage);
+    NS_DispatchToMainThread(worker);
+  }
+}
+
+RasterImage::HandleErrorWorker::HandleErrorWorker(RasterImage* aImage)
+  : mImage(aImage)
+{
+  MOZ_ASSERT(mImage, "Should have image");
+}
+
+NS_IMETHODIMP
+RasterImage::HandleErrorWorker::Run()
+{
+  mImage->DoError();
+
+  return NS_OK;
 }
 
 // nsIInputStream callback to copy the incoming image data directly to the
@@ -3188,6 +3219,7 @@ RasterImage::DecodePool::DecodeJob::Run()
   // this request to the back of the list.
   else if (mImage->mDecoder &&
            !mImage->mError &&
+           !mImage->mPendingError &&
            !mImage->IsDecodeFinished() &&
            bytesDecoded < mRequest->mBytesToDecode &&
            bytesDecoded > 0) {
