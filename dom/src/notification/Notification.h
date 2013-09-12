@@ -34,6 +34,37 @@ public:
                                                     const nsAString& aTitle,
                                                     const NotificationOptions& aOption,
                                                     ErrorResult& aRv);
+  void GetTitle(nsString& aRetval)
+  {
+    aRetval = mTitle;
+  }
+
+  NotificationDirection Dir()
+  {
+    return mDir;
+  }
+
+  void GetLang(nsString& aRetval)
+  {
+    aRetval = mLang;
+  }
+
+  void GetBody(nsString& aRetval)
+  {
+    aRetval = mBody;
+  }
+
+  void GetTag(nsString& aRetval)
+  {
+    if (StringBeginsWith(mTag, NS_LITERAL_STRING("tag:"))) {
+      aRetval = Substring(mTag, 4);
+    }
+  }
+
+  void GetIcon(nsString& aRetval)
+  {
+    aRetval = mIconUrl;
+  }
 
   static void RequestPermission(const GlobalObject& aGlobal,
                                 const Optional<OwningNonNull<NotificationPermissionCallback> >& aCallback,
