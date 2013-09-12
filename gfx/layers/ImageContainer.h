@@ -334,6 +334,14 @@ public:
   void SetCurrentImage(Image* aImage);
 
   /**
+   * Clear the current image.
+   * This function is expect to be called only from a CompositableClient
+   * that belongs to ImageBridgeChild. Created to prevent dead lock.
+   * See Bug 901224.
+   */
+  void ClearCurrentImage();
+
+  /**
    * Set an Image as the current image to display. The Image must have
    * been created by this ImageContainer.
    * Must be called on the main thread, within a layers transaction.
