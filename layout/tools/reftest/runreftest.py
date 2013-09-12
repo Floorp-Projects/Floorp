@@ -108,8 +108,8 @@ class RefTest(object):
     self.copyExtraFilesToProfile(options, profile)
     return profile
 
-  def buildBrowserEnv(self, options, profileDir, debugger = False):
-    browserEnv = self.automation.environment(xrePath = options.xrePath, debugger = debugger)
+  def buildBrowserEnv(self, options, profileDir):
+    browserEnv = self.automation.environment(xrePath = options.xrePath)
     browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
 
     for v in options.environment:
@@ -141,7 +141,7 @@ class RefTest(object):
       profileDir = profile.profile # name makes more sense
 
       # browser environment
-      browserEnv = self.buildBrowserEnv(options, profileDir, debuggerInfo is not None)
+      browserEnv = self.buildBrowserEnv(options, profileDir)
 
       self.automation.log.info("REFTEST INFO | runreftest.py | Running tests: start.\n")
       status = self.automation.runApp(None, browserEnv, options.app, profileDir,
