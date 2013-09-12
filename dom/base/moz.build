@@ -65,6 +65,7 @@ EXPORTS.mozilla.dom += [
 
 CPP_SOURCES += [
     'BarProps.cpp',
+    'CompositionStringSynthesizer.cpp',
     'Crypto.cpp',
     'DOMCursor.cpp',
     'DOMError.cpp',
