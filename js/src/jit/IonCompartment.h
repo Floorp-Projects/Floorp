@@ -93,7 +93,7 @@ class ICStubSpace
 // OptimizedICStubSpace.
 struct OptimizedICStubSpace : public ICStubSpace
 {
-    const static size_t STUB_DEFAULT_CHUNK_SIZE = 4 * 1024;
+    static const size_t STUB_DEFAULT_CHUNK_SIZE = 4 * 1024;
 
   public:
     OptimizedICStubSpace()
@@ -109,7 +109,7 @@ struct OptimizedICStubSpace : public ICStubSpace
 // FallbackICStubSpace.
 struct FallbackICStubSpace : public ICStubSpace
 {
-    const static size_t STUB_DEFAULT_CHUNK_SIZE = 256;
+    static const size_t STUB_DEFAULT_CHUNK_SIZE = 256;
 
   public:
     FallbackICStubSpace()
