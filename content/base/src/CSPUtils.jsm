@@ -108,7 +108,7 @@ this.CSPdebug = function CSPdebug(aMsg) {
 }
 
 // Callback to resume a request once the policy-uri has been fetched
-function CSPPolicyURIListener(policyURI, docRequest, csp) {
+function CSPPolicyURIListener(policyURI, docRequest, csp, reportOnly) {
   this._policyURI = policyURI;    // location of remote policy
   this._docRequest = docRequest;  // the parent document request
   this._csp = csp;                // parent document's CSP
@@ -116,6 +116,7 @@ function CSPPolicyURIListener(policyURI, docRequest, csp) {
   this._wrapper = null;           // nsIScriptableInputStream
   this._docURI = docRequest.QueryInterface(Ci.nsIChannel)
                  .URI;    // parent document URI (to be used as 'self')
+  this._reportOnly = reportOnly;
 }
 
 CSPPolicyURIListener.prototype = {
@@ -147,8 +148,8 @@ CSPPolicyURIListener.prototype = {
     if (Components.isSuccessCode(status)) {
       // send the policy we received back to the parent document's CSP
       // for parsing
-      this._csp.refinePolicy(this._policy, this._docURI,
-                             this._csp._specCompliant);
+      this._csp.appendPolicy(this._policy, this._docURI,
+                             this._reportOnly, this._csp._specCompliant);
     }
     else {
       // problem fetching policy so fail closed
@@ -177,6 +178,7 @@ this.CSPRep = function CSPRep(aSpecCompliant) {
 
   this._allowEval = false;
   this._allowInlineScripts = false;
+  this._reportOnlyMode = false;
 
   // don't auto-populate _directives, so it is easier to find bugs
   this._directives = {};
@@ -244,12 +246,14 @@ CSPRep.ALLOW_DIRECTIVE   = "allow";
   * @returns
   *        an instance of CSPRep
   */
-CSPRep.fromString = function(aStr, self, docRequest, csp) {
+CSPRep.fromString = function(aStr, self, docRequest, csp, reportOnly) {
+  if (typeof reportOnly === 'undefined') reportOnly = false;
   var SD = CSPRep.SRC_DIRECTIVES_OLD;
   var UD = CSPRep.URI_DIRECTIVES;
   var aCSPR = new CSPRep();
   aCSPR._originalText = aStr;
   aCSPR._innerWindowID = innerWindowFromRequest(docRequest);
+  aCSPR._reportOnlyMode = reportOnly;
 
   var selfUri = null;
   if (self instanceof Ci.nsIURI) {
@@ -451,7 +455,7 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
         // policy-uri can't be abused for CSRF
         chan.loadFlags |= Ci.nsIChannel.LOAD_ANONYMOUS;
         chan.loadGroup = docRequest.loadGroup;
-        chan.asyncOpen(new CSPPolicyURIListener(uri, docRequest, csp), null);
+        chan.asyncOpen(new CSPPolicyURIListener(uri, docRequest, csp, reportOnly), null);
       }
       catch (e) {
         // resume the document request and apply most restrictive policy
@@ -499,12 +503,15 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
   */
 // When we deprecate our original CSP implementation, we rename this to
 // CSPRep.fromString and remove the existing CSPRep.fromString above.
-CSPRep.fromStringSpecCompliant = function(aStr, self, docRequest, csp) {
+CSPRep.fromStringSpecCompliant = function(aStr, self, docRequest, csp, reportOnly) {
+  if (typeof reportOnly === 'undefined') reportOnly = false;
+
   var SD = CSPRep.SRC_DIRECTIVES_NEW;
   var UD = CSPRep.URI_DIRECTIVES;
   var aCSPR = new CSPRep(true);
   aCSPR._originalText = aStr;
   aCSPR._innerWindowID = innerWindowFromRequest(docRequest);
+  aCSPR._reportOnlyMode = reportOnly;
 
   var selfUri = null;
   if (self instanceof Ci.nsIURI) {
