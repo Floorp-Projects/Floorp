@@ -9,16 +9,7 @@ this.EXPORTED_SYMBOLS = ["WebappsUpdater"];
 const Cc = Components.classes;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-
-XPCOMUtils.defineLazyServiceGetter(this, "settings",
-                                   "@mozilla.org/settingsService;1",
-                                   "nsISettingsService");
-
-function debug(aStr) {
-  //dump("--*-- WebappsUpdater: " + aStr);
-}
 
 this.WebappsUpdater = {
   _checkingApps: false,
@@ -38,7 +29,7 @@ this.WebappsUpdater = {
     let browser = Services.wm.getMostRecentWindow("navigator:browser");
     if (!browser) {
       this._pendingEvents.push(detail);
-      debug("Warning: Couldn't send update event " + aType +
+      dump("Warning: Couldn't send update event " + aType +
           ": no content browser. Will send again when content becomes available.");
       return false;
     }
@@ -48,8 +39,8 @@ this.WebappsUpdater = {
   },
 
   _appsUpdated: function(aApps) {
-    debug("appsUpdated: " + aApps.length + " apps to update");
-    let lock = settings.createLock();
+    dump("appsUpdated: " + aApps.length + " apps to update");
+    let lock = Services.settings.createLock();
     lock.set("apps.updateStatus", "check-complete", null);
     this.sendChromeEvent("apps-update-check", { apps: aApps });
     this._checkingApps = false;
@@ -58,7 +49,7 @@ this.WebappsUpdater = {
   // Trigger apps update check and wait for all to be done before
   // notifying gaia.
   updateApps: function() {
-    debug("updateApps (" + this._checkingApps + ")");
+    dump("updateApps (" + this._checkingApps + ")");
     // Don't start twice.
     if (this._checkingApps) {
       return;
