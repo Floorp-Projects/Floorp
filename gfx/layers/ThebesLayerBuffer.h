@@ -87,6 +87,7 @@ public:
 
   void DrawBufferWithRotation(gfx::DrawTarget* aTarget, ContextSource aSource,
                               float aOpacity = 1.0,
+                              gfx::CompositionOp aOperator = gfx::OP_OVER,
                               gfx::SourceSurface* aMask = nullptr,
                               const gfx::Matrix* aMaskTransform = nullptr) const;
 
@@ -124,6 +125,7 @@ protected:
   void DrawBufferQuadrant(gfx::DrawTarget* aTarget, XSide aXSide, YSide aYSide,
                           ContextSource aSource,
                           float aOpacity,
+                          gfx::CompositionOp aOperator,
                           gfx::SourceSurface* aMask,
                           const gfx::Matrix* aMaskTransform) const;
 
@@ -245,12 +247,14 @@ public:
    * Return a new surface of |aSize| and |aType|.
    * @param aFlags if ALLOW_REPEAT is set, then the buffer should be configured
    * to allow repeat-mode, otherwise it should be in pad (clamp) mode
+   * If the created buffer supports azure content, then the result(s) will
+   * be returned in aBlackDT/aWhiteDT, otherwise aBlackSurface/aWhiteSurface
+   * will be used.
    */
-  virtual already_AddRefed<gfxASurface>
-  CreateBuffer(ContentType aType, const nsIntRect& aRect, uint32_t aFlags, gfxASurface** aWhiteSurface) = 0;
-  virtual TemporaryRef<gfx::DrawTarget>
-  CreateDTBuffer(ContentType aType, const nsIntRect& aRect, uint32_t aFlags, RefPtr<gfx::DrawTarget>* aWhiteDT)
-  { NS_RUNTIMEABORT("CreateDTBuffer not implemented on this platform!"); return nullptr; }
+  virtual void
+  CreateBuffer(ContentType aType, const nsIntRect& aRect, uint32_t aFlags,
+               gfxASurface** aBlackSurface, gfxASurface** aWhiteSurface,
+               RefPtr<gfx::DrawTarget>* aBlackDT, RefPtr<gfx::DrawTarget>* aWhiteDT) = 0;
   virtual bool SupportsAzureContent() const 
   { return false; }
 

@@ -6,7 +6,10 @@
 #define mozilla_a11y_FocusManager_h_
 
 #include "nsAutoPtr.h"
-#include "mozilla/dom/Element.h"
+
+class nsINode;
+class nsIDocument;
+class nsISupports;
 
 namespace mozilla {
 namespace a11y {

@@ -465,10 +465,7 @@ GetPrintCanvasElementsInFrame(nsIFrame* aFrame, nsTArray<nsRefPtr<HTMLCanvasElem
       if (canvasFrame) {
         HTMLCanvasElement* canvas =
           HTMLCanvasElement::FromContentOrNull(canvasFrame->GetContent());
-        nsCOMPtr<nsIPrintCallback> printCallback;
-        if (canvas &&
-            NS_SUCCEEDED(canvas->GetMozPrintCallback(getter_AddRefs(printCallback))) &&
-            printCallback) {
+        if (canvas && canvas->GetMozPrintCallback()) {
           aArr->AppendElement(canvas);
           continue;
         }

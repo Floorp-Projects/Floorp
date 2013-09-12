@@ -6,8 +6,12 @@
 #include "EventQueue.h"
 
 #include "Accessible-inl.h"
-#include "DocAccessible-inl.h"
 #include "nsEventShell.h"
+#include "DocAccessible.h"
+#include "nsAccessibilityService.h"
+#ifdef A11Y_LOG
+#include "Logging.h"
+#endif
 
 using namespace mozilla;
 using namespace mozilla::a11y;
