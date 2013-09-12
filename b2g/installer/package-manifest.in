@@ -733,6 +733,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 #ifdef MOZ_UPDATER
 @BINPATH@/components/UpdatePrompt.js
 #endif
+@BINPATH@/components/WebappsUpdateTimer.js
 @BINPATH@/components/MozKeyboard.js
 @BINPATH@/components/DirectoryProvider.js
 @BINPATH@/components/ActivitiesGlue.js

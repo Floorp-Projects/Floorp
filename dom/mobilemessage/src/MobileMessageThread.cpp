@@ -9,7 +9,7 @@
 #include "jsfriendapi.h"     // For js_DateGetMsecSinceEpoch
 #include "nsJSUtils.h"       // For nsDependentJSString
 #include "nsTArrayHelpers.h" // For nsTArrayToJSArray
-#include "Constants.h"       // For MessageType
+#include "mozilla/dom/mobilemessage/Constants.h" // For MessageType
 
 
 using namespace mozilla::dom::mobilemessage;

@@ -87,6 +87,7 @@ function runTest()
        "[" + element.tagName + "] witness should still be focused");
 
     // Cleanup.
+    element.hidden = true;
     witness.focus();
   }
 

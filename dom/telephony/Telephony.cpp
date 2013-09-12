@@ -24,9 +24,9 @@
 #include "TelephonyCall.h"
 #include "TelephonyCallGroup.h"
 
-USING_TELEPHONY_NAMESPACE
 using namespace mozilla::dom;
 using mozilla::ErrorResult;
+using mozilla::dom::telephony::kOutgoingPlaceholderCallIndex;
 
 namespace {
 

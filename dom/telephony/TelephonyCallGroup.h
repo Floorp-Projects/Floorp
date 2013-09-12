@@ -7,9 +7,10 @@
 #ifndef mozilla_dom_telephony_telephonycallgroup_h__
 #define mozilla_dom_telephony_telephonycallgroup_h__
 
-#include "TelephonyCommon.h"
+#include "mozilla/dom/telephony/TelephonyCommon.h"
 
-BEGIN_TELEPHONY_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 class TelephonyCallGroup MOZ_FINAL : public nsDOMEventTargetHelper
 {
@@ -111,6 +112,7 @@ private:
   bool CanConference(const TelephonyCall& aCall, TelephonyCall* aSecondCall);
 };
 
-END_TELEPHONY_NAMESPACE
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_telephony_telephonycallgroup_h__
