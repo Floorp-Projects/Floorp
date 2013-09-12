@@ -52,7 +52,7 @@ Vibrate(const nsTArray<uint32_t>& pattern, const WindowIdentifier &id)
 
   WindowIdentifier newID(id);
   newID.AppendProcessID();
-  Hal()->SendVibrate(p, newID.AsArray(), GetTabChildFrom(newID.GetWindow()));
+  Hal()->SendVibrate(p, newID.AsArray(), TabChild::GetFrom(newID.GetWindow()));
 }
 
 void
@@ -62,7 +62,7 @@ CancelVibrate(const WindowIdentifier &id)
 
   WindowIdentifier newID(id);
   newID.AppendProcessID();
-  Hal()->SendCancelVibrate(newID.AsArray(), GetTabChildFrom(newID.GetWindow()));
+  Hal()->SendCancelVibrate(newID.AsArray(), TabChild::GetFrom(newID.GetWindow()));
 }
 
 void
