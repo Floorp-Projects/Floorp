@@ -79,7 +79,7 @@ class RefTest(object):
       if len(thispref) < 2:
         print "Error: syntax error in --setpref=" + v
         sys.exit(1)
-        prefs[thispref[0]] = thispref[1]
+      prefs[thispref[0]] = thispref[1]
 
     # install the reftest extension bits into the profile
     addons = []
