@@ -34,11 +34,6 @@ function invalidEventHandler(e)
 
 function completeValidityCheck(element, alwaysValid, isBarred)
 {
-  if (element.type == 'file') {
-    // Need privileges to set a filename with .value.
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  }
-
   // Check when pattern matches.
   if (element.type == 'email') {
     element.pattern = ".*@bar.com";
@@ -48,7 +43,7 @@ function completeValidityCheck(element, alwaysValid, isBarred)
     element.value = "http://mozilla.com";
   } else {
     element.pattern = "foo";
-    element.value = "foo";
+    SpecialPowers.wrap(element).value = "foo";
   }
 
   checkValidPattern(element, true, isBarred);
@@ -63,7 +58,7 @@ function completeValidityCheck(element, alwaysValid, isBarred)
     element.value = "http://mozilla.org";
   } else {
     element.pattern = "foo";
-    element.value = "bar";
+    SpecialPowers.wrap(element).value = "bar";
   }
 
   if (!alwaysValid) {

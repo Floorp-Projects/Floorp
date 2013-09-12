@@ -169,3 +169,7 @@ MOCHITEST_CHROME_FILES += $(filter disabled-temporarily, test_cursorsnap.xul) \
 		window_cursorsnap_dialog.xul \
 		window_cursorsnap_wizard.xul
 endif
+
+MOCHITEST_CHROME_FILES += test_about_networking.html \
+		file_about_networking_wsh.py
+

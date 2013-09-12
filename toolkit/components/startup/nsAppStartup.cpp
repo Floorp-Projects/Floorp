@@ -363,6 +363,9 @@ nsAppStartup::Quit(uint32_t aMode)
     }
 
     if (mRestart) {
+      // Mark the next startup as a restart.
+      PR_SetEnv("MOZ_APP_RESTART=1");
+
       /* Firefox-restarts reuse the process so regular process start-time isn't
          a useful indicator of startup time anymore. */
       TimeStamp::RecordProcessRestart();
@@ -519,6 +522,19 @@ NS_IMETHODIMP
 nsAppStartup::GetRestarting(bool *aResult)
 {
   *aResult = mRestart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAppStartup::GetWasRestarted(bool *aResult)
+{
+  char *mozAppRestart = PR_GetEnv("MOZ_APP_RESTART");
+
+  /* When calling PR_SetEnv() with an empty value the existing variable may
+   * be unset or set to the empty string depending on the underlying platform
+   * thus we have to check if the variable is present and not empty. */
+  *aResult = mozAppRestart && (strcmp(mozAppRestart, "") != 0);
+
   return NS_OK;
 }
 
