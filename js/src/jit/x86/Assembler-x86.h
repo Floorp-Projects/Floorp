@@ -116,7 +116,7 @@ class Operand
         MEM_REG_DISP,
         FPREG,
         MEM_SCALE,
-        MEM_ADDRESS
+        MEM_ADDRESS32
     };
 
   private:
@@ -160,11 +160,11 @@ class Operand
         disp_(disp)
     { }
     explicit Operand(const AbsoluteAddress &address)
-      : kind_(MEM_ADDRESS),
+      : kind_(MEM_ADDRESS32),
         disp_(reinterpret_cast<int32_t>(address.addr))
     { }
     explicit Operand(const void *address)
-      : kind_(MEM_ADDRESS),
+      : kind_(MEM_ADDRESS32),
         disp_(reinterpret_cast<int32_t>(address))
     { }
 
@@ -206,7 +206,7 @@ class Operand
         return disp_;
     }
     void *address() const {
-        JS_ASSERT(kind() == MEM_ADDRESS);
+        JS_ASSERT(kind() == MEM_ADDRESS32);
         return reinterpret_cast<void *>(disp_);
     }
 };
@@ -386,7 +386,7 @@ class Assembler : public AssemblerX86Shared
             masm.cmpl_im_force32(imm.value, op.disp(), op.base());
             writeDataRelocation(imm);
             break;
-          case Operand::MEM_ADDRESS:
+          case Operand::MEM_ADDRESS32:
             masm.cmpl_im(imm.value, op.address());
             writeDataRelocation(imm);
             break;
