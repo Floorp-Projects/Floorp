@@ -1026,7 +1026,6 @@
                   contentcontextmenu="contentAreaContextMenu"
                   autocompletepopup="PopupAutoComplete"/>
       <chatbar id="pinnedchats" layer="true" mousethrough="always" hidden="true"/>
-      <statuspanel id="statusbar-display" inactive="true"/>
     </vbox>
     <splitter id="social-sidebar-splitter"
               class="chromeclass-extrachrome sidebar-splitter"
