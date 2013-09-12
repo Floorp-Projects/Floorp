@@ -12470,6 +12470,7 @@ let ICCContactHelper = {
    * @param onerror       Callback to be called when error.
    */
   updateICCContact: function updateICCContact(appType, contactType, contact, pin2, onsuccess, onerror) {
+   let error = onerror || debug;
     switch (contactType) {
       case "adn":
         if (!this.hasDfPhoneBook(appType)) {
@@ -12479,10 +12480,13 @@ let ICCContactHelper = {
         }
         break;
       case "fdn":
+        if (!pin2) {
+          error("pin2 is empty");
+          return;
+        }
         ICCRecordHelper.updateADNLike(ICC_EF_FDN, contact, pin2, onsuccess, onerror);
         break;
       default:
-        let error = onerror || debug;
         error(GECKO_ERROR_REQUEST_NOT_SUPPORTED);
         break;
     }
