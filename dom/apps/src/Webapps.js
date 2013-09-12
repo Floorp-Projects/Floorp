@@ -639,8 +639,7 @@ WebappsApplication.prototype = {
       case "Webapps:Connect:Return:OK":
         let messagePorts = [];
         msg.messagePortIDs.forEach(function(aPortID) {
-          let port = new this._window.MozInterAppMessagePort(msg.keyword,
-                                                             aPortID, true);
+          let port = new this._window.MozInterAppMessagePort(aPortID);
           messagePorts.push(port);
         }, this);
         req.resolve(messagePorts);
