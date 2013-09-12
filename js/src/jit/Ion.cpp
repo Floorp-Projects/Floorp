@@ -1833,10 +1833,6 @@ Compile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode 
 
     if (reason == AbortReason_Disable)
         return Method_CantCompile;
-    if (reason == AbortReason_Alloc) {
-        js_ReportOutOfMemory(cx);
-        return Method_Error;
-    }
 
     // Compilation succeeded or we invalidated right away or an inlining/alloc abort
     return HasIonScript(script, executionMode) ? Method_Compiled : Method_Skipped;
