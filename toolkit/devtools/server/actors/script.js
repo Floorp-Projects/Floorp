@@ -2549,7 +2549,8 @@ ObjectActor.prototype = {
     if (this.obj.class === "Function") {
       if (this.obj.name) {
         g.name = this.obj.name;
-      } else if (this.obj.displayName) {
+      }
+      if (this.obj.displayName) {
         g.displayName = this.obj.displayName;
       }
 
