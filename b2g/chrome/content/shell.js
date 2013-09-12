@@ -1189,6 +1189,15 @@ window.addEventListener('ContentStart', function update_onContentStart() {
 }, "audio-channel-changed", false);
 })();
 
+(function defaultVolumeChannelChangedTracker() {
+  Services.obs.addObserver(function(aSubject, aTopic, aData) {
+    shell.sendChromeEvent({
+      type: 'default-volume-channel-changed',
+      channel: aData
+    });
+}, "default-volume-channel-changed", false);
+})();
+
 (function visibleAudioChannelChangedTracker() {
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
     shell.sendChromeEvent({
