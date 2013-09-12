@@ -153,7 +153,10 @@ function runTest() {
       then(testThisBind);
       m = null;
     });
-  m.observe(div, { attributes: true});
+  m.observe(div, { attributes: true, attributeFilter: ["foo"] });
+  is(SpecialPowers.wrap(div).getBoundMutationObservers()[0].getObservingInfo()[0].attributes, true);
+  is(SpecialPowers.wrap(div).getBoundMutationObservers()[0].getObservingInfo()[0].attributeFilter.length, 1)
+  is(SpecialPowers.wrap(div).getBoundMutationObservers()[0].getObservingInfo()[0].attributeFilter[0], "foo")
   div.setAttribute("foo", "bar");
 }
 
@@ -182,6 +185,9 @@ function testThisBind() {
       m = null;
     }).bind(window));
   m.observe(div, { attributes: true, attributeOldValue: true, subtree: true });
+  is(SpecialPowers.wrap(div).getBoundMutationObservers()[0].getObservingInfo()[0].attributes, true)
+  is(SpecialPowers.wrap(div).getBoundMutationObservers()[0].getObservingInfo()[0].attributeOldValue, true)
+  is(SpecialPowers.wrap(div).getBoundMutationObservers()[0].getObservingInfo()[0].subtree, true)
   div.setAttribute("foo", "bar2");
   div.removeAttribute("foo");
   div.removeChild(child);
@@ -225,6 +231,11 @@ function testCharacterData() {
   m3.observe(div, { characterData: true, subtree: true });
   m3.observe(div, { characterData: true, subtree: false });
   m4.observe(div.firstChild, { characterData: true, subtree: false });
+  
+  is(SpecialPowers.wrap(div).getBoundMutationObservers().length, 3)
+  is(SpecialPowers.wrap(div).getBoundMutationObservers()[2].getObservingInfo()[0].characterData, true)
+  is(SpecialPowers.wrap(div).getBoundMutationObservers()[2].getObservingInfo()[0].subtree, false)
+
   div.firstChild.data = "bar";
 }
 
@@ -278,7 +289,7 @@ function testChildList4() {
   var s1 = div.appendChild(document.createElement("span"));
   s1.textContent = "foo";
   var s2 = div.appendChild(document.createElement("span"));
-  m = new M(function(records, observer) {
+  function callback(records, observer) {
       is(records.length, 3, "Should have got one record for removing nodes from document fragment and one record for adding them to div");
       is(records[0].removedNodes.length, 2, "Should have got removedNodes");
       is(records[0].removedNodes[0], t1, "Should be the 1st textnode");
@@ -294,9 +305,16 @@ function testChildList4() {
       observer.disconnect();
       then(testChildList5);
       m = null;
-    });
+    };
+  m = new M(callback);
   m.observe(df, { childList: true, characterData: true, characterDataOldValue: true, subtree: true });
+  is(SpecialPowers.wrap(df).getBoundMutationObservers()[0].getObservingInfo()[0].childList, true)
+  is(SpecialPowers.wrap(df).getBoundMutationObservers()[0].getObservingInfo()[0].characterData, true)
+  is(SpecialPowers.wrap(df).getBoundMutationObservers()[0].getObservingInfo()[0].characterDataOldValue, true)
+  is(SpecialPowers.wrap(df).getBoundMutationObservers()[0].getObservingInfo()[0].subtree, true)
+  ok(SpecialPowers.compare(SpecialPowers.wrap(df).getBoundMutationObservers()[0].mutationCallback, callback))
   m.observe(div, { childList: true });
+  is(SpecialPowers.wrap(df).getBoundMutationObservers()[0].getObservingInfo().length, 2)
   
   // Make sure transient observers aren't leaked.
   var leakTest = new M(function(){});
@@ -554,6 +572,8 @@ function testTakeRecords() {
       m = null;
     });
   m.observe(div, { attributes: true, attributeOldValue: true });
+  // Note, [0] points to a mutation observer which is there for a leak test!
+  ok(SpecialPowers.compare(SpecialPowers.wrap(div).getBoundMutationObservers()[1], m));
   var mutationEventCount = 0;
   div.addEventListener("DOMAttrModified", mutationListener);
   div.setAttribute("foo", "bar");

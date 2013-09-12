@@ -58,12 +58,15 @@ public:
    * @param aRetValue the result of executing the script.  Pass null if you
    *                  don't care about the result.  Note that asking for a
    *                  result will deoptimize your script somewhat in many cases.
+   * @param aOffThreadToken if specified, the result of compiling the script
+   *                        on another thread.
    */
   virtual nsresult EvaluateString(const nsAString& aScript,
                                   JS::Handle<JSObject*> aScopeObject,
                                   JS::CompileOptions& aOptions,
                                   bool aCoerceToString,
-                                  JS::Value* aRetValue) = 0;
+                                  JS::Value* aRetValue,
+                                  void **aOffThreadToken = nullptr) = 0;
 
   /**
    * Bind an already-compiled event handler function to the given

@@ -10,6 +10,7 @@
 #include "HyperTextAccessible.h"
 #include "nsMai.h"
 
+#include "nsIAccessibleTypes.h"
 #include "nsIPersistentProperties2.h"
 
 #include "mozilla/Likely.h"

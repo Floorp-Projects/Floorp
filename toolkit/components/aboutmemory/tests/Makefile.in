@@ -8,7 +8,6 @@ MOCHITEST_CHROME_FILES	= \
 		memory-reports-bad.json \
 		memory-reports-diff1.json \
 		memory-reports-diff2.json \
-		test_aboutcompartments.xul \
 		test_aboutmemory.xul \
 		test_aboutmemory2.xul \
 		test_aboutmemory3.xul \

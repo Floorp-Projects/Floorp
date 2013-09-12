@@ -831,6 +831,17 @@ nsHTMLReflowState::ComputeRelativeOffsets(uint8_t aCBDirection,
     // Computed value for 'bottom' is minus the value of 'top'
     aComputedOffsets.bottom = -aComputedOffsets.top;
   }
+
+  // Store the offset
+  FrameProperties props = aFrame->Properties();
+  nsMargin* offsets = static_cast<nsMargin*>
+    (props.Get(nsIFrame::ComputedOffsetProperty()));
+  if (offsets) {
+    *offsets = aComputedOffsets;
+  } else {
+    props.Set(nsIFrame::ComputedOffsetProperty(),
+              new nsMargin(aComputedOffsets));
+  }
 }
 
 /* static */ void
@@ -852,8 +863,11 @@ nsHTMLReflowState::ApplyRelativePositioning(nsIFrame* aFrame,
   if (NS_STYLE_POSITION_RELATIVE == display->mPosition) {
     *aPosition += nsPoint(aComputedOffsets.left, aComputedOffsets.top);
   } else if (NS_STYLE_POSITION_STICKY == display->mPosition) {
-    *aPosition = StickyScrollContainer::StickyScrollContainerForFrame(aFrame)->
-      ComputePosition(aFrame);
+    StickyScrollContainer* ssc =
+      StickyScrollContainer::GetStickyScrollContainerForFrame(aFrame);
+    if (ssc) {
+      *aPosition = ssc->ComputePosition(aFrame);
+    }
   }
 }
 
