@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2009 The Android Open Source Project
- * Copyright (c) 2011, Code Aurora Forum. All rights reserved.
+ * Copyright (C) 2013 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,35 +15,41 @@
  * limitations under the License.
  */
 
-
-#include <media/AudioParameter.h>
+#include "nsDebug.h"
+#define DOM_CAMERA_LOG_LEVEL        3
+#include "CameraCommon.h"
+#include "GonkCameraSource.h"
 #include "GonkRecorder.h"
 
+#define RE_LOGD(fmt, ...) DOM_CAMERA_LOGA("[%s:%d]" fmt,__FILE__,__LINE__, ## __VA_ARGS__)
+#define RE_LOGV(fmt, ...) DOM_CAMERA_LOGI("[%s:%d]" fmt,__FILE__,__LINE__, ## __VA_ARGS__)
+#define RE_LOGI(fmt, ...) DOM_CAMERA_LOGI("[%s:%d]" fmt,__FILE__,__LINE__, ## __VA_ARGS__)
+#define RE_LOGW(fmt, ...) DOM_CAMERA_LOGW("[%s:%d]" fmt,__FILE__,__LINE__, ## __VA_ARGS__)
+#define RE_LOGE(fmt, ...) DOM_CAMERA_LOGE("[%s:%d]" fmt,__FILE__,__LINE__, ## __VA_ARGS__)
+
+#include <binder/IPCThreadState.h>
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
+# include <media/openmax/OMX_Audio.h>
+#endif
+#include <media/stagefright/foundation/ADebug.h>
 #include <media/stagefright/AudioSource.h>
 #include <media/stagefright/AMRWriter.h>
+#include <media/stagefright/AACWriter.h>
 #include <media/stagefright/MPEG2TSWriter.h>
 #include <media/stagefright/MPEG4Writer.h>
-#include <media/stagefright/MediaDebug.h>
 #include <media/stagefright/MediaDefs.h>
 #include <media/stagefright/MetaData.h>
 #include <media/stagefright/OMXClient.h>
 #include <media/stagefright/OMXCodec.h>
 #include <media/MediaProfiles.h>
-#include <utils/String8.h>
 
 #include <utils/Errors.h>
 #include <sys/types.h>
 #include <ctype.h>
 #include <unistd.h>
 
-#include <system/audio.h>
-
-#include "ARTPWriter.h"
-
 #include <cutils/properties.h>
-
-#include "CameraCommon.h"
-#include "GonkCameraSource.h"
+#include <system/audio.h>
 
 namespace android {
 
@@ -52,34 +58,28 @@ GonkRecorder::GonkRecorder()
       mOutputFd(-1),
       mAudioSource(AUDIO_SOURCE_CNT),
       mVideoSource(VIDEO_SOURCE_LIST_END),
-      mStarted(false),
-      mDisableAudio(false) {
+      mStarted(false) {
 
-    DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+    RE_LOGV("Constructor");
     reset();
 }
 
 GonkRecorder::~GonkRecorder() {
-    DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+    RE_LOGV("Destructor");
     stop();
 }
 
 status_t GonkRecorder::init() {
-    DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+    RE_LOGV("init");
     return OK;
 }
 
 status_t GonkRecorder::setAudioSource(audio_source_t as) {
-    DOM_CAMERA_LOGI("%s: %d", __func__, as);
-
+    RE_LOGV("setAudioSource: %d", as);
     if (as < AUDIO_SOURCE_DEFAULT ||
         as >= AUDIO_SOURCE_CNT) {
-        DOM_CAMERA_LOGE("Invalid audio source: %d", as);
+        RE_LOGE("Invalid audio source: %d", as);
         return BAD_VALUE;
-    }
-
-    if (mDisableAudio) {
-        return OK;
     }
 
     if (as == AUDIO_SOURCE_DEFAULT) {
@@ -92,10 +92,10 @@ status_t GonkRecorder::setAudioSource(audio_source_t as) {
 }
 
 status_t GonkRecorder::setVideoSource(video_source vs) {
-    DOM_CAMERA_LOGI("%s: %d", __func__, vs);
+    RE_LOGV("setVideoSource: %d", vs);
     if (vs < VIDEO_SOURCE_DEFAULT ||
         vs >= VIDEO_SOURCE_LIST_END) {
-        DOM_CAMERA_LOGE("Invalid video source: %d", vs);
+        RE_LOGE("Invalid video source: %d", vs);
         return BAD_VALUE;
     }
 
@@ -109,10 +109,10 @@ status_t GonkRecorder::setVideoSource(video_source vs) {
 }
 
 status_t GonkRecorder::setOutputFormat(output_format of) {
-    DOM_CAMERA_LOGI("%s: %d", __func__, of);
+    RE_LOGV("setOutputFormat: %d", of);
     if (of < OUTPUT_FORMAT_DEFAULT ||
         of >= OUTPUT_FORMAT_LIST_END) {
-        DOM_CAMERA_LOGE("Invalid output format: %d", of);
+        RE_LOGE("Invalid output format: %d", of);
         return BAD_VALUE;
     }
 
@@ -126,15 +126,11 @@ status_t GonkRecorder::setOutputFormat(output_format of) {
 }
 
 status_t GonkRecorder::setAudioEncoder(audio_encoder ae) {
-    DOM_CAMERA_LOGI("%s: %d", __func__, ae);
+    RE_LOGV("setAudioEncoder: %d", ae);
     if (ae < AUDIO_ENCODER_DEFAULT ||
         ae >= AUDIO_ENCODER_LIST_END) {
-        DOM_CAMERA_LOGE("Invalid audio encoder: %d", ae);
+        RE_LOGE("Invalid audio encoder: %d", ae);
         return BAD_VALUE;
-    }
-
-    if (mDisableAudio) {
-        return OK;
     }
 
     if (ae == AUDIO_ENCODER_DEFAULT) {
@@ -147,10 +143,10 @@ status_t GonkRecorder::setAudioEncoder(audio_encoder ae) {
 }
 
 status_t GonkRecorder::setVideoEncoder(video_encoder ve) {
-    DOM_CAMERA_LOGI("%s: %d", __func__, ve);
+    RE_LOGV("setVideoEncoder: %d", ve);
     if (ve < VIDEO_ENCODER_DEFAULT ||
         ve >= VIDEO_ENCODER_LIST_END) {
-        DOM_CAMERA_LOGE("Invalid video encoder: %d", ve);
+        RE_LOGE("Invalid video encoder: %d", ve);
         return BAD_VALUE;
     }
 
@@ -164,9 +160,9 @@ status_t GonkRecorder::setVideoEncoder(video_encoder ve) {
 }
 
 status_t GonkRecorder::setVideoSize(int width, int height) {
-    DOM_CAMERA_LOGI("%s: %dx%d", __func__, width, height);
+    RE_LOGV("setVideoSize: %dx%d", width, height);
     if (width <= 0 || height <= 0) {
-        DOM_CAMERA_LOGE("Invalid video size: %dx%d", width, height);
+        RE_LOGE("Invalid video size: %dx%d", width, height);
         return BAD_VALUE;
     }
 
@@ -178,10 +174,10 @@ status_t GonkRecorder::setVideoSize(int width, int height) {
 }
 
 status_t GonkRecorder::setVideoFrameRate(int frames_per_second) {
-    DOM_CAMERA_LOGI("%s: %d", __func__, frames_per_second);
+    RE_LOGV("setVideoFrameRate: %d", frames_per_second);
     if ((frames_per_second <= 0 && frames_per_second != -1) ||
         frames_per_second > 120) {
-        DOM_CAMERA_LOGE("Invalid video frame rate: %d", frames_per_second);
+        RE_LOGE("Invalid video frame rate: %d", frames_per_second);
         return BAD_VALUE;
     }
 
@@ -192,7 +188,7 @@ status_t GonkRecorder::setVideoFrameRate(int frames_per_second) {
 }
 
 status_t GonkRecorder::setOutputFile(const char *path) {
-    DOM_CAMERA_LOGE("setOutputFile(const char*) must not be called");
+    RE_LOGE("setOutputFile(const char*) must not be called");
     // We don't actually support this at all, as the media_server process
     // no longer has permissions to create files.
 
@@ -200,13 +196,13 @@ status_t GonkRecorder::setOutputFile(const char *path) {
 }
 
 status_t GonkRecorder::setOutputFile(int fd, int64_t offset, int64_t length) {
-    DOM_CAMERA_LOGI("%s: %d, %lld, %lld", __func__, fd, offset, length);
+    RE_LOGV("setOutputFile: %d, %lld, %lld", fd, offset, length);
     // These don't make any sense, do they?
-    CHECK_EQ(offset, 0);
-    CHECK_EQ(length, 0);
+    CHECK_EQ(offset, 0ll);
+    CHECK_EQ(length, 0ll);
 
     if (fd < 0) {
-        DOM_CAMERA_LOGE("Invalid file descriptor: %d", fd);
+        RE_LOGE("Invalid file descriptor: %d", fd);
         return -EBADF;
     }
 
@@ -218,7 +214,7 @@ status_t GonkRecorder::setOutputFile(int fd, int64_t offset, int64_t length) {
     return OK;
 }
 
-// Attempt to parse an int64_t literal optionally surrounded by whitespace,
+// Attempt to parse an int64 literal optionally surrounded by whitespace,
 // returns true on success, false otherwise.
 static bool safe_strtoi64(const char *s, int64_t *val) {
     char *end;
@@ -238,7 +234,7 @@ static bool safe_strtoi64(const char *s, int64_t *val) {
     }
 
     // For a successful return, the string must contain nothing but a valid
-    // int64_t literal optionally surrounded by whitespace.
+    // int64 literal optionally surrounded by whitespace.
 
     return *end == '\0';
 }
@@ -274,9 +270,9 @@ static void TrimString(String8 *s) {
 }
 
 status_t GonkRecorder::setParamAudioSamplingRate(int32_t sampleRate) {
-    DOM_CAMERA_LOGI("%s: %d", __func__, sampleRate);
+    RE_LOGV("setParamAudioSamplingRate: %d", sampleRate);
     if (sampleRate <= 0) {
-        DOM_CAMERA_LOGE("Invalid audio sampling rate: %d", sampleRate);
+        RE_LOGE("Invalid audio sampling rate: %d", sampleRate);
         return BAD_VALUE;
     }
 
@@ -286,9 +282,9 @@ status_t GonkRecorder::setParamAudioSamplingRate(int32_t sampleRate) {
 }
 
 status_t GonkRecorder::setParamAudioNumberOfChannels(int32_t channels) {
-    DOM_CAMERA_LOGI("%s: %d", __func__, channels);
+    RE_LOGV("setParamAudioNumberOfChannels: %d", channels);
     if (channels <= 0 || channels >= 3) {
-        DOM_CAMERA_LOGE("Invalid number of audio channels: %d", channels);
+        RE_LOGE("Invalid number of audio channels: %d", channels);
         return BAD_VALUE;
     }
 
@@ -298,9 +294,9 @@ status_t GonkRecorder::setParamAudioNumberOfChannels(int32_t channels) {
 }
 
 status_t GonkRecorder::setParamAudioEncodingBitRate(int32_t bitRate) {
-    DOM_CAMERA_LOGI("%s: %d", __func__, bitRate);
+    RE_LOGV("setParamAudioEncodingBitRate: %d", bitRate);
     if (bitRate <= 0) {
-        DOM_CAMERA_LOGE("Invalid audio encoding bit rate: %d", bitRate);
+        RE_LOGE("Invalid audio encoding bit rate: %d", bitRate);
         return BAD_VALUE;
     }
 
@@ -313,9 +309,9 @@ status_t GonkRecorder::setParamAudioEncodingBitRate(int32_t bitRate) {
 }
 
 status_t GonkRecorder::setParamVideoEncodingBitRate(int32_t bitRate) {
-    DOM_CAMERA_LOGI("%s: %d", __func__, bitRate);
+    RE_LOGV("setParamVideoEncodingBitRate: %d", bitRate);
     if (bitRate <= 0) {
-        DOM_CAMERA_LOGE("Invalid video encoding bit rate: %d", bitRate);
+        RE_LOGE("Invalid video encoding bit rate: %d", bitRate);
         return BAD_VALUE;
     }
 
@@ -329,9 +325,9 @@ status_t GonkRecorder::setParamVideoEncodingBitRate(int32_t bitRate) {
 
 // Always rotate clockwise, and only support 0, 90, 180 and 270 for now.
 status_t GonkRecorder::setParamVideoRotation(int32_t degrees) {
-    DOM_CAMERA_LOGI("%s: %d", __func__, degrees);
+    RE_LOGV("setParamVideoRotation: %d", degrees);
     if (degrees < 0 || degrees % 90 != 0) {
-        DOM_CAMERA_LOGE("Unsupported video rotation angle: %d", degrees);
+        RE_LOGE("Unsupported video rotation angle: %d", degrees);
         return BAD_VALUE;
     }
     mRotationDegrees = degrees % 360;
@@ -339,44 +335,39 @@ status_t GonkRecorder::setParamVideoRotation(int32_t degrees) {
 }
 
 status_t GonkRecorder::setParamMaxFileDurationUs(int64_t timeUs) {
-    DOM_CAMERA_LOGI("%s: %lld us", __func__, timeUs);
+    RE_LOGV("setParamMaxFileDurationUs: %lld us", timeUs);
 
     // This is meant for backward compatibility for MediaRecorder.java
     if (timeUs <= 0) {
-        DOM_CAMERA_LOGW("Max file duration is not positive: %lld us. Disabling duration limit.", timeUs);
+        RE_LOGW("Max file duration is not positive: %lld us. Disabling duration limit.", timeUs);
         timeUs = 0; // Disable the duration limit for zero or negative values.
     } else if (timeUs <= 100000LL) {  // XXX: 100 milli-seconds
-        DOM_CAMERA_LOGE("Max file duration is too short: %lld us", timeUs);
+        RE_LOGE("Max file duration is too short: %lld us", timeUs);
         return BAD_VALUE;
     }
 
     if (timeUs <= 15 * 1000000LL) {
-        DOM_CAMERA_LOGW("Target duration (%lld us) too short to be respected", timeUs);
+        RE_LOGW("Target duration (%lld us) too short to be respected", timeUs);
     }
     mMaxFileDurationUs = timeUs;
     return OK;
 }
 
 status_t GonkRecorder::setParamMaxFileSizeBytes(int64_t bytes) {
-    DOM_CAMERA_LOGI("%s: %lld bytes", __func__, bytes);
+    RE_LOGV("setParamMaxFileSizeBytes: %lld bytes", bytes);
 
     // This is meant for backward compatibility for MediaRecorder.java
     if (bytes <= 0) {
-        DOM_CAMERA_LOGW("Max file size is not positive: %lld bytes. "
+        RE_LOGW("Max file size is not positive: %lld bytes. "
              "Disabling file size limit.", bytes);
         bytes = 0; // Disable the file size limit for zero or negative values.
     } else if (bytes <= 1024) {  // XXX: 1 kB
-        DOM_CAMERA_LOGE("Max file size is too small: %lld bytes", bytes);
+        RE_LOGE("Max file size is too small: %lld bytes", bytes);
         return BAD_VALUE;
     }
 
     if (bytes <= 100 * 1024) {
-        DOM_CAMERA_LOGW("Target file size (%lld bytes) is too small to be respected", bytes);
-    }
-
-    if (bytes >= 0xffffffffLL) {
-        DOM_CAMERA_LOGW("Target file size (%lld bytes) too larger than supported, clip to 4GB", bytes);
-        bytes = 0xffffffffLL;
+        RE_LOGW("Target file size (%lld bytes) is too small to be respected", bytes);
     }
 
     mMaxFileSizeBytes = bytes;
@@ -384,18 +375,18 @@ status_t GonkRecorder::setParamMaxFileSizeBytes(int64_t bytes) {
 }
 
 status_t GonkRecorder::setParamInterleaveDuration(int32_t durationUs) {
-    DOM_CAMERA_LOGI("%s: %d", __func__, durationUs);
+    RE_LOGV("setParamInterleaveDuration: %d", durationUs);
     if (durationUs <= 500000) {           //  500 ms
         // If interleave duration is too small, it is very inefficient to do
         // interleaving since the metadata overhead will count for a significant
         // portion of the saved contents
-        DOM_CAMERA_LOGE("Audio/video interleave duration is too small: %d us", durationUs);
+        RE_LOGE("Audio/video interleave duration is too small: %d us", durationUs);
         return BAD_VALUE;
     } else if (durationUs >= 10000000) {  // 10 seconds
         // If interleaving duration is too large, it can cause the recording
         // session to use too much memory since we have to save the output
         // data before we write them out
-        DOM_CAMERA_LOGE("Audio/video interleave duration is too large: %d us", durationUs);
+        RE_LOGE("Audio/video interleave duration is too large: %d us", durationUs);
         return BAD_VALUE;
     }
     mInterleaveDurationUs = durationUs;
@@ -406,20 +397,20 @@ status_t GonkRecorder::setParamInterleaveDuration(int32_t durationUs) {
 // If seconds == 0, all frames are encoded as I frames. No P frames
 // If seconds >  0, it is the time spacing (seconds) between 2 neighboring I frames
 status_t GonkRecorder::setParamVideoIFramesInterval(int32_t seconds) {
-    DOM_CAMERA_LOGI("%s: %d seconds", __func__, seconds);
+    RE_LOGV("setParamVideoIFramesInterval: %d seconds", seconds);
     mIFramesIntervalSec = seconds;
     return OK;
 }
 
 status_t GonkRecorder::setParam64BitFileOffset(bool use64Bit) {
-    DOM_CAMERA_LOGI("%s: %s", __func__,
+    RE_LOGV("setParam64BitFileOffset: %s",
         use64Bit? "use 64 bit file offset": "use 32 bit file offset");
     mUse64BitFileOffset = use64Bit;
     return OK;
 }
 
 status_t GonkRecorder::setParamVideoCameraId(int32_t cameraId) {
-    DOM_CAMERA_LOGI("%s: %d", __func__, cameraId);
+    RE_LOGV("setParamVideoCameraId: %d", cameraId);
     if (cameraId < 0) {
         return BAD_VALUE;
     }
@@ -428,9 +419,9 @@ status_t GonkRecorder::setParamVideoCameraId(int32_t cameraId) {
 }
 
 status_t GonkRecorder::setParamTrackTimeStatus(int64_t timeDurationUs) {
-    DOM_CAMERA_LOGI("%s: %lld", __func__, timeDurationUs);
+    RE_LOGV("setParamTrackTimeStatus: %lld", timeDurationUs);
     if (timeDurationUs < 20000) {  // Infeasible if shorter than 20 ms?
-        DOM_CAMERA_LOGE("Tracking time duration too short: %lld us", timeDurationUs);
+        RE_LOGE("Tracking time duration too short: %lld us", timeDurationUs);
         return BAD_VALUE;
     }
     mTrackEveryTimeDurationUs = timeDurationUs;
@@ -438,7 +429,7 @@ status_t GonkRecorder::setParamTrackTimeStatus(int64_t timeDurationUs) {
 }
 
 status_t GonkRecorder::setParamVideoEncoderProfile(int32_t profile) {
-    DOM_CAMERA_LOGI("%s: %d", __func__, profile);
+    RE_LOGV("setParamVideoEncoderProfile: %d", profile);
 
     // Additional check will be done later when we load the encoder.
     // For now, we are accepting values defined in OpenMAX IL.
@@ -447,7 +438,7 @@ status_t GonkRecorder::setParamVideoEncoderProfile(int32_t profile) {
 }
 
 status_t GonkRecorder::setParamVideoEncoderLevel(int32_t level) {
-    DOM_CAMERA_LOGI("%s: %d", __func__, level);
+    RE_LOGV("setParamVideoEncoderLevel: %d", level);
 
     // Additional check will be done later when we load the encoder.
     // For now, we are accepting values defined in OpenMAX IL.
@@ -456,12 +447,12 @@ status_t GonkRecorder::setParamVideoEncoderLevel(int32_t level) {
 }
 
 status_t GonkRecorder::setParamMovieTimeScale(int32_t timeScale) {
-    DOM_CAMERA_LOGI("%s: %d", __func__, timeScale);
+    RE_LOGV("setParamMovieTimeScale: %d", timeScale);
 
     // The range is set to be the same as the audio's time scale range
     // since audio's time scale has a wider range.
     if (timeScale < 600 || timeScale > 96000) {
-        DOM_CAMERA_LOGE("Time scale (%d) for movie is out of range [600, 96000]", timeScale);
+        RE_LOGE("Time scale (%d) for movie is out of range [600, 96000]", timeScale);
         return BAD_VALUE;
     }
     mMovieTimeScale = timeScale;
@@ -469,12 +460,12 @@ status_t GonkRecorder::setParamMovieTimeScale(int32_t timeScale) {
 }
 
 status_t GonkRecorder::setParamVideoTimeScale(int32_t timeScale) {
-    DOM_CAMERA_LOGI("%s: %d", __func__, timeScale);
+    RE_LOGV("setParamVideoTimeScale: %d", timeScale);
 
     // 60000 is chosen to make sure that each video frame from a 60-fps
     // video has 1000 ticks.
     if (timeScale < 600 || timeScale > 60000) {
-        DOM_CAMERA_LOGE("Time scale (%d) for video is out of range [600, 60000]", timeScale);
+        RE_LOGE("Time scale (%d) for video is out of range [600, 60000]", timeScale);
         return BAD_VALUE;
     }
     mVideoTimeScale = timeScale;
@@ -482,11 +473,11 @@ status_t GonkRecorder::setParamVideoTimeScale(int32_t timeScale) {
 }
 
 status_t GonkRecorder::setParamAudioTimeScale(int32_t timeScale) {
-    DOM_CAMERA_LOGI("%s: %d", __func__, timeScale);
+    RE_LOGV("setParamAudioTimeScale: %d", timeScale);
 
     // 96000 Hz is the highest sampling rate support in AAC.
     if (timeScale < 600 || timeScale > 96000) {
-        DOM_CAMERA_LOGE("Time scale (%d) for audio is out of range [600, 96000]", timeScale);
+        RE_LOGE("Time scale (%d) for audio is out of range [600, 96000]", timeScale);
         return BAD_VALUE;
     }
     mAudioTimeScale = timeScale;
@@ -515,7 +506,7 @@ status_t GonkRecorder::setParamGeoDataLatitude(
 
 status_t GonkRecorder::setParameter(
         const String8 &key, const String8 &value) {
-    DOM_CAMERA_LOGI("%s: key (%s) => value (%s)", __func__, key.string(), value.string());
+    RE_LOGV("setParameter: key (%s) => value (%s)", key.string(), value.string());
     if (key == "max-duration") {
         int64_t max_duration_ms;
         if (safe_strtoi64(value.string(), &max_duration_ms)) {
@@ -612,25 +603,25 @@ status_t GonkRecorder::setParameter(
             return setParamVideoTimeScale(timeScale);
         }
     } else {
-        DOM_CAMERA_LOGE("setParameter: failed to find key %s", key.string());
+        RE_LOGE("setParameter: failed to find key %s", key.string());
     }
     return BAD_VALUE;
 }
 
 status_t GonkRecorder::setParameters(const String8 &params) {
-    DOM_CAMERA_LOGI("%s: %s", __func__, params.string());
+    RE_LOGV("setParameters: %s", params.string());
     const char *cparams = params.string();
     const char *key_start = cparams;
     for (;;) {
         const char *equal_pos = strchr(key_start, '=');
         if (equal_pos == NULL) {
-            DOM_CAMERA_LOGE("Parameters %s miss a value", cparams);
+            RE_LOGE("Parameters %s miss a value", cparams);
             return BAD_VALUE;
         }
         String8 key(key_start, equal_pos - key_start);
         TrimString(&key);
         if (key.length() == 0) {
-            DOM_CAMERA_LOGE("Parameters %s contains an empty key", cparams);
+            RE_LOGE("Parameters %s contains an empty key", cparams);
             return BAD_VALUE;
         }
         const char *value_start = equal_pos + 1;
@@ -658,26 +649,23 @@ status_t GonkRecorder::setListener(const sp<IMediaRecorderClient> &listener) {
     return OK;
 }
 
-status_t GonkRecorder::prepare() {
-  DOM_CAMERA_LOGI(" %s E", __func__ );
+status_t GonkRecorder::setClientName(const String16& clientName) {
+    mClientName = clientName;
 
-  if(mVideoSource != VIDEO_SOURCE_LIST_END && mVideoEncoder != VIDEO_ENCODER_LIST_END && mVideoHeight && mVideoWidth &&             /*Video recording*/
-         (mMaxFileDurationUs <=0 ||             /*Max duration is not set*/
-         (mVideoHeight * mVideoWidth < 720 * 1280 && mMaxFileDurationUs > 30*60*1000*1000) ||
-         (mVideoHeight * mVideoWidth >= 720 * 1280 && mMaxFileDurationUs > 10*60*1000*1000))) {
-    /*Above Check can be further optimized for lower resolutions to reduce file size*/
-    DOM_CAMERA_LOGI("File is huge so setting 64 bit file offsets");
-    setParam64BitFileOffset(true);
-  }
-  DOM_CAMERA_LOGI(" %s X", __func__ );
-  return OK;
+    return OK;
+}
+
+status_t GonkRecorder::prepare() {
+    return OK;
 }
 
 status_t GonkRecorder::start() {
-    CHECK(mOutputFd >= 0);
+    CHECK_GE(mOutputFd, 0);
 
+    // Get UID here for permission checking
+    mClientUid = IPCThreadState::self()->getCallingUid();
     if (mWriter != NULL) {
-        DOM_CAMERA_LOGE("File writer is not available");
+        RE_LOGE("File writer is not avaialble");
         return UNKNOWN_ERROR;
     }
 
@@ -695,11 +683,23 @@ status_t GonkRecorder::start() {
             status = startAMRRecording();
             break;
 
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
+        case OUTPUT_FORMAT_AAC_ADIF:
+        case OUTPUT_FORMAT_AAC_ADTS:
+            status = startAACRecording();
+            break;
+#endif
+
+        case OUTPUT_FORMAT_RTP_AVP:
+            status = startRTPRecording();
+            break;
+
         case OUTPUT_FORMAT_MPEG2TS:
             status = startMPEG2TSRecording();
-		    break;
+            break;
+
         default:
-            DOM_CAMERA_LOGE("Unsupported output file format: %d", mOutputFormat);
+            RE_LOGE("Unsupported output file format: %d", mOutputFormat);
             status = UNKNOWN_ERROR;
             break;
     }
@@ -712,7 +712,6 @@ status_t GonkRecorder::start() {
 }
 
 sp<MediaSource> GonkRecorder::createAudioSource() {
-
     sp<AudioSource> audioSource =
         new AudioSource(
                 mAudioSource,
@@ -722,7 +721,7 @@ sp<MediaSource> GonkRecorder::createAudioSource() {
     status_t err = audioSource->initCheck();
 
     if (err != OK) {
-        DOM_CAMERA_LOGE("audio source is not initialized");
+        RE_LOGE("audio source is not initialized");
         return NULL;
     }
 
@@ -736,11 +735,22 @@ sp<MediaSource> GonkRecorder::createAudioSource() {
         case AUDIO_ENCODER_AMR_WB:
             mime = MEDIA_MIMETYPE_AUDIO_AMR_WB;
             break;
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
         case AUDIO_ENCODER_AAC:
             mime = MEDIA_MIMETYPE_AUDIO_AAC;
+            encMeta->setInt32(kKeyAACProfile, OMX_AUDIO_AACObjectLC);
             break;
+        case AUDIO_ENCODER_HE_AAC:
+            mime = MEDIA_MIMETYPE_AUDIO_AAC;
+            encMeta->setInt32(kKeyAACProfile, OMX_AUDIO_AACObjectHE);
+            break;
+        case AUDIO_ENCODER_AAC_ELD:
+            mime = MEDIA_MIMETYPE_AUDIO_AAC;
+            encMeta->setInt32(kKeyAACProfile, OMX_AUDIO_AACObjectELD);
+            break;
+#endif
         default:
-            DOM_CAMERA_LOGE("Unknown audio encoder: %d", mAudioEncoder);
+            RE_LOGE("Unknown audio encoder: %d", mAudioEncoder);
             return NULL;
     }
     encMeta->setCString(kKeyMIMEType, mime);
@@ -761,8 +771,7 @@ sp<MediaSource> GonkRecorder::createAudioSource() {
     // it can't connect.
     OMXClient client;
     // CHECK_EQ causes an abort if the given condition fails.
-    CHECK_EQ(client.connect(), OK);
-
+    CHECK_EQ(client.connect(), (status_t)OK);
     sp<MediaSource> audioEncoder =
         OMXCodec::Create(client.interface(), encMeta,
                          true /* createEncoder */, audioSource);
@@ -771,6 +780,28 @@ sp<MediaSource> GonkRecorder::createAudioSource() {
     return audioEncoder;
 }
 
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
+status_t GonkRecorder::startAACRecording() {
+    // FIXME:
+    // Add support for OUTPUT_FORMAT_AAC_ADIF
+    CHECK_EQ(mOutputFormat, OUTPUT_FORMAT_AAC_ADTS);
+
+    CHECK(mAudioEncoder == AUDIO_ENCODER_AAC ||
+          mAudioEncoder == AUDIO_ENCODER_HE_AAC ||
+          mAudioEncoder == AUDIO_ENCODER_AAC_ELD);
+    CHECK(mAudioSource != AUDIO_SOURCE_CNT);
+
+    mWriter = new AACWriter(mOutputFd);
+    status_t status = startRawAudioRecording();
+    if (status != OK) {
+        mWriter.clear();
+        mWriter = NULL;
+    }
+
+    return status;
+}
+#endif
+
 status_t GonkRecorder::startAMRRecording() {
     CHECK(mOutputFormat == OUTPUT_FORMAT_AMR_NB ||
           mOutputFormat == OUTPUT_FORMAT_AMR_WB);
@@ -778,13 +809,13 @@ status_t GonkRecorder::startAMRRecording() {
     if (mOutputFormat == OUTPUT_FORMAT_AMR_NB) {
         if (mAudioEncoder != AUDIO_ENCODER_DEFAULT &&
             mAudioEncoder != AUDIO_ENCODER_AMR_NB) {
-            DOM_CAMERA_LOGE("Invalid encoder %d used for AMRNB recording",
+            RE_LOGE("Invalid encoder %d used for AMRNB recording",
                     mAudioEncoder);
             return BAD_VALUE;
         }
     } else {  // mOutputFormat must be OUTPUT_FORMAT_AMR_WB
         if (mAudioEncoder != AUDIO_ENCODER_AMR_WB) {
-            DOM_CAMERA_LOGE("Invalid encoder %d used for AMRWB recording",
+            RE_LOGE("Invlaid encoder %d used for AMRWB recording",
                     mAudioEncoder);
             return BAD_VALUE;
         }
@@ -801,7 +832,7 @@ status_t GonkRecorder::startAMRRecording() {
 
 status_t GonkRecorder::startRawAudioRecording() {
     if (mAudioSource >= AUDIO_SOURCE_CNT) {
-        DOM_CAMERA_LOGE("Invalid audio source: %d", mAudioSource);
+        RE_LOGE("Invalid audio source: %d", mAudioSource);
         return BAD_VALUE;
     }
 
@@ -830,16 +861,23 @@ status_t GonkRecorder::startRawAudioRecording() {
     return OK;
 }
 
+status_t GonkRecorder::startRTPRecording() {
+    return INVALID_OPERATION;
+}
+
 status_t GonkRecorder::startMPEG2TSRecording() {
     CHECK_EQ(mOutputFormat, OUTPUT_FORMAT_MPEG2TS);
 
     sp<MediaWriter> writer = new MPEG2TSWriter(mOutputFd);
 
     if (mAudioSource != AUDIO_SOURCE_CNT) {
-        if (mAudioEncoder != AUDIO_ENCODER_AAC) {
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
+        if (mAudioEncoder != AUDIO_ENCODER_AAC &&
+            mAudioEncoder != AUDIO_ENCODER_HE_AAC &&
+            mAudioEncoder != AUDIO_ENCODER_AAC_ELD) {
             return ERROR_UNSUPPORTED;
         }
-
+#endif
         status_t err = setupAudioEncoder(writer);
 
         if (err != OK) {
@@ -882,71 +920,72 @@ status_t GonkRecorder::startMPEG2TSRecording() {
 }
 
 void GonkRecorder::clipVideoFrameRate() {
-    DOM_CAMERA_LOGI("%s: encoder %d", __func__, mVideoEncoder);
+    RE_LOGV("clipVideoFrameRate: encoder %d", mVideoEncoder);
     int minFrameRate = mEncoderProfiles->getVideoEncoderParamByName(
                         "enc.vid.fps.min", mVideoEncoder);
     int maxFrameRate = mEncoderProfiles->getVideoEncoderParamByName(
                         "enc.vid.fps.max", mVideoEncoder);
-    if (mFrameRate < minFrameRate && mFrameRate != -1) {
-        DOM_CAMERA_LOGW("Intended video encoding frame rate (%d fps) is too small"
+    if (mFrameRate < minFrameRate && minFrameRate != -1) {
+        RE_LOGW("Intended video encoding frame rate (%d fps) is too small"
              " and will be set to (%d fps)", mFrameRate, minFrameRate);
         mFrameRate = minFrameRate;
-    } else if (mFrameRate > maxFrameRate) {
-        DOM_CAMERA_LOGW("Intended video encoding frame rate (%d fps) is too large"
+    } else if (mFrameRate > maxFrameRate && maxFrameRate != -1) {
+        RE_LOGW("Intended video encoding frame rate (%d fps) is too large"
              " and will be set to (%d fps)", mFrameRate, maxFrameRate);
         mFrameRate = maxFrameRate;
     }
 }
 
 void GonkRecorder::clipVideoBitRate() {
-    DOM_CAMERA_LOGI("%s: encoder %d", __func__, mVideoEncoder);
+    RE_LOGV("clipVideoBitRate: encoder %d", mVideoEncoder);
     int minBitRate = mEncoderProfiles->getVideoEncoderParamByName(
                         "enc.vid.bps.min", mVideoEncoder);
     int maxBitRate = mEncoderProfiles->getVideoEncoderParamByName(
                         "enc.vid.bps.max", mVideoEncoder);
-    if (mVideoBitRate < minBitRate) {
-        DOM_CAMERA_LOGW("Intended video encoding bit rate (%d bps) is too small"
+    if (mVideoBitRate < minBitRate && minBitRate != -1) {
+        RE_LOGW("Intended video encoding bit rate (%d bps) is too small"
              " and will be set to (%d bps)", mVideoBitRate, minBitRate);
         mVideoBitRate = minBitRate;
-    } else if (mVideoBitRate > maxBitRate) {
-        DOM_CAMERA_LOGW("Intended video encoding bit rate (%d bps) is too large"
+    } else if (mVideoBitRate > maxBitRate && maxBitRate != -1) {
+        RE_LOGW("Intended video encoding bit rate (%d bps) is too large"
              " and will be set to (%d bps)", mVideoBitRate, maxBitRate);
         mVideoBitRate = maxBitRate;
     }
 }
 
 void GonkRecorder::clipVideoFrameWidth() {
-    DOM_CAMERA_LOGI("%s: encoder %d", __func__, mVideoEncoder);
+    RE_LOGV("clipVideoFrameWidth: encoder %d", mVideoEncoder);
     int minFrameWidth = mEncoderProfiles->getVideoEncoderParamByName(
                         "enc.vid.width.min", mVideoEncoder);
     int maxFrameWidth = mEncoderProfiles->getVideoEncoderParamByName(
                         "enc.vid.width.max", mVideoEncoder);
-    if (mVideoWidth < minFrameWidth) {
-        DOM_CAMERA_LOGW("Intended video encoding frame width (%d) is too small"
+    if (mVideoWidth < minFrameWidth && minFrameWidth != -1) {
+        RE_LOGW("Intended video encoding frame width (%d) is too small"
              " and will be set to (%d)", mVideoWidth, minFrameWidth);
         mVideoWidth = minFrameWidth;
-    } else if (mVideoWidth > maxFrameWidth) {
-        DOM_CAMERA_LOGW("Intended video encoding frame width (%d) is too large"
+    } else if (mVideoWidth > maxFrameWidth && maxFrameWidth != -1) {
+        RE_LOGW("Intended video encoding frame width (%d) is too large"
              " and will be set to (%d)", mVideoWidth, maxFrameWidth);
         mVideoWidth = maxFrameWidth;
     }
 }
 
 status_t GonkRecorder::checkVideoEncoderCapabilities() {
-        // Dont clip for time lapse capture as encoder will have enough
-        // time to encode because of slow capture rate of time lapse.
-        clipVideoBitRate();
-        clipVideoFrameRate();
-        clipVideoFrameWidth();
-        clipVideoFrameHeight();
-        setDefaultProfileIfNecessary();
+
+    // Dont clip for time lapse capture as encoder will have enough
+    // time to encode because of slow capture rate of time lapse.
+    clipVideoBitRate();
+    clipVideoFrameRate();
+    clipVideoFrameWidth();
+    clipVideoFrameHeight();
+    setDefaultProfileIfNecessary();
     return OK;
 }
 
 // Set to use AVC baseline profile if the encoding parameters matches
 // CAMCORDER_QUALITY_LOW profile; this is for the sake of MMS service.
 void GonkRecorder::setDefaultProfileIfNecessary() {
-    DOM_CAMERA_LOGI("%s", __func__);
+    RE_LOGV("setDefaultProfileIfNecessary");
 
     camcorder_quality quality = CAMCORDER_QUALITY_LOW;
 
@@ -995,7 +1034,7 @@ void GonkRecorder::setDefaultProfileIfNecessary() {
         audioSampleRate == mSampleRate &&
         audioChannels == mAudioChannels) {
         if (videoCodec == VIDEO_ENCODER_H264) {
-            DOM_CAMERA_LOGI("Force to use AVC baseline profile");
+            RE_LOGI("Force to use AVC baseline profile");
             setParamVideoEncoderProfile(OMX_VIDEO_AVCProfileBaseline);
         }
     }
@@ -1009,13 +1048,13 @@ status_t GonkRecorder::checkAudioEncoderCapabilities() {
 }
 
 void GonkRecorder::clipAudioBitRate() {
-    DOM_CAMERA_LOGI("%s: encoder %d", __func__, mAudioEncoder);
+    RE_LOGV("clipAudioBitRate: encoder %d", mAudioEncoder);
 
     int minAudioBitRate =
             mEncoderProfiles->getAudioEncoderParamByName(
                 "enc.aud.bps.min", mAudioEncoder);
-    if (mAudioBitRate < minAudioBitRate) {
-        DOM_CAMERA_LOGW("Intended audio encoding bit rate (%d) is too small"
+    if (minAudioBitRate != -1 && mAudioBitRate < minAudioBitRate) {
+        RE_LOGW("Intended audio encoding bit rate (%d) is too small"
             " and will be set to (%d)", mAudioBitRate, minAudioBitRate);
         mAudioBitRate = minAudioBitRate;
     }
@@ -1023,21 +1062,21 @@ void GonkRecorder::clipAudioBitRate() {
     int maxAudioBitRate =
             mEncoderProfiles->getAudioEncoderParamByName(
                 "enc.aud.bps.max", mAudioEncoder);
-    if (mAudioBitRate > maxAudioBitRate) {
-        DOM_CAMERA_LOGW("Intended audio encoding bit rate (%d) is too large"
+    if (maxAudioBitRate != -1 && mAudioBitRate > maxAudioBitRate) {
+        RE_LOGW("Intended audio encoding bit rate (%d) is too large"
             " and will be set to (%d)", mAudioBitRate, maxAudioBitRate);
         mAudioBitRate = maxAudioBitRate;
     }
 }
 
 void GonkRecorder::clipAudioSampleRate() {
-    DOM_CAMERA_LOGI("%s: encoder %d", __func__, mAudioEncoder);
+    RE_LOGV("clipAudioSampleRate: encoder %d", mAudioEncoder);
 
     int minSampleRate =
             mEncoderProfiles->getAudioEncoderParamByName(
                 "enc.aud.hz.min", mAudioEncoder);
-    if (mSampleRate < minSampleRate) {
-        DOM_CAMERA_LOGW("Intended audio sample rate (%d) is too small"
+    if (minSampleRate != -1 && mSampleRate < minSampleRate) {
+        RE_LOGW("Intended audio sample rate (%d) is too small"
             " and will be set to (%d)", mSampleRate, minSampleRate);
         mSampleRate = minSampleRate;
     }
@@ -1045,21 +1084,21 @@ void GonkRecorder::clipAudioSampleRate() {
     int maxSampleRate =
             mEncoderProfiles->getAudioEncoderParamByName(
                 "enc.aud.hz.max", mAudioEncoder);
-    if (mSampleRate > maxSampleRate) {
-        DOM_CAMERA_LOGW("Intended audio sample rate (%d) is too large"
+    if (maxSampleRate != -1 && mSampleRate > maxSampleRate) {
+        RE_LOGW("Intended audio sample rate (%d) is too large"
             " and will be set to (%d)", mSampleRate, maxSampleRate);
         mSampleRate = maxSampleRate;
     }
 }
 
 void GonkRecorder::clipNumberOfAudioChannels() {
-    DOM_CAMERA_LOGI("%s: encoder %d", __func__, mAudioEncoder);
+    RE_LOGV("clipNumberOfAudioChannels: encoder %d", mAudioEncoder);
 
     int minChannels =
             mEncoderProfiles->getAudioEncoderParamByName(
                 "enc.aud.ch.min", mAudioEncoder);
-    if (mAudioChannels < minChannels) {
-        DOM_CAMERA_LOGW("Intended number of audio channels (%d) is too small"
+    if (minChannels != -1 && mAudioChannels < minChannels) {
+        RE_LOGW("Intended number of audio channels (%d) is too small"
             " and will be set to (%d)", mAudioChannels, minChannels);
         mAudioChannels = minChannels;
     }
@@ -1067,25 +1106,25 @@ void GonkRecorder::clipNumberOfAudioChannels() {
     int maxChannels =
             mEncoderProfiles->getAudioEncoderParamByName(
                 "enc.aud.ch.max", mAudioEncoder);
-    if (mAudioChannels > maxChannels) {
-        DOM_CAMERA_LOGW("Intended number of audio channels (%d) is too large"
+    if (maxChannels != -1 && mAudioChannels > maxChannels) {
+        RE_LOGW("Intended number of audio channels (%d) is too large"
             " and will be set to (%d)", mAudioChannels, maxChannels);
         mAudioChannels = maxChannels;
     }
 }
 
 void GonkRecorder::clipVideoFrameHeight() {
-    DOM_CAMERA_LOGI("%s: encoder %d", __func__, mVideoEncoder);
+    RE_LOGV("clipVideoFrameHeight: encoder %d", mVideoEncoder);
     int minFrameHeight = mEncoderProfiles->getVideoEncoderParamByName(
                         "enc.vid.height.min", mVideoEncoder);
     int maxFrameHeight = mEncoderProfiles->getVideoEncoderParamByName(
                         "enc.vid.height.max", mVideoEncoder);
-    if (mVideoHeight < minFrameHeight) {
-        DOM_CAMERA_LOGW("Intended video encoding frame height (%d) is too small"
+    if (minFrameHeight != -1 && mVideoHeight < minFrameHeight) {
+        RE_LOGW("Intended video encoding frame height (%d) is too small"
              " and will be set to (%d)", mVideoHeight, minFrameHeight);
         mVideoHeight = minFrameHeight;
-    } else if (mVideoHeight > maxFrameHeight) {
-        DOM_CAMERA_LOGW("Intended video encoding frame height (%d) is too large"
+    } else if (maxFrameHeight != -1 && mVideoHeight > maxFrameHeight) {
+        RE_LOGW("Intended video encoding frame height (%d) is too large"
              " and will be set to (%d)", mVideoHeight, maxFrameHeight);
         mVideoHeight = maxFrameHeight;
     }
@@ -1144,7 +1183,7 @@ status_t GonkRecorder::setupCameraSource(
         int32_t frameRate = 0;
         CHECK ((*cameraSource)->getFormat()->findInt32(
                     kKeyFrameRate, &frameRate));
-        DOM_CAMERA_LOGI("Frame rate is not explicitly set. Use the current frame "
+        RE_LOGI("Frame rate is not explicitly set. Use the current frame "
              "rate (%d fps)", frameRate);
         mFrameRate = frameRate;
     }
@@ -1203,57 +1242,6 @@ status_t GonkRecorder::setupVideoEncoder(
     if (mVideoTimeScale > 0) {
         enc_meta->setInt32(kKeyTimeScale, mVideoTimeScale);
     }
-
-    /*
-     * can set profile from the app as a parameter.
-     * For the mean time, set from shell
-     */
-
-    char value[PROPERTY_VALUE_MAX];
-    bool customProfile = false;
-
-    if (property_get("encoder.video.profile", value, NULL) > 0) {
-        customProfile = true;
-    }
-
-    if (customProfile) {
-        switch ( mVideoEncoder ) {
-        case VIDEO_ENCODER_H264:
-            if (strncmp("base", value, 4) == 0) {
-                mVideoEncoderProfile = OMX_VIDEO_AVCProfileBaseline;
-                DOM_CAMERA_LOGI("H264 Baseline Profile");
-            }
-            else if (strncmp("main", value, 4) == 0) {
-                mVideoEncoderProfile = OMX_VIDEO_AVCProfileMain;
-                DOM_CAMERA_LOGI("H264 Main Profile");
-            }
-            else if (strncmp("high", value, 4) == 0) {
-                mVideoEncoderProfile = OMX_VIDEO_AVCProfileHigh;
-                DOM_CAMERA_LOGI("H264 High Profile");
-            }
-            else {
-               DOM_CAMERA_LOGW("Unsupported H264 Profile");
-            }
-            break;
-        case VIDEO_ENCODER_MPEG_4_SP:
-            if (strncmp("simple", value, 5) == 0 ) {
-                mVideoEncoderProfile = OMX_VIDEO_MPEG4ProfileSimple;
-                DOM_CAMERA_LOGI("MPEG4 Simple profile");
-            }
-            else if (strncmp("asp", value, 3) == 0 ) {
-                mVideoEncoderProfile = OMX_VIDEO_MPEG4ProfileAdvancedSimple;
-                DOM_CAMERA_LOGI("MPEG4 Advanced Simple Profile");
-            }
-            else {
-                DOM_CAMERA_LOGW("Unsupported MPEG4 Profile");
-            }
-            break;
-        default:
-            DOM_CAMERA_LOGW("No custom profile support for other codecs");
-            break;
-        }
-    }
-
     if (mVideoEncoderProfile != -1) {
         enc_meta->setInt32(kKeyVideoProfile, mVideoEncoderProfile);
     }
@@ -1261,26 +1249,23 @@ status_t GonkRecorder::setupVideoEncoder(
         enc_meta->setInt32(kKeyVideoLevel, mVideoEncoderLevel);
     }
 
-    uint32_t encoder_flags = 0;
-    if (mIsMetaDataStoredInVideoBuffers) {
-        DOM_CAMERA_LOGW("Camera source supports metadata mode, create OMXCodec for metadata");
-        encoder_flags |= OMXCodec::kHardwareCodecsOnly;
-        encoder_flags |= OMXCodec::kStoreMetaDataInVideoBuffers;
-        encoder_flags |= OMXCodec::kOnlySubmitOneInputBufferAtOneTime;
-    }
-
     // OMXClient::connect() always returns OK and abort's fatally if
     // it can't connect.
     OMXClient client;
     // CHECK_EQ causes an abort if the given condition fails.
-    CHECK_EQ(client.connect(), OK);
+    CHECK_EQ(client.connect(), (status_t)OK);
+
+    uint32_t encoder_flags = 0;
+    if (mIsMetaDataStoredInVideoBuffers) {
+        encoder_flags |= OMXCodec::kStoreMetaDataInVideoBuffers;
+    }
 
     sp<MediaSource> encoder = OMXCodec::Create(
             client.interface(), enc_meta,
             true /* createEncoder */, cameraSource,
             NULL, encoder_flags);
     if (encoder == NULL) {
-        DOM_CAMERA_LOGW("Failed to create the encoder");
+        RE_LOGW("Failed to create the encoder");
         // When the encoder fails to be created, we need
         // release the camera source due to the camera's lock
         // and unlock mechanism.
@@ -1302,11 +1287,15 @@ status_t GonkRecorder::setupAudioEncoder(const sp<MediaWriter>& writer) {
     switch(mAudioEncoder) {
         case AUDIO_ENCODER_AMR_NB:
         case AUDIO_ENCODER_AMR_WB:
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
         case AUDIO_ENCODER_AAC:
+        case AUDIO_ENCODER_HE_AAC:
+        case AUDIO_ENCODER_AAC_ELD:
+#endif
             break;
 
         default:
-            DOM_CAMERA_LOGE("Unsupported audio encoder: %d", mAudioEncoder);
+            RE_LOGE("Unsupported audio encoder: %d", mAudioEncoder);
             return UNKNOWN_ERROR;
     }
 
@@ -1399,7 +1388,7 @@ void GonkRecorder::setupMPEG4MetaData(int64_t startTimeUs, int32_t totalBitRate,
     char value[PROPERTY_VALUE_MAX];
     if (property_get("debug.camcorder.rotation", value, 0) > 0 && atoi(value) >= 0) {
         mRotationDegrees = atoi(value);
-        DOM_CAMERA_LOGI("Setting rotation to %d", mRotationDegrees );
+        RE_LOGI("Setting rotation to %d", mRotationDegrees );
     }
 
     if (mRotationDegrees != 0) {
@@ -1436,7 +1425,7 @@ status_t GonkRecorder::startMPEG4Recording() {
 }
 
 status_t GonkRecorder::pause() {
-    DOM_CAMERA_LOGI("%s", __func__);
+    RE_LOGV("pause");
     if (mWriter == NULL) {
         return UNKNOWN_ERROR;
     }
@@ -1451,7 +1440,7 @@ status_t GonkRecorder::pause() {
 }
 
 status_t GonkRecorder::stop() {
-    DOM_CAMERA_LOGI("%s", __func__);
+    RE_LOGV("stop");
     status_t err = OK;
 
     if (mWriter != NULL) {
@@ -1473,14 +1462,14 @@ status_t GonkRecorder::stop() {
 }
 
 status_t GonkRecorder::close() {
-    DOM_CAMERA_LOGI("%s", __func__);
+    RE_LOGV("close");
     stop();
 
     return OK;
 }
 
 status_t GonkRecorder::reset() {
-    DOM_CAMERA_LOGI("%s", __func__);
+    RE_LOGV("reset");
     stop();
 
     // No audio or video source by default
@@ -1499,7 +1488,7 @@ status_t GonkRecorder::reset() {
     mAudioChannels = 1;
     mAudioBitRate  = 12200;
     mInterleaveDurationUs = 0;
-    mIFramesIntervalSec = 2;
+    mIFramesIntervalSec = 1;
     mAudioSourceNode = 0;
     mUse64BitFileOffset = false;
     mMovieTimeScale  = -1;
@@ -1525,19 +1514,14 @@ status_t GonkRecorder::reset() {
     //default to no listener registered
     mListener = NULL;
 
-    // Disable Audio Encoding
-    char value[PROPERTY_VALUE_MAX];
-    property_get("camcorder.debug.disableaudio", value, "0");
-    if(atoi(value)) mDisableAudio = true;
-
     return OK;
 }
 
 status_t GonkRecorder::getMaxAmplitude(int *max) {
-    DOM_CAMERA_LOGI("%s", __func__);
+    RE_LOGV("getMaxAmplitude");
 
     if (max == NULL) {
-        DOM_CAMERA_LOGE("Null pointer argument");
+        RE_LOGE("Null pointer argument");
         return BAD_VALUE;
     }
 
@@ -1552,7 +1536,7 @@ status_t GonkRecorder::getMaxAmplitude(int *max) {
 
 status_t GonkRecorder::dump(
         int fd, const Vector<String16>& args) const {
-    DOM_CAMERA_LOGI("%s", __func__);
+    RE_LOGV("dump");
     const size_t SIZE = 256;
     char buffer[SIZE];
     String8 result;

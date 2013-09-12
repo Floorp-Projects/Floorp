@@ -23,14 +23,13 @@
 #include <camera/CameraParameters.h>
 #include <utils/List.h>
 #include <utils/RefBase.h>
-#include <utils/threads.h>
+#include <utils/String16.h>
 
 #include "GonkCameraHwMgr.h"
 
 namespace android {
 
 class IMemory;
-class GonkCameraSourceListener;
 
 class GonkCameraSource : public MediaSource, public MediaBufferObserver {
 public:
@@ -43,7 +42,7 @@ public:
     virtual ~GonkCameraSource();
 
     virtual status_t start(MetaData *params = NULL);
-    virtual status_t stop();
+    virtual status_t stop() { return reset(); }
     virtual status_t read(
             MediaBuffer **buffer, const ReadOptions *options = NULL);
 
@@ -85,6 +84,7 @@ protected:
 
     int32_t  mCameraFlags;
     Size     mVideoSize;
+    int32_t  mNumInputBuffers;
     int32_t  mVideoFrameRate;
     int32_t  mColorFormat;
     status_t mInitCheck;
@@ -153,6 +153,7 @@ private:
                     int32_t frameRate);
 
     void releaseCamera();
+    status_t reset();
 
     GonkCameraSource(const GonkCameraSource &);
     GonkCameraSource &operator=(const GonkCameraSource &);

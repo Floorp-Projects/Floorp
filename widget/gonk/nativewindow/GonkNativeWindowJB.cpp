@@ -20,26 +20,26 @@
 #define ATRACE_TAG ATRACE_TAG_GRAPHICS
 #include <utils/Log.h>
 
-#include <gui/BufferItemConsumer.h>
+#include "GonkNativeWindowJB.h"
+#include "GrallocImages.h"
 
-#define BI_LOGV(x, ...) ALOGV("[%s] "x, mName.string(), ##__VA_ARGS__)
-#define BI_LOGD(x, ...) ALOGD("[%s] "x, mName.string(), ##__VA_ARGS__)
-#define BI_LOGI(x, ...) ALOGI("[%s] "x, mName.string(), ##__VA_ARGS__)
-#define BI_LOGW(x, ...) ALOGW("[%s] "x, mName.string(), ##__VA_ARGS__)
-#define BI_LOGE(x, ...) ALOGE("[%s] "x, mName.string(), ##__VA_ARGS__)
+#define BI_LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__)
+#define BI_LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#define BI_LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define BI_LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+#define BI_LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+
+using namespace mozilla::layers;
 
 namespace android {
 
-GonkNativeWindow::BufferItemConsumer(uint32_t consumerUsage,
-        int bufferCount, bool synchronousMode) :
-    ConsumerBase(new BufferQueue(true) )
+GonkNativeWindow::GonkNativeWindow() :
+    GonkConsumerBase(new GonkBufferQueue(true) )
 {
-    mBufferQueue->setConsumerUsageBits(consumerUsage);
-    mBufferQueue->setSynchronousMode(synchronousMode);
-    mBufferQueue->setMaxAcquiredBufferCount(bufferCount);
+    mBufferQueue->setMaxAcquiredBufferCount(GonkBufferQueue::MIN_UNDEQUEUED_BUFFERS);
 }
 
-GonkNativeWindow::~BufferItemConsumer() {
+GonkNativeWindow::~GonkNativeWindow() {
 }
 
 void GonkNativeWindow::setName(const String8& name) {
@@ -85,8 +85,7 @@ status_t GonkNativeWindow::releaseBuffer(const BufferItem &item,
 
     err = addReleaseFenceLocked(item.mBuf, releaseFence);
 
-    err = releaseBufferLocked(item.mBuf, EGL_NO_DISPLAY,
-            EGL_NO_SYNC_KHR);
+    err = releaseBufferLocked(item.mBuf);
     if (err != OK) {
         BI_LOGE("Failed to release buffer: %s (%d)",
                 strerror(-err), err);
@@ -102,6 +101,63 @@ status_t GonkNativeWindow::setDefaultBufferSize(uint32_t w, uint32_t h) {
 status_t GonkNativeWindow::setDefaultBufferFormat(uint32_t defaultFormat) {
     Mutex::Autolock _l(mMutex);
     return mBufferQueue->setDefaultBufferFormat(defaultFormat);
+}
+
+already_AddRefed<GraphicBufferLocked>
+GonkNativeWindow::getCurrentBuffer()
+{
+    Mutex::Autolock _l(mMutex);
+    GonkBufferQueue::BufferItem item;
+
+    // In asynchronous mode the list is guaranteed to be one buffer
+    // deep, while in synchronous mode we use the oldest buffer.
+    status_t err = acquireBufferLocked(&item);
+    if (err != NO_ERROR) {
+        return NULL;
+    }
+
+  nsRefPtr<GraphicBufferLocked> ret =
+    new CameraGraphicBuffer(this, item.mBuf, mBufferQueue->getGeneration(), item.mSurfaceDescriptor);
+  return ret.forget();
+}
+
+bool
+GonkNativeWindow::returnBuffer(uint32_t aIndex, uint32_t aGeneration) {
+    BI_LOGD("GonkNativeWindow::returnBuffer: slot=%d (generation=%d)", aIndex, aGeneration);
+    Mutex::Autolock lock(mMutex);
+
+    if (aGeneration != mBufferQueue->getGeneration()) {
+        BI_LOGD("returnBuffer: buffer is from generation %d (current is %d)",
+          aGeneration, mBufferQueue->getGeneration());
+        return false;
+    }
+
+    status_t err = releaseBufferLocked(aIndex);
+    if (err != NO_ERROR) {
+        return false;
+    }
+  return true;
+}
+
+mozilla::layers::SurfaceDescriptor *
+GonkNativeWindow::getSurfaceDescriptorFromBuffer(ANativeWindowBuffer* buffer)
+{
+    Mutex::Autolock lock(mMutex);
+    return mBufferQueue->getSurfaceDescriptorFromBuffer(buffer);
+}
+void GonkNativeWindow::setNewFrameCallback(
+        GonkNativeWindowNewFrameCallback* aCallback) {
+    BI_LOGD("setNewFrameCallback");
+    Mutex::Autolock lock(mMutex);
+    mNewFrameCallback = aCallback;
+}
+
+void GonkNativeWindow::onFrameAvailable() {
+    GonkConsumerBase::onFrameAvailable();
+
+    if (mNewFrameCallback) {
+      mNewFrameCallback->OnNewFrame();
+    }
 }
 
 } // namespace android

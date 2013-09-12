@@ -39,7 +39,6 @@ if CONFIG['MOZ_B2G_CAMERA']:
         'GonkCameraHwMgr.cpp',
         'GonkRecorder.cpp',
         'GonkCameraSource.cpp',
-        'AudioParameter.cpp',
         'GonkRecorderProfiles.cpp',
     ]
 else:
