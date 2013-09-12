@@ -210,7 +210,7 @@ CodeGeneratorX86::visitLoadElementT(LLoadElementT *load)
     if (load->mir()->type() == MIRType_Double) {
         FloatRegister fpreg = ToFloatRegister(load->output());
         if (load->mir()->loadDoubles()) {
-            if (source.kind() == Operand::REG_DISP)
+            if (source.kind() == Operand::MEM_REG_DISP)
                 masm.loadDouble(source.toAddress(), fpreg);
             else
                 masm.loadDouble(source.toBaseIndex(), fpreg);
