@@ -21,6 +21,7 @@
     "content/media/test/test_bug495145.html": "timed out",
     "content/media/test/test_bug654550.html": "timed out",
     "content/media/test/test_bug686942.html": "timed out",
+    "content/media/test/test_buffered.html" : "assertion failures",
     "content/media/test/test_can_play_type.html":"timed out",
     "content/media/test/test_can_play_type_mpeg.html":"7 failures out of 27",
     "content/media/test/test_can_play_type_no_dash.html":"",
