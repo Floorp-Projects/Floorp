@@ -53,7 +53,9 @@
 #ifdef MOZ_MEDIA_NAVIGATOR
 #include "MediaManager.h"
 #endif
+#ifdef MOZ_B2G_RIL
 #include "mozilla/dom/Telephony.h"
+#endif
 #ifdef MOZ_B2G_BT
 #include "BluetoothManager.h"
 #endif
@@ -1688,6 +1690,7 @@ Navigator::HasCameraSupport(JSContext* /* unused */, JSObject* aGlobal)
   return win && nsDOMCameraManager::CheckPermission(win);
 }
 
+#ifdef MOZ_B2G_RIL
 /* static */
 bool
 Navigator::HasTelephonySupport(JSContext* /* unused */, JSObject* aGlobal)
@@ -1696,7 +1699,6 @@ Navigator::HasTelephonySupport(JSContext* /* unused */, JSObject* aGlobal)
   return win && Telephony::CheckPermission(win);
 }
 
-#ifdef MOZ_B2G_RIL
 /* static */
 bool
 Navigator::HasMobileConnectionSupport(JSContext* /* unused */,
