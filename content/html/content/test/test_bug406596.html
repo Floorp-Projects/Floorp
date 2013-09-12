@@ -25,9 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=406596
 /** Test for Bug 406596 **/
 
 function testTabbing(click, focus, selectionOffset) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var wu =  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                  .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var wu = SpecialPowers.getDOMWindowUtils(window);
 
   var elem = document.getElementById(click);
   var rect = elem.getBoundingClientRect();

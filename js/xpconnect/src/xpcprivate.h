@@ -3604,6 +3604,7 @@ struct SandboxOptions {
         , wantExportHelpers(false)
         , proto(xpc_GetSafeJSContext())
         , sameZoneAs(xpc_GetSafeJSContext())
+        , metadata(xpc_GetSafeJSContext())
     { }
 
     bool wantXrays;
@@ -3613,6 +3614,7 @@ struct SandboxOptions {
     nsCString sandboxName;
     JS::RootedObject sameZoneAs;
     DOMConstructors DOMConstructors;
+    JS::RootedValue metadata;
 };
 
 JSObject *
@@ -3647,7 +3649,18 @@ EvalInSandbox(JSContext *cx, JS::HandleObject sandbox, const nsAString& source,
               JSVersion jsVersion, bool returnStringOnly,
               JS::MutableHandleValue rval);
 
+// Helper for retrieving metadata stored in a reserved slot. The metadata
+// is set during the sandbox creation using the "metadata" option.
+nsresult
+GetSandboxMetadata(JSContext *cx, JS::HandleObject sandboxArg,
+                   JS::MutableHandleValue rval);
+
+nsresult
+SetSandboxMetadata(JSContext *cx, JS::HandleObject sandboxArg,
+                   JS::HandleValue metadata);
+
 } /* namespace xpc */
+
 
 /***************************************************************************/
 // Inlined utilities.
