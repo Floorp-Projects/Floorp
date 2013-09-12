@@ -25,6 +25,8 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/DownloadCore.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadCombinedList",
+                                  "resource://gre/modules/DownloadList.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadIntegration",
                                   "resource://gre/modules/DownloadIntegration.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadList",
@@ -44,6 +46,19 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
  * and provides the only entry point to get references to back-end objects.
  */
 this.Downloads = {
+  /**
+   * Work on downloads that were not started from a private browsing window.
+   */
+  get PUBLIC() "{Downloads.PUBLIC}",
+  /**
+   * Work on downloads that were started from a private browsing window.
+   */
+  get PRIVATE() "{Downloads.PRIVATE}",
+  /**
+   * Work on both Downloads.PRIVATE and Downloads.PUBLIC downloads.
+   */
+  get ALL() "{Downloads.ALL}",
+
   /**
    * Creates a new Download object.
    *
@@ -128,76 +143,63 @@ this.Downloads = {
   },
 
   /**
-   * Retrieves the DownloadList object for downloads that were not started from
-   * a private browsing window.
+   * Retrieves the specified type of DownloadList object.  There is one download
+   * list for each type, and this method always retrieves a reference to the
+   * same download list when called with the same argument.
    *
-   * Calling this function may cause the download list to be reloaded from the
-   * previous session, if it wasn't loaded already.
+   * Calling this function may cause the list of public downloads to be reloaded
+   * from the previous session, if it wasn't loaded already.
    *
-   * This method always retrieves a reference to the same download list.
+   * @param aType
+   *        This can be Downloads.PUBLIC, Downloads.PRIVATE, or Downloads.ALL.
+   *        Downloads added to the Downloads.PUBLIC and Downloads.PRIVATE lists
+   *        are reflected in the Downloads.ALL list, and downloads added to the
+   *        Downloads.ALL list are also added to either the Downloads.PUBLIC or
+   *        the Downloads.PRIVATE list based on their properties.
    *
    * @return {Promise}
-   * @resolves The DownloadList object for public downloads.
+   * @resolves The requested DownloadList or DownloadCombinedList object.
    * @rejects JavaScript exception.
    */
-  getPublicDownloadList: function D_getPublicDownloadList()
+  getList: function (aType)
   {
-    if (!this._promisePublicDownloadList) {
-      this._promisePublicDownloadList = Task.spawn(
-        function task_D_getPublicDownloadList() {
-          let list = new DownloadList(true);
+    if (aType != Downloads.PUBLIC && aType != Downloads.PRIVATE &&
+        aType != Downloads.ALL) {
+      throw new Error("Invalid aType argument.");
+    }
+
+    if (!(aType in this._listPromises)) {
+      this._listPromises[aType] = Task.spawn(function () {
+        let list;
+        if (aType == Downloads.ALL) {
+          list = new DownloadCombinedList(
+                       (yield this.getList(Downloads.PUBLIC)),
+                       (yield this.getList(Downloads.PRIVATE)));
+        } else {
+          list = new DownloadList();
           try {
-            yield DownloadIntegration.addListObservers(list, false);
-            yield DownloadIntegration.initializePublicDownloadList(list);
+            yield DownloadIntegration.addListObservers(
+                                        list, aType == Downloads.PRIVATE);
+            if (aType == Downloads.PUBLIC) {
+              yield DownloadIntegration.initializePublicDownloadList(list);
+            }
           } catch (ex) {
             Cu.reportError(ex);
           }
-          throw new Task.Result(list);
-        });
+        }
+        throw new Task.Result(list);
+      }.bind(this));
     }
-    return this._promisePublicDownloadList;
+
+    return this._listPromises[aType];
   },
 
   /**
-   * This promise is resolved with a reference to a DownloadList object that
-   * represents persistent downloads.  This property is null before the list of
-   * downloads is requested for the first time.
+   * This object is populated by the getList method with one key for each type
+   * of object that can be returned (Downloads.PUBLIC, Downloads.PRIVATE, or
+   * Downloads.ALL).  The values are the promises returned by the method.
    */
-  _promisePublicDownloadList: null,
-
-  /**
-   * Retrieves the DownloadList object for downloads that were started from
-   * a private browsing window.
-   *
-   * This method always retrieves a reference to the same download list.
-   *
-   * @return {Promise}
-   * @resolves The DownloadList object for private downloads.
-   * @rejects JavaScript exception.
-   */
-  getPrivateDownloadList: function D_getPrivateDownloadList()
-  {
-    if (!this._promisePrivateDownloadList) {
-      this._promisePrivateDownloadList = Task.spawn(
-        function task_D_getPublicDownloadList() {
-          let list = new DownloadList(false);
-          try {
-            yield DownloadIntegration.addListObservers(list, true);
-          } catch (ex) {
-            Cu.reportError(ex);
-          }
-          throw new Task.Result(list);
-        });
-    }
-    return this._promisePrivateDownloadList;
-  },
-
-  /**
-   * This promise is resolved with a reference to a DownloadList object that
-   * represents private downloads. This property is null before the list of
-   * downloads is requested for the first time.
-   */
-  _promisePrivateDownloadList: null,
+  _listPromises: {},
 
   /**
    * Returns the system downloads directory asynchronously.

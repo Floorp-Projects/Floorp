@@ -29,8 +29,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
  * @resolves Array [ Newly created DownloadList , associated DownloadStore ].
  * @rejects JavaScript exception.
  */
-function promiseNewListAndStore(aStorePath) {
-  return promiseNewDownloadList().then(function (aList) {
+function promiseNewListAndStore(aStorePath)
+{
+  return promiseNewList().then(function (aList) {
     let path = aStorePath || getTempFile(TEST_STORE_FILE_NAME).path;
     let store = new DownloadStore(aList, path);
     return [aList, store];
