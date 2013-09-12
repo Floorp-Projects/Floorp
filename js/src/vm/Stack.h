@@ -1058,7 +1058,7 @@ class InterpreterStack
     friend class FrameGuard;
     friend class InterpreterActivation;
 
-    const static size_t DEFAULT_CHUNK_SIZE = 4 * 1024;
+    static const size_t DEFAULT_CHUNK_SIZE = 4 * 1024;
     LifoAlloc allocator_;
 
     // Number of interpreter frames on the stack, for over-recursion checks.
