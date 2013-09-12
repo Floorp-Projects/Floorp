@@ -154,6 +154,21 @@ bufferTooSmall:
 ** JSAPI function prototypes
 *******************************************************************************/
 
+// We use an enclosing struct here out of paranoia about the ability of gcc 4.4
+// (and maybe 4.5) to correctly compile this if it were a template function.
+// See also the comments in dom/workers/Events.cpp (and other adjacent files) by
+// the |struct Property| there.
+template<JS::IsAcceptableThis Test, JS::NativeImpl Impl>
+struct Property
+{
+  static bool
+  Fun(JSContext* cx, unsigned argc, JS::Value* vp)
+  {
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+    return JS::CallNonGenericMethod<Test, Impl>(cx, args);
+  }
+};
+
 static bool ConstructAbstract(JSContext* cx, unsigned argc, jsval* vp);
 
 namespace CType {
@@ -163,13 +178,14 @@ namespace CType {
   static void Trace(JSTracer* trc, JSObject* obj);
   static void Finalize(JSFreeOp *fop, JSObject* obj);
 
-  static bool PrototypeGetter(JSContext* cx, HandleObject obj, HandleId idval,
-    MutableHandleValue vp);
-  static bool NameGetter(JSContext* cx, HandleObject obj, HandleId idval,
-    MutableHandleValue vp);
-  static bool SizeGetter(JSContext* cx, HandleObject obj, HandleId idval,
-    MutableHandleValue vp);
-  static bool PtrGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp);
+  bool IsCType(HandleValue v);
+  bool IsCTypeOrProto(HandleValue v);
+
+  bool PrototypeGetter(JSContext* cx, JS::CallArgs args);
+  bool NameGetter(JSContext* cx, JS::CallArgs args);
+  bool SizeGetter(JSContext* cx, JS::CallArgs args);
+  bool PtrGetter(JSContext* cx, JS::CallArgs args);
+
   static bool CreateArray(JSContext* cx, unsigned argc, jsval* vp);
   static bool ToString(JSContext* cx, unsigned argc, jsval* vp);
   static bool ToSource(JSContext* cx, unsigned argc, jsval* vp);
@@ -536,6 +552,9 @@ static const JSClass sCDataFinalizerClass = {
 #define CTYPESPROP_FLAGS \
   (JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)
 
+#define CTYPESACC_FLAGS \
+  (JSPROP_ENUMERATE | JSPROP_PERMANENT)
+
 #define CABIFN_FLAGS \
   (JSPROP_READONLY | JSPROP_PERMANENT)
 
@@ -546,10 +565,18 @@ static const JSClass sCDataFinalizerClass = {
   (JSPROP_READONLY | JSPROP_PERMANENT)
 
 static const JSPropertySpec sCTypeProps[] = {
-  { "name", 0, CTYPESPROP_FLAGS, JSOP_WRAPPER(CType::NameGetter), JSOP_NULLWRAPPER },
-  { "size", 0, CTYPESPROP_FLAGS, JSOP_WRAPPER(CType::SizeGetter), JSOP_NULLWRAPPER },
-  { "ptr", 0, CTYPESPROP_FLAGS, JSOP_WRAPPER(CType::PtrGetter), JSOP_NULLWRAPPER },
-  { "prototype", 0, CTYPESPROP_FLAGS, JSOP_WRAPPER(CType::PrototypeGetter), JSOP_NULLWRAPPER },
+  JS_PSG("name",
+         (Property<CType::IsCType, CType::NameGetter>::Fun),
+         CTYPESACC_FLAGS),
+  JS_PSG("size",
+         (Property<CType::IsCType, CType::SizeGetter>::Fun),
+         CTYPESACC_FLAGS),
+  JS_PSG("ptr",
+         (Property<CType::IsCType, CType::PtrGetter>::Fun),
+         CTYPESACC_FLAGS),
+  JS_PSG("prototype",
+         (Property<CType::IsCTypeOrProto, CType::PrototypeGetter>::Fun),
+         CTYPESACC_FLAGS),
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
@@ -3574,62 +3601,61 @@ CType::GetProtoFromType(JSContext* cx, JSObject* objArg, CTypeProtoSlot slot)
 }
 
 bool
-CType::PrototypeGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
+CType::IsCTypeOrProto(HandleValue v)
 {
-  if (!(CType::IsCType(obj) || CType::IsCTypeProto(obj))) {
-    JS_ReportError(cx, "not a CType or CTypeProto");
+  if (!v.isObject())
     return false;
-  }
+  JSObject* obj = &v.toObject();
+  return CType::IsCType(obj) || CType::IsCTypeProto(obj);
+}
 
+bool
+CType::PrototypeGetter(JSContext* cx, JS::CallArgs args)
+{
+  RootedObject obj(cx, &args.thisv().toObject());
   unsigned slot = CType::IsCTypeProto(obj) ? (unsigned) SLOT_OURDATAPROTO
                                            : (unsigned) SLOT_PROTO;
-  vp.set(JS_GetReservedSlot(obj, slot));
-  JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp) || JSVAL_IS_VOID(vp));
+  args.rval().set(JS_GetReservedSlot(obj, slot));
+  MOZ_ASSERT(args.rval().isObject() || args.rval().isUndefined());
   return true;
 }
 
 bool
-CType::NameGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
+CType::IsCType(HandleValue v)
 {
-  if (!CType::IsCType(obj)) {
-    JS_ReportError(cx, "not a CType");
-    return false;
-  }
+  return v.isObject() && CType::IsCType(&v.toObject());
+}
 
+bool
+CType::NameGetter(JSContext* cx, JS::CallArgs args)
+{
+  RootedObject obj(cx, &args.thisv().toObject());
   JSString* name = CType::GetName(cx, obj);
   if (!name)
     return false;
 
-  vp.setString(name);
+  args.rval().setString(name);
   return true;
 }
 
 bool
-CType::SizeGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
+CType::SizeGetter(JSContext* cx, JS::CallArgs args)
 {
-  if (!CType::IsCType(obj)) {
-    JS_ReportError(cx, "not a CType");
-    return false;
-  }
-
-  vp.set(JS_GetReservedSlot(obj, SLOT_SIZE));
-  JS_ASSERT(JSVAL_IS_NUMBER(vp) || JSVAL_IS_VOID(vp));
+  RootedObject obj(cx, &args.thisv().toObject());
+  args.rval().set(JS_GetReservedSlot(obj, SLOT_SIZE));
+  MOZ_ASSERT(args.rval().isNumber() || args.rval().isUndefined());
   return true;
 }
 
 bool
-CType::PtrGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
+CType::PtrGetter(JSContext* cx, JS::CallArgs args)
 {
-  if (!CType::IsCType(obj)) {
-    JS_ReportError(cx, "not a CType");
-    return false;
-  }
-
+  RootedObject obj(cx, &args.thisv().toObject());
   JSObject* pointerType = PointerType::CreateInternal(cx, obj);
   if (!pointerType)
     return false;
 
-  vp.setObject(*pointerType);
+  args.rval().setObject(*pointerType);
   return true;
 }
 
