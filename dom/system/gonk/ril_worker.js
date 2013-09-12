@@ -876,6 +876,7 @@ let RIL = {
       function onsuccess(contacts) {
         // Reuse 'options' to get 'requestId' and 'contactType'.
         options.contacts = contacts;
+        options.iccid = RIL.iccInfo.iccid;
         RIL.sendChromeMessage(options);
       }.bind(this),
       function onerror(errorMsg) {
@@ -906,6 +907,16 @@ let RIL = {
     if (!this.appType || !options.contact) {
       onerror(GECKO_ERROR_REQUEST_NOT_SUPPORTED);
       return;
+    }
+
+    let contact = options.contact;
+    let iccid = RIL.iccInfo.iccid;
+    if (contact.id.startsWith(iccid)) {
+      contact.recordId = contact.id.substring(iccid.length);
+    }
+
+    if (DEBUG) {
+      debug("Update ICC Contact " + JSON.stringify(contact));
     }
 
     // If contact has 'recordId' property, updates corresponding record.
