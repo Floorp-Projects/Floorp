@@ -10,31 +10,36 @@
 }
 
 #tabs {
-  box-shadow: inset -1px 0 5px rgba(0,0,0,0.9);
-  background: #22272D;
+  box-shadow: inset -4px 0 0 rgba(0,0,0,0.3);
+  background: #252C33;
 }
 
 .button {
   width: 80px;
-  height: 80px;
+  height: 85px;
+  padding-bottom: 5px;
   -moz-appearance: none;
   border: none;
-  border-top: 1px solid #323234;
   border-bottom: 1px solid #121214;
   background-color: transparent;
-  color: white;
+  color: #B5B8BB;
   cursor: pointer;
   text-align: center;
   -moz-box-align: end;
   font-size: 10px;
-  text-shadow: 0 1px 2px #111;
+  text-shadow: 0 1px 0 #333;
   color: #9FA6AD;
 }
 
+.button:first-child {
+  border-top: none;
+}
+
 .button[selected] {
-  color: #26A6DE;
+  box-shadow: inset -4px 0 0 rgba(0,0,0,0.3), inset 2px 0 0 #DEFFFF, inset 3px 0 0 #8DC7E8, inset 4px 0 1px #1D6496;
+  color: #DCE8F3;
+  background-color: #1A4766;
   border-color: #191B1E;
-  box-shadow: inset -5px 0 5px #111;
 }
 
 .button::-moz-focus-inner {
@@ -59,14 +64,10 @@
 }
 
 .device-button {
-  background-image: url('chrome://browser/skin/devtools/app-manager/index-icons.svg'), radial-gradient(at center left, red 40%, transparent);
+  background-image: url('chrome://browser/skin/devtools/app-manager/index-icons.svg');
   background-position: left -85px, top left;
   background-repeat: no-repeat, no-repeat;
   background-size: 160px 160px, 2px 80px;
-}
-
-.connected .device-button {
-  background-image: url('chrome://browser/skin/devtools/app-manager/index-icons.svg'), radial-gradient(at center left, #B1FC0D 40%, transparent);
 }
 
 .device-button[selected] {
