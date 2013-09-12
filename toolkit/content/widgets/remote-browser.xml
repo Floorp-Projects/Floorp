@@ -119,13 +119,6 @@
         ]]>
       </constructor>
 
-      <destructor>
-        <![CDATA[
-          this.webProgress._destroy();
-          this.controllers.removeController(this._controller);
-        ]]>
-      </destructor>
-
       <method name="receiveMessage">
         <parameter name="aMessage"/>
         <body><![CDATA[
