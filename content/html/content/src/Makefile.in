@@ -22,6 +22,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../../editor/libeditor/text \
 		-I$(srcdir)/../../../../editor/txmgr/src \
 		-I$(srcdir)/../../../../netwerk/base/src \
+		-I$(srcdir)/../../../../content/canvas/src \
 		-I$(srcdir) \
 		-I$(topsrcdir)/xpcom/ds \
 		-I$(topsrcdir)/content/media/ \
