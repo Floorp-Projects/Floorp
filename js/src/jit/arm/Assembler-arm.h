@@ -528,13 +528,14 @@ struct Imm8VFPImmData
     int32_t isInvalid : 12;
 
   public:
-    MOZ_CONSTEXPR Imm8VFPImmData()
-      : imm4L(-1U & 0xf), pad(0), imm4H(-1U & 0xf), isInvalid(-1)
+    Imm8VFPImmData()
+      : imm4L(-1U & 0xf), imm4H(-1U & 0xf), isInvalid(-1)
     { }
 
-    MOZ_CONSTEXPR Imm8VFPImmData(uint8_t imm)
-      : imm4L(imm&0xf), pad(0), imm4H(imm>>4), isInvalid(0)
+    Imm8VFPImmData(uint32_t imm)
+      : imm4L(imm&0xf), imm4H(imm>>4), isInvalid(0)
     {
+        JS_ASSERT(imm <= 0xff);
     }
 
     uint32_t encode() {
@@ -2182,22 +2183,55 @@ GetArgStackDisp(uint32_t arg)
 
 #endif
 class DoubleEncoder {
+    uint32_t rep(bool b, uint32_t count) {
+        uint32_t ret = 0;
+        for (uint32_t i = 0; i < count; i++)
+            ret = (ret << 1) | b;
+        return ret;
+    }
+    uint32_t encode(uint8_t value) {
+        //ARM ARM "VFP modified immediate constants"
+        // aBbbbbbb bbcdefgh 000...
+        // we want to return the top 32 bits of the double
+        // the rest are 0.
+        bool a = value >> 7;
+        bool b = value >> 6 & 1;
+        bool B = !b;
+        uint32_t cdefgh = value & 0x3f;
+        return a << 31 |
+            B << 30 |
+            rep(b, 8) << 22 |
+            cdefgh << 16;
+    }
+
     struct DoubleEntry
     {
         uint32_t dblTop;
         datastore::Imm8VFPImmData data;
 
-        MOZ_CONSTEXPR DoubleEntry(uint32_t dblTop_, datastore::Imm8VFPImmData data_)
+        DoubleEntry()
+          : dblTop(-1)
+        { }
+        DoubleEntry(uint32_t dblTop_, datastore::Imm8VFPImmData data_)
           : dblTop(dblTop_), data(data_)
         { }
     };
-    static const DoubleEntry table[256];
+    DoubleEntry table [256];
+
+    // grumble singleton, grumble
+    static DoubleEncoder _this;
+    DoubleEncoder()
+    {
+        for (int i = 0; i < 256; i++) {
+            table[i] = DoubleEntry(encode(i), datastore::Imm8VFPImmData(i));
+        }
+    }
 
   public:
     static bool lookup(uint32_t top, datastore::Imm8VFPImmData *ret) {
         for (int i = 0; i < 256; i++) {
-            if (table[i].dblTop == top) {
-                *ret = table[i].data;
+            if (_this.table[i].dblTop == top) {
+                *ret = _this.table[i].data;
                 return true;
             }
         }
