@@ -444,6 +444,7 @@ void ImageBridgeChild::FlushImageNow(ImageClient* aClient, ImageContainer* aCont
   aClient->FlushImage();
   aClient->OnTransaction();
   sImageBridgeChildSingleton->EndTransaction();
+  aClient->FlushTexturesToRemoveCallbacks();
 }
 
 void

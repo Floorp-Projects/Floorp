@@ -111,6 +111,20 @@ GrallocTextureClientOGL::GrallocTextureClientOGL(CompositableClient* aCompositab
 GrallocTextureClientOGL::~GrallocTextureClientOGL()
 {
   MOZ_COUNT_DTOR(GrallocTextureClientOGL);
+    if (ShouldDeallocateInDestructor()) {
+    // If the buffer has never been shared we must deallocate it or it would
+    // leak.
+    if (mBufferLocked) {
+      mBufferLocked->Unlock();
+    } else {
+      MOZ_ASSERT(mCompositable);
+      // We just need to wrap the actor in a SurfaceDescriptor because that's what
+      // ISurfaceAllocator uses as input, we don't care about the other parameters.
+      SurfaceDescriptor sd = SurfaceDescriptorGralloc(nullptr, mGrallocActor,
+                                                      nsIntSize(0,0), false, false);
+      mCompositable->GetForwarder()->DestroySharedSurface(&sd);
+    }
+  }
 }
 
 void
