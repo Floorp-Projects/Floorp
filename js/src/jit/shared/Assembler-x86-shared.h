@@ -780,6 +780,9 @@ class AssemblerX86Shared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
+    void cmpl(const Operand &op, ImmPtr imm) {
+        cmpl(op, ImmWord(uintptr_t(imm.value)));
+    }
     void setCC(Condition cond, const Register &r) {
         masm.setCC_r(static_cast<JSC::X86Assembler::Condition>(cond), r.code());
     }
@@ -1477,12 +1480,12 @@ class AssemblerX86Shared
         *((int32_t *) dataLabel.raw() - 1) = toWrite.value;
     }
 
-    static void patchDataWithValueCheck(CodeLocationLabel data, ImmWord newData,
-                                        ImmWord expectedData) {
+    static void patchDataWithValueCheck(CodeLocationLabel data, ImmPtr newData,
+                                        ImmPtr expectedData) {
         // The pointer given is a pointer to *after* the data.
         uintptr_t *ptr = ((uintptr_t *) data.raw()) - 1;
-        JS_ASSERT(*ptr == expectedData.value);
-        *ptr = newData.value;
+        JS_ASSERT(*ptr == (uintptr_t)expectedData.value);
+        *ptr = (uintptr_t)newData.value;
     }
     static uint32_t nopSize() {
         return 1;

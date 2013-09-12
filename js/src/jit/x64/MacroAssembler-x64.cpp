@@ -196,7 +196,7 @@ MacroAssemblerX64::callWithABI(void *fun, Result result)
 {
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
-    call(ImmWord(fun));
+    call(ImmPtr(fun));
     callWithABIPost(stackAdjust, result);
 }
 

@@ -205,6 +205,9 @@ class MacroAssemblerX86Shared : public Assembler
         framePushed_ += sizeof(word.value);
         return pushWithPatch(word);
     }
+    CodeOffsetLabel PushWithPatch(const ImmPtr &imm) {
+        return PushWithPatch(ImmWord(uintptr_t(imm.value)));
+    }
 
     template <typename T>
     void Pop(const T &t) {
@@ -528,7 +531,7 @@ class MacroAssemblerX86Shared : public Assembler
     bool buildOOLFakeExitFrame(void *fakeReturnAddr) {
         uint32_t descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
         Push(Imm32(descriptor));
-        Push(ImmWord(fakeReturnAddr));
+        Push(ImmPtr(fakeReturnAddr));
         return true;
     }
 
