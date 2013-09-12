@@ -88,13 +88,11 @@ InterAppMessagePort.prototype = {
   },
 
   // WebIDL implementation for constructor.
-  __init: function(aKeyword, aMessagePortID) {
+  __init: function(aMessagePortID) {
     if (DEBUG) {
-      debug("Calling __init(): aKeyword: " + aKeyword +
-            " aMessagePortID: " + aMessagePortID);
+      debug("Calling __init(): aMessagePortID: " + aMessagePortID);
     }
 
-    this._keyword = aKeyword;
     this._messagePortID = aMessagePortID;
 
     cpmm.sendAsyncMessage("InterAppMessagePort:Register",

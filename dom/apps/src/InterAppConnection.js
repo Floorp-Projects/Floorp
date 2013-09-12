@@ -121,8 +121,7 @@ InterAppConnectionRequestWrapper.prototype = {
   wrapMessage: function(aMessage, aWindow) {
     if (DEBUG) debug("wrapMessage: " + JSON.stringify(aMessage));
 
-    let port = new aWindow.MozInterAppMessagePort(aMessage.keyword,
-                                                  aMessage.messagePortID, false);
+    let port = new aWindow.MozInterAppMessagePort(aMessage.messagePortID);
     let connectionRequest =
       new aWindow.MozInterAppConnectionRequest(aMessage.keyword, port);
 
