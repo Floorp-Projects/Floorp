@@ -10,15 +10,6 @@ SHORT_LIBNAME	= xpcomsmp
 # IS_COMPONENT indicates that this makefile builds a component shared library.
 IS_COMPONENT	= 1
 
-# NOTE:
-####################################################################
-# Variable assignment(s) should be maintained within moz.build files 
-# whenever possible. Migrate existing Makefile.in content into the 
-# corresponding moz.build file, then run 'mach configure' to determine 
-# if the variable is suppported. If not supported / not yet converted- 
-# open a Build::Config bug requesting conversion of the variable.
-####################################################################
-
 # If this is Makefile builds a component, MODULE_NAME must match the module
 # name specified in NS_IMPL_NSGETMODULE
 MODULE_NAME	= nsSampleModule
