@@ -804,9 +804,6 @@ pref("dom.min_background_timeout_value", 1000);
 pref("dom.experimental_forms", false);
 pref("dom.forms.number", false);
 
-// Don't enable <input type=range> yet:
-pref("dom.experimental_forms_range", true);
-
 // Don't enable <input type=color> yet:
 pref("dom.forms.color", false);
 

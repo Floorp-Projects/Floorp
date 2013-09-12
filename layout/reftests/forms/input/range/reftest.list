@@ -1,6 +1,4 @@
 
-default-preferences pref(dom.experimental_forms_range,true)
-
 # sanity checks:
 != not-other-type-unthemed-1.html not-other-type-unthemed-1a-notref.html
 != not-other-type-unthemed-1.html not-other-type-unthemed-1b-notref.html
