@@ -316,7 +316,8 @@ private:
             const nsCString& aContentDisposition,
             const bool& aForceSave,
             const int64_t& aContentLength,
-            const OptionalURIParams& aReferrer);
+            const OptionalURIParams& aReferrer,
+            PBrowserParent* aBrowser);
     virtual bool DeallocPExternalHelperAppParent(PExternalHelperAppParent* aService);
 
     virtual PSmsParent* AllocPSmsParent();
