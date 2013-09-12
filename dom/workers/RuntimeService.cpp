@@ -826,7 +826,8 @@ public:
   WorkerJSRuntime(WorkerPrivate* aWorkerPrivate)
   : CycleCollectedJSRuntime(WORKER_DEFAULT_RUNTIME_HEAPSIZE,
                             JS_NO_HELPER_THREADS,
-                            false)
+                            false),
+    mWorkerPrivate(aWorkerPrivate)
   {
     // We need to ensure that a JSContext outlives the cycle collector, and
     // that the internal JSContext created by ctypes is not the last JSContext
@@ -845,7 +846,12 @@ public:
     // the GC the final time and finalize any JSObjects that were participating
     // in cycles that were broken during CC shutdown.
     nsCycleCollector_shutdownThreads();
+
+    // If we try to CC after this point, we're gonna have a bad time.
+    mWorkerPrivate = nullptr;
+
     nsCycleCollector_shutdown();
+
     JS_DestroyContext(mLastJSContext);
     mLastJSContext = nullptr;
   }
@@ -866,7 +872,22 @@ public:
     nsCycleCollector_doDeferredDeletion();
   }
 
+  virtual void CustomGCCallback(JSGCStatus aStatus) MOZ_OVERRIDE
+  {
+    if (!mWorkerPrivate) {
+      // We're shutting down, no need to do anything.
+      return;
+    }
+
+    mWorkerPrivate->AssertIsOnWorkerThread();
+
+    if (aStatus == JSGC_END) {
+      nsCycleCollector_collect(true, nullptr, nullptr);
+    }
+  }
+
 private:
+  WorkerPrivate* mWorkerPrivate;
   JSContext* mLastJSContext;
 };
 
