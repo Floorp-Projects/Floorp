@@ -24,17 +24,24 @@ function test() {
     tabState.entries[0].referrer = REFERRER2;
     ss.setTabState(tab, JSON.stringify(tabState));
 
-    tab.addEventListener("SSTabRestored", function() {
+    tab.addEventListener("SSTabRestored", function(e) {
       tab.removeEventListener("SSTabRestored", arguments.callee, true);
       is(window.content.document.referrer, REFERRER2, "document.referrer matches referrer set via setTabState.");
 
       gBrowser.removeTab(tab);
+      // Call stopPropagation on the event so we won't fire the
+      // tabbrowser's SSTabRestored listeners.
+      e.stopPropagation();
+
       let newTab = ss.undoCloseTab(window, 0);
-      newTab.addEventListener("SSTabRestored", function() {
+      newTab.addEventListener("SSTabRestored", function(e) {
         newTab.removeEventListener("SSTabRestored", arguments.callee, true);
 
         is(window.content.document.referrer, REFERRER2, "document.referrer is still correct after closing and reopening the tab.");
         gBrowser.removeTab(newTab);
+        // Call stopPropagation on the event so we won't fire the
+        // tabbrowser's SSTabRestored listeners.
+        e.stopPropagation();
 
         finish();
       }, true);
