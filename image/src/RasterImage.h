@@ -759,6 +759,11 @@ private: // data
   // off a full decode.
   bool                       mWantFullDecode:1;
 
+  // Set when a decode worker detects an error off-main-thread. Once the error
+  // is handled on the main thread, mError is set, but mPendingError is used to
+  // stop decode work immediately.
+  bool                       mPendingError:1;
+
   // Decoding
   nsresult RequestDecodeIfNeeded(nsresult aStatus,
                                  eShutdownIntent aIntent,
@@ -795,8 +800,28 @@ private: // data
 
   nsresult ShutdownDecoder(eShutdownIntent aIntent);
 
-  // Helpers
+  // Error handling.
   void DoError();
+
+  class HandleErrorWorker : public nsRunnable
+  {
+  public:
+    /**
+     * Called from decoder threads when DoError() is called, since errors can't
+     * be handled safely off-main-thread. Dispatches an event which reinvokes
+     * DoError on the main thread if there isn't one already pending.
+     */
+    static void DispatchIfNeeded(RasterImage* aImage);
+
+    NS_IMETHOD Run();
+
+  private:
+    HandleErrorWorker(RasterImage* aImage);
+
+    nsRefPtr<RasterImage> mImage;
+  };
+
+  // Helpers
   bool CanDiscard();
   bool CanForciblyDiscard();
   bool DiscardingActive();
