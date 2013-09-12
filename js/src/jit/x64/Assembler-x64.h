@@ -178,6 +178,7 @@ class Operand
         MEM_SCALE
     };
 
+  private:
     Kind kind_ : 3;
     int32_t base_ : 5;
     Scale scale_ : 3;
