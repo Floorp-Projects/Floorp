@@ -248,11 +248,9 @@ class AssemblerX86Shared
           case Operand::MEM_SCALE:
             masm.movl_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
             break;
-#ifdef JS_CPU_X86
-          case Operand::MEM_ADDRESS:
+          case Operand::MEM_ADDRESS32:
             masm.movl_mr(src.address(), dest.code());
             break;
-#endif
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
@@ -268,11 +266,9 @@ class AssemblerX86Shared
           case Operand::MEM_SCALE:
             masm.movl_rm(src.code(), dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
-#ifdef JS_CPU_X86
-          case Operand::MEM_ADDRESS:
+          case Operand::MEM_ADDRESS32:
             masm.movl_rm(src.code(), dest.address());
             break;
-#endif
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
@@ -737,11 +733,9 @@ class AssemblerX86Shared
           case Operand::MEM_SCALE:
             masm.cmpl_im(imm.value, op.disp(), op.base(), op.index(), op.scale());
             break;
-#ifdef JS_CPU_X86
-          case Operand::MEM_ADDRESS:
+          case Operand::MEM_ADDRESS32:
             masm.cmpl_im(imm.value, op.address());
             break;
-#endif
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
@@ -754,11 +748,9 @@ class AssemblerX86Shared
           case Operand::MEM_REG_DISP:
             masm.cmpl_rm(rhs.code(), lhs.disp(), lhs.base());
             break;
-#ifdef JS_CPU_X86
-          case Operand::MEM_ADDRESS:
+          case Operand::MEM_ADDRESS32:
             masm.cmpl_rm(rhs.code(), lhs.address());
             break;
-#endif
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
@@ -771,11 +763,9 @@ class AssemblerX86Shared
           case Operand::MEM_REG_DISP:
             masm.cmpl_im(imm.value, op.disp(), op.base());
             break;
-#ifdef JS_CPU_X86
-          case Operand::MEM_ADDRESS:
+          case Operand::MEM_ADDRESS32:
             masm.cmpl_im(imm.value, op.address());
             break;
-#endif
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
@@ -822,11 +812,9 @@ class AssemblerX86Shared
           case Operand::MEM_REG_DISP:
             masm.addl_im(imm.value, op.disp(), op.base());
             break;
-#ifdef JS_CPU_X86
-          case Operand::MEM_ADDRESS:
+          case Operand::MEM_ADDRESS32:
             masm.addl_im(imm.value, op.address());
             break;
-#endif
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
@@ -1227,11 +1215,9 @@ class AssemblerX86Shared
           case Operand::MEM_REG_DISP:
             masm.addsd_mr(src.disp(), src.base(), dest.code());
             break;
-#ifdef JS_CPU_X86
-          case Operand::MEM_ADDRESS:
+          case Operand::MEM_ADDRESS32:
             masm.addsd_mr(src.address(), dest.code());
             break;
-#endif
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
@@ -1245,11 +1231,9 @@ class AssemblerX86Shared
           case Operand::MEM_REG_DISP:
             masm.addss_mr(src.disp(), src.base(), dest.code());
             break;
-#ifdef JS_CPU_X86
-          case Operand::MEM_ADDRESS:
+          case Operand::MEM_ADDRESS32:
             masm.addss_mr(src.address(), dest.code());
             break;
-#endif
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
