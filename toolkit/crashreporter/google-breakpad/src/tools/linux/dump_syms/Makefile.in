@@ -9,10 +9,6 @@ LOCAL_INCLUDES 	= \
   -I$(srcdir)/../../../common/linux \
   $(NULL)
 
-HOST_CPPSRCS = \
-  dump_syms.cc \
-  $(NULL)
-
 HOST_LIBS += \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/linux/$(LIB_PREFIX)host_breakpad_linux_common_s.$(LIB_SUFFIX) \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)host_breakpad_common_s.$(LIB_SUFFIX) \
