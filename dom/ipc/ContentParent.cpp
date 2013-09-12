@@ -1630,6 +1630,19 @@ ContentParent::RecvAudioChannelChangedNotification()
 }
 
 bool
+ContentParent::RecvAudioChannelChangeDefVolChannel(
+  const AudioChannelType& aType, const bool& aHidden)
+{
+    nsRefPtr<AudioChannelService> service =
+        AudioChannelService::GetAudioChannelService();
+    if (service) {
+       service->SetDefaultVolumeControlChannelInternal(aType,
+                                                       aHidden, mChildID);
+    }
+    return true;
+}
+
+bool
 ContentParent::RecvBroadcastVolume(const nsString& aVolumeName)
 {
 #ifdef MOZ_WIDGET_GONK
