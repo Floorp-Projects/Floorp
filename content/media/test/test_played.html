@@ -13,6 +13,8 @@
 
 let manager = new MediaTestManager;
 
+SimpleTest.expectAssertions(0, 2);
+
 function finish_test(element) {
   if (element.parentNode)
     element.parentNode.removeChild(element);
