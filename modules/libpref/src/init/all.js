@@ -151,6 +151,7 @@ pref("browser.display.focus_ring_style", 1);
 pref("browser.helperApps.alwaysAsk.force",  false);
 pref("browser.helperApps.neverAsk.saveToDisk", "");
 pref("browser.helperApps.neverAsk.openFile", "");
+pref("browser.helperApps.deleteTempFileOnExit", false);
 
 #ifdef XP_WIN
 // By default, security zone information is stored in the Alternate Data Stream
