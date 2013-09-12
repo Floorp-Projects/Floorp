@@ -63,11 +63,16 @@ AudioContext::AudioContext(nsPIDOMWindow* aWindow,
   // Actually play audio
   mDestination->Stream()->AddAudioOutput(&gWebAudioOutputKey);
   nsDOMEventTargetHelper::BindToOwner(aWindow);
+  aWindow->AddAudioContext(this);
   SetIsDOMBinding();
 }
 
 AudioContext::~AudioContext()
 {
+  nsPIDOMWindow* window = GetOwner();
+  if (window) {
+    window->RemoveAudioContext(this);
+  }
 }
 
 JSObject*
@@ -91,7 +96,6 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
   }
 
   nsRefPtr<AudioContext> object = new AudioContext(window, false);
-  window->AddAudioContext(object);
   return object.forget();
 }
 
@@ -123,7 +127,6 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
                                                    aNumberOfChannels,
                                                    aLength,
                                                    aSampleRate);
-  window->AddAudioContext(object);
   return object.forget();
 }
 
