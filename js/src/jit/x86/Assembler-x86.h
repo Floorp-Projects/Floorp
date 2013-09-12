@@ -120,9 +120,9 @@ class Operand
     };
 
     Kind kind_ : 4;
-    int32_t index_ : 5;
+    int32_t base_ : 5;
     Scale scale_ : 3;
-    int32_t base_;
+    int32_t index_ : 5;
     int32_t disp_;
 
   public:
@@ -141,16 +141,16 @@ class Operand
     { }
     explicit Operand(const BaseIndex &address)
       : kind_(MEM_SCALE),
-        index_(address.index.code()),
-        scale_(address.scale),
         base_(address.base.code()),
+        scale_(address.scale),
+        index_(address.index.code()),
         disp_(address.offset)
     { }
     Operand(Register base, Register index, Scale scale, int32_t disp = 0)
       : kind_(MEM_SCALE),
-        index_(index.code()),
-        scale_(scale),
         base_(base.code()),
+        scale_(scale),
+        index_(index.code()),
         disp_(disp)
     { }
     Operand(Register reg, int32_t disp)
@@ -160,11 +160,11 @@ class Operand
     { }
     explicit Operand(const AbsoluteAddress &address)
       : kind_(MEM_ADDRESS),
-        base_(reinterpret_cast<int32_t>(address.addr))
+        disp_(reinterpret_cast<int32_t>(address.addr))
     { }
     explicit Operand(const void *address)
       : kind_(MEM_ADDRESS),
-        base_(reinterpret_cast<int32_t>(address))
+        disp_(reinterpret_cast<int32_t>(address))
     { }
 
     Address toAddress() {
@@ -206,7 +206,7 @@ class Operand
     }
     void *address() const {
         JS_ASSERT(kind() == MEM_ADDRESS);
-        return reinterpret_cast<void *>(base_);
+        return reinterpret_cast<void *>(disp_);
     }
 };
 
