@@ -342,6 +342,33 @@ public:
 
     void UpdateHitRegion(const nsRegion& aRegion);
 
+    static inline TabChild*
+    GetFrom(nsIDocShell* aDocShell)
+    {
+      nsCOMPtr<nsITabChild> tc = do_GetInterface(aDocShell);
+      return static_cast<TabChild*>(tc.get());
+    }
+
+    static inline TabChild*
+    GetFrom(nsIPresShell* aPresShell)
+    {
+      nsIDocument* doc = aPresShell->GetDocument();
+      if (!doc) {
+          return nullptr;
+      }
+      nsCOMPtr<nsISupports> container = doc->GetContainer();
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+      return GetFrom(docShell);
+    }
+
+    static inline TabChild*
+    GetFrom(nsIDOMWindow* aWindow)
+    {
+      nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(aWindow);
+      nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(webNav);
+      return GetFrom(docShell);
+    }
+
 protected:
     virtual PRenderFrameChild* AllocPRenderFrameChild(ScrollingBehavior* aScrolling,
                                                       TextureFactoryIdentifier* aTextureFactoryIdentifier,
@@ -476,33 +503,6 @@ private:
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };
-
-inline TabChild*
-GetTabChildFrom(nsIDocShell* aDocShell)
-{
-    nsCOMPtr<nsITabChild> tc = do_GetInterface(aDocShell);
-    return static_cast<TabChild*>(tc.get());
-}
-
-inline TabChild*
-GetTabChildFrom(nsIPresShell* aPresShell)
-{
-    nsIDocument* doc = aPresShell->GetDocument();
-    if (!doc) {
-        return nullptr;
-    }
-    nsCOMPtr<nsISupports> container = doc->GetContainer();
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-    return GetTabChildFrom(docShell);
-}
-
-inline TabChild*
-GetTabChildFrom(nsIDOMWindow* aWindow)
-{
-    nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(aWindow);
-    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(webNav);
-    return GetTabChildFrom(docShell);
-}
 
 }
 }
