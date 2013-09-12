@@ -8,10 +8,12 @@
 #include <errno.h>
 
 #include "IOInterposer.h"
+#include "NSPRInterposer.h"
 #include "ProfilerIOInterposeObserver.h"
 #include "platform.h"
 #include "PlatformMacros.h"
 #include "prenv.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/ThreadLocal.h"
 #include "PseudoStack.h"
 #include "TableTicker.h"
@@ -58,7 +60,8 @@ mozilla::Mutex* Sampler::sRegisteredThreadsMutex = nullptr;
 
 TableTicker* Sampler::sActiveSampler;
 
-static mozilla::ProfilerIOInterposeObserver* sInterposeObserver = nullptr;
+static mozilla::StaticAutoPtr<mozilla::ProfilerIOInterposeObserver>
+                                                            sInterposeObserver;
 
 void Sampler::Startup() {
   sRegisteredThreads = new std::vector<ThreadInfo*>();
@@ -303,8 +306,10 @@ void mozilla_sampler_init(void* stackTop)
   // Allow the profiler to be started using signals
   OS::RegisterStartHandler();
 
-  // Initialize (but don't enable) I/O interposing
-  sInterposeObserver = new mozilla::ProfilerIOInterposeObserver();
+  // Initialize I/O interposing
+  mozilla::IOInterposer::Init();
+  // Initialize NSPR I/O Interposing
+  mozilla::InitNSPRIOInterposing();
 
   // We can't open pref so we use an environment variable
   // to know if we should trigger the profiler on startup
@@ -353,9 +358,15 @@ void mozilla_sampler_shutdown()
 
   profiler_stop();
 
-  delete sInterposeObserver;
+  // Unregister IO interpose observer
+  mozilla::IOInterposer::Unregister(mozilla::IOInterposeObserver::OpAll,
+                                    sInterposeObserver);
+  // mozilla_sampler_shutdown is only called at shutdown, and late-write checks
+  // might need the IO interposer, so we don't clear it. Don't worry it's
+  // designed not to report leaks.
+  // mozilla::IOInterposer::Clear();
+  mozilla::ClearNSPRIOInterposing();
   sInterposeObserver = nullptr;
-  mozilla::IOInterposer::ClearInstance();
 
   Sampler::Shutdown();
 
@@ -499,7 +510,12 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
 #endif
 
   if (t->AddMainThreadIO()) {
-    mozilla::IOInterposer::GetInstance()->Enable(true);
+    if (!sInterposeObserver) {
+      // Lazily create IO interposer observer
+      sInterposeObserver = new mozilla::ProfilerIOInterposeObserver();
+    }
+    mozilla::IOInterposer::Register(mozilla::IOInterposeObserver::OpAll,
+                                    sInterposeObserver);
   }
 
   sIsProfiling = true;
@@ -544,7 +560,8 @@ void mozilla_sampler_stop()
     uwt__deinit();
   }
 
-  mozilla::IOInterposer::GetInstance()->Enable(false);
+  mozilla::IOInterposer::Unregister(mozilla::IOInterposeObserver::OpAll,
+                                    sInterposeObserver);
 
   sIsProfiling = false;
 
