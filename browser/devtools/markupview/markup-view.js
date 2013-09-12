@@ -8,19 +8,16 @@ const {Cc, Cu, Ci} = require("chrome");
 
 // Page size for pageup/pagedown
 const PAGE_SIZE = 10;
-
 const PREVIEW_AREA = 700;
 const DEFAULT_MAX_CHILDREN = 100;
 
-let {UndoStack} = require("devtools/shared/undo");
-let EventEmitter = require("devtools/shared/event-emitter");
-let {editableField, InplaceEditor} = require("devtools/shared/inplace-editor");
-let promise = require("sdk/core/promise");
+const {UndoStack} = require("devtools/shared/undo");
+const {editableField, InplaceEditor} = require("devtools/shared/inplace-editor");
+const promise = require("sdk/core/promise");
 
 Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource://gre/modules/devtools/Templater.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 loader.lazyGetter(this, "DOMParser", function() {
  return Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
@@ -192,7 +189,8 @@ MarkupView.prototype = {
         }
         break;
       case Ci.nsIDOMKeyEvent.DOM_VK_RIGHT:
-        if (!this._selectedContainer.expanded) {
+        if (!this._selectedContainer.expanded &&
+            this._selectedContainer.hasChildren) {
           this._expandContainer(this._selectedContainer);
         } else {
           let next = this._selectionWalker().nextNode();
@@ -365,7 +363,7 @@ MarkupView.prototype = {
       if (mutation.type === "documentUnload") {
         // Treat this as a childList change of the child (maybe the protocol
         // should do this).
-        type = "childList"
+        type = "childList";
         target = mutation.targetParent;
         if (!target) {
           continue;
@@ -389,7 +387,6 @@ MarkupView.prototype = {
       this._inspector.emit("markupmutation");
     });
   },
-
 
   /**
    * Make sure the given node's parents are expanded and the
@@ -419,7 +416,7 @@ MarkupView.prototype = {
   {
     return this._updateChildren(aContainer, true).then(() => {
       aContainer.expanded = true;
-    })
+    });
   },
 
   /**
@@ -807,8 +804,7 @@ MarkupView.prototype = {
       this._updatePreview();
       this._previewBar.classList.remove("hide");
     }.bind(this), 1000);
-  },
-
+  }
 };
 
 
@@ -817,14 +813,13 @@ MarkupView.prototype = {
  * tree.  Manages creation of the editor for the node and
  * a <ul> for placing child elements, and expansion/collapsing
  * of the element.
- *
+ * 
  * @param MarkupView aMarkupView
  *        The markup view that owns this container.
  * @param DOMNode aNode
  *        The node to display.
  */
-function MarkupContainer(aMarkupView, aNode)
-{
+function MarkupContainer(aMarkupView, aNode) {
   this.markup = aMarkupView;
   this.doc = this.markup.doc;
   this.undo = this.markup.undo;
@@ -839,48 +834,43 @@ function MarkupContainer(aMarkupView, aNode)
   } else if (aNode.nodeType == Ci.nsIDOMNode.DOCUMENT_TYPE_NODE) {
     this.editor = new DoctypeEditor(this, aNode);
   } else {
-    this.editor = new GenericEditor(this.markup, aNode);
+    this.editor = new GenericEditor(this, aNode);
   }
 
   // The template will fill the following properties
   this.elt = null;
   this.expander = null;
-  this.codeBox = null;
+  this.highlighter = null;
+  this.tagLine = null;
   this.children = null;
   this.markup.template("container", this);
   this.elt.container = this;
   this.children.container = this;
 
-  this.expander.addEventListener("click", function() {
-    this.markup.navigate(this);
+  // Expanding/collapsing the node on dblclick of the whole tag-line element
+  this._onToggle = this._onToggle.bind(this);
+  this.elt.addEventListener("dblclick", this._onToggle, false);
+  this.expander.addEventListener("click", this._onToggle, false);
 
-    this.markup.setNodeExpanded(this.node, !this.expanded);
-  }.bind(this));
+  // Dealing with the highlighting of the row via javascript rather than :hover
+  // This is to allow highlighting the closing tag-line as well as reusing the
+  // theme css classes (which wouldn't have been possible with a :hover pseudo)
+  this._onMouseOver = this._onMouseOver.bind(this);
+  this.elt.addEventListener("mouseover", this._onMouseOver, false);
 
-  this.codeBox.insertBefore(this.editor.elt, this.children);
+  this._onMouseOut = this._onMouseOut.bind(this);
+  this.elt.addEventListener("mouseout", this._onMouseOut, false);
 
-  this.editor.elt.addEventListener("mousedown", function(evt) {
-    this.markup.navigate(this);
-  }.bind(this), false);
+  // Appending the editor element and attaching event listeners
+  this.tagLine.appendChild(this.editor.elt);
 
-  if (this.editor.summaryElt) {
-    this.editor.summaryElt.addEventListener("click", function(evt) {
-      this.markup.navigate(this);
-      this.markup.expandNode(this.node);
-    }.bind(this), false);
-    this.codeBox.appendChild(this.editor.summaryElt);
-  }
-
-  if (this.editor.closeElt) {
-    this.editor.closeElt.addEventListener("mousedown", function(evt) {
-      this.markup.navigate(this);
-    }.bind(this), false);
-    this.codeBox.appendChild(this.editor.closeElt);
-  }
+  this.elt.addEventListener("mousedown", this._onMouseDown.bind(this), false);
 }
 
 MarkupContainer.prototype = {
-  toString: function() { return "[MarkupContainer for " + this.node + "]" },
+  toString: function() {
+    return "[MarkupContainer for " + this.node + "]";
+  },
 
   /**
    * True if the current node has children.  The MarkupView
@@ -909,21 +899,88 @@ MarkupContainer.prototype = {
    * True if the node has been visually expanded in the tree.
    */
   get expanded() {
-    return this.children.hasAttribute("expanded");
+    return !this.elt.classList.contains("collapsed");
   },
 
   set expanded(aValue) {
-    if (aValue) {
+    if (aValue && this.elt.classList.contains("collapsed")) {
+      // Expanding a node means cloning its "inline" closing tag into a new
+      // tag-line that the user can interact with and showing the children.
+      if (this.editor instanceof ElementEditor) {
+        let closingTag = this.elt.querySelector(".close");
+        if (closingTag) {
+          if (!this.closeTagLine) {
+            let line = this.markup.doc.createElement("div");
+            line.classList.add("tag-line");
+
+            let highlighter = this.markup.doc.createElement("div");
+            highlighter.classList.add("highlighter");
+            line.appendChild(highlighter);
+
+            line.appendChild(closingTag.cloneNode(true));
+            line.addEventListener("mouseover", this._onMouseOver, false);
+            line.addEventListener("mouseout", this._onMouseOut, false);
+
+            this.closeTagLine = line;
+          }
+          this.elt.appendChild(this.closeTagLine);
+        }
+      }
+      this.elt.classList.remove("collapsed");
       this.expander.setAttribute("open", "");
-      this.children.setAttribute("expanded", "");
-      if (this.editor.summaryElt) {
-        this.editor.summaryElt.setAttribute("expanded", "");
+      this.highlighted = false;
+    } else if (!aValue) {
+      if (this.editor instanceof ElementEditor && this.closeTagLine) {
+        this.elt.removeChild(this.closeTagLine);
+      }
+      this.elt.classList.add("collapsed");
+      this.expander.removeAttribute("open");
+    }
+  },
+
+  _onToggle: function(event) {
+    this.markup.navigate(this);
+    if(this.hasChildren) {
+      this.markup.setNodeExpanded(this.node, !this.expanded);
+    }
+    event.stopPropagation();
+  },
+
+  _onMouseOver: function(event) {
+    this.highlighted = true;
+    event.stopPropagation();
+  },
+
+  _onMouseOut: function(event) {
+    this.highlighted = false;
+    event.stopPropagation();
+  },
+
+  _onMouseDown: function(event) {
+    this.highlighted = false;
+    this.markup.navigate(this);
+    event.stopPropagation();
+  },
+
+  _highlighted: false,
+
+  /**
+   * Highlight the currently hovered tag + its closing tag if necessary
+   * (that is if the tag is expanded)
+   */
+  set highlighted(aValue) {
+    this._highlighted = aValue;
+    if (aValue) {
+      if (!this.selected) {
+        this.highlighter.classList.add("theme-bg-darker");
+      }
+      if (this.closeTagLine) {
+        this.closeTagLine.querySelector(".highlighter").classList.add("theme-bg-darker");
       }
     } else {
-      this.expander.removeAttribute("open");
-      this.children.removeAttribute("expanded");
-      if (this.editor.summaryElt) {
-        this.editor.summaryElt.removeAttribute("expanded");
+      this.highlighter.classList.remove("theme-bg-darker");
+      if (this.closeTagLine) {
+        this.closeTagLine.querySelector(".highlighter").classList.remove("theme-bg-darker");
       }
     }
   },
@@ -931,8 +988,7 @@ MarkupContainer.prototype = {
   /**
    * True if the container is visible in the markup tree.
    */
-  get visible()
-  {
+  get visible() {
     return this.elt.getBoundingClientRect().height > 0;
   },
 
@@ -949,15 +1005,11 @@ MarkupContainer.prototype = {
     this._selected = aValue;
     this.editor.selected = aValue;
     if (this._selected) {
-      this.editor.elt.classList.add("theme-selected");
-      if (this.editor.closeElt) {
-        this.editor.closeElt.classList.add("theme-selected");
-      }
+      this.tagLine.setAttribute("selected", "");
+      this.highlighter.classList.add("theme-selected");
     } else {
-      this.editor.elt.classList.remove("theme-selected");
-      if (this.editor.closeElt) {
-        this.editor.closeElt.classList.remove("theme-selected");
-      }
+      this.tagLine.removeAttribute("selected");
+      this.highlighter.classList.remove("theme-selected");
     }
   },
 
@@ -965,8 +1017,7 @@ MarkupContainer.prototype = {
    * Update the container's editor to the current state of the
    * viewed node.
    */
-  update: function MC_update()
-  {
+  update: function() {
     if (this.editor.update) {
       this.editor.update();
     }
@@ -975,20 +1026,19 @@ MarkupContainer.prototype = {
   /**
    * Try to put keyboard focus on the current editor.
    */
-  focus: function MC_focus()
-  {
+  focus: function() {
     let focusable = this.editor.elt.querySelector("[tabindex]");
     if (focusable) {
       focusable.focus();
     }
-  },
-}
+  }
+};
+
 
 /**
  * Dummy container node used for the root document element.
  */
-function RootContainer(aMarkupView, aNode)
-{
+function RootContainer(aMarkupView, aNode) {
   this.doc = aMarkupView.doc;
   this.elt = this.doc.createElement("ul");
   this.elt.container = this;
@@ -996,6 +1046,12 @@ function RootContainer(aMarkupView, aNode)
   this.node = aNode;
   this.toString = function() { return "[root container]"}
 }
+
+RootContainer.prototype = {
+  hasChildren: true,
+  expanded: true,
+  update: function() {}
+};
 
 /**
  * Creates an editor for simple nodes.
@@ -1117,26 +1173,18 @@ function ElementEditor(aContainer, aNode)
   this.markup = this.container.markup;
   this.node = aNode;
 
-  this.attrs = { };
+  this.attrs = {};
 
   // The templates will fill the following properties
   this.elt = null;
   this.tag = null;
+  this.closeTag = null;
   this.attrList = null;
   this.newAttr = null;
-  this.summaryElt = null;
   this.closeElt = null;
 
   // Create the main editor
   this.template("element", this);
-
-  if (this.node.hasChildren) {
-    // Create the summary placeholder
-    this.template("elementContentSummary", this);
-  }
-
-  // Create the closing tag
-  this.template("elementClose", this);
 
   this.rawNode = aNode.rawNode();
 
@@ -1338,7 +1386,6 @@ ElementEditor.prototype = {
     for (let attr of attrs) {
       // Create an attribute editor next to the current attribute if needed.
       this._createAttribute(attr, aAttrNode ? aAttrNode.nextSibling : null);
-
       this._saveAttribute(attr.name, aUndoMods);
       aDoMods.setAttribute(attr.name, attr.value);
     }
@@ -1414,14 +1461,6 @@ ElementEditor.prototype = {
       });
     }).then(null, console.error);
   }
-}
-
-
-
-RootContainer.prototype = {
-  hasChildren: true,
-  expanded: true,
-  update: function RC_update() {}
 };
 
 function nodeDocument(node) {
@@ -1439,7 +1478,6 @@ function nodeDocument(node) {
  *         An array of attribute names and their values.
  */
 function parseAttributeValues(attr, doc) {
-
   attr = attr.trim();
 
   // Handle bad user inputs by appending a " or ' if it fails to parse without them.
@@ -1464,19 +1502,6 @@ function parseAttributeValues(attr, doc) {
 
   // Attributes return from DOMParser in reverse order from how they are entered.
   return attributes.reverse();
-}
-
-/**
- * A tree walker filter for avoiding empty whitespace text nodes.
- */
-function whitespaceTextFilter(aNode)
-{
-    if (aNode.nodeType == Ci.nsIDOMNode.TEXT_NODE &&
-        !/[^\s]/.exec(aNode.nodeValue)) {
-      return Ci.nsIDOMNodeFilter.FILTER_SKIP;
-    } else {
-      return Ci.nsIDOMNodeFilter.FILTER_ACCEPT;
-    }
 }
 
 loader.lazyGetter(MarkupView.prototype, "strings", () => Services.strings.createBundle(
