@@ -10541,6 +10541,7 @@ struct PrototypeTraits;
                                             config)
         includes.add("mozilla/dom/OwningNonNull.h")
         includes.add("mozilla/dom/UnionMember.h")
+        includes.add("mozilla/dom/BindingDeclarations.h")
         implincludes.add("mozilla/dom/PrimitiveConversions.h")
 
         # Wrap all of that in our namespaces.
