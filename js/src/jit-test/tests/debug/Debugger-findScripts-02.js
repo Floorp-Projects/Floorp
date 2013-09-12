@@ -1,6 +1,6 @@
 // In a debuggee with functions, findScripts finds those functions' scripts.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.eval('function f(){}');
 g.eval('function g(){}');
 g.eval('function h(){}');

@@ -1,7 +1,7 @@
 // Returning a bad resumption value causes an exception that is reported to the
 // uncaughtExceptionHook.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 dbg.onDebuggerStatement = function () { return {oops: "bad resumption value"}; };
 dbg.uncaughtExceptionHook = function (exc) {

@@ -1,6 +1,6 @@
 // Environment.prototype.getVariable does not see variables bound in enclosing scopes.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var hits = 0;
 dbg.onDebuggerStatement = function (frame) {

@@ -1853,6 +1853,28 @@ class MBail : public MNullaryInstruction
 
 };
 
+class MAssertFloat32 : public MUnaryInstruction
+{
+  protected:
+    bool mustBeFloat32_;
+
+    MAssertFloat32(MDefinition *value, bool mustBeFloat32)
+      : MUnaryInstruction(value), mustBeFloat32_(mustBeFloat32)
+    {
+    }
+
+  public:
+    INSTRUCTION_HEADER(AssertFloat32)
+
+    static MAssertFloat32 *New(MDefinition *value, bool mustBeFloat32) {
+        return new MAssertFloat32(value, mustBeFloat32);
+    }
+
+    bool canConsumeFloat32() const { return true; }
+
+    bool mustBeFloat32() { return mustBeFloat32_; }
+};
+
 class MGetDynamicName
   : public MAryInstruction<2>,
     public MixPolicy<ObjectPolicy<0>, StringPolicy<1> >
@@ -3946,7 +3968,6 @@ class MComputeThis
       : MUnaryInstruction(def)
     {
         setResultType(MIRType_Object);
-        setResultTypeSet(def->resultTypeSet());
     }
 
   public:

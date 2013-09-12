@@ -40,11 +40,11 @@ XPTInterfaceInfoManager::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
     return n;
 }
 
-class XPTIWorkingSetReporter MOZ_FINAL : public MemoryReporterBase
+class XPTIWorkingSetReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
     XPTIWorkingSetReporter()
-      : MemoryReporterBase("explicit/xpti-working-set", KIND_HEAP, UNITS_BYTES,
+      : MemoryUniReporter("explicit/xpti-working-set", KIND_HEAP, UNITS_BYTES,
                            "Memory used by the XPCOM typelib system.")
     {}
 private:

@@ -1,7 +1,7 @@
 // Debugger.Script.prototype.staticLevel returns the script's static level.
 load(libdir + 'asserts.js');
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger();
 var gw = dbg.addDebuggee(g);
 

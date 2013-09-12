@@ -1,7 +1,7 @@
 // Debugger.Object.prototype.evalInGlobal: closures capturing the global
 
-var g = newGlobal('new-compartment');
-var h = newGlobal('new-compartment');
+var g = newGlobal();
+var h = newGlobal();
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);
 var hw = dbg.addDebuggee(h);

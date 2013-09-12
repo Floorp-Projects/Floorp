@@ -16,7 +16,7 @@ CounterAdd(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHand
     return true;
 }
 
-static JSClass CounterClass = {
+static const JSClass CounterClass = {
     "Counter",  /* name */
     0,  /* flags */
     CounterAdd, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,

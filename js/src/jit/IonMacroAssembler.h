@@ -181,7 +181,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         loadPtr(Address(objReg, JSObject::offsetOfType()), dest);
         loadPtr(Address(dest, offsetof(types::TypeObject, clasp)), dest);
     }
-    void branchTestObjClass(Condition cond, Register obj, Register scratch, js::Class *clasp,
+    void branchTestObjClass(Condition cond, Register obj, Register scratch, const js::Class *clasp,
                             Label *label) {
         loadPtr(Address(obj, JSObject::offsetOfType()), scratch);
         branchPtr(cond, Address(scratch, offsetof(types::TypeObject, clasp)), ImmWord(clasp), label);

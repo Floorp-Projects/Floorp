@@ -892,7 +892,7 @@ static const JSFunctionSpec glob_functions[] = {
     JS_FS_END
 };
 
-JSClass global_class = {
+const JSClass global_class = {
     "global", 0,
     JS_PropertyStub,  JS_DeletePropertyStub,  JS_PropertyStub,  JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   nullptr
@@ -1014,7 +1014,7 @@ env_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     return true;
 }
 
-static JSClass env_class = {
+static const JSClass env_class = {
     "environment", JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
     JS_PropertyStub,  JS_DeletePropertyStub,
     JS_PropertyStub,  env_setProperty,
@@ -1179,7 +1179,7 @@ usage(void)
     return 2;
 }
 
-extern JSClass global_class;
+extern const JSClass global_class;
 
 static void
 ProcessArgsForCompartment(JSContext *cx, char **argv, int argc)

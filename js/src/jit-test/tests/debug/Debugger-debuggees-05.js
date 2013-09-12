@@ -1,6 +1,6 @@
 // addDebuggee returns different Debugger.Object wrappers for different Debugger objects.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg1 = new Debugger;
 var gw1 = dbg1.addDebuggee(g);
 var dbg2 = new Debugger;

@@ -228,7 +228,8 @@ this.PermissionsTable =  { geolocation: {
                              substitute: [
                                "indexedDB-unlimited",
                                "offline-app",
-                               "pin-app"
+                               "pin-app",
+                               "default-persistent-storage"
                              ]
                            },
                            "background-sensors": {

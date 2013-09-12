@@ -108,50 +108,54 @@ public:
  *   the tab.
  *
  */
-class nsWindowMemoryReporter MOZ_FINAL : public nsIMemoryMultiReporter,
+class nsWindowMemoryReporter MOZ_FINAL : public nsIMemoryReporter,
                                          public nsIObserver,
                                          public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIMEMORYMULTIREPORTER
+  NS_DECL_NSIMEMORYREPORTER
   NS_DECL_NSIOBSERVER
 
   static void Init();
 
 private:
   /**
-   * GhostURLsReporter generates the "ghost-windows" multi-report, which
-   * includes a list of all ghost windows' URLs.  If you're only interested in
-   * this list, running this report is faster than running
-   * nsWindowMemoryReporter.
+   * GhostURLsReporter generates the list of all ghost windows' URLs.  If
+   * you're only interested in this list, running this report is faster than
+   * running nsWindowMemoryReporter.
    */
-  class GhostURLsReporter MOZ_FINAL : public nsIMemoryMultiReporter
+  class GhostURLsReporter MOZ_FINAL : public nsIMemoryReporter
   {
   public:
     GhostURLsReporter(nsWindowMemoryReporter* aWindowReporter);
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIMEMORYMULTIREPORTER
+    NS_DECL_NSIMEMORYREPORTER
 
   private:
     nsRefPtr<nsWindowMemoryReporter> mWindowReporter;
   };
 
   /**
-   * nsGhostWindowReporter generates the "ghost-windows" single-report, which
-   * counts the number of ghost windows present.
+   * nsGhostWindowReporter generates the "ghost-windows" report, which counts
+   * the number of ghost windows present.
    */
-  class NumGhostsReporter MOZ_FINAL : public mozilla::MemoryReporterBase
+  class NumGhostsReporter MOZ_FINAL : public mozilla::MemoryUniReporter
   {
   public:
     NumGhostsReporter(nsWindowMemoryReporter* aWindowReporter)
-        // Description is "???" because we define GetDescription below.
-      : MemoryReporterBase("ghost-windows", KIND_OTHER, UNITS_COUNT, "???")
+      : MemoryUniReporter("ghost-windows", KIND_OTHER, UNITS_COUNT,
+"The number of ghost windows present (the number of nodes underneath "
+"explicit/window-objects/top(none)/ghost, modulo race conditions).  A ghost "
+"window is not shown in any tab, does not share a domain with any non-detached "
+"windows, and has met these criteria for at least "
+"memory.ghost_window_timeout_seconds, or has survived a round of "
+"about:memory's minimize memory usage button.\n\n"
+"Ghost windows can happen legitimately, but they are often indicative of "
+"leaks in the browser or add-ons.")
       , mWindowReporter(aWindowReporter)
     {}
-
-    NS_IMETHOD GetDescription(nsACString& aDesc);
 
   private:
     int64_t Amount() MOZ_OVERRIDE;

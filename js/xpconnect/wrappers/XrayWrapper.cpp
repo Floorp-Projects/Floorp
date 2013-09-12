@@ -37,7 +37,7 @@ static const uint32_t JSSLOT_RESOLVING = 0;
 
 namespace XrayUtils {
 
-JSClass HolderClass = {
+const JSClass HolderClass = {
     "NativePropertyHolder",
     JSCLASS_HAS_RESERVED_SLOTS(2),
     JS_PropertyStub,        JS_DeletePropertyStub, holder_get,      holder_set,
@@ -54,7 +54,7 @@ GetXrayType(JSObject *obj)
     if (mozilla::dom::UseDOMXray(obj))
         return XrayForDOMObject;
 
-    js::Class* clasp = js::GetObjectClass(obj);
+    const js::Class* clasp = js::GetObjectClass(obj);
     if (IS_WN_CLASS(clasp) || clasp->ext.innerObject)
         return XrayForWrappedNative;
 
@@ -328,7 +328,7 @@ ExpandoObjectFinalize(JSFreeOp *fop, JSObject *obj)
     NS_RELEASE(principal);
 }
 
-JSClass ExpandoObjectClass = {
+const JSClass ExpandoObjectClass = {
     "XrayExpandoObject",
     JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_EXPANDO_COUNT),
     JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
@@ -1084,7 +1084,7 @@ DOMXrayTraits::call(JSContext *cx, HandleObject wrapper,
                     const JS::CallArgs &args, js::Wrapper& baseInstance)
 {
     RootedObject obj(cx, getTargetObject(wrapper));
-    js::Class* clasp = js::GetObjectClass(obj);
+    const js::Class* clasp = js::GetObjectClass(obj);
     // What we have is either a WebIDL interface object, a WebIDL prototype
     // object, or a WebIDL instance object.  WebIDL prototype objects never have
     // a clasp->call.  WebIDL interface objects we want to invoke on the xray
@@ -1114,7 +1114,7 @@ DOMXrayTraits::construct(JSContext *cx, HandleObject wrapper,
 {
     RootedObject obj(cx, getTargetObject(wrapper));
     MOZ_ASSERT(mozilla::dom::HasConstructor(obj));
-    js::Class* clasp = js::GetObjectClass(obj);
+    const js::Class* clasp = js::GetObjectClass(obj);
     // See comments in DOMXrayTraits::call() explaining what's going on here.
     if (clasp->flags & JSCLASS_IS_DOMIFACEANDPROTOJSCLASS) {
         if (!clasp->construct) {
@@ -1785,16 +1785,8 @@ SecurityXrayDOM SecurityXrayDOM::singleton(0);
 template class SecurityXrayDOM;
 
 template<>
-SCPermissiveXrayXPCWN SCPermissiveXrayXPCWN::singleton(0);
-template class SCPermissiveXrayXPCWN;
-
-template<>
 SCSecurityXrayXPCWN SCSecurityXrayXPCWN::singleton(0);
 template class SCSecurityXrayXPCWN;
-
-template<>
-SCPermissiveXrayDOM SCPermissiveXrayDOM::singleton(0);
-template class SCPermissiveXrayDOM;
 
 static nsQueryInterface
 do_QueryInterfaceNative(JSContext* cx, HandleObject wrapper)

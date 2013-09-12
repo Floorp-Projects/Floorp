@@ -1,6 +1,6 @@
 // Test that a frame's onStep handler gets called at least once on each line of a function.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 
 // When we hit a 'debugger' statement, set offsets to the frame's script's

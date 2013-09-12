@@ -214,7 +214,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
         objProto = obj->global().getOrCreateObjectPrototype(cx);
     if (!objProto)
         return NULL;
-    Class *clasp = &JSObject::class_;
+    const Class *clasp = &JSObject::class_;
 
     RootedObject proto(cx, NewObjectWithGivenProto(cx, clasp, objProto, NULL, SingletonObject));
     if (!proto)
@@ -523,7 +523,7 @@ fun_trace(JSTracer *trc, JSObject *obj)
     obj->as<JSFunction>().trace(trc);
 }
 
-Class JSFunction::class_ = {
+const Class JSFunction::class_ = {
     js_Function_str,
     JSCLASS_NEW_RESOLVE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
@@ -542,7 +542,7 @@ Class JSFunction::class_ = {
     fun_trace
 };
 
-Class* const js::FunctionClassPtr = &JSFunction::class_;
+const Class* const js::FunctionClassPtr = &JSFunction::class_;
 
 /* Find the body of a function (not including braces). */
 static bool
@@ -1799,7 +1799,7 @@ js::IsConstructor(const Value &v)
 }
 
 void
-js::ReportIncompatibleMethod(JSContext *cx, CallReceiver call, Class *clasp)
+js::ReportIncompatibleMethod(JSContext *cx, CallReceiver call, const Class *clasp)
 {
     RootedValue thisv(cx, call.thisv());
 

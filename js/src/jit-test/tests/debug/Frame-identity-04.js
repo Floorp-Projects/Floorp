@@ -1,7 +1,7 @@
 // Test that on-stack Debugger.Frames are not GC'd even if they are only reachable
 // from the js::Debugger::frames table.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.eval("function f(n) { if (n) f(n - 1); debugger; }");
 var dbg = new Debugger(g);
 var hits = 0;

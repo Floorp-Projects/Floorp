@@ -1658,7 +1658,7 @@ FinalizeStub(JSFreeOp *fop, JSObject *obj)
 {
 }
 
-static JSClass XPCOutParamClass = {
+static const JSClass XPCOutParamClass = {
     "XPCOutParam",
     0,
     JS_PropertyStub,

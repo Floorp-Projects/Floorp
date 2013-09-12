@@ -184,13 +184,13 @@ ContentTypeFromPixelFormat(android::PixelFormat aFormat)
   return gfxASurface::ContentFromFormat(ImageFormatForPixelFormat(aFormat));
 }
 
-class GrallocReporter MOZ_FINAL : public MemoryReporterBase
+class GrallocReporter MOZ_FINAL : public MemoryUniReporter
 {
   friend class GrallocBufferActor;
 
 public:
   GrallocReporter()
-    : MemoryReporterBase("gralloc", KIND_OTHER, UNITS_BYTES,
+    : MemoryUniReporter("gralloc", KIND_OTHER, UNITS_BYTES,
 "Special RAM that can be shared between processes and directly accessed by "
 "both the CPU and GPU.  Gralloc memory is usually a relatively precious "
 "resource, with much less available than generic RAM.  When it's exhausted, "

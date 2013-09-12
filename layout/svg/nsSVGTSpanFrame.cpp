@@ -91,16 +91,17 @@ nsSVGTSpanFrame::AttributeChanged(int32_t         aNameSpaceID,
 // nsSVGContainerFrame methods:
 
 gfxMatrix
-nsSVGTSpanFrame::GetCanvasTM(uint32_t aFor)
+nsSVGTSpanFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
 {
-  if (!(GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
+  if (!(GetStateBits() & NS_FRAME_IS_NONDISPLAY) && !aTransformRoot) {
     if ((aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) ||
         (aFor == FOR_HIT_TESTING && NS_SVGDisplayListHitTestingEnabled())) {
       return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(this);
     }
   }
   NS_ASSERTION(mParent, "null parent");
-  return static_cast<nsSVGContainerFrame*>(mParent)->GetCanvasTM(aFor);
+  return static_cast<nsSVGContainerFrame*>(mParent)->
+      GetCanvasTM(aFor, aTransformRoot);
 }
 
 //----------------------------------------------------------------------

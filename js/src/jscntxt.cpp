@@ -1301,8 +1301,8 @@ JSContext::findVersion() const
     if (JSScript *script = currentScript(NULL, ALLOW_CROSS_COMPARTMENT))
         return script->getVersion();
 
-    if (compartment() && compartment()->options().version != JSVERSION_UNKNOWN)
-        return compartment()->options().version;
+    if (compartment() && compartment()->options().version() != JSVERSION_UNKNOWN)
+        return compartment()->options().version();
 
     return runtime()->defaultVersion();
 }

@@ -2293,6 +2293,10 @@ let GroupItems = {
   // Given some sort of identifier, returns the appropriate groupItem.
   // Currently only supports groupItem ids.
   groupItem: function GroupItems_groupItem(a) {
+    if (!this.groupItems) {
+      // uninit has been called
+      return null;
+    }
     var result = null;
     this.groupItems.forEach(function(candidate) {
       if (candidate.id == a)

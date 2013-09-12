@@ -41,7 +41,7 @@ CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallA
 // and indicates whether the provided value is an acceptable |this| for the
 // method; it must be a pure function only of its argument.
 //
-//   static JSClass AnswerClass = { ... };
+//   static const JSClass AnswerClass = { ... };
 //
 //   static bool
 //   IsAnswerObject(const Value &v)

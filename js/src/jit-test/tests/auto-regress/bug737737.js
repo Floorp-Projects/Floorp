@@ -4,7 +4,7 @@
 function b(z) {
   switch (z) {
   default:
-    primarySandbox = newGlobal("new-compartment")
+    primarySandbox = newGlobal()
   }
   return function(f, code) {
     try {

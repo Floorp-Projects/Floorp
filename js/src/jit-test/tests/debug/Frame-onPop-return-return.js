@@ -1,7 +1,7 @@
 // |jit-test| error: TestComplete
 // onPop can change a normal return into a normal return of a different value.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 
 function test(type, provocation) {

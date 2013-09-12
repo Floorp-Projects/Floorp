@@ -94,7 +94,7 @@ xpc_DelocalizeRuntime(JSRuntime *rt);
 // If IS_WN_CLASS for the JSClass of an object is true, the object is a
 // wrappednative wrapper, holding the XPCWrappedNative in its private slot.
 
-static inline bool IS_WN_CLASS(js::Class* clazz)
+static inline bool IS_WN_CLASS(const js::Class* clazz)
 {
     return clazz->ext.isWrappedNative;
 }
@@ -163,7 +163,7 @@ xpc_UnmarkSkippableJSHolders();
 NS_EXPORT_(void)
 xpc_ActivateDebugMode();
 
-class nsIMemoryMultiReporterCallback;
+class nsIMemoryReporterCallback;
 
 // readable string conversions, static methods and members only
 class XPCStringConvert
@@ -359,7 +359,7 @@ private:
 nsresult
 ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                                  const nsACString &rtPath,
-                                 nsIMemoryMultiReporterCallback *cb,
+                                 nsIMemoryReporterCallback *cb,
                                  nsISupports *closure, size_t *rtTotal = NULL);
 
 /**

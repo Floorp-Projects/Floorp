@@ -65,14 +65,18 @@ protected:
   ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
   virtual PIndexedDBDatabaseChild*
-  AllocPIndexedDBDatabaseChild(const nsString& aName, const uint64_t& aVersion)
+  AllocPIndexedDBDatabaseChild(const nsString& aName, const uint64_t& aVersion,
+                               const PersistenceType& aPersistenceType)
                                MOZ_OVERRIDE;
 
   virtual bool
   DeallocPIndexedDBDatabaseChild(PIndexedDBDatabaseChild* aActor) MOZ_OVERRIDE;
 
   virtual PIndexedDBDeleteDatabaseRequestChild*
-  AllocPIndexedDBDeleteDatabaseRequestChild(const nsString& aName) MOZ_OVERRIDE;
+  AllocPIndexedDBDeleteDatabaseRequestChild(
+                                        const nsString& aName,
+                                        const PersistenceType& aPersistenceType)
+                                        MOZ_OVERRIDE;
 
   virtual bool
   DeallocPIndexedDBDeleteDatabaseRequestChild(

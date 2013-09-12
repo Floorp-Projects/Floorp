@@ -30,6 +30,7 @@
 #include "nsCOMArray.h"
 #include "nsXPCOMCID.h"
 #include "nsAutoPtr.h"
+#include "nsPrintfCString.h"
 
 #include "nsQuickSort.h"
 #include "pldhash.h"
@@ -44,6 +45,8 @@
 #include "nsTArray.h"
 #include "nsRefPtrHashtable.h"
 #include "nsIMemoryReporter.h"
+
+class PrefCallback;
 
 namespace mozilla {
 
@@ -203,19 +206,139 @@ Preferences::SizeOfIncludingThisAndOtherStuff(mozilla::MallocSizeOf aMallocSizeO
   return n;
 }
 
-class PreferencesReporter MOZ_FINAL : public MemoryReporterBase
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(PreferencesMallocSizeOf)
+
+class PreferencesReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
-  PreferencesReporter()
-    : MemoryReporterBase("explicit/preferences", KIND_HEAP, UNITS_BYTES,
-                         "Memory used by the preferences system.")
-  {}
-private:
-  int64_t Amount() MOZ_OVERRIDE
-  {
-    return Preferences::SizeOfIncludingThisAndOtherStuff(MallocSizeOf);
-  }
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMEMORYREPORTER
+protected:
+  static const uint32_t kSuspectReferentCount = 1000;
+  static PLDHashOperator CountReferents(PrefCallback* aKey,
+                                        nsAutoPtr<PrefCallback>& aCallback,
+                                        void* aClosure);
 };
+
+NS_IMPL_ISUPPORTS1(PreferencesReporter, nsIMemoryReporter)
+
+NS_IMETHODIMP
+PreferencesReporter::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("preference-service");
+  return NS_OK;
+}
+
+struct PreferencesReferentCount {
+  PreferencesReferentCount() : numStrong(0), numWeakAlive(0), numWeakDead(0) {}
+  size_t numStrong;
+  size_t numWeakAlive;
+  size_t numWeakDead;
+  nsTArray<nsCString> suspectPreferences;
+  // Count of the number of referents for each preference.
+  nsDataHashtable<nsCStringHashKey, uint32_t> prefCounter;
+};
+
+PLDHashOperator
+PreferencesReporter::CountReferents(PrefCallback* aKey,
+                                    nsAutoPtr<PrefCallback>& aCallback,
+                                    void* aClosure)
+{
+  PreferencesReferentCount* referentCount =
+    static_cast<PreferencesReferentCount*>(aClosure);
+
+  nsPrefBranch* prefBranch = aCallback->GetPrefBranch();
+  const char* pref = prefBranch->getPrefName(aCallback->GetDomain().get());
+
+  if (aCallback->IsWeak()) {
+    nsCOMPtr<nsIObserver> callbackRef = do_QueryReferent(aCallback->mWeakRef);
+    if (callbackRef) {
+      referentCount->numWeakAlive++;
+    } else {
+      referentCount->numWeakDead++;
+    }
+  } else {
+    referentCount->numStrong++;
+  }
+
+  nsDependentCString prefString(pref);
+  uint32_t oldCount = 0;
+  referentCount->prefCounter.Get(prefString, &oldCount);
+  uint32_t currentCount = oldCount + 1;
+  referentCount->prefCounter.Put(prefString, currentCount);
+
+  // Keep track of preferences that have a suspiciously large
+  // number of referents (symptom of leak).
+  if (currentCount == kSuspectReferentCount) {
+    referentCount->suspectPreferences.AppendElement(prefString);
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+NS_IMETHODIMP
+PreferencesReporter::CollectReports(nsIMemoryReporterCallback* aCb,
+                                    nsISupports* aClosure)
+{
+#define REPORT(_path, _kind, _units, _amount, _desc)                          \
+    do {                                                                      \
+      nsresult rv;                                                            \
+      rv = aCb->Callback(EmptyCString(), _path, _kind,                        \
+                         _units, _amount, NS_LITERAL_CSTRING(_desc),          \
+                         aClosure);                                           \
+      NS_ENSURE_SUCCESS(rv, rv);                                              \
+    } while (0)
+
+  REPORT(NS_LITERAL_CSTRING("explicit/preferences"),
+         nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
+         Preferences::SizeOfIncludingThisAndOtherStuff(PreferencesMallocSizeOf),
+         "Memory used by the preferences system.");
+
+  nsPrefBranch* rootBranch =
+    static_cast<nsPrefBranch*>(Preferences::GetRootBranch());
+  if (!rootBranch) {
+    return NS_OK;
+  }
+
+  PreferencesReferentCount referentCount;
+  rootBranch->mObservers.Enumerate(&CountReferents, &referentCount);
+
+  for (uint32_t i = 0; i < referentCount.suspectPreferences.Length(); i++) {
+    nsCString& suspect = referentCount.suspectPreferences[i];
+    uint32_t totalReferentCount = 0;
+    referentCount.prefCounter.Get(suspect, &totalReferentCount);
+
+    nsPrintfCString suspectPath("preference-service-suspect/"
+                                "referent(pref=%s)", suspect.get());
+
+    REPORT(suspectPath,
+           nsIMemoryReporter::KIND_OTHER, nsIMemoryReporter::UNITS_COUNT,
+           totalReferentCount,
+           "A preference with a suspiciously large number "
+           "referents (symptom of a leak).");
+  }
+
+  REPORT(NS_LITERAL_CSTRING("preference-service/referent/strong"),
+         nsIMemoryReporter::KIND_OTHER, nsIMemoryReporter::UNITS_COUNT,
+         referentCount.numStrong,
+         "The number of strong referents held by the preference service.");
+
+  REPORT(NS_LITERAL_CSTRING("preference-service/referent/weak/alive"),
+         nsIMemoryReporter::KIND_OTHER, nsIMemoryReporter::UNITS_COUNT,
+         referentCount.numWeakAlive,
+         "The number of weak referents held by the preference service "
+         "that are still alive.");
+
+  REPORT(NS_LITERAL_CSTRING("preference-service/referent/weak/dead"),
+         nsIMemoryReporter::KIND_OTHER, nsIMemoryReporter::UNITS_COUNT,
+         referentCount.numWeakDead,
+         "The number of weak referents held by the preference service "
+         "that are dead.");
+
+#undef REPORT
+
+  return NS_OK;
+}
 
 namespace {
 class AddPreferencesMemoryReporterRunnable : public nsRunnable

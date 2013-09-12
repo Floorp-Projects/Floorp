@@ -1,7 +1,7 @@
 // The debugger can eval in any frame in the stack even if every frame was
 // pushed in a different context.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.eval('function f(a) {\n' +
        '    if (a == 1)\n' +
        '        debugger;\n' +

@@ -14,8 +14,7 @@
 #include "jit/IonSpewer.h"
 #include "jit/SnapshotReader.h"
 
-#include "jsobjinlines.h"
-
+#include "jit/IonFrameIterator-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;

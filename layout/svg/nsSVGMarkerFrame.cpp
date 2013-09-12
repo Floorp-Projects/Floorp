@@ -70,7 +70,7 @@ nsSVGMarkerFrame::GetType() const
 // nsSVGContainerFrame methods:
 
 gfxMatrix
-nsSVGMarkerFrame::GetCanvasTM(uint32_t aFor)
+nsSVGMarkerFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
 {
   NS_ASSERTION(mMarkedFrame, "null nsSVGPathGeometry frame");
 
@@ -82,7 +82,7 @@ nsSVGMarkerFrame::GetCanvasTM(uint32_t aFor)
   SVGMarkerElement *content = static_cast<SVGMarkerElement*>(mContent);
   
   mInUse2 = true;
-  gfxMatrix markedTM = mMarkedFrame->GetCanvasTM(aFor);
+  gfxMatrix markedTM = mMarkedFrame->GetCanvasTM(aFor, aTransformRoot);
   mInUse2 = false;
 
   gfxMatrix markerTM = content->GetMarkerTransform(mStrokeWidth, mX, mY,

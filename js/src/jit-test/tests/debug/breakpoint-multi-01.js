@@ -1,6 +1,6 @@
 // A single Debugger object can set multiple breakpoints at an instruction.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var log = '';
 dbg.onDebuggerStatement = function (frame) {

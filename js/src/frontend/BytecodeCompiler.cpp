@@ -19,7 +19,6 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
-#include "frontend/ParseMaps-inl.h"
 #include "frontend/Parser-inl.h"
 
 using namespace js;

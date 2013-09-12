@@ -148,6 +148,9 @@ function reportMemoryUsage() {
   var mgr = Cc["@mozilla.org/memory-reporter-manager;1"]
             .getService(Ci.nsIMemoryReporterManager);
 
+  // XXX: this code is *so* bogus -- nsIMemoryReporter changed its |memoryUsed|
+  // field to |amount| *years* ago, and even bigger changes have happened
+  // since -- that it must just never be run.
   var reporters = mgr.enumerateReporters();
   if (reporters.hasMoreElements())
     print("\n");
@@ -376,14 +379,7 @@ function getPotentialLeaks() {
 
   let enm = mgr.enumerateReporters();
   while (enm.hasMoreElements()) {
-    let reporter = enm.getNext().QueryInterface(Ci.nsIMemoryReporter);
-    logReporter(reporter.process, reporter.path, reporter.kind, reporter.units,
-                reporter.amount, reporter.description);
-  }
-
-  let enm = mgr.enumerateMultiReporters();
-  while (enm.hasMoreElements()) {
-    let mr = enm.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
+    let mr = enm.getNext().QueryInterface(Ci.nsIMemoryReporter);
     mr.collectReports(logReporter, null);
   }
 

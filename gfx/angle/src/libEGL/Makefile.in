@@ -36,8 +36,8 @@ LOCAL_INCLUDES = \
   -I$(srcdir)/../../include \
   -I$(srcdir)/../../include/KHR \
   -I$(srcdir)/.. \
-  -I$(srcdir)/../libGLESv2
-#  -I"$(MOZ_DIRECTX_SDK_PATH)/include"
+  -I$(srcdir)/../libGLESv2 \
+  -I"$(MOZ_DIRECTX_SDK_PATH)/include"
 
 # src/common:
 VPATH += $(srcdir)/../common

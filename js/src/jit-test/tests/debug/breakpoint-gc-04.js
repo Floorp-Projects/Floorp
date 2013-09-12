@@ -1,6 +1,6 @@
 // Enabled debuggers keep breakpoint handlers alive.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.eval("var line0 = Error().lineNumber;\n" +
        "function f() {\n" +     // line0 + 1
        "    return 2;\n" +      // line0 + 2

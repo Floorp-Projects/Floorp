@@ -9,6 +9,7 @@
 #include "builtin/ParallelArray.h"
 #include "builtin/TestingFunctions.h"
 #include "jit/IonBuilder.h"
+#include "jit/Lowering.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 
@@ -55,6 +56,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineMathRandom(callInfo);
     if (native == js::math_imul)
         return inlineMathImul(callInfo);
+    if (native == js::math_fround)
+        return inlineMathFRound(callInfo);
     if (native == js::math_sin)
         return inlineMathFunction(callInfo, MMathFunction::Sin);
     if (native == js::math_cos)
@@ -149,6 +152,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineForceSequentialOrInParallelSection(callInfo);
     if (native == testingFunc_bailout)
         return inlineBailout(callInfo);
+    if (native == testingFunc_assertFloat32)
+        return inlineAssertFloat32(callInfo);
 
     return InliningStatus_NotInlined;
 }
@@ -623,7 +628,7 @@ IonBuilder::inlineMathSqrt(CallInfo &callInfo)
     MIRType argType = callInfo.getArg(0)->type();
     if (getInlineReturnType() != MIRType_Double)
         return InliningStatus_NotInlined;
-    if (argType != MIRType_Double && argType != MIRType_Int32)
+    if (!IsNumberType(argType))
         return InliningStatus_NotInlined;
 
     callInfo.unwrapArgs();
@@ -812,6 +817,33 @@ IonBuilder::inlineMathImul(CallInfo &callInfo)
 }
 
 IonBuilder::InliningStatus
+IonBuilder::inlineMathFRound(CallInfo &callInfo)
+{
+    if (!LIRGenerator::allowFloat32Optimizations())
+        return InliningStatus_NotInlined;
+
+    if (callInfo.argc() != 1 || callInfo.constructing())
+        return InliningStatus_NotInlined;
+
+    // MIRType can't be Float32, as this point, as getInlineReturnType uses JSVal types
+    // to infer the returned MIR type.
+    MIRType returnType = getInlineReturnType();
+    if (!IsNumberType(returnType))
+        return InliningStatus_NotInlined;
+
+    MIRType arg = callInfo.getArg(0)->type();
+    if (!IsNumberType(arg))
+        return InliningStatus_NotInlined;
+
+    callInfo.unwrapArgs();
+
+    MToFloat32 *ins = MToFloat32::New(callInfo.getArg(0));
+    current->add(ins);
+    current->push(ins);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
 IonBuilder::inlineMathMinMax(CallInfo &callInfo, bool max)
 {
     if (callInfo.argc() != 2 || callInfo.constructing())
@@ -970,7 +1002,7 @@ IonBuilder::inlineRegExpTest(CallInfo &callInfo)
     if (callInfo.thisArg()->type() != MIRType_Object)
         return InliningStatus_NotInlined;
     types::StackTypeSet *thisTypes = callInfo.thisArg()->resultTypeSet();
-    Class *clasp = thisTypes ? thisTypes->getKnownClass() : NULL;
+    const Class *clasp = thisTypes ? thisTypes->getKnownClass() : NULL;
     if (clasp != &RegExpObject::class_)
         return InliningStatus_NotInlined;
     if (callInfo.getArg(0)->type() != MIRType_String)
@@ -1446,8 +1478,8 @@ IonBuilder::inlineHaveSameClass(CallInfo &callInfo)
 
     types::StackTypeSet *arg1Types = callInfo.getArg(0)->resultTypeSet();
     types::StackTypeSet *arg2Types = callInfo.getArg(1)->resultTypeSet();
-    Class *arg1Clasp = arg1Types ? arg1Types->getKnownClass() : NULL;
-    Class *arg2Clasp = arg2Types ? arg1Types->getKnownClass() : NULL;
+    const Class *arg1Clasp = arg1Types ? arg1Types->getKnownClass() : NULL;
+    const Class *arg2Clasp = arg2Types ? arg2Types->getKnownClass() : NULL;
     if (arg1Clasp && arg2Clasp) {
         MConstant *constant = MConstant::New(BooleanValue(arg1Clasp == arg2Clasp));
         current->add(constant);
@@ -1484,7 +1516,7 @@ IonBuilder::inlineIsCallable(CallInfo &callInfo)
         isCallableConstant = false;
     } else {
         types::StackTypeSet *types = callInfo.getArg(0)->resultTypeSet();
-        Class *clasp = types ? types->getKnownClass() : NULL;
+        const Class *clasp = types ? types->getKnownClass() : NULL;
         if (clasp) {
             isCallableKnown = true;
             isCallableConstant = clasp->isCallable();
@@ -1532,6 +1564,25 @@ IonBuilder::inlineBailout(CallInfo &callInfo)
     callInfo.unwrapArgs();
 
     current->add(MBail::New());
+
+    MConstant *undefined = MConstant::New(UndefinedValue());
+    current->add(undefined);
+    current->push(undefined);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineAssertFloat32(CallInfo &callInfo)
+{
+    callInfo.unwrapArgs();
+
+    MDefinition *secondArg = callInfo.getArg(1);
+
+    JS_ASSERT(secondArg->type() == MIRType_Boolean);
+    JS_ASSERT(secondArg->isConstant());
+
+    bool mustBeFloat32 = JSVAL_TO_BOOLEAN(secondArg->toConstant()->value());
+    current->add(MAssertFloat32::New(callInfo.getArg(0), mustBeFloat32));
 
     MConstant *undefined = MConstant::New(UndefinedValue());
     current->add(undefined);

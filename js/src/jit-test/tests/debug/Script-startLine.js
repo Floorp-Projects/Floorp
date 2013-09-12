@@ -1,4 +1,4 @@
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var start, count;
 dbg.onDebuggerStatement = function (frame) {

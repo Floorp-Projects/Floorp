@@ -23,9 +23,14 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
 
+namespace mozilla {
+class PreferencesReporter;
+} // namespace mozilla;
+
 class nsPrefBranch;
 
 class PrefCallback : public PLDHashEntryHdr {
+  friend class mozilla::PreferencesReporter;
 
   public:
     typedef PrefCallback* KeyType;
@@ -173,6 +178,7 @@ class nsPrefBranch : public nsIPrefBranchInternal,
                      public nsIObserver,
                      public nsSupportsWeakReference
 {
+  friend class mozilla::PreferencesReporter;
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIPREFBRANCH

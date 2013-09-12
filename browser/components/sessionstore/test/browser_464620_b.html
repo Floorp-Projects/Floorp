@@ -48,8 +48,9 @@
     }
     document.getElementById("state").textContent = "done";
 
-    var event = document.createEvent("MessageEvent");
-    event.initMessageEvent("464620_b", true, false, "done", location.href, "", window);
+    var event = new MessageEvent('464620_b', { bubbles: true, cancelable: false,
+                                               data: "done", origin: location.href,
+                                               source: window });
     document.dispatchEvent(event);
   }
 </script>

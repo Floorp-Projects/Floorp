@@ -19,9 +19,7 @@
 #include "jit/Ion.h"
 #include "jit/PerfSpewer.h"
 
-#include "jsfuninlines.h"
 #include "jsobjinlines.h"
-#include "jsscriptinlines.h"
 
 using namespace js;
 using namespace js::jit;

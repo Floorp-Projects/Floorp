@@ -1621,8 +1621,8 @@ GetPropertyIC::tryAttachArgumentsLength(JSContext *cx, IonScript *ion, HandleObj
     }
     JS_ASSERT(object() != tmpReg);
 
-    Class *clasp = obj->is<StrictArgumentsObject>() ? &StrictArgumentsObject::class_
-                                                    : &NormalArgumentsObject::class_;
+    const Class *clasp = obj->is<StrictArgumentsObject>() ? &StrictArgumentsObject::class_
+                                                          : &NormalArgumentsObject::class_;
 
     Label fail;
     Label pass;
@@ -3068,8 +3068,8 @@ GetElementIC::attachArgumentsElement(JSContext *cx, IonScript *ion, JSObject *ob
     Register tmpReg = output().scratchReg().gpr();
     JS_ASSERT(tmpReg != InvalidReg);
 
-    Class *clasp = obj->is<StrictArgumentsObject>() ? &StrictArgumentsObject::class_
-                                                    : &NormalArgumentsObject::class_;
+    const Class *clasp = obj->is<StrictArgumentsObject>() ? &StrictArgumentsObject::class_
+                                                          : &NormalArgumentsObject::class_;
 
     Label fail;
     Label pass;

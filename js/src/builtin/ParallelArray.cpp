@@ -44,7 +44,7 @@ const JSFunctionSpec ParallelArrayObject::methods[] = {
     JS_FS_END
 };
 
-Class ParallelArrayObject::protoClass = {
+const Class ParallelArrayObject::protoClass = {
     "ParallelArray",
     JSCLASS_HAS_CACHED_PROTO(JSProto_ParallelArray),
     JS_PropertyStub,         // addProperty
@@ -56,7 +56,7 @@ Class ParallelArrayObject::protoClass = {
     JS_ConvertStub
 };
 
-Class ParallelArrayObject::class_ = {
+const Class ParallelArrayObject::class_ = {
     "ParallelArray",
     JSCLASS_HAS_CACHED_PROTO(JSProto_ParallelArray),
     JS_PropertyStub,         // addProperty
