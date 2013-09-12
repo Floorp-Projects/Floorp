@@ -322,11 +322,8 @@ Sanitizer.prototype = {
             }
 
             // Clear all completed/cancelled downloads
-            let publicList = yield Downloads.getPublicDownloadList();
-            publicList.removeFinished(filterByTime);
-
-            let privateList = yield Downloads.getPrivateDownloadList();
-            privateList.removeFinished(filterByTime);
+            let list = yield Downloads.getList(Downloads.ALL);
+            list.removeFinished(filterByTime);
           }.bind(this)).then(null, Components.utils.reportError);
         }
         else {

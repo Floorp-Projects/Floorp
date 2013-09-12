@@ -103,12 +103,9 @@ this.ForgetAboutSite = {
 
     if (useJSTransfer) {
       Task.spawn(function() {
-        for (let promiseList of [Downloads.getPublicDownloadList(),
-                                 Downloads.getPrivateDownloadList()]) {
-          let list = yield promiseList;
-          list.removeFinished(download => hasRootDomain(
-               NetUtil.newURI(download.source.url).host, aDomain));
-        }
+        let list = yield Downloads.getList(Downloads.ALL);
+        list.removeFinished(download => hasRootDomain(
+             NetUtil.newURI(download.source.url).host, aDomain));
       }).then(null, Cu.reportError);
     }
     else {
