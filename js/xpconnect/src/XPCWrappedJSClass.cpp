@@ -568,22 +568,6 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
                                              REFNSIID aIID,
                                              void** aInstancePtr)
 {
-    if (MOZ_UNLIKELY(!NS_IsMainThread())) {
-        printf("Uh oh! DelegatedQueryInterface called off-main-thread!\n");
-        printf("Name: %s\n", GetInterfaceName());
-        JSCompartment *c = js::GetObjectCompartment(self->GetJSObjectPreserveColor());
-        char *origin = nullptr;
-        nsresult rv = xpc::GetCompartmentPrincipal(c)->GetOrigin(&origin);
-        if (NS_SUCCEEDED(rv)) {
-            printf("Principal origin: %s\n", origin);
-            NS_Free(origin);
-        } else {
-            printf("Unable to get origin from principal :-(\n");
-        }
-        nsAutoCString loc(EnsureCompartmentPrivate(c)->GetLocation());
-        printf("Global's Location: %s\n", loc.get());
-        MOZ_CRASH();
-    }
     if (aIID.Equals(NS_GET_IID(nsIXPConnectJSObjectHolder))) {
         NS_ADDREF(self);
         *aInstancePtr = (void*) static_cast<nsIXPConnectJSObjectHolder*>(self);
