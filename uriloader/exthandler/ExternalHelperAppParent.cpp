@@ -11,6 +11,8 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIExternalHelperAppService.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/TabParent.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsStringStream.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -45,7 +47,8 @@ ExternalHelperAppParent::Init(ContentParent *parent,
                               const nsCString& aMimeContentType,
                               const nsCString& aContentDispositionHeader,
                               const bool& aForceSave,
-                              const OptionalURIParams& aReferrer)
+                              const OptionalURIParams& aReferrer,
+                              PBrowserParent* aBrowser)
 {
   nsCOMPtr<nsIExternalHelperAppService> helperAppService =
     do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID);
@@ -58,7 +61,13 @@ ExternalHelperAppParent::Init(ContentParent *parent,
   mContentDispositionHeader = aContentDispositionHeader;
   NS_GetFilenameFromDisposition(mContentDispositionFilename, mContentDispositionHeader, mURI);
   mContentDisposition = NS_GetContentDispositionFromHeader(mContentDispositionHeader, this);
-  helperAppService->DoContent(aMimeContentType, this, nullptr,
+
+  nsCOMPtr<nsIInterfaceRequestor> window;
+  TabParent *tabParent = static_cast<TabParent*>(aBrowser);
+  if (tabParent->GetOwnerElement())
+    window = do_QueryInterface(tabParent->GetOwnerElement()->OwnerDoc()->GetWindow());
+
+  helperAppService->DoContent(aMimeContentType, this, window,
                               aForceSave, getter_AddRefs(mListener));
 }
 
