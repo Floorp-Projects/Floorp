@@ -73,9 +73,6 @@ class StructuredHumanFormatter(logging.Formatter):
 
         elapsed = self._time(record)
 
-        if ('error' in record.params and
-            isinstance(record.params['error'], WindowsError)):
-            record.params['error'].args[1].decode(sys.stdout.encoding)
         return '%s %s' % (format_seconds(elapsed),
             record.msg.format(**record.params))
 

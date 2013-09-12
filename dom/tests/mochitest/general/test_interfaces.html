@@ -102,7 +102,7 @@ var interfaceNamesInGlobalScope =
     {name: "BluetoothStatusChangedEvent", b2g: true},
     {name: "BoxObject", xbl: true},
     {name: "BrowserFeedWriter", desktop: true},
-    {name: "CallEvent", permission: "telephony"},
+    "CallEvent",
     "CameraCapabilities",
     "CameraControl",
     "CameraManager",
@@ -529,9 +529,9 @@ var interfaceNamesInGlobalScope =
     "SVGViewElement",
     "SVGZoomAndPan",
     "SVGZoomEvent",
-    {name: "Telephony", permission: "telephony"},
-    {name: "TelephonyCall", permission: "telephony"},
-    {name: "TelephonyCallGroup", permission: "telephony"},
+    "Telephony",
+    "TelephonyCall",
+    "TelephonyCallGroup",
     "Text",
     "TextDecoder",
     "TextEncoder",
@@ -620,8 +620,7 @@ function createInterfaceMap(isXBLScope) {
     } else if (entry.xbl === !isXBLScope ||
                entry.desktop === !isDesktop ||
                entry.b2g === !isB2G ||
-               entry.release === !isRelease ||
-               entry.permission) {
+               entry.release === !isRelease) {
       interfaceMap[entry.name] = false;
     } else {
       interfaceMap[entry.name] = true;
@@ -645,7 +644,7 @@ function runTest(isXBLScope) {
   }
   for (var name of Object.keys(interfaceMap)) {
     ok(name in window === interfaceMap[name],
-       name + " should" + (interfaceMap[name] ? "" : " NOT") + " be defined on the " + (isXBLScope ? "XBL" : "global") +" scope");
+       name + " should " + (interfaceMap[name] ? "" : " NOT") + " be defined on the " + (isXBLScope ? "XBL" : "global") +" scope");
     if (!interfaceMap[name]) {
       delete interfaceMap[name];
     }
@@ -656,62 +655,14 @@ function runTest(isXBLScope) {
   } else {
     is(Object.keys(interfaceMap).length, 0,
        "The following interface(s) are not enumerated: " + Object.keys(interfaceMap).join(", "));
-    testPermissions();
   }
 }
 
-function createPermissionInfo() {
-  var interfaceNames = [];
-  var permissionMap = {};
-  for (var entry of interfaceNamesInGlobalScope) {
-    if (!entry.permission) {
-      continue;
-    }
-    interfaceNames.push(entry.name);
-    if (!(entry.permission in permissionMap)) {
-      permissionMap[entry.permission] = {};
-    }
-    permissionMap[entry.permission][entry.name] = true;
-  }
-  return {interfaces: interfaceNames, map: permissionMap};
-}
-
-function testPermissions() {
-  var permissionInfo = createPermissionInfo();
-  var permissionList = Object.keys(permissionInfo.map);
-  function next() {
-    if (!permissionList.length) {
-      runTestInXBLScope();
-      return;
-    }
-    var permissionName = permissionList.shift();
-    var permission = permissionInfo.map[permissionName];
-    SpecialPowers.pushPermissions([{type: permissionName, 'allow': true, 'context': document}], function() {
-      var ifr = document.createElement("iframe");
-      ifr.onload = function() {
-        var win = ifr.contentWindow;
-        for (var name of permissionInfo.interfaces) {
-          ok(name in win === name in permission,
-             name + " should" + (name in permission ? "" : " NOT") + " be enabled iff \"" + permissionName + "\" is granted.");
-        }
-        document.body.removeChild(ifr);
-        next();
-      };
-      document.body.appendChild(ifr);
-    });
-  }
-  next();
-}
-
-function runTestInXBLScope() {
-  // finish() will be called from the binding file.
-  document.body.insertAdjacentHTML("BeforeEnd", '<span id="span" style="-moz-binding: url(file_interfaces.xml)"></span>');
-}
-
-SimpleTest.waitForExplicitFinish();
 runTest(false);
+SimpleTest.waitForExplicitFinish();
 
 </script>
+<span id="span" style="-moz-binding: url(file_interfaces.xml)"></span>
 </pre>
 </body>
 </html>
