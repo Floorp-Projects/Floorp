@@ -36,15 +36,14 @@ function runTest()
     range.selectNodeContents(editor);
     var prevStr = range.toString();
 
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    var docShell =
-      window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-            .getInterface(Components.interfaces.nsIWebNavigation)
-            .QueryInterface(Components.interfaces.nsIDocShell);
+    var docShell = SpecialPowers.wrap(window)
+            .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+            .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+            .QueryInterface(SpecialPowers.Ci.nsIDocShell);
     var controller =
-          docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                  .getInterface(Components.interfaces.nsISelectionDisplay)
-                  .QueryInterface(Components.interfaces.nsISelectionController);
+          docShell.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                  .getInterface(SpecialPowers.Ci.nsISelectionDisplay)
+                  .QueryInterface(SpecialPowers.Ci.nsISelectionController);
     var sel = controller.getSelection(controller.SELECTION_NORMAL);
     sel.collapse(anchorInEditor, 0);
     synthesizeKey('a', {});

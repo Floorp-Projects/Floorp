@@ -63,22 +63,16 @@ if (serifWidth == monospaceWidth) {
 isnot(serifWidth, monospaceWidth,
       "can't find serif and monospace fonts of different width");
 
-var prefs =
-  CC["@mozilla.org/preferences-service;1"].getService(CI.nsIPrefBranch);
-prefs.setCharPref('font.name.serif.x-western', serifFonts[serifIdx]);
+SpecialPowers.pushPrefEnv({'set': [['font.name.serif.x-western', serifFonts[serifIdx]]]}, step2);
 
 var serifWidthFromPref;
-setTimeout(setTimeout, 0, step2, 0);
 function step2() {
     serifWidthFromPref = tableElement.offsetWidth;
-    prefs.setCharPref('font.name.serif.x-western',
-                        monospaceFonts[monospaceIdx]);
-    setTimeout(setTimeout, 0, step3, 0);
+    SpecialPowers.pushPrefEnv({'set': [['font.name.serif.x-western', monospaceFonts[monospaceIdx]]]}, step3);
 }
 var monospaceWidthFromPref;
 function step3() {
     monospaceWidthFromPref = tableElement.offsetWidth;
-    prefs.clearUserPref('font.name.serif.x-western');
 
     is(serifWidthFromPref, serifWidth,
        "changing font pref should change width of table (serif)");

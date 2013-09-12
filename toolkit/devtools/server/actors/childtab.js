@@ -12,7 +12,7 @@
 
 /**
  * Creates a tab actor for handling requests to the single tab, like
- * attaching and detaching. ContentTabActor respects the actor factories
+ * attaching and detaching. ContentAppActor respects the actor factories
  * registered with DebuggerServer.addTabActor.
  *
  * @param connection DebuggerServerConnection
@@ -20,16 +20,16 @@
  * @param browser browser
  *        The browser instance that contains this tab.
  */
-function ContentTabActor(connection, browser)
+function ContentAppActor(connection, browser)
 {
   BrowserTabActor.call(this, connection, browser);
 }
 
-ContentTabActor.prototype = Object.create(BrowserTabActor.prototype);
+ContentAppActor.prototype = Object.create(BrowserTabActor.prototype);
 
-ContentTabActor.prototype.constructor = ContentTabActor;
+ContentAppActor.prototype.constructor = ContentAppActor;
 
-Object.defineProperty(ContentTabActor.prototype, "title", {
+Object.defineProperty(ContentAppActor.prototype, "title", {
   get: function() {
     return this.browser.title;
   },
@@ -37,7 +37,7 @@ Object.defineProperty(ContentTabActor.prototype, "title", {
   configurable: false
 });
 
-Object.defineProperty(ContentTabActor.prototype, "url", {
+Object.defineProperty(ContentAppActor.prototype, "url", {
   get: function() {
     return this.browser.document.documentURI;
   },
@@ -45,7 +45,7 @@ Object.defineProperty(ContentTabActor.prototype, "url", {
   configurable: false
 });
 
-Object.defineProperty(ContentTabActor.prototype, "window", {
+Object.defineProperty(ContentAppActor.prototype, "window", {
   get: function() {
     return this.browser;
   },
@@ -55,9 +55,9 @@ Object.defineProperty(ContentTabActor.prototype, "window", {
 
 // Override grip just to rename this._tabActorPool to this._tabActorPool2
 // in order to prevent it to be cleaned on detach.
-// We have to keep tab actors alive as we keep the ContentTabActor
+// We have to keep tab actors alive as we keep the ContentAppActor
 // alive after detach and reuse it for multiple debug sessions.
-ContentTabActor.prototype.grip = function () {
+ContentAppActor.prototype.grip = function () {
   let response = {
     'actor': this.actorID,
     'title': this.title,

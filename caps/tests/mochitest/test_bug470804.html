@@ -21,10 +21,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=470804
     Passing a null targetURL to checkLoadURIWithPrincipal shouldn't crash
  **/
 
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
-var secMan = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
-                       .getService(nsIScriptSecurityManager);
+const nsIScriptSecurityManager = SpecialPowers.Ci.nsIScriptSecurityManager;
+var secMan = SpecialPowers.Services.scriptSecurityManager;
 var principal = SpecialPowers.wrap(document).nodePrincipal;
 isnot(principal, undefined, "Should have a principal");
 isnot(principal, null, "Should have a non-null principal");

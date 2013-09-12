@@ -21,16 +21,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=416383
 /** Test for Bug 416383 **/
 
 function runTest() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var testParent = document.getElementById("test_parent");
   var attrs = testParent.firstChild.attributes;
   ok(attrs != null, "Element should have attributes!");
   var attr = testParent.firstChild.getAttributeNode("someattr");
   ok(attr.value == "foo", "The value of the attribute should be 'foo'!");
   testParent.removeChild(testParent.firstChild);
-  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-        .getInterface(Components.interfaces.nsIDOMWindowUtils)
-        .garbageCollect();
+  SpecialPowers.gc();
   ok(true, "Browser should not crash!")
 
 }

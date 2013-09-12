@@ -65,8 +65,6 @@ function runNextTest() {
   if (tests.length > 0) {
     var test = tests.shift();
 
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
     // Initialize state variables
     testName = test[0]
     currentState = 0;

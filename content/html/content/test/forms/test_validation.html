@@ -268,10 +268,8 @@ function checkValidityStateObjectAliveWithoutElement(element)
   // Then, we make sure it is removed by the garbage collector and we check the
   // ValidityState default values (it should not crash).
 
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var v = document.createElement(element).validity;
-  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-    getInterface(Components.interfaces.nsIDOMWindowUtils).garbageCollect();
+  SpecialPowers.gc();
 
   ok(!v.valueMissing,
     "When the element is not alive, it shouldn't suffer from constraint validation");
