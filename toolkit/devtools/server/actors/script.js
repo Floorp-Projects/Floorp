@@ -873,7 +873,9 @@ ThreadActor.prototype = {
               this.dbg.onEnterFrame = onEnterFrame;
               // Fall through.
             case "next":
-              stepFrame.onStep = onStep;
+              if (stepFrame.script) {
+                  stepFrame.onStep = onStep;
+              }
               stepFrame.onPop = onPop;
               break;
             case "finish":
