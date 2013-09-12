@@ -11,9 +11,6 @@ CMSRCS = \
   HTTPMultipartUpload.m \
   $(NULL)
 
-
-HOST_CPPSRCS = $(CPPSRCS)
-
 HOST_CMMSRCS = \
   dump_syms.mm \
   $(NULL)

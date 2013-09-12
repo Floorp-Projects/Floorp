@@ -12,3 +12,7 @@ CSRCS += [
     'test-ctors.c',
 ]
 
+HOST_CPPSRCS += [
+    'elf.cpp',
+    'elfhack.cpp',
+]
