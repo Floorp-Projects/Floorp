@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=292789
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=292789">Mozilla Bug 292789</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  <script src="chrome://global/content/strres.js"></script>
+  <script src="chrome://global/content/treeUtils.js"></script>
   <script type="application/javascript;version=1.8" src="chrome://mozapps/content/xpinstall/xpinstallConfirm.js"></script>
   <script id="resjs" type="application/javascript;version=1.8"></script>
 </div>
@@ -29,11 +29,11 @@ SimpleTest.waitForExplicitFinish();
 
 /** <script src=""> test **/
 function testScriptSrc(aCallback) {
-    is(typeof srGetStrBundle, "function",
+    is(typeof gTreeUtils.sort, "function",
        "content can still load <script> from chrome://global");
     is(typeof XPInstallConfirm, "undefined",
        "content should not be able to load <script> from chrome://mozapps");
-    
+
     /** make sure the last one didn't pass because someone
      ** moved the resource
      **/
@@ -45,7 +45,7 @@ function testScriptSrc(aCallback) {
     function scriptOnload() {
       is(typeof XPInstallConfirm, "object",
          "xpinstallConfirm.js has not moved unexpectedly");
-  
+
       // trigger the callback
       if (aCallback)
         aCallback();
