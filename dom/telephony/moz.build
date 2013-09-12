@@ -12,12 +12,15 @@ XPIDL_MODULE = 'dom_telephony'
 
 MODULE = 'dom'
 
-EXPORTS.mozilla.dom.telephony += [
+EXPORTS.mozilla.dom += [
     'CallEvent.h',
     'CallsList.h',
     'Telephony.h',
     'TelephonyCall.h',
     'TelephonyCallGroup.h',
+]
+
+EXPORTS.mozilla.dom.telephony += [
     'TelephonyCommon.h',
     'TelephonyFactory.h',
     'ipc/TelephonyChild.h',

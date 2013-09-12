@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780847
   .target { position:absolute; left:100px; top:100px; width:100px; height:100px; background:blue; }
   </style>
 </head>
-<body id="body" onload="setTimeout(runTest, 0)" style="margin:0; width:100%; height:100%">
+<body id="body" onload="setTimeout(startTest, 0)" style="margin:0; width:100%; height:100%">
 <p id="display"></p>
 <div id="content">
   <div id="ruler" style="position:absolute; left:0; top:0; width:1mozmm; height:0;"></div>
@@ -48,28 +48,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780847
 </div>
 <pre id="test">
 <script type="application/javascript">
-var prefBase = "ui.mouse.radius.";
-SpecialPowers.setBoolPref(prefBase + "enabled", true);
-SpecialPowers.setBoolPref(prefBase + "inputSource.touchOnly", false);
-SpecialPowers.setIntPref(prefBase + "leftmm", 12);
-SpecialPowers.setIntPref(prefBase + "topmm", 8);
-SpecialPowers.setIntPref(prefBase + "rightmm", 4);
-SpecialPowers.setIntPref(prefBase + "bottommm", 4);
-SpecialPowers.setIntPref(prefBase + "visitedWeight", 50);
+function startTest() {
+  SpecialPowers.pushPrefEnv({"set": [["ui.mouse.radius.enabled", true],
+                                     ["ui.mouse.radius.inputSource.touchOnly", false],
+                                     ["ui.mouse.radius.leftmm", 12],
+                                     ["ui.mouse.radius.topmm", 8],
+                                     ["ui.mouse.radius.rightmm", 4],
+                                     ["ui.mouse.radius.bottommm", 4],
+                                     ["ui.mouse.radius.visitedweight", 50]]}, runTest);
+}
+
 
 SimpleTest.waitForExplicitFinish();
 
-var mm = document.getElementById("ruler").getBoundingClientRect().width;
-ok(4*mm >= 10, "WARNING: mm " + mm + " too small in this configuration. Test results will be bogus");
-
 function endTest() {
-  SpecialPowers.clearUserPref(prefBase + "enabled");
-  SpecialPowers.clearUserPref(prefBase + "inputSource.touchOnly");
-  SpecialPowers.clearUserPref(prefBase + "leftmmm");
-  SpecialPowers.clearUserPref(prefBase + "topmm");
-  SpecialPowers.clearUserPref(prefBase + "rightmm");
-  SpecialPowers.clearUserPref(prefBase + "bottommm");
-  SpecialPowers.clearUserPref(prefBase + "visitedWeight");
   SimpleTest.finish();
 }
 
@@ -92,7 +84,11 @@ function setShowing(id, show) {
   e.hidden = !show;
 }
 
+var mm;
 function runTest() {
+  mm = document.getElementById("ruler").getBoundingClientRect().width;
+  ok(4*mm >= 10, "WARNING: mm " + mm + " too small in this configuration. Test results will be bogus");
+
   // Test basic functionality: clicks sufficiently close to the element
   // should be allowed to hit the element. We test points just inside and
   // just outside the edges we set up in the prefs.
@@ -106,7 +102,10 @@ function runTest() {
   testMouseClick("t", 10, -3*mm, "t", "basic functionality");
 
   // When inputSource.touchOnly is true, mouse input is not retargeted.
-  SpecialPowers.setBoolPref(prefBase + "inputSource.touchOnly", true);
+  SpecialPowers.pushPrefEnv({"set": [["ui.mouse.radius.inputSource.touchOnly", true]]}, test2);
+}
+
+function test2() {
   testMouseClick("t", 100 + 11*mm, 10, "body", "disabled for mouse input");
   testMouseClick("t", 100 + 11*mm, 10, "t", "enabled for touch input", {
     inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH
@@ -114,8 +113,10 @@ function runTest() {
   testMouseClick("t", 100 + 13*mm, 10, "body", "basic functionality for touch", {
     inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH
   });
-  SpecialPowers.setBoolPref(prefBase + "inputSource.touchOnly", false);
+  SpecialPowers.pushPrefEnv({"set": [["ui.mouse.radius.inputSource.touchOnly", false]]}, test3);
+}
 
+function test3() {
   setShowing("t", false);
 
   // Now test the criteria we use to determine which elements are hittable

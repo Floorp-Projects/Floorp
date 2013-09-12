@@ -11,7 +11,7 @@ HTTP == simple-1.html simple-1.html?ref
 skip-if(B2G) HTTP == subpixel-1.html#d subpixel-1-ref.html#d
 fuzzy-if(Android,4,120) HTTP == text-1.html text-1.html?ref
 fuzzy-if(Android,4,120) HTTP == text-2.html?up text-2.html?ref
-fuzzy-if(Android&&AndroidVersion<15,251,722) fails-if(Android&&AndroidVersion>=15) HTTP == transformed-1.html transformed-1.html?ref #Bug 900607
+skip-if(B2G) fuzzy-if(Android&&AndroidVersion<15,251,722) fails-if(Android&&AndroidVersion>=15) HTTP == transformed-1.html transformed-1.html?ref #Bug 900607
 HTTP == transformed-1.html?up transformed-1.html?ref
 fuzzy-if(Android,5,20000) == uncovering-1.html uncovering-1-ref.html
 fuzzy-if(Android,5,20000) == uncovering-2.html uncovering-2-ref.html

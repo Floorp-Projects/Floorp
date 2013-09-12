@@ -242,7 +242,6 @@
  "layout/base/tests/test_bug629838.html": "",
  "layout/base/tests/test_flush_on_paint.html": "",
  "layout/base/tests/test_mozPaintCount.html": "",
- "layout/base/tests/test_reftests_with_caret.html": "1 test failing because of spellcheck, rest passes",
  "layout/forms/test/test_bug348236.html": "",
  "layout/forms/test/test_bug378670.html": "TIMED_OUT",
  "layout/forms/test/test_bug446663.html": "",
