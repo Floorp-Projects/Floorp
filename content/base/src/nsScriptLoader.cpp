@@ -915,7 +915,9 @@ nsIScriptContext *
 nsScriptLoader::GetScriptContext(JSObject **aGlobal)
 {
   nsPIDOMWindow *pwin = mDocument->GetInnerWindow();
-  NS_ASSERTION(pwin, "shouldn't be called with a null inner window");
+  if (!pwin) {
+    return nullptr;
+  }
 
   nsCOMPtr<nsIScriptGlobalObject> globalObject = do_QueryInterface(pwin);
   NS_ASSERTION(globalObject, "windows must be global objects");
