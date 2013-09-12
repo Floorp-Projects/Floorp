@@ -146,19 +146,20 @@ private:
                         ScreenPoint& aOffset);
 
   /**
-   * Adds a translation to the transform of any fixed-pos layer descendant of
-   * aTransformedSubtreeRoot whose parent layer is not fixed. The translation is
-   * chosen so that the layer's anchor point relative to aTransformedSubtreeRoot's
-   * parent layer is the same as it was when aTransformedSubtreeRoot's
-   * GetLocalTransform() was aPreviousTransformForRoot.
+   * Adds a translation to the transform of any fixed position (whose parent
+   * layer is not fixed) or sticky position layer descendant of
+   * aTransformedSubtreeRoot. The translation is chosen so that the layer's
+   * anchor point relative to aTransformedSubtreeRoot's parent layer is the same
+   * as it was when aTransformedSubtreeRoot's GetLocalTransform() was
+   * aPreviousTransformForRoot. For sticky position layers, the translation is
+   * further intersected with the layer's sticky scroll ranges.
    * This function will also adjust layers so that the given content document
    * fixed position margins will be respected during asynchronous panning and
    * zooming.
    */
-  void AlignFixedLayersForAnchorPoint(Layer* aLayer,
-                                      Layer* aTransformedSubtreeRoot,
-                                      const gfx3DMatrix& aPreviousTransformForRoot,
-                                      const LayerMargin& aFixedLayerMargins);
+  void AlignFixedAndStickyLayers(Layer* aLayer, Layer* aTransformedSubtreeRoot,
+                                 const gfx3DMatrix& aPreviousTransformForRoot,
+                                 const LayerMargin& aFixedLayerMargins);
 
   /**
    * DRAWING PHASE ONLY
