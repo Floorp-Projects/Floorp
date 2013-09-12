@@ -55,6 +55,7 @@ var BuiltinProvider = {
         "devtools": "resource:///modules/devtools",
         "devtools/server": "resource://gre/modules/devtools/server",
         "devtools/toolkit/webconsole": "resource://gre/modules/devtools/toolkit/webconsole",
+        "devtools/app-actor-front": "resource://gre/modules/devtools/app-actor-front.js",
         "devtools/styleinspector/css-logic": "resource://gre/modules/devtools/styleinspector/css-logic",
         "devtools/client": "resource://gre/modules/devtools/client",
 
@@ -95,6 +96,7 @@ var SrcdirProvider = {
     let toolkitURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools"));
     let serverURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools", "server"));
     let webconsoleURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools", "webconsole"));
+    let appActorURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools", "apps", "app-actor-front.js"));
     let cssLogicURI = this.fileURI(OS.Path.join(toolkitURI, "styleinspector", "css-logic"));
     let clientURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools", "client"));
     let mainURI = this.fileURI(OS.Path.join(srcdir, "browser", "devtools", "main.js"));
@@ -107,6 +109,7 @@ var SrcdirProvider = {
         "": "resource://gre/modules/commonjs/",
         "devtools/server": serverURI,
         "devtools/toolkit/webconsole": webconsoleURI,
+        "devtools/app-actor-front": appActorURI,
         "devtools/client": clientURI,
         "devtools": devtoolsURI,
         "devtools/styleinspector/css-logic": cssLogicURI,

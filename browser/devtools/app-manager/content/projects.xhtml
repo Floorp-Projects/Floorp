@@ -25,7 +25,7 @@
       <div id="new-packaged-project" onclick="UI.addPackaged()">&projects.addPackaged;</div>
       <div id="new-hosted-project">&projects.addHosted;
         <form onsubmit="UI.addHosted(); return false;" id="new-hosted-project-wrapper">
-          <input value="" id="url-input" type="url" pattern="https?://.+" placeholder="&projects.hostedManifestPlaceHolder;" size="50" />
+          <input value="" id="url-input" type="url" pattern="https?://.+" placeholder="&projects.hostedManifestPlaceHolder2;" size="50" />
           <div onclick="UI.addHosted()" id="new-hosted-project-click"></div>
           <input type="submit" hidden="true"></input>
         </form>
@@ -71,14 +71,10 @@
       </div>
       <div class="project-buttons">
         <button class="project-button-refresh" onclick="UI.update(this.dataset.location)" template='{"type":"attribute","path":"location","name":"data-location"}'>&projects.reloadFiles;</button>
-        <!-- Not available until bug 911785 is fixed
         <button class="device-action project-button-install" onclick="UI.install(this, this.dataset.location)" template='{"type":"attribute","path":"location","name":"data-location"}'>&projects.installApp;</button>
-        -->
         <button class="device-action project-button-start" onclick="UI.start(this.dataset.location)" template='{"type":"attribute","path":"location","name":"data-location"}'>&projects.startApp;</button>
         <button class="device-action project-button-stop" onclick="UI.stop(this.dataset.location)" template='{"type":"attribute","path":"location","name":"data-location"}'>&projects.stopApp;</button>
-        <!-- Not available until bug 911785 is fixed
         <button class="device-action project-button-debug" onclick="UI.openToolbox(this.dataset.location)" template='{"type":"attribute","path":"location","name":"data-location"}'>&projects.debugApp;</button>
-        -->
       </div>
       <div class="project-errors" template='{"type":"textContent","path":"errors"}'></div>
       <div class="project-warnings" template='{"type":"textContent","path":"warnings"}'></div>

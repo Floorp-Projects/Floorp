@@ -30,9 +30,8 @@ TimeStamp::ProcessCreation(bool& aIsInconsistent)
      * thus we have to check if the variable is present and not empty. */
     if (mozAppRestart && (strcmp(mozAppRestart, "") != 0)) {
       /* Firefox was restarted, use the first time-stamp we've taken as the new
-       * process startup time and unset MOZ_APP_RESTART. */
+       * process startup time. */
       ts = sFirstTimeStamp;
-      PR_SetEnv("MOZ_APP_RESTART=");
     } else {
       TimeStamp now = Now();
       uint64_t uptime = ComputeProcessUptime();
@@ -57,7 +56,6 @@ TimeStamp::ProcessCreation(bool& aIsInconsistent)
 void
 TimeStamp::RecordProcessRestart()
 {
-  PR_SetEnv("MOZ_APP_RESTART=1");
   sProcessCreation = TimeStamp();
 }
 

@@ -38,9 +38,9 @@
               <span>&connection.notConnected;</span>
               <button class="action-primary left" onclick="UI.connect()" id="connect-button" template='{"type":"localizedContent","property":"connection.connectTo","paths":["connection.host","connection.port"]}'></button>
               <button class="right" onclick="UI.editConnectionParameters()">&connection.changeHostAndPort;</button>
-              <div id="start-simulator-box" template='{"type":"attribute","path":"simulators.versions.length","name":"simulators-count"}'>
+              <div id="start-simulator-box">
                 <span>&connection.or;</span>
-                <button id="start-simulator-button" class="action-primary" onclick="UI.startSimulator()">&connection.startSimulator;</button>
+                <button id="start-simulator-button" class="action-primary" onclick="UI.showSimulatorList()">&connection.startSimulator;</button>
               </div>
             </div>
           </div>
@@ -81,6 +81,25 @@
           </div>
         </div>
 
+        <!-- Simulator -->
+        <div id="banner-simulators" class="banner" template='{"type":"attribute","path":"simulators.versions.length","name":"simulator-count"}'>
+          <div class="connected-indicator"></div>
+          <div class="banner-box">
+            <div class="banner-content">
+              <div class="no-simulator">
+                <span>&connection.noSimulatorInstalled;</span>
+                <button class="action-primary" onclick="UI.installSimulator()">&connection.installFirstSimulator;</button>
+              </div>
+              <div class="found-simulator">
+                <span template-loop='{"arrayPath":"simulators.versions","childSelector":"#simulator-item-template"}'></span>
+                <button class="action-primary" onclick="UI.installSimulator()">&connection.installAnotherSimulator;</button>
+              </div>
+              <button class="action-cancel" onclick="UI.cancelShowSimulatorList()">&connection.cancel;</button>
+            </div>
+          </div>
+        </div>
+
+
         <!-- Logs -->
         <div id="banner-logs">
         <div id="logs" class="banner-box">
@@ -91,6 +110,14 @@
       </div>
     </div>
   </body>
+
+  <template id="simulator-item-template">
+  <span>
+    <button class="simulator-item" onclick="UI.startSimulator(this.dataset.version)" template='{"type":"attribute","path":"version","name":"data-version"}'>
+      <span template='{"type":"textContent", "path":"version"}'></span>
+    </button>
+  </span>
+  </template>
 
   <script type="application/javascript;version=1.8" src="utils.js"></script>
   <script type="application/javascript;version=1.8" src="template.js"></script>

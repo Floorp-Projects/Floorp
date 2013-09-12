@@ -23,12 +23,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=456273
 /** Test for Bug 456273 **/
 
 function doTest() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   var ev = document.createEvent('KeyEvents');
   ev.initKeyEvent("keypress", true, true, null, true, false,
                  false, false, 0, "z".charCodeAt(0));
-  document.getElementById('edit456273').dispatchEvent(ev);
+  SpecialPowers.dispatchEvent(window, document.getElementById('edit456273'), ev);
+
   ok(true, "PASS");
   SimpleTest.finish();
 }
