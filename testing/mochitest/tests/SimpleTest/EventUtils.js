@@ -686,7 +686,7 @@ function _getDOMWindowUtils(aWindow)
                                getInterface(_EU_Ci.nsIDOMWindowUtils);
 }
 
-// Must be synchronized with nsIDOMWindowUtils.
+// Must be synchronized with nsICompositionStringSynthesizer.
 const COMPOSITION_ATTR_RAWINPUT              = 0x02;
 const COMPOSITION_ATTR_SELECTEDRAWTEXT       = 0x03;
 const COMPOSITION_ATTR_CONVERTEDTEXT         = 0x04;
@@ -741,7 +741,7 @@ function synthesizeComposition(aEvent, aWindow)
  *                 When it's composing, set the each clauses' length to the
  *                 |composition.clauses[n].length|.  The sum of the all length
  *                 values must be same as the length of |composition.string|.
- *                 Set nsIDOMWindowUtils.COMPOSITION_ATTR_* to the
+ *                 Set nsICompositionStringSynthesizer.ATTR_* to the
  *                 |composition.clauses[n].attr|.
  *
  *                 When it's not composing, set 0 to the
@@ -768,33 +768,20 @@ function synthesizeText(aEvent, aWindow)
     return;
   }
 
-  var firstClauseLength = aEvent.composition.clauses[0].length;
-  var firstClauseAttr   = aEvent.composition.clauses[0].attr;
-  var secondClauseLength = 0;
-  var secondClauseAttr = 0;
-  var thirdClauseLength = 0;
-  var thirdClauseAttr = 0;
-  if (aEvent.composition.clauses[1]) {
-    secondClauseLength = aEvent.composition.clauses[1].length;
-    secondClauseAttr   = aEvent.composition.clauses[1].attr;
-    if (aEvent.composition.clauses[2]) {
-      thirdClauseLength = aEvent.composition.clauses[2].length;
-      thirdClauseAttr   = aEvent.composition.clauses[2].attr;
+  var compositionString = utils.createCompositionStringSynthesizer();
+  compositionString.setString(aEvent.composition.string);
+  if (aEvent.composition.clauses[0].length) {
+    for (var i = 0; i < aEvent.composition.clauses.length; i++) {
+      compositionString.appendClause(aEvent.composition.clauses[i].length,
+                                     aEvent.composition.clauses[i].attr);
     }
   }
 
-  var caretStart = -1;
-  var caretLength = 0;
   if (aEvent.caret) {
-    caretStart = aEvent.caret.start;
-    caretLength = aEvent.caret.length;
+    compositionString.setCaret(aEvent.caret.start, aEvent.caret.length);
   }
 
-  utils.sendTextEvent(aEvent.composition.string,
-                      firstClauseLength, firstClauseAttr,
-                      secondClauseLength, secondClauseAttr,
-                      thirdClauseLength, thirdClauseAttr,
-                      caretStart, caretLength);
+  compositionString.dispatchEvent();
 }
 
 /**
