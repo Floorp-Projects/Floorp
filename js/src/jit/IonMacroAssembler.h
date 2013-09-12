@@ -1013,7 +1013,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     //
     // Functions for converting values to int.
     //
-    void convertDoubleToInt(FloatRegister src, Register output, Label *fail,
+    void convertDoubleToInt(FloatRegister src, Register output, Label *truncateFail, Label *fail,
                             IntConversionBehavior behavior);
 
     // Strings may be handled by providing labels to jump to when the behavior
@@ -1022,12 +1022,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     // double store into |temp|.
     void convertValueToInt(ValueOperand value, MDefinition *input,
                            Label *handleStringEntry, Label *handleStringRejoin,
+                           Label *truncateDoubleSlow,
                            Register stringReg, FloatRegister temp, Register output,
                            Label *fail, IntConversionBehavior behavior);
     void convertValueToInt(ValueOperand value, FloatRegister temp, Register output, Label *fail,
                            IntConversionBehavior behavior)
     {
-        convertValueToInt(value, NULL, NULL, NULL, InvalidReg, temp, output, fail, behavior);
+        convertValueToInt(value, NULL, NULL, NULL, NULL, InvalidReg, temp, output, fail, behavior);
     }
     bool convertValueToInt(JSContext *cx, const Value &v, Register output, Label *fail,
                            IntConversionBehavior behavior);
@@ -1050,7 +1051,7 @@ class MacroAssembler : public MacroAssemblerSpecific
                              FloatRegister temp, Register output, Label *fail,
                              bool negativeZeroCheck)
     {
-        convertValueToInt(value, input, NULL, NULL, InvalidReg, temp, output, fail,
+        convertValueToInt(value, input, NULL, NULL, NULL, InvalidReg, temp, output, fail,
                           negativeZeroCheck
                           ? IntConversion_NegativeZeroCheck
                           : IntConversion_Normal);
@@ -1085,16 +1086,16 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
     void truncateValueToInt32(ValueOperand value, MDefinition *input,
                               Label *handleStringEntry, Label *handleStringRejoin,
-                              Register stringReg, FloatRegister temp, Register output,
-                              Label *fail)
+                              Label *truncateDoubleSlow,
+                              Register stringReg, FloatRegister temp, Register output, Label *fail)
     {
-        convertValueToInt(value, input, handleStringEntry, handleStringRejoin,
+        convertValueToInt(value, input, handleStringEntry, handleStringRejoin, truncateDoubleSlow,
                           stringReg, temp, output, fail, IntConversion_Truncate);
     }
     void truncateValueToInt32(ValueOperand value, MDefinition *input,
                               FloatRegister temp, Register output, Label *fail)
     {
-        convertValueToInt(value, input, NULL, NULL, InvalidReg, temp, output, fail,
+        convertValueToInt(value, input, NULL, NULL, NULL, InvalidReg, temp, output, fail,
                           IntConversion_Truncate);
     }
     bool truncateValueToInt32(JSContext *cx, const Value &v, Register output, Label *fail) {
@@ -1117,16 +1118,16 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
     void clampValueToUint8(ValueOperand value, MDefinition *input,
                            Label *handleStringEntry, Label *handleStringRejoin,
-                           Register stringReg, FloatRegister temp, Register output,
-                           Label *fail)
+                           Label *truncateDoubleSlow,
+                           Register stringReg, FloatRegister temp, Register output, Label *fail)
     {
-        convertValueToInt(value, input, handleStringEntry, handleStringRejoin,
+        convertValueToInt(value, input, handleStringEntry, handleStringRejoin, truncateDoubleSlow,
                           stringReg, temp, output, fail, IntConversion_ClampToUint8);
     }
     void clampValueToUint8(ValueOperand value, MDefinition *input,
                            FloatRegister temp, Register output, Label *fail)
     {
-        convertValueToInt(value, input, NULL, NULL, InvalidReg, temp, output, fail,
+        convertValueToInt(value, input, NULL, NULL, NULL, InvalidReg, temp, output, fail,
                           IntConversion_ClampToUint8);
     }
     bool clampValueToUint8(JSContext *cx, const Value &v, Register output, Label *fail) {

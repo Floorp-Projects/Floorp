@@ -5,7 +5,6 @@
 
 #include "NotificationController.h"
 
-#include "Accessible-inl.h"
 #include "DocAccessible-inl.h"
 #include "TextLeafAccessible.h"
 #include "TextUpdater.h"

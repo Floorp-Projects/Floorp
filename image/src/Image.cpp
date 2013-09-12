@@ -10,9 +10,15 @@
 namespace mozilla {
 namespace image {
 
+#ifdef DEBUG_imagelib
+static const bool allowOMTURIAccess = true;
+#else
+static const bool allowOMTURIAccess = false;
+#endif
+
 // Constructor
 ImageResource::ImageResource(imgStatusTracker* aStatusTracker, nsIURI* aURI) :
-  mURI(aURI),
+  mURI(new nsMainThreadPtrHolder<nsIURI>(aURI, allowOMTURIAccess)),
   mInnerWindowId(0),
   mAnimationConsumers(0),
   mAnimationMode(kNormalAnimMode),

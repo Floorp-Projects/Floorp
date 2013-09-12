@@ -166,20 +166,31 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
 
     Label fails;
     if (lir->mode() == LValueToInt32::TRUNCATE) {
+        OutOfLineCode *oolDouble = oolTruncateDouble(temp, output);
+        if (!oolDouble)
+            return false;
+
         // We can only handle strings in truncation contexts, like bitwise
         // operations.
+        Label *stringEntry, *stringRejoin;
+        Register stringReg;
         if (input->mightBeType(MIRType_String)) {
-            Register stringReg = ToRegister(lir->temp());
-            OutOfLineCode *ool = oolCallVM(StringToNumberInfo, lir, (ArgList(), stringReg),
-                                           StoreFloatRegisterTo(temp));
-            if (!ool)
+            stringReg = ToRegister(lir->temp());
+            OutOfLineCode *oolString = oolCallVM(StringToNumberInfo, lir, (ArgList(), stringReg),
+                                                 StoreFloatRegisterTo(temp));
+            if (!oolString)
                 return false;
-
-            masm.truncateValueToInt32(operand, input, ool->entry(), ool->rejoin(), stringReg,
-                                      temp, output, &fails);
+            stringEntry = oolString->entry();
+            stringRejoin = oolString->rejoin();
         } else {
-            masm.truncateValueToInt32(operand, input, temp, output, &fails);
+            stringReg = InvalidReg;
+            stringEntry = NULL;
+            stringRejoin = NULL;
         }
+
+        masm.truncateValueToInt32(operand, input, stringEntry, stringRejoin, oolDouble->entry(),
+                                  stringReg, temp, output, &fails);
+        masm.bind(oolDouble->rejoin());
     } else {
         masm.convertValueToInt32(operand, input, temp, output, &fails,
                                  lir->mirNormal()->canBeNegativeZero());
@@ -6779,16 +6790,28 @@ CodeGenerator::visitClampVToUint8(LClampVToUint8 *lir)
     Register output = ToRegister(lir->output());
     MDefinition *input = lir->mir()->input();
 
-    Label fails;
-    if (input->mightBeType(MIRType_String)) {
-        OutOfLineCode *ool = oolCallVM(StringToNumberInfo, lir, (ArgList(), output),
-                                       StoreFloatRegisterTo(tempFloat));
-        masm.clampValueToUint8(operand, input, ool->entry(), ool->rejoin(), output,
-                               tempFloat, output, &fails);
+    OutOfLineCode *oolDouble = oolTruncateDouble(tempFloat, output);
+    if (!oolDouble)
+        return false;
 
+    Label *stringEntry, *stringRejoin;
+    if (input->mightBeType(MIRType_String)) {
+        OutOfLineCode *oolString = oolCallVM(StringToNumberInfo, lir, (ArgList(), output),
+                                             StoreFloatRegisterTo(tempFloat));
+        if (!oolString)
+            return false;
+        stringEntry = oolString->entry();
+        stringRejoin = oolString->rejoin();
     } else {
-        masm.clampValueToUint8(operand, input, tempFloat, output, &fails);
+        stringEntry = NULL;
+        stringRejoin = NULL;
     }
+
+    Label fails;
+    masm.clampValueToUint8(operand, input,
+                           stringEntry, stringRejoin, oolDouble->entry(),
+                           output, tempFloat, output, &fails);
+
     if (!bailoutFrom(&fails, lir->snapshot()))
         return false;
 

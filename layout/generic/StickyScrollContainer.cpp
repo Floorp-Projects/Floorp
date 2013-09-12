@@ -41,13 +41,17 @@ StickyScrollContainer::~StickyScrollContainer()
 
 // static
 StickyScrollContainer*
-StickyScrollContainer::StickyScrollContainerForFrame(nsIFrame* aFrame)
+StickyScrollContainer::GetStickyScrollContainerForFrame(nsIFrame* aFrame)
 {
   nsIScrollableFrame* scrollFrame =
     nsLayoutUtils::GetNearestScrollableFrame(aFrame->GetParent(),
       nsLayoutUtils::SCROLLABLE_SAME_DOC |
       nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
-  NS_ASSERTION(scrollFrame, "Need a scrolling container");
+  if (!scrollFrame) {
+    // We might not find any, for instance in the case of
+    // <html style="position: fixed">
+    return nullptr;
+  }
   FrameProperties props = static_cast<nsIFrame*>(do_QueryFrame(scrollFrame))->
     Properties();
   StickyScrollContainer* s = static_cast<StickyScrollContainer*>
@@ -90,8 +94,7 @@ StickyScrollContainer::ComputeStickyOffsets(nsIFrame* aFrame)
       nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
 
   if (!scrollableFrame) {
-    // Not sure how this would happen, but bail if it does.
-    NS_ERROR("Couldn't find a scrollable frame");
+    // Bail.
     return;
   }
 
@@ -113,11 +116,11 @@ StickyScrollContainer::ComputeStickyOffsets(nsIFrame* aFrame)
   // Store the offset
   FrameProperties props = aFrame->Properties();
   nsMargin* offsets = static_cast<nsMargin*>
-    (props.Get(nsIFrame::ComputedStickyOffsetProperty()));
+    (props.Get(nsIFrame::ComputedOffsetProperty()));
   if (offsets) {
     *offsets = computedOffsets;
   } else {
-    props.Set(nsIFrame::ComputedStickyOffsetProperty(),
+    props.Set(nsIFrame::ComputedOffsetProperty(),
               new nsMargin(computedOffsets));
   }
 }
@@ -130,7 +133,7 @@ StickyScrollContainer::ComputeStickyLimits(nsIFrame* aFrame, nsRect* aStick,
   aContain->SetRect(nscoord_MIN/2, nscoord_MIN/2, nscoord_MAX, nscoord_MAX);
 
   const nsMargin* computedOffsets = static_cast<nsMargin*>(
-    aFrame->Properties().Get(nsIFrame::ComputedStickyOffsetProperty()));
+    aFrame->Properties().Get(nsIFrame::ComputedOffsetProperty()));
   if (!computedOffsets) {
     // We haven't reflowed the scroll frame yet, so offsets haven't been
     // computed. Bail.

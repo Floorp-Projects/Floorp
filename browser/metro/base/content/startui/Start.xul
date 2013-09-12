@@ -28,7 +28,9 @@
 <html:html id="startui-page"
            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
            xmlns:html="http://www.w3.org/1999/xhtml">
-  <html:body id="startui-body" onload="StartUI.init();" onunload="StartUI.uninit();">
+
+  <html:body id="startui-body" class="meta"
+             onload="StartUI.init();" onunload="StartUI.uninit();">
 
   <script type="application/javascript" src="chrome://browser/content/startui-scripts.js"/>
 
@@ -38,7 +40,8 @@
     <broadcaster id="bcast_windowState" viewstate=""/>
   </broadcasterset>
 
-  <hbox id="start-container" observes="bcast_windowState">
+  <hbox id="start-container" class="meta-section-container"
+        observes="bcast_windowState">
   <!-- the start-container element has a max-height set in StartUI.js -->
       <vbox id="start-topsites" class="meta-section" expanded="true">
         <label class="meta-section-title wide-title" value="&topSitesHeader.label;"/>

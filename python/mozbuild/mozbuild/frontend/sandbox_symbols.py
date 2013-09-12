@@ -239,6 +239,12 @@ VARIABLES = {
         """Whether profile-guided optimization is enabled in this directory.
         """),
 
+    'OS_LIBS': (list, list, [],
+        """System link libraries.
+
+        This variable contains a list of system libaries to link against.
+        """),
+
     'SDK_LIBRARY': (StrictOrderingOnAppendList, list, [],
         """Elements of the distributed SDK.
 

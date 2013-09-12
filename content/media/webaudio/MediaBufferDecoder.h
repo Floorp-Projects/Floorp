@@ -80,8 +80,6 @@ public:
   bool SyncDecodeMedia(const char* aContentType, uint8_t* aBuffer,
                        uint32_t aLength, WebAudioDecodeJob& aDecodeJob);
 
-  void Shutdown();
-
 private:
   bool EnsureThreadPoolInitialized();
 

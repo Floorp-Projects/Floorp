@@ -15,7 +15,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
 
-class nsIAccessibleTraversalRule;
 class RuleCache;
 
 /**

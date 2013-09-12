@@ -916,8 +916,6 @@ nsInlineFrame::AccessibleType()
     return a11y::eHTMLButtonType;
   if (tagAtom == nsGkAtoms::img)  // Create accessible for broken <img>
     return a11y::eHyperTextType;
-  if (tagAtom == nsGkAtoms::label)  // Creat accessible for <label>
-    return a11y::eHTMLLabelType;
 
   return a11y::eNoType;
 }
