@@ -118,7 +118,6 @@ extern nsresult nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **)
 #include "base/message_loop.h"
 
 #include "mozilla/ipc/BrowserProcessSubThread.h"
-#include "mozilla/MapsMemoryReporter.h"
 #include "mozilla/AvailableMemoryTracker.h"
 #include "mozilla/ClearOnShutdown.h"
 
@@ -573,8 +572,6 @@ NS_InitXPCOM2(nsIServiceManager* *result,
 #ifdef XP_WIN
     CreateAnonTempFileRemover();
 #endif
-
-    mozilla::MapsMemoryReporter::Init();
 
     // The memory reporter manager is up and running -- register a reporter for
     // ICU's memory usage.
