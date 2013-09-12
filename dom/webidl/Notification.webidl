@@ -31,22 +31,22 @@ interface Notification : EventTarget {
   [SetterThrows]
   attribute EventHandler onclose;
 
-  [Constant]
+  [Pure]
   readonly attribute DOMString title;
 
-  [Constant]
+  [Pure]
   readonly attribute NotificationDirection dir;
 
-  [Constant]
+  [Pure]
   readonly attribute DOMString? lang;
 
-  [Constant]
+  [Pure]
   readonly attribute DOMString? body;
 
   [Constant]
   readonly attribute DOMString? tag;
 
-  [Constant]
+  [Pure]
   readonly attribute DOMString? icon;
 
   void close();
