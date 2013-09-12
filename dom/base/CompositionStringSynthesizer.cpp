@@ -117,13 +117,19 @@ CompositionStringSynthesizer::DispatchEvent(bool* aDefaultPrevented)
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  if (!mClauses.IsEmpty()) {
-    NS_ENSURE_TRUE(mClauses[mClauses.Length()-1].mEndOffset == mString.Length(),
-                   NS_ERROR_ILLEGAL_VALUE);
+  if (!mClauses.IsEmpty() &&
+      mClauses[mClauses.Length()-1].mEndOffset != mString.Length()) {
+    NS_WARNING("Sum of length of the all clauses must be same as the string "
+               "length");
+    ClearInternal();
+    return NS_ERROR_ILLEGAL_VALUE;
   }
   if (mCaret.mRangeType == NS_TEXTRANGE_CARETPOSITION) {
-    NS_ENSURE_TRUE(mCaret.mEndOffset <= mString.Length(),
-                   NS_ERROR_ILLEGAL_VALUE);
+    if (mCaret.mEndOffset > mString.Length()) {
+      NS_WARNING("Caret position is out of the composition string");
+      ClearInternal();
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
     mClauses.AppendElement(mCaret);
   }
 
