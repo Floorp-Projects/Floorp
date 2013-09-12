@@ -9,6 +9,8 @@ import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
+import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
+import org.mozilla.gecko.favicons.LoadFaviconTask;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
@@ -706,7 +708,7 @@ abstract public class BrowserApp extends GeckoApp
                 }
 
                 Favicons.loadFavicon(url, tab.getFaviconURL(), 0,
-                new Favicons.OnFaviconLoadedListener() {
+                new OnFaviconLoadedListener() {
                     @Override
                     public void onFaviconLoaded(String url, Bitmap favicon) {
                         GeckoAppShell.createShortcut(title, url, url, favicon == null ? null : favicon, "");
@@ -1332,9 +1334,9 @@ abstract public class BrowserApp extends GeckoApp
     private void loadFavicon(final Tab tab) {
         maybeCancelFaviconLoad(tab);
 
-        int flags = Favicons.FLAG_SCALE | ( (tab.isPrivate() || tab.getErrorType() != Tab.ErrorType.NONE) ? 0 : Favicons.FLAG_PERSIST);
+        int flags = LoadFaviconTask.FLAG_SCALE | ( (tab.isPrivate() || tab.getErrorType() != Tab.ErrorType.NONE) ? 0 : LoadFaviconTask.FLAG_PERSIST);
         long id = Favicons.loadFavicon(tab.getURL(), tab.getFaviconURL(), flags,
-                        new Favicons.OnFaviconLoadedListener() {
+                        new OnFaviconLoadedListener() {
 
             @Override
             public void onFaviconLoaded(String pageUrl, Bitmap favicon) {
