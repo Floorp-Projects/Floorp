@@ -2191,8 +2191,8 @@ public:
      : public nsXPCOMCycleCollectionParticipant
     {
       NS_DECL_CYCLE_COLLECTION_CLASS_BODY(XPCWrappedNative, XPCWrappedNative)
-      NS_IMETHOD Root(void *p) { return NS_OK; }
-      NS_IMETHOD Unroot(void *p) { return NS_OK; }
+      NS_IMETHOD_(void) Root(void *p) { }
+      NS_IMETHOD_(void) Unroot(void *p) { }
       NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(XPCWrappedNative)
     };
     NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(XPCWrappedNative);
