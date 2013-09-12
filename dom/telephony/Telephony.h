@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_telephony_telephony_h__
 #define mozilla_dom_telephony_telephony_h__
 
-#include "TelephonyCommon.h"
+#include "mozilla/dom/telephony/TelephonyCommon.h"
 
 #include "nsITelephonyProvider.h"
 
@@ -19,11 +19,8 @@ class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {
-class TelephonyCallOrTelephonyCallGroupReturnValue;
-}
-}
 
-BEGIN_TELEPHONY_NAMESPACE
+class TelephonyCallOrTelephonyCallGroupReturnValue;
 
 class Telephony MOZ_FINAL : public nsDOMEventTargetHelper
 {
@@ -181,6 +178,7 @@ private:
   Shutdown();
 };
 
-END_TELEPHONY_NAMESPACE
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_telephony_telephony_h__

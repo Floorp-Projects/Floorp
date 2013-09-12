@@ -120,7 +120,8 @@ class TableTicker: public Sampler {
                                                aInfo->Stack(),
                                                aInfo->ThreadId(),
                                                aInfo->GetPlatformData(),
-                                               aInfo->IsMainThread());
+                                               aInfo->IsMainThread(),
+                                               aInfo->StackTop());
     profile->addTag(ProfileEntry('m', "Start"));
 
     aInfo->SetProfile(profile);

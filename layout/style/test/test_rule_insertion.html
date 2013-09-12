@@ -82,11 +82,12 @@ var innerRuleInfo = [
      if (aException) {
        return false;
      }
-     if (navigator.oscpu.match(/Linux/)) {
+     if (navigator.oscpu.match(/Linux/) ||
+         navigator.oscpu.match(/Android/) ||
+         SpecialPowers.Services.appinfo.name == "B2G") {
        return true;
     }
-    return Math.abs(width - (aApplied ? monospaceWidth : serifWidth)) <= 1 ||
-           navigator.oscpu.match(/Android/); // bug 769194 prevents local()
+    return Math.abs(width - (aApplied ? monospaceWidth : serifWidth)) <= 1; // bug 769194 prevents local()
                                              // fonts working on Android
    }],
   ["@charset 'UTF-8';",

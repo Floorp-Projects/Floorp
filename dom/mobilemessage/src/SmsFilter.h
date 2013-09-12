@@ -8,7 +8,6 @@
 
 #include "mozilla/dom/mobilemessage/SmsTypes.h"
 #include "nsIDOMSmsFilter.h"
-#include "Types.h"
 #include "mozilla/Attributes.h"
 
 namespace mozilla {

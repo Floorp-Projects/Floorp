@@ -93,6 +93,7 @@ this.AppsUtils = {
       installerIsBrowser: !!aApp.installerIsBrowser,
       storeId: aApp.storeId || "",
       storeVersion: aApp.storeVersion || 0,
+      role: aApp.role || "",
       redirects: aApp.redirects
     };
   },
@@ -320,6 +321,10 @@ this.AppsUtils = {
       }
     }
 
+    // The 'role' field must be a string.
+    if (aManifest.role && (typeof aManifest.role !== "string")) {
+      return false;
+    }
     return true;
   },
 
@@ -639,5 +644,9 @@ ManifestHelper.prototype = {
   fullPackagePath: function() {
     let packagePath = this._localeProp("package_path");
     return this._origin.resolve(packagePath ? packagePath : "");
+  },
+
+  get role() {
+    return this._manifest.role || "";
   }
 }
