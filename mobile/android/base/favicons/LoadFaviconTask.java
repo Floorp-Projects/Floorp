@@ -26,6 +26,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Class representing the asynchronous task to load a Favicon which is not currently in the in-memory
@@ -39,8 +40,8 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
     public static final int FLAG_PERSIST = 1;
     public static final int FLAG_SCALE = 2;
 
-    private long mNextFaviconLoadId;
-    private long mId;
+    private static AtomicInteger mNextFaviconLoadId = new AtomicInteger(0);
+    private int mId;
     private String mPageUrl;
     private String mFaviconUrl;
     private OnFaviconLoadedListener mListener;
@@ -53,9 +54,7 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
                            OnFaviconLoadedListener aListener) {
         super(backgroundThreadHandler);
 
-        synchronized(this) {
-            mId = ++mNextFaviconLoadId;
-        }
+        mId = mNextFaviconLoadId.incrementAndGet();
 
         mPageUrl = aPageUrl;
         mFaviconUrl = aFaviconUrl;
@@ -201,7 +200,7 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
         // favicon load is cancelled.
     }
 
-    long getId() {
+    int getId() {
         return mId;
     }
 
