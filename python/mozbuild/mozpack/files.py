@@ -5,9 +5,9 @@
 import errno
 import os
 import platform
-import re
 import shutil
 import stat
+import subprocess
 import uuid
 import mozbuild.makeutil as makeutil
 from mozbuild.preprocessor import Preprocessor
@@ -28,7 +28,11 @@ from mozpack.errors import (
 from mozpack.mozjar import JarReader
 import mozpack.path
 from collections import OrderedDict
-from tempfile import mkstemp
+from jsmin import JavascriptMinify
+from tempfile import (
+    mkstemp,
+    NamedTemporaryFile,
+)
 
 
 class Dest(object):
@@ -594,15 +598,76 @@ class MinifiedProperties(BaseFile):
                                if not l.startswith('#')))
 
 
+class MinifiedJavaScript(BaseFile):
+    '''
+    File class for minifying JavaScript files.
+    '''
+    def __init__(self, file, verify_command=None):
+        assert isinstance(file, BaseFile)
+        self._file = file
+        self._verify_command = verify_command
+
+    def open(self):
+        output = BytesIO()
+        minify = JavascriptMinify(self._file.open(), output)
+        minify.minify()
+        output.seek(0)
+
+        if not self._verify_command:
+            return output
+
+        input_source = self._file.open().read()
+        output_source = output.getvalue()
+
+        with NamedTemporaryFile() as fh1, NamedTemporaryFile() as fh2:
+            fh1.write(input_source)
+            fh2.write(output_source)
+            fh1.flush()
+            fh2.flush()
+
+            try:
+                args = list(self._verify_command)
+                args.extend([fh1.name, fh2.name])
+                subprocess.check_output(args, stderr=subprocess.STDOUT)
+            except subprocess.CalledProcessError as e:
+                errors.warn('JS minification verification failed for %s:' %
+                    (getattr(self._file, 'path', '<unknown>')))
+                # Prefix each line with "Warning:" so mozharness doesn't
+                # think these error messages are real errors.
+                for line in e.output.splitlines():
+                    errors.warn(line)
+
+                return self._file.open()
+
+        return output
+
+
 class BaseFinder(object):
-    def __init__(self, base, minify=False):
+    def __init__(self, base, minify=False, minify_js=False,
+        minify_js_verify_command=None):
         '''
-        Initializes the instance with a reference base directory. The
-        optional minify argument specifies whether file types supporting
-        minification (currently only "*.properties") should be minified.
+        Initializes the instance with a reference base directory.
+
+        The optional minify argument specifies whether minification of code
+        should occur. minify_js is an additional option to control minification
+        of JavaScript. It requires minify to be True.
+
+        minify_js_verify_command can be used to optionally verify the results
+        of JavaScript minification. If defined, it is expected to be an iterable
+        that will constitute the first arguments to a called process which will
+        receive the filenames of the original and minified JavaScript files.
+        The invoked process can then verify the results. If minification is
+        rejected, the process exits with a non-0 exit code and the original
+        JavaScript source is used. An example value for this argument is
+        ('/path/to/js', '/path/to/verify/script.js').
         '''
+        if minify_js and not minify:
+            raise ValueError('minify_js requires minify.')
+
         self.base = base
         self._minify = minify
+        self._minify_js = minify_js
+        self._minify_js_verify_command = minify_js_verify_command
 
     def find(self, pattern):
         '''
@@ -644,11 +709,16 @@ class BaseFinder(object):
         instance (file), according to the file type (determined by the given
         path), if the FileFinder was created with minification enabled.
         Otherwise, just return the given BaseFile instance.
-        Currently, only "*.properties" files are handled.
         '''
-        if self._minify and not isinstance(file, ExecutableFile):
-            if path.endswith('.properties'):
-                return MinifiedProperties(file)
+        if not self._minify or isinstance(file, ExecutableFile):
+            return file
+
+        if path.endswith('.properties'):
+            return MinifiedProperties(file)
+
+        if self._minify_js and path.endswith(('.js', '.jsm')):
+            return MinifiedJavaScript(file, self._minify_js_verify_command)
+
         return file
 
 
