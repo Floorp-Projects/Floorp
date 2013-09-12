@@ -18,8 +18,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 
+const DEBUG = false;
 function debug(aMsg) {
-  // dump("-- InterAppMessagePort: " + Date.now() + ": " + aMsg + "\n");
+  dump("-- InterAppMessagePort: " + Date.now() + ": " + aMsg + "\n");
 }
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
@@ -56,7 +57,7 @@ InterAppMessageEvent.prototype = {
 
 
 function InterAppMessagePort() {
-  debug("InterAppMessagePort()");
+  if (DEBUG) debug("InterAppMessagePort()");
 };
 
 InterAppMessagePort.prototype = {
@@ -73,7 +74,7 @@ InterAppMessagePort.prototype = {
 
   // Ci.nsIDOMGlobalPropertyInitializer implementation.
   init: function(aWindow) {
-    debug("Calling init().");
+    if (DEBUG) debug("Calling init().");
 
     this.initDOMRequestHelper(aWindow, kMessages);
 
@@ -87,14 +88,14 @@ InterAppMessagePort.prototype = {
   },
 
   // WebIDL implementation for constructor.
-  __init: function(aKeyword, aMessagePortID, aIsPublisher) {
-    debug("Calling __init(): aKeyword: " + aKeyword +
-          " aMessagePortID: " + aMessagePortID +
-          " aIsPublisher: " + aIsPublisher);
+  __init: function(aKeyword, aMessagePortID) {
+    if (DEBUG) {
+      debug("Calling __init(): aKeyword: " + aKeyword +
+            " aMessagePortID: " + aMessagePortID);
+    }
 
     this._keyword = aKeyword;
     this._messagePortID = aMessagePortID;
-    this._isPublisher = aIsPublisher;
 
     cpmm.sendAsyncMessage("InterAppMessagePort:Register",
                           { messagePortID: this._messagePortID,
@@ -104,12 +105,12 @@ InterAppMessagePort.prototype = {
 
   // DOMRequestIpcHelper implementation.
   uninit: function() {
-    debug("Calling uninit().");
+    if (DEBUG) debug("Calling uninit().");
 
     // When the message port is uninitialized, we need to disentangle the
     // coupling ports, as if the close() method had been called.
     if (this._closed) {
-      debug("close() has been called. Don't need to close again.");
+      if (DEBUG) debug("close() has been called. Don't need to close again.");
       return;
     }
 
@@ -117,10 +118,10 @@ InterAppMessagePort.prototype = {
   },
 
   postMessage: function(aMessage) {
-    debug("Calling postMessage().");
+    if (DEBUG) debug("Calling postMessage().");
 
     if (this._closed) {
-      debug("close() has been called. Cannot post message.");
+      if (DEBUG) debug("close() has been called. Cannot post message.");
       return;
     }
 
@@ -132,15 +133,15 @@ InterAppMessagePort.prototype = {
 
   start: function() {
     // Begin dispatching messages received on the port.
-    debug("Calling start().");
+    if (DEBUG) debug("Calling start().");
 
     if (this._closed) {
-      debug("close() has been called. Cannot call start().");
+      if (DEBUG) debug("close() has been called. Cannot call start().");
       return;
     }
 
     if (this._started) {
-      debug("start() has been called. Don't need to start again.");
+      if (DEBUG) debug("start() has been called. Don't need to start again.");
       return;
     }
 
@@ -155,10 +156,10 @@ InterAppMessagePort.prototype = {
 
   close: function() {
     // Disconnecting the port, so that it is no longer active.
-    debug("Calling close().");
+    if (DEBUG) debug("Calling close().");
 
     if (this._closed) {
-      debug("close() has been called. Don't need to close again.");
+      if (DEBUG) debug("close() has been called. Don't need to close again.");
       return;
     }
 
@@ -173,13 +174,13 @@ InterAppMessagePort.prototype = {
   },
 
   get onmessage() {
-    debug("Getting onmessage handler.");
+    if (DEBUG) debug("Getting onmessage handler.");
 
     return this.__DOM_IMPL__.getEventHandler("onmessage");
   },
 
   set onmessage(aHandler) {
-    debug("Setting onmessage handler.");
+    if (DEBUG) debug("Setting onmessage handler.");
 
     this.__DOM_IMPL__.setEventHandler("onmessage", aHandler);
 
@@ -187,7 +188,7 @@ InterAppMessagePort.prototype = {
     // the port's message queue must be enabled, as if the start() method had
     // been called.
     if (this._started) {
-      debug("start() has been called. Don't need to start again.");
+      if (DEBUG) debug("start() has been called. Don't need to start again.");
       return;
     }
 
@@ -196,7 +197,10 @@ InterAppMessagePort.prototype = {
 
   _dispatchMessage: function _dispatchMessage(aMessage) {
     let wrappedMessage = ObjectWrapper.wrap(aMessage, this._window);
-    debug("_dispatchMessage: wrappedMessage: " + JSON.stringify(wrappedMessage));
+    if (DEBUG) {
+      debug("_dispatchMessage: wrappedMessage: " +
+            JSON.stringify(wrappedMessage));
+    }
 
     let event = new this._window
                     .MozInterAppMessageEvent("message",
@@ -205,25 +209,25 @@ InterAppMessagePort.prototype = {
   },
 
   receiveMessage: function(aMessage) {
-    debug("receiveMessage: name: " + aMessage.name);
+    if (DEBUG) debug("receiveMessage: name: " + aMessage.name);
 
     let message = aMessage.json;
     if (message.manifestURL != this._manifestURL ||
         message.pageURL != this._pageURL ||
         message.messagePortID != this._messagePortID) {
-      debug("The message doesn't belong to this page. Returning.");
+      if (DEBUG) debug("The message doesn't belong to this page. Returning.");
       return;
     }
 
     switch (aMessage.name) {
       case "InterAppMessagePort:OnMessage":
         if (this._closed) {
-          debug("close() has been called. Drop the message.");
+          if (DEBUG) debug("close() has been called. Drop the message.");
           return;
         }
 
         if (!this._started) {
-          debug("Not yet called start(). Queue up the message.");
+          if (DEBUG) debug("Not yet called start(). Queue up the message.");
           this._messageQueue.push(message.message);
           return;
         }
@@ -232,7 +236,7 @@ InterAppMessagePort.prototype = {
         break;
 
       default:
-        debug("Error! Shouldn't fall into this case.");
+        if (DEBUG) debug("Error! Shouldn't fall into this case.");
         break;
     }
   }
