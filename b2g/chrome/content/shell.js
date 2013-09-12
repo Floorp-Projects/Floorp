@@ -1135,6 +1135,9 @@ window.addEventListener('ContentStart', function cr_onContentStart() {
 });
 
 window.addEventListener('ContentStart', function update_onContentStart() {
+  Cu.import('resource://gre/modules/WebappsUpdater.jsm');
+  WebappsUpdater.handleContentStart(shell);
+
   let promptCc = Cc["@mozilla.org/updates/update-prompt;1"];
   if (!promptCc) {
     return;

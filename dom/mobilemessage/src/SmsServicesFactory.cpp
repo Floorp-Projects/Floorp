@@ -5,11 +5,17 @@
 
 #include "SmsServicesFactory.h"
 #include "nsXULAppAPI.h"
-#include "SmsService.h"
-#include "SmsIPCService.h"
-#ifndef MOZ_B2G_RIL
-#include "MobileMessageDatabaseService.h"
-#include "MmsService.h"
+#include "ipc/SmsIPCService.h"
+#ifdef MOZ_WIDGET_ANDROID
+#include "android/MobileMessageDatabaseService.h"
+#include "android/SmsService.h"
+#include "android/MmsService.h"
+#elif defined(MOZ_B2G_RIL)
+#include "gonk/SmsService.h"
+#else
+#include "fallback/MmsService.h"
+#include "fallback/MobileMessageDatabaseService.h"
+#include "fallback/SmsService.h"
 #endif
 #include "nsServiceManagerUtils.h"
 

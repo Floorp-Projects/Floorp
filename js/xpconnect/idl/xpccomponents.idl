@@ -120,7 +120,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(3b3b5adc-dce0-4d4e-a04e-06b2c8b5acfe)]
+[scriptable, uuid(c9ccec7a-726c-4479-9438-6f51f6ef4170)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -156,6 +156,32 @@ interface nsIXPCComponents_Utils : nsISupports
                         [optional] in jsval filename,
                         [optional] in long lineNo);
 
+    /*
+     * getSandboxMetadata is designed to be called from JavaScript only.
+     *
+     * getSandboxMetadata retrieves the metadata associated with
+     * a sandbox object. It will return undefined if there
+     * is no metadata attached to the sandbox.
+     *
+     * var s = C.u.Sandbox(..., { metadata: "metadata" });
+     * var metadata = C.u.getSandboxMetadata(s);
+     */
+    [implicit_jscontext]
+    jsval getSandboxMetadata(in jsval sandbox);
+
+    /*
+     * setSandboxMetadata is designed to be called from JavaScript only.
+     *
+     * setSandboxMetadata sets the metadata associated with
+     * a sandbox object.
+     *
+     * Note that the metadata object will be copied before being used.
+     * The copy will be performed using the structured clone algorithm.
+     * Note that this algorithm does not support reflectors and
+     * it will throw if it encounters them.
+     */
+    [implicit_jscontext]
+    void setSandboxMetadata(in jsval sandbox, in jsval metadata);
 
     /*
      * import is designed to be called from JavaScript only.

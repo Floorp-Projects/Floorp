@@ -1251,7 +1251,6 @@ MetroWidget::CSSIntPointToLayoutDeviceIntPoint(const CSSIntPoint &aCSSPoint)
 
 float MetroWidget::GetDPI()
 {
-  LogFunction();
   if (!mView) {
     return 96.0;
   }

@@ -50,7 +50,11 @@
 }
 
 .ruleview-header {
-  vertical-align:middle;
+  vertical-align: middle;
   height: 1.5em;
   line-height: 1.5em;
+}
+
+.ruleview-header.ruleview-expandable-header {
+  cursor: pointer;
 }

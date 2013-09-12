@@ -427,8 +427,11 @@ TabChild::Observe(nsISupports *aSubject,
         mLastMetrics.mZoom = mLastMetrics.CalculateIntrinsicScale();
         // We use ScreenToLayerScale(1) below in order to turn the
         // async zoom amount into the gecko zoom amount.
-        mLastMetrics.mResolution =
+        mLastMetrics.mCumulativeResolution =
           mLastMetrics.mZoom / mLastMetrics.mDevPixelsPerCSSPixel * ScreenToLayerScale(1);
+        // This is the root layer, so the cumulative resolution is the same
+        // as the resolution.
+        mLastMetrics.mResolution = mLastMetrics.mCumulativeResolution / LayoutDeviceToParentLayerScale(1);
         mLastMetrics.mScrollOffset = CSSPoint(0, 0);
 
         utils->SetResolution(mLastMetrics.mResolution.scale,
@@ -692,7 +695,10 @@ TabChild::HandlePossibleViewportChange()
     // new CSS viewport, so we know that there's no velocity, acceleration, and
     // we have no idea how long painting will take.
     metrics, gfx::Point(0.0f, 0.0f), gfx::Point(0.0f, 0.0f), 0.0);
-  metrics.mResolution = metrics.mZoom / metrics.mDevPixelsPerCSSPixel * ScreenToLayerScale(1);
+  metrics.mCumulativeResolution = metrics.mZoom / metrics.mDevPixelsPerCSSPixel * ScreenToLayerScale(1);
+  // This is the root layer, so the cumulative resolution is the same
+  // as the resolution.
+  metrics.mResolution = metrics.mCumulativeResolution / LayoutDeviceToParentLayerScale(1);
   utils->SetResolution(metrics.mResolution.scale, metrics.mResolution.scale);
 
   // Force a repaint with these metrics. This, among other things, sets the
@@ -1616,8 +1622,10 @@ TabChild::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
     }
 
     // set the resolution
-    LayoutDeviceToLayerScale resolution = aFrameMetrics.mZoom
-      / aFrameMetrics.mDevPixelsPerCSSPixel * ScreenToLayerScale(1);
+    ParentLayerToLayerScale resolution = aFrameMetrics.mZoom
+                                       / aFrameMetrics.mDevPixelsPerCSSPixel
+                                       / aFrameMetrics.GetParentResolution()
+                                       * ScreenToLayerScale(1);
     utils->SetResolution(resolution.scale, resolution.scale);
 
     // and set the display port

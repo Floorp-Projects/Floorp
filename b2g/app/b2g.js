@@ -523,6 +523,9 @@ pref("app.update.log", true);
 pref("shutdown.watchdog.timeoutSecs", -1);
 #endif
 
+// Check daily for apps updates.
+pref("webapps.update.interval", 86400);
+
 // Extensions preferences
 pref("extensions.update.enabled", false);
 pref("extensions.getAddons.cache.enabled", false);
@@ -605,15 +608,15 @@ pref("hal.processPriorityManager.gonk.FOREGROUND.OomScoreAdjust", 134);
 pref("hal.processPriorityManager.gonk.FOREGROUND.KillUnderMB", 6);
 pref("hal.processPriorityManager.gonk.FOREGROUND.Nice", 1);
 
-pref("hal.processPriorityManager.gonk.BACKGROUND_PERCEIVABLE.OomScoreAdjust", 200);
+pref("hal.processPriorityManager.gonk.BACKGROUND_PERCEIVABLE.OomScoreAdjust", 400);
 pref("hal.processPriorityManager.gonk.BACKGROUND_PERCEIVABLE.KillUnderMB", 7);
 pref("hal.processPriorityManager.gonk.BACKGROUND_PERCEIVABLE.Nice", 7);
 
-pref("hal.processPriorityManager.gonk.BACKGROUND_HOMESCREEN.OomScoreAdjust", 267);
+pref("hal.processPriorityManager.gonk.BACKGROUND_HOMESCREEN.OomScoreAdjust", 534);
 pref("hal.processPriorityManager.gonk.BACKGROUND_HOMESCREEN.KillUnderMB", 8);
 pref("hal.processPriorityManager.gonk.BACKGROUND_HOMESCREEN.Nice", 18);
 
-pref("hal.processPriorityManager.gonk.BACKGROUND.OomScoreAdjust", 400);
+pref("hal.processPriorityManager.gonk.BACKGROUND.OomScoreAdjust", 667);
 pref("hal.processPriorityManager.gonk.BACKGROUND.KillUnderMB", 20);
 pref("hal.processPriorityManager.gonk.BACKGROUND.Nice", 18);
 

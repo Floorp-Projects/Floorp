@@ -359,7 +359,7 @@ bool Sampler::RegisterCurrentThread(const char* aName,
   mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
 
   ThreadInfo* info = new ThreadInfo(aName, gettid(),
-    aIsMainThread, aPseudoStack);
+    aIsMainThread, aPseudoStack, stackTop);
 
   if (sActiveSampler) {
     sActiveSampler->RegisterThread(info);

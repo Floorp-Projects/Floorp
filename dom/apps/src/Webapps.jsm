@@ -190,6 +190,11 @@ this.DOMApplicationRegistry = {
               this.webapps[id].storeVersion = 0;
             }
 
+            // Default role to "".
+            if (this.webapps[id].role === undefined) {
+              this.webapps[id].role = "";
+            }
+
             // At startup we can't be downloading, and the $TMP directory
             // will be empty so we can't just apply a staged update.
             app.downloading = false;
@@ -242,13 +247,14 @@ this.DOMApplicationRegistry = {
     if (supportSystemMessages()) {
       this._processManifestForIds(ids, aRunUpdate);
     } else {
-      // Read the CSPs. If MOZ_SYS_MSG is defined this is done on
+      // Read the CSPs and roles. If MOZ_SYS_MSG is defined this is done on
       // _processManifestForIds so as to not reading the manifests
       // twice
       this._readManifests(ids, (function readCSPs(aResults) {
         aResults.forEach(function registerManifest(aResult) {
           let app = this.webapps[aResult.id];
           app.csp = aResult.manifest.csp || "";
+          app.role = aResult.manifest.role || "";
           if (app.appStatus >= Ci.nsIPrincipal.APP_STATUS_PRIVILEGED) {
             app.redirects = this.sanitizeRedirects(aResult.redirects);
           }
@@ -734,6 +740,7 @@ this.DOMApplicationRegistry = {
         let manifest = aResult.manifest;
         app.name = manifest.name;
         app.csp = manifest.csp || "";
+        app.role = manifest.role || "";
         if (app.appStatus >= Ci.nsIPrincipal.APP_STATUS_PRIVILEGED) {
           app.redirects = this.sanitizeRedirects(manifest.redirects);
         }
@@ -1345,6 +1352,7 @@ this.DOMApplicationRegistry = {
               if (array.length == CHUNK_SIZE) {
                 readChunk();
               } else {
+                file.close();
                 // We're passing false to get the binary hash and not base64.
                 let hash = hasher.finish(false);
                 // convert the binary hash data to a hex string.
@@ -1477,6 +1485,7 @@ this.DOMApplicationRegistry = {
 
         app.name = manifest.name;
         app.csp = manifest.csp || "";
+        app.role = manifest.role || "";
         app.updateTime = Date.now();
       } else {
         manifest = new ManifestHelper(aOldManifest, app.origin);
@@ -2057,6 +2066,7 @@ this.DOMApplicationRegistry = {
 
     appObject.name = manifest.name;
     appObject.csp = manifest.csp || "";
+    appObject.role = manifest.role || "";
 
     appObject.installerAppId = aData.appId;
     appObject.installerIsBrowser = aData.isBrowser;
@@ -2411,10 +2421,25 @@ this.DOMApplicationRegistry = {
               app.downloadSize = 0;
               app.installState = "installed";
               app.readyToApplyDownload = false;
+              if (app.staged && app.staged.manifestHash) {
+                // If we're here then the manifest has changed but the package
+                // hasn't. Let's clear this, so we don't keep offering
+                // a bogus update to the user
+                app.manifestHash = app.staged.manifestHash;
+                app.etag = app.staged.etag || app.etag;
+                app.staged = {};
+                // Move the staged update manifest to a non staged one.
+                let dirPath = self._getAppDir(id).path;
+
+                // We don't really mind much if this fails.
+                OS.File.move(OS.Path.join(dirPath, "staged-update.webapp"),
+                             OS.Path.join(dirPath, "update.webapp"));
+              }
+
               self.broadcastMessage("Webapps:PackageEvent", {
                                       type: "downloaded",
                                       manifestURL: aApp.manifestURL,
-                                      app: app })
+                                      app: app });
               self.broadcastMessage("Webapps:PackageEvent", {
                                       type: "applied",
                                       manifestURL: aApp.manifestURL,

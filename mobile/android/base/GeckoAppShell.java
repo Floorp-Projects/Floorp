@@ -955,13 +955,12 @@ public class GeckoAppShell
 
     @GeneratableAndroidBridgeTarget(stubName = "GetMimeTypeFromExtensionsWrapper")
     static String getMimeTypeFromExtensions(String aFileExt) {
-        MimeTypeMap mtm = MimeTypeMap.getSingleton();
         StringTokenizer st = new StringTokenizer(aFileExt, ".,; ");
         String type = null;
         String subType = null;
         while (st.hasMoreElements()) {
             String ext = st.nextToken();
-            String mt = mtm.getMimeTypeFromExtension(ext);
+            String mt = getMimeTypeFromExtension(ext);
             if (mt == null)
                 continue;
             int slash = mt.indexOf('/');
@@ -1746,6 +1745,14 @@ public class GeckoAppShell
 
     @GeneratableAndroidBridgeTarget
     public static void scanMedia(String aFile, String aMimeType) {
+        // If the platform didn't give us a mimetype, try to guess one from the filename
+        if (TextUtils.isEmpty(aMimeType)) {
+            int extPosition = aFile.lastIndexOf(".");
+            if (extPosition > 0 && extPosition < aFile.length() - 1) {
+                aMimeType = getMimeTypeFromExtension(aFile.substring(extPosition+1));
+            }
+        }
+
         Context context = getContext();
         GeckoMediaScannerClient.startScan(context, aFile, aMimeType);
     }
@@ -1781,10 +1788,14 @@ public class GeckoAppShell
         }
     }
 
+    private static String getMimeTypeFromExtension(String ext) {
+        final MimeTypeMap mtm = MimeTypeMap.getSingleton();
+        return mtm.getMimeTypeFromExtension(ext);
+    }
+    
     private static Drawable getDrawableForExtension(PackageManager pm, String aExt) {
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        MimeTypeMap mtm = MimeTypeMap.getSingleton();
-        String mimeType = mtm.getMimeTypeFromExtension(aExt);
+        final String mimeType = getMimeTypeFromExtension(aExt);
         if (mimeType != null && mimeType.length() > 0)
             intent.setType(mimeType);
         else

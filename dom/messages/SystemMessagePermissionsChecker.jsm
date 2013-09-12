@@ -37,19 +37,7 @@ this.SystemMessagePermissionsTable = {
   "bluetooth-cancel": {
     "bluetooth": []
   },
-  "bluetooth-pairedstatuschanged": {
-    "bluetooth": []
-  },
-  "bluetooth-a2dp-status-changed": {
-    "bluetooth": []
-  },
-  "bluetooth-hfp-status-changed": {
-    "bluetooth": []
-  },
   "bluetooth-hid-status-changed": {
-    "bluetooth": []
-  },
-  "bluetooth-sco-status-changed": {
     "bluetooth": []
   },
   "bluetooth-pairing-request": {
@@ -98,6 +86,9 @@ this.SystemMessagePermissionsTable = {
   },
   "wappush-received": {
     "wappush": []
+  },
+  "cdma-info-rec-received": {
+    "mobileconnection": []
   },
 };
 

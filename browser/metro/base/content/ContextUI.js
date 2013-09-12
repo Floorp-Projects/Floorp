@@ -20,6 +20,8 @@ var ContextUI = {
 
   init: function init() {
     Elements.browsers.addEventListener('URLChanged', this, true);
+    Elements.browsers.addEventListener("AlertActive", this, true);
+    Elements.browsers.addEventListener("AlertClose", this, true);
     Elements.tabList.addEventListener('TabSelect', this, true);
     Elements.panelUI.addEventListener('ToolPanelShown', this, false);
     Elements.panelUI.addEventListener('ToolPanelHidden', this, false);
@@ -324,6 +326,10 @@ var ContextUI = {
       case "ToolPanelShown":
       case "ToolPanelHidden":
         this.dismiss();
+        break;
+      case "AlertActive":
+      case "AlertClose":
+        ContentAreaObserver.updateContentArea();
         break;
       case "touchstart":
         if (!BrowserUI.isStartTabVisible) {

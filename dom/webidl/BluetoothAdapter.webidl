@@ -106,6 +106,10 @@ interface BluetoothAdapter : EventTarget {
    * device (CoD). If it isn't passed when calling Disconnect, all connected
    * profiles are going to be closed.
    *
+   * Reply success if the connection of any profile is successfully
+   * established/released; reply error if we failed to connect/disconnect all
+   * of the planned profiles.
+   *
    * @param device Remote device
    * @param profile 2-octets service UUID. This is optional.
    */

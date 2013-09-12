@@ -12,6 +12,7 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/WebappsUpdater.jsm");
 
 const VERBOSE = 1;
 let log =
@@ -449,61 +450,6 @@ UpdatePrompt.prototype = {
     }
   },
 
-  appsUpdated: function UP_appsUpdated(aApps) {
-    log("appsUpdated: " + aApps.length + " apps to update");
-    let lock = Services.settings.createLock();
-    lock.set("apps.updateStatus", "check-complete", null);
-    this.sendChromeEvent("apps-update-check", { apps: aApps });
-    this._checkingApps = false;
-  },
-
-  // Trigger apps update check and wait for all to be done before
-  // notifying gaia.
-  onUpdateCheckStart: function UP_onUpdateCheckStart() {
-    log("onUpdateCheckStart (" + this._checkingApps + ")");
-    // Don't start twice.
-    if (this._checkingApps) {
-      return;
-    }
-
-    this._checkingApps = true;
-
-    let self = this;
-
-    let window = Services.wm.getMostRecentWindow("navigator:browser");
-    let all = window.navigator.mozApps.mgmt.getAll();
-
-    all.onsuccess = function() {
-      let appsCount = this.result.length;
-      let appsChecked = 0;
-      let appsToUpdate = [];
-      this.result.forEach(function updateApp(aApp) {
-        let update = aApp.checkForUpdate();
-        update.onsuccess = function() {
-          if (aApp.downloadAvailable) {
-            appsToUpdate.push(aApp.manifestURL);
-          }
-
-          appsChecked += 1;
-          if (appsChecked == appsCount) {
-            self.appsUpdated(appsToUpdate);
-          }
-        }
-        update.onerror = function() {
-          appsChecked += 1;
-          if (appsChecked == appsCount) {
-            self.appsUpdated(appsToUpdate);
-          }
-        }
-      });
-    }
-
-    all.onerror = function() {
-      // Could not get the app list, just notify to update nothing.
-      self.appsUpdated([]);
-    }
-  },
-
   // nsIObserver
 
   observe: function UP_observe(aSubject, aTopic, aData) {
@@ -517,7 +463,7 @@ UpdatePrompt.prototype = {
         Services.obs.removeObserver(this, "quit-application");
         break;
       case "update-check-start":
-        this.onUpdateCheckStart();
+        WebappsUpdater.updateApps();
         break;
     }
   },

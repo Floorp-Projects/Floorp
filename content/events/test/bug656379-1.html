@@ -65,8 +65,7 @@ function isRectContainedInRectFromRegion(rect, region) {
 }
 
 function paintListener(e) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  if (isRectContainedInRectFromRegion(buttonRect(), e.clientRects)) {
+  if (isRectContainedInRectFromRegion(buttonRect(), SpecialPowers.wrap(e).clientRects)) {
     gNeedsPaint = false;
     currentSnapshot = takeSnapshot();
   }

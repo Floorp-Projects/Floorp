@@ -93,10 +93,11 @@ private:
   int8_t mProfilesIndex;
   nsTArray<BluetoothProfileManagerBase*> mProfiles;
 
+  BluetoothProfileControllerCallback mCallback;
   uint32_t mCod;
   nsString mDeviceAddress;
   nsRefPtr<BluetoothReplyRunnable> mRunnable;
-  BluetoothProfileControllerCallback mCallback;
+  bool mSuccess;
 };
 
 END_BLUETOOTH_NAMESPACE
