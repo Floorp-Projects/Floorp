@@ -254,9 +254,9 @@ function run_abstract_class_tests()
   do_check_true(ctypes.CType.prototype.prototype === ctypes.CData.prototype);
 
   // Check that the shared properties and functions on ctypes.CType.prototype throw.
-  do_check_throws(function() { ctypes.CType.prototype.name; }, Error);
-  do_check_throws(function() { ctypes.CType.prototype.size; }, Error);
-  do_check_throws(function() { ctypes.CType.prototype.ptr; }, Error);
+  do_check_throws(function() { ctypes.CType.prototype.name; }, TypeError);
+  do_check_throws(function() { ctypes.CType.prototype.size; }, TypeError);
+  do_check_throws(function() { ctypes.CType.prototype.ptr; }, TypeError);
   do_check_throws(function() { ctypes.CType.prototype.array(); }, Error);
 
 
