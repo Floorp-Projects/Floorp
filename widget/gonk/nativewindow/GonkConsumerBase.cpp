@@ -21,28 +21,20 @@
 
 #define EGL_EGLEXT_PROTOTYPES
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-
 #include <hardware/hardware.h>
 
 #include <gui/IGraphicBufferAlloc.h>
-#include <gui/ISurfaceComposer.h>
-#include <gui/SurfaceComposerClient.h>
-#include <gui/ConsumerBase.h>
-
-#include <private/gui/ComposerService.h>
-
 #include <utils/Log.h>
 #include <utils/String8.h>
-#include <utils/Trace.h>
+
+#include "GonkConsumerBase.h"
 
 // Macros for including the GonkConsumerBase name in log messages
-#define CB_LOGV(x, ...) ALOGV("[%s] "x, mName.string(), ##__VA_ARGS__)
-#define CB_LOGD(x, ...) ALOGD("[%s] "x, mName.string(), ##__VA_ARGS__)
-#define CB_LOGI(x, ...) ALOGI("[%s] "x, mName.string(), ##__VA_ARGS__)
-#define CB_LOGW(x, ...) ALOGW("[%s] "x, mName.string(), ##__VA_ARGS__)
-#define CB_LOGE(x, ...) ALOGE("[%s] "x, mName.string(), ##__VA_ARGS__)
+#define CB_LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__)
+#define CB_LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#define CB_LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define CB_LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+#define CB_LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
 namespace android {
 
@@ -230,11 +222,9 @@ status_t GonkConsumerBase::addReleaseFenceLocked(int slot, const sp<Fence>& fenc
     return OK;
 }
 
-status_t GonkConsumerBase::releaseBufferLocked(int slot, EGLDisplay display,
-       EGLSyncKHR eglFence) {
+status_t GonkConsumerBase::releaseBufferLocked(int slot) {
     CB_LOGV("releaseBufferLocked: slot=%d", slot);
-    status_t err = mBufferQueue->releaseBuffer(slot, display, eglFence,
-            mSlots[slot].mFence);
+    status_t err = mBufferQueue->releaseBuffer(slot, mSlots[slot].mFence);
     if (err == GonkBufferQueue::STALE_BUFFER_SLOT) {
         freeBufferLocked(slot);
     }

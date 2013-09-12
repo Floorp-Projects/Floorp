@@ -22,30 +22,22 @@
 #define GL_GLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-
-#include <gui/BufferQueue.h>
-#include <gui/ISurfaceComposer.h>
-#include <private/gui/ComposerService.h>
-
 #include <utils/Log.h>
-#include <utils/Trace.h>
+
+#include "mozilla/layers/ImageBridgeChild.h"
+
+#include "GonkBufferQueue.h"
 
 // Macros for including the GonkBufferQueue name in log messages
-#define ST_LOGV(x, ...) ALOGV("[%s] "x, mConsumerName.string(), ##__VA_ARGS__)
-#define ST_LOGD(x, ...) ALOGD("[%s] "x, mConsumerName.string(), ##__VA_ARGS__)
-#define ST_LOGI(x, ...) ALOGI("[%s] "x, mConsumerName.string(), ##__VA_ARGS__)
-#define ST_LOGW(x, ...) ALOGW("[%s] "x, mConsumerName.string(), ##__VA_ARGS__)
-#define ST_LOGE(x, ...) ALOGE("[%s] "x, mConsumerName.string(), ##__VA_ARGS__)
+#define ST_LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__)
+#define ST_LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#define ST_LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define ST_LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+#define ST_LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
-#define ATRACE_BUFFER_INDEX(index)                                            \
-    if (ATRACE_ENABLED()) {                                                   \
-        char ___traceBuf[1024];                                               \
-        snprintf(___traceBuf, 1024, "%s: %d", mConsumerName.string(),         \
-                (index));                                                     \
-        android::ScopedTrace ___bufTracer(ATRACE_TAG, ___traceBuf);           \
-    }
+#define ATRACE_BUFFER_INDEX(index)
+
+using namespace mozilla::layers;
 
 namespace android {
 
@@ -71,7 +63,7 @@ GonkBufferQueue::GonkBufferQueue(bool allowSynchronousMode,
     mMaxAcquiredBufferCount(1),
     mDefaultMaxBufferCount(2),
     mOverrideMaxBufferCount(0),
-    mSynchronousMode(false),
+    mSynchronousMode(true), // GonkBufferQueue always works in sync mode.
     mAllowSynchronousMode(allowSynchronousMode),
     mConnectedApi(NO_CONNECTED_API),
     mAbandoned(false),
@@ -79,21 +71,13 @@ GonkBufferQueue::GonkBufferQueue(bool allowSynchronousMode,
     mBufferHasBeenQueued(false),
     mDefaultBufferFormat(PIXEL_FORMAT_RGBA_8888),
     mConsumerUsageBits(0),
-    mTransformHint(0)
+    mTransformHint(0),
+    mGeneration(0)
 {
     // Choose a name using the PID and a process-unique ID.
     mConsumerName = String8::format("unnamed-%d-%d", getpid(), createProcessUniqueId());
 
     ST_LOGV("GonkBufferQueue");
-    if (allocator == NULL) {
-        sp<ISurfaceComposer> composer(ComposerService::getComposerService());
-        mGraphicBufferAlloc = composer->createGraphicBufferAlloc();
-        if (mGraphicBufferAlloc == 0) {
-            ST_LOGE("createGraphicBufferAlloc() failed in GonkBufferQueue()");
-        }
-    } else {
-        mGraphicBufferAlloc = allocator;
-    }
 }
 
 GonkBufferQueue::~GonkBufferQueue() {
@@ -139,10 +123,33 @@ status_t GonkBufferQueue::setTransformHint(uint32_t hint) {
     return NO_ERROR;
 }
 
+int GonkBufferQueue::getGeneration() {
+    return mGeneration;
+}
+
+mozilla::layers::SurfaceDescriptor*
+GonkBufferQueue::getSurfaceDescriptorFromBuffer(ANativeWindowBuffer* buffer)
+{
+    Mutex::Autolock _l(mMutex);
+    if (buffer == NULL) {
+        ST_LOGE("getSlotFromBufferLocked: encountered NULL buffer");
+        return nullptr;
+    }
+
+    for (int i = 0; i < NUM_BUFFER_SLOTS; i++) {
+        if (mSlots[i].mGraphicBuffer != NULL && mSlots[i].mGraphicBuffer->handle == buffer->handle) {
+            return &mSlots[i].mSurfaceDescriptor;
+        }
+    }
+    ST_LOGE("getSlotFromBufferLocked: unknown buffer: %p", buffer->handle);
+    return nullptr;
+}
+
 status_t GonkBufferQueue::setBufferCount(int bufferCount) {
     ST_LOGV("setBufferCount: count=%d", bufferCount);
 
     sp<ConsumerListener> listener;
+    nsAutoTArray<SurfaceDescriptor, NUM_BUFFER_SLOTS> freeList;
     {
         Mutex::Autolock lock(mMutex);
 
@@ -182,12 +189,13 @@ status_t GonkBufferQueue::setBufferCount(int bufferCount) {
         // and will release all of its buffer references.
         //
         // XXX: Should this use drainQueueAndFreeBuffersLocked instead?
-        freeAllBuffersLocked();
+        freeAllBuffersLocked(freeList);
         mOverrideMaxBufferCount = bufferCount;
         mBufferHasBeenQueued = false;
         mDequeueCondition.broadcast();
         listener = mConsumerListener;
     } // scope for lock
+    releaseBufferFreeListUnlocked(freeList);
 
     if (listener != NULL) {
         listener->onBuffersReleased();
@@ -198,7 +206,6 @@ status_t GonkBufferQueue::setBufferCount(int bufferCount) {
 
 int GonkBufferQueue::query(int what, int* outValue)
 {
-    ATRACE_CALL();
     Mutex::Autolock lock(mMutex);
 
     if (mAbandoned) {
@@ -231,7 +238,6 @@ int GonkBufferQueue::query(int what, int* outValue)
 }
 
 status_t GonkBufferQueue::requestBuffer(int slot, sp<GraphicBuffer>* buf) {
-    ATRACE_CALL();
     ST_LOGV("requestBuffer: slot=%d", slot);
     Mutex::Autolock lock(mMutex);
     if (mAbandoned) {
@@ -258,7 +264,6 @@ status_t GonkBufferQueue::requestBuffer(int slot, sp<GraphicBuffer>* buf) {
 
 status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence,
         uint32_t w, uint32_t h, uint32_t format, uint32_t usage) {
-    ATRACE_CALL();
     ST_LOGV("dequeueBuffer: w=%d h=%d fmt=%#x usage=%#x", w, h, format, usage);
 
     if ((w && !h) || (!w && h)) {
@@ -267,11 +272,13 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence,
     }
 
     status_t returnFlags(OK);
-    EGLDisplay dpy = EGL_NO_DISPLAY;
-    EGLSyncKHR eglFence = EGL_NO_SYNC_KHR;
+    uint32_t generation;
+    int buf = INVALID_BUFFER_SLOT;
+    SurfaceDescriptor descOld;
 
     { // Scope for the lock
         Mutex::Autolock lock(mMutex);
+        generation = mGeneration;
 
         if (format == 0) {
             format = mDefaultBufferFormat;
@@ -292,13 +299,13 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence,
 
             // Free up any buffers that are in slots beyond the max buffer
             // count.
-            for (int i = maxBufferCount; i < NUM_BUFFER_SLOTS; i++) {
-                assert(mSlots[i].mBufferState == BufferSlot::FREE);
-                if (mSlots[i].mGraphicBuffer != NULL) {
-                    freeBufferLocked(i);
-                    returnFlags |= IGraphicBufferProducer::RELEASE_ALL_BUFFERS;
-                }
-            }
+            //for (int i = maxBufferCount; i < NUM_BUFFER_SLOTS; i++) {
+            //    assert(mSlots[i].mBufferState == BufferSlot::FREE);
+            //    if (mSlots[i].mGraphicBuffer != NULL) {
+            //        freeBufferLocked(i);
+            //        returnFlags |= IGraphicBufferProducer::RELEASE_ALL_BUFFERS;
+            //    }
+            //}
 
             // look for a free buffer to give to the client
             found = INVALID_BUFFER_SLOT;
@@ -362,10 +369,8 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence,
             return -EBUSY;
         }
 
-        const int buf = found;
+        buf = found;
         *outBuf = found;
-
-        ATRACE_BUFFER_INDEX(buf);
 
         const bool useDefaultSize = !w && !h;
         if (useDefaultSize) {
@@ -386,54 +391,72 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence,
             mSlots[buf].mAcquireCalled = false;
             mSlots[buf].mGraphicBuffer = NULL;
             mSlots[buf].mRequestBufferCalled = false;
-            mSlots[buf].mEglFence = EGL_NO_SYNC_KHR;
             mSlots[buf].mFence = Fence::NO_FENCE;
-            mSlots[buf].mEglDisplay = EGL_NO_DISPLAY;
+            descOld = mSlots[buf].mSurfaceDescriptor;
+            mSlots[buf].mSurfaceDescriptor = SurfaceDescriptor();
 
             returnFlags |= IGraphicBufferProducer::BUFFER_NEEDS_REALLOCATION;
         }
 
-        dpy = mSlots[buf].mEglDisplay;
-        eglFence = mSlots[buf].mEglFence;
         *outFence = mSlots[buf].mFence;
-        mSlots[buf].mEglFence = EGL_NO_SYNC_KHR;
         mSlots[buf].mFence = Fence::NO_FENCE;
     }  // end lock scope
 
+    SurfaceDescriptor desc;
+    ImageBridgeChild* ibc;
+    sp<GraphicBuffer> graphicBuffer;
     if (returnFlags & IGraphicBufferProducer::BUFFER_NEEDS_REALLOCATION) {
+        usage |= GraphicBuffer::USAGE_HW_TEXTURE;
         status_t error;
-        sp<GraphicBuffer> graphicBuffer(
-                mGraphicBufferAlloc->createGraphicBuffer(
-                        w, h, format, usage, &error));
-        if (graphicBuffer == 0) {
-            ST_LOGE("dequeueBuffer: SurfaceComposer::createGraphicBuffer "
-                    "failed");
+        ibc = ImageBridgeChild::GetSingleton();
+        ST_LOGD("dequeueBuffer: about to alloc surface descriptor");
+        ibc->AllocSurfaceDescriptorGralloc(gfxIntSize(w, h),
+                                           format,
+                                           usage,
+                                           &desc);
+        // We can only use a gralloc buffer here.  If we didn't get
+        // one back, something went wrong.
+        ST_LOGD("dequeueBuffer: got surface descriptor");
+        if (SurfaceDescriptor::TSurfaceDescriptorGralloc != desc.type()) {
+            MOZ_ASSERT(SurfaceDescriptor::T__None == desc.type());
+            ST_LOGE("dequeueBuffer: failed to alloc gralloc buffer");
+            return -ENOMEM;
+        }
+        graphicBuffer = GrallocBufferActor::GetFrom(desc.get_SurfaceDescriptorGralloc());
+        error = graphicBuffer->initCheck();
+        if (error != NO_ERROR) {
+            ST_LOGE("dequeueBuffer: createGraphicBuffer failed with error %d", error);
             return error;
         }
 
+        bool tooOld = false;
         { // Scope for the lock
             Mutex::Autolock lock(mMutex);
 
             if (mAbandoned) {
-                ST_LOGE("dequeueBuffer: GonkBufferQueue has been abandoned!");
+                ST_LOGE("dequeueBuffer: SurfaceTexture has been abandoned!");
                 return NO_INIT;
             }
 
-            mSlots[*outBuf].mGraphicBuffer = graphicBuffer;
+            if (generation == mGeneration) {
+                mSlots[buf].mGraphicBuffer = graphicBuffer;
+                mSlots[buf].mSurfaceDescriptor = desc;
+                mSlots[buf].mSurfaceDescriptor.get_SurfaceDescriptorGralloc().external() = true;
+                ST_LOGD("dequeueBuffer: returning slot=%d buf=%p ", buf,
+                        mSlots[buf].mGraphicBuffer->handle);
+            } else {
+                tooOld = true;
+            }
+            //mSlots[*outBuf].mGraphicBuffer = graphicBuffer;
         }
-    }
 
-    if (eglFence != EGL_NO_SYNC_KHR) {
-        EGLint result = eglClientWaitSyncKHR(dpy, eglFence, 0, 1000000000);
-        // If something goes wrong, log the error, but return the buffer without
-        // synchronizing access to it.  It's too late at this point to abort the
-        // dequeue operation.
-        if (result == EGL_FALSE) {
-            ST_LOGE("dequeueBuffer: error waiting for fence: %#x", eglGetError());
-        } else if (result == EGL_TIMEOUT_EXPIRED_KHR) {
-            ST_LOGE("dequeueBuffer: timeout waiting for fence");
+        if (IsSurfaceDescriptorValid(descOld)) {
+            ibc->DeallocSurfaceDescriptorGralloc(descOld);
         }
-        eglDestroySyncKHR(dpy, eglFence);
+
+        if (tooOld) {
+            ibc->DeallocSurfaceDescriptorGralloc(desc);
+        }
     }
 
     ST_LOGV("dequeueBuffer: returning slot=%d buf=%p flags=%#x", *outBuf,
@@ -443,41 +466,11 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence,
 }
 
 status_t GonkBufferQueue::setSynchronousMode(bool enabled) {
-    ATRACE_CALL();
-    ST_LOGV("setSynchronousMode: enabled=%d", enabled);
-    Mutex::Autolock lock(mMutex);
-
-    if (mAbandoned) {
-        ST_LOGE("setSynchronousMode: GonkBufferQueue has been abandoned!");
-        return NO_INIT;
-    }
-
-    status_t err = OK;
-    if (!mAllowSynchronousMode && enabled)
-        return err;
-
-    if (!enabled) {
-        // going to asynchronous mode, drain the queue
-        err = drainQueueLocked();
-        if (err != NO_ERROR)
-            return err;
-    }
-
-    if (mSynchronousMode != enabled) {
-        // - if we're going to asynchronous mode, the queue is guaranteed to be
-        // empty here
-        // - if the client set the number of buffers, we're guaranteed that
-        // we have at least 3 (because we don't allow less)
-        mSynchronousMode = enabled;
-        mDequeueCondition.broadcast();
-    }
-    return err;
+    return NO_ERROR;
 }
 
 status_t GonkBufferQueue::queueBuffer(int buf,
         const QueueBufferInput& input, QueueBufferOutput* output) {
-    ATRACE_CALL();
-    ATRACE_BUFFER_INDEX(buf);
 
     Rect crop;
     uint32_t transform;
@@ -581,8 +574,6 @@ status_t GonkBufferQueue::queueBuffer(int buf,
 
         output->inflate(mDefaultWidth, mDefaultHeight, mTransformHint,
                 mQueue.size());
-
-        ATRACE_INT(mConsumerName.string(), mQueue.size());
     } // scope for the lock
 
     // call back without lock held
@@ -593,7 +584,6 @@ status_t GonkBufferQueue::queueBuffer(int buf,
 }
 
 void GonkBufferQueue::cancelBuffer(int buf, const sp<Fence>& fence) {
-    ATRACE_CALL();
     ST_LOGV("cancelBuffer: slot=%d", buf);
     Mutex::Autolock lock(mMutex);
 
@@ -622,7 +612,6 @@ void GonkBufferQueue::cancelBuffer(int buf, const sp<Fence>& fence) {
 }
 
 status_t GonkBufferQueue::connect(int api, QueueBufferOutput* output) {
-    ATRACE_CALL();
     ST_LOGV("connect: api=%d", api);
     Mutex::Autolock lock(mMutex);
 
@@ -663,11 +652,11 @@ status_t GonkBufferQueue::connect(int api, QueueBufferOutput* output) {
 }
 
 status_t GonkBufferQueue::disconnect(int api) {
-    ATRACE_CALL();
     ST_LOGV("disconnect: api=%d", api);
 
     int err = NO_ERROR;
     sp<ConsumerListener> listener;
+    nsAutoTArray<SurfaceDescriptor, NUM_BUFFER_SLOTS> freeList;
 
     { // Scope for the lock
         Mutex::Autolock lock(mMutex);
@@ -684,7 +673,7 @@ status_t GonkBufferQueue::disconnect(int api) {
             case NATIVE_WINDOW_API_MEDIA:
             case NATIVE_WINDOW_API_CAMERA:
                 if (mConnectedApi == api) {
-                    drainQueueAndFreeBuffersLocked();
+                    freeAllBuffersLocked(freeList);
                     mConnectedApi = NO_CONNECTED_API;
                     mDequeueCondition.broadcast();
                     listener = mConsumerListener;
@@ -700,6 +689,7 @@ status_t GonkBufferQueue::disconnect(int api) {
                 break;
         }
     }
+    releaseBufferFreeListUnlocked(freeList);
 
     if (listener != NULL) {
         listener->onBuffersReleased();
@@ -777,36 +767,48 @@ void GonkBufferQueue::dump(String8& result, const char* prefix,
     }
 }
 
-void GonkBufferQueue::freeBufferLocked(int slot) {
-    ST_LOGV("freeBufferLocked: slot=%d", slot);
-    mSlots[slot].mGraphicBuffer = 0;
-    if (mSlots[slot].mBufferState == BufferSlot::ACQUIRED) {
-        mSlots[slot].mNeedsCleanupOnRelease = true;
-    }
-    mSlots[slot].mBufferState = BufferSlot::FREE;
-    mSlots[slot].mFrameNumber = 0;
-    mSlots[slot].mAcquireCalled = false;
+void GonkBufferQueue::releaseBufferFreeListUnlocked(nsTArray<SurfaceDescriptor>& freeList)
+{
+    // This function MUST ONLY be called with mMutex unlocked; else there
+    // is a risk of deadlock with the ImageBridge thread.
 
-    // destroy fence as GonkBufferQueue now takes ownership
-    if (mSlots[slot].mEglFence != EGL_NO_SYNC_KHR) {
-        eglDestroySyncKHR(mSlots[slot].mEglDisplay, mSlots[slot].mEglFence);
-        mSlots[slot].mEglFence = EGL_NO_SYNC_KHR;
+    ST_LOGD("releaseBufferFreeListUnlocked: E");
+    ImageBridgeChild *ibc = ImageBridgeChild::GetSingleton();
+
+    for (uint32_t i = 0; i < freeList.Length(); ++i) {
+        ibc->DeallocSurfaceDescriptorGralloc(freeList[i]);
     }
-    mSlots[slot].mFence = Fence::NO_FENCE;
+
+    freeList.Clear();
+    ST_LOGD("releaseBufferFreeListUnlocked: X");
 }
 
-void GonkBufferQueue::freeAllBuffersLocked() {
+void GonkBufferQueue::freeAllBuffersLocked(nsTArray<SurfaceDescriptor>& freeList)
+{
     ALOGW_IF(!mQueue.isEmpty(),
             "freeAllBuffersLocked called but mQueue is not empty");
+    ++mGeneration;
     mQueue.clear();
     mBufferHasBeenQueued = false;
     for (int i = 0; i < NUM_BUFFER_SLOTS; i++) {
-        freeBufferLocked(i);
+        if (mSlots[i].mGraphicBuffer.get() && mSlots[i].mBufferState != BufferSlot::ACQUIRED) {
+            SurfaceDescriptor* desc = freeList.AppendElement();
+            *desc = mSlots[i].mSurfaceDescriptor;
+        }
+        mSlots[i].mGraphicBuffer = 0;
+        mSlots[i].mSurfaceDescriptor = SurfaceDescriptor();
+        if (mSlots[i].mBufferState == BufferSlot::ACQUIRED) {
+            mSlots[i].mNeedsCleanupOnRelease = true;
+        }
+        mSlots[i].mBufferState = BufferSlot::FREE;
+        mSlots[i].mFrameNumber = 0;
+        mSlots[i].mAcquireCalled = false;
+        // destroy fence as GonkBufferQueue now takes ownership
+        mSlots[i].mFence = Fence::NO_FENCE;
     }
 }
 
 status_t GonkBufferQueue::acquireBuffer(BufferItem *buffer) {
-    ATRACE_CALL();
     Mutex::Autolock _l(mMutex);
 
     // Check that the consumer doesn't currently have the maximum number of
@@ -832,13 +834,19 @@ status_t GonkBufferQueue::acquireBuffer(BufferItem *buffer) {
         Fifo::iterator front(mQueue.begin());
         int buf = *front;
 
-        ATRACE_BUFFER_INDEX(buf);
+        // In android, when the buffer is aquired by BufferConsumer,
+        // BufferQueue releases a reference to the buffer and
+        // it's ownership moves to the BufferConsumer.
+        // In b2g, GonkBufferQueue continues to have a buffer ownership.
+        // It is necessary to free buffer via ImageBridgeChild.
 
-        if (mSlots[buf].mAcquireCalled) {
-            buffer->mGraphicBuffer = NULL;
-        } else {
-            buffer->mGraphicBuffer = mSlots[buf].mGraphicBuffer;
-        }
+        //if (mSlots[buf].mAcquireCalled) {
+        //    buffer->mGraphicBuffer = NULL;
+        //} else {
+        //    buffer->mGraphicBuffer = mSlots[buf].mGraphicBuffer;
+        //}
+        buffer->mGraphicBuffer = mSlots[buf].mGraphicBuffer;
+        buffer->mSurfaceDescriptor = mSlots[buf].mSurfaceDescriptor;
         buffer->mCrop = mSlots[buf].mCrop;
         buffer->mTransform = mSlots[buf].mTransform;
         buffer->mScalingMode = mSlots[buf].mScalingMode;
@@ -854,8 +862,6 @@ status_t GonkBufferQueue::acquireBuffer(BufferItem *buffer) {
 
         mQueue.erase(front);
         mDequeueCondition.broadcast();
-
-        ATRACE_INT(mConsumerName.string(), mQueue.size());
     } else {
         return NO_BUFFER_AVAILABLE;
     }
@@ -863,19 +869,13 @@ status_t GonkBufferQueue::acquireBuffer(BufferItem *buffer) {
     return NO_ERROR;
 }
 
-status_t GonkBufferQueue::releaseBuffer(int buf, EGLDisplay display,
-        EGLSyncKHR eglFence, const sp<Fence>& fence) {
-    ATRACE_CALL();
-    ATRACE_BUFFER_INDEX(buf);
-
+status_t GonkBufferQueue::releaseBuffer(int buf, const sp<Fence>& fence) {
     Mutex::Autolock _l(mMutex);
 
     if (buf == INVALID_BUFFER_SLOT || fence == NULL) {
         return BAD_VALUE;
     }
 
-    mSlots[buf].mEglDisplay = display;
-    mSlots[buf].mEglFence = eglFence;
     mSlots[buf].mFence = fence;
 
     // The buffer can now only be released if its in the acquired state
@@ -914,18 +914,23 @@ status_t GonkBufferQueue::consumerConnect(const sp<ConsumerListener>& consumerLi
 
 status_t GonkBufferQueue::consumerDisconnect() {
     ST_LOGV("consumerDisconnect");
-    Mutex::Autolock lock(mMutex);
+    nsAutoTArray<SurfaceDescriptor, NUM_BUFFER_SLOTS> freeList;
+    {
+        Mutex::Autolock lock(mMutex);
 
-    if (mConsumerListener == NULL) {
-        ST_LOGE("consumerDisconnect: No consumer is connected!");
-        return -EINVAL;
+        if (mConsumerListener == NULL) {
+            ST_LOGE("consumerDisconnect: No consumer is connected!");
+            return -EINVAL;
+        }
+
+        mAbandoned = true;
+        mConsumerListener = NULL;
+        mQueue.clear();
+        freeAllBuffersLocked(freeList);
     }
-
-    mAbandoned = true;
-    mConsumerListener = NULL;
-    mQueue.clear();
-    freeAllBuffersLocked();
+    releaseBufferFreeListUnlocked(freeList);
     mDequeueCondition.broadcast();
+
     return NO_ERROR;
 }
 
@@ -966,13 +971,11 @@ status_t GonkBufferQueue::setDefaultBufferSize(uint32_t w, uint32_t h)
 }
 
 status_t GonkBufferQueue::setDefaultMaxBufferCount(int bufferCount) {
-    ATRACE_CALL();
     Mutex::Autolock lock(mMutex);
     return setDefaultMaxBufferCountLocked(bufferCount);
 }
 
 status_t GonkBufferQueue::setMaxAcquiredBufferCount(int maxAcquiredBuffers) {
-    ATRACE_CALL();
     Mutex::Autolock lock(mMutex);
     if (maxAcquiredBuffers < 1 || maxAcquiredBuffers > MAX_MAX_ACQUIRED_BUFFERS) {
         ST_LOGE("setMaxAcquiredBufferCount: invalid count specified: %d",
@@ -984,47 +987,6 @@ status_t GonkBufferQueue::setMaxAcquiredBufferCount(int maxAcquiredBuffers) {
     }
     mMaxAcquiredBufferCount = maxAcquiredBuffers;
     return NO_ERROR;
-}
-
-void GonkBufferQueue::freeAllBuffersExceptHeadLocked() {
-    int head = -1;
-    if (!mQueue.empty()) {
-        Fifo::iterator front(mQueue.begin());
-        head = *front;
-    }
-    mBufferHasBeenQueued = false;
-    for (int i = 0; i < NUM_BUFFER_SLOTS; i++) {
-        if (i != head) {
-            freeBufferLocked(i);
-        }
-    }
-}
-
-status_t GonkBufferQueue::drainQueueLocked() {
-    while (mSynchronousMode && mQueue.size() > 1) {
-        mDequeueCondition.wait(mMutex);
-        if (mAbandoned) {
-            ST_LOGE("drainQueueLocked: GonkBufferQueue has been abandoned!");
-            return NO_INIT;
-        }
-        if (mConnectedApi == NO_CONNECTED_API) {
-            ST_LOGE("drainQueueLocked: GonkBufferQueue is not connected!");
-            return NO_INIT;
-        }
-    }
-    return NO_ERROR;
-}
-
-status_t GonkBufferQueue::drainQueueAndFreeBuffersLocked() {
-    status_t err = drainQueueLocked();
-    if (err == NO_ERROR) {
-        if (mQueue.empty()) {
-            freeAllBuffersLocked();
-        } else {
-            freeAllBuffersExceptHeadLocked();
-        }
-    }
-    return err;
 }
 
 int GonkBufferQueue::getMinMaxBufferCountLocked() const {

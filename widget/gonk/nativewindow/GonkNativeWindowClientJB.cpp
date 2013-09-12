@@ -20,20 +20,13 @@
 //#define LOG_NDEBUG 0
 
 #include <android/native_window.h>
+#include <cutils/trace.h>
 
 #include <binder/Parcel.h>
-
 #include <utils/Log.h>
-#include <utils/Trace.h>
-
 #include <ui/Fence.h>
 
-#include <gui/ISurfaceComposer.h>
-#include <gui/SurfaceComposerClient.h>
-#include <gui/GLConsumer.h>
-#include <gui/Surface.h>
-
-#include <private/gui/ComposerService.h>
+#include "GonkNativeWindowClientJB.h"
 
 namespace android {
 
@@ -157,7 +150,6 @@ int GonkNativeWindowClient::hook_perform(ANativeWindow* window, int operation, .
 }
 
 int GonkNativeWindowClient::setSwapInterval(int interval) {
-    ATRACE_CALL();
     // EGL specification states:
     //  interval is silently clamped to minimum and maximum implementation
     //  dependent values before being stored.
@@ -176,7 +168,6 @@ int GonkNativeWindowClient::setSwapInterval(int interval) {
 
 int GonkNativeWindowClient::dequeueBuffer(android_native_buffer_t** buffer,
         int* fenceFd) {
-    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::dequeueBuffer");
     Mutex::Autolock lock(mMutex);
     int buf = -1;
@@ -223,7 +214,6 @@ int GonkNativeWindowClient::dequeueBuffer(android_native_buffer_t** buffer,
 
 int GonkNativeWindowClient::cancelBuffer(android_native_buffer_t* buffer,
         int fenceFd) {
-    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::cancelBuffer");
     Mutex::Autolock lock(mMutex);
     int i = getSlotFromBufferLocked(buffer);
@@ -255,7 +245,6 @@ int GonkNativeWindowClient::lockBuffer_DEPRECATED(android_native_buffer_t* buffe
 }
 
 int GonkNativeWindowClient::queueBuffer(android_native_buffer_t* buffer, int fenceFd) {
-    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::queueBuffer");
     Mutex::Autolock lock(mMutex);
     int64_t timestamp;
@@ -294,7 +283,6 @@ int GonkNativeWindowClient::queueBuffer(android_native_buffer_t* buffer, int fen
 }
 
 int GonkNativeWindowClient::query(int what, int* value) const {
-    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::query");
     { // scope for the lock
         Mutex::Autolock lock(mMutex);
@@ -306,13 +294,13 @@ int GonkNativeWindowClient::query(int what, int* value) const {
                 }
                 break;
             case NATIVE_WINDOW_QUEUES_TO_WINDOW_COMPOSER: {
-                sp<ISurfaceComposer> composer(
-                        ComposerService::getComposerService());
-                if (composer->authenticateSurfaceTexture(mGraphicBufferProducer)) {
-                    *value = 1;
-                } else {
+                //sp<ISurfaceComposer> composer(
+                //        ComposerService::getComposerService());
+                //if (composer->authenticateSurfaceTexture(mGraphicBufferProducer)) {
+                //    *value = 1;
+                //} else {
                     *value = 0;
-                }
+                //}
                 return NO_ERROR;
             }
             case NATIVE_WINDOW_CONCRETE_TYPE:
@@ -483,7 +471,6 @@ int GonkNativeWindowClient::dispatchUnlockAndPost(va_list args) {
 
 
 int GonkNativeWindowClient::connect(int api) {
-    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::connect");
     Mutex::Autolock lock(mMutex);
     IGraphicBufferProducer::QueueBufferOutput output;
@@ -501,7 +488,6 @@ int GonkNativeWindowClient::connect(int api) {
 }
 
 int GonkNativeWindowClient::disconnect(int api) {
-    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::disconnect");
     Mutex::Autolock lock(mMutex);
     freeAllBuffers();
@@ -531,8 +517,6 @@ int GonkNativeWindowClient::setUsage(uint32_t reqUsage)
 
 int GonkNativeWindowClient::setCrop(Rect const* rect)
 {
-    ATRACE_CALL();
-
     Rect realRect;
     if (rect == NULL || rect->isEmpty()) {
         realRect.clear();
@@ -550,7 +534,6 @@ int GonkNativeWindowClient::setCrop(Rect const* rect)
 
 int GonkNativeWindowClient::setBufferCount(int bufferCount)
 {
-    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::setBufferCount");
     Mutex::Autolock lock(mMutex);
 
@@ -567,7 +550,6 @@ int GonkNativeWindowClient::setBufferCount(int bufferCount)
 
 int GonkNativeWindowClient::setBuffersDimensions(int w, int h)
 {
-    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::setBuffersDimensions");
 
     if (w<0 || h<0)
@@ -584,7 +566,6 @@ int GonkNativeWindowClient::setBuffersDimensions(int w, int h)
 
 int GonkNativeWindowClient::setBuffersUserDimensions(int w, int h)
 {
-    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::setBuffersUserDimensions");
 
     if (w<0 || h<0)
@@ -613,7 +594,6 @@ int GonkNativeWindowClient::setBuffersFormat(int format)
 
 int GonkNativeWindowClient::setScalingMode(int mode)
 {
-    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::setScalingMode(%d)", mode);
 
     switch (mode) {
@@ -633,7 +613,6 @@ int GonkNativeWindowClient::setScalingMode(int mode)
 
 int GonkNativeWindowClient::setBuffersTransform(int transform)
 {
-    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::setBuffersTransform");
     Mutex::Autolock lock(mMutex);
     mTransform = transform;
@@ -657,179 +636,17 @@ void GonkNativeWindowClient::freeAllBuffers() {
 // ----------------------------------------------------------------------
 // the lock/unlock APIs must be used from the same thread
 
-static status_t copyBlt(
-        const sp<GraphicBuffer>& dst,
-        const sp<GraphicBuffer>& src,
-        const Region& reg)
-{
-    // src and dst with, height and format must be identical. no verification
-    // is done here.
-    status_t err;
-    uint8_t const * src_bits = NULL;
-    err = src->lock(GRALLOC_USAGE_SW_READ_OFTEN, reg.bounds(), (void**)&src_bits);
-    ALOGE_IF(err, "error locking src buffer %s", strerror(-err));
-
-    uint8_t* dst_bits = NULL;
-    err = dst->lock(GRALLOC_USAGE_SW_WRITE_OFTEN, reg.bounds(), (void**)&dst_bits);
-    ALOGE_IF(err, "error locking dst buffer %s", strerror(-err));
-
-    Region::const_iterator head(reg.begin());
-    Region::const_iterator tail(reg.end());
-    if (head != tail && src_bits && dst_bits) {
-        const size_t bpp = bytesPerPixel(src->format);
-        const size_t dbpr = dst->stride * bpp;
-        const size_t sbpr = src->stride * bpp;
-
-        while (head != tail) {
-            const Rect& r(*head++);
-            ssize_t h = r.height();
-            if (h <= 0) continue;
-            size_t size = r.width() * bpp;
-            uint8_t const * s = src_bits + (r.left + src->stride * r.top) * bpp;
-            uint8_t       * d = dst_bits + (r.left + dst->stride * r.top) * bpp;
-            if (dbpr==sbpr && size==sbpr) {
-                size *= h;
-                h = 1;
-            }
-            do {
-                memcpy(d, s, size);
-                d += dbpr;
-                s += sbpr;
-            } while (--h > 0);
-        }
-    }
-
-    if (src_bits)
-        src->unlock();
-
-    if (dst_bits)
-        dst->unlock();
-
-    return err;
-}
-
 // ----------------------------------------------------------------------------
 
 status_t GonkNativeWindowClient::lock(
         ANativeWindow_Buffer* outBuffer, ARect* inOutDirtyBounds)
 {
-    if (mLockedBuffer != 0) {
-        ALOGE("GonkNativeWindowClient::lock failed, already locked");
-        return INVALID_OPERATION;
-    }
-
-    if (!mConnectedToCpu) {
-        int err = GonkNativeWindowClient::connect(NATIVE_WINDOW_API_CPU);
-        if (err) {
-            return err;
-        }
-        // we're intending to do software rendering from this point
-        setUsage(GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN);
-    }
-
-    ANativeWindowBuffer* out;
-    int fenceFd = -1;
-    status_t err = dequeueBuffer(&out, &fenceFd);
-    ALOGE_IF(err, "dequeueBuffer failed (%s)", strerror(-err));
-    if (err == NO_ERROR) {
-        sp<GraphicBuffer> backBuffer(GraphicBuffer::getSelf(out));
-        sp<Fence> fence(new Fence(fenceFd));
-
-        err = fence->waitForever("GonkNativeWindowClient::lock");
-        if (err != OK) {
-            ALOGE("Fence::wait failed (%s)", strerror(-err));
-            cancelBuffer(out, fenceFd);
-            return err;
-        }
-
-        const Rect bounds(backBuffer->width, backBuffer->height);
-
-        Region newDirtyRegion;
-        if (inOutDirtyBounds) {
-            newDirtyRegion.set(static_cast<Rect const&>(*inOutDirtyBounds));
-            newDirtyRegion.andSelf(bounds);
-        } else {
-            newDirtyRegion.set(bounds);
-        }
-
-        // figure out if we can copy the frontbuffer back
-        const sp<GraphicBuffer>& frontBuffer(mPostedBuffer);
-        const bool canCopyBack = (frontBuffer != 0 &&
-                backBuffer->width  == frontBuffer->width &&
-                backBuffer->height == frontBuffer->height &&
-                backBuffer->format == frontBuffer->format);
-
-        if (canCopyBack) {
-            // copy the area that is invalid and not repainted this round
-            const Region copyback(mDirtyRegion.subtract(newDirtyRegion));
-            if (!copyback.isEmpty())
-                copyBlt(backBuffer, frontBuffer, copyback);
-        } else {
-            // if we can't copy-back anything, modify the user's dirty
-            // region to make sure they redraw the whole buffer
-            newDirtyRegion.set(bounds);
-            mDirtyRegion.clear();
-            Mutex::Autolock lock(mMutex);
-            for (size_t i=0 ; i<NUM_BUFFER_SLOTS ; i++) {
-                mSlots[i].dirtyRegion.clear();
-            }
-        }
-
-
-        { // scope for the lock
-            Mutex::Autolock lock(mMutex);
-            int backBufferSlot(getSlotFromBufferLocked(backBuffer.get()));
-            if (backBufferSlot >= 0) {
-                Region& dirtyRegion(mSlots[backBufferSlot].dirtyRegion);
-                mDirtyRegion.subtract(dirtyRegion);
-                dirtyRegion = newDirtyRegion;
-            }
-        }
-
-        mDirtyRegion.orSelf(newDirtyRegion);
-        if (inOutDirtyBounds) {
-            *inOutDirtyBounds = newDirtyRegion.getBounds();
-        }
-
-        void* vaddr;
-        status_t res = backBuffer->lock(
-                GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN,
-                newDirtyRegion.bounds(), &vaddr);
-
-        ALOGW_IF(res, "failed locking buffer (handle = %p)",
-                backBuffer->handle);
-
-        if (res != 0) {
-            err = INVALID_OPERATION;
-        } else {
-            mLockedBuffer = backBuffer;
-            outBuffer->width  = backBuffer->width;
-            outBuffer->height = backBuffer->height;
-            outBuffer->stride = backBuffer->stride;
-            outBuffer->format = backBuffer->format;
-            outBuffer->bits   = vaddr;
-        }
-    }
-    return err;
+    return INVALID_OPERATION;
 }
 
 status_t GonkNativeWindowClient::unlockAndPost()
 {
-    if (mLockedBuffer == 0) {
-        ALOGE("GonkNativeWindowClient::unlockAndPost failed, no locked buffer");
-        return INVALID_OPERATION;
-    }
-
-    status_t err = mLockedBuffer->unlock();
-    ALOGE_IF(err, "failed unlocking buffer (%p)", mLockedBuffer->handle);
-
-    err = queueBuffer(mLockedBuffer.get(), -1);
-    ALOGE_IF(err, "queueBuffer (handle=%p) failed (%s)",
-            mLockedBuffer->handle, strerror(-err));
-
-    mPostedBuffer = mLockedBuffer;
-    mLockedBuffer = 0;
-    return err;
+    return INVALID_OPERATION;
 }
 
 }; // namespace android
