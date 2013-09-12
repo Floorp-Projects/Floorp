@@ -24,6 +24,14 @@
 
 #include "IMediaResourceManagerDeathNotifier.h"
 
+#define DN_LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__)
+#define DN_LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+#define DN_LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#define DN_LOGE_IF(cond, ...) \
+    ( (CONDITION(cond)) \
+    ? ((void)__android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)) \
+    : (void)0 )
+
 namespace android {
 
 // client singleton for binder interface to services
@@ -36,7 +44,7 @@ SortedVector< wp<IMediaResourceManagerDeathNotifier> > IMediaResourceManagerDeat
 /*static*/const sp<IMediaResourceManagerService>&
 IMediaResourceManagerDeathNotifier::getMediaResourceManagerService()
 {
-    LOGV("getMediaResourceManagerService");
+    DN_LOGV("getMediaResourceManagerService");
     Mutex::Autolock _l(sServiceLock);
     if (sMediaResourceManagerService.get() == 0) {
         sp<IServiceManager> sm = defaultServiceManager();
@@ -46,7 +54,7 @@ IMediaResourceManagerDeathNotifier::getMediaResourceManagerService()
             if (binder != 0) {
                 break;
              }
-             LOGW("Media resource manager service not published, waiting...");
+             DN_LOGW("Media resource manager service not published, waiting...");
              usleep(500000); // 0.5 s
         } while(true);
 
@@ -56,14 +64,13 @@ IMediaResourceManagerDeathNotifier::getMediaResourceManagerService()
     binder->linkToDeath(sDeathNotifier);
     sMediaResourceManagerService = interface_cast<IMediaResourceManagerService>(binder);
     }
-    LOGE_IF(sMediaResourceManagerService == 0, "no media player service!?");
+    DN_LOGE_IF(sMediaResourceManagerService == 0, "no media player service!?");
     return sMediaResourceManagerService;
 }
 
 /*static*/ void
 IMediaResourceManagerDeathNotifier::addObitRecipient(const wp<IMediaResourceManagerDeathNotifier>& recipient)
 {
-    LOGV("addObitRecipient");
     Mutex::Autolock _l(sServiceLock);
     sObitRecipients.add(recipient);
 }
@@ -71,7 +78,6 @@ IMediaResourceManagerDeathNotifier::addObitRecipient(const wp<IMediaResourceMana
 /*static*/ void
 IMediaResourceManagerDeathNotifier::removeObitRecipient(const wp<IMediaResourceManagerDeathNotifier>& recipient)
 {
-    LOGV("removeObitRecipient");
     Mutex::Autolock _l(sServiceLock);
     sObitRecipients.remove(recipient);
 }
@@ -79,8 +85,7 @@ IMediaResourceManagerDeathNotifier::removeObitRecipient(const wp<IMediaResourceM
 void
 IMediaResourceManagerDeathNotifier::DeathNotifier::binderDied(const wp<IBinder>& who)
 {
-    LOGW("media server died");
-
+    DN_LOGW("media resource manager service died");
     // Need to do this with the lock held
     SortedVector< wp<IMediaResourceManagerDeathNotifier> > list;
     {
@@ -103,7 +108,6 @@ IMediaResourceManagerDeathNotifier::DeathNotifier::binderDied(const wp<IBinder>&
 
 IMediaResourceManagerDeathNotifier::DeathNotifier::~DeathNotifier()
 {
-    LOGV("DeathNotifier::~DeathNotifier");
     Mutex::Autolock _l(sServiceLock);
     sObitRecipients.clear();
     if (sMediaResourceManagerService != 0) {

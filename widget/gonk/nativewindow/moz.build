@@ -21,16 +21,32 @@ EXPORTS += [
     'GonkNativeWindowClient.h',
 ]
 
-EXPORTS += [
-    'GonkNativeWindowClientICS.h',
-    'GonkNativeWindowICS.h',
-]
+if CONFIG['ANDROID_VERSION'] == '18':
+    EXPORTS += [
+        'GonkBufferQueue.h',
+        'GonkConsumerBase.h',
+        'GonkNativeWindowClientJB.h',
+        'GonkNativeWindowJB.h',
+    ]
+elif CONFIG['ANDROID_VERSION'] == '15':
+    EXPORTS += [
+        'GonkNativeWindowClientICS.h',
+        'GonkNativeWindowICS.h',
+    ]
 
 if CONFIG['MOZ_B2G_CAMERA'] or CONFIG['MOZ_OMX_DECODER']:
-    CPP_SOURCES += [
-        'GonkNativeWindowICS.cpp',
-        'GonkNativeWindowClientICS.cpp',
-    ]
+    if CONFIG['ANDROID_VERSION'] == '18':
+        CPP_SOURCES += [
+            'GonkBufferQueue.cpp',
+            'GonkConsumerBase.cpp',
+            'GonkNativeWindowJB.cpp',
+            'GonkNativeWindowClientJB.cpp',
+        ]
+    elif CONFIG['ANDROID_VERSION'] == '15':
+        CPP_SOURCES += [
+            'GonkNativeWindowClientICS.cpp',
+            'GonkNativeWindowICS.cpp',
+        ]
 
 FAIL_ON_WARNINGS = True
 
