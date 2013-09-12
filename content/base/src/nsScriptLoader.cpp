@@ -775,7 +775,7 @@ nsScriptLoader::AttemptAsyncScriptParse(nsScriptLoadRequest* aRequest)
   JS::Rooted<JSObject*> global(cx, unrootedGlobal);
 
   JS::CompileOptions options(cx);
-  FillCompileOptionsForRequest(aRequest, &options);
+  FillCompileOptionsForRequest(aRequest, global, &options);
 
   if (!JS::CanCompileOffThread(cx, options)) {
     return NS_ERROR_FAILURE;
@@ -932,6 +932,7 @@ nsScriptLoader::GetScriptContext(JSObject **aGlobal)
 
 void
 nsScriptLoader::FillCompileOptionsForRequest(nsScriptLoadRequest *aRequest,
+                                             JS::Handle<JSObject *> scopeChain,
                                              JS::CompileOptions *aOptions)
 {
   // It's very important to use aRequest->mURI, not the final URI of the channel
@@ -940,6 +941,7 @@ nsScriptLoader::FillCompileOptionsForRequest(nsScriptLoadRequest *aRequest,
 
   aOptions->setFileAndLine(aRequest->mURL.get(), aRequest->mLineNo);
   aOptions->setVersion(JSVersion(aRequest->mJSVersion));
+  aOptions->setCompileAndGo(JS_IsGlobalObject(scopeChain));
   if (aRequest->mOriginPrincipal) {
     aOptions->setOriginPrincipals(nsJSPrincipals::get(aRequest->mOriginPrincipal));
   }
@@ -988,7 +990,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   JSVersion version = JSVersion(aRequest->mJSVersion);
   if (version != JSVERSION_UNKNOWN) {
     JS::CompileOptions options(cx);
-    FillCompileOptionsForRequest(aRequest, &options);
+    FillCompileOptionsForRequest(aRequest, global, &options);
     rv = context->EvaluateString(aScript, global,
                                  options, /* aCoerceToString = */ false, nullptr,
                                  aOffThreadToken);
