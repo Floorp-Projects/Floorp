@@ -71,7 +71,12 @@ function testAddContact(type, pin2) {
   };
 
   updateRequest.onerror = function onerror() {
-    ok(false, "Cannot add " + type + " contact: " + updateRequest.error.name);
+    if (type === "fdn" && pin2 === undefined) {
+      ok(updateRequest.error.name === "pin2 is empty",
+         "expected error when pin2 is not provided");
+    } else {
+      ok(false, "Cannot add " + type + " contact: " + updateRequest.error.name);
+    }
     runNextTest();
   };
 };
@@ -90,6 +95,7 @@ function testReadFdnContacts() {
 
 function testAddFdnContact() {
   testAddContact("fdn", "0000");
+  testAddContact("fdn");
 }
 
 let tests = [
