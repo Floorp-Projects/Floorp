@@ -2235,11 +2235,12 @@ ContentParent::AllocPExternalHelperAppParent(const OptionalURIParams& uri,
                                              const nsCString& aContentDisposition,
                                              const bool& aForceSave,
                                              const int64_t& aContentLength,
-                                             const OptionalURIParams& aReferrer)
+                                             const OptionalURIParams& aReferrer,
+                                             PBrowserParent* aBrowser)
 {
     ExternalHelperAppParent *parent = new ExternalHelperAppParent(uri, aContentLength);
     parent->AddRef();
-    parent->Init(this, aMimeContentType, aContentDisposition, aForceSave, aReferrer);
+    parent->Init(this, aMimeContentType, aContentDisposition, aForceSave, aReferrer, aBrowser);
     return parent;
 }
 

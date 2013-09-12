@@ -397,7 +397,8 @@ parent:
 
     PExternalHelperApp(OptionalURIParams uri, nsCString aMimeContentType,
                        nsCString aContentDisposition, bool aForceSave,
-                       int64_t aContentLength, OptionalURIParams aReferrer);
+                       int64_t aContentLength, OptionalURIParams aReferrer,
+                       nullable PBrowser aBrowser);
 
     AddGeolocationListener(Principal principal, bool highAccuracy);
     RemoveGeolocationListener();
