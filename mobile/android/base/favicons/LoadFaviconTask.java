@@ -125,9 +125,16 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
             }
 
             BufferedHttpEntity bufferedEntity = new BufferedHttpEntity(entity);
-            InputStream contentStream = bufferedEntity.getContent();
-            image = BitmapUtils.decodeStream(contentStream);
-            contentStream.close();
+            InputStream contentStream = null;
+            try {
+                contentStream = bufferedEntity.getContent();
+                image = BitmapUtils.decodeStream(contentStream);
+                contentStream.close();
+            } finally {
+                if (contentStream != null) {
+                    contentStream.close();
+                }
+            }
         } catch (Exception e) {
             Log.e(LOGTAG, "Error reading favicon", e);
         }
