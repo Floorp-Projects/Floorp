@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional CallEventInit eventInitDict)]
+[Constructor(DOMString type, optional CallEventInit eventInitDict), Func="Navigator::HasTelephonySupport"]
 interface CallEvent : Event
 {
   readonly attribute TelephonyCall? call;

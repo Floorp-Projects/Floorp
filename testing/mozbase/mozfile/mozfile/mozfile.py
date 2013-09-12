@@ -112,15 +112,23 @@ def rmtree(dir):
 
     This is a replacement for shutil.rmtree that works better under
     windows."""
-    # (Thanks to Bear at the OSAF for the code.)
-    if not os.path.exists(dir):
-        return
-    if os.path.islink(dir):
-        os.remove(dir)
-        return
+    try:
+        # (Thanks to Bear at the OSAF for the code.)
+        if not os.path.exists(dir):
+            return
+        if os.path.islink(dir):
+            try:
+                os.remove(dir)
+            except WindowsError, e:
+                print "exception occured when removing %s" % dir
+                raise e
+            return
 
-    # Verify the directory is read/write/execute for the current user
-    os.chmod(dir, 0700)
+        # Verify the directory is read/write/execute for the current user
+        os.chmod(dir, 0700)
+    except WindowsError, e:
+        print "exception occured when removing dir %s" % dir
+        raise e
 
     # os.listdir below only returns a list of unicode filenames
     # if the parameter is unicode.
@@ -139,21 +147,37 @@ def rmtree(dir):
         # on Windows, if we don't have write permission we can't remove
         # the file/directory either, so turn that on
         if os.name == 'nt':
-            if not os.access(full_name, os.W_OK):
-                # I think this is now redundant, but I don't have an NT
-                # machine to test on, so I'm going to leave it in place
-                # -warner
-                os.chmod(full_name, 0600)
+            try:
+                if not os.access(full_name, os.W_OK):
+                    # I think this is now redundant, but I don't have an NT
+                    # machine to test on, so I'm going to leave it in place
+                    # -warner
+                    try:
+                        os.chmod(full_name, 0600)
+                    except WindowsError, e:
+                        print "exception occured when chmod file %s" % full_name
+                        raise e
+            except WindowsError, e:
+                print "exception occured when access file %s" % full_name
+                raise e
 
-        if os.path.islink(full_name):
-            os.remove(full_name)
-        elif os.path.isdir(full_name):
-            rmtree(full_name)
-        else:
-            if os.path.isfile(full_name):
-                os.chmod(full_name, 0700)
-            os.remove(full_name)
-    os.rmdir(dir)
+        try:
+            if os.path.islink(full_name):
+                os.remove(full_name)
+            elif os.path.isdir(full_name):
+                rmtree(full_name)
+            else:
+                if os.path.isfile(full_name):
+                    os.chmod(full_name, 0700)
+                os.remove(full_name)
+        except WindowsError, e:
+            print "exception occured when removing file %s" % full_name
+            raise e
+    try:
+        os.rmdir(dir)
+    except WindowsError, e:
+        print "exception occured when removing dir %s" % dir
+        raise e
 
 
 class NamedTemporaryFile(object):
