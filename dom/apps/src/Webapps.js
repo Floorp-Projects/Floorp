@@ -466,23 +466,29 @@ WebappsApplication.prototype = {
   },
 
   connect: function(aKeyword, aRules) {
-    return this.createPromise(function (aResolver) {
+    return this.createPromise(function (aResolve, aReject) {
       cpmm.sendAsyncMessage("Webapps:Connect",
                             { keyword: aKeyword,
                               rules: aRules,
                               manifestURL: this.manifestURL,
                               outerWindowID: this._id,
                               appStatus: this._appStatus,
-                              requestID: this.getPromiseResolverId(aResolver) });
+                              requestID: this.getPromiseResolverId({
+                                resolve: aResolve,
+                                reject: aReject
+                              })});
     }.bind(this));
   },
 
   getConnections: function() {
-    return this.createPromise(function (aResolver) {
+    return this.createPromise(function (aResolve, aReject) {
       cpmm.sendAsyncMessage("Webapps:GetConnections",
                             { manifestURL: this.manifestURL,
                               outerWindowID: this._id,
-                              requestID: this.getPromiseResolverId(aResolver) });
+                              requestID: this.getPromiseResolverId({
+                                resolve: aResolve,
+                                reject: aReject
+                              })});
     }.bind(this));
   },
 
