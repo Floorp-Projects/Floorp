@@ -6,7 +6,7 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.EditBookmarkDialog;
-import org.mozilla.gecko.Favicons;
+import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;

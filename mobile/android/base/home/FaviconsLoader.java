@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.Favicons;
+import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.gfx.BitmapUtils;
