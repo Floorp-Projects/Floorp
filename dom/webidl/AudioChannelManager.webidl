@@ -24,4 +24,10 @@ interface AudioChannelManager : EventTarget {
    */
   [SetterThrows]
   attribute EventHandler onheadphoneschange;
+
+  /**
+   * Indicates which audio channel is used to adjust volume when pressing HW
+   * volume keys.
+   */
+  attribute DOMString volumeControlChannel;
 };
