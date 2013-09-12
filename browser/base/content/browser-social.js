@@ -1658,12 +1658,12 @@ SocialMarks = {
       {
         type: "link",
         id: "context-marklinkMenu",
-        label: "social.marklink.label"
+        label: "social.marklinkMenu.label"
       },
       {
         type: "page",
         id: "context-markpageMenu",
-        label: "social.markpage.label"
+        label: "social.markpageMenu.label"
       }
     ];
     for (let cfg of contextMenus) {

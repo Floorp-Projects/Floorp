@@ -21,14 +21,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=403852
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-var dirSvc = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"].getService(SpecialPowers.Ci.nsIProperties);
-var testFile = dirSvc.get("ProfD", SpecialPowers.Ci.nsIFile);
+var testFile = SpecialPowers.Services.dirsvc.get("ProfD", SpecialPowers.Ci.nsIFile);
 testFile.append("prefs.js");
 
 var fileList = document.getElementById('fileList');
-fileList.value = testFile.path;
+SpecialPowers.wrap(fileList).value = testFile.path;
 
 // Make sure the file is accessible with indexed notation
 var domFile = fileList.files[0];

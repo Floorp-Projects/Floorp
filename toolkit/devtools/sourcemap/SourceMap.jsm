@@ -490,6 +490,7 @@ define('source-map/util', ['require', 'exports', 'module' , ], function(require,
   exports.getArg = getArg;
 
   var urlRegexp = /([\w+\-.]+):\/\/((\w+:\w+)@)?([\w.]+)?(:(\d+))?(\S+)?/;
+  var dataUrlRegexp = /^data:.+\,.+/;
 
   function urlParse(aUrl) {
     var match = aUrl.match(urlRegexp);
@@ -527,7 +528,7 @@ define('source-map/util', ['require', 'exports', 'module' , ], function(require,
   function join(aRoot, aPath) {
     var url;
 
-    if (aPath.match(urlRegexp)) {
+    if (aPath.match(urlRegexp) || aPath.match(dataUrlRegexp)) {
       return aPath;
     }
 
@@ -1082,11 +1083,13 @@ define('source-map/source-map-generator', ['require', 'exports', 'module' ,  'so
       if (!aSourceFile) {
         aSourceFile = aSourceMapConsumer.file;
       }
+
       var sourceRoot = this._sourceRoot;
       // Make "aSourceFile" relative if an absolute Url is passed.
       if (sourceRoot) {
         aSourceFile = util.relative(sourceRoot, aSourceFile);
       }
+
       // Applying the SourceMap can add and remove items from the sources and
       // the names array.
       var newSources = new ArraySet();
@@ -1100,6 +1103,7 @@ define('source-map/source-map-generator', ['require', 'exports', 'module' ,  'so
             line: mapping.original.line,
             column: mapping.original.column
           });
+
           if (original.source !== null) {
             // Copy mapping
             if (sourceRoot) {

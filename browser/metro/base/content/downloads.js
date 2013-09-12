@@ -57,6 +57,7 @@ var Downloads = {
     Services.obs.addObserver(this, "dl-request", true);
 
     this._notificationBox = Browser.getNotificationBox();
+    this._notificationBox.addEventListener('AlertClose', this.handleEvent, true);
 
     this._progress = new DownloadProgressListener(this);
     this.manager.addListener(this._progress);
@@ -225,6 +226,7 @@ var Downloads = {
         accessKey: "",
         callback: function() {
           Downloads.cancelDownload(aDownload);
+          Downloads._downloadProgressIndicator.reset();
         }
       }
     ];
@@ -397,6 +399,7 @@ var Downloads = {
           accessKey: "",
           callback: function() {
             Downloads.cancelDownloads();
+            Downloads._downloadProgressIndicator.reset();
           }
         }
       ];
@@ -431,6 +434,17 @@ var Downloads = {
     }
   },
 
+  handleEvent: function handleEvent(aEvent) {
+    switch (aEvent.type) {
+      case "AlertClose":
+        if (aEvent.notification.value == "download-complete" &&
+            !Downloads._notificationBox.getNotificationWithValue("download-complete")) {
+          Downloads._downloadProgressIndicator.reset();
+        }
+        break;
+    }
+  },
+
   observe: function (aSubject, aTopic, aData) {
     let message = "";
     let msgTitle = "";
@@ -459,7 +473,6 @@ var Downloads = {
             this._showDownloadCompleteToast(download);
             this._showDownloadCompleteNotification(download);
           }
-          this._downloadProgressIndicator.reset();
           this._progressNotificationInfo.clear();
           this._downloadCount = 0;
           this._notificationBox.removeNotification(this._progressNotification);
@@ -469,7 +482,6 @@ var Downloads = {
       case "dl-failed":
         download = aSubject.QueryInterface(Ci.nsIDownload);
         this._showDownloadFailedNotification(download);
-        this._downloadProgressIndicator.reset();
         break;
       case "dl-request":
         setTimeout(function() {

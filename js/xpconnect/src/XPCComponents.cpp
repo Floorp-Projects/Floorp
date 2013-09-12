@@ -2766,6 +2766,46 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetSandboxMetadata(const JS::Value &sandboxVal,
+                                          JSContext *cx, JS::Value *rval)
+{
+    if (!sandboxVal.isObject())
+        return NS_ERROR_INVALID_ARG;
+
+    RootedObject sandbox(cx, &sandboxVal.toObject());
+    sandbox = js::CheckedUnwrap(sandbox);
+    if (!sandbox || !xpc::IsSandbox(sandbox))
+        return NS_ERROR_INVALID_ARG;
+
+    RootedValue metadata(cx);
+    nsresult rv = xpc::GetSandboxMetadata(cx, sandbox, &metadata);
+    NS_ENSURE_SUCCESS(rv, rv);
+    *rval = metadata;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::SetSandboxMetadata(const JS::Value &sandboxVal,
+                                          const JS::Value &metadataVal,
+                                          JSContext *cx)
+{
+    if (!sandboxVal.isObject())
+        return NS_ERROR_INVALID_ARG;
+
+    RootedObject sandbox(cx, &sandboxVal.toObject());
+    sandbox = js::CheckedUnwrap(sandbox);
+    if (!sandbox || !xpc::IsSandbox(sandbox))
+        return NS_ERROR_INVALID_ARG;
+
+    RootedValue metadata(cx, metadataVal);
+    nsresult rv = xpc::SetSandboxMetadata(cx, sandbox, metadata);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+}
+
 /* JSObject import (in AUTF8String registryLocation,
  *                  [optional] in JSObject targetObj);
  */

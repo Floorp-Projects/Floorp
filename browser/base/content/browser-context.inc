@@ -46,7 +46,7 @@
                 accesskey="&saveLinkCmd.accesskey;"
                 oncommand="gContextMenu.saveLink();"/>
       <menu id="context-marklinkMenu" label="&social.marklinkMenu.label;"
-            accesskey="&social.marklink.accesskey;">
+            accesskey="&social.marklinkMenu.accesskey;">
         <menupopup/>
       </menu>
       <menuitem id="context-copyemail"
@@ -252,7 +252,7 @@
                 accesskey="&savePageCmd.accesskey2;"
                 oncommand="gContextMenu.savePageAs();"/>
       <menu id="context-markpageMenu" label="&social.markpageMenu.label;"
-            accesskey="&social.markpage.accesskey;">
+            accesskey="&social.markpageMenu.accesskey;">
         <menupopup/>
       </menu>
       <menuseparator id="context-sep-viewbgimage"/>

@@ -13,6 +13,8 @@ MOCHITEST_FILES = \
   file_packaged_app.template.webapp \
   file_packaged_app.template.html \
   test_packaged_app_install.html \
+  test_packaged_app_update.html \
+  test_packaged_app_common.js \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \

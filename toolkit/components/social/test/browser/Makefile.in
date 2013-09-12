@@ -11,6 +11,7 @@ MOCHITEST_BROWSER_FILES = \
   echo.sjs \
   worker_xhr.js \
   browser_frameworker.js \
+  browser_frameworker_sandbox.js \
   worker_relative.js \
   relative_import.js \
   browser_workerAPI.js \

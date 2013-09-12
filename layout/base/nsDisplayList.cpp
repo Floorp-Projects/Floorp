@@ -663,20 +663,40 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
 
   nsIPresShell* presShell = presContext->GetPresShell();
   if (metrics.mScrollId == FrameMetrics::ROOT_SCROLL_ID) {
-    metrics.mResolution = LayoutDeviceToLayerScale(presShell->GetXResolution(),
-                                                   presShell->GetYResolution());
+    metrics.mResolution = ParentLayerToLayerScale(presShell->GetXResolution(),
+                                                  presShell->GetYResolution());
   } else {
     // Only the root scrollable frame for a given presShell should pick up
     // the presShell's resolution. All the other subframes are 1.0.
-    metrics.mResolution = LayoutDeviceToLayerScale(1.0f);
+    metrics.mResolution = ParentLayerToLayerScale(1.0f);
   }
+
+  metrics.mCumulativeResolution = LayoutDeviceToLayerScale(1.0f);
+  nsIPresShell* curPresShell = presShell;
+  while (curPresShell != nullptr) {
+    ParentLayerToLayerScale presShellResolution(curPresShell->GetXResolution(),
+                                                curPresShell->GetYResolution());
+    metrics.mCumulativeResolution.scale *= presShellResolution.scale;
+    nsPresContext* parentContext = curPresShell->GetPresContext()->GetParentPresContext();
+    curPresShell = parentContext ? parentContext->GetPresShell() : nullptr;
+  }
+#ifdef MOZ_WIDGET_ANDROID
+  if (presContext->IsRootContentDocument() && aScrollFrame == presShell->GetRootScrollFrame()) {
+    // On Android we set the resolution on a different presshell (bug 732971) so we
+    // need some special handling here to make things work properly. Once bug 732971 is
+    // fixed we should remove this ifdef block, and adjust any other pieces that need
+    // adjusting to make this work properly.
+    metrics.mResolution.scale = metrics.mCumulativeResolution.scale;
+  }
+#endif
+
   metrics.mDevPixelsPerCSSPixel = CSSToLayoutDeviceScale(
     (float)nsPresContext::AppUnitsPerCSSPixel() / auPerDevPixel);
 
   // Initially, AsyncPanZoomController should render the content to the screen
   // at the painted resolution.
   const LayerToScreenScale layerToScreenScale(1.0f);
-  metrics.mZoom = metrics.mResolution * metrics.mDevPixelsPerCSSPixel
+  metrics.mZoom = metrics.mCumulativeResolution * metrics.mDevPixelsPerCSSPixel
                 * layerToScreenScale;
 
   metrics.mMayHaveTouchListeners = aMayHaveTouchListeners;
@@ -689,7 +709,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   nsRect compositionBounds(frameForCompositionBoundsCalculation->GetOffsetToCrossDoc(aReferenceFrame),
                            frameForCompositionBoundsCalculation->GetSize());
   metrics.mCompositionBounds = RoundedToInt(LayoutDeviceRect::FromAppUnits(compositionBounds, auPerDevPixel)
-                             * metrics.mResolution
+                             * metrics.mCumulativeResolution
                              * layerToScreenScale);
 
   // Adjust composition bounds for the size of scroll bars.

@@ -41,41 +41,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=263683
       var prefNameFG = "ui.textHighlightForeground";
 
       function onLoad() {
-        // Get pref branch.
-        var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
-                              .getService(SpecialPowers.Ci.nsIPrefBranch);
+        SpecialPowers.pushPrefEnv({'set': [[prefNameBG, "#EF0FFF"], [prefNameFG, "#FFFFFF"]]}, startTest);
+      }
 
-        // Check to see if this pref has a user-set value. If so, store it
-        userSetFG = prefs.prefHasUserValue(prefNameFG);
-        userSetBG = prefs.prefHasUserValue(prefNameBG);
-
-        if (userSetFG)
-          userValueFG = prefs.getCharPref(prefNameFG);
-        if (userSetBG)
-          userValueBG = prefs.getCharPref(prefNameBG);
-
-        // Set pref to test colour used in reference file
-        prefs.setCharPref(prefNameBG, "#EF0FFF");
-        prefs.setCharPref(prefNameFG, "#FFFFFF");
-
+      function startTest() {
         var textToSelect = document.getElementById("selecttext");
 
         // Take a snapshot now. This will be used to check that removing the
         // ranges removes the highlighting correctly
         var noHighlight = snapshotWindow(window);
 
-        // Get docshell
-        var docShell =
-          SpecialPowers.wrap(window)
-                .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                .getInterface(SpecialPowers.Ci.nsIWebNavigation)
-                .QueryInterface(SpecialPowers.Ci.nsIDocShell);
-
-        // Get selection controller from docshell
-        var controller =
-          docShell.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                  .getInterface(SpecialPowers.Ci.nsISelectionDisplay)
-                  .QueryInterface(SpecialPowers.Ci.nsISelectionController);
+        var controller = SpecialPowers.wrap(window).
+           QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
+           getInterface(SpecialPowers.Ci.nsIWebNavigation).
+           QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
+           getInterface(SpecialPowers.Ci.nsISelectionDisplay).
+           QueryInterface(SpecialPowers.Ci.nsISelectionController);
 
         // Get selection
         var findSelection = controller.getSelection(controller.SELECTION_FIND);
@@ -107,24 +88,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=263683
         ok(res[0], "Removing ranges from FIND_SELECTION works correctly");
 
         SimpleTest.finish();
-      }
-
-      function onUnload() {
-        // Restore any user values for ui.textHighlight* preferences
-        var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
-                              .getService(SpecialPowers.Ci.nsIPrefBranch);
- 
-        if (prefs.prefHasUserValue(prefNameFG))
-          prefs.clearUserPref(prefNameFG);
-        if (prefs.prefHasUserValue(prefNameBG))
-          prefs.clearUserPref(prefNameBG);
-
-        if (userSetFG)
-          prefs.setCharPref(prefNameFG, userValueFG);
-
-        if (userSetBG)
-          prefs.setCharPref(prefNameBG, userValueBG);
- 
       }
 
     </script>

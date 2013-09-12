@@ -177,7 +177,8 @@ TEST(AsyncPanZoomController, ComplexTransform) {
   metrics.mViewport = CSSRect(0, 0, 4, 4);
   metrics.mScrollOffset = CSSPoint(10, 10);
   metrics.mScrollableRect = CSSRect(0, 0, 50, 50);
-  metrics.mResolution = LayoutDeviceToLayerScale(2);
+  metrics.mCumulativeResolution = LayoutDeviceToLayerScale(2);
+  metrics.mResolution = ParentLayerToLayerScale(2);
   metrics.mZoom = CSSToScreenScale(6);
   metrics.mDevPixelsPerCSSPixel = CSSToLayoutDeviceScale(3);
   metrics.mScrollId = FrameMetrics::ROOT_SCROLL_ID;
@@ -198,39 +199,39 @@ TEST(AsyncPanZoomController, ComplexTransform) {
   apzc->SetFrameMetrics(metrics);
   apzc->NotifyLayersUpdated(metrics, true);
   apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(LayerPoint(), LayoutDeviceToScreenScale(2)), viewTransformOut);
+  EXPECT_EQ(ViewTransform(LayerPoint(), ParentLayerToScreenScale(2)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(60, 60), pointOut);
 
   childApzc->SetFrameMetrics(childMetrics);
   childApzc->NotifyLayersUpdated(childMetrics, true);
   childApzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(LayerPoint(), LayoutDeviceToScreenScale(2)), viewTransformOut);
+  EXPECT_EQ(ViewTransform(LayerPoint(), ParentLayerToScreenScale(2)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(60, 60), pointOut);
 
   // do an async scroll by 5 pixels and check the transform
   metrics.mScrollOffset += CSSPoint(5, 0);
   apzc->SetFrameMetrics(metrics);
   apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), LayoutDeviceToScreenScale(2)), viewTransformOut);
+  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), ParentLayerToScreenScale(2)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(90, 60), pointOut);
 
   childMetrics.mScrollOffset += CSSPoint(5, 0);
   childApzc->SetFrameMetrics(childMetrics);
   childApzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), LayoutDeviceToScreenScale(2)), viewTransformOut);
+  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), ParentLayerToScreenScale(2)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(90, 60), pointOut);
 
   // do an async zoom of 1.5x and check the transform
   metrics.mZoom.scale *= 1.5f;
   apzc->SetFrameMetrics(metrics);
   apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), LayoutDeviceToScreenScale(3)), viewTransformOut);
+  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), ParentLayerToScreenScale(3)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(135, 90), pointOut);
 
   childMetrics.mZoom.scale *= 1.5f;
   childApzc->SetFrameMetrics(childMetrics);
   childApzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), LayoutDeviceToScreenScale(3)), viewTransformOut);
+  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), ParentLayerToScreenScale(3)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(135, 90), pointOut);
 }
 

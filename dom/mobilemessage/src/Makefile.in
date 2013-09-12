@@ -2,35 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-VPATH            = \
-  $(srcdir) \
-  $(srcdir)/ipc \
-  $(NULL)
-
-ifeq (android,$(MOZ_WIDGET_TOOLKIT))
-VPATH += $(srcdir)/android
-else ifdef MOZ_B2G_RIL
-VPATH += $(srcdir)/gonk
-else
-VPATH += $(srcdir)/fallback
-endif
-
 include $(topsrcdir)/dom/dom-config.mk
-
-LOCAL_INCLUDES = \
-  -I$(topsrcdir)/content/events/src \
-  -I$(topsrcdir)/dom/base \
-  $(NULL)
-
-# Add VPATH to LOCAL_INCLUDES so we are going to include the correct backend
-# subdirectory (and the ipc one).
-LOCAL_INCLUDES += $(VPATH:%=-I%)
-
-ifdef MOZ_B2G_RIL
-LOCAL_INCLUDES += \
-  -I$(topsrcdir)/dom/system/gonk \
-  $(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

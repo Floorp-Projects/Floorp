@@ -7,12 +7,14 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 
+const {Simulator} = Cu.import("resource://gre/modules/devtools/Simulator.jsm")
 const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {require} = devtools;
 
 const {ConnectionManager, Connection} = require("devtools/client/connection-manager");
 const ConnectionStore = require("devtools/app-manager/connection-store");
 const DeviceStore = require("devtools/app-manager/device-store");
+const simulatorsStore = require("devtools/app-manager/simulators-store");
 
 let UI = {
   init: function() {
@@ -43,6 +45,7 @@ let UI = {
     this.store = Utils.mergeStores({
       "device": new DeviceStore(this.connection),
       "connection": new ConnectionStore(this.connection),
+      "simulators": simulatorsStore,
     });
 
     let pre = document.querySelector("#logs > pre");
@@ -95,5 +98,48 @@ let UI = {
     this.connection.host = host;
     Services.prefs.setCharPref("devtools.debugger.remote-host", host);
     Services.prefs.setIntPref("devtools.debugger.remote-port", port);
+  },
+
+  showSimulatorList: function() {
+    document.body.classList.add("show-simulators");
+  },
+
+  cancelShowSimulatorList: function() {
+    document.body.classList.remove("show-simulators");
+  },
+
+  installSimulator: function() {
+    let url = Services.prefs.getCharPref("devtools.appmanager.simulatorInstallPage");
+    window.open(url);
+  },
+
+  startSimulator: function(version) {
+    let port = ConnectionManager.getFreeTCPPort();
+    let simulator = Simulator.getByVersion(version);
+    if (!simulator) {
+      this.connection.log("Error: can't find simulator: " + version);
+      return;
+    }
+    if (!simulator.launch) {
+      this.connection.log("Error: invalid simulator: " + version);
+      return;
+    }
+    this.connection.log("Found simulator: " + version);
+    this.connection.log("Starting simulator...");
+
+    this.simulator = simulator;
+    this.simulator.launch({ port: port })
+      .then(() => {
+        this.connection.log("Simulator ready. Connecting.");
+        this.connection.port = port;
+        this.connection.host = "localhost";
+        this.connection.once("connected", function() {
+          this.connection.log("Connected to simulator.");
+          this.connection.keepConnecting = false;
+        });
+        this.connection.keepConnecting = true;
+        this.connection.connect();
+      });
+    document.body.classList.remove("show-simulators");
   },
 }
