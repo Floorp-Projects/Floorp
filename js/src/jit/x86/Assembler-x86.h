@@ -119,6 +119,7 @@ class Operand
         MEM_ADDRESS
     };
 
+  private:
     Kind kind_ : 4;
     int32_t base_ : 5;
     Scale scale_ : 3;
