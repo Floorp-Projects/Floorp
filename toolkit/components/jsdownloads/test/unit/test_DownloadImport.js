@@ -689,7 +689,7 @@ add_task(function test_downloadImport()
   }
 
   // Import items.
-  let list = yield promiseNewDownloadList();
+  let list = yield promiseNewList();
   yield new DownloadImport(list, downloadsSqlite).import();
   let items = yield list.getAll();
 
