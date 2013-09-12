@@ -25,3 +25,6 @@ LIBXUL_LIBRARY = True
 
 MSVC_ENABLE_PGO = True
 
+LOCAL_INCLUDES += [
+    '/docshell/base',
+]
