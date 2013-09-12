@@ -328,12 +328,6 @@
     text-shadow: none;
   }
 
-  #main-window[sizemode=normal] .statuspanel-inner {
-    /* align with the browser's side borders */
-    padding-left: 1px;
-    padding-right: 1px;
-  }
-
   #ctrlTab-panel {
     background: transparent;
     -moz-appearance: -moz-win-glass;
