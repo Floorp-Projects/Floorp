@@ -421,7 +421,8 @@ class Marionette(object):
                  profile=None, emulator=None, sdcard=None, emulatorBinary=None,
                  emulatorImg=None, emulator_res=None, gecko_path=None,
                  connectToRunningEmulator=False, homedir=None, baseurl=None,
-                 noWindow=False, logcat_dir=None, busybox=None, symbols_path=None, timeout=None):
+                 noWindow=False, logcat_dir=None, busybox=None, symbols_path=None,
+                 timeout=None, device_serial=None):
         self.host = host
         self.port = self.local_port = port
         self.bin = bin
@@ -438,6 +439,7 @@ class Marionette(object):
         self._test_name = None
         self.symbols_path = symbols_path
         self.timeout = timeout
+        self.device_serial = device_serial
 
         if bin:
             port = int(self.port)
