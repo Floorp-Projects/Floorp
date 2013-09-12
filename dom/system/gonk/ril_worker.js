@@ -12731,6 +12731,7 @@ let ICCContactHelper = {
         error("Cannot access Phonebook.");
         return;
       }
+      contact.recordId %= ICC_MAX_LINEAR_FIXED_RECORDS;
       this.updatePhonebookSet(pbr, contact, onsuccess, onerror);
     }.bind(this);
 
