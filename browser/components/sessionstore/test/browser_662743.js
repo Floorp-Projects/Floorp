@@ -98,6 +98,9 @@ function testTabRestoreData(aFormData, aExpectedValues, aCallback) {
 
       // clean up
       gBrowser.removeTab(tab);
+      // Call stopPropagation on the event so we won't fire the
+      // tabbrowser's SSTabRestored listeners.
+      aEvent.stopPropagation();
       aCallback();
     });
 

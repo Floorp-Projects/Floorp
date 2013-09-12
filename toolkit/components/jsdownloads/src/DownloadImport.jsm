@@ -106,7 +106,7 @@ this.DownloadImport.prototype = {
 
             let autoResume = false;
             try {
-              autoResume = (row.getResultByName("autoResume") == 1);
+              autoResume = row.getResultByName("autoResume");
             } catch (ex) {
               // autoResume wasn't present in schema version 7
             }
@@ -153,7 +153,7 @@ this.DownloadImport.prototype = {
                 type: "copy",
                 entityID: entityID
               },
-              startTime: new Date(startTime / 1000),
+              startTime: startTime,
               totalBytes: maxBytes,
               hasPartialData: !!tempPath,
               tryToKeepPartialData: true,

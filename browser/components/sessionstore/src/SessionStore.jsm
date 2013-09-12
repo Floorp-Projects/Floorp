@@ -1619,6 +1619,9 @@ let SessionStoreInternal = {
   },
 
   getWindowValue: function ssi_getWindowValue(aWindow, aKey) {
+    if (this._disabledForMultiProcess)
+      return "";
+
     if ("__SSi" in aWindow) {
       var data = this._windows[aWindow.__SSi].extData || {};
       return data[aKey] || "";

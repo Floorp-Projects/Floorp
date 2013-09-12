@@ -2196,9 +2196,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 
 static void SlideSpanFrameRect(nsIFrame* aFrame, nscoord aDeltaWidth)
 {
-  nsRect r = aFrame->GetRect();
-  r.x -= aDeltaWidth;
-  aFrame->SetRect(r);
+  aFrame->MovePositionBy(nsPoint(-aDeltaWidth, 0));
 }
 
 bool

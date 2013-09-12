@@ -59,10 +59,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=732665
   ok(chromeLimit >= contentLimit + 10,
      "Chrome should be able to have at least 10 heavy frames more stack than content: " + chromeLimit + ", " + contentLimit);
 
-  // Exhaust the stack space in content, and then make sure we can still get 10 heavy frames in chrome.
+  // Exhaust the stack space in content, and then make sure we can still get 10
+  // heavy frames in chrome.
+  //
+  // Note that sometimes, if we pass |0| to nearNativeStackLimit, we can end up
+  // so close to the border in content that we can't even get ourselves together
+  // enough to make the cross-compartment call. So rather than exhausting the
+  // stack entirely and then checking for 10 chrome frames, we leave ourselves
+  // one frame's worth, and check for 11.
   contentSb.nnslChrome = chromeSb.nearNativeStackLimit;
-  var nestedLimit = Cu.evalInSandbox("nearNativeStackLimit(0, function() { nestedLimit = nnslChrome(0);}); nestedLimit;", contentSb);
-  ok(nestedLimit >= 10, "Chrome should be invokable from content script with an exhausted stack: " + nestedLimit);
+  var nestedLimit = Cu.evalInSandbox("nearNativeStackLimit(1, function() { nestedLimit = nnslChrome(0);}); nestedLimit;", contentSb);
+  ok(nestedLimit >= 11, "Chrome should be invokable from content script with an exhausted stack: " + nestedLimit);
 
   ]]>
   </script>

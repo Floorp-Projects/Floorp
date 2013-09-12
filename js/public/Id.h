@@ -22,6 +22,7 @@
 
 #include "jstypes.h"
 
+#include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 
@@ -159,5 +160,31 @@ extern JS_PUBLIC_DATA(const jsid) JSID_EMPTY;
 
 extern JS_PUBLIC_DATA(const JS::Handle<jsid>) JSID_VOIDHANDLE;
 extern JS_PUBLIC_DATA(const JS::Handle<jsid>) JSID_EMPTYHANDLE;
+
+namespace js {
+
+inline bool
+IsPoisonedId(jsid iden)
+{
+    if (JSID_IS_STRING(iden))
+        return JS::IsPoisonedPtr(JSID_TO_STRING(iden));
+    if (JSID_IS_OBJECT(iden))
+        return JS::IsPoisonedPtr(JSID_TO_OBJECT(iden));
+    return false;
+}
+
+template <> struct GCMethods<jsid>
+{
+    static jsid initial() { return JSID_VOID; }
+    static ThingRootKind kind() { return THING_ROOT_ID; }
+    static bool poisoned(jsid id) { return IsPoisonedId(id); }
+    static bool needsPostBarrier(jsid id) { return false; }
+#ifdef JSGC_GENERATIONAL
+    static void postBarrier(jsid *idp) {}
+    static void relocate(jsid *idp) {}
+#endif
+};
+
+}
 
 #endif /* js_Id_h */

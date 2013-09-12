@@ -352,8 +352,8 @@ inline void
 ExclusiveContext::maybePause() const
 {
 #ifdef JS_WORKER_THREADS
-    if (workerThread)
-        workerThread->maybePause();
+    if (workerThread())
+        workerThread()->maybePause();
 #endif
 }
 
