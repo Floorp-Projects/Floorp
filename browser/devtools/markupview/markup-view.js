@@ -10,6 +10,9 @@ const {Cc, Cu, Ci} = require("chrome");
 const PAGE_SIZE = 10;
 const PREVIEW_AREA = 700;
 const DEFAULT_MAX_CHILDREN = 100;
+const COLLAPSE_ATTRIBUTE_LENGTH = 120;
+const COLLAPSE_DATA_URL_REGEX = /^data.+base64/;
+const COLLAPSE_DATA_URL_LENGTH = 60;
 
 const {UndoStack} = require("devtools/shared/undo");
 const {editableField, InplaceEditor} = require("devtools/shared/inplace-editor");
@@ -1365,8 +1368,16 @@ ElementEditor.prototype = {
 
     this.attrs[aAttr.name] = attr;
 
+    let collapsedValue;
+    if (aAttr.value.match(COLLAPSE_DATA_URL_REGEX)) {
+      collapsedValue = truncateString(aAttr.value, COLLAPSE_DATA_URL_LENGTH);
+    }
+    else {
+      collapsedValue = truncateString(aAttr.value, COLLAPSE_ATTRIBUTE_LENGTH);
+    }
+
     name.textContent = aAttr.name;
-    val.textContent = aAttr.value;
+    val.textContent = collapsedValue;
 
     return attr;
   },
@@ -1467,6 +1478,15 @@ function nodeDocument(node) {
   return node.ownerDocument || (node.nodeType == Ci.nsIDOMNode.DOCUMENT_NODE ? node : null);
 }
 
+function truncateString(str, maxLength) {
+  if (str.length <= maxLength) {
+    return str;
+  }
+
+  return str.substring(0, Math.ceil(maxLength / 2)) +
+         "…" +
+         str.substring(str.length - Math.floor(maxLength / 2));
+}
 /**
  * Parse attribute names and values from a string.
  *
