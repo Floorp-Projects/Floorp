@@ -1,5 +1,5 @@
 // One Debugger's onPop handler can remove another Debugger's onPop handler.
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg1 = new Debugger(g);
 var dbg2 = new Debugger(g);
 

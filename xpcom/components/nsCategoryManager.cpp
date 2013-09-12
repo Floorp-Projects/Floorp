@@ -401,11 +401,11 @@ CategoryEnumerator::enumfunc_createenumerator(const char* aStr, CategoryNode* aN
 
 NS_IMPL_QUERY_INTERFACE1(nsCategoryManager, nsICategoryManager)
 
-class XPCOMCategoryManagerReporter MOZ_FINAL : public MemoryReporterBase
+class XPCOMCategoryManagerReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
     XPCOMCategoryManagerReporter()
-      : MemoryReporterBase("explicit/xpcom/category-manager",
+      : MemoryUniReporter("explicit/xpcom/category-manager",
                            KIND_HEAP, UNITS_BYTES,
                            "Memory used for the XPCOM category manager.")
     {}

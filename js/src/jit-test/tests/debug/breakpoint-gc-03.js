@@ -7,7 +7,7 @@
 // ensure that it isn't constant-folded; it's harder to get a compile-time
 // constant to be GC'd.)
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.eval("var d = 0;\n" +
        "function f() { return 'ok'; }\n" +
        "trap(f, 0, Array(17).join('\\n') + 'd++;');\n");

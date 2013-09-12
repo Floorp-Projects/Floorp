@@ -46,7 +46,7 @@
     for (let id = 1; id <= 100; id++) {
       let refs = {};
       let dbRefs = {};
-      let hasFileInfo = utils.getFileReferences(name, id, refs, dbRefs);
+      let hasFileInfo = utils.getFileReferences(name, id, null, refs, dbRefs);
       ok(hasFileInfo, "Has file info");
       is(refs.value, 1, "Correct ref count");
       is(dbRefs.value, id / 100 >> 0, "Correct db ref count");

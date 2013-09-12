@@ -1572,7 +1572,7 @@ function test() {
     checkThrow(function () DataView.prototype.buffer, TypeError);
 
     // Protos and proxies, oh my!
-    var alien = newGlobal('new-compartment');
+    var alien = newGlobal();
     var alien_data = alien.eval('data = ' + data1.toSource());
     var alien_buffer = alien.eval('buffer = new Uint8Array(data).buffer');
     var alien_view = alien.eval('view = new DataView(buffer, 0, 16)');

@@ -201,7 +201,7 @@ class CallObject : public ScopeObject
     create(JSContext *cx, HandleScript script, HandleObject enclosing, HandleFunction callee);
 
   public:
-    static Class class_;
+    static const Class class_;
 
     /* These functions are internal and are exposed only for JITs. */
     static CallObject *
@@ -259,7 +259,7 @@ class DeclEnvObject : public ScopeObject
     static const uint32_t RESERVED_SLOTS = 2;
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT2_BACKGROUND;
 
-    static Class class_;
+    static const Class class_;
 
     static DeclEnvObject *
     createTemplateObject(JSContext *cx, HandleFunction fun, gc::InitialHeap heap);
@@ -294,7 +294,7 @@ class WithObject : public NestedScopeObject
     static const unsigned RESERVED_SLOTS = 3;
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4_BACKGROUND;
 
-    static Class class_;
+    static const Class class_;
 
     static WithObject *
     create(JSContext *cx, HandleObject proto, HandleObject enclosing, uint32_t depth);
@@ -316,7 +316,7 @@ class BlockObject : public NestedScopeObject
     static const unsigned RESERVED_SLOTS = 2;
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4_BACKGROUND;
 
-    static Class class_;
+    static const Class class_;
 
     /* Return the number of variables associated with this block. */
     uint32_t slotCount() const {

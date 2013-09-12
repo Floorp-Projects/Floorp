@@ -50,6 +50,7 @@
                              [ 8, 8, "oneword\n", 0, 8 ],
                              [ 9, 18, "\n", 8, 9 ],
                              [ 19, 19, "two words\n", 9, 19 ]]);
+
       testTextBeforeOffset(IDs, BOUNDARY_LINE_END,
                           [ [ 0, 7, "", 0, 0 ],
                             [ 8, 8, "oneword", 0, 7 ],
@@ -96,7 +97,17 @@
 
       testTextAfterOffset([ getAccessible("ht_1").firstChild ], BOUNDARY_LINE_END,
                           [ [ 0, 5, "", 5, 5 ] ]);
-                           
+
+      //////////////////////////////////////////////////////////////////////////
+      // foo<br> and foo<br><br>
+
+      testTextAtOffset([ getAccessible("ht_2").firstChild.firstChild ],
+                       BOUNDARY_LINE_START,
+                       [ [ 0, 3, "foo", 0, 3 ] ]);
+      testTextAtOffset([ getAccessible("ht_3").firstChild.firstChild ],
+                       BOUNDARY_LINE_START,
+                       [ [ 0, 3, "foo\n", 0, 4 ], [ 4, 4, "", 4, 4 ] ]);
+
       SimpleTest.finish();
     }
 
@@ -135,16 +146,16 @@
           src="data:text/html,<html><body><textarea id='ta'>hello my friend</textarea></body></html>"></iframe>
 
   <pre>
-    <div id="ml_div">oneword
+    <div id="ml_div" style="border-style:outset;">oneword
 
 two words
 </div>
-  <div id="ml_divbr">oneword<br/><br/>two words<br/></div>
-  <div id="ml_editable" contenteditable="true">oneword
+  <div id="ml_divbr" style="border-style:outset;">oneword<br/><br/>two words<br/><br/></div>
+  <div id="ml_editable" style="border-style:outset;" contenteditable="true">oneword
 
 two words
 </div>
-  <div id="ml_editablebr" contenteditable="true">oneword<br/><br/>two words<br/></div>
+  <div id="ml_editablebr" contenteditable="true" style="border-style:outset;">oneword<br/><br/>two words<br/><br/></div>
   <textarea id="ml_textarea" cols="300">oneword
 
 two words
@@ -152,5 +163,8 @@ two words
   </pre>
 
   <iframe id="ht_1" src="data:text/html,<html><body>a <a href=''>b</a> c</body></html>"></iframe>
+
+  <iframe id="ht_2" src="data:text/html,<div contentEditable='true'>foo<br/></div>"></iframe>
+  <iframe id="ht_3" src="data:text/html,<div contentEditable='true'>foo<br/><br/></div>"></iframe>
 </body>
 </html>

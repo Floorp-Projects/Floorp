@@ -15,10 +15,21 @@ Services.prefs.setBoolPref("devtools.debugger.log", true);
 // Enable remote debugging for the relevant tests.
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 
-Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
-Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
-Cu.import("resource://gre/modules/devtools/Loader.jsm");
 Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
+
+function tryImport(url) {
+  try {
+    Cu.import(url);
+  } catch (e) {
+    dump("Error importing " + url + "\n");
+    dump(DevToolsUtils.safeErrorString(e) + "\n");
+    throw e;
+  }
+}
+
+tryImport("resource://gre/modules/devtools/dbg-server.jsm");
+tryImport("resource://gre/modules/devtools/dbg-client.jsm");
+tryImport("resource://gre/modules/devtools/Loader.jsm");
 
 function testExceptionHook(ex) {
   try {

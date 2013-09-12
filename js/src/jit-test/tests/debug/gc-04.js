@@ -1,7 +1,7 @@
 // Storing a Debugger.Object as a key in a WeakMap protects it from GC as long as
 // the referent is alive.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var N = g.N = 10;
 var dbg = Debugger(g);
 var cache = new WeakMap;

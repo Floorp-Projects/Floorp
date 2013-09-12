@@ -221,7 +221,8 @@ DOMRequestIpcHelper.prototype = {
 
   forEachPromiseResolver: function(aCallback) {
     Object.keys(this._requests).forEach(function(k) {
-      if (this.getPromiseResolver(k) instanceof this._window.PromiseResolver) {
+      if ("resolve" in this.getPromiseResolver(k) &&
+          "reject" in this.getPromiseResolver(k)) {
         aCallback(k);
       }
     }, this);

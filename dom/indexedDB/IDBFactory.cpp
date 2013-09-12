@@ -9,6 +9,7 @@
 #include "nsIFile.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIXPConnect.h"
 #include "nsIXPCScriptable.h"
 
@@ -22,7 +23,6 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/storage.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
@@ -51,6 +51,7 @@ USING_QUOTA_NAMESPACE
 
 using mozilla::dom::ContentChild;
 using mozilla::dom::ContentParent;
+using mozilla::dom::IDBOpenDBOptions;
 using mozilla::dom::NonNull;
 using mozilla::dom::Optional;
 using mozilla::dom::TabChild;
@@ -70,7 +71,8 @@ struct ObjectStoreInfoMap
 } // anonymous namespace
 
 IDBFactory::IDBFactory()
-: mOwningObject(nullptr), mActorChild(nullptr), mActorParent(nullptr),
+: mPrivilege(Content), mDefaultPersistenceType(PERSISTENCE_TYPE_TEMPORARY),
+  mOwningObject(nullptr), mActorChild(nullptr), mActorParent(nullptr),
   mContentParent(nullptr), mRootedOwningObject(false)
 {
   SetIsDOMBinding();
@@ -93,6 +95,7 @@ IDBFactory::~IDBFactory()
 // static
 nsresult
 IDBFactory::Create(nsPIDOMWindow* aWindow,
+                   const nsACString& aGroup,
                    const nsACString& aASCIIOrigin,
                    ContentParent* aContentParent,
                    IDBFactory** aFactory)
@@ -116,18 +119,31 @@ IDBFactory::Create(nsPIDOMWindow* aWindow,
 
   nsresult rv;
 
+  nsCString group(aGroup);
   nsCString origin(aASCIIOrigin);
+  StoragePrivilege privilege;
+  PersistenceType defaultPersistenceType;
   if (origin.IsEmpty()) {
-    rv = QuotaManager::GetASCIIOriginFromWindow(aWindow, origin);
-    if (NS_FAILED(rv)) {
-      // Not allowed.
-      *aFactory = nullptr;
-      return NS_OK;
-    }
+    NS_ASSERTION(aGroup.IsEmpty(), "Should be empty too!");
+
+    rv = QuotaManager::GetInfoFromWindow(aWindow, &group, &origin, &privilege,
+                                         &defaultPersistenceType);
+  }
+  else {
+    rv = QuotaManager::GetInfoFromWindow(aWindow, nullptr, nullptr, &privilege,
+                                         &defaultPersistenceType);
+  }
+  if (NS_FAILED(rv)) {
+    // Not allowed.
+    *aFactory = nullptr;
+    return NS_OK;
   }
 
   nsRefPtr<IDBFactory> factory = new IDBFactory();
+  factory->mGroup = group;
   factory->mASCIIOrigin = origin;
+  factory->mPrivilege = privilege;
+  factory->mDefaultPersistenceType = defaultPersistenceType;
   factory->mWindow = aWindow;
   factory->mContentParent = aContentParent;
 
@@ -138,7 +154,7 @@ IDBFactory::Create(nsPIDOMWindow* aWindow,
     IndexedDBChild* actor = new IndexedDBChild(origin);
 
     bool allowed;
-    tabChild->SendPIndexedDBConstructor(actor, origin, &allowed);
+    tabChild->SendPIndexedDBConstructor(actor, group, origin, &allowed);
 
     if (!allowed) {
       actor->Send__delete__(actor);
@@ -167,12 +183,20 @@ IDBFactory::Create(JSContext* aCx,
                "Not a global object!");
   NS_ASSERTION(nsContentUtils::IsCallerChrome(), "Only for chrome!");
 
+  nsCString group;
   nsCString origin;
-  nsresult rv = QuotaManager::GetASCIIOriginFromWindow(nullptr, origin);
+  StoragePrivilege privilege;
+  PersistenceType defaultPersistenceType;
+  nsresult rv =
+    QuotaManager::GetInfoFromWindow(nullptr, &group, &origin, &privilege,
+                                    &defaultPersistenceType);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<IDBFactory> factory = new IDBFactory();
+  factory->mGroup = group;
   factory->mASCIIOrigin = origin;
+  factory->mPrivilege = privilege;
+  factory->mDefaultPersistenceType = defaultPersistenceType;
   factory->mOwningObject = aOwningObject;
   factory->mContentParent = aContentParent;
 
@@ -238,7 +262,10 @@ IDBFactory::Create(ContentParent* aContentParent,
 
 // static
 already_AddRefed<nsIFileURL>
-IDBFactory::GetDatabaseFileURL(nsIFile* aDatabaseFile, const nsACString& aOrigin)
+IDBFactory::GetDatabaseFileURL(nsIFile* aDatabaseFile,
+                               PersistenceType aPersistenceType,
+                               const nsACString& aGroup,
+                               const nsACString& aOrigin)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewFileURI(getter_AddRefs(uri), aDatabaseFile);
@@ -247,7 +274,12 @@ IDBFactory::GetDatabaseFileURL(nsIFile* aDatabaseFile, const nsACString& aOrigin
   nsCOMPtr<nsIFileURL> fileUrl = do_QueryInterface(uri);
   NS_ASSERTION(fileUrl, "This should always succeed!");
 
-  rv = fileUrl->SetQuery(NS_LITERAL_CSTRING("origin=") + aOrigin);
+  nsAutoCString type;
+  PersistenceTypeToText(aPersistenceType, type);
+
+  rv = fileUrl->SetQuery(NS_LITERAL_CSTRING("persistenceType=") + type +
+                         NS_LITERAL_CSTRING("&group=") + aGroup +
+                         NS_LITERAL_CSTRING("&origin=") + aOrigin);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   return fileUrl.forget();
@@ -256,6 +288,8 @@ IDBFactory::GetDatabaseFileURL(nsIFile* aDatabaseFile, const nsACString& aOrigin
 // static
 already_AddRefed<mozIStorageConnection>
 IDBFactory::GetConnection(const nsAString& aDatabaseFilePath,
+                          PersistenceType aPersistenceType,
+                          const nsACString& aGroup,
                           const nsACString& aOrigin)
 {
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
@@ -273,7 +307,8 @@ IDBFactory::GetConnection(const nsAString& aDatabaseFilePath,
   NS_ENSURE_SUCCESS(rv, nullptr);
   NS_ENSURE_TRUE(exists, nullptr);
 
-  nsCOMPtr<nsIFileURL> dbFileUrl = GetDatabaseFileURL(dbFile, aOrigin);
+  nsCOMPtr<nsIFileURL> dbFileUrl =
+    GetDatabaseFileURL(dbFile, aPersistenceType, aGroup, aOrigin);
   NS_ENSURE_TRUE(dbFileUrl, nullptr);
 
   nsCOMPtr<mozIStorageService> ss =
@@ -524,7 +559,10 @@ DOMCI_DATA(IDBFactory, IDBFactory)
 nsresult
 IDBFactory::OpenInternal(const nsAString& aName,
                          int64_t aVersion,
+                         PersistenceType aPersistenceType,
+                         const nsACString& aGroup,
                          const nsACString& aASCIIOrigin,
+                         StoragePrivilege aPrivilege,
                          bool aDeleting,
                          IDBOpenDBRequest** _retval)
 {
@@ -534,17 +572,19 @@ IDBFactory::OpenInternal(const nsAString& aName,
   AutoJSContext cx;
   nsCOMPtr<nsPIDOMWindow> window;
   JS::Rooted<JSObject*> scriptOwner(cx);
-  StoragePrivilege privilege;
 
   if (mWindow) {
     window = mWindow;
     scriptOwner =
       static_cast<nsGlobalWindow*>(window.get())->FastGetGlobalJSObject();
-    privilege = Content;
   }
   else {
     scriptOwner = mOwningObject;
-    privilege = Chrome;
+  }
+
+  if (aPrivilege == Chrome) {
+    // Chrome privilege, ignore the persistence type parameter.
+    aPersistenceType = PERSISTENCE_TYPE_PERSISTENT;
   }
 
   nsRefPtr<IDBOpenDBRequest> request =
@@ -555,40 +595,51 @@ IDBFactory::OpenInternal(const nsAString& aName,
 
   if (IndexedDatabaseManager::IsMainProcess()) {
     nsRefPtr<OpenDatabaseHelper> openHelper =
-      new OpenDatabaseHelper(request, aName, aASCIIOrigin, aVersion, aDeleting,
-                             mContentParent, privilege);
+      new OpenDatabaseHelper(request, aName, aGroup, aASCIIOrigin, aVersion,
+                             aPersistenceType, aDeleting, mContentParent,
+                             aPrivilege);
 
     rv = openHelper->Init();
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    nsRefPtr<CheckPermissionsHelper> permissionHelper =
-      new CheckPermissionsHelper(openHelper, window, aDeleting);
+    if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
+      nsRefPtr<CheckPermissionsHelper> permissionHelper =
+        new CheckPermissionsHelper(openHelper, window);
 
-    QuotaManager* quotaManager = QuotaManager::Get();
-    NS_ASSERTION(quotaManager, "This should never be null!");
+      QuotaManager* quotaManager = QuotaManager::Get();
+      NS_ASSERTION(quotaManager, "This should never be null!");
 
-    rv = quotaManager->WaitForOpenAllowed(OriginOrPatternString::FromOrigin(
-                                          aASCIIOrigin), openHelper->Id(),
-                                          permissionHelper);
+      rv = quotaManager->
+        WaitForOpenAllowed(OriginOrPatternString::FromOrigin(aASCIIOrigin),
+                           Nullable<PersistenceType>(aPersistenceType),
+                           openHelper->Id(), permissionHelper);
+    }
+    else {
+      NS_ASSERTION(aPersistenceType == PERSISTENCE_TYPE_TEMPORARY, "Huh?");
+
+      rv = openHelper->WaitForOpenAllowed();
+    }
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
   else if (aDeleting) {
     nsCOMPtr<nsIAtom> databaseId =
-      QuotaManager::GetStorageId(aASCIIOrigin, aName);
+      QuotaManager::GetStorageId(aPersistenceType, aASCIIOrigin, aName);
     NS_ENSURE_TRUE(databaseId, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     IndexedDBDeleteDatabaseRequestChild* actor =
       new IndexedDBDeleteDatabaseRequestChild(this, request, databaseId);
 
     mActorChild->SendPIndexedDBDeleteDatabaseRequestConstructor(
-                                                               actor,
-                                                               nsString(aName));
+                                                              actor,
+                                                              nsString(aName),
+                                                              aPersistenceType);
   }
   else {
     IndexedDBDatabaseChild* dbActor =
       static_cast<IndexedDBDatabaseChild*>(
         mActorChild->SendPIndexedDBDatabaseConstructor(nsString(aName),
-                                                       aVersion));
+                                                       aVersion,
+                                                       aPersistenceType));
 
     dbActor->SetRequest(request);
   }
@@ -620,6 +671,22 @@ IDBFactory::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
   return IDBFactoryBinding::Wrap(aCx, aScope, this);
 }
 
+already_AddRefed<IDBOpenDBRequest>
+IDBFactory::Open(const nsAString& aName, const IDBOpenDBOptions& aOptions,
+                 ErrorResult& aRv)
+{
+  return Open(nullptr, aName, aOptions.mVersion, aOptions.mStorage, false, aRv);
+}
+
+already_AddRefed<IDBOpenDBRequest>
+IDBFactory::DeleteDatabase(const nsAString& aName,
+                           const IDBOpenDBOptions& aOptions,
+                           ErrorResult& aRv)
+{
+  return Open(nullptr, aName, Optional<uint64_t>(), aOptions.mStorage, true,
+              aRv);
+}
+
 int16_t
 IDBFactory::Cmp(JSContext* aCx, JS::Handle<JS::Value> aFirst,
                 JS::Handle<JS::Value> aSecond, ErrorResult& aRv)
@@ -646,22 +713,34 @@ IDBFactory::Cmp(JSContext* aCx, JS::Handle<JS::Value> aFirst,
 }
 
 already_AddRefed<IDBOpenDBRequest>
-IDBFactory::OpenForPrincipal(nsIPrincipal* aPrincipal,
-                             const nsAString& aName,
-                             const Optional<uint64_t>& aVersion,
-                             ErrorResult& aRv)
+IDBFactory::OpenForPrincipal(nsIPrincipal* aPrincipal, const nsAString& aName,
+                             uint64_t aVersion, ErrorResult& aRv)
 {
   // Just to be on the extra-safe side
   if (!nsContentUtils::IsCallerChrome()) {
     MOZ_CRASH();
   }
 
-  return Open(aPrincipal, aName, aVersion, false, aRv);
+  return Open(aPrincipal, aName, Optional<uint64_t>(aVersion),
+              Optional<mozilla::dom::StorageType>(), false, aRv);
 }
 
 already_AddRefed<IDBOpenDBRequest>
-IDBFactory::DeleteForPrincipal(nsIPrincipal* aPrincipal,
-                               const nsAString& aName,
+IDBFactory::OpenForPrincipal(nsIPrincipal* aPrincipal, const nsAString& aName,
+                             const IDBOpenDBOptions& aOptions, ErrorResult& aRv)
+{
+  // Just to be on the extra-safe side
+  if (!nsContentUtils::IsCallerChrome()) {
+    MOZ_CRASH();
+  }
+
+  return Open(aPrincipal, aName, aOptions.mVersion, aOptions.mStorage, false,
+              aRv);
+}
+
+already_AddRefed<IDBOpenDBRequest>
+IDBFactory::DeleteForPrincipal(nsIPrincipal* aPrincipal, const nsAString& aName,
+                               const IDBOpenDBOptions& aOptions,
                                ErrorResult& aRv)
 {
   // Just to be on the extra-safe side
@@ -669,43 +748,53 @@ IDBFactory::DeleteForPrincipal(nsIPrincipal* aPrincipal,
     MOZ_CRASH();
   }
 
-  return Open(aPrincipal, aName, Optional<uint64_t>(), true, aRv);
+  return Open(aPrincipal, aName, Optional<uint64_t>(), aOptions.mStorage, true,
+              aRv);
 }
 
 already_AddRefed<IDBOpenDBRequest>
-IDBFactory::Open(nsIPrincipal* aPrincipal,
-                 const nsAString& aName, const Optional<uint64_t>& aVersion,
+IDBFactory::Open(nsIPrincipal* aPrincipal, const nsAString& aName,
+                 const Optional<uint64_t>& aVersion,
+                 const Optional<mozilla::dom::StorageType>& aStorageType,
                  bool aDelete, ErrorResult& aRv)
 {
   nsresult rv;
 
+  nsCString group;
   nsCString origin;
+  StoragePrivilege privilege;
+  PersistenceType defaultPersistenceType;
   if (aPrincipal) {
-    rv = QuotaManager::GetASCIIOriginFromPrincipal(aPrincipal, origin);
+    rv = QuotaManager::GetInfoFromPrincipal(aPrincipal, &group, &origin,
+                                            &privilege,
+                                            &defaultPersistenceType);
     if (NS_FAILED(rv)) {
-      aRv.Throw(rv);
+      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
       return nullptr;
     }
   }
   else {
+    group = mGroup;
     origin = mASCIIOrigin;
+    privilege = mPrivilege;
+    defaultPersistenceType = mDefaultPersistenceType;
   }
 
-  uint64_t version;
+  uint64_t version = 0;
   if (!aDelete && aVersion.WasPassed()) {
-    version = aVersion.Value();
-    if (version < 1) {
+    if (aVersion.Value() < 1) {
       aRv.ThrowTypeError(MSG_INVALID_VERSION);
       return nullptr;
     }
-  }
-  else {
-    version = 0;
+    version = aVersion.Value();
   }
 
+  PersistenceType persistenceType =
+    PersistenceTypeFromStorage(aStorageType, defaultPersistenceType);
+
   nsRefPtr<IDBOpenDBRequest> request;
-  rv = OpenInternal(aName, version, origin, aDelete,
-                    getter_AddRefs(request));
+  rv = OpenInternal(aName, version, persistenceType, group, origin, privilege,
+                    aDelete, getter_AddRefs(request));
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;

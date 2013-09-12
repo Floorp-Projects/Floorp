@@ -1,7 +1,7 @@
 // |jit-test| error: TestComplete
 // onPop can request a termination when stopped for a termination
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 
 // We use Debugger.Frame.prototype.eval and ignore the outer 'eval' frame so we 

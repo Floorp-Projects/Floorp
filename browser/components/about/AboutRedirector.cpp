@@ -90,6 +90,8 @@ static RedirEntry kRedirMap[] = {
   { "healthreport", "chrome://browser/content/abouthealthreport/abouthealth.xhtml",
     nsIAboutModule::ALLOW_SCRIPT },
 #endif
+  { "app-manager", "chrome://browser/content/devtools/app-manager/index.xul",
+    nsIAboutModule::ALLOW_SCRIPT },
   { "customizing", "chrome://browser/content/customizableui/aboutCustomizing.xhtml",
     nsIAboutModule::ALLOW_SCRIPT },
 };

@@ -1,5 +1,5 @@
 // Setting onPop handlers from an onExceptionUnwind handler works.
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 var log;
 

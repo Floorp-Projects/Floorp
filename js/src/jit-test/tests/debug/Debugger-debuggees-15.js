@@ -1,5 +1,5 @@
 // Debugger mode can be disabled for a compartment even if it has scripts running.
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 g.parent = this;
 var n = 2;

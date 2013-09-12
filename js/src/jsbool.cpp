@@ -25,7 +25,7 @@
 using namespace js;
 using namespace js::types;
 
-Class BooleanObject::class_ = {
+const Class BooleanObject::class_ = {
     "Boolean",
     JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_HAS_CACHED_PROTO(JSProto_Boolean),
     JS_PropertyStub,         /* addProperty */

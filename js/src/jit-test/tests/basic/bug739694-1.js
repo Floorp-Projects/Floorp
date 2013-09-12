@@ -1,5 +1,5 @@
 function newFunc(x) { new Function(x)(); }; try { newFunc("\
-var g = newGlobal('new-compartment');\
+var g = newGlobal();\
 g.h = function () {\
     names = foo.blaaaaaaaaaaaaah().environment.names();\
 };\

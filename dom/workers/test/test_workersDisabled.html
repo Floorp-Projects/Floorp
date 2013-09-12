@@ -11,37 +11,43 @@
   </head>
   <body>
     <script type="text/javascript">
+      SimpleTest.waitForExplicitFinish();
+
       const enabledPref = "dom.workers.enabled";
 
       is(SpecialPowers.getBoolPref(enabledPref), true,
          "Workers should be enabled.");
 
-      SpecialPowers.setBoolPref(enabledPref, false);
-      ok(!("Worker" in window), "Worker constructor should not be available.");
+      SpecialPowers.pushPrefEnv({"set": [[enabledPref, false]]}, test1);
 
-      var exception;
-      try {
+      function test1() {
+        ok(!("Worker" in window), "Worker constructor should not be available.");
+
+        var exception;
+        try {
+          var worker = new Worker("workersDisabled_worker.js");
+        }
+        catch(e) {
+          exception = e;
+        }
+
+        ok(exception, "Shouldn't be able to make a worker.");
+
+        SpecialPowers.pushPrefEnv({"set": [[enabledPref, true]]}, test2);
+      }
+
+      function test2() {
+        ok(("Worker" in window), "Worker constructor should be available.");
+
+        const message = "Hi";
+
         var worker = new Worker("workersDisabled_worker.js");
+        worker.onmessage = function(event) {
+          is(event.data, message, "Good message.");
+          SimpleTest.finish();
+        }
+        worker.postMessage(message);
       }
-      catch(e) {
-        exception = e;
-      }
-
-      ok(exception, "Shouldn't be able to make a worker.");
-
-      SpecialPowers.setBoolPref(enabledPref, true);
-      ok(("Worker" in window), "Worker constructor should be available.");
-
-      const message = "Hi";
-
-      var worker = new Worker("workersDisabled_worker.js");
-      worker.onmessage = function(event) {
-        is(event.data, message, "Good message.");
-        SimpleTest.finish();
-      }
-      worker.postMessage(message);
-
-      SimpleTest.waitForExplicitFinish();
     </script>
   </body>
 </html>

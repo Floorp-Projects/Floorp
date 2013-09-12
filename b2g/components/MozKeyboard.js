@@ -545,8 +545,8 @@ MozInputContext.prototype = {
 
   getText: function ic_getText(offset, length) {
     let self = this;
-    return this.createPromise(function(resolver) {
-      let resolverId = self.getPromiseResolverId(resolver);
+    return this.createPromise(function(resolve, reject) {
+      let resolverId = self.getPromiseResolverId({ resolve: resolve, reject: reject });
       cpmm.sendAsyncMessage('Keyboard:GetText', {
         contextId: self._contextId,
         requestId: resolverId,
@@ -574,8 +574,8 @@ MozInputContext.prototype = {
 
   setSelectionRange: function ic_setSelectionRange(start, length) {
     let self = this;
-    return this.createPromise(function(resolver) {
-      let resolverId = self.getPromiseResolverId(resolver);
+    return this.createPromise(function(resolve, reject) {
+      let resolverId = self.getPromiseResolverId({ resolve: resolve, reject: reject });
       cpmm.sendAsyncMessage("Keyboard:SetSelectionRange", {
         contextId: self._contextId,
         requestId: resolverId,
@@ -603,8 +603,8 @@ MozInputContext.prototype = {
 
   replaceSurroundingText: function ic_replaceSurrText(text, offset, length) {
     let self = this;
-    return this.createPromise(function(resolver) {
-      let resolverId = self.getPromiseResolverId(resolver);
+    return this.createPromise(function(resolve, reject) {
+      let resolverId = self.getPromiseResolverId({ resolve: resolve, reject: reject });
       cpmm.sendAsyncMessage('Keyboard:ReplaceSurroundingText', {
         contextId: self._contextId,
         requestId: resolverId,
@@ -621,8 +621,8 @@ MozInputContext.prototype = {
 
   sendKey: function ic_sendKey(keyCode, charCode, modifiers) {
     let self = this;
-    return this.createPromise(function(resolver) {
-      let resolverId = self.getPromiseResolverId(resolver);
+    return this.createPromise(function(resolve, reject) {
+      let resolverId = self.getPromiseResolverId({ resolve: resolve, reject: reject });
       cpmm.sendAsyncMessage('Keyboard:SendKey', {
         contextId: self._contextId,
         requestId: resolverId,
@@ -635,8 +635,8 @@ MozInputContext.prototype = {
 
   setComposition: function ic_setComposition(text, cursor, clauses) {
     let self = this;
-    return this.createPromise(function(resolver) {
-      let resolverId = self.getPromiseResolverId(resolver);
+    return this.createPromise(function(resolve, reject) {
+      let resolverId = self.getPromiseResolverId({ resolve: resolve, reject: reject });
       cpmm.sendAsyncMessage('Keyboard:SetComposition', {
         contextId: self._contextId,
         requestId: resolverId,
@@ -649,8 +649,8 @@ MozInputContext.prototype = {
 
   endComposition: function ic_endComposition(text) {
     let self = this;
-    return this.createPromise(function(resolver) {
-      let resolverId = self.getPromiseResolverId(resolver);
+    return this.createPromise(function(resolve, reject) {
+      let resolverId = self.getPromiseResolverId({ resolve: resolve, reject: reject });
       cpmm.sendAsyncMessage('Keyboard:EndComposition', {
         contextId: self._contextId,
         requestId: resolverId,

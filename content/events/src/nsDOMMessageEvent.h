@@ -11,6 +11,13 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/MessageEventBinding.h"
 
+namespace mozilla {
+namespace dom {
+class MessagePortList;
+class WindowProxyOrMessagePortReturnValue;
+}
+}
+
 /**
  * Implements the MessageEvent event, used for cross-document messaging and
  * server-sent events.
@@ -43,31 +50,26 @@ public:
 
   JS::Value GetData(JSContext* aCx, mozilla::ErrorResult& aRv);
 
-  already_AddRefed<nsIDOMWindow> GetSource()
+  void GetSource(Nullable<mozilla::dom::WindowProxyOrMessagePortReturnValue>& aValue) const;
+
+  mozilla::dom::MessagePortList* GetPorts()
   {
-    nsCOMPtr<nsIDOMWindow> ret = mSource;
-    return ret.forget();
+    return mPorts;
   }
 
-  void InitMessageEvent(JSContext* aCx,
-                        const nsAString& aType,
-                        bool aCanBubble,
-                        bool aCancelable,
-                        JS::Handle<JS::Value> aData,
-                        const nsAString& aOrigin,
-                        const nsAString& aLastEventId,
-                        nsIDOMWindow* aSource,
-                        mozilla::ErrorResult& aRv)
-  {
-    aRv = InitMessageEvent(aType, aCanBubble, aCancelable, aData,
-                           aOrigin, aLastEventId, aSource);
-  }
+  static already_AddRefed<nsDOMMessageEvent>
+  Constructor(const mozilla::dom::GlobalObject& aGlobal, JSContext* aCx,
+              const nsAString& aType,
+              const mozilla::dom::MessageEventInit& aEventInit,
+              mozilla::ErrorResult& aRv);
 
 private:
   JS::Heap<JS::Value> mData;
   nsString mOrigin;
   nsString mLastEventId;
-  nsCOMPtr<nsIDOMWindow> mSource;
+  nsCOMPtr<nsIDOMWindow> mWindowSource;
+  nsCOMPtr<mozilla::dom::MessagePort> mPortSource;
+  nsRefPtr<mozilla::dom::MessagePortList> mPorts;
 };
 
 #endif // nsDOMMessageEvent_h__

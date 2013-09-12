@@ -9,8 +9,8 @@
 
 interface WindowProxy;
 
-interface MessageEvent : Event
-{
+[Constructor(DOMString type, optional MessageEventInit eventInitDict)]
+interface MessageEvent : Event {
   /**
    * Custom data associated with this event.
    */
@@ -32,21 +32,25 @@ interface MessageEvent : Event
   readonly attribute DOMString lastEventId;
 
   /**
-   * The window which originated this event.
+   * The window or the port which originated this event.
    */
-  readonly attribute WindowProxy? source;
+  readonly attribute (WindowProxy or MessagePort)? source;
 
   /**
    * Initializes this event with the given data, in a manner analogous to
    * the similarly-named method on the nsIDOMEvent interface, also setting the
    * data, origin, source, and lastEventId attributes of this appropriately.
    */
-  [Throws]
-  void initMessageEvent(DOMString aType,
-                        boolean aCanBubble,
-                        boolean aCancelable,
-                        any aData,
-                        DOMString aOrigin,
-                        DOMString aLastEventId,
-                        WindowProxy? aSource);
+  readonly attribute MessagePortList? ports;
+};
+
+dictionary MessageEventInit : EventInit {
+  any data;
+  DOMString origin;
+  DOMString lastEventId;
+
+  // TODO bug 767926 - This should be: (WindowProxy or MessagePort)? source;
+  object? source = null;
+
+  sequence<MessagePort>? ports;
 };

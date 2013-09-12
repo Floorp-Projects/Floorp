@@ -53,6 +53,7 @@
 
             // Fire notification closed event.
             let event = new Event('AlertClose');
+            event.notification = aItem;
             this.dispatchEvent(event);
 
             return aItem;

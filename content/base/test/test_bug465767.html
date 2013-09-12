@@ -19,19 +19,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=465767
 
 /** Test for Bug 465767 **/
 
-function CC() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-        .getInterface(Components.interfaces.nsIDOMWindowUtils)
-        .garbageCollect();
-}
-
 function runTest() {
   var node = document.createElement("div");
   var e = null;
   try {
     document.implementation.createDocument("", "", null).adoptNode(node);
-    CC();
+    SpecialPowers.gc();
     document.implementation.createDocument("", "", null).adoptNode(node);
   } catch(ex) {
     e = ex;

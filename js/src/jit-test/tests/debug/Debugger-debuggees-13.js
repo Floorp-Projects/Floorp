@@ -1,5 +1,5 @@
 // Removing a debuggee does not detach the debugger from a compartment if another debuggee is in it.
-var g1 = newGlobal('new-compartment');
+var g1 = newGlobal();
 var g2 = g1.eval("newGlobal('same-compartment')");
 var dbg = new Debugger(g1, g2);
 var hits = 0;

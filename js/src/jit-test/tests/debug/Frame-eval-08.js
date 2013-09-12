@@ -1,6 +1,6 @@
 // The arguments can escape from a function via a debugging hook.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 
 // capture arguments object and test function

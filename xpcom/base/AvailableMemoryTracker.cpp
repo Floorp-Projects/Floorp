@@ -325,36 +325,18 @@ CreateDIBSectionHook(HDC aDC,
   return result;
 }
 
-class LowMemoryEventsVirtualReporter MOZ_FINAL : public MemoryReporterBase
+class LowMemoryEventsVirtualReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
-  // The description is "???" because we implement GetDescription().
   LowMemoryEventsVirtualReporter()
-    : MemoryReporterBase("low-memory-events/virtual",
-                         KIND_OTHER, UNITS_COUNT_CUMULATIVE, "???")
+    : MemoryUniReporter("low-memory-events/virtual",
+                         KIND_OTHER, UNITS_COUNT_CUMULATIVE,
+"Number of low-virtual-memory events fired since startup. We fire such an "
+"event if we notice there is less than memory.low_virtual_mem_threshold_mb of "
+"virtual address space available (if zero, this behavior is disabled).  The "
+"process will probably crash if it runs out of virtual address space, so "
+"this event is dire.")
   {}
-
-  NS_IMETHOD GetDescription(nsACString &aDescription)
-  {
-    aDescription.AssignLiteral(
-      "Number of low-virtual-memory events fired since startup. ");
-
-    if (sLowVirtualMemoryThreshold == 0) {
-      aDescription.AppendLiteral(
-        "Tracking low-virtual-memory events is disabled, but you can enable it "
-        "by giving the memory.low_virtual_mem_threshold_mb pref a non-zero "
-        "value.");
-    }
-    else {
-      aDescription.Append(nsPrintfCString(
-        "We fire such an event if we notice there is less than %d MB of virtual "
-        "address space available (controlled by the "
-        "'memory.low_virtual_mem_threshold_mb' pref).  We'll likely crash if "
-        "we run out of virtual address space, so this event is somewhat dire.",
-        sLowVirtualMemoryThreshold));
-    }
-    return NS_OK;
-  }
 
 private:
   int64_t Amount() MOZ_OVERRIDE
@@ -367,72 +349,35 @@ private:
   }
 };
 
-class LowCommitSpaceEventsReporter MOZ_FINAL : public MemoryReporterBase
+class LowCommitSpaceEventsReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
-  // The description is "???" because we implement GetDescription().
   LowCommitSpaceEventsReporter()
-    : MemoryReporterBase("low-commit-space-events",
-                         KIND_OTHER, UNITS_COUNT_CUMULATIVE, "???")
+    : MemoryUniReporter("low-commit-space-events",
+                         KIND_OTHER, UNITS_COUNT_CUMULATIVE,
+"Number of low-commit-space events fired since startup. We fire such an "
+"event if we notice there is less than memory.low_commit_space_threshold_mb of "
+"commit space available (if zero, this behavior is disabled).  Windows will "
+"likely kill the process if it runs out of commit space, so this event is "
+"dire.")
   {}
-
-  NS_IMETHOD GetDescription(nsACString &aDescription)
-  {
-    aDescription.AssignLiteral(
-      "Number of low-commit-space events fired since startup. ");
-
-    if (sLowCommitSpaceThreshold == 0) {
-      aDescription.Append(
-        "Tracking low-commit-space events is disabled, but you can enable it "
-        "by giving the memory.low_commit_space_threshold_mb pref a non-zero "
-        "value.");
-    }
-    else {
-      aDescription.Append(nsPrintfCString(
-        "We fire such an event if we notice there is less than %d MB of "
-        "available commit space (controlled by the "
-        "'memory.low_commit_space_threshold_mb' pref).  Windows will likely "
-        "kill us if we run out of commit space, so this event is somewhat dire.",
-        sLowCommitSpaceThreshold));
-    }
-    return NS_OK;
-  }
 
 private:
   int64_t Amount() MOZ_OVERRIDE { return sNumLowCommitSpaceEvents; }
 };
 
-class LowMemoryEventsPhysicalReporter MOZ_FINAL : public MemoryReporterBase
+class LowMemoryEventsPhysicalReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
-  // The description is "???" because we implement GetDescription().
   LowMemoryEventsPhysicalReporter()
-    : MemoryReporterBase("low-memory-events/physical",
-                         KIND_OTHER, UNITS_COUNT_CUMULATIVE, "???")
+    : MemoryUniReporter("low-memory-events/physical",
+                         KIND_OTHER, UNITS_COUNT_CUMULATIVE,
+"Number of low-physical-memory events fired since startup. We fire such an "
+"event if we notice there is less than memory.low_physical_memory_threshold_mb "
+"of physical memory available (if zero, this behavior is disabled).  The "
+"machine will start to page if it runs out of physical memory.  This may "
+"cause it to run slowly, but it shouldn't cause it to crash.")
   {}
-
-  NS_IMETHOD GetDescription(nsACString &aDescription)
-  {
-    aDescription.AssignLiteral(
-      "Number of low-physical-memory events fired since startup. ");
-
-    if (sLowPhysicalMemoryThreshold == 0) {
-      aDescription.Append(
-        "Tracking low-physical-memory events is disabled, but you can enable it "
-        "by giving the memory.low_physical_memory_threshold_mb pref a non-zero "
-        "value.");
-    }
-    else {
-      aDescription.Append(nsPrintfCString(
-        "We fire such an event if we notice there is less than %d MB of "
-        "available physical memory (controlled by the "
-        "'memory.low_physical_memory_threshold_mb' pref).  The machine will start "
-        "to page if it runs out of physical memory; this may cause it to run "
-        "slowly, but it shouldn't cause us to crash.",
-        sLowPhysicalMemoryThreshold));
-    }
-    return NS_OK;
-  }
 
 private:
   int64_t Amount() MOZ_OVERRIDE { return sNumLowPhysicalMemEvents; }

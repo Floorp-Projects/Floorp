@@ -1,7 +1,7 @@
 // A breakpoint cleared during dispatch does not fire.
 // (Breakpoint dispatch is well-behaved even when breakpoint handlers clear other breakpoints.)
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var log = '';
 dbg.onDebuggerStatement = function (frame) {

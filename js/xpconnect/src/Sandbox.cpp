@@ -585,9 +585,11 @@ sandbox_convert(JSContext *cx, HandleObject obj, JSType type, MutableHandleValue
     return JS_ConvertStub(cx, obj, type, vp);
 }
 
-static JSClass SandboxClass = {
+#define XPCONNECT_SANDBOX_CLASS_METADATA_SLOT (XPCONNECT_GLOBAL_EXTRA_SLOT_OFFSET)
+
+static const JSClass SandboxClass = {
     "Sandbox",
-    XPCONNECT_GLOBAL_FLAGS,
+    XPCONNECT_GLOBAL_FLAGS_WITH_EXTRA_SLOTS(1),
     JS_PropertyStub,   JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     sandbox_enumerate, sandbox_resolve, sandbox_convert,  sandbox_finalize,
     NULL, NULL, NULL, NULL, TraceXPCGlobal
@@ -945,9 +947,10 @@ xpc::CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandb
     }
 
     JS::CompartmentOptions compartmentOptions;
-    compartmentOptions.setZone(options.sameZoneAs
-                                 ? JS::SameZoneAs(js::UncheckedUnwrap(options.sameZoneAs))
-                                 : JS::SystemZone);
+    if (options.sameZoneAs)
+        compartmentOptions.setSameZoneAs(js::UncheckedUnwrap(options.sameZoneAs));
+    else
+        compartmentOptions.setZone(JS::SystemZone);
     RootedObject sandbox(cx, xpc::CreateGlobalObject(cx, &SandboxClass,
                                                      principal, compartmentOptions));
     if (!sandbox)
@@ -982,7 +985,7 @@ xpc::CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandb
 
             // Now check what sort of thing we've got in |proto|
             JSObject *unwrappedProto = js::UncheckedUnwrap(options.proto, false);
-            js::Class *unwrappedClass = js::GetObjectClass(unwrappedProto);
+            const js::Class *unwrappedClass = js::GetObjectClass(unwrappedProto);
             if (IS_WN_CLASS(unwrappedClass) ||
                 mozilla::dom::IsDOMClass(Jsvalify(unwrappedClass))) {
                 // Wrap it up in a proxy that will do the right thing in terms
@@ -1040,6 +1043,8 @@ xpc::CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandb
     // Set the location information for the new global, so that tools like
     // about:memory may use that information
     xpc::SetLocationForGlobal(sandbox, options.sandboxName);
+
+    xpc::SetSandboxMetadata(cx, sandbox, options.metadata);
 
     JS_FireOnNewGlobalObject(cx, sandbox);
 
@@ -1338,6 +1343,10 @@ ParseOptionsObject(JSContext *cx, jsval from, SandboxOptions &options)
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = GetDOMConstructorsFromOptions(cx, optionsObject, options);
+
+    bool found;
+    rv = GetPropFromOptions(cx, optionsObject,
+                            "metadata", &options.metadata, &found);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
@@ -1649,4 +1658,41 @@ xpc::NewFunctionForwarder(JSContext *cx, HandleId id, HandleObject callable, boo
     js::SetFunctionNativeReserved(funobj, 0, ObjectValue(*callable));
     vp.setObject(*funobj);
     return true;
+}
+
+
+nsresult
+xpc::GetSandboxMetadata(JSContext *cx, HandleObject sandbox, MutableHandleValue rval)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(IsSandbox(sandbox));
+
+    RootedValue metadata(cx);
+    {
+      JSAutoCompartment ac(cx, sandbox);
+      metadata = JS_GetReservedSlot(sandbox, XPCONNECT_SANDBOX_CLASS_METADATA_SLOT);
+    }
+
+    if (!JS_WrapValue(cx, metadata.address()))
+        return NS_ERROR_UNEXPECTED;
+
+    rval.set(metadata);
+    return NS_OK;
+}
+
+nsresult
+xpc::SetSandboxMetadata(JSContext *cx, HandleObject sandbox, HandleValue metadataArg)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(IsSandbox(sandbox));
+
+    RootedValue metadata(cx);
+
+    JSAutoCompartment ac(cx, sandbox);
+    if (!JS_StructuredClone(cx, metadataArg, metadata.address(), NULL, NULL))
+        return NS_ERROR_UNEXPECTED;
+
+    JS_SetReservedSlot(sandbox, XPCONNECT_SANDBOX_CLASS_METADATA_SLOT, metadata);
+
+    return NS_OK;
 }

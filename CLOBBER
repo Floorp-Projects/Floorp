@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 912832 - Inverse tiers and subtiers for build traversal
+Bug 785884 - Implement support for temporary storage (aka shared pool) 

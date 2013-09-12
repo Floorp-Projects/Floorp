@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=848294
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 848294</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript">
+  function runTest() {
+    var channel = new MessageChannel();
+
+    var tests = [
+      {},
+      { data: 42 },
+      { data: {} },
+      { data: true, origin: 'wow' },
+      { data: [], lastEventId: 'wow2'  },
+      { data: null, source: null },
+      { data: window, source: window },
+      { data: window, source: channel.port1 },
+      { data: window, source: channel.port1, ports: [ channel.port1, channel.port2 ] },
+      { data: null, ports: null },
+    ];
+
+    while (tests.length) {
+      var test = tests.shift();
+
+      var e = new MessageEvent('message', test);
+      ok(e, "MessageEvent created");
+      is(e.type, 'message', 'MessageEvent.type is right');
+
+      is(e.data, 'data' in test ? test.data : undefined, 'MessageEvent.data is ok');
+      is(e.origin, 'origin' in test ? test.origin : '', 'MessageEvent.origin is ok');
+      is(e.lastEventId, 'lastEventId' in test ? test.lastEventId : '', 'MessageEvent.lastEventId is ok');
+      is(e.source, 'source' in test ? test.source : undefined, 'MessageEvent.source is ok');
+
+      if (test.ports != undefined) {
+        is(e.ports.length, test.ports.length, 'MessageEvent.ports is ok');
+        is(e.ports, e.ports, 'MessageEvent.ports is ok');
+      } else {
+        ok(!('ports' in test) || test.ports == null, 'MessageEvent.ports is ok');
+      }
+    }
+
+    try {
+      var e = new MessageEvent('foobar', { source: 42 });
+      ok(false, "Source has to be a window or a port");
+    } catch(e) {
+      ok(true, "Source has to be a window or a port");
+    }
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [["dom.messageChannel.enabled", true]]}, runTest);
+  </script>
+</body>
+</html>

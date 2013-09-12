@@ -25,11 +25,6 @@ onconnect = function(e) {
       case "test-profile":
         apiPort.postMessage({topic: "social.user-profile", data: data});
         break;
-      case "test-pending-msg":
-        // we also want to check we have seen a social.initialize message before
-        // this one, so send that back in the response.
-        port.postMessage({topic: "test-pending-response", data: {seenInit: !!apiPort}});
-        break;
       case "test-ambient":
         apiPort.postMessage({topic: "social.ambient-notification", data: data});
         break;
@@ -40,8 +35,6 @@ onconnect = function(e) {
         testerPort.postMessage({topic: "test.cookies-get-response", data: data});
         break;
       case "test-reload-init":
-        // browser_social_sidebar.js started test, tell the sidebar to
-        // start
         apiPort.postMessage({topic: 'social.reload-worker'});
         break;
       case "test-notification-create":
@@ -63,9 +56,4 @@ onconnect = function(e) {
         break;
     }
   }
-  // used for "test-reload-worker"
-  if (apiPort && apiPort != port) {
-    port.postMessage({topic: "worker.connected"})
-  }
-
 }

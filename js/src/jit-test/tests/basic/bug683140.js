@@ -6,7 +6,7 @@ g.eval("this.f = function(a) {" +
        "assertEq(a instanceof Array, true); }");
 g.f([1, 2, 3]);
 
-var g2 = newGlobal("new-compartment");
+var g2 = newGlobal();
 g2.a = g2.Array(10);
 assertEq(g2.a instanceof Array, false);
 g2.a = Array.prototype.slice(g2.a);

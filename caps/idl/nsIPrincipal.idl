@@ -20,7 +20,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, builtinclass, uuid(dbda8bb0-3023-4aec-ad98-8e9931a29d70)]
+[scriptable, builtinclass, uuid(551bf53d-203c-4ac4-8c0b-40aa7b5f1ad6)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -162,19 +162,19 @@ interface nsIPrincipal : nsISerializable
     [noscript] attribute nsIContentSecurityPolicy csp;
 
     /**
-     * Returns the extended origin of the principal.
-     * The extended origin is a string that has more information than the origin
-     * and can be used to isolate data or permissions between different
-     * principals while taking into account parameters like the app id or the
-     * fact that the principal is embedded in a mozbrowser.
-     * Some principals will return the origin for extendedOrigin.
-     * Some principals will assert if you try to access the extendedOrigin.
+     * Returns the jar prefix of the principal.
+     * The jar prefix is a string that can be used to isolate data or
+     * permissions between different principals while taking into account
+     * parameters like the app id or the fact that the principal is embedded in
+     * a mozbrowser.
+     * Some principals will return an empty string.
+     * Some principals will assert if you try to access the jarPrefix.
      *
-     * The extendedOrigin is intended to be an opaque identifier. It is
-     * currently "human-readable" but no callers should assume it will stay
-     * as is and it might be crypto-hashed at some point.
+     * The jarPrefix is intended to be an opaque identifier. It is currently
+     * "human-readable" but no callers should assume it will stay as is and
+     * it might be crypto-hashed at some point.
      */
-    readonly attribute AUTF8String extendedOrigin;
+    readonly attribute AUTF8String jarPrefix;
 
     /**
      * The base domain of the codebase URI to which this principal pertains

@@ -52,9 +52,7 @@ function clickHandler(e) {
 
 function doTest() {
   window.addEventListener("click", clickHandler, true);
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                     getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var utils = SpecialPowers.getDOMWindowUtils(window);
   utils.sendMouseEvent("mousedown", 1, 1, 0, 1, 0);
   utils.sendMouseEvent("mouseup", 1, 1, 0, 1, 0);
 

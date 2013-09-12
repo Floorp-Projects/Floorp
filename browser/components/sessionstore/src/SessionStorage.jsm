@@ -61,7 +61,7 @@ let DomStorage = {
       // Check if we're allowed to store sessionStorage data.
       let isHTTPS = principal.URI && principal.URI.schemeIs("https");
       if (aFullData || SessionStore.checkPrivacyLevel(isHTTPS, isPinned)) {
-        let origin = principal.extendedOrigin;
+        let origin = principal.jarPrefix + principal.origin;
 
         // Don't read a host twice.
         if (!(origin in data)) {

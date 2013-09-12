@@ -9,8 +9,6 @@
 #include "assembler/assembler/MacroAssembler.h"
 #include "jit/AsmJSModule.h"
 
-#include "vm/ObjectImpl-inl.h"
-
 using namespace js;
 using namespace js::jit;
 using namespace mozilla;

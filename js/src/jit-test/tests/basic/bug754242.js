@@ -1,4 +1,4 @@
-var g1 = newGlobal('new-compartment');
+var g1 = newGlobal();
 schedulegc(g1);
 gcslice(0);
 function testEq(b) {

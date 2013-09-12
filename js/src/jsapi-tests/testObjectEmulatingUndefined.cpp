@@ -4,7 +4,7 @@
 
 #include "jsapi-tests/tests.h"
 
-static JSClass ObjectEmulatingUndefinedClass = {
+static const JSClass ObjectEmulatingUndefinedClass = {
     "ObjectEmulatingUndefined",
     JSCLASS_EMULATES_UNDEFINED,
     JS_PropertyStub,

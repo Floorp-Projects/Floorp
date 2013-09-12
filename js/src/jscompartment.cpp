@@ -24,10 +24,10 @@
 #include "vm/StopIterationObject.h"
 #include "vm/WrapperObject.h"
 
+#include "jsatominlines.h"
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
 #include "jsinferinlines.h"
-#include "jsscriptinlines.h"
 
 #include "gc/Barrier-inl.h"
 

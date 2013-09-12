@@ -81,7 +81,6 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
-#include "vm/Runtime-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 

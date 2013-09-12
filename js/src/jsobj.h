@@ -18,6 +18,7 @@
 
 #include "mozilla/MemoryReporting.h"
 
+#include "gc/Marking.h"
 #include "vm/ObjectImpl.h"
 #include "vm/Shape.h"
 
@@ -151,9 +152,9 @@ DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded);
 
 } /* namespace js::baseops */
 
-extern Class IntlClass;
-extern Class JSONClass;
-extern Class MathClass;
+extern const Class IntlClass;
+extern const Class JSONClass;
+extern const Class MathClass;
 
 class ArrayBufferObject;
 class GlobalObject;
@@ -162,6 +163,41 @@ class NewObjectCache;
 class NormalArgumentsObject;
 class SetObject;
 class StrictArgumentsObject;
+
+#ifdef JSGC_GENERATIONAL
+class DenseRangeRef : public gc::BufferableRef
+{
+    JSObject *owner;
+    uint32_t start;
+    uint32_t end;
+
+  public:
+    DenseRangeRef(JSObject *obj, uint32_t start, uint32_t end)
+      : owner(obj), start(start), end(end)
+    {
+        JS_ASSERT(start < end);
+    }
+
+    inline void mark(JSTracer *trc);
+};
+#endif
+
+/*
+ * NOTE: This is a placeholder for bug 619558.
+ *
+ * Run a post write barrier that encompasses multiple contiguous slots in a
+ * single step.
+ */
+inline void
+DenseRangeWriteBarrierPost(JSRuntime *rt, JSObject *obj, uint32_t start, uint32_t count)
+{
+#ifdef JSGC_GENERATIONAL
+    if (count > 0) {
+        JS::shadow::Runtime *shadowRuntime = JS::shadow::Runtime::asShadowRuntime(rt);
+        shadowRuntime->gcStoreBufferPtr()->putGeneric(DenseRangeRef(obj, start, start + count));
+    }
+#endif
+}
 
 }  /* namespace js */
 
@@ -187,7 +223,7 @@ class JSObject : public js::ObjectImpl
     static js::types::TypeObject *makeLazyType(JSContext *cx, js::HandleObject obj);
 
   public:
-    static js::Class class_;
+    static const js::Class class_;
 
     /*
      * Update the last property, keeping the number of allocated slots in sync
@@ -431,7 +467,7 @@ class JSObject : public js::ObjectImpl
     void uninlinedSetType(js::types::TypeObject *newType);
 
 #ifdef DEBUG
-    bool hasNewType(js::Class *clasp, js::types::TypeObject *newType);
+    bool hasNewType(const js::Class *clasp, js::types::TypeObject *newType);
 #endif
 
     /*
@@ -447,10 +483,10 @@ class JSObject : public js::ObjectImpl
      * Mark an object as requiring its default 'new' type to have unknown
      * properties.
      */
-    static bool setNewTypeUnknown(JSContext *cx, js::Class *clasp, JS::HandleObject obj);
+    static bool setNewTypeUnknown(JSContext *cx, const js::Class *clasp, JS::HandleObject obj);
 
     /* Set a new prototype for an object with a singleton type. */
-    bool splicePrototype(JSContext *cx, js::Class *clasp, js::Handle<js::TaggedProto> proto);
+    bool splicePrototype(JSContext *cx, const js::Class *clasp, js::Handle<js::TaggedProto> proto);
 
     /*
      * For bootstrapping, whether to splice a prototype for Function.prototype
@@ -599,7 +635,13 @@ class JSObject : public js::ObjectImpl
                                            js::HandleObject obj, uint32_t index);
     static inline void removeDenseElementForSparseIndex(js::ExclusiveContext *cx,
                                                         js::HandleObject obj, uint32_t index);
-    inline void copyDenseElements(uint32_t dstStart, const js::Value *src, uint32_t count);
+
+    void copyDenseElements(uint32_t dstStart, const js::Value *src, uint32_t count) {
+        JS_ASSERT(dstStart + count <= getDenseCapacity());
+        JS::Zone *zone = this->zone();
+        for (uint32_t i = 0; i < count; ++i)
+            elements[dstStart + i].set(zone, this, js::HeapSlot::Element, dstStart + i, src[i]);
+    }
 
     void initDenseElements(uint32_t dstStart, const js::Value *src, uint32_t count) {
         JS_ASSERT(dstStart + count <= getDenseCapacity());
@@ -608,8 +650,50 @@ class JSObject : public js::ObjectImpl
             elements[dstStart + i].init(rt, this, js::HeapSlot::Element, dstStart + i, src[i]);
     }
 
-    inline void moveDenseElements(uint32_t dstStart, uint32_t srcStart, uint32_t count);
-    inline void moveDenseElementsUnbarriered(uint32_t dstStart, uint32_t srcStart, uint32_t count);
+    void moveDenseElements(uint32_t dstStart, uint32_t srcStart, uint32_t count) {
+        JS_ASSERT(dstStart + count <= getDenseCapacity());
+        JS_ASSERT(srcStart + count <= getDenseInitializedLength());
+
+        /*
+         * Using memmove here would skip write barriers. Also, we need to consider
+         * an array containing [A, B, C], in the following situation:
+         *
+         * 1. Incremental GC marks slot 0 of array (i.e., A), then returns to JS code.
+         * 2. JS code moves slots 1..2 into slots 0..1, so it contains [B, C, C].
+         * 3. Incremental GC finishes by marking slots 1 and 2 (i.e., C).
+         *
+         * Since normal marking never happens on B, it is very important that the
+         * write barrier is invoked here on B, despite the fact that it exists in
+         * the array before and after the move.
+        */
+        JS::Zone *zone = this->zone();
+        JS::shadow::Zone *shadowZone = JS::shadow::Zone::asShadowZone(zone);
+        if (shadowZone->needsBarrier()) {
+            if (dstStart < srcStart) {
+                js::HeapSlot *dst = elements + dstStart;
+                js::HeapSlot *src = elements + srcStart;
+                for (uint32_t i = 0; i < count; i++, dst++, src++)
+                    dst->set(zone, this, js::HeapSlot::Element, dst - elements, *src);
+            } else {
+                js::HeapSlot *dst = elements + dstStart + count - 1;
+                js::HeapSlot *src = elements + srcStart + count - 1;
+                for (uint32_t i = 0; i < count; i++, dst--, src--)
+                    dst->set(zone, this, js::HeapSlot::Element, dst - elements, *src);
+            }
+        } else {
+            memmove(elements + dstStart, elements + srcStart, count * sizeof(js::HeapSlot));
+            DenseRangeWriteBarrierPost(runtimeFromMainThread(), this, dstStart, count);
+        }
+    }
+
+    void moveDenseElementsUnbarriered(uint32_t dstStart, uint32_t srcStart, uint32_t count) {
+        JS_ASSERT(!shadowZone()->needsBarrier());
+
+        JS_ASSERT(dstStart + count <= getDenseCapacity());
+        JS_ASSERT(srcStart + count <= getDenseCapacity());
+
+        memmove(elements + dstStart, elements + srcStart, count * sizeof(js::Value));
+    }
 
     bool shouldConvertDoubleElements() {
         JS_ASSERT(isNative());
@@ -1088,6 +1172,19 @@ class ValueArray {
 
 namespace js {
 
+#ifdef JSGC_GENERATIONAL
+inline void
+DenseRangeRef::mark(JSTracer *trc)
+{
+    /* Apply forwarding, if we have already visited owner. */
+    js::gc::IsObjectMarked(&owner);
+    uint32_t initLen = owner->getDenseInitializedLength();
+    uint32_t clampedStart = Min(start, initLen);
+    gc::MarkArraySlots(trc, Min(end, initLen) - clampedStart,
+                       owner->getDenseElements() + clampedStart, "element");
+}
+#endif
+
 template <AllowGC allowGC>
 extern bool
 HasOwnProperty(JSContext *cx, LookupGenericOp lookup,
@@ -1097,10 +1194,10 @@ HasOwnProperty(JSContext *cx, LookupGenericOp lookup,
                typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp);
 
 bool
-IsStandardClassResolved(JSObject *obj, js::Class *clasp);
+IsStandardClassResolved(JSObject *obj, const js::Class *clasp);
 
 void
-MarkStandardClassInitializedNoProto(JSObject *obj, js::Class *clasp);
+MarkStandardClassInitializedNoProto(JSObject *obj, const js::Class *clasp);
 
 typedef JSObject *(*ClassInitializerOp)(JSContext *cx, JS::HandleObject obj);
 
@@ -1145,7 +1242,7 @@ js_IdentifyClassPrototype(JSObject *obj);
  */
 bool
 js_FindClassObject(js::ExclusiveContext *cx, JSProtoKey protoKey, js::MutableHandleValue vp,
-                   js::Class *clasp = NULL);
+                   const js::Class *clasp = NULL);
 
 /*
  * Find or create a property named by id in obj's scope, with the given getter
@@ -1216,7 +1313,7 @@ CreateThisForFunction(JSContext *cx, js::HandleObject callee, bool newType);
 
 // Generic call for constructing |this|.
 extern JSObject *
-CreateThis(JSContext *cx, js::Class *clasp, js::HandleObject callee);
+CreateThis(JSContext *cx, const js::Class *clasp, js::HandleObject callee);
 
 extern JSObject *
 CloneObject(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto, HandleObject parent);
@@ -1436,7 +1533,7 @@ js_InferFlags(JSContext *cx, unsigned defaultFlags);
  */
 extern bool
 js_GetClassPrototype(js::ExclusiveContext *cx, JSProtoKey protoKey, js::MutableHandleObject protop,
-                     js::Class *clasp = NULL);
+                     const js::Class *clasp = NULL);
 
 namespace js {
 
@@ -1445,7 +1542,7 @@ GetClassPrototypePure(GlobalObject *global, JSProtoKey protoKey);
 
 extern bool
 SetClassAndProto(JSContext *cx, HandleObject obj,
-                 Class *clasp, Handle<TaggedProto> proto, bool checkForCycles);
+                 const Class *clasp, Handle<TaggedProto> proto, bool checkForCycles);
 
 extern JSObject *
 NonNullObject(JSContext *cx, const Value &v);

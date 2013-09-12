@@ -1,6 +1,6 @@
 // setVariable works on let-bindings.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 function test(code, val) {
     g.eval("function f() { " + code + " }");
     var dbg = new Debugger(g);
