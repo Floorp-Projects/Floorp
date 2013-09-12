@@ -598,7 +598,7 @@ public class BookmarksPage extends HomeFragment {
                     if (bitmap != null) {
                         // Favicons.scaleImage can return several different size favicons,
                         // but will at least prevent this from being too large.
-                        thumbnails.put(url, new Thumbnail(Favicons.getInstance().scaleImage(bitmap), false));
+                        thumbnails.put(url, new Thumbnail(Favicons.scaleImage(bitmap), false));
                     }
                 }
             }

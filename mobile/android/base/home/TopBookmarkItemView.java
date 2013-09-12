@@ -180,7 +180,7 @@ public class TopBookmarkItemView extends RelativeLayout {
 
         mThumbnailView.setScaleType(ScaleType.CENTER);
         mThumbnailView.setImageBitmap(favicon);
-        mThumbnailView.setBackgroundColor(Favicons.getInstance().getFaviconColor(favicon, mUrl));
+        mThumbnailView.setBackgroundColor(Favicons.getFaviconColor(favicon, mUrl));
     }
 
     /**
