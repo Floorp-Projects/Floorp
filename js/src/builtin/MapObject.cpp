@@ -19,8 +19,6 @@
 
 #include "jsobjinlines.h"
 
-#include "gc/Barrier-inl.h"
-
 using namespace js;
 
 using mozilla::DoubleIsInt32;
@@ -857,7 +855,7 @@ namespace {
 class MapIteratorObject : public JSObject
 {
   public:
-    static Class class_;
+    static const Class class_;
 
     enum { TargetSlot, KindSlot, RangeSlot, SlotCount };
     static const JSFunctionSpec methods[];
@@ -875,7 +873,7 @@ class MapIteratorObject : public JSObject
 
 } /* anonymous namespace */
 
-Class MapIteratorObject::class_ = {
+const Class MapIteratorObject::class_ = {
     "Map Iterator",
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(MapIteratorObject::SlotCount),
@@ -1008,7 +1006,7 @@ MapIteratorObject::next(JSContext *cx, unsigned argc, Value *vp)
 
 /*** Map *****************************************************************************************/
 
-Class MapObject::class_ = {
+const Class MapObject::class_ = {
     "Map",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Map),
@@ -1045,7 +1043,7 @@ const JSFunctionSpec MapObject::methods[] = {
 };
 
 static JSObject *
-InitClass(JSContext *cx, Handle<GlobalObject*> global, Class *clasp, JSProtoKey key, Native construct,
+InitClass(JSContext *cx, Handle<GlobalObject*> global, const Class *clasp, JSProtoKey key, Native construct,
           const JSPropertySpec *properties, const JSFunctionSpec *methods)
 {
     Rooted<JSObject*> proto(cx, global->createBlankPrototype(cx, clasp));
@@ -1424,7 +1422,7 @@ namespace {
 class SetIteratorObject : public JSObject
 {
   public:
-    static Class class_;
+    static const Class class_;
 
     enum { TargetSlot, KindSlot, RangeSlot, SlotCount };
     static const JSFunctionSpec methods[];
@@ -1442,7 +1440,7 @@ class SetIteratorObject : public JSObject
 
 } /* anonymous namespace */
 
-Class SetIteratorObject::class_ = {
+const Class SetIteratorObject::class_ = {
     "Set Iterator",
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(SetIteratorObject::SlotCount),
@@ -1571,7 +1569,7 @@ SetIteratorObject::next(JSContext *cx, unsigned argc, Value *vp)
 
 /*** Set *****************************************************************************************/
 
-Class SetObject::class_ = {
+const Class SetObject::class_ = {
     "Set",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Set),

@@ -47,12 +47,12 @@ extern void
 global_finalize(JSFreeOp* fop, JSObject* obj);
 
 extern JSObject*
-CreateJSDGlobal(JSContext *cx, JSClass *clasp);
+CreateJSDGlobal(JSContext *cx, const JSClass *clasp);
 
 /***************************************************************************/
 
 
-static JSClass global_class = {
+static const JSClass global_class = {
     "JSDGlobal", JSCLASS_GLOBAL_FLAGS |
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
     JS_PropertyStub,  JS_DeletePropertyStub,  JS_PropertyStub,  JS_StrictPropertyStub,

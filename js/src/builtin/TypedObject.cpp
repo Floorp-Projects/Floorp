@@ -243,7 +243,7 @@ IsBinaryStruct(JSContext *cx, HandleObject obj)
     return IsBlockOfKind(cx, obj, TypeRepresentation::Struct);
 }
 
-Class js::DataClass = {
+const Class js::DataClass = {
     "Data",
     JSCLASS_HAS_CACHED_PROTO(JSProto_Data),
     JS_PropertyStub,
@@ -255,7 +255,7 @@ Class js::DataClass = {
     JS_ConvertStub
 };
 
-Class js::TypeClass = {
+const Class js::TypeClass = {
     "Type",
     JSCLASS_HAS_CACHED_PROTO(JSProto_Type),
     JS_PropertyStub,
@@ -319,7 +319,7 @@ TypeEquivalent(JSContext *cx, unsigned int argc, Value *vp)
     NULL                                                                      \
 },
 
-Class js::NumericTypeClasses[ScalarTypeRepresentation::TYPE_MAX] = {
+const Class js::NumericTypeClasses[ScalarTypeRepresentation::TYPE_MAX] = {
     JS_FOR_EACH_SCALAR_TYPE_REPR(BINARYDATA_NUMERIC_CLASSES)
 };
 
@@ -365,7 +365,7 @@ InRange<double, double>(double x)
 
 #define BINARYDATA_TYPE_TO_CLASS(constant_, type_, name_)                     \
     template <>                                                               \
-    Class *                                                                   \
+    const Class *                                                             \
     NumericType<constant_, type_>::typeToClass()                              \
     {                                                                         \
         return &NumericTypeClasses[constant_];                                \
@@ -554,7 +554,7 @@ SetupAndGetPrototypeObjectForComplexTypeInstance(JSContext *cx,
     return prototypeObj;
 }
 
-Class ArrayType::class_ = {
+const Class ArrayType::class_ = {
     "ArrayType",
     JSCLASS_HAS_RESERVED_SLOTS(ARRAY_TYPE_RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayType),
@@ -1028,7 +1028,7 @@ ArrayType::construct(JSContext *cx, unsigned argc, Value *vp)
 /*********************************
  * Structs
  *********************************/
-Class StructType::class_ = {
+const Class StructType::class_ = {
     "StructType",
     JSCLASS_HAS_RESERVED_SLOTS(STRUCT_TYPE_RESERVED_SLOTS) |
     JSCLASS_HAS_PRIVATE | // used to store FieldList
@@ -1572,7 +1572,7 @@ DefineNumericClass(JSContext *cx,
     RootedObject numFun(
         cx,
         JS_DefineObject(cx, global, name,
-                        (JSClass *) &NumericTypeClasses[type],
+                        (const JSClass *) &NumericTypeClasses[type],
                         globalProto, 0));
     if (!numFun)
         return false;
@@ -1624,7 +1624,7 @@ js_InitTypedObjectClasses(JSContext *cx, HandleObject obj)
 ///////////////////////////////////////////////////////////////////////////
 // Binary blocks
 
-Class BinaryBlock::class_ = {
+const Class BinaryBlock::class_ = {
     "BinaryBlock",
     Class::NON_NATIVE |
     JSCLASS_HAS_RESERVED_SLOTS(BLOCK_RESERVED_SLOTS) |

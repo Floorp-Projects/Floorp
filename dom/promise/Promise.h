@@ -23,14 +23,15 @@ namespace dom {
 class PromiseInit;
 class PromiseCallback;
 class AnyCallback;
-class PromiseResolver;
 
 class Promise MOZ_FINAL : public nsISupports,
                           public nsWrapperCache
 {
   friend class PromiseTask;
-  friend class PromiseResolver;
   friend class PromiseResolverTask;
+  friend class ResolvePromiseCallback;
+  friend class RejectPromiseCallback;
+  friend class WrapperPromiseCallback;
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -79,6 +80,11 @@ private:
     Rejected
   };
 
+  enum PromiseTaskSync {
+    SyncTask,
+    AsyncTask
+  };
+
   void SetState(PromiseState aState)
   {
     MOZ_ASSERT(mState == Pending);
@@ -97,6 +103,10 @@ private:
   // appended by then(), catch() or done().
   void RunTask();
 
+  void RunResolveTask(JS::Handle<JS::Value> aValue,
+                      Promise::PromiseState aState,
+                      PromiseTaskSync aAsynchronous);
+
   void AppendCallbacks(PromiseCallback* aResolveCallback,
                        PromiseCallback* aRejectCallback);
 
@@ -104,9 +114,29 @@ private:
   // report it to the error console.
   void MaybeReportRejected();
 
-  nsRefPtr<nsPIDOMWindow> mWindow;
+  void MaybeResolve(JSContext* aCx,
+                    const Optional<JS::Handle<JS::Value> >& aValue,
+                    PromiseTaskSync aSync = AsyncTask);
+  void MaybeReject(JSContext* aCx,
+                   const Optional<JS::Handle<JS::Value> >& aValue,
+                   PromiseTaskSync aSync = AsyncTask);
 
-  nsRefPtr<PromiseResolver> mResolver;
+  void ResolveInternal(JSContext* aCx,
+                       const Optional<JS::Handle<JS::Value> >& aValue,
+                       PromiseTaskSync aSync = AsyncTask);
+
+  void RejectInternal(JSContext* aCx,
+                      const Optional<JS::Handle<JS::Value> >& aValue,
+                      PromiseTaskSync aSync = AsyncTask);
+
+  // Static methods for the PromiseInit functions.
+  static bool
+  JSCallback(JSContext *aCx, unsigned aArgc, JS::Value *aVp);
+  static JSObject*
+  CreateFunction(JSContext* aCx, JSObject* aParent, Promise* aPromise,
+                int32_t aTask);
+
+  nsRefPtr<nsPIDOMWindow> mWindow;
 
   nsTArray<nsRefPtr<PromiseCallback> > mResolveCallbacks;
   nsTArray<nsRefPtr<PromiseCallback> > mRejectCallbacks;
@@ -115,6 +145,8 @@ private:
   PromiseState mState;
   bool mTaskPending;
   bool mHadRejectCallback;
+
+  bool mResolvePending;
 };
 
 } // namespace dom

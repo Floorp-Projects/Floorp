@@ -311,12 +311,13 @@ public:
     /** Return a boolean indicating if the page has called preventDefault on
      *  the event.
      */
-    bool DispatchMouseEvent(const nsString& aType,
-                            const CSSPoint& aPoint,
-                            const int32_t&  aButton,
-                            const int32_t&  aClickCount,
-                            const int32_t&  aModifiers,
-                            const bool&     aIgnoreRootScrollFrame);
+    bool DispatchMouseEvent(const nsString&       aType,
+                            const CSSPoint&       aPoint,
+                            const int32_t&        aButton,
+                            const int32_t&        aClickCount,
+                            const int32_t&        aModifiers,
+                            const bool&           aIgnoreRootScrollFrame,
+                            const unsigned short& aInputSourceArg);
 
     /**
      * Signal to this TabChild that it should be made visible:
@@ -351,7 +352,8 @@ protected:
 
     nsEventStatus DispatchWidgetEvent(nsGUIEvent& event);
 
-    virtual PIndexedDBChild* AllocPIndexedDBChild(const nsCString& aASCIIOrigin,
+    virtual PIndexedDBChild* AllocPIndexedDBChild(const nsCString& aGroup,
+                                                  const nsCString& aASCIIOrigin,
                                                   bool* /* aAllowed */);
 
     virtual bool DeallocPIndexedDBChild(PIndexedDBChild* aActor);

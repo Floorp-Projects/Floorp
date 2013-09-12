@@ -1,7 +1,7 @@
 // Disabling a Debugger object causes events to stop being delivered to it
 // immediately, even if we're in the middle of dispatching.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var log;
 
 var arr = [];

@@ -2,5 +2,5 @@
 // Flags:
 //
 try {
-  Uint8Array.subarray(newGlobal('new-compartment'));
+  Uint8Array.subarray(newGlobal());
 } catch(exc1) {}

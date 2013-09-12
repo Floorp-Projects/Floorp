@@ -170,7 +170,7 @@ nsSVGMaskFrame::GetType() const
 }
 
 gfxMatrix
-nsSVGMaskFrame::GetCanvasTM(uint32_t aFor)
+nsSVGMaskFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
 {
   NS_ASSERTION(mMaskParentMatrix, "null parent matrix");
 

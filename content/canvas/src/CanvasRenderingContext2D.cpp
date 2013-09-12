@@ -133,11 +133,11 @@ static int64_t gCanvasAzureMemoryUsed = 0;
 // This is KIND_OTHER because it's not always clear where in memory the pixels
 // of a canvas are stored.  Furthermore, this memory will be tracked by the
 // underlying surface implementations.  See bug 655638 for details.
-class Canvas2dPixelsReporter MOZ_FINAL : public MemoryReporterBase
+class Canvas2dPixelsReporter MOZ_FINAL : public MemoryUniReporter
 {
   public:
     Canvas2dPixelsReporter()
-      : MemoryReporterBase("canvas-2d-pixels", KIND_OTHER, UNITS_BYTES,
+      : MemoryUniReporter("canvas-2d-pixels", KIND_OTHER, UNITS_BYTES,
 "Memory used by 2D canvases. Each canvas requires (width * height * 4) bytes.")
     {}
 private:

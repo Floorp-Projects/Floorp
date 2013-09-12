@@ -10,7 +10,7 @@ interface nsIQuotaRequest;
 interface nsIURI;
 interface nsIUsageCallback;
 
-[scriptable, builtinclass, uuid(8d74e6f8-81c3-4045-9bb7-70bdb7b11b25)]
+[scriptable, builtinclass, uuid(f19a03ae-e97d-41e9-95dd-681b910c4093)]
 interface nsIQuotaManager : nsISupports
 {
   /**
@@ -30,6 +30,17 @@ interface nsIQuotaManager : nsISupports
                  [optional] in boolean aInMozBrowserOnly);
 
   /**
+   * Removes all storages. The files may not be deleted immediately depending
+   * on prohibitive concurrent operations.
+   * Be careful, this removes *all* the data that has ever been stored!
+   *
+   * If the dom.quotaManager.testing preference is not true the call will be
+   * a no-op.
+   */
+  void
+  clear();
+
+  /**
    * Removes all storages stored for the given URI. The files may not be
    * deleted immediately depending on prohibitive concurrent operations.
    *
@@ -41,4 +52,16 @@ interface nsIQuotaManager : nsISupports
   clearStoragesForURI(in nsIURI aURI,
                       [optional] in unsigned long aAppId,
                       [optional] in boolean aInMozBrowserOnly);
+
+  /**
+   * Resets quota and storage management. This can be used to force
+   * reinitialization of the temp storage, for example when the pref for
+   * overriding the temp storage limit has changed.
+   * Be carefull, this invalidates all live storages!
+   *
+   * If the dom.quotaManager.testing preference is not true the call will be
+   * a no-op.
+   */
+  void
+  reset();
 };

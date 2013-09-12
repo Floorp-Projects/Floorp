@@ -934,7 +934,7 @@ class nsCycleCollector
     CC_BeforeUnlinkCallback mBeforeUnlinkCB;
     CC_ForgetSkippableCallback mForgetSkippableCB;
 
-    nsCOMPtr<nsIMemoryMultiReporter> mReporter;
+    nsCOMPtr<nsIMemoryReporter> mReporter;
 
     nsPurpleBuffer mPurpleBuf;
 
@@ -2407,10 +2407,10 @@ nsCycleCollector::CollectWhite()
 // Memory reporter
 ////////////////////////
 
-class CycleCollectorMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
+class CycleCollectorReporter MOZ_FINAL : public nsIMemoryReporter
 {
   public:
-    CycleCollectorMultiReporter(nsCycleCollector* aCollector)
+    CycleCollectorReporter(nsCycleCollector* aCollector)
       : mCollector(aCollector)
     {}
 
@@ -2422,7 +2422,7 @@ class CycleCollectorMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
         return NS_OK;
     }
 
-    NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback* aCb,
+    NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCb,
                               nsISupports* aClosure)
     {
         size_t objectSize, graphNodesSize, graphEdgesSize, weakMapsSize,
@@ -2481,7 +2481,7 @@ class CycleCollectorMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
     nsCycleCollector* mCollector;
 };
 
-NS_IMPL_ISUPPORTS1(CycleCollectorMultiReporter, nsIMemoryMultiReporter)
+NS_IMPL_ISUPPORTS1(CycleCollectorReporter, nsIMemoryReporter)
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -2508,7 +2508,7 @@ nsCycleCollector::nsCycleCollector() :
 
 nsCycleCollector::~nsCycleCollector()
 {
-    NS_UnregisterMemoryMultiReporter(mReporter);
+    NS_UnregisterMemoryReporter(mReporter);
 }
 
 void
@@ -2524,7 +2524,7 @@ nsCycleCollector::RegisterJSRuntime(CycleCollectedJSRuntime *aJSRuntime)
     // instead.
     static bool registered = false;
     if (!registered) {
-        NS_RegisterMemoryMultiReporter(new CycleCollectorMultiReporter(this));
+        NS_RegisterMemoryReporter(new CycleCollectorReporter(this));
         registered = true;
     }
 }

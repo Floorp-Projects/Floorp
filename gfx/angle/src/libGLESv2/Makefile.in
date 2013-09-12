@@ -40,7 +40,8 @@ VPATH += $(srcdir)/../compiler/preprocessor
 LOCAL_INCLUDES += \
   -I$(srcdir)/../../include \
   -I$(srcdir)/../../include/KHR \
-  -I$(srcdir)/..
+  -I$(srcdir)/.. \
+  -I"$(MOZ_DIRECTX_SDK_PATH)/include"
 
 DEFINES += -DCOMPILER_IMPLEMENTATION
 

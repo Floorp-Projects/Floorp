@@ -179,11 +179,11 @@ public:
 
 protected:
     class MemoryReporter MOZ_FINAL
-        : public nsIMemoryMultiReporter
+        : public nsIMemoryReporter
     {
     public:
         NS_DECL_ISUPPORTS
-        NS_DECL_NSIMEMORYMULTIREPORTER
+        NS_DECL_NSIMEMORYREPORTER
     };
 
     gfxPlatformFontList(bool aNeedFullnamePostscriptNames = true);

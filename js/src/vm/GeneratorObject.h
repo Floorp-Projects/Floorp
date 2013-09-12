@@ -14,7 +14,7 @@ namespace js {
 class LegacyGeneratorObject : public JSObject
 {
   public:
-    static Class class_;
+    static const Class class_;
 
     JSGenerator *getGenerator() { return static_cast<JSGenerator*>(getPrivate()); }
 };
@@ -22,7 +22,7 @@ class LegacyGeneratorObject : public JSObject
 class StarGeneratorObject : public JSObject
 {
   public:
-    static Class class_;
+    static const Class class_;
 
     JSGenerator *getGenerator() { return static_cast<JSGenerator*>(getPrivate()); }
 };

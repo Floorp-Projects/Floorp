@@ -1,7 +1,7 @@
 // |jit-test| error: TestComplete
 // onPop fires when frames return normally.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 
 function test(type, provocation) {

@@ -59,7 +59,8 @@ nsSVGInnerSVGFrame::GetType() const
 
 NS_IMETHODIMP
 nsSVGInnerSVGFrame::PaintSVG(nsRenderingContext *aContext,
-                             const nsIntRect *aDirtyRect)
+                             const nsIntRect *aDirtyRect,
+                             nsIFrame* aTransformRoot)
 {
   NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
                (mState & NS_FRAME_IS_NONDISPLAY),
@@ -78,7 +79,7 @@ nsSVGInnerSVGFrame::PaintSVG(nsRenderingContext *aContext,
     }
 
     nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
-    gfxMatrix clipTransform = parent->GetCanvasTM(FOR_PAINTING);
+    gfxMatrix clipTransform = parent->GetCanvasTM(FOR_PAINTING, aTransformRoot);
 
     gfxContext *gfx = aContext->ThebesContext();
     autoSR.SetContext(gfx);
@@ -268,9 +269,9 @@ nsSVGInnerSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags)
 // nsSVGContainerFrame methods:
 
 gfxMatrix
-nsSVGInnerSVGFrame::GetCanvasTM(uint32_t aFor)
+nsSVGInnerSVGFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
 {
-  if (!(GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
+  if (!(GetStateBits() & NS_FRAME_IS_NONDISPLAY) && !aTransformRoot) {
     if ((aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) ||
         (aFor == FOR_HIT_TESTING && NS_SVGDisplayListHitTestingEnabled())) {
       return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(this);
@@ -282,7 +283,9 @@ nsSVGInnerSVGFrame::GetCanvasTM(uint32_t aFor)
     nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
     SVGSVGElement *content = static_cast<SVGSVGElement*>(mContent);
 
-    gfxMatrix tm = content->PrependLocalTransformsTo(parent->GetCanvasTM(aFor));
+    gfxMatrix tm = content->PrependLocalTransformsTo(
+        this == aTransformRoot ? gfxMatrix() :
+                                 parent->GetCanvasTM(aFor, aTransformRoot));
 
     mCanvasTM = new gfxMatrix(tm);
   }

@@ -12,13 +12,16 @@
 #include "nsIObserver.h"
 #include "nsIQuotaManager.h"
 
+#include "mozilla/dom/Nullable.h"
 #include "mozilla/Mutex.h"
+
 #include "nsClassHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsThreadUtils.h"
 
 #include "ArrayCluster.h"
 #include "Client.h"
+#include "PersistenceType.h"
 #include "StoragePrivilege.h"
 
 #define QUOTA_MANAGER_CONTRACTID "@mozilla.org/dom/quota/manager;1"
@@ -36,19 +39,28 @@ BEGIN_QUOTA_NAMESPACE
 class AcquireListener;
 class AsyncUsageRunnable;
 class CheckQuotaHelper;
+class CollectOriginsHelper;
+class FinalizeOriginEvictionRunnable;
+class GroupInfo;
+class GroupInfoPair;
 class OriginClearRunnable;
 class OriginInfo;
 class OriginOrPatternString;
 class QuotaObject;
+class ResetOrClearRunnable;
 struct SynchronizedOp;
 
 class QuotaManager MOZ_FINAL : public nsIQuotaManager,
                                public nsIObserver
 {
   friend class AsyncUsageRunnable;
+  friend class CollectOriginsHelper;
+  friend class FinalizeOriginEvictionRunnable;
+  friend class GroupInfo;
   friend class OriginClearRunnable;
   friend class OriginInfo;
   friend class QuotaObject;
+  friend class ResetOrClearRunnable;
 
   enum MozBrowserPatternFlag
   {
@@ -81,23 +93,53 @@ public:
   static bool IsShuttingDown();
 
   void
-  InitQuotaForOrigin(const nsACString& aOrigin,
-                     int64_t aLimitBytes,
-                     int64_t aUsageBytes);
+  InitQuotaForOrigin(PersistenceType aPersistenceType,
+                     const nsACString& aGroup,
+                     const nsACString& aOrigin,
+                     uint64_t aLimitBytes,
+                     uint64_t aUsageBytes,
+                     int64_t aAccessTime);
 
   void
-  DecreaseUsageForOrigin(const nsACString& aOrigin,
+  DecreaseUsageForOrigin(PersistenceType aPersistenceType,
+                         const nsACString& aGroup,
+                         const nsACString& aOrigin,
                          int64_t aSize);
 
   void
-  RemoveQuotaForPattern(const nsACString& aPattern);
+  UpdateOriginAccessTime(PersistenceType aPersistenceType,
+                         const nsACString& aGroup,
+                         const nsACString& aOrigin);
+
+  void
+  RemoveQuota();
+
+  void
+  RemoveQuotaForPersistenceType(PersistenceType);
+
+  void
+  RemoveQuotaForOrigin(PersistenceType aPersistenceType,
+                       const nsACString& aGroup,
+                       const nsACString& aOrigin)
+  {
+    MutexAutoLock lock(mQuotaMutex);
+    LockedRemoveQuotaForOrigin(aPersistenceType, aGroup, aOrigin);
+  }
+
+  void
+  RemoveQuotaForPattern(PersistenceType aPersistenceType,
+                        const nsACString& aPattern);
 
   already_AddRefed<QuotaObject>
-  GetQuotaObject(const nsACString& aOrigin,
+  GetQuotaObject(PersistenceType aPersistenceType,
+                 const nsACString& aGroup,
+                 const nsACString& aOrigin,
                  nsIFile* aFile);
 
   already_AddRefed<QuotaObject>
-  GetQuotaObject(const nsACString& aOrigin,
+  GetQuotaObject(PersistenceType aPersistenceType,
+                 const nsACString& aGroup,
+                 const nsACString& aOrigin,
                  const nsAString& aPath);
 
   // Set the Window that the current thread is doing operations for.
@@ -148,6 +190,7 @@ public:
   // complete before dispatching the given runnable.
   nsresult
   WaitForOpenAllowed(const OriginOrPatternString& aOriginOrPattern,
+                     Nullable<PersistenceType> aPersistenceType,
                      nsIAtom* aId,
                      nsIRunnable* aRunnable);
 
@@ -178,25 +221,39 @@ public:
 
   void
   AllowNextSynchronizedOp(const OriginOrPatternString& aOriginOrPattern,
+                          Nullable<PersistenceType> aPersistenceType,
                           nsIAtom* aId);
 
   bool
   IsClearOriginPending(const nsACString& aPattern)
   {
-    return !!FindSynchronizedOp(aPattern, nullptr);
+    return !!FindSynchronizedOp(aPattern, Nullable<PersistenceType>(), nullptr);
   }
 
   nsresult
-  GetDirectoryForOrigin(const nsACString& aASCIIOrigin,
+  GetDirectoryForOrigin(PersistenceType aPersistenceType,
+                        const nsACString& aASCIIOrigin,
                         nsIFile** aDirectory) const;
 
   nsresult
-  EnsureOriginIsInitialized(const nsACString& aOrigin,
+  EnsureOriginIsInitialized(PersistenceType aPersistenceType,
+                            const nsACString& aGroup,
+                            const nsACString& aOrigin,
                             bool aTrackQuota,
                             nsIFile** aDirectory);
 
   void
-  OriginClearCompleted(const nsACString& aPattern);
+  OriginClearCompleted(PersistenceType aPersistenceType,
+                       const OriginOrPatternString& aOriginOrPattern);
+
+  void
+  ResetOrClearCompleted();
+
+  void
+  AssertCurrentThreadOwnsQuotaMutex()
+  {
+    mQuotaMutex.AssertCurrentThreadOwns();
+  }
 
   nsIThread*
   IOThread()
@@ -209,31 +266,53 @@ public:
   GetClient(Client::Type aClientType);
 
   const nsString&
-  GetBaseDirectory() const
+  GetStoragePath(PersistenceType aPersistenceType) const
   {
-    return mStorageBasePath;
+    if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
+      return mPersistentStoragePath;
+    }
+
+    NS_ASSERTION(aPersistenceType == PERSISTENCE_TYPE_TEMPORARY, "Huh?");
+
+    return mTemporaryStoragePath;
+  }
+
+  uint64_t
+  GetGroupLimit() const
+  {
+    return mTemporaryStorageLimit / 5;
   }
 
   static uint32_t
   GetStorageQuotaMB();
 
   static already_AddRefed<nsIAtom>
-  GetStorageId(const nsACString& aOrigin,
+  GetStorageId(PersistenceType aPersistenceType,
+               const nsACString& aOrigin,
                const nsAString& aName);
 
   static nsresult
-  GetASCIIOriginFromURI(nsIURI* aURI,
-                        uint32_t aAppId,
-                        bool aInMozBrowser,
-                        nsACString& aASCIIOrigin);
+  GetInfoFromURI(nsIURI* aURI,
+                 uint32_t aAppId,
+                 bool aInMozBrowser,
+                 nsACString* aGroup,
+                 nsACString* aASCIIOrigin,
+                 StoragePrivilege* aPrivilege,
+                 PersistenceType* aDefaultPersistenceType);
 
   static nsresult
-  GetASCIIOriginFromPrincipal(nsIPrincipal* aPrincipal,
-                              nsACString& aASCIIOrigin);
+  GetInfoFromPrincipal(nsIPrincipal* aPrincipal,
+                       nsACString* aGroup,
+                       nsACString* aASCIIOrigin,
+                       StoragePrivilege* aPrivilege,
+                       PersistenceType* aDefaultPersistenceType);
 
   static nsresult
-  GetASCIIOriginFromWindow(nsPIDOMWindow* aWindow,
-                           nsACString& aASCIIOrigin);
+  GetInfoFromWindow(nsPIDOMWindow* aWindow,
+                    nsACString* aGroup,
+                    nsACString* aASCIIOrigin,
+                    StoragePrivilege* aPrivilege,
+                    PersistenceType* aDefaultPersistenceType);
 
   static void
   GetOriginPatternString(uint32_t aAppId, bool aBrowserOnly,
@@ -272,6 +351,15 @@ private:
   bool
   LockedQuotaIsLifted();
 
+  uint64_t
+  LockedCollectOriginsForEviction(uint64_t aMinSizeToBeFreed,
+                                  nsTArray<OriginInfo*>& aOriginInfos);
+
+  void
+  LockedRemoveQuotaForOrigin(PersistenceType aPersistenceType,
+                             const nsACString& aGroup,
+                             const nsACString& aOrigin);
+
   nsresult
   AcquireExclusiveAccess(const nsACString& aOrigin,
                          nsIOfflineStorage* aStorage,
@@ -279,19 +367,50 @@ private:
                          WaitingOnStoragesCallback aCallback,
                          void* aClosure);
 
+  void
+  AddSynchronizedOp(const OriginOrPatternString& aOriginOrPattern,
+                    Nullable<PersistenceType> aPersistenceType,
+                    nsIAtom* aId);
+
   nsresult
   RunSynchronizedOp(nsIOfflineStorage* aStorage,
                     SynchronizedOp* aOp);
 
   SynchronizedOp*
   FindSynchronizedOp(const nsACString& aPattern,
+                     Nullable<PersistenceType> aPersistenceType,
                      nsISupports* aId);
+
+  nsresult
+  MaybeUpgradeIndexedDBDirectory();
+
+  nsresult
+  InitializeOrigin(PersistenceType aPersistenceType,
+                   const nsACString& aGroup,
+                   const nsACString& aOrigin,
+                   bool aTrackQuota,
+                   int64_t aAccessTime,
+                   nsIFile* aDirectory);
 
   nsresult
   ClearStoragesForApp(uint32_t aAppId, bool aBrowserOnly);
 
-  nsresult
-  MaybeUpgradeOriginDirectory(nsIFile* aDirectory);
+  void
+  CheckTemporaryStorageLimits();
+
+  // Collect inactive and the least recently used origins.
+  uint64_t
+  CollectOriginsForEviction(uint64_t aMinSizeToBeFreed,
+                            nsTArray<OriginInfo*>& aOriginInfos);
+
+  void
+  DeleteTemporaryFilesForOrigin(const nsACString& aOrigin);
+
+  void
+  FinalizeOriginEviction(nsTArray<nsCString>& aOrigins);
+
+  void
+  SaveOriginAccessTime(const nsACString& aOrigin, int64_t aTimestamp);
 
   void
   ReleaseIOThreadObjects()
@@ -309,12 +428,47 @@ private:
                          const nsACString& aOrigin,
                          nsAutoCString& _retval);
 
+  static PLDHashOperator
+  RemoveQuotaForPersistenceTypeCallback(const nsACString& aKey,
+                                        nsAutoPtr<GroupInfoPair>& aValue,
+                                        void* aUserArg);
+
+  static PLDHashOperator
+  RemoveQuotaCallback(const nsACString& aKey,
+                      nsAutoPtr<GroupInfoPair>& aValue,
+                      void* aUserArg);
+
+  static PLDHashOperator
+  RemoveQuotaForPatternCallback(const nsACString& aKey,
+                                nsAutoPtr<GroupInfoPair>& aValue,
+                                void* aUserArg);
+
+  static PLDHashOperator
+  GetOriginsExceedingGroupLimit(const nsACString& aKey,
+                                GroupInfoPair* aValue,
+                                void* aUserArg);
+
+  static PLDHashOperator
+  GetAllTemporaryStorageOrigins(const nsACString& aKey,
+                                GroupInfoPair* aValue,
+                                void* aUserArg);
+
+  static PLDHashOperator
+  AddTemporaryStorageOrigins(const nsACString& aKey,
+                             ArrayCluster<nsIOfflineStorage*>* aValue,
+                             void* aUserArg);
+
+  static PLDHashOperator
+  GetInactiveTemporaryStorageOrigins(const nsACString& aKey,
+                                     GroupInfoPair* aValue,
+                                     void* aUserArg);
+
   // TLS storage index for the current thread's window.
   unsigned int mCurrentWindowIndex;
 
   mozilla::Mutex mQuotaMutex;
 
-  nsRefPtrHashtable<nsCStringHashKey, OriginInfo> mOriginInfos;
+  nsClassHashtable<nsCStringHashKey, GroupInfoPair> mGroupInfoPairs;
 
   // A map of Windows to the corresponding quota helper.
   nsRefPtrHashtable<nsPtrHashKey<nsPIDOMWindow>,
@@ -339,7 +493,15 @@ private:
 
   nsAutoTArray<nsRefPtr<Client>, Client::TYPE_MAX> mClients;
 
-  nsString mStorageBasePath;
+  nsString mIndexedDBPath;
+  nsString mPersistentStoragePath;
+  nsString mTemporaryStoragePath;
+
+  uint64_t mTemporaryStorageLimit;
+  uint64_t mTemporaryStorageUsage;
+  bool mTemporaryStorageInitialized;
+
+  bool mStorageAreaInitialized;
 };
 
 class AutoEnterWindow

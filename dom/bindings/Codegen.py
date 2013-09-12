@@ -189,7 +189,7 @@ class CGDOMJSClass(CGThing):
             newResolveHook = "JS_ResolveStub"
             enumerateHook = "JS_EnumerateStub"
         return """
-static DOMJSClass Class = {
+static const DOMJSClass Class = {
   { "%s",
     %s,
     %s, /* addProperty */
@@ -1011,7 +1011,7 @@ class CGAbstractClassHook(CGAbstractStaticMethod):
 
 class CGGetJSClassMethod(CGAbstractMethod):
     def __init__(self, descriptor):
-        CGAbstractMethod.__init__(self, descriptor, 'GetJSClass', 'JSClass*',
+        CGAbstractMethod.__init__(self, descriptor, 'GetJSClass', 'const JSClass*',
                                   [])
 
     def definition_body(self):

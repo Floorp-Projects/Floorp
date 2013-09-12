@@ -1,7 +1,7 @@
 // obj.defineProperty throws if a value, getter, or setter is not a debuggee value.
 
 load(libdir + "asserts.js");
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger;
 var gobj = dbg.addDebuggee(g);
 assertThrowsInstanceOf(function () { gobj.defineProperty('x', {value: {}}); }, TypeError);

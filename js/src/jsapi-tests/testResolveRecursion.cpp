@@ -14,7 +14,7 @@
 
 BEGIN_TEST(testResolveRecursion)
 {
-    static JSClass my_resolve_class = {
+    static const JSClass my_resolve_class = {
         "MyResolve",
         JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE,
 

@@ -44,6 +44,15 @@ struct MarginTyped:
 typedef MarginTyped<UnknownUnits> Margin;
 
 template<class units>
+IntMarginTyped<units> RoundedToInt(const MarginTyped<units>& aMargin)
+{
+  return IntMarginTyped<units>(int32_t(floorf(aMargin.top + 0.5f)),
+                               int32_t(floorf(aMargin.right + 0.5f)),
+                               int32_t(floorf(aMargin.bottom + 0.5f)),
+                               int32_t(floorf(aMargin.left + 0.5f)));
+}
+
+template<class units>
 struct IntRectTyped :
     public BaseRect<int32_t, IntRectTyped<units>, IntPointTyped<units>, IntSizeTyped<units>, IntMarginTyped<units> >,
     public units {

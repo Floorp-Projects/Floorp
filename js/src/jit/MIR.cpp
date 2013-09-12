@@ -24,8 +24,6 @@
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
 
-#include "vm/Shape-inl.h"
-
 using namespace js;
 using namespace js::jit;
 
@@ -2642,7 +2640,7 @@ jit::ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id)
     if (!types)
         return false;
 
-    Class *clasp = types->getKnownClass();
+    const Class *clasp = types->getKnownClass();
     return clasp && clasp->isNative();
 }
 

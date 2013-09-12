@@ -45,10 +45,7 @@ load 761831.html
 asserts(0-1) load 752038.html # We may hit bug 645229 here.
 asserts(1) load 753162.html # We hit bug 675518 or bug 680086 here.
 load 754311.html
-load 776328.html
-load 776333.html
 asserts(0-1) load 786142.html # We may hit bug 645229 here.
-load 791845.html
 load 797583.html
 load 806751.html
 load 833856.html

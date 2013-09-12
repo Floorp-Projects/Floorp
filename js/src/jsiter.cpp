@@ -196,7 +196,7 @@ Snapshot(JSContext *cx, JSObject *pobj_, unsigned flags, AutoIdVector *props)
     RootedObject pobj(cx, pobj_);
 
     do {
-        Class *clasp = pobj->getClass();
+        const Class *clasp = pobj->getClass();
         if (pobj->isNative() &&
             !pobj->getOps()->enumerate &&
             !(clasp->flags & JSCLASS_NEW_ENUMERATE)) {
@@ -382,7 +382,7 @@ NewPropertyIteratorObject(JSContext *cx, unsigned flags)
         if (!NewObjectMetadata(cx, &metadata))
             return NULL;
 
-        Class *clasp = &PropertyIteratorObject::class_;
+        const Class *clasp = &PropertyIteratorObject::class_;
         RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, NULL, NULL, metadata,
                                                           ITERATOR_FINALIZE_KIND));
         if (!shape)
@@ -832,7 +832,7 @@ PropertyIteratorObject::finalize(FreeOp *fop, JSObject *obj)
         fop->free_(ni);
 }
 
-Class PropertyIteratorObject::class_ = {
+const Class PropertyIteratorObject::class_ = {
     "Iterator",
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator) |
@@ -937,7 +937,7 @@ ElementIteratorObject::next_impl(JSContext *cx, CallArgs args)
     return false;
 }
 
-Class ElementIteratorObject::class_ = {
+const Class ElementIteratorObject::class_ = {
     "Array Iterator",
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(ElementIteratorObject::NumSlots),
@@ -1300,7 +1300,7 @@ stopiter_hasInstance(JSContext *cx, HandleObject obj, MutableHandleValue v, bool
     return true;
 }
 
-Class StopIterationObject::class_ = {
+const Class StopIterationObject::class_ = {
     "StopIteration",
     JSCLASS_HAS_CACHED_PROTO(JSProto_StopIteration) |
     JSCLASS_FREEZE_PROTO,
@@ -1453,7 +1453,7 @@ GeneratorState::pushInterpreterFrame(JSContext *cx, FrameGuard *)
     return gen_->fp;
 }
 
-Class LegacyGeneratorObject::class_ = {
+const Class LegacyGeneratorObject::class_ = {
     "Generator",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS,
     JS_PropertyStub,         /* addProperty */
@@ -1476,7 +1476,7 @@ Class LegacyGeneratorObject::class_ = {
     }
 };
 
-Class StarGeneratorObject::class_ = {
+const Class StarGeneratorObject::class_ = {
     "Generator",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS,
     JS_PropertyStub,         /* addProperty */
@@ -1874,7 +1874,7 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
 
     RootedObject proto(cx);
     if (global->getSlot(ELEMENT_ITERATOR_PROTO).isUndefined()) {
-        Class *cls = &ElementIteratorObject::class_;
+        const Class *cls = &ElementIteratorObject::class_;
         proto = global->createBlankPrototypeInheriting(cx, cls, *iteratorProto);
         if (!proto || !DefinePropertiesAndBrand(cx, proto, NULL, ElementIteratorObject::methods))
             return false;

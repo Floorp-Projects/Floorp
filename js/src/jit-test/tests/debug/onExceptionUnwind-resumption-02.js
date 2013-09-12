@@ -1,7 +1,7 @@
 // Check that if an onExceptionUnwind hook forces a constructor frame to
 // return a primitive value, it still gets wrapped up in an object.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 dbg.onExceptionUnwind = function (frame, exc) {
     return { return:"sproon" };

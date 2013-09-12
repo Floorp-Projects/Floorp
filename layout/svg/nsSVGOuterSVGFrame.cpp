@@ -865,7 +865,8 @@ nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags)
 
 NS_IMETHODIMP
 nsSVGOuterSVGFrame::PaintSVG(nsRenderingContext* aContext,
-                             const nsIntRect *aDirtyRect)
+                             const nsIntRect *aDirtyRect,
+                             nsIFrame* aTransformRoot)
 {
   NS_ASSERTION(GetFirstPrincipalChild()->GetType() ==
                  nsGkAtoms::svgOuterSVGAnonChildFrame &&
@@ -873,7 +874,7 @@ nsSVGOuterSVGFrame::PaintSVG(nsRenderingContext* aContext,
                "We should have a single, anonymous, child");
   nsSVGOuterSVGAnonChildFrame *anonKid =
     static_cast<nsSVGOuterSVGAnonChildFrame*>(GetFirstPrincipalChild());
-  return anonKid->PaintSVG(aContext, aDirtyRect);
+  return anonKid->PaintSVG(aContext, aDirtyRect, aTransformRoot);
 }
 
 SVGBBox
@@ -895,15 +896,16 @@ nsSVGOuterSVGFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
 // nsSVGContainerFrame methods:
 
 gfxMatrix
-nsSVGOuterSVGFrame::GetCanvasTM(uint32_t aFor)
+nsSVGOuterSVGFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
 {
-  if (!(GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
+  if (!(GetStateBits() & NS_FRAME_IS_NONDISPLAY) && !aTransformRoot) {
     if ((aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) ||
         (aFor == FOR_HIT_TESTING && NS_SVGDisplayListHitTestingEnabled())) {
       return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(this);
     }
   }
   if (!mCanvasTM) {
+    NS_ASSERTION(!aTransformRoot, "transform root will be ignored here");
     SVGSVGElement *content = static_cast<SVGSVGElement*>(mContent);
 
     float devPxPerCSSPx =

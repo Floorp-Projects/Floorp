@@ -25,7 +25,6 @@
 #include "vm/Interpreter.h"
 
 #include "jsfuninlines.h"
-#include "jsscriptinlines.h"
 
 #include "jit/IonFrameIterator-inl.h"
 #include "vm/Probes-inl.h"
@@ -536,8 +535,15 @@ HandleException(ResumeFromException *rfe)
             InlineFrameIterator frames(cx, &iter);
             for (;;) {
                 HandleExceptionIon(cx, frames, rfe, &overrecursed);
-                if (rfe->kind != ResumeFromException::RESUME_ENTRY_FRAME)
+
+                if (rfe->kind == ResumeFromException::RESUME_BAILOUT) {
+                    IonScript *ionScript = NULL;
+                    if (iter.checkInvalidation(&ionScript))
+                        ionScript->decref(cx->runtime()->defaultFreeOp());
                     return;
+                }
+
+                JS_ASSERT(rfe->kind == ResumeFromException::RESUME_ENTRY_FRAME);
 
                 // When profiling, each frame popped needs a notification that
                 // the function has exited, so invoke the probe that a function

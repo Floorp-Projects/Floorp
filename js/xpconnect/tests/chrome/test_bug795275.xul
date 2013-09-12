@@ -60,10 +60,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795275
   function go() {
     getWin('frame1').touchComponents();
     getWin('frame2').touchInterfaces();
-    ok(getWin('frame3').touchLookupMethod(), "Components.lookupMethod should be undefined");
     getWin('frame4').touchComponents();
     getWin('frame4').touchInterfaces();
-    ok(getWin('frame4').touchLookupMethod(), "Components.lookupMethod should be undefined");
     // This shouldn't warn.
     getWin('frame5').touchViaXBL();
 
@@ -74,7 +72,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795275
 
   function done() {
     gConsoleService.unregisterListener(gListener);
-    is(gWarnings, 4, "Got the right number of warnings");
+    is(gWarnings, 3, "Got the right number of warnings");
     SimpleTest.finish();
   }
 

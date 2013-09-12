@@ -9,7 +9,7 @@ check(['a', 'b', 'c', 'd'], 'a', 'b', 'c', 'd');
 check.apply(null, [['a', 'b'], 'a', 'b'])
 check.call(null, ['a', 'b'], 'a', 'b')
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.eval("function f(...rest) { return rest; }");
 var a = g.f(1, 2, 3);
 assertEq(a instanceof g.Array, true);

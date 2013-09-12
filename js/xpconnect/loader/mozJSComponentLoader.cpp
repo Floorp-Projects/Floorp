@@ -59,7 +59,7 @@ using namespace JS;
 // This JSClass exists to trick silly code that expects toString()ing the
 // global in a component scope to return something with "BackstagePass" in it
 // to continue working.
-static JSClass kFakeBackstagePassJSClass =
+static const JSClass kFakeBackstagePassJSClass =
 {
     "FakeBackstagePass",
     0,

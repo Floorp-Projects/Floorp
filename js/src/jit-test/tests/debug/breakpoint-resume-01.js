@@ -1,6 +1,6 @@
 // A breakpoint handler hit method can return {throw: exc} to throw an exception.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 dbg.onDebuggerStatement = function (frame) {
     function hit(frame) {

@@ -25,10 +25,9 @@ function run()
 {
   try
   {
-    var msg = document.createEvent("MessageEvent");
-    msg.initMessageEvent("message", true, true,
-                         "foo", "http://evil.com", "",
-                         window);
+    var msg = new MessageEvent('message', { bubbles: true, cancelable: true,
+                                            data: "foo", origin: "http://evil.com",
+                                            source: window });
 
     try
     {

@@ -14,7 +14,7 @@ namespace js {
 class StopIterationObject : public JSObject
 {
   public:
-    static Class class_;
+    static const Class class_;
 };
 
 } // namespace js

@@ -328,7 +328,7 @@ InterfaceObjectToString(JSContext* cx, unsigned argc, JS::Value *vp)
 
   JS::Value v = js::GetFunctionNativeReserved(callee,
                                               TOSTRING_CLASS_RESERVED_SLOT);
-  JSClass* clasp = static_cast<JSClass*>(JSVAL_TO_PRIVATE(v));
+  const JSClass* clasp = static_cast<const JSClass*>(JSVAL_TO_PRIVATE(v));
 
   v = js::GetFunctionNativeReserved(callee, TOSTRING_NAME_RESERVED_SLOT);
   JSString* jsname = static_cast<JSString*>(JSVAL_TO_STRING(v));
@@ -402,7 +402,7 @@ DefineConstructor(JSContext* cx, JS::Handle<JSObject*> global, const char* name,
 static JSObject*
 CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
                       JS::Handle<JSObject*> constructorProto,
-                      JSClass* constructorClass,
+                      const JSClass* constructorClass,
                       const JSNativeHolder* constructorNative,
                       unsigned ctorNargs, const NamedConstructor* namedConstructors,
                       JS::Handle<JSObject*> proto,
@@ -442,7 +442,7 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
     }
     JSObject* toStringObj = JS_GetFunctionObject(toString);
     js::SetFunctionNativeReserved(toStringObj, TOSTRING_CLASS_RESERVED_SLOT,
-                                  PRIVATE_TO_JSVAL(constructorClass));
+                                  PRIVATE_TO_JSVAL(const_cast<JSClass *>(constructorClass)));
 
     js::SetFunctionNativeReserved(toStringObj, TOSTRING_NAME_RESERVED_SLOT,
                                   STRING_TO_JSVAL(str));
@@ -543,7 +543,7 @@ DefineWebIDLBindingPropertiesOnXPCProto(JSContext* cx,
 static JSObject*
 CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
                                JS::Handle<JSObject*> parentProto,
-                               JSClass* protoClass,
+                               const JSClass* protoClass,
                                const NativeProperties* properties,
                                const NativeProperties* chromeOnlyProperties)
 {
@@ -593,9 +593,9 @@ CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
 void
 CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                        JS::Handle<JSObject*> protoProto,
-                       JSClass* protoClass, JS::Heap<JSObject*>* protoCache,
+                       const JSClass* protoClass, JS::Heap<JSObject*>* protoCache,
                        JS::Handle<JSObject*> constructorProto,
-                       JSClass* constructorClass, const JSNativeHolder* constructor,
+                       const JSClass* constructorClass, const JSNativeHolder* constructor,
                        unsigned ctorNargs, const NamedConstructor* namedConstructors,
                        JS::Heap<JSObject*>* constructorCache, const DOMClass* domClass,
                        const NativeProperties* properties,
@@ -735,7 +735,7 @@ bool
 InstanceClassHasProtoAtDepth(JS::Handle<JSObject*> protoObject, uint32_t protoID,
                              uint32_t depth)
 {
-  const DOMClass* domClass = static_cast<DOMClass*>(
+  const DOMClass* domClass = static_cast<const DOMClass*>(
     js::GetReservedSlot(protoObject, DOM_PROTO_INSTANCE_CLASS_SLOT).toPrivate());
   return (uint32_t)domClass->mInterfaceChain[depth] == protoID;
 }
@@ -1440,7 +1440,7 @@ AppendNamedPropertyIds(JSContext* cx, JS::Handle<JSObject*> proxy,
 JSObject*
 GetXrayExpandoChain(JSObject* obj)
 {
-  js::Class* clasp = js::GetObjectClass(obj);
+  const js::Class* clasp = js::GetObjectClass(obj);
   JS::Value v;
   if (IsDOMClass(clasp) || IsDOMIfaceAndProtoClass(clasp)) {
     v = js::GetReservedSlot(obj, DOM_XRAY_EXPANDO_SLOT);
@@ -1458,7 +1458,7 @@ void
 SetXrayExpandoChain(JSObject* obj, JSObject* chain)
 {
   JS::Value v = chain ? JS::ObjectValue(*chain) : JSVAL_VOID;
-  js::Class* clasp = js::GetObjectClass(obj);
+  const js::Class* clasp = js::GetObjectClass(obj);
   if (IsDOMClass(clasp) || IsDOMIfaceAndProtoClass(clasp)) {
     js::SetReservedSlot(obj, DOM_XRAY_EXPANDO_SLOT, v);
   } else if (js::IsProxyClass(clasp)) {
@@ -1542,7 +1542,7 @@ NativeToString(JSContext* cx, JS::Handle<JSObject*> wrapper,
       if (IsDOMProxy(obj)) {
         str = JS_BasicObjectToString(cx, obj);
       } else {
-        js::Class* clasp = js::GetObjectClass(obj);
+        const js::Class* clasp = js::GetObjectClass(obj);
         if (IsDOMClass(clasp)) {
           str = ConcatJSString(cx, "[object ",
                                JS_NewStringCopyZ(cx, clasp->name), "]");

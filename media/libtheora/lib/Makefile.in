@@ -68,15 +68,6 @@ ifeq ($(OS_TARGET),Android)
 DEFINES += -D__linux__
 endif
 
-THEORA_ASFILES  = \
-  armbits.s \
-  armfrag.s \
-  armidct.s \
-  armloop.s \
-  $(NULL)
-
-ASFILES = $(patsubst %.s,%-gnu.$(ASM_SUFFIX),$(THEORA_ASFILES))
-
 # These flags are a lie; they're just used to enable the requisite
 # opcodes; actual arch detection is done at runtime.
 ASFLAGS = -march=armv7-a -mfpu=neon

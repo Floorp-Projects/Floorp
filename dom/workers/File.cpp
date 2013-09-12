@@ -31,7 +31,7 @@ class Blob
   Blob();
   ~Blob();
 
-  static JSClass sClass;
+  static const JSClass sClass;
   static const JSPropertySpec sProperties[];
   static const JSFunctionSpec sFunctions[];
 
@@ -208,7 +208,7 @@ private:
   }
 };
 
-JSClass Blob::sClass = {
+const JSClass Blob::sClass = {
   "Blob",
   JSCLASS_HAS_PRIVATE,
   JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
@@ -232,7 +232,7 @@ class File : public Blob
   File();
   ~File();
 
-  static JSClass sClass;
+  static const JSClass sClass;
   static const JSPropertySpec sProperties[];
 
 public:
@@ -260,7 +260,7 @@ public:
   GetPrivate(JSObject* aObj)
   {
     if (aObj) {
-      JSClass* classPtr = JS_GetClass(aObj);
+      const JSClass* classPtr = JS_GetClass(aObj);
       if (classPtr == &sClass) {
         nsISupports* priv = static_cast<nsISupports*>(JS_GetPrivate(aObj));
         nsCOMPtr<nsIDOMFile> file = do_QueryInterface(priv);
@@ -271,7 +271,7 @@ public:
     return NULL;
   }
 
-  static JSClass*
+  static const JSClass*
   Class()
   {
     return &sClass;
@@ -426,7 +426,7 @@ private:
   }
 };
 
-JSClass File::sClass = {
+const JSClass File::sClass = {
   "File",
   JSCLASS_HAS_PRIVATE,
   JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
@@ -446,7 +446,7 @@ nsIDOMBlob*
 Blob::GetPrivate(JSObject* aObj)
 {
   if (aObj) {
-    JSClass* classPtr = JS_GetClass(aObj);
+    const JSClass* classPtr = JS_GetClass(aObj);
     if (classPtr == &sClass || classPtr == File::Class()) {
       nsISupports* priv = static_cast<nsISupports*>(JS_GetPrivate(aObj));
       nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(priv);

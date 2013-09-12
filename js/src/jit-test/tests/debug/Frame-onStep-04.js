@@ -1,7 +1,7 @@
 // When a recursive function has many frames on the stack, onStep may be set or
 // not independently on each frame.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.eval("function f(x) {\n" +
        "    if (x > 0)\n" +
        "        f(x - 1);\n" +

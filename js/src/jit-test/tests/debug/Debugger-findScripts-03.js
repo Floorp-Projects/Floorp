@@ -1,6 +1,6 @@
 // While eval code is running, findScripts returns its script.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 var log;
 

@@ -407,7 +407,7 @@ str_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     return true;
 }
 
-Class StringObject::class_ = {
+const Class StringObject::class_ = {
     js_String_str,
     JSCLASS_HAS_RESERVED_SLOTS(StringObject::RESERVED_SLOTS) |
     JSCLASS_NEW_RESOLVE | JSCLASS_HAS_CACHED_PROTO(JSProto_String),
@@ -2805,7 +2805,7 @@ LambdaIsGetElem(JSContext *cx, JSObject &lambda, MutableHandleObject pobj)
         return true;
 
     JSObject &bobj = b.toObject();
-    Class *clasp = bobj.getClass();
+    const Class *clasp = bobj.getClass();
     if (!clasp->isNative() || clasp->ops.lookupProperty || clasp->ops.getProperty)
         return true;
 
