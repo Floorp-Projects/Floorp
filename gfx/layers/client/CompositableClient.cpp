@@ -32,7 +32,24 @@ CompositableClient::~CompositableClient()
 {
   MOZ_COUNT_DTOR(CompositableClient);
   Destroy();
+
+  FlushTexturesToRemoveCallbacks();
+
   MOZ_ASSERT(mTexturesToRemove.Length() == 0, "would leak textures pending for deletion");
+}
+
+void
+CompositableClient::FlushTexturesToRemoveCallbacks()
+{
+  std::map<uint64_t,TextureClientData*>::iterator it
+    = mTexturesToRemoveCallbacks.begin();
+  std::map<uint64_t,TextureClientData*>::iterator stop
+    = mTexturesToRemoveCallbacks.end();
+  for (; it != stop; ++it) {
+    it->second->DeallocateSharedData(GetForwarder());
+    delete it->second;
+  }
+  mTexturesToRemoveCallbacks.clear();
 }
 
 LayersBackend
