@@ -3216,8 +3216,7 @@ class MBinaryArithInstruction
 
     virtual double getIdentity() = 0;
 
-    void infer(BaselineInspector *inspector,
-               jsbytecode *pc, bool overflowed);
+    void infer(BaselineInspector *inspector, jsbytecode *pc);
 
     void setInt32() {
         specialization_ = MIRType_Int32;
