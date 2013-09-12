@@ -12,7 +12,6 @@
 #include "nsIDOMSimpleGestureEvent.h" // Constants for gesture events
 #include "InputData.h"
 #include "UIABridgePrivate.h"
-#include "MetroAppShell.h"
 
 // System headers (alphabetical)
 #include <windows.ui.core.h> // ABI::Window::UI::Core namespace
@@ -180,20 +179,6 @@ namespace {
     aData->mChanged = false;
     return PL_DHASH_NEXT;
   }
-
-  // Helper for making sure event ptrs get freed.
-  class AutoDeleteEvent
-  {
-  public:
-    AutoDeleteEvent(nsGUIEvent* aPtr) :
-      mPtr(aPtr) {}
-    ~AutoDeleteEvent() {
-      if (mPtr) {
-        delete mPtr;
-      }
-    }
-    nsGUIEvent* mPtr;
-  };
 }
 
 namespace mozilla {
@@ -446,8 +431,6 @@ MetroInput::OnPointerPressed(UI::Core::ICoreWindow* aSender,
     mTouchStartDefaultPrevented = false;
     mTouchMoveDefaultPrevented = false;
     mIsFirstTouchMove = true;
-    mCancelable = true;
-    mTouchCancelSent = false;
     InitTouchEventTouchList(touchEvent);
     DispatchAsyncTouchEventWithCallback(touchEvent, &MetroInput::OnPointerPressedCallback);
   } else {
@@ -466,12 +449,10 @@ MetroInput::OnPointerPressedCallback()
 {
   nsEventStatus status = DeliverNextQueuedTouchEvent();
   mTouchStartDefaultPrevented = (nsEventStatus_eConsumeNoDefault == status);
+  // If content cancelled the first touchstart don't generate any gesture based
+  // input - clear the recognizer state without sending any events.
   if (mTouchStartDefaultPrevented) {
-    // If content canceled the first touchstart don't generate any gesture based
-    // input - clear the recognizer state without sending any events.
     mGestureRecognizer->CompleteGesture();
-    // Let the apz know content wants to consume touch events.
-    mWidget->ApzContentConsumingTouch();
   }
 }
 
@@ -568,15 +549,12 @@ MetroInput::OnPointerMoved(UI::Core::ICoreWindow* aSender,
 void
 MetroInput::OnFirstPointerMoveCallback()
 {
-  nsEventStatus status = DeliverNextQueuedTouchEvent();
-  mCancelable = false;
+  nsTouchEvent* event = static_cast<nsTouchEvent*>(mInputEventQueue.PopFront());
+  MOZ_ASSERT(event);
+  nsEventStatus status;
+  mWidget->DispatchEvent(event, status);
   mTouchMoveDefaultPrevented = (nsEventStatus_eConsumeNoDefault == status);
-  // Let the apz know whether content wants to consume touch events
-  if (mTouchMoveDefaultPrevented) {
-    mWidget->ApzContentConsumingTouch();
-  } else if (!mTouchMoveDefaultPrevented && !mTouchStartDefaultPrevented) {
-    mWidget->ApzContentIgnoringTouch();
-  }
+  delete event;
 }
 
 // This event is raised when the user lifts the left mouse button, lifts a
@@ -635,11 +613,6 @@ MetroInput::OnPointerReleased(UI::Core::ICoreWindow* aSender,
   if (!mTouchStartDefaultPrevented) {
     mGestureRecognizer->ProcessUpEvent(currentPoint.Get());
   }
-
-  // Make sure all gecko events are dispatched and the dom is up to date
-  // so that when ui automation comes in looking for focus info it gets
-  // the right information.
-  MetroAppShell::MarkEventQueueForPurge();
 
   return S_OK;
 }
@@ -1097,6 +1070,17 @@ MetroInput::DeliverNextQueuedEventIgnoreStatus()
   delete event;
 }
 
+nsEventStatus
+MetroInput::DeliverNextQueuedEvent()
+{
+  nsGUIEvent* event = static_cast<nsGUIEvent*>(mInputEventQueue.PopFront());
+  MOZ_ASSERT(event);
+  nsEventStatus status;
+  mWidget->DispatchEvent(event, status);
+  delete event;
+  return status;
+}
+
 void
 MetroInput::DispatchAsyncTouchEventIgnoreStatus(nsTouchEvent* aEvent)
 {
@@ -1112,67 +1096,17 @@ MetroInput::DispatchAsyncTouchEventIgnoreStatus(nsTouchEvent* aEvent)
 nsEventStatus
 MetroInput::DeliverNextQueuedTouchEvent()
 {
-  nsEventStatus status;
   nsTouchEvent* event = static_cast<nsTouchEvent*>(mInputEventQueue.PopFront());
   MOZ_ASSERT(event);
-
-  AutoDeleteEvent wrap(event);
-
-  /*
-   * We go through states here and make different decisions in each:
-   *
-   * 1) delivering first touchpoint touchstart or its first touchmove
-   *  Our callers (OnFirstPointerMoveCallback, OnPointerPressedCallback) will
-   *  check our result and set mTouchStartDefaultPrevented or
-   *  mTouchMoveDefaultPrevented appropriately. Deliver touch events to the apz
-   *  (ignoring return result) and to content and return the content event
-   *  status result to our caller.
-   * 2) mTouchStartDefaultPrevented or mTouchMoveDefaultPrevented are true
-   *  Deliver touch directly to content and bypass the apz. Our callers
-   *  handle calling cancel for the touch sequence on the apz.
-   * 3) mTouchStartDefaultPrevented and mTouchMoveDefaultPrevented are false
-   *  Deliver events to the apz. If the apz returns eConsumeNoDefault dispatch
-   *  a touchcancel to content and do not deliver any additional events there.
-   *  (If the apz is doing something with the events we can save ourselves
-   *  the overhead of delivering dom events.)
-   */
-
-  // Check if content called preventDefault on touchstart or first touchmove. If so
-  // send directly to content, do not forward to the apz.
-  if (mTouchStartDefaultPrevented || mTouchMoveDefaultPrevented) {
-    // continue delivering events to content
-    mWidget->DispatchEvent(event, status);
-    return status;
-  }
-
-  // Forward event data to apz. If the apz consumes the event, don't forward to
-  // content if this is not a cancelable event.
-  status = mWidget->ApzReceiveInputEvent(event);
-  if (!mCancelable && status == nsEventStatus_eConsumeNoDefault) {
-    if (!mTouchCancelSent) {
-      mTouchCancelSent = true;
-      DispatchTouchCancel();
-    }
-    return status;
-  }
-
-  // Deliver event to content
+  nsEventStatus status;
   mWidget->DispatchEvent(event, status);
+  // Deliver to the apz if content has *not* cancelled touchstart or the first touchmove.
+  if (!mTouchStartDefaultPrevented && !mTouchMoveDefaultPrevented && MetroWidget::sAPZC) {
+    MultiTouchInput inputData(*event);
+    MetroWidget::sAPZC->ReceiveInputEvent(inputData);
+  }
+  delete event;
   return status;
-}
-
-void
-MetroInput::DispatchTouchCancel()
-{
-  LogFunction();
-  // From the spec: The touch point or points that were removed must be
-  // included in the changedTouches attribute of the TouchEvent, and must
-  // not be included in the touches and targetTouches attributes. 
-  // (We are 'removing' all touch points that have been sent to content
-  // thus far.)
-  nsTouchEvent touchEvent(true, NS_TOUCH_CANCEL, mWidget.Get());
-  InitTouchEventTouchList(&touchEvent);
-  mWidget->DispatchEvent(&touchEvent, sThrowawayStatus);
 }
 
 void
