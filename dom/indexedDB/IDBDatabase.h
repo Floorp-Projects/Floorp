@@ -16,6 +16,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
 #include "mozilla/dom/IDBTransactionBinding.h"
+#include "mozilla/dom/quota/PersistenceType.h"
 #include "nsDOMEventTargetHelper.h"
 
 #include "mozilla/dom/indexedDB/FileManager.h"
@@ -209,6 +210,12 @@ public:
   IMPL_EVENT_HANDLER(abort)
   IMPL_EVENT_HANDLER(error)
   IMPL_EVENT_HANDLER(versionchange)
+
+  mozilla::dom::StorageType
+  Storage() const
+  {
+    return PersistenceTypeToStorage(mPersistenceType);
+  }
 
   already_AddRefed<IDBRequest>
   MozCreateFileHandle(const nsAString& aName, const Optional<nsAString>& aType,

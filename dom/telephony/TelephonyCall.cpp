@@ -13,9 +13,9 @@
 #include "Telephony.h"
 #include "TelephonyCallGroup.h"
 
-USING_TELEPHONY_NAMESPACE
 using namespace mozilla::dom;
 using mozilla::ErrorResult;
+using mozilla::dom::telephony::kOutgoingPlaceholderCallIndex;
 
 // static
 already_AddRefed<TelephonyCall>
@@ -161,7 +161,7 @@ TelephonyCall::NotifyError(const nsAString& aError)
   // Set the error string
   NS_ASSERTION(!mError, "Already have an error?");
 
-  mError = new mozilla::dom::DOMError(GetOwner(), aError);
+  mError = new DOMError(GetOwner(), aError);
 
   // Do the state transitions
   ChangeStateInternal(nsITelephonyProvider::CALL_STATE_DISCONNECTED, true);

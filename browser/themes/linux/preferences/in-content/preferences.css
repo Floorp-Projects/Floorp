@@ -49,11 +49,6 @@
   background-position: 0 0;
 }
 
-.preference-icon[type="tabs"],
-.landingButton-icon[type="tabs"] {
-  background-position: -32px 0;
-}
-
 .preference-icon[type="content"],
 .landingButton-icon[type="content"] {
   background-position: -64px 0;

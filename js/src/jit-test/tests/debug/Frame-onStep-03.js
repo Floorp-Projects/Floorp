@@ -1,7 +1,7 @@
 // Setting onStep does not affect later calls to the same function.
 // (onStep is per-frame, not per-function.)
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.a = 1;
 g.eval("function f(a) {\n" +
        "    var x = 2 * a;\n" +

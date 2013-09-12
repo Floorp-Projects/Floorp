@@ -1,6 +1,6 @@
 // env.names() on object environments ignores property names that are not identifiers.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var names;
 g.h = function () {

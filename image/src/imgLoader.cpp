@@ -49,7 +49,7 @@ using namespace mozilla::image;
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(ImagesMallocSizeOf)
 
 class imgMemoryReporter MOZ_FINAL :
-  public nsIMemoryMultiReporter
+  public nsIMemoryReporter
 {
 public:
   imgMemoryReporter()
@@ -64,7 +64,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *callback,
+  NS_IMETHOD CollectReports(nsIMemoryReporterCallback *callback,
                             nsISupports *closure)
   {
     AllSizes chrome;
@@ -221,15 +221,15 @@ private:
   }
 };
 
-NS_IMPL_ISUPPORTS1(imgMemoryReporter, nsIMemoryMultiReporter)
+NS_IMPL_ISUPPORTS1(imgMemoryReporter, nsIMemoryReporter)
 
 // This is used by telemetry.
 class ImagesContentUsedUncompressedReporter MOZ_FINAL
-  : public MemoryReporterBase
+  : public MemoryUniReporter
 {
 public:
   ImagesContentUsedUncompressedReporter()
-    : MemoryReporterBase("images-content-used-uncompressed",
+    : MemoryUniReporter("images-content-used-uncompressed",
                          KIND_OTHER, UNITS_BYTES,
 "This is the sum of the 'explicit/images/content/used/uncompressed-heap' "
 "and 'explicit/images/content/used/uncompressed-nonheap' numbers.  However, "
@@ -838,7 +838,7 @@ void imgLoader::GlobalInit()
     sCacheMaxSize = 5 * 1024 * 1024;
 
   sMemReporter = new imgMemoryReporter();
-  NS_RegisterMemoryMultiReporter(sMemReporter);
+  NS_RegisterMemoryReporter(sMemReporter);
   NS_RegisterMemoryReporter(new ImagesContentUsedUncompressedReporter());
 }
 

@@ -189,10 +189,9 @@ const kEventConstructors = {
                                                        },
                                              },
   MessageEvent:                              { create: function (aName, aProps) {
-                                                         var e = document.createEvent("messageevent");
-                                                         e.initMessageEvent(aName, aProps.bubbles, aProps.cancelable,
-                                                                            aProps.data, aProps.origin,
-                                                                            aProps.lastEventId, aProps.source);
+                                                         var e = new MessageEvent("messageevent", { bubbles: aProps.bubbles,
+                                                             cancelable: aProps.cancelable, data: aProps.data, origin: aProps.origin,
+                                                             lastEventId: aProps.lastEventId, source: aProps.source });
                                                          return e;
                                                        },
                                              },

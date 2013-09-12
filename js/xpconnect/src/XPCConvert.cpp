@@ -79,7 +79,7 @@ UnwrapNativeCPOW(nsISupports* wrapper)
 bool
 XPCConvert::GetISupportsFromJSObject(JSObject* obj, nsISupports** iface)
 {
-    JSClass* jsclass = js::GetObjectJSClass(obj);
+    const JSClass* jsclass = js::GetObjectJSClass(obj);
     MOZ_ASSERT(jsclass, "obj has no class");
     if (jsclass &&
         (jsclass->flags & JSCLASS_HAS_PRIVATE) &&

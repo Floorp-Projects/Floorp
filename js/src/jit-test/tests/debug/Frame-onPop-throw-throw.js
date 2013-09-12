@@ -2,7 +2,7 @@
 // onPop can change a throw into a throw of a different value.
 
 load(libdir + "asserts.js");
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 
 function test(type, provocation) {

@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=650776
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 914381</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=914381">Mozilla Bug 914381</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
+function createFileWithData(fileData) {
+  var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+  var testFile = dirSvc.get("ProfD", Ci.nsIFile);
+  testFile.append("testBug914381");
+
+  var outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+  outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
+                 0666, 0);
+  outStream.write(fileData, fileData.length);
+  outStream.close();
+
+  return testFile;
+}
+
+/** Test for Bug 914381. DOMFile's created in JS using an nsIFile should allow mozGetFullPathInternal calls to succeed **/
+var file = createFileWithData("Test bug 914381");
+var f = File(file);
+is(f.mozFullPathInternal, undefined, "mozFullPathInternal is undefined from js");
+is(f.mozFullPath, file.path, "mozFullPath returns path if created with nsIFile");
+
+f = File(file.path);
+is(f.mozFullPathInternal, undefined, "mozFullPathInternal is undefined from js");
+is(f.mozFullPath, "", "mozFullPath returns blank if created with a string");
+</script>
+</pre>
+</body>
+</html>

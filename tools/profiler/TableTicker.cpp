@@ -49,6 +49,14 @@
  #include "nsStackWalk.h"
 #endif
 
+#if defined(SPS_ARCH_arm) && defined(MOZ_WIDGET_GONK)
+ // Should also work on other Android and ARM Linux, but not tested there yet.
+ #define USE_EHABI_STACKWALK
+#endif
+#ifdef USE_EHABI_STACKWALK
+ #include "EHABIStackWalk.h"
+#endif
+
 using std::string;
 using namespace mozilla;
 
@@ -337,7 +345,7 @@ void addProfileEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
   }
 }
 
-#ifdef USE_NS_STACKWALK
+#if defined(USE_NS_STACKWALK) || defined(USE_EHABI_STACKWALK)
 typedef struct {
   void** array;
   void** sp_array;
@@ -345,6 +353,48 @@ typedef struct {
   size_t count;
 } PCArray;
 
+static void mergeNativeBacktrace(ThreadProfile &aProfile, const PCArray &array) {
+  aProfile.addTag(ProfileEntry('s', "(root)"));
+
+  PseudoStack* stack = aProfile.GetPseudoStack();
+  uint32_t pseudoStackPos = 0;
+
+  /* We have two stacks, the native C stack we extracted from unwinding,
+   * and the pseudostack we managed during execution. We want to consolidate
+   * the two in order. We do so by merging using the approximate stack address
+   * when each entry was push. When pushing JS entry we may not now the stack
+   * address in which case we have a NULL stack address in which case we assume
+   * that it follows immediatly the previous element.
+   *
+   *  C Stack | Address    --  Pseudo Stack | Address
+   *  main()  | 0x100          run_js()     | 0x40
+   *  start() | 0x80           jsCanvas()   | NULL
+   *  timer() | 0x50           drawLine()   | NULL
+   *  azure() | 0x10
+   *
+   * Merged: main(), start(), timer(), run_js(), jsCanvas(), drawLine(), azure()
+   */
+  // i is the index in C stack starting at main and decreasing
+  // pseudoStackPos is the position in the Pseudo stack starting
+  // at the first frame (run_js in the example) and increasing.
+  for (size_t i = array.count; i > 0; --i) {
+    while (pseudoStackPos < stack->stackSize()) {
+      volatile StackEntry& entry = stack->mStack[pseudoStackPos];
+
+      if (entry.stackAddress() < array.sp_array[i-1] && entry.stackAddress())
+        break;
+
+      addProfileEntry(entry, aProfile, stack, array.array[0]);
+      pseudoStackPos++;
+    }
+
+    aProfile.addTag(ProfileEntry('l', (void*)array.array[i-1]));
+  }
+}
+
+#endif
+
+#ifdef USE_NS_STACKWALK
 static
 void StackWalkCallback(void* aPC, void* aSP, void* aClosure)
 {
@@ -393,45 +443,29 @@ void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample
   nsresult rv = NS_StackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames,
                              &array, thread, platformData);
 #endif
-  if (NS_SUCCEEDED(rv)) {
-    aProfile.addTag(ProfileEntry('s', "(root)"));
-
-    PseudoStack* stack = aProfile.GetPseudoStack();
-    uint32_t pseudoStackPos = 0;
-
-    /* We have two stacks, the native C stack we extracted from unwinding,
-     * and the pseudostack we managed during execution. We want to consolidate
-     * the two in order. We do so by merging using the approximate stack address
-     * when each entry was push. When pushing JS entry we may not now the stack
-     * address in which case we have a NULL stack address in which case we assume
-     * that it follows immediatly the previous element.
-     *
-     *  C Stack | Address    --  Pseudo Stack | Address
-     *  main()  | 0x100          run_js()     | 0x40
-     *  start() | 0x80           jsCanvas()   | NULL
-     *  timer() | 0x50           drawLine()   | NULL
-     *  azure() | 0x10
-     *
-     * Merged: main(), start(), timer(), run_js(), jsCanvas(), drawLine(), azure()
-     */
-    // i is the index in C stack starting at main and decreasing
-    // pseudoStackPos is the position in the Pseudo stack starting
-    // at the first frame (run_js in the example) and increasing.
-    for (size_t i = array.count; i > 0; --i) {
-      while (pseudoStackPos < stack->stackSize()) {
-        volatile StackEntry& entry = stack->mStack[pseudoStackPos];
-
-        if (entry.stackAddress() < array.sp_array[i-1] && entry.stackAddress())
-          break;
-
-        addProfileEntry(entry, aProfile, stack, array.array[0]);
-        pseudoStackPos++;
-      }
-
-      aProfile.addTag(ProfileEntry('l', (void*)array.array[i-1]));
-    }
-  }
+  if (NS_SUCCEEDED(rv))
+    mergeNativeBacktrace(aProfile, array);
 }
+#endif
+
+#ifdef USE_EHABI_STACKWALK
+void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
+{
+  void *pc_array[1000];
+  void *sp_array[1000];
+  PCArray array = {
+    pc_array,
+    sp_array,
+    mozilla::ArrayLength(pc_array),
+    0
+  };
+
+  ucontext_t *ucontext = reinterpret_cast<ucontext_t *>(aSample->context);
+  array.count = EHABIStackWalk(ucontext->uc_mcontext, aProfile.GetStackTop(),
+                               sp_array, pc_array, array.size);
+  mergeNativeBacktrace(aProfile, array);
+}
+
 #endif
 
 static
@@ -496,7 +530,7 @@ void TableTicker::InplaceTick(TickSample* sample)
     }
   }
 
-#if defined(USE_NS_STACKWALK)
+#if defined(USE_NS_STACKWALK) || defined(USE_EHABI_STACKWALK)
   if (mUseStackWalk) {
     doNativeBacktrace(currThreadProfile, sample);
   } else {
@@ -544,8 +578,13 @@ void mozilla_sampler_print_location1()
     return;
   }
 
+  // This won't allow unwinding past this function, but it will be safe.
+  void *stackTop = &stack;
+
   ThreadProfile threadProfile("Temp", PROFILE_DEFAULT_ENTRY, stack,
-                              0, Sampler::AllocPlatformData(0), false);
+                              0, Sampler::AllocPlatformData(0), false,
+                              stackTop);
+
   doSampleStackTrace(stack, threadProfile, NULL);
 
   threadProfile.flush();

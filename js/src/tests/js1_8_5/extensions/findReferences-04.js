@@ -4,7 +4,7 @@
 
 if (typeof findReferences == "function") {
 
-    var global = newGlobal('new-compartment');
+    var global = newGlobal();
     var o = ({});
     global.o = o;
 

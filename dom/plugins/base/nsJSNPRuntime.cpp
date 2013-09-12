@@ -144,7 +144,7 @@ static bool
 CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject *npobj,
                      JS::Handle<jsid> id, NPVariant* getPropertyResult, JS::Value *vp);
 
-JSClass sNPObjectJSWrapperClass =
+const JSClass sNPObjectJSWrapperClass =
   {
     NPRUNTIME_JSCLASS_NAME,
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE,
@@ -181,7 +181,7 @@ NPObjectMember_Call(JSContext *cx, unsigned argc, JS::Value *vp);
 static void
 NPObjectMember_Trace(JSTracer *trc, JSObject *obj);
 
-static JSClass sNPObjectMemberClass =
+static const JSClass sNPObjectMemberClass =
   {
     "NPObject Ambiguous Member class", JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS,
     JS_PropertyStub, JS_DeletePropertyStub,
@@ -968,7 +968,7 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JS::Handle<JSObject*> obj)
   // class and private from the JSObject, neither of which cares about
   // compartments.
 
-  JSClass *clazz = JS_GetClass(obj);
+  const JSClass *clazz = JS_GetClass(obj);
 
   if (clazz == &sNPObjectJSWrapperClass) {
     // obj is one of our own, its private data is the NPObject we're

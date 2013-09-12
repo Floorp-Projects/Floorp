@@ -678,12 +678,12 @@ let SessionStoreInternal = {
         break;
       case "TabPinned":
         // If possible, update cached data without having to invalidate it
-        TabStateCache.update(aEvent.originalTarget, "pinned", true);
+        TabStateCache.updateField(aEvent.originalTarget, "pinned", true);
         this.saveStateDelayed(win);
         break;
       case "TabUnpinned":
         // If possible, update cached data without having to invalidate it
-        TabStateCache.update(aEvent.originalTarget, "pinned", false);
+        TabStateCache.updateField(aEvent.originalTarget, "pinned", false);
         this.saveStateDelayed(win);
         break;
     }
@@ -1330,7 +1330,7 @@ let SessionStoreInternal = {
     }
 
     // If possible, update cached data without having to invalidate it
-    TabStateCache.update(aTab, "hidden", false);
+    TabStateCache.updateField(aTab, "hidden", false);
 
     // Default delay of 2 seconds gives enough time to catch multiple TabShow
     // events due to changing groups in Panorama.
@@ -1345,7 +1345,7 @@ let SessionStoreInternal = {
     }
 
     // If possible, update cached data without having to invalidate it
-    TabStateCache.update(aTab, "hidden", true);
+    TabStateCache.updateField(aTab, "hidden", true);
 
     // Default delay of 2 seconds gives enough time to catch multiple TabHide
     // events due to changing groups in Panorama.
@@ -1665,7 +1665,6 @@ let SessionStoreInternal = {
   },
 
   setTabValue: function ssi_setTabValue(aTab, aKey, aStringValue) {
-    TabStateCache.delete(aTab);
     // If the tab hasn't been restored, then set the data there, otherwise we
     // could lose newly added data.
     let saveTo;
@@ -1679,12 +1678,13 @@ let SessionStoreInternal = {
       aTab.__SS_extdata = {};
       saveTo = aTab.__SS_extdata;
     }
+
     saveTo[aKey] = aStringValue;
+    TabStateCache.updateField(aTab, "extData", saveTo);
     this.saveStateDelayed(aTab.ownerDocument.defaultView);
   },
 
   deleteTabValue: function ssi_deleteTabValue(aTab, aKey) {
-    TabStateCache.delete(aTab);
     // We want to make sure that if data is accessed early, we attempt to delete
     // that data from __SS_data as well. Otherwise we'll throw in cases where
     // data can be set or read.
@@ -1696,9 +1696,19 @@ let SessionStoreInternal = {
       deleteFrom = aTab.linkedBrowser.__SS_data.extData;
     }
 
-    if (deleteFrom && deleteFrom[aKey])
+    if (deleteFrom && aKey in deleteFrom) {
       delete deleteFrom[aKey];
-    this.saveStateDelayed(aTab.ownerDocument.defaultView);
+
+      // Keep the extData object only if it is not empty, to save
+      // a little disk space when serializing the tab state later.
+      if (Object.keys(deleteFrom).length) {
+        TabStateCache.updateField(aTab, "extData", deleteFrom);
+      } else {
+        TabStateCache.removeField(aTab, "extData");
+      }
+
+      this.saveStateDelayed(aTab.ownerDocument.defaultView);
+    }
   },
 
   persistTabAttribute: function ssi_persistTabAttribute(aName) {
@@ -4639,11 +4649,27 @@ let TabStateCache = {
    * @param {string} aField The field to update.
    * @param {*} aValue The new value to place in the field.
    */
-  update: function(aKey, aField, aValue) {
+  updateField: function(aKey, aField, aValue) {
     let key = this._normalizeToBrowser(aKey);
     let data = this._data.get(key);
     if (data) {
       data[aField] = aValue;
+    }
+    TabStateCacheTelemetry.recordAccess(!!data);
+  },
+
+  /**
+   * Remove a given field from a cached tab state.
+   *
+   * @param {XULElement} aKey The tab or the associated browser.
+   * If the tab/browser is not present, do nothing.
+   * @param {string} aField The field to remove.
+   */
+  removeField: function(aKey, aField) {
+    let key = this._normalizeToBrowser(aKey);
+    let data = this._data.get(key);
+    if (data && aField in data) {
+      delete data[aField];
     }
     TabStateCacheTelemetry.recordAccess(!!data);
   },

@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=912103
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  function runTest() {
+    const Cc = Components.classes;
+    const Ci = Components.interfaces;
+
+    var dashboard = Cc['@mozilla.org/network/dashboard;1']
+                      .getService(Ci.nsIDashboard);
+    dashboard.enableLogging = true;
+
+    var wsURI = "ws://mochi.test:8888/chrome/toolkit/content/tests/chrome/file_about_networking";
+    var websocket = new WebSocket(wsURI);
+
+    websocket.addEventListener("open", function() {
+      dashboard.requestWebsocketConnections(function(data) {
+        isnot(data.hostport.indexOf("mochi.test:8888"), -1,
+              "tested websocket entry not found");
+        websocket.close();
+        SimpleTest.finish();
+      });
+    });
+  }
+
+  window.addEventListener("DOMContentLoaded", function run() {
+    window.removeEventListener("DOMContentLoaded", run);
+    runTest();
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=912103">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

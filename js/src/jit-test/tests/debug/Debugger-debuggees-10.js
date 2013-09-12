@@ -1,8 +1,8 @@
 // Allow diamonds in the graph of the compartment "debugs" relation.
-var program = newGlobal('new-compartment');
-var d1 = newGlobal('new-compartment');
+var program = newGlobal();
+var d1 = newGlobal();
 d1.top = this;
-var d2 = newGlobal('new-compartment');
+var d2 = newGlobal();
 d2.top = this;
 var dbg = new Debugger(d1, d2);
 d1.eval("var dbg = new Debugger(top.program)");

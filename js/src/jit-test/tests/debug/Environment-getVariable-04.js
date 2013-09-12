@@ -1,6 +1,6 @@
 // getVariable sees variables in function scopes added by non-strict direct eval.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var v;
 dbg.onDebuggerStatement = function (frame) {

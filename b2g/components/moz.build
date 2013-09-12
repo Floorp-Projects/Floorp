@@ -25,6 +25,7 @@ EXTRA_COMPONENTS += [
     'ProcessGlobal.js',
     'SmsProtocolHandler.js',
     'TelProtocolHandler.js',
+    'WebappsUpdateTimer.js',
     'YoutubeProtocolHandler.js',
 ]
 
@@ -44,4 +45,5 @@ EXTRA_JS_MODULES += [
     'Keyboard.jsm',
     'SignInToWebsite.jsm',
     'TelURIParser.jsm',
+    'WebappsUpdater.jsm',
 ]

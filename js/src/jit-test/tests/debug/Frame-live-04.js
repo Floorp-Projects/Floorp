@@ -1,6 +1,6 @@
 // frame.live is false for frames discarded during uncatchable error unwinding.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var hits = 0;
 var snapshot;

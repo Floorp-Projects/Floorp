@@ -6,11 +6,9 @@
 
 #include "vm/ProxyObject.h"
 
-#include "jsgcinlines.h"
-#include "jsobjinlines.h"
+#include "jscompartment.h"
 
-#include "gc/Barrier-inl.h"
-#include "vm/ObjectImpl-inl.h"
+#include "jsgcinlines.h"
 
 using namespace js;
 

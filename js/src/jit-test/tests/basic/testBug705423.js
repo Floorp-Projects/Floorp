@@ -1,6 +1,6 @@
 gczeal(1);
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 
 g.eval("\
 var f = function(x) { \

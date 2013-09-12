@@ -332,11 +332,11 @@ NS_InitXPCOM(nsIServiceManager* *result,
     return NS_InitXPCOM2(result, binDirectory, nullptr);
 }
 
-class ICUReporter MOZ_FINAL : public MemoryReporterBase
+class ICUReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
     ICUReporter()
-      : MemoryReporterBase("explicit/icu", KIND_HEAP, UNITS_BYTES,
+      : MemoryUniReporter("explicit/icu", KIND_HEAP, UNITS_BYTES,
 "Memory used by ICU, a Unicode and globalization support library.")
     {
 #ifdef DEBUG

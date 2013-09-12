@@ -68,7 +68,7 @@ public final class GeckoProfile {
             }
 
             GeckoProfile guest = GeckoProfile.getGuestProfile(context);
-            // if the guest profile exists and is locked, return it
+            // if the guest profile is locked, return it
             if (guest != null && guest.locked()) {
                 return guest;
             }
@@ -231,14 +231,21 @@ public final class GeckoProfile {
             return mLocked == LockState.LOCKED;
         }
 
-        File lockFile = new File(getDir(), LOCK_FILE_NAME);
-        boolean res = lockFile.exists();
-        mLocked = res ? LockState.LOCKED : LockState.UNLOCKED;
-        return res;
+        // Don't use getDir() as it will create a dir if none exists
+        if (mDir != null && mDir.exists()) {
+            File lockFile = new File(mDir, LOCK_FILE_NAME);
+            boolean res = lockFile.exists();
+            mLocked = res ? LockState.LOCKED : LockState.UNLOCKED;
+        } else {
+            mLocked = LockState.UNLOCKED;
+        }
+
+        return mLocked == LockState.LOCKED;
     }
 
     public boolean lock() {
         try {
+            // If this dir doesn't exist getDir will create it for us
             File lockFile = new File(getDir(), LOCK_FILE_NAME);
             boolean result = lockFile.createNewFile();
             if (result) {
@@ -255,8 +262,13 @@ public final class GeckoProfile {
     }
 
     public boolean unlock() {
+        // Don't use getDir() as it will create a dir
+        if (mDir == null || !mDir.exists()) {
+            return true;
+        }
+
         try {
-            File lockFile = new File(getDir(), LOCK_FILE_NAME);
+            File lockFile = new File(mDir, LOCK_FILE_NAME);
             boolean result = delete(lockFile);
             if (result) {
                 mLocked = LockState.UNLOCKED;

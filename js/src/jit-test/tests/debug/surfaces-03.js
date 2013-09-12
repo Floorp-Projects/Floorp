@@ -8,7 +8,7 @@ assertEq(typeof desc.set, 'function');
 
 assertThrowsInstanceOf(function () { Debugger.prototype.uncaughtExceptionHook = null; }, TypeError);
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 assertEq(desc.get.call(dbg), null);
 assertThrowsInstanceOf(function () { dbg.uncaughtExceptionHook = []; }, TypeError);

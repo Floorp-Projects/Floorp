@@ -124,7 +124,8 @@ public:
                        const nsRect *aPostFilterDirtyRect,
                        const nsRect *aPreFilterDirtyRect,
                        const nsRect *aOverridePreFilterVisualOverflowRect,
-                       const gfxRect *aOverrideBBox = nullptr);
+                       const gfxRect *aOverrideBBox = nullptr,
+                       nsIFrame* aTransformRoot = nullptr);
   ~nsAutoFilterInstance() {}
 
   // If this returns null, then draw nothing. Either the filter draws
@@ -141,7 +142,8 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
                                            const nsRect *aPostFilterDirtyRect,
                                            const nsRect *aPreFilterDirtyRect,
                                            const nsRect *aPreFilterVisualOverflowRectOverride,
-                                           const gfxRect *aOverrideBBox)
+                                           const gfxRect *aOverrideBBox,
+                                           nsIFrame* aTransformRoot)
 {
   const SVGFilterElement *filter = aFilterFrame->GetFilterContent();
 
@@ -279,7 +281,8 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
                             nsIntSize(filterRes.width, filterRes.height),
                             filterToDeviceSpace, filterToFrameSpaceInCSSPx,
                             preFilterVisualOverflowRect, postFilterDirtyRect,
-                            preFilterDirtyRect, primitiveUnits);
+                            preFilterDirtyRect, primitiveUnits,
+                            aTransformRoot);
 }
 
 uint16_t
@@ -439,10 +442,12 @@ nsresult
 nsSVGFilterFrame::PaintFilteredFrame(nsRenderingContext *aContext,
                                      nsIFrame *aFilteredFrame,
                                      nsSVGFilterPaintCallback *aPaintCallback,
-                                     const nsRect *aDirtyArea)
+                                     const nsRect *aDirtyArea,
+                                     nsIFrame* aTransformRoot)
 {
   nsAutoFilterInstance instance(aFilteredFrame, this, aPaintCallback,
-                                aDirtyArea, nullptr, nullptr);
+                                aDirtyArea, nullptr, nullptr, nullptr,
+                                aTransformRoot);
   if (!instance.get()) {
     return NS_OK;
   }

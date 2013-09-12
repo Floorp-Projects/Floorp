@@ -250,8 +250,10 @@ DatabaseInfo::Clone()
 
   dbInfo->cloned = true;
   dbInfo->name = name;
+  dbInfo->group = group;
   dbInfo->origin = origin;
   dbInfo->version = version;
+  dbInfo->persistenceType = persistenceType;
   dbInfo->id = id;
   dbInfo->filePath = filePath;
   dbInfo->nextObjectStoreId = nextObjectStoreId;

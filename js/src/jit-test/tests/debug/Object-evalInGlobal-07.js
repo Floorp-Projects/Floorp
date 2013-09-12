@@ -1,5 +1,5 @@
 // evalInGlobal correctly handles optional custom url option
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 var debuggee = dbg.getDebuggees()[0];
 var count = 0;

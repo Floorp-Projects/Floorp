@@ -86,7 +86,7 @@ class FunctionProxyObject : public ProxyObject
     static const uint32_t CONSTRUCT_SLOT = 5;
 
   public:
-    static Class class_;
+    static const Class class_;
 
     static FunctionProxyObject *New(JSContext *cx, BaseProxyHandler *handler, HandleValue priv,
                                     JSObject *proto, JSObject *parent, JSObject *call,
@@ -103,13 +103,13 @@ class FunctionProxyObject : public ProxyObject
 class ObjectProxyObject : public ProxyObject
 {
   public:
-    static Class class_;
+    static const Class class_;
 };
 
 class OuterWindowProxyObject : public ObjectProxyObject
 {
   public:
-    static Class class_;
+    static const Class class_;
 };
 
 } // namespace js

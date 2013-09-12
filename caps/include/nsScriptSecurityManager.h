@@ -526,9 +526,9 @@ public:
 namespace mozilla {
 
 void
-GetExtendedOrigin(nsIURI* aURI, uint32_t aAppid,
-                  bool aInMozBrowser,
-                  nsACString& aExtendedOrigin);
+GetJarPrefix(uint32_t aAppid,
+             bool aInMozBrowser,
+             nsACString& aJarPrefix);
 
 } // namespace mozilla
 

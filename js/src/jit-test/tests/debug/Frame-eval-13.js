@@ -1,6 +1,6 @@
 // The debugger may add new bindings into existing scopes
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 dbg.onDebuggerStatement = function(frame) {
     assertEq(frame.eval("var x = 3; x").return, 3);

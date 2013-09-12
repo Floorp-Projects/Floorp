@@ -7,6 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={821589}
   <title>Test for Bug {821589} Packaged apps installation and update</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="test_packaged_app_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -18,90 +19,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={821589}
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-
 "use strict";
-
-var gInstallOrigin = "http://mochi.test:8888";
-var gSJSPath = "tests/dom/apps/tests/file_packaged_app.sjs";
-var gSJS = "http://test/" + gSJSPath;
-var gAppName = "appname";
-var gApp = null;
-
-var launchableValue = undefined;
-
-var index = -1;
 
 function debug(aMsg) {
   //dump("== Tests debug == " + aMsg + "\n");
-}
-
-function next() {
-  index += 1;
-  if (index >= steps.length) {
-    ok(false, "Shouldn't get here!");
-    return;
-  }
-  try {
-    steps[index]();
-  } catch(ex) {
-    ok(false, "Caught exception", ex);
-  }
-}
-
-function go() {
-  next();
-}
-
-function finish() {
-  SpecialPowers.setAllAppsLaunchable(launchableValue);
-  SpecialPowers.removePermission("webapps-manage", document);
-  SimpleTest.finish();
-}
-
-function mozAppsError() {
-  ok(false, "mozApps error: " + this.error.name);
-  finish();
-}
-
-function xhrError(event, url) {
-  var xhr = event.target;
-  ok(false, "XHR error loading " + url + ": " + xhr.status + " - " +
-            xhr.statusText);
-  finish();
-}
-
-function xhrAbort(url) {
-  ok(false, "XHR abort loading " + url);
-  finish();
-}
-
-function setAppVersion(aVersion, aCb) {
-  var xhr = new XMLHttpRequest();
-  var url = gSJS + "?setVersion=" + aVersion;
-  xhr.addEventListener("load", function() {
-    is(xhr.responseText, "OK", "setAppVersion OK");
-    aCb();
-  });
-  xhr.addEventListener("error", event => xhrError(event, url));
-  xhr.addEventListener("abort", event => xhrAbort(url));
-  xhr.open("GET", url, true);
-  xhr.send();
 }
 
 function checkAppInstallError(aMiniManifestURL, aExpectedError) {
   var req = navigator.mozApps.installPackage(aMiniManifestURL);
   req.onsuccess = function() {
     ok(false, "We are supposed to throw " + aExpectedError);
-    finish();
+    PackagedTestHelper.finish();
   };
   req.onerror = function(evt) {
     var error = evt.target.error.name;
     if (error == aExpectedError) {
       ok(true, "Got expected " + aExpectedError);
-      next();
+      PackagedTestHelper.next();
     } else {
       ok(false, "Got unexpected " + aError);
-      finish();
+      PackagedTestHelper.finish();
     }
   };
 }
@@ -113,57 +50,11 @@ function checkUninstallApp(aApp) {
     aApp.ondownloadsuccess = null;
     aApp.ondownloaderror = null;
     aApp.onprogress = null;
-    next();
+    PackagedTestHelper.next();
   };
   req.onerror = function(evt) {
     ok(false, "Got unexpected " + evt.target.error.name);
-    finish();
-  };
-}
-
-function checkAppDownloadError(aMiniManifestURL,
-                               aExpectedError,
-                               aVersion,
-                               aUninstall,
-                               aDownloadAvailable,
-                               aName) {
-  var req = navigator.mozApps.installPackage(aMiniManifestURL);
-  req.onsuccess = function() {
-    ok(true, "App installed");
-  };
-  req.onerror = function(evt) {
-    ok(false, "Got unexpected " + evt.target.error.name);
-    finish();
-  };
-
-  navigator.mozApps.mgmt.oninstall = function(evt) {
-    var aApp = evt.application;
-    aApp.ondownloaderror = function(evt) {
-      var error = aApp.downloadError.name;
-      if (error == aExpectedError) {
-        ok(true, "Got expected " + aExpectedError);
-        var expected = {
-          name: aName,
-          manifestURL: aMiniManifestURL,
-          installOrigin: gInstallOrigin,
-          progress: 0,
-          installState: "pending",
-          downloadAvailable: aDownloadAvailable,
-          downloading: false,
-          downloadSize: 0,
-          size: 0,
-          readyToApplyDownload: false,
-        };
-        checkAppState(aApp, aVersion, expected, false, aUninstall, next);
-      } else {
-        ok(false, "Got unexpected " + error);
-        finish();
-      }
-    };
-    aApp.ondownloadsuccess = function(evt) {
-      ok(false, "We are supposed to throw " + aExpectedError);
-      finish();
-    };
+    PackagedTestHelper.finish();
   };
 }
 
@@ -175,91 +66,12 @@ function checkInstalledApp(aMiniManifestURL,
   var req = navigator.mozApps.checkInstalled(aMiniManifestURL);
   req.onsuccess = function(evt) {
     ok(true, "The app is installed");
-    checkAppState(evt.application, aVersion, aExpectedApp, aLaunchable,
-                  false, aCb);
+    PackagedTestHelper.checkAppState(evt.application, aVersion, aExpectedApp,
+                                     aLaunchable, false, aCb);
   };
   req.onerror = function() {
     ok(false, "The app is not installed");
-    finish();
-  };
-}
-
-function checkAppState(aApp,
-                       aVersion,
-                       aExpectedApp,
-                       aLaunchable,
-                       aUninstall,
-                       aCb) {
-  debug(JSON.stringify(aApp, null, 2));
-  if (aApp.manifest) {
-    debug(JSON.stringify(aApp.manifest, null, 2));
-  }
-
-  if (aExpectedApp.name) {
-    if (aApp.manifest) {
-      is(aApp.manifest.name, aExpectedApp.name, "Check name");
-    }
-    is(aApp.updateManifest.name, aExpectedApp.name, "Check name mini-manifest");
-  }
-  if (aApp.manifest) {
-    is(aApp.manifest.version, aVersion, "Check version");
-  }
-  if (typeof aExpectedApp.size !== "undefined" && aApp.manifest) {
-    is(aApp.manifest.size, aExpectedApp.size, "Check size");
-  }
-  if (aApp.manifest) {
-    is(aApp.manifest.launch_path, gSJSPath, "Check launch path");
-  }
-  if (aExpectedApp.manifestURL) {
-    is(aApp.manifestURL, aExpectedApp.manifestURL, "Check manifestURL");
-  }
-  if (aExpectedApp.installOrigin) {
-    is(aApp.installOrigin, aExpectedApp.installOrigin, "Check installOrigin");
-  }
-  ok(aApp.removable, "Removable app");
-  if (typeof aExpectedApp.progress !== "undefined") {
-    todo(aApp.progress == aExpectedApp.progress, "Check progress");
-  }
-  if (aExpectedApp.installState) {
-    is(aApp.installState, aExpectedApp.installState, "Check installState");
-  }
-  if (typeof aExpectedApp.downloadAvailable !== "undefined") {
-    is(aApp.downloadAvailable, aExpectedApp.downloadAvailable,
-       "Check download available");
-  }
-  if (typeof aExpectedApp.downloading !== "undefined") {
-    is(aApp.downloading, aExpectedApp.downloading, "Check downloading");
-  }
-  if (typeof aExpectedApp.downloadSize !== "undefined") {
-    is(aApp.downloadSize, aExpectedApp.downloadSize, "Check downloadSize");
-  }
-  if (typeof aExpectedApp.readyToApplyDownload !== "undefined") {
-    is(aApp.readyToApplyDownload, aExpectedApp.readyToApplyDownload,
-       "Check readyToApplyDownload");
-  }
-  if (aLaunchable) {
-    if (aUninstall) {
-      checkUninstallApp(aApp);
-    } else if (aCb && typeof aCb === 'function') {
-      aCb();
-    }
-    return;
-  }
-
-  // Check if app is not launchable.
-  var req = aApp.launch();
-  req.onsuccess = function () {
-    ok(false, "We shouldn't be here");
-    finish();
-  };
-  req.onerror = function() {
-    ok(true, "App is not launchable");
-    if (aUninstall) {
-      checkUninstallApp(aApp);
-    } else if (aCb && typeof aCb === 'function') {
-      aCb();
-    }
-    return;
+    PackagedTestHelper.finish();
   };
 }
 
@@ -268,17 +80,18 @@ SimpleTest.waitForExplicitFinish();
 var steps = [
   function() {
     // Set up
-    launchableValue = SpecialPowers.setAllAppsLaunchable(true);
+    PackagedTestHelper.launchableValue =
+      SpecialPowers.setAllAppsLaunchable(true);
     SpecialPowers.addPermission("webapps-manage", true, document);
     ok(true, "Set up");
-    next();
+    PackagedTestHelper.next();
   },
   function() {
     ok(true, "autoConfirmAppInstall");
-    SpecialPowers.autoConfirmAppInstall(next);
+    SpecialPowers.autoConfirmAppInstall(PackagedTestHelper.next);
   },
   function() {
-    setAppVersion(0, next);
+    PackagedTestHelper.setAppVersion(0, PackagedTestHelper.next);
   },
   function() {
     // Test network error.
@@ -288,7 +101,7 @@ var steps = [
   function() {
     // Test wrong mini-manifest content type.
     ok(true, "== TEST == Not valid mini-manifest content type");
-    var miniManifestURL = gSJS +
+    var miniManifestURL = PackagedTestHelper.gSJS +
                           "?getManifest=true" +
                           "&noManifestContentType=true";
     checkAppInstallError(miniManifestURL, "INVALID_MANIFEST");
@@ -296,7 +109,7 @@ var steps = [
   function() {
     // Test mini-manifest 'size' value is not number. Bug 839435.
     ok(true, "== TEST == Size value is not a number");
-    var miniManifestURL = gSJS +
+    var miniManifestURL = PackagedTestHelper.gSJS +
                           "?getManifest=true" +
                           "&packageSize=\"NotANumber\"";
     checkAppInstallError(miniManifestURL, "INVALID_MANIFEST");
@@ -304,7 +117,7 @@ var steps = [
   function() {
     // Test mini-manifest  negative 'size' value. Bug 839435.
     ok(true, "== TEST == Negative size value");
-    var miniManifestURL = gSJS +
+    var miniManifestURL = PackagedTestHelper.gSJS +
                           "?getManifest=true" +
                           "&packageSize=-1";
     checkAppInstallError(miniManifestURL, "INVALID_MANIFEST");
@@ -312,7 +125,7 @@ var steps = [
   function() {
     // Test wrong package path
     ok(true, "== TEST == Installing app with wrong package path");
-    var miniManifestURL = gSJS +
+    var miniManifestURL = PackagedTestHelper.gSJS +
                           "?getManifest=true" +
                           "&wrongPackagePath=true";
     checkAppInstallError(miniManifestURL, "INVALID_MANIFEST");
@@ -320,91 +133,99 @@ var steps = [
   function() {
     // Test no manifest in zip file.
     ok(true, "== TEST == No manifest in the zip file");
-    var miniManifestURL = gSJS + "?getManifest=true";
-    checkAppDownloadError(miniManifestURL, "MISSING_MANIFEST", 0, true, true,
-                          gAppName);
+    var miniManifestURL = PackagedTestHelper.gSJS + "?getManifest=true";
+    PackagedTestHelper.checkAppDownloadError(miniManifestURL,
+                                            "MISSING_MANIFEST", 0, true, true,
+                                             PackagedTestHelper.gAppName);
   },
   function() {
-    setAppVersion(1, next);
+      PackagedTestHelper.setAppVersion(1, PackagedTestHelper.next);
   },
   function() {
     // Test mini-manifest app name is different from the webapp manifest name.
     // Bug 844243.
     ok(true, "== TEST == Mini-manifest app name is different from webapp " +
              "manifest name");
-    var miniManifestURL = gSJS +
+    var miniManifestURL = PackagedTestHelper.gSJS +
                           "?getManifest=true" +
                           "&appName=arandomname";
-    checkAppDownloadError(miniManifestURL, "MANIFEST_MISMATCH", 1, true, true,
-                          "arandomname");
+    PackagedTestHelper.checkAppDownloadError(miniManifestURL,
+                                             "MANIFEST_MISMATCH", 1, true, true,
+                                             "arandomname");
   },
   function() {
     // Test mini-manifest dev name is different from the webapp manifest dev
     // name.
     ok (true, "== TEST == Mini-manifest dev name is different from manifest " +
               "dev name");
-    var miniManifestURL = gSJS +
+    var miniManifestURL = PackagedTestHelper.gSJS +
                           "?getManifest=true" +
                           "&devName=arandomdevname";
-    checkAppDownloadError(miniManifestURL, "MANIFEST_MISMATCH", 1, true, true,
-                          gAppName);
+    PackagedTestHelper.checkAppDownloadError(miniManifestURL,
+                                             "MANIFEST_MISMATCH", 1, true, true,
+                                             PackagedTestHelper.gAppName);
   },
   function() {
     // Test mini-manifest dev url is different from the webapp manifest dev
     // url.
     ok (true, "== TEST == Mini-manifest dev url is different from manifest " +
               "dev url");
-    var miniManifestURL = gSJS +
+    var miniManifestURL = PackagedTestHelper.gSJS +
                           "?getManifest=true" +
                           "&devUrl=arandomdevurl";
-    checkAppDownloadError(miniManifestURL, "MANIFEST_MISMATCH", 1, true, true,
-                          gAppName);
+    PackagedTestHelper.checkAppDownloadError(miniManifestURL,
+                                             "MANIFEST_MISMATCH", 1, true, true,
+                                             PackagedTestHelper.gAppName);
   },
   function() {
-    setAppVersion(2, next);
+    PackagedTestHelper.setAppVersion(2, PackagedTestHelper.next);
   },
   function() {
     ok(true, "== TEST == Install packaged app");
-    var miniManifestURL = gSJS +
+    var miniManifestURL = PackagedTestHelper.gSJS +
                           "?getManifest=true";
     navigator.mozApps.mgmt.oninstall = function(evt) {
       ok(true, "Got oninstall event");
-      gApp = evt.application;
-      gApp.ondownloaderror = function() {
-        ok(false, "Download error " + gApp.downloadError.name);
-        finish();
+      PackagedTestHelper.gApp = evt.application;
+      PackagedTestHelper.gApp.ondownloaderror = function() {
+        ok(false, "Download error " +
+                  PackagedTestHelper.gApp.downloadError.name);
+        PackagedTestHelper.finish();
       };
-      gApp.ondownloadsuccess = function() {
+      PackagedTestHelper.gApp.ondownloadsuccess = function() {
         ok(true, "App downloaded");
         var expected = {
-          name: gAppName,
+          name: PackagedTestHelper.gAppName,
           manifestURL: miniManifestURL,
-          installOrigin: gInstallOrigin,
+          installOrigin: PackagedTestHelper.gInstallOrigin,
           progress: 0,
           installState: "installed",
           downloadAvailable: false,
           downloading: false,
           downloadSize: 0,
           size: 0,
-          readyToApplyDownload: false,
+          readyToApplyDownload: false
         };
-        checkAppState(gApp, 2, expected, true, false, next);
+        PackagedTestHelper.checkAppState(PackagedTestHelper.gApp, 2, expected,
+                                         true, false, PackagedTestHelper.next);
       };
     };
 
     var request = navigator.mozApps.installPackage(miniManifestURL);
-    request.onerror = mozAppsError;
+    request.onerror = PackagedTestHelper.mozAppsError;
     request.onsuccess = function() {
       ok(true, "Application installed");
     };
   },
   function() {
     ok(true, "all done!\n");
-    SimpleTest.finish();
+    PackagedTestHelper.finish();
   }
 ];
 
-addLoadEvent(go);
+PackagedTestHelper.setSteps(steps);
+
+addLoadEvent(PackagedTestHelper.start);
 
 </script>
 </pre>

@@ -70,7 +70,7 @@ protected:
     JS::Heap<JSObject*> mJSObject;
     bool mDestroyed; // Probably not necessary, but let's be safe.
 
-    static JSClass gSharedGlobalClass;
+    static const JSClass gSharedGlobalClass;
 };
 
 nsIPrincipal* nsXULPrototypeDocument::gSystemPrincipal;
@@ -98,7 +98,7 @@ nsXULPDGlobalObject_resolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle
 }
 
 
-JSClass nsXULPDGlobalObject::gSharedGlobalClass = {
+const JSClass nsXULPDGlobalObject::gSharedGlobalClass = {
     "nsXULPrototypeScript compilation scope",
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS |
     JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(0),

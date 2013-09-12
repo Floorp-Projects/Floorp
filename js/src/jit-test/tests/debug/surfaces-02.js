@@ -2,7 +2,7 @@
 
 load(libdir + 'asserts.js');
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger(g);
 gc();  // don't assert marking debug hooks
 assertEq(dbg.onDebuggerStatement, undefined);

@@ -1,6 +1,6 @@
 // Unwinding due to uncatchable errors does not trigger onExceptionUnwind.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var hits = 0;
 dbg.onExceptionUnwind = function (frame, value) { hits = 'BAD'; };

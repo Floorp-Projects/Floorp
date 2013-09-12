@@ -1,6 +1,6 @@
 // Exceptions thrown by obj.defineProperties are copied into the debugger compartment.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);
 

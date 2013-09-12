@@ -2,7 +2,7 @@
 
 load(libdir + "asserts.js");
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.eval("function gen(a) { debugger; yield a; }");
 g.eval("function test() { debugger; }");
 var dbg = new Debugger(g);

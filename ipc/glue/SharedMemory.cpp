@@ -17,11 +17,11 @@ namespace ipc {
 static Atomic<size_t> gShmemAllocated;
 static Atomic<size_t> gShmemMapped;
 
-class ShmemAllocatedReporter MOZ_FINAL : public MemoryReporterBase
+class ShmemAllocatedReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
   ShmemAllocatedReporter()
-    : MemoryReporterBase("shmem-allocated", KIND_OTHER, UNITS_BYTES,
+    : MemoryUniReporter("shmem-allocated", KIND_OTHER, UNITS_BYTES,
 "Memory shared with other processes that is accessible (but not necessarily "
 "mapped).")
   {}
@@ -29,11 +29,11 @@ private:
   int64_t Amount() MOZ_OVERRIDE { return gShmemAllocated; }
 };
 
-class ShmemMappedReporter MOZ_FINAL : public MemoryReporterBase
+class ShmemMappedReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
   ShmemMappedReporter()
-    : MemoryReporterBase("shmem-mapped", KIND_OTHER, UNITS_BYTES,
+    : MemoryUniReporter("shmem-mapped", KIND_OTHER, UNITS_BYTES,
 "Memory shared with other processes that is mapped into the address space.")
   {}
 private:

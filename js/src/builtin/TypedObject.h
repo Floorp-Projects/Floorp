@@ -47,22 +47,22 @@ enum BlockCommonSlots {
     BLOCK_RESERVED_SLOTS
 };
 
-extern Class DataClass;
+extern const Class DataClass;
 
-extern Class TypeClass;
+extern const Class TypeClass;
 
 template <ScalarTypeRepresentation::Type type, typename T>
 class NumericType
 {
   private:
-    static Class * typeToClass();
+    static const Class * typeToClass();
   public:
     static bool convert(JSContext *cx, HandleValue val, T* converted);
     static bool reify(JSContext *cx, void *mem, MutableHandleValue vp);
     static bool call(JSContext *cx, unsigned argc, Value *vp);
 };
 
-extern Class NumericTypeClasses[ScalarTypeRepresentation::TYPE_MAX];
+extern const Class NumericTypeClasses[ScalarTypeRepresentation::TYPE_MAX];
 
 /*
  * Type descriptor created by `new ArrayType(...)`
@@ -71,7 +71,7 @@ class ArrayType : public JSObject
 {
   private:
   public:
-    static Class class_;
+    static const Class class_;
 
     static JSObject *create(JSContext *cx, HandleObject arrayTypeGlobal,
                             HandleObject elementType, size_t length);
@@ -99,7 +99,7 @@ class StructType : public JSObject
                        HandleObject fields);
 
   public:
-    static Class class_;
+    static const Class class_;
 
     static bool toSource(JSContext *cx, unsigned int argc, jsval *vp);
 
@@ -195,7 +195,7 @@ class BinaryBlock
                                 MutableHandleValue statep, MutableHandleId idp);
 
   public:
-    static Class class_;
+    static const Class class_;
 
     static bool isBlock(HandleObject val);
     static uint8_t *mem(HandleObject val);

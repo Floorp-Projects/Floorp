@@ -1,6 +1,6 @@
 // Basic newScript hook tests.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 var dbg = Debugger(g);
 var seen = WeakMap();
 var hits = 0;
@@ -38,7 +38,7 @@ assertEq(hits, 1);
 
 // cloning functions across compartments
 fn = g.evaluate("(function(a) { return 5 + a; })", {compileAndGo: false});
-var g2 = newGlobal('new-compartment');
+var g2 = newGlobal();
 dbg.addDebuggee(g2, dbg);
 hits = 0;
 g2.clone(fn);

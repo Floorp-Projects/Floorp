@@ -1,7 +1,7 @@
 // Environment.prototype.find finds bindings that are function arguments, 'let'
 // bindings, or FunctionExpression names.
 
-var g = newGlobal('new-compartment');
+var g = newGlobal();
 g.eval("function h() { debugger; }");
 
 var dbg = new Debugger(g);

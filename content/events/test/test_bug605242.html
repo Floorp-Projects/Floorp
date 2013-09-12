@@ -21,19 +21,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=605242
 
 SimpleTest.waitForExplicitFinish();
 
+var utils = SpecialPowers.getDOMWindowUtils(window);
 function sendMouseDown(el) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var rect = el.getBoundingClientRect();
-  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
   utils.sendMouseEvent('mousedown', rect.left + 5, rect.top + 5, 0, 1, 0);
 }
 
 function sendMouseUp(el) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var rect = el.getBoundingClientRect();
-  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
   utils.sendMouseEvent('mouseup', rect.left + 5, rect.top + 5, 0, 1, 0);
 }
 
