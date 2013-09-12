@@ -288,8 +288,8 @@ function run_abstract_class_tests()
   do_check_true(ctypes.CData.prototype.hasOwnProperty("toSource"));
 
   // Check that the shared properties and functions on ctypes.CData.prototype throw.
-  do_check_throws(function() { ctypes.CData.prototype.value; }, Error);
-  do_check_throws(function() { ctypes.CData.prototype.value = null; }, Error);
+  do_check_throws(function() { ctypes.CData.prototype.value; }, TypeError);
+  do_check_throws(function() { ctypes.CData.prototype.value = null; }, TypeError);
   do_check_throws(function() { ctypes.CData.prototype.address(); }, Error);
   do_check_throws(function() { ctypes.CData.prototype.readString(); }, Error);
 
@@ -750,8 +750,8 @@ function run_basic_class_tests(t)
   do_check_true(t.prototype.constructor === t);
 
   // Check that the shared properties and functions on 't.prototype' throw.
-  do_check_throws(function() { t.prototype.value; }, Error);
-  do_check_throws(function() { t.prototype.value = null; }, Error);
+  do_check_throws(function() { t.prototype.value; }, TypeError);
+  do_check_throws(function() { t.prototype.value = null; }, TypeError);
   do_check_throws(function() { t.prototype.address(); }, Error);
   do_check_throws(function() { t.prototype.readString(); }, Error);
 

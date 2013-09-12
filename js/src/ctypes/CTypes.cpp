@@ -212,12 +212,13 @@ namespace PointerType {
   static bool Create(JSContext* cx, unsigned argc, jsval* vp);
   static bool ConstructData(JSContext* cx, HandleObject obj, const CallArgs& args);
 
-  static bool TargetTypeGetter(JSContext* cx, HandleObject obj, HandleId idval,
-    MutableHandleValue vp);
-  static bool ContentsGetter(JSContext* cx, HandleObject obj, HandleId idval,
-    MutableHandleValue vp);
-  static bool ContentsSetter(JSContext* cx, HandleObject obj, HandleId idval, bool strict,
-    MutableHandleValue vp);
+  bool IsPointerType(HandleValue v);
+  bool IsPointer(HandleValue v);
+
+  bool TargetTypeGetter(JSContext* cx, JS::CallArgs args);
+  bool ContentsGetter(JSContext* cx, JS::CallArgs args);
+  bool ContentsSetter(JSContext* cx, JS::CallArgs args);
+
   static bool IsNull(JSContext* cx, unsigned argc, jsval* vp);
   static bool Increment(JSContext* cx, unsigned argc, jsval* vp);
   static bool Decrement(JSContext* cx, unsigned argc, jsval* vp);
@@ -281,10 +282,9 @@ namespace CClosure {
 namespace CData {
   static void Finalize(JSFreeOp *fop, JSObject* obj);
 
-  static bool ValueGetter(JSContext* cx, HandleObject obj, HandleId idval,
-                          MutableHandleValue vp);
-  static bool ValueSetter(JSContext* cx, HandleObject obj, HandleId idval,
-                          bool strict, MutableHandleValue vp);
+  bool ValueGetter(JSContext* cx, JS::CallArgs args);
+  bool ValueSetter(JSContext* cx, JS::CallArgs args);
+
   static bool Address(JSContext* cx, unsigned argc, jsval* vp);
   static bool ReadString(JSContext* cx, unsigned argc, jsval* vp);
   static bool ReadStringReplaceMalformed(JSContext* cx, unsigned argc, jsval* vp);
@@ -594,9 +594,11 @@ static const JSFunctionSpec sCABIFunctions[] = {
 };
 
 static const JSPropertySpec sCDataProps[] = {
-  { "value", 0, JSPROP_SHARED | JSPROP_PERMANENT,
-    JSOP_WRAPPER(CData::ValueGetter), JSOP_WRAPPER(CData::ValueSetter) },
-  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
+  JS_PSGS("value",
+          (Property<CData::IsCData, CData::ValueGetter>::Fun),
+          (Property<CData::IsCData, CData::ValueSetter>::Fun),
+          JSPROP_PERMANENT),
+  JS_PS_END
 };
 
 static const JSFunctionSpec sCDataFunctions[] = {
@@ -625,9 +627,10 @@ static const JSFunctionSpec sPointerFunction =
   JS_FN("PointerType", PointerType::Create, 1, CTYPESCTOR_FLAGS);
 
 static const JSPropertySpec sPointerProps[] = {
-  { "targetType", 0, CTYPESPROP_FLAGS,
-    JSOP_WRAPPER(PointerType::TargetTypeGetter), JSOP_NULLWRAPPER },
-  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
+  JS_PSG("targetType",
+         (Property<PointerType::IsPointerType, PointerType::TargetTypeGetter>::Fun),
+         CTYPESACC_FLAGS),
+  JS_PS_END
 };
 
 static const JSFunctionSpec sPointerInstanceFunctions[] = {
@@ -638,10 +641,11 @@ static const JSFunctionSpec sPointerInstanceFunctions[] = {
 };
 
 static const JSPropertySpec sPointerInstanceProps[] = {
-  { "contents", 0, JSPROP_SHARED | JSPROP_PERMANENT,
-    JSOP_WRAPPER(PointerType::ContentsGetter),
-    JSOP_WRAPPER(PointerType::ContentsSetter) },
-  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
+  JS_PSGS("contents",
+         (Property<PointerType::IsPointer, PointerType::ContentsGetter>::Fun),
+         (Property<PointerType::IsPointer, PointerType::ContentsSetter>::Fun),
+          JSPROP_PERMANENT),
+  JS_PS_END
 };
 
 static const JSFunctionSpec sArrayFunction =
@@ -4008,18 +4012,29 @@ PointerType::GetBaseType(JSObject* obj)
 }
 
 bool
-PointerType::TargetTypeGetter(JSContext* cx,
-                              HandleObject obj,
-                              HandleId idval,
-                              MutableHandleValue vp)
+PointerType::IsPointerType(HandleValue v)
 {
-  if (!CType::IsCType(obj) || CType::GetTypeCode(obj) != TYPE_pointer) {
-    JS_ReportError(cx, "not a PointerType");
+  if (!v.isObject())
     return false;
-  }
+  JSObject* obj = &v.toObject();
+  return CType::IsCType(obj) && CType::GetTypeCode(obj) == TYPE_pointer;
+}
 
-  vp.set(JS_GetReservedSlot(obj, SLOT_TARGET_T));
-  JS_ASSERT(vp.isObject());
+bool
+PointerType::IsPointer(HandleValue v)
+{
+  if (!v.isObject())
+    return false;
+  JSObject* obj = &v.toObject();
+  return CData::IsCData(obj) && CType::GetTypeCode(CData::GetCType(obj)) == TYPE_pointer;
+}
+
+bool
+PointerType::TargetTypeGetter(JSContext* cx, JS::CallArgs args)
+{
+  RootedObject obj(cx, &args.thisv().toObject());
+  args.rval().set(JS_GetReservedSlot(obj, SLOT_TARGET_T));
+  MOZ_ASSERT(args.rval().isObject());
   return true;
 }
 
@@ -4098,24 +4113,10 @@ PointerType::Decrement(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 bool
-PointerType::ContentsGetter(JSContext* cx,
-                            HandleObject obj,
-                            HandleId idval,
-                            MutableHandleValue vp)
+PointerType::ContentsGetter(JSContext* cx, JS::CallArgs args)
 {
-  if (!CData::IsCData(obj)) {
-    JS_ReportError(cx, "not a CData");
-    return false;
-  }
-
-  // Get pointer type and base type.
-  JSObject* typeObj = CData::GetCType(obj);
-  if (CType::GetTypeCode(typeObj) != TYPE_pointer) {
-    JS_ReportError(cx, "not a PointerType");
-    return false;
-  }
-
-  RootedObject baseType(cx, GetBaseType(typeObj));
+  RootedObject obj(cx, &args.thisv().toObject());
+  RootedObject baseType(cx, GetBaseType(CData::GetCType(obj)));
   if (!CType::IsSizeDefined(baseType)) {
     JS_ReportError(cx, "cannot get contents of undefined size");
     return false;
@@ -4131,30 +4132,15 @@ PointerType::ContentsGetter(JSContext* cx,
   if (!ConvertToJS(cx, baseType, NullPtr(), data, false, false, result.address()))
     return false;
 
-  vp.set(result);
+  args.rval().set(result);
   return true;
 }
 
 bool
-PointerType::ContentsSetter(JSContext* cx,
-                            HandleObject obj,
-                            HandleId idval,
-                            bool strict,
-                            MutableHandleValue vp)
+PointerType::ContentsSetter(JSContext* cx, JS::CallArgs args)
 {
-  if (!CData::IsCData(obj)) {
-    JS_ReportError(cx, "not a CData");
-    return false;
-  }
-
-  // Get pointer type and base type.
-  JSObject* typeObj = CData::GetCType(obj);
-  if (CType::GetTypeCode(typeObj) != TYPE_pointer) {
-    JS_ReportError(cx, "not a PointerType");
-    return false;
-  }
-
-  JSObject* baseType = GetBaseType(typeObj);
+  RootedObject obj(cx, &args.thisv().toObject());
+  RootedObject baseType(cx, GetBaseType(CData::GetCType(obj)));
   if (!CType::IsSizeDefined(baseType)) {
     JS_ReportError(cx, "cannot set contents of undefined size");
     return false;
@@ -4166,7 +4152,8 @@ PointerType::ContentsSetter(JSContext* cx,
     return false;
   }
 
-  return ImplicitConvert(cx, vp, baseType, data, false, nullptr);
+  args.rval().setUndefined();
+  return ImplicitConvert(cx, args.get(0), baseType, data, false, nullptr);
 }
 
 /*******************************************************************************
@@ -6390,36 +6377,33 @@ CData::IsCData(JSObject* obj)
 }
 
 bool
+CData::IsCData(HandleValue v)
+{
+  return v.isObject() && CData::IsCData(&v.toObject());
+}
+
+bool
 CData::IsCDataProto(JSObject* obj)
 {
   return JS_GetClass(obj) == &sCDataProtoClass;
 }
 
 bool
-CData::ValueGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
+CData::ValueGetter(JSContext* cx, JS::CallArgs args)
 {
-  if (!IsCData(obj)) {
-    JS_ReportError(cx, "not a CData");
-    return false;
-  }
+  RootedObject obj(cx, &args.thisv().toObject());
 
   // Convert the value to a primitive; do not create a new CData object.
   RootedObject ctype(cx, GetCType(obj));
-  if (!ConvertToJS(cx, ctype, NullPtr(), GetData(obj), true, false, vp.address()))
-    return false;
-
-  return true;
+  return ConvertToJS(cx, ctype, NullPtr(), GetData(obj), true, false, args.rval().address());
 }
 
 bool
-CData::ValueSetter(JSContext* cx, HandleObject obj, HandleId idval, bool strict, MutableHandleValue vp)
+CData::ValueSetter(JSContext* cx, JS::CallArgs args)
 {
-  if (!IsCData(obj)) {
-    JS_ReportError(cx, "not a CData");
-    return false;
-  }
-
-  return ImplicitConvert(cx, vp, GetCType(obj), GetData(obj), false, nullptr);
+  RootedObject obj(cx, &args.thisv().toObject());
+  args.rval().setUndefined();
+  return ImplicitConvert(cx, args.get(0), GetCType(obj), GetData(obj), false, nullptr);
 }
 
 bool
