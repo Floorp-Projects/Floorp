@@ -206,16 +206,36 @@ void
 CompositableClient::RemoveTextureClient(TextureClient* aClient)
 {
   MOZ_ASSERT(aClient);
-  mTexturesToRemove.AppendElement(aClient->GetID());
+  mTexturesToRemove.AppendElement(TextureIDAndFlags(aClient->GetID(),
+                                                    aClient->GetFlags()));
+  if (!(aClient->GetFlags() & TEXTURE_DEALLOCATE_HOST)) {
+    TextureClientData* data = aClient->DropTextureData();
+    if (data) {
+      mTexturesToRemoveCallbacks[aClient->GetID()] = data;
+    }
+  }
   aClient->ClearID();
   aClient->MarkInvalid();
+}
+
+void
+CompositableClient::OnReplyTextureRemoved(uint64_t aTextureID)
+{
+  std::map<uint64_t,TextureClientData*>::iterator it
+    = mTexturesToRemoveCallbacks.find(aTextureID);
+  if (it != mTexturesToRemoveCallbacks.end()) {
+    it->second->DeallocateSharedData(GetForwarder());
+    delete it->second;
+    mTexturesToRemoveCallbacks.erase(it);
+  }
 }
 
 void
 CompositableClient::OnTransaction()
 {
   for (unsigned i = 0; i < mTexturesToRemove.Length(); ++i) {
-    mForwarder->RemoveTexture(this, mTexturesToRemove[i]);
+    const TextureIDAndFlags& texture = mTexturesToRemove[i];
+    mForwarder->RemoveTexture(this, texture.mID, texture.mFlags);
   }
   mTexturesToRemove.Clear();
 }
