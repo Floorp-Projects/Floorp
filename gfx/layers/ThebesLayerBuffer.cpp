@@ -424,6 +424,10 @@ ThebesLayerBuffer::IsAzureBuffer()
   if (mBuffer) {
     return false;
   }
+  if (mBufferProvider) {
+    return gfxPlatform::GetPlatform()->SupportsAzureContentForType(
+      mBufferProvider->BackendType());
+  }
   return SupportsAzureContent();
 }
 
@@ -651,13 +655,9 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
           // We can't do a real self-copy because the buffer is rotated.
           // So allocate a new buffer for the destination.
           destBufferRect = ComputeBufferRect(neededRegion.GetBounds());
-          if (IsAzureBuffer()) {
-            MOZ_ASSERT(!mBuffer);
-            destDTBuffer = CreateDTBuffer(contentType, destBufferRect, bufferFlags, &destDTBufferOnWhite);
-          } else {
-            MOZ_ASSERT(!mDTBuffer);
-            destBuffer = CreateBuffer(contentType, destBufferRect, bufferFlags, getter_AddRefs(destBufferOnWhite));
-          }
+          CreateBuffer(contentType, destBufferRect, bufferFlags,
+                       getter_AddRefs(destBuffer), getter_AddRefs(destBufferOnWhite),
+                       &destDTBuffer, &destDTBufferOnWhite);
           if (!destBuffer && !destDTBuffer)
             return result;
         }
@@ -674,13 +674,9 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
     }
   } else {
     // The buffer's not big enough, so allocate a new one
-    if (IsAzureBuffer()) {
-      MOZ_ASSERT(!mBuffer);
-      destDTBuffer = CreateDTBuffer(contentType, destBufferRect, bufferFlags, &destDTBufferOnWhite);
-    } else {
-      MOZ_ASSERT(!mDTBuffer);
-      destBuffer = CreateBuffer(contentType, destBufferRect, bufferFlags, getter_AddRefs(destBufferOnWhite));
-    }
+    CreateBuffer(contentType, destBufferRect, bufferFlags,
+                 getter_AddRefs(destBuffer), getter_AddRefs(destBufferOnWhite),
+                 &destDTBuffer, &destDTBufferOnWhite);
     if (!destBuffer && !destDTBuffer)
       return result;
   }
