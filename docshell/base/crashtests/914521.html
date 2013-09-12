@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="UTF-8">
+<script>
+
+function f()
+{
+    function spin() {
+        for (var i = 0; i < 8; ++i) {
+            var x = new XMLHttpRequest();
+            x.open('GET', 'data:text/html,' + i, false);
+            x.send();
+        }
+    }
+
+    window.addEventListener("popstate", spin, false);
+    window.close();
+    window.location = "#c";
+    finish();
+}
+
+function start()
+{
+    var html = "<script>" + f + "<\/script><body onload=f()>";
+    var win = window.open("data:text/html," + encodeURIComponent(html), null, "width=300,height=300");
+    win.finish = function() { document.documentElement.removeAttribute("class"); };
+}
+
+</script>
+</head>
+<body onload="start();"></body>
+</html>
