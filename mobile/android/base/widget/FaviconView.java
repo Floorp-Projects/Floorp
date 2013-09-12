@@ -38,14 +38,14 @@ public class FaviconView extends ImageView {
             setImageResource(R.drawable.favicon);
             // The default favicon image is hi-res, so we should hide the background.
             setBackgroundResource(0);
-        } else if (Favicons.getInstance().isLargeFavicon(bitmap)) {
+        } else if (Favicons.isLargeFavicon(bitmap)) {
             setImageBitmap(bitmap);
             // If the icon is large, hide the background.
             setBackgroundResource(0);
         } else {
             setImageBitmap(bitmap);
             // Otherwise show a dominant color background.
-            int color = Favicons.getInstance().getFaviconColor(bitmap, key);
+            int color = Favicons.getFaviconColor(bitmap, key);
             color = Color.argb(70, Color.red(color), Color.green(color), Color.blue(color));
             Drawable drawable = getResources().getDrawable(R.drawable.favicon_bg);
             drawable.setColorFilter(color, Mode.SRC_ATOP);
