@@ -70,11 +70,49 @@ function testCreateNew()
         waitForEditorBlur(aEditor, function() {
           promiseDone(expectRuleChange(elementRuleEditor.rule).then(() => {
             is(textProp.value, "#XYZ", "Text prop should have been changed.");
-            is(textProp.editor._validate(), false, "#XYZ should not be a valid entry");
-            testEditProperty();
+            is(textProp.editor.isValid(), false, "#XYZ should not be a valid entry");
+            testCreateNewEscape();
           }));
         });
         aEditor.input.blur();
+      }));
+    });
+    EventUtils.synthesizeKey("VK_RETURN", {}, ruleWindow);
+  });
+
+  EventUtils.synthesizeMouse(elementRuleEditor.closeBrace, 1, 1,
+                             { },
+                             ruleWindow);
+}
+
+function testCreateNewEscape()
+{
+  // Create a new property.
+  let elementRuleEditor = ruleView.element.children[0]._ruleEditor;
+  waitForEditorFocus(elementRuleEditor.element, function onNewElement(aEditor) {
+    is(inplaceEditor(elementRuleEditor.newPropSpan), aEditor, "Next focused editor should be the new property editor.");
+    let input = aEditor.input;
+    input.value = "color";
+
+    waitForEditorFocus(elementRuleEditor.element, function onNewValue(aEditor) {
+      promiseDone(expectRuleChange(elementRuleEditor.rule).then(() => {
+        is(elementRuleEditor.rule.textProps.length,  2, "Should have created a new text property.");
+        is(elementRuleEditor.propertyList.children.length, 2, "Should have created a property editor.");
+        let textProp = elementRuleEditor.rule.textProps[1];
+        is(aEditor, inplaceEditor(textProp.editor.valueSpan), "Should be editing the value span now.");
+        aEditor.input.value = "red";
+        EventUtils.synthesizeKey("VK_ESCAPE", {}, ruleWindow);
+
+        // Make sure previous input is focused.
+        let focusedElement = inplaceEditor(elementRuleEditor.rule.textProps[0].editor.valueSpan).input;
+        is(focusedElement, focusedElement.ownerDocument.activeElement, "Correct element has focus");
+
+        EventUtils.synthesizeKey("VK_ESCAPE", {}, ruleWindow);
+
+        is(elementRuleEditor.rule.textProps.length,  1, "Should have removed the new text property.");
+        is(elementRuleEditor.propertyList.children.length, 1, "Should have removed the property editor.");
+
+        testEditProperty();
       }));
     });
     EventUtils.synthesizeKey("VK_RETURN", {}, ruleWindow);
@@ -101,7 +139,7 @@ function testEditProperty()
           promiseDone(expectRuleChange(idRuleEditor.rule).then(() => {
             let value = idRuleEditor.rule.domRule._rawStyle().getPropertyValue("border-color");
             is(value, "red", "border-color should have been set.");
-            is(propEditor._validate(), true, "red should be a valid entry");
+            is(propEditor.isValid(), true, "red should be a valid entry");
             finishTest();
           }));
         });
