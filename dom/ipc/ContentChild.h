@@ -146,8 +146,7 @@ public:
             const nsCString& aContentDisposition,
             const bool& aForceSave,
             const int64_t& aContentLength,
-            const OptionalURIParams& aReferrer,
-            PBrowserChild* aBrowser);
+            const OptionalURIParams& aReferrer);
     virtual bool DeallocPExternalHelperAppChild(PExternalHelperAppChild *aService);
 
     virtual PSmsChild* AllocPSmsChild();

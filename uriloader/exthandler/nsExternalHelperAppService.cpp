@@ -613,8 +613,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
       child->SendPExternalHelperAppConstructor(uriParams,
                                                nsCString(aMimeContentType),
                                                disp, aForceSave, contentLength,
-                                               referrerParams,
-                                               mozilla::dom::TabChild::GetFrom(window));
+                                               referrerParams);
     ExternalHelperAppChild *childListener = static_cast<ExternalHelperAppChild *>(pc);
 
     NS_ADDREF(*aStreamListener = childListener);
