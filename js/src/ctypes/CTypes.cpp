@@ -228,24 +228,28 @@ namespace PointerType {
 }
 
 namespace ArrayType {
+  bool IsArrayType(HandleValue v);
+  bool IsArrayOrArrayType(HandleValue v);
+
   static bool Create(JSContext* cx, unsigned argc, jsval* vp);
   static bool ConstructData(JSContext* cx, HandleObject obj, const CallArgs& args);
 
-  static bool ElementTypeGetter(JSContext* cx, HandleObject obj, HandleId idval,
-    MutableHandleValue vp);
-  static bool LengthGetter(JSContext* cx, HandleObject obj, HandleId idval,
-    MutableHandleValue vp);
+  bool ElementTypeGetter(JSContext* cx, JS::CallArgs args);
+  bool LengthGetter(JSContext* cx, JS::CallArgs args);
+
   static bool Getter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp);
   static bool Setter(JSContext* cx, HandleObject obj, HandleId idval, bool strict, MutableHandleValue vp);
   static bool AddressOfElement(JSContext* cx, unsigned argc, jsval* vp);
 }
 
 namespace StructType {
+  bool IsStruct(HandleValue v);
+
   static bool Create(JSContext* cx, unsigned argc, jsval* vp);
   static bool ConstructData(JSContext* cx, HandleObject obj, const CallArgs& args);
 
-  static bool FieldsArrayGetter(JSContext* cx, HandleObject obj, HandleId idval,
-    MutableHandleValue vp);
+  bool FieldsArrayGetter(JSContext* cx, JS::CallArgs args);
+
   static bool FieldGetter(JSContext* cx, HandleObject obj, HandleId idval,
     MutableHandleValue vp);
   static bool FieldSetter(JSContext* cx, HandleObject obj, HandleId idval, bool strict,
@@ -652,11 +656,13 @@ static const JSFunctionSpec sArrayFunction =
   JS_FN("ArrayType", ArrayType::Create, 1, CTYPESCTOR_FLAGS);
 
 static const JSPropertySpec sArrayProps[] = {
-  { "elementType", 0, CTYPESPROP_FLAGS,
-    JSOP_WRAPPER(ArrayType::ElementTypeGetter), JSOP_NULLWRAPPER },
-  { "length", 0, CTYPESPROP_FLAGS,
-    JSOP_WRAPPER(ArrayType::LengthGetter), JSOP_NULLWRAPPER },
-  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
+  JS_PSG("elementType",
+         (Property<ArrayType::IsArrayType, ArrayType::ElementTypeGetter>::Fun),
+         CTYPESACC_FLAGS),
+  JS_PSG("length",
+         (Property<ArrayType::IsArrayOrArrayType, ArrayType::LengthGetter>::Fun),
+         CTYPESACC_FLAGS),
+  JS_PS_END
 };
 
 static const JSFunctionSpec sArrayInstanceFunctions[] = {
@@ -665,18 +671,20 @@ static const JSFunctionSpec sArrayInstanceFunctions[] = {
 };
 
 static const JSPropertySpec sArrayInstanceProps[] = {
-  { "length", 0, JSPROP_SHARED | JSPROP_READONLY | JSPROP_PERMANENT,
-    JSOP_WRAPPER(ArrayType::LengthGetter), JSOP_NULLWRAPPER },
-  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
+  JS_PSG("length",
+         (Property<ArrayType::IsArrayOrArrayType, ArrayType::LengthGetter>::Fun),
+         JSPROP_PERMANENT),
+  JS_PS_END
 };
 
 static const JSFunctionSpec sStructFunction =
   JS_FN("StructType", StructType::Create, 2, CTYPESCTOR_FLAGS);
 
 static const JSPropertySpec sStructProps[] = {
-  { "fields", 0, CTYPESPROP_FLAGS,
-    JSOP_WRAPPER(StructType::FieldsArrayGetter), JSOP_NULLWRAPPER },
-  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
+  JS_PSG("fields",
+         (Property<StructType::IsStruct, StructType::FieldsArrayGetter>::Fun),
+         CTYPESACC_FLAGS),
+  JS_PS_END
 };
 
 static const JSFunctionSpec sStructFunctions[] = {
@@ -4444,35 +4452,50 @@ ArrayType::BuildFFIType(JSContext* cx, JSObject* obj)
 }
 
 bool
-ArrayType::ElementTypeGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
+ArrayType::IsArrayType(HandleValue v)
 {
-  if (!CType::IsCType(obj) || CType::GetTypeCode(obj) != TYPE_array) {
-    JS_ReportError(cx, "not an ArrayType");
+  if (!v.isObject())
     return false;
-  }
+  JSObject* obj = &v.toObject();
+  return CType::IsCType(obj) && CType::GetTypeCode(obj) == TYPE_array;
+}
 
-  vp.set(JS_GetReservedSlot(obj, SLOT_ELEMENT_T));
-  JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp));
+bool
+ArrayType::IsArrayOrArrayType(HandleValue v)
+{
+  if (!v.isObject())
+    return false;
+  JSObject* obj = &v.toObject();
+
+   // Allow both CTypes and CDatas of the ArrayType persuasion by extracting the
+   // CType if we're dealing with a CData.
+  if (CData::IsCData(obj)) {
+    obj = CData::GetCType(obj);
+  }
+  return CType::IsCType(obj) && CType::GetTypeCode(obj) == TYPE_array;
+}
+
+bool
+ArrayType::ElementTypeGetter(JSContext* cx, JS::CallArgs args)
+{
+  RootedObject obj(cx, &args.thisv().toObject());
+  args.rval().set(JS_GetReservedSlot(obj, SLOT_ELEMENT_T));
+  MOZ_ASSERT(args.rval().isObject());
   return true;
 }
 
 bool
-ArrayType::LengthGetter(JSContext* cx, HandleObject obj_, HandleId idval, MutableHandleValue vp)
+ArrayType::LengthGetter(JSContext* cx, JS::CallArgs args)
 {
-  JSObject *obj = obj_;
+  JSObject *obj = &args.thisv().toObject();
 
   // This getter exists for both CTypes and CDatas of the ArrayType persuasion.
   // If we're dealing with a CData, get the CType from it.
   if (CData::IsCData(obj))
     obj = CData::GetCType(obj);
 
-  if (!CType::IsCType(obj) || CType::GetTypeCode(obj) != TYPE_array) {
-    JS_ReportError(cx, "not an ArrayType");
-    return false;
-  }
-
-  vp.set(JS_GetReservedSlot(obj, SLOT_LENGTH));
-  JS_ASSERT(vp.isNumber() || vp.isUndefined());
+  args.rval().set(JS_GetReservedSlot(obj, SLOT_LENGTH));
+  JS_ASSERT(args.rval().isNumber() || args.rval().isUndefined());
   return true;
 }
 
@@ -5124,33 +5147,39 @@ StructType::BuildFieldsArray(JSContext* cx, JSObject* obj)
   return fieldsProp;
 }
 
-bool
-StructType::FieldsArrayGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
+/* static */ bool
+StructType::IsStruct(HandleValue v)
 {
-  if (!CType::IsCType(obj) || CType::GetTypeCode(obj) != TYPE_struct) {
-    JS_ReportError(cx, "not a StructType");
+  if (!v.isObject())
     return false;
-  }
+  JSObject* obj = &v.toObject();
+  return CType::IsCType(obj) && CType::GetTypeCode(obj) == TYPE_struct;
+}
 
-  vp.set(JS_GetReservedSlot(obj, SLOT_FIELDS));
+bool
+StructType::FieldsArrayGetter(JSContext* cx, JS::CallArgs args)
+{
+  RootedObject obj(cx, &args.thisv().toObject());
+
+  args.rval().set(JS_GetReservedSlot(obj, SLOT_FIELDS));
 
   if (!CType::IsSizeDefined(obj)) {
-    JS_ASSERT(JSVAL_IS_VOID(vp));
+    MOZ_ASSERT(args.rval().isUndefined());
     return true;
   }
 
-  if (JSVAL_IS_VOID(vp)) {
+  if (args.rval().isUndefined()) {
     // Build the 'fields' array lazily.
     JSObject* fields = BuildFieldsArray(cx, obj);
     if (!fields)
       return false;
     JS_SetReservedSlot(obj, SLOT_FIELDS, OBJECT_TO_JSVAL(fields));
 
-    vp.setObject(*fields);
+    args.rval().setObject(*fields);
   }
 
-  JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp) &&
-            JS_IsArrayObject(cx, JSVAL_TO_OBJECT(vp)));
+  MOZ_ASSERT(args.rval().isObject());
+  MOZ_ASSERT(JS_IsArrayObject(cx, &args.rval().toObject()));
   return true;
 }
 
