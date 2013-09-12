@@ -1728,3 +1728,60 @@ add_task(function test_history_tryToKeepPartialData()
   continueResponses();
   yield promiseDownloadStopped(download);
 });
+
+/**
+ * Tests that the temp download files are removed on exit and exiting private
+ * mode after they have been launched.
+ */
+add_task(function test_launchWhenSucceeded_deleteTempFileOnExit() {
+  const kDeleteTempFileOnExit = "browser.helperApps.deleteTempFileOnExit";
+
+  let customLauncherPath = getTempFile("app-launcher").path;
+  let autoDeleteTargetPathOne = getTempFile(TEST_TARGET_FILE_NAME).path;
+  let autoDeleteTargetPathTwo = getTempFile(TEST_TARGET_FILE_NAME).path;
+  let noAutoDeleteTargetPath = getTempFile(TEST_TARGET_FILE_NAME).path;
+
+  let autoDeleteDownloadOne = yield Downloads.createDownload({
+    source: { url: httpUrl("source.txt"), isPrivate: true },
+    target: autoDeleteTargetPathOne,
+    launchWhenSucceeded: true,
+    launcherPath: customLauncherPath,
+  });
+  yield autoDeleteDownloadOne.start();
+
+  Services.prefs.setBoolPref(kDeleteTempFileOnExit, true);
+  let autoDeleteDownloadTwo = yield Downloads.createDownload({
+    source: httpUrl("source.txt"),
+    target: autoDeleteTargetPathTwo,
+    launchWhenSucceeded: true,
+    launcherPath: customLauncherPath,
+  });
+  yield autoDeleteDownloadTwo.start();
+
+  Services.prefs.setBoolPref(kDeleteTempFileOnExit, false);
+  let noAutoDeleteDownload = yield Downloads.createDownload({
+    source: httpUrl("source.txt"),
+    target: noAutoDeleteTargetPath,
+    launchWhenSucceeded: true,
+    launcherPath: customLauncherPath,
+  });
+  yield noAutoDeleteDownload.start();
+
+  Services.prefs.clearUserPref(kDeleteTempFileOnExit);
+
+  do_check_true(yield OS.File.exists(autoDeleteTargetPathOne));
+  do_check_true(yield OS.File.exists(autoDeleteTargetPathTwo));
+  do_check_true(yield OS.File.exists(noAutoDeleteTargetPath));
+
+  // Simulate leaving private browsing mode
+  Services.obs.notifyObservers(null, "last-pb-context-exited", null);
+  do_check_false(yield OS.File.exists(autoDeleteTargetPathOne));
+
+  // Simulate browser shutdown
+  let expire = Cc["@mozilla.org/uriloader/external-helper-app-service;1"]
+                 .getService(Ci.nsIObserver);
+  expire.observe(null, "profile-before-change", null);
+  do_check_false(yield OS.File.exists(autoDeleteTargetPathTwo));
+  do_check_true(yield OS.File.exists(noAutoDeleteTargetPath));
+});
+
