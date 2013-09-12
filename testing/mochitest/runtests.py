@@ -487,9 +487,9 @@ class Mochitest(MochitestUtilsMixin):
     self.copyExtraFilesToProfile(options)
     return manifest
 
-  def buildBrowserEnv(self, options):
+  def buildBrowserEnv(self, options, debugger = False):
     """ build the environment variables for the specific test and operating system """
-    browserEnv = self.automation.environment(xrePath = options.xrePath)
+    browserEnv = self.automation.environment(xrePath = options.xrePath, debugger = debugger)
 
     # These variables are necessary for correct application startup; change
     # via the commandline at your own risk.
@@ -551,7 +551,7 @@ class Mochitest(MochitestUtilsMixin):
 
     self.leak_report_file = os.path.join(options.profilePath, "runtests_leaks.log")
 
-    browserEnv = self.buildBrowserEnv(options)
+    browserEnv = self.buildBrowserEnv(options, debuggerInfo is not None)
     if browserEnv is None:
       return 1
 
