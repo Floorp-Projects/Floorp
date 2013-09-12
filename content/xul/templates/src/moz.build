@@ -41,3 +41,9 @@ LIBXUL_LIBRARY = True
 
 MSVC_ENABLE_PGO = True
 
+LOCAL_INCLUDES += [
+    '../../content/src',
+    '/content/base/src',
+    '/dom/base',
+    '/layout/xul/tree/',
+]
