@@ -378,6 +378,13 @@ MacroAssemblerARM::ma_movPatchable(Imm32 imm_, Register dest,
 }
 
 void
+MacroAssemblerARM::ma_movPatchable(ImmPtr imm, Register dest,
+                                   Assembler::Condition c, RelocStyle rs, Instruction *i)
+{
+    return ma_movPatchable(Imm32(int32_t(imm.value)), dest, c, rs, i);
+}
+
+void
 MacroAssemblerARM::ma_mov(Register src, Register dest,
             SetCond_ sc, Assembler::Condition c)
 {
@@ -1546,7 +1553,7 @@ MacroAssemblerARMCompat::buildOOLFakeExitFrame(void *fakeReturnAddr)
     Push(Imm32(descriptor)); // descriptor_
 
     enterNoPool();
-    Push(Imm32((uint32_t) fakeReturnAddr));
+    Push(ImmPtr(fakeReturnAddr));
     leaveNoPool();
 
     return true;
@@ -1565,7 +1572,7 @@ MacroAssemblerARMCompat::callWithExitFrame(IonCode *target)
     else
         rs = L_LDR;
 
-    ma_movPatchable(Imm32((int) target->raw()), ScratchRegister, Always, rs);
+    ma_movPatchable(ImmPtr(target->raw()), ScratchRegister, Always, rs);
     ma_callIonHalfPush(ScratchRegister);
 }
 
@@ -1583,7 +1590,7 @@ MacroAssemblerARMCompat::callWithExitFrame(IonCode *target, Register dynStack)
     else
         rs = L_LDR;
 
-    ma_movPatchable(Imm32((int) target->raw()), ScratchRegister, Always, rs);
+    ma_movPatchable(ImmPtr(target->raw()), ScratchRegister, Always, rs);
     ma_callIonHalfPush(ScratchRegister);
 }
 
@@ -1756,6 +1763,11 @@ MacroAssemblerARMCompat::movePtr(const ImmGCPtr &imm, const Register &dest)
     ma_mov(imm, dest);
 }
 void
+MacroAssemblerARMCompat::movePtr(const ImmPtr &imm, const Register &dest)
+{
+    movePtr(ImmWord(uintptr_t(imm.value)), dest);
+}
+void
 MacroAssemblerARMCompat::load8ZeroExtend(const Address &address, const Register &dest)
 {
     ma_dataTransferN(IsLoad, 8, false, address.base, Imm32(address.offset), dest);
@@ -1896,7 +1908,7 @@ MacroAssemblerARMCompat::loadPtr(const BaseIndex &src, const Register &dest)
 void
 MacroAssemblerARMCompat::loadPtr(const AbsoluteAddress &address, const Register &dest)
 {
-    movePtr(ImmWord(address.addr), ScratchRegister);
+    movePtr(ImmWord(uintptr_t(address.addr)), ScratchRegister);
     loadPtr(Address(ScratchRegister, 0x0), dest);
 }
 
@@ -2073,6 +2085,12 @@ MacroAssemblerARMCompat::storePtr(ImmWord imm, const Address &address)
 }
 
 void
+MacroAssemblerARMCompat::storePtr(ImmPtr imm, const Address &address)
+{
+    storePtr(ImmWord(uintptr_t(imm.value)), address);
+}
+
+void
 MacroAssemblerARMCompat::storePtr(ImmGCPtr imm, const Address &address)
 {
     movePtr(imm, ScratchRegister);
@@ -2088,7 +2106,7 @@ MacroAssemblerARMCompat::storePtr(Register src, const Address &address)
 void
 MacroAssemblerARMCompat::storePtr(const Register &src, const AbsoluteAddress &dest)
 {
-    movePtr(ImmWord(dest.addr), ScratchRegister);
+    movePtr(ImmWord(uintptr_t(dest.addr)), ScratchRegister);
     storePtr(src, Address(ScratchRegister, 0x0));
 }
 
@@ -2126,6 +2144,12 @@ MacroAssemblerARMCompat::cmpPtr(const Register &lhs, const ImmWord &rhs)
 }
 
 void
+MacroAssemblerARMCompat::cmpPtr(const Register &lhs, const ImmPtr &rhs)
+{
+    return cmpPtr(lhs, ImmWord(uintptr_t(rhs.value)));
+}
+
+void
 MacroAssemblerARMCompat::cmpPtr(const Register &lhs, const Register &rhs)
 {
     ma_cmp(lhs, rhs);
@@ -2149,6 +2173,12 @@ MacroAssemblerARMCompat::cmpPtr(const Address &lhs, const ImmWord &rhs)
 {
     loadPtr(lhs, secondScratchReg_);
     ma_cmp(secondScratchReg_, Imm32(rhs.value));
+}
+
+void
+MacroAssemblerARMCompat::cmpPtr(const Address &lhs, const ImmPtr &rhs)
+{
+    cmpPtr(lhs, ImmWord(uintptr_t(rhs.value)));
 }
 
 void
@@ -3005,7 +3035,7 @@ MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, Register base, Register index,
 void
 MacroAssemblerARMCompat::linkExitFrame() {
     uint8_t *dest = ((uint8_t*)GetIonContext()->runtime) + offsetof(JSRuntime, mainThread.ionTop);
-    movePtr(ImmWord(dest), ScratchRegister);
+    movePtr(ImmPtr(dest), ScratchRegister);
     ma_str(StackPointer, Operand(ScratchRegister, 0));
 }
 
@@ -3521,7 +3551,7 @@ MacroAssemblerARMCompat::toggledCall(IonCode *target, bool enabled)
     BufferOffset bo = nextOffset();
     CodeOffsetLabel offset(bo.getOffset());
     addPendingJump(bo, target->raw(), Relocation::IONCODE);
-    ma_movPatchable(Imm32(uint32_t(target->raw())), ScratchRegister, Always, hasMOVWT() ? L_MOVWT : L_LDR);
+    ma_movPatchable(ImmPtr(target->raw()), ScratchRegister, Always, hasMOVWT() ? L_MOVWT : L_LDR);
     if (enabled)
         ma_blx(ScratchRegister);
     else

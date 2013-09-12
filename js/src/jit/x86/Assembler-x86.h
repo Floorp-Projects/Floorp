@@ -273,6 +273,9 @@ class Assembler : public AssemblerX86Shared
     void push(const ImmWord imm) {
         push(Imm32(imm.value));
     }
+    void push(const ImmPtr imm) {
+        push(ImmWord(uintptr_t(imm.value)));
+    }
     void push(const FloatRegister &src) {
         subl(Imm32(sizeof(double)), StackPointer);
         movsd(src, Operand(StackPointer, 0));
@@ -291,6 +294,9 @@ class Assembler : public AssemblerX86Shared
     CodeOffsetLabel movWithPatch(const ImmWord &word, const Register &dest) {
         movl(Imm32(word.value), dest);
         return masm.currentOffset();
+    }
+    CodeOffsetLabel movWithPatch(const ImmPtr &imm, const Register &dest) {
+        return movWithPatch(ImmWord(uintptr_t(imm.value)), dest);
     }
 
     void movl(const ImmGCPtr &ptr, const Register &dest) {
@@ -318,7 +324,13 @@ class Assembler : public AssemblerX86Shared
     void movl(ImmWord imm, Register dest) {
         masm.movl_i32r(imm.value, dest.code());
     }
+    void movl(ImmPtr imm, Register dest) {
+        movl(ImmWord(uintptr_t(imm.value)), dest);
+    }
     void mov(ImmWord imm, Register dest) {
+        movl(imm, dest);
+    }
+    void mov(ImmPtr imm, Register dest) {
         movl(imm, dest);
     }
     void mov(Imm32 imm, Register dest) {
@@ -352,6 +364,9 @@ class Assembler : public AssemblerX86Shared
 
     void cmpl(const Register src, ImmWord ptr) {
         masm.cmpl_ir(ptr.value, src.code());
+    }
+    void cmpl(const Register src, ImmPtr imm) {
+        cmpl(src, ImmWord(uintptr_t(imm.value)));
     }
     void cmpl(const Register src, ImmGCPtr ptr) {
         masm.cmpl_ir(ptr.value, src.code());
@@ -405,7 +420,10 @@ class Assembler : public AssemblerX86Shared
     }
     void call(ImmWord target) {
         JmpSrc src = masm.call();
-        addPendingJump(src, target.asPointer(), Relocation::HARDCODED);
+        addPendingJump(src, (void*)target.value, Relocation::HARDCODED);
+    }
+    void call(ImmPtr target) {
+        call(ImmWord(uintptr_t(target.value)));
     }
 
     // Emit a CALL or CMP (nop) instruction. ToggleCall can be used to patch

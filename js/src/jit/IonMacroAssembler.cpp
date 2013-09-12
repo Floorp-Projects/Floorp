@@ -560,7 +560,7 @@ MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Labe
 
 #ifdef JS_GC_ZEAL
     // Don't execute the inline path if gcZeal is active.
-    movePtr(ImmWord(GetIonContext()->runtime), result);
+    movePtr(ImmPtr(GetIonContext()->runtime), result);
     loadPtr(Address(result, offsetof(JSRuntime, gcZeal_)), result);
     branch32(Assembler::NotEqual, result, Imm32(0), fail);
 #endif
@@ -704,7 +704,7 @@ MacroAssembler::initGCThing(const Register &obj, JSObject *templateObject)
 
     storePtr(ImmGCPtr(templateObject->lastProperty()), Address(obj, JSObject::offsetOfShape()));
     storePtr(ImmGCPtr(templateObject->type()), Address(obj, JSObject::offsetOfType()));
-    storePtr(ImmWord((void *)NULL), Address(obj, JSObject::offsetOfSlots()));
+    storePtr(ImmPtr(NULL), Address(obj, JSObject::offsetOfSlots()));
 
     if (templateObject->is<ArrayObject>()) {
         JS_ASSERT(!templateObject->getDenseInitializedLength());
@@ -727,7 +727,7 @@ MacroAssembler::initGCThing(const Register &obj, JSObject *templateObject)
                       : 0),
                 Address(obj, elementsOffset + ObjectElements::offsetOfFlags()));
     } else {
-        storePtr(ImmWord(emptyObjectElements), Address(obj, JSObject::offsetOfElements()));
+        storePtr(ImmPtr(emptyObjectElements), Address(obj, JSObject::offsetOfElements()));
 
         // Fixed slots of non-array objects are required to be initialized.
         // Use the values currently in the template object.
@@ -740,7 +740,7 @@ MacroAssembler::initGCThing(const Register &obj, JSObject *templateObject)
 
     if (templateObject->hasPrivate()) {
         uint32_t nfixed = templateObject->numFixedSlots();
-        storePtr(ImmWord(templateObject->getPrivate()),
+        storePtr(ImmPtr(templateObject->getPrivate()),
                  Address(obj, JSObject::getPrivateDataOffset(nfixed)));
     }
 }
@@ -786,8 +786,7 @@ void
 MacroAssembler::checkInterruptFlagsPar(const Register &tempReg,
                                             Label *fail)
 {
-    void *interrupt = (void*)&GetIonContext()->runtime->interrupt;
-    movePtr(ImmWord(interrupt), tempReg);
+    movePtr(ImmPtr(&GetIonContext()->runtime->interrupt), tempReg);
     load32(Address(tempReg, 0), tempReg);
     branchTest32(Assembler::NonZero, tempReg, tempReg, fail);
 }
@@ -946,7 +945,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
         Label done;
         branchPtr(Assembler::Equal,
                   Address(bailoutInfo, offsetof(BaselineBailoutInfo, monitorStub)),
-                  ImmWord((void*) 0),
+                  ImmPtr(NULL),
                   &noMonitor);
 
         //
@@ -1041,7 +1040,7 @@ MacroAssembler::loadBaselineOrIonRaw(Register script, Register dest, ExecutionMo
     } else {
         loadPtr(Address(script, JSScript::offsetOfParallelIonScript()), dest);
         if (failure)
-            branchPtr(Assembler::BelowOrEqual, dest, ImmWord(ION_COMPILING_SCRIPT), failure);
+            branchPtr(Assembler::BelowOrEqual, dest, ImmPtr(ION_COMPILING_SCRIPT), failure);
         loadPtr(Address(dest, IonScript::offsetOfMethod()), dest);
         loadPtr(Address(dest, IonCode::offsetOfCode()), dest);
     }
@@ -1066,7 +1065,7 @@ MacroAssembler::loadBaselineOrIonNoArgCheck(Register script, Register dest, Exec
 
         loadPtr(Address(script, JSScript::offsetOfParallelIonScript()), dest);
         if (failure)
-            branchPtr(Assembler::BelowOrEqual, dest, ImmWord(ION_COMPILING_SCRIPT), failure);
+            branchPtr(Assembler::BelowOrEqual, dest, ImmPtr(ION_COMPILING_SCRIPT), failure);
 
         Push(offset);
         load32(Address(script, IonScript::offsetOfSkipArgCheckEntryOffset()), offset);
@@ -1126,7 +1125,7 @@ MacroAssembler::enterParallelExitFrameAndLoadSlice(const VMFunction *f, Register
     // Push the ioncode.
     exitCodePatch_ = PushWithPatch(ImmWord(-1));
     // Push the VMFunction pointer, to mark arguments.
-    Push(ImmWord(f));
+    Push(ImmPtr(f));
 }
 
 void
@@ -1136,8 +1135,8 @@ MacroAssembler::enterFakeParallelExitFrame(Register slice, Register scratch,
     // Load the PerThreadData from from the slice.
     loadPtr(Address(slice, offsetof(ForkJoinSlice, perThreadData)), scratch);
     linkParallelExitFrame(scratch);
-    Push(ImmWord(uintptr_t(codeVal)));
-    Push(ImmWord(uintptr_t(NULL)));
+    Push(ImmPtr(codeVal));
+    Push(ImmPtr(NULL));
 }
 
 void
@@ -1265,7 +1264,7 @@ MacroAssembler::printf(const char *output)
     Register temp = regs.takeGeneral();
 
     setupUnalignedABICall(1, temp);
-    movePtr(ImmWord(output), temp);
+    movePtr(ImmPtr(output), temp);
     passABIArg(temp);
     callWithABI(JS_FUNC_TO_DATA_PTR(void *, printf0_));
 
@@ -1289,7 +1288,7 @@ MacroAssembler::printf(const char *output, Register value)
     Register temp = regs.takeGeneral();
 
     setupUnalignedABICall(2, temp);
-    movePtr(ImmWord(output), temp);
+    movePtr(ImmPtr(output), temp);
     passABIArg(temp);
     passABIArg(value);
     callWithABI(JS_FUNC_TO_DATA_PTR(void *, printf1_));
@@ -1310,7 +1309,7 @@ MacroAssembler::tracelogStart(JSScript *script)
     Register rscript = regs.takeGeneral();
 
     setupUnalignedABICall(3, temp);
-    movePtr(ImmWord((void *)TraceLogging::defaultLogger()), temp);
+    movePtr(ImmPtr(TraceLogging::defaultLogger()), temp);
     passABIArg(temp);
     move32(Imm32(TraceLogging::SCRIPT_START), type);
     passABIArg(type);
@@ -1333,7 +1332,7 @@ MacroAssembler::tracelogStop()
     Register type = regs.takeGeneral();
 
     setupUnalignedABICall(2, temp);
-    movePtr(ImmWord((void *)TraceLogging::defaultLogger()), logger);
+    movePtr(ImmPtr(TraceLogging::defaultLogger()), logger);
     passABIArg(logger);
     move32(Imm32(TraceLogging::SCRIPT_STOP), type);
     passABIArg(type);
@@ -1354,7 +1353,7 @@ MacroAssembler::tracelogLog(TraceLogging::Type type)
     Register rtype = regs.takeGeneral();
 
     setupUnalignedABICall(2, temp);
-    movePtr(ImmWord((void *)TraceLogging::defaultLogger()), logger);
+    movePtr(ImmPtr(TraceLogging::defaultLogger()), logger);
     passABIArg(logger);
     move32(Imm32(type), rtype);
     passABIArg(rtype);
@@ -1462,7 +1461,7 @@ MacroAssembler::PushEmptyRooted(VMFunction::RootType rootType)
       case VMFunction::RootPropertyName:
       case VMFunction::RootFunction:
       case VMFunction::RootCell:
-        Push(ImmWord((void *)NULL));
+        Push(ImmPtr(NULL));
         break;
       case VMFunction::RootValue:
         Push(UndefinedValue());
