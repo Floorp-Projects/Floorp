@@ -2196,7 +2196,6 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
         return null();
     }
 
-
     if (fun->isNamedLambda()) {
         if (AtomDefnPtr p = pc->lexdeps->lookup(fun->name())) {
             Definition *dn = p.value().get<FullParseHandler>();
@@ -2208,6 +2207,9 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
     InternalHandle<Bindings*> bindings =
         InternalHandle<Bindings*>::fromMarkedLocation(&funbox->bindings);
     if (!pc->generateFunctionBindings(context, alloc, bindings))
+        return null();
+
+    if (!FoldConstants(context, &pn, this))
         return null();
 
     return pn;
