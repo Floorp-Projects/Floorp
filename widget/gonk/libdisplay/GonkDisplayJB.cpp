@@ -50,10 +50,10 @@ GonkDisplayJB::GonkDisplayJB()
         ALOGW_IF(err, "could not open framebuffer");
     }
 
-    if (!err) {
+    if (!err && mFBDevice) {
         mWidth = mFBDevice->width;
-        mHeight = mFBDevice->height;
-        xdpi = mFBDevice->xdpi;
+	 mHeight = mFBDevice->height;
+	 xdpi = mFBDevice->xdpi;
         /* The emulator actually reports RGBA_8888, but EGL doesn't return
          * any matching configuration. We force RGBX here to fix it. */
         surfaceformat = HAL_PIXEL_FORMAT_RGBX_8888;
@@ -116,7 +116,10 @@ GonkDisplayJB::GonkDisplayJB()
 
     status_t error;
     mBootAnimBuffer = mAlloc->createGraphicBuffer(mWidth, mHeight, surfaceformat, GRALLOC_USAGE_HW_FB | GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER, &error);
-    StartBootAnimation();
+    if (error == NO_ERROR && mBootAnimBuffer.get())
+        StartBootAnimation();
+    else
+        ALOGW("Couldn't show bootanimation (%s)", strerror(-error));
 }
 
 GonkDisplayJB::~GonkDisplayJB()
