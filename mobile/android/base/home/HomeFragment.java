@@ -231,7 +231,7 @@ abstract class HomeFragment extends Fragment {
 
         @Override
         public String doInBackground(Void... params) {
-            return Favicons.getInstance().getFaviconUrlForPageUrl(mUrl);
+            return Favicons.getFaviconUrlForPageUrl(mUrl);
         }
 
         @Override
@@ -243,7 +243,7 @@ abstract class HomeFragment extends Fragment {
                 }
             };
 
-            Favicons.getInstance().loadFavicon(mUrl, faviconUrl, 0, listener);
+            Favicons.loadFavicon(mUrl, faviconUrl, 0, listener);
         }
     }
 

@@ -705,8 +705,7 @@ abstract public class BrowserApp extends GeckoApp
                     return true;
                 }
 
-                Favicons favicons = Favicons.getInstance();
-                favicons.loadFavicon(url, tab.getFaviconURL(), 0,
+                Favicons.loadFavicon(url, tab.getFaviconURL(), 0,
                 new Favicons.OnFaviconLoadedListener() {
                     @Override
                     public void onFaviconLoaded(String url, Bitmap favicon) {
@@ -1334,7 +1333,7 @@ abstract public class BrowserApp extends GeckoApp
         maybeCancelFaviconLoad(tab);
 
         int flags = Favicons.FLAG_SCALE | ( (tab.isPrivate() || tab.getErrorType() != Tab.ErrorType.NONE) ? 0 : Favicons.FLAG_PERSIST);
-        long id = Favicons.getInstance().loadFavicon(tab.getURL(), tab.getFaviconURL(), flags,
+        long id = Favicons.loadFavicon(tab.getURL(), tab.getFaviconURL(), flags,
                         new Favicons.OnFaviconLoadedListener() {
 
             @Override
@@ -1366,7 +1365,7 @@ abstract public class BrowserApp extends GeckoApp
             return;
 
         // Cancel pending favicon load task
-        Favicons.getInstance().cancelFaviconLoad(faviconLoadId);
+        Favicons.cancelFaviconLoad(faviconLoadId);
 
         // Reset favicon load state
         tab.setFaviconLoadId(Favicons.NOT_LOADING);
