@@ -1,0 +1,25 @@
+--- gcc-4.7.3/gcc/diagnostic.c	2012-02-02 15:46:06.000000000 -0500
++++ gcc-patched/gcc/diagnostic.c	2013-05-23 14:07:10.756527912 -0400
+@@ -31,6 +31,10 @@
+ #include "intl.h"
+ #include "diagnostic.h"
+ 
++#include <execinfo.h>
++#include <unistd.h>
++#include <fcntl.h>
++#include <stdio.h>
+ #define pedantic_warning_kind(DC)			\
+   ((DC)->pedantic_errors ? DK_ERROR : DK_WARNING)
+ #define permissive_error_kind(DC) ((DC)->permissive ? DK_WARNING : DK_ERROR)
+@@ -237,6 +241,11 @@
+       if (context->abort_on_error)
+ 	real_abort ();
+ 
++      {
++        void *stack[100];
++        int count = backtrace(stack, 100);
++        backtrace_symbols_fd(stack, count, STDERR_FILENO);
++      }
+       fnotice (stderr, "Please submit a full bug report,\n"
+ 	       "with preprocessed source if appropriate.\n"
+ 	       "See %s for instructions.\n", bug_report_url);
