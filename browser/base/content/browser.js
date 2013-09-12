@@ -137,6 +137,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "SitePermissions",
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm");
 
+#ifdef MOZ_CRASHREPORTER
+XPCOMUtils.defineLazyModuleGetter(this, "TabCrashReporter",
+  "resource:///modules/TabCrashReporter.jsm");
+#endif
+
 let gInitialPages = [
   "about:blank",
   "about:newtab",
@@ -1041,6 +1046,11 @@ var gBrowserInit = {
 
     // Ensure login manager is up and running.
     Services.logins;
+
+#ifdef MOZ_CRASHREPORTER
+    if (gMultiProcessBrowser)
+      TabCrashReporter.init();
+#endif
 
     if (mustLoadSidebar) {
       let sidebar = document.getElementById("sidebar");
@@ -2497,6 +2507,12 @@ let BrowserOnClick = {
 
     let button = aEvent.originalTarget;
     if (button.id == "tryAgain") {
+#ifdef MOZ_CRASHREPORTER
+      if (aOwnerDoc.getElementById("checkSendReport").checked) {
+        let browser = gBrowser.getBrowserForDocument(aOwnerDoc);
+        TabCrashReporter.submitCrashReport(browser);
+      }
+#endif
       openUILinkIn(button.getAttribute("url"), "current");
     }
   },
@@ -4267,6 +4283,11 @@ var TabsProgressListener = {
         if (event.target.documentElement)
           event.target.documentElement.removeAttribute("hasBrowserHandlers");
       }, true);
+
+#ifdef MOZ_CRASHREPORTER
+      if (doc.documentURI.startsWith("about:tabcrashed"))
+        TabCrashReporter.onAboutTabCrashedLoad(aBrowser);
+#endif
     }
   },
 
