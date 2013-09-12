@@ -103,6 +103,7 @@
 #include <algorithm>
 #include "nsDOMEvent.h"
 #include "nsGlobalWindow.h"
+#include "nsDOMMutationObserver.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2141,6 +2142,22 @@ nsINode::UnbindObject(nsISupports* aObject)
     static_cast<nsCOMArray<nsISupports>*>(GetProperty(nsGkAtoms::keepobjectsalive));
   if (objects) {
     objects->RemoveObject(aObject);
+  }
+}
+
+void
+nsINode::GetBoundMutationObservers(nsTArray<nsRefPtr<nsDOMMutationObserver> >& aResult)
+{
+  nsCOMArray<nsISupports>* objects =
+    static_cast<nsCOMArray<nsISupports>*>(GetProperty(nsGkAtoms::keepobjectsalive));
+  if (objects) {
+    for (int32_t i = 0; i < objects->Count(); ++i) {
+      nsCOMPtr<nsDOMMutationObserver> mo = do_QueryInterface(objects->ObjectAt(i));
+      if (mo) {
+        MOZ_ASSERT(!aResult.Contains(mo));
+        aResult.AppendElement(mo.forget());
+      }
+    }
   }
 }
 

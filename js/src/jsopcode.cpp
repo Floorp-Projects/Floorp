@@ -732,7 +732,7 @@ Sprinter::realloc_(size_t newSize)
     return true;
 }
 
-Sprinter::Sprinter(JSContext *cx)
+Sprinter::Sprinter(ExclusiveContext *cx)
   : context(cx),
 #ifdef DEBUG
     initialized(false),
@@ -867,7 +867,7 @@ Sprinter::putString(JSString *s)
     char *buffer = reserve(size);
     if (!buffer)
         return -1;
-    DeflateStringToBuffer(context, chars, length, buffer, &size);
+    DeflateStringToBuffer(NULL, chars, length, buffer, &size);
     buffer[size] = 0;
 
     return oldOffset;
@@ -1023,14 +1023,15 @@ QuoteString(Sprinter *sp, JSString *str, uint32_t quote)
 }
 
 JSString *
-js_QuoteString(JSContext *cx, JSString *str, jschar quote)
+js_QuoteString(ExclusiveContext *cx, JSString *str, jschar quote)
 {
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return NULL;
     char *bytes = QuoteString(&sprinter, str, quote);
-    JSString *escstr = bytes ? JS_NewStringCopyZ(cx, bytes) : NULL;
-    return escstr;
+    if (!bytes)
+        return NULL;
+    return js_NewStringCopyZ<CanGC>(cx, bytes);
 }
 
 /************************************************************************/
