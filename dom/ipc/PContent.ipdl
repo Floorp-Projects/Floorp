@@ -319,6 +319,7 @@ child:
     async LoadAndRegisterSheet(URIParams uri, uint32_t type);
     async UnregisterSheet(URIParams uri, uint32_t type);
 
+    NotifyPhoneStateChange(nsString newState);
 parent:
     /**
      * Tell the content process some attributes of itself.  This is

@@ -668,6 +668,7 @@ ContentParent::Init()
         obs->AddObserver(this, "file-watcher-update", false);
 #ifdef MOZ_WIDGET_GONK
         obs->AddObserver(this, NS_VOLUME_STATE_CHANGED, false);
+        obs->AddObserver(this, "phone-state-changed", false);
 #endif
 #ifdef ACCESSIBILITY
         obs->AddObserver(this, "a11y-init-or-shutdown", false);
@@ -1762,6 +1763,9 @@ ContentParent::Observe(nsISupports* aSubject,
         unused << SendFileSystemUpdate(volName, mountPoint, state,
                                        mountGeneration, isMediaPresent,
                                        isSharing);
+    } else if (!strcmp(aTopic, "phone-state-changed")) {
+        nsString state(aData);
+        unused << SendNotifyPhoneStateChange(state);
     }
 #endif
 #ifdef ACCESSIBILITY
