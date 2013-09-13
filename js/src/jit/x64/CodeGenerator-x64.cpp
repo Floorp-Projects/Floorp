@@ -241,7 +241,7 @@ CodeGeneratorX64::visitLoadElementT(LLoadElementT *load)
 
     if (load->mir()->loadDoubles()) {
         FloatRegister fpreg = ToFloatRegister(load->output());
-        if (source.kind() == Operand::REG_DISP)
+        if (source.kind() == Operand::MEM_REG_DISP)
             masm.loadDouble(source.toAddress(), fpreg);
         else
             masm.loadDouble(source.toBaseIndex(), fpreg);

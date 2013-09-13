@@ -5358,7 +5358,7 @@ class ICCall_ScriptedApplyArray : public ICMonitoredStub
     // The maximum length of an inlineable funcall array.
     // Keep this small to avoid controllable stack overflows by attackers passing large
     // arrays to fun.apply.
-    const static uint32_t MAX_ARGS_ARRAY_LENGTH = 16;
+    static const uint32_t MAX_ARGS_ARRAY_LENGTH = 16;
 
   protected:
     uint32_t pcOffset_;

@@ -2343,7 +2343,7 @@ nsJSContext::LoadEnd()
 void
 nsJSContext::PokeGC(JS::gcreason::Reason aReason, int aDelay)
 {
-  if (sGCTimer || sShuttingDown) {
+  if (sGCTimer || sInterSliceGCTimer || sShuttingDown) {
     // There's already a timer for GC'ing, just return
     return;
   }
