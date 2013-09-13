@@ -290,15 +290,19 @@ class RecursiveMakeBackend(CommonBackend):
 
         for p in sorted(self._ipdl_sources):
             mk.add_statement('ALL_IPDLSRCS += %s\n' % p)
-            base = os.path.basename(p)
-            root, ext = os.path.splitext(base)
+            def files_from(ipdl):
+                base = os.path.basename(ipdl)
+                root, ext = os.path.splitext(base)
 
-            # Both .ipdl and .ipdlh become .cpp files
-            mk.add_statement('CPPSRCS += %s.cpp\n' % root)
-            if ext == '.ipdl':
-                # .ipdl also becomes Child/Parent.cpp files
-                mk.add_statement('CPPSRCS += %sChild.cpp\n' % root)
-                mk.add_statement('CPPSRCS += %sParent.cpp\n' % root)
+                # Both .ipdl and .ipdlh become .cpp files
+                files = ['%s.cpp' % root]
+                if ext == '.ipdl':
+                    # .ipdl also becomes Child/Parent.cpp files
+                    files.extend(['%sChild.cpp' % root,
+                                  '%sParent.cpp' % root])
+                return files
+
+            mk.add_statement('CPPSRCS += %s\n' % ' '.join(files_from(p)))
 
         mk.add_statement('IPDLDIRS := %s\n' % ' '.join(sorted(set(os.path.dirname(p)
             for p in self._ipdl_sources))))
