@@ -12,6 +12,7 @@ const promise = require("sdk/core/promise");
 function DebuggerPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
   this._toolbox = toolbox;
+  this._destroyer = null;
 
   this._view = this.panelWin.DebuggerView;
   this._controller = this.panelWin.DebuggerController;
@@ -32,7 +33,7 @@ DebuggerPanel.prototype = {
    * @return object
    *         A promise that is resolved when the Debugger completes opening.
    */
-  open: function DebuggerPanel_open() {
+  open: function() {
     let targetPromise;
 
     // Local debugging needs to make the target remote.
@@ -54,7 +55,7 @@ DebuggerPanel.prototype = {
       })
       .then(null, function onError(aReason) {
         Cu.reportError("DebuggerPanel open failed. " +
-                       reason.error + ": " + reason.message);
+                       aReason.error + ": " + aReason.message);
       });
   },
 
@@ -62,10 +63,17 @@ DebuggerPanel.prototype = {
   get target() this._toolbox.target,
 
   destroy: function() {
+    // Make sure this panel is not already destroyed.
+    if (this._destroyer) {
+      return this._destroyer;
+    }
+
     this.target.off("thread-paused", this.highlightWhenPaused);
     this.target.off("thread-resumed", this.unhighlightWhenResumed);
-    this.emit("destroyed");
-    return promise.resolve(null);
+
+    return this._destroyer = this._controller.shutdownDebugger().then(() => {
+      this.emit("destroyed");
+    });
   },
 
   // DebuggerPanel API

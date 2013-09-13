@@ -37,14 +37,18 @@ let DebuggerView = {
   /**
    * Initializes the debugger view.
    *
-   * @param function aCallback
-   *        Called after the view finishes initializing.
+   * @return object
+   *         A promise that is resolved when the view finishes initializing.
    */
-  initialize: function(aCallback) {
-    dumpn("Initializing the DebuggerView");
+  initialize: function() {
+    if (this._startup) {
+      return this._startup;
+    }
+
+    let deferred = promise.defer();
+    this._startup = deferred.promise;
 
     this._initializePanes();
-
     this.Toolbar.initialize();
     this.Options.initialize();
     this.Filtering.initialize();
@@ -55,19 +59,25 @@ let DebuggerView = {
     this.Sources.initialize();
     this.WatchExpressions.initialize();
     this.GlobalSearch.initialize();
-
     this._initializeVariablesView();
-    this._initializeEditor(aCallback);
+    this._initializeEditor(deferred.resolve);
+
+    return deferred.promise;
   },
 
   /**
    * Destroys the debugger view.
    *
-   * @param function aCallback
-   *        Called after the view finishes destroying.
+   * @return object
+   *         A promise that is resolved when the view finishes destroying.
    */
-  destroy: function(aCallback) {
-    dumpn("Destroying the DebuggerView");
+  destroy: function() {
+    if (this._shutdown) {
+      return this._shutdown;
+    }
+
+    let deferred = promise.defer();
+    this._shutdown = deferred.promise;
 
     this.Toolbar.destroy();
     this.Options.destroy();
@@ -79,11 +89,10 @@ let DebuggerView = {
     this.Sources.destroy();
     this.WatchExpressions.destroy();
     this.GlobalSearch.destroy();
-
     this._destroyPanes();
-    this._destroyEditor();
+    this._destroyEditor(deferred.resolve);
 
-    aCallback();
+    return deferred.promise;
   },
 
   /**
@@ -184,7 +193,6 @@ let DebuggerView = {
 
     DebuggerController.Breakpoints.initialize();
     window.dispatchEvent(document, "Debugger:EditorLoaded", this.editor);
-    this.editor.focus();
   },
 
   /**
@@ -467,6 +475,8 @@ let DebuggerView = {
     }
   },
 
+  _startup: null,
+  _shutdown: null,
   Toolbar: null,
   Options: null,
   Filtering: null,
@@ -486,8 +496,6 @@ let DebuggerView = {
   _instrumentsPaneToggleButton: null,
   _collapsePaneString: "",
   _expandPaneString: "",
-  _isInitialized: false,
-  _isDestroyed: false
 };
 
 /**
