@@ -727,7 +727,7 @@ function FilterView() {
   dumpn("FilterView was instantiated");
 
   this._onClick = this._onClick.bind(this);
-  this._onSearch = this._onSearch.bind(this);
+  this._onInput = this._onInput.bind(this);
   this._onKeyPress = this._onKeyPress.bind(this);
   this._onBlur = this._onBlur.bind(this);
 }
@@ -761,8 +761,8 @@ FilterView.prototype = {
     this._variableSearchKey = DevtoolsHelpers.prettyKey(document.getElementById("variableSearchKey"), true);
 
     this._searchbox.addEventListener("click", this._onClick, false);
-    this._searchbox.addEventListener("select", this._onSearch, false);
-    this._searchbox.addEventListener("input", this._onSearch, false);
+    this._searchbox.addEventListener("select", this._onInput, false);
+    this._searchbox.addEventListener("input", this._onInput, false);
     this._searchbox.addEventListener("keypress", this._onKeyPress, false);
     this._searchbox.addEventListener("blur", this._onBlur, false);
 
@@ -800,8 +800,8 @@ FilterView.prototype = {
     dumpn("Destroying the FilterView");
 
     this._searchbox.removeEventListener("click", this._onClick, false);
-    this._searchbox.removeEventListener("select", this._onSearch, false);
-    this._searchbox.removeEventListener("input", this._onSearch, false);
+    this._searchbox.removeEventListener("select", this._onInput, false);
+    this._searchbox.removeEventListener("input", this._onInput, false);
     this._searchbox.removeEventListener("keypress", this._onKeyPress, false);
     this._searchbox.removeEventListener("blur", this._onBlur, false);
   },
@@ -831,96 +831,82 @@ FilterView.prototype = {
   get target() this._target,
 
   /**
-   * Gets the entered file, line and token entered in the searchbox.
+   * Gets the entered operator and arguments in the searchbox.
    * @return array
    */
-  get searchboxInfo() {
-    let operator, file, line, token;
+  get searchData() {
+    let operator = "", args = [];
 
     let rawValue = this._searchbox.value;
     let rawLength = rawValue.length;
     let globalFlagIndex = rawValue.indexOf(SEARCH_GLOBAL_FLAG);
     let functionFlagIndex = rawValue.indexOf(SEARCH_FUNCTION_FLAG);
     let variableFlagIndex = rawValue.indexOf(SEARCH_VARIABLE_FLAG);
-    let lineFlagIndex = rawValue.lastIndexOf(SEARCH_LINE_FLAG);
     let tokenFlagIndex = rawValue.lastIndexOf(SEARCH_TOKEN_FLAG);
+    let lineFlagIndex = rawValue.lastIndexOf(SEARCH_LINE_FLAG);
 
     // This is not a global, function or variable search, allow file/line flags.
     if (globalFlagIndex != 0 && functionFlagIndex != 0 && variableFlagIndex != 0) {
-      let fileEnd = lineFlagIndex != -1
-        ? lineFlagIndex
-        : tokenFlagIndex != -1
-          ? tokenFlagIndex
-          : rawLength;
-
-      let lineEnd = tokenFlagIndex != -1
-        ? tokenFlagIndex
-        : rawLength;
-
-      operator = "";
-      file = rawValue.slice(0, fileEnd);
-      line = ~~(rawValue.slice(fileEnd + 1, lineEnd)) || 0;
-      token = rawValue.slice(lineEnd + 1);
+      // Token search has precedence over line search.
+      if (tokenFlagIndex != -1) {
+        operator = SEARCH_TOKEN_FLAG;
+        args.push(rawValue.slice(0, tokenFlagIndex)); // file
+        args.push(rawValue.substr(tokenFlagIndex + 1, rawLength)); // token
+      } else if (lineFlagIndex != -1) {
+        operator = SEARCH_LINE_FLAG;
+        args.push(rawValue.slice(0, lineFlagIndex)); // file
+        args.push(+rawValue.substr(lineFlagIndex + 1, rawLength) || 0); // line
+      } else {
+        args.push(rawValue);
+      }
     }
     // Global searches dissalow the use of file or line flags.
     else if (globalFlagIndex == 0) {
       operator = SEARCH_GLOBAL_FLAG;
-      file = "";
-      line = 0;
-      token = rawValue.slice(1);
+      args.push(rawValue.slice(1));
     }
     // Function searches dissalow the use of file or line flags.
     else if (functionFlagIndex == 0) {
       operator = SEARCH_FUNCTION_FLAG;
-      file = "";
-      line = 0;
-      token = rawValue.slice(1);
+      args.push(rawValue.slice(1));
     }
     // Variable searches dissalow the use of file or line flags.
     else if (variableFlagIndex == 0) {
       operator = SEARCH_VARIABLE_FLAG;
-      file = "";
-      line = 0;
-      token = rawValue.slice(1);
+      args.push(rawValue.slice(1));
     }
 
-    return [operator, file, line, token];
+    return [operator, args];
   },
 
   /**
-   * Returns the current searched operator.
+   * Returns the current search operator.
    * @return string
    */
-  get currentOperator() this.searchboxInfo[0],
+  get searchOperator() this.searchData[0],
 
   /**
-   * Returns the currently searched file.
-   * @return string
+   * Returns the current search arguments.
+   * @return array
    */
-  get searchedFile() this.searchboxInfo[1],
+  get searchArguments() this.searchData[1],
 
   /**
-   * Returns the currently searched line.
-   * @return number
-   */
-  get searchedLine() this.searchboxInfo[2],
-
-  /**
-   * Returns the currently searched token.
-   * @return string
-   */
-  get searchedToken() this.searchboxInfo[3],
-
-  /**
-   * Clears the text from the searchbox and resets any changed view.
+   * Clears the text from the searchbox and any changed views.
    */
   clearSearch: function() {
     this._searchbox.value = "";
-    this._searchboxHelpPanel.hidePopup();
+    this.clearViews();
   },
 
   /**
+   * Clears all the views that may pop up when searching.
    */
+  clearViews: function() {
+    DebuggerView.GlobalSearch.clearView();
+    DebuggerView.FilteredSources.clearView();
+    DebuggerView.FilteredFunctions.clearView();
+    this._searchboxHelpPanel.hidePopup();
   },
 
   /**
@@ -931,17 +917,11 @@ FilterView.prototype = {
    *        The source line number to jump to.
    */
   _performLineSearch: function(aLine) {
-    // Don't search for lines if the input hasn't changed.
-    if (this._prevSearchedLine != aLine && aLine) {
-      DebuggerView.editor.setCaretPosition(aLine - 1);
+    // Make sure we're actually searching for a valid line.
+    if (!aLine) {
+      return;
     }
-    // Can't search for lines and tokens at the same time.
-    if (this._prevSearchedToken && !aLine) {
-      this._target.refresh();
-    }
-
-    // Remember the previously searched line to avoid redundant filtering.
-    this._prevSearchedLine = aLine;
+    DebuggerView.editor.setCaretPosition(aLine - 1);
   },
 
   /**
@@ -952,17 +932,13 @@ FilterView.prototype = {
    *        The source token to find.
    */
   _performTokenSearch: function(aToken) {
-    // Don't search for tokens if the input hasn't changed.
-    if (this._prevSearchedToken != aToken && aToken) {
-      let editor = DebuggerView.editor;
-      let offset = editor.find(aToken, { ignoreCase: true });
-      if (offset > -1) {
-        editor.setSelection(offset, offset + aToken.length)
-      }
+    // Make sure we're actually searching for a valid token.
+    if (!aToken) {
+      return;
     }
-    // Can't search for tokens and lines at the same time.
-    if (this._prevSearchedLine && !aToken) {
-      this._target.refresh();
+    let offset = DebuggerView.editor.find(aToken, { ignoreCase: true });
+    if (offset > -1) {
+      DebuggerView.editor.setSelection(offset, offset + aToken.length)
     }
   },
 
@@ -974,42 +950,45 @@ FilterView.prototype = {
   },
 
   /**
-   * The search listener for the search container.
+   * The input listener for the search container.
    */
-  _onSearch: function() {
-    this._searchboxHelpPanel.hidePopup();
-    let [operator, file, line, token] = this.searchboxInfo;
+  _onInput: function() {
+    this.clearViews();
 
-    // If this is a global search, schedule it for when the user stops typing,
-    // or hide the corresponding pane otherwise.
-    if (operator == SEARCH_GLOBAL_FLAG) {
-      DebuggerView.GlobalSearch.scheduleSearch(token);
-      this._prevSearchedToken = token;
+    // Make sure we're actually searching for something.
+    if (!this._searchbox.value) {
       return;
     }
 
-    // If this is a function search, schedule it for when the user stops typing,
-    // or hide the corresponding panel otherwise.
-    if (operator == SEARCH_FUNCTION_FLAG) {
-      DebuggerView.FilteredFunctions.scheduleSearch(token);
-      this._prevSearchedToken = token;
-      return;
+    // Perform the required search based on the specified operator.
+    switch (this.searchOperator) {
+      case SEARCH_GLOBAL_FLAG:
+        // Schedule a global search for when the user stops typing.
+        DebuggerView.GlobalSearch.scheduleSearch(this.searchArguments[0]);
+        break;
+      case SEARCH_FUNCTION_FLAG:
+        // Schedule a function search for when the user stops typing.
+        DebuggerView.FilteredFunctions.scheduleSearch(this.searchArguments[0]);
+        break;
+      case SEARCH_VARIABLE_FLAG:
+        // Schedule a variable search for when the user stops typing.
+        DebuggerView.Variables.scheduleSearch(this.searchArguments[0]);
+        break;
+      case SEARCH_TOKEN_FLAG:
+        // Schedule a file+token search for when the user stops typing.
+        DebuggerView.FilteredSources.scheduleSearch(this.searchArguments[0]);
+        this._performTokenSearch(this.searchArguments[1]);
+        break;
+      case SEARCH_LINE_FLAG:
+        // Schedule a file+line search for when the user stops typing.
+        DebuggerView.FilteredSources.scheduleSearch(this.searchArguments[0]);
+        this._performLineSearch(this.searchArguments[1]);
+        break;
+      default:
+        // Schedule a file only search for when the user stops typing.
+        DebuggerView.FilteredSources.scheduleSearch(this.searchArguments[0]);
+        break;
     }
-
-    // If this is a variable search, defer the action to the corresponding
-    // variables view instance.
-    if (operator == SEARCH_VARIABLE_FLAG) {
-      DebuggerView.Variables.scheduleSearch(token);
-      this._prevSearchedToken = token;
-      return;
-    }
-
-    DebuggerView.GlobalSearch.clearView();
-    DebuggerView.FilteredFunctions.clearView();
-
-    this._performFileSearch(file);
-    this._performLineSearch(line);
-    this._performTokenSearch(token);
   },
 
   /**
@@ -1019,125 +998,123 @@ FilterView.prototype = {
     // This attribute is not implemented in Gecko at this time, see bug 680830.
     e.char = String.fromCharCode(e.charCode);
 
-    let [operator, file, line, token] = this.searchboxInfo;
-    let isGlobal = operator == SEARCH_GLOBAL_FLAG;
-    let isFunction = operator == SEARCH_FUNCTION_FLAG;
-    let isVariable = operator == SEARCH_VARIABLE_FLAG;
-    let action = -1;
+    // Perform the required action based on the specified operator.
+    let [operator, args] = this.searchData;
+    let isGlobalSearch = operator == SEARCH_GLOBAL_FLAG;
+    let isFunctionSearch = operator == SEARCH_FUNCTION_FLAG;
+    let isVariableSearch = operator == SEARCH_VARIABLE_FLAG;
+    let isTokenSearch = operator == SEARCH_TOKEN_FLAG;
+    let isLineSearch = operator == SEARCH_LINE_FLAG;
+    let isFileOnlySearch = !operator && args.length == 1;
 
-    if (file && !line && !token) {
-      var isFileSearch = true;
-    }
-    if (line && !token) {
-      var isLineSearch = true;
-    }
-    if (this._prevSearchedToken != token) {
-      var isDifferentToken = true;
-    }
+    // Depending on the pressed keys, determine to correct action to perform.
+    let actionToPerform;
 
     // Meta+G and Ctrl+N focus next matches.
     if ((e.char == "g" && e.metaKey) || e.char == "n" && e.ctrlKey) {
-      action = 0;
+      actionToPerform = "selectNext";
     }
     // Meta+Shift+G and Ctrl+P focus previous matches.
     else if ((e.char == "G" && e.metaKey) || e.char == "p" && e.ctrlKey) {
-      action = 1;
+      actionToPerform = "selectPrev";
     }
     // Return, enter, down and up keys focus next or previous matches, while
     // the escape key switches focus from the search container.
     else switch (e.keyCode) {
       case e.DOM_VK_RETURN:
       case e.DOM_VK_ENTER:
-        var isReturnKey = true;
-        // fall through
+        var isReturnKey = true; // Fall through.
       case e.DOM_VK_DOWN:
-        action = 0;
+        actionToPerform = "selectNext";
         break;
       case e.DOM_VK_UP:
-        action = 1;
-        break;
-      case e.DOM_VK_ESCAPE:
-        action = 2;
+        actionToPerform = "selectPrev";
         break;
     }
 
-    if (action == 2) {
-      DebuggerView.editor.focus();
-      return;
-    }
-    if (action == -1 || (!operator && !file && !line && !token)) {
+    // If there's no action to perform, or no operator, file line or token
+    // were specified, then this is either a broken or empty search.
+    if (!actionToPerform || (!operator && !args.length)) {
+      DebuggerView.editor.dropSelection();
       return;
     }
 
     e.preventDefault();
     e.stopPropagation();
 
-    // Select the next or previous file search entry.
-    if (isFileSearch) {
+    // Jump to the next/previous entry in the global search, or perform
+    // a new global search immediately
+    if (isGlobalSearch) {
+      let targetView = DebuggerView.GlobalSearch;
+      if (!isReturnKey) {
+        targetView[actionToPerform]();
+      } else if (targetView.hidden) {
+        targetView.scheduleSearch(args[0], 0);
+      }
+      return;
+    }
+
+    // Jump to the next/previous entry in the function search, perform
+    // a new function search immediately, or clear it.
+    if (isFunctionSearch) {
+      let targetView = DebuggerView.FilteredFunctions;
+      if (!isReturnKey) {
+        targetView[actionToPerform]();
+      } else if (targetView.hidden) {
+        targetView.scheduleSearch(args[0], 0);
+      } else {
+        this.clearSearch();
+      }
+      return;
+    }
+
+    // Perform a new variable search immediately.
+    if (isVariableSearch) {
+      let targetView = DebuggerView.Variables;
       if (isReturnKey) {
-        DebuggerView.FilteredSources.clearView();
-        DebuggerView.editor.focus();
-        this.clearSearch();
-      } else {
-        DebuggerView.FilteredSources[["selectNext", "selectPrev"][action]]();
+        targetView.scheduleSearch(args[0], 0);
       }
-      this._prevSearchedFile = file;
       return;
     }
 
-    // Perform a global search based on the specified operator.
-    if (isGlobal) {
-      if (isReturnKey && (isDifferentToken || DebuggerView.GlobalSearch.hidden)) {
-        DebuggerView.GlobalSearch.scheduleSearch(token, 0);
+    // Jump to the next/previous entry in the file search, perform
+    // a new file search immediately, or clear it.
+    if (isFileOnlySearch) {
+      let targetView = DebuggerView.FilteredSources;
+      if (!isReturnKey) {
+        targetView[actionToPerform]();
+      } else if (targetView.hidden) {
+        targetView.scheduleSearch(args[0], 0);
       } else {
-        DebuggerView.GlobalSearch[["selectNext", "selectPrev"][action]]();
-      }
-      this._prevSearchedToken = token;
-      return;
-    }
-
-    // Perform a function search based on the specified operator.
-    if (isFunction) {
-      if (isReturnKey && (isDifferentToken || DebuggerView.FilteredFunctions.hidden)) {
-        DebuggerView.FilteredFunctions.scheduleSearch(token, 0);
-      } else if (!isReturnKey) {
-        DebuggerView.FilteredFunctions[["selectNext", "selectPrev"][action]]();
-      } else {
-        DebuggerView.FilteredFunctions.clearView();
-        DebuggerView.editor.focus();
         this.clearSearch();
       }
-      this._prevSearchedToken = token;
       return;
     }
 
-    // Perform a variable search based on the specified operator.
-    if (isVariable) {
-      if (isReturnKey && isDifferentToken) {
-        DebuggerView.Variables.scheduleSearch(token, 0);
-      } else {
-        DebuggerView.Variables.expandFirstSearchResults();
+    // Jump to the next/previous instance of the currently searched token.
+    if (isTokenSearch) {
+      let [, token] = args;
+      let methods = { selectNext: "findNext", selectPrev: "findPrevious" };
+
+      // Search for the token and select it.
+      let offset = DebuggerView.editor[methods[actionToPerform]](true);
+      if (offset > -1) {
+        DebuggerView.editor.setSelection(offset, offset + token.length)
       }
-      this._prevSearchedToken = token;
       return;
     }
 
-    // Increment or decrement the specified line.
-    if (isLineSearch && !isReturnKey) {
-      line += action == 0 ? 1 : -1;
+    // Increment/decrement the currently searched caret line.
+    if (isLineSearch) {
+      let [, line] = args;
+      let amounts = { selectNext: 1, selectPrev: -1 };
+
+      // Modify the line number and jump to it.
+      line += !isReturnKey ? amounts[actionToPerform] : 0;
       let lineCount = DebuggerView.editor.getLineCount();
       let lineTarget = line < 1 ? 1 : line > lineCount ? lineCount : line;
-
-      DebuggerView.editor.setCaretPosition(lineTarget - 1);
-      this._searchbox.value = file + SEARCH_LINE_FLAG + lineTarget;
-      this._prevSearchedLine = lineTarget;
+      this._doSearch(SEARCH_LINE_FLAG, lineTarget);
       return;
-    }
-
-    let editor = DebuggerView.editor;
-    let offset = editor[["findNext", "findPrevious"][action]](true);
-    if (offset > -1) {
-      editor.setSelection(offset, offset + token.length)
     }
   },
 
@@ -1145,11 +1122,7 @@ FilterView.prototype = {
    * The blur listener for the search container.
    */
   _onBlur: function() {
-    DebuggerView.GlobalSearch.clearView();
-    DebuggerView.FilteredSources.clearView();
-    DebuggerView.FilteredFunctions.clearView();
-    DebuggerView.Variables.scheduleSearch(null, 0);
-    this._searchboxHelpPanel.hidePopup();
+    this.clearViews();
   },
 
   /**
@@ -1158,10 +1131,10 @@ FilterView.prototype = {
    * @param string aOperator
    *        The operator to use for filtering.
    */
-  _doSearch: function(aOperator = "") {
+  _doSearch: function(aOperator = "", aText = "") {
     this._searchbox.focus();
     this._searchbox.value = ""; // Need to clear value beforehand. Bug 779738.
-    this._searchbox.value = aOperator + DebuggerView.editor.getSelectedText();
+    this._searchbox.value = aOperator + (aText || DebuggerView.editor.getSelectedText());
   },
 
   /**
@@ -1208,7 +1181,6 @@ FilterView.prototype = {
    * Called when the variable search filter key sequence was pressed.
    */
   _doVariableSearch: function() {
-    DebuggerView.Variables.scheduleSearch("", 0);
     this._doSearch(SEARCH_VARIABLE_FLAG);
     this._searchboxHelpPanel.hidePopup();
   },
@@ -1239,10 +1211,7 @@ FilterView.prototype = {
   _tokenSearchKey: "",
   _lineSearchKey: "",
   _variableSearchKey: "",
-  _target: null,
-  _prevSearchedFile: "",
-  _prevSearchedLine: 0,
-  _prevSearchedToken: ""
+  _target: null
 };
 
 /**
@@ -1380,16 +1349,10 @@ FilteredSourcesView.prototype = Heritage.extend(ResultsPanelContainer.prototype,
    */
   _onSelect: function({ detail: locationItem }) {
     if (locationItem) {
-      let targetUrl = locationItem.attachment.url;
-      let currentLine = DebuggerView.editor.getCaretPosition().line + 1;
-
-      // If the same file is selected, don't change the source editor's
-      // carent or debug locations.
-      if (DebuggerView.Sources.selectedValue == targetUrl) {
-        DebuggerView.setEditorLocation(targetUrl, currentLine, { noDebug: true });
-      } else {
-        DebuggerView.setEditorLocation(targetUrl);
-      }
+      DebuggerView.setEditorLocation(locationItem.attachment.url, undefined, {
+        noCaret: true,
+        noDebug: true
+      });
     }
   }
 });
