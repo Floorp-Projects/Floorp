@@ -245,6 +245,7 @@ SECStatus
 BuildCertChain(TrustDomain& trustDomain,
                CERTCertificate* certToDup,
                PRTime time,
+               EndEntityOrCA endEntityOrCA,
                /*optional*/ KeyUsages requiredKeyUsagesIfPresent,
                /*optional*/ SECOidTag requiredEKUIfPresent,
                /*out*/ ScopedCERTCertList& results)
@@ -259,13 +260,13 @@ BuildCertChain(TrustDomain& trustDomain,
   // The only non-const operation on the cert we are allowed to do is
   // CERT_DupCertificate.
 
-  BackCert ee(certToDup, nullptr);
-  Result rv = ee.Init();
+  BackCert cert(certToDup, nullptr);
+  Result rv = cert.Init();
   if (rv != Success) {
     return SECFailure;
   }
 
-  rv = BuildForward(trustDomain, ee, time, MustBeEndEntity,
+  rv = BuildForward(trustDomain, cert, time, endEntityOrCA,
                     requiredKeyUsagesIfPresent, requiredEKUIfPresent,
                     0, results);
   if (rv != Success) {
@@ -275,7 +276,7 @@ BuildCertChain(TrustDomain& trustDomain,
 
   // Build the cert chain even if the cert is expired, because we would
   // rather report the untrusted issuer error than the expired error.
-  if (CheckTimes(ee.GetNSSCert(), time) != Success) {
+  if (CheckTimes(cert.GetNSSCert(), time) != Success) {
     PR_SetError(SEC_ERROR_EXPIRED_CERTIFICATE, 0);
     return SECFailure;
   }
