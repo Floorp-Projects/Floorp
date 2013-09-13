@@ -9,27 +9,6 @@ endif
 
 LOCAL_INCLUDES 	= -I$(srcdir)/..
 
-ifneq (WINNT,$(OS_TARGET))
-ifdef MOZ_CRASHREPORTER
-HOST_CPPSRCS = \
-  string_conversion.cc \
-  module.cc \
-  unique_string.cc \
-  md5.cc \
-  dwarf_cfi_to_module.cc \
-  dwarf_cu_to_module.cc \
-  language.cc \
-  stabs_to_module.cc \
-  stabs_reader.cc \
-  dwarf_line_to_module.cc \
-  arm_ex_reader.cc \
-  arm_ex_to_module.cc \
-  pathname_stripper.cc \
-  logging.cc \
-  $(NULL)
-endif
-endif
-
 ifeq ($(OS_TARGET),Android)
 VPATH += $(srcdir)/android
 TARGET_LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src/common/android/include/

@@ -317,8 +317,11 @@ let AdbController = {
 
     // Check if we have a remote debugging session going on. If so, we won't
     // disable adb even if the screen is locked.
-    let isDebugging = Object.keys(DebuggerServer._connections).length > 0;
-    this.debug("isDebugging=" + isDebugging);
+    let isDebugging = DebuggerServer._connections &&
+                      Object.keys(DebuggerServer._connections).length > 0;
+    if (this.DEBUG) {
+      this.debug("isDebugging=" + isDebugging);
+    }
 
     let enableAdb = this.remoteDebuggerEnabled &&
       (!(this.lockEnabled && this.locked) || isDebugging);

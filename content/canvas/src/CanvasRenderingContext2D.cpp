@@ -41,7 +41,7 @@
 
 #include "nsTArray.h"
 
-#include "imgIEncoder.h"
+#include "ImageEncoder.h"
 
 #include "gfxContext.h"
 #include "gfxASurface.h"
@@ -1036,71 +1036,71 @@ CanvasRenderingContext2D::Render(gfxContext *ctx, gfxPattern::GraphicsFilter aFi
   return rv;
 }
 
-NS_IMETHODIMP
-CanvasRenderingContext2D::GetInputStream(const char *aMimeType,
-                                         const PRUnichar *aEncoderOptions,
-                                         nsIInputStream **aStream)
+void
+CanvasRenderingContext2D::GetImageBuffer(uint8_t** aImageBuffer,
+                                         int32_t* aFormat)
 {
-  EnsureTarget();
-  if (!IsTargetValid()) {
-    return NS_ERROR_FAILURE;
-  }
+  *aImageBuffer = nullptr;
+  *aFormat = 0;
 
   nsRefPtr<gfxASurface> surface;
-
-  if (NS_FAILED(GetThebesSurface(getter_AddRefs(surface)))) {
-    return NS_ERROR_FAILURE;
+  nsresult rv = GetThebesSurface(getter_AddRefs(surface));
+  if (NS_FAILED(rv)) {
+    return;
   }
 
-  nsresult rv;
-  const char encoderPrefix[] = "@mozilla.org/image/encoder;2?type=";
   static const fallible_t fallible = fallible_t();
-  nsAutoArrayPtr<char> conid(new (fallible) char[strlen(encoderPrefix) + strlen(aMimeType) + 1]);
-
-  if (!conid) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  strcpy(conid, encoderPrefix);
-  strcat(conid, aMimeType);
-
-  nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(conid);
-  if (!encoder) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsAutoArrayPtr<uint8_t> imageBuffer(new (fallible) uint8_t[mWidth * mHeight * 4]);
+  uint8_t* imageBuffer = new (fallible) uint8_t[mWidth * mHeight * 4];
   if (!imageBuffer) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    return;
   }
 
   nsRefPtr<gfxImageSurface> imgsurf =
-    new gfxImageSurface(imageBuffer.get(),
+    new gfxImageSurface(imageBuffer,
                         gfxIntSize(mWidth, mHeight),
                         mWidth * 4,
                         gfxASurface::ImageFormatARGB32);
 
   if (!imgsurf || imgsurf->CairoStatus()) {
-    return NS_ERROR_FAILURE;
+    delete[] imageBuffer;
+    return;
   }
 
   nsRefPtr<gfxContext> ctx = new gfxContext(imgsurf);
-
   if (!ctx || ctx->HasError()) {
-    return NS_ERROR_FAILURE;
+    delete[] imageBuffer;
+    return;
   }
 
   ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
   ctx->SetSource(surface, gfxPoint(0, 0));
   ctx->Paint();
 
-  rv = encoder->InitFromData(imageBuffer.get(),
-                              mWidth * mHeight * 4, mWidth, mHeight, mWidth * 4,
-                              imgIEncoder::INPUT_FORMAT_HOSTARGB,
-                              nsDependentString(aEncoderOptions));
-  NS_ENSURE_SUCCESS(rv, rv);
+  *aImageBuffer = imageBuffer;
+  *aFormat = imgIEncoder::INPUT_FORMAT_HOSTARGB;
+}
 
-  return CallQueryInterface(encoder, aStream);
+NS_IMETHODIMP
+CanvasRenderingContext2D::GetInputStream(const char *aMimeType,
+                                         const PRUnichar *aEncoderOptions,
+                                         nsIInputStream **aStream)
+{
+  uint8_t* imageBuffer = nullptr;
+  int32_t format = 0;
+  GetImageBuffer(&imageBuffer, &format);
+  if (!imageBuffer) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCString enccid("@mozilla.org/image/encoder;2?type=");
+  enccid += aMimeType;
+  nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(enccid.get());
+  if (!encoder) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return ImageEncoder::GetInputStream(mWidth, mHeight, imageBuffer, format,
+                                      encoder, aEncoderOptions, aStream);
 }
 
 SurfaceFormat
@@ -3739,6 +3739,9 @@ NS_IMETHODIMP
 CanvasRenderingContext2D::GetThebesSurface(gfxASurface **surface)
 {
   EnsureTarget();
+  if (!IsTargetValid()) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsRefPtr<gfxASurface> thebesSurface =
       gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mTarget);

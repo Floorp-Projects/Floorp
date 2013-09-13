@@ -184,7 +184,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void branchTestObjClass(Condition cond, Register obj, Register scratch, const js::Class *clasp,
                             Label *label) {
         loadPtr(Address(obj, JSObject::offsetOfType()), scratch);
-        branchPtr(cond, Address(scratch, offsetof(types::TypeObject, clasp)), ImmWord(clasp), label);
+        branchPtr(cond, Address(scratch, offsetof(types::TypeObject, clasp)), ImmPtr(clasp), label);
     }
     void branchTestObjShape(Condition cond, Register obj, const Shape *shape, Label *label) {
         branchPtr(cond, Address(obj, JSObject::offsetOfShape()), ImmGCPtr(shape), label);
@@ -197,7 +197,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         Address handlerAddr(proxy, ProxyObject::offsetOfHandler());
         loadPrivate(handlerAddr, scratch);
         Address familyAddr(scratch, BaseProxyHandler::offsetOfFamily());
-        branchPtr(cond, familyAddr, ImmWord(handlerp), label);
+        branchPtr(cond, familyAddr, ImmPtr(handlerp), label);
     }
 
     template <typename Value>
@@ -252,11 +252,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void loadJSContext(const Register &dest) {
-        movePtr(ImmWord(GetIonContext()->runtime), dest);
+        movePtr(ImmPtr(GetIonContext()->runtime), dest);
         loadPtr(Address(dest, offsetof(JSRuntime, mainThread.ionJSContext)), dest);
     }
     void loadJitActivation(const Register &dest) {
-        movePtr(ImmWord(GetIonContext()->runtime), dest);
+        movePtr(ImmPtr(GetIonContext()->runtime), dest);
         size_t offset = offsetof(JSRuntime, mainThread) + PerThreadData::offsetOfActivation();
         loadPtr(Address(dest, offset), dest);
     }
@@ -422,8 +422,7 @@ class MacroAssembler : public MacroAssemblerSpecific
                 Push(ImmGCPtr(str));
             }
         } else {
-            size_t idbits = JSID_BITS(id);
-            Push(ImmWord(idbits));
+            Push(ImmWord(JSID_BITS(id)));
         }
     }
 
@@ -499,7 +498,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void branchTestNeedsBarrier(Condition cond, const Register &scratch, Label *label) {
         JS_ASSERT(cond == Zero || cond == NonZero);
         JS::Zone *zone = GetIonContext()->compartment->zone();
-        movePtr(ImmWord(zone), scratch);
+        movePtr(ImmPtr(zone), scratch);
         Address needsBarrierAddr(scratch, JS::Zone::OffsetOfNeedsBarrier());
         branchTest32(cond, needsBarrierAddr, Imm32(0x1), label);
     }
@@ -691,12 +690,12 @@ class MacroAssembler : public MacroAssemblerSpecific
         // Push the ioncode. (Bailout or VM wrapper)
         exitCodePatch_ = PushWithPatch(ImmWord(-1));
         // Push VMFunction pointer, to mark arguments.
-        Push(ImmWord(f));
+        Push(ImmPtr(f));
     }
     void enterFakeExitFrame(IonCode *codeVal = NULL) {
         linkExitFrame();
-        Push(ImmWord(uintptr_t(codeVal)));
-        Push(ImmWord(uintptr_t(NULL)));
+        Push(ImmPtr(codeVal));
+        Push(ImmPtr(NULL));
     }
 
     void loadForkJoinSlice(Register slice, Register scratch);
@@ -730,8 +729,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         // be unset if the code never needed to push its IonCode*.
         if (hasEnteredExitFrame()) {
             patchDataWithValueCheck(CodeLocationLabel(code, exitCodePatch_),
-                                    ImmWord(uintptr_t(code)),
-                                    ImmWord(uintptr_t(-1)));
+                                    ImmPtr(code),
+                                    ImmPtr((void*)-1));
         }
 
     }
@@ -794,9 +793,9 @@ class MacroAssembler : public MacroAssemblerSpecific
         // of the JSObject::isWrapper test performed in EmulatesUndefined.  If none
         // of the branches are taken, we can check class flags directly.
         loadObjClass(objReg, scratch);
-        branchPtr(Assembler::Equal, scratch, ImmWord(&ObjectProxyObject::class_), slowCheck);
-        branchPtr(Assembler::Equal, scratch, ImmWord(&OuterWindowProxyObject::class_), slowCheck);
-        branchPtr(Assembler::Equal, scratch, ImmWord(&FunctionProxyObject::class_), slowCheck);
+        branchPtr(Assembler::Equal, scratch, ImmPtr(&ObjectProxyObject::class_), slowCheck);
+        branchPtr(Assembler::Equal, scratch, ImmPtr(&OuterWindowProxyObject::class_), slowCheck);
+        branchPtr(Assembler::Equal, scratch, ImmPtr(&FunctionProxyObject::class_), slowCheck);
 
         test32(Address(scratch, Class::offsetOfFlags()), Imm32(JSCLASS_EMULATES_UNDEFINED));
         return truthy ? Assembler::Zero : Assembler::NonZero;
@@ -841,7 +840,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void spsProfileEntryAddress(SPSProfiler *p, int offset, Register temp,
                                 Label *full)
     {
-        movePtr(ImmWord(p->sizePointer()), temp);
+        movePtr(ImmPtr(p->sizePointer()), temp);
         load32(Address(temp, 0), temp);
         if (offset != 0)
             add32(Imm32(offset), temp);
@@ -850,7 +849,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         // 4 * sizeof(void*) * idx = idx << (2 + log(sizeof(void*)))
         JS_STATIC_ASSERT(sizeof(ProfileEntry) == 4 * sizeof(void*));
         lshiftPtr(Imm32(2 + (sizeof(void*) == 4 ? 2 : 3)), temp);
-        addPtr(ImmWord(p->stack()), temp);
+        addPtr(ImmPtr(p->stack()), temp);
     }
 
     // The safe version of the above method refrains from assuming that the fields
@@ -862,7 +861,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void spsProfileEntryAddressSafe(SPSProfiler *p, int offset, Register temp,
                                     Label *full)
     {
-        movePtr(ImmWord(p->addressOfSizePointer()), temp);
+        movePtr(ImmPtr(p->addressOfSizePointer()), temp);
 
         // Load size pointer
         loadPtr(Address(temp, 0), temp);
@@ -879,7 +878,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         JS_STATIC_ASSERT(sizeof(ProfileEntry) == 4 * sizeof(void*));
         lshiftPtr(Imm32(2 + (sizeof(void*) == 4 ? 2 : 3)), temp);
         push(temp);
-        movePtr(ImmWord(p->addressOfStack()), temp);
+        movePtr(ImmPtr(p->addressOfStack()), temp);
         loadPtr(Address(temp, 0), temp);
         addPtr(Address(StackPointer, 0), temp);
         addPtr(Imm32(sizeof(size_t)), StackPointer);
@@ -909,14 +908,14 @@ class MacroAssembler : public MacroAssemblerSpecific
         Label stackFull;
         spsProfileEntryAddress(p, 0, temp, &stackFull);
 
-        storePtr(ImmWord(str),    Address(temp, ProfileEntry::offsetOfString()));
-        storePtr(ImmGCPtr(s),     Address(temp, ProfileEntry::offsetOfScript()));
-        storePtr(ImmWord((void*) NULL), Address(temp, ProfileEntry::offsetOfStackAddress()));
+        storePtr(ImmPtr(str),  Address(temp, ProfileEntry::offsetOfString()));
+        storePtr(ImmGCPtr(s),  Address(temp, ProfileEntry::offsetOfScript()));
+        storePtr(ImmPtr(NULL), Address(temp, ProfileEntry::offsetOfStackAddress()));
         store32(Imm32(ProfileEntry::NullPCIndex), Address(temp, ProfileEntry::offsetOfPCIdx()));
 
         /* Always increment the stack size, whether or not we actually pushed. */
         bind(&stackFull);
-        movePtr(ImmWord(p->sizePointer()), temp);
+        movePtr(ImmPtr(p->sizePointer()), temp);
         add32(Imm32(1), Address(temp, 0));
     }
 
@@ -932,7 +931,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         loadPtr(script, temp2);
         storePtr(temp2, Address(temp, ProfileEntry::offsetOfScript()));
 
-        storePtr(ImmWord((void*) 0), Address(temp, ProfileEntry::offsetOfStackAddress()));
+        storePtr(ImmPtr(NULL), Address(temp, ProfileEntry::offsetOfStackAddress()));
 
         // Store 0 for PCIdx because that's what interpreter does.
         // (See Probes::enterScript, which calls spsProfiler.enter, which pushes an entry
@@ -941,19 +940,19 @@ class MacroAssembler : public MacroAssemblerSpecific
 
         /* Always increment the stack size, whether or not we actually pushed. */
         bind(&stackFull);
-        movePtr(ImmWord(p->addressOfSizePointer()), temp);
+        movePtr(ImmPtr(p->addressOfSizePointer()), temp);
         loadPtr(Address(temp, 0), temp);
         add32(Imm32(1), Address(temp, 0));
     }
 
     void spsPopFrame(SPSProfiler *p, Register temp) {
-        movePtr(ImmWord(p->sizePointer()), temp);
+        movePtr(ImmPtr(p->sizePointer()), temp);
         add32(Imm32(-1), Address(temp, 0));
     }
 
     // spsPropFrameSafe does not assume |profiler->sizePointer()| will stay constant.
     void spsPopFrameSafe(SPSProfiler *p, Register temp) {
-        movePtr(ImmWord(p->addressOfSizePointer()), temp);
+        movePtr(ImmPtr(p->addressOfSizePointer()), temp);
         loadPtr(Address(temp, 0), temp);
         add32(Imm32(-1), Address(temp, 0));
     }
@@ -1013,7 +1012,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     //
     // Functions for converting values to int.
     //
-    void convertDoubleToInt(FloatRegister src, Register output, Label *fail,
+    void convertDoubleToInt(FloatRegister src, Register output, Label *truncateFail, Label *fail,
                             IntConversionBehavior behavior);
 
     // Strings may be handled by providing labels to jump to when the behavior
@@ -1022,12 +1021,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     // double store into |temp|.
     void convertValueToInt(ValueOperand value, MDefinition *input,
                            Label *handleStringEntry, Label *handleStringRejoin,
+                           Label *truncateDoubleSlow,
                            Register stringReg, FloatRegister temp, Register output,
                            Label *fail, IntConversionBehavior behavior);
     void convertValueToInt(ValueOperand value, FloatRegister temp, Register output, Label *fail,
                            IntConversionBehavior behavior)
     {
-        convertValueToInt(value, NULL, NULL, NULL, InvalidReg, temp, output, fail, behavior);
+        convertValueToInt(value, NULL, NULL, NULL, NULL, InvalidReg, temp, output, fail, behavior);
     }
     bool convertValueToInt(JSContext *cx, const Value &v, Register output, Label *fail,
                            IntConversionBehavior behavior);
@@ -1050,7 +1050,7 @@ class MacroAssembler : public MacroAssemblerSpecific
                              FloatRegister temp, Register output, Label *fail,
                              bool negativeZeroCheck)
     {
-        convertValueToInt(value, input, NULL, NULL, InvalidReg, temp, output, fail,
+        convertValueToInt(value, input, NULL, NULL, NULL, InvalidReg, temp, output, fail,
                           negativeZeroCheck
                           ? IntConversion_NegativeZeroCheck
                           : IntConversion_Normal);
@@ -1085,16 +1085,16 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
     void truncateValueToInt32(ValueOperand value, MDefinition *input,
                               Label *handleStringEntry, Label *handleStringRejoin,
-                              Register stringReg, FloatRegister temp, Register output,
-                              Label *fail)
+                              Label *truncateDoubleSlow,
+                              Register stringReg, FloatRegister temp, Register output, Label *fail)
     {
-        convertValueToInt(value, input, handleStringEntry, handleStringRejoin,
+        convertValueToInt(value, input, handleStringEntry, handleStringRejoin, truncateDoubleSlow,
                           stringReg, temp, output, fail, IntConversion_Truncate);
     }
     void truncateValueToInt32(ValueOperand value, MDefinition *input,
                               FloatRegister temp, Register output, Label *fail)
     {
-        convertValueToInt(value, input, NULL, NULL, InvalidReg, temp, output, fail,
+        convertValueToInt(value, input, NULL, NULL, NULL, InvalidReg, temp, output, fail,
                           IntConversion_Truncate);
     }
     bool truncateValueToInt32(JSContext *cx, const Value &v, Register output, Label *fail) {
@@ -1117,16 +1117,16 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
     void clampValueToUint8(ValueOperand value, MDefinition *input,
                            Label *handleStringEntry, Label *handleStringRejoin,
-                           Register stringReg, FloatRegister temp, Register output,
-                           Label *fail)
+                           Label *truncateDoubleSlow,
+                           Register stringReg, FloatRegister temp, Register output, Label *fail)
     {
-        convertValueToInt(value, input, handleStringEntry, handleStringRejoin,
+        convertValueToInt(value, input, handleStringEntry, handleStringRejoin, truncateDoubleSlow,
                           stringReg, temp, output, fail, IntConversion_ClampToUint8);
     }
     void clampValueToUint8(ValueOperand value, MDefinition *input,
                            FloatRegister temp, Register output, Label *fail)
     {
-        convertValueToInt(value, input, NULL, NULL, InvalidReg, temp, output, fail,
+        convertValueToInt(value, input, NULL, NULL, NULL, InvalidReg, temp, output, fail,
                           IntConversion_ClampToUint8);
     }
     bool clampValueToUint8(JSContext *cx, const Value &v, Register output, Label *fail) {

@@ -12,4 +12,7 @@ if CONFIG['MOZ_LIBSTDCXX_TARGET_VERSION']:
 
 if CONFIG['MOZ_LIBSTDCXX_HOST_VERSION']:
     HOST_LIBRARY_NAME = 'host_stdc++compat'
+    HOST_CPPSRCS += [
+        'stdc++compat.cpp',
+    ]
 

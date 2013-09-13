@@ -41,8 +41,9 @@ interface nsIDOMClientRect;
 interface nsIURI;
 interface nsIDOMEventTarget;
 interface nsIRunnable;
+interface nsICompositionStringSynthesizer;
 
-[scriptable, uuid(d18a8d69-7609-4165-ae20-af8aead36833)]
+[scriptable, uuid(dd45c6ae-9d80-46ef-86d7-f2795a48a77b)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -787,44 +788,12 @@ interface nsIDOMWindowUtils : nsISupports {
                             in AString aLocale);
 
   /**
-   * Synthesize a text event to the window.
+   * Creating synthesizer of composition string on the window.
    *
    * Cannot be accessed from unprivileged context (not content-accessible)
    * Will throw a DOM security error if called without chrome privileges.
-   *
-   * Currently, this method doesn't support 4 or more clauses composition
-   * string.
-   *
-   * @param aCompositionString  composition string
-   * @param a*ClauseLengh       the length of nth clause, set 0 when you
-   *                            don't need second or third clause.
-   * @param a*ClauseAttr        the attribute of nth clause, uese following
-   *                            const values.
-   * @param aCaretStart         the caret position in the composition string,
-   *                            if you set negative value, this method don't
-   *                            set the caret position to the event.
-   * @param aCaretLength        the caret length, if this is one or more,
-   *                            the caret will be wide caret, otherwise,
-   *                            it's collapsed.
-   *                            XXX nsEditor doesn't support wide caret yet.
    */
-
-  // NOTE: These values must be same to NS_TEXTRANGE_* in nsGUIEvent.h
-
-  const unsigned long COMPOSITION_ATTR_RAWINPUT              = 0x02;
-  const unsigned long COMPOSITION_ATTR_SELECTEDRAWTEXT       = 0x03;
-  const unsigned long COMPOSITION_ATTR_CONVERTEDTEXT         = 0x04;
-  const unsigned long COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT = 0x05;
-
-  void sendTextEvent(in AString aCompositionString,
-                     in long aFirstClauseLength,
-                     in unsigned long aFirstClauseAttr,
-                     in long aSecondClauseLength,
-                     in unsigned long aSecondClauseAttr,
-                     in long aThirdClauseLength,
-                     in unsigned long aThirdClauseAttr,
-                     in long aCaretStart,
-                     in long aCaretLength);
+  nsICompositionStringSynthesizer createCompositionStringSynthesizer();
 
   /**
    * Synthesize a query content event. Note that the result value returned here

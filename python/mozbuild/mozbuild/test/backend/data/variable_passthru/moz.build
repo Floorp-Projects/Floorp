@@ -28,6 +28,8 @@ HOST_LIBRARY_NAME = 'host_bar'
 LIBRARY_NAME = 'lib_name'
 LIBS = ['bar.lib', 'foo.lib']
 
+OS_LIBS = ['foo.so', '-l123', 'bar.a']
+
 SDK_LIBRARY = ['bar.sdk', 'foo.sdk']
 
 SHARED_LIBRARY_LIBS += ['bar.sll', 'foo.sll']

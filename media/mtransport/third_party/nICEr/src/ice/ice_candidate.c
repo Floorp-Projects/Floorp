@@ -60,6 +60,7 @@ static char *RCSSTRING __UNUSED__="$Id: ice_candidate.c,v 1.2 2008/04/28 17:59:0
 #include "ice_reg.h"
 #include "ice_util.h"
 #include "nr_socket_turn.h"
+#include "nr_socket.h"
 
 static int next_automatic_preference = 224;
 
@@ -382,8 +383,12 @@ int nr_ice_candidate_compute_priority(nr_ice_candidate *cand)
     }
     else {
       char key_of_interface[MAXIFNAME + 41];
+      nr_transport_addr addr;
 
-      if(r=nr_transport_addr_fmt_ifname_addr_string(&cand->base,key_of_interface,
+      if(r=nr_socket_getaddr(cand->isock->sock, &addr))
+        ABORT(r);
+
+      if(r=nr_transport_addr_fmt_ifname_addr_string(&addr,key_of_interface,
          sizeof(key_of_interface))) {
         ABORT(r);
       }

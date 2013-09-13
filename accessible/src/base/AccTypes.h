@@ -29,7 +29,6 @@ enum AccType {
   eHTMLGroupboxType,
   eHTMLHRType,
   eHTMLImageMapType,
-  eHTMLLabelType,
   eHTMLLiType,
   eHTMLSelectListType,
   eHTMLMediaType,

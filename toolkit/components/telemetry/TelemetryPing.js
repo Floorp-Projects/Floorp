@@ -54,11 +54,11 @@ const TELEMETRY_DELAY = 60000;
 // We used to measure "explicit" too, but it could cause hangs, and the data
 // was always really noisy anyway.  See bug 859657.
 const MEM_HISTOGRAMS = {
-  "js-gc-heap": "MEMORY_JS_GC_HEAP",
-  "js-compartments/system": "MEMORY_JS_COMPARTMENTS_SYSTEM",
-  "js-compartments/user": "MEMORY_JS_COMPARTMENTS_USER",
+  "js-main-runtime-gc-heap": "MEMORY_JS_GC_HEAP",
+  "redundant/js-main-runtime-compartments/system": "MEMORY_JS_COMPARTMENTS_SYSTEM",
+  "redundant/js-main-runtime-compartments/user": "MEMORY_JS_COMPARTMENTS_USER",
   "js-main-runtime-temporary-peak": "MEMORY_JS_MAIN_RUNTIME_TEMPORARY_PEAK",
-  "resident-fast": "MEMORY_RESIDENT",
+  "redundant/resident-fast": "MEMORY_RESIDENT",
   "vsize": "MEMORY_VSIZE",
   "storage-sqlite": "MEMORY_STORAGE_SQLITE",
   "images-content-used-uncompressed":

@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// This file is used for both about:memory and about:compartments.
-
 // You can direct about:memory to immediately load memory reports from a file
 // by providing a file= query string.  For example,
 //
@@ -15,14 +13,9 @@
 // "file=" argument, and obviously the filename is case-sensitive iff you're on
 // a case-sensitive filesystem.  If you specify more than one "file=" argument,
 // only the first one is used.
-//
-// about:compartments doesn't support "file=" parameters and will ignore them
-// if they're provided.
 
 "use strict";
 
-//---------------------------------------------------------------------------
-// Code shared by about:memory and about:compartments
 //---------------------------------------------------------------------------
 
 const Cc = Components.classes;
@@ -58,12 +51,6 @@ let gMgr = Cc["@mozilla.org/memory-reporter-manager;1"]
 let gUnnamedProcessStr = "Main Process";
 
 let gIsDiff = false;
-
-{
-  let split = document.location.href.split('?');
-  // The toLowerCase() calls ensure that addresses like "ABOUT:MEMORY" work.
-  document.title = split[0].toLowerCase();
-}
 
 let gChildMemoryListener = undefined;
 
@@ -140,22 +127,11 @@ function addChildObserversAndUpdate(aUpdateFn)
   gChildMemoryListener();
 }
 
-function onLoad()
-{
-  if (document.title === "about:memory") {
-    onLoadAboutMemory();
-  } else if (document.title === "about:compartments") {
-    onLoadAboutCompartments();
-  } else {
-    assert(false, "Unknown location: " + document.title);
-  }
-}
-
 function onUnload()
 {
   // We need to check if the observer has been added before removing; in some
   // circumstances (e.g. reloading the page quickly) it might not have because
-  // onLoadAbout{Memory,Compartments} might not fire.
+  // onLoad might not fire.
   if (gChildMemoryListener) {
     let os = Cc["@mozilla.org/observer-service;1"]
                .getService(Ci.nsIObserverService);
@@ -227,7 +203,7 @@ function processMemoryReportsFromFile(aReports, aIgnoreReport, aHandleReport)
 // It's what is updated each time the page changes.
 let gMain;
 
-// The <div> holding the footer.  Is undefined in about:compartments.
+// The <div> holding the footer.
 let gFooter;
 
 // The "verbose" checkbox.
@@ -260,13 +236,11 @@ function updateMainAndFooter(aMsg, aFooterAction, aClassName)
     appendElementWithText(gMain, 'div', className, aMsg);
   }
 
-  if (gFooter !== undefined) {
-    switch (aFooterAction) {
-     case HIDE_FOOTER:   gFooter.classList.add('hidden');    break;
-     case SHOW_FOOTER:   gFooter.classList.remove('hidden'); break;
-     case IGNORE_FOOTER:                                     break;
-     default: assertInput(false, "bad footer action in updateMainAndFooter");
-    }
+  switch (aFooterAction) {
+   case HIDE_FOOTER:   gFooter.classList.add('hidden');    break;
+   case SHOW_FOOTER:   gFooter.classList.remove('hidden'); break;
+   case IGNORE_FOOTER:                                     break;
+   default: assertInput(false, "bad footer action in updateMainAndFooter");
   }
 }
 
@@ -298,11 +272,8 @@ function appendElementWithText(aP, aTagName, aClassName, aText)
 }
 
 //---------------------------------------------------------------------------
-// Code specific to about:memory
-//---------------------------------------------------------------------------
 
-const kTreeDescriptions = {
-  'explicit' :
+const explicitTreeDescription =
 "This tree covers explicit memory allocations by the application.  It includes \
 \n\n\
 * allocations made at the operating system level (via calls to functions such as \
@@ -319,69 +290,7 @@ and thread stacks. \
 \n\n\
 'explicit' is not guaranteed to cover every explicit allocation, but it does cover \
 most (including the entire heap), and therefore it is the single best number to \
-focus on when trying to reduce memory usage.",
-
-  'rss':
-"This tree shows how much space in physical memory each of the process's \
-mappings is currently using (the mapping's 'resident set size', or 'RSS'). \
-This is a good measure of the 'cost' of the mapping, although it does not \
-take into account the fact that shared libraries may be mapped by multiple \
-processes but appear only once in physical memory. \
-\n\n\
-Note that the 'rss' value here might not equal the value for 'resident' \
-under 'Other Measurements' because the two measurements are not taken at \
-exactly the same time.",
-
-  'pss':
-"This tree shows how much space in physical memory can be 'blamed' on this \
-process.  For each mapping, its 'proportional set size' (PSS) is the \
-mapping's resident size divided by the number of processes which use the \
-mapping.  So if a mapping is private to this process, its PSS should equal \
-its RSS.  But if a mapping is shared between three processes, its PSS in each \
-of the processes would be 1/3 its RSS.",
-
-  'size':
-"This tree shows how much virtual addres space each of the process's mappings \
-takes up (a.k.a. the mapping's 'vsize').  A mapping may have a large size but use \
-only a small amount of physical memory; the resident set size of a mapping is \
-a better measure of the mapping's 'cost'. \
-\n\n\
-Note that the 'size' value here might not equal the value for 'vsize' under \
-'Other Measurements' because the two measurements are not taken at exactly \
-the same time.",
-
-  'swap':
-"This tree shows how much space in the swap file each of the process's \
-mappings is currently using. Mappings which are not in the swap file (i.e., \
-nodes which would have a value of 0 in this tree) are omitted."
-};
-
-const kSectionNames = {
-  'explicit': 'Explicit Allocations',
-  'rss':      'Resident Set Size (RSS) Breakdown',
-  'pss':      'Proportional Set Size (PSS) Breakdown',
-  'size':     'Virtual Size Breakdown',
-  'swap':     'Swap Breakdown',
-  'other':    'Other Measurements'
-};
-
-const kSmapsTreeNames    = ['rss',  'pss',  'size',  'swap' ];
-const kSmapsTreePrefixes = ['rss/', 'pss/', 'size/', 'swap/'];
-
-function isExplicitPath(aUnsafePath)
-{
-  return aUnsafePath.startsWith("explicit/");
-}
-
-function isSmapsPath(aUnsafePath)
-{
-  for (let i = 0; i < kSmapsTreePrefixes.length; i++) {
-    if (aUnsafePath.startsWith(kSmapsTreePrefixes[i])) {
-      return true;
-    }
-  }
-  return false;
-}
+focus on when trying to reduce memory usage.";
 
 //---------------------------------------------------------------------------
 
@@ -405,7 +314,7 @@ function appendHiddenFileInput(aP, aId, aChangeListener)
   return input;
 }
 
-function onLoadAboutMemory()
+function onLoad()
 {
   // Generate the header.
 
@@ -438,7 +347,7 @@ function onLoadAboutMemory()
       delete this.filename1;
       updateAboutMemoryFromTwoFiles(filename1, file.mozFullPath);
     }
-  }); 
+  });
 
   const CuDesc = "Measure current memory reports and show.";
   const LdDesc = "Load memory reports from file and show.";
@@ -512,9 +421,9 @@ function onLoadAboutMemory()
   appendElementWithText(gFooter, "div", "legend", legendText1);
   appendElementWithText(gFooter, "div", "legend hiddenOnMobile", legendText2);
 
-  // See if we're loading from a file.  (Because about:memory and
-  // about:compartments are non-standard URLs, location.search is undefined, so
-  // we have to use location.href instead.)
+  // See if we're loading from a file.  (Because about:memory is a non-standard
+  // URL, location.search is undefined, so we have to use location.href
+  // instead.)
   let search = location.href.split('?')[1];
   if (search) {
     let searchSplit = search.split('&');
@@ -574,8 +483,7 @@ function updateAboutMemoryFromReporters()
 
   try {
     // Process the reports from the memory reporters.
-    appendAboutMemoryMain(processMemoryReporters, gMgr.hasMozMallocUsableSize,
-                          /* forceShowSmaps = */ false);
+    appendAboutMemoryMain(processMemoryReporters, gMgr.hasMozMallocUsableSize);
 
   } catch (ex) {
     handleException(ex);
@@ -604,8 +512,7 @@ function updateAboutMemoryFromJSONObject(aObj)
     let process = function(aIgnoreReporter, aIgnoreReport, aHandleReport) {
       processMemoryReportsFromFile(aObj.reports, aIgnoreReport, aHandleReport);
     }
-    appendAboutMemoryMain(process, aObj.hasMozMallocUsableSize,
-                          /* forceShowSmaps = */ true);
+    appendAboutMemoryMain(process, aObj.hasMozMallocUsableSize);
   } catch (ex) {
     handleException(ex);
   }
@@ -793,6 +700,8 @@ DReport.prototype = {
     //
     // In those cases, we just use the description from the first-encountered
     // one, which is what about:memory also does.
+    // (Note: reports with those paths are no longer generated, but allowing
+    // the descriptions to differ seems reasonable.)
   },
 
   merge: function(aJr) {
@@ -958,14 +867,10 @@ function PColl()
  *        file.
  * @param aHasMozMallocUsableSize
  *        Boolean indicating if moz_malloc_usable_size works.
- * @param aForceShowSmaps
- *        True if we should show the smaps memory reporters even if we're not
- *        in verbose mode.
  */
-function appendAboutMemoryMain(aProcessReports, aHasMozMallocUsableSize,
-                               aForceShowSmaps)
+function appendAboutMemoryMain(aProcessReports, aHasMozMallocUsableSize)
 {
-  let pcollsByProcess = getPCollsByProcess(aProcessReports, aForceShowSmaps);
+  let pcollsByProcess = getPCollsByProcess(aProcessReports);
 
   // Sort the processes.
   let processes = Object.keys(pcollsByProcess);
@@ -1026,12 +931,9 @@ function appendAboutMemoryMain(aProcessReports, aHasMozMallocUsableSize,
  * @param aProcessReports
  *        Function that extracts the memory reports from the reporters or from
  *        file.
- * @param aForceShowSmaps
- *        True if we should show the smaps memory reporters even if we're not
- *        in verbose mode.
  * @return The table of PColls by process.
  */
-function getPCollsByProcess(aProcessReports, aForceShowSmaps)
+function getPCollsByProcess(aProcessReports)
 {
   let pcollsByProcess = {};
 
@@ -1040,56 +942,35 @@ function getPCollsByProcess(aProcessReports, aForceShowSmaps)
   // be in parentheses, so a ')' might appear after the '.'.)
   const gSentenceRegExp = /^[A-Z].*\.\)?$/m;
 
-  // Ignore the "smaps" reporter in non-verbose mode unless we're reading from
-  // a file or the clipboard, and ignore the "compartments" and "ghost-windows"
-  // reporters all the time.  (Note that reports from these reporters can reach
-  // here via a "content-child" reporter if they were in a child process.)
-  //
-  // Also ignore the "resident-fast" reporter; we use the vanilla "resident"
-  // reporter because it's more important that we get accurate results than
-  // that we avoid the (small) possibility of a long pause when loading
-  // about:memory.  Furthermore, the "resident" reporter can purge pages on
-  // MacOS, which affects the results of the "resident-fast" reporter, and we
-  // don't want the measurements shown in about:memory to be affected by the
-  // (arbitrary) order of memory reporter execution.
+  // Ignore any "redundant/"-prefixed reporters and reports, which are only
+  // used by telemetry.
 
   function ignoreReporter(aName)
   {
-    return (aName === "smaps" && !gVerbose.checked && !aForceShowSmaps) ||
-           aName === "compartments" ||
-           aName === "ghost-windows" ||
-           aName === "resident-fast";
+    return aName.startsWith("redundant/");
   }
 
   function ignoreReport(aUnsafePath)
   {
-    return (isSmapsPath(aUnsafePath) && !gVerbose.checked && !aForceShowSmaps) ||
-           aUnsafePath.startsWith("compartments/") ||
-           aUnsafePath.startsWith("ghost-windows/") ||
-           aUnsafePath == "resident-fast";
+    return aUnsafePath.startsWith("redundant/");
   }
 
   function handleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount,
                         aDescription, aPresence)
   {
-    if (isExplicitPath(aUnsafePath)) {
+    if (aUnsafePath.startsWith("explicit/")) {
       assertInput(aKind === KIND_HEAP || aKind === KIND_NONHEAP,
                   "bad explicit kind");
       assertInput(aUnits === UNITS_BYTES, "bad explicit units");
       assertInput(gSentenceRegExp.test(aDescription),
                   "non-sentence explicit description");
 
-    } else if (isSmapsPath(aUnsafePath)) {
-      assertInput(aKind === KIND_NONHEAP, "bad smaps kind");
-      assertInput(aUnits === UNITS_BYTES, "bad smaps units");
-      assertInput(aDescription !== "", "empty smaps description");
-
     } else {
       assertInput(gSentenceRegExp.test(aDescription),
                   "non-sentence other description");
     }
 
-    assert(aPresence === undefined || 
+    assert(aPresence === undefined ||
            aPresence == DReport.PRESENT_IN_FIRST_ONLY ||
            aPresence == DReport.PRESENT_IN_SECOND_ONLY);
 
@@ -1471,7 +1352,7 @@ function appendProcessAboutMemoryElements(aP, aProcess, aTrees, aDegenerates,
   let hasKnownHeapAllocated;
   {
     let treeName = "explicit";
-    let pre = appendSectionHeader(aP, kSectionNames[treeName]);
+    let pre = appendSectionHeader(aP, "Explicit Allocations");
     let t = aTrees[treeName];
     if (t) {
       fillInTree(t);
@@ -1479,30 +1360,12 @@ function appendProcessAboutMemoryElements(aP, aProcess, aTrees, aDegenerates,
         aDegenerates &&
         addHeapUnclassifiedNode(t, aDegenerates["heap-allocated"], aHeapTotal);
       sortTreeAndInsertAggregateNodes(t._amount, t);
-      t._description = kTreeDescriptions[treeName];
+      t._description = explicitTreeDescription;
       appendTreeElements(pre, t, aProcess, "");
       delete aTrees[treeName];
     }
     appendTextNode(aP, "\n");  // gives nice spacing when we cut and paste
   }
-
-  // The smaps trees, which are only present in aTrees in verbose mode or when
-  // we're reading from a file or the clipboard.
-  kSmapsTreeNames.forEach(function(aTreeName) {
-    // |t| will be undefined if we don't have any reports for the given
-    // unsafePath.
-    let t = aTrees[aTreeName];
-    if (t) {
-      let pre = appendSectionHeader(aP, kSectionNames[aTreeName]);
-      fillInTree(t);
-      sortTreeAndInsertAggregateNodes(t._amount, t);
-      t._description = kTreeDescriptions[aTreeName];
-      t._hideKids = true;   // smaps trees are always initially collapsed
-      appendTreeElements(pre, t, aProcess, "");
-      delete aTrees[aTreeName];
-      appendTextNode(aP, "\n");  // gives nice spacing when we cut and paste
-    }
-  });
 
   // Fill in and sort all the non-degenerate other trees.
   let otherTrees = [];
@@ -1531,7 +1394,7 @@ function appendProcessAboutMemoryElements(aP, aProcess, aTrees, aDegenerates,
   otherDegenerates.sort(TreeNode.compareUnsafeNames);
 
   // Now generate the elements, putting non-degenerate trees first.
-  let pre = appendSectionHeader(aP, kSectionNames['other']);
+  let pre = appendSectionHeader(aP, "Other Measurements");
   for (let i = 0; i < otherTrees.length; i++) {
     let t = otherTrees[i];
     appendTreeElements(pre, t, aProcess, "");
@@ -2001,279 +1864,3 @@ function saveReportsToFile()
   };
   fp.open(fpCallback);
 }
-
-//-----------------------------------------------------------------------------
-// Code specific to about:compartments
-//-----------------------------------------------------------------------------
-
-function onLoadAboutCompartments()
-{
-  // Generate the main div, where content will go.  about:compartments doesn't
-  // have a header or footer.
-  gMain = appendElement(document.body, 'div', 'section');
-
-  // First generate the page, then minimize memory usage to collect any dead
-  // compartments, then update the page.  The first generation step may sound
-  // unnecessary, but it avoids a short delay in showing content when the page
-  // is loaded, which makes test_aboutcompartments.xul more reliable (see bug
-  // 729018 for details).
-  updateAboutCompartments();
-  gMgr.minimizeMemoryUsage(
-    function() { addChildObserversAndUpdate(updateAboutCompartments); });
-}
-
-/**
- * Top-level function that does the work of generating the page.
- */
-function updateAboutCompartments()
-{
-  // First, clear the contents of main.  Necessary because
-  // updateAboutMemoryFromReporters() might be called more than once due to the
-  // "child-memory-reporter-update" observer.
-  updateMainAndFooter("", IGNORE_FOOTER);
-
-  try {
-    let compartmentsByProcess = getCompartmentsByProcess();
-    let ghostWindowsByProcess = getGhostWindowsByProcess();
-
-    // Sort our list of processes.
-    let processes = Object.keys(compartmentsByProcess);
-    processes.sort(function(aProcessA, aProcessB) {
-      assert(aProcessA != aProcessB,
-             "Elements of Object.keys() should be unique, but " +
-             "saw duplicate '" + aProcessA + "' elem.");
-
-      // Always put the main process first.
-      if (aProcessA == gUnnamedProcessStr) {
-        return -1;
-      }
-      if (aProcessB == gUnnamedProcessStr) {
-        return 1;
-      }
-
-      // Otherwise the order doesn't matter.
-      return 0;
-    });
-
-    // Generate output for each process.
-    for (let i = 0; i < processes.length; i++) {
-      let process = processes[i];
-      appendProcessAboutCompartmentsElements(gMain, process,
-                                             compartmentsByProcess[process],
-                                             ghostWindowsByProcess[process]);
-    }
-
-  } catch (ex) {
-    handleException(ex);
-  }
-}
-
-//---------------------------------------------------------------------------
-
-function Compartment(aUnsafeName, aIsSystemCompartment)
-{
-  this._unsafeName          = aUnsafeName;
-  this._isSystemCompartment = aIsSystemCompartment;
-  // this._nMerged is only defined if > 1
-}
-
-Compartment.prototype = {
-  merge: function(aR) {
-    this._nMerged = this._nMerged ? this._nMerged + 1 : 2;
-  }
-};
-
-function getCompartmentsByProcess()
-{
-  // Ignore anything that didn't come from the "compartments" reporter.  (Note
-  // reports from this reporter can reach here via a "content-child" reporter
-  // if they were in a child process.)
-
-  function ignoreReporter(aName)
-  {
-    return !(aName == "compartments" || aName == "content-child");
-  }
-
-  function ignoreReport(aUnsafePath)
-  {
-    return !aUnsafePath.startsWith("compartments/");
-  }
-
-  let compartmentsByProcess = {};
-
-  function handleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount,
-                        aDescription)
-  {
-    let process = aProcess === "" ? gUnnamedProcessStr : aProcess;
-    let unsafeNames = aUnsafePath.split('/');
-    let isSystemCompartment;
-    if (unsafeNames[0] === "compartments" && unsafeNames[1] == "system" &&
-        unsafeNames.length == 3)
-    {
-      isSystemCompartment = true;
-
-    } else if (unsafeNames[0] === "compartments" && unsafeNames[1] == "user" &&
-        unsafeNames.length == 3)
-    {
-      isSystemCompartment = false;
-      // These null principal compartments are user compartments according to
-      // the JS engine, but they look odd being shown with content
-      // compartments, so we put them in the system compartments list.
-      if (unsafeNames[2].startsWith("moz-nullprincipal:{")) {
-        isSystemCompartment = true;
-      }
-
-    } else {
-      assertInput(false, "bad compartments path: " + aUnsafePath);
-    }
-    assertInput(aKind === KIND_OTHER,   "bad compartments kind");
-    assertInput(aUnits === UNITS_COUNT, "bad compartments units");
-    assertInput(aAmount === 1,          "bad compartments amount");
-    assertInput(aDescription === "",    "bad compartments description");
-
-    let c = new Compartment(unsafeNames[2], isSystemCompartment);
-
-    if (!compartmentsByProcess[process]) {
-      compartmentsByProcess[process] = {};
-    }
-    let compartments = compartmentsByProcess[process];
-    let cOld = compartments[c._unsafeName];
-    if (cOld) {
-      // Already an entry;  must be a duplicated compartment.  This can happen
-      // legitimately.  Merge them.
-      cOld.merge(c);
-    } else {
-      compartments[c._unsafeName] = c;
-    }
-  }
-
-  processMemoryReporters(ignoreReporter, ignoreReport, handleReport);
-
-  return compartmentsByProcess;
-}
-
-function GhostWindow(aUnsafeURL)
-{
-  // Call it _unsafeName rather than _unsafeURL for symmetry with the
-  // Compartment object.
-  this._unsafeName = aUnsafeURL;
-
-  // this._nMerged is only defined if > 1
-}
-
-GhostWindow.prototype = {
-  merge: function(aR) {
-    this._nMerged = this._nMerged ? this._nMerged + 1 : 2;
-  }
-};
-
-function getGhostWindowsByProcess()
-{
-  function ignoreReporter(aName)
-  {
-    return !(aName == "ghost-windows" || aName == "content-child");
-  }
-
-  function ignoreReport(aUnsafePath)
-  {
-    return !aUnsafePath.startsWith('ghost-windows/')
-  }
-
-  let ghostWindowsByProcess = {};
-
-  function handleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount,
-                        aDescription)
-  {
-    let unsafeSplit = aUnsafePath.split('/');
-    assertInput(unsafeSplit[0] === 'ghost-windows' && unsafeSplit.length === 2,
-           'Unexpected path in getGhostWindowsByProcess: ' + aUnsafePath);
-    assertInput(aKind === KIND_OTHER,   "bad ghost-windows kind");
-    assertInput(aUnits === UNITS_COUNT, "bad ghost-windows units");
-    assertInput(aAmount === 1,          "bad ghost-windows amount");
-    assertInput(aDescription === "",    "bad ghost-windows description");
-
-    let unsafeURL = unsafeSplit[1];
-    let ghostWindow = new GhostWindow(unsafeURL);
-
-    let process = aProcess === "" ? gUnnamedProcessStr : aProcess;
-    if (!ghostWindowsByProcess[process]) {
-      ghostWindowsByProcess[process] = {};
-    }
-
-    if (ghostWindowsByProcess[process][unsafeURL]) {
-      ghostWindowsByProcess[process][unsafeURL].merge(ghostWindow);
-    }
-    else {
-      ghostWindowsByProcess[process][unsafeURL] = ghostWindow;
-    }
-  }
-
-  processMemoryReporters(ignoreReporter, ignoreReport, handleReport);
-
-  return ghostWindowsByProcess;
-}
-
-//---------------------------------------------------------------------------
-
-function appendProcessAboutCompartmentsElementsHelper(aP, aEntries, aKindString)
-{
-  // aEntries might be null or undefined, e.g. if there are no ghost windows
-  // for this process.
-  aEntries = aEntries ? aEntries : {};
-
-  appendElementWithText(aP, "h2", "", aKindString + "\n");
-
-  let uPre = appendElement(aP, "pre", "entries");
-
-  let lines = [];
-  for (let name in aEntries) {
-    let e = aEntries[name];
-    let line = flipBackslashes(e._unsafeName);
-    if (e._nMerged) {
-      line += ' [' + e._nMerged + ']';
-    }
-    line += '\n';
-    lines.push(line);
-  }
-  lines.sort();
-
-  for (let i = 0; i < lines.length; i++) {
-    appendElementWithText(uPre, "span", "", lines[i]);
-  }
-
-  appendTextNode(aP, "\n");   // gives nice spacing when we cut and paste
-}
-
-/**
- * Appends the elements for a single process.
- *
- * @param aP
- *        The parent DOM node.
- * @param aProcess
- *        The name of the process.
- * @param aCompartments
- *        Table of Compartments for this process, indexed by _unsafeName.
- * @param aGhostWindows
- *        Array of window URLs of ghost windows.
- */
-function appendProcessAboutCompartmentsElements(aP, aProcess, aCompartments, aGhostWindows)
-{
-  appendElementWithText(aP, "h1", "", aProcess + "\n\n");
-
-  let userCompartments = {};
-  let systemCompartments = {};
-  for (let name in aCompartments) {
-    let c = aCompartments[name];
-    if (c._isSystemCompartment) {
-      systemCompartments[name] = c;
-    }
-    else {
-      userCompartments[name] = c;
-    }
-  }
-
-  appendProcessAboutCompartmentsElementsHelper(aP, userCompartments, "User Compartments");
-  appendProcessAboutCompartmentsElementsHelper(aP, systemCompartments, "System Compartments");
-  appendProcessAboutCompartmentsElementsHelper(aP, aGhostWindows, "Ghost Windows");
-}
-

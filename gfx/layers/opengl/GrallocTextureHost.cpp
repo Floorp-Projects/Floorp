@@ -7,6 +7,7 @@
 #include "gfxImageSurface.h"
 #include "gfx2DGlue.h"
 #include <ui/GraphicBuffer.h>
+#include "GrallocImages.h"  // for GrallocImage
 #include "mozilla/layers/GrallocTextureHost.h"
 #include "mozilla/layers/CompositorOGL.h"
 
@@ -33,6 +34,8 @@ SurfaceFormatForAndroidPixelFormat(android::PixelFormat aFormat,
   case HAL_PIXEL_FORMAT_YCbCr_422_SP:
   case HAL_PIXEL_FORMAT_YCrCb_420_SP:
   case HAL_PIXEL_FORMAT_YCbCr_422_I:
+  case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP_TILED:
+  case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP_VENUS:
   case HAL_PIXEL_FORMAT_YV12:
     return gfx::FORMAT_B8G8R8A8; // yup, use FORMAT_B8G8R8A8 even though it's a YUV texture. This is an external texture.
   default:
@@ -59,6 +62,8 @@ TextureTargetForAndroidPixelFormat(android::PixelFormat aFormat)
   case HAL_PIXEL_FORMAT_YCbCr_422_SP:
   case HAL_PIXEL_FORMAT_YCrCb_420_SP:
   case HAL_PIXEL_FORMAT_YCbCr_422_I:
+  case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP_TILED:
+  case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP_VENUS:
   case HAL_PIXEL_FORMAT_YV12:
     return LOCAL_GL_TEXTURE_EXTERNAL;
   case android::PIXEL_FORMAT_RGBA_8888:
@@ -93,6 +98,12 @@ GrallocTextureSourceOGL::GrallocTextureSourceOGL(CompositorOGL* aCompositor,
   MOZ_ASSERT(mGraphicBuffer.get());
 }
 
+GrallocTextureSourceOGL::~GrallocTextureSourceOGL()
+{
+  DeallocateDeviceData();
+  mCompositor = nullptr;
+}
+
 void GrallocTextureSourceOGL::BindTexture(GLenum aTextureUnit)
 {
   /*
@@ -106,21 +117,13 @@ void GrallocTextureSourceOGL::BindTexture(GLenum aTextureUnit)
   MOZ_ASSERT(gl());
   gl()->MakeCurrent();
 
-
-  GLuint tex = mCompositor->GetTemporaryTexture(aTextureUnit);
+  mQuirks->SetCompositor(mCompositor);
+  GLuint tex = static_cast<CompositableQuirksGonkOGL*>(mQuirks.get())->GetTexture();
   GLuint textureTarget = GetTextureTarget();
 
   gl()->fActiveTexture(aTextureUnit);
   gl()->fBindTexture(textureTarget, tex);
-  if (!mEGLImage) {
-    mEGLImage = gl()->CreateEGLImageForNativeBuffer(mGraphicBuffer->getNativeBuffer());
-  }
-  gl()->fEGLImageTargetTexture2D(textureTarget, mEGLImage);
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
-  // XXX - Bug 909356
-  // This is a temporary fix to a bad lock/unlock race with the camera.
-  // It is bad for performances so we need to find a better way asap.
-  DeallocateDeviceData();
 }
 
 bool
@@ -134,6 +137,16 @@ GrallocTextureSourceOGL::gl() const
 {
   return mCompositor ? mCompositor->gl() : nullptr;
 }
+
+void
+GrallocTextureSourceOGL::SetCompositor(CompositorOGL* aCompositor)
+{
+  if (mCompositor && !aCompositor) {
+    DeallocateDeviceData();
+  }
+  mCompositor = aCompositor;
+}
+
 
 GLenum
 GrallocTextureSourceOGL::GetTextureTarget() const
@@ -151,6 +164,30 @@ GrallocTextureSourceOGL::GetFormat() const {
     return gfx::FORMAT_R8G8B8A8;
   }
   return mFormat;
+}
+
+void
+GrallocTextureSourceOGL::SetCompositableQuirks(CompositableQuirks* aQuirks)
+{
+  mQuirks = aQuirks;
+
+  if (!mCompositor) {
+    return;
+  }
+
+  // delete old EGLImage
+  DeallocateDeviceData();
+
+  gl()->MakeCurrent();
+  mQuirks->SetCompositor(mCompositor);
+  GLuint tex = static_cast<CompositableQuirksGonkOGL*>(mQuirks.get())->GetTexture();
+  GLuint textureTarget = GetTextureTarget();
+
+  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+  gl()->fBindTexture(textureTarget, tex);
+  // create new EGLImage
+  mEGLImage = gl()->CreateEGLImageForNativeBuffer(mGraphicBuffer->getNativeBuffer());
+  gl()->fEGLImageTargetTexture2D(textureTarget, mEGLImage);
 }
 
 gfx::IntSize
@@ -195,10 +232,6 @@ GrallocTextureHostOGL::GrallocTextureHostOGL(uint64_t aID,
 
 GrallocTextureHostOGL::~GrallocTextureHostOGL()
 {
-  if (mTextureSource) {
-    mTextureSource->mGraphicBuffer = nullptr;
-    mTextureSource->SetCompositor(nullptr);
-  }
   mTextureSource = nullptr;
 }
 
@@ -277,7 +310,8 @@ GrallocTextureSourceOGL::GetAsSurface() {
   MOZ_ASSERT(gl());
   gl()->MakeCurrent();
 
-  GLuint tex = mCompositor->GetTemporaryTexture(LOCAL_GL_TEXTURE0);
+  mQuirks->SetCompositor(mCompositor);
+  GLuint tex = static_cast<CompositableQuirksGonkOGL*>(mQuirks.get())->GetTexture();
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   gl()->fBindTexture(GetTextureTarget(), tex);
   if (!mEGLImage) {
@@ -290,6 +324,15 @@ GrallocTextureSourceOGL::GetAsSurface() {
 
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   return surf.forget();
+}
+
+void
+GrallocTextureHostOGL::SetCompositableQuirks(CompositableQuirks* aQuirks)
+{
+  mQuirks = aQuirks;
+  if (mTextureSource) {
+    mTextureSource->SetCompositableQuirks(aQuirks);
+  }
 }
 
 } // namepsace layers

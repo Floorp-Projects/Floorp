@@ -148,7 +148,6 @@ bool MediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
         mVideoQueue.Push(mLastVideoFrame);
         mLastVideoFrame = NULL;
       }
-      mVideoQueue.Finish();
       return false;
     }
     mVideoSeekTimeUs = -1;
@@ -292,7 +291,6 @@ bool MediaPluginReader::DecodeAudioData()
   // Read next frame
   MPAPI::AudioFrame frame;
   if (!mPlugin->ReadAudio(mPlugin, &frame, mAudioSeekTimeUs)) {
-    mAudioQueue.Finish();
     return false;
   }
   mAudioSeekTimeUs = -1;

@@ -873,7 +873,9 @@ ThreadActor.prototype = {
               this.dbg.onEnterFrame = onEnterFrame;
               // Fall through.
             case "next":
-              stepFrame.onStep = onStep;
+              if (stepFrame.script) {
+                  stepFrame.onStep = onStep;
+              }
               stepFrame.onPop = onPop;
               break;
             case "finish":
@@ -1181,7 +1183,7 @@ ThreadActor.prototype = {
       let promise = this.sources.getOriginalLocation(form.where)
         .then((aOrigLocation) => {
           form.where = aOrigLocation;
-          let source = this.sources.source(form.where.url);
+          let source = this.sources.source({ url: form.where.url });
           if (source) {
             form.source = source.form();
           }
@@ -2292,21 +2294,28 @@ PauseScopedActor.prototype = {
 /**
  * A SourceActor provides information about the source of a script.
  *
- * @param aUrl String
+ * @param String url
  *        The url of the source we are representing.
- * @param aThreadActor ThreadActor
+ * @param ThreadActor thread
  *        The current thread actor.
- * @param aSourceMap SourceMapConsumer
+ * @param SourceMapConsumer sourceMap
  *        Optional. The source map that introduced this source, if available.
- * @param aGeneratedSource String
+ * @param String generatedSource
  *        Optional, passed in when aSourceMap is also passed in. The generated
  *        source url that introduced this source.
+ * @param String text
+ *        Optional. The content text of this source, if immediately available.
+ * @param String contentType
+ *        Optional. The content type of this source, if immediately available.
  */
-function SourceActor(aUrl, aThreadActor, aSourceMap=null, aGeneratedSource=null) {
-  this._threadActor = aThreadActor;
-  this._url = aUrl;
-  this._sourceMap = aSourceMap;
-  this._generatedSource = aGeneratedSource;
+function SourceActor({ url, thread, sourceMap, generatedSource, text,
+                       contentType }) {
+  this._threadActor = thread;
+  this._url = url;
+  this._sourceMap = sourceMap;
+  this._generatedSource = generatedSource;
+  this._text = text;
+  this._contentType = contentType;
 
   this.onSource = this.onSource.bind(this);
   this._invertSourceMap = this._invertSourceMap.bind(this);
@@ -2336,15 +2345,18 @@ SourceActor.prototype = {
   },
 
   _getSourceText: function SA__getSourceText() {
-    let sourceContent = null;
-    if (this._sourceMap) {
-      sourceContent = this._sourceMap.sourceContentFor(this._url);
+    const toResolvedContent = t => resolve({
+      content: t,
+      contentType: this._contentType
+    });
+
+    let sc;
+    if (this._sourceMap && (sc = this._sourceMap.sourceContentFor(this._url))) {
+      return toResolvedContent(sc);
     }
 
-    if (sourceContent) {
-      return resolve({
-        content: sourceContent
-      });
+    if (this._text) {
+      return toResolvedContent(this._text);
     }
 
     // XXX bug 865252: Don't load from the cache if this is a source mapped
@@ -2549,7 +2561,8 @@ ObjectActor.prototype = {
     if (this.obj.class === "Function") {
       if (this.obj.name) {
         g.name = this.obj.name;
-      } else if (this.obj.displayName) {
+      }
+      if (this.obj.displayName) {
         g.displayName = this.obj.displayName;
       }
 
@@ -3589,40 +3602,81 @@ ThreadSources._blackBoxedSources = new Set();
 
 ThreadSources.prototype = {
   /**
-   * Return the source actor representing |aURL|, creating one if none
-   * exists already. Returns null if |aURL| is not allowed by the 'allow'
+   * Return the source actor representing |url|, creating one if none
+   * exists already. Returns null if |url| is not allowed by the 'allow'
    * predicate.
    *
    * Right now this takes a URL, but in the future it should
    * take a Debugger.Source. See bug 637572.
    *
-   * @param String aURL
+   * @param String url
    *        The source URL.
-   * @param optional SourceMapConsumer aSourceMap
+   * @param optional SourceMapConsumer sourceMap
    *        The source map that introduced this source, if any.
-   * @param optional String aGeneratedSource
+   * @param optional String generatedSource
    *        The generated source url that introduced this source via source map,
    *        if any.
+   * @param optional String text
+   *        The text content of the source, if immediately available.
+   * @param optional String contentType
+   *        The content type of the source, if immediately available.
    * @returns a SourceActor representing the source at aURL or null.
    */
-  source: function TS_source(aURL, aSourceMap=null, aGeneratedSource=null) {
-    if (!this._allow(aURL)) {
+  source: function TS_source({ url, sourceMap, generatedSource, text,
+                               contentType }) {
+    if (!this._allow(url)) {
       return null;
     }
 
-    if (aURL in this._sourceActors) {
-      return this._sourceActors[aURL];
+    if (url in this._sourceActors) {
+      return this._sourceActors[url];
     }
 
-    let actor = new SourceActor(aURL, this._thread, aSourceMap, aGeneratedSource);
+    let actor = new SourceActor({
+      url: url,
+      thread: this._thread,
+      sourceMap: sourceMap,
+      generatedSource: generatedSource,
+      text: text,
+      contentType: contentType
+    });
     this._thread.threadLifetimePool.addActor(actor);
-    this._sourceActors[aURL] = actor;
+    this._sourceActors[url] = actor;
     try {
       this._onNewSource(actor);
     } catch (e) {
       reportError(e);
     }
     return actor;
+  },
+
+  /**
+   * Only to be used when we aren't source mapping.
+   */
+  _sourceForScript: function TS__sourceForScript(aScript) {
+    const spec = {
+      url: aScript.url
+    };
+
+    // XXX bug 915433: We can't rely on Debugger.Source.prototype.text if the
+    // source is an HTML-embedded <script> tag. Since we don't have an API
+    // implemented to detect whether this is the case, we need to be
+    // conservative and only use Debugger.Source.prototype.text if we get a
+    // normal .js file.
+    if (aScript.url) {
+      try {
+        const url = Services.io.newURI(aScript.url, null, null)
+          .QueryInterface(Ci.nsIURL);
+        if (url.fileExtension === "js") {
+          spec.contentType = "text/javascript";
+          spec.text = aScript.source.text;
+        }
+      } catch(ex) {
+        // Not a valid URI.
+      }
+    }
+
+    return this.source(spec);
   },
 
   /**
@@ -3635,23 +3689,24 @@ ThreadSources.prototype = {
    */
   sourcesForScript: function TS_sourcesForScript(aScript) {
     if (!this._useSourceMaps || !aScript.sourceMapURL) {
-      return resolve([this.source(aScript.url)].filter(isNotNull));
+      return resolve([this._sourceForScript(aScript)].filter(isNotNull));
     }
 
     return this.sourceMap(aScript)
       .then((aSourceMap) => {
         return [
-          this.source(s, aSourceMap, aScript.url) for (s of aSourceMap.sources)
+          this.source({ url: s,
+                        sourceMap: aSourceMap,
+                        generatedSource: aScript.url })
+          for (s of aSourceMap.sources)
         ];
       })
       .then(null, (e) => {
         reportError(e);
         delete this._sourceMapsByGeneratedSource[aScript.url];
-        return [this.source(aScript.url)];
+        return [this._sourceForScript(aScript)];
       })
-      .then(function (aSources) {
-        return aSources.filter(isNotNull);
-      });
+      .then(ss => ss.filter(isNotNull));
   },
 
   /**

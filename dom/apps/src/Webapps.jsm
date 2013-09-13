@@ -60,6 +60,11 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
 
+XPCOMUtils.defineLazyGetter(this, "interAppCommService", function() {
+  return Cc["@mozilla.org/inter-app-communication-service;1"]
+         .getService(Ci.nsIInterAppCommService);
+});
+
 XPCOMUtils.defineLazyGetter(this, "msgmgr", function() {
   return Cc["@mozilla.org/system-message-internal;1"]
          .getService(Ci.nsISystemMessagesInternal);
@@ -93,11 +98,6 @@ this.DOMApplicationRegistry = {
   webapps: { },
   children: [ ],
   allAppsLaunchable: false,
-#ifdef MOZ_OFFICIAL_BRANDING
-  get allowSideloadingCertified() false,
-#else
-  get allowSideloadingCertified() true,
-#endif
 
   init: function() {
     this.messages = ["Webapps:Install", "Webapps:Uninstall",
@@ -530,6 +530,8 @@ this.DOMApplicationRegistry = {
 
   // |aEntryPoint| is either the entry_point name or the null in which case we
   // use the root of the manifest.
+  //
+  // TODO Bug 908094 Refine _registerSystemMessagesForEntryPoint(...).
   _registerSystemMessagesForEntryPoint: function(aManifest, aApp, aEntryPoint) {
     let root = aManifest;
     if (aEntryPoint && aManifest.entry_points[aEntryPoint]) {
@@ -571,6 +573,69 @@ this.DOMApplicationRegistry = {
     });
   },
 
+  // |aEntryPoint| is either the entry_point name or the null in which case we
+  // use the root of the manifest.
+  //
+  // TODO Bug 908094 Refine _registerInterAppConnectionsForEntryPoint(...).
+  _registerInterAppConnectionsForEntryPoint: function(aManifest, aApp,
+                                                      aEntryPoint) {
+    let root = aManifest;
+    if (aEntryPoint && aManifest.entry_points[aEntryPoint]) {
+      root = aManifest.entry_points[aEntryPoint];
+    }
+
+    let connections = root.connections;
+    if (!connections) {
+      return;
+    }
+
+    if ((typeof connections) !== "object") {
+      debug("|connections| is not an object. Skipping: " + connections);
+      return;
+    }
+
+    let manifest = new ManifestHelper(aManifest, aApp.origin);
+    let launchPathURI = Services.io.newURI(manifest.fullLaunchPath(aEntryPoint),
+                                           null, null);
+    let manifestURI = Services.io.newURI(aApp.manifestURL, null, null);
+
+    for (let keyword in connections) {
+      let connection = connections[keyword];
+
+      // Resolve the handler path from origin. If |handler_path| is absent,
+      // use |launch_path| as default.
+      let fullHandlerPath;
+      let handlerPath = connection.handler_path;
+      if (handlerPath) {
+        try {
+          fullHandlerPath = manifest.resolveFromOrigin(handlerPath);
+        } catch(e) {
+          debug("Connection's handler path is invalid. Skipping: keyword: " +
+                keyword + " handler_path: " + handlerPath);
+          continue;
+        }
+      }
+      let handlerPageURI = fullHandlerPath
+                           ? Services.io.newURI(fullHandlerPath, null, null)
+                           : launchPathURI;
+
+      if (SystemMessagePermissionsChecker
+            .isSystemMessagePermittedToRegister("connection",
+                                                aApp.origin,
+                                                aManifest)) {
+        msgmgr.registerPage("connection", handlerPageURI, manifestURI);
+      }
+
+      interAppCommService.
+        registerConnection(keyword,
+                           handlerPageURI,
+                           manifestURI,
+                           connection.description,
+                           AppsUtils.getAppManifestStatus(manifest),
+                           connection.rules);
+    }
+  },
+
   _registerSystemMessages: function(aManifest, aApp) {
     this._registerSystemMessagesForEntryPoint(aManifest, aApp, null);
 
@@ -580,6 +645,19 @@ this.DOMApplicationRegistry = {
 
     for (let entryPoint in aManifest.entry_points) {
       this._registerSystemMessagesForEntryPoint(aManifest, aApp, entryPoint);
+    }
+  },
+
+  _registerInterAppConnections: function(aManifest, aApp) {
+    this._registerInterAppConnectionsForEntryPoint(aManifest, aApp, null);
+
+    if (!aManifest.entry_points) {
+      return;
+    }
+
+    for (let entryPoint in aManifest.entry_points) {
+      this._registerInterAppConnectionsForEntryPoint(aManifest, aApp,
+                                                     entryPoint);
     }
   },
 
@@ -745,6 +823,7 @@ this.DOMApplicationRegistry = {
           app.redirects = this.sanitizeRedirects(manifest.redirects);
         }
         this._registerSystemMessages(manifest, app);
+        this._registerInterAppConnections(manifest, app);
         appsToRegister.push({ manifest: manifest, app: app });
       }, this);
       this._registerActivitiesForApps(appsToRegister, aRunUpdate);
@@ -1396,6 +1475,7 @@ this.DOMApplicationRegistry = {
       }
       this._registerSystemMessages(aNewManifest, aApp);
       this._registerActivities(aNewManifest, aApp, true);
+      this._registerInterAppConnections(aNewManifest, aApp);
     } else {
       // Nothing else to do but notifying we're ready.
       this.notifyAppsRegistryReady();

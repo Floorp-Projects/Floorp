@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.Favicons;
+import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -173,14 +173,14 @@ public class TwoLinePageRow extends LinearLayout
             if (b != null) {
                 Bitmap bitmap = BitmapUtils.decodeByteArray(b);
                 if (bitmap != null) {
-                    favicon = Favicons.getInstance().scaleImage(bitmap);
+                    favicon = Favicons.scaleImage(bitmap);
                 }
             }
 
             setFaviconWithUrl(favicon, url);
         } else {
             // If favicons is not on the cursor, try to fetch it from the memory cache
-            setFaviconWithUrl(Favicons.getInstance().getFaviconFromMemCache(url), url);
+            setFaviconWithUrl(Favicons.getFaviconFromMemCache(url), url);
         }
 
         // Don't show bookmark/reading list icon, if not needed.

@@ -209,8 +209,7 @@ add_task(function test_notifications()
   mustInterruptResponses();
 
   for (let isPrivate of [false, true]) {
-    let list = isPrivate ? yield promiseNewPrivateDownloadList()
-                         : yield promiseNewDownloadList();
+    let list = yield promiseNewList(isPrivate);
     let download1 = yield promiseNewDownload(httpUrl("interruptible.txt"));
     let download2 = yield promiseNewDownload(httpUrl("interruptible.txt"));
     let download3 = yield promiseNewDownload(httpUrl("interruptible.txt"));
@@ -248,8 +247,7 @@ add_task(function test_no_notifications()
   enableObserversTestMode();
 
   for (let isPrivate of [false, true]) {
-    let list = isPrivate ? yield promiseNewPrivateDownloadList()
-                         : yield promiseNewDownloadList();
+    let list = yield promiseNewList(isPrivate);
     let download1 = yield promiseNewDownload(httpUrl("interruptible.txt"));
     let download2 = yield promiseNewDownload(httpUrl("interruptible.txt"));
     download1.start();
@@ -279,8 +277,8 @@ add_task(function test_mix_notifications()
   enableObserversTestMode();
   mustInterruptResponses();
 
-  let publicList = yield promiseNewDownloadList();
-  let privateList = yield promiseNewPrivateDownloadList();
+  let publicList = yield promiseNewList();
+  let privateList = yield promiseNewList(true);
   let download1 = yield promiseNewDownload(httpUrl("interruptible.txt"));
   let download2 = yield promiseNewDownload(httpUrl("interruptible.txt"));
   let promiseAttempt1 = download1.start();
@@ -301,3 +299,39 @@ add_task(function test_mix_notifications()
   publicList.remove(download1);
   privateList.remove(download2);
 });
+
+/**
+ * Tests both the downloads list and the in-progress downloads are clear when
+ * private browsing observer is notified.
+ */
+add_task(function test_exit_private_browsing()
+{
+  enableObserversTestMode();
+  mustInterruptResponses();
+
+  let privateList = yield promiseNewList(true);
+  let download1 = yield promiseNewDownload(httpUrl("source.txt"));
+  let download2 = yield promiseNewDownload(httpUrl("interruptible.txt"));
+  let promiseAttempt1 = download1.start();
+  let promiseAttempt2 = download2.start();
+
+  // Add downloads to list.
+  privateList.add(download1);
+  privateList.add(download2);
+
+  // Complete the download.
+  yield promiseAttempt1;
+
+  do_check_eq((yield privateList.getAll()).length, 2);
+
+  // Simulate exiting the private browsing.
+  DownloadIntegration._deferTestClearPrivateList = Promise.defer();
+  Services.obs.notifyObservers(null, "last-pb-context-exited", null);
+  let result = yield DownloadIntegration._deferTestClearPrivateList.promise;
+
+  do_check_eq(result, "success");
+  do_check_eq((yield privateList.getAll()).length, 0);
+
+  continueResponses();
+});
+

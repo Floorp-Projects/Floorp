@@ -67,7 +67,7 @@ listener.prototype = {
       // nsIContentSecurityPolicy instance.  The problem is, this cspr_str is a
       // string and not a policy due to the way it's exposed from
       // nsIContentSecurityPolicy, so we have to re-parse it.
-      let cspr_str = this._csp.policy;
+      let cspr_str = this._csp.getPolicy(0);
       let cspr = CSPRep.fromString(cspr_str, mkuri(DOCUMENT_URI));
 
       // and in reparsing it, we lose the 'self' relationships, so need to also

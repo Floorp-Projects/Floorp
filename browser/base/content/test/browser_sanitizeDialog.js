@@ -912,7 +912,7 @@ WindowHelper.prototype = {
  *        The download will be downloaded this many minutes ago
  */
 function addDownloadWithMinutesAgo(aExpectedPathList, aMinutesAgo) {
-  let publicList = yield Downloads.getPublicDownloadList();
+  let publicList = yield Downloads.getList(Downloads.PUBLIC);
 
   let name = "fakefile-" + aMinutesAgo + "-minutes-ago";
   let download = yield Downloads.createDownload({
@@ -984,7 +984,7 @@ function blankSlate() {
   let formHistoryDone = false, downloadsDone = false;
 
   Task.spawn(function deleteAllDownloads() {
-    let publicList = yield Downloads.getPublicDownloadList();
+    let publicList = yield Downloads.getList(Downloads.PUBLIC);
     let downloads = yield publicList.getAll();
     for (let download of downloads) {
       publicList.remove(download);
@@ -1037,7 +1037,7 @@ function boolPrefIs(aPrefName, aExpectedVal, aMsg) {
 function downloadExists(aPath)
 {
   return Task.spawn(function() {
-    let publicList = yield Downloads.getPublicDownloadList();
+    let publicList = yield Downloads.getList(Downloads.PUBLIC);
     let listArray = yield publicList.getAll();
     throw new Task.Result(listArray.some(i => i.target.path == aPath));
   });

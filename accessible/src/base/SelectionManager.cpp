@@ -10,17 +10,15 @@
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "nsIAccessibleEvent.h"
-#include "RootAccessible.h"
 
 #include "nsCaret.h"
+#include "nsIAccessibleTypes.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMHTMLAnchorElement.h"
-#include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
 #include "nsISelectionPrivate.h"
-#include "nsServiceManagerUtils.h"
 #include "mozilla/Selection.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

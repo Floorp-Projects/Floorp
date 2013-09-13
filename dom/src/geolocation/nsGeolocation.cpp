@@ -369,11 +369,14 @@ nsGeolocationRequest::Notify(nsITimer* aTimer)
 {
   MOZ_ASSERT(!mShutdown, "timeout after shutdown");
 
-  NotifyError(nsIDOMGeoPositionError::TIMEOUT);
   if (!mIsWatchPositionRequest) {
     Shutdown();
     mLocator->RemoveRequest(this);
-  } else if (!mShutdown) {
+  }
+
+  NotifyError(nsIDOMGeoPositionError::TIMEOUT);
+
+  if (!mShutdown) {
     SetTimeoutTimer();
   }
 
@@ -534,6 +537,11 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
   }
 
   mLocator->SetCachedPosition(wrapped);
+  if (!mIsWatchPositionRequest) {
+    // Cancel timer and position updates in case the position
+    // callback spins the event loop
+    Shutdown();
+  }
 
   // Ensure that the proper context is on the stack (bug 452762)
   nsCxPusher pusher;
@@ -552,9 +560,10 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
     callback->HandleEvent(aPosition);
   }
 
-  if (!mIsWatchPositionRequest) {
-    Shutdown();
-  } else if (!mShutdown) { // The handler may have called clearWatch
+  if (!mShutdown) {
+    // For watch requests, the handler may have called clearWatch
+    MOZ_ASSERT(mIsWatchPositionRequest,
+               "non-shutdown getCurrentPosition request after callback!");
     SetTimeoutTimer();
   }
 }
@@ -1452,7 +1461,7 @@ Geolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
 
     // because owner implements nsITabChild, we can assume that it is
     // the one and only TabChild.
-    TabChild* child = GetTabChildFrom(window->GetDocShell());
+    TabChild* child = TabChild::GetFrom(window->GetDocShell());
     if (!child) {
       return false;
     }

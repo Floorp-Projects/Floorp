@@ -124,9 +124,9 @@ RangeAnalysis::replaceDominatedUsesWith(MDefinition *orig, MDefinition *dom,
 }
 
 bool
-RangeAnalysis::addBetaNobes()
+RangeAnalysis::addBetaNodes()
 {
-    IonSpew(IonSpew_Range, "Adding beta nobes");
+    IonSpew(IonSpew_Range, "Adding beta nodes");
 
     for (PostorderIterator i(graph_.poBegin()); i != graph_.poEnd(); i++) {
         MBasicBlock *block = *i;
@@ -230,9 +230,9 @@ RangeAnalysis::addBetaNobes()
 }
 
 bool
-RangeAnalysis::removeBetaNobes()
+RangeAnalysis::removeBetaNodes()
 {
-    IonSpew(IonSpew_Range, "Removing beta nobes");
+    IonSpew(IonSpew_Range, "Removing beta nodes");
 
     for (PostorderIterator i(graph_.poBegin()); i != graph_.poEnd(); i++) {
         MBasicBlock *block = *i;
@@ -1168,6 +1168,42 @@ MLoadTypedArrayElementStatic::computeRange()
 {
     if (Range *range = GetTypedArrayRange(typedArray_->type()))
         setRange(range);
+}
+
+void
+MArrayLength::computeRange()
+{
+    Range *r = new Range(0, UINT32_MAX);
+    r->extendUInt32ToInt32Min();
+    setRange(r);
+}
+
+void
+MInitializedLength::computeRange()
+{
+    Range *r = new Range(0, UINT32_MAX);
+    r->extendUInt32ToInt32Min();
+    setRange(r);
+}
+
+void
+MTypedArrayLength::computeRange()
+{
+    setRange(new Range(0, INT32_MAX));
+}
+
+void
+MStringLength::computeRange()
+{
+    setRange(new Range(0, JSString::MAX_LENGTH));
+}
+
+void
+MArgumentsLength::computeRange()
+{
+    // This is is a conservative upper bound on what |TooManyArguments| checks.
+    // If exceeded, Ion will not be entered in the first place.
+    setRange(new Range(0, SNAPSHOT_MAX_NARGS));
 }
 
 ///////////////////////////////////////////////////////////////////////////////

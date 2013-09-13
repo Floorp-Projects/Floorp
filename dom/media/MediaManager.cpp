@@ -5,6 +5,9 @@
 #include "MediaManager.h"
 
 #include "MediaStreamGraph.h"
+#ifdef MOZ_WIDGET_GONK
+#include "nsIAudioManager.h"
+#endif
 #include "nsIDOMFile.h"
 #include "nsIEventTarget.h"
 #include "nsIUUIDGenerator.h"
@@ -57,7 +60,6 @@ GetMediaManagerLog()
 #else
 #define LOG(msg)
 #endif
-
 
 /**
  * Send an error back to content. The error is the form a string.
@@ -943,6 +945,7 @@ MediaManager::Get() {
       obs->AddObserver(sSingleton, "getUserMedia:response:allow", false);
       obs->AddObserver(sSingleton, "getUserMedia:response:deny", false);
       obs->AddObserver(sSingleton, "getUserMedia:revoke", false);
+      obs->AddObserver(sSingleton, "phone-state-changed", false);
     }
     // else MediaManager won't work properly and will leak (see bug 837874)
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -1444,6 +1447,15 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
 
     return NS_OK;
   }
+#ifdef MOZ_WIDGET_GONK
+  else if (!strcmp(aTopic, "phone-state-changed")) {
+    nsString state(aData);
+    if (atoi((const char*)state.get()) == nsIAudioManager::PHONE_STATE_IN_CALL) {
+      StopMediaStreams();
+    }
+    return NS_OK;
+  }
+#endif
 
   return NS_OK;
 }
@@ -1556,6 +1568,23 @@ MediaManager::MediaCaptureWindowStateInternal(nsIDOMWindow* aWindow, bool* aVide
     }
   }
   return NS_OK;
+}
+
+void
+MediaManager::StopMediaStreams()
+{
+  nsCOMPtr<nsISupportsArray> array;
+  GetActiveMediaCaptureWindows(getter_AddRefs(array));
+  uint32_t len;
+  array->Count(&len);
+  for (uint32_t i = 0; i < len; i++) {
+    nsCOMPtr<nsISupports> window;
+    array->GetElementAt(i, getter_AddRefs(window));
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(window));
+    if (win) {
+      OnNavigation(win->WindowID());
+    }
+  }
 }
 
 // Can be invoked from EITHER MainThread or MSG thread

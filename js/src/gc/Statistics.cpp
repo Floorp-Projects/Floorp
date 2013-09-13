@@ -36,7 +36,7 @@ class gcstats::StatisticsSerializer
     bool needComma_;
     bool oom_;
 
-    const static int MaxFieldValueLength = 128;
+    static const int MaxFieldValueLength = 128;
 
   public:
     enum Mode {
