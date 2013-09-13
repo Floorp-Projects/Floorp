@@ -203,9 +203,10 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
   }
 
   if (aMask) {
-    SurfacePattern mask(aMask, EXTEND_CLAMP, *aMaskTransform);
-
-    aTarget->Mask(source, mask, DrawOptions(aOpacity, aOperator));
+    Matrix oldTransform = aTarget->GetTransform();
+    aTarget->SetTransform(*aMaskTransform);
+    aTarget->MaskSurface(source, aMask, Point(0, 0), DrawOptions(aOpacity, aOperator));
+    aTarget->SetTransform(oldTransform);
   } else {
     aTarget->FillRect(gfx::Rect(fillRect.x, fillRect.y,
                                 fillRect.width, fillRect.height),
