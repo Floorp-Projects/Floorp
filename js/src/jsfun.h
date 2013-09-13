@@ -277,7 +277,23 @@ class JSFunction : public JSObject
         return u.i.s.script_;
     }
 
-    inline JSScript *existingScript();
+    JSScript *existingScript() {
+        JS_ASSERT(isInterpreted());
+        if (isInterpretedLazy()) {
+            js::LazyScript *lazy = lazyScript();
+            JSScript *script = lazy->maybeScript();
+            JS_ASSERT(script);
+
+            if (shadowZone()->needsBarrier())
+                js::LazyScript::writeBarrierPre(lazy);
+
+            flags &= ~INTERPRETED_LAZY;
+            flags |= INTERPRETED;
+            initScript(script);
+        }
+        JS_ASSERT(hasScript());
+        return u.i.s.script_;
+    }
 
     JSScript *nonLazyScript() const {
         JS_ASSERT(hasScript());
@@ -316,8 +332,15 @@ class JSFunction : public JSObject
 
     bool isStarGenerator() const { return generatorKind() == js::StarGenerator; }
 
-    inline void setScript(JSScript *script_);
-    inline void initScript(JSScript *script_);
+    void setScript(JSScript *script_) {
+        JS_ASSERT(isInterpreted());
+        mutableScript() = script_;
+    }
+
+    void initScript(JSScript *script_) {
+        JS_ASSERT(isInterpreted());
+        mutableScript().init(script_);
+    }
 
     void initLazyScript(js::LazyScript *lazy) {
         JS_ASSERT(isInterpreted());

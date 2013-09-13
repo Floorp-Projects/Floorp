@@ -14,9 +14,14 @@ function run_test()
 {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-grips");
-  gDebuggee.eval(function stopMe(arg1) {
-    debugger;
-  }.toString());
+  Cu.evalInSandbox(
+    "" + function stopMe(arg1) {
+      debugger;
+    },
+    gDebuggee,
+    "1.8",
+    getFileUrl("test_source-01.js")
+  );
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect(function() {
@@ -27,6 +32,9 @@ function run_test()
   });
   do_test_pending();
 }
+
+const SOURCE_URL = "http://example.com/foobar.js";
+const SOURCE_CONTENT = "stopMe()";
 
 function test_source()
 {
@@ -41,7 +49,7 @@ function test_source()
       });
 
       let source = aResponse.sources.filter(function (s) {
-        return s.url.match(/test_source-01.js$/);
+        return s.url === SOURCE_URL;
       })[0];
 
       do_check_true(!!source);
@@ -50,10 +58,11 @@ function test_source()
       sourceClient.source(function (aResponse) {
         do_check_true(!!aResponse);
         do_check_true(!aResponse.error);
-        do_check_true(!!aResponse.source);
+        do_check_true(!!aResponse.contentType);
         do_check_true(aResponse.contentType.contains("javascript"));
 
-        do_check_eq(readFile("test_source-01.js"),
+        do_check_true(!!aResponse.source);
+        do_check_eq(SOURCE_CONTENT,
                     aResponse.source);
 
         gThreadClient.resume(function () {
@@ -63,5 +72,10 @@ function test_source()
     });
   });
 
-  gDebuggee.eval('stopMe()');
+  Cu.evalInSandbox(
+    SOURCE_CONTENT,
+    gDebuggee,
+    "1.8",
+    SOURCE_URL
+  );
 }

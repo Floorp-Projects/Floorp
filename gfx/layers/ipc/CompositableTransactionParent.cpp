@@ -239,6 +239,11 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
                                                     op.textureFlags());
       MOZ_ASSERT(tex.get());
       tex->SetCompositor(compositable->GetCompositor());
+      // set CompositableQuirks
+      // on gonk, create EGLImage if possible.
+      // create EGLImage during buffer swap could reduce the graphic driver's task
+      // during rendering.
+      tex->SetCompositableQuirks(compositable->GetCompositableQuirks());
       compositable->AddTextureHost(tex);
       MOZ_ASSERT(compositable->GetTextureHost(op.textureID()) == tex.get());
       break;

@@ -2154,7 +2154,7 @@ public:
 
       // because owner implements nsITabChild, we can assume that it is
       // the one and only TabChild.
-      TabChild* child = GetTabChildFrom(mWindow->GetDocShell());
+      TabChild* child = TabChild::GetFrom(mWindow->GetDocShell());
       if (!child) {
         return NS_OK;
       }
@@ -3173,7 +3173,7 @@ nsDOMDeviceStorage::EnumerateInternal(const nsAString& aPath,
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     // because owner implements nsITabChild, we can assume that it is
     // the one and only TabChild.
-    TabChild* child = GetTabChildFrom(win->GetDocShell());
+    TabChild* child = TabChild::GetFrom(win->GetDocShell());
     if (!child) {
       return cursor.forget();
     }

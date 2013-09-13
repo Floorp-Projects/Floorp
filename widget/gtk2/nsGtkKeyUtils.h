@@ -139,6 +139,7 @@ protected:
      * Initializing methods.
      */
     void Init();
+    void InitXKBExtension();
     void InitBySystemSettings();
 
     /**
@@ -197,6 +198,11 @@ protected:
      * mGdkKeymap is a wrapped instance by this class.
      */
     GdkKeymap* mGdkKeymap;
+
+    /**
+     * The base event code of XKB extension.
+     */
+    int mXKBBaseEventCode;
 
     /**
      * Pointer of the singleton instance.

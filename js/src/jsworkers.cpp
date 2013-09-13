@@ -560,11 +560,11 @@ WorkerThreadState::finishParseTask(JSContext *maybecx, JSRuntime *rt, void *toke
          iter.next())
     {
         types::TypeObject *object = iter.get<types::TypeObject>();
-        JSObject *proto = object->proto;
-        if (!proto)
+        TaggedProto proto(object->proto);
+        if (!proto.isObject())
             continue;
 
-        JSProtoKey key = js_IdentifyClassPrototype(proto);
+        JSProtoKey key = js_IdentifyClassPrototype(proto.toObject());
         if (key == JSProto_Null)
             continue;
 

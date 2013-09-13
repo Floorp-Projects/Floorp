@@ -148,7 +148,7 @@ IDBFactory::Create(nsPIDOMWindow* aWindow,
   factory->mContentParent = aContentParent;
 
   if (!IndexedDatabaseManager::IsMainProcess()) {
-    TabChild* tabChild = GetTabChildFrom(aWindow);
+    TabChild* tabChild = TabChild::GetFrom(aWindow);
     NS_ENSURE_TRUE(tabChild, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     IndexedDBChild* actor = new IndexedDBChild(origin);
