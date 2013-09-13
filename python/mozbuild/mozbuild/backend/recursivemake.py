@@ -286,20 +286,24 @@ class RecursiveMakeBackend(CommonBackend):
         # Write out a master list of all IPDL source files.
         ipdls = FileAvoidWrite(os.path.join(self.environment.topobjdir,
             'ipc', 'ipdl', 'ipdlsrcs.mk'))
+        mk = mozmakeutil.Makefile()
+
         for p in sorted(self._ipdl_sources):
-            ipdls.write('ALL_IPDLSRCS += %s\n' % p)
+            mk.add_statement('ALL_IPDLSRCS += %s\n' % p)
             base = os.path.basename(p)
             root, ext = os.path.splitext(base)
 
             # Both .ipdl and .ipdlh become .cpp files
-            ipdls.write('CPPSRCS += %s.cpp\n' % root)
+            mk.add_statement('CPPSRCS += %s.cpp\n' % root)
             if ext == '.ipdl':
                 # .ipdl also becomes Child/Parent.cpp files
-                ipdls.write('CPPSRCS += %sChild.cpp\n' % root)
-                ipdls.write('CPPSRCS += %sParent.cpp\n' % root)
+                mk.add_statement('CPPSRCS += %sChild.cpp\n' % root)
+                mk.add_statement('CPPSRCS += %sParent.cpp\n' % root)
 
-        ipdls.write('IPDLDIRS := %s\n' % ' '.join(sorted(set(os.path.dirname(p)
+        mk.add_statement('IPDLDIRS := %s\n' % ' '.join(sorted(set(os.path.dirname(p)
             for p in self._ipdl_sources))))
+
+        mk.dump(ipdls)
 
         self._update_from_avoid_write(ipdls.close())
         self.summary.managed_count += 1
