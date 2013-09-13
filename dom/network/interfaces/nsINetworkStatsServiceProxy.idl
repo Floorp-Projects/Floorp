@@ -1,0 +1,35 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this file,
+* You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, function, uuid(5f821529-1d80-4ab5-a933-4e1b3585b6bc)]
+interface nsINetworkStatsServiceProxyCallback : nsISupports
+{
+  /*
+   * @param aResult callback result with boolean value
+   * @param aMessage message
+   */
+  void notify(in boolean aResult, in jsval aMessage);
+};
+
+[scriptable, uuid(8fbd115d-f590-474c-96dc-e2b6803ca975)]
+interface nsINetworkStatsServiceProxy : nsISupports
+{
+  /*
+   * An interface used to record per-app traffic data.
+   * @param aAppId app id
+   * @param aConnectionType network connection type (0 for wifi, 1 for mobile)
+   * @param aTimeStamp time stamp
+   * @param aRxBytes received data amount
+   * @param aTxBytes transmitted data amount
+   * @param aCallback an optional callback
+   */
+  void saveAppStats(in unsigned long aAppId,
+                    in long aConnectionType,
+                    in unsigned long long aTimeStamp,
+                    in unsigned long long aRxBytes,
+                    in unsigned long long aTxBytes,
+         [optional] in nsINetworkStatsServiceProxyCallback aCallback);
+};
