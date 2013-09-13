@@ -179,31 +179,40 @@ let DebuggerView = {
     this.editor = new SourceEditor();
     this.editor.init(placeholder, config, () => {
       this._loadingText = L10N.getStr("loadingText");
-      this._onEditorLoad();
-      aCallback();
+      this._onEditorLoad(aCallback);
     });
   },
 
   /**
    * The load event handler for the source editor, also executing any necessary
    * post-load operations.
+   *
+   * @param function aCallback
+   *        Called after the editor finishes loading.
    */
-  _onEditorLoad: function() {
+  _onEditorLoad: function(aCallback) {
     dumpn("Finished loading the DebuggerView editor");
 
-    DebuggerController.Breakpoints.initialize();
-    window.dispatchEvent(document, "Debugger:EditorLoaded", this.editor);
+    DebuggerController.Breakpoints.initialize().then(() => {
+      window.dispatchEvent(document, "Debugger:EditorLoaded", this.editor);
+      aCallback();
+    });
   },
 
   /**
    * Destroys the SourceEditor instance and also executes any necessary
    * post-unload operations.
+   *
+   * @param function aCallback
+   *        Called after the editor finishes destroying.
    */
-  _destroyEditor: function() {
+  _destroyEditor: function(aCallback) {
     dumpn("Destroying the DebuggerView editor");
 
-    DebuggerController.Breakpoints.destroy();
-    window.dispatchEvent(document, "Debugger:EditorUnloaded", this.editor);
+    DebuggerController.Breakpoints.destroy().then(() => {
+      window.dispatchEvent(document, "Debugger:EditorUnloaded", this.editor);
+      aCallback();
+    });
   },
 
   /**
