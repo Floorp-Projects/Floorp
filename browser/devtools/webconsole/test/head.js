@@ -809,12 +809,9 @@ function openDebugger(aOptions = {})
       deferred.resolve(resolveObject);
     }
     else {
-      panelWin.addEventListener("Debugger:AfterSourcesAdded",
-        function onAfterSourcesAdded() {
-          panelWin.removeEventListener("Debugger:AfterSourcesAdded",
-                                       onAfterSourcesAdded);
-          deferred.resolve(resolveObject);
-        });
+      panelWin.once(panelWin.EVENTS.SOURCES_ADDED, () => {
+        deferred.resolve(resolveObject);
+      });
     }
   }, function onFailure(aReason) {
     console.debug("failed to open the toolbox for 'jsdebugger'", aReason);
