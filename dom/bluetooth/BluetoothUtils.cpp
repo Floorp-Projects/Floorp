@@ -29,7 +29,7 @@ SetJsObject(JSContext* aContext,
   MOZ_ASSERT(aContext && aObj);
 
   if (aValue.type() != BluetoothValue::TArrayOfBluetoothNamedValue) {
-    NS_WARNING("SetJsObject: Invalid parameter type");
+    BT_WARNING("SetJsObject: Invalid parameter type");
     return false;
   }
 
@@ -56,14 +56,14 @@ SetJsObject(JSContext* aContext,
         val = BOOLEAN_TO_JSVAL(v.get_bool());
         break;
       default:
-        NS_WARNING("SetJsObject: Parameter is not handled");
+        BT_WARNING("SetJsObject: Parameter is not handled");
         break;
     }
 
     if (!JS_SetProperty(aContext, aObj,
                         NS_ConvertUTF16toUTF8(arr[i].name()).get(),
                         val)) {
-      NS_WARNING("Failed to set property");
+      BT_WARNING("Failed to set property");
       return false;
     }
   }
@@ -112,12 +112,12 @@ BroadcastSystemMessage(const nsAString& aType,
 
   JS::RootedObject obj(cx, JS_NewObject(cx, NULL, NULL, NULL));
   if (!obj) {
-    NS_WARNING("Failed to new JSObject for system message!");
+    BT_WARNING("Failed to new JSObject for system message!");
     return false;
   }
 
   if (!SetJsObject(cx, aData, obj)) {
-    NS_WARNING("Failed to set properties of system message!");
+    BT_WARNING("Failed to set properties of system message!");
     return false;
   }
 
@@ -149,7 +149,7 @@ DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,
 
   aRunnable->SetReply(reply);
   if (NS_FAILED(NS_DispatchToMainThread(aRunnable))) {
-    NS_WARNING("Failed to dispatch to main thread!");
+    BT_WARNING("Failed to dispatch to main thread!");
   }
 }
 

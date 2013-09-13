@@ -48,7 +48,7 @@ public:
       mRequest->RequestComplete();
 
       if (!mRequest->Send__delete__(mRequest, *mReply)) {
-        NS_WARNING("Failed to send response to child process!");
+        BT_WARNING("Failed to send response to child process!");
         return NS_ERROR_FAILURE;
       }
     }

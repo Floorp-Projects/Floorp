@@ -99,13 +99,13 @@ BluetoothUnixSocketConnector::SetUp(int aFd)
   if (lm) {
     if (mType == BluetoothSocketType::RFCOMM) {
       if (setsockopt(aFd, SOL_RFCOMM, RFCOMM_LM, &lm, sizeof(lm))) {
-        NS_WARNING("setsockopt(RFCOMM_LM) failed, throwing");
+        BT_WARNING("setsockopt(RFCOMM_LM) failed, throwing");
         return false;
       }
     } else if (mType == BluetoothSocketType::L2CAP ||
                mType == BluetoothSocketType::EL2CAP) {
       if (setsockopt(aFd, SOL_L2CAP, L2CAP_LM, &lm, sizeof(lm))) {
-        NS_WARNING("setsockopt(L2CAP_LM) failed, throwing");
+        BT_WARNING("setsockopt(L2CAP_LM) failed, throwing");
         return false;
       }
     }
@@ -114,7 +114,7 @@ BluetoothUnixSocketConnector::SetUp(int aFd)
   if (mType == BluetoothSocketType::RFCOMM) {
     sndbuf = RFCOMM_SO_SNDBUF;
     if (setsockopt(aFd, SOL_SOCKET, SO_SNDBUF, &sndbuf, sizeof(sndbuf))) {
-      NS_WARNING("setsockopt(SO_SNDBUF) failed, throwing");
+      BT_WARNING("setsockopt(SO_SNDBUF) failed, throwing");
       return false;
     }
   }
@@ -146,13 +146,13 @@ BluetoothUnixSocketConnector::SetUp(int aFd)
     if (mType == BluetoothSocketType::EL2CAP) {
       sndbuf = L2CAP_SO_SNDBUF;
       if (setsockopt(aFd, SOL_SOCKET, SO_SNDBUF, &sndbuf, sizeof(sndbuf))) {
-        NS_WARNING("setsockopt(SO_SNDBUF) failed, throwing");
+        BT_WARNING("setsockopt(SO_SNDBUF) failed, throwing");
         return false;
       }
 
       rcvbuf = L2CAP_SO_RCVBUF;
       if (setsockopt(aFd, SOL_SOCKET, SO_RCVBUF, &rcvbuf, sizeof(rcvbuf))) {
-        NS_WARNING("setsockopt(SO_RCVBUF) failed, throwing");
+        BT_WARNING("setsockopt(SO_RCVBUF) failed, throwing");
         return false;
       }
     }
@@ -185,12 +185,12 @@ BluetoothUnixSocketConnector::Create()
   }
 
   if (fd < 0) {
-    NS_WARNING("Could not open bluetooth socket!");
+    BT_WARNING("Could not open bluetooth socket!");
     return -1;
   }
 
   if (!SetUp(fd)) {
-    NS_WARNING("Could not set up socket!");
+    BT_WARNING("Could not set up socket!");
     return -1;
   }
 
@@ -208,7 +208,7 @@ BluetoothUnixSocketConnector::CreateAddr(bool aIsServer,
 
   if (!aIsServer && aAddress && strlen(aAddress) > 0) {
     if (get_bdaddr(aAddress, &bd_address_obj)) {
-      NS_WARNING("Can't get bluetooth address!");
+      BT_WARNING("Can't get bluetooth address!");
       return false;
     }
   }
@@ -239,7 +239,7 @@ BluetoothUnixSocketConnector::CreateAddr(bool aIsServer,
     memcpy(&aAddr.sco.sco_bdaddr, &bd_address_obj, sizeof(bd_address_obj));
     break;
   default:
-    NS_WARNING("Socket type unknown!");
+    BT_WARNING("Socket type unknown!");
     return false;
   }
   return true;

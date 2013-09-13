@@ -37,7 +37,7 @@ BluetoothSocket::Connect(const nsACString& aDeviceAddress, int aChannel)
   if (!ConnectSocket(c.forget(), aDeviceAddress.BeginReading())) {
     nsAutoString addr;
     GetAddress(addr);
-    BT_LOG("%s failed. Current connected device address: %s",
+    BT_LOGD("%s failed. Current connected device address: %s",
            __FUNCTION__, NS_ConvertUTF16toUTF8(addr).get());
     return false;
   }
@@ -56,7 +56,7 @@ BluetoothSocket::Listen(int aChannel)
   if (!ListenSocket(c.forget())) {
     nsAutoString addr;
     GetAddress(addr);
-    BT_LOG("%s failed. Current connected device address: %s",
+    BT_LOGD("%s failed. Current connected device address: %s",
            __FUNCTION__, NS_ConvertUTF16toUTF8(addr).get());
     return false;
   }
