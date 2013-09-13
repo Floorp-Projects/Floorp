@@ -444,7 +444,9 @@ function StackFrames() {
 StackFrames.prototype = {
   get activeThread() DebuggerController.activeThread,
   autoScopeExpand: false,
-  currentFrame: null,
+  currentFrameDepth: -1,
+  _isWatchExpressionsEvaluation: false,
+  _isConditionalBreakpointEvaluation: false,
   syncedWatchExpressions: null,
   currentWatchExpressions: null,
   currentBreakpointLocation: null,
@@ -549,27 +551,35 @@ StackFrames.prototype = {
       return;
     }
 
+    let waitForNextPause = false;
+    let breakLocation = this.currentBreakpointLocation;
+    let watchExpressions = this.currentWatchExpressions;
+
     // Conditional breakpoints are { breakpoint, expression } tuples. The
     // boolean evaluation of the expression decides if the active thread
     // automatically resumes execution or not.
     // TODO: handle all of this server-side: Bug 812172.
-    if (this.currentBreakpointLocation) {
-      let { url, line } = this.currentBreakpointLocation;
-      let breakpointClient = DebuggerController.Breakpoints.getBreakpoint(url, line);
-      if (breakpointClient) {
-        // Make sure a breakpoint actually exists at the specified url and line.
-        let conditionalExpression = breakpointClient.conditionalExpression;
-        if (conditionalExpression) {
-          // Evaluating the current breakpoint's conditional expression will
-          // cause the stack frames to be cleared and active thread to pause,
-          // sending a 'clientEvaluated' packed and adding the frames again.
-          this.evaluate(conditionalExpression, 0);
-          this._isConditionalBreakpointEvaluation = true;
-          return;
-        }
+    if (breakLocation) {
+      // Make sure a breakpoint actually exists at the specified url and line.
+      let breakpointPromise = DebuggerController.Breakpoints._getAdded(breakLocation);
+      if (breakpointPromise) {
+        breakpointPromise.then(aBreakpointClient => {
+          if ("conditionalExpression" in aBreakpointClient) {
+            // Evaluating the current breakpoint's conditional expression will
+            // cause the stack frames to be cleared and active thread to pause,
+            // sending a 'clientEvaluated' packed and adding the frames again.
+            this.evaluate(aBreakpointClient.conditionalExpression, 0);
+            this._isConditionalBreakpointEvaluation = true;
+            waitForNextPause = true;
+          }
+        });
       }
     }
-    // Got our evaluation of the current breakpoint's conditional expression.
+    // We'll get our evaluation of the current breakpoint's conditional
+    // expression the next time the thread client pauses...
+    if (waitForNextPause) {
+      return;
+    }
     if (this._isConditionalBreakpointEvaluation) {
       this._isConditionalBreakpointEvaluation = false;
       // If the breakpoint's conditional expression evaluation is falsy,
@@ -580,18 +590,21 @@ StackFrames.prototype = {
       }
     }
 
-
     // Watch expressions are evaluated in the context of the topmost frame,
     // and the results are displayed in the variables view.
     // TODO: handle all of this server-side: Bug 832470, comment 14.
-    if (this.currentWatchExpressions) {
+    if (watchExpressions) {
       // Evaluation causes the stack frames to be cleared and active thread to
       // pause, sending a 'clientEvaluated' packet and adding the frames again.
-      this.evaluate(this.currentWatchExpressions, 0);
+      this.evaluate(watchExpressions, 0);
       this._isWatchExpressionsEvaluation = true;
+      waitForNextPause = true;
+    }
+    // We'll get our evaluation of the current watch expressions the next time
+    // the thread client pauses...
+    if (waitForNextPause) {
       return;
     }
-    // Got our evaluation of the current watch expressions.
     if (this._isWatchExpressionsEvaluation) {
       this._isWatchExpressionsEvaluation = false;
       // If an error was thrown during the evaluation of the watch expressions,
@@ -603,7 +616,6 @@ StackFrames.prototype = {
         return;
       }
     }
-
 
     // Make sure the debugger view panes are visible.
     DebuggerView.showInstrumentsPane();
@@ -642,7 +654,7 @@ StackFrames.prototype = {
         frameTitle, frameLocation, line, depth, isBlackBoxed);
     }
 
-    if (this.currentFrame == null) {
+    if (this.currentFrameDepth == -1) {
       DebuggerView.StackFrames.selectedDepth = 0;
     }
     if (this.activeThread.moreFrames) {
@@ -654,7 +666,7 @@ StackFrames.prototype = {
    * Handler for the thread client's framescleared notification.
    */
   _onFramesCleared: function() {
-    this.currentFrame = null;
+    this.currentFrameDepth = -1;
     this.currentWatchExpressions = null;
     this.currentBreakpointLocation = null;
     this.currentEvaluation = null;
@@ -704,13 +716,13 @@ StackFrames.prototype = {
    */
   selectFrame: function(aDepth, aDontSwitchSources) {
     // Make sure the frame at the specified depth exists first.
-    let frame = this.activeThread.cachedFrames[this.currentFrame = aDepth];
+    let frame = this.activeThread.cachedFrames[this.currentFrameDepth = aDepth];
     if (!frame) {
       return;
     }
 
     // Check if the frame does not represent the evaluation of debuggee code.
-    let { environment, where: { url, line } } = frame;
+    let { environment, where } = frame;
     if (!environment) {
       return;
     }
@@ -719,9 +731,9 @@ StackFrames.prototype = {
     this._dontSwitchSources = false;
 
     // Move the editor's caret to the proper url and line.
-    DebuggerView.updateEditor(url, line, { noSwitch: noSwitch });
+    DebuggerView.updateEditor(where.url, where.line, { noSwitch: noSwitch });
     // Highlight the breakpoint at the specified url and line if it exists.
-    DebuggerView.Sources.highlightBreakpoint(url, line);
+    DebuggerView.Sources.highlightBreakpoint(where, { noEditorUpdate: true });
     // Don't display the watch expressions textbox inputs in the pane.
     DebuggerView.WatchExpressions.toggleContents(false);
     // Start recording any added variables or properties in any scope.
@@ -788,17 +800,18 @@ StackFrames.prototype = {
   },
 
   /**
-   * Evaluate an expression in the context of the selected frame. This is used
-   * for modifying the value of variables or properties in scope.
+   * Evaluate an expression in the context of the selected frame.
    *
    * @param string aExpression
    *        The expression to evaluate.
    * @param number aFrame [optional]
    *        The frame depth used for evaluation.
    */
-  evaluate: function(aExpression, aFrame = this.currentFrame || 0) {
+  evaluate: function(aExpression, aFrame = this.currentFrameDepth) {
     let frame = this.activeThread.cachedFrames[aFrame];
-    this.activeThread.eval(frame.actor, aExpression);
+    if (frame) {
+      this.activeThread.eval(frame.actor, aExpression);
+    }
   },
 
   /**
@@ -909,7 +922,7 @@ StackFrames.prototype = {
       this.syncedWatchExpressions =
         this.currentWatchExpressions = null;
     }
-    this.currentFrame = null;
+    this.currentFrameDepth = -1;
     this._onFrames();
   }
 };
@@ -1023,7 +1036,9 @@ SourceScripts.prototype = {
    */
   _onSourcesAdded: function(aResponse) {
     if (aResponse.error) {
-      Cu.reportError("Error getting sources: " + aResponse.message);
+      let msg = "Error getting sources: " + aResponse.message;
+      Cu.reportError(msg);
+      dumpn(msg);
       return;
     }
 
@@ -1516,33 +1531,23 @@ Breakpoints.prototype = {
    *          - location: the breakpoint's source location and line number
    *          - text: the breakpoint's line text to be displayed
    *          - actor: the breakpoint's corresponding actor id
-   * @param object aFlags [optional]
+   * @param object aOptions [optional]
    *        @see DebuggerController.Breakpoints.addBreakpoint
    */
-  _showBreakpoint: function(aBreakpointData, aFlags = {}) {
+  _showBreakpoint: function(aBreakpointData, aOptions = {}) {
     let currentSourceUrl = DebuggerView.Sources.selectedValue;
     let location = aBreakpointData.location;
 
     // Update the editor if required.
-    if (!aFlags.noEditorUpdate) {
+    if (!aOptions.noEditorUpdate) {
       if (location.url == currentSourceUrl) {
         DebuggerView.editor.addBreakpoint(location.line - 1);
       }
     }
 
     // Update the breakpoints pane if required.
-    if (!aFlags.noPaneUpdate) {
-      DebuggerView.Sources.addBreakpoint({
-        sourceLocation: location.url,
-        lineNumber: location.line,
-        lineText: aBreakpointData.text,
-        actor: aBreakpointData.actor,
-        openPopupFlag: aFlags.openPopup
-      });
-    }
-    // Highlight the breakpoint in the pane if required.
-    if (!aFlags.noPaneHighlight) {
-      DebuggerView.Sources.highlightBreakpoint(url, line, aFlags);
+    if (!aOptions.noPaneUpdate) {
+      DebuggerView.Sources.addBreakpoint(aBreakpointData, aOptions);
     }
   },
 
@@ -1551,21 +1556,22 @@ Breakpoints.prototype = {
    *
    * @param object aLocation
    *        @see DebuggerController.Breakpoints.addBreakpoint
-   * @param object aFlags [optional]
+   * @param object aOptions [optional]
    *        @see DebuggerController.Breakpoints.addBreakpoint
    */
-  _hideBreakpoint: function(aLocation, aFlags = {}) {
+  _hideBreakpoint: function(aLocation, aOptions = {}) {
     let currentSourceUrl = DebuggerView.Sources.selectedValue;
 
     // Update the editor if required.
-    if (!aFlags.noEditorUpdate) {
+    if (!aOptions.noEditorUpdate) {
       if (aLocation.url == currentSourceUrl) {
         DebuggerView.editor.removeBreakpoint(aLocation.line - 1);
       }
     }
+
     // Update the breakpoints pane if required.
-    if (!aFlags.noPaneUpdate) {
-      DebuggerView.Sources.removeBreakpoint(aLocation.url, aLocation.line);
+    if (!aOptions.noPaneUpdate) {
+      DebuggerView.Sources.removeBreakpoint(aLocation);
     }
   },
 
