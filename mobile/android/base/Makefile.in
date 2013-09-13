@@ -417,6 +417,7 @@ GARBAGE_DIRS += classes db jars res sync services
 
 MOZ_ANDROID_SHARED_ID = "$(ANDROID_PACKAGE_NAME).sharedID"
 MOZ_ANDROID_SHARED_ACCOUNT_TYPE = "$(ANDROID_PACKAGE_NAME)_sync"
+MOZ_ANDROID_SHARED_FXACCOUNT_TYPE = "$(ANDROID_PACKAGE_NAME)_account"
 
 # Bug 567884 - Need a way to find appropriate icons during packaging
 ifeq ($(MOZ_APP_NAME),fennec)
@@ -429,15 +430,19 @@ ICON_PATH_XXHDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_144x144
 ifeq (org.mozilla.firefox,$(ANDROID_PACKAGE_NAME))
 MOZ_ANDROID_SHARED_ID = "org.mozilla.firefox.sharedID"
 MOZ_ANDROID_SHARED_ACCOUNT_TYPE = "org.mozilla.firefox_sync"
+MOZ_ANDROID_SHARED_FXACCOUNT_TYPE = "org.mozilla.firefox_account"
 else ifeq (org.mozilla.firefox_beta,$(ANDROID_PACKAGE_NAME))
 MOZ_ANDROID_SHARED_ID = "org.mozilla.firefox.sharedID"
 MOZ_ANDROID_SHARED_ACCOUNT_TYPE = "org.mozilla.firefox_sync"
+MOZ_ANDROID_SHARED_FXACCOUNT_TYPE = "org.mozilla.firefox_account"
 else ifeq (org.mozilla.fennec_aurora,$(ANDROID_PACKAGE_NAME))
 MOZ_ANDROID_SHARED_ID = "org.mozilla.fennec.sharedID"
 MOZ_ANDROID_SHARED_ACCOUNT_TYPE = "org.mozilla.fennec_sync"
+MOZ_ANDROID_SHARED_FXACCOUNT_TYPE = "org.mozilla.fennec_account"
 else ifeq (org.mozilla.fennec,$(ANDROID_PACKAGE_NAME))
 MOZ_ANDROID_SHARED_ID = "org.mozilla.fennec.sharedID"
 MOZ_ANDROID_SHARED_ACCOUNT_TYPE = "org.mozilla.fennec_sync"
+MOZ_ANDROID_SHARED_FXACCOUNT_TYPE = "org.mozilla.fennec_account"
 endif
 
 else
@@ -450,6 +455,9 @@ DEFINES += -DMOZ_ANDROID_SHARED_ID="$(MOZ_ANDROID_SHARED_ID)"
 endif
 ifdef MOZ_ANDROID_SHARED_ACCOUNT_TYPE
 DEFINES += -DMOZ_ANDROID_SHARED_ACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_ACCOUNT_TYPE)"
+endif
+ifdef MOZ_ANDROID_SHARED_FXACCOUNT_TYPE
+DEFINES += -DMOZ_ANDROID_SHARED_FXACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_FXACCOUNT_TYPE)"
 endif
 
 RES_LAYOUT = \
