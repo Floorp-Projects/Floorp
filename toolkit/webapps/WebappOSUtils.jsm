@@ -8,31 +8,38 @@ const CC = Components.Constructor;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 
 this.EXPORTED_SYMBOLS = ["WebappOSUtils"];
 
+// Returns the MD5 hash of a string.
+function computeHash(aString) {
+  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+                  createInstance(Ci.nsIScriptableUnicodeConverter);
+  converter.charset = "UTF-8";
+  let result = {};
+  // Data is an array of bytes.
+  let data = converter.convertToByteArray(aString, result);
+
+  let hasher = Cc["@mozilla.org/security/hash;1"].
+               createInstance(Ci.nsICryptoHash);
+  hasher.init(hasher.MD5);
+  hasher.update(data, data.length);
+  // We're passing false to get the binary hash and not base64.
+  let hash = hasher.finish(false);
+
+  function toHexString(charCode) {
+    return ("0" + charCode.toString(16)).slice(-2);
+  }
+
+  // Convert the binary hash data to a hex string.
+  return [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
+}
+
 this.WebappOSUtils = {
   getUniqueName: function(aApp) {
-    let name;
-
-    // During the installation of a new app, the aApp object
-    // doesn't have a name property. We then need to use the manifest.
-    // For some mozApps calls, the aApp object doesn't have a manifest
-    // associated, and so we need to use the name property.
-    // They're guaranteed to be always identical to the application
-    // name in the user locale.
-    if (aApp.name) {
-      name = aApp.name;
-    } else {
-      let manifest =
-        new ManifestHelper(aApp.updateManifest || aApp.manifest, aApp.origin);
-      name = manifest.name;
-    }
-
-    return this.sanitizeStringForFilename(name).toLowerCase() + "-" +
-           AppsUtils.computeHash(aApp.manifestURL);
+    return this.sanitizeStringForFilename(aApp.name).toLowerCase() + "-" +
+           computeHash(aApp.manifestURL);
   },
 
   /**
@@ -87,15 +94,20 @@ this.WebappOSUtils = {
                      .createInstance(Ci.nsIMacWebAppUtils);
 
     try {
-      if (mwaUtils.pathForAppWithIdentifier(uniqueName)) {
-        return uniqueName;
-      }
-      if (mwaUtils.pathForAppWithIdentifier(aApp.origin)) {
-        return aApp.origin;
+      let path;
+      if (path = mwaUtils.pathForAppWithIdentifier(uniqueName)) {
+        return [ uniqueName, path ];
       }
     } catch(ex) {}
 
-    return null;
+    try {
+      let path;
+      if (path = mwaUtils.pathForAppWithIdentifier(aApp.origin)) {
+        return [ aApp.origin, path ];
+      }
+    } catch(ex) {}
+
+    return [ null, null ];
 #elifdef XP_UNIX
     let exeFile = Services.dirsvc.get("Home", Ci.nsIFile);
     exeFile.append("." + uniqueName);
@@ -121,6 +133,31 @@ this.WebappOSUtils = {
 #endif
   },
 
+  getInstallPath: function(aApp) {
+#ifdef XP_WIN
+    let execFile = this.getLaunchTarget(aApp);
+    if (!execFile) {
+      return null;
+    }
+
+    return execFile.parent.path;
+#elifdef XP_MACOSX
+    let [ bundleID, path ] = this.getLaunchTarget(aApp);
+    return path;
+#elifdef MOZ_B2G
+    return aApp.basePath + "/" + aApp.id;
+#elifdef MOZ_FENNEC
+    return aApp.basePath + "/" + aApp.id;
+#elifdef XP_UNIX
+    let execFile = this.getLaunchTarget(aApp);
+    if (!execFile) {
+      return null;
+    }
+
+    return execFile.parent.path;
+#endif
+  },
+
   launch: function(aApp) {
     let uniqueName = this.getUniqueName(aApp);
 
@@ -142,7 +179,7 @@ this.WebappOSUtils = {
 
     return true;
 #elifdef XP_MACOSX
-    let launchIdentifier = this.getLaunchTarget(aApp);
+    let [ launchIdentifier, path ] = this.getLaunchTarget(aApp);
     if (!launchIdentifier) {
       return false;
     }
@@ -215,7 +252,7 @@ this.WebappOSUtils = {
 
     return true;
 #elifdef XP_MACOSX
-    if (!this.getLaunchTarget(aApp)) {
+    if (!this.getInstallPath(aApp)) {
       return false;
     }
 
