@@ -34,7 +34,6 @@ EXTRA_JS_MODULES += [
 
 EXTRA_PP_JS_MODULES += [
     'AppsUtils.jsm',
-    'OperatorApps.jsm',
     'Webapps.jsm',
 ]
 
