@@ -753,9 +753,7 @@ nsRefreshDriver::AddRefreshObserver(nsARefreshObserver* aObserver,
 {
   ObserverArray& array = ArrayFor(aFlushType);
   bool success = array.AppendElement(aObserver) != nullptr;
-
   EnsureTimerStarted(false);
-
   return success;
 }
 
@@ -765,6 +763,18 @@ nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver* aObserver,
 {
   ObserverArray& array = ArrayFor(aFlushType);
   return array.RemoveElement(aObserver);
+}
+
+void
+nsRefreshDriver::AddPostRefreshObserver(nsAPostRefreshObserver* aObserver)
+{
+  mPostRefreshObservers.AppendElement(aObserver);
+}
+
+void
+nsRefreshDriver::RemovePostRefreshObserver(nsAPostRefreshObserver* aObserver)
+{
+  mPostRefreshObservers.RemoveElement(aObserver);
 }
 
 bool
@@ -1197,6 +1207,10 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
       printf("Ending ProcessPendingUpdates\n");
     }
 #endif
+  }
+
+  for (uint32_t i = 0; i < mPostRefreshObservers.Length(); ++i) {
+    mPostRefreshObservers[i]->DidRefresh();
   }
 }
 
