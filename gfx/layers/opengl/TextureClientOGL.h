@@ -41,6 +41,15 @@ public:
 
   virtual gfx::IntSize GetSize() const { return mSize; }
 
+  virtual TextureClientData* DropTextureData() MOZ_OVERRIDE
+  {
+    // XXX - right now the code paths using this are managing the shared texture
+    // data, although they should use a TextureClientData for this to ensure that
+    // the destruction sequence is race-free.
+    MarkInvalid();
+    return nullptr;
+  }
+
 protected:
   gl::SharedTextureHandle mHandle;
   gfx::IntSize mSize;

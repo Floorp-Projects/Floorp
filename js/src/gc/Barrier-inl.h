@@ -9,13 +9,6 @@
 
 #include "gc/Barrier.h"
 
-#include "jscompartment.h"
-
-#include "gc/Marking.h"
-#include "gc/StoreBuffer.h"
-
-#include "vm/String-inl.h"
-
 namespace js {
 
 inline const Value &
