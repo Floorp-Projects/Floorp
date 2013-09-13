@@ -158,8 +158,9 @@ AsyncChannel::ProcessLink::Open(mozilla::ipc::Transport* aTransport,
                 NewRunnableMethod(this, &ProcessLink::OnTakeConnectedChannel));
         }
 
-        // FIXME/cjones: handle errors
-        while (!mChan->Connected()) {
+        // Should not wait here if something goes wrong with the channel.
+        while (!mChan->Connected() &&
+               mChan->mChannelState != AsyncChannel::ChannelError) {
             mChan->mMonitor->Wait();
         }
     }
@@ -856,8 +857,10 @@ AsyncChannel::OnChannelErrorFromLink()
     AssertLinkThread();
     mMonitor->AssertCurrentThreadOwns();
 
-    if (ChannelClosing != mChannelState)
+    if (ChannelClosing != mChannelState) {
         mChannelState = ChannelError;
+        mMonitor->Notify();
+    }
 
     PostErrorNotifyTask();
 }

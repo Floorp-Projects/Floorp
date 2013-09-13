@@ -328,15 +328,45 @@ let tests = [
     imports.BackgroundPageThumbs.capture(url, {onDone: doneCallback});
     yield deferred.promise;
   },
+
+  function capIfMissing() {
+    let url = "http://example.com/";
+    let file = fileForURL(url);
+    ok(!file.exists(), "Thumbnail file should not already exist.");
+
+    let capturedURL = yield captureIfMissing(url);
+    is(capturedURL, url, "Captured URL should be URL passed to capture");
+    ok(file.exists(), "Thumbnail should be cached after capture: " + file.path);
+
+    let past = Date.now() - 1000000000;
+    let pastFudge = past + 30000;
+    file.lastModifiedTime = past;
+    ok(file.lastModifiedTime < pastFudge, "Last modified time should stick!");
+    capturedURL = yield captureIfMissing(url);
+    is(capturedURL, url, "Captured URL should be URL passed to second capture");
+    ok(file.exists(), "Thumbnail should remain cached after second capture: " +
+                      file.path);
+    ok(file.lastModifiedTime < pastFudge,
+       "File should not have been overwritten");
+
+    file.remove(false);
+  },
 ];
 
 function capture(url, options) {
+  return captureWithMethod("capture", url, options);
+}
+
+function captureIfMissing(url, options) {
+  return captureWithMethod("captureIfMissing", url, options);
+}
+
+function captureWithMethod(methodName, url, options={}) {
   let deferred = imports.Promise.defer();
-  options = options || {};
   options.onDone = function onDone(capturedURL) {
     deferred.resolve(capturedURL);
   };
-  imports.BackgroundPageThumbs.capture(url, options);
+  imports.BackgroundPageThumbs[methodName](url, options);
   return deferred.promise;
 }
 

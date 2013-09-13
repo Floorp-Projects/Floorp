@@ -213,6 +213,7 @@ ApplyTransform(nsIntPoint* aPoint, const gfx3DMatrix& aMatrix)
 nsEventStatus
 APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
 {
+  nsEventStatus result = nsEventStatus_eIgnore;
   gfx3DMatrix transformToApzc;
   gfx3DMatrix transformToScreen;
   switch (aEvent.mInputType) {
@@ -238,7 +239,7 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
         for (size_t i = 0; i < inputForApzc.mTouches.Length(); i++) {
           ApplyTransform(&(inputForApzc.mTouches[i].mScreenPoint), transformToApzc);
         }
-        mApzcForInputBlock->ReceiveInputEvent(inputForApzc);
+        result = mApzcForInputBlock->ReceiveInputEvent(inputForApzc);
         // If we have an mApzcForInputBlock and it's the end of the touch sequence
         // then null it out so we don't keep a dangling reference and leak things.
         if (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_CANCEL ||
@@ -254,7 +255,7 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
         GetInputTransforms(apzc, transformToApzc, transformToScreen);
         PinchGestureInput inputForApzc(pinchInput);
         ApplyTransform(&(inputForApzc.mFocusPoint), transformToApzc);
-        apzc->ReceiveInputEvent(inputForApzc);
+        result = apzc->ReceiveInputEvent(inputForApzc);
       }
       break;
     } case TAPGESTURE_INPUT: {
@@ -264,12 +265,12 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
         GetInputTransforms(apzc, transformToApzc, transformToScreen);
         TapGestureInput inputForApzc(tapInput);
         ApplyTransform(&(inputForApzc.mPoint), transformToApzc);
-        apzc->ReceiveInputEvent(inputForApzc);
+        result = apzc->ReceiveInputEvent(inputForApzc);
       }
       break;
     }
   }
-  return nsEventStatus_eIgnore;
+  return result;
 }
 
 nsEventStatus

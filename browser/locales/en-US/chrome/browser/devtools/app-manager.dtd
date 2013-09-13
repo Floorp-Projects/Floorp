@@ -3,8 +3,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!ENTITY index.title "App Manager">
-<!ENTITY index.projects "My Apps">
-<!ENTITY index.device "My Device">
+<!ENTITY index.projects2 "Apps">
+<!ENTITY index.device2 "Device">
 
 <!ENTITY device.screenshot "Screenshot">
 <!ENTITY device.title "Device Control Center">
