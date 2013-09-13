@@ -64,12 +64,17 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm")
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/commonjs/sdk/core/promise.js");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gDownloadHistory",
            "@mozilla.org/browser/download-history;1",
            Ci.nsIDownloadHistory);
+XPCOMUtils.defineLazyServiceGetter(this, "gExternalAppLauncher",
+           "@mozilla.org/uriloader/external-helper-app-service;1",
+           Ci.nsPIExternalAppLauncher);
 XPCOMUtils.defineLazyServiceGetter(this, "gExternalHelperAppService",
            "@mozilla.org/uriloader/external-helper-app-service;1",
            Ci.nsIExternalHelperAppService);
@@ -421,6 +426,17 @@ Download.prototype = {
 
             if (this.launchWhenSucceeded) {
               this.launch().then(null, Cu.reportError);
+
+              // Always schedule files to be deleted at the end of the private browsing
+              // mode, regardless of the value of the pref.
+              if (this.source.isPrivate) {
+                gExternalAppLauncher.deleteTemporaryPrivateFileWhenPossible(
+                                     new FileUtils.File(this.target.path));
+              } else if (Services.prefs.getBoolPref(
+                          "browser.helperApps.deleteTempFileOnExit")) {
+                gExternalAppLauncher.deleteTemporaryFileOnExit(
+                                     new FileUtils.File(this.target.path));
+              }
             }
           }
         }
@@ -816,10 +832,6 @@ Download.prototype = {
       serializable.error = { message: this.error.message };
     }
 
-    if (this.startTime) {
-      serializable.startTime = this.startTime.toJSON();
-    }
-
     // These are serialized unless they are false, null, or empty strings.
     for (let property of kSerializableDownloadProperties) {
       if (property != "error" && this[property]) {
@@ -857,6 +869,7 @@ const kSerializableDownloadProperties = [
   "succeeded",
   "canceled",
   "error",
+  "startTime",
   "totalBytes",
   "hasPartialData",
   "tryToKeepPartialData",
@@ -903,13 +916,6 @@ Download.fromSerializable = function (aSerializable) {
     download.saver = DownloadSaver.fromSerializable("copy");
   }
   download.saver.download = download;
-
-  if ("startTime" in aSerializable) {
-    let time = aSerializable.startTime.getTime
-             ? aSerializable.startTime.getTime()
-             : aSerializable.startTime;
-    download.startTime = new Date(time);
-  }
 
   for (let property of kSerializableDownloadProperties) {
     if (property in aSerializable) {

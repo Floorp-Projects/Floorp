@@ -873,7 +873,9 @@ ThreadActor.prototype = {
               this.dbg.onEnterFrame = onEnterFrame;
               // Fall through.
             case "next":
-              stepFrame.onStep = onStep;
+              if (stepFrame.script) {
+                  stepFrame.onStep = onStep;
+              }
               stepFrame.onPop = onPop;
               break;
             case "finish":
@@ -2549,7 +2551,8 @@ ObjectActor.prototype = {
     if (this.obj.class === "Function") {
       if (this.obj.name) {
         g.name = this.obj.name;
-      } else if (this.obj.displayName) {
+      }
+      if (this.obj.displayName) {
         g.displayName = this.obj.displayName;
       }
 

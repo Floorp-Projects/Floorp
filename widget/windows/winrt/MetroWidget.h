@@ -196,6 +196,10 @@ public:
   virtual void SetTransparencyMode(nsTransparencyMode aMode);
   virtual nsTransparencyMode GetTransparencyMode();
 
+  // APZ related apis
+  void ApzContentConsumingTouch();
+  void ApzContentIgnoringTouch();
+  nsEventStatus ApzReceiveInputEvent(nsTouchEvent* aEvent);
   nsresult RequestContentScroll();
   void RequestContentRepaintImplMainThread();
 

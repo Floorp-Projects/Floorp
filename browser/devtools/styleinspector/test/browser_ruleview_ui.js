@@ -152,7 +152,7 @@ function testEditProperty()
 
         for (let ch of "red;") {
           EventUtils.sendChar(ch, ruleWindow);
-          is(propEditor.warning.hidden, ch == "d" || ch == ";",
+          is(propEditor.warning.hidden, true,
             "warning triangle is hidden or shown as appropriate");
         }
       }));

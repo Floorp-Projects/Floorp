@@ -5,14 +5,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
+ * This file includes the following constructors and global objects:
+ *
+ * DownloadList
  * Represents a collection of Download objects that can be viewed and managed by
  * the user interface, and persisted across sessions.
+ *
+ * DownloadCombinedList
+ * Provides a unified, unordered list combining public and private downloads.
  */
 
 "use strict";
 
 this.EXPORTED_SYMBOLS = [
   "DownloadList",
+  "DownloadCombinedList",
 ];
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,10 +32,6 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-                                  "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/commonjs/sdk/core/promise.js");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
@@ -40,18 +43,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 /**
  * Represents a collection of Download objects that can be viewed and managed by
  * the user interface, and persisted across sessions.
- *
- * @param aIsPublic
- *        The boolean indicates it's a public download list or not.
  */
-function DownloadList(aIsPublic) {
+function DownloadList() {
   this._downloads = [];
   this._views = new Set();
-  // Only need to remove history entries for public downloads as no history
-  // entries are added for private downloads.
-  if (aIsPublic) {
-    PlacesUtils.history.addObserver(this, false);
-  }
 }
 
 DownloadList.prototype = {
@@ -88,16 +83,7 @@ DownloadList.prototype = {
   add: function DL_add(aDownload) {
     this._downloads.push(aDownload);
     aDownload.onchange = this._change.bind(this, aDownload);
-
-    for (let view of this._views) {
-      try {
-        if (view.onDownloadAdded) {
-          view.onDownloadAdded(aDownload);
-        }
-      } catch (ex) {
-        Cu.reportError(ex);
-      }
-    }
+    this._notifyAllViews("onDownloadAdded", aDownload);
   },
 
   /**
@@ -117,16 +103,7 @@ DownloadList.prototype = {
     if (index != -1) {
       this._downloads.splice(index, 1);
       aDownload.onchange = null;
-
-      for (let view of this._views) {
-        try {
-          if (view.onDownloadRemoved) {
-            view.onDownloadRemoved(aDownload);
-          }
-        } catch (ex) {
-          Cu.reportError(ex);
-        }
-      }
+      this._notifyAllViews("onDownloadRemoved", aDownload);
     }
   },
 
@@ -137,15 +114,7 @@ DownloadList.prototype = {
    *        The Download object that changed.
    */
   _change: function DL_change(aDownload) {
-    for (let view of this._views) {
-      try {
-        if (view.onDownloadChanged) {
-          view.onDownloadChanged(aDownload);
-        }
-      } catch (ex) {
-        Cu.reportError(ex);
-      }
-    }
+    this._notifyAllViews("onDownloadChanged", aDownload);
   },
 
   /**
@@ -181,7 +150,7 @@ DownloadList.prototype = {
   {
     this._views.add(aView);
 
-    if (aView.onDownloadAdded) {
+    if ("onDownloadAdded" in aView) {
       for (let download of this._downloads) {
         try {
           aView.onDownloadAdded(download);
@@ -202,6 +171,26 @@ DownloadList.prototype = {
   removeView: function DL_removeView(aView)
   {
     this._views.delete(aView);
+  },
+
+  /**
+   * Notifies all the views of a download addition, change, or removal.
+   *
+   * @param aMethodName
+   *        String containing the name of the method to call on the view.
+   * @param aDownload
+   *        The Download object that changed.
+   */
+  _notifyAllViews: function (aMethodName, aDownload) {
+    for (let view of this._views) {
+      try {
+        if (aMethodName in view) {
+          view[aMethodName](aDownload);
+        }
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
+    }
   },
 
   /**
@@ -239,29 +228,107 @@ DownloadList.prototype = {
       }
     }.bind(this)).then(null, Cu.reportError);
   },
-
-  ////////////////////////////////////////////////////////////////////////////
-  //// nsISupports
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver]),
-
-  ////////////////////////////////////////////////////////////////////////////
-  //// nsINavHistoryObserver
-
-  onDeleteURI: function DL_onDeleteURI(aURI, aGUID) {
-    this.removeFinished(download => aURI.equals(NetUtil.newURI(
-                                                download.source.url)));
-  },
-
-  onClearHistory: function DL_onClearHistory() {
-    this.removeFinished();
-  },
-
-  onTitleChanged: function () {},
-  onBeginUpdateBatch: function () {},
-  onEndUpdateBatch: function () {},
-  onVisit: function () {},
-  onPageChanged: function () {},
-  onDeleteVisits: function () {},
 };
 
+////////////////////////////////////////////////////////////////////////////////
+//// DownloadCombinedList
+
+/**
+ * Provides a unified, unordered list combining public and private downloads.
+ *
+ * Download objects added to this list are also added to one of the two
+ * underlying lists, based on their "source.isPrivate" property.  Views on this
+ * list will receive notifications for both public and private downloads.
+ *
+ * @param aPublicList
+ *        Underlying DownloadList containing public downloads.
+ * @param aPrivateList
+ *        Underlying DownloadList containing private downloads.
+ */
+function DownloadCombinedList(aPublicList, aPrivateList)
+{
+  DownloadList.call(this);
+  this._publicList = aPublicList;
+  this._privateList = aPrivateList;
+  aPublicList.addView(this);
+  aPrivateList.addView(this);
+}
+
+DownloadCombinedList.prototype = {
+  __proto__: DownloadList.prototype,
+
+  /**
+   * Underlying DownloadList containing public downloads.
+   */
+  _publicList: null,
+
+  /**
+   * Underlying DownloadList containing private downloads.
+   */
+  _privateList: null,
+
+  /**
+   * Adds a new download to the end of the items list.
+   *
+   * @note When a download is added to the list, its "onchange" event is
+   *       registered by the list, thus it cannot be used to monitor the
+   *       download.  To receive change notifications for downloads that are
+   *       added to the list, use the addView method to register for
+   *       onDownloadChanged notifications.
+   *
+   * @param aDownload
+   *        The Download object to add.
+   */
+  add: function (aDownload)
+  {
+    if (aDownload.source.isPrivate) {
+      this._privateList.add(aDownload);
+    } else {
+      this._publicList.add(aDownload);
+    }
+  },
+
+  /**
+   * Removes a download from the list.  If the download was already removed,
+   * this method has no effect.
+   *
+   * This method does not change the state of the download, to allow adding it
+   * to another list, or control it directly.  If you want to dispose of the
+   * download object, you should cancel it afterwards, and remove any partially
+   * downloaded data if needed.
+   *
+   * @param aDownload
+   *        The Download object to remove.
+   */
+  remove: function (aDownload)
+  {
+    if (aDownload.source.isPrivate) {
+      this._privateList.remove(aDownload);
+    } else {
+      this._publicList.remove(aDownload);
+    }
+  },
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// DownloadList view
+
+  onDownloadAdded: function (aDownload)
+  {
+    this._downloads.push(aDownload);
+    this._notifyAllViews("onDownloadAdded", aDownload);
+  },
+
+  onDownloadChanged: function (aDownload)
+  {
+    this._notifyAllViews("onDownloadChanged", aDownload);
+  },
+
+  onDownloadRemoved: function (aDownload)
+  {
+    let index = this._downloads.indexOf(aDownload);
+    if (index != -1) {
+      this._downloads.splice(index, 1);
+    }
+    this._notifyAllViews("onDownloadRemoved", aDownload);
+  },
+};

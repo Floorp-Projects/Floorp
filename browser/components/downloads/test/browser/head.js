@@ -72,7 +72,7 @@ function promisePanelOpened()
 function task_resetState()
 {
   // Remove all downloads.
-  let publicList = yield Downloads.getPublicDownloadList();
+  let publicList = yield Downloads.getList(Downloads.PUBLIC);
   let downloads = yield publicList.getAll();
   for (let download of downloads) {
     publicList.remove(download);
@@ -88,7 +88,7 @@ function task_addDownloads(aItems)
 {
   let startTimeMs = Date.now();
 
-  let publicList = yield Downloads.getPublicDownloadList();
+  let publicList = yield Downloads.getList(Downloads.PUBLIC);
   for (let item of aItems) {
     publicList.add(yield Downloads.createDownload({
       source: "http://www.example.com/test-download.txt",

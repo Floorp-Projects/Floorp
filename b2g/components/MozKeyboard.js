@@ -207,6 +207,8 @@ MozKeyboard.prototype = {
 function MozInputMethodManager() { }
 
 MozInputMethodManager.prototype = {
+  _supportsSwitching: false,
+
   classID: Components.ID("{7e9d7280-ef86-11e2-b778-0800200c9a66}"),
 
   QueryInterface: XPCOMUtils.generateQI([
@@ -230,7 +232,7 @@ MozInputMethodManager.prototype = {
   },
 
   supportsSwitching: function() {
-    return true;
+    return this._supportsSwitching;
   },
 
   hide: function() {
@@ -247,6 +249,7 @@ function MozInputMethod() { }
 
 MozInputMethod.prototype = {
   _inputcontext: null,
+  _layouts: {},
 
   classID: Components.ID("{4607330d-e7d2-40a4-9eb8-43967eae0142}"),
 
@@ -284,6 +287,7 @@ MozInputMethod.prototype = {
     cpmm.addMessageListener('Keyboard:FocusChange', this);
     cpmm.addMessageListener('Keyboard:SelectionChange', this);
     cpmm.addMessageListener('Keyboard:GetContext:Result:OK', this);
+    cpmm.addMessageListener('Keyboard:LayoutsChange', this);
 
     // If there already is an active context, then this will trigger
     // a GetContext:Result:OK event, and we can initialize ourselves.
@@ -296,6 +300,7 @@ MozInputMethod.prototype = {
     cpmm.removeMessageListener('Keyboard:FocusChange', this);
     cpmm.removeMessageListener('Keyboard:SelectionChange', this);
     cpmm.removeMessageListener('Keyboard:GetContext:Result:OK', this);
+    cpmm.removeMessageListener('Keyboard:LayoutsChange', this);
 
     this._window = null;
     this._mgmt = null;
@@ -319,6 +324,9 @@ MozInputMethod.prototype = {
         break;
       case 'Keyboard:GetContext:Result:OK':
         this.setInputContext(json);
+        break;
+      case 'Keyboard:LayoutsChange':
+        this._layouts = json;
         break;
     }
   },
@@ -349,9 +357,14 @@ MozInputMethod.prototype = {
     if (this._inputcontext) {
       this._inputcontext.destroy();
       this._inputcontext = null;
+      this._mgmt._supportsSwitching = false;
     }
 
     if (data) {
+      this._mgmt._supportsSwitching = this._layouts[data.type] ?
+        this._layouts[data.type] > 1 :
+        false;
+
       this._inputcontext = new MozInputContext(data);
       this._inputcontext.init(this._window);
     }

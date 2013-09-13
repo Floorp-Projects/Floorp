@@ -279,6 +279,25 @@ SimpleTest.todo = function(condition, name, diag) {
     SimpleTest._tests.push(test);
 };
 
+/*
+ * Returns the absolute URL to a test data file from where tests
+ * are served. i.e. the file doesn't necessarely exists where tests
+ * are executed.
+ * (For b2g and android, mochitest are executed on the device, while
+ * all mochitest html (and others) files are served from the test runner
+ * slave)
+ */
+SimpleTest.getTestFileURL = function(path) {
+  var lastSlashIdx = path.lastIndexOf("/") + 1;
+  var filename = path.substr(lastSlashIdx);
+  var location = window.location;
+  // Remove mochitest html file name from the path
+  var remotePath = location.pathname.replace(/\/[^\/]+?$/,"");
+  var url = location.origin +
+            remotePath + "/" + path;
+  return url;
+};
+
 SimpleTest._getCurrentTestURL = function() {
     return parentRunner && parentRunner.currentTestURL ||
            typeof gTestPath == "string" && gTestPath ||

@@ -91,6 +91,8 @@ void
 AudioChannelServiceChild::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
                                                     AudioChannelType aType)
 {
+  MOZ_ASSERT(aType != AUDIO_CHANNEL_DEFAULT);
+
   AudioChannelService::RegisterAudioChannelAgent(aAgent, aType);
 
   ContentChild *cc = ContentChild::GetSingleton();
@@ -126,5 +128,15 @@ AudioChannelServiceChild::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->NotifyObservers(nullptr, "audio-channel-agent-changed", nullptr);
+  }
+}
+
+void
+AudioChannelServiceChild::SetDefaultVolumeControlChannel(
+  AudioChannelType aType, bool aHidden)
+{
+  ContentChild *cc = ContentChild::GetSingleton();
+  if (cc) {
+    cc->SendAudioChannelChangeDefVolChannel(aType, aHidden);
   }
 }

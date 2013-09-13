@@ -352,6 +352,10 @@ pref("browser.download.panel.shown", false);
 // enabled has been completed already.
 pref("browser.download.panel.firstSessionCompleted", false);
 
+#ifndef XP_MACOSX
+pref("browser.helperApps.deleteTempFileOnExit", true);
+#endif
+
 // search engines URL
 pref("browser.search.searchEnginesURL",      "https://addons.mozilla.org/%LOCALE%/firefox/search-engines/");
 
