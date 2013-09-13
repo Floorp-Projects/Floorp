@@ -259,8 +259,13 @@ void
 StickyScrollContainer::UpdatePositions(nsPoint aScrollPosition,
                                        nsIFrame* aSubtreeRoot)
 {
-  NS_ASSERTION(!aSubtreeRoot || aSubtreeRoot == do_QueryFrame(mScrollFrame),
-    "If reflowing, should be reflowing the scroll frame");
+#ifdef DEBUG
+  {
+    nsIFrame* scrollFrameAsFrame = do_QueryFrame(mScrollFrame);
+    NS_ASSERTION(!aSubtreeRoot || aSubtreeRoot == scrollFrameAsFrame,
+                 "If reflowing, should be reflowing the scroll frame");
+  }
+#endif
   mScrollPosition = aScrollPosition;
 
   OverflowChangedTracker oct;
