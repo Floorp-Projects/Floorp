@@ -4,7 +4,6 @@
 #include "Hal.h"
 #include "nsITimer.h"
 #include "smslib.h"
-#include "nsComponentManagerUtils.h"
 
 #include <mach/mach.h>
 #include <cmath>

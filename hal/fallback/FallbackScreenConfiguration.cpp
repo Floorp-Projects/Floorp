@@ -5,7 +5,6 @@
 #include "Hal.h"
 #include "mozilla/dom/ScreenOrientation.h"
 #include "nsIScreenManager.h"
-#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 namespace hal_impl {
