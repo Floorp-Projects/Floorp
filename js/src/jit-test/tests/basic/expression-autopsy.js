@@ -76,6 +76,9 @@ check("o[4 + 'h']", "o['4h']");
 check("this.x");
 check("ieval(undef)", "ieval(...)");
 check("ieval.call()", "ieval.call(...)");
+check("ieval(...[])", "ieval(...)");
+check("ieval(...[undef])", "ieval(...)");
+check("ieval(...[undef, undef])", "ieval(...)");
 
 for (let tok of ["|", "^", "&", "==", "!==", "===", "!==", "<", "<=", ">", ">=",
                  ">>", "<<", ">>>", "+", "-", "*", "/", "%"]) {
