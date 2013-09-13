@@ -26,6 +26,7 @@ if CONFIG['MOZ_B2G_RIL']:
         'nsIDOMNetworkStats.idl',
         'nsIDOMNetworkStatsManager.idl',
         'nsIMobileConnectionProvider.idl',
+        'nsINetworkStatsServiceProxy.idl',
     ]
 
 XPIDL_MODULE = 'dom_network'
