@@ -610,16 +610,16 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext,
     return;
   }
 
-  gfxTextContextPaint *contextPaint =
-    (gfxTextContextPaint*)aContext->GetUserData(&gfxTextContextPaint::sUserDataKey);
+  gfxTextObjectPaint *objectPaint =
+    (gfxTextObjectPaint*)aContext->GetUserData(&gfxTextObjectPaint::sUserDataKey);
 
   if ((aRenderComponents & eRenderFill) &&
-      nsSVGUtils::SetupCairoFillPaint(this, gfx, contextPaint)) {
+      nsSVGUtils::SetupCairoFillPaint(this, gfx, objectPaint)) {
     gfx->Fill();
   }
 
   if ((aRenderComponents & eRenderStroke) &&
-       nsSVGUtils::SetupCairoStroke(this, gfx, contextPaint)) {
+       nsSVGUtils::SetupCairoStroke(this, gfx, objectPaint)) {
     gfx->Stroke();
   }
 
@@ -653,14 +653,14 @@ nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext,
 void
 nsSVGPathGeometryFrame::PaintMarkers(nsRenderingContext* aContext)
 {
-  gfxTextContextPaint *contextPaint =
-    (gfxTextContextPaint*)aContext->GetUserData(&gfxTextContextPaint::sUserDataKey);
+  gfxTextObjectPaint *objectPaint =
+    (gfxTextObjectPaint*)aContext->GetUserData(&gfxTextObjectPaint::sUserDataKey);
 
   if (static_cast<nsSVGPathGeometryElement*>(mContent)->IsMarkable()) {
     MarkerProperties properties = GetMarkerProperties(this);
 
     if (properties.MarkersExist()) {
-      float strokeWidth = nsSVGUtils::GetStrokeWidth(this, contextPaint);
+      float strokeWidth = nsSVGUtils::GetStrokeWidth(this, objectPaint);
 
       nsTArray<nsSVGMark> marks;
       static_cast<nsSVGPathGeometryElement*>

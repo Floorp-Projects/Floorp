@@ -11,15 +11,15 @@
   <!-- b -->
   <rect x="100" y="-900" width="800" height="800" stroke="chartreuse"
     stroke-width="50" stroke-dashoffset="35"
-    stroke-dasharray="context-value" id="glyph68" />
+    stroke-dasharray="-moz-objectValue" id="glyph68" />
 
   <!-- c -->
   <rect x="100" y="-900" width="800" height="800" stroke="sienna"
     stroke-width="50" stroke-dasharray="50 50"
-    stroke-dashoffset="context-value" id="glyph69" />
+    stroke-dashoffset="-moz-objectValue" id="glyph69" />
 
   <!-- d -->
   <rect x="100" y="-900" width="800" height="800" stroke="olivedrab"
-    stroke-width="context-value" stroke-dasharray="context-value"
-    stroke-dashoffset="context-value" id="glyph70" />
+    stroke-width="-moz-objectValue" stroke-dasharray="-moz-objectValue"
+    stroke-dashoffset="-moz-objectValue" id="glyph70" />
 </svg>

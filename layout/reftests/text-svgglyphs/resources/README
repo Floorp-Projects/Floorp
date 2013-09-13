@@ -1,37 +1,11 @@
-.woff files for SVG-in-OpenType testing
-=======================================
+Fonts in this directory:
 
-There are three .woff files in this directory:
- * nosvg.woff
- * svg.woff
- * rubbish.woff
+rubbish.woff contains an SVG table with the contents of rubbish.txt. This is
+not a valid SVG table so no SVG glyphs will be used.
 
-nosvg.woff
-----------
-This font is Liberation Serif with the addition of a glyph with a UVS selector
-(Liberation fonts do not come with UVS glyphs; one had to be added to test that
-SVG glyphs work with UVS selectors). It contains no 'SVG ' table.
+nosvg.woff is derived from the "Liberation" font. It contains no SVG table.
 
-svg.woff
---------
-This font is the same as nosvg.woff above, but with the glyphs-*.svg SVG
-documents from this directory embedded in it using the tools described below.
-
-rubbish.woff
-------------
-This font is the same as nosvg.woff above, but with the addition of an 'SVG '
-table with the contents of rubbish.txt. Its purpose is to test that SVG tables
-without valid XML are ignored.
-
-Creating the Fonts
-------------------
-The tools used here are insertsvg.py from [1] and sfnt2woff from [2].
-
-svg.woff can be recreated with:
-
-woff2sfnt nosvg.woff > nosvg.ttf
-insertsvg.py nosvg.ttf svg.ttf glyphs-*.svg
-sfnt2woff svg.ttf
-
-[1] https://github.com/edf825/SVG-OpenType-Utils
-[2] http://people.mozilla.com/~jkew/woff/
+svg.woff is nosvg.woff with an SVG table added. The
+table contains the glyph documents glyphs-base.svg, glyphs-invalid.svg,
+glyphs-objectcolor.svg, glyphs-objectopacity.svg, glyphs-objectstroke.svg,
+glyphs-paintservers.svg and glyphs-transforms.svg.

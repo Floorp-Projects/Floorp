@@ -4294,14 +4294,14 @@ nsComputedDOMStyle::GetSVGPaintFor(bool aFill)
       SetToRGBAColor(fallback, paint->mFallbackColor);
       return valueList;
     }
-    case eStyleSVGPaintType_ContextFill:
+    case eStyleSVGPaintType_ObjectFill:
     {
-      val->SetIdent(eCSSKeyword_context_fill);
+      val->SetIdent(eCSSKeyword__moz_objectfill);
       break;
     }
-    case eStyleSVGPaintType_ContextStroke:
+    case eStyleSVGPaintType_ObjectStroke:
     {
-      val->SetIdent(eCSSKeyword_context_stroke);
+      val->SetIdent(eCSSKeyword__moz_objectstroke);
       break;
     }
   }
