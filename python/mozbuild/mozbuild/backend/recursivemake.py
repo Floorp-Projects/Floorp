@@ -288,21 +288,23 @@ class RecursiveMakeBackend(CommonBackend):
             'ipc', 'ipdl', 'ipdlsrcs.mk'))
         mk = mozmakeutil.Makefile()
 
-        for p in sorted(self._ipdl_sources):
-            mk.add_statement('ALL_IPDLSRCS += %s\n' % p)
-            def files_from(ipdl):
-                base = os.path.basename(ipdl)
-                root, ext = os.path.splitext(base)
+        sorted_ipdl_sources = list(sorted(self._ipdl_sources))
+        mk.add_statement('ALL_IPDLSRCS := %s\n' % ' '.join(sorted_ipdl_sources))
 
-                # Both .ipdl and .ipdlh become .cpp files
-                files = ['%s.cpp' % root]
-                if ext == '.ipdl':
-                    # .ipdl also becomes Child/Parent.cpp files
-                    files.extend(['%sChild.cpp' % root,
-                                  '%sParent.cpp' % root])
-                return files
+        def files_from(ipdl):
+            base = os.path.basename(ipdl)
+            root, ext = os.path.splitext(base)
 
-            mk.add_statement('CPPSRCS += %s\n' % ' '.join(files_from(p)))
+            # Both .ipdl and .ipdlh become .cpp files
+            files = ['%s.cpp' % root]
+            if ext == '.ipdl':
+                # .ipdl also becomes Child/Parent.cpp files
+                files.extend(['%sChild.cpp' % root,
+                              '%sParent.cpp' % root])
+            return files
+
+        ipdl_cppsrcs = itertools.chain(*[files_from(p) for p in sorted_ipdl_sources])
+        mk.add_statement('CPPSRCS := %s\n' % ' '.join(ipdl_cppsrcs))
 
         mk.add_statement('IPDLDIRS := %s\n' % ' '.join(sorted(set(os.path.dirname(p)
             for p in self._ipdl_sources))))
