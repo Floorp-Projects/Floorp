@@ -846,7 +846,8 @@ CreateObserversForAnimatedGlyphs(gfxTextRun* aTextRun)
   }
   nsTArray<gfxFont*> fontsWithAnimatedGlyphs;
   uint32_t numGlyphRuns;
-  const GlyphRun* glyphRuns = aTextRun->GetGlyphRuns(&numGlyphRuns);
+  const gfxTextRun::GlyphRun* glyphRuns =
+    aTextRun->GetGlyphRuns(&numGlyphRuns);
   for (uint32_t i = 0; i < numGlyphRuns; ++i) {
     gfxFont* font = glyphRuns[i].mFont;
     if (font->GlyphsMayChange() && !fontsWithAnimatedGlyphs.Contains(font)) {
