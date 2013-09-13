@@ -945,7 +945,11 @@ FilterView.prototype = {
    * The click listener for the search container.
    */
   _onClick: function() {
-    this._searchboxHelpPanel.openPopup(this._searchbox);
+    // If there's some text in the searchbox, displaying a panel would
+    // interfere with double/triple click default behaviors.
+    if (!this._searchbox.value) {
+      this._searchboxHelpPanel.openPopup(this._searchbox);
+    }
   },
 
   /**

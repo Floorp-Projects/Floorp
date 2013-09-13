@@ -22,8 +22,8 @@ function test() {
     gSearchBoxPanel = gDebugger.DebuggerView.Filtering._searchboxHelpPanel;
 
     waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6)
-      .then(() => showPopup())
-      .then(() => hidePopup())
+      .then(showPopup)
+      .then(hidePopup)
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
       .then(null, aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
