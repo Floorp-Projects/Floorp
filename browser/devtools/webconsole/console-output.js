@@ -55,16 +55,28 @@ function ConsoleOutput(owner)
 
 ConsoleOutput.prototype = {
   /**
+   * The output container.
+   * @type DOMElement
+   */
+  get element() {
+    return this.owner.outputNode;
+  },
+
+  /**
    * The document that holds the output.
    * @type DOMDocument
    */
-  get document() this.owner.document,
+  get document() {
+    return this.owner.document;
+  },
 
   /**
    * The DOM window that holds the output.
    * @type Window
    */
-  get window() this.owner.window,
+  get window() {
+    return this.owner.window;
+  },
 
   /**
    * Add a message to output.
@@ -100,6 +112,100 @@ ConsoleOutput.prototype = {
   _onFlushOutputMessage: function(message)
   {
     return message.render().element;
+  },
+
+  /**
+   * Get an array of selected messages. This list is based on the text selection
+   * start and end points.
+   *
+   * @param number [limit]
+   *        Optional limit of selected messages you want. If no value is given,
+   *        all of the selected messages are returned.
+   * @return array
+   *         Array of DOM elements for each message that is currently selected.
+   */
+  getSelectedMessages: function(limit)
+  {
+    let selection = this.window.getSelection();
+    if (selection.isCollapsed) {
+      return [];
+    }
+
+    if (selection.containsNode(this.element, true)) {
+      return Array.slice(this.element.children);
+    }
+
+    let anchor = this.getMessageForElement(selection.anchorNode);
+    let focus = this.getMessageForElement(selection.focusNode);
+    if (!anchor || !focus) {
+      return [];
+    }
+
+    let start, end;
+    if (anchor.timestamp > focus.timestamp) {
+      start = focus;
+      end = anchor;
+    } else {
+      start = anchor;
+      end = focus;
+    }
+
+    let result = [];
+    let current = start;
+    while (current) {
+      result.push(current);
+      if (current == end || (limit && result.length == limit)) {
+        break;
+      }
+      current = current.nextSibling;
+    }
+    return result;
+  },
+
+  /**
+   * Find the DOM element of a message for any given descendant.
+   *
+   * @param DOMElement elem
+   *        The element to start the search from.
+   * @return DOMElement|null
+   *         The DOM element of the message, if any.
+   */
+  getMessageForElement: function(elem)
+  {
+    while (elem && elem.parentNode) {
+      if (elem.classList && elem.classList.contains("hud-msg-node")) {
+        return elem;
+      }
+      elem = elem.parentNode;
+    }
+    return null;
+  },
+
+  /**
+   * Select all messages.
+   */
+  selectAllMessages: function()
+  {
+    let selection = this.window.getSelection();
+    selection.removeAllRanges();
+    let range = this.document.createRange();
+    range.selectNodeContents(this.element);
+    selection.addRange(range);
+  },
+
+  /**
+   * Add a message to the selection.
+   *
+   * @param DOMElement elem
+   *        The message element to select.
+   */
+  selectMessage: function(elem)
+  {
+    let selection = this.window.getSelection();
+    selection.removeAllRanges();
+    let range = this.document.createRange();
+    range.selectNodeContents(elem);
+    selection.addRange(range);
   },
 
   /**
@@ -216,20 +322,14 @@ Messages.BaseMessage.prototype = {
   _renderCompat: function()
   {
     let doc = this.output.document;
-    let container = doc.createElementNS(XUL_NS, "richlistitem");
-    container.setAttribute("id", "console-msg-" + gSequenceId());
-    container.setAttribute("class", "hud-msg-node " + this._elementClassCompat);
+    let container = doc.createElementNS(XHTML_NS, "div");
+    container.id = "console-msg-" + gSequenceId();
+    container.className = "hud-msg-node " + this._elementClassCompat;
     container.category = this._categoryCompat;
     container.severity = this._severityCompat;
     container.clipboardText = this.textContent;
     container.timestamp = this.timestamp;
     container._messageObject = this;
-
-    let body = doc.createElementNS(XUL_NS, "description");
-    body.flex = 1;
-    body.classList.add("webconsole-msg-body");
-    body.classList.add("devtools-monospace");
-    container.appendChild(body);
 
     return container;
   },
@@ -287,13 +387,13 @@ Messages.NavigationMarker.prototype = Heritage.extend(Messages.BaseMessage.proto
     }
 
     let doc = this.output.document;
-    let urlnode = doc.createElementNS(XHTML_NS, "span");
+    let urlnode = doc.createElementNS(XHTML_NS, "a");
     urlnode.className = "url";
     urlnode.textContent = url;
+    urlnode.title = this._url;
 
-    // Add the text in the xul:description.webconsole-msg-body element.
     let render = Messages.BaseMessage.prototype.render.bind(this);
-    render().element.firstChild.appendChild(urlnode);
+    render().element.appendChild(urlnode);
     this.element.classList.add("navigation-marker");
     this.element.url = this._url;
 
