@@ -34,6 +34,15 @@ function test() {
   // Holds the MarkupTool object we're testing.
   let markup;
 
+  let LONG_ATTRIBUTE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let LONG_ATTRIBUTE_COLLAPSED = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEF\u2026UVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  let DATA_URL_INLINE_STYLE='color: red; background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+l2Z/dAAAAM0lEQVR4nGP4/5/h/1+G/58ZDrAz3D/McH8yw83NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC");';
+  let DATA_URL_INLINE_STYLE_COLLAPSED='color: red; background: url("data:image/png;base64,iVBORw0KG\u2026NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC");';
+
+  let DATA_URL_ATTRIBUTE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+l2Z/dAAAAM0lEQVR4nGP4/5/h/1+G/58ZDrAz3D/McH8yw83NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC";
+  let DATA_URL_ATTRIBUTE_COLLAPSED = "data:image/png;base64,iVBORw0K\u20269/AFGGFyjOXZtQAAAAAElFTkSuQmCC";
+
   /**
    * Edit a given editableField
    */
@@ -200,6 +209,128 @@ function test() {
         assertAttributes(doc.querySelector("#node24"), {
           id: "node24",
           class: ""
+        });
+      }
+    },
+
+    {
+      desc: "Try to add long attribute to make sure it is collapsed in attribute editor.",
+      before: function() {
+        assertAttributes(doc.querySelector("#node24"), {
+          id: "node24",
+          class: ""
+        });
+      },
+      execute: function(after) {
+        let editor = getContainerForRawNode(markup, doc.querySelector("#node24")).editor;
+        let attr = editor.newAttr;
+        editField(attr, 'data-long="'+LONG_ATTRIBUTE+'"');
+        inspector.once("markupmutation", after);
+      },
+      after: function() {
+
+        let editor = getContainerForRawNode(markup, doc.querySelector("#node24")).editor;
+        let visibleAttrText = editor.attrs["data-long"].querySelector(".attr-value").textContent;
+        is (visibleAttrText, LONG_ATTRIBUTE_COLLAPSED)
+
+        assertAttributes(doc.querySelector("#node24"), {
+          id: "node24",
+          class: "",
+          'data-long':LONG_ATTRIBUTE
+        });
+      }
+    },
+
+    {
+      desc: "Try to modify the collapsed long attribute, making sure it expands.",
+      before: function() {
+        assertAttributes(doc.querySelector("#node24"), {
+          id: "node24",
+          class: "",
+          'data-long': LONG_ATTRIBUTE
+        });
+      },
+      execute: function(after) {
+        let editor = getContainerForRawNode(markup, doc.querySelector("#node24")).editor;
+        let attr = editor.attrs["data-long"].querySelector(".editable");
+
+        // Check to make sure it has expanded after focus
+        attr.focus();
+        EventUtils.sendKey("return", inspector.panelWin);
+        let input = inplaceEditor(attr).input;
+        is (input.value, 'data-long="'+LONG_ATTRIBUTE+'"');
+        EventUtils.sendKey("escape", inspector.panelWin);
+
+        editField(attr, input.value  + ' data-short="ABC"');
+        inspector.once("markupmutation", after);
+      },
+      after: function() {
+
+        let editor = getContainerForRawNode(markup, doc.querySelector("#node24")).editor;
+        let visibleAttrText = editor.attrs["data-long"].querySelector(".attr-value").textContent;
+        is (visibleAttrText, LONG_ATTRIBUTE_COLLAPSED)
+
+        assertAttributes(doc.querySelector("#node24"), {
+          id: "node24",
+          class: "",
+          'data-long': LONG_ATTRIBUTE,
+          "data-short": "ABC"
+        });
+      }
+    },
+
+    {
+      desc: "Try to add long data URL to make sure it is collapsed in attribute editor.",
+      before: function() {
+        assertAttributes(doc.querySelector("#node-data-url"), {
+          id: "node-data-url"
+        });
+      },
+      execute: function(after) {
+        let editor = getContainerForRawNode(markup, doc.querySelector("#node-data-url")).editor;
+        let attr = editor.newAttr;
+        editField(attr, 'src="'+DATA_URL_ATTRIBUTE+'"');
+        inspector.once("markupmutation", after);
+      },
+      after: function() {
+
+        let editor = getContainerForRawNode(markup, doc.querySelector("#node-data-url")).editor;
+        let visibleAttrText = editor.attrs["src"].querySelector(".attr-value").textContent;
+        is (visibleAttrText, DATA_URL_ATTRIBUTE_COLLAPSED);
+
+        let node = doc.querySelector("#node-data-url");
+        is (node.width, 16, "Image width has been set after data url src.");
+        is (node.height, 16, "Image height has been set after data url src.");
+
+        assertAttributes(node, {
+          id: "node-data-url",
+          "src": DATA_URL_ATTRIBUTE
+        });
+      }
+    },
+
+    {
+      desc: "Try to add long data URL to make sure it is collapsed in attribute editor.",
+      before: function() {
+        assertAttributes(doc.querySelector("#node-data-url-style"), {
+          id: "node-data-url-style"
+        });
+      },
+      execute: function(after) {
+        let editor = getContainerForRawNode(markup, doc.querySelector("#node-data-url-style")).editor;
+        let attr = editor.newAttr;
+        editField(attr, "style='"+DATA_URL_INLINE_STYLE+"'");
+        inspector.once("markupmutation", after);
+      },
+      after: function() {
+
+        let editor = getContainerForRawNode(markup, doc.querySelector("#node-data-url-style")).editor;
+        let visibleAttrText = editor.attrs["style"].querySelector(".attr-value").textContent;
+        is (visibleAttrText, DATA_URL_INLINE_STYLE_COLLAPSED)
+
+        assertAttributes(doc.querySelector("#node-data-url-style"), {
+          id: "node-data-url-style",
+          'style':DATA_URL_INLINE_STYLE
         });
       }
     },

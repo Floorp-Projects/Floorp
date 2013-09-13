@@ -15,8 +15,12 @@ const WIDGET_FOCUSABLE_NODES = new Set(["vbox", "hbox"]);
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 
-this.EXPORTED_SYMBOLS = ["Heritage", "ViewHelpers", "WidgetMethods"];
+this.EXPORTED_SYMBOLS = [
+  "Heritage", "ViewHelpers", "WidgetMethods",
+  "setNamedTimeout", "clearNamedTimeout"
+];
 
 /**
  * Inheritance helpers from the addon SDK's core/heritage.
@@ -40,6 +44,41 @@ this.Heritage = {
     }, {});
   }
 };
+
+/**
+ * Helper for draining a rapid succession of events and invoking a callback
+ * once everything settles down.
+ *
+ * @param string aId
+ *        A string identifier for the named timeout.
+ * @param number aWait
+ *        The amount of milliseconds to wait after no more events are fired.
+ * @param function aCallback
+ *        Invoked when no more events are fired after the specified time.
+ */
+this.setNamedTimeout = function(aId, aWait, aCallback) {
+  clearNamedTimeout(aId);
+
+  namedTimeoutsStore.set(aId, setTimeout(() =>
+    namedTimeoutsStore.delete(aId) && aCallback(), aWait));
+};
+
+/**
+ * Clears a named timeout.
+ * @see setNamedTimeout
+ *
+ * @param string aId
+ *        A string identifier for the named timeout.
+ */
+this.clearNamedTimeout = function(aId) {
+  if (!namedTimeoutsStore) {
+    return;
+  }
+  clearTimeout(namedTimeoutsStore.get(aId));
+  namedTimeoutsStore.delete(aId);
+};
+
+XPCOMUtils.defineLazyGetter(this, "namedTimeoutsStore", () => new Map());
 
 /**
  * Helpers for creating and messaging between UI components.
@@ -154,6 +193,11 @@ this.ViewHelpers = {
    *        The element representing the pane to toggle.
    */
   togglePane: function(aFlags, aPane) {
+    // Make sure a pane is actually available first.
+    if (!aPane) {
+      return;
+    }
+
     // Hiding is always handled via margins, not the hidden attribute.
     aPane.removeAttribute("hidden");
 
@@ -168,8 +212,15 @@ this.ViewHelpers = {
       return;
     }
 
+    // The "animated" attributes enables animated toggles (slide in-out).
+    if (aFlags.animated) {
+      aPane.setAttribute("animated", "");
+    } else {
+      aPane.removeAttribute("animated");
+    }
+
     // Computes and sets the pane margins in order to hide or show it.
-    function set() {
+    let doToggle = () => {
       if (aFlags.visible) {
         aPane.style.marginLeft = "0";
         aPane.style.marginRight = "0";
@@ -194,19 +245,12 @@ this.ViewHelpers = {
       }
     }
 
-    // The "animated" attributes enables animated toggles (slide in-out).
-    if (aFlags.animated) {
-      aPane.setAttribute("animated", "");
-    } else {
-      aPane.removeAttribute("animated");
-    }
-
     // Sometimes it's useful delaying the toggle a few ticks to ensure
     // a smoother slide in-out animation.
     if (aFlags.delayed) {
-      aPane.ownerDocument.defaultView.setTimeout(set.bind(this), PANE_APPEARANCE_DELAY);
+      aPane.ownerDocument.defaultView.setTimeout(doToggle, PANE_APPEARANCE_DELAY);
     } else {
-      set.call(this);
+      doToggle();
     }
   }
 };
@@ -493,7 +537,7 @@ Item.prototype = {
    * @return string
    */
   toString: function() {
-    if (this._label && this._value) {
+    if (this._label != "undefined" && this._value != "undefined") {
       return this._label + " -> " + this._value;
     }
     if (this.attachment) {
@@ -723,25 +767,10 @@ this.WidgetMethods = {
   },
 
   /**
-   * Does not remove any item in this container. Instead, it overrides the
-   * current label to signal that it is unavailable and removes the tooltip.
-   */
-  setUnavailable: function() {
-    this._widget.setAttribute("notice", this.unavailableText);
-    this._widget.setAttribute("label", this.unavailableText);
-    this._widget.removeAttribute("tooltiptext");
-  },
-
-  /**
    * The label string automatically added to this container when there are
    * no child nodes present.
    */
   emptyText: "",
-
-  /**
-   * The label string added to this container when it is marked as unavailable.
-   */
-  unavailableText: "",
 
   /**
    * Toggles all the items in this container hidden or visible.
@@ -783,7 +812,7 @@ this.WidgetMethods = {
    *        If unspecified, all items will be sorted by their label.
    */
   sortContents: function(aPredicate = this._currentSortPredicate) {
-    let sortedItems = this.orderedItems.sort(this._currentSortPredicate = aPredicate);
+    let sortedItems = this.items.sort(this._currentSortPredicate = aPredicate);
 
     for (let i = 0, len = sortedItems.length; i < len; i++) {
       this.swapItems(this.getItemAtIndex(i), sortedItems[i]);
@@ -966,11 +995,10 @@ this.WidgetMethods = {
 
     // Prevent selecting the same item again and avoid dispatching
     // a redundant selection event, so return early.
-    if (targetElement == prevElement) {
-      return;
+    if (targetElement != prevElement) {
+      this._widget.selectedItem = targetElement;
+      ViewHelpers.dispatchEvent(targetElement || prevElement, "select", aItem);
     }
-    this._widget.selectedItem = targetElement;
-    ViewHelpers.dispatchEvent(targetElement || prevElement, "select", aItem);
 
     // Updates this container to reflect the information provided by the
     // currently selected item.
@@ -1209,15 +1237,23 @@ this.WidgetMethods = {
    *
    * @param nsIDOMNode aElement
    *        The element used to identify the item.
+   * @param object aFlags [optional]
+   *        Additional options for showing the source. Supported options:
+   *          - noSiblings: if siblings shouldn't be taken into consideration
+   *                        when searching for the associated item.
    * @return Item
    *         The matched item, or null if nothing is found.
    */
-  getItemForElement: function(aElement) {
+  getItemForElement: function(aElement, aFlags = {}) {
     while (aElement) {
-      let item =
-        this._itemsByElement.get(aElement) ||
-        this._itemsByElement.get(aElement.nextElementSibling) ||
-        this._itemsByElement.get(aElement.previousElementSibling);
+      let item = this._itemsByElement.get(aElement);
+
+      // Also search the siblings if allowed.
+      if (!aFlags.noSiblings) {
+        item = item ||
+          this._itemsByElement.get(aElement.nextElementSibling) ||
+          this._itemsByElement.get(aElement.previousElementSibling);
+      }
       if (item) {
         return item;
       }
@@ -1285,67 +1321,32 @@ this.WidgetMethods = {
   get itemCount() this._itemsByElement.size,
 
   /**
-   * Returns a list of items in this container, in no particular order.
+   * Returns a list of items in this container, in the displayed order.
    * @return array
    */
   get items() {
-    let items = [];
-    for (let [, item] of this._itemsByElement) {
-      items.push(item);
+    let store = [];
+    let itemCount = this.itemCount;
+    for (let i = 0; i < itemCount; i++) {
+      store.push(this.getItemAtIndex(i));
     }
-    return items;
+    return store;
   },
 
   /**
-   * Returns a list of labels in this container, in no particular order.
+   * Returns a list of labels in this container, in the displayed order.
    * @return array
    */
   get labels() {
-    let labels = [];
-    for (let [label] of this._itemsByLabel) {
-      labels.push(label);
-    }
-    return labels;
+    return this.items.map(e => e._label);
   },
 
   /**
-   * Returns a list of values in this container, in no particular order.
+   * Returns a list of values in this container, in the displayed order.
    * @return array
    */
   get values() {
-    let values = [];
-    for (let [value] of this._itemsByValue) {
-      values.push(value);
-    }
-    return values;
-  },
-
-  /**
-   * Returns a list of all the visible (non-hidden) items in this container,
-   * in no particular order.
-   * @return array
-   */
-  get visibleItems() {
-    let items = [];
-    for (let [element, item] of this._itemsByElement) {
-      if (!element.hidden) {
-        items.push(item);
-      }
-    }
-    return items;
-  },
-
-  /**
-   * Returns a list of all items in this container, in the displayed order.
-   * @return array
-   */
-  get orderedItems() {
-    let items = [];
-    let itemCount = this.itemCount;
-    for (let i = 0; i < itemCount; i++) {
-      items.push(this.getItemAtIndex(i));
-    }
-    return items;
+    return this.items.map(e => e._value);
   },
 
   /**
@@ -1353,16 +1354,8 @@ this.WidgetMethods = {
    * in the displayed order
    * @return array
    */
-  get orderedVisibleItems() {
-    let items = [];
-    let itemCount = this.itemCount;
-    for (let i = 0; i < itemCount; i++) {
-      let item = this.getItemAtIndex(i);
-      if (!item._target.hidden) {
-        items.push(item);
-      }
-    }
-    return items;
+  get visibleItems() {
+    return this.items.filter(e => !e._target.hidden);
   },
 
   /**

@@ -15,21 +15,10 @@ function test() {
 
 function testForOf(hud) {
   var jsterm = hud.jsterm;
-  jsterm.execute("{ [x.tagName for (x of document.body.childNodes) if (x.nodeType === 1)].join(' '); }");
-
-  waitForSuccess({
-    name: "jsterm output displayed",
-    validatorFn: function()
-    {
-      return hud.outputNode.querySelector(".webconsole-msg-output");
-    },
-    successFn: function()
-    {
-      let node = hud.outputNode.querySelector(".webconsole-msg-output");
+  jsterm.execute("{ [x.tagName for (x of document.body.childNodes) if (x.nodeType === 1)].join(' '); }",
+    (node) => {
       ok(/H1 DIV H2 P/.test(node.textContent),
         "for-of loop should find all top-level nodes");
       finishTest();
-    },
-    failureFn: finishTest,
-  });
+    });
 }

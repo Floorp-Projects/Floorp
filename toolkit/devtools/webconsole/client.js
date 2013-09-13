@@ -148,8 +148,8 @@ WebConsoleClient.prototype = {
   /**
    * Get Web Console-related preferences on the server.
    *
-   * @param object aPreferences
-   *        An object with the preferences you want to retrieve.
+   * @param array aPreferences
+   *        An array with the preferences you want to retrieve.
    * @param function [aOnResponse]
    *        Optional function to invoke when the response is received.
    */

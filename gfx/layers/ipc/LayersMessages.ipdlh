@@ -33,6 +33,7 @@ using mozilla::dom::ScreenOrientation;
 using mozilla::layers::TextureInfo;
 using mozilla::LayerMargin;
 using mozilla::LayerPoint;
+using mozilla::LayerRect;
 using mozilla::layers::ScaleMode;
 using mozilla::layers::DiagnosticTypes;
 
@@ -192,6 +193,10 @@ struct CommonLayerAttributes {
   bool isFixedPosition;
   LayerPoint fixedPositionAnchor;
   LayerMargin fixedPositionMargin;
+  bool isStickyPosition;
+  uint64_t stickyScrollContainerId;
+  LayerRect stickyScrollRangeOuter;
+  LayerRect stickyScrollRangeInner;
   nullable PLayer maskLayer;
   // Animated colors will only honored for ColorLayers.
   Animation[] animations;

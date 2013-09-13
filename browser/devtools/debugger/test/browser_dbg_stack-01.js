@@ -1,54 +1,41 @@
-/* vim:set ts=2 sw=2 sts=2 et: */
-/*
- * Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/**
+ * Test that stackframes are added when debugger is paused.
  */
 
-var gPane = null;
-var gTab = null;
-var gDebuggee = null;
-var gDebugger = null;
+const TAB_URL = EXAMPLE_URL + "doc_recursion-stack.html";
+
+let gTab, gDebuggee, gPanel, gDebugger;
+let gFrames;
 
 function test() {
-  debug_tab_pane(STACK_URL, function(aTab, aDebuggee, aPane) {
+  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
     gTab = aTab;
     gDebuggee = aDebuggee;
-    gPane = aPane;
-    gDebugger = gPane.panelWin;
+    gPanel = aPanel;
+    gDebugger = gPanel.panelWin;
+    gFrames = gDebugger.DebuggerView.StackFrames;
 
-    testSimpleCall();
+    waitForSourceAndCaretAndScopes(gPanel, ".html", 14).then(performTest);
+    gDebuggee.simpleCall();
   });
 }
 
-function testSimpleCall() {
-  gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
-    Services.tm.currentThread.dispatch({ run: function() {
+function performTest() {
+  is(gDebugger.gThreadClient.state, "paused",
+    "Should only be getting stack frames while paused.");
+  is(gFrames.itemCount, 1,
+    "Should have only one frame.");
 
-      let frames = gDebugger.DebuggerView.StackFrames.widget._list;
-      let childNodes = frames.childNodes;
-
-      is(gDebugger.DebuggerController.activeThread.state, "paused",
-        "Should only be getting stack frames while paused.");
-
-      is(frames.querySelectorAll(".dbg-stackframe").length, 1,
-        "Should have only one frame.");
-
-      is(childNodes.length, frames.querySelectorAll(".dbg-stackframe").length,
-        "All children should be frames.");
-
-      gDebugger.DebuggerController.activeThread.resume(function() {
-        closeDebuggerAndFinish();
-      });
-    }}, 0);
-  });
-
-  gDebuggee.simpleCall();
+  resumeDebuggerThenCloseAndFinish(gPanel);
 }
 
 registerCleanupFunction(function() {
-  removeTab(gTab);
-  gPane = null;
   gTab = null;
   gDebuggee = null;
+  gPanel = null;
   gDebugger = null;
+  gFrames = null;
 });

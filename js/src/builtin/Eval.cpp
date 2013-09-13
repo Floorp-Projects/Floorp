@@ -400,37 +400,10 @@ js::DirectEvalFromIon(JSContext *cx,
                          NullFramePtr() /* evalInFrame */, vp.address());
 }
 
-// We once supported a second argument to eval to use as the scope chain
-// when evaluating the code string.  Warn when such uses are seen so that
-// authors will know that support for eval(s, o) has been removed.
-static inline bool
-WarnOnTooManyArgs(JSContext *cx, const CallArgs &args)
-{
-    if (args.length() > 1) {
-        Rooted<JSScript*> script(cx, cx->currentScript());
-        if (script && !script->warnedAboutTwoArgumentEval) {
-            static const char TWO_ARGUMENT_WARNING[] =
-                "Support for eval(code, scopeObject) has been removed. "
-                "Use |with (scopeObject) eval(code);| instead.";
-            if (!JS_ReportWarning(cx, TWO_ARGUMENT_WARNING))
-                return false;
-            script->warnedAboutTwoArgumentEval = true;
-        } else {
-            // In the case of an indirect call without a caller frame, avoid a
-            // potential warning-flood by doing nothing.
-        }
-    }
-
-    return true;
-}
-
 bool
 js::IndirectEval(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (!WarnOnTooManyArgs(cx, args))
-        return false;
-
     Rooted<GlobalObject*> global(cx, &args.callee().global());
     return EvalKernel(cx, args, INDIRECT_EVAL, NullFramePtr(), global, NULL);
 }
@@ -446,9 +419,6 @@ js::DirectEval(JSContext *cx, const CallArgs &args)
     JS_ASSERT(JSOp(*iter.pc()) == JSOP_EVAL);
     JS_ASSERT_IF(caller.isFunctionFrame(),
                  caller.compartment() == caller.callee()->compartment());
-
-    if (!WarnOnTooManyArgs(cx, args))
-        return false;
 
     RootedObject scopeChain(cx, caller.scopeChain());
     return EvalKernel(cx, args, DIRECT_EVAL, caller, scopeChain, iter.pc());
