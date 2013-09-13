@@ -432,7 +432,7 @@ GeneratorKindFromBits(unsigned val) {
 
 } /* namespace js */
 
-class JSScript : public js::gc::Cell
+class JSScript : public js::gc::BarrieredCell<JSScript>
 {
     static const uint32_t stepFlagMask = 0x80000000U;
     static const uint32_t stepCountMask = 0x7fffffffU;
@@ -1062,26 +1062,6 @@ class JSScript : public js::gc::Cell
 
     void finalize(js::FreeOp *fop);
 
-    JS::Zone *zone() const { return tenuredZone(); }
-    JS::shadow::Zone *shadowZone() const { return JS::shadow::Zone::asShadowZone(zone()); }
-
-    static void writeBarrierPre(JSScript *script) {
-#ifdef JSGC_INCREMENTAL
-        if (!script || !script->shadowRuntimeFromAnyThread()->needsBarrier())
-            return;
-
-        JS::shadow::Zone *shadowZone = script->shadowZone();
-        if (shadowZone->needsBarrier()) {
-            MOZ_ASSERT(!js::RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone));
-            JSScript *tmp = script;
-            js::gc::MarkScriptUnbarriered(shadowZone->barrierTracer(), &tmp, "write barrier");
-            JS_ASSERT(tmp == script);
-        }
-#endif
-    }
-
-    static void writeBarrierPost(JSScript *script, void *addr) {}
-
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_SCRIPT; }
 
     void markChildren(JSTracer *trc);
@@ -1166,7 +1146,7 @@ class AliasedFormalIter
 
 // Information about a script which may be (or has been) lazily compiled to
 // bytecode from its source.
-class LazyScript : public js::gc::Cell
+class LazyScript : public gc::BarrieredCell<LazyScript>
 {
     // If non-NULL, the script has been compiled and this is a forwarding
     // pointer to the result.
@@ -1338,30 +1318,12 @@ class LazyScript : public js::gc::Cell
 
     uint32_t staticLevel(JSContext *cx) const;
 
-    Zone *zone() const { return tenuredZone(); }
-    JS::shadow::Zone *shadowZone() const { return JS::shadow::Zone::asShadowZone(zone()); }
-
     void markChildren(JSTracer *trc);
     void finalize(js::FreeOp *fop);
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
     {
         return mallocSizeOf(table_);
-    }
-
-    static void writeBarrierPre(LazyScript *lazy) {
-#ifdef JSGC_INCREMENTAL
-        if (!lazy || !lazy->shadowRuntimeFromAnyThread()->needsBarrier())
-            return;
-
-        JS::shadow::Zone *shadowZone = lazy->shadowZone();
-        if (shadowZone->needsBarrier()) {
-            MOZ_ASSERT(!js::RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone));
-            js::LazyScript *tmp = lazy;
-            MarkLazyScriptUnbarriered(shadowZone->barrierTracer(), &tmp, "write barrier");
-            JS_ASSERT(tmp == lazy);
-        }
-#endif
     }
 };
 
