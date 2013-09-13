@@ -58,6 +58,23 @@ class TiledLayerComposer;
 struct EffectChain;
 
 /**
+ * A base class for doing CompositableHost and platform dependent task on TextureHost.
+ */
+class CompositableQuirks : public RefCounted<CompositableQuirks>
+{
+public:
+  CompositableQuirks()
+  {
+    MOZ_COUNT_CTOR(CompositableQuirks);
+  }
+  virtual ~CompositableQuirks()
+  {
+    MOZ_COUNT_DTOR(CompositableQuirks);
+  }
+  virtual void SetCompositor(Compositor* aCompositor) {}
+};
+
+/**
  * The compositor-side counterpart to CompositableClient. Responsible for
  * updating textures and data about textures from IPC and how textures are
  * composited (tiling, double buffering, etc.).
@@ -81,6 +98,13 @@ public:
   static TemporaryRef<CompositableHost> Create(const TextureInfo& aTextureInfo);
 
   virtual CompositableType GetType() = 0;
+
+  virtual CompositableQuirks* GetCompositableQuirks() { return mQuirks; }
+
+  virtual void SetCompositableQuirks(CompositableQuirks* aQuirks)
+  {
+    mQuirks = aQuirks;
+  }
 
   // If base class overrides, it should still call the parent implementation
   virtual void SetCompositor(Compositor* aCompositor);
@@ -268,6 +292,7 @@ protected:
   TextureInfo mTextureInfo;
   Compositor* mCompositor;
   Layer* mLayer;
+  RefPtr<CompositableQuirks> mQuirks;
   RefPtr<TextureHost> mFirstTexture;
   bool mAttached;
   bool mKeepAttached;

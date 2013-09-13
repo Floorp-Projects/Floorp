@@ -300,7 +300,8 @@ TiledTexture::Validate(gfxReusableSurfaceWrapper* aReusableSurface, Compositor* 
     // convert placeholder tile to a real tile
     mDeprecatedTextureHost = DeprecatedTextureHost::CreateDeprecatedTextureHost(SurfaceDescriptor::Tnull_t,
                                                   TEXTURE_HOST_TILED,
-                                                  flags);
+                                                  flags,
+                                                  nullptr);
     mDeprecatedTextureHost->SetCompositor(aCompositor);
     flags |= TEXTURE_NEW_TILE;
   }
