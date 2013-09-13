@@ -44,10 +44,15 @@ public:
   virtual void OnConnect(const nsAString& aErrorStr) MOZ_OVERRIDE;
   virtual void OnDisconnect(const nsAString& aErrorStr) MOZ_OVERRIDE;
 
-  // A2DP member functions
+  virtual void GetName(nsACString& aName)
+  {
+    aName.AssignLiteral("A2DP");
+  }
+
+  // A2DP-specific functions
   void HandleSinkPropertyChanged(const BluetoothSignal& aSignal);
 
-  // AVRCP member functions
+  // AVRCP-specific functions
   void SetAvrcpConnected(bool aConnected);
   bool IsAvrcpConnected();
   void UpdateMetaData(const nsAString& aTitle,
