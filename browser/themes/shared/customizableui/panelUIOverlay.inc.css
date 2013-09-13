@@ -220,18 +220,37 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 :-moz-any(#PanelUI-help, #PanelUI-customize, #PanelUI-quit) > .toolbarbutton-icon {
   margin: 0 0 3px;
 }
+
+#PanelUI-customize {
+  list-style-image: url(chrome://browser/skin/menuPanel-customize.png);
+}
+
 #PanelUI-help {
   -moz-border-start-style: none;
-  list-style-image: url(chrome://global/skin/icons/question-16.png);
+  list-style-image: url(chrome://browser/skin/menuPanel-help.png);
 }
-#PanelUI-customize {
-  list-style-image: url(chrome://browser/skin/menuPanel-small.png);
-  -moz-image-region: rect(0, 16px, 16px, 0);
-}
+
 #PanelUI-quit {
   -moz-border-end-style: none;
-  list-style-image: url(chrome://browser/skin/menuPanel-small.png);
+  list-style-image: url(chrome://browser/skin/menuPanel-exit.png);
+}
+
+#PanelUI-customize,
+#PanelUI-help,
+#PanelUI-quit {
   -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+#PanelUI-customize:hover,
+#PanelUI-help:hover,
+#PanelUI-quit:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+#PanelUI-customize:hover:active,
+#PanelUI-help:hover:active,
+#PanelUI-quit:hover:active {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 #PanelUI-help[disabled],

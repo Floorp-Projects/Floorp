@@ -58,6 +58,12 @@ browser.jar:
   skin/classic/browser/notification-64@2x.png
   skin/classic/browser/menuPanel.png
   skin/classic/browser/menuPanel@2x.png
+  skin/classic/browser/menuPanel-customize.png
+  skin/classic/browser/menuPanel-customize@2x.png
+  skin/classic/browser/menuPanel-exit.png
+  skin/classic/browser/menuPanel-exit@2x.png
+  skin/classic/browser/menuPanel-help.png
+  skin/classic/browser/menuPanel-help@2x.png
   skin/classic/browser/menuPanel-small.png
   skin/classic/browser/menuPanel-small@2x.png
   skin/classic/browser/mixed-content-blocked-16.png

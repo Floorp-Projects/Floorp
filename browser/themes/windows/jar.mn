@@ -46,6 +46,9 @@ browser.jar:
         skin/classic/browser/menu-back.png
         skin/classic/browser/menu-forward.png
         skin/classic/browser/menuPanel.png
+        skin/classic/browser/menuPanel-customize.png
+        skin/classic/browser/menuPanel-exit.png
+        skin/classic/browser/menuPanel-help.png
         skin/classic/browser/menuPanel-small.png
         skin/classic/browser/mixed-content-blocked-16.png
         skin/classic/browser/mixed-content-blocked-64.png
@@ -332,6 +335,9 @@ browser.jar:
         skin/classic/aero/browser/menu-back.png                      (menu-back-aero.png)
         skin/classic/aero/browser/menu-forward.png                   (menu-forward-aero.png)
         skin/classic/aero/browser/menuPanel.png                      (menuPanel-aero.png)
+        skin/classic/aero/browser/menuPanel-customize.png
+        skin/classic/aero/browser/menuPanel-exit.png
+        skin/classic/aero/browser/menuPanel-help.png
         skin/classic/aero/browser/menuPanel-small.png                (menuPanel-small-aero.png)
         skin/classic/aero/browser/mixed-content-blocked-16.png
         skin/classic/aero/browser/mixed-content-blocked-64.png

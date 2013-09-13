@@ -41,6 +41,9 @@ browser.jar:
   skin/classic/browser/identity-icons-https-mixed-display.png
   skin/classic/browser/Info.png
   skin/classic/browser/menuPanel.png
+  skin/classic/browser/menuPanel-customize.png
+  skin/classic/browser/menuPanel-exit.png
+  skin/classic/browser/menuPanel-help.png
   skin/classic/browser/menuPanel-small.png
   skin/classic/browser/mixed-content-blocked-16.png
   skin/classic/browser/mixed-content-blocked-64.png
