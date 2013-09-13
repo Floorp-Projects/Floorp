@@ -6,8 +6,8 @@
 "use strict";
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
-const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("sdk/core/promise");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 function DebuggerPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
@@ -22,7 +22,8 @@ function DebuggerPanel(iframeWindow, toolbox) {
   this.unhighlightWhenResumed = this.unhighlightWhenResumed.bind(this);
 
   EventEmitter.decorate(this);
-}
+};
+
 exports.DebuggerPanel = DebuggerPanel;
 
 DebuggerPanel.prototype = {

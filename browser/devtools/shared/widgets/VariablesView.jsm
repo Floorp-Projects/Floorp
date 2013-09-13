@@ -21,7 +21,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 Cu.import("resource:///modules/devtools/shared/event-emitter.js");
-let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
 
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
   "resource://gre/modules/devtools/Loader.jsm");
@@ -1724,7 +1723,7 @@ Scope.prototype = {
     }
     let throbber = this._throbber = this.document.createElement("hbox");
     throbber.className = "variables-view-throbber";
-    this._title.appendChild(throbber);
+    this._title.insertBefore(throbber, this._spacer);
   },
 
   /**
@@ -2240,19 +2239,14 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
    *             - { type: "object", class: "Object" }
    */
   setGrip: function(aGrip) {
-    // Don't allow displaying grip information if there's no name available.
+    // Don't allow displaying grip information if there's no name available
+    // or the grip is malformed.
     if (!this._nameString || aGrip === undefined || aGrip === null) {
       return;
     }
     // Getters and setters should display grip information in sub-properties.
-    if (!this._isUndefined && (this.getter || this.setter)) {
-      this._valueLabel.setAttribute("value", "");
+    if (this.getter || this.setter) {
       return;
-    }
-
-    // Make sure the value is escaped unicode if it's a string.
-    if (typeof aGrip == "string") {
-      aGrip = NetworkHelper.convertToUnicode(unescape(aGrip));
     }
 
     let prevGrip = this._valueGrip;
@@ -2325,18 +2319,19 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
     let valueLabel = this._valueLabel = document.createElement("label");
     valueLabel.className = "plain value";
     valueLabel.setAttribute("crop", "center");
-    valueLabel.setAttribute('flex', "1");
+
+    let spacer = this._spacer = document.createElement("spacer");
+    spacer.setAttribute("flex", "1");
 
     this._title.appendChild(separatorLabel);
     this._title.appendChild(valueLabel);
+    this._title.appendChild(spacer);
 
-    let isPrimitive = this._isPrimitive = VariablesView.isPrimitive(descriptor);
-    let isUndefined = this._isUndefined = VariablesView.isUndefined(descriptor);
-
-    if (isPrimitive || isUndefined) {
+    if (VariablesView.isPrimitive(descriptor)) {
       this.hideArrow();
     }
-    if (!isUndefined && (descriptor.get || descriptor.set)) {
+
+    if (descriptor.get || descriptor.set) {
       separatorLabel.hidden = true;
       valueLabel.hidden = true;
 
@@ -2374,22 +2369,18 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
     let ownerView = this.ownerView;
     let descriptor = this._initialDescriptor;
 
-    if (ownerView.eval) {
-      if (!this._isUndefined && (this.getter || this.setter)) {
-        let editNode = this._editNode = this.document.createElement("toolbarbutton");
-        editNode.className = "plain variables-view-edit";
-        editNode.addEventListener("mousedown", this._onEdit.bind(this), false);
-        this._title.appendChild(editNode);
-      }
+    if (ownerView.eval && this.getter || this.setter) {
+      let editNode = this._editNode = this.document.createElement("toolbarbutton");
+      editNode.className = "plain variables-view-edit";
+      editNode.addEventListener("mousedown", this._onEdit.bind(this), false);
+      this._title.insertBefore(editNode, this._spacer);
     }
     if (ownerView.delete) {
-      if (!this._isUndefined || !(ownerView.getter && ownerView.setter)) {
-        let deleteNode = this._deleteNode = this.document.createElement("toolbarbutton");
-        deleteNode.className = "plain variables-view-delete";
-        deleteNode.setAttribute("ordinal", 2);
-        deleteNode.addEventListener("click", this._onDelete.bind(this), false);
-        this._title.appendChild(deleteNode);
-      }
+      let deleteNode = this._deleteNode = this.document.createElement("toolbarbutton");
+      deleteNode.className = "plain variables-view-delete";
+      deleteNode.setAttribute("ordinal", 2);
+      deleteNode.addEventListener("click", this._onDelete.bind(this), false);
+      this._title.appendChild(deleteNode);
     }
     if (ownerView.contextMenuId) {
       this._title.setAttribute("context", ownerView.contextMenuId);
@@ -2689,18 +2680,15 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
    * Disables this variable prior to a new name switch or value evaluation.
    */
   _disable: function() {
+    // Prevent the variable from being collapsed or expanded.
     this.hideArrow();
-    this._separatorLabel.hidden = true;
-    this._valueLabel.hidden = true;
+
+    // Hide any nodes that may offer information about the variable.
+    for (let node of this._title.childNodes) {
+      node.hidden = node != this._arrow && node != this._name;
+    }
     this._enum.hidden = true;
     this._nonenum.hidden = true;
-
-    if (this._editNode) {
-      this._editNode.hidden = true;
-    }
-    if (this._deleteNode) {
-      this._deleteNode.hidden = true;
-    }
   },
 
   /**
@@ -2808,9 +2796,8 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
   _symbolicName: "",
   _absoluteName: "",
   _initialDescriptor: null,
-  _isPrimitive: false,
-  _isUndefined: false,
   _separatorLabel: null,
+  _spacer: null,
   _valueLabel: null,
   _inputNode: null,
   _editNode: null,
