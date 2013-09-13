@@ -109,7 +109,7 @@ let UI = {
   },
 
   installSimulator: function() {
-    let url = Services.prefs.getCharPref("devtools.appmanager.simulatorInstallPage");
+    let url = "https://developer.mozilla.org/docs/Mozilla/Firefox_OS/Using_the_App_Manager#Simulator";
     window.open(url);
   },
 
