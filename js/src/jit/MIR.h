@@ -2197,7 +2197,7 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy
         setResultTypeSet(ins->resultTypeSet());
         setMovable();
 
-        if (mode_ == TypeBarrier)
+        if (mode_ == TypeBarrier || mode_ == Fallible)
             setGuard();
 
         bailoutKind_ = kind;
