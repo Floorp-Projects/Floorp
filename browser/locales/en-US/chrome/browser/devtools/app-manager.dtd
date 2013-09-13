@@ -66,11 +66,10 @@
 <!ENTITY projects.title "Local Apps">
 <!ENTITY projects.appDetails "App Details">
 <!ENTITY projects.removeAppFromList "Remove this app from the list of apps you are working on. This will not remove it from a device or a simulator.">
-<!ENTITY projects.reloadFiles "Refresh">
-<!ENTITY projects.installApp "Install">
-<!ENTITY projects.startApp "Start">
-<!ENTITY projects.stopApp "Stop">
+<!ENTITY projects.updateApp "Update">
+<!ENTITY projects.updateAppTooltip "Execute validation checks and update the app to the connected device">
 <!ENTITY projects.debugApp "Debug">
+<!ENTITY projects.debugAppTooltip "Open Developer Tools connected to this app">
 <!ENTITY projects.hostedManifestPlaceHolder2 "http://example.com/app/manifest.webapp">
 <!ENTITY projects.noProjects "No projects. Add a new packaged app below (local directory) or a hosted app (link to a manifest file).">
 

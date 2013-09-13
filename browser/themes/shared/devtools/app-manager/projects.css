@@ -358,31 +358,11 @@ strong {
   color: #FFF;
 }
 
-.project-button-install,
-.project-button-start {
-  color: #18BC9C
-}
-
-.project-button-install:hover,
-.project-button-start:hover {
-  background-color: #18BC9C;
-  color: #FFF;
-}
-
-.project-button-stop {
-  color: #E74C3C;
-}
-
-.project-button-stop:hover {
-  background-color: #E74C3C;
-  color: #FFF;
-}
-
-.project-button-refresh {
+.project-button-update {
   color: #777;
 }
 
-.project-button-refresh:hover {
+.project-button-update:hover {
   background-color: #777;
   color: #FFF;
 }
