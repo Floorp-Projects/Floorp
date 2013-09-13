@@ -12,6 +12,7 @@
 #include "nsIDOMSimpleGestureEvent.h" // Constants for gesture events
 #include "InputData.h"
 #include "UIABridgePrivate.h"
+#include "MetroAppShell.h"
 
 // System headers (alphabetical)
 #include <windows.ui.core.h> // ABI::Window::UI::Core namespace
@@ -635,6 +636,11 @@ MetroInput::OnPointerReleased(UI::Core::ICoreWindow* aSender,
     mGestureRecognizer->ProcessUpEvent(currentPoint.Get());
   }
 
+  // Make sure all gecko events are dispatched and the dom is up to date
+  // so that when ui automation comes in looking for focus info it gets
+  // the right information.
+  MetroAppShell::MarkEventQueueForPurge();
+
   return S_OK;
 }
 
@@ -1089,17 +1095,6 @@ MetroInput::DeliverNextQueuedEventIgnoreStatus()
   MOZ_ASSERT(event);
   DispatchEventIgnoreStatus(event);
   delete event;
-}
-
-nsEventStatus
-MetroInput::DeliverNextQueuedEvent()
-{
-  nsGUIEvent* event = static_cast<nsGUIEvent*>(mInputEventQueue.PopFront());
-  MOZ_ASSERT(event);
-  nsEventStatus status;
-  mWidget->DispatchEvent(event, status);
-  delete event;
-  return status;
 }
 
 void

@@ -12,12 +12,11 @@
 #include <gdk/gdkkeysyms.h>
 #include <algorithm>
 #include <gdk/gdk.h>
-#ifdef MOZ_X11
 #include <gdk/gdkx.h>
-#endif /* MOZ_X11 */
 #if (MOZ_WIDGET_GTK == 3)
 #include <gdk/gdkkeysyms-compat.h>
 #endif
+#include <X11/XKBlib.h>
 #include "nsGUIEvent.h"
 #include "WidgetUtils.h"
 #include "keysym2ucs.h"
@@ -153,7 +152,8 @@ KeymapWrapper::GetInstance()
 }
 
 KeymapWrapper::KeymapWrapper() :
-    mInitialized(false), mGdkKeymap(gdk_keymap_get_default())
+    mInitialized(false), mGdkKeymap(gdk_keymap_get_default()),
+    mXKBBaseEventCode(0)
 {
 #ifdef PR_LOGGING
     if (!gKeymapWrapperLog) {
@@ -170,6 +170,8 @@ KeymapWrapper::KeymapWrapper() :
     // This is necessary for catching the destroying timing.
     g_object_weak_ref(G_OBJECT(mGdkKeymap),
                       (GWeakNotify)OnDestroyKeymap, this);
+
+    InitXKBExtension();
 
     Init();
 }
@@ -202,6 +204,48 @@ KeymapWrapper::Init()
          GetModifierMask(SHIFT), GetModifierMask(CTRL),
          GetModifierMask(ALT), GetModifierMask(META),
          GetModifierMask(SUPER), GetModifierMask(HYPER)));
+}
+
+void
+KeymapWrapper::InitXKBExtension()
+{
+    int xkbMajorVer = XkbMajorVersion;
+    int xkbMinorVer = XkbMinorVersion;
+    if (!XkbLibraryVersion(&xkbMajorVer, &xkbMinorVer)) {
+        PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+               ("KeymapWrapper(%p): InitXKBExtension failed due to failure of "
+                "XkbLibraryVersion()", this));
+        return;
+    }
+
+    Display* display =
+        gdk_x11_display_get_xdisplay(gdk_display_get_default());
+
+    // XkbLibraryVersion() set xkbMajorVer and xkbMinorVer to that of the
+    // library, which may be newer than what is required of the server in
+    // XkbQueryExtension(), so these variables should be reset to
+    // XkbMajorVersion and XkbMinorVersion before the XkbQueryExtension call.
+    xkbMajorVer = XkbMajorVersion;
+    xkbMinorVer = XkbMinorVersion;
+    int opcode, baseErrorCode;
+    if (!XkbQueryExtension(display, &opcode, &mXKBBaseEventCode, &baseErrorCode,
+                           &xkbMajorVer, &xkbMinorVer)) {
+        PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+               ("KeymapWrapper(%p): InitXKBExtension failed due to failure of "
+                "XkbQueryExtension(), display=0x%p", this, display));
+        return;
+    }
+
+    if (!XkbSelectEventDetails(display, XkbUseCoreKbd, XkbStateNotify,
+                               XkbModifierStateMask, XkbModifierStateMask)) {
+        PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+               ("KeymapWrapper(%p): InitXKBExtension failed due to failure of "
+                "XkbSelectEventDetails(), display=0x%p", this, display));
+        return;
+    }
+
+    PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+           ("KeymapWrapper(%p): InitXKBExtension, Succeeded", this));
 }
 
 void
@@ -722,17 +766,22 @@ KeymapWrapper::InitKeyEvent(nsKeyEvent& aKeyEvent,
     // Unfortunately, gdk_keyboard_get_modifiers() returns current modifier
     // state.  It means if there're some pending modifier key press or
     // key release events, the result isn't what we want.
-    // Temporarily, we should compute the state only when the key event
-    // is GDK_KEY_PRESS.
-    // XXX If we could know the modifier keys state at the key release event,
-    //     we should cut out changingMask from modifierState.
     guint modifierState = aGdkKeyEvent->state;
-    if (aGdkKeyEvent->is_modifier && aGdkKeyEvent->type == GDK_KEY_PRESS) {
-        ModifierKey* modifierKey =
-            keymapWrapper->GetModifierKey(aGdkKeyEvent->hardware_keycode);
-        if (modifierKey) {
-            // If new modifier key is pressed, add the pressed mod mask.
-            modifierState |= modifierKey->mMask;
+    if (aGdkKeyEvent->is_modifier) {
+        Display* display =
+            gdk_x11_display_get_xdisplay(gdk_display_get_default());
+        if (XEventsQueued(display, QueuedAfterReading)) {
+            XEvent nextEvent;
+            XPeekEvent(display, &nextEvent);
+            if (nextEvent.type == keymapWrapper->mXKBBaseEventCode) {
+                XkbEvent* XKBEvent = (XkbEvent*)&nextEvent;
+                if (XKBEvent->any.xkb_type == XkbStateNotify) {
+                    XkbStateNotifyEvent* stateNotifyEvent =
+                        (XkbStateNotifyEvent*)XKBEvent;
+                    modifierState &= ~0xFF;
+                    modifierState |= stateNotifyEvent->lookup_mods;
+                }
+            }
         }
     }
     InitInputEvent(aKeyEvent, modifierState);

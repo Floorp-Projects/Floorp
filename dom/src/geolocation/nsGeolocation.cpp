@@ -1461,7 +1461,7 @@ Geolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
 
     // because owner implements nsITabChild, we can assume that it is
     // the one and only TabChild.
-    TabChild* child = GetTabChildFrom(window->GetDocShell());
+    TabChild* child = TabChild::GetFrom(window->GetDocShell());
     if (!child) {
       return false;
     }

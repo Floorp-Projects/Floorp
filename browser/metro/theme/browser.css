@@ -222,6 +222,21 @@ documenttab[selected] .documenttab-selection {
   visibility: collapse;
 }
 
+#autocomplete-overlay {
+  display: none;
+  background-color: black;
+  opacity: .3;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+#stack[autocomplete] > #page > #content-viewport > #autocomplete-overlay {
+  display: -moz-box;
+}
+
 /* Browser Content Areas ==================================================== */
 
 /* a 'margin-top' is applied dynamically in ContentAreaObserver */
