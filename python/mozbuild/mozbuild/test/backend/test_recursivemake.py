@@ -468,18 +468,23 @@ class TestRecursiveMakeBackend(BackendTester):
 
         expected = [
             "ALL_IPDLSRCS += %s/bar/bar.ipdl" % topsrcdir,
-            "CPPSRCS += bar.cpp",
-            "CPPSRCS += barChild.cpp",
-            "CPPSRCS += barParent.cpp",
+            "",
+            "CPPSRCS += bar.cpp barChild.cpp barParent.cpp",
+            "",
             "ALL_IPDLSRCS += %s/bar/bar2.ipdlh" % topsrcdir,
+            "",
             "CPPSRCS += bar2.cpp",
+            "",
             "ALL_IPDLSRCS += %s/foo/foo.ipdl" % topsrcdir,
-            "CPPSRCS += foo.cpp",
-            "CPPSRCS += fooChild.cpp",
-            "CPPSRCS += fooParent.cpp",
+            "",
+            "CPPSRCS += foo.cpp fooChild.cpp fooParent.cpp",
+            "",
             "ALL_IPDLSRCS += %s/foo/foo2.ipdlh" % topsrcdir,
+            "",
             "CPPSRCS += foo2.cpp",
+            "",
             "IPDLDIRS := %s/bar %s/foo" % (topsrcdir, topsrcdir),
+            "",
         ]
         self.assertEqual(lines, expected)
 
