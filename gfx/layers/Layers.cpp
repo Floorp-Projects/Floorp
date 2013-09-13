@@ -1231,7 +1231,11 @@ Layer::DumpSelf(FILE* aFile, const char* aPrefix)
 {
   nsAutoCString str;
   PrintInfo(str, aPrefix);
-  fprintf(FILEOrDefault(aFile), "%s\n", str.get());
+  if (!aFile || aFile == stderr) {
+    printf_stderr("%s\n", str.get());
+  } else {
+    fprintf(aFile, "%s\n", str.get());
+  }
 }
 
 void
