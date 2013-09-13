@@ -995,11 +995,10 @@ this.WidgetMethods = {
 
     // Prevent selecting the same item again and avoid dispatching
     // a redundant selection event, so return early.
-    if (targetElement == prevElement) {
-      return;
+    if (targetElement != prevElement) {
+      this._widget.selectedItem = targetElement;
+      ViewHelpers.dispatchEvent(targetElement || prevElement, "select", aItem);
     }
-    this._widget.selectedItem = targetElement;
-    ViewHelpers.dispatchEvent(targetElement || prevElement, "select", aItem);
 
     // Updates this container to reflect the information provided by the
     // currently selected item.
