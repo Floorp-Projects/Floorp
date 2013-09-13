@@ -30,7 +30,7 @@ fuzzy-if(Android,2,4) == right-3.html right-3-ref.html
 == scrollframe-reflow-1.html scrollframe-reflow-1-ref.html
 == scrollframe-reflow-2.html scrollframe-reflow-2-ref.html
 == scrollframe-auto-1.html scrollframe-auto-1-ref.html
-fuzzy-if(Android,1,3) == stacking-context-1.html stacking-context-1-ref.html
+fuzzy-if(Android,2,3) == stacking-context-1.html stacking-context-1-ref.html
 == top-bottom-1.html top-bottom-1-ref.html
 == top-bottom-2.html top-bottom-2-ref.html
 == top-bottom-3.html top-bottom-3-ref.html
