@@ -1212,20 +1212,6 @@ Breakpoints.prototype = {
    * A map of breakpoint promises as tracked by the debugger frontend.
    * The keys consist of a string representation of the breakpoint location.
    */
-
-  /**
-   * Skip editor breakpoint change events.
-   *
-   * This property tells the source editor event handler to skip handling of
-   * the BREAKPOINT_CHANGE events. This is used when the debugger adds/removes
-   * breakpoints from the editor. Typically, the BREAKPOINT_CHANGE event handler
-   * adds/removes events from the debugger, but when breakpoints are added from
-   * the public debugger API, we need to do things in reverse.
-   *
-   * This implementation relies on the fact that the source editor fires the
-   * BREAKPOINT_CHANGE events synchronously.
-   */
-  _skipEditorBreakpointCallbacks: false,
   _added: new Map(),
   _removing: new Map(),
 
@@ -1264,13 +1250,8 @@ Breakpoints.prototype = {
    *        The SourceEditor.EVENTS.BREAKPOINT_CHANGE event object.
    */
   _onEditorBreakpointChange: function(aEvent) {
-    if (this._skipEditorBreakpointCallbacks) {
-      return;
-    }
-    this._skipEditorBreakpointCallbacks = true;
     aEvent.added.forEach(this._onEditorBreakpointAdd, this);
     aEvent.removed.forEach(this._onEditorBreakpointRemove, this);
-    this._skipEditorBreakpointCallbacks = false;
   },
 
   /**
@@ -1545,9 +1526,7 @@ Breakpoints.prototype = {
     // Update the editor if required.
     if (!aFlags.noEditorUpdate) {
       if (location.url == currentSourceUrl) {
-        this._skipEditorBreakpointCallbacks = true;
         DebuggerView.editor.addBreakpoint(location.line - 1);
-        this._skipEditorBreakpointCallbacks = false;
       }
     }
 
@@ -1581,9 +1560,7 @@ Breakpoints.prototype = {
     // Update the editor if required.
     if (!aFlags.noEditorUpdate) {
       if (aLocation.url == currentSourceUrl) {
-        this._skipEditorBreakpointCallbacks = true;
         DebuggerView.editor.removeBreakpoint(aLocation.line - 1);
-        this._skipEditorBreakpointCallbacks = false;
       }
     }
     // Update the breakpoints pane if required.
