@@ -314,8 +314,7 @@ types::TypeFailure(JSContext *cx, const char *fmt, ...)
 // TypeSet
 /////////////////////////////////////////////////////////////////////
 
-TypeSet::TypeSet(Type type)
-  : flags(0), objectSet(NULL), constraintList(NULL)
+TemporaryTypeSet::TemporaryTypeSet(Type type)
 {
     if (type.isUnknown()) {
         flags |= TYPE_FLAG_BASE_MASK;
@@ -398,9 +397,11 @@ TypeSet::addTypesToConstraint(JSContext *cx, TypeConstraint *constraint)
         constraint->newType(cx, this, types[i]);
 }
 
-inline void
+void
 TypeSet::add(JSContext *cx, TypeConstraint *constraint, bool callExisting)
 {
+    JS_ASSERT(isStackSet() || isHeapSet());
+
     if (!constraint) {
         /* OOM failure while constructing the constraint. */
         cx->compartment()->types.setPendingNukeTypes(cx);
@@ -471,34 +472,11 @@ TypeSet::print()
     }
 }
 
-StackTypeSet *
-StackTypeSet::make(JSContext *cx, const char *name)
-{
-    JS_ASSERT(cx->compartment()->activeAnalysis);
-
-    StackTypeSet *res = cx->analysisLifoAlloc().new_<StackTypeSet>();
-    if (!res) {
-        cx->compartment()->types.setPendingNukeTypes(cx);
-        return NULL;
-    }
-
-    InferSpew(ISpewOps, "typeSet: %sT%p%s intermediate %s",
-              InferSpewColor(res), res, InferSpewColorReset(),
-              name);
-    res->setPurged();
-
-    return res;
-}
-
-StackTypeSet *
+TemporaryTypeSet *
 TypeSet::clone(LifoAlloc *alloc) const
 {
     unsigned objectCount = baseObjectCount();
     unsigned capacity = (objectCount >= 2) ? HashSetCapacity(objectCount) : 0;
-
-    StackTypeSet *res = alloc->new_<StackTypeSet>();
-    if (!res)
-        return NULL;
 
     TypeObjectKey **newSet;
     if (capacity) {
@@ -508,17 +486,17 @@ TypeSet::clone(LifoAlloc *alloc) const
         PodCopy(newSet, objectSet, capacity);
     }
 
-    res->flags = this->flags;
-    res->objectSet = capacity ? newSet : this->objectSet;
+    uint32_t newFlags = flags & ~(TYPE_FLAG_STACK_SET | TYPE_FLAG_HEAP_SET);
+    TemporaryTypeSet *res = alloc->new_<TemporaryTypeSet>(newFlags, capacity ? newSet : objectSet);
+    if (!res)
+        return NULL;
 
     return res;
 }
 
 bool
-TypeSet::addObject(TypeObjectKey *key, LifoAlloc *alloc)
+TemporaryTypeSet::addObject(TypeObjectKey *key, LifoAlloc *alloc)
 {
-    JS_ASSERT(!constraintList);
-
     uint32_t objectCount = baseObjectCount();
     TypeObjectKey **pentry = HashSetInsert<TypeObjectKey *,TypeObjectKey,TypeObjectKey>
                                  (*alloc, objectSet, objectCount, key);
@@ -538,14 +516,13 @@ TypeSet::addObject(TypeObjectKey *key, LifoAlloc *alloc)
     return true;
 }
 
-/* static */ StackTypeSet *
+/* static */ TemporaryTypeSet *
 TypeSet::unionSets(TypeSet *a, TypeSet *b, LifoAlloc *alloc)
 {
-    StackTypeSet *res = alloc->new_<StackTypeSet>();
+    TemporaryTypeSet *res = alloc->new_<TemporaryTypeSet>(a->baseFlags() | b->baseFlags(),
+                                                          static_cast<TypeObjectKey**>(NULL));
     if (!res)
         return NULL;
-
-    res->flags = a->baseFlags() | b->baseFlags();
 
     if (!res->unknownObject()) {
         for (size_t i = 0; i < a->getObjectCount() && !res->unknownObject(); i++) {
@@ -595,13 +572,12 @@ class TypeConstraintSubset : public TypeConstraint
 void
 StackTypeSet::addSubset(JSContext *cx, StackTypeSet *target)
 {
-    add(cx, cx->analysisLifoAlloc().new_<TypeConstraintSubset>(target));
+    add(cx, cx->typeLifoAlloc().new_<TypeConstraintSubset>(target));
 }
 
 void
 HeapTypeSet::addSubset(JSContext *cx, HeapTypeSet *target)
 {
-    JS_ASSERT(!target->purged());
     add(cx, cx->typeLifoAlloc().new_<TypeConstraintSubset>(target));
 }
 
@@ -671,7 +647,7 @@ GetValueTypeFromTypeFlags(TypeFlags flags)
 }
 
 JSValueType
-StackTypeSet::getKnownTypeTag()
+TemporaryTypeSet::getKnownTypeTag()
 {
     TypeFlags flags = baseFlags();
     JSValueType type;
@@ -722,7 +698,7 @@ HeapTypeSet::getKnownTypeTag(JSContext *cx)
 }
 
 bool
-StackTypeSet::mightBeType(JSValueType type)
+TemporaryTypeSet::mightBeType(JSValueType type)
 {
     if (unknown())
         return true;
@@ -768,7 +744,7 @@ class TypeConstraintFreezeObjectFlags : public TypeConstraint
 } /* anonymous namespace */
 
 bool
-StackTypeSet::hasObjectFlags(JSContext *cx, TypeObjectFlags flags)
+TemporaryTypeSet::hasObjectFlags(JSContext *cx, TypeObjectFlags flags)
 {
     if (unknownObject())
         return true;
@@ -797,7 +773,7 @@ StackTypeSet::hasObjectFlags(JSContext *cx, TypeObjectFlags flags)
          * Add a constraint on the the object to pick up changes in the
          * object's properties.
          */
-        TypeSet *types = object->getProperty(cx, JSID_EMPTY, false);
+        HeapTypeSet *types = object->getProperty(cx, JSID_EMPTY, false);
         if (!types)
             return true;
         types->add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeObjectFlags>(
@@ -940,7 +916,7 @@ HeapTypeSet::knownNonEmpty(JSContext *cx)
 }
 
 bool
-StackTypeSet::filtersType(const StackTypeSet *other, Type filteredType) const
+TemporaryTypeSet::filtersType(const TemporaryTypeSet *other, Type filteredType) const
 {
     if (other->unknown())
         return unknown();
@@ -966,8 +942,8 @@ StackTypeSet::filtersType(const StackTypeSet *other, Type filteredType) const
     return true;
 }
 
-StackTypeSet::DoubleConversion
-StackTypeSet::convertDoubleElements(JSContext *cx)
+TemporaryTypeSet::DoubleConversion
+TemporaryTypeSet::convertDoubleElements(JSContext *cx)
 {
     if (unknownObject() || !getObjectCount())
         return AmbiguousDoubleConversion;
@@ -1033,10 +1009,8 @@ StackTypeSet::convertDoubleElements(JSContext *cx)
 }
 
 bool
-HeapTypeSet::knownSubset(JSContext *cx, TypeSet *other)
+HeapTypeSet::knownSubset(JSContext *cx, HeapTypeSet *other)
 {
-    JS_ASSERT(!other->constraintsPurged());
-
     if (!isSubset(other))
         return false;
 
@@ -1046,7 +1020,7 @@ HeapTypeSet::knownSubset(JSContext *cx, TypeSet *other)
 }
 
 const Class *
-StackTypeSet::getKnownClass()
+TemporaryTypeSet::getKnownClass()
 {
     if (unknownObject())
         return NULL;
@@ -1072,7 +1046,7 @@ StackTypeSet::getKnownClass()
 }
 
 int
-StackTypeSet::getTypedArrayType()
+TemporaryTypeSet::getTypedArrayType()
 {
     const Class *clasp = getKnownClass();
 
@@ -1082,7 +1056,7 @@ StackTypeSet::getTypedArrayType()
 }
 
 bool
-StackTypeSet::isDOMClass()
+TemporaryTypeSet::isDOMClass()
 {
     if (unknownObject())
         return false;
@@ -1105,7 +1079,7 @@ StackTypeSet::isDOMClass()
 }
 
 bool
-StackTypeSet::maybeCallable()
+TemporaryTypeSet::maybeCallable()
 {
     if (!maybeObject())
         return false;
@@ -1131,7 +1105,7 @@ StackTypeSet::maybeCallable()
 }
 
 JSObject *
-StackTypeSet::getCommonPrototype()
+TemporaryTypeSet::getCommonPrototype()
 {
     if (unknownObject())
         return NULL;
@@ -1162,7 +1136,7 @@ StackTypeSet::getCommonPrototype()
 }
 
 JSObject *
-StackTypeSet::getSingleton()
+TemporaryTypeSet::getSingleton()
 {
     if (baseFlags() != 0 || baseObjectCount() != 1)
         return NULL;
@@ -1196,7 +1170,7 @@ HeapTypeSet::needsBarrier(JSContext *cx)
 }
 
 bool
-StackTypeSet::propertyNeedsBarrier(JSContext *cx, jsid id)
+TemporaryTypeSet::propertyNeedsBarrier(JSContext *cx, jsid id)
 {
     RootedId typeId(cx, IdToTypeId(id));
 
@@ -1576,7 +1550,7 @@ types::ArrayPrototypeHasIndexedProperty(JSContext *cx, HandleScript script)
 }
 
 bool
-types::TypeCanHaveExtraIndexedProperties(JSContext *cx, StackTypeSet *types)
+types::TypeCanHaveExtraIndexedProperties(JSContext *cx, TemporaryTypeSet *types)
 {
     const Class *clasp = types->getKnownClass();
 
@@ -2894,7 +2868,7 @@ types::AddClearDefiniteFunctionUsesInScript(JSContext *cx, TypeObject *type,
             // This is a type set that might have been used when inlining
             // |calleeScript| into |script|.
             types->add(cx,
-                cx->analysisLifoAlloc().new_<TypeConstraintClearDefiniteSingle>(type));
+                cx->typeLifoAlloc().new_<TypeConstraintClearDefiniteSingle>(type));
         }
     }
 }
@@ -3327,13 +3301,9 @@ JSScript::makeTypes(JSContext *cx)
     new(types) TypeScript();
 
     TypeSet *typeArray = types->typeArray();
-    TypeSet *returnTypes = TypeScript::ReturnTypes(this);
 
-    for (unsigned i = 0; i < count; i++) {
-        TypeSet *types = &typeArray[i];
-        if (types != returnTypes)
-            types->setConstraintsPurged();
-    }
+    for (unsigned i = 0; i < count; i++)
+        new (&typeArray[i]) StackTypeSet();
 
     if (isCallsiteClone) {
         /*
@@ -3348,7 +3318,6 @@ JSScript::makeTypes(JSContext *cx)
         if (!original->ensureHasTypes(cx))
             return false;
 
-        TypeScript::ReturnTypes(this)->addSubset(cx, TypeScript::ReturnTypes(original));
         TypeScript::ThisTypes(this)->addSubset(cx, TypeScript::ThisTypes(original));
         for (unsigned i = 0; i < function()->nargs; i++)
             TypeScript::ArgTypes(this, i)->addSubset(cx, TypeScript::ArgTypes(original, i));
@@ -3359,9 +3328,6 @@ JSScript::makeTypes(JSContext *cx)
         InferSpew(ISpewOps, "typeSet: %sT%p%s bytecode%u #%u",
                   InferSpewColor(&typeArray[i]), &typeArray[i], InferSpewColorReset(),
                   i, id());
-    InferSpew(ISpewOps, "typeSet: %sT%p%s return #%u",
-              InferSpewColor(returnTypes), returnTypes, InferSpewColorReset(),
-              id());
     TypeSet *thisTypes = TypeScript::ThisTypes(this);
     InferSpew(ISpewOps, "typeSet: %sT%p%s this #%u",
               InferSpewColor(thisTypes), thisTypes, InferSpewColorReset(),
@@ -3384,7 +3350,7 @@ JSScript::makeBytecodeTypeMap(JSContext *cx)
     JS_ASSERT(cx->typeInferenceEnabled());
     JS_ASSERT(types && !types->bytecodeMap);
 
-    types->bytecodeMap = cx->analysisLifoAlloc().newArrayUninitialized<uint32_t>(nTypeSets + 1);
+    types->bytecodeMap = cx->typeLifoAlloc().newArrayUninitialized<uint32_t>(nTypeSets + 1);
 
     if (!types->bytecodeMap)
         return false;
@@ -3415,7 +3381,7 @@ JSScript::makeAnalysis(JSContext *cx)
 
     AutoEnterAnalysis enter(cx);
 
-    types->analysis = cx->analysisLifoAlloc().new_<ScriptAnalysis>(this);
+    types->analysis = cx->typeLifoAlloc().new_<ScriptAnalysis>(this);
 
     if (!types->analysis)
         return false;
@@ -3789,8 +3755,6 @@ ExclusiveContext::getLazyType(const Class *clasp, TaggedProto proto)
 void
 TypeSet::sweep(Zone *zone)
 {
-    JS_ASSERT(!purged());
-
     /*
      * Purge references to type objects that are no longer live. Type sets hold
      * only weak references. For type sets containing more than one object,
@@ -4184,15 +4148,12 @@ TypeScript::AddFreezeConstraints(JSContext *cx, JSScript *script)
      */
 
     size_t count = TypeScript::NumTypeSets(script);
-    TypeSet *returnTypes = TypeScript::ReturnTypes(script);
 
     TypeSet *array = script->types->typeArray();
     for (size_t i = 0; i < count; i++) {
         TypeSet *types = &array[i];
-        if (types == returnTypes)
-            continue;
-        JS_ASSERT(types->constraintsPurged());
-        types->add(cx, cx->analysisLifoAlloc().new_<TypeConstraintFreezeStack>(script), false);
+        JS_ASSERT(types->isStackSet());
+        types->add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeStack>(script), false);
     }
 }
 
@@ -4228,8 +4189,6 @@ Zone::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t *typePool)
 void
 JSCompartment::sizeOfTypeInferenceData(JS::TypeInferenceSizes *sizes, mozilla::MallocSizeOf mallocSizeOf)
 {
-    sizes->analysisPool += analysisLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
-
     /* Pending arrays are cleared on GC along with the analysis pool. */
     sizes->pendingArrays += mallocSizeOf(types.pendingArray);
 
@@ -4382,8 +4341,6 @@ TypeScript::printTypes(JSContext *cx, HandleScript script) const
         }
     }
 
-    fprintf(stderr, "\n    return:");
-    TypeScript::ReturnTypes(script)->print();
     fprintf(stderr, "\n    this:");
     TypeScript::ThisTypes(script)->print();
 

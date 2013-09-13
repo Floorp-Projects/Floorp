@@ -225,17 +225,14 @@ FollowBranch(JSContext *cx, JSScript *script, unsigned offset)
 }
 
 /* Common representation of slots throughout analyses and the compiler. */
-static inline uint32_t CalleeSlot() {
+static inline uint32_t ThisSlot() {
     return 0;
 }
-static inline uint32_t ThisSlot() {
-    return 1;
-}
 static inline uint32_t ArgSlot(uint32_t arg) {
-    return 2 + arg;
+    return 1 + arg;
 }
 static inline uint32_t LocalSlot(JSScript *script, uint32_t local) {
-    return 2 + (script->function() ? script->function()->nargs : 0) + local;
+    return 1 + (script->function() ? script->function()->nargs : 0) + local;
 }
 static inline uint32_t TotalSlots(JSScript *script) {
     return LocalSlot(script, 0) + script->nfixed;
@@ -622,8 +619,6 @@ class ScriptAnalysis
 
     bool *escapedSlots;
 
-    types::StackTypeSet *undefinedTypeSet;
-
     /* Which analyses have been performed. */
     bool ranBytecode_;
     bool ranSSA_;
@@ -828,18 +823,6 @@ class ScriptAnalysis
     void mergeAllExceptionTargets(JSContext *cx, SSAValueInfo *values,
                                   const Vector<uint32_t> &exceptionTargets);
     void freezeNewValues(JSContext *cx, uint32_t offset);
-
-    struct TypeInferenceState {
-        Vector<SSAPhiNode *> phiNodes;
-        bool hasHole;
-        types::StackTypeSet *forTypes;
-        bool hasPropertyReadTypes;
-        uint32_t propertyReadIndex;
-        TypeInferenceState(JSContext *cx)
-            : phiNodes(cx), hasHole(false), forTypes(NULL),
-              hasPropertyReadTypes(false), propertyReadIndex(0)
-        {}
-    };
 
     typedef Vector<SSAValue, 16> SeenVector;
     bool needsArgsObj(JSContext *cx, SeenVector &seen, const SSAValue &v);
