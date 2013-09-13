@@ -217,7 +217,7 @@ class FileKind(object):
 
 def get_all_filenames():
     '''Get a list of all the files in the (Mercurial or Git) repository.'''
-    cmds = [['hg', 'manifest', '-q'], ['git', 'ls-files']]
+    cmds = [['hg', 'manifest', '-q'], ['git', 'ls-files', '--full-name', '../..']]
     for cmd in cmds:
         try:
             all_filenames = subprocess.check_output(cmd, universal_newlines=True,

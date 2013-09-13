@@ -48,8 +48,11 @@ assertEq(f(), 2);
 assertEq(counter, 3);
 
 assertEq(asmLink(asmCompile('glob', 'imp', USE_ASM + 'var add1=imp.add1; function g(i) { i=i|0; return add1(i|0)|0 } return g'), null, imp)(9), 10);
+assertEq(asmLink(asmCompile('glob', 'imp', USE_ASM + 'const add1=imp.add1; function g(i) { i=i|0; return add1(i|0)|0 } return g'), null, imp)(9), 10);
 assertEq(asmLink(asmCompile('glob', 'imp', USE_ASM + 'var add3=imp.add3; function g() { var i=1,j=3,k=9; return add3(i|0,j|0,k|0)|0 } return g'), null, imp)(), 13);
+assertEq(asmLink(asmCompile('glob', 'imp', USE_ASM + 'const add3=imp.add3; function g() { var i=1,j=3,k=9; return add3(i|0,j|0,k|0)|0 } return g'), null, imp)(), 13);
 assertEq(asmLink(asmCompile('glob', 'imp', USE_ASM + 'var add3=imp.add3; function g() { var i=1.4,j=2.3,k=32.1; return +add3(i,j,k) } return g'), null, imp)(), 1.4+2.3+32.1);
+assertEq(asmLink(asmCompile('glob', 'imp', USE_ASM + 'const add3=imp.add3; function g() { var i=1.4,j=2.3,k=32.1; return +add3(i,j,k) } return g'), null, imp)(), 1.4+2.3+32.1);
 
 assertEq(asmLink(asmCompile('glob', 'imp', USE_ASM + 'var add3=imp.add3; function f(i,j,k) { i=i|0;j=+j;k=k|0; return add3(i|0,j,k|0)|0 } return f'), null, imp)(1, 2.5, 3), 6);
 assertEq(asmLink(asmCompile('glob', 'imp', USE_ASM + 'var addN=imp.addN; function f() { return +addN(1,2,3,4.1,5,6.1,7,8.1,9.1,10,11.1,12,13,14.1,15.1,16.1,17.1,18.1) } return f'), null, imp)(), 1+2+3+4.1+5+6.1+7+8.1+9.1+10+11.1+12+13+14.1+15.1+16.1+17.1+18.1);
