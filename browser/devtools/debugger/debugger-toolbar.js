@@ -233,6 +233,7 @@ OptionsView.prototype = {
    */
   _onPopupShowing: function() {
     this._button.setAttribute("open", "true");
+    window.emit(EVENTS.OPTIONS_POPUP_SHOWING);
   },
 
   /**
@@ -246,7 +247,7 @@ OptionsView.prototype = {
    * Listener handling the 'gear menu' popup hidden event.
    */
   _onPopupHidden: function() {
-    window.dispatchEvent(document, "Debugger:OptionsPopupHidden");
+    window.emit(EVENTS.OPTIONS_POPUP_HIDDEN);
   },
 
   /**
@@ -306,9 +307,7 @@ OptionsView.prototype = {
       this._showOriginalSourceItem.getAttribute("checked") == "true";
 
     // Don't block the UI while reconfiguring the server.
-    window.addEventListener("Debugger:OptionsPopupHidden", function onHidden() {
-      window.removeEventListener("Debugger:OptionsPopupHidden", onHidden, false);
-
+    window.once(EVENTS.OPTIONS_POPUP_HIDDEN, () => {
       // The popup panel needs more time to hide after triggering onpopuphidden.
       window.setTimeout(() => {
         DebuggerController.reconfigureThread(pref);
@@ -1308,6 +1307,7 @@ FilteredSourcesView.prototype = Heritage.extend(ResultsPanelContainer.prototype,
     // If there are no matches found, keep the popup hidden and avoid
     // creating the view.
     if (!aSearchResults.length) {
+      window.emit(EVENTS.FILE_SEARCH_MATCH_NOT_FOUND);
       return;
     }
 
@@ -1328,6 +1328,9 @@ FilteredSourcesView.prototype = Heritage.extend(ResultsPanelContainer.prototype,
     // Select the first entry in this container.
     this.selectedIndex = 0;
     this.hidden = false;
+
+    // Signal that file search matches were found and displayed.
+    window.emit(EVENTS.FILE_SEARCH_MATCH_FOUND);
   },
 
   /**
@@ -1479,6 +1482,7 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
     // If there are no matches found, keep the popup hidden and avoid
     // creating the view.
     if (!aSearchResults.length) {
+      window.emit(EVENTS.FUNCTION_SEARCH_MATCH_NOT_FOUND);
       return;
     }
 
@@ -1523,6 +1527,9 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
     // Select the first entry in this container.
     this.selectedIndex = 0;
     this.hidden = false;
+
+    // Signal that function search matches were found and displayed.
+    window.emit(EVENTS.FUNCTION_SEARCH_MATCH_FOUND);
   },
 
   /**

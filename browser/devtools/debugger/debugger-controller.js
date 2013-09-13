@@ -14,10 +14,64 @@ const FETCH_SOURCE_RESPONSE_DELAY = 200; // ms
 const FRAME_STEP_CLEAR_DELAY = 100; // ms
 const CALL_STACK_PAGE_SIZE = 25; // frames
 
+// The panel's window global is an EventEmitter firing the following events:
+const EVENTS = {
+  // When the debugger's source editor instance finishes loading or unloading.
+  EDITOR_LOADED: "Debugger:EditorLoaded",
+  EDITOR_UNLOADED: "Debugger:EditorUnoaded",
+
+  // When new sources are received from the debugger server.
+  NEW_SOURCE: "Debugger:NewSource",
+  SOURCES_ADDED: "Debugger:SourcesAdded",
+
+  // When a source is shown in the source editor.
+  SOURCE_SHOWN: "Debugger:EditorSourceShown",
+  SOURCE_ERROR_SHOWN: "Debugger:EditorSourceErrorShown",
+
+  // When scopes, variables, properties and watch expressions are fetched and
+  // displayed in the variables view.
+  FETCHED_SCOPES: "Debugger:FetchedScopes",
+  FETCHED_VARIABLES: "Debugger:FetchedVariables",
+  FETCHED_PROPERTIES: "Debugger:FetchedProperties",
+  FETCHED_WATCH_EXPRESSIONS: "Debugger:FetchedWatchExpressions",
+
+  // When a breakpoint has been added or removed on the debugger server.
+  BREAKPOINT_ADDED: "Debugger:BreakpointAdded",
+  BREAKPOINT_REMOVED: "Debugger:BreakpointRemoved",
+
+  // When a breakpoint has been shown or hidden in the source editor.
+  BREAKPOINT_SHOWN: "Debugger:BreakpointShown",
+  BREAKPOINT_HIDDEN: "Debugger:BreakpointHidden",
+
+  // When a conditional breakpoint's popup is showing or hiding.
+  CONDITIONAL_BREAKPOINT_POPUP_SHOWING: "Debugger:ConditionalBreakpointPopupShowing",
+  CONDITIONAL_BREAKPOINT_POPUP_HIDING: "Debugger:ConditionalBreakpointPopupHiding",
+
+  // When a file search was performed.
+  FILE_SEARCH_MATCH_FOUND: "Debugger:FileSearch:MatchFound",
+  FILE_SEARCH_MATCH_NOT_FOUND: "Debugger:FileSearch:MatchNotFound",
+
+  // When a function search was performed.
+  FUNCTION_SEARCH_MATCH_FOUND: "Debugger:FunctionSearch:MatchFound",
+  FUNCTION_SEARCH_MATCH_NOT_FOUND: "Debugger:FunctionSearch:MatchNotFound",
+
+  // When a global text search was performed.
+  GLOBAL_SEARCH_MATCH_FOUND: "Debugger:GlobalSearch:MatchFound",
+  GLOBAL_SEARCH_MATCH_NOT_FOUND: "Debugger:GlobalSearch:MatchNotFound",
+
+  // After the stackframes are cleared and debugger won't pause anymore.
+  AFTER_FRAMES_CLEARED: "Debugger:AfterFramesCleared",
+
+  // When the options popup is showing or hiding.
+  OPTIONS_POPUP_SHOWING: "Debugger:OptionsPopupShowing",
+  OPTIONS_POPUP_HIDDEN: "Debugger:OptionsPopupHidden",
+};
+
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
+Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 Cu.import("resource:///modules/source-editor.jsm");
 Cu.import("resource:///modules/devtools/BreadcrumbsWidget.jsm");
 Cu.import("resource:///modules/devtools/SideMenuWidget.jsm");
@@ -643,7 +697,6 @@ StackFrames.prototype = {
       let title = StackFrameUtils.getFrameTitle(frame);
       DebuggerView.StackFrames.addFrame(title, location, line, depth, isBlackBoxed);
     }
-
     if (this.currentFrameDepth == -1) {
       DebuggerView.StackFrames.selectedDepth = 0;
     }
@@ -691,7 +744,8 @@ StackFrames.prototype = {
     DebuggerView.Sources.unhighlightBreakpoint();
     DebuggerView.WatchExpressions.toggleContents(true);
     DebuggerView.Variables.empty(0);
-    window.dispatchEvent(document, "Debugger:AfterFramesCleared");
+
+    window.emit(EVENTS.AFTER_FRAMES_CLEARED);
   },
 
   /**
@@ -771,8 +825,10 @@ StackFrames.prototype = {
       }
     } while ((environment = environment.parent));
 
-    // Signal that variables have been fetched.
-    window.dispatchEvent(document, "Debugger:FetchedVariables");
+    // Signal that scope environments have been shown and commit the current
+    // variables view hierarchy to briefly flash items that changed between the
+    // previous and current scope/variables/properties.
+    window.emit(EVENTS.FETCHED_SCOPES);
     DebuggerView.Variables.commitHierarchy();
   },
 
@@ -859,8 +915,10 @@ StackFrames.prototype = {
         expRef.separatorStr = L10N.getStr("variablesSeparatorLabel");
       }
 
-      // Signal that watch expressions have been fetched.
-      window.dispatchEvent(document, "Debugger:FetchedWatchExpressions");
+      // Signal that watch expressions have been fetched and commit the
+      // current variables view hierarchy to briefly flash items that changed
+      // between the previous and current scope/variables/properties.
+      window.emit(EVENTS.FETCHED_WATCH_EXPRESSIONS);
       DebuggerView.Variables.commitHierarchy();
     });
   },
@@ -1012,7 +1070,7 @@ SourceScripts.prototype = {
     DebuggerController.Breakpoints.updatePaneBreakpoints();
 
     // Signal that a new source has been added.
-    window.dispatchEvent(document, "Debugger:AfterNewSource");
+    window.emit(EVENTS.NEW_SOURCE);
   },
 
   /**
@@ -1053,7 +1111,7 @@ SourceScripts.prototype = {
     DebuggerController.Breakpoints.updatePaneBreakpoints();
 
     // Signal that sources have been added.
-    window.dispatchEvent(document, "Debugger:AfterSourcesAdded");
+    window.emit(EVENTS.SOURCES_ADDED);
   },
 
   /**
@@ -1274,7 +1332,7 @@ Breakpoints.prototype = {
         DebuggerView.editor.addBreakpoint(aBreakpointClient.location.line - 1);
       }
       // Notify that we've shown a breakpoint in the source editor.
-      window.dispatchEvent(document, "Debugger:BreakpointShown", aEditorBreakpoint);
+      window.emit(EVENTS.BREAKPOINT_SHOWN, aEditorBreakpoint);
     });
   },
 
@@ -1293,7 +1351,7 @@ Breakpoints.prototype = {
     // is invoked because a breakpoint was removed from the editor itself.
     this.removeBreakpoint(location, { noEditorUpdate: true }).then(() => {
       // Notify that we've hidden a breakpoint in the source editor.
-      window.dispatchEvent(document, "Debugger:BreakpointHidden", aEditorBreakpoint);
+      window.emit(EVENTS.BREAKPOINT_HIDDEN, aEditorBreakpoint);
     });
   },
 
@@ -1406,6 +1464,9 @@ Breakpoints.prototype = {
 
       // Show the breakpoint in the editor and breakpoints pane, and resolve.
       this._showBreakpoint(aBreakpointClient, aOptions);
+
+      // Notify that we've added a breakpoint.
+      window.emit(EVENTS.BREAKPOINT_ADDED, aBreakpointClient);
       deferred.resolve(aBreakpointClient);
     });
 
@@ -1466,6 +1527,9 @@ Breakpoints.prototype = {
 
         // Hide the breakpoint from the editor and breakpoints pane, and resolve.
         this._hideBreakpoint(aLocation, aOptions);
+
+        // Notify that we've removed a breakpoint.
+        window.emit(EVENTS.BREAKPOINT_REMOVED, aLocation);
         deferred.resolve(aLocation);
       });
     });
@@ -1630,6 +1694,11 @@ XPCOMUtils.defineLazyGetter(window, "_isChromeDebugger", function() {
   // We're inside a single top level XUL window in a different process.
   return !(window.frameElement instanceof XULElement);
 });
+
+/**
+ * Convenient way of emitting events from the panel window.
+ */
+EventEmitter.decorate(this);
 
 /**
  * Preliminary setup for the DebuggerController object.

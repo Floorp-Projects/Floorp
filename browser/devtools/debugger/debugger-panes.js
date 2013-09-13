@@ -52,8 +52,8 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this._editorDeck = document.getElementById("editor-deck");
     this._stopBlackBoxButton = document.getElementById("black-boxed-message-button");
 
-    window.addEventListener("Debugger:EditorLoaded", this._onEditorLoad, false);
-    window.addEventListener("Debugger:EditorUnloaded", this._onEditorUnload, false);
+    window.on(EVENTS.EDITOR_LOADED, this._onEditorLoad, false);
+    window.on(EVENTS.EDITOR_UNLOADED, this._onEditorUnload, false);
     this.widget.addEventListener("select", this._onSourceSelect, false);
     this.widget.addEventListener("click", this._onSourceClick, false);
     this.widget.addEventListener("check", this._onSourceCheck, false);
@@ -76,8 +76,8 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   destroy: function() {
     dumpn("Destroying the SourcesView");
 
-    window.removeEventListener("Debugger:EditorLoaded", this._onEditorLoad, false);
-    window.removeEventListener("Debugger:EditorUnloaded", this._onEditorUnload, false);
+    window.off(EVENTS.EDITOR_LOADED, this._onEditorLoad, false);
+    window.off(EVENTS.EDITOR_UNLOADED, this._onEditorUnload, false);
     this.widget.removeEventListener("select", this._onSourceSelect, false);
     this.widget.removeEventListener("click", this._onSourceClick, false);
     this.widget.removeEventListener("check", this._onSourceCheck, false);
@@ -600,17 +600,17 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * The load listener for the source editor.
    */
-  _onEditorLoad: function({ detail: editor }) {
-    editor.addEventListener("Selection", this._onEditorSelection, false);
-    editor.addEventListener("ContextMenu", this._onEditorContextMenu, false);
+  _onEditorLoad: function(aName, aEditor) {
+    aEditor.addEventListener(SourceEditor.EVENTS.SELECTION, this._onEditorSelection, false);
+    aEditor.addEventListener(SourceEditor.EVENTS.CONTEXT_MENU, this._onEditorContextMenu, false);
   },
 
   /**
    * The unload listener for the source editor.
    */
-  _onEditorUnload: function({ detail: editor }) {
-    editor.removeEventListener("Selection", this._onEditorSelection, false);
-    editor.removeEventListener("ContextMenu", this._onEditorContextMenu, false);
+  _onEditorUnload: function(aName, aEditor) {
+    aEditor.removeEventListener(SourceEditor.EVENTS.SELECTION, this._onEditorSelection, false);
+    aEditor.removeEventListener(SourceEditor.EVENTS.CONTEXT_MENU, this._onEditorContextMenu, false);
   },
 
   /**
@@ -740,6 +740,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    */
   _onConditionalPopupShowing: function() {
     this._conditionalPopupVisible = true; // Used in tests.
+    window.emit(EVENTS.CONDITIONAL_BREAKPOINT_POPUP_SHOWING);
   },
 
   /**
@@ -755,6 +756,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    */
   _onConditionalPopupHiding: function() {
     this._conditionalPopupVisible = false; // Used in tests.
+    window.emit(EVENTS.CONDITIONAL_BREAKPOINT_POPUP_HIDING);
   },
 
   /**
@@ -1517,7 +1519,6 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
   clearView: function() {
     this.hidden = true;
     this.empty();
-    window.dispatchEvent(document, "Debugger:GlobalSearch:ViewCleared");
   },
 
   /**
@@ -1589,7 +1590,6 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
     // Don't continue filtering if the searched token is an empty string.
     if (!aToken) {
       this.clearView();
-      window.dispatchEvent(document, "Debugger:GlobalSearch:TokenEmpty");
       return;
     }
 
@@ -1657,9 +1657,9 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
       this.hidden = false;
       this._currentlyFocusedMatch = -1;
       this._createGlobalResultsUI(globalResults);
-      window.dispatchEvent(document, "Debugger:GlobalSearch:MatchFound");
+      window.emit(EVENTS.GLOBAL_SEARCH_MATCH_FOUND);
     } else {
-      window.dispatchEvent(document, "Debugger:GlobalSearch:MatchNotFound");
+      window.emit(EVENTS.GLOBAL_SEARCH_MATCH_NOT_FOUND);
     }
   },
 
