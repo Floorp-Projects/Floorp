@@ -234,6 +234,10 @@ runTavaruaRadio(void *)
         NS_DispatchToMainThread(new RadioUpdate(hal::FM_RADIO_OPERATION_SEEK,
                                                 hal::FM_RADIO_OPERATION_STATUS_SUCCESS));
         break;
+      case TAVARUA_EVT_TUNE_SUCC:
+        NS_DispatchToMainThread(new RadioUpdate(hal::FM_RADIO_OPERATION_TUNE,
+                                                hal::FM_RADIO_OPERATION_STATUS_SUCCESS));
+        break;
       default:
         break;
       }

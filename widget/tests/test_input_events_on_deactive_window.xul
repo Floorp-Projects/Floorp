@@ -153,7 +153,6 @@ function startTests()
     is(textarea.value, "", "textarea value isn't empty");
 
     // IME events
-    const nsIDOMWindowUtils = Components.interfaces.nsIDOMWindowUtils;
     clear();
     // start composition
     synthesizeComposition({ type: "compositionstart" });
@@ -166,7 +165,7 @@ function startTests()
         { "string": "\u3089",
           "clauses":
           [
-            { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+            { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
           ]
         },
         "caret": { "start": 1, "length": 0 }

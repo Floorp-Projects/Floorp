@@ -211,15 +211,17 @@ if test -n "$gonkdir" ; then
         MOZ_B2G_BT=1
         MOZ_B2G_CAMERA=1
         MOZ_OMX_DECODER=1
-        AC_DEFINE(MOZ_OMX_DECODER)
         AC_SUBST(MOZ_OMX_DECODER)
         ;;
     18)
-        GONK_INCLUDES="-I$gonkdir/frameworks/native/include"
+        GONK_INCLUDES="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include"
         if test -d "$gonkdir/external/bluetooth/bluez"; then
             GONK_INCLUDES+=" -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib"
             MOZ_B2G_BT=1
         fi
+        MOZ_B2G_CAMERA=1
+        MOZ_OMX_DECODER=1
+        AC_SUBST(MOZ_OMX_DECODER)
         ;;
     *)
         AC_MSG_ERROR([Unsupported platform version: $ANDROID_VERSION])
