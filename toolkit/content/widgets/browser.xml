@@ -296,11 +296,24 @@
         </body>
       </method>
 
+      <field name="_finder">null</field>
+
+      <property name="finder" readonly="true">
+        <getter><![CDATA[
+          if (!this._finder) {
+            if (!this.docShell)
+              return null;
+
+            let Finder = Components.utils.import("resource://gre/modules/Finder.jsm", {}).Finder;
+            this._finder = new Finder(this.docShell);
+          }
+          return this._finder;
+        ]]></getter>
+      </property>
+
       <field name="_fastFind">null</field>
-      <property name="fastFind"
-                readonly="true">
-        <getter>
-        <![CDATA[
+      <property name="fastFind" readonly="true">
+        <getter><![CDATA[
           if (!this._fastFind) {
             if (!("@mozilla.org/typeaheadfind;1" in Components.classes))
               return null;
@@ -317,9 +330,11 @@
             this._fastFind.init(this.docShell);
           }
           return this._fastFind;
-        ]]>
-        </getter>
+        ]]></getter>
       </property>
+
+      <field name="_lastSearchString">null</field>
+      <field name="_lastSearchHighlight">false</field>
 
       <property name="webProgress"
                 readonly="true"
