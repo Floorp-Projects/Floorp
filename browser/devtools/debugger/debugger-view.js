@@ -27,6 +27,13 @@ const SEARCH_FUNCTION_FLAG = "@";
 const SEARCH_TOKEN_FLAG = "#";
 const SEARCH_LINE_FLAG = ":";
 const SEARCH_VARIABLE_FLAG = "*";
+const DEFAULT_EDITOR_CONFIG = {
+  mode: SourceEditor.MODES.TEXT,
+  readOnly: true,
+  showLineNumbers: true,
+  showAnnotationRuler: true,
+  showOverviewRuler: true
+};
 
 Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
 
@@ -167,17 +174,8 @@ let DebuggerView = {
   _initializeEditor: function(aCallback) {
     dumpn("Initializing the DebuggerView editor");
 
-    let placeholder = document.getElementById("editor");
-    let config = {
-      mode: SourceEditor.MODES.JAVASCRIPT,
-      readOnly: true,
-      showLineNumbers: true,
-      showAnnotationRuler: true,
-      showOverviewRuler: true
-    };
-
     this.editor = new SourceEditor();
-    this.editor.init(placeholder, config, () => {
+    this.editor.init(document.getElementById("editor"), DEFAULT_EDITOR_CONFIG, () => {
       this._loadingText = L10N.getStr("loadingText");
       this._onEditorLoad(aCallback);
     });
@@ -216,6 +214,19 @@ let DebuggerView = {
   },
 
   /**
+   * Sets the currently displayed text contents in the source editor.
+   * This resets the mode and undo stack.
+   *
+   * @param string aTextContent
+   *        The source text content.
+   */
+  _setEditorText: function(aTextContent = "") {
+    this.editor.setMode(SourceEditor.MODES.TEXT);
+    this.editor.setText(aTextContent);
+    this.editor.resetUndo();
+  },
+
+  /**
    * Sets the proper editor mode (JS or HTML) according to the specified
    * content type, or by determining the type from the url or text content.
    *
@@ -226,7 +237,7 @@ let DebuggerView = {
    * @param string aTextContent [optional]
    *        The source text content.
    */
-  setEditorMode: function(aUrl, aContentType = "", aTextContent = "") {
+  _setEditorMode: function(aUrl, aContentType = "", aTextContent = "") {
     // Avoid setting the editor mode for very large files.
     if (aTextContent.length >= SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE) {
       this.editor.setMode(SourceEditor.MODES.TEXT);
@@ -256,136 +267,115 @@ let DebuggerView = {
   /**
    * Sets the currently displayed source text in the editor.
    *
-   * To update the source editor's current caret and debug location based on
-   * a requested url and line, use the DebuggerView.updateEditor method.
+   * You should use DebuggerView.updateEditor instead. It updates the current
+   * caret and debug location based on a requested url and line.
    *
    * @param object aSource
    *        The source object coming from the active thread.
+   * @return object
+   *         A promise that is resolved after the source text has been set.
    */
-  set editorSource(aSource) {
-    if (!this._isInitialized || this._isDestroyed || this._editorSource == aSource) {
-      return;
+  _setEditorSource: function(aSource) {
+    // Avoid setting the same source text in the editor again.
+    if (this._editorSource.url == aSource.url) {
+      return this._editorSource.promise;
     }
 
-    dumpn("Setting the DebuggerView editor source: " + aSource.url +
-          ", fetched: " + !!aSource._fetched);
+    let deferred = promise.defer();
 
-    this.editor.setMode(SourceEditor.MODES.TEXT);
-    this.editor.setText(L10N.getStr("loadingText"));
-    this.editor.resetUndo();
-    this._editorSource = aSource;
+    this._setEditorText(L10N.getStr("loadingText"));
+    this._editorSource = { url: aSource.url, promise: deferred.promise };
 
     DebuggerController.SourceScripts.getTextForSource(aSource).then(([, aText]) => {
-      // Avoid setting an unexpected source. This may happen when fast switching
-      // between sources that haven't been fetched yet.
-      if (this._editorSource != aSource) {
+      // Avoid setting an unexpected source. This may happen when switching
+      // very fast between sources that haven't been fetched yet.
+      if (this._editorSource.url != aSource.url) {
         return;
       }
 
-      this.editor.setText(aText);
-      this.editor.resetUndo();
-      this.setEditorMode(aSource.url, aSource.contentType, aText);
-
-      // Update the editor's current caret and debug locations given by the
-      // currently active frame in the stack, if there's one available.
-      this.updateEditor();
+      this._setEditorText(aText);
+      this._setEditorMode(aSource.url, aSource.contentType, aText);
 
       // Synchronize any other components with the currently displayed source.
       DebuggerView.Sources.selectedValue = aSource.url;
       DebuggerController.Breakpoints.updateEditorBreakpoints();
 
-      // Notify that we've shown a source file.
+      // Resolve and notify that a source file was shown.
       window.dispatchEvent(document, "Debugger:SourceShown", aSource);
+      deferred.resolve([aSource, aText]);
     },
     ([, aError]) => {
-      // Rejected.
       let msg = L10N.getStr("errorLoadingText") + DevToolsUtils.safeErrorString(aError);
-      this.editor.setText(msg);
-      window.dispatchEvent(document, "Debugger:SourceErrorShown", aError);
-      dumpn(msg);
+      this._setEditorText(msg);
       Cu.reportError(msg);
+      dumpn(msg);
+
+      // Reject and notify that there was an error showing the source file.
+      window.dispatchEvent(document, "Debugger:SourceErrorShown", aError);
+      deferred.reject([aSource, aError]);
     });
+
+    return deferred.promise;
   },
 
   /**
-   * Gets the currently displayed source text in the editor.
-   *
-   * @return object
-   *         The source object coming from the active thread.
-   */
-  get editorSource() this._editorSource,
-
-  /**
    * Update the source editor's current caret and debug location based on
-   * a requested url and line. If unspecified, they default to the location
-   * given by the currently active frame in the stack.
+   * a requested url and line.
    *
-   * @param string aUrl [optional]
+   * @param string aUrl
    *        The target source url.
    * @param number aLine [optional]
-   *        The target line number in the source.
+   *        The target line in the source.
    * @param object aFlags [optional]
    *        Additional options for showing the source. Supported options:
    *          - charOffset: character offset for the caret or debug location
    *          - lineOffset: line offset for the caret or debug location
    *          - columnOffset: column offset for the caret or debug location
-   *          - noSwitch: don't switch to the source if not currently selected
    *          - noCaret: don't set the caret location at the specified line
    *          - noDebug: don't set the debug location at the specified line
+   * @return object
+   *         A promise that is resolved after the source text has been set.
    */
-  updateEditor: function(aUrl, aLine, aFlags = {}) {
-    if (!this._isInitialized || this._isDestroyed) {
-      return;
+  setEditorLocation: function(aUrl, aLine = 0, aFlags = {}) {
+    // Avoid trying to set a source for a url that isn't known yet.
+    if (!this.Sources.containsValue(aUrl)) {
+      return promise.reject(new Error("Unknown source for the specified URL."));
     }
-    // If the location is not specified, default to the location given by
-    // the currently active frame in the stack.
-    if (!aUrl && !aLine) {
+    // If the line is not specified, default to the current frame's position,
+    // if available and the frame's url corresponds to the requested url.
+    if (!aLine) {
       let cachedFrames = DebuggerController.activeThread.cachedFrames;
-      let currentFrame = DebuggerController.StackFrames.currentFrame;
-      let frame = cachedFrames[currentFrame];
-      if (frame) {
-        let { url, line } = frame.where;
-        this.updateEditor(url, line, { noSwitch: true });
+      let currentDepth = DebuggerController.StackFrames.currentFrameDepth;
+      let frame = cachedFrames[currentDepth];
+      if (frame && frame.where.url == aUrl) {
+        aLine = frame.where.line;
       }
-      return;
     }
 
-    dumpn("Updating the DebuggerView editor: " + aUrl + " @ " + aLine +
-          ", flags: " + aFlags.toSource());
+    let sourceItem = this.Sources.getItemByValue(aUrl);
+    let sourceClient = sourceItem.attachment.source;
 
-    // If the currently displayed source is the requested one, update.
-    if (this.Sources.selectedValue == aUrl) {
-      set(aLine);
-    }
-    // If the requested source exists, display it and update.
-    else if (this.Sources.containsValue(aUrl) && !aFlags.noSwitch) {
-      this.Sources.selectedValue = aUrl;
-      set(aLine);
-    }
-    // Dumb request, invalidate the caret position and debug location.
-    else {
-      set(0);
-    }
-
-    // Updates the source editor's caret position and debug location.
-    // @param number a Line
-    function set(aLine) {
-      let editor = DebuggerView.editor;
-
-      // Handle any additional options for showing the source.
+    // Make sure the requested source client is shown in the editor, then
+    // update the source editor's caret position and debug location.
+    return this._setEditorSource(sourceClient).then(() => {
+      // Line numbers in the source editor should start from 1. If invalid
+      // or not specified, then don't do anything.
+      if (aLine < 1) {
+        return;
+      }
       if (aFlags.charOffset) {
-        aLine += editor.getLineAtOffset(aFlags.charOffset);
+        aLine += this.editor.getLineAtOffset(aFlags.charOffset);
       }
       if (aFlags.lineOffset) {
         aLine += aFlags.lineOffset;
       }
       if (!aFlags.noCaret) {
-        editor.setCaretPosition(aLine - 1, aFlags.columnOffset);
+        this.editor.setCaretPosition(aLine - 1, aFlags.columnOffset);
       }
       if (!aFlags.noDebug) {
-        editor.setDebugLocation(aLine - 1, aFlags.columnOffset);
+        this.editor.setDebugLocation(aLine - 1, aFlags.columnOffset);
       }
-    }
+    });
   },
 
   /**
@@ -478,9 +468,10 @@ let DebuggerView = {
     this.Variables.empty();
 
     if (this.editor) {
+      this.editor.setMode(SourceEditor.MODES.TEXT);
       this.editor.setText("");
-      this.editor.focus();
-      this._editorSource = null;
+      this.editor.resetUndo();
+      this._editorSource = {};
     }
   },
 
@@ -497,8 +488,8 @@ let DebuggerView = {
   Sources: null,
   Variables: null,
   WatchExpressions: null,
-  _editor: null,
-  _editorSource: null,
+  editor: null,
+  _editorSource: {},
   _loadingText: "",
   _sourcesPane: null,
   _instrumentsPane: null,

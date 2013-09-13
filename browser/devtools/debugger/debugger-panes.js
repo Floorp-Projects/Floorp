@@ -350,7 +350,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
 
     // Update the editor location if necessary.
     if (!aOptions.noEditorUpdate) {
-      DebuggerView.updateEditor(aLocation.url, aLocation.line, { noDebug: true });
+      DebuggerView.setEditorLocation(aLocation.url, aLocation.line, { noDebug: true });
     }
 
     // If the breakpoint requires a new conditional expression, display
@@ -648,12 +648,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
       return;
     }
     // The container is not empty and an actual item was selected.
-    let selectedSource = sourceItem.attachment.source;
-
-    if (DebuggerView.editorSource != selectedSource) {
-      DebuggerView.editorSource = selectedSource;
-    }
-
+    DebuggerView.setEditorLocation(sourceItem.value);
     this.maybeShowBlackBoxMessage();
   },
 
@@ -662,9 +657,9 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * selected source is black boxed or not.
    */
   maybeShowBlackBoxMessage: function () {
-    const source = DebuggerController.activeThread.source(
-      DebuggerView.editorSource);
-    this._editorDeck.selectedIndex = source.isBlackBoxed ? 1 : 0;
+    let sourceForm = this.selectedItem.attachment.source;
+    let sourceClient = DebuggerController.activeThread.source(sourceForm);
+    this._editorDeck.selectedIndex = sourceClient.isBlackBoxed ? 1 : 0;
   },
 
   /**
@@ -1799,7 +1794,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
 
     let location = sourceResultsItem.location;
     let lineNumber = lineResultsItem.lineNumber;
-    DebuggerView.updateEditor(location, lineNumber + 1, { noDebug: true });
+    DebuggerView.setEditorLocation(location, lineNumber + 1, { noDebug: true });
 
     let editor = DebuggerView.editor;
     let offset = editor.getCaretOffset();
