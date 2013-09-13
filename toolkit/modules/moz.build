@@ -11,6 +11,7 @@ EXTRA_JS_MODULES += [
     'Deprecated.jsm',
     'Dict.jsm',
     'FileUtils.jsm',
+    'Finder.jsm',
     'Geometry.jsm',
     'Http.jsm',
     'InlineSpellChecker.jsm',
