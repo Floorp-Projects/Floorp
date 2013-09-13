@@ -10,10 +10,12 @@ interface nsIDocShell;
 
 /**
  * nsIContentSecurityPolicy
- * Describes an XPCOM component used to model an enforce CSPs.
+ * Describes an XPCOM component used to model and enforce CSPs.  Instances of
+ * this class may have multiple policies within them, but there should only be
+ * one of these per document/principal.
  */
 
-[scriptable, uuid(230b126d-afc3-4588-9794-3e135594d626)]
+[scriptable, uuid(e5020ec3-1437-46f5-b4eb-8b60766d02c0)]
 interface nsIContentSecurityPolicy : nsISupports
 {
 
@@ -25,61 +27,87 @@ interface nsIContentSecurityPolicy : nsISupports
   attribute boolean isInitialized;
 
   /**
-   * When set to true, content load-blocking and fail-closed are disabled: CSP
-   * will ONLY send reports, and not modify behavior.
+   * Accessor method for a read-only string version of the policy at a given
+   * index.
    */
-  attribute boolean reportOnlyMode;
+  AString getPolicy(in unsigned long index);
 
   /**
-   * A read-only string version of the policy for debugging.
+   * Returns the number of policies attached to this CSP instance.  Useful with
+   * getPolicy().
    */
-  readonly attribute AString policy;
+  attribute long policyCount;
+
+  /**
+   * Remove a policy associated with this CSP context.
+   * @throws NS_ERROR_FAILURE if the index is out of bounds or invalid.
+   */
+  void removePolicy(in unsigned long index);
+
+  /**
+   * Parse and install a CSP policy.
+   * @param aPolicy
+   *        String representation of the policy (e.g., header value)
+   * @param selfURI
+   *        the URI of the protected document/principal
+   * @param reportOnly
+   *        Should this policy affect content, script and style processing or
+   *        just send reports if it is violated?
+   * @param specCompliant
+   *        Whether or not the policy conforms to the W3C specification.
+   *        If this is false, that indicates this policy is from the older
+   *        implementation with different semantics and directive names.
+   */
+  void appendPolicy(in AString policyString, in nsIURI selfURI,
+                    in boolean reportOnly, in boolean specCompliant);
 
   /**
    * Whether this policy allows in-page script.
-   * @param shouldReportViolation
+   * @param shouldReportViolations
    *     Whether or not the use of inline script should be reported.
    *     This function always returns "true" for report-only policies, but when
-   *     the report-only policy is violated, shouldReportViolation is true as
-   *     well.
+   *     any policy (report-only or otherwise) is violated,
+   *     shouldReportViolations is true as well.
    * @return
    *     Whether or not the effects of the inline script should be allowed
    *     (block the compilation if false).
    */
-  boolean getAllowsInlineScript(out boolean shouldReportViolation);
+  boolean getAllowsInlineScript(out boolean shouldReportViolations);
 
   /**
    * whether this policy allows eval and eval-like functions
    * such as setTimeout("code string", time).
-   * @param shouldReportViolation
+   * @param shouldReportViolations
    *     Whether or not the use of eval should be reported.
-   *     This function always returns "true" for report-only policies, but when
-   *     the report-only policy is violated, shouldReportViolation is true as
-   *     well.
+   *     This function returns "true" when violating report-only policies, but
+   *     when any policy (report-only or otherwise) is violated,
+   *     shouldReportViolations is true as well.
    * @return
    *     Whether or not the effects of the eval call should be allowed
    *     (block the call if false).
    */
-  boolean getAllowsEval(out boolean shouldReportViolation);
+  boolean getAllowsEval(out boolean shouldReportViolations);
 
   /**
    * Whether this policy allows in-page styles.
    * This includes <style> tags with text content and style="" attributes in
    * HTML elements.
-   * @param shouldReportViolation
-   *     Whether or not the use of eval should be reported.
-   *     This function always returns "true" for report-only policies, but when
-   *     the report-only policy is violated, shouldReportViolation is true as
-   *     well.
+   * @param shouldReportViolations
+   *     Whether or not the use of inline style should be reported.
+   *     If there are report-only policies, this function may return true
+   *     (don't block), but one or more policy may still want to send
+   *     violation reports so shouldReportViolations will be true even if the
+   *     inline style should be permitted.
    * @return
-   *     Whether or not the effects of the eval call should be allowed
-   *     (block the call if false).
+   *     Whether or not the effects of the inline style should be allowed
+   *     (block the rules if false).
    */
-  boolean getAllowsInlineStyle(out boolean shouldReportViolation);
+  boolean getAllowsInlineStyle(out boolean shouldReportViolations);
 
   /**
-   * Log policy violation on the Error Console and send a report if a report-uri
-   * is present in the policy
+   * For each violated policy (of type violationType), log policy violation on
+   * the Error Console and send a report to report-uris present in the violated
+   * policies.
    *
    * @param violationType
    *     one of the VIOLATION_TYPE_* constants, e.g. inline-script or eval
@@ -100,46 +128,23 @@ interface nsIContentSecurityPolicy : nsISupports
   const unsigned short VIOLATION_TYPE_INLINE_STYLE = 3;
 
   /**
-   * Manually triggers violation report sending given a URI and reason.
-   * The URI may be null, in which case "self" is sent.
-   * @param blockedURI
-   *     the URI that violated the policy
-   * @param violatedDirective
-   *     the directive that was violated.
-   * @param scriptSample
-   *     a sample of the violating inline script
-   * @param lineNum
-   *     source line number of the violation (if available)
-   * @return
-   *     nothing.
-   */
-  void sendReports(in AString blockedURI,
-                   in AString violatedDirective,
-                   in AString scriptSample,
-                   in int32_t lineNum);
-
-  /**
    * Called after the CSP object is created to fill in the appropriate request
    * and request header information needed in case a report needs to be sent.
    */
   void scanRequestData(in nsIHttpChannel aChannel);
 
   /**
-   * Updates the policy currently stored in the CSP to be "refined" or
-   * tightened by the one specified in the string policyString.
-   */
-  void refinePolicy(in AString policyString, in nsIURI selfURI, in boolean specCompliant);
-
-  /**
    * Verifies ancestry as permitted by the policy.
    *
-   * Calls to this may trigger violation reports when queried, so
-   * this value should not be cached.
+   * NOTE: Calls to this may trigger violation reports when queried, so this
+   * value should not be cached.
    *
    * @param docShell
    *    containing the protected resource
    * @return
-   *    true if the frame's ancestors are all permitted by policy
+   *    true if the frame's ancestors are all allowed by policy (except for
+   *    report-only policies, which will send reports and then return true
+   *    here when violated).
    */
   boolean permitsAncestry(in nsIDocShell docShell);
 
@@ -151,11 +156,11 @@ interface nsIContentSecurityPolicy : nsISupports
    * Calls to this may trigger violation reports when queried, so
    * this value should not be cached.
    */
-  short shouldLoad(in unsigned long   aContentType, 
-                   in nsIURI          aContentLocation, 
-                   in nsIURI          aRequestOrigin, 
-                   in nsISupports     aContext, 
-                   in ACString        aMimeTypeGuess, 
+  short shouldLoad(in unsigned long   aContentType,
+                   in nsIURI          aContentLocation,
+                   in nsIURI          aRequestOrigin,
+                   in nsISupports     aContext,
+                   in ACString        aMimeTypeGuess,
                    in nsISupports     aExtra);
 
   /**
@@ -163,10 +168,10 @@ interface nsIContentSecurityPolicy : nsISupports
    * document are being processed.  Given a bit of information about the request,
    * decides whether or not the policy is satisfied.
    */
-  short shouldProcess(in unsigned long   aContentType, 
-                      in nsIURI          aContentLocation, 
-                      in nsIURI          aRequestOrigin, 
-                      in nsISupports     aContext, 
+  short shouldProcess(in unsigned long   aContentType,
+                      in nsIURI          aContentLocation,
+                      in nsIURI          aRequestOrigin,
+                      in nsISupports     aContext,
                       in ACString        aMimeType,
                       in nsISupports     aExtra);
 

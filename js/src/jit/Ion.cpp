@@ -1304,7 +1304,7 @@ OptimizeMIR(MIRGenerator *mir)
 
     if (js_IonOptions.rangeAnalysis) {
         RangeAnalysis r(mir, graph);
-        if (!r.addBetaNobes())
+        if (!r.addBetaNodes())
             return false;
         IonSpewPass("Beta");
         AssertExtendedGraphCoherency(graph);
@@ -1320,7 +1320,7 @@ OptimizeMIR(MIRGenerator *mir)
         if (mir->shouldCancel("Range Analysis"))
             return false;
 
-        if (!r.removeBetaNobes())
+        if (!r.removeBetaNodes())
             return false;
         IonSpewPass("De-Beta");
         AssertExtendedGraphCoherency(graph);

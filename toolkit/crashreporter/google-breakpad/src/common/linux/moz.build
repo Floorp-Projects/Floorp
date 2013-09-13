@@ -22,6 +22,15 @@ if CONFIG['OS_TARGET'] != 'Android':
 
 if CONFIG['MOZ_CRASHREPORTER']:
     HOST_LIBRARY_NAME = 'host_breakpad_linux_common_s'
+    HOST_CPPSRCS += [
+        'dump_symbols.cc',
+        'elf_symbols_to_module.cc',
+        'elfutils.cc',
+        'file_id.cc',
+        'guid_creator.cc',
+        'linux_libc_support.cc',
+        'memory_mapped_file.cc',
+    ]
 
 LIBRARY_NAME = 'breakpad_linux_common_s'
 

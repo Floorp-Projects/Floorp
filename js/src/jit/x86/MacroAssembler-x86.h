@@ -461,11 +461,17 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void cmpPtr(Register lhs, const ImmWord rhs) {
         cmpl(lhs, Imm32(rhs.value));
     }
+    void cmpPtr(Register lhs, const ImmPtr imm) {
+        cmpPtr(lhs, ImmWord(uintptr_t(imm.value)));
+    }
     void cmpPtr(Register lhs, const ImmGCPtr rhs) {
         cmpl(lhs, rhs);
     }
     void cmpPtr(const Operand &lhs, const ImmWord rhs) {
         cmpl(lhs, rhs);
+    }
+    void cmpPtr(const Operand &lhs, const ImmPtr imm) {
+        cmpPtr(lhs, ImmWord(uintptr_t(imm.value)));
     }
     void cmpPtr(const Operand &lhs, const ImmGCPtr rhs) {
         cmpl(lhs, rhs);
@@ -478,6 +484,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void cmpPtr(const Address &lhs, const ImmWord rhs) {
         cmpl(Operand(lhs), rhs);
+    }
+    void cmpPtr(const Address &lhs, const ImmPtr rhs) {
+        cmpPtr(lhs, ImmWord(uintptr_t(rhs.value)));
     }
     void cmpPtr(Register lhs, Register rhs) {
         cmpl(lhs, rhs);
@@ -515,6 +524,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void addPtr(ImmWord imm, const Register &dest) {
         addl(Imm32(imm.value), dest);
     }
+    void addPtr(ImmPtr imm, const Register &dest) {
+        addPtr(ImmWord(uintptr_t(imm.value)), dest);
+    }
     void addPtr(Imm32 imm, const Address &dest) {
         addl(imm, Operand(dest));
     }
@@ -549,8 +561,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
-    template <typename T>
-    void branchPrivatePtr(Condition cond, T lhs, ImmWord ptr, Label *label) {
+    void branchPrivatePtr(Condition cond, const Address &lhs, ImmPtr ptr, Label *label) {
         branchPtr(cond, lhs, ptr, label);
     }
 
@@ -607,6 +618,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void movePtr(ImmWord imm, Register dest) {
         movl(Imm32(imm.value), dest);
     }
+    void movePtr(ImmPtr imm, Register dest) {
+        movl(imm, dest);
+    }
     void movePtr(ImmGCPtr imm, Register dest) {
         movl(imm, dest);
     }
@@ -627,6 +641,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void storePtr(ImmWord imm, const Address &address) {
         movl(Imm32(imm.value), Operand(address));
+    }
+    void storePtr(ImmPtr imm, const Address &address) {
+        storePtr(ImmWord(uintptr_t(imm.value)), address);
     }
     void storePtr(ImmGCPtr imm, const Address &address) {
         movl(imm, Operand(address));

@@ -10,12 +10,82 @@
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/ShadowLayerUtilsGralloc.h"
+#include "GrallocImages.h"
 #include "gfx2DGlue.h"
 
 namespace mozilla {
 namespace layers {
 
 using namespace android;
+
+class GraphicBufferLockedTextureClientData : public TextureClientData {
+public:
+  GraphicBufferLockedTextureClientData(GraphicBufferLocked* aBufferLocked)
+    : mBufferLocked(aBufferLocked)
+  {
+    MOZ_COUNT_CTOR(GrallocTextureClientData);
+  }
+
+  ~GraphicBufferLockedTextureClientData()
+  {
+    MOZ_COUNT_DTOR(GrallocTextureClientData);
+    MOZ_ASSERT(!mBufferLocked, "Forgot to unlock the GraphicBufferLocked?");
+  }
+
+  virtual void DeallocateSharedData(ISurfaceAllocator*) MOZ_OVERRIDE
+  {
+    mBufferLocked->Unlock();
+    mBufferLocked = nullptr;
+  }
+
+private:
+  RefPtr<GraphicBufferLocked> mBufferLocked;
+};
+
+class GrallocTextureClientData : public TextureClientData {
+public:
+  GrallocTextureClientData(GrallocBufferActor* aActor)
+    : mGrallocActor(aActor)
+  {
+    MOZ_COUNT_CTOR(GrallocTextureClientData);
+  }
+
+  ~GrallocTextureClientData()
+  {
+    MOZ_COUNT_DTOR(GrallocTextureClientData);
+    MOZ_ASSERT(!mGrallocActor, "Forgot to unlock the GraphicBufferLocked?");
+  }
+
+  virtual void DeallocateSharedData(ISurfaceAllocator* allocator) MOZ_OVERRIDE
+  {
+    // We just need to wrap the actor in a SurfaceDescriptor because that's what
+    // ISurfaceAllocator uses as input, we don't care about the other parameters.
+    SurfaceDescriptor sd = SurfaceDescriptorGralloc(nullptr, mGrallocActor,
+                                                    nsIntSize(0,0), false, false);
+    allocator->DestroySharedSurface(&sd);
+    mGrallocActor = nullptr;
+  }
+
+private:
+  GrallocBufferActor* mGrallocActor;
+};
+
+TextureClientData*
+GrallocTextureClientOGL::DropTextureData()
+{
+  if (mBufferLocked) {
+    TextureClientData* result = new GraphicBufferLockedTextureClientData(mBufferLocked);
+    mBufferLocked = nullptr;
+    mGrallocActor = nullptr;
+    mGraphicBuffer = nullptr;
+    return result;
+  } else {
+    TextureClientData* result = new GrallocTextureClientData(mGrallocActor);
+    mGrallocActor = nullptr;
+    mGraphicBuffer = nullptr;
+    return result;
+  }
+}
 
 GrallocTextureClientOGL::GrallocTextureClientOGL(GrallocBufferActor* aActor,
                                                  gfx::IntSize aSize,
@@ -41,6 +111,20 @@ GrallocTextureClientOGL::GrallocTextureClientOGL(CompositableClient* aCompositab
 GrallocTextureClientOGL::~GrallocTextureClientOGL()
 {
   MOZ_COUNT_DTOR(GrallocTextureClientOGL);
+    if (ShouldDeallocateInDestructor()) {
+    // If the buffer has never been shared we must deallocate it or it would
+    // leak.
+    if (mBufferLocked) {
+      mBufferLocked->Unlock();
+    } else {
+      MOZ_ASSERT(mCompositable);
+      // We just need to wrap the actor in a SurfaceDescriptor because that's what
+      // ISurfaceAllocator uses as input, we don't care about the other parameters.
+      SurfaceDescriptor sd = SurfaceDescriptorGralloc(nullptr, mGrallocActor,
+                                                      nsIntSize(0,0), false, false);
+      mCompositable->GetForwarder()->DestroySharedSurface(&sd);
+    }
+  }
 }
 
 void
@@ -52,6 +136,12 @@ GrallocTextureClientOGL::InitWith(GrallocBufferActor* aActor, gfx::IntSize aSize
   mGrallocActor = aActor;
   mGraphicBuffer = aActor->GetGraphicBuffer();
   mSize = aSize;
+}
+
+void
+GrallocTextureClientOGL::SetGraphicBufferLocked(GraphicBufferLocked* aBufferLocked)
+{
+  mBufferLocked = aBufferLocked;
 }
 
 bool

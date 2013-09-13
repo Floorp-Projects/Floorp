@@ -177,21 +177,25 @@ ImageContainer::SetCurrentImageInternal(Image *aImage)
 }
 
 void
-ImageContainer::SetCurrentImage(Image *aImage)
+ImageContainer::ClearCurrentImage()
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  if (IsAsync()) {
-    if (aImage) {
-      ImageBridgeChild::DispatchImageClientUpdate(mImageClient, this);
-    } else {
-      // here we used to have a SetIdle() call on the image bridge to tell
-      // the compositor that the video element is not going to be seen for
-      // moment and that it can release its shared memory. It was causing
-      // crashes so it has been removed.
-      // This may be reimplemented after 858914 lands.
-    }
+  SetCurrentImageInternal(nullptr);
+}
+
+void
+ImageContainer::SetCurrentImage(Image *aImage)
+{
+  if (IsAsync() && !aImage) {
+    // Let ImageClient to release all TextureClients.
+    ImageBridgeChild::FlushImage(mImageClient, this);
+    return;
   }
 
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  if (IsAsync()) {
+    ImageBridgeChild::DispatchImageClientUpdate(mImageClient, this);
+  }
   SetCurrentImageInternal(aImage);
 }
 

@@ -8,7 +8,6 @@
 
 #include "nsIConsoleService.h"
 #include "nsIDiskSpaceWatcher.h"
-#include "nsIDOMScriptObjectFactory.h"
 #include "nsIFile.h"
 #include "nsIFileStorage.h"
 #include "nsIObserverService.h"
@@ -39,8 +38,6 @@
 USING_INDEXEDDB_NAMESPACE
 using namespace mozilla::dom;
 USING_QUOTA_NAMESPACE
-
-static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -605,11 +602,6 @@ IndexedDatabaseManager::InitWindowless(const jsval& aObj, JSContext* aCx)
     NS_WARNING("Passed object already has an 'indexedDB' property!");
     return NS_ERROR_FAILURE;
   }
-
-  // Instantiating this class will register exception providers so even 
-  // in xpcshell we will get typed (dom) exceptions, instead of general
-  // exceptions.
-  nsCOMPtr<nsIDOMScriptObjectFactory> sof(do_GetService(kDOMSOF_CID));
 
   JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, obj));
   NS_ASSERTION(global, "What?! No global!");

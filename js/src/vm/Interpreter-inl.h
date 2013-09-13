@@ -24,6 +24,7 @@
 #include "jsobjinlines.h"
 
 #include "vm/Stack-inl.h"
+#include "vm/String-inl.h"
 
 namespace js {
 
