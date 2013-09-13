@@ -1237,15 +1237,23 @@ this.WidgetMethods = {
    *
    * @param nsIDOMNode aElement
    *        The element used to identify the item.
+   * @param object aFlags [optional]
+   *        Additional options for showing the source. Supported options:
+   *          - noSiblings: if siblings shouldn't be taken into consideration
+   *                        when searching for the associated item.
    * @return Item
    *         The matched item, or null if nothing is found.
    */
-  getItemForElement: function(aElement) {
+  getItemForElement: function(aElement, aFlags = {}) {
     while (aElement) {
-      let item =
-        this._itemsByElement.get(aElement) ||
-        this._itemsByElement.get(aElement.nextElementSibling) ||
-        this._itemsByElement.get(aElement.previousElementSibling);
+      let item = this._itemsByElement.get(aElement);
+
+      // Also search the siblings if allowed.
+      if (!aFlags.noSiblings) {
+        item = item ||
+          this._itemsByElement.get(aElement.nextElementSibling) ||
+          this._itemsByElement.get(aElement.previousElementSibling);
+      }
       if (item) {
         return item;
       }

@@ -2131,7 +2131,7 @@ LineResults.prototype.__iterator__ = function() {
  */
 SourceResults.getItemForElement =
 LineResults.getItemForElement = function(aElement) {
-  return WidgetMethods.getItemForElement.call(this, aElement);
+  return WidgetMethods.getItemForElement.call(this, aElement, { noSiblings: true });
 };
 
 /**
