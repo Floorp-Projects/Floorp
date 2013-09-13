@@ -2938,7 +2938,8 @@ this.DOMApplicationRegistry = {
     let tmp = [];
 
     for (let appId in this.webapps) {
-      if (this.webapps[appId].manifestURL == aData.manifestURL) {
+      if (this.webapps[appId].manifestURL == aData.manifestURL &&
+          this._isLaunchable(this.webapps[appId])) {
         aData.app = AppsUtils.cloneAppObject(this.webapps[appId]);
         tmp.push({ id: appId });
         break;
