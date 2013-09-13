@@ -3342,7 +3342,7 @@ CSS_PROP_SVG(
     CSS_PROPERTY_PARSE_FUNCTION,
     "",
     0,
-    kContextPatternKTable,
+    kObjectPatternKTable,
     offsetof(nsStyleSVG, mFill),
     eStyleAnimType_PaintServer)
 CSS_PROP_SVG(
@@ -3351,8 +3351,8 @@ CSS_PROP_SVG(
     FillOpacity,
     CSS_PROPERTY_PARSE_VALUE,
     "",
-    VARIANT_HN | VARIANT_OPENTYPE_SVG_KEYWORD,
-    kContextOpacityKTable,
+    VARIANT_HN | VARIANT_KEYWORD,
+    kObjectOpacityKTable,
     offsetof(nsStyleSVG, mFillOpacity),
     eStyleAnimType_float)
 CSS_PROP_SVG(
@@ -3508,7 +3508,7 @@ CSS_PROP_SVG(
     CSS_PROPERTY_PARSE_FUNCTION,
     "",
     0,
-    kContextPatternKTable,
+    kObjectPatternKTable,
     offsetof(nsStyleSVG, mStroke),
     eStyleAnimType_PaintServer)
 CSS_PROP_SVG(
@@ -3520,7 +3520,7 @@ CSS_PROP_SVG(
         // NOTE: Internal values have range restrictions.
     "",
     0,
-    kStrokeContextValueKTable,
+    kStrokeObjectValueKTable,
     CSS_PROP_NO_OFFSET, /* property stored in 2 separate members */
     eStyleAnimType_Custom)
 CSS_PROP_SVG(
@@ -3529,8 +3529,8 @@ CSS_PROP_SVG(
     StrokeDashoffset,
     CSS_PROPERTY_PARSE_VALUE,
     "",
-    VARIANT_HLPN | VARIANT_OPENTYPE_SVG_KEYWORD,
-    kStrokeContextValueKTable,
+    VARIANT_HLPN | VARIANT_KEYWORD,
+    kStrokeObjectValueKTable,
     offsetof(nsStyleSVG, mStrokeDashoffset),
     eStyleAnimType_Coord)
 CSS_PROP_SVG(
@@ -3570,8 +3570,8 @@ CSS_PROP_SVG(
     StrokeOpacity,
     CSS_PROPERTY_PARSE_VALUE,
     "",
-    VARIANT_HN | VARIANT_OPENTYPE_SVG_KEYWORD,
-    kContextOpacityKTable,
+    VARIANT_HN | VARIANT_KEYWORD,
+    kObjectOpacityKTable,
     offsetof(nsStyleSVG, mStrokeOpacity),
     eStyleAnimType_float)
 CSS_PROP_SVG(
@@ -3581,8 +3581,8 @@ CSS_PROP_SVG(
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_VALUE_NONNEGATIVE,
     "",
-    VARIANT_HLPN | VARIANT_OPENTYPE_SVG_KEYWORD,
-    kStrokeContextValueKTable,
+    VARIANT_HLPN | VARIANT_KEYWORD,
+    kStrokeObjectValueKTable,
     offsetof(nsStyleSVG, mStrokeWidth),
     eStyleAnimType_Coord)
 CSS_PROP_SVG(

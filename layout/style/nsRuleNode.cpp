@@ -7420,11 +7420,11 @@ SetSVGPaint(const nsCSSValue& aValue, const nsStyleSVGPaint& parentPaint,
     } else if (pair.mXValue.GetUnit() == eCSSUnit_Enumerated) {
 
       switch (pair.mXValue.GetIntValue()) {
-      case NS_COLOR_CONTEXT_FILL:
-        aResult.SetType(eStyleSVGPaintType_ContextFill);
+      case NS_COLOR_OBJECTFILL:
+        aResult.SetType(eStyleSVGPaintType_ObjectFill);
         break;
-      case NS_COLOR_CONTEXT_STROKE:
-        aResult.SetType(eStyleSVGPaintType_ContextStroke);
+      case NS_COLOR_OBJECTSTROKE:
+        aResult.SetType(eStyleSVGPaintType_ObjectStroke);
         break;
       default:
         NS_NOTREACHED("unknown keyword as paint server value");
@@ -7456,11 +7456,11 @@ SetSVGOpacity(const nsCSSValue& aValue,
 {
   if (eCSSUnit_Enumerated == aValue.GetUnit()) {
     switch (aValue.GetIntValue()) {
-    case NS_STYLE_CONTEXT_FILL_OPACITY:
-      aOpacityTypeField = eStyleSVGOpacitySource_ContextFillOpacity;
+    case NS_STYLE_OBJECT_FILL_OPACITY:
+      aOpacityTypeField = eStyleSVGOpacitySource_ObjectFillOpacity;
       break;
-    case NS_STYLE_CONTEXT_STROKE_OPACITY:
-      aOpacityTypeField = eStyleSVGOpacitySource_ContextStrokeOpacity;
+    case NS_STYLE_OBJECT_STROKE_OPACITY:
+      aOpacityTypeField = eStyleSVGOpacitySource_ObjectStrokeOpacity;
       break;
     default:
       NS_NOTREACHED("SetSVGOpacity: Unknown keyword");
@@ -7480,10 +7480,10 @@ SetSVGOpacity(const nsCSSValue& aValue,
 
 template <typename FieldT, typename T>
 static bool
-SetTextContextValue(const nsCSSValue& aValue, FieldT& aField, T aFallbackValue)
+SetTextObjectValue(const nsCSSValue& aValue, FieldT& aField, T aFallbackValue)
 {
   if (aValue.GetUnit() != eCSSUnit_Enumerated ||
-      aValue.GetIntValue() != NS_STYLE_STROKE_PROP_CONTEXT_VALUE) {
+      aValue.GetIntValue() != NS_STYLE_STROKE_PROP_OBJECTVALUE) {
     return false;
   }
   aField = aFallbackValue;
@@ -7523,13 +7523,12 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
               parentSVG->mFill, mPresContext, aContext,
               svg->mFill, eStyleSVGPaintType_Color, canStoreInRuleTree);
 
-  // fill-opacity: factor, inherit, initial,
-  // context-fill-opacity, context-stroke-opacity
-  nsStyleSVGOpacitySource contextFillOpacity = svg->mFillOpacitySource;
+  // fill-opacity: factor, inherit, initial, objectFillOpacity, objectStrokeOpacity
+  nsStyleSVGOpacitySource objectFillOpacity = svg->mFillOpacitySource;
   SetSVGOpacity(*aRuleData->ValueForFillOpacity(),
-                svg->mFillOpacity, contextFillOpacity, canStoreInRuleTree,
+                svg->mFillOpacity, objectFillOpacity, canStoreInRuleTree,
                 parentSVG->mFillOpacity, parentSVG->mFillOpacitySource);
-  svg->mFillOpacitySource = contextFillOpacity;
+  svg->mFillOpacitySource = objectFillOpacity;
 
   // fill-rule: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForFillRule(),
@@ -7616,7 +7615,7 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
               parentSVG->mStroke, mPresContext, aContext,
               svg->mStroke, eStyleSVGPaintType_None, canStoreInRuleTree);
 
-  // stroke-dasharray: <dasharray>, none, inherit, context-value
+  // stroke-dasharray: <dasharray>, none, inherit, -moz-objectValue
   const nsCSSValue* strokeDasharrayValue = aRuleData->ValueForStrokeDasharray();
   switch (strokeDasharrayValue->GetUnit()) {
   case eCSSUnit_Null:
@@ -7643,7 +7642,7 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
 
   case eCSSUnit_Enumerated:
     NS_ABORT_IF_FALSE(strokeDasharrayValue->GetIntValue() ==
-                            NS_STYLE_STROKE_PROP_CONTEXT_VALUE,
+                            NS_STYLE_STROKE_PROP_OBJECTVALUE,
                       "Unknown keyword for stroke-dasharray");
     svg->mStrokeDasharrayFromObject = true;
     delete [] svg->mStrokeDasharray;
@@ -7698,9 +7697,9 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
     aRuleData->ValueForStrokeDashoffset();
   svg->mStrokeDashoffsetFromObject =
     strokeDashoffsetValue->GetUnit() == eCSSUnit_Enumerated &&
-    strokeDashoffsetValue->GetIntValue() == NS_STYLE_STROKE_PROP_CONTEXT_VALUE;
+    strokeDashoffsetValue->GetIntValue() == NS_STYLE_STROKE_PROP_OBJECTVALUE;
   if (svg->mStrokeDashoffsetFromObject) {
-    svg->mStrokeDashoffset.SetCoordValue(0);
+    svg->mStrokeDashoffset.SetIntValue(0, eStyleUnit_Integer);
   } else {
     SetCoord(*aRuleData->ValueForStrokeDashoffset(),
              svg->mStrokeDashoffset, parentSVG->mStrokeDashoffset,
@@ -7727,18 +7726,18 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
             parentSVG->mStrokeMiterlimit, 4.0f);
 
   // stroke-opacity:
-  nsStyleSVGOpacitySource contextStrokeOpacity = svg->mStrokeOpacitySource;
+  nsStyleSVGOpacitySource objectStrokeOpacity = svg->mStrokeOpacitySource;
   SetSVGOpacity(*aRuleData->ValueForStrokeOpacity(),
-                svg->mStrokeOpacity, contextStrokeOpacity, canStoreInRuleTree,
+                svg->mStrokeOpacity, objectStrokeOpacity, canStoreInRuleTree,
                 parentSVG->mStrokeOpacity, parentSVG->mStrokeOpacitySource);
-  svg->mStrokeOpacitySource = contextStrokeOpacity;
+  svg->mStrokeOpacitySource = objectStrokeOpacity;
 
   // stroke-width:
   const nsCSSValue* strokeWidthValue = aRuleData->ValueForStrokeWidth();
   switch (strokeWidthValue->GetUnit()) {
   case eCSSUnit_Enumerated:
     NS_ABORT_IF_FALSE(strokeWidthValue->GetIntValue() ==
-                        NS_STYLE_STROKE_PROP_CONTEXT_VALUE,
+                        NS_STYLE_STROKE_PROP_OBJECTVALUE,
                       "Unrecognized keyword for stroke-width");
     svg->mStrokeWidthFromObject = true;
     svg->mStrokeWidth.SetCoordValue(nsPresContext::CSSPixelsToAppUnits(1));

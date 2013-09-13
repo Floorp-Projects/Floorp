@@ -77,7 +77,6 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_bug716226.html \
 		test_bug765590.html \
 		test_bug798567.html \
-		test_bug798843_pref.html \
 		test_bug829816.html \
 		file_bug829816.css \
 		test_bug887741_at-rules_in_declaration_lists.html \
