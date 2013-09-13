@@ -2162,10 +2162,12 @@ js::CurrentScriptFileLineOrigin(JSContext *cx, const char **file, unsigned *line
         JSScript *script = NULL;
         jsbytecode *pc = NULL;
         types::TypeScript::GetPcScript(cx, &script, &pc);
-        JS_ASSERT(JSOp(*pc) == JSOP_EVAL);
-        JS_ASSERT(*(pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
+        JS_ASSERT(JSOp(*pc) == JSOP_EVAL || JSOp(*pc) == JSOP_SPREADEVAL);
+        JS_ASSERT(*(pc + (JSOp(*pc) == JSOP_EVAL ? JSOP_EVAL_LENGTH
+                                                 : JSOP_SPREADEVAL_LENGTH)) == JSOP_LINENO);
         *file = script->filename();
-        *linenop = GET_UINT16(pc + JSOP_EVAL_LENGTH);
+        *linenop = GET_UINT16(pc + (JSOp(*pc) == JSOP_EVAL ? JSOP_EVAL_LENGTH
+                                                           : JSOP_SPREADEVAL_LENGTH));
         *origin = script->originPrincipals();
         return;
     }

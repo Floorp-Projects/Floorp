@@ -2405,6 +2405,61 @@ BEGIN_CASE(JSOP_EVAL)
 }
 END_CASE(JSOP_EVAL)
 
+BEGIN_CASE(JSOP_SPREADNEW)
+BEGIN_CASE(JSOP_SPREADCALL)
+    if (regs.fp()->hasPushedSPSFrame())
+        cx->runtime()->spsProfiler.updatePC(script, regs.pc);
+    /* FALL THROUGH */
+
+BEGIN_CASE(JSOP_SPREADEVAL)
+{
+    JS_ASSERT(regs.stackDepth() >= 3);
+    RootedObject &aobj = rootObject0;
+    aobj = &regs.sp[-1].toObject();
+
+    uint32_t length = aobj->as<ArrayObject>().length();
+
+    if (length > ARGS_LENGTH_MAX) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             op == JSOP_SPREADNEW ? JSMSG_TOO_MANY_CON_SPREADARGS
+                                                  : JSMSG_TOO_MANY_FUN_SPREADARGS);
+        goto error;
+    }
+
+    InvokeArgs args(cx);
+
+    if (!args.init(length))
+        return false;
+
+    args.setCallee(regs.sp[-3]);
+    args.setThis(regs.sp[-2]);
+
+    if (!GetElements(cx, aobj, length, args.array()))
+        goto error;
+
+    if (op == JSOP_SPREADNEW) {
+        if (!InvokeConstructor(cx, args))
+            goto error;
+    } else if (op == JSOP_SPREADCALL) {
+        if (!Invoke(cx, args))
+            goto error;
+    } else {
+        JS_ASSERT(op == JSOP_SPREADEVAL);
+        if (IsBuiltinEvalForScope(regs.fp()->scopeChain(), args.calleev())) {
+            if (!DirectEval(cx, args))
+                goto error;
+        } else {
+            if (!Invoke(cx, args))
+                goto error;
+        }
+    }
+
+    regs.sp -= 2;
+    regs.sp[-1] = args.rval();
+    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
+}
+END_CASE(JSOP_SPREADCALL)
+
 BEGIN_CASE(JSOP_FUNAPPLY)
 {
     CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
