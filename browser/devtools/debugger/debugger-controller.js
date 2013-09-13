@@ -1714,12 +1714,6 @@ DebuggerController.Breakpoints = new Breakpoints();
  * Export some properties to the global scope for easier access.
  */
 Object.defineProperties(window, {
-  "dispatchEvent": {
-    get: function() ViewHelpers.dispatchEvent,
-  },
-  "editor": {
-    get: function() DebuggerView.editor
-  },
   "gTarget": {
     get: function() DebuggerController._target
   },
@@ -1728,18 +1722,6 @@ Object.defineProperties(window, {
   },
   "gThreadClient": {
     get: function() DebuggerController.activeThread
-  },
-  "gThreadState": {
-    get: function() DebuggerController.ThreadState
-  },
-  "gStackFrames": {
-    get: function() DebuggerController.StackFrames
-  },
-  "gSourceScripts": {
-    get: function() DebuggerController.SourceScripts
-  },
-  "gBreakpoints": {
-    get: function() DebuggerController.Breakpoints
   },
   "gCallStackPageSize": {
     get: function() CALL_STACK_PAGE_SIZE
