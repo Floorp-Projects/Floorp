@@ -16,20 +16,22 @@ function test()
         webconsole: hud,
         messages: [
           {
-          name: "Invalid HSTS header error displayed successfully",
-          text: HSTS_INVALID_HEADER_MSG,
-          category: CATEGORY_SECURITY,
-          severity: SEVERITY_WARNING
-        },
+            name: "Invalid HSTS header error displayed successfully",
+            text: HSTS_INVALID_HEADER_MSG,
+            category: CATEGORY_SECURITY,
+            severity: SEVERITY_WARNING,
+            objects: true,
+          },
         ],
-      }).then(() => testClickOpenNewTab(hud));
+      }).then((results) => testClickOpenNewTab(hud, results));
     });
   }, true);
 }
 
-function testClickOpenNewTab(hud) {
-  let warningNode = hud.outputNode.querySelector(
-    ".webconsole-learn-more-link");
+function testClickOpenNewTab(hud, results) {
+  let warningNode = results[0].clickableElements[0];
+  ok(warningNode, "link element");
+  ok(warningNode.classList.contains("learn-more-link"), "link class name");
 
   // Invoke the click event and check if a new tab would
   // open to the correct page.

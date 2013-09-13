@@ -29,125 +29,65 @@ function test()
   function performTest(aHud)
   {
     hud = aHud;
-
     hud.jsterm.clearOutput(true);
     hud.jsterm.execute("console.log('bazbaz', '" + longString +"', 'boom')");
 
-    waitForSuccess(waitForConsoleLog);
+    waitForMessages({
+      webconsole: hud,
+      messages: [{
+        name: "console.log output",
+        text: ["bazbaz", "boom", initialString],
+        noText: "foobar",
+        longString: true,
+      }],
+    }).then(onConsoleMessage);
   }
 
-  let waitForConsoleLog = {
-    name: "console.log output shown",
-    validatorFn: function()
-    {
-      return hud.outputNode.querySelector(".webconsole-msg-console");
-    },
-    successFn: function()
-    {
-      let msg = hud.outputNode.querySelector(".webconsole-msg-console");
-      is(msg.textContent.indexOf("foobar"), -1,
-         "foobar is not shown");
-      isnot(msg.textContent.indexOf("bazbaz"), -1,
-            "bazbaz is shown");
-      isnot(msg.textContent.indexOf("boom"), -1,
-            "boom is shown");
-      isnot(msg.textContent.indexOf(initialString), -1,
-            "initial string is shown");
-
-      let clickable = msg.querySelector(".longStringEllipsis");
-      ok(clickable, "long string ellipsis is shown");
-
-      scrollToVisible(clickable);
-
-      executeSoon(function() {
-        EventUtils.synthesizeMouse(clickable, 2, 2, {}, hud.iframeWindow);
-        waitForSuccess(waitForFullString);
-      });
-    },
-    failureFn: finishTest,
-  };
-
-  let waitForFullString = {
-    name: "full string shown",
-    validatorFn: function()
-    {
-      let msg = hud.outputNode.querySelector(".webconsole-msg-log");
-      return msg.textContent.indexOf(longString) > -1;
-    },
-    successFn: function()
-    {
-      let msg = hud.outputNode.querySelector(".webconsole-msg-log");
-      isnot(msg.textContent.indexOf("bazbaz"), -1,
-            "bazbaz is shown");
-      isnot(msg.textContent.indexOf("boom"), -1,
-            "boom is shown");
-
-      let clickable = msg.querySelector(".longStringEllipsis");
-      ok(!clickable, "long string ellipsis is not shown");
-
-      executeSoon(function() {
-        hud.jsterm.clearOutput(true);
-        hud.jsterm.execute("'" + longString +"'");
-        waitForSuccess(waitForExecute);
-      });
-    },
-    failureFn: finishTest,
-  };
-
-  let waitForExecute = {
-    name: "execute() output shown",
-    validatorFn: function()
-    {
-      return hud.outputNode.querySelector(".webconsole-msg-output");
-    },
-    successFn: function()
-    {
-      let msg = hud.outputNode.querySelector(".webconsole-msg-output");
-      isnot(msg.textContent.indexOf(initialString), -1,
-           "initial string is shown");
-      is(msg.textContent.indexOf(longString), -1,
-         "full string is not shown");
-
-      let clickable = msg.querySelector(".longStringEllipsis");
-      ok(clickable, "long string ellipsis is shown");
-
-      scrollToVisible(clickable);
-
-      executeSoon(function() {
-        EventUtils.synthesizeMouse(clickable, 3, 4, {}, hud.iframeWindow);
-        waitForSuccess(waitForFullStringAfterExecute);
-      });
-    },
-    failureFn: finishTest,
-  };
-
-  let waitForFullStringAfterExecute = {
-    name: "full string shown again",
-    validatorFn: function()
-    {
-      let msg = hud.outputNode.querySelector(".webconsole-msg-output");
-      return msg.textContent.indexOf(longString) > -1;
-    },
-    successFn: function()
-    {
-      let msg = hud.outputNode.querySelector(".webconsole-msg-output");
-      let clickable = msg.querySelector(".longStringEllipsis");
-      ok(!clickable, "long string ellipsis is not shown");
-
-      executeSoon(finishTest);
-    },
-    failureFn: finishTest,
-  };
-
-  function scrollToVisible(aNode)
+  function onConsoleMessage([result])
   {
-    let richListBoxNode = aNode.parentNode;
-    while (richListBoxNode.tagName != "richlistbox") {
-      richListBoxNode = richListBoxNode.parentNode;
-    }
+    let clickable = result.longStrings[0];
+    ok(clickable, "long string ellipsis is shown");
 
-    let boxObject = richListBoxNode.scrollBoxObject;
-    let nsIScrollBoxObject = boxObject.QueryInterface(Ci.nsIScrollBoxObject);
-    nsIScrollBoxObject.ensureElementIsVisible(aNode);
+    clickable.scrollIntoView(false);
+
+    EventUtils.synthesizeMouse(clickable, 2, 2, {}, hud.iframeWindow);
+
+    waitForMessages({
+      webconsole: hud,
+      messages: [{
+        name: "full string",
+        text: ["bazbaz", "boom", longString],
+        category: CATEGORY_WEBDEV,
+        longString: false,
+      }],
+    }).then(() => {
+      hud.jsterm.clearOutput(true);
+      hud.jsterm.execute("'" + longString +"'", onExecute);
+    });
+  }
+
+  function onExecute(msg)
+  {
+    isnot(msg.textContent.indexOf(initialString), -1,
+        "initial string is shown");
+    is(msg.textContent.indexOf(longString), -1,
+        "full string is not shown");
+
+    let clickable = msg.querySelector(".longStringEllipsis");
+    ok(clickable, "long string ellipsis is shown");
+
+    clickable.scrollIntoView(false);
+
+    EventUtils.synthesizeMouse(clickable, 3, 4, {}, hud.iframeWindow);
+
+    waitForMessages({
+      webconsole: hud,
+      messages: [{
+        name: "full string",
+        text: longString,
+        category: CATEGORY_OUTPUT,
+        longString: false,
+      }],
+    }).then(finishTest);
   }
 }

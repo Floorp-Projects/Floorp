@@ -1,0 +1,35 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Debugger test page</title>
+  </head>
+
+  <body>
+    <script type="text/javascript">
+      function simpleCall() {
+        debugger;
+      }
+
+      function evalCall() {
+        eval("debugger;");
+      }
+
+      var gRecurseLimit = 100;
+      var gRecurseDepth = 0;
+
+      function recurse() {
+        if (++gRecurseDepth == gRecurseLimit) {
+          debugger;
+          gRecurseDepth = 0;
+          return;
+        }
+        recurse();
+      }
+    </script>
+  </body>
+
+</html>
