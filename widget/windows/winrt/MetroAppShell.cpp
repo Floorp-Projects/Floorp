@@ -42,6 +42,8 @@ extern UINT sAppShellGeckoMsgId;
 
 static ComPtr<ICoreWindowStatic> sCoreStatic;
 static bool sIsDispatching = false;
+static bool sWillEmptyThreadQueue = false;
+static bool sEmptyingThreadQueue = false;
 
 MetroAppShell::~MetroAppShell()
 {
@@ -214,6 +216,43 @@ MetroAppShell::Run(void)
   return rv;
 }
 
+// Called in certain cases where we have async input events in the thread
+// queue and need to make sure they get dispatched before the stack unwinds.
+void // static
+MetroAppShell::MarkEventQueueForPurge()
+{
+  LogFunction();
+  sWillEmptyThreadQueue = true;
+
+  // If we're dispatching native events, wait until the dispatcher is
+  // off the stack.
+  if (sIsDispatching) {
+    return;
+  }
+
+  // Safe to process pending events now
+  DispatchAllGeckoEvents();
+}
+
+// static
+void
+MetroAppShell::DispatchAllGeckoEvents()
+{
+  if (!sWillEmptyThreadQueue) {
+    return;
+  }
+
+  LogFunction();
+  NS_ASSERTION(NS_IsMainThread(), "DispatchAllXPCOMEvents should be called on the main thread");
+
+  sWillEmptyThreadQueue = false;
+
+  AutoRestore<bool> dispatching(sEmptyingThreadQueue);
+  sEmptyingThreadQueue = true;
+  nsIThread *thread = NS_GetCurrentThread();
+  NS_ProcessPendingEvents(thread, 0);
+}
+
 static void
 ProcessNativeEvents(CoreProcessEventsOption eventOption)
 {
@@ -238,16 +277,35 @@ bool
 MetroAppShell::ProcessOneNativeEventIfPresent()
 {
   if (sIsDispatching) {
-    NS_RUNTIMEABORT("Reentrant call into process events, this is not allowed in Winrt land. Goodbye!");
+    // Calling into ProcessNativeEvents is harmless, but won't actually process any
+    // native events. So we log here so we can spot this and get a handle on the
+    // corner cases where this can happen.
+    Log("WARNING: Reentrant call into process events detected, returning early.");
+    return false;
   }
-  AutoRestore<bool> dispatching(sIsDispatching);
-  ProcessNativeEvents(CoreProcessEventsOption::CoreProcessEventsOption_ProcessOneIfPresent);
+
+  {
+    AutoRestore<bool> dispatching(sIsDispatching);
+    sIsDispatching = true;
+    ProcessNativeEvents(CoreProcessEventsOption::CoreProcessEventsOption_ProcessOneIfPresent);
+  }
+
+  DispatchAllGeckoEvents();
+
   return !!HIWORD(::GetQueueStatus(MOZ_QS_ALLEVENT));
 }
 
 bool
 MetroAppShell::ProcessNextNativeEvent(bool mayWait)
 {
+  // NS_ProcessPendingEvents will process thread events *and* call
+  // nsBaseAppShell::OnProcessNextEvent to process native events. However
+  // we do not want native events getting dispatched while we are in
+  // DispatchAllGeckoEvents.
+  if (sEmptyingThreadQueue) {
+    return false;
+  }
+
   if (ProcessOneNativeEventIfPresent()) {
     return true;
   }

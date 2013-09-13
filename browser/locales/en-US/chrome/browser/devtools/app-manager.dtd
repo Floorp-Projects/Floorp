@@ -49,4 +49,4 @@
 <!ENTITY projects.stopApp "Stop">
 <!ENTITY projects.debugApp "Debug">
 <!ENTITY projects.hostedManifestPlaceHolder2 "http://example.com/app/manifest.webapp">
-<!ENTITY projects.noProject "No project linked. Add a new packaged app below (a directory) or a hosted app (link to a manifest file).">
+<!ENTITY projects.noProjects "No projects. Add a new packaged app below (local directory) or a hosted app (link to a manifest file).">

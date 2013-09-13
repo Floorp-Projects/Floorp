@@ -1,8 +1,8 @@
 pref(gfx.font_rendering.opentype_svg.enabled,false)   != svg-glyph-basic.svg svg-glyph-basic-ref.svg
-pref(gfx.font_rendering.opentype_svg.enabled,true)    fails-if(Android||B2G) == svg-glyph-basic.svg svg-glyph-basic-ref.svg # bug 872487
-pref(gfx.font_rendering.opentype_svg.enabled,true)    fails-if(Android||B2G) == svg-glyph-invalid-ids.svg svg-glyph-invalid-ids-ref.svg # bug 872487
+pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-basic.svg svg-glyph-basic-ref.svg
+pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-invalid-ids.svg svg-glyph-invalid-ids-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,false)   != svg-glyph-positioning.svg svg-glyph-positioning-ref.svg
-pref(gfx.font_rendering.opentype_svg.enabled,true)    fails-if(Android||B2G) == svg-glyph-positioning.svg svg-glyph-positioning-ref.svg # bug 872487
+pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-positioning.svg svg-glyph-positioning-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    fails-if(winWidget) == svg-glyph-html.html svg-glyph-html-ref.svg # bug 872486
 pref(gfx.font_rendering.opentype_svg.enabled,true)    random-if(winWidget) == svg-glyph-direct.svg svg-glyph-direct-ref.svg # bug 872491
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-invalid.html svg-glyph-invalid-ref.html

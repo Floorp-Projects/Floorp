@@ -28,7 +28,7 @@ BoxInputsPolicy::alwaysBoxAt(MInstruction *at, MDefinition *operand)
     // Replace Float32 by double
     if (operand->type() == MIRType_Float32) {
         MInstruction *replace = MToDouble::New(operand);
-        operand->block()->insertBefore(at, replace);
+        at->block()->insertBefore(at, replace);
         boxedOperand = replace;
     }
     MBox *box = MBox::New(boxedOperand);

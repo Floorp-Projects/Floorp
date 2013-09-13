@@ -400,6 +400,7 @@ class TypeAnalyzer
     bool adjustInputs(MDefinition *def);
     bool insertConversions();
 
+    bool checkFloatCoherency();
     bool graphContainsFloat32();
     bool markPhiConsumers();
     bool markPhiProducers();
@@ -901,6 +902,42 @@ TypeAnalyzer::tryEmitFloatOperations()
 }
 
 bool
+TypeAnalyzer::checkFloatCoherency()
+{
+#ifdef DEBUG
+    // Asserts that all Float32 instructions are flowing into Float32 consumers or specialized
+    // operations
+    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); ++block) {
+        if (mir->shouldCancel("Check Float32 coherency"))
+            return false;
+
+        for (MDefinitionIterator def(*block); def; def++) {
+            if (def->type() != MIRType_Float32)
+                continue;
+            if (def->isPassArg()) // no check for PassArg as it is broken, see bug 915479
+                continue;
+
+            for (MUseDefIterator use(*def); use; use++) {
+                MDefinition *consumer = use.def();
+                // The only valid uses of a Float32 are:
+                // - an operation that can consume Float32
+                // - an operation that has been specialized to Float32 (for instance, an add)
+                // - a conversion to Double
+                if (consumer->canConsumeFloat32())
+                    continue;
+                if (consumer->type() == MIRType_Float32)
+                    continue;
+                if (consumer->isToDouble())
+                    continue;
+                MOZ_ASSUME_UNREACHABLE("Float32 flowing into a non float specialized operation");
+            }
+        }
+    }
+#endif
+    return true;
+}
+
+bool
 TypeAnalyzer::analyze()
 {
     if (!tryEmitFloatOperations())
@@ -908,6 +945,8 @@ TypeAnalyzer::analyze()
     if (!specializePhis())
         return false;
     if (!insertConversions())
+        return false;
+    if (!checkFloatCoherency())
         return false;
     return true;
 }
@@ -1587,8 +1626,8 @@ TryEliminateTypeBarrier(MTypeBarrier *barrier, bool *eliminated)
 {
     JS_ASSERT(!*eliminated);
 
-    const types::StackTypeSet *barrierTypes = barrier->resultTypeSet();
-    const types::StackTypeSet *inputTypes = barrier->input()->resultTypeSet();
+    const types::TemporaryTypeSet *barrierTypes = barrier->resultTypeSet();
+    const types::TemporaryTypeSet *inputTypes = barrier->input()->resultTypeSet();
 
     // Disregard the possible unbox added before the Typebarrier.
     if (barrier->input()->isUnbox() &&
@@ -2043,7 +2082,7 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
 
     Vector<jsid> accessedProperties(cx);
 
-    LifoAlloc alloc(JSCompartment::ANALYSIS_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
+    LifoAlloc alloc(types::TypeZone::TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
 
     TempAllocator temp(&alloc);
     IonContext ictx(cx, &temp);

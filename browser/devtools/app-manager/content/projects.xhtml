@@ -20,7 +20,7 @@
     <aside id="sidebar">
       <div id="project-list" template='{"type":"attribute","path":"projects.length","name":"projects-count"}'>
         <div template-loop='{"arrayPath":"projects","childSelector":"#project-item-template"}'></div>
-        <div id="no-project">&projects.noProject;</div>
+        <div id="no-project">&projects.noProjects;</div>
       </div>
       <div id="new-packaged-project" onclick="UI.addPackaged()">&projects.addPackaged;</div>
       <div id="new-hosted-project">&projects.addHosted;

@@ -496,7 +496,6 @@ struct JSContext : public js::ExclusiveContext,
     bool hasWErrorOption() const { return hasOption(JSOPTION_WERROR); }
 
     js::LifoAlloc &tempLifoAlloc() { return runtime()->tempLifoAlloc; }
-    inline js::LifoAlloc &analysisLifoAlloc();
 
 #ifdef JS_THREADSAFE
     unsigned            outstandingRequests;/* number of JS_BeginRequest calls

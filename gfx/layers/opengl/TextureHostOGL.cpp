@@ -41,6 +41,16 @@ namespace layers {
 
 class Compositor; 
 
+TemporaryRef<CompositableQuirks>
+CreateCompositableQuirksOGL()
+{
+#ifdef MOZ_WIDGET_GONK
+  return new CompositableQuirksGonkOGL();
+#else
+  return nullptr;
+#endif
+}
+
 TemporaryRef<DeprecatedTextureHost>
 CreateDeprecatedTextureHostOGL(SurfaceDescriptorType aDescriptorType,
                      uint32_t aDeprecatedTextureHostFlags,
@@ -154,6 +164,38 @@ WrapMode(gl::GLContext *aGl, bool aAllowRepeat)
     return LOCAL_GL_REPEAT;
   }
   return LOCAL_GL_CLAMP_TO_EDGE;
+}
+
+CompositableQuirksGonkOGL::CompositableQuirksGonkOGL()
+ : mTexture(0)
+{
+}
+CompositableQuirksGonkOGL::~CompositableQuirksGonkOGL()
+{
+  if (mTexture) {
+    gl()->MakeCurrent();
+    gl()->fDeleteTextures(1, &mTexture);
+  }
+}
+
+gl::GLContext*
+CompositableQuirksGonkOGL::gl() const
+{
+  return mCompositor ? mCompositor->gl() : nullptr;
+}
+
+void CompositableQuirksGonkOGL::SetCompositor(Compositor* aCompositor)
+{
+  mCompositor = static_cast<CompositorOGL*>(aCompositor);
+}
+
+GLuint CompositableQuirksGonkOGL::GetTexture()
+{
+  if (!mTexture) {
+    gl()->MakeCurrent();
+    gl()->fGenTextures(1, &mTexture);
+  }
+  return mTexture;
 }
 
 bool
@@ -1081,8 +1123,20 @@ GrallocDeprecatedTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImag
                                                mIsRBSwapped);
 
   mTextureTarget = TextureTargetForAndroidPixelFormat(mGraphicBuffer->getPixelFormat());
-
+  mQuirks->SetCompositor(mCompositor);
+  GLuint tex = static_cast<CompositableQuirksGonkOGL*>(mQuirks.get())->GetTexture();
+  // delete old EGLImage
   DeleteTextures();
+#if 1
+  gl()->MakeCurrent();
+  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+  gl()->fBindTexture(mTextureTarget, tex);
+  // create new EGLImage
+  // create EGLImage during buffer swap could reduce the graphic driver's task
+  // during rendering.
+  mEGLImage = gl()->CreateEGLImageForNativeBuffer(mGraphicBuffer->getNativeBuffer());
+  gl()->fEGLImageTargetTexture2D(mTextureTarget, mEGLImage);
+#endif
 
 }
 
@@ -1109,14 +1163,11 @@ void GrallocDeprecatedTextureHostOGL::BindTexture(GLenum aTextureUnit)
   MOZ_ASSERT(gl());
   gl()->MakeCurrent();
 
-  GLuint tex = mCompositor->GetTemporaryTexture(aTextureUnit);
+  mQuirks->SetCompositor(mCompositor);
+  GLuint tex = static_cast<CompositableQuirksGonkOGL*>(mQuirks.get())->GetTexture();
 
   gl()->fActiveTexture(aTextureUnit);
   gl()->fBindTexture(mTextureTarget, tex);
-  if (!mEGLImage) {
-    mEGLImage = gl()->CreateEGLImageForNativeBuffer(mGraphicBuffer->getNativeBuffer());
-  }
-  gl()->fEGLImageTargetTexture2D(mTextureTarget, mEGLImage);
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 }
 
@@ -1249,7 +1300,8 @@ already_AddRefed<gfxImageSurface>
 GrallocDeprecatedTextureHostOGL::GetAsSurface() {
   gl()->MakeCurrent();
 
-  GLuint tex = mCompositor->GetTemporaryTexture(LOCAL_GL_TEXTURE0);
+  mQuirks->SetCompositor(mCompositor);
+  GLuint tex = static_cast<CompositableQuirksGonkOGL*>(mQuirks.get())->GetTexture();
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   gl()->fBindTexture(mTextureTarget, tex);
   if (!mEGLImage) {
