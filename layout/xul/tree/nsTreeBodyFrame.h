@@ -617,6 +617,8 @@ protected: // Data Members
 
   bool mReflowCallbackPosted;
 
+  bool mCheckingOverflow;
+
   // Hash table to keep track of which listeners we created and thus
   // have pointers to us.
   nsTHashtable<nsPtrHashKey<nsTreeImageListener> > mCreatedListeners;
