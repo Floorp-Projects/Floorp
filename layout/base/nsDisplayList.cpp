@@ -44,6 +44,7 @@
 #include "ImageLayers.h"
 #include "ImageContainer.h"
 #include "nsCanvasFrame.h"
+#include "StickyScrollContainer.h"
 #include "mozilla/LookAndFeel.h"
 
 #include <stdint.h>
@@ -3133,42 +3134,29 @@ nsDisplayFixedPosition::~nsDisplayFixedPosition() {
 }
 #endif
 
-already_AddRefed<Layer>
-nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager,
-                                   const ContainerParameters& aContainerParameters) {
-  nsRefPtr<Layer> layer =
-    nsDisplayOwnLayer::BuildLayer(aBuilder, aManager, aContainerParameters);
+void nsDisplayFixedPosition::SetFixedPositionLayerData(Layer* const aLayer,
+                                                       nsIFrame* aViewportFrame,
+                                                       nsSize aViewportSize,
+                                                       nsPresContext* aPresContext,
+                                                       const ContainerParameters& aContainerParameters) {
+  // Find out the rect of the viewport frame relative to the reference frame.
+  // This, in conjunction with the container scale, will correspond to the
+  // coordinate-space of the built layer.
+  float factor = aPresContext->AppUnitsPerDevPixel();
+  nsPoint origin = aViewportFrame->GetOffsetToCrossDoc(ReferenceFrame());
+  LayerRect anchorRect(NSAppUnitsToFloatPixels(origin.x, factor) *
+                         aContainerParameters.mXScale,
+                       NSAppUnitsToFloatPixels(origin.y, factor) *
+                         aContainerParameters.mYScale,
+                       NSAppUnitsToFloatPixels(aViewportSize.width, factor) *
+                         aContainerParameters.mXScale,
+                       NSAppUnitsToFloatPixels(aViewportSize.height, factor) *
+                         aContainerParameters.mYScale);
 
   // Work out the anchor point for this fixed position layer. We assume that
   // any positioning set (left/top/right/bottom) indicates that the
   // corresponding side of its container should be the anchor point,
   // defaulting to top-left.
-  nsIFrame* viewportFrame = mFixedPosFrame->GetParent();
-  nsPresContext *presContext = viewportFrame->PresContext();
-
-  // Fixed position frames are reflowed into the scroll-port size if one has
-  // been set.
-  nsSize containingBlockSize = viewportFrame->GetSize();
-  if (presContext->PresShell()->IsScrollPositionClampingScrollPortSizeSet()) {
-    containingBlockSize = presContext->PresShell()->
-      GetScrollPositionClampingScrollPortSize();
-  }
-
-  // Find out the rect of the viewport frame relative to the reference frame.
-  // This, in conjunction with the container scale, will correspond to the
-  // coordinate-space of the built layer.
-  float factor = presContext->AppUnitsPerDevPixel();
-  nsPoint origin = viewportFrame->GetOffsetToCrossDoc(ReferenceFrame());
-  LayerRect anchorRect(NSAppUnitsToFloatPixels(origin.x, factor) *
-                         aContainerParameters.mXScale,
-                       NSAppUnitsToFloatPixels(origin.y, factor) *
-                         aContainerParameters.mYScale,
-                       NSAppUnitsToFloatPixels(containingBlockSize.width, factor) *
-                         aContainerParameters.mXScale,
-                       NSAppUnitsToFloatPixels(containingBlockSize.height, factor) *
-                         aContainerParameters.mYScale);
-
   LayerPoint anchor = anchorRect.TopLeft();
 
   const nsStylePosition* position = mFixedPosFrame->StylePosition();
@@ -3177,11 +3165,11 @@ nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
   if (position->mOffset.GetBottomUnit() != eStyleUnit_Auto)
     anchor.y = anchorRect.YMost();
 
-  layer->SetFixedPositionAnchor(anchor);
+  aLayer->SetFixedPositionAnchor(anchor);
 
   // Also make sure the layer is aware of any fixed position margins that have
   // been set.
-  nsMargin fixedMargins = presContext->PresShell()->GetContentDocumentFixedPositionMargins();
+  nsMargin fixedMargins = aPresContext->PresShell()->GetContentDocumentFixedPositionMargins();
   LayerMargin fixedLayerMargins(NSAppUnitsToFloatPixels(fixedMargins.top, factor) *
                                   aContainerParameters.mYScale,
                                 NSAppUnitsToFloatPixels(fixedMargins.right, factor) *
@@ -3203,7 +3191,29 @@ nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
     fixedLayerMargins.top = -1;
   }
 
-  layer->SetFixedPositionMargins(fixedLayerMargins);
+  aLayer->SetFixedPositionMargins(fixedLayerMargins);
+}
+
+already_AddRefed<Layer>
+nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerParameters& aContainerParameters) {
+  nsRefPtr<Layer> layer =
+    nsDisplayOwnLayer::BuildLayer(aBuilder, aManager, aContainerParameters);
+
+  nsIFrame* viewportFrame = mFixedPosFrame->GetParent();
+  nsPresContext *presContext = viewportFrame->PresContext();
+
+  // Fixed position frames are reflowed into the scroll-port size if one has
+  // been set.
+  nsSize viewportSize = viewportFrame->GetSize();
+  if (presContext->PresShell()->IsScrollPositionClampingScrollPortSizeSet()) {
+    viewportSize = presContext->PresShell()->
+      GetScrollPositionClampingScrollPortSize();
+  }
+
+  SetFixedPositionLayerData(layer, viewportFrame, viewportSize, presContext,
+                            aContainerParameters);
 
   return layer.forget();
 }
@@ -3219,6 +3229,76 @@ bool nsDisplayFixedPosition::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayI
     return false;
   MergeFromTrackingMergedFrames(other);
   return true;
+}
+
+nsDisplayStickyPosition::nsDisplayStickyPosition(nsDisplayListBuilder* aBuilder,
+                                                 nsIFrame* aFrame,
+                                                 nsIFrame* aStickyPosFrame,
+                                                 nsDisplayList* aList)
+    : nsDisplayFixedPosition(aBuilder, aFrame, aStickyPosFrame, aList) {
+  MOZ_COUNT_CTOR(nsDisplayStickyPosition);
+}
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsDisplayStickyPosition::~nsDisplayStickyPosition() {
+  MOZ_COUNT_DTOR(nsDisplayStickyPosition);
+}
+#endif
+
+already_AddRefed<Layer>
+nsDisplayStickyPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                    LayerManager* aManager,
+                                    const ContainerParameters& aContainerParameters) {
+  nsRefPtr<Layer> layer =
+    nsDisplayOwnLayer::BuildLayer(aBuilder, aManager, aContainerParameters);
+
+  StickyScrollContainer* stickyScrollContainer = StickyScrollContainer::
+    GetStickyScrollContainerForFrame(mFrame);
+  if (!stickyScrollContainer) {
+    return layer.forget();
+  }
+
+  nsIFrame* scrollFrame = do_QueryFrame(stickyScrollContainer->ScrollFrame());
+  nsPresContext* presContext = scrollFrame->PresContext();
+
+  // Sticky position frames whose scroll frame is the root scroll frame are
+  // reflowed into the scroll-port size if one has been set.
+  nsSize scrollFrameSize = scrollFrame->GetSize();
+  if (scrollFrame == presContext->PresShell()->GetRootScrollFrame() &&
+      presContext->PresShell()->IsScrollPositionClampingScrollPortSizeSet()) {
+    scrollFrameSize = presContext->PresShell()->
+      GetScrollPositionClampingScrollPortSize();
+  }
+
+  SetFixedPositionLayerData(layer, scrollFrame, scrollFrameSize, presContext,
+                            aContainerParameters);
+
+  ViewID scrollId = nsLayoutUtils::FindOrCreateIDFor(
+    stickyScrollContainer->ScrollFrame()->GetScrolledFrame()->GetContent());
+
+  float factor = presContext->AppUnitsPerDevPixel();
+  nsRect outer;
+  nsRect inner;
+  stickyScrollContainer->GetScrollRanges(mFrame, &outer, &inner);
+  LayerRect stickyOuter(NSAppUnitsToFloatPixels(outer.x, factor) *
+                          aContainerParameters.mXScale,
+                        NSAppUnitsToFloatPixels(outer.y, factor) *
+                          aContainerParameters.mYScale,
+                        NSAppUnitsToFloatPixels(outer.width, factor) *
+                          aContainerParameters.mXScale,
+                        NSAppUnitsToFloatPixels(outer.height, factor) *
+                          aContainerParameters.mYScale);
+  LayerRect stickyInner(NSAppUnitsToFloatPixels(inner.x, factor) *
+                          aContainerParameters.mXScale,
+                        NSAppUnitsToFloatPixels(inner.y, factor) *
+                          aContainerParameters.mYScale,
+                        NSAppUnitsToFloatPixels(inner.width, factor) *
+                          aContainerParameters.mXScale,
+                        NSAppUnitsToFloatPixels(inner.height, factor) *
+                          aContainerParameters.mYScale);
+  layer->SetStickyPositionData(scrollId, stickyOuter, stickyInner);
+
+  return layer.forget();
 }
 
 nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
