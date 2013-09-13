@@ -347,6 +347,9 @@ class Assembler : public AssemblerX86Shared
             push(ScratchReg);
         }
     }
+    void push(const ImmPtr &imm) {
+        push(ImmWord(uintptr_t(imm.value)));
+    }
     void push(const FloatRegister &src) {
         subq(Imm32(sizeof(double)), StackPointer);
         movsd(src, Operand(StackPointer, 0));
@@ -366,6 +369,9 @@ class Assembler : public AssemblerX86Shared
         masm.movq_i64r(word.value, dest.code());
         return masm.currentOffset();
     }
+    CodeOffsetLabel movWithPatch(const ImmPtr &imm, const Register &dest) {
+        return movWithPatch(ImmWord(uintptr_t(imm.value)), dest);
+    }
 
     // Load an ImmWord value into a register. Note that this instruction will
     // attempt to optimize its immediate field size. When a full 64-bit
@@ -384,6 +390,9 @@ class Assembler : public AssemblerX86Shared
             // Otherwise use movabs.
             masm.movq_i64r(word.value, dest.code());
         }
+    }
+    void movq(ImmPtr imm, const Register &dest) {
+        movq(ImmWord(uintptr_t(imm.value)), dest);
     }
     void movq(ImmGCPtr ptr, const Register &dest) {
         masm.movq_i64r(ptr.value, dest.code());
@@ -540,6 +549,9 @@ class Assembler : public AssemblerX86Shared
 
     void mov(ImmWord word, const Register &dest) {
         movq(word, dest);
+    }
+    void mov(ImmPtr imm, const Register &dest) {
+        movq(imm, dest);
     }
     void mov(const Imm32 &imm32, const Register &dest) {
         movl(imm32, dest);

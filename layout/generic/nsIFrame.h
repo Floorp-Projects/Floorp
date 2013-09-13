@@ -485,7 +485,7 @@ typedef uint32_t nsReflowStatus;
 
 // Construct a line-break-before status. Note that there is no
 // completion status for a line-break before because we *know* that
-// the frame will be reflowed later and hence it's current completion
+// the frame will be reflowed later and hence its current completion
 // status doesn't matter.
 #define NS_INLINE_LINE_BREAK_BEFORE()                                   \
   (NS_INLINE_BREAK | NS_INLINE_BREAK_BEFORE |                           \
@@ -1002,7 +1002,7 @@ public:
    * @param aReflowState An optional reflow state parameter, which is used if
    *        ApplySkipSides() is being called in the middle of reflow.
    *
-   * @note (See also bug 743402, comment 11) GetSkipSides() and it's sister
+   * @note (See also bug 743402, comment 11) GetSkipSides() and its sister
    *       method, ApplySkipSides() checks to see if this frame has a previous
    *       or next continuation to determine if a side should be skipped.
    *       Unfortunately, this only works after reflow has been completed. In
@@ -2420,7 +2420,7 @@ public:
    * Determine whether borders should not be painted on certain sides of the
    * frame.
    *
-   * @note (See also bug 743402, comment 11) GetSkipSides() and it's sister
+   * @note (See also bug 743402, comment 11) GetSkipSides() and its sister
    *       method, ApplySkipSides() checks to see if this frame has a previous
    *       or next continuation to determine if a side should be skipped.
    *       Unfortunately, this only works after reflow has been completed. In

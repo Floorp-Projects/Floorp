@@ -8,6 +8,7 @@
 
 #include <stdint.h>                     // for uint64_t
 #include <vector>                       // for vector
+#include <map>                          // for map
 #include "mozilla/Assertions.h"         // for MOZ_CRASH
 #include "mozilla/RefPtr.h"             // for TemporaryRef, RefCounted
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
@@ -27,6 +28,7 @@ class ImageBridgeChild;
 class CompositableForwarder;
 class CompositableChild;
 class SurfaceDescriptor;
+class TextureClientData;
 
 /**
  * CompositableClient manages the texture-specific logic for composite layers,
@@ -137,9 +139,19 @@ public:
    */
   virtual void OnDetach() {}
 
+  void OnReplyTextureRemoved(uint64_t aTextureID);
+
+  void FlushTexturesToRemoveCallbacks();
 protected:
+  struct TextureIDAndFlags {
+    TextureIDAndFlags(uint64_t aID, TextureFlags aFlags)
+    : mID(aID), mFlags(aFlags) {}
+    uint64_t mID;
+    TextureFlags mFlags;
+  };
   // The textures to destroy in the next transaction;
-  nsTArray<uint64_t> mTexturesToRemove;
+  nsTArray<TextureIDAndFlags> mTexturesToRemove;
+  std::map<uint64_t, TextureClientData*> mTexturesToRemoveCallbacks;
   uint64_t mNextTextureID;
   CompositableChild* mCompositableChild;
   CompositableForwarder* mForwarder;

@@ -143,11 +143,6 @@ interface nsIMemoryReporterCallback : nsISupports
  *   description that is a sentence (i.e. starts with a capital letter and
  *   ends with a period, or similar).
  *
- * - The "size", "rss", "pss" and "swap" trees are optional.  They
- *   represent regions of virtual memory that the process has mapped.
- *   Reporters in this category must have kind NONHEAP, units BYTES, and a
- *   non-empty description.
- *
  * - The "redundant" tree is optional, and can be used for reports that are
  *   redundant w.r.t. other reports.  These are useful for telemetry, and are
  *   not shown in about:memory.  Reports in this tree are entirely
