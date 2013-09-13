@@ -154,6 +154,11 @@ this.ViewHelpers = {
    *        The element representing the pane to toggle.
    */
   togglePane: function(aFlags, aPane) {
+    // Make sure a pane is actually available first.
+    if (!aPane) {
+      return;
+    }
+
     // Hiding is always handled via margins, not the hidden attribute.
     aPane.removeAttribute("hidden");
 
@@ -168,8 +173,15 @@ this.ViewHelpers = {
       return;
     }
 
+    // The "animated" attributes enables animated toggles (slide in-out).
+    if (aFlags.animated) {
+      aPane.setAttribute("animated", "");
+    } else {
+      aPane.removeAttribute("animated");
+    }
+
     // Computes and sets the pane margins in order to hide or show it.
-    function set() {
+    let doToggle = () => {
       if (aFlags.visible) {
         aPane.style.marginLeft = "0";
         aPane.style.marginRight = "0";
@@ -194,19 +206,12 @@ this.ViewHelpers = {
       }
     }
 
-    // The "animated" attributes enables animated toggles (slide in-out).
-    if (aFlags.animated) {
-      aPane.setAttribute("animated", "");
-    } else {
-      aPane.removeAttribute("animated");
-    }
-
     // Sometimes it's useful delaying the toggle a few ticks to ensure
     // a smoother slide in-out animation.
     if (aFlags.delayed) {
-      aPane.ownerDocument.defaultView.setTimeout(set.bind(this), PANE_APPEARANCE_DELAY);
+      aPane.ownerDocument.defaultView.setTimeout(doToggle, PANE_APPEARANCE_DELAY);
     } else {
-      set.call(this);
+      doToggle();
     }
   }
 };
@@ -493,7 +498,7 @@ Item.prototype = {
    * @return string
    */
   toString: function() {
-    if (this._label && this._value) {
+    if (this._label != "undefined" && this._value != "undefined") {
       return this._label + " -> " + this._value;
     }
     if (this.attachment) {
