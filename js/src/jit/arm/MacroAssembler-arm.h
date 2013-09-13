@@ -66,6 +66,9 @@ class MacroAssemblerARM : public Assembler
     void convertInt32ToFloat32(const Address &src, FloatRegister dest) {
         MOZ_ASSUME_UNREACHABLE("NYI");
     }
+    void convertFloat32ToInt32(const FloatRegister &src, const Register &dest, Label *fail, bool negativeZeroCheck = true) {
+        MOZ_ASSUME_UNREACHABLE("NYI");
+    }
 
     void addDouble(FloatRegister src, FloatRegister dest);
     void subDouble(FloatRegister src, FloatRegister dest);

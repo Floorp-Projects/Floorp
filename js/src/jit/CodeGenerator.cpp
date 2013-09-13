@@ -361,6 +361,18 @@ CodeGenerator::visitDoubleToInt32(LDoubleToInt32 *lir)
     return true;
 }
 
+bool
+CodeGenerator::visitFloat32ToInt32(LFloat32ToInt32 *lir)
+{
+    Label fail;
+    FloatRegister input = ToFloatRegister(lir->input());
+    Register output = ToRegister(lir->output());
+    masm.convertFloat32ToInt32(input, output, &fail, lir->mir()->canBeNegativeZero());
+    if (!bailoutFrom(&fail, lir->snapshot()))
+        return false;
+    return true;
+}
+
 void
 CodeGenerator::emitOOLTestObject(Register objreg, Label *ifTruthy, Label *ifFalsy, Register scratch)
 {
