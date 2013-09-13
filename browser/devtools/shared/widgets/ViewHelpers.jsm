@@ -15,8 +15,12 @@ const WIDGET_FOCUSABLE_NODES = new Set(["vbox", "hbox"]);
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 
-this.EXPORTED_SYMBOLS = ["Heritage", "ViewHelpers", "WidgetMethods"];
+this.EXPORTED_SYMBOLS = [
+  "Heritage", "ViewHelpers", "WidgetMethods",
+  "setNamedTimeout", "clearNamedTimeout"
+];
 
 /**
  * Inheritance helpers from the addon SDK's core/heritage.
@@ -40,6 +44,41 @@ this.Heritage = {
     }, {});
   }
 };
+
+/**
+ * Helper for draining a rapid succession of events and invoking a callback
+ * once everything settles down.
+ *
+ * @param string aId
+ *        A string identifier for the named timeout.
+ * @param number aWait
+ *        The amount of milliseconds to wait after no more events are fired.
+ * @param function aCallback
+ *        Invoked when no more events are fired after the specified time.
+ */
+this.setNamedTimeout = function(aId, aWait, aCallback) {
+  clearNamedTimeout(aId);
+
+  namedTimeoutsStore.set(aId, setTimeout(() =>
+    namedTimeoutsStore.delete(aId) && aCallback(), aWait));
+};
+
+/**
+ * Clears a named timeout.
+ * @see setNamedTimeout
+ *
+ * @param string aId
+ *        A string identifier for the named timeout.
+ */
+this.clearNamedTimeout = function(aId) {
+  if (!namedTimeoutsStore) {
+    return;
+  }
+  clearTimeout(namedTimeoutsStore.get(aId));
+  namedTimeoutsStore.delete(aId);
+};
+
+XPCOMUtils.defineLazyGetter(this, "namedTimeoutsStore", () => new Map());
 
 /**
  * Helpers for creating and messaging between UI components.

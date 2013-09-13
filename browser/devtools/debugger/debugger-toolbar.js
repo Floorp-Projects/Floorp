@@ -635,8 +635,8 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
     if (!this.dirty) {
       return;
     }
-    window.clearTimeout(this._scrollTimeout);
-    this._scrollTimeout = window.setTimeout(this._afterScroll, STACK_FRAMES_SCROLL_DELAY);
+    // Allow requests to settle down first.
+    setNamedTimeout("stack-scroll", STACK_FRAMES_SCROLL_DELAY, this._afterScroll);
   },
 
   /**
@@ -662,7 +662,6 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
 
   _commandset: null,
   _menupopup: null,
-  _scrollTimeout: null,
   _prevBlackBoxedUrl: null
 });
 
@@ -1154,7 +1153,7 @@ FilterView.prototype = {
     // Perform a global search based on the specified operator.
     if (isGlobal) {
       if (isReturnKey && (isDifferentToken || DebuggerView.GlobalSearch.hidden)) {
-        DebuggerView.GlobalSearch.performSearch(token);
+        DebuggerView.GlobalSearch.scheduleSearch(token, 0);
       } else {
         DebuggerView.GlobalSearch[["selectNext", "selectPrev"][action]]();
       }
@@ -1165,7 +1164,7 @@ FilterView.prototype = {
     // Perform a function search based on the specified operator.
     if (isFunction) {
       if (isReturnKey && (isDifferentToken || DebuggerView.FilteredFunctions.hidden)) {
-        DebuggerView.FilteredFunctions.performSearch(token);
+        DebuggerView.FilteredFunctions.scheduleSearch(token, 0);
       } else if (!isReturnKey) {
         DebuggerView.FilteredFunctions[["selectNext", "selectPrev"][action]]();
       } else {
@@ -1180,7 +1179,7 @@ FilterView.prototype = {
     // Perform a variable search based on the specified operator.
     if (isVariable) {
       if (isReturnKey && isDifferentToken) {
-        DebuggerView.Variables.performSearch(token);
+        DebuggerView.Variables.scheduleSearch(token, 0);
       } else {
         DebuggerView.Variables.expandFirstSearchResults();
       }
@@ -1214,7 +1213,7 @@ FilterView.prototype = {
     DebuggerView.GlobalSearch.clearView();
     DebuggerView.FilteredSources.clearView();
     DebuggerView.FilteredFunctions.clearView();
-    DebuggerView.Variables.performSearch(null);
+    DebuggerView.Variables.scheduleSearch(null, 0);
     this._searchboxHelpPanel.hidePopup();
   },
 
@@ -1274,7 +1273,7 @@ FilterView.prototype = {
    * Called when the variable search filter key sequence was pressed.
    */
   _doVariableSearch: function() {
-    DebuggerView.Variables.performSearch("");
+    DebuggerView.Variables.scheduleSearch("", 0);
     this._doSearch(SEARCH_VARIABLE_FLAG);
     this._searchboxHelpPanel.hidePopup();
   },
@@ -1412,7 +1411,6 @@ FilteredSourcesView.prototype = Heritage.extend(ResultsPanelContainer.prototype,
 function FilteredFunctionsView() {
   dumpn("FilteredFunctionsView was instantiated");
 
-  this._performFunctionSearch = this._performFunctionSearch.bind(this);
   this._onClick = this._onClick.bind(this);
   this._onSelect = this._onSelect.bind(this);
 }
@@ -1441,64 +1439,39 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
   },
 
   /**
-   * Allows searches to be scheduled and delayed to avoid redundant calls.
-   */
-  delayedSearch: true,
-
-  /**
    * Schedules searching for a function in all of the sources.
    *
-   * @param string aQuery
+   * @param string aToken
    *        The function to search for.
+   * @param number aWait
+   *        The amount of milliseconds to wait until draining.
    */
-  scheduleSearch: function(aQuery) {
-    if (!this.delayedSearch) {
-      this.performSearch(aQuery);
-      return;
-    }
-    let delay = Math.max(FUNCTION_SEARCH_ACTION_MAX_DELAY / aQuery.length, 0);
+  scheduleSearch: function(aToken, aWait) {
+    let maxDelay = FUNCTION_SEARCH_ACTION_MAX_DELAY;
+    let delay = aWait === undefined ? maxDelay / aToken.length : aWait;
 
-    window.clearTimeout(this._searchTimeout);
-    this._searchFunction = this._startSearch.bind(this, aQuery);
-    this._searchTimeout = window.setTimeout(this._searchFunction, delay);
-  },
-
-  /**
-   * Immediately searches for a function in all of the sources.
-   *
-   * @param string aQuery
-   *        The function to search for.
-   */
-  performSearch: function(aQuery) {
-    window.clearTimeout(this._searchTimeout);
-    this._searchFunction = null;
-    this._startSearch(aQuery);
-  },
-
-  /**
-   * Starts searching for a function in all of the sources.
-   *
-   * @param string aQuery
-   *        The function to search for.
-   */
-  _startSearch: function(aQuery) {
-    this._searchedToken = aQuery;
-
-    // Start fetching as many sources as possible, then perform the search.
-    DebuggerController.SourceScripts
-      .getTextForSources(DebuggerView.Sources.values)
-      .then(this._performFunctionSearch);
+    // Allow requests to settle down first.
+    setNamedTimeout("function-search", delay, () => {
+      // Start fetching as many sources as possible, then perform the search.
+      let urls = DebuggerView.Sources.values;
+      let sourcesFetched = DebuggerController.SourceScripts.getTextForSources(urls);
+      sourcesFetched.then(aSources => this._doSearch(aToken, aSources));
+    });
   },
 
   /**
    * Finds function matches in all the sources stored in the cache, and groups
    * them by location and line number.
+   *
+   * @param string aToken
+   *        The string to search for.
+   * @param array aSources
+   *        An array of [url, text] tuples for each source.
    */
-  _performFunctionSearch: function(aSources) {
+  _doSearch: function(aToken, aSources) {
     // Get the currently searched token from the filtering input.
     // Continue parsing even if the searched token is an empty string, to
     // cache the syntax tree nodes generated by the reflection API.
-    let token = this._searchedToken;
 
     // Make sure the currently displayed source is parsed first. Once the
     // maximum allowed number of resutls are found, parsing will be halted.
@@ -1507,8 +1480,9 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
     aSources.splice(aSources.indexOf(currentSource), 1);
     aSources.unshift(currentSource);
 
-    // If not searching for a specific function, only parse the displayed source.
-    if (!token) {
+    // If not searching for a specific function, only parse the displayed source,
+    // which is now the first item in the sources array.
+    if (!aToken) {
       aSources.splice(1);
     }
 
@@ -1517,7 +1491,7 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
 
     for (let [location, contents] of aSources) {
       let parserMethods = DebuggerController.Parser.get(location, contents);
-      let sourceResults = parserMethods.getNamedFunctionDefinitions(token);
+      let sourceResults = parserMethods.getNamedFunctionDefinitions(aToken);
 
       for (let scriptResult of sourceResults) {
         for (let parseResult of scriptResult.parseResults) {

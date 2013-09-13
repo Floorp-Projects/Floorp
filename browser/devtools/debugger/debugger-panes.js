@@ -1468,8 +1468,6 @@ WatchExpressionsView.prototype = Heritage.extend(WidgetMethods, {
 function GlobalSearchView() {
   dumpn("GlobalSearchView was instantiated");
 
-  this._startSearch = this._startSearch.bind(this);
-  this._performGlobalSearch = this._performGlobalSearch.bind(this);
   this._createItemView = this._createItemView.bind(this);
   this._onHeaderClick = this._onHeaderClick.bind(this);
   this._onLineClick = this._onLineClick.bind(this);
@@ -1558,73 +1556,47 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * Allows searches to be scheduled and delayed to avoid redundant calls.
-   */
-  delayedSearch: true,
-
-  /**
    * Schedules searching for a string in all of the sources.
    *
-   * @param string aQuery
+   * @param string aToken
    *        The string to search for.
+   * @param number aWait
+   *        The amount of milliseconds to wait until draining.
    */
-  scheduleSearch: function(aQuery) {
-    if (!this.delayedSearch) {
-      this.performSearch(aQuery);
-      return;
-    }
-    let delay = Math.max(GLOBAL_SEARCH_ACTION_MAX_DELAY / aQuery.length, 0);
+  scheduleSearch: function(aToken, aWait) {
+    // The amount of time to wait for the requests to settle.
+    let maxDelay = GLOBAL_SEARCH_ACTION_MAX_DELAY;
+    let delay = aWait === undefined ? maxDelay / aToken.length : aWait;
 
-    window.clearTimeout(this._searchTimeout);
-    this._searchFunction = this._startSearch.bind(this, aQuery);
-    this._searchTimeout = window.setTimeout(this._searchFunction, delay);
-  },
-
-  /**
-   * Immediately searches for a string in all of the sources.
-   *
-   * @param string aQuery
-   *        The string to search for.
-   */
-  performSearch: function(aQuery) {
-    window.clearTimeout(this._searchTimeout);
-    this._searchFunction = null;
-    this._startSearch(aQuery);
-  },
-
-  /**
-   * Starts searching for a string in all of the sources.
-   *
-   * @param string aQuery
-   *        The string to search for.
-   */
-  _startSearch: function(aQuery) {
-    this._searchedToken = aQuery;
-
-    // Start fetching as many sources as possible, then perform the search.
-    DebuggerController.SourceScripts
-      .getTextForSources(DebuggerView.Sources.values)
-      .then(this._performGlobalSearch);
+    // Allow requests to settle down first.
+    setNamedTimeout("global-search", delay, () => {
+      // Start fetching as many sources as possible, then perform the search.
+      let urls = DebuggerView.Sources.values;
+      let sourcesFetched = DebuggerController.SourceScripts.getTextForSources(urls);
+      sourcesFetched.then(aSources => this._doSearch(aToken, aSources));
+    });
   },
 
   /**
    * Finds string matches in all the sources stored in the controller's cache,
-   * and groups them by location and line number.
+   * and groups them by url and line number.
+   *
+   * @param string aToken
+   *        The string to search for.
+   * @param array aSources
+   *        An array of [url, text] tuples for each source.
    */
-  _performGlobalSearch: function(aSources) {
-    // Get the currently searched token from the filtering input.
-    let token = this._searchedToken;
-
-    // Make sure we're actually searching for something.
-    if (!token) {
+  _doSearch: function(aToken, aSources) {
+    // Don't continue filtering if the searched token is an empty string.
+    if (!aToken) {
       this.clearView();
       window.dispatchEvent(document, "Debugger:GlobalSearch:TokenEmpty");
       return;
     }
 
     // Search is not case sensitive, prepare the actual searched token.
-    let lowerCaseToken = token.toLowerCase();
-    let tokenLength = token.length;
+    let lowerCaseToken = aToken.toLowerCase();
+    let tokenLength = aToken.length;
 
     // Create a Map containing search details for each source.
     let globalResults = new GlobalResults();
@@ -1668,7 +1640,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
           }
 
           // Continue with the next sub-region in this line's text.
-          return aPrev + token + aCurr;
+          return aPrev + aToken + aCurr;
         }, "");
 
         if (lineResults.matchCount) {
@@ -1824,10 +1796,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
 
   _splitter: null,
   _currentlyFocusedMatch: -1,
-  _forceExpandResults: false,
-  _searchTimeout: null,
-  _searchFunction: null,
-  _searchedToken: ""
+  _forceExpandResults: false
 });
 
 /**

@@ -926,7 +926,6 @@ function SourceScripts() {
 SourceScripts.prototype = {
   get activeThread() DebuggerController.activeThread,
   get debuggerClient() DebuggerController.client,
-  _newSourceTimeout: null,
   _cache: new Map(),
 
   /**
@@ -948,7 +947,6 @@ SourceScripts.prototype = {
       return;
     }
     dumpn("SourceScripts is disconnecting...");
-    window.clearTimeout(this._newSourceTimeout);
     this.debuggerClient.removeListener("newGlobal", this._onNewGlobal);
     this.debuggerClient.removeListener("newSource", this._onNewSource);
     this.activeThread.removeListener("blackboxchange", this._onBlackBoxChange);
@@ -962,7 +960,9 @@ SourceScripts.prototype = {
       return;
     }
     dumpn("Handling tab navigation in the SourceScripts");
-    window.clearTimeout(this._newSourceTimeout);
+
+    // Don't expect the old sources to matter after the tab navigated.
+    clearNamedTimeout("new-source");
 
     // Retrieve the list of script sources known to the server from before
     // the client was ready to handle "newSource" notifications.
@@ -997,14 +997,13 @@ SourceScripts.prototype = {
     }
     // ..or the first entry if there's none selected yet after a while
     else {
-      window.clearTimeout(this._newSourceTimeout);
-      this._newSourceTimeout = window.setTimeout(() => {
+      setNamedTimeout("new-source", NEW_SOURCE_DISPLAY_DELAY, () => {
         // If after a certain delay the preferred source still wasn't received,
         // just give up on waiting and display the first entry.
         if (!DebuggerView.Sources.selectedValue) {
           DebuggerView.Sources.selectedIndex = 0;
         }
-      }, NEW_SOURCE_DISPLAY_DELAY);
+      });
     }
 
     // If there are any stored breakpoints for this source, display them again,

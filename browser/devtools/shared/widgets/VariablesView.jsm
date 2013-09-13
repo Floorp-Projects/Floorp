@@ -178,9 +178,7 @@ VariablesView.prototype = {
     this._store.length = 0;
     this._itemsByElement.clear();
 
-    this._emptyTimeout = this.window.setTimeout(() => {
-      this._emptyTimeout = null;
-
+    this.window.setTimeout(() => {
       prevList.removeEventListener("keypress", this._onViewKeyPress, false);
       currList.addEventListener("keypress", this._onViewKeyPress, false);
       currList.setAttribute("orient", "vertical");
@@ -457,7 +455,7 @@ VariablesView.prototype = {
    * Listener handling the searchbox input event.
    */
   _onSearchboxInput: function() {
-    this.performSearch(this._searchboxNode.value);
+    this._doSearch(this._searchboxNode.value);
   },
 
   /**
@@ -477,67 +475,43 @@ VariablesView.prototype = {
   },
 
   /**
-   * Allows searches to be scheduled and delayed to avoid redundant calls.
-   */
-  delayedSearch: true,
-
-  /**
    * Schedules searching for variables or properties matching the query.
    *
-   * @param string aQuery
+   * @param string aToken
    *        The variable or property to search for.
+   * @param number aWait
+   *        The amount of milliseconds to wait until draining.
    */
-  scheduleSearch: function(aQuery) {
-    if (!this.delayedSearch) {
-      this.performSearch(aQuery);
-      return;
-    }
-    let delay = Math.max(SEARCH_ACTION_MAX_DELAY / aQuery.length, 0);
+  scheduleSearch: function(aToken, aWait) {
+    let maxDelay = SEARCH_ACTION_MAX_DELAY;
+    let delay = aWait === undefined ? maxDelay / aToken.length : aWait;
 
-    this.window.clearTimeout(this._searchTimeout);
-    this._searchFunction = this._startSearch.bind(this, aQuery);
-    this._searchTimeout = this.window.setTimeout(this._searchFunction, delay);
-  },
-
-  /**
-   * Immediately searches for variables or properties matching the query.
-   *
-   * @param string aQuery
-   *        The variable or property to search for.
-   */
-  performSearch: function(aQuery) {
-    this.window.clearTimeout(this._searchTimeout);
-    this._searchFunction = null;
-    this._startSearch(aQuery);
+    // Allow requests to settle down first.
+    setNamedTimeout("vview-search", delay, () => this._doSearch(aToken));
   },
 
   /**
    * Performs a case insensitive search for variables or properties matching
    * the query, and hides non-matched items.
    *
-   * If aQuery is empty string, then all the scopes are unhidden and expanded,
+   * If aToken is falsy, then all the scopes are unhidden and expanded,
    * while the available variables and properties inside those scopes are
    * just unhidden.
    *
-   * If aQuery is null or undefined, then all the scopes are just unhidden,
-   * and the available variables and properties inside those scopes are also
-   * just unhidden.
-   *
-   * @param string aQuery
+   * @param string aToken
    *        The variable or property to search for.
    */
-  _startSearch: function(aQuery) {
+  _doSearch: function(aToken) {
     for (let scope of this._store) {
-      switch (aQuery) {
+      switch (aToken) {
         case "":
-          scope.expand();
-          // fall through
         case null:
         case undefined:
+          scope.expand();
           scope._performSearch("");
           break;
         default:
-          scope._performSearch(aQuery.toLowerCase());
+          scope._performSearch(aToken.toLowerCase());
           break;
       }
     }
@@ -906,9 +880,6 @@ VariablesView.prototype = {
   _currHierarchy: null,
   _enumVisible: true,
   _nonEnumVisible: true,
-  _emptyTimeout: null,
-  _searchTimeout: null,
-  _searchFunction: null,
   _parent: null,
   _list: null,
   _boxObject: null,
