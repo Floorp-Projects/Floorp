@@ -219,13 +219,7 @@ DownloadLegacyTransfer.prototype = {
       this._deferDownload.resolve(aDownload);
 
       // Add the download to the list, allowing it to be seen and canceled.
-      let list;
-      if (aIsPrivate) {
-        list = Downloads.getPrivateDownloadList();
-      } else {
-        list = Downloads.getPublicDownloadList();
-      }
-      return list.then(function (aList) aList.add(aDownload));
+      return Downloads.getList(Downloads.ALL).then(list => list.add(aDownload));
     }.bind(this)).then(null, Cu.reportError);
   },
 

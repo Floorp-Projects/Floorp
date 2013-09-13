@@ -675,11 +675,20 @@ class OutOfLineTruncateSlow : public OutOfLineCodeBase<CodeGeneratorShared>
     }
 };
 
-bool
-CodeGeneratorShared::emitTruncateDouble(const FloatRegister &src, const Register &dest)
+OutOfLineCode *
+CodeGeneratorShared::oolTruncateDouble(const FloatRegister &src, const Register &dest)
 {
     OutOfLineTruncateSlow *ool = new OutOfLineTruncateSlow(src, dest);
     if (!addOutOfLineCode(ool))
+        return NULL;
+    return ool;
+}
+
+bool
+CodeGeneratorShared::emitTruncateDouble(const FloatRegister &src, const Register &dest)
+{
+    OutOfLineCode *ool = oolTruncateDouble(src, dest);
+    if (!ool)
         return false;
 
     masm.branchTruncateDouble(src, dest, ool->entry());
@@ -820,24 +829,24 @@ CodeGeneratorShared::callTraceLIR(uint32_t blockIndex, LInstruction *lir,
         masm.move32(Imm32(blockIndex), blockIndexReg);
         masm.move32(Imm32(lir->id()), lirIndexReg);
         masm.move32(Imm32(emi), emiReg);
-        masm.movePtr(ImmWord(lir->opName()), lirOpNameReg);
+        masm.movePtr(ImmPtr(lir->opName()), lirOpNameReg);
         if (MDefinition *mir = lir->mirRaw()) {
-            masm.movePtr(ImmWord(mir->opName()), mirOpNameReg);
-            masm.movePtr(ImmWord((void *)mir->block()->info().script()), scriptReg);
-            masm.movePtr(ImmWord(mir->trackedPc()), pcReg);
+            masm.movePtr(ImmPtr(mir->opName()), mirOpNameReg);
+            masm.movePtr(ImmPtr(mir->block()->info().script()), scriptReg);
+            masm.movePtr(ImmPtr(mir->trackedPc()), pcReg);
         } else {
-            masm.movePtr(ImmWord((void *)NULL), mirOpNameReg);
-            masm.movePtr(ImmWord((void *)NULL), scriptReg);
-            masm.movePtr(ImmWord((void *)NULL), pcReg);
+            masm.movePtr(ImmPtr(NULL), mirOpNameReg);
+            masm.movePtr(ImmPtr(NULL), scriptReg);
+            masm.movePtr(ImmPtr(NULL), pcReg);
         }
     } else {
         masm.move32(Imm32(0xDEADBEEF), blockIndexReg);
         masm.move32(Imm32(0xDEADBEEF), lirIndexReg);
         masm.move32(Imm32(emi), emiReg);
-        masm.movePtr(ImmWord(bailoutName), lirOpNameReg);
-        masm.movePtr(ImmWord(bailoutName), mirOpNameReg);
-        masm.movePtr(ImmWord((void *)NULL), scriptReg);
-        masm.movePtr(ImmWord((void *)NULL), pcReg);
+        masm.movePtr(ImmPtr(bailoutName), lirOpNameReg);
+        masm.movePtr(ImmPtr(bailoutName), mirOpNameReg);
+        masm.movePtr(ImmPtr(NULL), scriptReg);
+        masm.movePtr(ImmPtr(NULL), pcReg);
     }
 
     masm.setupUnalignedABICall(7, CallTempReg4);

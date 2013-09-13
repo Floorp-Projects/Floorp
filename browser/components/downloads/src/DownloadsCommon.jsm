@@ -640,8 +640,8 @@ DownloadsDataCtor.prototype = {
     // Start receiving real-time events.
     if (DownloadsCommon.useJSTransfer) {
       if (!this._dataLinkInitialized) {
-        let promiseList = this._isPrivate ? Downloads.getPrivateDownloadList()
-                                          : Downloads.getPublicDownloadList();
+        let promiseList = Downloads.getList(this._isPrivate ? Downloads.PRIVATE
+                                                            : Downloads.PUBLIC);
         promiseList.then(list => list.addView(this)).then(null, Cu.reportError);
         this._dataLinkInitialized = true;
       }
@@ -697,8 +697,8 @@ DownloadsDataCtor.prototype = {
   removeFinished: function DD_removeFinished()
   {
     if (DownloadsCommon.useJSTransfer) {
-      let promiseList = this._isPrivate ? Downloads.getPrivateDownloadList()
-                                        : Downloads.getPublicDownloadList();
+      let promiseList = Downloads.getList(this._isPrivate ? Downloads.PRIVATE
+                                                          : Downloads.PUBLIC);
       promiseList.then(list => list.removeFinished())
                  .then(null, Cu.reportError);
     } else {
@@ -1715,12 +1715,10 @@ DownloadsDataItem.prototype = {
    */
   remove: function DDI_remove() {
     if (DownloadsCommon.useJSTransfer) {
-      let promiseList = this._download.source.isPrivate
-                          ? Downloads.getPrivateDownloadList()
-                          : Downloads.getPublicDownloadList();
-      promiseList.then(list => list.remove(this._download))
-                 .then(() => this._download.finalize(true))
-                 .then(null, Cu.reportError);
+      Downloads.getList(Downloads.ALL)
+               .then(list => list.remove(this._download))
+               .then(() => this._download.finalize(true))
+               .then(null, Cu.reportError);
       return;
     }
 

@@ -489,17 +489,17 @@
   </binding>
 
   <binding id="urlbar-autocomplete">
-    <content>
-      <xul:vbox id="results-vbox" anonid="results-container" flex="1">
+    <content class="meta-section-container">
+      <xul:vbox class="meta-section" anonid="results-container" flex="1">
         <xul:label class="meta-section-title"
                    value="&autocompleteResultsHeader.label;"/>
-        <richgrid id="results-richgrid" anonid="results" rows="3" flex="1"
+        <richgrid anonid="results" rows="3" flex="1"
                   seltype="single" deferlayout="true"/>
       </xul:vbox>
 
-      <xul:vbox id="searches-vbox" flex="1">
+      <xul:vbox class="meta-section" flex="1">
         <xul:label anonid="searches-header" class="meta-section-title"/>
-        <richgrid id="searches-richgrid" anonid="searches" rows="3" flex="1"
+        <richgrid anonid="searches" rows="3" flex="1"
                   seltype="single" deferlayout="true"/>
       </xul:vbox>
     </content>

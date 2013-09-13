@@ -16,3 +16,11 @@ HOST_LIBRARY_NAME = 'host_breakpad_solaris_common_s'
 
 LIBRARY_NAME = 'breakpad_solaris_common_s'
 
+# not compiling http_upload.cc currently
+# since it depends on libcurl
+HOST_CPPSRCS += [
+    'dump_symbols.cc',
+    'file_id.cc',
+    'guid_creator.cc',
+]
+

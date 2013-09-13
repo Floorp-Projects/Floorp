@@ -42,6 +42,15 @@ ImageHost::UseTextureHost(TextureHost* aTexture)
   mFrontBuffer = aTexture;
 }
 
+void
+ImageHost::RemoveTextureHost(uint64_t aTextureID)
+{
+  CompositableHost::RemoveTextureHost(aTextureID);
+  if (mFrontBuffer && mFrontBuffer->GetID() == aTextureID) {
+    mFrontBuffer = nullptr;
+  }
+}
+
 TextureHost*
 ImageHost::GetTextureHost()
 {
@@ -232,7 +241,8 @@ DeprecatedImageHostSingle::MakeDeprecatedTextureHost(TextureIdentifier aTextureI
 {
   mDeprecatedTextureHost = DeprecatedTextureHost::CreateDeprecatedTextureHost(aSurface.type(),
                                                 mTextureInfo.mDeprecatedTextureHostFlags,
-                                                mTextureInfo.mTextureFlags);
+                                                mTextureInfo.mTextureFlags,
+                                                this);
 
   NS_ASSERTION(mDeprecatedTextureHost, "Failed to create texture host");
 

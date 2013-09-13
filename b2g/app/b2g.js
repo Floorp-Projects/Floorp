@@ -73,7 +73,7 @@ pref("mozilla.widget.force-24bpp", true);
 pref("mozilla.widget.use-buffer-pixmap", true);
 pref("mozilla.widget.disable-native-theme", true);
 pref("layout.reflow.synthMouseMove", false);
-pref("layers.force-tiles", false);
+pref("layers.force-tiles", true);
 
 /* download manager (don't show the window or alert) */
 pref("browser.download.useDownloadDir", true);
@@ -747,8 +747,22 @@ pref("ping.manifestURL", "https://marketplace.firefox.com/packaged.webapp");
 // Enable the disk space watcher
 pref("disk_space_watcher.enabled", true);
 
+// SNTP preferences.
+pref("network.sntp.maxRetryCount", 10);
+pref("network.sntp.refreshPeriod", 86400); // In seconds.
+pref("network.sntp.pools", // Servers separated by ';'.
+     "0.pool.ntp.org;1.pool.ntp.org;2.pool.ntp.org;3.pool.ntp.org");
+pref("network.sntp.port", 123);
+pref("network.sntp.timeout", 30); // In seconds.
+
 // Enable promise
 pref("dom.promise.enabled", false);
+
+// DOM Inter-App Communication API.
+#ifdef MOZ_WIDGET_GONK
+// Enable this only for gonk-specific build but not for desktop build.
+pref("dom.inter-app-communication-api.enabled", true);
+#endif
 
 // Allow ADB to run for this many hours before disabling
 // (only applies when marionette is disabled)

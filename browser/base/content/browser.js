@@ -137,6 +137,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "SitePermissions",
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm");
 
+#ifdef MOZ_CRASHREPORTER
+XPCOMUtils.defineLazyModuleGetter(this, "TabCrashReporter",
+  "resource:///modules/TabCrashReporter.jsm");
+#endif
+
 let gInitialPages = [
   "about:blank",
   "about:newtab",
@@ -170,6 +175,10 @@ let gInitialPages = [
 
 XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
 #ifdef XP_WIN
+  // Bug 666808 - AeroPeek support for e10s
+  if (gMultiProcessBrowser)
+    return null;
+
   const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
   if (WINTASKBAR_CONTRACTID in Cc &&
       Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available) {
@@ -1042,6 +1051,11 @@ var gBrowserInit = {
     // Ensure login manager is up and running.
     Services.logins;
 
+#ifdef MOZ_CRASHREPORTER
+    if (gMultiProcessBrowser)
+      TabCrashReporter.init();
+#endif
+
     if (mustLoadSidebar) {
       let sidebar = document.getElementById("sidebar");
       let sidebarBox = document.getElementById("sidebar-box");
@@ -1135,11 +1149,8 @@ var gBrowserInit = {
     gBrowser.mPanelContainer.addEventListener("PreviewBrowserTheme", LightWeightThemeWebInstaller, false, true);
     gBrowser.mPanelContainer.addEventListener("ResetBrowserThemePreview", LightWeightThemeWebInstaller, false, true);
 
-    // Bug 666808 - AeroPeek support for e10s
-    if (!gMultiProcessBrowser) {
-      if (Win7Features)
-        Win7Features.onOpenWindow();
-    }
+    if (Win7Features)
+      Win7Features.onOpenWindow();
 
    // called when we go into full screen, even if initiated by a web page script
     window.addEventListener("fullscreen", onFullScreen, true);
@@ -2497,6 +2508,12 @@ let BrowserOnClick = {
 
     let button = aEvent.originalTarget;
     if (button.id == "tryAgain") {
+#ifdef MOZ_CRASHREPORTER
+      if (aOwnerDoc.getElementById("checkSendReport").checked) {
+        let browser = gBrowser.getBrowserForDocument(aOwnerDoc);
+        TabCrashReporter.submitCrashReport(browser);
+      }
+#endif
       openUILinkIn(button.getAttribute("url"), "current");
     }
   },
@@ -3655,8 +3672,7 @@ var XULBrowserWindow = {
     return this.reloadCommand = document.getElementById("Browser:Reload");
   },
   get statusTextField () {
-    delete this.statusTextField;
-    return this.statusTextField = document.getElementById("statusbar-display");
+    return gBrowser.getStatusPanel();
   },
   get isImage () {
     delete this.isImage;
@@ -3676,7 +3692,6 @@ var XULBrowserWindow = {
     delete this.throbberElement;
     delete this.stopCommand;
     delete this.reloadCommand;
-    delete this.statusTextField;
     delete this.statusText;
   },
 
@@ -4267,6 +4282,11 @@ var TabsProgressListener = {
         if (event.target.documentElement)
           event.target.documentElement.removeAttribute("hasBrowserHandlers");
       }, true);
+
+#ifdef MOZ_CRASHREPORTER
+      if (doc.documentURI.startsWith("about:tabcrashed"))
+        TabCrashReporter.onAboutTabCrashedLoad(aBrowser);
+#endif
     }
   },
 

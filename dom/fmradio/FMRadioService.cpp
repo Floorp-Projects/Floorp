@@ -228,10 +228,6 @@ public:
   NS_IMETHOD Run()
   {
     SetFMRadioFrequency(mFrequency);
-
-    FMRadioService* fmRadioService = FMRadioService::Singleton();
-    fmRadioService->UpdateFrequency();
-
     return NS_OK;
   }
 
@@ -754,6 +750,9 @@ FMRadioService::Notify(const FMRadioOperationInformation& aInfo)
         TransitionState(SuccessResponse(), Enabled);
       }
 
+      UpdateFrequency();
+      break;
+    case FM_RADIO_OPERATION_TUNE:
       UpdateFrequency();
       break;
     default:

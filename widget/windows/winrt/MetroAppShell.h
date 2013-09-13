@@ -27,12 +27,14 @@ public:
 
   static LRESULT CALLBACK EventWindowProc(HWND, UINT, WPARAM, LPARAM);
   static bool ProcessOneNativeEventIfPresent();
+  static void MarkEventQueueForPurge();
 
 protected:
   NS_IMETHOD Run();
 
   virtual void ScheduleNativeEventCallback();
   virtual bool ProcessNextNativeEvent(bool mayWait);
+  static void DispatchAllGeckoEvents();
   virtual ~MetroAppShell();
 
   HWND mEventWnd;

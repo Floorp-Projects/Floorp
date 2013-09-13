@@ -231,10 +231,6 @@ JSCustomObject::~JSCustomObject()
   mProperties.EnumerateRead(HashTableFree, nullptr);
 }
 
-JSAObjectBuilder::~JSAObjectBuilder()
-{
-}
-
 JSCustomObjectBuilder::JSCustomObjectBuilder()
 {}
 

@@ -5,6 +5,9 @@
 #include "CSFLog.h"
 #include "nspr.h"
 
+// For rtcp-fb constants
+#include "ccsdp.h"
+
 #include "VideoConduit.h"
 #include "AudioConduit.h"
 #include "webrtc/video_engine/include/vie_errors.h"
@@ -245,22 +248,6 @@ MediaConduitErrorCode WebrtcVideoConduit::Init()
                 mPtrViEBase->LastError());
     return kMediaConduitRTCPStatusError;
   }
-  // Enable pli as key frame request method.
-  if(mPtrRTP->SetKeyFrameRequestMethod(mChannel,
-                                    webrtc::kViEKeyFrameRequestPliRtcp) != 0)
-  {
-    CSFLogError(logTag,  "%s KeyFrameRequest Failed %d ", __FUNCTION__,
-                mPtrViEBase->LastError());
-    return kMediaConduitKeyFrameRequestError;
-  }
-  // Enable lossless transport
-  // XXX Note: We may want to disable this or limit it
-  if (mPtrRTP->SetNACKStatus(mChannel, true) != 0)
-  {
-    CSFLogError(logTag,  "%s NACKStatus Failed %d ", __FUNCTION__,
-                mPtrViEBase->LastError());
-    return kMediaConduitNACKStatusError;
-  }
   CSFLogError(logTag, "%s Initialization Done", __FUNCTION__);
   return kMediaConduitNoError;
 }
@@ -418,6 +405,16 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
   mSendingWidth = 0;
   mSendingHeight = 0;
 
+  if(codecConfig->RtcpFbIsSet(SDP_RTCP_FB_NACK_BASIC)) {
+    CSFLogDebug(logTag, "Enabling NACK (send) for video stream\n");
+    if (mPtrRTP->SetNACKStatus(mChannel, true) != 0)
+    {
+      CSFLogError(logTag,  "%s NACKStatus Failed %d ", __FUNCTION__,
+                  mPtrViEBase->LastError());
+      return kMediaConduitNACKStatusError;
+    }
+  }
+
   if(mPtrViEBase->StartSend(mChannel) == -1)
   {
     CSFLogError(logTag, "%s Start Send Error %d ", __FUNCTION__,
@@ -428,8 +425,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
   //Copy the applied codec for future reference
   delete mCurSendCodecConfig;
 
-  mCurSendCodecConfig = new VideoCodecConfig(codecConfig->mType,
-                                             codecConfig->mName);
+  mCurSendCodecConfig = new VideoCodecConfig(*codecConfig);
 
   mPtrRTP->SetRembStatus(mChannel, true, false);
 
@@ -472,6 +468,9 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     return kMediaConduitMalformedArgument;
   }
 
+  webrtc::ViEKeyFrameRequestMethod kf_request = webrtc::kViEKeyFrameRequestNone;
+  bool use_nack_basic = false;
+
   //Try Applying the codecs in the list
   // we treat as success if atleast one codec was applied and reception was
   // started successfully.
@@ -483,7 +482,25 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
       return condError;
     }
 
+    // Check for the keyframe request type: PLI is preferred
+    // over FIR, and FIR is preferred over none.
+    if (codecConfigList[i]->RtcpFbIsSet(SDP_RTCP_FB_NACK_PLI))
+    {
+      kf_request = webrtc::kViEKeyFrameRequestPliRtcp;
+    } else if(kf_request == webrtc::kViEKeyFrameRequestNone &&
+              codecConfigList[i]->RtcpFbIsSet(SDP_RTCP_FB_CCM_FIR))
+    {
+      kf_request = webrtc::kViEKeyFrameRequestFirRtcp;
+    }
+
+    // Check whether NACK is requested
+    if(codecConfigList[i]->RtcpFbIsSet(SDP_RTCP_FB_NACK_BASIC))
+    {
+      use_nack_basic = true;
+    }
+
     webrtc::VideoCodec  video_codec;
+
     mEngineReceiving = false;
     memset(&video_codec, 0, sizeof(webrtc::VideoCodec));
     //Retrieve pre-populated codec structure for our codec.
@@ -521,6 +538,51 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
   {
     CSFLogError(logTag, "%s Setting Receive Codec Failed ", __FUNCTION__);
     return kMediaConduitInvalidReceiveCodec;
+  }
+
+  // XXX Currently, we gather up all of the feedback types that the remote
+  // party indicated it supports for all video codecs and configure the entire
+  // conduit based on those capabilities. This is technically out of spec,
+  // as these values should be configured on a per-codec basis. However,
+  // the video engine only provides this API on a per-conduit basis, so that's
+  // how we have to do it. The approach of considering the remote capablities
+  // for the entire conduit to be a union of all remote codec capabilities
+  // (rather than the more conservative approach of using an intersection)
+  // is made to provide as many feedback mechanisms as are likely to be
+  // processed by the remote party (and should be relatively safe, since the
+  // remote party is required to ignore feedback types that it does not
+  // understand).
+  //
+  // Note that our configuration uses this union of remote capabilites as
+  // input to the configuration. It is not isomorphic to the configuration.
+  // For example, it only makes sense to have one frame request mechanism
+  // active at a time; so, if the remote party indicates more than one
+  // supported mechanism, we're only configuring the one we most prefer.
+  //
+  // See http://code.google.com/p/webrtc/issues/detail?id=2331
+
+  if (kf_request != webrtc::kViEKeyFrameRequestNone)
+  {
+    CSFLogDebug(logTag, "Enabling %s frame requests for video stream\n",
+                (kf_request == webrtc::kViEKeyFrameRequestPliRtcp ?
+                 "PLI" : "FIR"));
+    if(mPtrRTP->SetKeyFrameRequestMethod(mChannel, kf_request) != 0)
+    {
+      CSFLogError(logTag,  "%s KeyFrameRequest Failed %d ", __FUNCTION__,
+                  mPtrViEBase->LastError());
+      return kMediaConduitKeyFrameRequestError;
+    }
+  }
+
+  if(use_nack_basic)
+  {
+    CSFLogDebug(logTag, "Enabling NACK (recv) for video stream\n");
+    if (mPtrRTP->SetNACKStatus(mChannel, true) != 0)
+    {
+      CSFLogError(logTag,  "%s NACKStatus Failed %d ", __FUNCTION__,
+                  mPtrViEBase->LastError());
+      return kMediaConduitNACKStatusError;
+    }
   }
 
   //Start Receive on the video engine
@@ -789,8 +851,7 @@ WebrtcVideoConduit::CodecConfigToWebRTCCodec(const VideoCodecConfig* codecInfo,
 bool
 WebrtcVideoConduit::CopyCodecToDB(const VideoCodecConfig* codecInfo)
 {
-  VideoCodecConfig* cdcConfig = new VideoCodecConfig(codecInfo->mType,
-                                                     codecInfo->mName);
+  VideoCodecConfig* cdcConfig = new VideoCodecConfig(*codecInfo);
   mRecvCodecList.push_back(cdcConfig);
   return true;
 }

@@ -620,22 +620,38 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     first.startedMillis > second.startedMillis,
 
   _byStatus: function({ attachment: first }, { attachment: second })
-    first.status > second.status,
+    first.status == second.status
+      ? first.startedMillis > second.startedMillis
+      : first.status > second.status,
 
   _byMethod: function({ attachment: first }, { attachment: second })
-    first.method > second.method,
+    first.method == second.method
+      ? first.startedMillis > second.startedMillis
+      : first.method > second.method,
 
-  _byFile: function({ attachment: first }, { attachment: second })
-    this._getUriNameWithQuery(first.url).toLowerCase() >
-    this._getUriNameWithQuery(second.url).toLowerCase(),
+  _byFile: function({ attachment: first }, { attachment: second }) {
+    let firstUrl = this._getUriNameWithQuery(first.url).toLowerCase();
+    let secondUrl = this._getUriNameWithQuery(second.url).toLowerCase();
+    return firstUrl == secondUrl
+      ? first.startedMillis > second.startedMillis
+      : firstUrl > secondUrl;
+  },
 
-  _byDomain: function({ attachment: first }, { attachment: second })
-    this._getUriHostPort(first.url).toLowerCase() >
-    this._getUriHostPort(second.url).toLowerCase(),
+  _byDomain: function({ attachment: first }, { attachment: second }) {
+    let firstDomain = this._getUriHostPort(first.url).toLowerCase();
+    let secondDomain = this._getUriHostPort(second.url).toLowerCase();
+    return firstDomain == secondDomain
+      ? first.startedMillis > second.startedMillis
+      : firstDomain > secondDomain;
+  },
 
-  _byType: function({ attachment: first }, { attachment: second })
-    this._getAbbreviatedMimeType(first.mimeType).toLowerCase() >
-    this._getAbbreviatedMimeType(second.mimeType).toLowerCase(),
+  _byType: function({ attachment: first }, { attachment: second }) {
+    let firstType = this._getAbbreviatedMimeType(first.mimeType).toLowerCase();
+    let secondType = this._getAbbreviatedMimeType(second.mimeType).toLowerCase();
+    return firstType == secondType
+      ? first.startedMillis > second.startedMillis
+      : firstType > secondType;
+  },
 
   _bySize: function({ attachment: first }, { attachment: second })
     first.contentSize > second.contentSize,

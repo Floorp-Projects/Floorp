@@ -28,7 +28,7 @@ BoxInputsPolicy::alwaysBoxAt(MInstruction *at, MDefinition *operand)
     // Replace Float32 by double
     if (operand->type() == MIRType_Float32) {
         MInstruction *replace = MToDouble::New(operand);
-        operand->block()->insertBefore(at, replace);
+        at->block()->insertBefore(at, replace);
         boxedOperand = replace;
     }
     MBox *box = MBox::New(boxedOperand);
@@ -555,18 +555,6 @@ bool
 CallPolicy::adjustInputs(MInstruction *ins)
 {
     MCall *call = ins->toCall();
-
-    // External calls shouldn't have Float32 parameters
-    for (uint32_t i = 0, numArgs = call->numActualArgs(); i < numArgs; i++) {
-        MDefinition *arg = call->getArg(i+1); // arg 0 is |this|
-        if (arg->type() == MIRType_Float32) {
-            JS_ASSERT(arg->isPassArg()); // can't be a type barrier, as Float32 doesn't rely on type inference
-            MPassArg *passArg = arg->toPassArg();
-            MInstruction *replace = MToDouble::New(passArg->getArgument());
-            passArg->replaceOperand(0, replace);
-            call->block()->insertBefore(passArg, replace);
-        }
-    }
 
     MDefinition *func = call->getFunction();
     if (func->type() == MIRType_Object)

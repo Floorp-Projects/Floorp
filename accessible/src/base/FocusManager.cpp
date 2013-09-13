@@ -10,10 +10,10 @@
 #include "nsAccUtils.h"
 #include "nsEventShell.h"
 #include "Role.h"
-#include "RootAccessible.h"
 
 #include "nsEventStateManager.h"
 #include "nsFocusManager.h"
+#include "mozilla/dom/Element.h"
 
 namespace dom = mozilla::dom;
 using namespace mozilla::a11y;

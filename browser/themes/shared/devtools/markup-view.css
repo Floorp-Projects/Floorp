@@ -7,28 +7,6 @@
   margin: 0;
 }
 
-.newattr {
-  cursor: pointer;
-  padding: 1px 0;
-}
-
-li.container {
-  padding: 2px 0 0 2px;
-}
-
-.codebox {
-  padding-left: 14px;
-}
-
-.codebox > * {
-  vertical-align: middle;
-}
-
-.expander {
-  display: inline-block;
-  margin-left: -14px;
-}
-
 .more-nodes {
   padding-left: 16px;
 }

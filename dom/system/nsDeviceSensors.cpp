@@ -18,6 +18,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
 #include "nsIPermissionManager.h"
+#include "mozilla/dom/DeviceProximityEvent.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -257,17 +258,16 @@ nsDeviceSensors::FireDOMProximityEvent(mozilla::dom::EventTarget* aTarget,
                                        double aMin,
                                        double aMax)
 {
-  nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMDeviceProximityEvent(getter_AddRefs(event), aTarget, nullptr, nullptr);
-  nsCOMPtr<nsIDOMDeviceProximityEvent> oe = do_QueryInterface(event);
-
-  oe->InitDeviceProximityEvent(NS_LITERAL_STRING("deviceproximity"),
-                               true,
-                               false,
-                               aValue,
-                               aMin,
-                               aMax);
-
+  DeviceProximityEventInitInitializer init;
+  init.mBubbles = true;
+  init.mCancelable = false;
+  init.mValue = aValue;
+  init.mMin = aMin;
+  init.mMax = aMax;
+  nsRefPtr<DeviceProximityEvent> event =
+    DeviceProximityEvent::Constructor(aTarget,
+                                      NS_LITERAL_STRING("deviceproximity"),
+                                      init);
   event->SetTrusted(true);
 
   bool defaultActionEnabled;

@@ -246,10 +246,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mUrlEditContainer = findViewById(R.id.url_edit_container);
         mUrlEditText = (CustomEditText) findViewById(R.id.url_edit_text);
 
-        // This will clip the right edge's image at half of its width
+        // This will clip the right edge's image at 60% of its width
         mUrlBarRightEdge = (ImageView) findViewById(R.id.url_bar_right_edge);
         if (mUrlBarRightEdge != null) {
-            mUrlBarRightEdge.getDrawable().setLevel(5000);
+            mUrlBarRightEdge.getDrawable().setLevel(6000);
         }
 
         mTitle = (GeckoTextView) findViewById(R.id.url_bar_title);

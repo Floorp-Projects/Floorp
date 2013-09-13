@@ -388,13 +388,13 @@ TabChild::Observe(nsISupports *aSubject,
 {
   if (!strcmp(aTopic, CANCEL_DEFAULT_PAN_ZOOM)) {
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aSubject));
-    nsCOMPtr<nsITabChild> tabChild(GetTabChildFrom(docShell));
+    nsCOMPtr<nsITabChild> tabChild(TabChild::GetFrom(docShell));
     if (tabChild == this) {
       mRemoteFrame->CancelDefaultPanZoom();
     }
   } else if (!strcmp(aTopic, BROWSER_ZOOM_TO_RECT)) {
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aSubject));
-    nsCOMPtr<nsITabChild> tabChild(GetTabChildFrom(docShell));
+    nsCOMPtr<nsITabChild> tabChild(TabChild::GetFrom(docShell));
     if (tabChild == this) {
       CSSRect rect;
       sscanf(NS_ConvertUTF16toUTF8(aData).get(),
@@ -425,6 +425,7 @@ TabChild::Observe(nsISupports *aSubject,
         mLastMetrics.mViewport = CSSRect(CSSPoint(), kDefaultViewportSize);
         mLastMetrics.mCompositionBounds = ScreenIntRect(ScreenIntPoint(), mInnerSize);
         mLastMetrics.mZoom = mLastMetrics.CalculateIntrinsicScale();
+        mLastMetrics.mDevPixelsPerCSSPixel = CSSToLayoutDeviceScale(mWidget->GetDefaultScale());
         // We use ScreenToLayerScale(1) below in order to turn the
         // async zoom amount into the gecko zoom amount.
         mLastMetrics.mCumulativeResolution =
@@ -442,7 +443,7 @@ TabChild::Observe(nsISupports *aSubject,
     }
   } else if (!strcmp(aTopic, DETECT_SCROLLABLE_SUBFRAME)) {
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aSubject));
-    nsCOMPtr<nsITabChild> tabChild(GetTabChildFrom(docShell));
+    nsCOMPtr<nsITabChild> tabChild(TabChild::GetFrom(docShell));
     if (tabChild == this) {
       mRemoteFrame->DetectScrollableSubframe();
     }

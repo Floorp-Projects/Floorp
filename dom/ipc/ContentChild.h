@@ -225,6 +225,7 @@ public:
     virtual bool RecvLoadAndRegisterSheet(const URIParams& aURI, const uint32_t& aType);
     virtual bool RecvUnregisterSheet(const URIParams& aURI, const uint32_t& aType);
 
+    virtual bool RecvNotifyPhoneStateChange(const nsString& state);
 #ifdef ANDROID
     gfxIntSize GetScreenSize() { return mScreenSize; }
 #endif

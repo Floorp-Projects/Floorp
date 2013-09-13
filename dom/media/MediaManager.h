@@ -438,6 +438,8 @@ private:
   nsresult MediaCaptureWindowStateInternal(nsIDOMWindow* aWindow, bool* aVideo,
                                            bool* aAudio);
 
+  void StopMediaStreams();
+
   // ONLY access from MainThread so we don't need to lock
   WindowTable mActiveWindows;
   nsRefPtrHashtable<nsStringHashKey, nsRunnable> mActiveCallbacks;

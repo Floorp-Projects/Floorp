@@ -88,7 +88,6 @@
 
 #include "vm/Interpreter-inl.h"
 #include "vm/ObjectImpl-inl.h"
-#include "vm/Shape-inl.h"
 #include "vm/String-inl.h"
 
 using namespace js;
@@ -6336,4 +6335,15 @@ JS_PreventExtensions(JSContext *cx, JS::HandleObject obj)
     if (!extensible)
         return true;
     return JSObject::preventExtensions(cx, obj);
+}
+
+char *
+JSAutoByteString::encodeLatin1(ExclusiveContext *cx, JSString *str)
+{
+    JSLinearString *linear = str->ensureLinear(cx);
+    if (!linear)
+        return NULL;
+
+    mBytes = LossyTwoByteCharsToNewLatin1CharsZ(cx, linear->range()).c_str();
+    return mBytes;
 }
