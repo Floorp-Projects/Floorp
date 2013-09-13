@@ -78,7 +78,6 @@
 #include "nsIBaseWindow.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "GeckoProfiler.h"
 
 #ifdef XP_WIN
 #undef GetClassName
