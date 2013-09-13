@@ -21,6 +21,10 @@ content/web/images/findbarButton-previous-rtl.png
 content/web/images/findbarButton-previous.png
 content/web/images/loading-icon.gif
 content/web/images/loading-small.png
+content/web/images/secondaryToolbarButton-firstPage.png
+content/web/images/secondaryToolbarButton-lastPage.png
+content/web/images/secondaryToolbarButton-rotateCcw.png
+content/web/images/secondaryToolbarButton-rotateCw.png
 content/web/images/shadow.png
 content/web/images/texture.png
 content/web/images/toolbarButton-bookmark.png
@@ -34,6 +38,7 @@ content/web/images/toolbarButton-pageUp.png
 content/web/images/toolbarButton-presentationMode.png
 content/web/images/toolbarButton-print.png
 content/web/images/toolbarButton-search.png
+content/web/images/toolbarButton-secondaryToolbarToggle.png
 content/web/images/toolbarButton-sidebarToggle.png
 content/web/images/toolbarButton-viewOutline.png
 content/web/images/toolbarButton-viewThumbnail.png

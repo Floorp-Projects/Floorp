@@ -2,16 +2,64 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ul {
-  list-style: none;
+#root-wrapper {
+  overflow: hidden;
+  min-width: 250px;
 }
 
-ul.children:not([expanded]) {
+.children {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.child {
+  margin-left: -1000em;
+  padding-left: 1001em;
+}
+
+.tag-line {
+  min-height: 1.4em;
+  line-height: 1.4em;
+  position: relative;
+}
+
+/* Children are indented thanks to their parent's left padding, that means they
+ * are not stretching from edge to edge, which is what we want.
+ * So we insert a pseudo-element and make sure it covers the whole "line" */
+.tag-line .highlighter {
+    content: "";
+    position: absolute;
+    left: -1000em;
+    right: 0;
+    height: 100%;
+    z-index: -1;
+}
+
+.expander {
+  display: inline-block;
+  margin-left: -14px;
+  vertical-align: middle;
+}
+
+.child.collapsed .child {
   display: none;
 }
 
-.codebox {
-  display: inline-block;
+.child > .tag-line:first-child .close {
+  display: none;
+}
+
+.child.collapsed > .tag-line:first-child .close {
+  display: inline;
+}
+
+.child.collapsed > .tag-line ~ .tag-line {
+  display: none;
+}
+
+.child.collapsed .close {
+  display: inline;
 }
 
 .newattr {
@@ -19,22 +67,11 @@ ul.children:not([expanded]) {
   width: 1em;
   height: 1ex;
   margin-right: -1em;
+  padding: 1px 0;
 }
 
 .newattr:focus {
   margin-right: 0;
-}
-
-.closing-bracket {
-  pointer-events: none;
-}
-
-.summary {
-  cursor: pointer;
-}
-
-.summary[expanded] {
-  display: none;
 }
 
 /* Preview */

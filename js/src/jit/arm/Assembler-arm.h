@@ -1779,8 +1779,8 @@ class Assembler
     static uint32_t patchWrite_NearCallSize();
     static uint32_t nopSize() { return 4; }
     static void patchWrite_NearCall(CodeLocationLabel start, CodeLocationLabel toCall);
-    static void patchDataWithValueCheck(CodeLocationLabel label, ImmWord newValue,
-                                        ImmWord expectedValue);
+    static void patchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue,
+                                        ImmPtr expectedValue);
     static void patchWrite_Imm32(CodeLocationLabel label, Imm32 imm);
     static uint32_t alignDoubleArg(uint32_t offset) {
         return (offset+1)&~1;

@@ -30,6 +30,7 @@ function test_named_function()
 
     do_check_eq(args[0].class, "Function");
     do_check_eq(args[0].name, "stopMe");
+    do_check_eq(args[0].displayName, "stopMe");
 
     let objClient = gThreadClient.pauseGrip(args[0]);
     objClient.getParameterNames(function(aResponse) {

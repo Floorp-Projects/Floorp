@@ -6,12 +6,6 @@ ifdef MOZ_CRASHREPORTER
 
 LOCAL_INCLUDES 	= -I$(srcdir)/../..
 
-HOST_CPPSRCS = \
-  bytereader.cc \
-  dwarf2diehandler.cc \
-  dwarf2reader.cc \
-  functioninfo.cc \
-  $(NULL)
 endif
 
 # This code is only compiled for build-time tools,

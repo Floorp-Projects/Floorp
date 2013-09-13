@@ -92,6 +92,11 @@ MOCHITEST_FILES := \
   test_CSP_bug888172.html \
   file_CSP_bug888172.html \
   file_CSP_bug888172.sjs \
+  test_bug836922_npolicies.html \
+  file_bug836922_npolicies.html \
+  file_bug836922_npolicies.html^headers^ \
+  file_bug836922_npolicies_violation.sjs \
+  file_bug836922_npolicies_ro_violation.sjs \
   $(NULL)
 
 MOCHITEST_CHROME_FILES := \

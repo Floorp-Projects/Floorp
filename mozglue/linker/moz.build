@@ -16,3 +16,7 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'linker'
 
+HOST_CPPSRCS += [
+    'SeekableZStream.cpp',
+    'szip.cpp',
+]

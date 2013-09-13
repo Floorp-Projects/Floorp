@@ -66,6 +66,31 @@ function promiseDownloadMidway(aDownload) {
 }
 
 /**
+ * Waits for a download to finish, in case it has not finished already.
+ *
+ * @param aDownload
+ *        The Download object to wait upon.
+ *
+ * @return {Promise}
+ * @resolves When the download has finished successfully.
+ * @rejects JavaScript exception if the download failed.
+ */
+function promiseDownloadStopped(aDownload) {
+  if (!aDownload.stopped) {
+    // The download is in progress, wait for the current attempt to finish and
+    // report any errors that may occur.
+    return aDownload.start();
+  }
+
+  if (aDownload.succeeded) {
+    return Promise.resolve();
+  }
+
+  // The download failed or was canceled.
+  return Promise.reject(aDownload.error || new Error("Download canceled."));
+}
+
+/**
  * Creates and starts a new download, configured to keep partial data, and
  * returns only when the first part of "interruptible_resumable.txt" has been
  * saved to disk.  You must call "continueResponses" to allow the interruptible
@@ -1600,25 +1625,6 @@ add_task(function test_contentType() {
 });
 
 /**
- * Tests that the serialization/deserialization of the startTime Date
- * object works correctly.
- */
-add_task(function test_toSerializable_startTime()
-{
-  let download1 = yield promiseStartDownload(httpUrl("source.txt"));
-  yield promiseDownloadStopped(download1);
-
-  let serializable = download1.toSerializable();
-  let reserialized = JSON.parse(JSON.stringify(serializable));
-
-  let download2 = yield Downloads.createDownload(reserialized);
-
-  do_check_eq(download1.startTime.constructor.name, "Date");
-  do_check_eq(download2.startTime.constructor.name, "Date");
-  do_check_eq(download1.startTime.toJSON(), download2.startTime.toJSON());
-});
-
-/**
  * This test will call the platform specific operations within
  * DownloadPlatform::DownloadDone. While there is no test to verify the
  * specific behaviours, this at least ensures that there is no error or crash.
@@ -1728,3 +1734,60 @@ add_task(function test_history_tryToKeepPartialData()
   continueResponses();
   yield promiseDownloadStopped(download);
 });
+
+/**
+ * Tests that the temp download files are removed on exit and exiting private
+ * mode after they have been launched.
+ */
+add_task(function test_launchWhenSucceeded_deleteTempFileOnExit() {
+  const kDeleteTempFileOnExit = "browser.helperApps.deleteTempFileOnExit";
+
+  let customLauncherPath = getTempFile("app-launcher").path;
+  let autoDeleteTargetPathOne = getTempFile(TEST_TARGET_FILE_NAME).path;
+  let autoDeleteTargetPathTwo = getTempFile(TEST_TARGET_FILE_NAME).path;
+  let noAutoDeleteTargetPath = getTempFile(TEST_TARGET_FILE_NAME).path;
+
+  let autoDeleteDownloadOne = yield Downloads.createDownload({
+    source: { url: httpUrl("source.txt"), isPrivate: true },
+    target: autoDeleteTargetPathOne,
+    launchWhenSucceeded: true,
+    launcherPath: customLauncherPath,
+  });
+  yield autoDeleteDownloadOne.start();
+
+  Services.prefs.setBoolPref(kDeleteTempFileOnExit, true);
+  let autoDeleteDownloadTwo = yield Downloads.createDownload({
+    source: httpUrl("source.txt"),
+    target: autoDeleteTargetPathTwo,
+    launchWhenSucceeded: true,
+    launcherPath: customLauncherPath,
+  });
+  yield autoDeleteDownloadTwo.start();
+
+  Services.prefs.setBoolPref(kDeleteTempFileOnExit, false);
+  let noAutoDeleteDownload = yield Downloads.createDownload({
+    source: httpUrl("source.txt"),
+    target: noAutoDeleteTargetPath,
+    launchWhenSucceeded: true,
+    launcherPath: customLauncherPath,
+  });
+  yield noAutoDeleteDownload.start();
+
+  Services.prefs.clearUserPref(kDeleteTempFileOnExit);
+
+  do_check_true(yield OS.File.exists(autoDeleteTargetPathOne));
+  do_check_true(yield OS.File.exists(autoDeleteTargetPathTwo));
+  do_check_true(yield OS.File.exists(noAutoDeleteTargetPath));
+
+  // Simulate leaving private browsing mode
+  Services.obs.notifyObservers(null, "last-pb-context-exited", null);
+  do_check_false(yield OS.File.exists(autoDeleteTargetPathOne));
+
+  // Simulate browser shutdown
+  let expire = Cc["@mozilla.org/uriloader/external-helper-app-service;1"]
+                 .getService(Ci.nsIObserver);
+  expire.observe(null, "profile-before-change", null);
+  do_check_false(yield OS.File.exists(autoDeleteTargetPathTwo));
+  do_check_true(yield OS.File.exists(noAutoDeleteTargetPath));
+});
+
