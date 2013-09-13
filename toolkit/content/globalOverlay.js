@@ -13,6 +13,9 @@ function closeWindow(aClose, aPromptFunction)
   
   while (e.hasMoreElements()) {
     var w = e.getNext();
+    if (w.closed) {
+      continue;
+    }
     if (++windowCount == 2) 
       break;
   }
