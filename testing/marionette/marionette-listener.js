@@ -283,6 +283,12 @@ function resetValues() {
   mouseEventsOnly = false;
 }
 
+/**
+ * Dump a logline to stdout. Prepends logline with a timestamp.
+ */
+function dumpLog(logline) {
+  dump(Date.now() + " Marionette: " + logline);
+}
 
 /*
  * Marionette Methods
@@ -594,8 +600,8 @@ function executeWithCallback(msg, useFinish) {
  * This function creates a touch event given a touch type and a touch
  */
 function emitTouchEvent(type, touch) {
-  let loggingInfo = "Marionette: emitting Touch event of type " + type + " to element with id: " + touch.target.id + " and tag name: " + touch.target.tagName + " at coordinates (" + touch.clientX + ", " + touch.clientY + ") relative to the viewport";
-  dump(loggingInfo);
+  let loggingInfo = "emitting Touch event of type " + type + " to element with id: " + touch.target.id + " and tag name: " + touch.target.tagName + " at coordinates (" + touch.clientX + ", " + touch.clientY + ") relative to the viewport";
+  dumpLog(loggingInfo);
   /*
   Disabled per bug 888303
   marionetteLogObj.log(loggingInfo, "TRACE");
@@ -615,8 +621,8 @@ function emitTouchEvent(type, touch) {
  *           elClientX and elClientY are the coordinates of the mouse relative to the viewport
  */
 function emitMouseEvent(doc, type, elClientX, elClientY, detail, button) {
-  let loggingInfo = "Marionette: emitting Mouse event of type " + type + " at coordinates (" + elClientX + ", " + elClientY + ") relative to the viewport";
-  dump(loggingInfo);
+  let loggingInfo = "emitting Mouse event of type " + type + " at coordinates (" + elClientX + ", " + elClientY + ") relative to the viewport";
+  dumpLog(loggingInfo);
   /*
   Disabled per bug 888303
   marionetteLogObj.log(loggingInfo, "TRACE");
