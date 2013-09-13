@@ -23,6 +23,8 @@
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
 
+#include "vm/Shape-inl.h"
+
 using mozilla::DebugOnly;
 
 using namespace js;
