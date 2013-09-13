@@ -41,6 +41,10 @@ assertEq(asmLink(asmCompile(USE_ASM + 'function f(i) { i=i|0; return (i+-2147483
 assertEq(asmLink(asmCompile(USE_ASM + 'function f(i) { i=i|0; return (i+4294967295)|0 } return f'))(0), 4294967295|0);
 
 assertAsmTypeFail(USE_ASM + 'var i=-2147483649; function f() { return i|0 } return f');
+assertAsmTypeFail(USE_ASM + 'const i=-2147483649; function f() { return i|0 } return f');
 assertAsmTypeFail(USE_ASM + 'var i=4294967296; function f() { return i|0 } return f');
+assertAsmTypeFail(USE_ASM + 'const i=4294967296; function f() { return i|0 } return f');
 assertEq(asmLink(asmCompile(USE_ASM + 'var i=-2147483648; function f() { return i|0 } return f'))(), -2147483648);
+assertEq(asmLink(asmCompile(USE_ASM + 'const i=-2147483648; function f() { return i|0 } return f'))(), -2147483648);
 assertEq(asmLink(asmCompile(USE_ASM + 'var i=4294967295; function f() { return i|0 } return f'))(), 4294967295|0);
+assertEq(asmLink(asmCompile(USE_ASM + 'const i=4294967295; function f() { return i|0 } return f'))(), 4294967295|0);
