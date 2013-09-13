@@ -70,14 +70,14 @@ function checkLineAndClickNext(aEvent, aPanel)
   ok(line, "found source line for index " + index);
 
   info("Waiting for the correct script to be selected for index " + index);
-  dbg.panelWin.addEventListener("Debugger:SourceShown", onSource, false);
+  dbg.panelWin.on(dbg.panelWin.EVENTS.SOURCE_SHOWN, onSource);
 }
 
-function onSource(aEvent) {
-  if (aEvent.detail.url != src) {
+function onSource(aEvent, aSource) {
+  if (aSource.url != src) {
     return;
   }
-  dbg.panelWin.removeEventListener("Debugger:SourceShown", onSource, false);
+  dbg.panelWin.off(dbg.panelWin.EVENTS.SOURCE_SHOWN, onSource);
 
   ok(true, "Correct script is selected for index " + index);
 
