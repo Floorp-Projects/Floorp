@@ -65,6 +65,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_search-global-06.js \
 	browser_dbg_search-sources-01.js \
 	browser_dbg_search-sources-02.js \
+	browser_dbg_search-sources-03.js \
 	browser_dbg_search-symbols.js \
 	browser_dbg_searchbox-help-popup.js \
 	browser_dbg_source-maps-01.js \
