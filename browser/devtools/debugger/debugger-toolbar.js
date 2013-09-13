@@ -1390,7 +1390,7 @@ FilteredSourcesView.prototype = Heritage.extend(ResultsPanelContainer.prototype,
    */
   _onSelect: function({ detail: locationItem }) {
     if (locationItem) {
-      DebuggerView.updateEditor(locationItem.attachment.fullValue, 0);
+      DebuggerView.setEditorLocation(locationItem.attachment.fullValue, 0);
     }
   }
 });
@@ -1613,7 +1613,7 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
       let scriptOffset = functionItem.attachment.scriptOffset;
       let actualLocation = functionItem.attachment.actualLocation;
 
-      DebuggerView.updateEditor(sourceUrl, actualLocation.start.line, {
+      DebuggerView.setEditorLocation(sourceUrl, actualLocation.start.line, {
         charOffset: scriptOffset,
         columnOffset: actualLocation.start.column,
         noDebug: true
