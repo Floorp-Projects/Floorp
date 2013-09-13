@@ -9,6 +9,7 @@ function testUnary(f, g) {
 assertAsmLinkFail(asmCompile('glob', USE_ASM + 'var sq=glob.Math.sin; function f(d) { d=+d; return +sq(d) } return f'), {Math:{sin:Math.sqrt}});
 assertAsmLinkFail(asmCompile('glob', USE_ASM + 'var sq=glob.Math.sin; function f(d) { d=+d; return +sq(d) } return f'), {Math:{sin:null}});
 testUnary(asmLink(asmCompile('glob', USE_ASM + 'var sq=glob.Math.sin; function f(d) { d=+d; return +sq(d) } return f'), {Math:{sin:Math.sin}}), Math.sin);
+testUnary(asmLink(asmCompile('glob', USE_ASM + 'const sq=glob.Math.sin; function f(d) { d=+d; return +sq(d) } return f'), {Math:{sin:Math.sin}}), Math.sin);
 
 assertAsmLinkFail(asmCompile('glob', USE_ASM + 'var co=glob.Math.cos; function f(d) { d=+d; return +co(d) } return f'), {Math:{cos:Math.sqrt}});
 assertAsmLinkFail(asmCompile('glob', USE_ASM + 'var co=glob.Math.cos; function f(d) { d=+d; return +co(d) } return f'), {Math:{cos:null}});
