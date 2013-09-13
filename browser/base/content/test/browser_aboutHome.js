@@ -17,6 +17,7 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref("network.cookie.lifetimePolicy");
   Services.prefs.clearUserPref("browser.rights.override");
   Services.prefs.clearUserPref("browser.rights." + gRightsVersion + ".shown");
+  Services.prefs.clearUserPref("browser.aboutHomeSnippets.updateUrl");
 });
 
 let gTests = [
@@ -338,20 +339,25 @@ function test()
     for (let test of gTests) {
       info(test.desc);
 
+      // Make sure we don't try to load snippets from the network.
+      Services.prefs.setCharPref("browser.aboutHomeSnippets.updateUrl", "nonexistent://test");
+
       if (test.beforeRun)
         yield test.beforeRun();
 
-      let tab = yield promiseNewTabLoadEvent("about:home", "DOMContentLoaded");
+      // Create a tab to run the test.
+      let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
 
-      // Must wait for both the snippets map and the browser attributes, since
-      // can't guess the order they will happen.
-      // So, start listening now, but verify the promise is fulfilled only
-      // after the snippets map setup.
-      let promise = promiseBrowserAttributes(tab);
-      // Prepare the snippets map with default values, then run the test setup.
-      let snippetsMap = yield promiseSetupSnippetsMap(tab, test.setup);
-      // Ensure browser has set attributes already, or wait for them.
-      yield promise;
+      // Add an event handler to modify the snippets map once it's ready.
+      let snippetsPromise = promiseSetupSnippetsMap(tab, test.setup);
+
+      // Start loading about:home and wait for it to complete.
+      yield promiseTabLoadEvent(tab, "about:home", "AboutHomeLoadSnippetsSucceeded");
+
+      // This promise should already be resolved since the page is done,
+      // but we still want to get the snippets map out of it.
+      let snippetsMap = yield snippetsPromise;
+
       info("Running test");
       yield test.run(snippetsMap);
       info("Cleanup");
@@ -364,29 +370,31 @@ function test()
 }
 
 /**
- * Creates a new tab and waits for a load event.
+ * Starts a load in an existing tab and waits for it to finish (via some event).
  *
+ * @param aTab
+ *        The tab to load into.
  * @param aUrl
- *        The url to load in a new tab.
+ *        The url to load.
  * @param aEvent
  *        The load event type to wait for.  Defaults to "load".
- * @return {Promise} resolved when the event is handled.  Gets the new tab.
+ * @return {Promise} resolved when the event is handled.
  */
-function promiseNewTabLoadEvent(aUrl, aEventType="load")
+function promiseTabLoadEvent(aTab, aURL, aEventType="load")
 {
   let deferred = Promise.defer();
-  let tab = gBrowser.selectedTab = gBrowser.addTab(aUrl);
   info("Wait tab event: " + aEventType);
-  tab.linkedBrowser.addEventListener(aEventType, function load(event) {
-    if (event.originalTarget != tab.linkedBrowser.contentDocument ||
+  aTab.linkedBrowser.addEventListener(aEventType, function load(event) {
+    if (event.originalTarget != aTab.linkedBrowser.contentDocument ||
         event.target.location.href == "about:blank") {
       info("skipping spurious load event");
       return;
     }
-    tab.linkedBrowser.removeEventListener(aEventType, load, true);
+    aTab.linkedBrowser.removeEventListener(aEventType, load, true);
     info("Tab event received: " + aEventType);
-    deferred.resolve(tab);
-  }, true);
+    deferred.resolve();
+  }, true, true);
+  aTab.linkedBrowser.loadURI(aURL);
   return deferred.promise;
 }
 
@@ -403,28 +411,32 @@ function promiseNewTabLoadEvent(aUrl, aEventType="load")
 function promiseSetupSnippetsMap(aTab, aSetupFn)
 {
   let deferred = Promise.defer();
-  let cw = aTab.linkedBrowser.contentWindow.wrappedJSObject;
   info("Waiting for snippets map");
-  cw.ensureSnippetsMapThen(function (aSnippetsMap) {
-    info("Got snippets map: " +
-         "{ last-update: " + aSnippetsMap.get("snippets-last-update") +
-         ", cached-version: " + aSnippetsMap.get("snippets-cached-version") +
-         " }");
-    // Don't try to update.
-    aSnippetsMap.set("snippets-last-update", Date.now());
-    aSnippetsMap.set("snippets-cached-version", AboutHomeUtils.snippetsVersion);
-    // Clear snippets.
-    aSnippetsMap.delete("snippets");
-    aSetupFn(aSnippetsMap);
-    // Must be sure to continue after the page snippets map setup.
-    executeSoon(function() deferred.resolve(aSnippetsMap));
-  });
+  aTab.linkedBrowser.addEventListener("AboutHomeLoadSnippets", function load(event) {
+    aTab.linkedBrowser.removeEventListener("AboutHomeLoadSnippets", load, true);
+
+    let cw = aTab.linkedBrowser.contentWindow.wrappedJSObject;
+    // The snippets should already be ready by this point. Here we're
+    // just obtaining a reference to the snippets map.
+    cw.ensureSnippetsMapThen(function (aSnippetsMap) {
+      info("Got snippets map: " +
+           "{ last-update: " + aSnippetsMap.get("snippets-last-update") +
+           ", cached-version: " + aSnippetsMap.get("snippets-cached-version") +
+           " }");
+      // Don't try to update.
+      aSnippetsMap.set("snippets-last-update", Date.now());
+      aSnippetsMap.set("snippets-cached-version", AboutHomeUtils.snippetsVersion);
+      // Clear snippets.
+      aSnippetsMap.delete("snippets");
+      aSetupFn(aSnippetsMap);
+      deferred.resolve(aSnippetsMap);
+    });
+  }, true, true);
   return deferred.promise;
 }
 
 /**
- * Waits for the attributes being set by browser.js and overwrites snippetsURL
- * to ensure we won't try to hit the network and we can force xhr to throw.
+ * Waits for the attributes being set by browser.js.
  *
  * @param aTab
  *        The tab containing about:home.
@@ -435,16 +447,10 @@ function promiseBrowserAttributes(aTab)
   let deferred = Promise.defer();
 
   let docElt = aTab.linkedBrowser.contentDocument.documentElement;
-  //docElt.setAttribute("snippetsURL", "nonexistent://test");
   let observer = new MutationObserver(function (mutations) {
     for (let mutation of mutations) {
       info("Got attribute mutation: " + mutation.attributeName +
                                     " from " + mutation.oldValue); 
-      if (mutation.attributeName == "snippetsURL" &&
-          docElt.getAttribute("snippetsURL") != "nonexistent://test") {
-        docElt.setAttribute("snippetsURL", "nonexistent://test");
-      }
-
       // Now we just have to wait for the last attribute.
       if (mutation.attributeName == "searchEngineName") {
         info("Remove attributes observer");

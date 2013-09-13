@@ -1,9 +1,9 @@
-for (var i = -20; i < 20; i++)
-    assertNear(Math.cosh(i), (Math.exp(i) + Math.exp(-i)) / 2);
+var sloppy_tolerance = 100;
 
-assertNear(Math.cosh(1e5), Infinity);
-assertNear(Math.cosh(1e-30), 1);
-assertNear(Math.cosh(1e-10), 1);
+assertEq(Math.cosh(1000), Infinity);
+assertEq(Math.cosh(Number.MAX_VALUE), Infinity);
+assertNear(Math.cosh(1e-30), 1, sloppy_tolerance);
+assertNear(Math.cosh(1e-10), 1, sloppy_tolerance);
 
 var cosh_data = [
     [0.0016914556651292944, 1.0000014305114746],
@@ -270,6 +270,9 @@ var cosh_data = [
 ];
 
 for (var [x, y] of cosh_data)
-    assertNear(Math.cosh(x), y);
+    assertNear(Math.cosh(x), y, sloppy_tolerance);
+
+for (var i = -20; i < 20; i++)
+    assertNear(Math.cosh(i), (Math.exp(i) + Math.exp(-i)) / 2, sloppy_tolerance);
 
 reportCompare(0, 0, "ok");

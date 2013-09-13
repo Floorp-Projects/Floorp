@@ -77,6 +77,7 @@ struct nsRect;
 class nsRegion;
 class nsRefreshDriver;
 class nsARefreshObserver;
+class nsAPostRefreshObserver;
 #ifdef ACCESSIBILITY
 class nsAccessibilityService;
 namespace mozilla {
@@ -1363,13 +1364,13 @@ public:
    */
 protected:
   virtual bool AddRefreshObserverExternal(nsARefreshObserver* aObserver,
-                                            mozFlushType aFlushType);
+                                          mozFlushType aFlushType);
   bool AddRefreshObserverInternal(nsARefreshObserver* aObserver,
-                                    mozFlushType aFlushType);
+                                  mozFlushType aFlushType);
   virtual bool RemoveRefreshObserverExternal(nsARefreshObserver* aObserver,
-                                               mozFlushType aFlushType);
+                                             mozFlushType aFlushType);
   bool RemoveRefreshObserverInternal(nsARefreshObserver* aObserver,
-                                       mozFlushType aFlushType);
+                                     mozFlushType aFlushType);
 
   /**
    * Do computations necessary to determine if font size inflation is enabled.
@@ -1380,7 +1381,7 @@ protected:
 
 public:
   bool AddRefreshObserver(nsARefreshObserver* aObserver,
-                            mozFlushType aFlushType) {
+                          mozFlushType aFlushType) {
 #ifdef MOZILLA_INTERNAL_API
     return AddRefreshObserverInternal(aObserver, aFlushType);
 #else
@@ -1389,13 +1390,16 @@ public:
   }
 
   bool RemoveRefreshObserver(nsARefreshObserver* aObserver,
-                               mozFlushType aFlushType) {
+                             mozFlushType aFlushType) {
 #ifdef MOZILLA_INTERNAL_API
     return RemoveRefreshObserverInternal(aObserver, aFlushType);
 #else
     return RemoveRefreshObserverExternal(aObserver, aFlushType);
 #endif
   }
+
+  virtual bool AddPostRefreshObserver(nsAPostRefreshObserver* aObserver);
+  virtual bool RemovePostRefreshObserver(nsAPostRefreshObserver* aObserver);
 
   /**
    * Initialize and shut down static variables.
