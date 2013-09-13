@@ -11,7 +11,7 @@ function test() {
   setUp(URL, function onSetUp(tab, browser, panel) {
     let data = { uri: SCRIPT, line: 5, isChrome: false };
 
-    panel.displaySource(data, function onOpen() {
+    panel.displaySource(data).then(function onOpen() {
       let target = TargetFactory.forTab(tab);
       let dbg = gDevTools.getToolbox(target).getPanel("jsdebugger");
       let view = dbg.panelWin.DebuggerView;
@@ -23,7 +23,7 @@ function test() {
       // Test the case where script is already loaded.
       view.editor.setCaretPosition(1);
       gDevTools.showToolbox(target, "jsprofiler").then(function () {
-        panel.displaySource(data, function onOpenAgain() {
+        panel.displaySource(data).then(function onOpenAgain() {
           is(view.editor.getCaretPosition().line, data.line - 1,
             "Line is different");
           tearDown(tab);
