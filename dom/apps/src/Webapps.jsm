@@ -2221,6 +2221,11 @@ this.DOMApplicationRegistry = {
 
   _nextLocalId: function() {
     let id = Services.prefs.getIntPref("dom.mozApps.maxLocalId") + 1;
+
+    while (this.getManifestURLByLocalId(id)) {
+      id++;
+    }
+
     Services.prefs.setIntPref("dom.mozApps.maxLocalId", id);
     Services.prefs.savePrefFile(null);
     return id;
