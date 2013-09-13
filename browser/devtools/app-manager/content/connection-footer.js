@@ -8,6 +8,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 
 const {Simulator} = Cu.import("resource://gre/modules/devtools/Simulator.jsm")
+const {Devices} = Cu.import("resource://gre/modules/devtools/Devices.jsm");
 const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {require} = devtools;
 
@@ -15,6 +16,7 @@ const {ConnectionManager, Connection} = require("devtools/client/connection-mana
 const ConnectionStore = require("devtools/app-manager/connection-store");
 const DeviceStore = require("devtools/app-manager/device-store");
 const simulatorsStore = require("devtools/app-manager/simulators-store");
+const adbStore = require("devtools/app-manager/builtin-adb-store");
 
 let UI = {
   init: function() {
@@ -46,6 +48,7 @@ let UI = {
       "device": new DeviceStore(this.connection),
       "connection": new ConnectionStore(this.connection),
       "simulators": simulatorsStore,
+      "adb": adbStore
     });
 
     let pre = document.querySelector("#logs > pre");
@@ -141,5 +144,14 @@ let UI = {
         this.connection.connect();
       });
     document.body.classList.remove("show-simulators");
+  },
+
+  connectToAdbDevice: function(name) {
+    let device = Devices.getByName(name);
+    device.connect().then((port) => {
+      this.connection.host = "localhost";
+      this.connection.port = port;
+      this.connect();
+    });
   },
 }
