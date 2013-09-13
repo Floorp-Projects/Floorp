@@ -94,6 +94,8 @@ EXPORTS.mozilla.dom += [
     'TextTrackCue.h',
     'TextTrackCueList.h',
     'TextTrackList.h',
+    'TextTrackRegion.h',
+    'TextTrackRegionList.h',
     'VideoPlaybackQuality.h',
     'VideoStreamTrack.h',
 ]
@@ -126,6 +128,8 @@ CPP_SOURCES += [
     'TextTrackCue.cpp',
     'TextTrackCueList.cpp',
     'TextTrackList.cpp',
+    'TextTrackRegion.cpp',
+    'TextTrackRegionList.cpp',
     'VideoFrameContainer.cpp',
     'VideoPlaybackQuality.cpp',
     'VideoSegment.cpp',
