@@ -60,7 +60,7 @@ JS_PUBLIC_DATA(void * const) JS::NullPtr::constNullValue = NULL;
  */
 
 static inline void
-PushMarkStack(GCMarker *gcmarker, JSObject *thing);
+PushMarkStack(GCMarker *gcmarker, ObjectImpl *thing);
 
 static inline void
 PushMarkStack(GCMarker *gcmarker, JSFunction *thing);
@@ -203,16 +203,16 @@ MarkInternal(JSTracer *trc, T **thingp)
                  trc->runtime->gcIncrementalState == NO_INCREMENTAL ||  \
                  trc->runtime->gcIncrementalState == MARK_ROOTS);
 
+namespace js {
+namespace gc {
+
 template <typename T>
-static void
+void
 MarkUnbarriered(JSTracer *trc, T **thingp, const char *name)
 {
     JS_SET_TRACING_NAME(trc, name);
     MarkInternal(trc, thingp);
 }
-
-namespace js {
-namespace gc {
 
 template <typename T>
 static void
@@ -325,6 +325,12 @@ Mark##base##Unbarriered(JSTracer *trc, type **thingp, const char *name)         
     MarkUnbarriered<type>(trc, thingp, name);                                                     \
 }                                                                                                 \
                                                                                                   \
+/* This is a hack that forces the compiler to generate code for */                                \
+/* MarkUnbarriered<type>. Without it, some compilers will completely inline it */                 \
+/* away, causing linking errors in other translation units. */                                    \
+void (*Mark##base##type##UnbarrieredVar)(JSTracer *, type **, const char *) =                     \
+    MarkUnbarriered<type>;                                                                        \
+                                                                                                  \
 void                                                                                              \
 Mark##base##Range(JSTracer *trc, size_t len, HeapPtr<type> *vec, const char *name)                \
 {                                                                                                 \
@@ -361,9 +367,14 @@ Is##base##AboutToBeFinalized(EncapsulatedPtr<type> *thingp)                     
     return IsAboutToBeFinalized<type>(thingp->unsafeGet());                                       \
 }
 
+// The arguments to DeclMarkerImpl cannot be qualified names due to the
+// Mark##base##type##UnbarrieredVar hack in DeclMarkerImpl.
+using jit::IonCode;
+using js::types::TypeObject;
+
 DeclMarkerImpl(BaseShape, BaseShape)
 DeclMarkerImpl(BaseShape, UnownedBaseShape)
-DeclMarkerImpl(IonCode, jit::IonCode)
+DeclMarkerImpl(IonCode, IonCode)
 DeclMarkerImpl(Object, ArgumentsObject)
 DeclMarkerImpl(Object, ArrayBufferObject)
 DeclMarkerImpl(Object, ArrayBufferViewObject)
@@ -371,6 +382,7 @@ DeclMarkerImpl(Object, DebugScopeObject)
 DeclMarkerImpl(Object, GlobalObject)
 DeclMarkerImpl(Object, JSObject)
 DeclMarkerImpl(Object, JSFunction)
+DeclMarkerImpl(Object, ObjectImpl)
 DeclMarkerImpl(Object, ScopeObject)
 DeclMarkerImpl(Script, JSScript)
 DeclMarkerImpl(LazyScript, LazyScript)
@@ -380,7 +392,7 @@ DeclMarkerImpl(String, JSString)
 DeclMarkerImpl(String, JSFlatString)
 DeclMarkerImpl(String, JSLinearString)
 DeclMarkerImpl(String, PropertyName)
-DeclMarkerImpl(TypeObject, js::types::TypeObject)
+DeclMarkerImpl(TypeObject, TypeObject)
 
 } /* namespace gc */
 } /* namespace js */
@@ -748,7 +760,7 @@ gc::IsCellAboutToBeFinalized(Cell **thingp)
               (rt)->isAtomsZone((thing)->zone()));
 
 static void
-PushMarkStack(GCMarker *gcmarker, JSObject *thing)
+PushMarkStack(GCMarker *gcmarker, ObjectImpl *thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime, thing);
     JS_ASSERT(!IsInsideNursery(gcmarker->runtime, thing));
