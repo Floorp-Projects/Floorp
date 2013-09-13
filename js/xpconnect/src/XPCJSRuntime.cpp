@@ -2159,11 +2159,6 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                    cStats.typeInference.typeResults,
                    "Memory used by dynamic type results produced by scripts.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/analysis-pool"),
-                   cStats.typeInference.analysisPool,
-                   "Memory holding transient analysis information used during type inference and "
-                   "compilation.");
-
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/pending-arrays"),
                    cStats.typeInference.pendingArrays,
                    "Memory used for solving constraints during type inference.");

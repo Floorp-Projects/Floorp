@@ -676,18 +676,11 @@ TypeScript::NumTypeSets(JSScript *script)
     return script->nTypeSets + analyze::LocalSlot(script, 0);
 }
 
-/* static */ inline HeapTypeSet *
-TypeScript::ReturnTypes(JSScript *script)
-{
-    TypeSet *types = script->types->typeArray() + script->nTypeSets + js::analyze::CalleeSlot();
-    return types->toHeapTypeSet();
-}
-
 /* static */ inline StackTypeSet *
 TypeScript::ThisTypes(JSScript *script)
 {
     TypeSet *types = script->types->typeArray() + script->nTypeSets + js::analyze::ThisSlot();
-    return types->toStackTypeSet();
+    return types->toStackSet();
 }
 
 /*
@@ -701,15 +694,7 @@ TypeScript::ArgTypes(JSScript *script, unsigned i)
 {
     JS_ASSERT(i < script->function()->nargs);
     TypeSet *types = script->types->typeArray() + script->nTypeSets + js::analyze::ArgSlot(i);
-    return types->toStackTypeSet();
-}
-
-/* static */ inline StackTypeSet *
-TypeScript::SlotTypes(JSScript *script, unsigned slot)
-{
-    JS_ASSERT(slot < js::analyze::LocalSlot(script, 0));
-    TypeSet *types = script->types->typeArray() + script->nTypeSets + slot;
-    return types->toStackTypeSet();
+    return types->toStackSet();
 }
 
 /* static */ inline StackTypeSet *
@@ -725,12 +710,12 @@ TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc)
     // See if this pc is the next typeset opcode after the last one looked up.
     if (bytecodeMap[*hint + 1] == offset && (*hint + 1) < script->nTypeSets) {
         (*hint)++;
-        return script->types->typeArray()->toStackTypeSet() + *hint;
+        return script->types->typeArray()->toStackSet() + *hint;
     }
 
     // See if this pc is the same as the last one looked up.
     if (bytecodeMap[*hint] == offset)
-        return script->types->typeArray()->toStackTypeSet() + *hint;
+        return script->types->typeArray()->toStackSet() + *hint;
 
     // Fall back to a binary search.
     size_t bottom = 0;
@@ -752,7 +737,7 @@ TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc)
     JS_ASSERT(bytecodeMap[mid] == offset || mid == top);
 
     *hint = mid;
-    return script->types->typeArray()->toStackTypeSet() + *hint;
+    return script->types->typeArray()->toStackSet() + *hint;
 }
 
 /* static */ inline TypeObject *
@@ -1275,6 +1260,10 @@ TypeSet::addType(ExclusiveContext *cxArg, Type type)
 {
     JS_ASSERT(cxArg->compartment()->activeAnalysis);
 
+    // Temporary type sets use a separate LifoAlloc for storage.
+    JS_ASSERT_IF(!type.isUnknown() && !type.isAnyObject() && type.isObject(),
+                 isStackSet() || isHeapSet());
+
     if (unknown())
         return;
 
@@ -1298,13 +1287,10 @@ TypeSet::addType(ExclusiveContext *cxArg, Type type)
         if (type.isAnyObject())
             goto unknownObject;
 
-        LifoAlloc &alloc =
-            purged() ? cxArg->compartment()->analysisLifoAlloc : cxArg->typeLifoAlloc();
-
         uint32_t objectCount = baseObjectCount();
         TypeObjectKey *object = type.objectKey();
         TypeObjectKey **pentry = HashSetInsert<TypeObjectKey *,TypeObjectKey,TypeObjectKey>
-                                     (alloc, objectSet, objectCount, object);
+                                     (cxArg->typeLifoAlloc(), objectSet, objectCount, object);
         if (!pentry) {
             cxArg->compartment()->types.setPendingNukeTypes(cxArg);
             return;
@@ -1429,20 +1415,6 @@ TypeSet::getTypeOrSingleObject(JSContext *cx, unsigned i, TypeObject **result) c
     }
     *result = type;
     return true;
-}
-
-/////////////////////////////////////////////////////////////////////
-// TypeCallsite
-/////////////////////////////////////////////////////////////////////
-
-inline
-TypeCallsite::TypeCallsite(JSContext *cx, JSScript *script, jsbytecode *pc,
-                           bool isNew, unsigned argumentCount)
-    : script(script), pc(pc), isNew(isNew), argumentCount(argumentCount),
-      thisTypes(NULL), returnTypes(NULL)
-{
-    /* Caller must check for failure. */
-    argumentTypes = cx->analysisLifoAlloc().newArray<StackTypeSet*>(argumentCount);
 }
 
 /////////////////////////////////////////////////////////////////////

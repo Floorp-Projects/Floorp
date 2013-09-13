@@ -138,9 +138,9 @@ MacroAssembler::guardType(const Source &address, types::Type type,
     guardTypeSet(address, &wrapper, scratch, matched, miss);
 }
 
-template void MacroAssembler::guardTypeSet(const Address &address, const types::StackTypeSet *types,
+template void MacroAssembler::guardTypeSet(const Address &address, const types::TemporaryTypeSet *types,
                                            Register scratch, Label *matched, Label *miss);
-template void MacroAssembler::guardTypeSet(const ValueOperand &value, const types::StackTypeSet *types,
+template void MacroAssembler::guardTypeSet(const ValueOperand &value, const types::TemporaryTypeSet *types,
                                            Register scratch, Label *matched, Label *miss);
 
 template void MacroAssembler::guardTypeSet(const Address &address, const types::HeapTypeSet *types,
@@ -160,7 +160,7 @@ template void MacroAssembler::guardTypeSet(const Address &address, const TypeWra
 template void MacroAssembler::guardTypeSet(const ValueOperand &value, const TypeWrapper *types,
                                            Register scratch, Label *matched, Label *miss);
 
-template void MacroAssembler::guardObjectType(Register obj, const types::StackTypeSet *types,
+template void MacroAssembler::guardObjectType(Register obj, const types::TemporaryTypeSet *types,
                                               Register scratch, Label *matched, Label *miss);
 template void MacroAssembler::guardObjectType(Register obj, const types::TypeSet *types,
                                               Register scratch, Label *matched, Label *miss);

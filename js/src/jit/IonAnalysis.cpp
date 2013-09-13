@@ -1626,8 +1626,8 @@ TryEliminateTypeBarrier(MTypeBarrier *barrier, bool *eliminated)
 {
     JS_ASSERT(!*eliminated);
 
-    const types::StackTypeSet *barrierTypes = barrier->resultTypeSet();
-    const types::StackTypeSet *inputTypes = barrier->input()->resultTypeSet();
+    const types::TemporaryTypeSet *barrierTypes = barrier->resultTypeSet();
+    const types::TemporaryTypeSet *inputTypes = barrier->input()->resultTypeSet();
 
     // Disregard the possible unbox added before the Typebarrier.
     if (barrier->input()->isUnbox() &&
@@ -2082,7 +2082,7 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
 
     Vector<jsid> accessedProperties(cx);
 
-    LifoAlloc alloc(JSCompartment::ANALYSIS_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
+    LifoAlloc alloc(types::TypeZone::TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
 
     TempAllocator temp(&alloc);
     IonContext ictx(cx, &temp);
