@@ -35,6 +35,9 @@ const SEVERITY_WARNING = 1;
 const SEVERITY_INFO = 2;
 const SEVERITY_LOG = 3;
 
+// The indent of a console group in pixels.
+const GROUP_INDENT = 12;
+
 const WEBCONSOLE_STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let WCU_l10n = new WebConsoleUtils.l10n(WEBCONSOLE_STRINGS_URI);
 
@@ -107,10 +110,10 @@ function afterAllTabsLoaded(callback, win) {
 function testLogEntry(aOutputNode, aMatchString, aMsg, aOnlyVisible,
                       aFailIfFound, aClass)
 {
-  let selector = ".hud-msg-node";
+  let selector = ".message";
   // Skip entries that are hidden by the filter.
   if (aOnlyVisible) {
-    selector += ":not(.hud-filtered-by-type)";
+    selector += ":not(.filtered-by-type):not(.filtered-by-string)";
   }
   if (aClass) {
     selector += "." + aClass;
@@ -123,15 +126,6 @@ function testLogEntry(aOutputNode, aMatchString, aMsg, aOnlyVisible,
     if (message > -1) {
       found = true;
       break;
-    }
-
-    // Search the labels too.
-    let labels = msgs[i].querySelectorAll("label");
-    for (let j = 0; j < labels.length; j++) {
-      if (labels[j].getAttribute("value").indexOf(aMatchString) > -1) {
-        found = true;
-        break;
-      }
     }
   }
 
@@ -244,7 +238,7 @@ function dumpConsoles()
 {
   if (gPendingOutputTest) {
     console.log("dumpConsoles start");
-    for (let hud of HUDService.consoles) {
+    for (let [, hud] of HUDService.consoles) {
       if (!hud.outputNode) {
         console.debug("no output content for", hud.hudId);
         continue;
@@ -269,8 +263,8 @@ function dumpConsoles()
  */
 function dumpMessageElement(aMessage)
 {
-  let text = getMessageElementText(aMessage);
-  let repeats = aMessage.querySelector(".webconsole-msg-repeat");
+  let text = aMessage.textContent;
+  let repeats = aMessage.querySelector(".repeats");
   if (repeats) {
     repeats = repeats.getAttribute("value");
   }
@@ -815,12 +809,9 @@ function openDebugger(aOptions = {})
       deferred.resolve(resolveObject);
     }
     else {
-      panelWin.addEventListener("Debugger:AfterSourcesAdded",
-        function onAfterSourcesAdded() {
-          panelWin.removeEventListener("Debugger:AfterSourcesAdded",
-                                       onAfterSourcesAdded);
-          deferred.resolve(resolveObject);
-        });
+      panelWin.once(panelWin.EVENTS.SOURCES_ADDED, () => {
+        deferred.resolve(resolveObject);
+      });
     }
   }, function onFailure(aReason) {
     console.debug("failed to open the toolbox for 'jsdebugger'", aReason);
@@ -828,24 +819,6 @@ function openDebugger(aOptions = {})
   });
 
   return deferred.promise;
-}
-
-/**
- * Get the full text displayed by a Web Console message.
- *
- * @param nsIDOMElement aElement
- *        The message element from the Web Console output.
- * @return string
- *         The full text displayed by the given message element.
- */
-function getMessageElementText(aElement)
-{
-  let text = aElement.textContent;
-  let labels = aElement.querySelectorAll("label");
-  for (let label of labels) {
-    text += " " + label.getAttribute("value");
-  }
-  return text;
 }
 
 /**
@@ -883,6 +856,8 @@ function getMessageElementText(aElement)
  *            - consoleTimeEnd: same as above, but for console.timeEnd().
  *            - consoleDir: boolean, set to |true| to match a console.dir()
  *            message.
+ *            - consoleGroup: boolean, set to |true| to match a console.group()
+ *            message.
  *            - longString: boolean, set to |true} to match long strings in the
  *            message.
  *            - type: match messages that are instances of the given object. For
@@ -893,6 +868,9 @@ function getMessageElementText(aElement)
  *            - source: object of the shape { url, line }. This is used to
  *            match the source URL and line number of the error message or
  *            console API call.
+ *            - groupDepth: number used to check the depth of the message in
+ *            a group.
+ *            - url: URL to match for network requests.
  * @return object
  *         A promise object is returned once the messages you want are found.
  *         The promise is resolved with the array of rule objects you give in
@@ -919,7 +897,10 @@ function waitForMessages(aOptions)
   function checkText(aRule, aText)
   {
     let result;
-    if (typeof aRule == "string") {
+    if (Array.isArray(aRule)) {
+      result = aRule.every((s) => checkText(s, aText));
+    }
+    else if (typeof aRule == "string") {
       result = aText.indexOf(aRule) > -1;
     }
     else if (aRule instanceof RegExp) {
@@ -930,14 +911,14 @@ function waitForMessages(aOptions)
 
   function checkConsoleTrace(aRule, aElement)
   {
-    let elemText = getMessageElementText(aElement);
+    let elemText = aElement.textContent;
     let trace = aRule.consoleTrace;
 
     if (!checkText("Stack trace from ", elemText)) {
       return false;
     }
 
-    let clickable = aElement.querySelector(".hud-clickable");
+    let clickable = aElement.querySelector(".body a");
     if (!clickable) {
       ok(false, "console.trace() message is missing .hud-clickable");
       displayErrorContext(aRule, aElement);
@@ -977,7 +958,7 @@ function waitForMessages(aOptions)
 
   function checkConsoleTime(aRule, aElement)
   {
-    let elemText = getMessageElementText(aElement);
+    let elemText = aElement.textContent;
     let time = aRule.consoleTime;
 
     if (!checkText(time + ": timer started", elemText)) {
@@ -992,7 +973,7 @@ function waitForMessages(aOptions)
 
   function checkConsoleTimeEnd(aRule, aElement)
   {
-    let elemText = getMessageElementText(aElement);
+    let elemText = aElement.textContent;
     let time = aRule.consoleTimeEnd;
     let regex = new RegExp(time + ": -?\\d+ms");
 
@@ -1008,11 +989,11 @@ function waitForMessages(aOptions)
 
   function checkConsoleDir(aRule, aElement)
   {
-    if (!aElement.classList.contains("webconsole-msg-inspector")) {
+    if (!aElement.classList.contains("inlined-variables-view")) {
       return false;
     }
 
-    let elemText = getMessageElementText(aElement);
+    let elemText = aElement.textContent;
     if (!checkText(aRule.consoleDir, elemText)) {
       return false;
     }
@@ -1026,9 +1007,20 @@ function waitForMessages(aOptions)
     return true;
   }
 
+  function checkConsoleGroup(aRule, aElement)
+  {
+    if (!isNaN(parseInt(aRule.consoleGroup))) {
+      aRule.groupDepth = aRule.consoleGroup;
+    }
+    aRule.category = CATEGORY_WEBDEV;
+    aRule.severity = SEVERITY_LOG;
+
+    return true;
+  }
+
   function checkSource(aRule, aElement)
   {
-    let location = aElement.querySelector(".webconsole-location");
+    let location = aElement.querySelector(".location");
     if (!location) {
       return false;
     }
@@ -1046,7 +1038,7 @@ function waitForMessages(aOptions)
 
   function checkMessage(aRule, aElement)
   {
-    let elemText = getMessageElementText(aElement);
+    let elemText = aElement.textContent;
 
     if (aRule.text && !checkText(aRule.text, elemText)) {
       return false;
@@ -1069,6 +1061,10 @@ function waitForMessages(aOptions)
     }
 
     if (aRule.consoleDir && !checkConsoleDir(aRule, aElement)) {
+      return false;
+    }
+
+    if (aRule.consoleGroup && !checkConsoleGroup(aRule, aElement)) {
       return false;
     }
 
@@ -1105,7 +1101,7 @@ function waitForMessages(aOptions)
       return false;
     }
 
-    if (aRule.severity && aElement.severity != aRule.severity) {
+    if ("severity" in aRule && aElement.severity != aRule.severity) {
       if (partialMatch) {
         is(aElement.severity, aRule.severity,
            "message severity for rule: " + displayRule(aRule));
@@ -1114,9 +1110,24 @@ function waitForMessages(aOptions)
       return false;
     }
 
-    if (aRule.repeats) {
-      let repeats = aElement.querySelector(".webconsole-msg-repeat");
+    if (aRule.category == CATEGORY_NETWORK && "url" in aRule &&
+        !checkText(aRule.url, aElement.url)) {
+      return false;
+    }
+
+    if ("repeats" in aRule) {
+      let repeats = aElement.querySelector(".repeats");
       if (!repeats || repeats.getAttribute("value") != aRule.repeats) {
+        return false;
+      }
+    }
+
+    if ("groupDepth" in aRule) {
+      let timestamp = aElement.querySelector(".timestamp");
+      let indent = (GROUP_INDENT * aRule.groupDepth) + "px";
+      if (!timestamp || timestamp.style.marginRight != indent) {
+        is(timestamp.style.marginRight, indent,
+           "group depth check failed for message rule: " + displayRule(aRule));
         return false;
       }
     }
@@ -1136,7 +1147,7 @@ function waitForMessages(aOptions)
     }
 
     if ("objects" in aRule) {
-      let clickables = aElement.querySelectorAll(".hud-clickable");
+      let clickables = aElement.querySelectorAll(".body a");
       if (aRule.objects != !!clickables[0]) {
         if (partialMatch) {
           is(!!clickables[0], aRule.objects,
@@ -1161,9 +1172,9 @@ function waitForMessages(aOptions)
   function onMessagesAdded(aEvent, aNewElements)
   {
     for (let elem of aNewElements) {
-      let location = elem.querySelector(".webconsole-location");
+      let location = elem.querySelector(".location");
       if (location) {
-        let url = location.getAttribute("title");
+        let url = location.title;
         // Prevent recursion with the browser console and any potential
         // messages coming from head.js.
         if (url.indexOf("browser/devtools/webconsole/test/head.js") != -1) {
@@ -1248,25 +1259,6 @@ function waitForMessages(aOptions)
   });
 
   return deferred.promise;
-}
-
-
-/**
- * Scroll the Web Console output to the given node.
- *
- * @param nsIDOMNode aNode
- *        The node to scroll to.
- */
-function scrollOutputToNode(aNode)
-{
-  let richListBoxNode = aNode.parentNode;
-  while (richListBoxNode.tagName != "richlistbox") {
-    richListBoxNode = richListBoxNode.parentNode;
-  }
-
-  let boxObject = richListBoxNode.scrollBoxObject;
-  let nsIScrollBoxObject = boxObject.QueryInterface(Ci.nsIScrollBoxObject);
-  nsIScrollBoxObject.ensureElementIsVisible(aNode);
 }
 
 function whenDelayedStartupFinished(aWindow, aCallback)

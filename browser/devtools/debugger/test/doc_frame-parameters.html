@@ -1,0 +1,37 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Debugger test page</title>
+  </head>
+
+  <body>
+    <button onclick="start()">Click me!</button>
+
+    <script type="text/javascript">
+      function test(aArg, bArg, cArg, dArg, eArg, fArg) {
+        var a = 1;
+        var b = { a: a };
+        var c = { a: 1, b: "beta", c: 3, d: false, e: null, f: fArg };
+        var myVar = {
+          _prop: 42,
+          get prop() { return this._prop; },
+          set prop(val) { this._prop = val; }
+        };
+        debugger;
+      }
+
+      function start() {
+        var a = { a: 1, b: "beta", c: 3, d: false, e: null, f: undefined };
+        var e = eval("test(a, 'beta', 3, false, null);");
+      }
+
+      var button = document.querySelector("button");
+      var buttonAsProto = Object.create(button);
+    </script>
+  </body>
+
+</html>
