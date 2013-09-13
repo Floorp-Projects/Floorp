@@ -2458,6 +2458,30 @@ nsDocument::SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages)
   }
 }
 
+static nsresult
+AppendCSPFromHeader(nsIContentSecurityPolicy* csp, const nsAString& aHeaderValue,
+                    nsIURI* aSelfURI, bool aReportOnly, bool aSpecCompliant)
+{
+  // Need to tokenize the header value since multiple headers could be
+  // concatenated into one comma-separated list of policies.
+  // See RFC2616 section 4.2 (last paragraph)
+  nsresult rv = NS_OK;
+  nsCharSeparatedTokenizer tokenizer(aHeaderValue, ',');
+  while (tokenizer.hasMoreTokens()) {
+      const nsSubstring& policy = tokenizer.nextToken();
+      rv = csp->AppendPolicy(policy, aSelfURI, aReportOnly, aSpecCompliant);
+      NS_ENSURE_SUCCESS(rv, rv);
+#ifdef PR_LOGGING
+      {
+        PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+                ("CSP refined with policy: \"%s\"",
+                NS_ConvertUTF16toUTF8(policy).get()));
+      }
+#endif
+  }
+  return NS_OK;
+}
+
 nsresult
 nsDocument::InitCSP(nsIChannel* aChannel)
 {
@@ -2502,15 +2526,23 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   bool specCompliantEnabled =
     Preferences::GetBool("security.csp.speccompliant");
 
+  // If spec compliant pref isn't set, pretend we never got these headers.
   if ((!cspHeaderValue.IsEmpty() || !cspROHeaderValue.IsEmpty()) &&
        !specCompliantEnabled) {
-    // If spec compliant pref isn't set, pretend we never got
-    // these headers.
-    if (!specCompliantEnabled) {
-      PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-             ("Got spec compliant CSP headers but pref was not set"));
-      cspHeaderValue.Truncate();
-      cspROHeaderValue.Truncate();
+    PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+            ("Got spec compliant CSP headers but pref was not set"));
+    cspHeaderValue.Truncate();
+    cspROHeaderValue.Truncate();
+  }
+
+  // If the old header is present, warn that it will be deprecated.
+  if (!cspOldHeaderValue.IsEmpty() || !cspOldROHeaderValue.IsEmpty()) {
+    mCSPWebConsoleErrorQueue.Add("OldCSPHeaderDeprecated");
+
+    // Also, if the new headers AND the old headers were present, warn
+    // that the old headers will be ignored.
+    if (!cspHeaderValue.IsEmpty() || !cspROHeaderValue.IsEmpty()) {
+      mCSPWebConsoleErrorQueue.Add("BothCSPHeadersPresent");
     }
   }
 
@@ -2571,19 +2603,13 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   }
 
   // used as a "self" identifier for the CSP.
-  nsCOMPtr<nsIURI> chanURI;
-  aChannel->GetURI(getter_AddRefs(chanURI));
+  nsCOMPtr<nsIURI> selfURI;
+  aChannel->GetURI(getter_AddRefs(selfURI));
 
   // Store the request context for violation reports
   csp->ScanRequestData(httpChannel);
 
-  // The CSP is refined in the following order:
-  // 1. Default app CSP, if applicable
-  // 2. App manifest CSP, if provided
-  // 3. HTTP header CSP, if provided
-  // Note that since each application of refinePolicy is a set intersection,
-  // the order in which multiple CSP's are refined does not matter.
-
+  // ----- if the doc is an app and we want a default CSP, apply it.
   if (applyAppDefaultCSP) {
     nsAdoptingString appCSP;
     if (appStatus ==  nsIPrincipal::APP_STATUS_PRIVILEGED) {
@@ -2594,92 +2620,43 @@ nsDocument::InitCSP(nsIChannel* aChannel)
       NS_ASSERTION(appCSP, "App, but no default CSP in security.apps.certified.CSP.default");
     }
 
-    if (appCSP)
+    if (appCSP) {
       // Use the 1.0 CSP parser for apps if the pref to do so is set.
-      csp->RefinePolicy(appCSP, chanURI, specCompliantEnabled);
+      csp->AppendPolicy(appCSP, selfURI, false, specCompliantEnabled);
+    }
   }
 
+  // ----- if the doc is an app and specifies a CSP in its manifest, apply it.
   if (applyAppManifestCSP) {
     // Use the 1.0 CSP parser for apps if the pref to do so is set.
-    csp->RefinePolicy(appManifestCSP, chanURI, specCompliantEnabled);
+    csp->AppendPolicy(appManifestCSP, selfURI, false, specCompliantEnabled);
   }
 
   // While we are supporting both CSP 1.0 and the x- headers, the 1.0 headers
-  // take priority.  If any spec-compliant headers are present, the x- headers
-  // are ignored, and the spec compliant parser is used.
-  bool cspSpecCompliant = (!cspHeaderValue.IsEmpty() || !cspROHeaderValue.IsEmpty());
-
-  // If the old header is present, warn that it will be deprecated.
-  if (!cspOldHeaderValue.IsEmpty() || !cspOldROHeaderValue.IsEmpty()) {
-    mCSPWebConsoleErrorQueue.Add("OldCSPHeaderDeprecated");
-
-    // Also, if the new headers AND the old headers were present, warn
-    // that the old headers will be ignored.
-    if (cspSpecCompliant) {
-      mCSPWebConsoleErrorQueue.Add("BothCSPHeadersPresent");
-    }
-  }
+  // can coexist with x- headers.  If both exist, they're both enforced, but
+  // there's a warning posted in the web console that the x-headers are going
+  // away.
 
   // ----- if there's a full-strength CSP header, apply it.
-  bool applyCSPFromHeader =
-    (( cspSpecCompliant && !cspHeaderValue.IsEmpty()) ||
-     (!cspSpecCompliant && !cspOldHeaderValue.IsEmpty()));
-
-  if (applyCSPFromHeader) {
-    // Need to tokenize the header value since multiple headers could be
-    // concatenated into one comma-separated list of policies.
-    // See RFC2616 section 4.2 (last paragraph)
-    nsCharSeparatedTokenizer tokenizer(cspSpecCompliant ?
-                                       cspHeaderValue :
-                                       cspOldHeaderValue, ',');
-    while (tokenizer.hasMoreTokens()) {
-        const nsSubstring& policy = tokenizer.nextToken();
-        csp->RefinePolicy(policy, chanURI, cspSpecCompliant);
-#ifdef PR_LOGGING
-        {
-          PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-                 ("CSP refined with policy: \"%s\"",
-                  NS_ConvertUTF16toUTF8(policy).get()));
-        }
-#endif
-    }
+  if (!cspOldHeaderValue.IsEmpty()) {
+    rv = AppendCSPFromHeader(csp, cspOldHeaderValue, selfURI, false, false);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // ----- if there's a report-only CSP header, apply it
-  if (( cspSpecCompliant && !cspROHeaderValue.IsEmpty()) ||
-      (!cspSpecCompliant && !cspOldROHeaderValue.IsEmpty())) {
-    // post a warning and skip report-only CSP when both read only and regular
-    // CSP policies are present since CSP only allows one policy and it can't
-    // be partially report-only.
-    if (applyAppDefaultCSP || applyCSPFromHeader) {
-      mCSPWebConsoleErrorQueue.Add("ReportOnlyCSPIgnored");
-#ifdef PR_LOGGING
-      PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-              ("Skipped report-only CSP init for document %p because another, enforced policy is set", this));
-#endif
-    } else {
-      // we can apply the report-only policy because there's no other CSP
-      // applied.
-      csp->SetReportOnlyMode(true);
+  if (!cspHeaderValue.IsEmpty()) {
+    rv = AppendCSPFromHeader(csp, cspHeaderValue, selfURI, false, true);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-      // Need to tokenize the header value since multiple headers could be
-      // concatenated into one comma-separated list of policies.
-      // See RFC2616 section 4.2 (last paragraph)
-      nsCharSeparatedTokenizer tokenizer(cspSpecCompliant ?
-                                         cspROHeaderValue :
-                                         cspOldROHeaderValue, ',');
-      while (tokenizer.hasMoreTokens()) {
-        const nsSubstring& policy = tokenizer.nextToken();
-        csp->RefinePolicy(policy, chanURI, cspSpecCompliant);
-#ifdef PR_LOGGING
-        {
-          PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-                  ("CSP (report-only) refined with policy: \"%s\"",
-                    NS_ConvertUTF16toUTF8(policy).get()));
-        }
-#endif
-      }
-    }
+  // ----- if there's a report-only CSP header, apply it.
+  if (!cspOldROHeaderValue.IsEmpty()) {
+    rv = AppendCSPFromHeader(csp, cspOldROHeaderValue, selfURI, true, false);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (!cspROHeaderValue.IsEmpty()) {
+    rv = AppendCSPFromHeader(csp, cspROHeaderValue, selfURI, true, true);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // ----- Enforce frame-ancestor policy on any applied policies

@@ -106,7 +106,7 @@ CanvasLayerComposite::RenderLayer(const nsIntPoint& aOffset,
 CompositableHost*
 CanvasLayerComposite::GetCompositableHost()
 {
-  if (mImageHost->IsAttached()) {
+  if ( mImageHost && mImageHost->IsAttached()) {
     return mImageHost.get();
   }
 

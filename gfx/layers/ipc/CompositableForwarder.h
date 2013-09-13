@@ -169,7 +169,7 @@ public:
    */
   virtual void RemoveTexture(CompositableClient* aCompositable,
                              uint64_t aTextureID,
-                             TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT) = 0;
+                             TextureFlags aFlags) = 0;
 
   /**
    * Tell the CompositableHost on the compositor side what texture to use for

@@ -17,11 +17,6 @@ const DEFAULT_CAPTURE_TIMEOUT = 30000; // ms
 const DESTROY_BROWSER_TIMEOUT = 60000; // ms
 const FRAME_SCRIPT_URL = "chrome://global/content/backgroundPageThumbsContent.js";
 
-// If a request for a thumbnail comes in and we find one that is "stale"
-// (or don't find one at all) we automatically queue a request to generate a
-// new one.
-const MAX_THUMBNAIL_AGE_SECS = 172800; // 2 days == 60*60*24*2 == 172800 secs.
-
 const TELEMETRY_HISTOGRAM_ID_PREFIX = "FX_THUMBNAILS_BG_";
 
 // possible FX_THUMBNAILS_BG_CAPTURE_DONE_REASON telemetry values
@@ -63,7 +58,7 @@ const BackgroundPageThumbs = {
   capture: function (url, options={}) {
     if (!PageThumbs._prefEnabled()) {
       if (options.onDone)
-        schedule(() => options.onDone(null));
+        schedule(() => options.onDone(url));
       return;
     }
     this._captureQueue = this._captureQueue || [];
@@ -87,11 +82,8 @@ const BackgroundPageThumbs = {
   },
 
   /**
-   * Checks if an existing thumbnail for the specified URL is either missing
-   * or stale, and if so, queues a background request to capture it.  That
-   * capture process will send a notification via the observer service on
-   * capture, so consumers should watch for such observations if they want to
-   * be notified of an updated thumbnail.
+   * Asynchronously captures a thumbnail of the given URL if one does not
+   * already exist.  Otherwise does nothing.
    *
    * WARNING: BackgroundPageThumbs.jsm is currently excluded from release
    * builds.  If you use it, you must also exclude your caller when
@@ -102,19 +94,21 @@ const BackgroundPageThumbs = {
    * @param options  An optional object that configures the capture.  See
    *                 capture() for description.
    */
-  captureIfStale: function PageThumbs_captureIfStale(url, options={}) {
-    PageThumbsStorage.isFileRecentForURL(url, MAX_THUMBNAIL_AGE_SECS).then(
-      result => {
-        if (result.ok) {
-          if (options.onDone)
-            options.onDone(url);
-          return;
-        }
-        this.capture(url, options);
-      }, err => {
+  captureIfMissing: function (url, options={}) {
+    // The fileExistsForURL call is an optimization, potentially but unlikely
+    // incorrect, and no big deal when it is.  After the capture is done, we
+    // atomically test whether the file exists before writing it.
+    PageThumbsStorage.fileExistsForURL(url).then(exists => {
+      if (exists.ok) {
         if (options.onDone)
           options.onDone(url);
-      });
+        return;
+      }
+      this.capture(url, options);
+    }, err => {
+      if (options.onDone)
+        options.onDone(url);
+    });
   },
 
   /**
@@ -387,7 +381,7 @@ Capture.prototype = {
       return;
     }
 
-    PageThumbs._store(this.url, data.finalURL, data.imageData, data.wasErrorResponse)
+    PageThumbs._store(this.url, data.finalURL, data.imageData, true)
               .then(done, done);
   },
 };

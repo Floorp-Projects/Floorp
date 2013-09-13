@@ -51,7 +51,7 @@
 
     if (useJSTransfer) {
       var Downloads = SpecialPowers.Cu.import("resource://gre/modules/Downloads.jsm").Downloads;
-      Downloads.getPublicDownloadList().then(list => {
+      Downloads.getList(Downloads.PUBLIC).then(list => {
         list = SpecialPowers.wrap(list);
         list.addView({
           onDownloadAdded: function (aDownload) {

@@ -364,10 +364,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
 
   let deferred = Promise.defer();
 
-  let isPrivate = aOptions && aOptions.isPrivate;
-  let promise = isPrivate ? Downloads.getPrivateDownloadList()
-                          : Downloads.getPublicDownloadList();
-  promise.then(function (aList) {
+  Downloads.getList(Downloads.ALL).then(function (aList) {
     // Temporarily register a view that will get notified when the download we
     // are controlling becomes visible in the list of downloads.
     aList.addView({
@@ -382,6 +379,8 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
         deferred.resolve(aDownload);
       },
     });
+
+    let isPrivate = aOptions && aOptions.isPrivate;
 
     // Initialize the components so they reference each other.  This will cause
     // the Download object to be created and added to the public downloads.
@@ -417,7 +416,7 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
 
   let deferred = Promise.defer();
 
-  Downloads.getPublicDownloadList().then(function (aList) {
+  Downloads.getList(Downloads.PUBLIC).then(function (aList) {
     // Temporarily register a view that will get notified when the download we
     // are controlling becomes visible in the list of downloads.
     aList.addView({
@@ -465,54 +464,30 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
 }
 
 /**
- * Waits for a download to finish, in case it has not finished already.
+ * Returns a new public or private DownloadList object.
  *
- * @param aDownload
- *        The Download object to wait upon.
- *
- * @return {Promise}
- * @resolves When the download has finished successfully.
- * @rejects JavaScript exception if the download failed.
- */
-function promiseDownloadStopped(aDownload) {
-  if (!aDownload.stopped) {
-    // The download is in progress, wait for the current attempt to finish and
-    // report any errors that may occur.
-    return aDownload.start();
-  }
-
-  if (aDownload.succeeded) {
-    return Promise.resolve();
-  }
-
-  // The download failed or was canceled.
-  return Promise.reject(aDownload.error || new Error("Download canceled."));
-}
-
-/**
- * Returns a new public DownloadList object.
+ * @param aIsPrivate
+ *        True for the private list, false or undefined for the public list.
  *
  * @return {Promise}
  * @resolves The newly created DownloadList object.
  * @rejects JavaScript exception.
  */
-function promiseNewDownloadList() {
-  // Force the creation of a new public download list.
-  Downloads._promisePublicDownloadList = null;
-  return Downloads.getPublicDownloadList();
-}
+function promiseNewList(aIsPrivate)
+{
+  let type = aIsPrivate ? Downloads.PRIVATE : Downloads.PUBLIC;
 
-/**
- * Returns a new private DownloadList object.
- *
- * @return {Promise}
- * @resolves The newly created DownloadList object.
- * @rejects JavaScript exception.
- */
-function promiseNewPrivateDownloadList() {
-  // Force the creation of a new public download list.
-  Downloads._promisePrivateDownloadList = null;
-  return Downloads.getPrivateDownloadList();
+  // Force the creation of a new list.
+  if (type in Downloads._listPromises) {
+    delete Downloads._listPromises[type];
+  }
+
+  // Invalidate the combined list, if any.
+  if (Downloads.ALL in Downloads._listPromises) {
+    delete Downloads._listPromises[Downloads.ALL];
+  }
+
+  return Downloads.getList(type);
 }
 
 /**

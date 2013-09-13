@@ -35,6 +35,78 @@ using namespace mozilla::gl;
 namespace mozilla {
 namespace layers {
 
+class ShmemTextureClientData : public TextureClientData
+{
+public:
+  ShmemTextureClientData(ipc::Shmem& aShmem)
+  : mShmem(aShmem)
+  {
+    MOZ_COUNT_CTOR(ShmemTextureClientData);
+  }
+
+  ~ShmemTextureClientData()
+  {
+    MOZ_COUNT_CTOR(ShmemTextureClientData);
+  }
+
+  virtual void DeallocateSharedData(ISurfaceAllocator* allocator)
+  {
+    allocator->DeallocShmem(mShmem);
+    mShmem = ipc::Shmem();
+  }
+
+private:
+  ipc::Shmem mShmem;
+};
+
+class MemoryTextureClientData : public TextureClientData
+{
+public:
+  MemoryTextureClientData(uint8_t* aBuffer)
+  : mBuffer(aBuffer)
+  {
+    MOZ_COUNT_CTOR(MemoryTextureClientData);
+  }
+
+  ~MemoryTextureClientData()
+  {
+    MOZ_ASSERT(!mBuffer, "Forgot to deallocate the shared texture data?");
+    MOZ_COUNT_CTOR(MemoryTextureClientData);
+  }
+
+  virtual void DeallocateSharedData(ISurfaceAllocator*)
+  {
+    delete[] mBuffer;
+  }
+
+private:
+  uint8_t* mBuffer;
+};
+
+TextureClientData*
+MemoryTextureClient::DropTextureData()
+{
+  if (!mBuffer) {
+    return nullptr;
+  }
+  TextureClientData* result = new MemoryTextureClientData(mBuffer);
+  MarkInvalid();
+  mBuffer = nullptr;
+  return result;
+}
+
+TextureClientData*
+ShmemTextureClient::DropTextureData()
+{
+  if (!mShmem.IsReadable()) {
+    return nullptr;
+  }
+  TextureClientData* result = new ShmemTextureClientData(mShmem);
+  MarkInvalid();
+  mShmem = ipc::Shmem();
+  return result;
+}
+
 TextureClient::TextureClient(TextureFlags aFlags)
   : mID(0)
   , mFlags(aFlags)
@@ -51,15 +123,11 @@ TextureClient::ShouldDeallocateInDestructor() const
   if (!IsAllocated()) {
     return false;
   }
-  if (GetFlags() & TEXTURE_DEALLOCATE_CLIENT) {
-    return true;
-  }
 
   // If we're meant to be deallocated by the host,
   // but we haven't been shared yet, then we should
   // deallocate on the client instead.
-  return (GetFlags() & TEXTURE_DEALLOCATE_HOST) &&
-         !IsSharedWithCompositor();
+  return !IsSharedWithCompositor();
 }
 
 bool

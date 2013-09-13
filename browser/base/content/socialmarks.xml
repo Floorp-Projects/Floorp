@@ -198,11 +198,12 @@
           this.dispatchPanelEvent("socialFrameShow");
           sizeSocialPanelToContent(this.panel, this.content);
         } else {
-          this.content.addEventListener("load", function panelBrowserOnload(e) {
+          let panelBrowserOnload = () => {
             this.content.removeEventListener("load", panelBrowserOnload, true);
             this.dispatchPanelEvent("socialFrameShow");
             sizeSocialPanelToContent(this.panel, this.content);
-          }.bind(this), true);
+          };
+          this.content.addEventListener("load", panelBrowserOnload, true);
         }
       ]]></handler>
       <handler event="popuphidden"><![CDATA[

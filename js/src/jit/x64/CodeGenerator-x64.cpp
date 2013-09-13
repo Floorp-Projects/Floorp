@@ -287,8 +287,7 @@ CodeGeneratorX64::visitInterruptCheck(LInterruptCheck *lir)
     if (!ool)
         return false;
 
-    void *interrupt = (void*)&GetIonContext()->runtime->interrupt;
-    masm.movq(ImmWord(interrupt), ScratchReg);
+    masm.movq(ImmPtr(&GetIonContext()->runtime->interrupt), ScratchReg);
     masm.cmpl(Operand(ScratchReg, 0), Imm32(0));
     masm.j(Assembler::NonZero, ool->entry());
     masm.bind(ool->rejoin());
