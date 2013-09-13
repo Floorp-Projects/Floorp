@@ -42,7 +42,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     });
 
     this.emptyText = L10N.getStr("noSourcesText");
-    this.unavailableText = L10N.getStr("noMatchingSourcesText");
     this._blackBoxCheckboxTooltip = L10N.getStr("blackBoxCheckboxTooltip");
 
     this._commandset = document.getElementById("debuggerCommands");
