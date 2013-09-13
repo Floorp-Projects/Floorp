@@ -350,7 +350,16 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
 
     // Move the frame
     if (display->mPosition == NS_STYLE_POSITION_STICKY) {
-      StickyScrollContainer::ComputeStickyOffsets(aFrame);
+      // Update sticky positioning for an entire element at once when
+      // RecomputePosition is called with the first continuation in a chain.
+      if (!aFrame->GetPrevContinuation()) {
+        StickyScrollContainer::ComputeStickyOffsets(aFrame);
+        StickyScrollContainer* ssc =
+          StickyScrollContainer::GetStickyScrollContainerForFrame(aFrame);
+        if (ssc) {
+          ssc->PositionContinuations(aFrame);
+        }
+      }
     } else {
       MOZ_ASSERT(NS_STYLE_POSITION_RELATIVE == display->mPosition,
                  "Unexpected type of positioning");
@@ -362,13 +371,13 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
       NS_ASSERTION(newOffsets.left == -newOffsets.right &&
                    newOffsets.top == -newOffsets.bottom,
                    "ComputeRelativeOffsets should return valid results");
+
+      // nsHTMLReflowState::ApplyRelativePositioning would work here, but
+      // since we've already checked mPosition and aren't changing the frame's
+      // normal position, go ahead and add the offsets directly.
+      aFrame->SetPosition(aFrame->GetNormalPosition() +
+                          nsPoint(newOffsets.left, newOffsets.top));
     }
-
-    nsPoint position = aFrame->GetNormalPosition();
-
-    // This handles both relative and sticky positioning.
-    nsHTMLReflowState::ApplyRelativePositioning(aFrame, newOffsets, &position);
-    aFrame->SetPosition(position);
 
     return true;
   }
