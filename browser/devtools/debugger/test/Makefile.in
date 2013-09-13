@@ -29,7 +29,6 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_debugger-statement.js \
 	browser_dbg_editor-contextmenu.js \
 	browser_dbg_editor-mode.js \
-	browser_dbg_event-listeners.js \
 	browser_dbg_function-display-name.js \
 	browser_dbg_globalactor.js \
 	browser_dbg_iframes.js \
@@ -180,6 +179,7 @@ endif
 ifneq (Darwin,$(OS_ARCH))
 MOCHITEST_BROWSER_TESTS += \
 	browser_dbg_break-on-dom-event.js \
+	browser_dbg_event-listeners.js \
 	$(NULL)
 endif
 
