@@ -24,6 +24,7 @@
 #include <algorithm>
 #include "DOMMediaStream.h"
 #include "GeckoProfiler.h"
+#include "nsIScriptError.h"
 
 using namespace mozilla::layers;
 using namespace mozilla::dom;
@@ -464,6 +465,42 @@ MediaStreamGraphImpl::MarkConsumed(MediaStream* aStream)
   }
 }
 
+
+static void
+WarnIllegalCycle(MediaStream* aStream)
+{
+  class MediaStreamGraphWarnCycleRunnable : public nsRunnable {
+  public:
+    explicit MediaStreamGraphWarnCycleRunnable(MediaStream* aStream)
+      : mStream(aStream)
+    {
+    }
+
+    nsresult Run()
+    {
+      AudioNodeEngine* engine = mStream->AsAudioNodeStream()->Engine();
+      MutexAutoLock mon(engine->NodeMutex());
+      AudioNode* node = engine->Node();
+      nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(node->Context()->GetParentObject());
+      nsIDocument* doc = nullptr;
+      if (pWindow) {
+        doc = pWindow->GetExtantDoc();
+      }
+      nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                      NS_LITERAL_CSTRING("Media"),
+                                      doc,
+                                      nsContentUtils::eDOM_PROPERTIES,
+                                      "AudioNodeCycleWithoutDelay");
+      return NS_OK;
+    }
+  private:
+    MediaStream* mStream;
+  };
+
+  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphWarnCycleRunnable(aStream);
+  NS_DispatchToMainThread(event);
+}
+
 void
 MediaStreamGraphImpl::UpdateStreamOrderForStream(mozilla::LinkedList<MediaStream>* aStack,
                                                  already_AddRefed<MediaStream> aStream)
@@ -497,6 +534,13 @@ MediaStreamGraphImpl::UpdateStreamOrderForStream(mozilla::LinkedList<MediaStream
         MOZ_ASSERT(iter->AsAudioNodeStream());
         iter->AsAudioNodeStream()->Mute();
       } while((iter = iter->getNext()));
+
+      // Warn the user that some of the nodes in the graph are muted, but only
+      // once. This flag is reset when the graph changes.
+      if (!mUserWarnedAboutCycles) {
+        WarnIllegalCycle(aStack->getLast());
+        mUserWarnedAboutCycles = true;
+      }
     }
     return;
   }
@@ -2318,6 +2362,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime)
   , mRealtime(aRealtime)
   , mNonRealtimeProcessing(false)
   , mStreamOrderDirty(false)
+  , mUserWarnedAboutCycles(false)
 {
 #ifdef PR_LOGGING
   if (!gMediaStreamGraphLog) {
