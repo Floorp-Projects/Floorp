@@ -4122,7 +4122,8 @@ let RIL = {
    * @return A failure cause defined in 3GPP 23.040 clause 9.2.3.22.
    */
   _processSmsMultipart: function _processSmsMultipart(message) {
-    if (message.header && (message.header.segmentMaxSeq > 1)) {
+    if (message.header && message.header.segmentMaxSeq &&
+        (message.header.segmentMaxSeq > 1)) {
       message = this._processReceivedSmsSegment(message);
     } else {
       if (message.encoding == PDU_DCS_MSG_CODING_8BITS_ALPHABET) {

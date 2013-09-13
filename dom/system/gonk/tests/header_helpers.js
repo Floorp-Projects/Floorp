@@ -142,15 +142,16 @@ function newIncomingParcel(fakeParcelSize, response, request, data) {
 /**
  *
  */
-function newRadioInterfaceLayer() {
-  let ril_ns = {
-    ChromeWorker: function ChromeWorker() {
-      // Stub function
-    },
-  };
+let ril_ns;
+function newRadioInterface() {
+  if (!ril_ns) {
+    ril_ns = {};
+    subscriptLoader.loadSubScript("resource://gre/components/RadioInterfaceLayer.js", ril_ns);
+  }
 
-  subscriptLoader.loadSubScript("resource://gre/components/RadioInterfaceLayer.js", ril_ns);
-  return new ril_ns.RadioInterfaceLayer();
+  return {
+    __proto__: ril_ns.RadioInterface.prototype,
+  };
 }
 
 /**
