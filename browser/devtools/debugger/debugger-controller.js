@@ -1203,20 +1203,15 @@ function Breakpoints() {
   this._onEditorBreakpointRemove = this._onEditorBreakpointRemove.bind(this);
   this.addBreakpoint = this.addBreakpoint.bind(this);
   this.removeBreakpoint = this.removeBreakpoint.bind(this);
-  this.getBreakpoint = this.getBreakpoint.bind(this);
 }
 
 Breakpoints.prototype = {
   get activeThread() DebuggerController.ThreadState.activeThread,
-  get editor() DebuggerView.editor,
 
   /**
-   * The list of breakpoints in the debugger as tracked by the current
-   * debugger instance. This is an object where the values are BreakpointActor
-   * objects received from the client, while the keys are actor names, for
-   * example "conn0.breakpoint3".
+   * A map of breakpoint promises as tracked by the debugger frontend.
+   * The keys consist of a string representation of the breakpoint location.
    */
-  store: {},
 
   /**
    * Skip editor breakpoint change events.
@@ -1231,25 +1226,34 @@ Breakpoints.prototype = {
    * BREAKPOINT_CHANGE events synchronously.
    */
   _skipEditorBreakpointCallbacks: false,
+  _added: new Map(),
+  _removing: new Map(),
 
   /**
    * Adds the source editor breakpoint handlers.
+   *
+   * @return object
+   *         A promise that is resolved when the breakpoints finishes initializing.
    */
   initialize: function() {
-    this.editor.addEventListener(
+    DebuggerView.editor.addEventListener(
       SourceEditor.EVENTS.BREAKPOINT_CHANGE, this._onEditorBreakpointChange);
+
+    // Initialization is synchronous, for now.
+    return promise.resolve(null);
   },
 
   /**
    * Removes the source editor breakpoint handlers & all the added breakpoints.
+   *
+   * @return object
+   *         A promise that is resolved when the breakpoints finishes destroying.
    */
   destroy: function() {
-    this.editor.removeEventListener(
+    DebuggerView.editor.removeEventListener(
       SourceEditor.EVENTS.BREAKPOINT_CHANGE, this._onEditorBreakpointChange);
 
-    for each (let breakpointClient in this.store) {
-      this.removeBreakpoint(breakpointClient);
-    }
+    return this.removeAllBreakpoints();
   },
 
   /**
@@ -1278,15 +1282,20 @@ Breakpoints.prototype = {
   _onEditorBreakpointAdd: function(aEditorBreakpoint) {
     let url = DebuggerView.Sources.selectedValue;
     let line = aEditorBreakpoint.line + 1;
+    let location = { url: url, line: line };
 
-    this.addBreakpoint({ url: url, line: line }, (aBreakpointClient) => {
-      // If the breakpoint client has an "actualLocation" attached, then
+    // Initialize the breakpoint, but don't update the editor, since this
+    // callback is invoked because a breakpoint was added in the editor itself.
+    this.addBreakpoint(location, { noEditorUpdate: true }).then(aBreakpointClient => {
+      // If the breakpoint client has an "requestedLocation" attached, then
       // the original requested placement for the breakpoint wasn't accepted.
       // In this case, we need to update the editor with the new location.
-      if (aBreakpointClient.actualLocation) {
-        this.editor.removeBreakpoint(line - 1);
-        this.editor.addBreakpoint(aBreakpointClient.actualLocation.line - 1);
+      if (aBreakpointClient.requestedLocation) {
+        DebuggerView.editor.removeBreakpoint(aBreakpointClient.requestedLocation.line - 1);
+        DebuggerView.editor.addBreakpoint(aBreakpointClient.location.line - 1);
       }
+      // Notify that we've shown a breakpoint in the source editor.
+      window.dispatchEvent(document, "Debugger:BreakpointShown", aEditorBreakpoint);
     });
   },
 
@@ -1299,8 +1308,14 @@ Breakpoints.prototype = {
   _onEditorBreakpointRemove: function(aEditorBreakpoint) {
     let url = DebuggerView.Sources.selectedValue;
     let line = aEditorBreakpoint.line + 1;
+    let location = { url: url, line: line };
 
-    this.removeBreakpoint(this.getBreakpoint(url, line));
+    // Destroy the breakpoint, but don't update the editor, since this callback
+    // is invoked because a breakpoint was removed from the editor itself.
+    this.removeBreakpoint(location, { noEditorUpdate: true }).then(() => {
+      // Notify that we've hidden a breakpoint in the source editor.
+      window.dispatchEvent(document, "Debugger:BreakpointHidden", aEditorBreakpoint);
+    });
   },
 
   /**
@@ -1310,13 +1325,16 @@ Breakpoints.prototype = {
    * are received via the _onNewSource and _onSourcesAdded event listeners.
    */
   updateEditorBreakpoints: function() {
-    for each (let breakpointClient in this.store) {
-      if (DebuggerView.Sources.selectedValue == breakpointClient.location.url) {
-        this._showBreakpoint(breakpointClient, {
-          noPaneUpdate: true,
-          noPaneHighlight: true
-        });
-      }
+    for (let [, breakpointPromise] of this._added) {
+      breakpointPromise.then(aBreakpointClient => {
+        let currentSourceUrl = DebuggerView.Sources.selectedValue;
+        let breakpointUrl = aBreakpointClient.location.url;
+
+        // Update the view only if the breakpoint is in the currently shown source.
+        if (currentSourceUrl == breakpointUrl) {
+          this._showBreakpoint(aBreakpointClient, { noPaneUpdate: true });
+        }
+      });
     }
   },
 
@@ -1327,13 +1345,16 @@ Breakpoints.prototype = {
    * _onSourcesAdded event listeners.
    */
   updatePaneBreakpoints: function() {
-    for each (let breakpointClient in this.store) {
-      if (DebuggerView.Sources.containsValue(breakpointClient.location.url)) {
-        this._showBreakpoint(breakpointClient, {
-          noEditorUpdate: true,
-          noPaneHighlight: true
-        });
-      }
+    for (let [, breakpointPromise] of this._added) {
+      breakpointPromise.then(aBreakpointClient => {
+        let container = DebuggerView.Sources;
+        let breakpointUrl = aBreakpointClient.location.url;
+
+        // Update the view only if the breakpoint exists in a known source.
+        if (container.containsValue(breakpointUrl)) {
+          this._showBreakpoint(aBreakpointClient, { noEditorUpdate: true });
+        }
+      });
     }
   },
 
@@ -1341,146 +1362,202 @@ Breakpoints.prototype = {
    * Add a breakpoint.
    *
    * @param object aLocation
-   *        The location where you want the breakpoint. This object must have
-   *        two properties:
-   *          - url: the url of the source.
-   *          - line: the line number (starting from 1).
-   * @param function aCallback [optional]
-   *        Optional function to invoke once the breakpoint is added. The
-   *        callback is invoked with two arguments:
-   *          - aBreakpointClient: the BreakpointActor client object
-   *          - aResponseError: if there was any error
-   * @param object aFlags [optional]
-   *        An object containing some of the following boolean properties:
-   *          - conditionalExpression: tells this breakpoint's conditional expression
-   *          - openPopup: tells if the expression popup should be shown
-   *          - noEditorUpdate: tells if you want to skip editor updates
-   *          - noPaneUpdate: tells if you want to skip breakpoint pane updates
-   *          - noPaneHighlight: tells if you don't want to highlight the breakpoint
+   *        The location where you want the breakpoint.
+   *        This object must have two properties:
+   *          - url: the breakpoint's source location.
+   *          - line: the breakpoint's line number.
+   * @param object aOptions [optional]
+   *        Additional options or flags supported by this operation:
+   *          - openPopup: tells if the expression popup should be shown.
+   *          - noEditorUpdate: tells if you want to skip editor updates.
+   *          - noPaneUpdate: tells if you want to skip breakpoint pane updates.
+   * @return object
+   *         A promise that is resolved after the breakpoint is added, or
+   *         rejected if there was an error.
    */
-  addBreakpoint: function(aLocation, aCallback, aFlags = {}) {
+  addBreakpoint: function(aLocation, aOptions = {}) {
     // Make sure a proper location is available.
     if (!aLocation) {
-      aCallback && aCallback(null, new Error("Invalid breakpoint location."));
-      return;
-    }
-    let breakpointClient = this.getBreakpoint(aLocation.url, aLocation.line);
-
-    // If the breakpoint was already added, callback immediately.
-    if (breakpointClient) {
-      aCallback && aCallback(breakpointClient);
-      return;
+      return promise.reject(new Error("Invalid breakpoint location."));
     }
 
+    // If the breakpoint was already added, or is currently being added at the
+    // specified location, then return that promise immediately.
+    let addedPromise = this._getAdded(aLocation);
+    if (addedPromise) {
+      return addedPromise;
+    }
+
+    // If the breakpoint is currently being removed from the specified location,
+    // then wait for that to finish and retry afterwards.
+    let removingPromise = this._getRemoving(aLocation);
+    if (removingPromise) {
+      return removingPromise.then(() => this.addBreakpoint(aLocation, aOptions));
+    }
+
+    let deferred = promise.defer();
+
+    // Remember the breakpoint initialization promise in the store.
+    let identifier = this._getIdentifier(aLocation);
+    this._added.set(identifier, deferred.promise);
+
+    // Try adding the breakpoint.
     this.activeThread.setBreakpoint(aLocation, (aResponse, aBreakpointClient) => {
-      let { url, line } = aResponse.actualLocation || aLocation;
-
-      // If the response contains a breakpoint that exists in the cache, prevent
-      // it from being shown in the source editor at an incorrect position.
-      if (this.getBreakpoint(url, line)) {
-        this._hideBreakpoint(aBreakpointClient);
-        return;
-      }
-
       // If the breakpoint response has an "actualLocation" attached, then
       // the original requested placement for the breakpoint wasn't accepted.
       if (aResponse.actualLocation) {
-        // Store the originally requested location in case it's ever needed.
-        aBreakpointClient.requestedLocation = {
-          url: aBreakpointClient.location.url,
-          line: aBreakpointClient.location.line
-        };
-        // Store the response actual location to be used.
-        aBreakpointClient.actualLocation = aResponse.actualLocation;
-        // Update the breakpoint client with the actual location.
-        aBreakpointClient.location.url = aResponse.actualLocation.url;
-        aBreakpointClient.location.line = aResponse.actualLocation.line;
+        // Remember the initialization promise for the new location instead.
+        let oldIdentifier = identifier;
+        let newIdentifier = this._getIdentifier(aResponse.actualLocation);
+        this._added.delete(oldIdentifier);
+        this._added.set(newIdentifier, deferred.promise);
+
+        // Store the originally requested location in case it's ever needed
+        // and update the breakpoint client with the actual location.
+        aBreakpointClient.requestedLocation = aLocation;
+        aBreakpointClient.location = aResponse.actualLocation;
       }
-
-      // Remember the breakpoint client in the store.
-      this.store[aBreakpointClient.actor] = aBreakpointClient;
-
-      // Attach any specified conditional expression to the breakpoint client.
-      aBreakpointClient.conditionalExpression = aFlags.conditionalExpression;
 
       // Preserve information about the breakpoint's line text, to display it
       // in the sources pane without requiring fetching the source (for example,
-      // after the target navigated).
-      aBreakpointClient.lineText = DebuggerView.getEditorLineText(line - 1).trim();
+      // after the target navigated). Note that this will get out of sync
+      // if the source text contents change.
+      let line = aBreakpointClient.location.line - 1;
+      aBreakpointClient.text = DebuggerView.getEditorLineText(line).trim();
 
-      // Show the breakpoint in the editor and breakpoints pane.
-      this._showBreakpoint(aBreakpointClient, aFlags);
-
-      // We're done here.
-      aCallback && aCallback(aBreakpointClient, aResponse.error);
+      // Show the breakpoint in the editor and breakpoints pane, and resolve.
+      this._showBreakpoint(aBreakpointClient, aOptions);
+      deferred.resolve(aBreakpointClient);
     });
+
+    return deferred.promise;
   },
 
   /**
    * Remove a breakpoint.
    *
-   * @param object aBreakpointClient
-   *        The BreakpointActor client object to remove.
-   * @param function aCallback [optional]
-   *        Optional function to invoke once the breakpoint is removed. The
-   *        callback is invoked with one argument
-   *          - aBreakpointClient: the breakpoint location (url and line)
-   * @param object aFlags [optional]
+   * @param object aLocation
    *        @see DebuggerController.Breakpoints.addBreakpoint
+   * @param object aOptions [optional]
+   *        @see DebuggerController.Breakpoints.addBreakpoint
+   * @return object
+   *         A promise that is resolved after the breakpoint is removed, or
+   *         rejected if there was an error.
    */
-  removeBreakpoint: function(aBreakpointClient, aCallback, aFlags = {}) {
-    // Make sure a proper breakpoint client is available.
-    if (!aBreakpointClient) {
-      aCallback && aCallback(null, new Error("Invalid breakpoint client."));
-      return;
-    }
-    let breakpointActor = aBreakpointClient.actor;
-
-    // If the breakpoint was already removed, callback immediately.
-    if (!this.store[breakpointActor]) {
-      aCallback && aCallback(aBreakpointClient.location);
-      return;
+  removeBreakpoint: function(aLocation, aOptions = {}) {
+    // Make sure a proper location is available.
+    if (!aLocation) {
+      return promise.reject(new Error("Invalid breakpoint location."));
     }
 
-    aBreakpointClient.remove(() => {
-      // Delete the breakpoint client from the store.
-      delete this.store[breakpointActor];
+    // If the breakpoint was already removed, or has never even been added,
+    // then return a resolved promise immediately.
+    let addedPromise = this._getAdded(aLocation);
+    if (!addedPromise) {
+      return promise.resolve(aLocation);
+    }
 
-      // Hide the breakpoint from the editor and breakpoints pane.
-      this._hideBreakpoint(aBreakpointClient, aFlags);
+    // If the breakpoint is currently being removed from the specified location,
+    // then return that promise immediately.
+    let removingPromise = this._getRemoving(aLocation);
+    if (removingPromise) {
+      return removingPromise;
+    }
 
-      // We're done here.
-      aCallback && aCallback(aBreakpointClient.location);
+    let deferred = promise.defer();
+
+    // Remember the breakpoint removal promise in the store.
+    let identifier = this._getIdentifier(aLocation);
+    this._removing.set(identifier, deferred.promise);
+
+    // Retrieve the corresponding breakpoint client first.
+    addedPromise.then(aBreakpointClient => {
+      // Try removing the breakpoint.
+      aBreakpointClient.remove(aResponse => {
+        // If there was an error removing the breakpoint, reject the promise
+        // and forget about it that the breakpoint may be re-removed later.
+        if (aResponse.error) {
+          deferred.reject(aResponse);
+          return void this._removing.delete(identifier);
+        }
+
+        // Forget both the initialization and removal promises from the store.
+        this._added.delete(identifier);
+        this._removing.delete(identifier);
+
+        // Hide the breakpoint from the editor and breakpoints pane, and resolve.
+        this._hideBreakpoint(aLocation, aOptions);
+        deferred.resolve(aLocation);
+      });
+    });
+
+    return deferred.promise;
+  },
+
+  /**
+   * Removes all breakpoints.
+   *
+   * @return object
+   *         A promise that is resolved after all breakpoints are removed, or
+   *         rejected if there was an error.
+   */
+  removeAllBreakpoints: function() {
+    /* Gets an array of all the existing breakpoints promises. */
+    let getActiveBreakpoints = (aPromises, aStore = []) => {
+      for (let [, breakpointPromise] of aPromises) {
+        aStore.push(breakpointPromise);
+      }
+      return aStore;
+    }
+
+    /* Gets an array of all the removed breakpoints promises. */
+    let getRemovedBreakpoints = (aClients, aStore = []) => {
+      for (let breakpointClient of aClients) {
+        aStore.push(this.removeBreakpoint(breakpointClient.location));
+      }
+      return aStore;
+    }
+
+    // First, populate an array of all the currently added breakpoints promises.
+    // Then, once all the breakpoints clients are retrieved, populate an array
+    // of all the removed breakpoints promises and wait for their fulfillment.
+    return promise.all(getActiveBreakpoints(this._added)).then(aBreakpointClients => {
+      return promise.all(getRemovedBreakpoints(aBreakpointClients));
     });
   },
 
   /**
    * Update the editor and breakpoints pane to show a specified breakpoint.
    *
-   * @param object aBreakpointClient
-   *        The BreakpointActor client object to show.
+   * @param object aBreakpointData
+   *        Information about the breakpoint to be shown.
+   *        This object must have the following properties:
+   *          - location: the breakpoint's source location and line number
+   *          - text: the breakpoint's line text to be displayed
+   *          - actor: the breakpoint's corresponding actor id
    * @param object aFlags [optional]
    *        @see DebuggerController.Breakpoints.addBreakpoint
    */
-  _showBreakpoint: function(aBreakpointClient, aFlags = {}) {
+  _showBreakpoint: function(aBreakpointData, aFlags = {}) {
     let currentSourceUrl = DebuggerView.Sources.selectedValue;
-    let { url, line } = aBreakpointClient.location;
+    let location = aBreakpointData.location;
 
     // Update the editor if required.
     if (!aFlags.noEditorUpdate) {
-      if (url == currentSourceUrl) {
+      if (location.url == currentSourceUrl) {
         this._skipEditorBreakpointCallbacks = true;
-        this.editor.addBreakpoint(line - 1);
+        DebuggerView.editor.addBreakpoint(location.line - 1);
         this._skipEditorBreakpointCallbacks = false;
       }
     }
+
     // Update the breakpoints pane if required.
     if (!aFlags.noPaneUpdate) {
       DebuggerView.Sources.addBreakpoint({
-        sourceLocation: url,
-        lineNumber: line,
-        lineText: aBreakpointClient.lineText,
-        actor: aBreakpointClient.actor,
+        sourceLocation: location.url,
+        lineNumber: location.line,
+        lineText: aBreakpointData.text,
+        actor: aBreakpointData.actor,
         openPopupFlag: aFlags.openPopup
       });
     }
@@ -1488,58 +1565,72 @@ Breakpoints.prototype = {
     if (!aFlags.noPaneHighlight) {
       DebuggerView.Sources.highlightBreakpoint(url, line, aFlags);
     }
-
-    // Notify that we've shown a breakpoint.
-    window.dispatchEvent(document, "Debugger:BreakpointShown", aBreakpointClient);
   },
 
   /**
    * Update the editor and breakpoints pane to hide a specified breakpoint.
    *
-   * @param object aBreakpointClient
-   *        The BreakpointActor client object to hide.
+   * @param object aLocation
+   *        @see DebuggerController.Breakpoints.addBreakpoint
    * @param object aFlags [optional]
    *        @see DebuggerController.Breakpoints.addBreakpoint
    */
-  _hideBreakpoint: function(aBreakpointClient, aFlags = {}) {
+  _hideBreakpoint: function(aLocation, aFlags = {}) {
     let currentSourceUrl = DebuggerView.Sources.selectedValue;
-    let { url, line } = aBreakpointClient.location;
 
     // Update the editor if required.
     if (!aFlags.noEditorUpdate) {
-      if (url == currentSourceUrl) {
+      if (aLocation.url == currentSourceUrl) {
         this._skipEditorBreakpointCallbacks = true;
-        this.editor.removeBreakpoint(line - 1);
+        DebuggerView.editor.removeBreakpoint(aLocation.line - 1);
         this._skipEditorBreakpointCallbacks = false;
       }
     }
     // Update the breakpoints pane if required.
     if (!aFlags.noPaneUpdate) {
-      DebuggerView.Sources.removeBreakpoint(url, line);
+      DebuggerView.Sources.removeBreakpoint(aLocation.url, aLocation.line);
     }
-
-    // Notify that we've hidden a breakpoint.
-    window.dispatchEvent(document, "Debugger:BreakpointHidden", aBreakpointClient);
   },
 
   /**
-   * Get the BreakpointActor client object at the given location.
+   * Get a Promise for the BreakpointActor client object which is already added
+   * or currently being added at the given location.
    *
-   * @param string aUrl
-   *        The URL of where the breakpoint is.
-   * @param number aLine
-   *        The line number where the breakpoint is.
-   * @return object
-   *         The BreakpointActor client object.
+   * @param object aLocation
+   *        @see DebuggerController.Breakpoints.addBreakpoint
+   * @return object | null
+   *         A promise that is resolved after the breakpoint is added, or
+   *         null if no breakpoint was found.
    */
-  getBreakpoint: function(aUrl, aLine) {
-    for each (let breakpointClient in this.store) {
-      if (breakpointClient.location.url == aUrl &&
-          breakpointClient.location.line == aLine) {
-        return breakpointClient;
-      }
-    }
-    return null;
+  _getAdded: function(aLocation) {
+    return this._added.get(this._getIdentifier(aLocation));
+  },
+
+  /**
+   * Get a Promise for the BreakpointActor client object which is currently
+   * being removed from the given location.
+   *
+   * @param object aLocation
+   *        @see DebuggerController.Breakpoints.addBreakpoint
+   * @return object | null
+   *         A promise that is resolved after the breakpoint is removed, or
+   *         null if no breakpoint was found.
+   */
+  _getRemoving: function(aLocation) {
+    return this._removing.get(this._getIdentifier(aLocation));
+  },
+
+  /**
+   * Get an identifier string for a given location. Breakpoint promises are
+   * identified in the store by a string representation of their location.
+   *
+   * @param object aLocation
+   *        The location to serialize to a string.
+   * @return string
+   *         The identifier string.
+   */
+  _getIdentifier: function(aLocation) {
+    return aLocation.url + ":" + aLocation.line;
   }
 };
 
