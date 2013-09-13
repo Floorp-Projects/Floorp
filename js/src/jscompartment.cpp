@@ -47,7 +47,6 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     global_(NULL),
     enterCompartmentDepth(0),
     lastCodeRelease(0),
-    analysisLifoAlloc(ANALYSIS_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     data(NULL),
     objectMetadataCallback(NULL),
     lastAnimationTime(0),
@@ -539,14 +538,11 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
         WeakMapBase::sweepCompartment(this);
     }
 
-    if (!zone()->isPreservingCode()) {
-        JS_ASSERT(!types.constrainedOutputs);
-        gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_DISCARD_ANALYSIS);
-        gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_FREE_TI_ARENA);
-        rt->freeLifoAlloc.transferFrom(&analysisLifoAlloc);
-    } else {
+    if (zone()->isPreservingCode()) {
         gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_DISCARD_ANALYSIS);
         types.sweepShapes(fop);
+    } else {
+        JS_ASSERT(!types.constrainedOutputs);
     }
 
     NativeIterator *ni = enumerators->next();
@@ -610,7 +606,6 @@ JSCompartment::clearTables()
 #endif
     JS_ASSERT(!debugScopes);
     JS_ASSERT(!gcWeakMapList);
-    JS_ASSERT(!analysisLifoAlloc.used());
     JS_ASSERT(enumerators->next() == enumerators);
 
     if (baseShapes.initialized())

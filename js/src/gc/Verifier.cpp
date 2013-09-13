@@ -528,7 +528,7 @@ IsMarkedOrAllocated(Cell *cell)
     return cell->isMarked() || cell->arenaHeader()->allocatedDuringIncremental;
 }
 
-const static uint32_t MAX_VERIFIER_EDGES = 1000;
+static const uint32_t MAX_VERIFIER_EDGES = 1000;
 
 /*
  * This function is called by EndVerifyBarriers for every heap edge. If the edge

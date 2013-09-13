@@ -12731,7 +12731,7 @@ nsDocShell::GetAppId(uint32_t* aAppId)
 NS_IMETHODIMP
 nsDocShell::GetAsyncPanZoomEnabled(bool* aOut)
 {
-    if (TabChild* tabChild = GetTabChildFrom(this)) {
+    if (TabChild* tabChild = TabChild::GetFrom(this)) {
         *aOut = tabChild->IsAsyncPanZoomEnabled();
         return NS_OK;
     }
