@@ -25,7 +25,7 @@
           <div id="status" class="banner-box">
             <div class="banner-content">
               <span template='{"type":"localizedContent","property":"connection.connectedToDevice","paths":["device.description.name"]}'></span>
-              <button class="action-cancel" onclick="UI.disconnect()">&connection.disconnect;</button>
+              <button class="action-cancel" onclick="UI.disconnect()" title="&connection.disconnectTooltip;">&connection.disconnect;</button>
             </div>
           </div>
         </div>
@@ -36,11 +36,11 @@
           <div class="banner-box">
             <div class="banner-content">
               <span>&connection.notConnected;</span>
-              <button class="action-primary left" onclick="UI.connect()" id="connect-button" template='{"type":"localizedContent","property":"connection.connectTo","paths":["connection.host","connection.port"]}'></button>
-              <button class="right" onclick="UI.editConnectionParameters()">&connection.changeHostAndPort;</button>
+              <button class="action-primary left" onclick="UI.connect()" id="connect-button" template='{"type":"localizedContent","property":"connection.connectTo","paths":["connection.host","connection.port"]}' title="&connection.connectTooltip;"></button>
+              <button class="right" onclick="UI.editConnectionParameters()" title="&connection.changeHostAndPortTooltip;">&connection.changeHostAndPort;</button>
               <div id="start-simulator-box">
                 <span>&connection.or;</span>
-                <button id="start-simulator-button" class="action-primary" onclick="UI.showSimulatorList()">&connection.startSimulator;</button>
+                <button id="start-simulator-button" class="action-primary" onclick="UI.showSimulatorList()" title="&connection.startSimulatorTooltip;">&connection.startSimulator;</button>
               </div>
             </div>
           </div>
@@ -52,7 +52,7 @@
           <div id="status" class="banner-box">
             <div class="banner-content">
               <span>&connection.connecting;</span>
-              <button class="action-cancel" onclick="UI.disconnect()">&connection.cancel;</button>
+              <button class="action-cancel" onclick="UI.disconnect()" title="&connection.cancelConnectTooltip;">&connection.cancel;</button>
             </div>
           </div>
         </div>
@@ -75,7 +75,7 @@
               <form onsubmit="UI.saveConnectionInfo()">
                 <input class="host" template='{"type":"attribute","path":"connection.host","name":"value"}'></input>
                 <input class="port" pattern="\d+" template='{"type":"attribute","path":"connection.port","name":"value"}' type="number"></input>
-                <button type="submit">&connection.saveConnectionInfo;</button>
+                <button type="submit" title="&connection.saveConnectionInfoTooltip;">&connection.saveConnectionInfo;</button>
               </form>
             </div>
           </div>
@@ -88,13 +88,13 @@
             <div class="banner-content">
               <div class="no-simulator">
                 <span>&connection.noSimulatorInstalled;</span>
-                <button class="action-primary" onclick="UI.installSimulator()">&connection.installFirstSimulator;</button>
+                <button class="action-primary" onclick="UI.installSimulator()" title="&connection.installOneSimulatorTooltip;">&connection.installOneSimulator;</button>
               </div>
               <div class="found-simulator">
                 <span template-loop='{"arrayPath":"simulators.versions","childSelector":"#simulator-item-template"}'></span>
-                <button class="action-primary" onclick="UI.installSimulator()">&connection.installAnotherSimulator;</button>
+                <button class="action-primary" onclick="UI.installSimulator()" title="&connection.installAnotherSimulatorTooltip;">&connection.installAnotherSimulator;</button>
               </div>
-              <button class="action-cancel" onclick="UI.cancelShowSimulatorList()">&connection.cancel;</button>
+              <button class="action-cancel" onclick="UI.cancelShowSimulatorList()" title="&connection.cancelShowSimulatorTooltip;">&connection.cancel;</button>
             </div>
           </div>
         </div>
@@ -113,7 +113,7 @@
 
   <template id="simulator-item-template">
   <span>
-    <button class="simulator-item" onclick="UI.startSimulator(this.dataset.version)" template='{"type":"attribute","path":"version","name":"data-version"}'>
+    <button class="simulator-item" onclick="UI.startSimulator(this.dataset.version)" template='{"type":"attribute","path":"version","name":"data-version"}' title="&connection.startSimulatorTooltip;">
       <span template='{"type":"textContent", "path":"version"}'></span>
     </button>
   </span>
