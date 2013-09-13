@@ -453,7 +453,6 @@ StackFrames.prototype = {
   currentEvaluation: null,
   currentException: null,
   currentReturnedValue: null,
-  _dontSwitchSources: false,
 
   /**
    * Connect to the current thread client.
@@ -684,7 +683,6 @@ StackFrames.prototype = {
    */
   _onBlackBoxChange: function() {
     if (this.activeThread.state == "paused") {
-      this._dontSwitchSources = true;
       this.currentFrame = null;
       this._refillFrames();
     }
@@ -727,11 +725,8 @@ StackFrames.prototype = {
       return;
     }
 
-    let noSwitch = this._dontSwitchSources;
-    this._dontSwitchSources = false;
-
     // Move the editor's caret to the proper url and line.
-    DebuggerView.updateEditor(where.url, where.line, { noSwitch: noSwitch });
+    DebuggerView.setEditorLocation(where.url, where.line);
     // Highlight the breakpoint at the specified url and line if it exists.
     DebuggerView.Sources.highlightBreakpoint(where, { noEditorUpdate: true });
     // Don't display the watch expressions textbox inputs in the pane.
@@ -740,7 +735,6 @@ StackFrames.prototype = {
     DebuggerView.Variables.createHierarchy();
     // Clear existing scopes and create each one dynamically.
     DebuggerView.Variables.empty();
-
 
     // If watch expressions evaluation results are available, create a scope
     // to contain all the values.
@@ -942,6 +936,7 @@ SourceScripts.prototype = {
   get activeThread() DebuggerController.activeThread,
   get debuggerClient() DebuggerController.client,
   _newSourceTimeout: null,
+  _cache: new Map(),
 
   /**
    * Connect to the current thread client.
@@ -980,6 +975,7 @@ SourceScripts.prototype = {
 
     // Retrieve the list of script sources known to the server from before
     // the client was ready to handle "newSource" notifications.
+    this._cache.clear();
     this.activeThread.getSources(this._onSourcesAdded);
   },
 
@@ -1123,12 +1119,13 @@ SourceScripts.prototype = {
    */
   getTextForSource: function(aSource, aOnTimeout, aDelay = FETCH_SOURCE_RESPONSE_DELAY) {
     // Fetch the source text only once.
-    if (aSource._fetched) {
-      return aSource._fetched;
+    let textPromise = this._cache.get(aSource.url);
+    if (textPromise) {
+      return textPromise;
     }
 
     let deferred = promise.defer();
-    aSource._fetched = deferred.promise;
+    this._cache.set(aSource.url, deferred.promise);
 
     // If the source text takes a long time to fetch, invoke a callback.
     if (aOnTimeout) {
