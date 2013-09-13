@@ -288,6 +288,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   , mVisible(true)
   , mCurrentRemoteFrame(nullptr)
   , mRemoteBrowser(nullptr)
+  , mChildID(0)
   , mRenderMode(RENDER_MODE_DEFAULT)
   , mEventMode(EVENT_MODE_NORMAL_DISPATCH)
 {
@@ -2061,6 +2062,7 @@ nsFrameLoader::TryRemoteBrowser()
   nsCOMPtr<Element> ownerElement = mOwnerContent;
   mRemoteBrowser = ContentParent::CreateBrowserOrApp(context, ownerElement);
   if (mRemoteBrowser) {
+    mChildID = mRemoteBrowser->Manager()->ChildID();
     nsCOMPtr<nsIDocShellTreeItem> rootItem;
     parentAsItem->GetRootTreeItem(getter_AddRefs(rootItem));
     nsCOMPtr<nsIDOMWindow> rootWin = do_GetInterface(rootItem);
@@ -2444,6 +2446,13 @@ nsFrameLoader::GetOwnerElement(nsIDOMElement **aElement)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrameLoader::GetChildID(uint64_t* aChildID)
+{
+  *aChildID = mChildID;
+  return NS_OK;
+}
+
 void
 nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
 {
@@ -2451,7 +2460,7 @@ nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
   MOZ_ASSERT(!mCurrentRemoteFrame);
   mRemoteFrame = true;
   mRemoteBrowser = static_cast<TabParent*>(aTabParent);
-
+  mChildID = mRemoteBrowser ? mRemoteBrowser->Manager()->ChildID() : 0;
   ShowRemoteFrame(nsIntSize(0, 0));
 }
 

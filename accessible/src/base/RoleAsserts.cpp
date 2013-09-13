@@ -7,8 +7,6 @@
 #include "nsIAccessibleRole.h"
 #include "Role.h"
 
-#include "mozilla/Assertions.h"
-
 using namespace mozilla::a11y;
 
 #define ROLE(geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role, nameRule) \

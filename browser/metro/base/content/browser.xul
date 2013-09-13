@@ -196,6 +196,9 @@
 
         <!-- Content touch selection overlay -->
         <box class="selection-overlay-hidden" id="content-selection-overlay"/>
+
+        <!-- Overlay to dim screen when autocomplete shows up -->
+        <hbox id="autocomplete-overlay" onclick="ContextUI.dismiss()"/>
       </stack>
     </vbox>
 
@@ -205,7 +208,7 @@
               observes="cmd_back"></html:div>
 
     <!-- Navigation bar -->
-    <appbar id="navbar" mousethrough="never" observes="bcast_windowState">
+    <appbar id="navbar" mousethrough="never">
       <hbox id="progress-container" layer="true">
         <hbox id="progress-control" />
       </hbox>

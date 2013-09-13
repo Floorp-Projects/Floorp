@@ -29,8 +29,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
  * @resolves Array [ Newly created DownloadList , associated DownloadStore ].
  * @rejects JavaScript exception.
  */
-function promiseNewListAndStore(aStorePath) {
-  return promiseNewDownloadList().then(function (aList) {
+function promiseNewListAndStore(aStorePath)
+{
+  return promiseNewList().then(function (aList) {
     let path = aStorePath || getTempFile(TEST_STORE_FILE_NAME).path;
     let store = new DownloadStore(aList, path);
     return [aList, store];
@@ -213,4 +214,79 @@ add_task(function test_load_string_malformed()
   let items = yield list.getAll();
 
   do_check_eq(items.length, 0);
+});
+
+/**
+ * Saves downloads with unknown properties to a file and then reloads
+ * them to ensure that these properties are preserved.
+ */
+add_task(function test_save_reload_unknownProperties()
+{
+  let [listForSave, storeForSave] = yield promiseNewListAndStore();
+  let [listForLoad, storeForLoad] = yield promiseNewListAndStore(
+                                                 storeForSave.path);
+
+  let download1 = yield promiseNewDownload(httpUrl("source.txt"));
+  // startTime should be ignored as it is a known property, and error
+  // is ignored by serialization
+  download1._unknownProperties = { peanut: "butter",
+                                   orange: "marmalade",
+                                   startTime: 77,
+                                   error: { message: "Passed" } };
+  listForSave.add(download1);
+
+  let download2 = yield promiseStartLegacyDownload();
+  yield download2.cancel();
+  download2._unknownProperties = { number: 5, object: { test: "string" } };
+  listForSave.add(download2);
+
+  let download3 = yield Downloads.createDownload({
+    source: { url: httpUrl("empty.txt"),
+              referrer: TEST_REFERRER_URL,
+              source1: "download3source1",
+              source2: "download3source2" },
+    target: { path: getTempFile(TEST_TARGET_FILE_NAME).path,
+              target1: "download3target1",
+              target2: "download3target2" },
+    saver : { type: "copy",
+              saver1: "download3saver1",
+              saver2: "download3saver2" },
+  });
+  listForSave.add(download3);
+
+  yield storeForSave.save();
+  yield storeForLoad.load();
+
+  let itemsForSave = yield listForSave.getAll();
+  let itemsForLoad = yield listForLoad.getAll();
+
+  do_check_eq(itemsForSave.length, itemsForLoad.length);
+
+  do_check_eq(Object.keys(itemsForLoad[0]._unknownProperties).length, 2);
+  do_check_eq(itemsForLoad[0]._unknownProperties.peanut, "butter");
+  do_check_eq(itemsForLoad[0]._unknownProperties.orange, "marmalade");
+  do_check_false("startTime" in itemsForLoad[0]._unknownProperties);
+  do_check_false("error" in itemsForLoad[0]._unknownProperties);
+
+  do_check_eq(Object.keys(itemsForLoad[1]._unknownProperties).length, 2);
+  do_check_eq(itemsForLoad[1]._unknownProperties.number, 5);
+  do_check_eq(itemsForLoad[1]._unknownProperties.object.test, "string");
+
+  do_check_eq(Object.keys(itemsForLoad[2].source._unknownProperties).length, 2);
+  do_check_eq(itemsForLoad[2].source._unknownProperties.source1,
+              "download3source1");
+  do_check_eq(itemsForLoad[2].source._unknownProperties.source2,
+              "download3source2");
+
+  do_check_eq(Object.keys(itemsForLoad[2].target._unknownProperties).length, 2);
+  do_check_eq(itemsForLoad[2].target._unknownProperties.target1,
+              "download3target1");
+  do_check_eq(itemsForLoad[2].target._unknownProperties.target2,
+              "download3target2");
+
+  do_check_eq(Object.keys(itemsForLoad[2].saver._unknownProperties).length, 2);
+  do_check_eq(itemsForLoad[2].saver._unknownProperties.saver1,
+              "download3saver1");
+  do_check_eq(itemsForLoad[2].saver._unknownProperties.saver2,
+              "download3saver2");
 });

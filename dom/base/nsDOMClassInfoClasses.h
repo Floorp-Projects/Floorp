@@ -65,9 +65,6 @@ DOMCI_CLASS(CSSSupportsRule)
 DOMCI_CLASS(SVGLength)
 DOMCI_CLASS(SVGNumber)
 
-// Canvas
-DOMCI_CLASS(MozCanvasPrintState)
-
 // WindowUtils
 DOMCI_CLASS(WindowUtils)
 

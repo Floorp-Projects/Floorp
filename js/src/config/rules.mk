@@ -54,11 +54,11 @@ ifndef EXTERNALLY_MANAGED_MAKE_FILE
 # scenarios.
 _current_makefile = $(CURDIR)/$(firstword $(MAKEFILE_LIST))
 
-$(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES),$(if $($(var)),\
+$(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES),$(if $(filter file override,$(subst $(NULL) ,_,$(origin $(var)))),\
     $(error Variable $(var) is defined in $(_current_makefile). It should only be defined in moz.build files),\
     ))
 
-$(foreach var,$(_DEPRECATED_VARIABLES),$(if $($(var)),\
+$(foreach var,$(_DEPRECATED_VARIABLES),$(if $(filter file override,$(subst $(NULL) ,_,$(origin $(var)))),\
     $(error Variable $(var) is defined in $(_current_makefile). This variable has been deprecated. It does nothing. It must be removed in order to build)\
     ))
 
@@ -1487,7 +1487,7 @@ PP_TARGETS += DIST_CHROME_FILES
 endif
 
 ifneq ($(XPI_PKGNAME),)
-libs realchrome::
+tools realchrome::
 ifdef STRIP_XPI
 ifndef MOZ_DEBUG
 	@echo "Stripping $(XPI_PKGNAME) package directory..."
@@ -1526,7 +1526,7 @@ ifndef XPI_NAME
 $(error XPI_NAME must be set for INSTALL_EXTENSION_ID)
 endif
 
-libs::
+tools::
 	$(RM) -r "$(DIST)/bin$(DIST_SUBDIR:%=/%)/extensions/$(INSTALL_EXTENSION_ID)"
 	$(NSINSTALL) -D "$(DIST)/bin$(DIST_SUBDIR:%=/%)/extensions/$(INSTALL_EXTENSION_ID)"
 	$(call copy_dir,$(FINAL_TARGET),$(DIST)/bin$(DIST_SUBDIR:%=/%)/extensions/$(INSTALL_EXTENSION_ID))

@@ -8,8 +8,6 @@
 
 #include "AccEvent.h"
 
-class nsIContent;
-
 namespace mozilla {
 namespace a11y {
 

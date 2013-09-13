@@ -1801,6 +1801,42 @@ public:
   }
 };
 
+template<typename T>
+class MOZ_STACK_CLASS RootedUnion : public T,
+                                    private JS::CustomAutoRooter
+{
+public:
+  RootedUnion(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
+    T(),
+    JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
+  {
+  }
+
+  virtual void trace(JSTracer *trc) MOZ_OVERRIDE
+  {
+    this->TraceUnion(trc);
+  }
+};
+
+template<typename T>
+class MOZ_STACK_CLASS NullableRootedUnion : public Nullable<T>,
+                                            private JS::CustomAutoRooter
+{
+public:
+  NullableRootedUnion(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
+    Nullable<T>(),
+    JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
+  {
+  }
+
+  virtual void trace(JSTracer *trc) MOZ_OVERRIDE
+  {
+    if (!this->IsNull()) {
+      this->Value().TraceUnion(trc);
+    }
+  }
+};
+
 inline bool
 IdEquals(jsid id, const char* string)
 {

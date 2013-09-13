@@ -20,6 +20,7 @@
 #include "vm/Shape.h"
 
 #include "vm/Interpreter-inl.h"
+#include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -177,7 +178,7 @@ class IonCache::StubAttacher
     // value would be replaced by the attachStub function after the allocation
     // of the IonCode. The self-reference is used to keep the stub path alive
     // even if the IonScript is invalidated or if the IC is flushed.
-    static const ImmWord STUB_ADDR;
+    static const ImmPtr STUB_ADDR;
 
     template <class T1, class T2>
     void branchNextStub(MacroAssembler &masm, Assembler::Condition cond, T1 op1, T2 op2) {
@@ -238,14 +239,14 @@ class IonCache::StubAttacher
         if (hasStubCodePatchOffset_) {
             stubCodePatchOffset_.fixup(&masm);
             Assembler::patchDataWithValueCheck(CodeLocationLabel(code, stubCodePatchOffset_),
-                                               ImmWord(uintptr_t(code)), STUB_ADDR);
+                                               ImmPtr(code), STUB_ADDR);
         }
     }
 
     virtual void patchNextStubJump(MacroAssembler &masm, IonCode *code) = 0;
 };
 
-const ImmWord IonCache::StubAttacher::STUB_ADDR = ImmWord(uintptr_t(0xdeadc0de));
+const ImmPtr IonCache::StubAttacher::STUB_ADDR = ImmPtr((void*)0xdeadc0de);
 
 class RepatchIonCache::RepatchStubAppender : public IonCache::StubAttacher
 {
@@ -344,7 +345,7 @@ void
 DispatchIonCache::emitInitialJump(MacroAssembler &masm, AddCacheState &addState)
 {
     Register scratch = addState.dispatchScratch;
-    dispatchLabel_ = masm.movWithPatch(ImmWord(uintptr_t(-1)), scratch);
+    dispatchLabel_ = masm.movWithPatch(ImmPtr((void*)-1), scratch);
     masm.loadPtr(Address(scratch, 0), scratch);
     masm.jump(scratch);
     rejoinLabel_ = masm.labelForPatch();
@@ -365,8 +366,8 @@ DispatchIonCache::updateBaseAddress(IonCode *code, MacroAssembler &masm)
     IonCache::updateBaseAddress(code, masm);
     dispatchLabel_.fixup(&masm);
     Assembler::patchDataWithValueCheck(CodeLocationLabel(code, dispatchLabel_),
-                                       ImmWord(uintptr_t(&firstStub_)),
-                                       ImmWord(uintptr_t(-1)));
+                                       ImmPtr(&firstStub_),
+                                       ImmPtr((void*)-1));
     firstStub_ = fallbackLabel_.raw();
     rejoinLabel_.repoint(code, &masm);
 }
@@ -651,7 +652,7 @@ GenerateDOMProxyChecks(JSContext *cx, MacroAssembler &masm, JSObject *obj,
 
     // Check that object is a DOMProxy.
     masm.branchPrivatePtr(Assembler::NotEqual, handlerAddr,
-                          ImmWord(obj->as<ProxyObject>().handler()), stubFailure);
+                          ImmPtr(obj->as<ProxyObject>().handler()), stubFailure);
 
     if (skipExpandoCheck)
         return;
@@ -673,7 +674,7 @@ GenerateDOMProxyChecks(JSContext *cx, MacroAssembler &masm, JSObject *obj,
         masm.branchTestValue(Assembler::NotEqual, tempVal, expandoVal, &failDOMProxyCheck);
 
         ExpandoAndGeneration *expandoAndGeneration = (ExpandoAndGeneration*)expandoVal.toPrivate();
-        masm.movePtr(ImmWord(expandoAndGeneration), tempVal.scratchReg());
+        masm.movePtr(ImmPtr(expandoAndGeneration), tempVal.scratchReg());
 
         masm.branch32(Assembler::NotEqual, Address(tempVal.scratchReg(), sizeof(Value)),
                                                    Imm32(expandoAndGeneration->generation),
@@ -1078,8 +1079,11 @@ GenerateTypedArrayLength(JSContext *cx, MacroAssembler &masm, IonCache::StubAtta
 
     // Implement the negated version of JSObject::isTypedArray predicate.
     masm.loadObjClass(object, tmpReg);
-    masm.branchPtr(Assembler::Below, tmpReg, ImmWord(&TypedArrayObject::classes[0]), &failures);
-    masm.branchPtr(Assembler::AboveOrEqual, tmpReg, ImmWord(&TypedArrayObject::classes[ScalarTypeRepresentation::TYPE_MAX]), &failures);
+    masm.branchPtr(Assembler::Below, tmpReg, ImmPtr(&TypedArrayObject::classes[0]),
+                   &failures);
+    masm.branchPtr(Assembler::AboveOrEqual, tmpReg,
+                   ImmPtr(&TypedArrayObject::classes[ScalarTypeRepresentation::TYPE_MAX]),
+                   &failures);
 
     // Load length.
     masm.loadTypedOrValue(Address(object, TypedArrayObject::lengthOffset()), output);
@@ -3112,7 +3116,7 @@ GetElementIC::attachArgumentsElement(JSContext *cx, IonScript *ion, JSObject *ob
     masm.loadPtr(BaseIndex(tmpReg, indexReg, ScaleFromElemWidth(sizeof(size_t))), tmpReg);
 
     // Don't bother testing specific bit, if any bit is set in the word, fail.
-    masm.branchPtr(Assembler::NotEqual, tmpReg, ImmWord((size_t)0), &failurePopIndex);
+    masm.branchPtr(Assembler::NotEqual, tmpReg, ImmPtr(NULL), &failurePopIndex);
 
     // Get the address to load from into tmpReg
     masm.loadPrivate(Address(object(), ArgumentsObject::getDataSlotOffset()), tmpReg);

@@ -1370,6 +1370,16 @@ ContentChild::RecvCancelMinimizeMemoryUsage()
 }
 
 bool
+ContentChild::RecvNotifyPhoneStateChange(const nsString& aState)
+{
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  if (os) {
+    os->NotifyObservers(nullptr, "phone-state-changed", aState.get());
+  }
+  return true;
+}
+
+bool
 ContentChild::RecvLoadAndRegisterSheet(const URIParams& aURI, const uint32_t& aType)
 {
     nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);

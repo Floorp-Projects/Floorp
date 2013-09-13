@@ -64,12 +64,17 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm")
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/commonjs/sdk/core/promise.js");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gDownloadHistory",
            "@mozilla.org/browser/download-history;1",
            Ci.nsIDownloadHistory);
+XPCOMUtils.defineLazyServiceGetter(this, "gExternalAppLauncher",
+           "@mozilla.org/uriloader/external-helper-app-service;1",
+           Ci.nsPIExternalAppLauncher);
 XPCOMUtils.defineLazyServiceGetter(this, "gExternalHelperAppService",
            "@mozilla.org/uriloader/external-helper-app-service;1",
            Ci.nsIExternalHelperAppService);
@@ -85,6 +90,36 @@ function isString(aValue) {
   // We cannot use the "instanceof" operator reliably across module boundaries.
   return (typeof aValue == "string") ||
          (typeof aValue == "object" && "charAt" in aValue);
+}
+
+/**
+ * Serialize the unknown properties of aObject into aSerializable.
+ */
+function serializeUnknownProperties(aObject, aSerializable)
+{
+  if (aObject._unknownProperties) {
+    for (let property in aObject._unknownProperties) {
+      aSerializable[property] = aObject._unknownProperties[property];
+    }
+  }
+}
+
+/**
+ * Check for any unknown properties in aSerializable and preserve those in the
+ * _unknownProperties field of aObject. aFilterFn is called for each property
+ * name of aObject and should return true only for unknown properties.
+ */
+function deserializeUnknownProperties(aObject, aSerializable, aFilterFn)
+{
+  for (let property in aSerializable) {
+    if (aFilterFn(property)) {
+      if (!aObject._unknownProperties) {
+        aObject._unknownProperties = { };
+      }
+
+      aObject._unknownProperties[property] = aSerializable[property];
+    }
+  }
 }
 
 /**
@@ -421,6 +456,17 @@ Download.prototype = {
 
             if (this.launchWhenSucceeded) {
               this.launch().then(null, Cu.reportError);
+
+              // Always schedule files to be deleted at the end of the private browsing
+              // mode, regardless of the value of the pref.
+              if (this.source.isPrivate) {
+                gExternalAppLauncher.deleteTemporaryPrivateFileWhenPossible(
+                                     new FileUtils.File(this.target.path));
+              } else if (Services.prefs.getBoolPref(
+                          "browser.helperApps.deleteTempFileOnExit")) {
+                gExternalAppLauncher.deleteTemporaryFileOnExit(
+                                     new FileUtils.File(this.target.path));
+              }
             }
           }
         }
@@ -822,10 +868,12 @@ Download.prototype = {
 
     // These are serialized unless they are false, null, or empty strings.
     for (let property of kSerializableDownloadProperties) {
-      if (property != "error" && this[property]) {
+      if (property != "error" && property != "startTime" && this[property]) {
         serializable[property] = this[property];
       }
     }
+
+    serializeUnknownProperties(this, serializable);
 
     return serializable;
   },
@@ -917,6 +965,13 @@ Download.fromSerializable = function (aSerializable) {
     }
   }
 
+  deserializeUnknownProperties(download, aSerializable, property =>
+    kSerializableDownloadProperties.indexOf(property) == -1 &&
+    property != "startTime" &&
+    property != "source" &&
+    property != "target" &&
+    property != "saver");
+
   return download;
 };
 
@@ -955,7 +1010,7 @@ DownloadSource.prototype = {
   toSerializable: function ()
   {
     // Simplify the representation if we don't have other details.
-    if (!this.isPrivate && !this.referrer) {
+    if (!this.isPrivate && !this.referrer && !this._unknownProperties) {
       return this.url;
     }
 
@@ -966,6 +1021,8 @@ DownloadSource.prototype = {
     if (this.referrer) {
       serializable.referrer = this.referrer;
     }
+
+    serializeUnknownProperties(this, serializable);
     return serializable;
   },
 };
@@ -1004,7 +1061,11 @@ DownloadSource.fromSerializable = function (aSerializable) {
     if ("referrer" in aSerializable) {
       source.referrer = aSerializable.referrer;
     }
+
+    deserializeUnknownProperties(source, aSerializable, property =>
+      property != "url" && property != "isPrivate" && property != "referrer");
   }
+
   return source;
 };
 
@@ -1038,12 +1099,14 @@ DownloadTarget.prototype = {
   toSerializable: function ()
   {
     // Simplify the representation if we don't have other details.
-    if (!this.partFilePath) {
+    if (!this.partFilePath && !this._unknownProperties) {
       return this.path;
     }
 
-    return { path: this.path,
-             partFilePath: this.partFilePath };
+    let serializable = { path: this.path,
+                         partFilePath: this.partFilePath };
+    serializeUnknownProperties(this, serializable);
+    return serializable;
   },
 };
 
@@ -1056,6 +1119,7 @@ DownloadTarget.prototype = {
  *        object with the following properties:
  *        {
  *          path: String containing the path of the target file.
+ *          partFilePath: optional string containing the part file path.
  *        }
  *
  * @return The newly created DownloadTarget object.
@@ -1075,6 +1139,9 @@ DownloadTarget.fromSerializable = function (aSerializable) {
     if ("partFilePath" in aSerializable) {
       target.partFilePath = aSerializable.partFilePath;
     }
+
+    deserializeUnknownProperties(target, aSerializable, property =>
+      property != "path" && property != "partFilePath");
   }
   return target;
 };
@@ -1582,12 +1649,14 @@ DownloadCopySaver.prototype = {
   toSerializable: function ()
   {
     // Simplify the representation if we don't have other details.
-    if (!this.entityID) {
+    if (!this.entityID && !this._unknownProperties) {
       return "copy";
     }
 
-    return { type: "copy",
-             entityID: this.entityID };
+    let serializable = { type: "copy",
+                         entityID: this.entityID };
+    serializeUnknownProperties(this, serializable);
+    return serializable;
   },
 };
 
@@ -1605,6 +1674,10 @@ DownloadCopySaver.fromSerializable = function (aSerializable) {
   if ("entityID" in aSerializable) {
     saver.entityID = aSerializable.entityID;
   }
+
+  deserializeUnknownProperties(saver, aSerializable, property =>
+    property != "entityID" && property != "type");
+
   return saver;
 };
 

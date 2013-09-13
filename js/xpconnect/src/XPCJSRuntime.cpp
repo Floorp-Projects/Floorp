@@ -1563,12 +1563,12 @@ GetCompartmentName(JSCompartment *c, nsCString &name, bool replaceSlashes)
 
 // Telemetry relies on this being a uni-reporter (rather than part of the "js"
 // reporter).
-class JSGCHeapReporter MOZ_FINAL : public MemoryUniReporter
+class JSMainRuntimeGCHeapReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
-    JSGCHeapReporter()
-      : MemoryUniReporter("js-gc-heap", KIND_OTHER, UNITS_BYTES,
-"Memory used by the garbage-collected JavaScript heap.")
+    JSMainRuntimeGCHeapReporter()
+      : MemoryUniReporter("js-main-runtime-gc-heap", KIND_OTHER, UNITS_BYTES,
+"Memory used by the garbage-collected heap in the main JSRuntime.")
     {}
 private:
     int64_t Amount() MOZ_OVERRIDE
@@ -1579,21 +1579,21 @@ private:
     }
 };
 
-// Nb: js-compartments/system + js-compartments/user could be different to the
-// number of compartments reported by JSReporter if a garbage collection
-// occurred between them being consulted.  We could move these reporters into
-// JSReporter to avoid that problem, but then we couldn't easily report them
-// via telemetry, so we live with the small risk of inconsistencies.
+// Nb: js-main-runtime-compartments/system + js-main-runtime-compartments/user
+// could be different to the number of compartments reported by JSReporter if a
+// garbage collection occurred between them being consulted.  We could move
+// these reporters into JSReporter to avoid that problem, but then we couldn't
+// easily report them via telemetry, so we live with the small risk of
+// inconsistencies.
 
-class JSCompartmentsSystemReporter MOZ_FINAL : public MemoryUniReporter
+class RedundantJSMainRuntimeCompartmentsSystemReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
-    JSCompartmentsSystemReporter()
-      : MemoryUniReporter("js-compartments/system", KIND_OTHER, UNITS_COUNT,
-"The number of JavaScript compartments for system code.  The sum of this and "
-"'js-compartments/user' might not match the number of compartments listed "
-"in the 'explicit' tree if a garbage collection occurs at an inopportune "
-"time, but such cases should be rare.")
+    // An empty description is ok because this is a "redundant/"-prefixed
+    // reporter and so is ignored by about:memory.
+    RedundantJSMainRuntimeCompartmentsSystemReporter()
+      : MemoryUniReporter("redundant/js-main-runtime-compartments/system",
+                          KIND_OTHER, UNITS_COUNT, "")
     {}
 private:
     int64_t Amount() MOZ_OVERRIDE
@@ -1603,15 +1603,15 @@ private:
     }
 };
 
-class JSCompartmentsUserReporter MOZ_FINAL : public MemoryUniReporter
+class RedundantJSMainRuntimeCompartmentsUserReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
-    JSCompartmentsUserReporter()
-      : MemoryUniReporter("js-compartments/user", KIND_OTHER, UNITS_COUNT,
-"The number of JavaScript compartments for user code.  The sum of this and "
-"'js-compartments/system' might not match the number of compartments listed "
-"under 'js' if a garbage collection occurs at an inopportune time, but such "
-"cases should be rare.")
+    // An empty description is ok because this is a "redundant/"-prefixed
+    // reporter and so is ignored by about:memory.
+    RedundantJSMainRuntimeCompartmentsUserReporter()
+      : MemoryUniReporter("redundant/js-main-runtime-compartments/user",
+                          KIND_OTHER, UNITS_COUNT,
+"The number of JavaScript compartments for user code in the main JSRuntime.")
     {}
 private:
     int64_t Amount() MOZ_OVERRIDE
@@ -2159,11 +2159,6 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                    cStats.typeInference.typeResults,
                    "Memory used by dynamic type results produced by scripts.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/analysis-pool"),
-                   cStats.typeInference.analysisPool,
-                   "Memory holding transient analysis information used during type inference and "
-                   "compilation.");
-
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/pending-arrays"),
                    cStats.typeInference.pendingArrays,
                    "Memory used for solving constraints during type inference.");
@@ -2360,13 +2355,13 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
 
 } // namespace xpc
 
-class JSCompartmentsReporter MOZ_FINAL : public nsIMemoryReporter
+class JSMainRuntimeCompartmentsReporter MOZ_FINAL : public nsIMemoryReporter
 {
   public:
     NS_DECL_THREADSAFE_ISUPPORTS
 
     NS_IMETHOD GetName(nsACString &name) {
-        name.AssignLiteral("compartments");
+        name.AssignLiteral("js-main-runtime-compartments");
         return NS_OK;
     }
 
@@ -2378,8 +2373,8 @@ class JSCompartmentsReporter MOZ_FINAL : public nsIMemoryReporter
         nsCString path;
         GetCompartmentName(c, path, true);
         path.Insert(js::IsSystemCompartment(c)
-                    ? NS_LITERAL_CSTRING("compartments/system/")
-                    : NS_LITERAL_CSTRING("compartments/user/"),
+                    ? NS_LITERAL_CSTRING("js-main-runtime-compartments/system/")
+                    : NS_LITERAL_CSTRING("js-main-runtime-compartments/user/"),
                     0);
         paths->append(path);
     }
@@ -2400,13 +2395,14 @@ class JSCompartmentsReporter MOZ_FINAL : public nsIMemoryReporter
         // Report.
         for (size_t i = 0; i < paths.length(); i++)
             // These ones don't need a description, hence the "".
-            REPORT(nsCString(paths[i]), KIND_OTHER, UNITS_COUNT, 1, "");
+            REPORT(nsCString(paths[i]), KIND_OTHER, UNITS_COUNT, 1,
+                   "A live compartment in the main JSRuntime.");
 
         return NS_OK;
     }
 };
 
-NS_IMPL_ISUPPORTS1(JSCompartmentsReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS1(JSMainRuntimeCompartmentsReporter, nsIMemoryReporter)
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(OrphanMallocSizeOf)
 
@@ -3044,11 +3040,11 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     if (!xpc_LocalizeRuntime(runtime))
         NS_RUNTIMEABORT("xpc_LocalizeRuntime failed.");
 
-    NS_RegisterMemoryReporter(new JSGCHeapReporter());
-    NS_RegisterMemoryReporter(new JSCompartmentsSystemReporter());
-    NS_RegisterMemoryReporter(new JSCompartmentsUserReporter());
+    NS_RegisterMemoryReporter(new JSMainRuntimeGCHeapReporter());
+    NS_RegisterMemoryReporter(new RedundantJSMainRuntimeCompartmentsSystemReporter());
+    NS_RegisterMemoryReporter(new RedundantJSMainRuntimeCompartmentsUserReporter());
     NS_RegisterMemoryReporter(new JSMainRuntimeTemporaryPeakReporter());
-    NS_RegisterMemoryReporter(new JSCompartmentsReporter);
+    NS_RegisterMemoryReporter(new JSMainRuntimeCompartmentsReporter);
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG

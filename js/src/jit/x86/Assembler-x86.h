@@ -113,16 +113,17 @@ class Operand
   public:
     enum Kind {
         REG,
-        REG_DISP,
+        MEM_REG_DISP,
         FPREG,
-        SCALE,
-        ADDRESS
+        MEM_SCALE,
+        MEM_ADDRESS32
     };
 
+  private:
     Kind kind_ : 4;
-    int32_t index_ : 5;
+    int32_t base_ : 5;
     Scale scale_ : 3;
-    int32_t base_;
+    int32_t index_ : 5;
     int32_t disp_;
 
   public:
@@ -135,45 +136,45 @@ class Operand
         base_(reg.code())
     { }
     explicit Operand(const Address &address)
-      : kind_(REG_DISP),
+      : kind_(MEM_REG_DISP),
         base_(address.base.code()),
         disp_(address.offset)
     { }
     explicit Operand(const BaseIndex &address)
-      : kind_(SCALE),
-        index_(address.index.code()),
-        scale_(address.scale),
+      : kind_(MEM_SCALE),
         base_(address.base.code()),
+        scale_(address.scale),
+        index_(address.index.code()),
         disp_(address.offset)
     { }
     Operand(Register base, Register index, Scale scale, int32_t disp = 0)
-      : kind_(SCALE),
-        index_(index.code()),
-        scale_(scale),
+      : kind_(MEM_SCALE),
         base_(base.code()),
+        scale_(scale),
+        index_(index.code()),
         disp_(disp)
     { }
     Operand(Register reg, int32_t disp)
-      : kind_(REG_DISP),
+      : kind_(MEM_REG_DISP),
         base_(reg.code()),
         disp_(disp)
     { }
     explicit Operand(const AbsoluteAddress &address)
-      : kind_(ADDRESS),
-        base_(reinterpret_cast<int32_t>(address.addr))
+      : kind_(MEM_ADDRESS32),
+        disp_(reinterpret_cast<int32_t>(address.addr))
     { }
     explicit Operand(const void *address)
-      : kind_(ADDRESS),
-        base_(reinterpret_cast<int32_t>(address))
+      : kind_(MEM_ADDRESS32),
+        disp_(reinterpret_cast<int32_t>(address))
     { }
 
     Address toAddress() {
-        JS_ASSERT(kind() == REG_DISP);
+        JS_ASSERT(kind() == MEM_REG_DISP);
         return Address(Register::FromCode(base()), disp());
     }
 
     BaseIndex toBaseIndex() {
-        JS_ASSERT(kind() == SCALE);
+        JS_ASSERT(kind() == MEM_SCALE);
         return BaseIndex(Register::FromCode(base()), Register::FromCode(index()), scale(), disp());
     }
 
@@ -185,15 +186,15 @@ class Operand
         return (Registers::Code)base_;
     }
     Registers::Code base() const {
-        JS_ASSERT(kind() == REG_DISP || kind() == SCALE);
+        JS_ASSERT(kind() == MEM_REG_DISP || kind() == MEM_SCALE);
         return (Registers::Code)base_;
     }
     Registers::Code index() const {
-        JS_ASSERT(kind() == SCALE);
+        JS_ASSERT(kind() == MEM_SCALE);
         return (Registers::Code)index_;
     }
     Scale scale() const {
-        JS_ASSERT(kind() == SCALE);
+        JS_ASSERT(kind() == MEM_SCALE);
         return scale_;
     }
     FloatRegisters::Code fpu() const {
@@ -201,12 +202,12 @@ class Operand
         return (FloatRegisters::Code)base_;
     }
     int32_t disp() const {
-        JS_ASSERT(kind() == REG_DISP || kind() == SCALE);
+        JS_ASSERT(kind() == MEM_REG_DISP || kind() == MEM_SCALE);
         return disp_;
     }
     void *address() const {
-        JS_ASSERT(kind() == ADDRESS);
-        return reinterpret_cast<void *>(base_);
+        JS_ASSERT(kind() == MEM_ADDRESS32);
+        return reinterpret_cast<void *>(disp_);
     }
 };
 
@@ -273,6 +274,9 @@ class Assembler : public AssemblerX86Shared
     void push(const ImmWord imm) {
         push(Imm32(imm.value));
     }
+    void push(const ImmPtr imm) {
+        push(ImmWord(uintptr_t(imm.value)));
+    }
     void push(const FloatRegister &src) {
         subl(Imm32(sizeof(double)), StackPointer);
         movsd(src, Operand(StackPointer, 0));
@@ -292,6 +296,9 @@ class Assembler : public AssemblerX86Shared
         movl(Imm32(word.value), dest);
         return masm.currentOffset();
     }
+    CodeOffsetLabel movWithPatch(const ImmPtr &imm, const Register &dest) {
+        return movWithPatch(ImmWord(uintptr_t(imm.value)), dest);
+    }
 
     void movl(const ImmGCPtr &ptr, const Register &dest) {
         masm.movl_i32r(ptr.value, dest.code());
@@ -303,11 +310,11 @@ class Assembler : public AssemblerX86Shared
             masm.movl_i32r(ptr.value, dest.reg());
             writeDataRelocation(ptr);
             break;
-          case Operand::REG_DISP:
+          case Operand::MEM_REG_DISP:
             masm.movl_i32m(ptr.value, dest.disp(), dest.base());
             writeDataRelocation(ptr);
             break;
-          case Operand::SCALE:
+          case Operand::MEM_SCALE:
             masm.movl_i32m(ptr.value, dest.disp(), dest.base(), dest.index(), dest.scale());
             writeDataRelocation(ptr);
             break;
@@ -318,7 +325,13 @@ class Assembler : public AssemblerX86Shared
     void movl(ImmWord imm, Register dest) {
         masm.movl_i32r(imm.value, dest.code());
     }
+    void movl(ImmPtr imm, Register dest) {
+        movl(ImmWord(uintptr_t(imm.value)), dest);
+    }
     void mov(ImmWord imm, Register dest) {
+        movl(imm, dest);
+    }
+    void mov(ImmPtr imm, Register dest) {
         movl(imm, dest);
     }
     void mov(Imm32 imm, Register dest) {
@@ -353,6 +366,9 @@ class Assembler : public AssemblerX86Shared
     void cmpl(const Register src, ImmWord ptr) {
         masm.cmpl_ir(ptr.value, src.code());
     }
+    void cmpl(const Register src, ImmPtr imm) {
+        cmpl(src, ImmWord(uintptr_t(imm.value)));
+    }
     void cmpl(const Register src, ImmGCPtr ptr) {
         masm.cmpl_ir(ptr.value, src.code());
         writeDataRelocation(ptr);
@@ -366,11 +382,11 @@ class Assembler : public AssemblerX86Shared
             masm.cmpl_ir_force32(imm.value, op.reg());
             writeDataRelocation(imm);
             break;
-          case Operand::REG_DISP:
+          case Operand::MEM_REG_DISP:
             masm.cmpl_im_force32(imm.value, op.disp(), op.base());
             writeDataRelocation(imm);
             break;
-          case Operand::ADDRESS:
+          case Operand::MEM_ADDRESS32:
             masm.cmpl_im(imm.value, op.address());
             writeDataRelocation(imm);
             break;
@@ -405,7 +421,10 @@ class Assembler : public AssemblerX86Shared
     }
     void call(ImmWord target) {
         JmpSrc src = masm.call();
-        addPendingJump(src, target.asPointer(), Relocation::HARDCODED);
+        addPendingJump(src, (void*)target.value, Relocation::HARDCODED);
+    }
+    void call(ImmPtr target) {
+        call(ImmWord(uintptr_t(target.value)));
     }
 
     // Emit a CALL or CMP (nop) instruction. ToggleCall can be used to patch

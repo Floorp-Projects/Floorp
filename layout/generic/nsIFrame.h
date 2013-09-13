@@ -485,7 +485,7 @@ typedef uint32_t nsReflowStatus;
 
 // Construct a line-break-before status. Note that there is no
 // completion status for a line-break before because we *know* that
-// the frame will be reflowed later and hence it's current completion
+// the frame will be reflowed later and hence its current completion
 // status doesn't matter.
 #define NS_INLINE_LINE_BREAK_BEFORE()                                   \
   (NS_INLINE_BREAK | NS_INLINE_BREAK_BEFORE |                           \
@@ -867,6 +867,13 @@ public:
   void SetPosition(const nsPoint& aPt) { mRect.MoveTo(aPt); }
 
   /**
+   * Move the frame, accounting for relative positioning. Use this when
+   * adjusting the frame's position by a known amount, to properly update its
+   * saved normal position (see GetNormalPosition below).
+   */
+  void MovePositionBy(const nsPoint& aTranslation);
+
+  /**
    * Return frame's position without relative positioning
    */
   nsPoint GetNormalPosition() const;
@@ -927,7 +934,7 @@ public:
   NS_DECLARE_FRAME_PROPERTY(IBSplitSpecialPrevSibling, nullptr)
 
   NS_DECLARE_FRAME_PROPERTY(NormalPositionProperty, DestroyPoint)
-  NS_DECLARE_FRAME_PROPERTY(ComputedStickyOffsetProperty, DestroyMargin)
+  NS_DECLARE_FRAME_PROPERTY(ComputedOffsetProperty, DestroyMargin)
 
   NS_DECLARE_FRAME_PROPERTY(OutlineInnerRectProperty, DestroyRect)
   NS_DECLARE_FRAME_PROPERTY(PreEffectsBBoxProperty, DestroyRect)
@@ -995,7 +1002,7 @@ public:
    * @param aReflowState An optional reflow state parameter, which is used if
    *        ApplySkipSides() is being called in the middle of reflow.
    *
-   * @note (See also bug 743402, comment 11) GetSkipSides() and it's sister
+   * @note (See also bug 743402, comment 11) GetSkipSides() and its sister
    *       method, ApplySkipSides() checks to see if this frame has a previous
    *       or next continuation to determine if a side should be skipped.
    *       Unfortunately, this only works after reflow has been completed. In
@@ -2413,7 +2420,7 @@ public:
    * Determine whether borders should not be painted on certain sides of the
    * frame.
    *
-   * @note (See also bug 743402, comment 11) GetSkipSides() and it's sister
+   * @note (See also bug 743402, comment 11) GetSkipSides() and its sister
    *       method, ApplySkipSides() checks to see if this frame has a previous
    *       or next continuation to determine if a side should be skipped.
    *       Unfortunately, this only works after reflow has been completed. In

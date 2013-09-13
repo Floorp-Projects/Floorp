@@ -38,7 +38,7 @@ function createRootActor()
                 url: s.url,
                 startLine: s.startLine,
                 lineCount: s.lineCount,
-                source: this.sources.source(s.url).form()
+                source: this.sources.source({ url: s.url }).form()
               };
               scripts.push(script);
             }
@@ -68,7 +68,7 @@ function createRootActor()
               url: aScript.url,
               startLine: aScript.startLine,
               lineCount: aScript.lineCount,
-              source: actor.thread.sources.source(aScript.url).form()
+              source: actor.thread.sources.source({ url: aScript.url }).form()
             });
           };
         }(actor.thread.onNewScript));

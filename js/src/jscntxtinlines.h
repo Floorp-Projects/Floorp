@@ -8,6 +8,7 @@
 #define jscntxtinlines_h
 
 #include "jscntxt.h"
+#include "jscompartment.h"
 
 #include "jsiter.h"
 #include "jsworkers.h"
@@ -17,8 +18,6 @@
 #include "vm/ForkJoin.h"
 #include "vm/Interpreter.h"
 #include "vm/ProxyObject.h"
-
-#include "gc/Barrier-inl.h"
 
 namespace js {
 
@@ -352,8 +351,8 @@ inline void
 ExclusiveContext::maybePause() const
 {
 #ifdef JS_WORKER_THREADS
-    if (workerThread)
-        workerThread->maybePause();
+    if (workerThread())
+        workerThread()->maybePause();
 #endif
 }
 
@@ -420,12 +419,6 @@ ExclusiveContext::typeLifoAlloc()
 }
 
 }  /* namespace js */
-
-inline js::LifoAlloc &
-JSContext::analysisLifoAlloc()
-{
-    return compartment()->analysisLifoAlloc;
-}
 
 inline void
 JSContext::setPendingException(js::Value v) {

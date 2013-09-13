@@ -29,6 +29,8 @@ uint32_t GrallocImage::sColorIdMap[] = {
     HAL_PIXEL_FORMAT_YCbCr_420_SP, OMX_COLOR_FormatYUV420SemiPlanar,
     HAL_PIXEL_FORMAT_YCrCb_420_SP, -1,
     HAL_PIXEL_FORMAT_YCrCb_420_SP_ADRENO, -1,
+    HAL_PIXEL_FORMAT_YCbCr_420_SP_TILED, HAL_PIXEL_FORMAT_YCbCr_420_SP_TILED,
+    HAL_PIXEL_FORMAT_YCbCr_420_SP_VENUS, HAL_PIXEL_FORMAT_YCbCr_420_SP_VENUS,
     HAL_PIXEL_FORMAT_YV12, OMX_COLOR_FormatYUV420Planar,
     0, 0
 };
@@ -53,7 +55,9 @@ GrallocImage::GrallocImage()
 
 GrallocImage::~GrallocImage()
 {
-  if (mGraphicBuffer.get()) {
+  // If we have a texture client, the latter takes over the responsibility to
+  // unlock the GraphicBufferLocked.
+  if (mGraphicBuffer.get() && !mTextureClient) {
     mGraphicBuffer->Unlock();
     if (mBufferAllocated) {
       ImageBridgeChild *ibc = ImageBridgeChild::GetSingleton();
@@ -294,6 +298,7 @@ GrallocImage::GetTextureClient()
     mTextureClient = new GrallocTextureClientOGL(actor,
                                                  gfx::ToIntSize(mSize),
                                                  flags);
+    mTextureClient->SetGraphicBufferLocked(mGraphicBuffer);
   }
   return mTextureClient;
 }

@@ -564,6 +564,11 @@ var BrowserUI = {
   blurNavBar: function blurNavBar() {
     if (this._edit.focused) {
       this._edit.blur();
+
+      // Advanced notice to CAO, so we can shuffle the nav bar in advance
+      // of the keyboard transition.
+      ContentAreaObserver.navBarWillBlur();
+
       return true;
     }
     return false;
