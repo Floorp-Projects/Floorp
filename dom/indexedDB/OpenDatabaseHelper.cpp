@@ -1737,7 +1737,8 @@ OpenDatabaseHelper::DispatchToIOThread()
 nsresult
 OpenDatabaseHelper::RunImmediately()
 {
-  NS_ASSERTION(mState == eCreated, "We've already been dispatched?");
+  NS_ASSERTION(mState == eCreated || mState == eOpenPending,
+               "We've already been dispatched?");
   NS_ASSERTION(NS_FAILED(mResultCode),
                "Should only be short-circuiting if we failed!");
   NS_ASSERTION(NS_IsMainThread(), "All hell is about to break lose!");
@@ -2168,6 +2169,10 @@ OpenDatabaseHelper::Run()
     PROFILER_MAIN_THREAD_LABEL("IndexedDB", "OpenDatabaseHelper::Run");
 
     if (mState == eOpenPending) {
+      if (NS_FAILED(mResultCode)) {
+        return RunImmediately();
+      }
+
       return DispatchToIOThread();
     }
 

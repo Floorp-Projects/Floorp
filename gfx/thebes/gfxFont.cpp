@@ -89,6 +89,61 @@ gfxCharacterMap::NotifyReleased()
     delete this;
 }
 
+gfxFontEntry::gfxFontEntry() :
+    mItalic(false), mFixedPitch(false),
+    mIsProxy(false), mIsValid(true),
+    mIsBadUnderlineFont(false),
+    mIsUserFont(false),
+    mIsLocalUserFont(false),
+    mStandardFace(false),
+    mSymbolFont(false),
+    mIgnoreGDEF(false),
+    mIgnoreGSUB(false),
+    mSVGInitialized(false),
+    mHasSpaceFeaturesInitialized(false),
+    mHasSpaceFeatures(false),
+    mHasSpaceFeaturesKerning(false),
+    mHasSpaceFeaturesNonKerning(false),
+    mHasSpaceFeaturesSubDefault(false),
+    mCheckedForGraphiteTables(false),
+    mHasCmapTable(false),
+    mGrFaceInitialized(false),
+    mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
+    mUVSOffset(0), mUVSData(nullptr),
+    mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
+    mHBFace(nullptr),
+    mGrFace(nullptr),
+    mGrFaceRefCnt(0)
+{
+}
+
+gfxFontEntry::gfxFontEntry(const nsAString& aName, bool aIsStandardFace) :
+    mName(aName), mItalic(false), mFixedPitch(false),
+    mIsProxy(false), mIsValid(true),
+    mIsBadUnderlineFont(false), mIsUserFont(false),
+    mIsLocalUserFont(false), mStandardFace(aIsStandardFace),
+    mSymbolFont(false),
+    mIgnoreGDEF(false),
+    mIgnoreGSUB(false),
+    mSVGInitialized(false),
+    mHasSpaceFeaturesInitialized(false),
+    mHasSpaceFeatures(false),
+    mHasSpaceFeaturesKerning(false),
+    mHasSpaceFeaturesNonKerning(false),
+    mHasSpaceFeaturesSubDefault(false),
+    mCheckedForGraphiteTables(false),
+    mHasCmapTable(false),
+    mGrFaceInitialized(false),
+    mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
+    mUVSOffset(0), mUVSData(nullptr),
+    mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
+    mHBFace(nullptr),
+    mGrFace(nullptr),
+    mGrFaceRefCnt(0)
+{
+    memset(&mHasSpaceFeaturesSub, 0, sizeof(mHasSpaceFeaturesSub));
+}
+
 gfxFontEntry::~gfxFontEntry()
 {
     // For downloaded fonts, we need to tell the user font cache that this
@@ -102,11 +157,6 @@ gfxFontEntry::~gfxFontEntry()
     // face objects should have been released.
     MOZ_ASSERT(!mHBFace);
     MOZ_ASSERT(!mGrFaceInitialized);
-
-    if (mSVGGlyphs) {
-        delete mSVGGlyphs;
-    }
-    delete mUserFontData;
 }
 
 bool gfxFontEntry::IsSymbolFont() 
@@ -248,7 +298,7 @@ gfxFontEntry::RenderSVGGlyph(gfxContext *aContext, uint32_t aGlyphId,
 }
 
 bool
-gfxFontEntry::TryGetSVGData()
+gfxFontEntry::TryGetSVGData(gfxFont* aFont)
 {
     if (!gfxPlatform::GetPlatform()->OpenTypeSVGEnabled()) {
         return false;
@@ -266,10 +316,29 @@ gfxFontEntry::TryGetSVGData()
 
         // gfxSVGGlyphs will hb_blob_destroy() the table when it is finished
         // with it.
-        mSVGGlyphs = new gfxSVGGlyphs(svgTable);
+        mSVGGlyphs = new gfxSVGGlyphs(svgTable, this);
+    }
+
+    if (!mFontsUsingSVGGlyphs.Contains(aFont)) {
+        mFontsUsingSVGGlyphs.AppendElement(aFont);
     }
 
     return !!mSVGGlyphs;
+}
+
+void
+gfxFontEntry::NotifyFontDestroyed(gfxFont* aFont)
+{
+    mFontsUsingSVGGlyphs.RemoveElement(aFont);
+}
+
+void
+gfxFontEntry::NotifyGlyphsChanged()
+{
+    for (uint32_t i = 0, count = mFontsUsingSVGGlyphs.Length(); i < count; ++i) {
+        gfxFont* font = mFontsUsingSVGGlyphs[i];
+        font->NotifyGlyphsChanged();
+    }
 }
 
 /**
@@ -1704,6 +1773,14 @@ gfxFont::gfxFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
     mKerningSet = HasFeatureSet(HB_TAG('k','e','r','n'), mKerningEnabled);
 }
 
+static PLDHashOperator
+NotifyFontDestroyed(nsPtrHashKey<gfxFont::GlyphChangeObserver>* aKey,
+                    void* aClosure)
+{
+    aKey->GetKey()->ForgetFont();
+    return PL_DHASH_NEXT;
+}
+
 gfxFont::~gfxFont()
 {
     uint32_t i, count = mGlyphExtentsArray.Length();
@@ -1712,6 +1789,12 @@ gfxFont::~gfxFont()
     // of classes that lack a proper copy constructor
     for (i = 0; i < count; ++i) {
         delete mGlyphExtentsArray[i];
+    }
+
+    mFontEntry->NotifyFontDestroyed(this);
+
+    if (mGlyphChangeObservers) {
+        mGlyphChangeObservers->EnumerateEntries(NotifyFontDestroyed, nullptr);
     }
 }
 
@@ -2295,7 +2378,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
     double direction = aTextRun->GetDirection();
     gfxMatrix globalMatrix = aContext->CurrentMatrix();
 
-    bool haveSVGGlyphs = GetFontEntry()->TryGetSVGData();
+    bool haveSVGGlyphs = GetFontEntry()->TryGetSVGData(this);
     nsAutoPtr<gfxTextContextPaint> contextPaint;
     if (haveSVGGlyphs && !aContextPaint) {
         // If no pattern is specified for fill, use the current pattern
@@ -2935,6 +3018,28 @@ gfxFont::Measure(gfxTextRun *aTextRun,
     return metrics;
 }
 
+static PLDHashOperator
+NotifyGlyphChangeObservers(nsPtrHashKey<gfxFont::GlyphChangeObserver>* aKey,
+                           void* aClosure)
+{
+    aKey->GetKey()->NotifyGlyphsChanged();
+    return PL_DHASH_NEXT;
+}
+
+void
+gfxFont::NotifyGlyphsChanged()
+{
+    uint32_t i, count = mGlyphExtentsArray.Length();
+    for (i = 0; i < count; ++i) {
+        // Flush cached extents array
+        mGlyphExtentsArray[i]->NotifyGlyphsChanged();
+    }
+
+    if (mGlyphChangeObservers) {
+        mGlyphChangeObservers->EnumerateEntries(NotifyGlyphChangeObservers, nullptr);
+    }
+}
+
 static bool
 IsBoundarySpace(PRUnichar aChar, PRUnichar aNextChar)
 {
@@ -3389,7 +3494,7 @@ gfxFont::SetupGlyphExtents(gfxContext *aContext, uint32_t aGlyphID, bool aNeedTi
     aContext->IdentityMatrix();
 
     gfxRect svgBounds;
-    if (mFontEntry->TryGetSVGData() && mFontEntry->HasSVGGlyph(aGlyphID) &&
+    if (mFontEntry->TryGetSVGData(this) && mFontEntry->HasSVGGlyph(aGlyphID) &&
         mFontEntry->GetSVGGlyphExtents(aContext, aGlyphID, &svgBounds)) {
         gfxFloat d2a = aExtents->GetAppUnitsPerDevUnit();
         aExtents->SetTightGlyphExtents(aGlyphID,
@@ -3723,6 +3828,23 @@ gfxFont::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 {
     aSizes->mFontInstances += aMallocSizeOf(this);
     SizeOfExcludingThis(aMallocSizeOf, aSizes);
+}
+
+void
+gfxFont::AddGlyphChangeObserver(GlyphChangeObserver *aObserver)
+{
+    if (!mGlyphChangeObservers) {
+        mGlyphChangeObservers = new nsTHashtable<nsPtrHashKey<GlyphChangeObserver> >;
+    }
+    mGlyphChangeObservers->PutEntry(aObserver);
+}
+
+void
+gfxFont::RemoveGlyphChangeObserver(GlyphChangeObserver *aObserver)
+{
+    NS_ASSERTION(mGlyphChangeObservers, "No observers registered");
+    NS_ASSERTION(mGlyphChangeObservers->Contains(aObserver), "Observer not registered");
+    mGlyphChangeObservers->RemoveEntry(aObserver);
 }
 
 gfxGlyphExtents::~gfxGlyphExtents()

@@ -148,6 +148,28 @@ NS_DECLARE_FRAME_PROPERTY(UninflatedTextRunProperty, nullptr)
 
 NS_DECLARE_FRAME_PROPERTY(FontSizeInflationProperty, nullptr)
 
+class GlyphObserver : public gfxFont::GlyphChangeObserver {
+public:
+  GlyphObserver(gfxFont* aFont, nsTextFrame* aFrame)
+    : gfxFont::GlyphChangeObserver(aFont), mFrame(aFrame) {}
+  virtual void NotifyGlyphsChanged() MOZ_OVERRIDE;
+private:
+  nsTextFrame* mFrame;
+};
+
+static void DestroyGlyphObserverList(void* aPropertyValue)
+{
+  delete static_cast<nsTArray<nsAutoPtr<GlyphObserver> >*>(aPropertyValue);
+}
+
+/**
+ * This property is set on text frames with TEXT_IN_TEXTRUN_USER_DATA set that
+ * have potentially-animated glyphs.
+ * The only reason this list is in a property is to automatically destroy the
+ * list when the frame is deleted, unregistering the observers.
+ */
+NS_DECLARE_FRAME_PROPERTY(TextFrameGlyphObservers, DestroyGlyphObserverList);
+
 // The following flags are set during reflow
 
 // This bit is set on the first frame in a continuation indicating
@@ -506,6 +528,26 @@ UnhookTextRunFromFrames(gfxTextRun* aTextRun, nsTextFrame* aStartContinuation)
   }
 }
 
+void
+GlyphObserver::NotifyGlyphsChanged()
+{
+  nsIPresShell* shell = mFrame->PresContext()->PresShell();
+  for (nsIFrame* f = mFrame; f;
+       f = nsLayoutUtils::GetNextContinuationOrSpecialSibling(f)) {
+    if (f != mFrame && f->HasAnyStateBits(TEXT_IN_TEXTRUN_USER_DATA)) {
+      // f will have its own GlyphObserver (if needed) so we can stop here.
+      break;
+    }
+    f->InvalidateFrame();
+    // Theoretically we could just update overflow areas, perhaps using
+    // OverflowChangedTracker, but that would do a bunch of work eagerly that
+    // we should probably do lazily here since there could be a lot
+    // of text frames affected and we'd like to coalesce the work. So that's
+    // not easy to do well.
+    shell->FrameNeedsReflow(f, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+  }
+}
+
 class FrameTextRunCache;
 
 static FrameTextRunCache *gTextRuns = nullptr;
@@ -772,6 +814,63 @@ IsAllNewlines(const nsTextFragment* aFrag)
   return true;
 }
 
+static void
+CreateObserverForAnimatedGlyphs(nsTextFrame* aFrame, const nsTArray<gfxFont*>& aFonts)
+{
+  if (!(aFrame->GetStateBits() & TEXT_IN_TEXTRUN_USER_DATA)) {
+    // Maybe the textrun was created for uninflated text.
+    return;
+  }
+
+  nsTArray<nsAutoPtr<GlyphObserver> >* observers =
+    new nsTArray<nsAutoPtr<GlyphObserver> >();
+  for (uint32_t i = 0, count = aFonts.Length(); i < count; ++i) {
+    observers->AppendElement(new GlyphObserver(aFonts[i], aFrame));
+  }
+  aFrame->Properties().Set(TextFrameGlyphObservers(), observers);
+  // We are lazy and don't try to remove a property value that might be
+  // obsolete due to style changes or font selection changes. That is
+  // likely to be rarely needed, and we don't want to eat the overhead of
+  // doing it for the overwhelmingly common case of no property existing.
+  // (And we're out of state bits to conveniently use for a fast property
+  // existence check.) The only downside is that in some rare cases we might
+  // keep fonts alive for longer than necessary, or unnecessarily invalidate
+  // frames.
+}
+
+static void
+CreateObserversForAnimatedGlyphs(gfxTextRun* aTextRun)
+{
+  if (!aTextRun->GetUserData()) {
+    return;
+  }
+  nsTArray<gfxFont*> fontsWithAnimatedGlyphs;
+  uint32_t numGlyphRuns;
+  const gfxTextRun::GlyphRun* glyphRuns =
+    aTextRun->GetGlyphRuns(&numGlyphRuns);
+  for (uint32_t i = 0; i < numGlyphRuns; ++i) {
+    gfxFont* font = glyphRuns[i].mFont;
+    if (font->GlyphsMayChange() && !fontsWithAnimatedGlyphs.Contains(font)) {
+      fontsWithAnimatedGlyphs.AppendElement(font);
+    }
+  }
+  if (fontsWithAnimatedGlyphs.IsEmpty()) {
+    return;
+  }
+
+  if (aTextRun->GetFlags() & nsTextFrameUtils::TEXT_IS_SIMPLE_FLOW) {
+    CreateObserverForAnimatedGlyphs(static_cast<nsTextFrame*>(
+      static_cast<nsIFrame*>(aTextRun->GetUserData())), fontsWithAnimatedGlyphs);
+  } else {
+    TextRunUserData* userData =
+      static_cast<TextRunUserData*>(aTextRun->GetUserData());
+    for (uint32_t i = 0; i < userData->mMappedFlowCount; ++i) {
+      CreateObserverForAnimatedGlyphs(userData->mMappedFlows[i].mStartFrame,
+                                      fontsWithAnimatedGlyphs);
+    }
+  }
+}
+
 /**
  * This class accumulates state as we scan a paragraph of text. It detects
  * textrun boundaries (changes from text to non-text, hard
@@ -927,6 +1026,10 @@ public:
           static_cast<nsTransformedTextRun*>(mTextRun);
         transformedTextRun->FinishSettingProperties(mContext);
       }
+      // The way nsTransformedTextRun is implemented, its glyph runs aren't
+      // available until after nsTransformedTextRun::FinishSettingProperties()
+      // is called. So that's why we defer checking for animated glyphs to here.
+      CreateObserversForAnimatedGlyphs(mTextRun);
     }
 
     gfxTextRun*  mTextRun;

@@ -186,6 +186,7 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mUseTileSourceRect(false),
   mIsFixedPosition(false),
   mMargins(0, 0, 0, 0),
+  mStickyPositionData(nullptr),
   mDebugColorIndex(0),
   mAnimationGeneration(0)
 {}
@@ -1279,6 +1280,14 @@ Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
   }
   if (GetIsFixedPosition()) {
     aTo.AppendPrintf(" [isFixedPosition anchor=%f,%f]", mAnchor.x, mAnchor.y);
+  }
+  if (GetIsStickyPosition()) {
+    aTo.AppendPrintf(" [isStickyPosition scrollId=%d outer=%f,%f %fx%f "
+                     "inner=%f,%f %fx%f]", mStickyPositionData->mScrollId,
+                     mStickyPositionData->mOuter.x, mStickyPositionData->mOuter.y,
+                     mStickyPositionData->mOuter.width, mStickyPositionData->mOuter.height,
+                     mStickyPositionData->mInner.x, mStickyPositionData->mInner.y,
+                     mStickyPositionData->mInner.width, mStickyPositionData->mInner.height);
   }
 
   return aTo;
