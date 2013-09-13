@@ -174,10 +174,23 @@ let WebConsoleUtils = {
    */
   abbreviateSourceURL: function WCU_abbreviateSourceURL(aSourceURL)
   {
+    if (aSourceURL.substr(0, 5) == "data:") {
+      let commaIndex = aSourceURL.indexOf(",");
+      if (commaIndex > -1) {
+        aSourceURL = "data:" + aSourceURL.substring(commaIndex + 1);
+      }
+    }
+
     // Remove any query parameters.
     let hookIndex = aSourceURL.indexOf("?");
     if (hookIndex > -1) {
       aSourceURL = aSourceURL.substring(0, hookIndex);
+    }
+
+    // Remove any hash fragments.
+    let hashIndex = aSourceURL.indexOf("#");
+    if (hashIndex > -1) {
+      aSourceURL = aSourceURL.substring(0, hashIndex);
     }
 
     // Remove a trailing "/".
