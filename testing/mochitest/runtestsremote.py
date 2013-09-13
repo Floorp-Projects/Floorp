@@ -118,16 +118,13 @@ class RemoteOptions(MochitestOptions):
         defaults["closeWhenDone"] = True
         defaults["testPath"] = ""
         defaults["app"] = None
+        defaults["utilityPath"] = None
 
         self.set_defaults(**defaults)
 
     def verifyRemoteOptions(self, options, automation):
         if not options.remoteTestRoot:
             options.remoteTestRoot = automation._devicemanager.getDeviceRoot()
-        productRoot = options.remoteTestRoot + "/" + automation._product
-
-        if (options.utilityPath == self._automation.DIST_BIN):
-            options.utilityPath = productRoot + "/bin"
 
         if options.remoteWebServer == None:
             if os.name != "nt":
@@ -161,10 +158,7 @@ class RemoteOptions(MochitestOptions):
 
         # Only reset the xrePath if it wasn't provided
         if (options.xrePath == None):
-            if (automation._product == "fennec"):
-                options.xrePath = productRoot + "/xulrunner"
-            else:
-                options.xrePath = options.utilityPath
+            options.xrePath = options.utilityPath
 
         if (options.pidFile != ""):
             f = open(options.pidFile, 'w')
@@ -292,15 +286,15 @@ class MochiRemote(Mochitest):
         if options.xrePath == None:
             log.error("unable to find xulrunner path for %s, please specify with --xre-path", os.name)
             sys.exit(1)
-        paths.append("bin")
-        paths.append(os.path.join("..", "bin"))
 
         xpcshell = "xpcshell"
         if (os.name == "nt"):
             xpcshell += ".exe"
       
-        if (options.utilityPath):
-            paths.insert(0, options.utilityPath)
+        if options.utilityPath:
+            paths = [options.utilityPath, options.xrePath]
+        else:
+            paths = [options.xrePath]
         options.utilityPath = self.findPath(paths, xpcshell)
         if options.utilityPath == None:
             log.error("unable to find utility path for %s, please specify with --utility-path", os.name)

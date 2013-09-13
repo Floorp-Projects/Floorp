@@ -38,12 +38,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=782211
         ok(true, "Non callable arugment to request permission should throw exception.");
       }
 
-      var notification = new Notification("This is a title", {
-          dir: "auto",
-          lang: "",
-          body: "This is a notification body",
-          tag: "sometag",
-        });
+      var title = "This is a title";
+
+      var notification = new Notification(title);
+
+      is(notification.title, title, "Title should be set");
+      is(notification.dir, "auto", "Dir should default to 'auto'");
+      is(notification.lang, "", "Lang should not be set");
+      is(notification.body, "", "Body should not be set");
+      is(notification.tag, "", "Tag should not be set");
+
+      var options = {
+        dir: "auto",
+        lang: "",
+        body: "This is a notification body",
+        tag: "sometag"
+      };
+
+      var notification = new Notification(title, options);
+
+      is(notification.title, title, "Title should be set");
+      is(notification.dir, options.dir, "Dir should be set");
+      is(notification.lang, options.lang, "Lang should be set");
+      is(notification.body, options.body, "Body should be set");
+      is(notification.tag, options.tag, "Tag should be set");
 
       notification.onclose = function() {
         ok(true, "Notification should be closed.");

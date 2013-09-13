@@ -4,9 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+EXPORTS.mozilla.dom += [
+    'InterAppComm.h',
+]
+
+CPP_SOURCES += [
+    'InterAppComm.cpp',
+]
+
 EXTRA_COMPONENTS += [
     'AppsService.js',
     'AppsService.manifest',
+    'InterAppComm.manifest',
+    'InterAppCommService.js',
+    'InterAppConnection.js',
+    'InterAppMessagePort.js',
     'Webapps.js',
     'Webapps.manifest',
 ]
@@ -25,3 +37,8 @@ EXTRA_PP_JS_MODULES += [
     'Webapps.jsm',
 ]
 
+FAIL_ON_WARNINGS = True
+
+LIBXUL_LIBRARY = True
+
+LIBRARY_NAME = 'dom_apps_s'

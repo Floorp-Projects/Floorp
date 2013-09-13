@@ -2205,15 +2205,9 @@ BluetoothDBusService::GetConnectedDevicePropertiesInternal(uint16_t aServiceUuid
   }
 
   nsTArray<nsString> deviceAddresses;
-  BluetoothProfileManagerBase* profile;
-  if (aServiceUuid == BluetoothServiceClass::HANDSFREE ||
-      aServiceUuid == BluetoothServiceClass::HEADSET) {
-    profile = BluetoothHfpManager::Get();
-  } else if (aServiceUuid == BluetoothServiceClass::HID) {
-    profile = BluetoothHidManager::Get();
-  } else if (aServiceUuid == BluetoothServiceClass::OBJECT_PUSH) {
-    profile = BluetoothOppManager::Get();
-  } else {
+  BluetoothProfileManagerBase* profile =
+    BluetoothUuidHelper::GetBluetoothProfileManager(aServiceUuid);
+  if (!profile) {
     DispatchBluetoothReply(aRunnable, values,
                            NS_LITERAL_STRING(ERR_UNKNOWN_PROFILE));
     return NS_OK;
@@ -2680,15 +2674,9 @@ BluetoothDBusService::IsConnected(const uint16_t aServiceUuid)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  BluetoothProfileManagerBase* profile;
-  if (aServiceUuid == BluetoothServiceClass::HANDSFREE ||
-      aServiceUuid == BluetoothServiceClass::HEADSET) {
-    profile = BluetoothHfpManager::Get();
-  } else if (aServiceUuid == BluetoothServiceClass::HID) {
-    profile = BluetoothHidManager::Get();
-  } else if (aServiceUuid == BluetoothServiceClass::OBJECT_PUSH) {
-    profile = BluetoothOppManager::Get();
-  } else {
+  BluetoothProfileManagerBase* profile =
+    BluetoothUuidHelper::GetBluetoothProfileManager(aServiceUuid);
+  if (!profile) {
     NS_WARNING(ERR_UNKNOWN_PROFILE);
     return false;
   }

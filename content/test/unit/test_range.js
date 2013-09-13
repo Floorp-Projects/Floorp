@@ -6,9 +6,6 @@ const C_i = Components.interfaces;
 
 const UNORDERED_TYPE = C_i.nsIDOMXPathResult.ANY_UNORDERED_NODE_TYPE;
 
-// Instantiate nsIDOMScriptObjectFactory so that DOMException is usable in xpcshell
-Components.classesByID["{9eb760f0-4380-11d2-b328-00805f8a3859}"].getService(C_i.nsISupports);
-
 /**
  * Determine if the data node has only ignorable white-space.
  *

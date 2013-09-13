@@ -173,12 +173,6 @@ var WifiManager = (function() {
 
   var driverLoaded = false;
 
-  manager.checkDriverState = function(expectState) {
-    if (!unloadDriverEnabled)
-      return true;
-    return (expectState === driverLoaded);
-  }
-
   function loadDriver(callback) {
     if (driverLoaded) {
       callback(0);
@@ -1315,7 +1309,6 @@ var WifiManager = (function() {
                 if (status < 0) {
                   unloadDriver(function() {
                     callback(status);
-
                   });
                   manager.state = "UNINITIALIZED";
                   return;
@@ -2090,9 +2083,6 @@ function WifiWorker() {
       self._allowWpaEap = false;
     }
 
-    // Check if we need to dequeue requests first.
-    self._notifyAfterStateChange(true, true);
-
     // Notify everybody, even if they didn't ask us to come up.
     WifiManager.getMacAddress(function (mac) {
       self.macAddress = mac;
@@ -2108,9 +2098,6 @@ function WifiWorker() {
     WifiManager.enabled = WifiManager.supplicantStarted = false;
     WifiManager.state = "UNINITIALIZED";
     debug("Supplicant died!");
-
-    // Check if we need to dequeue requests first.
-    self._notifyAfterStateChange(this.success, false);
 
     // Notify everybody, even if they didn't ask us to come up.
     self._fireEvent("wifiDown", {});
@@ -2933,103 +2920,33 @@ WifiWorker.prototype = {
     }).bind(this));
   },
 
-  _notifyAfterStateChange: function(success, newState) {
-    if (!this._stateRequests.length)
-      return;
-
-    // First, notify all of the requests that were trying to make this change.
-    let state = this._stateRequests[0].enabled;
-    let driverReady = WifiManager.checkDriverState(newState);
-
-    // It is callback function's responsibility to handle the pending request.
-    // So we just return here.
-    if (this._stateRequests.length > 0
-        && ("callback" in this._stateRequests[0])) {
-      return;
-    }
-
-    // If the new state is not the same as state or new state is not the same as
-    // driver loaded state, then we weren't processing the first request (we
-    // were racing somehow) so don't notify.
-    // For newState is false(disable), we expect driverLoaded is false(driver unloaded)
-    // to proceed, and vice versa.
-    if (!success || (driverReady && state === newState)) {
-      do {
-        if (!("callback" in this._stateRequests[0])) {
-          this._stateRequests.shift();
-        }
-        // Don't remove more than one request if the previous one failed.
-      } while (success &&
-               this._stateRequests.length &&
-               !("callback" in this._stateRequests[0]) &&
-               this._stateRequests[0].enabled === state);
-    }
-    // If there were requests queued after this one, run them.
-    if (this._stateRequests.length > 0) {
-      let self = this;
-      let callback = null;
-      this._callbackTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      if (driverReady) {
-        // Driver is ready for next request.
-        callback = function(timer) {
-          if ("callback" in self._stateRequests[0]) {
-            self._stateRequests[0].callback.call(self, self._stateRequests[0].enabled);
-          } else {
-            WifiManager.setWifiEnabled(self._stateRequests[0].enabled,
-                                       self._setWifiEnabledCallback.bind(self));
-          }
-          timer = null;
-        };
-      } else {
-        // Wait driver until it's ready.
-        callback = function(timer) {
-          self._notifyAfterStateChange(success, newState);
-          timer = null;
-        };
-      }
-      this._callbackTimer.initWithCallback(callback, 1000, Ci.nsITimer.TYPE_ONE_SHOT);
-    }
-  },
-
   _setWifiEnabledCallback: function(status) {
-    if (status === "no change") {
-      this._notifyAfterStateChange(true, this._stateRequests[0].enabled);
-      return;
-    }
-
-    if (status) {
-      // Don't call notifyAndContinue because we don't want to skip another
-      // attempt to turn wifi on or off if this one failed.
-      this._notifyAfterStateChange(false, this._stateRequests[0].enabled);
-      return;
-    }
-
     // If we're enabling ourselves, then wait until we've connected to the
     // supplicant to notify. If we're disabling, we take care of this in
     // supplicantlost.
     if (WifiManager.supplicantStarted)
       WifiManager.start();
+
+    this.requestDone();
   },
 
-  setWifiEnabled: function(msg) {
-    // There are two problems that we're trying to solve here:
-    //   - If we get multiple requests to turn on and off wifi before the
-    //     current request has finished, then we need to queue up the requests
-    //     and handle each on/off request in turn.
-    //   - Because we can't pass a callback to WifiManager.start, we need to
-    //     have a way to communicate with our onsupplicantconnection callback.
-    this._stateRequests.push(msg);
-    if (this._stateRequests.length === 1) {
-      if ("callback" in this._stateRequests[0]) {
-        this._stateRequests[0].callback.call(this, msg.enabled);
-      } else {
-        WifiManager.setWifiEnabled(msg.enabled, this._setWifiEnabledCallback.bind(this));
-      }
-    }
+  setWifiEnabled: function(enabled, callback) {
+    WifiManager.setWifiEnabled(enabled, callback);
   },
 
+  // requestDone() must be called to before callback complete(or error)
+  // so next queue in the request quene can be executed.
   queueRequest: function(enabled, callback) {
-    this.setWifiEnabled({enabled: enabled, callback: callback});
+    if (!callback) {
+        throw "Try to enqueue a request without callback";
+    }
+
+    this._stateRequests.push({
+      enabled: enabled,
+      callback: callback
+    });
+
+    this.nextRequest();
   },
 
   getWifiTetheringParameters: function getWifiTetheringParameters(enable) {
@@ -3103,6 +3020,7 @@ WifiWorker.prototype = {
     let configuration = this.getWifiTetheringParameters(enabled);
 
     if (!configuration) {
+      this.requestDone();
       debug("Invalid Wifi Tethering configuration.");
       return;
     }
@@ -3335,49 +3253,79 @@ WifiWorker.prototype = {
 
   shutdown: function() {
     debug("shutting down ...");
-    this.setWifiEnabled({enabled: false});
+    this.queueRequest(false, function(data) {
+      this.setWifiEnabled(false, this._setWifiEnabledCallback.bind(this));
+    }.bind(this));
+  },
+
+  requestProcessing: false,   // Hold while dequeue and execution a request.
+                              // Released upon the request is fully executed,
+                              // i.e, mostly after callback is done.
+  requestDone: function requestDone() {
+    this.requestProcessing = false;
+    this.nextRequest();
   },
 
   nextRequest: function nextRequest() {
-    if (this._stateRequests.length <= 0 ||
-        !("callback" in this._stateRequests[0])) {
+    // No request to process
+    if (this._stateRequests.length === 0) {
       return;
     }
-    this._stateRequests.shift();
-    // Serve the pending requests.
-    if (this._stateRequests.length > 0) {
-      if ("callback" in this._stateRequests[0]) {
-        this._stateRequests[0].callback.call(this,
-                                             this._stateRequests[0].enabled);
-      } else {
-        WifiManager.setWifiEnabled(this._stateRequests[0].enabled,
-                                   this._setWifiEnabledCallback.bind(this));
-      }
+
+    // Handling request, wait for it.
+    if (this.requestProcessing) {
+      return;
     }
+
+    // Hold processing lock
+    this.requestProcessing = true;
+
+    // Find next valid request
+    let request = this._stateRequests.shift();
+
+    request.callback(request.enabled);
   },
 
   notifyTetheringOn: function notifyTetheringOn() {
     // It's really sad that we don't have an API to notify the wifi
     // hotspot status. Toggle settings to let gaia know that wifi hotspot
     // is enabled.
+    let self = this;
     this.tetheringSettings[SETTINGS_WIFI_TETHERING_ENABLED] = true;
     this._oldWifiTetheringEnabledState = true;
     gSettingsService.createLock().set(
-      SETTINGS_WIFI_TETHERING_ENABLED, true, null, "fromInternalSetting");
-    // Check for the next request.
-    this.nextRequest();
+      SETTINGS_WIFI_TETHERING_ENABLED,
+      true,
+      {
+        handle: function(aName, aResult) {
+          self.requestDone();
+        },
+        handleError: function(aErrorMessage) {
+          self.requestDone();
+        }
+      },
+      "fromInternalSetting");
   },
 
   notifyTetheringOff: function notifyTetheringOff() {
     // It's really sad that we don't have an API to notify the wifi
     // hotspot status. Toggle settings to let gaia know that wifi hotspot
     // is disabled.
+    let self = this;
     this.tetheringSettings[SETTINGS_WIFI_TETHERING_ENABLED] = false;
     this._oldWifiTetheringEnabledState = false;
     gSettingsService.createLock().set(
-      SETTINGS_WIFI_TETHERING_ENABLED, false, null, "fromInternalSetting");
-    // Check for the next request.
-    this.nextRequest();
+      SETTINGS_WIFI_TETHERING_ENABLED,
+      false,
+      {
+        handle: function(aName, aResult) {
+          self.requestDone();
+        },
+        handleError: function(aErrorMessage) {
+          self.requestDone();
+        }
+      },
+      "fromInternalSetting");
   },
 
   handleWifiEnabled: function(enabled) {
@@ -3385,38 +3333,60 @@ WifiWorker.prototype = {
       return;
     }
     // Make sure Wifi hotspot is idle before switching to Wifi mode.
-    if (enabled && (this.tetheringSettings[SETTINGS_WIFI_TETHERING_ENABLED] ||
-         WifiManager.tetheringState != "UNINITIALIZED")) {
+    if (enabled) {
       this.queueRequest(false, function(data) {
+        if (this.tetheringSettings[SETTINGS_WIFI_TETHERING_ENABLED] ||
+            WifiManager.tetheringState != "UNINITIALIZED") {
+          this.setWifiApEnabled(false, this.notifyTetheringOff.bind(this));
+        } else {
+          this.requestDone();
+        }
         this.disconnectedByWifi = true;
-        this.setWifiApEnabled(false, this.notifyTetheringOff.bind(this));
       }.bind(this));
     }
-    this.setWifiEnabled({enabled: enabled});
 
-    if (!enabled && this.disconnectedByWifi) {
+    this.queueRequest(enabled, function(data) {
+      this.setWifiEnabled(enabled, this._setWifiEnabledCallback.bind(this));
+    }.bind(this));
+
+    if (!enabled) {
       this.queueRequest(true, function(data) {
+        if (this.disconnectedByWifi) {
+          this.setWifiApEnabled(true, this.notifyTetheringOn.bind(this));
+        } else {
+          this.requestDone();
+        }
         this.disconnectedByWifi = false;
-        this.setWifiApEnabled(true, this.notifyTetheringOn.bind(this));
       }.bind(this));
     }
   },
 
   handleWifiTetheringEnabled: function(enabled) {
     // Make sure Wifi is idle before switching to Wifi hotspot mode.
-    if (enabled && (WifiManager.enabled ||
-         WifiManager.state != "UNINITIALIZED")) {
-      this.disconnectedByWifiTethering = true;
-      this.setWifiEnabled({enabled: false});
+    if (enabled) {
+      this.queueRequest(false, function(data) {
+        if (WifiManager.enabled || WifiManager.state != "UNINITIALIZED") {
+          this.setWifiEnabled(false, this._setWifiEnabledCallback.bind(this));
+        } else {
+          this.requestDone();
+        }
+        this.disconnectedByWifiTethering = true;
+      }.bind(this));
     }
 
     this.queueRequest(enabled, function(data) {
-      this.setWifiApEnabled(data, this.nextRequest.bind(this));
+      this.setWifiApEnabled(data, this.requestDone.bind(this));
     }.bind(this));
 
-    if (!enabled && this.disconnectedByWifiTethering) {
-      this.disconnectedByWifiTethering = false;
-      this.setWifiEnabled({enabled: true});
+    if (!enabled) {
+      this.queueRequest(true, function(data) {
+        if (this.disconnectedByWifiTethering) {
+          this.setWifiEnabled(true, this._setWifiEnabledCallback.bind(this));
+        } else {
+          this.requestDone();
+        }
+        this.disconnectedByWifiTethering = false;
+      }.bind(this));
     }
   },
 

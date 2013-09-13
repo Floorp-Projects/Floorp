@@ -190,8 +190,8 @@ BaselineCompiler::compile()
         size_t icEntry = icLoadLabels_[i].icEntry;
         ICEntry *entryAddr = &(baselineScript->icEntry(icEntry));
         Assembler::patchDataWithValueCheck(CodeLocationLabel(code, label),
-                                           ImmWord(uintptr_t(entryAddr)),
-                                           ImmWord(uintptr_t(-1)));
+                                           ImmPtr(entryAddr),
+                                           ImmPtr((void*)-1));
     }
 
     if (modifiesArguments_)
@@ -236,7 +236,7 @@ BaselineCompiler::emitPrologue()
     // the callee, NULL is stored for now so that GC doesn't choke on
     // a bogus ScopeChain value in the frame.
     if (function())
-        masm.storePtr(ImmWord((uintptr_t)0), frame.addressOfScopeChain());
+        masm.storePtr(ImmPtr(NULL), frame.addressOfScopeChain());
     else
         masm.storePtr(R1.scratchReg(), frame.addressOfScopeChain());
 
@@ -345,7 +345,7 @@ BaselineCompiler::emitOutOfLinePostBarrierSlot()
 #endif
 
     masm.setupUnalignedABICall(2, scratch);
-    masm.movePtr(ImmWord(cx->runtime()), scratch);
+    masm.movePtr(ImmPtr(cx->runtime()), scratch);
     masm.passABIArg(scratch);
     masm.passABIArg(objReg);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, PostWriteBarrier));
@@ -527,7 +527,7 @@ BaselineCompiler::emitUseCountIncrement()
 
     masm.branchPtr(Assembler::Equal,
                    Address(scriptReg, JSScript::offsetOfIonScript()),
-                   ImmWord(ION_COMPILING_SCRIPT), &skipCall);
+                   ImmPtr(ION_COMPILING_SCRIPT), &skipCall);
 
     // Call IC.
     ICUseCount_Fallback::Compiler stubCompiler(cx);
@@ -969,7 +969,7 @@ BaselineCompiler::emit_JSOP_THIS()
     frame.pushThis();
 
     // In strict mode function or self-hosted function, |this| is left alone.
-    if (!function() || function()->strict() || function()->isSelfHostedBuiltin())
+    if (function() && (function()->strict() || function()->isSelfHostedBuiltin()))
         return true;
 
     Label skipIC;
@@ -2067,7 +2067,7 @@ BaselineCompiler::emitInitPropGetterSetter()
     pushArg(R0.scratchReg());
     pushArg(ImmGCPtr(script->getName(pc)));
     pushArg(R1.scratchReg());
-    pushArg(ImmWord(pc));
+    pushArg(ImmPtr(pc));
 
     if (!callVM(InitPropGetterSetterInfo))
         return false;
@@ -2111,7 +2111,7 @@ BaselineCompiler::emitInitElemGetterSetter()
     pushArg(R0);
     masm.extractObject(frame.addressOfStackValue(frame.peek(-3)), R0.scratchReg());
     pushArg(R0.scratchReg());
-    pushArg(ImmWord(pc));
+    pushArg(ImmPtr(pc));
 
     if (!callVM(InitElemGetterSetterInfo))
         return false;
@@ -2538,7 +2538,7 @@ bool
 BaselineCompiler::emit_JSOP_DEBUGGER()
 {
     prepareVMCall();
-    pushArg(ImmWord(pc));
+    pushArg(ImmPtr(pc));
 
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
     pushArg(R0.scratchReg());
@@ -2645,7 +2645,7 @@ BaselineCompiler::emit_JSOP_TOID()
 
     pushArg(R0);
     pushArg(R1);
-    pushArg(ImmWord(pc));
+    pushArg(ImmPtr(pc));
     pushArg(ImmGCPtr(script));
 
     if (!callVM(ToIdInfo))

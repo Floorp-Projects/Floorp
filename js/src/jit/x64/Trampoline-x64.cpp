@@ -703,7 +703,7 @@ IonRuntime::generatePreBarrier(JSContext *cx, MIRType type)
     masm.PushRegsInMask(regs);
 
     JS_ASSERT(PreBarrierReg == rdx);
-    masm.mov(ImmWord(cx->runtime()), rcx);
+    masm.mov(ImmPtr(cx->runtime()), rcx);
 
     masm.setupUnalignedABICall(2, rax);
     masm.passABIArg(rcx);
@@ -750,7 +750,7 @@ IonRuntime::generateDebugTrapHandler(JSContext *cx)
     // Enter a stub frame and call the HandleDebugTrap VM function. Ensure
     // the stub frame has a NULL ICStub pointer, since this pointer is marked
     // during GC.
-    masm.movePtr(ImmWord((void *)NULL), BaselineStubReg);
+    masm.movePtr(ImmPtr(NULL), BaselineStubReg);
     EmitEnterStubFrame(masm, scratch3);
 
     IonCode *code = cx->runtime()->ionRuntime()->getVMWrapper(HandleDebugTrapInfo);

@@ -273,8 +273,7 @@ function appendElementWithText(aP, aTagName, aClassName, aText)
 
 //---------------------------------------------------------------------------
 
-const kTreeDescriptions = {
-  'explicit' :
+const explicitTreeDescription =
 "This tree covers explicit memory allocations by the application.  It includes \
 \n\n\
 * allocations made at the operating system level (via calls to functions such as \
@@ -291,69 +290,7 @@ and thread stacks. \
 \n\n\
 'explicit' is not guaranteed to cover every explicit allocation, but it does cover \
 most (including the entire heap), and therefore it is the single best number to \
-focus on when trying to reduce memory usage.",
-
-  'rss':
-"This tree shows how much space in physical memory each of the process's \
-mappings is currently using (the mapping's 'resident set size', or 'RSS'). \
-This is a good measure of the 'cost' of the mapping, although it does not \
-take into account the fact that shared libraries may be mapped by multiple \
-processes but appear only once in physical memory. \
-\n\n\
-Note that the 'rss' value here might not equal the value for 'resident' \
-under 'Other Measurements' because the two measurements are not taken at \
-exactly the same time.",
-
-  'pss':
-"This tree shows how much space in physical memory can be 'blamed' on this \
-process.  For each mapping, its 'proportional set size' (PSS) is the \
-mapping's resident size divided by the number of processes which use the \
-mapping.  So if a mapping is private to this process, its PSS should equal \
-its RSS.  But if a mapping is shared between three processes, its PSS in each \
-of the processes would be 1/3 its RSS.",
-
-  'size':
-"This tree shows how much virtual addres space each of the process's mappings \
-takes up (a.k.a. the mapping's 'vsize').  A mapping may have a large size but use \
-only a small amount of physical memory; the resident set size of a mapping is \
-a better measure of the mapping's 'cost'. \
-\n\n\
-Note that the 'size' value here might not equal the value for 'vsize' under \
-'Other Measurements' because the two measurements are not taken at exactly \
-the same time.",
-
-  'swap':
-"This tree shows how much space in the swap file each of the process's \
-mappings is currently using. Mappings which are not in the swap file (i.e., \
-nodes which would have a value of 0 in this tree) are omitted."
-};
-
-const kSectionNames = {
-  'explicit': 'Explicit Allocations',
-  'rss':      'Resident Set Size (RSS) Breakdown',
-  'pss':      'Proportional Set Size (PSS) Breakdown',
-  'size':     'Virtual Size Breakdown',
-  'swap':     'Swap Breakdown',
-  'other':    'Other Measurements'
-};
-
-const kSmapsTreeNames    = ['rss',  'pss',  'size',  'swap' ];
-const kSmapsTreePrefixes = ['rss/', 'pss/', 'size/', 'swap/'];
-
-function isExplicitPath(aUnsafePath)
-{
-  return aUnsafePath.startsWith("explicit/");
-}
-
-function isSmapsPath(aUnsafePath)
-{
-  for (let i = 0; i < kSmapsTreePrefixes.length; i++) {
-    if (aUnsafePath.startsWith(kSmapsTreePrefixes[i])) {
-      return true;
-    }
-  }
-  return false;
-}
+focus on when trying to reduce memory usage.";
 
 //---------------------------------------------------------------------------
 
@@ -546,8 +483,7 @@ function updateAboutMemoryFromReporters()
 
   try {
     // Process the reports from the memory reporters.
-    appendAboutMemoryMain(processMemoryReporters, gMgr.hasMozMallocUsableSize,
-                          /* forceShowSmaps = */ false);
+    appendAboutMemoryMain(processMemoryReporters, gMgr.hasMozMallocUsableSize);
 
   } catch (ex) {
     handleException(ex);
@@ -576,8 +512,7 @@ function updateAboutMemoryFromJSONObject(aObj)
     let process = function(aIgnoreReporter, aIgnoreReport, aHandleReport) {
       processMemoryReportsFromFile(aObj.reports, aIgnoreReport, aHandleReport);
     }
-    appendAboutMemoryMain(process, aObj.hasMozMallocUsableSize,
-                          /* forceShowSmaps = */ true);
+    appendAboutMemoryMain(process, aObj.hasMozMallocUsableSize);
   } catch (ex) {
     handleException(ex);
   }
@@ -765,6 +700,8 @@ DReport.prototype = {
     //
     // In those cases, we just use the description from the first-encountered
     // one, which is what about:memory also does.
+    // (Note: reports with those paths are no longer generated, but allowing
+    // the descriptions to differ seems reasonable.)
   },
 
   merge: function(aJr) {
@@ -930,14 +867,10 @@ function PColl()
  *        file.
  * @param aHasMozMallocUsableSize
  *        Boolean indicating if moz_malloc_usable_size works.
- * @param aForceShowSmaps
- *        True if we should show the smaps memory reporters even if we're not
- *        in verbose mode.
  */
-function appendAboutMemoryMain(aProcessReports, aHasMozMallocUsableSize,
-                               aForceShowSmaps)
+function appendAboutMemoryMain(aProcessReports, aHasMozMallocUsableSize)
 {
-  let pcollsByProcess = getPCollsByProcess(aProcessReports, aForceShowSmaps);
+  let pcollsByProcess = getPCollsByProcess(aProcessReports);
 
   // Sort the processes.
   let processes = Object.keys(pcollsByProcess);
@@ -998,12 +931,9 @@ function appendAboutMemoryMain(aProcessReports, aHasMozMallocUsableSize,
  * @param aProcessReports
  *        Function that extracts the memory reports from the reporters or from
  *        file.
- * @param aForceShowSmaps
- *        True if we should show the smaps memory reporters even if we're not
- *        in verbose mode.
  * @return The table of PColls by process.
  */
-function getPCollsByProcess(aProcessReports, aForceShowSmaps)
+function getPCollsByProcess(aProcessReports)
 {
   let pcollsByProcess = {};
 
@@ -1012,40 +942,28 @@ function getPCollsByProcess(aProcessReports, aForceShowSmaps)
   // be in parentheses, so a ')' might appear after the '.'.)
   const gSentenceRegExp = /^[A-Z].*\.\)?$/m;
 
-  // Ignore the "smaps" reporter in non-verbose mode unless we're reading from
-  // a file or the clipboard.  (Note that reports from these reporters can
-  // reach here via a "content-child" reporter if they were in a child
-  // process.)
-  //
   // Ignore any "redundant/"-prefixed reporters and reports, which are only
   // used by telemetry.
 
   function ignoreReporter(aName)
   {
-    return (aName === "smaps" && !gVerbose.checked && !aForceShowSmaps) ||
-           aName.startsWith("redundant/");
+    return aName.startsWith("redundant/");
   }
 
   function ignoreReport(aUnsafePath)
   {
-    return (isSmapsPath(aUnsafePath) && !gVerbose.checked && !aForceShowSmaps) ||
-           aUnsafePath.startsWith("redundant/");
+    return aUnsafePath.startsWith("redundant/");
   }
 
   function handleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount,
                         aDescription, aPresence)
   {
-    if (isExplicitPath(aUnsafePath)) {
+    if (aUnsafePath.startsWith("explicit/")) {
       assertInput(aKind === KIND_HEAP || aKind === KIND_NONHEAP,
                   "bad explicit kind");
       assertInput(aUnits === UNITS_BYTES, "bad explicit units");
       assertInput(gSentenceRegExp.test(aDescription),
                   "non-sentence explicit description");
-
-    } else if (isSmapsPath(aUnsafePath)) {
-      assertInput(aKind === KIND_NONHEAP, "bad smaps kind");
-      assertInput(aUnits === UNITS_BYTES, "bad smaps units");
-      assertInput(aDescription !== "", "empty smaps description");
 
     } else {
       assertInput(gSentenceRegExp.test(aDescription),
@@ -1434,7 +1352,7 @@ function appendProcessAboutMemoryElements(aP, aProcess, aTrees, aDegenerates,
   let hasKnownHeapAllocated;
   {
     let treeName = "explicit";
-    let pre = appendSectionHeader(aP, kSectionNames[treeName]);
+    let pre = appendSectionHeader(aP, "Explicit Allocations");
     let t = aTrees[treeName];
     if (t) {
       fillInTree(t);
@@ -1442,30 +1360,12 @@ function appendProcessAboutMemoryElements(aP, aProcess, aTrees, aDegenerates,
         aDegenerates &&
         addHeapUnclassifiedNode(t, aDegenerates["heap-allocated"], aHeapTotal);
       sortTreeAndInsertAggregateNodes(t._amount, t);
-      t._description = kTreeDescriptions[treeName];
+      t._description = explicitTreeDescription;
       appendTreeElements(pre, t, aProcess, "");
       delete aTrees[treeName];
     }
     appendTextNode(aP, "\n");  // gives nice spacing when we cut and paste
   }
-
-  // The smaps trees, which are only present in aTrees in verbose mode or when
-  // we're reading from a file or the clipboard.
-  kSmapsTreeNames.forEach(function(aTreeName) {
-    // |t| will be undefined if we don't have any reports for the given
-    // unsafePath.
-    let t = aTrees[aTreeName];
-    if (t) {
-      let pre = appendSectionHeader(aP, kSectionNames[aTreeName]);
-      fillInTree(t);
-      sortTreeAndInsertAggregateNodes(t._amount, t);
-      t._description = kTreeDescriptions[aTreeName];
-      t._hideKids = true;   // smaps trees are always initially collapsed
-      appendTreeElements(pre, t, aProcess, "");
-      delete aTrees[aTreeName];
-      appendTextNode(aP, "\n");  // gives nice spacing when we cut and paste
-    }
-  });
 
   // Fill in and sort all the non-degenerate other trees.
   let otherTrees = [];
@@ -1494,7 +1394,7 @@ function appendProcessAboutMemoryElements(aP, aProcess, aTrees, aDegenerates,
   otherDegenerates.sort(TreeNode.compareUnsafeNames);
 
   // Now generate the elements, putting non-degenerate trees first.
-  let pre = appendSectionHeader(aP, kSectionNames['other']);
+  let pre = appendSectionHeader(aP, "Other Measurements");
   for (let i = 0; i < otherTrees.length; i++) {
     let t = otherTrees[i];
     appendTreeElements(pre, t, aProcess, "");
