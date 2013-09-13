@@ -342,6 +342,15 @@ function setupSearchEngine()
 }
 
 /**
+ * Inform the test harness that we're done loading the page.
+ */
+function loadSucceeded()
+{
+  var event = new CustomEvent("AboutHomeLoadSnippetsSucceeded", {bubbles:true});
+  document.dispatchEvent(event);
+}
+
+/**
  * Update the local snippets from the remote storage, then show them through
  * showSnippets.
  */
@@ -349,6 +358,10 @@ function loadSnippets()
 {
   if (!gSnippetsMap)
     throw new Error("Snippets map has not properly been initialized");
+
+  // Allow tests to modify the snippets map before using it.
+  var event = new CustomEvent("AboutHomeLoadSnippets", {bubbles:true});
+  document.dispatchEvent(event);
 
   // Check cached snippets version.
   let cachedVersion = gSnippetsMap.get("snippets-cached-version") || 0;
@@ -370,6 +383,7 @@ function loadSnippets()
       xhr.open("GET", updateURL, true);
     } catch (ex) {
       showSnippets();
+      loadSucceeded();
       return;
     }
     // Even if fetching should fail we don't want to spam the server, thus
@@ -385,10 +399,12 @@ function loadSnippets()
         gSnippetsMap.set("snippets-cached-version", currentVersion);
       }
       showSnippets();
+      loadSucceeded();
     };
     xhr.send(null);
   } else {
     showSnippets();
+    loadSucceeded();
   }
 }
 
