@@ -162,6 +162,9 @@ CompositableHost::RemoveMaskEffect()
   }
 }
 
+// implemented in TextureHostOGL.cpp
+TemporaryRef<CompositableQuirks> CreateCompositableQuirksOGL();
+
 /* static */ TemporaryRef<CompositableHost>
 CompositableHost::Create(const TextureInfo& aTextureInfo)
 {
@@ -169,28 +172,33 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
   switch (aTextureInfo.mCompositableType) {
   case COMPOSITABLE_IMAGE:
     result = new ImageHost(aTextureInfo);
-    return result;
+    break;
   case BUFFER_IMAGE_BUFFERED:
     result = new DeprecatedImageHostBuffered(aTextureInfo);
-    return result;
+    break;
   case BUFFER_IMAGE_SINGLE:
     result = new DeprecatedImageHostSingle(aTextureInfo);
-    return result;
+    break;
   case BUFFER_TILED:
     result = new TiledContentHost(aTextureInfo);
-    return result;
+    break;
   case BUFFER_CONTENT:
     result = new ContentHostSingleBuffered(aTextureInfo);
-    return result;
+    break;
   case BUFFER_CONTENT_DIRECT:
     result = new ContentHostDoubleBuffered(aTextureInfo);
-    return result;
+    break;
   case BUFFER_CONTENT_INC:
     result = new ContentHostIncremental(aTextureInfo);
-    return result;
+    break;
   default:
     MOZ_CRASH("Unknown CompositableType");
   }
+  if (result) {
+    RefPtr<CompositableQuirks> quirks = CreateCompositableQuirksOGL();
+    result->SetCompositableQuirks(quirks);
+  }
+  return result;
 }
 
 #ifdef MOZ_DUMP_PAINTING
