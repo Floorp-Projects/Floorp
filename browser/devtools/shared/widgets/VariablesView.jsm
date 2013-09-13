@@ -1359,7 +1359,6 @@ Scope.prototype = {
       // Only allow left-click to trigger this event.
       return;
     }
-    this._wasToggled = true;
     this.expanded ^= 1;
 
     // Make sure the scope and its contents are visibile.
@@ -1800,30 +1799,21 @@ Scope.prototype = {
         // If the variable was ever expanded, there's a possibility it may
         // contain some matched properties, so make sure they're visible
         // ("expand downwards").
-
-        if (variable._wasToggled && aLowerCaseQuery) {
+        if (variable._store.size) {
           variable.expand();
-        }
-        if (variable._isExpanded && !aLowerCaseQuery) {
-          variable._wasToggled = true;
         }
 
         // If the variable is contained in another Scope, Variable, or Property,
         // the parent may not be a match, thus hidden. It should be visible
         // ("expand upwards").
-        while ((variable = variable.ownerView) &&  /* Parent object exists. */
-               variable instanceof Scope) {
-
-          // Show and expand the parent, as it is certainly accessible.
+        while ((variable = variable.ownerView) && variable instanceof Scope) {
           variable._matched = true;
-          aLowerCaseQuery && variable.expand();
+          variable.expand();
         }
       }
 
       // Proceed with the search recursively inside this variable or property.
-      if (currentObject._wasToggled ||
-          currentObject.getter ||
-          currentObject.setter) {
+      if (currentObject._store.size || currentObject.getter || currentObject.setter) {
         currentObject._performSearch(aLowerCaseQuery);
       }
     }
@@ -2007,7 +1997,6 @@ Scope.prototype = {
   _locked: false,
   _isExpanding: false,
   _isExpanded: false,
-  _wasToggled: false,
   _isContentVisible: true,
   _isHeaderVisible: true,
   _isArrowVisible: true,
@@ -2926,7 +2915,6 @@ VariablesView.prototype.commitHierarchy = function() {
 
     // Re-expand the variable if not previously collapsed.
     if (expanded) {
-      currVariable._wasToggled = prevVariable._wasToggled;
       currVariable.expand();
     }
     // This variable was either not changed or removed, no need to continue.
