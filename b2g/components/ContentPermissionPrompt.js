@@ -249,13 +249,8 @@ ContentPermissionPrompt.prototype = {
       return;
     }
 
-    // When it's an app, get the manifest to add the l10n application name.
-    let app = DOMApplicationRegistry.getAppByLocalId(principal.appId);
-    DOMApplicationRegistry.getManifestFor(app.manifestURL, function getManifest(aManifest) {
-      let helper = new ManifestHelper(aManifest, app.origin);
-      details.appName = helper.name;
-      browser.shell.sendChromeEvent(details);
-    });
+    details.manifestURL = DOMApplicationRegistry.getManifestURLByLocalId(principal.appId);
+    browser.shell.sendChromeEvent(details);
   },
 
   classID: Components.ID("{8c719f03-afe0-4aac-91ff-6c215895d467}"),
