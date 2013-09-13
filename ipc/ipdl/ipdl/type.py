@@ -500,7 +500,7 @@ def makeBuiltinUsing(tname):
                               QualifiedId(_builtinloc, base, quals)))
 
 builtinUsing = [ makeBuiltinUsing(t) for t in builtin.Types ]
-builtinHeaderIncludes = [ CxxInclude(_builtinloc, f) for f in builtin.HeaderIncludes ]
+builtinIncludes = [ CxxInclude(_builtinloc, f) for f in builtin.Includes ]
 
 def errormsg(loc, fmt, *args):
     while not isinstance(loc, Loc):
@@ -589,7 +589,7 @@ With this information, it finally type checks the AST.'''
                 return False
             return True
 
-        tu.cxxIncludes = builtinHeaderIncludes + tu.cxxIncludes
+        tu.cxxIncludes = builtinIncludes + tu.cxxIncludes
 
         # tag each relevant node with "decl" information, giving type, name,
         # and location of declaration
