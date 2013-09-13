@@ -3433,11 +3433,11 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                                                     eUnit_CSSValuePair);
         return true;
       }
-      if (paint.mType == eStyleSVGPaintType_ContextFill ||
-          paint.mType == eStyleSVGPaintType_ContextStroke) {
+      if (paint.mType == eStyleSVGPaintType_ObjectFill ||
+          paint.mType == eStyleSVGPaintType_ObjectStroke) {
         nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
-        pair->mXValue.SetIntValue(paint.mType == eStyleSVGPaintType_ContextFill ?
-                                  NS_COLOR_CONTEXT_FILL : NS_COLOR_CONTEXT_STROKE,
+        pair->mXValue.SetIntValue(paint.mType == eStyleSVGPaintType_ObjectFill ?
+                                    NS_COLOR_OBJECTFILL : NS_COLOR_OBJECTSTROKE,
                                   eCSSUnit_Enumerated);
         pair->mYValue.SetColorValue(paint.mFallbackColor);
         aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),

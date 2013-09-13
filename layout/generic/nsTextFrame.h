@@ -374,7 +374,7 @@ public:
   // context.
   void PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
                  const nsRect& aDirtyRect, const nsCharClipDisplayItem& aItem,
-                 gfxTextContextPaint* aContextPaint = nullptr,
+                 gfxTextObjectPaint* aObjectPaint = nullptr,
                  DrawPathCallbacks* aCallbacks = nullptr);
   // helper: paint text frame when we're impacted by at least one selection.
   // Return false if the text was not painted and we should continue with
@@ -388,7 +388,7 @@ public:
                               uint32_t aContentLength,
                               nsTextPaintStyle& aTextPaintStyle,
                               const nsCharClipDisplayItem::ClipEdges& aClipEdges,
-                              gfxTextContextPaint* aContextPaint,
+                              gfxTextObjectPaint* aObjectPaint,
                               DrawPathCallbacks* aCallbacks);
   // helper: paint text with foreground and background colors determined
   // by selection(s). Also computes a mask of all selection types applying to
@@ -650,7 +650,7 @@ protected:
                    nscolor aTextColor,
                    gfxFloat& aAdvanceWidth,
                    bool aDrawSoftHyphen,
-                   gfxTextContextPaint* aContextPaint,
+                   gfxTextObjectPaint* aObjectPaint,
                    DrawPathCallbacks* aCallbacks);
 
   void DrawTextRunAndDecorations(gfxContext* const aCtx,
@@ -667,7 +667,7 @@ protected:
                                  bool aDrawSoftHyphen,
                                  const TextDecorations& aDecorations,
                                  const nscolor* const aDecorationOverrideColor,
-                                 gfxTextContextPaint* aContextPaint,
+                                 gfxTextObjectPaint* aObjectPaint,
                                  DrawPathCallbacks* aCallbacks);
 
   void DrawText(gfxContext* const aCtx,
@@ -683,7 +683,7 @@ protected:
                 gfxFloat& aAdvanceWidth,
                 bool aDrawSoftHyphen,
                 const nscolor* const aDecorationOverrideColor = nullptr,
-                gfxTextContextPaint* aContextPaint = nullptr,
+                gfxTextObjectPaint* aObjectPaint = nullptr,
                 DrawPathCallbacks* aCallbacks = nullptr);
 
   // Set non empty rect to aRect, it should be overflow rect or frame rect.

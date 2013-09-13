@@ -49,8 +49,6 @@
 #define VARIANT_ELEMENT       0x08000000  // eCSSUnit_Element
 #define VARIANT_POSITIVE_DIMENSION 0x10000000 // Only lengths greater than 0.0
 #define VARIANT_NONNEGATIVE_DIMENSION 0x20000000 // Only lengths greater than or equal to 0.0
-// Keyword used iff gfx.font_rendering.opentype_svg.enabled is true:
-#define VARIANT_OPENTYPE_SVG_KEYWORD 0x40000000
 
 // Common combinations of variants
 #define VARIANT_AL   (VARIANT_AUTO | VARIANT_LENGTH)
@@ -458,7 +456,7 @@ public:
   static const int32_t kShapeRenderingKTable[];
   static const int32_t kStrokeLinecapKTable[];
   static const int32_t kStrokeLinejoinKTable[];
-  static const int32_t kStrokeContextValueKTable[];
+  static const int32_t kStrokeObjectValueKTable[];
   static const int32_t kVectorEffectKTable[];
   static const int32_t kTextAnchorKTable[];
   static const int32_t kTextRenderingKTable[];
@@ -507,8 +505,8 @@ public:
   static const int32_t kListStylePositionKTable[];
   static const int32_t kListStyleKTable[];
   static const int32_t kMaskTypeKTable[];
-  static const int32_t kContextOpacityKTable[];
-  static const int32_t kContextPatternKTable[];
+  static const int32_t kObjectOpacityKTable[];
+  static const int32_t kObjectPatternKTable[];
   static const int32_t kOrientKTable[];
   static const int32_t kOutlineStyleKTable[];
   static const int32_t kOutlineColorKTable[];
