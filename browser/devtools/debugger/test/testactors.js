@@ -8,7 +8,7 @@ function TestActor1(aConnection, aTab)
 }
 
 TestActor1.prototype = {
-  actorPrefix: "testone",
+  actorPrefix: "test_one",
 
   grip: function TA1_grip() {
     return { actor: this.actorID,

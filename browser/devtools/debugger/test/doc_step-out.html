@@ -1,0 +1,42 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Debugger test page</title>
+  </head>
+
+  <body>
+    <button id="return">Return me!</button>
+    <button id="throw">Throw me!</button>
+
+    <script type="text/javascript">
+      function normal(aArg) {
+        debugger;
+        var r = 10;
+        return r;
+      }
+
+      function error(aArg) {
+        function inner(aArg) {
+          debugger;
+          var r = 10;
+          throw "boom";
+          return r;
+        }
+        try {
+          inner(aArg);
+        } catch (e) {}
+      }
+
+      var normalBtn = document.getElementById("return");
+      normalBtn.addEventListener("click", normal, false);
+
+      var throwBtn = document.getElementById("throw");
+      throwBtn.addEventListener("click", error, false);
+    </script>
+  </body>
+
+</html>
