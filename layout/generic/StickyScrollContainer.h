@@ -64,6 +64,11 @@ public:
   void GetScrollRanges(nsIFrame* aFrame, nsRect* aOuter, nsRect* aInner) const;
 
   /**
+   * Compute and set the position of a frame and its following continuations.
+   */
+  void PositionContinuations(nsIFrame* aFrame);
+
+  /**
    * Compute and set the position of all sticky frames, given the current
    * scroll position of the scroll frame. If not in reflow, aSubtreeRoot should
    * be null; otherwise, overflow-area updates will be limited to not affect
