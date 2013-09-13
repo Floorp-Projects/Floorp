@@ -773,7 +773,6 @@ bool WebMReader::DecodeAudioData()
 
   nsAutoRef<NesteggPacketHolder> holder(NextPacket(AUDIO));
   if (!holder) {
-    AudioQueue().Finish();
     return false;
   }
 
@@ -792,7 +791,6 @@ bool WebMReader::DecodeVideoFrame(bool &aKeyframeSkip,
 
   nsAutoRef<NesteggPacketHolder> holder(NextPacket(VIDEO));
   if (!holder) {
-    VideoQueue().Finish();
     return false;
   }
 

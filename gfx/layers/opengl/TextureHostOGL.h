@@ -8,6 +8,7 @@
 
 #include <stddef.h>                     // for size_t
 #include <stdint.h>                     // for uint64_t
+#include "CompositableHost.h"
 #include "GLContextTypes.h"             // for GLContext
 #include "GLDefs.h"                     // for GLenum, LOCAL_GL_CLAMP_TO_EDGE, etc
 #include "GLTextureImage.h"             // for TextureImage
@@ -52,6 +53,29 @@ namespace layers {
 class Compositor;
 class CompositorOGL;
 class TextureImageDeprecatedTextureHostOGL;
+
+/**
+ * CompositableQuirks implementation for the Gonk OpenGL backend.
+ * Share a same texture between TextureHosts in the same CompositableHost.
+ * By shareing the texture among the TextureHosts, number of texture allocations
+ * can be reduced than texture allocation in every TextureHosts.
+ * From Bug 912134, use only one texture among all TextureHosts degrade
+ * the rendering performance.
+ * CompositableQuirksGonkOGL chooses in a middile of them.
+ */
+class CompositableQuirksGonkOGL : public CompositableQuirks
+{
+public:
+  CompositableQuirksGonkOGL();
+  virtual ~CompositableQuirksGonkOGL();
+
+  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+  GLuint GetTexture();
+  gl::GLContext* gl() const;
+protected:
+  RefPtr<CompositorOGL> mCompositor;
+  GLuint mTexture;
+};
 
 /*
  * TextureHost implementations for the OpenGL backend.

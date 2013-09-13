@@ -281,6 +281,7 @@ private:
 
   nsIScriptContext *GetScriptContext(JSObject **aGlobal);
   void FillCompileOptionsForRequest(nsScriptLoadRequest *aRequest,
+                                    JS::Handle<JSObject *> scopeChain,
                                     JS::CompileOptions *aOptions);
 
   nsresult PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
