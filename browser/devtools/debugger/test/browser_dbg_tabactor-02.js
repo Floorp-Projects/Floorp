@@ -5,57 +5,80 @@
  * Check extension-added tab actor lifetimes.
  */
 
-var gTab1 = null;
-var gTab1Actor = null;
+const CHROME_URL = "chrome://mochitests/content/browser/browser/devtools/debugger/test/"
+const ACTORS_URL = CHROME_URL + "testactors.js";
+const TAB_URL = EXAMPLE_URL + "doc_empty-tab-01.html";
 
-var gClient = null;
+let gClient;
 
-function test()
-{
-  DebuggerServer.addActors("chrome://mochitests/content/browser/browser/devtools/debugger/test/testactors.js");
+function test() {
+  if (!DebuggerServer.initialized) {
+    DebuggerServer.init(() => true);
+    DebuggerServer.addBrowserActors();
+  }
+
+  DebuggerServer.addActors(ACTORS_URL);
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.connect(function (aType, aTraits) {
-    is(aType, "browser", "Root actor should identify itself as a browser.");
-    get_tab();
-  });
-}
+  gClient.connect((aType, aTraits) => {
+    is(aType, "browser",
+      "Root actor should identify itself as a browser.");
 
-function get_tab()
-{
-  gTab1 = addTab(TAB1_URL, function() {
-    attach_tab_actor_for_url(gClient, TAB1_URL, function(aGrip) {
-      gTab1Actor = aGrip.actor;
-      ok(aGrip.testTabActor1, "Found the test tab actor.")
-      ok(aGrip.testTabActor1.indexOf("testone") >= 0,
-         "testTabActor's actorPrefix should be used.");
-      gClient.request({ to: aGrip.testTabActor1, type: "ping" }, function(aResponse) {
-        is(aResponse.pong, "pong", "Actor should respond to requests.");
-        close_tab(aResponse.actor);
+    addTab(TAB_URL)
+      .then(() => attachTabActorForUrl(gClient, TAB_URL))
+      .then(testTabActor)
+      .then(closeTab)
+      .then(closeConnection)
+      .then(finish)
+      .then(null, aError => {
+        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
-    });
   });
 }
 
-function close_tab(aTestActor)
-{
-  removeTab(gTab1);
-  try {
-    gClient.request({ to: aTestActor, type: "ping" }, function (aResponse) {
-      is(aResponse, undefined, "testTabActor1 didn't go away with the tab.");
-      finish_test();
-    });
-  } catch (e) {
-    is(e.message, "'ping' request packet has no destination.",
-       "testTabActor1 should have gone away with the tab.");
-    finish_test();
-  }
+function testTabActor([aGrip, aResponse]) {
+  let deferred = promise.defer();
+
+  ok(aGrip.testTabActor1,
+    "Found the test tab actor.");
+  ok(aGrip.testTabActor1.contains("test_one"),
+    "testTabActor1's actorPrefix should be used.");
+
+  gClient.request({ to: aGrip.testTabActor1, type: "ping" }, aResponse => {
+    is(aResponse.pong, "pong",
+      "Actor should respond to requests.");
+
+    deferred.resolve(aResponse.actor);
+  });
+
+  return deferred.promise;
 }
 
-function finish_test()
-{
-  gClient.close(function () {
-    finish();
+function closeTab(aTestActor) {
+  return removeTab(gBrowser.selectedTab).then(() => {
+    let deferred = promise.defer();
+
+    try {
+      gClient.request({ to: aTestActor, type: "ping" }, aResponse => {
+        ok(false, "testTabActor1 didn't go away with the tab.");
+        deferred.reject(aResponse);
+      });
+    } catch(e) {
+      is(e.message, "'ping' request packet has no destination.", "testTabActor1 went away.");
+      deferred.resolve();
+    }
+
+    return deferred.promise;
   });
 }
+
+function closeConnection() {
+  let deferred = promise.defer();
+  gClient.close(deferred.resolve);
+  return deferred.promise;
+}
+
+registerCleanupFunction(function() {
+  gClient = null;
+});

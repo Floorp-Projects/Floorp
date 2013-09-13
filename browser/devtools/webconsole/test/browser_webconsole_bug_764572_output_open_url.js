@@ -77,7 +77,9 @@ function testOnNetActivity() {
 
 function onNetworkMessage(aResults) {
   outputNode.focus();
-  outputNode.selectedItem = [...aResults[0].matched][0];
+  let msg = [...aResults[0].matched][0];
+  ok(msg, "network message");
+  HUD.ui.output.selectMessage(msg);
 
   let currentTab = gBrowser.selectedTab;
   let newTab = null;
@@ -92,7 +94,7 @@ function onNetworkMessage(aResults) {
     newTab.linkedBrowser.removeEventListener("load", onTabLoaded, true);
     gBrowser.removeTab(newTab);
     gBrowser.selectedTab = currentTab;
-    executeSoon(testOnNetActivity_contextmenu);
+    executeSoon(testOnNetActivity_contextmenu.bind(null, msg));
   }
 
   // Check if the command is enabled for a network message.
@@ -106,13 +108,11 @@ function onNetworkMessage(aResults) {
   goDoCommand(COMMAND_NAME);
 }
 
-function testOnNetActivity_contextmenu() {
-  let target = outputNode.querySelector(".webconsole-msg-network");
-
+function testOnNetActivity_contextmenu(msg) {
   outputNode.focus();
-  outputNode.selectedItem = target;
+  HUD.ui.output.selectMessage(msg);
 
-  waitForContextMenu(contextMenu, target, () => {
+  waitForContextMenu(contextMenu, msg, () => {
     let isShown = !contextMenu.querySelector(CONTEXT_MENU_ID).hidden;
     ok(isShown, CONTEXT_MENU_ID + " should be shown.");
   }, finishTest);

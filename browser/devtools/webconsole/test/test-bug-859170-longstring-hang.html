@@ -11,7 +11,7 @@ for (var i = 0; i < 10; i++) {
   longString += longString + longString;
 }
 
-longString = "foobar" + (new Array(20000)).join("a") + "foobaz" +
+longString = "foobar" + (new Array(9000)).join("a") + "foobaz" +
              longString + "boom!";
 console.log(longString);
 })();
