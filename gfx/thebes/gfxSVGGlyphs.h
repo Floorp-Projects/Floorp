@@ -17,6 +17,9 @@
 #include "gfxPattern.h"
 #include "gfxFont.h"
 #include "mozilla/gfx/UserData.h"
+#include "nsRefreshDriver.h"
+ 
+class gfxSVGGlyphs;
 
 
 /**
@@ -27,21 +30,20 @@
  * Finds and looks up elements contained in the SVG document which have glyph
  *   mappings to be drawn by gfxSVGGlyphs
  */
-class gfxSVGGlyphsDocument
+class gfxSVGGlyphsDocument MOZ_FINAL : public nsAPostRefreshObserver
 {
     typedef mozilla::dom::Element Element;
     typedef gfxFont::DrawMode DrawMode;
 
 public:
-    gfxSVGGlyphsDocument(const uint8_t *aBuffer, uint32_t aBufLen);
+    gfxSVGGlyphsDocument(const uint8_t *aBuffer, uint32_t aBufLen,
+                         gfxSVGGlyphs *aSVGGlyphs);
 
     Element *GetGlyphElement(uint32_t aGlyphId);
 
-    ~gfxSVGGlyphsDocument() {
-        if (mViewer) {
-            mViewer->Destroy();
-        }
-    }
+    ~gfxSVGGlyphsDocument();
+
+    virtual void DidRefresh() MOZ_OVERRIDE;
 
 private:
     nsresult ParseDocument(const uint8_t *aBuffer, uint32_t aBufLen);
@@ -52,6 +54,8 @@ private:
 
     void InsertGlyphId(Element *aGlyphElement);
 
+    // Weak so as not to create a cycle. mOwner owns us so this can't dangle.
+    gfxSVGGlyphs* mOwner;
     nsCOMPtr<nsIDocument> mDocument;
     nsCOMPtr<nsIContentViewer> mViewer;
     nsCOMPtr<nsIPresShell> mPresShell;
@@ -83,12 +87,17 @@ public:
      * that are passed in, and will hb_blob_destroy() them when finished;
      * the caller should -not- destroy these references.
      */
-    gfxSVGGlyphs(hb_blob_t *aSVGTable);
+    gfxSVGGlyphs(hb_blob_t *aSVGTable, gfxFontEntry *aFontEntry);
 
     /**
-     * Releases our references to the SVG table.
+     * Releases our references to the SVG table and cleans up everything else.
      */
     ~gfxSVGGlyphs();
+
+    /**
+     * This is called when the refresh driver has ticked.
+     */
+    void DidRefresh();
 
     /**
      * Find the |gfxSVGGlyphsDocument| containing an SVG glyph for |aGlyphId|.
@@ -126,6 +135,7 @@ private:
     nsBaseHashtable<nsUint32HashKey, Element*, Element*> mGlyphIdMap;
 
     hb_blob_t *mSVGData;
+    gfxFontEntry *mFontEntry;
 
     const struct Header {
         mozilla::AutoSwap_PRUint16 mVersion;
