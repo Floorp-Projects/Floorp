@@ -1471,8 +1471,8 @@ PCToLineNumber(unsigned startLine, jssrcnote *notes, jsbytecode *code, jsbytecod
  * executing on cx. If there is no current script executing on cx (e.g., a
  * native called directly through JSAPI (e.g., by setTimeout)), NULL and 0 are
  * returned as the file and line. Additionally, this function avoids the full
- * linear scan to compute line number when the caller guarnatees that the
- * script compilation occurs at a JSOP_EVAL.
+ * linear scan to compute line number when the caller guarantees that the
+ * script compilation occurs at a JSOP_EVAL/JSOP_SPREADEVAL.
  */
 
 enum LineOption {
