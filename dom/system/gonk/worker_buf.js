@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const INT32_MAX   = 2147483647;
-const UINT8_SIZE  = 1;
-const UINT16_SIZE = 2;
-const UINT32_SIZE = 4;
 
 /**
  * This object contains helpers buffering incoming data & deconstructing it
@@ -21,7 +17,12 @@ const UINT32_SIZE = 4;
  */
 
 let Buf = {
-  PARCEL_SIZE_SIZE: UINT32_SIZE,
+  INT32_MAX: 2147483647,
+  UINT8_SIZE: 1,
+  UINT16_SIZE: 2,
+  UINT32_SIZE: 4,
+  PARCEL_SIZE_SIZE: 4,
+  PDU_HEX_OCTET_SIZE: 4,
 
   incomingBufferLength: 1024,
   incomingBuffer: null,
@@ -277,7 +278,7 @@ let Buf = {
 
   readString: function readString() {
     let string_len = this.readUint32();
-    if (string_len < 0 || string_len >= INT32_MAX) {
+    if (string_len < 0 || string_len >= this.INT32_MAX) {
       return null;
     }
     let s = "";

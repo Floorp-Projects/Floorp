@@ -33,7 +33,7 @@ function add_test_incoming_parcel(parcel, handler) {
 
     // supports only requests less or equal than UINT8_MAX(255).
     let buf = worker.Buf;
-    let request = parcel[buf.PARCEL_SIZE_SIZE + worker.UINT32_SIZE];
+    let request = parcel[buf.PARCEL_SIZE_SIZE + buf.UINT32_SIZE];
     worker.RIL[request] = function ril_request_handler() {
       handler(worker);
       worker.postMessage();
