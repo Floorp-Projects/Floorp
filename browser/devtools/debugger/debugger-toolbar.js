@@ -233,6 +233,7 @@ OptionsView.prototype = {
    */
   _onPopupShowing: function() {
     this._button.setAttribute("open", "true");
+    window.emit(EVENTS.OPTIONS_POPUP_SHOWING);
   },
 
   /**
@@ -246,7 +247,7 @@ OptionsView.prototype = {
    * Listener handling the 'gear menu' popup hidden event.
    */
   _onPopupHidden: function() {
-    window.dispatchEvent(document, "Debugger:OptionsPopupHidden");
+    window.emit(EVENTS.OPTIONS_POPUP_HIDDEN);
   },
 
   /**
@@ -302,20 +303,16 @@ OptionsView.prototype = {
    * Listener handling the 'show original source' menuitem command.
    */
   _toggleShowOriginalSource: function() {
-    function reconfigure() {
-      window.removeEventListener("Debugger:OptionsPopupHidden", reconfigure, false);
-
-      // The popup panel needs more time to hide after triggering onpopuphidden.
-      window.setTimeout(() => {
-        DebuggerController.reconfigureThread(pref);
-      }, POPUP_HIDDEN_DELAY);
-    }
-
     let pref = Prefs.sourceMapsEnabled =
       this._showOriginalSourceItem.getAttribute("checked") == "true";
 
     // Don't block the UI while reconfiguring the server.
-    window.addEventListener("Debugger:OptionsPopupHidden", reconfigure, false);
+    window.once(EVENTS.OPTIONS_POPUP_HIDDEN, () => {
+      // The popup panel needs more time to hide after triggering onpopuphidden.
+      window.setTimeout(() => {
+        DebuggerController.reconfigureThread(pref);
+      }, POPUP_HIDDEN_DELAY);
+    }, false);
   },
 
   _button: null,
@@ -345,7 +342,6 @@ ChromeGlobalsView.prototype = Heritage.extend(WidgetMethods, {
 
     this.widget = document.getElementById("chrome-globals");
     this.emptyText = L10N.getStr("noGlobalsText");
-    this.unavailableText = L10N.getStr("noMatchingGlobalsText");
 
     this.widget.addEventListener("select", this._onSelect, false);
     this.widget.addEventListener("click", this._onClick, false);
@@ -430,32 +426,42 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Adds a frame in this stackframes container.
    *
-   * @param string aFrameTitle
-   *        The frame title to be displayed in the list.
-   * @param string aSourceLocation
-   *        The source location to be displayed in the list.
-   * @param string aLineNumber
-   *        The line number to be displayed in the list.
+   * @param string aTitle
+   *        The frame title (function name).
+   * @param string aUrl
+   *        The frame source url.
+   * @param string aLine
+   *        The frame line number.
    * @param number aDepth
-   *        The frame depth specified by the debugger.
+   *        The frame depth in the stack.
    * @param boolean aIsBlackBoxed
    *        Whether or not the frame is black boxed.
    */
-  addFrame: function(aFrameTitle, aSourceLocation, aLineNumber, aDepth, aIsBlackBoxed) {
+  addFrame: function(aTitle, aUrl, aLine, aDepth, aIsBlackBoxed) {
+    // Blackboxed stack frames are collapsed into a single entry in
+    // the view. By convention, only the first frame is displayed.
+    if (aIsBlackBoxed) {
+      if (this._prevBlackBoxedUrl == aUrl) {
+        return;
+      }
+      this._prevBlackBoxedUrl = aUrl;
+    } else {
+      this._prevBlackBoxedUrl = null;
+    }
+
     // Create the element node and menu entry for the stack frame item.
     let frameView = this._createFrameView.apply(this, arguments);
     let menuEntry = this._createMenuEntry.apply(this, arguments);
 
     // Append a stack frame item to this container.
-    this.push([frameView], {
+    this.push([frameView, aTitle, aUrl], {
       index: 0, /* specifies on which position should the item be appended */
       attachment: {
         popup: menuEntry,
         depth: aDepth
       },
       attributes: [
-        ["contextmenu", "stackframesMenupopup"],
-        ["tooltiptext", aSourceLocation]
+        ["contextmenu", "stackframesMenupopup"]
       ],
       // Make sure that when the stack frame item is removed, the corresponding
       // menuitem and command are also destroyed.
@@ -468,7 +474,7 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
    * @param number aDepth
    */
   set selectedDepth(aDepth) {
-    this.selectedItem = (aItem) => aItem.attachment.depth == aDepth;
+    this.selectedItem = aItem => aItem.attachment.depth == aDepth;
   },
 
   /**
@@ -479,26 +485,26 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Customization function for creating an item's UI.
    *
-   * @param string aFrameTitle
+   * @param string aTitle
    *        The frame title to be displayed in the list.
-   * @param string aSourceLocation
-   *        The source location to be displayed in the list.
-   * @param string aLineNumber
-   *        The line number to be displayed in the list.
+   * @param string aUrl
+   *        The frame source url.
+   * @param string aLine
+   *        The frame line number.
    * @param number aDepth
-   *        The frame depth specified by the debugger.
+   *        The frame depth in the stack.
    * @param boolean aIsBlackBoxed
    *        Whether or not the frame is black boxed.
    * @return nsIDOMNode
    *         The stack frame view.
    */
-  _createFrameView: function(aFrameTitle, aSourceLocation, aLineNumber, aDepth, aIsBlackBoxed) {
+  _createFrameView: function(aTitle, aUrl, aLine, aDepth, aIsBlackBoxed) {
     let container = document.createElement("hbox");
     container.id = "stackframe-" + aDepth;
     container.className = "dbg-stackframe";
 
     let frameDetails = SourceUtils.trimUrlLength(
-      SourceUtils.getSourceLabel(aSourceLocation),
+      SourceUtils.getSourceLabel(aUrl),
       STACK_FRAMES_SOURCE_URL_MAX_LENGTH,
       STACK_FRAMES_SOURCE_URL_TRIM_SECTION);
 
@@ -507,10 +513,10 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
     } else {
       let frameTitleNode = document.createElement("label");
       frameTitleNode.className = "plain dbg-stackframe-title breadcrumbs-widget-item-tag";
-      frameTitleNode.setAttribute("value", aFrameTitle);
+      frameTitleNode.setAttribute("value", aTitle);
       container.appendChild(frameTitleNode);
 
-      frameDetails += SEARCH_LINE_FLAG + aLineNumber;
+      frameDetails += SEARCH_LINE_FLAG + aLine;
     }
 
     let frameDetailsNode = document.createElement("label");
@@ -524,25 +530,25 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Customization function for populating an item's context menu.
    *
-   * @param string aFrameTitle
+   * @param string aTitle
    *        The frame title to be displayed in the list.
-   * @param string aSourceLocation
-   *        The source location to be displayed in the list.
-   * @param string aLineNumber
-   *        The line number to be displayed in the list.
+   * @param string aUrl
+   *        The frame source url.
+   * @param string aLine
+   *        The frame line number.
    * @param number aDepth
-   *        The frame depth specified by the debugger.
+   *        The frame depth in the stack.
    * @param boolean aIsBlackBoxed
    *        Whether or not the frame is black boxed.
    * @return object
    *         An object containing the stack frame command and menu item.
    */
-  _createMenuEntry: function(aFrameTitle, aSourceLocation, aLineNumber, aDepth, aIsBlackBoxed) {
-    let frameDescription =
-      SourceUtils.trimUrlLength(
-        SourceUtils.getSourceLabel(aSourceLocation),
-        STACK_FRAMES_POPUP_SOURCE_URL_MAX_LENGTH,
-        STACK_FRAMES_POPUP_SOURCE_URL_TRIM_SECTION) + SEARCH_LINE_FLAG + aLineNumber;
+  _createMenuEntry: function(aTitle, aUrl, aLine, aDepth, aIsBlackBoxed) {
+    let frameDescription = SourceUtils.trimUrlLength(
+      SourceUtils.getSourceLabel(aUrl),
+      STACK_FRAMES_POPUP_SOURCE_URL_MAX_LENGTH,
+      STACK_FRAMES_POPUP_SOURCE_URL_TRIM_SECTION) +
+      SEARCH_LINE_FLAG + aLine;
 
     let prefix = "sf-cMenu-"; // "stackframes context menu"
     let commandId = prefix + aDepth + "-" + "-command";
@@ -557,11 +563,11 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
     menuitem.className = "dbg-stackframe-menuitem";
     menuitem.setAttribute("type", "checkbox");
     menuitem.setAttribute("command", commandId);
-    menuitem.setAttribute("tooltiptext", aSourceLocation);
+    menuitem.setAttribute("tooltiptext", aUrl);
 
     let labelNode = document.createElement("label");
     labelNode.className = "plain dbg-stackframe-menuitem-title";
-    labelNode.setAttribute("value", aFrameTitle);
+    labelNode.setAttribute("value", aTitle);
     labelNode.setAttribute("flex", "1");
 
     let descriptionNode = document.createElement("label");
@@ -593,6 +599,9 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
     let contextItem = aItem.attachment.popup;
     contextItem.command.remove();
     contextItem.menuitem.remove();
+
+    // Forget the previously blackboxed stack frame url.
+    this._prevBlackBoxedUrl = null;
   },
 
   /**
@@ -602,7 +611,7 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
     let stackframeItem = this.selectedItem;
     if (stackframeItem) {
       // The container is not empty and an actual item was selected.
-      gStackFrames.selectFrame(stackframeItem.attachment.depth);
+      DebuggerController.StackFrames.selectFrame(stackframeItem.attachment.depth);
 
       // Update the context menu to show the currently selected stackframe item
       // as a checked entry.
@@ -624,8 +633,8 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
     if (!this.dirty) {
       return;
     }
-    window.clearTimeout(this._scrollTimeout);
-    this._scrollTimeout = window.setTimeout(this._afterScroll, STACK_FRAMES_SCROLL_DELAY);
+    // Allow requests to settle down first.
+    setNamedTimeout("stack-scroll", STACK_FRAMES_SCROLL_DELAY, this._afterScroll);
   },
 
   /**
@@ -651,7 +660,7 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
 
   _commandset: null,
   _menupopup: null,
-  _scrollTimeout: null
+  _prevBlackBoxedUrl: null
 });
 
 /**
@@ -717,7 +726,7 @@ function FilterView() {
   dumpn("FilterView was instantiated");
 
   this._onClick = this._onClick.bind(this);
-  this._onSearch = this._onSearch.bind(this);
+  this._onInput = this._onInput.bind(this);
   this._onKeyPress = this._onKeyPress.bind(this);
   this._onBlur = this._onBlur.bind(this);
 }
@@ -751,8 +760,8 @@ FilterView.prototype = {
     this._variableSearchKey = DevtoolsHelpers.prettyKey(document.getElementById("variableSearchKey"), true);
 
     this._searchbox.addEventListener("click", this._onClick, false);
-    this._searchbox.addEventListener("select", this._onSearch, false);
-    this._searchbox.addEventListener("input", this._onSearch, false);
+    this._searchbox.addEventListener("select", this._onInput, false);
+    this._searchbox.addEventListener("input", this._onInput, false);
     this._searchbox.addEventListener("keypress", this._onKeyPress, false);
     this._searchbox.addEventListener("blur", this._onBlur, false);
 
@@ -790,8 +799,8 @@ FilterView.prototype = {
     dumpn("Destroying the FilterView");
 
     this._searchbox.removeEventListener("click", this._onClick, false);
-    this._searchbox.removeEventListener("select", this._onSearch, false);
-    this._searchbox.removeEventListener("input", this._onSearch, false);
+    this._searchbox.removeEventListener("select", this._onInput, false);
+    this._searchbox.removeEventListener("input", this._onInput, false);
     this._searchbox.removeEventListener("keypress", this._onKeyPress, false);
     this._searchbox.removeEventListener("blur", this._onBlur, false);
   },
@@ -821,158 +830,82 @@ FilterView.prototype = {
   get target() this._target,
 
   /**
-   * Gets the entered file, line and token entered in the searchbox.
+   * Gets the entered operator and arguments in the searchbox.
    * @return array
    */
-  get searchboxInfo() {
-    let operator, file, line, token;
+  get searchData() {
+    let operator = "", args = [];
 
     let rawValue = this._searchbox.value;
     let rawLength = rawValue.length;
     let globalFlagIndex = rawValue.indexOf(SEARCH_GLOBAL_FLAG);
     let functionFlagIndex = rawValue.indexOf(SEARCH_FUNCTION_FLAG);
     let variableFlagIndex = rawValue.indexOf(SEARCH_VARIABLE_FLAG);
-    let lineFlagIndex = rawValue.lastIndexOf(SEARCH_LINE_FLAG);
     let tokenFlagIndex = rawValue.lastIndexOf(SEARCH_TOKEN_FLAG);
+    let lineFlagIndex = rawValue.lastIndexOf(SEARCH_LINE_FLAG);
 
     // This is not a global, function or variable search, allow file/line flags.
     if (globalFlagIndex != 0 && functionFlagIndex != 0 && variableFlagIndex != 0) {
-      let fileEnd = lineFlagIndex != -1
-        ? lineFlagIndex
-        : tokenFlagIndex != -1
-          ? tokenFlagIndex
-          : rawLength;
-
-      let lineEnd = tokenFlagIndex != -1
-        ? tokenFlagIndex
-        : rawLength;
-
-      operator = "";
-      file = rawValue.slice(0, fileEnd);
-      line = ~~(rawValue.slice(fileEnd + 1, lineEnd)) || 0;
-      token = rawValue.slice(lineEnd + 1);
+      // Token search has precedence over line search.
+      if (tokenFlagIndex != -1) {
+        operator = SEARCH_TOKEN_FLAG;
+        args.push(rawValue.slice(0, tokenFlagIndex)); // file
+        args.push(rawValue.substr(tokenFlagIndex + 1, rawLength)); // token
+      } else if (lineFlagIndex != -1) {
+        operator = SEARCH_LINE_FLAG;
+        args.push(rawValue.slice(0, lineFlagIndex)); // file
+        args.push(+rawValue.substr(lineFlagIndex + 1, rawLength) || 0); // line
+      } else {
+        args.push(rawValue);
+      }
     }
     // Global searches dissalow the use of file or line flags.
     else if (globalFlagIndex == 0) {
       operator = SEARCH_GLOBAL_FLAG;
-      file = "";
-      line = 0;
-      token = rawValue.slice(1);
+      args.push(rawValue.slice(1));
     }
     // Function searches dissalow the use of file or line flags.
     else if (functionFlagIndex == 0) {
       operator = SEARCH_FUNCTION_FLAG;
-      file = "";
-      line = 0;
-      token = rawValue.slice(1);
+      args.push(rawValue.slice(1));
     }
     // Variable searches dissalow the use of file or line flags.
     else if (variableFlagIndex == 0) {
       operator = SEARCH_VARIABLE_FLAG;
-      file = "";
-      line = 0;
-      token = rawValue.slice(1);
+      args.push(rawValue.slice(1));
     }
 
-    return [operator, file, line, token];
+    return [operator, args];
   },
 
   /**
-   * Returns the current searched operator.
+   * Returns the current search operator.
    * @return string
    */
-  get currentOperator() this.searchboxInfo[0],
+  get searchOperator() this.searchData[0],
 
   /**
-   * Returns the currently searched file.
-   * @return string
+   * Returns the current search arguments.
+   * @return array
    */
-  get searchedFile() this.searchboxInfo[1],
+  get searchArguments() this.searchData[1],
 
   /**
-   * Returns the currently searched line.
-   * @return number
-   */
-  get searchedLine() this.searchboxInfo[2],
-
-  /**
-   * Returns the currently searched token.
-   * @return string
-   */
-  get searchedToken() this.searchboxInfo[3],
-
-  /**
-   * Clears the text from the searchbox and resets any changed view.
+   * Clears the text from the searchbox and any changed views.
    */
   clearSearch: function() {
     this._searchbox.value = "";
-    this._searchboxHelpPanel.hidePopup();
+    this.clearViews();
   },
 
   /**
-   * Performs a file search if necessary.
-   *
-   * @param string aFile
-   *        The source location to search for.
+   * Clears all the views that may pop up when searching.
    */
-  _performFileSearch: function(aFile) {
-    // Don't search for files if the input hasn't changed.
-    if (this._prevSearchedFile == aFile) {
-      return;
-    }
-
-    // This is the target container to be currently filtered. Clicking on a
-    // container generally means it should become a target.
-    let view = this._target;
-
-    // If we're not searching for a file anymore, unhide all the items.
-    if (!aFile) {
-      for (let item in view) {
-        item.target.hidden = false;
-      }
-      view.refresh();
-    }
-    // If the searched file string is valid, hide non-matched items.
-    else {
-      let found = false;
-      let lowerCaseFile = aFile.toLowerCase();
-
-      for (let item in view) {
-        let element = item.target;
-        let lowerCaseLabel = item.label.toLowerCase();
-
-        // Search is not case sensitive, and is tied to the label not the value.
-        if (lowerCaseLabel.match(lowerCaseFile)) {
-          element.hidden = false;
-
-          // Automatically select the first match.
-          if (!found) {
-            found = true;
-            view.selectedItem = item;
-            view.refresh();
-          }
-        }
-        // Item not matched, hide the corresponding node.
-        else {
-          element.hidden = true;
-        }
-      }
-      // If no matches were found, display the appropriate info.
-      if (!found) {
-        view.setUnavailable();
-      }
-    }
-    // Synchronize with the view's filtered sources container.
-    DebuggerView.FilteredSources.syncFileSearch();
-
-    // Hide all the groups with no visible children.
-    view.widget.hideEmptyGroups();
-
-    // Ensure the currently selected item is visible.
-    view.widget.ensureSelectionIsVisible({ withGroup: true });
-
-    // Remember the previously searched file to avoid redundant filtering.
-    this._prevSearchedFile = aFile;
+  clearViews: function() {
+    DebuggerView.GlobalSearch.clearView();
+    DebuggerView.FilteredSources.clearView();
+    DebuggerView.FilteredFunctions.clearView();
+    this._searchboxHelpPanel.hidePopup();
   },
 
   /**
@@ -983,17 +916,11 @@ FilterView.prototype = {
    *        The source line number to jump to.
    */
   _performLineSearch: function(aLine) {
-    // Don't search for lines if the input hasn't changed.
-    if (this._prevSearchedLine != aLine && aLine) {
-      DebuggerView.editor.setCaretPosition(aLine - 1);
+    // Make sure we're actually searching for a valid line.
+    if (!aLine) {
+      return;
     }
-    // Can't search for lines and tokens at the same time.
-    if (this._prevSearchedToken && !aLine) {
-      this._target.refresh();
-    }
-
-    // Remember the previously searched line to avoid redundant filtering.
-    this._prevSearchedLine = aLine;
+    DebuggerView.editor.setCaretPosition(aLine - 1);
   },
 
   /**
@@ -1004,67 +931,67 @@ FilterView.prototype = {
    *        The source token to find.
    */
   _performTokenSearch: function(aToken) {
-    // Don't search for tokens if the input hasn't changed.
-    if (this._prevSearchedToken != aToken && aToken) {
-      let editor = DebuggerView.editor;
-      let offset = editor.find(aToken, { ignoreCase: true });
-      if (offset > -1) {
-        editor.setSelection(offset, offset + aToken.length)
-      }
+    // Make sure we're actually searching for a valid token.
+    if (!aToken) {
+      return;
     }
-    // Can't search for tokens and lines at the same time.
-    if (this._prevSearchedLine && !aToken) {
-      this._target.refresh();
+    let offset = DebuggerView.editor.find(aToken, { ignoreCase: true });
+    if (offset > -1) {
+      DebuggerView.editor.setSelection(offset, offset + aToken.length)
     }
-
-    // Remember the previously searched token to avoid redundant filtering.
-    this._prevSearchedToken = aToken;
   },
 
   /**
    * The click listener for the search container.
    */
   _onClick: function() {
-    this._searchboxHelpPanel.openPopup(this._searchbox);
+    // If there's some text in the searchbox, displaying a panel would
+    // interfere with double/triple click default behaviors.
+    if (!this._searchbox.value) {
+      this._searchboxHelpPanel.openPopup(this._searchbox);
+    }
   },
 
   /**
-   * The search listener for the search container.
+   * The input listener for the search container.
    */
-  _onSearch: function() {
-    this._searchboxHelpPanel.hidePopup();
-    let [operator, file, line, token] = this.searchboxInfo;
+  _onInput: function() {
+    this.clearViews();
 
-    // If this is a global search, schedule it for when the user stops typing,
-    // or hide the corresponding pane otherwise.
-    if (operator == SEARCH_GLOBAL_FLAG) {
-      DebuggerView.GlobalSearch.scheduleSearch(token);
-      this._prevSearchedToken = token;
+    // Make sure we're actually searching for something.
+    if (!this._searchbox.value) {
       return;
     }
 
-    // If this is a function search, schedule it for when the user stops typing,
-    // or hide the corresponding panel otherwise.
-    if (operator == SEARCH_FUNCTION_FLAG) {
-      DebuggerView.FilteredFunctions.scheduleSearch(token);
-      this._prevSearchedToken = token;
-      return;
+    // Perform the required search based on the specified operator.
+    switch (this.searchOperator) {
+      case SEARCH_GLOBAL_FLAG:
+        // Schedule a global search for when the user stops typing.
+        DebuggerView.GlobalSearch.scheduleSearch(this.searchArguments[0]);
+        break;
+      case SEARCH_FUNCTION_FLAG:
+        // Schedule a function search for when the user stops typing.
+        DebuggerView.FilteredFunctions.scheduleSearch(this.searchArguments[0]);
+        break;
+      case SEARCH_VARIABLE_FLAG:
+        // Schedule a variable search for when the user stops typing.
+        DebuggerView.Variables.scheduleSearch(this.searchArguments[0]);
+        break;
+      case SEARCH_TOKEN_FLAG:
+        // Schedule a file+token search for when the user stops typing.
+        DebuggerView.FilteredSources.scheduleSearch(this.searchArguments[0]);
+        this._performTokenSearch(this.searchArguments[1]);
+        break;
+      case SEARCH_LINE_FLAG:
+        // Schedule a file+line search for when the user stops typing.
+        DebuggerView.FilteredSources.scheduleSearch(this.searchArguments[0]);
+        this._performLineSearch(this.searchArguments[1]);
+        break;
+      default:
+        // Schedule a file only search for when the user stops typing.
+        DebuggerView.FilteredSources.scheduleSearch(this.searchArguments[0]);
+        break;
     }
-
-    // If this is a variable search, defer the action to the corresponding
-    // variables view instance.
-    if (operator == SEARCH_VARIABLE_FLAG) {
-      DebuggerView.Variables.scheduleSearch(token);
-      this._prevSearchedToken = token;
-      return;
-    }
-
-    DebuggerView.GlobalSearch.clearView();
-    DebuggerView.FilteredFunctions.clearView();
-
-    this._performFileSearch(file);
-    this._performLineSearch(line);
-    this._performTokenSearch(token);
   },
 
   /**
@@ -1074,125 +1001,123 @@ FilterView.prototype = {
     // This attribute is not implemented in Gecko at this time, see bug 680830.
     e.char = String.fromCharCode(e.charCode);
 
-    let [operator, file, line, token] = this.searchboxInfo;
-    let isGlobal = operator == SEARCH_GLOBAL_FLAG;
-    let isFunction = operator == SEARCH_FUNCTION_FLAG;
-    let isVariable = operator == SEARCH_VARIABLE_FLAG;
-    let action = -1;
+    // Perform the required action based on the specified operator.
+    let [operator, args] = this.searchData;
+    let isGlobalSearch = operator == SEARCH_GLOBAL_FLAG;
+    let isFunctionSearch = operator == SEARCH_FUNCTION_FLAG;
+    let isVariableSearch = operator == SEARCH_VARIABLE_FLAG;
+    let isTokenSearch = operator == SEARCH_TOKEN_FLAG;
+    let isLineSearch = operator == SEARCH_LINE_FLAG;
+    let isFileOnlySearch = !operator && args.length == 1;
 
-    if (file && !line && !token) {
-      var isFileSearch = true;
-    }
-    if (line && !token) {
-      var isLineSearch = true;
-    }
-    if (this._prevSearchedToken != token) {
-      var isDifferentToken = true;
-    }
+    // Depending on the pressed keys, determine to correct action to perform.
+    let actionToPerform;
 
     // Meta+G and Ctrl+N focus next matches.
     if ((e.char == "g" && e.metaKey) || e.char == "n" && e.ctrlKey) {
-      action = 0;
+      actionToPerform = "selectNext";
     }
     // Meta+Shift+G and Ctrl+P focus previous matches.
     else if ((e.char == "G" && e.metaKey) || e.char == "p" && e.ctrlKey) {
-      action = 1;
+      actionToPerform = "selectPrev";
     }
     // Return, enter, down and up keys focus next or previous matches, while
     // the escape key switches focus from the search container.
     else switch (e.keyCode) {
       case e.DOM_VK_RETURN:
       case e.DOM_VK_ENTER:
-        var isReturnKey = true;
-        // fall through
+        var isReturnKey = true; // Fall through.
       case e.DOM_VK_DOWN:
-        action = 0;
+        actionToPerform = "selectNext";
         break;
       case e.DOM_VK_UP:
-        action = 1;
-        break;
-      case e.DOM_VK_ESCAPE:
-        action = 2;
+        actionToPerform = "selectPrev";
         break;
     }
 
-    if (action == 2) {
-      DebuggerView.editor.focus();
-      return;
-    }
-    if (action == -1 || (!operator && !file && !line && !token)) {
+    // If there's no action to perform, or no operator, file line or token
+    // were specified, then this is either a broken or empty search.
+    if (!actionToPerform || (!operator && !args.length)) {
+      DebuggerView.editor.dropSelection();
       return;
     }
 
     e.preventDefault();
     e.stopPropagation();
 
-    // Select the next or previous file search entry.
-    if (isFileSearch) {
+    // Jump to the next/previous entry in the global search, or perform
+    // a new global search immediately
+    if (isGlobalSearch) {
+      let targetView = DebuggerView.GlobalSearch;
+      if (!isReturnKey) {
+        targetView[actionToPerform]();
+      } else if (targetView.hidden) {
+        targetView.scheduleSearch(args[0], 0);
+      }
+      return;
+    }
+
+    // Jump to the next/previous entry in the function search, perform
+    // a new function search immediately, or clear it.
+    if (isFunctionSearch) {
+      let targetView = DebuggerView.FilteredFunctions;
+      if (!isReturnKey) {
+        targetView[actionToPerform]();
+      } else if (targetView.hidden) {
+        targetView.scheduleSearch(args[0], 0);
+      } else {
+        this.clearSearch();
+      }
+      return;
+    }
+
+    // Perform a new variable search immediately.
+    if (isVariableSearch) {
+      let targetView = DebuggerView.Variables;
       if (isReturnKey) {
-        DebuggerView.FilteredSources.clearView();
-        DebuggerView.editor.focus();
-        this.clearSearch();
-      } else {
-        DebuggerView.FilteredSources[["selectNext", "selectPrev"][action]]();
+        targetView.scheduleSearch(args[0], 0);
       }
-      this._prevSearchedFile = file;
       return;
     }
 
-    // Perform a global search based on the specified operator.
-    if (isGlobal) {
-      if (isReturnKey && (isDifferentToken || DebuggerView.GlobalSearch.hidden)) {
-        DebuggerView.GlobalSearch.performSearch(token);
+    // Jump to the next/previous entry in the file search, perform
+    // a new file search immediately, or clear it.
+    if (isFileOnlySearch) {
+      let targetView = DebuggerView.FilteredSources;
+      if (!isReturnKey) {
+        targetView[actionToPerform]();
+      } else if (targetView.hidden) {
+        targetView.scheduleSearch(args[0], 0);
       } else {
-        DebuggerView.GlobalSearch[["selectNext", "selectPrev"][action]]();
-      }
-      this._prevSearchedToken = token;
-      return;
-    }
-
-    // Perform a function search based on the specified operator.
-    if (isFunction) {
-      if (isReturnKey && (isDifferentToken || DebuggerView.FilteredFunctions.hidden)) {
-        DebuggerView.FilteredFunctions.performSearch(token);
-      } else if (!isReturnKey) {
-        DebuggerView.FilteredFunctions[["selectNext", "selectPrev"][action]]();
-      } else {
-        DebuggerView.FilteredFunctions.clearView();
-        DebuggerView.editor.focus();
         this.clearSearch();
       }
-      this._prevSearchedToken = token;
       return;
     }
 
-    // Perform a variable search based on the specified operator.
-    if (isVariable) {
-      if (isReturnKey && isDifferentToken) {
-        DebuggerView.Variables.performSearch(token);
-      } else {
-        DebuggerView.Variables.expandFirstSearchResults();
+    // Jump to the next/previous instance of the currently searched token.
+    if (isTokenSearch) {
+      let [, token] = args;
+      let methods = { selectNext: "findNext", selectPrev: "findPrevious" };
+
+      // Search for the token and select it.
+      let offset = DebuggerView.editor[methods[actionToPerform]](true);
+      if (offset > -1) {
+        DebuggerView.editor.setSelection(offset, offset + token.length)
       }
-      this._prevSearchedToken = token;
       return;
     }
 
-    // Increment or decrement the specified line.
-    if (isLineSearch && !isReturnKey) {
-      line += action == 0 ? 1 : -1;
+    // Increment/decrement the currently searched caret line.
+    if (isLineSearch) {
+      let [, line] = args;
+      let amounts = { selectNext: 1, selectPrev: -1 };
+
+      // Modify the line number and jump to it.
+      line += !isReturnKey ? amounts[actionToPerform] : 0;
       let lineCount = DebuggerView.editor.getLineCount();
       let lineTarget = line < 1 ? 1 : line > lineCount ? lineCount : line;
-
-      DebuggerView.editor.setCaretPosition(lineTarget - 1);
-      this._searchbox.value = file + SEARCH_LINE_FLAG + lineTarget;
-      this._prevSearchedLine = lineTarget;
+      this._doSearch(SEARCH_LINE_FLAG, lineTarget);
       return;
-    }
-
-    let editor = DebuggerView.editor;
-    let offset = editor[["findNext", "findPrevious"][action]](true);
-    if (offset > -1) {
-      editor.setSelection(offset, offset + token.length)
     }
   },
 
@@ -1200,11 +1125,7 @@ FilterView.prototype = {
    * The blur listener for the search container.
    */
   _onBlur: function() {
-    DebuggerView.GlobalSearch.clearView();
-    DebuggerView.FilteredSources.clearView();
-    DebuggerView.FilteredFunctions.clearView();
-    DebuggerView.Variables.performSearch(null);
-    this._searchboxHelpPanel.hidePopup();
+    this.clearViews();
   },
 
   /**
@@ -1213,10 +1134,10 @@ FilterView.prototype = {
    * @param string aOperator
    *        The operator to use for filtering.
    */
-  _doSearch: function(aOperator = "") {
+  _doSearch: function(aOperator = "", aText = "") {
     this._searchbox.focus();
     this._searchbox.value = ""; // Need to clear value beforehand. Bug 779738.
-    this._searchbox.value = aOperator + DebuggerView.getEditorSelectionText();
+    this._searchbox.value = aOperator + (aText || DebuggerView.editor.getSelectedText());
   },
 
   /**
@@ -1263,7 +1184,6 @@ FilterView.prototype = {
    * Called when the variable search filter key sequence was pressed.
    */
   _doVariableSearch: function() {
-    DebuggerView.Variables.performSearch("");
     this._doSearch(SEARCH_VARIABLE_FLAG);
     this._searchboxHelpPanel.hidePopup();
   },
@@ -1294,10 +1214,7 @@ FilterView.prototype = {
   _tokenSearchKey: "",
   _lineSearchKey: "",
   _variableSearchKey: "",
-  _target: null,
-  _prevSearchedFile: "",
-  _prevSearchedLine: 0,
-  _prevSearchedToken: ""
+  _target: null
 };
 
 /**
@@ -1334,41 +1251,90 @@ FilteredSourcesView.prototype = Heritage.extend(ResultsPanelContainer.prototype,
   },
 
   /**
-   * Updates the list of sources displayed in this container.
+   * Schedules searching for a source.
+   *
+   * @param string aToken
+   *        The function to search for.
+   * @param number aWait
+   *        The amount of milliseconds to wait until draining.
    */
-  syncFileSearch: function() {
-    this.empty();
+  scheduleSearch: function(aToken, aWait) {
+    // The amount of time to wait for the requests to settle.
+    let maxDelay = FILE_SEARCH_ACTION_MAX_DELAY;
+    let delay = aWait === undefined ? maxDelay / aToken.length : aWait;
 
-    // If there's no currently searched file, or there are no matches found,
-    // hide the popup and avoid creating the view again.
-    if (!DebuggerView.Filtering.searchedFile ||
-        !DebuggerView.Sources.visibleItems.length) {
-      this.hidden = true;
+    // Allow requests to settle down first.
+    setNamedTimeout("sources-search", delay, () => this._doSearch(aToken));
+  },
+
+  /**
+   * Finds file matches in all the displayed sources.
+   *
+   * @param string aToken
+   *        The string to search for.
+   */
+  _doSearch: function(aToken, aStore = []) {
+    // Don't continue filtering if the searched token is an empty string.
+    // In contrast with function searching, in this case we don't want to
+    // show a list of all the files when no search token was supplied.
+    if (!aToken) {
       return;
     }
 
-    // Get the currently visible items in the sources container.
-    let visibleItems = DebuggerView.Sources.visibleItems;
-    let displayedItems = visibleItems.slice(0, RESULTS_PANEL_MAX_RESULTS);
+    for (let item of DebuggerView.Sources.items) {
+      let lowerCaseLabel = item.label.toLowerCase();
+      let lowerCaseToken = aToken.toLowerCase();
+      if (lowerCaseLabel.match(lowerCaseToken)) {
+        aStore.push(item);
+      }
 
-    // Append a location item item to this container.
-    for (let item of displayedItems) {
+      // Once the maximum allowed number of results is reached, proceed
+      // with building the UI immediately.
+      if (aStore.length >= RESULTS_PANEL_MAX_RESULTS) {
+        this._syncView(aStore);
+        return;
+      }
+    }
+
+    // Couldn't reach the maximum allowed number of results, but that's ok,
+    // continue building the UI.
+    this._syncView(aStore);
+  },
+
+  /**
+   * Updates the list of sources displayed in this container.
+   *
+   * @param array aSearchResults
+   *        The results array, containing search details for each source.
+   */
+  _syncView: function(aSearchResults) {
+    // If there are no matches found, keep the popup hidden and avoid
+    // creating the view.
+    if (!aSearchResults.length) {
+      window.emit(EVENTS.FILE_SEARCH_MATCH_NOT_FOUND);
+      return;
+    }
+
+    for (let item of aSearchResults) {
+      // Append a location item to this container for each match.
       let trimmedLabel = SourceUtils.trimUrlLength(item.label);
       let trimmedValue = SourceUtils.trimUrlLength(item.value, 0, "start");
-      let locationItem = this.push([trimmedLabel, trimmedValue], {
+
+      this.push([trimmedLabel, trimmedValue], {
+        index: -1, /* specifies on which position should the item be appended */
         relaxed: true, /* this container should allow dupes & degenerates */
         attachment: {
-          fullLabel: item.label,
-          fullValue: item.value
+          url: item.value
         }
       });
     }
 
     // Select the first entry in this container.
     this.selectedIndex = 0;
+    this.hidden = false;
 
-    // Only display the results panel if there's at least one entry available.
-    this.hidden = this.itemCount == 0;
+    // Signal that file search matches were found and displayed.
+    window.emit(EVENTS.FILE_SEARCH_MATCH_FOUND);
   },
 
   /**
@@ -1390,7 +1356,10 @@ FilteredSourcesView.prototype = Heritage.extend(ResultsPanelContainer.prototype,
    */
   _onSelect: function({ detail: locationItem }) {
     if (locationItem) {
-      DebuggerView.updateEditor(locationItem.attachment.fullValue, 0);
+      DebuggerView.setEditorLocation(locationItem.attachment.url, undefined, {
+        noCaret: true,
+        noDebug: true
+      });
     }
   }
 });
@@ -1401,7 +1370,6 @@ FilteredSourcesView.prototype = Heritage.extend(ResultsPanelContainer.prototype,
 function FilteredFunctionsView() {
   dumpn("FilteredFunctionsView was instantiated");
 
-  this._performFunctionSearch = this._performFunctionSearch.bind(this);
   this._onClick = this._onClick.bind(this);
   this._onSelect = this._onSelect.bind(this);
 }
@@ -1430,85 +1398,60 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
   },
 
   /**
-   * Allows searches to be scheduled and delayed to avoid redundant calls.
-   */
-  delayedSearch: true,
-
-  /**
    * Schedules searching for a function in all of the sources.
    *
-   * @param string aQuery
+   * @param string aToken
    *        The function to search for.
+   * @param number aWait
+   *        The amount of milliseconds to wait until draining.
    */
-  scheduleSearch: function(aQuery) {
-    if (!this.delayedSearch) {
-      this.performSearch(aQuery);
-      return;
-    }
-    let delay = Math.max(FUNCTION_SEARCH_ACTION_MAX_DELAY / aQuery.length, 0);
+  scheduleSearch: function(aToken, aWait) {
+    // The amount of time to wait for the requests to settle.
+    let maxDelay = FUNCTION_SEARCH_ACTION_MAX_DELAY;
+    let delay = aWait === undefined ? maxDelay / aToken.length : aWait;
 
-    window.clearTimeout(this._searchTimeout);
-    this._searchFunction = this._startSearch.bind(this, aQuery);
-    this._searchTimeout = window.setTimeout(this._searchFunction, delay);
-  },
-
-  /**
-   * Immediately searches for a function in all of the sources.
-   *
-   * @param string aQuery
-   *        The function to search for.
-   */
-  performSearch: function(aQuery) {
-    window.clearTimeout(this._searchTimeout);
-    this._searchFunction = null;
-    this._startSearch(aQuery);
-  },
-
-  /**
-   * Starts searching for a function in all of the sources.
-   *
-   * @param string aQuery
-   *        The function to search for.
-   */
-  _startSearch: function(aQuery) {
-    this._searchedToken = aQuery;
-
-    // Start fetching as many sources as possible, then perform the search.
-    DebuggerController.SourceScripts
-      .getTextForSources(DebuggerView.Sources.values)
-      .then(this._performFunctionSearch);
+    // Allow requests to settle down first.
+    setNamedTimeout("function-search", delay, () => {
+      // Start fetching as many sources as possible, then perform the search.
+      let urls = DebuggerView.Sources.values;
+      let sourcesFetched = DebuggerController.SourceScripts.getTextForSources(urls);
+      sourcesFetched.then(aSources => this._doSearch(aToken, aSources));
+    });
   },
 
   /**
    * Finds function matches in all the sources stored in the cache, and groups
    * them by location and line number.
+   *
+   * @param string aToken
+   *        The string to search for.
+   * @param array aSources
+   *        An array of [url, text] tuples for each source.
    */
-  _performFunctionSearch: function(aSources) {
-    // Get the currently searched token from the filtering input.
+  _doSearch: function(aToken, aSources, aStore = []) {
     // Continue parsing even if the searched token is an empty string, to
     // cache the syntax tree nodes generated by the reflection API.
-    let token = this._searchedToken;
 
     // Make sure the currently displayed source is parsed first. Once the
     // maximum allowed number of resutls are found, parsing will be halted.
     let currentUrl = DebuggerView.Sources.selectedValue;
-    aSources.sort(([sourceUrl]) => sourceUrl == currentUrl ? -1 : 1);
+    let currentSource = aSources.filter(([sourceUrl]) => sourceUrl == currentUrl)[0];
+    aSources.splice(aSources.indexOf(currentSource), 1);
+    aSources.unshift(currentSource);
 
-    // If not searching for a specific function, only parse the displayed source.
-    if (!token) {
+    // If not searching for a specific function, only parse the displayed source,
+    // which is now the first item in the sources array.
+    if (!aToken) {
       aSources.splice(1);
     }
 
-    // Prepare the results array, containing search details for each source.
-    let searchResults = [];
-
     for (let [location, contents] of aSources) {
       let parserMethods = DebuggerController.Parser.get(location, contents);
-      let sourceResults = parserMethods.getNamedFunctionDefinitions(token);
+      let sourceResults = parserMethods.getNamedFunctionDefinitions(aToken);
 
       for (let scriptResult of sourceResults) {
         for (let parseResult of scriptResult.parseResults) {
-          searchResults.push({
+          aStore.push({
             sourceUrl: scriptResult.sourceUrl,
             scriptOffset: scriptResult.scriptOffset,
             functionName: parseResult.functionName,
@@ -1520,16 +1463,17 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
 
           // Once the maximum allowed number of results is reached, proceed
           // with building the UI immediately.
-          if (searchResults.length >= RESULTS_PANEL_MAX_RESULTS) {
-            this._syncFunctionSearch(searchResults);
+          if (aStore.length >= RESULTS_PANEL_MAX_RESULTS) {
+            this._syncView(aStore);
             return;
           }
         }
       }
     }
+
     // Couldn't reach the maximum allowed number of results, but that's ok,
     // continue building the UI.
-    this._syncFunctionSearch(searchResults);
+    this._syncView(aStore);
   },
 
   /**
@@ -1538,13 +1482,11 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
    * @param array aSearchResults
    *        The results array, containing search details for each source.
    */
-  _syncFunctionSearch: function(aSearchResults) {
-    this.empty();
-
-    // Show the popup even if the search token is an empty string. If there are
-    // no matches found, hide the popup and avoid creating the view again.
+  _syncView: function(aSearchResults) {
+    // If there are no matches found, keep the popup hidden and avoid
+    // creating the view.
     if (!aSearchResults.length) {
-      this.hidden = true;
+      window.emit(EVENTS.FUNCTION_SEARCH_MATCH_NOT_FOUND);
       return;
     }
 
@@ -1574,12 +1516,12 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
         item.actualLocation = item.functionLocation;
       }
 
-      // Append a function item to this container.
+      // Append a function item to this container for each match.
       let trimmedLabel = SourceUtils.trimUrlLength(item.displayedName + "()");
       let trimmedValue = SourceUtils.trimUrlLength(item.sourceUrl, 0, "start");
       let description = (item.inferredChain || []).join(".");
 
-      let functionItem = this.push([trimmedLabel, trimmedValue, description], {
+      this.push([trimmedLabel, trimmedValue, description], {
         index: -1, /* specifies on which position should the item be appended */
         relaxed: true, /* this container should allow dupes & degenerates */
         attachment: item
@@ -1588,9 +1530,10 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
 
     // Select the first entry in this container.
     this.selectedIndex = 0;
+    this.hidden = false;
 
-    // Only display the results panel if there's at least one entry available.
-    this.hidden = this.itemCount == 0;
+    // Signal that function search matches were found and displayed.
+    window.emit(EVENTS.FUNCTION_SEARCH_MATCH_FOUND);
   },
 
   /**
@@ -1613,7 +1556,7 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
       let scriptOffset = functionItem.attachment.scriptOffset;
       let actualLocation = functionItem.attachment.actualLocation;
 
-      DebuggerView.updateEditor(sourceUrl, actualLocation.start.line, {
+      DebuggerView.setEditorLocation(sourceUrl, actualLocation.start.line, {
         charOffset: scriptOffset,
         columnOffset: actualLocation.start.column,
         noDebug: true

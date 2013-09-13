@@ -1,154 +1,89 @@
-/* vim:set ts=2 sw=2 sts=2 et: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const TAB_URL = EXAMPLE_URL + "browser_dbg_script-switching.html";
+/**
+ * Tests if the stackframe breadcrumbs are keyboard accessible.
+ */
 
-let gPane = null;
-let gTab = null;
-let gDebuggee = null;
-let gDebugger = null;
+const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 
-function test()
-{
-  let scriptShown = false;
-  let framesAdded = false;
-  let resumed = false;
-  let testStarted = false;
+function test() {
+  let gTab, gDebuggee, gPanel, gDebugger;
+  let gSources, gFrames;
 
-  debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
+  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
     gTab = aTab;
     gDebuggee = aDebuggee;
-    gPane = aPane;
-    gDebugger = gPane.panelWin;
-    resumed = true;
+    gPanel = aPanel;
+    gDebugger = gPanel.panelWin;
+    gSources = gDebugger.DebuggerView.Sources;
+    gFrames = gDebugger.DebuggerView.StackFrames;
 
-    gDebugger.addEventListener("Debugger:SourceShown", onScriptShown);
-
-    gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
-      framesAdded = true;
-      executeSoon(startTest);
-    });
-
-    executeSoon(function() {
-      gDebuggee.firstCall();
-    });
-  });
-
-  function onScriptShown(aEvent)
-  {
-    scriptShown = aEvent.detail.url.indexOf("-02.js") != -1;
-    executeSoon(startTest);
-  }
-
-  function startTest()
-  {
-    if (scriptShown && framesAdded && resumed && !testStarted) {
-      gDebugger.removeEventListener("Debugger:SourceShown", onScriptShown);
-      testStarted = true;
-      Services.tm.currentThread.dispatch({ run: performTest }, 0);
-    }
-  }
-
-  function performTest()
-  {
-    let editor = gDebugger.DebuggerView.editor;
-    let sources = gDebugger.DebuggerView.Sources;
-    let stackframes = gDebugger.DebuggerView.StackFrames;
-
-    is(editor.getCaretPosition().line, 5,
-      "The source editor caret position was incorrect (1).");
-    is(sources.selectedLabel, "test-script-switching-02.js",
-      "The currently selected source is incorrect (1).");
-    is(stackframes.selectedIndex, 3,
-      "The currently selected stackframe is incorrect (1).");
-
-    EventUtils.sendKey("DOWN", gDebugger);
-    is(editor.getCaretPosition().line, 6,
-      "The source editor caret position was incorrect (2).");
-    is(sources.selectedLabel, "test-script-switching-02.js",
-      "The currently selected source is incorrect (2).");
-    is(stackframes.selectedIndex, 3,
-      "The currently selected stackframe is incorrect (2).");
-
-    EventUtils.sendKey("UP", gDebugger);
-    is(editor.getCaretPosition().line, 5,
-      "The source editor caret position was incorrect (3).");
-    is(sources.selectedLabel, "test-script-switching-02.js",
-      "The currently selected source is incorrect (3).");
-    is(stackframes.selectedIndex, 3,
-      "The currently selected stackframe is incorrect (3).");
-
-
-    EventUtils.sendMouseEvent({ type: "mousedown" },
-      stackframes.selectedItem.target,
-      gDebugger);
-
-
-    EventUtils.sendKey("UP", gDebugger);
-    is(editor.getCaretPosition().line, 5,
-      "The source editor caret position was incorrect (4).");
-    is(sources.selectedLabel, "test-script-switching-02.js",
-      "The currently selected source is incorrect (4).");
-    is(stackframes.selectedIndex, 2,
-      "The currently selected stackframe is incorrect (4).");
-
-    gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
-      gDebugger.removeEventListener(aEvent.type, _onEvent);
-
-      is(editor.getCaretPosition().line, 4,
-        "The source editor caret position was incorrect (5).");
-      is(sources.selectedLabel, "test-script-switching-01.js",
-        "The currently selected source is incorrect (5).");
-      is(stackframes.selectedIndex, 1,
-        "The currently selected stackframe is incorrect (5).");
-
-      EventUtils.sendKey("UP", gDebugger);
-
-      is(editor.getCaretPosition().line, 4,
-        "The source editor caret position was incorrect (6).");
-      is(sources.selectedLabel, "test-script-switching-01.js",
-        "The currently selected source is incorrect (6).");
-      is(stackframes.selectedIndex, 0,
-        "The currently selected stackframe is incorrect (6).");
-
-      gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
-        gDebugger.removeEventListener(aEvent.type, _onEvent);
-
-        is(editor.getCaretPosition().line, 5,
-          "The source editor caret position was incorrect (7).");
-        is(sources.selectedLabel, "test-script-switching-02.js",
-          "The currently selected source is incorrect (7).");
-        is(stackframes.selectedIndex, 3,
-          "The currently selected stackframe is incorrect (7).");
-
-        gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
-          gDebugger.removeEventListener(aEvent.type, _onEvent);
-
-          is(editor.getCaretPosition().line, 4,
-            "The source editor caret position was incorrect (8).");
-          is(sources.selectedLabel, "test-script-switching-01.js",
-            "The currently selected source is incorrect (8).");
-          is(stackframes.selectedIndex, 0,
-            "The currently selected stackframe is incorrect (8).");
-
-          closeDebuggerAndFinish();
-        });
-
-        EventUtils.sendKey("HOME", gDebugger);
+    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6)
+      .then(checkNavigationWhileNotFocused)
+      .then(focusCurrentStackFrame)
+      .then(checkNavigationWhileFocused)
+      .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
+      .then(null, aError => {
+        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
 
-      EventUtils.sendKey("END", gDebugger);
-    });
+    gDebuggee.firstCall();
+  });
+
+  function checkNavigationWhileNotFocused() {
+    checkState({ frame: 3, source: 1, line: 6 });
+
+    EventUtils.sendKey("DOWN", gDebugger);
+    checkState({ frame: 3, source: 1, line: 7 });
 
     EventUtils.sendKey("UP", gDebugger);
+    checkState({ frame: 3, source: 1, line: 6 });
   }
 
-  registerCleanupFunction(function() {
-    removeTab(gTab);
-    gPane = null;
-    gTab = null;
-    gDebuggee = null;
-    gDebugger = null;
-  });
+  function focusCurrentStackFrame() {
+    EventUtils.sendMouseEvent({ type: "mousedown" },
+      gFrames.selectedItem.target,
+      gDebugger);
+  }
+
+  function checkNavigationWhileFocused() {
+    let deferred = promise.defer();
+
+    EventUtils.sendKey("UP", gDebugger);
+    checkState({ frame: 2, source: 1, line: 6 });
+
+    waitForSourceAndCaret(gPanel, "-01.js", 5).then(() => {
+      checkState({ frame: 1, source: 0, line: 5 });
+
+      EventUtils.sendKey("UP", gDebugger);
+      checkState({ frame: 0, source: 0, line: 5 });
+
+      waitForSourceAndCaret(gPanel, "-02.js", 6).then(() => {
+        checkState({ frame: 3, source: 1, line: 6 });
+
+        waitForSourceAndCaret(gPanel, "-01.js", 5).then(() => {
+          checkState({ frame: 0, source: 0, line: 5 });
+          deferred.resolve();
+        });
+
+        EventUtils.sendKey("HOME", gDebugger)
+      });
+
+      EventUtils.sendKey("END", gDebugger)
+    });
+
+    EventUtils.sendKey("UP", gDebugger)
+
+    return deferred.promise;
+  }
+
+  function checkState({ frame, source, line }) {
+    is(gFrames.selectedIndex, frame,
+      "The currently selected stackframe is incorrect.");
+    is(gSources.selectedIndex, source,
+      "The currently selected source is incorrect.");
+    ok(isCaretPos(gPanel, line),
+      "The source editor caret position was incorrect.");
+  }
 }

@@ -45,45 +45,45 @@ function populateConsole(aHudRef) {
 function testCSSPruning(hudRef) {
   populateConsoleRepeats(hudRef);
 
-  let waitForNoRepeatedNodes = {
-    name:  "number of nodes is LOG_LIMIT",
-    validatorFn: function()
-    {
-      return countMessageNodes() == LOG_LIMIT;
-    },
-    successFn: function()
-    {
+  waitForMessages({
+    webconsole: hudRef,
+    messages: [{
+      text: "css log x",
+      category: CATEGORY_CSS,
+      severity: SEVERITY_WARNING,
+      repeats: 5,
+    }],
+  }).then(() => {
+    populateConsole(hudRef);
+    waitForMessages({
+      webconsole: hudRef,
+      messages: [{
+        text: "css log 0",
+        category: CATEGORY_CSS,
+        severity: SEVERITY_WARNING,
+      },
+      {
+        text: "css log 24", // LOG_LIMIT + 5
+        category: CATEGORY_CSS,
+        severity: SEVERITY_WARNING,
+      }],
+    }).then(([result]) => {
+      is(countMessageNodes(), LOG_LIMIT, "number of messages");
+
       is(Object.keys(hudRef.ui._repeatNodes).length, LOG_LIMIT,
          "repeated nodes pruned from repeatNodes");
 
-      let msg = hudRef.outputNode.querySelector(".webconsole-msg-cssparser " +
-                                                ".webconsole-msg-repeat");
-      is(msg.getAttribute("value"), 1,
+      let msg = [...result.matched][0];
+      let repeats = msg.querySelector(".repeats");
+      is(repeats.getAttribute("value"), 1,
          "repeated nodes pruned from repeatNodes (confirmed)");
 
       finishTest();
-    },
-    failureFn: finishTest,
-  };
-
-  waitForSuccess({
-    name: "repeated nodes in cssNodes",
-    validatorFn: function()
-    {
-      let msg = hudRef.outputNode.querySelector(".webconsole-msg-cssparser " +
-                                                ".webconsole-msg-repeat");
-      return msg && msg.getAttribute("value") == 5;
-    },
-    successFn: function()
-    {
-      populateConsole(hudRef);
-      waitForSuccess(waitForNoRepeatedNodes);
-    },
-    failureFn: finishTest,
+    });
   });
 }
 
 function countMessageNodes() {
   let outputNode = HUDService.getHudByWindow(content).outputNode;
-  return outputNode.querySelectorAll(".hud-msg-node").length;
+  return outputNode.querySelectorAll(".message").length;
 }
