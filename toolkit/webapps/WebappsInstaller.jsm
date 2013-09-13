@@ -126,10 +126,11 @@ NativeApp.prototype = {
    *
    */
   init: function(aData, aManifest) {
+    let app = aData.app;
     let manifest = this.manifest = new ManifestHelper(aManifest,
-                                                      aData.app.origin);
+                                                      app.origin);
 
-    let origin = Services.io.newURI(aData.app.origin, null, null);
+    let origin = Services.io.newURI(app.origin, null, null);
 
     let biggestIcon = getBiggestIconURL(manifest.icons);
     try {
@@ -169,7 +170,7 @@ NativeApp.prototype = {
       this.shortDescription = this.appName;
     }
 
-    this.categories = aData.app.categories.slice(0);
+    this.categories = app.categories.slice(0);
 
     // The app registry is the Firefox profile from which the app
     // was installed.
@@ -179,10 +180,26 @@ NativeApp.prototype = {
       "registryDir": registryFolder.path,
       "app": {
         "manifest": aManifest,
-        "origin": aData.app.origin,
-        "manifestURL": aData.app.manifestURL
+        "origin": app.origin,
+        "manifestURL": app.manifestURL,
+        "installOrigin": app.installOrigin,
+        "categories": app.categories,
+        "receipts": app.receipts,
+        "installTime": app.installTime,
       }
     };
+
+    if (app.etag) {
+      this.webappJson.app.etag = app.etag;
+    }
+
+    if (app.packageEtag) {
+      this.webappJson.app.packageEtag = app.packageEtag;
+    }
+
+    if (app.updateManifest) {
+      this.webappJson.app.updateManifest = app.updateManifest;
+    }
 
     this.runtimeFolder = Services.dirsvc.get("GreD", Ci.nsIFile);
   },
