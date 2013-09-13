@@ -688,7 +688,6 @@ WMFReader::DecodeAudioData()
   if (FAILED(hr)) {
     LOG("WMFReader::DecodeAudioData() ReadSample failed with hr=0x%x", hr);
     // End the stream.
-    mAudioQueue.Finish();
     return false;
   }
 
@@ -703,7 +702,6 @@ WMFReader::DecodeAudioData()
     LOG("WMFReader::DecodeAudioData() ReadSample failed with hr=0x%x flags=0x%x",
         hr, flags);
     // End the stream.
-    mAudioQueue.Finish();
     return false;
   }
 
@@ -925,8 +923,6 @@ WMFReader::DecodeVideoFrame(bool &aKeyframeSkip,
                                  nullptr);
   if (FAILED(hr)) {
     LOG("WMFReader::DecodeVideoData() ReadSample failed with hr=0x%x", hr);
-    // End the stream.
-    mVideoQueue.Finish();
     return false;
   }
 
@@ -938,7 +934,6 @@ WMFReader::DecodeVideoFrame(bool &aKeyframeSkip,
   if (flags & MF_SOURCE_READERF_ERROR) {
     NS_WARNING("WMFReader: Catastrophic failure reading video sample");
     // Future ReadSample() calls will fail, so give up and report end of stream.
-    mVideoQueue.Finish();
     return false;
   }
 
@@ -950,8 +945,6 @@ WMFReader::DecodeVideoFrame(bool &aKeyframeSkip,
   if (!sample) {
     if ((flags & MF_SOURCE_READERF_ENDOFSTREAM)) {
       LOG("WMFReader; Null sample after video decode, at end of stream");
-      // End the stream.
-      mVideoQueue.Finish();
       return false;
     }
     LOG("WMFReader; Null sample after video decode. Maybe insufficient data...");
@@ -966,7 +959,6 @@ WMFReader::DecodeVideoFrame(bool &aKeyframeSkip,
     if (FAILED(hr) ||
         FAILED(ConfigureVideoFrameGeometry(mediaType))) {
       NS_WARNING("Failed to reconfigure video media type");
-      mVideoQueue.Finish();
       return false;
     }
   }
@@ -997,7 +989,6 @@ WMFReader::DecodeVideoFrame(bool &aKeyframeSkip,
 
   if ((flags & MF_SOURCE_READERF_ENDOFSTREAM)) {
     // End of stream.
-    mVideoQueue.Finish();
     LOG("End of video stream");
     return false;
   }
