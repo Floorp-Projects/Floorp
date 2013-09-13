@@ -5,69 +5,27 @@
     },
     "global": {
         "talos_repo": "http://hg.mozilla.org/build/talos",
-        "talos_revision": "ca2229a32cb6"
+        "talos_revision": "655c5140970c"
     },
     "suites": {
         "chromez": {
-            "tests": ["tresize", "tcanvasmark"],
-            "talos_options": [
-                "--mozAfterPaint",
-                "--filter",
-                "ignore_first:5",
-                "--filter",
-                "median"
-            ]
+            "tests": ["tresize", "tcanvasmark"]
         },
         "dirtypaint": {
-            "tests": [
-                "tspaint_places_generated_med",
-                "tspaint_places_generated_max"
-            ],
+            "tests": ["tspaint_places_generated_med", "tspaint_places_generated_max"],
             "talos_addons": [
                 "http://talos-bundles.pvt.build.mozilla.org/profiles/dirtyDBs.zip",
                 "http://talos-bundles.pvt.build.mozilla.org/profiles/dirtyMaxDBs.zip"
-            ],
-            "talos_options": [
-                "--setPref",
-                "hangmonitor.timeout=0",
-                "--mozAfterPaint"
             ]
         },
         "dromaeojs": {
             "tests": ["dromaeo_css", "dromaeo_dom", "kraken", "v8_7"]
         },
         "other": {
-            "tests": ["a11yr", "ts_paint", "tpaint"],
-            "talos_options": [
-                "--mozAfterPaint",
-                "--filter",
-                "ignore_first:5",
-                "--filter",
-                "median"
-            ]
+            "tests": ["a11yr", "ts_paint", "tpaint"]
         },
         "svgr": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx"]
-        },
-        "tpn": {
-            "tests": ["tp5n"],
-            "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
-            "pagesets_parent_dir_path": "talos/page_load_test/",
-            "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5n.manifest",
-            "plugins": {
-                "32": "http://talos-bundles.pvt.build.mozilla.org/zips/flash32_10_3_183_5.zip",
-                "64": "http://talos-bundles.pvt.build.mozilla.org/zips/flash64_11_0_d1_98.zip"
-            },
-            "talos_options": [
-                "--mozAfterPaint",
-                "--responsiveness",
-                "--filter",
-                "ignore_first:5",
-                "--filter",
-                "median",
-                "--test_timeout",
-                "3600"
-            ]
         },
         "tp5o": {
             "tests": ["tp5o"],
@@ -77,17 +35,7 @@
             "plugins": {
                 "32": "http://talos-bundles.pvt.build.mozilla.org/zips/flash32_10_3_183_5.zip",
                 "64": "http://talos-bundles.pvt.build.mozilla.org/zips/flash64_11_0_d1_98.zip"
-            },
-            "talos_options": [
-                "--mozAfterPaint",
-                "--responsiveness",
-                "--filter",
-                "ignore_first:5",
-                "--filter",
-                "median",
-                "--test_timeout",
-                "3600"
-            ]
+            }
         },
         "xperf": {
             "tests": ["tp5n"],
@@ -99,13 +47,8 @@
                 "64": "http://talos-bundles.pvt.build.mozilla.org/zips/flash64_11_0_d1_98.zip"
             },
             "talos_options": [
-                "--mozAfterPaint",
                 "--xperf_path",
                 "\"c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe\"",
-                "--filter",
-                "ignore_first:5",
-                "--filter",
-                "median",
                 "C:/slave/talos-data/talos/xperf.config"
             ]
         }

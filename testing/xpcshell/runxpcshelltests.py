@@ -114,6 +114,7 @@ class XPCShellTestThread(Thread):
         self.xpcshell = kwargs.get('xpcshell')
         self.xpcsRunArgs = kwargs.get('xpcsRunArgs')
         self.failureManifest = kwargs.get('failureManifest')
+        self.on_message = kwargs.get('on_message')
 
         self.tests_root_dir = tests_root_dir
         self.app_dir_key = app_dir_key
@@ -132,6 +133,8 @@ class XPCShellTestThread(Thread):
 
         self.output_lines = []
         self.has_failure_output = False
+        self.saw_proc_start = False
+        self.saw_proc_end = False
 
         # event from main thread to signal work done
         self.event = event
@@ -193,6 +196,18 @@ class XPCShellTestThread(Thread):
           Simple wrapper to communicate with a process.
           On a remote system, this is overloaded to handle remote process communication.
         """
+        # Processing of incremental output put here to
+        # sidestep issues on remote platforms, where what we know
+        # as proc is a file pulled off of a device.
+        while True:
+            line = proc.stdout.readline()
+            if not line:
+                break
+            self.process_line(line)
+
+        if self.saw_proc_start and not self.saw_proc_end:
+            self.has_failure_output = True
+
         return proc.communicate()
 
     def launchProcess(self, cmd, stdout, stderr, env, cwd):
@@ -393,16 +408,14 @@ class XPCShellTestThread(Thread):
         if self.pluginsDir:
             self.cleanupDir(self.pluginsDir, name, self.xunit_result)
 
-    def append_message_from_line(self, line):
-        """Given a line of raw output, convert to message and append to
-        output buffer."""
+    def message_from_line(self, line):
+        """ Given a line of raw output, convert to a string message. """
         if isinstance(line, basestring):
             # This function has received unstructured output.
             if line:
-                self.output_lines.append(line)
                 if 'TEST-UNEXPECTED-' in line:
                     self.has_failure_output = True
-            return
+            return line
 
         msg = ['%s: ' % line['process'] if 'process' in line else '']
 
@@ -418,43 +431,55 @@ class XPCShellTestThread(Thread):
                                          line.get('diagnostic', 'undefined')))
 
         msg.append('\n%s' % line['stack'] if 'stack' in line else '')
-        self.output_lines.append(''.join(msg))
+        return ''.join(msg)
 
     def parse_output(self, output):
         """Parses process output for structured messages and saves output as it is
         read. Sets self.has_failure_output in case of evidence of a failure"""
-        seen_proc_start = False
-        seen_proc_end = False
-        self.output_lines = []
         for line_string in output.splitlines():
-            try:
-                line_object = json.loads(line_string)
-                if not isinstance(line_object, dict):
-                    self.append_message_from_line(line_string)
-                    continue
-            except ValueError:
-                self.append_message_from_line(line_string)
-                continue
+            self.process_line(line_string)
 
-            if 'action' not in line_object:
-                # In case a test outputs something that happens to be valid
-                # JSON object.
-                self.append_message_from_line(line_string)
-                continue
-
-            action = line_object['action']
-            self.append_message_from_line(line_object)
-
-            if action in FAILURE_ACTIONS:
-                self.has_failure_output = True
-
-            elif action == 'child_test_start':
-                seen_proc_start = True
-            elif action == 'child_test_end':
-                seen_proc_end = True
-
-        if seen_proc_start and not seen_proc_end:
+        if self.saw_proc_start and not self.saw_proc_end:
             self.has_failure_output = True
+
+    def report_message(self, line):
+        """ Reports a message to a consumer, both as a strucutured and
+        human-readable log message. """
+        message = self.message_from_line(line).strip()
+
+        if self.on_message:
+            self.on_message(line, message)
+        else:
+            self.output_lines.append(message)
+
+    def process_line(self, line_string):
+        """ Parses a single line of output, determining its significance and
+        reporting a message.
+        """
+        try:
+            line_object = json.loads(line_string)
+            if not isinstance(line_object, dict):
+                self.report_message(line_string)
+                return
+        except ValueError:
+            self.report_message(line_string)
+            return
+
+        if 'action' not in line_object:
+            # In case a test outputs something that happens to be valid
+            # JSON.
+            self.report_message(line_string)
+            return
+
+        action = line_object['action']
+        self.report_message(line_object)
+
+        if action in FAILURE_ACTIONS:
+            self.has_failure_output = True
+        elif action == 'child_test_start':
+            self.saw_proc_start = True
+        elif action == 'child_test_end':
+            self.saw_proc_end = True
 
     def log_output(self, output):
         """Prints given output line-by-line to avoid overflowing buffers."""
@@ -579,8 +604,10 @@ class XPCShellTestThread(Thread):
                     return
 
                 failureType = "TEST-UNEXPECTED-%s" % ("FAIL" if expected else "PASS")
-                message = "%s | %s | test failed (with xpcshell return code: %d), see following log:" % (
+                message = "%s | %s | test failed (with xpcshell return code: %d)" % (
                               failureType, name, self.getReturnCode(proc))
+                if self.output_lines:
+                    message += ", see following log:"
 
                 with LOG_MUTEX:
                     self.log.error(message)
@@ -1092,7 +1119,7 @@ class XPCShellTests(object):
                  testsRootDir=None, xunitFilename=None, xunitName=None,
                  testingModulesDir=None, autolog=False, pluginsPath=None,
                  testClass=XPCShellTestThread, failureManifest=None,
-                 **otherOptions):
+                 on_message=None, **otherOptions):
         """Run xpcshell tests.
 
         |xpcshell|, is the xpcshell executable to use to run the tests.
@@ -1181,6 +1208,7 @@ class XPCShellTests(object):
         self.verbose = verbose
         self.keepGoing = keepGoing
         self.logfiles = logfiles
+        self.on_message = on_message
         self.totalChunks = totalChunks
         self.thisChunk = thisChunk
         self.debuggerInfo = getDebuggerInfo(self.oldcwd, debugger, debuggerArgs, debuggerInteractive)
@@ -1257,7 +1285,8 @@ class XPCShellTests(object):
             'logfiles': self.logfiles,
             'xpcshell': self.xpcshell,
             'xpcsRunArgs': self.xpcsRunArgs,
-            'failureManifest': failureManifest
+            'failureManifest': failureManifest,
+            'on_message': self.on_message,
         }
 
         if self.sequential:

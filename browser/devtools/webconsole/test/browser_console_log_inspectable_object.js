@@ -22,37 +22,33 @@ function performTest(hud)
 
   hud.jsterm.execute("myObj = {abba: 'omgBug676722'}");
   hud.jsterm.execute("console.log('fooBug676722', myObj)");
-  waitForSuccess({
-    name: "eval results are shown",
-    validatorFn: function()
-    {
-      return hud.outputNode.textContent.indexOf("fooBug676722") > -1 &&
-             hud.outputNode.querySelector(".hud-clickable");
-    },
-    successFn: function()
-    {
-      isnot(hud.outputNode.textContent.indexOf("myObj = {"), -1,
-            "myObj = ... is shown");
 
-      let clickable = hud.outputNode.querySelector(".hud-clickable");
-      ok(clickable, "the console.log() object .hud-clickable was found");
-      isnot(clickable.textContent.indexOf("Object"), -1,
-            "clickable node content is correct");
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "fooBug676722",
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+      objects: true,
+    }],
+  }).then(([result]) => {
+    let clickable = result.clickableElements[0];
+    ok(clickable, "the console.log() object anchor was found");
+    isnot(clickable.textContent.indexOf("Object"), -1,
+          "clickable node content is correct");
 
-      hud.jsterm.once("variablesview-fetched",
-        (aEvent, aVar) => {
-          ok(aVar, "object inspector opened on click");
+    hud.jsterm.once("variablesview-fetched",
+      (aEvent, aVar) => {
+        ok(aVar, "object inspector opened on click");
 
-          findVariableViewProperties(aVar, [{
-            name: "abba",
-            value: "omgBug676722",
-          }], { webconsole: hud }).then(finishTest);
-        });
-
-      executeSoon(function() {
-        EventUtils.synthesizeMouse(clickable, 2, 2, {}, hud.iframeWindow);
+        findVariableViewProperties(aVar, [{
+          name: "abba",
+          value: "omgBug676722",
+        }], { webconsole: hud }).then(finishTest);
       });
-    },
-    failureFn: finishTest,
+
+    executeSoon(function() {
+      EventUtils.synthesizeMouse(clickable, 2, 2, {}, hud.iframeWindow);
+    });
   });
 }
