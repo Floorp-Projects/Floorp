@@ -223,6 +223,11 @@ VariablesView.prototype = {
   lazyExpand: true,
 
   /**
+   * Specifies if nodes in this view may be searched lazily.
+   */
+  lazySearch: true,
+
+  /**
    * Function called each time a variable or property's value is changed via
    * user interaction. If null, then value changes are disabled.
    *
@@ -455,7 +460,7 @@ VariablesView.prototype = {
    * Listener handling the searchbox input event.
    */
   _onSearchboxInput: function() {
-    this._doSearch(this._searchboxNode.value);
+    this.scheduleSearch(this._searchboxNode.value);
   },
 
   /**
@@ -483,6 +488,13 @@ VariablesView.prototype = {
    *        The amount of milliseconds to wait until draining.
    */
   scheduleSearch: function(aToken, aWait) {
+    // Check if this search operation may not be executed lazily.
+    if (!this.lazySearch) {
+      this._doSearch(aToken);
+      return;
+    }
+
+    // The amount of time to wait for the requests to settle.
     let maxDelay = SEARCH_ACTION_MAX_DELAY;
     let delay = aWait === undefined ? maxDelay / aToken.length : aWait;
 
@@ -513,18 +525,6 @@ VariablesView.prototype = {
         default:
           scope._performSearch(aToken.toLowerCase());
           break;
-      }
-    }
-  },
-
-  /**
-   * Expands the first search results in this container.
-   */
-  expandFirstSearchResults: function() {
-    for (let scope of this._store) {
-      let match = scope._firstMatch;
-      if (match) {
-        match.expand();
       }
     }
   },
