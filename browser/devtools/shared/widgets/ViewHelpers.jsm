@@ -812,7 +812,7 @@ this.WidgetMethods = {
    *        If unspecified, all items will be sorted by their label.
    */
   sortContents: function(aPredicate = this._currentSortPredicate) {
-    let sortedItems = this.orderedItems.sort(this._currentSortPredicate = aPredicate);
+    let sortedItems = this.items.sort(this._currentSortPredicate = aPredicate);
 
     for (let i = 0, len = sortedItems.length; i < len; i++) {
       this.swapItems(this.getItemAtIndex(i), sortedItems[i]);
@@ -1314,67 +1314,32 @@ this.WidgetMethods = {
   get itemCount() this._itemsByElement.size,
 
   /**
-   * Returns a list of items in this container, in no particular order.
+   * Returns a list of items in this container, in the displayed order.
    * @return array
    */
   get items() {
-    let items = [];
-    for (let [, item] of this._itemsByElement) {
-      items.push(item);
+    let store = [];
+    let itemCount = this.itemCount;
+    for (let i = 0; i < itemCount; i++) {
+      store.push(this.getItemAtIndex(i));
     }
-    return items;
+    return store;
   },
 
   /**
-   * Returns a list of labels in this container, in no particular order.
+   * Returns a list of labels in this container, in the displayed order.
    * @return array
    */
   get labels() {
-    let labels = [];
-    for (let [label] of this._itemsByLabel) {
-      labels.push(label);
-    }
-    return labels;
+    return this.items.map(e => e._label);
   },
 
   /**
-   * Returns a list of values in this container, in no particular order.
+   * Returns a list of values in this container, in the displayed order.
    * @return array
    */
   get values() {
-    let values = [];
-    for (let [value] of this._itemsByValue) {
-      values.push(value);
-    }
-    return values;
-  },
-
-  /**
-   * Returns a list of all the visible (non-hidden) items in this container,
-   * in no particular order.
-   * @return array
-   */
-  get visibleItems() {
-    let items = [];
-    for (let [element, item] of this._itemsByElement) {
-      if (!element.hidden) {
-        items.push(item);
-      }
-    }
-    return items;
-  },
-
-  /**
-   * Returns a list of all items in this container, in the displayed order.
-   * @return array
-   */
-  get orderedItems() {
-    let items = [];
-    let itemCount = this.itemCount;
-    for (let i = 0; i < itemCount; i++) {
-      items.push(this.getItemAtIndex(i));
-    }
-    return items;
+    return this.items.map(e => e._value);
   },
 
   /**
@@ -1382,16 +1347,8 @@ this.WidgetMethods = {
    * in the displayed order
    * @return array
    */
-  get orderedVisibleItems() {
-    let items = [];
-    let itemCount = this.itemCount;
-    for (let i = 0; i < itemCount; i++) {
-      let item = this.getItemAtIndex(i);
-      if (!item._target.hidden) {
-        items.push(item);
-      }
-    }
-    return items;
+  get visibleItems() {
+    return this.items.filter(e => !e._target.hidden);
   },
 
   /**
