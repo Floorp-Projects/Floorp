@@ -69,6 +69,9 @@ BaselineCompiler::compile()
     IonSpew(IonSpew_BaselineScripts, "Baseline compiling script %s:%d (%p)",
             script->filename(), script->lineno, script.get());
 
+    IonSpew(IonSpew_Codegen, "# Emitting baseline code for script %s:%d",
+            script->filename(), script->lineno);
+
     if (cx->typeInferenceEnabled() && !script->ensureHasBytecodeTypeMap(cx))
         return Method_Error;
 
