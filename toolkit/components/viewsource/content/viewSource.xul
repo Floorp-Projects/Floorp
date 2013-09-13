@@ -207,9 +207,10 @@
   </toolbox>
 
   <vbox id="appcontent" flex="1">
-    <findbar id="FindToolbar" browserid="content" position="top"/>
+
     <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"
              context="viewSourceContextMenu" showcaret="true" tooltip="aHTMLTooltip"/>
+    <findbar id="FindToolbar" browserid="content"/>
   </vbox> 
 
   <statusbar id="status-bar" class="chromeclass-status">
