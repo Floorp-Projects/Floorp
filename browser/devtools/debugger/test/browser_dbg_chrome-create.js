@@ -1,32 +1,26 @@
-/* vim:set ts=2 sw=2 sts=2 et: */
-/*
- * Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/**
+ * Tests that a chrome debugger can be created in a new process.
  */
 
-// Tests that a chrome debugger can be created in a new process.
-
-var gProcess = null;
-var gTab = null;
-var gDebuggee = null;
+let gProcess;
 
 function test() {
   // Windows XP test slaves are terribly slow at this test.
   requestLongerTimeout(4);
 
-  debug_chrome(STACK_URL, aOnClosing, function(aTab, aDebuggee, aProcess) {
-    gTab = aTab;
-    gDebuggee = aDebuggee;
+  initChromeDebugger(aOnClose).then(aProcess => {
     gProcess = aProcess;
 
-    info("Starting test");
-    testSimpleCall();
+    info("Starting test...");
+    performTest();
   });
 }
 
-function testSimpleCall() {
+function performTest() {
   Services.tm.currentThread.dispatch({ run: function() {
-
     ok(gProcess._dbgProcess,
       "The remote debugger process wasn't created properly!");
     ok(gProcess._dbgProcess.isRunning,
@@ -68,7 +62,7 @@ function testSimpleCall() {
   }}, 0);
 }
 
-function aOnClosing() {
+function aOnClose() {
   ok(!gProcess._dbgProcess.isRunning,
     "The remote debugger process isn't closed as it should be!");
   is(gProcess._dbgProcess.exitValue, (Services.appinfo.OS == "WINNT" ? 0 : 256),
@@ -80,14 +74,9 @@ function aOnClosing() {
   info("profile rootDir: " + gProcess._dbgProfile.rootDir.path);
   info("profile name: " + gProcess._dbgProfile.name);
 
-  executeSoon(function() {
-    finish();
-  });
+  finish();
 }
 
 registerCleanupFunction(function() {
-  removeTab(gTab);
   gProcess = null;
-  gTab = null;
-  gDebuggee = null;
 });

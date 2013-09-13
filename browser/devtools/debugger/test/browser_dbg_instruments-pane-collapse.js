@@ -1,29 +1,32 @@
-/*
- * Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/**
+ * Tests that the debugger panes collapse properly.
  */
 
-// Tests that the debugger panes collapse properly.
+const TAB_URL = EXAMPLE_URL + "doc_recursion-stack.html";
 
-var gPane = null;
-var gTab = null;
-var gDebuggee = null;
-var gDebugger = null;
-var gView = null;
+let gTab, gDebuggee, gPanel, gDebugger;
+let gPrefs, gOptions;
 
 function test() {
-  debug_tab_pane(STACK_URL, function(aTab, aDebuggee, aPane) {
+  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
     gTab = aTab;
     gDebuggee = aDebuggee;
-    gPane = aPane;
-    gDebugger = gPane.panelWin;
-    gView = gDebugger.DebuggerView;
+    gPanel = aPanel;
+    gDebugger = gPanel.panelWin;
+    gPrefs = gDebugger.Prefs;
+    gOptions = gDebugger.DebuggerView.Options;
 
     testPanesState();
 
-    gView.toggleInstrumentsPane({ visible: true, animated: false });
+    gDebugger.DebuggerView.toggleInstrumentsPane({ visible: true, animated: false });
+
     testInstrumentsPaneCollapse();
     testPanesStartupPref();
+
+    closeDebuggerAndFinish(gPanel);
   });
 }
 
@@ -36,9 +39,9 @@ function testPanesState() {
   ok(instrumentsPane.hasAttribute("pane-collapsed") &&
      instrumentsPaneToggleButton.hasAttribute("pane-collapsed"),
     "The debugger view instruments pane should initially be hidden.");
-  is(gDebugger.Prefs.panesVisibleOnStartup, false,
+  is(gPrefs.panesVisibleOnStartup, false,
     "The debugger view instruments pane should initially be preffed as hidden.");
-  isnot(gDebugger.DebuggerView.Options._showPanesOnStartupItem.getAttribute("checked"), "true",
+  isnot(gOptions._showPanesOnStartupItem.getAttribute("checked"), "true",
     "The options menu item should not be checked.");
 }
 
@@ -49,7 +52,7 @@ function testInstrumentsPaneCollapse() {
     gDebugger.document.getElementById("instruments-pane-toggle");
 
   let width = parseInt(instrumentsPane.getAttribute("width"));
-  is(width, gDebugger.Prefs.instrumentsWidth,
+  is(width, gPrefs.instrumentsWidth,
     "The instruments pane has an incorrect width.");
   is(instrumentsPane.style.marginLeft, "0px",
     "The instruments pane has an incorrect left margin.");
@@ -61,15 +64,15 @@ function testInstrumentsPaneCollapse() {
      !instrumentsPaneToggleButton.hasAttribute("pane-collapsed"),
     "The instruments pane should at this point be visible.");
 
-  gView.toggleInstrumentsPane({ visible: false, animated: true });
+  gDebugger.DebuggerView.toggleInstrumentsPane({ visible: false, animated: true });
 
-  is(gDebugger.Prefs.panesVisibleOnStartup, false,
+  is(gPrefs.panesVisibleOnStartup, false,
     "The debugger view panes should still initially be preffed as hidden.");
-  isnot(gDebugger.DebuggerView.Options._showPanesOnStartupItem.getAttribute("checked"), "true",
+  isnot(gOptions._showPanesOnStartupItem.getAttribute("checked"), "true",
     "The options menu item should still not be checked.");
 
   let margin = -(width + 1) + "px";
-  is(width, gDebugger.Prefs.instrumentsWidth,
+  is(width, gPrefs.instrumentsWidth,
     "The instruments pane has an incorrect width after collapsing.");
   is(instrumentsPane.style.marginLeft, margin,
     "The instruments pane has an incorrect left margin after collapsing.");
@@ -81,14 +84,14 @@ function testInstrumentsPaneCollapse() {
      instrumentsPaneToggleButton.hasAttribute("pane-collapsed"),
     "The instruments pane should not be visible after collapsing.");
 
-  gView.toggleInstrumentsPane({ visible: true, animated: false });
+  gDebugger.DebuggerView.toggleInstrumentsPane({ visible: true, animated: false });
 
-  is(gDebugger.Prefs.panesVisibleOnStartup, false,
+  is(gPrefs.panesVisibleOnStartup, false,
     "The debugger view panes should still initially be preffed as hidden.");
-  isnot(gDebugger.DebuggerView.Options._showPanesOnStartupItem.getAttribute("checked"), "true",
+  isnot(gOptions._showPanesOnStartupItem.getAttribute("checked"), "true",
     "The options menu item should still not be checked.");
 
-  is(width, gDebugger.Prefs.instrumentsWidth,
+  is(width, gPrefs.instrumentsWidth,
     "The instruments pane has an incorrect width after uncollapsing.");
   is(instrumentsPane.style.marginLeft, "0px",
     "The instruments pane has an incorrect left margin after uncollapsing.");
@@ -107,53 +110,45 @@ function testPanesStartupPref() {
   let instrumentsPaneToggleButton =
     gDebugger.document.getElementById("instruments-pane-toggle");
 
-  is(gDebugger.Prefs.panesVisibleOnStartup, false,
+  is(gPrefs.panesVisibleOnStartup, false,
     "The debugger view panes should still initially be preffed as hidden.");
 
   ok(!instrumentsPane.hasAttribute("pane-collapsed") &&
      !instrumentsPaneToggleButton.hasAttribute("pane-collapsed"),
     "The debugger instruments pane should at this point be visible.");
-  is(gDebugger.Prefs.panesVisibleOnStartup, false,
+  is(gPrefs.panesVisibleOnStartup, false,
     "The debugger view panes should initially be preffed as hidden.");
-  isnot(gDebugger.DebuggerView.Options._showPanesOnStartupItem.getAttribute("checked"), "true",
+  isnot(gOptions._showPanesOnStartupItem.getAttribute("checked"), "true",
     "The options menu item should still not be checked.");
 
-  gDebugger.DebuggerView.Options._showPanesOnStartupItem.setAttribute("checked", "true");
-  gDebugger.DebuggerView.Options._toggleShowPanesOnStartup();
+  gOptions._showPanesOnStartupItem.setAttribute("checked", "true");
+  gOptions._toggleShowPanesOnStartup();
 
-  executeSoon(function() {
-    ok(!instrumentsPane.hasAttribute("pane-collapsed") &&
-       !instrumentsPaneToggleButton.hasAttribute("pane-collapsed"),
-      "The debugger instruments pane should at this point be visible.");
-    is(gDebugger.Prefs.panesVisibleOnStartup, true,
-      "The debugger view panes should now be preffed as visible.");
-    is(gDebugger.DebuggerView.Options._showPanesOnStartupItem.getAttribute("checked"), "true",
-      "The options menu item should now be checked.");
+  ok(!instrumentsPane.hasAttribute("pane-collapsed") &&
+     !instrumentsPaneToggleButton.hasAttribute("pane-collapsed"),
+    "The debugger instruments pane should at this point be visible.");
+  is(gPrefs.panesVisibleOnStartup, true,
+    "The debugger view panes should now be preffed as visible.");
+  is(gOptions._showPanesOnStartupItem.getAttribute("checked"), "true",
+    "The options menu item should now be checked.");
 
-    gDebugger.DebuggerView.Options._showPanesOnStartupItem.setAttribute("checked", "false");
-    gDebugger.DebuggerView.Options._toggleShowPanesOnStartup();
+  gOptions._showPanesOnStartupItem.setAttribute("checked", "false");
+  gOptions._toggleShowPanesOnStartup();
 
-    executeSoon(function() {
-      ok(!instrumentsPane.hasAttribute("pane-collapsed") &&
-         !instrumentsPaneToggleButton.hasAttribute("pane-collapsed"),
-        "The debugger instruments pane should at this point be visible.");
-      is(gDebugger.Prefs.panesVisibleOnStartup, false,
-        "The debugger view panes should now be preffed as hidden.");
-      isnot(gDebugger.DebuggerView.Options._showPanesOnStartupItem.getAttribute("checked"), "true",
-        "The options menu item should now be unchecked.");
-
-      executeSoon(function() {
-        closeDebuggerAndFinish();
-      });
-    });
-  });
+  ok(!instrumentsPane.hasAttribute("pane-collapsed") &&
+     !instrumentsPaneToggleButton.hasAttribute("pane-collapsed"),
+    "The debugger instruments pane should at this point be visible.");
+  is(gPrefs.panesVisibleOnStartup, false,
+    "The debugger view panes should now be preffed as hidden.");
+  isnot(gOptions._showPanesOnStartupItem.getAttribute("checked"), "true",
+    "The options menu item should now be unchecked.");
 }
 
 registerCleanupFunction(function() {
-  removeTab(gTab);
-  gPane = null;
   gTab = null;
   gDebuggee = null;
+  gPanel = null;
   gDebugger = null;
-  gView = null;
+  gPrefs = null;
+  gOptions = null;
 });
