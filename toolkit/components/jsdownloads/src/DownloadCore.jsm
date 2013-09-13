@@ -832,6 +832,10 @@ Download.prototype = {
       serializable.error = { message: this.error.message };
     }
 
+    if (this.startTime) {
+      serializable.startTime = this.startTime.toJSON();
+    }
+
     // These are serialized unless they are false, null, or empty strings.
     for (let property of kSerializableDownloadProperties) {
       if (property != "error" && this[property]) {
@@ -869,7 +873,6 @@ const kSerializableDownloadProperties = [
   "succeeded",
   "canceled",
   "error",
-  "startTime",
   "totalBytes",
   "hasPartialData",
   "tryToKeepPartialData",
@@ -916,6 +919,13 @@ Download.fromSerializable = function (aSerializable) {
     download.saver = DownloadSaver.fromSerializable("copy");
   }
   download.saver.download = download;
+
+  if ("startTime" in aSerializable) {
+    let time = aSerializable.startTime.getTime
+             ? aSerializable.startTime.getTime()
+             : aSerializable.startTime;
+    download.startTime = new Date(time);
+  }
 
   for (let property of kSerializableDownloadProperties) {
     if (property in aSerializable) {
