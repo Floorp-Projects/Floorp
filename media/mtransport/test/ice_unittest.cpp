@@ -31,6 +31,10 @@
 #include "nrinterfaceprioritizer.h"
 #include "mtransport_test_utils.h"
 #include "runnable_utils.h"
+#include "stunserver.h"
+// TODO(bcampen@mozilla.com): Big fat hack since the build system doesn't give
+// us a clean way to add object files to a single executable.
+#include "stunserver.cpp"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
@@ -586,6 +590,9 @@ class IceTestPeer : public sigslot::has_slots<> {
 class IceGatherTest : public ::testing::Test {
  public:
   void SetUp() {
+    test_utils->sts_target()->Dispatch(WrapRunnable(TestStunServer::GetInstance(),
+                                                    &TestStunServer::Reset),
+                                       NS_DISPATCH_SYNC);
     peer_ = new IceTestPeer("P1", true, false);
     peer_->AddStream(1);
   }
@@ -1148,7 +1155,14 @@ int main(int argc, char **argv)
   // Start the tests
   ::testing::InitGoogleTest(&argc, argv);
 
+  test_utils->sts_target()->Dispatch(
+    WrapRunnableNM(&TestStunServer::GetInstance), NS_DISPATCH_SYNC);
+
   int rv = RUN_ALL_TESTS();
+
+  test_utils->sts_target()->Dispatch(
+    WrapRunnableNM(&TestStunServer::ShutdownInstance), NS_DISPATCH_SYNC);
+
   delete test_utils;
   return rv;
 }
