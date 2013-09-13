@@ -268,11 +268,6 @@ CheckExtensions(BackCert& cert,
                 SECOidTag requiredEKUIfPresent,
                 unsigned int subCACount)
 {
-  if (endEntityOrCA != MustBeCA && isTrustAnchor) {
-    PR_NOT_REACHED("only CAs can be trust anchors.");
-    return Fail(FatalError, PR_INVALID_STATE_ERROR);
-  }
-
   // 4.2.1.1. Authority Key Identifier dealt with as part of path building
   // 4.2.1.2. Subject Key Identifier dealt with as part of path building
 
@@ -307,6 +302,7 @@ CheckExtensions(BackCert& cert,
 
   // 4.2.1.10. Name Constraints
   // 4.2.1.11. Policy Constraints
+
   // 4.2.1.12. Extended Key Usage
   rv = CheckExtendedKeyUsage(endEntityOrCA, cert.encodedExtendedKeyUsage,
                              requiredEKUIfPresent);
