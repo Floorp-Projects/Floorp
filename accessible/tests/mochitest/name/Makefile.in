@@ -13,11 +13,7 @@ MOCHITEST_A11Y_FILES =\
 		test_list.html \
 		test_markup.html \
 		test_svg.html \
+		test_tree.xul \
 		test_browserui.xul \
 		markuprules.xml \
 		$(NULL)
-
-# Disabled on mac while bug 905909 is sorted out.
-ifneq ($(OS_ARCH), Darwin)
-MOCHITEST_A11Y_FILES += test_tree.xul
-endif
