@@ -62,7 +62,6 @@ toolkit.jar:
    content/global/bindings/expander.xml        (widgets/expander.xml)
 *  content/global/bindings/filefield.xml       (widgets/filefield.xml)
 *+ content/global/bindings/findbar.xml         (widgets/findbar.xml)
-   content/global/bindings/findbar.css         (widgets/findbar.css)
    content/global/bindings/general.xml         (widgets/general.xml)
    content/global/bindings/groupbox.xml        (widgets/groupbox.xml)
 *+ content/global/bindings/listbox.xml         (widgets/listbox.xml)
