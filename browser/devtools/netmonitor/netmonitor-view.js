@@ -686,7 +686,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * Adds odd/even attributes to all the visible items in this container.
    */
   refreshZebra: function() {
-    let visibleItems = this.orderedVisibleItems;
+    let visibleItems = this.visibleItems;
 
     for (let i = 0, len = visibleItems.length; i < len; i++) {
       let requestItem = visibleItems[i];
