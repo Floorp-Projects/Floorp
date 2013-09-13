@@ -10,7 +10,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
 const NEW_SOURCE_IGNORED_URLS = ["debugger eval code", "self-hosted", "XStringBundle"];
 const NEW_SOURCE_DISPLAY_DELAY = 200; // ms
-const FETCH_SOURCE_RESPONSE_DELAY = 50; // ms
+const FETCH_SOURCE_RESPONSE_DELAY = 200; // ms
 const FRAME_STEP_CLEAR_DELAY = 100; // ms
 const CALL_STACK_PAGE_SIZE = 25; // frames
 
@@ -31,17 +31,20 @@ XPCOMUtils.defineLazyModuleGetter(this, "Parser",
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
   "resource://gre/modules/devtools/Loader.jsm");
 
-Object.defineProperty(this, "NetworkHelper", {
+XPCOMUtils.defineLazyModuleGetter(this, "DevToolsUtils",
+  "resource://gre/modules/devtools/DevToolsUtils.jsm");
+
+Object.defineProperty(this, "DevtoolsHelpers", {
   get: function() {
-    return devtools.require("devtools/toolkit/webconsole/network-helper");
+    return devtools.require("devtools/shared/helpers");
   },
   configurable: true,
   enumerable: true
 });
 
-Object.defineProperty(this, "DevtoolsHelpers", {
+Object.defineProperty(this, "NetworkHelper", {
   get: function() {
-    return devtools.require("devtools/shared/helpers");
+    return devtools.require("devtools/toolkit/webconsole/network-helper");
   },
   configurable: true,
   enumerable: true
@@ -150,13 +153,13 @@ let DebuggerController = {
 
     if (!window._isChromeDebugger) {
       let target = this._target;
-      let { client, form, threadActor } = target;
+      let { client, form: { chromeDebugger }, threadActor } = target;
       target.on("close", this._onTabDetached);
       target.on("navigate", this._onTabNavigated);
       target.on("will-navigate", this._onTabNavigated);
 
       if (target.chrome) {
-        this._startChromeDebugging(client, form.chromeDebugger, deferred.resolve);
+        this._startChromeDebugging(client, chromeDebugger, deferred.resolve);
       } else {
         this._startDebuggingTab(client, threadActor, deferred.resolve);
       }
@@ -171,8 +174,8 @@ let DebuggerController = {
     let client = new DebuggerClient(transport);
     client.addListener("tabNavigated", this._onTabNavigated);
     client.addListener("tabDetached", this._onTabDetached);
-    client.connect((aType, aTraits) => {
-      client.listTabs((aResponse) => {
+    client.connect(() => {
+      client.listTabs(aResponse => {
         this._startChromeDebugging(client, aResponse.chromeDebugger, deferred.resolve);
       });
     });
@@ -212,18 +215,23 @@ let DebuggerController = {
    *        Packet received from the server.
    */
   _onTabNavigated: function(aType, aPacket) {
-    if (aType == "will-navigate") {
-      DebuggerView._handleTabNavigation();
+    switch (aType) {
+      case "will-navigate": {
+        // Reset UI.
+        DebuggerView._handleTabNavigation();
 
-      // Discard all the old sources.
-      DebuggerController.Parser.clearCache();
-      SourceUtils.clearCache();
-      return;
+        // Discard all the old sources.
+        DebuggerController.Parser.clearCache();
+        SourceUtils.clearCache();
+        break;
+      }
+      case "navigate": {
+        this.ThreadState._handleTabNavigation();
+        this.StackFrames._handleTabNavigation();
+        this.SourceScripts._handleTabNavigation();
+        break;
+      }
     }
-
-    this.ThreadState._handleTabNavigation();
-    this.StackFrames._handleTabNavigation();
-    this.SourceScripts._handleTabNavigation();
   },
 
   /**
@@ -314,11 +322,10 @@ let DebuggerController = {
 
   /**
    * Detach and reattach to the thread actor with useSourceMaps true, blow
-   * away old scripts and get sources again.
+   * away old sources and get them again.
    */
   reconfigureThread: function(aUseSourceMaps) {
-    this.client.reconfigureThread({ useSourceMaps: aUseSourceMaps },
-                                  (aResponse) => {
+    this.client.reconfigureThread({ useSourceMaps: aUseSourceMaps }, aResponse => {
       if (aResponse.error) {
         let msg = "Couldn't reconfigure thread: " + aResponse.message;
         Cu.reportError(msg);
@@ -326,6 +333,7 @@ let DebuggerController = {
         return;
       }
 
+      // Reset UI, discard all the old sources and get them again.
       DebuggerView._handleTabNavigation();
       this.SourceScripts._handleTabNavigation();
 
@@ -443,16 +451,15 @@ function StackFrames() {
 
 StackFrames.prototype = {
   get activeThread() DebuggerController.activeThread,
-  autoScopeExpand: false,
   currentFrameDepth: -1,
   _isWatchExpressionsEvaluation: false,
   _isConditionalBreakpointEvaluation: false,
-  syncedWatchExpressions: null,
-  currentWatchExpressions: null,
-  currentBreakpointLocation: null,
-  currentEvaluation: null,
-  currentException: null,
-  currentReturnedValue: null,
+  _syncedWatchExpressions: null,
+  _currentWatchExpressions: null,
+  _currentBreakpointLocation: null,
+  _currentEvaluation: null,
+  _currentException: null,
+  _currentReturnedValue: null,
 
   /**
    * Connect to the current thread client.
@@ -502,15 +509,15 @@ StackFrames.prototype = {
     switch (aPacket.why.type) {
       // If paused by a breakpoint, store the breakpoint location.
       case "breakpoint":
-        this.currentBreakpointLocation = aPacket.frame.where;
+        this._currentBreakpointLocation = aPacket.frame.where;
         break;
       // If paused by a client evaluation, store the evaluated value.
       case "clientEvaluated":
-        this.currentEvaluation = aPacket.why.frameFinished;
+        this._currentEvaluation = aPacket.why.frameFinished;
         break;
       // If paused by an exception, store the exception value.
       case "exception":
-        this.currentException = aPacket.why.exception;
+        this._currentException = aPacket.why.exception;
         break;
       // If paused while stepping out of a frame, store the returned value or
       // thrown exception.
@@ -518,9 +525,9 @@ StackFrames.prototype = {
         if (!aPacket.why.frameFinished) {
           break;
         } else if (aPacket.why.frameFinished.throw) {
-          this.currentException = aPacket.why.frameFinished.throw;
+          this._currentException = aPacket.why.frameFinished.throw;
         } else if (aPacket.why.frameFinished.return) {
-          this.currentReturnedValue = aPacket.why.frameFinished.return;
+          this._currentReturnedValue = aPacket.why.frameFinished.return;
         }
         break;
     }
@@ -537,7 +544,7 @@ StackFrames.prototype = {
 
     // Prepare the watch expression evaluation string for the next pause.
     if (!this._isWatchExpressionsEvaluation) {
-      this.currentWatchExpressions = this.syncedWatchExpressions;
+      this._currentWatchExpressions = this._syncedWatchExpressions;
     }
   },
 
@@ -546,13 +553,13 @@ StackFrames.prototype = {
    */
   _onFrames: function() {
     // Ignore useless notifications.
-    if (!this.activeThread.cachedFrames.length) {
+    if (!this.activeThread || !this.activeThread.cachedFrames.length) {
       return;
     }
 
     let waitForNextPause = false;
-    let breakLocation = this.currentBreakpointLocation;
-    let watchExpressions = this.currentWatchExpressions;
+    let breakLocation = this._currentBreakpointLocation;
+    let watchExpressions = this._currentWatchExpressions;
 
     // Conditional breakpoints are { breakpoint, expression } tuples. The
     // boolean evaluation of the expression decides if the active thread
@@ -583,7 +590,7 @@ StackFrames.prototype = {
       this._isConditionalBreakpointEvaluation = false;
       // If the breakpoint's conditional expression evaluation is falsy,
       // automatically resume execution.
-      if (VariablesView.isFalsy({ value: this.currentEvaluation.return })) {
+      if (VariablesView.isFalsy({ value: this._currentEvaluation.return })) {
         this.activeThread.resume(DebuggerController._ensureResumptionOrder);
         return;
       }
@@ -609,16 +616,15 @@ StackFrames.prototype = {
       // If an error was thrown during the evaluation of the watch expressions,
       // then at least one expression evaluation could not be performed. So
       // remove the most recent watch expression and try again.
-      if (this.currentEvaluation.throw) {
+      if (this._currentEvaluation.throw) {
         DebuggerView.WatchExpressions.removeAt(0);
         DebuggerController.StackFrames.syncWatchExpressions();
         return;
       }
     }
 
-    // Make sure the debugger view panes are visible.
+    // Make sure the debugger view panes are visible, then refill the frames.
     DebuggerView.showInstrumentsPane();
-
     this._refillFrames();
   },
 
@@ -630,27 +636,12 @@ StackFrames.prototype = {
     // Make sure all the previous stackframes are removed before re-adding them.
     DebuggerView.StackFrames.empty();
 
-    let previousBlackBoxed = null;
     for (let frame of this.activeThread.cachedFrames) {
       let { depth, where: { url, line }, source } = frame;
-
-      let isBlackBoxed = source
-        ? this.activeThread.source(source).isBlackBoxed
-        : false;
-      let frameLocation = NetworkHelper.convertToUnicode(unescape(url));
-      let frameTitle = StackFrameUtils.getFrameTitle(frame);
-
-      if (isBlackBoxed) {
-        if (previousBlackBoxed == url) {
-          continue;
-        }
-        previousBlackBoxed = url;
-      } else {
-        previousBlackBoxed = null;
-      }
-
-      DebuggerView.StackFrames.addFrame(
-        frameTitle, frameLocation, line, depth, isBlackBoxed);
+      let isBlackBoxed = source ? this.activeThread.source(source).isBlackBoxed : false;
+      let location = NetworkHelper.convertToUnicode(unescape(url));
+      let title = StackFrameUtils.getFrameTitle(frame);
+      DebuggerView.StackFrames.addFrame(title, location, line, depth, isBlackBoxed);
     }
 
     if (this.currentFrameDepth == -1) {
@@ -666,11 +657,11 @@ StackFrames.prototype = {
    */
   _onFramesCleared: function() {
     this.currentFrameDepth = -1;
-    this.currentWatchExpressions = null;
-    this.currentBreakpointLocation = null;
-    this.currentEvaluation = null;
-    this.currentException = null;
-    this.currentReturnedValue = null;
+    this._currentWatchExpressions = null;
+    this._currentBreakpointLocation = null;
+    this._currentEvaluation = null;
+    this._currentException = null;
+    this._currentReturnedValue = null;
     // After each frame step (in, over, out), framescleared is fired, which
     // forces the UI to be emptied and rebuilt on framesadded. Most of the times
     // this is not necessary, and will result in a brief redraw flicker.
@@ -738,7 +729,7 @@ StackFrames.prototype = {
 
     // If watch expressions evaluation results are available, create a scope
     // to contain all the values.
-    if (this.syncedWatchExpressions && aDepth == 0) {
+    if (this._syncedWatchExpressions && aDepth == 0) {
       let label = L10N.getStr("watchExpressionsScopeLabel");
       let scope = DebuggerView.Variables.addScope(label);
 
@@ -750,7 +741,7 @@ StackFrames.prototype = {
       scope.delete = DebuggerView.WatchExpressions.deleteExpression;
 
       // The evaluation hasn't thrown, so fetch and add the returned results.
-      this._fetchWatchExpressions(scope, this.currentEvaluation.return);
+      this._fetchWatchExpressions(scope, this._currentEvaluation.return);
 
       // The watch expressions scope is always automatically expanded.
       scope.expand();
@@ -775,7 +766,7 @@ StackFrames.prototype = {
       // The innermost scope is always automatically expanded, because it
       // contains the variables in the current stack frame which are likely to
       // be inspected.
-      if (innermost || this.autoScopeExpand) {
+      if (innermost) {
         scope.expand();
       }
     } while ((environment = environment.parent));
@@ -818,14 +809,14 @@ StackFrames.prototype = {
    */
   _insertScopeFrameReferences: function(aScope, aFrame) {
     // Add any thrown exception.
-    if (this.currentException) {
-      let excRef = aScope.addItem("<exception>", { value: this.currentException });
-      DebuggerView.Variables.controller.addExpander(excRef, this.currentException);
+    if (this._currentException) {
+      let excRef = aScope.addItem("<exception>", { value: this._currentException });
+      DebuggerView.Variables.controller.addExpander(excRef, this._currentException);
     }
     // Add any returned value.
-    if (this.currentReturnedValue) {
-      let retRef = aScope.addItem("<return>", { value: this.currentReturnedValue });
-      DebuggerView.Variables.controller.addExpander(retRef, this.currentReturnedValue);
+    if (this._currentReturnedValue) {
+      let retRef = aScope.addItem("<return>", { value: this._currentReturnedValue });
+      DebuggerView.Variables.controller.addExpander(retRef, this._currentReturnedValue);
     }
     // Add "this".
     if (aFrame.this) {
@@ -850,7 +841,7 @@ StackFrames.prototype = {
     aScope._fetched = true;
 
     // Add nodes for every watch expression in scope.
-    this.activeThread.pauseGrip(aExp).getPrototypeAndProperties((aResponse) => {
+    this.activeThread.pauseGrip(aExp).getPrototypeAndProperties(aResponse => {
       let ownProperties = aResponse.ownProperties;
       let totalExpressions = DebuggerView.WatchExpressions.itemCount;
 
@@ -885,7 +876,7 @@ StackFrames.prototype = {
     // having the whole watch expressions array throw because of a single
     // faulty expression, simply convert it to a string describing the error.
     // There's no other information necessary to be offered in such cases.
-    let sanitizedExpressions = list.map((aString) => {
+    let sanitizedExpressions = list.map(aString => {
       // Reflect.parse throws when it encounters a syntax error.
       try {
         Parser.reflectionAPI.parse(aString);
@@ -896,10 +887,10 @@ StackFrames.prototype = {
     });
 
     if (sanitizedExpressions.length) {
-      this.syncedWatchExpressions =
-        this.currentWatchExpressions =
+      this._syncedWatchExpressions =
+        this._currentWatchExpressions =
           "[" +
-            sanitizedExpressions.map((aString) =>
+            sanitizedExpressions.map(aString =>
               "eval(\"" +
                 "try {" +
                   // Make sure all quotes are escaped in the expression's syntax,
@@ -913,8 +904,8 @@ StackFrames.prototype = {
             ).join(",") +
           "]";
     } else {
-      this.syncedWatchExpressions =
-        this.currentWatchExpressions = null;
+      this._syncedWatchExpressions =
+        this._currentWatchExpressions = null;
     }
     this.currentFrameDepth = -1;
     this._onFrames();
@@ -999,12 +990,10 @@ SourceScripts.prototype = {
     // Add the source in the debugger view sources container.
     DebuggerView.Sources.addSource(aPacket.source, { staged: false });
 
-    let container = DebuggerView.Sources;
-    let preferredValue = container.preferredValue;
-
     // Select this source if it's the preferred one.
+    let preferredValue = DebuggerView.Sources.preferredValue;
     if (aPacket.source.url == preferredValue) {
-      container.selectedValue = preferredValue;
+      DebuggerView.Sources.selectedValue = preferredValue;
     }
     // ..or the first entry if there's none selected yet after a while
     else {
@@ -1012,8 +1001,8 @@ SourceScripts.prototype = {
       this._newSourceTimeout = window.setTimeout(() => {
         // If after a certain delay the preferred source still wasn't received,
         // just give up on waiting and display the first entry.
-        if (!container.selectedValue) {
-          container.selectedIndex = 0;
+        if (!DebuggerView.Sources.selectedValue) {
+          DebuggerView.Sources.selectedIndex = 0;
         }
       }, NEW_SOURCE_DISPLAY_DELAY);
     }
@@ -1023,7 +1012,7 @@ SourceScripts.prototype = {
     DebuggerController.Breakpoints.updateEditorBreakpoints();
     DebuggerController.Breakpoints.updatePaneBreakpoints();
 
-    // Signal that a new script has been added.
+    // Signal that a new source has been added.
     window.dispatchEvent(document, "Debugger:AfterNewSource");
   },
 
@@ -1041,25 +1030,22 @@ SourceScripts.prototype = {
     // Add all the sources in the debugger view sources container.
     for (let source of aResponse.sources) {
       // Ignore bogus scripts, e.g. generated from 'clientEvaluate' packets.
-      if (NEW_SOURCE_IGNORED_URLS.indexOf(source.url) != -1) {
-        continue;
+      if (NEW_SOURCE_IGNORED_URLS.indexOf(source.url) == -1) {
+        DebuggerView.Sources.addSource(source, { staged: true });
       }
-      DebuggerView.Sources.addSource(source, { staged: true });
     }
-
-    let container = DebuggerView.Sources;
-    let preferredValue = container.preferredValue;
 
     // Flushes all the prepared sources into the sources container.
-    container.commit({ sorted: true });
+    DebuggerView.Sources.commit({ sorted: true });
 
     // Select the preferred source if it exists and was part of the response.
-    if (container.containsValue(preferredValue)) {
-      container.selectedValue = preferredValue;
+    let preferredValue = DebuggerView.Sources.preferredValue;
+    if (DebuggerView.Sources.containsValue(preferredValue)) {
+      DebuggerView.Sources.selectedValue = preferredValue;
     }
     // ..or the first entry if there's no one selected yet.
-    else if (!container.selectedValue) {
-      container.selectedIndex = 0;
+    else if (!DebuggerView.Sources.selectedValue) {
+      DebuggerView.Sources.selectedIndex = 0;
     }
 
     // If there are any stored breakpoints for the sources, display them again,
@@ -1067,7 +1053,7 @@ SourceScripts.prototype = {
     DebuggerController.Breakpoints.updateEditorBreakpoints();
     DebuggerController.Breakpoints.updatePaneBreakpoints();
 
-    // Signal that scripts have been added.
+    // Signal that sources have been added.
     window.dispatchEvent(document, "Debugger:AfterSourcesAdded");
   },
 
@@ -1092,12 +1078,12 @@ SourceScripts.prototype = {
    */
   blackBox: function(aSource, aBlackBoxFlag) {
     const sourceClient = this.activeThread.source(aSource);
-    sourceClient[aBlackBoxFlag ? "blackBox" : "unblackBox"](function({ error, message }) {
+    sourceClient[aBlackBoxFlag ? "blackBox" : "unblackBox"](({ error, message }) => {
       if (error) {
-        let msg = "Could not toggle black boxing for "
-          + aSource.url + ": " + message;
+        let msg = "Couldn't toggle black boxing for " + aSource.url + ": " + message;
         dumpn(msg);
-        return void Cu.reportError(msg);
+        Cu.reportError(msg);
+        return;
       }
     });
   },
@@ -1117,7 +1103,7 @@ SourceScripts.prototype = {
    * @return object
    *         A promise that is resolved after the source text has been fetched.
    */
-  getTextForSource: function(aSource, aOnTimeout, aDelay = FETCH_SOURCE_RESPONSE_DELAY) {
+  getText: function(aSource, aOnTimeout, aDelay = FETCH_SOURCE_RESPONSE_DELAY) {
     // Fetch the source text only once.
     let textPromise = this._cache.get(aSource.url);
     if (textPromise) {
@@ -1133,7 +1119,7 @@ SourceScripts.prototype = {
     }
 
     // Get the source text from the active thread.
-    this.activeThread.source(aSource).source((aResponse) => {
+    this.activeThread.source(aSource).source(aResponse => {
       if (aOnTimeout) {
         window.clearTimeout(fetchTimeout);
       }
@@ -1169,8 +1155,8 @@ SourceScripts.prototype = {
     // Try to fetch as many sources as possible.
     for (let url of aUrls) {
       let sourceItem = DebuggerView.Sources.getItemByValue(url);
-      let sourceClient = sourceItem.attachment.source;
-      this.getTextForSource(sourceClient, onTimeout).then(onFetch, onError);
+      let sourceForm = sourceItem.attachment.source;
+      this.getText(sourceForm, onTimeout).then(onFetch, onError);
     }
 
     /* Called if fetching a source takes too long. */
@@ -1198,6 +1184,7 @@ SourceScripts.prototype = {
     /* Called every time something interesting happens while fetching sources. */
     function maybeFinish() {
       if (pending.size == 0) {
+        // Sort the fetched sources alphabetically by their url.
         deferred.resolve(fetched.sort(([aFirst], [aSecond]) => aFirst > aSecond));
       }
     }
@@ -1218,7 +1205,7 @@ function Breakpoints() {
 }
 
 Breakpoints.prototype = {
-  get activeThread() DebuggerController.ThreadState.activeThread,
+  get activeThread() DebuggerController.activeThread,
 
   /**
    * A map of breakpoint promises as tracked by the debugger frontend.
@@ -1687,7 +1674,7 @@ Object.defineProperties(window, {
     get: function() DebuggerController.Breakpoints
   },
   "gCallStackPageSize": {
-    get: function() CALL_STACK_PAGE_SIZE,
+    get: function() CALL_STACK_PAGE_SIZE
   }
 });
 

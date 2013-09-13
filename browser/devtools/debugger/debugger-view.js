@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const SOURCE_URL_DEFAULT_MAX_LENGTH = 64; // chars
 const SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE = 1048576; // 1 MB in bytes
+const SOURCE_URL_DEFAULT_MAX_LENGTH = 64; // chars
 const STACK_FRAMES_SOURCE_URL_MAX_LENGTH = 15; // chars
 const STACK_FRAMES_SOURCE_URL_TRIM_SECTION = "center";
 const STACK_FRAMES_POPUP_SOURCE_URL_MAX_LENGTH = 32; // chars
@@ -34,8 +34,6 @@ const DEFAULT_EDITOR_CONFIG = {
   showAnnotationRuler: true,
   showOverviewRuler: true
 };
-
-Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
 
 /**
  * Object defining the debugger view components.
@@ -286,7 +284,7 @@ let DebuggerView = {
     this._setEditorText(L10N.getStr("loadingText"));
     this._editorSource = { url: aSource.url, promise: deferred.promise };
 
-    DebuggerController.SourceScripts.getTextForSource(aSource).then(([, aText]) => {
+    DebuggerController.SourceScripts.getText(aSource).then(([, aText]) => {
       // Avoid setting an unexpected source. This may happen when switching
       // very fast between sources that haven't been fetched yet.
       if (this._editorSource.url != aSource.url) {
@@ -353,11 +351,11 @@ let DebuggerView = {
     }
 
     let sourceItem = this.Sources.getItemByValue(aUrl);
-    let sourceClient = sourceItem.attachment.source;
+    let sourceForm = sourceItem.attachment.source;
 
     // Make sure the requested source client is shown in the editor, then
     // update the source editor's caret position and debug location.
-    return this._setEditorSource(sourceClient).then(() => {
+    return this._setEditorSource(sourceForm).then(() => {
       // Line numbers in the source editor should start from 1. If invalid
       // or not specified, then don't do anything.
       if (aLine < 1) {
@@ -382,8 +380,8 @@ let DebuggerView = {
    * Gets the text in the source editor's specified line.
    *
    * @param number aLine [optional]
-   *        The line to get the text from.
-   *        If unspecified, it defaults to the current caret position line.
+   *        The line to get the text from. If unspecified, it defaults to
+   *        the current caret position.
    * @return string
    *         The specified line's text.
    */
@@ -392,17 +390,6 @@ let DebuggerView = {
     let start = this.editor.getLineStart(line);
     let end = this.editor.getLineEnd(line);
     return this.editor.getText(start, end);
-  },
-
-  /**
-   * Gets the text in the source editor's selection bounds.
-   *
-   * @return string
-   *         The selected text.
-   */
-  getEditorSelectionText: function() {
-    let selection = this.editor.getSelection();
-    return this.editor.getText(selection.start, selection.end);
   },
 
   /**
@@ -768,10 +755,11 @@ ResultsPanelContainer.prototype = Heritage.extend(WidgetMethods, {
    */
   set hidden(aFlag) {
     if (aFlag) {
+      this._panel.hidden = true;
       this._panel.hidePopup();
     } else {
+      this._panel.hidden = false;
       this._panel.openPopup(this._anchor, this.position, this.left, this.top);
-      this.anchor.focus();
     }
   },
 

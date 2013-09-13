@@ -40,6 +40,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
       showCheckboxes: true,
       showArrows: true
     });
+
     this.emptyText = L10N.getStr("noSourcesText");
     this.unavailableText = L10N.getStr("noMatchingSourcesText");
     this._blackBoxCheckboxTooltip = L10N.getStr("blackBoxCheckboxTooltip");
@@ -91,15 +92,15 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
 
   /**
    * Sets the preferred location to be selected in this sources container.
-   * @param string aSourceLocation
+   * @param string aUrl
    */
-  set preferredSource(aSourceLocation) {
-    this._preferredValue = aSourceLocation;
+  set preferredSource(aUrl) {
+    this._preferredValue = aUrl;
 
     // Selects the element with the specified value in this sources container,
     // if already inserted.
-    if (this.containsValue(aSourceLocation)) {
-      this.selectedValue = aSourceLocation;
+    if (this.containsValue(aUrl)) {
+      this.selectedValue = aUrl;
     }
   },
 
@@ -110,7 +111,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    *        The source object coming from the active thread.
    * @param object aOptions [optional]
    *        Additional options for adding the source. Supported options:
-   *        - forced: force the source to be immediately added
+   *        - staged: true to stage the item to be appended later
    */
   addSource: function(aSource, aOptions = {}) {
     let url = aSource.url;
@@ -474,8 +475,8 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
 
     let container = document.createElement("hbox");
     container.id = "breakpoint-" + aOptions.actor;
-    container.className = "dbg-breakpoint devtools-monospace" +
-                          " side-menu-widget-item-other";
+    container.className = "dbg-breakpoint side-menu-widget-item-other";
+    container.classList.add("devtools-monospace");
     container.setAttribute("align", "center");
     container.setAttribute("flex", "1");
 
@@ -656,7 +657,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * Show or hide the black box message vs. source editor depending on if the
    * selected source is black boxed or not.
    */
-  maybeShowBlackBoxMessage: function () {
+  maybeShowBlackBoxMessage: function() {
     let sourceForm = this.selectedItem.attachment.source;
     let sourceClient = DebuggerController.activeThread.source(sourceForm);
     this._editorDeck.selectedIndex = sourceClient.isBlackBoxed ? 1 : 0;
@@ -679,11 +680,11 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * The click listener for the stop black boxing button.
+   * The click listener for the "stop black boxing" button.
    */
   _onStopBlackBoxing: function() {
-    DebuggerController.SourceScripts.blackBox(DebuggerView.editorSource,
-                                              false);
+    let sourceForm = this.selectedItem.attachment.source;
+    DebuggerController.SourceScripts.blackBox(sourceForm, false);
   },
 
   /**
@@ -739,7 +740,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * The popup showing listener for the breakpoints conditional expression panel.
    */
   _onConditionalPopupShowing: function() {
-    this._conditionalPopupVisible = true;
+    this._conditionalPopupVisible = true; // Used in tests.
   },
 
   /**
@@ -754,7 +755,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * The popup hiding listener for the breakpoints conditional expression panel.
    */
   _onConditionalPopupHiding: function() {
-    this._conditionalPopupVisible = false;
+    this._conditionalPopupVisible = false; // Used in tests.
   },
 
   /**
@@ -1334,7 +1335,7 @@ WatchExpressionsView.prototype = Heritage.extend(WidgetMethods, {
    *         The watch expressions code strings.
    */
   getAllStrings: function() {
-    return this.orderedItems.map((e) => e.attachment.currentExpression);
+    return this.items.map(e => e.attachment.currentExpression);
   },
 
   /**
@@ -1470,7 +1471,6 @@ function GlobalSearchView() {
   this._startSearch = this._startSearch.bind(this);
   this._performGlobalSearch = this._performGlobalSearch.bind(this);
   this._createItemView = this._createItemView.bind(this);
-  this._onScroll = this._onScroll.bind(this);
   this._onHeaderClick = this._onHeaderClick.bind(this);
   this._onLineClick = this._onLineClick.bind(this);
   this._onMatchClick = this._onMatchClick.bind(this);
@@ -1488,7 +1488,6 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
 
     this.widget.emptyText = L10N.getStr("noMatchingStringsText");
     this.widget.itemFactory = this._createItemView;
-    this.widget.addEventListener("scroll", this._onScroll, false);
   },
 
   /**
@@ -1496,17 +1495,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
    */
   destroy: function() {
     dumpn("Destroying the GlobalSearchView");
-
-    this.widget.removeEventListener("scroll", this._onScroll, false);
   },
-
-  /**
-   * Gets the visibility state of the global search container.
-   * @return boolean
-   */
-  get hidden()
-    this.widget.getAttribute("hidden") == "true" ||
-    this._splitter.getAttribute("hidden") == "true",
 
   /**
    * Sets the results container hidden or visible. It's hidden by default.
@@ -1516,6 +1505,14 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
     this.widget.setAttribute("hidden", aFlag);
     this._splitter.setAttribute("hidden", aFlag);
   },
+
+  /**
+   * Gets the visibility state of the global search container.
+   * @return boolean
+   */
+  get hidden()
+    this.widget.getAttribute("hidden") == "true" ||
+    this._splitter.getAttribute("hidden") == "true",
 
   /**
    * Hides and removes all items from this search container.
@@ -1629,61 +1626,63 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
     let lowerCaseToken = token.toLowerCase();
     let tokenLength = token.length;
 
-    // Prepare the results map, containing search details for each line.
+    // Create a Map containing search details for each source.
     let globalResults = new GlobalResults();
 
-    for (let [location, contents] of aSources) {
+    // Search for the specified token in each source's text.
+    for (let [url, text] of aSources) {
       // Verify that the search token is found anywhere in the source.
-      if (!contents.toLowerCase().contains(lowerCaseToken)) {
+      if (!text.toLowerCase().contains(lowerCaseToken)) {
         continue;
       }
-      let lines = contents.split("\n");
-      let sourceResults = new SourceResults();
+      // ...and if so, create a Map containing search details for each line.
+      let sourceResults = new SourceResults(url, globalResults);
 
-      for (let i = 0, len = lines.length; i < len; i++) {
-        let line = lines[i];
-        let lowerCaseLine = line.toLowerCase();
+      // Search for the specified token in each line's text.
+      text.split("\n").forEach((aString, aLine) => {
+        // Search is not case sensitive, prepare the actual searched line.
+        let lowerCaseLine = aString.toLowerCase();
 
-        // Search is not case sensitive, and is tied to each line in the source.
+        // Verify that the search token is found anywhere in this line.
         if (!lowerCaseLine.contains(lowerCaseToken)) {
-          continue;
+          return;
         }
+        // ...and if so, create a Map containing search details for each word.
+        let lineResults = new LineResults(aLine, sourceResults);
 
-        let lineNumber = i;
-        let lineResults = new LineResults();
+        // Search for the specified token this line's text.
+        lowerCaseLine.split(lowerCaseToken).reduce((aPrev, aCurr, aIndex, aArray) => {
+          let prevLength = aPrev.length;
+          let currLength = aCurr.length;
 
-        lowerCaseLine.split(lowerCaseToken).reduce((prev, curr, index, { length }) => {
-          let prevLength = prev.length;
-          let currLength = curr.length;
-          let unmatched = line.substr(prevLength, currLength);
+          // Everything before the token is unmatched.
+          let unmatched = aString.substr(prevLength, currLength);
           lineResults.add(unmatched);
 
-          if (index != length - 1) {
-            let matched = line.substr(prevLength + currLength, tokenLength);
-            let range = {
-              start: prevLength + currLength,
-              length: matched.length
-            };
+          // The lowered-case line was split by the lowered-case token. So,
+          // get the actual matched text from the original line's text.
+          if (aIndex != aArray.length - 1) {
+            let matched = aString.substr(prevLength + currLength, tokenLength);
+            let range = { start: prevLength + currLength, length: matched.length };
             lineResults.add(matched, range, true);
-            sourceResults.matchCount++;
           }
-          return prev + token + curr;
+
+          // Continue with the next sub-region in this line's text.
+          return aPrev + token + aCurr;
         }, "");
 
-        if (sourceResults.matchCount) {
-          sourceResults.add(lineNumber, lineResults);
+        if (lineResults.matchCount) {
+          sourceResults.add(lineResults);
         }
-      }
+      });
+
       if (sourceResults.matchCount) {
-        globalResults.add(location, sourceResults);
+        globalResults.add(sourceResults);
       }
     }
 
-    // Empty this container to rebuild the search results.
-    this.empty();
-
-    // Signal if there are any matches, and the rebuild the results.
-    if (globalResults.itemCount) {
+    // Rebuild the results, then signal if there are any matches.
+    if (globalResults.matchCount) {
       this.hidden = false;
       this._currentlyFocusedMatch = -1;
       this._createGlobalResultsUI(globalResults);
@@ -1702,15 +1701,16 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
   _createGlobalResultsUI: function(aGlobalResults) {
     let i = 0;
 
-    for (let [location, sourceResults] in aGlobalResults) {
+    for (let sourceResults in aGlobalResults) {
       if (i++ == 0) {
-        this._createSourceResultsUI(location, sourceResults, true);
+        this._createSourceResultsUI(sourceResults);
       } else {
         // Dispatch subsequent document manipulation operations, to avoid
         // blocking the main thread when a large number of search results
         // is found, thus giving the impression of faster searching.
         Services.tm.currentThread.dispatch({ run:
-          this._createSourceResultsUI.bind(this, location, sourceResults) }, 0);
+          this._createSourceResultsUI.bind(this, sourceResults)
+        }, 0);
       }
     }
   },
@@ -1718,21 +1718,16 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Creates source search results entries and adds them to this container.
    *
-   * @param string aLocation
-   *        The location of the source.
    * @param SourceResults aSourceResults
    *        An object containing all the matched lines for a specific source.
-   * @param boolean aExpandFlag
-   *        True to expand the source results.
    */
-  _createSourceResultsUI: function(aLocation, aSourceResults, aExpandFlag) {
+  _createSourceResultsUI: function(aSourceResults) {
     // Append a source results item to this container.
-    let sourceResultsItem = this.push([aLocation, aSourceResults.matchCount], {
+    this.push([], {
       index: -1, /* specifies on which position should the item be appended */
       relaxed: true, /* this container should allow dupes & degenerates */
       attachment: {
-        sourceResults: aSourceResults,
-        expandFlag: aExpandFlag
+        sourceResults: aSourceResults
       }
     });
   },
@@ -1744,15 +1739,9 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
    *        The element associated with the displayed item.
    * @param any aAttachment
    *        Some attached primitive/object.
-   * @param string aLocation
-   *        The source result's location.
-   * @param string aMatchCount
-   *        The source result's match count.
    */
-  _createItemView: function(aElementNode, aAttachment, aLocation, aMatchCount) {
-    let { sourceResults, expandFlag } = aAttachment;
-
-    sourceResults.createView(aElementNode, aLocation, aMatchCount, expandFlag, {
+  _createItemView: function(aElementNode, aAttachment) {
+    aAttachment.sourceResults.createView(aElementNode, {
       onHeaderClick: this._onHeaderClick,
       onLineClick: this._onLineClick,
       onMatchClick: this._onMatchClick
@@ -1783,6 +1772,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
       e.preventDefault();
       e.stopPropagation();
     }
+
     let target = e.target;
     let sourceResultsItem = SourceResults.getItemForElement(target);
     let lineResultsItem = LineResults.getItemForElement(target);
@@ -1792,43 +1782,14 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
     this._scrollMatchIntoViewIfNeeded(target);
     this._bounceMatch(target);
 
-    let location = sourceResultsItem.location;
-    let lineNumber = lineResultsItem.lineNumber;
-    DebuggerView.setEditorLocation(location, lineNumber + 1, { noDebug: true });
+    let url = sourceResultsItem.instance.url;
+    let line = lineResultsItem.instance.line;
+    DebuggerView.setEditorLocation(url, line + 1, { noDebug: true });
 
     let editor = DebuggerView.editor;
     let offset = editor.getCaretOffset();
     let { start, length } = lineResultsItem.lineData.range;
     editor.setSelection(offset + start, offset + start + length);
-  },
-
-  /**
-   * The scroll listener for the global search container.
-   */
-  _onScroll: function(e) {
-    for (let item in this) {
-      this._expandResultsIfNeeded(item.target);
-    }
-  },
-
-  /**
-   * Expands the source results it they are currently visible.
-   *
-   * @param nsIDOMNode aTarget
-   *        The element associated with the displayed item.
-   */
-  _expandResultsIfNeeded: function(aTarget) {
-    let sourceResultsItem = SourceResults.getItemForElement(aTarget);
-    if (sourceResultsItem.instance.toggled ||
-        sourceResultsItem.instance.expanded) {
-      return;
-    }
-    let { top, height } = aTarget.getBoundingClientRect();
-    let { clientHeight } = this.widget._parent;
-
-    if (top - height <= clientHeight || this._forceExpandResults) {
-      sourceResultsItem.instance.expand();
-    }
   },
 
   /**
@@ -1851,7 +1812,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
    *        The match to start a bounce animation for.
    */
   _bounceMatch: function(aMatch) {
-    Services.tm.currentThread.dispatch({ run: function() {
+    Services.tm.currentThread.dispatch({ run: () => {
       aMatch.addEventListener("transitionend", function onEvent() {
         aMatch.removeEventListener("transitionend", onEvent);
         aMatch.removeAttribute("focused");
@@ -1874,7 +1835,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
  * Iterable via "for (let [location, sourceResults] in globalResults) { }".
  */
 function GlobalResults() {
-  this._store = new Map();
+  this._store = [];
   SourceResults._itemsByElement = new Map();
   LineResults._itemsByElement = new Map();
 }
@@ -1883,100 +1844,86 @@ GlobalResults.prototype = {
   /**
    * Adds source results to this store.
    *
-   * @param string aLocation
-   *        The location of the source.
    * @param SourceResults aSourceResults
-   *        An object containing all the matched lines for a specific source.
+   *        An object containing search results for a specific source.
    */
-  add: function(aLocation, aSourceResults) {
-    this._store.set(aLocation, aSourceResults);
+  add: function(aSourceResults) {
+    this._store.push(aSourceResults);
   },
 
   /**
    * Gets the number of source results in this store.
    */
-  get itemCount() this._store.size,
-
-  _store: null
+  get matchCount() this._store.length
 };
 
 /**
  * An object containing all the matched lines for a specific source.
  * Iterable via "for (let [lineNumber, lineResults] in sourceResults) { }".
+ *
+ * @param string aUrl
+ *        The target source url.
+ * @param GlobalResults aGlobalResults
+ *        An object containing all source results, grouped by source location.
  */
-function SourceResults() {
-  this._store = new Map();
-  this.matchCount = 0;
+function SourceResults(aUrl, aGlobalResults) {
+  this.url = aUrl;
+  this._globalResults = aGlobalResults;
+  this._store = [];
 }
 
 SourceResults.prototype = {
   /**
    * Adds line results to this store.
    *
-   * @param number aLineNumber
-   *        The line location in the source.
    * @param LineResults aLineResults
-   *        An object containing all the matches for a specific line.
+   *        An object containing search results for a specific line.
    */
-  add: function(aLineNumber, aLineResults) {
-    this._store.set(aLineNumber, aLineResults);
+  add: function(aLineResults) {
+    this._store.push(aLineResults);
   },
 
   /**
-   * The number of matches in this store. One line may have multiple matches.
+   * Gets the number of line results in this store.
    */
-  matchCount: -1,
+  get matchCount() this._store.length,
 
   /**
    * Expands the element, showing all the added details.
    */
   expand: function() {
-    this._target.resultsContainer.removeAttribute("hidden")
-    this._target.arrow.setAttribute("open", "");
+    this._resultsContainer.removeAttribute("hidden");
+    this._arrow.setAttribute("open", "");
   },
 
   /**
    * Collapses the element, hiding all the added details.
    */
   collapse: function() {
-    this._target.resultsContainer.setAttribute("hidden", "true");
-    this._target.arrow.removeAttribute("open");
+    this._resultsContainer.setAttribute("hidden", "true");
+    this._arrow.removeAttribute("open");
   },
 
   /**
    * Toggles between the element collapse/expand state.
    */
   toggle: function(e) {
-    if (e instanceof Event) {
-      this._userToggled = true;
-    }
     this.expanded ^= 1;
   },
-
-  /**
-   * Relaxes the auto-expand rules to always show as many results as possible.
-   */
-  alwaysExpand: true,
 
   /**
    * Gets this element's expanded state.
    * @return boolean
    */
   get expanded()
-    this._target.resultsContainer.getAttribute("hidden") != "true" &&
-    this._target.arrow.hasAttribute("open"),
+    this._resultsContainer.getAttribute("hidden") != "true" &&
+    this._arrow.hasAttribute("open"),
 
   /**
    * Sets this element's expanded state.
    * @param boolean aFlag
    */
   set expanded(aFlag) this[aFlag ? "expand" : "collapse"](),
-
-  /**
-   * Returns if this element was ever toggled via user interaction.
-   * @return boolean
-   */
-  get toggled() this._userToggled,
 
   /**
    * Gets the element associated with this item.
@@ -1989,32 +1936,26 @@ SourceResults.prototype = {
    *
    * @param nsIDOMNode aElementNode
    *        The element associated with the displayed item.
-   * @param string aLocation
-   *        The source result's location.
-   * @param string aMatchCount
-   *        The source result's match count.
-   * @param boolean aExpandFlag
-   *        True to expand the source results.
    * @param object aCallbacks
    *        An object containing all the necessary callback functions:
    *          - onHeaderClick
    *          - onMatchClick
    */
-  createView: function(aElementNode, aLocation, aMatchCount, aExpandFlag, aCallbacks) {
+  createView: function(aElementNode, aCallbacks) {
     this._target = aElementNode;
 
-    let arrow = document.createElement("box");
+    let arrow = this._arrow = document.createElement("box");
     arrow.className = "arrow";
 
     let locationNode = document.createElement("label");
     locationNode.className = "plain dbg-results-header-location";
-    locationNode.setAttribute("value", SourceUtils.trimUrlLength(aLocation));
+    locationNode.setAttribute("value", this.url);
 
     let matchCountNode = document.createElement("label");
     matchCountNode.className = "plain dbg-results-header-match-count";
-    matchCountNode.setAttribute("value", "(" + aMatchCount + ")");
+    matchCountNode.setAttribute("value", "(" + this.matchCount + ")");
 
-    let resultsHeader = document.createElement("hbox");
+    let resultsHeader = this._resultsHeader = document.createElement("hbox");
     resultsHeader.className = "dbg-results-header";
     resultsHeader.setAttribute("align", "center")
     resultsHeader.appendChild(arrow);
@@ -2022,20 +1963,17 @@ SourceResults.prototype = {
     resultsHeader.appendChild(matchCountNode);
     resultsHeader.addEventListener("click", aCallbacks.onHeaderClick, false);
 
-    let resultsContainer = document.createElement("vbox");
+    let resultsContainer = this._resultsContainer = document.createElement("vbox");
     resultsContainer.className = "dbg-results-container";
     resultsContainer.setAttribute("hidden", "true");
 
-    for (let [lineNumber, lineResults] of this._store) {
-      lineResults.createView(resultsContainer, lineNumber, aCallbacks)
+    // Create lines search results entries and add them to this container.
+    // Afterwards, if the number of matches is reasonable, expand this
+    // container automatically.
+    for (let lineResults of this._store) {
+      lineResults.createView(resultsContainer, aCallbacks);
     }
-
-    aElementNode.arrow = arrow;
-    aElementNode.resultsHeader = resultsHeader;
-    aElementNode.resultsContainer = resultsContainer;
-
-    if ((aExpandFlag || this.alwaysExpand) &&
-         aMatchCount < GLOBAL_SEARCH_EXPAND_MAX_RESULTS) {
+    if (this.matchCount < GLOBAL_SEARCH_EXPAND_MAX_RESULTS) {
       this.expand();
     }
 
@@ -2044,29 +1982,36 @@ SourceResults.prototype = {
     resultsBox.appendChild(resultsHeader);
     resultsBox.appendChild(resultsContainer);
 
-    aElementNode.id = "source-results-" + aLocation;
+    aElementNode.id = "source-results-" + this.url;
     aElementNode.className = "dbg-source-results";
     aElementNode.appendChild(resultsBox);
 
-    SourceResults._itemsByElement.set(aElementNode, {
-      location: aLocation,
-      matchCount: aMatchCount,
-      autoExpand: aExpandFlag,
-      instance: this
-    });
+    SourceResults._itemsByElement.set(aElementNode, { instance: this });
   },
 
+  url: "",
+  _globalResults: null,
   _store: null,
   _target: null,
-  _userToggled: false
+  _arrow: null,
+  _resultsHeader: null,
+  _resultsContainer: null
 };
 
 /**
  * An object containing all the matches for a specific line.
  * Iterable via "for (let chunk in lineResults) { }".
+ *
+ * @param number aLine
+ *        The target line in the source.
+ * @param SourceResults aSourceResults
+ *        An object containing all the matched lines for a specific source.
  */
-function LineResults() {
+function LineResults(aLine, aSourceResults) {
+  this.line = aLine;
+  this._sourceResults = aSourceResults;
   this._store = [];
+  this._matchCount = 0;
 }
 
 LineResults.prototype = {
@@ -2081,12 +2026,14 @@ LineResults.prototype = {
    *        True if the chunk is a matched string, false if just text content.
    */
   add: function(aString, aRange, aMatchFlag) {
-    this._store.push({
-      string: aString,
-      range: aRange,
-      match: !!aMatchFlag
-    });
+    this._store.push({ string: aString, range: aRange, match: !!aMatchFlag });
+    this._matchCount += aMatchFlag ? 1 : 0;
   },
+
+  /**
+   * Gets the number of word results in this store.
+   */
+  get matchCount() this._matchCount,
 
   /**
    * Gets the element associated with this item.
@@ -2097,45 +2044,45 @@ LineResults.prototype = {
   /**
    * Customization function for creating this item's UI.
    *
-   * @param nsIDOMNode aContainer
+   * @param nsIDOMNode aElementNode
    *        The element associated with the displayed item.
-   * @param number aLineNumber
-   *        The line location in the source.
    * @param object aCallbacks
    *        An object containing all the necessary callback functions:
    *          - onMatchClick
    *          - onLineClick
    */
-  createView: function(aContainer, aLineNumber, aCallbacks) {
-    this._target = aContainer;
+  createView: function(aElementNode, aCallbacks) {
+    this._target = aElementNode;
 
     let lineNumberNode = document.createElement("label");
+    lineNumberNode.className = "plain dbg-results-line-number";
+    lineNumberNode.classList.add("devtools-monospace");
+    lineNumberNode.setAttribute("value", this.line + 1);
+
     let lineContentsNode = document.createElement("hbox");
+    lineContentsNode.className = "light list-widget-item dbg-results-line-contents";
+    lineContentsNode.classList.add("devtools-monospace");
+    lineContentsNode.setAttribute("flex", "1");
+
     let lineString = "";
     let lineLength = 0;
     let firstMatch = null;
 
-    lineNumberNode.className = "plain dbg-results-line-number devtools-monospace";
-    lineNumberNode.setAttribute("value", aLineNumber + 1);
-    lineContentsNode.className = "light list-widget-item devtools-monospace" +
-                                 " dbg-results-line-contents";
-    lineContentsNode.setAttribute("flex", "1");
-
-    for (let chunk of this._store) {
-      let { string, range, match } = chunk;
+    for (let lineChunk of this._store) {
+      let { string, range, match } = lineChunk;
       lineString = string.substr(0, GLOBAL_SEARCH_LINE_MAX_LENGTH - lineLength);
       lineLength += string.length;
 
-      let label = document.createElement("label");
-      label.className = "plain dbg-results-line-contents-string";
-      label.setAttribute("value", lineString);
-      label.setAttribute("match", match);
-      lineContentsNode.appendChild(label);
+      let lineChunkNode = document.createElement("label");
+      lineChunkNode.className = "plain dbg-results-line-contents-string";
+      lineChunkNode.setAttribute("value", lineString);
+      lineChunkNode.setAttribute("match", match);
+      lineContentsNode.appendChild(lineChunkNode);
 
       if (match) {
-        this._entangleMatch(aLineNumber, label, chunk);
-        label.addEventListener("click", aCallbacks.onMatchClick, false);
-        firstMatch = firstMatch || label;
+        this._entangleMatch(lineChunkNode, lineChunk);
+        lineChunkNode.addEventListener("click", aCallbacks.onMatchClick, false);
+        firstMatch = firstMatch || lineChunkNode;
       }
       if (lineLength >= GLOBAL_SEARCH_LINE_MAX_LENGTH) {
         lineContentsNode.appendChild(this._ellipsis.cloneNode());
@@ -2150,18 +2097,18 @@ LineResults.prototype = {
     searchResult.className = "dbg-search-result";
     searchResult.appendChild(lineNumberNode);
     searchResult.appendChild(lineContentsNode);
-    aContainer.appendChild(searchResult);
+
+    aElementNode.appendChild(searchResult);
   },
 
   /**
    * Handles a match while creating the view.
-   * @param number aLineNumber
    * @param nsIDOMNode aNode
    * @param object aMatchChunk
    */
-  _entangleMatch: function(aLineNumber, aNode, aMatchChunk) {
+  _entangleMatch: function(aNode, aMatchChunk) {
     LineResults._itemsByElement.set(aNode, {
-      lineNumber: aLineNumber,
+      instance: this,
       lineData: aMatchChunk
     });
   },
@@ -2173,8 +2120,9 @@ LineResults.prototype = {
    */
   _entangleLine: function(aNode, aFirstMatch) {
     LineResults._itemsByElement.set(aNode, {
+      instance: this,
       firstMatch: aFirstMatch,
-      nonenumerable: true
+      ignored: true
     });
   },
 
@@ -2188,6 +2136,8 @@ LineResults.prototype = {
     return label;
   })(),
 
+  line: 0,
+  _sourceResults: null,
   _store: null,
   _target: null
 };
@@ -2227,7 +2177,7 @@ LineResults.getItemForElement = function(aElement) {
 SourceResults.getElementAtIndex =
 LineResults.getElementAtIndex = function(aIndex) {
   for (let [element, item] of this._itemsByElement) {
-    if (!item.nonenumerable && !aIndex--) {
+    if (!item.ignored && !aIndex--) {
       return element;
     }
   }
@@ -2249,7 +2199,7 @@ LineResults.indexOfElement = function(aElement) {
     if (element == aElement) {
       return count;
     }
-    if (!item.nonenumerable) {
+    if (!item.ignored) {
       count++;
     }
   }
@@ -2266,7 +2216,7 @@ SourceResults.size =
 LineResults.size = function() {
   let count = 0;
   for (let [, item] of this._itemsByElement) {
-    if (!item.nonenumerable) {
+    if (!item.ignored) {
       count++;
     }
   }

@@ -302,20 +302,18 @@ OptionsView.prototype = {
    * Listener handling the 'show original source' menuitem command.
    */
   _toggleShowOriginalSource: function() {
-    function reconfigure() {
-      window.removeEventListener("Debugger:OptionsPopupHidden", reconfigure, false);
+    let pref = Prefs.sourceMapsEnabled =
+      this._showOriginalSourceItem.getAttribute("checked") == "true";
+
+    // Don't block the UI while reconfiguring the server.
+    window.addEventListener("Debugger:OptionsPopupHidden", function onHidden() {
+      window.removeEventListener("Debugger:OptionsPopupHidden", onHidden, false);
 
       // The popup panel needs more time to hide after triggering onpopuphidden.
       window.setTimeout(() => {
         DebuggerController.reconfigureThread(pref);
       }, POPUP_HIDDEN_DELAY);
-    }
-
-    let pref = Prefs.sourceMapsEnabled =
-      this._showOriginalSourceItem.getAttribute("checked") == "true";
-
-    // Don't block the UI while reconfiguring the server.
-    window.addEventListener("Debugger:OptionsPopupHidden", reconfigure, false);
+    }, false);
   },
 
   _button: null,
@@ -430,32 +428,42 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Adds a frame in this stackframes container.
    *
-   * @param string aFrameTitle
-   *        The frame title to be displayed in the list.
-   * @param string aSourceLocation
-   *        The source location to be displayed in the list.
-   * @param string aLineNumber
-   *        The line number to be displayed in the list.
+   * @param string aTitle
+   *        The frame title (function name).
+   * @param string aUrl
+   *        The frame source url.
+   * @param string aLine
+   *        The frame line number.
    * @param number aDepth
-   *        The frame depth specified by the debugger.
+   *        The frame depth in the stack.
    * @param boolean aIsBlackBoxed
    *        Whether or not the frame is black boxed.
    */
-  addFrame: function(aFrameTitle, aSourceLocation, aLineNumber, aDepth, aIsBlackBoxed) {
+  addFrame: function(aTitle, aUrl, aLine, aDepth, aIsBlackBoxed) {
+    // Blackboxed stack frames are collapsed into a single entry in
+    // the view. By convention, only the first frame is displayed.
+    if (aIsBlackBoxed) {
+      if (this._prevBlackBoxedUrl == aUrl) {
+        return;
+      }
+      this._prevBlackBoxedUrl = aUrl;
+    } else {
+      this._prevBlackBoxedUrl = null;
+    }
+
     // Create the element node and menu entry for the stack frame item.
     let frameView = this._createFrameView.apply(this, arguments);
     let menuEntry = this._createMenuEntry.apply(this, arguments);
 
     // Append a stack frame item to this container.
-    this.push([frameView], {
+    this.push([frameView, aTitle, aUrl], {
       index: 0, /* specifies on which position should the item be appended */
       attachment: {
         popup: menuEntry,
         depth: aDepth
       },
       attributes: [
-        ["contextmenu", "stackframesMenupopup"],
-        ["tooltiptext", aSourceLocation]
+        ["contextmenu", "stackframesMenupopup"]
       ],
       // Make sure that when the stack frame item is removed, the corresponding
       // menuitem and command are also destroyed.
@@ -468,7 +476,7 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
    * @param number aDepth
    */
   set selectedDepth(aDepth) {
-    this.selectedItem = (aItem) => aItem.attachment.depth == aDepth;
+    this.selectedItem = aItem => aItem.attachment.depth == aDepth;
   },
 
   /**
@@ -479,26 +487,26 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Customization function for creating an item's UI.
    *
-   * @param string aFrameTitle
+   * @param string aTitle
    *        The frame title to be displayed in the list.
-   * @param string aSourceLocation
-   *        The source location to be displayed in the list.
-   * @param string aLineNumber
-   *        The line number to be displayed in the list.
+   * @param string aUrl
+   *        The frame source url.
+   * @param string aLine
+   *        The frame line number.
    * @param number aDepth
-   *        The frame depth specified by the debugger.
+   *        The frame depth in the stack.
    * @param boolean aIsBlackBoxed
    *        Whether or not the frame is black boxed.
    * @return nsIDOMNode
    *         The stack frame view.
    */
-  _createFrameView: function(aFrameTitle, aSourceLocation, aLineNumber, aDepth, aIsBlackBoxed) {
+  _createFrameView: function(aTitle, aUrl, aLine, aDepth, aIsBlackBoxed) {
     let container = document.createElement("hbox");
     container.id = "stackframe-" + aDepth;
     container.className = "dbg-stackframe";
 
     let frameDetails = SourceUtils.trimUrlLength(
-      SourceUtils.getSourceLabel(aSourceLocation),
+      SourceUtils.getSourceLabel(aUrl),
       STACK_FRAMES_SOURCE_URL_MAX_LENGTH,
       STACK_FRAMES_SOURCE_URL_TRIM_SECTION);
 
@@ -507,10 +515,10 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
     } else {
       let frameTitleNode = document.createElement("label");
       frameTitleNode.className = "plain dbg-stackframe-title breadcrumbs-widget-item-tag";
-      frameTitleNode.setAttribute("value", aFrameTitle);
+      frameTitleNode.setAttribute("value", aTitle);
       container.appendChild(frameTitleNode);
 
-      frameDetails += SEARCH_LINE_FLAG + aLineNumber;
+      frameDetails += SEARCH_LINE_FLAG + aLine;
     }
 
     let frameDetailsNode = document.createElement("label");
@@ -524,25 +532,25 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Customization function for populating an item's context menu.
    *
-   * @param string aFrameTitle
+   * @param string aTitle
    *        The frame title to be displayed in the list.
-   * @param string aSourceLocation
-   *        The source location to be displayed in the list.
-   * @param string aLineNumber
-   *        The line number to be displayed in the list.
+   * @param string aUrl
+   *        The frame source url.
+   * @param string aLine
+   *        The frame line number.
    * @param number aDepth
-   *        The frame depth specified by the debugger.
+   *        The frame depth in the stack.
    * @param boolean aIsBlackBoxed
    *        Whether or not the frame is black boxed.
    * @return object
    *         An object containing the stack frame command and menu item.
    */
-  _createMenuEntry: function(aFrameTitle, aSourceLocation, aLineNumber, aDepth, aIsBlackBoxed) {
-    let frameDescription =
-      SourceUtils.trimUrlLength(
-        SourceUtils.getSourceLabel(aSourceLocation),
-        STACK_FRAMES_POPUP_SOURCE_URL_MAX_LENGTH,
-        STACK_FRAMES_POPUP_SOURCE_URL_TRIM_SECTION) + SEARCH_LINE_FLAG + aLineNumber;
+  _createMenuEntry: function(aTitle, aUrl, aLine, aDepth, aIsBlackBoxed) {
+    let frameDescription = SourceUtils.trimUrlLength(
+      SourceUtils.getSourceLabel(aUrl),
+      STACK_FRAMES_POPUP_SOURCE_URL_MAX_LENGTH,
+      STACK_FRAMES_POPUP_SOURCE_URL_TRIM_SECTION) +
+      SEARCH_LINE_FLAG + aLine;
 
     let prefix = "sf-cMenu-"; // "stackframes context menu"
     let commandId = prefix + aDepth + "-" + "-command";
@@ -557,11 +565,11 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
     menuitem.className = "dbg-stackframe-menuitem";
     menuitem.setAttribute("type", "checkbox");
     menuitem.setAttribute("command", commandId);
-    menuitem.setAttribute("tooltiptext", aSourceLocation);
+    menuitem.setAttribute("tooltiptext", aUrl);
 
     let labelNode = document.createElement("label");
     labelNode.className = "plain dbg-stackframe-menuitem-title";
-    labelNode.setAttribute("value", aFrameTitle);
+    labelNode.setAttribute("value", aTitle);
     labelNode.setAttribute("flex", "1");
 
     let descriptionNode = document.createElement("label");
@@ -593,6 +601,9 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
     let contextItem = aItem.attachment.popup;
     contextItem.command.remove();
     contextItem.menuitem.remove();
+
+    // Forget the previously blackboxed stack frame url.
+    this._prevBlackBoxedUrl = null;
   },
 
   /**
@@ -602,7 +613,7 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
     let stackframeItem = this.selectedItem;
     if (stackframeItem) {
       // The container is not empty and an actual item was selected.
-      gStackFrames.selectFrame(stackframeItem.attachment.depth);
+      DebuggerController.StackFrames.selectFrame(stackframeItem.attachment.depth);
 
       // Update the context menu to show the currently selected stackframe item
       // as a checked entry.
@@ -651,7 +662,8 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
 
   _commandset: null,
   _menupopup: null,
-  _scrollTimeout: null
+  _scrollTimeout: null,
+  _prevBlackBoxedUrl: null
 });
 
 /**
@@ -949,7 +961,6 @@ FilterView.prototype = {
           if (!found) {
             found = true;
             view.selectedItem = item;
-            view.refresh();
           }
         }
         // Item not matched, hide the corresponding node.
@@ -1216,7 +1227,7 @@ FilterView.prototype = {
   _doSearch: function(aOperator = "") {
     this._searchbox.focus();
     this._searchbox.value = ""; // Need to clear value beforehand. Bug 779738.
-    this._searchbox.value = aOperator + DebuggerView.getEditorSelectionText();
+    this._searchbox.value = aOperator + DebuggerView.editor.getSelectedText();
   },
 
   /**
@@ -1492,7 +1503,9 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
     // Make sure the currently displayed source is parsed first. Once the
     // maximum allowed number of resutls are found, parsing will be halted.
     let currentUrl = DebuggerView.Sources.selectedValue;
-    aSources.sort(([sourceUrl]) => sourceUrl == currentUrl ? -1 : 1);
+    let currentSource = aSources.filter(([sourceUrl]) => sourceUrl == currentUrl)[0];
+    aSources.splice(aSources.indexOf(currentSource), 1);
+    aSources.unshift(currentSource);
 
     // If not searching for a specific function, only parse the displayed source.
     if (!token) {
@@ -1579,7 +1592,7 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
       let trimmedValue = SourceUtils.trimUrlLength(item.sourceUrl, 0, "start");
       let description = (item.inferredChain || []).join(".");
 
-      let functionItem = this.push([trimmedLabel, trimmedValue, description], {
+      this.push([trimmedLabel, trimmedValue, description], {
         index: -1, /* specifies on which position should the item be appended */
         relaxed: true, /* this container should allow dupes & degenerates */
         attachment: item
