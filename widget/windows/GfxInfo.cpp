@@ -758,6 +758,8 @@ WindowsVersionToOperatingSystem(int32_t aWindowsVersion)
       return DRIVER_OS_WINDOWS_7;
     case gfxWindowsPlatform::kWindows8:
       return DRIVER_OS_WINDOWS_8;
+    case gfxWindowsPlatform::kWindows8_1:
+      return DRIVER_OS_WINDOWS_8_1;
     case gfxWindowsPlatform::kWindowsUnknown:
     default:
       return DRIVER_OS_UNKNOWN;
