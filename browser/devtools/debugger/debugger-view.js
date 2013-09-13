@@ -155,10 +155,10 @@ let DebuggerView = {
     this.Variables.on("fetched", (aEvent, aType) => {
       switch (aType) {
         case "variables":
-          window.dispatchEvent(document, "Debugger:FetchedVariables");
+          window.emit(EVENTS.FETCHED_VARIABLES);
           break;
         case "properties":
-          window.dispatchEvent(document, "Debugger:FetchedProperties");
+          window.emit(EVENTS.FETCHED_PROPERTIES);
           break;
       }
     });
@@ -191,7 +191,7 @@ let DebuggerView = {
     dumpn("Finished loading the DebuggerView editor");
 
     DebuggerController.Breakpoints.initialize().then(() => {
-      window.dispatchEvent(document, "Debugger:EditorLoaded", this.editor);
+      window.emit(EVENTS.EDITOR_LOADED, this.editor);
       aCallback();
     });
   },
@@ -207,7 +207,7 @@ let DebuggerView = {
     dumpn("Destroying the DebuggerView editor");
 
     DebuggerController.Breakpoints.destroy().then(() => {
-      window.dispatchEvent(document, "Debugger:EditorUnloaded", this.editor);
+      window.emit(EVENTS.EDITOR_UNLOADED, this.editor);
       aCallback();
     });
   },
@@ -300,7 +300,7 @@ let DebuggerView = {
       DebuggerController.Breakpoints.updateEditorBreakpoints();
 
       // Resolve and notify that a source file was shown.
-      window.dispatchEvent(document, "Debugger:SourceShown", aSource);
+      window.emit(EVENTS.SOURCE_SHOWN, aSource);
       deferred.resolve([aSource, aText]);
     },
     ([, aError]) => {
@@ -310,7 +310,7 @@ let DebuggerView = {
       dumpn(msg);
 
       // Reject and notify that there was an error showing the source file.
-      window.dispatchEvent(document, "Debugger:SourceErrorShown", aError);
+      window.emit(EVENTS.SOURCE_ERROR_SHOWN, aSource);
       deferred.reject([aSource, aError]);
     });
 
