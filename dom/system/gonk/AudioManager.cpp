@@ -468,6 +468,14 @@ AudioManager::SetPhoneState(int32_t aState)
   if (mPhoneState == aState) {
     return NS_OK;
   }
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    nsString state;
+    state.AppendInt(aState);
+    obs->NotifyObservers(nullptr, "phone-state-changed", state.get());
+  }
+
   // follow the switch audio path logic for android, Bug 897364
   int usage;
   GetForceForUse(nsIAudioManager::USE_COMMUNICATION, &usage);
