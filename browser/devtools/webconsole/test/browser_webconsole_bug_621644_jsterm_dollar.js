@@ -12,50 +12,22 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 function test$(HUD) {
   HUD.jsterm.clearOutput();
 
-  HUD.jsterm.setInputValue("$(document.body)");
-  HUD.jsterm.execute();
+  HUD.jsterm.execute("$(document.body)", (msg) => {
+    ok(msg.textContent.indexOf("<p>") > -1,
+       "jsterm output is correct for $()");
 
-  waitForSuccess({
-    name: "jsterm output for $()",
-    validatorFn: function()
-    {
-      return HUD.outputNode.querySelector(".webconsole-msg-output:last-child");
-    },
-    successFn: function()
-    {
-      let outputItem = HUD.outputNode.
-                       querySelector(".webconsole-msg-output:last-child");
-      ok(outputItem.textContent.indexOf("<p>") > -1,
-         "jsterm output is correct for $()");
-
-      test$$(HUD);
-    },
-    failureFn: test$$.bind(null, HUD),
+    test$$(HUD);
   });
 }
 
 function test$$(HUD) {
   HUD.jsterm.clearOutput();
 
-  HUD.jsterm.setInputValue("$$(document)");
-  HUD.jsterm.execute();
-
-  waitForSuccess({
-    name: "jsterm output for $$()",
-    validatorFn: function()
-    {
-      return HUD.outputNode.querySelector(".webconsole-msg-output:last-child");
-    },
-    successFn: function()
-    {
-      let outputItem = HUD.outputNode.
-                       querySelector(".webconsole-msg-output:last-child");
-      ok(outputItem.textContent.indexOf("621644") > -1,
-         "jsterm output is correct for $$()");
-
-      executeSoon(finishTest);
-    },
-    failureFn: finishTest,
+  HUD.jsterm.setInputValue();
+  HUD.jsterm.execute("$$(document)", (msg) => {
+    ok(msg.textContent.indexOf("621644") > -1,
+       "jsterm output is correct for $$()");
+    finishTest();
   });
 }
 

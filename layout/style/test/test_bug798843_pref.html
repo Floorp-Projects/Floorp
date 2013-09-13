@@ -28,6 +28,7 @@ function testDisabled() {
     is(document.body.style[p], "", p + " not settable to " + props[p]);
     document.body.style[p] = "";
   }
+  SimpleTest.finish();
 }
 
 function testEnabled() {
@@ -42,6 +43,8 @@ function testEnabled() {
     testDisabled
   );
 }
+
+SimpleTest.waitForExplicitFinish();
 
 SpecialPowers.pushPrefEnv(
   {'set': [['gfx.font_rendering.opentype_svg.enabled', true]]},

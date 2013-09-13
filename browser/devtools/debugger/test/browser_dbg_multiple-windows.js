@@ -1,142 +1,164 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Make sure that the debugger attaches to the right tab when multiple windows
-// are open.
+/**
+ * Make sure that the debugger attaches to the right tab when multiple windows
+ * are open.
+ */
 
-var gTab1 = null;
-var gTab1Actor = null;
+const TAB1_URL = EXAMPLE_URL + "doc_script-switching-01.html";
+const TAB2_URL = EXAMPLE_URL + "doc_script-switching-02.html";
 
-var gSecondWindow = null;
+let gNewTab, gNewWindow;
+let gClient;
 
-var gClient = null;
-var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"]
-                     .getService(Ci.nsIWindowMediator);
+function test() {
+  if (!DebuggerServer.initialized) {
+    DebuggerServer.init(() => true);
+    DebuggerServer.addBrowserActors();
+  }
 
-function test()
-{
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.connect(function(aType, aTraits) {
-    is(aType, "browser", "Root actor should identify itself as a browser.");
-    test_first_tab();
+  gClient.connect((aType, aTraits) => {
+    is(aType, "browser",
+      "Root actor should identify itself as a browser.");
+
+    promise.resolve(null)
+      .then(() => addTab(TAB1_URL))
+      .then(testFirstTab)
+      .then(() => addWindow(TAB2_URL))
+      .then(testNewWindow)
+      .then(testFocusFirst)
+      .then(testRemoveTab)
+      .then(closeConnection)
+      .then(finish)
+      .then(null, aError => {
+        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
+      });
   });
 }
 
-function test_first_tab()
-{
-  gTab1 = addTab(TAB1_URL, function() {
-    gClient.listTabs(function(aResponse) {
-      for each (let tab in aResponse.tabs) {
-        if (tab.url == TAB1_URL) {
-          gTab1Actor = tab.actor;
-        }
-      }
-      ok(gTab1Actor, "Should find a tab actor for tab1.");
-      is(aResponse.selected, 1, "Tab1 is selected.");
-      test_open_window();
+function testFirstTab(aTab) {
+  let deferred = promise.defer();
+
+  gNewTab = aTab;
+  ok(!!gNewTab, "Second tab created.");
+
+  gClient.listTabs(aResponse => {
+    let tabActor = aResponse.tabs.filter(aGrip => aGrip.url == TAB1_URL).pop();
+    ok(tabActor,
+      "Should find a tab actor for the first tab.");
+
+    is(aResponse.selected, 1,
+      "The first tab is selected.");
+
+    deferred.resolve();
+  });
+
+  return deferred.promise;
+}
+
+function testNewWindow(aWindow) {
+  let deferred = promise.defer();
+
+  gNewWindow = aWindow;
+  ok(!!gNewWindow, "Second window created.");
+
+  gNewWindow.focus();
+
+  let topWindow = Services.wm.getMostRecentWindow("navigator:browser");
+  is(topWindow, gNewWindow,
+    "The second window is on top.");
+
+  let isActive = promise.defer();
+  let isLoaded = promise.defer();
+
+  promise.all([isActive.promise, isLoaded.promise]).then(() => {
+    gNewWindow.BrowserChromeTest.runWhenReady(() => {
+      gClient.listTabs(aResponse => {
+        is(aResponse.selected, 2,
+          "The second tab is selected.");
+
+        deferred.resolve();
+      });
     });
   });
-}
 
-function test_open_window()
-{
-  gSecondWindow = window.open(TAB2_URL, "secondWindow");
-  ok(!!gSecondWindow, "Second window created.");
-  gSecondWindow.focus();
-  let top = windowMediator.getMostRecentWindow("navigator:browser");
-  var main2 = gSecondWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                   .getInterface(Components.interfaces.nsIWebNavigation)
-                   .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
-                   .rootTreeItem
-                   .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                   .getInterface(Components.interfaces.nsIDOMWindow);
-  is(top, main2, "The second window is on top.");
-  let gotLoad = false;
-  let gotActivate = (Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager).activeWindow == main2);
-  function maybeWindowLoadedAndActive() {
-    if (gotLoad && gotActivate) {
-      top.BrowserChromeTest.runWhenReady(function() {
-        executeSoon(function() {
-          gClient.listTabs(function(aResponse) {
-            is(aResponse.selected, 2, "Tab2 is selected.");
-            test_focus_first();
-          });
-        });
-      })
-    }
-  }
-
-  if (!gotActivate) {
-    main2.addEventListener("activate", function() {
-        main2.removeEventListener("activate", arguments.callee, true);
-        gotActivate = true;
-        maybeWindowLoadedAndActive();
-      },
-      true
-    );
-  }
-  main2.document.addEventListener("load", function(e) {
-      if (e.target.documentURI != TAB2_URL) {
+  let focusManager = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+  if (focusManager.activeWindow != gNewWindow) {
+    gNewWindow.addEventListener("activate", function onActivate(aEvent) {
+      if (aEvent.target != gNewWindow) {
         return;
       }
-      main2.document.removeEventListener("load", arguments.callee, true);
-      gotLoad = true;
-      maybeWindowLoadedAndActive();
-    },
-    true
-  );
-}
+      gNewWindow.removeEventListener("activate", onActivate, true);
+      isActive.resolve();
+    }, true);
+  } else {
+    isActive.resolve();
+  }
 
-function test_focus_first()
-{
-  window.content.addEventListener("focus", function onFocus() {
-    window.content.removeEventListener("focus", onFocus, false);
-    let top = windowMediator.getMostRecentWindow("navigator:browser");
-    var main1 = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                     .getInterface(Components.interfaces.nsIWebNavigation)
-                     .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
-                     .rootTreeItem
-                     .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                     .getInterface(Components.interfaces.nsIDOMWindow);
-    is(top, main1, "The first window is on top.");
-
-    gClient.listTabs(function(aResponse) {
-      is(aResponse.selected, 1, "Tab1 is selected after focusing on it.");
-
-      test_remove_tab();
-    });
-  }, false);
-  window.content.focus();
-}
-
-function test_remove_tab()
-{
-  gSecondWindow.close();
-  gSecondWindow = null;
-  removeTab(gTab1);
-  gTab1 = null;
-  gClient.listTabs(function(aResponse) {
-    // Verify that tabs are no longer included in listTabs.
-    let foundTab1 = false;
-    let foundTab2 = false;
-    for (let tab of aResponse.tabs) {
-      if (tab.url == TAB1_URL) {
-        foundTab1 = true;
-      } else if (tab.url == TAB2_URL) {
-        foundTab2 = true;
+  let contentLocation = gNewWindow.content.location.href;
+  if (contentLocation != TAB2_URL) {
+    gNewWindow.document.addEventListener("load", function onLoad(aEvent) {
+      if (aEvent.target.documentURI != TAB2_URL) {
+        return;
       }
-    }
+      gNewWindow.document.removeEventListener("load", onLoad, true);
+      isLoaded.resolve();
+    }, true);
+  } else {
+    isLoaded.resolve();
+  }
+
+  return deferred.promise;
+}
+
+function testFocusFirst() {
+  let deferred = promise.defer();
+
+  once(window.content, "focus").then(() => {
+    let topWindow = Services.wm.getMostRecentWindow("navigator:browser");
+    is(top, getDOMWindow(window),
+      "The first window is on top.");
+
+    gClient.listTabs(aResponse => {
+      is(aResponse.selected, 1,
+        "The first tab is selected after focusing on it.");
+
+      deferred.resolve();
+    });
+  });
+
+  window.content.focus();
+
+  return deferred.promise;
+}
+
+function testRemoveTab() {
+  gNewWindow.close();
+  removeTab(gNewTab);
+
+  gClient.listTabs(aResponse => {
+    // Verify that tabs are no longer included in listTabs.
+    let foundTab1 = aResponse.tabs.some(aGrip => aGrip.url == TAB1_URL);
+    let foundTab2 = aResponse.tabs.some(aGrip => aGrip.url == TAB2_URL);
     ok(!foundTab1, "Tab1 should be gone.");
     ok(!foundTab2, "Tab2 should be gone.");
-    is(aResponse.selected, 0, "The original tab is selected.");
-    finish_test();
+
+    is(aResponse.selected, 0,
+      "The original tab is selected.");
   });
 }
 
-function finish_test()
-{
-  gClient.close(function() {
-    finish();
-  });
+function closeConnection() {
+  let deferred = promise.defer();
+  gClient.close(deferred.resolve);
+  return deferred.promise;
 }
+
+registerCleanupFunction(function() {
+  gNewTab = null;
+  gNewWindow = null;
+  gClient = null;
+});

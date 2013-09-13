@@ -58,7 +58,7 @@
     "content/media/test/test_streams_element_capture.html": "bug 900172 - timeouts",
     "content/media/test/test_streams_gc.html": "Value being assigned to HTMLMediaElement.currentTime is not a finite floating-point value",
     "content/media/test/test_unseekable.html":"",
-    "content/media/webaudio/test/test_audioBufferSourceNodeOffset.html":"bug 899654",
+    "content/media/webaudio":"bug 916135",
     "content/media/webspeech/recognition/test/test_recognition_service_error.html": "timed out",
     "content/media/webspeech/synth/ipc/test/test_ipc.html": "comp.classes['@mozilla.org/special-powers-observer;1'] is undefined",
     "content/media/webspeech/synth/test/test_speech_queue.html": "Test timed out",

@@ -38,19 +38,18 @@ function test() {
             severity: SEVERITY_WARNING
           },
         ],
-      }).then( () => testClickOpenNewTab(hud));
+      }).then(testClickOpenNewTab.bind(null, hud));
     });
   }, true);
 }
 
-function testClickOpenNewTab(hud) {
-  let warningNode = hud.outputNode.querySelector(
-    ".webconsole-msg-body .webconsole-learn-more-link");
+function testClickOpenNewTab(hud, [result]) {
+  let msg = [...result.matched][0];
+  let warningNode = msg.querySelector(".learn-more-link");
+  ok(warningNode, "learn more link");
 
-  /*
-   * Invoke the click event and check if a new tab would open to the correct
-   * page
-   */
+  // Invoke the click event and check if a new tab would open to the correct
+  // page
   let linkOpened = false;
   let oldOpenUILinkIn = window.openUILinkIn;
   window.openUILinkIn = function(aLink) {

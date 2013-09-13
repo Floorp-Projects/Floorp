@@ -44,6 +44,9 @@ public class FennecNativeActions implements Actions {
     private Method mRegisterEventListener;
     private Method mUnregisterEventListener;
     private Method mBroadcastEvent;
+    private Method mPreferencesGetEvent;
+    private Method mPreferencesObserveEvent;
+    private Method mPreferencesRemoveObserversEvent;
     private Method mSetDrawListener;
     private Method mQuerySql;
     private Object mRobocopApi;
@@ -66,6 +69,9 @@ public class FennecNativeActions implements Actions {
             mRegisterEventListener = mApiClass.getMethod("registerEventListener", String.class, mEventListenerClass);
             mUnregisterEventListener = mApiClass.getMethod("unregisterEventListener", String.class, mEventListenerClass);
             mBroadcastEvent = mApiClass.getMethod("broadcastEvent", String.class, String.class);
+            mPreferencesGetEvent = mApiClass.getMethod("preferencesGetEvent", Integer.TYPE, String[].class);
+            mPreferencesObserveEvent = mApiClass.getMethod("preferencesObserveEvent", Integer.TYPE, String[].class);
+            mPreferencesRemoveObserversEvent = mApiClass.getMethod("preferencesRemoveObserversEvent", Integer.TYPE);
             mSetDrawListener = mApiClass.getMethod("setDrawListener", mDrawListenerClass);
             mQuerySql = mApiClass.getMethod("querySql", String.class, String.class);
 
@@ -263,6 +269,34 @@ public class FennecNativeActions implements Actions {
         } catch (InvocationTargetException e) {
             FennecNativeDriver.log(LogLevel.ERROR, e);
         }
+    }
+
+    private void sendPreferencesEvent(Method method, int requestId, String[] prefNames) {
+        try {
+            method.invoke(mRobocopApi, requestId, prefNames);
+        } catch (IllegalAccessException e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        } catch (InvocationTargetException e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        }
+    }
+
+    public void sendPreferencesGetEvent(int requestId, String[] prefNames) {
+        sendPreferencesEvent(mPreferencesGetEvent, requestId, prefNames);
+    }
+
+    public void sendPreferencesObserveEvent(int requestId, String[] prefNames) {
+        sendPreferencesEvent(mPreferencesObserveEvent, requestId, prefNames);
+    }
+
+    public void sendPreferencesRemoveObserversEvent(int requestId) {
+        try {
+            mPreferencesRemoveObserversEvent.invoke(mRobocopApi, requestId);
+        } catch (IllegalAccessException e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        } catch (InvocationTargetException e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        } 
     }
 
     class DrawListenerProxy implements InvocationHandler {
