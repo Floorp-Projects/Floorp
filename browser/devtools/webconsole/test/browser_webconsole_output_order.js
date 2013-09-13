@@ -23,22 +23,29 @@ function testOutputOrder(hud) {
   jsterm.clearOutput();
   jsterm.execute("console.log('foo', 'bar');");
 
-  waitForSuccess({
-    name: "console.log message displayed",
-    validatorFn: function()
-    {
-      return outputNode.querySelectorAll(".hud-msg-node").length == 3;
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "console.log('foo', 'bar');",
+      category: CATEGORY_INPUT,
     },
-    successFn: function()
     {
-      let nodes = outputNode.querySelectorAll(".hud-msg-node");
-      let executedStringFirst =
-        /console\.log\('foo', 'bar'\);/.test(nodes[0].textContent);
-      let outputSecond = /"foo" "bar"/.test(nodes[2].textContent);
-      ok(executedStringFirst && outputSecond, "executed string comes first");
-
-      finishTest();
+      text: "undefined",
+      category: CATEGORY_OUTPUT,
     },
-    failureFn: finishTest,
+    {
+      text: '"foo" "bar"',
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+    }],
+  }).then(([function_call, result, console_message]) => {
+    let fncall_node = [...function_call.matched][0];
+    let result_node = [...result.matched][0];
+    let console_message_node = [...console_message.matched][0];
+    is(fncall_node.nextElementSibling, result_node,
+       "console.log() is followed by undefined");
+    is(result_node.nextElementSibling, console_message_node,
+       "undefined is followed by 'foo' 'bar'");
+    finishTest();
   });
 }

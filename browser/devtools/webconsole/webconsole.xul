@@ -33,7 +33,7 @@ function goUpdateConsoleCommands() {
 
   <commandset id="consoleCommands"
               commandupdater="true"
-              events="richlistbox-select"
+              events="focus,select"
               oncommandupdate="goUpdateConsoleCommands();">
     <command id="consoleCmd_openURL"
              oncommand="goDoCommand('consoleCmd_openURL');"/>
@@ -63,7 +63,7 @@ function goUpdateConsoleCommands() {
   <keyset id="editMenuKeys"/>
 
   <popupset id="mainPopupSet">
-    <menupopup id="output-contextmenu">
+    <menupopup id="output-contextmenu" onpopupshowing="goUpdateGlobalEditMenuItems()">
       <menuitem id="saveBodiesContextMenu" type="checkbox" label="&saveBodies.label;"
                 accesskey="&saveBodies.accesskey;"/>
       <menuitem id="menu_openURL" label="&openURL.label;"
@@ -76,6 +76,8 @@ function goUpdateConsoleCommands() {
       <menuitem id="cMenu_selectAll"/>
     </menupopup>
   </popupset>
+
+  <tooltip id="aHTMLTooltip" page="true"/>
 
   <box class="hud-outer-wrapper devtools-responsive-container" flex="1">
     <vbox class="hud-console-wrapper" flex="1">
@@ -163,9 +165,9 @@ function goUpdateConsoleCommands() {
                  placeholder="&filterOutput.placeholder;" tabindex="2"/>
       </toolbar>
 
-      <richlistbox class="hud-output-node" orient="vertical" flex="1"
-                   seltype="multiple" context="output-contextmenu"
-                   style="direction:ltr;" tabindex="1"/>
+      <hbox id="output-wrapper" flex="1" context="output-contextmenu" tooltip="aHTMLTooltip">
+        <div xmlns="http://www.w3.org/1999/xhtml" id="output-container" tabindex="1" />
+      </hbox>
 
       <hbox class="jsterm-input-container" style="direction:ltr">
         <stack class="jsterm-stack-node" flex="1">

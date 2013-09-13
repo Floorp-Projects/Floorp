@@ -474,56 +474,32 @@ WebConsole.prototype = {
   viewSourceInDebugger:
   function WC_viewSourceInDebugger(aSourceURL, aSourceLine)
   {
-    let self = this;
-    let panelWin = null;
-    let debuggerWasOpen = true;
     let toolbox = gDevTools.getToolbox(this.target);
     if (!toolbox) {
-      self.viewSource(aSourceURL, aSourceLine);
+      this.viewSource(aSourceURL, aSourceLine);
       return;
     }
 
-    if (!toolbox.getPanel("jsdebugger")) {
-      debuggerWasOpen = false;
-      let toolboxWin = toolbox.doc.defaultView;
-      toolboxWin.addEventListener("Debugger:AfterSourcesAdded",
-                                  function afterSourcesAdded() {
-        toolboxWin.removeEventListener("Debugger:AfterSourcesAdded",
-                                       afterSourcesAdded);
-        loadScript();
-      });
+    let showSource = ({ DebuggerView }) => {
+      if (DebuggerView.Sources.containsValue(aSourceURL)) {
+        DebuggerView.setEditorLocation(aSourceURL, aSourceLine);
+        return;
+      }
+      toolbox.selectTool("webconsole");
+      this.viewSource(aSourceURL, aSourceLine);
     }
 
-    toolbox.selectTool("jsdebugger").then(function onDebuggerOpen(dbg) {
-      panelWin = dbg.panelWin;
-      if (debuggerWasOpen) {
-        loadScript();
+    // If the Debugger was already open, switch to it and try to show the
+    // source immediately. Otherwise, initialize it and wait for the sources
+    // to be added first.
+    let debuggerAlreadyOpen = toolbox.getPanel("jsdebugger");
+    toolbox.selectTool("jsdebugger").then(({ panelWin: dbg }) => {
+      if (debuggerAlreadyOpen) {
+        showSource(dbg);
+      } else {
+        dbg.once(dbg.EVENTS.SOURCES_ADDED, () => showSource(dbg));
       }
     });
-
-    function loadScript() {
-      let debuggerView = panelWin.DebuggerView;
-      if (!debuggerView.Sources.containsValue(aSourceURL)) {
-        toolbox.selectTool("webconsole");
-        self.viewSource(aSourceURL, aSourceLine);
-        return;
-      }
-      if (debuggerWasOpen && debuggerView.Sources.selectedValue == aSourceURL) {
-        debuggerView.editor.setCaretPosition(aSourceLine - 1);
-        return;
-      }
-
-      panelWin.addEventListener("Debugger:SourceShown", onSource, false);
-      debuggerView.Sources.preferredSource = aSourceURL;
-    }
-
-    function onSource(aEvent) {
-      if (aEvent.detail.url != aSourceURL) {
-        return;
-      }
-      panelWin.removeEventListener("Debugger:SourceShown", onSource, false);
-      panelWin.DebuggerView.editor.setCaretPosition(aSourceLine - 1);
-    }
   },
 
   /**
@@ -549,12 +525,12 @@ WebConsole.prototype = {
     if (!panel) {
       return null;
     }
-    let framesController = panel.panelWin.gStackFrames;
+    let framesController = panel.panelWin.DebuggerController.StackFrames;
     let thread = framesController.activeThread;
     if (thread && thread.paused) {
       return {
         frames: thread.cachedFrames,
-        selected: framesController.currentFrame,
+        selected: framesController.currentFrameDepth,
       };
     }
     return null;

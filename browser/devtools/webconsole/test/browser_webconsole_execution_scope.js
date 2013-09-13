@@ -20,26 +20,22 @@ function testExecutionScope(hud) {
 
   jsterm.clearOutput();
   jsterm.execute("window.location.href;");
-
-  waitForSuccess({
-    name: "jsterm execution output (two nodes)",
-    validatorFn: function()
-    {
-      return jsterm.outputNode.querySelectorAll(".hud-msg-node").length == 2;
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "window.location.href;",
+      category: CATEGORY_INPUT,
     },
-    successFn: function()
     {
-      let nodes = jsterm.outputNode.querySelectorAll(".hud-msg-node");
-
-      is(/window.location.href;/.test(nodes[0].textContent), true,
-        "'window.location.href;' written to output");
-
-      isnot(nodes[1].textContent.indexOf(TEST_URI), -1,
-        "command was executed in the window scope");
-
-      executeSoon(finishTest);
-    },
-    failureFn: finishTest,
+      text: TEST_URI,
+      category: CATEGORY_OUTPUT,
+    }],
+  }).then(([input, output]) => {
+    let inputNode = [...input.matched][0];
+    let outputNode = [...output.matched][0];
+    is(inputNode.getAttribute("category"), "input", "input node category is correct");
+    is(outputNode.getAttribute("category"), "output", "output node category is correct");
+    finishTest();
   });
 }
 
