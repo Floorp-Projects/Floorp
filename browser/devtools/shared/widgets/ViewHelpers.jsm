@@ -767,25 +767,10 @@ this.WidgetMethods = {
   },
 
   /**
-   * Does not remove any item in this container. Instead, it overrides the
-   * current label to signal that it is unavailable and removes the tooltip.
-   */
-  setUnavailable: function() {
-    this._widget.setAttribute("notice", this.unavailableText);
-    this._widget.setAttribute("label", this.unavailableText);
-    this._widget.removeAttribute("tooltiptext");
-  },
-
-  /**
    * The label string automatically added to this container when there are
    * no child nodes present.
    */
   emptyText: "",
-
-  /**
-   * The label string added to this container when it is marked as unavailable.
-   */
-  unavailableText: "",
 
   /**
    * Toggles all the items in this container hidden or visible.

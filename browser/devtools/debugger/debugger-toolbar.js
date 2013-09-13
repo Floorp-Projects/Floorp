@@ -343,7 +343,6 @@ ChromeGlobalsView.prototype = Heritage.extend(WidgetMethods, {
 
     this.widget = document.getElementById("chrome-globals");
     this.emptyText = L10N.getStr("noGlobalsText");
-    this.unavailableText = L10N.getStr("noMatchingGlobalsText");
 
     this.widget.addEventListener("select", this._onSelect, false);
     this.widget.addEventListener("click", this._onClick, false);
@@ -921,68 +920,7 @@ FilterView.prototype = {
   },
 
   /**
-   * Performs a file search if necessary.
-   *
-   * @param string aFile
-   *        The source location to search for.
    */
-  _performFileSearch: function(aFile) {
-    // Don't search for files if the input hasn't changed.
-    if (this._prevSearchedFile == aFile) {
-      return;
-    }
-
-    // This is the target container to be currently filtered. Clicking on a
-    // container generally means it should become a target.
-    let view = this._target;
-
-    // If we're not searching for a file anymore, unhide all the items.
-    if (!aFile) {
-      for (let item in view) {
-        item.target.hidden = false;
-      }
-      view.refresh();
-    }
-    // If the searched file string is valid, hide non-matched items.
-    else {
-      let found = false;
-      let lowerCaseFile = aFile.toLowerCase();
-
-      for (let item in view) {
-        let element = item.target;
-        let lowerCaseLabel = item.label.toLowerCase();
-
-        // Search is not case sensitive, and is tied to the label not the value.
-        if (lowerCaseLabel.match(lowerCaseFile)) {
-          element.hidden = false;
-
-          // Automatically select the first match.
-          if (!found) {
-            found = true;
-            view.selectedItem = item;
-          }
-        }
-        // Item not matched, hide the corresponding node.
-        else {
-          element.hidden = true;
-        }
-      }
-      // If no matches were found, display the appropriate info.
-      if (!found) {
-        view.setUnavailable();
-      }
-    }
-    // Synchronize with the view's filtered sources container.
-    DebuggerView.FilteredSources.syncFileSearch();
-
-    // Hide all the groups with no visible children.
-    view.widget.hideEmptyGroups();
-
-    // Ensure the currently selected item is visible.
-    view.widget.ensureSelectionIsVisible({ withGroup: true });
-
-    // Remember the previously searched file to avoid redundant filtering.
-    this._prevSearchedFile = aFile;
   },
 
   /**
@@ -1026,9 +964,6 @@ FilterView.prototype = {
     if (this._prevSearchedLine && !aToken) {
       this._target.refresh();
     }
-
-    // Remember the previously searched token to avoid redundant filtering.
-    this._prevSearchedToken = aToken;
   },
 
   /**
@@ -1344,41 +1279,86 @@ FilteredSourcesView.prototype = Heritage.extend(ResultsPanelContainer.prototype,
   },
 
   /**
-   * Updates the list of sources displayed in this container.
+   * Schedules searching for a source.
+   *
+   * @param string aToken
+   *        The function to search for.
+   * @param number aWait
+   *        The amount of milliseconds to wait until draining.
    */
-  syncFileSearch: function() {
-    this.empty();
+  scheduleSearch: function(aToken, aWait) {
+    // The amount of time to wait for the requests to settle.
+    let maxDelay = FILE_SEARCH_ACTION_MAX_DELAY;
+    let delay = aWait === undefined ? maxDelay / aToken.length : aWait;
 
-    // If there's no currently searched file, or there are no matches found,
-    // hide the popup and avoid creating the view again.
-    if (!DebuggerView.Filtering.searchedFile ||
-        !DebuggerView.Sources.visibleItems.length) {
-      this.hidden = true;
+    // Allow requests to settle down first.
+    setNamedTimeout("sources-search", delay, () => this._doSearch(aToken));
+  },
+
+  /**
+   * Finds file matches in all the displayed sources.
+   *
+   * @param string aToken
+   *        The string to search for.
+   */
+  _doSearch: function(aToken, aStore = []) {
+    // Don't continue filtering if the searched token is an empty string.
+    // In contrast with function searching, in this case we don't want to
+    // show a list of all the files when no search token was supplied.
+    if (!aToken) {
       return;
     }
 
-    // Get the currently visible items in the sources container.
-    let visibleItems = DebuggerView.Sources.visibleItems;
-    let displayedItems = visibleItems.slice(0, RESULTS_PANEL_MAX_RESULTS);
+    for (let item of DebuggerView.Sources.items) {
+      let lowerCaseLabel = item.label.toLowerCase();
+      let lowerCaseToken = aToken.toLowerCase();
+      if (lowerCaseLabel.match(lowerCaseToken)) {
+        aStore.push(item);
+      }
 
-    // Append a location item item to this container.
-    for (let item of displayedItems) {
+      // Once the maximum allowed number of results is reached, proceed
+      // with building the UI immediately.
+      if (aStore.length >= RESULTS_PANEL_MAX_RESULTS) {
+        this._syncView(aStore);
+        return;
+      }
+    }
+
+    // Couldn't reach the maximum allowed number of results, but that's ok,
+    // continue building the UI.
+    this._syncView(aStore);
+  },
+
+  /**
+   * Updates the list of sources displayed in this container.
+   *
+   * @param array aSearchResults
+   *        The results array, containing search details for each source.
+   */
+  _syncView: function(aSearchResults) {
+    // If there are no matches found, keep the popup hidden and avoid
+    // creating the view.
+    if (!aSearchResults.length) {
+      return;
+    }
+
+    for (let item of aSearchResults) {
+      // Append a location item to this container for each match.
       let trimmedLabel = SourceUtils.trimUrlLength(item.label);
       let trimmedValue = SourceUtils.trimUrlLength(item.value, 0, "start");
-      let locationItem = this.push([trimmedLabel, trimmedValue], {
+
+      this.push([trimmedLabel, trimmedValue], {
+        index: -1, /* specifies on which position should the item be appended */
         relaxed: true, /* this container should allow dupes & degenerates */
         attachment: {
-          fullLabel: item.label,
-          fullValue: item.value
+          url: item.value
         }
       });
     }
 
     // Select the first entry in this container.
     this.selectedIndex = 0;
-
-    // Only display the results panel if there's at least one entry available.
-    this.hidden = this.itemCount == 0;
+    this.hidden = false;
   },
 
   /**
@@ -1400,7 +1380,16 @@ FilteredSourcesView.prototype = Heritage.extend(ResultsPanelContainer.prototype,
    */
   _onSelect: function({ detail: locationItem }) {
     if (locationItem) {
-      DebuggerView.setEditorLocation(locationItem.attachment.fullValue, 0);
+      let targetUrl = locationItem.attachment.url;
+      let currentLine = DebuggerView.editor.getCaretPosition().line + 1;
+
+      // If the same file is selected, don't change the source editor's
+      // carent or debug locations.
+      if (DebuggerView.Sources.selectedValue == targetUrl) {
+        DebuggerView.setEditorLocation(targetUrl, currentLine, { noDebug: true });
+      } else {
+        DebuggerView.setEditorLocation(targetUrl);
+      }
     }
   }
 });
@@ -1447,6 +1436,7 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
    *        The amount of milliseconds to wait until draining.
    */
   scheduleSearch: function(aToken, aWait) {
+    // The amount of time to wait for the requests to settle.
     let maxDelay = FUNCTION_SEARCH_ACTION_MAX_DELAY;
     let delay = aWait === undefined ? maxDelay / aToken.length : aWait;
 
@@ -1468,8 +1458,7 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
    * @param array aSources
    *        An array of [url, text] tuples for each source.
    */
-  _doSearch: function(aToken, aSources) {
-    // Get the currently searched token from the filtering input.
+  _doSearch: function(aToken, aSources, aStore = []) {
     // Continue parsing even if the searched token is an empty string, to
     // cache the syntax tree nodes generated by the reflection API.
 
@@ -1486,16 +1475,13 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
       aSources.splice(1);
     }
 
-    // Prepare the results array, containing search details for each source.
-    let searchResults = [];
-
     for (let [location, contents] of aSources) {
       let parserMethods = DebuggerController.Parser.get(location, contents);
       let sourceResults = parserMethods.getNamedFunctionDefinitions(aToken);
 
       for (let scriptResult of sourceResults) {
         for (let parseResult of scriptResult.parseResults) {
-          searchResults.push({
+          aStore.push({
             sourceUrl: scriptResult.sourceUrl,
             scriptOffset: scriptResult.scriptOffset,
             functionName: parseResult.functionName,
@@ -1507,16 +1493,17 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
 
           // Once the maximum allowed number of results is reached, proceed
           // with building the UI immediately.
-          if (searchResults.length >= RESULTS_PANEL_MAX_RESULTS) {
-            this._syncFunctionSearch(searchResults);
+          if (aStore.length >= RESULTS_PANEL_MAX_RESULTS) {
+            this._syncView(aStore);
             return;
           }
         }
       }
     }
+
     // Couldn't reach the maximum allowed number of results, but that's ok,
     // continue building the UI.
-    this._syncFunctionSearch(searchResults);
+    this._syncView(aStore);
   },
 
   /**
@@ -1525,13 +1512,10 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
    * @param array aSearchResults
    *        The results array, containing search details for each source.
    */
-  _syncFunctionSearch: function(aSearchResults) {
-    this.empty();
-
-    // Show the popup even if the search token is an empty string. If there are
-    // no matches found, hide the popup and avoid creating the view again.
+  _syncView: function(aSearchResults) {
+    // If there are no matches found, keep the popup hidden and avoid
+    // creating the view.
     if (!aSearchResults.length) {
-      this.hidden = true;
       return;
     }
 
@@ -1561,7 +1545,7 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
         item.actualLocation = item.functionLocation;
       }
 
-      // Append a function item to this container.
+      // Append a function item to this container for each match.
       let trimmedLabel = SourceUtils.trimUrlLength(item.displayedName + "()");
       let trimmedValue = SourceUtils.trimUrlLength(item.sourceUrl, 0, "start");
       let description = (item.inferredChain || []).join(".");
@@ -1575,9 +1559,7 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
 
     // Select the first entry in this container.
     this.selectedIndex = 0;
-
-    // Only display the results panel if there's at least one entry available.
-    this.hidden = this.itemCount == 0;
+    this.hidden = false;
   },
 
   /**
