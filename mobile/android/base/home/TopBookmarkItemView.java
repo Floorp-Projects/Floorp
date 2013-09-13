@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.Favicons;
+import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.R;
 
 import android.content.Context;
@@ -180,7 +180,7 @@ public class TopBookmarkItemView extends RelativeLayout {
 
         mThumbnailView.setScaleType(ScaleType.CENTER);
         mThumbnailView.setImageBitmap(favicon);
-        mThumbnailView.setBackgroundColor(Favicons.getInstance().getFaviconColor(favicon, mUrl));
+        mThumbnailView.setBackgroundColor(Favicons.getFaviconColor(favicon, mUrl));
     }
 
     /**

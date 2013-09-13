@@ -668,7 +668,7 @@ let StackFrameUtils = {
   getFrameTitle: function(aFrame) {
     if (aFrame.type == "call") {
       let c = aFrame.callee;
-      return (c.name || c.userDisplayName || c.displayName || "(anonymous)");
+      return (c.userDisplayName || c.displayName || c.name || "(anonymous)");
     }
     return "(" + aFrame.type + ")";
   },
@@ -702,7 +702,7 @@ let StackFrameUtils = {
       case "function":
         let f = aEnv.function;
         label += " [" +
-          (f.name || f.userDisplayName || f.displayName || "(anonymous)") +
+          (f.userDisplayName || f.displayName || f.name || "(anonymous)") +
         "]";
         break;
     }

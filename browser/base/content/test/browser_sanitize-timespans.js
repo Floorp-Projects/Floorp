@@ -96,7 +96,7 @@ function onHistoryReady() {
   itemPrefs.setBoolPref("sessions", false);
   itemPrefs.setBoolPref("siteSettings", false);
 
-  let publicList = yield Downloads.getPublicDownloadList();
+  let publicList = yield Downloads.getList(Downloads.PUBLIC);
   let downloadPromise = promiseDownloadRemoved(publicList);
 
   // Clear 10 minutes ago
@@ -612,7 +612,7 @@ function setupFormHistory() {
 
 function setupDownloads() {
 
-  let publicList = yield Downloads.getPublicDownloadList();
+  let publicList = yield Downloads.getList(Downloads.PUBLIC);
 
   let download = yield Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",

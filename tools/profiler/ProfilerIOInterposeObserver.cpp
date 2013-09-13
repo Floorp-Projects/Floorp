@@ -2,34 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ProfilerIOInterposeObserver.h"
-
 #include "GeckoProfiler.h"
+#include "ProfilerIOInterposeObserver.h"
 
 using namespace mozilla;
 
-ProfilerIOInterposeObserver::ProfilerIOInterposeObserver()
+void ProfilerIOInterposeObserver::Observe(Observation& aObservation)
 {
-  IOInterposer* interposer = IOInterposer::GetInstance();
-  if (interposer) {
-    interposer->Register(IOInterposeObserver::OpAll, this);
+  // TODO: The profile might want to take notice of non-main-thread IO, as
+  // well as noting what files or references causes the IO.
+  if (NS_IsMainThread()) {
+    const char* ops[] = {"none", "read", "write", "invalid", "fsync"};
+    PROFILER_MARKER(ops[aObservation.ObservedOperation()]);
   }
 }
-
-ProfilerIOInterposeObserver::~ProfilerIOInterposeObserver()
-{
-  IOInterposer* interposer = IOInterposer::GetInstance();
-  if (interposer) {
-    interposer->Deregister(IOInterposeObserver::OpAll, this);
-  }
-}
-
-void ProfilerIOInterposeObserver::Observe(IOInterposeObserver::Operation aOp,
-                                          double& aDuration,
-                                          const char* aModuleInfo)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  const char* ops[] = {"none", "read", "write", "invalid", "fsync"};
-  PROFILER_MARKER(ops[aOp]);
-}
-

@@ -425,6 +425,9 @@ private:
 
     virtual bool RecvAudioChannelChangedNotification();
 
+    virtual bool RecvAudioChannelChangeDefVolChannel(
+      const AudioChannelType& aType, const bool& aHidden);
+
     virtual bool RecvBroadcastVolume(const nsString& aVolumeName);
 
     virtual bool RecvRecordingDeviceEvents(const nsString& aRecordingStatus);

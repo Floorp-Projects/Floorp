@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.Favicons;
+import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.gfx.BitmapUtils;
@@ -38,14 +38,12 @@ class FaviconsLoader {
             return urls;
         }
 
-        final Favicons favicons = Favicons.getInstance();
-
         do {
             final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
 
             // We only want to load favicons from DB if they are not in the
             // memory cache yet. The url is null for bookmark folders.
-            if (url == null || favicons.getFaviconFromMemCache(url) != null) {
+            if (url == null || Favicons.getFaviconFromMemCache(url) != null) {
                 continue;
             }
 
@@ -60,8 +58,6 @@ class FaviconsLoader {
             return;
         }
 
-        final Favicons favicons = Favicons.getInstance();
-
         do {
             final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
             final byte[] b = c.getBlob(c.getColumnIndexOrThrow(URLColumns.FAVICON));
@@ -75,8 +71,8 @@ class FaviconsLoader {
                 continue;
             }
 
-            favicon = favicons.scaleImage(favicon);
-            favicons.putFaviconInMemCache(url, favicon);
+            favicon = Favicons.scaleImage(favicon);
+            Favicons.putFaviconInMemCache(url, favicon);
         } while (c.moveToNext());
     }
 
