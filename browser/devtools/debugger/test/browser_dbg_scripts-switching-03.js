@@ -2,59 +2,51 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Make sure that the Debugger-View error loading source text is correct
+ * Make sure that the DebuggerView error loading source text is correct.
  */
 
-const TAB_URL = EXAMPLE_URL + "browser_dbg_script-switching.html";
+const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 
-var gPane = null;
-var gTab = null;
-var gDebuggee = null;
-var gDebugger = null;
-var gView = null;
-var gL10N = null;
+let gTab, gDebuggee, gPanel, gDebugger;
+let gView, gEditor, gL10N;
 
-function test()
-{
-  debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane){
+function test() {
+  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
     gTab = aTab;
     gDebuggee = aDebuggee;
-    gPane = aPane;
-    gDebugger = gPane.panelWin;
+    gPanel = aPanel;
+    gDebugger = gPanel.panelWin;
     gView = gDebugger.DebuggerView;
+    gEditor = gDebugger.DebuggerView.editor;
     gL10N = gDebugger.L10N;
 
-    gDebugger.addEventListener("Debugger:SourceShown", onScriptShown);
+    waitForSourceShown(gPanel, "-01.js")
+      .then(showBogusSource)
+      .then(testDebuggerLoadingError)
+      .then(() => closeDebuggerAndFinish(gPanel))
+      .then(null, aError => {
+        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
+      });
   });
 }
 
-function onScriptShown(aEvent)
-{
-  gView.editorSource = { url: "http://example.com/fake.js", actor: "fake.actor" };
-  gDebugger.removeEventListener("Debugger:SourceShown", onScriptShown);
-  gDebugger.addEventListener("Debugger:SourceErrorShown", onScriptErrorShown);
+function showBogusSource() {
+  let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_ERROR_SHOWN);
+  gView._setEditorSource({ url: "http://example.com/fake.js", actor: "fake.actor" });
+  return finished;
 }
 
-function onScriptErrorShown(aEvent)
-{
-  gDebugger.removeEventListener("Debugger:SourceErrorShown", onScriptErrorShown);
-  testDebuggerLoadingError();
-}
-
-function testDebuggerLoadingError()
-{
-  ok(gDebugger.editor.getText().search(new RegExp(gL10N.getStr("errorLoadingText")) != -1),
+function testDebuggerLoadingError() {
+  ok(gEditor.getText().contains(gL10N.getStr("errorLoadingText")),
     "The valid error loading message is displayed.");
-  closeDebuggerAndFinish();
 }
 
-registerCleanupFunction(function()
-{
-  removeTab(gTab);
-  gPane = null;
+registerCleanupFunction(function() {
   gTab = null;
+  gDebuggee = null;
+  gPanel = null;
   gDebugger = null;
   gView = null;
-  gDebuggee = null;
+  gEditor = null;
   gL10N = null;
 });

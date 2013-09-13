@@ -5,7 +5,7 @@
  * Make sure that switching the displayed source in the UI works as advertised.
  */
 
-const TAB_URL = EXAMPLE_URL + "doc_script-switching-02.html";
+const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 
 let gTab, gDebuggee, gPanel, gDebugger;
 let gEditor, gSources;
@@ -35,7 +35,6 @@ function test() {
 
 let gLabel1 = "code_script-switching-01.js";
 let gLabel2 = "code_script-switching-02.js";
-let gParams = "?foo=bar,baz|lol";
 
 function testSourcesDisplay() {
   let deferred = promise.defer();
@@ -45,7 +44,7 @@ function testSourcesDisplay() {
 
   ok(gSources.containsValue(EXAMPLE_URL + gLabel1),
     "First source url is incorrect.");
-  ok(gSources.containsValue(EXAMPLE_URL + gLabel2 + gParams),
+  ok(gSources.containsValue(EXAMPLE_URL + gLabel2),
     "Second source url is incorrect.");
 
   ok(gSources.containsLabel(gLabel1),
@@ -57,7 +56,7 @@ function testSourcesDisplay() {
     "There should be a selected item in the sources pane.");
   is(gSources.selectedLabel, gLabel2,
     "The selected label is the sources pane is incorrect.");
-  is(gSources.selectedValue, EXAMPLE_URL + gLabel2 + gParams,
+  is(gSources.selectedValue, EXAMPLE_URL + gLabel2,
     "The selected value is the sources pane is incorrect.");
 
   is(gEditor.getText().search(/firstCall/), -1,
@@ -74,7 +73,7 @@ function testSourcesDisplay() {
       "Editor debugger location is correct.");
 
     waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN).then(deferred.resolve);
-    gSources.selectedLabel = gLabel1;
+    gSources.selectedIndex = 0;
   });
 
   return deferred.promise;
@@ -103,7 +102,7 @@ function testSwitchPaused1() {
       "Editor debugger location is correct.");
 
     waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN).then(deferred.resolve);
-    gSources.selectedLabel = gLabel2;
+    gSources.selectedIndex = 1;
   });
 
   return deferred.promise;
@@ -116,7 +115,7 @@ function testSwitchPaused2() {
     "There should be a selected item in the sources pane.");
   is(gSources.selectedLabel, gLabel2,
     "The selected label is the sources pane is incorrect.");
-  is(gSources.selectedValue, EXAMPLE_URL + gLabel2 + gParams,
+  is(gSources.selectedValue, EXAMPLE_URL + gLabel2,
     "The selected value is the sources pane is incorrect.");
 
   is(gEditor.getText().search(/firstCall/), -1,
@@ -182,5 +181,4 @@ registerCleanupFunction(function() {
   gSources = null;
   gLabel1 = null;
   gLabel2 = null;
-  gParams = null;
 });
