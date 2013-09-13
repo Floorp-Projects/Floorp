@@ -214,14 +214,31 @@ GetLayerFixedMarginsOffset(Layer* aLayer,
   return translation;
 }
 
-void
-AsyncCompositionManager::AlignFixedLayersForAnchorPoint(Layer* aLayer,
-                                                        Layer* aTransformedSubtreeRoot,
-                                                        const gfx3DMatrix& aPreviousTransformForRoot,
-                                                        const LayerMargin& aFixedLayerMargins)
+static gfxFloat
+IntervalOverlap(gfxFloat aTranslation, gfxFloat aMin, gfxFloat aMax)
 {
-  if (aLayer != aTransformedSubtreeRoot && aLayer->GetIsFixedPosition() &&
-      !aLayer->GetParent()->GetIsFixedPosition()) {
+  // Determine the amount of overlap between the 1D vector |aTranslation|
+  // and the interval [aMin, aMax].
+  if (aTranslation > 0) {
+    return std::max(0.0, std::min(aMax, aTranslation) - std::max(aMin, 0.0));
+  } else {
+    return std::min(0.0, std::max(aMin, aTranslation) - std::min(aMax, 0.0));
+  }
+}
+
+void
+AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
+                                                   Layer* aTransformedSubtreeRoot,
+                                                   const gfx3DMatrix& aPreviousTransformForRoot,
+                                                   const LayerMargin& aFixedLayerMargins)
+{
+  bool isRootFixed = aLayer->GetIsFixedPosition() &&
+    !aLayer->GetParent()->GetIsFixedPosition();
+  bool isStickyForSubtree = aLayer->GetIsStickyPosition() &&
+    aTransformedSubtreeRoot->AsContainerLayer() &&
+    aLayer->GetStickyScrollContainerId() ==
+      aTransformedSubtreeRoot->AsContainerLayer()->GetFrameMetrics().mScrollId;
+  if (aLayer != aTransformedSubtreeRoot && (isRootFixed || isStickyForSubtree)) {
     // Insert a translation so that the position of the anchor point is the same
     // before and after the change to the transform of aTransformedSubtreeRoot.
     // This currently only works for fixed layers with 2D transforms.
@@ -286,6 +303,21 @@ AsyncCompositionManager::AlignFixedLayersForAnchorPoint(Layer* aLayer,
         oldCumulativeTransform.Transform(locallyTransformedOffsetAnchor));
     gfxPoint translation = oldAnchorPositionInNewSpace - locallyTransformedAnchor;
 
+    if (aLayer->GetIsStickyPosition()) {
+      // For sticky positioned layers, the difference between the two rectangles
+      // defines a pair of translation intervals in each dimension through which
+      // the layer should not move relative to the scroll container. To
+      // accomplish this, we limit each dimension of the |translation| to that
+      // part of it which overlaps those intervals.
+      const LayerRect& stickyOuter = aLayer->GetStickyScrollRangeOuter();
+      const LayerRect& stickyInner = aLayer->GetStickyScrollRangeInner();
+
+      translation.y = IntervalOverlap(translation.y, stickyOuter.y, stickyOuter.YMost()) -
+                      IntervalOverlap(translation.y, stickyInner.y, stickyInner.YMost());
+      translation.x = IntervalOverlap(translation.x, stickyOuter.x, stickyOuter.XMost()) -
+                      IntervalOverlap(translation.x, stickyInner.x, stickyInner.XMost());
+    }
+
     // Finally, apply the 2D translation to the layer transform.
     TranslateShadowLayer2D(aLayer, translation);
 
@@ -296,8 +328,8 @@ AsyncCompositionManager::AlignFixedLayersForAnchorPoint(Layer* aLayer,
 
   for (Layer* child = aLayer->GetFirstChild();
        child; child = child->GetNextSibling()) {
-    AlignFixedLayersForAnchorPoint(child, aTransformedSubtreeRoot,
-                                   aPreviousTransformForRoot, aFixedLayerMargins);
+    AlignFixedAndStickyLayers(child, aTransformedSubtreeRoot,
+                              aPreviousTransformForRoot, aFixedLayerMargins);
   }
 }
 
@@ -501,7 +533,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
 #endif
     oldTransform.Scale(resolution.scale, resolution.scale, 1);
 
-    AlignFixedLayersForAnchorPoint(aLayer, aLayer, oldTransform, fixedLayerMargins);
+    AlignFixedAndStickyLayers(aLayer, aLayer, oldTransform, fixedLayerMargins);
 
     appliedTransform = true;
   }
@@ -607,7 +639,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const LayoutDev
   // transform so that fixed position content moves and scales accordingly.
   // These calculations will effectively scale and offset fixed position layers
   // in screen space when the compensatory transform is performed in
-  // AlignFixedLayersForAnchorPoint.
+  // AlignFixedAndStickyLayers.
   ScreenRect contentScreenRect = mContentRect * userZoom;
   gfxPoint3D overscrollTranslation;
   if (userScroll.x < contentScreenRect.x) {
@@ -637,7 +669,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const LayoutDev
 
   // Make sure fixed position layers don't move away from their anchor points
   // when we're asynchronously panning or zooming
-  AlignFixedLayersForAnchorPoint(aLayer, aLayer, oldTransform, fixedLayerMargins);
+  AlignFixedAndStickyLayers(aLayer, aLayer, oldTransform, fixedLayerMargins);
 }
 
 bool

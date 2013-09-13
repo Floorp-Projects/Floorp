@@ -220,6 +220,42 @@ StickyScrollContainer::ComputePosition(nsIFrame* aFrame) const
 }
 
 void
+StickyScrollContainer::GetScrollRanges(nsIFrame* aFrame, nsRect* aOuter,
+                                       nsRect* aInner) const
+{
+  nsRect stick;
+  nsRect contain;
+  ComputeStickyLimits(aFrame, &stick, &contain);
+
+  aOuter->SetRect(nscoord_MIN/2, nscoord_MIN/2, nscoord_MAX, nscoord_MAX);
+  aInner->SetRect(nscoord_MIN/2, nscoord_MIN/2, nscoord_MAX, nscoord_MAX);
+
+  const nsPoint normalPosition = aFrame->GetNormalPosition();
+
+  // Bottom and top
+  if (stick.YMost() != nscoord_MAX/2) {
+    aOuter->SetTopEdge(contain.y - stick.YMost());
+    aInner->SetTopEdge(normalPosition.y - stick.YMost());
+  }
+
+  if (stick.y != nscoord_MIN/2) {
+    aInner->SetBottomEdge(normalPosition.y - stick.y);
+    aOuter->SetBottomEdge(contain.YMost() - stick.y);
+  }
+
+  // Right and left
+  if (stick.XMost() != nscoord_MAX/2) {
+    aOuter->SetLeftEdge(contain.x - stick.XMost());
+    aInner->SetLeftEdge(normalPosition.x - stick.XMost());
+  }
+
+  if (stick.x != nscoord_MIN/2) {
+    aInner->SetRightEdge(normalPosition.x - stick.x);
+    aOuter->SetRightEdge(contain.XMost() - stick.x);
+  }
+}
+
+void
 StickyScrollContainer::UpdatePositions(nsPoint aScrollPosition,
                                        nsIFrame* aSubtreeRoot)
 {

@@ -168,29 +168,19 @@ class TreeMetadataEmitter(LoggingMixin):
         if program:
             yield Program(sandbox, program, sandbox['CONFIG']['BIN_SUFFIX'])
 
-        for manifest in sandbox.get('XPCSHELL_TESTS_MANIFESTS', []):
-            yield XpcshellManifests(sandbox, manifest)
-
-        for ipdl in sandbox.get('IPDL_SOURCES', []):
-            yield IPDLFile(sandbox, ipdl)
-
-        for local_include in sandbox.get('LOCAL_INCLUDES', []):
-            yield LocalInclude(sandbox, local_include)
-
-        for webidl in sandbox.get('WEBIDL_FILES', []):
-            yield WebIDLFile(sandbox, webidl)
-
-        for webidl in sandbox.get('GENERATED_EVENTS_WEBIDL_FILES', []):
-            yield GeneratedEventWebIDLFile(sandbox, webidl)
-
-        for webidl in sandbox.get('TEST_WEBIDL_FILES', []):
-            yield TestWebIDLFile(sandbox, webidl)
-
-        for webidl in sandbox.get('PREPROCESSED_WEBIDL_FILES', []):
-            yield PreprocessedWebIDLFile(sandbox, webidl)
-
-        for webidl in sandbox.get('GENERATED_WEBIDL_FILES', []):
-            yield GeneratedWebIDLFile(sandbox, webidl)
+        simple_lists = [
+            ('GENERATED_EVENTS_WEBIDL_FILES', GeneratedEventWebIDLFile),
+            ('GENERATED_WEBIDL_FILES', GeneratedWebIDLFile),
+            ('IPDL_SOURCES', IPDLFile),
+            ('LOCAL_INCLUDES', LocalInclude),
+            ('PREPROCESSED_WEBIDL_FILES', PreprocessedWebIDLFile),
+            ('TEST_WEBIDL_FILES', TestWebIDLFile),
+            ('WEBIDL_FILES', WebIDLFile),
+            ('XPCSHELL_TESTS_MANIFESTS', XpcshellManifests),
+        ]
+        for sandbox_var, klass in simple_lists:
+            for name in sandbox.get(sandbox_var, []):
+                yield klass(sandbox, name)
 
     def _emit_directory_traversal_from_sandbox(self, sandbox):
         o = DirectoryTraversal(sandbox)

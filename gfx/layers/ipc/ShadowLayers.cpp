@@ -496,6 +496,12 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
     common.isFixedPosition() = mutant->GetIsFixedPosition();
     common.fixedPositionAnchor() = mutant->GetFixedPositionAnchor();
     common.fixedPositionMargin() = mutant->GetFixedPositionMargins();
+    common.isStickyPosition() = mutant->GetIsStickyPosition();
+    if (mutant->GetIsStickyPosition()) {
+      common.stickyScrollContainerId() = mutant->GetStickyScrollContainerId();
+      common.stickyScrollRangeOuter() = mutant->GetStickyScrollRangeOuter();
+      common.stickyScrollRangeInner() = mutant->GetStickyScrollRangeInner();
+    }
     if (Layer* maskLayer = mutant->GetMaskLayer()) {
       common.maskLayerChild() = Shadow(maskLayer->AsShadowableLayer());
     } else {
