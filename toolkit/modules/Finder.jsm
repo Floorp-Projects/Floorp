@@ -16,7 +16,8 @@ function Finder(docShell) {
   this._fastFind.init(docShell);
 
   this._docShell = docShell;
-  this._document = docShell.getInterface(Ci.nsIDOMWindow).document;
+  this._document = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindow).document;
   this._listeners = [];
 
   this._previousLink = null;
