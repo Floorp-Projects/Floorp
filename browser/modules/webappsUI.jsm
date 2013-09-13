@@ -81,6 +81,9 @@ this.webappsUI = {
     let found = false;
     while (!found && browserEnumerator.hasMoreElements()) {
       let browserWin = browserEnumerator.getNext();
+      if (browserWin.closed) {
+        continue;
+      }
       let tabbrowser = browserWin.gBrowser;
 
       // Check each tab of this browser instance
