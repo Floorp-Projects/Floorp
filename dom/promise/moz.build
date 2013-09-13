@@ -25,3 +25,7 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'dompromise_s'
 
+LOCAL_INCLUDES += [
+    '../base',
+    '../workers',
+]
