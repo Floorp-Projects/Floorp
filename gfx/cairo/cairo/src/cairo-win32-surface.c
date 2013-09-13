@@ -2115,13 +2115,15 @@ cairo_public cairo_surface_t *
 cairo_win32_surface_create_with_d3dsurface9 (IDirect3DSurface9 *surface)
 {
     HDC dc;
-    cairo_win32_surface_t *win_surface;
+    cairo_surface_t *win_surface;
 
     IDirect3DSurface9_AddRef (surface);
     IDirect3DSurface9_GetDC (surface, &dc);
     win_surface = cairo_win32_surface_create_internal(dc, CAIRO_FORMAT_RGB24);
-    win_surface->d3d9surface = surface;
-    return (cairo_surface_t*) win_surface;
+    if (likely(win_surface->status == CAIRO_STATUS_SUCCESS)) {
+	((cairo_win32_surface_t*)win_surface)->d3d9surface = surface;
+    }
+    return win_surface;
 
 }
 /**
