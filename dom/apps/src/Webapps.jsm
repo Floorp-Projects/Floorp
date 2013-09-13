@@ -882,8 +882,11 @@ this.DOMApplicationRegistry = {
     }
   },
 
-  addMessageListener: function(aMsgNames, aMm) {
+  addMessageListener: function(aMsgNames, aApp, aMm) {
     aMsgNames.forEach(function (aMsgName) {
+      let man = aApp && aApp.manifestURL;
+      debug("Adding messageListener for: " + aMsgName + "App: " +
+            man);
       if (!(aMsgName in this.children)) {
         this.children[aMsgName] = [];
       }
@@ -901,6 +904,26 @@ this.DOMApplicationRegistry = {
           mm: aMm,
           refCount: 1
         });
+
+        // If it wasn't registered before, let's update its state
+        if ((aMsgName === 'Webapps:PackageEvent') ||
+            (aMsgName === 'Webapps:OfflineCache')) {
+          if (man) {
+            let app = this.getAppByManifestURL(aApp.manifestURL);
+            if (app && ((aApp.installState !== app.installState) ||
+                        (aApp.downloading !== app.downloading))) {
+              debug("Got a registration from an outdated app: " +
+                    aApp.manifestURL);
+              let aEvent ={
+                type: app.installState,
+                app: app,
+                manifestURL: app.manifestURL,
+                manifest: app.manifest
+              };
+              aMm.sendAsyncMessage(aMsgName, aEvent);
+            }
+          }
+        }
       }
     }, this);
   },
@@ -999,7 +1022,7 @@ this.DOMApplicationRegistry = {
         this.doInstallPackage(msg, mm);
         break;
       case "Webapps:RegisterForMessages":
-        this.addMessageListener(msg, mm);
+        this.addMessageListener(msg.messages, msg.app, mm);
         break;
       case "Webapps:UnregisterForMessages":
         this.removeMessageListener(msg, mm);
@@ -1008,7 +1031,7 @@ this.DOMApplicationRegistry = {
         this.removeMessageListener(["Webapps:Internal:AllMessages"], mm);
         break;
       case "Webapps:GetList":
-        this.addMessageListener(["Webapps:AddApp", "Webapps:RemoveApp"], mm);
+        this.addMessageListener(["Webapps:AddApp", "Webapps:RemoveApp"], null, mm);
         return this.webapps;
       case "Webapps:Download":
         this.startDownload(msg.manifestURL);
