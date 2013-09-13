@@ -42,6 +42,14 @@ background/healthreport/upload/HealthReportUploadStartReceiver.java
 background/healthreport/upload/ObsoleteDocumentTracker.java
 background/healthreport/upload/SubmissionClient.java
 background/healthreport/upload/SubmissionPolicy.java
+fxa/authenticator/FxAccountAuthenticator.java
+fxa/authenticator/FxAccountAuthenticatorService.java
+fxa/sync/FxAccountBookmarksSyncService.java
+fxa/sync/FxAccountHistorySyncService.java
+fxa/sync/FxAccountPasswordsSyncService.java
+fxa/sync/FxAccountSyncAdapter.java
+fxa/sync/FxAccountSyncService.java
+fxa/sync/FxAccountTabsSyncService.java
 sync/AlreadySyncingException.java
 sync/CollectionKeys.java
 sync/CommandProcessor.java
