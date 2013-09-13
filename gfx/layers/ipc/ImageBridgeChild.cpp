@@ -122,9 +122,17 @@ ImageBridgeChild::RemoveTexture(CompositableClient* aCompositable,
                                 uint64_t aTexture,
                                 TextureFlags aFlags)
 {
-  mTxn->AddNoSwapEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
-                                      aTexture,
-                                      aFlags));
+  if (aFlags & TEXTURE_DEALLOCATE_HOST) {
+    // if deallocation happens on the host side, we don't need the transaction
+    // to be synchronous.
+    mTxn->AddNoSwapEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
+                                        aTexture,
+                                        aFlags));
+  } else {
+    mTxn->AddEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
+                                  aTexture,
+                                  aFlags));
+  }
 }
 
 void
@@ -393,6 +401,52 @@ void ImageBridgeChild::DispatchImageClientUpdate(ImageClient* aClient,
       nsRefPtr<ImageContainer> >(&UpdateImageClientNow, aClient, aContainer));
 }
 
+static void FlushImageSync(ImageClient* aClient, ImageContainer* aContainer, ReentrantMonitor* aBarrier, bool* aDone)
+{
+  ImageBridgeChild::FlushImageNow(aClient, aContainer);
+
+  ReentrantMonitorAutoEnter autoMon(*aBarrier);
+  *aDone = true;
+  aBarrier->NotifyAll();
+}
+
+//static
+void ImageBridgeChild::FlushImage(ImageClient* aClient, ImageContainer* aContainer)
+{
+  if (InImageBridgeChildThread()) {
+    FlushImageNow(aClient, aContainer);
+    return;
+  }
+
+  ReentrantMonitor barrier("CreateImageClient Lock");
+  ReentrantMonitorAutoEnter autoMon(barrier);
+  bool done = false;
+
+  sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
+    FROM_HERE,
+    NewRunnableFunction(&FlushImageSync, aClient, aContainer, &barrier, &done));
+
+  // should stop the thread until the ImageClient has been created on
+  // the other thread
+  while (!done) {
+    barrier.Wait();
+  }
+}
+
+//static
+void ImageBridgeChild::FlushImageNow(ImageClient* aClient, ImageContainer* aContainer)
+{
+  MOZ_ASSERT(aClient);
+  sImageBridgeChildSingleton->BeginTransaction();
+  if (aContainer) {
+    aContainer->ClearCurrentImage();
+  }
+  aClient->FlushImage();
+  aClient->OnTransaction();
+  sImageBridgeChildSingleton->EndTransaction();
+  aClient->FlushTexturesToRemoveCallbacks();
+}
+
 void
 ImageBridgeChild::BeginTransaction()
 {
@@ -454,6 +508,10 @@ ImageBridgeChild::EndTransaction()
       // This would be, for instance, the place to implement a mechanism to
       // notify the B2G camera that the gralloc buffer is not used by the
       // compositor anymore and that it can be recycled.
+      const ReplyTextureRemoved& rep = reply.get_ReplyTextureRemoved();
+      CompositableClient* compositable
+        = static_cast<CompositableChild*>(rep.compositableChild())->GetCompositableClient();
+      compositable->OnReplyTextureRemoved(rep.textureId());
       break;
     }
     default:

@@ -309,6 +309,8 @@ WebappsApplication.prototype = {
 
   init: function(aWindow, aApp) {
     this._window = aWindow;
+    let principal = this._window.document.nodePrincipal;
+    this._appStatus = principal.appStatus;
     this.origin = aApp.origin;
     this._manifest = aApp.manifest;
     this._updateManifest = aApp.updateManifest;
@@ -342,7 +344,10 @@ WebappsApplication.prototype = {
                               "Webapps:Launch:Return:OK",
                               "Webapps:Launch:Return:KO",
                               "Webapps:PackageEvent",
-                              "Webapps:ClearBrowserData:Return"]);
+                              "Webapps:ClearBrowserData:Return",
+                              "Webapps:Connect:Return:OK",
+                              "Webapps:Connect:Return:KO",
+                              "Webapps:GetConnections:Return:OK"]);
 
     cpmm.sendAsyncMessage("Webapps:RegisterForMessages",
                           ["Webapps:OfflineCache",
@@ -460,6 +465,33 @@ WebappsApplication.prototype = {
     return request;
   },
 
+  connect: function(aKeyword, aRules) {
+    return this.createPromise(function (aResolve, aReject) {
+      cpmm.sendAsyncMessage("Webapps:Connect",
+                            { keyword: aKeyword,
+                              rules: aRules,
+                              manifestURL: this.manifestURL,
+                              outerWindowID: this._id,
+                              appStatus: this._appStatus,
+                              requestID: this.getPromiseResolverId({
+                                resolve: aResolve,
+                                reject: aReject
+                              })});
+    }.bind(this));
+  },
+
+  getConnections: function() {
+    return this.createPromise(function (aResolve, aReject) {
+      cpmm.sendAsyncMessage("Webapps:GetConnections",
+                            { manifestURL: this.manifestURL,
+                              outerWindowID: this._id,
+                              requestID: this.getPromiseResolverId({
+                                resolve: aResolve,
+                                reject: aReject
+                              })});
+    }.bind(this));
+  },
+
   uninit: function() {
     this._onprogress = null;
     cpmm.sendAsyncMessage("Webapps:UnregisterForMessages",
@@ -479,7 +511,14 @@ WebappsApplication.prototype = {
 
   receiveMessage: function(aMessage) {
     let msg = aMessage.json;
-    let req = this.takeRequest(msg.requestID);
+    let req;
+    if (aMessage.name == "Webapps:Connect:Return:OK" ||
+        aMessage.name == "Webapps:Connect:Return:KO" ||
+        aMessage.name == "Webapps:GetConnections:Return:OK") {
+      req = this.takePromiseResolver(msg.requestID);
+    } else {
+      req = this.takeRequest(msg.requestID);
+    }
 
     // ondownload* callbacks should be triggered on all app instances
     if ((msg.oid != this._id || !req) &&
@@ -602,6 +641,28 @@ WebappsApplication.prototype = {
         break;
       case "Webapps:ClearBrowserData:Return":
         Services.DOMRequest.fireSuccess(req, null);
+        break;
+      case "Webapps:Connect:Return:OK":
+        let messagePorts = [];
+        msg.messagePortIDs.forEach(function(aPortID) {
+          let port = new this._window.MozInterAppMessagePort(aPortID);
+          messagePorts.push(port);
+        }, this);
+        req.resolve(messagePorts);
+        break;
+      case "Webapps:Connect:Return:KO":
+        req.reject("No connections registered");
+        break;
+      case "Webapps:GetConnections:Return:OK":
+        let connections = [];
+        msg.connections.forEach(function(aConnection) {
+          let connection =
+            new this._window.MozInterAppConnection(aConnection.keyword,
+                                                   aConnection.pubAppManifestURL,
+                                                   aConnection.subAppManifestURL);
+          connections.push(connection);
+        }, this);
+        req.resolve(connections);
         break;
     }
   },

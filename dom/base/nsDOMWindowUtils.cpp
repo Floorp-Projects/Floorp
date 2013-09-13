@@ -11,6 +11,7 @@
 #include "nsIDOMEvent.h"
 #include "nsDOMWindowUtils.h"
 #include "nsQueryContentEventResult.h"
+#include "CompositionStringSynthesizer.h"
 #include "nsGlobalWindow.h"
 #include "nsIDocument.h"
 #include "nsFocusManager.h"
@@ -1816,82 +1817,21 @@ nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType,
   return NS_OK;
 }
 
-static void
-AppendClause(int32_t aClauseLength, uint32_t aClauseAttr,
-             nsTArray<nsTextRange>* aRanges)
-{
-  NS_PRECONDITION(aRanges, "aRange is null");
-  if (aClauseLength == 0) {
-    return;
-  }
-  nsTextRange range;
-  range.mStartOffset = aRanges->Length() == 0 ? 0 :
-    aRanges->ElementAt(aRanges->Length() - 1).mEndOffset + 1;
-  range.mEndOffset = range.mStartOffset + aClauseLength;
-  NS_ASSERTION(range.mStartOffset <= range.mEndOffset, "range is invalid");
-  NS_PRECONDITION(aClauseAttr == NS_TEXTRANGE_RAWINPUT ||
-                  aClauseAttr == NS_TEXTRANGE_SELECTEDRAWTEXT ||
-                  aClauseAttr == NS_TEXTRANGE_CONVERTEDTEXT ||
-                  aClauseAttr == NS_TEXTRANGE_SELECTEDCONVERTEDTEXT,
-                  "aClauseAttr is invalid value");
-  range.mRangeType = aClauseAttr;
-  aRanges->AppendElement(range);
-}
-
 NS_IMETHODIMP
-nsDOMWindowUtils::SendTextEvent(const nsAString& aCompositionString,
-                                int32_t aFirstClauseLength,
-                                uint32_t aFirstClauseAttr,
-                                int32_t aSecondClauseLength,
-                                uint32_t aSecondClauseAttr,
-                                int32_t aThirdClauseLength,
-                                uint32_t aThirdClauseAttr,
-                                int32_t aCaretStart,
-                                int32_t aCaretLength)
+nsDOMWindowUtils::CreateCompositionStringSynthesizer(
+                    nsICompositionStringSynthesizer** aResult)
 {
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nullptr;
+
   if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  // get the widget to send the event to
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget) {
-    return NS_ERROR_FAILURE;
-  }
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_TRUE(window, NS_ERROR_NOT_AVAILABLE);
 
-  nsTextEvent textEvent(true, NS_TEXT_TEXT, widget);
-  InitEvent(textEvent);
-
-  nsAutoTArray<nsTextRange, 4> textRanges;
-  NS_ENSURE_TRUE(aFirstClauseLength >= 0,  NS_ERROR_INVALID_ARG);
-  NS_ENSURE_TRUE(aSecondClauseLength >= 0, NS_ERROR_INVALID_ARG);
-  NS_ENSURE_TRUE(aThirdClauseLength >= 0,  NS_ERROR_INVALID_ARG);
-  AppendClause(aFirstClauseLength,  aFirstClauseAttr, &textRanges);
-  AppendClause(aSecondClauseLength, aSecondClauseAttr, &textRanges);
-  AppendClause(aThirdClauseLength,  aThirdClauseAttr, &textRanges);
-  int32_t len = aFirstClauseLength + aSecondClauseLength + aThirdClauseLength;
-  NS_ENSURE_TRUE(len == 0 || uint32_t(len) == aCompositionString.Length(),
-                 NS_ERROR_FAILURE);
-
-  if (aCaretStart >= 0) {
-    nsTextRange range;
-    range.mStartOffset = aCaretStart;
-    range.mEndOffset = range.mStartOffset + aCaretLength;
-    range.mRangeType = NS_TEXTRANGE_CARETPOSITION;
-    textRanges.AppendElement(range);
-  }
-
-  textEvent.theText = aCompositionString;
-
-  textEvent.rangeCount = textRanges.Length();
-  textEvent.rangeArray = textRanges.Elements();
-
-  textEvent.mFlags.mIsSynthesizedForTests = true;
-
-  nsEventStatus status;
-  nsresult rv = widget->DispatchEvent(&textEvent, status);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  NS_ADDREF(*aResult = new CompositionStringSynthesizer(window));
   return NS_OK;
 }
 

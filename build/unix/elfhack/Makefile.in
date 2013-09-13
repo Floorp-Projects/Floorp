@@ -10,11 +10,6 @@ NO_PROFILE_GUIDED_OPTIMIZE = 1
 
 VPATH += $(topsrcdir)/build
 
-HOST_CPPSRCS = \
-  elf.cpp \
-  elfhack.cpp \
-  $(NULL)
-
 OS_CXXFLAGS := $(filter-out -fno-exceptions,$(OS_CXXFLAGS)) -fexceptions
 
 ifndef CROSS_COMPILE
