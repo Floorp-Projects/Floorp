@@ -1,65 +1,48 @@
-/* vim:set ts=2 sw=2 sts=2 et: */
-/*
- * Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/**
+ * Test that stackframes are cleared after resume.
  */
 
-var gPane = null;
-var gTab = null;
-var gDebuggee = null;
-var gDebugger = null;
+const TAB_URL = EXAMPLE_URL + "doc_recursion-stack.html";
+
+let gTab, gDebuggee, gPanel, gDebugger;
+let gFrames;
 
 function test() {
-  debug_tab_pane(STACK_URL, function(aTab, aDebuggee, aPane) {
+  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
     gTab = aTab;
     gDebuggee = aDebuggee;
-    gPane = aPane;
-    gDebugger = gPane.panelWin;
+    gPanel = aPanel;
+    gDebugger = gPanel.panelWin;
+    gFrames = gDebugger.DebuggerView.StackFrames;
 
-    testEvalCallResume();
+    waitForSourceAndCaretAndScopes(gPanel, ".html", 18).then(performTest);
+    gDebuggee.evalCall();
   });
 }
 
-function testEvalCallResume() {
-  gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
-    Services.tm.currentThread.dispatch({ run: function() {
+function performTest() {
+  is(gDebugger.gThreadClient.state, "paused",
+    "Should only be getting stack frames while paused.");
+  is(gFrames.itemCount, 2,
+    "Should have two frames.");
 
-      let frames = gDebugger.DebuggerView.StackFrames.widget._list;
-      let childNodes = frames.childNodes;
+  gDebugger.once(gDebugger.EVENTS.AFTER_FRAMES_CLEARED, () => {
+    is(gFrames.itemCount, 0,
+      "Should have no frames after resume.");
 
-      is(gDebugger.DebuggerController.activeThread.state, "paused",
-        "Should only be getting stack frames while paused.");
+    closeDebuggerAndFinish(gPanel);
+  }, true);
 
-      is(frames.querySelectorAll(".dbg-stackframe").length, 2,
-        "Should have two frames.");
-
-      is(childNodes.length, frames.querySelectorAll(".dbg-stackframe").length,
-        "All children should be frames.");
-
-
-      gDebugger.addEventListener("Debugger:AfterFramesCleared", function listener() {
-        gDebugger.removeEventListener("Debugger:AfterFramesCleared", listener, true);
-
-        is(frames.querySelectorAll(".dbg-stackframe").length, 0,
-          "Should have no frames after resume");
-
-        is(childNodes.length, 0,
-          "Should only have no children.");
-
-        closeDebuggerAndFinish();
-      }, true);
-
-      gDebugger.DebuggerController.activeThread.resume();
-    }}, 0);
-  });
-
-  gDebuggee.evalCall();
+  gDebugger.gThreadClient.resume();
 }
 
 registerCleanupFunction(function() {
-  removeTab(gTab);
-  gPane = null;
   gTab = null;
   gDebuggee = null;
+  gPanel = null;
   gDebugger = null;
+  gFrames = null;
 });
