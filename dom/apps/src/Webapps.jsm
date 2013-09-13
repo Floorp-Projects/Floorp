@@ -1950,8 +1950,8 @@ this.DOMApplicationRegistry = {
         }
 
         // Disallow reinstalls from the same manifest URL for now.
-        if (this._appIdForManifestURL(app.manifestURL) !== null &&
-            this._isLaunchable(app)) {
+        let id = this._appIdForManifestURL(app.manifestURL);
+        if (id !== null && this._isLaunchable(this.webapps[id])) {
           sendError("REINSTALL_FORBIDDEN");
           return;
         }
@@ -2069,7 +2069,7 @@ this.DOMApplicationRegistry = {
                                   app: app,
                                   manifest: aManifest });
           if (installSuccessCallback) {
-            installSuccessCallback(aManifest);
+            installSuccessCallback(aManifest, zipFile.path);
           }
         }).bind(this));
       }).bind(this));
