@@ -1,0 +1,390 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.panel-subviews {
+  background-image: linear-gradient(to bottom, white 1px, rgba(255, 255, 255, 0) 15px);
+  background-color: -moz-dialog;
+  box-shadow: -1px 0px 0px rgba(0, 0, 0, 0.2), -1px 0px 2px rgba(0, 0, 0, 0.1), 1px 0px 0px rgba(255, 255, 255, 0.2) inset;
+  margin-left: 38px;
+}
+
+.panel-viewstack[viewtype="main"] > .panel-subviews {
+  transform: translateX(@menuPanelWidth@);
+}
+
+.panel-viewstack:not([viewtype="main"]) > .panel-mainview > #PanelUI-mainView {
+  -moz-box-flex: 1;
+}
+
+#PanelUI-mainView-spring {
+  flex: auto;
+}
+
+#PanelUI-mainView {
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-viewstack[viewtype="main"] > .panel-mainview > #PanelUI-mainView > #PanelUI-mainView-spring {
+  display: none;
+}
+
+#app-extension-point-end > #PanelUI-menu-button {
+  padding: 2px 5px;
+}
+#app-extension-point-end > #PanelUI-menu-button .toolbarbutton-text {
+  display: none;
+}
+#app-extension-point-end > #PanelUI-menu-button .toolbarbutton-icon {
+  margin: 0;
+}
+
+#PanelUI-popup > arrowscrollbox > autorepeatbutton {
+  display: none;
+}
+#PanelUI-popup > arrowscrollbox > scrollbox {
+  overflow: visible;
+}
+
+#PanelUI-popup > .panel-arrowcontainer > .panel-arrowcontent {
+  overflow: hidden;
+  padding: 0;
+  box-shadow: none;
+}
+
+#PanelUI-contents,
+.panel-mainview:not([panelid="PanelUI-popup"]) {
+  padding: .5em 0;
+}
+
+#PanelUI-contents > toolbarpaletteitem > toolbaritem > toolbarbutton > .toolbarbutton-text,
+#PanelUI-contents > toolbaritem > toolbarbutton > .toolbarbutton-text,
+#PanelUI-contents > toolbarpaletteitem > toolbarbutton > .toolbarbutton-text,
+#PanelUI-contents > toolbarbutton > .toolbarbutton-text {
+  font-size: 10px;
+}
+
+
+#wrapper-edit-controls:-moz-any([place="palette"],[place="panel"]) > #edit-controls,
+#wrapper-zoom-controls:-moz-any([place="palette"],[place="panel"]) > #zoom-controls {
+  -moz-margin-start: 0;
+}
+
+#PanelUI-contents,
+.panel-mainview:not([panelid="PanelUI-popup"]) {
+  max-width: @menuPanelWidth@;
+}
+
+panelview:not([mainview]) .toolbarbutton-text,
+#customizationui-widget-panel toolbarbutton > .toolbarbutton-text {
+  text-align: start;
+  -moz-padding-start: 8px;
+  display: -moz-box;
+}
+
+#PanelUI-contents {
+  display: block;
+  flex: auto;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: @menuPanelWidth@;
+}
+
+#PanelUI-contents-scroller {
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: @menuPanelWidth@;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#edit-controls:not([customizableui-areatype="toolbar"]) > toolbarbutton > .toolbarbutton-icon,
+#zoom-controls:not([customizableui-areatype="toolbar"]) > toolbarbutton > .toolbarbutton-icon {
+  -moz-margin-end: 0;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+}
+
+#PanelUI-contents toolbarbutton,
+toolbarpaletteitem[place="panel"] > toolbarbutton,
+toolbarpaletteitem[place="palette"] > toolbarbutton,
+toolbarpaletteitem[place="panel"] > toolbaritem > toolbarbutton,
+toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton,
+.panel-customization-placeholder {
+  -moz-appearance: none;
+  -moz-box-orient: vertical;
+  min-width: 7em;
+  max-width: 7em;
+  height: 6em;
+  max-height: 6em;
+}
+
+.panel-customization-placeholder[expand],
+.panel-customization-placeholder[contract] {
+  transition-property: width;
+  transition-duration: 170ms;
+  transition-delay: 20ms;
+  transition-timing-function: ease-in-out;
+  min-width: 0;
+  max-width: none;
+}
+
+#edit-controls:not([customizableui-areatype="toolbar"]) > toolbarbutton,
+#zoom-controls:not([customizableui-areatype="toolbar"]) > toolbarbutton {
+  -moz-box-orient: horizontal;
+  min-width: 7em;
+}
+
+#PanelUI-contents > #edit-controls > toolbarbutton,
+#PanelUI-contents > #wrapper-edit-controls > #edit-controls > toolbarbutton,
+#PanelUI-contents > #zoom-controls > toolbarbutton,
+#PanelUI-contents > #wrapper-zoom-controls > #zoom-controls > toolbarbutton {
+  max-width: none;
+  max-height: none;
+  height: auto;
+}
+
+.panel-combined-item[customizableui-areatype="menu-panel"] {
+  -moz-box-align: stretch;
+  padding: .5em 0 .5em;
+}
+
+.panel-combined-button[disabled] > .toolbarbutton-icon {
+  opacity: .5;
+}
+
+.panel-customization-placeholder-child > .toolbarbutton-icon,
+toolbarbutton[customizableui-areatype="menu-panel"] > .toolbarbutton-icon,
+toolbaritem[customizableui-areatype="menu-panel"] > toolbarbutton > .toolbarbutton-icon,
+toolbarpaletteitem[place="palette"] > toolbarbutton > .toolbarbutton-icon,
+toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton > .toolbarbutton-icon,
+toolbarpaletteitem[place="panel"] > toolbarbutton > .toolbarbutton-icon,
+toolbarpaletteitem[place="panel"] > toolbaritem > toolbarbutton > .toolbarbutton-icon {
+  min-width: calc(8em / 3);
+  min-height: calc(8em / 3);
+  margin: calc(5em / 12);
+}
+
+toolbarbutton[customizableui-areatype="menu-panel"] > .toolbarbutton-icon[label]:not([label=""]),
+toolbaritem[customizableui-areatype="menu-panel"] > toolbarbutton > .toolbarbutton-icon[label]:not([label=""]),
+toolbarpaletteitem[place="palette"] > toolbarbutton > .toolbarbutton-icon[label]:not([label=""]),
+toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton > .toolbarbutton-icon[label]:not([label=""]),
+toolbarpaletteitem[place="panel"] > toolbarbutton > .toolbarbutton-icon[label]:not([label=""]),
+toolbarpaletteitem[place="panel"] > toolbaritem > toolbarbutton > .toolbarbutton-icon[label]:not([label=""]) {
+  -moz-margin-end: 0;
+}
+
+toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
+  -moz-box-flex: 1;
+}
+
+#edit-controls:not([customizableui-areatype="toolbar"]) > #copy-button,
+#zoom-controls:not([customizableui-areatype="toolbar"]) > #zoom-reset-button {
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+}
+
+#zoom-in-button > .toolbarbutton-text,
+#zoom-out-button > .toolbarbutton-text,
+#zoom-reset-button > .toolbarbutton-icon {
+  display: none;
+}
+
+#PanelUI-footer {
+  display: flex;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-top: 1px solid rgba(0,0,0,.1);
+  padding: 0;
+  margin: 0;
+  min-height: 4em;
+}
+
+#PanelUI-help,
+#PanelUI-customize,
+#PanelUI-quit {
+  margin: -1px 0 0;
+  padding: 10px;
+  -moz-appearance: none;
+  box-shadow: none;
+  background-image: none;
+  border: 1px solid transparent;
+  border-bottom-style: none;
+  border-radius: 0;
+  transition: background-color;
+  -moz-box-orient: vertical;
+  flex: auto;
+}
+:-moz-any(#PanelUI-help, #PanelUI-customize, #PanelUI-quit) > .toolbarbutton-icon {
+  margin: 0 0 3px;
+}
+#PanelUI-help {
+  -moz-border-start-style: none;
+  list-style-image: url(chrome://global/skin/icons/question-16.png);
+}
+#PanelUI-customize {
+  list-style-image: url(chrome://browser/skin/menuPanel-small.png);
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+#PanelUI-quit {
+  -moz-border-end-style: none;
+  list-style-image: url(chrome://browser/skin/menuPanel-small.png);
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+#PanelUI-help[disabled],
+#PanelUI-quit[disabled] {
+  opacity: 0.4;
+}
+
+#PanelUI-help:not([disabled]):hover,
+#PanelUI-customize:hover,
+#PanelUI-quit:not([disabled]):hover {
+  border-color: rgba(8,25,42,0.2);
+  border-top-color: rgba(8,25,42,0.1);
+  background-color: rgba(0,0,0,0.1);
+  box-shadow: none;
+}
+
+#main-window[customizing] #PanelUI-customize {
+  color: white;
+  background-image: linear-gradient(rgb(41,123,204), rgb(40,133,203));
+  box-shadow: inset 0 1px 1px rgba(0,0,0,0.5), 0 2px rgba(255,255,255,0.2);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.4);
+}
+
+#main-window[customizing] #PanelUI-customize:hover,
+#main-window[customizing] #PanelUI-customize:hover:active {
+  background-image: linear-gradient(rgb(38,115,191), rgb(38,125,191));
+}
+
+#customization-palette .toolbarbutton-text {
+  display: none;
+}
+
+panelview toolbarbutton,
+#widget-overflow-list > toolbarbutton,
+#widget-overflow-list > toolbaritem > toolbarbutton,
+.customizationmode-button {
+  -moz-appearance: none;
+  padding: 2px 6px;
+  background-color: hsla(210,32%,93%,0);
+  background-clip: padding-box;
+  border-radius: 2px;
+  border: 1px solid;
+  border-color: hsla(210,54%,20%,0) hsla(210,54%,20%,0) hsla(210,54%,20%,0);
+  box-shadow: 0 1px hsla(0,0%,100%,0) inset,
+              0 1px hsla(210,54%,20%,0),
+              0 0 2px hsla(210,54%,20%,0);
+  transition-property: background-color, border-color, box-shadow;
+  transition-duration: 150ms;
+}
+
+panelview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
+#widget-overflow-list > toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
+#edit-controls:not([customizableui-areatype="toolbar"]) > toolbarbutton,
+#zoom-controls:not([customizableui-areatype="toolbar"]) > toolbarbutton,
+.customizationmode-button {
+  background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
+  border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.2) hsla(210,54%,20%,.25);
+  box-shadow: 0 1px hsla(0,0%,100%,.3) inset,
+              0 1px hsla(210,54%,20%,.03),
+              0 0 2px hsla(210,54%,20%,.1);
+}
+
+panelview toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
+.customizationmode-button:not([disabled]):hover:active,
+#widget-overflow-list > toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active) {
+  background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
+  background-color: hsla(210,54%,20%,.15);
+  border-color: hsla(210,54%,20%,.3) hsla(210,54%,20%,.35) hsla(210,54%,20%,.4);
+  box-shadow: 0 1px 1px hsla(210,54%,20%,.1) inset,
+              0 0 1px hsla(210,54%,20%,.2) inset,
+              0 1px 0 hsla(210,54%,20%,0),
+              0 0 2px hsla(210,54%,20%,0);
+  text-shadow: none;
+  transition: none;
+}
+
+panelview toolbarseparator {
+  -moz-appearance: none;
+  min-height: 0;
+  border-top: 1px solid ThreeDShadow;
+  margin: 5px 0;
+}
+
+#PanelUI-historyItems > toolbarbutton {
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+}
+
+#PanelUI-historyItems > toolbarbutton > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+}
+
+#PanelUI-footer.panel-multiview-anchor,
+#PanelUI-footer.panel-multiview-anchor > #PanelUI-help,
+toolbarbutton.panel-multiview-anchor {
+  background-color: Highlight;
+  background-image: linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
+  background-repeat: repeat-x;
+  color: HighlightText;
+}
+
+#bookmarks-menu-button[customizableui-areatype="menu-panel"] > .toolbarbutton-menubutton-dropmarker {
+  display: none;
+}
+
+#edit-controls[customizableui-areatype="menu-panel"],
+#edit-controls[customizableui-areatype="menu-panel"] > toolbarbutton,
+#zoom-controls[customizableui-areatype="menu-panel"],
+#zoom-controls[customizableui-areatype="menu-panel"] > toolbarbutton {
+  -moz-box-flex: 1;
+}
+
+#zoom-controls[customizableui-areatype="toolbar"] > #zoom-reset-button {
+  display: none;
+}
+
+#zoom-controls:not([customizableui-areatype="toolbar"]) > #zoom-reset-button {
+  list-style-image: none;
+}
+
+#edit-controls:not([customizableui-areatype="toolbar"]) > #paste-button,
+#zoom-controls:not([customizableui-areatype="toolbar"]) > #zoom-in-button {
+  -moz-border-start-width: 1px;
+  -moz-border-start-style: solid;
+}
+
+#edit-controls:not([customizableui-areatype="toolbar"]) > #cut-button:-moz-locale-dir(ltr),
+#edit-controls:not([customizableui-areatype="toolbar"]) > #paste-button:-moz-locale-dir(rtl),
+#zoom-controls:not([customizableui-areatype="toolbar"]) > #zoom-out-button:-moz-locale-dir(ltr),
+#zoom-controls:not([customizableui-areatype="toolbar"]) > #zoom-in-button:-moz-locale-dir(rtl) {
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+}
+
+#edit-controls:not([customizableui-areatype="toolbar"]) > #cut-button:-moz-locale-dir(rtl),
+#edit-controls:not([customizableui-areatype="toolbar"]) > #paste-button:-moz-locale-dir(ltr),
+#zoom-controls:not([customizableui-areatype="toolbar"]) > #zoom-out-button:-moz-locale-dir(rtl),
+#zoom-controls:not([customizableui-areatype="toolbar"]) > #zoom-in-button:-moz-locale-dir(ltr) {
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
+.PanelUI-characterEncodingView-list > toolbarbutton[current] {
+  -moz-padding-start: 2px;
+}
+
+.PanelUI-characterEncodingView-list > toolbarbutton[current] > .toolbarbutton-text,
+#customizationui-widget-panel .PanelUI-characterEncodingView-list > toolbarbutton[current] > .toolbarbutton-text {
+  -moz-padding-start: 0px;
+}
+
+.PanelUI-characterEncodingView-list > toolbarbutton[current]::before {
+  content: "✓";
+  display: -moz-box;
+  width: 12px;
+}
