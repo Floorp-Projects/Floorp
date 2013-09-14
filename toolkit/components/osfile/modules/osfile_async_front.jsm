@@ -55,6 +55,8 @@ Components.utils.import("resource://gre/modules/osfile/_PromiseWorker.jsm", this
 
 Components.utils.import("resource://gre/modules/Services.jsm", this);
 
+Components.utils.import("resource://gre/modules/AsyncShutdown.jsm", this);
+
 LOG("Checking profileDir", OS.Constants.Path);
 
 // If profileDir is not available, osfile.jsm has been imported before the
@@ -139,12 +141,35 @@ let clone = function clone(object, refs = noRefs) {
 let worker = new PromiseWorker(
   "resource://gre/modules/osfile/osfile_async_worker.js", LOG);
 let Scheduler = {
+  /**
+   * |true| once we have sent at least one message to the worker.
+   */
+  launched: false,
+
+  /**
+   * |true| once shutdown has begun i.e. we should reject any
+   * message
+   */
+  shutdown: false,
+
+  /**
+   * The latest promise returned.
+   */
+  latestPromise: Promise.resolve("OS.File scheduler hasn't been launched yet"),
+
   post: function post(...args) {
+    this.launched = true;
+
+    if (this.shutdown) {
+      LOG("OS.File is not available anymore. The following request has been rejected.", args);
+      return Promise.reject(new Error("OS.File has been shut down."));
+    }
+
     // By convention, the last argument of any message may be an |options| object.
     let methodArgs = args[1];
     let options = methodArgs ? methodArgs[methodArgs.length - 1] : null;
     let promise = worker.post.apply(worker, args);
-    return promise.then(
+    return this.latestPromise = promise.then(
       function onSuccess(data) {
         // Check for duration and return result.
         if (!options) {
@@ -230,41 +255,48 @@ if (OS.Shared.DEBUG === true) {
 
 // Observer topics used for monitoring shutdown
 const WEB_WORKERS_SHUTDOWN_TOPIC = "web-workers-shutdown";
-const TEST_WEB_WORKERS_SHUTDOWN_TOPIC = "test.osfile.web-workers-shutdown";
 
 // Preference used to configure test shutdown observer.
 const PREF_OSFILE_TEST_SHUTDOWN_OBSERVER =
   "toolkit.osfile.test.shutdown.observer";
 
 /**
- * Safely attempt removing a test shutdown observer.
+ * A condition function meant to be used during phase
+ * webWorkersShutdown, to warn about unclosed files and directories
+ * and reconfigure the Scheduler to reject further requests.
+ *
+ * @param {bool=} shutdown If true or unspecified, reconfigure
+ * the scheduler to reject further requests. Can be set to |false|
+ * for testing purposes.
+ * @return {promise} A promise satisfied once all pending messages
+ * (including the shutdown warning message) have been answered.
  */
-let removeTestObserver = function removeTestObserver() {
-  try {
-    Services.obs.removeObserver(webWorkersShutdownObserver,
-      TEST_WEB_WORKERS_SHUTDOWN_TOPIC);
-  } catch (ex) {
-    // There was no observer to remove.
-  }
-};
-
-/**
- * An observer function to be used to monitor web-workers-shutdown events.
- */
-let webWorkersShutdownObserver = function webWorkersShutdownObserver(aSubject, aTopic) {
-  if (aTopic == WEB_WORKERS_SHUTDOWN_TOPIC) {
-    Services.obs.removeObserver(webWorkersShutdownObserver, WEB_WORKERS_SHUTDOWN_TOPIC);
-    removeTestObserver();
+function warnAboutUnclosedFiles(shutdown = true) {
+  if (!Scheduler.launched) {
+    // Don't launch the scheduler on our behalf. If no message has been
+    // sent to the worker, we can't have any leaking file/directory
+    // descriptor.
+    return null;
   }
   // Send a "System_shutdown" message to the worker.
-  Scheduler.post("System_shutdown").then(function onSuccess(opened) {
+  let promise = Scheduler.post("System_shutdown");
+
+  // Configure the worker to reject any further message.
+  if (shutdown) {
+    Scheduler.shutdown = true;
+  }
+
+  return promise.then(function onSuccess(opened) {
     let msg = "";
     if (opened.openedFiles.length > 0) {
-      msg += "The following files are still opened:\n" +
+      msg += "The following files are still open:\n" +
         opened.openedFiles.join("\n");
     }
+    if (msg) {
+      msg += "\n";
+    }
     if (opened.openedDirectoryIterators.length > 0) {
-      msg += "The following directory iterators are still opened:\n" +
+      msg += "The following directory iterators are still open:\n" +
         opened.openedDirectoryIterators.join("\n");
     }
     // Only log if file descriptors leaks detected.
@@ -274,8 +306,11 @@ let webWorkersShutdownObserver = function webWorkersShutdownObserver(aSubject, a
   });
 };
 
-Services.obs.addObserver(webWorkersShutdownObserver,
-  WEB_WORKERS_SHUTDOWN_TOPIC, false);
+AsyncShutdown.webWorkersShutdown.addBlocker(
+  "OS.File: flush pending requests, warn about unclosed files, shut down service.",
+  () => warnAboutUnclosedFiles(true)
+);
+
 
 // Attaching an observer for PREF_OSFILE_TEST_SHUTDOWN_OBSERVER to enable or
 // disable the test shutdown event observer.
@@ -283,21 +318,23 @@ Services.obs.addObserver(webWorkersShutdownObserver,
 // Note: This is meant to be used for testing purposes only.
 Services.prefs.addObserver(PREF_OSFILE_TEST_SHUTDOWN_OBSERVER,
   function prefObserver() {
-    let addObserver;
+    // The temporary phase topic used to trigger the unclosed
+    // phase warning.
+    let TOPIC = null;
     try {
-      addObserver = Services.prefs.getBoolPref(
+      TOPIC = Services.prefs.getCharPref(
         PREF_OSFILE_TEST_SHUTDOWN_OBSERVER);
     } catch (x) {
-      // In case PREF_OSFILE_TEST_SHUTDOWN_OBSERVER was cleared.
-      addObserver = false;
     }
-    if (addObserver) {
-      // Attaching an observer listening to the TEST_WEB_WORKERS_SHUTDOWN_TOPIC.
-      Services.obs.addObserver(webWorkersShutdownObserver,
-        TEST_WEB_WORKERS_SHUTDOWN_TOPIC, false);
-    } else {
-      // Removing the observer.
-      removeTestObserver();
+    if (TOPIC) {
+      // Generate a phase, add a blocker.
+      // Note that this can work only if AsyncShutdown itself has been
+      // configured for testing by the testsuite.
+      let phase = AsyncShutdown._getPhase(TOPIC);
+      phase.addBlocker(
+        "(for testing purposes) OS.File: warn about unclosed files",
+        () => warnAboutUnclosedFiles(false)
+      );
     }
   }, false);
 
@@ -929,11 +966,11 @@ DirectoryIterator.prototype = {
    */
   close: function close() {
     if (this._isClosed) {
-      return;
+      return Promise.resolve();
     }
     this._isClosed = true;
     let self = this;
-    this._itmsg.then(
+    return this._itmsg.then(
       function withIterator(iterator) {
         self._itmsg = Promise.reject(StopIteration);
         return Scheduler.post("DirectoryIterator_prototype_close", [iterator]);
@@ -965,3 +1002,16 @@ Object.defineProperty(File, "POS_END", {value: OS.Shared.POS_END});
 OS.File = File;
 OS.File.Error = OSError;
 OS.File.DirectoryIterator = DirectoryIterator;
+
+
+// Auto-flush OS.File during profile-before-change. This ensures that any I/O
+// that has been queued *before* profile-before-change is properly completed.
+// To ensure that I/O queued *during* profile-before-change is completed,
+// clients should register using AsyncShutdown.addBlocker.
+AsyncShutdown.profileBeforeChange.addBlocker(
+  "OS.File: flush I/O queued before profile-before-change",
+  () =>
+    // Wait until the latest currently enqueued promise is satisfied/rejected
+    Scheduler.latestPromise.then(null,
+      function onError() { /* ignore error */})
+);
