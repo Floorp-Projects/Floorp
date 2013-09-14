@@ -207,14 +207,14 @@ class VFPRegister
     {
         JS_ASSERT(_code == (unsigned)fr.code());
     }
-    bool isDouble() { return kind == Double; }
-    bool isSingle() { return kind == Single; }
-    bool isFloat() { return (kind == Double) || (kind == Single); }
-    bool isInt() { return (kind == UInt) || (kind == Int); }
-    bool isSInt()   { return kind == Int; }
-    bool isUInt()   { return kind == UInt; }
-    bool equiv(VFPRegister other) { return other.kind == kind; }
-    size_t size() { return (kind == Double) ? 8 : 4; }
+    bool isDouble() const { return kind == Double; }
+    bool isSingle() const { return kind == Single; }
+    bool isFloat() const { return (kind == Double) || (kind == Single); }
+    bool isInt() const { return (kind == UInt) || (kind == Int); }
+    bool isSInt() const { return kind == Int; }
+    bool isUInt() const { return kind == UInt; }
+    bool equiv(VFPRegister other) const { return other.kind == kind; }
+    size_t size() const { return (kind == Double) ? 8 : 4; }
     bool isInvalid();
     bool isMissing();
 
@@ -947,7 +947,9 @@ class VFPImm {
     uint32_t data;
 
   public:
-    VFPImm(uint32_t top);
+    static const VFPImm one;
+
+    VFPImm(uint32_t topWordOfDouble);
 
     uint32_t encode() {
         return data;
@@ -1488,6 +1490,9 @@ class Assembler
 
     // load a 64 bit floating point immediate from a pool into a register
     BufferOffset as_FImm64Pool(VFPRegister dest, double value, ARMBuffer::PoolEntry *pe = NULL, Condition c = Always);
+    // load a 32 bit floating point immediate from a pool into a register
+    BufferOffset as_FImm32Pool(VFPRegister dest, float value, ARMBuffer::PoolEntry *pe = NULL, Condition c = Always);
+
     // Control flow stuff:
 
     // bx can *only* branch to a register
@@ -2182,6 +2187,7 @@ GetArgStackDisp(uint32_t arg)
 }
 
 #endif
+
 class DoubleEncoder {
     uint32_t rep(bool b, uint32_t count) {
         uint32_t ret = 0;
@@ -2189,6 +2195,7 @@ class DoubleEncoder {
             ret = (ret << 1) | b;
         return ret;
     }
+
     uint32_t encode(uint8_t value) {
         //ARM ARM "VFP modified immediate constants"
         // aBbbbbbb bbcdefgh 000...
@@ -2216,10 +2223,10 @@ class DoubleEncoder {
           : dblTop(dblTop_), data(data_)
         { }
     };
-    DoubleEntry table [256];
 
-    // grumble singleton, grumble
-    static DoubleEncoder _this;
+    DoubleEntry table[256];
+
+  public:
     DoubleEncoder()
     {
         for (int i = 0; i < 256; i++) {
@@ -2227,11 +2234,10 @@ class DoubleEncoder {
         }
     }
 
-  public:
-    static bool lookup(uint32_t top, datastore::Imm8VFPImmData *ret) {
+    bool lookup(uint32_t top, datastore::Imm8VFPImmData *ret) {
         for (int i = 0; i < 256; i++) {
-            if (_this.table[i].dblTop == top) {
-                *ret = _this.table[i].data;
+            if (table[i].dblTop == top) {
+                *ret = table[i].data;
                 return true;
             }
         }
