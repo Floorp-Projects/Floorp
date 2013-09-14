@@ -1435,7 +1435,7 @@ Breakpoints.prototype = {
     let deferred = promise.defer();
 
     // Remember the breakpoint initialization promise in the store.
-    let identifier = this._getIdentifier(aLocation);
+    let identifier = this.getIdentifier(aLocation);
     this._added.set(identifier, deferred.promise);
 
     // Try adding the breakpoint.
@@ -1445,7 +1445,7 @@ Breakpoints.prototype = {
       if (aResponse.actualLocation) {
         // Remember the initialization promise for the new location instead.
         let oldIdentifier = identifier;
-        let newIdentifier = this._getIdentifier(aResponse.actualLocation);
+        let newIdentifier = this.getIdentifier(aResponse.actualLocation);
         this._added.delete(oldIdentifier);
         this._added.set(newIdentifier, deferred.promise);
 
@@ -1507,7 +1507,7 @@ Breakpoints.prototype = {
     let deferred = promise.defer();
 
     // Remember the breakpoint removal promise in the store.
-    let identifier = this._getIdentifier(aLocation);
+    let identifier = this.getIdentifier(aLocation);
     this._removing.set(identifier, deferred.promise);
 
     // Retrieve the corresponding breakpoint client first.
@@ -1577,7 +1577,6 @@ Breakpoints.prototype = {
    *        This object must have the following properties:
    *          - location: the breakpoint's source location and line number
    *          - text: the breakpoint's line text to be displayed
-   *          - actor: the breakpoint's corresponding actor id
    * @param object aOptions [optional]
    *        @see DebuggerController.Breakpoints.addBreakpoint
    */
@@ -1633,7 +1632,7 @@ Breakpoints.prototype = {
    *         null if no breakpoint was found.
    */
   _getAdded: function(aLocation) {
-    return this._added.get(this._getIdentifier(aLocation));
+    return this._added.get(this.getIdentifier(aLocation));
   },
 
   /**
@@ -1647,7 +1646,7 @@ Breakpoints.prototype = {
    *         null if no breakpoint was found.
    */
   _getRemoving: function(aLocation) {
-    return this._removing.get(this._getIdentifier(aLocation));
+    return this._removing.get(this.getIdentifier(aLocation));
   },
 
   /**
@@ -1659,7 +1658,7 @@ Breakpoints.prototype = {
    * @return string
    *         The identifier string.
    */
-  _getIdentifier: function(aLocation) {
+  getIdentifier: function(aLocation) {
     return aLocation.url + ":" + aLocation.line;
   }
 };
