@@ -356,18 +356,8 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEDIADEVICE
 
-  MediaDevice(MediaEngineVideoSource* aSource) {
-    mSource = aSource;
-    mType.Assign(NS_LITERAL_STRING("video"));
-    mSource->GetName(mName);
-    mSource->GetUUID(mID);
-  }
-  MediaDevice(MediaEngineAudioSource* aSource) {
-    mSource = aSource;
-    mType.Assign(NS_LITERAL_STRING("audio"));
-    mSource->GetName(mName);
-    mSource->GetUUID(mID);
-  }
+  MediaDevice(MediaEngineVideoSource* aSource);
+  MediaDevice(MediaEngineAudioSource* aSource);
   virtual ~MediaDevice() {}
 
   MediaEngineSource* GetSource();
@@ -375,6 +365,8 @@ private:
   nsString mName;
   nsString mType;
   nsString mID;
+  bool mHasFacingMode;
+  dom::VideoFacingModeEnum mFacingMode;
   nsRefPtr<MediaEngineSource> mSource;
 };
 
