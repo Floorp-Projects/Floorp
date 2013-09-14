@@ -84,10 +84,13 @@ CodeGeneratorX64::visitBox(LBox *box)
     const LAllocation *in = box->getOperand(0);
     const LDefinition *result = box->getDef(0);
 
-    if (box->type() != MIRType_Double)
-        masm.boxValue(ValueTypeFromMIRType(box->type()), ToRegister(in), ToRegister(result));
-    else
+    if (IsFloatingPointType(box->type())) {
+        if (box->type() == MIRType_Float32)
+            masm.convertFloatToDouble(ToFloatRegister(in), ToFloatRegister(in));
         masm.movq(ToFloatRegister(in), ToRegister(result));
+    } else {
+        masm.boxValue(ValueTypeFromMIRType(box->type()), ToRegister(in), ToRegister(result));
+    }
     return true;
 }
 

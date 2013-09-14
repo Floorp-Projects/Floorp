@@ -76,8 +76,8 @@ LIRGeneratorX64::visitUnbox(MUnbox *unbox)
 {
     MDefinition *box = unbox->getOperand(0);
     LUnboxBase *lir;
-    if (unbox->type() == MIRType_Double)
-        lir = new LUnboxDouble(useRegister(box));
+    if (IsFloatingPointType(unbox->type()))
+        lir = new LUnboxFloatingPoint(useRegister(box), unbox->type());
     else
         lir = new LUnbox(useRegister(box));
 
