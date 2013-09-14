@@ -11,7 +11,6 @@
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
-#include "nsIDOMDeviceLightEvent.h"
 #include "nsIDOMDeviceOrientationEvent.h"
 #include "nsIDOMUserProximityEvent.h"
 #include "nsIDOMDeviceMotionEvent.h"
