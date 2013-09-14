@@ -20,7 +20,6 @@
 #include "jit/ExecutionModeInlines.h"
 #include "jit/IonLinker.h"
 #include "jit/IonSpewer.h"
-#include "jit/Lowering.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MoveEmitter.h"
 #include "jit/ParallelFunctions.h"
@@ -5755,58 +5754,55 @@ CodeGenerator::link()
     return true;
 }
 
-// An out-of-line path to convert a boxed int32 to either a double or float.
-class OutOfLineUnboxFloatingPoint : public OutOfLineCodeBase<CodeGenerator>
+// An out-of-line path to convert a boxed int32 to a double.
+class OutOfLineUnboxDouble : public OutOfLineCodeBase<CodeGenerator>
 {
-    LUnboxFloatingPoint *unboxFloatingPoint_;
+    LUnboxDouble *unboxDouble_;
 
   public:
-    OutOfLineUnboxFloatingPoint(LUnboxFloatingPoint *unboxFloatingPoint)
-      : unboxFloatingPoint_(unboxFloatingPoint)
+    OutOfLineUnboxDouble(LUnboxDouble *unboxDouble)
+      : unboxDouble_(unboxDouble)
     { }
 
     bool accept(CodeGenerator *codegen) {
-        return codegen->visitOutOfLineUnboxFloatingPoint(this);
+        return codegen->visitOutOfLineUnboxDouble(this);
     }
 
-    LUnboxFloatingPoint *unboxFloatingPoint() const {
-        return unboxFloatingPoint_;
+    LUnboxDouble *unboxDouble() const {
+        return unboxDouble_;
     }
 };
 
 bool
-CodeGenerator::visitUnboxFloatingPoint(LUnboxFloatingPoint *lir)
+CodeGenerator::visitUnboxDouble(LUnboxDouble *lir)
 {
-    const ValueOperand box = ToValue(lir, LUnboxFloatingPoint::Input);
+    const ValueOperand box = ToValue(lir, LUnboxDouble::Input);
     const LDefinition *result = lir->output();
 
     // Out-of-line path to convert int32 to double or bailout
     // if this instruction is fallible.
-    OutOfLineUnboxFloatingPoint *ool = new OutOfLineUnboxFloatingPoint(lir);
+    OutOfLineUnboxDouble *ool = new OutOfLineUnboxDouble(lir);
     if (!addOutOfLineCode(ool))
         return false;
 
-    FloatRegister resultReg = ToFloatRegister(result);
     masm.branchTestDouble(Assembler::NotEqual, box, ool->entry());
-    masm.unboxDouble(box, resultReg);
-    if (lir->type() == MIRType_Float32)
-        masm.convertDoubleToFloat(resultReg, resultReg);
+    masm.unboxDouble(box, ToFloatRegister(result));
     masm.bind(ool->rejoin());
     return true;
 }
 
 bool
-CodeGenerator::visitOutOfLineUnboxFloatingPoint(OutOfLineUnboxFloatingPoint *ool)
+CodeGenerator::visitOutOfLineUnboxDouble(OutOfLineUnboxDouble *ool)
 {
-    LUnboxFloatingPoint *ins = ool->unboxFloatingPoint();
-    const ValueOperand value = ToValue(ins, LUnboxFloatingPoint::Input);
+    LUnboxDouble *ins = ool->unboxDouble();
+    const ValueOperand value = ToValue(ins, LUnboxDouble::Input);
 
     if (ins->mir()->fallible()) {
         Assembler::Condition cond = masm.testInt32(Assembler::NotEqual, value);
         if (!bailoutIf(cond, ins->snapshot()))
             return false;
     }
-    masm.int32ValueToFloatingPoint(value, ToFloatRegister(ins->output()), ins->type());
+    masm.int32ValueToDouble(value, ToFloatRegister(ins->output()));
     masm.jump(ool->rejoin());
     return true;
 }
@@ -6704,9 +6700,7 @@ template <typename T>
 static inline void
 StoreToTypedArray(MacroAssembler &masm, int arrayType, const LAllocation *value, const T &dest)
 {
-    if (arrayType == ScalarTypeRepresentation::TYPE_FLOAT32 ||
-        arrayType == ScalarTypeRepresentation::TYPE_FLOAT64)
-    {
+    if (arrayType == ScalarTypeRepresentation::TYPE_FLOAT32 || arrayType == ScalarTypeRepresentation::TYPE_FLOAT64) {
         masm.storeToTypedFloatArray(arrayType, ToFloatRegister(value), dest);
     } else {
         if (value->isConstant())

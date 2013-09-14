@@ -3402,11 +3402,9 @@ GenerateSetTypedArrayElement(JSContext *cx, MacroAssembler &masm, IonCache::Stub
     int width = TypedArrayObject::slotWidth(arrayType);
     BaseIndex target(elements, index, ScaleFromElemWidth(width));
 
-    if (arrayType == ScalarTypeRepresentation::TYPE_FLOAT32) {
-        if (!masm.convertConstantOrRegisterToFloat(cx, value, tempFloat, &failures))
-            return false;
-        masm.storeToTypedFloatArray(arrayType, tempFloat, target);
-    } else if (arrayType == ScalarTypeRepresentation::TYPE_FLOAT64) {
+    if (arrayType == ScalarTypeRepresentation::TYPE_FLOAT32 ||
+        arrayType == ScalarTypeRepresentation::TYPE_FLOAT64)
+    {
         if (!masm.convertConstantOrRegisterToDouble(cx, value, tempFloat, &failures))
             return false;
         masm.storeToTypedFloatArray(arrayType, tempFloat, target);

@@ -6964,8 +6964,6 @@ class MSetElementCache
     TypePolicy *typePolicy() {
         return this;
     }
-
-    bool canConsumeFloat32() const { return true; }
 };
 
 class MCallGetProperty

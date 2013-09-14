@@ -30,7 +30,7 @@ class CheckOverRecursedFailure;
 class CheckOverRecursedFailurePar;
 class OutOfLineCheckInterruptPar;
 class OutOfLineInterruptCheckImplicit;
-class OutOfLineUnboxFloatingPoint;
+class OutOfLineUnboxDouble;
 class OutOfLineStoreElementHole;
 class OutOfLineTypeOfV;
 class OutOfLineLoadTypedArray;
@@ -272,8 +272,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitInterruptCheckImplicit(LInterruptCheckImplicit *ins);
     bool visitOutOfLineInterruptCheckImplicit(OutOfLineInterruptCheckImplicit *ins);
 
-    bool visitUnboxFloatingPoint(LUnboxFloatingPoint *lir);
-    bool visitOutOfLineUnboxFloatingPoint(OutOfLineUnboxFloatingPoint *ool);
+    bool visitUnboxDouble(LUnboxDouble *lir);
+    bool visitOutOfLineUnboxDouble(OutOfLineUnboxDouble *ool);
     bool visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool);
 
     bool visitOutOfLineNewGCThingPar(OutOfLineNewGCThingPar *ool);
