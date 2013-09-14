@@ -7,6 +7,7 @@
 TEST_DIRS += ['tests']
 
 EXTRA_JS_MODULES += [
+    'AsyncShutdown.jsm',
     'DeferredTask.jsm',
     'Deprecated.jsm',
     'Dict.jsm',
