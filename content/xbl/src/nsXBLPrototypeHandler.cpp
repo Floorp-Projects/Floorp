@@ -550,7 +550,7 @@ nsXBLPrototypeHandler::DispatchXULKeyCommand(nsIDOMEvent* aEvent)
     return NS_ERROR_FAILURE;
   }
 
-  // XXX We should use widget::Modifiers for supporting all modifiers.
+  // XXX We should use mozilla::Modifiers for supporting all modifiers.
 
   bool isAlt = false;
   bool isControl = false;

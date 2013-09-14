@@ -406,25 +406,25 @@ nsDOMUIEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 //     we fail to build on Mac at calling mozilla::ArrayLength().
 struct nsModifierPair
 {
-  mozilla::widget::Modifier modifier;
+  mozilla::Modifier modifier;
   const char* name;
 };
 static const nsModifierPair kPairs[] = {
-  { widget::MODIFIER_ALT,        NS_DOM_KEYNAME_ALT },
-  { widget::MODIFIER_ALTGRAPH,   NS_DOM_KEYNAME_ALTGRAPH },
-  { widget::MODIFIER_CAPSLOCK,   NS_DOM_KEYNAME_CAPSLOCK },
-  { widget::MODIFIER_CONTROL,    NS_DOM_KEYNAME_CONTROL },
-  { widget::MODIFIER_FN,         NS_DOM_KEYNAME_FN },
-  { widget::MODIFIER_META,       NS_DOM_KEYNAME_META },
-  { widget::MODIFIER_NUMLOCK,    NS_DOM_KEYNAME_NUMLOCK },
-  { widget::MODIFIER_SCROLLLOCK, NS_DOM_KEYNAME_SCROLLLOCK },
-  { widget::MODIFIER_SHIFT,      NS_DOM_KEYNAME_SHIFT },
-  { widget::MODIFIER_SYMBOLLOCK, NS_DOM_KEYNAME_SYMBOLLOCK },
-  { widget::MODIFIER_OS,         NS_DOM_KEYNAME_OS }
+  { MODIFIER_ALT,        NS_DOM_KEYNAME_ALT },
+  { MODIFIER_ALTGRAPH,   NS_DOM_KEYNAME_ALTGRAPH },
+  { MODIFIER_CAPSLOCK,   NS_DOM_KEYNAME_CAPSLOCK },
+  { MODIFIER_CONTROL,    NS_DOM_KEYNAME_CONTROL },
+  { MODIFIER_FN,         NS_DOM_KEYNAME_FN },
+  { MODIFIER_META,       NS_DOM_KEYNAME_META },
+  { MODIFIER_NUMLOCK,    NS_DOM_KEYNAME_NUMLOCK },
+  { MODIFIER_SCROLLLOCK, NS_DOM_KEYNAME_SCROLLLOCK },
+  { MODIFIER_SHIFT,      NS_DOM_KEYNAME_SHIFT },
+  { MODIFIER_SYMBOLLOCK, NS_DOM_KEYNAME_SYMBOLLOCK },
+  { MODIFIER_OS,         NS_DOM_KEYNAME_OS }
 };
 
 /* static */
-mozilla::widget::Modifiers
+mozilla::Modifiers
 nsDOMUIEvent::ComputeModifierState(const nsAString& aModifiersList)
 {
   if (aModifiersList.IsEmpty()) {

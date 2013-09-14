@@ -194,7 +194,7 @@ HTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           nsEventStatus status = aVisitor.mEventStatus;
           // Ok to use aVisitor.mEvent as parameter because DispatchClickEvent
           // will actually create a new event.
-          widget::EventFlags eventFlags;
+          EventFlags eventFlags;
           eventFlags.mMultipleActionsPrevented = true;
           DispatchClickEvent(aVisitor.mPresContext,
                              static_cast<nsInputEvent*>(aVisitor.mEvent),
