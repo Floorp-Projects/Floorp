@@ -173,24 +173,27 @@
 
 .tab-background-start[selected=true]::before,
 .tab-background-end[selected=true]::before {
-  background-color: -moz-dialog;
+  background-color: @fgTabBackgroundColor@;
   background-image: @fgTabTexture@;
   background-repeat: no-repeat;
 }
 
 .tab-background-middle[selected=true] {
-  background-color: transparent;
+  background-clip: padding-box, padding-box, content-box;
+  background-color: @fgTabBackgroundColor@;
   background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
                     @fgTabTexture@,
-                    @fgTabBackgroundMiddle@;
+                    none;
   background-repeat: repeat-x;
   background-size: auto 100%;
+  /* The padding-top combined with background-clip: content-box (the bottom-most) ensure the
+     background-color doesn't extend above the top border. */
+  padding-top: 2px;
 }
 
 /* Selected tab lightweight theme styles */
 .tab-background-middle[selected=true]:-moz-lwtheme {
-  background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
-                    @fgTabTextureLWT@;
+  background-color: transparent;
   /* Don't stretch the LWT header images */
   background-size: auto 100%, auto 100%, auto auto;
 }
