@@ -817,6 +817,7 @@ var WalkerActor = protocol.ActorClass({
     this._activePseudoClassLocks = null;
     this.progressListener.destroy();
     this.rootDoc = null;
+    events.emit(this, "destroyed");
     protocol.Actor.prototype.destroy.call(this);
   },
 
@@ -2208,6 +2209,10 @@ var InspectorActor = protocol.ActorClass({
       let tabActor = this.tabActor;
       window.removeEventListener("DOMContentLoaded", domReady, true);
       this.walker = WalkerActor(this.conn, tabActor, options);
+      events.once(this.walker, "destroyed", () => {
+        this._walkerPromise = null;
+        this._pageStylePromise = null;
+      });
       deferred.resolve(this.walker);
     };
 

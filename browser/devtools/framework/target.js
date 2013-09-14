@@ -428,6 +428,10 @@ TabTarget.prototype = {
     // Before taking any action, notify listeners that destruction is imminent.
     this.emit("close");
 
+    if (this._inspector) {
+      this._inspector.destroy();
+    }
+
     // First of all, do cleanup tasks that pertain to both remoted and
     // non-remoted targets.
     this.off("thread-resumed", this._handleThreadState);
