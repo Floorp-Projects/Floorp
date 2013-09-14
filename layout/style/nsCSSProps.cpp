@@ -848,7 +848,6 @@ const int32_t nsCSSProps::kColorKTable[] = {
   eCSSKeyword__moz_mac_menutextdisable, LookAndFeel::eColorID__moz_mac_menutextdisable,
   eCSSKeyword__moz_mac_menutextselect, LookAndFeel::eColorID__moz_mac_menutextselect,
   eCSSKeyword__moz_mac_disabledtoolbartext, LookAndFeel::eColorID__moz_mac_disabledtoolbartext,
-  eCSSKeyword__moz_mac_alternateprimaryhighlight, LookAndFeel::eColorID__moz_mac_alternateprimaryhighlight,
   eCSSKeyword__moz_mac_secondaryhighlight, LookAndFeel::eColorID__moz_mac_secondaryhighlight,
   eCSSKeyword__moz_menuhover, LookAndFeel::eColorID__moz_menuhover,
   eCSSKeyword__moz_menuhovertext, LookAndFeel::eColorID__moz_menuhovertext,
