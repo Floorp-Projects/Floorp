@@ -56,6 +56,10 @@
 #include "DirectShowDecoder.h"
 #include "DirectShowReader.h"
 #endif
+#ifdef MOZ_APPLEMEDIA
+#include "AppleDecoder.h"
+#include "AppleMP3Reader.h"
+#endif
 
 namespace mozilla
 {
@@ -288,6 +292,38 @@ IsDirectShowSupportedType(const nsACString& aType)
 }
 #endif
 
+#ifdef MOZ_APPLEMEDIA
+static const char * const gAppleMP3Types[] = {
+  "audio/mp3",
+  "audio/mpeg",
+  nullptr,
+};
+
+static const char * const gAppleMP3Codecs[] = {
+  "mp3",
+  nullptr
+};
+
+static bool
+IsAppleMediaSupportedType(const nsACString& aType,
+                     const char * const ** aCodecs = nullptr)
+{
+  if (MediaDecoder::IsAppleMP3Enabled()
+      && CodecListContains(gAppleMP3Types, aType)) {
+
+    if (aCodecs) {
+      *aCodecs = gAppleMP3Codecs;
+    }
+
+    return true;
+  }
+
+  // TODO MP4
+
+  return false;
+}
+#endif
+
 /* static */
 bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType)
 {
@@ -368,6 +404,11 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
 #endif
 #ifdef MOZ_DIRECTSHOW
   if (DirectShowDecoder::GetSupportedCodecs(nsDependentCString(aMIMEType), &codecList)) {
+    result = CANPLAY_MAYBE;
+  }
+#endif
+#ifdef MOZ_APPLEMEDIA
+  if (IsAppleMediaSupportedType(nsDependentCString(aMIMEType), &codecList)) {
     result = CANPLAY_MAYBE;
   }
 #endif
@@ -473,6 +514,11 @@ DecoderTraits::CreateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
     decoder = new WMFDecoder();
   }
 #endif
+#ifdef MOZ_APPLEMEDIA
+  if (IsAppleMediaSupportedType(aType)) {
+    decoder = new AppleDecoder();
+  }
+#endif
 
   NS_ENSURE_TRUE(decoder != nullptr, nullptr);
   NS_ENSURE_TRUE(decoder->Init(aOwner), nullptr);
@@ -533,6 +579,11 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
     decoderReader = new WMFReader(aDecoder);
   } else
 #endif
+#ifdef MOZ_APPLEMEDIA
+  if (IsAppleMediaSupportedType(aType)) {
+    decoderReader = new AppleMP3Reader(aDecoder);
+  } else
+#endif
 #ifdef MOZ_DASH
   // The DASH decoder is not supported.
 #endif
@@ -571,6 +622,9 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
 #endif
 #ifdef MOZ_DIRECTSHOW
     IsDirectShowSupportedType(aType) ||
+#endif
+#ifdef MOZ_APPLEMEDIA
+    IsAppleMediaSupportedType(aType) ||
 #endif
     false;
 }
