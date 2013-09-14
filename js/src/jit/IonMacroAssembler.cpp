@@ -305,7 +305,8 @@ MacroAssembler::moveNurseryPtr(const ImmMaybeNurseryPtr &ptr, const Register &re
 
 template<typename S, typename T>
 static void
-StoreToTypedFloatArray(MacroAssembler &masm, int arrayType, const S &value, const T &dest) {
+StoreToTypedFloatArray(MacroAssembler &masm, int arrayType, const S &value, const T &dest)
+{
     switch (arrayType) {
       case ScalarTypeRepresentation::TYPE_FLOAT32:
         if (LIRGenerator::allowFloat32Optimizations()) {
@@ -331,10 +332,16 @@ StoreToTypedFloatArray(MacroAssembler &masm, int arrayType, const S &value, cons
     }
 }
 
-void MacroAssembler::storeToTypedFloatArray(int arrayType, const FloatRegister &value, const BaseIndex &dest) {
+void
+MacroAssembler::storeToTypedFloatArray(int arrayType, const FloatRegister &value,
+                                       const BaseIndex &dest)
+{
     StoreToTypedFloatArray(*this, arrayType, value, dest);
 }
-void MacroAssembler::storeToTypedFloatArray(int arrayType, const FloatRegister &value, const Address &dest) {
+void
+MacroAssembler::storeToTypedFloatArray(int arrayType, const FloatRegister &value,
+                                       const Address &dest)
+{
     StoreToTypedFloatArray(*this, arrayType, value, dest);
 }
 
@@ -1374,9 +1381,13 @@ MacroAssembler::convertInt32ValueToDouble(const Address &address, Register scrat
 
 static const double DoubleZero = 0.0;
 static const double DoubleOne  = 1.0;
+static const float FloatZero = 0.0;
+static const float FloatOne  = 1.0;
+static const float FloatNaN = js_NaN;
 
 void
-MacroAssembler::convertValueToDouble(ValueOperand value, FloatRegister output, Label *fail)
+MacroAssembler::convertValueToFloatingPoint(ValueOperand value, FloatRegister output,
+                                            Label *fail, MIRType outputType)
 {
     Register tag = splitTagForTest(value);
 
@@ -1389,28 +1400,31 @@ MacroAssembler::convertValueToDouble(ValueOperand value, FloatRegister output, L
     branchTestUndefined(Assembler::NotEqual, tag, fail);
 
     // fall-through: undefined
-    loadStaticDouble(&js_NaN, output);
+    loadStaticFloatingPoint(&js_NaN, &FloatNaN, output, outputType);
     jump(&done);
 
     bind(&isNull);
-    loadStaticDouble(&DoubleZero, output);
+    loadStaticFloatingPoint(&DoubleZero, &FloatZero, output, outputType);
     jump(&done);
 
     bind(&isBool);
-    boolValueToDouble(value, output);
+    boolValueToFloatingPoint(value, output, outputType);
     jump(&done);
 
     bind(&isInt32);
-    int32ValueToDouble(value, output);
+    int32ValueToFloatingPoint(value, output, outputType);
     jump(&done);
 
     bind(&isDouble);
     unboxDouble(value, output);
+    if (outputType == MIRType_Float32)
+        convertDoubleToFloat(output, output);
     bind(&done);
 }
 
 bool
-MacroAssembler::convertValueToDouble(JSContext *cx, const Value &v, FloatRegister output, Label *fail)
+MacroAssembler::convertValueToFloatingPoint(JSContext *cx, const Value &v, FloatRegister output,
+                                            Label *fail, MIRType outputType)
 {
     if (v.isNumber() || v.isString()) {
         double d;
@@ -1420,28 +1434,28 @@ MacroAssembler::convertValueToDouble(JSContext *cx, const Value &v, FloatRegiste
             return false;
 
         if (d == js_NaN)
-            loadStaticDouble(&js_NaN, output);
+            loadStaticFloatingPoint(&js_NaN, &FloatNaN, output, outputType);
         else
-            loadConstantDouble(d, output);
+            loadConstantFloatingPoint(d, static_cast<float>(d), output, outputType);
 
         return true;
     }
 
     if (v.isBoolean()) {
         if (v.toBoolean())
-            loadStaticDouble(&DoubleOne, output);
+            loadStaticFloatingPoint(&DoubleOne, &FloatOne, output, outputType);
         else
-            loadStaticDouble(&DoubleZero, output);
+            loadStaticFloatingPoint(&DoubleZero, &FloatZero, output, outputType);
         return true;
     }
 
     if (v.isNull()) {
-        loadStaticDouble(&DoubleZero, output);
+        loadStaticFloatingPoint(&DoubleZero, &FloatZero, output, outputType);
         return true;
     }
 
     if (v.isUndefined()) {
-        loadStaticDouble(&js_NaN, output);
+        loadStaticFloatingPoint(&js_NaN, &FloatNaN, output, outputType);
         return true;
     }
 
@@ -1490,43 +1504,59 @@ MacroAssembler::popRooted(VMFunction::RootType rootType, Register cellReg,
 }
 
 bool
-MacroAssembler::convertConstantOrRegisterToDouble(JSContext *cx, ConstantOrRegister src,
-                                                  FloatRegister output, Label *fail)
+MacroAssembler::convertConstantOrRegisterToFloatingPoint(JSContext *cx, ConstantOrRegister src,
+                                                         FloatRegister output, Label *fail,
+                                                         MIRType outputType)
 {
     if (src.constant())
-        return convertValueToDouble(cx, src.value(), output, fail);
+        return convertValueToFloatingPoint(cx, src.value(), output, fail, outputType);
 
-    convertTypedOrValueToDouble(src.reg(), output, fail);
+    convertTypedOrValueToFloatingPoint(src.reg(), output, fail, outputType);
     return true;
 }
 
 void
-MacroAssembler::convertTypedOrValueToDouble(TypedOrValueRegister src, FloatRegister output,
-                                            Label *fail)
+MacroAssembler::convertTypedOrValueToFloatingPoint(TypedOrValueRegister src, FloatRegister output,
+                                                   Label *fail, MIRType outputType)
 {
+    JS_ASSERT(IsFloatingPointType(outputType));
+
     if (src.hasValue()) {
-        convertValueToDouble(src.valueReg(), output, fail);
+        convertValueToFloatingPoint(src.valueReg(), output, fail, outputType);
         return;
     }
 
+    bool outputIsDouble = outputType == MIRType_Double;
     switch (src.type()) {
       case MIRType_Null:
-        loadStaticDouble(&DoubleZero, output);
+        loadStaticFloatingPoint(&DoubleZero, &FloatZero, output, outputType);
         break;
       case MIRType_Boolean:
       case MIRType_Int32:
-        convertInt32ToDouble(src.typedReg().gpr(), output);
+        convertInt32ToFloatingPoint(src.typedReg().gpr(), output, outputType);
+        break;
+      case MIRType_Float32:
+        if (outputIsDouble) {
+            convertFloatToDouble(src.typedReg().fpu(), output);
+        } else {
+            if (src.typedReg().fpu() != output)
+                moveFloat(src.typedReg().fpu(), output);
+        }
         break;
       case MIRType_Double:
-        if (src.typedReg().fpu() != output)
-            moveDouble(src.typedReg().fpu(), output);
+        if (outputIsDouble) {
+            if (src.typedReg().fpu() != output)
+                moveDouble(src.typedReg().fpu(), output);
+        } else {
+            convertDoubleToFloat(src.typedReg().fpu(), output);
+        }
         break;
       case MIRType_Object:
       case MIRType_String:
         jump(fail);
         break;
       case MIRType_Undefined:
-        loadStaticDouble(&js_NaN, output);
+        loadStaticFloatingPoint(&js_NaN, &FloatNaN, output, outputType);
         break;
       default:
         MOZ_ASSUME_UNREACHABLE("Bad MIRType");
@@ -1534,8 +1564,9 @@ MacroAssembler::convertTypedOrValueToDouble(TypedOrValueRegister src, FloatRegis
 }
 
 void
-MacroAssembler::convertDoubleToInt(FloatRegister src, Register output, Label *truncateFail,
-                                   Label *fail, IntConversionBehavior behavior)
+MacroAssembler::convertDoubleToInt(FloatRegister src, Register output, FloatRegister temp,
+                                   Label *truncateFail, Label *fail,
+                                   IntConversionBehavior behavior)
 {
     switch (behavior) {
       case IntConversion_Normal:
@@ -1546,7 +1577,9 @@ MacroAssembler::convertDoubleToInt(FloatRegister src, Register output, Label *tr
         branchTruncateDouble(src, output, truncateFail ? truncateFail : fail);
         break;
       case IntConversion_ClampToUint8:
-        clampDoubleToUint8(src, output);
+        // Clamping clobbers the input register, so use a temp.
+        moveDouble(src, temp);
+        clampDoubleToUint8(temp, output);
         break;
     }
 }
@@ -1613,7 +1646,7 @@ MacroAssembler::convertValueToInt(ValueOperand value, MDefinition *maybeInput,
         if (handleStrings)
             bind(handleStringRejoin);
 
-        convertDoubleToInt(temp, output, truncateDoubleSlow, fail, behavior);
+        convertDoubleToInt(temp, output, temp, truncateDoubleSlow, fail, behavior);
         jump(&done);
     }
 
@@ -1722,9 +1755,11 @@ MacroAssembler::convertTypedOrValueToInt(TypedOrValueRegister src, FloatRegister
       case MIRType_Int32:
         if (src.typedReg().gpr() != output)
             move32(src.typedReg().gpr(), output);
+        if (src.type() == MIRType_Int32 && behavior == IntConversion_ClampToUint8)
+            clampIntToUint8(output);
         break;
       case MIRType_Double:
-        convertDoubleToInt(src.typedReg().fpu(), output, NULL, fail, behavior);
+        convertDoubleToInt(src.typedReg().fpu(), output, temp, NULL, fail, behavior);
         break;
       case MIRType_String:
       case MIRType_Object:
