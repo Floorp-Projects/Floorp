@@ -273,7 +273,10 @@ button {
   color: #FFF;
 }
 
-
+.help {
+  float: right;
+  padding: 0 5px;
+}
 
 /*****************     HEADER      *****************/
 

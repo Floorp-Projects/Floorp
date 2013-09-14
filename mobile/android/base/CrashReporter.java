@@ -132,7 +132,6 @@ public class CrashReporter extends Activity
             getSharedPreferences(GeckoApp.PREFS_NAME, 0);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putBoolean(GeckoApp.PREFS_WAS_STOPPED, true);
-        editor.putBoolean(GeckoApp.PREFS_CRASHED, true);
         editor.commit();
 
         final CheckBox allowContactCheckBox = (CheckBox) findViewById(R.id.allow_contact);
@@ -413,6 +412,7 @@ public class CrashReporter extends Activity
             Intent intent = new Intent(action);
             intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
                                 AppConstants.BROWSER_INTENT_CLASS);
+            intent.putExtra("didRestart", true);
             Log.i(LOGTAG, intent.toString());
             startActivity(intent);
         } catch (Exception e) {
