@@ -164,6 +164,8 @@ exports["test Document Reload"] = function(assert, done) {
   assert.pass('Panel was created');
 };
 
+// Test disabled because of bug 910230
+/*
 exports["test Parent Resize Hack"] = function(assert, done) {
   const { Panel } = require('sdk/panel');
 
@@ -216,6 +218,7 @@ exports["test Parent Resize Hack"] = function(assert, done) {
 
   panel.show();
 }
+*/
 
 exports["test Resize Panel"] = function(assert, done) {
   const { Panel } = require('sdk/panel');

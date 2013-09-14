@@ -30,14 +30,16 @@ function consoleOpened(hud)
   gJSTerm.execute("fooObj", onExecuteFooObj);
 }
 
-function onExecuteFooObj()
+function onExecuteFooObj(msg)
 {
-  let msg = gWebConsole.outputNode.querySelector(".webconsole-msg-output");
   ok(msg, "output message found");
-  isnot(msg.textContent.indexOf("[object Object]"), -1, "message text check");
+
+  let anchor = msg.querySelector("a");
+  ok(anchor, "object anchor");
+  isnot(anchor.textContent.indexOf("[object Object]"), -1, "message text check");
 
   gJSTerm.once("variablesview-fetched", onFooObjFetch);
-  EventUtils.synthesizeMouse(msg, 2, 2, {}, gWebConsole.iframeWindow)
+  EventUtils.synthesizeMouse(anchor, 2, 2, {}, gWebConsole.iframeWindow)
 }
 
 function onFooObjFetch(aEvent, aVar)
@@ -69,14 +71,15 @@ function onSidebarClosed()
   gJSTerm.execute("window", onExecuteWindow);
 }
 
-function onExecuteWindow()
+function onExecuteWindow(msg)
 {
-  let msg = gWebConsole.outputNode.querySelector(".webconsole-msg-output");
   ok(msg, "output message found");
-  isnot(msg.textContent.indexOf("[object Window]"), -1, "message text check");
+  let anchor = msg.querySelector("a");
+  ok(anchor, "object anchor");
+  isnot(anchor.textContent.indexOf("[object Window]"), -1, "message text check");
 
   gJSTerm.once("variablesview-fetched", onWindowFetch);
-  EventUtils.synthesizeMouse(msg, 2, 2, {}, gWebConsole.iframeWindow)
+  EventUtils.synthesizeMouse(anchor, 2, 2, {}, gWebConsole.iframeWindow)
 }
 
 function onWindowFetch(aEvent, aVar)

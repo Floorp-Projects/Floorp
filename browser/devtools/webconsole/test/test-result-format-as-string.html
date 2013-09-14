@@ -11,6 +11,7 @@
     <script>
       document.querySelector("p").toSource = function() {
         var element = document.createElement("div");
+        element.id = "foobar";
         element.textContent = "bug772506_content";
         element.setAttribute("onmousemove",
           "(function () {" +

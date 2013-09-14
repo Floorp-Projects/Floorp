@@ -30,6 +30,9 @@ public class DoorHangerPopup extends ArrowPopup
     // uniquely identified by its tabId and value.
     private HashSet<DoorHanger> mDoorHangers;
 
+    // Whether or not the doorhanger popup is disabled.
+    private boolean mDisabled;
+
     DoorHangerPopup(GeckoApp activity, View anchor) {
         super(activity, anchor);
 
@@ -44,6 +47,24 @@ public class DoorHangerPopup extends ArrowPopup
         unregisterEventListener("Doorhanger:Add");
         unregisterEventListener("Doorhanger:Remove");
         Tabs.unregisterOnTabsChangedListener(this);
+    }
+
+    /**
+     * Temporarily disables the doorhanger popup. If the popup is disabled,
+     * it will not be shown to the user, but it will continue to process
+     * calls to add/remove doorhanger notifications.
+     */
+    void disable() {
+        mDisabled = true;
+        updatePopup();
+    }
+
+    /**
+     * Re-enables the doorhanger popup.
+     */
+    void enable() {
+        mDisabled = false;
+        updatePopup();
     }
 
     @Override
@@ -246,12 +267,13 @@ public class DoorHangerPopup extends ArrowPopup
      *
      * This method must be called on the UI thread.
      */
-    void updatePopup() {
+    private void updatePopup() {
         // Bail if the selected tab is null, if there are no active doorhangers,
-        // or if we haven't inflated the layout yet (this can happen if updatePopup()
-        // is called before the runnable from addDoorHanger() runs). 
+        // if we haven't inflated the layout yet (this can happen if updatePopup()
+        // is called before the runnable from addDoorHanger() runs), or if the
+        // doorhanger popup is temporarily disabled.
         Tab tab = Tabs.getInstance().getSelectedTab();
-        if (tab == null || mDoorHangers.size() == 0 || !mInflated) {
+        if (tab == null || mDoorHangers.size() == 0 || !mInflated || mDisabled) {
             dismiss();
             return;
         }

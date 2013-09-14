@@ -38,7 +38,7 @@ function consoleOpened(aHud) {
 }
 
 function testLiveFilteringOfMessageTypes() {
-  is(hud.outputNode.itemCount, 50, "number of messages");
+  is(hud.outputNode.children.length, 50, "number of messages");
 
   hud.setFilterState("log", false);
   is(countMessageNodes(), 0, "the log nodes are hidden when the " +
@@ -52,7 +52,7 @@ function testLiveFilteringOfMessageTypes() {
 }
 
 function countMessageNodes() {
-  let messageNodes = hud.outputNode.querySelectorAll(".hud-log");
+  let messageNodes = hud.outputNode.querySelectorAll(".message");
   let displayedMessageNodes = 0;
   let view = hud.iframeWindow;
   for (let i = 0; i < messageNodes.length; i++) {

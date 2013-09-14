@@ -28,9 +28,8 @@ tests.testConsole = function(options) {
   }
   Services.obs.addObserver(onWebConsoleOpen, "web-console-created", false);
 
-  function onExecute () {
-    let labels = hud.outputNode.querySelectorAll(".webconsole-msg-output");
-    ok(labels.length > 0, "output for pprint(window)");
+  function onExecute (msg) {
+    ok(msg, "output for pprint(window)");
 
     hud.jsterm.once("messages-cleared", onClear);
 
@@ -45,7 +44,7 @@ tests.testConsole = function(options) {
   }
 
   function onClear() {
-    let labels = hud.outputNode.querySelectorAll(".webconsole-msg-output");
+    let labels = hud.outputNode.querySelectorAll(".message");
     is(labels.length, 0, "no output in console");
 
     helpers.audit(options, [

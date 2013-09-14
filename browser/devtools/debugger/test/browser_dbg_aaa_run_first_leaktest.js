@@ -2,72 +2,27 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * This tests if the debugger leaks.
+ * This tests if the debugger leaks on initialization and sudden destruction.
+ * You can also use this initialization format as a template for other tests.
  * If leaks happen here, there's something very, very fishy going on.
  */
 
-const TAB_URL = EXAMPLE_URL + "browser_dbg_script-switching.html";
+const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 
-let gPane = null;
-let gTab = null;
-let gDebuggee = null;
-let gDebugger = null;
-
-function test()
-{
-  let scriptShown = false;
-  let framesAdded = false;
-  let resumed = false;
-  let testStarted = false;
-
+function test() {
   // Wait longer for this very simple test that comes first, to make sure that
   // GC from previous tests does not interfere with the debugger suite.
   requestLongerTimeout(2);
 
-  debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
-    gTab = aTab;
-    gDebuggee = aDebuggee;
-    gPane = aPane;
-    gDebugger = gPane.panelWin;
-    resumed = true;
+  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+    ok(aTab, "Should have a tab available.");
+    ok(aDebuggee, "Should have a debuggee available.");
+    ok(aPanel, "Should have a debugger pane available.");
 
-    gDebugger.addEventListener("Debugger:SourceShown", onScriptShown);
-
-    gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
-      framesAdded = true;
-      executeSoon(startTest);
+    waitForSourceAndCaretAndScopes(aPanel, "-02.js", 6).then(() => {
+      resumeDebuggerThenCloseAndFinish(aPanel);
     });
 
-    executeSoon(function() {
-      gDebuggee.firstCall();
-    });
-  });
-
-  function onScriptShown(aEvent)
-  {
-    scriptShown = aEvent.detail.url.indexOf("-02.js") != -1;
-    executeSoon(startTest);
-  }
-
-  function startTest()
-  {
-    if (scriptShown && framesAdded && resumed && !testStarted) {
-      gDebugger.removeEventListener("Debugger:SourceShown", onScriptShown);
-      testStarted = true;
-      Services.tm.currentThread.dispatch({ run: performTest }, 0);
-    }
-  }
-
-  function performTest()
-  {
-    closeDebuggerAndFinish();
-  }
-
-  registerCleanupFunction(function() {
-    removeTab(gTab);
-    gPane = null;
-    gTab = null;
-    gDebuggee = null;
-    gDebugger = null;
+    aDebuggee.firstCall();
   });
 }

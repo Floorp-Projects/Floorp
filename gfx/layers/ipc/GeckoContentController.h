@@ -64,6 +64,16 @@ public:
    */
   virtual void PostDelayedTask(Task* aTask, int aDelayMs) = 0;
 
+  /**
+   * Retrieves the last known zoom constraints. This function should return
+   * false if there are no last known zoom constraints.
+   */
+  virtual bool GetZoomConstraints(bool* aOutAllowZoom,
+                                  CSSToScreenScale* aOutMinZoom,
+                                  CSSToScreenScale* aOutMaxZoom)
+  {
+    return false;
+  }
 
   /**
    * Request any special actions be performed when panning starts

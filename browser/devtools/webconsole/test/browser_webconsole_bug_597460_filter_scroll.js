@@ -38,28 +38,26 @@ function consoleOpened(aHud) {
         text: "test-network.html",
         category: CATEGORY_NETWORK,
         severity: SEVERITY_LOG,
-        successFn: testScroll,
-        failureFn: finishTest,
       }],
     }).then(testScroll);
     content.location.reload();
   });
 }
 
-function testScroll() {
-  let msgNode = hud.outputNode.querySelector(".webconsole-msg-network");
-  ok(msgNode.classList.contains("hud-filtered-by-type"),
+function testScroll([result]) {
+  let scrollNode = hud.outputNode.parentNode;
+  let msgNode = [...result.matched][0];
+  ok(msgNode.classList.contains("filtered-by-type"),
     "network message is filtered by type");
-  ok(msgNode.classList.contains("hud-filtered-by-string"),
+  ok(msgNode.classList.contains("filtered-by-string"),
     "network message is filtered by string");
 
-  let scrollBox = hud.outputNode.scrollBoxObject.element;
-  ok(scrollBox.scrollTop > 0, "scroll location is not at the top");
+  ok(scrollNode.scrollTop > 0, "scroll location is not at the top");
 
   // Make sure the Web Console output is scrolled as near as possible to the
   // bottom.
-  let nodeHeight = hud.outputNode.querySelector(".hud-log").clientHeight;
-  ok(scrollBox.scrollTop >= scrollBox.scrollHeight - scrollBox.clientHeight -
+  let nodeHeight = msgNode.clientHeight;
+  ok(scrollNode.scrollTop >= scrollNode.scrollHeight - scrollNode.clientHeight -
      nodeHeight * 2, "scroll location is correct");
 
   hud.setFilterState("network", true);

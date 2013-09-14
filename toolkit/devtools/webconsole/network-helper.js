@@ -52,7 +52,7 @@
  *  Mihai Sucan (Mozilla Corp.)
  */
 
-const {Cc, Ci, Cu} = require("chrome");
+const {components, Cc, Ci, Cu} = require("chrome");
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 
 /**
@@ -244,7 +244,7 @@ let NetworkHelper = {
       Ci.nsICachingChannel.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
 
     NetUtil.asyncFetch(channel, function (aInputStream, aStatusCode, aRequest) {
-      if (!Components.isSuccessCode(aStatusCode)) {
+      if (!components.isSuccessCode(aStatusCode)) {
         aCallback(null);
         return;
       }

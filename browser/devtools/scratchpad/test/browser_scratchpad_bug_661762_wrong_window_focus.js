@@ -50,12 +50,12 @@ function test()
 function testFocus(sw, hud) {
   let sp = sw.Scratchpad;
 
-  function onMessage(subj) {
-    Services.obs.removeObserver(onMessage, "web-console-message-created");
+  function onMessage(event, messages) {
+    let msg = [...messages][0];
 
-    var loc = hud.jsterm.outputNode.querySelector(".webconsole-location");
+    var loc = msg.querySelector(".location");
     ok(loc, "location element exists");
-    is(loc.value, sw.Scratchpad.uniqueName + ":1",
+    is(loc.textContent.trim(), sw.Scratchpad.uniqueName + ":1",
         "location value is correct");
 
     sw.addEventListener("focus", function onFocus() {
@@ -79,7 +79,7 @@ function testFocus(sw, hud) {
 
   // Sending messages to web console is an asynchronous operation. That's
   // why we have to setup an observer here.
-  Services.obs.addObserver(onMessage, "web-console-message-created", false);
+  hud.ui.once("messages-added", onMessage);
 
   sp.setText("console.log('foo');");
   sp.run().then(function ([selection, error, result]) {

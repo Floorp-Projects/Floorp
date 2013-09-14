@@ -2,67 +2,61 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Test that we get a stack frame for each black boxed source, not a single one
- * for all of them.
+ * Test that a "this source is blackboxed" message is shown when necessary
+ * and can be properly dismissed.
  */
 
-const TAB_URL = EXAMPLE_URL + "binary_search.html";
+const TAB_URL = EXAMPLE_URL + "doc_binary_search.html";
 
-var gPane = null;
-var gTab = null;
-var gDebuggee = null;
-var gDebugger = null;
+let gTab, gDebuggee, gPanel, gDebugger;
+let gDeck;
 
-function test()
-{
-  let scriptShown = false;
-  let framesAdded = false;
-  let resumed = false;
-  let testStarted = false;
-
-  debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
-    resumed = true;
+function test() {
+  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
     gTab = aTab;
     gDebuggee = aDebuggee;
-    gPane = aPane;
-    gDebugger = gPane.panelWin;
+    gPanel = aPanel;
+    gDebugger = gPanel.panelWin;
+    gDeck = gDebugger.document.getElementById("editor-deck");
 
-    once(gDebugger, "Debugger:SourceShown", testSourceEditorShown);
+    waitForSourceShown(gPanel, ".coffee")
+      .then(testSourceEditorShown)
+      .then(blackBoxSource)
+      .then(testBlackBoxMessageShown)
+      .then(clickStopBlackBoxingButton)
+      .then(testSourceEditorShownAgain)
+      .then(() => closeDebuggerAndFinish(gPanel))
+      .then(null, aError => {
+        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
+      });
   });
 }
 
 function testSourceEditorShown() {
-  const deck = gDebugger.document.getElementById("editor-deck");
-  is(deck.selectedIndex, "0",
-     "The first item in the deck should be selected (the source editor)");
-  blackBoxSource();
+  is(gDeck.selectedIndex, "0",
+    "The first item in the deck should be selected (the source editor).");
 }
 
 function blackBoxSource() {
-  const { activeThread } = gDebugger.DebuggerController;
-  activeThread.addOneTimeListener("blackboxchange", testBlackBoxMessageShown);
+  let finished = waitForThreadEvents(gPanel, "blackboxchange");
   getAnyBlackBoxCheckbox().click();
+  return finished;
 }
 
 function testBlackBoxMessageShown() {
-  const deck = gDebugger.document.getElementById("editor-deck");
-  is(deck.selectedIndex, "1",
-     "The second item in the deck should be selected (the black box message)");
-  clickStopBlackBoxingButton();
+  is(gDeck.selectedIndex, "1",
+    "The second item in the deck should be selected (the black box message).");
 }
 
 function clickStopBlackBoxingButton() {
-  const button = gDebugger.document.getElementById("black-boxed-message-button");
-  const { activeThread } = gDebugger.DebuggerController;
-  activeThread.addOneTimeListener("blackboxchange", testSourceEditorShownAgain);
-  button.click();
+  let finished = waitForThreadEvents(gPanel, "blackboxchange");
+  getEditorBlackboxMessageButton().click();
+  return finished;
 }
 
 function testSourceEditorShownAgain() {
-  const deck = gDebugger.document.getElementById("editor-deck");
-  is(deck.selectedIndex, "0",
-     "The first item in the deck should be selected again (the source editor)");
-  closeDebuggerAndFinish();
+  is(gDeck.selectedIndex, "0",
+    "The first item in the deck should be selected again (the source editor).");
 }
 
 function getAnyBlackBoxCheckbox() {
@@ -70,17 +64,14 @@ function getAnyBlackBoxCheckbox() {
     ".side-menu-widget-item .side-menu-widget-item-checkbox");
 }
 
-function once(target, event, callback) {
-  target.addEventListener(event, function _listener(...args) {
-    target.removeEventListener(event, _listener, false);
-    callback.apply(null, args);
-  }, false);
+function getEditorBlackboxMessageButton() {
+  return gDebugger.document.getElementById("black-boxed-message-button");
 }
 
 registerCleanupFunction(function() {
-  removeTab(gTab);
-  gPane = null;
   gTab = null;
   gDebuggee = null;
+  gPanel = null;
   gDebugger = null;
+  gDeck = null;
 });

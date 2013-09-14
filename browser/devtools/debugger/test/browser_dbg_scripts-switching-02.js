@@ -1,175 +1,186 @@
-/* vim:set ts=2 sw=2 sts=2 et: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Make sure that switching the displayed script in the UI works as advertised
- * when urls are escaped.
+ * Make sure that switching the displayed source in the UI works as advertised.
  */
 
-const TAB_URL = EXAMPLE_URL + "browser_dbg_script-switching-02.html";
+const TAB_URL = EXAMPLE_URL + "doc_script-switching-02.html";
 
-var gPane = null;
-var gTab = null;
-var gDebuggee = null;
-var gDebugger = null;
-var gSources = null;
+let gTab, gDebuggee, gPanel, gDebugger;
+let gEditor, gSources;
 
-function test()
-{
-  let scriptShown = false;
-  let framesAdded = false;
-  let resumed = false;
-  let testStarted = false;
-
-  debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
+function test() {
+  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
     gTab = aTab;
     gDebuggee = aDebuggee;
-    gPane = aPane;
-    gDebugger = gPane.panelWin;
-    resumed = true;
+    gPanel = aPanel;
+    gDebugger = gPanel.panelWin;
+    gEditor = gDebugger.DebuggerView.editor;
+    gSources = gDebugger.DebuggerView.Sources;
 
-    gDebugger.addEventListener("Debugger:SourceShown", onScriptShown);
+    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6)
+      .then(testSourcesDisplay)
+      .then(testSwitchPaused1)
+      .then(testSwitchPaused2)
+      .then(testSwitchRunning)
+      .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
+      .then(null, aError => {
+        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
+      });
 
-    gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
-      framesAdded = true;
-      executeSoon(startTest);
-    });
-
-    executeSoon(function() {
-      gDebuggee.firstCall();
-    });
+    gDebuggee.firstCall();
   });
-
-  function onScriptShown(aEvent)
-  {
-    scriptShown = aEvent.detail.url.indexOf("-02.js") != -1;
-    executeSoon(startTest);
-  }
-
-  function startTest()
-  {
-    if (scriptShown && framesAdded && resumed && !testStarted) {
-      gDebugger.removeEventListener("Debugger:SourceShown", onScriptShown);
-      testStarted = true;
-      Services.tm.currentThread.dispatch({ run: testScriptsDisplay }, 0);
-    }
-  }
 }
 
-function testScriptsDisplay() {
-  gSources = gDebugger.DebuggerView.Sources;
+let gLabel1 = "code_script-switching-01.js";
+let gLabel2 = "code_script-switching-02.js";
+let gParams = "?foo=bar,baz|lol";
 
-  is(gDebugger.DebuggerController.activeThread.state, "paused",
-    "Should only be getting stack frames while paused.");
+function testSourcesDisplay() {
+  let deferred = promise.defer();
 
   is(gSources.itemCount, 2,
-    "Found the expected number of scripts.");
+    "Found the expected number of sources.");
 
-  for (let i = 0; i < gSources.itemCount; i++) {
-    info("label: " + i + " " + gSources.getItemAtIndex(i).target.getAttribute("label"));
-  }
+  ok(gSources.containsValue(EXAMPLE_URL + gLabel1),
+    "First source url is incorrect.");
+  ok(gSources.containsValue(EXAMPLE_URL + gLabel2 + gParams),
+    "Second source url is incorrect.");
 
-  let label1 = "test-script-switching-01.js";
-  let label2 = "test-script-switching-02.js";
-  let params = "?foo=bar,baz|lol";
+  ok(gSources.containsLabel(gLabel1),
+    "First source label is incorrect.");
+  ok(gSources.containsLabel(gLabel2),
+    "Second source label is incorrect.");
 
-  ok(gDebugger.DebuggerView.Sources.containsValue(EXAMPLE_URL +
-    label1), "First script url is incorrect.");
-  ok(gDebugger.DebuggerView.Sources.containsValue(EXAMPLE_URL +
-    label2 + params), "Second script url is incorrect.");
-
-  ok(gDebugger.DebuggerView.Sources.containsLabel(
-    label1), "First script label is incorrect.");
-  ok(gDebugger.DebuggerView.Sources.containsLabel(
-    label2), "Second script label is incorrect.");
-
-  ok(gDebugger.DebuggerView.Sources.selectedItem,
+  ok(gSources.selectedItem,
     "There should be a selected item in the sources pane.");
-  is(gDebugger.DebuggerView.Sources.selectedLabel,
-    label2, "The selected label is the sources pane is incorrect.");
-  is(gDebugger.DebuggerView.Sources.selectedValue, EXAMPLE_URL +
-    label2 + params, "The selected value is the sources pane is incorrect.");
+  is(gSources.selectedLabel, gLabel2,
+    "The selected label is the sources pane is incorrect.");
+  is(gSources.selectedValue, EXAMPLE_URL + gLabel2 + gParams,
+    "The selected value is the sources pane is incorrect.");
 
-  ok(gDebugger.editor.getText().search(/debugger/) != -1,
-    "The correct script was loaded initially.");
+  is(gEditor.getText().search(/firstCall/), -1,
+    "The first source is not displayed.");
+  is(gEditor.getText().search(/debugger/), 172,
+    "The second source is displayed.");
 
-  is(gDebugger.editor.getDebugLocation(), 5,
-    "Editor debugger location is correct.");
+  ok(isCaretPos(gPanel, 6),
+    "Editor caret location is correct.");
 
-  gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
-    let url = aEvent.detail.url;
-    if (url.indexOf("-01.js") != -1) {
-      gDebugger.removeEventListener(aEvent.type, _onEvent);
-      testSwitch1();
-    }
+  // The editor's debug location takes a tick to update.
+  executeSoon(() => {
+    is(gEditor.getDebugLocation(), 5,
+      "Editor debugger location is correct.");
+
+    waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN).then(deferred.resolve);
+    gSources.selectedLabel = gLabel1;
   });
 
-  gDebugger.DebuggerView.Sources.selectedValue = EXAMPLE_URL + label1;
+  return deferred.promise;
 }
 
-function testSwitch1() {
-  dump("Debugger editor text:\n" + gDebugger.editor.getText() + "\n");
+function testSwitchPaused1() {
+  let deferred = promise.defer();
 
-  let label1 = "test-script-switching-01.js";
-  let label2 = "test-script-switching-02.js";
-  let params = "?foo=bar,baz|lol";
-
-  ok(gDebugger.DebuggerView.Sources.selectedItem,
+  ok(gSources.selectedItem,
     "There should be a selected item in the sources pane.");
-  is(gDebugger.DebuggerView.Sources.selectedLabel,
-    label1, "The selected label is the sources pane is incorrect.");
-  is(gDebugger.DebuggerView.Sources.selectedValue, EXAMPLE_URL +
-    label1, "The selected value is the sources pane is incorrect.");
+  is(gSources.selectedLabel, gLabel1,
+    "The selected label is the sources pane is incorrect.");
+  is(gSources.selectedValue, EXAMPLE_URL + gLabel1,
+    "The selected value is the sources pane is incorrect.");
 
-  ok(gDebugger.editor.getText().search(/debugger/) == -1,
-    "The second script is no longer displayed.");
+  is(gEditor.getText().search(/firstCall/), 118,
+    "The first source is displayed.");
+  is(gEditor.getText().search(/debugger/), -1,
+    "The second source is not displayed.");
 
-  ok(gDebugger.editor.getText().search(/firstCall/) != -1,
-    "The first script is displayed.");
+  // The editor's debug location takes a tick to update.
+  executeSoon(() => {
+    ok(isCaretPos(gPanel, 1),
+      "Editor caret location is correct.");
+    is(gEditor.getDebugLocation(), -1,
+      "Editor debugger location is correct.");
 
-  is(gDebugger.editor.getDebugLocation(), -1,
-    "Editor debugger location has been cleared.");
-
-  gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
-    let url = aEvent.detail.url;
-    if (url.indexOf("-02.js") != -1) {
-      gDebugger.removeEventListener(aEvent.type, _onEvent);
-      testSwitch2();
-    }
+    waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN).then(deferred.resolve);
+    gSources.selectedLabel = gLabel2;
   });
 
-  gDebugger.DebuggerView.Sources.selectedValue = EXAMPLE_URL + label2 + params;
+  return deferred.promise;
 }
 
-function testSwitch2() {
-  dump("Debugger editor text:\n" + gDebugger.editor.getText() + "\n");
+function testSwitchPaused2() {
+  let deferred = promise.defer();
 
-  let label1 = "test-script-switching-01.js";
-  let label2 = "test-script-switching-02.js";
-  let params = "?foo=bar,baz|lol";
-
-  ok(gDebugger.DebuggerView.Sources.selectedItem,
+  ok(gSources.selectedItem,
     "There should be a selected item in the sources pane.");
-  is(gDebugger.DebuggerView.Sources.selectedLabel,
-    label2, "The selected label is the sources pane is incorrect.");
-  is(gDebugger.DebuggerView.Sources.selectedValue, EXAMPLE_URL +
-    label2 + params, "The selected value is the sources pane is incorrect.");
+  is(gSources.selectedLabel, gLabel2,
+    "The selected label is the sources pane is incorrect.");
+  is(gSources.selectedValue, EXAMPLE_URL + gLabel2 + gParams,
+    "The selected value is the sources pane is incorrect.");
 
-  ok(gDebugger.editor.getText().search(/debugger/) != -1,
-    "The correct script was loaded initially.");
+  is(gEditor.getText().search(/firstCall/), -1,
+    "The first source is not displayed.");
+  is(gEditor.getText().search(/debugger/), 172,
+    "The second source is displayed.");
 
-  is(gDebugger.editor.getDebugLocation(), 5,
-    "Editor debugger location is correct.");
+  // The editor's debug location takes a tick to update.
+  executeSoon(() => {
+    ok(isCaretPos(gPanel, 6),
+      "Editor caret location is correct.");
+    is(gEditor.getDebugLocation(), 5,
+      "Editor debugger location is correct.");
 
-  closeDebuggerAndFinish();
+    // Step out three times.
+    waitForThreadEvents(gPanel, "paused").then(() => {
+      waitForThreadEvents(gPanel, "paused").then(() => {
+        waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN).then(deferred.resolve);
+        gDebugger.gThreadClient.stepOut();
+      });
+      gDebugger.gThreadClient.stepOut();
+    });
+    gDebugger.gThreadClient.stepOut();
+  });
+
+  return deferred.promise;
+}
+
+function testSwitchRunning() {
+  let deferred = promise.defer();
+
+  ok(gSources.selectedItem,
+    "There should be a selected item in the sources pane.");
+  is(gSources.selectedLabel, gLabel1,
+    "The selected label is the sources pane is incorrect.");
+  is(gSources.selectedValue, EXAMPLE_URL + gLabel1,
+    "The selected value is the sources pane is incorrect.");
+
+  is(gEditor.getText().search(/firstCall/), 118,
+    "The first source is displayed.");
+  is(gEditor.getText().search(/debugger/), -1,
+    "The second source is not displayed.");
+
+  // The editor's debug location takes a tick to update.
+  executeSoon(() => {
+    ok(isCaretPos(gPanel, 5),
+      "Editor caret location is correct.");
+    is(gEditor.getDebugLocation(), 4,
+      "Editor debugger location is correct.");
+
+    deferred.resolve();
+  });
+
+  return deferred.promise;
 }
 
 registerCleanupFunction(function() {
-  removeTab(gTab);
-  gPane = null;
   gTab = null;
   gDebuggee = null;
+  gPanel = null;
   gDebugger = null;
+  gEditor = null;
   gSources = null;
+  gLabel1 = null;
+  gLabel2 = null;
+  gParams = null;
 });
