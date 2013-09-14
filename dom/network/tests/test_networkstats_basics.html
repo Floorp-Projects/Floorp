@@ -143,7 +143,7 @@ var steps = [
     }, 1000);
   },
   function () {
-    ok(true, "Get stats for a connectionType and dates adapted to samplerate");
+    ok(true, "Get system stats for a connectionType and dates adapted to samplerate");
     // Prepare get params
     var type = netStats.connectionTypes[0];
     var diff = 2;
@@ -161,7 +161,8 @@ var steps = [
     // Launch request
     req = netStats.getNetworkStats({start: startDate, end: endDate, connectionType: type});
     req.onsuccess = function () {
-      ok(true, "Get stats request ok");
+      ok(true, "Get system stats request ok");
+      ok(req.result.manifestURL == null, "manifestURL should be null");
       ok(req.result.connectionType == type, "connectionTypes should be equals");
       ok(req.result.start.getTime() == startDate.getTime(), "starts should be equals");
       ok(req.result.end.getTime() == endDate.getTime(), "ends should be equals");
@@ -172,11 +173,11 @@ var steps = [
       next();
     };
     req.onerror = function () {
-      ok(false, "Get stats for a connectionType failure!");
+      ok(false, "Get system stats for a connectionType failure!");
     }
   },
   function () {
-    ok(true, "Get stats for all connectionTypes and dates adapted to samplerate");
+    ok(true, "Get system stats for all connectionTypes and dates adapted to samplerate");
     // Prepare get params
     var diff = 2;
     // Get samplerate in millis
@@ -194,6 +195,7 @@ var steps = [
     req = netStats.getNetworkStats({start: startDate, end: endDate});
     req.onsuccess = function () {
       ok(true, "Get stats request ok");
+      ok(req.result.manifestURL == null, "manifestURL should be null");
       ok(req.result.connectionType == null, "connectionTypes should be null");
       ok(req.result.start.getTime() == startDate.getTime(), "starts should be equals");
       ok(req.result.end.getTime() == endDate.getTime(), "ends should be equals");
@@ -204,11 +206,85 @@ var steps = [
       next();
     };
     req.onerror = function () {
-      ok(false, "Get stats for all connectionTypes failure!");
+      ok(false, "Get system stats for all connectionTypes failure!");
     }
   },
   function () {
-    ok(true, "Get stats for a connectionType and dates not adapted to samplerate");
+    ok(true, "Get app stats for a connectionType and dates adapted to samplerate");
+    // Prepare get params
+    var url = 'app://browser.gaiamobile.org/manifest.webapp';
+    var type = netStats.connectionTypes[0];
+    var diff = 2;
+    // Get samplerate in millis
+    var sampleRate = netStats.sampleRate * 1000;
+    // Get date with samplerate's precision
+    var offset = new Date().getTimezoneOffset() * 60 * 1000;
+    var endDate = new Date(Math.floor((new Date().getTime() - offset) / sampleRate)
+                           * sampleRate + offset);
+    var startDate = new Date(endDate.getTime() - (sampleRate * diff));
+    // Calculate the number of samples that should be returned based on the
+    // the samplerate and including final and initial samples.
+    var samples = (endDate.getTime() - startDate.getTime()) / sampleRate + 1;
+
+    // Launch request
+    req = netStats.getNetworkStats({start:          startDate,
+                                    end:            endDate,
+                                    connectionType: type,
+                                    manifestURL:    url});
+    req.onsuccess = function () {
+      ok(true, "Get app stats request ok");
+      ok(req.result.manifestURL == url, "manifestURL should be equals");
+      ok(req.result.connectionType == type, "connectionTypes should be equals");
+      ok(req.result.start.getTime() == startDate.getTime(), "starts should be equals");
+      ok(req.result.end.getTime() == endDate.getTime(), "ends should be equals");
+      var data = req.result.data;
+      ok(Array.isArray(data) && data.length == samples,
+         "data is an array of length " + samples);
+      checkDataDates(data, startDate, endDate, sampleRate);
+      next();
+    };
+    req.onerror = function () {
+      ok(false, "Get app stats for a connectionType failure!");
+    }
+  },
+  function () {
+    ok(true, "Get app stats for all connectionTypes and dates adapted to samplerate");
+    // Prepare get params
+    var url = 'app://browser.gaiamobile.org/manifest.webapp';
+    var diff = 2;
+    // Get samplerate in millis
+    var sampleRate = netStats.sampleRate * 1000;
+    // Get date with samplerate's precision
+    var offset = new Date().getTimezoneOffset() * 60 * 1000;
+    var endDate = new Date(Math.floor((new Date().getTime() - offset) / sampleRate)
+                           * sampleRate + offset);
+    var startDate = new Date(endDate.getTime() - (sampleRate * diff));
+    // Calculate the number of samples that should be returned based on the
+    // the samplerate and including final and initial samples.
+    var samples = (endDate.getTime() - startDate.getTime()) / sampleRate + 1;
+
+    // Launch request
+    req = netStats.getNetworkStats({start:       startDate,
+                                    end:         endDate,
+                                    manifestURL: url});
+    req.onsuccess = function () {
+      ok(true, "Get app stats request ok");
+      ok(req.result.manifestURL == url, "manifestURL should be equals");
+      ok(req.result.connectionType == null, "connectionTypes should be null");
+      ok(req.result.start.getTime() == startDate.getTime(), "starts should be equals");
+      ok(req.result.end.getTime() == endDate.getTime(), "ends should be equals");
+      var data = req.result.data;
+      ok(Array.isArray(data) && data.length == samples,
+         "data is an array of length " + samples);
+      checkDataDates(data, startDate, endDate, sampleRate);
+      next();
+    };
+    req.onerror = function () {
+      ok(false, "Get app stats for all connectionTypes failure!");
+    }
+  },
+  function () {
+    ok(true, "Get system stats for a connectionType and dates not adapted to samplerate");
     // Prepare get params
     var type = netStats.connectionTypes[0];
     var diff = 2;
@@ -225,7 +301,8 @@ var steps = [
     // Launch request
     req = netStats.getNetworkStats({start: startDate, end: endDate, connectionType: type});
     req.onsuccess = function () {
-      ok(true, "Get stats request ok");
+      ok(true, "Get system stats request ok");
+      ok(req.result.manifestURL == null, "manifestURL should be null");
       ok(req.result.connectionType == type, "connectionTypes should be equals");
       ok(req.result.start.getTime() == startDate.getTime(), "starts should be equals");
       ok(req.result.end.getTime() == endDate.getTime(), "ends should be equals");
@@ -236,11 +313,11 @@ var steps = [
       next();
     };
     req.onerror = function () {
-      ok(false, "Get stats for a connectionType failure!");
+      ok(false, "Get system stats for a connectionType failure!");
     }
   },
   function () {
-    ok(true, "Get stats for all connectionTypes and dates not adapted to samplerate");
+    ok(true, "Get system stats for all connectionTypes and dates not adapted to samplerate");
     // Prepare get params
     var diff = 2;
     // Get samplerate in millis
@@ -258,6 +335,7 @@ var steps = [
     req = netStats.getNetworkStats({start: startDate, end: endDate});
     req.onsuccess = function () {
       ok(true, "Get stats request ok");
+      ok(req.result.manifestURL == null, "manifestURL should be null");
       ok(req.result.connectionType == null, "connectionTypes should be null");
       ok(req.result.start.getTime() == startDate.getTime(), "starts should be equals");
       ok(req.result.end.getTime() == endDate.getTime(), "ends should be equals");
@@ -268,7 +346,7 @@ var steps = [
       next();
     };
     req.onerror = function () {
-      ok(false, "Get stats for all connectionType failure!");
+      ok(false, "Get system stats for all connectionType failure!");
     }
   },
   function () {

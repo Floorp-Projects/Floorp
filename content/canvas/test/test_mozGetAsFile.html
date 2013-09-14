@@ -7,33 +7,22 @@
 <canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
 <script>
 
-function compareAsync(file, canvas, type, callback)
+var gCompares = 0;
+
+function compareAsync(file, canvas, type)
 {
+  ++gCompares;
+
   var reader = new FileReader();
   reader.onload = 
     function(e) {
       is(e.target.result, canvas.toDataURL(type),
  "<canvas>.mozGetAsFile().getAsDataURL() should equal <canvas>.toDataURL()");
-      callback(canvas);
+      if (--gCompares == 0) {
+        SimpleTest.finish();
+      }
     };
   reader.readAsDataURL(file);
-}
-
-function test1(canvas)
-{
-  var pngfile = canvas.mozGetAsFile("foo.png");
-  is(pngfile.type, "image/png", "Default type for mozGetAsFile should be PNG");
-  compareAsync(pngfile, canvas, "image/png", test2);
-  is(pngfile.name, "foo.png", "File name should be what we passed in");
-}
-
-function test2(canvas)
-{
-  var jpegfile = canvas.mozGetAsFile("bar.jpg", "image/jpeg");
-  is(jpegfile.type, "image/jpeg",
-     "When a valid type is specified that should be returned");
-  compareAsync(jpegfile, canvas, "image/jpeg", SimpleTest.finish);
-  is(jpegfile.name, "bar.jpg", "File name should be what we passed in");
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -41,9 +30,19 @@ addLoadEvent(function () {
 
 var canvas = document.getElementById('c');
 var ctx = canvas.getContext('2d');
+
 ctx.drawImage(document.getElementById('yellow75.png'), 0, 0);
 
-test1(canvas);
+var pngfile = canvas.mozGetAsFile("foo.png");
+is(pngfile.type, "image/png", "Default type for mozGetAsFile should be PNG");
+compareAsync(pngfile, canvas, "image/png");
+is(pngfile.name, "foo.png", "File name should be what we passed in");
+
+var jpegfile = canvas.mozGetAsFile("bar.jpg", "image/jpeg");
+is(jpegfile.type, "image/jpeg",
+   "When a valid type is specified that should be returned");
+compareAsync(jpegfile, canvas, "image/jpeg");
+is(jpegfile.name, "bar.jpg", "File name should be what we passed in");
 
 });
 </script>
