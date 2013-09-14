@@ -49,7 +49,7 @@ protected:
                                   bool aToWindow,
                                   bool *aPreventDefault);
 
-  static mozilla::widget::Modifiers GetWidgetModifiers(int32_t aModifiers);
+  static mozilla::Modifiers GetWidgetModifiers(int32_t aModifiers);
 };
 
 #endif

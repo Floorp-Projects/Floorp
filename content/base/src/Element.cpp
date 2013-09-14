@@ -1405,7 +1405,7 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
                             nsInputEvent* aSourceEvent,
                             nsIContent* aTarget,
                             bool aFullDispatch,
-                            const widget::EventFlags* aExtraEventFlags,
+                            const EventFlags* aExtraEventFlags,
                             nsEventStatus* aStatus)
 {
   NS_PRECONDITION(aTarget, "Must have target");

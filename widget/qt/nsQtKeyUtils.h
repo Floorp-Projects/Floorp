@@ -13,6 +13,6 @@
 int      QtKeyCodeToDOMKeyCode     (int aKeysym);
 int      DOMKeyCodeToQtKeyCode     (int aKeysym);
 
-mozilla::widget::KeyNameIndex QtKeyCodeToDOMKeyNameIndex(int aKeysym);
+mozilla::KeyNameIndex QtKeyCodeToDOMKeyNameIndex(int aKeysym);
 
 #endif /* __nsQtKeyUtils_h__ */
