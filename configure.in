@@ -5455,6 +5455,22 @@ if test -n "$MOZ_MEDIA_PLUGINS"; then
 fi
 
 dnl ========================================================
+dnl = Disable platform MP3 decoder on OSX
+dnl ========================================================
+if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
+  MOZ_APPLEMEDIA=1
+fi
+
+MOZ_ARG_DISABLE_BOOL(apple-media,
+[  --disable-apple-media  Disable support for Apple AudioToolbox/VideoToolbox],
+    MOZ_APPLEMEDIA=,
+    MOZ_APPLEMEDIA=1)
+
+if test -n "$MOZ_APPLEMEDIA"; then
+  AC_DEFINE(MOZ_APPLEMEDIA)
+fi
+
+dnl ========================================================
 dnl = Enable getUserMedia support
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(media-navigator,
@@ -8751,6 +8767,7 @@ AC_SUBST(MOZ_DASH)
 AC_SUBST(MOZ_WMF)
 AC_SUBST(MOZ_DIRECTSHOW)
 AC_SUBST(MOZ_MEDIA_PLUGINS)
+AC_SUBST(MOZ_APPLEMEDIA)
 AC_SUBST(MOZ_OMX_PLUGIN)
 AC_SUBST(MOZ_VP8_ERROR_CONCEALMENT)
 AC_SUBST(MOZ_VP8_ENCODER)

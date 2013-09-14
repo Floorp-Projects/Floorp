@@ -37,6 +37,9 @@ if CONFIG['MOZ_MEDIA_PLUGINS']:
 if CONFIG['MOZ_WMF']:
     PARALLEL_DIRS += ['wmf']
 
+if CONFIG['MOZ_APPLEMEDIA']:
+    PARALLEL_DIRS += ['apple']
+
 PARALLEL_DIRS += ['webrtc']
 
 if CONFIG['MOZ_OMX_DECODER']:
