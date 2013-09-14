@@ -78,8 +78,6 @@ private:
     typedef gfxFont::DrawMode DrawMode;
 
 public:
-    static const float SVG_UNITS_PER_EM;
-
     /**
      * @param aSVGTable The SVG table from the OpenType font
      *
