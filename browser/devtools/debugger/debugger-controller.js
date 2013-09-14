@@ -1270,6 +1270,7 @@ Breakpoints.prototype = {
    */
   _added: new Map(),
   _removing: new Map(),
+  _disabled: new Map(),
 
   /**
    * Adds the source editor breakpoint handlers.
@@ -1362,7 +1363,7 @@ Breakpoints.prototype = {
    * are received via the _onNewSource and _onSourcesAdded event listeners.
    */
   updateEditorBreakpoints: function() {
-    for (let [, breakpointPromise] of this._added) {
+    for (let breakpointPromise of this._addedOrDisabled) {
       breakpointPromise.then(aBreakpointClient => {
         let currentSourceUrl = DebuggerView.Sources.selectedValue;
         let breakpointUrl = aBreakpointClient.location.url;
@@ -1382,7 +1383,7 @@ Breakpoints.prototype = {
    * _onSourcesAdded event listeners.
    */
   updatePaneBreakpoints: function() {
-    for (let [, breakpointPromise] of this._added) {
+    for (let breakpointPromise of this._addedOrDisabled) {
       breakpointPromise.then(aBreakpointClient => {
         let container = DebuggerView.Sources;
         let breakpointUrl = aBreakpointClient.location.url;
@@ -1445,7 +1446,7 @@ Breakpoints.prototype = {
       if (aResponse.actualLocation) {
         // Remember the initialization promise for the new location instead.
         let oldIdentifier = identifier;
-        let newIdentifier = this.getIdentifier(aResponse.actualLocation);
+        let newIdentifier = identifier = this.getIdentifier(aResponse.actualLocation);
         this._added.delete(oldIdentifier);
         this._added.set(newIdentifier, deferred.promise);
 
@@ -1454,6 +1455,11 @@ Breakpoints.prototype = {
         aBreakpointClient.requestedLocation = aLocation;
         aBreakpointClient.location = aResponse.actualLocation;
       }
+
+      // By default, new breakpoints are always enabled. Disabled breakpoints
+      // are, in fact, removed from the server but preserved in the frontend,
+      // so that they may not be forgotten across target navigations.
+      this._disabled.delete(identifier);
 
       // Preserve information about the breakpoint's line text, to display it
       // in the sources pane without requiring fetching the source (for example,
@@ -1521,6 +1527,15 @@ Breakpoints.prototype = {
           return void this._removing.delete(identifier);
         }
 
+        // When a breakpoint is removed, the frontend may wish to preserve some
+        // details about it, so that it can be easily re-added later. In such
+        // cases, breakpoints are marked and stored as disabled, so that they
+        // may not be forgotten across target navigations.
+        if (aOptions.rememberDisabled) {
+          aBreakpointClient.disabled = true;
+          this._disabled.set(identifier, promise.resolve(aBreakpointClient));
+        }
+
         // Forget both the initialization and removal promises from the store.
         this._added.delete(identifier);
         this._removing.delete(identifier);
@@ -1538,7 +1553,7 @@ Breakpoints.prototype = {
   },
 
   /**
-   * Removes all breakpoints.
+   * Removes all the currently enabled breakpoints.
    *
    * @return object
    *         A promise that is resolved after all breakpoints are removed, or
@@ -1576,6 +1591,7 @@ Breakpoints.prototype = {
    *        Information about the breakpoint to be shown.
    *        This object must have the following properties:
    *          - location: the breakpoint's source location and line number
+   *          - disabled: the breakpoint's disabled state, boolean
    *          - text: the breakpoint's line text to be displayed
    * @param object aOptions [optional]
    *        @see DebuggerController.Breakpoints.addBreakpoint
@@ -1585,7 +1601,7 @@ Breakpoints.prototype = {
     let location = aBreakpointData.location;
 
     // Update the editor if required.
-    if (!aOptions.noEditorUpdate) {
+    if (!aOptions.noEditorUpdate && !aBreakpointData.disabled) {
       if (location.url == currentSourceUrl) {
         DebuggerView.editor.addBreakpoint(location.line - 1);
       }
@@ -1619,6 +1635,16 @@ Breakpoints.prototype = {
     if (!aOptions.noPaneUpdate) {
       DebuggerView.Sources.removeBreakpoint(aLocation);
     }
+  },
+
+  /**
+   * Gets all Promises for the BreakpointActor client objects that are
+   * either enabled (added to the server) or disabled (removed from the server,
+   * but for which some details are preserved).
+   */
+  get _addedOrDisabled() {
+    for (let [, value] of this._added) yield value;
+    for (let [, value] of this._disabled) yield value;
   },
 
   /**
