@@ -919,7 +919,7 @@ var BrowserApp = {
     let e = Services.wm.getEnumerator("navigator:browser");
     while (e.hasMoreElements() && lastBrowser) {
       let win = e.getNext();
-      if (win != window)
+      if (!win.closed && win != window)
         lastBrowser = false;
     }
 
