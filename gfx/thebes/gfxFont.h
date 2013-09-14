@@ -375,6 +375,16 @@ public:
     hb_blob_t *ShareFontTableAndGetBlob(uint32_t aTag,
                                         FallibleTArray<uint8_t>* aTable);
 
+    // Get the font's unitsPerEm from the 'head' table, in the case of an
+    // sfnt resource. Will return kInvalidUPEM for non-sfnt fonts,
+    // if present on the platform.
+    uint16_t UnitsPerEm();
+    enum {
+        kMinUPEM = 16,    // Limits on valid unitsPerEm range, from the
+        kMaxUPEM = 16384, // OpenType spec
+        kInvalidUPEM = uint16_t(-1)
+    };
+
     // Shaper face accessors:
     // NOTE that harfbuzz and graphite handle ownership/lifetime of the face
     // object in completely different ways.
@@ -472,6 +482,10 @@ protected:
     // This method assumes aFontData is valid 'sfnt' data; before using this,
     // caller is responsible to do any sanitization/validation necessary.
     hb_blob_t* GetTableFromFontData(const void* aFontData, uint32_t aTableTag);
+
+    // Font's unitsPerEm from the 'head' table, if available (will be set to
+    // kInvalidUPEM for non-sfnt font formats)
+    uint16_t mUnitsPerEm;
 
     // Shaper-specific face objects, shared by all instantiations of the same
     // physical font, regardless of size.
