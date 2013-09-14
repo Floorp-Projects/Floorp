@@ -927,6 +927,9 @@ var gViewController = {
         var windows = Services.wm.getEnumerator(null);
         while (windows.hasMoreElements()) {
           var win = windows.getNext();
+          if (win.closed) {
+            continue;
+          }
           if (win.document.documentURI == optionsURL) {
             win.focus();
             return;
