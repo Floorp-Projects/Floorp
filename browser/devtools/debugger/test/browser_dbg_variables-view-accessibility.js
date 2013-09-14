@@ -457,12 +457,6 @@ function synthesizeKeyAndWaitForTick(aKey, aModifiers) {
   return waitForTick();
 }
 
-function waitForTick() {
-  let deferred = promise.defer();
-  executeSoon(deferred.resolve);
-  return deferred.promise;
-}
-
 function waitForElement(aSelector, aExistence, aInterval = 10) {
   let deferred = promise.defer();
 
