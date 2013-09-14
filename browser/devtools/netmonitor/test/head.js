@@ -193,7 +193,7 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
 
   let requestsMenu = aRequestItem.ownerView;
   let widgetIndex = requestsMenu.indexOfItem(aRequestItem);
-  let visibleIndex = requestsMenu.orderedVisibleItems.indexOf(aRequestItem);
+  let visibleIndex = requestsMenu.visibleItems.indexOf(aRequestItem);
 
   info("Widget index of item: " + widgetIndex);
   info("Visible index of item: " + visibleIndex);

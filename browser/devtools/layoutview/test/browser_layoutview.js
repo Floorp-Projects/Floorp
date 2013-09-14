@@ -7,7 +7,6 @@ let TargetFactory = devtools.TargetFactory;
 function test() {
   waitForExplicitFinish();
 
-  Services.prefs.setBoolPref("devtools.layoutview.enabled", true);
   Services.prefs.setBoolPref("devtools.inspector.sidebarOpen", true);
 
   let doc;
@@ -123,7 +122,6 @@ function test() {
   }
 
   function finishUp() {
-    Services.prefs.clearUserPref("devtools.layoutview.enabled");
     Services.prefs.clearUserPref("devtools.inspector.sidebarOpen");
     gBrowser.removeCurrentTab();
     finish();

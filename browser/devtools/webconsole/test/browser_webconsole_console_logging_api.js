@@ -72,7 +72,7 @@ function testConsoleLoggingAPI(aMethod) {
     name: "1 hidden " + aMethod + " node via string filtering",
     validatorFn: function()
     {
-      return outputNode.querySelectorAll(".hud-filtered-by-string").length == 1;
+      return outputNode.querySelectorAll(".filtered-by-string").length == 1;
     },
     successFn: nextTest,
     failureFn: nextTest,
@@ -86,14 +86,15 @@ function testConsoleLoggingAPI(aMethod) {
 
   // TODO: move all filtering tests into a separate test file: see bug 608135
   setStringFilter("");
-  hud.setFilterState(aMethod, false);
+  let filter = aMethod == "debug" ? "log" : aMethod;
+  hud.setFilterState(filter, false);
   console[aMethod]("foo-bar-baz");
 
   waitForSuccess({
     name: "1 message hidden for " + aMethod + " (logging turned off)",
     validatorFn: function()
     {
-      return outputNode.querySelectorAll("description").length == 1;
+      return outputNode.querySelectorAll(".filtered-by-type").length == 1;
     },
     successFn: nextTest,
     failureFn: nextTest,
@@ -102,14 +103,14 @@ function testConsoleLoggingAPI(aMethod) {
   yield undefined;
 
   hud.jsterm.clearOutput();
-  hud.setFilterState(aMethod, true);
+  hud.setFilterState(filter, true);
   console[aMethod]("foo-bar-baz");
 
   waitForSuccess({
     name: "1 message shown for " + aMethod + " (logging turned on)",
     validatorFn: function()
     {
-      return outputNode.querySelectorAll("description").length == 1;
+      return outputNode.querySelectorAll(".message:not(.filtered-by-type)").length == 1;
     },
     successFn: nextTest,
     failureFn: nextTest,
@@ -123,16 +124,13 @@ function testConsoleLoggingAPI(aMethod) {
   // test for multiple arguments.
   console[aMethod]("foo", "bar");
 
-  waitForSuccess({
-    name: "show both console arguments for " + aMethod,
-    validatorFn: function()
-    {
-      let node = outputNode.querySelector(".hud-msg-node");
-      return node && /"foo" "bar"/.test(node.textContent);
-    },
-    successFn: nextTest,
-    failureFn: nextTest,
-  });
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: '"foo" "bar"',
+      category: CATEGORY_WEBDEV,
+    }],
+  }).then(nextTest);
 
   yield undefined;
   testDriver.next();

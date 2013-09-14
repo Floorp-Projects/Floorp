@@ -1,102 +1,101 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Make sure the listTabs request works as specified.
+/**
+ * Make sure the listTabs request works as specified.
+ */
 
-var gTab1 = null;
-var gTab1Actor = null;
+const TAB1_URL = EXAMPLE_URL + "doc_empty-tab-01.html";
+const TAB2_URL = EXAMPLE_URL + "doc_empty-tab-02.html";
 
-var gTab2 = null;
-var gTab2Actor = null;
+let gTab1, gTab1Actor, gTab2, gTab2Actor, gClient;
 
-var gClient = null;
+function test() {
+  if (!DebuggerServer.initialized) {
+    DebuggerServer.init(() => true);
+    DebuggerServer.addBrowserActors();
+  }
 
-function test()
-{
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.connect(function(aType, aTraits) {
-    is(aType, "browser", "Root actor should identify itself as a browser.");
-    test_first_tab();
+  gClient.connect((aType, aTraits) => {
+    is(aType, "browser",
+      "Root actor should identify itself as a browser.");
+
+    promise.resolve(null)
+      .then(testFirstTab)
+      .then(testSecondTab)
+      .then(testRemoveTab)
+      .then(testAttachRemovedTab)
+      .then(closeConnection)
+      .then(finish)
+      .then(null, aError => {
+        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
+      });
   });
 }
 
-/**
- * Verify that a new tab shows up in a listTabs call.
- */
-function test_first_tab()
-{
-  gTab1 = addTab(TAB1_URL, function() {
-    gClient.listTabs(function(aResponse) {
-      for each (let tab in aResponse.tabs) {
-        if (tab.url == TAB1_URL) {
-          gTab1Actor = tab.actor;
-        }
-      }
-      ok(gTab1Actor, "Should find a tab actor for tab1.");
-      test_second_tab();
+function testFirstTab() {
+  return addTab(TAB1_URL).then(aTab => {
+    gTab1 = aTab;
+
+    return getTabActorForUrl(gClient, TAB1_URL).then(aGrip => {
+      ok(aGrip, "Should find a tab actor for the first tab.");
+      gTab1Actor = aGrip.actor;
     });
   });
 }
 
-function test_second_tab()
-{
-  gTab2 = addTab(TAB2_URL, function() {
-    gClient.listTabs(function(aResponse) {
-      // Verify that tab1 has the same actor it used to.
-      let foundTab1 = false;
-      for each (let tab in aResponse.tabs) {
-        if (tab.url == TAB1_URL) {
-          is(tab.actor, gTab1Actor, "Tab1's actor shouldn't have changed.");
-          foundTab1 = true;
-        }
-        if (tab.url == TAB2_URL) {
-          gTab2Actor = tab.actor;
-        }
-      }
-      ok(foundTab1, "Should have found an actor for tab 1.");
-      ok(gTab2Actor != null, "Should find an actor for tab2.");
+function testSecondTab() {
+  return addTab(TAB2_URL).then(aTab => {
+    gTab2 = aTab;
 
-      test_remove_tab();
+    return getTabActorForUrl(gClient, TAB1_URL).then(aFirstGrip => {
+      return getTabActorForUrl(gClient, TAB2_URL).then(aSecondGrip => {
+        is(aFirstGrip.actor, gTab1Actor, "First tab's actor shouldn't have changed.");
+        ok(aSecondGrip, "Should find a tab actor for the second tab.");
+        gTab2Actor = aSecondGrip.actor;
+      });
     });
   });
 }
 
-function test_remove_tab()
-{
-  removeTab(gTab1);
+function testRemoveTab() {
+  return removeTab(gTab1).then(() => {
+    return getTabActorForUrl(gClient, TAB1_URL).then(aGrip => {
+      ok(!aGrip, "Shouldn't find a tab actor for the first tab anymore.");
+    });
+  });
+}
+
+function testAttachRemovedTab() {
+  return removeTab(gTab2).then(() => {
+    let deferred = promise.defer();
+
+    gClient.addListener("paused", (aEvent, aPacket) => {
+      ok(false, "Attaching to an exited tab actor shouldn't generate a pause.");
+      deferred.reject();
+    });
+
+    gClient.request({ to: gTab2Actor, type: "attach" }, aResponse => {
+      is(aResponse.type, "exited", "Tab should consider itself exited.");
+      deferred.resolve();
+    });
+
+    return deferred.promise;
+  });
+}
+
+function closeConnection() {
+  let deferred = promise.defer();
+  gClient.close(deferred.resolve);
+  return deferred.promise;
+}
+
+registerCleanupFunction(function() {
   gTab1 = null;
-  gClient.listTabs(function(aResponse) {
-    // Verify that tab1 is no longer included in listTabs.
-    let foundTab1 = false;
-    for each (let tab in aResponse.tabs) {
-      if (tab.url == TAB1_URL) {
-        ok(false, "Tab1 should be gone.");
-      }
-    }
-    ok(!foundTab1, "Tab1 should be gone.");
-    test_attach_removed_tab();
-  });
-}
-
-function test_attach_removed_tab()
-{
-  removeTab(gTab2);
+  gTab1Actor = null;
   gTab2 = null;
-  gClient.addListener("paused", function(aEvent, aPacket) {
-    ok(false, "Attaching to an exited tab actor shouldn't generate a pause.");
-    finish_test();
-  });
-
-  gClient.request({ to: gTab2Actor, type: "attach" }, function(aResponse) {
-    is(aResponse.type, "exited", "Tab should consider itself exited.");
-    finish_test();
-  });
-}
-
-function finish_test()
-{
-  gClient.close(function() {
-    finish();
-  });
-}
+  gTab2Actor = null;
+  gClient = null;
+});

@@ -55,16 +55,28 @@ function ConsoleOutput(owner)
 
 ConsoleOutput.prototype = {
   /**
+   * The output container.
+   * @type DOMElement
+   */
+  get element() {
+    return this.owner.outputNode;
+  },
+
+  /**
    * The document that holds the output.
    * @type DOMDocument
    */
-  get document() this.owner.document,
+  get document() {
+    return this.owner.document;
+  },
 
   /**
    * The DOM window that holds the output.
    * @type Window
    */
-  get window() this.owner.window,
+  get window() {
+    return this.owner.window;
+  },
 
   /**
    * Add a message to output.
@@ -100,6 +112,100 @@ ConsoleOutput.prototype = {
   _onFlushOutputMessage: function(message)
   {
     return message.render().element;
+  },
+
+  /**
+   * Get an array of selected messages. This list is based on the text selection
+   * start and end points.
+   *
+   * @param number [limit]
+   *        Optional limit of selected messages you want. If no value is given,
+   *        all of the selected messages are returned.
+   * @return array
+   *         Array of DOM elements for each message that is currently selected.
+   */
+  getSelectedMessages: function(limit)
+  {
+    let selection = this.window.getSelection();
+    if (selection.isCollapsed) {
+      return [];
+    }
+
+    if (selection.containsNode(this.element, true)) {
+      return Array.slice(this.element.children);
+    }
+
+    let anchor = this.getMessageForElement(selection.anchorNode);
+    let focus = this.getMessageForElement(selection.focusNode);
+    if (!anchor || !focus) {
+      return [];
+    }
+
+    let start, end;
+    if (anchor.timestamp > focus.timestamp) {
+      start = focus;
+      end = anchor;
+    } else {
+      start = anchor;
+      end = focus;
+    }
+
+    let result = [];
+    let current = start;
+    while (current) {
+      result.push(current);
+      if (current == end || (limit && result.length == limit)) {
+        break;
+      }
+      current = current.nextSibling;
+    }
+    return result;
+  },
+
+  /**
+   * Find the DOM element of a message for any given descendant.
+   *
+   * @param DOMElement elem
+   *        The element to start the search from.
+   * @return DOMElement|null
+   *         The DOM element of the message, if any.
+   */
+  getMessageForElement: function(elem)
+  {
+    while (elem && elem.parentNode) {
+      if (elem.classList && elem.classList.contains("message")) {
+        return elem;
+      }
+      elem = elem.parentNode;
+    }
+    return null;
+  },
+
+  /**
+   * Select all messages.
+   */
+  selectAllMessages: function()
+  {
+    let selection = this.window.getSelection();
+    selection.removeAllRanges();
+    let range = this.document.createRange();
+    range.selectNodeContents(this.element);
+    selection.addRange(range);
+  },
+
+  /**
+   * Add a message to the selection.
+   *
+   * @param DOMElement elem
+   *        The message element to select.
+   */
+  selectMessage: function(elem)
+  {
+    let selection = this.window.getSelection();
+    selection.removeAllRanges();
+    let range = this.document.createRange();
+    range.selectNodeContents(elem);
+    selection.addRange(range);
   },
 
   /**
@@ -175,9 +281,11 @@ Messages.BaseMessage.prototype = {
 
   // Properties that allow compatibility with the current Web Console output
   // implementation.
-  _elementClassCompat: "",
   _categoryCompat: null,
   _severityCompat: null,
+  _categoryNameCompat: null,
+  _severityNameCompat: null,
+  _filterKeyCompat: null,
 
   /**
    * Initialize the message.
@@ -216,20 +324,17 @@ Messages.BaseMessage.prototype = {
   _renderCompat: function()
   {
     let doc = this.output.document;
-    let container = doc.createElementNS(XUL_NS, "richlistitem");
-    container.setAttribute("id", "console-msg-" + gSequenceId());
-    container.setAttribute("class", "hud-msg-node " + this._elementClassCompat);
+    let container = doc.createElementNS(XHTML_NS, "div");
+    container.id = "console-msg-" + gSequenceId();
+    container.className = "message";
     container.category = this._categoryCompat;
     container.severity = this._severityCompat;
+    container.setAttribute("category", this._categoryNameCompat);
+    container.setAttribute("severity", this._severityNameCompat);
+    container.setAttribute("filter", this._filterKeyCompat);
     container.clipboardText = this.textContent;
     container.timestamp = this.timestamp;
     container._messageObject = this;
-
-    let body = doc.createElementNS(XUL_NS, "description");
-    body.flex = 1;
-    body.classList.add("webconsole-msg-body");
-    body.classList.add("devtools-monospace");
-    container.appendChild(body);
 
     return container;
   },
@@ -265,10 +370,11 @@ Messages.NavigationMarker.prototype = Heritage.extend(Messages.BaseMessage.proto
    */
   timestamp: 0,
 
-  // Class names in order: category, severity then the class for the filter.
-  _elementClassCompat: "webconsole-msg-network webconsole-msg-info hud-networkinfo",
   _categoryCompat: COMPAT.CATEGORIES.NETWORK,
   _severityCompat: COMPAT.SEVERITIES.LOG,
+  _categoryNameCompat: "network",
+  _severityNameCompat: "info",
+  _filterKeyCompat: "networkinfo",
 
   /**
    * Prepare the DOM element for this message.
@@ -287,13 +393,24 @@ Messages.NavigationMarker.prototype = Heritage.extend(Messages.BaseMessage.proto
     }
 
     let doc = this.output.document;
-    let urlnode = doc.createElementNS(XHTML_NS, "span");
+    let urlnode = doc.createElementNS(XHTML_NS, "a");
     urlnode.className = "url";
     urlnode.textContent = url;
+    urlnode.title = this._url;
+    urlnode.href = this._url;
+    urlnode.draggable = false;
 
-    // Add the text in the xul:description.webconsole-msg-body element.
+    // This is going into the WebConsoleFrame object instance that owns
+    // the ConsoleOutput object. The WebConsoleFrame owner is the WebConsole
+    // object instance from hudservice.js.
+    // TODO: move _addMessageLinkCallback() into ConsoleOutput once bug 778766
+    // is fixed.
+    this.output.owner._addMessageLinkCallback(urlnode, () => {
+      this.output.owner.owner.openLink(this._url);
+    });
+
     let render = Messages.BaseMessage.prototype.render.bind(this);
-    render().element.firstChild.appendChild(urlnode);
+    render().element.appendChild(urlnode);
     this.element.classList.add("navigation-marker");
     this.element.url = this._url;
 

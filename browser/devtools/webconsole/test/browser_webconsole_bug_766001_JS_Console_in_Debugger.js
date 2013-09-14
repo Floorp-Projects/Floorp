@@ -26,28 +26,31 @@ function testViewSource(aHud)
     nodes = dbg = toolbox = target = index = src = line = null;
   });
 
-  let JSSelector = ".webconsole-msg-exception .webconsole-location";
-  let consoleSelector = ".webconsole-msg-console .webconsole-location";
-
-  waitForSuccess({
-    name: "find the location node",
-    validatorFn: function()
-    {
-      return aHud.outputNode.querySelector(JSSelector) &&
-             aHud.outputNode.querySelector(consoleSelector);
+  waitForMessages({
+    webconsole: aHud,
+    messages: [{
+      text: "document.bar",
+      category: CATEGORY_JS,
+      severity: SEVERITY_ERROR,
     },
-    successFn: function()
     {
-      nodes = [aHud.outputNode.querySelector(JSSelector),
-               aHud.outputNode.querySelector(consoleSelector)];
+      text: "Blah Blah",
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+    }],
+  }).then(([exceptionRule, consoleRule]) => {
+    let exceptionMsg = [...exceptionRule.matched][0];
+    let consoleMsg = [...consoleRule.matched][0];
+    nodes = [exceptionMsg.querySelector(".location"),
+             consoleMsg.querySelector(".location")];
+    ok(nodes[0], ".location node for the exception message");
+    ok(nodes[1], ".location node for the console message");
 
-      target = TargetFactory.forTab(gBrowser.selectedTab);
-      toolbox = gDevTools.getToolbox(target);
-      toolbox.once("jsdebugger-selected", checkLineAndClickNext);
+    target = TargetFactory.forTab(gBrowser.selectedTab);
+    toolbox = gDevTools.getToolbox(target);
+    toolbox.once("jsdebugger-selected", checkLineAndClickNext);
 
-      EventUtils.sendMouseEvent({ type: "click" }, nodes[index%2]);
-    },
-    failureFn: finishTest,
+    EventUtils.sendMouseEvent({ type: "click" }, nodes[index%2]);
   });
 }
 
@@ -67,14 +70,14 @@ function checkLineAndClickNext(aEvent, aPanel)
   ok(line, "found source line for index " + index);
 
   info("Waiting for the correct script to be selected for index " + index);
-  dbg.panelWin.addEventListener("Debugger:SourceShown", onSource, false);
+  dbg.panelWin.on(dbg.panelWin.EVENTS.SOURCE_SHOWN, onSource);
 }
 
-function onSource(aEvent) {
-  if (aEvent.detail.url != src) {
+function onSource(aEvent, aSource) {
+  if (aSource.url != src) {
     return;
   }
-  dbg.panelWin.removeEventListener("Debugger:SourceShown", onSource, false);
+  dbg.panelWin.off(dbg.panelWin.EVENTS.SOURCE_SHOWN, onSource);
 
   ok(true, "Correct script is selected for index " + index);
 

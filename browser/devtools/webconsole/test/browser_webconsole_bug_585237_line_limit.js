@@ -44,15 +44,14 @@ function testGen() {
     console.log("foo #" + i); // must change message to prevent repeats
   }
 
-  waitForSuccess({
-    name: "20 console.log messages displayed",
-    validatorFn: function()
-    {
-      return outputNode.textContent.indexOf("foo #29") > -1;
-    },
-    successFn: testNext,
-    failureFn: finishTest,
-  });
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "foo #29",
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+    }],
+  }).then(testNext);
 
   yield undefined;
 
@@ -61,15 +60,14 @@ function testGen() {
 
   console.log("bar bug585237");
 
-  waitForSuccess({
-    name: "another console.log message displayed",
-    validatorFn: function()
-    {
-      return outputNode.textContent.indexOf("bar bug585237") > -1;
-    },
-    successFn: testNext,
-    failureFn: finishTest,
-  });
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "bar bug585237",
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+    }],
+  }).then(testNext);
 
   yield undefined;
 
@@ -81,15 +79,14 @@ function testGen() {
     console.log("boo #" + i); // must change message to prevent repeats
   }
 
-  waitForSuccess({
-    name: "another 20 console.log message displayed",
-    validatorFn: function()
-    {
-      return outputNode.textContent.indexOf("boo #19") > -1;
-    },
-    successFn: testNext,
-    failureFn: finishTest,
-  });
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "boo #19",
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+    }],
+  }).then(testNext);
 
   yield undefined;
 
@@ -104,6 +101,6 @@ function testGen() {
 }
 
 function countMessageNodes() {
-  return outputNode.querySelectorAll(".hud-msg-node").length;
+  return outputNode.querySelectorAll(".message").length;
 }
 

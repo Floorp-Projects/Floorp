@@ -19,33 +19,32 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/devtools/Console.jsm");
 
 /**
- * Utility to get access to the current breakpoint list
- * @param dbg The debugger panel
- * @returns an array of object, one for each breakpoint, where each breakpoint
- * object has the following properties:
- * - id: A unique identifier for the breakpoint. This is not designed to be
- *       shown to the user.
- * - label: A unique string identifier designed to be user visible. In theory
- *          the label of a breakpoint could change
- * - url: The URL of the source file
- * - lineNumber: The line number of the breakpoint in the source file
- * - lineText: The text of the line at the breakpoint
- * - truncatedLineText: lineText truncated to MAX_LINE_TEXT_LENGTH
+ * Utility to get access to the current breakpoint list.
+ *
+ * @param DebuggerPanel dbg
+ *        The debugger panel.
+ * @return array
+ *         An array of objects, one for each breakpoint, where each breakpoint
+ *         object has the following properties:
+ *           - url: the URL of the source file.
+ *           - label: a unique string identifier designed to be user visible.
+ *           - lineNumber: the line number of the breakpoint in the source file.
+ *           - lineText: the text of the line at the breakpoint.
+ *           - truncatedLineText: lineText truncated to MAX_LINE_TEXT_LENGTH.
  */
 function getAllBreakpoints(dbg) {
   let breakpoints = [];
-  let sources = dbg.panelWin.DebuggerView.Sources;
-  let { trimUrlLength: tr } = dbg.panelWin.SourceUtils;
+  let sources = dbg._view.Sources;
+  let { trimUrlLength: trim } = dbg.panelWin.SourceUtils;
 
   for (let source in sources) {
     for (let { attachment: breakpoint } in source) {
       breakpoints.push({
-        id: source.value + ":" + breakpoint.lineNumber,
-        label: source.label + ":" + breakpoint.lineNumber,
         url: source.value,
-        lineNumber: breakpoint.lineNumber,
-        lineText: breakpoint.lineText,
-        truncatedLineText: tr(breakpoint.lineText, MAX_LINE_TEXT_LENGTH, "end")
+        label: source.label + ":" + breakpoint.line,
+        lineNumber: breakpoint.line,
+        lineText: breakpoint.text,
+        truncatedLineText: trim(breakpoint.text, MAX_LINE_TEXT_LENGTH, "end")
       });
     }
   }
@@ -70,10 +69,8 @@ gcli.addCommand({
   description: gcli.lookup("breaklistDesc"),
   returnType: "breakpoints",
   exec: function(args, context) {
-    let dbg = getPanel(context, "jsdebugger", { ensure_opened: true });
-    return dbg.then(function(dbg) {
-      return getAllBreakpoints(dbg);
-    });
+    let dbg = getPanel(context, "jsdebugger", { ensureOpened: true });
+    return dbg.then(getAllBreakpoints);
   }
 });
 
@@ -151,7 +148,7 @@ gcli.addCommand({
         data: function(context) {
           let dbg = getPanel(context, "jsdebugger");
           if (dbg) {
-            return dbg.panelWin.DebuggerView.Sources.values;
+            return dbg._view.Sources.values;
           }
           return [];
         }
@@ -166,8 +163,6 @@ gcli.addCommand({
   ],
   returnType: "string",
   exec: function(args, context) {
-    args.type = "line";
-
     let dbg = getPanel(context, "jsdebugger");
     if (!dbg) {
       return gcli.lookup("debuggerStopped");
@@ -175,13 +170,13 @@ gcli.addCommand({
 
     let deferred = context.defer();
     let position = { url: args.file, line: args.line };
-    dbg.addBreakpoint(position, function(aBreakpoint, aError) {
-      if (aError) {
-        deferred.resolve(gcli.lookupFormat("breakaddFailed", [aError]));
-        return;
-      }
+
+    dbg.addBreakpoint(position).then(() => {
       deferred.resolve(gcli.lookup("breakaddAdded"));
+    }, aError => {
+      deferred.resolve(gcli.lookupFormat("breakaddFailed", [aError]));
     });
+
     return deferred.promise;
   }
 });
@@ -199,16 +194,14 @@ gcli.addCommand({
         name: "selection",
         lookup: function(context) {
           let dbg = getPanel(context, "jsdebugger");
-          if (dbg == null) {
+          if (!dbg) {
             return [];
           }
-          return getAllBreakpoints(dbg).map(breakpoint => {
-            return {
-              name: breakpoint.label,
-              value: breakpoint,
-              description: breakpoint.truncatedLineText
-            };
-          });
+          return getAllBreakpoints(dbg).map(breakpoint => ({
+            name: breakpoint.label,
+            value: breakpoint,
+            description: breakpoint.truncatedLineText
+          }));
         }
       },
       description: gcli.lookup("breakdelBreakidDesc")
@@ -221,23 +214,15 @@ gcli.addCommand({
       return gcli.lookup("debuggerStopped");
     }
 
-    let breakpoint = dbg.getBreakpoint(
-      args.breakpoint.url, args.breakpoint.lineNumber);
-
-    if (breakpoint == null) {
-      return gcli.lookup("breakNotFound");
-    }
-
     let deferred = context.defer();
-    try {
-      dbg.removeBreakpoint(breakpoint, function() {
-        deferred.resolve(gcli.lookup("breakdelRemoved"));
-      });
-    } catch (ex) {
-      console.error('Error removing breakpoint, already removed?', ex);
-      // If the debugger has been closed already, don't scare the user.
+    let position = { url: args.breakpoint.url, line: args.breakpoint.lineNumber };
+
+    dbg.removeBreakpoint(position).then(() => {
       deferred.resolve(gcli.lookup("breakdelRemoved"));
-    }
+    }, () => {
+      deferred.resolve(gcli.lookup("breakNotFound"));
+    });
+
     return deferred.promise;
   }
 });
@@ -259,8 +244,8 @@ gcli.addCommand({
   description: gcli.lookup("dbgOpen"),
   params: [],
   exec: function(args, context) {
-    return gDevTools.showToolbox(context.environment.target, "jsdebugger")
-                    .then(() => null);
+    let target = context.environment.target;
+    return gDevTools.showToolbox(target, "jsdebugger").then(() => null);
   }
 });
 
@@ -272,11 +257,11 @@ gcli.addCommand({
   description: gcli.lookup("dbgClose"),
   params: [],
   exec: function(args, context) {
-    if (!getPanel(context, "jsdebugger"))
+    if (!getPanel(context, "jsdebugger")) {
       return;
-
-    return gDevTools.closeToolbox(context.environment.target)
-                    .then(() => null);
+    }
+    let target = context.environment.target;
+    return gDevTools.closeToolbox(target).then(() => null);
   }
 });
 
@@ -404,17 +389,18 @@ gcli.addCommand({
   returnType: "dom",
   exec: function(args, context) {
     let dbg = getPanel(context, "jsdebugger");
-    let doc = context.environment.chromeDocument;
     if (!dbg) {
       return gcli.lookup("debuggerClosed");
     }
 
     let sources = dbg._view.Sources.values;
+    let doc = context.environment.chromeDocument;
     let div = createXHTMLElement(doc, "div");
     let ol = createXHTMLElement(doc, "ol");
-    sources.forEach(function(src) {
+
+    sources.forEach(source => {
       let li = createXHTMLElement(doc, "li");
-      li.textContent = src;
+      li.textContent = source;
       ol.appendChild(li);
     });
     div.appendChild(ol);
@@ -437,8 +423,8 @@ gcli.addCommand({
     clientMethod: "unblackBox",
     l10nPrefix: "dbgUnBlackBox"
   }
-].forEach(function (cmd) {
-  const lookup = function (id) {
+].forEach(function(cmd) {
+  const lookup = function(id) {
     return gcli.lookup(cmd.l10nPrefix + id);
   };
 
@@ -450,11 +436,12 @@ gcli.addCommand({
         name: "source",
         type: {
           name: "selection",
-          data: function (context) {
+          data: function(context) {
             let dbg = getPanel(context, "jsdebugger");
-            return dbg
-              ? [s for (s of dbg._view.Sources.values)]
-              : [];
+            if (dbg) {
+              return dbg._view.Sources.values;
+            }
+            return [];
           }
         },
         description: lookup("SourceDesc"),
@@ -473,7 +460,7 @@ gcli.addCommand({
       }
     ],
     returnType: "dom",
-    exec: function (args, context) {
+    exec: function(args, context) {
       const dbg = getPanel(context, "jsdebugger");
       const doc = context.environment.chromeDocument;
       if (!dbg) {
@@ -482,9 +469,7 @@ gcli.addCommand({
 
       const { promise, resolve, reject } = context.defer();
       const { activeThread } = dbg._controller;
-      const globRegExp = args.glob
-        ? globToRegExp(args.glob)
-        : null;
+      const globRegExp = args.glob ? globToRegExp(args.glob) : null;
 
       // Filter the sources down to those that we will need to black box.
 
@@ -512,12 +497,11 @@ gcli.addCommand({
       const blackBoxed = [];
 
       for (let source of toBlackBox) {
-        let { url } = source;
-        activeThread.source(source)[cmd.clientMethod](function ({ error }) {
+        activeThread.source(source)[cmd.clientMethod](function({ error }) {
           if (error) {
-            blackBoxed.push(lookup("ErrorDesc") + " " + url);
+            blackBoxed.push(lookup("ErrorDesc") + " " + source.url);
           } else {
-            blackBoxed.push(url);
+            blackBoxed.push(source.url);
           }
 
           if (toBlackBox.length === blackBoxed.length) {
@@ -531,8 +515,10 @@ gcli.addCommand({
       function displayResults() {
         const results = doc.createElement("div");
         results.textContent = lookup("NonEmptyDesc");
+
         const list = createXHTMLElement(doc, "ul");
         results.appendChild(list);
+
         for (let result of blackBoxed) {
           const item = createXHTMLElement(doc, "li");
           item.textContent = result;
@@ -547,23 +533,24 @@ gcli.addCommand({
 });
 
 /**
- * A helper to create xhtml namespaced elements
+ * A helper to create xhtml namespaced elements.
  */
 function createXHTMLElement(document, tagname) {
   return document.createElementNS("http://www.w3.org/1999/xhtml", tagname);
 }
 
 /**
- * A helper to go from a command context to a debugger panel
+ * A helper to go from a command context to a debugger panel.
  */
 function getPanel(context, id, options = {}) {
-  if (context == null) {
+  if (!context) {
     return undefined;
   }
 
   let target = context.environment.target;
-  if (options.ensure_opened) {
-    return gDevTools.showToolbox(target, id).then(function(toolbox) {
+
+  if (options.ensureOpened) {
+    return gDevTools.showToolbox(target, id).then(toolbox => {
       return toolbox.getPanel(id);
     });
   } else {
@@ -577,11 +564,11 @@ function getPanel(context, id, options = {}) {
 }
 
 /**
- * Converts a glob to a regular expression
+ * Converts a glob to a regular expression.
  */
 function globToRegExp(glob) {
   const reStr = glob
-  // Escape existing regular expression syntax
+  // Escape existing regular expression syntax.
     .replace(/\\/g, "\\\\")
     .replace(/\//g, "\\/")
     .replace(/\^/g, "\\^")
@@ -600,7 +587,7 @@ function globToRegExp(glob) {
     .replace(/\[/g, "\\[")
     .replace(/\]/g, "\\]")
     .replace(/\-/g, "\\-")
-  // Turn * into the match everything wildcard
+  // Turn * into the match everything wildcard.
     .replace(/\*/g, ".*")
   return new RegExp("^" + reStr + "$");
 }

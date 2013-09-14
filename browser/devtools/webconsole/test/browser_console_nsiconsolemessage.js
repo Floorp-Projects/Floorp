@@ -82,11 +82,11 @@ function onBrowserConsoleOpen(hud)
     let msg = [...results[2].matched][0];
     ok(msg, "message element for do-not-show-me (nsIConsoleMessage)");
     isnot(msg.textContent.indexOf("do-not-show"), -1, "element content is correct");
-    ok(!msg.classList.contains("hud-filtered-by-type"), "element is not filtered");
+    ok(!msg.classList.contains("filtered-by-type"), "element is not filtered");
 
     hud.setFilterState("jslog", false);
 
-    ok(msg.classList.contains("hud-filtered-by-type"), "element is filtered");
+    ok(msg.classList.contains("filtered-by-type"), "element is filtered");
 
     hud.setFilterState("jslog", true);
 

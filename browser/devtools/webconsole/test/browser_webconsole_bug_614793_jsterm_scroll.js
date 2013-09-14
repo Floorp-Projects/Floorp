@@ -10,8 +10,7 @@
 function consoleOpened(hud) {
   hud.jsterm.clearOutput();
 
-  let outputNode = hud.outputNode;
-  let boxObject = outputNode.scrollBoxObject.element;
+  let scrollNode = hud.outputNode.parentNode;
 
   for (let i = 0; i < 150; i++) {
     content.console.log("test message " + i);
@@ -19,43 +18,32 @@ function consoleOpened(hud) {
 
   let oldScrollTop = -1;
 
-  waitForSuccess({
-    name: "console.log messages displayed",
-    validatorFn: function()
-    {
-      return outputNode.itemCount == 150;
-    },
-    successFn: function()
-    {
-      oldScrollTop = boxObject.scrollTop;
-      ok(oldScrollTop > 0, "scroll location is not at the top");
+  waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "test message 149",
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+    }],
+  }).then(() => {
+    oldScrollTop = scrollNode.scrollTop;
+    isnot(oldScrollTop, 0, "scroll location is not at the top");
 
-      hud.jsterm.execute("'hello world'");
-
-      waitForSuccess(waitForExecute);
-    },
-    failureFn: finishTest,
+    hud.jsterm.execute("'hello world'", onExecute);
   });
 
-  let waitForExecute = {
-    name: "jsterm output displayed",
-    validatorFn: function()
-    {
-      return outputNode.querySelector(".webconsole-msg-output");
-    },
-    successFn: function()
-    {
-      isnot(boxObject.scrollTop, oldScrollTop, "scroll location updated");
+  function onExecute(msg)
+  {
+    isnot(scrollNode.scrollTop, oldScrollTop, "scroll location updated");
 
-      oldScrollTop = boxObject.scrollTop;
-      outputNode.scrollBoxObject.ensureElementIsVisible(outputNode.lastChild);
+    oldScrollTop = scrollNode.scrollTop;
 
-      is(boxObject.scrollTop, oldScrollTop, "scroll location is the same");
+    msg.scrollIntoView(false);
 
-      finishTest();
-    },
-    failureFn: finishTest,
-  };
+    is(scrollNode.scrollTop, oldScrollTop, "scroll location is the same");
+
+    finishTest();
+  }
 }
 
 function test() {
