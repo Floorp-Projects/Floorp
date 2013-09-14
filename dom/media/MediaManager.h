@@ -20,6 +20,7 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "prlog.h"
 #include "DOMMediaStream.h"
 
@@ -32,6 +33,11 @@
 #endif
 
 namespace mozilla {
+namespace dom {
+class MediaStreamConstraints;
+class NavigatorUserMediaSuccessCallback;
+class NavigatorUserMediaErrorCallback;
+}
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* GetMediaManagerLog();
@@ -407,11 +413,14 @@ public:
   void RemoveFromWindowList(uint64_t aWindowID,
     GetUserMediaCallbackMediaStreamListener *aListener);
 
-  nsresult GetUserMedia(bool aPrivileged, nsPIDOMWindow* aWindow,
-    nsIMediaStreamOptions* aParams,
+  nsresult GetUserMedia(JSContext* aCx, bool aPrivileged,
+    nsPIDOMWindow* aWindow,
+    const dom::MediaStreamConstraints& aRawConstraints,
     nsIDOMGetUserMediaSuccessCallback* onSuccess,
     nsIDOMGetUserMediaErrorCallback* onError);
+
   nsresult GetUserMediaDevices(nsPIDOMWindow* aWindow,
+    const dom::MediaStreamConstraintsInternal& aConstraints,
     nsIGetUserMediaDevicesSuccessCallback* onSuccess,
     nsIDOMGetUserMediaErrorCallback* onError);
   void OnNavigation(uint64_t aWindowID);
