@@ -635,6 +635,10 @@ class CGHeaders(CGWrapper):
             if unrolled.isUnion():
                 # UnionConversions.h includes UnionTypes.h
                 bindingHeaders.add("mozilla/dom/UnionConversions.h")
+                if dictionary:
+                    # Our dictionary definition is in the header and
+                    # needs the union type.
+                    declareIncludes.add("mozilla/dom/UnionTypes.h")
             elif unrolled.isDate():
                 if dictionary or jsImplementedDescriptors:
                     headerSet = declareIncludes

@@ -101,6 +101,7 @@ WEBIDL_FILES = [
     'Function.webidl',
     'GainNode.webidl',
     'Geolocation.webidl',
+    'GetUserMediaRequest.webidl',
     'History.webidl',
     'HTMLAnchorElement.webidl',
     'HTMLAppletElement.webidl',
