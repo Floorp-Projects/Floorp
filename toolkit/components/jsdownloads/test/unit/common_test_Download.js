@@ -36,36 +36,6 @@ function promiseStartDownload(aSourceUrl) {
 }
 
 /**
- * Waits for a download to reach half of its progress, in case it has not
- * reached the expected progress already.
- *
- * @param aDownload
- *        The Download object to wait upon.
- *
- * @return {Promise}
- * @resolves When the download has reached half of its progress.
- * @rejects Never.
- */
-function promiseDownloadMidway(aDownload) {
-  let deferred = Promise.defer();
-
-  // Wait for the download to reach half of its progress.
-  let onchange = function () {
-    if (!aDownload.stopped && !aDownload.canceled && aDownload.progress == 50) {
-      aDownload.onchange = null;
-      deferred.resolve();
-    }
-  };
-
-  // Register for the notification, but also call the function directly in
-  // case the download already reached the expected progress.
-  aDownload.onchange = onchange;
-  onchange();
-
-  return deferred.promise;
-}
-
-/**
  * Waits for a download to finish, in case it has not finished already.
  *
  * @param aDownload
