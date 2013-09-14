@@ -1288,33 +1288,35 @@ RangeAnalysis::analyzeLoop(MBasicBlock *header)
     for (MPhiIterator iter(header->phisBegin()); iter != header->phisEnd(); iter++)
         analyzeLoopPhi(header, iterationBound, *iter);
 
-    // Try to hoist any bounds checks from the loop using symbolic bounds.
+    if (!mir->compilingAsmJS()) {
+        // Try to hoist any bounds checks from the loop using symbolic bounds.
 
-    Vector<MBoundsCheck *, 0, IonAllocPolicy> hoistedChecks;
+        Vector<MBoundsCheck *, 0, IonAllocPolicy> hoistedChecks;
 
-    for (ReversePostorderIterator iter(graph_.rpoBegin(header)); iter != graph_.rpoEnd(); iter++) {
-        MBasicBlock *block = *iter;
-        if (!block->isMarked())
-            continue;
+        for (ReversePostorderIterator iter(graph_.rpoBegin(header)); iter != graph_.rpoEnd(); iter++) {
+            MBasicBlock *block = *iter;
+            if (!block->isMarked())
+                continue;
 
-        for (MDefinitionIterator iter(block); iter; iter++) {
-            MDefinition *def = *iter;
-            if (def->isBoundsCheck() && def->isMovable()) {
-                if (tryHoistBoundsCheck(header, def->toBoundsCheck()))
-                    hoistedChecks.append(def->toBoundsCheck());
+            for (MDefinitionIterator iter(block); iter; iter++) {
+                MDefinition *def = *iter;
+                if (def->isBoundsCheck() && def->isMovable()) {
+                    if (tryHoistBoundsCheck(header, def->toBoundsCheck()))
+                        hoistedChecks.append(def->toBoundsCheck());
+                }
             }
         }
-    }
 
-    // Note: replace all uses of the original bounds check with the
-    // actual index. This is usually done during bounds check elimination,
-    // but in this case it's safe to do it here since the load/store is
-    // definitely not loop-invariant, so we will never move it before
-    // one of the bounds checks we just added.
-    for (size_t i = 0; i < hoistedChecks.length(); i++) {
-        MBoundsCheck *ins = hoistedChecks[i];
-        ins->replaceAllUsesWith(ins->index());
-        ins->block()->discard(ins);
+        // Note: replace all uses of the original bounds check with the
+        // actual index. This is usually done during bounds check elimination,
+        // but in this case it's safe to do it here since the load/store is
+        // definitely not loop-invariant, so we will never move it before
+        // one of the bounds checks we just added.
+        for (size_t i = 0; i < hoistedChecks.length(); i++) {
+            MBoundsCheck *ins = hoistedChecks[i];
+            ins->replaceAllUsesWith(ins->index());
+            ins->block()->discard(ins);
+        }
     }
 
     graph_.unmarkBlocks();
