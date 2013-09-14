@@ -44,6 +44,10 @@ public:
     mFrames.RemoveElement(aFrame);
   }
 
+  nsIScrollableFrame* ScrollFrame() const {
+    return mScrollFrame;
+  }
+
   // Compute the offsets for a sticky position element
   static void ComputeStickyOffsets(nsIFrame* aFrame);
 
@@ -52,6 +56,12 @@ public:
    * stored in its properties along with our scroll frame and scroll position.
    */
   nsPoint ComputePosition(nsIFrame* aFrame) const;
+
+  /**
+   * Compute where a frame should not scroll with the page, represented by the
+   * difference of two rectangles.
+   */
+  void GetScrollRanges(nsIFrame* aFrame, nsRect* aOuter, nsRect* aInner) const;
 
   /**
    * Compute and set the position of all sticky frames, given the current

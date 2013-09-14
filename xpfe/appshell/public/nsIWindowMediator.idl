@@ -29,7 +29,9 @@ interface nsIWindowMediator: nsISupports
     *                     windows of this type. ("type" is the
     *                     |windowtype| attribute of the XML <window> element.)
     *                     If null, all windows will be enumerated.
-    * @return an enumerator of nsIDOMWindows
+    * @return an enumerator of nsIDOMWindows.  Note that windows close
+    *         asynchronously in many cases, so windows returned from this
+    *         enumerator can have .closed set to true.  Caveat enumerator!
     */
   nsISimpleEnumerator getEnumerator(in wstring aWindowType);
 

@@ -272,6 +272,11 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       layer->SetIsFixedPosition(common.isFixedPosition());
       layer->SetFixedPositionAnchor(common.fixedPositionAnchor());
       layer->SetFixedPositionMargins(common.fixedPositionMargin());
+      if (common.isStickyPosition()) {
+        layer->SetStickyPositionData(common.stickyScrollContainerId(),
+                                     common.stickyScrollRangeOuter(),
+                                     common.stickyScrollRangeInner());
+      }
       if (PLayerParent* maskLayer = common.maskLayerParent()) {
         layer->SetMaskLayer(cast(maskLayer)->AsLayer());
       } else {

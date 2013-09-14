@@ -2569,7 +2569,28 @@ public:
   NS_DISPLAY_DECL_NAME("FixedPosition", TYPE_FIXED_POSITION)
 
 protected:
+  void SetFixedPositionLayerData(Layer* const aLayer, nsIFrame* aViewportFrame,
+                                 nsSize aViewportSize, nsPresContext* aPresContext,
+                                 const ContainerParameters& aContainerParameters);
   nsIFrame* mFixedPosFrame;
+};
+
+/**
+ * A display item used to represent sticky position elements. The contents
+ * gets its own layer and creates a stacking context, and the layer will have
+ * position-related metadata set on it.
+ */
+class nsDisplayStickyPosition : public nsDisplayFixedPosition {
+public:
+  nsDisplayStickyPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                          nsIFrame* aStickyPosFrame, nsDisplayList* aList);
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayStickyPosition();
+#endif
+
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager,
+                                             const ContainerParameters& aContainerParameters) MOZ_OVERRIDE;
 };
 
 /**

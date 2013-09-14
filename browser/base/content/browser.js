@@ -2177,6 +2177,9 @@ function BrowserPageInfo(doc, initialTab, imageElement) {
   // Check for windows matching the url
   while (windows.hasMoreElements()) {
     var currentWindow = windows.getNext();
+    if (currentWindow.closed) {
+      continue;
+    }
     if (currentWindow.document.documentElement.getAttribute("relatedUrl") == documentURL) {
       currentWindow.focus();
       currentWindow.resetPageInfo(args);
@@ -6040,7 +6043,7 @@ function warnAboutClosingWindow() {
   let nonPopupPresent = false;
   while (e.hasMoreElements()) {
     let win = e.getNext();
-    if (win != window) {
+    if (!win.closed && win != window) {
       if (isPBWindow && PrivateBrowsingUtils.isWindowPrivate(win))
         otherPBWindowExists = true;
       if (win.toolbar.visible)

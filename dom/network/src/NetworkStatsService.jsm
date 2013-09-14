@@ -23,6 +23,9 @@ const TOPIC_INTERFACE_UNREGISTERED = "network-interface-unregistered";
 const NET_TYPE_WIFI = Ci.nsINetworkInterface.NETWORK_TYPE_WIFI;
 const NET_TYPE_MOBILE = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE;
 
+// The maximum traffic amount can be saved in the |cachedAppStats|.
+const MAX_CACHED_TRAFFIC = 500 * 1000 * 1000; // 500 MB
+
 XPCOMUtils.defineLazyServiceGetter(this, "gIDBManager",
                                    "@mozilla.org/dom/indexeddb/manager;1",
                                    "nsIIndexedDatabaseManager");
@@ -34,6 +37,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
 XPCOMUtils.defineLazyServiceGetter(this, "networkManager",
                                    "@mozilla.org/network/manager;1",
                                    "nsINetworkManager");
+
+XPCOMUtils.defineLazyServiceGetter(this, "appsService",
+                                   "@mozilla.org/AppsService;1",
+                                   "nsIAppsService");
 
 let myGlobal = this;
 
@@ -73,6 +80,10 @@ this.NetworkStatsService = {
     // Stats for all interfaces are updated periodically
     this.timer.initWithCallback(this, this._db.sampleRate,
                                 Ci.nsITimer.TYPE_REPEATING_PRECISE);
+
+    // App stats are firstly stored in the cached.
+    this.cachedAppStats = Object.create(null);
+    this.cachedAppStatsDate = new Date();
 
     this.updateQueue = [];
     this.isQueueRunning = false;
@@ -164,15 +175,38 @@ this.NetworkStatsService = {
    * In order to return updated stats, first is performed a call to
    * updateAllStats function, which will get last stats from netd
    * and update the database.
-   * Then, depending on the request (stats per interface or total stats)
+   * Then, depending on the request (stats per appId or total stats)
    * it retrieve them from database and return to the manager.
    */
   getStats: function getStats(mm, msg) {
     this.updateAllStats(function onStatsUpdated(aResult, aMessage) {
 
-      let options = msg.data;
+      let data = msg.data;
+
+      let options = { appId:          0,
+                      connectionType: data.connectionType,
+                      start:          data.start,
+                      end:            data.end };
+
+      let manifestURL = data.manifestURL;
+      if (manifestURL) {
+        let appId = appsService.getAppLocalIdByManifestURL(manifestURL);
+        if (DEBUG) {
+          debug("get appId: " + appId + " from manifestURL: " + manifestURL);
+        }
+
+        if (!appId) {
+          mm.sendAsyncMessage("NetworkStats:Get:Return",
+                              { id: msg.id, error: "Invalid manifestURL", result: null });
+          return;
+        }
+
+        options.appId = appId;
+        options.manifestURL = manifestURL;
+      }
+
       if (DEBUG) {
-        debug("getstats for: - " + options.connectionType + " -");
+        debug("getStats for options: " + JSON.stringify(options));
       }
 
       if (!options.connectionType || options.connectionType.length == 0) {
@@ -207,6 +241,9 @@ this.NetworkStatsService = {
   },
 
   updateAllStats: function updateAllStats(callback) {
+    // Update |cachedAppStats|.
+    this.updateCachedAppStats();
+
     let elements = [];
     let lastElement;
 
@@ -356,10 +393,11 @@ this.NetworkStatsService = {
       return;
     }
 
-    let stats = { connectionType: this._connectionTypes[connType].name,
+    let stats = { appId:          0,
+                  connectionType: this._connectionTypes[connType].name,
                   date:           date,
-                  rxBytes:        txBytes,
-                  txBytes:        rxBytes};
+                  rxBytes:        rxBytes,
+                  txBytes:        txBytes };
 
     if (DEBUG) {
       debug("Update stats for " + stats.connectionType + ": rx=" + stats.rxBytes +
@@ -375,6 +413,130 @@ this.NetworkStatsService = {
         callback(true, "OK");
       }
     });
+  },
+
+  /*
+   * Function responsible for receiving per-app stats.
+   */
+  saveAppStats: function saveAppStats(aAppId, aConnectionType, aTimeStamp, aRxBytes, aTxBytes, aCallback) {
+    if (DEBUG) {
+      debug("saveAppStats: " + aAppId + " " + aConnectionType + " " +
+            aTimeStamp + " " + aRxBytes + " " + aTxBytes);
+    }
+
+    // |aAppId| can not be 0 or null in this case.
+    if (!aAppId) {
+      return;
+    }
+
+    let stats = { appId: aAppId,
+                  connectionType: this._connectionTypes[aConnectionType].name,
+                  date: new Date(aTimeStamp),
+                  rxBytes: aRxBytes,
+                  txBytes: aTxBytes };
+
+    // Generate an unique key from |appId| and |connectionType|,
+    // which is used to retrieve data in |cachedAppStats|.
+    let key = stats.appId + stats.connectionType;
+
+    // |cachedAppStats| only keeps the data with the same date.
+    // If the incoming date is different from |cachedAppStatsDate|,
+    // both |cachedAppStats| and |cachedAppStatsDate| will get updated.
+    let diff = (this._db.normalizeDate(stats.date) -
+                this._db.normalizeDate(this.cachedAppStatsDate)) /
+               this._db.sampleRate;
+    if (diff != 0) {
+      this.updateCachedAppStats(function onUpdated(success, message) {
+        this.cachedAppStatsDate = stats.date;
+        this.cachedAppStats[key] = stats;
+
+        if (!aCallback) {
+          return;
+        }
+
+        if (!success) {
+          aCallback.notify(false, message);
+          return;
+        }
+
+        aCallback.notify(true, "ok");
+      }.bind(this));
+
+      return;
+    }
+
+    // Try to find the matched row in the cached by |appId| and |connectionType|.
+    // If not found, save the incoming data into the cached.
+    let appStats = this.cachedAppStats[key];
+    if (!appStats) {
+      this.cachedAppStats[key] = stats;
+      return;
+    }
+
+    // Find matched row, accumulate the traffic amount.
+    appStats.rxBytes += stats.rxBytes;
+    appStats.txBytes += stats.txBytes;
+
+    // If new rxBytes or txBytes exceeds MAX_CACHED_TRAFFIC
+    // the corresponding row will be saved to indexedDB.
+    // Then, the row will be removed from the cached.
+    if (appStats.rxBytes > MAX_CACHED_TRAFFIC ||
+        appStats.txBytes > MAX_CACHED_TRAFFIC) {
+      this._db.saveStats(appStats,
+        function (error, result) {
+          if (DEBUG) {
+            debug("Application stats inserted in indexedDB");
+          }
+        }
+      );
+      delete this.cachedAppStats[key];
+    }
+  },
+
+  updateCachedAppStats: function updateCachedAppStats(callback) {
+    if (DEBUG) {
+      debug("updateCachedAppStats: " + this.cachedAppStatsDate);
+    }
+
+    let stats = Object.keys(this.cachedAppStats);
+    if (stats.length == 0) {
+      // |cachedAppStats| is empty, no need to update.
+      return;
+    }
+
+    let index = 0;
+    this._db.saveStats(this.cachedAppStats[stats[index]],
+      function onSavedStats(error, result) {
+        if (DEBUG) {
+          debug("Application stats inserted in indexedDB");
+        }
+
+        // Clean up the |cachedAppStats| after updating.
+        if (index == stats.length - 1) {
+          this.cachedAppStats = Object.create(null);
+
+          if (!callback) {
+            return;
+          }
+
+          if (error) {
+            callback(false, error);
+            return;
+          }
+
+          callback(true, "ok");
+          return;
+        }
+
+        // Update is not finished, keep updating.
+        index += 1;
+        this._db.saveStats(this.cachedAppStats[stats[index]],
+                           onSavedStats.bind(this, error, result));
+      }.bind(this));
+  },
+
+  get maxCachedTraffic () {
+    return MAX_CACHED_TRAFFIC;
   },
 
   logAllRecords: function logAllRecords() {

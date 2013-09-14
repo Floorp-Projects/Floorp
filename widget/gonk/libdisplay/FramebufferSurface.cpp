@@ -29,6 +29,9 @@
 #include <EGL/egl.h>
 
 #include <hardware/hardware.h>
+#if ANDROID_VERSION == 17
+#include <gui/SurfaceTextureClient.h>
+#endif
 #include <ui/GraphicBuffer.h>
 
 #include "FramebufferSurface.h"

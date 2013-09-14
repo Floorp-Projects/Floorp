@@ -61,7 +61,7 @@ function locateHelpWindow(contentPack) {
 # pack.
     while (iterator.hasMoreElements()) {
         aWindow = iterator.getNext();
-        if (aWindow.getHelpFileURI() == contentPack) {
+        if (!aWindow.closed && aWindow.getHelpFileURI() == contentPack) {
             topWindow = aWindow;
         }
     }
