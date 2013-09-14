@@ -8342,6 +8342,32 @@ if (""",
             Argument("JSTracer*", "trc"),
         ], body=body)
 
+    def assignmentOperator(self):
+        body = CGList([], "\n")
+        if self.dictionary.parent:
+            body.append(CGGeneric(
+                    "%s::operator=(aOther);" %
+                    self.makeClassName(self.dictionary.parent)))
+        for (m, _) in self.memberInfo:
+            memberName = self.makeMemberName(m.identifier.name)
+            if not m.defaultValue:
+                memberAssign = CGIfElseWrapper(
+                    "aOther.%s.WasPassed()" % memberName,
+                    CGGeneric("%s.Construct();\n"
+                              "%s.Value() = aOther.%s.Value();" %
+                              (memberName, memberName, memberName)),
+                    CGGeneric("%s.Reset();" % memberName))
+            else:
+                memberAssign = CGGeneric(
+                    "%s = aOther.%s;" % (memberName, memberName))
+            body.append(memberAssign)
+        return ClassMethod(
+            "operator=", "void", [
+                Argument("const %s&" % self.makeClassName(self.dictionary),
+                         "aOther")
+                ],
+            body=body.define())
+
     def getStructs(self):
         d = self.dictionary
         selfName = self.makeClassName(d)
@@ -8350,7 +8376,7 @@ if (""",
                                visibility="public",
                                body=self.getMemberInitializer(m))
                    for m in self.memberInfo]
-        ctor = ClassConstructor([], bodyInHeader=True, visibility="public")
+        ctors = [ClassConstructor([], bodyInHeader=True, visibility="public")]
         methods = []
 
         if self.needToInitIds:
@@ -8361,13 +8387,27 @@ if (""",
         methods.append(self.toObjectMethod())
         methods.append(self.traceDictionaryMethod())
 
+        if CGDictionary.isDictionaryCopyConstructible(d):
+            disallowCopyConstruction = False
+            # Note: no base constructors because our operator= will
+            # deal with that.
+            ctors.append(ClassConstructor([Argument("const %s&" % selfName,
+                                                    "aOther")],
+                                          bodyInHeader=True,
+                                          visibility="public",
+                                          explicit=True,
+                                          body="*this = aOther;"))
+            methods.append(self.assignmentOperator())
+        else:
+            disallowCopyConstruction = True
+
         struct = CGClass(selfName,
             bases=[ClassBase(self.base())],
             members=members,
-            constructors=[ctor],
+            constructors=ctors,
             methods=methods,
             isStruct=True,
-            disallowCopyConstruction=True)
+            disallowCopyConstruction=disallowCopyConstruction)
 
 
         initializerCtor = ClassConstructor([],
@@ -8580,6 +8620,18 @@ if (""",
             deps |= CGDictionary.getDictionaryDependenciesFromType(member.type)
         return deps
 
+    @staticmethod
+    def isDictionaryCopyConstructible(dictionary):
+        def isTypeCopyConstructible(type):
+            # Nullable and sequence stuff doesn't affect copy/constructibility
+            type = type.unroll()
+            return (type.isPrimitive() or type.isString() or type.isEnum() or
+                    (type.isDictionary() and
+                     CGDictionary.isDictionaryCopyConstructible(type.inner)))
+        if (dictionary.parent and
+            not CGDictionary.isDictionaryCopyConstructible(dictionary.parent)):
+            return False
+        return all(isTypeCopyConstructible(m.type) for m in dictionary.members)
 
 class CGRegisterProtos(CGAbstractMethod):
     def __init__(self, config):
