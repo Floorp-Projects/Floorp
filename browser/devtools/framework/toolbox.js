@@ -940,14 +940,18 @@ Toolbox.prototype = {
 
     this._telemetry.destroy();
 
-    // Targets need to be notified that the toolbox is being torn down.
-    if (this._target) {
-      this._target.off("close", this.destroy);
-      outstanding.push(this._target.destroy());
-    }
-    this._target = null;
-
-    promise.all(outstanding).then(function() {
+    promise.all(outstanding).then(() => {
+      // Targets need to be notified that the toolbox is being torn down.
+      // This is done after other destruction tasks since it may tear down
+      // fronts and the debugger transport which earlier destroy methods may
+      // require to complete.
+      if (this._target) {
+        let target = this._target;
+        this._target = null;
+        target.off("close", this.destroy);
+        return target.destroy();
+      }
+    }).then(function() {
       this.emit("destroyed");
       // Free _host after the call to destroyed in order to let a chance
       // to destroyed listeners to still query toolbox attributes
