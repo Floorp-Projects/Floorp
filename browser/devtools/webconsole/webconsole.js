@@ -29,6 +29,7 @@ loader.lazyGetter(this, "Messages",
 loader.lazyImporter(this, "ObjectClient", "resource://gre/modules/devtools/dbg-client.jsm");
 loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/VariablesView.jsm");
 loader.lazyImporter(this, "VariablesViewController", "resource:///modules/devtools/VariablesViewController.jsm");
+loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
@@ -946,7 +947,9 @@ WebConsoleFrame.prototype = {
     let occurrences = parseInt(repeatNode.getAttribute("value")) + 1;
     repeatNode.setAttribute("value", occurrences);
     repeatNode.textContent = occurrences;
-    repeatNode.title = l10n.getFormatStr("messageRepeats.tooltip", [occurrences]);
+    let str = l10n.getStr("messageRepeats.tooltip2");
+    repeatNode.title = PluralForm.get(occurrences, str)
+                       .replace("#1", occurrences);
   },
 
   /**
