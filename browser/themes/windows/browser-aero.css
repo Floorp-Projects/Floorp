@@ -34,9 +34,7 @@
   }
 
   .tab-background-middle[selected=true]:not(:-moz-lwtheme) {
-    background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
-                      @fgTabTexture@,
-                      linear-gradient(transparent, transparent 2px, @customToolbarColor@ 2px, @customToolbarColor@);
+    background-color: @customToolbarColor@;
   }
 
   #navigator-toolbox:not(:-moz-lwtheme)::after {

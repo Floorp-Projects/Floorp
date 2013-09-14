@@ -2461,7 +2461,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   .tab-background-middle[selected=true] {
     background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle@2x.png),
                       @fgTabTexture@,
-                      @fgTabBackgroundMiddle@;
+                      none;
   }
 
   .tab-background-start[selected=true]:-moz-locale-dir(ltr)::after,
