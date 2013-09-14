@@ -9,9 +9,9 @@
 
 #define LIR_CPU_OPCODE_LIST(_)  \
     _(Unbox)                    \
-    _(UnboxFloatingPoint)       \
+    _(UnboxDouble)              \
     _(Box)                      \
-    _(BoxFloatingPoint)         \
+    _(BoxDouble)                \
     _(DivI)                     \
     _(SoftDivI)                 \
     _(DivPowTwoI)               \

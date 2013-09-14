@@ -329,10 +329,6 @@ class AssemblerX86Shared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void movss(const FloatRegister &src, const FloatRegister &dest) {
-        JS_ASSERT(HasSSE2());
-        masm.movss_rr(src.code(), dest.code());
-    }
     void movss(const Operand &src, const FloatRegister &dest) {
         JS_ASSERT(HasSSE2());
         switch (src.kind()) {
