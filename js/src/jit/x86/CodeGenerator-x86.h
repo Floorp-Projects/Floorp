@@ -48,7 +48,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
 
   public:
     bool visitBox(LBox *box);
-    bool visitBoxDouble(LBoxDouble *box);
+    bool visitBoxFloatingPoint(LBoxFloatingPoint *box);
     bool visitUnbox(LUnbox *unbox);
     bool visitValue(LValue *value);
     bool visitOsrValue(LOsrValue *value);
