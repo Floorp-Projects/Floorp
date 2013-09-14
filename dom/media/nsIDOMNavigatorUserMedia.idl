@@ -35,15 +35,3 @@ interface nsIDOMGetUserMediaErrorCallback : nsISupports
 {
   void onError(in DOMString error);
 };
-
-[scriptable, uuid(f34a3616-395a-43cd-b275-bf81750ac8b9)]
-interface nsIMediaStreamOptions : nsISupports
-{
-  readonly attribute boolean fake;
-  readonly attribute boolean audio;
-  readonly attribute boolean video;
-  readonly attribute boolean picture;
-  readonly attribute DOMString camera;
-  readonly attribute nsIMediaDevice audioDevice;
-  readonly attribute nsIMediaDevice videoDevice;
-};
