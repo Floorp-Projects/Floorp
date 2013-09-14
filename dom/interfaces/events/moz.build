@@ -15,7 +15,6 @@ XPIDL_SOURCES += [
     'nsIDOMDOMTransactionEvent.idl',
     'nsIDOMDataContainerEvent.idl',
     'nsIDOMDataTransfer.idl',
-    'nsIDOMDeviceLightEvent.idl',
     'nsIDOMDeviceMotionEvent.idl',
     'nsIDOMDeviceOrientationEvent.idl',
     'nsIDOMDragEvent.idl',
