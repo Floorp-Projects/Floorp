@@ -69,6 +69,9 @@ BaselineCompiler::compile()
     IonSpew(IonSpew_BaselineScripts, "Baseline compiling script %s:%d (%p)",
             script->filename(), script->lineno, script.get());
 
+    IonSpew(IonSpew_Codegen, "# Emitting baseline code for script %s:%d",
+            script->filename(), script->lineno);
+
     if (cx->typeInferenceEnabled() && !script->ensureHasBytecodeTypeMap(cx))
         return Method_Error;
 
@@ -968,8 +971,8 @@ BaselineCompiler::emit_JSOP_THIS()
     // Keep this value in R0
     frame.pushThis();
 
-    // In strict mode function or self-hosted function, |this| is left alone.
-    if (function() && (function()->strict() || function()->isSelfHostedBuiltin()))
+    // In strict mode code or self-hosted functions, |this| is left alone.
+    if (script->strict || (function() && function()->isSelfHostedBuiltin()))
         return true;
 
     Label skipIC;

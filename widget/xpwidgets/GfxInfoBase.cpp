@@ -211,6 +211,8 @@ BlacklistOSToOperatingSystem(const nsAString& os)
     return DRIVER_OS_WINDOWS_7;
   else if (os == NS_LITERAL_STRING("WINNT 6.2"))
     return DRIVER_OS_WINDOWS_8;
+  else if (os == NS_LITERAL_STRING("WINNT 6.3"))
+    return DRIVER_OS_WINDOWS_8_1;
   else if (os == NS_LITERAL_STRING("Linux"))
     return DRIVER_OS_LINUX;
   else if (os == NS_LITERAL_STRING("Darwin 9"))

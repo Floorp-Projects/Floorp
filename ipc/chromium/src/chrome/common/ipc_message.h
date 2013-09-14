@@ -287,7 +287,6 @@ class Message : public Pickle {
     COMPRESS_BIT    = 0x0200
   };
 
-#pragma pack(push, 2)
   struct Header : Pickle::Header {
     int32_t routing;  // ID of the view that this message is destined for
     msgid_t type;   // specifies the user-defined message type
@@ -305,7 +304,6 @@ class Message : public Pickle {
     // Sequence number
     int32_t seqno;
   };
-#pragma pack(pop)
 
   Header* header() {
     return headerT<Header>();

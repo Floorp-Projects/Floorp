@@ -1,5 +1,10 @@
-for (var i = -20; i < 20; i++)
-    assertNear(Math.tanh(i), (Math.exp(i) - Math.exp(-i)) / (Math.exp(i) + Math.exp(-i)));
+var sloppy_tolerance = 4;
+
+for (var i = -20; i < 20; i++) {
+    assertNear(Math.tanh(i),
+               (Math.exp(i) - Math.exp(-i)) / (Math.exp(i) + Math.exp(-i)),
+               sloppy_tolerance);
+}
 
 assertEq(Math.tanh(1e300), 1);
 
@@ -272,6 +277,6 @@ var tanh_data = [
 ];
 
 for (var [x, y] of tanh_data)
-    assertNear(Math.tanh(y), x);
+    assertNear(Math.tanh(y), x, sloppy_tolerance);
 
 reportCompare(0, 0, "ok");

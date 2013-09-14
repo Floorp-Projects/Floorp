@@ -543,6 +543,27 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         AddObserver(curEvent->Characters(), curEvent->Observer());
         break;
 
+    case AndroidGeckoEvent::PREFERENCES_GET:
+    case AndroidGeckoEvent::PREFERENCES_OBSERVE: {
+        const nsTArray<nsString> &prefNames = curEvent->PrefNames();
+        size_t count = prefNames.Length();
+        nsAutoArrayPtr<const PRUnichar*> prefNamePtrs(new const PRUnichar*[count]);
+        for (size_t i = 0; i < count; ++i) {
+            prefNamePtrs[i] = prefNames[i].get();
+        }
+
+        if (curEvent->Type() == AndroidGeckoEvent::PREFERENCES_GET) {
+            mBrowserApp->GetPreferences(curEvent->RequestId(), prefNamePtrs, count);
+        } else {
+            mBrowserApp->ObservePreferences(curEvent->RequestId(), prefNamePtrs, count);
+        }
+        break;
+    }
+
+    case AndroidGeckoEvent::PREFERENCES_REMOVE_OBSERVERS:
+        mBrowserApp->RemovePreferenceObservers(curEvent->RequestId());
+        break;
+
     case AndroidGeckoEvent::LOW_MEMORY:
         // TODO hook in memory-reduction stuff for different levels here
         if (curEvent->MetaState() >= AndroidGeckoEvent::MEMORY_PRESSURE_MEDIUM) {
