@@ -257,9 +257,6 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
     case eColorID__moz_buttondefault:
       aColor = NS_RGB(0xDC,0xDC,0xDC);
       break;
-    case eColorID__moz_mac_alternateprimaryhighlight:
-      aColor = GetColorFromNSColor([NSColor alternateSelectedControlColor]);
-      break;
     case eColorID__moz_cellhighlight:
     case eColorID__moz_html_cellhighlight:
     case eColorID__moz_mac_secondaryhighlight:
