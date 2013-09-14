@@ -5,6 +5,7 @@
 <!ENTITY index.title "App Manager">
 <!ENTITY index.projects2 "Apps">
 <!ENTITY index.device2 "Device">
+<!ENTITY index.help "Help">
 
 <!ENTITY device.screenshot "Screenshot">
 <!ENTITY device.screenshotTooltip "Open a screenshot of the current state of the device in a new tab.">
@@ -72,3 +73,13 @@
 <!ENTITY projects.debugApp "Debug">
 <!ENTITY projects.hostedManifestPlaceHolder2 "http://example.com/app/manifest.webapp">
 <!ENTITY projects.noProjects "No projects. Add a new packaged app below (local directory) or a hosted app (link to a manifest file).">
+
+<!ENTITY help.title "App Manager">
+<!ENTITY help.close "Close">
+<!ENTITY help.intro "This tool will help you build and install web apps on compatible devices (i.e Firefox OS). The <strong>Apps</strong> tab will assist you in the validation and installation process of your app. The <strong>Device</strong> tab will give you information about the connected device. Use the bottom toolbar to connect to a device or start the simulator.">
+<!ENTITY help.usefullLinks "Useful links:">
+<!ENTITY help.linkToAppMgrDoc "<a>Documentation: Using the App Manager</a>">
+<!ENTITY help.linkToConfiguringDevice "<a>How to setup your Firefox OS device</a>">
+<!ENTITY help.linkToTroubleShooting "<a>Troubleshooting</a>">
+<!ENTITY help.linkToSimulatorAddon "<a>Install Simulator Add-on</a>">
+<!ENTITY help.linkToAdbHelperAddon "<a>Install Adb Helper Add-on</a>">

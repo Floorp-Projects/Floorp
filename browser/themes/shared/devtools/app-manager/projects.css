@@ -22,7 +22,6 @@ body {
   color: #333;
   background-color: white;
   font-family: Lucida Grande, Helvetica, Helvetica Neue, sans-serif;
-  display: flex;
   overflow: hidden;
 }
 
