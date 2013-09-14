@@ -12,7 +12,6 @@
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
 #include "nsIDOMDeviceOrientationEvent.h"
-#include "nsIDOMUserProximityEvent.h"
 #include "nsIDOMDeviceMotionEvent.h"
 #include "nsDOMDeviceMotionEvent.h"
 #include "mozilla/TimeStamp.h"

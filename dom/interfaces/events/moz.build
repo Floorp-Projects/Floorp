@@ -47,7 +47,6 @@ XPIDL_SOURCES += [
     'nsIDOMTouchEvent.idl',
     'nsIDOMTransitionEvent.idl',
     'nsIDOMUIEvent.idl',
-    'nsIDOMUserProximityEvent.idl',
     'nsIDOMWheelEvent.idl',
 ]
 

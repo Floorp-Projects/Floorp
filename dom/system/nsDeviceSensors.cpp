@@ -20,6 +20,7 @@
 #include "nsIPermissionManager.h"
 #include "mozilla/dom/DeviceLightEvent.h"
 #include "mozilla/dom/DeviceProximityEvent.h"
+#include "mozilla/dom/UserProximityEvent.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -288,14 +289,14 @@ void
 nsDeviceSensors::FireDOMUserProximityEvent(mozilla::dom::EventTarget* aTarget,
                                            bool aNear)
 {
-  nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMUserProximityEvent(getter_AddRefs(event), aTarget, nullptr, nullptr);
-  nsCOMPtr<nsIDOMUserProximityEvent> pe = do_QueryInterface(event);
-
-  pe->InitUserProximityEvent(NS_LITERAL_STRING("userproximity"),
-                             true,
-                             false,
-                             aNear);
+  UserProximityEventInitInitializer init;
+  init.mBubbles = true;
+  init.mCancelable = false;
+  init.mNear = aNear;
+  nsRefPtr<UserProximityEvent> event =
+    UserProximityEvent::Constructor(aTarget,
+                                    NS_LITERAL_STRING("userproximity"),
+                                    init);
 
   event->SetTrusted(true);
 
