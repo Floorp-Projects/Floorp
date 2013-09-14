@@ -135,17 +135,18 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    *        Information about the breakpoint to be shown.
    *        This object must have the following properties:
    *          - location: the breakpoint's source location and line number
+   *          - disabled: the breakpoint's disabled state, boolean
    *          - text: the breakpoint's line text to be displayed
    * @param object aOptions [optional]
    *        @see DebuggerController.Breakpoints.addBreakpoint
    */
   addBreakpoint: function(aBreakpointData, aOptions = {}) {
-    let location = aBreakpointData.location;
+    let { location, disabled } = aBreakpointData;
 
     // Make sure we're not duplicating anything. If a breakpoint at the
-    // specified source url and line already exists, just enable it.
+    // specified source url and line already exists, just toggle it.
     if (this.getBreakpoint(location)) {
-      this.enableBreakpoint(location);
+      this[disabled ? "disableBreakpoint" : "enableBreakpoint"](location);
       return;
     }
 
@@ -322,7 +323,10 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     return DebuggerController.Breakpoints.removeBreakpoint(aLocation, {
       // No need to update this pane, since this method is invoked because
       // a breakpoint's view was interacted with.
-      noPaneUpdate: true
+      noPaneUpdate: true,
+      // Mark this breakpoint as being "disabled", not completely removed.
+      // This makes sure it will not be forgotten across target navigations.
+      rememberDisabled: true
     });
   },
 
@@ -445,17 +449,18 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * @param object aOptions
    *        A couple of options or flags supported by this operation:
    *          - location: the breakpoint's source location and line number
-   *          - text: the breakpoint's line text to be displayed.
+   *          - disabled: the breakpoint's disabled state, boolean
+   *          - text: the breakpoint's line text to be displayed
    * @return object
    *         An object containing the breakpoint container, checkbox,
    *         line number and line text nodes.
    */
   _createBreakpointView: function(aOptions) {
-    let { location, text } = aOptions;
+    let { location, disabled, text } = aOptions;
     let identifier = DebuggerController.Breakpoints.getIdentifier(location);
 
     let checkbox = document.createElement("checkbox");
-    checkbox.setAttribute("checked", "true");
+    checkbox.setAttribute("checked", !disabled);
     checkbox.className = "dbg-breakpoint-checkbox";
 
     let lineNumberNode = document.createElement("label");
@@ -499,11 +504,12 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * @param object aOptions
    *        A couple of options or flags supported by this operation:
    *          - location: the breakpoint's source location and line number
+   *          - disabled: the breakpoint's disabled state, boolean
    * @return object
    *         An object containing the breakpoint commandset and menu popup ids.
    */
   _createContextMenu: function(aOptions) {
-    let location = aOptions.location;
+    let { location, disabled } = aOptions;
     let identifier = DebuggerController.Breakpoints.getIdentifier(location);
 
     let commandset = document.createElement("commandset");
@@ -511,8 +517,8 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     commandset.id = "bp-cSet-" + identifier;
     menupopup.id = "bp-mPop-" + identifier;
 
-    createMenuItem.call(this, "enableSelf", true);
-    createMenuItem.call(this, "disableSelf");
+    createMenuItem.call(this, "enableSelf", !disabled);
+    createMenuItem.call(this, "disableSelf", disabled);
     createMenuItem.call(this, "deleteSelf");
     createMenuSeparator();
     createMenuItem.call(this, "setConditional");
