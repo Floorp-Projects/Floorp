@@ -59,8 +59,9 @@ LIRGeneratorX86::visitBox(MBox *box)
     MDefinition *inner = box->getOperand(0);
 
     // If the box wrapped a double, it needs a new register.
-    if (inner->type() == MIRType_Double)
-        return defineBox(new LBoxDouble(useRegisterAtStart(inner), tempCopy(inner, 0)), box);
+    if (IsFloatingPointType(inner->type()))
+        return defineBox(new LBoxFloatingPoint(useRegisterAtStart(inner), tempCopy(inner, 0),
+                                               inner->type()), box);
 
     if (box->canEmitAtUses())
         return emitAtUses(box);
@@ -100,11 +101,11 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
     if (!ensureDefined(inner))
         return false;
 
-    if (unbox->type() == MIRType_Double) {
-        LUnboxDouble *lir = new LUnboxDouble;
+    if (IsFloatingPointType(unbox->type())) {
+        LUnboxFloatingPoint *lir = new LUnboxFloatingPoint(unbox->type());
         if (unbox->fallible() && !assignSnapshot(lir, unbox->bailoutKind()))
             return false;
-        if (!useBox(lir, LUnboxDouble::Input, inner))
+        if (!useBox(lir, LUnboxFloatingPoint::Input, inner))
             return false;
         return define(lir, unbox);
     }
