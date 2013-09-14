@@ -2581,7 +2581,7 @@ WebConsoleFrame.prototype = {
         while (wins.hasMoreElements()) {
           let win = wins.getNext();
 
-          if (win.Scratchpad.uniqueName === aSourceURL) {
+          if (!win.closed && win.Scratchpad.uniqueName === aSourceURL) {
             win.focus();
             return;
           }
