@@ -5,12 +5,10 @@
 from __future__ import unicode_literals
 
 import errno
-import itertools
 import logging
 import os
 import types
 
-import mozbuild.makeutil as mozmakeutil
 from mozpack.copier import FilePurger
 from mozpack.manifests import (
     InstallManifest,
@@ -288,30 +286,20 @@ class RecursiveMakeBackend(CommonBackend):
         # Write out a master list of all IPDL source files.
         ipdls = FileAvoidWrite(os.path.join(self.environment.topobjdir,
             'ipc', 'ipdl', 'ipdlsrcs.mk'))
-        mk = mozmakeutil.Makefile()
-
-        sorted_ipdl_sources = list(sorted(self._ipdl_sources))
-        mk.add_statement('ALL_IPDLSRCS := %s\n' % ' '.join(sorted_ipdl_sources))
-
-        def files_from(ipdl):
-            base = os.path.basename(ipdl)
+        for p in sorted(self._ipdl_sources):
+            ipdls.write('ALL_IPDLSRCS += %s\n' % p)
+            base = os.path.basename(p)
             root, ext = os.path.splitext(base)
 
             # Both .ipdl and .ipdlh become .cpp files
-            files = ['%s.cpp' % root]
+            ipdls.write('CPPSRCS += %s.cpp\n' % root)
             if ext == '.ipdl':
                 # .ipdl also becomes Child/Parent.cpp files
-                files.extend(['%sChild.cpp' % root,
-                              '%sParent.cpp' % root])
-            return files
+                ipdls.write('CPPSRCS += %sChild.cpp\n' % root)
+                ipdls.write('CPPSRCS += %sParent.cpp\n' % root)
 
-        ipdl_cppsrcs = itertools.chain(*[files_from(p) for p in sorted_ipdl_sources])
-        mk.add_statement('CPPSRCS := %s\n' % ' '.join(ipdl_cppsrcs))
-
-        mk.add_statement('IPDLDIRS := %s\n' % ' '.join(sorted(set(os.path.dirname(p)
+        ipdls.write('IPDLDIRS := %s\n' % ' '.join(sorted(set(os.path.dirname(p)
             for p in self._ipdl_sources))))
-
-        mk.dump(ipdls)
 
         self._update_from_avoid_write(ipdls.close())
         self.summary.managed_count += 1
