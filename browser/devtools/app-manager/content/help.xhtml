@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+     - License, v. 2.0. If a copy of the MPL was not distributed with this
+     - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html [
+  <!ENTITY % appMgrDTD SYSTEM "chrome://browser/locale/devtools/app-manager.dtd" >
+  %appMgrDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+  <head>
+    <meta charset="utf8"/>
+    <base href="chrome://browser/content/devtools/app-manager/"></base>
+    <title>&help.title;</title>
+    <link rel="stylesheet" href="chrome://browser/skin/devtools/app-manager/help.css" type="text/css"/>
+  </head>
+
+  <body>
+
+    <h1>&help.title;</h1>
+
+    <p>&help.intro;</p>
+
+    <p>&help.usefullLinks;</p>
+    <ul>
+      <li id="linkToAppMgrDoc">&help.linkToAppMgrDoc;</li>
+      <li id="linkToConfiguringDevice">&help.linkToConfiguringDevice;</li>
+      <li id="linkToTroubleShooting">&help.linkToTroubleShooting;</li>
+      <li id="linkToSimulatorAddon">&help.linkToSimulatorAddon;</li>
+      <li id="linkToAdbHelperAddon">&help.linkToAdbHelperAddon;</li>
+    </ul>
+
+    <button id="close-button" onclick="closeHelp()">&help.close;</button>
+
+  </body>
+
+  <script type="application/javascript;version=1.8">
+    function closeHelp() {
+      window.parent.postMessage(JSON.stringify({name:"closeHelp"}), "*");
+    }
+
+    let a;
+
+    let link_usingAppMgr =       "https://developer.mozilla.org/docs/Mozilla/Firefox_OS/Using_the_App_Manager";
+    let link_configuringDevice = "https://developer.mozilla.org/docs/Mozilla/Firefox_OS/Using_the_App_Manager#Configuring_device";
+    let link_troubleShooting =   "https://developer.mozilla.org/docs/Mozilla/Firefox_OS/Using_the_App_Manager#Troubleshooting";
+    let link_installSimulator =  "https://developer.mozilla.org/docs/Mozilla/Firefox_OS/Using_the_App_Manager#Simulator";
+    let link_installAdbHelper =  "https://developer.mozilla.org/docs/Mozilla/Firefox_OS/Using_the_App_Manager#Adb_Helper_Add-on";
+
+    a = document.querySelector("#linkToAppMgrDoc > a");
+    a.target = "mdn";
+    a.href = link_usingAppMgr;
+
+    a = document.querySelector("#linkToConfiguringDevice > a");
+    a.target = "mdn";
+    a.href = link_configuringDevice;
+
+    a = document.querySelector("#linkToTroubleShooting > a");
+    a.target = "mdn";
+    a.href = link_troubleShooting;
+
+    a = document.querySelector("#linkToSimulatorAddon> a");
+    a.target = "mdn";
+    a.href = link_installSimulator;
+
+    a = document.querySelector("#linkToAdbHelperAddon > a");
+    a.target = "mdn";
+    a.href = link_installAdbHelper;
+
+  </script>
+</html>
+
