@@ -1457,6 +1457,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_vstr(VFPRegister(ScratchFloatReg).singleOverlay(), base, index, 0, cond);
 
     }
+    void moveFloat(FloatRegister src, FloatRegister dest) {
+        ma_vmov(VFPRegister(src).singleOverlay(), VFPRegister(dest).singleOverlay());
+    }
 };
 
 typedef MacroAssemblerARMCompat MacroAssemblerSpecific;
