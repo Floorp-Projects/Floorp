@@ -1264,19 +1264,15 @@ CodeGeneratorARM::visitBox(LBox *box)
 }
 
 bool
-CodeGeneratorARM::visitBoxFloatingPoint(LBoxFloatingPoint *box)
+CodeGeneratorARM::visitBoxDouble(LBoxDouble *box)
 {
     const LDefinition *payload = box->getDef(PAYLOAD_INDEX);
     const LDefinition *type = box->getDef(TYPE_INDEX);
     const LAllocation *in = box->getOperand(0);
 
-    FloatRegister reg = ToFloatRegister(in);
-    if (box->type() == MIRType_Float32)
-        masm.convertFloatToDouble(reg, reg);
-
     //masm.as_vxfer(ToRegister(payload), ToRegister(type),
     //              VFPRegister(ToFloatRegister(in)), Assembler::FloatToCore);
-    masm.ma_vxfer(VFPRegister(reg), ToRegister(payload), ToRegister(type));
+    masm.ma_vxfer(VFPRegister(ToFloatRegister(in)), ToRegister(payload), ToRegister(type));
     return true;
 }
 
