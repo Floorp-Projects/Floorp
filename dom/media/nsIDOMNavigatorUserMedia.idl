@@ -6,12 +6,13 @@
 #include "nsIVariant.idl"
 #include "nsIDOMMediaStream.idl"
 
-[scriptable, builtinclass, uuid(6de854f9-acf8-4383-b464-4803631ef309)]
+[scriptable, builtinclass, uuid(4af2bdb7-1547-4d10-8886-02a78c3c0b83)]
 interface nsIMediaDevice : nsISupports
 {
   readonly attribute DOMString type;
   readonly attribute DOMString name;
   readonly attribute DOMString id;
+  readonly attribute DOMString facingMode;
 };
 
 [scriptable, function, uuid(24544878-d35e-4962-8c5f-fb84e97bdfee)]
