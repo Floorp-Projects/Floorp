@@ -36,10 +36,15 @@
             </h3>
             <p template='{"type":"localizedContent","property":"device.deviceSize", "paths":["device.description.width","device.description.height","device.description.dpi"]}'></p>
           </header>
-          <button onclick="UI.screenshot()">&device.screenshot;</button>
+          <button onclick="UI.screenshot()" title="&device.screenshotTooltip;">&device.screenshot;</button>
           <div id="tabs-headers">
-            <div onclick="UI.setTab('apps')" class="tab sidebar-item apps">&device.installedApps;</div>
-            <div onclick="UI.setTab('permissions')" class="tab sidebar-item permissions">&device.permissions;</div>
+            <div onclick="UI.setTab('apps')" class="tab sidebar-item apps" title="&device.installedAppsTooltip;">&device.installedApps;</div>
+            <div onclick="UI.setTab('permissions')" class="tab sidebar-item permissions" title="&device.permissionsTooltip;">
+              &device.permissions;
+              <a target="_blank" href="&device.permissionsHelpLink;">
+                <button class="help">&device.help;</button>
+              </a>
+            </div>
           </div>
         </div>
       </aside>
@@ -59,9 +64,9 @@
               <section template-loop='{"arrayPath":"device.permissions","childSelector":"#permission-template"}'></section>
             </div>
             <div class="permission-table-footer">
-              <div class="allow-label">&device.allow;</div>
-              <div class="prompt-label">&device.prompt;</div>
-              <div class="deny-label">&device.deny;</div>
+              <div class="allow-label" title="&device.allowTooltip;">&device.allow;</div>
+              <div class="prompt-label" title="&device.promptTooltip;">&device.prompt;</div>
+              <div class="deny-label" title="&device.denyTooltip;">&device.deny;</div>
             </div>
           </div>
         </div>
@@ -84,9 +89,9 @@
     <img class="app-icon" template='{"type":"attribute","path":"iconURL","name":"src"}'></img>
     <span class="app-name" template='{"type":"textContent","path":"name"}'></span>
     <div class="app-buttons">
-      <button class="button-debug" template='{"type":"attribute","path":"manifestURL","name":"data-manifest"}' onclick="UI.openToolbox(this.dataset.manifest)">&device.debugApp;</button>
-      <button class="button-start" template='{"type":"attribute","path":"manifestURL","name":"data-manifest"}' onclick="UI.startApp(this.dataset.manifest)">&device.startApp;</button>
-      <button class="button-stop"  template='{"type":"attribute","path":"manifestURL","name":"data-manifest"}' onclick="UI.stopApp(this.dataset.manifest)">&device.stopApp;</button>
+      <button class="button-debug" template='{"type":"attribute","path":"manifestURL","name":"data-manifest"}' onclick="UI.openToolbox(this.dataset.manifest)" title="&device.debugAppTooltip;">&device.debugApp;</button>
+      <button class="button-start" template='{"type":"attribute","path":"manifestURL","name":"data-manifest"}' onclick="UI.startApp(this.dataset.manifest)" title="&device.startAppTooltip;">&device.startApp;</button>
+      <button class="button-stop" template='{"type":"attribute","path":"manifestURL","name":"data-manifest"}' onclick="UI.stopApp(this.dataset.manifest)" title="&device.stopAppTooltip;">&device.stopApp;</button>
     </div>
   </div>
   </template>

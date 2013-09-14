@@ -101,6 +101,14 @@ public class BrowserToolbar extends GeckoRelativeLayout
         public void onFilter(String searchText, AutocompleteHandler handler);
     }
 
+    public interface OnStartEditingListener {
+        public void onStartEditing();
+    }
+
+    public interface OnStopEditingListener {
+        public void onStopEditing();
+    }
+
     private LayoutParams mAwesomeBarParams;
     private View mUrlDisplayContainer;
     private View mUrlEditContainer;
@@ -128,10 +136,13 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private LinearLayout mActionItemBar;
     private MenuPopup mMenuPopup;
     private List<? extends View> mFocusOrder;
+
     private OnActivateListener mActivateListener;
     private OnCommitListener mCommitListener;
     private OnDismissListener mDismissListener;
     private OnFilterListener mFilterListener;
+    private OnStartEditingListener mStartEditingListener;
+    private OnStopEditingListener mStopEditingListener;
 
     final private BrowserApp mActivity;
     private boolean mHasSoftMenuButton;
@@ -1181,6 +1192,14 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mFilterListener = listener;
     }
 
+    public void setOnStartEditingListener(OnStartEditingListener listener) {
+        mStartEditingListener = listener;
+    }
+
+    public void setOnStopEditingListener(OnStopEditingListener listener) {
+        mStopEditingListener = listener;
+    }
+
     private void showSoftInput() {
         InputMethodManager imm =
                (InputMethodManager) mActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -1267,6 +1286,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         mUrlEditText.setText(url != null ? url : "");
         mIsEditing = true;
+
+        if (mStartEditingListener != null) {
+            mStartEditingListener.onStartEditing();
+        }
 
         final int entryTranslation = getUrlBarEntryTranslation();
         final int curveTranslation = getUrlBarCurveTranslation();
@@ -1375,6 +1398,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
             return url;
         }
         mIsEditing = false;
+
+        if (mStopEditingListener != null) {
+            mStopEditingListener.onStopEditing();
+        }
 
         if (HardwareUtils.isTablet() || Build.VERSION.SDK_INT < 11) {
             hideUrlEditContainer();
