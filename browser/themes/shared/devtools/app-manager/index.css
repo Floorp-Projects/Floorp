@@ -67,11 +67,23 @@
   background-image: url('chrome://browser/skin/devtools/app-manager/index-icons.svg');
   background-position: left -85px, top left;
   background-repeat: no-repeat, no-repeat;
-  background-size: 160px 160px, 2px 80px;
+  background-size: 160px 240px, 2px 80px;
 }
 
 .device-button[selected] {
   background-position: right -85px, top left;
+}
+
+.help-button {
+  border-bottom: 0;
+  background-image: url('chrome://browser/skin/devtools/app-manager/index-icons.svg');
+  background-position: left -165px, top left;
+  background-repeat: no-repeat, no-repeat;
+  background-size: 160px 240px, 2px 80px;
+}
+
+.help-button[selected] {
+  background-position: right -165px, top left;
 }
 
 #connection-footer {

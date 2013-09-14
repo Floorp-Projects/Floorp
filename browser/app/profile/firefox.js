@@ -1073,6 +1073,7 @@ pref("devtools.commands.dir", "");
 // Disable the app manager
 pref("devtools.appmanager.enabled", true);
 pref("devtools.appmanager.simulatorInstallPage", "https://addons.mozilla.org/firefox/addon/firefox-os-simulator/");
+pref("devtools.appmanager.firstrun", true);
 
 // Toolbox preferences
 pref("devtools.toolbox.footer.height", 250);
