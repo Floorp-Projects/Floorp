@@ -35,7 +35,7 @@ this.BrowserDebuggerProcess = function BrowserDebuggerProcess(aOnClose, aOnRun) 
   this._initServer();
   this._initProfile();
   this._create();
-}
+};
 
 /**
  * Initializes and starts a chrome debugger process.

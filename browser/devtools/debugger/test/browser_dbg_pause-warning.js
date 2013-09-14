@@ -1,43 +1,35 @@
-/* vim:set ts=2 sw=2 sts=2 et: */
-/*
- * Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/**
+ * Tests if a warning is shown in the inspector when debugger is paused.
  */
 
-var gPane = null;
-var gTab = null;
-var gDebugger = null;
-var gView = null;
-var gToolbox = null;
-var gTarget = null;
+const TAB_URL = EXAMPLE_URL + "doc_inline-script.html";
+
+let gTab, gDebuggee, gPanel, gDebugger;
+let gTarget, gToolbox;
 
 function test() {
-  debug_tab_pane(STACK_URL, function(aTab, aDebuggee, aPane) {
+  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
     gTab = aTab;
-    gPane = aPane;
-    gDebugger = gPane.panelWin;
-    gView = gDebugger.DebuggerView;
-
-    gTarget = TargetFactory.forTab(gBrowser.selectedTab);
-    gToolbox = gDevTools.getToolbox(gTarget);
+    gDebuggee = aDebuggee;
+    gPanel = aPanel;
+    gDebugger = gPanel.panelWin;
+    gTarget = gPanel.target;
+    gToolbox = gPanel._toolbox;
 
     testPause();
   });
 }
 
 function testPause() {
-  let button = gDebugger.document.getElementById("resume");
+  gDebugger.gThreadClient.addOneTimeListener("paused", () => {
+    ok(gTarget.isThreadPaused,
+      "target.isThreadPaused has been updated to true.");
 
-  gDebugger.DebuggerController.activeThread.addOneTimeListener("paused", function() {
-    Services.tm.currentThread.dispatch({ run: function() {
-      is(gDebugger.DebuggerController.activeThread.paused, true,
-        "Debugger is paused.");
-
-      ok(gTarget.isThreadPaused, "target.isThreadPaused has been updated");
-
-      gToolbox.once("inspector-selected", testNotificationIsUp1);
-      gToolbox.selectTool("inspector");
-    }}, 0);
+    gToolbox.once("inspector-selected", testNotificationIsUp1);
+    gToolbox.selectTool("inspector");
   });
 
   EventUtils.sendMouseEvent({ type: "mousedown" },
@@ -48,7 +40,10 @@ function testPause() {
 function testNotificationIsUp1() {
   let notificationBox = gToolbox.getNotificationBox();
   let notification = notificationBox.getNotificationWithValue("inspector-script-paused");
-  ok(notification, "Notification is present");
+
+  ok(notification,
+    "Inspector notification is present (1).");
+
   gToolbox.once("jsdebugger-selected", testNotificationIsHidden);
   gToolbox.selectTool("jsdebugger");
 }
@@ -56,7 +51,10 @@ function testNotificationIsUp1() {
 function testNotificationIsHidden() {
   let notificationBox = gToolbox.getNotificationBox();
   let notification = notificationBox.getNotificationWithValue("inspector-script-paused");
-  ok(!notification, "Notification is hidden");
+
+  ok(!notification,
+    "Inspector notification is hidden (2).");
+
   gToolbox.once("inspector-selected", testNotificationIsUp2);
   gToolbox.selectTool("inspector");
 }
@@ -64,21 +62,25 @@ function testNotificationIsHidden() {
 function testNotificationIsUp2() {
   let notificationBox = gToolbox.getNotificationBox();
   let notification = notificationBox.getNotificationWithValue("inspector-script-paused");
-  ok(notification, "Notification is present");
+
+  ok(notification,
+    "Inspector notification is present again (3).");
+
   testResume();
 }
 
 function testResume() {
-  gDebugger.DebuggerController.activeThread.addOneTimeListener("resumed", function() {
-    Services.tm.currentThread.dispatch({ run: function() {
+  gDebugger.gThreadClient.addOneTimeListener("resumed", () => {
+    ok(!gTarget.isThreadPaused,
+      "target.isThreadPaused has been updated to false.");
 
-      ok(!gTarget.isThreadPaused, "target.isThreadPaused has been updated");
-      let notificationBox = gToolbox.getNotificationBox();
-      let notification = notificationBox.getNotificationWithValue("inspector-script-paused");
-      ok(!notification, "No notification once debugger resumed");
+    let notificationBox = gToolbox.getNotificationBox();
+    let notification = notificationBox.getNotificationWithValue("inspector-script-paused");
 
-      closeDebuggerAndFinish();
-    }}, 0);
+    ok(!notification,
+      "Inspector notification was removed once debugger resumed.");
+
+    closeDebuggerAndFinish(gPanel);
   });
 
   EventUtils.sendMouseEvent({ type: "mousedown" },
@@ -87,11 +89,10 @@ function testResume() {
 }
 
 registerCleanupFunction(function() {
-  removeTab(gTab);
-  gPane = null;
   gTab = null;
+  gDebuggee = null;
+  gPanel = null;
   gDebugger = null;
-  gView = null;
-  gToolbox = null;
   gTarget = null;
+  gToolbox = null;
 });

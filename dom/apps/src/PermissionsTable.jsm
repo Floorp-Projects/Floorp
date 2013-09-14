@@ -284,7 +284,7 @@ this.PermissionsTable =  { geolocation: {
                            },
                            "keyboard": {
                              app: DENY_ACTION,
-                             privileged: DENY_ACTION,
+                             privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "wappush": {

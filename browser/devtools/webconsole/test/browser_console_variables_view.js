@@ -25,16 +25,18 @@ function consoleOpened(hud)
   gJSTerm.execute("fooObj", onExecuteFooObj);
 }
 
-function onExecuteFooObj()
+function onExecuteFooObj(msg)
 {
-  let msg = gWebConsole.outputNode.querySelector(".webconsole-msg-output");
   ok(msg, "output message found");
   isnot(msg.textContent.indexOf("[object Object]"), -1, "message text check");
+
+  let anchor = msg.querySelector("a");
+  ok(anchor, "object link found");
 
   gJSTerm.once("variablesview-fetched", onFooObjFetch);
 
   executeSoon(() =>
-    EventUtils.synthesizeMouse(msg, 2, 2, {}, gWebConsole.iframeWindow)
+    EventUtils.synthesizeMouse(anchor, 2, 2, {}, gWebConsole.iframeWindow)
   );
 }
 
@@ -150,12 +152,15 @@ function onRenamedTestPropFoundAgain(aResults)
 
   let outputNode = gWebConsole.outputNode;
 
-  waitForSuccess({
-    name: "exception in property update reported in the web console output",
-    validatorFn: () => outputNode.textContent.indexOf("foobarzFailure") != -1,
-    successFn: testPropDelete.bind(null, prop),
-    failureFn: testPropDelete.bind(null, prop),
-  });
+  waitForMessages({
+    webconsole: gWebConsole,
+    messages: [{
+      name: "exception in property update reported in the web console output",
+      text: "foobarzFailure",
+      category: CATEGORY_OUTPUT,
+      severity: SEVERITY_ERROR,
+    }],
+  }).then(testPropDelete.bind(null, prop));
 }
 
 function testPropDelete(aProp)

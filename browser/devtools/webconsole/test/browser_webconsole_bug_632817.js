@@ -185,7 +185,7 @@ function testLiveFilteringOnSearchStrings() {
 }
 
 function countMessageNodes() {
-  let messageNodes = hud.outputNode.querySelectorAll(".hud-msg-node");
+  let messageNodes = hud.outputNode.querySelectorAll(".message");
   let displayedMessageNodes = 0;
   let view = hud.iframeWindow;
   for (let i = 0; i < messageNodes.length; i++) {

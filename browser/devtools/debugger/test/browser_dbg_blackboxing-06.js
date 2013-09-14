@@ -5,66 +5,52 @@
  * Test that clicking the black box checkbox doesn't select that source.
  */
 
-const TAB_URL = EXAMPLE_URL + "browser_dbg_blackboxing.html";
+const TAB_URL = EXAMPLE_URL + "doc_blackboxing.html";
 
-var gPane = null;
-var gTab = null;
-var gDebuggee = null;
-var gDebugger = null;
+let gTab, gDebuggee, gPanel, gDebugger;
+let gSources;
 
-function test()
-{
-  let scriptShown = false;
-  let framesAdded = false;
-  let resumed = false;
-  let testStarted = false;
-
-  debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
-    resumed = true;
+function test() {
+  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
     gTab = aTab;
     gDebuggee = aDebuggee;
-    gPane = aPane;
-    gDebugger = gPane.panelWin;
+    gPanel = aPanel;
+    gDebugger = gPanel.panelWin;
+    gSources = gDebugger.DebuggerView.Sources;
 
-    once(gDebugger, "Debugger:SourceShown", testBlackBox);
+    waitForSourceShown(gPanel, ".js")
+      .then(testBlackBox)
+      .then(() => closeDebuggerAndFinish(gPanel))
+      .then(null, aError => {
+        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
+      });
   });
 }
 
 function testBlackBox() {
-  const sources = gDebugger.DebuggerView.Sources;
-
-  const selectedUrl = sources.selectedItem.attachment.source.url;
+  const selectedUrl = gSources.selectedValue;
   const checkbox = getDifferentBlackBoxCheckbox(selectedUrl);
-  ok(checkbox, "We should be able to grab a checkbox");
+  ok(checkbox, "We should be able to grab a different checkbox.");
 
-  const { activeThread } = gDebugger.DebuggerController;
-  activeThread.addOneTimeListener("blackboxchange", function () {
-    is(selectedUrl,
-       sources.selectedItem.attachment.source.url,
-       "The same source should be selected");
-    closeDebuggerAndFinish();
+  let finished = waitForThreadEvents(gPanel, "blackboxchange").then(() => {
+    is(selectedUrl, gSources.selectedValue,
+      "The same source should still be selected.");
   });
 
   checkbox.click();
+  return finished;
 }
 
-function getDifferentBlackBoxCheckbox(url) {
+function getDifferentBlackBoxCheckbox(aUrl) {
   return gDebugger.document.querySelector(
-    ".side-menu-widget-item:not([tooltiptext=\""
-      + url + "\"]) .side-menu-widget-item-checkbox");
-}
-
-function once(target, event, callback) {
-  target.addEventListener(event, function _listener(...args) {
-    target.removeEventListener(event, _listener, false);
-    callback.apply(null, args);
-  }, false);
+    ".side-menu-widget-item:not([tooltiptext=\"" + aUrl + "\"]) " +
+    ".side-menu-widget-item-checkbox");
 }
 
 registerCleanupFunction(function() {
-  removeTab(gTab);
-  gPane = null;
   gTab = null;
   gDebuggee = null;
+  gPanel = null;
   gDebugger = null;
+  gSources = null;
 });

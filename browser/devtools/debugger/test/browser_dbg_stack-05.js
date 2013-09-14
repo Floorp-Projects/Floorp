@@ -1,114 +1,154 @@
-/* vim:set ts=2 sw=2 sts=2 et: */
-/*
- * Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/**
+ * Test that switching between stack frames properly sets the current debugger
+ * location in the source editor.
  */
 
-// Test that switching between stack frames properly sets the current debugger
-// location in the source editor.
+const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 
-const TAB_URL = EXAMPLE_URL + "browser_dbg_script-switching.html";
-
-var gPane = null;
-var gTab = null;
-var gDebuggee = null;
-var gDebugger = null;
+let gTab, gDebuggee, gPanel, gDebugger;
+let gEditor, gSources, gFrames;
 
 function test() {
-  let scriptShown = false;
-  let framesAdded = false;
-
-  debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
+  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
     gTab = aTab;
     gDebuggee = aDebuggee;
-    gPane = aPane;
-    gDebugger = gPane.panelWin;
+    gPanel = aPanel;
+    gDebugger = gPanel.panelWin;
+    gEditor = gDebugger.DebuggerView.editor;
+    gSources = gDebugger.DebuggerView.Sources;
+    gFrames = gDebugger.DebuggerView.StackFrames;
 
-    gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
-      let url = aEvent.detail.url;
-      if (url.indexOf("-02.js") != -1) {
-        scriptShown = true;
-        gDebugger.removeEventListener(aEvent.type, _onEvent);
-        runTest();
-      }
-    });
-
-    gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
-      framesAdded = true;
-      runTest();
-    });
+    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6)
+      .then(initialChecks)
+      .then(testNewestTwoFrames)
+      .then(testOldestTwoFrames)
+      .then(testAfterResume)
+      .then(() => closeDebuggerAndFinish(gPanel))
+      .then(null, aError => {
+        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
+      });
 
     gDebuggee.firstCall();
   });
-
-  function runTest()
-  {
-    if (scriptShown && framesAdded) {
-      Services.tm.currentThread.dispatch({ run: testRecurse }, 0);
-    }
-  }
 }
 
-function testRecurse()
-{
-  let frames = gDebugger.DebuggerView.StackFrames.widget._list;
-  let childNodes = frames.childNodes;
+function initialChecks() {
+  is(gDebugger.gThreadClient.state, "paused",
+    "Should only be getting stack frames while paused.");
+  is(gFrames.itemCount, 4,
+    "Should have four frames.");
+}
 
-  is(frames.querySelectorAll(".dbg-stackframe").length, 4,
-    "Correct number of frames.");
+function testNewestTwoFrames() {
+  let deferred = promise.defer();
 
-  is(childNodes.length, frames.querySelectorAll(".dbg-stackframe").length,
-    "All children should be frames.");
+  is(gFrames.selectedIndex, 3,
+    "Newest frame should be selected by default.");
+  is(gSources.selectedIndex, 1,
+    "The second source is selected in the widget.");
+  ok(isCaretPos(gPanel, 6),
+    "Editor caret location is correct.");
 
-  ok(frames.querySelector("#stackframe-0").parentNode.hasAttribute("checked"),
-    "First frame should be selected by default.");
+  // The editor's debug location takes a tick to update.
+  executeSoon(() => {
+    is(gEditor.getDebugLocation(), 5,
+      "Editor debug location is correct.");
 
-  ok(!frames.querySelector("#stackframe-2").parentNode.hasAttribute("checked"),
-    "Third frame should not be selected.");
+    EventUtils.sendMouseEvent({ type: "mousedown" },
+      gFrames.getItemAtIndex(2).target,
+      gDebugger);
 
-  is(gDebugger.editor.getDebugLocation(), 5,
-     "editor debugger location is correct.");
+    is(gFrames.selectedIndex, 2,
+      "Third frame should be selected after click.");
+    is(gSources.selectedIndex, 1,
+      "The second source is still selected in the widget.");
+    ok(isCaretPos(gPanel, 6),
+      "Editor caret location is correct.");
 
+    // The editor's debug location takes a tick to update.
+    executeSoon(() => {
+      is(gEditor.getDebugLocation(), 5,
+        "Editor debug location is correct.");
 
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    frames.querySelector("#stackframe-2"),
-    gDebugger);
-
-  ok(!frames.querySelector("#stackframe-0").parentNode.hasAttribute("checked"),
-     "First frame should not be selected after click.");
-
-  ok(frames.querySelector("#stackframe-2").parentNode.hasAttribute("checked"),
-     "Third frame should be selected after click.");
-
-  is(gDebugger.editor.getDebugLocation(), 4,
-     "editor debugger location is correct after click.");
-
-
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    frames.querySelector("#stackframe-0 .dbg-stackframe-title"),
-    gDebugger);
-
-  ok(frames.querySelector("#stackframe-0").parentNode.hasAttribute("checked"),
-     "First frame should be selected after click inside the first frame.");
-
-  ok(!frames.querySelector("#stackframe-2").parentNode.hasAttribute("checked"),
-     "Third frame should not be selected after click inside the first frame.");
-
-  is(gDebugger.editor.getDebugLocation(), 5,
-     "editor debugger location is correct (frame 0 again).");
-
-  gDebugger.DebuggerController.activeThread.resume(function() {
-    is(gDebugger.editor.getDebugLocation(), -1,
-       "editor debugger location is correct after resume.");
-
-    closeDebuggerAndFinish();
+      deferred.resolve();
+    });
   });
+
+  return deferred.promise;
+}
+
+function testOldestTwoFrames() {
+  let deferred = promise.defer();
+
+  waitForSourceAndCaret(gPanel, "-01.js", 5).then(() => {
+    is(gFrames.selectedIndex, 1,
+      "Second frame should be selected after click.");
+    is(gSources.selectedIndex, 0,
+      "The first source is now selected in the widget.");
+    ok(isCaretPos(gPanel, 5),
+      "Editor caret location is correct.");
+
+    // The editor's debug location takes a tick to update.
+    executeSoon(() => {
+      is(gEditor.getDebugLocation(), 4,
+        "Editor debug location is correct.");
+
+      EventUtils.sendMouseEvent({ type: "mousedown" },
+        gFrames.getItemAtIndex(0).target,
+        gDebugger);
+
+      is(gFrames.selectedIndex, 0,
+        "Oldest frame should be selected after click.");
+      is(gSources.selectedIndex, 0,
+        "The first source is still selected in the widget.");
+      ok(isCaretPos(gPanel, 5),
+        "Editor caret location is correct.");
+
+      // The editor's debug location takes a tick to update.
+      executeSoon(() => {
+        is(gEditor.getDebugLocation(), 4,
+          "Editor debug location is correct.");
+
+        deferred.resolve();
+      });
+    });
+  });
+
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    gFrames.getItemAtIndex(1).target,
+    gDebugger);
+
+  return deferred.promise;
+}
+
+function testAfterResume() {
+  let deferred = promise.defer();
+
+  gDebugger.once(gDebugger.EVENTS.AFTER_FRAMES_CLEARED, () => {
+    is(gFrames.itemCount, 0,
+      "Should have no frames after resume.");
+    ok(isCaretPos(gPanel, 5),
+      "Editor caret location is correct after resume.");
+    is(gEditor.getDebugLocation(), -1,
+      "Editor debug location is correct after resume.");
+
+    deferred.resolve();
+  }, true);
+
+  gDebugger.gThreadClient.resume();
+
+  return deferred.promise;
 }
 
 registerCleanupFunction(function() {
-  removeTab(gTab);
-  gPane = null;
   gTab = null;
   gDebuggee = null;
+  gPanel = null;
   gDebugger = null;
+  gEditor = null;
+  gFrames = null;
 });
+
