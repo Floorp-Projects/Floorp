@@ -23,6 +23,7 @@ class OptionalURIParams;
 namespace dom {
 
 class ContentParent;
+class PBrowserParent;
 
 class ExternalHelperAppParent : public PExternalHelperAppParent
                               , public nsHashPropertyBag
@@ -48,7 +49,8 @@ public:
               const nsCString& aMimeContentType,
               const nsCString& aContentDisposition,
               const bool& aForceSave,
-              const OptionalURIParams& aReferrer);
+              const OptionalURIParams& aReferrer,
+              PBrowserParent* aBrowser);
     virtual ~ExternalHelperAppParent();
 
 private:

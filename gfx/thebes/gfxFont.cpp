@@ -111,6 +111,7 @@ gfxFontEntry::gfxFontEntry() :
     mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
     mUVSOffset(0), mUVSData(nullptr),
     mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
+    mUnitsPerEm(0),
     mHBFace(nullptr),
     mGrFace(nullptr),
     mGrFaceRefCnt(0)
@@ -137,6 +138,7 @@ gfxFontEntry::gfxFontEntry(const nsAString& aName, bool aIsStandardFace) :
     mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
     mUVSOffset(0), mUVSData(nullptr),
     mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
+    mUnitsPerEm(0),
     mHBFace(nullptr),
     mGrFace(nullptr),
     mGrFaceRefCnt(0)
@@ -264,6 +266,30 @@ gfxFontEntry::FindOrMakeFont(const gfxFontStyle *aStyle, bool aNeedsBold)
     return font.forget();
 }
 
+uint16_t
+gfxFontEntry::UnitsPerEm()
+{
+    if (!mUnitsPerEm) {
+        AutoTable headTable(this, TRUETYPE_TAG('h','e','a','d'));
+        if (headTable) {
+            uint32_t len;
+            const HeadTable* head =
+                reinterpret_cast<const HeadTable*>(hb_blob_get_data(headTable,
+                                                                    &len));
+            if (len >= sizeof(HeadTable)) {
+                mUnitsPerEm = head->unitsPerEm;
+            }
+        }
+
+        // if we didn't find a usable 'head' table, or if the value was
+        // outside the valid range, record it as invalid
+        if (mUnitsPerEm < kMinUPEM || mUnitsPerEm > kMaxUPEM) {
+            mUnitsPerEm = kInvalidUPEM;
+        }
+    }
+    return mUnitsPerEm;
+}
+
 bool
 gfxFontEntry::HasSVGGlyph(uint32_t aGlyphId)
 {
@@ -275,15 +301,17 @@ bool
 gfxFontEntry::GetSVGGlyphExtents(gfxContext *aContext, uint32_t aGlyphId,
                                  gfxRect *aResult)
 {
-    NS_ABORT_IF_FALSE(mSVGInitialized, "SVG data has not yet been loaded. TryGetSVGData() first.");
+    NS_ABORT_IF_FALSE(mSVGInitialized,
+                      "SVG data has not yet been loaded. TryGetSVGData() first.");
+    NS_ABORT_IF_FALSE(mUnitsPerEm >= kMinUPEM && mUnitsPerEm <= kMaxUPEM,
+                      "font has invalid unitsPerEm");
 
     gfxContextAutoSaveRestore matrixRestore(aContext);
     cairo_matrix_t fontMatrix;
     cairo_get_font_matrix(aContext->GetCairo(), &fontMatrix);
 
     gfxMatrix svgToAppSpace = *reinterpret_cast<gfxMatrix*>(&fontMatrix);
-    svgToAppSpace.Scale(1.0f / gfxSVGGlyphs::SVG_UNITS_PER_EM,
-                        1.0f / gfxSVGGlyphs::SVG_UNITS_PER_EM);
+    svgToAppSpace.Scale(1.0f / mUnitsPerEm, 1.0f / mUnitsPerEm);
 
     return mSVGGlyphs->GetGlyphExtents(aGlyphId, svgToAppSpace, aResult);
 }
@@ -307,8 +335,13 @@ gfxFontEntry::TryGetSVGData(gfxFont* aFont)
     if (!mSVGInitialized) {
         mSVGInitialized = true;
 
-        // We don't use AutoTable here because we'll pass ownership of these
-        // blobs to the gfxSVGGlyphs, once we've confirmed the tables exist
+        // If UnitsPerEm is not known/valid, we can't use SVG glyphs
+        if (UnitsPerEm() == kInvalidUPEM) {
+            return false;
+        }
+
+        // We don't use AutoTable here because we'll pass ownership of this
+        // blob to the gfxSVGGlyphs, once we've confirmed the table exists
         hb_blob_t *svgTable = GetFontTable(TRUETYPE_TAG('S','V','G',' '));
         if (!svgTable) {
             return false;
@@ -652,6 +685,15 @@ gfxFontEntry::ReleaseGrFace(gr_face *aFace)
         mGrFaceInitialized = false;
         delete mGrTableMap;
         mGrTableMap = nullptr;
+    }
+}
+
+void
+gfxFontEntry::DisconnectSVG()
+{
+    if (mSVGInitialized && mSVGGlyphs) {
+        mSVGGlyphs = nullptr;
+        mSVGInitialized = false;
     }
 }
 
@@ -1360,20 +1402,10 @@ gfxFontCache::MemoryReporter::CollectReports
     return NS_OK;
 }
 
-// Observer for the memory-pressure notification, to trigger
-// flushing of the shaped-word caches
-class MemoryPressureObserver MOZ_FINAL : public nsIObserver,
-                                         public nsSupportsWeakReference
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-};
-
-NS_IMPL_ISUPPORTS2(MemoryPressureObserver, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS1(gfxFontCache::Observer, nsIObserver)
 
 NS_IMETHODIMP
-MemoryPressureObserver::Observe(nsISupports *aSubject,
+gfxFontCache::Observer::Observe(nsISupports *aSubject,
                                 const char *aTopic,
                                 const PRUnichar *someData)
 {
@@ -1382,6 +1414,8 @@ MemoryPressureObserver::Observe(nsISupports *aSubject,
         if (fontCache) {
             fontCache->FlushShapedWordCaches();
         }
+    } else {
+        NS_NOTREACHED("unexpected notification topic");
     }
     return NS_OK;
 }
@@ -1422,7 +1456,7 @@ gfxFontCache::gfxFontCache()
 {
     nsCOMPtr<nsIObserverService> obs = GetObserverService();
     if (obs) {
-        obs->AddObserver(new MemoryPressureObserver, "memory-pressure", false);
+        obs->AddObserver(new Observer, "memory-pressure", false);
     }
 
     mWordCacheExpirationTimer = do_CreateInstance("@mozilla.org/timer;1");
@@ -2818,7 +2852,8 @@ gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMod
         return false;
     }
 
-    const gfxFloat devUnitsPerSVGUnit = GetStyle()->size / gfxSVGGlyphs::SVG_UNITS_PER_EM;
+    const gfxFloat devUnitsPerSVGUnit =
+        GetAdjustedSize() / GetFontEntry()->UnitsPerEm();
     gfxContextMatrixAutoSaveRestore matrixRestore(aContext);
 
     aContext->Translate(gfxPoint(aPoint.x, aPoint.y));
@@ -3548,7 +3583,6 @@ gfxFont::InitMetricsFromSfntTables(Metrics& aMetrics)
 {
     mIsValid = false; // font is NOT valid in case of early return
 
-    const uint32_t kHeadTableTag = TRUETYPE_TAG('h','e','a','d');
     const uint32_t kHheaTableTag = TRUETYPE_TAG('h','h','e','a');
     const uint32_t kPostTableTag = TRUETYPE_TAG('p','o','s','t');
     const uint32_t kOS_2TableTag = TRUETYPE_TAG('O','S','/','2');
@@ -3557,20 +3591,10 @@ gfxFont::InitMetricsFromSfntTables(Metrics& aMetrics)
 
     if (mFUnitsConvFactor == 0.0) {
         // If the conversion factor from FUnits is not yet set,
-        // 'head' table is required; otherwise we cannot read any metrics
-        // because we don't know unitsPerEm
-        gfxFontEntry::AutoTable headTable(mFontEntry, kHeadTableTag);
-        if (!headTable) {
+        // get the unitsPerEm from the 'head' table via the font entry
+        uint16_t unitsPerEm = GetFontEntry()->UnitsPerEm();
+        if (unitsPerEm == gfxFontEntry::kInvalidUPEM) {
             return false;
-        }
-        const HeadTable* head =
-            reinterpret_cast<const HeadTable*>(hb_blob_get_data(headTable, &len));
-        if (len < sizeof(HeadTable)) {
-            return false;
-        }
-        uint32_t unitsPerEm = head->unitsPerEm;
-        if (!unitsPerEm) {
-            return true; // is an sfnt, but not valid
         }
         mFUnitsConvFactor = mAdjustedSize / unitsPerEm;
     }

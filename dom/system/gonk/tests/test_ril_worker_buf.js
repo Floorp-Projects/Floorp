@@ -32,7 +32,8 @@ function add_test_incoming_parcel(parcel, handler) {
     }
 
     // supports only requests less or equal than UINT8_MAX(255).
-    let request = parcel[worker.PARCEL_SIZE_SIZE + worker.UINT32_SIZE];
+    let buf = worker.Buf;
+    let request = parcel[buf.PARCEL_SIZE_SIZE + buf.UINT32_SIZE];
     worker.RIL[request] = function ril_request_handler() {
       handler(worker);
       worker.postMessage();
@@ -111,19 +112,19 @@ add_test(function test_incoming_parcel_buffer_overwritten() {
 
   // Prepare two parcels, whose sizes are both smaller than the incoming buffer
   // size but larger when combined, to trigger the bug.
-  let pA_dataLength = buf.INCOMING_BUFFER_LENGTH / 2;
+  let pA_dataLength = buf.incomingBufferLength / 2;
   let pA = newIncomingParcel(-1,
                              worker.RESPONSE_TYPE_UNSOLICITED,
                              request,
                              calloc(pA_dataLength, 1));
-  let pA_parcelSize = pA.length - worker.PARCEL_SIZE_SIZE;
+  let pA_parcelSize = pA.length - buf.PARCEL_SIZE_SIZE;
 
-  let pB_dataLength = buf.INCOMING_BUFFER_LENGTH * 3 / 4;
+  let pB_dataLength = buf.incomingBufferLength * 3 / 4;
   let pB = newIncomingParcel(-1,
                              worker.RESPONSE_TYPE_UNSOLICITED,
                              request,
                              calloc(pB_dataLength, 1));
-  let pB_parcelSize = pB.length - worker.PARCEL_SIZE_SIZE;
+  let pB_parcelSize = pB.length - buf.PARCEL_SIZE_SIZE;
 
   // First, send an incomplete pA and verifies related data pointer:
   let p1 = pA.subarray(0, pA.length - 1);
@@ -134,7 +135,7 @@ add_test(function test_incoming_parcel_buffer_overwritten() {
   // than 4 octets.
   do_check_eq(buf.currentParcelSize, pA_parcelSize);
   // buf.readIncoming should contains remaining unconsumed octets count.
-  do_check_eq(buf.readIncoming, p1.length - worker.PARCEL_SIZE_SIZE);
+  do_check_eq(buf.readIncoming, p1.length - buf.PARCEL_SIZE_SIZE);
   // buf.incomingWriteIndex should be ready to accept the last octet.
   do_check_eq(buf.incomingWriteIndex, p1.length);
 

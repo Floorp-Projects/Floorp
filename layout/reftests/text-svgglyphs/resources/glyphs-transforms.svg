@@ -19,18 +19,18 @@
   </defs>
 
   <!-- char 'g' -->
-  <rect id="glyph73" x="250" y="-750" width="500" height="500" fill="red" />
+  <rect id="glyph74" x="250" y="-750" width="500" height="500" fill="red" />
 
   <!-- char 'h' -->
-  <rect id="glyph74" x="25" y="-75" width="50" height="50" transform="scale(10)" fill="red" />
+  <rect id="glyph75" x="25" y="-75" width="50" height="50" transform="scale(10)" fill="red" />
 
   <!-- char 'i' -->
-  <g id="glyph75">
+  <g id="glyph76">
     <use xlink:href="#small" transform="scale(5)" />
   </g>
 
   <!-- char 'j' -->
-  <g id="glyph76">
+  <g id="glyph77">
     <g transform="translate(300,-300) scale(0.4)">
       <rect x="0" y="-1000" width="1000" height="1000" fill="blue" />
     </g>
@@ -40,7 +40,7 @@
   </g>
 
   <!-- char 'k' -->
-  <g id="glyph77" transform="scale(0.5)">
+  <g id="glyph78" transform="scale(0.5)">
     <g transform="scale(0.5)">
       <use xlink:href="#small" transform="scale(20)" />
     </g>
@@ -48,20 +48,20 @@
 
   <!-- char 'l' -->
   <g transform="scale(2)">
-    <g id="glyph78">
+    <g id="glyph79">
       <use xlink:href="#small" transform="scale(5)" />
     </g>
   </g>
 
-  <g id="glyph79"> <!-- char 'm' -->
-    <g id="glyph80" transform="scale(5)"> <!-- char 'n' -->
-      <g id="glyph81"> <!-- char 'o' -->
-        <use id="glyph82" xlink:href="#small" /> <!-- char 'p' -->
+  <g id="glyph80"> <!-- char 'm' -->
+    <g id="glyph81" transform="scale(5)"> <!-- char 'n' -->
+      <g id="glyph82"> <!-- char 'o' -->
+        <use id="glyph83" xlink:href="#small" /> <!-- char 'p' -->
       </g>
     </g>
   </g>
 
   <!-- char 'q' -->
-  <use id="glyph83" xlink:href="#small" />
+  <use id="glyph84" xlink:href="#small" />
 
 </svg>

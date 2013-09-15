@@ -35,7 +35,6 @@
 #include "nsThreadUtils.h"
 #include "nsDebug.h"
 #include "nsDataHashtable.h"
-#include "nsPrintfCString.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/Hal.h"
@@ -170,7 +169,6 @@ static const char* sBluetoothDBusSignals[] =
 /**
  * DBus Connection held for the BluetoothCommandThread to use. Should never be
  * used by any other thread.
- *
  */
 static nsRefPtr<RawDBusConnection> gThreadConnection;
 static nsDataHashtable<nsStringHashKey, DBusMessage* >* sPairingReqTable;
@@ -206,7 +204,7 @@ GetPairedDevicesFilter(const BluetoothValue& aValue)
 {
   // Check property 'Paired' and only paired device will be returned
   if (aValue.type() != BluetoothValue::TArrayOfBluetoothNamedValue) {
-    NS_WARNING("Not a BluetoothNamedValue array!");
+    BT_WARNING("Not a BluetoothNamedValue array!");
     return false;
   }
 
@@ -369,30 +367,6 @@ IsDBusMessageError(DBusMessage* aMsg, DBusError* aErr, nsAString& aErrorStr)
 }
 
 static void
-UnpackIntMessage(DBusMessage* aMsg, DBusError* aErr,
-                 BluetoothValue& aValue, nsAString& aErrorStr)
-{
-  MOZ_ASSERT(aMsg);
-
-  DBusError err;
-  dbus_error_init(&err);
-  if (!IsDBusMessageError(aMsg, aErr, aErrorStr)) {
-    MOZ_ASSERT(dbus_message_get_type(aMsg) == DBUS_MESSAGE_TYPE_METHOD_RETURN,
-               "Got dbus callback that's not a METHOD_RETURN!");
-    int i;
-    if (!dbus_message_get_args(aMsg, &err, DBUS_TYPE_INT32,
-                               &i, DBUS_TYPE_INVALID)) {
-      if (dbus_error_is_set(&err)) {
-        aErrorStr = NS_ConvertUTF8toUTF16(err.message);
-        LOG_AND_FREE_DBUS_ERROR(&err);
-      }
-    } else {
-      aValue = (uint32_t)i;
-    }
-  }
-}
-
-static void
 UnpackObjectPathMessage(DBusMessage* aMsg, DBusError* aErr,
                         BluetoothValue& aValue, nsAString& aErrorStr)
 {
@@ -422,13 +396,13 @@ public:
   {
     BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
     if (!hfp || !hfp->Listen()) {
-      NS_WARNING("Failed to start listening for BluetoothHfpManager!");
+      BT_WARNING("Failed to start listening for BluetoothHfpManager!");
       return NS_ERROR_FAILURE;
     }
 
     BluetoothOppManager* opp = BluetoothOppManager::Get();
     if (!opp || !opp->Listen()) {
-      NS_WARNING("Failed to start listening for BluetoothOppManager!");
+      BT_WARNING("Failed to start listening for BluetoothOppManager!");
       return NS_ERROR_FAILURE;
     }
 
@@ -651,9 +625,9 @@ GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
   }
 
   if ((receivedType != expectedType) && !convert) {
-    NS_WARNING(nsPrintfCString("Iterator not type we expect! Property name: %s,
-      Property Type Expected: %d, Property Type Received: %d",
-      NS_ConvertUTF16toUTF8(propertyName).get(), expectedType, receivedType).get());
+    BT_WARNING("Iterator not type we expect! Property name: %s,"
+      "Property Type Expected: %d, Property Type Received: %d",
+      NS_ConvertUTF16toUTF8(propertyName).get(), expectedType, receivedType);
     return false;
   }
 
@@ -742,7 +716,7 @@ ParseProperties(DBusMessageIter* aIter,
     if (!GetProperty(dict_entry, aPropertyTypes, aPropertyTypeLen, &prop_index,
                      props)) {
       aErrorStr.AssignLiteral("Can't Create Property!");
-      NS_WARNING("Can't create property!");
+      BT_WARNING("Can't create property!");
       return;
     }
   } while (dbus_message_iter_next(&dict));
@@ -802,13 +776,13 @@ ParsePropertyChange(DBusMessage* aMsg, BluetoothValue& aValue,
 
   dbus_error_init(&err);
   if (!dbus_message_iter_init(aMsg, &iter)) {
-    NS_WARNING("Can't create iterator!");
+    BT_WARNING("Can't create iterator!");
     return;
   }
 
   if (!GetProperty(iter, aPropertyTypes, aPropertyTypeLen,
                    &prop_index, props)) {
-    NS_WARNING("Can't get property!");
+    BT_WARNING("Can't get property!");
     aErrorStr.AssignLiteral("Can't get property!");
     return;
   }
@@ -939,7 +913,7 @@ AgentEventFilter(DBusConnection *conn, DBusMessage *msg, void *data)
   DBusError err;
   dbus_error_init(&err);
 
-  BT_LOG("%s: %s, %s", __FUNCTION__,
+  BT_LOGD("%s: %s, %s", __FUNCTION__,
                        dbus_message_get_path(msg),
                        dbus_message_get_member(msg));
 
@@ -991,7 +965,7 @@ AgentEventFilter(DBusConnection *conn, DBusMessage *msg, void *data)
       goto handle_error;
     }
 
-    DBusMessage* reply;
+    DBusMessage* reply = nullptr;
     int i;
     int length = sAuthorizedServiceClass.Length();
     for (i = 0; i < length; i++) {
@@ -1199,7 +1173,7 @@ public:
     ExtractHandles(aReply, handles);
 
     if(!RegisterAgent(&sAgentVTable)) {
-      NS_WARNING("Failed to register agent");
+      BT_WARNING("Failed to register agent");
     }
   }
 
@@ -1380,7 +1354,7 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
   nsAutoString signalName;
   nsAutoString signalInterface;
 
-  BT_LOG("%s: %s, %s, %s", __FUNCTION__,
+  BT_LOGD("%s: %s, %s, %s", __FUNCTION__,
                           dbus_message_get_interface(aMsg),
                           dbus_message_get_path(aMsg),
                           dbus_message_get_member(aMsg));
@@ -1406,7 +1380,7 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
     DBusMessageIter iter;
 
     if (!dbus_message_iter_init(aMsg, &iter)) {
-      NS_WARNING("Can't create iterator!");
+      BT_WARNING("Can't create iterator!");
       return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
     }
 
@@ -1583,7 +1557,7 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
   }
 
   if (!errorStr.IsEmpty()) {
-    NS_WARNING(NS_ConvertUTF16toUTF8(errorStr).get());
+    BT_WARNING(NS_ConvertUTF16toUTF8(errorStr).get());
     return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
   }
 
@@ -1633,7 +1607,7 @@ bool
 BluetoothDBusService::IsReady()
 {
   if (!IsEnabled() || !mConnection || !gThreadConnection || IsToggling()) {
-    NS_WARNING("Bluetooth service is not ready yet!");
+    BT_WARNING("Bluetooth service is not ready yet!");
     return false;
   }
   return true;
@@ -1646,7 +1620,7 @@ BluetoothDBusService::StartInternal()
   MOZ_ASSERT(!NS_IsMainThread());
 
   if (!StartDBus()) {
-    NS_WARNING("Cannot start DBus thread!");
+    BT_WARNING("Cannot start DBus thread!");
     return NS_ERROR_FAILURE;
   }
 
@@ -1655,7 +1629,7 @@ BluetoothDBusService::StartInternal()
   }
 
   if (NS_FAILED(EstablishDBusConnection())) {
-    NS_WARNING("Cannot start Main Thread DBus connection!");
+    BT_WARNING("Cannot start Main Thread DBus connection!");
     StopDBus();
     return NS_ERROR_FAILURE;
   }
@@ -1663,7 +1637,7 @@ BluetoothDBusService::StartInternal()
   gThreadConnection = new RawDBusConnection();
 
   if (NS_FAILED(gThreadConnection->EstablishDBusConnection())) {
-    NS_WARNING("Cannot start Sync Thread DBus connection!");
+    BT_WARNING("Cannot start Sync Thread DBus connection!");
     StopDBus();
     return NS_ERROR_FAILURE;
   }
@@ -1687,7 +1661,7 @@ BluetoothDBusService::StartInternal()
   // Add a filter for all incoming messages_base
   if (!dbus_connection_add_filter(mConnection, EventFilter,
                                   NULL, NULL)) {
-    NS_WARNING("Cannot create DBus Event Filter for DBus Thread!");
+    BT_WARNING("Cannot create DBus Event Filter for DBus Thread!");
     return NS_ERROR_FAILURE;
   }
 
@@ -1704,7 +1678,7 @@ BluetoothDBusService::StartInternal()
     // Adapter path has been ready. let's do PrepareAdapterRunnable now
     nsRefPtr<PrepareAdapterRunnable> b = new PrepareAdapterRunnable(v.get_nsString());
     if (NS_FAILED(NS_DispatchToMainThread(b))) {
-      NS_WARNING("Failed to dispatch to main thread!");
+      BT_WARNING("Failed to dispatch to main thread!");
     }
   }
 
@@ -2276,7 +2250,7 @@ BluetoothDBusService::SetProperty(BluetoothObjectType aType,
                                       "SetProperty");
 
   if (!msg) {
-    NS_WARNING("Could not allocate D-Bus message object!");
+    BT_WARNING("Could not allocate D-Bus message object!");
     return NS_ERROR_FAILURE;
   }
 
@@ -2284,7 +2258,7 @@ BluetoothDBusService::SetProperty(BluetoothObjectType aType,
   const char* propName = intermediatePropName.get();
   if (!dbus_message_append_args(msg, DBUS_TYPE_STRING, &propName,
                                 DBUS_TYPE_INVALID)) {
-    NS_WARNING("Couldn't append arguments to dbus message!");
+    BT_WARNING("Couldn't append arguments to dbus message!");
     return NS_ERROR_FAILURE;
   }
 
@@ -2306,7 +2280,7 @@ BluetoothDBusService::SetProperty(BluetoothObjectType aType,
     val = &(tmp_int);
     type = DBUS_TYPE_BOOLEAN;
   } else {
-    NS_WARNING("Property type not handled!");
+    BT_WARNING("Property type not handled!");
     dbus_message_unref(msg);
     return NS_ERROR_FAILURE;
   }
@@ -2318,7 +2292,7 @@ BluetoothDBusService::SetProperty(BluetoothObjectType aType,
                                         var_type, &value_iter) ||
       !dbus_message_iter_append_basic(&value_iter, type, val) ||
       !dbus_message_iter_close_container(&iter, &value_iter)) {
-    NS_WARNING("Could not append argument to method call!");
+    BT_WARNING("Could not append argument to method call!");
     dbus_message_unref(msg);
     return NS_ERROR_FAILURE;
   }
@@ -2331,7 +2305,7 @@ BluetoothDBusService::SetProperty(BluetoothObjectType aType,
                             1000,
                             GetVoidCallback,
                             (void*)aRunnable)) {
-    NS_WARNING("Could not start async function!");
+    BT_WARNING("Could not start async function!");
     return NS_ERROR_FAILURE;
   }
   runnable.forget();
@@ -2413,7 +2387,7 @@ BluetoothDBusService::CreatePairedDeviceInternal(
                                   DBUS_TYPE_STRING, &capabilities,
                                   DBUS_TYPE_INVALID);
   if (!ret) {
-    NS_WARNING("Could not start async function!");
+    BT_WARNING("Could not start async function!");
     return NS_ERROR_FAILURE;
   }
 
@@ -2677,7 +2651,7 @@ BluetoothDBusService::IsConnected(const uint16_t aServiceUuid)
   BluetoothProfileManagerBase* profile =
     BluetoothUuidHelper::GetBluetoothProfileManager(aServiceUuid);
   if (!profile) {
-    NS_WARNING(ERR_UNKNOWN_PROFILE);
+    BT_WARNING(ERR_UNKNOWN_PROFILE);
     return false;
   }
 

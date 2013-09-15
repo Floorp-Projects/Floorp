@@ -2162,9 +2162,9 @@ bool nsWindow::OnMouseChord(MPARAM mp1, MPARAM mp2)
 
   event.keyCode     = NS_VK_INSERT;
   if (isCopy) {
-    event.modifiers = widget::MODIFIER_CONTROL;
+    event.modifiers = MODIFIER_CONTROL;
   } else {
-    event.modifiers = widget::MODIFIER_SHIFT;
+    event.modifiers = MODIFIER_SHIFT;
   }
   event.eventStructType = NS_KEY_EVENT;
   event.charCode    = 0;
@@ -2173,13 +2173,13 @@ bool nsWindow::OnMouseChord(MPARAM mp1, MPARAM mp2)
   if (SHORT1FROMMP(mp1) & (KC_VIRTUALKEY | KC_KEYUP | KC_LONEKEY)) {
     USHORT usVKey = SHORT2FROMMP(mp2);
     if (usVKey == VK_SHIFT) {
-      event.modifiers |= widget::MODIFIER_SHIFT;
+      event.modifiers |= MODIFIER_SHIFT;
     }
     if (usVKey == VK_CTRL) {
-      event.modifiers |= widget::MODIFIER_CONTROL;
+      event.modifiers |= MODIFIER_CONTROL;
     }
     if (usVKey == VK_ALTGRAF || usVKey == VK_ALT) {
-      event.modifiers |= widget::MODIFIER_ALT;
+      event.modifiers |= MODIFIER_ALT;
     }
   }
 

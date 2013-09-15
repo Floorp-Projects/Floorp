@@ -8,9 +8,10 @@ There are three .woff files in this directory:
 
 nosvg.woff
 ----------
-This font is Liberation Serif with the addition of a glyph with a UVS selector
-(Liberation fonts do not come with UVS glyphs; one had to be added to test that
-SVG glyphs work with UVS selectors). It contains no 'SVG ' table.
+This font is FiraSansOT-Regular, with its metrics hacked so that its ascent
+is 1000 and descent is 0. Its unitsPerEm value is 1000.
+
+It contains no 'SVG ' table.
 
 svg.woff
 --------

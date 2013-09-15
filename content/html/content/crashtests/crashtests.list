@@ -48,7 +48,7 @@ load 819745.html
 pref(dom.experimental_forms,true) load 828472.html
 load 828180.html
 load 837033.html
-pref(dom.experimental_forms_range,true) load 838256-1.html
+load 838256-1.html
 load 862084.html
 load 865147.html
 load 877910.html

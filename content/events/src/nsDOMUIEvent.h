@@ -158,7 +158,7 @@ protected:
   bool mIsPointerLocked;
   CSSIntPoint mLastClientPoint;
 
-  typedef mozilla::widget::Modifiers Modifiers;
+  typedef mozilla::Modifiers Modifiers;
   static Modifiers ComputeModifierState(const nsAString& aModifiersList);
   bool GetModifierStateInternal(const nsAString& aKey);
 };
