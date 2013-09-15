@@ -170,6 +170,8 @@ private:
 
   nsIWidget *mWidget;
 
+  bool mDisableSequenceForNextFrame;
+
   CallbackInfo mCurrentCallbackInfo;
 
   nsIntSize mViewport;
