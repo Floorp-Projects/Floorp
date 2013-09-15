@@ -899,10 +899,8 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
 
   if ((GetStateBits() & NS_FRAME_FIRST_REFLOW) && !mReflowCallbackPosted) {
     nsIPresShell* shell = PresContext()->PresShell();
-    if (shell && !shell->AssumeAllImagesVisible()) {
-      mReflowCallbackPosted = true;
-      shell->PostReflowCallback(this);
-    }
+    mReflowCallbackPosted = true;
+    shell->PostReflowCallback(this);
   }
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
