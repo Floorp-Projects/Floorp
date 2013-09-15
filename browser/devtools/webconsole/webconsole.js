@@ -491,7 +491,8 @@ WebConsoleFrame.prototype = {
     this._initFilterButtons();
     this._changeClearModifier();
 
-    let fontSize = Services.prefs.getIntPref("devtools.webconsole.fontSize");
+    let fontSize = this.owner._browserConsole ?
+                   Services.prefs.getIntPref("devtools.webconsole.fontSize") : 0;
 
     if (fontSize != 0) {
       fontSize = Math.max(MIN_FONT_SIZE, fontSize);
@@ -499,6 +500,13 @@ WebConsoleFrame.prototype = {
       this.outputNode.style.fontSize = fontSize + "px";
       this.completeNode.style.fontSize = fontSize + "px";
       this.inputNode.style.fontSize = fontSize + "px";
+    }
+
+    if (this.owner._browserConsole) {
+      for (let id of ["Enlarge", "Reduce", "Reset"]) {
+        this.document.getElementById("cmd_fullZoom" + id)
+                     .removeAttribute("disabled");
+      }
     }
 
     let updateSaveBodiesPrefUI = (aElement) => {
@@ -4598,12 +4606,12 @@ CommandController.prototype = {
         return selectedItem && "url" in selectedItem;
       }
       case "consoleCmd_clearOutput":
-      case "cmd_fontSizeEnlarge":
-      case "cmd_fontSizeReduce":
-      case "cmd_fontSizeReset":
       case "cmd_selectAll":
       case "cmd_find":
         return true;
+      case "cmd_fontSizeEnlarge":
+      case "cmd_fontSizeReduce":
+      case "cmd_fontSizeReset":
       case "cmd_close":
         return this.owner.owner._browserConsole;
     }
