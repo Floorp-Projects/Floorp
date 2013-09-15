@@ -206,3 +206,17 @@ button.action-cancel {
 #banner-simulators:not([simulator-count="0"]) .no-simulator {
   display: none;
 }
+
+#connection-no-device,
+[device-count="0"] > #connection-found-device,
+#connection-manual,
+#connection-assisted {
+  display: none;
+}
+
+#connection-found-device,
+[device-count="0"] > #connection-no-device,
+[adb-available="true"] > #connection-assisted,
+[adb-available="false"] > #connection-manual {
+  display: inline;
+}

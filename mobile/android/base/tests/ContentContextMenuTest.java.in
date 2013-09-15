@@ -10,7 +10,7 @@ import java.lang.reflect.Method;
 /**
  * This class covers interactions with the context menu opened from web content
  */
-abstract class ContentContextMenuTest extends AboutHomeTest {
+abstract class ContentContextMenuTest extends BaseTest {
     private static final int MAX_TEST_TIMEOUT = 10000;
 
     // This method opens the context menu of any web content. It assumes that the page is already loaded
@@ -88,6 +88,6 @@ abstract class ContentContextMenuTest extends AboutHomeTest {
         openWebContentContextMenu(bookmarkOption);
         mSolo.clickOnText(bookmarkOption);
         mAsserter.ok(waitForText("Bookmark added"), "Waiting for the Bookmark added toaster notification", "The notification has been displayed");
-        mAsserter.ok(isBookmark(link), "Checking if the link has been added as a bookmark", "The link has been bookmarked");
+        mAsserter.ok(mDatabaseHelper.isBookmark(link), "Checking if the link has been added as a bookmark", "The link has been bookmarked");
     }
 }

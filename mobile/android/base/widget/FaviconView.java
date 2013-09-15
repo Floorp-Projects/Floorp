@@ -154,11 +154,37 @@ public class FaviconView extends ImageView {
         formatImage();
     }
 
+    /**
+     * Update the displayed image and apply the scaling logic.
+     * The scaling logic will attempt to resize the image to fit correctly inside the view in a way
+     * that avoids unreasonable levels of loss of quality.
+     * Scaling is necessary only when the icon being provided is not drawn from the Favicon cache
+     * introduced in Bug 914296.
+     *
+     * Due to Bug 913746, icons bundled for search engines are not available to the cache, so must
+     * always have the scaling logic applied here. At the time of writing, this is the only case in
+     * which the scaling logic here is applied.
+     *
+     * @param bitmap The bitmap to display in this favicon view.
+     * @param key The key to use into the dominant colours cache when selecting a background colour.
+     */
     public void updateAndScaleImage(Bitmap bitmap, String key) {
         updateImageInternal(bitmap, key, true);
     }
 
+    /**
+     * Update the image displayed in the Favicon view without scaling. Images larger than the view
+     * will be centrally cropped. Images smaller than the view will be placed centrally and the
+     * extra space filled with the dominant colour of the provided image.
+     *
+     * @param bitmap The bitmap to display in this favicon view.
+     * @param key The key to use into the dominant colours cache when selecting a background colour.
+     */
     public void updateImage(Bitmap bitmap, String key) {
         updateImageInternal(bitmap, key, false);
+    }
+
+    public Bitmap getBitmap() {
+        return mIconBitmap;
     }
 }
