@@ -185,6 +185,31 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsAString& aPropertyName,
 }
 
 NS_IMETHODIMP
+nsDOMCSSDeclaration::GetAuthoredPropertyValue(const nsAString& aPropertyName,
+                                              nsAString& aReturn)
+{
+  const nsCSSProperty propID = nsCSSProps::LookupProperty(aPropertyName,
+                                                          nsCSSProps::eEnabled);
+  if (propID == eCSSProperty_UNKNOWN) {
+    aReturn.Truncate();
+    return NS_OK;
+  }
+
+  if (propID == eCSSPropertyExtra_variable) {
+    GetCustomPropertyValue(aPropertyName, aReturn);
+    return NS_OK;
+  }
+
+  css::Declaration* decl = GetCSSDeclaration(false);
+  if (!decl) {
+    return NS_ERROR_FAILURE;
+  }
+
+  decl->GetAuthoredValue(propID, aReturn);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMCSSDeclaration::GetPropertyPriority(const nsAString& aPropertyName,
                                          nsAString& aReturn)
 {
