@@ -167,7 +167,7 @@ DataSourceSurfaceCG::InitFromData(unsigned char *aData,
   mImage = CreateCGImage(data, data, aSize, aStride, aFormat);
 
   if (!mImage) {
-    delete data;
+    free(data);
     return false;
   }
 
