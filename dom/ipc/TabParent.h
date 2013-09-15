@@ -197,7 +197,7 @@ public:
                       int32_t aCharCode, int32_t aModifiers,
                       bool aPreventDefault);
     bool SendRealMouseEvent(nsMouseEvent& event);
-    bool SendMouseWheelEvent(mozilla::widget::WheelEvent& event);
+    bool SendMouseWheelEvent(mozilla::WheelEvent& event);
     bool SendRealKeyEvent(nsKeyEvent& event);
     bool SendRealTouchEvent(nsTouchEvent& event);
 

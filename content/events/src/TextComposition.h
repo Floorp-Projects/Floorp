@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsEvent.h"
 #include "nsINode.h"
+#include "nsIWidget.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"

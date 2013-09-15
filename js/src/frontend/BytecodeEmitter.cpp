@@ -1179,48 +1179,53 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
         }
     }
 
-    /*
-     * Try to convert free names in global scope to GNAME opcodes.
-     *
-     * This conversion is not made if we are in strict mode. In eval code nested
-     * within (strict mode) eval code, access to an undeclared "global" might
-     * merely be to a binding local to that outer eval:
-     *
-     *   "use strict";
-     *   var x = "global";
-     *   eval('var x = "eval"; eval("x");'); // 'eval', not 'global'
-     *
-     * Outside eval code, access to an undeclared global is a strict mode error:
-     *
-     *   "use strict";
-     *   function foo()
-     *   {
-     *     undeclared = 17; // throws ReferenceError
-     *   }
-     *   foo();
-     */
-    if (bce->script->compileAndGo &&
-        bce->hasGlobalScope &&
-        !(bce->sc->isFunctionBox() && bce->sc->asFunctionBox()->mightAliasLocals()) &&
-        !pn->isDeoptimized() &&
-        !(bce->sc->strict && bce->insideEval))
-    {
-        // If you change anything here, you might also need to change
-        // js::ReportIfUndeclaredVarAssignment.
-        JSOp op;
-        switch (pn->getOp()) {
-          case JSOP_NAME:     op = JSOP_GETGNAME; break;
-          case JSOP_SETNAME:  op = JSOP_SETGNAME; break;
-          case JSOP_SETCONST:
-            /* Not supported. */
+    // Unbound names aren't recognizable global-property references if the
+    // script isn't running against its global object.
+    if (!bce->script->compileAndGo || !bce->hasGlobalScope)
+        return false;
+
+    // Deoptimized names also aren't necessarily globals.
+    if (pn->isDeoptimized())
+        return false;
+
+    if (bce->sc->isFunctionBox()) {
+        // Unbound names in function code may not be globals if new locals can
+        // be added to this function (or an enclosing one) to alias a global
+        // reference.
+        FunctionBox *funbox = bce->sc->asFunctionBox();
+        if (funbox->mightAliasLocals())
             return false;
-          default: MOZ_ASSUME_UNREACHABLE("gname");
-        }
-        pn->setOp(op);
-        return true;
     }
 
-    return false;
+    // If this is eval code, being evaluated inside strict mode eval code,
+    // an "unbound" name might be a binding local to that outer eval:
+    //
+    //   var x = "GLOBAL";
+    //   eval('"use strict"; ' +
+    //        'var x; ' +
+    //        'eval("print(x)");'); // "undefined", not "GLOBAL"
+    //
+    // Given the enclosing eval code's strictness and its bindings (neither is
+    // readily available now), we could exactly check global-ness, but it's not
+    // worth the trouble for doubly-nested eval code.  So we conservatively
+    // approximate.  If the outer eval code is strict, then this eval code will
+    // be: thus, don't optimize if we're compiling strict code inside an eval.
+    if (bce->insideEval && bce->sc->strict)
+        return false;
+
+    // Beware: if you change anything here, you might also need to change
+    // js::ReportIfUndeclaredVarAssignment.
+    JSOp op;
+    switch (pn->getOp()) {
+      case JSOP_NAME:     op = JSOP_GETGNAME; break;
+      case JSOP_SETNAME:  op = JSOP_SETGNAME; break;
+      case JSOP_SETCONST:
+        // Not supported.
+        return false;
+      default: MOZ_ASSUME_UNREACHABLE("gname");
+    }
+    pn->setOp(op);
+    return true;
 }
 
 /*

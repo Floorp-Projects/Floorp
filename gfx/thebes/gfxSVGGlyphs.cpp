@@ -44,8 +44,6 @@ typedef mozilla::dom::Element Element;
 
 mozilla::gfx::UserDataKey gfxTextContextPaint::sUserDataKey;
 
-const float gfxSVGGlyphs::SVG_UNITS_PER_EM = 1000.0f;
-
 const gfxRGBA SimpleTextContextPaint::sZero = gfxRGBA(0.0f, 0.0f, 0.0f, 0.0f);
 
 gfxSVGGlyphs::gfxSVGGlyphs(hb_blob_t *aSVGTable, gfxFontEntry *aFontEntry)

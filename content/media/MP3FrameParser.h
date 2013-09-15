@@ -79,6 +79,7 @@ private:
   // All fields below are protected by mLock
   uint64_t mDurationUs;
   uint64_t mBitRateSum;
+  uint64_t mTotalFrameSize;
   uint64_t mNumFrames;
 
   // Offset of the last data parsed. This is the end offset of the last data
@@ -86,10 +87,9 @@ private:
   // call to Parse().
   int64_t  mOffset;
 
-  // Count of the number of bytes that the parser hasn't seen so far. This
-  // happens when the stream seeks.
-  int64_t  mUnhandled;
+  // Total length of the stream in bytes.
   int64_t  mLength;
+
   // Offset of first MP3 frame in the bitstream. Has value -1 until the
   // first MP3 frame is found.
   int64_t mMP3Offset;
@@ -98,6 +98,9 @@ private:
   // find a sync pattern or an ID3 header. If this gets too high, we assume
   // the stream either isn't MP3, or is corrupt.
   uint32_t mSkippedBytes;
+
+  // Number of audio samples per second. Fixed through the whole file.
+  uint16_t mSampleRate;
 
   enum eIsMP3 {
     MAYBE_MP3, // We're giving the stream the benefit of the doubt...

@@ -3,20 +3,20 @@ pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-basic.svg svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-invalid-ids.svg svg-glyph-invalid-ids-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,false)   != svg-glyph-positioning.svg svg-glyph-positioning-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-positioning.svg svg-glyph-positioning-ref.svg
-pref(gfx.font_rendering.opentype_svg.enabled,true)    fails-if(winWidget) == svg-glyph-html.html svg-glyph-html-ref.svg # bug 872486
-pref(gfx.font_rendering.opentype_svg.enabled,true)    random-if(winWidget) == svg-glyph-direct.svg svg-glyph-direct-ref.svg # bug 872491
+pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-html.html svg-glyph-html-ref.svg
+pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-direct.svg svg-glyph-direct-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-invalid.html svg-glyph-invalid-ref.html
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-objectfill-solid.svg svg-glyph-objectfill-solid-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-objectstroke-solid.svg svg-glyph-objectstroke-solid-ref.svg
-pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy(4,6) == svg-glyph-objectgradient.svg svg-glyph-objectgradient-ref.svg # see bug 871961#c5
+pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy(1,6) == svg-glyph-objectgradient.svg svg-glyph-objectgradient-ref.svg # see bug 871961#c5
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-objectgradient-zoom.svg svg-glyph-objectgradient-zoom-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-objectpattern.svg svg-glyph-objectpattern-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == clip.html clip-ref.html
-pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy(5,12) == svg-glyph-objectopacity.svg svg-glyph-objectopacity-ref.svg # see bug 871961#c5
+pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy(1,12) == svg-glyph-objectopacity.svg svg-glyph-objectopacity-ref.svg # see bug 871961#c5
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-objectopacity2.svg svg-glyph-objectopacity2-ref.svg
-pref(gfx.font_rendering.opentype_svg.enabled,true)    random-if(winWidget) == svg-glyph-paintnone.svg svg-glyph-paintnone-ref.svg # bug 872491
+pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-paintnone.svg svg-glyph-paintnone-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-cachedopacity.svg svg-glyph-cachedopacity-ref.svg
-pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-objectvalue.svg svg-glyph-objectvalue-ref.svg
+pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy-if(cocoaWidget,255,100) == svg-glyph-objectvalue.svg svg-glyph-objectvalue-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    fails == svg-glyph-mask.svg svg-glyph-mask-ref.svg # bug 872483
-pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-paint-server.svg svg-glyph-paint-server-ref.svg # bug 801467
-pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-transform.svg svg-glyph-transform-ref.svg # bug 875329
+pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-paint-server.svg svg-glyph-paint-server-ref.svg
+pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-transform.svg svg-glyph-transform-ref.svg

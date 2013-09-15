@@ -37,6 +37,9 @@ if CONFIG['MOZ_MEDIA_PLUGINS']:
 if CONFIG['MOZ_WMF']:
     PARALLEL_DIRS += ['wmf']
 
+if CONFIG['MOZ_APPLEMEDIA']:
+    PARALLEL_DIRS += ['apple']
+
 PARALLEL_DIRS += ['webrtc']
 
 if CONFIG['MOZ_OMX_DECODER']:
@@ -94,6 +97,8 @@ EXPORTS.mozilla.dom += [
     'TextTrackCue.h',
     'TextTrackCueList.h',
     'TextTrackList.h',
+    'TextTrackRegion.h',
+    'TextTrackRegionList.h',
     'VideoPlaybackQuality.h',
     'VideoStreamTrack.h',
 ]
@@ -126,6 +131,8 @@ CPP_SOURCES += [
     'TextTrackCue.cpp',
     'TextTrackCueList.cpp',
     'TextTrackList.cpp',
+    'TextTrackRegion.cpp',
+    'TextTrackRegionList.cpp',
     'VideoFrameContainer.cpp',
     'VideoPlaybackQuality.cpp',
     'VideoSegment.cpp',

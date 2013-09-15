@@ -695,9 +695,11 @@ function mediaTestCleanup() {
   var branch = prefService.getBranch("media.");
   var oldDefault = 2;
   var oldAuto = 3;
+  var oldAppleMedia = undefined;
   var oldGStreamer = undefined;
   var oldOpus = undefined;
 
+  try { oldAppleMedia = SpecialPowers.getBoolPref("media.apple.mp3.enabled"); } catch(ex) { }
   try { oldGStreamer = SpecialPowers.getBoolPref("media.gstreamer.enabled"); } catch(ex) { }
   try { oldDefault   = SpecialPowers.getIntPref("media.preload.default"); } catch(ex) { }
   try { oldAuto      = SpecialPowers.getIntPref("media.preload.auto"); } catch(ex) { }
@@ -710,10 +712,14 @@ function mediaTestCleanup() {
     SpecialPowers.setBoolPref("media.opus.enabled", true);
   if (oldGStreamer !== undefined)
     SpecialPowers.setBoolPref("media.gstreamer.enabled", true);
+  if (oldAppleMedia !== undefined)
+    SpecialPowers.setBoolPref("media.apple.mp3.enabled", true);
 
   window.addEventListener("unload", function() {
     if (oldGStreamer !== undefined)
       SpecialPowers.setBoolPref("media.gstreamer.enabled", oldGStreamer);
+    if (oldAppleMedia !== undefined)
+      SpecialPowers.setBoolPref("media.apple.mp3.enabled", oldAppleMedia);
     SpecialPowers.setIntPref("media.preload.default", oldDefault);
     SpecialPowers.setIntPref("media.preload.auto", oldAuto);
     if (oldOpus !== undefined)

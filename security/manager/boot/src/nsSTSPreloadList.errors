@@ -19,6 +19,7 @@ chrome-devtools-frontend.appspot.com: did not receive HSTS header
 chrome.google.com: did not receive HSTS header
 code.google.com: did not receive HSTS header
 codereview.chromium.org: did not receive HSTS header
+crowdcurity.com: did not receive HSTS header
 crypto.is: did not receive HSTS header
 csawctf.poly.edu: did not receive HSTS header
 dl.google.com: did not receive HSTS header
