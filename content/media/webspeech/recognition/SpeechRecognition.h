@@ -176,6 +176,16 @@ private:
   void SetState(FSMState state);
   bool StateBetween(FSMState begin, FSMState end);
 
+  class GetUserMediaStreamOptions : public nsIMediaStreamOptions
+  {
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIMEDIASTREAMOPTIONS
+
+    GetUserMediaStreamOptions() {}
+    virtual ~GetUserMediaStreamOptions() {}
+  };
+
   class GetUserMediaSuccessCallback : public nsIDOMGetUserMediaSuccessCallback
   {
   public:
