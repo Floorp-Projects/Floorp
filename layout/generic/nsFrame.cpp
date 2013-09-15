@@ -1997,6 +1997,16 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
         new (aBuilder) nsDisplayTransform(aBuilder, this, &resultList));
     }
   }
+
+  /* If there's blending, wrap up the list in a blend-mode item. Note
+   * that opacity can be applied before blending as the blend color is
+   * not affected by foreground opacity (only background alpha).
+   */
+
+  if (useBlendMode && !resultList.IsEmpty()) {
+    resultList.AppendNewToTop(
+        new (aBuilder) nsDisplayMixBlendMode(aBuilder, this, &resultList));
+  }
   
   if (aBuilder->ContainsBlendMode()) {
       resultList.AppendNewToTop(

@@ -494,7 +494,8 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
   bool complexEffects = false;
   /* Check if we need to do additional operations on this child's
    * rendering, which necessitates rendering into another surface. */
-  if (opacity != 1.0f || maskFrame || (clipPathFrame && !isTrivialClip)) {
+  if (opacity != 1.0f || maskFrame || (clipPathFrame && !isTrivialClip)
+      || aFrame->StyleDisplay()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
     complexEffects = true;
     gfx->Save();
     aCtx->IntersectClip(aFrame->GetVisualOverflowRectRelativeToSelf() +
