@@ -1983,9 +1983,10 @@ nsGfxScrollFrameInner::ScrollToImpl(nsPoint aPt, const nsRect& aRange)
 
   nsPoint dist(std::abs(pt.x - mLastUpdateImagesPos.x),
                std::abs(pt.y - mLastUpdateImagesPos.y));
-  nscoord horzAllowance = std::max(mScrollPort.width / std::max(sHorzScrollFraction, 1),
+  nsSize scrollPortSize = GetScrollPositionClampingScrollPortSize();
+  nscoord horzAllowance = std::max(scrollPortSize.width / std::max(sHorzScrollFraction, 1),
                                    nsPresContext::AppUnitsPerCSSPixel());
-  nscoord vertAllowance = std::max(mScrollPort.height / std::max(sVertScrollFraction, 1),
+  nscoord vertAllowance = std::max(scrollPortSize.height / std::max(sVertScrollFraction, 1),
                                    nsPresContext::AppUnitsPerCSSPixel());
   if (dist.x >= horzAllowance || dist.y >= vertAllowance) {
     needImageVisibilityUpdate = true;
@@ -2353,7 +2354,10 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 bool
 nsGfxScrollFrameInner::IsRectNearlyVisible(const nsRect& aRect) const
 {
-  return aRect.Intersects(ExpandRect(mScrollPort));
+  // Use the right rect depending on if a display port is set.
+  nsRect displayPort;
+  bool usingDisplayport = nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort);
+  return aRect.Intersects(ExpandRect(usingDisplayport ? displayPort : mScrollPort));
 }
 
 static void HandleScrollPref(nsIScrollable *aScrollable, int32_t aOrientation,
