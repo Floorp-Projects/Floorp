@@ -33,17 +33,16 @@
 #ifndef _SYS_QUEUE_H_
 #define	_SYS_QUEUE_H_
 
-#if !defined(__FreeBSD__) && !defined(DARWIN)
 #include <stddef.h>
-#define __offsetof offsetof
+
+#ifndef offsetof
+#define offsetof(type, field) ((size_t)(&((type *)0)->field))
 #endif
 
 #define STAILQ_FOREACH_SAFE(var, head, field, tvar)                     \
          for ((var) = STAILQ_FIRST((head));                              \
              (var) && ((tvar) = STAILQ_NEXT((var), field), 1);           \
              (var) = (tvar))
-
-// #define __offsetof(type, field) ((size_t)(&((type *)0)->field))
 
 /*
  * This file defines four types of data structures: singly-linked lists,
@@ -285,7 +284,7 @@ struct {								\
 	(STAILQ_EMPTY((head)) ?						\
 		NULL :							\
 	        ((struct type *)					\
-		((char *)((head)->stqh_last) - __offsetof(struct type, field))))
+		((char *)((head)->stqh_last) - offsetof(struct type, field))))
 
 #define	STAILQ_NEXT(elm, field)	((elm)->field.stqe_next)
 
