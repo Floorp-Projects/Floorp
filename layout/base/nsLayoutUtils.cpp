@@ -5468,13 +5468,16 @@ nsLayoutUtils::UpdateImageVisibilityForFrame(nsIFrame* aImageFrame)
   MOZ_ASSERT(type == nsGkAtoms::imageFrame ||
              type == nsGkAtoms::imageControlFrame ||
              type == nsGkAtoms::svgImageFrame, "wrong type of frame");
-
-  NS_ASSERTION(!aImageFrame->PresContext()->PresShell()->AssumeAllImagesVisible(),
-               "shouldn't be in a doc where we assume all images are visible");
 #endif
 
   nsCOMPtr<nsIImageLoadingContent> content = do_QueryInterface(aImageFrame->GetContent());
   if (!content) {
+    return;
+  }
+
+  nsIPresShell* presShell = aImageFrame->PresContext()->PresShell();
+  if (presShell->AssumeAllImagesVisible()) {
+    presShell->EnsureImageInVisibleList(content);
     return;
   }
 
@@ -5505,8 +5508,8 @@ nsLayoutUtils::UpdateImageVisibilityForFrame(nsIFrame* aImageFrame)
   }
 
   if (visible) {
-    aImageFrame->PresContext()->PresShell()->EnsureImageInVisibleList(content);
+    presShell->EnsureImageInVisibleList(content);
   } else {
-    aImageFrame->PresContext()->PresShell()->RemoveImageFromVisibleList(content);
+    presShell->RemoveImageFromVisibleList(content);
   }
 }

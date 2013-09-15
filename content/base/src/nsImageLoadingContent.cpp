@@ -242,8 +242,8 @@ nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest,
     // so we can trust our visible count and we don't start decode if we are not
     // visible.
     nsIFrame* f = GetOurPrimaryFrame();
-    if (!mFrameCreateCalled || !f ||
-        (f->GetStateBits() & NS_FRAME_FIRST_REFLOW) || mVisibleCount > 0) {
+    if (!mFrameCreateCalled || !f || (f->GetStateBits() & NS_FRAME_FIRST_REFLOW) ||
+        mVisibleCount > 0 || shell->AssumeAllImagesVisible()) {
       if (NS_SUCCEEDED(mCurrentRequest->StartDecoding())) {
         startedDecoding = true;
       }
