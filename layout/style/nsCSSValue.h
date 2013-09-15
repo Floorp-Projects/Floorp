@@ -1355,6 +1355,8 @@ public:
   nscolor GetColorValue(nsCSSUnit aUnit) const;
   bool IsNonTransparentColor() const;
 
+  void AppendToString(nsCSSUnit aUnit, nsAString& aResult) const;
+
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   NS_INLINE_DECL_REFCOUNTING(nsCSSValueFloatColor)
