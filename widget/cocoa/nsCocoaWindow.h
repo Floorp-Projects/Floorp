@@ -277,6 +277,7 @@ public:
     virtual void SetShowsToolbarButton(bool aShow);
     virtual void SetShowsFullScreenButton(bool aShow);
     virtual void SetWindowAnimationType(WindowAnimationType aType);
+    NS_IMETHOD SetNonClientMargins(nsIntMargin &margins);
     NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, bool aActive);
     virtual void SetDrawsInTitlebar(bool aState);
     virtual nsresult SynthesizeNativeMouseEvent(nsIntPoint aPoint,
