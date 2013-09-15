@@ -1,0 +1,5 @@
+pref(layout.css.mix-blend-mode.enabled,true) == blend-canvas.html blend-canvas-ref.html
+pref(layout.css.mix-blend-mode.enabled,true) == blend-constant-background-color.html blend-constant-background-color-ref.html
+pref(layout.css.mix-blend-mode.enabled,true) == blend-gradient-background-color.html blend-gradient-background-color-ref.html
+pref(layout.css.mix-blend-mode.enabled,true) == blend-image.html blend-image-ref.html
+pref(layout.css.mix-blend-mode.enabled,true) == blend-difference-stacking.html blend-difference-stacking-ref.html
