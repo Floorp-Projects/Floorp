@@ -10,6 +10,55 @@
  * liability, trademark and document use rules apply.
  */
 
+// Important! Do not ever add members that might need tracing (e.g. object)
+// to MediaTrackConstraintSet or any dictionary marked XxxInternal here
+
+enum VideoFacingModeEnum {
+    "user",
+    "environment",
+    "left",
+    "right"
+};
+
+dictionary MediaTrackConstraintSet {
+    VideoFacingModeEnum facingMode;
+};
+
+// MediaTrackConstraint = single-property-subset of MediaTrackConstraintSet
+// Implemented as full set. Test Object.keys(pair).length == 1
+
+// typedef MediaTrackConstraintSet MediaTrackConstraint; // TODO: Bug 913053
+
+dictionary MediaStreamConstraints {
+    (boolean or object) audio = false; // TODO: Once Bug 767924 fixed change to
+    (boolean or object) video = false; // (boolean or MediaTrackConstraints)
+    boolean picture = false;
+    boolean fake = false;
+};
+
+// Internal dictionary to process the raw objects in (boolean or object)
+// workaround above. Since we cannot yet use unions on non-objects, we process
+// the data into discrete members for internal use until Bug 767924 is fixed:
+
+dictionary MediaStreamConstraintsInternal {
+    boolean audio = false;
+    boolean video = false;
+    boolean picture = false;
+    boolean fake = false;
+    MediaTrackConstraintsInternal audiom;
+    MediaTrackConstraintsInternal videom;
+};
+
+dictionary MediaTrackConstraints {
+    object mandatory; // so we can see unknown + unsupported constraints
+    sequence<MediaTrackConstraintSet> _optional; // a.k.a. MediaTrackConstraint
+};
+
+dictionary MediaTrackConstraintsInternal {
+    MediaTrackConstraintSet mandatory; // holds only supported constraints
+    sequence<MediaTrackConstraintSet> _optional; // a.k.a. MediaTrackConstraint
+};
+
 interface MediaStreamTrack {
     readonly    attribute DOMString             kind;
     readonly    attribute DOMString             id;

@@ -285,12 +285,16 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     template <typename T>
     void storeTypedOrValue(TypedOrValueRegister src, const T &dest) {
-        if (src.hasValue())
+        if (src.hasValue()) {
             storeValue(src.valueReg(), dest);
-        else if (src.type() == MIRType_Double)
-            storeDouble(src.typedReg().fpu(), dest);
-        else
+        } else if (IsFloatingPointType(src.type())) {
+            FloatRegister reg = src.typedReg().fpu();
+            if (src.type() == MIRType_Float32)
+                convertFloatToDouble(reg, reg);
+            storeDouble(reg, dest);
+        } else {
             storeValue(ValueTypeFromMIRType(src.type()), src.typedReg().gpr(), dest);
+        }
     }
 
     template <typename T>
@@ -427,12 +431,16 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void Push(TypedOrValueRegister v) {
-        if (v.hasValue())
+        if (v.hasValue()) {
             Push(v.valueReg());
-        else if (IsFloatingPointType(v.type()))
-            Push(v.typedReg().fpu());
-        else
+        } else if (IsFloatingPointType(v.type())) {
+            FloatRegister reg = v.typedReg().fpu();
+            if (v.type() == MIRType_Float32)
+                convertFloatToDouble(reg, reg);
+            Push(reg);
+        } else {
             Push(ValueTypeFromMIRType(v.type()), v.typedReg().gpr());
+        }
     }
 
     void Push(ConstantOrRegister v) {
@@ -995,12 +1003,73 @@ class MacroAssembler : public MacroAssemblerSpecific
     void tracelogLog(TraceLogging::Type type);
 #endif
 
+#define DISPATCH_FLOATING_POINT_OP(method, type, arg1d, arg1f, arg2)    \
+    JS_ASSERT(IsFloatingPointType(type));                               \
+    if (type == MIRType_Double)                                         \
+        method##Double(arg1d, arg2);                                    \
+    else                                                                \
+        method##Float32(arg1f, arg2);                                   \
+
+    void loadStaticFloatingPoint(const double *dp, const float *fp, FloatRegister dest,
+                                 MIRType destType)
+    {
+        DISPATCH_FLOATING_POINT_OP(loadStatic, destType, dp, fp, dest);
+    }
+    void loadConstantFloatingPoint(double d, float f, FloatRegister dest, MIRType destType) {
+        DISPATCH_FLOATING_POINT_OP(loadConstant, destType, d, f, dest);
+    }
+    void boolValueToFloatingPoint(ValueOperand value, FloatRegister dest, MIRType destType) {
+        DISPATCH_FLOATING_POINT_OP(boolValueTo, destType, value, value, dest);
+    }
+    void int32ValueToFloatingPoint(ValueOperand value, FloatRegister dest, MIRType destType) {
+        DISPATCH_FLOATING_POINT_OP(int32ValueTo, destType, value, value, dest);
+    }
+    void convertInt32ToFloatingPoint(Register src, FloatRegister dest, MIRType destType) {
+        DISPATCH_FLOATING_POINT_OP(convertInt32To, destType, src, src, dest);
+    }
+
+#undef DISPATCH_FLOATING_POINT_OP
+
+    void convertValueToFloatingPoint(ValueOperand value, FloatRegister output, Label *fail,
+                                     MIRType outputType);
+    bool convertValueToFloatingPoint(JSContext *cx, const Value &v, FloatRegister output,
+                                     Label *fail, MIRType outputType);
+    bool convertConstantOrRegisterToFloatingPoint(JSContext *cx, ConstantOrRegister src,
+                                                  FloatRegister output, Label *fail,
+                                                  MIRType outputType);
+    void convertTypedOrValueToFloatingPoint(TypedOrValueRegister src, FloatRegister output,
+                                            Label *fail, MIRType outputType);
+
     void convertInt32ValueToDouble(const Address &address, Register scratch, Label *done);
-    void convertValueToDouble(ValueOperand value, FloatRegister output, Label *fail);
-    bool convertValueToDouble(JSContext *cx, const Value &v, FloatRegister output, Label *fail);
+    void convertValueToDouble(ValueOperand value, FloatRegister output, Label *fail) {
+        convertValueToFloatingPoint(value, output, fail, MIRType_Double);
+    }
+    bool convertValueToDouble(JSContext *cx, const Value &v, FloatRegister output, Label *fail) {
+        return convertValueToFloatingPoint(cx, v, output, fail, MIRType_Double);
+    }
     bool convertConstantOrRegisterToDouble(JSContext *cx, ConstantOrRegister src,
-                                           FloatRegister output, Label *fail);
-    void convertTypedOrValueToDouble(TypedOrValueRegister src, FloatRegister output, Label *fail);
+                                           FloatRegister output, Label *fail)
+    {
+        return convertConstantOrRegisterToFloatingPoint(cx, src, output, fail, MIRType_Double);
+    }
+    void convertTypedOrValueToDouble(TypedOrValueRegister src, FloatRegister output, Label *fail) {
+        convertTypedOrValueToFloatingPoint(src, output, fail, MIRType_Double);
+    }
+
+    void convertValueToFloat(ValueOperand value, FloatRegister output, Label *fail) {
+        convertValueToFloatingPoint(value, output, fail, MIRType_Float32);
+    }
+    bool convertValueToFloat(JSContext *cx, const Value &v, FloatRegister output, Label *fail) {
+        return convertValueToFloatingPoint(cx, v, output, fail, MIRType_Float32);
+    }
+    bool convertConstantOrRegisterToFloat(JSContext *cx, ConstantOrRegister src,
+                                          FloatRegister output, Label *fail)
+    {
+        return convertConstantOrRegisterToFloatingPoint(cx, src, output, fail, MIRType_Float32);
+    }
+    void convertTypedOrValueToFloat(TypedOrValueRegister src, FloatRegister output, Label *fail) {
+        convertTypedOrValueToFloatingPoint(src, output, fail, MIRType_Float32);
+    }
 
     enum IntConversionBehavior {
         IntConversion_Normal,
@@ -1012,8 +1081,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     //
     // Functions for converting values to int.
     //
-    void convertDoubleToInt(FloatRegister src, Register output, Label *truncateFail, Label *fail,
-                            IntConversionBehavior behavior);
+    void convertDoubleToInt(FloatRegister src, Register output, FloatRegister temp,
+                            Label *truncateFail, Label *fail, IntConversionBehavior behavior);
 
     // Strings may be handled by providing labels to jump to when the behavior
     // is truncation or clamping. The subroutine, usually an OOL call, is

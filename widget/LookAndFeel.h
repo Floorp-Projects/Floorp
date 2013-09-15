@@ -141,11 +141,6 @@ public:
     eColorID__moz_mac_menutextselect,
     // text color of disabled text on toolbars
     eColorID__moz_mac_disabledtoolbartext,
-
-    //new in 10.2
-
-    //active list highlight
-    eColorID__moz_mac_alternateprimaryhighlight,
     //inactive light hightlight
     eColorID__moz_mac_secondaryhighlight,
 

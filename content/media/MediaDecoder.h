@@ -786,6 +786,10 @@ public:
   static bool IsWMFEnabled();
 #endif
 
+#ifdef MOZ_APPLEMEDIA
+  static bool IsAppleMP3Enabled();
+#endif
+
   // Schedules the state machine to run one cycle on the shared state
   // machine thread. Main thread only.
   nsresult ScheduleStateMachineThread();

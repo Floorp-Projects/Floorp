@@ -392,6 +392,9 @@ class MacroAssemblerX86Shared : public Assembler
     void storeFloat(FloatRegister src, const BaseIndex &dest) {
         movss(src, Operand(dest));
     }
+    void moveFloat(FloatRegister src, FloatRegister dest) {
+        movss(src, dest);
+    }
 
     // Checks whether a double is representable as a 32-bit integer. If so, the
     // integer is written to the output register. Otherwise, a bailout is taken to

@@ -34,10 +34,23 @@
         <div id="banner-disconnected" class="banner">
           <div class="connected-indicator"></div>
           <div class="banner-box">
-            <div class="banner-content">
-              <span>&connection.notConnected;</span>
-              <button class="action-primary left" onclick="UI.connect()" id="connect-button" template='{"type":"localizedContent","property":"connection.connectTo","paths":["connection.host","connection.port"]}' title="&connection.connectTooltip;"></button>
-              <button class="right" onclick="UI.editConnectionParameters()" title="&connection.changeHostAndPortTooltip;">&connection.changeHostAndPort;</button>
+            <div class="banner-content" template='{"type":"attribute","path":"adb.available","name":"adb-available"}'>
+              <span>&connection.notConnected2;</span>
+              <div id="connection-manual">
+                <button class="action-primary left" onclick="UI.connect()" id="connect-button" template='{"type":"localizedContent","property":"connection.connectTo","paths":["connection.host","connection.port"]}'></button>
+                <button class="right" onclick="UI.editConnectionParameters()">&connection.changeHostAndPort;</button>
+                <button class="action-primary left" onclick="UI.connect()" id="connect-button" template='{"type":"localizedContent","property":"connection.connectTo","paths":["connection.host","connection.port"]}' title="&connection.connectTooltip;"></button>
+                <button class="right" onclick="UI.editConnectionParameters()" title="&connection.changeHostAndPortTooltip;">&connection.changeHostAndPort;</button>
+              </div>
+              <div id="connection-assisted" template='{"type":"attribute","path":"adb.devices.length","name":"device-count"}'>
+                <div id="connection-found-device">
+                  <span>&connection.connectTo;</span>
+                  <span template-loop='{"arrayPath":"adb.devices","childSelector":"#adb-devices-template"}'></span>
+                </div>
+                <div id="connection-no-device">
+                  <span>&connection.noDeviceFound;</span>
+                </div>
+              </div>
               <div id="start-simulator-box">
                 <span>&connection.or;</span>
                 <button id="start-simulator-button" class="action-primary" onclick="UI.showSimulatorList()" title="&connection.startSimulatorTooltip;">&connection.startSimulator;</button>
@@ -115,6 +128,14 @@
   <span>
     <button class="simulator-item" onclick="UI.startSimulator(this.dataset.version)" template='{"type":"attribute","path":"version","name":"data-version"}' title="&connection.startSimulatorTooltip;">
       <span template='{"type":"textContent", "path":"version"}'></span>
+    </button>
+  </span>
+  </template>
+
+  <template id="adb-devices-template">
+  <span>
+    <button class="adb-device action-primary" onclick="UI.connectToAdbDevice(this.dataset.name)" template='{"type":"attribute","path":"name","name":"data-name"}'>
+      <span template='{"type":"textContent", "path":"name"}'></span>
     </button>
   </span>
   </template>

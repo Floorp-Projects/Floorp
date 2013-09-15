@@ -166,7 +166,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
         mSearchEngine = searchEngine;
 
         // Set the search engine icon (e.g., Google) for the row
-        mIconView.updateImage(mSearchEngine.icon, mSearchEngine.name);
+        mIconView.updateAndScaleImage(mSearchEngine.icon, mSearchEngine.name);
 
         // Set the initial content description
         setDescriptionOnSuggestion(mUserEnteredTextView, mUserEnteredTextView.getText().toString());

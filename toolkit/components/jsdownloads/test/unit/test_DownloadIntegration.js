@@ -278,7 +278,7 @@ add_task(function test_mix_notifications()
   mustInterruptResponses();
 
   let publicList = yield promiseNewList();
-  let privateList = yield promiseNewList(true);
+  let privateList = yield Downloads.getList(Downloads.PRIVATE);
   let download1 = yield promiseNewDownload(httpUrl("interruptible.txt"));
   let download2 = yield promiseNewDownload(httpUrl("interruptible.txt"));
   let promiseAttempt1 = download1.start();

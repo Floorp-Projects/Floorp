@@ -42,15 +42,15 @@ public class testImportFromAndroid extends AboutHomeTest {
         addData();
 
         // Get the initial bookmarks and history
-        oldFirefoxBookmarks = getBrowserDBUrls(BrowserDataType.BOOKMARKS);
-        oldFirefoxHistory = getBrowserDBUrls(BrowserDataType.HISTORY);
+        oldFirefoxBookmarks = mDatabaseHelper.getBrowserDBUrls(DatabaseHelper.BrowserDataType.BOOKMARKS);
+        oldFirefoxHistory = mDatabaseHelper.getBrowserDBUrls(DatabaseHelper.BrowserDataType.HISTORY);
 
         // Import the bookmarks and history
         importDataFromAndroid();
 
         // Get the Android history and the Firefox bookmarks and history lists
-        firefoxHistory = getBrowserDBUrls(BrowserDataType.HISTORY);
-        firefoxBookmarks = getBrowserDBUrls(BrowserDataType.BOOKMARKS);
+        firefoxHistory = mDatabaseHelper.getBrowserDBUrls(DatabaseHelper.BrowserDataType.HISTORY);
+        firefoxBookmarks = mDatabaseHelper.getBrowserDBUrls(DatabaseHelper.BrowserDataType.BOOKMARKS);
 
         /**
          * Add a delay to make sure the imported items are added to the array lists 
@@ -90,7 +90,7 @@ public class testImportFromAndroid extends AboutHomeTest {
 
         // Verify bookmarks are not duplicated
         ArrayList<String> verifiedBookmarks = new ArrayList<String>();
-        firefoxBookmarks = getBrowserDBUrls(BrowserDataType.BOOKMARKS);
+        firefoxBookmarks = mDatabaseHelper.getBrowserDBUrls(DatabaseHelper.BrowserDataType.BOOKMARKS);
         for (String url:firefoxBookmarks) {
              if (verifiedBookmarks.contains(url)) {
                  mAsserter.ok(false, "Bookmark " + url + " should not be duplicated", "Bookmark is duplicated");
@@ -101,7 +101,7 @@ public class testImportFromAndroid extends AboutHomeTest {
         }
 
         // Verify history count is not increased after the second import
-        mAsserter.ok(firefoxHistory.size() == getBrowserDBUrls(BrowserDataType.HISTORY).size(), "The number of history entries was not increased", "None of the items were duplicated");
+        mAsserter.ok(firefoxHistory.size() == mDatabaseHelper.getBrowserDBUrls(DatabaseHelper.BrowserDataType.HISTORY).size(), "The number of history entries was not increased", "None of the items were duplicated");
     }
 
     private void addData() {
@@ -111,7 +111,7 @@ public class testImportFromAndroid extends AboutHomeTest {
         for (String url:androidBookmarks) {
             // Add every 3rd bookmark to Firefox Mobile
             if ((androidBookmarks.indexOf(url) % 3) == 0) {
-                 addOrUpdateMobileBookmark("Bookmark Number " + String.valueOf(androidBookmarks.indexOf(url)), url);
+                mDatabaseHelper.addOrUpdateMobileBookmark("Bookmark Number" + String.valueOf(androidBookmarks.indexOf(url)), url);
             }
         }
 
@@ -135,7 +135,7 @@ public class testImportFromAndroid extends AboutHomeTest {
 
     private void importDataFromAndroid() {
         waitForText("Enter Search or Address");
-        selectSettingsItem("Customize", "Import from Android");
+        selectSettingsItem(StringHelper.CUSTOMIZE_SECTION_LABEL, StringHelper.IMPORT_FROM_ANDROID_LABEL);
 
         // Wait for the Import form Android pop-up to be opened. It has the same title as the option so waiting for the "Cancel" button
         waitForText("Cancel");
@@ -153,7 +153,7 @@ public class testImportFromAndroid extends AboutHomeTest {
         // Import has finished. Waiting to get back to the Settings Menu and looking for the Import&Export subsection
         if ("phone".equals(mDevice.type)) {
             // Phones don't have headers like tablets, so we need to pop up one more level.
-            waitForText("Import from Android");
+            waitForText(StringHelper.IMPORT_FROM_ANDROID_LABEL);
             mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         }
         waitForText("Privacy"); // Settings is a header for the settings menu page. Waiting for Privacy ensures we are back in the top Settings view
@@ -196,11 +196,11 @@ public class testImportFromAndroid extends AboutHomeTest {
         // Bookmarks
         ArrayList<String> androidBookmarks = getAndroidUrls("bookmarks");
         for (String url:androidBookmarks) {
-             deleteBookmark(url);
+             mDatabaseHelper.deleteBookmark(url);
         }
         // History
         for (String url:androidData) {
-             deleteHistoryItem(url);
+             mDatabaseHelper.deleteHistoryItem(url);
         }
     }
 

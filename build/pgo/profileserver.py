@@ -48,7 +48,7 @@ if __name__ == '__main__':
       prefs[pref] = Preferences.cast(prefs[pref])
     profile = FirefoxProfile(profile=profilePath,
                              preferences=prefs,
-                             #addons=[os.path.join(here, 'extension')],
+                             addons=[os.path.join(build.distdir, 'xpi-stage', 'quitter')],
                              locations=locations)
 
     env = os.environ.copy()
