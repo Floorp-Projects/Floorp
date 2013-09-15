@@ -210,7 +210,7 @@ enum nsCSSUnit {
   eCSSUnit_Enumerated   = 71,     // (int) value has enumerated meaning
 
   eCSSUnit_EnumColor    = 80,     // (int) enumerated color (kColorKTable)
-  eCSSUnit_Color        = 81,     // (nscolor) an RGBA value
+  eCSSUnit_RGBAColor    = 81,     // (nscolor) an RGBA value
 
   eCSSUnit_Percent      = 90,     // (float) 1.0 == 100%) value is percentage of something
   eCSSUnit_Number       = 91,     // (float) value is numeric (usually multiplier, different behavior that percent)
@@ -404,7 +404,7 @@ public:
 
   nscolor GetColorValue() const
   {
-    NS_ABORT_IF_FALSE((mUnit == eCSSUnit_Color), "not a color value");
+    NS_ABORT_IF_FALSE((mUnit == eCSSUnit_RGBAColor), "not a color value");
     return mValue.mColor;
   }
 

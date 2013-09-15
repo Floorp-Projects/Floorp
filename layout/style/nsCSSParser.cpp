@@ -12069,7 +12069,7 @@ CSSParserImpl::ParseShadowItem(nsCSSValue& aValue, bool aIsBoxShadow)
   } else {
     // Must be a color (as string or color value)
     NS_ASSERTION(xOrColor.GetUnit() == eCSSUnit_Ident ||
-                 xOrColor.GetUnit() == eCSSUnit_Color ||
+                 xOrColor.GetUnit() == eCSSUnit_RGBAColor ||
                  xOrColor.GetUnit() == eCSSUnit_EnumColor,
                  "Must be a color value");
     val->Item(IndexColor) = xOrColor;
