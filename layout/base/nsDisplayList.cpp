@@ -3168,15 +3168,18 @@ already_AddRefed<Layer>
 nsDisplayMixBlendMode::BuildLayer(nsDisplayListBuilder* aBuilder,
                                   LayerManager* aManager,
                                   const ContainerParameters& aContainerParameters) {
+  ContainerParameters newContainerParameters = aContainerParameters;
+  newContainerParameters.mDisableSubpixelAntialiasingInDescendants = true;
+
   nsRefPtr<Layer> container = aManager->GetLayerBuilder()->
   BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
-                         aContainerParameters, nullptr);
+                         newContainerParameters, nullptr);
   if (!container) {
     return nullptr;
   }
-  
+
   container->SetMixBlendMode(GetGFXBlendMode(mFrame->StyleDisplay()->mMixBlendMode));
-  
+
   return container.forget();
 }
 
