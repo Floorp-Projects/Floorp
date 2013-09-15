@@ -73,6 +73,7 @@ BasicContainerLayer::ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToS
    */
   mUseIntermediateSurface =
     GetMaskLayer() ||
+    GetForceIsolatedGroup() ||
     (GetMixBlendMode() != gfxContext::OPERATOR_OVER && HasMultipleChildren()) ||
     (GetEffectiveOpacity() != 1.0 && (HasMultipleChildren() || hasSingleBlendingChild));
 }
