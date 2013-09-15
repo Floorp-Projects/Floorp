@@ -529,9 +529,16 @@ var Scratchpad = {
    */
   prettyPrint: function SP_prettyPrint() {
     const uglyText = this.getText();
+    const tabsize = Services.prefs.getIntPref("devtools.editor.tabsize");
     try {
       const ast = Reflect.parse(uglyText);
-      const prettyText = escodegen.generate(ast);
+      const prettyText = escodegen.generate(ast, {
+        format: {
+          indent: {
+            style: " ".repeat(tabsize)
+          }
+        }
+      });
       this.setText(prettyText);
     } catch (e) {
       this.writeAsErrorComment(DevToolsUtils.safeErrorString(e));
