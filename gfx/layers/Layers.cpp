@@ -182,6 +182,7 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mPostYScale(1.0f),
   mOpacity(1.0),
   mMixBlendMode(gfxContext::OPERATOR_OVER),
+  mForceIsolatedGroup(false),
   mContentFlags(0),
   mUseClipRect(false),
   mUseTileSourceRect(false),
