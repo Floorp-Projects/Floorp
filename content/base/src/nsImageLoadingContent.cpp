@@ -237,8 +237,16 @@ nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest,
   if (shell && shell->IsVisible() &&
       (!shell->DidInitialize() || shell->IsPaintingSuppressed())) {
 
-    if (NS_SUCCEEDED(mCurrentRequest->StartDecoding())) {
-      startedDecoding = true;
+    // If we've gotten a frame and that frame has called FrameCreate and that
+    // frame has been reflowed then we know that it checked it's own visibility
+    // so we can trust our visible count and we don't start decode if we are not
+    // visible.
+    nsIFrame* f = GetOurPrimaryFrame();
+    if (!mFrameCreateCalled || !f ||
+        (f->GetStateBits() & NS_FRAME_FIRST_REFLOW) || mVisibleCount > 0) {
+      if (NS_SUCCEEDED(mCurrentRequest->StartDecoding())) {
+        startedDecoding = true;
+      }
     }
   }
 
