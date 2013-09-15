@@ -5,6 +5,7 @@
 <!ENTITY index.title "App Manager">
 <!ENTITY index.projects2 "Apps">
 <!ENTITY index.device2 "Device">
+<!ENTITY index.help "Help">
 
 <!ENTITY device.screenshot "Screenshot">
 <!ENTITY device.screenshotTooltip "Open a screenshot of the current state of the device in a new tab.">
@@ -36,8 +37,9 @@
 <!ENTITY connection.connectTooltip "Connect to the device.">
 <!ENTITY connection.disconnect "Disconnect">
 <!ENTITY connection.disconnectTooltip "Disconnect from the current device or simulator.">
-<!ENTITY connection.showDeviceCtrlCenter "Click for More Details">
-<!ENTITY connection.notConnected "Not Connected">
+<!ENTITY connection.notConnected2 "Not Connected.">
+<!ENTITY connection.connectTo "Connect to:">
+<!ENTITY connection.noDeviceFound "No device found. Plug a device">
 <!ENTITY connection.changeHostAndPort "Change">
 <!ENTITY connection.changeHostAndPortTooltip "Change the host and port used to connect to the device. (Defaults to localhost:6000)">
 <!ENTITY connection.startSimulator "Start Simulator">
@@ -65,10 +67,19 @@
 <!ENTITY projects.title "Local Apps">
 <!ENTITY projects.appDetails "App Details">
 <!ENTITY projects.removeAppFromList "Remove this app from the list of apps you are working on. This will not remove it from a device or a simulator.">
-<!ENTITY projects.reloadFiles "Refresh">
-<!ENTITY projects.installApp "Install">
-<!ENTITY projects.startApp "Start">
-<!ENTITY projects.stopApp "Stop">
+<!ENTITY projects.updateApp "Update">
+<!ENTITY projects.updateAppTooltip "Execute validation checks and update the app to the connected device">
 <!ENTITY projects.debugApp "Debug">
+<!ENTITY projects.debugAppTooltip "Open Developer Tools connected to this app">
 <!ENTITY projects.hostedManifestPlaceHolder2 "http://example.com/app/manifest.webapp">
 <!ENTITY projects.noProjects "No projects. Add a new packaged app below (local directory) or a hosted app (link to a manifest file).">
+
+<!ENTITY help.title "App Manager">
+<!ENTITY help.close "Close">
+<!ENTITY help.intro "This tool will help you build and install web apps on compatible devices (i.e Firefox OS). The <strong>Apps</strong> tab will assist you in the validation and installation process of your app. The <strong>Device</strong> tab will give you information about the connected device. Use the bottom toolbar to connect to a device or start the simulator.">
+<!ENTITY help.usefullLinks "Useful links:">
+<!ENTITY help.linkToAppMgrDoc "<a>Documentation: Using the App Manager</a>">
+<!ENTITY help.linkToConfiguringDevice "<a>How to setup your Firefox OS device</a>">
+<!ENTITY help.linkToTroubleShooting "<a>Troubleshooting</a>">
+<!ENTITY help.linkToSimulatorAddon "<a>Install Simulator Add-on</a>">
+<!ENTITY help.linkToAdbHelperAddon "<a>Install Adb Helper Add-on</a>">

@@ -116,41 +116,59 @@ let UI = {
 
   validate: function(project) {
     let validation = new AppValidator(project);
-    validation.validate()
-              .then(function () {
-                if (validation.manifest) {
-                  project.name = validation.manifest.name;
-                  project.icon = UI._getLocalIconURL(project, validation.manifest);
-                  project.manifest = validation.manifest;
-                }
+    return validation.validate()
+      .then(function () {
+        if (validation.manifest) {
+          project.name = validation.manifest.name;
+          project.icon = UI._getLocalIconURL(project, validation.manifest);
+          project.manifest = validation.manifest;
+        }
 
-                project.validationStatus = "valid";
+        project.validationStatus = "valid";
 
-                if (validation.warnings.length > 0) {
-                  project.warningsCount = validation.warnings.length;
-                  project.warnings = validation.warnings.join(",\n ");
-                  project.validationStatus = "warning";
-                } else {
-                  project.warnings = "";
-                  project.warningsCount = 0;
-                }
+        if (validation.warnings.length > 0) {
+          project.warningsCount = validation.warnings.length;
+          project.warnings = validation.warnings.join(",\n ");
+          project.validationStatus = "warning";
+        } else {
+          project.warnings = "";
+          project.warningsCount = 0;
+        }
 
-                if (validation.errors.length > 0) {
-                  project.errorsCount = validation.errors.length;
-                  project.errors = validation.errors.join(",\n ");
-                  project.validationStatus = "error";
-                } else {
-                  project.errors = "";
-                  project.errorsCount = 0;
-                }
+        if (validation.errors.length > 0) {
+          project.errorsCount = validation.errors.length;
+          project.errors = validation.errors.join(",\n ");
+          project.validationStatus = "error";
+        } else {
+          project.errors = "";
+          project.errorsCount = 0;
+        }
 
-              });
+      });
 
   },
 
-  update: function(location) {
+  update: function(button, location) {
+    button.disabled = true;
     let project = AppProjects.get(location);
-    this.validate(project);
+    this.validate(project)
+        .then(() => {
+           // Install the app to the device if we are connected,
+           // and there is no error
+           if (project.errorsCount == 0 && this.listTabsResponse) {
+             return this.install(project);
+           }
+         })
+        .then(
+         () => {
+           button.disabled = false;
+         },
+         (res) => {
+           button.disabled = false;
+           let message = res.error + ": " + res.message;
+           alert(message);
+           this.connection.log(message);
+         });
   },
 
   remove: function(location) {
@@ -165,11 +183,7 @@ let UI = {
     }
   },
 
-  install: function(button, location) {
-    button.dataset.originalTextContent = button.textContent;
-    button.textContent = Utils.l10n("project.installing");
-    button.disabled = true;
-    let project = AppProjects.get(location);
+  install: function(project) {
     let install;
     if (project.type == "packaged") {
       install = installPackaged(this.connection.client, this.listTabsResponse.webappsActor, project.location, project.packagedAppOrigin);
@@ -183,43 +197,37 @@ let UI = {
       };
       install = installHosted(this.connection.client, this.listTabsResponse.webappsActor, appId, metadata, project.manifest);
     }
-    install.then(function () {
-      button.disabled = false;
-      button.textContent = Utils.l10n("project.installed");
-      setTimeout(function() {
-        button.textContent = button.dataset.originalTextContent;
-      }, 1500);
-    },
-    function (res) {
-      button.disabled = false;
-      let message = res.error + ": " + res.message;
-      alert(message);
-      this.connection.log(message);
-    });
+    return install;
   },
 
-  start: function(location) {
-    let project = AppProjects.get(location);
+  start: function(project) {
+    let deferred = promise.defer();
     let request = {
       to: this.listTabsResponse.webappsActor,
       type: "launch",
       manifestURL: this._getProjectManifestURL(project)
     };
     this.connection.client.request(request, (res) => {
-
+      if (res.error)
+        deferred.reject(res.error);
+      else
+        deferred.resolve(res);
     });
+    return deferred.promise;
   },
 
   stop: function(location) {
     let project = AppProjects.get(location);
+    let deferred = promise.defer();
     let request = {
       to: this.listTabsResponse.webappsActor,
       type: "close",
       manifestURL: this._getProjectManifestURL(project)
     };
     this.connection.client.request(request, (res) => {
-
+      promive.resolve(res);
     });
+    return deferred.promise;
   },
 
   _getTargetForApp: function(manifest) { // FIXME <- will be implemented in bug 912476
@@ -252,8 +260,39 @@ let UI = {
     return deferred.promise;
   },
 
-  openToolbox: function(location) {
+  debug: function(button, location) {
+    button.disabled = true;
     let project = AppProjects.get(location);
+    // First try to open the app
+    this.start(project)
+        .then(
+         null,
+         (error) => {
+           // If not installed, install and open it
+           if (error == "NO_SUCH_APP") {
+             return this.install(project)
+                        .then(() => this.start(project));
+           } else {
+             throw error;
+           }
+         })
+        .then(() => {
+           // Finally, when it's finally opened, display the toolbox
+           return this.openToolbox(project)
+        })
+        .then(() => {
+           // And only when the toolbox is opened, release the button
+           button.disabled = false;
+         },
+         (msg) => {
+           button.disabled = false;
+           alert(msg);
+           this.connection.log(msg);
+         });
+  },
+
+  openToolbox: function(project) {
+    let deferred = promise.defer();
     let manifest = this._getProjectManifestURL(project);
     this._getTargetForApp(manifest).then((target) => {
       gDevTools.showToolbox(target,
@@ -262,10 +301,11 @@ let UI = {
         this.connection.once(Connection.Events.DISCONNECTED, () => {
           toolbox.destroy();
         });
+        deferred.resolve();
       });
-    }, console.error);
+    }, deferred.reject);
+    return deferred.promise;
   },
-
 
   reveal: function(location) {
     let project = AppProjects.get(location);
