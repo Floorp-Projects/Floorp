@@ -6421,7 +6421,7 @@ var gIdentityHandler = {
     this._encryptionLabel[this.IDENTITY_MODE_MIXED_ACTIVE_LOADED] =
       gNavigatorBundle.getString("identity.mixed_active_loaded2");
     this._encryptionLabel[this.IDENTITY_MODE_MIXED_DISPLAY_LOADED_ACTIVE_BLOCKED] =
-      gNavigatorBundle.getString("identity.mixed_display_loaded_active_blocked");
+      gNavigatorBundle.getString("identity.mixed_display_loaded");
     return this._encryptionLabel;
   },
   get _identityPopup () {
