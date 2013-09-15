@@ -10,7 +10,7 @@
 #define LIR_CPU_OPCODE_LIST(_)      \
     _(Box)                          \
     _(Unbox)                        \
-    _(UnboxDouble)                  \
+    _(UnboxFloatingPoint)           \
     _(DivI)                         \
     _(DivPowTwoI)                   \
     _(DivSelfI)                     \

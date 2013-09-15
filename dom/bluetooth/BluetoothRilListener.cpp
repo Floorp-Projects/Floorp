@@ -192,10 +192,10 @@ TelephonyListener::NotifyError(int32_t aCallIndex,
     hfp->HandleCallStateChanged(aCallIndex,
                                 nsITelephonyProvider::CALL_STATE_DISCONNECTED,
                                 aError, EmptyString(), false, true);
-    NS_WARNING("Reset the call state due to call transition ends abnormally");
+    BT_WARNING("Reset the call state due to call transition ends abnormally");
   }
 
-  NS_WARNING(NS_ConvertUTF16toUTF8(aError).get());
+  BT_WARNING(NS_ConvertUTF16toUTF8(aError).get());
   return NS_OK;
 }
 

@@ -132,7 +132,8 @@ nsImageFrame::nsImageFrame(nsStyleContext* aContext) :
   mComputedSize(0, 0),
   mIntrinsicRatio(0, 0),
   mDisplayingIcon(false),
-  mFirstFrameComplete(false)
+  mFirstFrameComplete(false),
+  mReflowCallbackPosted(false)
 {
   // We assume our size is not constrained and we haven't gotten an
   // initial reflow yet, so don't touch those flags.
@@ -180,6 +181,11 @@ nsImageFrame::DisconnectMap()
 void
 nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
+  if (mReflowCallbackPosted) {
+    PresContext()->PresShell()->CancelReflowCallback(this);
+    mReflowCallbackPosted = false;
+  }
+
   // Tell our image map, if there is one, to clean up
   // This causes the nsImageMap to unregister itself as
   // a DOM listener.
@@ -891,11 +897,33 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
   }
   FinishAndStoreOverflow(&aMetrics);
 
+  if ((GetStateBits() & NS_FRAME_FIRST_REFLOW) && !mReflowCallbackPosted) {
+    nsIPresShell* shell = PresContext()->PresShell();
+    mReflowCallbackPosted = true;
+    shell->PostReflowCallback(this);
+  }
+
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                   ("exit nsImageFrame::Reflow: size=%d,%d",
                   aMetrics.width, aMetrics.height));
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
   return NS_OK;
+}
+
+bool
+nsImageFrame::ReflowFinished()
+{
+  mReflowCallbackPosted = false;
+
+  nsLayoutUtils::UpdateImageVisibilityForFrame(this);
+
+  return false;
+}
+
+void
+nsImageFrame::ReflowCallbackCanceled()
+{
+  mReflowCallbackPosted = false;
 }
 
 // Computes the width of the specified string. aMaxWidth specifies the maximum

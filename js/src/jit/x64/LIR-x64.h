@@ -54,13 +54,20 @@ class LUnbox : public LUnboxBase {
     { }
 };
 
-class LUnboxDouble : public LUnboxBase {
-  public:
-    LIR_HEADER(UnboxDouble)
+class LUnboxFloatingPoint : public LUnboxBase {
+    MIRType type_;
 
-    LUnboxDouble(const LAllocation &input)
-      : LUnboxBase(input)
+  public:
+    LIR_HEADER(UnboxFloatingPoint)
+
+    LUnboxFloatingPoint(const LAllocation &input, MIRType type)
+      : LUnboxBase(input),
+        type_(type)
     { }
+
+    MIRType type() const {
+        return type_;
+    }
 };
 
 // Convert a 32-bit unsigned integer to a double.

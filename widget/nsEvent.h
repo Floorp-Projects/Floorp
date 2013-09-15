@@ -76,7 +76,6 @@ class nsAnimationEvent;
 class nsPluginEvent;
 
 namespace mozilla {
-namespace widget {
 
 struct EventFlags;
 
@@ -100,21 +99,6 @@ enum Modifier {
 
 typedef uint16_t Modifiers;
 
-// NotificationToIME is shared by nsIMEStateManager and TextComposition.
-enum NotificationToIME {
-  // XXX We should replace NOTIFY_IME_OF_CURSOR_POS_CHANGED with
-  //     NOTIFY_IME_OF_SELECTION_CHANGE later.
-  NOTIFY_IME_OF_CURSOR_POS_CHANGED,
-  // An editable content is getting focus
-  NOTIFY_IME_OF_FOCUS,
-  // An editable content is losing focus
-  NOTIFY_IME_OF_BLUR,
-  // Selection in the focused editable content is changed
-  NOTIFY_IME_OF_SELECTION_CHANGE,
-  REQUEST_TO_COMMIT_COMPOSITION,
-  REQUEST_TO_CANCEL_COMPOSITION
-};
-
 #define NS_DEFINE_KEYNAME(aCPPName, aDOMKeyName) \
   KEY_NAME_INDEX_##aCPPName,
 
@@ -127,7 +111,6 @@ enum KeyNameIndex {
 
 #undef NS_DEFINE_KEYNAME
 
-} // namespace widget
 } // namespace mozilla
 
 #define NS_DOM_KEYNAME_ALT        "Alt"

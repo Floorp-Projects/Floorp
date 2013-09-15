@@ -1884,6 +1884,14 @@ public:
   AssertTreeOnlyEmptyNextInFlows(nsIFrame *aSubtreeRoot);
 #endif
 
+  /**
+   * Determine if aImageFrame (which is an nsImageFrame, nsImageControlFrame, or
+   * nsSVGImageFrame) is visible or close to being visible via scrolling and
+   * update the presshell with this knowledge.
+   */
+  static void
+  UpdateImageVisibilityForFrame(nsIFrame* aImageFrame);
+
 private:
   // Helper-functions for SortFrameList():
   template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>

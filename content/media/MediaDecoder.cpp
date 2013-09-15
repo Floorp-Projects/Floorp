@@ -1274,7 +1274,6 @@ void MediaDecoder::SetMediaDuration(int64_t aDuration)
 
 void MediaDecoder::UpdateEstimatedMediaDuration(int64_t aDuration)
 {
-  MOZ_ASSERT(NS_IsMainThread());
   if (mPlayState <= PLAY_STATE_LOADING) {
     return;
   }
@@ -1725,6 +1724,14 @@ bool
 MediaDecoder::IsWMFEnabled()
 {
   return WMFDecoder::IsEnabled();
+}
+#endif
+
+#ifdef MOZ_APPLEMEDIA
+bool
+MediaDecoder::IsAppleMP3Enabled()
+{
+  return Preferences::GetBool("media.apple.mp3.enabled");
 }
 #endif
 

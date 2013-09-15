@@ -1,25 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg">
 <!--
     Test SVG glyphs for text object stroke value inheritance
-    Covers glyph ID range 67 (a) to 70 (d)
+    Covers glyph ID range 68 (a) to 71 (d)
 -->
   <!-- a -->
   <rect x="100" y="-900" width="800" height="800" stroke="powderblue"
     stroke-width="50" stroke-dashoffset="35"
-    stroke-dasharray="50 50" id="glyph67" />
+    stroke-dasharray="50 50" id="glyph68" />
 
   <!-- b -->
   <rect x="100" y="-900" width="800" height="800" stroke="chartreuse"
     stroke-width="50" stroke-dashoffset="35"
-    stroke-dasharray="context-value" id="glyph68" />
+    stroke-dasharray="context-value" id="glyph69" />
 
   <!-- c -->
   <rect x="100" y="-900" width="800" height="800" stroke="sienna"
     stroke-width="50" stroke-dasharray="50 50"
-    stroke-dashoffset="context-value" id="glyph69" />
+    stroke-dashoffset="context-value" id="glyph70" />
 
   <!-- d -->
   <rect x="100" y="-900" width="800" height="800" stroke="olivedrab"
     stroke-width="context-value" stroke-dasharray="context-value"
-    stroke-dashoffset="context-value" id="glyph70" />
+    stroke-dashoffset="context-value" id="glyph71" />
 </svg>

@@ -21,13 +21,13 @@ svg:not(:root), symbol, image, marker, pattern, foreignObject {
 
 @media all and (-moz-is-glyph) {
  :root {
-   fill: -moz-objectfill;
-   fill-opacity: -moz-objectfillopacity;
-   stroke: -moz-objectstroke;
-   stroke-opacity: -moz-objectstrokeopacity;
-   stroke-width: -moz-objectValue;
-   stroke-dasharray: -moz-objectValue;
-   stroke-dashoffset: -moz-objectValue;
+   fill: context-fill;
+   fill-opacity: context-fill-opacity;
+   stroke: context-stroke;
+   stroke-opacity: context-stroke-opacity;
+   stroke-width: context-value;
+   stroke-dasharray: context-value;
+   stroke-dashoffset: context-value;
  }
 }
 

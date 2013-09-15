@@ -224,7 +224,7 @@ public:
                                 const bool&     aIgnoreRootScrollFrame);
     virtual bool RecvRealMouseEvent(const nsMouseEvent& event);
     virtual bool RecvRealKeyEvent(const nsKeyEvent& event);
-    virtual bool RecvMouseWheelEvent(const mozilla::widget::WheelEvent& event);
+    virtual bool RecvMouseWheelEvent(const mozilla::WheelEvent& event);
     virtual bool RecvRealTouchEvent(const nsTouchEvent& event);
     virtual bool RecvRealTouchMoveEvent(const nsTouchEvent& event);
     virtual bool RecvKeyEvent(const nsString& aType,

@@ -81,6 +81,11 @@ public:
   virtual void OnConnect(const nsAString& aErrorStr) MOZ_OVERRIDE;
   virtual void OnDisconnect(const nsAString& AErrorStr) MOZ_OVERRIDE;
 
+  virtual void GetName(nsACString& aName)
+  {
+    aName.AssignLiteral("HFP/HSP");
+  }
+
   bool Listen();
   bool ConnectSco(BluetoothReplyRunnable* aRunnable = nullptr);
   bool DisconnectSco();
