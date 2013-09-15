@@ -10,7 +10,6 @@
 #include "nsCycleCollectionParticipant.h"
 
 #include "mozilla/dom/SpeechRecognitionBinding.h"
-#include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/MediaManager.h"
 #include "mozilla/Services.h"
 
@@ -712,16 +711,11 @@ SpeechRecognition::Start(ErrorResult& aRv)
   rv = mRecognitionService->Initialize(this->asWeakPtr());
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  AutoSafeJSContext cx;
-  MediaStreamConstraintsInitializer constraints;
-  constraints.mAudio.SetAsBoolean() = true;
-
   if (!mTestConfig.mFakeFSMEvents) {
     MediaManager* manager = MediaManager::Get();
-    manager->GetUserMedia(cx,
-                          false,
+    manager->GetUserMedia(false,
                           GetOwner(),
-                          constraints,
+                          new GetUserMediaStreamOptions(),
                           new GetUserMediaSuccessCallback(this),
                           new GetUserMediaErrorCallback(this));
   }
@@ -926,6 +920,56 @@ SpeechRecognition::GetName(SpeechEvent* aEvent)
   MOZ_ASSERT(aEvent->mType < EVENT_COUNT);
   MOZ_ASSERT(ArrayLength(names) == EVENT_COUNT);
   return names[aEvent->mType];
+}
+
+NS_IMPL_ISUPPORTS1(SpeechRecognition::GetUserMediaStreamOptions, nsIMediaStreamOptions)
+
+NS_IMETHODIMP
+SpeechRecognition::GetUserMediaStreamOptions::GetFake(bool* aFake)
+{
+  *aFake = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SpeechRecognition::GetUserMediaStreamOptions::GetAudio(bool* aAudio)
+{
+  *aAudio = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SpeechRecognition::GetUserMediaStreamOptions::GetVideo(bool* aVideo)
+{
+  *aVideo = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SpeechRecognition::GetUserMediaStreamOptions::GetPicture(bool* aPicture)
+{
+  *aPicture = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SpeechRecognition::GetUserMediaStreamOptions::GetCamera(nsAString& aCamera)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SpeechRecognition::GetUserMediaStreamOptions::GetAudioDevice(nsIMediaDevice** aAudioDevice)
+{
+  *aAudioDevice = nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SpeechRecognition::GetUserMediaStreamOptions::GetVideoDevice(nsIMediaDevice** aVideoDevice)
+{
+  *aVideoDevice = nullptr;
+  return NS_OK;
 }
 
 SpeechEvent::~SpeechEvent()
