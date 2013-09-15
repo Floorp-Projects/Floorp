@@ -337,6 +337,9 @@ var BrowserApp = {
     AccessFu.attach(window);
 #endif
 
+    // Init LoginManager
+    Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+
     let url = null;
     let pinned = false;
     if ("arguments" in window) {
