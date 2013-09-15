@@ -48,8 +48,7 @@ public:
     if (IsHidden())
       return;
     gfxContextAutoSaveRestore contextSR(aContext);
-    gfxContext::GraphicsOperator mixBlendMode = GetEffectiveMixBlendMode();
-    AutoSetOperator setOptimizedOperator(aContext, mixBlendMode != gfxContext::OPERATOR_OVER ? mixBlendMode : GetOperator());
+    AutoSetOperator setOperator(aContext, GetOperator());
 
     aContext->SetColor(mColor);
 
