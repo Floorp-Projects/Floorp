@@ -181,8 +181,6 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mPostXScale(1.0f),
   mPostYScale(1.0f),
   mOpacity(1.0),
-  mMixBlendMode(gfxContext::OPERATOR_OVER),
-  mForceIsolatedGroup(false),
   mContentFlags(0),
   mUseClipRect(false),
   mUseTileSourceRect(false),
@@ -681,20 +679,6 @@ Layer::GetEffectiveOpacity()
     opacity *= c->GetLocalOpacity();
   }
   return opacity;
-}
-  
-gfxContext::GraphicsOperator
-Layer::GetEffectiveMixBlendMode()
-{
-  if(mMixBlendMode != gfxContext::OPERATOR_OVER)
-    return mMixBlendMode;
-  for (ContainerLayer* c = GetParent(); c && !c->UseIntermediateSurface();
-    c = c->GetParent()) {
-    if(c->mMixBlendMode != gfxContext::OPERATOR_OVER)
-      return c->mMixBlendMode;
-  }
-
-  return mMixBlendMode;
 }
 
 void

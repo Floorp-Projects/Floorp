@@ -27,8 +27,7 @@ BasicCanvasLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
   UpdateSurface();
   FireDidTransactionCallback();
 
-  gfxContext::GraphicsOperator mixBlendMode = GetEffectiveMixBlendMode();
-  PaintWithOpacity(aContext, GetEffectiveOpacity(), aMaskLayer, mixBlendMode != gfxContext::OPERATOR_OVER ? mixBlendMode : GetOperator());
+  PaintWithOpacity(aContext, GetEffectiveOpacity(), aMaskLayer, GetOperator());
 }
 
 already_AddRefed<CanvasLayer>
