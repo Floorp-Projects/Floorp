@@ -1048,9 +1048,6 @@ var gBrowserInit = {
     AddonManager.addAddonListener(AddonsMgrListener);
     WebrtcIndicator.init();
 
-    // Ensure login manager is up and running.
-    Services.logins;
-
 #ifdef MOZ_CRASHREPORTER
     if (gMultiProcessBrowser)
       TabCrashReporter.init();
