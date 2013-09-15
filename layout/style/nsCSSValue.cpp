@@ -121,7 +121,7 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   else if (eCSSUnit_Integer <= mUnit && mUnit <= eCSSUnit_EnumColor) {
     mValue.mInt = aCopy.mValue.mInt;
   }
-  else if (eCSSUnit_Color == mUnit) {
+  else if (eCSSUnit_RGBAColor == mUnit) {
     mValue.mColor = aCopy.mValue.mColor;
   }
   else if (UnitHasArrayValue()) {
@@ -207,7 +207,7 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
     else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_EnumColor)) {
       return mValue.mInt == aOther.mValue.mInt;
     }
-    else if (eCSSUnit_Color == mUnit) {
+    else if (eCSSUnit_RGBAColor == mUnit) {
       return mValue.mColor == aOther.mValue.mColor;
     }
     else if (UnitHasArrayValue()) {
@@ -377,7 +377,7 @@ void nsCSSValue::SetStringValue(const nsString& aValue,
 void nsCSSValue::SetColorValue(nscolor aValue)
 {
   Reset();
-  mUnit = eCSSUnit_Color;
+  mUnit = eCSSUnit_RGBAColor;
   mValue.mColor = aValue;
 }
 
@@ -640,7 +640,7 @@ bool nsCSSValue::IsNonTransparentColor() const
   // rgba notation.
   nsDependentString buf;
   return
-    (mUnit == eCSSUnit_Color && NS_GET_A(GetColorValue()) > 0) ||
+    (mUnit == eCSSUnit_RGBAColor && NS_GET_A(GetColorValue()) > 0) ||
     (mUnit == eCSSUnit_Ident &&
      !nsGkAtoms::transparent->Equals(GetStringValue(buf))) ||
     (mUnit == eCSSUnit_EnumColor);
@@ -979,7 +979,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
       NS_ABORT_IF_FALSE(false, "bad color value");
     }
   }
-  else if (eCSSUnit_Color == unit) {
+  else if (eCSSUnit_RGBAColor == unit) {
     nscolor color = GetColorValue();
     if (color == NS_RGBA(0, 0, 0, 0)) {
       // Use the strictest match for 'transparent' so we do correct
@@ -1268,7 +1268,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     case eCSSUnit_Integer:      break;
     case eCSSUnit_Enumerated:   break;
     case eCSSUnit_EnumColor:    break;
-    case eCSSUnit_Color:        break;
+    case eCSSUnit_RGBAColor:    break;
     case eCSSUnit_Percent:      aResult.Append(PRUnichar('%'));    break;
     case eCSSUnit_Number:       break;
     case eCSSUnit_Gradient:     break;
@@ -1427,7 +1427,7 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
       break;
 
     // Color: nothing extra to measure.
-    case eCSSUnit_Color:
+    case eCSSUnit_RGBAColor:
       break;
 
     // Float: nothing extra to measure.
