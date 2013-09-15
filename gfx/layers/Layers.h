@@ -741,6 +741,20 @@ public:
       Mutated();
     }
   }
+  
+  void SetForceIsolatedGroup(bool aForceIsolatedGroup)
+  {
+    if(mForceIsolatedGroup != aForceIsolatedGroup) {
+      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ForceIsolatedGroup", this));
+      mForceIsolatedGroup = aForceIsolatedGroup;
+      Mutated();
+    }
+  }
+  
+  bool GetForceIsolatedGroup() const
+  {
+    return mForceIsolatedGroup;
+  }
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -1323,6 +1337,7 @@ protected:
   InfallibleTArray<AnimData> mAnimationData;
   float mOpacity;
   gfxContext::GraphicsOperator mMixBlendMode;
+  bool mForceIsolatedGroup;
   nsIntRect mClipRect;
   nsIntRect mTileSourceRect;
   nsIntRegion mInvalidRegion;
