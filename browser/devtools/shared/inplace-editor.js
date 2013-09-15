@@ -703,6 +703,7 @@ InplaceEditor.prototype = {
     } else {
       this.popup.selectNextItem();
     }
+    this._selectedIndex = this.popup.selectedIndex;
     let input = this.input;
     let pre = "";
     if (input.selectionStart < input.selectionEnd) {
@@ -752,6 +753,45 @@ InplaceEditor.prototype = {
    */
   _onBlur: function InplaceEditor_onBlur(aEvent, aDoNotClear)
   {
+    if (aEvent && this.popup && this.popup.isOpen &&
+        this.contentType == CONTENT_TYPES.CSS_MIXED) {
+      let label, preLabel;
+      if (this._selectedIndex === undefined) {
+        ({label, preLabel}) = this.popup.getItemAtIndex(this.popup.selectedIndex);
+      }
+      else {
+        ({label, preLabel}) = this.popup.getItemAtIndex(this._selectedIndex);
+      }
+      let input = this.input;
+      let pre = "";
+      if (input.selectionStart < input.selectionEnd) {
+        pre = input.value.slice(0, input.selectionStart);
+      }
+      else {
+        pre = input.value.slice(0, input.selectionStart - label.length +
+                                   preLabel.length);
+      }
+      let post = input.value.slice(input.selectionEnd, input.value.length);
+      let item = this.popup.selectedItem;
+      this._selectedIndex = this.popup.selectedIndex;
+      let toComplete = item.label.slice(item.preLabel.length);
+      input.value = pre + toComplete + post;
+      input.setSelectionRange(pre.length + toComplete.length,
+                              pre.length + toComplete.length);
+      this._updateSize();
+      // Wait for the popup to hide and then focus input async otherwise it does
+      // not work.
+      let onPopupHidden = () => {
+        this.popup._panel.removeEventListener("popuphidden", onPopupHidden);
+        this.doc.defaultView.setTimeout(()=> {
+          input.focus();
+          this.emit("after-suggest");
+        }, 0);
+      };
+      this.popup._panel.addEventListener("popuphidden", onPopupHidden);
+      this.popup.hidePopup();
+      return;
+    }
     this._apply();
     if (!aDoNotClear) {
       this._clear();
