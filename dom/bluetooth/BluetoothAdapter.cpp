@@ -73,7 +73,7 @@ public:
 
     const BluetoothValue& v = mReply->get_BluetoothReplySuccess().value();
     if (v.type() != BluetoothValue::TArrayOfBluetoothNamedValue) {
-      NS_WARNING("Not a BluetoothNamedValue array!");
+      BT_WARNING("Not a BluetoothNamedValue array!");
       SetError(NS_LITERAL_STRING("BluetoothReplyTypeError"));
       return false;
     }
@@ -86,7 +86,7 @@ public:
     for (uint32_t i = 0; i < values.Length(); i++) {
       const BluetoothValue properties = values[i].value();
       if (properties.type() != BluetoothValue::TArrayOfBluetoothNamedValue) {
-        NS_WARNING("Not a BluetoothNamedValue array!");
+        BT_WARNING("Not a BluetoothNamedValue array!");
         SetError(NS_LITERAL_STRING("BluetoothReplyTypeError"));
         return false;
       }
@@ -100,7 +100,7 @@ public:
     nsresult rv;
     nsIScriptContext* sc = mAdapterPtr->GetContextForEventHandlers(&rv);
     if (!sc) {
-      NS_WARNING("Cannot create script context!");
+      BT_WARNING("Cannot create script context!");
       SetError(NS_LITERAL_STRING("BluetoothScriptContextError"));
       return false;
     }
@@ -108,7 +108,7 @@ public:
     AutoPushJSContext cx(sc->GetNativeContext());
     rv = nsTArrayToJSArray(cx, devices, &JsDevices);
     if (!JsDevices) {
-      NS_WARNING("Cannot create JS array!");
+      BT_WARNING("Cannot create JS array!");
       SetError(NS_LITERAL_STRING("BluetoothError"));
       return false;
     }
@@ -142,7 +142,7 @@ public:
 
     const BluetoothValue& v = mReply->get_BluetoothReplySuccess().value();
     if (v.type() != BluetoothValue::Tbool) {
-      NS_WARNING("Not a boolean!");
+      BT_WARNING("Not a boolean!");
       SetError(NS_LITERAL_STRING("BluetoothReplyTypeError"));
       return false;
     }
@@ -252,7 +252,7 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
     AutoPushJSContext cx(sc->GetNativeContext());
     JS::Rooted<JSObject*> uuids(cx);
     if (NS_FAILED(nsTArrayToJSArray(cx, mUuids, uuids.address()))) {
-      NS_WARNING("Cannot set JS UUIDs object!");
+      BT_WARNING("Cannot set JS UUIDs object!");
       return;
     }
     mJsUuids = uuids;
@@ -273,7 +273,7 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
     JS::Rooted<JSObject*> deviceAddresses(cx);
     if (NS_FAILED(nsTArrayToJSArray(cx, mDeviceAddresses,
                                     deviceAddresses.address()))) {
-      NS_WARNING("Cannot set JS Devices object!");
+      BT_WARNING("Cannot set JS Devices object!");
       return;
     }
     mJsDeviceAddresses = deviceAddresses;
@@ -283,7 +283,7 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
     nsCString warningMsg;
     warningMsg.AssignLiteral("Not handling adapter property: ");
     warningMsg.Append(NS_ConvertUTF16toUTF8(name));
-    NS_WARNING(warningMsg.get());
+    BT_WARNING(warningMsg.get());
 #endif
   }
 }
@@ -304,7 +304,7 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
 {
   InfallibleTArray<BluetoothNamedValue> arr;
 
-  BT_LOG("[A] %s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(aData.name()).get());
+  BT_LOGD("[A] %s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(aData.name()).get());
 
   BluetoothValue v = aData.value();
   if (aData.name().EqualsLiteral("DeviceFound")) {
@@ -359,7 +359,7 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
     nsCString warningMsg;
     warningMsg.AssignLiteral("Not handling adapter signal: ");
     warningMsg.Append(NS_ConvertUTF16toUTF8(aData.name()));
-    NS_WARNING(warningMsg.get());
+    BT_WARNING(warningMsg.get());
 #endif
   }
 }
@@ -389,7 +389,7 @@ BluetoothAdapter::StartStopDiscovery(bool aStart, ErrorResult& aRv)
     rv = bs->StopDiscoveryInternal(results);
   }
   if (NS_FAILED(rv)) {
-    NS_WARNING("Start/Stop Discovery failed!");
+    BT_WARNING("Start/Stop Discovery failed!");
     aRv.Throw(rv);
     return nullptr;
   }
@@ -416,7 +416,7 @@ JS::Value
 BluetoothAdapter::GetDevices(JSContext* aContext, ErrorResult& aRv)
 {
   if (!mJsDeviceAddresses) {
-    NS_WARNING("Devices not yet set!\n");
+    BT_WARNING("Devices not yet set!\n");
     aRv.Throw(NS_ERROR_FAILURE);
     return JS::NullValue();
   }
@@ -429,7 +429,7 @@ JS::Value
 BluetoothAdapter::GetUuids(JSContext* aContext, ErrorResult& aRv)
 {
   if (!mJsUuids) {
-    NS_WARNING("UUIDs not yet set!\n");
+    BT_WARNING("UUIDs not yet set!\n");
     aRv.Throw(NS_ERROR_FAILURE);
     return JS::NullValue();
   }
@@ -559,7 +559,7 @@ BluetoothAdapter::PairUnpair(bool aPair, BluetoothDevice& aDevice,
     rv = bs->RemoveDeviceInternal(addr, results);
   }
   if (NS_FAILED(rv)) {
-    NS_WARNING("Pair/Unpair failed!");
+    BT_WARNING("Pair/Unpair failed!");
     aRv.Throw(rv);
     return nullptr;
   }
@@ -599,7 +599,7 @@ BluetoothAdapter::SetPinCode(const nsAString& aDeviceAddress,
     return nullptr;
   }
   if (!bs->SetPinCodeInternal(aDeviceAddress, aPinCode, results)) {
-    NS_WARNING("SetPinCode failed!");
+    BT_WARNING("SetPinCode failed!");
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
@@ -627,7 +627,7 @@ BluetoothAdapter::SetPasskey(const nsAString& aDeviceAddress, uint32_t aPasskey,
     return nullptr;
   }
   if (bs->SetPasskeyInternal(aDeviceAddress, aPasskey, results)) {
-    NS_WARNING("SetPasskeyInternal failed!");
+    BT_WARNING("SetPasskeyInternal failed!");
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
@@ -657,7 +657,7 @@ BluetoothAdapter::SetPairingConfirmation(const nsAString& aDeviceAddress,
   if (!bs->SetPairingConfirmationInternal(aDeviceAddress,
                                           aConfirmation,
                                           results)) {
-    NS_WARNING("SetPairingConfirmation failed!");
+    BT_WARNING("SetPairingConfirmation failed!");
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
@@ -747,7 +747,7 @@ BluetoothAdapter::SendFile(const nsAString& aDeviceAddress,
   BlobChild* actor =
     ContentChild::GetSingleton()->GetOrCreateActorForBlob(aBlob);
   if (!actor) {
-    NS_WARNING("Can't create actor");
+    BT_WARNING("Can't create actor");
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }

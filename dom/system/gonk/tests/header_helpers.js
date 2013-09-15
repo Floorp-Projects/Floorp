@@ -25,7 +25,10 @@ function newWorker(custom_ns) {
   let worker_ns = {
     importScripts: function fakeImportScripts() {
       Array.slice(arguments).forEach(function (script) {
-        subscriptLoader.loadSubScript("resource://gre/modules/" + script, this);
+        if (!script.startsWith("resource:")) {
+          script = "resource://gre/modules/" + script;
+        }
+        subscriptLoader.loadSubScript(script, this);
       }, this);
     },
 
@@ -53,6 +56,22 @@ function newWorker(custom_ns) {
   for (let key in custom_ns) {
     worker_ns[key] = custom_ns[key];
   }
+
+  // fake require() for toolkit/components/workerloader/require.js
+  let require = (function() {
+    return function require(script) {
+      worker_ns.module = {};
+      worker_ns.importScripts(script);
+      return worker_ns;
+    }
+  })();
+
+  Object.freeze(require);
+  Object.defineProperty(worker_ns, "require", {
+    value: require,
+    enumerable: true,
+    configurable: false
+  });
 
   // Load the RIL worker itself.
   worker_ns.importScripts("ril_worker.js");
@@ -123,15 +142,16 @@ function newIncomingParcel(fakeParcelSize, response, request, data) {
 /**
  *
  */
-function newRadioInterfaceLayer() {
-  let ril_ns = {
-    ChromeWorker: function ChromeWorker() {
-      // Stub function
-    },
-  };
+let ril_ns;
+function newRadioInterface() {
+  if (!ril_ns) {
+    ril_ns = {};
+    subscriptLoader.loadSubScript("resource://gre/components/RadioInterfaceLayer.js", ril_ns);
+  }
 
-  subscriptLoader.loadSubScript("resource://gre/components/RadioInterfaceLayer.js", ril_ns);
-  return new ril_ns.RadioInterfaceLayer();
+  return {
+    __proto__: ril_ns.RadioInterface.prototype,
+  };
 }
 
 /**

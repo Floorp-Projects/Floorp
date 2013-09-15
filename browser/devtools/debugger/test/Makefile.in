@@ -15,6 +15,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_breadcrumbs-access.js \
 	browser_dbg_breakpoints-actual-location.js \
 	browser_dbg_breakpoints-contextmenu.js \
+	browser_dbg_breakpoints-disabled-reload.js \
 	browser_dbg_breakpoints-editor.js \
 	browser_dbg_breakpoints-highlight.js \
 	browser_dbg_breakpoints-new-script.js \

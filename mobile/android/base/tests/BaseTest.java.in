@@ -52,27 +52,10 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private static final int MAX_WAIT_HOME_PAGER_HIDDEN_MS = 10000;
     public static final int MAX_WAIT_MS = 3000;
 
-    // Note: DEFAULT_BOOKMARKS_TITLES.length == DEFAULT_BOOKMARKS_URLS.length
-    protected static final String[] DEFAULT_BOOKMARKS_TITLES = new String[] {
-        "Firefox: About your browser",
-        "Firefox: Support",
-        "Firefox: Customize with add-ons"
-    };
-    protected static final String[] DEFAULT_BOOKMARKS_URLS = new String[] {
-        "about:firefox",
-        "http://support.mozilla.org/en-US/products/mobile",
-        "https://addons.mozilla.org/en-US/android/"
-    };
-    protected static final int DEFAULT_BOOKMARKS_COUNT = DEFAULT_BOOKMARKS_TITLES.length;
-
     // IDs for UI views
     private static final String BROWSER_TOOLBAR_ID = "browser_toolbar";
     protected static final String URL_EDIT_TEXT_ID = "url_edit_text";
     protected static final String URL_BAR_TITLE_ID = "url_bar_title";
-
-    // Settings menu paths
-    protected static final String PRIVACY_LABEL = "Privacy";
-    protected static final String CLEAR_PRIVATE_DATA_LABEL = "Clear private data";
 
     private static Class<Activity> mLauncherActivityClass;
     private Activity mActivity;
@@ -85,6 +68,8 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private String mLogFile;
     protected String mProfile;
     public Device mDevice;
+    protected DatabaseHelper mDatabaseHelper;
+    protected StringHelper mStringHelper;
 
     protected void blockForGeckoReady() {
         try {
@@ -154,6 +139,8 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mDriver = new FennecNativeDriver(mActivity, mSolo, rootPath);
         mActions = new FennecNativeActions(mActivity, mSolo, getInstrumentation(), mAsserter);
         mDevice = new Device();
+        mDatabaseHelper = new DatabaseHelper(mActivity, mAsserter);
+        mStringHelper = new StringHelper();
     }
 
     @Override
@@ -617,7 +604,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     public void clearPrivateData() {
-        selectSettingsItem(PRIVACY_LABEL, CLEAR_PRIVATE_DATA_LABEL);
+        selectSettingsItem(StringHelper.PRIVACY_SECTION_LABEL, StringHelper.CLEAR_PRIVATE_DATA_LABEL);
         Actions.EventExpecter clearData = mActions.expectGeckoEvent("Sanitize:Finished");
         mSolo.clickOnText("Clear data");
         clearData.blockForEvent();
