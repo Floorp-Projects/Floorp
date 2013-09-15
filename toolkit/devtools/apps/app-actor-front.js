@@ -170,12 +170,10 @@ function installPackaged(client, webappsActor, packagePath, appId) {
             if (res.error) {
               deferred.reject(res);
             }
-          });
-          client.addOneTimeListener("webappsEvent", function (aState, aType, aPacket) {
-            if ("error" in aType)
-              deferred.reject({error: aType.error, message: aType.message});
+            if ("error" in res)
+              deferred.reject({error: res.error, message: res.message});
             else
-              deferred.resolve({appId: aType.appId});
+              deferred.resolve({appId: res.appId});
           });
           // Ensure deleting the temporary package file, but only if that a temporary
           // package created when we pass a directory as `packagePath`
@@ -203,12 +201,10 @@ function installHosted(client, webappsActor, appId, metadata, manifest) {
     if (res.error) {
       deferred.reject(res);
     }
-  });
-  client.addOneTimeListener("webappsEvent", function (aState, aType, aPacket) {
-    if ("error" in aType)
-      deferred.reject({error: aType.error, message: aType.message});
+    if ("error" in res)
+      deferred.reject({error: res.error, message: res.message});
     else
-      deferred.resolve({appId: aType.appId});
+      deferred.resolve({appId: res.appId});
   });
   return deferred.promise;
 }
