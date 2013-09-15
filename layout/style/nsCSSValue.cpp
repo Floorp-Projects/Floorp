@@ -738,9 +738,11 @@ nsCSSValue::BufferFromString(const nsString& aValue)
 namespace {
 
 struct CSSValueSerializeCalcOps {
-  CSSValueSerializeCalcOps(nsCSSProperty aProperty, nsAString& aResult)
+  CSSValueSerializeCalcOps(nsCSSProperty aProperty, nsAString& aResult,
+                           nsCSSValue::Serialization aSerialization)
     : mProperty(aProperty),
-      mResult(aResult)
+      mResult(aResult),
+      mValueSerialization(aSerialization)
   {
   }
 
@@ -760,24 +762,26 @@ struct CSSValueSerializeCalcOps {
   {
     NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Percent ||
                       aValue.IsLengthUnit(), "unexpected unit");
-    aValue.AppendToString(mProperty, mResult);
+    aValue.AppendToString(mProperty, mResult, mValueSerialization);
   }
 
   void AppendNumber(const input_type& aValue)
   {
     NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Number, "unexpected unit");
-    aValue.AppendToString(mProperty, mResult);
+    aValue.AppendToString(mProperty, mResult, mValueSerialization);
   }
 
 private:
   nsCSSProperty mProperty;
   nsAString &mResult;
+  nsCSSValue::Serialization mValueSerialization;
 };
 
 } // anonymous namespace
 
 void
-nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
+nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+                           Serialization aSerialization) const
 {
   // eCSSProperty_UNKNOWN gets used for some recursive calls below.
   NS_ABORT_IF_FALSE((0 <= aProperty &&
@@ -844,7 +848,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
          i == array->Count() - 1)
         ? eCSSProperty_list_style_type : aProperty;
       if (array->Item(i).GetUnit() != eCSSUnit_Null) {
-        array->Item(i).AppendToString(prop, aResult);
+        array->Item(i).AppendToString(prop, aResult, aSerialization);
         mark = true;
       }
     }
@@ -902,7 +906,8 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
 
     /* Now, step through the function contents, writing each of them as we go. */
     for (size_t index = 1; index < array->Count(); ++index) {
-      array->Item(index).AppendToString(aProperty, aResult);
+      array->Item(index).AppendToString(aProperty, aResult,
+                                        aSerialization);
 
       /* If we're not at the final element, append a comma. */
       if (index + 1 != array->Count())
@@ -914,7 +919,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
   }
   else if (IsCalcUnit()) {
     NS_ABORT_IF_FALSE(GetUnit() == eCSSUnit_Calc, "unexpected unit");
-    CSSValueSerializeCalcOps ops(aProperty, aResult);
+    CSSValueSerializeCalcOps ops(aProperty, aResult, aSerialization);
     css::SerializeCalc(*this, ops);
   }
   else if (eCSSUnit_Integer == unit) {
@@ -1112,10 +1117,12 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
       } else {
         NS_ABORT_IF_FALSE(gradient->GetRadiusX().GetUnit() != eCSSUnit_None,
                           "bad unit for radial gradient explicit size");
-        gradient->GetRadiusX().AppendToString(aProperty, aResult);
+        gradient->GetRadiusX().AppendToString(aProperty, aResult,
+                                              aSerialization);
         if (gradient->GetRadiusY().GetUnit() != eCSSUnit_None) {
           aResult.AppendLiteral(" ");
-          gradient->GetRadiusY().AppendToString(aProperty, aResult);
+          gradient->GetRadiusY().AppendToString(aProperty, aResult,
+                                                aSerialization);
         }
         needSep = true;
       }
@@ -1131,16 +1138,16 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
         if (!(gradient->mBgPos.mXValue.GetIntValue() & NS_STYLE_BG_POSITION_CENTER)) {
           aResult.AppendLiteral(" ");
           gradient->mBgPos.mXValue.AppendToString(eCSSProperty_background_position,
-                                                  aResult);
+                                                  aResult, aSerialization);
         }
         if (!(gradient->mBgPos.mYValue.GetIntValue() & NS_STYLE_BG_POSITION_CENTER)) {
           aResult.AppendLiteral(" ");
           gradient->mBgPos.mYValue.AppendToString(eCSSProperty_background_position,
-                                                  aResult);
+                                                  aResult, aSerialization);
         }
         needSep = true;
       } else if (gradient->mAngle.GetUnit() != eCSSUnit_None) {
-        gradient->mAngle.AppendToString(aProperty, aResult);
+        gradient->mAngle.AppendToString(aProperty, aResult, aSerialization);
         needSep = true;
       }
     } else if (gradient->mBgPos.mXValue.GetUnit() != eCSSUnit_None ||
@@ -1154,18 +1161,18 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
       }
       if (gradient->mBgPos.mXValue.GetUnit() != eCSSUnit_None) {
         gradient->mBgPos.mXValue.AppendToString(eCSSProperty_background_position,
-                                                aResult);
+                                                aResult, aSerialization);
         aResult.AppendLiteral(" ");
       }
       if (gradient->mBgPos.mXValue.GetUnit() != eCSSUnit_None) {
         gradient->mBgPos.mYValue.AppendToString(eCSSProperty_background_position,
-                                                aResult);
+                                                aResult, aSerialization);
         aResult.AppendLiteral(" ");
       }
       if (gradient->mAngle.GetUnit() != eCSSUnit_None) {
         NS_ABORT_IF_FALSE(gradient->mIsLegacySyntax,
                           "angle is allowed only for legacy syntax");
-        gradient->mAngle.AppendToString(aProperty, aResult);
+        gradient->mAngle.AppendToString(aProperty, aResult, aSerialization);
       }
       needSep = true;
     }
@@ -1206,10 +1213,12 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     }
 
     for (uint32_t i = 0 ;;) {
-      gradient->mStops[i].mColor.AppendToString(aProperty, aResult);
+      gradient->mStops[i].mColor.AppendToString(aProperty, aResult,
+                                                aSerialization);
       if (gradient->mStops[i].mLocation.GetUnit() != eCSSUnit_None) {
         aResult.AppendLiteral(" ");
-        gradient->mStops[i].mLocation.AppendToString(aProperty, aResult);
+        gradient->mStops[i].mLocation.AppendToString(aProperty, aResult,
+                                                     aSerialization);
       }
       if (++i == gradient->mStops.Length()) {
         break;
@@ -1247,23 +1256,23 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
       nsStyleUtil::SerializeFunctionalAlternates(altValues, out);
       aResult.Append(out);
     } else {
-      GetPairValue().AppendToString(aProperty, aResult);
+      GetPairValue().AppendToString(aProperty, aResult, aSerialization);
     }
   } else if (eCSSUnit_Triplet == unit) {
-    GetTripletValue().AppendToString(aProperty, aResult);
+    GetTripletValue().AppendToString(aProperty, aResult, aSerialization);
   } else if (eCSSUnit_Rect == unit) {
-    GetRectValue().AppendToString(aProperty, aResult);
+    GetRectValue().AppendToString(aProperty, aResult, aSerialization);
   } else if (eCSSUnit_List == unit || eCSSUnit_ListDep == unit) {
-    GetListValue()->AppendToString(aProperty, aResult);
+    GetListValue()->AppendToString(aProperty, aResult, aSerialization);
   } else if (eCSSUnit_SharedList == unit) {
-    GetSharedListValue()->AppendToString(aProperty, aResult);
+    GetSharedListValue()->AppendToString(aProperty, aResult, aSerialization);
   } else if (eCSSUnit_PairList == unit || eCSSUnit_PairListDep == unit) {
     switch (aProperty) {
       case eCSSProperty_font_feature_settings:
         nsStyleUtil::AppendFontFeatureSettings(*this, aResult);
         break;
       default:
-        GetPairListValue()->AppendToString(aProperty, aResult);
+        GetPairListValue()->AppendToString(aProperty, aResult, aSerialization);
         break;
     }
   }
@@ -1554,11 +1563,12 @@ nsCSSValueList::CloneInto(nsCSSValueList* aList) const
 }
 
 void
-nsCSSValueList::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
+nsCSSValueList::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+                               nsCSSValue::Serialization aSerialization) const
 {
   const nsCSSValueList* val = this;
   for (;;) {
-    val->mValue.AppendToString(aProperty, aResult);
+    val->mValue.AppendToString(aProperty, aResult, aSerialization);
     val = val->mNext;
     if (!val)
       break;
@@ -1618,10 +1628,11 @@ nsCSSValueSharedList::~nsCSSValueSharedList()
 }
 
 void
-nsCSSValueSharedList::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
+nsCSSValueSharedList::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+                                     nsCSSValue::Serialization aSerialization) const
 {
   if (mHead) {
-    mHead->AppendToString(aProperty, aResult);
+    mHead->AppendToString(aProperty, aResult, aSerialization);
   }
 }
 
@@ -1663,7 +1674,8 @@ nsCSSRect::~nsCSSRect()
 }
 
 void
-nsCSSRect::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
+nsCSSRect::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+                          nsCSSValue::Serialization aSerialization) const
 {
   NS_ABORT_IF_FALSE(mTop.GetUnit() != eCSSUnit_Null &&
                     mTop.GetUnit() != eCSSUnit_Inherit &&
@@ -1676,24 +1688,24 @@ nsCSSRect::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
       eCSSProperty_border_image_outset == aProperty) {
     NS_NAMED_LITERAL_STRING(space, " ");
 
-    mTop.AppendToString(aProperty, aResult);
+    mTop.AppendToString(aProperty, aResult, aSerialization);
     aResult.Append(space);
-    mRight.AppendToString(aProperty, aResult);
+    mRight.AppendToString(aProperty, aResult, aSerialization);
     aResult.Append(space);
-    mBottom.AppendToString(aProperty, aResult);
+    mBottom.AppendToString(aProperty, aResult, aSerialization);
     aResult.Append(space);
-    mLeft.AppendToString(aProperty, aResult);
+    mLeft.AppendToString(aProperty, aResult, aSerialization);
   } else {
     NS_NAMED_LITERAL_STRING(comma, ", ");
 
     aResult.AppendLiteral("rect(");
-    mTop.AppendToString(aProperty, aResult);
+    mTop.AppendToString(aProperty, aResult, aSerialization);
     aResult.Append(comma);
-    mRight.AppendToString(aProperty, aResult);
+    mRight.AppendToString(aProperty, aResult, aSerialization);
     aResult.Append(comma);
-    mBottom.AppendToString(aProperty, aResult);
+    mBottom.AppendToString(aProperty, aResult, aSerialization);
     aResult.Append(comma);
-    mLeft.AppendToString(aProperty, aResult);
+    mLeft.AppendToString(aProperty, aResult, aSerialization);
     aResult.Append(PRUnichar(')'));
   }
 }
@@ -1732,12 +1744,13 @@ static_assert(NS_SIDE_TOP == 0 && NS_SIDE_RIGHT == 1 &&
 
 void
 nsCSSValuePair::AppendToString(nsCSSProperty aProperty,
-                               nsAString& aResult) const
+                               nsAString& aResult,
+                               nsCSSValue::Serialization aSerialization) const
 {
-  mXValue.AppendToString(aProperty, aResult);
+  mXValue.AppendToString(aProperty, aResult, aSerialization);
   if (mYValue.GetUnit() != eCSSUnit_Null) {
     aResult.Append(PRUnichar(' '));
-    mYValue.AppendToString(aProperty, aResult);
+    mYValue.AppendToString(aProperty, aResult, aSerialization);
   }
 }
 
@@ -1763,15 +1776,16 @@ nsCSSValuePair_heap::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) co
 
 void
 nsCSSValueTriplet::AppendToString(nsCSSProperty aProperty,
-                               nsAString& aResult) const
+                                  nsAString& aResult,
+                                  nsCSSValue::Serialization aSerialization) const
 {
-    mXValue.AppendToString(aProperty, aResult);
+    mXValue.AppendToString(aProperty, aResult, aSerialization);
     if (mYValue.GetUnit() != eCSSUnit_Null) {
         aResult.Append(PRUnichar(' '));
-        mYValue.AppendToString(aProperty, aResult);
+        mYValue.AppendToString(aProperty, aResult, aSerialization);
         if (mZValue.GetUnit() != eCSSUnit_Null) {
             aResult.Append(PRUnichar(' '));
-            mZValue.AppendToString(aProperty, aResult);
+            mZValue.AppendToString(aProperty, aResult, aSerialization);
         }
     }
 }
@@ -1810,19 +1824,20 @@ nsCSSValuePairList::Clone() const
 
 void
 nsCSSValuePairList::AppendToString(nsCSSProperty aProperty,
-                                   nsAString& aResult) const
+                                   nsAString& aResult,
+                                   nsCSSValue::Serialization aSerialization) const
 {
   const nsCSSValuePairList* item = this;
   for (;;) {
     NS_ABORT_IF_FALSE(item->mXValue.GetUnit() != eCSSUnit_Null,
                       "unexpected null unit");
-    item->mXValue.AppendToString(aProperty, aResult);
+    item->mXValue.AppendToString(aProperty, aResult, aSerialization);
     if (item->mXValue.GetUnit() != eCSSUnit_Inherit &&
         item->mXValue.GetUnit() != eCSSUnit_Initial &&
         item->mXValue.GetUnit() != eCSSUnit_Unset &&
         item->mYValue.GetUnit() != eCSSUnit_Null) {
       aResult.Append(PRUnichar(' '));
-      item->mYValue.AppendToString(aProperty, aResult);
+      item->mYValue.AppendToString(aProperty, aResult, aSerialization);
     }
     item = item->mNext;
     if (!item)
