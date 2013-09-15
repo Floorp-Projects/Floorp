@@ -40,6 +40,14 @@ SpecialPowers.prototype._sendAsyncMessage = function(msgname, msg) {
   sendAsyncMessage(msgname, msg);
 };
 
+SpecialPowers.prototype._addMessageListener = function(msgname, listener) {
+  addMessageListener(msgname, listener);
+};
+
+SpecialPowers.prototype._removeMessageListener = function(msgname, listener) {
+  removeMessageListener(msgname, listener);
+};
+
 SpecialPowers.prototype.registerProcessCrashObservers = function() {
   addMessageListener("SPProcessCrashService", this._messageListener);
   sendSyncMessage("SPProcessCrashService", { op: "register-observer" });
