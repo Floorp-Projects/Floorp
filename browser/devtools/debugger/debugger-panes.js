@@ -135,18 +135,18 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    *        Information about the breakpoint to be shown.
    *        This object must have the following properties:
    *          - location: the breakpoint's source location and line number
+   *          - disabled: the breakpoint's disabled state, boolean
    *          - text: the breakpoint's line text to be displayed
-   *          - actor: the breakpoint's corresponding actor id
    * @param object aOptions [optional]
    *        @see DebuggerController.Breakpoints.addBreakpoint
    */
   addBreakpoint: function(aBreakpointData, aOptions = {}) {
-    let { location, actor } = aBreakpointData;
+    let { location, disabled } = aBreakpointData;
 
     // Make sure we're not duplicating anything. If a breakpoint at the
-    // specified source url and line already exists, just enable it.
+    // specified source url and line already exists, just toggle it.
     if (this.getBreakpoint(location)) {
-      this.enableBreakpoint(location, { id: actor });
+      this[disabled ? "disableBreakpoint" : "enableBreakpoint"](location);
       return;
     }
 
@@ -220,17 +220,18 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Returns all breakpoints which are not at the specified source url and line.
    *
-   * @param string aId
-   *        The original breakpoint client actor.
+   * @param object aLocation [optional]
+   *        @see DebuggerController.Breakpoints.addBreakpoint
    * @param array aStore [optional]
    *        A list in which to store the corresponding breakpoints.
    * @return array
    *         The corresponding breakpoints if found, an empty array otherwise.
    */
-  getOtherBreakpoints: function(aId, aStore = []) {
+  getOtherBreakpoints: function(aLocation = {}, aStore = []) {
     for (let source in this) {
       for (let breakpointItem in source) {
-        if (breakpointItem.attachment.actor != aId) {
+        let { url, line } = breakpointItem.attachment;
+        if (url != aLocation.url || line != aLocation.line) {
           aStore.push(breakpointItem);
         }
       }
@@ -245,7 +246,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    *        @see DebuggerController.Breakpoints.addBreakpoint
    * @param object aOptions [optional]
    *        Additional options or flags supported by this operation:
-   *          - id: a new id to be applied to the corresponding element node
    *          - silent: pass true to not update the checkbox checked state;
    *                    this is usually necessary when the checked state will
    *                    be updated automatically (e.g: on a checkbox click).
@@ -265,15 +265,12 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
 
     // Update the corresponding menu items to reflect the enabled state.
     let prefix = "bp-cMenu-"; // "breakpoints context menu"
-    let enableSelfId = prefix + "enableSelf-" + attachment.actor + "-menuitem";
-    let disableSelfId = prefix + "disableSelf-" + attachment.actor + "-menuitem";
+    let identifier = DebuggerController.Breakpoints.getIdentifier(attachment);
+    let enableSelfId = prefix + "enableSelf-" + identifier + "-menuitem";
+    let disableSelfId = prefix + "disableSelf-" + identifier + "-menuitem";
     document.getElementById(enableSelfId).setAttribute("hidden", "true");
     document.getElementById(disableSelfId).removeAttribute("hidden");
 
-    // Set a new id to the corresponding breakpoint element if required.
-    if (aOptions.id) {
-      attachment.view.container.id = "breakpoint-" + aOptions.id;
-    }
     // Update the checkbox state if necessary.
     if (!aOptions.silent) {
       attachment.view.checkbox.setAttribute("checked", "true");
@@ -312,8 +309,9 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
 
     // Update the corresponding menu items to reflect the disabled state.
     let prefix = "bp-cMenu-"; // "breakpoints context menu"
-    let enableSelfId = prefix + "enableSelf-" + attachment.actor + "-menuitem";
-    let disableSelfId = prefix + "disableSelf-" + attachment.actor + "-menuitem";
+    let identifier = DebuggerController.Breakpoints.getIdentifier(attachment);
+    let enableSelfId = prefix + "enableSelf-" + identifier + "-menuitem";
+    let disableSelfId = prefix + "disableSelf-" + identifier + "-menuitem";
     document.getElementById(enableSelfId).removeAttribute("hidden");
     document.getElementById(disableSelfId).setAttribute("hidden", "true");
 
@@ -325,7 +323,10 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     return DebuggerController.Breakpoints.removeBreakpoint(aLocation, {
       // No need to update this pane, since this method is invoked because
       // a breakpoint's view was interacted with.
-      noPaneUpdate: true
+      noPaneUpdate: true,
+      // Mark this breakpoint as being "disabled", not completely removed.
+      // This makes sure it will not be forgotten across target navigations.
+      rememberDisabled: true
     });
   },
 
@@ -448,32 +449,35 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * @param object aOptions
    *        A couple of options or flags supported by this operation:
    *          - location: the breakpoint's source location and line number
-   *          - text: the breakpoint's line text to be displayed.
-   *          - actor: a breakpoint identifier specified by the controller.
+   *          - disabled: the breakpoint's disabled state, boolean
+   *          - text: the breakpoint's line text to be displayed
    * @return object
    *         An object containing the breakpoint container, checkbox,
    *         line number and line text nodes.
    */
   _createBreakpointView: function(aOptions) {
+    let { location, disabled, text } = aOptions;
+    let identifier = DebuggerController.Breakpoints.getIdentifier(location);
+
     let checkbox = document.createElement("checkbox");
-    checkbox.setAttribute("checked", "true");
+    checkbox.setAttribute("checked", !disabled);
     checkbox.className = "dbg-breakpoint-checkbox";
 
     let lineNumberNode = document.createElement("label");
     lineNumberNode.className = "plain dbg-breakpoint-line";
-    lineNumberNode.setAttribute("value", aOptions.location.line);
+    lineNumberNode.setAttribute("value", location.line);
 
     let lineTextNode = document.createElement("label");
     lineTextNode.className = "plain dbg-breakpoint-text";
-    lineTextNode.setAttribute("value", aOptions.text);
+    lineTextNode.setAttribute("value", text);
     lineTextNode.setAttribute("crop", "end");
     lineTextNode.setAttribute("flex", "1");
 
-    let tooltip = aOptions.text.substr(0, BREAKPOINT_LINE_TOOLTIP_MAX_LENGTH);
+    let tooltip = text.substr(0, BREAKPOINT_LINE_TOOLTIP_MAX_LENGTH);
     lineTextNode.setAttribute("tooltiptext", tooltip);
 
     let container = document.createElement("hbox");
-    container.id = "breakpoint-" + aOptions.actor;
+    container.id = "breakpoint-" + identifier;
     container.className = "dbg-breakpoint side-menu-widget-item-other";
     container.classList.add("devtools-monospace");
     container.setAttribute("align", "center");
@@ -497,23 +501,24 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Creates a context menu for a breakpoint element.
    *
-   * @param aOptions
+   * @param object aOptions
    *        A couple of options or flags supported by this operation:
-   *          - actor: a breakpoint identifier specified by the controller.
+   *          - location: the breakpoint's source location and line number
+   *          - disabled: the breakpoint's disabled state, boolean
    * @return object
    *         An object containing the breakpoint commandset and menu popup ids.
    */
   _createContextMenu: function(aOptions) {
-    let commandsetId = "bp-cSet-" + aOptions.actor;
-    let menupopupId = "bp-mPop-" + aOptions.actor;
+    let { location, disabled } = aOptions;
+    let identifier = DebuggerController.Breakpoints.getIdentifier(location);
 
     let commandset = document.createElement("commandset");
     let menupopup = document.createElement("menupopup");
-    commandset.id = commandsetId;
-    menupopup.id = menupopupId;
+    commandset.id = "bp-cSet-" + identifier;
+    menupopup.id = "bp-mPop-" + identifier;
 
-    createMenuItem.call(this, "enableSelf", true);
-    createMenuItem.call(this, "disableSelf");
+    createMenuItem.call(this, "enableSelf", !disabled);
+    createMenuItem.call(this, "disableSelf", disabled);
     createMenuItem.call(this, "deleteSelf");
     createMenuSeparator();
     createMenuItem.call(this, "setConditional");
@@ -531,8 +536,8 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this._commandset.appendChild(commandset);
 
     return {
-      commandsetId: commandsetId,
-      menupopupId: menupopupId
+      commandsetId: commandset.id,
+      menupopupId: menupopup.id
     };
 
     /**
@@ -549,15 +554,15 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
       let command = document.createElement("command");
 
       let prefix = "bp-cMenu-"; // "breakpoints context menu"
-      let commandId = prefix + aName + "-" + aOptions.actor + "-command";
-      let menuitemId = prefix + aName + "-" + aOptions.actor + "-menuitem";
+      let commandId = prefix + aName + "-" + identifier + "-command";
+      let menuitemId = prefix + aName + "-" + identifier + "-menuitem";
 
       let label = L10N.getStr("breakpointMenuItem." + aName);
       let func = "_on" + aName.charAt(0).toUpperCase() + aName.slice(1);
 
       command.id = commandId;
       command.setAttribute("label", label);
-      command.addEventListener("command", () => this[func](aOptions.actor), false);
+      command.addEventListener("command", () => this[func](location), false);
 
       menuitem.id = menuitemId;
       menuitem.setAttribute("command", commandId);
@@ -842,69 +847,57 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Function invoked on the "setConditional" menuitem command.
    *
-   * @param string aId
-   *        The original breakpoint client actor.
+   * @param object aLocation
+   *        @see DebuggerController.Breakpoints.addBreakpoint
    */
-  _onSetConditional: function(aId) {
-    let targetBreakpoint = this.getItemForPredicate(aItem => aItem.attachment.actor == aId);
-    let attachment = targetBreakpoint.attachment;
-
+  _onSetConditional: function(aLocation) {
     // Highlight the breakpoint and show a conditional expression popup.
-    this.highlightBreakpoint(attachment, { openPopup: true });
+    this.highlightBreakpoint(aLocation, { openPopup: true });
   },
 
   /**
    * Function invoked on the "enableSelf" menuitem command.
    *
-   * @param string aId
-   *        The original breakpoint client actor.
+   * @param object aLocation
+   *        @see DebuggerController.Breakpoints.addBreakpoint
    */
-  _onEnableSelf: function(aId) {
-    let targetBreakpoint = this.getItemForPredicate(aItem => aItem.attachment.actor == aId);
-    let attachment = targetBreakpoint.attachment;
-
+  _onEnableSelf: function(aLocation) {
     // Enable the breakpoint, in this container and the controller store.
-    this.enableBreakpoint(attachment);
+    this.enableBreakpoint(aLocation);
   },
 
   /**
    * Function invoked on the "disableSelf" menuitem command.
    *
-   * @param string aId
-   *        The original breakpoint client actor.
+   * @param object aLocation
+   *        @see DebuggerController.Breakpoints.addBreakpoint
    */
-  _onDisableSelf: function(aId) {
-    let targetBreakpoint = this.getItemForPredicate(aItem => aItem.attachment.actor == aId);
-    let attachment = targetBreakpoint.attachment;
-
+  _onDisableSelf: function(aLocation) {
     // Disable the breakpoint, in this container and the controller store.
-    this.disableBreakpoint(attachment);
+    this.disableBreakpoint(aLocation);
   },
 
   /**
    * Function invoked on the "deleteSelf" menuitem command.
    *
-   * @param string aId
-   *        The original breakpoint client actor.
+   * @param object aLocation
+   *        @see DebuggerController.Breakpoints.addBreakpoint
    */
-  _onDeleteSelf: function(aId) {
-    let targetBreakpoint = this.getItemForPredicate(aItem => aItem.attachment.actor == aId);
-    let attachment = targetBreakpoint.attachment;
-
+  _onDeleteSelf: function(aLocation) {
     // Remove the breakpoint, from this container and the controller store.
-    this.removeBreakpoint(attachment);
-    DebuggerController.Breakpoints.removeBreakpoint(attachment);
+    this.removeBreakpoint(aLocation);
+    DebuggerController.Breakpoints.removeBreakpoint(aLocation);
   },
 
   /**
    * Function invoked on the "enableOthers" menuitem command.
    *
-   * @param string aId
-   *        The original breakpoint client actor.
+   * @param object aLocation
+   *        @see DebuggerController.Breakpoints.addBreakpoint
    */
-  _onEnableOthers: function(aId) {
-    let enableOthers = (aCallback) => {
-      let other = this.getOtherBreakpoints(aId);
+  _onEnableOthers: function(aLocation) {
+    let enableOthers = aCallback => {
+      let other = this.getOtherBreakpoints(aLocation);
       let outstanding = other.map(e => this.enableBreakpoint(e.attachment));
       promise.all(outstanding).then(aCallback);
     }
@@ -922,44 +915,44 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Function invoked on the "disableOthers" menuitem command.
    *
-   * @param string aId
-   *        The original breakpoint client actor.
+   * @param object aLocation
+   *        @see DebuggerController.Breakpoints.addBreakpoint
    */
-  _onDisableOthers: function(aId) {
-    let other = this.getOtherBreakpoints(aId);
-    other.forEach(e => this._onDisableSelf(e.attachment.actor));
+  _onDisableOthers: function(aLocation) {
+    let other = this.getOtherBreakpoints(aLocation);
+    other.forEach(e => this._onDisableSelf(e.attachment));
   },
 
   /**
    * Function invoked on the "deleteOthers" menuitem command.
    *
-   * @param string aId
-   *        The original breakpoint client actor.
+   * @param object aLocation
+   *        @see DebuggerController.Breakpoints.addBreakpoint
    */
-  _onDeleteOthers: function(aId) {
-    let other = this.getOtherBreakpoints(aId);
-    other.forEach(e => this._onDeleteSelf(e.attachment.actor));
+  _onDeleteOthers: function(aLocation) {
+    let other = this.getOtherBreakpoints(aLocation);
+    other.forEach(e => this._onDeleteSelf(e.attachment));
   },
 
   /**
    * Function invoked on the "enableAll" menuitem command.
    */
   _onEnableAll: function() {
-    this._onEnableOthers(null);
+    this._onEnableOthers(undefined);
   },
 
   /**
    * Function invoked on the "disableAll" menuitem command.
    */
   _onDisableAll: function() {
-    this._onDisableOthers(null);
+    this._onDisableOthers(undefined);
   },
 
   /**
    * Function invoked on the "deleteAll" menuitem command.
    */
   _onDeleteAll: function() {
-    this._onDeleteOthers(null);
+    this._onDeleteOthers(undefined);
   },
 
   _commandset: null,

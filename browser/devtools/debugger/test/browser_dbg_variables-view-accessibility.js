@@ -256,6 +256,15 @@ function performTest() {
       "The 'someProp5' item should be focused.");
     is(gVariablesView.getFocusedItem().expanded, true,
       "The 'someProp5' item should now be expanded.");
+    is(gVariablesView.getFocusedItem()._store.size, 9,
+      "There should be 9 properties in the selected variable.");
+    is(gVariablesView.getFocusedItem()._enumItems.length, 7,
+      "There should be 7 enumerable properties in the selected variable.");
+    is(gVariablesView.getFocusedItem()._nonEnumItems.length, 2,
+      "There should be 2 non-enumerable properties in the selected variable.");
+
+    yield waitForChildNodes(gVariablesView.getFocusedItem()._enum, 7);
+    yield waitForChildNodes(gVariablesView.getFocusedItem()._nonenum, 2);
 
     EventUtils.sendKey("RIGHT", gDebugger);
     is(gVariablesView.getFocusedItem().name, "0",
@@ -276,6 +285,15 @@ function performTest() {
       "The '5' item should be focused.");
     is(gVariablesView.getFocusedItem().expanded, true,
       "The '5' item should now be expanded.");
+    is(gVariablesView.getFocusedItem()._store.size, 5,
+      "There should be 5 properties in the selected variable.");
+    is(gVariablesView.getFocusedItem()._enumItems.length, 3,
+      "There should be 3 enumerable properties in the selected variable.");
+    is(gVariablesView.getFocusedItem()._nonEnumItems.length, 2,
+      "There should be 2 non-enumerable properties in the selected variable.");
+
+    yield waitForChildNodes(gVariablesView.getFocusedItem()._enum, 3);
+    yield waitForChildNodes(gVariablesView.getFocusedItem()._nonenum, 2);
 
     EventUtils.sendKey("RIGHT", gDebugger);
     is(gVariablesView.getFocusedItem().name, "0",
@@ -291,13 +309,42 @@ function performTest() {
     is(gVariablesView.getFocusedItem().expanded, false,
       "The '6' item should not be expanded yet.");
 
-    // Part 9: Test that the RIGHT key collapses elements as intended.
+    yield synthesizeKeyAndWaitForTick("VK_RIGHT", {});
+    is(gVariablesView.getFocusedItem().name, "6",
+      "The '6' item should be focused.");
+    is(gVariablesView.getFocusedItem().expanded, true,
+      "The '6' item should now be expanded.");
+    is(gVariablesView.getFocusedItem()._store.size, 3,
+      "There should be 3 properties in the selected variable.");
+    is(gVariablesView.getFocusedItem()._enumItems.length, 2,
+      "There should be 2 enumerable properties in the selected variable.");
+    is(gVariablesView.getFocusedItem()._nonEnumItems.length, 1,
+      "There should be 1 non-enumerable properties in the selected variable.");
 
-    EventUtils.sendKey("DOWN", gDebugger);
-    EventUtils.sendKey("DOWN", gDebugger);
-    EventUtils.sendKey("DOWN", gDebugger);
+    yield waitForChildNodes(gVariablesView.getFocusedItem()._enum, 2);
+    yield waitForChildNodes(gVariablesView.getFocusedItem()._nonenum, 1);
+
+    EventUtils.sendKey("RIGHT", gDebugger);
+    is(gVariablesView.getFocusedItem().name, "prop1",
+      "The 'prop1' item should be focused.");
+
+    if (gVariablesView.getFocusedItem().name != "prop1") {
+      gDebugger.DebuggerView.toggleInstrumentsPane({ visible: true, animated: false })
+      yield promise.defer().promise;
+      yield closeDebuggerAndFinish(gPanel);
+    }
+
+    EventUtils.sendKey("RIGHT", gDebugger);
+    is(gVariablesView.getFocusedItem().name, "prop1",
+      "The 'prop1' item should still be focused.");
+
+    EventUtils.sendKey("PAGE_DOWN", gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp6",
       "The 'someProp6' item should be focused.");
+    is(gVariablesView.getFocusedItem().expanded, false,
+      "The 'someProp6' item should not be expanded yet.");
+
+    // Part 9: Test that the RIGHT key collapses elements as intended.
 
     EventUtils.sendKey("LEFT", gDebugger);
     is(gVariablesView.getFocusedItem().name, "someProp6",
@@ -457,13 +504,19 @@ function synthesizeKeyAndWaitForTick(aKey, aModifiers) {
   return waitForTick();
 }
 
-function waitForTick() {
-  let deferred = promise.defer();
-  executeSoon(deferred.resolve);
-  return deferred.promise;
+function waitForElement(aSelector, aExistence) {
+  return waitForPredicate(() => {
+    return !!gVariablesView._list.querySelector(aSelector) == aExistence;
+  });
 }
 
-function waitForElement(aSelector, aExistence, aInterval = 10) {
+function waitForChildNodes(aTarget, aCount) {
+  return waitForPredicate(() => {
+    return aTarget.childNodes.length == aCount;
+  });
+}
+
+function waitForPredicate(aPredicate, aInterval = 10) {
   let deferred = promise.defer();
 
   // Poll every few milliseconds until the element is retrieved.
@@ -475,8 +528,8 @@ function waitForElement(aSelector, aExistence, aInterval = 10) {
       window.clearInterval(intervalID);
       return;
     }
-    // Check if the existence condition is fulfilled.
-    if (!!gVariablesView._list.querySelector(aSelector) != aExistence) {
+    // Check if the predicate condition is fulfilled.
+    if (!aPredicate()) {
       return;
     }
     // We got the element, it's safe to callback.

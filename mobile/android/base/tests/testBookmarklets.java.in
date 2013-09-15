@@ -14,7 +14,7 @@ public class testBookmarklets extends AboutHomeTest {
     }
 
     public void testBookmarklets() {
-        final String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
+        final String url = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
         final String title = "alertBookmarklet";
         final String js = "javascript:alert(12 + .34)";
         boolean alerted;
@@ -23,7 +23,7 @@ public class testBookmarklets extends AboutHomeTest {
 
         // load a standard page so bookmarklets work
         inputAndLoadUrl(url);
-        verifyPageTitle("Browser Blank Page 01"); // Waiting for page title to ensure the page is loaded
+        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE); // Waiting for page title to ensure the page is loaded
 
         // verify that user-entered bookmarklets do *not* work
         enterUrl(js);
@@ -38,7 +38,7 @@ public class testBookmarklets extends AboutHomeTest {
 
         // add the bookmarklet to the database. there's currently no way to
         // add this using the UI, so we go through the content provider.
-        addOrUpdateMobileBookmark(title, js);
+        mDatabaseHelper.addOrUpdateMobileBookmark(title, js);
 
         // Open about:home in the Bookmarks page
         openAboutHomeTab(AboutHomeTabs.BOOKMARKS);
@@ -77,6 +77,6 @@ public class testBookmarklets extends AboutHomeTest {
         mAsserter.is(alerted, true, "Alert was shown for clicked bookmarklet");
 
         // remove the bookmarklet
-        deleteBookmark(js);
+        mDatabaseHelper.deleteBookmark(js);
     }
 }
