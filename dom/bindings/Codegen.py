@@ -1641,7 +1641,9 @@ class AttrDefiner(PropertyDefiner):
                    (accessor, jitinfo)
 
         def setter(attr):
-            if attr.readonly and attr.getExtendedAttribute("PutForwards") is None:
+            if (attr.readonly and
+                attr.getExtendedAttribute("PutForwards") is None and
+                attr.getExtendedAttribute("Replaceable") is None):
                 return "JSOP_NULLWRAPPER"
             if self.static:
                 accessor = 'set_' + attr.identifier.name
@@ -5795,6 +5797,29 @@ if (!v.isObject()) {
 
 return JS_SetProperty(cx, &v.toObject(), "%s", args[0]);""" % (attrName, self.descriptor.interface.identifier.name, attrName, forwardToAttrName))).define()
 
+class CGSpecializedReplaceableSetter(CGSpecializedSetter):
+    """
+    A class for generating the code for a specialized attribute setter with
+    Replaceable that the JIT can call with lower overhead.
+    """
+    def __init__(self, descriptor, attr):
+        CGSpecializedSetter.__init__(self, descriptor, attr)
+
+    def definition_body(self):
+        attrName = self.attr.identifier.name
+        return CGIndenter(CGGeneric("""JS::Rooted<JSPropertyDescriptor> desc(cx);
+desc.object().set(obj);
+desc.setEnumerable();
+desc.value().set(args[0]);
+
+JS::Rooted<jsid> id(cx);
+if (!InternJSString(cx, id.get(), "%s")) {
+  return false;
+}
+
+bool b;
+return js_DefineOwnProperty(cx, obj, id, desc, &b);""" % attrName)).define()
+
 def memberReturnsNewObject(member):
     return member.getExtendedAttribute("NewObject") is not None
 
@@ -5849,7 +5874,9 @@ class CGMemberJITInfo(CGThing):
             result = self.defineJitInfo(getterinfo, getter, "Getter",
                                         getterinfal, getterconst, getterpure,
                                         [self.member.type])
-            if not self.member.readonly or self.member.getExtendedAttribute("PutForwards") is not None:
+            if (not self.member.readonly or
+                self.member.getExtendedAttribute("PutForwards") is not None or
+                self.member.getExtendedAttribute("Replaceable") is not None):
                 setterinfo = ("%s_setterinfo" % self.member.identifier.name)
                 # Actually a JSJitSetterOp, but JSJitGetterOp is first in the
                 # union.
@@ -7970,6 +7997,9 @@ class CGDescriptor(CGThing):
                             hasSetter = True
                 elif m.getExtendedAttribute("PutForwards"):
                     cgThings.append(CGSpecializedForwardingSetter(descriptor, m))
+                    hasSetter = True
+                elif m.getExtendedAttribute("Replaceable"):
+                    cgThings.append(CGSpecializedReplaceableSetter(descriptor, m))
                     hasSetter = True
                 if (not m.isStatic() and
                     descriptor.interface.hasInterfacePrototypeObject()):
