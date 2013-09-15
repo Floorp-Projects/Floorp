@@ -1024,31 +1024,55 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     }
   }
   else if (IsNumericColorUnit(unit)) {
-    nscolor color = GetColorValue();
-    if (color == NS_RGBA(0, 0, 0, 0)) {
-      // Use the strictest match for 'transparent' so we do correct
-      // round-tripping of all other rgba() values.
-      aResult.AppendLiteral("transparent");
-    } else {
-      uint8_t a = NS_GET_A(color);
-      if (a < 255) {
-        aResult.AppendLiteral("rgba(");
+    if (aSerialization == eNormalized ||
+        unit == eCSSUnit_RGBColor ||
+        unit == eCSSUnit_RGBAColor) {
+      nscolor color = GetColorValue();
+      if (aSerialization == eNormalized &&
+          color == NS_RGBA(0, 0, 0, 0)) {
+        // Use the strictest match for 'transparent' so we do correct
+        // round-tripping of all other rgba() values.
+        aResult.AppendLiteral("transparent");
       } else {
-        aResult.AppendLiteral("rgb(");
-      }
+        uint8_t a = NS_GET_A(color);
+        bool showAlpha =
+          (aSerialization == eNormalized && a < 255) ||
+          (aSerialization == eAuthorSpecified &&
+           unit == eCSSUnit_RGBAColor);
+        if (showAlpha) {
+          aResult.AppendLiteral("rgba(");
+        } else {
+          aResult.AppendLiteral("rgb(");
+        }
 
-      NS_NAMED_LITERAL_STRING(comma, ", ");
+        NS_NAMED_LITERAL_STRING(comma, ", ");
 
-      aResult.AppendInt(NS_GET_R(color), 10);
-      aResult.Append(comma);
-      aResult.AppendInt(NS_GET_G(color), 10);
-      aResult.Append(comma);
-      aResult.AppendInt(NS_GET_B(color), 10);
-      if (a < 255) {
+        aResult.AppendInt(NS_GET_R(color), 10);
         aResult.Append(comma);
-        aResult.AppendFloat(nsStyleUtil::ColorComponentToFloat(a));
+        aResult.AppendInt(NS_GET_G(color), 10);
+        aResult.Append(comma);
+        aResult.AppendInt(NS_GET_B(color), 10);
+        if (showAlpha) {
+          aResult.Append(comma);
+          aResult.AppendFloat(nsStyleUtil::ColorComponentToFloat(a));
+        }
+        aResult.Append(PRUnichar(')'));
       }
-      aResult.Append(PRUnichar(')'));
+    } else if (eCSSUnit_HexColor == unit) {
+      nscolor color = GetColorValue();
+      aResult.Append('#');
+      aResult.AppendPrintf("%02x", NS_GET_R(color));
+      aResult.AppendPrintf("%02x", NS_GET_G(color));
+      aResult.AppendPrintf("%02x", NS_GET_B(color));
+    } else if (eCSSUnit_ShortHexColor == unit) {
+      nscolor color = GetColorValue();
+      aResult.Append('#');
+      aResult.AppendInt(NS_GET_R(color) / 0x11, 16);
+      aResult.AppendInt(NS_GET_G(color) / 0x11, 16);
+      aResult.AppendInt(NS_GET_B(color) / 0x11, 16);
+    } else {
+      MOZ_ASSERT(IsFloatColorUnit());
+      mValue.mFloatColor->AppendToString(unit, aResult);
     }
   }
   else if (eCSSUnit_URL == unit || eCSSUnit_Image == unit) {
@@ -2162,6 +2186,45 @@ bool
 nsCSSValueFloatColor::IsNonTransparentColor() const
 {
   return mAlpha > 0.0f;
+}
+
+void
+nsCSSValueFloatColor::AppendToString(nsCSSUnit aUnit, nsAString& aResult) const
+{
+  MOZ_ASSERT(nsCSSValue::IsFloatColorUnit(aUnit), "unexpected unit");
+
+  bool hasAlpha = aUnit == eCSSUnit_PercentageRGBAColor ||
+                  aUnit == eCSSUnit_HSLAColor;
+  bool isHSL = aUnit == eCSSUnit_HSLColor ||
+               aUnit == eCSSUnit_HSLAColor;
+
+  if (isHSL) {
+    aResult.AppendLiteral("hsl");
+  } else {
+    aResult.AppendLiteral("rgb");
+  }
+  if (hasAlpha) {
+    aResult.AppendLiteral("a(");
+  } else {
+    aResult.Append('(');
+  }
+  if (isHSL) {
+    aResult.AppendFloat(mComponent1 * 360.0f);
+    aResult.AppendLiteral(", ");
+  } else {
+    aResult.AppendFloat(mComponent1 * 100.0f);
+    aResult.AppendLiteral("%, ");
+  }
+  aResult.AppendFloat(mComponent2 * 100.0f);
+  aResult.AppendLiteral("%, ");
+  aResult.AppendFloat(mComponent3 * 100.0f);
+  if (hasAlpha) {
+    aResult.AppendLiteral("%, ");
+    aResult.AppendFloat(mAlpha);
+    aResult.Append(')');
+  } else {
+    aResult.AppendLiteral("%)");
+  }
 }
 
 size_t
