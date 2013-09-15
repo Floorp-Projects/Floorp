@@ -144,7 +144,7 @@ WebappsActor.prototype = {
     this.conn = null;
   },
 
-  _registerApp: function wa_actorRegisterApp(aApp, aId, aDir) {
+  _registerApp: function wa_actorRegisterApp(aDeferred, aApp, aId, aDir) {
     debug("registerApp");
     let reg = DOMApplicationRegistry;
     let self = this;
@@ -191,10 +191,7 @@ WebappsActor.prototype = {
                              });
 
         delete aApp.manifest;
-        self.conn.send({ from: self.actorID,
-                         type: "webappsEvent",
-                         appId: aId
-                       });
+        aDeferred.resolve({ appId: aId, path: aDir.path });
 
         // We can't have appcache for packaged apps.
         if (!aApp.origin.startsWith("app://")) {
@@ -207,15 +204,13 @@ WebappsActor.prototype = {
     });
   },
 
-  _sendError: function wa_actorSendError(aMsg, aId) {
+  _sendError: function wa_actorSendError(aDeferred, aMsg, aId) {
     debug("Sending error: " + aMsg);
-    this.conn.send(
-      { from: this.actorID,
-        type: "webappsEvent",
-        appId: aId,
-        error: "installationFailed",
-        message: aMsg
-      });
+    aDeferred.resolve({
+      error: "installationFailed",
+      message: aMsg,
+      appId: aId
+    });
   },
 
   _getAppType: function wa_actorGetAppType(aType) {
@@ -258,6 +253,7 @@ WebappsActor.prototype = {
                                                    aManifest, aMetadata) {
     debug("installHostedApp");
     let self = this;
+    let deferred = promise.defer();
 
     function readManifest() {
       if (aManifest) {
@@ -339,24 +335,26 @@ WebappsActor.prototype = {
                 receipts: aReceipts,
               };
 
-              self._registerApp(app, aId, aDir);
+              self._registerApp(deferred, app, aId, aDir);
             }, function (error) {
-              self._sendError(error, aId);
+              self._sendError(deferred, error, aId);
             });
         } catch(e) {
           // If anything goes wrong, just send it back.
-          self._sendError(e.toString(), aId);
+          self._sendError(deferred, e.toString(), aId);
         }
       }
     }
 
     Services.tm.currentThread.dispatch(runnable,
                                        Ci.nsIThread.DISPATCH_NORMAL);
+    return deferred.promise;
   },
 
   installPackagedApp: function wa_actorInstallPackaged(aDir, aId, aReceipts) {
     debug("installPackagedApp");
     let self = this;
+    let deferred = promise.defer();
 
     let runnable = {
       run: function run() {
@@ -379,7 +377,7 @@ WebappsActor.prototype = {
 
           DOMApplicationRegistry._loadJSONAsync(manFile, function(aManifest) {
             if (!aManifest) {
-              self._sendError("Error Parsing manifest.webapp", aId);
+              self._sendError(deferred, "Error Parsing manifest.webapp", aId);
             }
 
             let appType = self._getAppType(aManifest.type);
@@ -394,17 +392,18 @@ WebappsActor.prototype = {
               receipts: aReceipts,
             }
 
-            self._registerApp(app, aId, aDir);
+            self._registerApp(deferred, app, id, aDir);
           });
         } catch(e) {
           // If anything goes wrong, just send it back.
-          self._sendError(e.toString(), aId);
+          self._sendError(deferred, e.toString(), aId);
         }
       }
     }
 
     Services.tm.currentThread.dispatch(runnable,
                                        Ci.nsIThread.DISPATCH_NORMAL);
+    return deferred.promise;
   },
 
   /**
@@ -462,49 +461,48 @@ WebappsActor.prototype = {
     let receipts = (aRequest.receipts && Array.isArray(aRequest.receipts))
                     ? aRequest.receipts
                     : [];
-    let manifest, metadata;
 
     if (testFile.exists()) {
-      this.installPackagedApp(appDir, appId, receipts);
-    } else {
-      let missing =
-        ["manifest.webapp", "metadata.json"]
-        .some(function(aName) {
-          testFile = appDir.clone();
-          testFile.append(aName);
-          return !testFile.exists();
-        });
-
-      if (missing) {
-        if (aRequest.manifest && aRequest.metadata &&
-            aRequest.metadata.origin) {
-          manifest = aRequest.manifest;
-          metadata = aRequest.metadata;
-        } else {
-          try {
-            appDir.remove(true);
-          } catch(e) {}
-            return { error: "badParameterType",
-                     message: "hosted app file and manifest/metadata fields are missing" };
-        }
-      }
-
-      this.installHostedApp(appDir, appId, receipts, manifest, metadata);
+      return this.installPackagedApp(appDir, appId, receipts);
     }
 
-    return { appId: appId, path: appDir.path }
+    let manifest, metadata;
+    let missing =
+      ["manifest.webapp", "metadata.json"]
+      .some(function(aName) {
+        testFile = appDir.clone();
+        testFile.append(aName);
+        return !testFile.exists();
+      });
+    if (missing) {
+      if (aRequest.manifest && aRequest.metadata &&
+          aRequest.metadata.origin) {
+        manifest = aRequest.manifest;
+        metadata = aRequest.metadata;
+      } else {
+        try {
+          appDir.remove(true);
+        } catch(e) {}
+        return { error: "badParameterType",
+                 message: "hosted app file and manifest/metadata fields " +
+                          "are missing"
+        };
+      }
+    }
+
+    return this.installHostedApp(appDir, appId, receipts, manifest, metadata);
   },
 
   getAll: function wa_actorGetAll(aRequest) {
     debug("getAll");
 
-    let defer = promise.defer();
+    let deferred = promise.defer();
     let reg = DOMApplicationRegistry;
     reg.getAll(apps => {
-      defer.resolve({ apps: this._filterAllowedApps(apps) });
+      deferred.resolve({ apps: this._filterAllowedApps(apps) });
     });
 
-    return defer.promise;
+    return deferred.promise;
   },
 
   _areCertifiedAppsAllowed: function wa__areCertifiedAppsAllowed() {
@@ -539,19 +537,19 @@ WebappsActor.prototype = {
                message: "missing parameter manifestURL" };
     }
 
-    let defer = promise.defer();
+    let deferred = promise.defer();
     let reg = DOMApplicationRegistry;
     reg.uninstall(
       manifestURL,
       function onsuccess() {
-        defer.resolve({});
+        deferred.resolve({});
       },
       function onfailure(reason) {
-        defer.resolve({ error: reason });
+        deferred.resolve({ error: reason });
       }
     );
 
-    return defer.promise;
+    return deferred.promise;
   },
 
   _findManifestByURL: function wa__findManifestByURL(aManifestURL) {
@@ -643,20 +641,20 @@ WebappsActor.prototype = {
                message: "missing parameter manifestURL" };
     }
 
-    let defer = promise.defer();
+    let deferred = promise.defer();
 
     DOMApplicationRegistry.launch(
       aRequest.manifestURL,
       aRequest.startPoint || "",
       Date.now(),
       function onsuccess() {
-        defer.resolve({});
+        deferred.resolve({});
       },
       function onfailure(reason) {
-        defer.resolve({ error: reason });
+        deferred.resolve({ error: reason });
       });
 
-    return defer.promise;
+    return deferred.promise;
   },
 
   close: function wa_actorLaunch(aRequest) {
@@ -718,7 +716,7 @@ WebappsActor.prototype = {
   },
 
   _connectToApp: function (aFrame) {
-    let defer = Promise.defer();
+    let deferred = Promise.defer();
 
     let mm = aFrame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
     mm.loadFrameScript("resource://gre/modules/devtools/server/child.js", false);
@@ -746,7 +744,7 @@ WebappsActor.prototype = {
 
       this._appActorsMap.set(mm, actor);
 
-      defer.resolve(actor);
+      deferred.resolve(actor);
     }).bind(this);
     mm.addMessageListener("debug:actor", onActorCreated);
 
@@ -762,7 +760,7 @@ WebappsActor.prototype = {
           // Otherwise, the app has been closed before the actor
           // had a chance to be created, so we are not able to create
           // the actor.
-          defer.resolve(null);
+          deferred.resolve(null);
         }
         this._appActorsMap.delete(mm);
       }
@@ -773,7 +771,7 @@ WebappsActor.prototype = {
     let prefixStart = this.conn.prefix + "child";
     mm.sendAsyncMessage("debug:connect", { prefix: prefixStart });
 
-    return defer.promise;
+    return deferred.promise;
   },
 
   getAppActor: function ({ manifestURL }) {
