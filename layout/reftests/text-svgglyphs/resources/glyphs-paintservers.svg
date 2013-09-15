@@ -19,10 +19,10 @@
   </defs>
 
   <!-- char 'e' -->
-  <rect id="glyph71" x="250" y="-750" width="500" height="500"
+  <rect id="glyph72" x="250" y="-750" width="500" height="500"
     fill="url(#grad)" />
 
   <!-- char 'f' -->
-  <rect id="glyph72" x="250" y="-750" width="500" height="500"
+  <rect id="glyph73" x="250" y="-750" width="500" height="500"
     fill="url(#grad2)" />
 </svg>

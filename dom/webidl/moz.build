@@ -101,6 +101,7 @@ WEBIDL_FILES = [
     'Function.webidl',
     'GainNode.webidl',
     'Geolocation.webidl',
+    'GetUserMediaRequest.webidl',
     'History.webidl',
     'HTMLAnchorElement.webidl',
     'HTMLAppletElement.webidl',
@@ -380,6 +381,8 @@ WEBIDL_FILES = [
     'TextTrack.webidl',
     'TextTrackCueList.webidl',
     'TextTrackList.webidl',
+    'TextTrackRegion.webidl',
+    'TextTrackRegionList.webidl',
     'TimeEvent.webidl',
     'TimeRanges.webidl',
     'Touch.webidl',
@@ -462,7 +465,6 @@ if CONFIG['MOZ_B2G_RIL']:
 WEBIDL_FILES += [
     'CloseEvent.webidl',
     'CustomEvent.webidl',
-    'DeviceLightEvent.webidl',
     'DeviceOrientationEvent.webidl',
     'DeviceStorageChangeEvent.webidl',
     'DOMTransactionEvent.webidl',
@@ -483,7 +485,6 @@ WEBIDL_FILES += [
     'StyleRuleChangeEvent.webidl',
     'StyleSheetApplicableStateChangeEvent.webidl',
     'StyleSheetChangeEvent.webidl',
-    'UserProximityEvent.webidl',
 ]
 
 if CONFIG['MOZ_B2G_BT']:
@@ -538,7 +539,9 @@ if CONFIG['MOZ_B2G']:
 
 GENERATED_EVENTS_WEBIDL_FILES = [
     'BlobEvent.webidl',
+    'DeviceLightEvent.webidl',
     'DeviceProximityEvent.webidl',
+    'UserProximityEvent.webidl',
 ]
 
 if CONFIG['MOZ_GAMEPAD']:

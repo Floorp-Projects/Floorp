@@ -298,6 +298,14 @@ function checkSocialUI(win) {
   is(numGoodTests, numTests, "The Social UI tests succeeded.")
 }
 
+function waitForNotification(topic, cb) {
+  function observer(subject, topic, data) {
+    Services.obs.removeObserver(observer, topic);
+    cb();
+  }
+  Services.obs.addObserver(observer, topic, false);
+}
+
 // blocklist testing
 function updateBlocklist(aCallback) {
   var blocklistNotifier = Cc["@mozilla.org/extensions/blocklist;1"]

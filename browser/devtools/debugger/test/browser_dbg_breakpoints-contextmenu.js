@@ -113,10 +113,10 @@ function test() {
         is(!!breakpoint.attachment.disabled, false,
           "All breakpoints should initially be enabled.");
 
-        let actor = breakpoint.attachment.actor;
         let prefix = "bp-cMenu-"; // "breakpoints context menu"
-        let enableSelfId = prefix + "enableSelf-" + actor + "-menuitem";
-        let disableSelfId = prefix + "disableSelf-" + actor + "-menuitem";
+        let identifier = gBreakpoints.getIdentifier(breakpoint.attachment);
+        let enableSelfId = prefix + "enableSelf-" + identifier + "-menuitem";
+        let disableSelfId = prefix + "disableSelf-" + identifier + "-menuitem";
 
         is(gDebugger.document.getElementById(enableSelfId).getAttribute("hidden"), "true",
           "The 'Enable breakpoint' context menu item should initially be hidden'.");
@@ -151,10 +151,10 @@ function test() {
         "There should be a breakpoint client available as a promise.");
     });
 
-    let actor = selectedBreakpoint.attachment.actor;
     let prefix = "bp-cMenu-"; // "breakpoints context menu"
-    let enableSelfId = prefix + "enableSelf-" + actor + "-menuitem";
-    let disableSelfId = prefix + "disableSelf-" + actor + "-menuitem";
+    let identifier = gBreakpoints.getIdentifier(selectedBreakpoint.attachment);
+    let enableSelfId = prefix + "enableSelf-" + identifier + "-menuitem";
+    let disableSelfId = prefix + "disableSelf-" + identifier + "-menuitem";
 
     is(gDebugger.document.getElementById(enableSelfId).getAttribute("hidden"), "true",
       "The 'Enable breakpoint' context menu item should be hidden'.");
@@ -176,7 +176,7 @@ function test() {
       });
 
       // Test re-disabling this breakpoint.
-      gSources._onEnableSelf(selectedBreakpoint.attachment.actor);
+      gSources._onEnableSelf(selectedBreakpoint.attachment);
       is(selectedBreakpoint.attachment.disabled, false,
         "The current breakpoint should now be enabled.")
 
@@ -189,7 +189,7 @@ function test() {
     });
 
     // Test disabling this breakpoint.
-    gSources._onDisableSelf(selectedBreakpoint.attachment.actor);
+    gSources._onDisableSelf(selectedBreakpoint.attachment);
     is(selectedBreakpoint.attachment.disabled, true,
       "The current breakpoint should now be disabled.")
 
@@ -305,10 +305,10 @@ function test() {
   }
 
   function disableOthers() {
-    gSources._onDisableOthers(gSources._selectedBreakpointItem.attachment.actor);
+    gSources._onDisableOthers(gSources._selectedBreakpointItem.attachment);
   }
   function enableOthers() {
-    gSources._onEnableOthers(gSources._selectedBreakpointItem.attachment.actor);
+    gSources._onEnableOthers(gSources._selectedBreakpointItem.attachment);
   }
   function disableAll() {
     gSources._onDisableAll();

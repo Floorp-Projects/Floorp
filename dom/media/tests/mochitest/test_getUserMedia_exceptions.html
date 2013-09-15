@@ -39,7 +39,7 @@ var exceptionTests = [
   // type to any mozGetUserMedia parameter should throw
   // the correct exception specified
   { params: [1, unexpectedCall, unexpectedCall],
-    error: "Argument 1 of Navigator.mozGetUserMedia is not an object.",
+    error: "Argument 1 of Navigator.mozGetUserMedia can't be converted to a dictionary.",
     message: "wrong object type as first parameter" },
   { params: [{video: true, fake: true}, 1, unexpectedCall],
     error: "Argument 2 of Navigator.mozGetUserMedia is not an object.",

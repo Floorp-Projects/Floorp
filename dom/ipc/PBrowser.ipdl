@@ -44,7 +44,7 @@ using nsIntSize;
 using nsKeyEvent;
 using nsMouseEvent;
 using nsMouseScrollEvent;
-using mozilla::widget::WheelEvent;
+using mozilla::WheelEvent;
 using nsQueryContentEvent;
 using nsRect;
 using nsSelectionEvent;

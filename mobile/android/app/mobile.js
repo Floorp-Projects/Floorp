@@ -162,6 +162,7 @@ pref("layout.spellcheckDefault", 0);
 
 /* new html5 forms */
 pref("dom.experimental_forms", true);
+pref("dom.forms.number", true);
 
 /* extension manager and xpinstall */
 pref("xpinstall.whitelist.add", "addons.mozilla.org");

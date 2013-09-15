@@ -9,19 +9,18 @@
 
 #include "nscore.h"
 #include "nsDebug.h"
+#include "nsEvent.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/TimeStamp.h"
 #include <windows.h>
 
 class nsWindowBase;
-class nsGUIEvent;
 struct nsIntPoint;
 
 namespace mozilla {
 namespace widget {
 
 class ModifierKeyState;
-class WheelEvent;
 
 struct MSGResult;
 

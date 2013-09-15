@@ -7,21 +7,29 @@ Cu.import("resource:///modules/devtools/gDevTools.jsm");
 const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {require} = devtools;
 const {ConnectionManager, Connection} = require("devtools/client/connection-manager");
+const prefs = require('sdk/preferences/service');
 
 let connection;
 
 window.addEventListener("message", function(event) {
   try {
     let json = JSON.parse(event.data);
-    if (json.name == "connection") {
-      let cid = +json.cid;
-      for (let c of ConnectionManager.connections) {
-        if (c.uid == cid) {
-          connection = c;
-          onNewConnection();
-          break;
+    switch (json.name) {
+      case "connection":
+        let cid = +json.cid;
+        for (let c of ConnectionManager.connections) {
+          if (c.uid == cid) {
+            connection = c;
+            onNewConnection();
+            break;
+          }
         }
-      }
+        break;
+      case "closeHelp":
+        selectTab("projects");
+        break;
+      default:
+        Cu.reportError("Unknown message: " + json.name);
     }
   } catch(e) { Cu.reportError(e); }
 
@@ -45,10 +53,18 @@ function selectTab(id) {
   for (let type of ["button", "panel"]) {
     let oldSelection = document.querySelector("." + type + "[selected]");
     let newSelection = document.querySelector("." + id + "-" + type);
-    if (!newSelection) continue;
     if (oldSelection) oldSelection.removeAttribute("selected");
-    newSelection.setAttribute("selected", "true");
+    if (newSelection) newSelection.setAttribute("selected", "true");
+  }
+  if (id != "help") {
+    // Might be the first time the user is accessing the actual app manager
+    prefs.set("devtools.appmanager.firstrun", false);
   }
 }
-selectTab("projects");
 
+let firstRun = prefs.get("devtools.appmanager.firstrun");
+if (firstRun) {
+  selectTab("help");
+} else {
+  selectTab("projects");
+}

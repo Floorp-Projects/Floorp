@@ -868,7 +868,8 @@ ContentChild::AllocPExternalHelperAppChild(const OptionalURIParams& uri,
                                            const nsCString& aContentDisposition,
                                            const bool& aForceSave,
                                            const int64_t& aContentLength,
-                                           const OptionalURIParams& aReferrer)
+                                           const OptionalURIParams& aReferrer,
+                                           PBrowserChild* aBrowser)
 {
     ExternalHelperAppChild *child = new ExternalHelperAppChild();
     child->AddRef();

@@ -227,14 +227,14 @@ function test() {
           ? "Should have added a breakpoint in the pane."
           : "Should have the same number of breakpoints in the pane.");
 
-      let id = "breakpoint-" + aBreakpointClient.actor;
-      let node = gDebugger.document.getElementById(id);
+      let identifier = gBreakpoints.getIdentifier(aBreakpointClient.location);
+      let node = gDebugger.document.getElementById("breakpoint-" + identifier);
       let line = node.getElementsByClassName("dbg-breakpoint-line")[0];
       let text = node.getElementsByClassName("dbg-breakpoint-text")[0];
       let check = node.querySelector("checkbox");
 
-      is(node.id, id,
-        "Breakpoint element " + id + " found successfully.");
+      ok(node,
+        "Breakpoint element found successfully.");
       is(line.getAttribute("value"), aTestData.line,
         "The expected information wasn't found in the breakpoint element.");
       is(text.getAttribute("value"), aTestData.text,

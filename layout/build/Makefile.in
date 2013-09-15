@@ -167,6 +167,12 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(NULL)
 endif
 
+ifdef MOZ_APPLEMEDIA
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/content/media/apple/$(LIB_PREFIX)gkconapplemedia_s.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
 ifdef MOZ_WAVE
 SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/content/media/wave/$(LIB_PREFIX)gkconwave_s.$(LIB_SUFFIX) \

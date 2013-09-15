@@ -3,37 +3,37 @@
     Test handling of invalid ids
 -->
   <!-- not valid: leading space not allowed -->
-  <g id="glyph 47">
+  <g id="glyph 48">
     <rect x="100" y="-900" width="800" height="800" stroke-width="50"
           fill="red"/>
   </g>
   <!-- not valid: leading zero not allowed -->
-  <g id="glyph047">
+  <g id="glyph048">
     <rect x="100" y="-900" width="800" height="800" stroke-width="50"
           fill="red"/>
   </g>
   <!-- not valid: trailing garbage not allowed -->
-  <g id="glyph47xxx">
+  <g id="glyph48xxx">
     <rect x="100" y="-900" width="800" height="800" stroke-width="50"
           fill="red"/>
   </g>
   <!-- not valid: trailing space not allowed -->
-  <g id="glyph47 ">
+  <g id="glyph48 ">
     <rect x="100" y="-900" width="800" height="800" stroke-width="50"
           fill="red"/>
   </g>
   <!-- not valid: floating point not allowed -->
-  <g id="glyph47.0">
+  <g id="glyph48.0">
     <rect x="100" y="-900" width="800" height="800" stroke-width="50"
           fill="red"/>
   </g>
   <!-- char = M -->
-  <g id="glyph47">
+  <g id="glyph48">
     <rect x="100" y="-900" width="800" height="800" stroke-width="50"
           fill="lime"/>
   </g>
-  <!-- Ensure first glyph47 is picked -->
-  <g id="glyph47">
+  <!-- Ensure first glyph48 is picked -->
+  <g id="glyph48">
     <rect x="100" y="-900" width="800" height="800" stroke-width="50"
           fill="red"/>
   </g>
