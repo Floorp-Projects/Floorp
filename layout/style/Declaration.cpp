@@ -95,7 +95,8 @@ Declaration::HasProperty(nsCSSProperty aProperty) const
 
 bool
 Declaration::AppendValueToString(nsCSSProperty aProperty,
-                                 nsAString& aResult) const
+                                 nsAString& aResult,
+                                 nsCSSValue::Serialization aSerialization) const
 {
   NS_ABORT_IF_FALSE(0 <= aProperty &&
                     aProperty < eCSSProperty_COUNT_no_shorthands,
@@ -108,7 +109,7 @@ Declaration::AppendValueToString(nsCSSProperty aProperty,
     return false;
   }
 
-  val->AppendToString(aProperty, aResult);
+  val->AppendToString(aProperty, aResult, aSerialization);
   return true;
 }
 
@@ -117,7 +118,8 @@ Declaration::AppendValueToString(nsCSSProperty aProperty,
 static void
 AppendSidesShorthandToString(const nsCSSProperty aProperties[],
                              const nsCSSValue* aValues[],
-                             nsAString& aString)
+                             nsAString& aString,
+                             nsCSSValue::Serialization aSerialization)
 {
   const nsCSSValue& value1 = *aValues[0];
   const nsCSSValue& value2 = *aValues[1];
@@ -125,19 +127,19 @@ AppendSidesShorthandToString(const nsCSSProperty aProperties[],
   const nsCSSValue& value4 = *aValues[3];
 
   NS_ABORT_IF_FALSE(value1.GetUnit() != eCSSUnit_Null, "null value 1");
-  value1.AppendToString(aProperties[0], aString);
+  value1.AppendToString(aProperties[0], aString, aSerialization);
   if (value1 != value2 || value1 != value3 || value1 != value4) {
     aString.Append(PRUnichar(' '));
     NS_ABORT_IF_FALSE(value2.GetUnit() != eCSSUnit_Null, "null value 2");
-    value2.AppendToString(aProperties[1], aString);
+    value2.AppendToString(aProperties[1], aString, aSerialization);
     if (value1 != value3 || value2 != value4) {
       aString.Append(PRUnichar(' '));
       NS_ABORT_IF_FALSE(value3.GetUnit() != eCSSUnit_Null, "null value 3");
-      value3.AppendToString(aProperties[2], aString);
+      value3.AppendToString(aProperties[2], aString, aSerialization);
       if (value2 != value4) {
         aString.Append(PRUnichar(' '));
         NS_ABORT_IF_FALSE(value4.GetUnit() != eCSSUnit_Null, "null value 4");
-        value4.AppendToString(aProperties[3], aString);
+        value4.AppendToString(aProperties[3], aString, aSerialization);
       }
     }
   }
@@ -146,11 +148,24 @@ AppendSidesShorthandToString(const nsCSSProperty aProperties[],
 void
 Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
 {
+  GetValue(aProperty, aValue, nsCSSValue::eNormalized);
+}
+
+void
+Declaration::GetAuthoredValue(nsCSSProperty aProperty, nsAString& aValue) const
+{
+  GetValue(aProperty, aValue, nsCSSValue::eAuthorSpecified);
+}
+
+void
+Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
+                      nsCSSValue::Serialization aSerialization) const
+{
   aValue.Truncate(0);
 
   // simple properties are easy.
   if (!nsCSSProps::IsShorthand(aProperty)) {
-    AppendValueToString(aProperty, aValue);
+    AppendValueToString(aProperty, aValue, aSerialization);
     return;
   }
 
@@ -220,17 +235,20 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
   }
   if (initialCount == totalCount) {
     // Simplify serialization below by serializing initial up-front.
-    nsCSSValue(eCSSUnit_Initial).AppendToString(eCSSProperty_UNKNOWN, aValue);
+    nsCSSValue(eCSSUnit_Initial).AppendToString(eCSSProperty_UNKNOWN, aValue,
+                                                nsCSSValue::eNormalized);
     return;
   }
   if (inheritCount == totalCount) {
     // Simplify serialization below by serializing inherit up-front.
-    nsCSSValue(eCSSUnit_Inherit).AppendToString(eCSSProperty_UNKNOWN, aValue);
+    nsCSSValue(eCSSUnit_Inherit).AppendToString(eCSSProperty_UNKNOWN, aValue,
+                                                nsCSSValue::eNormalized);
     return;
   }
   if (unsetCount == totalCount) {
     // Simplify serialization below by serializing unset up-front.
-    nsCSSValue(eCSSUnit_Unset).AppendToString(eCSSProperty_UNKNOWN, aValue);
+    nsCSSValue(eCSSUnit_Unset).AppendToString(eCSSProperty_UNKNOWN, aValue,
+                                              nsCSSValue::eNormalized);
     return;
   }
   if (initialCount != 0 || inheritCount != 0 || unsetCount != 0) {
@@ -271,7 +289,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         data->ValueFor(subprops[2]),
         data->ValueFor(subprops[3])
       };
-      AppendSidesShorthandToString(subprops, vals, aValue);
+      AppendSidesShorthandToString(subprops, vals, aValue, aSerialization);
       break;
     }
     case eCSSProperty_border_radius:
@@ -300,10 +318,10 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         }
       }
 
-      AppendSidesShorthandToString(subprops, xVals, aValue);
+      AppendSidesShorthandToString(subprops, xVals, aValue, aSerialization);
       if (needY) {
         aValue.AppendLiteral(" / ");
-        AppendSidesShorthandToString(subprops, yVals, aValue);
+        AppendSidesShorthandToString(subprops, yVals, aValue, aSerialization);
       }
       break;
     }
@@ -312,7 +330,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       // 'border-image-source' (when it's none), it's probably not a
       // good idea since it's likely to be confusing.  It would also
       // require adding the extra check that we serialize *something*.
-      AppendValueToString(eCSSProperty_border_image_source, aValue);
+      AppendValueToString(eCSSProperty_border_image_source, aValue,
+                          aSerialization);
 
       bool sliceDefault = data->HasDefaultBorderImageSlice();
       bool widthDefault = data->HasDefaultBorderImageWidth();
@@ -320,16 +339,19 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
 
       if (!sliceDefault || !widthDefault || !outsetDefault) {
         aValue.Append(PRUnichar(' '));
-        AppendValueToString(eCSSProperty_border_image_slice, aValue);
+        AppendValueToString(eCSSProperty_border_image_slice, aValue,
+                            aSerialization);
         if (!widthDefault || !outsetDefault) {
           aValue.Append(NS_LITERAL_STRING(" /"));
           if (!widthDefault) {
             aValue.Append(PRUnichar(' '));
-            AppendValueToString(eCSSProperty_border_image_width, aValue);
+            AppendValueToString(eCSSProperty_border_image_width, aValue,
+                                aSerialization);
           }
           if (!outsetDefault) {
             aValue.Append(NS_LITERAL_STRING(" / "));
-            AppendValueToString(eCSSProperty_border_image_outset, aValue);
+            AppendValueToString(eCSSProperty_border_image_outset, aValue,
+                                aSerialization);
           }
         }
       }
@@ -337,7 +359,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       bool repeatDefault = data->HasDefaultBorderImageRepeat();
       if (!repeatDefault) {
         aValue.Append(PRUnichar(' '));
-        AppendValueToString(eCSSProperty_border_image_repeat, aValue);
+        AppendValueToString(eCSSProperty_border_image_repeat, aValue,
+                            aSerialization);
       }
       break;
     }
@@ -407,13 +430,13 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       bool isMozUseTextColor =
         colorValue->GetUnit() == eCSSUnit_Enumerated &&
         colorValue->GetIntValue() == NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR;
-      if (!AppendValueToString(subprops[0], aValue) ||
+      if (!AppendValueToString(subprops[0], aValue, aSerialization) ||
           !(aValue.Append(PRUnichar(' ')),
-            AppendValueToString(subprops[1], aValue)) ||
+            AppendValueToString(subprops[1], aValue, aSerialization)) ||
           // Don't output a third value when it's -moz-use-text-color.
           !(isMozUseTextColor ||
             (aValue.Append(PRUnichar(' ')),
-             AppendValueToString(subprops[2], aValue)))) {
+             AppendValueToString(subprops[2], aValue, aSerialization)))) {
         aValue.Truncate();
       }
       break;
@@ -442,7 +465,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         nsCSSProps::SubpropertyEntryFor(aProperty);
       NS_ABORT_IF_FALSE(subprops[3] == eCSSProperty_UNKNOWN,
                         "not box property with physical vs. logical cascading");
-      AppendValueToString(subprops[0], aValue);
+      AppendValueToString(subprops[0], aValue, aSerialization);
       break;
     }
     case eCSSProperty_background: {
@@ -475,27 +498,32 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         data->ValueFor(eCSSProperty_background_size)->
         GetPairListValue();
       for (;;) {
-        image->mValue.AppendToString(eCSSProperty_background_image, aValue);
+        image->mValue.AppendToString(eCSSProperty_background_image, aValue,
+                                     aSerialization);
         aValue.Append(PRUnichar(' '));
-        repeat->mXValue.AppendToString(eCSSProperty_background_repeat, aValue);
+        repeat->mXValue.AppendToString(eCSSProperty_background_repeat, aValue,
+                                       aSerialization);
         if (repeat->mYValue.GetUnit() != eCSSUnit_Null) {
-          repeat->mYValue.AppendToString(eCSSProperty_background_repeat, aValue);
+          repeat->mYValue.AppendToString(eCSSProperty_background_repeat, aValue,
+                                         aSerialization);
         }
         aValue.Append(PRUnichar(' '));
         attachment->mValue.AppendToString(eCSSProperty_background_attachment,
-                                          aValue);
+                                          aValue, aSerialization);
         aValue.Append(PRUnichar(' '));
         position->mValue.AppendToString(eCSSProperty_background_position,
-                                        aValue);
+                                        aValue, aSerialization);
         
         if (size->mXValue.GetUnit() != eCSSUnit_Auto ||
             size->mYValue.GetUnit() != eCSSUnit_Auto) {
           aValue.Append(PRUnichar(' '));
           aValue.Append(PRUnichar('/'));
           aValue.Append(PRUnichar(' '));
-          size->mXValue.AppendToString(eCSSProperty_background_size, aValue);
+          size->mXValue.AppendToString(eCSSProperty_background_size, aValue,
+                                       aSerialization);
           aValue.Append(PRUnichar(' '));
-          size->mYValue.AppendToString(eCSSProperty_background_size, aValue);
+          size->mYValue.AppendToString(eCSSProperty_background_size, aValue,
+                                       aSerialization);
         }
 
         NS_ABORT_IF_FALSE(clip->mValue.GetUnit() == eCSSUnit_Enumerated &&
@@ -518,11 +546,13 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
                         NS_STYLE_BG_ORIGIN_CONTENT,
                         "bg-clip and bg-origin style constants must agree");
           aValue.Append(PRUnichar(' '));
-          origin->mValue.AppendToString(eCSSProperty_background_origin, aValue);
+          origin->mValue.AppendToString(eCSSProperty_background_origin, aValue,
+                                        aSerialization);
 
           if (clip->mValue != origin->mValue) {
             aValue.Append(PRUnichar(' '));
-            clip->mValue.AppendToString(eCSSProperty_background_clip, aValue);
+            clip->mValue.AppendToString(eCSSProperty_background_clip, aValue,
+                                        aSerialization);
           }
         }
 
@@ -552,7 +582,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       }
 
       aValue.Append(PRUnichar(' '));
-      AppendValueToString(eCSSProperty_background_color, aValue);
+      AppendValueToString(eCSSProperty_background_color, aValue,
+                          aSerialization);
       break;
     }
     case eCSSProperty_font: {
@@ -629,7 +660,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
           // This can't be represented as a shorthand.
           return;
         }
-        systemFont->AppendToString(eCSSProperty__x_system_font, aValue);
+        systemFont->AppendToString(eCSSProperty__x_system_font, aValue,
+                                   aSerialization);
       } else {
         // properties reset by this shorthand property to their
         // initial values but not represented in its syntax
@@ -654,35 +686,44 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
 
         if (style->GetUnit() != eCSSUnit_Enumerated ||
             style->GetIntValue() != NS_FONT_STYLE_NORMAL) {
-          style->AppendToString(eCSSProperty_font_style, aValue);
+          style->AppendToString(eCSSProperty_font_style, aValue,
+                                aSerialization);
           aValue.Append(PRUnichar(' '));
         }
         if (variant->GetUnit() != eCSSUnit_Enumerated ||
             variant->GetIntValue() != NS_FONT_VARIANT_NORMAL) {
-          variant->AppendToString(eCSSProperty_font_variant, aValue);
+          variant->AppendToString(eCSSProperty_font_variant, aValue,
+                                  aSerialization);
           aValue.Append(PRUnichar(' '));
         }
         if (weight->GetUnit() != eCSSUnit_Enumerated ||
             weight->GetIntValue() != NS_FONT_WEIGHT_NORMAL) {
-          weight->AppendToString(eCSSProperty_font_weight, aValue);
+          weight->AppendToString(eCSSProperty_font_weight, aValue,
+                                 aSerialization);
           aValue.Append(PRUnichar(' '));
         }
-        size->AppendToString(eCSSProperty_font_size, aValue);
+        size->AppendToString(eCSSProperty_font_size, aValue, aSerialization);
         if (lh->GetUnit() != eCSSUnit_Normal) {
           aValue.Append(PRUnichar('/'));
-          lh->AppendToString(eCSSProperty_line_height, aValue);
+          lh->AppendToString(eCSSProperty_line_height, aValue, aSerialization);
         }
         aValue.Append(PRUnichar(' '));
-        family->AppendToString(eCSSProperty_font_family, aValue);
+        family->AppendToString(eCSSProperty_font_family, aValue,
+                               aSerialization);
       }
       break;
     }
     case eCSSProperty_list_style:
-      if (AppendValueToString(eCSSProperty_list_style_type, aValue))
+      if (AppendValueToString(eCSSProperty_list_style_type, aValue,
+                              aSerialization)) {
         aValue.Append(PRUnichar(' '));
-      if (AppendValueToString(eCSSProperty_list_style_position, aValue))
+      }
+      if (AppendValueToString(eCSSProperty_list_style_position, aValue,
+                              aSerialization)) {
         aValue.Append(PRUnichar(' '));
-      AppendValueToString(eCSSProperty_list_style_image, aValue);
+      }
+      AppendValueToString(eCSSProperty_list_style_image, aValue,
+                          aSerialization);
       break;
     case eCSSProperty_overflow: {
       const nsCSSValue &xValue =
@@ -690,7 +731,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       const nsCSSValue &yValue =
         *data->ValueFor(eCSSProperty_overflow_y);
       if (xValue == yValue)
-        xValue.AppendToString(eCSSProperty_overflow_x, aValue);
+        xValue.AppendToString(eCSSProperty_overflow_x, aValue, aSerialization);
       break;
     }
     case eCSSProperty_text_decoration: {
@@ -712,7 +753,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         return;
       }
 
-      AppendValueToString(eCSSProperty_text_decoration_line, aValue);
+      AppendValueToString(eCSSProperty_text_decoration_line, aValue,
+                          aSerialization);
       break;
     }
     case eCSSProperty_transition: {
@@ -747,14 +789,17 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         // If any of the other three lists has more than one element,
         // we can't use the shorthand.
         if (!dur->mNext && !tim->mNext && !del->mNext) {
-          transProp->AppendToString(eCSSProperty_transition_property, aValue);
+          transProp->AppendToString(eCSSProperty_transition_property, aValue,
+                                    aSerialization);
           aValue.Append(PRUnichar(' '));
-          dur->mValue.AppendToString(eCSSProperty_transition_duration,aValue);
+          dur->mValue.AppendToString(eCSSProperty_transition_duration,aValue,
+                                     aSerialization);
           aValue.Append(PRUnichar(' '));
           tim->mValue.AppendToString(eCSSProperty_transition_timing_function,
-                                     aValue);
+                                     aValue, aSerialization);
           aValue.Append(PRUnichar(' '));
-          del->mValue.AppendToString(eCSSProperty_transition_delay, aValue);
+          del->mValue.AppendToString(eCSSProperty_transition_delay, aValue,
+                                     aSerialization);
           aValue.Append(PRUnichar(' '));
         } else {
           aValue.Truncate();
@@ -767,16 +812,16 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         const nsCSSValueList* pro = transProp->GetListValue();
         for (;;) {
           pro->mValue.AppendToString(eCSSProperty_transition_property,
-                                        aValue);
+                                        aValue, aSerialization);
           aValue.Append(PRUnichar(' '));
           dur->mValue.AppendToString(eCSSProperty_transition_duration,
-                                        aValue);
+                                        aValue, aSerialization);
           aValue.Append(PRUnichar(' '));
           tim->mValue.AppendToString(eCSSProperty_transition_timing_function,
-                                        aValue);
+                                        aValue, aSerialization);
           aValue.Append(PRUnichar(' '));
           del->mValue.AppendToString(eCSSProperty_transition_delay,
-                                        aValue);
+                                        aValue, aSerialization);
           pro = pro->mNext;
           dur = dur->mNext;
           tim = tim->mNext;
@@ -819,7 +864,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
                           "animation-name must be last");
         bool done = false;
         for (uint32_t i = 0;;) {
-          lists[i]->mValue.AppendToString(subprops[i], aValue);
+          lists[i]->mValue.AppendToString(subprops[i], aValue, aSerialization);
           lists[i] = lists[i]->mNext;
           if (!lists[i]) {
             done = true;
@@ -851,16 +896,16 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       const nsCSSValue &startValue =
         *data->ValueFor(eCSSProperty_marker_start);
       if (endValue == midValue && midValue == startValue)
-        AppendValueToString(eCSSProperty_marker_end, aValue);
+        AppendValueToString(eCSSProperty_marker_end, aValue, aSerialization);
       break;
     }
     case eCSSProperty__moz_columns: {
       // Two values, column-count and column-width, separated by a space.
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
-      AppendValueToString(subprops[0], aValue);
+      AppendValueToString(subprops[0], aValue, aSerialization);
       aValue.Append(PRUnichar(' '));
-      AppendValueToString(subprops[1], aValue);
+      AppendValueToString(subprops[1], aValue, aSerialization);
       break;
     }
     case eCSSProperty_flex: {
@@ -868,11 +913,11 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
 
-      AppendValueToString(subprops[0], aValue);
+      AppendValueToString(subprops[0], aValue, aSerialization);
       aValue.Append(PRUnichar(' '));
-      AppendValueToString(subprops[1], aValue);
+      AppendValueToString(subprops[1], aValue, aSerialization);
       aValue.Append(PRUnichar(' '));
-      AppendValueToString(subprops[2], aValue);
+      AppendValueToString(subprops[2], aValue, aSerialization);
       break;
     }
     case eCSSProperty_flex_flow: {
@@ -882,9 +927,9 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       NS_ABORT_IF_FALSE(subprops[2] == eCSSProperty_UNKNOWN,
                         "must have exactly two subproperties");
 
-      AppendValueToString(subprops[0], aValue);
+      AppendValueToString(subprops[0], aValue, aSerialization);
       aValue.Append(PRUnichar(' '));
-      AppendValueToString(subprops[1], aValue);
+      AppendValueToString(subprops[1], aValue, aSerialization);
       break;
     }
     case eCSSProperty__moz_transform: {
@@ -893,7 +938,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         nsCSSProps::SubpropertyEntryFor(aProperty);
       NS_ABORT_IF_FALSE(subprops[1] == eCSSProperty_UNKNOWN,
                         "must have exactly one subproperty");
-      AppendValueToString(subprops[0], aValue);
+      AppendValueToString(subprops[0], aValue, aSerialization);
       break;
     }
     case eCSSProperty_all:
@@ -961,7 +1006,7 @@ Declaration::AppendPropertyAndValueToString(nsCSSProperty aProperty,
   AppendASCIItoUTF16(nsCSSProps::GetStringValue(aProperty), aResult);
   aResult.AppendLiteral(": ");
   if (aValue.IsEmpty())
-    AppendValueToString(aProperty, aResult);
+    AppendValueToString(aProperty, aResult, nsCSSValue::eNormalized);
   else
     aResult.Append(aValue);
   if (GetValueIsImportant(aProperty)) {
@@ -1096,7 +1141,8 @@ Declaration::ToString(nsAString& aString) const
           // Output the shorthand font declaration that we will
           // partially override later.  But don't add it to
           // |shorthandsUsed|, since we will have to override it.
-          systemFont->AppendToString(eCSSProperty__x_system_font, value);
+          systemFont->AppendToString(eCSSProperty__x_system_font, value,
+                                     nsCSSValue::eNormalized);
           AppendPropertyAndValueToString(eCSSProperty_font, value, aString);
           value.Truncate();
           didSystemFont = true;

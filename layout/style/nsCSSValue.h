@@ -311,11 +311,15 @@ public:
     return !(*this == aOther);
   }
 
+  // Enum for AppendToString's aValueSerialization argument.
+  enum Serialization { eNormalized, eAuthorSpecified };
+
   /**
    * Serialize |this| as a specified value for |aProperty| and append
    * it to |aResult|.
    */
-  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+                      Serialization aValueSerialization) const;
 
   nsCSSUnit GetUnit() const { return mUnit; }
   bool      IsLengthUnit() const
@@ -725,7 +729,8 @@ struct nsCSSValueList {
 
   nsCSSValueList* Clone() const;  // makes a deep copy
   void CloneInto(nsCSSValueList* aList) const; // makes a deep copy into aList
-  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+                      nsCSSValue::Serialization aValueSerialization) const;
 
   bool operator==(nsCSSValueList const& aOther) const;
   bool operator!=(const nsCSSValueList& aOther) const
@@ -775,7 +780,8 @@ struct nsCSSValueSharedList {
 
   NS_INLINE_DECL_REFCOUNTING(nsCSSValueSharedList)
 
-  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+                      nsCSSValue::Serialization aValueSerialization) const;
 
   bool operator==(nsCSSValueSharedList const& aOther) const;
   bool operator!=(const nsCSSValueSharedList& aOther) const
@@ -815,7 +821,8 @@ struct nsCSSRect {
   nsCSSRect(const nsCSSRect& aCopy);
   ~nsCSSRect();
 
-  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+                      nsCSSValue::Serialization aValueSerialization) const;
 
   bool operator==(const nsCSSRect& aOther) const {
     return mTop == aOther.mTop &&
@@ -944,7 +951,8 @@ struct nsCSSValuePair {
            mYValue.GetUnit() != eCSSUnit_Null;
   }
 
-  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+                      nsCSSValue::Serialization aValueSerialization) const;
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -1029,7 +1037,8 @@ struct nsCSSValueTriplet {
                mZValue.GetUnit() != eCSSUnit_Null;
     }
 
-    void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+    void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+                        nsCSSValue::Serialization aValueSerialization) const;
 
     nsCSSValue mXValue;
     nsCSSValue mYValue;
@@ -1086,7 +1095,8 @@ struct nsCSSValuePairList {
   ~nsCSSValuePairList();
 
   nsCSSValuePairList* Clone() const; // makes a deep copy
-  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+                      nsCSSValue::Serialization aValueSerialization) const;
 
   bool operator==(const nsCSSValuePairList& aOther) const;
   bool operator!=(const nsCSSValuePairList& aOther) const

@@ -2687,7 +2687,7 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
     return false;
   }
 
-  val.AppendToString(aProperty, aSpecifiedValue);
+  val.AppendToString(aProperty, aSpecifiedValue, nsCSSValue::eNormalized);
   return true;
 }
 
