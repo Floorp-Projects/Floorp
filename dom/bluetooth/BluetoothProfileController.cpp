@@ -17,6 +17,14 @@
 
 USING_BLUETOOTH_NAMESPACE
 
+#define BT_LOGR_PROFILE(mgr, args...)                 \
+  do {                                                \
+    nsCString name;                                   \
+    mgr->GetName(name);                               \
+    BT_LOGR("%s: [%s] %s", __FUNCTION__, name.get(),  \
+      nsPrintfCString(args).get());                   \
+  } while(0)
+
 BluetoothProfileController::BluetoothProfileController(
                                    const nsAString& aDeviceAddress,
                                    BluetoothReplyRunnable* aRunnable,
@@ -120,7 +128,6 @@ BluetoothProfileController::Connect(uint32_t aCod)
    * It's almost impossible to send file to a remote device which is an Audio
    * device or a Rendering device, so we won't connect OPP in that case.
    */
-  BluetoothProfileManagerBase* profile;
   if (hasAudio) {
     AddProfile(BluetoothHfpManager::Get());
   }
@@ -144,6 +151,7 @@ BluetoothProfileController::ConnectNext()
 
   if (++mProfilesIndex < mProfiles.Length()) {
     MOZ_ASSERT(!mDeviceAddress.IsEmpty());
+    BT_LOGR_PROFILE(mProfiles[mProfilesIndex], "");
 
     mProfiles[mProfilesIndex]->Connect(mDeviceAddress, this);
     return;
@@ -166,6 +174,8 @@ void
 BluetoothProfileController::OnConnect(const nsAString& aErrorStr)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  BT_LOGR_PROFILE(mProfiles[mProfilesIndex], "<%s>",
+    NS_ConvertUTF16toUTF8(aErrorStr).get());
 
   if (!aErrorStr.IsEmpty()) {
     BT_WARNING(NS_ConvertUTF16toUTF8(aErrorStr).get());
@@ -203,6 +213,8 @@ BluetoothProfileController::DisconnectNext()
   MOZ_ASSERT(NS_IsMainThread());
 
   if (++mProfilesIndex < mProfiles.Length()) {
+    BT_LOGR_PROFILE(mProfiles[mProfilesIndex], "");
+
     mProfiles[mProfilesIndex]->Disconnect(this);
     return;
   }
@@ -224,6 +236,8 @@ void
 BluetoothProfileController::OnDisconnect(const nsAString& aErrorStr)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  BT_LOGR_PROFILE(mProfiles[mProfilesIndex], "<%s>",
+    NS_ConvertUTF16toUTF8(aErrorStr).get());
 
   if (!aErrorStr.IsEmpty()) {
     BT_WARNING(NS_ConvertUTF16toUTF8(aErrorStr).get());
@@ -233,4 +247,3 @@ BluetoothProfileController::OnDisconnect(const nsAString& aErrorStr)
 
   DisconnectNext();
 }
-

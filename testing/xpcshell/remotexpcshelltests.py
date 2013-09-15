@@ -202,6 +202,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.remoteDebuggerArgs = options.debuggerArgs
         self.testingModulesDir = options.testingModulesDir
 
+        self.env = {}
+
         if self.options.objdir:
             self.xpcDir = os.path.join(self.options.objdir, "_tests/xpcshell")
         elif os.path.isdir(os.path.join(here, 'tests')):
@@ -237,8 +239,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         if self.remoteAPK:
             self.mobileArgs['remoteAPK'] = self.remoteAPK
 
-    def setLD_LIBRARY_PATH(self, env):
-        env["LD_LIBRARY_PATH"]=self.remoteBinDir
+    def setLD_LIBRARY_PATH(self):
+        self.env["LD_LIBRARY_PATH"] = self.remoteBinDir
 
     def pushWrapper(self):
         # Rather than executing xpcshell directly, this wrapper script is
@@ -263,9 +265,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.device.chmodDir(self.remoteBinDir)
 
     def buildEnvironment(self):
-        self.env = {}
         self.buildCoreEnvironment()
-        self.setLD_LIBRARY_PATH(self.env)
+        self.setLD_LIBRARY_PATH()
         self.env["MOZ_LINKER_CACHE"] = self.remoteBinDir
         if self.options.localAPK and self.appRoot:
             self.env["GRE_HOME"] = self.appRoot
@@ -339,6 +340,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.pushLibs()
 
     def pushLibs(self):
+        pushed_libs_count = 0
         if self.options.localAPK:
             try:
                 dir = tempfile.mkdtemp()
@@ -359,9 +361,10 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                         if szip:
                             out = subprocess.check_output([szip, '-d', file], stderr=subprocess.STDOUT)
                         self.device.pushFile(os.path.join(dir, info.filename), remoteFile)
+                        pushed_libs_count += 1
             finally:
                 shutil.rmtree(dir)
-            return
+            return pushed_libs_count
 
         for file in os.listdir(self.localLib):
             if (file.endswith(".so")):
@@ -370,6 +373,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                     print >> sys.stderr, "This is a big file, it could take a while."
                 remoteFile = remoteJoin(self.remoteBinDir, file)
                 self.device.pushFile(os.path.join(self.localLib, file), remoteFile)
+                pushed_libs_count += 1
 
         # Additional libraries may be found in a sub-directory such as "lib/armeabi-v7a"
         localArmLib = os.path.join(self.localLib, "lib")
@@ -380,6 +384,9 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                         print >> sys.stderr, "Pushing %s.." % file
                         remoteFile = remoteJoin(self.remoteBinDir, file)
                         self.device.pushFile(os.path.join(root, file), remoteFile)
+                        pushed_libs_count += 1
+
+        return pushed_libs_count
 
     def setupModules(self):
         if self.testingModulesDir:
