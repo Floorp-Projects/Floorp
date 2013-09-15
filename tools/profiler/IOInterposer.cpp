@@ -86,22 +86,6 @@ void VectorRemove(std::vector<T>& vector, const T& element)
 
 } // anonymous namespace
 
-// Default, trivial implementation of Observation::Filename, used when filename
-// isn't available.
-const char* IOInterposeObserver::Observation::Filename()
-{
-  return nullptr;
-}
-
-IOInterposeObserver::~IOInterposeObserver()
-{
-}
-
-// Trivial virtual destructor
-IOInterposeObserver::Observation::~Observation()
-{
-}
-
 // Flags tracking which operations are being observed
 IOInterposeObserver::Operation IOInterposer::sObservedOperations =
                                                   IOInterposeObserver::OpNone;
