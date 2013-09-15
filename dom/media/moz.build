@@ -32,14 +32,6 @@ EXTRA_COMPONENTS += [
     'PeerConnection.manifest',
 ]
 
-if CONFIG['MOZ_B2G']:
-    EXPORTS.mozilla += [
-        'MediaPermissionGonk.h',
-    ]
-    CPP_SOURCES += [
-        'MediaPermissionGonk.cpp',
-    ]
-
 FAIL_ON_WARNINGS = True
 
 LIBXUL_LIBRARY = True
