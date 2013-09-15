@@ -2163,11 +2163,33 @@ nsGfxScrollFrameInner::EnsureImageVisPrefsCached()
   }
 }
 
-/* static */ nsRect
-nsGfxScrollFrameInner::ExpandRect(const nsRect& aRect)
+nsRect
+nsGfxScrollFrameInner::ExpandRect(const nsRect& aRect) const
 {
+  // We don't want to expand a rect in a direction that we can't scroll, so we
+  // check the scroll range.
+  nsRect scrollRange = GetScrollRangeForClamping();
+  nsPoint scrollPos = GetScrollPosition();
+  nsMargin expand(0, 0, 0, 0);
+
+  nscoord vertShift = sVertExpandScrollPort * aRect.height;
+  if (scrollRange.y < scrollPos.y) {
+    expand.top = vertShift;
+  }
+  if (scrollPos.y < scrollRange.YMost()) {
+    expand.bottom = vertShift;
+  }
+
+  nscoord horzShift = sHorzExpandScrollPort * aRect.width;
+  if (scrollRange.x < scrollPos.x) {
+    expand.left = horzShift;
+  }
+  if (scrollPos.x < scrollRange.XMost()) {
+    expand.right = horzShift;
+  }
+
   nsRect rect = aRect;
-  rect.Inflate(sHorzExpandScrollPort * aRect.width, sVertExpandScrollPort * aRect.height);
+  rect.Inflate(expand);
   return rect;
 }
 
@@ -2248,8 +2270,9 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   if (aBuilder->IsForImageVisibility()) {
     // We expand the dirty rect to catch images just outside of the scroll port.
-    // We could be smarter and not expand the dirty rect in a direction in which
-    // we are not able to scroll.
+    // We use the dirty rect instead of the whole scroll port to prevent
+    // too much expansion in the presence of very large (bigger than the
+    // viewport) scroll ports.
     dirtyRect = ExpandRect(dirtyRect);
   }
 
