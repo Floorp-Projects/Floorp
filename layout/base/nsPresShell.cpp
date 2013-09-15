@@ -5458,6 +5458,31 @@ PresShell::EnsureImageInVisibleList(nsIImageLoadingContent* aImage)
   }
 }
 
+void
+PresShell::RemoveImageFromVisibleList(nsIImageLoadingContent* aImage)
+{
+#ifdef DEBUG
+  // if it has a frame make sure its in this presshell
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aImage);
+  if (content) {
+    PresShell* shell = static_cast<PresShell*>(content->OwnerDoc()->GetShell());
+    MOZ_ASSERT(!shell || shell == this, "wrong shell");
+  }
+#endif
+
+  if (AssumeAllImagesVisible(mPresContext, mDocument)) {
+    MOZ_ASSERT(mVisibleImages.Count() == 0, "shouldn't have any images in the table");
+    return;
+  }
+
+  uint32_t count = mVisibleImages.Count();
+  mVisibleImages.RemoveEntry(aImage);
+  if (mVisibleImages.Count() < count) {
+    // aImage was in the hashtable, so we need to decrement its visible count
+    aImage->DecrementVisibleCount();
+  }
+}
+
 class nsAutoNotifyDidPaint
 {
 public:
