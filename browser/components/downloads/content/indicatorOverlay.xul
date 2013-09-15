@@ -34,7 +34,6 @@
                    ondrop="DownloadsIndicatorView.onDrop(event);"
                    ondragover="DownloadsIndicatorView.onDragOver(event);"
                    ondragenter="DownloadsIndicatorView.onDragOver(event);"
-                   ondragleave="DownloadsIndicatorView.onDragLeave(event);"
                    skipintoolbarset="true">
       <!-- The panel's anchor area is smaller than the outer button, but must
            always be visible and must not move or resize when the indicator

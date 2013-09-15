@@ -72,5 +72,15 @@
       <xul:image class="toolbarbutton-icon" xbl:inherits="src=image"/>
     </content>
   </binding>
+
+  <binding id="toolbarbutton-wrapping-label"
+           extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
+    <content>
+      <children includes="observes|template|menupopup|panel|tooltip"/>
+      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label"/>
+      <xul:label class="toolbarbutton-text toolbarbutton-label" flex="1"
+                 xbl:inherits="xbl:text=label,accesskey"/>
+    </content>
+  </binding>
     
 </bindings>

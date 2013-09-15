@@ -168,6 +168,9 @@ const DownloadsButton = {
     placeholder.parentNode.insertBefore(indicator, placeholder);
     placeholder.collapsed = true;
     indicator.collapsed = false;
+    const kAreaType = "customizableui-areatype";
+    if (!indicator.getAttribute(kAreaType))
+      indicator.setAttribute(kAreaType, placeholder.getAttribute(kAreaType));
 
     indicator.open = this._anchorRequested;
 
@@ -523,7 +526,13 @@ const DownloadsIndicatorView = {
       DownloadsCommon.getIndicatorData(window).attention = false;
       BrowserDownloadsUI();
     } else {
-      DownloadsPanel.showPanel();
+      // If the downloads button is in the menu panel, open the Library
+      let widgetGroup = CustomizableUI.getWidget("downloads-button");
+      if (widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL) {
+        DownloadsPanel.showDownloadsHistory();
+      } else {
+        DownloadsPanel.showPanel();
+      }
     }
 
     aEvent.stopPropagation();
