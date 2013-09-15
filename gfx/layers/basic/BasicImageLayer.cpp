@@ -110,9 +110,7 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
   // The visible region can extend outside the image, so just draw
   // within the image bounds.
   if (aContext) {
-    gfxContext::GraphicsOperator mixBlendMode = GetEffectiveMixBlendMode();
-    AutoSetOperator setOptimizedOperator(aContext, mixBlendMode != gfxContext::OPERATOR_OVER ? mixBlendMode : GetOperator());
-
+    AutoSetOperator setOperator(aContext, GetOperator());
     PaintContext(pat,
                  nsIntRegion(nsIntRect(0, 0, size.width, size.height)),
                  aOpacity, aContext, aMaskLayer);
