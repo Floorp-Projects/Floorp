@@ -420,40 +420,43 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
             break;
           default: {
             bool handled = false;
-            if (!mul->canOverflow()) {
-                // If it cannot overflow, we can do lots of optimizations
-                Register src = ToRegister(lhs);
-                uint32_t shift = FloorLog2(constant);
-                uint32_t rest = constant - (1 << shift);
-                // See if the constant has one bit set, meaning it can be encoded as a bitshift
-                if ((1 << shift) == constant) {
-                    masm.ma_lsl(Imm32(shift), src, ToRegister(dest));
-                    handled = true;
-                } else {
-                    // If the constant cannot be encoded as (1<<C1), see if it can be encoded as
-                    // (1<<C1) | (1<<C2), which can be computed using an add and a shift
-                    uint32_t shift_rest = FloorLog2(rest);
-                    if ((1u << shift_rest) == rest) {
-                        masm.as_add(ToRegister(dest), src, lsl(src, shift-shift_rest));
-                        if (shift_rest != 0)
-                            masm.ma_lsl(Imm32(shift_rest), ToRegister(dest), ToRegister(dest));
+            if (constant > 0) {
+                // Try shift and add sequences for a positive constant.
+                if (!mul->canOverflow()) {
+                    // If it cannot overflow, we can do lots of optimizations
+                    Register src = ToRegister(lhs);
+                    uint32_t shift = FloorLog2(constant);
+                    uint32_t rest = constant - (1 << shift);
+                    // See if the constant has one bit set, meaning it can be encoded as a bitshift
+                    if ((1 << shift) == constant) {
+                        masm.ma_lsl(Imm32(shift), src, ToRegister(dest));
+                        handled = true;
+                    } else {
+                        // If the constant cannot be encoded as (1<<C1), see if it can be encoded as
+                        // (1<<C1) | (1<<C2), which can be computed using an add and a shift
+                        uint32_t shift_rest = FloorLog2(rest);
+                        if ((1u << shift_rest) == rest) {
+                            masm.as_add(ToRegister(dest), src, lsl(src, shift-shift_rest));
+                            if (shift_rest != 0)
+                                masm.ma_lsl(Imm32(shift_rest), ToRegister(dest), ToRegister(dest));
+                            handled = true;
+                        }
+                    }
+                } else if (ToRegister(lhs) != ToRegister(dest)) {
+                    // To stay on the safe side, only optimize things that are a
+                    // power of 2.
+
+                    uint32_t shift = FloorLog2(constant);
+                    if ((1 << shift) == constant) {
+                        // dest = lhs * pow(2,shift)
+                        masm.ma_lsl(Imm32(shift), ToRegister(lhs), ToRegister(dest));
+                        // At runtime, check (lhs == dest >> shift), if this does not hold,
+                        // some bits were lost due to overflow, and the computation should
+                        // be resumed as a double.
+                        masm.as_cmp(ToRegister(lhs), asr(ToRegister(dest), shift));
+                        c = Assembler::NotEqual;
                         handled = true;
                     }
-                }
-            } else if (ToRegister(lhs) != ToRegister(dest)) {
-                // To stay on the safe side, only optimize things that are a
-                // power of 2.
-
-                uint32_t shift = FloorLog2(constant);
-                if ((1 << shift) == constant) {
-                    // dest = lhs * pow(2,shift)
-                    masm.ma_lsl(Imm32(shift), ToRegister(lhs), ToRegister(dest));
-                    // At runtime, check (lhs == dest >> shift), if this does not hold,
-                    // some bits were lost due to overflow, and the computation should
-                    // be resumed as a double.
-                    masm.as_cmp(ToRegister(lhs), asr(ToRegister(dest), shift));
-                    c = Assembler::NotEqual;
-                    handled = true;
                 }
             }
 
