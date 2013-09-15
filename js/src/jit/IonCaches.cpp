@@ -20,7 +20,6 @@
 #include "vm/Shape.h"
 
 #include "vm/Interpreter-inl.h"
-#include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::jit;
