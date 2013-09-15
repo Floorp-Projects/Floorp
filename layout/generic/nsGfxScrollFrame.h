@@ -402,7 +402,7 @@ protected:
                           nsIAtom *aOrigin, // nullptr indicates "other" origin
                           const nsRect* aRange);
 
-  static nsRect ExpandRect(const nsRect& aRect);
+  nsRect ExpandRect(const nsRect& aRect) const;
   static void EnsureImageVisPrefsCached();
   static bool sImageVisPrefsCached;
   // The number of scrollports wide/high to expand when looking for images.
