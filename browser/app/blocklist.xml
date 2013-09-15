@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1378508419000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1379114379000">
   <emItems>
       <emItem  blockID="i350" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -17,6 +17,10 @@
                   </emItem>
       <emItem  blockID="i71" id="youtube@2youtube.com">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i404" id="{a9bb9fa0-4122-4c75-bd9a-bc27db3f9155}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i8" id="{B13721C7-F507-4982-B2E5-502A71474FED}">
@@ -216,8 +220,8 @@
                         <versionRange  minVersion="0.1" maxVersion="14.4.0" severity="1">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i93" id="{68b8676b-99a5-46d1-b390-22411d8bcd61}">
-                        <versionRange  minVersion="0" maxVersion="*">
+      <emItem  blockID="i449" id="gystqfr@ylgga.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i142" id="{a3a5c777-f583-4fef-9380-ab4add1bc2a8}">
@@ -425,7 +429,7 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i404" id="{a9bb9fa0-4122-4c75-bd9a-bc27db3f9155}">
+      <emItem  blockID="i448" id="{0134af61-7a0c-4649-aeca-90d776060cb3}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
@@ -599,6 +603,10 @@
                     </versionRange>
                   </emItem>
       <emItem  blockID="i101" id="{3a12052a-66ef-49db-8c39-e5b0bd5c83fa}">
+                        <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i93" id="{68b8676b-99a5-46d1-b390-22411d8bcd61}">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>

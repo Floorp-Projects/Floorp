@@ -126,10 +126,10 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString& aType,
 
   nsresult rv = InitMouseEvent(aType, aCanBubble, aCancelable, aView,
                                aDetail, aScreenX, aScreenY, aClientX, aClientY,
-                               (modifiers & widget::MODIFIER_CONTROL) != 0,
-                               (modifiers & widget::MODIFIER_ALT) != 0,
-                               (modifiers & widget::MODIFIER_SHIFT) != 0,
-                               (modifiers & widget::MODIFIER_META) != 0,
+                               (modifiers & MODIFIER_CONTROL) != 0,
+                               (modifiers & MODIFIER_ALT) != 0,
+                               (modifiers & MODIFIER_SHIFT) != 0,
+                               (modifiers & MODIFIER_META) != 0,
                                aButton, aRelatedTarget);
   NS_ENSURE_SUCCESS(rv, rv);
 

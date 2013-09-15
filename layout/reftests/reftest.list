@@ -288,11 +288,14 @@ skip-if(B2G) include text-indent/reftest.list
 # text-shadow/
 skip-if(Android||B2G) include text-shadow/reftest.list
 
-# theme (osx)
-skip-if(B2G) include ../../toolkit/themes/osx/reftests/reftest.list
+# text-svgglyphs/
+include text-svgglyphs/reftest.list
 
 # text-transform/
 skip-if(B2G) include text-transform/reftest.list
+
+# theme (osx)
+skip-if(B2G) include ../../toolkit/themes/osx/reftests/reftest.list
 
 # -moz-transform/
 include transform/reftest.list

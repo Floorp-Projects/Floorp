@@ -66,6 +66,11 @@ function injectController(doc, topic, data) {
       return;
     }
 
+    // we always handle window.close on social content, even if they are not
+    // "enabled".  "enabled" is about the worker state and a provider may
+    // still be in e.g. the share panel without having their worker enabled.
+    handleWindowClose(window);
+
     SocialService.getProvider(doc.nodePrincipal.origin, function(provider) {
       if (provider && provider.enabled) {
         attachToWindow(provider, window);
@@ -214,7 +219,9 @@ function attachToWindow(provider, targetWindow) {
       schedule(function () { port.close(); });
     });
   }
+}
 
+function handleWindowClose(targetWindow) {
   // We allow window.close() to close the panel, so add an event handler for
   // this, then cancel the event (so the window itself doesn't die) and
   // close the panel instead.

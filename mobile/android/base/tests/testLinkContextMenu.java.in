@@ -34,7 +34,7 @@ public class testLinkContextMenu extends ContentContextMenuTest {
 
     @Override
     public void tearDown() throws Exception {
-        deleteBookmark(BLANK_PAGE_URL);
+        mDatabaseHelper.deleteBookmark(BLANK_PAGE_URL);
         super.tearDown();
     }
 }

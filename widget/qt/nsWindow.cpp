@@ -168,7 +168,7 @@ InitKeyEvent(nsKeyEvent &aEvent, QKeyEvent *aQEvent)
     aEvent.time = 0;
 
     if (sAltGrModifier) {
-        aEvent.modifiers |= (widget::MODIFIER_CONTROL | widget::MODIFIER_ALT);
+        aEvent.modifiers |= (MODIFIER_CONTROL | MODIFIER_ALT);
     }
 
     // The transformations above and in qt for the keyval are not invertible
@@ -1684,9 +1684,9 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
              // At that time, we need to reset the modifiers
              // because nsEditor will not accept a key event
              // for text input if one or more modifiers are set.
-        event.modifiers &= ~(widget::MODIFIER_CONTROL |
-                             widget::MODIFIER_ALT |
-                             widget::MODIFIER_META);
+        event.modifiers &= ~(MODIFIER_CONTROL |
+                             MODIFIER_ALT |
+                             MODIFIER_META);
     }
 
     KeySym keysym = NoSymbol;

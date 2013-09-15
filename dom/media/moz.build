@@ -19,11 +19,16 @@ XPIDL_MODULE = 'dom_media'
 
 MODULE = 'dom'
 
+EXPORTS.mozilla.dom += [
+    'GetUserMediaRequest.h',
+]
+
 EXPORTS.mozilla += [
     'MediaManager.h',
 ]
 
 CPP_SOURCES += [
+    'GetUserMediaRequest.cpp',
     'MediaManager.cpp',
 ]
 

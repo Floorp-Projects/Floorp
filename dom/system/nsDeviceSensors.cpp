@@ -18,7 +18,9 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
 #include "nsIPermissionManager.h"
+#include "mozilla/dom/DeviceLightEvent.h"
 #include "mozilla/dom/DeviceProximityEvent.h"
+#include "mozilla/dom/UserProximityEvent.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -237,14 +239,12 @@ void
 nsDeviceSensors::FireDOMLightEvent(mozilla::dom::EventTarget* aTarget,
                                    double aValue)
 {
-  nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMDeviceLightEvent(getter_AddRefs(event), aTarget, nullptr, nullptr);
-
-  nsCOMPtr<nsIDOMDeviceLightEvent> oe = do_QueryInterface(event);
-  oe->InitDeviceLightEvent(NS_LITERAL_STRING("devicelight"),
-                          true,
-                          false,
-                          aValue);
+  DeviceLightEventInitInitializer init;
+  init.mBubbles = true;
+  init.mCancelable = false;
+  init.mValue = aValue;
+  nsRefPtr<DeviceLightEvent> event =
+    DeviceLightEvent::Constructor(aTarget, NS_LITERAL_STRING("devicelight"), init);
 
   event->SetTrusted(true);
 
@@ -289,14 +289,14 @@ void
 nsDeviceSensors::FireDOMUserProximityEvent(mozilla::dom::EventTarget* aTarget,
                                            bool aNear)
 {
-  nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMUserProximityEvent(getter_AddRefs(event), aTarget, nullptr, nullptr);
-  nsCOMPtr<nsIDOMUserProximityEvent> pe = do_QueryInterface(event);
-
-  pe->InitUserProximityEvent(NS_LITERAL_STRING("userproximity"),
-                             true,
-                             false,
-                             aNear);
+  UserProximityEventInitInitializer init;
+  init.mBubbles = true;
+  init.mCancelable = false;
+  init.mNear = aNear;
+  nsRefPtr<UserProximityEvent> event =
+    UserProximityEvent::Constructor(aTarget,
+                                    NS_LITERAL_STRING("userproximity"),
+                                    init);
 
   event->SetTrusted(true);
 

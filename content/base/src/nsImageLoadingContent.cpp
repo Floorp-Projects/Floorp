@@ -89,6 +89,7 @@ nsImageLoadingContent::nsImageLoadingContent()
     mStateChangerDepth(0),
     mCurrentRequestRegistered(false),
     mPendingRequestRegistered(false),
+    mFrameCreateCalled(false),
     mVisibleCount(0)
 {
   if (!nsContentUtils::GetImgLoaderForChannel(nullptr)) {
@@ -236,8 +237,16 @@ nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest,
   if (shell && shell->IsVisible() &&
       (!shell->DidInitialize() || shell->IsPaintingSuppressed())) {
 
-    if (NS_SUCCEEDED(mCurrentRequest->StartDecoding())) {
-      startedDecoding = true;
+    // If we've gotten a frame and that frame has called FrameCreate and that
+    // frame has been reflowed then we know that it checked it's own visibility
+    // so we can trust our visible count and we don't start decode if we are not
+    // visible.
+    nsIFrame* f = GetOurPrimaryFrame();
+    if (!mFrameCreateCalled || !f || (f->GetStateBits() & NS_FRAME_FIRST_REFLOW) ||
+        mVisibleCount > 0 || shell->AssumeAllImagesVisible()) {
+      if (NS_SUCCEEDED(mCurrentRequest->StartDecoding())) {
+        startedDecoding = true;
+      }
     }
   }
 
@@ -422,23 +431,19 @@ nsImageLoadingContent::FrameCreated(nsIFrame* aFrame)
 {
   NS_ASSERTION(aFrame, "aFrame is null");
 
+  mFrameCreateCalled = true;
+
   if (aFrame->HasAnyStateBits(NS_FRAME_IN_POPUP)) {
     // Assume all images in popups are visible.
     IncrementVisibleCount();
   }
 
-  nsPresContext* presContext = aFrame->PresContext();
-  if (mVisibleCount == 0) {
-    presContext->PresShell()->EnsureImageInVisibleList(this);
-  }
-
-  // We pass the SKIP_FRAME_CHECK flag to TrackImage here because our primary
-  // frame pointer hasn't been setup yet when this is caled.
-  TrackImage(mCurrentRequest, SKIP_FRAME_CHECK);
-  TrackImage(mPendingRequest, SKIP_FRAME_CHECK);
+  TrackImage(mCurrentRequest);
+  TrackImage(mPendingRequest);
 
   // We need to make sure that our image request is registered, if it should
   // be registered.
+  nsPresContext* presContext = aFrame->PresContext();
   if (mCurrentRequest) {
     nsLayoutUtils::RegisterImageRequestIfAnimated(presContext, mCurrentRequest,
                                                   &mCurrentRequestRegistered);
@@ -454,6 +459,8 @@ NS_IMETHODIMP_(void)
 nsImageLoadingContent::FrameDestroyed(nsIFrame* aFrame)
 {
   NS_ASSERTION(aFrame, "aFrame is null");
+
+  mFrameCreateCalled = false;
 
   // We need to make sure that our image request is deregistered.
   if (mCurrentRequest) {
@@ -1281,7 +1288,7 @@ nsImageLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 void
-nsImageLoadingContent::TrackImage(imgIRequest* aImage, uint32_t aFlags /* = 0 */)
+nsImageLoadingContent::TrackImage(imgIRequest* aImage)
 {
   if (!aImage)
     return;
@@ -1290,7 +1297,7 @@ nsImageLoadingContent::TrackImage(imgIRequest* aImage, uint32_t aFlags /* = 0 */
              "Why haven't we heard of this request?");
 
   nsIDocument* doc = GetOurCurrentDoc();
-  if (doc && ((aFlags & SKIP_FRAME_CHECK) || GetOurPrimaryFrame()) &&
+  if (doc && (mFrameCreateCalled || GetOurPrimaryFrame()) &&
       (mVisibleCount > 0)) {
     if (aImage == mCurrentRequest && !(mCurrentRequestFlags & REQUEST_IS_TRACKED)) {
       mCurrentRequestFlags |= REQUEST_IS_TRACKED;

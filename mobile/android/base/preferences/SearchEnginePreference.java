@@ -10,10 +10,10 @@ import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.os.Build;
 import android.preference.Preference;
 import android.text.SpannableString;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 import org.json.JSONException;
@@ -21,15 +21,13 @@ import org.json.JSONObject;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.widget.FaviconView;
 
 /**
  * Represents an element in the list of search engines on the preferences menu.
  */
 public class SearchEnginePreference extends Preference {
     private static final String LOGTAG = "SearchEnginePreference";
-
-    // Dimensions, in dp, of the icon to display for this engine.
-    public static int sIconSize;
 
     // Indices in button array of the AlertDialog of the three buttons.
     public static final int INDEX_SET_DEFAULT_BUTTON = 0;
@@ -51,6 +49,13 @@ public class SearchEnginePreference extends Preference {
 
     private final SearchPreferenceCategory mParentCategory;
 
+    // The icon to display in the prompt when clicked.
+    private BitmapDrawable mPromptIcon;
+    // The bitmap backing the drawable above - needed separately for the FaviconView.
+    private Bitmap mIconBitmap;
+
+    private FaviconView mFaviconView;
+
     /**
      * Create a preference object to represent a search engine that is attached to category
      * containingCategory.
@@ -64,8 +69,9 @@ public class SearchEnginePreference extends Preference {
 
         Resources res = getContext().getResources();
 
-        // Fetch the icon dimensions from the resource file.
-        sIconSize = res.getDimensionPixelSize(R.dimen.searchpreferences_icon_size);
+        // Set the layout resource for this preference - includes a FaviconView.
+        setLayoutResource(R.layout.preference_search_engine);
+
         setOnPreferenceClickListener(new OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
@@ -85,13 +91,27 @@ public class SearchEnginePreference extends Preference {
     }
 
     /**
+     * Called by Android when we're bound to the custom view. Allows us to set the custom properties
+     * of our custom view elements as we desire (We can now use findViewById on them).
+     *
+     * @param view The view instance for this Preference object.
+     */
+    @Override
+    protected void onBindView(View view) {
+        super.onBindView(view);
+        // Set the icon in the FaviconView.
+        mFaviconView = ((FaviconView) view.findViewById(R.id.search_engine_icon));
+        mFaviconView.updateAndScaleImage(mIconBitmap, getTitle().toString());
+    }
+
+    /**
      * Configure this Preference object from the Gecko search engine JSON object.
      * @param geckoEngineJSON The Gecko-formatted JSON object representing the search engine.
      * @throws JSONException If the JSONObject is invalid.
      */
     public void setSearchEngineFromJSON(JSONObject geckoEngineJSON) throws JSONException {
         final String engineName = geckoEngineJSON.getString("name");
-        SpannableString titleSpannable = new SpannableString(engineName);
+        final SpannableString titleSpannable = new SpannableString(engineName);
         mIsImmutableEngine = geckoEngineJSON.getBoolean("immutable");
 
         if (mIsImmutableEngine) {
@@ -100,18 +120,14 @@ public class SearchEnginePreference extends Preference {
         }
         setTitle(titleSpannable);
 
-        // setIcon is only available on Honeycomb and up.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            // Create a drawable from the iconURI and assign it to this Preference for display.
-            String iconURI = geckoEngineJSON.getString("iconURI");
-            Bitmap iconBitmap = BitmapUtils.getBitmapFromDataURI(iconURI);
-            // The favicon provided may be null or corrupt, if there was a network error or similar.
-            if (iconBitmap == null) {
-                return;
-            }
-            Bitmap scaledIconBitmap = Bitmap.createScaledBitmap(iconBitmap, sIconSize, sIconSize, false);
-            BitmapDrawable drawable = new BitmapDrawable(scaledIconBitmap);
-            setIcon(drawable);
+        final String iconURI = geckoEngineJSON.getString("iconURI");
+        // Keep a reference to the bitmap - we'll need it later in onBindView.
+        try {
+            mIconBitmap = BitmapUtils.getBitmapFromDataURI(iconURI);
+        } catch (IllegalArgumentException e) {
+            Log.e(LOGTAG, "IllegalArgumentException creating Bitmap. Most likely a zero-length bitmap.", e);
+        } catch (NullPointerException e) {
+            Log.e(LOGTAG, "NullPointerException creating Bitmap. Most likely a zero-length bitmap.", e);
         }
     }
 
@@ -176,10 +192,12 @@ public class SearchEnginePreference extends Preference {
             }
         });
 
-        // Copy the icon, if any, from this object to the prompt we produce.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            builder.setIcon(getIcon());
+        // Copy the icon from this object to the prompt we produce. We lazily create the drawable,
+        // as the user may not ever actually tap this object.
+        if (mPromptIcon == null && mIconBitmap != null) {
+            mPromptIcon = new BitmapDrawable(mFaviconView.getBitmap());
         }
+        builder.setIcon(mPromptIcon);
 
         // We have to construct the dialog itself on the UI thread.
         ThreadUtils.postToUiThread(new Runnable() {
@@ -221,7 +239,7 @@ public class SearchEnginePreference extends Preference {
      */
     private void configureShownDialog() {
         // If we are the default engine, disable the "Set as default" button.
-        TextView defaultButton = (TextView) mDialog.getListView().getChildAt(INDEX_SET_DEFAULT_BUTTON);
+        final TextView defaultButton = (TextView) mDialog.getListView().getChildAt(INDEX_SET_DEFAULT_BUTTON);
         // Disable "Set as default" button if we are already the default.
         if (mIsDefaultEngine) {
             defaultButton.setEnabled(false);

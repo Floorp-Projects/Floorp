@@ -3,6 +3,7 @@
 Components.utils.import("resource://gre/modules/osfile.jsm");
 Components.utils.import("resource://gre/modules/Promise.jsm");
 Components.utils.import("resource://gre/modules/Task.jsm");
+Components.utils.import("resource://gre/modules/AsyncShutdown.jsm");
 
 // The following are used to compare against a well-tested reference
 // implementation of file I/O.
@@ -759,111 +760,85 @@ let test_debug_test = maketest("debug_test", function debug_test(test) {
  * Test logging of file descriptors leaks.
  */
 let test_system_shutdown = maketest("system_shutdown", function system_shutdown(test) {
+
+  // Test that unclosed files cause warnings
+  // Test that unclosed directories cause warnings
+  // Test that closed files do not cause warnings
+  // Test that closed directories do not cause warnings
+
   return Task.spawn(function () {
-    // Count the number of times the leaks are logged.
-    let logCounter = 0;
-    // Create a console listener.
-    function inDebugTest(resource, f) {
-      return Task.spawn(function task() {
-        let originalDebug = OS.Shared.DEBUG;
-        OS.Shared.TEST = true;
-        OS.Shared.DEBUG = true;
+    function testLeaksOf(resource, topic) {
+      return Task.spawn(function() {
+        let deferred = Promise.defer();
 
-        let waitObservation = Promise.defer();
-        // Unregister a listener, reset DEBUG and TEST both when the promise is
-        // resolved or rejected.
-        let cleanUp = function cleanUp() {
-          toggleDebugTest(false, listener);
-        };
-        waitObservation.promise.then(cleanUp, cleanUp);
+        // Register observer
+        Services.prefs.setBoolPref("toolkit.asyncshutdown.testing", true);
+        Services.prefs.setBoolPref("toolkit.osfile.log", true);
+        Services.prefs.setBoolPref("toolkit.osfile.log.redirect", true);
+        Services.prefs.setCharPref("toolkit.osfile.test.shutdown.observer", topic);
 
-        // Measure how long it takes to receive a log message.
-        let logStart;
-
-        let listener = {
-          observe: function (aMessage) {
-            test.info("Waiting for a console message mentioning resource " + resource);
-            // Ignore unexpected messages.
+        let observer = {
+          observe: function(aMessage) {
+          try {
+              test.info("Got message: " + aMessage);
             if (!(aMessage instanceof Components.interfaces.nsIConsoleMessage)) {
-              test.info("Not a console message");
               return;
             }
-            if (aMessage.message.indexOf("TEST OS Controller WARNING") < 0) {
-              test.info("Not a warning");
+            let message = aMessage.message;
+            test.info("Got message: " + message);
+            if (message.indexOf("TEST OS Controller WARNING") < 0) {
               return;
             }
-            test.ok(aMessage.message.indexOf("WARNING: File descriptors leaks " +
-              "detected.") >= 0, "Noticing file descriptors leaks, as expected.");
-            let found = aMessage.message.indexOf(resource) >= 0;
-            if (found) {
-              if (++logCounter > 2) {
-                test.fail("test.osfile.web-workers-shutdown observer should only " +
-                  "be activated 2 times.");
-              }
-              test.ok(true, "Leaked resource is correctly listed in the log.");
-              test.info(
-                "It took " + (Date.now() - logStart) + "MS to receive a log message.");
-              setTimeout(function() { waitObservation.resolve(); });
-            } else {
-              test.info("This log didn't list the expected resource: " + resource + "\ngot " + aMessage.message);
+            test.info("Got message: " + message + ", looking for resource " + resource);
+            if (message.indexOf(resource) < 0) {
+              return;
             }
+            setTimeout(deferred.resolve);
+          } catch (ex) {
+            setTimeout(function() {
+              deferred.reject(ex);
+            });
           }
-        };
-        toggleDebugTest(true, listener);
-        logStart = Date.now();
-        f();
-        // If listener does not resolve webObservation in timely manner (1000MS),
-        // reject it.
+        }};
+        Services.console.registerListener(observer);
+        Services.obs.notifyObservers(null, topic, null);
         setTimeout(function() {
-          test.info("waitObservation timeout exceeded.");
-          waitObservation.reject();
-        }, 1000);
-        yield waitObservation.promise;
-      });
-    }
+          test.info("Timeout while waiting for resource: " + resource);
+          deferred.reject("timeout");
+        }, 300);
 
-    // Enable test shutdown observer.
-    Services.prefs.setBoolPref("toolkit.osfile.test.shutdown.observer", true);
-
-    let currentDir = yield OS.File.getCurrentDirectory();
-    test.info("Testing for leaks of directory iterator " + currentDir);
-    let iterator = new OS.File.DirectoryIterator(currentDir);
-    try {
-      yield inDebugTest(currentDir, function() {
-        Services.obs.notifyObservers(null, "test.osfile.web-workers-shutdown",
-          null);
-      });
-      test.ok(true, "Log messages observation promise resolved as expected.");
-    } catch (ex) {
-      test.fail("Log messages observation promise was rejected.");
-    }
-    yield iterator.close();
-
-    let testFileDescriptorsLeaks = function testFileDescriptorsLeaks(shouldResolve) {
-      return Task.spawn(function task() {
-        let openedFile = yield OS.File.open(EXISTING_FILE);
+        let resolved = false;
         try {
-          yield inDebugTest(EXISTING_FILE, function() {
-            Services.obs.notifyObservers(null, "test.osfile.web-workers-shutdown",
-              null);
-          });
-          test.ok(shouldResolve,
-            "Log message observation promise resolved as expected.");
+          yield deferred.promise;
+          resolved = true;
         } catch (ex) {
-          test.ok(!shouldResolve,
-            "Log message observation promise was rejected as expected.");
+          if (ex != "timeout") {
+            test.ok(false, "Error during 'test.osfile.web-workers-shutdown'" + ex);
+          }
+          resolved = false;
         }
-        yield openedFile.close();
+        Services.console.unregisterListener(observer);
+        Services.prefs.clearUserPref("toolkit.osfile.log");
+        Services.prefs.clearUserPref("toolkit.osfile.log.redirect");
+        Services.prefs.clearUserPref("toolkit.osfile.test.shutdown.observer");
+        Services.prefs.clearUserPref("toolkit.async_shutdown.testing", true);
+
+        throw new Task.Result(resolved);
       });
-    };
+    }
 
-    test.info("Testing for leaks of file " + EXISTING_FILE);
-    yield testFileDescriptorsLeaks(true);
+    let TEST_DIR = OS.Path.join((yield OS.File.getCurrentDirectory()), "..");
+    test.info("Testing for leaks of directory iterator " + TEST_DIR);
+    let iterator = new OS.File.DirectoryIterator(TEST_DIR);
+    ok((yield testLeaksOf(TEST_DIR, "test.shutdown.dir.leak")), "Detected directory leak");
+    yield iterator.close();
+    ok(!(yield testLeaksOf(TEST_DIR, "test.shutdown.dir.noleak")), "We don't leak the directory anymore");
 
-    // Disable test shutdown observer.
-    Services.prefs.clearUserPref("toolkit.osfile.test.shutdown.observer");
-    // Nothing should be logged since the test shutdown observer is unregistered.
-    yield testFileDescriptorsLeaks(false);
+    test.info("Testing for leaks of file descriptor: " + EXISTING_FILE);
+    let openedFile = yield OS.File.open(EXISTING_FILE);
+    ok((yield testLeaksOf(EXISTING_FILE, "test.shutdown.file.leak")), "Detected file leak");
+    yield openedFile.close();
+    ok(!(yield testLeaksOf(EXISTING_FILE, "test.shutdown.file.noleak")), "We don't leak the file anymore");
   });
 });
 

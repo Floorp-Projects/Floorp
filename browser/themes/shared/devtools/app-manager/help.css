@@ -1,0 +1,40 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  color: #555;
+  font-family: Lucida Grande, Helvetica, Helvetica Neue, sans-serif;
+  overflow: hidden;
+  max-width: 600px;
+  margin: auto;
+  padding: 20px 0;
+  background-color: #FFF;
+}
+
+button {
+  border: 1px solid #CCC;
+  padding: 5px 15px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  color: #3498DB;
+}
+
+button:hover {
+  background-color: #3498DB;
+  color: #FFF;
+}
+
+a, a:visited {
+  color: rgb(39,109,163);
+}
+
+#close-button {
+  float: right;
+}
