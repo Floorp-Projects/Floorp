@@ -125,10 +125,11 @@ typedef struct CapturingContentInfo {
   nsIContent* mContent;
 } CapturingContentInfo;
 
-// 218d1f13-c3e4-4b0d-9773-a18a6fd5d520
+
+// d39cd4ce-6b38-4793-8c1a-00985c56d931
 #define NS_IPRESSHELL_IID \
-{ 0x218d1f13, 0xc3e4, 0x4b0d, \
-  { 0x97, 0x73, 0xa1, 0x8a, 0x6f, 0xd5, 0xd5, 0x20 } }
+{ 0xd39cd4ce, 0x6b38, 0x4793, \
+  { 0x8c, 0x1a, 0x00, 0x98, 0x5c, 0x56, 0xd9, 0x31 } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -1361,6 +1362,9 @@ public:
 
   // Removes the image from the list of visible images if it is present there.
   virtual void RemoveImageFromVisibleList(nsIImageLoadingContent* aImage) = 0;
+
+  // Whether we should assume all images are visible.
+  virtual bool AssumeAllImagesVisible() = 0;
 
   /**
    * Refresh observer management.
