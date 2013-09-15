@@ -5460,3 +5460,53 @@ nsLayoutUtils::GetBoxShadowRectForFrame(nsIFrame* aFrame,
   return shadows;
 }
 
+/* static */ void
+nsLayoutUtils::UpdateImageVisibilityForFrame(nsIFrame* aImageFrame)
+{
+#ifdef DEBUG
+  nsIAtom* type = aImageFrame->GetType();
+  MOZ_ASSERT(type == nsGkAtoms::imageFrame ||
+             type == nsGkAtoms::imageControlFrame ||
+             type == nsGkAtoms::svgImageFrame, "wrong type of frame");
+
+  NS_ASSERTION(!aImageFrame->PresContext()->PresShell()->AssumeAllImagesVisible(),
+               "shouldn't be in a doc where we assume all images are visible");
+#endif
+
+  nsCOMPtr<nsIImageLoadingContent> content = do_QueryInterface(aImageFrame->GetContent());
+  if (!content) {
+    return;
+  }
+
+  bool visible = true;
+  nsIFrame* f = aImageFrame->GetParent();
+  nsRect rect = aImageFrame->GetContentRectRelativeToSelf();
+  nsIFrame* rectFrame = aImageFrame;
+  while (f) {
+    nsIScrollableFrame* sf = do_QueryFrame(f);
+    if (sf) {
+      nsRect transformedRect =
+        nsLayoutUtils::TransformFrameRectToAncestor(rectFrame, rect, f);
+      if (!sf->IsRectNearlyVisible(transformedRect)) {
+        visible = false;
+        break;
+      }
+      rect = sf->GetScrollPortRect();
+      rectFrame = f;
+    }
+    nsIFrame* parent = f->GetParent();
+    if (!parent) {
+      parent = nsLayoutUtils::GetCrossDocParentFrame(f);
+      if (parent && parent->PresContext()->IsChrome()) {
+        break;
+      }
+    }
+    f = parent;
+  }
+
+  if (visible) {
+    aImageFrame->PresContext()->PresShell()->EnsureImageInVisibleList(content);
+  } else {
+    aImageFrame->PresContext()->PresShell()->RemoveImageFromVisibleList(content);
+  }
+}
