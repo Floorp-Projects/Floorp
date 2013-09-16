@@ -30,7 +30,7 @@ using namespace mozilla::dom;
 USING_INDEXEDDB_NAMESPACE
 USING_QUOTA_NAMESPACE
 
-static const fallible_t fallible = new fallible_t();
+static const fallible_t fallible = fallible_t();
 
 namespace {
 
