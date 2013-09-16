@@ -67,3 +67,10 @@ foreignObject {
 *[xml|space=preserve] {
   white-space: -moz-pre-discard-newlines;
 }
+
+*|*::-moz-svg-marker-anon-child {
+  clip-path: inherit;
+  filter: inherit;
+  mask: inherit;
+  opacity: inherit;
+}

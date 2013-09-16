@@ -35,6 +35,7 @@ typedef nsSVGContainerFrame nsSVGMarkerFrameBase;
 
 class nsSVGMarkerFrame : public nsSVGMarkerFrameBase
 {
+  friend class nsSVGMarkerAnonChildFrame;
   friend nsIFrame*
   NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
@@ -77,6 +78,15 @@ public:
     return MakeFrameName(NS_LITERAL_STRING("SVGMarker"), aResult);
   }
 #endif
+
+  virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
+    // Any children must be added to our single anonymous inner frame kid.
+    NS_ABORT_IF_FALSE(GetFirstPrincipalChild() &&
+                      GetFirstPrincipalChild()->GetType() ==
+                        nsGkAtoms::svgMarkerAnonChildFrame,
+                      "Where is our anonymous child?");
+    return GetFirstPrincipalChild()->GetContentInsertionFrame();
+  }
 
   // nsSVGMarkerFrame methods:
   nsresult PaintMark(nsRenderingContext *aContext,
@@ -125,4 +135,50 @@ private:
   bool mInUse2;
 };
 
+////////////////////////////////////////////////////////////////////////
+// nsMarkerAnonChildFrame class
+
+typedef nsSVGDisplayContainerFrame nsSVGMarkerAnonChildFrameBase;
+
+/**
+ */
+class nsSVGMarkerAnonChildFrame
+  : public nsSVGMarkerAnonChildFrameBase
+{
+  friend nsIFrame*
+  NS_NewSVGMarkerAnonChildFrame(nsIPresShell* aPresShell,
+                                nsStyleContext* aContext);
+
+  nsSVGMarkerAnonChildFrame(nsStyleContext* aContext)
+    : nsSVGMarkerAnonChildFrameBase(aContext)
+  {}
+
+public:
+  NS_DECL_FRAMEARENA_HELPERS
+
+#ifdef DEBUG
+  virtual void Init(nsIContent* aContent,
+                    nsIFrame* aParent,
+                    nsIFrame* aPrevInFlow) MOZ_OVERRIDE;
+
+  NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE {
+    return MakeFrameName(NS_LITERAL_STRING("SVGMarkerAnonChild"), aResult);
+  }
+#endif
+
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsGkAtoms::svgMarkerAnonChildFrame
+   */
+  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+
+  // nsSVGContainerFrame methods:
+  virtual gfxMatrix GetCanvasTM(uint32_t aFor,
+                                nsIFrame* aTransformRoot = nullptr) MOZ_OVERRIDE
+  {
+    nsSVGMarkerFrame* marker = static_cast<nsSVGMarkerFrame*>(mParent);
+    return marker->GetCanvasTM(aFor, aTransformRoot);
+  }
+};
 #endif
