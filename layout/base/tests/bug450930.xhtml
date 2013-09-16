@@ -100,11 +100,10 @@ function runTest1() {
   var foundExactRect = false;
 
   function listener(event) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var r = event.boundingClientRect;
+    var r = SpecialPowers.wrap(event).boundingClientRect;
     var bounds = document.getElementById('d').getBoundingClientRect();
     checkContains(r, bounds, "");
-    if (isRectInList(bounds, event.clientRects)) {
+    if (isRectInList(bounds, SpecialPowers.wrap(event).clientRects)) {
       foundExactRect = true;
     }
     window.removeEventListener("MozAfterPaint", listener, false);
@@ -133,10 +132,9 @@ function runTest2(frameID, containerID) {
   var container = document.getElementById(containerID);
 
   function listener(event) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    if (checkGotSubdoc(event.clientRects, container))
+    if (checkGotSubdoc(SpecialPowers.wrap(event).clientRects, container))
       gotSubdocPrivileged = true;
-    if (event.clientRects.length > 0) {
+    if (SpecialPowers.wrap(event).clientRects.length > 0) {
       if (++fired == 1)
         setTimeout(check, 100);
     }

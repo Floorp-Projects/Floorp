@@ -24,14 +24,8 @@ SimpleTest.waitForExplicitFinish();
 
 function testViewport() {
 
-  /* We need to access the document headers, which are chrome-only. */
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   /* Grab Viewport Metadata from the document header. */
-  var iRequester =
-    window.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-  var windowUtils =
-    iRequester.getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var windowUtils = SpecialPowers.getDOMWindowUtils(window);
   var vpWidth =
     parseInt(windowUtils.getDocumentMetadata("viewport-width"));
   var vpHeight =
