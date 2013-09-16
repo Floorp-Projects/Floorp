@@ -8,7 +8,6 @@
 #include "nsCSSKeywords.h"
 #include "nsString.h"
 #include "nsStaticNameTable.h"
-#include "nsReadableUtils.h"
 
 // required to make the symbol external, so that TestCSSPropertyLookup.cpp can link with it
 extern const char* const kCSSRawKeywords[];
