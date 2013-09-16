@@ -11,10 +11,8 @@
 #define nsStyleTransformMatrix_h_
 
 #include "nsCSSValue.h"
-#include "gfxMatrix.h"
 #include "gfx3DMatrix.h"
 
-struct nsCSSValueList;
 class nsStyleContext;
 class nsPresContext;
 struct nsRect;
