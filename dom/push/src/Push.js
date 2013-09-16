@@ -4,8 +4,12 @@
 
 "use strict";
 
+// Don't modify this, instead set services.push.debug.
+let gDebuggingEnabled = false;
+
 function debug(s) {
-  // dump("-*- Push.js: " + s + "\n");
+  if (gDebuggingEnabled)
+    dump("-*- Push.js: " + s + "\n");
 }
 
 const Cc = Components.classes;
@@ -39,6 +43,10 @@ Push.prototype = {
                                           Ci.nsISupportsWeakReference]),
 
   init: function(aWindow) {
+    // Set debug first so that all debugging actually works.
+    // NOTE: We don't add an observer here like in PushService. Flipping the
+    // pref will require a reload of the app/page, which seems acceptable.
+    gDebuggingEnabled = Services.prefs.getBoolPref("services.push.debug");
     debug("init()");
 
     let principal = aWindow.document.nodePrincipal;
