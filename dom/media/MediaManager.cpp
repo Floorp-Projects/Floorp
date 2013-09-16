@@ -38,6 +38,10 @@
 #include "MediaEngineWebRTC.h"
 #endif
 
+#ifdef MOZ_WIDGET_GONK
+#include "MediaPermissionGonk.h"
+#endif
+
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount() and conflicts with MediaStream::GetCurrentTime.
 #ifdef GetCurrentTime
@@ -1192,6 +1196,10 @@ MediaManager::GetUserMedia(JSContext* aCx, bool aPrivileged,
     // Force MediaManager to startup before we try to access it from other threads
     // Hack: should init singleton earlier unless it's expensive (mem or CPU)
     (void) MediaManager::Get();
+#ifdef MOZ_WIDGET_GONK
+    // Initialize MediaPermissionManager before send out any permission request.
+    (void) MediaPermissionManager::GetInstance();
+#endif //MOZ_WIDGET_GONK
   }
 
   // Store the WindowID in a hash table and mark as active. The entry is removed
@@ -1252,10 +1260,7 @@ MediaManager::GetUserMedia(JSContext* aCx, bool aPrivileged,
 
 #ifdef MOZ_B2G_CAMERA
   if (mCameraManager == nullptr) {
-    aPrivileged = nsDOMCameraManager::CheckPermission(aWindow);
-    if (aPrivileged) {
-      mCameraManager = nsDOMCameraManager::CreateInstance(aWindow);
-    }
+    mCameraManager = nsDOMCameraManager::CreateInstance(aWindow);
   }
 #endif
 
