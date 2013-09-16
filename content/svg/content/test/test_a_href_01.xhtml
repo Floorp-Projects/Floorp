@@ -5,6 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=620295
 <head>
   <title>Test that activating SVG 'a' elements navigate to their xlink:href</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -42,8 +43,6 @@ function doNavigationIfReady() {
 }
 
 function doNavigation() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   // Test clicking on an unmodified <a>.
   doNavigationTest(1, "a_href_helper_01.svg");
   // Test clicking on an <a> whose xlink:href is modified by assigning to href.baseVal.
@@ -67,14 +66,7 @@ function doNavigationTest(testNumber, initialHref, f) {
   if (f) {
     f(a);
   }
-  dispatchClickEvent(a);
-}
-
-function dispatchClickEvent(element) {
-  var event = element.ownerDocument.createEvent("MouseEvent");
-  event.initMouseEvent("click", true, true, element.ownerDocument.defaultView, 1, 0, 0, 0, 0, false, false,
-                       false, false, 0, null);
-  element.dispatchEvent(event);
+  sendMouseEvent({type:'click'}, a);
 }
 
 window.onload = windowLoaded;
