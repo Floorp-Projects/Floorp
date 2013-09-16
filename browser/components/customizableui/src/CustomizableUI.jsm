@@ -2380,6 +2380,12 @@ OverflowableToolbar.prototype = {
 
       this._collapsed.pop();
       let beforeNodeIndex = placements.indexOf(child.id) + 1;
+      // If this is a skipintoolbarset item, meaning it doesn't occur in the placements list,
+      // we're inserting it at the end. This will mean first-in, first-out (more or less)
+      // leading to as little change in order as possible.
+      if (beforeNodeIndex == 0) {
+        beforeNodeIndex = placements.length;
+      }
       let inserted = false;
       for (; beforeNodeIndex < placements.length; beforeNodeIndex++) {
         let beforeNode = this._target.querySelector(idToSelector(placements[beforeNodeIndex]));
