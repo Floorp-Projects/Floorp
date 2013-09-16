@@ -322,6 +322,7 @@ class BufferedAudioStream : public AudioStream
   int64_t GetPosition();
   int64_t GetPositionInFrames();
   int64_t GetPositionInFramesInternal();
+  int64_t GetLatencyInFrames();
   bool IsPaused();
   // This method acquires the monitor and forward the call to the base
   // class, to prevent a race on |mTimeStretcher|, in
@@ -773,6 +774,17 @@ BufferedAudioStream::GetPositionInFramesUnlocked()
     adjustedPosition = position - mLostFrames;
   }
   return std::min<uint64_t>(adjustedPosition, INT64_MAX);
+}
+
+int64_t
+BufferedAudioStream::GetLatencyInFrames()
+{
+  uint32_t latency;
+  if(cubeb_stream_get_latency(mCubebStream, &latency)) {
+    NS_WARNING("Could not get cubeb latency.");
+    return 0;
+  }
+  return static_cast<int64_t>(latency);
 }
 
 bool
