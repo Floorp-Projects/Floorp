@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -36,6 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "SigProc_FIX.h"
 #include "define.h"
 #include "tuning_parameters.h"
+#include "pitch.h"
 
 #define MAX_FRAME_SIZE              384             /* subfr_length * nb_subfr = ( 0.005 * 16000 + 16 ) * 4 = 384 */
 
@@ -51,7 +48,7 @@ void silk_burg_modified(
     opus_int32                  A_Q16[],            /* O    Prediction coefficients (length order)                      */
     const opus_int16            x[],                /* I    Input signal, length: nb_subfr * ( D + subfr_length )       */
     const opus_int32            minInvGain_Q30,     /* I    Inverse of max prediction gain                              */
-    const opus_int              subfr_length,       /* I    Input signal subframe length (incl. D preceeding samples)   */
+    const opus_int              subfr_length,       /* I    Input signal subframe length (incl. D preceding samples)    */
     const opus_int              nb_subfr,           /* I    Number of subframes stacked in x                            */
     const opus_int              D                   /* I    Order                                                       */
 )
@@ -64,6 +61,7 @@ void silk_burg_modified(
     opus_int32       Af_QA[       SILK_MAX_ORDER_LPC ];
     opus_int32       CAf[ SILK_MAX_ORDER_LPC + 1 ];
     opus_int32       CAb[ SILK_MAX_ORDER_LPC + 1 ];
+    opus_int32       xcorr[ SILK_MAX_ORDER_LPC ];
 
     silk_assert( subfr_length * nb_subfr <= MAX_FRAME_SIZE );
 
@@ -97,10 +95,17 @@ void silk_burg_modified(
         }
     } else {
         for( s = 0; s < nb_subfr; s++ ) {
+            int i;
+            opus_int32 d;
             x_ptr = x + s * subfr_length;
+            celt_pitch_xcorr(x_ptr, x_ptr + 1, xcorr, subfr_length - D, D );
             for( n = 1; n < D + 1; n++ ) {
-                C_first_row[ n - 1 ] += silk_LSHIFT32(
-                    silk_inner_prod_aligned( x_ptr, x_ptr + n, subfr_length - n ), -rshifts );
+               for ( i = n + subfr_length - D, d = 0; i < subfr_length; i++ )
+                  d = MAC16_16( d, x_ptr[ i ], x_ptr[ i - n ] );
+               xcorr[ n - 1 ] += d;
+            }
+            for( n = 1; n < D + 1; n++ ) {
+                C_first_row[ n - 1 ] += silk_LSHIFT32( xcorr[ n - 1 ], -rshifts );
             }
         }
     }
@@ -109,7 +114,7 @@ void silk_burg_modified(
     /* Initialize */
     CAb[ 0 ] = CAf[ 0 ] = C0 + silk_SMMUL( SILK_FIX_CONST( FIND_LPC_COND_FAC, 32 ), C0 ) + 1;                                /* Q(-rshifts) */
 
-    invGain_Q30 = 1 << 30;
+    invGain_Q30 = (opus_int32)1 << 30;
     reached_max_gain = 0;
     for( n = 0; n < D; n++ ) {
         /* Update first row of correlation matrix (without first element) */
@@ -196,7 +201,7 @@ void silk_burg_modified(
         tmp1 = silk_LSHIFT( silk_SMMUL( invGain_Q30, tmp1 ), 2 );
         if( tmp1 <= minInvGain_Q30 ) {
             /* Max prediction gain exceeded; set reflection coefficient such that max prediction gain is exactly hit */
-            tmp2 = ( 1 << 30 ) - silk_DIV32_varQ( minInvGain_Q30, invGain_Q30, 30 );            /* Q30 */
+            tmp2 = ( (opus_int32)1 << 30 ) - silk_DIV32_varQ( minInvGain_Q30, invGain_Q30, 30 );            /* Q30 */
             rc_Q31 = silk_SQRT_APPROX( tmp2 );                                                  /* Q15 */
             /* Newton-Raphson iteration */
             rc_Q31 = silk_RSHIFT32( rc_Q31 + silk_DIV32( tmp2, rc_Q31 ), 1 );                   /* Q15 */
@@ -242,7 +247,7 @@ void silk_burg_modified(
             /* Scale coefficients */
             A_Q16[ k ] = -silk_RSHIFT_ROUND( Af_QA[ k ], QA - 16 );
         }
-        /* Subtract energy of preceeding samples from C0 */
+        /* Subtract energy of preceding samples from C0 */
         if( rshifts > 0 ) {
             for( s = 0; s < nb_subfr; s++ ) {
                 x_ptr = x + s * subfr_length;
@@ -260,14 +265,14 @@ void silk_burg_modified(
     } else {
         /* Return residual energy */
         nrg  = CAf[ 0 ];                                                                            /* Q( -rshifts ) */
-        tmp1 = 1 << 16;                                                                             /* Q16 */
+        tmp1 = (opus_int32)1 << 16;                                                                             /* Q16 */
         for( k = 0; k < D; k++ ) {
             Atmp1 = silk_RSHIFT_ROUND( Af_QA[ k ], QA - 16 );                                       /* Q16 */
             nrg  = silk_SMLAWW( nrg, CAf[ k + 1 ], Atmp1 );                                         /* Q( -rshifts ) */
             tmp1 = silk_SMLAWW( tmp1, Atmp1, Atmp1 );                                               /* Q16 */
             A_Q16[ k ] = -Atmp1;
         }
-        *res_nrg = silk_SMLAWW( nrg, silk_SMMUL( FIND_LPC_COND_FAC, C0 ), -tmp1 );                  /* Q( -rshifts ) */
+        *res_nrg = silk_SMLAWW( nrg, silk_SMMUL( SILK_FIX_CONST( FIND_LPC_COND_FAC, 32 ), C0 ), -tmp1 );/* Q( -rshifts ) */
         *res_nrg_Q = -rshifts;
     }
 }

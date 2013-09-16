@@ -1,9 +1,5 @@
-/* Copyright (C) 2001-2012 IETF Trust, Erik de Castro Lopo. All rights reserved.*/
+/* Copyright (C) 2001 Erik de Castro Lopo <erikd AT mega-nerd DOT com> */
 /*
-
-   This file is extracted from RFC6716. Please see that RFC for additional
-   information.
-
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:
@@ -14,11 +10,6 @@
    - Redistributions in binary form must reproduce the above copyright
    notice, this list of conditions and the following disclaimer in the
    documentation and/or other materials provided with the distribution.
-
-   - Neither the name of Internet Society, IETF or IETF Trust, nor the
-   names of specific contributors, may be used to endorse or promote
-   products derived from this software without specific prior written
-   permission.
 
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
    ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -99,14 +90,14 @@
 #include <math.h>
 #define float2int(x) lrint(x)
 
-#elif (defined (WIN64) || defined (_WIN64))
+#elif (defined(_MSC_VER) && _MSC_VER >= 1400) && (defined (WIN64) || defined (_WIN64))
         #include <xmmintrin.h>
 
         __inline long int float2int(float value)
         {
                 return _mm_cvtss_si32(_mm_load_ss(&value));
         }
-#elif (defined (WIN32) || defined (_WIN32))
+#elif (defined(_MSC_VER) && _MSC_VER >= 1400) && (defined (WIN32) || defined (_WIN32))
         #include <math.h>
 
         /*      Win32 doesn't seem to have these functions.
@@ -136,6 +127,7 @@
         #define float2int(flt) ((int)(floor(.5+flt)))
 #endif
 
+#ifndef DISABLE_FLOAT_API
 static inline opus_int16 FLOAT2INT16(float x)
 {
    x = x*CELT_SIG_SCALE;
@@ -143,5 +135,6 @@ static inline opus_int16 FLOAT2INT16(float x)
    x = MIN32(x, 32767);
    return (opus_int16)float2int(x);
 }
+#endif /* DISABLE_FLOAT_API */
 
 #endif /* FLOAT_CAST_H */

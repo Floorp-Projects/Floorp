@@ -6,7 +6,7 @@ FORCE_STATIC_LIB= 1
 
 DEFINES += \
   -DOPUS_BUILD \
-  -DOPUS_VERSION='"draft-11-mozilla"' \
+  -DOPUS_VERSION='"v1.1-beta-23-gf2446c2-mozilla"' \
   -DUSE_ALLOCA \
   -Drestrict= \
   $(NULL)
@@ -62,5 +62,6 @@ CSRCS += $(notdir $(SILK_SOURCES_FIXED))
 else
 LOCAL_INCLUDES += -I$(srcdir)/silk/float
 VPATH += $(srcdir)/silk/float
-CSRCS += $(notdir $(SILK_SOURCES_FLOAT))
+CSRCS += $(notdir $(SILK_SOURCES_FLOAT)) \
+         $(notdir $(OPUS_SOURCES_FLOAT))
 endif

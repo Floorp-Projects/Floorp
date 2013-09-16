@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -34,6 +30,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #include "main.h"
+#include "stack_alloc.h"
 #include "PLC.h"
 
 #define NB_ATT 2
@@ -49,7 +46,7 @@ static inline void silk_PLC_update(
 static inline void silk_PLC_conceal(
     silk_decoder_state                  *psDec,             /* I/O Decoder state        */
     silk_decoder_control                *psDecCtrl,         /* I/O Decoder control      */
-    opus_int16                          signal[]            /* O LPC residual signal    */
+    opus_int16                          frame[]             /* O LPC residual signal    */
 );
 
 
@@ -182,12 +179,17 @@ static inline void silk_PLC_conceal(
     opus_int16 rand_scale_Q14;
     opus_int16 *B_Q14, *exc_buf_ptr;
     opus_int32 *sLPC_Q14_ptr;
-    opus_int16 exc_buf[ 2 * MAX_SUB_FRAME_LENGTH ];
+    VARDECL( opus_int16, exc_buf );
     opus_int16 A_Q12[ MAX_LPC_ORDER ];
-    opus_int16 sLTP[ MAX_FRAME_LENGTH ];
-    opus_int32 sLTP_Q14[ 2 * MAX_FRAME_LENGTH ];
+    VARDECL( opus_int16, sLTP );
+    VARDECL( opus_int32, sLTP_Q14 );
     silk_PLC_struct *psPLC = &psDec->sPLC;
     opus_int32 prevGain_Q10[2];
+    SAVE_STACK;
+
+    ALLOC( exc_buf, 2*psPLC->subfr_length, opus_int16 );
+    ALLOC( sLTP, psDec->ltp_mem_length, opus_int16 );
+    ALLOC( sLTP_Q14, psDec->ltp_mem_length + psDec->frame_length, opus_int32 );
 
     prevGain_Q10[0] = silk_RSHIFT( psPLC->prevGain_Q16[ 0 ], 6);
     prevGain_Q10[1] = silk_RSHIFT( psPLC->prevGain_Q16[ 1 ], 6);
@@ -253,8 +255,8 @@ static inline void silk_PLC_conceal(
 
             invGain_Q30 = silk_LPC_inverse_pred_gain( psPLC->prevLPC_Q12, psDec->LPC_order );
 
-            down_scale_Q30 = silk_min_32( silk_RSHIFT( 1 << 30, LOG2_INV_LPC_GAIN_HIGH_THRES ), invGain_Q30 );
-            down_scale_Q30 = silk_max_32( silk_RSHIFT( 1 << 30, LOG2_INV_LPC_GAIN_LOW_THRES ), down_scale_Q30 );
+            down_scale_Q30 = silk_min_32( silk_RSHIFT( (opus_int32)1 << 30, LOG2_INV_LPC_GAIN_HIGH_THRES ), invGain_Q30 );
+            down_scale_Q30 = silk_max_32( silk_RSHIFT( (opus_int32)1 << 30, LOG2_INV_LPC_GAIN_LOW_THRES ), down_scale_Q30 );
             down_scale_Q30 = silk_LSHIFT( down_scale_Q30, LOG2_INV_LPC_GAIN_HIGH_THRES );
 
             rand_Gain_Q15 = silk_RSHIFT( silk_SMULWB( down_scale_Q30, rand_Gain_Q15 ), 14 );
@@ -358,9 +360,10 @@ static inline void silk_PLC_conceal(
     for( i = 0; i < MAX_NB_SUBFR; i++ ) {
         psDecCtrl->pitchL[ i ] = lag;
     }
+    RESTORE_STACK;
 }
 
-/* Glues concealed frames with new good recieved frames */
+/* Glues concealed frames with new good received frames */
 void silk_PLC_glue_frames(
     silk_decoder_state                  *psDec,             /* I/O decoder state        */
     opus_int16                          frame[],            /* I/O signal               */
@@ -402,14 +405,14 @@ void silk_PLC_glue_frames(
                 frac_Q24 = silk_DIV32( psPLC->conc_energy, silk_max( energy, 1 ) );
 
                 gain_Q16 = silk_LSHIFT( silk_SQRT_APPROX( frac_Q24 ), 4 );
-                slope_Q16 = silk_DIV32_16( ( 1 << 16 ) - gain_Q16, length );
+                slope_Q16 = silk_DIV32_16( ( (opus_int32)1 << 16 ) - gain_Q16, length );
                 /* Make slope 4x steeper to avoid missing onsets after DTX */
                 slope_Q16 = silk_LSHIFT( slope_Q16, 2 );
 
                 for( i = 0; i < length; i++ ) {
                     frame[ i ] = silk_SMULWB( gain_Q16, frame[ i ] );
                     gain_Q16 += slope_Q16;
-                    if( gain_Q16 > 1 << 16 ) {
+                    if( gain_Q16 > (opus_int32)1 << 16 ) {
                         break;
                     }
                 }
