@@ -1777,7 +1777,7 @@ Element::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
                                         bool* aDefer)
 {
   *aDefer = true;
-  return GetListenerManager(true);
+  return ListenerManager();
 }
 
 Element::nsAttrInfo

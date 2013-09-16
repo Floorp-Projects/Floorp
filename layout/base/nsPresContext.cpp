@@ -2206,7 +2206,7 @@ MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
     return false;
 
   nsEventListenerManager* manager = nullptr;
-  if ((manager = parentTarget->GetListenerManager(false)) &&
+  if ((manager = parentTarget->GetExistingListenerManager()) &&
       manager->MayHavePaintEventListener()) {
     return true;
   }
@@ -2234,7 +2234,7 @@ MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
   EventTarget* tabChildGlobal;
   return root &&
          (tabChildGlobal = root->GetParentTarget()) &&
-         (manager = tabChildGlobal->GetListenerManager(false)) &&
+         (manager = tabChildGlobal->GetExistingListenerManager()) &&
          manager->MayHavePaintEventListener();
 }
 

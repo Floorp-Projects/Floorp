@@ -866,7 +866,7 @@ nsDocShellTreeOwner::AddChromeListeners()
   nsCOMPtr<EventTarget> target;
   GetDOMEventTarget(mWebBrowser, getter_AddRefs(target));
 
-  nsEventListenerManager* elmP = target->GetListenerManager(true);
+  nsEventListenerManager* elmP = target->ListenerManager();
   if (elmP) {
     elmP->AddEventListenerByType(this, NS_LITERAL_STRING("dragover"),
                                  dom::TrustedEventsAtSystemGroupBubble());
@@ -896,7 +896,7 @@ nsDocShellTreeOwner::RemoveChromeListeners()
   if (!piTarget)
     return NS_OK;
 
-  nsEventListenerManager* elmP = piTarget->GetListenerManager(true);
+  nsEventListenerManager* elmP = piTarget->ListenerManager();
   if (elmP)
   {
     elmP->RemoveEventListenerByType(this, NS_LITERAL_STRING("dragover"),
