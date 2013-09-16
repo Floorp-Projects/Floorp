@@ -12,10 +12,11 @@ interface nsIAudioChannelAgentCallback : nsISupports
    *
    * @param canPlay
    *        Callback from agent to notify component of the playable status
-   *        of the channel. If canPlay is false, component SHOULD stop playing
-   *        media associated with this channel as soon as possible.
+   *        of the channel. If canPlay is muted state, component SHOULD stop
+   *        playing media associated with this channel as soon as possible. if
+   *        it is faded state then the volume of media should be reduced.
    */
-  void canPlayChanged(in boolean canPlay);
+  void canPlayChanged(in long canPlay);
 };
 
 /**
@@ -31,7 +32,7 @@ interface nsIAudioChannelAgentCallback : nsISupports
  *   1. Changes to the playable status of this channel.
  */
 
-[scriptable, uuid(f012a9b7-6431-4915-a4ac-4ba7d833e28e)]
+[scriptable, uuid(7a4c0b06-63a4-11e2-8c1b-10bf48d64bd4)]
 interface nsIAudioChannelAgent : nsISupports
 {
   const long AUDIO_AGENT_CHANNEL_NORMAL             = 0;
@@ -43,6 +44,10 @@ interface nsIAudioChannelAgent : nsISupports
   const long AUDIO_AGENT_CHANNEL_PUBLICNOTIFICATION = 6;
 
   const long AUDIO_AGENT_CHANNEL_ERROR              = 1000;
+
+  const long AUDIO_AGENT_STATE_NORMAL               = 0;
+  const long AUDIO_AGENT_STATE_MUTED                = 1;
+  const long AUDIO_AGENT_STATE_FADED                = 2;
 
   /**
    * Before init() is called, this returns AUDIO_AGENT_CHANNEL_ERROR.
@@ -80,12 +85,14 @@ interface nsIAudioChannelAgent : nsISupports
    *
    *
    * @return
-   *    true: the agent has registered with audio channel service and the
-   *          component should start playback.
-   *    false: the agent has registered with audio channel service but the
-   *          component should not start playback.
+   *    normal state: the agent has registered with audio channel service and
+   *          the component should start playback.
+   *    muted state: the agent has registered with audio channel service but
+   *          the component should not start playback.
+   *    faded state: the agent has registered with audio channel service the
+   *          component should start playback as well as reducing the volume.
    */
-  boolean startPlaying();
+  long startPlaying();
 
   /**
    * Notify the agent we no longer want to play.
