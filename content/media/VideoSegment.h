@@ -72,13 +72,11 @@ struct VideoChunk {
   {
     mDuration = aDuration;
     mFrame.SetNull();
-    mTimeStamp = TimeStamp();
   }
   void SetForceBlack(bool aForceBlack) { mFrame.SetForceBlack(aForceBlack); }
 
   TrackTicks mDuration;
   VideoFrame mFrame;
-  mozilla::TimeStamp mTimeStamp;
 };
 
 class VideoSegment : public MediaSegmentBase<VideoSegment, VideoChunk> {
