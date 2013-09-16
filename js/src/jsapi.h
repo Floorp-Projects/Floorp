@@ -3249,6 +3249,7 @@ class JS_PUBLIC_API(CompileOptions)
     bool versionSet;
     bool utf8;
     const char *filename;
+    const jschar *sourceMapURL;
     unsigned lineno;
     unsigned column;
     Handle<JSObject*> element;
@@ -3275,6 +3276,7 @@ class JS_PUBLIC_API(CompileOptions)
     CompileOptions &setFileAndLine(const char *f, unsigned l) {
         filename = f; lineno = l; return *this;
     }
+    CompileOptions &setSourceMapURL(const jschar *s) { sourceMapURL = s; return *this; }
     CompileOptions &setColumn(unsigned c) { column = c; return *this; }
     CompileOptions &setElement(Handle<JSObject*> e) { element = e; return *this; }
     CompileOptions &setCompileAndGo(bool cng) { compileAndGo = cng; return *this; }

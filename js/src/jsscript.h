@@ -304,7 +304,7 @@ class ScriptSource
     uint32_t length_;
     uint32_t compressedLength_;
     char *filename_;
-    jschar *sourceMap_;
+    jschar *sourceMapURL_;
     JSPrincipals *originPrincipals_;
 
     // True if we can call JSRuntime::sourceHook to load the source on
@@ -320,7 +320,7 @@ class ScriptSource
         length_(0),
         compressedLength_(0),
         filename_(NULL),
-        sourceMap_(NULL),
+        sourceMapURL_(NULL),
         originPrincipals_(originPrincipals),
         sourceRetrievable_(false),
         argumentsNotIncluded_(false),
@@ -368,9 +368,9 @@ class ScriptSource
     }
 
     // Source maps
-    bool setSourceMap(ExclusiveContext *cx, jschar *sourceMapURL);
-    const jschar *sourceMap();
-    bool hasSourceMap() const { return sourceMap_ != NULL; }
+    bool setSourceMapURL(ExclusiveContext *cx, const jschar *sourceMapURL);
+    const jschar *sourceMapURL();
+    bool hasSourceMapURL() const { return sourceMapURL_ != NULL; }
 
     JSPrincipals *originPrincipals() const { return originPrincipals_; }
 

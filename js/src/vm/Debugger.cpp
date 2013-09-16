@@ -2900,8 +2900,8 @@ DebuggerScript_getSourceMapUrl(JSContext *cx, unsigned argc, Value *vp)
     ScriptSource *source = script->scriptSource();
     JS_ASSERT(source);
 
-    if (source->hasSourceMap()) {
-        JSString *str = JS_NewUCStringCopyZ(cx, source->sourceMap());
+    if (source->hasSourceMapURL()) {
+        JSString *str = JS_NewUCStringCopyZ(cx, source->sourceMapURL());
         if (!str)
             return false;
         args.rval().setString(str);
