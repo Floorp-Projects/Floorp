@@ -54,8 +54,9 @@ using namespace mozilla::dom;
 using namespace mozilla::dom::indexedDB::ipc;
 using mozilla::dom::quota::FileOutputStream;
 using mozilla::ErrorResult;
+using mozilla::fallible_t;
 
-static const mozilla::fallible_t fallible;
+static const fallible_t fallible = new fallible_t();
 
 BEGIN_INDEXEDDB_NAMESPACE
 
