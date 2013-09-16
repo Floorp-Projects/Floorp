@@ -686,6 +686,50 @@ InplaceEditor.prototype = {
   },
 
   /**
+   * Cycle through the autocompletion suggestions in the popup.
+   *
+   * @param {boolean} aReverse
+   *        true to select previous item from the popup.
+   * @param {boolean} aNoSelect
+   *        true to not select the text after selecting the newly selectedItem
+   *        from the popup.
+   */
+  _cycleCSSSuggestion:
+  function InplaceEditor_cycleCSSSuggestion(aReverse, aNoSelect)
+  {
+    let {label, preLabel} = this.popup.selectedItem;
+    if (aReverse) {
+      this.popup.selectPreviousItem();
+    } else {
+      this.popup.selectNextItem();
+    }
+    this._selectedIndex = this.popup.selectedIndex;
+    let input = this.input;
+    let pre = "";
+    if (input.selectionStart < input.selectionEnd) {
+      pre = input.value.slice(0, input.selectionStart);
+    }
+    else {
+      pre = input.value.slice(0, input.selectionStart - label.length +
+                                 preLabel.length);
+    }
+    let post = input.value.slice(input.selectionEnd, input.value.length);
+    let item = this.popup.selectedItem;
+    let toComplete = item.label.slice(item.preLabel.length);
+    input.value = pre + toComplete + post;
+    if (!aNoSelect) {
+      input.setSelectionRange(pre.length, pre.length + toComplete.length);
+    }
+    else {
+      input.setSelectionRange(pre.length + toComplete.length,
+                              pre.length + toComplete.length);
+    }
+    this._updateSize();
+    // This emit is mainly for the purpose of making the test flow simpler.
+    this.emit("after-suggest");
+  },
+
+  /**
    * Call the client's done handler and clear out.
    */
   _apply: function InplaceEditor_apply(aEvent)
@@ -709,6 +753,45 @@ InplaceEditor.prototype = {
    */
   _onBlur: function InplaceEditor_onBlur(aEvent, aDoNotClear)
   {
+    if (aEvent && this.popup && this.popup.isOpen &&
+        this.contentType == CONTENT_TYPES.CSS_MIXED) {
+      let label, preLabel;
+      if (this._selectedIndex === undefined) {
+        ({label, preLabel}) = this.popup.getItemAtIndex(this.popup.selectedIndex);
+      }
+      else {
+        ({label, preLabel}) = this.popup.getItemAtIndex(this._selectedIndex);
+      }
+      let input = this.input;
+      let pre = "";
+      if (input.selectionStart < input.selectionEnd) {
+        pre = input.value.slice(0, input.selectionStart);
+      }
+      else {
+        pre = input.value.slice(0, input.selectionStart - label.length +
+                                   preLabel.length);
+      }
+      let post = input.value.slice(input.selectionEnd, input.value.length);
+      let item = this.popup.selectedItem;
+      this._selectedIndex = this.popup.selectedIndex;
+      let toComplete = item.label.slice(item.preLabel.length);
+      input.value = pre + toComplete + post;
+      input.setSelectionRange(pre.length + toComplete.length,
+                              pre.length + toComplete.length);
+      this._updateSize();
+      // Wait for the popup to hide and then focus input async otherwise it does
+      // not work.
+      let onPopupHidden = () => {
+        this.popup._panel.removeEventListener("popuphidden", onPopupHidden);
+        this.doc.defaultView.setTimeout(()=> {
+          input.focus();
+          this.emit("after-suggest");
+        }, 0);
+      };
+      this.popup._panel.addEventListener("popuphidden", onPopupHidden);
+      this.popup.hidePopup();
+      return;
+    }
     this._apply();
     if (!aDoNotClear) {
       this._clear();
@@ -754,22 +837,7 @@ InplaceEditor.prototype = {
     } else if (increment && this.popup && this.popup.isOpen) {
       cycling = true;
       prevent = true;
-      if (increment > 0) {
-        this.popup.selectPreviousItem();
-      } else {
-        this.popup.selectNextItem();
-      }
-      let input = this.input;
-      let pre = input.value.slice(0, input.selectionStart);
-      let post = input.value.slice(input.selectionEnd, input.value.length);
-      let item = this.popup.selectedItem;
-      let toComplete = item.label.slice(item.preLabel.length);
-      input.value = pre + toComplete + post;
-      input.setSelectionRange(pre.length, pre.length + toComplete.length);
-      this._updateSize();
-
-      // This emit is mainly for the purpose of making the test flow simpler.
-      this.emit("after-suggest");
+      this._cycleCSSSuggestion(increment > 0);
       this._doValidation();
     }
 
@@ -806,6 +874,21 @@ InplaceEditor.prototype = {
       this._preventSuggestions = true;
 
       let input = this.input;
+
+      if (aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_TAB &&
+          this.contentType == CONTENT_TYPES.CSS_MIXED) {
+        if (this.popup && input.selectionStart < input.selectionEnd) {
+          aEvent.preventDefault();
+          input.setSelectionRange(input.selectionEnd, input.selectionEnd);
+          this.emit("after-suggest");
+          return;
+        }
+        else if (this.popup && this.popup.isOpen) {
+          aEvent.preventDefault();
+          this._cycleCSSSuggestion(aEvent.shiftKey, true);
+          return;
+        }
+      }
 
       this._apply();
 

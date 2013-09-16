@@ -29,6 +29,7 @@ loader.lazyGetter(this, "Messages",
 loader.lazyImporter(this, "ObjectClient", "resource://gre/modules/devtools/dbg-client.jsm");
 loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/VariablesView.jsm");
 loader.lazyImporter(this, "VariablesViewController", "resource:///modules/devtools/VariablesViewController.jsm");
+loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
@@ -490,7 +491,8 @@ WebConsoleFrame.prototype = {
     this._initFilterButtons();
     this._changeClearModifier();
 
-    let fontSize = Services.prefs.getIntPref("devtools.webconsole.fontSize");
+    let fontSize = this.owner._browserConsole ?
+                   Services.prefs.getIntPref("devtools.webconsole.fontSize") : 0;
 
     if (fontSize != 0) {
       fontSize = Math.max(MIN_FONT_SIZE, fontSize);
@@ -498,6 +500,13 @@ WebConsoleFrame.prototype = {
       this.outputNode.style.fontSize = fontSize + "px";
       this.completeNode.style.fontSize = fontSize + "px";
       this.inputNode.style.fontSize = fontSize + "px";
+    }
+
+    if (this.owner._browserConsole) {
+      for (let id of ["Enlarge", "Reduce", "Reset"]) {
+        this.document.getElementById("cmd_fullZoom" + id)
+                     .removeAttribute("disabled");
+      }
     }
 
     let updateSaveBodiesPrefUI = (aElement) => {
@@ -946,7 +955,9 @@ WebConsoleFrame.prototype = {
     let occurrences = parseInt(repeatNode.getAttribute("value")) + 1;
     repeatNode.setAttribute("value", occurrences);
     repeatNode.textContent = occurrences;
-    repeatNode.title = l10n.getFormatStr("messageRepeats.tooltip", [occurrences]);
+    let str = l10n.getStr("messageRepeats.tooltip2");
+    repeatNode.title = PluralForm.get(occurrences, str)
+                       .replace("#1", occurrences);
   },
 
   /**
@@ -4595,12 +4606,12 @@ CommandController.prototype = {
         return selectedItem && "url" in selectedItem;
       }
       case "consoleCmd_clearOutput":
-      case "cmd_fontSizeEnlarge":
-      case "cmd_fontSizeReduce":
-      case "cmd_fontSizeReset":
       case "cmd_selectAll":
       case "cmd_find":
         return true;
+      case "cmd_fontSizeEnlarge":
+      case "cmd_fontSizeReduce":
+      case "cmd_fontSizeReset":
       case "cmd_close":
         return this.owner.owner._browserConsole;
     }

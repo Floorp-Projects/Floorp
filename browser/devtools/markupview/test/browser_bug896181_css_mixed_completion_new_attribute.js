@@ -43,7 +43,10 @@ function test() {
     ['"', 'style="', 7, 7, false],
     ['d', 'style="direction', 8, 16, true],
     ['VK_DOWN', 'style="display', 8, 14, true],
-    ['VK_RIGHT', 'style="display', 14, 14, false],
+    ['VK_TAB', 'style="display', 14, 14, true],
+    ['VK_TAB', 'style="dominant-baseline', 24, 24, true],
+    ['VK_TAB', 'style="direction', 16, 16, true],
+    ['click_1', 'style="display', 14, 14, false],
     [':', 'style="display:', 15, 15, false],
     ['n', 'style="display:none', 16, 19, false],
     ['VK_BACK_SPACE', 'style="display:n', 16, 16, false],
@@ -100,6 +103,13 @@ function test() {
         info("inside event listener");
         checkState();
       }) 
+    }
+    else if (/click_[0-9]/.test(key)) {
+      editor.once("after-suggest", checkState);
+      let index = +key.split("_")[1];
+      editor.popup._list.childNodes[index].click();
+      editor.input.blur();
+      return;
     }
     else {
       editor.once("after-suggest", checkState);
