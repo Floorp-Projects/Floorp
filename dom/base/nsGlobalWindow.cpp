@@ -11510,40 +11510,57 @@ nsGlobalWindow::DisableTimeChangeNotifications()
   nsSystemTimeChangeObserver::RemoveWindowListener(this);
 }
 
-static size_t
-SizeOfEventTargetObjectsEntryExcludingThisFun(
+static PLDHashOperator
+CollectSizeAndListenerCount(
   nsPtrHashKey<nsDOMEventTargetHelper> *aEntry,
-  MallocSizeOf aMallocSizeOf,
   void *arg)
 {
-  nsISupports *supports = aEntry->GetKey();
-  nsCOMPtr<nsISizeOfEventTarget> iface = do_QueryInterface(supports);
-  return iface ? iface->SizeOfEventTargetIncludingThis(aMallocSizeOf) : 0;
+  nsWindowSizes* windowSizes = static_cast<nsWindowSizes*>(arg);
+
+  nsDOMEventTargetHelper* et = aEntry->GetKey();
+
+  if (nsCOMPtr<nsISizeOfEventTarget> iSizeOf = do_QueryObject(et)) {
+    windowSizes->mDOMEventTargetsSize +=
+      iSizeOf->SizeOfEventTargetIncludingThis(windowSizes->mMallocSizeOf);
+  }
+
+  if (nsEventListenerManager* elm = et->GetExistingListenerManager()) {
+    windowSizes->mDOMEventListenersCount += elm->ListenerCount();
+  }
+
+  return PL_DHASH_NEXT;
 }
 
 void
 nsGlobalWindow::SizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
 {
-  aWindowSizes->mDOMOther += aWindowSizes->mMallocSizeOf(this);
+  aWindowSizes->mDOMOtherSize += aWindowSizes->mMallocSizeOf(this);
 
   if (IsInnerWindow()) {
     if (nsEventListenerManager* elm = GetExistingListenerManager()) {
-      aWindowSizes->mDOMOther +=
+      aWindowSizes->mDOMOtherSize +=
         elm->SizeOfIncludingThis(aWindowSizes->mMallocSizeOf);
+      aWindowSizes->mDOMEventListenersCount +=
+        elm->ListenerCount();
     }
     if (mDoc) {
       mDoc->DocSizeOfIncludingThis(aWindowSizes);
     }
   }
 
-  aWindowSizes->mDOMOther +=
+  aWindowSizes->mDOMOtherSize +=
     mNavigator ?
       mNavigator->SizeOfIncludingThis(aWindowSizes->mMallocSizeOf) : 0;
 
-  aWindowSizes->mDOMEventTargets +=
-    mEventTargetObjects.SizeOfExcludingThis(
-      SizeOfEventTargetObjectsEntryExcludingThisFun,
-      aWindowSizes->mMallocSizeOf);
+  // The things pointed to by the entries will be measured below, so we
+  // use nullptr for the callback here.
+  aWindowSizes->mDOMEventTargetsSize +=
+    mEventTargetObjects.SizeOfExcludingThis(nullptr,
+                                            aWindowSizes->mMallocSizeOf);
+  aWindowSizes->mDOMEventTargetsCount +=
+    const_cast<nsTHashtable<nsPtrHashKey<nsDOMEventTargetHelper> >*>
+      (&mEventTargetObjects)->EnumerateEntries(CollectSizeAndListenerCount,
+                                               aWindowSizes);
 }
 
 
