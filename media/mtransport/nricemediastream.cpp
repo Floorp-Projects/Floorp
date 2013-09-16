@@ -120,6 +120,7 @@ static bool ToNrIceCandidate(const nr_ice_candidate& candc,
 // defn of nr_ice_candidate but we pass by reference.
 static NrIceCandidate* MakeNrIceCandidate(const nr_ice_candidate& candc) {
   ScopedDeletePtr<NrIceCandidate> out(new NrIceCandidate());
+
   if (!ToNrIceCandidate(candc, out)) {
     return nullptr;
   }
@@ -263,21 +264,21 @@ void NrIceMediaStream::EmitAllCandidates() {
 }
 
 nsresult NrIceMediaStream::GetCandidatePairs(std::vector<NrIceCandidatePair>*
-                                             outPairs) const {
-  MOZ_ASSERT(outPairs);
+                                             out_pairs) const {
+  MOZ_ASSERT(out_pairs);
 
   // Get the check_list on the peer stream (this is where the check_list
   // actually lives, not in stream_)
-  nr_ice_media_stream* peerStream = nullptr;
-  int r = nr_ice_peer_ctx_find_pstream(ctx_->peer(), stream_, &peerStream);
+  nr_ice_media_stream* peer_stream;
+  int r = nr_ice_peer_ctx_find_pstream(ctx_->peer(), stream_, &peer_stream);
   if (r != 0) {
     return NS_ERROR_FAILURE;
   }
 
   nr_ice_cand_pair *p1;
-  outPairs->clear();
+  out_pairs->clear();
 
-  TAILQ_FOREACH(p1, &peerStream->check_list, entry) {
+  TAILQ_FOREACH(p1, &peer_stream->check_list, entry) {
     MOZ_ASSERT(p1);
     MOZ_ASSERT(p1->local);
     MOZ_ASSERT(p1->remote);
@@ -303,12 +304,12 @@ nsresult NrIceMediaStream::GetCandidatePairs(std::vector<NrIceCandidatePair>*
         pair.state = NrIceCandidatePair::State::STATE_CANCELLED;
         break;
       default:
-        return NS_ERROR_FAILURE;
+        MOZ_ASSERT(0);
     }
 
     pair.priority = p1->priority;
-    pair.nominated = p1->peer_nominated != 0 || p1->nominated != 0;
-    pair.selected = p1->local->component != nullptr &&
+    pair.nominated = p1->peer_nominated || p1->nominated;
+    pair.selected = p1->local->component &&
                     p1->local->component->active == p1;
 
     if (!ToNrIceCandidate(*(p1->local), &pair.local) ||
@@ -316,7 +317,7 @@ nsresult NrIceMediaStream::GetCandidatePairs(std::vector<NrIceCandidatePair>*
       return NS_ERROR_FAILURE;
     }
 
-    outPairs->push_back(pair);
+    out_pairs->push_back(pair);
   }
 
   return NS_OK;
