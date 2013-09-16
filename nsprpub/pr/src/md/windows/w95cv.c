@@ -18,6 +18,8 @@
  */
  
 #include "primpl.h"
+#include <stdio.h>
+#include <windows.h>
 
 /*
  * AddThreadToCVWaitQueueInternal --
@@ -150,6 +152,10 @@ md_UnlockAndPostNotifies(
                 thred->md.prev = thred->md.next = NULL;
 
                 rv = ReleaseSemaphore(thred->md.blocked_sema, 1, NULL);
+                if (!rv) {
+                    fprintf(stderr, "ReleaseSemaphore failed, handle: %x, last error: %x\n",
+                            (void*)thred->md.blocked_sema, GetLastError());
+                }
                 PR_ASSERT(rv != 0);
                 thred = next;
             }
@@ -246,6 +252,10 @@ void _PR_MD_WAIT_CV(_MDCVar *cv, _MDLock *lock, PRIntervalTime timeout )
 
     /* Wait for notification or timeout; don't really care which */
     rv = WaitForSingleObject(thred->md.blocked_sema, msecs);
+    if (rv == WAIT_FAILED) {
+        fprintf(stderr, "WaitForSingleObject failed, handle: %x, last error: %x\n",
+                (void*)thred->md.blocked_sema, GetLastError());
+    }
 
     EnterCriticalSection(&(lock->mutex));
 
