@@ -413,6 +413,14 @@ opensl_stream_get_position(cubeb_stream * stm, uint64_t * position)
   return CUBEB_OK;
 }
 
+int
+opensl_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
+{
+  *latency = NBUFS * stm->queuebuf_len;
+
+  return CUBEB_OK;
+}
+
 static struct cubeb_ops const opensl_ops = {
   .init = opensl_init,
   .get_backend_id = opensl_get_backend_id,
@@ -422,5 +430,6 @@ static struct cubeb_ops const opensl_ops = {
   .stream_destroy = opensl_stream_destroy,
   .stream_start = opensl_stream_start,
   .stream_stop = opensl_stream_stop,
-  .stream_get_position = opensl_stream_get_position
+  .stream_get_position = opensl_stream_get_position,
+  .stream_get_latency = opensl_stream_get_latency
 };

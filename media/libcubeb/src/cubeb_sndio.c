@@ -314,6 +314,15 @@ sndio_stream_set_volume(cubeb_stream *s, float volume)
   return CUBEB_OK;
 }
 
+int
+sndio_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
+{
+  // http://www.openbsd.org/cgi-bin/man.cgi?query=sio_open
+  // in the "Measuring the latency and buffers usage" paragraph.
+  *latency = stm->wrpos - stm->rdpos;
+  return CUBEB_OK;
+}
+
 static struct cubeb_ops const sndio_ops = {
   .init = sndio_init,
   .get_backend_id = sndio_get_backend_id,
@@ -322,5 +331,6 @@ static struct cubeb_ops const sndio_ops = {
   .stream_destroy = sndio_stream_destroy,
   .stream_start = sndio_stream_start,
   .stream_stop = sndio_stream_stop,
-  .stream_get_position = sndio_stream_get_position
+  .stream_get_position = sndio_stream_get_position,
+  .stream_get_latency = sndio_stream_get_latency
 };
