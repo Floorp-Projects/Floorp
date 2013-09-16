@@ -17,9 +17,6 @@
 var shell;
 var shellType;
 var failureRegExp = new RegExp("^FAILURE");
-var origBlockDisplay;
-var origBlockActive;
-
 
 window.addEventListener("message", onMessageReceived, false);
 
@@ -50,7 +47,7 @@ function onMessageReceived(event)
 
         case "window":
           shell.close();
-          window.setTimeout(function() {endTest();}, 0);
+          window.setTimeout(function() {SimpleTest.finish();}, 0);
           break;
       }
       break;
@@ -61,23 +58,14 @@ function onMessageReceived(event)
   }
 }
 
-function startTest()
-{
-  origBlockDisplay = SpecialPowers.getBoolPref("security.mixed_content.block_display_content");
-  origBlockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
-  SpecialPowers.setBoolPref("security.mixed_content.block_display_content", false);
-  SpecialPowers.setBoolPref("security.mixed_content.block_active_content", false);
+function startTest() {
+  SpecialPowers.pushPrefEnv({"set": [["security.mixed_content.block_display_content", false], ["security.mixed_content.block_active_content", false]]}, test1);
+}
 
+function test1() {
   shellType = "frame";
   shell = frame;
   shell.location = "http://example.org:80/tests/dom/tests/mochitest/localstorage/frameReplace.html?init&" + shellType;
-}
-
-function endTest()
-{
-  SpecialPowers.setBoolPref("security.mixed_content.block_display_content", origBlockDisplay);
-  SpecialPowers.setBoolPref("security.mixed_content.block_active_content", origBlockActive);
-  SimpleTest.finish();
 }
 
 SimpleTest.waitForExplicitFinish();
