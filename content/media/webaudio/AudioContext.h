@@ -205,7 +205,7 @@ public:
                        const Optional<OwningNonNull<DecodeErrorCallback> >& aFailureCallback);
 
   // OfflineAudioContext methods
-  void StartRendering();
+  void StartRendering(ErrorResult& aRv);
   IMPL_EVENT_HANDLER(complete)
 
   bool IsOffline() const { return mIsOffline; }
@@ -251,6 +251,7 @@ private:
   // Number of channels passed in the OfflineAudioContext ctor.
   uint32_t mNumberOfChannels;
   bool mIsOffline;
+  bool mIsStarted;
 };
 
 }

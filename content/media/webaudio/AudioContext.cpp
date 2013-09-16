@@ -59,6 +59,7 @@ AudioContext::AudioContext(nsPIDOMWindow* aWindow,
                                           aLength, aSampleRate))
   , mNumberOfChannels(aNumberOfChannels)
   , mIsOffline(aIsOffline)
+  , mIsStarted(!aIsOffline)
 {
   // Actually play audio
   mDestination->Stream()->AddAudioOutput(&gWebAudioOutputKey);
@@ -595,10 +596,15 @@ AudioContext::GetJSContext() const
 }
 
 void
-AudioContext::StartRendering()
+AudioContext::StartRendering(ErrorResult& aRv)
 {
   MOZ_ASSERT(mIsOffline, "This should only be called on OfflineAudioContext");
+  if (mIsStarted) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
 
+  mIsStarted = true;
   mDestination->StartRendering();
 }
 
