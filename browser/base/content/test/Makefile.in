@@ -57,6 +57,7 @@ endif
 
 MOCHITEST_BROWSER_FILES = \
                  head.js \
+                 accounts_testRemoteCommands.html \
                  alltabslistener.html \
                  app_bug575561.html \
                  app_subframe_bug575561.html \
@@ -65,6 +66,7 @@ MOCHITEST_BROWSER_FILES = \
                  blockPluginHard.xml \
                  blockPluginVulnerableNoUpdate.xml \
                  blockPluginVulnerableUpdatable.xml \
+                 browser_aboutAccounts.js \
                  browser_aboutHealthReport.js \
                  browser_aboutHome.js \
                  browser_aboutSyncProgress.js \

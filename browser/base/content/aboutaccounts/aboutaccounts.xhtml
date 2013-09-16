@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+  %brandDTD;
+  <!ENTITY % aboutAccountsDTD SYSTEM "chrome://browser/locale/aboutAccounts.dtd">
+  %aboutAccountsDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+   <title>&aboutAccounts.pageTitle;</title>
+   <link rel="icon" type="image/png" id="favicon"
+         href="chrome://branding/content/icon32.png"/>
+   <link rel="stylesheet"
+     href="chrome://browser/content/aboutaccounts/aboutaccounts.css"
+     type="text/css" />
+  </head>
+  <body>
+    <iframe mozframetype="content" id="remote" />
+    <script type="text/javascript;version=1.8"
+      src="chrome://browser/content/aboutaccounts/aboutaccounts.js" />
+  </body>
+</html>

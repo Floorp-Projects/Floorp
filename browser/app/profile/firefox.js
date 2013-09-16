@@ -1305,3 +1305,7 @@ pref("geo.wifi.uri", "https://www.googleapis.com/geolocation/v1/geolocate?key=%G
 // Necko IPC security checks only needed for app isolation for cookies/cache/etc:
 // currently irrelevant for desktop e10s
 pref("network.disable.ipc.security", true);
+
+// The URL where remote content that composes the UI for Firefox Accounts should
+// be fetched.
+pref("firefox.accounts.remoteUrl", "http://accounts.dev.lcip.org/flow");
