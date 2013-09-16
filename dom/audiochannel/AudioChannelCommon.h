@@ -24,6 +24,12 @@ enum AudioChannelType {
   AUDIO_CHANNEL_LAST
 };
 
+enum AudioChannelState {
+  AUDIO_CHANNEL_STATE_NORMAL = 0,
+  AUDIO_CHANNEL_STATE_MUTED,
+  AUDIO_CHANNEL_STATE_FADED,
+  AUDIO_CHANNEL_STATE_LAST
+};
 } // namespace dom
 } // namespace mozilla
 

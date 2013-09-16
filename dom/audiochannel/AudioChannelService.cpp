@@ -98,8 +98,8 @@ AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
   MOZ_ASSERT(aType != AUDIO_CHANNEL_DEFAULT);
 
   AudioChannelAgentData* data = new AudioChannelAgentData(aType,
-                                                          true /* mElementHidden */,
-                                                          true /* mMuted */);
+                                true /* aElementHidden */,
+                                AUDIO_CHANNEL_STATE_MUTED /* aState */);
   mAgents.Put(aAgent, data);
   RegisterType(aType, CONTENT_PROCESS_ID_MAIN);
 }
@@ -203,27 +203,25 @@ AudioChannelService::UpdateChannelType(AudioChannelType aType,
   }
 }
 
-bool
-AudioChannelService::GetMuted(AudioChannelAgent* aAgent, bool aElementHidden)
+AudioChannelState
+AudioChannelService::GetState(AudioChannelAgent* aAgent, bool aElementHidden)
 {
   AudioChannelAgentData* data;
   if (!mAgents.Get(aAgent, &data)) {
-    return true;
+    return AUDIO_CHANNEL_STATE_MUTED;
   }
 
   bool oldElementHidden = data->mElementHidden;
   // Update visibility.
   data->mElementHidden = aElementHidden;
 
-  bool muted = GetMutedInternal(data->mType, CONTENT_PROCESS_ID_MAIN,
+  data->mState = GetStateInternal(data->mType, CONTENT_PROCESS_ID_MAIN,
                                 aElementHidden, oldElementHidden);
-  data->mMuted = muted;
-
-  return muted;
+  return data->mState;
 }
 
-bool
-AudioChannelService::GetMutedInternal(AudioChannelType aType, uint64_t aChildID,
+AudioChannelState
+AudioChannelService::GetStateInternal(AudioChannelType aType, uint64_t aChildID,
                                       bool aElementHidden, bool aElementWasHidden)
 {
   UpdateChannelType(aType, aChildID, aElementHidden, aElementWasHidden);
@@ -269,24 +267,64 @@ AudioChannelService::GetMutedInternal(AudioChannelType aType, uint64_t aChildID,
 
   // Let play any visible audio channel.
   if (!aElementHidden) {
-    return false;
+    if (CheckVolumeFadedCondition(newType, aElementHidden)) {
+      return AUDIO_CHANNEL_STATE_FADED;
+    }
+    return AUDIO_CHANNEL_STATE_NORMAL;
   }
-
-  bool muted = false;
 
   // We are not visible, maybe we have to mute.
   if (newType == AUDIO_CHANNEL_INT_NORMAL_HIDDEN ||
       (newType == AUDIO_CHANNEL_INT_CONTENT_HIDDEN &&
        !mActiveContentChildIDs.Contains(aChildID))) {
-    muted = true;
+    return AUDIO_CHANNEL_STATE_MUTED;
   }
 
-  if (!muted) {
+  // After checking the condition on normal & content channel, if the state
+  // is not on muted then checking other higher channels type here.
+  if (ChannelsActiveWithHigherPriorityThan(newType)) {
     MOZ_ASSERT(newType != AUDIO_CHANNEL_INT_NORMAL_HIDDEN);
-    muted = ChannelsActiveWithHigherPriorityThan(newType);
+    if (CheckVolumeFadedCondition(newType, aElementHidden)) {
+      return AUDIO_CHANNEL_STATE_FADED;
+    }
+    return AUDIO_CHANNEL_STATE_MUTED;
   }
 
-  return muted;
+  return AUDIO_CHANNEL_STATE_NORMAL;
+}
+
+bool
+AudioChannelService::CheckVolumeFadedCondition(AudioChannelInternalType aType,
+                                               bool aElementHidden)
+{
+  // Only normal & content channels are considered
+  if (aType > AUDIO_CHANNEL_INT_CONTENT_HIDDEN) {
+    return false;
+  }
+
+  // Consider that audio from notification is with short duration
+  // so just fade the volume not pause it
+  if (mChannelCounters[AUDIO_CHANNEL_INT_NOTIFICATION].IsEmpty() &&
+      mChannelCounters[AUDIO_CHANNEL_INT_NOTIFICATION_HIDDEN].IsEmpty()) {
+    return false;
+  }
+
+  // Since this element is on the foreground, it can be allowed to play always.
+  // So return true directly when there is any notification channel alive.
+  if (aElementHidden == false) {
+   return true;
+  }
+
+  // If element is on the background, it is possible paused by channels higher
+  // then notification.
+  for (int i = AUDIO_CHANNEL_INT_LAST - 1;
+    i != AUDIO_CHANNEL_INT_NOTIFICATION_HIDDEN; --i) {
+    if (!mChannelCounters[i].IsEmpty()) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 bool
@@ -476,7 +514,8 @@ AudioChannelService::Notify(nsITimer* aTimer)
 }
 
 bool
-AudioChannelService::ChannelsActiveWithHigherPriorityThan(AudioChannelInternalType aType)
+AudioChannelService::ChannelsActiveWithHigherPriorityThan(
+  AudioChannelInternalType aType)
 {
   for (int i = AUDIO_CHANNEL_INT_LAST - 1;
        i != AUDIO_CHANNEL_INT_CONTENT_HIDDEN; --i) {

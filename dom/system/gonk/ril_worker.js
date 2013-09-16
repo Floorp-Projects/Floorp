@@ -876,6 +876,7 @@ let RIL = {
       function onsuccess(contacts) {
         // Reuse 'options' to get 'requestId' and 'contactType'.
         options.contacts = contacts;
+        options.iccid = RIL.iccInfo.iccid;
         RIL.sendChromeMessage(options);
       }.bind(this),
       function onerror(errorMsg) {
@@ -906,6 +907,16 @@ let RIL = {
     if (!this.appType || !options.contact) {
       onerror(GECKO_ERROR_REQUEST_NOT_SUPPORTED);
       return;
+    }
+
+    let contact = options.contact;
+    let iccid = RIL.iccInfo.iccid;
+    if (contact.id.startsWith(iccid)) {
+      contact.recordId = contact.id.substring(iccid.length);
+    }
+
+    if (DEBUG) {
+      debug("Update ICC Contact " + JSON.stringify(contact));
     }
 
     // If contact has 'recordId' property, updates corresponding record.
@@ -2712,6 +2723,12 @@ let RIL = {
           destinationId: STK_DEVICE_ID_SIM
         };
         command.transactionId = 0;
+        break;
+      case STK_EVENT_TYPE_USER_ACTIVITY:
+        command.deviceId = {
+          sourceId: STK_DEVICE_ID_ME,
+          destinationId: STK_DEVICE_ID_SIM
+        };
         break;
       case STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE:
         command.deviceId = {
@@ -12470,6 +12487,7 @@ let ICCContactHelper = {
    * @param onerror       Callback to be called when error.
    */
   updateICCContact: function updateICCContact(appType, contactType, contact, pin2, onsuccess, onerror) {
+   let error = onerror || debug;
     switch (contactType) {
       case "adn":
         if (!this.hasDfPhoneBook(appType)) {
@@ -12479,10 +12497,13 @@ let ICCContactHelper = {
         }
         break;
       case "fdn":
+        if (!pin2) {
+          error("pin2 is empty");
+          return;
+        }
         ICCRecordHelper.updateADNLike(ICC_EF_FDN, contact, pin2, onsuccess, onerror);
         break;
       default:
-        let error = onerror || debug;
         error(GECKO_ERROR_REQUEST_NOT_SUPPORTED);
         break;
     }
@@ -12716,6 +12737,7 @@ let ICCContactHelper = {
         error("Cannot access Phonebook.");
         return;
       }
+      contact.recordId %= ICC_MAX_LINEAR_FIXED_RECORDS;
       this.updatePhonebookSet(pbr, contact, onsuccess, onerror);
     }.bind(this);
 

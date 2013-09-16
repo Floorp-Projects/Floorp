@@ -43,7 +43,7 @@ checkPixelRelativeUnits();
 
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv({'set': [['layout.css.dpi', 96]]}, test1);
+SpecialPowers.pushPrefEnv({'set': [['layout.css.dpi', dpi=96]]}, test1);
 
 var mozmmSize;
 function test1() {
@@ -54,8 +54,7 @@ function test1() {
 
   checkPixelRelativeUnits();
 
-  SpecialPowers.setIntPref("layout.css.dpi", dpi = 192);
-  SpecialPowers.pushPrefEnv({'set': [['layout.css.dpi', 192]]}, test2);
+  SpecialPowers.pushPrefEnv({'set': [['layout.css.dpi', dpi=192]]}, test2);
 }
 
 function test2() {
