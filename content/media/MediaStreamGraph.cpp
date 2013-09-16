@@ -488,15 +488,22 @@ MediaStreamGraphImpl::UpdateStreamOrderForStream(mozilla::LinkedList<MediaStream
     }
     if (cycleFound && !delayNodePresent) {
       // If we have detected a cycle, the previous loop should exit with stream
-      // == iter. Go back in the cycle and mute all nodes we find.
-      MOZ_ASSERT(iter);
-      do {
-        // There can't be non-AudioNodeStream here, MediaStreamAudio{Source,
-        // Destination}Node are connected to regular MediaStreams, but they can't be
-        // in a cycle (there is no content API to do so).
-        MOZ_ASSERT(iter->AsAudioNodeStream());
+      // == iter, or the node is connected to itself. Go back in the cycle and
+      // mute all nodes we find, or just mute the node itself.
+      if (!iter) {
+        // The node is connected to itself.
+        iter = aStack->getLast();
         iter->AsAudioNodeStream()->Mute();
-      } while((iter = iter->getNext()));
+      } else {
+        MOZ_ASSERT(iter);
+        do {
+          // There can't be non-AudioNodeStream here, MediaStreamAudio{Source,
+          // Destination}Node are connected to regular MediaStreams, but they can't be
+          // in a cycle (there is no content API to do so).
+          MOZ_ASSERT(iter->AsAudioNodeStream());
+          iter->AsAudioNodeStream()->Mute();
+        } while((iter = iter->getNext()));
+      }
     }
     return;
   }
