@@ -4447,6 +4447,7 @@ JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
       versionSet(false),
       utf8(false),
       filename(NULL),
+      sourceMapURL(NULL),
       lineno(1),
       column(0),
       element(NullPtr()),

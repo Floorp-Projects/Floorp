@@ -353,7 +353,7 @@ MSG_DEF(JSMSG_REST_WITH_DEFAULT,      299, 0, JSEXN_SYNTAXERR, "rest parameter m
 MSG_DEF(JSMSG_NONDEFAULT_FORMAL_AFTER_DEFAULT, 300, 0, JSEXN_SYNTAXERR, "parameter(s) with default followed by parameter without default")
 MSG_DEF(JSMSG_YIELD_IN_DEFAULT,       301, 0, JSEXN_SYNTAXERR, "yield in default expression")
 MSG_DEF(JSMSG_INTRINSIC_NOT_DEFINED,  302, 1, JSEXN_REFERENCEERR, "no intrinsic function {0}")
-MSG_DEF(JSMSG_ALREADY_HAS_SOURCEMAP,  303, 1, JSEXN_ERR,      "{0} is being assigned a source map, yet already has one")
+MSG_DEF(JSMSG_ALREADY_HAS_SOURCE_MAP_URL, 303, 1, JSEXN_ERR,      "{0} is being assigned a source map URL, but already has one")
 MSG_DEF(JSMSG_PAR_ARRAY_BAD_ARG,      304, 1, JSEXN_RANGEERR, "invalid ParallelArray{0} argument")
 MSG_DEF(JSMSG_PAR_ARRAY_BAD_PARTITION, 305, 0, JSEXN_ERR, "argument must be divisible by outermost dimension")
 MSG_DEF(JSMSG_PAR_ARRAY_REDUCE_EMPTY, 306, 0, JSEXN_ERR, "cannot reduce ParallelArray object whose outermost dimension is empty")
