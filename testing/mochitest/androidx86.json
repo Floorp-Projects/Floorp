@@ -195,7 +195,6 @@
  "dom/browser-element/mochitest/test_browserElement_inproc_CloseApp.html": "FAILS, bug 796982",
  "dom/contacts/tests/test_contacts_getall.html": "x86 only",
  "dom/devicestorage": "bug 781789 & bug 782275",
- "dom/imptests/editing/conformancetest/test_event.html": "",
  "dom/imptests/editing/conformancetest/test_runtest.html": "",
  "dom/imptests/editing/selecttest/test_addRange.html": "bug 775227",
  "dom/imptests/html/webgl": "WebGL",
