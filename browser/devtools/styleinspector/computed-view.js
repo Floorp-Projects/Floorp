@@ -11,13 +11,14 @@ let {CssLogic} = require("devtools/styleinspector/css-logic");
 let {ELEMENT_STYLE} = require("devtools/server/actors/styles");
 let promise = require("sdk/core/promise");
 let {EventEmitter} = require("devtools/shared/event-emitter");
+let {colorUtils} = require("devtools/shared/css-color");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PluralForm.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/devtools/Templater.jsm");
 
-Cu.import("resource:///modules/devtools/gDevTools.jsm");
+let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 
 const FILTER_CHANGED_TIMEOUT = 300;
 
@@ -152,6 +153,10 @@ function CssHtmlTree(aStyleInspector, aPageStyle)
   // No results text.
   this.noResults = this.styleDocument.getElementById("noResults");
 
+  // Refresh panel when color unit changed.
+  this._handlePrefChange = this._handlePrefChange.bind(this);
+  gDevTools.on("pref-changed", this._handlePrefChange);
+
   CssHtmlTree.processTemplate(this.templateRoot, this.root, this);
 
   // The element that we're inspecting, and the document that it comes from.
@@ -244,6 +249,12 @@ CssHtmlTree.prototype = {
     return this.includeBrowserStylesCheckbox.checked;
   },
 
+  _handlePrefChange: function(event, data) {
+    if (data.pref == "devtools.defaultColorUnit" && this._computed) {
+      this.refreshPanel();
+    }
+  },
+
   /**
    * Update the highlighted element. The CssHtmlTree panel will show the style
    * information for the given element.
@@ -256,7 +267,7 @@ CssHtmlTree.prototype = {
       if (this._refreshProcess) {
         this._refreshProcess.cancel();
       }
-      return promise.resolve(undefined)
+      return promise.resolve(undefined);
     }
 
     if (aElement === this.viewedElement) {
@@ -495,6 +506,7 @@ CssHtmlTree.prototype = {
     this.includeBrowserStylesCheckbox.removeEventListener("command",
       this.includeBrowserStylesChanged);
     this.searchField.removeEventListener("command", this.filterChanged);
+    gDevTools.off("pref-changed", this._handlePrefChange);
 
     // Cancel tree construction
     if (this._createViewsProcess) {
@@ -553,8 +565,13 @@ function PropertyInfo(aTree, aName) {
   this.name = aName;
 }
 PropertyInfo.prototype = {
-  get value() this.tree._computed ? this.tree._computed[this.name].value : ""
-}
+  get value() {
+    if (this.tree._computed) {
+      let value = this.tree._computed[this.name].value;
+      return colorUtils.processCSSString(value);
+    }
+  }
+};
 
 /**
  * A container to give easy access to property data from the template engine.
@@ -935,7 +952,8 @@ SelectorView.prototype = {
 
   get value()
   {
-    return this.selectorInfo.value;
+    let val = this.selectorInfo.value;
+    return colorUtils.processCSSString(val);
   },
 
   maybeOpenStyleEditor: function(aEvent)
