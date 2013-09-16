@@ -788,8 +788,21 @@ bool MinidumpGenerator::GetThreadState(thread_act_t target_thread,
         return true;
       }
 #endif
+#ifdef HAS_X86_SUPPORT
+    case CPU_TYPE_I386:
+    case CPU_TYPE_X86_64: {
+        size_t state_size = cpu_type_ == CPU_TYPE_I386 ?
+            sizeof(i386_thread_state_t) : sizeof(x86_thread_state64_t);
+        size_t final_size =
+            std::min(static_cast<size_t>(*count), state_size);
+        memcpy(state, &task_context_->uc_mcontext->__ss, final_size);
+        *count = final_size;
+        return true;
+      }
+#endif
     }
   }
+
   thread_state_flavor_t flavor;
   switch (cpu_type_) {
 #ifdef HAS_ARM_SUPPORT
