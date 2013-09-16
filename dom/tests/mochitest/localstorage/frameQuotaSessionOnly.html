@@ -6,7 +6,6 @@
 <script type="text/javascript">
 
 const DOM_QUOTA_REACHED = 2152924150;
-const Cc = SpecialPowers.Cc;
 
 function checkException(func, exc)
 {
@@ -23,14 +22,6 @@ function checkException(func, exc)
 
 function doStep()
 {
-  var io = Cc["@mozilla.org/network/io-service;1"]
-    .getService(SpecialPowers.Ci.nsIIOService);
-  var uri = io.newURI(window.location, "", null);
-  var cp = Cc["@mozilla.org/cookie/permission;1"]
-    .getService(SpecialPowers.Ci.nsICookiePermission);
-
-  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION);
-
   var query = location.search.substring(1);
   var queries = query.split("&");
 
@@ -95,8 +86,6 @@ function doStep()
       {
         case "clear":
           localStorage.clear();
-          cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT);
-
           break;
       }
 
@@ -108,10 +97,15 @@ function doStep()
   return false;
 }
 
+function startTest() {
+  SpecialPowers.pushPermissions([{'type': 'cookie', 'allow': SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION, 'context': document}], function() {
+    postMsg('frame loaded');
+  });
+}
 </script>
 
 </head>
 
-<body onload="postMsg('frame loaded');">
+<body onload="startTest();">
 </body>
 </html>

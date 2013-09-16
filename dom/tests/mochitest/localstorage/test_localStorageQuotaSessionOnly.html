@@ -9,19 +9,6 @@
 <script type="text/javascript">
 
 var currentTest = 1;
-var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
-            .getService(SpecialPowers.Ci.nsIPrefBranch);
-var io = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
-  .getService(SpecialPowers.Ci.nsIIOService);
-var uri = io.newURI(window.location, "", null);
-var cp = SpecialPowers.Cc["@mozilla.org/cookie/permission;1"]
-  .getService(SpecialPowers.Ci.nsICookiePermission);
-
-cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION);
-
-var quota;
-var origBlockDisplay;
-var origBlockActive;
 
 function doNextTest()
 {
@@ -29,22 +16,7 @@ function doNextTest()
 
   switch (currentTest)
   {
-    // Initialy setup the quota to testing value of 1024B and
-    // set a 500 bytes key with name length 1 (allocate 501 bytes)
     case 1:
-      try {
-        quota = prefs.getIntPref("dom.storage.default_quota");
-      } catch (ex) {
-        quota = 5*1024;
-      }
-      prefs.setIntPref("dom.storage.default_quota", 1);
-
-      origBlockDisplay = prefs.getBoolPref("security.mixed_content.block_display_content");
-      origBlockActive = prefs.getBoolPref("security.mixed_content.block_active_content");
-
-      prefs.setBoolPref("security.mixed_content.block_display_content", false);
-      prefs.setBoolPref("security.mixed_content.block_active_content", false);
-
       slaveOrigin = "http://example.com";
       slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?add&A&success";
       break;
@@ -111,10 +83,6 @@ function doNextTest()
       break;
 
     default:
-      prefs.setIntPref("dom.storage.default_quota", quota);
-      prefs.setBoolPref("security.mixed_content.block_display_content", origBlockDisplay);
-      prefs.setBoolPref("security.mixed_content.block_active_content", origBlockActive);
-      cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT);
       SimpleTest.finish();
   }
 
@@ -127,11 +95,18 @@ function doStep()
 
 SimpleTest.waitForExplicitFinish();
 
+function startTest() {
+  SpecialPowers.pushPermissions([{'type': 'cookie', 'allow': SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION, 'context': document}], function() {
+    // Initialy setup the quota to testing value of 1024B and
+    // set a 500 bytes key with name length 1 (allocate 501 bytes)
+    SpecialPowers.pushPrefEnv({"set": [["dom.storage.default_quota", 1], ["security.mixed_content.block_display_content", false], ["security.mixed_content.block_active_content", false]]}, doNextTest);
+  });
+}
 </script>
 
 </head>
 
-<body onload="doNextTest();">
+<body onload="startTest();">
   <iframe src="" name="frame"></iframe>
 </body>
 </html>
