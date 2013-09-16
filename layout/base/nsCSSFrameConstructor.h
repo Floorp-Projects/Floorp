@@ -1216,17 +1216,40 @@ private:
                        Element* aElement,
                        nsStyleContext* aStyleContext);
 
-// SVG - rods
   /**
-   * Construct an nsSVGOuterSVGFrame, the anonymous child that wraps its real
-   * children, and its descendant frames.  This is the FrameConstructionData
-   * callback used for the job.
+   * Constructs an outer frame, an anonymous child that wraps its real
+   * children, and its descendant frames.  This is used by both ConstructOuterSVG
+   * and ConstructMarker, which both want an anonymous block child for their
+   * children to go in to.
+   */
+  nsIFrame* ConstructFrameWithAnonymousChild(
+                                  nsFrameConstructorState& aState,
+                                  FrameConstructionItem&   aItem,
+                                  nsIFrame*                aParentFrame,
+                                  const nsStyleDisplay*    aDisplay,
+                                  nsFrameItems&            aFrameItems,
+                                  FrameCreationFunc        aConstructor,
+                                  FrameCreationFunc        aInnerConstructor,
+                                  nsICSSAnonBoxPseudo*     aInnerPseudo,
+                                  bool                     aCandidateRootFrame);
+
+  /**
+   * Construct an nsSVGOuterSVGFrame.
    */
   nsIFrame* ConstructOuterSVG(nsFrameConstructorState& aState,
                               FrameConstructionItem&   aItem,
                               nsIFrame*                aParentFrame,
                               const nsStyleDisplay*    aDisplay,
                               nsFrameItems&            aFrameItems);
+
+  /**
+   * Construct an nsSVGMarkerFrame.
+   */
+  nsIFrame* ConstructMarker(nsFrameConstructorState& aState,
+                            FrameConstructionItem&   aItem,
+                            nsIFrame*                aParentFrame,
+                            const nsStyleDisplay*    aDisplay,
+                            nsFrameItems&            aFrameItems);
 
   static const FrameConstructionData* FindSVGData(Element* aElement,
                                                   nsIAtom* aTag,
