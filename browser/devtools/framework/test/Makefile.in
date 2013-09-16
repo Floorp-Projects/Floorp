@@ -22,5 +22,6 @@ MOCHITEST_BROWSER_FILES = \
 		browser_toolbox_options_disablejs_iframe.html \
 		browser_toolbox_highlight.js \
 		browser_toolbox_raise.js \
+		browser_toolbox_zoom.js \
 		browser_keybindings.js \
 		$(NULL)

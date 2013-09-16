@@ -78,8 +78,8 @@
 <!ENTITY help.close "Close">
 <!ENTITY help.intro "This tool will help you build and install web apps on compatible devices (i.e Firefox OS). The <strong>Apps</strong> tab will assist you in the validation and installation process of your app. The <strong>Device</strong> tab will give you information about the connected device. Use the bottom toolbar to connect to a device or start the simulator.">
 <!ENTITY help.usefullLinks "Useful links:">
-<!ENTITY help.linkToAppMgrDoc "<a>Documentation: Using the App Manager</a>">
-<!ENTITY help.linkToConfiguringDevice "<a>How to setup your Firefox OS device</a>">
-<!ENTITY help.linkToTroubleShooting "<a>Troubleshooting</a>">
-<!ENTITY help.linkToSimulatorAddon "<a>Install Simulator Add-on</a>">
-<!ENTITY help.linkToAdbHelperAddon "<a>Install Adb Helper Add-on</a>">
+<!ENTITY help.appMgrDoc "Documentation: Using the App Manager">
+<!ENTITY help.configuringDevice "How to setup your Firefox OS device">
+<!ENTITY help.troubleShooting "Troubleshooting">
+<!ENTITY help.simulatorAddon "Install Simulator Add-on">
+<!ENTITY help.adbHelperAddon "Install Adb Helper Add-on">

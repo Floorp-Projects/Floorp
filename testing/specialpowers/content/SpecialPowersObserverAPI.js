@@ -23,6 +23,7 @@ SpecialPowersException.prototype.toString = function() {
 this.SpecialPowersObserverAPI = function SpecialPowersObserverAPI() {
   this._crashDumpDir = null;
   this._processCrashObserversRegistered = false;
+  this._chromeScriptListeners = [];
 }
 
 function parseKeyValuePairs(text) {
@@ -286,6 +287,55 @@ SpecialPowersObserverAPI.prototype = {
           default:
             throw new SpecialPowersException("Invalid operation for SPObserverervice");
         }
+        break;
+
+      case "SPLoadChromeScript":
+        var url = aMessage.json.url;
+        var id = aMessage.json.id;
+
+        // Fetch script content as we can't use scriptloader's loadSubScript
+        // to evaluate http:// urls...
+        var scriptableStream = Cc["@mozilla.org/scriptableinputstream;1"]
+                                 .getService(Ci.nsIScriptableInputStream);
+        var channel = Services.io.newChannel(url, null, null);
+        var input = channel.open();
+        scriptableStream.init(input);
+        var jsScript = scriptableStream.read(input.available());
+        scriptableStream.close();
+        input.close();
+
+        // Setup a chrome sandbox that has access to sendAsyncMessage
+        // and addMessageListener in order to communicate with
+        // the mochitest.
+        var systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+        var sb = Components.utils.Sandbox(systemPrincipal);
+        var mm = aMessage.target
+                         .QueryInterface(Ci.nsIFrameLoaderOwner)
+                         .frameLoader
+                         .messageManager;
+        sb.sendAsyncMessage = (name, message) => {
+          mm.sendAsyncMessage("SPChromeScriptMessage",
+                              { id: id, name: name, message: message });
+        };
+        sb.addMessageListener = (name, listener) => {
+          this._chromeScriptListeners.push({ id: id, name: name, listener: listener });
+        };
+        // Evaluate the chrome script
+        try {
+          Components.utils.evalInSandbox(jsScript, sb, "1.8", url, 1);
+        } catch(e) {
+          throw new SpecialPowersException("Error while executing chrome " +
+                                           "script '" + url + "':\n" + e);
+        }
+        break;
+
+      case "SPChromeScriptMessage":
+        var id = aMessage.json.id;
+        var name = aMessage.json.name;
+        var message = aMessage.json.message;
+        this._chromeScriptListeners
+            .filter(o => (o.name == name && o.id == id))
+            .forEach(o => o.listener(message));
         break;
 
       default:

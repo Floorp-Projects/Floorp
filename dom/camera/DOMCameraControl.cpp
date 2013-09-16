@@ -294,7 +294,7 @@ nsDOMCameraControl::StartRecording(JSContext* aCx,
       // Camera app will stop recording when it falls to the background, so no callback is necessary.
       mAudioChannelAgent->Init(AUDIO_CHANNEL_CONTENT, nullptr);
       // Video recording doesn't output any sound, so it's not necessary to check canPlay.
-      bool canPlay;
+      int32_t canPlay;
       mAudioChannelAgent->StartPlaying(&canPlay);
     }
   }

@@ -31,6 +31,22 @@
          key="&toolboxPreviousTool.key;"
          oncommand="void(0);"
          modifiers="accel"/>
+    <key id="toolbox-zoom-in-key"
+         key="&toolboxZoomIn.key;"
+         oncommand="void(0);"
+         modifiers="accel"/>
+    <key id="toolbox-zoom-in-key2"
+         key="&toolboxZoomIn.key2;"
+         oncommand="void(0);"
+         modifiers="accel"/>
+    <key id="toolbox-zoom-out-key"
+         key="&toolboxZoomOut.key;"
+         oncommand="void(0);"
+         modifiers="accel"/>
+    <key id="toolbox-zoom-reset-key"
+         key="&toolboxZoomReset.key;"
+         oncommand="void(0);"
+         modifiers="accel"/>
   </keyset>
 
   <notificationbox id="toolbox-notificationbox" flex="1">
