@@ -13,9 +13,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 
-#include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
-#include "nsIStyleSheet.h"
 #include "nsIStyleRuleProcessor.h"
 
 struct MiscContainer;
