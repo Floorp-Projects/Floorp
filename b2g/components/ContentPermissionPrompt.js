@@ -13,7 +13,7 @@ const Cr = Components.results;
 const Cu = Components.utils;
 const Cc = Components.classes;
 
-const PROMPT_FOR_UNKNOWN = ["geolocation", "desktop-notification"];
+const PROMPT_FOR_UNKNOWN = ["geolocation", "desktop-notification", "audio-capture"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
