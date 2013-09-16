@@ -96,7 +96,7 @@ Push.prototype = {
 
   register: function() {
     debug("register()");
-    var req = this.createRequest();
+    let req = this.createRequest();
     if (!Services.prefs.getBoolPref("services.push.connection.enabled")) {
       // If push socket is disabled by the user, immediately error rather than
       // timing out.
@@ -114,7 +114,7 @@ Push.prototype = {
 
   unregister: function(aPushEndpoint) {
     debug("unregister(" + aPushEndpoint + ")");
-    var req = this.createRequest();
+    let req = this.createRequest();
     this._cpmm.sendAsyncMessage("Push:Unregister", {
                                   pageURL: this._pageURL.spec,
                                   manifestURL: this._manifestURL,
@@ -126,7 +126,7 @@ Push.prototype = {
 
   registrations: function() {
     debug("registrations()");
-    var req = this.createRequest();
+    let req = this.createRequest();
     this._cpmm.sendAsyncMessage("Push:Registrations", {
                                   manifestURL: this._manifestURL,
                                   requestID: this.getRequestId(req)
