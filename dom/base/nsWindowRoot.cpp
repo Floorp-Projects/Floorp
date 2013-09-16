@@ -65,7 +65,8 @@ NS_IMPL_DOMTARGET_DEFAULTS(nsWindowRoot)
 NS_IMETHODIMP
 nsWindowRoot::RemoveEventListener(const nsAString& aType, nsIDOMEventListener* aListener, bool aUseCapture)
 {
-  if (nsRefPtr<nsEventListenerManager> elm = GetExistingListenerManager()) {
+  nsRefPtr<nsEventListenerManager> elm = GetListenerManager(false);
+  if (elm) {
     elm->RemoveEventListener(aType, aListener, aUseCapture);
   }
   return NS_OK;
@@ -105,7 +106,7 @@ nsWindowRoot::AddEventListener(const nsAString& aType,
                "aWantsUntrusted to false or make the aWantsUntrusted "
                "explicit by making optional_argc non-zero.");
 
-  nsEventListenerManager* elm = ListenerManager();
+  nsEventListenerManager* elm = GetListenerManager(true);
   NS_ENSURE_STATE(elm);
   elm->AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted);
   return NS_OK;
@@ -119,7 +120,7 @@ nsWindowRoot::AddEventListener(const nsAString& aType,
                                 ErrorResult& aRv)
 {
   bool wantsUntrusted = !aWantsUntrusted.IsNull() && aWantsUntrusted.Value();
-  nsEventListenerManager* elm = ListenerManager();
+  nsEventListenerManager* elm = GetListenerManager(true);
   if (!elm) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
@@ -145,19 +146,13 @@ nsWindowRoot::AddSystemEventListener(const nsAString& aType,
 }
 
 nsEventListenerManager*
-nsWindowRoot::ListenerManager()
+nsWindowRoot::GetListenerManager(bool aCreateIfNotFound)
 {
-  if (!mListenerManager) {
+  if (!mListenerManager && aCreateIfNotFound) {
     mListenerManager =
       new nsEventListenerManager(static_cast<EventTarget*>(this));
   }
 
-  return mListenerManager;
-}
-
-nsEventListenerManager*
-nsWindowRoot::GetExistingListenerManager() const
-{
   return mListenerManager;
 }
 

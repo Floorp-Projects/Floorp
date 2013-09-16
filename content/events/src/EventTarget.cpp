@@ -16,7 +16,7 @@ EventTarget::RemoveEventListener(const nsAString& aType,
                                  bool aUseCapture,
                                  ErrorResult& aRv)
 {
-  nsEventListenerManager* elm = GetExistingListenerManager();
+  nsEventListenerManager* elm = GetListenerManager(false);
   if (elm) {
     elm->RemoveEventListener(aType, aListener, aUseCapture);
   }
@@ -25,7 +25,7 @@ EventTarget::RemoveEventListener(const nsAString& aType,
 EventHandlerNonNull*
 EventTarget::GetEventHandler(nsIAtom* aType, const nsAString& aTypeString)
 {
-  nsEventListenerManager* elm = GetExistingListenerManager();
+  nsEventListenerManager* elm = GetListenerManager(false);
   return elm ? elm->GetEventHandler(aType, aTypeString) : nullptr;
 }
 
@@ -48,7 +48,9 @@ EventTarget::SetEventHandler(nsIAtom* aType, const nsAString& aTypeString,
                              EventHandlerNonNull* aHandler,
                              ErrorResult& rv)
 {
-  rv = ListenerManager()->SetEventHandler(aType, aTypeString, aHandler);
+  rv = GetListenerManager(true)->SetEventHandler(aType,
+                                                 aTypeString,
+                                                 aHandler);
 }
 
 } // namespace dom

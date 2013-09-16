@@ -500,7 +500,7 @@ nsXULElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName, bool* aDefer)
         nsCOMPtr<EventTarget> piTarget = do_QueryInterface(window);
 
         *aDefer = false;
-        return piTarget->ListenerManager();
+        return piTarget->GetListenerManager(true);
     }
 
     return nsStyledElement::GetEventListenerManagerForAttr(aAttrName, aDefer);
@@ -1675,7 +1675,7 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
       new nsXULPopupListener(this, isContext);
 
     // Add the popup as a listener on this element.
-    nsEventListenerManager* manager = ListenerManager();
+    nsEventListenerManager* manager = GetListenerManager(true);
     SetFlags(listenerFlag);
 
     if (isContext) {

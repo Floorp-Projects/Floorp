@@ -370,7 +370,7 @@ public:
   NS_DECL_NSIDOMJSWINDOW
 
   // nsIDOMEventTarget
-  NS_REALLY_DECL_NSIDOMEVENTTARGET
+  NS_DECL_NSIDOMEVENTTARGET
   using mozilla::dom::EventTarget::RemoveEventListener;
   virtual void AddEventListener(const nsAString& aType,
                                 nsIDOMEventListener* aListener,
@@ -547,7 +547,7 @@ public:
     return static_cast<nsGlobalWindow *>(GetOuterWindow());
   }
 
-  nsGlobalWindow *GetCurrentInnerWindowInternal() const
+  nsGlobalWindow *GetCurrentInnerWindowInternal()
   {
     return static_cast<nsGlobalWindow *>(mInnerWindow);
   }
@@ -703,14 +703,15 @@ public:
 #define EVENT(name_, id_, type_, struct_)                                     \
   mozilla::dom::EventHandlerNonNull* GetOn##name_()                           \
   {                                                                           \
-    nsEventListenerManager *elm = GetExistingListenerManager();               \
+    nsEventListenerManager *elm = GetListenerManager(false);                  \
     return elm ? elm->GetEventHandler(nsGkAtoms::on##name_, EmptyString())    \
                : nullptr;                                                     \
   }                                                                           \
   void SetOn##name_(mozilla::dom::EventHandlerNonNull* handler,               \
                     mozilla::ErrorResult& error)                              \
   {                                                                           \
-    if (nsEventListenerManager *elm = ListenerManager()) {                    \
+    nsEventListenerManager *elm = GetListenerManager(true);                   \
+    if (elm) {                                                                \
       error = elm->SetEventHandler(nsGkAtoms::on##name_, EmptyString(),       \
                                    handler);                                  \
     } else {                                                                  \
@@ -720,13 +721,14 @@ public:
 #define ERROR_EVENT(name_, id_, type_, struct_)                               \
   mozilla::dom::OnErrorEventHandlerNonNull* GetOn##name_()                    \
   {                                                                           \
-    nsEventListenerManager *elm = GetExistingListenerManager();               \
+    nsEventListenerManager *elm = GetListenerManager(false);                  \
     return elm ? elm->GetOnErrorEventHandler() : nullptr;                     \
   }                                                                           \
   void SetOn##name_(mozilla::dom::OnErrorEventHandlerNonNull* handler,        \
                     mozilla::ErrorResult& error)                              \
   {                                                                           \
-    if (nsEventListenerManager *elm = ListenerManager()) {                    \
+    nsEventListenerManager *elm = GetListenerManager(true);                   \
+    if (elm) {                                                                \
       error = elm->SetEventHandler(handler);                                  \
     } else {                                                                  \
       error.Throw(NS_ERROR_OUT_OF_MEMORY);                                    \
@@ -735,13 +737,14 @@ public:
 #define BEFOREUNLOAD_EVENT(name_, id_, type_, struct_)                        \
   mozilla::dom::BeforeUnloadEventHandlerNonNull* GetOn##name_()               \
   {                                                                           \
-    nsEventListenerManager *elm = GetExistingListenerManager();               \
+    nsEventListenerManager *elm = GetListenerManager(false);                  \
     return elm ? elm->GetOnBeforeUnloadEventHandler() : nullptr;              \
   }                                                                           \
   void SetOn##name_(mozilla::dom::BeforeUnloadEventHandlerNonNull* handler,   \
                     mozilla::ErrorResult& error)                              \
   {                                                                           \
-    if (nsEventListenerManager *elm = ListenerManager()) {                    \
+    nsEventListenerManager *elm = GetListenerManager(true);                   \
+    if (elm) {                                                                \
       error = elm->SetEventHandler(handler);                                  \
     } else {                                                                  \
       error.Throw(NS_ERROR_OUT_OF_MEMORY);                                    \

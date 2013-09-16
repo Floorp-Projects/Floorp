@@ -108,7 +108,7 @@ nsEditorEventListener::InstallToEditor()
   NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
   // register the event listeners with the listener manager
-  nsEventListenerManager* elmP = piTarget->ListenerManager();
+  nsEventListenerManager* elmP = piTarget->GetListenerManager(true);
   NS_ENSURE_STATE(elmP);
 
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
@@ -187,7 +187,8 @@ nsEditorEventListener::UninstallFromEditor()
     return;
   }
 
-  nsEventListenerManager* elmP = piTarget->ListenerManager();
+  nsEventListenerManager* elmP =
+    piTarget->GetListenerManager(true);
   if (!elmP) {
     return;
   }

@@ -1039,7 +1039,7 @@ nsINode::AddEventListener(const nsAString& aType,
     aWantsUntrusted = true;
   }
 
-  nsEventListenerManager* listener_manager = ListenerManager();
+  nsEventListenerManager* listener_manager = GetListenerManager(true);
   NS_ENSURE_STATE(listener_manager);
   listener_manager->AddEventListener(aType, aListener, aUseCapture,
                                      aWantsUntrusted);
@@ -1060,7 +1060,7 @@ nsINode::AddEventListener(const nsAString& aType,
     wantsUntrusted = aWantsUntrusted.Value();
   }
 
-  nsEventListenerManager* listener_manager = ListenerManager();
+  nsEventListenerManager* listener_manager = GetListenerManager(true);
   if (!listener_manager) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
@@ -1096,7 +1096,7 @@ nsINode::RemoveEventListener(const nsAString& aType,
                              nsIDOMEventListener* aListener,
                              bool aUseCapture)
 {
-  nsEventListenerManager* elm = GetExistingListenerManager();
+  nsEventListenerManager* elm = GetListenerManager(false);
   if (elm) {
     elm->RemoveEventListener(aType, aListener, aUseCapture);
   }
@@ -1158,15 +1158,9 @@ nsINode::DispatchDOMEvent(nsEvent* aEvent,
 }
 
 nsEventListenerManager*
-nsINode::ListenerManager()
+nsINode::GetListenerManager(bool aCreateIfNotFound)
 {
-  return nsContentUtils::ListenerManagerForNode(this);
-}
-
-nsEventListenerManager*
-nsINode::GetExistingListenerManager() const
-{
-  return nsContentUtils::GetExistingListenerManagerForNode(this);
+  return nsContentUtils::GetListenerManager(this, aCreateIfNotFound);
 }
 
 nsIScriptContext*
@@ -2171,7 +2165,8 @@ size_t
 nsINode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
-  nsEventListenerManager* elm = GetExistingListenerManager();
+  nsEventListenerManager* elm =
+    const_cast<nsINode*>(this)->GetListenerManager(false);
   if (elm) {
     n += elm->SizeOfIncludingThis(aMallocSizeOf);
   }
@@ -2189,13 +2184,13 @@ nsINode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 
 #define EVENT(name_, id_, type_, struct_)                                    \
   EventHandlerNonNull* nsINode::GetOn##name_() {                             \
-    nsEventListenerManager *elm = GetExistingListenerManager();              \
+    nsEventListenerManager *elm = GetListenerManager(false);                 \
     return elm ? elm->GetEventHandler(nsGkAtoms::on##name_, EmptyString())   \
                : nullptr;                                                    \
   }                                                                          \
   void nsINode::SetOn##name_(EventHandlerNonNull* handler,                   \
                              ErrorResult& error) {                           \
-    nsEventListenerManager *elm = ListenerManager();                         \
+    nsEventListenerManager *elm = GetListenerManager(true);                  \
     if (elm) {                                                               \
       error = elm->SetEventHandler(nsGkAtoms::on##name_,                     \
                                    EmptyString(), handler);                  \

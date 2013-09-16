@@ -144,7 +144,7 @@ MarkMessageManagers()
           continue;
         }
         static_cast<nsInProcessTabChildGlobal*>(et)->MarkForCC();
-        nsEventListenerManager* elm = et->GetExistingListenerManager();
+        nsEventListenerManager* elm = et->GetListenerManager(false);
         if (elm) {
           elm->MarkForCC();
         }
@@ -188,13 +188,13 @@ MarkContentViewer(nsIContentViewer* aViewer, bool aCleanupJS,
       doc->GetMarkedCCGeneration() != nsCCUncollectableMarker::sGeneration) {
     doc->MarkUncollectableForCCGeneration(nsCCUncollectableMarker::sGeneration);
     if (aCleanupJS) {
-      nsEventListenerManager* elm = doc->GetExistingListenerManager();
+      nsEventListenerManager* elm = doc->GetListenerManager(false);
       if (elm) {
         elm->MarkForCC();
       }
       nsCOMPtr<EventTarget> win = do_QueryInterface(doc->GetInnerWindow());
       if (win) {
-        elm = win->GetExistingListenerManager();
+        elm = win->GetListenerManager(false);
         if (elm) {
           elm->MarkForCC();
         }

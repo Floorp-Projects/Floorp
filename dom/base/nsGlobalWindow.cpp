@@ -1573,7 +1573,8 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsGlobalWindow)
     if (tmp->mCachedXBLPrototypeHandlers) {
       tmp->mCachedXBLPrototypeHandlers->Enumerate(MarkXBLHandlers, nullptr);
     }
-    if (nsEventListenerManager* elm = tmp->GetExistingListenerManager()) {
+    nsEventListenerManager* elm = tmp->GetListenerManager(false);
+    if (elm) {
       elm->MarkForCC();
     }
     tmp->UnmarkGrayTimers();
@@ -8036,7 +8037,8 @@ nsGlobalWindow::RemoveEventListener(const nsAString& aType,
                                     nsIDOMEventListener* aListener,
                                     bool aUseCapture)
 {
-  if (nsRefPtr<nsEventListenerManager> elm = GetExistingListenerManager()) {
+  nsRefPtr<nsEventListenerManager> elm = GetListenerManager(false);
+  if (elm) {
     elm->RemoveEventListener(aType, aListener, aUseCapture);
   }
   return NS_OK;
@@ -8091,7 +8093,7 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
     aWantsUntrusted = true;
   }
 
-  nsEventListenerManager* manager = ListenerManager();
+  nsEventListenerManager* manager = GetListenerManager(true);
   NS_ENSURE_STATE(manager);
   manager->AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted);
   return NS_OK;
@@ -8117,7 +8119,7 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
     wantsUntrusted = aWantsUntrusted.Value();
   }
 
-  nsEventListenerManager* manager = ListenerManager();
+  nsEventListenerManager* manager = GetListenerManager(true);
   if (!manager) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
@@ -8152,22 +8154,14 @@ nsGlobalWindow::AddSystemEventListener(const nsAString& aType,
 }
 
 nsEventListenerManager*
-nsGlobalWindow::ListenerManager()
+nsGlobalWindow::GetListenerManager(bool aCreateIfNotFound)
 {
-  FORWARD_TO_INNER_CREATE(ListenerManager, (), nullptr);
+  FORWARD_TO_INNER_CREATE(GetListenerManager, (aCreateIfNotFound), nullptr);
 
-  if (!mListenerManager) {
+  if (!mListenerManager && aCreateIfNotFound) {
     mListenerManager =
       new nsEventListenerManager(static_cast<EventTarget*>(this));
   }
-
-  return mListenerManager;
-}
-
-nsEventListenerManager*
-nsGlobalWindow::GetExistingListenerManager() const
-{
-  FORWARD_TO_INNER(GetExistingListenerManager, (), nullptr);
 
   return mListenerManager;
 }
@@ -11510,57 +11504,42 @@ nsGlobalWindow::DisableTimeChangeNotifications()
   nsSystemTimeChangeObserver::RemoveWindowListener(this);
 }
 
-static PLDHashOperator
-CollectSizeAndListenerCount(
+static size_t
+SizeOfEventTargetObjectsEntryExcludingThisFun(
   nsPtrHashKey<nsDOMEventTargetHelper> *aEntry,
+  MallocSizeOf aMallocSizeOf,
   void *arg)
 {
-  nsWindowSizes* windowSizes = static_cast<nsWindowSizes*>(arg);
-
-  nsDOMEventTargetHelper* et = aEntry->GetKey();
-
-  if (nsCOMPtr<nsISizeOfEventTarget> iSizeOf = do_QueryObject(et)) {
-    windowSizes->mDOMEventTargetsSize +=
-      iSizeOf->SizeOfEventTargetIncludingThis(windowSizes->mMallocSizeOf);
-  }
-
-  if (nsEventListenerManager* elm = et->GetExistingListenerManager()) {
-    windowSizes->mDOMEventListenersCount += elm->ListenerCount();
-  }
-
-  return PL_DHASH_NEXT;
+  nsISupports *supports = aEntry->GetKey();
+  nsCOMPtr<nsISizeOfEventTarget> iface = do_QueryInterface(supports);
+  return iface ? iface->SizeOfEventTargetIncludingThis(aMallocSizeOf) : 0;
 }
 
 void
 nsGlobalWindow::SizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
 {
-  aWindowSizes->mDOMOtherSize += aWindowSizes->mMallocSizeOf(this);
+  aWindowSizes->mDOMOther += aWindowSizes->mMallocSizeOf(this);
 
   if (IsInnerWindow()) {
-    if (nsEventListenerManager* elm = GetExistingListenerManager()) {
-      aWindowSizes->mDOMOtherSize +=
+    nsEventListenerManager* elm =
+      const_cast<nsGlobalWindow*>(this)->GetListenerManager(false);
+    if (elm) {
+      aWindowSizes->mDOMOther +=
         elm->SizeOfIncludingThis(aWindowSizes->mMallocSizeOf);
-      aWindowSizes->mDOMEventListenersCount +=
-        elm->ListenerCount();
     }
     if (mDoc) {
       mDoc->DocSizeOfIncludingThis(aWindowSizes);
     }
   }
 
-  aWindowSizes->mDOMOtherSize +=
+  aWindowSizes->mDOMOther +=
     mNavigator ?
       mNavigator->SizeOfIncludingThis(aWindowSizes->mMallocSizeOf) : 0;
 
-  // The things pointed to by the entries will be measured below, so we
-  // use nullptr for the callback here.
-  aWindowSizes->mDOMEventTargetsSize +=
-    mEventTargetObjects.SizeOfExcludingThis(nullptr,
-                                            aWindowSizes->mMallocSizeOf);
-  aWindowSizes->mDOMEventTargetsCount +=
-    const_cast<nsTHashtable<nsPtrHashKey<nsDOMEventTargetHelper> >*>
-      (&mEventTargetObjects)->EnumerateEntries(CollectSizeAndListenerCount,
-                                               aWindowSizes);
+  aWindowSizes->mDOMEventTargets +=
+    mEventTargetObjects.SizeOfExcludingThis(
+      SizeOfEventTargetObjectsEntryExcludingThisFun,
+      aWindowSizes->mMallocSizeOf);
 }
 
 
@@ -12084,7 +12063,8 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
 #define ERROR_EVENT(name_, id_, type_, struct_)                              \
   NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
                                              JS::Value *vp) {                \
-    if (nsEventListenerManager *elm = GetExistingListenerManager()) {        \
+    nsEventListenerManager *elm = GetListenerManager(false);                 \
+    if (elm) {                                                               \
       OnErrorEventHandlerNonNull* h = elm->GetOnErrorEventHandler();         \
       if (h) {                                                               \
         *vp = JS::ObjectValue(*h->Callable());                               \
@@ -12096,7 +12076,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
   }                                                                          \
   NS_IMETHODIMP nsGlobalWindow::SetOn##name_(JSContext *cx,                  \
                                              const JS::Value &v) {           \
-    nsEventListenerManager *elm = ListenerManager();                         \
+    nsEventListenerManager *elm = GetListenerManager(true);                  \
     if (!elm) {                                                              \
       return NS_ERROR_OUT_OF_MEMORY;                                         \
     }                                                                        \
@@ -12112,7 +12092,8 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
 #define BEFOREUNLOAD_EVENT(name_, id_, type_, struct_)                       \
   NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
                                              JS::Value *vp) {                \
-    if (nsEventListenerManager *elm = GetExistingListenerManager()) {        \
+    nsEventListenerManager *elm = GetListenerManager(false);                 \
+    if (elm) {                                                               \
       BeforeUnloadEventHandlerNonNull* h =                                   \
         elm->GetOnBeforeUnloadEventHandler();                                \
       if (h) {                                                               \
@@ -12125,7 +12106,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
   }                                                                          \
   NS_IMETHODIMP nsGlobalWindow::SetOn##name_(JSContext *cx,                  \
                                              const JS::Value &v) {           \
-    nsEventListenerManager *elm = ListenerManager();                         \
+    nsEventListenerManager *elm = GetListenerManager(true);                  \
     if (!elm) {                                                              \
       return NS_ERROR_OUT_OF_MEMORY;                                         \
     }                                                                        \

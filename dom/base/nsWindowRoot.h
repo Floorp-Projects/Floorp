@@ -27,7 +27,7 @@ public:
   virtual ~nsWindowRoot();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_REALLY_DECL_NSIDOMEVENTTARGET
+  NS_DECL_NSIDOMEVENTTARGET
   using mozilla::dom::EventTarget::RemoveEventListener;
   virtual void AddEventListener(const nsAString& aType,
                                 nsIDOMEventListener* aListener,
