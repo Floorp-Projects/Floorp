@@ -798,7 +798,7 @@ public:
   /**
    * See nsIDOMEventTarget
    */
-  NS_REALLY_DECL_NSIDOMEVENTTARGET
+  NS_DECL_NSIDOMEVENTTARGET
   using mozilla::dom::EventTarget::RemoveEventListener;
   using nsIDOMEventTarget::AddEventListener;
   virtual void AddEventListener(const nsAString& aType,

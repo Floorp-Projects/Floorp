@@ -32,23 +32,19 @@ public:
   }
   mozilla::MallocSizeOf mMallocSizeOf;
   nsArenaMemoryStats mArenaStats;
-  size_t mDOMElementNodesSize;
-  size_t mDOMTextNodesSize;
-  size_t mDOMCDATANodesSize;
-  size_t mDOMCommentNodesSize;
-  size_t mDOMEventTargetsSize;
-  size_t mDOMOtherSize;
-  size_t mStyleSheetsSize;
-  size_t mLayoutPresShellSize;
-  size_t mLayoutStyleSetsSize;
-  size_t mLayoutTextRunsSize;
-  size_t mLayoutPresContextSize;
-  size_t mPropertyTablesSize;
-
-  uint32_t mDOMEventTargetsCount;
-  uint32_t mDOMEventListenersCount;
+  size_t mDOMElementNodes;
+  size_t mDOMTextNodes;
+  size_t mDOMCDATANodes;
+  size_t mDOMCommentNodes;
+  size_t mDOMEventTargets;
+  size_t mDOMOther;
+  size_t mStyleSheets;
+  size_t mLayoutPresShell;
+  size_t mLayoutStyleSets;
+  size_t mLayoutTextRuns;
+  size_t mLayoutPresContext;
+  size_t mPropertyTables;
 };
-  
 
 /**
  * nsWindowMemoryReporter is responsible for the 'explicit/window-objects'

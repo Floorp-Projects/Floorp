@@ -154,7 +154,7 @@ nsDOMEventTargetHelper::RemoveEventListener(const nsAString& aType,
                                             nsIDOMEventListener* aListener,
                                             bool aUseCapture)
 {
-  nsEventListenerManager* elm = GetExistingListenerManager();
+  nsEventListenerManager* elm = GetListenerManager(false);
   if (elm) {
     elm->RemoveEventListener(aType, aListener, aUseCapture);
   }
@@ -181,7 +181,7 @@ nsDOMEventTargetHelper::AddEventListener(const nsAString& aType,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsEventListenerManager* elm = ListenerManager();
+  nsEventListenerManager* elm = GetListenerManager(true);
   NS_ENSURE_STATE(elm);
   elm->AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted);
   return NS_OK;
@@ -205,7 +205,7 @@ nsDOMEventTargetHelper::AddEventListener(const nsAString& aType,
     wantsUntrusted = aWantsUntrusted.Value();
   }
 
-  nsEventListenerManager* elm = ListenerManager();
+  nsEventListenerManager* elm = GetListenerManager(true);
   if (!elm) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
@@ -320,18 +320,12 @@ nsDOMEventTargetHelper::DispatchDOMEvent(nsEvent* aEvent,
 }
 
 nsEventListenerManager*
-nsDOMEventTargetHelper::ListenerManager()
+nsDOMEventTargetHelper::GetListenerManager(bool aCreateIfNotFound)
 {
-  if (!mListenerManager) {
+  if (!mListenerManager && aCreateIfNotFound) {
     mListenerManager = new nsEventListenerManager(this);
   }
 
-  return mListenerManager;
-}
-
-nsEventListenerManager*
-nsDOMEventTargetHelper::GetExistingListenerManager() const
-{
   return mListenerManager;
 }
 

@@ -231,7 +231,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
 #ifdef DEBUG
     if (nsContentUtils::IsInitialized()) {
       nsEventListenerManager* manager =
-        nsContentUtils::GetExistingListenerManagerForNode(aNode);
+        nsContentUtils::GetListenerManager(aNode, false);
       if (!manager) {
         NS_ERROR("Huh, our bit says we have a listener manager list, "
                  "but there's nothing in the hash!?!!");
@@ -480,7 +480,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
 
       nsPIDOMWindow* window = newDoc->GetInnerWindow();
       if (window) {
-        nsEventListenerManager* elm = aNode->GetExistingListenerManager();
+        nsEventListenerManager* elm = aNode->GetListenerManager(false);
         if (elm) {
           window->SetMutationListeners(elm->MutationListenerBits());
           if (elm->MayHavePaintEventListener()) {
