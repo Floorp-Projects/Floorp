@@ -1,10 +1,7 @@
-/* Copyright (c) 2007-2012 IETF Trust, CSIRO, Xiph.Org Foundation. All rights reserved.
+/* Copyright (c) 2007-2008 CSIRO
+   Copyright (c) 2007-2009 Xiph.Org Foundation
    Written by Jean-Marc Valin */
 /*
-
-   This file is extracted from RFC6716. Please see that RFC for additional
-   information.
-
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:
@@ -15,11 +12,6 @@
    - Redistributions in binary form must reproduce the above copyright
    notice, this list of conditions and the following disclaimer in the
    documentation and/or other materials provided with the distribution.
-
-   - Neither the name of Internet Society, IETF or IETF Trust, nor the
-   names of specific contributors, may be used to endorse or promote
-   products derived from this software without specific prior written
-   permission.
 
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
    ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -117,7 +109,7 @@ static void exp_rotation(celt_norm *X, int len, int dir, int stride, int K, int 
 
 /** Takes the pitch vector and the decoded residual vector, computes the gain
     that will give ||p+g*y||=1 and mixes the residual with the pitch. */
-static void normalise_residual(int * restrict iy, celt_norm * restrict X,
+static void normalise_residual(int * OPUS_RESTRICT iy, celt_norm * OPUS_RESTRICT X,
       int N, opus_val32 Ryy, opus_val16 gain)
 {
    int i;

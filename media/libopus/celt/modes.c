@@ -1,11 +1,8 @@
-/* Copyright (c) 2007-2012 IETF Trust, CSIRO, Xiph.Org Foundation,
-                           Gregory Maxwell. All rights reserved.
+/* Copyright (c) 2007-2008 CSIRO
+   Copyright (c) 2007-2009 Xiph.Org Foundation
+   Copyright (c) 2008 Gregory Maxwell
    Written by Jean-Marc Valin and Gregory Maxwell */
 /*
-
-   This file is extracted from RFC6716. Please see that RFC for additional
-   information.
-
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:
@@ -16,11 +13,6 @@
    - Redistributions in binary form must reproduce the above copyright
    notice, this list of conditions and the following disclaimer in the
    documentation and/or other materials provided with the distribution.
-
-   - Neither the name of Internet Society, IETF or IETF Trust, nor the
-   names of specific contributors, may be used to endorse or promote
-   products derived from this software without specific prior written
-   permission.
 
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
    ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -353,6 +345,14 @@ CELTMode *opus_custom_mode_create(opus_int32 Fs, int frame_size, int *error)
    mode->eBands = compute_ebands(Fs, mode->shortMdctSize, res, &mode->nbEBands);
    if (mode->eBands==NULL)
       goto failure;
+#if !defined(SMALL_FOOTPRINT)
+   /* Make sure we don't allocate a band larger than our PVQ table.
+      208 should be enough, but let's be paranoid. */
+   if ((mode->eBands[mode->nbEBands] - mode->eBands[mode->nbEBands-1])<<LM >
+    208) {
+       goto failure;
+   }
+#endif
 
    mode->effEBands = mode->nbEBands;
    while (mode->eBands[mode->effEBands] > mode->shortMdctSize)

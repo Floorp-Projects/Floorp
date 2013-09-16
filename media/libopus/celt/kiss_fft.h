@@ -1,9 +1,9 @@
-/*Copyright (c) 2003-2012 IETF Trust, Mark Borgerding, Jean-Marc Valin
-                          Xiph.Org Foundation, CSIRO. All rights reserved.
+/*Copyright (c) 2003-2004, Mark Borgerding
+  Lots of modifications by Jean-Marc Valin
+  Copyright (c) 2005-2007, Xiph.Org Foundation
+  Copyright (c) 2008,      Xiph.Org Foundation, CSIRO
 
-
-  This file is extracted from RFC6716. Please see that RFC for additional
-  information.
+  All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are met:
@@ -13,11 +13,6 @@
     * Redistributions in binary form must reproduce the above copyright notice,
        this list of conditions and the following disclaimer in the
        documentation and/or other materials provided with the distribution.
-
-   - Neither the name of Internet Society, IETF or IETF Trust, nor the
-   names of specific contributors, may be used to endorse or promote
-   products derived from this software without specific prior written
-   permission.
 
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE

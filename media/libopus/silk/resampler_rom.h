@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -46,12 +42,12 @@ extern "C"
 #define RESAMPLER_ORDER_FIR_12                  8
 
 /* Tables for 2x downsampler */
-extern const opus_int16 silk_resampler_down2_0;
-extern const opus_int16 silk_resampler_down2_1;
+static const opus_int16 silk_resampler_down2_0 = 9872;
+static const opus_int16 silk_resampler_down2_1 = 39809 - 65536;
 
 /* Tables for 2x upsampler, high quality */
-extern const opus_int16 silk_resampler_up2_hq_0[ 3 ];
-extern const opus_int16 silk_resampler_up2_hq_1[ 3 ];
+static const opus_int16 silk_resampler_up2_hq_0[ 3 ] = { 1746, 14986, 39083 - 65536 };
+static const opus_int16 silk_resampler_up2_hq_1[ 3 ] = { 6854, 25769, 55542 - 65536 };
 
 /* Tables with IIR and FIR coefficients for fractional downsamplers */
 extern const opus_int16 silk_Resampler_3_4_COEFS[ 2 + 3 * RESAMPLER_DOWN_ORDER_FIR0 / 2 ];

@@ -1,10 +1,7 @@
-/* Copyright (c) 2007-2012 IETF Trust, CSIRO, Xiph.Org Foundation. All rights reserved.
+/* Copyright (c) 2007 CSIRO
+   Copyright (c) 2007-2009 Xiph.Org Foundation
    Written by Jean-Marc Valin */
 /*
-
-   This file is extracted from RFC6716. Please see that RFC for additional
-   information.
-
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:
@@ -15,11 +12,6 @@
    - Redistributions in binary form must reproduce the above copyright
    notice, this list of conditions and the following disclaimer in the
    documentation and/or other materials provided with the distribution.
-
-   - Neither the name of Internet Society, IETF or IETF Trust, nor the
-   names of specific contributors, may be used to endorse or promote
-   products derived from this software without specific prior written
-   permission.
 
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
    ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -48,11 +40,12 @@
     direction). */
 #define LAPLACE_NMIN (16)
 
+/* When called, decay is positive and at most 11456. */
 static unsigned ec_laplace_get_freq1(unsigned fs0, int decay)
 {
    unsigned ft;
    ft = 32768 - LAPLACE_MINP*(2*LAPLACE_NMIN) - fs0;
-   return ft*(16384-decay)>>15;
+   return ft*(opus_int32)(16384-decay)>>15;
 }
 
 void ec_laplace_encode(ec_enc *enc, int *value, unsigned fs, int decay)

@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -55,7 +51,7 @@ static inline void silk_NLSF_residual_dequant(               /* O    Returns RD 
         } else if( out_Q10 < 0 ) {
             out_Q10 = silk_ADD16( out_Q10, SILK_FIX_CONST( NLSF_QUANT_LEVEL_ADJ, 10 ) );
         }
-        out_Q10  = silk_SMLAWB( pred_Q10, out_Q10, quant_step_size_Q16 );
+        out_Q10  = silk_SMLAWB( pred_Q10, (opus_int32)out_Q10, quant_step_size_Q16 );
         x_Q10[ i ] = out_Q10;
     }
 }

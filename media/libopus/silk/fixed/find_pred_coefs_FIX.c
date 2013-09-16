@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -34,6 +30,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #include "main_FIX.h"
+#include "stack_alloc.h"
 
 void silk_find_pred_coefs_FIX(
     silk_encoder_state_FIX          *psEnc,                                 /* I/O  encoder state                                                               */
@@ -44,13 +41,14 @@ void silk_find_pred_coefs_FIX(
 )
 {
     opus_int         i;
-    opus_int32       WLTP[ MAX_NB_SUBFR * LTP_ORDER * LTP_ORDER ];
     opus_int32       invGains_Q16[ MAX_NB_SUBFR ], local_gains[ MAX_NB_SUBFR ], Wght_Q15[ MAX_NB_SUBFR ];
     opus_int16       NLSF_Q15[ MAX_LPC_ORDER ];
     const opus_int16 *x_ptr;
-    opus_int16       *x_pre_ptr, LPC_in_pre[ MAX_NB_SUBFR * MAX_LPC_ORDER + MAX_FRAME_LENGTH ];
+    opus_int16       *x_pre_ptr;
+    VARDECL( opus_int16, LPC_in_pre );
     opus_int32       tmp, min_gain_Q16, minInvGain_Q30;
     opus_int         LTP_corrs_rshift[ MAX_NB_SUBFR ];
+    SAVE_STACK;
 
     /* weighting for weighted least squares */
     min_gain_Q16 = silk_int32_MAX >> 6;
@@ -72,14 +70,21 @@ void silk_find_pred_coefs_FIX(
         Wght_Q15[ i ] = silk_RSHIFT( tmp, 1 );
 
         /* Invert the inverted and normalized gains */
-        local_gains[ i ] = silk_DIV32( ( 1 << 16 ), invGains_Q16[ i ] );
+        local_gains[ i ] = silk_DIV32( ( (opus_int32)1 << 16 ), invGains_Q16[ i ] );
     }
 
+    ALLOC( LPC_in_pre,
+           psEnc->sCmn.nb_subfr * psEnc->sCmn.predictLPCOrder
+               + psEnc->sCmn.frame_length, opus_int16 );
     if( psEnc->sCmn.indices.signalType == TYPE_VOICED ) {
+        VARDECL( opus_int32, WLTP );
+
         /**********/
         /* VOICED */
         /**********/
         silk_assert( psEnc->sCmn.ltp_mem_length - psEnc->sCmn.predictLPCOrder >= psEncCtrl->pitchL[ 0 ] + LTP_ORDER / 2 );
+
+        ALLOC( WLTP, psEnc->sCmn.nb_subfr * LTP_ORDER * LTP_ORDER, opus_int32 );
 
         /* LTP analysis */
         silk_find_LTP_FIX( psEncCtrl->LTPCoef_Q14, WLTP, &psEncCtrl->LTPredCodGain_Q7,
@@ -118,10 +123,10 @@ void silk_find_pred_coefs_FIX(
     /* Limit on total predictive coding gain */
     if( psEnc->sCmn.first_frame_after_reset ) {
         minInvGain_Q30 = SILK_FIX_CONST( 1.0f / MAX_PREDICTION_POWER_GAIN_AFTER_RESET, 30 );
-    } else {
-        minInvGain_Q30 = silk_log2lin( silk_SMLAWB( 16 << 7, psEncCtrl->LTPredCodGain_Q7, SILK_FIX_CONST( 1.0 / 3, 16 ) ) );      /* Q16 */
-        minInvGain_Q30 = silk_DIV32_varQ( minInvGain_Q30,
-            silk_SMULWW( SILK_FIX_CONST( MAX_PREDICTION_POWER_GAIN, 0 ),
+    } else {        
+        minInvGain_Q30 = silk_log2lin( silk_SMLAWB( 16 << 7, (opus_int32)psEncCtrl->LTPredCodGain_Q7, SILK_FIX_CONST( 1.0 / 3, 16 ) ) );      /* Q16 */
+        minInvGain_Q30 = silk_DIV32_varQ( minInvGain_Q30, 
+            silk_SMULWW( SILK_FIX_CONST( MAX_PREDICTION_POWER_GAIN, 0 ), 
                 silk_SMLAWB( SILK_FIX_CONST( 0.25, 18 ), SILK_FIX_CONST( 0.75, 18 ), psEncCtrl->coding_quality_Q14 ) ), 14 );
     }
 
@@ -137,4 +142,5 @@ void silk_find_pred_coefs_FIX(
 
     /* Copy to prediction struct for use in next frame for interpolation */
     silk_memcpy( psEnc->sCmn.prev_NLSFq_Q15, NLSF_Q15, sizeof( psEnc->sCmn.prev_NLSFq_Q15 ) );
+    RESTORE_STACK;
 }
