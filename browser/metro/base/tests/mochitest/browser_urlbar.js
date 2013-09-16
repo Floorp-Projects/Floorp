@@ -305,3 +305,35 @@ gTests.push({
   }
 });
 
+gTests.push({
+  desc: "Bug 916383 - Invisible autocomplete items selectable by keyboard when 'your results' not shown",
+  setUp: setUp,
+  tearDown: tearDown,
+  run: function testBug916383() {
+    sendElementTap(window, gEdit);
+
+    let bookmarkItem = Browser.selectedBrowser.contentWindow.BookmarksStartView._grid.querySelector("richgriditem");
+    // Get the first bookmark item label to make sure it will show up in 'your results'
+    let label = bookmarkItem.getAttribute("label");
+
+    EventUtils.sendString(label, window);
+
+    let opened = yield waitForCondition(() => gEdit.popup.popupOpen);
+    yield waitForCondition(() => gEdit.popup._results.itemCount > 0);
+
+    ok(!gEdit.popup._resultsContainer.hidden, "'Your results' are visible");
+    ok(gEdit.popup._results.itemCount > 0, "'Your results' are populated");
+
+    // Append a string to make sure it doesn't match anything in 'your results'
+    EventUtils.sendString("zzzzzzzzzzzzzzzzzz", window);
+
+    yield waitForCondition(() => gEdit.popup._resultsContainer.hidden);
+
+    ok(gEdit.popup._resultsContainer.hidden, "'Your results' are hidden");
+    ok(gEdit.popup._results.itemCount === 0, "'Your results' are empty");
+
+    EventUtils.synthesizeKey("VK_DOWN", {}, window);
+    is(gEdit.popup._searches.selectedIndex, 0, "key select search: first search selected");
+  }
+});
+
