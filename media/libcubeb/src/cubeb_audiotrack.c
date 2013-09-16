@@ -5,9 +5,7 @@
  * accompanying file LICENSE for details.
  */
 
-#if !defined(NDEBUG)
 #define NDEBUG
-#endif
 #include <assert.h>
 #include <pthread.h>
 #include <stdlib.h>
@@ -426,19 +424,6 @@ audiotrack_stream_get_position(cubeb_stream * stream, uint64_t * position)
   return CUBEB_OK;
 }
 
-int
-audiotrack_stream_get_latency(cubeb_stream * stream, uint32_t * latency)
-{
-  assert(stream->instance && latency);
-
-  /* Android returns the latency in ms, we want it in frames. */
-  *latency = stream->context->klass.latency(stream->instance);
-  /* with rate <= 96000, we won't overflow until 44.739 seconds of latency */
-  *latency = (*latency * stream->params.rate) / 1000;
-
-  return 0;
-}
-
 static struct cubeb_ops const audiotrack_ops = {
   .init = audiotrack_init,
   .get_backend_id = audiotrack_get_backend_id,
@@ -448,6 +433,5 @@ static struct cubeb_ops const audiotrack_ops = {
   .stream_destroy = audiotrack_stream_destroy,
   .stream_start = audiotrack_stream_start,
   .stream_stop = audiotrack_stream_stop,
-  .stream_get_position = audiotrack_stream_get_position,
-  .stream_get_latency = audiotrack_stream_get_latency
+  .stream_get_position = audiotrack_stream_get_position
 };
