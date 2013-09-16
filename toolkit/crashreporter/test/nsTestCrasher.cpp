@@ -46,6 +46,7 @@ const int16_t CRASH_PURE_VIRTUAL_CALL     = 1;
 const int16_t CRASH_RUNTIMEABORT          = 2;
 const int16_t CRASH_OOM                   = 3;
 const int16_t CRASH_MOZ_CRASH             = 4;
+const int16_t CRASH_ABORT                 = 5;
 
 extern "C" NS_EXPORT
 void Crash(int16_t how)
@@ -74,6 +75,10 @@ void Crash(int16_t how)
   }
   case CRASH_MOZ_CRASH: {
     MOZ_CRASH();
+    break;
+  }
+  case CRASH_ABORT: {
+    abort();
     break;
   }
   default:
