@@ -71,13 +71,12 @@ var ANCHOR = 0;
 var FOCUS = 1;
 
 function testCollapsed(id, vPercent, startAt, expected) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var selection = window.getSelection().QueryInterface(Components.interfaces.nsISelectionPrivate);
+  var selection = window.getSelection().QueryInterface(SpecialPowers.Ci.nsISelectionPrivate);
 
   var c = document.getElementById("c" + id);
   var target = document.getElementById("target" + id);
   if (target.contentDocument) {
-    selection = target.contentWindow.getSelection().QueryInterface(Components.interfaces.nsISelectionPrivate);
+    selection = target.contentWindow.getSelection().QueryInterface(SpecialPowers.Ci.nsISelectionPrivate);
     target = target.contentDocument.getElementById("target" + id);
   }
   selection.collapse(target.parentNode, 0);

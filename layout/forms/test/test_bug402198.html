@@ -52,13 +52,12 @@ function doe3() {
 
   document.getElementById('a').focus();
   document.body.style.display = 'none';
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var wu =  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                  .getInterface(Components.interfaces.nsIDOMWindowUtils);
-  wu.sendKeyEvent('keypress',  9, 0, 4);
+
+  synthesizeKey('VK_TAB', {type: "keypress", shiftKey: true});
 
   is(0, 0, "this is a crash/assertion test, so we're ok if we survived this far");
   SimpleTest.finish();
+  setTimeout(function() {document.body.style.display = '';}, 400);
 }
 
 function do_test() {

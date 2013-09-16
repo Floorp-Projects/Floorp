@@ -52,7 +52,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378518
     var myExtendedBoxClicked = false;
 
     function testClick(elemName) {
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       var wu  =
         window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
               .getInterface(Components.interfaces.nsIDOMWindowUtils);
