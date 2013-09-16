@@ -5,6 +5,8 @@
 
 #include "primpl.h"
 #include <process.h>  /* for _beginthreadex() */
+#include <stdio.h>
+#include <windows.h>
 
 #if defined(_MSC_VER) && _MSC_VER <= 1200
 /*
@@ -217,6 +219,10 @@ _PR_MD_CLEAN_THREAD(PRThread *thread)
 
     if (thread->md.handle) {
         rv = CloseHandle(thread->md.handle);
+        if (!rv) {
+          fprintf(stderr, "CloseHandle failed, handle: %x, last error: %x\n",
+                  (void*)thread->md.handle, GetLastError());
+        }
         PR_ASSERT(rv);
         thread->md.handle = 0;
     }
