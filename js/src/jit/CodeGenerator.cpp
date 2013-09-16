@@ -6802,10 +6802,6 @@ CodeGenerator::visitClampVToUint8(LClampVToUint8 *lir)
     Register output = ToRegister(lir->output());
     MDefinition *input = lir->mir()->input();
 
-    OutOfLineCode *oolDouble = oolTruncateDouble(tempFloat, output);
-    if (!oolDouble)
-        return false;
-
     Label *stringEntry, *stringRejoin;
     if (input->mightBeType(MIRType_String)) {
         OutOfLineCode *oolString = oolCallVM(StringToNumberInfo, lir, (ArgList(), output),
@@ -6821,7 +6817,7 @@ CodeGenerator::visitClampVToUint8(LClampVToUint8 *lir)
 
     Label fails;
     masm.clampValueToUint8(operand, input,
-                           stringEntry, stringRejoin, oolDouble->entry(),
+                           stringEntry, stringRejoin,
                            output, tempFloat, output, &fails);
 
     if (!bailoutFrom(&fails, lir->snapshot()))
