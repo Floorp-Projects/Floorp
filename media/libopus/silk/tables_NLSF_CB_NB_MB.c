@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -35,7 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "tables.h"
 
-const opus_uint8 silk_NLSF_CB1_NB_MB_Q8[ 320 ] = {
+static const opus_uint8 silk_NLSF_CB1_NB_MB_Q8[ 320 ] = {
         12,     35,     60,     83,    108,    132,    157,    180,
        206,    228,     15,     32,     55,     77,    101,    125,
        151,    175,    201,    225,     19,     42,     66,     89,
@@ -78,7 +74,7 @@ const opus_uint8 silk_NLSF_CB1_NB_MB_Q8[ 320 ] = {
         64,     84,    104,    118,    156,    177,    201,    230
 };
 
-const opus_uint8 silk_NLSF_CB1_iCDF_NB_MB[ 64 ] = {
+static const opus_uint8 silk_NLSF_CB1_iCDF_NB_MB[ 64 ] = {
        212,    178,    148,    129,    108,     96,     85,     82,
         79,     77,     61,     59,     57,     56,     51,     49,
         48,     45,     42,     41,     40,     38,     36,     34,
@@ -89,7 +85,7 @@ const opus_uint8 silk_NLSF_CB1_iCDF_NB_MB[ 64 ] = {
         28,     20,     19,     18,     12,     11,      5,      0
 };
 
-const opus_uint8 silk_NLSF_CB2_SELECT_NB_MB[ 160 ] = {
+static const opus_uint8 silk_NLSF_CB2_SELECT_NB_MB[ 160 ] = {
         16,      0,      0,      0,      0,     99,     66,     36,
         36,     34,     36,     34,     34,     34,     34,     83,
         69,     36,     52,     34,    116,    102,     70,     68,
@@ -112,7 +108,7 @@ const opus_uint8 silk_NLSF_CB2_SELECT_NB_MB[ 160 ] = {
        171,    137,    139,    137,    155,    218,    219,    139
 };
 
-const opus_uint8 silk_NLSF_CB2_iCDF_NB_MB[ 72 ] = {
+static const opus_uint8 silk_NLSF_CB2_iCDF_NB_MB[ 72 ] = {
        255,    254,    253,    238,     14,      3,      2,      1,
          0,    255,    254,    252,    218,     35,      3,      2,
          1,      0,    255,    254,    250,    208,     59,      4,
@@ -124,7 +120,7 @@ const opus_uint8 silk_NLSF_CB2_iCDF_NB_MB[ 72 ] = {
        254,    236,    173,     95,     37,      7,      1,      0
 };
 
-const opus_uint8 silk_NLSF_CB2_BITS_NB_MB_Q5[ 72 ] = {
+static const opus_uint8 silk_NLSF_CB2_BITS_NB_MB_Q5[ 72 ] = {
        255,    255,    255,    131,      6,    145,    255,    255,
        255,    255,    255,    236,     93,     15,     96,    255,
        255,    255,    255,    255,    194,     83,     25,     71,
@@ -136,13 +132,13 @@ const opus_uint8 silk_NLSF_CB2_BITS_NB_MB_Q5[ 72 ] = {
        251,    123,     65,     55,     68,    100,    171,    255
 };
 
-const opus_uint8 silk_NLSF_PRED_NB_MB_Q8[ 18 ] = {
+static const opus_uint8 silk_NLSF_PRED_NB_MB_Q8[ 18 ] = {
        179,    138,    140,    148,    151,    149,    153,    151,
        163,    116,     67,     82,     59,     92,     72,    100,
         89,     92
 };
 
-const opus_int16 silk_NLSF_DELTA_MIN_NB_MB_Q15[ 11 ] = {
+static const opus_int16 silk_NLSF_DELTA_MIN_NB_MB_Q15[ 11 ] = {
        250,      3,      6,      3,      3,      3,      4,      3,
          3,      3,    461
 };

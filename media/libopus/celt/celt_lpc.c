@@ -1,10 +1,6 @@
-/* Copyright (c) 2009-2012 IETF Trust, Xiph.Org Foundation. All rights reserved.
+/* Copyright (c) 2009-2010 Xiph.Org Foundation
    Written by Jean-Marc Valin */
 /*
-
-   This file is extracted from RFC6716. Please see that RFC for additional
-   information.
-
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:
@@ -15,11 +11,6 @@
    - Redistributions in binary form must reproduce the above copyright
    notice, this list of conditions and the following disclaimer in the
    documentation and/or other materials provided with the distribution.
-
-   - Neither the name of Internet Society, IETF or IETF Trust, nor the
-   names of specific contributors, may be used to endorse or promote
-   products derived from this software without specific prior written
-   permission.
 
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
    ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -41,6 +32,7 @@
 #include "celt_lpc.h"
 #include "stack_alloc.h"
 #include "mathops.h"
+#include "pitch.h"
 
 void _celt_lpc(
       opus_val16       *_lpc, /* out: [0...p-1] LPC coefficients      */
@@ -96,42 +88,71 @@ int          p
 #endif
 }
 
-void celt_fir(const opus_val16 *x,
+void celt_fir(const opus_val16 *_x,
          const opus_val16 *num,
-         opus_val16 *y,
+         opus_val16 *_y,
          int N,
          int ord,
          opus_val16 *mem)
 {
    int i,j;
+   VARDECL(opus_val16, rnum);
+   VARDECL(opus_val16, x);
+   SAVE_STACK;
 
+   ALLOC(rnum, ord, opus_val16);
+   ALLOC(x, N+ord, opus_val16);
+   for(i=0;i<ord;i++)
+      rnum[i] = num[ord-i-1];
+   for(i=0;i<ord;i++)
+      x[i] = mem[ord-i-1];
+   for (i=0;i<N;i++)
+      x[i+ord]=_x[i];
+   for(i=0;i<ord;i++)
+      mem[i] = _x[N-i-1];
+#ifdef SMALL_FOOTPRINT
    for (i=0;i<N;i++)
    {
-      opus_val32 sum = SHL32(EXTEND32(x[i]), SIG_SHIFT);
+      opus_val32 sum = SHL32(EXTEND32(_x[i]), SIG_SHIFT);
       for (j=0;j<ord;j++)
       {
-         sum += MULT16_16(num[j],mem[j]);
+         sum = MAC16_16(sum,rnum[j],x[i+j]);
       }
-      for (j=ord-1;j>=1;j--)
-      {
-         mem[j]=mem[j-1];
-      }
-      mem[0] = x[i];
-      y[i] = ROUND16(sum, SIG_SHIFT);
+      _y[i] = SATURATE16(PSHR32(sum, SIG_SHIFT));
    }
+#else
+   for (i=0;i<N-3;i+=4)
+   {
+      opus_val32 sum[4]={0,0,0,0};
+      xcorr_kernel(rnum, x+i, sum, ord);
+      _y[i  ] = SATURATE16(ADD32(EXTEND32(_x[i  ]), PSHR32(sum[0], SIG_SHIFT)));
+      _y[i+1] = SATURATE16(ADD32(EXTEND32(_x[i+1]), PSHR32(sum[1], SIG_SHIFT)));
+      _y[i+2] = SATURATE16(ADD32(EXTEND32(_x[i+2]), PSHR32(sum[2], SIG_SHIFT)));
+      _y[i+3] = SATURATE16(ADD32(EXTEND32(_x[i+3]), PSHR32(sum[3], SIG_SHIFT)));
+   }
+   for (;i<N;i++)
+   {
+      opus_val32 sum = 0;
+      for (j=0;j<ord;j++)
+         sum = MAC16_16(sum,rnum[j],x[i+j]);
+      _y[i] = SATURATE16(ADD32(EXTEND32(_x[i]), PSHR32(sum, SIG_SHIFT)));
+   }
+#endif
+   RESTORE_STACK;
 }
 
-void celt_iir(const opus_val32 *x,
+void celt_iir(const opus_val32 *_x,
          const opus_val16 *den,
-         opus_val32 *y,
+         opus_val32 *_y,
          int N,
          int ord,
          opus_val16 *mem)
 {
+#ifdef SMALL_FOOTPRINT
    int i,j;
    for (i=0;i<N;i++)
    {
-      opus_val32 sum = x[i];
+      opus_val32 sum = _x[i];
       for (j=0;j<ord;j++)
       {
          sum -= MULT16_16(den[j],mem[j]);
@@ -141,11 +162,65 @@ void celt_iir(const opus_val32 *x,
          mem[j]=mem[j-1];
       }
       mem[0] = ROUND16(sum,SIG_SHIFT);
-      y[i] = sum;
+      _y[i] = sum;
    }
+#else
+   int i,j;
+   VARDECL(opus_val16, rden);
+   VARDECL(opus_val16, y);
+   SAVE_STACK;
+
+   celt_assert((ord&3)==0);
+   ALLOC(rden, ord, opus_val16);
+   ALLOC(y, N+ord, opus_val16);
+   for(i=0;i<ord;i++)
+      rden[i] = den[ord-i-1];
+   for(i=0;i<ord;i++)
+      y[i] = -mem[ord-i-1];
+   for(;i<N+ord;i++)
+      y[i]=0;
+   for (i=0;i<N-3;i+=4)
+   {
+      /* Unroll by 4 as if it were an FIR filter */
+      opus_val32 sum[4];
+      sum[0]=_x[i];
+      sum[1]=_x[i+1];
+      sum[2]=_x[i+2];
+      sum[3]=_x[i+3];
+      xcorr_kernel(rden, y+i, sum, ord);
+
+      /* Patch up the result to compensate for the fact that this is an IIR */
+      y[i+ord  ] = -ROUND16(sum[0],SIG_SHIFT);
+      _y[i  ] = sum[0];
+      sum[1] = MAC16_16(sum[1], y[i+ord  ], den[0]);
+      y[i+ord+1] = -ROUND16(sum[1],SIG_SHIFT);
+      _y[i+1] = sum[1];
+      sum[2] = MAC16_16(sum[2], y[i+ord+1], den[0]);
+      sum[2] = MAC16_16(sum[2], y[i+ord  ], den[1]);
+      y[i+ord+2] = -ROUND16(sum[2],SIG_SHIFT);
+      _y[i+2] = sum[2];
+
+      sum[3] = MAC16_16(sum[3], y[i+ord+2], den[0]);
+      sum[3] = MAC16_16(sum[3], y[i+ord+1], den[1]);
+      sum[3] = MAC16_16(sum[3], y[i+ord  ], den[2]);
+      y[i+ord+3] = -ROUND16(sum[3],SIG_SHIFT);
+      _y[i+3] = sum[3];
+   }
+   for (;i<N;i++)
+   {
+      opus_val32 sum = _x[i];
+      for (j=0;j<ord;j++)
+         sum -= MULT16_16(rden[j],y[i+j]);
+      y[i+ord] = ROUND16(sum,SIG_SHIFT);
+      _y[i] = sum;
+   }
+   for(i=0;i<ord;i++)
+      mem[i] = _y[N-i-1];
+   RESTORE_STACK;
+#endif
 }
 
-void _celt_autocorr(
+int _celt_autocorr(
                    const opus_val16 *x,   /*  in: [0...n-1] samples x   */
                    opus_val32       *ac,  /* out: [0...lag-1] ac values */
                    const opus_val16       *window,
@@ -155,43 +230,79 @@ void _celt_autocorr(
                   )
 {
    opus_val32 d;
-   int i;
+   int i, k;
+   int fastN=n-lag;
+   int shift;
+   const opus_val16 *xptr;
    VARDECL(opus_val16, xx);
    SAVE_STACK;
    ALLOC(xx, n, opus_val16);
    celt_assert(n>0);
    celt_assert(overlap>=0);
-   for (i=0;i<n;i++)
-      xx[i] = x[i];
-   for (i=0;i<overlap;i++)
+   if (overlap == 0)
    {
-      xx[i] = MULT16_16_Q15(x[i],window[i]);
-      xx[n-i-1] = MULT16_16_Q15(x[n-i-1],window[i]);
+      xptr = x;
+   } else {
+      for (i=0;i<n;i++)
+         xx[i] = x[i];
+      for (i=0;i<overlap;i++)
+      {
+         xx[i] = MULT16_16_Q15(x[i],window[i]);
+         xx[n-i-1] = MULT16_16_Q15(x[n-i-1],window[i]);
+      }
+      xptr = xx;
    }
+   shift=0;
 #ifdef FIXED_POINT
    {
-      opus_val32 ac0=0;
-      int shift;
-      for(i=0;i<n;i++)
-         ac0 += SHR32(MULT16_16(xx[i],xx[i]),9);
-      ac0 += 1+n;
+      opus_val32 ac0;
+      ac0 = 1+(n<<7);
+      if (n&1) ac0 += SHR32(MULT16_16(xptr[0],xptr[0]),9);
+      for(i=(n&1);i<n;i+=2)
+      {
+         ac0 += SHR32(MULT16_16(xptr[i],xptr[i]),9);
+         ac0 += SHR32(MULT16_16(xptr[i+1],xptr[i+1]),9);
+      }
 
       shift = celt_ilog2(ac0)-30+10;
-      shift = (shift+1)/2;
-      for(i=0;i<n;i++)
-         xx[i] = VSHR32(xx[i], shift);
+      shift = (shift)/2;
+      if (shift>0)
+      {
+         for(i=0;i<n;i++)
+            xx[i] = PSHR32(xptr[i], shift);
+         xptr = xx;
+      } else
+         shift = 0;
    }
 #endif
-   while (lag>=0)
+   celt_pitch_xcorr(xptr, xptr, ac, fastN, lag+1);
+   for (k=0;k<=lag;k++)
    {
-      for (i = lag, d = 0; i < n; i++)
-         d += xx[i] * xx[i-lag];
-      ac[lag] = d;
-      /*printf ("%f ", ac[lag]);*/
-      lag--;
+      for (i = k+fastN, d = 0; i < n; i++)
+         d = MAC16_16(d, xptr[i], xptr[i-k]);
+      ac[k] += d;
    }
-   /*printf ("\n");*/
-   ac[0] += 10;
+#ifdef FIXED_POINT
+   shift = 2*shift;
+   if (shift<=0)
+      ac[0] += SHL32((opus_int32)1, -shift);
+   if (ac[0] < 268435456)
+   {
+      int shift2 = 29 - EC_ILOG(ac[0]);
+      for (i=0;i<=lag;i++)
+         ac[i] = SHL32(ac[i], shift2);
+      shift -= shift2;
+   } else if (ac[0] >= 536870912)
+   {
+      int shift2=1;
+      if (ac[0] >= 1073741824)
+         shift2++;
+      for (i=0;i<=lag;i++)
+         ac[i] = SHR32(ac[i], shift2);
+      shift += shift2;
+   }
+#endif
 
    RESTORE_STACK;
+   return shift;
 }

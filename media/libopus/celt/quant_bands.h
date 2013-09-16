@@ -1,10 +1,7 @@
-/* Copyright (c) 2007-2012 IETF Trust, CSIRO, Xiph.Org Foundation. All rights reserved.
+/* Copyright (c) 2007-2008 CSIRO
+   Copyright (c) 2007-2009 Xiph.Org Foundation
    Written by Jean-Marc Valin */
 /*
-
-   This file is extracted from RFC6716. Please see that RFC for additional
-   information.
-
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:
@@ -15,11 +12,6 @@
    - Redistributions in binary form must reproduce the above copyright
    notice, this list of conditions and the following disclaimer in the
    documentation and/or other materials provided with the distribution.
-
-   - Neither the name of Internet Society, IETF or IETF Trust, nor the
-   names of specific contributors, may be used to endorse or promote
-   products derived from this software without specific prior written
-   permission.
 
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
    ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -43,6 +35,12 @@
 #include "entdec.h"
 #include "mathops.h"
 
+#ifdef FIXED_POINT
+extern const signed char eMeans[25];
+#else
+extern const opus_val16 eMeans[25];
+#endif
+
 void amp2Log2(const CELTMode *m, int effEnd, int end,
       celt_ener *bandE, opus_val16 *bandLogE, int C);
 
@@ -53,7 +51,7 @@ void quant_coarse_energy(const CELTMode *m, int start, int end, int effEnd,
       const opus_val16 *eBands, opus_val16 *oldEBands, opus_uint32 budget,
       opus_val16 *error, ec_enc *enc, int C, int LM,
       int nbAvailableBytes, int force_intra, opus_val32 *delayedIntra,
-      int two_pass, int loss_rate);
+      int two_pass, int loss_rate, int lfe);
 
 void quant_fine_energy(const CELTMode *m, int start, int end, opus_val16 *oldEBands, opus_val16 *error, int *fine_quant, ec_enc *enc, int C);
 

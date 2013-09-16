@@ -1,14 +1,11 @@
-/* Copyright (c) 2007-2012 IETF Trust, CSIRO, Xiph.Org Foundation. All rights reserved.
+/* Copyright (c) 2007-2008 CSIRO
+   Copyright (c) 2007-2009 Xiph.Org Foundation
    Written by Jean-Marc Valin */
 /**
    @file vq.h
    @brief Vector quantisation of the residual
  */
 /*
-
-   This file is extracted from RFC6716. Please see that RFC for additional
-   information.
-
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:
@@ -19,11 +16,6 @@
    - Redistributions in binary form must reproduce the above copyright
    notice, this list of conditions and the following disclaimer in the
    documentation and/or other materials provided with the distribution.
-
-   - Neither the name of Internet Society, IETF or IETF Trust, nor the
-   names of specific contributors, may be used to endorse or promote
-   products derived from this software without specific prior written
-   permission.
 
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
    ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -48,11 +40,9 @@
 /** Algebraic pulse-vector quantiser. The signal x is replaced by the sum of
   * the pitch and a combination of pulses such that its norm is still equal
   * to 1. This is the function that will typically require the most CPU.
- * @param x Residual signal to quantise/encode (returns quantised version)
- * @param W Perceptual weight to use when optimising (currently unused)
+ * @param X Residual signal to quantise/encode (returns quantised version)
  * @param N Number of samples to encode
  * @param K Number of pulses to use
- * @param p Pitch vector (it is assumed that p+x is a unit vector)
  * @param enc Entropy encoder state
  * @ret A mask indicating which blocks in the band received pulses
 */
@@ -64,10 +54,9 @@ unsigned alg_quant(celt_norm *X, int N, int K, int spread, int B,
       );
 
 /** Algebraic pulse decoder
- * @param x Decoded normalised spectrum (returned)
+ * @param X Decoded normalised spectrum (returned)
  * @param N Number of samples to decode
  * @param K Number of pulses to use
- * @param p Pitch vector (automatically added to x)
  * @param dec Entropy decoder state
  * @ret A mask indicating which blocks in the band received pulses
  */
