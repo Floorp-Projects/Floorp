@@ -30,8 +30,6 @@ using namespace mozilla::dom;
 USING_INDEXEDDB_NAMESPACE
 USING_QUOTA_NAMESPACE
 
-static const fallible_t fallible = fallible_t();
-
 namespace {
 
 // If JS_STRUCTURED_CLONE_VERSION changes then we need to update our major
@@ -884,8 +882,7 @@ public:
     NS_ENSURE_SUCCESS(rv, rv);
 
     size_t compressedLength = snappy::MaxCompressedLength(uncompressedLength);
-    nsAutoArrayPtr<char> compressed(new (fallible) char[compressedLength]);
-    NS_ENSURE_TRUE(compressed, NS_ERROR_OUT_OF_MEMORY);
+    nsAutoArrayPtr<char> compressed(new char[compressedLength]);
 
     snappy::RawCompress(reinterpret_cast<const char*>(uncompressed),
                         uncompressedLength, compressed.get(),

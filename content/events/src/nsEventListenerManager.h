@@ -400,11 +400,6 @@ public:
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  uint32_t ListenerCount() const
-  {
-    return mListeners.Length();
-  }
-
   void MarkForCC();
 
   mozilla::dom::EventTarget* GetTarget() { return mTarget; }
@@ -566,7 +561,7 @@ NS_AddSystemEventListener(mozilla::dom::EventTarget* aTarget,
                           bool aUseCapture,
                           bool aWantsUntrusted)
 {
-  nsEventListenerManager* listenerManager = aTarget->ListenerManager();
+  nsEventListenerManager* listenerManager = aTarget->GetListenerManager(true);
   NS_ENSURE_STATE(listenerManager);
   mozilla::dom::EventListenerFlags flags;
   flags.mInSystemGroup = true;

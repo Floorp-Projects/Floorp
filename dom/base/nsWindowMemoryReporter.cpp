@@ -124,7 +124,7 @@ CollectWindowReports(nsGlobalWindow *aWindow,
                      nsIMemoryReporterCallback *aCb,
                      nsISupports *aClosure)
 {
-  nsAutoCString windowPath;
+  nsAutoCString windowPath("explicit/");
 
   // Avoid calling aWindow->GetTop() if there's no outer window.  It will work
   // just fine, but will spew a lot of warnings.
@@ -176,123 +176,94 @@ CollectWindowReports(nsGlobalWindow *aWindow,
   AppendWindowURI(aWindow, windowPath);
   windowPath += NS_LITERAL_CSTRING(")");
 
-  nsCString explicitWindowPath("explicit/");
-  explicitWindowPath += windowPath;
-
-  // XXXkhuey 
-  nsCString censusWindowPath("event-counts/");
-  censusWindowPath += windowPath;
-
   // Remember the path for later.
-  aWindowPaths->Put(aWindow->WindowID(), explicitWindowPath);
+  aWindowPaths->Put(aWindow->WindowID(), windowPath);
 
-#define REPORT_SIZE(_pathTail, _amount, _desc)                                \
+#define REPORT(_pathTail, _amount, _desc)                                     \
   do {                                                                        \
     if (_amount > 0) {                                                        \
-      nsAutoCString path(explicitWindowPath);                                 \
-      path += _pathTail;                                                      \
-      nsresult rv;                                                            \
-      rv = aCb->Callback(EmptyCString(), path, nsIMemoryReporter::KIND_HEAP,  \
-                    nsIMemoryReporter::UNITS_BYTES, _amount,                  \
-                    NS_LITERAL_CSTRING(_desc), aClosure);                     \
-      NS_ENSURE_SUCCESS(rv, rv);                                              \
-    }                                                                         \
-  } while (0)
-
-#define REPORT_COUNT(_pathTail, _amount, _desc)                               \
-  do {                                                                        \
-    if (_amount > 0) {                                                        \
-      nsAutoCString path(censusWindowPath);                                   \
-      path += _pathTail;                                                      \
-      nsresult rv;                                                            \
-      rv = aCb->Callback(EmptyCString(), path, nsIMemoryReporter::KIND_OTHER, \
-                    nsIMemoryReporter::UNITS_COUNT, _amount,                  \
-                    NS_LITERAL_CSTRING(_desc), aClosure);                     \
-      NS_ENSURE_SUCCESS(rv, rv);                                              \
+        nsAutoCString path(windowPath);                                       \
+        path += _pathTail;                                                    \
+        nsresult rv;                                                          \
+        rv = aCb->Callback(EmptyCString(), path, nsIMemoryReporter::KIND_HEAP,\
+                      nsIMemoryReporter::UNITS_BYTES, _amount,                \
+                      NS_LITERAL_CSTRING(_desc), aClosure);                   \
+        NS_ENSURE_SUCCESS(rv, rv);                                            \
     }                                                                         \
   } while (0)
 
   nsWindowSizes windowSizes(WindowsMallocSizeOf);
   aWindow->SizeOfIncludingThis(&windowSizes);
 
-  REPORT_SIZE("/dom/element-nodes", windowSizes.mDOMElementNodesSize,
-              "Memory used by the element nodes in a window's DOM.");
-  aWindowTotalSizes->mDOMElementNodesSize += windowSizes.mDOMElementNodesSize;
+  REPORT("/dom/element-nodes", windowSizes.mDOMElementNodes,
+         "Memory used by the element nodes in a window's DOM.");
+  aWindowTotalSizes->mDOMElementNodes += windowSizes.mDOMElementNodes;
 
-  REPORT_SIZE("/dom/text-nodes", windowSizes.mDOMTextNodesSize,
-              "Memory used by the text nodes in a window's DOM.");
-  aWindowTotalSizes->mDOMTextNodesSize += windowSizes.mDOMTextNodesSize;
+  REPORT("/dom/text-nodes", windowSizes.mDOMTextNodes,
+         "Memory used by the text nodes in a window's DOM.");
+  aWindowTotalSizes->mDOMTextNodes += windowSizes.mDOMTextNodes;
 
-  REPORT_SIZE("/dom/cdata-nodes", windowSizes.mDOMCDATANodesSize,
-              "Memory used by the CDATA nodes in a window's DOM.");
-  aWindowTotalSizes->mDOMCDATANodesSize += windowSizes.mDOMCDATANodesSize;
+  REPORT("/dom/cdata-nodes", windowSizes.mDOMCDATANodes,
+         "Memory used by the CDATA nodes in a window's DOM.");
+  aWindowTotalSizes->mDOMCDATANodes += windowSizes.mDOMCDATANodes;
 
-  REPORT_SIZE("/dom/comment-nodes", windowSizes.mDOMCommentNodesSize,
-              "Memory used by the comment nodes in a window's DOM.");
-  aWindowTotalSizes->mDOMCommentNodesSize += windowSizes.mDOMCommentNodesSize;
+  REPORT("/dom/comment-nodes", windowSizes.mDOMCommentNodes,
+         "Memory used by the comment nodes in a window's DOM.");
+  aWindowTotalSizes->mDOMCommentNodes += windowSizes.mDOMCommentNodes;
 
-  REPORT_SIZE("/dom/event-targets", windowSizes.mDOMEventTargetsSize,
-              "Memory used by the event targets table in a window's DOM, and "
-              "the objects it points to, which include XHRs.");
-  aWindowTotalSizes->mDOMEventTargetsSize += windowSizes.mDOMEventTargetsSize;
+  REPORT("/dom/event-targets", windowSizes.mDOMEventTargets,
+         "Memory used by the event targets table in a window's DOM, and the "
+         "objects it points to, which include XHRs.");
+  aWindowTotalSizes->mDOMEventTargets += windowSizes.mDOMEventTargets;
 
-  REPORT_COUNT("/dom/event-targets", windowSizes.mDOMEventTargetsCount,
-               "Number of non-node event targets in the event targets table in "
-               " window's DOM, such as XHRs.");
-  aWindowTotalSizes->mDOMEventTargetsCount += windowSizes.mDOMEventTargetsCount;
+  REPORT("/dom/other", windowSizes.mDOMOther,
+         "Memory used by a window's DOM that isn't measured by the other "
+         "'dom/' numbers.");
+  aWindowTotalSizes->mDOMOther += windowSizes.mDOMOther;
 
-  REPORT_COUNT("/dom/event-listeners", windowSizes.mDOMEventListenersCount,
-               "Number of event listeners in a window, including event "
-               "listeners on nodes and other event targets.");
-  aWindowTotalSizes->mDOMEventListenersCount += windowSizes.mDOMEventListenersCount;
+  REPORT("/property-tables",
+         windowSizes.mPropertyTables,
+         "Memory used for the property tables within a window.");
+  aWindowTotalSizes->mPropertyTables += windowSizes.mPropertyTables;
 
-  REPORT_SIZE("/dom/other", windowSizes.mDOMOtherSize,
-              "Memory used by a window's DOM that isn't measured by the other "
-               "'dom/' numbers.");
-  aWindowTotalSizes->mDOMOtherSize += windowSizes.mDOMOtherSize;
+  REPORT("/style-sheets", windowSizes.mStyleSheets,
+         "Memory used by style sheets within a window.");
+  aWindowTotalSizes->mStyleSheets += windowSizes.mStyleSheets;
 
-  REPORT_SIZE("/property-tables", windowSizes.mPropertyTablesSize,
-              "Memory used for the property tables within a window.");
-  aWindowTotalSizes->mPropertyTablesSize += windowSizes.mPropertyTablesSize;
+  REPORT("/layout/pres-shell", windowSizes.mLayoutPresShell,
+         "Memory used by layout's PresShell, along with any structures "
+         "allocated in its arena and not measured elsewhere, "
+         "within a window.");
+  aWindowTotalSizes->mLayoutPresShell += windowSizes.mLayoutPresShell;
 
-  REPORT_SIZE("/style-sheets", windowSizes.mStyleSheetsSize,
-              "Memory used by style sheets within a window.");
-  aWindowTotalSizes->mStyleSheetsSize += windowSizes.mStyleSheetsSize;
-
-  REPORT_SIZE("/layout/pres-shell", windowSizes.mLayoutPresShellSize,
-              "Memory used by layout's PresShell, along with any structures "
-              "allocated in its arena and not measured elsewhere, "
-              "within a window.");
-  aWindowTotalSizes->mLayoutPresShellSize += windowSizes.mLayoutPresShellSize;
-
-  REPORT_SIZE("/layout/line-boxes", windowSizes.mArenaStats.mLineBoxes,
-              "Memory used by line boxes within a window.");
+  REPORT("/layout/line-boxes", windowSizes.mArenaStats.mLineBoxes,
+         "Memory used by line boxes within a window.");
   aWindowTotalSizes->mArenaStats.mLineBoxes
     += windowSizes.mArenaStats.mLineBoxes;
 
-  REPORT_SIZE("/layout/rule-nodes", windowSizes.mArenaStats.mRuleNodes,
-              "Memory used by CSS rule nodes within a window.");
+  REPORT("/layout/rule-nodes", windowSizes.mArenaStats.mRuleNodes,
+         "Memory used by CSS rule nodes within a window.");
   aWindowTotalSizes->mArenaStats.mRuleNodes
     += windowSizes.mArenaStats.mRuleNodes;
 
-  REPORT_SIZE("/layout/style-contexts", windowSizes.mArenaStats.mStyleContexts,
-              "Memory used by style contexts within a window.");
+  REPORT("/layout/style-contexts", windowSizes.mArenaStats.mStyleContexts,
+         "Memory used by style contexts within a window.");
   aWindowTotalSizes->mArenaStats.mStyleContexts
     += windowSizes.mArenaStats.mStyleContexts;
 
-  REPORT_SIZE("/layout/style-sets", windowSizes.mLayoutStyleSetsSize,
-              "Memory used by style sets within a window.");
-  aWindowTotalSizes->mLayoutStyleSetsSize += windowSizes.mLayoutStyleSetsSize;
+  REPORT("/layout/style-sets", windowSizes.mLayoutStyleSets,
+         "Memory used by style sets within a window.");
+  aWindowTotalSizes->mLayoutStyleSets += windowSizes.mLayoutStyleSets;
 
-  REPORT_SIZE("/layout/text-runs", windowSizes.mLayoutTextRunsSize,
-              "Memory used for text-runs (glyph layout) in the PresShell's "
-              "frame tree, within a window.");
-  aWindowTotalSizes->mLayoutTextRunsSize += windowSizes.mLayoutTextRunsSize;
+  REPORT("/layout/text-runs", windowSizes.mLayoutTextRuns,
+         "Memory used for text-runs (glyph layout) in the PresShell's frame "
+         "tree, within a window.");
+  aWindowTotalSizes->mLayoutTextRuns += windowSizes.mLayoutTextRuns;
 
-  REPORT_SIZE("/layout/pres-contexts", windowSizes.mLayoutPresContextSize,
-              "Memory used for the PresContext in the PresShell's frame "
-              "within a window.");
-  aWindowTotalSizes->mLayoutPresContextSize += windowSizes.mLayoutPresContextSize;
+  REPORT("/layout/pres-contexts", windowSizes.mLayoutPresContext,
+         "Memory used for the PresContext in the PresShell's frame "
+         "within a window.");
+  aWindowTotalSizes->mLayoutPresContext += windowSizes.mLayoutPresContext;
 
   // There are many different kinds of frames, but it is very likely
   // that only a few matter.  Implement a cutoff so we don't bloat
@@ -308,9 +279,9 @@ CollectWindowReports(nsGlobalWindow *aWindow,
     if (frameSize < FRAME_SUNDRIES_THRESHOLD) {                         \
       frameSundriesSize += frameSize;                                   \
     } else {                                                            \
-      REPORT_SIZE("/layout/frames/" # classname, frameSize,             \
-                  "Memory used by frames of "                           \
-                  "type " #classname " within a window.");              \
+      REPORT("/layout/frames/" # classname, frameSize,                  \
+             "Memory used by frames of "                                \
+             "type " #classname " within a window.");                   \
     }                                                                   \
     aWindowTotalSizes->mArenaStats.FRAME_ID_STAT_FIELD(classname)       \
       += frameSize;                                                     \
@@ -319,13 +290,12 @@ CollectWindowReports(nsGlobalWindow *aWindow,
 #undef FRAME_ID
 
   if (frameSundriesSize > 0) {
-    REPORT_SIZE("/layout/frames/sundries", frameSundriesSize,
-                "The sum of all memory used by frames which were too small "
-                "to be shown individually.");
+    REPORT("/layout/frames/sundries", frameSundriesSize,
+           "The sum of all memory used by frames which were too small "
+           "to be shown individually.");
   }
 
-#undef REPORT_SIZE
-#undef REPORT_COUNT
+#undef REPORT
 
   return NS_OK;
 }
@@ -397,32 +367,32 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryReporterCallback* aCb,
     NS_ENSURE_SUCCESS(rv, rv);                                                \
   } while (0)
 
-  REPORT("window-objects/dom/element-nodes", windowTotalSizes.mDOMElementNodesSize,
+  REPORT("window-objects/dom/element-nodes", windowTotalSizes.mDOMElementNodes,
          "This is the sum of all windows' 'dom/element-nodes' numbers.");
 
-  REPORT("window-objects/dom/text-nodes", windowTotalSizes.mDOMTextNodesSize,
+  REPORT("window-objects/dom/text-nodes", windowTotalSizes.mDOMTextNodes,
          "This is the sum of all windows' 'dom/text-nodes' numbers.");
 
-  REPORT("window-objects/dom/cdata-nodes", windowTotalSizes.mDOMCDATANodesSize,
+  REPORT("window-objects/dom/cdata-nodes", windowTotalSizes.mDOMCDATANodes,
          "This is the sum of all windows' 'dom/cdata-nodes' numbers.");
 
-  REPORT("window-objects/dom/comment-nodes", windowTotalSizes.mDOMCommentNodesSize,
+  REPORT("window-objects/dom/comment-nodes", windowTotalSizes.mDOMCommentNodes,
          "This is the sum of all windows' 'dom/comment-nodes' numbers.");
 
-  REPORT("window-objects/dom/event-targets", windowTotalSizes.mDOMEventTargetsSize,
+  REPORT("window-objects/dom/event-targets", windowTotalSizes.mDOMEventTargets,
          "This is the sum of all windows' 'dom/event-targets' numbers.");
 
-  REPORT("window-objects/dom/other", windowTotalSizes.mDOMOtherSize,
+  REPORT("window-objects/dom/other", windowTotalSizes.mDOMOther,
          "This is the sum of all windows' 'dom/other' numbers.");
 
   REPORT("window-objects/property-tables",
-         windowTotalSizes.mPropertyTablesSize,
+         windowTotalSizes.mPropertyTables,
          "This is the sum of all windows' 'property-tables' numbers.");
 
-  REPORT("window-objects/style-sheets", windowTotalSizes.mStyleSheetsSize,
+  REPORT("window-objects/style-sheets", windowTotalSizes.mStyleSheets,
          "This is the sum of all windows' 'style-sheets' numbers.");
 
-  REPORT("window-objects/layout/pres-shell", windowTotalSizes.mLayoutPresShellSize,
+  REPORT("window-objects/layout/pres-shell", windowTotalSizes.mLayoutPresShell,
          "This is the sum of all windows' 'layout/arenas' numbers.");
 
   REPORT("window-objects/layout/line-boxes",
@@ -437,13 +407,13 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryReporterCallback* aCb,
          windowTotalSizes.mArenaStats.mStyleContexts,
          "This is the sum of all windows' 'layout/style-contexts' numbers.");
 
-  REPORT("window-objects/layout/style-sets", windowTotalSizes.mLayoutStyleSetsSize,
+  REPORT("window-objects/layout/style-sets", windowTotalSizes.mLayoutStyleSets,
          "This is the sum of all windows' 'layout/style-sets' numbers.");
 
-  REPORT("window-objects/layout/text-runs", windowTotalSizes.mLayoutTextRunsSize,
+  REPORT("window-objects/layout/text-runs", windowTotalSizes.mLayoutTextRuns,
          "This is the sum of all windows' 'layout/text-runs' numbers.");
 
-  REPORT("window-objects/layout/pres-contexts", windowTotalSizes.mLayoutPresContextSize,
+  REPORT("window-objects/layout/pres-contexts", windowTotalSizes.mLayoutPresContext,
          "This is the sum of all windows' 'layout/pres-contexts' numbers.");
 
   size_t frameTotal = 0;

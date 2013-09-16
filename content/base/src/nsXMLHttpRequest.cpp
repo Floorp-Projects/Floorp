@@ -2173,7 +2173,7 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
     NS_ASSERTION(!(mState & XML_HTTP_REQUEST_SYNCLOOPING),
       "We weren't supposed to support HTML parsing with XHR!");
     nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(mResponseXML);
-    nsEventListenerManager* manager = eventTarget->ListenerManager();
+    nsEventListenerManager* manager = eventTarget->GetListenerManager(true);
     manager->AddEventListenerByType(new nsXHRParseEndListener(this),
                                     NS_LITERAL_STRING("DOMContentLoaded"),
                                     dom::TrustedEventsAtSystemGroupBubble());
