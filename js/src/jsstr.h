@@ -235,7 +235,7 @@ js_strncpy(jschar *dst, const jschar *src, size_t nelem)
 }
 
 extern jschar *
-js_strdup(JSContext *cx, const jschar *s);
+js_strdup(js::ThreadSafeContext *cx, const jschar *s);
 
 namespace js {
 
