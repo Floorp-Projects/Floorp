@@ -38,10 +38,10 @@ public:
     }
     if (node) {
       if (mChange == ADDREF) {
-        node->mPlayingRef.Take(node);
+        node->MarkActive();
       } else if (mChange == RELEASE &&
                  node->AcceptPlayingRefRelease(mLastProcessedGraphUpdateIndex)) {
-        node->mPlayingRef.Drop(node);
+        node->MarkInactive();
       }
     }
     return NS_OK;
