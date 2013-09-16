@@ -22,6 +22,7 @@
 #include "jsscriptinlines.h"
 
 #include "jit/shared/CodeGenerator-shared-inl.h"
+#include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::jit;

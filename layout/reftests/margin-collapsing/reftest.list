@@ -1,6 +1,6 @@
 # Test Suite for CSS 2.1, 8.3.1 Collapsing margins - See Bug 477462
 # Based on CSS 2.1: http://www.w3.org/TR/2011/REC-CSS2-20110607/
-# and its Errata, Last revised: $Date: 2013-02-28 01:06:17 $
+# and its Errata, Last revised: $Date: 2013-07-22 09:54:24 $
 # "Horizontal margins never collapse."
 # The norefs for these tests depict margins that incorrectly collapsed.
 # Horizontal margins of inline boxes do not collapse.
@@ -329,6 +329,143 @@ skip-if(B2G) == block-sibling-2-dyn.html block-sibling-2-ref.html # bug 773482
 == block-last-child-4b.html block-last-child-4-ref.html
 == block-last-child-4c.html block-last-child-4-ref.html
 == block-last-child-4d.html block-last-child-4-ref.html
+# If a parent box's height is 'auto' and its 'min-height' is non-zero,
+# then its bottom margin collapses with its last-child's bottom margin.
+# This is true even if the two margins do not actually touch each other,
+# as they are still considered 'adjoining'.
+fails == block-min-height-last-child-1a.html block-min-height-last-child-1-ref.html # Bug 616339
+== block-min-height-last-child-1b.html block-min-height-last-child-1-ref.html
+== block-min-height-last-child-1c.html block-min-height-last-child-1-ref.html
+fails == block-min-height-last-child-2a.html block-min-height-last-child-2-ref.html # Bug 616339
+fails == block-min-height-last-child-2b.html block-min-height-last-child-2-ref.html # Bug 616339
+fails == block-min-height-last-child-3a.html block-min-height-last-child-3-ref.html # Bug 616339
+== block-min-height-last-child-3b.html block-min-height-last-child-3-ref.html
+== block-min-height-last-child-3c.html block-min-height-last-child-3-ref.html
+== block-min-height-last-child-4a.html block-min-height-last-child-4-ref.html
+== block-min-height-last-child-4b.html block-min-height-last-child-4-ref.html
+== block-min-height-last-child-4c.html block-min-height-last-child-4-ref.html
+== block-min-height-last-child-5a.html block-min-height-last-child-5-ref.html
+== block-min-height-last-child-5b.html block-min-height-last-child-5-ref.html
+== block-min-height-last-child-6a.html block-min-height-last-child-6-ref.html
+== block-min-height-last-child-6b.html block-min-height-last-child-6-ref.html
+== block-min-height-last-child-6c.html block-min-height-last-child-6-ref.html
+== block-min-height-last-child-7a.html block-min-height-last-child-7-ref.html
+== block-min-height-last-child-7b.html block-min-height-last-child-7-ref.html
+== block-min-height-last-child-7c.html block-min-height-last-child-7-ref.html
+== block-min-height-last-child-8a.html block-min-height-last-child-8-ref.html
+== block-min-height-last-child-8b.html block-min-height-last-child-8-ref.html
+== block-min-height-last-child-9a.html block-min-height-last-child-9-ref.html
+== block-min-height-last-child-9b.html block-min-height-last-child-9-ref.html
+== block-min-height-last-child-9c.html block-min-height-last-child-9-ref.html
+fails == block-min-height-last-child-1a-dyn.html block-min-height-last-child-1-ref.html # Bug 616339
+== block-min-height-last-child-1b-dyn.html block-min-height-last-child-1-ref.html
+== block-min-height-last-child-1c-dyn.html block-min-height-last-child-1-ref.html
+fails == block-min-height-last-child-2a-dyn.html block-min-height-last-child-2-ref.html # Bug 616339
+fails == block-min-height-last-child-2b-dyn.html block-min-height-last-child-2-ref.html # Bug 616339
+fails == block-min-height-last-child-3a-dyn.html block-min-height-last-child-3-ref.html # Bug 616339
+== block-min-height-last-child-3b-dyn.html block-min-height-last-child-3-ref.html
+== block-min-height-last-child-3c-dyn.html block-min-height-last-child-3-ref.html
+== block-min-height-last-child-4a-dyn.html block-min-height-last-child-4-ref.html
+== block-min-height-last-child-4b-dyn.html block-min-height-last-child-4-ref.html
+== block-min-height-last-child-4c-dyn.html block-min-height-last-child-4-ref.html
+== block-min-height-last-child-5a-dyn.html block-min-height-last-child-5-ref.html
+== block-min-height-last-child-5b-dyn.html block-min-height-last-child-5-ref.html
+== block-min-height-last-child-6a-dyn.html block-min-height-last-child-6-ref.html
+== block-min-height-last-child-6b-dyn.html block-min-height-last-child-6-ref.html
+== block-min-height-last-child-6c-dyn.html block-min-height-last-child-6-ref.html
+== block-min-height-last-child-7a-dyn.html block-min-height-last-child-7-ref.html
+== block-min-height-last-child-7b-dyn.html block-min-height-last-child-7-ref.html
+== block-min-height-last-child-7c-dyn.html block-min-height-last-child-7-ref.html
+== block-min-height-last-child-8a-dyn.html block-min-height-last-child-8-ref.html
+== block-min-height-last-child-8b-dyn.html block-min-height-last-child-8-ref.html
+== block-min-height-last-child-9a-dyn.html block-min-height-last-child-9-ref.html
+== block-min-height-last-child-9b-dyn.html block-min-height-last-child-9-ref.html
+== block-min-height-last-child-9c-dyn.html block-min-height-last-child-9-ref.html
+# If a parent box's height is 'auto' and its 'max-height' is not 'none'
+# then its bottom margin collapses with its last-child's bottom margin.
+# According to CSS 2.1 §10.7 (Minimum and maximum heights) this is true,
+# even if the descendant's height is bigger than the defined max-height.
+== block-max-height-last-child-1a.html block-max-height-last-child-1-ref.html
+== block-max-height-last-child-1b.html block-max-height-last-child-1-ref.html
+== block-max-height-last-child-1c.html block-max-height-last-child-1-ref.html
+== block-max-height-last-child-2a.html block-max-height-last-child-2-ref.html
+== block-max-height-last-child-2b.html block-max-height-last-child-2-ref.html
+== block-max-height-last-child-3a.html block-max-height-last-child-3-ref.html
+== block-max-height-last-child-3b.html block-max-height-last-child-3-ref.html
+== block-max-height-last-child-3c.html block-max-height-last-child-3-ref.html
+== block-max-height-last-child-4a.html block-max-height-last-child-4-ref.html
+== block-max-height-last-child-4b.html block-max-height-last-child-4-ref.html
+== block-max-height-last-child-4c.html block-max-height-last-child-4-ref.html
+== block-max-height-last-child-5a.html block-max-height-last-child-5-ref.html
+== block-max-height-last-child-5b.html block-max-height-last-child-5-ref.html
+== block-max-height-last-child-6a.html block-max-height-last-child-6-ref.html
+== block-max-height-last-child-6b.html block-max-height-last-child-6-ref.html
+== block-max-height-last-child-6c.html block-max-height-last-child-6-ref.html
+fails == block-max-height-last-child-7a.html block-max-height-last-child-7-ref.html # Bug 616339
+== block-max-height-last-child-7b.html block-max-height-last-child-7-ref.html
+== block-max-height-last-child-7c.html block-max-height-last-child-7-ref.html
+fails == block-max-height-last-child-8a.html block-max-height-last-child-8-ref.html # Bug 616339
+fails == block-max-height-last-child-8b.html block-max-height-last-child-8-ref.html # Bug 616339
+fails == block-max-height-last-child-9a.html block-max-height-last-child-9-ref.html # Bug 616339
+== block-max-height-last-child-9b.html block-max-height-last-child-9-ref.html
+== block-max-height-last-child-9c.html block-max-height-last-child-9-ref.html
+== block-max-height-last-child-1a-dyn.html block-max-height-last-child-1-ref.html
+== block-max-height-last-child-1b-dyn.html block-max-height-last-child-1-ref.html
+== block-max-height-last-child-1c-dyn.html block-max-height-last-child-1-ref.html
+== block-max-height-last-child-2a-dyn.html block-max-height-last-child-2-ref.html
+== block-max-height-last-child-2b-dyn.html block-max-height-last-child-2-ref.html
+== block-max-height-last-child-3a-dyn.html block-max-height-last-child-3-ref.html
+== block-max-height-last-child-3b-dyn.html block-max-height-last-child-3-ref.html
+== block-max-height-last-child-3c-dyn.html block-max-height-last-child-3-ref.html
+== block-max-height-last-child-4a-dyn.html block-max-height-last-child-4-ref.html
+== block-max-height-last-child-4b-dyn.html block-max-height-last-child-4-ref.html
+== block-max-height-last-child-4c-dyn.html block-max-height-last-child-4-ref.html
+== block-max-height-last-child-5a-dyn.html block-max-height-last-child-5-ref.html
+== block-max-height-last-child-5b-dyn.html block-max-height-last-child-5-ref.html
+== block-max-height-last-child-6a-dyn.html block-max-height-last-child-6-ref.html
+== block-max-height-last-child-6b-dyn.html block-max-height-last-child-6-ref.html
+== block-max-height-last-child-6c-dyn.html block-max-height-last-child-6-ref.html
+fails == block-max-height-last-child-7a-dyn.html block-max-height-last-child-7-ref.html # Bug 616339
+== block-max-height-last-child-7b-dyn.html block-max-height-last-child-7-ref.html
+== block-max-height-last-child-7c-dyn.html block-max-height-last-child-7-ref.html
+fails == block-max-height-last-child-8a-dyn.html block-max-height-last-child-8-ref.html # Bug 616339
+fails == block-max-height-last-child-8b-dyn.html block-max-height-last-child-8-ref.html # Bug 616339
+fails == block-max-height-last-child-9a-dyn.html block-max-height-last-child-9-ref.html # Bug 616339
+== block-max-height-last-child-9b-dyn.html block-max-height-last-child-9-ref.html
+== block-max-height-last-child-9c-dyn.html block-max-height-last-child-9-ref.html
+# If a parent box's height is not 'auto' then its bottom margin
+# never collapses with its last-child's bottom margin,
+# as these margins are not considered 'adjoining'.
+# According to CSS 2.1 §10.7 (Minimum and maximum heights) this is true,
+# even if the value of min- or max-height is used instead.
+== block-fix-height-last-child-1a.html block-fix-height-last-child-1-ref.html
+== block-fix-height-last-child-1b.html block-fix-height-last-child-1-ref.html
+== block-fix-height-last-child-2a.html block-fix-height-last-child-2-ref.html
+== block-fix-height-last-child-2b.html block-fix-height-last-child-2-ref.html
+== block-fix-height-last-child-3a.html block-fix-height-last-child-3-ref.html
+== block-fix-height-last-child-3b.html block-fix-height-last-child-3-ref.html
+== block-fix-height-last-child-4a.html block-fix-height-last-child-4-ref.html
+== block-fix-height-last-child-4b.html block-fix-height-last-child-4-ref.html
+== block-fix-height-last-child-4c.html block-fix-height-last-child-4-ref.html
+== block-fix-height-last-child-4d.html block-fix-height-last-child-4-ref.html
+== block-fix-height-last-child-4e.html block-fix-height-last-child-4-ref.html
+== block-fix-height-last-child-4f.html block-fix-height-last-child-4-ref.html
+== block-fix-height-last-child-4g.html block-fix-height-last-child-4-ref.html
+== block-fix-height-last-child-4h.html block-fix-height-last-child-4-ref.html
+== block-fix-height-last-child-1a-dyn.html block-fix-height-last-child-1-ref.html
+== block-fix-height-last-child-1b-dyn.html block-fix-height-last-child-1-ref.html
+== block-fix-height-last-child-2a-dyn.html block-fix-height-last-child-2-ref.html
+== block-fix-height-last-child-2b-dyn.html block-fix-height-last-child-2-ref.html
+== block-fix-height-last-child-3a-dyn.html block-fix-height-last-child-3-ref.html
+== block-fix-height-last-child-3b-dyn.html block-fix-height-last-child-3-ref.html
+== block-fix-height-last-child-4a-dyn.html block-fix-height-last-child-4-ref.html
+== block-fix-height-last-child-4b-dyn.html block-fix-height-last-child-4-ref.html
+== block-fix-height-last-child-4c-dyn.html block-fix-height-last-child-4-ref.html
+== block-fix-height-last-child-4d-dyn.html block-fix-height-last-child-4-ref.html
+== block-fix-height-last-child-4e-dyn.html block-fix-height-last-child-4-ref.html
+== block-fix-height-last-child-4f-dyn.html block-fix-height-last-child-4-ref.html
+== block-fix-height-last-child-4g-dyn.html block-fix-height-last-child-4-ref.html
+== block-fix-height-last-child-4h-dyn.html block-fix-height-last-child-4-ref.html
 # Basic tests for margins of floats and block siblings/descendants.
 == block-float-1a.html block-float-1a-ref.html
 == block-float-1a.html block-float-1a-ref2.html

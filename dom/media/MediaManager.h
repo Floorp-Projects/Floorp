@@ -20,7 +20,6 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "prlog.h"
 #include "DOMMediaStream.h"
 
@@ -33,11 +32,6 @@
 #endif
 
 namespace mozilla {
-namespace dom {
-class MediaStreamConstraints;
-class NavigatorUserMediaSuccessCallback;
-class NavigatorUserMediaErrorCallback;
-}
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* GetMediaManagerLog();
@@ -356,8 +350,18 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEDIADEVICE
 
-  MediaDevice(MediaEngineVideoSource* aSource);
-  MediaDevice(MediaEngineAudioSource* aSource);
+  MediaDevice(MediaEngineVideoSource* aSource) {
+    mSource = aSource;
+    mType.Assign(NS_LITERAL_STRING("video"));
+    mSource->GetName(mName);
+    mSource->GetUUID(mID);
+  }
+  MediaDevice(MediaEngineAudioSource* aSource) {
+    mSource = aSource;
+    mType.Assign(NS_LITERAL_STRING("audio"));
+    mSource->GetName(mName);
+    mSource->GetUUID(mID);
+  }
   virtual ~MediaDevice() {}
 
   MediaEngineSource* GetSource();
@@ -365,8 +369,6 @@ private:
   nsString mName;
   nsString mType;
   nsString mID;
-  bool mHasFacingMode;
-  dom::VideoFacingModeEnum mFacingMode;
   nsRefPtr<MediaEngineSource> mSource;
 };
 
@@ -405,14 +407,11 @@ public:
   void RemoveFromWindowList(uint64_t aWindowID,
     GetUserMediaCallbackMediaStreamListener *aListener);
 
-  nsresult GetUserMedia(JSContext* aCx, bool aPrivileged,
-    nsPIDOMWindow* aWindow,
-    const dom::MediaStreamConstraints& aRawConstraints,
+  nsresult GetUserMedia(bool aPrivileged, nsPIDOMWindow* aWindow,
+    nsIMediaStreamOptions* aParams,
     nsIDOMGetUserMediaSuccessCallback* onSuccess,
     nsIDOMGetUserMediaErrorCallback* onError);
-
   nsresult GetUserMediaDevices(nsPIDOMWindow* aWindow,
-    const dom::MediaStreamConstraintsInternal& aConstraints,
     nsIGetUserMediaDevicesSuccessCallback* onSuccess,
     nsIDOMGetUserMediaErrorCallback* onError);
   void OnNavigation(uint64_t aWindowID);

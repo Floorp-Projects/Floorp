@@ -6,9 +6,8 @@
 
 MODULE = 'profdirserviceprovider'
 
-CPP_SOURCES += [
-    '$(MODULES_PROFILEDIRSERVICE_SRC_LCSRCS)',
-]
+include('objs.mozbuild')
+
+CPP_SOURCES += modules_profiledirservice_src_csrcs
 
 LIBRARY_NAME = 'profdirserviceprovider_s'
-

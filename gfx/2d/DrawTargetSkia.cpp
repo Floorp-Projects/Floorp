@@ -99,7 +99,7 @@ SetCacheLimits()
     return;
 
   int individualCacheSize = SKIA_TOTAL_CACHE_SIZE / size;
-  for (int i = 0; i < size; i++) {
+  for (uint32_t i = 0; i < size; i++) {
     targets[i]->SetCacheLimits(SKIA_MAX_CACHE_ITEMS, individualCacheSize);
   }
 

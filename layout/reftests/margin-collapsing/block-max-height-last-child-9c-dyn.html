@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+#parent {
+ max-height: 100px;
+ margin-bottom: -20px;
+ background-color: lightgreen;
+}
+#last-child {
+ display: none;
+ height: 110px;
+ margin-bottom: -20px;
+ background-color: green;
+}
+#separator {
+ height: 20px;
+ background-color: blue;
+}
+</style>
+<script type="text/javascript">
+function test() {
+ document.getElementById('last-child').style.display = 'block';
+ document.documentElement.removeAttribute('class');
+}
+document.addEventListener('MozReftestInvalidate', test, false);
+</script>
+</head>
+<body>
+<div id="parent">
+ <div id="last-child"></div>
+</div>
+<div id="separator"></div>
+</body>
+</html>

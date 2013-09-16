@@ -2,18 +2,43 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-include $(srcdir)/../objs.mk
-
-EXTRA_DEPS += $(srcdir)/../objs.mk
 
 FORCE_STATIC_LIB= 1
 ifeq (WINNT,$(OS_TARGET))
 VISIBILITY_FLAGS =
 endif
 
-# Make a copy into the local directory for dual compilation
-export:: $(MTRANSPORT_CPPSRCS)
-	$(INSTALL) $^ .
+DEFINES += -DHAVE_STRDUP -DNR_SOCKET_IS_VOID_PTR
+
+ifneq (,$(filter Darwin DragonFly FreeBSD NetBSD OpenBSD,$(OS_TARGET)))
+ifeq ($(OS_TARGET), Darwin)
+DEFINES += -DDARWIN
+else
+DEFINES += -DBSD
+endif
+endif
+
+ifeq ($(OS_TARGET), Linux)
+DEFINES += -DLINUX -DUSE_INTERFACE_PRIORITIZER
+endif
+
+ifeq ($(OS_TARGET), Android)
+DEFINES += -DLINUX -DANDROID
+endif
+
+ifeq ($(OS_TARGET), WINNT)
+DEFINES += -DWIN
+endif
+
+DEFINES += \
+   -DR_DEFINED_INT2=int16_t -DR_DEFINED_UINT2=uint16_t \
+   -DR_DEFINED_INT4=int32_t -DR_DEFINED_UINT4=uint32_t \
+   -DR_DEFINED_INT8=int64_t -DR_DEFINED_UINT8=uint64_t \
+   $(NULL)
+
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+DEFINES += -DUSE_INTERFACE_PRIORITIZER
+endif
 
 # for stun.h
 ifeq (WINNT,$(OS_TARGET))
@@ -25,4 +50,3 @@ else ifeq (Linux,$(OS_TARGET))
 DEFINES += -DLINUX
 endif
 
-include $(srcdir)/../objs.mk

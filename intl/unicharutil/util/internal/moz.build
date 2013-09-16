@@ -6,9 +6,9 @@
 
 MODULE = 'unicharutil'
 
-CPP_SOURCES += [
-    '$(INTL_UNICHARUTIL_UTIL_LCPPSRCS)',
-]
+include('../objs.mozbuild')
+
+CPP_SOURCES += intl_unicharutil_util_cppsrcs
 
 LIBRARY_NAME = 'unicharutil_s'
 

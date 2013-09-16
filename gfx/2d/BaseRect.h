@@ -7,8 +7,8 @@
 #define MOZILLA_GFX_BASERECT_H_
 
 #include <cmath>
-#include <mozilla/Assertions.h>
 #include <algorithm>
+#include "nsDebug.h"
 
 namespace mozilla {
 namespace gfx {
@@ -277,21 +277,21 @@ struct BaseRect {
 
   // Moves one edge of the rect without moving the opposite edge.
   void SetLeftEdge(T aX) {
-    MOZ_ASSERT(aX <= XMost());
+    NS_ASSERTION(aX <= XMost(), "Bad rect edge");
     width = XMost() - aX;
     x = aX;
   }
   void SetRightEdge(T aXMost) { 
-    MOZ_ASSERT(aXMost >= x);
+    NS_ASSERTION(aXMost >= x, "Bad rect edge");
     width = aXMost - x; 
   }
   void SetTopEdge(T aY) {
-    MOZ_ASSERT(aY <= YMost());
+    NS_ASSERTION(aY <= YMost(), "Bad rect edge");
     height = YMost() - aY;
     y = aY;
   }
   void SetBottomEdge(T aYMost) { 
-    MOZ_ASSERT(aYMost >= y);
+    NS_ASSERTION(aYMost >= y, "Bad rect edge");
     height = aYMost - y; 
   }
 

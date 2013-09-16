@@ -6,10 +6,13 @@
 
 MODULE = 'xpcom'
 
+include('../../objs.mozbuild')
+
+CPP_SOURCES += xpcom_glue_src_cppsrcs
+
 CPP_SOURCES += [
-    '$(XPCOM_GLUE_SRC_LCPPSRCS)',
-    'nsStringAPI.cpp',
-    'nsXPCOMGlue.cpp',
+    '../../nsStringAPI.cpp',
+    '../nsXPCOMGlue.cpp',
 ]
 
 LIBRARY_NAME = 'xpcomglue_staticruntime'
