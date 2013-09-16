@@ -4,8 +4,12 @@
 
 "use strict";
 
+// Don't modify this, instead set services.push.debug.
+let gDebuggingEnabled = false;
+
 function debug(s) {
-  // dump("-*- PushService.jsm: " + s + "\n");
+  if (gDebuggingEnabled)
+    dump("-*- PushService.jsm: " + s + "\n");
 }
 
 const Cc = Components.classes;
@@ -26,6 +30,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AlarmService",
 this.EXPORTED_SYMBOLS = ["PushService"];
 
 const prefs = new Preferences("services.push.");
+// Set debug first so that all debugging actually works.
+gDebuggingEnabled = prefs.get("debug");
 
 const kPUSHDB_DB_NAME = "push";
 const kPUSHDB_DB_VERSION = 1; // Change this if the IndexedDB format changes
@@ -318,6 +324,8 @@ this.PushService = {
           } else {
             this._shutdownWS();
           }
+        } else if (aData == "services.push.debug") {
+          gDebuggingEnabled = prefs.get("debug");
         }
         break;
       case "timer-callback":
@@ -467,6 +475,8 @@ this.PushService = {
     prefs.observe("serverURL", this);
     // Used to monitor if the user wishes to disable Push.
     prefs.observe("connection.enabled", this);
+    // Debugging
+    prefs.observe("debug", this);
 
     this._started = true;
   },
@@ -493,6 +503,7 @@ this.PushService = {
 
     debug("uninit()");
 
+    prefs.ignore("debug", this);
     prefs.ignore("connection.enabled", this);
     prefs.ignore("serverURL", this);
     Services.obs.removeObserver(this, this._getNetworkStateChangeEventName());
