@@ -47,6 +47,38 @@ HasOpaqueAncestorLayer(Layer* aLayer)
   return false;
 }
 
+/**
+ * Returns a rectangle of content painted opaquely by aLayer. Very consertative;
+ * bails by returning an empty rect in any tricky situations.
+ */
+static nsIntRect
+GetOpaqueRect(Layer* aLayer)
+{
+  nsIntRect result;
+  // Just bail if there's anything difficult to handle.
+  if (!aLayer->GetEffectiveTransform().IsIdentity() ||
+      aLayer->GetEffectiveOpacity() != 1.0f ||
+      aLayer->GetMaskLayer()) {
+    return result;
+  }
+  if (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) {
+    result = aLayer->GetEffectiveVisibleRegion().GetLargestRectangle();
+  } else {
+    // Drill down into RefLayers because that's what we particularly care about;
+    // layer construction for aLayer will not have known about the opaqueness
+    // of any RefLayer subtrees.
+    RefLayer* refLayer = aLayer->AsRefLayer();
+    if (refLayer && refLayer->GetFirstChild()) {
+      result = GetOpaqueRect(refLayer->GetFirstChild());
+    }
+  }
+  const nsIntRect* clipRect = aLayer->GetEffectiveClipRect();
+  if (clipRect) {
+    result.IntersectRect(result, *clipRect);
+  }
+  return result;
+}
+
 template<class ContainerT> void
 ContainerRender(ContainerT* aContainer,
                 const nsIntPoint& aOffset,
@@ -141,6 +173,23 @@ ContainerRender(ContainerT* aContainer,
     if (layerToRender->GetLayer()->GetEffectiveVisibleRegion().IsEmpty() &&
         !layerToRender->GetLayer()->AsContainerLayer()) {
       continue;
+    }
+
+    if (i + 1 < children.Length() &&
+        layerToRender->GetLayer()->GetEffectiveTransform().IsIdentity()) {
+      LayerComposite* nextLayer = static_cast<LayerComposite*>(children.ElementAt(i + 1)->ImplData());
+      nsIntRect nextLayerOpaqueRect;
+      if (nextLayer && nextLayer->GetLayer()) {
+        nextLayerOpaqueRect = GetOpaqueRect(nextLayer->GetLayer());
+      }
+      if (!nextLayerOpaqueRect.IsEmpty()) {
+        nsIntRegion visibleRegion;
+        visibleRegion.Sub(layerToRender->GetShadowVisibleRegion(), nextLayerOpaqueRect);
+        layerToRender->SetShadowVisibleRegion(visibleRegion);
+        if (visibleRegion.IsEmpty()) {
+          continue;
+        }
+      }
     }
 
     nsIntRect clipRect = layerToRender->GetLayer()->
