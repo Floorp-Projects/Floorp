@@ -216,6 +216,12 @@ SmsRequestChild::Recv__delete__(const MessageReply& aReply)
       mReplyRequest->NotifyGetSegmentInfoForTextFailed(
         aReply.get_ReplyGetSegmentInfoForTextFail().error());
       break;
+    case MessageReply::TReplyGetSmscAddress:
+      mReplyRequest->NotifyGetSmscAddress(aReply.get_ReplyGetSmscAddress().smscAddress());
+      break;
+    case MessageReply::TReplyGetSmscAddressFail:
+      mReplyRequest->NotifyGetSmscAddressFailed(aReply.get_ReplyGetSmscAddressFail().error());
+      break;
     default:
       MOZ_CRASH("Received invalid response parameters!");
   }

@@ -367,6 +367,8 @@ SmsParent::RecvPSmsRequestConstructor(PSmsRequestParent* aActor,
       return actor->DoRequest(aRequest.get_MarkMessageReadRequest());
     case IPCSmsRequest::TGetSegmentInfoForTextRequest:
       return actor->DoRequest(aRequest.get_GetSegmentInfoForTextRequest());
+    case IPCSmsRequest::TGetSmscAddressRequest:
+      return actor->DoRequest(aRequest.get_GetSmscAddressRequest());
     default:
       MOZ_CRASH("Unknown type!");
   }
@@ -508,6 +510,23 @@ SmsRequestParent::DoRequest(const GetMessageRequest& aRequest)
 
   if (NS_FAILED(rv)) {
     return NS_SUCCEEDED(NotifyGetMessageFailed(nsIMobileMessageCallback::INTERNAL_ERROR));
+  }
+
+  return true;
+}
+
+bool
+SmsRequestParent::DoRequest(const GetSmscAddressRequest& aRequest)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
+  if (smsService) {
+    rv = smsService->GetSmscAddress(aRequest.serviceId(), this);
+  }
+
+  if (NS_FAILED(rv)) {
+    return NS_SUCCEEDED(NotifyGetSmscAddressFailed(nsIMobileMessageCallback::INTERNAL_ERROR));
   }
 
   return true;
@@ -682,6 +701,18 @@ NS_IMETHODIMP
 SmsRequestParent::NotifyGetSegmentInfoForTextFailed(int32_t aError)
 {
   return SendReply(ReplyGetSegmentInfoForTextFail(aError));
+}
+
+NS_IMETHODIMP
+SmsRequestParent::NotifyGetSmscAddress(const nsAString& aSmscAddress)
+{
+  return SendReply(ReplyGetSmscAddress(nsString(aSmscAddress)));
+}
+
+NS_IMETHODIMP
+SmsRequestParent::NotifyGetSmscAddressFailed(int32_t aError)
+{
+  return SendReply(ReplyGetSmscAddressFail(aError));
 }
 
 /*******************************************************************************
