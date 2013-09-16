@@ -45,7 +45,7 @@ interface nsIScriptContext;
 interface nsIDOMEventListener;
 interface nsIDOMEvent;
 
-[scriptable, builtinclass, uuid(31e92e56-4d23-4a4a-9cfe-a6d12cf434bc)]
+[scriptable, builtinclass, uuid(b128448c-7b53-4769-92cb-cd6eafee676c)]
 interface nsIDOMEventTarget : nsISupports
 {
   /**
@@ -267,14 +267,21 @@ interface nsIDOMEventTarget : nsISupports
                         in nsPresContextPtr aPresContext,
                         in nsEventStatusPtr aEventStatus);
 
+%{C++
+  // These are virtual, but everything after this is not accessible to JS so
+  // xpidl not understanding the vtable here doesn't matter.
+
   /**
-   * Get the event listener manager, the guy you talk to to register for events
-   * on this node.
-   * @param aMayCreate If PR_FALSE, returns a listener manager only if
-   *                   one already exists.
+   * Get the event listener manager, creating it if it does not already exist.
    */
-  [notxpcom, nostdcall]
-  nsEventListenerManagerPtr GetListenerManager(in boolean aMayCreate);
+  virtual nsEventListenerManager* ListenerManager() = 0;
+
+  /**
+   * Get the event listener manager, returning null if it does not already
+   * exist.
+   */
+  virtual nsEventListenerManager* GetExistingListenerManager() const = 0;
+%}
 
   /**
    * Get the script context in which the event handlers should be run.
@@ -293,6 +300,11 @@ interface nsIDOMEventTarget : nsISupports
 
 %{C++
 
+#define NS_REALLY_DECL_NSIDOMEVENTTARGET \
+  NS_DECL_NSIDOMEVENTTARGET \
+  virtual nsEventListenerManager* ListenerManager() MOZ_OVERRIDE; \
+  virtual nsEventListenerManager* GetExistingListenerManager() const MOZ_OVERRIDE;
+
 #define NS_IMPL_DOMTARGET_DEFAULTS(_class) \
 mozilla::dom::EventTarget* _class::GetTargetForDOMEvent() { return this; } \
 mozilla::dom::EventTarget* _class::GetTargetForEventTargetChain() { return this; } \
@@ -305,7 +317,7 @@ aClass::RemoveSystemEventListener(const nsAString& aType, \
                                   nsIDOMEventListener *aListener, \
                                   bool aUseCapture) \
 { \
-  nsEventListenerManager* listenerManager = GetListenerManager(false); \
+  nsEventListenerManager* listenerManager = GetExistingListenerManager(); \
   if (!listenerManager) { \
     return NS_OK; \
   } \
