@@ -10,7 +10,6 @@
 
 #include "jit/IonCode.h"
 #include "vm/ArgumentsObject.h"
-#include "vm/ScopeObject.h"
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 
@@ -18,6 +17,7 @@
 #include "jsinferinlines.h"
 
 #include "gc/Nursery-inl.h"
+#include "vm/Shape-inl.h"
 #include "vm/String-inl.h"
 
 using namespace js;

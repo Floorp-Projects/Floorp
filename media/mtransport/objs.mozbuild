@@ -1,0 +1,33 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+mtransport_lcppsrcs = [
+    'dtlsidentity.cpp',
+    'nricectx.cpp',
+    'nricemediastream.cpp',
+    'nriceresolverfake.cpp',
+    'nriceresolver.cpp',
+    'nrinterfaceprioritizer.cpp',
+    'nr_socket_prsock.cpp',
+    'nr_timer.cpp',
+    'transportflow.cpp',
+    'transportlayer.cpp',
+    'transportlayerice.cpp',
+    'transportlayerdtls.cpp',
+    'transportlayerlog.cpp',
+    'transportlayerloopback.cpp',
+    'transportlayerprsock.cpp',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    mtransport_lcppsrcs += [
+        'gonk_addrs.cpp',
+    ]
+
+mtransport_lcppsrcs.sort()
+mtransport_cppsrcs = [ 
+    '%s/media/mtransport/%s' % (TOPSRCDIR, s) for s in mtransport_lcppsrcs
+]

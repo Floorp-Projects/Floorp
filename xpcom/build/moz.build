@@ -41,9 +41,12 @@ else:
         'mozPoisonWriteStub.cpp',
     ]
 
+include('../glue/objs.mozbuild')
+
+CPP_SOURCES += xpcom_gluens_src_cppsrcs
+CPP_SOURCES += xpcom_glue_src_cppsrcs
+
 CPP_SOURCES += [
-    '$(XPCOM_GLUENS_SRC_LCPPSRCS)',
-    '$(XPCOM_GLUE_SRC_LCPPSRCS)',
     'FileLocation.cpp',
     'FrozenFunctions.cpp',
     'Omnijar.cpp',

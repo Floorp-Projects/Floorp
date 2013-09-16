@@ -65,18 +65,18 @@ function getBrowserForWindow(aContentWindow) {
 }
 
 function handleRequest(aSubject, aTopic, aData) {
-  let constraints = aSubject.getConstraints();
+  let {windowID: windowID, callID: callID} = JSON.parse(aData);
+
+  let params = aSubject.QueryInterface(Ci.nsIMediaStreamOptions);
 
   Services.wm.getMostRecentWindow(null).navigator.mozGetUserMediaDevices(
-    constraints,
     function (devices) {
-      prompt(aSubject.windowID, aSubject.callID, constraints.audio,
-             constraints.video || constraints.picture, devices);
+      prompt(windowID, callID, params.audio, params.video || params.picture, devices);
     },
     function (error) {
       // bug 827146 -- In the future, the UI should catch NO_DEVICES_FOUND
       // and allow the user to plug in a device, instead of immediately failing.
-      denyRequest(aSubject.callID, error);
+      denyRequest(callID, error);
     }
   );
 }

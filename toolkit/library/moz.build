@@ -16,9 +16,13 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 else:
     LIBRARY_NAME = 'xul'
 
+include('/rdf/util/src/objs.mozbuild')
+include('/intl/unicharutil/util/objs.mozbuild')
+
+CPP_SOURCES += intl_unicharutil_util_cppsrcs
+CPP_SOURCES += rdf_util_src_cppsrcs
+
 CPP_SOURCES += [
-    '$(INTL_UNICHARUTIL_UTIL_LCPPSRCS)',
-    '$(RDF_UTIL_SRC_LCPPSRCS)',
     'nsStaticXULComponents.cpp',
 ]
 
@@ -47,4 +51,3 @@ if CONFIG['OS_ARCH'] == 'OS2':
         ]
 
 MSVC_ENABLE_PGO = True
-
