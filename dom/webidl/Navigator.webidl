@@ -320,22 +320,22 @@ partial interface Navigator {
 #endif // MOZ_AUDIO_CHANNEL_MANAGER
 
 #ifdef MOZ_MEDIA_NAVIGATOR
-callback NavigatorUserMediaSuccessCallback = void (MediaStream stream);
-callback NavigatorUserMediaErrorCallback = void (DOMString error);
-
+// nsIDOMNavigatorUserMedia
+callback MozDOMGetUserMediaSuccessCallback = void (nsISupports? value);
+callback MozDOMGetUserMediaErrorCallback = void (DOMString error);
+interface MozMediaStreamOptions;
 partial interface Navigator {
   [Throws, Func="Navigator::HasUserMediaSupport"]
-  void mozGetUserMedia(MediaStreamConstraints constraints,
-                       NavigatorUserMediaSuccessCallback successCallback,
-                       NavigatorUserMediaErrorCallback errorCallback);
+  void mozGetUserMedia(MozMediaStreamOptions? params,
+                       MozDOMGetUserMediaSuccessCallback? onsuccess,
+                       MozDOMGetUserMediaErrorCallback? onerror);
 };
 
 // nsINavigatorUserMedia
 callback MozGetUserMediaDevicesSuccessCallback = void (nsIVariant? devices);
 partial interface Navigator {
   [Throws, ChromeOnly]
-  void mozGetUserMediaDevices(MediaStreamConstraintsInternal constraints,
-                              MozGetUserMediaDevicesSuccessCallback onsuccess,
-                              NavigatorUserMediaErrorCallback onerror);
+  void mozGetUserMediaDevices(MozGetUserMediaDevicesSuccessCallback? onsuccess,
+                              MozDOMGetUserMediaErrorCallback? onerror);
 };
 #endif // MOZ_MEDIA_NAVIGATOR
