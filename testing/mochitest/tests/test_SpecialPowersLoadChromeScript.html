@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for SpecialPowers extension</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var url = SimpleTest.getTestFileURL("SpecialPowersLoadChromeScript.js");
+var script = SpecialPowers.loadChromeScript(url);
+
+var MESSAGE = { bar: true };
+script.addMessageListener("bar", function (message) {
+  is(JSON.stringify(message), JSON.stringify(MESSAGE));
+  script.destroy();
+  SimpleTest.finish();
+});
+
+script.sendAsyncMessage("foo", MESSAGE);
+</script>
+</pre>
+</body>
+</html>

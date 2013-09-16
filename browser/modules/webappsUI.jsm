@@ -22,29 +22,60 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "nsIMessageSender");
 
 this.webappsUI = {
-  downloads: {},
+  // List of promises for in-progress installations
+  installations: {},
 
   init: function webappsUI_init() {
     Services.obs.addObserver(this, "webapps-ask-install", false);
     Services.obs.addObserver(this, "webapps-launch", false);
     Services.obs.addObserver(this, "webapps-uninstall", false);
+    cpmm.addMessageListener("Webapps:Install:Return:OK", this);
     cpmm.addMessageListener("Webapps:OfflineCache", this);
+    cpmm.addMessageListener("Webapps:Install:Return:KO", this);
+    cpmm.addMessageListener("Webapps:PackageEvent", this);
   },
 
   uninit: function webappsUI_uninit() {
     Services.obs.removeObserver(this, "webapps-ask-install");
     Services.obs.removeObserver(this, "webapps-launch");
     Services.obs.removeObserver(this, "webapps-uninstall");
+    cpmm.removeMessageListener("Webapps:Install:Return:OK", this);
     cpmm.removeMessageListener("Webapps:OfflineCache", this);
+    cpmm.removeMessageListener("Webapps:Install:Return:KO", this);
+    cpmm.removeMessageListener("Webapps:PackageEvent", this);
   },
 
   receiveMessage: function(aMessage) {
     let data = aMessage.data;
 
-    if (aMessage.name == "Webapps:OfflineCache" &&
-        data.installState == "installed" &&
-        this.downloads[data.manifest]) {
-      this.downloads[data.manifest].resolve();
+    let manifestURL = data.manifestURL ||
+                      (data.app && data.app.manifestURL) ||
+                      data.manifest;
+
+    if (!this.installations[manifestURL]) {
+      return;
+    }
+
+    if (aMessage.name == "Webapps:OfflineCache") {
+      if (data.error) {
+        this.installations[manifestURL].reject(data.error);
+      } else if (data.installState == "installed") {
+        this.installations[manifestURL].resolve();
+      }
+    } else if (aMessage.name == "Webapps:Install:Return:OK" &&
+               !data.isPackage) {
+      let manifest = new ManifestHelper(data.app.manifest, data.app.origin);
+      if (!manifest.appcache_path) {
+        this.installations[manifestURL].resolve();
+      }
+    } else if (aMessage.name == "Webapps:Install:Return:KO") {
+      this.installations[manifestURL].reject(data.error);
+    } else if (aMessage.name == "Webapps:PackageEvent") {
+      if (data.type == "installed") {
+        this.installations[manifestURL].resolve();
+      } else if (data.type == "error") {
+        this.installations[manifestURL].reject(data.error);
+      }
     }
   },
 
@@ -146,9 +177,20 @@ this.webappsUI = {
         popupProgressContent.appendChild(progressMeter);
 
         let manifestURL = aData.app.manifestURL;
-        if (aData.app.manifest && aData.app.manifest.appcache_path) {
-          this.downloads[manifestURL] = Promise.defer();
-        }
+
+        let cleanup = (ex) => {
+          popupProgressContent.removeChild(progressMeter);
+          delete this.installations[manifestURL];
+          if (Object.getOwnPropertyNames(this.installations).length == 0) {
+            notification.remove();
+          }
+        };
+
+        this.installations[manifestURL] = Promise.defer();
+        this.installations[manifestURL].promise.then(null, (error) => {
+          Cu.reportError("Error installing webapp: " + error);
+          cleanup();
+        });
 
         let app = WebappsInstaller.init(aData);
 
@@ -163,22 +205,19 @@ this.webappsUI = {
               Task.spawn(function() {
                 try {
                   yield WebappsInstaller.install(aData, aManifest, aZipPath);
-                  if (this.downloads[manifestURL]) {
-                    yield this.downloads[manifestURL].promise;
-                  }
+                  yield this.installations[manifestURL].promise;
                   installationSuccessNotification(aData, app, bundle);
                 } catch (ex) {
                   Cu.reportError("Error installing webapp: " + ex);
                   // TODO: Notify user that the installation has failed
                 } finally {
-                  popupProgressContent.removeChild(progressMeter);
-                  notification.remove();
-                  delete this.downloads[manifestURL];
+                  cleanup();
                 }
               }.bind(this));
             });
         } else {
           DOMApplicationRegistry.denyInstall(aData);
+          cleanup();
         }
       }
     };
