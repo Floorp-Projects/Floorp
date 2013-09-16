@@ -43,7 +43,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsDOMEventTargetHelper)
 
-  NS_DECL_NSIDOMEVENTTARGET
+  NS_REALLY_DECL_NSIDOMEVENTTARGET
   using mozilla::dom::EventTarget::RemoveEventListener;
   virtual void AddEventListener(const nsAString& aType,
                                 nsIDOMEventListener* aListener,
@@ -222,8 +222,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMEventTargetHelper,
   virtual nsresult DispatchDOMEvent(nsEvent *aEvent, nsIDOMEvent *aDOMEvent, nsPresContext *aPresContext, nsEventStatus *aEventStatus) { \
     return _to DispatchDOMEvent(aEvent, aDOMEvent, aPresContext, aEventStatus); \
   } \
-  virtual nsEventListenerManager * GetListenerManager(bool aMayCreate) { \
-    return _to GetListenerManager(aMayCreate); \
+  virtual nsEventListenerManager * ListenerManager() { \
+    return _to ListenerManager(); \
+  } \
+  virtual nsEventListenerManager * GetExistingListenerManager() const { \
+    return _to GetExistingListenerManager(); \
   } \
   virtual nsIScriptContext * GetContextForEventHandlers(nsresult *aRv) { \
     return _to GetContextForEventHandlers(aRv); \
@@ -235,6 +238,14 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMEventTargetHelper,
 #define NS_REALLY_FORWARD_NSIDOMEVENTTARGET(_class) \
   using _class::AddEventListener;                   \
   using _class::RemoveEventListener;                \
-  NS_FORWARD_NSIDOMEVENTTARGET(_class::)
+  NS_FORWARD_NSIDOMEVENTTARGET(_class::)            \
+  virtual nsEventListenerManager*                   \
+  ListenerManager() {                               \
+    return _class::ListenerManager();               \
+  }                                                 \
+  virtual nsEventListenerManager*                   \
+  GetExistingListenerManager() const {              \
+    return _class::GetExistingListenerManager();    \
+  }
 
 #endif // nsDOMEventTargetHelper_h_

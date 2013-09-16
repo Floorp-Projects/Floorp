@@ -499,8 +499,7 @@ nsXBLBinding::InstallEventHandlers()
     nsXBLPrototypeHandler* handlerChain = mPrototypeBinding->GetPrototypeHandlers();
 
     if (handlerChain) {
-      nsEventListenerManager* manager =
-        mBoundElement->GetListenerManager(true);
+      nsEventListenerManager* manager = mBoundElement->ListenerManager();
       if (!manager)
         return;
 
@@ -649,7 +648,7 @@ nsXBLBinding::UnhookEventHandlers()
 
   if (handlerChain) {
     nsEventListenerManager* manager =
-      mBoundElement->GetListenerManager(false);
+      mBoundElement->GetExistingListenerManager();
     if (!manager) {
       return;
     }
