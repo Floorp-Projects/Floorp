@@ -78,6 +78,13 @@ const size_t AsmJSPageSize = 4096;
 // The asm.js spec requires that the ArrayBuffer's byteLength be a multiple of 4096.
 static const size_t AsmJSAllocationGranularity = 4096;
 
+// These functions define the valid heap lengths.
+extern uint32_t
+RoundUpToNextValidAsmJSHeapLength(uint32_t length);
+
+extern bool
+IsValidAsmJSHeapLength(uint32_t length);
+
 #ifdef JS_CPU_X64
 // On x64, the internal ArrayBuffer data array is inflated to 4GiB (only the
 // byteLength portion of which is accessible) so that out-of-bounds accesses

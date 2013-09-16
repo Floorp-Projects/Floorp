@@ -29,7 +29,7 @@ AsmJSModule::initHeap(Handle<ArrayBufferObject*> heap, JSContext *cx)
     maybeHeap_ = heap;
     heapDatum() = heap->dataPointer();
 
-    JS_ASSERT(IsPowerOfTwo(heap->byteLength()));
+    JS_ASSERT(IsValidAsmJSHeapLength(heap->byteLength()));
 #if defined(JS_CPU_X86)
     uint8_t *heapOffset = heap->dataPointer();
     void *heapLength = (void*)heap->byteLength();
