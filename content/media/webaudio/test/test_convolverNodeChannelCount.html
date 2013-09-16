@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test PannerNode directly above</title>
+  <title>Test ConvolverNode channel count</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -12,7 +12,7 @@
 
 const signalLength = 2048;
 const responseLength = 1000;
-const outputLength = 4096; // > signalLength + responseLength to work around bug 910171
+const outputLength = 2048; // < signalLength + responseLength to test bug 910171
 
 var gTest = {
   length: outputLength,
