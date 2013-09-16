@@ -124,8 +124,8 @@ class NrIceMediaStream {
   std::vector<std::string> GetCandidates() const;
 
   // Get all candidate pairs, whether in the check list or triggered check
-  // queue, in priority order. outPairs is cleared before being filled.
-  nsresult GetCandidatePairs(std::vector<NrIceCandidatePair>* outPairs) const;
+  // queue, in priority order. |out_pairs| is cleared before being filled.
+  nsresult GetCandidatePairs(std::vector<NrIceCandidatePair>* out_pairs) const;
 
   // Get the default candidate as host and port
   nsresult GetDefaultCandidate(int component, std::string *host, int *port);
