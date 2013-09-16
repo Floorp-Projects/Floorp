@@ -1127,7 +1127,7 @@ GrallocDeprecatedTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImag
   GLuint tex = static_cast<CompositableQuirksGonkOGL*>(mQuirks.get())->GetTexture();
   // delete old EGLImage
   DeleteTextures();
-#if 1
+
   gl()->MakeCurrent();
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   gl()->fBindTexture(mTextureTarget, tex);
@@ -1136,7 +1136,6 @@ GrallocDeprecatedTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImag
   // during rendering.
   mEGLImage = gl()->CreateEGLImageForNativeBuffer(mGraphicBuffer->getNativeBuffer());
   gl()->fEGLImageTargetTexture2D(mTextureTarget, mEGLImage);
-#endif
 
 }
 
