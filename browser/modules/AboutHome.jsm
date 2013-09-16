@@ -205,7 +205,7 @@ let AboutHome = {
         mm.broadcastAsyncMessage("AboutHome:Update", data);
       }
     }).then(null, function onError(x) {
-      Cu.reportError("Error in AboutHome.sendAboutHomeData " + x);
+      Cu.reportError("Error in AboutHome.sendAboutHomeData: " + x);
     });
   },
 };

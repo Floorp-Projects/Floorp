@@ -148,7 +148,7 @@ function reportMemoryUsage() {
   var mgr = Cc["@mozilla.org/memory-reporter-manager;1"]
             .getService(Ci.nsIMemoryReporterManager);
 
-  // XXX: this code is *so* bogus -- nsIMemoryReporter changed its |memoryUsed|
+  // Bug 916501: this code is *so* bogus -- nsIMemoryReporter changed its |memoryUsed|
   // field to |amount| *years* ago, and even bigger changes have happened
   // since -- that it must just never be run.
   var reporters = mgr.enumerateReporters();
