@@ -313,6 +313,7 @@ LookupHeapAccess(const AsmJSModule &module, uint8_t *pc)
 # endif
 #endif
 
+#if defined(ANDROID)
 // Not all versions of the Android NDK define ucontext_t or mcontext_t.
 // Detect this and provide custom but compatible definitions. Note that these
 // follow the GLibc naming convention to access register values from
@@ -320,13 +321,14 @@ LookupHeapAccess(const AsmJSModule &module, uint8_t *pc)
 //
 // See: https://chromiumcodereview.appspot.com/10829122/
 // See: http://code.google.com/p/android/issues/detail?id=34784
-#if defined(ANDROID) && !defined(__BIONIC_HAVE_UCONTEXT_T)
-# if defined(__arm__)
+# if !defined(__BIONIC_HAVE_UCONTEXT_T)
+#  if defined(__arm__)
+
 // GLibc on ARM defines mcontext_t has a typedef for 'struct sigcontext'.
 // Old versions of the C library <signal.h> didn't define the type.
-#  if !defined(__BIONIC_HAVE_STRUCT_SIGCONTEXT)
-#   include <asm/sigcontext.h>
-#  endif
+#   if !defined(__BIONIC_HAVE_STRUCT_SIGCONTEXT)
+#    include <asm/sigcontext.h>
+#   endif
 
 typedef struct sigcontext mcontext_t;
 
@@ -338,7 +340,7 @@ typedef struct ucontext {
     // Other fields are not used so don't define them here.
 } ucontext_t;
 
-# elif defined(__i386__)
+#  elif defined(__i386__)
 // x86 version for Android.
 typedef struct {
     uint32_t gregs[19];
@@ -356,8 +358,20 @@ typedef struct ucontext {
     // Other fields are not used by V8, don't define them here.
 } ucontext_t;
 enum { REG_EIP = 14 };
-# endif
-#endif  // defined(__ANDROID__) && !defined(__BIONIC_HAVE_UCONTEXT_T)
+#  endif  // defined(__i386__)
+# endif  // !defined(__BIONIC_HAVE_UCONTEXT_T)
+#endif // defined(ANDROID)
+
+#if defined(ANDROID) && defined(MOZ_LINKER)
+// Apparently, on some Android systems, the signal handler is always passed
+// NULL as the faulting address. This would cause the asm.js signal handler to
+// think that a safe out-of-bounds access was a NULL-deref. This brokenness is
+// already detected by ElfLoader (enabled by MOZ_LINKER), so reuse that check
+// to disable asm.js compilation on systems where the signal handler is broken.
+extern "C" MFBT_API bool IsSignalHandlingBroken();
+#else
+static bool IsSignalHandlingBroken() { return false; }
+#endif // defined(MOZ_LINKER)
 
 #if !defined(XP_WIN)
 # define CONTEXT ucontext_t
@@ -970,6 +984,9 @@ AsmJSFaultHandler(int signum, siginfo_t *info, void *context)
 bool
 js::EnsureAsmJSSignalHandlersInstalled(JSRuntime *rt)
 {
+    if (IsSignalHandlingBroken())
+        return false;
+
 #if defined(XP_MACOSX)
     // On OSX, each JSRuntime gets its own handler.
     return rt->asmJSMachExceptionHandler.installed() || rt->asmJSMachExceptionHandler.install(rt);
