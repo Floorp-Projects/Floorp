@@ -12,8 +12,8 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
-  "resource:///modules/sessionstore/SessionStore.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
+  "resource:///modules/sessionstore/PrivacyLevel.jsm");
 
 // MAX_EXPIRY should be 2^63-1, but JavaScript can't handle that precision.
 const MAX_EXPIRY = Math.pow(2, 62);
@@ -67,8 +67,8 @@ let SessionCookiesInternal = {
         for (let cookie of CookieStore.getCookiesForHost(host)) {
           // _getCookiesForHost() will only return hosts with the right privacy
           // rules, so there is no need to do anything special with this call
-          // to checkPrivacyLevel().
-          if (SessionStore.checkPrivacyLevel(cookie.secure, isPinned)) {
+          // to PrivacyLevel.canSave().
+          if (PrivacyLevel.canSave({isHttps: cookie.secure, isPinned: isPinned})) {
             cookies.push(cookie);
           }
         }
@@ -209,7 +209,7 @@ let SessionCookiesInternal = {
     // case testing scheme will be sufficient.
     if (/https?/.test(scheme) && !hosts[host] &&
         (!checkPrivacy ||
-         SessionStore.checkPrivacyLevel(scheme == "https", isPinned))) {
+         PrivacyLevel.canSave({isHttps: scheme == "https", isPinned: isPinned}))) {
       // By setting this to true or false, we can determine when looking at
       // the host in update() if we should check for privacy.
       hosts[host] = isPinned;
