@@ -96,6 +96,12 @@ ifdef ENABLE_TESTS
 include $(topsrcdir)/testing/testsuite-targets.mk
 endif
 
+export::
+	$(RM) -r $(DIST)/sdk
+
+export::
+	$(call py_action,process_install_manifest,$(DIST)/include _build_manifests/install/dist_include js/src/_build_manifests/install/dist_include)
+
 default all::
 	$(call BUILDSTATUS,TIERS export compile libs tools)
 
