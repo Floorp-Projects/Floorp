@@ -1,5 +1,5 @@
 if (!this.hasOwnProperty("Type"))
-  exit(0);
+  quit();
 
 function eval() {
     yield(undefined)
