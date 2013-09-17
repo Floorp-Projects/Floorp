@@ -164,7 +164,7 @@ public class Tab {
         return mFavicon;
     }
 
-    public Drawable getThumbnail() {
+    public BitmapDrawable getThumbnail() {
         return mThumbnail;
     }
 

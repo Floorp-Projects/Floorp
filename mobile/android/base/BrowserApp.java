@@ -67,6 +67,7 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.EnumSet;
@@ -1701,6 +1702,35 @@ abstract public class BrowserApp extends GeckoApp
                 shareIntent.putExtra(Intent.EXTRA_TEXT, url);
                 shareIntent.putExtra(Intent.EXTRA_SUBJECT, tab.getDisplayTitle());
                 shareIntent.putExtra(Intent.EXTRA_TITLE, tab.getDisplayTitle());
+
+                // Clear the existing thumbnail extras so we don't share an old thumbnail.
+                shareIntent.removeExtra("share_screenshot");
+                shareIntent.removeExtra("share_screenshot_uri");
+
+                // Include the thumbnail of the page being shared.
+                BitmapDrawable drawable = tab.getThumbnail();
+                if (drawable != null) {
+                    Bitmap thumbnail = drawable.getBitmap();
+                    shareIntent.putExtra("share_screenshot", thumbnail);
+
+                    // Kobo uses a custom intent extra for sharing thumbnails.
+                    if (Build.MANUFACTURER.equals("Kobo")) {
+                        File cacheDir = getExternalCacheDir();
+
+                        if (cacheDir != null) {
+                            File outFile = new File(cacheDir, "thumbnail.png");
+
+                            try {
+                                java.io.FileOutputStream out = new java.io.FileOutputStream(outFile);
+                                thumbnail.compress(Bitmap.CompressFormat.PNG, 90, out);
+                            } catch (FileNotFoundException e) {
+                                Log.e(LOGTAG, "File not found", e);
+                            }
+
+                            shareIntent.putExtra("share_screenshot_uri", Uri.parse(outFile.getPath()));
+                        }
+                    }
+                }
             }
         }
 
