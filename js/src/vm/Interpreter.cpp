@@ -1650,14 +1650,14 @@ BEGIN_CASE(JSOP_STOP)
      */
     CHECK_BRANCH();
 
-#if JS_TRACE_LOGGING
-    TraceLogging::defaultLogger()->log(TraceLogging::SCRIPT_STOP);
-#endif
-
     interpReturnOK = true;
     if (entryFrame != regs.fp())
   inline_return:
     {
+#if JS_TRACE_LOGGING
+        TraceLogging::defaultLogger()->log(TraceLogging::SCRIPT_STOP);
+#endif
+
         if (cx->compartment()->debugMode())
             interpReturnOK = ScriptDebugEpilogue(cx, regs.fp(), interpReturnOK);
 
@@ -3383,6 +3383,10 @@ default:
         Probes::exitScript(cx, script, script->function(), regs.fp());
 
     gc::MaybeVerifyBarriers(cx, true);
+
+#if JS_TRACE_LOGGING
+        TraceLogging::defaultLogger()->log(TraceLogging::SCRIPT_STOP);
+#endif
 
 #ifdef JS_ION
     /*
