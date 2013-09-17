@@ -2575,7 +2575,6 @@ static void
 SweepZones(FreeOp *fop, bool lastGC)
 {
     JSRuntime *rt = fop->runtime();
-    JS_ASSERT_IF(lastGC, !rt->hasContexts());
 
     /* Skip the atomsCompartment zone. */
     Zone **read = rt->zones.begin() + 1;
@@ -3784,7 +3783,7 @@ EndSweepingZoneGroup(JSRuntime *rt)
 }
 
 static void
-BeginSweepPhase(JSRuntime *rt)
+BeginSweepPhase(JSRuntime *rt, bool lastGC)
 {
     /*
      * Sweep phase.
@@ -3801,7 +3800,7 @@ BeginSweepPhase(JSRuntime *rt)
     gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP);
 
 #ifdef JS_THREADSAFE
-    rt->gcSweepOnBackgroundThread = rt->hasContexts() && rt->useHelperThreads();
+    rt->gcSweepOnBackgroundThread = !lastGC && rt->useHelperThreads();
 #endif
 
 #ifdef DEBUG
@@ -4278,6 +4277,8 @@ IncrementalCollectSlice(JSRuntime *rt,
     AutoCopyFreeListToArenas copy(rt);
     AutoGCSlice slice(rt);
 
+    bool lastGC = (reason == JS::gcreason::DESTROY_RUNTIME);
+
     gc::State initialState = rt->gcIncrementalState;
 
     int zeal = 0;
@@ -4321,7 +4322,7 @@ IncrementalCollectSlice(JSRuntime *rt,
             return;
         }
 
-        if (rt->hasContexts())
+        if (!lastGC)
             PushZealSelectedObjects(rt);
 
         rt->gcIncrementalState = MARK;
@@ -4361,7 +4362,7 @@ IncrementalCollectSlice(JSRuntime *rt,
          * This runs to completion, but we don't continue if the budget is
          * now exhasted.
          */
-        BeginSweepPhase(rt);
+        BeginSweepPhase(rt, lastGC);
         if (sliceBudget.isOverBudget())
             break;
 
@@ -4380,7 +4381,7 @@ IncrementalCollectSlice(JSRuntime *rt,
         if (!finished)
             break;
 
-        EndSweepPhase(rt, gckind, reason == JS::gcreason::DESTROY_RUNTIME);
+        EndSweepPhase(rt, gckind, lastGC);
 
         if (rt->gcSweepOnBackgroundThread)
             rt->gcHelperThread.startBackgroundSweep(gckind == GC_SHRINK);
@@ -4526,7 +4527,7 @@ ShouldCleanUpEverything(JSRuntime *rt, JS::gcreason::Reason reason, JSGCInvocati
     // DEBUG_MODE_GC indicates we're discarding code because the debug mode
     // has changed; debug mode affects the results of bytecode analysis, so
     // we need to clear everything away.
-    return !rt->hasContexts() ||
+    return reason == JS::gcreason::DESTROY_RUNTIME ||
            reason == JS::gcreason::SHUTDOWN_CC ||
            reason == JS::gcreason::DEBUG_MODE_GC ||
            gckind == GC_SHRINK;
@@ -4588,7 +4589,8 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
 
     JS_ASSERT_IF(!incremental || budget != SliceBudget::Unlimited, JSGC_INCREMENTAL);
 
-    AutoStopVerifyingBarriers av(rt, reason == JS::gcreason::SHUTDOWN_CC || !rt->hasContexts());
+    AutoStopVerifyingBarriers av(rt, reason == JS::gcreason::SHUTDOWN_CC ||
+                                     reason == JS::gcreason::DESTROY_RUNTIME);
 
     MinorGC(rt, reason);
 
