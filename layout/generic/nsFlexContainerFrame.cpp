@@ -2312,6 +2312,16 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   // we know its final size and position.
   for (uint32_t i = 0; i < items.Length(); ++i) {
     FlexItem& curItem = items[i];
+
+    nsPoint physicalPosn = axisTracker.PhysicalPositionFromLogicalPosition(
+                             curItem.GetMainPosition(),
+                             curItem.GetCrossPosition(),
+                             contentBoxMainSize,
+                             contentBoxCrossSize);
+    // Adjust physicalPosn to be relative to the container's border-box
+    // (i.e. its frame rect), instead of the container's content-box:
+    physicalPosn += containerContentBoxOrigin;
+
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
                                        curItem.Frame(),
                                        nsSize(aReflowState.ComputedWidth(),
@@ -2368,15 +2378,6 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     // NOTE: Be very careful about doing anything else with childReflowState
     // after this point, because some of its methods (e.g. SetComputedWidth)
     // internally call InitResizeFlags and stomp on mVResize & mHResize.
-
-    nsPoint physicalPosn = axisTracker.PhysicalPositionFromLogicalPosition(
-                             curItem.GetMainPosition(),
-                             curItem.GetCrossPosition(),
-                             contentBoxMainSize,
-                             contentBoxCrossSize);
-    // Adjust physicalPosn to be relative to the container's border-box
-    // (i.e. its frame rect), instead of the container's content-box:
-    physicalPosn += containerContentBoxOrigin;
 
     nsHTMLReflowMetrics childDesiredSize;
     nsReflowStatus childReflowStatus;
