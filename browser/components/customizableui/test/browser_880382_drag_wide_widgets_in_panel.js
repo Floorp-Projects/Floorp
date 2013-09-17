@@ -141,35 +141,22 @@ let gTests = [
     run: function() {
       let developerButton = document.getElementById("developer-button");
       let zoomControls = document.getElementById("zoom-controls");
-      let expectedPlacementsAfterInsert = ["edit-controls",
-                                           "developer-button",
-                                           "new-window-button",
-                                           "privatebrowsing-button",
-                                           "zoom-controls",
-                                           "save-page-button",
-                                           "print-button",
-                                           "history-panelmenu",
-                                           "fullscreen-button",
-                                           "find-button",
-                                           "preferences-button",
-                                           "add-ons-button"];
+      let placementsAfterInsert = ["edit-controls",
+                                   "developer-button",
+                                   "new-window-button",
+                                   "privatebrowsing-button",
+                                   "zoom-controls",
+                                   "save-page-button",
+                                   "print-button",
+                                   "history-panelmenu",
+                                   "fullscreen-button",
+                                   "find-button",
+                                   "preferences-button",
+                                   "add-ons-button"];
       simulateItemDrag(developerButton, zoomControls);
       // Currently, the developer-button is placed after the zoom-controls, but it should be
       // placed like expectedPlacementsAfterInsert describes.
-      todoAssertAreaPlacements(CustomizableUI.AREA_PANEL, expectedPlacementsAfterInsert);
-      let actualPlacementsAfterInsert = ["edit-controls",
-                                         "zoom-controls",
-                                         "developer-button",
-                                         "new-window-button",
-                                         "privatebrowsing-button",
-                                         "save-page-button",
-                                         "print-button",
-                                         "history-panelmenu",
-                                         "fullscreen-button",
-                                         "find-button",
-                                         "preferences-button",
-                                         "add-ons-button"];
-      assertAreaPlacements(CustomizableUI.AREA_PANEL, actualPlacementsAfterInsert);
+      assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterInsert);
       ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
       let palette = document.getElementById("customization-palette");
       // Check that the palette items are re-wrapped correctly.
