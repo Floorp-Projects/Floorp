@@ -425,7 +425,7 @@ GetParamsForMessage(JSContext* aCx,
   //    as a dictionary.
   nsAutoString json;
   JS::Rooted<JS::Value> v(aCx, aJSON);
-  NS_ENSURE_TRUE(JS_Stringify(aCx, v.address(), nullptr, JSVAL_NULL,
+  NS_ENSURE_TRUE(JS_Stringify(aCx, &v, JS::NullPtr(), JS::NullHandleValue,
                               JSONCreator, &json), false);
   NS_ENSURE_TRUE(!json.IsEmpty(), false);
 
@@ -872,7 +872,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                funval, 1, argv.address(), rval.address());
           if (aJSONRetVal) {
             nsString json;
-            if (JS_Stringify(ctx, rval.address(), nullptr, JSVAL_NULL,
+            if (JS_Stringify(ctx, &rval, JS::NullPtr(), JS::NullHandleValue,
                              JSONCreator, &json)) {
               aJSONRetVal->AppendElement(json);
             }
