@@ -80,9 +80,9 @@ static void
 DeallocateExecutableMemory(uint8_t *code, size_t totalBytes)
 {
 #ifdef XP_WIN
-        JS_ALWAYS_TRUE(VirtualFree(code, 0, MEM_RELEASE));
+    JS_ALWAYS_TRUE(VirtualFree(code, 0, MEM_RELEASE));
 #else
-        JS_ALWAYS_TRUE(munmap(code, totalBytes) == 0);
+    JS_ALWAYS_TRUE(munmap(code, totalBytes) == 0);
 #endif
 }
 
@@ -129,8 +129,25 @@ AsmJSModule::staticallyLink(const AsmJSStaticLinkData &linkData)
     }
 }
 
+AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t charsBegin)
+  : globalArgumentName_(NULL),
+    importArgumentName_(NULL),
+    bufferArgumentName_(NULL),
+    minHeapLength_(AsmJSAllocationGranularity),
+    code_(NULL),
+    operationCallbackExit_(NULL),
+    linked_(false),
+    charsBegin_(charsBegin),
+    scriptSource_(scriptSource)
+{
+    mozilla::PodZero(&pod);
+    scriptSource_->incref();
+}
+
 AsmJSModule::~AsmJSModule()
 {
+    scriptSource_->decref();
+
     if (code_) {
         for (unsigned i = 0; i < numExits(); i++) {
             AsmJSModule::ExitDatum &exitDatum = exitIndexToGlobalDatum(i);
