@@ -36,6 +36,39 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(OscillatorNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(OscillatorNode, AudioNode)
 
+static const float sLeak = 0.995f;
+
+class DCBlocker
+{
+public:
+  // These are sane defauts when the initial mPhase is zero
+  DCBlocker(float aLastInput = 0.0f,
+            float aLastOutput = 0.0f,
+            float aPole = 0.995)
+    :mLastInput(aLastInput),
+     mLastOutput(aLastOutput),
+     mPole(aPole)
+  {
+    MOZ_ASSERT(aPole > 0);
+  }
+
+  inline float Process(float aInput)
+  {
+    float out;
+
+    out = mLastOutput * mPole + aInput - mLastInput;
+    mLastOutput = out;
+    mLastInput = aInput;
+
+    return out;
+  }
+private:
+  float mLastInput;
+  float mLastOutput;
+  float mPole;
+};
+
+
 class OscillatorNodeEngine : public AudioNodeEngine
 {
 public:
@@ -50,6 +83,16 @@ public:
     , mDetune(0.f)
     , mType(OscillatorType::Sine)
     , mPhase(0.)
+    , mFinalFrequency(0.0)
+    , mNumberOfHarmonics(0)
+    , mSignalPeriod(0.0)
+    , mAmplitudeAtZero(0.0)
+    , mPhaseIncrement(0.0)
+    , mSquare(0.0)
+    , mTriangle(0.0)
+    , mSaw(0.0)
+    , mPhaseWrap(0.0)
+    , mRecomputeFrequency(true)
   {
   }
 
@@ -70,6 +113,7 @@ public:
                             const AudioParamTimeline& aValue,
                             TrackRate aSampleRate) MOZ_OVERRIDE
   {
+    mRecomputeFrequency = true;
     switch (aIndex) {
     case FREQUENCY:
       MOZ_ASSERT(mSource && mDestination);
@@ -85,6 +129,7 @@ public:
       NS_ERROR("Bad OscillatorNodeEngine TimelineParameter");
     }
   }
+
   virtual void SetStreamTimeParameter(uint32_t aIndex, TrackTicks aParam)
   {
     switch (aIndex) {
@@ -94,29 +139,95 @@ public:
       NS_ERROR("Bad OscillatorNodeEngine StreamTimeParameter");
     }
   }
+
   virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam)
   {
-    switch (aIndex) {
-    case TYPE: mType = static_cast<OscillatorType>(aParam); break;
-    default:
-      NS_ERROR("Bad OscillatorNodeEngine Int32Parameter");
+    mType = static_cast<OscillatorType>(aParam);
+    // Set the new type, and update integrators with the new initial conditions.
+    switch (mType) {
+      case OscillatorType::Sine:
+        mPhase = 0.0;
+        break;
+      case OscillatorType::Square:
+        mPhase = 0.0;
+        // Initial integration condition is -0.5, because our square has 50%
+        // duty cycle.
+        mSquare = -0.5;
+        break;
+      case OscillatorType::Triangle:
+        // Initial mPhase and related integration condition so the triangle is
+        // in the middle of the first upward slope.
+        // XXX actually do the maths and put the right number here.
+        mPhase = (float)(M_PI / 2);
+        mSquare = 0.5;
+        mTriangle = 0.0;
+        break;
+      case OscillatorType::Sawtooth:
+        /* initial mPhase so the oscillator start at the middle
+         * of the ramp, per spec */
+        mPhase = (float)(M_PI / 2);
+        /* mSaw = 0 when mPhase = pi/2 */
+        mSaw = 0.0;
+        break;
+      default:
+        NS_ERROR("Bad OscillatorNodeEngine Int32Parameter.");
+    };
+  }
+
+  void IncrementPhase()
+  {
+    mPhase += mPhaseIncrement;
+    if (mPhase > mPhaseWrap) {
+      mPhase -= mPhaseWrap;
     }
   }
 
-  double ComputeFrequency(TrackTicks ticks, size_t count)
+  // Square and triangle are using a bipolar band-limited impulse train, saw is
+  // using a normal band-limited impulse train.
+  bool UsesBipolarBLIT() {
+    return mType == OscillatorType::Square || mType == OscillatorType::Triangle;
+  }
+
+  void UpdateFrequencyIfNeeded(TrackTicks ticks, size_t count)
   {
     double frequency, detune;
-    if (mFrequency.HasSimpleValue()) {
+
+    bool simpleFrequency = mFrequency.HasSimpleValue();
+    bool simpleDetune = mDetune.HasSimpleValue();
+
+    // Shortcut if frequency-related AudioParam are not automated, and we
+    // already have computed the frequency information and related parameters.
+    if (simpleFrequency && simpleDetune && !mRecomputeFrequency) {
+      return;
+    }
+
+    if (simpleFrequency) {
       frequency = mFrequency.GetValue();
     } else {
       frequency = mFrequency.GetValueAtTime(ticks, count);
     }
-    if (mDetune.HasSimpleValue()) {
+    if (simpleDetune) {
       detune = mDetune.GetValue();
     } else {
       detune = mDetune.GetValueAtTime(ticks, count);
     }
-    return frequency * pow(2., detune / 1200.);
+
+    mFinalFrequency = frequency * pow(2., detune / 1200.);
+    mRecomputeFrequency = false;
+
+    // When using bipolar BLIT, we divide the signal period by two, because we
+    // are using two BLIT out of phase.
+    mSignalPeriod = UsesBipolarBLIT() ? 0.5 * mSource->SampleRate() / mFinalFrequency
+                                      : mSource->SampleRate() / mFinalFrequency;
+    // Wrap the phase accordingly:
+    mPhaseWrap = UsesBipolarBLIT() || mType == OscillatorType::Sine ? 2 * M_PI
+                                   : M_PI;
+    // Even number of harmonics for bipolar blit, odd otherwise.
+    mNumberOfHarmonics = UsesBipolarBLIT() ? 2 * floor(0.5 * mSignalPeriod)
+                                           : 2 * floor(0.5 * mSignalPeriod) + 1;
+    mPhaseIncrement = mType == OscillatorType::Sine ? 2 * M_PI / mSignalPeriod
+                                                    : M_PI / mSignalPeriod;
+    mAmplitudeAtZero = mNumberOfHarmonics / mSignalPeriod;
   }
 
   void FillBounds(float* output, TrackTicks ticks,
@@ -141,95 +252,98 @@ public:
     }
   }
 
-  void ComputeSine(AudioChunk *aOutput)
+  float BipolarBLIT()
   {
-    AllocateAudioBlock(1, aOutput);
-    float* output = static_cast<float*>(const_cast<void*>(aOutput->mChannelData[0]));
+    float blit;
+    float denom = sin(mPhase);
 
-    TrackTicks ticks = mSource->GetCurrentPosition();
-    uint32_t start, end;
-    FillBounds(output, ticks, start, end);
-
-    double rate = 2.*M_PI / mSource->SampleRate();
-    double phase = mPhase;
-    for (uint32_t i = start; i < end; ++i) {
-      phase += ComputeFrequency(ticks, i) * rate;
-      output[i] = sin(phase);
-    }
-    mPhase = phase;
-    while (mPhase > 2.0*M_PI) {
-      // Rescale to avoid precision reductions on long runs.
-      mPhase -= 2.0*M_PI;
-    }
-  }
-
-  void ComputeSquare(AudioChunk *aOutput)
-  {
-    AllocateAudioBlock(1, aOutput);
-    float* output = static_cast<float*>(const_cast<void*>(aOutput->mChannelData[0]));
-
-    TrackTicks ticks = mSource->GetCurrentPosition();
-    uint32_t start, end;
-    FillBounds(output, ticks, start, end);
-
-    double rate = 1.0 / mSource->SampleRate();
-    double phase = mPhase;
-    for (uint32_t i = start; i < end; ++i) {
-      phase += ComputeFrequency(ticks, i) * rate;
-      if (phase > 1.0) {
-        phase -= 1.0;
-      }
-      output[i] = phase < 0.5 ? 1.0 : -1.0;
-    }
-    mPhase = phase;
-  }
-
-  void ComputeSawtooth(AudioChunk *aOutput)
-  {
-    AllocateAudioBlock(1, aOutput);
-    float* output = static_cast<float*>(const_cast<void*>(aOutput->mChannelData[0]));
-
-    TrackTicks ticks = mSource->GetCurrentPosition();
-    uint32_t start, end;
-    FillBounds(output, ticks, start, end);
-
-    double rate = 1.0 / mSource->SampleRate();
-    double phase = mPhase;
-    for (uint32_t i = start; i < end; ++i) {
-      phase += ComputeFrequency(ticks, i) * rate;
-      if (phase > 1.0) {
-        phase -= 1.0;
-      }
-      output[i] = phase < 0.5 ? 2.0*phase : 2.0*(phase - 1.0);
-    }
-    mPhase = phase;
-  }
-
-  void ComputeTriangle(AudioChunk *aOutput)
-  {
-    AllocateAudioBlock(1, aOutput);
-    float* output = static_cast<float*>(const_cast<void*>(aOutput->mChannelData[0]));
-
-    TrackTicks ticks = mSource->GetCurrentPosition();
-    uint32_t start, end;
-    FillBounds(output, ticks, start, end);
-
-    double rate = 1.0 / mSource->SampleRate();
-    double phase = mPhase;
-    for (uint32_t i = start; i < end; ++i) {
-      phase += ComputeFrequency(ticks, i) * rate;
-      if (phase > 1.0) {
-        phase -= 1.0;
-      }
-      if (phase < 0.25) {
-        output[i] = 4.0*phase;
-      } else if (phase < 0.75) {
-        output[i] = 1.0 - 4.0*(phase - 0.25);
+    if (fabs(denom) < std::numeric_limits<float>::epsilon()) {
+      if (mPhase < 0.1f || mPhase > 2 * M_PI - 0.1f) {
+        blit = mAmplitudeAtZero;
       } else {
-        output[i] = 4.0*(phase - 0.75) - 1.0;
+        blit = -mAmplitudeAtZero;
       }
+    } else {
+      blit = sin(mNumberOfHarmonics * mPhase);
+      blit /= mSignalPeriod * denom;
     }
-    mPhase = phase;
+    return blit;
+  }
+
+  float UnipolarBLIT()
+  {
+    float blit;
+    float denom = sin(mPhase);
+
+    if (fabs(denom) <= std::numeric_limits<float>::epsilon()) {
+      blit = mAmplitudeAtZero;
+    } else {
+      blit = sin(mNumberOfHarmonics * mPhase);
+      blit /= mSignalPeriod * denom;
+    }
+
+    return blit;
+  }
+
+  void ComputeSine(float * aOutput, TrackTicks ticks, uint32_t aStart, uint32_t aEnd)
+  {
+    for (uint32_t i = aStart; i < aEnd; ++i) {
+      UpdateFrequencyIfNeeded(ticks, i);
+
+      aOutput[i] = sin(mPhase);
+
+      IncrementPhase();
+    }
+  }
+
+  void ComputeSquare(float * aOutput, TrackTicks ticks, uint32_t aStart, uint32_t aEnd)
+  {
+    for (uint32_t i = aStart; i < aEnd; ++i) {
+      UpdateFrequencyIfNeeded(ticks, i);
+      // Integration to get us a square. It turns out we can have a
+      // pure integrator here.
+      mSquare += BipolarBLIT();
+      aOutput[i] = mSquare;
+      // maybe we want to apply a gain, the wg has not decided yet
+      aOutput[i] *= 1.5;
+      IncrementPhase();
+    }
+  }
+
+  void ComputeSawtooth(float * aOutput, TrackTicks ticks, uint32_t aStart, uint32_t aEnd)
+  {
+    float dcoffset;
+    for (uint32_t i = aStart; i < aEnd; ++i) {
+      UpdateFrequencyIfNeeded(ticks, i);
+      // DC offset so the Saw does not ramp up to infinity when integrating.
+      dcoffset = mFinalFrequency / mSource->SampleRate();
+      // Integrate and offset so we get mAmplitudeAtZero sawtooth. We have a
+      // very low frequency component somewhere here, but I'm not sure where.
+      mSaw += UnipolarBLIT() - dcoffset;
+      // reverse the saw so we are spec compliant
+      aOutput[i] = -mSaw * 1.5;
+
+      IncrementPhase();
+    }
+  }
+
+  void ComputeTriangle(float * aOutput, TrackTicks ticks, uint32_t aStart, uint32_t aEnd)
+  {
+    for (uint32_t i = aStart; i < aEnd; ++i) {
+      UpdateFrequencyIfNeeded(ticks, i);
+      // Integrate to get a square
+      mSquare += BipolarBLIT();
+      // Leaky integrate to get a triangle. We get too much dc offset if we don't
+      // leaky integrate here.
+      // C6 = k0 / period
+      // (period is samplingrate / frequency, k0 = (PI/2)/(2*PI)) = 0.25
+      float C6 = 0.25 / (mSource->SampleRate() / mFinalFrequency);
+      mTriangle = mTriangle * sLeak + mSquare + C6;
+      // DC Block, and scale back to [-1.0; 1.0]
+      aOutput[i] = mDCBlocker.Process(mTriangle) / (mSignalPeriod/2) * 1.5;
+
+      IncrementPhase();
+    }
   }
 
   void ComputeSilence(AudioChunk *aOutput)
@@ -261,25 +375,35 @@ public:
       *aFinished = true;
       return;
     }
+
+    AllocateAudioBlock(1, aOutput);
+    float* output = static_cast<float*>(
+        const_cast<void*>(aOutput->mChannelData[0]));
+
+    uint32_t start, end;
+    FillBounds(output, ticks, start, end);
+
     // Synthesize the correct waveform.
-    switch (mType) {
+    switch(mType) {
       case OscillatorType::Sine:
-        ComputeSine(aOutput);
+        ComputeSine(output, ticks, start, end);
         break;
       case OscillatorType::Square:
-        ComputeSquare(aOutput);
-        break;
-      case OscillatorType::Sawtooth:
-        ComputeSawtooth(aOutput);
+        ComputeSquare(output, ticks, start, end);
         break;
       case OscillatorType::Triangle:
-        ComputeTriangle(aOutput);
+        ComputeTriangle(output, ticks, start, end);
+        break;
+      case OscillatorType::Sawtooth:
+        ComputeSawtooth(output, ticks, start, end);
         break;
       default:
         ComputeSilence(aOutput);
-    }
+    };
+
   }
 
+  DCBlocker mDCBlocker;
   AudioNodeStream* mSource;
   AudioNodeStream* mDestination;
   TrackTicks mStart;
@@ -287,7 +411,17 @@ public:
   AudioParamTimeline mFrequency;
   AudioParamTimeline mDetune;
   OscillatorType mType;
-  double mPhase;
+  float mPhase;
+  float mFinalFrequency;
+  uint32_t mNumberOfHarmonics;
+  float mSignalPeriod;
+  float mAmplitudeAtZero;
+  float mPhaseIncrement;
+  float mSquare;
+  float mTriangle;
+  float mSaw;
+  float mPhaseWrap;
+  bool mRecomputeFrequency;
 };
 
 OscillatorNode::OscillatorNode(AudioContext* aContext)
