@@ -1435,7 +1435,6 @@ var gBrowserInit = {
     }
 
     // Final window teardown, do this last.
-    window.XULBrowserWindow.destroy();
     window.XULBrowserWindow = null;
     window.QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(Ci.nsIWebNavigation)
@@ -3688,14 +3687,6 @@ var XULBrowserWindow = {
     // Initialize the security button's state and tooltip text.
     var securityUI = gBrowser.securityUI;
     this.onSecurityChange(null, null, securityUI.state);
-  },
-
-  destroy: function () {
-    // XXXjag to avoid leaks :-/, see bug 60729
-    delete this.throbberElement;
-    delete this.stopCommand;
-    delete this.reloadCommand;
-    delete this.statusText;
   },
 
   setJSStatus: function () {
