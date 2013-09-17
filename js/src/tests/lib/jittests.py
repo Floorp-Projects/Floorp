@@ -139,14 +139,8 @@ class Test:
                         test.valgrind = options.valgrind
                     elif name == 'tz-pacific':
                         test.tz_pacific = True
-                    elif name == 'mjitalways':
-                        test.jitflags.append('--always-mjit')
                     elif name == 'debug':
                         test.jitflags.append('--debugjit')
-                    elif name == 'mjit':
-                        test.jitflags.append('--jm')
-                    elif name == 'no-jm':
-                        test.jitflags.append('--no-jm')
                     elif name == 'ion-eager':
                         test.jitflags.append('--ion-eager')
                     elif name == 'no-ion':
@@ -349,7 +343,7 @@ def check_output(out, err, rc, test):
 
 def print_tinderbox(ok, res):
     # Output test failures in a TBPL parsable format, eg:
-    # TEST-PASS | /foo/bar/baz.js | --no-jm
+    # TEST-PASS | /foo/bar/baz.js | --ion-eager
     # TEST-UNEXPECTED-FAIL | /foo/bar/baz.js | --no-ion: Assertion failure: ...
     # INFO exit-status     : 3
     # INFO timed-out       : False
