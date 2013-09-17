@@ -164,3 +164,9 @@ add_task(function test_getTemporaryDownloadsDirectory()
   let downloadDir = yield Downloads.getTemporaryDownloadsDirectory();
   do_check_true(downloadDir instanceof Ci.nsIFile);
 });
+
+////////////////////////////////////////////////////////////////////////////////
+//// Termination
+
+let tailFile = do_get_file("tail.js");
+Services.scriptloader.loadSubScript(NetUtil.newURI(tailFile).spec);
