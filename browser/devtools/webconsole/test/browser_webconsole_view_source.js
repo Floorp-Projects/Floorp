@@ -29,6 +29,7 @@ function testViewSource(hud) {
       severity: SEVERITY_ERROR,
     }],
   }).then(([result]) => {
+    Cu.forceGC();
     let msg = [...result.matched][0];
     ok(msg, "error message");
     let locationNode = msg.querySelector(".location");
