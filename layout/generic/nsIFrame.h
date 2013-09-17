@@ -870,6 +870,12 @@ public:
    * Move the frame, accounting for relative positioning. Use this when
    * adjusting the frame's position by a known amount, to properly update its
    * saved normal position (see GetNormalPosition below).
+   *
+   * This must be used only when moving a frame *after*
+   * nsHTMLReflowState::ApplyRelativePositioning is called.  When moving
+   * a frame during the reflow process prior to calling
+   * nsHTMLReflowState::ApplyRelativePositioning, the position should
+   * simply be adjusted directly (e.g., using SetPosition()).
    */
   void MovePositionBy(const nsPoint& aTranslation);
 
