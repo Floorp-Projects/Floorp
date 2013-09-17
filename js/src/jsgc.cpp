@@ -1326,8 +1326,7 @@ void
 ArenaLists::finalizeNow(FreeOp *fop, AllocKind thingKind)
 {
     JS_ASSERT(!IsBackgroundFinalized(thingKind));
-    JS_ASSERT(backgroundFinalizeState[thingKind] == BFS_DONE ||
-              backgroundFinalizeState[thingKind] == BFS_JUST_FINISHED);
+    JS_ASSERT(backgroundFinalizeState[thingKind] == BFS_DONE);
 
     ArenaHeader *arenas = arenaLists[thingKind].head;
     arenaLists[thingKind].clear();
@@ -2783,10 +2782,6 @@ BeginMarkPhase(JSRuntime *rt)
             c->zone()->setPreservingCode(true);
     }
 
-    /* Check that at least one zone is scheduled for collection. */
-    if (!any)
-        return false;
-
     /*
      * Atoms are not in the cross-compartment map. So if there are any
      * zones that are not being collected, we are not allowed to collect
@@ -2811,7 +2806,12 @@ BeginMarkPhase(JSRuntime *rt)
     if (atomsZone->isGCScheduled() && rt->gcIsFull && !keepAtoms) {
         JS_ASSERT(!atomsZone->isCollecting());
         atomsZone->setGCState(Zone::Mark);
+        any = true;
     }
+
+    /* Check that at least one zone is scheduled for collection. */
+    if (!any)
+        return false;
 
     /*
      * At the end of each incremental slice, we call prepareForIncrementalGC,
