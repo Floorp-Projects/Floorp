@@ -132,7 +132,7 @@ this.Downloads = {
    * @resolves When the download has finished successfully.
    * @rejects JavaScript exception if the download failed.
    */
-  startDirect: function (aSource, aTarget, aOptions) {
+  simpleDownload: function D_simpleDownload(aSource, aTarget, aOptions) {
     return this.createDownload({
       source: aSource,
       target: aTarget,
@@ -182,10 +182,10 @@ this.Downloads = {
         let publicSummary = yield this.getSummary(Downloads.PUBLIC);
         let privateSummary = yield this.getSummary(Downloads.PRIVATE);
         let combinedSummary = yield this.getSummary(Downloads.ALL);
-
-        yield publicSummary.bindToList(publicList);
-        yield privateSummary.bindToList(privateList);
-        yield combinedSummary.bindToList(combinedList);
+        
+        publicSummary.bindToList(publicList);
+        privateSummary.bindToList(privateList);
+        combinedSummary.bindToList(combinedList);
 
         this._lists[Downloads.PUBLIC] = publicList;
         this._lists[Downloads.PRIVATE] = privateList;
