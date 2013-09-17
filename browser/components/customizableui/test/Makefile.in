@@ -1,0 +1,21 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+MOCHITEST_BROWSER_FILES = \
+  browser_873501_handle_specials.js \
+  browser_877006_missing_view.js \
+  browser_877178_unregisterArea.js \
+  browser_877447_skip_missing_ids.js \
+  browser_878452_drag_to_panel.js \
+  browser_876926_customize_mode_wrapping.js \
+  browser_880382_drag_wide_widgets_in_panel.js \
+  browser_885530_showInPrivateBrowsing.js \
+  browser_887438_currentset_shim.js \
+  browser_890262_destroyWidget_after_add_to_panel.js \
+  browser_892955_isWidgetRemovable_for_removed_widgets.js \
+  browser_892956_destroyWidget_defaultPlacements.js \
+  browser_888817_currentset_updating.js \
+  browser_913972_currentset_overflow.js \
+  head.js \
+  $(NULL)
