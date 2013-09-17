@@ -165,10 +165,6 @@
   z-index: 1;
 }
 
-.titlebar-placeholder[type="appmenu-button"] {
-  margin-left: 4px;
-}
-
 .titlebar-placeholder[type="caption-buttons"] {
 %ifdef WINDOWS_AERO
   margin-left: 22px; /* additional space for Aero Snap */
