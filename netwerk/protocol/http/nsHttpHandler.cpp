@@ -82,12 +82,6 @@ using namespace mozilla::net;
 extern PRThread *gSocketThread;
 #endif
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
-static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
-static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
-static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
-
 #define UA_PREF_PREFIX          "general.useragent."
 #ifdef XP_WIN
 #define UA_SPARE_PLATFORM
