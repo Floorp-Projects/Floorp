@@ -32,7 +32,6 @@
 #include "nsCSSRuleProcessor.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
-#include "nsCSSFrameConstructor.h"
 #include "nsHashKeys.h"
 #include "RestyleManager.h"
 
