@@ -136,7 +136,7 @@ let UI = {
         this.connection.log("Simulator ready. Connecting.");
         this.connection.port = port;
         this.connection.host = "localhost";
-        this.connection.once("connected", function() {
+        this.connection.once("connected", () => {
           this.connection.log("Connected to simulator.");
           this.connection.keepConnecting = false;
         });
