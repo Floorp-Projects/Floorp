@@ -1409,6 +1409,7 @@ struct JSRuntime : public JS::shadow::Runtime,
   private:
     js::AtomSet atoms_;
     JSCompartment *atomsCompartment_;
+    bool beingDestroyed_;
   public:
     js::AtomSet &atoms() {
         JS_ASSERT(currentThreadHasExclusiveAccess());
@@ -1421,6 +1422,10 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     bool isAtomsCompartment(JSCompartment *comp) {
         return comp == atomsCompartment_;
+    }
+
+    bool isBeingDestroyed() const {
+        return beingDestroyed_;
     }
 
     // The atoms compartment is the only one in its zone.

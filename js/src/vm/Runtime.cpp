@@ -259,6 +259,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     mathCache_(NULL),
     trustedPrincipals_(NULL),
     atomsCompartment_(NULL),
+    beingDestroyed_(false),
     wrapObjectCallback(TransparentObjectWrapper),
     sameCompartmentWrapObjectCallback(NULL),
     preWrapObjectCallback(NULL),
@@ -418,6 +419,15 @@ JSRuntime::~JSRuntime()
 
     /* Clear the statics table to remove GC roots. */
     staticStrings.finish();
+
+    /*
+     * Flag us as being destroyed. This allows the GC to free things like
+     * interned atoms and Ion trampolines.
+     */
+    beingDestroyed_ = true;
+
+    /* Allow the GC to release scripts that were being profiled. */
+    profilingScripts = false;
 
     JS::PrepareForFullGC(this);
     GC(this, GC_NORMAL, JS::gcreason::DESTROY_RUNTIME);
