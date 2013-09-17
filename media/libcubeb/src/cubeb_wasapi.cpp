@@ -878,8 +878,8 @@ cubeb_ops const wasapi_ops = {
   /*.stream_destroy =*/ wasapi_stream_destroy,
   /*.stream_start =*/ wasapi_stream_start,
   /*.stream_stop =*/ wasapi_stream_stop,
-  /*.stream_get_position =*/ wasapi_stream_get_position
-  ///*.stream_get_latency =*/ wasapi_stream_get_latency
+  /*.stream_get_position =*/ wasapi_stream_get_position,
+  /*.stream_get_latency =*/ wasapi_stream_get_latency
  };
 } // namespace anonymous
 
