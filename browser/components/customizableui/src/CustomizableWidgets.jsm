@@ -36,49 +36,6 @@ function setAttributes(aNode, aAttrs) {
   }
 }
 
-// This function is called whenever an item gets moved in the menu panel. It
-// adjusts the position of widgets within the panel to reduce single-column
-// buttons from being placed in a row by themselves.
-function adjustPosition(aNode) {
-  // TODO(bug 885574): Merge this constant with the one in CustomizeMode.jsm,
-  //                   maybe just use a pref for this.
-  const kColumnsInMenuPanel = 3;
-
-  let nodeId = aNode.id;
-  // If these are wrapped, we'll need to look for items before the wrapper instead:
-  if (aNode.parentNode.localName == "toolbarpaletteitem") {
-    aNode = aNode.parentNode;
-  }
-
-  // Make sure that there are n % columns = 0 narrow buttons before the widget.
-  let prevSibling = aNode.previousElementSibling;
-  let previousSiblingCount = 0;
-  while (prevSibling) {
-    let nodeToCheck = prevSibling.localName == "toolbarpaletteitem" ? prevSibling.firstChild : prevSibling;
-    if (!nodeToCheck.classList.contains(kWidePanelItemClass)) {
-      previousSiblingCount++;
-    }
-    prevSibling = prevSibling.previousElementSibling;
-  }
-  if (previousSiblingCount % kColumnsInMenuPanel) {
-    let previousElement = aNode.previousElementSibling;
-    if (!previousElement) {
-      return;
-    }
-    let nodeToCheck = previousElement.localName == "toolbarpaletteitem" ? previousElement.firstChild : previousElement;
-    if (nodeToCheck.classList.contains(kWidePanelItemClass)) {
-      return;
-    }
-
-    let position = CustomizableUI.getPlacementOfWidget(nodeId).position;
-    // We don't need to move all of the items in this pass, because
-    // this move will trigger adjustPosition to get called again. The
-    // function will stop recursing when it finds that there is no
-    // more work that is needed.
-    CustomizableUI.moveWidgetWithinArea(nodeId, position - 1);
-  }
-}
-
 const CustomizableWidgets = [{
     id: "history-panelmenu",
     type: "view",
@@ -380,10 +337,6 @@ const CustomizableWidgets = [{
 
       let listener = {
         onWidgetAdded: function(aWidgetId, aArea, aPosition) {
-          if (this.currentArea == CustomizableUI.AREA_PANEL) {
-            adjustPosition(node);
-          }
-
           if (aWidgetId != this.id)
             return;
 
@@ -395,10 +348,6 @@ const CustomizableWidgets = [{
         }.bind(this),
 
         onWidgetRemoved: function(aWidgetId, aPrevArea) {
-          if (this.currentArea == CustomizableUI.AREA_PANEL) {
-            adjustPosition(node);
-          }
-
           if (aWidgetId != this.id)
             return;
 
@@ -419,10 +368,6 @@ const CustomizableWidgets = [{
         }.bind(this),
 
         onWidgetMoved: function(aWidgetId, aArea) {
-          if (this.currentArea == CustomizableUI.AREA_PANEL) {
-            adjustPosition(node);
-          }
-
           if (aWidgetId != this.id)
             return;
           updateWidgetStyle(aArea);
@@ -512,20 +457,12 @@ const CustomizableWidgets = [{
 
       let listener = {
         onWidgetAdded: function(aWidgetId, aArea, aPosition) {
-          if (this.currentArea == CustomizableUI.AREA_PANEL) {
-            adjustPosition(node);
-          }
-
           if (aWidgetId != this.id)
             return;
           updateWidgetStyle(aArea);
         }.bind(this),
 
         onWidgetRemoved: function(aWidgetId, aPrevArea) {
-          if (this.currentArea == CustomizableUI.AREA_PANEL) {
-            adjustPosition(node);
-          }
-
           if (aWidgetId != this.id)
             return;
           // When a widget is demoted to the palette ('removed'), it's visual
@@ -540,10 +477,6 @@ const CustomizableWidgets = [{
         }.bind(this),
 
         onWidgetMoved: function(aWidgetId, aArea) {
-          if (this.currentArea == CustomizableUI.AREA_PANEL) {
-            adjustPosition(node);
-          }
-
           if (aWidgetId != this.id)
             return;
           updateWidgetStyle(aArea);
