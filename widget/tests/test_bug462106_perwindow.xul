@@ -99,10 +99,14 @@ function initAndRunTests() {
         // the data should be on the clipboard inside the private browsing mode
         is(data2, paste(), "Data successfully copied inside the private browsing mode");
         aPrivateWindow.close();
-        // the data should no longer be on the clipboard at this stage
-        isnot(data2, paste(), "Data no longer available after leaving the private browsing mode");
 
-        SimpleTest.finish();
+        // The above .close() call will run asynchronously.
+        SimpleTest.executeSoon(function() {
+          // the data should no longer be on the clipboard at this stage
+          isnot(data2, paste(), "Data no longer available after leaving the private browsing mode");
+
+          SimpleTest.finish();
+        });
       }, 0);
     });
   });
