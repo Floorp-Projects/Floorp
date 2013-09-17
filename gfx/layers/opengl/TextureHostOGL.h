@@ -71,7 +71,6 @@ public:
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
   GLuint GetTexture();
-  void DeleteTextureIfPresent();
   gl::GLContext* gl() const;
 protected:
   RefPtr<CompositorOGL> mCompositor;
