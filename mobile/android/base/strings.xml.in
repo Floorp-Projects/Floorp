@@ -222,9 +222,9 @@
   <string name="contextmenu_edit_bookmark">&contextmenu_edit_bookmark;</string>
   <string name="contextmenu_subscribe">&contextmenu_subscribe;</string>
   <string name="contextmenu_site_settings">&contextmenu_site_settings;</string>
-  <string name="contextmenu_top_bookmarks_edit">&contextmenu_top_bookmarks_edit;</string>
-  <string name="contextmenu_top_bookmarks_pin">&contextmenu_top_bookmarks_pin;</string>
-  <string name="contextmenu_top_bookmarks_unpin">&contextmenu_top_bookmarks_unpin;</string>
+  <string name="contextmenu_top_sites_edit">&contextmenu_top_bookmarks_edit;</string>
+  <string name="contextmenu_top_sites_pin">&contextmenu_top_bookmarks_pin;</string>
+  <string name="contextmenu_top_sites_unpin">&contextmenu_top_bookmarks_unpin;</string>
 
   <string name="pref_titlebar_mode">&pref_titlebar_mode;</string>
   <string name="pref_titlebar_mode_title">&pref_titlebar_mode_title;</string>
@@ -264,7 +264,7 @@
   <string name="home_reading_list_empty">&home_reading_list_empty;</string>
   <string name="home_reading_list_hint">&home_reading_list_hint;</string>
   <string name="home_reading_list_hint_accessible">&home_reading_list_hint_accessible;</string>
-  <string name="pin_bookmark_dialog_hint">&pin_bookmark_dialog_hint;</string>
+  <string name="pin_site_dialog_hint">&pin_bookmark_dialog_hint;</string>
 
   <string name="filepicker_title">&filepicker_title;</string>
   <string name="filepicker_audio_title">&filepicker_audio_title;</string>

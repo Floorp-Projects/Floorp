@@ -217,7 +217,6 @@ FENNEC_JAVA_FILES = \
   home/BookmarksListView.java \
   home/BookmarksPage.java \
   home/BookmarkFolderView.java \
-  home/BookmarkThumbnailView.java \
   home/BrowserSearch.java \
   home/HistoryPage.java \
   home/HomeFragment.java \
@@ -229,7 +228,7 @@ FENNEC_JAVA_FILES = \
   home/LastTabsPage.java \
   home/MostRecentPage.java \
   home/MultiTypeCursorAdapter.java \
-  home/PinBookmarkDialog.java \
+  home/PinSiteDialog.java \
   home/ReadingListPage.java \
   home/SearchEngine.java \
   home/SearchEngineRow.java \
@@ -237,10 +236,11 @@ FENNEC_JAVA_FILES = \
   home/SimpleCursorLoader.java \
   home/SuggestClient.java \
   home/TabMenuStrip.java \
-  home/TopBookmarkItemView.java \
-  home/TopBookmarksAdapter.java \
-  home/TopBookmarksView.java \
+  home/TopSitesGridAdapter.java \
+  home/TopSitesGridItemView.java \
+  home/TopSitesGridView.java \
   home/TopSitesPage.java \
+  home/TopSitesThumbnailView.java \
   home/TwoLinePageRow.java \
   menu/GeckoMenu.java \
   menu/GeckoMenuInflater.java \
@@ -491,7 +491,7 @@ RES_LAYOUT = \
   res/layout/notification_icon_text.xml \
   res/layout/notification_progress.xml \
   res/layout/notification_progress_text.xml \
-  res/layout/pin_bookmark_dialog.xml \
+  res/layout/pin_site_dialog.xml \
   res/layout/preference_rightalign_icon.xml \
   res/layout/preference_search_engine.xml \
   res/layout/preference_search_tip.xml \
@@ -510,7 +510,7 @@ RES_LAYOUT = \
   res/layout/tabs_item_cell.xml \
   res/layout/tabs_item_row.xml \
   res/layout/text_selection_handles.xml \
-  res/layout/top_bookmark_item_view.xml \
+  res/layout/top_sites_grid_item_view.xml \
   res/layout/two_line_page_row.xml \
   res/layout/list_item_header.xml \
   res/layout/select_dialog_list.xml \
@@ -715,7 +715,7 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/tabs_normal.png \
   res/drawable-mdpi/tabs_private.png \
   res/drawable-mdpi/tabs_synced.png \
-  res/drawable-mdpi/top_bookmark_add.png \
+  res/drawable-mdpi/top_site_add.png \
   res/drawable-mdpi/urlbar_stop.png \
   res/drawable-mdpi/reader.png \
   res/drawable-mdpi/reader_cropped.png \
@@ -824,7 +824,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/tabs_normal.png \
   res/drawable-hdpi/tabs_private.png \
   res/drawable-hdpi/tabs_synced.png \
-  res/drawable-hdpi/top_bookmark_add.png \
+  res/drawable-hdpi/top_site_add.png \
   res/drawable-hdpi/urlbar_stop.png \
   res/drawable-hdpi/reader.png \
   res/drawable-hdpi/reader_cropped.png \
@@ -899,7 +899,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/find_close.png \
   res/drawable-xhdpi/find_next.png \
   res/drawable-xhdpi/find_prev.png \
-  res/drawable-xhdpi/top_bookmark_add.png \
+  res/drawable-xhdpi/top_site_add.png \
   res/drawable-xhdpi/urlbar_stop.png \
   res/drawable-xhdpi/reader.png \
   res/drawable-xhdpi/reader_cropped.png \
@@ -1076,7 +1076,7 @@ RES_COLOR = \
   res/color/select_item_multichoice.xml \
   res/color/tertiary_text.xml \
   res/color/tertiary_text_inverse.xml \
-  res/color/top_bookmark_item_title.xml \
+  res/color/top_sites_grid_item_title.xml \
   res/color/url_bar_title.xml \
   res/color/url_bar_title_hint.xml \
   $(NULL)
@@ -1086,7 +1086,7 @@ RES_MENU = \
   res/menu/gecko_app_menu.xml \
   res/menu/home_contextmenu.xml \
   res/menu/titlebar_contextmenu.xml \
-  res/menu/top_bookmarks_contextmenu.xml \
+  res/menu/top_sites_contextmenu.xml \
   res/menu-large-v11/browser_app_menu.xml \
   res/menu-v11/browser_app_menu.xml \
   res/menu-xlarge-v11/browser_app_menu.xml \
@@ -1104,7 +1104,7 @@ RES_DRAWABLE += \
   $(SYNC_RES_DRAWABLE)                                \
   res/drawable/action_bar_button.xml                  \
   res/drawable/action_bar_button_inverse.xml          \
-  res/drawable/bookmark_thumbnail_bg.xml              \
+  res/drawable/top_sites_thumbnail_bg.xml             \
   res/drawable/url_bar_bg.xml                         \
   res/drawable/url_bar_entry.xml                      \
   res/drawable/url_bar_nav_button.xml                 \
