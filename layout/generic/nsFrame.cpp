@@ -5094,6 +5094,10 @@ nsIFrame::MovePositionBy(const nsPoint& aTranslation)
   nsHTMLReflowState::ApplyRelativePositioning(this, computedOffsets ?
                                               *computedOffsets : nsMargin(),
                                               &position);
+  NS_ASSERTION(StyleDisplay()->mPosition == NS_STYLE_POSITION_STICKY ||
+               GetPosition() + aTranslation == position,
+               "MovePositionBy should always lead to the movement "
+               "specified, unless the frame is position:sticky");
   SetPosition(position);
 }
 
