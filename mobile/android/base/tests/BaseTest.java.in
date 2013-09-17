@@ -49,7 +49,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private static final int VERIFY_URL_TIMEOUT = 2000;
     private static final int MAX_LIST_ATTEMPTS = 3;
     private static final int MAX_WAIT_ENABLED_TEXT_MS = 10000;
-    private static final int MAX_WAIT_HOME_PAGER_HIDDEN_MS = 10000;
+    private static final int MAX_WAIT_HOME_PAGER_HIDDEN_MS = 15000;
     public static final int MAX_WAIT_MS = 3000;
 
     // IDs for UI views
