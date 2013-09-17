@@ -186,6 +186,11 @@ cc_return_t CC_CallFeature_AddICECandidate(cc_call_handle_t call_handle,
                                            const char *mid,
                                            cc_level_t level,
                                            Timecard *tc);
+cc_return_t CC_CallFeature_FoundICECandidate(cc_call_handle_t call_handle,
+					     const char* candidate,
+					     const char *mid,
+					     cc_level_t level,
+					     Timecard *tc);
 
 /**
  * Initiate a speed dial.

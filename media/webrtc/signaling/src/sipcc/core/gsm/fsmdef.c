@@ -37,6 +37,7 @@
 #include "platform_api.h"
 #include "peer_connection_types.h"
 #include "prlog.h"
+#include "prprf.h"
 #include "sessionHash.h"
 
 extern void update_kpmlconfig(int kpmlVal);
@@ -93,6 +94,7 @@ static sm_rcs_t fsmdef_ev_setpeerconnection(sm_event_t *event);
 static sm_rcs_t fsmdef_ev_addstream(sm_event_t *event);
 static sm_rcs_t fsmdef_ev_removestream(sm_event_t *event);
 static sm_rcs_t fsmdef_ev_addcandidate(sm_event_t *event);
+static sm_rcs_t fsmdef_ev_foundcandidate(sm_event_t *event);
 
 static sm_rcs_t fsmdef_ev_default(sm_event_t *event);
 static sm_rcs_t fsmdef_ev_default_feature_ack(sm_event_t *event);
@@ -202,7 +204,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_setpeerconnection,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_default
     },
 
 /* FSMDEF_S_COLLECT_INFO ---------------------------------------------------- */
@@ -232,7 +235,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_default
     },
 
 /* FSMDEF_S_CALL_SENT ------------------------------------------------------- */
@@ -262,7 +266,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_default
     },
 
 /* FSMDEF_S_OUTGOING_PROCEEDING --------------------------------------------- */
@@ -292,7 +297,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_default
     },
 
 /* FSMDEF_S_KPML_COLLECT_INFO ----------------------------------------------- */
@@ -322,7 +328,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_default
     },
 
 /* FSMDEF_S_OUTGOING_ALERTING ----------------------------------------------- */
@@ -352,7 +359,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_default
     },
 
 /* FSMDEF_S_INCOMING_ALERTING ----------------------------------------------- */
@@ -382,7 +390,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_default
     },
 
 /* FSMDEF_S_CONNECTING ------------------------------------------------------ */
@@ -412,7 +421,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_default
     },
 
 /* FSMDEF_S_JOINING --------------------------------------------------------- */
@@ -442,7 +452,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_default
     },
 
 /* FSMDEF_S_CONNECTED ------------------------------------------------------- */
@@ -472,7 +483,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_default
     },
 
 /* FSMDEF_S_CONNECTED_MEDIA_PEND  ------------------------------------------- */
@@ -502,7 +514,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_default
     },
 
 /* FSMDEF_S_RELEASING ------------------------------------------------------- */
@@ -532,7 +545,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_default
     },
 
 /* FSMDEF_S_HOLD_PENDING ---------------------------------------------------- */
@@ -562,7 +576,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_default
     },
 
 /* FSMDEF_S_HOLDING --------------------------------------------------------- */
@@ -592,7 +607,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_default
     },
 
 /* FSMDEF_S_RESUME_PENDING -------------------------------------------------- */
@@ -622,7 +638,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_default
     },
 
 /* FSMDEF_S_PRESERVED  ------------------------------------------------------ */
@@ -652,7 +669,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_default
     },
 
 
@@ -683,7 +701,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_addstream,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_removestream,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_addcandidate
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_addcandidate,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_foundcandidate
     },
 
 /* FSMDEF_S_HAVE_LOCAL_OFFER  ----------------------------------------------- */
@@ -713,8 +732,9 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default /* Reject lame-duck
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default, /* Reject lame-duck
                                                        candidates */
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_foundcandidate
     },
 
 /* FSMDEF_S_HAVE_REMOTE_OFFER  ---------------------------------------------- */
@@ -744,7 +764,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_addstream,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_removestream,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_addcandidate
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_addcandidate,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_default
     },
 
 /* FSMDEF_S_HAVE_LOCAL_PRANSWER  -------------------------------------------- */
@@ -774,7 +795,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_addcandidate
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_addcandidate,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_foundcandidate
     },
 
 /* FSMDEF_S_HAVE_REMOTE_PRANSWER  ------------------------------------------- */
@@ -804,7 +826,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_addcandidate
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_addcandidate,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_foundcandidate
     },
 
 /* FSMDEF_S_CLOSED  --------------------------------------------------------- */
@@ -834,7 +857,8 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_default,
+    /* CC_MSG_FOUNDCANDIDATE   */ fsmdef_ev_default
     }
 };
 
@@ -1302,6 +1326,8 @@ fsmdef_init_dcb (fsmdef_dcb_t *dcb, callid_t call_id,
 
     dcb->digest_alg[0] = '\0';
     dcb->digest[0] = '\0';
+
+    sll_lite_init(&dcb->candidate_list);
 }
 
 
@@ -1350,6 +1376,9 @@ fsmdef_free_dcb (fsmdef_dcb_t *dcb)
 
     /* clean media list */
     gsmsdp_clean_media_list(dcb);
+
+    /* clean candidate list */
+    gsmsdp_clean_candidate_list(dcb);
 
     gsmsdp_free(dcb);
 
@@ -2455,6 +2484,14 @@ fsmdef_ev_default (sm_event_t *event)
               fsmdef_state_name(fcb->state));
         break;
 
+      case CC_MSG_FOUNDCANDIDATE:
+          ui_ice_candidate_found(evFoundIceCandidateError, fcb->state, msg->line,
+              msg->call_id, dcb->caller_id.call_instance_id, strlib_empty(),
+              NULL, msg->timecard,
+              PC_INVALID_STATE, "Cannot add found ICE candidate in state %s",
+              fsmdef_state_name(fcb->state));
+        break;
+
       case CC_MSG_ADDSTREAM:
       case CC_MSG_REMOVESTREAM:
           /* This shouldn't happen, since PeerConnection should check
@@ -3170,6 +3207,9 @@ fsmdef_ev_createoffer (sm_event_t *event) {
         return (SM_RC_END);
     }
 
+    /* clean candidate list, since we are about to return the candidates */
+    gsmsdp_clean_candidate_list(dcb);
+
     dcb->inbound = FALSE;
 
     if (msg->data.session.constraints) {
@@ -3331,6 +3371,9 @@ fsmdef_ev_createanswer (sm_event_t *event) {
         return (SM_RC_END);
     }
 
+    /* clean candidate list, since we are about to return the candidates */
+    gsmsdp_clean_candidate_list(dcb);
+
     dcb->inbound = TRUE;
 
     if (msg->data.session.constraints) {
@@ -3459,6 +3502,7 @@ fsmdef_ev_setlocaldesc(sm_event_t *event) {
     cc_causes_t         lsm_rc;
     char                *local_sdp = NULL;
     uint32_t            local_sdp_len = 0;
+    fsmdef_candidate_t *candidate = NULL;
 
     FSM_DEBUG_SM(DEB_F_PREFIX"Entered.", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
 
@@ -3602,6 +3646,21 @@ fsmdef_ev_setlocaldesc(sm_event_t *event) {
     ui_set_local_description(evSetLocalDescSuccess, fcb->state, msg->line,
         msg->call_id, dcb->caller_id.call_instance_id,
         strlib_malloc(local_sdp,-1), msg->timecard, PC_NO_ERROR, NULL);
+
+    /* If we have pending candidates flush them too */
+    while (TRUE) {
+        /* unlink head and free the media */
+        candidate = (fsmdef_candidate_t *)sll_lite_unlink_head(&dcb->candidate_list);
+        if (candidate) {
+            ui_ice_candidate_found(evFoundIceCandidate, fcb->state, line, call_id,
+                                   dcb->caller_id.call_instance_id, strlib_malloc(local_sdp,-1),
+                                   candidate->candidate, /* Transfer ownership */
+                                   NULL, PC_NO_ERROR, NULL);
+            free(candidate);
+        } else {
+            break;
+        }
+    }
 
     free(local_sdp);
     return (SM_RC_END);
@@ -4121,6 +4180,117 @@ fsmdef_ev_addcandidate(sm_event_t *event) {
     free(remote_sdp);
     return (SM_RC_END);
 }
+
+
+static sm_rcs_t
+fsmdef_ev_foundcandidate(sm_event_t *event) {
+    fsm_fcb_t           *fcb = (fsm_fcb_t *) event->data;
+    fsmdef_dcb_t        *dcb = fcb->dcb;
+    cc_causes_t         cause = CC_CAUSE_NORMAL;
+    cc_feature_t        *msg = (cc_feature_t *) event->msg;
+    int                 sdpmode = 0;
+    short               vcm_res;
+    uint16_t            level;
+    line_t              line = msg->line;
+    callid_t            call_id = msg->call_id;
+    char                *local_sdp = 0;
+    uint32_t            local_sdp_len = 0;
+    string_t            candidate = 0;
+    char                candidate_tmp[CANDIDATE_SIZE + 32]; /* Sort of arbitrary */
+
+    FSM_DEBUG_SM(DEB_F_PREFIX"Entered.", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
+
+    if (!dcb) {
+        FSM_DEBUG_SM(DEB_F_PREFIX"dcb is NULL.", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
+        ui_ice_candidate_add(evAddIceCandidateError, fcb->state, line, call_id,
+            0, strlib_empty(), msg->timecard, PC_INTERNAL_ERROR,
+            "DCB has not been created.");
+        return SM_RC_CLEANUP;
+    }
+
+    config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
+    if (!sdpmode) {
+        MOZ_CRASH();
+    }
+
+    MOZ_ASSERT(dcb->sdp && dcb->sdp->src_sdp);
+    if (!dcb->sdp || !dcb->sdp->src_sdp) {
+        FSM_DEBUG_SM(DEB_F_PREFIX"Has the "
+            "local description been set yet?\n",
+            DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
+
+        ui_ice_candidate_found(evFoundIceCandidateError, fcb->state, line, call_id,
+                               dcb->caller_id.call_instance_id, strlib_empty(),
+                               NULL, msg->timecard,
+            PC_INVALID_STATE, "Cannot add found ICE candidates without"
+                              "local SDP.");
+
+        return SM_RC_END;
+    }
+
+    /* Store the candidate in the SDP for future reference */
+    level = msg->data.candidate.level;
+    gsmsdp_set_ice_attribute (SDP_ATTR_ICE_CANDIDATE, level,
+                              dcb->sdp->src_sdp,
+                              (char *)msg->data.candidate.candidate);
+
+    local_sdp = sipsdp_write_to_buf(dcb->sdp->src_sdp, &local_sdp_len);
+
+    if (!local_sdp) {
+        ui_ice_candidate_found(evFoundIceCandidateError, fcb->state, line, call_id,
+            dcb->caller_id.call_instance_id, strlib_empty(), NULL,
+            msg->timecard,
+            PC_INTERNAL_ERROR, "Could not serialize new SDP after adding ICE "
+            "candidate.");
+        return (SM_RC_END);
+    }
+
+    /* Distinguish between the following two cases:
+
+       1. CreateOffer() has been called but SetLocalDesc() has not.
+       2. We are mid-call.
+
+       Both of these are in state STABLE but only in one do we
+       pass up trickle candidates. In the other we buffer them
+       and send them later.
+    */
+    /* Smuggle the entire candidate structure in a string */
+    PR_snprintf(candidate_tmp, sizeof(candidate_tmp), "%d\t%s\t%s",
+                msg->data.candidate.level,
+                (char *)msg->data.candidate.mid,
+                (char *)msg->data.candidate.candidate);
+
+    if (fcb->state == FSMDEF_S_STABLE) {
+        if (!dcb->sdp->dest_sdp) {
+            fsmdef_candidate_t *buffered_cand = NULL;
+
+            FSM_DEBUG_SM(DEB_F_PREFIX"dcb->sdp->dest_sdp is null."
+                         "assuming CreateOffer called but not SetLocal...\n",
+                         DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
+
+            buffered_cand = (fsmdef_candidate_t *)cpr_malloc(sizeof(fsmdef_candidate_t));
+            if (!buffered_cand)
+                return SM_RC_END;
+
+            buffered_cand->candidate = strlib_malloc(candidate_tmp, -1);
+
+            if (sll_lite_link_head(&dcb->candidate_list,
+                                   (sll_lite_node_t *)buffered_cand) != SLL_LITE_RET_SUCCESS)
+                return SM_RC_END;
+
+            /* Don't notify upward */
+            return SM_RC_END;
+        }
+    }
+
+    ui_ice_candidate_found(evFoundIceCandidate, fcb->state, line, call_id,
+        dcb->caller_id.call_instance_id, strlib_malloc(local_sdp,-1),
+        strlib_malloc(candidate_tmp, -1),
+        msg->timecard, PC_NO_ERROR, NULL);
+
+    return SM_RC_END;
+}
+
 
 static void
 fsmdef_check_active_feature (fsmdef_dcb_t *dcb, cc_features_t ftr_id)
