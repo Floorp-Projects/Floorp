@@ -21,16 +21,12 @@ interface MediaRecorder : EventTarget {
 
   readonly attribute DOMString mimeType;
 
-  [SetterThrows]
   attribute EventHandler ondataavailable;
 
-  [SetterThrows]
   attribute EventHandler onerror;
 
-  [SetterThrows]
   attribute EventHandler onstop;
 
-  [SetterThrows]
   attribute EventHandler onwarning;
 
   [Throws]
