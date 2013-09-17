@@ -1195,6 +1195,7 @@ var InputSourceHelper = {
     window.addEventListener("mousedown", this, true);
     window.addEventListener("touchstart", this, true);
     window.addEventListener("touchend", this, true);
+    window.addEventListener("touchcancel", this, true);
   },
 
   _precise: function () {
@@ -1218,6 +1219,7 @@ var InputSourceHelper = {
         this.touchIsActive = true;
         break;
       case "touchend":
+      case "touchcancel":
         this.touchIsActive = false;
         break;
       default:
