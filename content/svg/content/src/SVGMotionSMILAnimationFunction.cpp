@@ -4,15 +4,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGMotionSMILAnimationFunction.h"
-#include "nsSMILParserUtils.h"
-#include "nsSVGAngle.h"
-#include "SVGMotionSMILType.h"
-#include "SVGMotionSMILPathUtils.h"
-#include "nsSVGPathDataParser.h"
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/dom/SVGPathElement.h" // for nsSVGPathList
 #include "mozilla/dom/SVGMPathElement.h"
+#include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
+#include "nsSMILParserUtils.h"
+#include "nsSVGAngle.h"
+#include "nsSVGPathDataParser.h"
+#include "SVGMotionSMILType.h"
+#include "SVGMotionSMILPathUtils.h"
 
 namespace mozilla {
 

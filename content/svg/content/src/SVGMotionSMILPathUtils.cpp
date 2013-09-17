@@ -106,7 +106,7 @@ SVGMotionSMILPathUtils::PathGenerator::
     return false;
   }
 
-  if (tokenizer.lastTokenEndedWithSeparator() || // Trailing comma.
+  if (tokenizer.separatorAfterCurrentToken() ||  // Trailing comma.
       tokenizer.hasMoreTokens()) {               // More text remains
     return false;
   }
