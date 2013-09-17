@@ -1873,6 +1873,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 attributes = null; // CPP
                                 break starttagloop;
                             case INPUT:
+                                errStartTagInTable(name);
                                 if (!Portability.lowerCaseLiteralEqualsIgnoreAsciiCaseString(
                                         "hidden",
                                         attributes.getValue(AttributeName.TYPE))) {
