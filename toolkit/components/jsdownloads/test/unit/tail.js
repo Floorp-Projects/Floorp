@@ -14,9 +14,6 @@
 
 add_task(function test_common_terminate()
 {
-  // Ensure all the pending HTTP requests have a chance to finish.
-  continueResponses();
-
   // Stop the HTTP server.  We must do this inside a task in "tail.js" until the
   // xpcshell testing framework supports asynchronous termination functions.
   let deferred = Promise.defer();
