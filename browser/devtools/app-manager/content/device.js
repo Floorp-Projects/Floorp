@@ -11,6 +11,7 @@ const {require} = devtools;
 
 const {ConnectionManager, Connection} = require("devtools/client/connection-manager");
 const {getDeviceFront} = require("devtools/server/actors/device");
+const {getTargetForApp} = require("devtools/app-actor-front");
 const DeviceStore = require("devtools/app-manager/device-store");
 const WebappsStore = require("devtools/app-manager/webapps-store");
 const promise = require("sdk/core/promise");
@@ -134,39 +135,12 @@ let UI = {
     }).then(null, console.error);
   },
 
-  _getTargetForApp: function(manifest) { // FIXME <- will be implemented in bug 912476
-    if (!this.listTabsResponse)
-      return null;
-
-    let actor = this.listTabsResponse.webappsActor;
-    let deferred = promise.defer();
-    let request = {
-      to: actor,
-      type: "getAppActor",
-      manifestURL: manifest,
-    }
-    this.connection.client.request(request, (res) => {
-      if (res.error) {
-        deferred.reject(res.error);
-      } else {
-        let options = {
-          form: res.actor,
-          client: this.connection.client,
-          chrome: false
-        };
-
-        devtools.TargetFactory.forRemoteTab(options).then((target) => {
-          deferred.resolve(target)
-        }, (error) => {
-          deferred.reject(error);
-        });
-      }
-    });
-    return deferred.promise;
-  },
-
   openToolbox: function(manifest) {
-    this._getTargetForApp(manifest).then((target) => {
+    if (!this.listTabsResponse)
+      return;
+    getTargetForApp(this.connection.client,
+                    this.listTabsResponse.webappsActor,
+                    manifest).then((target) => {
       gDevTools.showToolbox(target,
                             null,
                             devtools.Toolbox.HostType.WINDOW).then(toolbox => {

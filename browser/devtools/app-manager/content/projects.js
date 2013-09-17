@@ -14,7 +14,7 @@ const {AppProjects} = require("devtools/app-manager/app-projects");
 const {AppValidator} = require("devtools/app-manager/app-validator");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
-const {installHosted, installPackaged} = require("devtools/app-actor-front");
+const {installHosted, installPackaged, getTargetForApp} = require("devtools/app-actor-front");
 
 const promise = require("sdk/core/promise");
 
@@ -256,36 +256,6 @@ let UI = {
     return deferred.promise;
   },
 
-  _getTargetForApp: function(manifest) { // FIXME <- will be implemented in bug 912476
-    if (!this.listTabsResponse)
-      return null;
-    let actor = this.listTabsResponse.webappsActor;
-    let deferred = promise.defer();
-    let request = {
-      to: actor,
-      type: "getAppActor",
-      manifestURL: manifest,
-    }
-    this.connection.client.request(request, (res) => {
-      if (res.error) {
-        deferred.reject(res.error);
-      } else {
-        let options = {
-          form: res.actor,
-          client: this.connection.client,
-          chrome: false
-        };
-
-        devtools.TargetFactory.forRemoteTab(options).then((target) => {
-          deferred.resolve(target)
-        }, (error) => {
-          deferred.reject(error);
-        });
-      }
-    });
-    return deferred.promise;
-  },
-
   debug: function(button, location) {
     button.disabled = true;
     let project = AppProjects.get(location);
@@ -320,7 +290,9 @@ let UI = {
   openToolbox: function(project) {
     let deferred = promise.defer();
     let manifest = this._getProjectManifestURL(project);
-    this._getTargetForApp(manifest).then((target) => {
+    getTargetForApp(this.connection.client,
+                    this.listTabsResponse.webappsActor,
+                    manifest).then((target) => {
       gDevTools.showToolbox(target,
                             null,
                             devtools.Toolbox.HostType.WINDOW).then(toolbox => {
