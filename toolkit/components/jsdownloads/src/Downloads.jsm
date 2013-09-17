@@ -132,7 +132,7 @@ this.Downloads = {
    * @resolves When the download has finished successfully.
    * @rejects JavaScript exception if the download failed.
    */
-  fetch: function (aSource, aTarget, aOptions) {
+  startDirect: function (aSource, aTarget, aOptions) {
     return this.createDownload({
       source: aSource,
       target: aTarget,
