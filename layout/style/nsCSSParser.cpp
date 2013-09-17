@@ -25,7 +25,6 @@
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsReadableUtils.h"
 #include "nsIAtom.h"
 #include "nsColor.h"
 #include "nsCSSPseudoClasses.h"
