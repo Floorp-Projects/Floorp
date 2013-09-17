@@ -957,22 +957,7 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
 
   mSection = eCSSSection_General;
 
-  // In quirks mode, allow style declarations to have braces or not
-  // (bug 99554).
-  bool haveBraces;
-  if (mNavQuirkMode && GetToken(true)) {
-    haveBraces = eCSSToken_Symbol == mToken.mType &&
-                 '{' == mToken.mSymbol;
-    UngetToken();
-  }
-  else {
-    haveBraces = false;
-  }
-
   uint32_t parseFlags = eParseDeclaration_AllowImportant;
-  if (haveBraces) {
-    parseFlags |= eParseDeclaration_InBraces;
-  }
 
   css::Declaration* declaration = ParseDeclarationBlock(parseFlags);
   if (declaration) {
