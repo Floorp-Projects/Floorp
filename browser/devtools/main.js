@@ -193,7 +193,7 @@ Tools.netMonitor = {
   tooltip: l10n("netmonitor.tooltip", netMonitorStrings),
 
   isTargetSupported: function(target) {
-    return true;
+    return !target.isApp;
   },
 
   build: function(iframeWindow, toolbox) {
