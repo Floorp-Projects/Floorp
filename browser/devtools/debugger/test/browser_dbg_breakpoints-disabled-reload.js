@@ -80,7 +80,7 @@ function test() {
 
     function testWhenBreakpointEnabledAndSecondSourceShown() {
       return Task.spawn(function() {
-        yield ensureSourceIs(aPanel, "-02.js");
+        yield ensureSourceIs(aPanel, "-02.js", true);
         yield verifyView({ disabled: false, visible: false });
 
         executeSoon(() => aDebuggee.firstCall());
@@ -95,7 +95,7 @@ function test() {
 
     function testWhenBreakpointDisabledAndSecondSourceShown() {
       return Task.spawn(function() {
-        yield ensureSourceIs(aPanel, "-02.js");
+        yield ensureSourceIs(aPanel, "-02.js", true);
         yield verifyView({ disabled: true, visible: false });
 
         executeSoon(() => aDebuggee.firstCall());
