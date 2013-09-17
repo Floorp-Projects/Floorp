@@ -373,16 +373,6 @@ JS_ClearWatchPointsForObject(JSContext *cx, JSObject *obj)
     return true;
 }
 
-JS_PUBLIC_API(bool)
-JS_ClearAllWatchPoints(JSContext *cx)
-{
-    if (JSCompartment *comp = cx->compartment()) {
-        if (WatchpointMap *wpmap = comp->watchpointMap)
-            wpmap->clear();
-    }
-    return true;
-}
-
 /************************************************************************/
 
 JS_PUBLIC_API(unsigned)
