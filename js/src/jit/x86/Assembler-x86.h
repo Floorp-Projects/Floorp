@@ -237,8 +237,8 @@ class Assembler : public AssemblerX86Shared
     void writeRelocation(JmpSrc src) {
         jumpRelocations_.writeUnsigned(src.offset());
     }
-    void addPendingJump(JmpSrc src, void *target, Relocation::Kind kind) {
-        enoughMemory_ &= jumps_.append(RelativePatch(src.offset(), target, kind));
+    void addPendingJump(JmpSrc src, ImmPtr target, Relocation::Kind kind) {
+        enoughMemory_ &= jumps_.append(RelativePatch(src.offset(), target.value, kind));
         if (kind == Relocation::IONCODE)
             writeRelocation(src);
     }
@@ -395,32 +395,32 @@ class Assembler : public AssemblerX86Shared
         return masm.currentOffset();
     }
 
-    void jmp(void *target, Relocation::Kind reloc = Relocation::HARDCODED) {
+    void jmp(ImmPtr target, Relocation::Kind reloc = Relocation::HARDCODED) {
         JmpSrc src = masm.jmp();
         addPendingJump(src, target, reloc);
     }
-    void j(Condition cond, void *target,
+    void j(Condition cond, ImmPtr target,
            Relocation::Kind reloc = Relocation::HARDCODED) {
         JmpSrc src = masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond));
         addPendingJump(src, target, reloc);
     }
 
     void jmp(IonCode *target) {
-        jmp(target->raw(), Relocation::IONCODE);
+        jmp(ImmPtr(target->raw()), Relocation::IONCODE);
     }
     void j(Condition cond, IonCode *target) {
-        j(cond, target->raw(), Relocation::IONCODE);
+        j(cond, ImmPtr(target->raw()), Relocation::IONCODE);
     }
     void call(IonCode *target) {
         JmpSrc src = masm.call();
-        addPendingJump(src, target->raw(), Relocation::IONCODE);
+        addPendingJump(src, ImmPtr(target->raw()), Relocation::IONCODE);
     }
     void call(ImmWord target) {
-        JmpSrc src = masm.call();
-        addPendingJump(src, (void*)target.value, Relocation::HARDCODED);
+        call(ImmPtr((void*)target.value));
     }
     void call(ImmPtr target) {
-        call(ImmWord(uintptr_t(target.value)));
+        JmpSrc src = masm.call();
+        addPendingJump(src, target, Relocation::HARDCODED);
     }
 
     // Emit a CALL or CMP (nop) instruction. ToggleCall can be used to patch
@@ -428,7 +428,7 @@ class Assembler : public AssemblerX86Shared
     CodeOffsetLabel toggledCall(IonCode *target, bool enabled) {
         CodeOffsetLabel offset(size());
         JmpSrc src = enabled ? masm.call() : masm.cmp_eax();
-        addPendingJump(src, target->raw(), Relocation::IONCODE);
+        addPendingJump(src, ImmPtr(target->raw()), Relocation::IONCODE);
         JS_ASSERT(size() - offset.offset() == ToggledCallSize());
         return offset;
     }
@@ -440,7 +440,7 @@ class Assembler : public AssemblerX86Shared
 
     // Re-routes pending jumps to an external target, flushing the label in the
     // process.
-    void retarget(Label *label, void *target, Relocation::Kind reloc) {
+    void retarget(Label *label, ImmPtr target, Relocation::Kind reloc) {
         JSC::MacroAssembler::Label jsclabel;
         if (label->used()) {
             bool more;
