@@ -8,4 +8,5 @@ EXTRA_PP_JS_MODULES += [
     'CustomizableUI.jsm',
     'CustomizableWidgets.jsm',
     'CustomizeMode.jsm',
+    'PanelWideWidgetTracker.jsm',
 ]

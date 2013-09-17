@@ -10,6 +10,8 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PanelWideWidgetTracker",
+  "resource:///modules/PanelWideWidgetTracker.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableWidgets",
   "resource:///modules/CustomizableWidgets.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
@@ -155,6 +157,8 @@ let CustomizableUIInternal = {
       type: CustomizableUI.TYPE_MENU_PANEL,
       defaultPlacements: panelPlacements
     });
+    PanelWideWidgetTracker.init();
+
     this.registerArea(CustomizableUI.AREA_NAVBAR, {
       legacy: true,
       type: CustomizableUI.TYPE_TOOLBAR,
@@ -393,8 +397,10 @@ let CustomizableUIInternal = {
         }
       }
 
+      this.notifyListeners("onWidgetBeforeDOMChange", node, currentNode, container);
       this.insertWidgetBefore(node, currentNode, container, aArea);
       this._addParentFlex(node);
+      this.notifyListeners("onWidgetAfterDOMChange", node, currentNode, container);
       if (gResetting) {
         this.notifyListeners("onWidgetReset", id);
       }
@@ -1771,7 +1777,7 @@ let CustomizableUIInternal = {
   getCustomizeTargetForArea: function(aArea, aWindow) {
     let buildAreaNodes = gBuildAreas.get(aArea);
     if (!buildAreaNodes) {
-      throw new Error("No build area nodes registered for " + aArea);
+      return null;
     }
 
     for (let node of buildAreaNodes) {
@@ -1780,7 +1786,7 @@ let CustomizableUIInternal = {
       }
     }
 
-    throw new Error("Could not find any window nodes for area " + aArea);
+    return null;
   },
 
   reset: function() {
@@ -2118,7 +2124,8 @@ function WidgetGroupWrapper(aWidget) {
     }
 
     let instance = aWidget.instances.get(aWindow.document);
-    if (!instance) {
+    if (!instance &&
+        (aWidget.showInPrivateBrowsing || !PrivateBrowsingUtils.isWindowPrivate(aWindow))) {
       instance = CustomizableUIInternal.buildWidget(aWindow.document,
                                                     aWidget);
     }
@@ -2127,6 +2134,16 @@ function WidgetGroupWrapper(aWidget) {
     wrapperMap.set(aWidget.id, wrapper);
     return wrapper;
   };
+
+  this.__defineGetter__("instances", function() {
+    // Can't use gBuildWindows here because some areas load lazily:
+    let placement = CustomizableUIInternal.getPlacementOfWidget(aWidget.id);
+    if (!placement) {
+      return [];
+    }
+    let area = placement.area;
+    return [this.forWindow(node.ownerDocument.defaultView) for (node of gBuildAreas.get(area))];
+  });
 
   this.__defineGetter__("areaType", function() {
     return gAreas.get(aWidget.currentArea).get("type");
@@ -2222,6 +2239,10 @@ function XULWidgetGroupWrapper(aWidgetId) {
     }
 
     return gAreas.get(placement.area).get("type");
+  });
+
+  this.__defineGetter__("instances", function() {
+    return [this.forWindow(win) for ([win,] of gBuildWindows)];
   });
 
   Object.freeze(this);
