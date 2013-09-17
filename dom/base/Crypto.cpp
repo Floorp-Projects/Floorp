@@ -91,7 +91,8 @@ Crypto::GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
     InfallibleTArray<uint8_t> randomValues;
     // Tell the parent process to generate random values via PContent
     ContentChild* cc = ContentChild::GetSingleton();
-    if (!cc->SendGetRandomValues(dataLen, &randomValues)) {
+    if (!cc->SendGetRandomValues(dataLen, &randomValues) ||
+        randomValues.Length() == 0) {
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
