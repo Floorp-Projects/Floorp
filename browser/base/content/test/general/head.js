@@ -111,6 +111,18 @@ function getTestPlugin(aName) {
   return null;
 }
 
+// call this to set the test plugin(s) initially expected enabled state.
+// it will automatically be reset to it's previous value after the test
+// ends
+function setTestPluginEnabledState(newEnabledState, pluginName) {
+  var plugin = getTestPlugin(pluginName);
+  var oldEnabledState = plugin.enabledState;
+  plugin.enabledState = newEnabledState;
+  SimpleTest.registerCleanupFunction(function() {
+    getTestPlugin(pluginName).enabledState = oldEnabledState;
+  });
+}
+
 // after a test is done using the plugin doorhanger, we should just clear
 // any permissions that may have crept in
 function clearAllPluginPermissions() {
