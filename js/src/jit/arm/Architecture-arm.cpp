@@ -60,6 +60,13 @@ uint32_t getFlags()
         }
         close(fd);
     }
+
+#if defined(__ARM_ARCH_7__) || defined (__ARM_ARCH_7A__)
+    flags = HWCAP_ARMv7;
+#endif
+    isSet = true;
+    return flags;
+
 #elif defined(WTF_OS_ANDROID) || defined(MOZ_B2G)
     FILE *fp = fopen("/proc/cpuinfo", "r");
     if (!fp)
@@ -98,7 +105,7 @@ uint32_t getFlags()
     return flags;
 #endif
 
-    return false;
+    return 0;
 }
 
 bool hasMOVWT()
