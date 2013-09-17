@@ -71,7 +71,6 @@
     <dimen name="text_selection_handle_width">47dp</dimen>
     <dimen name="text_selection_handle_height">58dp</dimen>
     <dimen name="text_selection_handle_shadow">11dp</dimen>
-    <dimen name="top_bookmark_pinsize">20dp</dimen>
     <dimen name="validation_message_height">50dp</dimen>
     <dimen name="validation_message_margin_top">6dp</dimen>
     <dimen name="forward_default_offset">-13dip</dimen>
