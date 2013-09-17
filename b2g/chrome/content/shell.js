@@ -1049,9 +1049,11 @@ let RemoteDebugger = {
       DebuggerServer.registerModule("devtools/server/actors/device");
       DebuggerServer.registerModule("devtools/server/actors/inspector")
 
+#ifdef MOZ_WIDGET_GONK
       DebuggerServer.onConnectionChange = function(what) {
         AdbController.updateState();
       }
+#endif
     }
 
     let path = Services.prefs.getCharPref("devtools.debugger.unix-domain-socket") ||
