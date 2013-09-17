@@ -8,7 +8,6 @@ dictionary DeviceStorageEnumerationParameters {
 };
 
 interface DeviceStorage : EventTarget {
-  [SetterThrows]
   attribute EventHandler onchange;
 
   [Throws]

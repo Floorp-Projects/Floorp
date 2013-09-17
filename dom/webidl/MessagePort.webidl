@@ -17,7 +17,6 @@ interface MessagePort : EventTarget {
   void close();
 
   // event handlers
-  [SetterThrows]
-           attribute EventHandler onmessage;
+  attribute EventHandler onmessage;
 };
 // MessagePort implements Transferable;

@@ -816,6 +816,12 @@ class Marionette(object):
             return HTMLElement(self, response)
         return None
 
+    def switch_to_default_content(self):
+        '''
+        Switch the current context to page's default content.
+        '''
+        return self.switch_to_frame()
+
     def switch_to_frame(self, frame=None, focus=True):
         '''
         Switch the current context to the specified frame. Subsequent commands will operate in the context of the specified frame, if applicable.

@@ -12056,9 +12056,8 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
       handler = new EventHandlerNonNull(callable);                           \
     }                                                                        \
-    ErrorResult rv;                                                          \
-    SetOn##name_(handler, rv);                                               \
-    return rv.ErrorCode();                                                   \
+    SetOn##name_(handler);                                                   \
+    return NS_OK;                                                            \
   }
 #define ERROR_EVENT(name_, id_, type_, struct_)                              \
   NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
@@ -12087,7 +12086,8 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
       handler = new OnErrorEventHandlerNonNull(callable);                    \
     }                                                                        \
-    return elm->SetEventHandler(handler);                                    \
+    elm->SetEventHandler(handler);                                           \
+    return NS_OK;                                                            \
   }
 #define BEFOREUNLOAD_EVENT(name_, id_, type_, struct_)                       \
   NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
@@ -12117,7 +12117,8 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
       handler = new BeforeUnloadEventHandlerNonNull(callable);               \
     }                                                                        \
-    return elm->SetEventHandler(handler);                                    \
+    elm->SetEventHandler(handler);                                           \
+    return NS_OK;                                                            \
   }
 #define WINDOW_ONLY_EVENT EVENT
 #define TOUCH_EVENT EVENT

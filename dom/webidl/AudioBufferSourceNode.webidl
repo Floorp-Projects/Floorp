@@ -27,7 +27,6 @@ interface AudioBufferSourceNode : AudioNode {
     [Throws]
     void stop(optional double when = 0);
 
-    [SetterThrows]
     attribute EventHandler onended;
 };
 

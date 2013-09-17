@@ -9337,6 +9337,7 @@ export STLPORT_CPPFLAGS
 export STLPORT_LDFLAGS
 export STLPORT_LIBS
 export JS_STANDALONE=no
+export MOZ_LINKER
 
 if ! test -e js; then
     mkdir js

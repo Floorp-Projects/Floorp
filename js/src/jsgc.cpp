@@ -2281,6 +2281,10 @@ GCHelperThread::threadLoop()
 {
     AutoLockGC lock(rt);
 
+#if JS_TRACE_LOGGING
+    TraceLogging *logger = TraceLogging::getLogger(TraceLogging::GC_BACKGROUND);
+#endif
+
     /*
      * Even on the first iteration the state can be SHUTDOWN or SWEEPING if
      * the stop request or the GC and the corresponding startBackgroundSweep call
@@ -2294,12 +2298,21 @@ GCHelperThread::threadLoop()
             PR_WaitCondVar(wakeup, PR_INTERVAL_NO_TIMEOUT);
             break;
           case SWEEPING:
+#if JS_TRACE_LOGGING
+            logger->log(TraceLogging::GC_SWEEPING_START);
+#endif
             doSweep();
             if (state == SWEEPING)
                 state = IDLE;
             PR_NotifyAllCondVar(done);
+#if JS_TRACE_LOGGING
+            logger->log(TraceLogging::GC_SWEEPING_STOP);
+#endif
             break;
           case ALLOCATING:
+#if JS_TRACE_LOGGING
+            logger->log(TraceLogging::GC_ALLOCATING_START);
+#endif
             do {
                 Chunk *chunk;
                 {
@@ -2308,14 +2321,21 @@ GCHelperThread::threadLoop()
                 }
 
                 /* OOM stops the background allocation. */
-                if (!chunk)
+                if (!chunk) {
+#if JS_TRACE_LOGGING
+            logger->log(TraceLogging::GC_ALLOCATING_STOP);
+#endif
                     break;
+                }
                 JS_ASSERT(chunk->info.numArenasFreeCommitted == ArenasPerChunk);
                 rt->gcNumArenasFreeCommitted += ArenasPerChunk;
                 rt->gcChunkPool.put(chunk);
             } while (state == ALLOCATING && rt->gcChunkPool.wantBackgroundAllocation(rt));
             if (state == ALLOCATING)
                 state = IDLE;
+#if JS_TRACE_LOGGING
+            logger->log(TraceLogging::GC_ALLOCATING_STOP);
+#endif
             break;
           case CANCEL_ALLOCATION:
             state = IDLE;

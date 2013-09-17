@@ -354,6 +354,7 @@ public:
     , mCameraManager(aCameraManager)
     , mWindowId(aWindowId)
   {
+    AsyncLatencyLogger::Get(true)->AddRef();
   }
 #else
   MediaEngineWebRTC()
@@ -365,7 +366,12 @@ public:
   {
   }
 #endif
-  ~MediaEngineWebRTC() { Shutdown(); }
+  ~MediaEngineWebRTC() {
+    Shutdown();
+#ifdef MOZ_B2G_CAMERA
+    AsyncLatencyLogger::Get()->Release();
+#endif
+  }
 
   // Clients should ensure to clean-up sources video/audio sources
   // before invoking Shutdown on this class.

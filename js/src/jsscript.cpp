@@ -1209,7 +1209,7 @@ ScriptSource::destroy()
     JS_ASSERT(ready());
     adjustDataSize(0);
     js_free(filename_);
-    js_free(sourceMap_);
+    js_free(sourceMapURL_);
     if (originPrincipals_)
         JS_DropPrincipals(TlsPerThreadData.get()->runtimeFromMainThread(), originPrincipals_);
     ready_ = false;
@@ -1274,29 +1274,29 @@ ScriptSource::performXDR(XDRState<mode> *xdr)
         argumentsNotIncluded_ = argumentsNotIncluded;
     }
 
-    uint8_t haveSourceMap = hasSourceMap();
+    uint8_t haveSourceMap = hasSourceMapURL();
     if (!xdr->codeUint8(&haveSourceMap))
         return false;
 
     if (haveSourceMap) {
-        uint32_t sourceMapLen = (mode == XDR_DECODE) ? 0 : js_strlen(sourceMap_);
-        if (!xdr->codeUint32(&sourceMapLen))
+        uint32_t sourceMapURLLen = (mode == XDR_DECODE) ? 0 : js_strlen(sourceMapURL_);
+        if (!xdr->codeUint32(&sourceMapURLLen))
             return false;
 
         if (mode == XDR_DECODE) {
-            size_t byteLen = (sourceMapLen + 1) * sizeof(jschar);
-            sourceMap_ = static_cast<jschar *>(xdr->cx()->malloc_(byteLen));
-            if (!sourceMap_)
+            size_t byteLen = (sourceMapURLLen + 1) * sizeof(jschar);
+            sourceMapURL_ = static_cast<jschar *>(xdr->cx()->malloc_(byteLen));
+            if (!sourceMapURL_)
                 return false;
         }
-        if (!xdr->codeChars(sourceMap_, sourceMapLen)) {
+        if (!xdr->codeChars(sourceMapURL_, sourceMapURLLen)) {
             if (mode == XDR_DECODE) {
-                js_free(sourceMap_);
-                sourceMap_ = NULL;
+                js_free(sourceMapURL_);
+                sourceMapURL_ = NULL;
             }
             return false;
         }
-        sourceMap_[sourceMapLen] = '\0';
+        sourceMapURL_[sourceMapURLLen] = '\0';
     }
 
     uint8_t haveFilename = !!filename_;
@@ -1332,27 +1332,32 @@ ScriptSource::setFilename(ExclusiveContext *cx, const char *filename)
 }
 
 bool
-ScriptSource::setSourceMap(ExclusiveContext *cx, jschar *sourceMapURL)
+ScriptSource::setSourceMapURL(ExclusiveContext *cx, const jschar *sourceMapURL)
 {
     JS_ASSERT(sourceMapURL);
-    if (hasSourceMap()) {
+    if (hasSourceMapURL()) {
         if (cx->isJSContext() &&
             !JS_ReportErrorFlagsAndNumber(cx->asJSContext(), JSREPORT_WARNING, js_GetErrorMessage,
-                                          NULL, JSMSG_ALREADY_HAS_SOURCEMAP, filename_))
+                                          NULL, JSMSG_ALREADY_HAS_SOURCE_MAP_URL, filename_))
         {
-            js_free(sourceMapURL);
             return false;
         }
     }
-    sourceMap_ = sourceMapURL;
+
+    size_t len = js_strlen(sourceMapURL) + 1;
+    if (len == 1) 
+        return true;
+    sourceMapURL_ = js_strdup(cx, sourceMapURL);
+    if (!sourceMapURL_)
+        return false;
     return true;
 }
 
 const jschar *
-ScriptSource::sourceMap()
+ScriptSource::sourceMapURL()
 {
-    JS_ASSERT(hasSourceMap());
-    return sourceMap_;
+    JS_ASSERT(hasSourceMapURL());
+    return sourceMapURL_;
 }
 
 /*
@@ -2157,10 +2162,12 @@ js::CurrentScriptFileLineOrigin(JSContext *cx, const char **file, unsigned *line
         JSScript *script = NULL;
         jsbytecode *pc = NULL;
         types::TypeScript::GetPcScript(cx, &script, &pc);
-        JS_ASSERT(JSOp(*pc) == JSOP_EVAL);
-        JS_ASSERT(*(pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
+        JS_ASSERT(JSOp(*pc) == JSOP_EVAL || JSOp(*pc) == JSOP_SPREADEVAL);
+        JS_ASSERT(*(pc + (JSOp(*pc) == JSOP_EVAL ? JSOP_EVAL_LENGTH
+                                                 : JSOP_SPREADEVAL_LENGTH)) == JSOP_LINENO);
         *file = script->filename();
-        *linenop = GET_UINT16(pc + JSOP_EVAL_LENGTH);
+        *linenop = GET_UINT16(pc + (JSOp(*pc) == JSOP_EVAL ? JSOP_EVAL_LENGTH
+                                                           : JSOP_SPREADEVAL_LENGTH));
         *origin = script->originPrincipals();
         return;
     }
