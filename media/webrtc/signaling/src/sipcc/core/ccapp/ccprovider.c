@@ -710,6 +710,13 @@ processSessionEvent (line_t line_id, callid_t call_id, unsigned int event, sdp_d
            sstrncpy(featdata.candidate.mid, data1, sizeof(featdata.candidate.mid)-1);
            cc_int_feature2(CC_MSG_ADDCANDIDATE, CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_ADDICECANDIDATE, &featdata, timecard);
            break;
+         case CC_FEATURE_FOUNDICECANDIDATE:
+           STAMP_TIMECARD(timecard, "Processing found candidate event");
+           featdata.candidate.level = ccData.level;
+           sstrncpy(featdata.candidate.candidate, data, sizeof(featdata.candidate.candidate)-1);
+           sstrncpy(featdata.candidate.mid, data1, sizeof(featdata.candidate.mid)-1);
+           cc_int_feature2(CC_MSG_FOUNDCANDIDATE, CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_FOUNDICECANDIDATE, &featdata, timecard);
+           break;
          case CC_FEATURE_DIALSTR:
              if (CheckAndGetAvailableLine(&line_id, &call_id) == TRUE) {
                  getDigits(data, digits, sizeof(digits));
@@ -1061,7 +1068,8 @@ session_data_t * getDeepCopyOfSessionData(session_data_t *data)
            newData->plcd_number =  strlib_copy(data->plcd_number);
            newData->status =  strlib_copy(data->status);
            newData->sdp = strlib_copy(data->sdp);
-
+	   newData->candidate = data->candidate ?
+	       strlib_copy(data->candidate) : strlib_empty();
            /* The timecard can have only one owner */
            newData->timecard = data->timecard;
            data->timecard = NULL;
@@ -1085,6 +1093,7 @@ session_data_t * getDeepCopyOfSessionData(session_data_t *data)
            newData->plcd_number =  strlib_empty();
            newData->status = strlib_empty();
            newData->sdp = strlib_empty();
+	   newData->candidate = strlib_empty();
            newData->timecard = NULL;
            calllogger_init_call_log(&newData->call_log);
        }
@@ -1132,6 +1141,9 @@ void cleanSessionData(session_data_t *data)
         data->status = strlib_empty();
         strlib_free(data->sdp);
         data->sdp = strlib_empty();
+	if (data->candidate)
+	    strlib_free(data->candidate);
+	data->candidate = strlib_empty();
         data->timecard = NULL;
         calllogger_free_call_log(&data->call_log);
     }
@@ -1450,6 +1462,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
             sessUpd->eventID == UPDATE_LOCAL_DESC ||
             sessUpd->eventID == UPDATE_REMOTE_DESC ||
             sessUpd->eventID == ICE_CANDIDATE_ADD ||
+            sessUpd->eventID == ICE_CANDIDATE_FOUND ||
             sessUpd->eventID == REMOTE_STREAM_ADD ) {
             data->attr = sessUpd->update.ccSessionUpd.data.state_data.attr;
             data->inst = sessUpd->update.ccSessionUpd.data.state_data.inst;
@@ -1832,6 +1845,12 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
     case UPDATE_LOCAL_DESC:
     case UPDATE_REMOTE_DESC:
     case ICE_CANDIDATE_ADD:
+    case ICE_CANDIDATE_FOUND:
+	if (sessUpd->update.ccSessionUpd.data.state_data.extra) {
+	    if (sessUpd->eventID == ICE_CANDIDATE_FOUND) {
+		data->candidate = sessUpd->update.ccSessionUpd.data.state_data.extra;
+	    }
+	}
         data->sdp = sessUpd->update.ccSessionUpd.data.state_data.sdp;
         /* Fall through to the next case... */
     case REMOTE_STREAM_ADD:
