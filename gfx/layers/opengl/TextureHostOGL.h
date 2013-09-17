@@ -920,6 +920,8 @@ public:
 
   virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
 
+  GLuint GetGLTexture();
+
 private:
   gl::GLContext* gl() const;
 
