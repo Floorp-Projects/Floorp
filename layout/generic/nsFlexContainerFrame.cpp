@@ -209,8 +209,35 @@ public:
       aMargin.TopBottom();
   }
 
+  /**
+   * Converts a logical position into a "physical" x,y position.
+   *
+   * In the simplest case where the main-axis is left-to-right and the
+   * cross-axis is top-to-bottom, this just returns
+   * nsPoint(aMainPosn, aCrossPosn).
+   *
+   *  @arg aMainPosn  The main-axis position -- i.e an offset from the
+   *                  main-start edge of the container's content box.
+   *  @arg aCrossPosn The cross-axis position -- i.e an offset from the
+   *                  cross-start edge of the container's content box.
+   *  @return A nsPoint representing the same position (in coordinates
+   *          relative to the container's content box).
+   */
   nsPoint PhysicalPositionFromLogicalPosition(nscoord aMainPosn,
-                                              nscoord aCrossPosn) const {
+                                              nscoord aCrossPosn,
+                                              nscoord aContainerMainSize,
+                                              nscoord aContainerCrossSize) const {
+    // If either of our logical axes are backwards with respect to our x,y
+    // coordinate system (e.g. right-to-left or bottom-to-top), then subtract
+    // that axis's logical coord them from the container size in that dimension,
+    // to flip the polarity around.
+    if (!AxisGrowsInPositiveDirection(mMainAxis)) {
+      aMainPosn = aContainerMainSize - aMainPosn;
+    }
+    if (!AxisGrowsInPositiveDirection(mCrossAxis)) {
+      aCrossPosn = aContainerCrossSize - aCrossPosn;
+    }
+
     return IsAxisHorizontal(mMainAxis) ?
       nsPoint(aMainPosn, aCrossPosn) :
       nsPoint(aCrossPosn, aMainPosn);
@@ -2342,17 +2369,13 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     // after this point, because some of its methods (e.g. SetComputedWidth)
     // internally call InitResizeFlags and stomp on mVResize & mHResize.
 
-    nscoord mainPosn = curItem.GetMainPosition();
-    nscoord crossPosn = curItem.GetCrossPosition();
-    if (!AxisGrowsInPositiveDirection(axisTracker.GetMainAxis())) {
-      mainPosn = contentBoxMainSize - mainPosn;
-    }
-    if (!AxisGrowsInPositiveDirection(axisTracker.GetCrossAxis())) {
-      crossPosn = contentBoxCrossSize - crossPosn;
-    }
-
-    nsPoint physicalPosn =
-      axisTracker.PhysicalPositionFromLogicalPosition(mainPosn, crossPosn);
+    nsPoint physicalPosn = axisTracker.PhysicalPositionFromLogicalPosition(
+                             curItem.GetMainPosition(),
+                             curItem.GetCrossPosition(),
+                             contentBoxMainSize,
+                             contentBoxCrossSize);
+    // Adjust physicalPosn to be relative to the container's border-box
+    // (i.e. its frame rect), instead of the container's content-box:
     physicalPosn += containerContentBoxOrigin;
 
     nsHTMLReflowMetrics childDesiredSize;
