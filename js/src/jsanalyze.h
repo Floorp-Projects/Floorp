@@ -633,7 +633,6 @@ class ScriptAnalysis
 
     bool usesScopeChain_:1;
     bool localsAliasStack_:1;
-    bool isIonInlineable:1;
     bool canTrackVars:1;
     bool hasLoops_:1;
     bool hasTryFinally_:1;
@@ -664,9 +663,6 @@ class ScriptAnalysis
 
     bool OOM() const { return outOfMemory; }
     bool failed() const { return hadFailure; }
-    bool ionInlineable() const { return isIonInlineable; }
-    bool ionInlineable(uint32_t argc) const { return isIonInlineable && argc == script_->function()->nargs; }
-    void setIonUninlineable() { isIonInlineable = false; }
 
     /* Whether the script has a |finally| block. */
     bool hasTryFinally() const { return hasTryFinally_; }
