@@ -95,6 +95,22 @@ DownloadLegacyTransfer.prototype = {
         download.saver.onTransferStarted(
                          aRequest,
                          this._cancelable instanceof Ci.nsIHelperAppLauncher);
+
+        // To handle asynchronous cancellation properly, we should hook up the
+        // handler only after we have been notified that the main request
+        // started.  We will wait until the main request stopped before
+        // notifying that the download has been canceled.
+        return download.saver.deferCanceled.promise.then(() => {
+          // Only cancel if the object executing the download is still running.
+          if (this._cancelable && !this._componentFailed) {
+            this._cancelable.cancel(Cr.NS_ERROR_ABORT);
+            if (this._cancelable instanceof Ci.nsIWebBrowserPersist) {
+              // This component will not send the STATE_STOP notification.
+              download.saver.onTransferFinished(aRequest, Cr.NS_ERROR_ABORT);
+              this._cancelable = null;
+            }
+          }
+        });
       }).then(null, Cu.reportError);
     } else if ((aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) &&
         (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK)) {
@@ -196,14 +212,6 @@ DownloadLegacyTransfer.prototype = {
       contentType: contentType,
       launcherPath: launcherPath
     }).then(function DLT_I_onDownload(aDownload) {
-      // Now that the saver is available, hook up the cancellation handler.
-      aDownload.saver.deferCanceled.promise.then(() => {
-        // Only cancel if the object executing the download is still running.
-        if (!this._componentFailed) {
-          aCancelable.cancel(Cr.NS_ERROR_ABORT);
-        }
-      }).then(null, Cu.reportError);
-
       // Legacy components keep partial data when they use a ".part" file.
       if (aTempFile) {
         aDownload.tryToKeepPartialData = true;
