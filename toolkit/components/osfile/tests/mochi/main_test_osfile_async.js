@@ -793,6 +793,7 @@ let test_system_shutdown = maketest("system_shutdown", function system_shutdown(
             if (message.indexOf(resource) < 0) {
               return;
             }
+            test.info("Resource: " + resource + " found");
             setTimeout(deferred.resolve);
           } catch (ex) {
             setTimeout(function() {
@@ -805,7 +806,7 @@ let test_system_shutdown = maketest("system_shutdown", function system_shutdown(
         setTimeout(function() {
           test.info("Timeout while waiting for resource: " + resource);
           deferred.reject("timeout");
-        }, 300);
+        }, 1000);
 
         let resolved = false;
         try {
