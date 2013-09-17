@@ -642,11 +642,6 @@ const DownloadsOverlayLoader = {
       this._overlayLoading = false;
       this._loadedOverlays[aOverlay] = true;
 
-      // Loading the overlay causes all the persisted XUL attributes to be
-      // reapplied, including "iconsize" on the toolbars.  Until bug 640158 is
-      // fixed, we must recalculate the correct "iconsize" attributes manually.
-      retrieveToolbarIconsizesFromTheme();
-
       this.processPendingRequests();
     }
 
