@@ -386,6 +386,8 @@ private:
   // Holder for error messages from parsing SDP
   std::vector<std::string> mSDPParseErrorMessages;
 
+  bool mTrickle;
+
 public:
   //these are temporary until the DataChannel Listen/Connect API is removed
   unsigned short listenPort;
