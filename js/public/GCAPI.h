@@ -208,6 +208,19 @@ PokeGC(JSRuntime *rt);
 extern JS_FRIEND_API(bool)
 WasIncrementalGC(JSRuntime *rt);
 
+extern JS_FRIEND_API(size_t)
+GetGCNumber();
+
+class AutoAssertNoGC {
+#ifdef DEBUG
+    size_t gcNumber;
+
+  public:
+    AutoAssertNoGC();
+    ~AutoAssertNoGC();
+#endif
+};
+
 class JS_PUBLIC_API(ObjectPtr)
 {
     Heap<JSObject *> value;
