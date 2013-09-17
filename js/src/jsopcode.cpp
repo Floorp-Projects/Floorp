@@ -167,11 +167,7 @@ js::StackDefs(JSScript *script, jsbytecode *pc)
 }
 
 static const char * const countBaseNames[] = {
-    "interp",
-    "mjit",
-    "mjit_calls",
-    "mjit_code",
-    "mjit_pics"
+    "interp"
 };
 
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(countBaseNames) == PCCounts::BASE_LIMIT);
