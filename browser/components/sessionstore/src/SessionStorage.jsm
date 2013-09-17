@@ -7,12 +7,13 @@
 this.EXPORTED_SYMBOLS = ["SessionStorage"];
 
 const Cu = Components.utils;
+const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
-  "resource:///modules/sessionstore/SessionStore.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
+  "resource:///modules/sessionstore/PrivacyLevel.jsm");
 
 this.SessionStorage = {
   /**
@@ -51,16 +52,17 @@ let DomStorage = {
   read: function DomStorage_read(aDocShell, aFullData) {
     let data = {};
     let isPinned = aDocShell.isAppTab;
-    let shistory = aDocShell.sessionHistory;
+    let webNavigation = aDocShell.QueryInterface(Ci.nsIWebNavigation);
+    let shistory = webNavigation.sessionHistory;
 
-    for (let i = 0; i < shistory.count; i++) {
+    for (let i = 0; shistory && i < shistory.count; i++) {
       let principal = History.getPrincipalForEntry(shistory, i, aDocShell);
       if (!principal)
         continue;
 
       // Check if we're allowed to store sessionStorage data.
-      let isHTTPS = principal.URI && principal.URI.schemeIs("https");
-      if (aFullData || SessionStore.checkPrivacyLevel(isHTTPS, isPinned)) {
+      let isHttps = principal.URI && principal.URI.schemeIs("https");
+      if (aFullData || PrivacyLevel.canSave({isHttps: isHttps, isPinned: isPinned})) {
         let origin = principal.jarPrefix + principal.origin;
 
         // Don't read a host twice.
@@ -90,8 +92,8 @@ let DomStorage = {
       let storageManager = aDocShell.QueryInterface(Components.interfaces.nsIDOMStorageManager);
 
       // There is no need to pass documentURI, it's only used to fill documentURI property of
-			// domstorage event, which in this case has no consumer.  Prevention of events in case
-			// of missing documentURI will be solved in a followup bug to bug 600307.
+      // domstorage event, which in this case has no consumer. Prevention of events in case
+      // of missing documentURI will be solved in a followup bug to bug 600307.
       let storage = storageManager.createStorage(principal, "", aDocShell.usePrivateBrowsing);
 
       for (let [key, value] in Iterator(data)) {

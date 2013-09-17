@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 from configobj import ConfigObj
 import re
+import os
 
 
 BUGZILLA_FINGERPRINT = '45:77:35:fd:6f:2c:1c:c2:90:4b:f7:b4:4d:60:c6:97:c5:5c:47:27'
@@ -15,8 +16,21 @@ HG_FINGERPRINT = '10:78:e8:57:2d:95:de:7c:de:90:bd:22:e1:38:17:67:c5:a7:9c:14'
 class MercurialConfig(object):
     """Interface for manipulating a Mercurial config file."""
 
-    def __init__(self, infile=None):
+    def __init__(self, infiles=None):
         """Create a new instance, optionally from an existing hgrc file."""
+
+        if infiles:
+            # If multiple files were specified, figure out which file we're using:
+            if len(infiles) > 1:
+                picky_infiles = filter(os.path.isfile, infiles)
+                if picky_infiles:
+                    picky_infiles = [(os.path.getsize(path), path) for path in picky_infiles]
+                    infiles = [max(picky_infiles)[1]]
+
+            infile = infiles[0]
+            self.config_path = infile
+        else:
+            infile = None
 
         # write_empty_values is necessary to prevent built-in extensions (which
         # have no value) from being dropped on write.
