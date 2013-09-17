@@ -277,6 +277,10 @@ this.SessionStore = {
     return SessionStoreInternal.getCurrentState(aUpdateAll);
   },
 
+  fillTabCachesAsynchronously: function () {
+    return SessionStoreInternal.fillTabCachesAsynchronously();
+  },
+
   /**
    * Backstage pass to implementation details, used for testing purpose.
    * Controlled by preference "browser.sessionstore.testmode".
@@ -1881,6 +1885,68 @@ let SessionStoreInternal = {
     }
 
     return [true, canOverwriteTabs];
+  },
+
+  /* ........ Async Data Collection .............. */
+
+  /**
+   * Kicks off asynchronous data collection for all tabs that do not have any
+   * cached data. The returned promise will only notify that the tab collection
+   * has been finished without resolving to any data. The tab collection for a
+   * a few or all tabs might have failed or timed out. By calling
+   * fillTabCachesAsynchronously() and waiting for the promise to be resolved
+   * before calling getCurrentState(), callers ensure that most of the data
+   * should have been collected asynchronously, without blocking the main
+   * thread.
+   *
+   * @return {Promise} the promise that is fulfilled when the tab data is ready
+   */
+  fillTabCachesAsynchronously: function () {
+    let countdown = 0;
+    let deferred = Promise.defer();
+    let activeWindow = this._getMostRecentBrowserWindow();
+
+    // The callback that will be called when a promise has been resolved
+    // successfully, i.e. the tab data has been collected.
+    function done() {
+      if (--countdown === 0) {
+        deferred.resolve();
+      }
+    }
+
+    // The callback that will be called when a promise is rejected, i.e. we
+    // we couldn't collect the tab data because of a script error or a timeout.
+    function fail(reason) {
+      debug("Failed collecting tab data asynchronously: " + reason);
+      done();
+    }
+
+    this._forEachBrowserWindow(win => {
+      if (!this._isWindowLoaded(win)) {
+        // Bail out if the window hasn't even loaded, yet.
+        return;
+      }
+
+      if (!DirtyWindows.has(win) && win != activeWindow) {
+        // Bail out if the window is not dirty and inactive.
+        return;
+      }
+
+      for (let tab of win.gBrowser.tabs) {
+        if (!TabStateCache.has(tab)) {
+          countdown++;
+          TabState.collect(tab).then(done, fail);
+        }
+      }
+    });
+
+    // If no dirty tabs were found, return a resolved
+    // promise because there is nothing to do here.
+    if (countdown == 0) {
+      return Promise.resolve();
+    }
+
+    return deferred.promise;
   },
 
   /* ........ Saving Functionality .............. */
