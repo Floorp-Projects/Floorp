@@ -11,7 +11,7 @@ function test() {
   tab.linkedBrowser.addEventListener("load", (function(event) {
     tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
 
-    is(BookmarkingUI.button.getAttribute("tooltiptext"),
+    is(BookmarkingUI.button.getAttribute("buttontooltiptext"),
        BookmarkingUI._unstarredTooltip,
        "Star icon should have the unstarred tooltip text");
 
