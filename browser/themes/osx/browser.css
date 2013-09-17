@@ -1009,7 +1009,6 @@ toolbarbutton.bookmark-item > menupopup {
   }
 
   /* Footer and wide panel control icons */
-  #PanelUI-customize,
   #edit-controls[customizableui-areatype="menu-panel"] > toolbarbutton,
   #zoom-controls[customizableui-areatype="menu-panel"] > toolbarbutton,
   toolbarpaletteitem[place="palette"] > #edit-controls > toolbarbutton,
@@ -1042,14 +1041,7 @@ toolbarbutton.bookmark-item > menupopup {
     -moz-image-region: rect(0px, 192px, 32px, 160px);
   }
 
-  #PanelUI-customize {
-    -moz-image-region: rect(0, 32px, 32px, 0);
-  }
-
-  #PanelUI-help {
-    list-style-image: url(chrome://global/skin/icons/question-32.png);
-  }
-
+  #PanelUI-quit > .toolbarbutton-icon,
   #PanelUI-customize > .toolbarbutton-icon,
   #PanelUI-help > .toolbarbutton-icon {
     width: 16px;
