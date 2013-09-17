@@ -78,9 +78,8 @@
 #include "nsIDocShell.h"
 #include "nsIDocCharset.h"
 #include "nsIDocument.h"
-#ifdef MOZ_DISABLE_CRYPTOLEGACY
 #include "Crypto.h"
-#else
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
 #include "nsIDOMCryptoLegacy.h"
 #endif
 #include "nsIDOMDocument.h"
@@ -3857,12 +3856,16 @@ nsGlobalWindow::GetCrypto(nsIDOMCrypto** aCrypto)
 
   if (!mCrypto) {
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
-    nsresult rv;
-    mCrypto = do_CreateInstance(NS_CRYPTO_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-#else
-    mCrypto = new Crypto();
+    if (XRE_GetProcessType() != GeckoProcessType_Content) {
+      nsresult rv;
+      mCrypto = do_CreateInstance(NS_CRYPTO_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+    } else
 #endif
+    {
+      mCrypto = new Crypto();
+    }
+
     mCrypto->Init(this);
   }
   NS_IF_ADDREF(*aCrypto = mCrypto);
