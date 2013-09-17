@@ -720,9 +720,7 @@ struct JSRuntime : public JS::shadow::Runtime,
      * Protects all data that is touched in this process.
      */
     PRLock *operationCallbackLock;
-#ifdef DEBUG
     PRThread *operationCallbackOwner;
-#endif
   public:
 #endif // JS_THREADSAFE
 
@@ -732,16 +730,13 @@ struct JSRuntime : public JS::shadow::Runtime,
       public:
         AutoLockForOperationCallback(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM) : rt(rt) {
             MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+            JS_ASSERT(!rt->currentThreadOwnsOperationCallbackLock());
             PR_Lock(rt->operationCallbackLock);
-#ifdef DEBUG
             rt->operationCallbackOwner = PR_GetCurrentThread();
-#endif
         }
         ~AutoLockForOperationCallback() {
             JS_ASSERT(rt->operationCallbackOwner == PR_GetCurrentThread());
-#ifdef DEBUG
             rt->operationCallbackOwner = NULL;
-#endif
             PR_Unlock(rt->operationCallbackLock);
         }
 #else // JS_THREADSAFE
@@ -755,7 +750,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     };
 
     bool currentThreadOwnsOperationCallbackLock() {
-#if defined(JS_THREADSAFE) && defined(DEBUG)
+#if defined(JS_THREADSAFE)
         return operationCallbackOwner == PR_GetCurrentThread();
 #else
         return true;
