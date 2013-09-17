@@ -132,7 +132,7 @@ DownloadStore.prototype = {
           } finally {
             // Add the download to the list if we succeeded in creating it,
             // after we have updated its initial state.
-            this.list.add(download);
+            yield this.list.add(download);
           }
         } catch (ex) {
           // If an item is unrecognized, don't prevent others from being loaded.
