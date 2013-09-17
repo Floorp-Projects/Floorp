@@ -1077,10 +1077,8 @@ let RemoteDebugger = {
 }
 
 let KeyboardHelper = {
-  handleEvent: function keyboard_handleEvent(aMessage) {
-    let data = aMessage.data;
-
-    Keyboard.setLayouts(data.layouts);
+  handleEvent: function keyboard_handleEvent(detail) {
+    Keyboard.setLayouts(detail.layouts);
   }
 };
 
