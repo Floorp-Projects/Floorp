@@ -124,6 +124,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
   "resource:///modules/devtools/scratchpad-manager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DocumentUtils",
   "resource:///modules/sessionstore/DocumentUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Messenger",
+  "resource:///modules/sessionstore/Messenger.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
   "resource:///modules/sessionstore/PrivacyLevel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionSaver",
@@ -4124,6 +4126,17 @@ let TabStateCache = {
   _data: new WeakMap(),
 
   /**
+   * Tells whether an entry is in the cache.
+   *
+   * @param {XULElement} aKey The tab or the associated browser.
+   * @return {bool} Whether there's a cached entry for the given tab.
+   */
+  has: function (aTab) {
+    let key = this._normalizeToBrowser(aTab);
+    return this._data.has(key);
+  },
+
+  /**
    * Add or replace an entry in the cache.
    *
    * @param {XULElement} aTab The key, which may be either a tab
@@ -4223,6 +4236,10 @@ let TabStateCache = {
  * Module that contains tab state collection methods.
  */
 let TabState = {
+  // A map (xul:tab -> promise) that keeps track of tabs and
+  // their promises when collecting tab data asynchronously.
+  _pendingCollections: new WeakMap(),
+
   /**
    * Collect data related to a single tab, asynchronously.
    *
@@ -4232,7 +4249,51 @@ let TabState = {
    * @returns {Promise} A promise that will resolve to a TabData instance.
    */
   collect: function (tab) {
-    return Promise.resolve(this.collectSync(tab));
+    if (!tab) {
+      throw new TypeError("Expecting a tab");
+    }
+
+    // Don't collect if we don't need to.
+    if (TabStateCache.has(tab)) {
+      return Promise.resolve(TabStateCache.get(tab));
+    }
+
+    let promise = Task.spawn(function task() {
+      // Collect basic tab data, without session history and storage.
+      let options = {omitSessionHistory: true, omitSessionStorage: true};
+      let tabData = new TabData(this._collectBaseTabData(tab, options));
+
+      // Collected session history data asynchronously.
+      let history = yield Messenger.send(tab, "SessionStore:collectSessionHistory");
+      tabData.entries = history.entries;
+      tabData.index = history.index;
+
+      // Collected session storage data asynchronously.
+      let storage = yield Messenger.send(tab, "SessionStore:collectSessionStorage");
+      if (Object.keys(storage).length) {
+        tabData.storage = storage;
+      }
+
+      // Put tabData into cache when reading scroll and text data succeeds.
+      if (this._updateTextAndScrollDataForTab(tab, tabData)) {
+        // If we're still the latest async collection for the given tab and
+        // the cache hasn't been filled by collect() in the meantime, let's
+        // fill the cache with the data we received.
+        if (this._pendingCollections.get(tab) == promise) {
+          TabStateCache.set(tab, tabData);
+          this._pendingCollections.delete(tab);
+        }
+      }
+
+      throw new Task.Result(tabData);
+    }.bind(this));
+
+    // Save the current promise as the latest asynchronous collection that is
+    // running. This will be used to check whether the collected data is still
+    // valid and will be used to fill the tab state cache.
+    this._pendingCollections.set(tab, promise);
+
+    return promise;
   },
 
   /**
@@ -4249,14 +4310,22 @@ let TabState = {
     if (!tab) {
       throw new TypeError("Expecting a tab");
     }
-    let tabData;
-    if ((tabData = TabStateCache.get(tab))) {
-      return tabData;
+    if (TabStateCache.has(tab)) {
+      return TabStateCache.get(tab);
     }
-    tabData = new TabData(this._collectBaseTabData(tab));
+
+    let tabData = new TabData(this._collectBaseTabData(tab));
     if (this._updateTextAndScrollDataForTab(tab, tabData)) {
       TabStateCache.set(tab, tabData);
     }
+
+    // Prevent all running asynchronous collections from filling the cache.
+    // Every asynchronous data collection started before a collectSync() call
+    // can't expect to retrieve different data than the sync call. That's why
+    // we just fill the cache with the data collected from the sync call and
+    // discard any data collected asynchronously.
+    this._pendingCollections.delete(tab);
+
     return tabData;
   },
 
@@ -4286,6 +4355,13 @@ let TabState = {
    * @param options
    *        An object that will be passed to session history and session
    *        storage data collection methods.
+   *        {omitSessionHistory: true} to skip collecting session history data
+   *        {omitSessionStorage: true} to skip collecting session storage data
+   *
+   *        The omit* options have been introduced to enable us collecting
+   *        those parts of the tab data asynchronously. We will request basic
+   *        tabData without the parts to omit and fill those holes later when
+   *        the content script has responded.
    *
    * @returns {object} An object with the basic data for this tab.
    */
@@ -4316,7 +4392,9 @@ let TabState = {
     }
 
     // Collection session history data.
-    this._collectTabHistory(tab, tabData, options);
+    if (!options || !options.omitSessionHistory) {
+      this._collectTabHistory(tab, tabData, options);
+    }
 
     // If there is a userTypedValue set, then either the user has typed something
     // in the URL bar, or a new tab was opened with a URI to load. userTypedClear
@@ -4358,7 +4436,9 @@ let TabState = {
       delete tabData.extData;
 
     // Collect DOMSessionStorage data.
-    this._collectTabSessionStorage(tab, tabData, options);
+    if (!options || !options.omitSessionStorage) {
+      this._collectTabSessionStorage(tab, tabData, options);
+    }
 
     return tabData;
   },
