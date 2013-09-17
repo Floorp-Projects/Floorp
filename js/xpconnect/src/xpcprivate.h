@@ -2705,7 +2705,7 @@ public:
     nsXPCWrappedJS* FindInherited(REFNSIID aIID);
 
     bool IsValid() const {return mJSObj != nullptr;}
-    void SystemIsBeingShutDown(JSRuntime* rt);
+    void SystemIsBeingShutDown();
 
     // This is used by XPCJSRuntime::GCCallback to find wrappers that no
     // longer root their JSObject and are only still alive because they
