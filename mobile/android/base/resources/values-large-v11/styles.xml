@@ -62,9 +62,11 @@
     </style>
 
     <style name="Widget.BookmarksListView" parent="Widget.HomeListView">
+        <item name="android:paddingTop">30dp</item>
         <item name="android:paddingLeft">32dp</item>
         <item name="android:paddingRight">32dp</item>
         <item name="android:scrollbarStyle">outsideOverlay</item>
+        <item name="topDivider">true</item>
     </style>
 
     <style name="Widget.TopBookmarksView" parent="Widget.GridView">
@@ -76,10 +78,9 @@
         <item name="android:verticalSpacing">10dp</item>
     </style>
 
-    <style name="Widget.ReadingListView" parent="Widget.BookmarksListView">
-        <item name="android:paddingTop">30dp</item>
-        <item name="topDivider">true</item>
-    </style>
+    <style name="Widget.TopSitesListView" parent="Widget.BookmarksListView"/>
+
+    <style name="Widget.ReadingListView" parent="Widget.BookmarksListView"/>
 
     <style name="Widget.HomeBanner">
         <item name="android:paddingLeft">32dp</item>

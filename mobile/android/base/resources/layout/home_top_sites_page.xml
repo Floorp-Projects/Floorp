@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:orientation="vertical">
+
+    <ViewStub android:id="@+id/home_empty_view_stub"
+              android:layout="@layout/home_empty_page"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"/>
+
+    <org.mozilla.gecko.home.HomeListView
+            android:id="@+id/list"
+            style="@style/Widget.TopSitesListView"
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+    <org.mozilla.gecko.home.HomeBanner android:id="@+id/home_banner"
+                                       style="@style/Widget.HomeBanner"
+                                       android:layout_width="fill_parent"
+                                       android:layout_height="@dimen/home_banner_height"
+                                       android:background="@drawable/home_banner"
+                                       android:layout_gravity="bottom"
+                                       android:gravity="center_vertical"
+                                       android:visibility="gone"
+                                       android:clickable="true"
+                                       android:focusable="true"/>
+
+</LinearLayout>

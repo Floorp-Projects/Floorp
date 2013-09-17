@@ -1395,7 +1395,7 @@ abstract public class BrowserApp extends GeckoApp
         animator.setUseHardwareLayer(false);
 
         mBrowserToolbar.startEditing(url, animator);
-        showHomePagerWithAnimator(HomePager.Page.HISTORY, animator);
+        showHomePagerWithAnimator(HomePager.Page.TOP_SITES, animator);
 
         animator.start();
     }

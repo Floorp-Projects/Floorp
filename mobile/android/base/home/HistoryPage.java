@@ -25,7 +25,7 @@ public class HistoryPage extends HomeFragment
     private static final String LOGTAG = "GeckoHistoryPage";
     private IconTabWidget mTabWidget;
     private int mSelectedTab;
-    private boolean initializeVisitedPage;
+    private boolean initializeRecentPage;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -38,7 +38,6 @@ public class HistoryPage extends HomeFragment
 
         mTabWidget = (IconTabWidget) view.findViewById(R.id.tab_icon_widget);
 
-        mTabWidget.addTab(R.drawable.icon_most_visited, R.string.home_most_visited_title);
         mTabWidget.addTab(R.drawable.icon_most_recent, R.string.home_most_recent_title);
         mTabWidget.addTab(R.drawable.icon_last_tabs, R.string.home_last_tabs_title);
 
@@ -50,11 +49,11 @@ public class HistoryPage extends HomeFragment
 
     @Override
     public void load() {
-        // Show most visited page as the initial page.
+        // Show most recent page as the initial page.
         // Since we detach/attach on config change, this prevents from replacing current fragment.
-        if (!initializeVisitedPage) {
-            showMostVisitedPage();
-            initializeVisitedPage = true;
+        if (!initializeRecentPage) {
+            showMostRecentPage();
+            initializeRecentPage = true;
         }
     }
 
@@ -65,10 +64,8 @@ public class HistoryPage extends HomeFragment
         }
 
         if (index == 0) {
-            showMostVisitedPage();
-        } else if (index == 1) {
             showMostRecentPage();
-        } else if (index == 2) {
+        } else if (index == 1) {
             showLastTabsPage();
         }
 
@@ -95,13 +92,8 @@ public class HistoryPage extends HomeFragment
         subPage.setArguments(args);
 
         getChildFragmentManager().beginTransaction()
-                .addToBackStack(null).replace(R.id.visited_page_container, subPage)
+                .addToBackStack(null).replace(R.id.history_page_container, subPage)
                 .commitAllowingStateLoss();
-    }
-
-    private void showMostVisitedPage() {
-        final MostVisitedPage mostVisitedPage = MostVisitedPage.newInstance();
-        showSubPage(mostVisitedPage);
     }
 
     private void showMostRecentPage() {
