@@ -3553,7 +3553,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 /* Lion Fullscreen window styling */
 @media (-moz-mac-lion-theme) {
   #navigator-toolbox[inFullscreen]:not(:-moz-lwtheme)::before {
-    height: 36px;
+    height: calc(@tabHeight@ + 11px) !important;
   }
   #main-window[inFullscreen]:-moz-lwtheme {
     /* This additional padding matches the change in height in the pseudo-element
