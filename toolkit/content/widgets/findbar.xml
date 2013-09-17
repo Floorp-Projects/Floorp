@@ -105,7 +105,7 @@
 
       <handler event="blur"><![CDATA[
         let findbar = this.findbar;
-        findbar.browser.finder.focusContent();
+        findbar.browser.finder.removeSelection();
       ]]></handler>
 
       <handler event="compositionstart"><![CDATA[
