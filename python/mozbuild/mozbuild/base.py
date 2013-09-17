@@ -521,7 +521,9 @@ class MachCommandConditions(object):
     @staticmethod
     def is_b2g(cls):
         """Must have a Boot to Gecko build."""
-        return cls.substs.get('MOZ_WIDGET_TOOLKIT') == 'gonk'
+        if hasattr(cls, 'substs'):
+            return cls.substs.get('MOZ_WIDGET_TOOLKIT') == 'gonk'
+        return False
 
 
 class PathArgument(object):
