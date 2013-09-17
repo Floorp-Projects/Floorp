@@ -863,8 +863,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
     void loadConstantDouble(double d, const FloatRegister &dest);
     void loadConstantFloat32(float f, const FloatRegister &dest);
-    void loadStaticDouble(const double *dp, const FloatRegister &dest);
-    void loadStaticFloat32(const float *dp, const FloatRegister &dest);
 
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail) {
         const uint32_t IndefiniteIntegerValue = 0x80000000;

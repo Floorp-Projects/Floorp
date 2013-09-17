@@ -1390,8 +1390,7 @@ CodeGeneratorX86Shared::visitRound(LRound *lir)
     Label negative, end;
 
     // Load 0.5 in the temp register.
-    static const double PointFive = 0.5;
-    masm.loadStaticDouble(&PointFive, temp);
+    masm.loadConstantDouble(0.5, temp);
 
     // Branch to a slow path for negative inputs. Doesn't catch NaN or -0.
     masm.xorpd(scratch, scratch);

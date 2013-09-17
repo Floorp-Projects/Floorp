@@ -833,14 +833,12 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate *ool)
             Label positive;
             masm.j(Assembler::Above, &positive);
 
-            static const double shiftNeg = 4294967296.0;
-            masm.loadStaticDouble(&shiftNeg, temp);
+            masm.loadConstantDouble(4294967296.0, temp);
             Label skip;
             masm.jmp(&skip);
 
             masm.bind(&positive);
-            static const double shiftPos = -4294967296.0;
-            masm.loadStaticDouble(&shiftPos, temp);
+            masm.loadConstantDouble(-4294967296.0, temp);
             masm.bind(&skip);
         }
 

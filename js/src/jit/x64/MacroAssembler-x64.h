@@ -1019,12 +1019,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         mov(ImmWord(pun.u), ScratchReg);
         movq(ScratchReg, dest);
     }
-    void loadStaticDouble(const double *dp, const FloatRegister &dest) {
-        loadConstantDouble(*dp, dest);
-    }
-    void loadStaticFloat32(const float *fp, const FloatRegister &dest) {
-        loadConstantFloat32(*fp, dest);
-    }
 
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail) {
         const uint64_t IndefiniteIntegerValue = 0x8000000000000000;
