@@ -273,11 +273,17 @@ void GrallocBufferActor::ActorDestroy(ActorDestroyReason)
   if (mDeprecatedTextureHost) {
     mDeprecatedTextureHost->ForgetBuffer();
   }
+  mDeprecatedTextureHost = nullptr;
 }
 
 // used only for hacky fix in gecko 23 for bug 862324
 void GrallocBufferActor::SetDeprecatedTextureHost(DeprecatedTextureHost* aDeprecatedTextureHost)
 {
+  if (mDeprecatedTextureHost &&
+      mDeprecatedTextureHost != aDeprecatedTextureHost)
+  {
+    mDeprecatedTextureHost->ForgetBuffer();
+  }
   mDeprecatedTextureHost = aDeprecatedTextureHost;
 }
 
