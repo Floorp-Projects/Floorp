@@ -237,6 +237,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     profilingScripts(false),
     alwaysPreserveCode(false),
     hadOutOfMemory(false),
+    haveCreatedContext(false),
     data(NULL),
     gcLock(NULL),
     gcHelperThread(thisFromCtor()),
