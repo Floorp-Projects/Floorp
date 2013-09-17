@@ -1687,8 +1687,7 @@ public:
   */
 #define EVENT(name_, id_, type_, struct_)                             \
   mozilla::dom::EventHandlerNonNull* GetOn##name_();                  \
-  void SetOn##name_(mozilla::dom::EventHandlerNonNull* listener,      \
-                    mozilla::ErrorResult& error);                     \
+  void SetOn##name_(mozilla::dom::EventHandlerNonNull* listener);     \
   NS_IMETHOD GetOn##name_(JSContext *cx, JS::Value *vp);              \
   NS_IMETHOD SetOn##name_(JSContext *cx, const JS::Value &v);
 #define TOUCH_EVENT EVENT

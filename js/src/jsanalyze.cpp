@@ -265,6 +265,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             break;
 
           case JSOP_EVAL:
+          case JSOP_SPREADEVAL:
             canTrackVars = false;
             isIonInlineable = false;
             break;

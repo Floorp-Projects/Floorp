@@ -432,12 +432,12 @@ MessagePort::GetOnmessage()
 }
 
 void
-MessagePort::SetOnmessage(EventHandlerNonNull* aCallback, ErrorResult& aRv)
+MessagePort::SetOnmessage(EventHandlerNonNull* aCallback)
 {
   if (NS_IsMainThread()) {
-    SetEventHandler(nsGkAtoms::onmessage, EmptyString(), aCallback, aRv);
+    SetEventHandler(nsGkAtoms::onmessage, EmptyString(), aCallback);
   } else {
-    SetEventHandler(nullptr, NS_LITERAL_STRING("message"), aCallback, aRv);
+    SetEventHandler(nullptr, NS_LITERAL_STRING("message"), aCallback);
   }
 
   // When using onmessage, the call to start() is implied.

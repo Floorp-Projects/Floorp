@@ -6,7 +6,9 @@
 
 // Original author: ekr@rtfm.com
 
+#include <algorithm>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <string>
 #include <vector>
@@ -61,6 +63,49 @@ static bool IsRelayCandidate(const std::string& candidate) {
   return candidate.find("typ relay") != std::string::npos;
 }
 
+bool ContainsSucceededPair(const std::vector<NrIceCandidatePair>& pairs) {
+  for (size_t i = 0; i < pairs.size(); ++i) {
+    if (pairs[i].state == NrIceCandidatePair::STATE_SUCCEEDED) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Note: Does not correspond to any notion of prioritization; this is just
+// so we can use stl containers/algorithms that need a comparator
+bool operator<(const NrIceCandidate& lhs,
+               const NrIceCandidate& rhs) {
+  if (lhs.host == rhs.host) {
+    if (lhs.port == rhs.port) {
+      return lhs.type < rhs.type;
+    }
+    return lhs.port < rhs.port;
+  }
+  return lhs.host < rhs.host;
+}
+
+bool operator==(const NrIceCandidate& lhs,
+                const NrIceCandidate& rhs) {
+  return lhs.host == rhs.host &&
+         lhs.port == rhs.port &&
+         lhs.type == rhs.type;
+}
+
+class IceCandidatePairCompare {
+  public:
+    bool operator()(const NrIceCandidatePair& lhs,
+                    const NrIceCandidatePair& rhs) const {
+      if (lhs.priority == rhs.priority) {
+        if (lhs.local == rhs.local) {
+          return lhs.remote < rhs.remote;
+        }
+        return lhs.local < rhs.local;
+      }
+      return lhs.priority < rhs.priority;
+    }
+};
+
 class IceTestPeer : public sigslot::has_slots<> {
  public:
 
@@ -107,6 +152,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     streams_.push_back(stream);
     stream->SignalCandidate.connect(this, &IceTestPeer::GotCandidate);
     stream->SignalReady.connect(this, &IceTestPeer::StreamReady);
+    stream->SignalFailed.connect(this, &IceTestPeer::StreamFailed);
     stream->SignalPacketReceived.connect(this, &IceTestPeer::PacketReceived);
   }
 
@@ -238,11 +284,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     }
 
     if (start) {
-      // Now start checks
-      test_utils->sts_target()->Dispatch(
-        WrapRunnableRet(ice_ctx_, &NrIceCtx::StartChecks, &res),
-        NS_DISPATCH_SYNC);
-      ASSERT_TRUE(NS_SUCCEEDED(res));
+      StartChecks();
     }
   }
 
@@ -353,9 +395,137 @@ class IceTestPeer : public sigslot::has_slots<> {
     candidates_[stream->name()].push_back(candidate);
   }
 
+  nsresult GetCandidatePairs(size_t stream_index,
+                             std::vector<NrIceCandidatePair>* pairs) {
+    MOZ_ASSERT(pairs);
+    if (stream_index >= streams_.size()) {
+      // Is there a better error for "no such index"?
+      ADD_FAILURE() << "No such media stream index: " << stream_index;
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    nsresult res;
+    test_utils->sts_target()->Dispatch(
+        WrapRunnableRet(streams_[stream_index],
+                        &NrIceMediaStream::GetCandidatePairs,
+                        pairs,
+                        &res),
+        NS_DISPATCH_SYNC);
+    return res;
+  }
+
+  void DumpCandidatePair(const NrIceCandidatePair& pair) {
+      std::cerr << std::endl;
+      DumpCandidate("Local", pair.local);
+      DumpCandidate("Remote", pair.remote);
+      std::cerr << "state = " << pair.state
+                << " priority = " << pair.priority
+                << " nominated = " << pair.nominated
+                << " selected = " << pair.selected << std::endl;
+  }
+
+  void DumpCandidatePairs(NrIceMediaStream *stream) {
+    std::vector<NrIceCandidatePair> pairs;
+    nsresult res = stream->GetCandidatePairs(&pairs);
+    ASSERT_TRUE(NS_SUCCEEDED(res));
+
+    std::cerr << "Begin list of candidate pairs [" << std::endl;
+
+    for (std::vector<NrIceCandidatePair>::iterator p = pairs.begin();
+         p != pairs.end(); ++p) {
+      DumpCandidatePair(*p);
+    }
+    std::cerr << "]" << std::endl;
+  }
+
+  void DumpCandidatePairs() {
+    std::cerr << "Dumping candidate pairs for all streams [" << std::endl;
+    for (size_t s = 0; s < streams_.size(); ++s) {
+      DumpCandidatePairs(streams_[s]);
+    }
+    std::cerr << "]" << std::endl;
+  }
+
+  bool CandidatePairsPriorityDescending(const std::vector<NrIceCandidatePair>&
+                                        pairs) {
+    // Verify that priority is descending
+    uint64_t priority = std::numeric_limits<uint64_t>::max();
+
+    for (size_t p = 0; p < pairs.size(); ++p) {
+      if (priority < pairs[p].priority) {
+        std::cerr << "Priority increased in subsequent pairs:" << std::endl;
+        DumpCandidatePair(pairs[p-1]);
+        DumpCandidatePair(pairs[p]);
+        return false;
+      } else if (priority == pairs[p].priority) {
+        std::cerr << "Duplicate priority in subseqent pairs:" << std::endl;
+        DumpCandidatePair(pairs[p-1]);
+        DumpCandidatePair(pairs[p]);
+        return false;
+      }
+      priority = pairs[p].priority;
+    }
+    return true;
+  }
+
+  void UpdateAndValidateCandidatePairs(size_t stream_index,
+                                       std::vector<NrIceCandidatePair>*
+                                       new_pairs) {
+    std::vector<NrIceCandidatePair> old_pairs = *new_pairs;
+    GetCandidatePairs(stream_index, new_pairs);
+    ASSERT_TRUE(CandidatePairsPriorityDescending(*new_pairs)) << "New list of "
+            "candidate pairs is either not sorted in priority order, or has "
+            "duplicate priorities.";
+    ASSERT_TRUE(CandidatePairsPriorityDescending(old_pairs)) << "Old list of "
+            "candidate pairs is either not sorted in priority order, or has "
+            "duplicate priorities. This indicates some bug in the test case.";
+    std::vector<NrIceCandidatePair> added_pairs;
+    std::vector<NrIceCandidatePair> removed_pairs;
+
+    // set_difference computes the set of elements that are present in the
+    // first set, but not the second
+    // NrIceCandidatePair::operator< compares based on the priority, local
+    // candidate, and remote candidate in that order. This means this will
+    // catch cases where the priority has remained the same, but one of the
+    // candidates has changed.
+    std::set_difference((*new_pairs).begin(),
+                        (*new_pairs).end(),
+                        old_pairs.begin(),
+                        old_pairs.end(),
+                        std::inserter(added_pairs, added_pairs.begin()),
+                        IceCandidatePairCompare());
+
+    std::set_difference(old_pairs.begin(),
+                        old_pairs.end(),
+                        (*new_pairs).begin(),
+                        (*new_pairs).end(),
+                        std::inserter(removed_pairs, removed_pairs.begin()),
+                        IceCandidatePairCompare());
+
+    for (std::vector<NrIceCandidatePair>::iterator a = added_pairs.begin();
+         a != added_pairs.end(); ++a) {
+        std::cerr << "Found new candidate pair." << std::endl;
+        DumpCandidatePair(*a);
+    }
+
+    for (std::vector<NrIceCandidatePair>::iterator r = removed_pairs.begin();
+         r != removed_pairs.end(); ++r) {
+        std::cerr << "Pre-existing candidate pair is now missing:" << std::endl;
+        DumpCandidatePair(*r);
+    }
+
+    ASSERT_TRUE(removed_pairs.empty()) << "At least one candidate pair has "
+                                          "gone missing.";
+  }
+
   void StreamReady(NrIceMediaStream *stream) {
     ++ready_ct_;
     std::cerr << "Stream ready " << stream->name() << " ct=" << ready_ct_ << std::endl;
+    DumpCandidatePairs(stream);
+  }
+  void StreamFailed(NrIceMediaStream *stream) {
+    std::cerr << "Stream failed " << stream->name() << " ct=" << ready_ct_ << std::endl;
+    DumpCandidatePairs(stream);
   }
 
   void IceCompleted(NrIceCtx *ctx) {
@@ -846,6 +1016,70 @@ TEST_F(IceConnectTest, TestConnectShutdownOneSide) {
   ASSERT_TRUE(Gather(true));
   ConnectThenDelete();
 }
+
+TEST_F(IceConnectTest, TestPollCandPairsBeforeConnect) {
+  AddStream("first", 1);
+  ASSERT_TRUE(Gather(true));
+
+  std::vector<NrIceCandidatePair> pairs;
+  nsresult res = p1_->GetCandidatePairs(0, &pairs);
+  // There should be no candidate pairs prior to calling Connect()
+  ASSERT_TRUE(NS_FAILED(res));
+  ASSERT_EQ(0U, pairs.size());
+
+  res = p2_->GetCandidatePairs(0, &pairs);
+  ASSERT_TRUE(NS_FAILED(res));
+  ASSERT_EQ(0U, pairs.size());
+}
+
+TEST_F(IceConnectTest, TestPollCandPairsAfterConnect) {
+  AddStream("first", 1);
+  ASSERT_TRUE(Gather(true));
+  Connect();
+
+  std::vector<NrIceCandidatePair> pairs;
+  nsresult r = p1_->GetCandidatePairs(0, &pairs);
+  ASSERT_EQ(NS_OK, r);
+  // How detailed of a check do we want to do here? If the turn server is
+  // functioning, we'll get at least two pairs, but this is probably not
+  // something we should assume.
+  ASSERT_NE(0U, pairs.size());
+  ASSERT_TRUE(p1_->CandidatePairsPriorityDescending(pairs));
+  ASSERT_TRUE(ContainsSucceededPair(pairs));
+  pairs.clear();
+
+  r = p2_->GetCandidatePairs(0, &pairs);
+  ASSERT_EQ(NS_OK, r);
+  ASSERT_NE(0U, pairs.size());
+  ASSERT_TRUE(p2_->CandidatePairsPriorityDescending(pairs));
+  ASSERT_TRUE(ContainsSucceededPair(pairs));
+}
+
+TEST_F(IceConnectTest, TestPollCandPairsDuringConnect) {
+  AddStream("first", 1);
+  ASSERT_TRUE(Gather(true));
+
+  p1_->Connect(p2_, TRICKLE_NONE, false);
+  p2_->Connect(p1_, TRICKLE_NONE, false);
+
+  std::vector<NrIceCandidatePair> pairs1;
+  std::vector<NrIceCandidatePair> pairs2;
+
+  p1_->StartChecks();
+  p1_->UpdateAndValidateCandidatePairs(0, &pairs1);
+  p2_->UpdateAndValidateCandidatePairs(0, &pairs2);
+
+  p2_->StartChecks();
+  p1_->UpdateAndValidateCandidatePairs(0, &pairs1);
+  p2_->UpdateAndValidateCandidatePairs(0, &pairs2);
+
+  WaitForComplete();
+  p1_->UpdateAndValidateCandidatePairs(0, &pairs1);
+  p2_->UpdateAndValidateCandidatePairs(0, &pairs2);
+  ASSERT_TRUE(ContainsSucceededPair(pairs1));
+  ASSERT_TRUE(ContainsSucceededPair(pairs2));
+}
+
 
 TEST_F(PrioritizerTest, TestPrioritizer) {
   SetPriorizer(::mozilla::CreateInterfacePrioritizer());

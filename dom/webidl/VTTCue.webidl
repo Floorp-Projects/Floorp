@@ -41,9 +41,7 @@ interface VTTCue : EventTarget {
   attribute DOMString text;
   DocumentFragment getCueAsHTML();
 
-  [SetterThrows]
-    attribute EventHandler onenter;
+  attribute EventHandler onenter;
 
-  [SetterThrows]
-    attribute EventHandler onexit;
+  attribute EventHandler onexit;
 };

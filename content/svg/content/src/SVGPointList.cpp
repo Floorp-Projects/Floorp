@@ -110,7 +110,7 @@ SVGPointList::SetValueFromString(const nsAString& aValue)
 
     temp.AppendItem(SVGPoint(x, y));
   }
-  if (tokenizer.lastTokenEndedWithSeparator()) {
+  if (tokenizer.separatorAfterCurrentToken()) {
     rv = NS_ERROR_DOM_SYNTAX_ERR; // trailing comma
   }
   nsresult rv2 = CopyFrom(temp);

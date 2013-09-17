@@ -6,11 +6,10 @@
 
 #include "mozilla/dom/SVGTransform.h"
 #include "mozilla/dom/SVGMatrix.h"
+#include "mozilla/dom/SVGTransformBinding.h"
 #include "nsError.h"
-#include "nsAttrValueInlines.h"
 #include "nsSVGAnimatedTransformList.h"
 #include "nsSVGAttrTearoffTable.h"
-#include "mozilla/dom/SVGTransformBinding.h"
 
 namespace mozilla {
 namespace dom {

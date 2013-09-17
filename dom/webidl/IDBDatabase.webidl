@@ -35,11 +35,8 @@ interface IDBDatabase : EventTarget {
 
     void           close ();
 
-    [SetterThrows]
                 attribute EventHandler       onabort;
-    [SetterThrows]
                 attribute EventHandler       onerror;
-    [SetterThrows]
                 attribute EventHandler       onversionchange;
 };
 

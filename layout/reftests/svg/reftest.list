@@ -183,6 +183,7 @@ fuzzy-if(Android||B2G,9,980) == gradient-live-01d.svg gradient-live-01-ref.svg
 == linearGradient-basic-02.svg pass.svg
 == markers-and-group-opacity-01.svg markers-and-group-opacity-01-ref.svg
 == marker-attribute-01.svg pass.svg
+== marker-effects-01.svg marker-effects-01-ref.svg
 == marker-viewBox-01.svg marker-viewBox-01-ref.svg
 == marker-orientation-01.svg marker-orientation-01-ref.svg
 pref(svg.marker-improvements.enabled,true) == marker-orientation-02.svg marker-orientation-02-ref.svg
@@ -367,3 +368,26 @@ skip-if(B2G) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-ref.svg # bug 773
 == svg-effects-area-zoomed-out.xhtml svg-effects-area-zoomed-out-ref.xhtml
 == href-attr-change-restyles.svg href-attr-change-restyles-ref.svg
 == mask-img.html mask-img-ref.html
+
+skip-if(d2d||B2G||(Android&&AndroidVersion<15)) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-burn.svg blend-color-burn-ref.svg
+skip-if(d2d||B2G||(Android&&AndroidVersion<15)) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-dodge.svg blend-color-dodge-ref.svg
+# pref(layout.css.mix-blend-mode.enabled,true) == blend-color.svg blend-color-ref.svg
+skip-if(B2G||(Android&&AndroidVersion<15)) pref(layout.css.mix-blend-mode.enabled,true) == blend-darken.svg blend-darken-ref.svg
+skip-if(B2G||(Android&&AndroidVersion<15)) pref(layout.css.mix-blend-mode.enabled,true) == blend-difference.svg blend-difference-ref.svg
+skip-if(B2G||(Android&&AndroidVersion<15)) pref(layout.css.mix-blend-mode.enabled,true) == blend-exclusion.svg blend-exclusion-ref.svg
+# pref(layout.css.mix-blend-mode.enabled,true) == blend-hard-light.svg blend-hard-light-ref.svg
+# pref(layout.css.mix-blend-mode.enabled,true) == blend-hue.svg blend-hue-ref.svg
+skip-if(B2G||(Android&&AndroidVersion<15)) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-blend.svg blend-layer-blend-ref.svg
+skip-if(B2G||(Android&&AndroidVersion<15)) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-filter.svg blend-layer-filter-ref.svg
+skip-if(B2G||(Android&&AndroidVersion<15)) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-mask.svg blend-layer-mask-ref.svg
+skip-if(B2G||(Android&&AndroidVersion<15)) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-opacity.svg blend-layer-opacity-ref.svg
+skip-if(B2G||(Android&&AndroidVersion<15)) pref(layout.css.mix-blend-mode.enabled,true) == blend-lighten.svg blend-lighten-ref.svg
+# pref(layout.css.mix-blend-mode.enabled,true) == blend-luminosity.svg blend-luminosity-ref.svg
+#skip-if(B2G||(Android&&AndroidVersion<15)) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply-alpha.svg blend-multiply-alpha-ref.svg
+skip-if(B2G||(Android&&AndroidVersion<15)) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply.svg blend-multiply-ref.svg
+pref(layout.css.mix-blend-mode.enabled,true) == blend-normal.svg blend-normal-ref.svg
+#skip-if(B2G||(Android&&AndroidVersion<15)) pref(layout.css.mix-blend-mode.enabled,true) == blend-overlay.svg blend-overlay-ref.svg
+#skip-if(B2G||(Android&&AndroidVersion<15))  pref(layout.css.mix-blend-mode.enabled,true) == blend-saturation.svg blend-saturation-ref.svg
+#skip-if(B2G||(Android&&AndroidVersion<15)) pref(layout.css.mix-blend-mode.enabled,true) == blend-screen.svg blend-screen-ref.svg
+# skip-if(B2G||(Android&&AndroidVersion<15)) pref(layout.css.mix-blend-mode.enabled,true) == blend-soft-light.svg blend-soft-light-ref.svg
+skip-if(B2G||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-difference-stacking.html blend-difference-stacking-ref.html

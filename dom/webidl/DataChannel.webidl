@@ -21,14 +21,10 @@ interface DataChannel : EventTarget
   readonly attribute boolean reliable;
   readonly attribute RTCDataChannelState readyState;
   readonly attribute unsigned long bufferedAmount;
-  [SetterThrows]
   attribute EventHandler onopen;
-  [SetterThrows]
   attribute EventHandler onerror;
-  [SetterThrows]
   attribute EventHandler onclose;
   void close();
-  [SetterThrows]
   attribute EventHandler onmessage;
   attribute RTCDataChannelType binaryType;
   [Throws]

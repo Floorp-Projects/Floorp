@@ -858,6 +858,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               NS_HTML5_BREAK(starttagloop);
             }
             case NS_HTML5TREE_BUILDER_INPUT: {
+              errStartTagInTable(name);
               if (!nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString("hidden", attributes->getValue(nsHtml5AttributeName::ATTR_TYPE))) {
                 NS_HTML5_BREAK(intableloop);
               }

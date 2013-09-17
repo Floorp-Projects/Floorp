@@ -64,6 +64,7 @@ struct cubeb_stream {
   HANDLE event;
   HWAVEOUT waveout;
   CRITICAL_SECTION lock;
+  uint64_t written;
 };
 
 static size_t
@@ -144,6 +145,7 @@ winmm_refill_stream(cubeb_stream * stm)
   } else if (got < wanted) {
     stm->draining = 1;
   }
+  stm->written += got;
 
   assert(hdr->dwFlags & WHDR_PREPARED);
 
@@ -389,6 +391,7 @@ winmm_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   stm->data_callback = data_callback;
   stm->state_callback = state_callback;
   stm->user_ptr = user_ptr;
+  stm->written = 0;
 
   if (latency < context->minimum_latency) {
     latency = context->minimum_latency;
@@ -574,6 +577,24 @@ winmm_stream_get_position(cubeb_stream * stm, uint64_t * position)
   return CUBEB_OK;
 }
 
+int
+winmm_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
+{
+  MMRESULT r;
+  MMTIME time;
+  uint64_t written;
+
+  EnterCriticalSection(&stm->lock);
+  time.wType = TIME_SAMPLES;
+  r = waveOutGetPosition(stm->waveout, &time, sizeof(time));
+  written = stm->written;
+  LeaveCriticalSection(&stm->lock);
+
+  *latency = written - time.u.sample;
+
+  return CUBEB_OK;
+}
+
 static struct cubeb_ops const winmm_ops = {
   /*.init =*/ winmm_init,
   /*.get_backend_id =*/ winmm_get_backend_id,
@@ -583,5 +604,6 @@ static struct cubeb_ops const winmm_ops = {
   /*.stream_destroy =*/ winmm_stream_destroy,
   /*.stream_start =*/ winmm_stream_start,
   /*.stream_stop =*/ winmm_stream_stop,
-  /*.stream_get_position =*/ winmm_stream_get_position
+  /*.stream_get_position =*/ winmm_stream_get_position,
+  /*.stream_get_latency = */ winmm_stream_get_latency
 };

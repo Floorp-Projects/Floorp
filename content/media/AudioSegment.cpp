@@ -7,6 +7,7 @@
 
 #include "AudioStream.h"
 #include "AudioChannelFormat.h"
+#include "Latency.h"
 
 namespace mozilla {
 
@@ -137,7 +138,7 @@ DownmixAndInterleave(const nsTArray<const void*>& aChannelData,
 }
 
 void
-AudioSegment::WriteTo(AudioStream* aOutput)
+AudioSegment::WriteTo(uint64_t aID, AudioStream* aOutput)
 {
   uint32_t outputChannels = aOutput->GetChannels();
   nsAutoTArray<AudioDataValue,AUDIO_PROCESSING_FRAMES*GUESS_AUDIO_CHANNELS> buf;
@@ -183,6 +184,9 @@ AudioSegment::WriteTo(AudioStream* aOutput)
         memset(buf.Elements(), 0, buf.Length()*sizeof(AudioDataValue));
       }
       aOutput->Write(buf.Elements(), int32_t(duration));
+      if(!c.mTimeStamp.IsNull())
+        LogLatency(AsyncLatencyLogger::AudioMediaStreamTrack, aID,
+                   (mozilla::TimeStamp::Now() - c.mTimeStamp).ToMilliseconds());
       offset += duration;
     }
   }

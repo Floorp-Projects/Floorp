@@ -25,8 +25,8 @@ linked_generated_events_cpp_files := $(subst .webidl,.cpp,$(generated_events_web
 
 all_webidl_files += $(test_webidl_files)
 
-binding_header_files := $(subst .webidl,Binding.h,$(all_webidl_files))
-binding_cpp_files := $(subst .webidl,Binding.cpp,$(all_webidl_files))
+generated_header_files := $(subst .webidl,Binding.h,$(all_webidl_files)) $(exported_generated_events_headers)
+generated_cpp_files := $(subst .webidl,Binding.cpp,$(all_webidl_files)) $(linked_generated_events_cpp_files)
 
 # We want to be able to only regenerate the .cpp and .h files that really need
 # to change when a .webidl file changes.  We do this by making the
@@ -174,9 +174,9 @@ $(preprocessed_webidl_files): %: $(webidl_base)/% $(GLOBAL_DEPS)
 all_webidl_files_absolute = $(addprefix $(CURDIR)/,$(all_webidl_files))
 $(all_webidl_files_absolute): $(CURDIR)/%: %
 
-$(binding_header_files): .BindingGen
+$(generated_header_files): .BindingGen
 
-$(binding_cpp_files): .BindingGen
+$(generated_cpp_files): .BindingGen
 
 # $(binding_dependency_trackers) pick up additional dependencies via .pp files
 # The rule: just brings the tracker up to date, if it's out of date, so that
@@ -264,14 +264,14 @@ GARBAGE += \
 # headers they depend on.  This is really only needed for the test files, since
 # the non-test headers are all exported above anyway.  Note that this means that
 # we do all of our codegen during export.
-webidl:: $(binding_header_files)
+webidl:: $(generated_header_files)
 
 .PHONY: webidl
 
 distclean::
 	-$(RM) \
-        $(binding_header_files) \
-        $(binding_cpp_files) \
+        $(generated_header_files) \
+        $(generated_cpp_files) \
         $(all_webidl_files) \
         $(globalgen_targets) \
         ParserResults.pkl \

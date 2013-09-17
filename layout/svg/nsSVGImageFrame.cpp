@@ -342,7 +342,7 @@ nsSVGImageFrame::PaintSVG(nsRenderingContext *aContext,
       opacity = StyleDisplay()->mOpacity;
     }
 
-    if (opacity != 1.0f) {
+    if (opacity != 1.0f || StyleDisplay()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
       ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
     }
 
@@ -396,7 +396,7 @@ nsSVGImageFrame::PaintSVG(nsRenderingContext *aContext,
         drawFlags);
     }
 
-    if (opacity != 1.0f) {
+    if (opacity != 1.0f || StyleDisplay()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
       ctx->PopGroupToSource();
       ctx->SetOperator(gfxContext::OPERATOR_OVER);
       ctx->Paint(opacity);

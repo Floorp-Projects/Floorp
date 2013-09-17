@@ -36,7 +36,6 @@ interface OscillatorNode : AudioNode {
     void stop(double when);
     void setPeriodicWave(PeriodicWave periodicWave);
 
-    [SetterThrows]
     attribute EventHandler onended;
 
 };

@@ -581,7 +581,7 @@ JS_GetScriptSourceMap(JSContext *cx, JSScript *script)
 {
     ScriptSource *source = script->scriptSource();
     JS_ASSERT(source);
-    return source->hasSourceMap() ? source->sourceMap() : NULL;
+    return source->hasSourceMapURL() ? source->sourceMapURL() : NULL;
 }
 
 JS_PUBLIC_API(unsigned)

@@ -44,6 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef nricemediastream_h__
 #define nricemediastream_h__
 
+#include <string>
 #include <vector>
 
 #include "sigslot.h"
@@ -78,6 +79,33 @@ struct NrIceCandidate {
   Type type;
 };
 
+struct NrIceCandidatePair {
+
+  enum State {
+    STATE_FROZEN,
+    STATE_WAITING,
+    STATE_IN_PROGRESS,
+    STATE_FAILED,
+    STATE_SUCCEEDED,
+    STATE_CANCELLED
+  };
+
+  State state;
+  uint64_t priority;
+  // Set regardless of who nominated it. Does not necessarily mean that it is
+  // ready to be selected (ie; nominated by peer, but our check has not
+  // succeeded yet.) Note: since this implementation uses aggressive nomination,
+  // when we are the controlling agent, this will always be set if the pair is
+  // in STATE_SUCCEEDED.
+  bool nominated;
+  // Set if this candidate pair has been selected. Note: Since we are using
+  // aggressive nomination, this could change frequently as ICE runs.
+  bool selected;
+  NrIceCandidate local;
+  NrIceCandidate remote;
+  // TODO(bcampen@mozilla.com): Is it important to put the foundation in here?
+};
+
 class NrIceMediaStream {
  public:
   static RefPtr<NrIceMediaStream> Create(NrIceCtx *ctx,
@@ -94,6 +122,10 @@ class NrIceMediaStream {
 
   // Get all the candidates
   std::vector<std::string> GetCandidates() const;
+
+  // Get all candidate pairs, whether in the check list or triggered check
+  // queue, in priority order. |out_pairs| is cleared before being filled.
+  nsresult GetCandidatePairs(std::vector<NrIceCandidatePair>* out_pairs) const;
 
   // Get the default candidate as host and port
   nsresult GetDefaultCandidate(int component, std::string *host, int *port);

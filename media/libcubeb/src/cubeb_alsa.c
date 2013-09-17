@@ -1009,6 +1009,21 @@ alsa_stream_get_position(cubeb_stream * stm, uint64_t * position)
   return CUBEB_OK;
 }
 
+int
+alsa_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
+{
+  snd_pcm_sframes_t delay;
+  /* This function returns the delay in frames until a frame written using
+     snd_pcm_writei is sent to the DAC. The DAC delay should be < 1ms anyways. */
+  if (snd_pcm_delay(stm->pcm, &delay)) {
+    return CUBEB_ERROR;
+  }
+
+  *latency = delay;
+
+  return CUBEB_OK;
+}
+
 static struct cubeb_ops const alsa_ops = {
   .init = alsa_init,
   .get_backend_id = alsa_get_backend_id,
@@ -1018,5 +1033,6 @@ static struct cubeb_ops const alsa_ops = {
   .stream_destroy = alsa_stream_destroy,
   .stream_start = alsa_stream_start,
   .stream_stop = alsa_stream_stop,
-  .stream_get_position = alsa_stream_get_position
+  .stream_get_position = alsa_stream_get_position,
+  .stream_get_latency = alsa_stream_get_latency
 };

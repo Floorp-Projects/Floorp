@@ -568,6 +568,26 @@ pulse_stream_get_position(cubeb_stream * stm, uint64_t * position)
   return CUBEB_OK;
 }
 
+int
+pulse_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
+{
+  pa_usec_t r_usec;
+  int negative, r;
+
+  if (!stm) {
+    return CUBEB_ERROR;
+  }
+
+  r = WRAP(pa_stream_get_latency)(stm->stream, &r_usec, &negative);
+  assert(!negative);
+  if (r) {
+    return CUBEB_ERROR;
+  }
+
+  *latency = r_usec * stm->sample_spec.rate / PA_USEC_PER_SEC;
+  return CUBEB_OK;
+}
+
 static struct cubeb_ops const pulse_ops = {
   .init = pulse_init,
   .get_backend_id = pulse_get_backend_id,
@@ -577,5 +597,6 @@ static struct cubeb_ops const pulse_ops = {
   .stream_destroy = pulse_stream_destroy,
   .stream_start = pulse_stream_start,
   .stream_stop = pulse_stream_stop,
-  .stream_get_position = pulse_stream_get_position
+  .stream_get_position = pulse_stream_get_position,
+  .stream_get_latency = pulse_stream_get_latency
 };

@@ -1308,6 +1308,9 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
       case JSOP_FUNCALL:
         return decompilePC(pcstack[-int32_t(GET_ARGC(pc) + 2)]) &&
                write("(...)");
+      case JSOP_SPREADCALL:
+        return decompilePC(pcstack[-int32_t(3)]) &&
+               write("(...)");
       case JSOP_NEWARRAY:
         return write("[]");
       case JSOP_REGEXP:
@@ -2009,10 +2012,12 @@ js::CallResultEscapes(jsbytecode *pc)
      * - call / not / ifeq
      */
 
-    if (*pc != JSOP_CALL)
+    if (*pc == JSOP_CALL)
+        pc += JSOP_CALL_LENGTH;
+    else if (*pc == JSOP_SPREADCALL)
+        pc += JSOP_SPREADCALL_LENGTH;
+    else
         return true;
-
-    pc += JSOP_CALL_LENGTH;
 
     if (*pc == JSOP_POP)
         return false;
