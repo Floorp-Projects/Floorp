@@ -797,7 +797,7 @@ class JSScript : public js::gc::Cell
 
     JSFlatString *sourceData(JSContext *cx);
 
-    static bool loadSource(JSContext *cx, js::HandleScript scr, bool *worked);
+    static bool loadSource(JSContext *cx, js::ScriptSource *ss, bool *worked);
 
     void setSourceObject(js::ScriptSourceObject *object);
     js::ScriptSourceObject *sourceObject() const;
