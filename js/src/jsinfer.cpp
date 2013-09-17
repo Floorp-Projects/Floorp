@@ -10,10 +10,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 
-#ifdef __SUNPRO_CC
-#include <alloca.h>
-#endif
-
 #include "jsapi.h"
 #include "jsautooplen.h"
 #include "jscntxt.h"
