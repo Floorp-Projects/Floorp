@@ -709,6 +709,7 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/menu_item_check.png \
   res/drawable-mdpi/menu_item_more.png \
   res/drawable-mdpi/menu_item_uncheck.png \
+  res/drawable-mdpi/pin.png \
   res/drawable-mdpi/shield.png \
   res/drawable-mdpi/shield_doorhanger.png \
   res/drawable-mdpi/tabs_normal.png \
@@ -817,6 +818,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/menu_item_check.png \
   res/drawable-hdpi/menu_item_more.png \
   res/drawable-hdpi/menu_item_uncheck.png \
+  res/drawable-hdpi/pin.png \
   res/drawable-hdpi/shield.png \
   res/drawable-hdpi/shield_doorhanger.png \
   res/drawable-hdpi/tabs_normal.png \
@@ -915,6 +917,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/menu_item_check.png \
   res/drawable-xhdpi/menu_item_more.png \
   res/drawable-xhdpi/menu_item_uncheck.png \
+  res/drawable-xhdpi/pin.png \
   res/drawable-xhdpi/shield.png \
   res/drawable-xhdpi/shield_doorhanger.png \
   res/drawable-xhdpi/tab_indicator_divider.9.png \
