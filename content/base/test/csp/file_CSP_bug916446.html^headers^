@@ -1,1 +1,0 @@
-x-content-security-policy-report-only: options eval-script; script-src 'self' ; report-uri /csp_report

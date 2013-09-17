@@ -243,8 +243,6 @@ CSPRep.ALLOW_DIRECTIVE   = "allow";
   *        while the policy-uri is asynchronously fetched
   * @param csp (optional)
   *        the CSP object to update once the policy has been fetched
-  * @param reportOnly (optional)
-  *        whether or not this CSP is report-only (defaults to false)
   * @returns
   *        an instance of CSPRep
   */
@@ -482,8 +480,7 @@ CSPRep.fromString = function(aStr, self, docRequest, csp, reportOnly) {
   // directive to be present.
   if (!aCSPR._directives[SD.DEFAULT_SRC]) {
     cspWarn(aCSPR, CSPLocalizer.getStr("allowOrDefaultSrcRequired"));
-    return CSPRep.fromString("default-src 'none'", selfUri, docRequest, csp,
-                             reportOnly);
+    return CSPRep.fromString("default-src 'none'", selfUri);
   }
   return aCSPR;
 };
@@ -501,8 +498,6 @@ CSPRep.fromString = function(aStr, self, docRequest, csp, reportOnly) {
   *        while the policy-uri is asynchronously fetched
   * @param csp (optional)
   *        the CSP object to update once the policy has been fetched
-  * @param reportOnly (optional)
-  *        whether or not this CSP is report-only (defaults to false)
   * @returns
   *        an instance of CSPRep
   */
