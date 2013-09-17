@@ -19,7 +19,7 @@
                   android:layout_width="fill_parent"
                   android:layout_height="fill_parent"
                   android:padding="6dip"
-                  android:hint="@string/pin_bookmark_dialog_hint"
+                  android:hint="@string/pin_site_dialog_hint"
                   android:background="@drawable/url_bar_entry"
                   android:textColor="@color/url_bar_title"
                   android:textColorHint="@color/url_bar_title_hint"

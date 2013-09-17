@@ -20,9 +20,9 @@ import android.view.ViewGroup;
 import java.util.Map;
 
 /**
- * A cursor adapter holding the pinned and top bookmarks.
+ * A cursor adapter holding the pinned and top sites.
  */
-public class TopBookmarksAdapter extends CursorAdapter {
+public class TopSitesGridAdapter extends CursorAdapter {
     // Cache to store the thumbnails.
     private Map<String, Thumbnail> mThumbnails;
 
@@ -42,7 +42,7 @@ public class TopBookmarksAdapter extends CursorAdapter {
         }
     }
 
-    public TopBookmarksAdapter(Context context, Cursor cursor) {
+    public TopSitesGridAdapter(Context context, Cursor cursor) {
         super(context, cursor);
     }
 
@@ -82,14 +82,14 @@ public class TopBookmarksAdapter extends CursorAdapter {
             pinned = ((TopSitesCursorWrapper) cursor).isPinned();
         }
 
-        TopBookmarkItemView view = (TopBookmarkItemView) bindView;
+        TopSitesGridItemView view = (TopSitesGridItemView) bindView;
         view.setTitle(title);
         view.setUrl(url);
         view.setPinned(pinned);
 
         // If there is no url, then show "add bookmark".
         if (TextUtils.isEmpty(url)) {
-            view.displayThumbnail(R.drawable.top_bookmark_add);
+            view.displayThumbnail(R.drawable.top_site_add);
         } else {
             // Show the thumbnail.
             Thumbnail thumbnail = (mThumbnails != null ? mThumbnails.get(url) : null);
@@ -108,6 +108,6 @@ public class TopBookmarksAdapter extends CursorAdapter {
      */
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
-        return new TopBookmarkItemView(context);
+        return new TopSitesGridItemView(context);
     }
 }
