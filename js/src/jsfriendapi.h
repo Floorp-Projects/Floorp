@@ -203,7 +203,7 @@ struct JSFunctionSpecWithHelp {
 extern JS_FRIEND_API(bool)
 JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj, const JSFunctionSpecWithHelp *fs);
 
-typedef bool (* JS_SourceHook)(JSContext *cx, JS::Handle<JSScript*> script,
+typedef bool (* JS_SourceHook)(JSContext *cx, const char *filename,
                                jschar **src, uint32_t *length);
 
 extern JS_FRIEND_API(void)

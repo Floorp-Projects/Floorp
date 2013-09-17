@@ -2843,8 +2843,7 @@ ReadSourceFromFilename(JSContext *cx, const char *filename, jschar **src, uint32
   function. See the comment in the XPCJSRuntime constructor.
 */
 static bool
-SourceHook(JSContext *cx, JS::Handle<JSScript*> script, jschar **src,
-           uint32_t *length)
+SourceHook(JSContext *cx, const char *filename, jschar **src, uint32_t *length)
 {
   *src = NULL;
   *length = 0;
@@ -2852,7 +2851,6 @@ SourceHook(JSContext *cx, JS::Handle<JSScript*> script, jschar **src,
   if (!nsContentUtils::IsCallerChrome())
     return true;
 
-  const char *filename = JS_GetScriptFilename(cx, script);
   if (!filename)
     return true;
 
