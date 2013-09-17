@@ -1111,6 +1111,7 @@ let BookmarkingUI = {
     if (aState == "invalid") {
       this.star.setAttribute("disabled", "true");
       this.button.removeAttribute("starred");
+      this.button.setAttribute("buttontooltiptext", "");
     }
     else {
       this.star.removeAttribute("disabled");
@@ -1229,11 +1230,11 @@ let BookmarkingUI = {
 
     if (this._itemIds.length > 0) {
       button.setAttribute("starred", "true");
-      button.setAttribute("tooltiptext", this._starredTooltip);
+      button.setAttribute("buttontooltiptext", this._starredTooltip);
     }
     else {
       button.removeAttribute("starred");
-      button.setAttribute("tooltiptext", this._unstarredTooltip);
+      button.setAttribute("buttontooltiptext", this._unstarredTooltip);
     }
   },
 
