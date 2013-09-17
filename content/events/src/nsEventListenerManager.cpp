@@ -50,9 +50,6 @@ using namespace mozilla::hal;
     (!mIsMainThreadELM && ls->mTypeString.Equals(typeString)))) ||   \
    (allEvents && ls->mAllEvents))
 
-static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
-                     NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
-
 static const uint32_t kAllMutationBits =
   NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED |
   NS_EVENT_BITS_MUTATION_NODEINSERTED |
