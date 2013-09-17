@@ -834,6 +834,7 @@ function BasicHighlighter(aTarget, aInspector)
 
 BasicHighlighter.prototype = {
   destroy: function() {
+    this.walker.highlight(null);
     this.selection.off("new-node-front", this.highlight);
     this.walker = null;
     this.selection = null;

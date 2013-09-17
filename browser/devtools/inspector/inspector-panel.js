@@ -447,6 +447,13 @@ InspectorPanel.prototype = {
     if (this._destroyPromise) {
       return this._destroyPromise;
     }
+
+    if (this.highlighter) {
+      this.highlighter.off("locked", this.onLockStateChanged);
+      this.highlighter.off("unlocked", this.onLockStateChanged);
+      this.highlighter.destroy();
+    }
+
     if (this.walker) {
       this.walker.off("new-root", this.onNewRoot);
       this._destroyPromise = this.walker.release().then(null, console.error);
@@ -462,12 +469,6 @@ InspectorPanel.prototype = {
     if (this.browser) {
       this.browser.removeEventListener("resize", this.scheduleLayoutChange, true);
       this.browser = null;
-    }
-
-    if (this.highlighter) {
-      this.highlighter.off("locked", this.onLockStateChanged);
-      this.highlighter.off("unlocked", this.onLockStateChanged);
-      this.highlighter.destroy();
     }
 
     this.target.off("thread-paused", this.updateDebuggerPausedWarning);
