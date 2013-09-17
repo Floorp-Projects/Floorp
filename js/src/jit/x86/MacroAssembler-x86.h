@@ -45,6 +45,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     typedef HashMap<float, size_t, DefaultHasher<float>, SystemAllocPolicy> FloatMap;
     FloatMap floatMap_;
 
+    Double *getDouble(double d);
+    Float *getFloat(float f);
+
   protected:
     MoveResolver moveResolver_;
 
@@ -862,7 +865,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
 
     void loadConstantDouble(double d, const FloatRegister &dest);
+    void addConstantDouble(double d, const FloatRegister &dest);
     void loadConstantFloat32(float f, const FloatRegister &dest);
+    void addConstantFloat32(float f, const FloatRegister &dest);
 
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail) {
         const uint32_t IndefiniteIntegerValue = 0x80000000;
@@ -952,8 +957,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
         // dest is now a double with the int range.
         // correct the double value by adding 0x80000000.
-        static const double NegativeOne = 2147483648.0;
-        addsd(Operand(&NegativeOne), dest);
+        addConstantDouble(2147483648.0, dest);
     }
 
     // Note: this function clobbers the source register.
@@ -966,8 +970,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
         // dest is now a double with the int range.
         // correct the double value by adding 0x80000000.
-        static const float NegativeOne = 2147483648.f;
-        addss(Operand(&NegativeOne), dest);
+        addConstantFloat32(2147483648.f, dest);
     }
 
     void inc64(AbsoluteAddress dest) {
