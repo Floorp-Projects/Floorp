@@ -1934,6 +1934,10 @@ js::TriggerGC(JSRuntime *rt, JS::gcreason::Reason reason)
         return;
     }
 
+    /* Don't trigger GCs when allocating under the operation callback lock. */
+    if (rt->currentThreadOwnsOperationCallbackLock())
+        return;
+
     JS_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
     if (rt->isHeapBusy())
@@ -1956,6 +1960,10 @@ js::TriggerZoneGC(Zone *zone, JS::gcreason::Reason reason)
     }
 
     JSRuntime *rt = zone->runtimeFromMainThread();
+
+    /* Don't trigger GCs when allocating under the operation callback lock. */
+    if (rt->currentThreadOwnsOperationCallbackLock())
+        return;
 
     if (rt->isHeapBusy())
         return;
