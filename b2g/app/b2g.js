@@ -400,6 +400,8 @@ pref("dom.mozAlarms.enabled", true);
 
 // SimplePush
 pref("services.push.enabled", true);
+// Debugging enabled.
+pref("services.push.debug", false);
 // Is the network connection allowed to be up?
 // This preference should be used in UX to enable/disable push.
 pref("services.push.connection.enabled", true);

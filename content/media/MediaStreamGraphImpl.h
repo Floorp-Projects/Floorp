@@ -365,6 +365,14 @@ public:
    * Remove aPort from the graph and release it.
    */
   void DestroyPort(MediaInputPort* aPort);
+  /**
+   * Mark the media stream order as dirty.
+   */
+  void SetStreamOrderDirty()
+  {
+    mStreamOrderDirty = true;
+    mUserWarnedAboutCycles = false;
+  }
 
   // Data members
 
@@ -554,6 +562,16 @@ public:
    * value is only accessed on the main thread.
    */
   bool mNonRealtimeProcessing;
+  /**
+   * True when a change has happened which requires us to recompute the stream
+   * blocking order.
+   */
+  bool mStreamOrderDirty;
+  /**
+   * True when the user has already been warned that this graph contains a
+   * cycle. Reset each time mStreamOrderDirty becomes true.
+   */
+  bool mUserWarnedAboutCycles;
 };
 
 }

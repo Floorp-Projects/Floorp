@@ -174,15 +174,12 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMEventTargetHelper,
     }                                                                     \
     return GetEventHandler(nullptr, NS_LITERAL_STRING(#_event));          \
   }                                                                       \
-  inline void SetOn##_event(mozilla::dom::EventHandlerNonNull* aCallback, \
-                            mozilla::ErrorResult& aRv)                    \
+  inline void SetOn##_event(mozilla::dom::EventHandlerNonNull* aCallback) \
   {                                                                       \
     if (NS_IsMainThread()) {                                              \
-      SetEventHandler(nsGkAtoms::on##_event, EmptyString(),               \
-                      aCallback, aRv);                                    \
+      SetEventHandler(nsGkAtoms::on##_event, EmptyString(), aCallback);   \
     } else {                                                              \
-      SetEventHandler(nullptr, NS_LITERAL_STRING(#_event),                \
-                      aCallback, aRv);                                    \
+      SetEventHandler(nullptr, NS_LITERAL_STRING(#_event), aCallback);    \
     }                                                                     \
   }
 

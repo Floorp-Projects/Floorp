@@ -7,11 +7,9 @@
 #include "prdtoa.h"
 #include "nsTextFormatter.h"
 #include "nsCharSeparatedTokenizer.h"
-#include "nsMathUtils.h"
 #include "nsSMILValue.h"
 #include "SVGContentUtils.h"
 #include "SVGViewBoxSMILType.h"
-#include "nsAttrValueInlines.h"
 
 #define NUM_VIEWBOX_COMPONENTS 4
 using namespace mozilla;
@@ -139,7 +137,7 @@ ToSVGViewBoxRect(const nsAString& aStr, nsSVGViewBoxRect *aViewBox)
 
   if (i != NUM_VIEWBOX_COMPONENTS ||              // Too few values.
       tokenizer.hasMoreTokens() ||                // Too many values.
-      tokenizer.lastTokenEndedWithSeparator()) {  // Trailing comma.
+      tokenizer.separatorAfterCurrentToken()) {   // Trailing comma.
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 

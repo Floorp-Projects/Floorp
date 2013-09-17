@@ -534,8 +534,6 @@ static void GetOtherValuesForProperty(const uint32_t aParserVariant,
   if (aParserVariant & VARIANT_COLOR) {
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("rgb"));
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("hsl"));
-    InsertNoDuplicates(aArray, NS_LITERAL_STRING("-moz-rgba"));
-    InsertNoDuplicates(aArray, NS_LITERAL_STRING("-moz-hsla"));
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("rgba"));
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("hsla"));
   }

@@ -90,9 +90,13 @@ OPDEF(JSOP_DELELEM,   38, "delelem",    NULL,         1,  2,  1, JOF_BYTE |JOF_E
 OPDEF(JSOP_TYPEOF,    39, js_typeof_str,NULL,         1,  1,  1, JOF_BYTE|JOF_DETECTING)
 OPDEF(JSOP_VOID,      40, js_void_str,  NULL,         1,  1,  1, JOF_BYTE)
 
-OPDEF(JSOP_UNUSED41,  41, "unused41",   NULL,         1,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_UNUSED42,  42, "unused42",   NULL,         1,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_UNUSED43,  43, "unused43",   NULL,         1,  0,  0,  JOF_BYTE)
+/* spreadcall variant of JSOP_CALL */
+OPDEF(JSOP_SPREADCALL,41, "spreadcall", NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET)
+/* spreadcall variant of JSOP_NEW */
+OPDEF(JSOP_SPREADNEW, 42, "spreadnew",  NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET)
+/* spreadcall variant of JSOP_EVAL */
+OPDEF(JSOP_SPREADEVAL,43, "spreadeval", NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET)
+
 OPDEF(JSOP_UNUSED44,  44, "unused44",   NULL,         1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED45,  45, "unused45",   NULL,         1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED46,  46, "unused46",   NULL,         1,  0,  0,  JOF_BYTE)

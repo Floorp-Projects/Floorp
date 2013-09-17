@@ -32,22 +32,18 @@ interface FMRadio : EventTarget {
   readonly attribute double channelWidth;
 
   /* Fired when the FM radio is enabled. */
-  [SetterThrows]
   attribute EventHandler onenabled;
 
   /* Fired when the FM radio is disabled. */
-  [SetterThrows]
   attribute EventHandler ondisabled;
 
   /**
    * Fired when the antenna becomes available or unavailable, i.e., fired when
    * the antennaAvailable attribute changes.
    */
-  [SetterThrows]
   attribute EventHandler onantennaavailablechange;
 
   /* Fired when the FM radio's frequency is changed. */
-  [SetterThrows]
   attribute EventHandler onfrequencychange;
 
   /**

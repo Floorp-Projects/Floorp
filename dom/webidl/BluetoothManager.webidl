@@ -7,11 +7,8 @@ interface BluetoothManager : EventTarget {
   [Throws]
   readonly attribute boolean      enabled;
 
-  [SetterThrows]
            attribute EventHandler onenabled;
-  [SetterThrows]
            attribute EventHandler ondisabled;
-  [SetterThrows]
            attribute EventHandler onadapteradded;
 
   [Throws]

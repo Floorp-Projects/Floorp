@@ -24,6 +24,7 @@
 #include <algorithm>
 #include "DOMMediaStream.h"
 #include "GeckoProfiler.h"
+#include "nsIScriptError.h"
 
 using namespace mozilla::layers;
 using namespace mozilla::dom;
@@ -464,6 +465,41 @@ MediaStreamGraphImpl::MarkConsumed(MediaStream* aStream)
   }
 }
 
+class MediaStreamGraphWarnCycleRunnable : public nsRunnable {
+public:
+  explicit MediaStreamGraphWarnCycleRunnable(MediaStream* aStream)
+    : mStream(aStream)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    AudioNodeEngine* engine = mStream->AsAudioNodeStream()->Engine();
+    MutexAutoLock mon(engine->NodeMutex());
+    AudioNode* node = engine->Node();
+    nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(node->Context()->GetParentObject());
+    nsIDocument* doc = nullptr;
+    if (pWindow) {
+      doc = pWindow->GetExtantDoc();
+    }
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    NS_LITERAL_CSTRING("Media"),
+                                    doc,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "AudioNodeCycleWithoutDelay");
+    return NS_OK;
+  }
+private:
+  MediaStream* mStream;
+};
+
+static void
+WarnIllegalCycle(MediaStream* aStream)
+{
+  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphWarnCycleRunnable(aStream);
+  NS_DispatchToMainThread(event);
+}
+
 void
 MediaStreamGraphImpl::UpdateStreamOrderForStream(mozilla::LinkedList<MediaStream>* aStack,
                                                  already_AddRefed<MediaStream> aStream)
@@ -472,11 +508,45 @@ MediaStreamGraphImpl::UpdateStreamOrderForStream(mozilla::LinkedList<MediaStream
   NS_ASSERTION(!stream->mHasBeenOrdered, "stream should not have already been ordered");
   if (stream->mIsOnOrderingStack) {
     MediaStream* iter = aStack->getLast();
+    AudioNodeStream* ns = stream->AsAudioNodeStream();
+    bool delayNodePresent = ns ? ns->Engine()->AsDelayNodeEngine() != nullptr : false;
+    bool cycleFound = false;
     if (iter) {
       do {
+        cycleFound = true;
         iter->AsProcessedStream()->mInCycle = true;
+        AudioNodeStream* ns = iter->AsAudioNodeStream();
+        if (ns && ns->Engine()->AsDelayNodeEngine()) {
+          delayNodePresent = true;
+        }
         iter = iter->getPrevious();
       } while (iter && iter != stream);
+    }
+    if (cycleFound && !delayNodePresent) {
+      // If we have detected a cycle, the previous loop should exit with stream
+      // == iter, or the node is connected to itself. Go back in the cycle and
+      // mute all nodes we find, or just mute the node itself.
+      if (!iter) {
+        // The node is connected to itself.
+        iter = aStack->getLast();
+        iter->AsAudioNodeStream()->Mute();
+      } else {
+        MOZ_ASSERT(iter);
+        do {
+          // There can't be non-AudioNodeStream here, MediaStreamAudio{Source,
+          // Destination}Node are connected to regular MediaStreams, but they can't be
+          // in a cycle (there is no content API to do so).
+          MOZ_ASSERT(iter->AsAudioNodeStream());
+          iter->AsAudioNodeStream()->Mute();
+        } while((iter = iter->getNext()));
+      }
+
+      // Warn the user that some of the nodes in the graph are muted, but only
+      // once. This flag is reset when the graph changes.
+      if (!mUserWarnedAboutCycles) {
+        WarnIllegalCycle(aStack->getLast());
+        mUserWarnedAboutCycles = true;
+      }
     }
     return;
   }
@@ -513,6 +583,10 @@ MediaStreamGraphImpl::UpdateStreamOrder()
     ProcessedMediaStream* ps = stream->AsProcessedStream();
     if (ps) {
       ps->mInCycle = false;
+      AudioNodeStream* ns = ps->AsAudioNodeStream();
+      if (ns) {
+        ns->Unmute();
+      }
     }
   }
 
@@ -814,7 +888,8 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
                              aStream, MediaTimeToSeconds(t), MediaTimeToSeconds(end),
                              startTicks, endTicks));
       }
-      output.WriteTo(audioOutput.mStream);
+      // XXX need unique id for stream & track
+      output.WriteTo((((uint64_t)i) << 32) | track->GetID(), audioOutput.mStream);
       t = end;
     }
   }
@@ -2292,6 +2367,8 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime)
   , mPostedRunInStableState(false)
   , mRealtime(aRealtime)
   , mNonRealtimeProcessing(false)
+  , mStreamOrderDirty(false)
+  , mUserWarnedAboutCycles(false)
 {
 #ifdef PR_LOGGING
   if (!gMediaStreamGraphLog) {
@@ -2443,6 +2520,13 @@ MediaStreamGraph::StartNonRealtimeProcessing(uint32_t aTicksToProcess)
   graph->mNonRealtimeTicksToProcess = aTicksToProcess;
   graph->mNonRealtimeProcessing = true;
   graph->EnsureRunInStableState();
+}
+
+void
+ProcessedMediaStream::AddInput(MediaInputPort* aPort)
+{
+  mInputs.AppendElement(aPort);
+  GraphImpl()->SetStreamOrderDirty();
 }
 
 }

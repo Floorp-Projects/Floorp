@@ -1054,12 +1054,11 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         if (!script)
             return false;
 
-        if (sourceMapURL && !script->scriptSource()->hasSourceMap()) {
+        if (sourceMapURL && !script->scriptSource()->hasSourceMapURL()) {
             const jschar *smurl = JS_GetStringCharsZ(cx, sourceMapURL);
             if (!smurl)
                 return false;
-            jschar *smurl_copy = js_strdup(cx, smurl);
-            if (!smurl_copy || !script->scriptSource()->setSourceMap(cx, smurl_copy))
+            if (!script->scriptSource()->setSourceMapURL(cx, smurl))
                 return false;
         }
         if (!JS_ExecuteScript(cx, global, script, vp)) {

@@ -1194,12 +1194,15 @@ jit::asr (Register r, Register amt)
     return O2RegRegShift(r, ASR, amt);
 }
 
+static js::jit::DoubleEncoder doubleEncoder;
+
+/* static */ const js::jit::VFPImm js::jit::VFPImm::one(0x3FF00000);
 
 js::jit::VFPImm::VFPImm(uint32_t top)
 {
     data = -1;
     datastore::Imm8VFPImmData tmp;
-    if (DoubleEncoder::lookup(top, &tmp))
+    if (doubleEncoder.lookup(top, &tmp))
         data = tmp.encode();
 }
 
@@ -1216,8 +1219,6 @@ BOffImm::getDest(Instruction *src)
     // since it is indexing into an array of instruction sized objects.
     return &src[(((int32_t)data<<8)>>8) + 2];
 }
-
-js::jit::DoubleEncoder js::jit::DoubleEncoder::_this;
 
 //VFPRegister implementation
 VFPRegister
@@ -1585,11 +1586,14 @@ class PoolHintData {
     };
 
   private:
-    uint32_t   index    : 17;
+    uint32_t   index    : 16;
     uint32_t   cond     : 4;
-    LoadType loadType : 2;
+    LoadType   loadType : 2;
     uint32_t   destReg  : 5;
+    uint32_t   destType : 1;
     uint32_t   ONES     : 4;
+
+    static const uint32_t expectedOnes = 0xfu;
 
   public:
     void init(uint32_t index_, Assembler::Condition cond_, LoadType lt, const Register &destReg_) {
@@ -1598,17 +1602,20 @@ class PoolHintData {
         cond = cond_ >> 28;
         JS_ASSERT(cond == cond_ >> 28);
         loadType = lt;
-        ONES = 0xfu;
+        ONES = expectedOnes;
         destReg = destReg_.code();
+        destType = 0;
     }
     void init(uint32_t index_, Assembler::Condition cond_, LoadType lt, const VFPRegister &destReg_) {
+        JS_ASSERT(destReg_.isFloat());
         index = index_;
         JS_ASSERT(index == index_);
         cond = cond_ >> 28;
         JS_ASSERT(cond == cond_ >> 28);
         loadType = lt;
-        ONES = 0xfu;
+        ONES = expectedOnes;
         destReg = destReg_.code();
+        destType = destReg_.isDouble();
     }
     Assembler::Condition getCond() {
         return Assembler::Condition(cond << 28);
@@ -1618,14 +1625,15 @@ class PoolHintData {
         return Register::FromCode(destReg);
     }
     VFPRegister getVFPReg() {
-        return VFPRegister(FloatRegister::FromCode(destReg));
+        return VFPRegister(FloatRegister::FromCode(destReg),
+                           destType ? VFPRegister::Double : VFPRegister::Single);
     }
 
     int32_t getIndex() {
         return index;
     }
     void setIndex(uint32_t index_) {
-        JS_ASSERT(ONES == 0xf && loadType != poolBOGUS);
+        JS_ASSERT(ONES == expectedOnes && loadType != poolBOGUS);
         index = index_;
         JS_ASSERT(index == index_);
     }
@@ -1634,7 +1642,7 @@ class PoolHintData {
         // If this *was* a poolBranch, but the branch has already been bound
         // then this isn't going to look like a real poolhintdata, but we still
         // want to lie about it so everyone knows it *used* to be a branch.
-        if (ONES != 0xf)
+        if (ONES != expectedOnes)
             return PoolHintData::poolBranch;
         return loadType;
     }
@@ -1644,7 +1652,7 @@ class PoolHintData {
         // blx and the entire NEON instruction set. For the purposes of pool loads, and
         // possibly patched branches, the possible instructions are ldr and b, neither of
         // which can have a condition code of 0xf.
-        return ONES == 0xf;
+        return ONES == expectedOnes;
     }
 };
 
@@ -1705,6 +1713,7 @@ Assembler::as_Imm32Pool(Register dest, uint32_t value, ARMBuffer::PoolEntry *pe,
     php.phd.init(0, c, PoolHintData::poolDTR, dest);
     return m_buffer.insertEntry(4, (uint8_t*)&php.raw, int32Pool, (uint8_t*)&value, pe);
 }
+
 void
 Assembler::as_WritePoolEntry(Instruction *addr, Condition c, uint32_t data)
 {
@@ -1739,7 +1748,6 @@ Assembler::as_BranchPool(uint32_t value, RepatchLabel *label, ARMBuffer::PoolEnt
     return ret;
 }
 
-
 BufferOffset
 Assembler::as_FImm64Pool(VFPRegister dest, double value, ARMBuffer::PoolEntry *pe, Condition c)
 {
@@ -1748,6 +1756,29 @@ Assembler::as_FImm64Pool(VFPRegister dest, double value, ARMBuffer::PoolEntry *p
     php.phd.init(0, c, PoolHintData::poolVDTR, dest);
     return m_buffer.insertEntry(4, (uint8_t*)&php.raw, doublePool, (uint8_t*)&value, pe);
 }
+
+struct PaddedFloat32
+{
+    float value;
+    uint32_t padding;
+};
+JS_STATIC_ASSERT(sizeof(PaddedFloat32) == sizeof(double));
+
+BufferOffset
+Assembler::as_FImm32Pool(VFPRegister dest, float value, ARMBuffer::PoolEntry *pe, Condition c)
+{
+    /*
+     * Insert floats into the double pool as they have the same limitations on
+     * immediate offset.  This wastes 4 bytes padding per float.  An alternative
+     * would be to have a separate pool for floats.
+     */
+    JS_ASSERT(dest.isSingle());
+    PoolHintPun php;
+    php.phd.init(0, c, PoolHintData::poolVDTR, dest);
+    PaddedFloat32 pf = { value, 0 };
+    return m_buffer.insertEntry(4, (uint8_t*)&php.raw, doublePool, (uint8_t*)&pf, pe);
+}
+
 // Pool callbacks stuff:
 void
 Assembler::insertTokenIntoTag(uint32_t instSize, uint8_t *load_, int32_t token)
@@ -1787,15 +1818,14 @@ Assembler::patchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
                           data.getCond(), instAddr);
         }
         break;
-      case PoolHintData::poolVDTR:
-        if ((offset + (8 * data.getIndex()) - 8) < -1023 ||
-            (offset + (8 * data.getIndex()) - 8) > 1023)
-        {
+      case PoolHintData::poolVDTR: {
+        VFPRegister dest = data.getVFPReg();
+        int32_t imm = offset + (8 * data.getIndex()) - 8;
+        if (imm < -1023 || imm  > 1023)
             return false;
-        }
-        dummy->as_vdtr(IsLoad, data.getVFPReg(),
-                       VFPAddr(pc, VFPOffImm(offset+8*data.getIndex() - 8)), data.getCond(), instAddr);
+        dummy->as_vdtr(IsLoad, dest, VFPAddr(pc, VFPOffImm(imm)), data.getCond(), instAddr);
         break;
+      }
     }
     return true;
 }
@@ -1909,7 +1939,6 @@ Assembler::as_bl(Label *l, Condition c)
         BufferOffset ret;
         return ret;
     }
-    //as_bkpt();
     m_buffer.markNextAsBranch();
     if (l->bound()) {
         BufferOffset ret = as_nop();
@@ -1975,7 +2004,8 @@ Assembler::as_vfp_float(VFPRegister vd, VFPRegister vn, VFPRegister vm,
                   VFPOp op, Condition c)
 {
     // Make sure we believe that all of our operands are the same kind
-    JS_ASSERT(vd.equiv(vn) && vd.equiv(vm));
+    JS_ASSERT_IF(!vn.isMissing(), vd.equiv(vn));
+    JS_ASSERT_IF(!vm.isMissing(), vd.equiv(vm));
     vfp_size sz = vd.isDouble() ? isDouble : isSingle;
     return writeVFPInst(sz, VD(vd) | VN(vn) | VM(vm) | op | vfp_arith | c);
 }
@@ -2204,12 +2234,8 @@ Assembler::as_vdtm(LoadStore st, Register rn, VFPRegister vd, int length,
 BufferOffset
 Assembler::as_vimm(VFPRegister vd, VFPImm imm, Condition c)
 {
+    JS_ASSERT(imm.isValid());
     vfp_size sz = vd.isDouble() ? isDouble : isSingle;
-
-    // Don't know how to handle this right now.
-    if (!vd.isDouble())
-        MOZ_ASSUME_UNREACHABLE("non-double immediate");
-
     return writeVFPInst(sz,  c | imm.encode() | VD(vd) | 0x02B00000);
 
 }

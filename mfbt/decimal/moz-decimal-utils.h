@@ -83,6 +83,8 @@ String mozToString(uint64_t aNum) {
   return o.str();
 }
 
+namespace moz_decimal_utils {
+
 class StringBuilder
 {
 public:
@@ -104,6 +106,8 @@ public:
 private:
   std::string mStr;
 };
+
+} // namespace moz-decimal-utils
 
 #endif
 

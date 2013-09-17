@@ -995,7 +995,7 @@ CodeGeneratorARM::toMoveOperand(const LAllocation *a) const
         return MoveOperand(ToFloatRegister(a));
     JS_ASSERT((ToStackOffset(a) & 3) == 0);
     int32_t offset = ToStackOffset(a);
-    
+
     // The way the stack slots work, we assume that everything from depth == 0 downwards is writable
     // however, since our frame is included in this, ensure that the frame gets skipped
     if (gen->compilingAsmJS())
@@ -1127,6 +1127,32 @@ CodeGeneratorARM::visitMathD(LMathD *math)
         break;
       case JSOP_DIV:
         masm.ma_vdiv(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("unexpected opcode");
+    }
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitMathF(LMathF *math)
+{
+    const LAllocation *src1 = math->getOperand(0);
+    const LAllocation *src2 = math->getOperand(1);
+    const LDefinition *output = math->getDef(0);
+
+    switch (math->jsop()) {
+      case JSOP_ADD:
+        masm.ma_vadd_f32(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        break;
+      case JSOP_SUB:
+        masm.ma_vsub_f32(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        break;
+      case JSOP_MUL:
+        masm.ma_vmul_f32(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        break;
+      case JSOP_DIV:
+        masm.ma_vdiv_f32(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
         break;
       default:
         MOZ_ASSUME_UNREACHABLE("unexpected opcode");
@@ -1306,6 +1332,14 @@ CodeGeneratorARM::visitDouble(LDouble *ins)
     const LDefinition *out = ins->getDef(0);
 
     masm.ma_vimm(ins->getDouble(), ToFloatRegister(out));
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitFloat32(LFloat32 *ins)
+{
+    const LDefinition *out = ins->getDef(0);
+    masm.loadConstantFloat32(ins->getFloat(), ToFloatRegister(out));
     return true;
 }
 
@@ -2083,5 +2117,13 @@ CodeGeneratorARM::visitNegD(LNegD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     masm.ma_vneg(input, ToFloatRegister(ins->output()));
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitNegF(LNegF *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    masm.ma_vneg_f32(input, ToFloatRegister(ins->output()));
     return true;
 }

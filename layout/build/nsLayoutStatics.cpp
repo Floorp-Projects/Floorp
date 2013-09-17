@@ -92,6 +92,7 @@
 #endif
 
 #include "AudioStream.h"
+#include "Latency.h"
 #include "WebAudioUtils.h"
 
 #ifdef MOZ_WIDGET_GONK
@@ -249,6 +250,7 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
+  AsyncLatencyLogger::InitializeStatics();
   AudioStream::InitLibrary();
 
   nsContentSink::InitializeStatics();
@@ -354,6 +356,7 @@ nsLayoutStatics::Shutdown()
 #endif
 
   AudioStream::ShutdownLibrary();
+  AsyncLatencyLogger::Shutdown();
   WebAudioUtils::Shutdown();
 
 #ifdef MOZ_WMF

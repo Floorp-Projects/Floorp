@@ -63,7 +63,7 @@ function do_test() {
       "purple", "red", "rosybrown", "royalblue", "saddlebrown", "salmon", "sandybrown", "seagreen",
       "seashell", "sienna", "silver", "skyblue", "slateblue", "slategray", "slategrey", "snow", "springgreen",
       "steelblue", "tan", "teal", "thistle", "tomato", "transparent", "turquoise", "violet", "wheat",
-      "white", "whitesmoke", "yellow", "yellowgreen", "rgb", "hsl", "-moz-rgba", "-moz-hsla", "rgba", "hsla" ];
+      "white", "whitesmoke", "yellow", "yellowgreen", "rgb", "hsl", "rgba", "hsla" ];
   ok(testValues(values, expected), "property color's values.");
 
   // test a shorthand property
@@ -91,12 +91,12 @@ function do_test() {
       "violet", "wheat", "white", "whitesmoke", "yellow", "yellowgreen", "no-repeat", "repeat",
       "repeat-x", "repeat-y", "fixed", "scroll", "local", "center", "top", "bottom", "left", "right",
       "border-box", "padding-box", "content-box", "border-box", "padding-box", "content-box", "contain",
-      "cover", "rgb", "hsl", "-moz-rgba", "-moz-hsla", "rgba", "hsla", "none", "-moz-element", "-moz-image-rect", "url" ];
+      "cover", "rgb", "hsl", "rgba", "hsla", "none", "-moz-element", "-moz-image-rect", "url" ];
   ok(testValues(values, expected), "Shorthand property values.");
 
   var prop = "border";
   var values = utils.getCSSValuesForProperty(prop);
-  var expected = [ "-moz-calc", "-moz-hsla", "-moz-initial", "-moz-rgba", "-moz-use-text-color", "aliceblue",
+  var expected = [ "-moz-calc", "-moz-initial", "-moz-use-text-color", "aliceblue",
       "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque", "black", "blanchedalmond", "blue", "blueviolet",
       "brown", "burlywood", "cadetblue", "calc", "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk",
       "crimson", "cyan", "darkblue", "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkgrey", "darkkhaki",
@@ -143,7 +143,7 @@ function do_test() {
       "purple", "red", "rosybrown", "royalblue", "saddlebrown", "salmon", "sandybrown", "seagreen", "seashell",
       "sienna", "silver", "skyblue", "slateblue", "slategray", "slategrey", "snow", "springgreen", "steelblue",
       "tan", "teal", "thistle", "tomato", "transparent", "turquoise", "violet", "wheat", "white", "whitesmoke",
-      "yellow", "yellowgreen", "calc", "-moz-calc", "rgb", "hsl", "-moz-rgba", "-moz-hsla", "rgba", "hsla" ];
+      "yellow", "yellowgreen", "calc", "-moz-calc", "rgb", "hsl", "rgba", "hsla" ];
   ok(testValues(values, expected), "property border-top's values.");
 
   // tests no keywords or colors

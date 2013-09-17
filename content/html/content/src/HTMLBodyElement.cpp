@@ -502,9 +502,8 @@ HTMLBodyElement::IsEventAttributeName(nsIAtom *aName)
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                   \
       handler = new type_(callable);                                           \
     }                                                                          \
-    ErrorResult rv;                                                            \
-    forwardto_::SetOn##name_(handler, rv);                                     \
-    return rv.ErrorCode();                                                     \
+    forwardto_::SetOn##name_(handler);                                         \
+    return NS_OK;                                                              \
   }
 #define FORWARDED_EVENT(name_, id_, type_, struct_)                            \
   FORWARDED_EVENT_HELPER(name_, nsGenericHTMLElement, EventHandlerNonNull,     \
@@ -525,7 +524,7 @@ HTMLBodyElement::IsEventAttributeName(nsIAtom *aName)
     return nullptr;                                                            \
   }                                                                            \
   void                                                                         \
-  HTMLBodyElement::SetOn##name_(type_* handler, ErrorResult& error)            \
+  HTMLBodyElement::SetOn##name_(type_* handler)                                \
   {                                                                            \
     nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                         \
     if (!win) {                                                                \
@@ -534,7 +533,7 @@ HTMLBodyElement::IsEventAttributeName(nsIAtom *aName)
                                                                                \
     nsCOMPtr<nsISupports> supports = do_QueryInterface(win);                   \
     nsGlobalWindow* globalWin = nsGlobalWindow::FromSupports(supports);        \
-    return globalWin->SetOn##name_(handler, error);                            \
+    return globalWin->SetOn##name_(handler);                                   \
   }                                                                            \
   FORWARDED_EVENT_HELPER(name_, HTMLBodyElement, type_, type_*)
 #define WINDOW_EVENT(name_, id_, type_, struct_)                               \
