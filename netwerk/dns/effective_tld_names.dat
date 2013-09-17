@@ -175,17 +175,16 @@ it.ao
 // aq : http://en.wikipedia.org/wiki/.aq
 aq
 
-// ar : http://en.wikipedia.org/wiki/.ar
-*.ar
-!congresodelalengua3.ar
-!educ.ar
-!gobiernoelectronico.ar
-!mecon.ar
-!nacion.ar
-!nic.ar
-!promocion.ar
-!retina.ar
-!uba.ar
+// ar : https://nic.ar/normativa-vigente.xhtml
+ar
+com.ar
+edu.ar
+gob.ar
+int.ar
+mil.ar
+net.ar
+org.ar
+tur.ar
 
 // arpa : http://en.wikipedia.org/wiki/.arpa
 // Confirmed by registry <iana-questions@icann.org> 2008-06-18
