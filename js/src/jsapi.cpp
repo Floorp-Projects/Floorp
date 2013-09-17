@@ -38,6 +38,7 @@
 #include "jsstr.h"
 #include "jstypes.h"
 #include "jsutil.h"
+#include "jswatchpoint.h"
 #include "jsweakmap.h"
 #ifdef JS_THREADSAFE
 #include "jsworkers.h"
@@ -716,7 +717,6 @@ JS_NewRuntime(uint32_t maxbytes, JSUseHelperThreads useHelperThreads)
 JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt)
 {
-    js_free(rt->defaultLocale);
     js_delete(rt);
 }
 

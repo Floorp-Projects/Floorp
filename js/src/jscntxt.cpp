@@ -251,44 +251,13 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
         JS_ASSERT(!rt->isHeapBusy());
 
         /*
-         * Dump remaining type inference results first. This printing
-         * depends on atoms still existing.
+         * Dump remaining type inference results while we still have a context.
+         * This printing depends on atoms still existing.
          */
         for (CompartmentsIter c(rt); !c.done(); c.next())
             c->types.print(cx, false);
-
-        /* Off thread compilation and parsing depend on atoms still existing. */
-        for (CompartmentsIter c(rt); !c.done(); c.next())
-            CancelOffThreadIonCompile(c, NULL);
-        WaitForOffThreadParsingToFinish(rt);
-
-#ifdef JS_WORKER_THREADS
-        if (rt->workerThreadState)
-            rt->workerThreadState->cleanup(rt);
-#endif
-
-        /* Unpin all common names before final GC. */
-        FinishCommonNames(rt);
-
-        /* Clear debugging state to remove GC roots. */
-        for (CompartmentsIter c(rt); !c.done(); c.next()) {
-            c->clearTraps(rt->defaultFreeOp());
-            if (WatchpointMap *wpmap = c->watchpointMap)
-                wpmap->clear();
-        }
-
-        /* Clear the statics table to remove GC roots. */
-        rt->staticStrings.finish();
-
-        JS::PrepareForFullGC(rt);
-        GC(rt, GC_NORMAL, JS::gcreason::LAST_CONTEXT);
-
-        /*
-         * Clear the self-hosted global and delete self-hosted classes *after*
-         * GC, as finalizers for objects check for clasp->finalize during GC.
-         */
-        rt->finishSelfHosting();
-    } else if (mode == DCM_FORCE_GC) {
+    }
+    if (mode == DCM_FORCE_GC) {
         JS_ASSERT(!rt->isHeapBusy());
         JS::PrepareForFullGC(rt);
         GC(rt, GC_NORMAL, JS::gcreason::DESTROY_CONTEXT);
