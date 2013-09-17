@@ -225,9 +225,9 @@ size. -->
 <!ENTITY contextmenu_edit_bookmark "Edit">
 <!ENTITY contextmenu_subscribe "Subscribe to Page">
 <!ENTITY contextmenu_site_settings "Edit Site Settings">
-<!ENTITY contextmenu_top_bookmarks_edit "Edit">
-<!ENTITY contextmenu_top_bookmarks_pin "Pin Site">
-<!ENTITY contextmenu_top_bookmarks_unpin "Unpin Site">
+<!ENTITY contextmenu_top_sites_edit "Edit">
+<!ENTITY contextmenu_top_sites_pin "Pin Site">
+<!ENTITY contextmenu_top_sites_unpin "Unpin Site">
 
 <!ENTITY pref_titlebar_mode "Title bar">
 <!ENTITY pref_titlebar_mode_title "Show page title">
@@ -289,7 +289,7 @@ size. -->
 <!ENTITY home_reading_list_hint_accessible "TIP: Save articles to your reading list by long pressing the reader mode button when it appears in the title bar.">
 
 <!ENTITY home_most_visited_empty "Websites you visit most frequently show up here.">
-<!ENTITY pin_bookmark_dialog_hint "Enter a search keyword">
+<!ENTITY pin_site_dialog_hint "Enter a search keyword">
 
 <!ENTITY filepicker_title "Choose File">
 <!ENTITY filepicker_audio_title "Choose or record a sound">
