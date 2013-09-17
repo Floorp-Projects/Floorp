@@ -179,7 +179,6 @@ js::NewContext(JSRuntime *rt, size_t stackChunkSize)
      * Here the GC lock is still held after js_InitContextThreadAndLockGC took it and
      * the GC is not running on another thread.
      */
-    bool first = rt->contextList.isEmpty();
     rt->contextList.insertBack(cx);
 
     /*
@@ -187,10 +186,9 @@ js::NewContext(JSRuntime *rt, size_t stackChunkSize)
      * keywords, numbers, strings and self-hosted scripts. If one of these
      * steps should fail, the runtime will be left in a partially initialized
      * state, with zeroes and nulls stored in the default-initialized remainder
-     * of the struct. We'll clean the runtime up under DestroyContext, because
-     * cx will be "last" as well as "first".
+     * of the struct.
      */
-    if (first) {
+    if (!rt->haveCreatedContext) {
 #ifdef JS_THREADSAFE
         JS_BeginRequest(cx);
 #endif
@@ -207,6 +205,7 @@ js::NewContext(JSRuntime *rt, size_t stackChunkSize)
             DestroyContext(cx, DCM_NEW_FAILED);
             return NULL;
         }
+        rt->haveCreatedContext = true;
     }
 
     JSContextCallback cxCallback = rt->cxCallback;
