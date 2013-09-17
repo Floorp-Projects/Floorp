@@ -19,13 +19,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 /**
- * A view that displays the thumbnail and the title/url for a bookmark.
+ * A view that displays the thumbnail and the title/url for a top/pinned site.
  * If the title/url is longer than the width of the view, they are faded out.
  * If there is no valid url, a default string is shown at 50% opacity.
  * This is denoted by the empty state.
  */
-public class TopBookmarkItemView extends RelativeLayout {
-    private static final String LOGTAG = "GeckoTopBookmarkItemView";
+public class TopSitesGridItemView extends LinearLayout {
+    private static final String LOGTAG = "GeckoTopSitesGridItemView";
 
     // Empty state, to denote there is no valid url.
     private static final int[] STATE_EMPTY = { android.R.attr.state_empty };
@@ -44,18 +44,18 @@ public class TopBookmarkItemView extends RelativeLayout {
     // Empty state.
     private boolean mIsEmpty = true;
 
-    public TopBookmarkItemView(Context context) {
+    public TopSitesGridItemView(Context context) {
         this(context, null);
     }
 
-    public TopBookmarkItemView(Context context, AttributeSet attrs) {
-        this(context, attrs, R.attr.topBookmarkItemViewStyle);
+    public TopSitesGridItemView(Context context, AttributeSet attrs) {
+        this(context, attrs, R.attr.topSitesGridItemViewStyle);
     }
 
-    public TopBookmarkItemView(Context context, AttributeSet attrs, int defStyle) {
+    public TopSitesGridItemView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
 
-        LayoutInflater.from(context).inflate(R.layout.top_bookmark_item_view, this);
+        LayoutInflater.from(context).inflate(R.layout.top_sites_grid_item_view, this);
 
         mTitleView = (TextView) findViewById(R.id.title);
         mThumbnailView = (ImageView) findViewById(R.id.thumbnail);
