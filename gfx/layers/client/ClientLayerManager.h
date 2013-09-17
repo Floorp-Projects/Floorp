@@ -66,6 +66,7 @@ public:
   virtual void Mutated(Layer* aLayer);
 
   virtual already_AddRefed<ThebesLayer> CreateThebesLayer();
+  virtual already_AddRefed<ThebesLayer> CreateThebesLayerWithHint(ThebesLayerCreationHint aHint);
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer();
   virtual already_AddRefed<ImageLayer> CreateImageLayer();
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
