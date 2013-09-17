@@ -409,9 +409,9 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
     if (cx->isExceptionPending())
         return false;
 
-    const AsmJSModuleSourceDesc &desc= module.sourceDesc();
-    uint32_t length = desc.bufEnd() - desc.bufStart();
-    Rooted<JSStableString*> src(cx, desc.scriptSource()->substring(cx, desc.bufStart(), desc.bufEnd()));
+    uint32_t begin = module.charsBegin();
+    uint32_t end = module.charsEnd();
+    Rooted<JSStableString*> src(cx, module.scriptSource()->substring(cx, begin, end));
     if (!src)
         return false;
 
@@ -432,11 +432,11 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
 
     CompileOptions options(cx);
     options.setPrincipals(cx->compartment()->principals)
-           .setOriginPrincipals(desc.scriptSource()->originPrincipals())
+           .setOriginPrincipals(module.scriptSource()->originPrincipals())
            .setCompileAndGo(false)
            .setNoScriptRval(false);
 
-    if (!frontend::CompileFunctionBody(cx, &fun, options, formals, src->chars().get(), length))
+    if (!frontend::CompileFunctionBody(cx, &fun, options, formals, src->chars().get(), end - begin))
         return false;
 
     // Call the function we just recompiled.
