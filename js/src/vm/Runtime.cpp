@@ -110,9 +110,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     operationCallback(NULL),
 #ifdef JS_THREADSAFE
     operationCallbackLock(NULL),
-#ifdef DEBUG
     operationCallbackOwner(NULL),
-#endif
 #endif
 #ifdef JS_WORKER_THREADS
     workerThreadState(NULL),
