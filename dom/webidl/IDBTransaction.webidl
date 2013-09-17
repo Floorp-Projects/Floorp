@@ -28,11 +28,8 @@ interface IDBTransaction : EventTarget {
     [Throws]
     void           abort();
 
-    [SetterThrows]
                 attribute EventHandler       onabort;
-    [SetterThrows]
                 attribute EventHandler       oncomplete;
-    [SetterThrows]
                 attribute EventHandler       onerror;
 };
 

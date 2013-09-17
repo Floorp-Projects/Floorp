@@ -13,6 +13,5 @@ interface MozCellBroadcast : EventTarget
   /**
    * Cell Broadcast messages received.
    */
-  [SetterThrows]
   attribute EventHandler onreceived;
 };

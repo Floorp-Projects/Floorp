@@ -8,9 +8,7 @@
  */
 
 interface IDBOpenDBRequest : IDBRequest {
-    [SetterThrows]
                 attribute EventHandler onblocked;
 
-    [SetterThrows]
                 attribute EventHandler onupgradeneeded;
 };
