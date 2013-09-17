@@ -170,7 +170,7 @@ this.DownloadImport.prototype = {
 
             let download = yield Downloads.createDownload(downloadOptions);
 
-            yield this.list.add(download);
+            this.list.add(download);
 
             if (resumeDownload) {
               download.start();

@@ -83,17 +83,11 @@ DownloadList.prototype = {
    *
    * @param aDownload
    *        The Download object to add.
-   *
-   * @return {Promise}
-   * @resolves When the download has been added.
-   * @rejects JavaScript exception.
    */
   add: function DL_add(aDownload) {
     this._downloads.push(aDownload);
     aDownload.onchange = this._change.bind(this, aDownload);
     this._notifyAllViews("onDownloadAdded", aDownload);
-
-    return Promise.resolve();
   },
 
   /**
@@ -107,10 +101,6 @@ DownloadList.prototype = {
    *
    * @param aDownload
    *        The Download object to remove.
-   *
-   * @return {Promise}
-   * @resolves When the download has been removed.
-   * @rejects JavaScript exception.
    */
   remove: function DL_remove(aDownload) {
     let index = this._downloads.indexOf(aDownload);
@@ -119,8 +109,6 @@ DownloadList.prototype = {
       aDownload.onchange = null;
       this._notifyAllViews("onDownloadRemoved", aDownload);
     }
-
-    return Promise.resolve();
   },
 
   /**
@@ -157,10 +145,10 @@ DownloadList.prototype = {
    *          },
    *        }
    *
-   * @return {Promise}
-   * @resolves When the view has been registered and all the onDownloadAdded
-   *           notifications for the existing downloads have been sent.
-   * @rejects JavaScript exception.
+   * @note The onDownloadAdded notifications are sent synchronously.  This
+   *       allows for a complete initialization of the view used for detecting
+   *       changes to downloads to be persisted, before other callers get a
+   *       chance to modify them.
    */
   addView: function DL_addView(aView)
   {
@@ -175,26 +163,18 @@ DownloadList.prototype = {
         }
       }
     }
-
-    return Promise.resolve();
   },
 
   /**
-   * Removes a view that was previously added using addView.
+   * Removes a view that was previously added using addView.  The removed view
+   * will not receive any more notifications after this method returns.
    *
    * @param aView
    *        The view object to remove.
-   *
-   * @return {Promise}
-   * @resolves When the view has been removed.  At this point, the removed view
-   *           will not receive any more notifications.
-   * @rejects JavaScript exception.
    */
   removeView: function DL_removeView(aView)
   {
     this._views.delete(aView);
-
-    return Promise.resolve();
   },
 
   /**
@@ -242,7 +222,7 @@ DownloadList.prototype = {
             (!aFilterFn || aFilterFn(download))) {
           // Remove the download first, so that the views don't get the change
           // notifications that may occur during finalization.
-          yield this.remove(download);
+          this.remove(download);
           // Ensure that the download is stopped and no partial data is kept.
           // This works even if the download state has changed meanwhile.  We
           // don't need to wait for the procedure to be complete before
@@ -274,8 +254,8 @@ function DownloadCombinedList(aPublicList, aPrivateList)
   DownloadList.call(this);
   this._publicList = aPublicList;
   this._privateList = aPrivateList;
-  aPublicList.addView(this).then(null, Cu.reportError);
-  aPrivateList.addView(this).then(null, Cu.reportError);
+  aPublicList.addView(this);
+  aPrivateList.addView(this);
 }
 
 DownloadCombinedList.prototype = {
@@ -302,17 +282,13 @@ DownloadCombinedList.prototype = {
    *
    * @param aDownload
    *        The Download object to add.
-   *
-   * @return {Promise}
-   * @resolves When the download has been added.
-   * @rejects JavaScript exception.
    */
   add: function (aDownload)
   {
     if (aDownload.source.isPrivate) {
-      return this._privateList.add(aDownload);
+      this._privateList.add(aDownload);
     } else {
-      return this._publicList.add(aDownload);
+      this._publicList.add(aDownload);
     }
   },
 
@@ -327,17 +303,13 @@ DownloadCombinedList.prototype = {
    *
    * @param aDownload
    *        The Download object to remove.
-   *
-   * @return {Promise}
-   * @resolves When the download has been removed.
-   * @rejects JavaScript exception.
    */
   remove: function (aDownload)
   {
     if (aDownload.source.isPrivate) {
-      return this._privateList.remove(aDownload);
+      this._privateList.remove(aDownload);
     } else {
-      return this._publicList.remove(aDownload);
+      this._publicList.remove(aDownload);
     }
   },
 
@@ -396,10 +368,6 @@ DownloadSummary.prototype = {
    *
    * @param aList
    *        Underlying DownloadList whose contents should be summarized.
-   *
-   * @return {Promise}
-   * @resolves When the view on the underlying list has been registered.
-   * @rejects JavaScript exception.
    */
   bindToList: function (aList)
   {
@@ -407,12 +375,12 @@ DownloadSummary.prototype = {
       throw new Error("bindToList may be called only once.");
     }
 
-    return aList.addView(this).then(() => {
-      // Set the list reference only after addView has returned, so that we don't
-      // send a notification to our views for each download that is added.
-      this._list = aList;
-      this._onListChanged();
-    });
+    aList.addView(this);
+
+    // Set the list reference only after addView has returned, so that we don't
+    // send a notification to our views for each download that is added.
+    this._list = aList;
+    this._onListChanged();
   },
 
   /**
@@ -431,11 +399,6 @@ DownloadSummary.prototype = {
    *            // Called after any property of the summary has changed.
    *          },
    *        }
-   *
-   * @return {Promise}
-   * @resolves When the view has been registered and the onSummaryChanged
-   *           notification has been sent.
-   * @rejects JavaScript exception.
    */
   addView: function (aView)
   {
@@ -448,26 +411,18 @@ DownloadSummary.prototype = {
         Cu.reportError(ex);
       }
     }
-
-    return Promise.resolve();
   },
 
   /**
-   * Removes a view that was previously added using addView.
+   * Removes a view that was previously added using addView.  The removed view
+   * will not receive any more notifications after this method returns.
    *
    * @param aView
    *        The view object to remove.
-   *
-   * @return {Promise}
-   * @resolves When the view has been removed.  At this point, the removed view
-   *           will not receive any more notifications.
-   * @rejects JavaScript exception.
    */
   removeView: function (aView)
   {
     this._views.delete(aView);
-
-    return Promise.resolve();
   },
 
   /**
