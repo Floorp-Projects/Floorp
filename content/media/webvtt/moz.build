@@ -17,3 +17,7 @@ EXTRA_COMPONENTS += [
   'WebVTT.manifest',
   'WebVTTParserWrapper.js',
 ]
+
+EXTRA_JS_MODULES += [
+  'vtt.jsm',
+]
