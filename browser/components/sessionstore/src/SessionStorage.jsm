@@ -11,8 +11,8 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
-  "resource:///modules/sessionstore/SessionStore.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
+  "resource:///modules/sessionstore/PrivacyLevel.jsm");
 
 this.SessionStorage = {
   /**
@@ -59,8 +59,8 @@ let DomStorage = {
         continue;
 
       // Check if we're allowed to store sessionStorage data.
-      let isHTTPS = principal.URI && principal.URI.schemeIs("https");
-      if (aFullData || SessionStore.checkPrivacyLevel(isHTTPS, isPinned)) {
+      let isHttps = principal.URI && principal.URI.schemeIs("https");
+      if (aFullData || PrivacyLevel.canSave({isHttps: isHttps, isPinned: isPinned})) {
         let origin = principal.jarPrefix + principal.origin;
 
         // Don't read a host twice.
