@@ -2137,7 +2137,18 @@ abstract public class BrowserApp extends GeckoApp
             GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(uri));
         }
 
-        if (!Intent.ACTION_MAIN.equals(action) || !mInitialized) {
+        if (!mInitialized) {
+            return;
+        }
+
+        // Dismiss editing mode if the user is loading a URL from an external app.
+        if (Intent.ACTION_VIEW.equals(action)) {
+            dismissEditingMode();
+            return;
+        }
+
+        // Only solicit feedback when the app has been launched from the icon shortcut.
+        if (!Intent.ACTION_MAIN.equals(action)) {
             return;
         }
 
