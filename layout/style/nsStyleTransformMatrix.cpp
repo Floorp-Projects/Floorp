@@ -13,6 +13,7 @@
 #include "nsRuleNode.h"
 #include "nsCSSKeywords.h"
 #include "nsStyleAnimation.h"
+#include "gfxMatrix.h"
 
 namespace css = mozilla::css;
 
