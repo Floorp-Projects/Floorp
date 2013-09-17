@@ -182,16 +182,7 @@ abstract public class BrowserApp extends GeckoApp
                 // fall through
             case SELECTED:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
-                    if (isAboutHome(tab)) {
-                        showHomePager(tab.getAboutHomePage());
-
-                        if (isDynamicToolbarEnabled()) {
-                            // Show the toolbar.
-                            mLayerView.getLayerMarginsAnimator().showMargins(false);
-                        }
-                    } else {
-                        hideHomePager();
-                    }
+                    updateHomePagerForTab(tab);
 
                     if (mSiteIdentityPopup != null)
                         mSiteIdentityPopup.dismiss();
@@ -1505,6 +1496,27 @@ abstract public class BrowserApp extends GeckoApp
             showBrowserSearch();
             mHomePager.setVisibility(View.INVISIBLE);
             mBrowserSearch.filter(searchTerm, handler);
+        }
+    }
+
+    /**
+     * Shows or hides the home pager for the given tab.
+     */
+    private void updateHomePagerForTab(Tab tab) {
+        // Don't change the visibility of the home pager if we're in editing mode.
+        if (mBrowserToolbar.isEditing()) {
+            return;
+        }
+
+        if (isAboutHome(tab)) {
+            showHomePager(tab.getAboutHomePage());
+
+            if (isDynamicToolbarEnabled()) {
+                // Show the toolbar.
+                mLayerView.getLayerMarginsAnimator().showMargins(false);
+            }
+        } else {
+            hideHomePager();
         }
     }
 
