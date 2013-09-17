@@ -465,37 +465,38 @@ MediaStreamGraphImpl::MarkConsumed(MediaStream* aStream)
   }
 }
 
-class MediaStreamGraphWarnCycleRunnable : public nsRunnable {
-public:
-  explicit MediaStreamGraphWarnCycleRunnable(MediaStream* aStream)
-    : mStream(aStream)
-  {
-  }
-
-  NS_IMETHOD Run()
-  {
-    AudioNodeEngine* engine = mStream->AsAudioNodeStream()->Engine();
-    MutexAutoLock mon(engine->NodeMutex());
-    AudioNode* node = engine->Node();
-    nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(node->Context()->GetParentObject());
-    nsIDocument* doc = nullptr;
-    if (pWindow) {
-      doc = pWindow->GetExtantDoc();
-    }
-    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                    NS_LITERAL_CSTRING("Media"),
-                                    doc,
-                                    nsContentUtils::eDOM_PROPERTIES,
-                                    "AudioNodeCycleWithoutDelay");
-    return NS_OK;
-  }
-private:
-  MediaStream* mStream;
-};
 
 static void
 WarnIllegalCycle(MediaStream* aStream)
 {
+  class MediaStreamGraphWarnCycleRunnable : public nsRunnable {
+  public:
+    explicit MediaStreamGraphWarnCycleRunnable(MediaStream* aStream)
+      : mStream(aStream)
+    {
+    }
+
+    nsresult Run()
+    {
+      AudioNodeEngine* engine = mStream->AsAudioNodeStream()->Engine();
+      MutexAutoLock mon(engine->NodeMutex());
+      AudioNode* node = engine->Node();
+      nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(node->Context()->GetParentObject());
+      nsIDocument* doc = nullptr;
+      if (pWindow) {
+        doc = pWindow->GetExtantDoc();
+      }
+      nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                      NS_LITERAL_CSTRING("Media"),
+                                      doc,
+                                      nsContentUtils::eDOM_PROPERTIES,
+                                      "AudioNodeCycleWithoutDelay");
+      return NS_OK;
+    }
+  private:
+    MediaStream* mStream;
+  };
+
   nsCOMPtr<nsIRunnable> event = new MediaStreamGraphWarnCycleRunnable(aStream);
   NS_DispatchToMainThread(event);
 }
