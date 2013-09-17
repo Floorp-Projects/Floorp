@@ -32,14 +32,14 @@
   }
 
   #PanelUI-customize:hover,
-  #PanelUI-help:hover,
-  #PanelUI-quit:hover {
+  #PanelUI-help:not([disabled]):hover,
+  #PanelUI-quit:not([disabled]):hover {
     -moz-image-region: rect(0, 64px, 32px, 32px);
   }
 
   #PanelUI-customize:hover:active,
-  #PanelUI-help:hover:active,
-  #PanelUI-quit:hover:active {
+  #PanelUI-help:not([disabled]):hover:active,
+  #PanelUI-quit:not([disabled]):hover:active {
     -moz-image-region: rect(0, 96px, 32px, 64px);
   }
 }
