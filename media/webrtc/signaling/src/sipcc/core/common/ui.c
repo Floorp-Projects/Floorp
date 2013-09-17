@@ -1556,6 +1556,7 @@ static void post_message_helper(group_call_event_t eventId,
                                 callid_t nCallId,
                                 uint16_t call_instance_id,
                                 string_t sdp,
+				string_t extra,
                                 Timecard *timecard,
                                 pc_error error,
                                 const char *format,
@@ -1580,6 +1581,7 @@ static void post_message_helper(group_call_event_t eventId,
     msg.update.ccSessionUpd.data.state_data.inst = call_instance_id;
     msg.update.ccSessionUpd.data.state_data.line_id = nLine;
     msg.update.ccSessionUpd.data.state_data.sdp = sdp;
+    msg.update.ccSessionUpd.data.state_data.extra = extra;
     msg.update.ccSessionUpd.data.state_data.cause = error;
     msg.update.ccSessionUpd.data.state_data.timecard = timecard;
 
@@ -1627,7 +1629,7 @@ void ui_create_offer(call_events event,
 
     va_start(ap, format);
     post_message_helper(CREATE_OFFER, event, new_state, nLine, nCallID,
-                        call_instance_id, sdp, timecard, error, format, ap);
+                        call_instance_id, sdp, NULL, timecard, error, format, ap);
     va_end(ap);
 
     return;
@@ -1655,7 +1657,7 @@ void ui_create_answer(call_events event,
 
     va_start(ap, format);
     post_message_helper(CREATE_ANSWER, event, new_state, nLine, nCallID,
-                        call_instance_id, sdp, timecard, error, format, ap);
+                        call_instance_id, sdp, NULL, timecard, error, format, ap);
     va_end(ap);
 
     return;
@@ -1683,7 +1685,7 @@ void ui_set_local_description(call_events event,
 
     va_start(ap, format);
     post_message_helper(SET_LOCAL_DESC, event, new_state, nLine, nCallID,
-                        call_instance_id, sdp, timecard, error, format, ap);
+                        call_instance_id, sdp, NULL, timecard, error, format, ap);
     va_end(ap);
 
     return;
@@ -1711,7 +1713,7 @@ void ui_set_remote_description(call_events event,
 
     va_start(ap, format);
     post_message_helper(SET_REMOTE_DESC, event, new_state, nLine, nCallID,
-                        call_instance_id, sdp, timecard, error, format, ap);
+                        call_instance_id, sdp, NULL, timecard, error, format, ap);
     va_end(ap);
 
     return;
@@ -1740,7 +1742,7 @@ void ui_update_local_description(call_events event,
 
     va_start(ap, format);
     post_message_helper(UPDATE_LOCAL_DESC, event, new_state, nLine, nCallID,
-                        call_instance_id, sdp, timecard, error, format, ap);
+                        call_instance_id, sdp, NULL, timecard, error, format, ap);
     va_end(ap);
 
     return;
@@ -1768,7 +1770,35 @@ void ui_ice_candidate_add(call_events event,
 
     va_start(ap, format);
     post_message_helper(ICE_CANDIDATE_ADD, event, new_state, nLine, nCallID,
-                        call_instance_id, sdp, timecard, error, format, ap);
+                        call_instance_id, sdp, NULL, timecard, error, format, ap);
+    va_end(ap);
+}
+
+
+/**
+ * Send data from foundIceCandidate to the UI
+ *
+ * @return none
+ */
+
+void ui_ice_candidate_found(call_events event,
+			    fsmdef_states_t new_state,
+			    line_t nLine,
+			    callid_t nCallID,
+			    uint16_t call_instance_id,
+			    string_t sdp,
+			    string_t candidate,
+			    Timecard *timecard,
+			    pc_error error,
+			    const char *format, ...)
+{
+    va_list ap;
+    TNP_DEBUG(DEB_L_C_F_PREFIX"state=%d call_instance=%d",
+              DEB_L_C_F_PREFIX_ARGS(UI_API, nLine, nCallID, __FUNCTION__), event, call_instance_id);
+
+    va_start(ap, format);
+    post_message_helper(ICE_CANDIDATE_FOUND, event, new_state, nLine, nCallID,
+                        call_instance_id, sdp, candidate, timecard, error, format, ap);
     va_end(ap);
 }
 
