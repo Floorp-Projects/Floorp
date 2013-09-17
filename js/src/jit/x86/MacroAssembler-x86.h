@@ -808,7 +808,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         if (dest.isFloat()) {
             Label notInt32, end;
             branchTestInt32(Assembler::NotEqual, src, &notInt32);
-            cvtsi2sd(src.payloadReg(), dest.fpu());
+            convertInt32ToDouble(src.payloadReg(), dest.fpu());
             jump(&end);
             bind(&notInt32);
             unboxDouble(src, dest.fpu());
@@ -852,16 +852,16 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
 
     void boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest) {
-        cvtsi2sd(operand.payloadReg(), dest);
+        convertInt32ToDouble(operand.payloadReg(), dest);
     }
     void boolValueToFloat32(const ValueOperand &operand, const FloatRegister &dest) {
-        cvtsi2ss(operand.payloadReg(), dest);
+        convertInt32ToFloat32(operand.payloadReg(), dest);
     }
     void int32ValueToDouble(const ValueOperand &operand, const FloatRegister &dest) {
-        cvtsi2sd(operand.payloadReg(), dest);
+        convertInt32ToDouble(operand.payloadReg(), dest);
     }
     void int32ValueToFloat32(const ValueOperand &operand, const FloatRegister &dest) {
-        cvtsi2ss(operand.payloadReg(), dest);
+        convertInt32ToFloat32(operand.payloadReg(), dest);
     }
 
     void loadConstantDouble(double d, const FloatRegister &dest);
@@ -903,7 +903,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void loadInt32OrDouble(const Operand &operand, const FloatRegister &dest) {
         Label notInt32, end;
         branchTestInt32(Assembler::NotEqual, operand, &notInt32);
-        cvtsi2sd(ToPayload(operand), dest);
+        convertInt32ToDouble(ToPayload(operand), dest);
         jump(&end);
         bind(&notInt32);
         movsd(operand, dest);
@@ -953,7 +953,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         subl(Imm32(0x80000000), src);
 
         // Now src is [-2^31, 2^31-1] - int range, but not the same value.
-        cvtsi2sd(src, dest);
+        convertInt32ToDouble(src, dest);
 
         // dest is now a double with the int range.
         // correct the double value by adding 0x80000000.
@@ -966,7 +966,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         subl(Imm32(0x80000000), src);
 
         // Do it the GCC way
-        cvtsi2ss(src, dest);
+        convertInt32ToFloat32(src, dest);
 
         // dest is now a double with the int range.
         // correct the double value by adding 0x80000000.
