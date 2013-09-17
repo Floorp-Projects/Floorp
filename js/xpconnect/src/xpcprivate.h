@@ -3086,7 +3086,6 @@ class XPCJSContextStack
 public:
     XPCJSContextStack()
       : mSafeJSContext(NULL)
-      , mOwnSafeJSContext(NULL)
     { }
 
     virtual ~XPCJSContextStack();
@@ -3119,7 +3118,6 @@ private:
 
     AutoInfallibleTArray<XPCJSContextInfo, 16> mStack;
     JSContext*  mSafeJSContext;
-    JSContext*  mOwnSafeJSContext;
 };
 
 /***************************************************************************/

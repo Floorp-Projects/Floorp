@@ -96,10 +96,15 @@ nsXPConnect::nsXPConnect()
 nsXPConnect::~nsXPConnect()
 {
     mRuntime->DeleteJunkScope();
-
-    // This needs to happen exactly here, otherwise we leak at shutdown. I don't
-    // know why. :-(
     mRuntime->DestroyJSContextStack();
+
+    // In order to clean up everything properly, we need to GC twice: once now,
+    // to clean anything that can go away on its own (like the Junk Scope, which
+    // we unrooted above), and once after forcing a bunch of shutdown in
+    // XPConnect, to clean the stuff we forcibly disconnected. The forced
+    // shutdown code defaults to leaking in a number of situations, so we can't
+    // get by with only the second GC. :-(
+    JS_GC(mRuntime->Runtime());
 
     mShuttingDown = true;
     XPCWrappedNativeScope::SystemIsBeingShutDown();
