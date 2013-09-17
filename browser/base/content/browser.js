@@ -4301,11 +4301,6 @@ var TabsProgressListener = {
 
     // Filter out location changes in sub documents.
     if (aWebProgress.isTopLevel) {
-      // Initialize the click-to-play state.
-      aBrowser._clickToPlayPluginsActivated = new Map();
-      aBrowser._clickToPlayAllPluginsActivated = false;
-      aBrowser._pluginScriptedState = gPluginHandler.PLUGIN_SCRIPTED_STATE_NONE;
-
       FullZoom.onLocationChange(aLocationURI, false, aBrowser);
     }
   },
