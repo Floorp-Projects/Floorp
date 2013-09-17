@@ -16,12 +16,8 @@ interface BatteryManager : EventTarget {
     readonly attribute unrestricted double dischargingTime;
     readonly attribute double              level;
 
-    [SetterThrows]
              attribute EventHandler        onchargingchange;
-    [SetterThrows]
              attribute EventHandler        onchargingtimechange;
-    [SetterThrows]
              attribute EventHandler        ondischargingtimechange;
-    [SetterThrows]
              attribute EventHandler        onlevelchange;
 };
