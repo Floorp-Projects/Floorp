@@ -22,6 +22,7 @@
 #include "jsnativestack.h"
 #include "jsobj.h"
 #include "jsscript.h"
+#include "jswatchpoint.h"
 #include "jswrapper.h"
 
 #include "jit/AsmJSSignalHandlers.h"
@@ -393,6 +394,40 @@ JSRuntime::init(uint32_t maxbytes)
 
 JSRuntime::~JSRuntime()
 {
+    JS_ASSERT(!isHeapBusy());
+
+    /* Off thread compilation and parsing depend on atoms still existing. */
+    for (CompartmentsIter comp(this); !comp.done(); comp.next())
+        CancelOffThreadIonCompile(comp, NULL);
+    WaitForOffThreadParsingToFinish(this);
+
+#ifdef JS_WORKER_THREADS
+    if (workerThreadState)
+        workerThreadState->cleanup(this);
+#endif
+
+    /* Poison common names before final GC. */
+    FinishCommonNames(this);
+
+    /* Clear debugging state to remove GC roots. */
+    for (CompartmentsIter comp(this); !comp.done(); comp.next()) {
+        comp->clearTraps(defaultFreeOp());
+        if (WatchpointMap *wpmap = comp->watchpointMap)
+            wpmap->clear();
+    }
+
+    /* Clear the statics table to remove GC roots. */
+    staticStrings.finish();
+
+    JS::PrepareForFullGC(this);
+    GC(this, GC_NORMAL, JS::gcreason::DESTROY_RUNTIME);
+
+    /*
+     * Clear the self-hosted global and delete self-hosted classes *after*
+     * GC, as finalizers for objects check for clasp->finalize during GC.
+     */
+    finishSelfHosting();
+
     mainThread.removeFromThreadList();
 
 #ifdef JS_WORKER_THREADS
@@ -449,6 +484,7 @@ JSRuntime::~JSRuntime()
         PR_DestroyLock(gcLock);
 #endif
 
+    js_free(defaultLocale);
     js_delete(bumpAlloc_);
     js_delete(mathCache_);
 #ifdef JS_ION
