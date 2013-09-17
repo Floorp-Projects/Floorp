@@ -413,7 +413,7 @@ let SessionStoreInternal = {
 
       // Let everyone know we're done.
       this._deferredInitialized.resolve();
-    });
+    }, Cu.reportError);
   },
 
   initSession: function ssi_initSession() {
