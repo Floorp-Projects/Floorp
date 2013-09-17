@@ -510,7 +510,10 @@ AudioContext::Graph() const
 MediaStream*
 AudioContext::DestinationStream() const
 {
-  return Destination()->Stream();
+  if (Destination()) {
+    return Destination()->Stream();
+  }
+  return nullptr;
 }
 
 double
