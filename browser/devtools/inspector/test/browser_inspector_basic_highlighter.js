@@ -45,7 +45,7 @@ function test()
   }
 
   function testNoNodeSelected() {
-    ok(doc.querySelectorAll(":-moz-devtools-highlighted").length, 0, "no node selected");
+    ok(doc.querySelectorAll(":-moz-devtools-highlighted").length === 0, "no node selected");
     finishUp();
   }
 
