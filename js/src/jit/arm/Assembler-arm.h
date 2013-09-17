@@ -1640,8 +1640,8 @@ class Assembler
     static void TraceDataRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
 
   protected:
-    void addPendingJump(BufferOffset src, void *target, Relocation::Kind kind) {
-        enoughMemory_ &= jumps_.append(RelativePatch(src, target, kind));
+    void addPendingJump(BufferOffset src, ImmPtr target, Relocation::Kind kind) {
+        enoughMemory_ &= jumps_.append(RelativePatch(src, target.value, kind));
         if (kind == Relocation::IONCODE)
             writeRelocation(src);
     }
