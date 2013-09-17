@@ -1,3 +1,6 @@
+if (typeof ParallelArray === "undefined")
+  quit();
+
 function x() {
     yield x
 }
