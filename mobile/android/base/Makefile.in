@@ -228,7 +228,6 @@ FENNEC_JAVA_FILES = \
   home/FadedTextView.java \
   home/LastTabsPage.java \
   home/MostRecentPage.java \
-  home/MostVisitedPage.java \
   home/MultiTypeCursorAdapter.java \
   home/PinBookmarkDialog.java \
   home/ReadingListPage.java \
@@ -241,6 +240,7 @@ FENNEC_JAVA_FILES = \
   home/TopBookmarkItemView.java \
   home/TopBookmarksAdapter.java \
   home/TopBookmarksView.java \
+  home/TopSitesPage.java \
   home/TwoLinePageRow.java \
   menu/GeckoMenu.java \
   menu/GeckoMenuInflater.java \
@@ -476,12 +476,12 @@ RES_LAYOUT = \
   res/layout/home_last_tabs_page.xml \
   res/layout/home_history_list.xml \
   res/layout/home_most_recent_page.xml \
-  res/layout/home_most_visited_page.xml \
   res/layout/home_pager.xml \
   res/layout/home_reading_list_page.xml \
   res/layout/home_search_item_row.xml \
   res/layout/home_banner.xml \
   res/layout/home_suggestion_prompt.xml \
+  res/layout/home_top_sites_page.xml \
   res/layout/web_app.xml \
   res/layout/launch_app_list.xml \
   res/layout/launch_app_listitem.xml \
