@@ -1257,7 +1257,13 @@ status_t GonkRecorder::setupVideoEncoder(
 
     uint32_t encoder_flags = 0;
     if (mIsMetaDataStoredInVideoBuffers) {
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
         encoder_flags |= OMXCodec::kStoreMetaDataInVideoBuffers;
+#else
+        encoder_flags |= OMXCodec::kHardwareCodecsOnly;
+        encoder_flags |= OMXCodec::kStoreMetaDataInVideoBuffers;
+        encoder_flags |= OMXCodec::kOnlySubmitOneInputBufferAtOneTime;
+#endif
     }
 
     sp<MediaSource> encoder = OMXCodec::Create(
