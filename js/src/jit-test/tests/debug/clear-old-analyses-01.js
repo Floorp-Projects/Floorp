@@ -1,4 +1,4 @@
-// |jit-test| mjitalways; error:AllDone
+// |jit-test| error:AllDone
 // When we enter debug mode in a compartment, we must throw away all
 // analyses in that compartment (debug mode affects the results of
 // analysis, so they become out of date). This is true even when we would
