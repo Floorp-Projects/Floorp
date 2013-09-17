@@ -713,7 +713,7 @@ IFACEMETHODIMP CExecuteCommandVerb::Execute()
   }
 
   CComPtr<IApplicationActivationManager> activateMgr;
-  if (!PrepareActivationManager(activateMgr)) {
+  if (FAILED(PrepareActivationManager(activateMgr))) {
       LaunchDesktopBrowser();
       return S_OK;
   }
