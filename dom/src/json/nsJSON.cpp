@@ -24,8 +24,6 @@
 #include "mozilla/Maybe.h"
 #include <algorithm>
 
-static const char kXPConnectServiceCID[] = "@mozilla.org/js/xpc/XPConnect;1";
-
 #define JSON_STREAM_BUFSIZE 4096
 
 NS_INTERFACE_MAP_BEGIN(nsJSON)
