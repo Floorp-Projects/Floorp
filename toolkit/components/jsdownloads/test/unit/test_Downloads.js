@@ -61,40 +61,40 @@ add_task(function test_createDownload_public()
 });
 
 /**
- * Tests startDirect with nsIURI and nsIFile as arguments.
+ * Tests simpleDownload with nsIURI and nsIFile as arguments.
  */
-add_task(function test_startDirect_uri_file_arguments()
+add_task(function test_simpleDownload_uri_file_arguments()
 {
   let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
-  yield Downloads.startDirect(NetUtil.newURI(httpUrl("source.txt")),
-                              targetFile);
+  yield Downloads.simpleDownload(NetUtil.newURI(httpUrl("source.txt")),
+                                 targetFile);
   yield promiseVerifyContents(targetFile.path, TEST_DATA_SHORT);
 });
 
 /**
- * Tests startDirect with DownloadSource and DownloadTarget as arguments.
+ * Tests simpleDownload with DownloadSource and DownloadTarget as arguments.
  */
-add_task(function test_startDirect_object_arguments()
+add_task(function test_simpleDownload_object_arguments()
 {
   let targetPath = getTempFile(TEST_TARGET_FILE_NAME).path;
-  yield Downloads.startDirect({ url: httpUrl("source.txt") },
-                              { path: targetPath });
+  yield Downloads.simpleDownload({ url: httpUrl("source.txt") },
+                                 { path: targetPath });
   yield promiseVerifyContents(targetPath, TEST_DATA_SHORT);
 });
 
 /**
- * Tests startDirect with string arguments.
+ * Tests simpleDownload with string arguments.
  */
-add_task(function test_startDirect_string_arguments()
+add_task(function test_simpleDownload_string_arguments()
 {
   let targetPath = getTempFile(TEST_TARGET_FILE_NAME).path;
-  yield Downloads.startDirect(httpUrl("source.txt"),
-                              targetPath);
+  yield Downloads.simpleDownload(httpUrl("source.txt"),
+                                 targetPath);
   yield promiseVerifyContents(targetPath, TEST_DATA_SHORT);
 
   targetPath = getTempFile(TEST_TARGET_FILE_NAME).path;
-  yield Downloads.startDirect(new String(httpUrl("source.txt")),
-                              new String(targetPath));
+  yield Downloads.simpleDownload(new String(httpUrl("source.txt")),
+                                 new String(targetPath));
   yield promiseVerifyContents(targetPath, TEST_DATA_SHORT);
 });
 
