@@ -150,8 +150,8 @@ add_task(function test_execute()
 
   // test getPageTitle
   yield promiseAddVisits({ uri: uri("http://example.com"), title: "title" });
-  var title = histsvc.getPageTitle(uri("http://example.com"));
-  do_check_eq(title, "title");
+  let placeInfo = yield PlacesUtils.promisePlaceInfo(uri("http://example.com"));
+  do_check_eq(placeInfo.title, "title");
 
   // query for the visit
   do_check_true(uri_in_db(testURI));
