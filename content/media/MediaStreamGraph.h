@@ -917,7 +917,10 @@ public:
   friend class MediaStreamGraphImpl;
 
   // Do not call these from outside MediaStreamGraph.cpp!
-  virtual void AddInput(MediaInputPort* aPort);
+  virtual void AddInput(MediaInputPort* aPort)
+  {
+    mInputs.AppendElement(aPort);
+  }
   virtual void RemoveInput(MediaInputPort* aPort)
   {
     mInputs.RemoveElement(aPort);
