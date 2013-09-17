@@ -373,14 +373,9 @@ protected:
   void ProcessAnyRefreshTags();
 
   /**
-   * Notify our nsITransfer object that we are done with the download.  This is
-   * always called after the target file has been closed.
-   *
-   * @param aStatus
-   *        NS_OK for success, or a failure code if the download failed.
-   *        A partially downloaded file may still be available in this case.
+   * Notify our nsITransfer object that we are done with the download.
    */
-  void NotifyTransfer(nsresult aStatus);
+  nsresult NotifyTransfer();
 
   /**
    * Helper routine that searches a pref string for a given mime type
