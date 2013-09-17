@@ -82,8 +82,8 @@
     <!-- We need to maintain height for the tab widget on History Page
          since android does not add footer/header divider height to its
          calculation for wrap_content in LinearLayout.
-         50dp * 3 Views + 30dp padding + 4dp dividers-->
-    <dimen name="history_tab_widget_height">184dp</dimen>
+         50dp * 2 Views + 30dp padding + 4dp dividers-->
+    <dimen name="history_tab_widget_height">134dp</dimen>
 
     <!-- PageActionButtons dimensions -->
     <dimen name="page_action_button_width">32dp</dimen>
