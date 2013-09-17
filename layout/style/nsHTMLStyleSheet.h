@@ -17,12 +17,12 @@
 #include "nsCOMPtr.h"
 #include "nsIStyleRule.h"
 #include "nsIStyleRuleProcessor.h"
-#include "nsIStyleSheet.h"
 #include "pldhash.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsString.h"
 
+class nsIDocument;
 class nsMappedAttributes;
 
 class nsHTMLStyleSheet MOZ_FINAL : public nsIStyleRuleProcessor
