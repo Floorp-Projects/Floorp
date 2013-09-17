@@ -55,20 +55,8 @@ ifndef MOZ_PROFILE_USE
 libs export tools:: CLOBBER $(topsrcdir)/configure config.status backend.RecursiveMakeBackend.built
 	$(call SUBMAKE,backend.RecursiveMakeBackend.built,js/src,1)
 
-.PHONY: install-manifests
-export:: install-manifests
-
-install_manifests := bin idl include public private sdk
-.PHONY: $(addprefix install-dist-,$(install_manifests))
-install-manifests: $(addprefix install-dist-,$(install_manifests))
-$(addprefix install-dist-,$(install_manifests)): install-dist-%: CLOBBER $(topsrcdir)/configure config.status backend.RecursiveMakeBackend.built
-	$(call py_action,process_install_manifest,$(DIST)/$* _build_manifests/install/dist_$* js/src/_build_manifests/install/dist_$*)
-
-.PHONY: install-tests
-install-manifests: install-tests
-install-tests: CLOBBER $(topsrcdir)/configure config.status backend.RecursiveMakeBackend.built
-	$(call py_action,process_install_manifest,_tests _build_manifests/install/tests js/src/_build_manifests/install/tests)
-
+export::
+	$(call py_action,purge_manifests,-d _build_manifests/purge .)
 endif
 
 CLOBBER: $(topsrcdir)/CLOBBER
@@ -91,13 +79,13 @@ config.status: $(topsrcdir)/configure
 	@echo "but your build might not succeed."
 	@exit 1
 
+export::
+	$(RM) -r $(DIST)/sdk
+
 ifdef ENABLE_TESTS
 # Additional makefile targets to call automated test suites
 include $(topsrcdir)/testing/testsuite-targets.mk
 endif
-
-export::
-	$(RM) -r $(DIST)/sdk
 
 export::
 	$(call py_action,process_install_manifest,$(DIST)/include _build_manifests/install/dist_include js/src/_build_manifests/install/dist_include)
