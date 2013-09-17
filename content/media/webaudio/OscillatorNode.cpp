@@ -36,7 +36,7 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(OscillatorNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(OscillatorNode, AudioNode)
 
-static const float sLeak = 0.995;
+static const float sLeak = 0.995f;
 
 class DCBlocker
 {
@@ -158,14 +158,14 @@ public:
         // Initial mPhase and related integration condition so the triangle is
         // in the middle of the first upward slope.
         // XXX actually do the maths and put the right number here.
-        mPhase = M_PI / 2;
+        mPhase = (float)(M_PI / 2);
         mSquare = 0.5;
         mTriangle = 0.0;
         break;
       case OscillatorType::Sawtooth:
         /* initial mPhase so the oscillator start at the middle
          * of the ramp, per spec */
-        mPhase = M_PI / 2;
+        mPhase = (float)(M_PI / 2);
         /* mSaw = 0 when mPhase = pi/2 */
         mSaw = 0.0;
         break;
