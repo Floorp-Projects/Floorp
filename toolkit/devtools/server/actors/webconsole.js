@@ -59,13 +59,9 @@ function WebConsoleActor(aConnection, aParentActor)
   this.dbg = new Debugger();
 
   this._protoChains = new Map();
-  this._dbgGlobals = new Map();
   this._netEvents = new Map();
-  this._getDebuggerGlobal(this.window);
 
   this._onObserverNotification = this._onObserverNotification.bind(this);
-  Services.obs.addObserver(this._onObserverNotification,
-                           "inner-window-destroyed", false);
   if (this.parentActor.isRootActor) {
     Services.obs.addObserver(this._onObserverNotification,
                              "last-pb-context-exited", false);
@@ -95,14 +91,6 @@ WebConsoleActor.prototype =
    * @type object
    */
   _prefs: null,
-
-  /**
-   * Holds a map between inner window IDs and Debugger.Objects for the window
-   * objects.
-   * @private
-   * @type Map
-   */
-  _dbgGlobals: null,
 
   /**
    * Holds a map between nsIChannel objects and NetworkEventActors for requests
@@ -199,8 +187,6 @@ WebConsoleActor.prototype =
       this.consoleProgressListener = null;
     }
     this.conn.removeActorPool(this._actorPool);
-    Services.obs.removeObserver(this._onObserverNotification,
-                                "inner-window-destroyed");
     if (this.parentActor.isRootActor) {
       Services.obs.removeObserver(this._onObserverNotification,
                                   "last-pb-context-exited");
@@ -209,7 +195,6 @@ WebConsoleActor.prototype =
 
     this._netEvents.clear();
     this._protoChains.clear();
-    this._dbgGlobals.clear();
     this.dbg.enabled = false;
     this.dbg = null;
     this.conn = null;
@@ -248,16 +233,7 @@ WebConsoleActor.prototype =
         // The above can throw an exception if aValue is not an actual object.
       }
     }
-    let dbgGlobal = null;
-    try {
-      dbgGlobal = this._getDebuggerGlobal(global);
-    }
-    catch (ex) {
-      // The above call can throw in addDebuggee() if the given global object
-      // is already in the stackframe of code that is executing now. Console.jsm
-      // and the Browser Console can cause this case.
-      dbgGlobal = this._getDebuggerGlobal(this.window);
-    }
+    let dbgGlobal = this.dbg.makeGlobalObjectReference(global);
     return dbgGlobal.makeDebuggeeValue(aValue);
   },
 
@@ -668,27 +644,6 @@ WebConsoleActor.prototype =
   //////////////////
 
   /**
-   * Get the Debugger.Object for the given global object (usually a window
-   * object).
-   *
-   * @private
-   * @param object aGlobal
-   *        The global object for which you want a Debugger.Object.
-   * @return Debugger.Object
-   *         The Debugger.Object for the given global object.
-   */
-  _getDebuggerGlobal: function WCA__getDebuggerGlobal(aGlobal)
-  {
-    let windowId = WebConsoleUtils.getInnerWindowId(aGlobal);
-    if (!this._dbgGlobals.has(windowId)) {
-      let dbgGlobal = this.dbg.addDebuggee(aGlobal);
-      this.dbg.removeDebuggee(aGlobal);
-      this._dbgGlobals.set(windowId, dbgGlobal);
-    }
-    return this._dbgGlobals.get(windowId);
-  },
-
-  /**
    * Create an object with the API we expose to the Web Console during
    * JavaScript evaluation.
    * This object inherits properties and methods from the Web Console actor.
@@ -787,16 +742,6 @@ WebConsoleActor.prototype =
       aString = "help()";
     }
 
-    // Find the Debugger.Object of the given ObjectActor. This is used as
-    // a binding during eval: |_self|.
-    let bindSelf = null;
-    if (aOptions.bindObjectActor) {
-      let objActor = this.getActorByID(aOptions.bindObjectActor);
-      if (objActor) {
-        bindSelf = objActor.obj;
-      }
-    }
-
     // Find the Debugger.Frame of the given FrameActor.
     let frame = null, frameActor = null;
     if (aOptions.frameActor) {
@@ -810,36 +755,31 @@ WebConsoleActor.prototype =
       }
     }
 
-    // Determine which debugger to use, depending on the presence of the
-    // stackframe.
-    // This helps with avoid having bindings from a different Debugger. The
-    // Debugger.Frame comes from the jsdebugger's Debugger instance.
-    let dbg = this.dbg;
-    let dbgWindow = this._getDebuggerGlobal(this.window);
-    if (frame) {
-      dbg = frameActor.threadActor.dbg;
-      dbgWindow = dbg.addDebuggee(this.window);
-    }
+    // If we've been given a frame actor in whose scope we should evaluate the
+    // expression, be sure to use that frame's Debugger (that is, the JavaScript
+    // debugger's Debugger) for the whole operation, not the console's Debugger.
+    // (One Debugger will treat a different Debugger's Debugger.Object instances
+    // as ordinary objects, not as references to be followed, so mixing
+    // debuggers causes strange behaviors.)
+    let dbg = frame ? frameActor.threadActor.dbg : this.dbg;
+    let dbgWindow = dbg.makeGlobalObjectReference(this.window);
 
-    // If we have an object to bind to |_self| we need to determine the
-    // global of the given JavaScript object.
-    if (bindSelf) {
-      let jsObj = bindSelf.unsafeDereference();
-      let global = Cu.getGlobalForObject(jsObj);
-
-      // Get the Debugger.Object for the new global.
-      if (global != this.window) {
-        dbgWindow = dbg.addDebuggee(global);
-
-        // Remove the debuggee only if the Debugger instance belongs to the
-        // console actor, to avoid breaking the ThreadActor that owns the
-        // Debugger object.
-        if (dbg == this.dbg) {
-          dbg.removeDebuggee(global);
-        }
+    // If we have an object to bind to |_self|, create a Debugger.Object
+    // referring to that object, belonging to dbg.
+    let bindSelf = null;
+    let dbgWindow = dbg.makeGlobalObjectReference(this.window);
+    if (aOptions.bindObjectActor) {
+      let objActor = this.getActorByID(aOptions.bindObjectActor);
+      if (objActor) {
+        let jsObj = objActor.obj.unsafeDereference();
+        // If we use the makeDebuggeeValue method of jsObj's own global, then
+        // we'll get a D.O that sees jsObj as viewed from its own compartment -
+        // that is, without wrappers. The evalWithBindings call will then wrap
+        // jsObj appropriately for the evaluation compartment.
+        let global = Cu.getGlobalForObject(jsObj);
+        dbgWindow = dbg.makeGlobalObjectReference(global);
+        bindSelf = dbgWindow.makeDebuggeeValue(jsObj);
       }
-
-      bindSelf = dbgWindow.makeDebuggeeValue(jsObj);
     }
 
     // Get the JSTerm helpers for the given debugger window.
@@ -1145,8 +1085,7 @@ WebConsoleActor.prototype =
   },
 
   /**
-   * Notification observer for the "inner-window-destroyed" topic. This function
-   * cleans up |this._dbgGlobals| when needed.
+   * Notification observer for the "last-pb-context-exited" topic.
    *
    * @private
    * @param object aSubject
@@ -1158,13 +1097,6 @@ WebConsoleActor.prototype =
   _onObserverNotification: function WCA__onObserverNotification(aSubject, aTopic)
   {
     switch (aTopic) {
-      case "inner-window-destroyed": {
-        let windowId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
-        if (this._dbgGlobals.has(windowId)) {
-          this._dbgGlobals.delete(windowId);
-        }
-        break;
-      }
       case "last-pb-context-exited":
         this.conn.send({
           from: this.actorID,
