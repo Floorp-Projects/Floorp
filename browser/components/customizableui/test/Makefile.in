@@ -18,5 +18,6 @@ MOCHITEST_BROWSER_FILES = \
   browser_892956_destroyWidget_defaultPlacements.js \
   browser_888817_currentset_updating.js \
   browser_913972_currentset_overflow.js \
+  browser_914863_disabled_help_quit_buttons.js \
   head.js \
   $(NULL)
