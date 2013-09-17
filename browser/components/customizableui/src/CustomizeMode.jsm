@@ -153,8 +153,8 @@ CustomizeMode.prototype = {
       window.PanelUI.menuButton.addEventListener("click", this, false);
       window.PanelUI.menuButton.disabled = true;
 
-      window.document.getElementById("PanelUI-help").disabled = true;
-      window.document.getElementById("PanelUI-quit").disabled = true;
+      document.getElementById("PanelUI-help").setAttribute("disabled", true);
+      document.getElementById("PanelUI-quit").setAttribute("disabled", true);
 
       this._updateResetButton();
 
@@ -227,13 +227,17 @@ CustomizeMode.prototype = {
       // Let everybody in this window know that we're starting to
       // exit customization mode.
       this.dispatchToolboxEvent("customizationending");
+
       window.PanelUI.setMainView(window.PanelUI.mainView);
       window.PanelUI.menuButton.disabled = false;
 
-      window.document.getElementById("PanelUI-help").disabled = false;
-      window.document.getElementById("PanelUI-quit").disabled = false;
+      // We have to use setAttribute/removeAttribute here instead of the
+      // property because the XBL property will be set later, and right
+      // now we'd be setting an expando, which breaks the XBL property.
+      document.getElementById("PanelUI-help").removeAttribute("disabled");
+      document.getElementById("PanelUI-quit").removeAttribute("disabled");
 
-      // We need to set self._customizing to false before removing the tab
+      // We need to set this._customizing to false before removing the tab
       // or the TabSelect event handler will think that we are exiting
       // customization mode for a second time.
       this._customizing = false;
