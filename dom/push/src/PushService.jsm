@@ -827,28 +827,6 @@ this.PushService = {
   /**
    * Protocol handler invoked by server message.
    */
-  _handleUnregisterReply: function(reply) {
-    debug("handleUnregisterReply()");
-    if (typeof reply.channelID !== "string" ||
-        typeof this._pendingRequests[reply.channelID] !== "object")
-      return;
-
-    let tmp = this._pendingRequests[reply.channelID];
-    delete this._pendingRequests[reply.channelID];
-    if (Object.keys(this._pendingRequests).length == 0 &&
-        this._requestTimeoutTimer)
-      this._requestTimeoutTimer.cancel();
-
-    if (reply.status == 200) {
-      tmp.deferred.resolve(reply);
-    } else {
-      tmp.deferred.reject(reply);
-    }
-  },
-
-  /**
-   * Protocol handler invoked by server message.
-   */
   _handleNotificationReply: function(reply) {
     debug("handleNotificationReply()");
     if (typeof reply.updates !== 'object') {
@@ -1157,7 +1135,7 @@ this.PushService = {
         },
         function(error) {
           // Unable to save.
-          this._sendRequest("unregister", {channelID: record.channelID});
+          this._send("unregister", {channelID: record.channelID});
           message["error"] = error;
           deferred.reject(message);
         }
@@ -1372,7 +1350,7 @@ this.PushService = {
 
     // A whitelist of protocol handlers. Add to these if new messages are added
     // in the protocol.
-    let handlers = ["Hello", "Register", "Unregister", "Notification"];
+    let handlers = ["Hello", "Register", "Notification"];
 
     // Build up the handler name to call from messageType.
     // e.g. messageType == "register" -> _handleRegisterReply.
