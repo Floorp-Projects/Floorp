@@ -4230,13 +4230,16 @@ other.nf
 store.nf
 
 // ng : http://psg.com/dns/ng/
-// Submitted by registry <randy@psg.com> 2008-06-17
-ac.ng
+ng
 com.ng
 edu.ng
-gov.ng
+name.ng
 net.ng
 org.ng
+sch.ng
+gov.ng
+mil.ng
+mobi.ng
 
 // ni : http://www.nic.ni/dominios.htm
 *.ni
