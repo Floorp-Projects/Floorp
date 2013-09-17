@@ -35,6 +35,12 @@ function test() {
       yield verifyH1Selected();
       yield deselect();
       yield verifyNoNodeSelected();
+
+      yield selectH1();
+      yield verifyH1Selected();
+      yield destroyInspector();
+      yield verifyNoNodeSelected();
+
       finishUp();
     }).then(null, Cu.reportError);
   }
@@ -64,6 +70,10 @@ function test() {
     });
     inspector.selection.setNode(null);
     return deferred.promise;
+  }
+
+  function destroyInspector() {
+    return inspector.destroy();
   }
 
   function verifyNoNodeSelected() {
