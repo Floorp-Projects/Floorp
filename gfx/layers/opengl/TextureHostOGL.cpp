@@ -172,10 +172,7 @@ CompositableQuirksGonkOGL::CompositableQuirksGonkOGL()
 }
 CompositableQuirksGonkOGL::~CompositableQuirksGonkOGL()
 {
-  if (mTexture) {
-    gl()->MakeCurrent();
-    gl()->fDeleteTextures(1, &mTexture);
-  }
+  DeleteTextureIfPresent();
 }
 
 gl::GLContext*
@@ -196,6 +193,15 @@ GLuint CompositableQuirksGonkOGL::GetTexture()
     gl()->fGenTextures(1, &mTexture);
   }
   return mTexture;
+}
+
+void
+CompositableQuirksGonkOGL::DeleteTextureIfPresent()
+{
+  if (mTexture) {
+    gl()->MakeCurrent();
+    gl()->fDeleteTextures(1, &mTexture);
+  }
 }
 
 bool
@@ -499,6 +505,19 @@ TextureImageDeprecatedTextureHostOGL::UpdateImpl(const SurfaceDescriptor& aImage
     NS_WARNING("trying to update TextureImageDeprecatedTextureHostOGL without a compositor?");
     return;
   }
+
+#ifdef MOZ_WIDGET_GONK
+  if (mQuirks) {
+    // on gonk, this class is used as a fallback from gralloc buffer.
+    // There is a case this class is used with GrallocDeprecatedTextureHostOGL
+    // under same CompositableHost. if it happens, a gralloc buffer of
+    // GrallocDeprecatedTextureHostOGL needs to be unbounded from a texture,
+    // when the gralloc buffer is not rendered.
+    // Establish the unbound by deleting the texture.
+    // See Bug 916264.
+    static_cast<CompositableQuirksGonkOGL*>(mQuirks.get())->DeleteTextureIfPresent();
+  }
+#endif
 
   AutoOpenSurface surf(OPEN_READ_ONLY, aImage);
   nsIntSize size = surf.Size();
