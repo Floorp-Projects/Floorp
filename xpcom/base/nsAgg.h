@@ -143,7 +143,7 @@ _class::Internal::AddRef(void)                                              \
 {                                                                           \
     _class* agg = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Downcast(this);    \
     MOZ_ASSERT(int32_t(agg->mRefCnt) >= 0, "illegal refcnt");               \
-    NS_ASSERT_OWNINGTHREAD_AGGREGATE(agg, _class)                           \
+    NS_ASSERT_OWNINGTHREAD_AGGREGATE(agg, _class);                          \
     nsrefcnt count = agg->mRefCnt.incr();                                   \
     NS_LOG_ADDREF(this, count, #_class, sizeof(*agg));                      \
     return count;                                                           \
@@ -153,7 +153,7 @@ _class::Internal::Release(void)                                             \
 {                                                                           \
     _class* agg = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Downcast(this);    \
     MOZ_ASSERT(int32_t(agg->mRefCnt) > 0, "dup release");                   \
-    NS_ASSERT_OWNINGTHREAD_AGGREGATE(agg, _class)                           \
+    NS_ASSERT_OWNINGTHREAD_AGGREGATE(agg, _class);                          \
     nsrefcnt count = agg->mRefCnt.decr(this);                               \
     NS_LOG_RELEASE(this, count, #_class);                                   \
     return count;                                                           \
