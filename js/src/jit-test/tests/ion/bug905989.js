@@ -1,3 +1,6 @@
+if (typeof ParallelArray === "undefined")
+  quit();
+
 function TestCase(n, d, e, a) {};
 function reportCompare() {
   new TestCase();

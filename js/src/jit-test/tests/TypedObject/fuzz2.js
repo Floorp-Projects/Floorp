@@ -1,4 +1,4 @@
 if (!this.hasOwnProperty("Type"))
-  exit(0);
+  quit();
 
 new StructType([])

@@ -1,3 +1,6 @@
+if (!this.hasOwnProperty("Type"))
+  quit();
+
 var PointType = new StructType({x: float64,
                                 y: float64,
                                 z: float64});
