@@ -2248,7 +2248,7 @@ const LAZY_RESIZE_INTERVAL_MS = 200;
 
 function OverflowableToolbar(aToolbarNode) {
   this._toolbar = aToolbarNode;
-  this._collapsed = [];
+  this._collapsed = new Map();
   this._enabled = true;
 
   this._toolbar.customizationTarget.addEventListener("overflow", this);
@@ -2363,11 +2363,11 @@ OverflowableToolbar.prototype = {
 
     let child = this._target.lastChild;
 
-    while(child && this._target.clientWidth < this._target.scrollWidth) {
+    while (child && this._target.clientWidth < this._target.scrollWidth) {
       let prevChild = child.previousSibling;
 
       if (!child.hasAttribute("nooverflow")) {
-        this._collapsed.push({child: child, minSize: this._target.clientWidth});
+        this._collapsed.set(child.id, this._target.clientWidth);
         child.classList.add("overflowedItem");
         child.setAttribute("customizableui-anchorid", this._chevron.id);
 
@@ -2391,15 +2391,17 @@ OverflowableToolbar.prototype = {
 
   _moveItemsBackToTheirOrigin: function(shouldMoveAllItems) {
     let placements = gPlacements.get(this._toolbar.id);
-    for (let i = this._collapsed.length - 1; i >= 0; i--) {
-      let {child, minSize} = this._collapsed[i];
+    while (this._list.firstChild) {
+      let child = this._list.firstChild;
+      let minSize = this._collapsed.get(child.id);
 
       if (!shouldMoveAllItems &&
+          minSize &&
           this._target.clientWidth <= minSize) {
         return;
       }
 
-      this._collapsed.pop();
+      this._collapsed.delete(child.id);
       let beforeNodeIndex = placements.indexOf(child.id) + 1;
       // If this is a skipintoolbarset item, meaning it doesn't occur in the placements list,
       // we're inserting it at the end. This will mean first-in, first-out (more or less)
@@ -2426,7 +2428,7 @@ OverflowableToolbar.prototype = {
     let win = this._target.ownerDocument.defaultView;
     win.UpdateUrlbarSearchSplitterState();
 
-    if (!this._collapsed.length) {
+    if (!this._collapsed.size) {
       this._toolbar.removeAttribute("overflowing");
     }
   },
