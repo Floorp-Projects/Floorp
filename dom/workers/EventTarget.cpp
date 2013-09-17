@@ -30,8 +30,8 @@ EventTarget::GetEventListener(const nsAString& aType, ErrorResult& aRv) const
 {
   JSContext* cx = GetJSContext();
 
-  JSString* type =
-    JS_NewUCStringCopyN(cx, aType.BeginReading(), aType.Length());
+  JS::RootedString type(cx,
+    JS_NewUCStringCopyN(cx, aType.BeginReading(), aType.Length()));
   if (!type || !(type = JS_InternJSString(cx, type))) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return NULL;
@@ -47,8 +47,8 @@ EventTarget::SetEventListener(const nsAString& aType,
 {
   JSContext* cx = GetJSContext();
 
-  JSString* type =
-    JS_NewUCStringCopyN(cx, aType.BeginReading(), aType.Length());
+  JS::RootedString type(cx,
+    JS_NewUCStringCopyN(cx, aType.BeginReading(), aType.Length()));
   if (!type || !(type = JS_InternJSString(cx, type))) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
@@ -70,8 +70,8 @@ EventTarget::AddEventListener(const nsAString& aType,
 
   JSContext* cx = GetJSContext();
 
-  JSString* type =
-    JS_NewUCStringCopyN(cx, aType.BeginReading(), aType.Length());
+  JS::RootedString type(cx,
+    JS_NewUCStringCopyN(cx, aType.BeginReading(), aType.Length()));
   if (!type || !(type = JS_InternJSString(cx, type))) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
@@ -94,8 +94,8 @@ EventTarget::RemoveEventListener(const nsAString& aType,
 
   JSContext* cx = GetJSContext();
 
-  JSString* type =
-    JS_NewUCStringCopyN(cx, aType.BeginReading(), aType.Length());
+  JS::RootedString type(cx,
+    JS_NewUCStringCopyN(cx, aType.BeginReading(), aType.Length()));
   if (!type || !(type = JS_InternJSString(cx, type))) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;

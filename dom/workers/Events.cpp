@@ -844,7 +844,7 @@ public:
   }
 
   static JSObject*
-  Create(JSContext* aCx, JS::Handle<JSObject*> aParent, JSString* aType,
+  Create(JSContext* aCx, JS::Handle<JSObject*> aParent, JS::Handle<JSString*> aType,
          bool aLengthComputable, double aLoaded, double aTotal)
   {
     JS::Rooted<JSString*> type(aCx, JS_InternJSString(aCx, aType));
@@ -1041,7 +1041,7 @@ CreateErrorEvent(JSContext* aCx, JS::Handle<JSString*> aMessage,
 }
 
 JSObject*
-CreateProgressEvent(JSContext* aCx, JSString* aType, bool aLengthComputable,
+CreateProgressEvent(JSContext* aCx, JS::Handle<JSString*> aType, bool aLengthComputable,
                     double aLoaded, double aTotal)
 {
   JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
