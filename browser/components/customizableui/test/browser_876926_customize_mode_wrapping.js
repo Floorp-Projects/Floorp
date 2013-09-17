@@ -146,9 +146,14 @@ let gTests = [
 function afterPanelOpen(win) {
   let panelEl = win.PanelUI.panel;
   let deferred = Promise.defer();
+  function onPanelClose(e) {
+    panelEl.removeEventListener("popuphidden", onPanelClose);
+    deferred.resolve();
+  }
   function onPanelOpen(e) {
     panelEl.removeEventListener("popupshown", onPanelOpen);
-    deferred.resolve();
+    panelEl.addEventListener("popuphidden", onPanelClose);
+    win.PanelUI.toggle({type: "command"});
   };
   panelEl.addEventListener("popupshown", onPanelOpen);
   win.PanelUI.toggle({type: "command"});
