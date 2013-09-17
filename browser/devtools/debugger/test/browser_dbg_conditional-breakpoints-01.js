@@ -8,6 +8,9 @@
 const TAB_URL = EXAMPLE_URL + "doc_conditional-breakpoints.html";
 
 function test() {
+  // Linux debug test slaves are a bit slow at this test sometimes.
+  requestLongerTimeout(2);
+
   let gTab, gDebuggee, gPanel, gDebugger;
   let gEditor, gSources, gBreakpoints, gBreakpointsAdded, gBreakpointsRemoving;
 
