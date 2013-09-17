@@ -165,6 +165,7 @@ function RTCPeerConnection() {
   this._pendingType = null;
   this._localType = null;
   this._remoteType = null;
+  this._trickleIce = false;
 
   /**
    * Everytime we get a request from content, we put it in the queue. If
@@ -193,6 +194,7 @@ RTCPeerConnection.prototype = {
   init: function(win) { this._win = win; },
 
   __init: function(rtcConfig) {
+    this._trickleIce = Services.prefs.getBoolPref("media.peerconnection.trickle_ice");
     if (!rtcConfig.iceServers ||
         !Services.prefs.getBoolPref("media.peerconnection.use_document_iceservers")) {
       rtcConfig = {iceServers:
@@ -224,11 +226,11 @@ RTCPeerConnection.prototype = {
     // Add a reference to the PeerConnection to global list (before init).
     _globalPCList.addPC(this);
 
-    // Nothing starts until ICE gathering completes.
     this._queueOrRun({
       func: this._getPC().initialize,
       args: [this._observer, this._win, rtcConfig, Services.tm.currentThread],
-      wait: true
+      // If not trickling, suppress start.
+      wait: !this._trickleIce
     });
   },
 
@@ -894,13 +896,11 @@ PeerConnectionObserver.prototype = {
     this._dompc._pendingType = null;
     this.callCB(this._dompc._onSetLocalDescriptionSuccess);
 
-    // Until we support generating trickle ICE candidates,
-    // we go ahead and trigger a call of onicecandidate here.
-    // This is to provide some level of compatibility with
-    // scripts that expect this behavior (which is how Chrome
-    // signals that no further trickle candidates will be sent).
-    // TODO: This needs to be removed when Bug 842459 lands.
-    this.foundIceCandidate(null);
+    if (this._iceGatheringState == "complete") {
+        // If we are not trickling or we completed gathering prior
+        // to setLocal, then trigger a call of onicecandidate here.
+        this.foundIceCandidate(null);
+    }
 
     this._dompc._executeNext();
   },
@@ -938,6 +938,16 @@ PeerConnectionObserver.prototype = {
     this._dompc._executeNext();
   },
 
+  onIceCandidate: function(level, mid, candidate) {
+    this.foundIceCandidate(new this._dompc._win.mozRTCIceCandidate(
+        {
+            candidate: candidate,
+            sdpMid: mid,
+            sdpMLineIndex: level
+        }
+    ));
+  },
+
   handleIceStateChanges: function(iceState) {
     var histogram = Services.telemetry.getHistogramById("WEBRTC_ICE_SUCCESS_RATE");
     switch (iceState) {
@@ -945,8 +955,18 @@ PeerConnectionObserver.prototype = {
         this._dompc.changeIceConnectionState("new");
         this.callCB(this._dompc.ongatheringchange, "complete");
         this.callCB(this._onicechange, "starting");
-        // Now that the PC is ready to go, execute any pending operations.
-        this._dompc._executeNext();
+
+        if (!this._dompc._trickleIce) {
+          // If we are not trickling, then the queue is in a pending state
+          // waiting for ICE gathering and executeNext frees it
+          this._dompc._executeNext();
+        }
+        else if (this.localDescription) {
+          // If we are trickling but we have already done setLocal,
+          // then we need to send a final foundIceCandidate(null) to indicate
+          // that we are done gathering.
+          this.foundIceCandidate(null);
+        }
         break;
       case Ci.IPeerConnection.kIceChecking:
         this._dompc.changeIceConnectionState("checking");
@@ -1009,9 +1029,13 @@ PeerConnectionObserver.prototype = {
                                                              { stream: stream }));
   },
 
-  foundIceCandidate: function(c) {
+  foundIceCandidate: function(cand, mid, line) {
     this.dispatchEvent(new this._dompc._win.RTCPeerConnectionIceEvent("icecandidate",
-                                                                      { candidate: c }));
+                                                                      {
+                                                                          candidate: cand,
+                                                                          sdpMid: mid,
+                                                                          sdpMLineIndex: line
+                                                                      }));
   },
 
   notifyDataChannel: function(channel) {
