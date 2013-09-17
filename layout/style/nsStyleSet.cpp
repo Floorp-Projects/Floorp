@@ -33,6 +33,7 @@
 #include "GeckoProfiler.h"
 #include "nsHTMLCSSStyleSheet.h"
 #include "nsHTMLStyleSheet.h"
+#include "nsCSSRules.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
