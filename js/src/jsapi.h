@@ -3724,13 +3724,6 @@ extern JS_PUBLIC_API(size_t)
 JS_PutEscapedFlatString(char *buffer, size_t size, JSFlatString *str, char quote);
 
 /*
- * This function is now obsolete and behaves the same as JS_NewUCString.  Use
- * JS_NewUCString instead.
- */
-extern JS_PUBLIC_API(JSString *)
-JS_NewGrowableString(JSContext *cx, jschar *chars, size_t length);
-
-/*
  * Create a dependent string, i.e., a string that owns no character storage,
  * but that refers to a slice of another string's chars.  Dependent strings
  * are mutable by definition, so the thread safety comments above apply.

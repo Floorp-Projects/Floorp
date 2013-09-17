@@ -5472,14 +5472,6 @@ JS_FileEscapedString(FILE *fp, JSString *str, char quote)
 }
 
 JS_PUBLIC_API(JSString *)
-JS_NewGrowableString(JSContext *cx, jschar *chars, size_t length)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    return js_NewString<CanGC>(cx, chars, length);
-}
-
-JS_PUBLIC_API(JSString *)
 JS_NewDependentString(JSContext *cx, HandleString str, size_t start, size_t length)
 {
     AssertHeapIsIdle(cx);
