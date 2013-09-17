@@ -318,8 +318,6 @@ nsXULPrototypeCache::AbortCaching()
 }
 
 
-static const char kDisableXULDiskCachePref[] = "nglayout.debug.disable_xul_fastload";
-
 nsresult
 nsXULPrototypeCache::WritePrototype(nsXULPrototypeDocument* aPrototypeDocument)
 {

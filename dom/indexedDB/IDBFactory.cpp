@@ -558,8 +558,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBFactory)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mOwningObject)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-DOMCI_DATA(IDBFactory, IDBFactory)
-
 nsresult
 IDBFactory::OpenInternal(const nsAString& aName,
                          int64_t aVersion,

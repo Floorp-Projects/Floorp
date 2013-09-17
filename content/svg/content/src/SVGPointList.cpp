@@ -47,13 +47,6 @@ SVGPointList::GetValueAsString(nsAString& aValue) const
   }
 }
 
-static inline char* SkipWhitespace(char* str)
-{
-  while (IsSVGWhitespace(*str))
-    ++str;
-  return str;
-}
-
 nsresult
 SVGPointList::SetValueFromString(const nsAString& aValue)
 {

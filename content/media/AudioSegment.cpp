@@ -28,34 +28,6 @@ InterleaveAndConvertBuffer(const SrcT** aSourceChannels,
   }
 }
 
-static inline void
-InterleaveAndConvertBuffer(const int16_t** aSourceChannels,
-                           int32_t aLength, float aVolume,
-                           int32_t aChannels,
-                           int16_t* aOutput)
-{
-  int16_t* output = aOutput;
-  if (0.0f <= aVolume && aVolume <= 1.0f) {
-    int32_t scale = int32_t((1 << 16) * aVolume);
-    for (int32_t i = 0; i < aLength; ++i) {
-      for (int32_t channel = 0; channel < aChannels; ++channel) {
-        int16_t s = aSourceChannels[channel][i];
-        *output = int16_t((int32_t(s) * scale) >> 16);
-        ++output;
-      }
-    }
-    return;
-  }
-
-  for (int32_t i = 0; i < aLength; ++i) {
-    for (int32_t channel = 0; channel < aChannels; ++channel) {
-      float v = AudioSampleToFloat(aSourceChannels[channel][i])*aVolume;
-      *output = FloatToAudioSample<int16_t>(v);
-      ++output;
-    }
-  }
-}
-
 void
 InterleaveAndConvertBuffer(const void** aSourceChannels,
                            AudioSampleFormat aSourceFormat,
