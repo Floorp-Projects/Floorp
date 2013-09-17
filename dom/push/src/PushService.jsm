@@ -330,21 +330,35 @@ this.PushService = {
         break;
       case "timer-callback":
         if (aSubject == this._requestTimeoutTimer) {
-          if (Object.keys(this._pendingRequests).length == 0)
+          if (Object.keys(this._pendingRequests).length == 0) {
             this._requestTimeoutTimer.cancel();
+          }
 
+          // Set to true if at least one request timed out.
+          let requestTimedOut = false;
           for (let channelID in this._pendingRequests) {
             let duration = Date.now() - this._pendingRequests[channelID].ctime;
-            if (duration > this._requestTimeout) {
+
+            // If any of the registration requests time out, all the ones after it
+            // also made to fail, since we are going to be disconnecting the socket.
+            if (requestTimedOut || duration > this._requestTimeout) {
               debug("Request timeout: Removing " + channelID);
+              requestTimedOut = true;
               this._pendingRequests[channelID]
-                .deferred.reject({status: 0, error: "Timeout"});
+                .deferred.reject({status: 0, error: "TimeoutError"});
 
               delete this._pendingRequests[channelID];
               for (let i = this._requestQueue.length - 1; i >= 0; --i)
                 if (this._requestQueue[i].channelID == channelID)
                   this._requestQueue.splice(i, 1);
             }
+          }
+
+          // The most likely reason for a registration request timing out is
+          // that the socket has disconnected. Best to reconnect.
+          if (requestTimedOut) {
+            this._shutdownWS();
+            this._reconnectAfterBackoff();
           }
         }
         break;
@@ -1150,11 +1164,10 @@ this.PushService = {
    */
   _onRegisterError: function(aPageRecord, aMessageManager, reply) {
     debug("_onRegisterError()");
-
-    if (reply.status) {
-      debug("General failure " + reply.status);
-      throw { requestID: aPageRecord.requestID, error: reply.error };    
+    if (!reply.error) {
+      debug("Called without valid error message!");
     }
+    throw { requestID: aPageRecord.requestID, error: reply.error };
   },
 
   /**
