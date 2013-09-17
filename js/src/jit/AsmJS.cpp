@@ -1261,7 +1261,6 @@ class MOZ_STACK_CLASS ModuleCompiler
 
     char *                         errorString_;
     uint32_t                       errorOffset_;
-    uint32_t                       bodyStart_;
 
     int64_t                        usecBefore_;
     SlowFunctionVector             slowFunctions_;
@@ -1291,7 +1290,6 @@ class MOZ_STACK_CLASS ModuleCompiler
         globalAccesses_(cx),
         errorString_(NULL),
         errorOffset_(UINT32_MAX),
-        bodyStart_(parser.tokenStream.currentToken().pos.end),
         usecBefore_(PRMJ_Now()),
         slowFunctions_(cx),
         finishedFunctionBodies_(false)
@@ -1339,7 +1337,12 @@ class MOZ_STACK_CLASS ModuleCompiler
             return false;
         }
 
-        module_ = cx_->new_<AsmJSModule>();
+        // The record offset in the char buffer officially begins the char
+        // after the "use asm" processing directive statement (including any
+        // semicolon).
+        uint32_t charsBegin = parser_.tokenStream.currentToken().pos.end;
+
+        module_ = cx_->new_<AsmJSModule>(parser_.ss, charsBegin);
         if (!module_)
             return false;
 
@@ -1676,11 +1679,7 @@ class MOZ_STACK_CLASS ModuleCompiler
 
     bool extractModule(ScopedJSDeletePtr<AsmJSModule> *module, AsmJSStaticLinkData *linkData)
     {
-        // Record the ScriptSource and [begin, end) range of the module in case
-        // the link-time validation fails in LinkAsmJS and we need to re-parse
-        // the entire module from scratch.
-        uint32_t bodyEnd = parser_.tokenStream.currentToken().pos.end;
-        module_->initSourceDesc(parser_.ss, bodyStart_, bodyEnd);
+        module_->initCharsEnd(parser_.tokenStream.currentToken().pos.end);
 
         masm_.finish();
         if (masm_.oom())

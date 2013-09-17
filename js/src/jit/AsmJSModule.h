@@ -351,6 +351,7 @@ class AsmJSModule
 #endif
 
     struct Pod {
+        uint32_t                          charsLength_;
         uint32_t                          numGlobalVars_;
         uint32_t                          numFFIs_;
         size_t                            funcPtrTableAndExitBytes_;
@@ -366,22 +367,13 @@ class AsmJSModule
     bool                                  linked_;
     HeapPtr<ArrayBufferObject>            maybeHeap_;
 
-    AsmJSModuleSourceDesc                 sourceDesc_;
+    uint32_t                              charsBegin_;
+    ScriptSource *                        scriptSource_;
+
     FunctionCountsVector                  functionCounts_;
 
   public:
-    explicit AsmJSModule()
-      : globalArgumentName_(NULL),
-        importArgumentName_(NULL),
-        bufferArgumentName_(NULL),
-        minHeapLength_(AsmJSAllocationGranularity),
-        code_(NULL),
-        operationCallbackExit_(NULL),
-        linked_(false)
-    {
-        mozilla::PodZero(&pod);
-    }
-
+    explicit AsmJSModule(ScriptSource *scriptSource, uint32_t charsBegin);
     ~AsmJSModule();
 
     void trace(JSTracer *trc) {
@@ -412,6 +404,21 @@ class AsmJSModule
             MarkStringUnbarriered(trc, &importArgumentName_, "asm.js import argument name");
         if (bufferArgumentName_)
             MarkStringUnbarriered(trc, &bufferArgumentName_, "asm.js buffer argument name");
+    }
+
+    ScriptSource *scriptSource() const {
+        JS_ASSERT(scriptSource_ != NULL);
+        return scriptSource_;
+    }
+    uint32_t charsBegin() const {
+        return charsBegin_;
+    }
+    void initCharsEnd(uint32_t charsEnd) {
+        JS_ASSERT(charsEnd >= charsBegin_);
+        pod.charsLength_ = charsEnd - charsBegin_;
+    }
+    uint32_t charsEnd() const {
+        return charsBegin_ + pod.charsLength_;
     }
 
     bool addGlobalVarInitConstant(const Value &v, uint32_t *globalIndex) {
@@ -715,13 +722,6 @@ class AsmJSModule
     }
     PropertyName *bufferArgumentName() const {
         return bufferArgumentName_;
-    }
-
-    void initSourceDesc(ScriptSource *scriptSource, uint32_t bufStart, uint32_t bufEnd) {
-        sourceDesc_.init(scriptSource, bufStart, bufEnd);
-    }
-    const AsmJSModuleSourceDesc &sourceDesc() const {
-        return sourceDesc_;
     }
 
     void detachIonCompilation(size_t exitIndex) const {
