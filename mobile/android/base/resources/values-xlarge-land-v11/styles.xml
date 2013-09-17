@@ -5,7 +5,7 @@
 
 <resources>
 
-    <style name="Widget.TopBookmarksView" parent="Widget.GridView">
+    <style name="Widget.TopSitesGridView" parent="Widget.GridView">
         <item name="android:paddingLeft">55dp</item>
         <item name="android:paddingRight">55dp</item>
         <item name="android:paddingTop">30dp</item>

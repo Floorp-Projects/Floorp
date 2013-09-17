@@ -5,19 +5,19 @@
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:id="@+id/top_bookmarks_open_new_tab"
+    <item android:id="@+id/top_sites_open_new_tab"
           android:title="@string/contextmenu_open_new_tab"/>
 
-    <item android:id="@+id/top_bookmarks_open_private_tab"
+    <item android:id="@+id/top_sites_open_private_tab"
           android:title="@string/contextmenu_open_private_tab"/>
 
-    <item android:id="@+id/top_bookmarks_edit"
-          android:title="@string/contextmenu_top_bookmarks_edit"/>
+    <item android:id="@+id/top_sites_edit"
+          android:title="@string/contextmenu_top_sites_edit"/>
 
-    <item android:id="@+id/top_bookmarks_pin"
-          android:title="@string/contextmenu_top_bookmarks_pin"/>
+    <item android:id="@+id/top_sites_pin"
+          android:title="@string/contextmenu_top_sites_pin"/>
 
-    <item android:id="@+id/top_bookmarks_unpin"
-          android:title="@string/contextmenu_top_bookmarks_unpin"/>
+    <item android:id="@+id/top_sites_unpin"
+          android:title="@string/contextmenu_top_sites_unpin"/>
 
 </menu>
