@@ -9,7 +9,7 @@
 
 #include "mozilla/LinkedList.h"
 #include "mozilla/StaticPtr.h"
-#include "nsThreadUtils.h"
+#include "MainThreadUtils.h"
 
 /*
  * This header exports one public method in the mozilla namespace:
