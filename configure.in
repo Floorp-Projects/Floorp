@@ -1943,6 +1943,7 @@ ia64*-hpux*)
         _PLATFORM_DEFAULT_TOOLKIT=cairo-gonk
         MOZ_B2G_RIL=1
         MOZ_B2G_FM=1
+        MOZ_SYNTH_PICO=1
     else
         _PLATFORM_DEFAULT_TOOLKIT=cairo-android
         MOZ_LINKER=1
@@ -7480,6 +7481,18 @@ if test -n "$MOZ_B2G_BT"; then
     AC_DEFINE(MOZ_B2G_BT)
 fi
 AC_SUBST(MOZ_B2G_BT)
+
+dnl ========================================================
+dnl = Enable Pico Speech Synthesis (Gonk usually)
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(synth-pico,
+[  --enable-synth-pico  Set compile flags necessary for compiling Pico Web Speech API ],
+    MOZ_SYNTH_PICO=1,
+    MOZ_SYNTH_PICO= )
+if test -n "$MOZ_SYNTH_PICO"; then
+    AC_DEFINE(MOZ_SYNTH_PICO)
+fi
+AC_SUBST(MOZ_SYNTH_PICO)
 
 dnl ========================================================
 dnl = Enable Support for Time Manager API
