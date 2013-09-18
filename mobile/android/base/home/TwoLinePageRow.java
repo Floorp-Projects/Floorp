@@ -189,25 +189,11 @@ public class TwoLinePageRow extends LinearLayout
         }
 
         updateDisplayedUrl(url);
-
-        int faviconIndex = cursor.getColumnIndex(URLColumns.FAVICON);
-        Bitmap favicon = null;
-        if (faviconIndex != -1) {
-            byte[] b = cursor.getBlob(faviconIndex);
-
-            if (b != null) {
-                Bitmap bitmap = BitmapUtils.decodeByteArray(b);
-                if (bitmap != null) {
-                    favicon = Favicons.scaleImage(bitmap);
-                }
-            }
-        } else {
-            // If favicons is not on the cursor, try to fetch it from the memory cache
-            favicon = Favicons.getFaviconFromMemCache(url);
-        }
-
         cancelLoadFaviconTask();
 
+        // First, try to find the favicon in the memory cache. If it's not
+        // cached yet, try to load it from the database, off main thread.
+        final Bitmap favicon = Favicons.getFaviconFromMemCache(url);
         if (favicon != null) {
             setFaviconWithUrl(favicon, url);
         } else {
