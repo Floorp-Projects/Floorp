@@ -14,6 +14,8 @@
 #include "nsDependentString.h"
 #endif
 
+#include "mozilla/Char16.h"
+
 namespace mozilla {
 namespace internal {
 
@@ -26,42 +28,20 @@ inline uint32_t LiteralStringLength(const char (&c)[n])
   return n - 1;
 }
 
-#if defined(HAVE_CPP_CHAR16_T)
 template<int n>
 inline uint32_t LiteralWStringLength(const char16_t (&c)[n])
 {
   return n - 1;
 }
-#elif defined(HAVE_CPP_2BYTE_WCHAR_T)
-template<int n>
-inline uint32_t LiteralWStringLength(const wchar_t (&c)[n])
-{
-  return n - 1;
-}
-#endif
 
 } // namespace internal
 } // namespace mozilla
 
-#if defined(HAVE_CPP_CHAR16_T) || defined(HAVE_CPP_2BYTE_WCHAR_T)
-#if defined(HAVE_CPP_CHAR16_T)
-  //PR_STATIC_ASSERT(sizeof(char16_t) == 2);
-  #define NS_LL(s)                                u##s
-#else
-  //PR_STATIC_ASSERT(sizeof(wchar_t) == 2);
-  #define NS_LL(s)                                L##s
-#endif
-  #define NS_MULTILINE_LITERAL_STRING(s)          nsDependentString(reinterpret_cast<const nsAString::char_type*>(s), mozilla::internal::LiteralWStringLength(s))
-  #define NS_MULTILINE_LITERAL_STRING_INIT(n,s)   n(reinterpret_cast<const nsAString::char_type*>(s), mozilla::internal::LiteralWStringLength(s))
-  #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  const nsDependentString n(reinterpret_cast<const nsAString::char_type*>(s), mozilla::internal::LiteralWStringLength(s))
-  typedef nsDependentString nsLiteralString;
-#else
-  #define NS_LL(s)                                s
-  #define NS_MULTILINE_LITERAL_STRING(s)          NS_ConvertASCIItoUTF16(s, mozilla::internal::LiteralStringLength(s))
-  #define NS_MULTILINE_LITERAL_STRING_INIT(n,s)   n(s, mozilla::internal::LiteralStringLength(s))
-  #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  const NS_ConvertASCIItoUTF16 n(s, mozilla::internal::LiteralStringLength(s))
-  typedef NS_ConvertASCIItoUTF16 nsLiteralString;
-#endif
+#define NS_LL(s) MOZ_UTF16(s)
+#define NS_MULTILINE_LITERAL_STRING(s)          nsDependentString(reinterpret_cast<const nsAString::char_type*>(s), mozilla::internal::LiteralWStringLength(s))
+#define NS_MULTILINE_LITERAL_STRING_INIT(n,s)   n(reinterpret_cast<const nsAString::char_type*>(s), mozilla::internal::LiteralWStringLength(s))
+#define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  const nsDependentString n(reinterpret_cast<const nsAString::char_type*>(s), mozilla::internal::LiteralWStringLength(s))
+typedef nsDependentString nsLiteralString;
 
 /*
  * Macro arguments used in concatenation or stringification won't be expanded.
