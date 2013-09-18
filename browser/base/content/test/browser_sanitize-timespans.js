@@ -620,7 +620,7 @@ function setupDownloads() {
   });
   download.startTime = new Date(now_mSec - 10 * kMsecPerMin), // 10 minutes ago
   download.canceled = true;
-  publicList.add(download);
+  yield publicList.add(download);
 
   download = yield Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
@@ -628,7 +628,7 @@ function setupDownloads() {
   });
   download.startTime = new Date(now_mSec - 45 * kMsecPerMin), // 45 minutes ago
   download.canceled = true;
-  publicList.add(download);
+  yield publicList.add(download);
 
   download = yield Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
@@ -636,7 +636,7 @@ function setupDownloads() {
   });
   download.startTime = new Date(now_mSec - 70 * kMsecPerMin), // 70 minutes ago
   download.canceled = true;
-  publicList.add(download);
+  yield publicList.add(download);
 
   download = yield Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
@@ -644,7 +644,7 @@ function setupDownloads() {
   });
   download.startTime = new Date(now_mSec - 90 * kMsecPerMin), // 90 minutes ago
   download.canceled = true;
-  publicList.add(download);
+  yield publicList.add(download);
 
   download = yield Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
@@ -652,7 +652,7 @@ function setupDownloads() {
   });
   download.startTime = new Date(now_mSec - 130 * kMsecPerMin), // 130 minutes ago
   download.canceled = true;
-  publicList.add(download);
+  yield publicList.add(download);
 
   download = yield Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
@@ -660,7 +660,7 @@ function setupDownloads() {
   });
   download.startTime = new Date(now_mSec - 180 * kMsecPerMin), // 180 minutes ago
   download.canceled = true;
-  publicList.add(download);
+  yield publicList.add(download);
 
   download = yield Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
@@ -668,7 +668,7 @@ function setupDownloads() {
   });
   download.startTime = new Date(now_mSec - 250 * kMsecPerMin), // 250 minutes ago
   download.canceled = true;
-  publicList.add(download);
+  yield publicList.add(download);
 
   // Add "today" download
   let today = new Date();
@@ -682,7 +682,7 @@ function setupDownloads() {
   });
   download.startTime = today, // 12:00:01 AM this morning
   download.canceled = true;
-  publicList.add(download);
+  yield publicList.add(download);
   
   // Add "before today" download
   let lastYear = new Date();
@@ -694,7 +694,7 @@ function setupDownloads() {
   });
   download.startTime = lastYear,
   download.canceled = true;
-  publicList.add(download);
+  yield publicList.add(download);
   
   // Confirm everything worked
   let downloads = yield publicList.getAll();

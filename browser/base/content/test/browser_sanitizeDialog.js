@@ -987,7 +987,7 @@ function blankSlate() {
     let publicList = yield Downloads.getList(Downloads.PUBLIC);
     let downloads = yield publicList.getAll();
     for (let download of downloads) {
-      publicList.remove(download);
+      yield publicList.remove(download);
       yield download.finalize(true);
     }
     downloadsDone = true;
