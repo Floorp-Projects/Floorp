@@ -173,6 +173,10 @@ class MozbuildSandbox(Sandbox):
             d['CONFIG'] = ReadOnlyDefaultDict(self.config.substs_unicode,
                 global_default=None)
 
+            var = metadata.get('var', None)
+            if var and var in ['TOOL_DIRS', 'TEST_TOOL_DIRS']:
+                d['IS_TOOL_DIR'] = True
+
             # Register functions.
             for name, func in FUNCTIONS.items():
                 d[name] = getattr(self, func[0])
@@ -332,7 +336,8 @@ class BuildReaderError(Exception):
             s.write('The error occurred when validating the result of ')
             s.write('the execution. The reported error is:\n')
             s.write('\n')
-            s.write('    %s\n' % self.validation_error.message)
+            s.write(''.join('    %s\n' % l
+                            for l in self.validation_error.message.splitlines()))
             s.write('\n')
         else:
             s.write('The error appears to be part of the %s ' % __name__)
@@ -634,6 +639,20 @@ class BuildReader(object):
         sandbox = MozbuildSandbox(self.config, path, metadata=metadata)
         sandbox.exec_file(path, filesystem_absolute=filesystem_absolute)
         sandbox.execution_time = time.time() - time_start
+        var = metadata.get('var', None)
+        forbidden = {
+            'TOOL_DIRS': ['DIRS', 'PARALLEL_DIRS', 'TEST_DIRS'],
+            'TEST_TOOL_DIRS': ['DIRS', 'PARALLEL_DIRS', 'TEST_DIRS', 'TOOL_DIRS'],
+        }
+        if var in forbidden:
+            matches = [v for v in forbidden[var] if sandbox[v]]
+            if matches:
+                raise SandboxValidationError('%s is registered as %s in %s/moz.build.\n'
+                    'The %s variable%s not allowed in such directories.'
+                    % (sandbox['RELATIVEDIR'], var, metadata['parent'],
+                       ' and '.join(', '.join(matches).rsplit(', ', 1)),
+                       's are' if len(matches) > 1 else ' is'))
+
         yield sandbox
 
         # Traverse into referenced files.
@@ -658,7 +677,9 @@ class BuildReader(object):
                         'Directory (%s) registered multiple times in %s' % (
                             d, var))
 
-                recurse_info[d] = {'tier': metadata.get('tier', None)}
+                recurse_info[d] = {'tier': metadata.get('tier', None),
+                                   'parent': sandbox['RELATIVEDIR'],
+                                   'var': var}
 
         # We also have tiers whose members are directories.
         if 'TIERS' in sandbox:
@@ -674,7 +695,9 @@ class BuildReader(object):
                         raise SandboxValidationError(
                             'Tier directory (%s) registered multiple '
                             'times in %s' % (d, tier))
-                    recurse_info[d] = {'tier': tier}
+                    recurse_info[d] = {'tier': tier,
+                                       'parent': sandbox['RELATIVEDIR'],
+                                       'var': 'DIRS'}
 
         curdir = os.path.dirname(path)
         for relpath, child_metadata in recurse_info.items():
