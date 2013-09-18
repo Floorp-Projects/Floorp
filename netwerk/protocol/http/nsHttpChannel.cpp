@@ -2194,25 +2194,6 @@ nsHttpChannel::ProcessPartialContent()
     }
 
 
-    int64_t cachedContentLength = mCachedResponseHead->ContentLength();
-    int64_t entitySize = mResponseHead->TotalEntitySize();
-
-    LOG(("nsHttpChannel::ProcessPartialContent [this=%p trans=%p] "
-         "original content-length %lld, entity-size %lld, content-range %s\n",
-         this, mTransaction.get(), cachedContentLength, entitySize,
-         mResponseHead->PeekHeader(nsHttp::Content_Range)));
-
-    if ((entitySize >= 0) && (cachedContentLength >= 0) &&
-        (entitySize != cachedContentLength)) {
-        LOG(("nsHttpChannel::ProcessPartialContent [this=%p] "
-             "206 has different total entity size than the content length "
-             "of the original partially cached entity.\n", this));
-        
-        mCacheEntry->AsyncDoom(nullptr);
-        Cancel(NS_ERROR_CORRUPTED_CONTENT);
-        return CallOnStartRequest();
-    }
-
     // suspend the current transaction
     nsresult rv = mTransactionPump->Suspend();
     if (NS_FAILED(rv)) return rv;
@@ -5346,10 +5327,7 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
 
         uint64_t progressMax(uint64_t(mResponseHead->ContentLength()));
         uint64_t progress = mLogicalOffset + uint64_t(count);
-
-        if (progress > progressMax)
-            NS_WARNING("unexpected progress values - "
-                       "is server exceeding content length?");
+        MOZ_ASSERT(progress <= progressMax, "unexpected progress values");
 
         if (NS_IsMainThread()) {
             OnTransportStatus(nullptr, transportStatus, progress, progressMax);
