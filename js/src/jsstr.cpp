@@ -1783,6 +1783,16 @@ class MOZ_STACK_CLASS StringRegExpGuard
         return cx->compartment()->regExps.get(cx, patstr, opt, &re_);
     }
 
+    bool zeroLastIndex(JSContext *cx) {
+        if (!regExpIsObject())
+            return true;
+
+        // Don't use RegExpObject::setLastIndex, because that ignores the
+        // writability of "lastIndex" on this user-controlled RegExp object.
+        RootedValue zero(cx, Int32Value(0));
+        return JSObject::setProperty(cx, obj_, obj_, cx->names().lastIndex, &zero, true);
+    }
+
     RegExpShared &regExp() { return *re_; }
 
     bool regExpIsObject() { return obj_ != NULL; }
@@ -2727,6 +2737,15 @@ str_replace_regexp(JSContext *cx, CallArgs args, ReplaceData &rdata)
 
     RegExpStatics *res = cx->global()->getRegExpStatics();
     RegExpShared &re = rdata.g.regExp();
+
+    // The spec doesn't describe this function very clearly, so we go ahead and
+    // assume that when the input to String.prototype.replace is a global
+    // RegExp, calling the replacer function (assuming one was provided) takes
+    // place only after the matching is done. See the comment at the beginning
+    // of DoMatchGlobal explaining why we can zero the the RegExp object's
+    // lastIndex property here.
+    if (re.global() && !rdata.g.zeroLastIndex(cx))
+        return false;
 
     /* Optimize removal. */
     if (rdata.repstr && rdata.repstr->length() == 0) {
