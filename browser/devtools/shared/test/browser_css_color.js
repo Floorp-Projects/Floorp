@@ -9,12 +9,6 @@ let {Loader} = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {}
 let {colorUtils} = devtools.require("devtools/shared/css-color");
 
 function test() {
-  // FIXME: Enable this test on Linux once bug 916544 is fixed
-  if (Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS === "Linux") {
-    Services = colorUtils.CssColor = Loader = null;
-    return;
-  }
-
   waitForExplicitFinish();
 
   gBrowser.selectedTab = gBrowser.addTab();
@@ -302,7 +296,7 @@ function getTestData() {
     {authored: "hsla(0, 0%, 0%, 0)", name: "transparent", hex: "transparent", hsl: "transparent", rgb: "transparent"},
     {authored: "rgba(50, 60, 70, 0.5)", name: "rgba(50, 60, 70, 0.5)", hex: "rgba(50, 60, 70, 0.5)", hsl: "hsla(210, 17%, 24%, 0.5)", rgb: "rgba(50, 60, 70, 0.5)"},
     {authored: "rgba(0, 0, 0, 0.3)", name: "rgba(0, 0, 0, 0.3)", hex: "rgba(0, 0, 0, 0.3)", hsl: "hsla(0, 0%, 0%, 0.3)", rgb: "rgba(0, 0, 0, 0.3)"},
-    {authored: "rgba(255, 255, 255, 0.7)", name: "rgba(255, 255, 255, 0.7)", hex: "rgba(255, 255, 255, 0.7)", hsl: "hsla(0, 0%, 100%, 0.7)", rgb: "rgba(255, 255, 255, 0.7)"},
+    {authored: "rgba(255, 255, 255, 0.6)", name: "rgba(255, 255, 255, 0.6)", hex: "rgba(255, 255, 255, 0.6)", hsl: "hsla(0, 0%, 100%, 0.6)", rgb: "rgba(255, 255, 255, 0.6)"},
     {authored: "rgba(127, 89, 45, 1)", name: "#7F592D", hex: "#7F592D", hsl: "hsl(32.195, 48%, 34%)", rgb: "rgb(127, 89, 45)"},
     {authored: "hsla(19.304, 56%, 40%, 1)", name: "#9F512C", hex: "#9F512C", hsl: "hsl(19.304, 57%, 40%)", rgb: "rgb(159, 81, 44)"},
     {authored: "invalidColor", name: "", hex: "", hsl: "", rgb: ""}
