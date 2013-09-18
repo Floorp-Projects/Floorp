@@ -38,6 +38,9 @@ if CONFIG['MOZ_WEBSPEECH']:
         'nsSynthVoiceRegistry.cpp',
     ]
 
+    if CONFIG['MOZ_SYNTH_PICO']:
+        PARALLEL_DIRS = ['pico']
+
 IPDL_SOURCES += [
     'ipc/PSpeechSynthesis.ipdl',
     'ipc/PSpeechSynthesisRequest.ipdl',
