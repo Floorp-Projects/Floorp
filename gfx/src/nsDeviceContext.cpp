@@ -353,7 +353,9 @@ nsDeviceContext::SetDPI()
             dpi = 96.0f;
         }
 
-        double devPixelsPerCSSPixel = mWidget ? mWidget->GetDefaultScale() : 1.0;
+        CSSToLayoutDeviceScale scale = mWidget ? mWidget->GetDefaultScale()
+                                               : CSSToLayoutDeviceScale(1.0);
+        double devPixelsPerCSSPixel = scale.scale;
 
         mAppUnitsPerDevNotScaledPixel =
             std::max(1, NS_lround(AppUnitsPerCSSPixel() / devPixelsPerCSSPixel));
