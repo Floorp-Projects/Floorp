@@ -12,6 +12,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import org.json.JSONObject;
+import org.mozilla.gecko.background.common.DateUtils;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.healthreport.HealthReportStorage.MeasurementFields.FieldSpec;
 
@@ -1029,7 +1030,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
 
   @Override
   public int getDay(long time) {
-    return HealthReportUtils.getDay(time);
+    return DateUtils.getDay(time);
   }
 
   @Override

@@ -4,13 +4,10 @@
 
 package org.mozilla.gecko.background.healthreport;
 
-import java.text.SimpleDateFormat;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Locale;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.TimeZone;
 import java.util.TreeSet;
 import java.util.UUID;
 
@@ -25,22 +22,8 @@ import android.net.Uri;
 public class HealthReportUtils {
   public static final String LOG_TAG = HealthReportUtils.class.getSimpleName();
 
-  public static int getDay(final long time) {
-    return (int) Math.floor(time / HealthReportConstants.MILLISECONDS_PER_DAY);
-  }
-
   public static String getEnvironmentHash(final String input) {
     return DigestUtils.shaHex(input);
-  }
-
-  public static String getDateStringForDay(long day) {
-    return getDateString(HealthReportConstants.MILLISECONDS_PER_DAY * day);
-  }
-
-  public static String getDateString(long time) {
-    final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-    format.setTimeZone(TimeZone.getTimeZone("UTC"));
-    return format.format(time);
   }
 
   /**
