@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES_A = \
+MOCHITEST_FILES = \
 		responseIdentical.sjs \
 		test_bug5141.html \
 		test_bug51034.html \
@@ -235,9 +235,6 @@ MOCHITEST_FILES_A = \
 		test_bug894874.html \
 		test_bug895974.html \
 		test_bug895239.html \
-		$(NULL)
-
-MOCHITEST_FILES_B = \
 		test_bug459424.html \
 		bug461735-redirect1.sjs \
 		bug461735-redirect2.sjs \
@@ -437,9 +434,6 @@ MOCHITEST_FILES_B = \
 		invalid_accesscontrol.resource^headers^ \
 		file_bug869432.eventsource \
 		file_bug869432.eventsource^headers^ \
-		$(NULL)
-
-MOCHITEST_FILES_C= \
 		test_xhr_progressevents.html \
 		progressserver.sjs \
 		somedatas.resource \
@@ -587,7 +581,7 @@ MOCHITEST_FILES_C= \
 # (see Bug 774939). App permission checks are also disabled on
 # anything but B2G (Bug 900707).
 ifdef MOZ_CHILD_PERMISSIONS
-MOCHITEST_FILES_B += \
+MOCHITEST_FILES += \
 		test_messagemanager_assertpermission.html \
 		test_child_process_shutdown_message.html \
 		$(NULL)
@@ -600,13 +594,10 @@ MOCHITEST_CHROME_FILES =	\
 
 # This test fails on the Mac for some reason
 ifneq (,$(filter gtk2 gtk3 windows,$(MOZ_WIDGET_TOOLKIT)))
-MOCHITEST_FILES_C += \
+MOCHITEST_FILES += \
 		test_copyimage.html \
 		$(NULL)
 endif
-
-MOCHITEST_FILES_PARTS = $(foreach s,A B C,MOCHITEST_FILES_$(s))
-
 
 # Disabled for now. Mochitest isn't reliable enough for these.
 # test_bug444546.html \

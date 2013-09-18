@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_BROWSER_TESTS = \
+MOCHITEST_BROWSER_FILES = \
 		browser_profiler_remote.js \
 		browser_profiler_bug_834878_source_buttons.js \
 		browser_profiler_cmd.js \
@@ -17,12 +17,7 @@ MOCHITEST_BROWSER_TESTS = \
 		browser_profiler_gecko_data.js \
 		browser_profiler_io.js \
 		head.js \
-		$(NULL)
-
-MOCHITEST_BROWSER_PAGES = \
 		mock_profiler_bug_834878_page.html \
 		mock_profiler_bug_834878_script.js \
 		mock_console_api.html \
 		$(NULL)
-
-MOCHITEST_BROWSER_FILES_PARTS = MOCHITEST_BROWSER_TESTS MOCHITEST_BROWSER_PAGES

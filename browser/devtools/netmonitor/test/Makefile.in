@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_BROWSER_TESTS = \
+MOCHITEST_BROWSER_FILES = \
 	browser_net_aaa_leaktest.js \
 	browser_net_autoscroll.js \
 	browser_net_simple-init.js \
@@ -39,9 +39,6 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_net_copy_url.js \
 	browser_net_open_request_in_tab.js \
 	head.js \
-	$(NULL)
-
-MOCHITEST_BROWSER_PAGES = \
 	test-image.png \
 	html_simple-test-page.html \
 	html_navigate-test-page.html \
@@ -62,5 +59,3 @@ MOCHITEST_BROWSER_PAGES = \
 	sjs_status-codes-test-server.sjs \
 	sjs_sorting-test-server.sjs \
 	$(NULL)
-
-MOCHITEST_BROWSER_FILES_PARTS = MOCHITEST_BROWSER_TESTS MOCHITEST_BROWSER_PAGES

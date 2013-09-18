@@ -5,7 +5,7 @@
 ADDONSRC = $(srcdir)/addons
 TESTXPI = $(CURDIR)/$(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)/addons
 
-MOCHITEST_BROWSER_MAIN = \
+MOCHITEST_BROWSER_MAIN_FILES = \
   head.js \
   browser_about.js \
   browser_bug523784.js \
@@ -59,8 +59,8 @@ MOCHITEST_BROWSER_MAIN = \
   browser_CTP_plugins.js \
   $(NULL)
 
-MOCHITEST_BROWSER_SECONDARY = \
-  head.js \
+MOCHITEST_BROWSER_FILES = \
+  $(MOCHITEST_BROWSER_MAIN_FILES) \
   browser_addonrepository_performance.js \
   browser_bug557956.js \
   browser_bug616841.js \
@@ -73,9 +73,6 @@ MOCHITEST_BROWSER_SECONDARY = \
   browser_select_selection.js \
   browser_select_update.js \
   browser_updatessl.js \
-  $(NULL)
-
-MOCHITEST_BROWSER_RESOURCES = \
   addon_about.xul \
   addon_prefs.xul \
   browser_bug557956.rdf \
@@ -109,12 +106,10 @@ MOCHITEST_BROWSER_RESOURCES = \
   blockPluginHard.xml \
   $(NULL)
 
-MOCHITEST_BROWSER_FILES_PARTS = $(foreach s,MAIN SECONDARY RESOURCES,MOCHITEST_BROWSER_$(s))
+MOCHITEST_BROWSER_MAIN_DEST = $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)-window
+INSTALL_TARGETS += MOCHITEST_BROWSER_MAIN
 
 include $(topsrcdir)/config/rules.mk
-
-libs:: $(MOCHITEST_BROWSER_MAIN)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)-window
 
 libs::
 	rm -rf $(TESTXPI)
