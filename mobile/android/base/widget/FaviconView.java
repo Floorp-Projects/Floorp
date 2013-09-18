@@ -156,6 +156,14 @@ public class FaviconView extends ImageView {
     }
 
     /**
+     * Clear image and background shown by this view.
+     */
+    public void clearImage() {
+        setImageResource(0);
+        hideBackground();
+    }
+
+    /**
      * Update the displayed image and apply the scaling logic.
      * The scaling logic will attempt to resize the image to fit correctly inside the view in a way
      * that avoids unreasonable levels of loss of quality.
