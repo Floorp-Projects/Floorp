@@ -23,7 +23,6 @@ MOCHITEST_BROWSER_FILES := \
                  browser_styleeditor_reload.js \
                  head.js \
                  four.html \
-                 head.js \
                  import.css \
                  import.html \
                  import2.css \

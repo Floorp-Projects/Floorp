@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES_A	= \
+MOCHITEST_FILES	= \
 		DOMTestCase.js \
 		test_anchor01.html \
 		test_anchor02.html \
@@ -83,7 +83,7 @@ MOCHITEST_FILES_A	= \
 # This test is failing on all platforms -- bug 471139
 #		test_HTMLDocument12.html \
 #
-MOCHITEST_FILES_B	= \
+MOCHITEST_FILES	+= \
 		test_HTMLDirectoryElement01.html \
 		test_HTMLDivElement01.html \
 		test_HTMLDlistElement01.html \
@@ -251,8 +251,6 @@ MOCHITEST_FILES_B	= \
 		test_HTMLElement97.html \
 		test_HTMLElement98.html \
 		test_HTMLElement99.html \
-		$(NULL)
-MOCHITEST_FILES_C	= \
 		test_HTMLFieldSetElement01.html \
 		test_HTMLFieldSetElement02.html \
 		test_HTMLFontElement01.html \
@@ -365,9 +363,6 @@ MOCHITEST_FILES_C	= \
 		test_HTMLModElement02.html \
 		test_HTMLModElement03.html \
 		test_HTMLModElement04.html \
-		$(NULL)
-
-MOCHITEST_FILES_D	= \
 		test_HTMLObjectElement01.html \
 		test_HTMLObjectElement02.html \
 		test_HTMLObjectElement03.html \
@@ -600,8 +595,6 @@ MOCHITEST_FILES_D	= \
 		test_HTMLTitleElement01.html \
 		test_HTMLUListElement01.html \
 		test_HTMLUListElement02.html \
-		$(NULL)
-MOCHITEST_FILES_E	= \
 		test_object01.html \
 		test_object02.html \
 		test_object03.html \
@@ -671,9 +664,6 @@ MOCHITEST_FILES_E	= \
 		test_hasFeature04.html \
 		test_hasFeature05.html \
 		test_hasFeature06.html \
-		$(NULL)
-
-MOCHITEST_FILES_F	= \
 		test_HTMLAppletElement01.html \
 		test_HTMLAppletElement02.html \
 		test_HTMLAppletElement03.html \
@@ -686,5 +676,3 @@ MOCHITEST_FILES_F	= \
 		test_HTMLAppletElement10.html \
 		test_HTMLAppletElement11.html \
 		$(NULL)
-
-MOCHITEST_FILES_PARTS := $(foreach part,A B C D E,MOCHITEST_FILES_$(part))
