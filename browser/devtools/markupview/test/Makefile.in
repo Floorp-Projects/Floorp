@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MOCHITEST_BROWSER_FILES := \
+		browser_inspector_markup_colorconversion.js \
 		browser_inspector_markup_navigation.html \
 		browser_inspector_markup_navigation.js \
 		browser_inspector_markup_mutation.html \

@@ -252,11 +252,11 @@ let Downloads = {
   },
 
   _getDownloadSize: function dl_getDownloadSize(aSize) {
-    let displaySize = DownloadUtils.convertByteUnits(aSize);
-    if (displaySize[0] > 0) // [0] is size, [1] is units
-      return displaySize.join("");
-    else
-      return gStrings.GetStringFromName("downloadState.unknownSize");
+    if (aSize > 0) {
+      let displaySize = DownloadUtils.convertByteUnits(aSize);
+      return displaySize.join(""); // [0] is size, [1] is units
+    }
+    return gStrings.GetStringFromName("downloadState.unknownSize");
   },
 
   // Not all states are displayed as-is on mobile, some are translated to a generic state
