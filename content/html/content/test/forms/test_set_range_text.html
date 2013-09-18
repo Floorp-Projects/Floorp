@@ -1,0 +1,183 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=850364
+-->
+<head>
+<title>Test for Bug 850364</title>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=850364">Mozilla Bug 850364</a>
+<p id="display"></p>
+<div id="content">
+
+<!-- "SetRangeText() supported types"-->
+<input type="text" id="input_text"></input>
+<input type="search" id="input_search"></input>
+<input type="url" id="input_url"></input>
+<input type="tel" id="input_tel"></input>
+<input type="password" id="input_password"></input>
+
+<!-- "SetRangeText() non-supported types" -->
+<input type="button" id="input_button"></input>
+<input type="submit" id="input_submit"></input>
+<input type="image" id="input_image"></input>
+<input type="reset" id="input_reset"></input>
+<input type="radio" id="input_radio"></input>
+<input type="checkbox" id="input_checkbox"></input>
+<input type="range" id="input_range"></input>
+<input type="file" id="input_file"></input>
+<input type="email" id="input_email"></input>
+ 
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  /** Test for Bug 850364 **/
+
+  var SupportedTypes = ["text", "search", "url", "tel", "password"];
+  var NonSupportedTypes = ["button", "submit", "image", "reset", "radio",
+                           "checkbox", "range", "file", "email"];
+
+  SimpleTest.waitForExplicitFinish();
+
+  function TestInputs() {
+
+    var opThrows, elem, i, msg;
+
+    //Non-supported types should throw
+    for (i = 0; i < NonSupportedTypes.length; ++i) {
+      opThrows = false;
+      msg = "input_" + NonSupportedTypes[i];
+      elem = document.getElementById(msg);
+      elem.focus();
+      try {
+        elem.setRangeText("abc");
+      } catch (ex) {
+       opThrows = true;
+      }
+      ok(opThrows, msg + " should throw NotSupportedError");
+    }
+
+    //Supported types should not throw
+    for (i = 0; i < SupportedTypes.length; ++i) {
+      opThrows = false;
+      msg = "input_" + SupportedTypes[i];
+      elem = document.getElementById(msg);
+      elem.focus();
+      try {
+        elem.setRangeText("abc");
+      } catch (ex) {
+          opThrows = true;
+      }
+      is(opThrows, false, msg + " should not throw NotSupportedError");
+
+      elem.addEventListener("select", function (aEvent) {
+        ok(true, "select event should be fired for "+ msg);
+      }, false);
+
+      elem.addEventListener("input", function (aEvent) {
+        ok(false, "input event should NOT be fired for " + msg);
+      }, false);
+
+      //test setRange(replacement)
+      elem.value = "0123456789ABCDEF";
+      elem.setSelectionRange(1, 6);
+      elem.setRangeText("xyz");
+      is(elem.value, "0xyz6789ABCDEF", msg + ".value == \"0xyz6789ABCDEF\"");
+      is(elem.selectionStart, 1, msg + ".selectionStart == 1");
+      is(elem.selectionEnd, 4, msg + ".selectionEnd == 4");
+      elem.setRangeText("mnk");
+      is(elem.value, "0mnk6789ABCDEF", msg + ".value == \"0mnk6789ABCDEF\"");
+
+      //test SetRange(replacement, start, end, mode) with start > end
+      try {
+        elem.setRangeText("abc", 20, 4);
+      } catch (ex) {
+        opThrows = (ex.name == "IndexSizeError" && ex.code == DOMException.INDEX_SIZE_ERR);
+      }
+      is(opThrows, true, msg + " should throw IndexSizeError");
+
+      //test SelectionMode 'select'
+      elem.value = "0123456789ABCDEF";
+      elem.setRangeText("xyz", 4, 9, "select");
+      is(elem.value, "0123xyz9ABCDEF", msg + ".value == \"0123xyz9ABCDEF\"");
+      is(elem.selectionStart, 4, msg + ".selectionStart == 4, with \"select\"");
+      is(elem.selectionEnd, 7, msg + ".selectionEnd == 7, with \"select\"");
+
+      elem.setRangeText("pqm", 6, 25, "select");
+      is(elem.value, "0123xypqm", msg + ".value == \"0123xypqm\"");
+      is(elem.selectionStart, 6, msg + ".selectionStart == 6, with \"select\"");
+      is(elem.selectionEnd, 9, msg + ".selectionEnd == 9, with \"select\"");
+
+      //test SelectionMode 'start'
+      elem.value = "0123456789ABCDEF";
+      elem.setRangeText("xyz", 4, 9, "start");
+      is(elem.value, "0123xyz9ABCDEF", msg + ".value == \"0123xyz9ABCDEF\"");
+      is(elem.selectionStart, 4, msg + ".selectionStart == 4, with \"start\"");
+      is(elem.selectionEnd, 4, msg + ".selectionEnd == 4, with \"start\"");
+
+      elem.setRangeText("pqm", 6, 25, "start");
+      is(elem.value, "0123xypqm", msg + ".value == \"0123xypqm\"");
+      is(elem.selectionStart, 6, msg + ".selectionStart == 6, with \"start\"");
+      is(elem.selectionEnd, 6, msg + ".selectionEnd == 6, with \"start\"");
+
+      //test SelectionMode 'end'
+      elem.value = "0123456789ABCDEF";
+      elem.setRangeText("xyz", 4, 9, "end");
+      is(elem.value, "0123xyz9ABCDEF", msg + ".value == \"0123xyz9ABCDEF\"");
+      is(elem.selectionStart, 7, msg + ".selectionStart == 7, with \"end\"");
+      is(elem.selectionEnd, 7, msg + ".selectionEnd == 7, with \"end\"");
+
+      elem.setRangeText("pqm", 6, 25, "end");
+      is(elem.value, "0123xypqm", msg + ".value == \"0123xypqm\"");
+      is(elem.selectionStart, 9, msg + ".selectionStart == 9, with \"end\"");
+      is(elem.selectionEnd, 9, msg + ".selectionEnd == 9, with \"end\"");
+
+      //test SelectionMode 'preserve' (default)
+
+      //subcase: selection{Start|End} > end
+      elem.value = "0123456789";
+      elem.setSelectionRange(6, 9);
+      elem.setRangeText("Z", 1, 2, "preserve");
+      is(elem.value, "0Z23456789", msg + ".value == \"0Z23456789\"");
+      is(elem.selectionStart, 6, msg + ".selectionStart == 6, with \"preserve\"");
+      is(elem.selectionEnd, 9, msg + ".selectionEnd == 9, with \"preserve\"");
+
+      //subcase: selection{Start|End} < end
+      elem.value = "0123456789";
+      elem.setSelectionRange(4, 5);
+      elem.setRangeText("QRST", 2, 9, "preserve");
+      is(elem.value, "01QRST9", msg + ".value == \"01QRST9\"");
+      is(elem.selectionStart, 2, msg + ".selectionStart == 2, with \"preserve\"");
+      is(elem.selectionEnd, 6, msg + ".selectionEnd == 6, with \"preserve\"");
+
+      //subcase: selectionStart > end, selectionEnd < end
+      elem.value = "0123456789";
+      elem.setSelectionRange(8, 4);
+      elem.setRangeText("QRST", 1, 5);
+      is(elem.value, "0QRST56789", msg + ".value == \"0QRST56789\"");
+      is(elem.selectionStart, 1, msg + ".selectionStart == 1, with \"default\"");
+      is(elem.selectionEnd, 5, msg + ".selectionEnd == 5, with \"default\"");
+
+      //subcase: selectionStart < end, selectionEnd > end
+      elem.value = "0123456789";
+      elem.setSelectionRange(4, 9);
+      elem.setRangeText("QRST", 2, 6);
+      is(elem.value, "01QRST6789", msg + ".value == \"01QRST6789\"");
+      is(elem.selectionStart, 2, msg + ".selectionStart == 2, with \"default\"");
+      is(elem.selectionEnd, 9, msg + ".selectionEnd == 9, with \"default\"");
+    }
+
+    SimpleTest.finish();
+  }
+
+  addLoadEvent(TestInputs);
+
+</script>
+</pre>
+</body>
+</html>
