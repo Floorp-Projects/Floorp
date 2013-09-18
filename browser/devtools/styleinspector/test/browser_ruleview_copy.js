@@ -71,10 +71,10 @@ function checkCopySelection()
   let expectedPattern = "    margin: 10em;[\\r\\n]+" +
                         "    font-size: 14pt;[\\r\\n]+" +
                         "    font-family: helvetica,sans-serif;[\\r\\n]+" +
-                        "    color: rgb\\(170, 170, 170\\);[\\r\\n]+" +
+                        "    color: #AAA;[\\r\\n]+" +
                         "}[\\r\\n]+" +
                         "html {[\\r\\n]+" +
-                        "    color: rgb\\(0, 0, 0\\);[\\r\\n]*";
+                        "    color: #000;[\\r\\n]*";
 
   SimpleTest.waitForClipboard(function IUI_boundCopyCheck() {
     return checkClipboardData(expectedPattern);

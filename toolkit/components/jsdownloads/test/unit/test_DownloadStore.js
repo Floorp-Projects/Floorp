@@ -290,3 +290,9 @@ add_task(function test_save_reload_unknownProperties()
   do_check_eq(itemsForLoad[2].saver._unknownProperties.saver2,
               "download3saver2");
 });
+
+////////////////////////////////////////////////////////////////////////////////
+//// Termination
+
+let tailFile = do_get_file("tail.js");
+Services.scriptloader.loadSubScript(NetUtil.newURI(tailFile).spec);
