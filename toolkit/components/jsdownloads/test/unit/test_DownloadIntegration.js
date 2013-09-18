@@ -335,3 +335,8 @@ add_task(function test_exit_private_browsing()
   continueResponses();
 });
 
+////////////////////////////////////////////////////////////////////////////////
+//// Termination
+
+let tailFile = do_get_file("tail.js");
+Services.scriptloader.loadSubScript(NetUtil.newURI(tailFile).spec);
