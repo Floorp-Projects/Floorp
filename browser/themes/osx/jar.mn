@@ -112,7 +112,6 @@ browser.jar:
   skin/classic/browser/downloads/download-summary.png       (downloads/download-summary.png)
   skin/classic/browser/downloads/download-summary@2x.png    (downloads/download-summary@2x.png)
   skin/classic/browser/downloads/downloads.css              (downloads/downloads.css)
-  skin/classic/browser/downloads/indicator.css              (downloads/indicator.css)
   skin/classic/browser/feeds/subscribe.css                  (feeds/subscribe.css)
   skin/classic/browser/feeds/subscribe-ui.css               (feeds/subscribe-ui.css)
   skin/classic/browser/feeds/feedIcon.png                   (feeds/feedIcon.png)
