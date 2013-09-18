@@ -539,7 +539,10 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
 
   if (SupportsAzureContent()) {
     MOZ_ASSERT(!destCtx->IsCairo());
-    aSource.DrawBufferWithRotation(destCtx->GetDrawTarget(), BUFFER_BLACK, 1.0, OP_SOURCE);
+    if (destCtx->GetDrawTarget()->GetFormat() == FORMAT_B8G8R8A8) {
+      destCtx->GetDrawTarget()->ClearRect(Rect(0, 0, mFrontBufferRect.width, mFrontBufferRect.height));
+    }
+    aSource.DrawBufferWithRotation(destCtx->GetDrawTarget(), BUFFER_BLACK);
   } else {
     aSource.DrawBufferWithRotation(destCtx, BUFFER_BLACK);
   }
@@ -557,7 +560,10 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
 
     if (SupportsAzureContent()) {
       MOZ_ASSERT(!destCtx->IsCairo());
-      aSource.DrawBufferWithRotation(destCtx->GetDrawTarget(), BUFFER_WHITE, 1.0, OP_SOURCE);
+      if (destCtx->GetDrawTarget()->GetFormat() == FORMAT_B8G8R8A8) {
+        destCtx->GetDrawTarget()->ClearRect(Rect(0, 0, mFrontBufferRect.width, mFrontBufferRect.height));
+      }
+      aSource.DrawBufferWithRotation(destCtx->GetDrawTarget(), BUFFER_WHITE);
     } else {
       aSource.DrawBufferWithRotation(destCtx, BUFFER_WHITE);
     }
