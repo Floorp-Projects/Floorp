@@ -5,5 +5,6 @@
 
 MOCHITEST_FILES = \
   test_webgl_conformance.html \
+  test_webgl_request_context.html \
   test_webgl_request_mismatch.html \
   $(NULL)
