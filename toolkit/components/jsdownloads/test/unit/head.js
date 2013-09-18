@@ -464,6 +464,61 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
 }
 
 /**
+ * Waits for a download to reach half of its progress, in case it has not
+ * reached the expected progress already.
+ *
+ * @param aDownload
+ *        The Download object to wait upon.
+ *
+ * @return {Promise}
+ * @resolves When the download has reached half of its progress.
+ * @rejects Never.
+ */
+function promiseDownloadMidway(aDownload) {
+  let deferred = Promise.defer();
+
+  // Wait for the download to reach half of its progress.
+  let onchange = function () {
+    if (!aDownload.stopped && !aDownload.canceled && aDownload.progress == 50) {
+      aDownload.onchange = null;
+      deferred.resolve();
+    }
+  };
+
+  // Register for the notification, but also call the function directly in
+  // case the download already reached the expected progress.
+  aDownload.onchange = onchange;
+  onchange();
+
+  return deferred.promise;
+}
+
+/**
+ * Waits for a download to finish, in case it has not finished already.
+ *
+ * @param aDownload
+ *        The Download object to wait upon.
+ *
+ * @return {Promise}
+ * @resolves When the download has finished successfully.
+ * @rejects JavaScript exception if the download failed.
+ */
+function promiseDownloadStopped(aDownload) {
+  if (!aDownload.stopped) {
+    // The download is in progress, wait for the current attempt to finish and
+    // report any errors that may occur.
+    return aDownload.start();
+  }
+
+  if (aDownload.succeeded) {
+    return Promise.resolve();
+  }
+
+  // The download failed or was canceled.
+  return Promise.reject(aDownload.error || new Error("Download canceled."));
+}
+
+/**
  * Returns a new public or private DownloadList object.
  *
  * @param aIsPrivate
@@ -475,19 +530,13 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
  */
 function promiseNewList(aIsPrivate)
 {
-  let type = aIsPrivate ? Downloads.PRIVATE : Downloads.PUBLIC;
+  // We need to clear all the internal state for the list and summary objects,
+  // since all the objects are interdependent internally.
+  Downloads._promiseListsInitialized = null;
+  Downloads._lists = {};
+  Downloads._summaries = {};
 
-  // Force the creation of a new list.
-  if (type in Downloads._listPromises) {
-    delete Downloads._listPromises[type];
-  }
-
-  // Invalidate the combined list, if any.
-  if (Downloads.ALL in Downloads._listPromises) {
-    delete Downloads._listPromises[Downloads.ALL];
-  }
-
-  return Downloads.getList(type);
+  return Downloads.getList(aIsPrivate ? Downloads.PRIVATE : Downloads.PUBLIC);
 }
 
 /**
