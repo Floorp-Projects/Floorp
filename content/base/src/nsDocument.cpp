@@ -6886,7 +6886,8 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     }
     // Now convert the scale into device pixels per CSS pixel.
     nsIWidget *widget = nsContentUtils::WidgetForDocument(this);
-    CSSToLayoutDeviceScale pixelRatio(widget ? widget->GetDefaultScale() : 1.0f);
+    CSSToLayoutDeviceScale pixelRatio = widget ? widget->GetDefaultScale()
+                                               : CSSToLayoutDeviceScale(1.0f);
     CSSToScreenScale scaleFloat = mScaleFloat * pixelRatio;
     CSSToScreenScale scaleMinFloat = mScaleMinFloat * pixelRatio;
     CSSToScreenScale scaleMaxFloat = mScaleMaxFloat * pixelRatio;
