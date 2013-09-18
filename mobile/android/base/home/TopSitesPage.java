@@ -14,11 +14,11 @@ import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.db.BrowserDB.TopSitesCursorWrapper;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.home.HomeListView.HomeContextMenuInfo;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.PinSiteDialog.OnSiteSelectedListener;
-import org.mozilla.gecko.home.TopSitesGridAdapter.Thumbnail;
 import org.mozilla.gecko.home.TopSitesGridView.OnPinSiteListener;
 import org.mozilla.gecko.home.TopSitesGridView.TopSitesGridContextMenuInfo;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -66,14 +66,11 @@ public class TopSitesPage extends HomeFragment {
     // Logging tag name
     private static final String LOGTAG = "GeckoTopSitesPage";
 
-    // Cursor loader ID for list of top sites
-    private static final int LOADER_ID_TOP_SITES_LIST = 0;
-
-    // Cursor loader ID for grid of top sites
-    private static final int LOADER_ID_TOP_SITES_GRID = 1;
+    // Cursor loader ID for the top sites
+    private static final int LOADER_ID_TOP_SITES = 0;
 
     // Loader ID for thumbnails
-    private static final int LOADER_ID_THUMBNAILS = 2;
+    private static final int LOADER_ID_THUMBNAILS = 1;
 
     // Key for thumbnail urls
     private static final String THUMBNAILS_URLS_KEY = "urls";
@@ -114,6 +111,25 @@ public class TopSitesPage extends HomeFragment {
     // On URL open listener
     private OnUrlOpenListener mUrlOpenListener;
 
+    // Max number of entries shown in the grid from the cursor.
+    private int mMaxGridEntries;
+
+    /**
+     *  Class to hold the bitmap of cached thumbnails/favicons.
+     */
+    public static class Thumbnail {
+        // Thumbnail or favicon.
+        private final boolean isThumbnail;
+
+        // Bitmap of thumbnail/favicon.
+        private final Bitmap bitmap;
+
+        public Thumbnail(Bitmap bitmap, boolean isThumbnail) {
+            this.bitmap = bitmap;
+            this.isThumbnail = isThumbnail;
+        }
+    }
+
     public static TopSitesPage newInstance() {
         return new TopSitesPage();
     }
@@ -125,6 +141,8 @@ public class TopSitesPage extends HomeFragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
+
+        mMaxGridEntries = activity.getResources().getInteger(R.integer.number_of_top_sites);
 
         try {
             mUrlOpenListener = (OnUrlOpenListener) activity;
@@ -162,6 +180,16 @@ public class TopSitesPage extends HomeFragment {
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                final ListView list = (ListView) parent;
+                final int headerCount = list.getHeaderViewsCount();
+                if (position < headerCount) {
+                    // The click is on a header, don't do anything.
+                    return;
+                }
+
+                // Absolute position for the adapter.
+                position += (mGridAdapter.getCount() - headerCount);
+
                 final Cursor c = mListAdapter.getCursor();
                 if (c == null || !c.moveToPosition(position)) {
                     return;
@@ -252,6 +280,7 @@ public class TopSitesPage extends HomeFragment {
         inflater.inflate(R.menu.top_sites_contextmenu, menu);
 
         TopSitesGridContextMenuInfo info = (TopSitesGridContextMenuInfo) menuInfo;
+        menu.setHeaderTitle(info.getDisplayTitle());
 
         if (!TextUtils.isEmpty(info.url)) {
             if (info.isPinned) {
@@ -335,9 +364,7 @@ public class TopSitesPage extends HomeFragment {
 
     @Override
     protected void load() {
-        final LoaderManager manager = getLoaderManager();
-        manager.initLoader(LOADER_ID_TOP_SITES_LIST, null, mCursorLoaderCallbacks);
-        manager.initLoader(LOADER_ID_TOP_SITES_GRID, null, mCursorLoaderCallbacks);
+        getLoaderManager().initLoader(LOADER_ID_TOP_SITES, null, mCursorLoaderCallbacks);
     }
 
     /**
@@ -452,30 +479,19 @@ public class TopSitesPage extends HomeFragment {
         }
     }
 
-    private static class TopSitesListLoader extends SimpleCursorLoader {
+    private static class TopSitesLoader extends SimpleCursorLoader {
         // Max number of search results
-        private static final int SEARCH_LIMIT = 50;
+        private static final int SEARCH_LIMIT = 30;
+        private int mMaxGridEntries;
 
-        public TopSitesListLoader(Context context) {
+        public TopSitesLoader(Context context) {
             super(context);
+            mMaxGridEntries = context.getResources().getInteger(R.integer.number_of_top_sites);
         }
 
         @Override
         public Cursor loadCursor() {
-            final ContentResolver cr = getContext().getContentResolver();
-            return BrowserDB.filter(cr, "", SEARCH_LIMIT);
-        }
-    }
-
-    private static class TopSitesGridLoader extends SimpleCursorLoader {
-        public TopSitesGridLoader(Context context) {
-            super(context);
-        }
-
-        @Override
-        public Cursor loadCursor() {
-            final int max = getContext().getResources().getInteger(R.integer.number_of_top_sites);
-            return BrowserDB.getTopSites(getContext().getContentResolver(), max);
+            return BrowserDB.getTopSites(getContext().getContentResolver(), mMaxGridEntries, SEARCH_LIMIT);
         }
     }
 
@@ -485,70 +501,136 @@ public class TopSitesPage extends HomeFragment {
         }
 
         @Override
+        public int getCount() {
+            return Math.max(0, super.getCount() - mMaxGridEntries);
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return super.getItem(position + mMaxGridEntries);
+        }
+
+        @Override
         public void bindView(View view, Context context, Cursor cursor) {
+            final int position = cursor.getPosition();
+            cursor.moveToPosition(position + mMaxGridEntries);
+
             final TwoLinePageRow row = (TwoLinePageRow) view;
             row.updateFromCursor(cursor);
         }
 
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            return LayoutInflater.from(parent.getContext()).inflate(R.layout.home_item_row, parent, false);
+            return LayoutInflater.from(context).inflate(R.layout.home_item_row, parent, false);
+        }
+    }
+
+    public class TopSitesGridAdapter extends CursorAdapter {
+        // Cache to store the thumbnails.
+        private Map<String, Thumbnail> mThumbnails;
+
+        public TopSitesGridAdapter(Context context, Cursor cursor) {
+            super(context, cursor);
+        }
+
+        @Override
+        public int getCount() {
+            return Math.min(mMaxGridEntries, super.getCount());
+        }
+
+        @Override
+        protected void onContentChanged() {
+            // Don't do anything. We don't want to regenerate every time
+            // our database is updated.
+            return;
+        }
+
+        /**
+         * Update the thumbnails returned by the db.
+         *
+         * @param thumbnails A map of urls and their thumbnail bitmaps.
+         */
+        public void updateThumbnails(Map<String, Thumbnail> thumbnails) {
+            mThumbnails = thumbnails;
+            notifyDataSetChanged();
+        }
+
+        @Override
+        public void bindView(View bindView, Context context, Cursor cursor) {
+            String url = "";
+            String title = "";
+            boolean pinned = false;
+
+            // Cursor is already moved to required position.
+            if (!cursor.isAfterLast()) {
+                url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
+                title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
+                pinned = ((TopSitesCursorWrapper) cursor).isPinned();
+            }
+
+            TopSitesGridItemView view = (TopSitesGridItemView) bindView;
+            view.setTitle(title);
+            view.setUrl(url);
+            view.setPinned(pinned);
+
+            // If there is no url, then show "add bookmark".
+            if (TextUtils.isEmpty(url)) {
+                view.displayThumbnail(R.drawable.top_site_add);
+            } else {
+                // Show the thumbnail.
+                Thumbnail thumbnail = (mThumbnails != null ? mThumbnails.get(url) : null);
+                if (thumbnail == null) {
+                    view.displayThumbnail(null);
+                } else if (thumbnail.isThumbnail) {
+                    view.displayThumbnail(thumbnail.bitmap);
+                } else {
+                    view.displayFavicon(thumbnail.bitmap);
+                }
+            }
+        }
+
+        @Override
+        public View newView(Context context, Cursor cursor, ViewGroup parent) {
+            return new TopSitesGridItemView(context);
         }
     }
 
     private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            final Activity activity = getActivity();
-
-            if (id == LOADER_ID_TOP_SITES_LIST) {
-                return new TopSitesListLoader(activity);
-            } else if (id == LOADER_ID_TOP_SITES_GRID) {
-                return new TopSitesGridLoader(activity);
-            }
-
-            return null;
+            return new TopSitesLoader(getActivity());
         }
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
-            final int id = loader.getId();
+            mListAdapter.swapCursor(c);
+            mGridAdapter.swapCursor(c);
+            updateUiFromCursor(c);
 
-            if (id == LOADER_ID_TOP_SITES_LIST) {
-                mListAdapter.swapCursor(c);
-                updateUiFromCursor(c);
-            } else if (id == LOADER_ID_TOP_SITES_GRID) {
-                mGridAdapter.swapCursor(c);
+            // Load the thumbnails.
+            if (c.getCount() > 0 && c.moveToFirst()) {
+                final ArrayList<String> urls = new ArrayList<String>();
+                do {
+                    final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
+                    urls.add(url);
+                } while (c.moveToNext());
 
-                // Load the thumbnails.
-                if (c.getCount() > 0 && c.moveToFirst()) {
-                    final ArrayList<String> urls = new ArrayList<String>();
-                    do {
-                        final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
-                        urls.add(url);
-                    } while (c.moveToNext());
-
-                    if (urls.size() > 0) {
-                        Bundle bundle = new Bundle();
-                        bundle.putStringArrayList(THUMBNAILS_URLS_KEY, urls);
-                        getLoaderManager().restartLoader(LOADER_ID_THUMBNAILS, bundle, mThumbnailsLoaderCallbacks);
-                    }
+                if (urls.size() > 0) {
+                    Bundle bundle = new Bundle();
+                    bundle.putStringArrayList(THUMBNAILS_URLS_KEY, urls);
+                    getLoaderManager().restartLoader(LOADER_ID_THUMBNAILS, bundle, mThumbnailsLoaderCallbacks);
                 }
             }
         }
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
-            final int id = loader.getId();
+            if (mListAdapter != null) {
+                mListAdapter.swapCursor(null);
+            }
 
-            if (id == LOADER_ID_TOP_SITES_LIST) {
-                if (mListAdapter != null) {
-                    mListAdapter.swapCursor(null);
-                }
-            } else if (id == LOADER_ID_TOP_SITES_GRID) {
-                if (mGridAdapter != null) {
-                    mGridAdapter.swapCursor(null);
-                }
+            if (mGridAdapter != null) {
+                mGridAdapter.swapCursor(null);
             }
         }
     }

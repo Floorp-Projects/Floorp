@@ -236,7 +236,6 @@ FENNEC_JAVA_FILES = \
   home/SimpleCursorLoader.java \
   home/SuggestClient.java \
   home/TabMenuStrip.java \
-  home/TopSitesGridAdapter.java \
   home/TopSitesGridItemView.java \
   home/TopSitesGridView.java \
   home/TopSitesPage.java \
