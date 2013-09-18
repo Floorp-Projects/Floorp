@@ -71,7 +71,7 @@ SaveProfileTask::Run() {
       JSAutoCompartment autoComp(cx, obj);
       JSObject* profileObj = profiler_get_profile_jsobject(cx);
       JS::Rooted<JS::Value> val(cx, OBJECT_TO_JSVAL(profileObj));
-      JS_Stringify(cx, val.address(), nullptr, JSVAL_NULL, WriteCallback, &stream);
+      JS_Stringify(cx, &val, JS::NullPtr(), JS::NullHandleValue, WriteCallback, &stream);
       stream.close();
       LOGF("Saved to %s", tmpPath.get());
     } else {

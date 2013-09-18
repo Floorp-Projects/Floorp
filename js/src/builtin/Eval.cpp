@@ -416,7 +416,8 @@ js::DirectEval(JSContext *cx, const CallArgs &args)
     AbstractFramePtr caller = iter.abstractFramePtr();
 
     JS_ASSERT(IsBuiltinEvalForScope(caller.scopeChain(), args.calleev()));
-    JS_ASSERT(JSOp(*iter.pc()) == JSOP_EVAL);
+    JS_ASSERT(JSOp(*iter.pc()) == JSOP_EVAL ||
+              JSOp(*iter.pc()) == JSOP_SPREADEVAL);
     JS_ASSERT_IF(caller.isFunctionFrame(),
                  caller.compartment() == caller.callee()->compartment());
 

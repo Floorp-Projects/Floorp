@@ -66,8 +66,7 @@ is($("target").value, "abcdefghijkl", "Should only delete one char");
 sendKey("back_space");
 is($("target").value, "abcdefghijk", "Should only delete one char again");
 (function () {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  $("target").controllers.getControllerForCommand('cmd_undo')
+  SpecialPowers.wrap($("target")).controllers.getControllerForCommand('cmd_undo')
                          .doCommand('cmd_undo');
 })();
 is($("target").value, "abcdefghijklm",

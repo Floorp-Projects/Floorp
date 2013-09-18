@@ -849,6 +849,15 @@ nsHTMLReflowState::ApplyRelativePositioning(nsIFrame* aFrame,
                                             const nsMargin& aComputedOffsets,
                                             nsPoint* aPosition)
 {
+  if (!aFrame->IsRelativelyPositioned()) {
+    NS_ASSERTION(!aFrame->Properties().Get(nsIFrame::NormalPositionProperty()),
+                 "We assume that changing the 'position' property causes "
+                 "frame reconstruction.  If that ever changes, this code "
+                 "should call "
+                 "props.Delete(nsIFrame::NormalPositionProperty())");
+    return;
+  }
+
   // Store the normal position
   FrameProperties props = aFrame->Properties();
   nsPoint* normalPosition = static_cast<nsPoint*>

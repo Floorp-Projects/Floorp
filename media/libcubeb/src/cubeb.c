@@ -224,3 +224,13 @@ cubeb_stream_get_position(cubeb_stream * stream, uint64_t * position)
 
   return stream->context->ops->stream_get_position(stream, position);
 }
+
+int
+cubeb_stream_get_latency(cubeb_stream * stream, uint32_t * latency)
+{
+  if (!stream || !latency) {
+    return CUBEB_ERROR_INVALID_PARAMETER;
+  }
+
+  return stream->context->ops->stream_get_latency(stream, latency);
+}

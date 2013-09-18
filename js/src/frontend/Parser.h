@@ -544,7 +544,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
                            ParseNodeKind kind = PNK_SEMI, JSOp op = JSOP_NOP);
     bool arrayInitializerComprehensionTail(Node pn);
     Node generatorExpr(Node kid);
-    bool argumentList(Node listNode);
+    bool argumentList(Node listNode, bool *isSpread);
     Node letBlock(LetContext letContext);
     Node destructuringExpr(BindData<ParseHandler> *data, TokenKind tt);
 
