@@ -26,7 +26,7 @@
 #include "prerr.h"
 #include "NetworkActivityMonitor.h"
 #include "mozilla/VisualEventTracer.h"
-
+#include "nsThreadUtils.h"
 #include "nsIServiceManager.h"
 #include "nsISocketProviderService.h"
 #include "nsISocketProvider.h"

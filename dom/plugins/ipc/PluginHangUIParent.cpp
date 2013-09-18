@@ -18,6 +18,7 @@
 #include "nsIWindowMediator.h"
 #include "nsIWinTaskbar.h"
 #include "nsServiceManagerUtils.h"
+#include "nsThreadUtils.h"
 
 #include "WidgetUtils.h"
 

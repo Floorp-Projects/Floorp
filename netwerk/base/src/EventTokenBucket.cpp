@@ -8,6 +8,7 @@
 
 #include "nsNetUtil.h"
 #include "nsSocketTransportService2.h"
+#include "nsThreadUtils.h"
 
 #ifdef XP_WIN
 #include <windows.h>

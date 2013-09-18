@@ -10,7 +10,6 @@
 
 #include <nsTArray.h>
 #include <nsAutoPtr.h>
-#include <nsThreadUtils.h>
 
 class nsISupports;
 
@@ -70,7 +69,7 @@ class ChannelEventQueue
   inline void Suspend();
   // Resume flushes the queue asynchronously, i.e. items in queue will be
   // dispatched in a new event on the current thread.
-  inline void Resume();
+  void Resume();
 
  private:
   inline void MaybeFlushQueue();
@@ -137,22 +136,6 @@ ChannelEventQueue::CompleteResume()
     // queued ones.
     mSuspended = false;
     MaybeFlushQueue();
-  }
-}
-
-inline void
-ChannelEventQueue::Resume()
-{
-  // Resuming w/o suspend: error in debug mode, ignore in build
-  MOZ_ASSERT(mSuspendCount > 0);
-  if (mSuspendCount <= 0) {
-    return;
-  }
-
-  if (!--mSuspendCount) {
-    nsRefPtr<nsRunnableMethod<ChannelEventQueue> > event =
-      NS_NewRunnableMethod(this, &ChannelEventQueue::CompleteResume);
-    NS_DispatchToCurrentThread(event);
   }
 }
 
