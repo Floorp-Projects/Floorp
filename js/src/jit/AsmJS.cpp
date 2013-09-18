@@ -960,7 +960,7 @@ js::RoundUpToNextValidAsmJSHeapLength(uint32_t length)
         return (length + 0x0003ffff) & ~0x0003ffff;
     if (length < 0x10000000u) // < 256M quanta 1M
         return (length + 0x000fffff) & ~0x000fffff;
-    if (length < 0x10000000u) // < 1024M quanta 4M
+    if (length < 0x40000000u) // < 1024M quanta 4M
         return (length + 0x003fffff) & ~0x003fffff;
     // < 4096M quanta 16M.  Note zero is returned if over 0xff000000 but such
     // lengths are not currently valid.
