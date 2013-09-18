@@ -208,7 +208,7 @@
               observes="cmd_back"></html:div>
 
     <!-- Navigation bar -->
-    <appbar id="navbar" mousethrough="never">
+    <appbar id="navbar" mousethrough="never" visible="true">
       <hbox id="progress-container" layer="true">
         <hbox id="progress-control" />
       </hbox>
