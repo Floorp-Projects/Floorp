@@ -218,9 +218,9 @@ add_task(function test_notifications()
     download3.start();
 
     // Add downloads to list.
-    list.add(download1);
-    list.add(download2);
-    list.add(download3);
+    yield list.add(download1);
+    yield list.add(download2);
+    yield list.add(download3);
     // Cancel third download
     yield download3.cancel();
 
@@ -232,9 +232,9 @@ add_task(function test_notifications()
     yield promiseAttempt2;
 
     // Clean up.
-    list.remove(download1);
-    list.remove(download2);
-    list.remove(download3);
+    yield list.remove(download1);
+    yield list.remove(download2);
+    yield list.remove(download3);
   }
 });
 
@@ -254,8 +254,8 @@ add_task(function test_no_notifications()
     download2.start();
 
     // Add downloads to list.
-    list.add(download1);
-    list.add(download2);
+    yield list.add(download1);
+    yield list.add(download2);
 
     yield download1.cancel();
     yield download2.cancel();
@@ -263,8 +263,8 @@ add_task(function test_no_notifications()
     notifyPromptObservers(isPrivate, 0, 0);
 
     // Clean up.
-    list.remove(download1);
-    list.remove(download2);
+    yield list.remove(download1);
+    yield list.remove(download2);
   }
 });
 
@@ -285,8 +285,8 @@ add_task(function test_mix_notifications()
   let promiseAttempt2 = download2.start();
 
   // Add downloads to lists.
-  publicList.add(download1);
-  privateList.add(download2);
+  yield publicList.add(download1);
+  yield privateList.add(download2);
 
   notifyPromptObservers(true, 2, 1);
 
@@ -296,8 +296,89 @@ add_task(function test_mix_notifications()
   yield promiseAttempt2;
 
   // Clean up.
-  publicList.remove(download1);
-  privateList.remove(download2);
+  yield publicList.remove(download1);
+  yield privateList.remove(download2);
+});
+
+/**
+ * Tests suspending and resuming as well as going offline and then online again.
+ * The downloads should stop when suspending and start again when resuming.
+ */
+add_task(function test_suspend_resume()
+{
+  enableObserversTestMode();
+
+  // The default wake delay is 10 seconds, so set the wake delay to be much
+  // faster for these tests.
+  Services.prefs.setIntPref("browser.download.manager.resumeOnWakeDelay", 5);
+
+  let addDownload = function(list)
+  {
+    return Task.spawn(function () {
+      let download = yield promiseNewDownload(httpUrl("interruptible.txt"));
+      download.start();
+      list.add(download);
+      throw new Task.Result(download);
+    });
+  }
+
+  let publicList = yield promiseNewList();
+  let privateList = yield promiseNewList(true);
+
+  let download1 = yield addDownload(publicList);
+  let download2 = yield addDownload(publicList);
+  let download3 = yield addDownload(privateList);
+  let download4 = yield addDownload(privateList);
+  let download5 = yield addDownload(publicList);
+
+  // First, check that the downloads are all canceled when going to sleep.
+  Services.obs.notifyObservers(null, "sleep_notification", null);
+  do_check_true(download1.canceled);
+  do_check_true(download2.canceled);
+  do_check_true(download3.canceled);
+  do_check_true(download4.canceled);
+  do_check_true(download5.canceled);
+
+  // Remove a download. It should not be started again.
+  publicList.remove(download5);
+  do_check_true(download5.canceled);
+
+  // When waking up again, the downloads start again after the wake delay. To be
+  // more robust, don't check after a delay but instead just wait for the
+  // downloads to finish.
+  Services.obs.notifyObservers(null, "wake_notification", null);
+  yield download1.whenSucceeded();
+  yield download2.whenSucceeded();
+  yield download3.whenSucceeded();
+  yield download4.whenSucceeded();
+
+  // Downloads should no longer be canceled. However, as download5 was removed
+  // from the public list, it will not be restarted.
+  do_check_false(download1.canceled);
+  do_check_true(download5.canceled);
+
+  // Create four new downloads and check for going offline and then online again.
+
+  download1 = yield addDownload(publicList);
+  download2 = yield addDownload(publicList);
+  download3 = yield addDownload(privateList);
+  download4 = yield addDownload(privateList);
+
+  // Going offline should cancel the downloads.
+  Services.obs.notifyObservers(null, "network:offline-about-to-go-offline", null);
+  do_check_true(download1.canceled);
+  do_check_true(download2.canceled);
+  do_check_true(download3.canceled);
+  do_check_true(download4.canceled);
+
+  // Going back online should start the downloads again.
+  Services.obs.notifyObservers(null, "network:offline-status-changed", "online");
+  yield download1.whenSucceeded();
+  yield download2.whenSucceeded();
+  yield download3.whenSucceeded();
+  yield download4.whenSucceeded();
+
+  Services.prefs.clearUserPref("browser.download.manager.resumeOnWakeDelay");
 });
 
 /**
@@ -316,8 +397,8 @@ add_task(function test_exit_private_browsing()
   let promiseAttempt2 = download2.start();
 
   // Add downloads to list.
-  privateList.add(download1);
-  privateList.add(download2);
+  yield privateList.add(download1);
+  yield privateList.add(download2);
 
   // Complete the download.
   yield promiseAttempt1;
@@ -335,3 +416,8 @@ add_task(function test_exit_private_browsing()
   continueResponses();
 });
 
+////////////////////////////////////////////////////////////////////////////////
+//// Termination
+
+let tailFile = do_get_file("tail.js");
+Services.scriptloader.loadSubScript(NetUtil.newURI(tailFile).spec);

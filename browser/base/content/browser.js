@@ -1119,25 +1119,18 @@ var gBrowserInit = {
     // If the user manually opens the download manager before the timeout, the
     // downloads will start right away, and getting the service again won't hurt.
     setTimeout(function() {
-      try {
-        let DownloadsCommon =
-          Cu.import("resource:///modules/DownloadsCommon.jsm", {}).DownloadsCommon;
-        if (DownloadsCommon.useJSTransfer) {
-          // Open the data link without initalizing nsIDownloadManager.
-          DownloadsCommon.initializeAllDataLinks();
-          let DownloadsTaskbar =
-            Cu.import("resource:///modules/DownloadsTaskbar.jsm", {}).DownloadsTaskbar;
-          DownloadsTaskbar.registerIndicator(window);
-        } else {
-          // Initalizing nsIDownloadManager will trigger the data link.
-          Services.downloads;
-          let DownloadTaskbarProgress =
-            Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm", {}).DownloadTaskbarProgress;
-          DownloadTaskbarProgress.onBrowserWindowLoad(window);
-        }
-      } catch (ex) {
-        Cu.reportError(ex);
+      let DownloadsCommon =
+        Cu.import("resource:///modules/DownloadsCommon.jsm", {}).DownloadsCommon;
+      if (DownloadsCommon.useJSTransfer) {
+        // Open the data link without initalizing nsIDownloadManager.
+        DownloadsCommon.initializeAllDataLinks();
+      } else {
+        // Initalizing nsIDownloadManager will trigger the data link.
+        Services.downloads;
       }
+      let DownloadTaskbarProgress =
+        Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm", {}).DownloadTaskbarProgress;
+      DownloadTaskbarProgress.onBrowserWindowLoad(window);
     }, 10000);
 
     // The object handling the downloads indicator is also initialized here in the
@@ -1442,7 +1435,6 @@ var gBrowserInit = {
     }
 
     // Final window teardown, do this last.
-    window.XULBrowserWindow.destroy();
     window.XULBrowserWindow = null;
     window.QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(Ci.nsIWebNavigation)
@@ -3697,14 +3689,6 @@ var XULBrowserWindow = {
     this.onSecurityChange(null, null, securityUI.state);
   },
 
-  destroy: function () {
-    // XXXjag to avoid leaks :-/, see bug 60729
-    delete this.throbberElement;
-    delete this.stopCommand;
-    delete this.reloadCommand;
-    delete this.statusText;
-  },
-
   setJSStatus: function () {
     // unsupported
   },
@@ -4317,11 +4301,6 @@ var TabsProgressListener = {
 
     // Filter out location changes in sub documents.
     if (aWebProgress.isTopLevel) {
-      // Initialize the click-to-play state.
-      aBrowser._clickToPlayPluginsActivated = new Map();
-      aBrowser._clickToPlayAllPluginsActivated = false;
-      aBrowser._pluginScriptedState = gPluginHandler.PLUGIN_SCRIPTED_STATE_NONE;
-
       FullZoom.onLocationChange(aLocationURI, false, aBrowser);
     }
   },
@@ -4445,7 +4424,8 @@ nsBrowserAccess.prototype = {
         break;
       case Ci.nsIBrowserDOMWindow.OPEN_NEWTAB :
         let browser = this._openURIInNewTab(aURI, aOpener, isExternal);
-        newWindow = browser.contentWindow;
+        if (browser)
+          newWindow = browser.contentWindow;
         break;
       default : // OPEN_CURRENTWINDOW or an illegal value
         newWindow = content;
@@ -4470,7 +4450,10 @@ nsBrowserAccess.prototype = {
 
     var isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
     let browser = this._openURIInNewTab(aURI, aOpener, isExternal);
-    return browser.QueryInterface(Ci.nsIFrameLoaderOwner);
+    if (browser)
+      return browser.QueryInterface(Ci.nsIFrameLoaderOwner);
+
+    return null;
   },
 
   isTabContentWindow: function (aWindow) {

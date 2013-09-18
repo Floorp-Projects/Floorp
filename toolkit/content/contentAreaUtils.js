@@ -1089,10 +1089,7 @@ function openURL(aURL)
   else {
     var recentWindow = Services.wm.getMostRecentWindow("navigator:browser");
     if (recentWindow) {
-      var win = recentWindow.browserDOMWindow.openURI(uri, null,
-                                                      recentWindow.browserDOMWindow.OPEN_DEFAULTWINDOW,
-                                                      recentWindow.browserDOMWindow.OPEN_NEW);
-      win.focus();
+      recentWindow.openUILinkIn(uri.spec, "tab");
       return;
     }
 

@@ -2511,8 +2511,8 @@ ContentParent::RecvShowFilePicker(const int16_t& mode,
     nsCOMPtr<nsIFile> file;
     filePicker->GetFile(getter_AddRefs(file));
 
-    // even with NS_OK file can be null if nothing was selected 
-    if (file) {                                 
+    // Even with NS_OK file can be null if nothing was selected.
+    if (file) {
         nsAutoString filePath;
         file->GetPath(filePath);
         files->AppendElement(filePath);
@@ -2526,6 +2526,9 @@ ContentParent::RecvGetRandomValues(const uint32_t& length,
                                    InfallibleTArray<uint8_t>* randomValues)
 {
     uint8_t* buf = Crypto::GetRandomValues(length);
+    if (!buf) {
+        return true;
+    }
 
     randomValues->SetCapacity(length);
     randomValues->SetLength(length);

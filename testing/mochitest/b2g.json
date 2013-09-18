@@ -4,7 +4,8 @@
     "content": "",
     "docshell": "",
     "dom": "",
-    "layout": ""
+    "layout": "",
+    "toolkit/devtools/apps": ""
   },
 "excludetests": {
     "content/xul":"tests that use xul",
@@ -394,7 +395,6 @@
     "dom/workers/test/test_relativeLoad.html":"Failed to load script: relativeLoad_import.js",
 
     "layout/base/tests/test_bug450930.xhtml":"times out",
-    "layout/base/tests/test_bug458898.html":"nsIDOMJSWindow.openDialog error",
     "layout/base/tests/test_bug603550.html":"Components.classes[@mozilla.org/widget/dragservice;1] is undefined",
     "layout/base/tests/test_bug629838.html":"depends on plugins support",
     "layout/base/tests/test_mozPaintCount.html":"depends on plugins support",

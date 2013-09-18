@@ -277,12 +277,6 @@ DirectShowReader::DecodeAudioData()
                                  numFrames,
                                  buffer.forget(),
                                  mNumChannels));
-
-  uint32_t bytesConsumed = mSourceFilter->GetAndResetBytesConsumedCount();
-  if (bytesConsumed > 0) {
-    mDecoder->NotifyBytesConsumed(bytesConsumed);
-  }
-
   return true;
 }
 

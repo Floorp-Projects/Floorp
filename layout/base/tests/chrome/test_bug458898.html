@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=458898
+-->
+<head>
+  <title>Test for Bug 458898</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=458898">Mozilla Bug 458898</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+var win = window.openDialog("data:text/html,<div style='height:200px; width:100px;'>");
+
+function loaded() {
+  var disableWindowResizePref = "dom.disable_window_move_resize";
+  var oldPrefValue = SpecialPowers.getBoolPref(disableWindowResizePref);
+  SpecialPowers.setBoolPref(disableWindowResizePref, false);
+  win.sizeToContent();
+  ok(win.innerWidth >= 100, "innerWidth: " + win.innerWidth + " >= 100 ?");
+  ok(win.innerHeight >= 200, "innerHeight: " + win.innerHeight + " >= 200 ?");
+  win.close();
+  SpecialPowers.setBoolPref(disableWindowResizePref, oldPrefValue);
+  SimpleTest.finish();
+}
+
+win.addEventListener("load", loaded, false);
+
+</script>
+</pre>
+</body>
+</html>

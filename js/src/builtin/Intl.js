@@ -525,9 +525,9 @@ function CanonicalizeLocaleList(locales) {
  * Spec: RFC 4647, section 3.4.
  */
 function BestAvailableLocale(availableLocales, locale) {
-    assert(IsStructurallyValidLanguageTag(locale), "BestAvailableLocale");
-    assert(locale === CanonicalizeLanguageTag(locale), "BestAvailableLocale");
-    assert(callFunction(std_String_indexOf, locale, "-u-") === -1, "BestAvailableLocale");
+    assert(IsStructurallyValidLanguageTag(locale), "invalid BestAvailableLocale locale structure");
+    assert(locale === CanonicalizeLanguageTag(locale), "non-canonical BestAvailableLocale locale");
+    assert(callFunction(std_String_indexOf, locale, "-u-") === -1, "locale shouldn't contain -u-");
 
     var candidate = locale;
     while (true) {

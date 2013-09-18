@@ -12,8 +12,6 @@
 #include "mozilla/css/StyleRule.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsPresContext.h"
-#include "nsIDocument.h"
-#include "nsCOMPtr.h"
 #include "nsRuleWalker.h"
 #include "nsRuleProcessorData.h"
 #include "mozilla/dom/Element.h"

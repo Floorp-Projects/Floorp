@@ -233,13 +233,13 @@ CodeGenerator::visitValueToDouble(LValueToDouble *lir)
 
     if (hasNull) {
         masm.bind(&isNull);
-        masm.loadStaticDouble(&DoubleZero, output);
+        masm.loadConstantDouble(DoubleZero, output);
         masm.jump(&done);
     }
 
     if (hasUndefined) {
         masm.bind(&isUndefined);
-        masm.loadStaticDouble(&js_NaN, output);
+        masm.loadConstantDouble(js_NaN, output);
         masm.jump(&done);
     }
 
@@ -290,16 +290,14 @@ CodeGenerator::visitValueToFloat32(LValueToFloat32 *lir)
         return false;
 
     if (hasNull) {
-        static float DoubleZeroFloat = DoubleZero;
         masm.bind(&isNull);
-        masm.loadStaticFloat32(&DoubleZeroFloat, output);
+        masm.loadConstantFloat32((float)DoubleZero, output);
         masm.jump(&done);
     }
 
     if (hasUndefined) {
-        static float js_NaN_float = js_NaN;
         masm.bind(&isUndefined);
-        masm.loadStaticFloat32(&js_NaN_float, output);
+        masm.loadConstantFloat32((float)js_NaN, output);
         masm.jump(&done);
     }
 
@@ -6802,10 +6800,6 @@ CodeGenerator::visitClampVToUint8(LClampVToUint8 *lir)
     Register output = ToRegister(lir->output());
     MDefinition *input = lir->mir()->input();
 
-    OutOfLineCode *oolDouble = oolTruncateDouble(tempFloat, output);
-    if (!oolDouble)
-        return false;
-
     Label *stringEntry, *stringRejoin;
     if (input->mightBeType(MIRType_String)) {
         OutOfLineCode *oolString = oolCallVM(StringToNumberInfo, lir, (ArgList(), output),
@@ -6821,7 +6815,7 @@ CodeGenerator::visitClampVToUint8(LClampVToUint8 *lir)
 
     Label fails;
     masm.clampValueToUint8(operand, input,
-                           stringEntry, stringRejoin, oolDouble->entry(),
+                           stringEntry, stringRejoin,
                            output, tempFloat, output, &fails);
 
     if (!bailoutFrom(&fails, lir->snapshot()))

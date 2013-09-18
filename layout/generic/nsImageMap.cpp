@@ -27,8 +27,6 @@
 
 namespace dom = mozilla::dom;
 
-static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 class Area {
 public:
   Area(nsIContent* aArea);

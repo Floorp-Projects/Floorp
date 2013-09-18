@@ -564,15 +564,14 @@ class MacroAssembler : public MacroAssemblerSpecific
     void canonicalizeDouble(FloatRegister reg) {
         Label notNaN;
         branchDouble(DoubleOrdered, reg, reg, &notNaN);
-        loadStaticDouble(&js_NaN, reg);
+        loadConstantDouble(js_NaN, reg);
         bind(&notNaN);
     }
 
     void canonicalizeFloat(FloatRegister reg) {
-        static float js_NaN_float = js_NaN;
         Label notNaN;
         branchFloat(DoubleOrdered, reg, reg, &notNaN);
-        loadStaticFloat32(&js_NaN_float, reg);
+        loadConstantFloat32((float)js_NaN, reg);
         bind(&notNaN);
     }
 
@@ -1010,11 +1009,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     else                                                                \
         method##Float32(arg1f, arg2);                                   \
 
-    void loadStaticFloatingPoint(const double *dp, const float *fp, FloatRegister dest,
-                                 MIRType destType)
-    {
-        DISPATCH_FLOATING_POINT_OP(loadStatic, destType, dp, fp, dest);
-    }
     void loadConstantFloatingPoint(double d, float f, FloatRegister dest, MIRType destType) {
         DISPATCH_FLOATING_POINT_OP(loadConstant, destType, d, f, dest);
     }
@@ -1186,10 +1180,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
     void clampValueToUint8(ValueOperand value, MDefinition *input,
                            Label *handleStringEntry, Label *handleStringRejoin,
-                           Label *truncateDoubleSlow,
                            Register stringReg, FloatRegister temp, Register output, Label *fail)
     {
-        convertValueToInt(value, input, handleStringEntry, handleStringRejoin, truncateDoubleSlow,
+        convertValueToInt(value, input, handleStringEntry, handleStringRejoin, NULL,
                           stringReg, temp, output, fail, IntConversion_ClampToUint8);
     }
     void clampValueToUint8(ValueOperand value, MDefinition *input,

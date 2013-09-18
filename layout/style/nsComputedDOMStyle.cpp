@@ -43,7 +43,6 @@
 #include "mozilla/dom/Element.h"
 #include "prtime.h"
 #include "nsWrapperCacheInlines.h"
-#include "nsUTF8Utils.h"
 #include <algorithm>
 
 using namespace mozilla;

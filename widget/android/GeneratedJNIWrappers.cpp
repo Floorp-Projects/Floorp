@@ -42,6 +42,7 @@ void AndroidBridge::InitStubs(JNIEnv *jEnv) {
     jGetContext = getStaticMethod("getContext", "()Landroid/content/Context;");
     jGetCurrentBatteryInformationWrapper = getStaticMethod("getCurrentBatteryInformation", "()[D");
     jGetCurrentNetworkInformationWrapper = getStaticMethod("getCurrentNetworkInformation", "()[D");
+    jGetDensity = getStaticMethod("getDensity", "()F");
     jGetDpiWrapper = getStaticMethod("getDpi", "()I");
     jGetExtensionFromMimeTypeWrapper = getStaticMethod("getExtensionFromMimeType", "(Ljava/lang/String;)Ljava/lang/String;");
     jGetGfxInfoDataWrapper = getStaticMethod("getGfxInfoData", "()Ljava/lang/String;");
@@ -780,6 +781,33 @@ jdoubleArray AndroidBridge::GetCurrentNetworkInformationWrapper() {
     }
     jdoubleArray ret = static_cast<jdoubleArray>(env->PopLocalFrame(temp));
     return ret;
+}
+
+jfloat AndroidBridge::GetDensity() {
+    JNIEnv *env = GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0.0;
+    }
+
+    if (env->PushLocalFrame(0) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return 0.0;
+    }
+
+    jfloat temp = env->CallStaticFloatMethod(mGeckoAppShellClass, jGetDensity);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return 0.0;
+    }
+    env->PopLocalFrame(NULL);
+    return temp;
 }
 
 int32_t AndroidBridge::GetDpiWrapper() {

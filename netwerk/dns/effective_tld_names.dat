@@ -175,17 +175,16 @@ it.ao
 // aq : http://en.wikipedia.org/wiki/.aq
 aq
 
-// ar : http://en.wikipedia.org/wiki/.ar
-*.ar
-!congresodelalengua3.ar
-!educ.ar
-!gobiernoelectronico.ar
-!mecon.ar
-!nacion.ar
-!nic.ar
-!promocion.ar
-!retina.ar
-!uba.ar
+// ar : https://nic.ar/normativa-vigente.xhtml
+ar
+com.ar
+edu.ar
+gob.ar
+int.ar
+mil.ar
+net.ar
+org.ar
+tur.ar
 
 // arpa : http://en.wikipedia.org/wiki/.arpa
 // Confirmed by registry <iana-questions@icann.org> 2008-06-18
@@ -4231,13 +4230,16 @@ other.nf
 store.nf
 
 // ng : http://psg.com/dns/ng/
-// Submitted by registry <randy@psg.com> 2008-06-17
-ac.ng
+ng
 com.ng
 edu.ng
-gov.ng
+name.ng
 net.ng
 org.ng
+sch.ng
+gov.ng
+mil.ng
+mobi.ng
 
 // ni : http://www.nic.ni/dominios.htm
 *.ni
@@ -5038,7 +5040,16 @@ nu
 *.nz
 
 // om : http://en.wikipedia.org/wiki/.om
-*.om
+om
+co.om
+com.om
+edu.om
+gov.om
+med.om
+museum.om
+net.om
+org.om
+pro.om
 !mediaphone.om
 !nawrastelecom.om
 !nawras.om
@@ -5742,8 +5753,13 @@ store.st
 // su : http://en.wikipedia.org/wiki/.su
 su
 
-// sv : http://www.svnet.org.sv/svpolicy.html
-*.sv
+// sv : http://www.svnet.org.sv/niveldos.pdf
+sv
+com.sv
+edu.sv
+gob.sv
+org.sv
+red.sv
 
 // sx : http://en.wikipedia.org/wiki/.sx
 // Confirmed by registry <jcvignes@openregistry.com> 2012-05-31

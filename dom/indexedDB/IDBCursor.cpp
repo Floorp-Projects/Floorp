@@ -32,7 +32,7 @@
 USING_INDEXEDDB_NAMESPACE
 using namespace mozilla::dom::indexedDB::ipc;
 using mozilla::dom::Optional;
-using mozilla::dom::IDBObjectStoreOrIDBIndexReturnValue;
+using mozilla::dom::OwningIDBObjectStoreOrIDBIndex;
 using mozilla::ErrorResult;
 
 static_assert(sizeof(size_t) >= sizeof(IDBCursor::Direction),
@@ -521,7 +521,7 @@ IDBCursor::GetDirection() const
 
 
 void
-IDBCursor::GetSource(IDBObjectStoreOrIDBIndexReturnValue& aSource) const
+IDBCursor::GetSource(OwningIDBObjectStoreOrIDBIndex& aSource) const
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 

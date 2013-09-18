@@ -34,8 +34,9 @@ function prefObserver(subject, topic, data) {
   if (enable && !Social.provider) {
     // this will result in setting Social.provider
     SocialService.getOrderedProviderList(function(providers) {
-      Social.enabled = true;
       Social._updateProviderCache(providers);
+      Social.enabled = true;
+      Services.obs.notifyObservers(null, "social:providers-changed", null);
     });
   } else if (!enable && Social.provider) {
     Social.provider = null;
@@ -167,7 +168,7 @@ this.Social = {
       // Retrieve the current set of providers, and set the current provider.
       SocialService.getOrderedProviderList(function (providers) {
         Social._updateProviderCache(providers);
-        Social._updateWorkerState(SocialService.enabled);
+        Social._updateWorkerState(true);
       });
     }
 
@@ -180,16 +181,10 @@ this.Social = {
         Services.obs.notifyObservers(null, "social:" + topic, origin);
         return;
       }
-      if (topic == "provider-enabled") {
+      if (topic == "provider-enabled" || topic == "provider-disabled") {
         Social._updateProviderCache(providers);
-        Social._updateWorkerState(Social.enabled);
-        Services.obs.notifyObservers(null, "social:" + topic, origin);
-        return;
-      }
-      if (topic == "provider-disabled") {
-        // a provider was removed from the list of providers, that does not
-        // affect worker state for other providers
-        Social._updateProviderCache(providers);
+        Social._updateWorkerState(true);
+        Services.obs.notifyObservers(null, "social:providers-changed", null);
         Services.obs.notifyObservers(null, "social:" + topic, origin);
         return;
       }
@@ -199,6 +194,7 @@ this.Social = {
         Social._updateProviderCache(providers);
         let provider = Social._getProviderFromOrigin(origin);
         provider.reload();
+        Services.obs.notifyObservers(null, "social:providers-changed", null);
       }
     });
   },
@@ -214,7 +210,6 @@ this.Social = {
   // Called to update our cache of providers and set the current provider
   _updateProviderCache: function (providers) {
     this.providers = providers;
-    Services.obs.notifyObservers(null, "social:providers-changed", null);
 
     // If social is currently disabled there's nothing else to do other than
     // to notify about the lack of a provider.

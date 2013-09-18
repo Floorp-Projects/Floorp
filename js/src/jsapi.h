@@ -3249,6 +3249,7 @@ class JS_PUBLIC_API(CompileOptions)
     bool versionSet;
     bool utf8;
     const char *filename;
+    const jschar *sourceMapURL;
     unsigned lineno;
     unsigned column;
     Handle<JSObject*> element;
@@ -3275,6 +3276,7 @@ class JS_PUBLIC_API(CompileOptions)
     CompileOptions &setFileAndLine(const char *f, unsigned l) {
         filename = f; lineno = l; return *this;
     }
+    CompileOptions &setSourceMapURL(const jschar *s) { sourceMapURL = s; return *this; }
     CompileOptions &setColumn(unsigned c) { column = c; return *this; }
     CompileOptions &setElement(Handle<JSObject*> e) { element = e; return *this; }
     CompileOptions &setCompileAndGo(bool cng) { compileAndGo = cng; return *this; }
@@ -3597,7 +3599,7 @@ extern JS_PUBLIC_API(JSString *)
 JS_NewStringCopyZ(JSContext *cx, const char *s);
 
 extern JS_PUBLIC_API(JSString *)
-JS_InternJSString(JSContext *cx, JSString *str);
+JS_InternJSString(JSContext *cx, JS::HandleString str);
 
 extern JS_PUBLIC_API(JSString *)
 JS_InternStringN(JSContext *cx, const char *s, size_t length);
@@ -3722,19 +3724,12 @@ extern JS_PUBLIC_API(size_t)
 JS_PutEscapedFlatString(char *buffer, size_t size, JSFlatString *str, char quote);
 
 /*
- * This function is now obsolete and behaves the same as JS_NewUCString.  Use
- * JS_NewUCString instead.
- */
-extern JS_PUBLIC_API(JSString *)
-JS_NewGrowableString(JSContext *cx, jschar *chars, size_t length);
-
-/*
  * Create a dependent string, i.e., a string that owns no character storage,
  * but that refers to a slice of another string's chars.  Dependent strings
  * are mutable by definition, so the thread safety comments above apply.
  */
 extern JS_PUBLIC_API(JSString *)
-JS_NewDependentString(JSContext *cx, JSString *str, size_t start,
+JS_NewDependentString(JSContext *cx, JS::HandleString str, size_t start,
                       size_t length);
 
 /*
@@ -3742,7 +3737,7 @@ JS_NewDependentString(JSContext *cx, JSString *str, size_t start,
  * See above for thread safety comments.
  */
 extern JS_PUBLIC_API(JSString *)
-JS_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
+JS_ConcatStrings(JSContext *cx, JS::HandleString left, JS::HandleString right);
 
 /*
  * For JS_DecodeBytes, set *dstlenp to the size of the destination buffer before
@@ -3874,18 +3869,18 @@ typedef bool (* JSONWriteCallback)(const jschar *buf, uint32_t len, void *data);
  * JSON.stringify as specified by ES5.
  */
 JS_PUBLIC_API(bool)
-JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
-             JSONWriteCallback callback, void *data);
+JS_Stringify(JSContext *cx, JS::MutableHandleValue value, JS::HandleObject replacer,
+             JS::HandleValue space, JSONWriteCallback callback, void *data);
 
 /*
  * JSON.parse as specified by ES5.
  */
 JS_PUBLIC_API(bool)
-JS_ParseJSON(JSContext *cx, const jschar *chars, uint32_t len, JS::MutableHandle<JS::Value> vp);
+JS_ParseJSON(JSContext *cx, const jschar *chars, uint32_t len, JS::MutableHandleValue vp);
 
 JS_PUBLIC_API(bool)
-JS_ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32_t len, jsval reviver,
-                        jsval *vp);
+JS_ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32_t len, JS::HandleValue reviver,
+                        JS::MutableHandleValue vp);
 
 /************************************************************************/
 

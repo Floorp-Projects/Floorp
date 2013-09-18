@@ -48,27 +48,21 @@ interface BluetoothAdapter : EventTarget {
   [GetterThrows]
   readonly attribute any            uuids;
 
-  [SetterThrows]
            attribute EventHandler   ondevicefound;
 
   // Fired when pairing process is completed
-  [SetterThrows]
            attribute EventHandler   onpairedstatuschanged;
 
   // Fired when a2dp connection status changed
-  [SetterThrows]
            attribute EventHandler   ona2dpstatuschanged;
 
   // Fired when handsfree connection status changed
-  [SetterThrows]
            attribute EventHandler   onhfpstatuschanged;
 
   // Fired when sco connection status changed
-  [SetterThrows]
            attribute EventHandler   onscostatuschanged;
 
   // Fired when remote devices query current media play status
-  [SetterThrows]
            attribute EventHandler   onrequestmediaplaystatus;
 
   [Creator, Throws]

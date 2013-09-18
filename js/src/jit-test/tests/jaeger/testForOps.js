@@ -1,4 +1,4 @@
-// |jit-test| mjitalways
+// |jit-test|
 // vim: set ts=8 sts=4 et sw=4 tw=99:
 
 function assertObjectsEqual(obj1, obj2) {

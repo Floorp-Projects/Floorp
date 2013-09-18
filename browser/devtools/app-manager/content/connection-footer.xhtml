@@ -37,8 +37,6 @@
             <div class="banner-content" template='{"type":"attribute","path":"adb.available","name":"adb-available"}'>
               <span>&connection.notConnected2;</span>
               <div id="connection-manual">
-                <button class="action-primary left" onclick="UI.connect()" id="connect-button" template='{"type":"localizedContent","property":"connection.connectTo","paths":["connection.host","connection.port"]}'></button>
-                <button class="right" onclick="UI.editConnectionParameters()">&connection.changeHostAndPort;</button>
                 <button class="action-primary left" onclick="UI.connect()" id="connect-button" template='{"type":"localizedContent","property":"connection.connectTo","paths":["connection.host","connection.port"]}' title="&connection.connectTooltip;"></button>
                 <button class="right" onclick="UI.editConnectionParameters()" title="&connection.changeHostAndPortTooltip;">&connection.changeHostAndPort;</button>
               </div>

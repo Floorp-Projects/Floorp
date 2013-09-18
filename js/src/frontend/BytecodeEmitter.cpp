@@ -5049,6 +5049,9 @@ EmitDelete(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 }
 
 static bool
+EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, uint32_t count);
+
+static bool
 EmitCallOrNew(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     bool callop = pn->isKind(PNK_CALL);
@@ -5079,18 +5082,20 @@ EmitCallOrNew(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     bool emitArgs = true;
     ParseNode *pn2 = pn->pn_head;
+    bool spread = JOF_OPTYPE(pn->getOp()) == JOF_BYTE;
     switch (pn2->getKind()) {
       case PNK_NAME:
         if (bce->emitterMode == BytecodeEmitter::SelfHosting &&
-            pn2->name() == cx->names().callFunction)
+            pn2->name() == cx->names().callFunction &&
+            !spread)
         {
             /*
              * Special-casing of callFunction to emit bytecode that directly
              * invokes the callee with the correct |this| object and arguments.
-             * callFunction(fun, thisArg, ...args) thus becomes:
+             * callFunction(fun, thisArg, arg0, arg1) thus becomes:
              * - emit lookup for fun
              * - emit lookup for thisArg
-             * - emit lookups for ...args
+             * - emit lookups for arg0, arg1
              *
              * argc is set to the amount of actually emitted args and the
              * emitting of args below is disabled by setting emitArgs to false.
@@ -5176,19 +5181,29 @@ EmitCallOrNew(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          */
         bool oldEmittingForInit = bce->emittingForInit;
         bce->emittingForInit = false;
-        for (ParseNode *pn3 = pn2->pn_next; pn3; pn3 = pn3->pn_next) {
-            if (!EmitTree(cx, bce, pn3))
-                return false;
-            if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
+        if (!spread) {
+            for (ParseNode *pn3 = pn2->pn_next; pn3; pn3 = pn3->pn_next) {
+                if (!EmitTree(cx, bce, pn3))
+                    return false;
+                if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
+                    return false;
+            }
+        } else {
+            if (!EmitArray(cx, bce, pn2->pn_next, argc))
                 return false;
         }
         bce->emittingForInit = oldEmittingForInit;
     }
 
-    if (Emit3(cx, bce, pn->getOp(), ARGC_HI(argc), ARGC_LO(argc)) < 0)
-        return false;
+    if (!spread) {
+        if (Emit3(cx, bce, pn->getOp(), ARGC_HI(argc), ARGC_LO(argc)) < 0)
+            return false;
+    } else {
+        if (Emit1(cx, bce, pn->getOp()) < 0)
+            return false;
+    }
     CheckTypeSet(cx, bce, pn->getOp());
-    if (pn->isOp(JSOP_EVAL)) {
+    if (pn->isOp(JSOP_EVAL) || pn->isOp(JSOP_SPREADEVAL)) {
         uint32_t lineNum = bce->parser->tokenStream.srcCoords.lineNum(pn->pn_pos.begin);
         EMIT_UINT16_IMM_OP(JSOP_LINENO, lineNum);
     }
@@ -5559,7 +5574,29 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 }
 
 static bool
-EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+EmitArrayComp(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+{
+    if (!EmitNewInit(cx, bce, JSProto_Array, pn))
+        return false;
+
+    /*
+     * Pass the new array's stack index to the PNK_ARRAYPUSH case via
+     * bce->arrayCompDepth, then simply traverse the PNK_FOR node and
+     * its kids under pn2 to generate this comprehension.
+     */
+    JS_ASSERT(bce->stackDepth > 0);
+    unsigned saveDepth = bce->arrayCompDepth;
+    bce->arrayCompDepth = (uint32_t) (bce->stackDepth - 1);
+    if (!EmitTree(cx, bce, pn->pn_head))
+        return false;
+    bce->arrayCompDepth = saveDepth;
+
+    /* Emit the usual op needed for decompilation. */
+    return Emit1(cx, bce, JSOP_ENDINIT) >= 0;
+}
+
+static bool
+EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, uint32_t count)
 {
     /*
      * Emit code for [a, b, c] that is equivalent to constructing a new
@@ -5570,31 +5607,8 @@ EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * JSOP_SETELEM/JSOP_SETPROP would do.
      */
 
-    if (pn->isKind(PNK_ARRAYCOMP)) {
-        if (!EmitNewInit(cx, bce, JSProto_Array, pn))
-            return false;
-
-        /*
-         * Pass the new array's stack index to the PNK_ARRAYPUSH case via
-         * bce->arrayCompDepth, then simply traverse the PNK_FOR node and
-         * its kids under pn2 to generate this comprehension.
-         */
-        JS_ASSERT(bce->stackDepth > 0);
-        unsigned saveDepth = bce->arrayCompDepth;
-        bce->arrayCompDepth = (uint32_t) (bce->stackDepth - 1);
-        if (!EmitTree(cx, bce, pn->pn_head))
-            return false;
-        bce->arrayCompDepth = saveDepth;
-
-        /* Emit the usual op needed for decompilation. */
-        return Emit1(cx, bce, JSOP_ENDINIT) >= 0;
-    }
-
-    if (!(pn->pn_xflags & PNX_NONCONST) && pn->pn_head && bce->checkSingletonContext())
-        return EmitSingletonInitialiser(cx, bce, pn);
-
     int32_t nspread = 0;
-    for (ParseNode *elt = pn->pn_head; elt; elt = elt->pn_next) {
+    for (ParseNode *elt = pn; elt; elt = elt->pn_next) {
         if (elt->isKind(PNK_SPREAD))
             nspread++;
     }
@@ -5607,9 +5621,9 @@ EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     // For arrays with spread, this is a very pessimistic allocation, the
     // minimum possible final size.
-    SET_UINT24(pc, pn->pn_count - nspread);
+    SET_UINT24(pc, count - nspread);
 
-    ParseNode *pn2 = pn->pn_head;
+    ParseNode *pn2 = pn;
     jsatomid atomIndex;
     if (nspread && !EmitNumberOp(cx, 0, bce))
         return false;
@@ -5635,7 +5649,7 @@ EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             SET_UINT24(bce->code(off), atomIndex);
         }
     }
-    JS_ASSERT(atomIndex == pn->pn_count);
+    JS_ASSERT(atomIndex == count);
     if (nspread) {
         if (Emit1(cx, bce, JSOP_POP) < 0)
             return false;
@@ -6064,8 +6078,14 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       }
 
       case PNK_ARRAY:
-      case PNK_ARRAYCOMP:
-        ok = EmitArray(cx, bce, pn);
+        if (!(pn->pn_xflags & PNX_NONCONST) && pn->pn_head && bce->checkSingletonContext())
+            ok = EmitSingletonInitialiser(cx, bce, pn);
+        else
+            ok = EmitArray(cx, bce, pn->pn_head, pn->pn_count);
+        break;
+
+       case PNK_ARRAYCOMP:
+        ok = EmitArrayComp(cx, bce, pn);
         break;
 
       case PNK_OBJECT:

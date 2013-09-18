@@ -1090,6 +1090,9 @@ pref("devtools.inspector.markupPreview", false);
 pref("devtools.inspector.remote", false);
 pref("devtools.inspector.show_pseudo_elements", true);
 
+// DevTools default color unit
+pref("devtools.defaultColorUnit", "hex");
+
 // Enable the Responsive UI tool
 pref("devtools.responsiveUI.enabled", true);
 pref("devtools.responsiveUI.no-reload-notification", false);

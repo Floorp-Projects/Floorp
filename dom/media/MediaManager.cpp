@@ -321,6 +321,16 @@ MediaDevice::MediaDevice(MediaEngineVideoSource* aSource)
   mSource->GetName(mName);
   mSource->GetUUID(mID);
 
+#ifdef MOZ_B2G_CAMERA
+  if (mName.EqualsLiteral("back")) {
+    mHasFacingMode = true;
+    mFacingMode = dom::VideoFacingModeEnum::Environment;
+  } else if (mName.EqualsLiteral("front")) {
+    mHasFacingMode = true;
+    mFacingMode = dom::VideoFacingModeEnum::User;
+  }
+#endif // MOZ_B2G_CAMERA
+
   // Kludge to test user-facing cameras on OSX.
   if (mName.Find(NS_LITERAL_STRING("Face")) != -1) {
     mHasFacingMode = true;

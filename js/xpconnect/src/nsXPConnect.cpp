@@ -96,30 +96,27 @@ nsXPConnect::nsXPConnect()
 nsXPConnect::~nsXPConnect()
 {
     mRuntime->DeleteJunkScope();
-
-    JSContext *cx = nullptr;
-    if (mRuntime) {
-        // Create our own JSContext rather than an XPCCallContext, since
-        // otherwise we will create a new safe JS context and attach a
-        // components object that won't get GCed.
-        cx = JS_NewContext(mRuntime->Runtime(), 8192);
-    }
-
-    // This needs to happen exactly here, otherwise we leak at shutdown. I don't
-    // know why. :-(
     mRuntime->DestroyJSContextStack();
 
-    mShuttingDown = true;
-    if (cx) {
-        // XXX Call even if |mRuntime| null?
-        XPCWrappedNativeScope::SystemIsBeingShutDown();
+    // In order to clean up everything properly, we need to GC twice: once now,
+    // to clean anything that can go away on its own (like the Junk Scope, which
+    // we unrooted above), and once after forcing a bunch of shutdown in
+    // XPConnect, to clean the stuff we forcibly disconnected. The forced
+    // shutdown code defaults to leaking in a number of situations, so we can't
+    // get by with only the second GC. :-(
+    JS_GC(mRuntime->Runtime());
 
-        mRuntime->SystemIsBeingShutDown();
-        JS_DestroyContext(cx);
-    }
+    mShuttingDown = true;
+    XPCWrappedNativeScope::SystemIsBeingShutDown();
+    mRuntime->SystemIsBeingShutDown();
+
+    // The above causes us to clean up a bunch of XPConnect data structures,
+    // after which point we need to GC to clean everything up. We need to do
+    // this before deleting the XPCJSRuntime, because doing so destroys the
+    // maps that our finalize callback depends on.
+    JS_GC(mRuntime->Runtime());
 
     NS_IF_RELEASE(mDefaultSecurityManager);
-
     gScriptSecurityManager = nullptr;
 
     // shutdown the logging system

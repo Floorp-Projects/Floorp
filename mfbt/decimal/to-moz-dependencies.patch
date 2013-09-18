@@ -1,7 +1,7 @@
 diff --git a/mfbt/decimal/Decimal.cpp b/mfbt/decimal/Decimal.cpp
 --- a/mfbt/decimal/Decimal.cpp
 +++ b/mfbt/decimal/Decimal.cpp
-@@ -23,27 +23,22 @@
+@@ -23,26 +23,23 @@
   * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
   * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
   * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
@@ -21,7 +21,8 @@ diff --git a/mfbt/decimal/Decimal.cpp b/mfbt/decimal/Decimal.cpp
 -#include <wtf/MathExtras.h>
 -#include <wtf/Noncopyable.h>
 -#include <wtf/text/StringBuilder.h>
--
++using namespace moz_decimal_utils;
+ 
  namespace WebCore {
  
  namespace DecimalPrivate {
@@ -29,8 +30,7 @@ diff --git a/mfbt/decimal/Decimal.cpp b/mfbt/decimal/Decimal.cpp
  static int const ExponentMax = 1023;
  static int const ExponentMin = -1023;
  static int const Precision = 18;
- 
-@@ -685,17 +680,17 @@ Decimal Decimal::floor() const
+@@ -685,17 +682,17 @@ Decimal Decimal::floor() const
          result += 1;
      }
      return Decimal(sign(), 0, result);
@@ -49,7 +49,7 @@ diff --git a/mfbt/decimal/Decimal.cpp b/mfbt/decimal/Decimal.cpp
  }
  
  Decimal Decimal::fromString(const String& str)
-@@ -937,17 +932,17 @@ Decimal Decimal::round() const
+@@ -937,17 +934,17 @@ Decimal Decimal::round() const
      result /= 10;
      return Decimal(sign(), 0, result);
  }
@@ -68,7 +68,7 @@ diff --git a/mfbt/decimal/Decimal.cpp b/mfbt/decimal/Decimal.cpp
  
      return std::numeric_limits<double>::quiet_NaN();
  }
-@@ -990,17 +985,17 @@ String Decimal::toString() const
+@@ -990,17 +987,17 @@ String Decimal::toString() const
              ++coefficient;
  
          while (originalExponent < 0 && coefficient && !(coefficient % 10)) {
@@ -87,7 +87,7 @@ diff --git a/mfbt/decimal/Decimal.cpp b/mfbt/decimal/Decimal.cpp
              return builder.toString();
          }
  
-@@ -1032,15 +1027,28 @@ String Decimal::toString() const
+@@ -1032,15 +1029,28 @@ String Decimal::toString() const
          if (adjustedExponent) {
              builder.append(adjustedExponent < 0 ? "e" : "e+");
              builder.appendNumber(adjustedExponent);
@@ -217,117 +217,3 @@ diff --git a/mfbt/decimal/Decimal.h b/mfbt/decimal/Decimal.h
 +
  #endif // Decimal_h
  
-diff --git a/mfbt/decimal/moz-decimal-utils.h b/mfbt/decimal/moz-decimal-utils.h
-new file mode 100644
---- /dev/null
-+++ b/mfbt/decimal/moz-decimal-utils.h
-@@ -0,0 +1,109 @@
-+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-+/* This Source Code Form is subject to the terms of the Mozilla Public
-+ * License, v. 2.0. If a copy of the MPL was not distributed with this
-+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-+
-+#ifndef MOZ_DECIMAL_UTILS_H
-+#define MOZ_DECIMAL_UTILS_H
-+
-+// This file contains extra includes, defines and typedefs to allow compilation
-+// of Decimal.cpp under the Mozilla source without blink core dependencies. Do
-+// not include it into any file other than Decimal.cpp.
-+
-+#include "../double-conversion/double-conversion.h"
-+#include "mozilla/Util.h"
-+#include "mozilla/Casting.h"
-+#include "mozilla/FloatingPoint.h"
-+#include "mozilla/NullPtr.h"
-+
-+#include <cmath>
-+#include <cstring>
-+#include <iomanip>
-+#include <limits>
-+#include <sstream>
-+
-+#ifndef UINT64_C
-+// For Android toolchain
-+#define UINT64_C(c) (c ## ULL)
-+#endif
-+
-+#ifdef ASSERT
-+#undef ASSERT
-+#endif
-+#define ASSERT MOZ_ASSERT
-+
-+#define ASSERT_NOT_REACHED() MOZ_ASSUME_UNREACHABLE()
-+
-+#define WTF_MAKE_NONCOPYABLE(ClassName) \
-+  private: \
-+    ClassName(const ClassName&) MOZ_DELETE; \
-+    void operator=(const ClassName&) MOZ_DELETE;
-+
-+#if defined(_MSC_VER) && (_MSC_VER <= 1700)
-+namespace std {
-+  inline bool isinf(double num) { return MOZ_DOUBLE_IS_INFINITE(num); }
-+  inline bool isnan(double num) { return MOZ_DOUBLE_IS_NaN(num); }
-+  inline bool isfinite(double num) { return MOZ_DOUBLE_IS_FINITE(num); }
-+}
-+#endif
-+
-+typedef std::string String;
-+
-+double mozToDouble(const String &aStr, bool *valid) {
-+  double_conversion::StringToDoubleConverter converter(
-+    double_conversion::StringToDoubleConverter::NO_FLAGS,
-+    MOZ_DOUBLE_NaN(), MOZ_DOUBLE_NaN(), nullptr, nullptr);
-+  const char* str = aStr.c_str();
-+  int length = mozilla::SafeCast<int>(strlen(str));
-+  int processed_char_count; // unused - NO_FLAGS requires the whole string to parse
-+  double result = converter.StringToDouble(str, length, &processed_char_count);
-+  *valid = MOZ_DOUBLE_IS_FINITE(result);
-+  return result;
-+}
-+
-+String mozToString(double aNum) {
-+  char buffer[64];
-+  int buffer_length = mozilla::ArrayLength(buffer);
-+  const double_conversion::DoubleToStringConverter& converter =
-+    double_conversion::DoubleToStringConverter::EcmaScriptConverter();
-+  double_conversion::StringBuilder builder(buffer, buffer_length);
-+  converter.ToShortest(aNum, &builder);
-+  return String(builder.Finalize());
-+}
-+
-+String mozToString(int64_t aNum) {
-+  std::ostringstream o;
-+  o << std::setprecision(std::numeric_limits<int64_t>::digits10) << aNum;
-+  return o.str();
-+}
-+
-+String mozToString(uint64_t aNum) {
-+  std::ostringstream o;
-+  o << std::setprecision(std::numeric_limits<uint64_t>::digits10) << aNum;
-+  return o.str();
-+}
-+
-+class StringBuilder
-+{
-+public:
-+  void append(char c) {
-+    mStr += c;
-+  }
-+  void appendLiteral(const char *aStr) {
-+    mStr += aStr;
-+  }
-+  void appendNumber(int aNum) {
-+    mStr += mozToString(int64_t(aNum));
-+  }
-+  void append(const String& aStr) {
-+    mStr += aStr;
-+  }
-+  std::string toString() const {
-+    return mStr;
-+  }
-+private:
-+  std::string mStr;
-+};
-+
-+#endif
-+

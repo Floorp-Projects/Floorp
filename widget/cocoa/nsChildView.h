@@ -377,9 +377,14 @@ public:
                                  ChildView* aView, BOOL isClickThrough = NO);
   static void MouseExitedWindow(NSEvent* aEvent);
   static void MouseEnteredWindow(NSEvent* aEvent);
-  static void ReEvaluateMouseEnterState(NSEvent* aEvent = nil);
+  static void ReEvaluateMouseEnterState(NSEvent* aEvent = nil, ChildView* aOldView = nil);
   static void ResendLastMouseMoveEvent();
   static ChildView* ViewForEvent(NSEvent* aEvent);
+  static void AttachPluginEvent(nsMouseEvent_base& aMouseEvent,
+                                ChildView* aView,
+                                NSEvent* aNativeMouseEvent,
+                                int aPluginEventType,
+                                void* aPluginEventHolder);
 
   static ChildView* sLastMouseEventView;
   static NSEvent* sLastMouseMoveEvent;
