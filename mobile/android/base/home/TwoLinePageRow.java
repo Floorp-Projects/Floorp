@@ -197,6 +197,9 @@ public class TwoLinePageRow extends LinearLayout
         if (favicon != null) {
             setFaviconWithUrl(favicon, url);
         } else {
+            // Show blank image until the new favicon finishes loading
+            mFavicon.clearImage();
+
             mLoadFaviconTask = new LoadFaviconTask(url);
 
             // Try to use a thread pool instead of serial execution of tasks
