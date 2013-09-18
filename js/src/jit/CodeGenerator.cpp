@@ -7430,7 +7430,7 @@ CodeGenerator::emitAssertRangeI(const Range *r, Register input)
         masm.bind(&success);
     }
 
-    // For r->isDecimal() and r->exponent(), there's nothing to check, because
+    // For r->canHaveFractionalPart() and r->exponent(), there's nothing to check, because
     // if we ended up in the integer range checking code, the value is already
     // in an integer register in the integer range.
 
@@ -7461,7 +7461,7 @@ CodeGenerator::emitAssertRangeD(const Range *r, FloatRegister input, FloatRegist
         masm.bind(&success);
     }
 
-    // This code does not yet check r->isDecimal(). This would require new
+    // This code does not yet check r->canHaveFractionalPart(). This would require new
     // assembler interfaces to make rounding instructions available.
 
     if (!r->isInfinite()) {
