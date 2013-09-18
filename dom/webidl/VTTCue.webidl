@@ -34,6 +34,7 @@ interface VTTCue : EventTarget {
   attribute double startTime;
   attribute double endTime;
   attribute boolean pauseOnExit;
+  attribute DOMString regionId;
   attribute DirectionSetting vertical;
   attribute boolean snapToLines;
   // XXXhumph: https://www.w3.org/Bugs/Public/show_bug.cgi?id=20651
