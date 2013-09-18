@@ -1502,7 +1502,7 @@ class MInitProp
     CompilerRootPropertyName name_;
 
   protected:
-    MInitProp(MDefinition *obj, HandlePropertyName name, MDefinition *value)
+    MInitProp(MDefinition *obj, PropertyName *name, MDefinition *value)
       : name_(name)
     {
         setOperand(0, obj);
@@ -1513,7 +1513,7 @@ class MInitProp
   public:
     INSTRUCTION_HEADER(InitProp)
 
-    static MInitProp *New(MDefinition *obj, HandlePropertyName name, MDefinition *value) {
+    static MInitProp *New(MDefinition *obj, PropertyName *name, MDefinition *value) {
         return new MInitProp(obj, name, value);
     }
 
@@ -4327,7 +4327,7 @@ class MDefFun : public MUnaryInstruction
     CompilerRootFunction fun_;
 
   private:
-    MDefFun(HandleFunction fun, MDefinition *scopeChain)
+    MDefFun(JSFunction *fun, MDefinition *scopeChain)
       : MUnaryInstruction(scopeChain),
         fun_(fun)
     {}
@@ -4335,7 +4335,7 @@ class MDefFun : public MUnaryInstruction
   public:
     INSTRUCTION_HEADER(DefFun)
 
-    static MDefFun *New(HandleFunction fun, MDefinition *scopeChain) {
+    static MDefFun *New(JSFunction *fun, MDefinition *scopeChain) {
         return new MDefFun(fun, scopeChain);
     }
 
@@ -5327,7 +5327,7 @@ class MArrayConcat
 {
     CompilerRootObject templateObj_;
 
-    MArrayConcat(MDefinition *lhs, MDefinition *rhs, HandleObject templateObj)
+    MArrayConcat(MDefinition *lhs, MDefinition *rhs, JSObject *templateObj)
       : MBinaryInstruction(lhs, rhs),
         templateObj_(templateObj)
     {
@@ -5338,7 +5338,7 @@ class MArrayConcat
   public:
     INSTRUCTION_HEADER(ArrayConcat)
 
-    static MArrayConcat *New(MDefinition *lhs, MDefinition *rhs, HandleObject templateObj) {
+    static MArrayConcat *New(MDefinition *lhs, MDefinition *rhs, JSObject *templateObj) {
         return new MArrayConcat(lhs, rhs, templateObj);
     }
 
@@ -5924,7 +5924,7 @@ class MGetPropertyCache
 
     InlinePropertyTable *inlinePropertyTable_;
 
-    MGetPropertyCache(MDefinition *obj, HandlePropertyName name)
+    MGetPropertyCache(MDefinition *obj, PropertyName *name)
       : MUnaryInstruction(obj),
         name_(name),
         idempotent_(false),
@@ -5943,7 +5943,7 @@ class MGetPropertyCache
   public:
     INSTRUCTION_HEADER(GetPropertyCache)
 
-    static MGetPropertyCache *New(MDefinition *obj, HandlePropertyName name) {
+    static MGetPropertyCache *New(MDefinition *obj, PropertyName *name) {
         return new MGetPropertyCache(obj, name);
     }
 
@@ -6025,7 +6025,7 @@ class MGetPropertyPolymorphic
     Vector<Entry, 4, IonAllocPolicy> shapes_;
     CompilerRootPropertyName name_;
 
-    MGetPropertyPolymorphic(MDefinition *obj, HandlePropertyName name)
+    MGetPropertyPolymorphic(MDefinition *obj, PropertyName *name)
       : MUnaryInstruction(obj),
         name_(name)
     {
@@ -6040,7 +6040,7 @@ class MGetPropertyPolymorphic
   public:
     INSTRUCTION_HEADER(GetPropertyPolymorphic)
 
-    static MGetPropertyPolymorphic *New(MDefinition *obj, HandlePropertyName name) {
+    static MGetPropertyPolymorphic *New(MDefinition *obj, PropertyName *name) {
         return new MGetPropertyPolymorphic(obj, name);
     }
 
@@ -6683,7 +6683,7 @@ class MGetNameCache
     CompilerRootPropertyName name_;
     AccessKind kind_;
 
-    MGetNameCache(MDefinition *obj, HandlePropertyName name, AccessKind kind)
+    MGetNameCache(MDefinition *obj, PropertyName *name, AccessKind kind)
       : MUnaryInstruction(obj),
         name_(name),
         kind_(kind)
@@ -6694,7 +6694,7 @@ class MGetNameCache
   public:
     INSTRUCTION_HEADER(GetNameCache)
 
-    static MGetNameCache *New(MDefinition *obj, HandlePropertyName name, AccessKind kind) {
+    static MGetNameCache *New(MDefinition *obj, PropertyName *name, AccessKind kind) {
         return new MGetNameCache(obj, name, kind);
     }
     TypePolicy *typePolicy() {
@@ -6715,7 +6715,7 @@ class MCallGetIntrinsicValue : public MNullaryInstruction
 {
     CompilerRootPropertyName name_;
 
-    MCallGetIntrinsicValue(HandlePropertyName name)
+    MCallGetIntrinsicValue(PropertyName *name)
       : name_(name)
     {
         setResultType(MIRType_Value);
@@ -6724,7 +6724,7 @@ class MCallGetIntrinsicValue : public MNullaryInstruction
   public:
     INSTRUCTION_HEADER(CallGetIntrinsicValue)
 
-    static MCallGetIntrinsicValue *New(HandlePropertyName name) {
+    static MCallGetIntrinsicValue *New(PropertyName *name) {
         return new MCallGetIntrinsicValue(name);
     }
     PropertyName *name() const {
@@ -6780,7 +6780,7 @@ class MSetPropertyInstruction : public MBinaryInstruction
     bool needsBarrier_;
 
   protected:
-    MSetPropertyInstruction(MDefinition *obj, MDefinition *value, HandlePropertyName name,
+    MSetPropertyInstruction(MDefinition *obj, MDefinition *value, PropertyName *name,
                             bool strict)
       : MBinaryInstruction(obj, value),
         name_(name), strict_(strict), needsBarrier_(true)
@@ -6835,7 +6835,7 @@ class MDeleteProperty
     CompilerRootPropertyName name_;
 
   protected:
-    MDeleteProperty(MDefinition *val, HandlePropertyName name)
+    MDeleteProperty(MDefinition *val, PropertyName *name)
       : MUnaryInstruction(val),
         name_(name)
     {
@@ -6845,7 +6845,7 @@ class MDeleteProperty
   public:
     INSTRUCTION_HEADER(DeleteProperty)
 
-    static MDeleteProperty *New(MDefinition *obj, HandlePropertyName name) {
+    static MDeleteProperty *New(MDefinition *obj, PropertyName *name) {
         return new MDeleteProperty(obj, name);
     }
     MDefinition *value() const {
@@ -6892,7 +6892,7 @@ class MCallSetProperty
   : public MSetPropertyInstruction,
     public CallSetElementPolicy
 {
-    MCallSetProperty(MDefinition *obj, MDefinition *value, HandlePropertyName name, bool strict)
+    MCallSetProperty(MDefinition *obj, MDefinition *value, PropertyName *name, bool strict)
       : MSetPropertyInstruction(obj, value, name, strict)
     {
     }
@@ -6900,7 +6900,7 @@ class MCallSetProperty
   public:
     INSTRUCTION_HEADER(CallSetProperty)
 
-    static MCallSetProperty *New(MDefinition *obj, MDefinition *value, HandlePropertyName name, bool strict) {
+    static MCallSetProperty *New(MDefinition *obj, MDefinition *value, PropertyName *name, bool strict) {
         return new MCallSetProperty(obj, value, name, strict);
     }
 
@@ -6918,7 +6918,7 @@ class MSetPropertyCache
 {
     bool needsTypeBarrier_;
 
-    MSetPropertyCache(MDefinition *obj, MDefinition *value, HandlePropertyName name, bool strict,
+    MSetPropertyCache(MDefinition *obj, MDefinition *value, PropertyName *name, bool strict,
                       bool typeBarrier)
       : MSetPropertyInstruction(obj, value, name, strict),
         needsTypeBarrier_(typeBarrier)
@@ -6928,7 +6928,7 @@ class MSetPropertyCache
   public:
     INSTRUCTION_HEADER(SetPropertyCache)
 
-    static MSetPropertyCache *New(MDefinition *obj, MDefinition *value, HandlePropertyName name,
+    static MSetPropertyCache *New(MDefinition *obj, MDefinition *value, PropertyName *name,
                                   bool strict, bool typeBarrier) {
         return new MSetPropertyCache(obj, value, name, strict, typeBarrier);
     }
@@ -6980,7 +6980,7 @@ class MCallGetProperty
     CompilerRootPropertyName name_;
     bool idempotent_;
 
-    MCallGetProperty(MDefinition *value, HandlePropertyName name)
+    MCallGetProperty(MDefinition *value, PropertyName *name)
       : MUnaryInstruction(value), name_(name),
         idempotent_(false)
     {
@@ -6990,7 +6990,7 @@ class MCallGetProperty
   public:
     INSTRUCTION_HEADER(CallGetProperty)
 
-    static MCallGetProperty *New(MDefinition *value, HandlePropertyName name) {
+    static MCallGetProperty *New(MDefinition *value, PropertyName *name) {
         return new MCallGetProperty(value, name);
     }
     MDefinition *value() const {
@@ -8022,7 +8022,7 @@ class MNewStringObject :
 {
     CompilerRootObject templateObj_;
 
-    MNewStringObject(MDefinition *input, HandleObject templateObj)
+    MNewStringObject(MDefinition *input, JSObject *templateObj)
       : MUnaryInstruction(input),
         templateObj_(templateObj)
     {
@@ -8032,7 +8032,7 @@ class MNewStringObject :
   public:
     INSTRUCTION_HEADER(NewStringObject)
 
-    static MNewStringObject *New(MDefinition *input, HandleObject templateObj) {
+    static MNewStringObject *New(MDefinition *input, JSObject *templateObj) {
         return new MNewStringObject(input, templateObj);
     }
 

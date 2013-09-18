@@ -39,3 +39,11 @@ FAIL_ON_WARNINGS = True
 
 LIBXUL_LIBRARY = True
 
+LOCAL_INCLUDES += [
+    '../text',
+    '/content/base/src',
+    '/content/events/src',
+    '/editor/txmgr/src',
+    '/extensions/spellcheck/src',
+    '/layout/style',
+]
