@@ -10,7 +10,6 @@
 #include "FileCommon.h"
 
 #include "nsIRequestObserver.h"
-#include "nsThreadUtils.h"
 
 class nsIFileStorage;
 
@@ -58,18 +57,10 @@ public:
   OnStreamProgress(uint64_t aProgress, uint64_t aProgressMax);
 
   void
-  OnStreamClose()
-  {
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-    Finish();
-  }
+  OnStreamClose();
 
   void
-  OnStreamDestroy()
-  {
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-    Finish();
-  }
+  OnStreamDestroy();
 
   static LockedFile*
   GetCurrentLockedFile();

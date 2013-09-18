@@ -18,7 +18,6 @@
 #include "nsTArray.h"
 #include "nsIURI.h"
 #include "nsITimer.h"
-#include "nsThreadUtils.h"
 #include "MediaDecoder.h"
 #include "DASHReader.h"
 
