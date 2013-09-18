@@ -106,7 +106,6 @@ WMFByteStream::WMFByteStream(MediaResource* aResource,
     mResource(aResource),
     mReentrantMonitor("WMFByteStream.Data"),
     mOffset(0),
-    mBytesConsumed(0),
     mIsShutdown(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
@@ -396,15 +395,6 @@ WMFByteStream::Close()
   return S_OK;
 }
 
-uint32_t
-WMFByteStream::GetAndResetBytesConsumedCount()
-{
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  uint32_t bytesConsumed = mBytesConsumed;
-  mBytesConsumed = 0;
-  return bytesConsumed;
-}
-
 STDMETHODIMP
 WMFByteStream::EndRead(IMFAsyncResult* aResult, ULONG *aBytesRead)
 {
@@ -427,10 +417,6 @@ WMFByteStream::EndRead(IMFAsyncResult* aResult, ULONG *aBytesRead)
 
   LOG("[%p] WMFByteStream::EndRead() offset=%lld *aBytesRead=%u mOffset=%lld status=0x%x hr=0x%x eof=%d",
       this, requestState->mOffset, *aBytesRead, mOffset, aResult->GetStatus(), hr, IsEOS());
-
-  if (SUCCEEDED(aResult->GetStatus())) {
-    mBytesConsumed += requestState->mBytesRead;
-  }
 
   return aResult->GetStatus();
 }
