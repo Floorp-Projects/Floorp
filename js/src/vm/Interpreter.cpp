@@ -1224,9 +1224,8 @@ ModOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs
 
 static JS_ALWAYS_INLINE bool
 SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, const Value &value,
-                          bool strict, JSScript *maybeScript = NULL, jsbytecode *pc = NULL)
+                          bool strict, JSScript *script = NULL, jsbytecode *pc = NULL)
 {
-    RootedScript script(cx, maybeScript);
     types::TypeScript::MonitorAssign(cx, obj, id);
 
     if (obj->isNative() && JSID_IS_INT(id)) {
@@ -1234,14 +1233,12 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
         int32_t i = JSID_TO_INT(id);
         if ((uint32_t)i >= length) {
             // Annotate script if provided with information (e.g. baseline)
-            if (script && script->hasAnalysis()) {
-                JS_ASSERT(pc);
-                script->analysis()->getCode(pc).arrayWriteHole = true;
-            }
+            if (script && script->hasBaselineScript() && *pc == JSOP_SETELEM)
+                script->baselineScript()->noteArrayWriteHole(pc - script->code);
         }
     }
 
-    if (obj->isNative() && !obj->setHadElementsAccess(cx))
+    if (obj->isNative() && !JSID_IS_INT(id) && !obj->setHadElementsAccess(cx))
         return false;
 
     RootedValue tmp(cx, value);
