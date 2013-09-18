@@ -3811,8 +3811,13 @@ void HTMLMediaElement::UpdateAudioChannelPlayingState()
       if (!mAudioChannelAgent) {
         return;
       }
+      nsCOMPtr<nsIDOMHTMLVideoElement> video = do_QueryObject(this);
       // Use a weak ref so the audio channel agent can't leak |this|.
-      mAudioChannelAgent->InitWithWeakCallback(mAudioChannelType, this);
+      if (AUDIO_CHANNEL_NORMAL == mAudioChannelType && video) {
+        mAudioChannelAgent->InitWithVideo(mAudioChannelType, this, true);
+      } else {
+        mAudioChannelAgent->InitWithWeakCallback(mAudioChannelType, this);
+      }
       mAudioChannelAgent->SetVisibilityState(!OwnerDoc()->Hidden());
     }
 
