@@ -916,12 +916,4 @@ interface nsIDocShell : nsIDocShellTreeItem
     */
   boolean isCommandEnabled(in string command);
   void doCommand(in string command);
-
-  /**
-   * If deviceSizeIsPageSize is set to true, device-width/height media queries
-   * will be calculated from the page size, not the device size.
-   *
-   * Used by the Responsive Design View.
-   */
-  [infallible] attribute boolean deviceSizeIsPageSize;
 };
