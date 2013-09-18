@@ -158,7 +158,7 @@ MIRGraph::forkJoinSlice()
 }
 
 MBasicBlock *
-MBasicBlock::New(MIRGraph &graph, CompileInfo &info,
+MBasicBlock::New(MIRGraph &graph, BytecodeAnalysis *analysis, CompileInfo &info,
                  MBasicBlock *pred, jsbytecode *entryPc, Kind kind)
 {
     JS_ASSERT(entryPc != NULL);
@@ -167,7 +167,7 @@ MBasicBlock::New(MIRGraph &graph, CompileInfo &info,
     if (!block->init())
         return NULL;
 
-    if (!block->inherit(pred, 0))
+    if (!block->inherit(analysis, pred, 0))
         return NULL;
 
     return block;
@@ -181,7 +181,7 @@ MBasicBlock::NewPopN(MIRGraph &graph, CompileInfo &info,
     if (!block->init())
         return NULL;
 
-    if (!block->inherit(pred, popped))
+    if (!block->inherit(NULL, pred, popped))
         return NULL;
 
     return block;
@@ -210,14 +210,14 @@ MBasicBlock *
 MBasicBlock::NewPendingLoopHeader(MIRGraph &graph, CompileInfo &info,
                                   MBasicBlock *pred, jsbytecode *entryPc)
 {
-    return MBasicBlock::New(graph, info, pred, entryPc, PENDING_LOOP_HEADER);
+    return MBasicBlock::New(graph, NULL, info, pred, entryPc, PENDING_LOOP_HEADER);
 }
 
 MBasicBlock *
 MBasicBlock::NewSplitEdge(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred)
 {
     return pred->pc()
-           ? MBasicBlock::New(graph, info, pred, pred->pc(), SPLIT_EDGE)
+           ? MBasicBlock::New(graph, NULL, info, pred, pred->pc(), SPLIT_EDGE)
            : MBasicBlock::NewAsmJS(graph, info, pred, SPLIT_EDGE);
 }
 
@@ -323,7 +323,7 @@ MBasicBlock::copySlots(MBasicBlock *from)
 }
 
 bool
-MBasicBlock::inherit(MBasicBlock *pred, uint32_t popped)
+MBasicBlock::inherit(BytecodeAnalysis *analysis, MBasicBlock *pred, uint32_t popped)
 {
     if (pred) {
         stackPosition_ = pred->stackPosition_;
@@ -332,7 +332,7 @@ MBasicBlock::inherit(MBasicBlock *pred, uint32_t popped)
         if (kind_ != PENDING_LOOP_HEADER)
             copySlots(pred);
     } else {
-        uint32_t stackDepth = info().script()->analysis()->getCode(pc()).stackDepth;
+        uint32_t stackDepth = analysis->info(pc()).stackDepth;
         stackPosition_ = info().firstStackSlot() + stackDepth;
         JS_ASSERT(stackPosition_ >= popped);
         stackPosition_ -= popped;

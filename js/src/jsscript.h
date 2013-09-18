@@ -932,6 +932,8 @@ class JSScript : public js::gc::Cell
         return reinterpret_cast<js::TryNoteArray *>(data + trynotesOffset());
     }
 
+    bool hasLoops();
+
     js::HeapPtrAtom &getAtom(size_t index) const {
         JS_ASSERT(index < natoms);
         return atoms[index];

@@ -2959,6 +2959,20 @@ JSScript::updateBaselineOrIonRaw()
 #endif
 }
 
+bool
+JSScript::hasLoops()
+{
+    if (!hasTrynotes())
+        return false;
+    JSTryNote *tn = trynotes()->vector;
+    JSTryNote *tnlimit = tn + trynotes()->length;
+    for (; tn < tnlimit; tn++) {
+        if (tn->kind == JSTRY_ITER || tn->kind == JSTRY_LOOP)
+            return true;
+    }
+    return false;
+}
+
 static inline void
 LazyScriptHash(uint32_t lineno, uint32_t column, uint32_t begin, uint32_t end,
                HashNumber hashes[3])
