@@ -3505,7 +3505,12 @@ for (uint32_t i = 0; i < length; ++i) {
                 raise NoSuchDescriptorError("Can't handle member callbacks in "
                                             "workers; need to sort out rooting"
                                             "issues")
-            declType = CGGeneric("JS::Rooted<JSObject*>")
+            if isOptional:
+                # We have a specialization of Optional that will use a
+                # Rooted for the storage here.
+                declType = CGGeneric("JS::Handle<JSObject*>")
+            else:
+                declType = CGGeneric("JS::Rooted<JSObject*>")            
             conversion = "  ${declName} = &${val}.toObject();\n"
             declArgs = "cx"
         else:
