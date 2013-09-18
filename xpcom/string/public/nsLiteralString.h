@@ -37,26 +37,14 @@ inline uint32_t LiteralWStringLength(const char16_t (&c)[n])
 } // namespace internal
 } // namespace mozilla
 
-#define NS_LL(s) MOZ_UTF16(s)
 #define NS_MULTILINE_LITERAL_STRING(s)          nsDependentString(reinterpret_cast<const nsAString::char_type*>(s), mozilla::internal::LiteralWStringLength(s))
 #define NS_MULTILINE_LITERAL_STRING_INIT(n,s)   n(reinterpret_cast<const nsAString::char_type*>(s), mozilla::internal::LiteralWStringLength(s))
 #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  const nsDependentString n(reinterpret_cast<const nsAString::char_type*>(s), mozilla::internal::LiteralWStringLength(s))
 typedef nsDependentString nsLiteralString;
 
-/*
- * Macro arguments used in concatenation or stringification won't be expanded.
- * Therefore, in order for |NS_L(FOO)| to work as expected (which is to expand
- * |FOO| before doing whatever |NS_L| needs to do to it) a helper macro needs
- * to be inserted in between to allow the macro argument to expand.
- * See "3.10.6 Separate Expansion of Macro Arguments" of the CPP manual for a
- * more accurate and precise explanation.
- */
-
-#define NS_L(s)                                   NS_LL(s)
-
-#define NS_LITERAL_STRING(s)                      static_cast<const nsAFlatString&>(NS_MULTILINE_LITERAL_STRING(NS_LL(s)))
-#define NS_LITERAL_STRING_INIT(n,s)               NS_MULTILINE_LITERAL_STRING_INIT(n, NS_LL(s))
-#define NS_NAMED_LITERAL_STRING(n,s)              NS_NAMED_MULTILINE_LITERAL_STRING(n, NS_LL(s))
+#define NS_LITERAL_STRING(s)                      static_cast<const nsAFlatString&>(NS_MULTILINE_LITERAL_STRING(MOZ_UTF16(s)))
+#define NS_LITERAL_STRING_INIT(n,s)               NS_MULTILINE_LITERAL_STRING_INIT(n, MOZ_UTF16(s))
+#define NS_NAMED_LITERAL_STRING(n,s)              NS_NAMED_MULTILINE_LITERAL_STRING(n, MOZ_UTF16(s))
 
 #define NS_LITERAL_CSTRING(s)                     static_cast<const nsDependentCString&>(nsDependentCString(s, mozilla::internal::LiteralStringLength(s)))
 #define NS_LITERAL_CSTRING_INIT(n,s)              n(s, mozilla::internal::LiteralStringLength(s))
