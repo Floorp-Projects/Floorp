@@ -226,6 +226,49 @@ tasks.push(function testEnableData() {
   setSetting(DATA_KEY, true);
 });
 
+tasks.push(function testUnregisterDataWhileDataEnabled() {
+  log("Set data registration unregistered while data enabled.");
+
+  // When data registration is unregistered, all data calls
+  // will be automatically deactivated.
+  sendCmdToEmulator("gsm data unregistered", function() {
+    connection.addEventListener("datachange", function ondatachange() {
+      log("mobileConnection.data.state is now '"
+        + connection.data.state + "'.");
+      if (connection.data.state == "notSearching") {
+        connection.removeEventListener("datachange", ondatachange);
+        log("mobileConnection.data.connected is now '"
+          + connection.data.connected + "'.");
+        is(connection.data.connected, false, "data.connected");
+        tasks.next();
+      }
+    });
+  });
+});
+
+tasks.push(function testRegisterDataWhileDataEnabled() {
+  log("Set data registration home while data enabled.");
+
+  // When data registration is registered, data call will be
+  // (re)activated by gecko if ril.data.enabled is set to true.
+  sendCmdToEmulator("gsm data home", function() {
+    connection.addEventListener("datachange", function ondatachange() {
+      connection.removeEventListener("datachange", ondatachange);
+      log("mobileConnection.data.state is now '"
+        + connection.data.state + "'.");
+      is(connection.data.state, "registered", "data.state");
+
+      connection.addEventListener("datachange", function ondatachange() {
+        connection.removeEventListener("datachange", ondatachange);
+        log("mobileConnection.data.connected is now '"
+          + connection.data.connected + "'.");
+        is(connection.data.connected, true, "data.connected");
+        tasks.next();
+      });
+    });
+  });
+});
+
 tasks.push(function testDisableDataRoamingWhileRoaming() {
   log("Disable data roaming while roaming.");
 
