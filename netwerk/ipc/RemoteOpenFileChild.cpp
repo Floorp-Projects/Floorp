@@ -75,6 +75,7 @@ RemoteOpenFileChild::RemoteOpenFileChild(const RemoteOpenFileChild& other)
 {
   // Note: don't clone mListener or we'll have a refcount leak.
   other.mURI->Clone(getter_AddRefs(mURI));
+  other.mAppURI->Clone(getter_AddRefs(mAppURI));
   other.mFile->Clone(getter_AddRefs(mFile));
 }
 
@@ -93,11 +94,13 @@ RemoteOpenFileChild::~RemoteOpenFileChild()
 }
 
 nsresult
-RemoteOpenFileChild::Init(nsIURI* aRemoteOpenUri)
+RemoteOpenFileChild::Init(nsIURI* aRemoteOpenUri, nsIURI* aAppUri)
 {
-  if (!aRemoteOpenUri) {
+  if (!aRemoteOpenUri || !aAppUri) {
     return NS_ERROR_INVALID_ARG;
   }
+
+  aAppUri->Clone(getter_AddRefs(mAppURI));
 
   nsAutoCString scheme;
   nsresult rv = aRemoteOpenUri->GetScheme(scheme);
@@ -183,8 +186,10 @@ RemoteOpenFileChild::AsyncRemoteFileOpen(int32_t aFlags,
 
   URIParams uri;
   SerializeURI(mURI, uri);
+  URIParams appUri;
+  SerializeURI(mAppURI, appUri);
 
-  gNeckoChild->SendPRemoteOpenFileConstructor(this, uri);
+  gNeckoChild->SendPRemoteOpenFileConstructor(this, uri, appUri);
 
   // The chrome process now has a logical ref to us until it calls Send__delete.
   AddIPDLReference();
