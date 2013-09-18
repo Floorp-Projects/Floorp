@@ -7,7 +7,6 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Date.h"
-#include "mozilla/dom/HTMLInputElementBinding.h"
 #include "nsAsyncDOMEvent.h"
 #include "nsAttrValueInlines.h"
 
@@ -4504,6 +4503,11 @@ HTMLInputElement::SetSelectionRange(int32_t aSelectionStart,
       if (!aRv.Failed()) {
         aRv = textControlFrame->ScrollSelectionIntoView();
       }
+
+      nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
+                                           static_cast<nsIDOMHTMLInputElement*>(this),
+                                           NS_LITERAL_STRING("select"), true,
+                                           false);
     }
   }
 }
@@ -4519,6 +4523,113 @@ HTMLInputElement::SetSelectionRange(int32_t aSelectionStart,
 
   SetSelectionRange(aSelectionStart, aSelectionEnd, direction, rv);
   return rv.ErrorCode();
+}
+
+void
+HTMLInputElement::SetRangeText(const nsAString& aReplacement, ErrorResult& aRv)
+{
+  if (!SupportsSetRangeText()) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
+  int32_t start, end;
+  aRv = GetSelectionRange(&start, &end);
+  if (aRv.Failed()) {
+    nsTextEditorState* state = GetEditorState();
+    if (state && state->IsSelectionCached()) {
+      start = state->GetSelectionProperties().mStart;
+      end = state->GetSelectionProperties().mEnd;
+      aRv = NS_OK;
+    }
+  }
+
+  SetRangeText(aReplacement, start, end, mozilla::dom::SelectionMode::Preserve,
+               aRv, start, end);
+}
+
+void
+HTMLInputElement::SetRangeText(const nsAString& aReplacement, uint32_t aStart,
+                               uint32_t aEnd, const SelectionMode& aSelectMode,
+                               ErrorResult& aRv, int32_t aSelectionStart,
+                               int32_t aSelectionEnd)
+{
+  if (!SupportsSetRangeText()) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
+  if (aStart > aEnd) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  nsAutoString value;
+  GetValueInternal(value);
+  uint32_t inputValueLength = value.Length();
+
+  if (aStart > inputValueLength) {
+    aStart = inputValueLength;
+  }
+
+  if (aEnd > inputValueLength) {
+    aEnd = inputValueLength;
+  }
+
+  if (aSelectionStart == -1 && aSelectionEnd == -1) {
+      aRv = GetSelectionRange(&aSelectionStart, &aSelectionEnd);
+      if (aRv.Failed()) {
+        nsTextEditorState* state = GetEditorState();
+        if (state && state->IsSelectionCached()) {
+          aSelectionStart = state->GetSelectionProperties().mStart;
+          aSelectionEnd = state->GetSelectionProperties().mEnd;
+          aRv = NS_OK;
+        }
+      }
+  }
+
+  if (aStart < aEnd) {
+    value.Replace(aStart, aEnd - aStart, aReplacement);
+    SetValueInternal(value, false, false);
+  }
+
+  uint32_t newEnd = aStart + aReplacement.Length();
+  int32_t delta =  aReplacement.Length() - (aEnd - aStart);
+
+  switch (aSelectMode) {
+    case mozilla::dom::SelectionMode::Select:
+    {
+      aSelectionStart = aStart;
+      aSelectionEnd = newEnd;
+    }
+    break;
+    case mozilla::dom::SelectionMode::Start:
+    {
+      aSelectionStart = aSelectionEnd = aStart;
+    }
+    break;
+    case mozilla::dom::SelectionMode::End:
+    {
+      aSelectionStart = aSelectionEnd = newEnd;
+    }
+    break;
+    case mozilla::dom::SelectionMode::Preserve:
+    {
+      if ((uint32_t)aSelectionStart > aEnd)
+        aSelectionStart += delta;
+      else if ((uint32_t)aSelectionStart > aStart)
+       aSelectionStart = aStart;
+
+      if ((uint32_t)aSelectionEnd > aEnd)
+        aSelectionEnd += delta;
+      else if ((uint32_t)aSelectionEnd > aStart)
+        aSelectionEnd = newEnd;
+    }
+    break;
+  }
+
+  Optional<nsAString> direction;
+  SetSelectionRange(aSelectionStart, aSelectionEnd, direction, aRv);
 }
 
 int32_t
