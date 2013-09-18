@@ -231,13 +231,9 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     }
 
     @Override
-    public Cursor getTopBookmarks(ContentResolver cr, int limit) {
-        // Only select bookmarks. Unfortunately, we need to query the combined view,
-        // instead of just the bookmarks table, in order to do the frecency calculation.
-        String selection = Combined.BOOKMARK_ID + " IS NOT NULL";
-
-        // Filter out sites that are pinned.
-        selection = DBUtils.concatenateWhere(selection, Combined.URL + " NOT IN (SELECT " +
+    public Cursor getTopSites(ContentResolver cr, int limit) {
+        // Filter out sites that are pinned
+        String selection = DBUtils.concatenateWhere("", Combined.URL + " NOT IN (SELECT " +
                                              Bookmarks.URL + " FROM bookmarks WHERE " +
                                              DBUtils.qualifyColumn("bookmarks", Bookmarks.PARENT) + " == ? AND " +
                                              DBUtils.qualifyColumn("bookmarks", Bookmarks.IS_DELETED) + " == 0)");
