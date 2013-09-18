@@ -1,5 +1,4 @@
-// |jit-test| no-jm
-// (disable with JM, see bug 845276)
+// |jit-test|
 
 // If an exception unwind hook performs a forced return, and this calls an
 // onPop handler that throws, the exception should not be handled in the

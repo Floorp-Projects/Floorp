@@ -1244,7 +1244,7 @@ NS_IMETHODIMP nsWebBrowser::Destroy()
 
 NS_IMETHODIMP nsWebBrowser::GetUnscaledDevicePixelsPerCSSPixel(double *aScale)
 {
-  *aScale = mParentWidget ? mParentWidget->GetDefaultScale() : 1.0;
+  *aScale = mParentWidget ? mParentWidget->GetDefaultScale().scale : 1.0;
   return NS_OK;
 }
 

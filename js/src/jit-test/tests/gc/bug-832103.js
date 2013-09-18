@@ -1,4 +1,4 @@
-//|jit-test| error:TypeError;mjitalways
+//|jit-test| error:TypeError
 RegExp("").exec()
 Object.defineProperty(this, "x", {
     get: function() {

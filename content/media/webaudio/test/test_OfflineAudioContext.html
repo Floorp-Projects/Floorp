@@ -54,6 +54,10 @@ addLoadEvent(function() {
     compareBuffers(e.renderedBuffer.getChannelData(0), buf.getChannelData(0));
     compareBuffers(e.renderedBuffer.getChannelData(1), buf.getChannelData(1));
 
+    expectException(function() {
+      ctx.startRendering();
+    }, DOMException.INVALID_STATE_ERR);
+
     SimpleTest.finish();
   }, false);
 });

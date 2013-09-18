@@ -1,4 +1,4 @@
-// |jit-test| mjitalways;
+// |jit-test|
 
 try {
     a = []

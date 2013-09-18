@@ -1,4 +1,4 @@
-// This test is made to be effective with --no-jm.
+// This test was made to be effective with --no-jm.
 
 var list = [
   { entry00: 0, length: 1 },

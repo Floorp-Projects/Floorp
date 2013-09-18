@@ -997,8 +997,6 @@ struct TypeObject : gc::Cell
     /* Flags for this object. */
     TypeObjectFlags flags;
 
-    static inline size_t offsetOfFlags() { return offsetof(TypeObject, flags); }
-
     /*
      * This field allows various special classes of objects to attach
      * additional information to a type object:

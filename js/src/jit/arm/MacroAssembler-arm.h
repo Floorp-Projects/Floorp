@@ -776,7 +776,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadInt32OrDouble(const Operand &src, const FloatRegister &dest);
     void loadInt32OrDouble(Register base, Register index,
                            const FloatRegister &dest, int32_t shift = defaultShift);
-    void loadStaticDouble(const double *dp, const FloatRegister &dest);
     void loadConstantDouble(double dp, const FloatRegister &dest);
     // treat the value as a boolean, and set condition codes accordingly
     Condition testInt32Truthy(bool truthy, const ValueOperand &operand);
@@ -786,7 +785,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void boolValueToFloat32(const ValueOperand &operand, const FloatRegister &dest);
     void int32ValueToFloat32(const ValueOperand &operand, const FloatRegister &dest);
-    void loadStaticFloat32(const float *fp, const FloatRegister &dest);
     void loadConstantFloat32(float f, const FloatRegister &dest);
 
     template<typename T>

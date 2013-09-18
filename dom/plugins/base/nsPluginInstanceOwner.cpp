@@ -290,6 +290,7 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mNumCachedParams = 0;
   mCachedAttrParamNames = nullptr;
   mCachedAttrParamValues = nullptr;
+  mLastMouseDownButtonType = -1;
 
 #ifdef XP_MACOSX
 #ifndef NP_NO_CARBON
@@ -1860,8 +1861,9 @@ nsPluginInstanceOwner::ProcessMouseDown(nsIDOMEvent* aMouseEvent)
   }
 
   nsEvent* event = aMouseEvent->GetInternalNSEvent();
-    if (event && event->eventStructType == NS_MOUSE_EVENT) {
-      nsEventStatus rv = ProcessEvent(*static_cast<nsGUIEvent*>(event));
+  if (event && event->eventStructType == NS_MOUSE_EVENT) {
+    mLastMouseDownButtonType = static_cast<nsMouseEvent*>(event)->button;
+    nsEventStatus rv = ProcessEvent(*static_cast<nsGUIEvent*>(event));
     if (nsEventStatus_eConsumeNoDefault == rv) {
       return aMouseEvent->PreventDefault(); // consume event
     }
@@ -1888,6 +1890,9 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent)
       aMouseEvent->PreventDefault();
       aMouseEvent->StopPropagation();
     }
+    if (event->message == NS_MOUSE_BUTTON_UP) {
+      mLastMouseDownButtonType = -1;
+    }
   }
   return NS_OK;
 }
@@ -1911,11 +1916,15 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
     return ProcessMouseDown(aEvent);
   }
   if (eventType.EqualsLiteral("mouseup")) {
-    // Don't send a mouse-up event to the plugin if it isn't focused.  This can
-    // happen if the previous mouse-down was sent to a DOM element above the
-    // plugin, the mouse is still above the plugin, and the mouse-down event
-    // caused the element to disappear.  See bug 627649.
-    if (!mContentFocused) {
+    // Don't send a mouse-up event to the plugin if its button type doesn't
+    // match that of the preceding mouse-down event (if any).  This kind of
+    // mismatch can happen if the previous mouse-down event was sent to a DOM
+    // element above the plugin, the mouse is still above the plugin, and the
+    // mouse-down event caused the element to disappear.  See bug 627649 and
+    // bug 909678.
+    nsMouseEvent *event =
+      static_cast<nsMouseEvent*>(aEvent->GetInternalNSEvent());
+    if (event && ((int) event->button != mLastMouseDownButtonType)) {
       aEvent->PreventDefault();
       return NS_OK;
     }

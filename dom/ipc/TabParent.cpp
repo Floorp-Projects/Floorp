@@ -1146,9 +1146,9 @@ TabParent::RecvGetDefaultScale(double* aValue)
 {
   TryCacheDPIAndScale();
 
-  NS_ABORT_IF_FALSE(mDefaultScale > 0,
+  NS_ABORT_IF_FALSE(mDefaultScale.scale > 0,
                     "Must not ask for scale before OwnerElement is received!");
-  *aValue = mDefaultScale;
+  *aValue = mDefaultScale.scale;
   return true;
 }
 
