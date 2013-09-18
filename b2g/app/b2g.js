@@ -135,6 +135,11 @@ pref("browser.search.suggest.enabled", true);
 // tell the search service that we don't really expose the "current engine"
 pref("browser.search.noCurrentEngine", true);
 
+// Enable sparse localization by setting a few package locale overrides
+pref("chrome.override_package.global", "b2g-l10n");
+pref("chrome.override_package.mozapps", "b2g-l10n");
+pref("chrome.override_package.passwordmgr", "b2g-l10n");
+
 // enable xul error pages
 pref("browser.xul.error_pages.enabled", true);
 
