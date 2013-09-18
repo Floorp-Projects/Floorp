@@ -3677,6 +3677,27 @@ let RIL = {
     this.sendChromeMessage(message);
   },
 
+  _compareDataCallLink: function _compareDataCallLink(source, target) {
+    if (source.ifname != target.ifname ||
+        source.ipaddr != target.ipaddr ||
+        source.gw != target.gw) {
+      return false;
+    }
+
+    // Compare <datacall>.dns.
+    let sdns = source.dns, tdns = target.dns;
+    if (sdns.length != tdns.length) {
+      return false;
+    }
+    for (let i = 0; i < sdns.length; i++) {
+      if (sdns[i] != tdns[i]) {
+        return false;
+      }
+    }
+
+    return true;
+  },
+
   _processDataCallList: function _processDataCallList(datacalls, newDataCallOptions) {
     // Check for possible PDP errors: We check earlier because the datacall
     // can be removed if is the same as the current one.
@@ -3700,6 +3721,7 @@ let RIL = {
         // If datacalls list is coming from REQUEST_SETUP_DATA_CALL response,
         // we do not change state for any currentDataCalls not in datacalls list.
         if (!newDataCallOptions) {
+          delete this.currentDataCalls[currentDataCall.cid];
           currentDataCall.state = GECKO_NETWORK_STATE_DISCONNECTED;
           currentDataCall.rilMessageType = "datacallstatechange";
           this.sendChromeMessage(currentDataCall);
@@ -3717,31 +3739,60 @@ let RIL = {
 
       this._setDataCallGeckoState(updatedDataCall);
       if (updatedDataCall.state != currentDataCall.state) {
+        if (updatedDataCall.state == GECKO_NETWORK_STATE_DISCONNECTED) {
+          delete this.currentDataCalls[currentDataCall.cid];
+        }
         currentDataCall.status = updatedDataCall.status;
         currentDataCall.active = updatedDataCall.active;
         currentDataCall.state = updatedDataCall.state;
         currentDataCall.rilMessageType = "datacallstatechange";
         this.sendChromeMessage(currentDataCall);
+        continue;
       }
+
+      // State not changed, now check links.
+      if (this._compareDataCallLink(updatedDataCall, currentDataCall)) {
+        if(DEBUG) debug("No changes in data call.");
+        continue;
+      }
+      if ((updatedDataCall.ifname != currentDataCall.ifname) ||
+          (updatedDataCall.ipaddr != currentDataCall.ipaddr)) {
+        if(DEBUG) debug("Data link changed, cleanup.");
+        this.deactivateDataCall(currentDataCall);
+        continue;
+      }
+      // Minor change, just update and notify.
+      if(DEBUG) debug("Data link minor change, just update and notify.");
+      currentDataCall.gw = updatedDataCall.gw;
+      if (updatedDataCall.dns) {
+        currentDataCall.dns[0] = updatedDataCall.dns[0];
+        currentDataCall.dns[1] = updatedDataCall.dns[1];
+      }
+      currentDataCall.rilMessageType = "datacallstatechange";
+      this.sendChromeMessage(currentDataCall);
     }
 
     for each (let newDataCall in datacalls) {
       if (!newDataCall.ifname) {
         continue;
       }
+
+      if (!newDataCallOptions) {
+        if (DEBUG) debug("Unexpected new data call: " + JSON.stringify(newDataCall));
+        continue;
+      }
+
       this.currentDataCalls[newDataCall.cid] = newDataCall;
       this._setDataCallGeckoState(newDataCall);
-      if (newDataCallOptions) {
-        newDataCall.radioTech = newDataCallOptions.radioTech;
-        newDataCall.apn = newDataCallOptions.apn;
-        newDataCall.user = newDataCallOptions.user;
-        newDataCall.passwd = newDataCallOptions.passwd;
-        newDataCall.chappap = newDataCallOptions.chappap;
-        newDataCall.pdptype = newDataCallOptions.pdptype;
-        newDataCallOptions = null;
-      } else if (DEBUG) {
-        debug("Unexpected new data call: " + JSON.stringify(newDataCall));
-      }
+
+      newDataCall.radioTech = newDataCallOptions.radioTech;
+      newDataCall.apn = newDataCallOptions.apn;
+      newDataCall.user = newDataCallOptions.user;
+      newDataCall.passwd = newDataCallOptions.passwd;
+      newDataCall.chappap = newDataCallOptions.chappap;
+      newDataCall.pdptype = newDataCallOptions.pdptype;
+      newDataCallOptions = null;
+
       newDataCall.rilMessageType = "datacallstatechange";
       this.sendChromeMessage(newDataCall);
     }

@@ -275,6 +275,13 @@ function removeHostRoute(options) {
   }
 }
 
+/**
+ * Remove the routes associated with the named interface.
+ */
+function removeHostRoutes(options) {
+  libnetutils.ifc_remove_host_routes(options.ifname);
+}
+
 function removeNetworkRoute(options) {
   let ipvalue = netHelpers.stringToIP(options.ip);
   let netmaskvalue = netHelpers.stringToIP(options.netmask);
