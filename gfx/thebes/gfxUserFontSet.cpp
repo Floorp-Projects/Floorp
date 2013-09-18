@@ -811,6 +811,14 @@ gfxUserFontSet::UserFontCache::Entry::RemoveIfPrivate(Entry* aEntry,
 }
 
 PLDHashOperator
+gfxUserFontSet::UserFontCache::Entry::RemoveIfMatches(Entry* aEntry,
+                                                      void* aUserData)
+{
+    return aEntry->GetFontEntry() == static_cast<gfxFontEntry*>(aUserData) ?
+        PL_DHASH_REMOVE : PL_DHASH_NEXT;
+}
+
+PLDHashOperator
 gfxUserFontSet::UserFontCache::Entry::DisconnectSVG(Entry* aEntry,
                                                     void* aUserData)
 {
@@ -902,11 +910,11 @@ gfxUserFontSet::UserFontCache::ForgetFont(gfxFontEntry *aFontEntry)
         return;
     }
 
-    gfxUserFontData *data = aFontEntry->mUserFontData;
-    if (data) {
-        sUserFonts->RemoveEntry(Key(data->mURI, data->mPrincipal, aFontEntry,
-                                    data->mPrivate));
-    }
+    // We can't simply use RemoveEntry here because it's possible the principal
+    // may have changed since the font was cached, in which case the lookup
+    // would no longer find the entry (bug 838105).
+    sUserFonts->EnumerateEntries(
+        gfxUserFontSet::UserFontCache::Entry::RemoveIfMatches, aFontEntry);
 }
 
 gfxFontEntry*
