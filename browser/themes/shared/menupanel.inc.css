@@ -107,34 +107,34 @@ toolbarpaletteitem[place="palette"] > #preferences-button {
 
 /* Wide panel control icons */
 
-#edit-controls[customizableui-areatype="menu-panel"] > toolbarbutton,
-#zoom-controls[customizableui-areatype="menu-panel"] > toolbarbutton,
+#edit-controls@inAnyPanel@ > toolbarbutton,
+#zoom-controls@inAnyPanel@ > toolbarbutton,
 toolbarpaletteitem[place="palette"] > #edit-controls > toolbarbutton,
 toolbarpaletteitem[place="palette"] > #zoom-controls > toolbarbutton {
   list-style-image: url(chrome://browser/skin/menuPanel-small.png);
 }
 
-#edit-controls[customizableui-areatype="menu-panel"] > #cut-button,
+#edit-controls@inAnyPanel@ > #cut-button,
 toolbarpaletteitem[place="palette"] > #edit-controls > #cut-button {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
-#edit-controls[customizableui-areatype="menu-panel"] > #copy-button,
+#edit-controls@inAnyPanel@ > #copy-button,
 toolbarpaletteitem[place="palette"] > #edit-controls > #copy-button {
   -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 
-#edit-controls[customizableui-areatype="menu-panel"] > #paste-button,
+#edit-controls@inAnyPanel@ > #paste-button,
 toolbarpaletteitem[place="palette"] > #edit-controls > #paste-button {
   -moz-image-region: rect(0px, 64px, 16px, 48px);
 }
 
-#zoom-controls[customizableui-areatype="menu-panel"] > #zoom-out-button,
+#zoom-controls@inAnyPanel@ > #zoom-out-button,
 toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-out-button {
   -moz-image-region: rect(0px, 80px, 16px, 64px);
 }
 
-#zoom-controls[customizableui-areatype="menu-panel"] > #zoom-in-button,
+#zoom-controls@inAnyPanel@ > #zoom-in-button,
 toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button {
   -moz-image-region: rect(0px, 96px, 16px, 80px);
 }
