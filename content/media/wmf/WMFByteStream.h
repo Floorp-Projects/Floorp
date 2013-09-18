@@ -112,10 +112,6 @@ public:
   void ProcessReadRequest(IMFAsyncResult* aResult,
                           ReadRequest* aRequestState);
 
-  // Returns the number of bytes that have been consumed by the users of this
-  // class since the last time we called this, and resets the internal counter.
-  uint32_t GetAndResetBytesConsumedCount();
-
 private:
 
   // Locks the MediaResource and performs the read. The other read methods
@@ -151,11 +147,6 @@ private:
   // We implement IMFAttributes by forwarding all calls to an instance of the
   // standard IMFAttributes class, which we store a reference to here.
   RefPtr<IMFAttributes> mAttributes;
-
-  // Number of bytes that have been consumed by callers of the read functions
-  // on this object since the last time GetAndResetBytesConsumedCount() was
-  // called.
-  uint32_t mBytesConsumed;
 
   // True if the resource has been shutdown, either because the WMFReader is
   // shutting down, or because the underlying MediaResource has closed.

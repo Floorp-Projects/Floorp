@@ -1,4 +1,4 @@
-// |jit-test| mjitalways;debug
+// |jit-test| debug
 setDebug(true);
 
 function nop(){}

@@ -709,7 +709,7 @@ public:
   // see bug 865908 about fixing this.
   virtual void SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* aAllocator)
   {
-    MOZ_ASSERT(!mBuffer, "Will leak the old mBuffer");
+    MOZ_ASSERT(!mBuffer || mBuffer == aBuffer, "Will leak the old mBuffer");
     mBuffer = aBuffer;
     mDeAllocator = aAllocator;
   }

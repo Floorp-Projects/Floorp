@@ -2015,23 +2015,29 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
     // point.
     return rv;
   }
+
+  // These two calls to nsIPresShell::SetCapturingContext() (on mouse-down
+  // and mouse-up) are needed to make the routing of mouse events while
+  // dragging conform to standard OS X practice, and to the Cocoa NPAPI spec.
+  // See bug 525078 and bug 909678.
+  if (anEvent->message == NS_MOUSE_BUTTON_DOWN) {
+    nsIPresShell::SetCapturingContent(GetContent(), CAPTURE_IGNOREALLOWED);
+  }
 #endif
 
-  return nsObjectFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
-}
+  rv = nsObjectFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
+
+  // We need to be careful from this point because the call to
+  // nsObjectFrameSuper::HandleEvent() might have killed us.
 
 #ifdef XP_MACOSX
-// Needed to make the routing of mouse events while dragging conform to
-// standard OS X practice, and to the Cocoa NPAPI spec.  See bug 525078.
-NS_IMETHODIMP
-nsObjectFrame::HandlePress(nsPresContext* aPresContext,
-                           nsGUIEvent*    anEvent,
-                           nsEventStatus* anEventStatus)
-{
-  nsIPresShell::SetCapturingContent(GetContent(), CAPTURE_IGNOREALLOWED);
-  return nsObjectFrameSuper::HandlePress(aPresContext, anEvent, anEventStatus);
-}
+  if (anEvent->message == NS_MOUSE_BUTTON_UP) {
+    nsIPresShell::SetCapturingContent(nullptr, 0);
+  }
 #endif
+
+  return rv;
+}
 
 nsresult
 nsObjectFrame::GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance)

@@ -18,16 +18,13 @@
 using namespace js;
 using namespace js::jit;
 
-void
-MacroAssemblerX86::loadConstantDouble(double d, const FloatRegister &dest)
+MacroAssemblerX86::Double *
+MacroAssemblerX86::getDouble(double d)
 {
-    if (maybeInlineDouble(d, dest))
-        return;
-
     if (!doubleMap_.initialized()) {
         enoughMemory_ &= doubleMap_.init();
         if (!enoughMemory_)
-            return;
+            return NULL;
     }
     size_t doubleIndex;
     DoubleMap::AddPtr p = doubleMap_.lookupForAdd(d);
@@ -38,24 +35,42 @@ MacroAssemblerX86::loadConstantDouble(double d, const FloatRegister &dest)
         enoughMemory_ &= doubles_.append(Double(d));
         enoughMemory_ &= doubleMap_.add(p, d, doubleIndex);
         if (!enoughMemory_)
-            return;
+            return NULL;
     }
     Double &dbl = doubles_[doubleIndex];
     JS_ASSERT(!dbl.uses.bound());
-
-    masm.movsd_mr(reinterpret_cast<const void *>(dbl.uses.prev()), dest.code());
-    dbl.uses.setPrev(masm.size());
+    return &dbl;
 }
 
 void
-MacroAssemblerX86::loadConstantFloat32(float f, const FloatRegister &dest)
+MacroAssemblerX86::loadConstantDouble(double d, const FloatRegister &dest)
 {
-    // Contrarily to loadConstantDouble, this one doesn't have any maybeInlineFloat,
-    // but that might be interesting to do it in the future.
+    if (maybeInlineDouble(d, dest))
+        return;
+    Double *dbl = getDouble(d);
+    if (!dbl)
+        return;
+    masm.movsd_mr(reinterpret_cast<const void *>(dbl->uses.prev()), dest.code());
+    dbl->uses.setPrev(masm.size());
+}
+
+void
+MacroAssemblerX86::addConstantDouble(double d, const FloatRegister &dest)
+{
+    Double *dbl = getDouble(d);
+    if (!dbl)
+        return;
+    masm.addsd_mr(reinterpret_cast<const void *>(dbl->uses.prev()), dest.code());
+    dbl->uses.setPrev(masm.size());
+}
+
+MacroAssemblerX86::Float *
+MacroAssemblerX86::getFloat(float f)
+{
     if (!floatMap_.initialized()) {
         enoughMemory_ &= floatMap_.init();
         if (!enoughMemory_)
-            return;
+            return NULL;
     }
     size_t floatIndex;
     FloatMap::AddPtr p = floatMap_.lookupForAdd(f);
@@ -66,28 +81,33 @@ MacroAssemblerX86::loadConstantFloat32(float f, const FloatRegister &dest)
         enoughMemory_ &= floats_.append(Float(f));
         enoughMemory_ &= floatMap_.add(p, f, floatIndex);
         if (!enoughMemory_)
-            return;
+            return NULL;
     }
     Float &flt = floats_[floatIndex];
     JS_ASSERT(!flt.uses.bound());
-
-    masm.movss_mr(reinterpret_cast<const void *>(flt.uses.prev()), dest.code());
-    flt.uses.setPrev(masm.size());
+    return &flt;
 }
 
 void
-MacroAssemblerX86::loadStaticDouble(const double *dp, const FloatRegister &dest) {
-    if (maybeInlineDouble(*dp, dest))
+MacroAssemblerX86::loadConstantFloat32(float f, const FloatRegister &dest)
+{
+    // Contrary to loadConstantDouble, this one doesn't have any maybeInlineFloat,
+    // but that might be interesting to do it in the future.
+    Float *flt = getFloat(f);
+    if (!flt)
         return;
-
-    // x86 can just load from any old immediate address.
-    movsd(dp, dest);
+    masm.movss_mr(reinterpret_cast<const void *>(flt->uses.prev()), dest.code());
+    flt->uses.setPrev(masm.size());
 }
 
 void
-MacroAssemblerX86::loadStaticFloat32(const float *fp, const FloatRegister &dest) {
-    // x86 can just load from any old immediate address.
-    movss(fp, dest);
+MacroAssemblerX86::addConstantFloat32(float f, const FloatRegister &dest)
+{
+    Float *flt = getFloat(f);
+    if (!flt)
+        return;
+    masm.addss_mr(reinterpret_cast<const void *>(flt->uses.prev()), dest.code());
+    flt->uses.setPrev(masm.size());
 }
 
 void

@@ -63,7 +63,6 @@ public:
 private:
 
   void ReadAndPushData(guint aLength);
-  void NotifyBytesConsumed();
   int64_t QueryDuration();
 
   /* Called once the pipeline is setup to check that the stream only contains
@@ -160,10 +159,6 @@ private:
    * DecodeAudioData and DecodeVideoFrame should not expect any more data
    */
   bool mReachedEos;
-  /* offset we've reached reading from the source */
-  gint64 mByteOffset;
-  /* the last offset we reported with NotifyBytesConsumed */
-  gint64 mLastReportedByteOffset;
   int fpsNum;
   int fpsDen;
 };
