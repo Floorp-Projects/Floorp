@@ -7412,7 +7412,7 @@ CodeGenerator::visitAsmJSCheckOverRecursed(LAsmJSCheckOverRecursed *lir)
 }
 
 bool
-CodeGenerator::emitAssertRangeI(Range *r, Register input)
+CodeGenerator::emitAssertRangeI(const Range *r, Register input)
 {
     // Check the lower bound.
     if (r->lower() != INT32_MIN) {
@@ -7438,7 +7438,7 @@ CodeGenerator::emitAssertRangeI(Range *r, Register input)
 }
 
 bool
-CodeGenerator::emitAssertRangeD(Range *r, FloatRegister input, FloatRegister temp)
+CodeGenerator::emitAssertRangeD(const Range *r, FloatRegister input, FloatRegister temp)
 {
     // Check the lower bound.
     if (!r->isLowerInfinite()) {
@@ -7488,7 +7488,7 @@ bool
 CodeGenerator::visitAssertRangeI(LAssertRangeI *ins)
 {
     Register input = ToRegister(ins->input());
-    Range *r = ins->range();
+    const Range *r = ins->range();
 
     return emitAssertRangeI(r, input);
 }
@@ -7498,7 +7498,7 @@ CodeGenerator::visitAssertRangeD(LAssertRangeD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     FloatRegister temp = ToFloatRegister(ins->temp());
-    Range *r = ins->range();
+    const Range *r = ins->range();
 
     return emitAssertRangeD(r, input, temp);
 }
@@ -7508,7 +7508,7 @@ CodeGenerator::visitAssertRangeF(LAssertRangeF *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     FloatRegister temp = ToFloatRegister(ins->temp());
-    Range *r = ins->range();
+    const Range *r = ins->range();
 
     masm.convertFloatToDouble(input, input);
     bool success = emitAssertRangeD(r, input, temp);
@@ -7519,7 +7519,7 @@ CodeGenerator::visitAssertRangeF(LAssertRangeF *ins)
 bool
 CodeGenerator::visitAssertRangeV(LAssertRangeV *ins)
 {
-    Range *r = ins->range();
+    const Range *r = ins->range();
     const ValueOperand value = ToValue(ins, LAssertRangeV::Input);
     Register tag = masm.splitTagForTest(value);
     Label done;
