@@ -64,7 +64,7 @@ public class FaviconView extends ImageView {
     private void formatImage() {
         // If we're called before bitmap is set, just show the default.
         if (mIconBitmap == null) {
-            setImageResource(0);
+            setImageResource(R.drawable.favicon);
             hideBackground();
             return;
         }
@@ -72,6 +72,7 @@ public class FaviconView extends ImageView {
         // If we're called before size set, abort.
         if (mActualWidth == 0 || mActualHeight == 0) {
             hideBackground();
+            setImageResource(R.drawable.favicon);
             return;
         }
 
