@@ -508,7 +508,7 @@ SendFunctionsToPerf(JSContext *cx, AsmJSModule &module)
         return true;
 
     uintptr_t base = (uintptr_t) module.codeBase();
-    const char *filename = module.sourceDesc().scriptSource()->filename();
+    const char *filename = module.scriptSource()->filename();
 
     for (unsigned i = 0; i < module.numPerfFunctions(); i++) {
         const AsmJSModule::ProfiledFunction &func = module.perfProfiledFunction(i);
@@ -535,7 +535,7 @@ SendBlocksToPerf(JSContext *cx, AsmJSModule &module)
         return true;
 
     unsigned long funcBaseAddress = (unsigned long) module.codeBase();
-    const char *filename = module.sourceDesc().scriptSource()->filename();
+    const char *filename = module.scriptSource()->filename();
 
     for (unsigned i = 0; i < module.numPerfBlocksFunctions(); i++) {
         const AsmJSModule::ProfiledBlocksFunction &func = module.perfProfiledBlocksFunction(i);
