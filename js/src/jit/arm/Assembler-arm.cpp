@@ -900,7 +900,7 @@ Assembler::processCodeLabels(uint8_t *rawCode)
 void
 Assembler::writeCodePointer(AbsoluteLabel *absoluteLabel) {
     JS_ASSERT(!absoluteLabel->bound());
-    BufferOffset off = writeInst(-1);
+    BufferOffset off = writeInst(LabelBase::INVALID_OFFSET);
 
     // x86/x64 makes general use of AbsoluteLabel and weaves a linked list of
     // uses of an AbsoluteLabel through the assembly. ARM only uses labels

@@ -1375,6 +1375,12 @@ class Assembler
     void copyPreBarrierTable(uint8_t *dest);
 
     bool addCodeLabel(CodeLabel label);
+    size_t numCodeLabels() const {
+        return codeLabels_.length();
+    }
+    CodeLabel codeLabel(size_t i) {
+        return codeLabels_[i];
+    }
 
     // Size of the instruction stream, in bytes.
     size_t size() const;
@@ -1627,8 +1633,13 @@ class Assembler
     void retarget(Label *label, Label *target);
     // I'm going to pretend this doesn't exist for now.
     void retarget(Label *label, void *target, Relocation::Kind reloc);
-    //    void Bind(IonCode *code, AbsoluteLabel *label, const void *address);
+
     void Bind(uint8_t *rawCode, AbsoluteLabel *label, const void *address);
+
+    // See Bind
+    size_t labelOffsetToPatchOffset(size_t offset) {
+        return actualOffset(offset);
+    }
 
     void call(Label *label);
     void call(void *target);
@@ -1640,8 +1651,8 @@ class Assembler
     static void TraceDataRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
 
   protected:
-    void addPendingJump(BufferOffset src, void *target, Relocation::Kind kind) {
-        enoughMemory_ &= jumps_.append(RelativePatch(src, target, kind));
+    void addPendingJump(BufferOffset src, ImmPtr target, Relocation::Kind kind) {
+        enoughMemory_ &= jumps_.append(RelativePatch(src, target.value, kind));
         if (kind == Relocation::IONCODE)
             writeRelocation(src);
     }
