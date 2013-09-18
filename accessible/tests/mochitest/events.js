@@ -1541,10 +1541,12 @@ function moveToTextStart(aID)
 /**
  * Move the caret in text accessible.
  */
-function moveCaretToDOMPoint(aID, aNode, aOffset, aExpectedOffset,
-                             aFocusTargetID)
+function moveCaretToDOMPoint(aID, aDOMPointNodeID, aDOMPointOffset,
+                             aExpectedOffset, aFocusTargetID,
+                             aCheckFunc)
 {
   this.target = getAccessible(aID, [nsIAccessibleText]);
+  this.DOMPointNode = getNode(aDOMPointNodeID);
   this.focus = aFocusTargetID ? getAccessible(aFocusTargetID) : null;
   this.focusNode = this.focus ? this.focus.DOMNode : null;
 
@@ -1553,13 +1555,25 @@ function moveCaretToDOMPoint(aID, aNode, aOffset, aExpectedOffset,
     if (this.focusNode)
       this.focusNode.focus();
 
-    window.getSelection().getRangeAt(0).setStart(aNode, aOffset);
+    var selection = this.DOMPointNode.ownerDocument.defaultView.getSelection();
+    var selRange = selection.getRangeAt(0);
+    selRange.setStart(this.DOMPointNode, aDOMPointOffset);
+    selRange.collapse(true);
+
+    selection.removeRange(selRange);
+    selection.addRange(selRange);
   }
 
   this.getID = function moveCaretToDOMPoint_getID()
   {
    return "Set caret on " + prettyName(aID) + " at point: " +
-     prettyName(aNode) + " node with offset " + aOffset;
+     prettyName(aDOMPointNodeID) + " node with offset " + aDOMPointOffset;
+  }
+
+  this.finalCheck = function moveCaretToDOMPoint_finalCheck()
+  {
+    if (aCheckFunc)
+      aCheckFunc.call();
   }
 
   this.eventSeq = [
