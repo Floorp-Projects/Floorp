@@ -13,3 +13,61 @@
 * locale/@AB_CD@/b2g-l10n/netError.dtd             (%chrome/overrides/netError.dtd)
 * locale/@AB_CD@/b2g-l10n/aboutCertError.dtd       (%chrome/overrides/aboutCertError.dtd)
 * locale/@AB_CD@/b2g-l10n/appstrings.properties    (%chrome/overrides/appstrings.properties)
+
+
+# overrides for toolkit l10n, also for en-US
+relativesrcdir toolkit/locales:
+  locale/@AB_CD@/b2g-l10n/overrides/about.dtd                       (%chrome/global/about.dtd)
+  locale/@AB_CD@/b2g-l10n/overrides/aboutAbout.dtd                  (%chrome/global/aboutAbout.dtd)
+  locale/@AB_CD@/b2g-l10n/overrides/aboutRights.dtd                 (%chrome/global/aboutRights.dtd)
+  locale/@AB_CD@/b2g-l10n/overrides/commonDialogs.properties        (%chrome/global/commonDialogs.properties)
+  locale/@AB_CD@/b2g-l10n/overrides/handling/handling.properties    (%chrome/mozapps/handling/handling.properties)
+  locale/@AB_CD@/b2g-l10n/overrides/intl.properties                 (%chrome/global/intl.properties)
+  locale/@AB_CD@/b2g-l10n/overrides/intl.css                        (%chrome/global/intl.css)
+  locale/@AB_CD@/b2g-l10n/overrides/passwordmgr.properties          (%chrome/passwordmgr/passwordmgr.properties)
+  locale/@AB_CD@/b2g-l10n/overrides/search/search.properties        (%chrome/search/search.properties)
+  locale/@AB_CD@/b2g-l10n/overrides/update/updates.properties       (%chrome/mozapps/update/updates.properties)
+# about:support
+  locale/@AB_CD@/b2g-l10n/overrides/global/aboutSupport.dtd         (%chrome/global/aboutSupport.dtd)
+  locale/@AB_CD@/b2g-l10n/overrides/global/aboutSupport.properties  (%chrome/global/aboutSupport.properties)
+#about:crashes
+  locale/@AB_CD@/b2g-l10n/overrides/crashreporter/crashes.dtd         (%crashreporter/crashes.dtd)
+  locale/@AB_CD@/b2g-l10n/overrides/crashreporter/crashes.properties  (%crashreporter/crashes.properties)
+#about:mozilla
+  locale/@AB_CD@/b2g-l10n/overrides/global/mozilla.dtd                (%chrome/global/mozilla.dtd)
+#about:telemetry
+  locale/@AB_CD@/b2g-l10n/overrides/global/aboutTelemetry.dtd         (%chrome/global/aboutTelemetry.dtd)
+  locale/@AB_CD@/b2g-l10n/overrides/global/aboutTelemetry.properties  (%chrome/global/aboutTelemetry.properties)
+
+% override chrome://global/locale/about.dtd chrome://b2g-l10n/locale/overrides/about.dtd
+% override chrome://global/locale/aboutAbout.dtd chrome://b2g-l10n/locale/overrides/aboutAbout.dtd
+% override chrome://global/locale/aboutRights.dtd chrome://b2g-l10n/locale/overrides/aboutRights.dtd
+% override chrome://global/locale/commonDialogs.properties chrome://b2g-l10n/locale/overrides/commonDialogs.properties
+% override chrome://mozapps/locale/handling/handling.properties chrome://b2g-l10n/locale/overrides/handling/handling.properties
+% override chrome://global/locale/intl.properties chrome://b2g-l10n/locale/overrides/intl.properties
+% override chrome://global/locale/intl.css chrome://b2g-l10n/locale/overrides/intl.css
+% override chrome://passwordmgr/locale/passwordmgr.properties chrome://b2g-l10n/locale/overrides/passwordmgr/passwordmgr.properties
+% override chrome://global/locale/search/search.properties chrome://b2g-l10n/locale/overrides/search/search.properties
+% override chrome://mozapps/locale/update/updates.properties chrome://b2g-l10n/locale/overrides/update/updates.properties
+% override chrome://global/locale/aboutSupport.dtd chrome://b2g-l10n/locale/overrides/global/aboutSupport.dtd
+% override chrome://global/locale/aboutSupport.properties chrome://b2g-l10n/locale/overrides/global/aboutSupport.properties
+% override chrome://global/locale/crashes.dtd chrome://b2g-l10n/locale/overrides/crashreporter/crashes.dtd
+% override chrome://global/locale/crashes.properties chrome://b2g-l10n/locale/overrides/crashreporter/crashes.properties
+% override chrome://global/locale/mozilla.dtd chrome://b2g-l10n/locale/overrides/global/mozilla.dtd
+% override chrome://global/locale/aboutTelemetry.dtd chrome://b2g-l10n/locale/overrides/global/aboutTelemetry.dtd
+% override chrome://global/locale/aboutTelemetry.properties chrome://b2g-l10n/locale/overrides/global/aboutTelemetry.properties
+
+# overrides for dom l10n, also for en-US
+relativesrcdir dom/locales:
+  locale/@AB_CD@/b2g-l10n/overrides/charsetTitles.properties    (%chrome/charsetTitles.properties)
+  locale/@AB_CD@/b2g-l10n/overrides/global.dtd                  (%chrome/global.dtd)
+  locale/@AB_CD@/b2g-l10n/overrides/AccessFu.properties         (%chrome/accessibility/AccessFu.properties)
+  locale/@AB_CD@/b2g-l10n/overrides/dom/dom.properties          (%chrome/dom/dom.properties)
+#about:plugins
+  locale/@AB_CD@/b2g-l10n/overrides/plugins.properties          (%chrome/plugins.properties)
+
+% override chrome://global/locale/charsetTitles.properties chrome://b2g-l10n/locale/overrides/charsetTitles.properties
+% override chrome://global/locale/global.dtd chrome://b2g-l10n/locale/overrides/global.dtd
+% override chrome://global/locale/AccessFu.properties chrome://b2g-l10n/locale/overrides/AccessFu.properties
+% override chrome://global/locale/dom/dom.properties chrome://b2g-l10n/locale/overrides/dom/dom.properties
+% override chrome://global/locale/plugins.properties chrome://b2g-l10n/locale/overrides/plugins.properties
