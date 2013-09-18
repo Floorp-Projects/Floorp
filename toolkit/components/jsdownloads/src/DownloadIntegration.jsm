@@ -216,8 +216,11 @@ this.DownloadIntegration = {
       // After the list of persistent downloads has been loaded, add the
       // DownloadAutoSaveView and the DownloadHistoryObserver (even if the load
       // operation failed).  These objects are kept alive by the underlying
-      // DownloadList and by the history service respectively.
-      new DownloadAutoSaveView(aList, this._store);
+      // DownloadList and by the history service respectively.  We wait for a
+      // complete initialization of the view used for detecting changes to
+      // downloads to be persisted, before other callers get a chance to modify
+      // the list without being detected.
+      yield new DownloadAutoSaveView(aList, this._store).initialize();
       new DownloadHistoryObserver(aList);
     }.bind(this));
   },
@@ -769,7 +772,8 @@ this.DownloadObserver = {
       }
     };
 
-    aList.addView(downloadsView);
+    // We register the view asynchronously.
+    aList.addView(downloadsView).then(null, Cu.reportError);
   },
 
   /**
@@ -828,8 +832,9 @@ this.DownloadObserver = {
           let list = yield Downloads.getList(Downloads.PRIVATE);
           let downloads = yield list.getAll();
 
+          // We can remove the downloads and finalize them in parallel.
           for (let download of downloads) {
-            list.remove(download);
+            list.remove(download).then(null, Cu.reportError);
             download.finalize(true).then(null, Cu.reportError);
           }
         });
@@ -904,7 +909,9 @@ DownloadHistoryObserver.prototype = {
 
 /**
  * This view can be added to a DownloadList object to trigger a save operation
- * in the given DownloadStore object when a relevant change occurs.
+ * in the given DownloadStore object when a relevant change occurs.  You should
+ * call the "initialize" method in order to register the view and load the
+ * current state from disk.
  *
  * You do not need to keep a reference to this object in order to keep it alive,
  * because the DownloadList object already keeps a strong reference to it.
@@ -915,25 +922,40 @@ DownloadHistoryObserver.prototype = {
  *        The DownloadStore object used for saving.
  */
 function DownloadAutoSaveView(aList, aStore) {
+  this._list = aList;
   this._store = aStore;
   this._downloadsMap = new Map();
-
-  // We set _initialized to true after adding the view, so that onDownloadAdded
-  // doesn't cause a save to occur.
-  aList.addView(this);
-  this._initialized = true;
 }
 
 DownloadAutoSaveView.prototype = {
+  /**
+   * DownloadList object linked to this view.
+   */
+  _list: null,
+
+  /**
+   * The DownloadStore object used for saving.
+   */
+  _store: null,
+
   /**
    * True when the initial state of the downloads has been loaded.
    */
   _initialized: false,
 
   /**
-   * The DownloadStore object used for saving.
+   * Registers the view and loads the current state from disk.
+   *
+   * @return {Promise}
+   * @resolves When the view has been registered.
+   * @rejects JavaScript exception.
    */
-  _store: null,
+  initialize: function ()
+  {
+    // We set _initialized to true after adding the view, so that
+    // onDownloadAdded doesn't cause a save to occur.
+    return this._list.addView(this).then(() => this._initialized = true);
+  },
 
   /**
    * This map contains only Download objects that should be saved to disk, and

@@ -218,9 +218,9 @@ add_task(function test_notifications()
     download3.start();
 
     // Add downloads to list.
-    list.add(download1);
-    list.add(download2);
-    list.add(download3);
+    yield list.add(download1);
+    yield list.add(download2);
+    yield list.add(download3);
     // Cancel third download
     yield download3.cancel();
 
@@ -232,9 +232,9 @@ add_task(function test_notifications()
     yield promiseAttempt2;
 
     // Clean up.
-    list.remove(download1);
-    list.remove(download2);
-    list.remove(download3);
+    yield list.remove(download1);
+    yield list.remove(download2);
+    yield list.remove(download3);
   }
 });
 
@@ -254,8 +254,8 @@ add_task(function test_no_notifications()
     download2.start();
 
     // Add downloads to list.
-    list.add(download1);
-    list.add(download2);
+    yield list.add(download1);
+    yield list.add(download2);
 
     yield download1.cancel();
     yield download2.cancel();
@@ -263,8 +263,8 @@ add_task(function test_no_notifications()
     notifyPromptObservers(isPrivate, 0, 0);
 
     // Clean up.
-    list.remove(download1);
-    list.remove(download2);
+    yield list.remove(download1);
+    yield list.remove(download2);
   }
 });
 
@@ -285,8 +285,8 @@ add_task(function test_mix_notifications()
   let promiseAttempt2 = download2.start();
 
   // Add downloads to lists.
-  publicList.add(download1);
-  privateList.add(download2);
+  yield publicList.add(download1);
+  yield privateList.add(download2);
 
   notifyPromptObservers(true, 2, 1);
 
@@ -296,8 +296,8 @@ add_task(function test_mix_notifications()
   yield promiseAttempt2;
 
   // Clean up.
-  publicList.remove(download1);
-  privateList.remove(download2);
+  yield publicList.remove(download1);
+  yield privateList.remove(download2);
 });
 
 /**
@@ -316,8 +316,8 @@ add_task(function test_exit_private_browsing()
   let promiseAttempt2 = download2.start();
 
   // Add downloads to list.
-  privateList.add(download1);
-  privateList.add(download2);
+  yield privateList.add(download1);
+  yield privateList.add(download2);
 
   // Complete the download.
   yield promiseAttempt1;

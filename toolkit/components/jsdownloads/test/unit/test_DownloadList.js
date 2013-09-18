@@ -91,14 +91,14 @@ add_task(function test_add_getAll()
   let list = yield promiseNewList();
 
   let downloadOne = yield promiseNewDownload();
-  list.add(downloadOne);
+  yield list.add(downloadOne);
 
   let itemsOne = yield list.getAll();
   do_check_eq(itemsOne.length, 1);
   do_check_eq(itemsOne[0], downloadOne);
 
   let downloadTwo = yield promiseNewDownload();
-  list.add(downloadTwo);
+  yield list.add(downloadTwo);
 
   let itemsTwo = yield list.getAll();
   do_check_eq(itemsTwo.length, 2);
@@ -116,14 +116,14 @@ add_task(function test_remove()
 {
   let list = yield promiseNewList();
 
-  list.add(yield promiseNewDownload());
-  list.add(yield promiseNewDownload());
+  yield list.add(yield promiseNewDownload());
+  yield list.add(yield promiseNewDownload());
 
   let items = yield list.getAll();
-  list.remove(items[0]);
+  yield list.remove(items[0]);
 
   // Removing an item that was never added should not raise an error.
-  list.remove(yield promiseNewDownload());
+  yield list.remove(yield promiseNewDownload());
 
   items = yield list.getAll();
   do_check_eq(items.length, 1);
@@ -146,25 +146,25 @@ add_task(function test_DownloadCombinedList_add_remove_getAll()
     target: getTempFile(TEST_TARGET_FILE_NAME).path,
   });
 
-  publicList.add(publicDownload);
-  privateList.add(privateDownload);
+  yield publicList.add(publicDownload);
+  yield privateList.add(privateDownload);
 
   do_check_eq((yield combinedList.getAll()).length, 2);
 
-  combinedList.remove(publicDownload);
-  combinedList.remove(privateDownload);
+  yield combinedList.remove(publicDownload);
+  yield combinedList.remove(privateDownload);
 
   do_check_eq((yield combinedList.getAll()).length, 0);
 
-  combinedList.add(publicDownload);
-  combinedList.add(privateDownload);
+  yield combinedList.add(publicDownload);
+  yield combinedList.add(privateDownload);
 
   do_check_eq((yield publicList.getAll()).length, 1);
   do_check_eq((yield privateList.getAll()).length, 1);
   do_check_eq((yield combinedList.getAll()).length, 2);
 
-  publicList.remove(publicDownload);
-  privateList.remove(privateDownload);
+  yield publicList.remove(publicDownload);
+  yield privateList.remove(privateDownload);
 
   do_check_eq((yield combinedList.getAll()).length, 0);
 });
@@ -188,8 +188,8 @@ add_task(function test_notifications_add_remove()
       source: { url: httpUrl("source.txt"), isPrivate: true },
       target: getTempFile(TEST_TARGET_FILE_NAME).path,
     });
-    list.add(downloadOne);
-    list.add(downloadTwo);
+    yield list.add(downloadOne);
+    yield list.add(downloadTwo);
 
     // Check that we receive add notifications for existing elements.
     let addNotifications = 0;
@@ -204,11 +204,11 @@ add_task(function test_notifications_add_remove()
         addNotifications++;
       },
     };
-    list.addView(viewOne);
+    yield list.addView(viewOne);
     do_check_eq(addNotifications, 2);
 
     // Check that we receive add notifications for new elements.
-    list.add(yield promiseNewDownload());
+    yield list.add(yield promiseNewDownload());
     do_check_eq(addNotifications, 3);
 
     // Check that we receive remove notifications.
@@ -219,18 +219,18 @@ add_task(function test_notifications_add_remove()
         removeNotifications++;
       },
     };
-    list.addView(viewTwo);
-    list.remove(downloadOne);
+    yield list.addView(viewTwo);
+    yield list.remove(downloadOne);
     do_check_eq(removeNotifications, 1);
 
     // We should not receive remove notifications after the view is removed.
-    list.removeView(viewTwo);
-    list.remove(downloadTwo);
+    yield list.removeView(viewTwo);
+    yield list.remove(downloadTwo);
     do_check_eq(removeNotifications, 1);
 
     // We should not receive add notifications after the view is removed.
-    list.removeView(viewOne);
-    list.add(yield promiseNewDownload());
+    yield list.removeView(viewOne);
+    yield list.add(yield promiseNewDownload());
     do_check_eq(addNotifications, 3);
   }
 });
@@ -253,12 +253,12 @@ add_task(function test_notifications_change()
       source: { url: httpUrl("source.txt"), isPrivate: true },
       target: getTempFile(TEST_TARGET_FILE_NAME).path,
     });
-    list.add(downloadOne);
-    list.add(downloadTwo);
+    yield list.add(downloadOne);
+    yield list.add(downloadTwo);
 
     // Check that we receive change notifications.
     let receivedOnDownloadChanged = false;
-    list.addView({
+    yield list.addView({
       onDownloadChanged: function (aDownload) {
         do_check_eq(aDownload, downloadOne);
         receivedOnDownloadChanged = true;
@@ -269,7 +269,7 @@ add_task(function test_notifications_change()
 
     // We should not receive change notifications after a download is removed.
     receivedOnDownloadChanged = false;
-    list.remove(downloadTwo);
+    yield list.remove(downloadTwo);
     yield downloadTwo.start();
     do_check_false(receivedOnDownloadChanged);
   }
@@ -303,12 +303,12 @@ add_task(function test_notifications_this()
       receivedOnDownloadRemoved = true;
     },
   };
-  list.addView(view);
+  yield list.addView(view);
 
   let download = yield promiseNewDownload();
-  list.add(download);
+  yield list.add(download);
   yield download.start();
-  list.remove(download);
+  yield list.remove(download);
 
   // Verify that we executed the checks.
   do_check_true(receivedOnDownloadAdded);
@@ -344,7 +344,7 @@ add_task(function test_history_expiration()
       }
     },
   };
-  list.addView(downloadView);
+  yield list.addView(downloadView);
 
   // Work with one finished download and one canceled download.
   yield downloadOne.start();
@@ -358,8 +358,8 @@ add_task(function test_history_expiration()
   yield promiseExpirableDownloadVisit(httpUrl("interruptible.txt"));
 
   // After clearing history, we can add the downloads to be removed to the list.
-  list.add(downloadOne);
-  list.add(downloadTwo);
+  yield list.add(downloadOne);
+  yield list.add(downloadTwo);
 
   // Force a history expiration.
   let expire = Cc["@mozilla.org/places/expiration;1"]
@@ -380,8 +380,8 @@ add_task(function test_history_clear()
   let list = yield promiseNewList();
   let downloadOne = yield promiseNewDownload();
   let downloadTwo = yield promiseNewDownload();
-  list.add(downloadOne);
-  list.add(downloadTwo);
+  yield list.add(downloadOne);
+  yield list.add(downloadTwo);
 
   let deferred = Promise.defer();
   let removeNotifications = 0;
@@ -392,7 +392,7 @@ add_task(function test_history_clear()
       }
     },
   };
-  list.addView(downloadView);
+  yield list.addView(downloadView);
 
   yield downloadOne.start();
   yield downloadTwo.start();
@@ -414,10 +414,10 @@ add_task(function test_removeFinished()
   let downloadTwo = yield promiseNewDownload();
   let downloadThree = yield promiseNewDownload();
   let downloadFour = yield promiseNewDownload();
-  list.add(downloadOne);
-  list.add(downloadTwo);
-  list.add(downloadThree);
-  list.add(downloadFour);
+  yield list.add(downloadOne);
+  yield list.add(downloadTwo);
+  yield list.add(downloadThree);
+  yield list.add(downloadFour);
 
   let deferred = Promise.defer();
   let removeNotifications = 0;
@@ -432,7 +432,7 @@ add_task(function test_removeFinished()
       }
     },
   };
-  list.addView(downloadView);
+  yield list.addView(downloadView);
 
   // Start three of the downloads, but don't start downloadTwo, then set
   // downloadFour to have partial data. All downloads except downloadFour
@@ -467,7 +467,7 @@ add_task(function test_DownloadSummary()
   // Add a public download that has succeeded.
   let succeededPublicDownload = yield promiseNewDownload();
   yield succeededPublicDownload.start();
-  publicList.add(succeededPublicDownload);
+  yield publicList.add(succeededPublicDownload);
 
   // Add a public download that has been canceled midway.
   let canceledPublicDownload =
@@ -475,14 +475,14 @@ add_task(function test_DownloadSummary()
   canceledPublicDownload.start();
   yield promiseDownloadMidway(canceledPublicDownload);
   yield canceledPublicDownload.cancel();
-  publicList.add(canceledPublicDownload);
+  yield publicList.add(canceledPublicDownload);
 
   // Add a public download that is in progress.
   let inProgressPublicDownload =
       yield promiseNewDownload(httpUrl("interruptible.txt"));
   inProgressPublicDownload.start();
   yield promiseDownloadMidway(inProgressPublicDownload);
-  publicList.add(inProgressPublicDownload);
+  yield publicList.add(inProgressPublicDownload);
 
   // Add a private download that is in progress.
   let inProgressPrivateDownload = yield Downloads.createDownload({
@@ -491,7 +491,7 @@ add_task(function test_DownloadSummary()
   });
   inProgressPrivateDownload.start();
   yield promiseDownloadMidway(inProgressPrivateDownload);
-  privateList.add(inProgressPrivateDownload);
+  yield privateList.add(inProgressPrivateDownload);
 
   // Verify that the summary includes the total number of bytes and the
   // currently transferred bytes only for the downloads that are not stopped.
@@ -553,11 +553,11 @@ add_task(function test_DownloadSummary_notifications()
   let summary = yield Downloads.getSummary(Downloads.ALL);
 
   let download = yield promiseNewDownload();
-  list.add(download);
+  yield list.add(download);
 
   // Check that we receive change notifications.
   let receivedOnSummaryChanged = false;
-  summary.addView({
+  yield summary.addView({
     onSummaryChanged: function () {
       receivedOnSummaryChanged = true;
     },
