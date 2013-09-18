@@ -382,11 +382,6 @@ private:
     // Returns null if a principal cannot be found; generally callers
     // should error out at that point.
     static nsIPrincipal* doGetObjectPrincipal(JS::Handle<JSObject*> obj);
-#ifdef DEBUG
-    static nsIPrincipal*
-    old_doGetObjectPrincipal(JS::Handle<JSObject*> obj,
-                             bool aAllowShortCircuit = true);
-#endif
 
     // Returns null if a principal cannot be found.  Note that rv can be NS_OK
     // when this happens -- this means that there was no JS running.
@@ -409,7 +404,8 @@ private:
 
     nsresult
     LookupPolicy(nsIPrincipal* principal,
-                 ClassInfoData& aClassData, jsid aProperty,
+                 ClassInfoData& aClassData,
+                 JS::Handle<jsid> aProperty,
                  uint32_t aAction,
                  ClassPolicy** aCachedClassPolicy,
                  SecurityLevel* result);

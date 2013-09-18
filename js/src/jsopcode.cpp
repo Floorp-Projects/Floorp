@@ -61,9 +61,6 @@ JS_STATIC_ASSERT(sizeof(uint32_t) * JS_BITS_PER_BYTE >= INDEX_LIMIT_LOG2 + 1);
 #include "jsopcode.tbl"
 #undef OPDEF
 
-static const char js_incop_strs[][3] = {"++", "--"};
-static const char js_for_each_str[]  = "for each";
-
 const JSCodeSpec js_CodeSpec[] = {
 #define OPDEF(op,val,name,token,length,nuses,ndefs,format) \
     {length,nuses,ndefs,format},
@@ -170,11 +167,7 @@ js::StackDefs(JSScript *script, jsbytecode *pc)
 }
 
 static const char * const countBaseNames[] = {
-    "interp",
-    "mjit",
-    "mjit_calls",
-    "mjit_code",
-    "mjit_pics"
+    "interp"
 };
 
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(countBaseNames) == PCCounts::BASE_LIMIT);

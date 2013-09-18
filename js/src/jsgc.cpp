@@ -5219,4 +5219,26 @@ JS::AssertGCThingMustBeTenured(JSObject *obj)
     JS_ASSERT((!IsNurseryAllocable(obj->tenuredGetAllocKind()) || obj->getClass()->finalize) &&
               obj->isTenured());
 }
+
+JS_FRIEND_API(size_t)
+JS::GetGCNumber()
+{
+    JSRuntime *rt = js::TlsPerThreadData.get()->runtimeFromMainThread();
+    if (!rt)
+        return 0;
+    return rt->gcNumber;
+}
+
+JS::AutoAssertNoGC::AutoAssertNoGC()
+{
+    JSRuntime *rt = js::TlsPerThreadData.get()->runtimeFromMainThread();
+    gcNumber = rt ? rt->gcNumber : size_t(-1);
+}
+
+JS::AutoAssertNoGC::~AutoAssertNoGC()
+{
+    JSRuntime *rt = js::TlsPerThreadData.get()->runtimeFromMainThread();
+    if (rt)
+        MOZ_ASSERT(gcNumber == rt->gcNumber, "GC ran inside an AutoAssertNoGC scope");
+}
 #endif

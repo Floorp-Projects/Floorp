@@ -169,13 +169,27 @@ struct ImmMaybeNurseryPtr : public ImmGCPtr
 struct AbsoluteAddress {
     void *addr;
 
-    explicit AbsoluteAddress(void *addr)
-      : addr(addr)
+    explicit AbsoluteAddress(const void *addr)
+      : addr(const_cast<void*>(addr))
     { }
 
     AbsoluteAddress offset(ptrdiff_t delta) {
         return AbsoluteAddress(((uint8_t *) addr) + delta);
     }
+};
+
+// The same as AbsoluteAddress except that the intention is to patch this
+// instruction. The initial value of the immediate is 'addr' and this value is
+// either clobbered or used in the patching process.
+struct PatchedAbsoluteAddress {
+    void *addr;
+
+    explicit PatchedAbsoluteAddress()
+      : addr(NULL)
+    { }
+    explicit PatchedAbsoluteAddress(const void *addr)
+      : addr(const_cast<void*>(addr))
+    { }
 };
 
 // Specifies an address computed in the form of a register base and a constant,

@@ -2560,13 +2560,14 @@ dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
 AC_CHECK_FUNCS([fchmod flockfile getc_unlocked _getc_nolock getpagesize \
-                lchown localtime_r lstat64 memmove random rint sbrk snprintf \
+                lchown localtime_r lstat64 memmove random sbrk snprintf \
                 stat64 statvfs statvfs64 strerror strtok_r truncate64])
 
 
 dnl Checks for math functions.
 dnl ========================================================
-AC_CHECK_FUNCS(log2 log1p expm1 sqrt1pm1 acosh asinh atanh hypot trunc cbrt)
+AC_CHECK_LIB(m, sin)
+AC_CHECK_FUNCS([log2 log1p expm1 sqrt1pm1 acosh asinh atanh hypot trunc cbrt])
 
 
 dnl check for wcrtomb/mbrtowc
