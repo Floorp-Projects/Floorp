@@ -560,6 +560,9 @@ new Uint8Array(buf)[0xfffff] = 0xAA;
 assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) { i=i|0; return u8[i]|0; } return f'), this, null, buf)(0),0);
 assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) { i=i|0; return u8[i]|0; } return f'), this, null, buf)(0xfffff),0xAA);
 assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) { i=i|0; return u8[i]|0; } return f'), this, null, buf)(0x100000),0);
+var buf = new ArrayBuffer(0x104000);
+new Uint8Array(buf)[0x103fff] = 0xAA;
+assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { return u8[0x103fff]|0; } return f'), this, null, buf)(),0xAA);
 var buf = new ArrayBuffer(0x3f8000);
 new Uint8Array(buf)[0x3f7fff] = 0xAA;
 assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) { i=i|0; return u8[i]|0; } return f'), this, null, buf)(0),0);
@@ -572,6 +575,9 @@ assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'functi
 assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) { i=i|0; return u8[i]|0; } return f'), this, null, buf)(0x3fc000),0);
 var buf = new ArrayBuffer(0x3fe000);
 assertAsmLinkFail(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) { i=i|0; return u8[i]|0; } return f'), this, null, buf);
+var buf = new ArrayBuffer(0x410000);
+new Uint8Array(buf)[0x40ffff] = 0xAA;
+assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { return u8[0x40ffff]|0; } return f'), this, null, buf)(),0xAA);
 // The rest are getting too large for regular testing.
 //var buf = new ArrayBuffer(0xfe8000);
 //assertAsmLinkFail(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) { i=i|0; return u8[i]|0; } return f'), this, null, buf);
@@ -600,6 +606,9 @@ assertAsmLinkFail(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'funct
 //assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) { i=i|0; return u8[i]|0; } return f'), this, null, buf)(0xff00000),0);
 //var buf = new ArrayBuffer(0xff80000);
 //assertAsmLinkFail(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) { i=i|0; return u8[i]|0; } return f'), this, null, buf);
+//var buf = new ArrayBuffer(0x10400000);
+//new Uint8Array(buf)[0x103fffff] = 0xAA;
+//assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { return u8[0x103fffff]|0; } return f'), this, null, buf)(),0xAA);
 //var buf = new ArrayBuffer(0x3fa00000);
 //assertAsmLinkFail(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) { i=i|0; return u8[i]|0; } return f'), this, null, buf);
 //var buf = new ArrayBuffer(0x3fc00000); // 1020M
