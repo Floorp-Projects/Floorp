@@ -108,9 +108,27 @@ Explicit Allocations\n\
 \n\
 Other Measurements\n\
 \n\
+0.00 MB (100.0%) -- compartments\n\
+└──0.00 MB (100.0%) ── system/a\n\
+\n\
+0.00 MB (100.0%) -- ghost-windows\n\
+└──0.00 MB (100.0%) ── a\n\
+\n\
 0.30 MB (100.0%) -- other\n\
 ├──0.20 MB (66.67%) ── a\n\
 └──0.10 MB (33.33%) ── b\n\
+\n\
+0.00 MB (100.0%) -- pss\n\
+└──0.00 MB (100.0%) ── a\n\
+\n\
+0.00 MB (100.0%) -- rss\n\
+└──0.00 MB (100.0%) ── a\n\
+\n\
+0.00 MB (100.0%) -- size\n\
+└──0.00 MB (100.0%) ── a\n\
+\n\
+0.00 MB (100.0%) -- swap\n\
+└──0.00 MB (100.0%) ── a\n\
 \n\
 250.00 MB ── heap-allocated\n\
 \n\
