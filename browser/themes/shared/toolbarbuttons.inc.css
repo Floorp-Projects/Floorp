@@ -109,27 +109,27 @@
   -moz-image-region: rect(0, 486px, 18px, 468px);
 }
 
-#edit-controls[customizableui-areatype="toolbar"] > #cut-button {
+#edit-controls:not(@inAnyPanel@) > #cut-button {
   -moz-image-region: rect(0, 504px, 18px, 486px);
 }
 
-#edit-controls[customizableui-areatype="toolbar"] > #copy-button {
+#edit-controls:not(@inAnyPanel@) > #copy-button {
   -moz-image-region: rect(0, 522px, 18px, 504px);
 }
 
-#edit-controls[customizableui-areatype="toolbar"] > #paste-button {
+#edit-controls:not(@inAnyPanel@) > #paste-button {
   -moz-image-region: rect(0, 540px, 18px, 522px);
 }
 
-#zoom-controls[customizableui-areatype="toolbar"] > #zoom-out-button {
+#zoom-controls:not(@inAnyPanel@) > #zoom-out-button {
   -moz-image-region: rect(0, 558px, 18px, 540px);
 }
 
-#zoom-controls[customizableui-areatype="toolbar"] > #zoom-in-button {
+#zoom-controls:not(@inAnyPanel@) > #zoom-in-button {
   -moz-image-region: rect(0, 576px, 18px, 558px);
 }
 
-#webrtc-status-button[customizableui-areatype="toolbar"] {
+#webrtc-status-button:not(@inAnyPanel@) {
   -moz-image-region: rect(0, 594px, 18px, 576px);
 }
 

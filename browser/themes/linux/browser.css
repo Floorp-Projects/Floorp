@@ -56,18 +56,6 @@
   -moz-image-region: rect(-5px, 12px, 11px, -4px);
 }
 
-#widget-overflow-list > .overflowedItem {
-  width: 100%;
-  min-height: 36px;
-  background-repeat: no-repeat;
-  background-position: 0 center;
-}
-
-#widget-overflow-list > .overflowedItem > .toolbarbutton-text {
-  -moz-padding-start: 10px;
-  text-align: start;
-}
-
 #personal-bookmarks {
   min-height: 29px;
 }
@@ -619,32 +607,32 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
   -moz-image-region: rect(0px 120px 24px 96px);
 }
 
-#edit-controls[customizableui-areatype="toolbar"] > #cut-button {
+#edit-controls:not(@inAnyPanel@) > #cut-button {
   list-style-image: url("moz-icon://stock/gtk-cut?size=toolbar") !important;
 }
-#edit-controls[customizableui-areatype="toolbar"] > #cut-button[disabled="true"] {
+#edit-controls:not(@inAnyPanel@) > #cut-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-cut?size=toolbar&state=disabled") !important;
 }
 
-#edit-controls[customizableui-areatype="toolbar"] > #copy-button {
+#edit-controls:not(@inAnyPanel@) > #copy-button {
   list-style-image: url("moz-icon://stock/gtk-copy?size=toolbar") !important;
 }
-#edit-controls[customizableui-areatype="toolbar"] > #copy-button[disabled="true"] {
+#edit-controls:not(@inAnyPanel@) > #copy-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-copy?size=toolbar&state=disabled") !important;
 }
 
-#edit-controls[customizableui-areatype="toolbar"] > #paste-button {
+#edit-controls:not(@inAnyPanel@) > #paste-button {
   list-style-image: url("moz-icon://stock/gtk-paste?size=toolbar") !important;
 }
-#edit-controls[customizableui-areatype="toolbar"] > #paste-button[disabled="true"] {
+#edit-controls:not(@inAnyPanel@) > #paste-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-paste?size=toolbar&state=disabled") !important;
 }
 
-#zoom-controls[customizableui-areatype="toolbar"] > #zoom-out-button {
+#zoom-controls:not(@inAnyPanel@) > #zoom-out-button {
   list-style-image: url("moz-icon://stock/gtk-zoom-out?size=toolbar") !important;
 }
 
-#zoom-controls[customizableui-areatype="toolbar"] > #zoom-in-button {
+#zoom-controls:not(@inAnyPanel@) > #zoom-in-button {
   list-style-image: url("moz-icon://stock/gtk-zoom-in?size=toolbar") !important;
 }
 

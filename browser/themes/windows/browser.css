@@ -107,18 +107,6 @@
   margin-top: -1px; /* Move up 1px into the TabsToolbar */
 }
 
-#widget-overflow-list > .overflowedItem {
-  width: 100%;
-  min-height: 36px;
-  background-repeat: no-repeat;
-  background-position: 0 center;
-}
-
-#widget-overflow-list > .overflowedItem > .toolbarbutton-text {
-  -moz-padding-start: 10px;
-  text-align: start;
-}
-
 #personal-bookmarks {
   min-height: 24px;
 }
