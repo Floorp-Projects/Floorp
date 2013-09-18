@@ -119,6 +119,7 @@
 @BINPATH@/mozsqlt3@DLL_SUFFIX@
 #endif
 @BINPATH@/blocklist.xml
+@BINPATH@/ua-update.json
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
 @BINPATH@/run-mozilla.sh
