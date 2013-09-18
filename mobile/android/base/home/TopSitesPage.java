@@ -542,9 +542,13 @@ public class TopSitesPage extends HomeFragment {
             final int id = loader.getId();
 
             if (id == LOADER_ID_TOP_SITES_LIST) {
-                mListAdapter.swapCursor(null);
+                if (mListAdapter != null) {
+                    mListAdapter.swapCursor(null);
+                }
             } else if (id == LOADER_ID_TOP_SITES_GRID) {
-                mGridAdapter.swapCursor(null);
+                if (mGridAdapter != null) {
+                    mGridAdapter.swapCursor(null);
+                }
             }
         }
     }
