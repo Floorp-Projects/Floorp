@@ -191,6 +191,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     PRNetAddr addr;
     PRStatus status = PR_StringToNetAddr(kDefaultStunServerAddress.c_str(),
                                          &addr);
+    addr.inet.port = kDefaultStunServerPort;
     ASSERT_EQ(PR_SUCCESS, status);
     fake_resolver_.SetAddr(kDefaultStunServerHostname, addr);
     ASSERT_TRUE(NS_SUCCEEDED(ice_ctx_->SetResolver(
