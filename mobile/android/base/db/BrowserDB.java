@@ -39,9 +39,9 @@ public class BrowserDB {
 
         public Cursor filter(ContentResolver cr, CharSequence constraint, int limit);
 
-        // This should only return frecent bookmarks, BrowserDB.getTopBookmarks will do the
+        // This should onlyl return frecent sites, BrowserDB.getTopSites will do the
         // work to combine that list with the pinned sites list
-        public Cursor getTopBookmarks(ContentResolver cr, int limit);
+        public Cursor getTopSites(ContentResolver cr, int limit);
 
         public void updateVisitedHistory(ContentResolver cr, String uri);
 
@@ -138,12 +138,12 @@ public class BrowserDB {
         return sDb.filter(cr, constraint, limit);
     }
 
-    public static Cursor getTopBookmarks(ContentResolver cr, int limit) {
-        // Note this is not a single query anymore, but actually returns a mixture of two queries,
-        // one for top bookmarks, and one for pinned sites (which are actually bookmarks as well).
-        Cursor topBookmarks = sDb.getTopBookmarks(cr, limit);
+    public static Cursor getTopSites(ContentResolver cr, int limit) {
+        // Note this is not a single query anymore, but actually returns a mixture of two queries, one for topSites
+        // and one for pinned sites
+        Cursor topSites = sDb.getTopSites(cr, limit);
         Cursor pinnedSites = sDb.getPinnedSites(cr, limit);
-        return new TopSitesCursorWrapper(pinnedSites, topBookmarks, limit);
+        return new TopSitesCursorWrapper(pinnedSites, topSites, limit);
     }
 
     public static void updateVisitedHistory(ContentResolver cr, String uri) {
