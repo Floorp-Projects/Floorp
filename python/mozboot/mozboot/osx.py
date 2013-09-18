@@ -112,11 +112,32 @@ PACKAGE_MANAGER = {'Homebrew': 'brew',
 
 PACKAGE_MANAGER_CHOICES = ['Homebrew', 'MacPorts']
 
-MACPORTS_POSTINSTALL_RESTART_REQUIRED = '''
-MacPorts was installed successfully. However, you'll need to start a new shell
-to pick up the environment changes so MacPorts can be found by your tools.
+PACKAGE_MANAGER_BIN_MISSING = '''
+A package manager is installed. However, your current shell does
+not know where to find '%s' yet. You'll need to start a new shell
+to pick up the environment changes so it can be found.
 
-Please start a new shell or terminal window and run this bootstrapper again.
+Please start a new shell or terminal window and run this
+bootstrapper again.
+
+If this problem persists, you will likely want to adjust your
+shell's init script (e.g. ~/.bash_profile) to export a PATH
+environment variable containing the location of your package
+manager binary. e.g.
+
+    export PATH=/usr/local/bin:$PATH
+'''
+
+BAD_PATH_ORDER = '''
+Your environment's PATH variable lists a system path directory (%s)
+before the path to your package manager's binaries (%s).
+This means that the package manager's binaries likely won't be
+detected properly.
+
+Please modify your shell's configuration (e.g. ~/.bash_profile) to
+have %s appear in $PATH before %s. e.g.
+
+    export PATH=%s:$PATH
 '''
 
 
@@ -261,18 +282,45 @@ class OSXBootstrapper(BaseBootstrapper):
             if self.which(cmd) is not None:
                 installed.append(name)
 
+        active_name, active_cmd = None, None
+
         if not installed:
             print(NO_PACKAGE_MANAGER_WARNING)
             choice = self.prompt_int(prompt=PACKAGE_MANAGER_CHOICE, low=1, high=2)
-            getattr(self, 'install_%s' % PACKAGE_MANAGER_CHOICES[choice - 1].lower())()
-            return PACKAGE_MANAGER_CHOICES[choice - 1].lower()
+            active_name = PACKAGE_MANAGER_CHOICES[choice - 1]
+            active_cmd = PACKAGE_MANAGER[active_name]
+            getattr(self, 'install_%s' % active_name.lower())()
         elif len(installed) == 1:
             print(PACKAGE_MANAGER_EXISTS % (installed[0], installed[0]))
-            return installed[0].lower()
+            active_name = installed[0]
+            active_cmd = PACKAGE_MANAGER[active_name]
         else:
             print(MULTI_PACKAGE_MANAGER_EXISTS)
             choice = self.prompt_int(prompt=PACKAGE_MANAGER_CHOICE, low=1, high=2)
-            return PACKAGE_MANAGER_CHOICES[choice - 1].lower()
+
+            active_name = PACKAGE_MANAGER_CHOICES[choice - 1]
+            active_cmd = PACKAGE_MANAGER[active_name]
+
+        # Ensure the active package manager is in $PATH and it comes before
+        # /usr/bin. If it doesn't come before /usr/bin, we'll pick up system
+        # packages before package manager installed packages and the build may
+        # break.
+        p = self.which(active_cmd)
+        if not p:
+            print(PACKAGE_MANAGER_BIN_MISSING % active_cmd)
+            sys.exit(1)
+
+        p_dir = os.path.dirname(p)
+        for path in os.environ['PATH'].split(os.pathsep):
+            if path == p_dir:
+                break
+
+            for check in ('/bin', '/usr/bin'):
+                if path == check:
+                    print(BAD_PATH_ORDER % (check, p_dir, p_dir, check, p_dir))
+                    sys.exit(1)
+
+        return active_name.lower()
 
     def install_homebrew(self):
         print(PACKAGE_MANAGER_INSTALL % ('Homebrew', 'Homebrew', 'Homebrew', 'brew'))
@@ -296,12 +344,6 @@ class OSXBootstrapper(BaseBootstrapper):
             tf.flush()
 
             self.run_as_root(['installer', '-pkg', tf.name, '-target', '/'])
-
-        # MacPorts installs itself into a location likely not on the PATH. If
-        # we can't find it, prompt to restart.
-        if self.which('port') is None:
-            print(MACPORTS_POSTINSTALL_RESTART_REQUIRED)
-            sys.exit(1)
 
     def _update_package_manager(self):
         if self.package_manager == 'homebrew':
