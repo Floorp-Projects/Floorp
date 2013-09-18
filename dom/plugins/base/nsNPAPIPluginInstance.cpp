@@ -23,6 +23,7 @@
 #include "nsContentUtils.h"
 #include "nsPluginInstanceOwner.h"
 
+#include "nsThreadUtils.h"
 #include "nsIDOMElement.h"
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
