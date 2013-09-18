@@ -346,6 +346,7 @@ public:
             gfxFontEntry* GetFontEntry() const { return mFontEntry; }
 
             static PLDHashOperator RemoveIfPrivate(Entry* aEntry, void* aUserData);
+            static PLDHashOperator RemoveIfMatches(Entry* aEntry, void* aUserData);
             static PLDHashOperator DisconnectSVG(Entry* aEntry, void* aUserData);
 
         private:
