@@ -134,37 +134,61 @@ this.WebappOSUtils = {
   },
 
   getInstallPath: function(aApp) {
-    if (Services.appinfo.ID == "{3c2e2abc-06d4-11e1-ac3b-374f68613e61}") {
-      // B2G
-      return aApp.basePath + "/" + aApp.id;
-    } else if (Services.appinfo.ID == "{aa3c5121-dab2-40e2-81ca-7ea25febc110}") {
-      // Android
-      return aApp.basePath + "/" + aApp.id;
-    } else if (Services.appinfo.ID == "{99bceaaa-e3c6-48c1-b981-ef9b46b67d60}") {
-      // Metro
-      return null;
-    } else {
-      // Firefox, the Webapp Runtime and other Desktop products share the same
-      // directory naming scheme.
+#ifdef MOZ_B2G
+    // All b2g builds
+    return aApp.basePath + "/" + aApp.id;
+
+#elifdef MOZ_FENNEC
+   // All fennec
+    return aApp.basePath + "/" + aApp.id;
+
+#elifdef MOZ_PHOENIX
+   // Firefox
+
 #ifdef XP_WIN
-      let execFile = this.getLaunchTarget(aApp);
-      if (!execFile) {
-        return null;
-      }
-
-      return execFile.parent.path;
-#elifdef XP_MACOSX
-      let [ bundleID, path ] = this.getLaunchTarget(aApp);
-      return path;
-#elifdef XP_UNIX
-      let execFile = this.getLaunchTarget(aApp);
-      if (!execFile) {
-        return null;
-      }
-
-      return execFile.parent.path;
-#endif
+    let execFile = this.getLaunchTarget(aApp);
+    if (!execFile) {
+      return null;
     }
+
+    return execFile.parent.path;
+#elifdef XP_MACOSX
+    let [ bundleID, path ] = this.getLaunchTarget(aApp);
+    return path;
+#elifdef XP_UNIX
+    let execFile = this.getLaunchTarget(aApp);
+    if (!execFile) {
+      return null;
+    }
+
+    return execFile.parent.path;
+#endif
+
+#elifdef MOZ_WEBAPP_RUNTIME
+    // Webapp runtime
+
+#ifdef XP_WIN
+    let execFile = this.getLaunchTarget(aApp);
+    if (!execFile) {
+      return null;
+    }
+
+    return execFile.parent.path;
+#elifdef XP_MACOSX
+    let [ bundleID, path ] = this.getLaunchTarget(aApp);
+    return path;
+#elifdef XP_UNIX
+    let execFile = this.getLaunchTarget(aApp);
+    if (!execFile) {
+      return null;
+    }
+
+    return execFile.parent.path;
+#endif
+
+#endif
+    // Anything unsupported, like Metro
+    throw new Error("Unsupported apps platform");
   },
 
   launch: function(aApp) {
