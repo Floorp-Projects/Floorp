@@ -20,6 +20,7 @@
 #include "nsIPipe.h"
 #include "prerror.h"
 #include "nsINSSErrorsService.h"
+#include "nsThreadUtils.h"
 
 using namespace mozilla::net;
 using namespace mozilla;
