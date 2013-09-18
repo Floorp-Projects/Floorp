@@ -71,7 +71,7 @@ function checkCopySelection()
   info("Checking that cssHtmlTree.siBoundCopy() " +
        " returns the correct clipboard value");
 
-  let expectedPattern = "color: rgb\\(255, 255, 0\\);[\\r\\n]+" +
+  let expectedPattern = "color: #FF0;[\\r\\n]+" +
                  "font-family: helvetica,sans-serif;[\\r\\n]+" +
                  "font-size: 16px;[\\r\\n]+" +
                  "font-variant: small-caps;[\\r\\n]*";

@@ -43,6 +43,7 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.nfc.NdefMessage;
@@ -68,6 +69,8 @@ import android.view.animation.Interpolator;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.net.URLEncoder;
 import java.util.EnumSet;
 import java.util.Vector;
@@ -182,16 +185,7 @@ abstract public class BrowserApp extends GeckoApp
                 // fall through
             case SELECTED:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
-                    if (isAboutHome(tab)) {
-                        showHomePager(tab.getAboutHomePage());
-
-                        if (isDynamicToolbarEnabled()) {
-                            // Show the toolbar.
-                            mLayerView.getLayerMarginsAnimator().showMargins(false);
-                        }
-                    } else {
-                        hideHomePager();
-                    }
+                    updateHomePagerForTab(tab);
 
                     if (mSiteIdentityPopup != null)
                         mSiteIdentityPopup.dismiss();
@@ -1508,6 +1502,27 @@ abstract public class BrowserApp extends GeckoApp
         }
     }
 
+    /**
+     * Shows or hides the home pager for the given tab.
+     */
+    private void updateHomePagerForTab(Tab tab) {
+        // Don't change the visibility of the home pager if we're in editing mode.
+        if (mBrowserToolbar.isEditing()) {
+            return;
+        }
+
+        if (isAboutHome(tab)) {
+            showHomePager(tab.getAboutHomePage());
+
+            if (isDynamicToolbarEnabled()) {
+                // Show the toolbar.
+                mLayerView.getLayerMarginsAnimator().showMargins(false);
+            }
+        } else {
+            hideHomePager();
+        }
+    }
+
     private void showHomePager(HomePager.Page page) {
         showHomePagerWithAnimator(page, null);
     }
@@ -1899,13 +1914,45 @@ abstract public class BrowserApp extends GeckoApp
             if (provider != null) {
                 Intent shareIntent = provider.getIntent();
 
+                // For efficiency, the provider's intent is only set once
                 if (shareIntent == null) {
-                    shareIntent = GeckoAppShell.getShareIntent(this, url,
-                                                               "text/plain", tab.getDisplayTitle());
+                    shareIntent = new Intent(Intent.ACTION_SEND);
+                    shareIntent.setType("text/plain");
                     provider.setIntent(shareIntent);
-                } else {
-                    shareIntent.putExtra(Intent.EXTRA_TEXT, url);
-                    shareIntent.putExtra(Intent.EXTRA_SUBJECT, tab.getDisplayTitle());
+                }
+
+                // Replace the existing intent's extras
+                shareIntent.putExtra(Intent.EXTRA_TEXT, url);
+                shareIntent.putExtra(Intent.EXTRA_SUBJECT, tab.getDisplayTitle());
+                shareIntent.putExtra(Intent.EXTRA_TITLE, tab.getDisplayTitle());
+
+                // Clear the existing thumbnail extras so we don't share an old thumbnail.
+                shareIntent.removeExtra("share_screenshot");
+                shareIntent.removeExtra("share_screenshot_uri");
+
+                // Include the thumbnail of the page being shared.
+                BitmapDrawable drawable = tab.getThumbnail();
+                if (drawable != null) {
+                    Bitmap thumbnail = drawable.getBitmap();
+                    shareIntent.putExtra("share_screenshot", thumbnail);
+
+                    // Kobo uses a custom intent extra for sharing thumbnails.
+                    if (Build.MANUFACTURER.equals("Kobo")) {
+                        File cacheDir = getExternalCacheDir();
+
+                        if (cacheDir != null) {
+                            File outFile = new File(cacheDir, "thumbnail.png");
+
+                            try {
+                                java.io.FileOutputStream out = new java.io.FileOutputStream(outFile);
+                                thumbnail.compress(Bitmap.CompressFormat.PNG, 90, out);
+                            } catch (FileNotFoundException e) {
+                                Log.e(LOGTAG, "File not found", e);
+                            }
+
+                            shareIntent.putExtra("share_screenshot_uri", Uri.parse(outFile.getPath()));
+                        }
+                    }
                 }
             }
         }
@@ -2125,7 +2172,18 @@ abstract public class BrowserApp extends GeckoApp
             GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(uri));
         }
 
-        if (!Intent.ACTION_MAIN.equals(action) || !mInitialized) {
+        if (!mInitialized) {
+            return;
+        }
+
+        // Dismiss editing mode if the user is loading a URL from an external app.
+        if (Intent.ACTION_VIEW.equals(action)) {
+            dismissEditingMode();
+            return;
+        }
+
+        // Only solicit feedback when the app has been launched from the icon shortcut.
+        if (!Intent.ACTION_MAIN.equals(action)) {
             return;
         }
 

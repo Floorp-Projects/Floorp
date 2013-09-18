@@ -20,7 +20,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_input_sample.html \
 	browser_pageshow.js \
 	browser_sessionStorage.js \
-        browser_upgrade_backup.js \
+	browser_upgrade_backup.js \
 	browser_windowRestore_perwindowpb.js \
 	browser_248970_b_perwindowpb.js \
 	browser_248970_b_sample.html \
@@ -135,6 +135,8 @@ MOCHITEST_BROWSER_FILES = \
 	browser_739805.js \
 	browser_819510_perwindowpb.js \
 	browser_833286_atomic_backup.js \
+	browser_916390_form_data_loss.js \
+	browser_916390_sample.html \
 	$(filter disabled-for-intermittent-failures--bug-766044, browser_459906_empty.html) \
 	$(filter disabled-for-intermittent-failures--bug-766044, browser_459906_sample.html) \
 	$(filter disabled-for-intermittent-failures--bug-765389, browser_461743_sample.html) \
