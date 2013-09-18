@@ -121,6 +121,11 @@ function cleanUp() {
 setRadioEnabled(false, function() {
   sendToEmulator("gsm clear", function(result) {
     is(result[0], "OK");
-    dial("0912345678");
+
+    waitFor(function() {
+      dial("0912345678");
+    }, function() {
+      return telephony.calls.length === 0;
+    });
   });
 });
