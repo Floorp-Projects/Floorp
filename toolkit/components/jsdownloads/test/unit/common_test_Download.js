@@ -1212,8 +1212,8 @@ add_task(function test_public_and_private()
   });
 
   let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
-  yield Downloads.simpleDownload(sourceUrl, targetFile);
-  yield Downloads.simpleDownload(sourceUrl, targetFile);
+  yield Downloads.fetch(sourceUrl, targetFile);
+  yield Downloads.fetch(sourceUrl, targetFile);
 
   if (!gUseLegacySaver) {
     let download = yield Downloads.createDownload({

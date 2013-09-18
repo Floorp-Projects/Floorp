@@ -61,40 +61,37 @@ add_task(function test_createDownload_public()
 });
 
 /**
- * Tests simpleDownload with nsIURI and nsIFile as arguments.
+ * Tests "fetch" with nsIURI and nsIFile as arguments.
  */
-add_task(function test_simpleDownload_uri_file_arguments()
+add_task(function test_fetch_uri_file_arguments()
 {
   let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
-  yield Downloads.simpleDownload(NetUtil.newURI(httpUrl("source.txt")),
-                                 targetFile);
+  yield Downloads.fetch(NetUtil.newURI(httpUrl("source.txt")), targetFile);
   yield promiseVerifyContents(targetFile.path, TEST_DATA_SHORT);
 });
 
 /**
- * Tests simpleDownload with DownloadSource and DownloadTarget as arguments.
+ * Tests "fetch" with DownloadSource and DownloadTarget as arguments.
  */
-add_task(function test_simpleDownload_object_arguments()
+add_task(function test_fetch_object_arguments()
 {
   let targetPath = getTempFile(TEST_TARGET_FILE_NAME).path;
-  yield Downloads.simpleDownload({ url: httpUrl("source.txt") },
-                                 { path: targetPath });
+  yield Downloads.fetch({ url: httpUrl("source.txt") }, { path: targetPath });
   yield promiseVerifyContents(targetPath, TEST_DATA_SHORT);
 });
 
 /**
- * Tests simpleDownload with string arguments.
+ * Tests "fetch" with string arguments.
  */
-add_task(function test_simpleDownload_string_arguments()
+add_task(function test_fetch_string_arguments()
 {
   let targetPath = getTempFile(TEST_TARGET_FILE_NAME).path;
-  yield Downloads.simpleDownload(httpUrl("source.txt"),
-                                 targetPath);
+  yield Downloads.fetch(httpUrl("source.txt"), targetPath);
   yield promiseVerifyContents(targetPath, TEST_DATA_SHORT);
 
   targetPath = getTempFile(TEST_TARGET_FILE_NAME).path;
-  yield Downloads.simpleDownload(new String(httpUrl("source.txt")),
-                                 new String(targetPath));
+  yield Downloads.fetch(new String(httpUrl("source.txt")),
+                        new String(targetPath));
   yield promiseVerifyContents(targetPath, TEST_DATA_SHORT);
 });
 
