@@ -1766,15 +1766,28 @@ class MOZ_STACK_CLASS ModuleCompiler
             }
         }
 
-        // Global-data-section accesses
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+#if defined(JS_CPU_X86)
+        // Global data accesses in x86 need to be patched with the absolute
+        // address of the global. Globals are allocated sequentially after the
+        // code section so we can just use an RelativeLink.
+        for (unsigned i = 0; i < globalAccesses_.length(); i++) {
+            AsmJSGlobalAccess a = globalAccesses_[i];
+            AsmJSStaticLinkData::RelativeLink link;
+            link.patchAtOffset = masm_.labelOffsetToPatchOffset(a.patchAt.offset());
+            link.targetOffset = module_->offsetOfGlobalData() + a.globalDataOffset;
+            if (!linkData->relativeLinks.append(link))
+                return false;
+        }
+#endif
+
+#if defined(JS_CPU_X64)
+        // Global data accesses on x64 use rip-relative addressing and thus do
+        // not need patching after deserialization.
         uint8_t *code = module_->codeBase();
         for (unsigned i = 0; i < globalAccesses_.length(); i++) {
             AsmJSGlobalAccess a = globalAccesses_[i];
-            masm_.patchAsmJSGlobalAccess(a.offset, code, module_->globalData(), a.globalDataOffset);
+            masm_.patchAsmJSGlobalAccess(a.patchAt, code, module_->globalData(), a.globalDataOffset);
         }
-#else
-        JS_ASSERT(globalAccesses_.empty());
 #endif
 
         *module = module_.forget();
