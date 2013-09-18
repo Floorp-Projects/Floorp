@@ -22,7 +22,7 @@
                               0, 140, 20, 120) center no-repeat;
 }
 
-#downloads-indicator[attention]
+#downloads-button[attention]
 #downloads-indicator-icon {
   background-image: url("chrome://browser/skin/downloads/download-glow.png");
 }
@@ -30,14 +30,14 @@
 /* In the next few rules, we use :not([counter]) as a shortcut that is
    equivalent to -moz-any([progress], [paused]). */
 
-#downloads-indicator:not([counter])
+#downloads-button:not([counter])
 #downloads-indicator-counter {
   background: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"),
                               0, 140, 20, 120) center no-repeat;
   background-size: 12px;
 }
 
-#downloads-indicator:not([counter])[attention]
+#downloads-button:not([counter])[attention]
 #downloads-indicator-counter {
   background-image: url("chrome://browser/skin/downloads/download-glow.png");
 }
@@ -48,17 +48,17 @@
     background-size: 20px;
   }
 
-  #downloads-indicator:not([counter]) > #downloads-indicator-anchor >
+  #downloads-button:not([counter]) > #downloads-indicator-anchor >
   #downloads-indicator-progress-area > #downloads-indicator-counter {
     background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar@2x.png"), 0, 280, 40, 240);
   }
 
-  #downloads-indicator[attention] > #downloads-indicator-anchor >
+  #downloads-button[attention] > #downloads-indicator-anchor >
   #downloads-indicator-icon {
     background-image: url("chrome://browser/skin/downloads/download-glow@2x.png");
   }
 
-  #downloads-indicator:not([counter])[attention] > #downloads-indicator-anchor >
+  #downloads-button:not([counter])[attention] > #downloads-indicator-anchor >
   #downloads-indicator-progress-area > #downloads-indicator-counter {
     background-image: url("chrome://browser/skin/downloads/download-glow@2x.png");
   }
@@ -85,19 +85,19 @@
   to   { opacity: 0; transform: translate(0) scale(1); }
 }
 
-#downloads-indicator[notification="start"] > #downloads-indicator-anchor > #downloads-indicator-notification {
+#downloads-button[notification="start"] > #downloads-indicator-anchor > #downloads-indicator-notification {
   background-image: url("chrome://browser/skin/downloads/download-notification-start.png");
   animation-name: downloadsIndicatorNotificationStartRight;
   animation-duration: 1s;
 }
 
 @media (min-resolution: 2dppx) {
-  #downloads-indicator[notification="start"] > #downloads-indicator-anchor > #downloads-indicator-notification {
+  #downloads-button[notification="start"] > #downloads-indicator-anchor > #downloads-indicator-notification {
     background-image: url("chrome://browser/skin/downloads/download-notification-start@2x.png");
   }
 }
 
-#downloads-indicator[notification="start"]:-moz-locale-dir(rtl) > #downloads-indicator-anchor > #downloads-indicator-notification {
+#downloads-button[notification="start"]:-moz-locale-dir(rtl) > #downloads-indicator-anchor > #downloads-indicator-notification {
   animation-name: downloadsIndicatorNotificationStartLeft;
 }
 
@@ -107,14 +107,14 @@
   to   { opacity: 0; transform: scale(8); }
 }
 
-#downloads-indicator[notification="finish"] > #downloads-indicator-anchor > #downloads-indicator-notification {
+#downloads-button[notification="finish"] > #downloads-indicator-anchor > #downloads-indicator-notification {
   background-image: url("chrome://browser/skin/downloads/download-notification-finish.png");
   animation-name: downloadsIndicatorNotificationFinish;
   animation-duration: 1s;
 }
 
 @media (min-resolution: 2dppx) {
-  #downloads-indicator[notification="finish"] > #downloads-indicator-anchor > #downloads-indicator-notification {
+  #downloads-button[notification="finish"] > #downloads-indicator-anchor > #downloads-indicator-notification {
     background-image: url("chrome://browser/skin/downloads/download-notification-finish@2x.png");
   }
 }
@@ -166,15 +166,15 @@
   border-radius: 0 2px 2px 0;
 }
 
-#downloads-indicator[paused] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-progress > .progress-bar {
+#downloads-button[paused] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-progress > .progress-bar {
   background-color: rgb(220, 230, 81);
 }
 
-#downloads-indicator[paused] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-progress > .progress-remainder {
+#downloads-button[paused] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-progress > .progress-remainder {
   background-image: linear-gradient(#4b5000, #515700);
 }
 
-toolbar[mode="full"] > #downloads-indicator > .toolbarbutton-text {
+toolbar[mode="full"] > #downloads-button[indicator] > .toolbarbutton-text {
   margin: 2px 0 0;
   padding: 0;
   text-align: center;
