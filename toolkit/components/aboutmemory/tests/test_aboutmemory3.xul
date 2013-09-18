@@ -213,9 +213,27 @@ Explicit Allocations\n\
 \n\
 Other Measurements\n\
 \n\
+1,024 B (100.0%) -- compartments\n\
+└──1,024 B (100.0%) ── system/a\n\
+\n\
+1,024 B (100.0%) -- ghost-windows\n\
+└──1,024 B (100.0%) ── a\n\
+\n\
 314,572 B (100.0%) -- other\n\
 ├──209,715 B (66.67%) ── a\n\
 └──104,857 B (33.33%) ── b\n\
+\n\
+1,024 B (100.0%) -- pss\n\
+└──1,024 B (100.0%) ── a\n\
+\n\
+1,024 B (100.0%) -- rss\n\
+└──1,024 B (100.0%) ── a\n\
+\n\
+1,024 B (100.0%) -- size\n\
+└──1,024 B (100.0%) ── a\n\
+\n\
+1,024 B (100.0%) -- swap\n\
+└──1,024 B (100.0%) ── a\n\
 \n\
 262,144,000 B ── heap-allocated\n\
 \n\
@@ -309,12 +327,13 @@ Other Measurements\n\
     // This loads a pre-existing file that is valid.
     { filename: "memory-reports-good.json", expected: expectedGood, dumpFirst: false },
 
-    // This dumps to a file and then reads it back in.  The output is the same as the first test.
+    // This dumps to a file and then reads it back in.
     { filename: "memory-reports-dumped.json.gz", expected: expectedGood2, dumpFirst: true },
 
     // This loads a pre-existing file that is invalid.
     { filename: "memory-reports-bad.json",  expected: expectedBad, dumpFirst: false },
 
+    // This loads a pre-existing diff file.
     { filename: "memory-reports-diff1.json", filename2: "memory-reports-diff2.json",  expected: expectedDiff, dumpFirst: false }
   ];
 
