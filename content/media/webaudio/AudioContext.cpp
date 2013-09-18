@@ -60,6 +60,7 @@ AudioContext::AudioContext(nsPIDOMWindow* aWindow,
   , mNumberOfChannels(aNumberOfChannels)
   , mIsOffline(aIsOffline)
   , mIsStarted(!aIsOffline)
+  , mIsShutDown(false)
 {
   // Actually play audio
   mDestination->Stream()->AddAudioOutput(&gWebAudioOutputKey);
@@ -443,7 +444,9 @@ AudioContext::RemoveFromDecodeQueue(WebAudioDecodeJob* aDecodeJob)
 void
 AudioContext::RegisterActiveNode(AudioNode* aNode)
 {
-  mActiveNodes.PutEntry(aNode);
+  if (!mIsShutDown) {
+    mActiveNodes.PutEntry(aNode);
+  }
 }
 
 void
@@ -536,6 +539,8 @@ GetHashtableElements(nsTHashtable<nsPtrHashKey<T> >& aHashtable, nsTArray<T*>& a
 void
 AudioContext::Shutdown()
 {
+  mIsShutDown = true;
+
   Suspend();
 
   // Release references to active nodes.
