@@ -22,6 +22,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_breakpoints-pane.js \
 	browser_dbg_chrome-debugging.js \
 	browser_dbg_clean-exit.js \
+	browser_dbg_clean-exit-window.js \
 	browser_dbg_cmd-blackbox.js \
 	browser_dbg_cmd-break.js \
 	browser_dbg_cmd-dbg.js \
