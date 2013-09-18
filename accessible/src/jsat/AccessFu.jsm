@@ -19,6 +19,8 @@ const ACCESSFU_DISABLE = 0;
 const ACCESSFU_ENABLE = 1;
 const ACCESSFU_AUTO = 2;
 
+const SCREENREADER_SETTING = 'accessibility.screenreader';
+
 this.AccessFu = {
   /**
    * Initialize chrome-layer accessibility functionality.
@@ -35,8 +37,15 @@ this.AccessFu = {
       Services.obs.addObserver(this, 'Accessibility:Settings', false);
     } catch (x) {
       // Not on Android
-      if (Utils.MozBuildApp === 'b2g') {
-        aWindow.addEventListener('ContentStart', this, false);
+      if (aWindow.navigator.mozSettings) {
+        let lock = aWindow.navigator.mozSettings.createLock();
+        let req = lock.get(SCREENREADER_SETTING);
+        req.addEventListener('success', () => {
+          this._systemPref = req.result[SCREENREADER_SETTING];
+          this._enableOrDisable();
+        });
+        aWindow.navigator.mozSettings.addObserver(
+          SCREENREADER_SETTING, this.handleEvent.bind(this));
       }
     }
 
@@ -56,10 +65,9 @@ this.AccessFu = {
     }
     if (Utils.MozBuildApp === 'mobile/android') {
       Services.obs.removeObserver(this, 'Accessibility:Settings');
-    } else if (Utils.MozBuildApp === 'b2g') {
-      Utils.win.shell.contentBrowser.contentWindow.removeEventListener(
-        'mozContentEvent', this);
-      Utils.win.removeEventListener('ContentStart', this);
+    } else if (Utils.win.navigator.mozSettings) {
+      Utils.win.navigator.mozSettings.removeObserver(
+        SCREENREADER_SETTING, this.handleEvent.bind(this));
     }
     delete this._activatePref;
     Utils.uninit();
@@ -308,20 +316,6 @@ this.AccessFu = {
 
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
-      case 'ContentStart':
-      {
-        Utils.win.shell.contentBrowser.contentWindow.addEventListener(
-          'mozContentEvent', this, false, true);
-        break;
-      }
-      case 'mozContentEvent':
-      {
-        if (aEvent.detail.type == 'accessibility-screenreader') {
-          this._systemPref = aEvent.detail.enabled;
-          this._enableOrDisable();
-        }
-        break;
-      }
       case 'TabOpen':
       {
         let mm = Utils.getMessageManager(aEvent.target);
@@ -348,6 +342,15 @@ this.AccessFu = {
             function () {
               this.showCurrent(false);
             }.bind(this), 500);
+        }
+        break;
+      }
+      default:
+      {
+        // A settings change, it does not have an event type
+        if (aEvent.settingName == SCREENREADER_SETTING) {
+          this._systemPref = aEvent.settingValue;
+          this._enableOrDisable();
         }
         break;
       }
