@@ -47,7 +47,16 @@ public class StringUtils {
         return wasSearchQuery;
     }
 
+    public static class UrlFlags {
+        public static final int NONE = 0;
+        public static final int STRIP_HTTPS = 1;
+    }
+
     public static String stripScheme(String url) {
+        return stripScheme(url, UrlFlags.NONE);
+    }
+
+    public static String stripScheme(String url, int flags) {
         if (url == null) {
             return url;
         }
@@ -57,6 +66,8 @@ public class StringUtils {
 
         if (url.startsWith("http://")) {
             start = 7;
+        } else if (url.startsWith("https://") && flags == UrlFlags.STRIP_HTTPS) {
+            start = 8;
         }
 
         if (url.endsWith("/")) {

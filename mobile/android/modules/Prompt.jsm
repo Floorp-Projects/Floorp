@@ -78,6 +78,16 @@ Prompt.prototype = {
     });
   },
 
+  addNumber: function(aOptions) {
+    return this._addInput({
+      type: "number",
+      value: aOptions.value,
+      hint: aOptions.hint,
+      autofocus: aOptions.autofocus,
+      id: aOptions.id
+    });
+  },
+
   addPassword: function(aOptions) {
     return this._addInput({
       type: "password",
