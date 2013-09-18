@@ -25,6 +25,7 @@ SYNC_JAVA_FILES := \
   background/bagheera/BagheeraRequestDelegate.java \
   background/bagheera/BoundedByteArrayEntity.java \
   background/bagheera/DeflateHelper.java \
+  background/common/DateUtils.java \
   background/common/log/Logger.java \
   background/common/log/writers/AndroidLevelCachingLogWriter.java \
   background/common/log/writers/AndroidLogWriter.java \
