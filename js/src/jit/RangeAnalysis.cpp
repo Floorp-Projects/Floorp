@@ -270,7 +270,7 @@ Range::print(Sprinter &sp) const
     JS_ASSERT_IF(upper_infinite_, upper_ == JSVAL_INT_MAX);
 
     // Real or Natural subset.
-    if (decimal_)
+    if (canHaveFractionalPart_)
         sp.printf("R");
     else
         sp.printf("N");
@@ -340,7 +340,7 @@ Range::intersect(const Range *lhs, const Range *rhs, bool *emptyRange)
 
     Range *r = new Range(
         newLower, newUpper,
-        lhs->decimal_ && rhs->decimal_,
+        lhs->canHaveFractionalPart_ && rhs->canHaveFractionalPart_,
         Min(lhs->max_exponent_, rhs->max_exponent_));
 
     r->lower_infinite_ = lhs->lower_infinite_ && rhs->lower_infinite_;
@@ -352,7 +352,7 @@ Range::intersect(const Range *lhs, const Range *rhs, bool *emptyRange)
 void
 Range::unionWith(const Range *other)
 {
-   bool decimal = decimal_ | other->decimal_;
+   bool canHaveFractionalPart = canHaveFractionalPart_ | other->canHaveFractionalPart_;
    uint16_t max_exponent = Max(max_exponent_, other->max_exponent_);
 
    if (lower_infinite_ || other->lower_infinite_)
@@ -365,7 +365,7 @@ Range::unionWith(const Range *other)
    else
        setUpperInit(Max(upper_, other->upper_));
 
-   decimal_ = decimal;
+   canHaveFractionalPart_ = canHaveFractionalPart;
    max_exponent_ = max_exponent;
 }
 
@@ -413,7 +413,7 @@ Range::add(const Range *lhs, const Range *rhs)
     if (lhs->isUpperInfinite() || rhs->isUpperInfinite())
         h = RANGE_INF_MAX;
 
-    return new Range(l, h, lhs->isDecimal() || rhs->isDecimal(),
+    return new Range(l, h, lhs->canHaveFractionalPart() || rhs->canHaveFractionalPart(),
                      Max(lhs->exponent(), rhs->exponent()) + 1);
 }
 
@@ -428,7 +428,7 @@ Range::sub(const Range *lhs, const Range *rhs)
     if (lhs->isUpperInfinite() || rhs->isLowerInfinite())
         h = RANGE_INF_MAX;
 
-    return new Range(l, h, lhs->isDecimal() || rhs->isDecimal(),
+    return new Range(l, h, lhs->canHaveFractionalPart() || rhs->canHaveFractionalPart(),
                      Max(lhs->exponent(), rhs->exponent()) + 1);
 }
 
@@ -593,10 +593,10 @@ Range::not_(const Range *op)
 Range *
 Range::mul(const Range *lhs, const Range *rhs)
 {
-    bool decimal = lhs->isDecimal() || rhs->isDecimal();
+    bool fractional = lhs->canHaveFractionalPart() || rhs->canHaveFractionalPart();
     uint16_t exponent = lhs->numBits() + rhs->numBits() - 1;
     if (HasInfinite(lhs, rhs))
-        return new Range(RANGE_INF_MIN, RANGE_INF_MAX, decimal, exponent);
+        return new Range(RANGE_INF_MIN, RANGE_INF_MAX, fractional, exponent);
     int64_t a = (int64_t)lhs->lower_ * (int64_t)rhs->lower_;
     int64_t b = (int64_t)lhs->lower_ * (int64_t)rhs->upper_;
     int64_t c = (int64_t)lhs->upper_ * (int64_t)rhs->lower_;
@@ -604,7 +604,7 @@ Range::mul(const Range *lhs, const Range *rhs)
     return new Range(
         Min( Min(a, b), Min(c, d) ),
         Max( Max(a, b), Max(c, d) ),
-        decimal, exponent);
+        fractional, exponent);
 }
 
 Range *
@@ -688,7 +688,7 @@ Range::abs(const Range *op)
 
     return new Range(Max(Max(int64_t(0), l), -u),
                      Max(Abs(l), Abs(u)),
-                     op->isDecimal(),
+                     op->canHaveFractionalPart(),
                      op->exponent());
 }
 
@@ -701,7 +701,7 @@ Range::min(const Range *lhs, const Range *rhs)
 
     return new Range(Min(lhs->lower(), rhs->lower()),
                      Min(lhs->upper(), rhs->upper()),
-                     lhs->isDecimal() || rhs->isDecimal(),
+                     lhs->canHaveFractionalPart() || rhs->canHaveFractionalPart(),
                      Max(lhs->exponent(), rhs->exponent()));
 }
 
@@ -714,7 +714,7 @@ Range::max(const Range *lhs, const Range *rhs)
 
     return new Range(Max(lhs->lower(), rhs->lower()),
                      Max(lhs->upper(), rhs->upper()),
-                     lhs->isDecimal() || rhs->isDecimal(),
+                     lhs->canHaveFractionalPart() || rhs->canHaveFractionalPart(),
                      Max(lhs->exponent(), rhs->exponent()));
 }
 
@@ -744,14 +744,14 @@ Range::update(const Range *other)
         lower_infinite_ != other->lower_infinite_ ||
         upper_ != other->upper_ ||
         upper_infinite_ != other->upper_infinite_ ||
-        decimal_ != other->decimal_ ||
+        canHaveFractionalPart_ != other->canHaveFractionalPart_ ||
         max_exponent_ != other->max_exponent_;
     if (changed) {
         lower_ = other->lower_;
         lower_infinite_ = other->lower_infinite_;
         upper_ = other->upper_;
         upper_infinite_ = other->upper_infinite_;
-        decimal_ = other->decimal_;
+        canHaveFractionalPart_ = other->canHaveFractionalPart_;
         max_exponent_ = other->max_exponent_;
     }
 
@@ -841,7 +841,7 @@ MConstant::computeRange()
     // Extract the exponent, to approximate it with the range analysis.
     exp = ExponentComponent(d);
     if (exp < 0) {
-        // This double only has a decimal part.
+        // This double only has a fractional part.
         if (IsNegative(d))
             setRange(new Range(-1, 0, true, 0));
         else
@@ -849,7 +849,7 @@ MConstant::computeRange()
     } else if (exp < Range::MaxTruncatableExponent) {
         // Extract the integral part.
         int64_t integral = ToInt64(d);
-        // Extract the decimal part.
+        // Extract the fractional part.
         double rest = d - (double) integral;
         // Estimate the smallest integral boundaries.
         //   Safe double comparisons, because there is no precision loss.
@@ -864,7 +864,7 @@ MConstant::computeRange()
         setRange(new Range(l, h, (rest != 0), exp));
     } else {
         // This double has a precision loss. This also mean that it cannot
-        // encode any decimals.
+        // encode any values with fractional parts.
         if (IsNegative(d))
             setRange(new Range(RANGE_INF_MIN, RANGE_INF_MIN, false, exp));
         else
@@ -1080,7 +1080,7 @@ MMod::computeRange()
     // If the value is known to be integer, less-than abs(rhs) is equivalent
     // to less-than-or-equal abs(rhs)-1. This is important for being able to
     // say that the result of x%256 is an 8-bit unsigned number.
-    if (!lhs.isDecimal() && !rhs.isDecimal())
+    if (!lhs.canHaveFractionalPart() && !rhs.canHaveFractionalPart())
         --rhsAbsBound;
 
     // Next, the absolute value of the result will never be greater than the
@@ -1096,7 +1096,7 @@ MMod::computeRange()
     int64_t lower = lhs.lower() >= 0 ? 0 : -absBound;
     int64_t upper = lhs.upper() <= 0 ? 0 : absBound;
 
-    setRange(new Range(lower, upper, lhs.isDecimal() || rhs.isDecimal()));
+    setRange(new Range(lower, upper, lhs.canHaveFractionalPart() || rhs.canHaveFractionalPart()));
 }
 
 void
