@@ -270,6 +270,7 @@ private:
   uint32_t mNumberOfChannels;
   bool mIsOffline;
   bool mIsStarted;
+  bool mIsShutDown;
 };
 
 }
