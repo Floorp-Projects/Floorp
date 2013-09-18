@@ -215,34 +215,27 @@
               accesskey="&newWindowsAsTabs.accesskey;"
               preference="browser.link.open_newwindow"
               onsyncfrompreference="return gMainPane.readLinkTarget();"
-              onsynctopreference="return gMainPane.writeLinkTarget();"
-              class="indent"/>
+              onsynctopreference="return gMainPane.writeLinkTarget();"/>
 
     <checkbox id="warnCloseMultiple" label="&warnCloseMultipleTabs.label;"
               accesskey="&warnCloseMultipleTabs.accesskey;"
-              preference="browser.tabs.warnOnClose"
-              class="indent"/>
+              preference="browser.tabs.warnOnClose"/>
 
     <checkbox id="warnOpenMany" label="&warnOpenManyTabs.label;"
               accesskey="&warnOpenManyTabs.accesskey;"
-              preference="browser.tabs.warnOnOpen"
-              class="indent"/>
+              preference="browser.tabs.warnOnOpen"/>
 
     <checkbox id="restoreOnDemand" label="&restoreTabsOnDemand.label;"
               accesskey="&restoreTabsOnDemand.accesskey;"
-              preference="browser.sessionstore.restore_on_demand"
-              class="indent"/>
+              preference="browser.sessionstore.restore_on_demand"/>
 
     <checkbox id="switchToNewTabs" label="&switchToNewTabs.label;"
               accesskey="&switchToNewTabs.accesskey;"
-              preference="browser.tabs.loadInBackground"
-              class="indent"/>
+              preference="browser.tabs.loadInBackground"/>
 
 #ifdef XP_WIN
     <checkbox id="showTabsInTaskbar" label="&showTabsInTaskbar.label;"
               accesskey="&showTabsInTaskbar.accesskey;"
-              preference="browser.taskbar.previews.enable"
-              class="indent"/>
+              preference="browser.taskbar.previews.enable"/>
 #endif
-
 </groupbox>
