@@ -737,6 +737,13 @@ compile:: $(OBJS) $(HOST_OBJS)
 
 include $(topsrcdir)/config/makefiles/target_libs.mk
 
+ifdef IS_TOOL_DIR
+# One would think "tools:: libs" would work, but it turns out that combined with
+# bug 907365, this makes make forget to run some rules sometimes.
+tools::
+	@$(MAKE) libs
+endif
+
 ##############################################
 ifndef NO_PROFILE_GUIDED_OPTIMIZE
 ifdef MOZ_PROFILE_USE

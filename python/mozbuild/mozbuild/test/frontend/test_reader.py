@@ -244,6 +244,14 @@ class TestBuildReader(unittest.TestCase):
         self.assertIn('A moz.build file called the error() function.', str(e))
         self.assertIn('    Some error.', str(e))
 
+    def test_error_traversal_tools(self):
+        reader = self.reader('reader-error-traversal-tools')
+
+        with self.assertRaises(BuildReaderError) as bre:
+            list(reader.read_topsrcdir())
+
+        e = bre.exception
+        self.assertIn('The DIRS variable is not allowed in such directories.', str(e))
 
 if __name__ == '__main__':
     main()
