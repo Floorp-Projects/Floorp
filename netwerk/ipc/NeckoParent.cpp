@@ -348,7 +348,8 @@ NeckoParent::DeallocPTCPServerSocketParent(PTCPServerSocketParent* actor)
 }
 
 PRemoteOpenFileParent*
-NeckoParent::AllocPRemoteOpenFileParent(const URIParams& aURI)
+NeckoParent::AllocPRemoteOpenFileParent(const URIParams& aURI,
+                                        const OptionalURIParams& aAppURI)
 {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(uri);
@@ -447,8 +448,8 @@ NeckoParent::AllocPRemoteOpenFileParent(const URIParams& aURI)
         printf_stderr("NeckoParent::AllocPRemoteOpenFile: "
                       "FATAL error: app without webapps-manage permission is "
                       "requesting file '%s' but is only allowed to open its "
-                      "own application.zip: KILLING CHILD PROCESS\n",
-                      requestedPath.get());
+                      "own application.zip at %s: KILLING CHILD PROCESS\n",
+                      requestedPath.get(), mustMatch.get());
         return nullptr;
       }
     }
@@ -460,7 +461,8 @@ NeckoParent::AllocPRemoteOpenFileParent(const URIParams& aURI)
 
 bool
 NeckoParent::RecvPRemoteOpenFileConstructor(PRemoteOpenFileParent* aActor,
-                                            const URIParams& aFileURI)
+                                            const URIParams& aFileURI,
+                                            const OptionalURIParams& aAppURI)
 {
   return static_cast<RemoteOpenFileParent*>(aActor)->OpenSendCloseDelete();
 }
