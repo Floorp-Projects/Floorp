@@ -142,14 +142,12 @@ public class LastTabsPage extends HomeFragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        final Activity activity = getActivity();
-
         // Intialize adapter
-        mAdapter = new LastTabsAdapter(activity);
+        mAdapter = new LastTabsAdapter(getActivity());
         mList.setAdapter(mAdapter);
 
         // Create callbacks before the initial loader is started
-        mCursorLoaderCallbacks = new CursorLoaderCallbacks(activity, getLoaderManager());
+        mCursorLoaderCallbacks = new CursorLoaderCallbacks();
         loadIfVisible();
     }
 
@@ -262,43 +260,21 @@ public class LastTabsPage extends HomeFragment {
         }
     }
 
-    private class CursorLoaderCallbacks extends HomeCursorLoaderCallbacks {
-        public CursorLoaderCallbacks(Context context, LoaderManager loaderManager) {
-            super(context, loaderManager);
-        }
-
+    private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            if (id == LOADER_ID_LAST_TABS) {
-                return new LastTabsCursorLoader(getActivity());
-            } else {
-                return super.onCreateLoader(id, args);
-            }
+            return new LastTabsCursorLoader(getActivity());
         }
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
-            if (loader.getId() == LOADER_ID_LAST_TABS) {
-                mAdapter.swapCursor(c);
-                updateUiFromCursor(c);
-                loadFavicons(c);
-            } else {
-                super.onLoadFinished(loader, c);
-            }
+            mAdapter.swapCursor(c);
+            updateUiFromCursor(c);
         }
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
-            if (loader.getId() == LOADER_ID_LAST_TABS) {
-                mAdapter.swapCursor(null);
-            } else {
-                super.onLoaderReset(loader);
-            }
-        }
-
-        @Override
-        public void onFaviconsLoaded() {
-            mAdapter.notifyDataSetChanged();
+            mAdapter.swapCursor(null);
         }
     }
 }
