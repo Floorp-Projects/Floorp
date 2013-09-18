@@ -2068,6 +2068,8 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 %include ../shared/devtools/commandline.inc.css
 %include ../shared/plugin-doorhanger.inc.css
 
+%include downloads/indicator.css
+
 .gcli-panel {
   padding: 0;
 }

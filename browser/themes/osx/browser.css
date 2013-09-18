@@ -3664,6 +3664,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 %include ../shared/devtools/commandline.inc.css
 %include ../shared/plugin-doorhanger.inc.css
 
+%include downloads/indicator.css
+
 /* On mac, the popup notification contents are indented by default and so
   the default closebutton margins from notification.css require adjustment */
 

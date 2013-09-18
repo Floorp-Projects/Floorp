@@ -70,7 +70,6 @@ browser.jar:
   skin/classic/browser/downloads/download-notification-start.png (downloads/download-notification-start.png)
   skin/classic/browser/downloads/download-summary.png (downloads/download-summary.png)
   skin/classic/browser/downloads/downloads.css        (downloads/downloads.css)
-  skin/classic/browser/downloads/indicator.css        (downloads/indicator.css)
   skin/classic/browser/feeds/feedIcon.png             (feeds/feedIcon.png)
   skin/classic/browser/feeds/feedIcon16.png           (feeds/feedIcon16.png)
   skin/classic/browser/feeds/videoFeedIcon.png        (feeds/feedIcon.png)
