@@ -626,12 +626,6 @@ add_task(function test_cancel_midway_restart_tryToKeepPartialData()
   let download = yield promiseStartDownload_tryToKeepPartialData();
   yield download.cancel();
 
-  // This time-based solution is a workaround to avoid intermittent failures,
-  // and will be removed when bug 899102 is resolved.
-  if (gUseLegacySaver) {
-    yield promiseTimeout(250);
-  }
-
   do_check_true(download.stopped);
   do_check_true(download.hasPartialData);
 
@@ -685,12 +679,6 @@ add_task(function test_cancel_midway_restart_removePartialData()
   let download = yield promiseStartDownload_tryToKeepPartialData();
   yield download.cancel();
 
-  // This time-based solution is a workaround to avoid intermittent failures,
-  // and will be removed when bug 899102 is resolved.
-  if (gUseLegacySaver) {
-    yield promiseTimeout(250);
-  }
-
   do_check_true(download.hasPartialData);
   yield promiseVerifyContents(download.target.partFilePath, TEST_DATA_SHORT);
 
@@ -722,12 +710,6 @@ add_task(function test_cancel_midway_restart_tryToKeepPartialData_false()
   let download = yield promiseStartDownload_tryToKeepPartialData();
   yield download.cancel();
 
-  // This time-based solution is a workaround to avoid intermittent failures,
-  // and will be removed when bug 899102 is resolved.
-  if (gUseLegacySaver) {
-    yield promiseTimeout(250);
-  }
-
   download.tryToKeepPartialData = false;
 
   // The above property change does not affect existing partial data.
@@ -749,12 +731,6 @@ add_task(function test_cancel_midway_restart_tryToKeepPartialData_false()
   do_check_true(yield OS.File.exists(download.target.partFilePath));
 
   yield download.cancel();
-
-  // This time-based solution is a workaround to avoid intermittent failures,
-  // and will be removed when bug 899102 is resolved.
-  if (gUseLegacySaver) {
-    yield promiseTimeout(250);
-  }
 
   // The ".part" file should be deleted now that the download is canceled.
   do_check_false(download.hasPartialData);
@@ -962,12 +938,6 @@ add_task(function test_finalize_tryToKeepPartialData()
   let download = yield promiseStartDownload_tryToKeepPartialData();
   yield download.finalize();
 
-  // This time-based solution is a workaround to avoid intermittent failures,
-  // and will be removed when bug 899102 is resolved.
-  if (gUseLegacySaver) {
-    yield promiseTimeout(250);
-  }
-
   do_check_true(download.hasPartialData);
   do_check_true(yield OS.File.exists(download.target.partFilePath));
 
@@ -977,12 +947,6 @@ add_task(function test_finalize_tryToKeepPartialData()
   // Check finalization while removing partial data.
   download = yield promiseStartDownload_tryToKeepPartialData();
   yield download.finalize(true);
-
-  // This time-based solution is a workaround to avoid intermittent failures,
-  // and will be removed when bug 899102 is resolved.
-  if (gUseLegacySaver) {
-    yield promiseTimeout(250);
-  }
 
   do_check_false(download.hasPartialData);
   do_check_false(yield OS.File.exists(download.target.partFilePath));

@@ -1901,14 +1901,8 @@ DownloadLegacySaver.prototype = {
       return this.copySaver.cancel.apply(this.copySaver, arguments);
     }
 
-    // Synchronously cancel the operation as soon as the object is connected.
+    // Cancel the operation as soon as the object is connected.
     this.deferCanceled.resolve();
-
-    // We don't necessarily receive status notifications after we call "cancel",
-    // but cancellation through nsICancelable should be synchronous, thus force
-    // the rejection of the execution promise immediately.
-    this.deferExecuted.reject(new DownloadError(Cr.NS_ERROR_FAILURE,
-                                                "Download canceled."));
   },
 
   /**
