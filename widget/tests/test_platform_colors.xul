@@ -75,7 +75,7 @@ var colors = {
   "-moz-mac-menushadow": ["rgb(163, 163, 163)"],
   "-moz-mac-menutextdisable": ["rgb(152, 152, 152)", "rgb(136, 136, 136)"],
   "-moz-mac-menutextselect": ["rgb(255, 255, 255)"],
-  "-moz-mac-disabledtoolbartext": ["rgb(63, 63, 63)"],
+  "-moz-mac-disabledtoolbartext": ["rgb(127, 127, 127)"],
   "-moz-mac-secondaryhighlight": ["rgb(212, 212, 212)"],
   "-moz-menuhover": ["rgb(115, 132, 153)", "rgb(127, 127, 127)", "rgb(56, 117, 215)", "rgb(255, 193, 31)", "rgb(243, 70, 72)", "rgb(255, 138, 34)", "rgb(102, 197, 71)", "rgb(140, 78, 184)"],
   "-moz-menuhovertext": ["rgb(255, 255, 255)", "rgb(255, 254, 254)", "rgb(254, 255, 254)"],
