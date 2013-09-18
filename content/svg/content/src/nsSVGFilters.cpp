@@ -50,7 +50,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-static const unsigned short SVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN  = 0;
 static const unsigned short SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY = 1;
 static const unsigned short SVG_FECOMPONENTTRANSFER_TYPE_TABLE    = 2;
 static const unsigned short SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE = 3;

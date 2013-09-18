@@ -19,7 +19,7 @@ namespace net {
 // Behavior pref constants
 static const int32_t BEHAVIOR_ACCEPT = 0;
 static const int32_t BEHAVIOR_REJECTFOREIGN = 1;
-static const int32_t BEHAVIOR_REJECT = 2;
+// static const int32_t BEHAVIOR_REJECT = 2;
 static const int32_t BEHAVIOR_LIMITFOREIGN = 3;
 
 // Pref string constants

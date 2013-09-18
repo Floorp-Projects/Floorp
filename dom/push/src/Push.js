@@ -4,8 +4,12 @@
 
 "use strict";
 
+// Don't modify this, instead set services.push.debug.
+let gDebuggingEnabled = false;
+
 function debug(s) {
-  // dump("-*- Push.js: " + s + "\n");
+  if (gDebuggingEnabled)
+    dump("-*- Push.js: " + s + "\n");
 }
 
 const Cc = Components.classes;
@@ -39,6 +43,10 @@ Push.prototype = {
                                           Ci.nsISupportsWeakReference]),
 
   init: function(aWindow) {
+    // Set debug first so that all debugging actually works.
+    // NOTE: We don't add an observer here like in PushService. Flipping the
+    // pref will require a reload of the app/page, which seems acceptable.
+    gDebuggingEnabled = Services.prefs.getBoolPref("services.push.debug");
     debug("init()");
 
     let principal = aWindow.document.nodePrincipal;
@@ -96,7 +104,7 @@ Push.prototype = {
 
   register: function() {
     debug("register()");
-    var req = this.createRequest();
+    let req = this.createRequest();
     if (!Services.prefs.getBoolPref("services.push.connection.enabled")) {
       // If push socket is disabled by the user, immediately error rather than
       // timing out.
@@ -114,7 +122,7 @@ Push.prototype = {
 
   unregister: function(aPushEndpoint) {
     debug("unregister(" + aPushEndpoint + ")");
-    var req = this.createRequest();
+    let req = this.createRequest();
     this._cpmm.sendAsyncMessage("Push:Unregister", {
                                   pageURL: this._pageURL.spec,
                                   manifestURL: this._manifestURL,
@@ -126,7 +134,7 @@ Push.prototype = {
 
   registrations: function() {
     debug("registrations()");
-    var req = this.createRequest();
+    let req = this.createRequest();
     this._cpmm.sendAsyncMessage("Push:Registrations", {
                                   manifestURL: this._manifestURL,
                                   requestID: this.getRequestId(req)

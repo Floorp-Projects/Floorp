@@ -31,11 +31,8 @@ interface SVGElement : Element {
   readonly attribute SVGSVGElement? ownerSVGElement;
   readonly attribute SVGElement? viewportElement;
 
-  [SetterThrows]
            attribute EventHandler oncopy;
-  [SetterThrows]
            attribute EventHandler oncut;
-  [SetterThrows]
            attribute EventHandler onpaste;
 };
 

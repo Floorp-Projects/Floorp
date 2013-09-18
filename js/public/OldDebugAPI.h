@@ -191,9 +191,6 @@ JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsid id,
 extern JS_PUBLIC_API(bool)
 JS_ClearWatchPointsForObject(JSContext *cx, JSObject *obj);
 
-extern JS_PUBLIC_API(bool)
-JS_ClearAllWatchPoints(JSContext *cx);
-
 /************************************************************************/
 
 // Raw JSScript* because this needs to be callable from a signal handler.

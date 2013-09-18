@@ -892,12 +892,6 @@ static const JSFunctionSpec glob_functions[] = {
     JS_FS_END
 };
 
-const JSClass global_class = {
-    "global", 0,
-    JS_PropertyStub,  JS_DeletePropertyStub,  JS_PropertyStub,  JS_StrictPropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   nullptr
-};
-
 static bool
 env_setProperty(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
 {
@@ -1178,8 +1172,6 @@ usage(void)
     fprintf(gErrFile, "usage: xpcshell [-g gredir] [-a appdir] [-r manifest]... [-PsSwWCijmIn] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
     return 2;
 }
-
-extern const JSClass global_class;
 
 static void
 ProcessArgsForCompartment(JSContext *cx, char **argv, int argc)
@@ -1664,11 +1656,6 @@ main(int argc, char **argv, char **envp)
             printf("failed to get nsXPConnect service!\n");
             return 1;
         }
-
-        // Force the SafeJSContext to be created. This is a workaround for our
-        // implicit dependency on keeping at least one JSContext alive until the
-        // end of shutdown. This can go away when we get bug 905926 landed.
-        xpc->GetSafeJSContext();
 
         nsCOMPtr<nsIPrincipal> systemprincipal;
         // Fetch the system principal and store it away in a global, to use for

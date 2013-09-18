@@ -35,7 +35,6 @@ interface Screen : EventTarget {
    */
   readonly attribute DOMString mozOrientation;
 
-  [SetterThrows]
   attribute EventHandler onmozorientationchange;
 
   /**

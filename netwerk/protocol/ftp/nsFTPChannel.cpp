@@ -24,17 +24,6 @@
 extern PRLogModuleInfo* gFTPLog;
 #endif /* PR_LOGGING */
 
-////////////// this needs to move to nspr
-static inline uint32_t
-PRTimeToSeconds(PRTime t_usec)
-{
-    return uint32_t(t_usec / PR_USEC_PER_SEC);
-}
-
-#define NowInSeconds() PRTimeToSeconds(PR_Now())
-////////////// end
-
-
 // There are two transport connections established for an 
 // ftp connection. One is used for the command channel , and
 // the other for the data channel. The command channel is the first

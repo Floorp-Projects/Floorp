@@ -1416,6 +1416,16 @@ XPCJSRuntime::~XPCJSRuntime()
     }
 #endif
 
+    auto rtPrivate = static_cast<PerThreadAtomCache*>(JS_GetRuntimePrivate(Runtime()));
+    delete rtPrivate;
+    JS_SetRuntimePrivate(Runtime(), nullptr);
+
+    // Tell the superclas to destroy the JSRuntime. We need to do this here,
+    // because destroying the runtime runs one final rambo GC, which sometimes
+    // calls various finalizers that assume that XPCJSRuntime is still
+    // operational. We have bug 911303 on file for fixing this.
+    DestroyRuntime();
+
     // clean up and destroy maps...
     if (mWrappedJSMap) {
 #ifdef XPC_DUMP_AT_SHUTDOWN
@@ -1423,7 +1433,7 @@ XPCJSRuntime::~XPCJSRuntime()
         if (count)
             printf("deleting XPCJSRuntime with %d live wrapped JSObject\n", (int)count);
 #endif
-        mWrappedJSMap->ShutdownMarker(Runtime());
+        mWrappedJSMap->ShutdownMarker();
         delete mWrappedJSMap;
     }
 
@@ -1524,10 +1534,6 @@ XPCJSRuntime::~XPCJSRuntime()
         MOZ_ASSERT(!mScratchStrings[i].mInUse, "Uh, string wrapper still in use!");
     }
 #endif
-
-    auto rtPrivate = static_cast<PerThreadAtomCache*>(JS_GetRuntimePrivate(Runtime()));
-    delete rtPrivate;
-    JS_SetRuntimePrivate(Runtime(), nullptr);
 }
 
 static void
