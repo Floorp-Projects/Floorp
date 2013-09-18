@@ -1365,7 +1365,7 @@ CodeGeneratorX86Shared::visitFloor(LFloor *lir)
                 return false;
 
             // Test whether the input double was integer-valued.
-            masm.cvtsi2sd(output, scratch);
+            masm.convertInt32ToDouble(output, scratch);
             masm.branchDouble(Assembler::DoubleEqualOrUnordered, input, scratch, &end);
 
             // Input is not integer-valued, so we rounded off-by-one in the
@@ -1390,8 +1390,7 @@ CodeGeneratorX86Shared::visitRound(LRound *lir)
     Label negative, end;
 
     // Load 0.5 in the temp register.
-    static const double PointFive = 0.5;
-    masm.loadStaticDouble(&PointFive, temp);
+    masm.loadConstantDouble(0.5, temp);
 
     // Branch to a slow path for negative inputs. Doesn't catch NaN or -0.
     masm.xorpd(scratch, scratch);
@@ -1454,7 +1453,7 @@ CodeGeneratorX86Shared::visitRound(LRound *lir)
                 return false;
 
             // Test whether the truncated double was integer-valued.
-            masm.cvtsi2sd(output, scratch);
+            masm.convertInt32ToDouble(output, scratch);
             masm.branchDouble(Assembler::DoubleEqualOrUnordered, temp, scratch, &end);
 
             // Input is not integer-valued, so we rounded off-by-one in the

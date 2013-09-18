@@ -181,7 +181,7 @@ class AutoSetHandlingSignal
 // Windows), the InstallSignalHandlersMutex prevents races between JSRuntimes
 // installing signal handlers.
 #if !defined(XP_MACOSX)
-# ifdef JS_THREADSAFE
+# if defined(JS_THREADSAFE)
 #  include "jslock.h"
 
 namespace {
@@ -242,7 +242,7 @@ bool InstallSignalHandlersMutex::Lock::sHandlersInstalled = false;
 # endif  // JS_THREADSAFE
 #endif   // !XP_MACOSX
 
-# if defined(JS_CPU_X64)
+#if defined(JS_CPU_X64)
 template <class T>
 static void
 SetXMMRegToNaN(bool isFloat32, T *xmm_reg)
@@ -292,27 +292,28 @@ LookupHeapAccess(const AsmJSModule &module, uint8_t *pc)
 
     return NULL;
 }
-# endif
+#endif
 
-# if defined(XP_WIN)
-#  include "jswin.h"
-# else
-#  include <signal.h>
-#  include <sys/mman.h>
-# endif
+#if defined(XP_WIN)
+# include "jswin.h"
+#else
+# include <signal.h>
+# include <sys/mman.h>
+#endif
 
-# if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
-#  include <sys/ucontext.h> // for ucontext_t, mcontext_t
-# endif
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+# include <sys/ucontext.h> // for ucontext_t, mcontext_t
+#endif
 
-# if defined(JS_CPU_X64)
-#  if defined(__DragonFly__)
-#   include <machine/npx.h> // for union savefpu
-#  elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__FreeBSD_kernel__)
-#   include <machine/fpu.h> // for struct savefpu/fxsave64
-#  endif
+#if defined(JS_CPU_X64)
+# if defined(__DragonFly__)
+#  include <machine/npx.h> // for union savefpu
+# elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__FreeBSD_kernel__)
+#  include <machine/fpu.h> // for struct savefpu/fxsave64
 # endif
+#endif
 
+#if defined(ANDROID)
 // Not all versions of the Android NDK define ucontext_t or mcontext_t.
 // Detect this and provide custom but compatible definitions. Note that these
 // follow the GLibc naming convention to access register values from
@@ -320,13 +321,14 @@ LookupHeapAccess(const AsmJSModule &module, uint8_t *pc)
 //
 // See: https://chromiumcodereview.appspot.com/10829122/
 // See: http://code.google.com/p/android/issues/detail?id=34784
-# if (defined(ANDROID)) && !defined(__BIONIC_HAVE_UCONTEXT_T)
+# if !defined(__BIONIC_HAVE_UCONTEXT_T)
 #  if defined(__arm__)
+
 // GLibc on ARM defines mcontext_t has a typedef for 'struct sigcontext'.
 // Old versions of the C library <signal.h> didn't define the type.
-#if !defined(__BIONIC_HAVE_STRUCT_SIGCONTEXT)
-#include <asm/sigcontext.h>
-#endif
+#   if !defined(__BIONIC_HAVE_STRUCT_SIGCONTEXT)
+#    include <asm/sigcontext.h>
+#   endif
 
 typedef struct sigcontext mcontext_t;
 
@@ -356,31 +358,42 @@ typedef struct ucontext {
     // Other fields are not used by V8, don't define them here.
 } ucontext_t;
 enum { REG_EIP = 14 };
-#  endif
-# endif  // defined(__ANDROID__) && !defined(__BIONIC_HAVE_UCONTEXT_T)
+#  endif  // defined(__i386__)
+# endif  // !defined(__BIONIC_HAVE_UCONTEXT_T)
+#endif // defined(ANDROID)
 
+#if defined(ANDROID) && defined(MOZ_LINKER)
+// Apparently, on some Android systems, the signal handler is always passed
+// NULL as the faulting address. This would cause the asm.js signal handler to
+// think that a safe out-of-bounds access was a NULL-deref. This brokenness is
+// already detected by ElfLoader (enabled by MOZ_LINKER), so reuse that check
+// to disable asm.js compilation on systems where the signal handler is broken.
+extern "C" MFBT_API bool IsSignalHandlingBroken();
+#else
+static bool IsSignalHandlingBroken() { return false; }
+#endif // defined(MOZ_LINKER)
 
-# if !defined(XP_WIN)
-#  define CONTEXT ucontext_t
-# endif
+#if !defined(XP_WIN)
+# define CONTEXT ucontext_t
+#endif
 
-# if !defined(XP_MACOSX)
+#if !defined(XP_MACOSX)
 static uint8_t **
 ContextToPC(CONTEXT *context)
 {
-#  if defined(JS_CPU_X64)
+# if defined(JS_CPU_X64)
     JS_STATIC_ASSERT(sizeof(RIP_sig(context)) == sizeof(void*));
     return reinterpret_cast<uint8_t**>(&RIP_sig(context));
-#  elif defined(JS_CPU_X86)
+# elif defined(JS_CPU_X86)
     JS_STATIC_ASSERT(sizeof(EIP_sig(context)) == sizeof(void*));
     return reinterpret_cast<uint8_t**>(&EIP_sig(context));
-#  elif defined(JS_CPU_ARM)
+# elif defined(JS_CPU_ARM)
     JS_STATIC_ASSERT(sizeof(PC_sig(context)) == sizeof(void*));
     return reinterpret_cast<uint8_t**>(&PC_sig(context));
-#  endif
+# endif
 }
 
-#  if defined(JS_CPU_X64)
+# if defined(JS_CPU_X64)
 static void
 SetRegisterToCoercedUndefined(CONTEXT *context, bool isFloat32, AnyRegister reg)
 {
@@ -426,10 +439,10 @@ SetRegisterToCoercedUndefined(CONTEXT *context, bool isFloat32, AnyRegister reg)
         }
     }
 }
-#  endif  // JS_CPU_X64
-# endif   // !XP_MACOSX
+# endif  // JS_CPU_X64
+#endif   // !XP_MACOSX
 
-# if defined(XP_WIN)
+#if defined(XP_WIN)
 
 static bool
 HandleException(PEXCEPTION_POINTERS exception)
@@ -524,22 +537,22 @@ AsmJSExceptionHandler(LPEXCEPTION_POINTERS exception)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-# elif defined(XP_MACOSX)
-#  include <mach/exc.h>
+#elif defined(XP_MACOSX)
+# include <mach/exc.h>
 
 static uint8_t **
 ContextToPC(x86_thread_state_t &state)
 {
-#  if defined(JS_CPU_X64)
+# if defined(JS_CPU_X64)
     JS_STATIC_ASSERT(sizeof(state.uts.ts64.__rip) == sizeof(void*));
     return reinterpret_cast<uint8_t**>(&state.uts.ts64.__rip);
-#  else
+# else
     JS_STATIC_ASSERT(sizeof(state.uts.ts32.__eip) == sizeof(void*));
     return reinterpret_cast<uint8_t**>(&state.uts.ts32.__eip);
-#  endif
+# endif
 }
 
-#  if defined(JS_CPU_X64)
+# if defined(JS_CPU_X64)
 static bool
 SetRegisterToCoercedUndefined(mach_port_t rtThread, x86_thread_state64_t &state,
                               const AsmJSHeapAccess &heapAccess)
@@ -600,7 +613,7 @@ SetRegisterToCoercedUndefined(mach_port_t rtThread, x86_thread_state64_t &state,
     }
     return true;
 }
-#  endif
+# endif
 
 // This definition was generated by mig (the Mach Interface Generator) for the
 // routine 'exception_raise' (exc.defs).
@@ -679,7 +692,7 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
         return kret == KERN_SUCCESS;
     }
 
-#  if defined(JS_CPU_X64)
+# if defined(JS_CPU_X64)
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
     if (!module.maybeHeap() ||
@@ -711,9 +724,9 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
         return false;
 
     return true;
-#  else
+# else
     return false;
-#  endif
+# endif
 }
 
 // Taken from mach_exc in /usr/include/mach/mach_exc.defs.
@@ -867,7 +880,7 @@ AsmJSMachExceptionHandler::install(JSRuntime *rt)
     return false;
 }
 
-# else  // If not Windows or Mac, assume Unix
+#else  // If not Windows or Mac, assume Unix
 
 // Be very cautious and default to not handling; we don't want to accidentally
 // silence real crashes from real bugs.
@@ -910,7 +923,7 @@ HandleSignal(int signum, siginfo_t *info, void *ctx)
         return true;
     }
 
-#  if defined(JS_CPU_X64)
+# if defined(JS_CPU_X64)
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
     if (!module.maybeHeap() ||
@@ -934,9 +947,9 @@ HandleSignal(int signum, siginfo_t *info, void *ctx)
         SetRegisterToCoercedUndefined(context, heapAccess->isFloat32Load(), heapAccess->loadedReg());
     *ppc += heapAccess->opLength();
     return true;
-#  else
+# else
     return false;
-#  endif
+# endif
 }
 
 static struct sigaction sPrevHandler;
@@ -966,11 +979,14 @@ AsmJSFaultHandler(int signum, siginfo_t *info, void *context)
     else
         sPrevHandler.sa_handler(signum);
 }
-# endif
+#endif
 
 bool
 js::EnsureAsmJSSignalHandlersInstalled(JSRuntime *rt)
 {
+    if (IsSignalHandlingBroken())
+        return false;
+
 #if defined(XP_MACOSX)
     // On OSX, each JSRuntime gets its own handler.
     return rt->asmJSMachExceptionHandler.installed() || rt->asmJSMachExceptionHandler.install(rt);

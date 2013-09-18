@@ -50,7 +50,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private static final int MAX_LIST_ATTEMPTS = 3;
     private static final int MAX_WAIT_ENABLED_TEXT_MS = 10000;
     private static final int MAX_WAIT_HOME_PAGER_HIDDEN_MS = 10000;
-    public static final int MAX_WAIT_MS = 3000;
+    public static final int MAX_WAIT_MS = 4500;
 
     // IDs for UI views
     private static final String BROWSER_TOOLBAR_ID = "browser_toolbar";

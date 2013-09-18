@@ -22,6 +22,7 @@
 #include "jsnativestack.h"
 #include "jsobj.h"
 #include "jsscript.h"
+#include "jswatchpoint.h"
 #include "jswrapper.h"
 
 #include "jit/AsmJSSignalHandlers.h"
@@ -109,9 +110,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     operationCallback(NULL),
 #ifdef JS_THREADSAFE
     operationCallbackLock(NULL),
-#ifdef DEBUG
     operationCallbackOwner(NULL),
-#endif
 #endif
 #ifdef JS_WORKER_THREADS
     workerThreadState(NULL),
@@ -237,6 +236,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     profilingScripts(false),
     alwaysPreserveCode(false),
     hadOutOfMemory(false),
+    haveCreatedContext(false),
     data(NULL),
     gcLock(NULL),
     gcHelperThread(thisFromCtor()),
@@ -257,6 +257,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     mathCache_(NULL),
     trustedPrincipals_(NULL),
     atomsCompartment_(NULL),
+    beingDestroyed_(false),
     wrapObjectCallback(TransparentObjectWrapper),
     sameCompartmentWrapObjectCallback(NULL),
     preWrapObjectCallback(NULL),
@@ -392,6 +393,49 @@ JSRuntime::init(uint32_t maxbytes)
 
 JSRuntime::~JSRuntime()
 {
+    JS_ASSERT(!isHeapBusy());
+
+    /* Off thread compilation and parsing depend on atoms still existing. */
+    for (CompartmentsIter comp(this); !comp.done(); comp.next())
+        CancelOffThreadIonCompile(comp, NULL);
+    WaitForOffThreadParsingToFinish(this);
+
+#ifdef JS_WORKER_THREADS
+    if (workerThreadState)
+        workerThreadState->cleanup(this);
+#endif
+
+    /* Poison common names before final GC. */
+    FinishCommonNames(this);
+
+    /* Clear debugging state to remove GC roots. */
+    for (CompartmentsIter comp(this); !comp.done(); comp.next()) {
+        comp->clearTraps(defaultFreeOp());
+        if (WatchpointMap *wpmap = comp->watchpointMap)
+            wpmap->clear();
+    }
+
+    /* Clear the statics table to remove GC roots. */
+    staticStrings.finish();
+
+    /*
+     * Flag us as being destroyed. This allows the GC to free things like
+     * interned atoms and Ion trampolines.
+     */
+    beingDestroyed_ = true;
+
+    /* Allow the GC to release scripts that were being profiled. */
+    profilingScripts = false;
+
+    JS::PrepareForFullGC(this);
+    GC(this, GC_NORMAL, JS::gcreason::DESTROY_RUNTIME);
+
+    /*
+     * Clear the self-hosted global and delete self-hosted classes *after*
+     * GC, as finalizers for objects check for clasp->finalize during GC.
+     */
+    finishSelfHosting();
+
     mainThread.removeFromThreadList();
 
 #ifdef JS_WORKER_THREADS
@@ -448,6 +492,7 @@ JSRuntime::~JSRuntime()
         PR_DestroyLock(gcLock);
 #endif
 
+    js_free(defaultLocale);
     js_delete(bumpAlloc_);
     js_delete(mathCache_);
 #ifdef JS_ION

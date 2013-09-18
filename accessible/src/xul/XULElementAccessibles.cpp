@@ -46,14 +46,11 @@ XULLabelAccessible::
   nsTextBoxFrame* textBoxFrame = do_QueryFrame(mContent->GetPrimaryFrame());
   if (textBoxFrame) {
     mValueTextLeaf = new XULLabelTextLeafAccessible(mContent, mDoc);
-    if (mDoc->BindToDocument(mValueTextLeaf, nullptr)) {
-      nsAutoString text;
-      textBoxFrame->GetCroppedTitle(text);
-      mValueTextLeaf->SetText(text);
-      return;
-    }
+    mDoc->BindToDocument(mValueTextLeaf, nullptr);
 
-    mValueTextLeaf = nullptr;
+    nsAutoString text;
+    textBoxFrame->GetCroppedTitle(text);
+    mValueTextLeaf->SetText(text);
   }
 }
 

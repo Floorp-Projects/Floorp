@@ -1046,15 +1046,17 @@ void MediaDecoder::NotifyPrincipalChanged()
   }
 }
 
-void MediaDecoder::NotifyBytesConsumed(int64_t aBytes)
+void MediaDecoder::NotifyBytesConsumed(int64_t aBytes, int64_t aOffset)
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   NS_ENSURE_TRUE_VOID(mDecoderStateMachine);
-  MOZ_ASSERT(OnStateMachineThread() || OnDecodeThread());
-  if (!mIgnoreProgressData) {
-    mDecoderPosition += aBytes;
+  if (mIgnoreProgressData) {
+    return;
+  }
+  if (aOffset >= mDecoderPosition) {
     mPlaybackStatistics.AddBytes(aBytes);
   }
+  mDecoderPosition = aOffset + aBytes;
 }
 
 void MediaDecoder::UpdateReadyStateForData()

@@ -87,7 +87,8 @@ public:
 
   // used only for hacky fix in gecko 23 for bug 862324
   // see bug 865908 about fixing this.
-  void SetDeprecatedTextureHost(DeprecatedTextureHost* aDeprecatedTextureHost);
+  void AddDeprecatedTextureHost(DeprecatedTextureHost* aDeprecatedTextureHost);
+  void RemoveDeprecatedTextureHost(DeprecatedTextureHost* aDeprecatedTextureHost);
 
   android::GraphicBuffer* GetGraphicBuffer();
 
@@ -104,7 +105,7 @@ private:
 
   // used only for hacky fix in gecko 23 for bug 862324
   // see bug 865908 about fixing this.
-  DeprecatedTextureHost* mDeprecatedTextureHost;
+  nsAutoTArray<DeprecatedTextureHost*, 2> mDeprecatedTextureHosts;
 
   friend class ISurfaceAllocator;
 };

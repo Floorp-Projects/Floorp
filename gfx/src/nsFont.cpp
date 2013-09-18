@@ -181,7 +181,6 @@ static bool IsGenericFontFamily(const nsString& aFamily)
   return generic != kGenericFont_NONE;
 }
 
-const PRUnichar kNullCh       = PRUnichar('\0');
 const PRUnichar kSingleQuote  = PRUnichar('\'');
 const PRUnichar kDoubleQuote  = PRUnichar('\"');
 const PRUnichar kComma        = PRUnichar(',');

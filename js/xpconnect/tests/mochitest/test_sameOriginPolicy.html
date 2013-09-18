@@ -40,7 +40,9 @@ function check(obj, prop, allowed, write) {
 var crossOriginReadableWindowProps = ['blur', 'close', 'closed', 'focus',
                                       'frames', 'location', 'length',
                                       'opener', 'parent', 'postMessage',
-                                      'self', 'top', 'window'];
+                                      'self', 'top', 'window',
+                                      /* indexed and named accessors */
+                                      '0', 'subframe'];
 
 function isCrossOriginReadable(obj, prop) {
   if (obj == "Window")
@@ -60,11 +62,21 @@ function isCrossOriginWritable(obj, prop) {
 // NB: we don't want to succeed with writes, so we only check them when it should be denied.
 function testAll(sameOrigin) {
   var win = document.getElementById('ifr').contentWindow;
-  for (var prop in window) {
-    // On android, this appears to be on the window but not on the iframe. It's
-    // not really relevant to this test, so just skip it.
-    if (prop === 'crypto')
-      continue;
+
+  // Build a list of properties to check from the properties available on our
+  // window.
+  var props = [];
+  for (var prop in window) { props.push(prop); }
+
+  // On android, this appears to be on the window but not on the iframe. It's
+  // not really relevant to this test, so just skip it.
+  if (props.indexOf('crypto') != -1)
+    props.splice(props.indexOf('crypto'), 1);
+
+  // Add the named grand-child, since that won't appear on our window.
+  props.push('subframe');
+
+  for (var prop of props) {
     check(win, prop, sameOrigin || isCrossOriginReadable('Window', prop), /* write = */ false);
     if (!sameOrigin && !isCrossOriginWritable('Window', prop))
       check(win, prop, false, /* write = */ true);

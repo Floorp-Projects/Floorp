@@ -42,6 +42,11 @@ static bool fRtcpMux = true;
 static std::string callerName = "caller";
 static std::string calleeName = "callee";
 
+#define ARRAY_TO_STL(container, type, array) \
+        (container<type>((array), (array) + PR_ARRAY_SIZE(array)))
+
+#define ARRAY_TO_SET(type, array) ARRAY_TO_STL(std::set, type, array)
+
 namespace test {
 
 std::string indent(const std::string &s, int width = 4) {
@@ -143,7 +148,8 @@ enum mediaPipelineFlags
   PIPELINE_LOCAL = (1<<0),
   PIPELINE_RTCP_MUX = (1<<1),
   PIPELINE_SEND = (1<<2),
-  PIPELINE_VIDEO = (1<<3)
+  PIPELINE_VIDEO = (1<<3),
+  PIPELINE_RTCP_NACK = (1<<4)
 };
 
 
@@ -464,6 +470,17 @@ class ParsedSDP {
     Parse();
   }
 
+  void DeleteAllLines(std::string objType)
+  {
+    int count = sdp_map_.count(objType);
+    std::cout << "Removing " << count << " lines from SDP (" << objType
+              << ")" << std::endl;
+
+    for (int i = 0; i < count; i++) {
+      DeleteLine(objType);
+    }
+  }
+
   void DeleteLine(std::string objType)
   {
     ReplaceLine(objType, "");
@@ -483,7 +500,7 @@ class ParsedSDP {
       if(content.empty()) {
         return;
       }
-      std::string value = content.substr(objType.length());
+      std::string value = content.substr(objType.length() + 1);
       sdp_map_.insert(std::pair<std::string, SdpLine>(objType,
         std::make_pair(line_no,value)));
     }
@@ -504,6 +521,27 @@ class ParsedSDP {
     sdp_map_.insert(std::pair<std::string, SdpLine>(key,
       std::make_pair(num_lines,value)));
     num_lines++;
+  }
+
+  // Returns the values for all lines of the indicated type
+  // Removes trailing "\r\n" from values.
+  std::vector<std::string> GetLines(std::string objType) const
+  {
+    std::multimap<std::string, SdpLine>::const_iterator it, end;
+    std::vector<std::string> values;
+    it = sdp_map_.lower_bound(objType);
+    end = sdp_map_.upper_bound(objType);
+    while (it != end) {
+      std::string value = it->second.second;
+      if (value.find("\r") != std::string::npos) {
+        value = value.substr(0, value.find("\r"));
+      } else {
+        ADD_FAILURE();
+      }
+      values.push_back(value);
+      ++it;
+    }
+    return values;
   }
 
   //Parse SDP as std::string into map that looks like:
@@ -971,8 +1009,20 @@ void CreateAnswer(sipcc::MediaConstraints& constraints, std::string offer,
     return streamInfo->GetPipeline(track);
   }
 
+  void CheckMediaPipeline(int stream, int track, uint32_t flags,
+    VideoSessionConduit::FrameRequestType frameRequestMethod =
+      VideoSessionConduit::FrameRequestNone) {
 
-  void CheckMediaPipeline(int stream, int track, uint32_t flags) {
+    std::cout << name << ": Checking media pipeline settings for "
+              << ((flags & PIPELINE_LOCAL) ? "local " : "remote ")
+              << ((flags & PIPELINE_SEND) ? "sending " : "receiving ")
+              << ((flags & PIPELINE_VIDEO) ? "video" : "audio")
+              << " pipeline (stream " << stream
+              << ", track " << track << "); expect "
+              << ((flags & PIPELINE_RTCP_MUX) ? "MUX, " : "no MUX, ")
+              << ((flags & PIPELINE_RTCP_NACK) ? "NACK." : "no NACK.")
+              << std::endl;
+
     mozilla::RefPtr<mozilla::MediaPipeline> pipeline =
       GetMediaPipeline((flags & PIPELINE_LOCAL), stream, track);
     ASSERT_TRUE(pipeline);
@@ -993,8 +1043,20 @@ void CreateAnswer(sipcc::MediaConstraints& constraints, std::string offer,
         ASSERT_GE(pipeline->rtcp_packets_sent(), 1);
       }
     }
-  }
 
+
+    // Check feedback method for video
+    if (flags & PIPELINE_VIDEO) {
+        mozilla::MediaSessionConduit *conduit = pipeline->Conduit();
+        ASSERT_TRUE(conduit);
+        ASSERT_EQ(conduit->type(), mozilla::MediaSessionConduit::VIDEO);
+        mozilla::VideoSessionConduit *video_conduit =
+          static_cast<mozilla::VideoSessionConduit*>(conduit);
+        ASSERT_EQ(!!(flags & PIPELINE_RTCP_NACK),
+                  video_conduit->UsingNackBasic());
+        ASSERT_EQ(frameRequestMethod, video_conduit->FrameRequestMethod());
+    }
+  }
 
 public:
   mozilla::RefPtr<sipcc::PeerConnectionImpl> pc;
@@ -1217,10 +1279,10 @@ public:
   void OfferModifiedAnswer(sipcc::MediaConstraints& aconstraints,
                            sipcc::MediaConstraints& bconstraints,
                            uint32_t offerSdpCheck, uint32_t answerSdpCheck) {
-    a1_.CreateOffer(aconstraints, OFFER_AV, offerSdpCheck);
+    a1_.CreateOffer(aconstraints, OFFER_AUDIO, offerSdpCheck);
     a1_.SetLocal(TestObserver::OFFER, a1_.offer());
     a2_.SetRemote(TestObserver::OFFER, a1_.offer());
-    a2_.CreateAnswer(bconstraints, a1_.offer(), OFFER_AV | ANSWER_AV,
+    a2_.CreateAnswer(bconstraints, a1_.offer(), OFFER_AUDIO | ANSWER_AUDIO,
                      answerSdpCheck);
     a2_.SetLocal(TestObserver::ANSWER, a2_.answer());
     ParsedSDP sdpWrapper(a2_.answer());
@@ -1296,6 +1358,83 @@ public:
   void AddIceCandidateEarly(const char * candidate, const char * mid,
                             unsigned short level) {
     a1_.AddIceCandidate(candidate, mid, level, false);
+  }
+
+  void CheckRtcpFbSdp(const std::string &sdp,
+                      const std::set<std::string>& expected) {
+
+    std::set<std::string>::const_iterator it;
+
+    // Iterate through the list of expected feedback types and ensure
+    // that none of them are missing.
+    for (it = expected.begin(); it != expected.end(); ++it) {
+      std::string attr = std::string("\r\na=rtcp-fb:120 ") + (*it) + "\r\n";
+      std::cout << " - Checking for a=rtcp-fb: '" << *it << "'" << std::endl;
+      ASSERT_NE(sdp.find(attr), std::string::npos);
+    }
+
+    // Iterate through all of the rtcp-fb lines in the SDP and ensure
+    // that all of them are expected.
+    ParsedSDP sdpWrapper(sdp);
+    std::vector<std::string> values = sdpWrapper.GetLines("a=rtcp-fb:120");
+    std::vector<std::string>::iterator it2;
+    for (it2 = values.begin(); it2 != values.end(); ++it2) {
+      std::cout << " - Verifying that rtcp-fb is okay: '" << *it2
+                << "'" << std::endl;
+      ASSERT_NE(0U, expected.count(*it2));
+    }
+  }
+
+  void TestRtcpFb(const std::set<std::string>& feedback,
+                  uint32_t rtcpFbFlags,
+                  VideoSessionConduit::FrameRequestType frameRequestMethod) {
+    sipcc::MediaConstraints constraints;
+
+    a1_.CreateOffer(constraints, OFFER_AV, SHOULD_SENDRECV_AV);
+    a1_.SetLocal(TestObserver::OFFER, a1_.offer());
+
+    ParsedSDP sdpWrapper(a1_.offer());
+
+    // Strip out any existing rtcp-fb lines
+    sdpWrapper.DeleteAllLines("a=rtcp-fb:120");
+
+    // Add rtcp-fb lines for the desired feedback types
+    // We know that the video section is generated second (last),
+    // so appending these to the end of the SDP has the desired effect.
+    std::set<std::string>::const_iterator it;
+    for (it = feedback.begin(); it != feedback.end(); ++it) {
+      sdpWrapper.AddLine(std::string("a=rtcp-fb:120 ") + (*it) + "\r\n");
+    }
+
+    std::cout << "Modified SDP " << std::endl
+              << indent(sdpWrapper.getSdp()) << std::endl;
+
+    // Double-check that the offered SDP matches what we expect
+    CheckRtcpFbSdp(sdpWrapper.getSdp(), feedback);
+
+    a2_.SetRemote(TestObserver::OFFER, sdpWrapper.getSdp());
+    a2_.CreateAnswer(constraints, sdpWrapper.getSdp(), OFFER_AV | ANSWER_AV);
+
+    CheckRtcpFbSdp(a2_.answer(), feedback);
+
+    a2_.SetLocal(TestObserver::ANSWER, a2_.answer());
+    a1_.SetRemote(TestObserver::ANSWER, a2_.answer());
+
+    ASSERT_TRUE_WAIT(a1_.IceCompleted() == true, kDefaultTimeout);
+    ASSERT_TRUE_WAIT(a2_.IceCompleted() == true, kDefaultTimeout);
+
+    a1_.CloseSendStreams();
+    a1_.CloseReceiveStreams();
+    a2_.CloseSendStreams();
+    a2_.CloseReceiveStreams();
+
+    // Check caller video settings for remote pipeline
+    a1_.CheckMediaPipeline(0, 2, (fRtcpMux ? PIPELINE_RTCP_MUX : 0) |
+      PIPELINE_SEND | PIPELINE_VIDEO | rtcpFbFlags, frameRequestMethod);
+
+    // Check callee video settings for remote pipeline
+    a2_.CheckMediaPipeline(0, 2, (fRtcpMux ? PIPELINE_RTCP_MUX : 0) |
+      PIPELINE_VIDEO | rtcpFbFlags, frameRequestMethod);
   }
 
  protected:
@@ -1696,9 +1835,7 @@ TEST_F(SignalingTest, FullCall)
     PIPELINE_LOCAL | PIPELINE_SEND);
 
   // The first Remote pipeline gets stored at 1
-  a2_.CheckMediaPipeline(0, 1, fRtcpMux ?
-    PIPELINE_RTCP_MUX :
-    0);
+  a2_.CheckMediaPipeline(0, 1, (fRtcpMux ?  PIPELINE_RTCP_MUX : 0));
 }
 
 TEST_F(SignalingTest, FullCallAudioOnly)
@@ -1748,8 +1885,8 @@ TEST_F(SignalingTest, FullCallVideoOnly)
 TEST_F(SignalingTest, OfferModifiedAnswer)
 {
   sipcc::MediaConstraints constraints;
-  OfferModifiedAnswer(constraints, constraints, SHOULD_SENDRECV_AV,
-                      SHOULD_SENDRECV_AV);
+  OfferModifiedAnswer(constraints, constraints, SHOULD_SENDRECV_AUDIO,
+                      SHOULD_SENDRECV_AUDIO);
   a1_.CloseSendStreams();
   a2_.CloseReceiveStreams();
 }
@@ -2459,17 +2596,88 @@ TEST_F(SignalingTest, FullCallAudioNoMuxVideoMux)
   a1_.CheckMediaPipeline(0, 0, PIPELINE_LOCAL | PIPELINE_SEND);
 
   // Now check video mux.
-  a1_.CheckMediaPipeline(0, 1, fRtcpMux ?
-    PIPELINE_LOCAL | PIPELINE_RTCP_MUX | PIPELINE_SEND | PIPELINE_VIDEO :
-    PIPELINE_LOCAL | PIPELINE_SEND | PIPELINE_VIDEO);
+  a1_.CheckMediaPipeline(0, 1,
+    PIPELINE_LOCAL | (fRtcpMux ? PIPELINE_RTCP_MUX : 0) | PIPELINE_SEND |
+    PIPELINE_VIDEO);
 
   // The first Remote pipeline gets stored at 1
   a2_.CheckMediaPipeline(0, 1, 0);
 
   // Now check video mux.
-  a2_.CheckMediaPipeline(0, 2, fRtcpMux ?
-    PIPELINE_RTCP_MUX | PIPELINE_VIDEO :
-    PIPELINE_VIDEO);
+  a2_.CheckMediaPipeline(0, 2, (fRtcpMux ?  PIPELINE_RTCP_MUX : 0) |
+    PIPELINE_VIDEO | PIPELINE_RTCP_NACK, VideoSessionConduit::FrameRequestPli);
+}
+
+TEST_F(SignalingTest, RtcpFbInOffer)
+{
+  sipcc::MediaConstraints constraints;
+  a1_.CreateOffer(constraints, OFFER_AV, SHOULD_SENDRECV_AV);
+  const char *expected[] = { "nack", "nack pli", "ccm fir" };
+  CheckRtcpFbSdp(a1_.offer(), ARRAY_TO_SET(std::string, expected));
+}
+
+TEST_F(SignalingTest, RtcpFbInAnswer)
+{
+  const char *feedbackTypes[] = { "nack", "nack pli", "ccm fir" };
+  TestRtcpFb(ARRAY_TO_SET(std::string, feedbackTypes),
+             PIPELINE_RTCP_NACK,
+             VideoSessionConduit::FrameRequestPli);
+}
+
+TEST_F(SignalingTest, RtcpFbNoNackBasic)
+{
+  const char *feedbackTypes[] = { "nack pli", "ccm fir" };
+  TestRtcpFb(ARRAY_TO_SET(std::string, feedbackTypes),
+             0,
+             VideoSessionConduit::FrameRequestPli);
+}
+
+TEST_F(SignalingTest, RtcpFbNoNackPli)
+{
+  const char *feedbackTypes[] = { "nack", "ccm fir" };
+  TestRtcpFb(ARRAY_TO_SET(std::string, feedbackTypes),
+             PIPELINE_RTCP_NACK,
+             VideoSessionConduit::FrameRequestFir);
+}
+
+TEST_F(SignalingTest, RtcpFbNoCcmFir)
+{
+  const char *feedbackTypes[] = { "nack", "nack pli" };
+  TestRtcpFb(ARRAY_TO_SET(std::string, feedbackTypes),
+             PIPELINE_RTCP_NACK,
+             VideoSessionConduit::FrameRequestPli);
+}
+
+TEST_F(SignalingTest, RtcpFbNoNack)
+{
+  const char *feedbackTypes[] = { "ccm fir" };
+  TestRtcpFb(ARRAY_TO_SET(std::string, feedbackTypes),
+             0,
+             VideoSessionConduit::FrameRequestFir);
+}
+
+TEST_F(SignalingTest, RtcpFbNoFrameRequest)
+{
+  const char *feedbackTypes[] = { "nack" };
+  TestRtcpFb(ARRAY_TO_SET(std::string, feedbackTypes),
+             PIPELINE_RTCP_NACK,
+             VideoSessionConduit::FrameRequestNone);
+}
+
+TEST_F(SignalingTest, RtcpFbPliOnly)
+{
+  const char *feedbackTypes[] = { "nack pli" };
+  TestRtcpFb(ARRAY_TO_SET(std::string, feedbackTypes),
+             0,
+             VideoSessionConduit::FrameRequestPli);
+}
+
+TEST_F(SignalingTest, RtcpFbNoFeedback)
+{
+  const char *feedbackTypes[] = { };
+  TestRtcpFb(ARRAY_TO_SET(std::string, feedbackTypes),
+             0,
+             VideoSessionConduit::FrameRequestNone);
 }
 
 // In this test we will change the offer SDP's a=setup value

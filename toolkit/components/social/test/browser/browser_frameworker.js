@@ -146,7 +146,7 @@ let tests = {
         port.onmessage = function(e) {
           if (e.data.topic == "ping") {
             try {
-              importScripts("http://foo.bar/error");
+              importScripts("http://mochi.test:8888/error");
             } catch(ex) {
               port.postMessage({topic: "pong", data: ex});
               return;

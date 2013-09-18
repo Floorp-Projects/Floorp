@@ -16,6 +16,8 @@ const COLLAPSE_DATA_URL_LENGTH = 60;
 
 const {UndoStack} = require("devtools/shared/undo");
 const {editableField, InplaceEditor} = require("devtools/shared/inplace-editor");
+const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+const {colorUtils} = require("devtools/shared/css-color");
 const promise = require("sdk/core/promise");
 
 Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
@@ -75,7 +77,7 @@ function MarkupView(aInspector, aFrame, aControllerWindow)
   this._containers = new WeakMap();
 
   this._boundMutationObserver = this._mutationObserver.bind(this);
-  this.walker.on("mutations", this._boundMutationObserver)
+  this.walker.on("mutations", this._boundMutationObserver);
 
   this._boundOnNewSelection = this._onNewSelection.bind(this);
   this._inspector.selection.on("new-node-front", this._boundOnNewSelection);
@@ -86,6 +88,9 @@ function MarkupView(aInspector, aFrame, aControllerWindow)
 
   this._boundFocus = this._onFocus.bind(this);
   this._frame.addEventListener("focus", this._boundFocus, false);
+
+  this._handlePrefChange = this._handlePrefChange.bind(this);
+  gDevTools.on("pref-changed", this._handlePrefChange);
 
   this._initPreview();
 }
@@ -110,6 +115,33 @@ MarkupView.prototype = {
   getContainer: function MT_getContainer(aNode)
   {
     return this._containers.get(aNode);
+  },
+
+  _handlePrefChange: function(event, data) {
+    if (data.pref == "devtools.defaultColorUnit") {
+      this.update();
+    }
+  },
+
+  update: function() {
+    let updateChildren = function(node) {
+      this.getContainer(node).update();
+      for (let child of node.treeChildren()) {
+        updateChildren(child);
+      }
+    }.bind(this);
+
+    // Start with the documentElement
+    let documentElement;
+    for (let node of this._rootNode.treeChildren()) {
+      if (node.isDocumentElement === true) {
+        documentElement = node;
+        break;
+      }
+    }
+
+    // Recursively update each node starting with documentElement.
+    updateChildren(documentElement);
   },
 
   /**
@@ -380,7 +412,7 @@ MarkupView.prototype = {
         continue;
       }
       if (type === "attributes" || type === "characterData") {
-        container.update();
+        container.update(false);
       } else if (type === "childList") {
         container.childrenDirty = true;
         this._updateChildren(container);
@@ -697,6 +729,8 @@ MarkupView.prototype = {
    */
   destroy: function MT_destroy()
   {
+    gDevTools.off("pref-changed", this._handlePrefChange);
+
     this.undo.destroy();
     delete this.undo;
 
@@ -1020,9 +1054,9 @@ MarkupContainer.prototype = {
    * Update the container's editor to the current state of the
    * viewed node.
    */
-  update: function() {
+  update: function(parseColors=true) {
     if (this.editor.update) {
-      this.editor.update();
+      this.editor.update(parseColors);
     }
   },
 
@@ -1241,7 +1275,7 @@ ElementEditor.prototype = {
   /**
    * Update the state of the editor from the node.
    */
-  update: function EE_update()
+  update: function EE_update(parseColors=true)
   {
     let attrs = this.node.attributes;
     if (!attrs) {
@@ -1260,10 +1294,13 @@ ElementEditor.prototype = {
 
     // Get the attribute editor for each attribute that exists on
     // the node and show it.
-    for (let i = 0; i < attrs.length; i++) {
-      let attr = this._createAttribute(attrs[i]);
-      if (!attr.inplaceEditor) {
-        attr.style.removeProperty("display");
+    for (let attr of attrs) {
+      if (parseColors && typeof attr.value !== "undefined") {
+        attr.value = colorUtils.processCSSString(attr.value);
+      }
+      let attribute = this._createAttribute(attr);
+      if (!attribute.inplaceEditor) {
+        attribute.style.removeProperty("display");
       }
     }
   },

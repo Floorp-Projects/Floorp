@@ -36,9 +36,10 @@ def ancestors(path):
         path = newpath
 
 def samepath(path1, path2):
-    if hasattr(os.path, "samepath"):
-        return os.path.samepath(path1, path2)
-    return os.path.normpath(path1) == os.path.normpath(path2)
+    if hasattr(os.path, 'samefile'):
+        return os.path.samefile(path1, path2)
+    return os.path.normpath(os.path.realpath(path1)) == \
+        os.path.normpath(os.path.realpath(path2))
 
 class BadEnvironmentException(Exception):
     """Base class for errors raised when the build environment is not sane."""
@@ -87,7 +88,7 @@ class MozbuildObject(ProcessExecutionMixin):
         self._config_environment = None
 
     @classmethod
-    def from_environment(cls, cwd=None):
+    def from_environment(cls, cwd=None, detect_virtualenv_mozinfo=True):
         """Create a MozbuildObject by detecting the proper one from the env.
 
         This examines environment state like the current working directory and
@@ -109,6 +110,11 @@ class MozbuildObject(ProcessExecutionMixin):
         an objdir, we use that as our objdir.
 
         If we're not inside a srcdir or objdir, an exception is raised.
+
+        detect_virtualenv_mozinfo determines whether we should look for a
+        mozinfo.json file relative to the virtualenv directory. This was
+        added to facilitate testing. Callers likely shouldn't change the
+        default.
         """
 
         cwd = cwd or os.getcwd()
@@ -139,7 +145,7 @@ class MozbuildObject(ProcessExecutionMixin):
 
         # See if we're running from a Python virtualenv that's inside an objdir.
         mozinfo_path = os.path.join(os.path.dirname(sys.prefix), "mozinfo.json")
-        if os.path.isfile(mozinfo_path):
+        if detect_virtualenv_mozinfo and os.path.isfile(mozinfo_path):
             topsrcdir, topobjdir, mozconfig = load_mozinfo(mozinfo_path)
 
         # If we were successful, we're only guaranteed to find a topsrcdir. If
@@ -515,7 +521,9 @@ class MachCommandConditions(object):
     @staticmethod
     def is_b2g(cls):
         """Must have a Boot to Gecko build."""
-        return cls.substs.get('MOZ_WIDGET_TOOLKIT') == 'gonk'
+        if hasattr(cls, 'substs'):
+            return cls.substs.get('MOZ_WIDGET_TOOLKIT') == 'gonk'
+        return False
 
 
 class PathArgument(object):

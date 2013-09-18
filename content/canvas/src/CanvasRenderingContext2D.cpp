@@ -638,7 +638,7 @@ CanvasRenderingContext2D::SetStyleFromString(const nsAString& str,
 }
 
 void
-CanvasRenderingContext2D::GetStyleAsUnion(StringOrCanvasGradientOrCanvasPatternReturnValue& aValue,
+CanvasRenderingContext2D::GetStyleAsUnion(OwningStringOrCanvasGradientOrCanvasPattern& aValue,
                                           Style aWhichStyle)
 {
   const ContextState &state = CurrentState();

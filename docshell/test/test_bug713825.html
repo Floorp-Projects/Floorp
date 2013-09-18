@@ -22,15 +22,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=713825
  * Test for Bug 713825 
  *  test that nsIDocCharset still works backward compatibly
  */
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-var Ci = Components.interfaces;
-var docShell = window.QueryInterface(Ci.nsIInterfaceRequestor).
+var Ci = SpecialPowers.Ci;
+var docShell = SpecialPowers.wrap(window).QueryInterface(Ci.nsIInterfaceRequestor).
                       getInterface(Ci.nsIWebNavigation).
                       QueryInterface(Ci.nsIDocShell);
 
 var charset1 = docShell.charset;
 var charset2 = docShell.QueryInterface(Ci.nsIDocCharset).charset;
-var charset3 = window.QueryInterface(Ci.nsIInterfaceRequestor).
+var charset3 = SpecialPowers.wrap(window).QueryInterface(Ci.nsIInterfaceRequestor).
                       getInterface(Ci.nsIDocCharset).charset;
 
 /* if we get here without throwing and the three charsets are equal, all is OK */

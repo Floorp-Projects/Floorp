@@ -33,8 +33,6 @@
 extern PRThread *gSocketThread;
 #endif
 
-static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
-
 using namespace mozilla;
 using namespace mozilla::net;
 

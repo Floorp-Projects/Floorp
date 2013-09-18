@@ -29,8 +29,6 @@ function runTests() {
     return;
   }
 
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   var domWindowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                              .getInterface(Components.interfaces.nsIDOMWindowUtils);
   var devPxPerCSSPx = domWindowUtils.screenPixelsPerCSSPixel;

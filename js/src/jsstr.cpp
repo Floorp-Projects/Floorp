@@ -4015,7 +4015,7 @@ js_strlen(const jschar *s)
 }
 
 jschar *
-js_strdup(JSContext *cx, const jschar *s)
+js_strdup(js::ThreadSafeContext *cx, const jschar *s)
 {
     size_t n = js_strlen(s);
     jschar *ret = cx->pod_malloc<jschar>(n + 1);
