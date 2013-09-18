@@ -1597,24 +1597,26 @@ ContentParent::RecvAudioChannelGetState(const AudioChannelType& aType,
 }
 
 bool
-ContentParent::RecvAudioChannelRegisterType(const AudioChannelType& aType)
+ContentParent::RecvAudioChannelRegisterType(const AudioChannelType& aType,
+                                            const bool& aWithVideo)
 {
     nsRefPtr<AudioChannelService> service =
         AudioChannelService::GetAudioChannelService();
     if (service) {
-        service->RegisterType(aType, mChildID);
+        service->RegisterType(aType, mChildID, aWithVideo);
     }
     return true;
 }
 
 bool
 ContentParent::RecvAudioChannelUnregisterType(const AudioChannelType& aType,
-                                              const bool& aElementHidden)
+                                              const bool& aElementHidden,
+                                              const bool& aWithVideo)
 {
     nsRefPtr<AudioChannelService> service =
         AudioChannelService::GetAudioChannelService();
     if (service) {
-        service->UnregisterType(aType, aElementHidden, mChildID);
+        service->UnregisterType(aType, aElementHidden, mChildID, aWithVideo);
     }
     return true;
 }
