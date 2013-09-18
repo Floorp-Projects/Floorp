@@ -63,6 +63,7 @@ body {
   overflow-x: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  outline: 0;
 }
 
 .property-value {
@@ -76,6 +77,7 @@ body {
   background-size: 5px 8px;
   background-position: 2px center;
   padding-left: 10px;
+  outline: 0;
 }
 
 .other-property-value {
