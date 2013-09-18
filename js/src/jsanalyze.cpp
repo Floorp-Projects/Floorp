@@ -132,12 +132,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             escapedSlots[LocalSlot(script_, bi.frameIndex())] = allVarsAliased || bi->aliased();
     }
 
-    bool heavyweight = script_->function() && script_->function()->isHeavyweight();
-
-    isIonInlineable = true;
-    if (heavyweight || cx->compartment()->debugMode())
-        isIonInlineable = false;
-
     canTrackVars = true;
 
     /*
@@ -214,10 +208,8 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
         code->analyzed = true;
 
-        if (script_->hasBreakpointsAt(pc)) {
+        if (script_->hasBreakpointsAt(pc))
             canTrackVars = false;
-            isIonInlineable = false;
-        }
 
         unsigned stackDepth = code->stackDepth;
 
@@ -238,11 +230,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             numReturnSites_++;
             break;
 
-          case JSOP_SETRVAL:
-          case JSOP_POPV:
-            isIonInlineable = false;
-            break;
-
           case JSOP_NAME:
           case JSOP_CALLNAME:
           case JSOP_BINDNAME:
@@ -261,28 +248,15 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_SETCONST:
             usesScopeChain_ = true; // Requires access to VarObj via ScopeChain.
             canTrackVars = false;
-            isIonInlineable = false;
             break;
 
           case JSOP_EVAL:
-            canTrackVars = false;
-            isIonInlineable = false;
-            break;
-
+          case JSOP_SPREADEVAL:
           case JSOP_ENTERWITH:
             canTrackVars = false;
-            isIonInlineable = false;
-            break;
-
-          case JSOP_ENTERLET0:
-          case JSOP_ENTERLET1:
-          case JSOP_ENTERBLOCK:
-          case JSOP_LEAVEBLOCK:
-            isIonInlineable = false;
             break;
 
           case JSOP_TABLESWITCH: {
-            isIonInlineable = false;
             unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
             jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
             int32_t low = GET_JUMP_OFFSET(pc2);
@@ -311,7 +285,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
              * exception but is not caught by a later handler in the same function:
              * no more code will execute, and it does not matter what is defined.
              */
-            isIonInlineable = false;
             JSTryNote *tn = script_->trynotes()->vector;
             JSTryNote *tnlimit = tn + script_->trynotes()->length;
             for (; tn < tnlimit; tn++) {
@@ -368,122 +341,11 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             numPropertyReads_++;
             break;
 
-          case JSOP_THROW:
-          case JSOP_EXCEPTION:
-          case JSOP_DEBUGGER:
-            isIonInlineable = false;
-            break;
-
           case JSOP_FINALLY:
             hasTryFinally_ = true;
             break;
 
-          /* Additional opcodes which can be both compiled both normally and inline. */
-          case JSOP_ARGUMENTS:
-          case JSOP_CALL:
-          case JSOP_NEW:
-          case JSOP_FUNCALL:
-          case JSOP_FUNAPPLY:
-          case JSOP_CALLEE:
-          case JSOP_NOP:
-          case JSOP_UNDEFINED:
-          case JSOP_GOTO:
-          case JSOP_DEFAULT:
-          case JSOP_IFEQ:
-          case JSOP_IFNE:
-          case JSOP_ITERNEXT:
-          case JSOP_DUP:
-          case JSOP_DUP2:
-          case JSOP_SWAP:
-          case JSOP_PICK:
-          case JSOP_BITOR:
-          case JSOP_BITXOR:
-          case JSOP_BITAND:
-          case JSOP_LT:
-          case JSOP_LE:
-          case JSOP_GT:
-          case JSOP_GE:
-          case JSOP_EQ:
-          case JSOP_NE:
-          case JSOP_LSH:
-          case JSOP_RSH:
-          case JSOP_URSH:
-          case JSOP_ADD:
-          case JSOP_SUB:
-          case JSOP_MUL:
-          case JSOP_DIV:
-          case JSOP_MOD:
-          case JSOP_NOT:
-          case JSOP_BITNOT:
-          case JSOP_NEG:
-          case JSOP_POS:
-          case JSOP_DELPROP:
-          case JSOP_DELELEM:
-          case JSOP_TYPEOF:
-          case JSOP_TYPEOFEXPR:
-          case JSOP_VOID:
-          case JSOP_TOID:
-          case JSOP_SETELEM:
-          case JSOP_IMPLICITTHIS:
-          case JSOP_DOUBLE:
-          case JSOP_STRING:
-          case JSOP_ZERO:
-          case JSOP_ONE:
-          case JSOP_NULL:
-          case JSOP_FALSE:
-          case JSOP_TRUE:
-          case JSOP_OR:
-          case JSOP_AND:
-          case JSOP_CASE:
-          case JSOP_STRICTEQ:
-          case JSOP_STRICTNE:
-          case JSOP_ITER:
-          case JSOP_MOREITER:
-          case JSOP_ENDITER:
-          case JSOP_POP:
-          case JSOP_GETARG:
-          case JSOP_SETARG:
-          case JSOP_CALLARG:
-          case JSOP_BINDGNAME:
-          case JSOP_UINT16:
-          case JSOP_NEWINIT:
-          case JSOP_NEWARRAY:
-          case JSOP_NEWOBJECT:
-          case JSOP_ENDINIT:
-          case JSOP_INITPROP:
-          case JSOP_INITELEM:
-          case JSOP_INITELEM_ARRAY:
-          case JSOP_SETPROP:
-          case JSOP_IN:
-          case JSOP_INSTANCEOF:
-          case JSOP_LINENO:
-          case JSOP_ENUMELEM:
-          case JSOP_CONDSWITCH:
-          case JSOP_LABEL:
-          case JSOP_RETRVAL:
-          case JSOP_GETGNAME:
-          case JSOP_CALLGNAME:
-          case JSOP_GETINTRINSIC:
-          case JSOP_SETINTRINSIC:
-          case JSOP_BINDINTRINSIC:
-          case JSOP_CALLINTRINSIC:
-          case JSOP_SETGNAME:
-          case JSOP_REGEXP:
-          case JSOP_OBJECT:
-          case JSOP_UINT24:
-          case JSOP_GETXPROP:
-          case JSOP_INT8:
-          case JSOP_INT32:
-          case JSOP_HOLE:
-          case JSOP_LOOPHEAD:
-          case JSOP_LOOPENTRY:
-          case JSOP_NOTEARG:
-          case JSOP_REST:
-          case JSOP_THIS:
-            break;
-
           default:
-            isIonInlineable = false;
             break;
         }
 

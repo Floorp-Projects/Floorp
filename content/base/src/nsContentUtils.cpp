@@ -251,7 +251,6 @@ bool nsContentUtils::sDOMWindowDumpEnabled;
 
 namespace {
 
-static const char kJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
@@ -2218,13 +2217,6 @@ static inline void KeyAppendInt(int32_t aInt, nsACString& aKey)
   KeyAppendSep(aKey);
 
   aKey.Append(nsPrintfCString("%d", aInt));
-}
-
-static inline void KeyAppendAtom(nsIAtom* aAtom, nsACString& aKey)
-{
-  NS_PRECONDITION(aAtom, "KeyAppendAtom: aAtom can not be null!\n");
-
-  KeyAppendString(nsAtomCString(aAtom), aKey);
 }
 
 static inline bool IsAutocompleteOff(const nsIContent* aElement)

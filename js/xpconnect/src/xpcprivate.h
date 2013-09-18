@@ -2705,7 +2705,7 @@ public:
     nsXPCWrappedJS* FindInherited(REFNSIID aIID);
 
     bool IsValid() const {return mJSObj != nullptr;}
-    void SystemIsBeingShutDown(JSRuntime* rt);
+    void SystemIsBeingShutDown();
 
     // This is used by XPCJSRuntime::GCCallback to find wrappers that no
     // longer root their JSObject and are only still alive because they
@@ -3086,7 +3086,6 @@ class XPCJSContextStack
 public:
     XPCJSContextStack()
       : mSafeJSContext(NULL)
-      , mOwnSafeJSContext(NULL)
     { }
 
     virtual ~XPCJSContextStack();
@@ -3119,7 +3118,6 @@ private:
 
     AutoInfallibleTArray<XPCJSContextInfo, 16> mStack;
     JSContext*  mSafeJSContext;
-    JSContext*  mOwnSafeJSContext;
 };
 
 /***************************************************************************/

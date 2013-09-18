@@ -619,8 +619,6 @@ NS_INTERFACE_MAP_END_INHERITING(IDBWrapperCache)
 NS_IMPL_ADDREF_INHERITED(IDBTransaction, IDBWrapperCache)
 NS_IMPL_RELEASE_INHERITED(IDBTransaction, IDBWrapperCache)
 
-DOMCI_DATA(IDBTransaction, IDBTransaction)
-
 JSObject*
 IDBTransaction::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {

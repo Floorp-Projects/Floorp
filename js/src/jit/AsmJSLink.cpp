@@ -12,6 +12,7 @@
 
 #include "jscntxt.h"
 #include "jsmath.h"
+#include "jsprf.h"
 #include "jswrapper.h"
 
 #include "frontend/BytecodeCompiler.h"
@@ -214,8 +215,11 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
 
         heap = &bufferVal.toObject().as<ArrayBufferObject>();
 
-        if (!IsPowerOfTwo(heap->byteLength()) || heap->byteLength() < AsmJSAllocationGranularity)
-            return LinkFail(cx, "ArrayBuffer byteLength must be a power of two greater than or equal to 4096");
+        if (!IsValidAsmJSHeapLength(heap->byteLength())) {
+            return LinkFail(cx, JS_smprintf("ArrayBuffer byteLength 0x%x is not a valid heap length. The next valid length is 0x%x",
+                                            heap->byteLength(),
+                                            RoundUpToNextValidAsmJSHeapLength(heap->byteLength())));
+        }
 
         // This check is sufficient without considering the size of the loaded datum because heap
         // loads and stores start on an aligned boundary and the heap byteLength has larger alignment.

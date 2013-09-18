@@ -42,8 +42,8 @@ CheckLength(ExclusiveContext *cx, size_t length)
 static bool
 SetSourceMap(ExclusiveContext *cx, TokenStream &tokenStream, ScriptSource *ss)
 {
-    if (tokenStream.hasSourceMap()) {
-        if (!ss->setSourceMap(cx, tokenStream.releaseSourceMap()))
+    if (tokenStream.hasSourceMapURL()) {
+        if (!ss->setSourceMapURL(cx, tokenStream.sourceMapURL()))
             return false;
     }
     return true;
@@ -359,6 +359,15 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
 
     if (!SetSourceMap(cx, parser.tokenStream, ss))
         return NULL;
+
+    /*
+     * Source map URLs passed as a compile option (usually via a HTTP source map
+     * header) override any source map urls passed as comment pragmas.
+     */
+    if (options.sourceMapURL) {
+        if (!ss->setSourceMapURL(cx, options.sourceMapURL))
+            return NULL;
+    }
 
     /*
      * Nowadays the threaded interpreter needs a stop instruction, so we

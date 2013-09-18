@@ -91,7 +91,8 @@ Crypto::GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
     InfallibleTArray<uint8_t> randomValues;
     // Tell the parent process to generate random values via PContent
     ContentChild* cc = ContentChild::GetSingleton();
-    if (!cc->SendGetRandomValues(dataLen, &randomValues)) {
+    if (!cc->SendGetRandomValues(dataLen, &randomValues) ||
+        randomValues.Length() == 0) {
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
@@ -128,6 +129,85 @@ Crypto::SetEnableSmartCardEvents(bool aEnableSmartCardEvents)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+bool
+Crypto::EnableSmartCardEvents()
+{
+  return false;
+}
+
+void
+Crypto::SetEnableSmartCardEvents(bool aEnable, ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+void
+Crypto::GetVersion(nsString& aVersion)
+{
+}
+
+already_AddRefed<nsIDOMCRMFObject>
+Crypto::GenerateCRMFRequest(JSContext* aContext,
+                            const nsCString& aReqDN,
+                            const nsCString& aRegToken,
+                            const nsCString& aAuthenticator,
+                            const nsCString& aEaCert,
+                            const nsCString& aJsCallback,
+                            const Sequence<JS::Value>& aArgs,
+                            ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
+}
+
+void
+Crypto::ImportUserCertificates(const nsAString& aNickname,
+                               const nsAString& aCmmfResponse,
+                               bool aDoForcedBackup,
+                               nsAString& aReturn,
+                               ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+void
+Crypto::PopChallengeResponse(const nsAString& aChallenge,
+                             nsAString& aReturn,
+                             ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+void
+Crypto::Random(int32_t aNumBytes, nsAString& aReturn, ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+void
+Crypto::SignText(JSContext* aContext,
+                 const nsAString& aStringToSign,
+                 const nsAString& aCaOption,
+                 const Sequence<nsCString>& aArgs,
+                 nsAString& aReturn)
+
+{
+  aReturn.AssignLiteral("error:internalError");
+}
+
+void
+Crypto::Logout(ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+void
+Crypto::DisableRightClick(ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
 #endif
 
 /* static */ uint8_t*

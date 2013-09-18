@@ -6,6 +6,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378670
 <head>
   <title>Test for Bug 378670</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -22,7 +23,7 @@ Clicking on the select should not crash Mozilla
 
 <pre id="test">
 <script>
-document.getElementsByTagName('*')[3].addEventListener('popupshowing', function(e) {e.target.parentNode.removeChild(e.target) }, true);
+document.body.addEventListener('popupshowing', function(e) {e.target.parentNode.removeChild(e.target) }, true);
 </script>
 <script type="application/javascript">
 
@@ -31,18 +32,13 @@ document.getElementsByTagName('*')[3].addEventListener('popupshowing', function(
 SimpleTest.waitForExplicitFinish();
 
 function clickit() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var select = document.getElementById('select');
-  var evt = document.createEvent("MouseEvents");
-  evt.initMouseEvent("mousedown", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-  select.dispatchEvent(evt);
-  evt.initMouseEvent("mouseup", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-  select.dispatchEvent(evt);
-  evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-  select.dispatchEvent(evt);
+
+  sendMouseEvent({type:'mousedown'}, select);
+  sendMouseEvent({type:'mouseup'}, select);
+  sendMouseEvent({type:'click'}, select);
 
   setTimeout(finish, 200);
-
 }
 
 window.addEventListener('load', clickit, false);

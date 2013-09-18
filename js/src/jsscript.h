@@ -304,7 +304,7 @@ class ScriptSource
     uint32_t length_;
     uint32_t compressedLength_;
     char *filename_;
-    jschar *sourceMap_;
+    jschar *sourceMapURL_;
     JSPrincipals *originPrincipals_;
 
     // True if we can call JSRuntime::sourceHook to load the source on
@@ -320,7 +320,7 @@ class ScriptSource
         length_(0),
         compressedLength_(0),
         filename_(NULL),
-        sourceMap_(NULL),
+        sourceMapURL_(NULL),
         originPrincipals_(originPrincipals),
         sourceRetrievable_(false),
         argumentsNotIncluded_(false),
@@ -368,9 +368,9 @@ class ScriptSource
     }
 
     // Source maps
-    bool setSourceMap(ExclusiveContext *cx, jschar *sourceMapURL);
-    const jschar *sourceMap();
-    bool hasSourceMap() const { return sourceMap_ != NULL; }
+    bool setSourceMapURL(ExclusiveContext *cx, const jschar *sourceMapURL);
+    const jschar *sourceMapURL();
+    bool hasSourceMapURL() const { return sourceMapURL_ != NULL; }
 
     JSPrincipals *originPrincipals() const { return originPrincipals_; }
 
@@ -592,6 +592,7 @@ class JSScript : public js::gc::Cell
     bool            shouldCloneAtCallsite:1;
     bool            isCallsiteClone:1; /* is a callsite clone; has a link to the original function */
     bool            shouldInline:1;    /* hint to inline when possible */
+    bool            uninlineable:1;    /* explicitly marked as uninlineable */
 #ifdef JS_ION
     bool            failedBoundsCheck:1; /* script has had hoisted bounds checks fail */
     bool            failedShapeGuard:1; /* script has had hoisted shape guard fail */
@@ -1471,8 +1472,8 @@ PCToLineNumber(unsigned startLine, jssrcnote *notes, jsbytecode *code, jsbytecod
  * executing on cx. If there is no current script executing on cx (e.g., a
  * native called directly through JSAPI (e.g., by setTimeout)), NULL and 0 are
  * returned as the file and line. Additionally, this function avoids the full
- * linear scan to compute line number when the caller guarnatees that the
- * script compilation occurs at a JSOP_EVAL.
+ * linear scan to compute line number when the caller guarantees that the
+ * script compilation occurs at a JSOP_EVAL/JSOP_SPREADEVAL.
  */
 
 enum LineOption {
