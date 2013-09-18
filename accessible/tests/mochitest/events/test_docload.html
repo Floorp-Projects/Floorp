@@ -216,8 +216,11 @@
 
         this.mDialog.close();
 
-        ok(!isAccessibleInCache(dlgDoc),
-           "The document accessible for '" + aURL + "' is in cache still!");
+        // close() is asynchronous.
+        SimpleTest.executeSoon(function() {
+          ok(!isAccessibleInCache(dlgDoc),
+             "The document accessible for '" + aURL + "' is in cache still!");
+        });
       }
 
       this.getID = function openDialogWnd_getID()

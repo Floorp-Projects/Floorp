@@ -71,7 +71,7 @@ typedef enum JSType {
 typedef enum JSProtoKey {
 #define PROTOKEY_AND_INITIALIZER(name,code,init) JSProto_##name = code,
     JS_FOR_EACH_PROTOTYPE(PROTOKEY_AND_INITIALIZER)
-#undef JS_PROTO
+#undef PROTOKEY_AND_INITIALIZER
     JSProto_LIMIT
 } JSProtoKey;
 

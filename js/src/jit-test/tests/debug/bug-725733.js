@@ -1,4 +1,4 @@
-// |jit-test| mjitalways
+// |jit-test|
 // Adding a debuggee must leave its scripts in a safe state.
 
 var g = newGlobal();

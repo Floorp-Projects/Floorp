@@ -22,7 +22,6 @@
 #include "jsscriptinlines.h"
 
 #include "jit/shared/CodeGenerator-shared-inl.h"
-#include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -319,7 +318,7 @@ CodeGeneratorARM::visitMinMaxD(LMinMaxD *ins)
     masm.ma_b(&done);
 
     masm.bind(&nan);
-    masm.loadStaticDouble(&js_NaN, output);
+    masm.loadConstantDouble(js_NaN, output);
     masm.ma_b(&done);
 
     masm.bind(&returnSecond);

@@ -2596,6 +2596,13 @@ let SessionStoreInternal = {
         tabbrowser.unpinTab(tabbrowser.tabs[t]);
     }
 
+    // We need to keep track of the initially open tabs so that they
+    // can be moved to the end of the restored tabs.
+    let initialTabs = [];
+    if (!overwriteTabs && firstWindow) {
+      initialTabs = Array.slice(tabbrowser.tabs);
+    }
+
     // make sure that the selected tab won't be closed in order to
     // prevent unnecessary flickering
     if (overwriteTabs && tabbrowser.selectedTab._tPos >= newTabCount)
@@ -2607,10 +2614,6 @@ let SessionStoreInternal = {
       tabs.push(t < openTabCount ?
                 tabbrowser.tabs[t] :
                 tabbrowser.addTab("about:blank", {skipAnimation: true}));
-      // when resuming at startup: add additionally requested pages to the end
-      if (!overwriteTabs && firstWindow) {
-        tabbrowser.moveTabTo(tabs[t], t);
-      }
 
       if (winData.tabs[t].pinned)
         tabbrowser.pinTab(tabs[t]);
@@ -2621,6 +2624,14 @@ let SessionStoreInternal = {
       else {
         tabbrowser.showTab(tabs[t]);
         numVisibleTabs++;
+      }
+    }
+
+    if (!overwriteTabs && firstWindow) {
+      // Move the originally open tabs to the end
+      let endPosition = tabbrowser.tabs.length - 1;
+      for (let i = 0; i < initialTabs.length; i++) {
+        tabbrowser.moveTabTo(initialTabs[i], endPosition);
       }
     }
 

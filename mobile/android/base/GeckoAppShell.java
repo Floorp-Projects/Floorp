@@ -1348,6 +1348,11 @@ public class GeckoAppShell
         return sDensityDpi;
     }
 
+    @GeneratableAndroidBridgeTarget()
+    public static float getDensity() {
+        return getContext().getResources().getDisplayMetrics().density;
+    }
+
     private static boolean isHighMemoryDevice() {
         BufferedReader br = null;
         FileReader fr = null;
