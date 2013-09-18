@@ -138,12 +138,12 @@ public class BrowserDB {
         return sDb.filter(cr, constraint, limit);
     }
 
-    public static Cursor getTopSites(ContentResolver cr, int limit) {
-        // Note this is not a single query anymore, but actually returns a mixture of two queries, one for topSites
-        // and one for pinned sites
-        Cursor topSites = sDb.getTopSites(cr, limit);
-        Cursor pinnedSites = sDb.getPinnedSites(cr, limit);
-        return new TopSitesCursorWrapper(pinnedSites, topSites, limit);
+    public static Cursor getTopSites(ContentResolver cr, int minLimit, int maxLimit) {
+        // Note this is not a single query anymore, but actually returns a mixture
+        // of two queries, one for topSites and one for pinned sites.
+        Cursor pinnedSites = sDb.getPinnedSites(cr, minLimit);
+        Cursor topSites = sDb.getTopSites(cr, maxLimit - pinnedSites.getCount());
+        return new TopSitesCursorWrapper(pinnedSites, topSites, minLimit);
     }
 
     public static void updateVisitedHistory(ContentResolver cr, String uri) {
@@ -342,12 +342,12 @@ public class BrowserDB {
         int mSize = 0;
         private SparseArray<PinnedSite> mPinnedSites = null;
 
-        public TopSitesCursorWrapper(Cursor pinnedCursor, Cursor normalCursor, int size) {
+        public TopSitesCursorWrapper(Cursor pinnedCursor, Cursor normalCursor, int minSize) {
             super(normalCursor);
 
             setPinnedSites(pinnedCursor);
             mCursor = normalCursor;
-            mSize = size;
+            mSize = Math.max(minSize, mPinnedSites.size() + mCursor.getCount());
         }
 
         public void setPinnedSites(Cursor c) {
