@@ -602,6 +602,28 @@ class IceGatherTest : public ::testing::Test {
 
     ASSERT_TRUE_WAIT(peer_->gathering_complete(), 10000);
   }
+
+  void UseFakeStunServerWithResponse(const std::string& fake_addr,
+                                     uint16_t fake_port) {
+    TestStunServer::GetInstance()->SetResponseAddr(fake_addr, fake_port);
+    // Sets an additional stun server
+    peer_->SetStunServer(TestStunServer::GetInstance()->addr(),
+                         TestStunServer::GetInstance()->port());
+  }
+
+  // NB: Only does substring matching, watch out for stuff like "1.2.3.4"
+  // matching "21.2.3.47". " 1.2.3.4 " should not have false positives.
+  bool StreamHasMatchingCandidate(unsigned int stream,
+                                  const std::string& match) {
+    std::vector<std::string> candidates = peer_->GetCandidates(stream);
+    for (size_t c = 0; c < candidates.size(); ++c) {
+      if (std::string::npos != candidates[c].find(match)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
  protected:
   mozilla::ScopedDeletePtr<IceTestPeer> peer_;
 };
@@ -874,6 +896,30 @@ TEST_F(IceGatherTest, TestGatherDisableComponent) {
 TEST_F(IceGatherTest, TestBogusCandidate) {
   Gather();
   peer_->ParseCandidate(0, kBogusIceCandidate);
+}
+
+TEST_F(IceGatherTest, VerifyTestStunServer) {
+  UseFakeStunServerWithResponse("192.0.2.133", 3333);
+  Gather();
+  ASSERT_TRUE(StreamHasMatchingCandidate(0, " 192.0.2.133 3333 "));
+}
+
+TEST_F(IceGatherTest, TestStunServerReturnsWildcardAddr) {
+  UseFakeStunServerWithResponse("0.0.0.0", 3333);
+  Gather();
+  ASSERT_FALSE(StreamHasMatchingCandidate(0, " 0.0.0.0 "));
+}
+
+TEST_F(IceGatherTest, TestStunServerReturnsPort0) {
+  UseFakeStunServerWithResponse("192.0.2.133", 0);
+  Gather();
+  ASSERT_FALSE(StreamHasMatchingCandidate(0, " 192.0.2.133 0 "));
+}
+
+TEST_F(IceGatherTest, TestStunServerReturnsLoopbackAddr) {
+  UseFakeStunServerWithResponse("127.0.0.133", 3333);
+  Gather();
+  ASSERT_FALSE(StreamHasMatchingCandidate(0, " 127.0.0.133 "));
 }
 
 TEST_F(IceConnectTest, TestGather) {
