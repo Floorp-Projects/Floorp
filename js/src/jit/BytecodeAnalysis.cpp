@@ -15,7 +15,9 @@ using namespace js::jit;
 
 BytecodeAnalysis::BytecodeAnalysis(JSScript *script)
   : script_(script),
-    infos_()
+    infos_(),
+    usesScopeChain_(false),
+    hasTryFinally_(false)
 {
 }
 
@@ -142,6 +144,26 @@ BytecodeAnalysis::init(JSContext *cx)
                 if (catchFinallyRanges[i].contains(offset))
                     infos_[offset].loopEntryInCatchOrFinally = true;
             }
+            break;
+
+          case JSOP_NAME:
+          case JSOP_CALLNAME:
+          case JSOP_BINDNAME:
+          case JSOP_SETNAME:
+          case JSOP_DELNAME:
+          case JSOP_GETALIASEDVAR:
+          case JSOP_CALLALIASEDVAR:
+          case JSOP_SETALIASEDVAR:
+          case JSOP_LAMBDA:
+          case JSOP_DEFFUN:
+          case JSOP_DEFVAR:
+          case JSOP_DEFCONST:
+          case JSOP_SETCONST:
+            usesScopeChain_ = true;
+            break;
+
+          case JSOP_FINALLY:
+            hasTryFinally_ = true;
             break;
 
           default:
