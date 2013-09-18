@@ -36,6 +36,14 @@ APPLE_CLANG_MINIMUM_VERSION = StrictVersion('4.0')
 XCODE_REQUIRED = '''
 Xcode is required to build Firefox. Please complete the install of Xcode
 through the App Store.
+
+It's possible Xcode is already installed on this machine but it isn't being
+detected. This is possible with developer preview releases of Xcode, for
+example. To correct this problem, run:
+
+  `xcode-select --switch /path/to/Xcode.app`.
+
+e.g. `sudo xcode-select --switch /Applications/Xcode.app`.
 '''
 
 XCODE_REQUIRED_LEGACY = '''
@@ -167,8 +175,19 @@ class OSXBootstrapper(BaseBootstrapper):
                 subprocess.check_call(['open', XCODE_LEGACY])
                 sys.exit(1)
 
+        # OS X 10.7 have Xcode come from the app store. However, users can
+        # still install Xcode into any arbitrary location. We honor the
+        # location of Xcode as set by xcode-select. This should also pick up
+        # developer preview releases of Xcode, which can be installed into
+        # paths like /Applications/Xcode5-DP6.app.
         elif self.os_version >= StrictVersion('10.7'):
-            if not os.path.exists('/Applications/Xcode.app'):
+            select = self.which('xcode-select')
+            output = self.check_output([select, '--print-path'])
+
+            # This isn't the most robust check in the world. It relies on the
+            # default value not being in an application bundle, which seems to
+            # hold on at least Mavericks.
+            if '.app/' not in output:
                 print(XCODE_REQUIRED)
 
                 subprocess.check_call(['open', XCODE_APP_STORE])
