@@ -8,7 +8,7 @@
 #include "mozilla/dom/HTMLTrackElement.h"
 #include "mozilla/dom/HTMLTrackElementBinding.h"
 #include "mozilla/dom/HTMLUnknownElement.h"
-#include "WebVTTListener.h"
+#include "WebVTTLoadListener.h"
 #include "nsAttrValueInlines.h"
 #include "nsCOMPtr.h"
 #include "nsContentPolicyUtils.h"
@@ -87,7 +87,7 @@ NS_IMPL_RELEASE_INHERITED(HTMLTrackElement, Element)
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED_4(HTMLTrackElement, nsGenericHTMLElement,
                                      mTrack, mChannel, mMediaParent,
-                                     mListener)
+                                     mLoadListener)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(HTMLTrackElement)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
@@ -238,13 +238,13 @@ HTMLTrackElement::LoadResource()
                      channelPolicy);
   NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
 
-  mListener = new WebVTTListener(this);
-  rv = mListener->LoadResource();
+  mLoadListener = new WebVTTLoadListener(this);
+  rv = mLoadListener->LoadResource();
   NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
-  channel->SetNotificationCallbacks(mListener);
+  channel->SetNotificationCallbacks(mLoadListener);
 
   LOG(PR_LOG_DEBUG, ("opening webvtt channel"));
-  rv = channel->AsyncOpen(mListener, nullptr);
+  rv = channel->AsyncOpen(mLoadListener, nullptr);
   NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
 
   mChannel = channel;
