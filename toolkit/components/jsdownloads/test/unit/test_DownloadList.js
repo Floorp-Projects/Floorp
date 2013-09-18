@@ -137,7 +137,7 @@ add_task(function test_remove()
 add_task(function test_DownloadCombinedList_add_remove_getAll()
 {
   let publicList = yield promiseNewList();
-  let privateList = yield promiseNewList(true);
+  let privateList = yield Downloads.getList(Downloads.PRIVATE);
   let combinedList = yield Downloads.getList(Downloads.ALL);
 
   let publicDownload = yield promiseNewDownload();
@@ -447,4 +447,121 @@ add_task(function test_removeFinished()
 
   let downloads = yield list.getAll()
   do_check_eq(downloads.length, 1);
+});
+
+/**
+ * Tests the global DownloadSummary objects for the public, private, and
+ * combined download lists.
+ */
+add_task(function test_DownloadSummary()
+{
+  mustInterruptResponses();
+
+  let publicList = yield promiseNewList();
+  let privateList = yield Downloads.getList(Downloads.PRIVATE);
+
+  let publicSummary = yield Downloads.getSummary(Downloads.PUBLIC);
+  let privateSummary = yield Downloads.getSummary(Downloads.PRIVATE);
+  let combinedSummary = yield Downloads.getSummary(Downloads.ALL);
+
+  // Add a public download that has succeeded.
+  let succeededPublicDownload = yield promiseNewDownload();
+  yield succeededPublicDownload.start();
+  publicList.add(succeededPublicDownload);
+
+  // Add a public download that has been canceled midway.
+  let canceledPublicDownload =
+      yield promiseNewDownload(httpUrl("interruptible.txt"));
+  canceledPublicDownload.start();
+  yield promiseDownloadMidway(canceledPublicDownload);
+  yield canceledPublicDownload.cancel();
+  publicList.add(canceledPublicDownload);
+
+  // Add a public download that is in progress.
+  let inProgressPublicDownload =
+      yield promiseNewDownload(httpUrl("interruptible.txt"));
+  inProgressPublicDownload.start();
+  yield promiseDownloadMidway(inProgressPublicDownload);
+  publicList.add(inProgressPublicDownload);
+
+  // Add a private download that is in progress.
+  let inProgressPrivateDownload = yield Downloads.createDownload({
+    source: { url: httpUrl("interruptible.txt"), isPrivate: true },
+    target: getTempFile(TEST_TARGET_FILE_NAME).path,
+  });
+  inProgressPrivateDownload.start();
+  yield promiseDownloadMidway(inProgressPrivateDownload);
+  privateList.add(inProgressPrivateDownload);
+
+  // Verify that the summary includes the total number of bytes and the
+  // currently transferred bytes only for the downloads that are not stopped.
+  // For simplicity, we assume that after a download is added to the list, its
+  // current state is immediately propagated to the summary object, which is
+  // true in the current implementation, though it is not guaranteed as all the
+  // download operations may happen asynchronously.
+  do_check_false(publicSummary.allHaveStopped);
+  do_check_eq(publicSummary.progressTotalBytes, TEST_DATA_SHORT.length * 2);
+  do_check_eq(publicSummary.progressCurrentBytes, TEST_DATA_SHORT.length);
+
+  do_check_false(privateSummary.allHaveStopped);
+  do_check_eq(privateSummary.progressTotalBytes, TEST_DATA_SHORT.length * 2);
+  do_check_eq(privateSummary.progressCurrentBytes, TEST_DATA_SHORT.length);
+
+  do_check_false(combinedSummary.allHaveStopped);
+  do_check_eq(combinedSummary.progressTotalBytes, TEST_DATA_SHORT.length * 4);
+  do_check_eq(combinedSummary.progressCurrentBytes, TEST_DATA_SHORT.length * 2);
+
+  yield inProgressPublicDownload.cancel();
+
+  // Stopping the download should have excluded it from the summary.
+  do_check_true(publicSummary.allHaveStopped);
+  do_check_eq(publicSummary.progressTotalBytes, 0);
+  do_check_eq(publicSummary.progressCurrentBytes, 0);
+
+  do_check_false(privateSummary.allHaveStopped);
+  do_check_eq(privateSummary.progressTotalBytes, TEST_DATA_SHORT.length * 2);
+  do_check_eq(privateSummary.progressCurrentBytes, TEST_DATA_SHORT.length);
+
+  do_check_false(combinedSummary.allHaveStopped);
+  do_check_eq(combinedSummary.progressTotalBytes, TEST_DATA_SHORT.length * 2);
+  do_check_eq(combinedSummary.progressCurrentBytes, TEST_DATA_SHORT.length);
+
+  yield inProgressPrivateDownload.cancel();
+
+  // All the downloads should be stopped now.
+  do_check_true(publicSummary.allHaveStopped);
+  do_check_eq(publicSummary.progressTotalBytes, 0);
+  do_check_eq(publicSummary.progressCurrentBytes, 0);
+
+  do_check_true(privateSummary.allHaveStopped);
+  do_check_eq(privateSummary.progressTotalBytes, 0);
+  do_check_eq(privateSummary.progressCurrentBytes, 0);
+
+  do_check_true(combinedSummary.allHaveStopped);
+  do_check_eq(combinedSummary.progressTotalBytes, 0);
+  do_check_eq(combinedSummary.progressCurrentBytes, 0);
+});
+
+/**
+ * Checks that views receive the summary change notification.  This is tested on
+ * the combined summary when adding a public download, as we assume that if we
+ * pass the test in this case we will also pass it in the others.
+ */
+add_task(function test_DownloadSummary_notifications()
+{
+  let list = yield promiseNewList();
+  let summary = yield Downloads.getSummary(Downloads.ALL);
+
+  let download = yield promiseNewDownload();
+  list.add(download);
+
+  // Check that we receive change notifications.
+  let receivedOnSummaryChanged = false;
+  summary.addView({
+    onSummaryChanged: function () {
+      receivedOnSummaryChanged = true;
+    },
+  });
+  yield download.start();
+  do_check_true(receivedOnSummaryChanged);
 });

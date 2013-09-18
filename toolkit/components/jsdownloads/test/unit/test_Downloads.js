@@ -119,6 +119,26 @@ add_task(function test_getList()
 });
 
 /**
+ * Tests that the getSummary function returns the same summary when called
+ * multiple times with the same argument, but returns different summaries when
+ * called with different arguments.  More detailed tests are implemented
+ * separately for the DownloadSummary object in the DownloadList module.
+ */
+add_task(function test_getSummary()
+{
+  let publicSummaryOne = yield Downloads.getSummary(Downloads.PUBLIC);
+  let privateSummaryOne = yield Downloads.getSummary(Downloads.PRIVATE);
+
+  let publicSummaryTwo = yield Downloads.getSummary(Downloads.PUBLIC);
+  let privateSummaryTwo = yield Downloads.getSummary(Downloads.PRIVATE);
+
+  do_check_eq(publicSummaryOne, publicSummaryTwo);
+  do_check_eq(privateSummaryOne, privateSummaryTwo);
+
+  do_check_neq(publicSummaryOne, privateSummaryOne);
+});
+
+/**
  * Tests that the getSystemDownloadsDirectory returns a valid nsFile
  * download directory object.
  */
