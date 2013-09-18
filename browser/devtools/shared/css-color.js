@@ -6,6 +6,28 @@
 
 const COLOR_UNIT_PREF = "devtools.defaultColorUnit";
 const {Cc, Ci, Cu} = require("chrome");
+
+const REGEX_JUST_QUOTES  = /^""$/;
+const REGEX_RGB_3_TUPLE  = /^rgb\(([\d.]+),\s*([\d.]+),\s*([\d.]+)\)$/i;
+const REGEX_RGBA_4_TUPLE = /^rgba\(([\d.]+),\s*([\d.]+),\s*([\d.]+),\s*([\d.]+|1|0)\)$/i;
+const REGEX_HSL_3_TUPLE  = /^\bhsl\(([\d.]+),\s*([\d.]+%),\s*([\d.]+%)\)$/i;
+
+/**
+ * This regex matches:
+ *  - #F00
+ *  - #FF0000
+ *  - hsl()
+ *  - hsla()
+ *  - rgb()
+ *  - rgba()
+ *  - red
+ *
+ *  It also matches css keywords e.g. "background-color" otherwise
+ *  "background" would be replaced with #6363CE ("background" is a platform
+ *  color).
+ */
+const REGEX_ALL_COLORS = /#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b|hsl\(.*?\)|hsla\(.*?\)|rgba?\(.*?\)|\b[a-zA-Z-]+\b/g;
+
 let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 /**
@@ -152,6 +174,10 @@ CssColor.prototype = {
       return "transparent";
     }
     if (!this.hasAlpha) {
+      if (this.authored.startsWith("rgb(")) {
+        // The color is valid and begins with rgb(. Return the authored value.
+        return this.authored;
+      }
       let tuple = this._getRGBATuple();
       return "rgb(" + tuple.r + ", " + tuple.g + ", " + tuple.b + ")";
     }
@@ -164,6 +190,10 @@ CssColor.prototype = {
     }
     if (this.transparent) {
       return "transparent";
+    }
+    if (this.authored.startsWith("rgba(")) {
+      // The color is valid and begins with rgba(. Return the authored value.
+        return this.authored;
     }
     let components = this._getRGBATuple();
     return "rgba(" + components.r + ", " +
@@ -179,6 +209,10 @@ CssColor.prototype = {
     if (this.transparent) {
       return "transparent";
     }
+    if (this.authored.startsWith("hsl(")) {
+      // The color is valid and begins with hsl(. Return the authored value.
+      return this.authored;
+    }
     if (this.hasAlpha) {
       return this.hsla;
     }
@@ -192,11 +226,9 @@ CssColor.prototype = {
     if (this.transparent) {
       return "transparent";
     }
-    // Because an hsla rbg roundtrip would lose accuracy we use the authored
-    // values if this is an hsla color.
     if (this.authored.startsWith("hsla(")) {
-      let [, h, s, l, a] = /^\bhsla\(([\d.]+),\s*([\d.]+%),\s*([\d.]+%),\s*([\d.]+|0|1)\)$/gi.exec(this.authored);
-      return "hsla(" + h + ", " + s + ", " + l + ", " + a + ")";
+      // The color is valid and begins with hsla(. Return the authored value.
+      return this.authored;
     }
     if (this.hasAlpha) {
       let a = this._getRGBATuple().a;
@@ -261,13 +293,13 @@ CssColor.prototype = {
       return "transparent";
     }
 
-    let rgba = /^rgba\((\d+),\s*(\d+),\s*(\d+),\s*(\d+\.\d+|1|0)\)$/gi.exec(computed);
+    let rgba = computed.match(REGEX_RGBA_4_TUPLE);
 
     if (rgba) {
       let [, r, g, b, a] = rgba;
       return {r: r, g: g, b: b, a: a};
     } else {
-      let rgb = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/gi.exec(computed);
+      let rgb = computed.match(REGEX_RGB_3_TUPLE);
       let [, r, g, b] = rgb;
 
       return {r: r, g: g, b: b, a: 1};
@@ -277,10 +309,10 @@ CssColor.prototype = {
   _hslNoAlpha: function() {
     let {r, g, b} = this._getRGBATuple();
 
-    // Because an hsl rbg roundtrip would lose accuracy we use the authored
-    // values if this is an hsla color.
     if (this.authored.startsWith("hsl(")) {
-      let [, h, s, l] = /^\bhsl\(([\d.]+),\s*([\d.]+%),\s*([\d.]+%)\)$/gi.exec(this.authored);
+      // We perform string manipulations on our output so let's ensure that it
+      // is formatted as we expect.
+      let [, h, s, l] = this.authored.match(REGEX_HSL_3_TUPLE);
       return "hsl(" + h + ", " + s + ", " + l + ")";
     }
 
@@ -365,23 +397,11 @@ CssColor.prototype = {
  *         Converted CSS String e.g. "color:#F00; background-color:#0F0;"
  */
 function processCSSString(value) {
-  if (value && /^""$/.test(value)) {
+  if (value && REGEX_JUST_QUOTES.test(value)) {
     return value;
   }
 
-  // This regex matches:
-  //  - #F00
-  //  - #FF0000
-  //  - hsl()
-  //  - hsla()
-  //  - rgb()
-  //  - rgba()
-  //  - red
-  //
-  //  It also matches css keywords e.g. "background-color" otherwise
-  //  "background" would be replaced with #6363CE ("background" is a platform
-  //  color).
-  let colorPattern = /#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b|hsl\(.*?\)|hsla\(.*?\)|rgba?\(.*?\)|\b[a-zA-Z-]+\b/g;
+  let colorPattern = REGEX_ALL_COLORS;
 
   value = value.replace(colorPattern, function(match) {
     let color = new CssColor(match);
