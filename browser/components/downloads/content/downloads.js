@@ -151,6 +151,8 @@ const DownloadsPanel = {
       DownloadsViewController.initialize();
       DownloadsCommon.log("Attaching DownloadsView...");
       DownloadsCommon.getData(window).addView(DownloadsView);
+      DownloadsCommon.getSummary(window, DownloadsView.kItemCountLimit)
+                     .addView(DownloadsSummary);
       DownloadsCommon.log("DownloadsView attached - the panel for this window",
                           "should now see download items come in.");
       DownloadsPanel._attachEventListeners();
@@ -179,6 +181,8 @@ const DownloadsPanel = {
 
     DownloadsViewController.terminate();
     DownloadsCommon.getData(window).removeView(DownloadsView);
+    DownloadsCommon.getSummary(window, DownloadsView.kItemCountLimit)
+                   .removeView(DownloadsSummary);
     this._unattachEventListeners();
 
     this._state = this.kStateUninitialized;
@@ -1575,10 +1579,8 @@ const DownloadsSummary = {
     }
     if (aActive) {
       DownloadsCommon.getSummary(window, DownloadsView.kItemCountLimit)
-                     .addView(this);
+                     .refreshView(this);
     } else {
-      DownloadsCommon.getSummary(window, DownloadsView.kItemCountLimit)
-                     .removeView(this);
       DownloadsFooter.showingSummary = false;
     }
 
