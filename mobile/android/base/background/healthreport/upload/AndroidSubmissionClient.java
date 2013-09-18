@@ -10,6 +10,7 @@ import java.util.Collection;
 import org.json.JSONObject;
 import org.mozilla.gecko.background.bagheera.BagheeraClient;
 import org.mozilla.gecko.background.bagheera.BagheeraRequestDelegate;
+import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.healthreport.EnvironmentBuilder;
 import org.mozilla.gecko.background.healthreport.HealthReportConstants;
@@ -103,7 +104,7 @@ public class AndroidSubmissionClient implements SubmissionClient {
         return;
       }
 
-      long since = localTime - HealthReportConstants.MILLISECONDS_PER_SIX_MONTHS;
+      long since = localTime - GlobalConstants.MILLISECONDS_PER_SIX_MONTHS;
       long last = Math.max(getLastUploadLocalTime(), HealthReportConstants.EARLIEST_LAST_PING);
 
       if (!storage.hasEventSince(last)) {
