@@ -4,12 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PARALLEL_DIRS += [
-  'encoder',
-  'mediasource',
-  'webaudio',
-  'webvtt'
-]
+PARALLEL_DIRS += ['encoder']
+
+PARALLEL_DIRS += ['mediasource']
+
+PARALLEL_DIRS += ['webaudio']
 
 if CONFIG['MOZ_RAW']:
     PARALLEL_DIRS += ['raw']
@@ -141,7 +140,7 @@ CPP_SOURCES += [
     'VideoSegment.cpp',
     'VideoStreamTrack.cpp',
     'VideoUtils.cpp',
-    'WebVTTListener.cpp',
+    'WebVTTLoadListener.cpp',
 ]
 
 FAIL_ON_WARNINGS = True
