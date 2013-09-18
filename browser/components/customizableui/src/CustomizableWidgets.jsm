@@ -357,7 +357,7 @@ const CustomizableWidgets = [{
       if (inPanel && this.currentArea) {
         let panel = aDocument.getElementById(kPanelId);
         panel.addEventListener("popupshowing", updateZoomResetButton);
-      } else if (!this.currentArea) {
+      } else {
         updateZoomResetButton();
       }
 
@@ -371,8 +371,7 @@ const CustomizableWidgets = [{
           setAttributes(node.childNodes[i], attrs);
         }
 
-        if (inPanel || !aArea)
-          updateZoomResetButton();
+        updateZoomResetButton();
       }
 
       let listener = {

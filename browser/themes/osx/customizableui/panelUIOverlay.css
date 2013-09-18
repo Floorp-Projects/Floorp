@@ -44,22 +44,19 @@
   }
 }
 
-#edit-controls[customizableui-areatype="menu-panel"] > toolbarbutton:not(:first-child),
-#zoom-controls[customizableui-areatype="menu-panel"] > toolbarbutton:not(:first-child) {
-  -moz-margin-start: 0;
+#edit-controls@inAnyPanel@ > toolbarbutton:not(:first-child),
+#zoom-controls@inAnyPanel@ > toolbarbutton:not(:first-child) {
+  margin-left: 0;
+  margin-right: 0;
 }
-#edit-controls[customizableui-areatype="menu-panel"] > toolbarbutton:not(:last-child),
-#zoom-controls[customizableui-areatype="menu-panel"] > toolbarbutton:not(:last-child) {
-  -moz-margin-end: 0;
-}
-#edit-controls[customizableui-areatype="menu-panel"] > toolbarbutton:not(:first-child):not(:last-child),
-#zoom-controls[customizableui-areatype="menu-panel"] > toolbarbutton:not(:first-child):not(:last-child) {
+#edit-controls@inAnyPanel@ > toolbarbutton:not(:first-child):not(:last-child),
+#zoom-controls@inAnyPanel@ > toolbarbutton:not(:first-child):not(:last-child) {
   margin-left: 0;
   margin-right: 0;
 }
 
-#zoom-controls[customizableui-areatype="menu-panel"] > #zoom-in-button,
-#zoom-controls[customizableui-areatype="menu-panel"] > #zoom-out-button,
+#zoom-controls@inAnyPanel@ > #zoom-in-button,
+#zoom-controls@inAnyPanel@ > #zoom-out-button,
 toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button,
 toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-out-button {
   padding-left: 12px;
