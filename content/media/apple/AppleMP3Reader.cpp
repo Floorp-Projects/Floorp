@@ -87,9 +87,8 @@ static void _AudioSampleCallback(void *aThis,
  * Otherwise, put as much data as is left into |aData|, set |aNumBytes| to the
  * amount of data we have left, and return false.
  *
- * This function also calls NotifyBytesConsumed() on the media resource and
- * passes the read data on to the MP3 frame parser for stream duration
- * estimation.
+ * This function also passes the read data on to the MP3 frame parser for
+ * stream duration estimation.
  */
 nsresult
 AppleMP3Reader::ReadAndNotify(uint32_t *aNumBytes, char *aData)
@@ -111,8 +110,6 @@ AppleMP3Reader::ReadAndNotify(uint32_t *aNumBytes, char *aData)
       return NS_ERROR_FAILURE;
     }
   } while(totalBytes < *aNumBytes && numBytes);
-
-  mDecoder->NotifyBytesConsumed(totalBytes);
 
   // Pass the buffer to the MP3 frame parser to improve our duration estimate.
   if (mMP3FrameParser.IsMP3()) {

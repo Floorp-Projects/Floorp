@@ -209,8 +209,35 @@ public:
       aMargin.TopBottom();
   }
 
+  /**
+   * Converts a logical position into a "physical" x,y position.
+   *
+   * In the simplest case where the main-axis is left-to-right and the
+   * cross-axis is top-to-bottom, this just returns
+   * nsPoint(aMainPosn, aCrossPosn).
+   *
+   *  @arg aMainPosn  The main-axis position -- i.e an offset from the
+   *                  main-start edge of the container's content box.
+   *  @arg aCrossPosn The cross-axis position -- i.e an offset from the
+   *                  cross-start edge of the container's content box.
+   *  @return A nsPoint representing the same position (in coordinates
+   *          relative to the container's content box).
+   */
   nsPoint PhysicalPositionFromLogicalPosition(nscoord aMainPosn,
-                                              nscoord aCrossPosn) const {
+                                              nscoord aCrossPosn,
+                                              nscoord aContainerMainSize,
+                                              nscoord aContainerCrossSize) const {
+    // If either of our logical axes are backwards with respect to our x,y
+    // coordinate system (e.g. right-to-left or bottom-to-top), then subtract
+    // that axis's logical coord them from the container size in that dimension,
+    // to flip the polarity around.
+    if (!AxisGrowsInPositiveDirection(mMainAxis)) {
+      aMainPosn = aContainerMainSize - aMainPosn;
+    }
+    if (!AxisGrowsInPositiveDirection(mCrossAxis)) {
+      aCrossPosn = aContainerCrossSize - aCrossPosn;
+    }
+
     return IsAxisHorizontal(mMainAxis) ?
       nsPoint(aMainPosn, aCrossPosn) :
       nsPoint(aCrossPosn, aMainPosn);
@@ -963,6 +990,8 @@ protected:
 };
 
 // Tracks our position in the main axis, when we're laying out flex items.
+// The "0" position represents the main-start edge of the flex container's
+// content-box.
 class MOZ_STACK_CLASS MainAxisPositionTracker : public PositionTracker {
 public:
   MainAxisPositionTracker(nsFlexContainerFrame* aFlexContainerFrame,
@@ -992,12 +1021,15 @@ private:
 };
 
 // Utility class for managing our position along the cross axis along
-// the whole flex container (at a higher level than a single line)
+// the whole flex container (at a higher level than a single line).
+// The "0" position represents the cross-start edge of the flex container's
+// content-box.
 class MOZ_STACK_CLASS CrossAxisPositionTracker : public PositionTracker {
 public:
   CrossAxisPositionTracker(nsFlexContainerFrame* aFlexContainerFrame,
                            const FlexboxAxisTracker& aAxisTracker,
-                           const nsHTMLReflowState& aReflowState);
+                           const nsHTMLReflowState& aReflowState)
+    : PositionTracker(aAxisTracker.GetCrossAxis()) {}
 
   // XXXdholbert This probably needs a ResolveStretchedLines() method,
   // (which takes an array of SingleLineCrossAxisPositionTracker objects
@@ -1462,10 +1494,6 @@ MainAxisPositionTracker::
   MOZ_ASSERT(aReflowState.frame == aFlexContainerFrame,
              "Expecting the reflow state for the flex container frame");
 
-  // Step over flex container's own main-start border/padding.
-  // XXXdholbert Check GetSkipSides() here when we support pagination.
-  EnterMargin(aReflowState.mComputedBorderPadding);
-
   // Set up our state for managing packing space & auto margins.
   //   * If our main-size is unconstrained, then we just shrinkwrap our
   // contents, and we don't have any packing space.
@@ -1605,16 +1633,6 @@ MainAxisPositionTracker::TraversePackingSpace()
     mNumPackingSpacesRemaining--;
     mPackingSpaceRemaining -= curPackingSpace;
   }
-}
-
-CrossAxisPositionTracker::
-  CrossAxisPositionTracker(nsFlexContainerFrame* aFlexContainerFrame,
-                           const FlexboxAxisTracker& aAxisTracker,
-                           const nsHTMLReflowState& aReflowState)
-    : PositionTracker(aAxisTracker.GetCrossAxis())
-{
-  // Step over flex container's cross-start border/padding.
-  EnterMargin(aReflowState.mComputedBorderPadding);
 }
 
 SingleLineCrossAxisPositionTracker::
@@ -2188,10 +2206,6 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   ResolveFlexibleLengths(axisTracker, contentBoxMainSize, items);
 
-  // Our frame's main-size is the content-box size plus border and padding.
-  const nscoord frameMainSize = contentBoxMainSize +
-    axisTracker.GetMarginSizeInMainAxis(aReflowState.mComputedBorderPadding);
-
   // Cross Size Determination - Flexbox spec section 9.4
   // ===================================================
   // Calculate the hypothetical cross size of each item:
@@ -2261,9 +2275,6 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     lineCrossAxisPosnTracker.SetLineCrossSize(contentBoxCrossSize);
   }
 
-  const nscoord frameCrossSize = contentBoxCrossSize +
-    axisTracker.GetMarginSizeInCrossAxis(aReflowState.mComputedBorderPadding);
-
   // Set the flex container's baseline, from its baseline-aligned items.
   // (This might give us nscoord_MIN if we don't have any baseline-aligned
   // flex items.  That's OK, we'll update it below.)
@@ -2289,10 +2300,28 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
                             lineCrossAxisPosnTracker, items[i]);
   }
 
+  // Before giving each child a final reflow, calculate the origin of the
+  // flex container's content box (with respect to its border-box), so that
+  // we can compute our flex item's final positions.
+  nsMargin containerBorderPadding(aReflowState.mComputedBorderPadding);
+  ApplySkipSides(containerBorderPadding, &aReflowState);
+  const nsPoint containerContentBoxOrigin(containerBorderPadding.left,
+                                          containerBorderPadding.top);
+
   // FINAL REFLOW: Give each child frame another chance to reflow, now that
   // we know its final size and position.
   for (uint32_t i = 0; i < items.Length(); ++i) {
     FlexItem& curItem = items[i];
+
+    nsPoint physicalPosn = axisTracker.PhysicalPositionFromLogicalPosition(
+                             curItem.GetMainPosition(),
+                             curItem.GetCrossPosition(),
+                             contentBoxMainSize,
+                             contentBoxCrossSize);
+    // Adjust physicalPosn to be relative to the container's border-box
+    // (i.e. its frame rect), instead of the container's content-box:
+    physicalPosn += containerContentBoxOrigin;
+
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
                                        curItem.Frame(),
                                        nsSize(aReflowState.ComputedWidth(),
@@ -2350,18 +2379,6 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     // after this point, because some of its methods (e.g. SetComputedWidth)
     // internally call InitResizeFlags and stomp on mVResize & mHResize.
 
-    nscoord mainPosn = curItem.GetMainPosition();
-    nscoord crossPosn = curItem.GetCrossPosition();
-    if (!AxisGrowsInPositiveDirection(axisTracker.GetMainAxis())) {
-      mainPosn = frameMainSize - mainPosn;
-    }
-    if (!AxisGrowsInPositiveDirection(axisTracker.GetCrossAxis())) {
-      crossPosn = frameCrossSize - crossPosn;
-    }
-
-    nsPoint physicalPosn =
-      axisTracker.PhysicalPositionFromLogicalPosition(mainPosn, crossPosn);
-
     nsHTMLReflowMetrics childDesiredSize;
     nsReflowStatus childReflowStatus;
     nsresult rv = ReflowChild(curItem.Frame(), aPresContext,
@@ -2399,13 +2416,14 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     }
   }
 
-  // XXXdholbert This could be more elegant
-  aDesiredSize.width =
-    IsAxisHorizontal(axisTracker.GetMainAxis()) ?
-    frameMainSize : frameCrossSize;
-  aDesiredSize.height =
-    IsAxisHorizontal(axisTracker.GetCrossAxis()) ?
-    frameMainSize : frameCrossSize;
+  nsSize desiredContentBoxSize =
+    axisTracker.PhysicalSizeFromLogicalSizes(contentBoxMainSize,
+                                             contentBoxCrossSize);
+
+  aDesiredSize.width = desiredContentBoxSize.width +
+    containerBorderPadding.LeftRight();
+  aDesiredSize.height = desiredContentBoxSize.height +
+    containerBorderPadding.TopBottom();
 
   if (flexContainerAscent == nscoord_MIN) {
     // Still don't have our baseline set -- this happens if we have no

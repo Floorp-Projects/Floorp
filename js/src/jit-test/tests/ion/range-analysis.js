@@ -1,5 +1,4 @@
-// |jit-test| no-jm
-// Disable JM until it got investigated in Bug 843902.
+// |jit-test|
 
 // Only fails with Ion.
 function add_xors_1() {

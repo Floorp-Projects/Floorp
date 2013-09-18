@@ -11,8 +11,6 @@
 #include "jsapi-tests/tests.h"
 #include "vm/Shape.h"
 
-#include "vm/Shape-inl.h"
-
 BEGIN_TEST(testRegExpInstanceProperties)
 {
     jsval regexpProtoVal;

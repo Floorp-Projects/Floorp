@@ -139,14 +139,8 @@ class Test:
                         test.valgrind = options.valgrind
                     elif name == 'tz-pacific':
                         test.tz_pacific = True
-                    elif name == 'mjitalways':
-                        test.jitflags.append('--always-mjit')
                     elif name == 'debug':
                         test.jitflags.append('--debugjit')
-                    elif name == 'mjit':
-                        test.jitflags.append('--jm')
-                    elif name == 'no-jm':
-                        test.jitflags.append('--no-jm')
                     elif name == 'ion-eager':
                         test.jitflags.append('--ion-eager')
                     elif name == 'no-ion':
@@ -330,7 +324,16 @@ def run_test_remote(test, device, prefix, options):
 def check_output(out, err, rc, test):
     if test.expect_error:
         # The shell exits with code 3 on uncaught exceptions.
-        return test.expect_error in err and rc == 3
+        # Sometimes 0 is returned on Windows for unknown reasons.
+        # See bug 899697.
+        if sys.platform in ['win32', 'cygwin']:
+            if rc != 3 and rc != 0:
+                return False
+        else:
+            if rc != 3:
+                return False
+
+        return test.expect_error in err
 
     for line in out.split('\n'):
         if line.startswith('Trace stats check failed'):
@@ -349,7 +352,7 @@ def check_output(out, err, rc, test):
 
 def print_tinderbox(ok, res):
     # Output test failures in a TBPL parsable format, eg:
-    # TEST-PASS | /foo/bar/baz.js | --no-jm
+    # TEST-PASS | /foo/bar/baz.js | --ion-eager
     # TEST-UNEXPECTED-FAIL | /foo/bar/baz.js | --no-ion: Assertion failure: ...
     # INFO exit-status     : 3
     # INFO timed-out       : False

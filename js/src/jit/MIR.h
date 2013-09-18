@@ -1041,7 +1041,8 @@ class MControlInstruction : public MInstruction
 };
 
 class MTableSwitch MOZ_FINAL
-  : public MControlInstruction
+  : public MControlInstruction,
+    public NoFloatPolicy<0>
 {
     // The successors of the tableswitch
     // - First successor = the default case
@@ -1158,6 +1159,10 @@ class MTableSwitch MOZ_FINAL
 
     size_t numOperands() const {
         return 1;
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
     }
 };
 

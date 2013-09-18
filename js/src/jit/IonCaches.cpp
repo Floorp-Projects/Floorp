@@ -21,6 +21,7 @@
 #include "vm/Shape.h"
 
 #include "vm/Interpreter-inl.h"
+#include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -1628,8 +1629,6 @@ GetPropertyIC::tryAttachArgumentsLength(JSContext *cx, IonScript *ion, HandleObj
     const Class *clasp = obj->is<StrictArgumentsObject>() ? &StrictArgumentsObject::class_
                                                           : &NormalArgumentsObject::class_;
 
-    Label fail;
-    Label pass;
     masm.branchTestObjClass(Assembler::NotEqual, object(), tmpReg, clasp, &failures);
 
     // Get initial ArgsObj length value, test if length has been overridden.
@@ -3075,8 +3074,6 @@ GetElementIC::attachArgumentsElement(JSContext *cx, IonScript *ion, JSObject *ob
     const Class *clasp = obj->is<StrictArgumentsObject>() ? &StrictArgumentsObject::class_
                                                           : &NormalArgumentsObject::class_;
 
-    Label fail;
-    Label pass;
     masm.branchTestObjClass(Assembler::NotEqual, object(), tmpReg, clasp, &failures);
 
     // Get initial ArgsObj length value, test if length has been overridden.

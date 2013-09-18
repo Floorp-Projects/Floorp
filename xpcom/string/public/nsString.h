@@ -52,8 +52,11 @@
 static_assert(sizeof(PRUnichar) == 2, "size of PRUnichar must be 2");
 static_assert(sizeof(nsString::char_type) == 2,
               "size of nsString::char_type must be 2");
+static_assert(nsString::char_type(-1) > nsString::char_type(0),
+              "nsString::char_type must be unsigned");
 static_assert(sizeof(nsCString::char_type) == 1,
               "size of nsCString::char_type must be 1");
+
 
   /**
    * A helper class that converts a UTF-16 string to ASCII in a lossy manner
