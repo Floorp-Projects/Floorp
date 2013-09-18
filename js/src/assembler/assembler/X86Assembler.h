@@ -285,6 +285,8 @@ private:
         OP2_MOVSD_VsdWsd    = 0x10,
         OP2_MOVSD_WsdVsd    = 0x11,
         OP2_UNPCKLPS_VsdWsd = 0x14,
+        OP2_MOVAPD_VsdWsd   = 0x28,
+        OP2_MOVAPS_VsdWsd   = 0x28,
         OP2_CVTSI2SD_VsdEd  = 0x2A,
         OP2_CVTTSD2SI_GdWsd = 0x2C,
         OP2_UCOMISD_VsdWsd  = 0x2E,
@@ -2579,6 +2581,9 @@ public:
         m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, base, index, scale, offset);
     }
 
+    // Note that the register-to-register form of movsd does not write to the
+    // entire output register. For general-purpose register-to-register moves,
+    // use movaps instead.
     void movsd_rr(XMMRegisterID src, XMMRegisterID dst)
     {
         spew("movsd      %s, %s",
@@ -2587,6 +2592,8 @@ public:
         m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, (RegisterID)src);
     }
 
+    // The register-to-register form of movss has the same problem as movsd
+    // above. Prefer movapd for register-to-register moves.
     void movss_rr(XMMRegisterID src, XMMRegisterID dst)
     {
         spew("movss      %s, %s",
@@ -2645,6 +2652,19 @@ public:
         return JmpSrc(m_formatter.size());
     }
 #endif
+
+    void movaps_rr(XMMRegisterID src, XMMRegisterID dst) {
+        spew("movaps     %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MOVAPS_VsdWsd, (RegisterID)dst, (RegisterID)src);
+    }
+
+    void movapd_rr(XMMRegisterID src, XMMRegisterID dst) {
+        spew("movapd     %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_MOVAPD_VsdWsd, (RegisterID)dst, (RegisterID)src);
+    }
 
     void movdqa_rm(XMMRegisterID src, int offset, RegisterID base)
     {

@@ -61,9 +61,6 @@ JS_STATIC_ASSERT(sizeof(uint32_t) * JS_BITS_PER_BYTE >= INDEX_LIMIT_LOG2 + 1);
 #include "jsopcode.tbl"
 #undef OPDEF
 
-static const char js_incop_strs[][3] = {"++", "--"};
-static const char js_for_each_str[]  = "for each";
-
 const JSCodeSpec js_CodeSpec[] = {
 #define OPDEF(op,val,name,token,length,nuses,ndefs,format) \
     {length,nuses,ndefs,format},
@@ -170,11 +167,7 @@ js::StackDefs(JSScript *script, jsbytecode *pc)
 }
 
 static const char * const countBaseNames[] = {
-    "interp",
-    "mjit",
-    "mjit_calls",
-    "mjit_code",
-    "mjit_pics"
+    "interp"
 };
 
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(countBaseNames) == PCCounts::BASE_LIMIT);
@@ -1308,6 +1301,9 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
       case JSOP_FUNCALL:
         return decompilePC(pcstack[-int32_t(GET_ARGC(pc) + 2)]) &&
                write("(...)");
+      case JSOP_SPREADCALL:
+        return decompilePC(pcstack[-int32_t(3)]) &&
+               write("(...)");
       case JSOP_NEWARRAY:
         return write("[]");
       case JSOP_REGEXP:
@@ -2009,10 +2005,12 @@ js::CallResultEscapes(jsbytecode *pc)
      * - call / not / ifeq
      */
 
-    if (*pc != JSOP_CALL)
+    if (*pc == JSOP_CALL)
+        pc += JSOP_CALL_LENGTH;
+    else if (*pc == JSOP_SPREADCALL)
+        pc += JSOP_SPREADCALL_LENGTH;
+    else
         return true;
-
-    pc += JSOP_CALL_LENGTH;
 
     if (*pc == JSOP_POP)
         return false;

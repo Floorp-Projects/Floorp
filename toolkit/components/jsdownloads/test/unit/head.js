@@ -369,16 +369,17 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
     // are controlling becomes visible in the list of downloads.
     aList.addView({
       onDownloadAdded: function (aDownload) {
-        aList.removeView(this);
+        aList.removeView(this).then(null, do_report_unexpected_exception);
 
         // Remove the download to keep the list empty for the next test.  This
         // also allows the caller to register the "onchange" event directly.
-        aList.remove(aDownload);
+        let promise = aList.remove(aDownload);
 
         // When the download object is ready, make it available to the caller.
-        deferred.resolve(aDownload);
+        promise.then(() => deferred.resolve(aDownload),
+                     do_report_unexpected_exception);
       },
-    });
+    }).then(null, do_report_unexpected_exception);
 
     let isPrivate = aOptions && aOptions.isPrivate;
 
@@ -421,16 +422,17 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
     // are controlling becomes visible in the list of downloads.
     aList.addView({
       onDownloadAdded: function (aDownload) {
-        aList.removeView(this);
+        aList.removeView(this).then(null, do_report_unexpected_exception);
 
         // Remove the download to keep the list empty for the next test.  This
         // also allows the caller to register the "onchange" event directly.
-        aList.remove(aDownload);
+        let promise = aList.remove(aDownload);
 
         // When the download object is ready, make it available to the caller.
-        deferred.resolve(aDownload);
+        promise.then(() => deferred.resolve(aDownload),
+                     do_report_unexpected_exception);
       },
-    });
+    }).then(null, do_report_unexpected_exception);
 
     let channel = NetUtil.newChannel(sourceURI);
 
@@ -491,6 +493,31 @@ function promiseDownloadMidway(aDownload) {
   onchange();
 
   return deferred.promise;
+}
+
+/**
+ * Waits for a download to finish, in case it has not finished already.
+ *
+ * @param aDownload
+ *        The Download object to wait upon.
+ *
+ * @return {Promise}
+ * @resolves When the download has finished successfully.
+ * @rejects JavaScript exception if the download failed.
+ */
+function promiseDownloadStopped(aDownload) {
+  if (!aDownload.stopped) {
+    // The download is in progress, wait for the current attempt to finish and
+    // report any errors that may occur.
+    return aDownload.start();
+  }
+
+  if (aDownload.succeeded) {
+    return Promise.resolve();
+  }
+
+  // The download failed or was canceled.
+  return Promise.reject(aDownload.error || new Error("Download canceled."));
 }
 
 /**

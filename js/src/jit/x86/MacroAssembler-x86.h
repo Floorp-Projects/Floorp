@@ -45,6 +45,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     typedef HashMap<float, size_t, DefaultHasher<float>, SystemAllocPolicy> FloatMap;
     FloatMap floatMap_;
 
+    Double *getDouble(double d);
+    Float *getFloat(float f);
+
   protected:
     MoveResolver moveResolver_;
 
@@ -805,7 +808,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         if (dest.isFloat()) {
             Label notInt32, end;
             branchTestInt32(Assembler::NotEqual, src, &notInt32);
-            cvtsi2sd(src.payloadReg(), dest.fpu());
+            convertInt32ToDouble(src.payloadReg(), dest.fpu());
             jump(&end);
             bind(&notInt32);
             unboxDouble(src, dest.fpu());
@@ -849,22 +852,22 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
 
     void boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest) {
-        cvtsi2sd(operand.payloadReg(), dest);
+        convertInt32ToDouble(operand.payloadReg(), dest);
     }
     void boolValueToFloat32(const ValueOperand &operand, const FloatRegister &dest) {
-        cvtsi2ss(operand.payloadReg(), dest);
+        convertInt32ToFloat32(operand.payloadReg(), dest);
     }
     void int32ValueToDouble(const ValueOperand &operand, const FloatRegister &dest) {
-        cvtsi2sd(operand.payloadReg(), dest);
+        convertInt32ToDouble(operand.payloadReg(), dest);
     }
     void int32ValueToFloat32(const ValueOperand &operand, const FloatRegister &dest) {
-        cvtsi2ss(operand.payloadReg(), dest);
+        convertInt32ToFloat32(operand.payloadReg(), dest);
     }
 
     void loadConstantDouble(double d, const FloatRegister &dest);
+    void addConstantDouble(double d, const FloatRegister &dest);
     void loadConstantFloat32(float f, const FloatRegister &dest);
-    void loadStaticDouble(const double *dp, const FloatRegister &dest);
-    void loadStaticFloat32(const float *dp, const FloatRegister &dest);
+    void addConstantFloat32(float f, const FloatRegister &dest);
 
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail) {
         const uint32_t IndefiniteIntegerValue = 0x80000000;
@@ -900,7 +903,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void loadInt32OrDouble(const Operand &operand, const FloatRegister &dest) {
         Label notInt32, end;
         branchTestInt32(Assembler::NotEqual, operand, &notInt32);
-        cvtsi2sd(ToPayload(operand), dest);
+        convertInt32ToDouble(ToPayload(operand), dest);
         jump(&end);
         bind(&notInt32);
         movsd(operand, dest);
@@ -950,12 +953,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         subl(Imm32(0x80000000), src);
 
         // Now src is [-2^31, 2^31-1] - int range, but not the same value.
-        cvtsi2sd(src, dest);
+        convertInt32ToDouble(src, dest);
 
         // dest is now a double with the int range.
         // correct the double value by adding 0x80000000.
-        static const double NegativeOne = 2147483648.0;
-        addsd(Operand(&NegativeOne), dest);
+        addConstantDouble(2147483648.0, dest);
     }
 
     // Note: this function clobbers the source register.
@@ -964,12 +966,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         subl(Imm32(0x80000000), src);
 
         // Do it the GCC way
-        cvtsi2ss(src, dest);
+        convertInt32ToFloat32(src, dest);
 
         // dest is now a double with the int range.
         // correct the double value by adding 0x80000000.
-        static const float NegativeOne = 2147483648.f;
-        addss(Operand(&NegativeOne), dest);
+        addConstantFloat32(2147483648.f, dest);
     }
 
     void inc64(AbsoluteAddress dest) {
@@ -1041,8 +1042,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // Save an exit frame (which must be aligned to the stack pointer) to
     // ThreadData::ionTop of the main thread.
     void linkExitFrame() {
-        JSRuntime *runtime = GetIonContext()->runtime;
-        movl(StackPointer, Operand(&runtime->mainThread.ionTop));
+        movl(StackPointer, Operand(AbsoluteAddress(&GetIonContext()->runtime->mainThread.ionTop)));
     }
 
     void callWithExitFrame(IonCode *target, Register dynStack) {

@@ -54,18 +54,10 @@ class MacroAssemblerARM : public Assembler
     void convertDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail,
                               bool negativeZeroCheck = true);
 
-    void convertFloatToDouble(const FloatRegister &src, const FloatRegister &dest) {
-        MOZ_ASSUME_UNREACHABLE("NYI");
-    }
-    void branchTruncateFloat32(const FloatRegister &src, const Register &dest, Label *fail) {
-        MOZ_ASSUME_UNREACHABLE("NYI");
-    }
-    void convertInt32ToFloat32(const Register &src, const FloatRegister &dest) {
-        MOZ_ASSUME_UNREACHABLE("NYI");
-    }
-    void convertInt32ToFloat32(const Address &src, FloatRegister dest) {
-        MOZ_ASSUME_UNREACHABLE("NYI");
-    }
+    void convertFloatToDouble(const FloatRegister &src, const FloatRegister &dest);
+    void branchTruncateFloat32(const FloatRegister &src, const Register &dest, Label *fail);
+    void convertInt32ToFloat32(const Register &src, const FloatRegister &dest);
+    void convertInt32ToFloat32(const Address &src, FloatRegister dest);
 
     void addDouble(FloatRegister src, FloatRegister dest);
     void subDouble(FloatRegister src, FloatRegister dest);
@@ -327,9 +319,18 @@ class MacroAssemblerARM : public Assembler
     void ma_vsqrt(FloatRegister src, FloatRegister dest, Condition cc = Always);
 
     void ma_vimm(double value, FloatRegister dest, Condition cc = Always);
+    void ma_vimm_f32(float value, FloatRegister dest, Condition cc = Always);
 
     void ma_vcmp(FloatRegister src1, FloatRegister src2, Condition cc = Always);
     void ma_vcmpz(FloatRegister src1, Condition cc = Always);
+
+    void ma_vadd_f32(FloatRegister src1, FloatRegister src2, FloatRegister dst);
+    void ma_vsub_f32(FloatRegister src1, FloatRegister src2, FloatRegister dst);
+
+    void ma_vmul_f32(FloatRegister src1, FloatRegister src2, FloatRegister dst);
+    void ma_vdiv_f32(FloatRegister src1, FloatRegister src2, FloatRegister dst);
+
+    void ma_vneg_f32(FloatRegister src, FloatRegister dest, Condition cc = Always);
 
     // source is F64, dest is I32
     void ma_vcvt_F64_I32(FloatRegister src, FloatRegister dest, Condition cc = Always);
@@ -338,6 +339,14 @@ class MacroAssemblerARM : public Assembler
     // source is I32, dest is F64
     void ma_vcvt_I32_F64(FloatRegister src, FloatRegister dest, Condition cc = Always);
     void ma_vcvt_U32_F64(FloatRegister src, FloatRegister dest, Condition cc = Always);
+
+    // source is F32, dest is I32
+    void ma_vcvt_F32_I32(FloatRegister src, FloatRegister dest, Condition cc = Always);
+    void ma_vcvt_F32_U32(FloatRegister src, FloatRegister dest, Condition cc = Always);
+
+    // source is I32, dest is F32
+    void ma_vcvt_I32_F32(FloatRegister src, FloatRegister dest, Condition cc = Always);
+    void ma_vcvt_U32_F32(FloatRegister src, FloatRegister dest, Condition cc = Always);
 
     void ma_vxfer(FloatRegister src, Register dest, Condition cc = Always);
     void ma_vxfer(FloatRegister src, Register dest1, Register dest2, Condition cc = Always);
@@ -767,7 +776,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadInt32OrDouble(const Operand &src, const FloatRegister &dest);
     void loadInt32OrDouble(Register base, Register index,
                            const FloatRegister &dest, int32_t shift = defaultShift);
-    void loadStaticDouble(const double *dp, const FloatRegister &dest);
     void loadConstantDouble(double dp, const FloatRegister &dest);
     // treat the value as a boolean, and set condition codes accordingly
     Condition testInt32Truthy(bool truthy, const ValueOperand &operand);
@@ -775,18 +783,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testDoubleTruthy(bool truthy, const FloatRegister &reg);
     Condition testStringTruthy(bool truthy, const ValueOperand &value);
 
-    void boolValueToFloat32(const ValueOperand &operand, const FloatRegister &dest) {
-        MOZ_ASSUME_UNREACHABLE("NYI");
-    }
-    void int32ValueToFloat32(const ValueOperand &operand, const FloatRegister &dest) {
-        MOZ_ASSUME_UNREACHABLE("NYI");
-    }
-    void loadStaticFloat32(const float *dp, const FloatRegister &dest) {
-        MOZ_ASSUME_UNREACHABLE("NYI");
-    }
-    void loadConstantFloat32(const float dp, const FloatRegister &dest) {
-        MOZ_ASSUME_UNREACHABLE("NYI");
-    }
+    void boolValueToFloat32(const ValueOperand &operand, const FloatRegister &dest);
+    void int32ValueToFloat32(const ValueOperand &operand, const FloatRegister &dest);
+    void loadConstantFloat32(float f, const FloatRegister &dest);
 
     template<typename T>
     void branchTestInt32(Condition cond, const T & t, Label *label) {
@@ -1240,12 +1239,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadFloatAsDouble(const Address &addr, const FloatRegister &dest);
     void loadFloatAsDouble(const BaseIndex &src, const FloatRegister &dest);
 
-    void loadFloat(const Address &addr, const FloatRegister &dest) {
-        MOZ_ASSUME_UNREACHABLE("NYI");
-    }
-    void loadFloat(const BaseIndex &src, const FloatRegister &dest) {
-        MOZ_ASSUME_UNREACHABLE("NYI");
-    }
+    void loadFloat(const Address &addr, const FloatRegister &dest);
+    void loadFloat(const BaseIndex &src, const FloatRegister &dest);
 
     void store8(const Register &src, const Address &address);
     void store8(const Imm32 &imm, const Address &address);
@@ -1334,10 +1329,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void branchDouble(DoubleCondition cond, const FloatRegister &lhs, const FloatRegister &rhs,
                       Label *label);
 
+    void compareFloat(FloatRegister lhs, FloatRegister rhs);
     void branchFloat(DoubleCondition cond, const FloatRegister &lhs, const FloatRegister &rhs,
-                      Label *label) {
-        MOZ_ASSUME_UNREACHABLE("NYI");
-    }
+                     Label *label);
 
     void checkStackAlignment();
 

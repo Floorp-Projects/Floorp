@@ -52,8 +52,8 @@ MacroAssemblerARM::convertInt32ToDouble(const Register &src, const FloatRegister
 void
 MacroAssemblerARM::convertInt32ToDouble(const Address &src, FloatRegister dest)
 {
-    ma_ldr(Operand(src), ScratchRegister);
-    convertInt32ToDouble(ScratchRegister, dest);
+    ma_vldr(Operand(src), ScratchFloatReg);
+    as_vcvt(dest, VFPRegister(ScratchFloatReg).sintOverlay());
 }
 
 void
@@ -114,6 +114,35 @@ MacroAssemblerARM::convertDoubleToInt32(const FloatRegister &src, const Register
         ma_cmp(dest, Imm32(0x80000000), Assembler::Equal);
         ma_b(fail, Assembler::Equal);
     }
+}
+
+void
+MacroAssemblerARM::convertFloatToDouble(const FloatRegister &src, const FloatRegister &dest) {
+    as_vcvt(VFPRegister(dest), VFPRegister(src).singleOverlay());
+}
+
+void
+MacroAssemblerARM::branchTruncateFloat32(const FloatRegister &src, const Register &dest, Label *fail) {
+    ma_vcvt_F32_I32(src, ScratchFloatReg);
+    ma_vxfer(ScratchFloatReg, dest);
+    ma_cmp(dest, Imm32(0x7fffffff));
+    ma_cmp(dest, Imm32(0x80000000), Assembler::NotEqual);
+    ma_b(fail, Assembler::Equal);
+}
+
+void
+MacroAssemblerARM::convertInt32ToFloat32(const Register &src, const FloatRegister &dest_) {
+    // direct conversions aren't possible.
+    VFPRegister dest = VFPRegister(dest_).singleOverlay();
+    as_vxfer(src, InvalidReg, dest.sintOverlay(),
+             CoreToFloat);
+    as_vcvt(dest, dest.sintOverlay());
+}
+
+void
+MacroAssemblerARM::convertInt32ToFloat32(const Address &src, FloatRegister dest) {
+    ma_vldr(Operand(src), ScratchFloatReg);
+    as_vcvt(dest, VFPRegister(ScratchFloatReg).sintOverlay());
 }
 
 void
@@ -1297,9 +1326,23 @@ MacroAssemblerARM::ma_vadd(FloatRegister src1, FloatRegister src2, FloatRegister
 }
 
 void
+MacroAssemblerARM::ma_vadd_f32(FloatRegister src1, FloatRegister src2, FloatRegister dst)
+{
+    as_vadd(VFPRegister(dst).singleOverlay(), VFPRegister(src1).singleOverlay(),
+            VFPRegister(src2).singleOverlay());
+}
+
+void
 MacroAssemblerARM::ma_vsub(FloatRegister src1, FloatRegister src2, FloatRegister dst)
 {
     as_vsub(VFPRegister(dst), VFPRegister(src1), VFPRegister(src2));
+}
+
+void
+MacroAssemblerARM::ma_vsub_f32(FloatRegister src1, FloatRegister src2, FloatRegister dst)
+{
+    as_vsub(VFPRegister(dst).singleOverlay(), VFPRegister(src1).singleOverlay(),
+            VFPRegister(src2).singleOverlay());
 }
 
 void
@@ -1309,9 +1352,23 @@ MacroAssemblerARM::ma_vmul(FloatRegister src1, FloatRegister src2, FloatRegister
 }
 
 void
+MacroAssemblerARM::ma_vmul_f32(FloatRegister src1, FloatRegister src2, FloatRegister dst)
+{
+    as_vmul(VFPRegister(dst).singleOverlay(), VFPRegister(src1).singleOverlay(),
+            VFPRegister(src2).singleOverlay());
+}
+
+void
 MacroAssemblerARM::ma_vdiv(FloatRegister src1, FloatRegister src2, FloatRegister dst)
 {
     as_vdiv(VFPRegister(dst), VFPRegister(src1), VFPRegister(src2));
+}
+
+void
+MacroAssemblerARM::ma_vdiv_f32(FloatRegister src1, FloatRegister src2, FloatRegister dst)
+{
+    as_vdiv(VFPRegister(dst).singleOverlay(), VFPRegister(src1).singleOverlay(),
+            VFPRegister(src2).singleOverlay());
 }
 
 void
@@ -1327,6 +1384,12 @@ MacroAssemblerARM::ma_vneg(FloatRegister src, FloatRegister dest, Condition cc)
 }
 
 void
+MacroAssemblerARM::ma_vneg_f32(FloatRegister src, FloatRegister dest, Condition cc)
+{
+    as_vneg(VFPRegister(dest).singleOverlay(), VFPRegister(src).singleOverlay(), cc);
+}
+
+void
 MacroAssemblerARM::ma_vabs(FloatRegister src, FloatRegister dest, Condition cc)
 {
     as_vabs(dest, src, cc);
@@ -1338,33 +1401,48 @@ MacroAssemblerARM::ma_vsqrt(FloatRegister src, FloatRegister dest, Condition cc)
     as_vsqrt(dest, src, cc);
 }
 
+union DoublePun
+{
+    struct
+    {
+#if defined(IS_LITTLE_ENDIAN)
+        uint32_t lo, hi;
+#else
+        uint32_t hi, lo;
+#endif
+    } s;
+    double d;
+};
+
+static inline uint32_t
+DoubleHighWord(const double& value)
+{
+    const DoublePun *dpun = reinterpret_cast<const DoublePun *>(&value);
+    return dpun->s.hi;
+}
+
+static inline uint32_t
+DoubleLowWord(const double& value)
+{
+    const DoublePun *dpun = reinterpret_cast<const DoublePun *>(&value);
+    return dpun->s.lo;
+}
+
 void
 MacroAssemblerARM::ma_vimm(double value, FloatRegister dest, Condition cc)
 {
-    union DoublePun {
-        struct {
-#if defined(IS_LITTLE_ENDIAN)
-            uint32_t lo, hi;
-#else
-            uint32_t hi, lo;
-#endif
-        } s;
-        double d;
-    } dpun;
-    dpun.d = value;
     if (hasVFPv3()) {
-        if (dpun.s.lo == 0) {
-            if (dpun.s.hi == 0) {
+        if (DoubleLowWord(value) == 0) {
+            if (DoubleHighWord(value) == 0) {
                 // To zero a register, load 1.0, then execute dN <- dN - dN
-                VFPImm dblEnc(0x3FF00000);
-                as_vimm(dest, dblEnc, cc);
+                as_vimm(dest, VFPImm::one, cc);
                 as_vsub(dest, dest, dest, cc);
                 return;
             }
 
-            VFPImm dblEnc(dpun.s.hi);
-            if (dblEnc.isValid()) {
-                as_vimm(dest, dblEnc, cc);
+            VFPImm enc(DoubleHighWord(value));
+            if (enc.isValid()) {
+                as_vimm(dest, enc, cc);
                 return;
             }
 
@@ -1372,6 +1450,34 @@ MacroAssemblerARM::ma_vimm(double value, FloatRegister dest, Condition cc)
     }
     // Fall back to putting the value in a pool.
     as_FImm64Pool(dest, value, NULL, cc);
+}
+
+static inline uint32_t
+Float32Word(const float& value)
+{
+    return *reinterpret_cast<const uint32_t*>(&value);
+}
+
+void
+MacroAssemblerARM::ma_vimm_f32(float value, FloatRegister dest, Condition cc)
+{
+    VFPRegister vd = VFPRegister(dest).singleOverlay();
+    if (hasVFPv3()) {
+        if (Float32Word(value) == 0) {
+            // To zero a register, load 1.0, then execute sN <- sN - sN
+            as_vimm(vd, VFPImm::one, cc);
+            as_vsub(vd, vd, vd, cc);
+            return;
+        }
+
+        VFPImm enc(DoubleHighWord(double(value)));
+        if (enc.isValid()) {
+            as_vimm(vd, enc, cc);
+            return;
+        }
+    }
+    // Fall back to putting the value in a pool.
+    as_FImm32Pool(vd, value, NULL, cc);
 }
 
 void
@@ -1404,6 +1510,27 @@ void
 MacroAssemblerARM::ma_vcvt_U32_F64(FloatRegister dest, FloatRegister src, Condition cc)
 {
     as_vcvt(VFPRegister(dest), VFPRegister(src).uintOverlay(), false, cc);
+}
+
+void
+MacroAssemblerARM::ma_vcvt_F32_I32(FloatRegister src, FloatRegister dest, Condition cc)
+{
+    as_vcvt(VFPRegister(dest).sintOverlay(), VFPRegister(src).singleOverlay(), false, cc);
+}
+void
+MacroAssemblerARM::ma_vcvt_F32_U32(FloatRegister src, FloatRegister dest, Condition cc)
+{
+    as_vcvt(VFPRegister(dest).uintOverlay(), VFPRegister(src).singleOverlay(), false, cc);
+}
+void
+MacroAssemblerARM::ma_vcvt_I32_F32(FloatRegister dest, FloatRegister src, Condition cc)
+{
+    as_vcvt(VFPRegister(dest).singleOverlay(), VFPRegister(src).sintOverlay(), false, cc);
+}
+void
+MacroAssemblerARM::ma_vcvt_U32_F32(FloatRegister dest, FloatRegister src, Condition cc)
+{
+    as_vcvt(VFPRegister(dest).singleOverlay(), VFPRegister(src).uintOverlay(), false, cc);
 }
 
 void
@@ -1949,7 +2076,7 @@ void
 MacroAssemblerARMCompat::loadFloatAsDouble(const Address &address, const FloatRegister &dest)
 {
     VFPRegister rt = dest;
-    ma_vdtr(IsLoad, address, rt.singleOverlay());
+    ma_vldr(Operand(address), rt.singleOverlay());
     as_vcvt(rt, rt.singleOverlay());
 }
 
@@ -1965,8 +2092,28 @@ MacroAssemblerARMCompat::loadFloatAsDouble(const BaseIndex &src, const FloatRegi
     VFPRegister rt = dest;
     as_add(ScratchRegister, base, lsl(index, scale));
 
-    ma_vdtr(IsLoad, Operand(ScratchRegister, offset), rt.singleOverlay());
+    ma_vldr(Operand(ScratchRegister, offset), rt.singleOverlay());
     as_vcvt(rt, rt.singleOverlay());
+}
+
+void
+MacroAssemblerARMCompat::loadFloat(const Address &address, const FloatRegister &dest)
+{
+    ma_vldr(Operand(address), VFPRegister(dest).singleOverlay());
+}
+
+void
+MacroAssemblerARMCompat::loadFloat(const BaseIndex &src, const FloatRegister &dest)
+{
+    // VFP instructions don't even support register Base + register Index modes, so
+    // just add the index, then handle the offset like normal
+    Register base = src.base;
+    Register index = src.index;
+    uint32_t scale = Imm32::ShiftOf(src.scale).value;
+    int32_t offset = src.offset;
+    as_add(ScratchRegister, base, lsl(index, scale));
+
+    ma_vldr(Operand(ScratchRegister, offset), VFPRegister(dest).singleOverlay());
 }
 
 void
@@ -2239,6 +2386,43 @@ MacroAssemblerARMCompat::branchDouble(DoubleCondition cond, const FloatRegister 
                                       const FloatRegister &rhs, Label *label)
 {
     compareDouble(lhs, rhs);
+
+    if (cond == DoubleNotEqual) {
+        // Force the unordered cases not to jump.
+        Label unordered;
+        ma_b(&unordered, VFP_Unordered);
+        ma_b(label, VFP_NotEqualOrUnordered);
+        bind(&unordered);
+        return;
+    }
+
+    if (cond == DoubleEqualOrUnordered) {
+        ma_b(label, VFP_Unordered);
+        ma_b(label, VFP_Equal);
+        return;
+    }
+
+    ma_b(label, ConditionFromDoubleCondition(cond));
+}
+
+void
+MacroAssemblerARMCompat::compareFloat(FloatRegister lhs, FloatRegister rhs)
+{
+    // Compare the doubles, setting vector status flags.
+    if (rhs == InvalidFloatReg)
+        as_vcmpz(VFPRegister(lhs).singleOverlay());
+    else
+        as_vcmp(VFPRegister(lhs).singleOverlay(), VFPRegister(rhs).singleOverlay());
+
+    // Move vector status bits to normal status flags.
+    as_vmrs(pc);
+}
+
+void
+MacroAssemblerARMCompat::branchFloat(DoubleCondition cond, const FloatRegister &lhs,
+                                     const FloatRegister &rhs, Label *label)
+{
+    compareFloat(lhs, rhs);
 
     if (cond == DoubleNotEqual) {
         // Force the unordered cases not to jump.
@@ -2693,6 +2877,33 @@ MacroAssemblerARMCompat::int32ValueToDouble(const ValueOperand &operand, const F
 }
 
 void
+MacroAssemblerARMCompat::boolValueToFloat32(const ValueOperand &operand, const FloatRegister &dest)
+{
+    VFPRegister d = VFPRegister(dest).singleOverlay();
+    ma_vimm_f32(1.0, dest);
+    ma_cmp(operand.payloadReg(), Imm32(0));
+    // If the source is 0, then subtract the dest from itself, producing 0.
+    as_vsub(d, d, d, Equal);
+}
+
+void
+MacroAssemblerARMCompat::int32ValueToFloat32(const ValueOperand &operand, const FloatRegister &dest)
+{
+    // transfer the integral value to a floating point register
+    VFPRegister vfpdest = VFPRegister(dest).singleOverlay();
+    as_vxfer(operand.payloadReg(), InvalidReg,
+             vfpdest.sintOverlay(), CoreToFloat);
+    // convert the value to a float.
+    as_vcvt(vfpdest, vfpdest.sintOverlay());
+}
+
+void
+MacroAssemblerARMCompat::loadConstantFloat32(float f, const FloatRegister &dest)
+{
+    ma_vimm_f32(f, dest);
+}
+
+void
 MacroAssemblerARMCompat::loadInt32OrDouble(const Operand &src, const FloatRegister &dest)
 {
     Label notInt32, end;
@@ -2743,11 +2954,6 @@ MacroAssemblerARMCompat::loadConstantDouble(double dp, const FloatRegister &dest
     as_FImm64Pool(dest, dp);
 }
 
-void
-MacroAssemblerARMCompat::loadStaticDouble(const double *dp, const FloatRegister &dest)
-{
-    loadConstantDouble(*dp, dest);
-}
     // treat the value as a boolean, and set condition codes accordingly
 
 Assembler::Condition

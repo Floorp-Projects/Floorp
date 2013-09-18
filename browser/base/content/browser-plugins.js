@@ -4,10 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 var gPluginHandler = {
-  PLUGIN_SCRIPTED_STATE_NONE: 0,
-  PLUGIN_SCRIPTED_STATE_FIRED: 1,
-  PLUGIN_SCRIPTED_STATE_DONE: 2,
-
   PREF_NOTIFY_MISSING_FLASH: "plugins.notifyMissingFlash",
   PREF_SESSION_PERSIST_MINUTES: "plugin.sessionPermissionNow.intervalInMinutes",
   PREF_PERSISTENT_DAYS: "plugin.persistentPermissionAlways.intervalInDays",

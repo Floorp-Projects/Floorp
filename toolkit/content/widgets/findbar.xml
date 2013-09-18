@@ -105,7 +105,7 @@
 
       <handler event="blur"><![CDATA[
         let findbar = this.findbar;
-        findbar.browser.finder.focusContent();
+        findbar.browser.finder.removeSelection();
       ]]></handler>
 
       <handler event="compositionstart"><![CDATA[
@@ -433,28 +433,6 @@
                        }, this._quickFindTimeoutLength, this);
         ]]></body>
       </method>
-
-      <!--
-        - For a given node, walk up it's parent chain, to try and find an
-        - editable node.
-        -
-        - @param aNode the node we want to check
-        - @returns the first node in the parent chain that is editable,
-        -          null if there is no such node
-        -->
-      <method name="_getEditableNode">
-        <parameter name="aNode"/>
-        <body><![CDATA[
-          while (aNode) {
-            if (aNode instanceof Components.interfaces.nsIDOMNSEditableElement) {
-              return aNode.editor ? aNode : null;
-            }
-            aNode = aNode.parentNode;
-          }
-          return null;
-        ]]></body>
-      </method>
-
 
       <!--
         - Turns highlight on or off.

@@ -199,9 +199,6 @@ using mozilla::dom::workers::ResolveWorkerClasses;
 
 static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
-static const char kDOMStringBundleURL[] =
-  "chrome://global/locale/dom/dom.properties";
-
 // NOTE: DEFAULT_SCRIPTABLE_FLAGS and DOM_DEFAULT_SCRIPTABLE_FLAGS
 //       are defined in nsIDOMClassInfo.h.
 
@@ -354,8 +351,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(CSSNameSpaceRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSRuleList, nsCSSRuleListSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(CSSGroupRuleRuleList, nsCSSRuleListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MediaList, nsMediaListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
@@ -706,50 +701,6 @@ WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
 {
   return WrapNative(cx, scope, native, cache, nullptr, vp, aHolder,
                     aAllowWrapping);
-}
-
-// Used for cases where PreCreate needs to wrap the native parent, and the
-// native parent is likely to have been wrapped already.  |native| must
-// implement nsWrapperCache, and nativeWrapperCache must be |native|'s
-// nsWrapperCache.
-static inline nsresult
-WrapNativeParent(JSContext *cx, JS::Handle<JSObject*> scope, nsISupports *native,
-                 nsWrapperCache *nativeWrapperCache, JSObject **parentObj)
-{
-  // In the common case, |native| is a wrapper cache with an existing wrapper
-#ifdef DEBUG
-  nsWrapperCache* cache = nullptr;
-  CallQueryInterface(native, &cache);
-  NS_PRECONDITION(nativeWrapperCache &&
-                  cache == nativeWrapperCache, "What happened here?");
-#endif
-
-  JS::Rooted<JSObject*> obj(cx, nativeWrapperCache->GetWrapper());
-  if (obj) {
-#ifdef DEBUG
-    JS::Rooted<JS::Value> debugVal(cx);
-    nsresult rv = WrapNative(cx, scope, native, nativeWrapperCache, false,
-                             debugVal.address());
-    NS_ASSERTION(NS_SUCCEEDED(rv) && JSVAL_TO_OBJECT(debugVal) == obj,
-                 "Unexpected object in nsWrapperCache");
-#endif
-    *parentObj = obj;
-    return NS_OK;
-  }
-
-  JS::Rooted<JS::Value> v(cx);
-  nsresult rv = WrapNative(cx, scope, native, nativeWrapperCache, false, v.address());
-  NS_ENSURE_SUCCESS(rv, rv);
-  *parentObj = v.toObjectOrNull();
-  return NS_OK;
-}
-
-template<class P>
-static inline nsresult
-WrapNativeParent(JSContext *cx, JS::Handle<JSObject*> scope, P *parent,
-                 JSObject **parentObj)
-{
-  return WrapNativeParent(cx, scope, ToSupports(parent), parent, parentObj);
 }
 
 // Helper to handle torn-down inner windows.
@@ -1126,10 +1077,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(CSSRuleList, nsIDOMCSSRuleList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRuleList)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(CSSGroupRuleRuleList, nsIDOMCSSRuleList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRuleList)
   DOM_CLASSINFO_MAP_END
 

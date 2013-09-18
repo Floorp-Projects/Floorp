@@ -1958,13 +1958,10 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
     MIRType outputType = ins->type();
 
     JS_ASSERT(inputType == outputType);
-    JS_ASSERT_IF(ins->alwaysBails(), outputType == MIRType_Value);
 
     // Handle typebarrier that will always bail.
     // (Emit LBail for visibility).
     if (ins->alwaysBails()) {
-        JS_ASSERT(outputType == MIRType_Value);
-
         LBail *bail = new LBail();
         if (!assignSnapshot(bail, ins->bailoutKind()))
             return false;
@@ -2439,8 +2436,11 @@ LIRGenerator::visitStoreTypedArrayElement(MStoreTypedArrayElement *ins)
     JS_ASSERT(ins->index()->type() == MIRType_Int32);
 
     if (ins->isFloatArray()) {
-        JS_ASSERT_IF(ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT32, ins->value()->type() == MIRType_Float32);
-        JS_ASSERT_IF(ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT64, ins->value()->type() == MIRType_Double);
+        bool optimizeFloat32 = allowFloat32Optimizations();
+        JS_ASSERT_IF(optimizeFloat32 && ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT32,
+                     ins->value()->type() == MIRType_Float32);
+        JS_ASSERT_IF(!optimizeFloat32 || ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT64,
+                     ins->value()->type() == MIRType_Double);
     } else {
         JS_ASSERT(ins->value()->type() == MIRType_Int32);
     }
@@ -2465,8 +2465,11 @@ LIRGenerator::visitStoreTypedArrayElementHole(MStoreTypedArrayElementHole *ins)
     JS_ASSERT(ins->length()->type() == MIRType_Int32);
 
     if (ins->isFloatArray()) {
-        JS_ASSERT_IF(ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT32, ins->value()->type() == MIRType_Float32);
-        JS_ASSERT_IF(ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT64, ins->value()->type() == MIRType_Double);
+        bool optimizeFloat32 = allowFloat32Optimizations();
+        JS_ASSERT_IF(optimizeFloat32 && ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT32,
+                     ins->value()->type() == MIRType_Float32);
+        JS_ASSERT_IF(!optimizeFloat32 || ins->arrayType() == ScalarTypeRepresentation::TYPE_FLOAT64,
+                     ins->value()->type() == MIRType_Double);
     } else {
         JS_ASSERT(ins->value()->type() == MIRType_Int32);
     }

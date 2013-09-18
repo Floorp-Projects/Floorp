@@ -180,6 +180,12 @@ function ResponsiveUI(aWindow, aTab)
   this.buildUI();
   this.checkMenus();
 
+  this.docShell = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIWebNavigation)
+                      .QueryInterface(Ci.nsIDocShell);
+
+  this.docShell.deviceSizeIsPageSize = true;
+
   try {
     if (Services.prefs.getBoolPref("devtools.responsiveUI.rotate")) {
       this.rotate();
@@ -252,6 +258,8 @@ ResponsiveUI.prototype = {
     this.browser.removeEventListener("load", this.bound_onPageLoad, true);
     this.browser.removeEventListener("unload", this.bound_onPageUnload, true);
 
+    this.docShell.deviceSizeIsPageSize = false;
+
     if (this._floatingScrollbars)
       switchToNativeScrollbars(this.tab);
 
@@ -288,6 +296,7 @@ ResponsiveUI.prototype = {
     this.container.removeAttribute("responsivemode");
     this.stack.removeAttribute("responsivemode");
 
+    delete this.docShell;
     delete this.tab.__responsiveUI;
     if (this.touchEventHandler)
       this.touchEventHandler.stop();

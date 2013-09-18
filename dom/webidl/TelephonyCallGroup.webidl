@@ -25,16 +25,10 @@ interface TelephonyCallGroup : EventTarget {
 
   readonly attribute DOMString state;
 
-  [SetterThrows]
   attribute EventHandler onstatechange;
-  [SetterThrows]
   attribute EventHandler onconnected;
-  [SetterThrows]
   attribute EventHandler onholding;
-  [SetterThrows]
   attribute EventHandler onheld;
-  [SetterThrows]
   attribute EventHandler onresuming;
-  [SetterThrows]
   attribute EventHandler oncallschanged;
 };

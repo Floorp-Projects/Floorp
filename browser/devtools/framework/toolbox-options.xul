@@ -31,6 +31,24 @@
           <radio value="light" label="&options.lightTheme.label;"/>
           <radio value="dark" label="&options.darkTheme.label;"/>
         </radiogroup>
+        <label value="&options.context.inspector;"/>
+        <vbox id="inspector-options" class="options-groupbox">
+          <hbox align="center">
+            <label value="&options.defaultColorUnit.label;"
+              control="defaultColorUnitMenuList"
+              accesskey="&options.defaultColorUnit.accesskey;"/>
+            <menulist id="defaultColorUnitMenuList"
+                      label="&options.defaultColorUnit.label;"
+                      data-pref="devtools.defaultColorUnit">
+              <menupopup>
+                <menuitem label="&options.defaultColorUnit.hex;" value="hex"/>
+                <menuitem label="&options.defaultColorUnit.hsl;" value="hsl"/>
+                <menuitem label="&options.defaultColorUnit.rgb;" value="rgb"/>
+                <menuitem label="&options.defaultColorUnit.name;" value="name"/>
+              </menupopup>
+            </menulist>
+          </hbox>
+        </vbox>
         <label value="&options.webconsole.label;"/>
         <vbox id="webconsole-options" class="options-groupbox">
           <checkbox label="&options.enablePersistentLogging.label;"

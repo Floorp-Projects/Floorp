@@ -12,13 +12,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=539565
 
   <script class="testbody" type="text/javascript">
 function runTests() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  viewer = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                 .getInterface(Components.interfaces.nsIWebNavigation)
-                 .QueryInterface(Components.interfaces.nsIDocShell)
-                 .contentViewer
-                 .QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
-
   var moveBy = 17;
   var waitedForPaint = 0;
   function waitForPaint(func) {
@@ -40,20 +33,18 @@ function runTests() {
   }
 
   function doClick(x,y,func) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    synthesizeMouse($("plugin1"), x, y, {}, window); 
+    synthesizeMouse($("plugin1"), x, y, {}, window);
     setTimeout(func,0);
   }
 
   function verify(test,x,y,next) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var p = $("plugin1").getLastMouseX();
     const delta = 2;
     ok(p-delta <= x && x <= p+delta, "test"+test+" LastMouseX got " + p + " expected " + x + 
-                                     " with fullZoom="+viewer.fullZoom+" MozTransform='"+$("container").style.MozTransform+"'");
+                                     " with fullZoom="+SpecialPowers.getFullZoom(window)+" MozTransform='"+$("container").style.MozTransform+"'");
     p = $("plugin1").getLastMouseY();
     ok(p-delta <= y && y <= p+delta, "test"+test+" LastMouseY got " + p + " expected " + y +
-                                     " with fullZoom="+viewer.fullZoom+" MozTransform='"+$("container").style.MozTransform+"'");
+                                     " with fullZoom="+SpecialPowers.getFullZoom(window)+" MozTransform='"+$("container").style.MozTransform+"'");
     if (next) next();
   }
 
@@ -61,8 +52,7 @@ function runTests() {
     waitForPaint(function(){doClick(x,y,next);})
   }
   function zoom(factor) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    viewer.fullZoom = factor;
+    SpecialPowers.setFullZoom(window, factor);
   }
 
   function test1() { // fullZoom=1 (sanity check)

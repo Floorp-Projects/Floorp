@@ -13,7 +13,7 @@
 
 #include "mozilla/css/Declaration.h"
 #include "nsPrintfCString.h"
-#include "mozilla/Preferences.h"
+#include "gfxFontConstants.h"
 
 namespace mozilla {
 namespace css {

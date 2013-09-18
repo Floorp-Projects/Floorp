@@ -9,6 +9,8 @@
 
 #include <stdio.h>                      // for FILE
 #include <stdint.h>                     // for int32_t, int64_t
+#include <algorithm>                    // for min/max
+#include "nsDebug.h"                    // for NS_WARNING
 #include "gfxCore.h"                    // for NS_GFX
 #include "mozilla/Likely.h"             // for MOZ_UNLIKELY
 #include "mozilla/gfx/BaseRect.h"       // for BaseRect
@@ -53,11 +55,6 @@ struct NS_GFX nsRect :
   }
 #endif
 
-  // A version of Inflate that caps the values to the nscoord range.
-  // x & y is capped at the minimum value nscoord_MIN and
-  // width & height is capped at the maximum value nscoord_MAX.
-  void SaturatingInflate(const nsMargin& aMargin);
-
   // We have saturating versions of all the Union methods. These avoid
   // overflowing nscoord values in the 'width' and 'height' fields by
   // clamping the width and height values to nscoord_MAX if necessary.
@@ -73,7 +70,40 @@ struct NS_GFX nsRect :
     }
   }
 
-  nsRect SaturatingUnionEdges(const nsRect& aRect) const;
+  nsRect SaturatingUnionEdges(const nsRect& aRect) const
+  {
+#ifdef NS_COORD_IS_FLOAT
+    return UnionEdges(aRect);
+#else
+    nsRect result;
+    result.x = std::min(aRect.x, x);
+    int64_t w = std::max(int64_t(aRect.x) + aRect.width, int64_t(x) + width) - result.x;
+    if (MOZ_UNLIKELY(w > nscoord_MAX)) {
+      NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord width");
+      // Clamp huge negative x to nscoord_MIN / 2 and try again.
+      result.x = std::max(result.x, nscoord_MIN / 2);
+      w = std::max(int64_t(aRect.x) + aRect.width, int64_t(x) + width) - result.x;
+      if (MOZ_UNLIKELY(w > nscoord_MAX)) {
+        w = nscoord_MAX;
+      }
+    }
+    result.width = nscoord(w);
+
+    result.y = std::min(aRect.y, y);
+    int64_t h = std::max(int64_t(aRect.y) + aRect.height, int64_t(y) + height) - result.y;
+    if (MOZ_UNLIKELY(h > nscoord_MAX)) {
+      NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord height");
+      // Clamp huge negative y to nscoord_MIN / 2 and try again.
+      result.y = std::max(result.y, nscoord_MIN / 2);
+      h = std::max(int64_t(aRect.y) + aRect.height, int64_t(y) + height) - result.y;
+      if (MOZ_UNLIKELY(h > nscoord_MAX)) {
+        h = nscoord_MAX;
+      }
+    }
+    result.height = nscoord(h);
+    return result;
+#endif
+  }
 
 #ifndef NS_COORD_IS_FLOAT
   // Make all nsRect Union methods be saturating.

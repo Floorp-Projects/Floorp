@@ -38,6 +38,7 @@
 #include "jsstr.h"
 #include "jstypes.h"
 #include "jsutil.h"
+#include "jswatchpoint.h"
 #include "jsweakmap.h"
 #ifdef JS_THREADSAFE
 #include "jsworkers.h"
@@ -88,7 +89,6 @@
 
 #include "vm/Interpreter-inl.h"
 #include "vm/ObjectImpl-inl.h"
-#include "vm/Shape-inl.h"
 #include "vm/String-inl.h"
 
 using namespace js;
@@ -716,7 +716,6 @@ JS_NewRuntime(uint32_t maxbytes, JSUseHelperThreads useHelperThreads)
 JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt)
 {
-    js_free(rt->defaultLocale);
     js_delete(rt);
 }
 
@@ -4447,6 +4446,7 @@ JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
       versionSet(false),
       utf8(false),
       filename(NULL),
+      sourceMapURL(NULL),
       lineno(1),
       column(0),
       element(NullPtr()),
@@ -5268,7 +5268,7 @@ INTERNED_STRING_TO_JSID(JSContext *cx, JSString *str)
 }
 
 JS_PUBLIC_API(JSString *)
-JS_InternJSString(JSContext *cx, JSString *str)
+JS_InternJSString(JSContext *cx, HandleString str)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -5471,15 +5471,7 @@ JS_FileEscapedString(FILE *fp, JSString *str, char quote)
 }
 
 JS_PUBLIC_API(JSString *)
-JS_NewGrowableString(JSContext *cx, jschar *chars, size_t length)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    return js_NewString<CanGC>(cx, chars, length);
-}
-
-JS_PUBLIC_API(JSString *)
-JS_NewDependentString(JSContext *cx, JSString *str, size_t start, size_t length)
+JS_NewDependentString(JSContext *cx, HandleString str, size_t start, size_t length)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -5487,13 +5479,11 @@ JS_NewDependentString(JSContext *cx, JSString *str, size_t start, size_t length)
 }
 
 JS_PUBLIC_API(JSString *)
-JS_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
+JS_ConcatStrings(JSContext *cx, HandleString left, HandleString right)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    Rooted<JSString*> lstr(cx, left);
-    Rooted<JSString*> rstr(cx, right);
-    return ConcatStrings<CanGC>(cx, lstr, rstr);
+    return ConcatStrings<CanGC>(cx, left, right);
 }
 
 JS_PUBLIC_API(bool)
@@ -5570,19 +5560,15 @@ JS_EncodeStringToBuffer(JSContext *cx, JSString *str, char *buffer, size_t lengt
 }
 
 JS_PUBLIC_API(bool)
-JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacerArg, jsval space,
-             JSONWriteCallback callback, void *data)
+JS_Stringify(JSContext *cx, MutableHandleValue vp, HandleObject replacer,
+             HandleValue space, JSONWriteCallback callback, void *data)
 {
-    RootedObject replacer(cx, replacerArg);
-    RootedValue value(cx, *vp);
-
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, replacer, space);
     StringBuffer sb(cx);
-    if (!js_Stringify(cx, &value, replacer, space, sb))
+    if (!js_Stringify(cx, vp, replacer, space, sb))
         return false;
-    *vp = value;
     if (sb.empty()) {
         HandlePropertyName null = cx->names().null;
         return callback(null->chars(), null->length(), data);
@@ -5596,22 +5582,16 @@ JS_ParseJSON(JSContext *cx, const jschar *chars, uint32_t len, JS::MutableHandle
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    RootedValue reviver(cx, NullValue()), value(cx);
+    RootedValue reviver(cx, NullValue());
     return ParseJSONWithReviver(cx, JS::StableCharPtr(chars, len), len, reviver, vp);
 }
 
 JS_PUBLIC_API(bool)
-JS_ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32_t len, jsval reviverArg, jsval *vp)
+JS_ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32_t len, HandleValue reviver, MutableHandleValue vp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-
-    RootedValue reviver(cx, reviverArg), value(cx);
-    if (!ParseJSONWithReviver(cx, StableCharPtr(chars, len), len, reviver, &value))
-        return false;
-
-    *vp = value;
-    return true;
+    return ParseJSONWithReviver(cx, StableCharPtr(chars, len), len, reviver, vp);
 }
 
 /************************************************************************/
