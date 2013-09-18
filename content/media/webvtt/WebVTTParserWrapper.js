@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/vtt.jsm");
+// TODO: Import vtt.js
 
 var Ci = Components.interfaces;
 
@@ -19,7 +19,7 @@ WebVTTParserWrapper.prototype =
 {
   loadParser: function(window)
   {
-    this.parser = new WebVTTParser(window,  new TextDecoder("utf8"));
+    // TODO: Instantiate JS WebVTT parser
   },
 
   parse: function(data, count)
@@ -31,23 +31,22 @@ WebVTTParserWrapper.prototype =
       buffer[i] = data.charCodeAt(i);
     }
 
-    this.parser.parse(buffer);
+    // TODO: Call parse on JS WebVTT parser
   },
 
   flush: function()
   {
-    this.parser.flush();
+    // TODO: Call flush on JS WebVTT parser
   },
 
   watch: function(callback)
   {
-    this.parser.oncue = callback.onCue;
-    this.parser.onregion = callback.onRegion;
+    // TODO: Set callbacks for oncue and onregion for JS WebVTT parser
   },
 
   convertCueToDOMTree: function(window, cue)
   {
-    return WebVTTParser.convertCueToDOMTree(window, cue.text);
+    // TODO: Call convertCueToDOMTree on JS WebVTT parser
   },
 
   classDescription: "Wrapper for the JS WebVTTParser (vtt.js)",
