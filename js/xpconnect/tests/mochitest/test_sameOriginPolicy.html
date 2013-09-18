@@ -40,9 +40,7 @@ function check(obj, prop, allowed, write) {
 var crossOriginReadableWindowProps = ['blur', 'close', 'closed', 'focus',
                                       'frames', 'location', 'length',
                                       'opener', 'parent', 'postMessage',
-                                      'self', 'top', 'window',
-                                      /* indexed and named accessors */
-                                      '0', 'subframe'];
+                                      'self', 'top', 'window'];
 
 function isCrossOriginReadable(obj, prop) {
   if (obj == "Window")
