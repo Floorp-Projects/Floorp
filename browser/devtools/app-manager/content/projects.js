@@ -171,8 +171,34 @@ let UI = {
          });
   },
 
-  remove: function(location) {
-    AppProjects.remove(location);
+  remove: function(location, event) {
+    if (event) {
+      // We don't want the "click" event to be propagated to the project item.
+      // That would trigger `selectProject()`.
+      event.stopPropagation();
+    }
+
+    let item = document.getElementById(location);
+
+    let toSelect = document.querySelector(".project-item.selected");
+    toSelect = toSelect ? toSelect.id : "";
+
+    if (toSelect == location) {
+      toSelect = null;
+      let sibling;
+      if (item.previousElementSibling) {
+        sibling = item.previousElementSibling;
+      } else {
+        sibling = item.nextElementSibling;
+      }
+      if (sibling && !!AppProjects.get(sibling.id)) {
+        toSelect = sibling.id;
+      }
+    }
+
+    AppProjects.remove(location).then(() => {
+      this.selectProject(toSelect);
+    });
   },
 
   _getProjectManifestURL: function (project) {
@@ -326,15 +352,20 @@ let UI = {
         break;
       }
     }
-    if (idx == projects.length) {
-      // Not found
-      return;
-    }
 
     let oldButton = document.querySelector(".project-item.selected");
     if (oldButton) {
       oldButton.classList.remove("selected");
     }
+
+    if (idx == projects.length) {
+      // Not found. Empty lense.
+      let lense = document.querySelector("#lense");
+      lense.setAttribute("template-for", '{"path":"","childSelector":""}');
+      this.template._processFor(lense);
+      return;
+    }
+
     let button = document.getElementById(location);
     button.classList.add("selected");
 

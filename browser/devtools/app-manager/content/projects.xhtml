@@ -39,7 +39,7 @@
     <div class="project-item-status" template='{"type":"attribute","path":"validationStatus","name":"status"}'></div>
     <img class="project-item-icon" template='{"type":"attribute","path":"icon","name":"src"}' />
     <div class="project-item-meta">
-      <div class="button-remove" onclick="UI.remove(this.dataset.location)" template='{"type":"attribute","path":"location","name":"data-location"}' title="&projects.removeAppFromList;"></div>
+      <div class="button-remove" onclick="UI.remove(this.dataset.location, event)" template='{"type":"attribute","path":"location","name":"data-location"}' title="&projects.removeAppFromList;"></div>
       <strong template='{"type":"textContent","path":"name"}'></strong>
       <span class="project-item-type" template='{"type":"textContent","path":"type"}'></span>
       <p class="project-item-description" template='{"type":"textContent","path":"manifest.description"}'></p>
