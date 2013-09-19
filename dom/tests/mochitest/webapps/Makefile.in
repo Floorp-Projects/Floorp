@@ -17,7 +17,6 @@ MOCHITEST_CHROME_FILES = \
     test_install_receipts.xul \
     test_getNotInstalled.xul \
     test_launch_paths.xul \
-    test_uninstall_errors.xul \
     $(NULL)
 
 MOCHITEST_FILES = \
