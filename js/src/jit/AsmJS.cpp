@@ -5442,10 +5442,7 @@ static const RegisterSet NonVolatileRegs =
 static void
 LoadAsmJSActivationIntoRegister(MacroAssembler &masm, Register reg)
 {
-    masm.movePtr(ImmPtr(GetIonContext()->runtime), reg);
-    size_t offset = offsetof(JSRuntime, mainThread) +
-                    PerThreadData::offsetOfAsmJSActivationStackReadOnly();
-    masm.loadPtr(Address(reg, offset), reg);
+    masm.loadPtr(AbsoluteAddress(GetIonContext()->runtime->mainThread.addressOfAsmJSActivationStackReadOnly()), reg);
 }
 
 static void

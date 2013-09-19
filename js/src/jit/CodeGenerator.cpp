@@ -5244,8 +5244,7 @@ CodeGenerator::visitIteratorStart(LIteratorStart *lir)
     masm.or32(Imm32(JSITER_ACTIVE), Address(niTemp, offsetof(NativeIterator, flags)));
 
     // Chain onto the active iterator stack.
-    masm.movePtr(ImmPtr(gen->compartment), temp1);
-    masm.loadPtr(Address(temp1, offsetof(JSCompartment, enumerators)), temp1);
+    masm.loadPtr(AbsoluteAddress(&gen->compartment->enumerators), temp1);
 
     // ni->next = list
     masm.storePtr(temp1, Address(niTemp, NativeIterator::offsetOfNext()));

@@ -533,11 +533,11 @@ class PerThreadData : public PerThreadDataFriendFields,
     js::AsmJSActivation *asmJSActivationStack_;
 
   public:
-    static unsigned offsetOfActivation() {
-        return offsetof(PerThreadData, activation_);
+    js::Activation *const *addressOfActivation() const {
+        return &activation_;
     }
-    static unsigned offsetOfAsmJSActivationStackReadOnly() {
-        return offsetof(PerThreadData, asmJSActivationStack_);
+    js::AsmJSActivation *const *addressOfAsmJSActivationStackReadOnly() const {
+        return &asmJSActivationStack_;
     }
 
     js::AsmJSActivation *asmJSActivationStackFromAnyThread() const {
