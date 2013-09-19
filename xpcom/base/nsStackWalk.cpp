@@ -6,9 +6,8 @@
 
 /* API for getting a stack trace of the C/C++ stack on the current thread */
 
-#include "mozilla/Util.h"
 #include "mozilla/StackWalk.h"
-#include "nsDebug.h"
+#include "mozilla/Assertions.h"
 #include "nsStackWalkPrivate.h"
 
 #include "nsStackWalk.h"
@@ -42,7 +41,6 @@ static CriticalAddress gCriticalAddress;
 
 #if NSSTACKWALK_SUPPORTS_MACOSX
 #include <pthread.h>
-#include <errno.h>
 #include <CoreServices/CoreServices.h>
 
 typedef void
@@ -178,6 +176,7 @@ StackWalkInitCriticalAddress()
 #include <stdio.h>
 #include <malloc.h>
 #include "plstr.h"
+#include "mozilla/Util.h"
 
 #include "nspr.h"
 #include <imagehlp.h>
@@ -814,7 +813,6 @@ NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
 
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include "nscore.h"
 #include <stdio.h>
 #include "plstr.h"
@@ -831,7 +829,6 @@ NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
 // Yes, this is a gcc only hack
 #if defined(MOZ_DEMANGLE_SYMBOLS)
 #include <cxxabi.h>
-#include <stdlib.h> // for free()
 #endif // MOZ_DEMANGLE_SYMBOLS
 
 void DemangleSymbol(const char * aSymbol, 
