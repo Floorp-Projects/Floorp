@@ -1490,7 +1490,7 @@ skip-if(B2G) fuzzy-if(Android&&AndroidVersion>=15,12,300) == 551463-1.html 55146
 # 553571 depends on MS Indic shaping behavior and Win7 font support;
 # not expected to be reliable on XP or non-Windows platforms
 random-if(!winWidget) random-if(/^Windows\x20NT\x205/.test(http.oscpu)) != 553571-1.html 553571-1-notref.html # expect dotted circle in test, not in ref
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,91) random-if(d2d) skip-if(azureSkiaGL) == 555388-1.html 555388-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,128,91) random-if(d2d) skip-if(azureSkiaGL) == 555388-1.html 555388-1-ref.html
 == 556661-1.html 556661-1-ref.html
 skip-if(B2G) fails-if(Android) == 557087-1.html 557087-ref.html
 skip-if(B2G) fails-if(Android) == 557087-2.html 557087-ref.html
