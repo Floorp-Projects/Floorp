@@ -1328,14 +1328,6 @@ MMod::canBePowerOfTwoDivisor() const
     return true;
 }
 
-static inline MDefinition *
-TryFold(MDefinition *original, MDefinition *replacement)
-{
-    if (original->type() == replacement->type())
-        return replacement;
-    return original;
-}
-
 MDefinition *
 MMod::foldsTo(bool useValueNumbers)
 {
