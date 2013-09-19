@@ -217,10 +217,11 @@ class AliasSet {
         FixedSlot         = 1 << 3, // A member of obj->fixedSlots().
         TypedArrayElement = 1 << 4, // A typed array element.
         DOMProperty       = 1 << 5, // A DOM property
-        Last              = DOMProperty,
+        AsmJSGlobalVar    = 1 << 6, // An asm.js global var
+        Last              = AsmJSGlobalVar,
         Any               = Last | (Last - 1),
 
-        NumCategories     = 6,
+        NumCategories     = 7,
 
         // Indicates load or store.
         Store_            = 1 << 31
@@ -8446,8 +8447,7 @@ class MAsmJSLoadGlobalVar : public MNullaryInstruction
     {
         JS_ASSERT(type == MIRType_Int32 || type == MIRType_Double);
         setResultType(type);
-        if (isConstant)
-            setMovable();
+        setMovable();
     }
 
     unsigned globalDataOffset_;
@@ -8462,12 +8462,13 @@ class MAsmJSLoadGlobalVar : public MNullaryInstruction
 
     unsigned globalDataOffset() const { return globalDataOffset_; }
 
+    bool congruentTo(MDefinition *ins) const;
+
     AliasSet getAliasSet() const {
-        if (isConstant_)
-            return AliasSet::None();
-        else
-            return AliasSet::Store(AliasSet::Any);
+        return AliasSet::Load(AliasSet::AsmJSGlobalVar);
     }
+
+    bool mightAlias(MDefinition *def);
 };
 
 class MAsmJSStoreGlobalVar : public MUnaryInstruction
@@ -8487,6 +8488,10 @@ class MAsmJSStoreGlobalVar : public MUnaryInstruction
 
     unsigned globalDataOffset() const { return globalDataOffset_; }
     MDefinition *value() const { return getOperand(0); }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::AsmJSGlobalVar);
+    }
 };
 
 class MAsmJSLoadFuncPtr : public MUnaryInstruction

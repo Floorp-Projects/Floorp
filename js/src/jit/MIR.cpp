@@ -2433,6 +2433,26 @@ MLoadFixedSlot::mightAlias(MDefinition *store)
 }
 
 bool
+MAsmJSLoadGlobalVar::mightAlias(MDefinition *def)
+{
+    if (def->isAsmJSStoreGlobalVar()) {
+        MAsmJSStoreGlobalVar *store = def->toAsmJSStoreGlobalVar();
+        return store->globalDataOffset() == globalDataOffset_;
+    }
+    return true;
+}
+
+bool
+MAsmJSLoadGlobalVar::congruentTo(MDefinition *ins) const
+{
+    if (ins->isAsmJSLoadGlobalVar()) {
+        MAsmJSLoadGlobalVar *load = ins->toAsmJSLoadGlobalVar();
+        return globalDataOffset_ == load->globalDataOffset_;
+    }
+    return false;
+}
+
+bool
 MLoadSlot::mightAlias(MDefinition *store)
 {
     if (store->isStoreSlot() && store->toStoreSlot()->slot() != slot())
