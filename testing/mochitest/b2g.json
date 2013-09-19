@@ -15,6 +15,7 @@
 
     "layout/forms/test/test_bug478219.xhtml":"window.closed not working, bug 907795",
 
+    "content/media/test":"bug 918299",
     "content/media/test/test_bug448534.html": "Timed out, bug 894922? Bug 902677 is for the timing out of a lot of media tests",
     "content/media/mediasource/test/test_MediaSource.html": " ReferenceError: MediaSource is not defined",
     "content/media/test/test_autoplay_contentEditable.html": "bug 899074 - timeouts",
