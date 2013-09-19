@@ -176,6 +176,7 @@ public class TopSitesPage extends HomeFragment {
         mPinSiteListener = new PinSiteListener();
 
         mList.setTag(HomePager.LIST_TAG_MOST_VISITED);
+        mList.setHeaderDividersEnabled(false);
 
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -460,6 +461,8 @@ public class TopSitesPage extends HomeFragment {
     }
 
     private void updateUiFromCursor(Cursor c) {
+        mList.setHeaderDividersEnabled(c != null && c.getCount() > mMaxGridEntries);
+
         if (c != null && c.getCount() > 0) {
             return;
         }
