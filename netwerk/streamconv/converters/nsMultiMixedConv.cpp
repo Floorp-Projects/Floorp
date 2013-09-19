@@ -449,7 +449,7 @@ nsMultiMixedConv::AsyncConvertData(const char *aFromType, const char *aToType,
 class AutoFree
 {
 public:
-  AutoFree() : mBuffer(NULL) {}
+  AutoFree() : mBuffer(nullptr) {}
 
   AutoFree(char *buffer) : mBuffer(buffer) {}
 

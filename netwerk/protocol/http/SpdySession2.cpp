@@ -724,7 +724,7 @@ SpdySession2::ConvertHeaders(nsDependentCSubstring &status,
       mFlatHTTPResponseHeaders.Append(nameString);
       mFlatHTTPResponseHeaders.Append(NS_LITERAL_CSTRING(": "));
 
-      // expand NULL bytes in the value string
+      // expand nullptr bytes in the value string
       for (char *cPtr = valueString.BeginWriting();
            cPtr && cPtr < valueString.EndWriting();
            ++cPtr) {
@@ -2218,7 +2218,7 @@ SpdySession2::RequestHead()
   MOZ_ASSERT(false,
              "SpdySession2::RequestHead() "
              "should not be called after SPDY is setup");
-  return NULL;
+  return nullptr;
 }
 
 uint32_t

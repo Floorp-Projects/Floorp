@@ -118,7 +118,7 @@ private:
 
   // Common send code for binary + text msgs
   nsresult SendMsgCommon(const nsACString *aMsg, bool isBinary,
-                         uint32_t length, nsIInputStream *aStream = NULL);
+                         uint32_t length, nsIInputStream *aStream = nullptr);
 
   void EnqueueOutgoingMessage(nsDeque &aQueue, OutboundMessage *aMsg);
 
