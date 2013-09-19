@@ -35,7 +35,7 @@ let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
  *
  * Usage:
  *   let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
- *   let {colorUtils} = devtools.require("devtools/shared/css-color");
+ *   let {colorUtils} = devtools.require("devtools/css-color");
  *
  *   color.authored === "red"
  *   color.hasAlpha === false
