@@ -23,7 +23,7 @@
 #include "mozilla/Util.h"
 #include "nsCycleCollector.h"
 #include "nsIXPConnect.h"
-#include "nsThreadUtils.h" // Hacky work around for some bindings needing NS_IsMainThread.
+#include "MainThreadUtils.h"
 #include "nsTraceRefcnt.h"
 #include "qsObjectHelper.h"
 #include "xpcpublic.h"
