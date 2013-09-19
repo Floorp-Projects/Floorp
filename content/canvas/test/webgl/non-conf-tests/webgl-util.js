@@ -1,7 +1,7 @@
 WebGLUtil = (function() {
   // ---------------------------------------------------------------------------
   // Error handling
-  
+
   function defaultErrorFunc(str) {
     console.log('Error: ' + str);
   }
@@ -14,7 +14,7 @@ WebGLUtil = (function() {
   function error(str) {
     gErrorFunc(str);
   }
-  
+
   // ---------------------------------------------------------------------------
   // WebGL helpers
 
@@ -41,7 +41,7 @@ WebGLUtil = (function() {
 
     return gl;
   }
-  
+
   function getContentFromElem(elem) {
     var str = "";
     var k = elem.firstChild;
@@ -51,10 +51,10 @@ WebGLUtil = (function() {
 
       k = k.nextSibling;
     }
-    
+
     return str;
   }
-  
+
   // Returns a valid shader, or null on errors.
   function createShaderById(gl, id) {
     var elem = document.getElementById(id);
@@ -80,13 +80,13 @@ WebGLUtil = (function() {
 
     return shader;
   }
-  
+
   function createProgramByIds(gl, vsId, fsId) {
     var vs = createShaderById(gl, vsId);
     var fs = createShaderById(gl, fsId);
     if (!vs || !fs)
       return null;
-    
+
     var prog = gl.createProgram();
     gl.attachShader(prog, vs);
     gl.attachShader(prog, fs);
@@ -100,13 +100,13 @@ WebGLUtil = (function() {
       error(str);
       return null;
     }
-    
+
     return prog;
   }
 
   return {
     setErrorFunc: setErrorFunc,
-    
+
     getWebGL: getWebGL,
     createShaderById: createShaderById,
     createProgramByIds: createProgramByIds,
