@@ -23,7 +23,7 @@ function getExistingCalls() {
 function cancelExistingCalls(callList) {
   if (callList.length && callList[0] != "OK") {
     // Existing calls remain; get rid of the next one in the list
-    nextCall = callList.shift().split(' ')[2].trim();
+    nextCall = callList.shift().split(/\s+/)[2].trim();
     log("Cancelling existing call '" + nextCall +"'");
     runEmulatorCmd("gsm cancel " + nextCall, function(result) {
       if (result[0] == "OK") {
@@ -48,7 +48,7 @@ function dial() {
   outgoingCall.onalerting = function onalerting(event) {
     log("Received 'alerting' call event.");
     answer();
-  };  
+  };
 }
 
 function answer() {

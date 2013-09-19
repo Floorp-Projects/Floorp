@@ -1606,9 +1606,6 @@ IonCompile(JSContext *cx, JSScript *script,
                         script);
 #endif
 
-    if (!script->ensureRanAnalysis(cx))
-        return AbortReason_Alloc;
-
     LifoAlloc *alloc = cx->new_<LifoAlloc>(BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     if (!alloc)
         return AbortReason_Alloc;

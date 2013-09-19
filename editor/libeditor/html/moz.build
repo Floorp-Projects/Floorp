@@ -34,3 +34,13 @@ FAIL_ON_WARNINGS = True
 
 LIBXUL_LIBRARY = True
 
+LOCAL_INCLUDES += [
+    '../base',
+    '../text',
+    '/content/base/src',
+    '/editor/txmgr/src',
+    '/layout/generic',
+    '/layout/style',
+    '/layout/tables',
+    '/layout/xul/base/src',
+]

@@ -35,6 +35,29 @@
          "Wrong caret offset for " + aID);
     }
 
+    function testCaretOffsets(aList)
+    {
+      for (var i = 0; i < aList.length; i++)
+        testCaretOffset(aList[0][0], aList[0][1]);
+    }
+
+    function queueTraversalList(aList, aFocusNode)
+    {
+      for (var i = 0 ; i < aList.length; i++) {
+        var node = aList[i].DOMPoint[0];
+        var nodeOffset = aList[i].DOMPoint[1];
+
+        var textAcc = aList[i].point[0];
+        var textOffset = aList[i].point[1];
+        var textList = aList[i].pointList;
+        var invoker =
+          new moveCaretToDOMPoint(textAcc, node, nodeOffset, textOffset,
+                                  ((i == 0) ? aFocusNode : null),
+                                  testCaretOffsets.bind(null, textList))
+        gQueue.push(invoker);
+      }
+    }
+
     /**
      * Do tests.
      */
@@ -48,7 +71,7 @@
       turnCaretBrowsing(true);
 
       // test caret offsets
-      testCaretOffset(document, 14);
+      testCaretOffset(document, 16);
       testCaretOffset("textbox", -1);
       testCaretOffset("textarea", -1);
       testCaretOffset("p", -1);
@@ -59,6 +82,49 @@
       gQueue.push(new setCaretOffset("textbox", 1, "textbox"));
       gQueue.push(new setCaretOffset("link", 1, "link"));
       gQueue.push(new setCaretOffset("heading", 1, document));
+
+      // a*b*c
+      var p2Doc = getNode("p2_container").contentDocument;
+      var traversalList = [
+        { // before 'a'
+          DOMPoint: [ getNode("p2", p2Doc).firstChild, 0 ],
+          point: [ getNode("p2", p2Doc), 0 ],
+          pointList: [ [ p2Doc, 0 ] ]
+        },
+        { // after 'a' (before anchor)
+          DOMPoint: [ getNode("p2", p2Doc).firstChild, 1 ],
+          point: [ getNode("p2", p2Doc), 1 ],
+          pointList: [ [ p2Doc, 0 ] ]
+        },
+        { // before 'b' (inside anchor)
+          DOMPoint: [ getNode("p2_a", p2Doc).firstChild, 0 ],
+          point: [ getNode("p2_a", p2Doc), 0 ],
+          pointList: [
+            [ getNode("p2", p2Doc), 1 ],
+            [ p2Doc, 0 ]
+          ]
+        },
+        { // after 'b' (inside anchor)
+          DOMPoint: [ getNode("p2_a", p2Doc).firstChild, 1 ],
+          point: [ getNode("p2_a", p2Doc), 1 ],
+          pointList: [
+            [ getNode("p2", p2Doc), 1 ] ,
+            [ p2Doc, 0 ]
+          ]
+        },
+        { // before 'c' (after anchor)
+          DOMPoint: [ getNode("p2", p2Doc).lastChild, 0 ],
+          point: [ getNode("p2", p2Doc), 2 ],
+          pointList: [ [ p2Doc, 0 ] ]
+        },
+        { // after 'c'
+          DOMPoint: [ getNode("p2", p2Doc).lastChild, 1 ],
+          point: [ getNode("p2", p2Doc), 3 ],
+          pointList: [ [ p2Doc, 0 ] ]
+        }
+      ];
+      queueTraversalList(traversalList, getNode("p2", p2Doc));
+
       gQueue.onFinish = function()
       {
         turnCaretBrowsing(false);
@@ -77,22 +143,27 @@
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=448744"
      title="caretOffset should return -1 if the system caret is not currently with in that particular object">
-    Mozilla Bug 448744
+    Bug 448744
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=524115"
      title="HyperText accessible should get focus when the caret is positioned inside of it, text is changed or copied into clipboard by ATs">
-    Mozilla Bug 524115
+    Bug 524115
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=546068"
      title="Position is not being updated when atk_text_set_caret_offset is used">
-    Mozilla Bug 546068
+    Bug 546068
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=672717"
+     title="Broken caret when moving into/out of embedded objects with right arrow">
+    Bug 672717
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=725581"
      title="caretOffset for textarea should be -1 when textarea doesn't have a focus">
-    Mozilla Bug 725581
+    Bug 725581
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -104,6 +175,8 @@
   <p id="p" contentEditable="true"><span>text</span><br/>text</p>
   <a id="link" href="about:">about mozilla</a>
   <h5 id="heading">heading</h5>
+  <iframe id="p2_container"
+          src="data:text/html,<p id='p2' contentEditable='true'>a<a id='p2_a' href='mozilla.org'>b</a>c</p>"></iframe>
 
   <div id="eventdump"></div>
 </body>

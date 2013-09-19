@@ -9,7 +9,6 @@ MOCHITEST_BROWSER_FILES := \
 		browser_responsive_cmd.js \
 		browser_responsivecomputedview.js \
 		browser_responsiveui_touch.js \
-		browser_responsive_devicewidth.js \
 		touch.html \
 		head.js \
 		$(NULL)

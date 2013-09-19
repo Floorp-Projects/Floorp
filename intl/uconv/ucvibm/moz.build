@@ -39,3 +39,6 @@ LIBRARY_NAME = 'ucvibm_s'
 
 LIBXUL_LIBRARY = True
 
+LOCAL_INCLUDES += [
+    '../util',
+]

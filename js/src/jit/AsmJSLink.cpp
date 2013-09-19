@@ -409,9 +409,9 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
     if (cx->isExceptionPending())
         return false;
 
-    const AsmJSModuleSourceDesc &desc= module.sourceDesc();
-    uint32_t length = desc.bufEnd() - desc.bufStart();
-    Rooted<JSStableString*> src(cx, desc.scriptSource()->substring(cx, desc.bufStart(), desc.bufEnd()));
+    uint32_t begin = module.charsBegin();
+    uint32_t end = module.charsEnd();
+    Rooted<JSStableString*> src(cx, module.scriptSource()->substring(cx, begin, end));
     if (!src)
         return false;
 
@@ -432,11 +432,11 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
 
     CompileOptions options(cx);
     options.setPrincipals(cx->compartment()->principals)
-           .setOriginPrincipals(desc.scriptSource()->originPrincipals())
+           .setOriginPrincipals(module.scriptSource()->originPrincipals())
            .setCompileAndGo(false)
            .setNoScriptRval(false);
 
-    if (!frontend::CompileFunctionBody(cx, &fun, options, formals, src->chars().get(), length))
+    if (!frontend::CompileFunctionBody(cx, &fun, options, formals, src->chars().get(), end - begin))
         return false;
 
     // Call the function we just recompiled.
@@ -464,7 +464,7 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
 static bool
 SendFunctionsToVTune(JSContext *cx, AsmJSModule &module)
 {
-    uint8_t *base = module.functionCode();
+    uint8_t *base = module.codeBase();
 
     for (unsigned i = 0; i < module.numProfiledFunctions(); i++) {
         const AsmJSModule::ProfiledFunction &func = module.profiledFunction(i);
@@ -507,8 +507,8 @@ SendFunctionsToPerf(JSContext *cx, AsmJSModule &module)
     if (!PerfFuncEnabled())
         return true;
 
-    uintptr_t base = (uintptr_t) module.functionCode();
-    const char *filename = module.sourceDesc().scriptSource()->filename();
+    uintptr_t base = (uintptr_t) module.codeBase();
+    const char *filename = module.scriptSource()->filename();
 
     for (unsigned i = 0; i < module.numPerfFunctions(); i++) {
         const AsmJSModule::ProfiledFunction &func = module.perfProfiledFunction(i);
@@ -534,8 +534,8 @@ SendBlocksToPerf(JSContext *cx, AsmJSModule &module)
     if (!PerfBlockEnabled())
         return true;
 
-    unsigned long funcBaseAddress = (unsigned long) module.functionCode();
-    const char *filename = module.sourceDesc().scriptSource()->filename();
+    unsigned long funcBaseAddress = (unsigned long) module.codeBase();
+    const char *filename = module.scriptSource()->filename();
 
     for (unsigned i = 0; i < module.numPerfBlocksFunctions(); i++) {
         const AsmJSModule::ProfiledBlocksFunction &func = module.perfProfiledBlocksFunction(i);

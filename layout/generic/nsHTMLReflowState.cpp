@@ -871,7 +871,14 @@ nsHTMLReflowState::ApplyRelativePositioning(nsIFrame* aFrame,
   const nsStyleDisplay* display = aFrame->StyleDisplay();
   if (NS_STYLE_POSITION_RELATIVE == display->mPosition) {
     *aPosition += nsPoint(aComputedOffsets.left, aComputedOffsets.top);
-  } else if (NS_STYLE_POSITION_STICKY == display->mPosition) {
+  } else if (NS_STYLE_POSITION_STICKY == display->mPosition &&
+             !aFrame->GetNextContinuation() && !aFrame->GetPrevContinuation()) {
+    // Sticky positioning for elements with multiple frames needs to be
+    // computed all at once. We can't safely do that here because we might be
+    // partway through (re)positioning the frames, so leave it until the scroll
+    // container reflows and calls StickyScrollContainer::UpdatePositions.
+    // For single-frame sticky positioned elements, though, go ahead and apply
+    // it now to avoid unnecessary overflow updates later.
     StickyScrollContainer* ssc =
       StickyScrollContainer::GetStickyScrollContainerForFrame(aFrame);
     if (ssc) {

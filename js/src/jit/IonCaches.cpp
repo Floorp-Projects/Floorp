@@ -1949,7 +1949,7 @@ SetPropertyIC::attachNativeExisting(JSContext *cx, IonScript *ion, HandleObject 
     MacroAssembler masm(cx);
     RepatchStubAppender attacher(*this);
 
-    Label failures;
+    Label failures, barrierFailure;
     masm.branchPtr(Assembler::NotEqual,
                    Address(object(), JSObject::offsetOfShape()),
                    ImmGCPtr(obj->lastProperty()), &failures);
@@ -1973,20 +1973,10 @@ SetPropertyIC::attachNativeExisting(JSContext *cx, IonScript *ion, HandleObject 
             JS_ASSERT(propTypes);
             JS_ASSERT(!propTypes->unknown());
 
-            Label barrierSuccess;
-            Label barrierFailure;
-
             Register scratchReg = object();
             masm.push(scratchReg);
 
-            masm.guardTypeSet(valReg, propTypes, scratchReg,
-                                &barrierSuccess, &barrierFailure);
-
-            masm.bind(&barrierFailure);
-            masm.pop(object());
-            masm.jump(&failures);
-
-            masm.bind(&barrierSuccess);
+            masm.guardTypeSet(valReg, propTypes, scratchReg, &barrierFailure);
             masm.pop(object());
         }
     }
@@ -2011,6 +2001,11 @@ SetPropertyIC::attachNativeExisting(JSContext *cx, IonScript *ion, HandleObject 
     }
 
     attacher.jumpRejoin(masm);
+
+    if (barrierFailure.used()) {
+        masm.bind(&barrierFailure);
+        masm.pop(object());
+    }
 
     masm.bind(&failures);
     attacher.jumpNextStub(masm);

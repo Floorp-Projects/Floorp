@@ -313,7 +313,7 @@ class Assembler : public AssemblerX86Shared
 
   private:
     void writeRelocation(JmpSrc src, Relocation::Kind reloc);
-    void addPendingJump(JmpSrc src, void *target, Relocation::Kind reloc);
+    void addPendingJump(JmpSrc src, ImmPtr target, Relocation::Kind reloc);
 
   protected:
     size_t addPatchableJump(JmpSrc src, Relocation::Kind reloc);
@@ -714,25 +714,25 @@ class Assembler : public AssemblerX86Shared
         }
     }
 
-    void jmp(void *target, Relocation::Kind reloc = Relocation::HARDCODED) {
+    void jmp(ImmPtr target, Relocation::Kind reloc = Relocation::HARDCODED) {
         JmpSrc src = masm.jmp();
         addPendingJump(src, target, reloc);
     }
-    void j(Condition cond, void *target,
+    void j(Condition cond, ImmPtr target,
            Relocation::Kind reloc = Relocation::HARDCODED) {
         JmpSrc src = masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond));
         addPendingJump(src, target, reloc);
     }
 
     void jmp(IonCode *target) {
-        jmp(target->raw(), Relocation::IONCODE);
+        jmp(ImmPtr(target->raw()), Relocation::IONCODE);
     }
     void j(Condition cond, IonCode *target) {
-        j(cond, target->raw(), Relocation::IONCODE);
+        j(cond, ImmPtr(target->raw()), Relocation::IONCODE);
     }
     void call(IonCode *target) {
         JmpSrc src = masm.call();
-        addPendingJump(src, target->raw(), Relocation::IONCODE);
+        addPendingJump(src, ImmPtr(target->raw()), Relocation::IONCODE);
     }
 
     // Emit a CALL or CMP (nop) instruction. ToggleCall can be used to patch
@@ -740,7 +740,7 @@ class Assembler : public AssemblerX86Shared
     CodeOffsetLabel toggledCall(IonCode *target, bool enabled) {
         CodeOffsetLabel offset(size());
         JmpSrc src = enabled ? masm.call() : masm.cmp_eax();
-        addPendingJump(src, target->raw(), Relocation::IONCODE);
+        addPendingJump(src, ImmPtr(target->raw()), Relocation::IONCODE);
         JS_ASSERT(size() - offset.offset() == ToggledCallSize());
         return offset;
     }

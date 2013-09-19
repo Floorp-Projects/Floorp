@@ -51,15 +51,6 @@ public:
   int32_t GetWidth(ErrorResult& aRv)
   {
     nsRect rect;
-    if (IsDeviceSizePageSize()) {
-      nsCOMPtr<nsPIDOMWindow> owner = GetOwner();
-      if (owner) {
-        int32_t innerWidth = 0;
-        aRv = owner->GetInnerWidth(&innerWidth);
-        return innerWidth;
-      }
-    }
-
     aRv = GetRect(rect);
     return rect.width;
   }
@@ -67,15 +58,6 @@ public:
   int32_t GetHeight(ErrorResult& aRv)
   {
     nsRect rect;
-    if (IsDeviceSizePageSize()) {
-      nsCOMPtr<nsPIDOMWindow> owner = GetOwner();
-      if (owner) {
-        int32_t innerHeight = 0;
-        aRv = owner->GetInnerHeight(&innerHeight);
-        return innerHeight;
-      }
-    }
-
     aRv = GetRect(rect);
     return rect.height;
   }
@@ -154,8 +136,6 @@ private:
   };
 
   LockPermission GetLockOrientationPermission() const;
-
-  bool IsDeviceSizePageSize();
 
   nsRefPtr<FullScreenEventListener> mEventListener;
 };

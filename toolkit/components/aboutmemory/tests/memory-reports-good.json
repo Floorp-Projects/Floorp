@@ -7,6 +7,13 @@
     {"process": "Main Process (pid NNN)", "path": "other/a", "kind": 2, "units": 0, "amount": 209715, "description": "Other a."},
     {"process": "Main Process (pid NNN)", "path": "explicit/a/b", "kind": 1, "units": 0, "amount": 52428800, "description": "A b."},
 
+    {"process": "Main Process (pid NNN)", "path": "size/a", "kind": 1, "units": 0, "amount": 1024, "description": "non-sentence"},
+    {"process": "Main Process (pid NNN)", "path": "rss/a", "kind": 1, "units": 0, "amount": 1024, "description": "non-sentence"},
+    {"process": "Main Process (pid NNN)", "path": "pss/a", "kind": 1, "units": 0, "amount": 1024, "description": "non-sentence"},
+    {"process": "Main Process (pid NNN)", "path": "swap/a", "kind": 1, "units": 0, "amount": 1024, "description": "non-sentence"},
+    {"process": "Main Process (pid NNN)", "path": "compartments/system/a", "kind": 1, "units": 0, "amount": 1024, "description": ""},
+    {"process": "Main Process (pid NNN)", "path": "ghost-windows/a", "kind": 1, "units": 0, "amount": 1024, "description": ""},
+
     {"process": "Explicit-only process", "path": "explicit/a/b", "kind": 1, "units": 0, "amount": 100000, "description": "A b."},
 
     {"process": "Other-only process", "path": "a/b", "kind": 1, "units": 0, "amount": 100000, "description": "A b."},

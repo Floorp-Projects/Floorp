@@ -1692,7 +1692,7 @@ MacroAssemblerARMCompat::callWithExitFrame(IonCode *target)
     uint32_t descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
     Push(Imm32(descriptor)); // descriptor
 
-    addPendingJump(m_buffer.nextOffset(), target->raw(), Relocation::IONCODE);
+    addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::IONCODE);
     RelocStyle rs;
     if (hasMOVWT())
         rs = L_MOVWT;
@@ -1710,7 +1710,7 @@ MacroAssemblerARMCompat::callWithExitFrame(IonCode *target, Register dynStack)
     makeFrameDescriptor(dynStack, IonFrame_OptimizedJS);
     Push(dynStack); // descriptor
 
-    addPendingJump(m_buffer.nextOffset(), target->raw(), Relocation::IONCODE);
+    addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::IONCODE);
     RelocStyle rs;
     if (hasMOVWT())
         rs = L_MOVWT;
@@ -3756,7 +3756,7 @@ MacroAssemblerARMCompat::toggledCall(IonCode *target, bool enabled)
 {
     BufferOffset bo = nextOffset();
     CodeOffsetLabel offset(bo.getOffset());
-    addPendingJump(bo, target->raw(), Relocation::IONCODE);
+    addPendingJump(bo, ImmPtr(target->raw()), Relocation::IONCODE);
     ma_movPatchable(ImmPtr(target->raw()), ScratchRegister, Always, hasMOVWT() ? L_MOVWT : L_LDR);
     if (enabled)
         ma_blx(ScratchRegister);

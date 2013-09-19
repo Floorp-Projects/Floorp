@@ -5,7 +5,7 @@
 var success = 0;
 
 try {
-  parent[name].success = 1;
+  SpecialPowers.unwrap(SpecialPowers.wrap(parent)[name]).success = 1;
 } catch (e) {
   parent.postMessage(e, "http://mochi.test:8888");
 }
