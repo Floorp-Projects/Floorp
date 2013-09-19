@@ -620,9 +620,9 @@ MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Labe
 
 #ifdef JS_GC_ZEAL
     // Don't execute the inline path if gcZeal is active.
-    movePtr(ImmPtr(GetIonContext()->runtime), result);
-    loadPtr(Address(result, offsetof(JSRuntime, gcZeal_)), result);
-    branch32(Assembler::NotEqual, result, Imm32(0), fail);
+    branch32(Assembler::NotEqual,
+             AbsoluteAddress(&GetIonContext()->runtime->gcZeal_), Imm32(0),
+             fail);
 #endif
 
     // Don't execute the inline path if the compartment has an object metadata callback,
