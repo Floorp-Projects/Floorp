@@ -215,13 +215,20 @@ SocialUI = {
       // enabled == true means we at least have a defaultProvider
       let provider = Social.provider || Social.defaultProvider;
       // We only need to update the command itself - all our menu items use it.
-      let label = gNavigatorBundle.getFormattedString(Social.provider ?
-                                                        "social.turnOff.label" :
-                                                        "social.turnOn.label",
-                                                      [provider.name]);
-      let accesskey = gNavigatorBundle.getString(Social.provider ?
-                                                   "social.turnOff.accesskey" :
-                                                   "social.turnOn.accesskey");
+      let label;
+      if (Social.providers.length == 1) {
+        label = gNavigatorBundle.getFormattedString(Social.provider
+                                                    ? "social.turnOff.label"
+                                                    : "social.turnOn.label",
+                                                    [provider.name]);
+      } else {
+        label = gNavigatorBundle.getString(Social.provider
+                                           ? "social.turnOffAll.label"
+                                           : "social.turnOnAll.label");
+      }
+      let accesskey = gNavigatorBundle.getString(Social.provider
+                                                 ? "social.turnOff.accesskey"
+                                                 : "social.turnOn.accesskey");
       toggleCommand.setAttribute("label", label);
       toggleCommand.setAttribute("accesskey", accesskey);
     }
