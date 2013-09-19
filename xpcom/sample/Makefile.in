@@ -7,9 +7,6 @@
 # e.g. dist/bin/components/xpcomsmp.dll
 SHORT_LIBNAME	= xpcomsmp
 
-# IS_COMPONENT indicates that this makefile builds a component shared library.
-IS_COMPONENT	= 1
-
 # If this is Makefile builds a component, MODULE_NAME must match the module
 # name specified in NS_IMPL_NSGETMODULE
 MODULE_NAME	= nsSampleModule

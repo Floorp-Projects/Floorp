@@ -33,3 +33,6 @@ EXTRA_COMPONENTS += [
 # i.e. dist/bin/components/libxpcomsample.so
 LIBRARY_NAME = 'xpcomsample'
 
+# IS_COMPONENT indicates that this makefile builds a component shared library.
+IS_COMPONENT = True
+

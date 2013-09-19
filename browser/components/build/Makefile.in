@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SHORT_LIBNAME = brwsrcmp
-IS_COMPONENT = 1
 MODULE_NAME = nsBrowserCompsModule
 FORCE_SHARED_LIB = 1
 

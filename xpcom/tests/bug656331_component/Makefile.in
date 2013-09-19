@@ -5,7 +5,6 @@
 
 # Blatantly copied from xpcom/tests/component.
 
-IS_COMPONENT	= 1
 FORCE_SHARED_LIB = 1
 
 MANIFEST_FILE = bug656331.manifest
