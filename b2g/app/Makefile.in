@@ -66,6 +66,16 @@ WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
 endif
 endif #LIBXUL_SDK
 
+UA_UPDATE_FILE = ua-update.json
+
+$(UA_UPDATE_FILE): % : %.in
+	# strip out comment lines, which are not valid in JSON
+	sed -e "/^ *\\/\\//d" -e "/^ *$$/d" $^ > $@
+
+UA_UPDATE_FILES = $(UA_UPDATE_FILE)
+UA_UPDATE_DEST  = $(FINAL_TARGET)
+INSTALL_TARGETS += UA_UPDATE
+
 # Make sure the standalone glue doesn't try to get libxpcom.so from b2g/app.
 NSDISTMODE = copy
 
