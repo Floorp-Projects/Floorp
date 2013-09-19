@@ -129,7 +129,7 @@ jsd_InitObjectManager(JSDContext* jsdc)
     JS_INIT_CLIST(&jsdc->objectsList);
     jsdc->objectsTable = JS_NewHashTable(256, _hash_root,
                                          JS_CompareValues, JS_CompareValues,
-                                         NULL, NULL);
+                                         nullptr, nullptr);
     return !!jsdc->objectsTable;
 }
 
@@ -161,7 +161,7 @@ jsd_IterateObjects(JSDContext* jsdc, JSDObject** iterp)
     if( !jsdobj )
         jsdobj = (JSDObject *)jsdc->objectsList.next;
     if( jsdobj == (JSDObject *)&jsdc->objectsList )
-        return NULL;
+        return nullptr;
     *iterp = (JSDObject*) jsdobj->links.next;
     return jsdobj;
 }
@@ -177,7 +177,7 @@ jsd_GetObjectNewURL(JSDContext* jsdc, JSDObject* jsdobj)
 {
     if( jsdobj->newURL )
         return JSD_ATOM_TO_STRING(jsdobj->newURL);
-    return NULL;
+    return nullptr;
 }
 
 unsigned
@@ -191,7 +191,7 @@ jsd_GetObjectConstructorURL(JSDContext* jsdc, JSDObject* jsdobj)
 {
     if( jsdobj->ctorURL )
         return JSD_ATOM_TO_STRING(jsdobj->ctorURL);
-    return NULL;
+    return nullptr;
 }
 
 unsigned
@@ -205,7 +205,7 @@ jsd_GetObjectConstructorName(JSDContext* jsdc, JSDObject* jsdobj)
 {
     if( jsdobj->ctorName )
         return JSD_ATOM_TO_STRING(jsdobj->ctorName);
-    return NULL;
+    return nullptr;
 }
 
 JSDObject*
