@@ -20,6 +20,8 @@
      "use strict";
 
      exports.OS = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm").OS;
+     let Path = require("resource://gre/modules/osfile/ospath.jsm");
+
      // exports.OS.Unix is created by osfile_unix_back.jsm
      if (exports.OS && exports.OS.File) {
        return; // Avoid double-initialization
@@ -652,7 +654,7 @@
          let isDir, isSymLink;
          if (!("d_type" in contents)) {
            // |dirent| doesn't have d_type on some platforms (e.g. Solaris).
-           let path = OS.Unix.Path.join(this._path, name);
+           let path = Path.join(this._path, name);
            throw_on_negative("lstat", UnixFile.lstat(path, gStatDataPtr));
            isDir = (gStatData.st_mode & OS.Constants.libc.S_IFMT) == OS.Constants.libc.S_IFDIR;
            isSymLink = (gStatData.st_mode & OS.Constants.libc.S_IFMT) == OS.Constants.libc.S_IFLNK;
@@ -702,7 +704,7 @@
        // Copy the relevant part of |unix_entry| to ensure that
        // our data is not overwritten prematurely.
        this._parent = parent;
-       let path = OS.Unix.Path.join(this._parent, name);
+       let path = Path.join(this._parent, name);
 
        exports.OS.Shared.Unix.AbstractEntry.call(this, isDir, isSymLink, name, path);
      };
