@@ -1323,6 +1323,12 @@ LIRGenerator::visitMul(MMul *ins)
     if (ins->specialization() == MIRType_Int32) {
         JS_ASSERT(lhs->type() == MIRType_Int32);
         ReorderCommutative(&lhs, &rhs);
+
+        // If our RHS is a constant -1 and we don't have to worry about
+        // overflow, we can optimize to an LNegI.
+        if (!ins->fallible() && rhs->isConstant() && rhs->toConstant()->value() == Int32Value(-1))
+            return defineReuseInput(new LNegI(useRegisterAtStart(lhs)), ins, 0);
+
         return lowerMulI(ins, lhs, rhs);
     }
     if (ins->specialization() == MIRType_Double) {
@@ -1340,9 +1346,7 @@ LIRGenerator::visitMul(MMul *ins)
         ReorderCommutative(&lhs, &rhs);
 
         // We apply the same optimizations as for doubles
-        if (lhs->isConstant() && lhs->toConstant()->value() == JS::Float32Value(-1.0f))
-            return defineReuseInput(new LNegF(useRegisterAtStart(rhs)), ins, 0);
-        if (rhs->isConstant() && rhs->toConstant()->value() == JS::Float32Value(-1.0f))
+        if (rhs->isConstant() && rhs->toConstant()->value() == Float32Value(-1.0f))
             return defineReuseInput(new LNegF(useRegisterAtStart(lhs)), ins, 0);
 
         return lowerForFPU(new LMathF(JSOP_MUL), ins, lhs, rhs);
