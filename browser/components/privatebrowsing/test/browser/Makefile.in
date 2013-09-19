@@ -10,11 +10,13 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# Disabled for too many intermittent failures (bug 895390)
+#                browser_privatebrowsing_cache.js \
+
 MOCHITEST_BROWSER_FILES =  \
 		head.js \
                 browser_privatebrowsing_aboutHomeButtonAfterWindowClose.js \
                 browser_privatebrowsing_aboutSessionRestore.js \
-                browser_privatebrowsing_cache.js \
 		browser_privatebrowsing_certexceptionsui.js \
 		browser_privatebrowsing_concurrent.js \
 		browser_privatebrowsing_concurrent_page.html \
