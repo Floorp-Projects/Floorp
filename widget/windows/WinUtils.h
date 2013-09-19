@@ -15,7 +15,7 @@
 #include "nsString.h"
 #include "nsRegion.h"
 
-#include "nsThreadUtils.h"
+#include "nsIRunnable.h"
 #include "nsICryptoHash.h"
 #ifdef MOZ_PLACES
 #include "nsIFaviconService.h"
@@ -30,6 +30,7 @@ class nsWindow;
 class nsWindowBase;
 struct KeyPair;
 struct nsIntRect;
+class nsIThread;
 
 namespace mozilla {
 namespace widget {

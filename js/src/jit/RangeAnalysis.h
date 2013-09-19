@@ -204,9 +204,6 @@ class Range : public TempObject {
 
     void print(Sprinter &sp) const;
     bool update(const Range *other);
-    bool update(const Range &other) {
-        return update(&other);
-    }
 
     // Unlike the other operations, unionWith is an in-place
     // modification. This is to avoid a bunch of useless extra
@@ -233,67 +230,62 @@ class Range : public TempObject {
 
     static bool negativeZeroMul(const Range *lhs, const Range *rhs);
 
-    inline void makeLowerInfinite() {
+    void makeLowerInfinite() {
         lower_infinite_ = true;
         lower_ = JSVAL_INT_MIN;
         if (max_exponent_ < MaxInt32Exponent)
             max_exponent_ = MaxInt32Exponent;
     }
-    inline void makeUpperInfinite() {
+    void makeUpperInfinite() {
         upper_infinite_ = true;
         upper_ = JSVAL_INT_MAX;
         if (max_exponent_ < MaxInt32Exponent)
             max_exponent_ = MaxInt32Exponent;
     }
-    inline void makeRangeInfinite() {
-        makeLowerInfinite();
-        makeUpperInfinite();
-        max_exponent_ = MaxDoubleExponent;
-    }
 
-    inline bool isLowerInfinite() const {
+    bool isLowerInfinite() const {
         return lower_infinite_;
     }
-    inline bool isUpperInfinite() const {
+    bool isUpperInfinite() const {
         return upper_infinite_;
     }
 
-    inline bool isInt32() const {
+    bool isInt32() const {
         return !isLowerInfinite() && !isUpperInfinite();
     }
-    inline bool isBoolean() const {
+    bool isBoolean() const {
         return lower() >= 0 && upper() <= 1;
     }
 
-    inline bool hasRoundingErrors() const {
+    bool hasRoundingErrors() const {
         return canHaveFractionalPart() || exponent() >= MaxTruncatableExponent;
     }
 
-    inline bool isInfinite() const {
+    bool isInfinite() const {
         return exponent() >= MaxDoubleExponent;
     }
 
-    inline bool canHaveFractionalPart() const {
+    bool canHaveFractionalPart() const {
         return canHaveFractionalPart_;
     }
 
-    inline uint16_t exponent() const {
+    uint16_t exponent() const {
         return max_exponent_;
     }
 
-    inline uint16_t numBits() const {
+    uint16_t numBits() const {
         return max_exponent_ + 1; // 2^0 -> 1
     }
 
-    inline int32_t lower() const {
+    int32_t lower() const {
         return lower_;
     }
 
-    inline int32_t upper() const {
+    int32_t upper() const {
         return upper_;
     }
 
-    inline void setLowerInit(int64_t x) {
+    void setLowerInit(int64_t x) {
         if (x > JSVAL_INT_MAX) { // c.c
             lower_ = JSVAL_INT_MAX;
             lower_infinite_ = false;
@@ -304,12 +296,12 @@ class Range : public TempObject {
             lower_infinite_ = false;
         }
     }
-    inline void setLower(int64_t x) {
+    void setLower(int64_t x) {
         setLowerInit(x);
         rectifyExponent();
         JS_ASSERT_IF(lower_infinite_, lower_ == JSVAL_INT_MIN);
     }
-    inline void setUpperInit(int64_t x) {
+    void setUpperInit(int64_t x) {
         if (x > JSVAL_INT_MAX) {
             makeUpperInfinite();
         } else if (x < JSVAL_INT_MIN) { // c.c
@@ -320,20 +312,20 @@ class Range : public TempObject {
             upper_infinite_ = false;
         }
     }
-    inline void setUpper(int64_t x) {
+    void setUpper(int64_t x) {
         setUpperInit(x);
         rectifyExponent();
         JS_ASSERT_IF(upper_infinite_, upper_ == JSVAL_INT_MAX);
     }
 
-    inline void setInt32() {
+    void setInt32() {
         lower_infinite_ = false;
         upper_infinite_ = false;
         canHaveFractionalPart_ = false;
         max_exponent_ = MaxInt32Exponent;
     }
 
-    inline void set(int64_t l, int64_t h, bool f = false, uint16_t e = MaxInt32Exponent) {
+    void set(int64_t l, int64_t h, bool f = false, uint16_t e = MaxInt32Exponent) {
         max_exponent_ = e;
         setLowerInit(l);
         setUpperInit(h);
@@ -374,7 +366,7 @@ class Range : public TempObject {
     // Note:
     //     exponent of JSVAL_INT_MIN == 32
     //     exponent of JSVAL_INT_MAX == 31
-    inline void rectifyExponent() {
+    void rectifyExponent() {
         if (!isInt32()) {
             JS_ASSERT(max_exponent_ >= MaxInt32Exponent);
             return;
@@ -394,10 +386,10 @@ class Range : public TempObject {
         return symbolicUpper_;
     }
 
-    inline void setSymbolicLower(SymbolicBound *bound) {
+    void setSymbolicLower(SymbolicBound *bound) {
         symbolicLower_ = bound;
     }
-    inline void setSymbolicUpper(SymbolicBound *bound) {
+    void setSymbolicUpper(SymbolicBound *bound) {
         symbolicUpper_ = bound;
     }
 };

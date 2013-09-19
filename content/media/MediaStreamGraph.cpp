@@ -472,11 +472,38 @@ MediaStreamGraphImpl::UpdateStreamOrderForStream(mozilla::LinkedList<MediaStream
   NS_ASSERTION(!stream->mHasBeenOrdered, "stream should not have already been ordered");
   if (stream->mIsOnOrderingStack) {
     MediaStream* iter = aStack->getLast();
+    AudioNodeStream* ns = stream->AsAudioNodeStream();
+    bool delayNodePresent = ns ? ns->Engine()->AsDelayNodeEngine() != nullptr : false;
+    bool cycleFound = false;
     if (iter) {
       do {
+        cycleFound = true;
         iter->AsProcessedStream()->mInCycle = true;
+        AudioNodeStream* ns = iter->AsAudioNodeStream();
+        if (ns && ns->Engine()->AsDelayNodeEngine()) {
+          delayNodePresent = true;
+        }
         iter = iter->getPrevious();
       } while (iter && iter != stream);
+    }
+    if (cycleFound && !delayNodePresent) {
+      // If we have detected a cycle, the previous loop should exit with stream
+      // == iter, or the node is connected to itself. Go back in the cycle and
+      // mute all nodes we find, or just mute the node itself.
+      if (!iter) {
+        // The node is connected to itself.
+        iter = aStack->getLast();
+        iter->AsAudioNodeStream()->Mute();
+      } else {
+        MOZ_ASSERT(iter);
+        do {
+          // There can't be non-AudioNodeStream here, MediaStreamAudio{Source,
+          // Destination}Node are connected to regular MediaStreams, but they can't be
+          // in a cycle (there is no content API to do so).
+          MOZ_ASSERT(iter->AsAudioNodeStream());
+          iter->AsAudioNodeStream()->Mute();
+        } while((iter = iter->getNext()));
+      }
     }
     return;
   }
@@ -513,6 +540,10 @@ MediaStreamGraphImpl::UpdateStreamOrder()
     ProcessedMediaStream* ps = stream->AsProcessedStream();
     if (ps) {
       ps->mInCycle = false;
+      AudioNodeStream* ns = ps->AsAudioNodeStream();
+      if (ns) {
+        ns->Unmute();
+      }
     }
   }
 
@@ -2293,6 +2324,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime)
   , mPostedRunInStableState(false)
   , mRealtime(aRealtime)
   , mNonRealtimeProcessing(false)
+  , mStreamOrderDirty(false)
 {
 #ifdef PR_LOGGING
   if (!gMediaStreamGraphLog) {
@@ -2444,6 +2476,13 @@ MediaStreamGraph::StartNonRealtimeProcessing(uint32_t aTicksToProcess)
   graph->mNonRealtimeTicksToProcess = aTicksToProcess;
   graph->mNonRealtimeProcessing = true;
   graph->EnsureRunInStableState();
+}
+
+void
+ProcessedMediaStream::AddInput(MediaInputPort* aPort)
+{
+  mInputs.AppendElement(aPort);
+  GraphImpl()->SetStreamOrderDirty();
 }
 
 }

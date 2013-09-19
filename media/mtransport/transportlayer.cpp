@@ -8,6 +8,7 @@
 #include "logging.h"
 #include "transportflow.h"
 #include "transportlayer.h"
+#include "nsThreadUtils.h"
 
 // Logging context
 namespace mozilla {
@@ -44,6 +45,21 @@ void TransportLayer::SetState(State state) {
     state_ = state;
     SignalStateChange(this, state);
   }
+}
+
+nsresult TransportLayer::RunOnThread(nsIRunnable *event) {
+  if (target_) {
+    nsIThread *thr;
+
+    DebugOnly<nsresult> rv = NS_GetCurrentThread(&thr);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    if (target_ != thr) {
+      return target_->Dispatch(event, NS_DISPATCH_SYNC);
+    }
+  }
+
+  return event->Run();
 }
 
 }  // close namespace

@@ -26,6 +26,7 @@
 #include "jit/ParallelFunctions.h"
 #include "jit/ParallelSafetyAnalysis.h"
 #include "jit/PerfSpewer.h"
+#include "jit/RangeAnalysis.h"
 #include "vm/ForkJoin.h"
 
 #include "jsboolinlines.h"

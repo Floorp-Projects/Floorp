@@ -10,10 +10,10 @@
 #include "nscore.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
-#include "nsThreadUtils.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"
+#include "nsIRunnable.h"
 
 #include "SQLiteMutex.h"
 #include "mozIStoragePendingStatement.h"

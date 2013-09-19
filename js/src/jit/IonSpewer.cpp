@@ -54,7 +54,7 @@ FilterContainsLocation(HandleScript function)
 
     const char *filename = function->filename();
     const size_t line = function->lineno;
-    static size_t filelen = strlen(filename);
+    const size_t filelen = strlen(filename);
     const char *index = strstr(filter, filename);
     while (index) {
         if (index == filter || index[-1] == ',') {

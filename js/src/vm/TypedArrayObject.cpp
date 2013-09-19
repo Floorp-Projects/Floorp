@@ -1302,11 +1302,6 @@ template<> inline const int TypeIDOfType<float>() { return ScalarTypeRepresentat
 template<> inline const int TypeIDOfType<double>() { return ScalarTypeRepresentation::TYPE_FLOAT64; }
 template<> inline const int TypeIDOfType<uint8_clamped>() { return ScalarTypeRepresentation::TYPE_UINT8_CLAMPED; }
 
-template<typename NativeType> static inline const bool ElementTypeMayBeDouble() { return false; }
-template<> inline const bool ElementTypeMayBeDouble<uint32_t>() { return true; }
-template<> inline const bool ElementTypeMayBeDouble<float>() { return true; }
-template<> inline const bool ElementTypeMayBeDouble<double>() { return true; }
-
 template<typename ElementType>
 static inline JSObject *
 NewArray(JSContext *cx, uint32_t nelements);
@@ -1334,7 +1329,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     static const int ArrayTypeID() { return TypeIDOfType<NativeType>(); }
     static const bool ArrayTypeIsUnsigned() { return TypeIsUnsigned<NativeType>(); }
     static const bool ArrayTypeIsFloatingPoint() { return TypeIsFloatingPoint<NativeType>(); }
-    static const bool ArrayElementTypeMayBeDouble() { return ElementTypeMayBeDouble<NativeType>(); }
 
     static const size_t BYTES_PER_ELEMENT = sizeof(ThisType);
 
