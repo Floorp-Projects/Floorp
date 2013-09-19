@@ -4,6 +4,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MOCHITEST_FILES = \
+  driver-info.js \
+  webgl-util.js \
+  \
+  test_webgl_available.html \
   test_webgl_conformance.html \
   test_webgl_request_mismatch.html \
   $(NULL)
