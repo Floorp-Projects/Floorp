@@ -75,6 +75,6 @@ function performTest(HUD, [result]) {
   isnot(selectionText.indexOf("foobarBazBug613280"), -1,
         "selection text includes 'foobarBazBug613280'");
 
-  waitForClipboard(selectionText, clipboard_setup, clipboard_copy_done,
-                   clipboard_copy_done);
+  waitForClipboard((str) => { return str.trim() == selectionText.trim(); },
+                   clipboard_setup, clipboard_copy_done, clipboard_copy_done);
 }
