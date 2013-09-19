@@ -12,7 +12,8 @@
                   android:title="@string/pref_category_customize"
                   android:enabled="false">
 
-    <org.mozilla.gecko.SyncPreference android:title="@string/pref_sync"
+    <org.mozilla.gecko.SyncPreference android:key="android.not_a_preference.sync"
+                                      android:title="@string/pref_sync"
                                       android:persistent="false" />
 
     <PreferenceScreen android:title="@string/pref_category_search"
