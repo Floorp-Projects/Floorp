@@ -1973,18 +1973,15 @@ GSNCache::purge()
 }
 
 jssrcnote *
-js_GetSrcNote(JSContext *cx, JSScript *script, jsbytecode *pc)
+js::GetSrcNote(GSNCache &cache, JSScript *script, jsbytecode *pc)
 {
-    GSNCache *cache = &cx->runtime()->gsnCache;
-    cx = NULL;  // nulling |cx| ensures GC can't be triggered, so |JSScript *script| is safe
-
     size_t target = pc - script->code;
     if (target >= size_t(script->length))
         return NULL;
 
-    if (cache->code == script->code) {
-        JS_ASSERT(cache->map.initialized());
-        GSNCache::Map::Ptr p = cache->map.lookup(pc);
+    if (cache.code == script->code) {
+        JS_ASSERT(cache.map.initialized());
+        GSNCache::Map::Ptr p = cache.map.lookup(pc);
         return p ? p->value : NULL;
     }
 
@@ -2002,31 +1999,37 @@ js_GetSrcNote(JSContext *cx, JSScript *script, jsbytecode *pc)
         }
     }
 
-    if (cache->code != script->code && script->length >= GSN_CACHE_THRESHOLD) {
+    if (cache.code != script->code && script->length >= GSN_CACHE_THRESHOLD) {
         unsigned nsrcnotes = 0;
         for (jssrcnote *sn = script->notes(); !SN_IS_TERMINATOR(sn);
              sn = SN_NEXT(sn)) {
             if (SN_IS_GETTABLE(sn))
                 ++nsrcnotes;
         }
-        if (cache->code) {
-            JS_ASSERT(cache->map.initialized());
-            cache->map.finish();
-            cache->code = NULL;
+        if (cache.code) {
+            JS_ASSERT(cache.map.initialized());
+            cache.map.finish();
+            cache.code = NULL;
         }
-        if (cache->map.init(nsrcnotes)) {
+        if (cache.map.init(nsrcnotes)) {
             pc = script->code;
             for (jssrcnote *sn = script->notes(); !SN_IS_TERMINATOR(sn);
                  sn = SN_NEXT(sn)) {
                 pc += SN_DELTA(sn);
                 if (SN_IS_GETTABLE(sn))
-                    JS_ALWAYS_TRUE(cache->map.put(pc, sn));
+                    JS_ALWAYS_TRUE(cache.map.put(pc, sn));
             }
-            cache->code = script->code;
+            cache.code = script->code;
         }
     }
 
     return result;
+}
+
+jssrcnote *
+js_GetSrcNote(JSContext *cx, JSScript *script, jsbytecode *pc)
+{
+    return GetSrcNote(cx->runtime()->gsnCache, script, pc);
 }
 
 unsigned
