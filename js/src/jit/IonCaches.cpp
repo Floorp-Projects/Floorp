@@ -2595,18 +2595,18 @@ IsPropertySetInlineable(JSContext *cx, const SetPropertyIC &cache, HandleObject 
     if (!obj->isNative())
         return false;
 
-    Shape *shape = obj->nativeLookup(cx, id);
+    pshape.set(obj->nativeLookup(cx, id));
 
-    if (!shape)
+    if (!pshape)
         return false;
 
-    if (!shape->hasSlot())
+    if (!pshape->hasSlot())
         return false;
 
-    if (!shape->hasDefaultSetter())
+    if (!pshape->hasDefaultSetter())
         return false;
 
-    if (!shape->writable())
+    if (!pshape->writable())
         return false;
 
     bool shouldCheck = false;
@@ -2640,7 +2640,6 @@ IsPropertySetInlineable(JSContext *cx, const SetPropertyIC &cache, HandleObject 
         }
     }
 
-    pshape.set(shape);
     *checkTypeset = shouldCheck;
 
     return true;
