@@ -24,7 +24,6 @@
 #include "prmem.h"
 
 #include "nsNativeCharsetUtils.h"
-#include "nsThreadUtils.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gWin32SoundLog = nullptr;

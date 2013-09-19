@@ -20,6 +20,7 @@
 #include "nsIJumpListItem.h"
 #include "JumpListItem.h"
 #include "nsIObserver.h"
+#include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 
 namespace mozilla {

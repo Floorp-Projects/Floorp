@@ -10,7 +10,6 @@
 #include "nsSocketTransportService2.h"
 #include "mozilla/Mutex.h"
 #include "nsIOutputStream.h"
-#include "nsAutoPtr.h"
 
 //-----------------------------------------------------------------------------
 
