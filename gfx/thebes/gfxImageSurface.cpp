@@ -297,6 +297,8 @@ gfxImageSurface::GetSubimage(const gfxRect& aRect)
 {
     gfxRect r(aRect);
     r.Round();
+    MOZ_ASSERT(gfxRect(0, 0, mSize.width, mSize.height).Contains(r));
+
     unsigned char* subData = Data() +
         (Stride() * (int)r.Y()) +
         (int)r.X() * gfxASurface::BytePerPixelFromFormat(Format());
