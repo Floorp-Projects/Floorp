@@ -4,8 +4,6 @@
 
 #include "nsINIParserImpl.h"
 
-#include "nsIFile.h"
-
 #include "nsINIParser.h"
 #include "nsStringEnumerator.h"
 #include "nsTArray.h"

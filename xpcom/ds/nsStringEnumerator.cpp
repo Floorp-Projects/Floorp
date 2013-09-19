@@ -5,12 +5,10 @@
 
 
 #include "nsStringEnumerator.h"
-#include "nsCRT.h"
-#include "nsString.h"
-#include "nsReadableUtils.h"
 #include "nsISimpleEnumerator.h"
 #include "nsSupportsPrimitives.h"
 #include "mozilla/Attributes.h"
+#include "nsTArray.h"
 
 //
 // nsStringEnumerator

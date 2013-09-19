@@ -11,7 +11,6 @@
 
 #include "nsIVariant.h"
 #include "nsStringFwd.h"
-#include "xpt_struct.h"
 #include "mozilla/Attributes.h"
 
 class nsCycleCollectionTraversalCallback;

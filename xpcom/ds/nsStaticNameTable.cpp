@@ -9,9 +9,6 @@
 #include "nsCRT.h"
 
 #include "nscore.h"
-#include "nsString.h"
-#include "nsReadableUtils.h"
-#include "prbit.h"
 #include "mozilla/HashFunctions.h"
 #include "nsTraceRefcnt.h"
 
