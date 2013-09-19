@@ -36,7 +36,8 @@ static bool pathBeginsWithVolName(const nsACString& path, nsACString& firstPathC
     do {
       HFSUniStr255 volName;
       FSRef rootDirectory;
-      err = ::FSGetVolumeInfo(0, volumeIndex, NULL, kFSVolInfoNone, NULL, &volName, &rootDirectory);
+      err = ::FSGetVolumeInfo(0, volumeIndex, nullptr, kFSVolInfoNone, nullptr,
+                              &volName, &rootDirectory);
       if (err == noErr) {
         NS_ConvertUTF16toUTF8 volNameStr(Substring((PRUnichar *)volName.unicode,
                                                    (PRUnichar *)volName.unicode + volName.length));
@@ -76,14 +77,14 @@ static nsresult convertHFSPathtoPOSIX(const nsACString& hfsPath, nsACString& pos
   // to UTF-8, and we need "/Volumes" (or whatever - Apple says this is subject to change)
   // prepended if the path is not on the boot drive.
 
-  CFStringRef pathStrRef = CFStringCreateWithCString(NULL,
+  CFStringRef pathStrRef = CFStringCreateWithCString(nullptr,
                               PromiseFlatCString(hfsPath).get(),
                               kCFStringEncodingMacRoman);
   if (!pathStrRef)
     return NS_ERROR_FAILURE;
 
   nsresult rv = NS_ERROR_FAILURE;
-  CFURLRef urlRef = CFURLCreateWithFileSystemPath(NULL,
+  CFURLRef urlRef = CFURLCreateWithFileSystemPath(nullptr,
                               pathStrRef, kCFURLHFSPathStyle, true);
   if (urlRef) {
     UInt8 pathBuf[PATH_MAX];

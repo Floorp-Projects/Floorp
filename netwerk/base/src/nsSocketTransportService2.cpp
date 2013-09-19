@@ -647,7 +647,7 @@ nsSocketTransportService::Run()
 
     gSocketThread = PR_GetCurrentThread();
 
-    // add thread event to poll list (mThreadEvent may be NULL)
+    // add thread event to poll list (mThreadEvent may be nullptr)
     mPollList[0].fd = mThreadEvent;
     mPollList[0].in_flags = PR_POLL_READ;
     mPollList[0].out_flags = 0;

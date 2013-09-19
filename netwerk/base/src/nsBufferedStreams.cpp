@@ -98,7 +98,7 @@ nsBufferedStream::Close()
         if (!tfp) {
             tfp = fopen("/tmp/bufstats", "w");
             if (tfp)
-                setvbuf(tfp, NULL, _IOLBF, 0);
+                setvbuf(tfp, nullptr, _IOLBF, 0);
         }
         if (tfp) {
             fprintf(tfp, "seeks within buffer:    %u\n",
@@ -249,7 +249,7 @@ nsBufferedStream::SetEOF()
 NS_IMPL_ADDREF_INHERITED(nsBufferedInputStream, nsBufferedStream)
 NS_IMPL_RELEASE_INHERITED(nsBufferedInputStream, nsBufferedStream)
 
-NS_IMPL_CLASSINFO(nsBufferedInputStream, NULL, nsIClassInfo::THREADSAFE,
+NS_IMPL_CLASSINFO(nsBufferedInputStream, nullptr, nsIClassInfo::THREADSAFE,
                   NS_BUFFEREDINPUTSTREAM_CID)
 
 NS_INTERFACE_MAP_BEGIN(nsBufferedInputStream)
