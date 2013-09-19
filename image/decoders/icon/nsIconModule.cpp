@@ -38,7 +38,7 @@ static const mozilla::Module::CategoryEntry kIconCategories[] = {
 static void
 IconDecoderModuleDtor()
 {
-#if (MOZ_WIDGET_GTK == 2)
+#ifdef MOZ_WIDGET_GTK2
   nsIconChannel::Shutdown();
 #endif
 }

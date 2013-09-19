@@ -236,14 +236,14 @@ moz_container_realize (GtkWidget *widget)
         attributes.visual = gtk_widget_get_visual (widget);
         attributes.window_type = GDK_WINDOW_CHILD;
 
-#if (MOZ_WIDGET_GTK == 2)
+#if defined(MOZ_WIDGET_GTK2)    
         attributes.colormap = gtk_widget_get_colormap (widget);
         attributes_mask |= GDK_WA_COLORMAP;
 #endif
 
         window = gdk_window_new (parent, &attributes, attributes_mask);
         gdk_window_set_user_data (window, widget);
-#if (MOZ_WIDGET_GTK == 2)
+#if defined(MOZ_WIDGET_GTK2)
         /* TODO GTK3? */
         /* set the back pixmap to None so that you don't end up with the gtk
            default which is BlackPixel */
@@ -256,7 +256,7 @@ moz_container_realize (GtkWidget *widget)
 
     gtk_widget_set_window (widget, window);
 
-#if (MOZ_WIDGET_GTK == 2)
+#if defined(MOZ_WIDGET_GTK2)    
     widget->style = gtk_style_attach (widget->style, widget->window);
 #endif
 }

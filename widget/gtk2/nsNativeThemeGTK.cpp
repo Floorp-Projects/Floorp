@@ -630,7 +630,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
   return true;
 }
 
-#if (MOZ_WIDGET_GTK == 2)
+#if defined(MOZ_WIDGET_GTK2)
 class ThemeRenderer : public gfxGdkNativeRenderer {
 public:
   ThemeRenderer(GtkWidgetState aState, GtkThemeWidgetType aGTKWidgetType,
@@ -822,7 +822,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
     gdk_error_trap_push ();
   }
 
-#if (MOZ_WIDGET_GTK == 2)
+#if defined(MOZ_WIDGET_GTK2)
   // The gdk_clip is just advisory here, meaning "you don't
   // need to draw outside this rect if you don't feel like it!"
   GdkRectangle gdk_clip = {0, 0, drawingRect.width, drawingRect.height};
