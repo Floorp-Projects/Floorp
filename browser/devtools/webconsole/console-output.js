@@ -413,6 +413,7 @@ Messages.NavigationMarker.prototype = Heritage.extend(Messages.BaseMessage.proto
     render().element.appendChild(urlnode);
     this.element.classList.add("navigation-marker");
     this.element.url = this._url;
+    this.element.appendChild(doc.createTextNode("\n"));
 
     return this;
   },
