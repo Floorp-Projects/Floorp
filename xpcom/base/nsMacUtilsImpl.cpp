@@ -6,7 +6,6 @@
 #include "nsMacUtilsImpl.h"
 
 #include <CoreFoundation/CoreFoundation.h>
-#include <sys/sysctl.h>
 
 NS_IMPL_ISUPPORTS1(nsMacUtilsImpl, nsIMacUtils)
 

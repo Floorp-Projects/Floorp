@@ -6,19 +6,17 @@
 
 #include "mozilla/AvailableMemoryTracker.h"
 
+#if defined(XP_WIN)
 #include "prinrval.h"
 #include "prenv.h"
+#endif
 
-#include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIRunnable.h"
 #include "nsISupports.h"
-#include "nsMemoryPressure.h"
-#include "nsPrintfCString.h"
-#include "nsThread.h"
+#include "nsThreadUtils.h"
 
-#include "mozilla/Atomics.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 

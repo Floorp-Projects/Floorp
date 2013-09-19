@@ -7,8 +7,6 @@
 
 #include "nsSystemInfo.h"
 #include "prsystem.h"
-#include "nsString.h"
-#include "prprf.h"
 #include "mozilla/SSE.h"
 #include "mozilla/arm.h"
 
