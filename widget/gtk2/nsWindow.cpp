@@ -105,6 +105,7 @@ extern "C" {
 #include "LayerManagerOGL.h"
 #include "GLContextProvider.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/layers/CompositorParent.h"
 
 #ifdef MOZ_X11
 #include "gfxXlibSurface.h"
@@ -1974,6 +1975,12 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         mAttachedWidgetListener ? mAttachedWidgetListener : mWidgetListener;
     if (!listener)
         return FALSE;
+
+    // Do an early async composite so that we at least have something on screen
+    // in the right place, even if the content is out of date.
+    if (GetLayerManager()->GetBackendType() == LAYERS_CLIENT && mCompositorParent) {
+        mCompositorParent->ScheduleRenderOnCompositorThread();
+    }
 
     // Dispatch WillPaintWindow notification to allow scripts etc. to run
     // before we paint
