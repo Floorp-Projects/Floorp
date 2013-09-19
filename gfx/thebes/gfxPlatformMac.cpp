@@ -235,7 +235,6 @@ gfxPlatformMac::UpdateFontList()
 static const char kFontArialUnicodeMS[] = "Arial Unicode MS";
 static const char kFontAppleBraille[] = "Apple Braille";
 static const char kFontAppleSymbols[] = "Apple Symbols";
-static const char kFontAppleMyungjo[] = "AppleMyungjo";
 static const char kFontGeneva[] = "Geneva";
 static const char kFontGeezaPro[] = "Geeza Pro";
 static const char kFontHiraginoKakuGothic[] = "Hiragino Kaku Gothic ProN";
