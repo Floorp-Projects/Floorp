@@ -416,12 +416,23 @@ void MP3FrameParser::Parse(const char* aBuffer, uint32_t aLength, int64_t aOffse
       return;
     }
     MOZ_ASSERT(bytesRead >= mBufferLength, "Parse should leave original buffer");
+
     // Adjust the incoming buffer pointer/length so that it reflects that we may have
     // consumed data from buffer.
     uint32_t adjust = bytesRead - mBufferLength;
-    aOffset += adjust;
-    aLength -= adjust;
     mBufferLength = 0;
+    if (adjust >= aLength) {
+      // The frame or tag found in the buffer finishes outside the range.
+      // Just set the offset to the end of that tag/frame, and return.
+      mOffset = streamOffset + bytesRead;
+      if (mOffset > mLength) {
+        mLength = mOffset;
+      }
+      return;
+    }
+    aOffset += adjust;
+    MOZ_ASSERT(aLength >= adjust);
+    aLength -= adjust;
   }
 
   uint32_t bytesRead = 0;
