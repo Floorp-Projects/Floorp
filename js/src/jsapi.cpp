@@ -6126,17 +6126,13 @@ BOOL WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 #endif
 
 JS_PUBLIC_API(bool)
-JS_IndexToId(JSContext *cx, uint32_t index, jsid *idp)
+JS_IndexToId(JSContext *cx, uint32_t index, MutableHandleId id)
 {
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
-        return false;
-    *idp = id;
-    return true;
+    return IndexToId(cx, index, id);
 }
 
 JS_PUBLIC_API(bool)
-JS_CharsToId(JSContext* cx, JS::TwoByteChars chars, jsid *idp)
+JS_CharsToId(JSContext* cx, JS::TwoByteChars chars, MutableHandleId idp)
 {
     RootedAtom atom(cx, AtomizeChars<CanGC>(cx, chars.start().get(), chars.length()));
     if (!atom)
@@ -6145,12 +6141,12 @@ JS_CharsToId(JSContext* cx, JS::TwoByteChars chars, jsid *idp)
     uint32_t dummy;
     MOZ_ASSERT(!atom->isIndex(&dummy), "API misuse: |chars| must not encode an index");
 #endif
-    *idp = AtomToId(atom);
+    idp.set(AtomToId(atom));
     return true;
 }
 
 JS_PUBLIC_API(bool)
-JS_IsIdentifier(JSContext *cx, JSString *str, bool *isIdentifier)
+JS_IsIdentifier(JSContext *cx, HandleString str, bool *isIdentifier)
 {
     assertSameCompartment(cx, str);
 
