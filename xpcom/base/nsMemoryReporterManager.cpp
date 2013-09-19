@@ -464,6 +464,18 @@ public:
     }
 };
 
+static nsresult
+PageFaultsHardDistinguishedAmount(int64_t* aAmount)
+{
+    struct rusage usage;
+    int err = getrusage(RUSAGE_SELF, &usage);
+    if (err != 0) {
+        return NS_ERROR_FAILURE;
+    }
+    *aAmount = usage.ru_majflt;
+    return NS_OK;
+}
+
 class PageFaultsHardReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
@@ -483,13 +495,7 @@ public:
 
     NS_IMETHOD GetAmount(int64_t* aAmount)
     {
-        struct rusage usage;
-        int err = getrusage(RUSAGE_SELF, &usage);
-        if (err != 0) {
-            return NS_ERROR_FAILURE;
-        }
-        *aAmount = usage.ru_majflt;
-        return NS_OK;
+        return PageFaultsHardDistinguishedAmount(aAmount);
     }
 };
 #endif  // HAVE_PAGE_FAULT_REPORTERS
@@ -502,6 +508,25 @@ public:
 
 #ifdef HAVE_JEMALLOC_STATS
 
+static int64_t
+HeapAllocated()
+{
+    jemalloc_stats_t stats;
+    jemalloc_stats(&stats);
+    return (int64_t) stats.allocated;
+}
+
+// This has UNITS_PERCENTAGE, so it is multiplied by 100x.
+static int64_t
+HeapOverheadRatio()
+{
+    jemalloc_stats_t stats;
+    jemalloc_stats(&stats);
+    return (int64_t) 10000 *
+      (stats.waste + stats.bookkeeping + stats.page_cache) /
+      ((double)stats.allocated);
+}
+
 class HeapAllocatedReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
@@ -513,12 +538,7 @@ public:
 "exact amount requested is not recorded.)")
     {}
 private:
-    int64_t Amount() MOZ_OVERRIDE
-    {
-        jemalloc_stats_t stats;
-        jemalloc_stats(&stats);
-        return (int64_t) stats.allocated;
-    }
+    int64_t Amount() MOZ_OVERRIDE { return HeapAllocated(); }
 };
 
 class HeapOverheadWasteReporter MOZ_FINAL : public MemoryUniReporter
@@ -537,7 +557,7 @@ public:
 "fragmented, or that allocator is performing poorly for some other reason.")
     {}
 private:
-    int64_t Amount()
+    int64_t Amount() MOZ_OVERRIDE
     {
         jemalloc_stats_t stats;
         jemalloc_stats(&stats);
@@ -554,7 +574,7 @@ public:
 "Committed bytes which the heap allocator uses for internal data structures.")
     {}
 private:
-    int64_t Amount()
+    int64_t Amount() MOZ_OVERRIDE
     {
         jemalloc_stats_t stats;
         jemalloc_stats(&stats);
@@ -574,7 +594,7 @@ public:
 "is typically not larger than a few megabytes.")
     {}
 private:
-    int64_t Amount()
+    int64_t Amount() MOZ_OVERRIDE
     {
         jemalloc_stats_t stats;
         jemalloc_stats(&stats);
@@ -594,7 +614,7 @@ public:
 "exactly.")
     {}
 private:
-    int64_t Amount()
+    int64_t Amount() MOZ_OVERRIDE
     {
         jemalloc_stats_t stats;
         jemalloc_stats(&stats);
@@ -614,14 +634,7 @@ public:
 "the heap allocator relative to amount of memory allocated.")
     {}
 private:
-    int64_t Amount()
-    {
-        jemalloc_stats_t stats;
-        jemalloc_stats(&stats);
-        return (int64_t) 10000 *
-          (stats.waste + stats.bookkeeping + stats.page_cache) /
-          ((double)stats.allocated);
-    }
+    int64_t Amount() MOZ_OVERRIDE { return HeapOverheadRatio(); }
 };
 #endif  // HAVE_JEMALLOC_STATS
 
@@ -638,7 +651,10 @@ public:
 "Memory used by the dynamic and static atoms tables.")
     {}
 private:
-    int64_t Amount() { return NS_SizeOfAtomTablesIncludingThis(MallocSizeOf); }
+    int64_t Amount() MOZ_OVERRIDE
+    {
+        return NS_SizeOfAtomTablesIncludingThis(MallocSizeOf);
+    }
 };
 
 #ifdef MOZ_DMD
@@ -965,6 +981,12 @@ public:
                         const nsACString& aDescription,
                         nsISupports* aWrappedExplicit)
     {
+        // Using the "heap-allocated" reporter here instead of
+        // nsMemoryReporterManager.heapAllocated goes against the usual
+        // pattern.  But it's for a good reason:  in tests, we can easily
+        // create artificial (i.e. deterministic) reporters -- which allows us
+        // to precisely test nsMemoryReporterManager.explicit -- but we can't
+        // do that for distinguished amounts.
         if (aPath.Equals("heap-allocated") ||
             (aKind == nsIMemoryReporter::KIND_NONHEAP &&
              PromiseFlatCString(aPath).Find("explicit") == 0))
@@ -1012,6 +1034,17 @@ nsMemoryReporterManager::GetExplicit(int64_t* aAmount)
 }
 
 NS_IMETHODIMP
+nsMemoryReporterManager::GetVsize(int64_t* aVsize)
+{
+#ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
+    return ::GetVsize(aVsize);
+#else
+    *aResident = 0;
+    return NS_ERROR_NOT_AVAILABLE;
+#endif
+}
+
+NS_IMETHODIMP
 nsMemoryReporterManager::GetResident(int64_t* aAmount)
 {
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
@@ -1033,6 +1066,31 @@ nsMemoryReporterManager::GetResidentFast(int64_t* aAmount)
 #endif
 }
 
+NS_IMETHODIMP
+nsMemoryReporterManager::GetHeapAllocated(int64_t* aAmount)
+{
+#ifdef HAVE_JEMALLOC_STATS
+    *aAmount = HeapAllocated();
+    return NS_OK;
+#else
+    *aAmount = 0;
+    return NS_ERROR_NOT_AVAILABLE;
+#endif
+}
+
+// This has UNITS_PERCENTAGE, so it is multiplied by 100x.
+NS_IMETHODIMP
+nsMemoryReporterManager::GetHeapOverheadRatio(int64_t* aAmount)
+{
+#ifdef HAVE_JEMALLOC_STATS
+    *aAmount = HeapOverheadRatio();
+    return NS_OK;
+#else
+    *aAmount = 0;
+    return NS_ERROR_NOT_AVAILABLE;
+#endif
+}
+
 static nsresult
 GetInfallibleAmount(InfallibleAmountFn aAmountFn, int64_t* aAmount)
 {
@@ -1042,6 +1100,18 @@ GetInfallibleAmount(InfallibleAmountFn aAmountFn, int64_t* aAmount)
     }
     *aAmount = 0;
     return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::GetJSMainRuntimeGCHeap(int64_t* aAmount)
+{
+    return GetInfallibleAmount(mAmountFns.mJSMainRuntimeGCHeap, aAmount);
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::GetJSMainRuntimeTemporaryPeak(int64_t* aAmount)
+{
+    return GetInfallibleAmount(mAmountFns.mJSMainRuntimeTemporaryPeak, aAmount);
 }
 
 NS_IMETHODIMP
@@ -1056,6 +1126,48 @@ nsMemoryReporterManager::GetJSMainRuntimeCompartmentsUser(int64_t* aAmount)
 {
     return GetInfallibleAmount(mAmountFns.mJSMainRuntimeCompartmentsUser,
                                aAmount);
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::GetImagesContentUsedUncompressed(int64_t* aAmount)
+{
+    return GetInfallibleAmount(mAmountFns.mImagesContentUsedUncompressed,
+                               aAmount);
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::GetStorageSQLite(int64_t* aAmount)
+{
+    return GetInfallibleAmount(mAmountFns.mStorageSQLite, aAmount);
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::GetLowMemoryEventsVirtual(int64_t* aAmount)
+{
+    return GetInfallibleAmount(mAmountFns.mLowMemoryEventsVirtual, aAmount);
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::GetLowMemoryEventsPhysical(int64_t* aAmount)
+{
+    return GetInfallibleAmount(mAmountFns.mLowMemoryEventsPhysical, aAmount);
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::GetGhostWindows(int64_t* aAmount)
+{
+    return GetInfallibleAmount(mAmountFns.mGhostWindows, aAmount);
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::GetPageFaultsHard(int64_t* aAmount)
+{
+#ifdef HAVE_PAGE_FAULT_REPORTERS
+    return PageFaultsHardDistinguishedAmount(aAmount);
+#else
+    *aAmount = 0;
+    return NS_ERROR_NOT_AVAILABLE;
+#endif
 }
 
 NS_IMETHODIMP
@@ -1184,7 +1296,7 @@ namespace mozilla {
 
 // Macro for generating functions that register distinguished amount functions
 // with the memory reporter manager.
-#define REGISTER_DISTINGUISHED_AMOUNT(kind, name)                             \
+#define DEFINE_REGISTER_DISTINGUISHED_AMOUNT(kind, name)                      \
     nsresult                                                                  \
     Register##name##DistinguishedAmount(kind##AmountFn aAmountFn)             \
     {                                                                         \
@@ -1199,10 +1311,38 @@ namespace mozilla {
         return NS_OK;                                                         \
     }
 
-REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeCompartmentsSystem)
-REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeCompartmentsUser)
+#define DEFINE_UNREGISTER_DISTINGUISHED_AMOUNT(name)                          \
+    nsresult                                                                  \
+    Unregister##name##DistinguishedAmount()                                   \
+    {                                                                         \
+        nsCOMPtr<nsIMemoryReporterManager> imgr =                             \
+            do_GetService("@mozilla.org/memory-reporter-manager;1");          \
+        nsRefPtr<nsMemoryReporterManager> mgr =                               \
+            static_cast<nsMemoryReporterManager*>(imgr.get());                \
+        if (!mgr) {                                                           \
+            return NS_ERROR_FAILURE;                                          \
+        }                                                                     \
+        mgr->mAmountFns.m##name = nullptr;                                    \
+        return NS_OK;                                                         \
+    }
 
-#undef REGISTER_DISTINGUISHED_AMOUNT
+DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeGCHeap)
+DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeTemporaryPeak)
+DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeCompartmentsSystem)
+DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeCompartmentsUser)
+
+DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, ImagesContentUsedUncompressed)
+
+DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, StorageSQLite)
+DEFINE_UNREGISTER_DISTINGUISHED_AMOUNT(StorageSQLite)
+
+DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, LowMemoryEventsVirtual)
+DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, LowMemoryEventsPhysical)
+
+DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, GhostWindows)
+
+#undef DEFINE_REGISTER_DISTINGUISHED_AMOUNT
+#undef DEFINE_UNREGISTER_DISTINGUISHED_AMOUNT
 
 }
 

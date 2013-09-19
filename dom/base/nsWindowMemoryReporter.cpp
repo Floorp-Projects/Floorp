@@ -51,6 +51,7 @@ nsWindowMemoryReporter::Init()
   }
 
   NS_RegisterMemoryReporter(new GhostWindowsReporter());
+  RegisterGhostWindowsDistinguishedAmount(GhostWindowsReporter::DistinguishedAmount);
 }
 
 static already_AddRefed<nsIURI>
@@ -713,10 +714,11 @@ nsWindowMemoryReporter::CheckForGhostWindows(
                              &ghostEnumData);
 }
 
-int64_t
-nsWindowMemoryReporter::GhostWindowsReporter::Amount()
+/* static */ int64_t
+nsWindowMemoryReporter::GhostWindowsReporter::DistinguishedAmount()
 {
   nsTHashtable<nsUint64HashKey> ghostWindows;
   sWindowReporter->CheckForGhostWindows(&ghostWindows);
   return ghostWindows.Count();
 }
+

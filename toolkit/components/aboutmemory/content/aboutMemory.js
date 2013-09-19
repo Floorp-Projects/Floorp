@@ -1342,6 +1342,11 @@ function appendProcessAboutMemoryElements(aP, aProcess, aTrees, aDegenerates,
     let t = aTrees[treeName];
     if (t) {
       fillInTree(t);
+      // Using the "heap-allocated" reporter here instead of
+      // nsMemoryReporterManager.heapAllocated goes against the usual pattern.
+      // But the "heap-allocated" node will go in the tree like the others, so
+      // we have to deal with it, and once we're dealing with it, it's easier
+      // to keep doing so rather than switching to the distinguished amount.
       hasKnownHeapAllocated =
         aDegenerates &&
         addHeapUnclassifiedNode(t, aDegenerates["heap-allocated"], aHeapTotal);
