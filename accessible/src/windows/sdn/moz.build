@@ -8,6 +8,7 @@ MODULE = 'accessibility'
 
 CPP_SOURCES += [
     'sdnAccessible.cpp',
+    'sdnDocAccessible.cpp',
     'sdnTextAccessible.cpp',
 ]
 
