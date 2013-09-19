@@ -5,9 +5,10 @@
 #ifndef nsInterfaceRequestorAgg_h__
 #define nsInterfaceRequestorAgg_h__
 
-#include "nsIInterfaceRequestor.h"
+#include "nsError.h"
 
 class nsIEventTarget;
+class nsIInterfaceRequestor;
 
 /**
  * This function returns an instance of nsIInterfaceRequestor that aggregates

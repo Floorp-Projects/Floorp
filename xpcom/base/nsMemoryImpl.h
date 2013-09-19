@@ -10,7 +10,6 @@
 
 #include "nsIMemory.h"
 #include "nsIRunnable.h"
-#include "prtime.h"
 
 // nsMemoryImpl is a static object. We can do this because it doesn't have
 // a constructor/destructor or any instance members. Please don't add
