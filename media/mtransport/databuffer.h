@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <mozilla/Scoped.h>
 #include <m_cpp_utils.h>
+#include <nsISupportsImpl.h>
 
 namespace mozilla {
 

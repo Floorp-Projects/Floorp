@@ -3,6 +3,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# Disabled for too many intermittent failures (bug 719186)
+#		test_bug413310.html \
+
 MOCHITEST_FILES = \
 		test_bug123696.html \
 		bug123696-subframe.html \
@@ -13,7 +16,6 @@ MOCHITEST_FILES = \
 		test_bug387979.html \
 		test_bug404548.html \
 		bug404548-subframe.html \
-		test_bug413310.html \
 		bug413310-subframe.html \
 		bug413310-post.sjs \
 		test_bug402210.html \

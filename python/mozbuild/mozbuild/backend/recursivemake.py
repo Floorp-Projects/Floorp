@@ -19,6 +19,7 @@ import mozpack.path as mozpath
 from .common import CommonBackend
 from ..frontend.data import (
     ConfigFileSubstitution,
+    Defines,
     DirectoryTraversal,
     Exports,
     GeneratedEventWebIDLFile,
@@ -203,6 +204,15 @@ class RecursiveMakeBackend(CommonBackend):
                         backend_file.write('%s := 1\n' % k)
                 else:
                     backend_file.write('%s := %s\n' % (k, v))
+
+        elif isinstance(obj, Defines):
+            defines = obj.get_defines()
+            if defines:
+                backend_file.write('DEFINES +=')
+                for define in defines:
+                    backend_file.write(' %s' % define)
+                backend_file.write('\n')
+
         elif isinstance(obj, Exports):
             self._process_exports(obj, obj.exports, backend_file)
 

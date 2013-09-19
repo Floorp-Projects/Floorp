@@ -2663,7 +2663,7 @@ LIRGenerator::visitAssertRange(MAssertRange *ins)
 
     switch (input->type()) {
       case MIRType_Int32:
-          lir = new LAssertRangeI(useRegisterAtStart(input));
+        lir = new LAssertRangeI(useRegisterAtStart(input));
         break;
 
       case MIRType_Double:
