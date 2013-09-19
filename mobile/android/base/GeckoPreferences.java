@@ -77,6 +77,7 @@ public class GeckoPreferences
     private static String PREFS_HEALTHREPORT_LINK = NON_PREF_PREFIX + "healthreport.link";
     private static String PREFS_DEVTOOLS_REMOTE_ENABLED = "devtools.debugger.remote-enabled";
     private static String PREFS_DISPLAY_REFLOW_ON_ZOOM = "browser.zoom.reflowOnZoom";
+    private static String PREFS_SYNC = NON_PREF_PREFIX + "sync";
 
     public static String PREFS_RESTORE_SESSION = NON_PREF_PREFIX + "restoreSession3";
 
@@ -341,6 +342,11 @@ public class GeckoPreferences
                     ListPreference listPref = (ListPreference) pref;
                     CharSequence selectedEntry = listPref.getEntry();
                     listPref.setSummary(selectedEntry);
+                    continue;
+                } else if (PREFS_SYNC.equals(key) && GeckoProfile.get(this).inGuestMode()) {
+                    // Don't show sync prefs while in guest mode.
+                    preferences.removePreference(pref);
+                    i--;
                     continue;
                 }
 
