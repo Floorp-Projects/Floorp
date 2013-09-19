@@ -4128,10 +4128,10 @@ extern JS_PUBLIC_API(bool)
 JS_IsExceptionPending(JSContext *cx);
 
 extern JS_PUBLIC_API(bool)
-JS_GetPendingException(JSContext *cx, jsval *vp);
+JS_GetPendingException(JSContext *cx, JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(void)
-JS_SetPendingException(JSContext *cx, jsval v);
+JS_SetPendingException(JSContext *cx, JS::HandleValue v);
 
 extern JS_PUBLIC_API(void)
 JS_ClearPendingException(JSContext *cx);
@@ -4167,7 +4167,7 @@ JS_DropExceptionState(JSContext *cx, JSExceptionState *state);
  * of the exception object.
  */
 extern JS_PUBLIC_API(JSErrorReport *)
-JS_ErrorFromException(JSContext *cx, jsval v);
+JS_ErrorFromException(JSContext *cx, JS::HandleValue v);
 
 /*
  * Given a reported error's message and JSErrorReport struct pointer, throw
