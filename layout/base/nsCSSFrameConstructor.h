@@ -31,6 +31,7 @@ struct nsGenConInitializer;
 class nsICSSAnonBoxPseudo;
 class nsPageContentFrame;
 struct PendingBinding;
+class nsGenericDOMDataNode;
 
 class nsFrameConstructorState;
 class nsFrameConstructorSaveState;
@@ -197,6 +198,13 @@ public:
 
   nsresult CharacterDataChanged(nsIContent* aContent,
                                 CharacterDataChangeInfo* aInfo);
+
+  // If aContent is a text node that has been optimized away due to being
+  // whitespace next to a block boundary (or for some other reason), stop
+  // doing that and create a frame for it if it should have one. This recreates
+  // frames so be careful (although this should not change actual layout).
+  // Returns the frame for aContent if there is one.
+  nsIFrame* EnsureFrameForTextNode(nsGenericDOMDataNode* aContent);
 
   // generate the child frames and process bindings
   nsresult GenerateChildFrames(nsIFrame* aFrame);

@@ -143,6 +143,7 @@ MOCHITEST_FILES =	\
 		  bug851445_helper.html \
 		test_emulateMedium.html \
 		enableTestPlugin.js \
+		test_getClientRects_emptytext.html \
 		$(NULL)
 
 ifeq (,$(filter gonk,$(MOZ_WIDGET_TOOLKIT)))
