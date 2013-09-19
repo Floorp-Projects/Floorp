@@ -2382,15 +2382,12 @@ MBoundsCheckLower::fallible()
 void
 MBeta::printOpcode(FILE *fp) const
 {
-    PrintOpcodeName(fp, op());
-    fprintf(fp, " ");
-    getOperand(0)->printName(fp);
-    fprintf(fp, " ");
+    MDefinition::printOpcode(fp);
 
     Sprinter sp(GetIonContext()->cx);
     sp.init();
     comparison_->print(sp);
-    fprintf(fp, "%s", sp.string());
+    fprintf(fp, " %s", sp.string());
 }
 
 bool

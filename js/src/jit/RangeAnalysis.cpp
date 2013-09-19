@@ -269,11 +269,11 @@ Range::print(Sprinter &sp) const
     JS_ASSERT_IF(lower_infinite_, lower_ == JSVAL_INT_MIN);
     JS_ASSERT_IF(upper_infinite_, upper_ == JSVAL_INT_MAX);
 
-    // Real or Natural subset.
+    // Floating-point or Integer subset.
     if (canHaveFractionalPart_)
-        sp.printf("R");
+        sp.printf("F");
     else
-        sp.printf("N");
+        sp.printf("I");
 
     sp.printf("[");
 
@@ -352,21 +352,21 @@ Range::intersect(const Range *lhs, const Range *rhs, bool *emptyRange)
 void
 Range::unionWith(const Range *other)
 {
-   bool canHaveFractionalPart = canHaveFractionalPart_ | other->canHaveFractionalPart_;
-   uint16_t max_exponent = Max(max_exponent_, other->max_exponent_);
+    bool canHaveFractionalPart = canHaveFractionalPart_ | other->canHaveFractionalPart_;
+    uint16_t max_exponent = Max(max_exponent_, other->max_exponent_);
 
-   if (lower_infinite_ || other->lower_infinite_)
-       makeLowerInfinite();
-   else
-       setLowerInit(Min(lower_, other->lower_));
+    if (lower_infinite_ || other->lower_infinite_)
+        makeLowerInfinite();
+    else
+        setLowerInit(Min(lower_, other->lower_));
 
-   if (upper_infinite_ || other->upper_infinite_)
-       makeUpperInfinite();
-   else
-       setUpperInit(Max(upper_, other->upper_));
+    if (upper_infinite_ || other->upper_infinite_)
+        makeUpperInfinite();
+    else
+        setUpperInit(Max(upper_, other->upper_));
 
-   canHaveFractionalPart_ = canHaveFractionalPart;
-   max_exponent_ = max_exponent;
+    canHaveFractionalPart_ = canHaveFractionalPart;
+    max_exponent_ = max_exponent;
 }
 
 static const int64_t RANGE_INF_MAX = int64_t(JSVAL_INT_MAX) + 1;
@@ -824,10 +824,8 @@ MConstant::computeRange()
     int exp = Range::MaxDoubleExponent;
 
     // NaN is estimated as a Double which covers everything.
-    if (IsNaN(d)) {
-        setRange(new Range(RANGE_INF_MIN, RANGE_INF_MAX, true, exp));
+    if (IsNaN(d))
         return;
-    }
 
     // Infinity is used to set both lower and upper to the range boundaries.
     if (IsInfinite(d)) {
