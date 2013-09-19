@@ -10,6 +10,7 @@
 #include "nsIDNSService.h"
 #include "nsIThread.h"
 #include "nsSocketTransport2.h"
+#include "nsThreadUtils.h"
 
 using mozilla::AutoSafeJSContext;
 namespace mozilla {
