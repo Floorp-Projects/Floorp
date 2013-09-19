@@ -72,15 +72,27 @@
     <style name="Widget.TopSitesGridView" parent="Widget.GridView">
         <item name="android:paddingLeft">5dp</item>
         <item name="android:paddingRight">5dp</item>
-        <item name="android:paddingTop">30dp</item>
         <item name="android:paddingBottom">30dp</item>
         <item name="android:horizontalSpacing">10dp</item>
         <item name="android:verticalSpacing">10dp</item>
     </style>
 
-    <style name="Widget.TopSitesListView" parent="Widget.BookmarksListView"/>
+    <style name="Widget.TopSitesListView" parent="Widget.BookmarksListView">
+        <item name="topDivider">false</item>
+    </style>
 
     <style name="Widget.ReadingListView" parent="Widget.BookmarksListView"/>
+
+    <style name="Widget.Home.HistoryPageTitle" parent="Widget.Home.HistoryTabIndicator">
+        <item name="android:layout_marginLeft">32dp</item>
+        <item name="android:layout_marginRight">32dp</item>
+    </style>
+
+    <style name="Widget.Home.HistoryListView">
+        <item name="android:paddingLeft">32dp</item>
+        <item name="android:paddingRight">32dp</item>
+        <item name="android:scrollbarStyle">outsideOverlay</item>
+    </style>
 
     <style name="Widget.HomeBanner">
         <item name="android:paddingLeft">32dp</item>
