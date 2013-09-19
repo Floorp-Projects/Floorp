@@ -20,8 +20,16 @@ public:
   nsMemoryReporterManager();
   virtual ~nsMemoryReporterManager();
 
+  // Functions that (a) implement distinguished amounts, and (b) are outside of
+  // this module.
+  struct AmountFns {
+    mozilla::InfallibleAmountFn mJSMainRuntimeCompartmentsSystem;
+    mozilla::InfallibleAmountFn mJSMainRuntimeCompartmentsUser;
+  };
+  AmountFns mAmountFns;
+
 private:
-  nsresult RegisterReporterHelper(nsIMemoryReporter *reporter, bool aForce);
+  nsresult RegisterReporterHelper(nsIMemoryReporter *aReporter, bool aForce);
 
   nsTHashtable<nsISupportsHashKey> mReporters;
   Mutex mMutex;
