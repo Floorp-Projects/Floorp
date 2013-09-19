@@ -38,12 +38,13 @@ interface nsITCPSocketParent : nsISupports
 
 // Intermediate class to handle sending multiple possible data types
 // and kicking off the chrome process socket object's connection.
-[scriptable, uuid(38bec1ed-b863-40dd-ba69-7bd92e568ee3)]
+[scriptable, uuid(be67b1b8-03b0-4171-a791-d004458021b6)]
 interface nsITCPSocketIntermediary : nsISupports {
   // Open the connection to the server with the given parameters
   nsIDOMTCPSocket open(in nsITCPSocketParent parent,
                        in DOMString host, in unsigned short port,
-                       in boolean useSSL, in DOMString binaryType);
+                       in boolean useSSL, in DOMString binaryType,
+                       in unsigned long appId);
 
   // Listen on a port
   nsIDOMTCPServerSocket listen(in nsITCPServerSocketParent parent,

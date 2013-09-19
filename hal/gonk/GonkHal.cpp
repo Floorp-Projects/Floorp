@@ -885,7 +885,7 @@ DestroyAlarmData(void* aData)
 // Runs on alarm-watcher thread.
 void ShutDownAlarm(int aSigno)
 {
-  if (aSigno == SIGUSR1) {
+  if (aSigno == SIGUSR1 && sAlarmData) {
     sAlarmData->mShuttingDown = true;
   }
   return;

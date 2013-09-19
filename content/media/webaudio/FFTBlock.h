@@ -39,11 +39,14 @@ public:
   CreateInterpolatedBlock(const FFTBlock& block0,
                           const FFTBlock& block1, double interp);
 
+  // Transform FFTSize() points of aData and store the result internally.
   void PerformFFT(const float* aData)
   {
     EnsureFFT();
     kiss_fftr(mFFT, aData, mOutputBuffer.Elements());
   }
+  // Inverse-transform internal data and store the resulting FFTSize()
+  // points in aData.
   void PerformInverseFFT(float* aData)
   {
     EnsureIFFT();
@@ -52,6 +55,27 @@ public:
       aData[i] /= mFFTSize;
     }
   }
+  // Inverse-transform the FFTSize()/2+1 points of data in each
+  // of aRealDataIn and aImagDataIn and store the resulting
+  // FFTSize() points in aRealDataOut.
+  void PerformInverseFFT(float* aRealDataIn,
+                         float *aImagDataIn,
+                         float *aRealDataOut)
+  {
+    EnsureIFFT();
+    const uint32_t inputSize = mFFTSize / 2 + 1;
+    nsTArray<kiss_fft_cpx> inputBuffer;
+    inputBuffer.SetLength(inputSize);
+    for (uint32_t i = 0; i < inputSize; ++i) {
+      inputBuffer[i].r = aRealDataIn[i];
+      inputBuffer[i].i = aImagDataIn[i];
+    }
+    kiss_fftri(mIFFT, inputBuffer.Elements(), aRealDataOut);
+    for (uint32_t i = 0; i < mFFTSize; ++i) {
+      aRealDataOut[i] /= mFFTSize;
+    }
+  }
+
   void Multiply(const FFTBlock& aFrame)
   {
     BufferComplexMultiply(reinterpret_cast<const float*>(mOutputBuffer.Elements()),

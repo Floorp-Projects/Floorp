@@ -1,4 +1,5 @@
-// XXXkhuey this needs a license header.
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 this.EXPORTED_SYMBOLS = ["CrashTestUtils"];
 
@@ -16,6 +17,7 @@ this.CrashTestUtils = {
   CRASH_RUNTIMEABORT:          2,
   CRASH_OOM:                   3,
   CRASH_MOZ_CRASH:             4,
+  CRASH_ABORT:                 5,
 
   // Constants for dumpHasStream()
   // From google_breakpad/common/minidump_format.h

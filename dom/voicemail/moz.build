@@ -28,3 +28,6 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'domvoicemail_s'
 
+LOCAL_INCLUDES += [
+    '../base',
+]

@@ -20,6 +20,7 @@
 #include "jsobjinlines.h"
 
 using namespace js;
+using namespace jit;
 
 void
 AsmJSModule::initHeap(Handle<ArrayBufferObject*> heap, JSContext *cx)
@@ -79,21 +80,21 @@ static void
 DeallocateExecutableMemory(uint8_t *code, size_t totalBytes)
 {
 #ifdef XP_WIN
-        JS_ALWAYS_TRUE(VirtualFree(code, 0, MEM_RELEASE));
+    JS_ALWAYS_TRUE(VirtualFree(code, 0, MEM_RELEASE));
 #else
-        JS_ALWAYS_TRUE(munmap(code, totalBytes) == 0);
+    JS_ALWAYS_TRUE(munmap(code, totalBytes) == 0);
 #endif
 }
 
-uint8_t *
-AsmJSModule::allocateCodeAndGlobalSegment(ExclusiveContext *cx, size_t bytesNeeded)
+bool
+AsmJSModule::allocateAndCopyCode(ExclusiveContext *cx, MacroAssembler &masm)
 {
     JS_ASSERT(!code_);
 
     // The global data section sits immediately after the executable (and
     // other) data allocated by the MacroAssembler, so ensure it is
     // double-aligned.
-    pod.codeBytes_ = AlignBytes(bytesNeeded, sizeof(double));
+    pod.codeBytes_ = AlignBytes(masm.bytesNeeded(), sizeof(double));
 
     // The entire region is allocated via mmap/VirtualAlloc which requires
     // units of pages.
@@ -101,14 +102,52 @@ AsmJSModule::allocateCodeAndGlobalSegment(ExclusiveContext *cx, size_t bytesNeed
 
     code_ = AllocateExecutableMemory(cx, pod.totalBytes_);
     if (!code_)
-        return NULL;
+        return false;
 
     JS_ASSERT(uintptr_t(code_) % AsmJSPageSize == 0);
-    return code_;
+    masm.executableCopy(code_);
+    return true;
+}
+
+void
+AsmJSModule::staticallyLink(const AsmJSStaticLinkData &linkData)
+{
+    // Process AsmJSStaticLinkData:
+
+    operationCallbackExit_ = code_ + linkData.operationCallbackExitOffset;
+
+    for (size_t i = 0; i < linkData.relativeLinks.length(); i++) {
+        AsmJSStaticLinkData::RelativeLink link = linkData.relativeLinks[i];
+        *(void **)(code_ + link.patchAtOffset) = code_ + link.targetOffset;
+    }
+
+    // Initialize global data segment
+
+    for (size_t i = 0; i < exits_.length(); i++) {
+        exitIndexToGlobalDatum(i).exit = interpExitTrampoline(exits_[i]);
+        exitIndexToGlobalDatum(i).fun = NULL;
+    }
+}
+
+AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t charsBegin)
+  : globalArgumentName_(NULL),
+    importArgumentName_(NULL),
+    bufferArgumentName_(NULL),
+    minHeapLength_(AsmJSAllocationGranularity),
+    code_(NULL),
+    operationCallbackExit_(NULL),
+    linked_(false),
+    charsBegin_(charsBegin),
+    scriptSource_(scriptSource)
+{
+    mozilla::PodZero(&pod);
+    scriptSource_->incref();
 }
 
 AsmJSModule::~AsmJSModule()
 {
+    scriptSource_->decref();
+
     if (code_) {
         for (unsigned i = 0; i < numExits(); i++) {
             AsmJSModule::ExitDatum &exitDatum = exitIndexToGlobalDatum(i);

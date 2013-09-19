@@ -50,6 +50,8 @@
 
     function receiveSubDomain(evt)
     {
+      var topframe =
+        SpecialPowers.unwrap(SpecialPowers.wrap(window).parent.topDomainFrame);
       if (evt.origin !== "http://mochi.test:8888")
       {
         fail("wrong top-domain origin: " + evt.origin);
@@ -62,12 +64,13 @@
       }
 
       document.domain = "example.com";
-      window.parent.topDomainFrame.postMessage("domain-switch",
-                                               "http://example.com");
+      topframe.postMessage("domain-switch", "http://example.com");
     }
     
     function receiveTopDomain(evt)
     {
+      var subframe =
+        SpecialPowers.unwrap(SpecialPowers.wrap(window).parent.subDomainFrame);
       if (evt.origin !== "http://test1.example.com")
       {
         fail("wrong subdomain origin: " + evt.origin);
@@ -78,14 +81,14 @@
         fail("wrong subdomain message: " + evt.origin);
         return;
       }
-      if (evt.source !== window.parent.subDomainFrame)
+      if (evt.source !== subframe)
       {
         fail("wrong source on message from subdomain");
         return;
       }
 
       document.domain = "example.com";
-      window.parent.subDomainFrame.testSiblingPostMessage();
+      subframe.testSiblingPostMessage();
     }
 
     function testSiblingPostMessage()

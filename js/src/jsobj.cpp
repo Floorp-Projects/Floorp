@@ -4040,12 +4040,6 @@ NativeGetInline(JSContext *cx,
     {
         jsbytecode *pc;
         JSScript *script = cx->currentScript(&pc);
-        if (script && script->hasAnalysis()) {
-            analyze::Bytecode *code = script->analysis()->maybeCode(pc);
-            if (code)
-                code->accessGetter = true;
-        }
-
 #ifdef JS_ION
         if (script && script->hasBaselineScript()) {
             switch (JSOp(*pc)) {
