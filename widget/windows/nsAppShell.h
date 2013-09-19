@@ -27,6 +27,7 @@ public:
     mLastNativeEventScheduledMutex("nsAppShell::mLastNativeEventScheduledMutex")
   {}
   typedef mozilla::TimeStamp TimeStamp;
+  typedef mozilla::Mutex Mutex;
 
   nsresult Init();
   void DoProcessMoreGeckoEvents();
