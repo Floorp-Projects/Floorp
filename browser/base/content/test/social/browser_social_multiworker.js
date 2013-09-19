@@ -7,6 +7,7 @@ function test() {
 
   Services.prefs.setBoolPref("social.allowMultipleWorkers", true);
   runSocialTestWithProvider(gProviders, function (finishcb) {
+    Social.enabled = true;
     runSocialTests(tests, undefined, undefined, function() {
       Services.prefs.clearUserPref("social.allowMultipleWorkers");
       finishcb();
