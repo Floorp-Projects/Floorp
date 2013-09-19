@@ -625,9 +625,10 @@ CustomizeMode.prototype = {
     }
     // If the node is still attached to the container, wrap it again:
     if (aNodeToChange.parentNode) {
-      this.wrapToolbarItem(aNodeToChange);
+      let place = getPlaceForItem(aNodeToChange);
+      this.wrapToolbarItem(aNodeToChange, place);
       if (aSecondaryNode) {
-        this.wrapToolbarItem(aSecondaryNode);
+        this.wrapToolbarItem(aSecondaryNode, place);
       }
     } else {
       // If not, it got removed.
