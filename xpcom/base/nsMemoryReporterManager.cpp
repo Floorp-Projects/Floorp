@@ -16,9 +16,10 @@
 #if defined(XP_LINUX)
 #include "nsMemoryInfoDumper.h"
 #endif
-#include "mozilla/Telemetry.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/Services.h"
+#include "mozilla/Telemetry.h"
 
 #ifndef XP_WIN
 #include <unistd.h>
@@ -426,26 +427,6 @@ public:
 
     NS_IMETHOD GetAmount(int64_t* aAmount) { return GetResident(aAmount); }
 };
-
-// This is a "redundant/"-prefixed reporter, which means it's ignored by
-// about:memory.  This is good because the "resident" reporter can purge pages
-// on MacOS, which affects the "resident-fast" results, and we don't want the
-// measurements shown in about:memory to be affected by the (arbitrary) order
-// of memory reporter execution.  This reporter is used by telemetry.
-class ResidentFastReporter MOZ_FINAL : public MemoryUniReporter
-{
-public:
-    ResidentFastReporter()
-      : MemoryUniReporter("redundant/resident-fast", KIND_OTHER, UNITS_BYTES,
-"This is the same measurement as 'resident', but it tries to be as fast as "
-"possible at the expense of accuracy.  On most platforms this is identical to "
-"the 'resident' measurement, but on Mac it may over-count.  You should use "
-"'resident-fast' where you care about latency of collection (e.g. in "
-"telemetry).  Otherwise you should use 'resident'.")
-    {}
-
-    NS_IMETHOD GetAmount(int64_t* aAmount) { return GetResidentFast(aAmount); }
-};
 #endif  // HAVE_VSIZE_AND_RESIDENT_REPORTERS
 
 #ifdef XP_UNIX
@@ -752,7 +733,6 @@ nsMemoryReporterManager::Init()
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
     RegisterReporter(new VsizeReporter);
     RegisterReporter(new ResidentReporter);
-    RegisterReporter(new ResidentFastReporter);
 #endif
 
 #ifdef HAVE_RESIDENT_UNIQUE_REPORTER
@@ -848,6 +828,7 @@ nsMemoryReporterManager::nsMemoryReporterManager()
   : mMutex("nsMemoryReporterManager::mMutex"),
     mIsRegistrationBlocked(false)
 {
+    PodZero(&mAmountFns);
 }
 
 nsMemoryReporterManager::~nsMemoryReporterManager()
@@ -964,17 +945,6 @@ nsMemoryReporterManager::UnblockRegistration()
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsMemoryReporterManager::GetResident(int64_t* aResident)
-{
-#ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
-    return ::GetResident(aResident);
-#else
-    *aResident = 0;
-    return NS_ERROR_NOT_AVAILABLE;
-#endif
-}
-
 // This is just a wrapper for int64_t that implements nsISupports, so it can be
 // passed to nsIMemoryReporter::CollectReports.
 class Int64Wrapper MOZ_FINAL : public nsISupports {
@@ -1009,10 +979,10 @@ public:
 NS_IMPL_ISUPPORTS1(ExplicitCallback, nsIMemoryReporterCallback)
 
 NS_IMETHODIMP
-nsMemoryReporterManager::GetExplicit(int64_t* aExplicit)
+nsMemoryReporterManager::GetExplicit(int64_t* aAmount)
 {
-    NS_ENSURE_ARG_POINTER(aExplicit);
-    *aExplicit = 0;
+    NS_ENSURE_ARG_POINTER(aAmount);
+    *aAmount = 0;
 #ifndef HAVE_JEMALLOC_STATS
     return NS_ERROR_NOT_AVAILABLE;
 #else
@@ -1035,10 +1005,57 @@ nsMemoryReporterManager::GetExplicit(int64_t* aExplicit)
         r->CollectReports(cb, wrappedExplicitSize);
     }
 
-    *aExplicit = wrappedExplicitSize->mValue;
+    *aAmount = wrappedExplicitSize->mValue;
 
     return NS_OK;
 #endif // HAVE_JEMALLOC_STATS
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::GetResident(int64_t* aAmount)
+{
+#ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
+    return ::GetResident(aAmount);
+#else
+    *aAmount = 0;
+    return NS_ERROR_NOT_AVAILABLE;
+#endif
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::GetResidentFast(int64_t* aAmount)
+{
+#ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
+    return ::GetResidentFast(aAmount);
+#else
+    *aAmount = 0;
+    return NS_ERROR_NOT_AVAILABLE;
+#endif
+}
+
+static nsresult
+GetInfallibleAmount(InfallibleAmountFn aAmountFn, int64_t* aAmount)
+{
+    if (aAmountFn) {
+        *aAmount = aAmountFn();
+        return NS_OK;
+    }
+    *aAmount = 0;
+    return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::GetJSMainRuntimeCompartmentsSystem(int64_t* aAmount)
+{
+    return GetInfallibleAmount(mAmountFns.mJSMainRuntimeCompartmentsSystem,
+                               aAmount);
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::GetJSMainRuntimeCompartmentsUser(int64_t* aAmount)
+{
+    return GetInfallibleAmount(mAmountFns.mJSMainRuntimeCompartmentsUser,
+                               aAmount);
 }
 
 NS_IMETHODIMP
@@ -1161,6 +1178,32 @@ NS_UnregisterMemoryReporter(nsIMemoryReporter* aReporter)
         return NS_ERROR_FAILURE;
     }
     return mgr->UnregisterReporter(aReporter);
+}
+
+namespace mozilla {
+
+// Macro for generating functions that register distinguished amount functions
+// with the memory reporter manager.
+#define REGISTER_DISTINGUISHED_AMOUNT(kind, name)                             \
+    nsresult                                                                  \
+    Register##name##DistinguishedAmount(kind##AmountFn aAmountFn)             \
+    {                                                                         \
+        nsCOMPtr<nsIMemoryReporterManager> imgr =                             \
+            do_GetService("@mozilla.org/memory-reporter-manager;1");          \
+        nsRefPtr<nsMemoryReporterManager> mgr =                               \
+            static_cast<nsMemoryReporterManager*>(imgr.get());                \
+        if (!mgr) {                                                           \
+            return NS_ERROR_FAILURE;                                          \
+        }                                                                     \
+        mgr->mAmountFns.m##name = aAmountFn;                                  \
+        return NS_OK;                                                         \
+    }
+
+REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeCompartmentsSystem)
+REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeCompartmentsUser)
+
+#undef REGISTER_DISTINGUISHED_AMOUNT
+
 }
 
 #if defined(MOZ_DMD)
