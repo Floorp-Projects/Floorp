@@ -99,6 +99,9 @@ public class HealthReportProvider extends ContentProvider {
 
   @Override
   public void onLowMemory() {
+    // While we could prune the database here, it wouldn't help - it would restore disk space
+    // rather then lower our RAM usage. Additionally, pruning the database may use even more
+    // memory and take too long to run in this method.
     super.onLowMemory();
     databases.closeDatabaseHelpers();
   }

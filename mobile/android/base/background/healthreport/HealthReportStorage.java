@@ -219,6 +219,20 @@ public interface HealthReportStorage {
   public void deleteEverything();
   public void deleteEnvironments();
   public void deleteMeasurements();
+  /**
+   * Deletes all environments, addons, and events from the database before the given time.
+   *
+   * @param time milliseconds since epoch.
+   * @param curEnv The ID of the current environment.
+   * @return The number of environments and addon entries deleted.
+   */
+  public int deleteDataBefore(final long time, final int curEnv);
+
+  public int getEventCount();
+  public int getEnvironmentCount();
+
+  public void pruneEvents(final int num);
+  public void pruneEnvironments(final int num);
 
   public void enqueueOperation(Runnable runnable);
 }
