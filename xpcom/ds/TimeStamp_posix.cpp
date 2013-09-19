@@ -50,6 +50,7 @@
 #include "nsCRT.h"
 #include "prprf.h"
 #include "prthread.h"
+#include "nsDebug.h"
 
 // Estimate of the smallest duration of time we can measure.
 static uint64_t sResolution;

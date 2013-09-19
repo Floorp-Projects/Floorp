@@ -21,6 +21,7 @@
 #include "nsIHashable.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
+#include "nsTArray.h"
 
 static NS_DEFINE_CID(kZipReaderCacheCID, NS_ZIPREADERCACHE_CID);
 

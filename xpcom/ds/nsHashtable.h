@@ -23,15 +23,13 @@
 
 #include "pldhash.h"
 #include "nscore.h"
-#include "nsString.h"
-#include "nsISupportsBase.h"
+#include "nsISupports.h"
 #include "nsTraceRefcnt.h"
+#include "nsStringFwd.h"
 
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
 
-class nsHashtable;
-class nsStringKey;
 struct PRLock;
 
 class nsHashKey {
@@ -157,8 +155,6 @@ class nsObjectHashtable : public nsHashtable {
 ////////////////////////////////////////////////////////////////////////////////
 // nsSupportsHashtable: an nsHashtable where the elements are nsISupports*
 
-class nsISupports;
-
 class nsSupportsHashtable
   : private nsHashtable
 {
@@ -193,8 +189,6 @@ class nsSupportsHashtable
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupportsKey: Where keys are nsISupports objects that get refcounted.
-
-#include "nsISupports.h"
 
 class nsISupportsKey : public nsHashKey {
   protected:
@@ -300,8 +294,6 @@ class nsVoidKey : public nsHashKey {
 
     void* GetValue() { return mKey; }
 };
-
-#include "nsString.h"
 
 // for null-terminated c-strings
 class nsCStringKey : public nsHashKey {
