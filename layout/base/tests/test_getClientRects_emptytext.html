@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<div id="testDiv"> </div>
+<script>
+var textNode = testDiv.firstChild;
+var range = new Range();
+range.selectNodeContents(textNode);
+is(range.getClientRects().length, 1, "Text node should have a rectangle");
+var rect = range.getClientRects()[0];
+ok(rect.left > 0, "Rectangle x should be greater than zero");
+ok(rect.top > 0, "Rectangle y should be greater than zero");
+is(rect.width, 0, "Rectangle should be zero width");
+is(rect.height, 0, "Rectangle should be zero height");
+</script>
+</body>
+</html>
