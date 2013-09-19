@@ -3352,7 +3352,7 @@ default:
 
             switch (tn->kind) {
               case JSTRY_CATCH:
-                  JS_ASSERT(*regs.pc == JSOP_ENTERBLOCK);
+                JS_ASSERT(*regs.pc == JSOP_ENTERBLOCK || *regs.pc == JSOP_EXCEPTION);
 
                 /* Catch cannot intercept the closing of a generator. */
                   if (JS_UNLIKELY(cx->getPendingException().isMagic(JS_GENERATOR_CLOSING)))

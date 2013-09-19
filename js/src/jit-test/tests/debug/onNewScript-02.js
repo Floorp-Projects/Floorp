@@ -49,6 +49,9 @@ test(function () { g.clone(evaluate("(function(x) { return x + 1; })", {compileA
 // eval declaring a generator
 test(function () { g.eval("function r(n) { for (var i=0;i<n;i++) yield i; }"); });
 
+// eval declaring a star generator
+test(function () { g.eval("function* sg(n) { for (var i=0;i<n;i++) yield i; }"); });
+
 // eval with a generator-expression
 test(function () { g.eval("var it = (obj[p] for (p in obj));"); });
 
