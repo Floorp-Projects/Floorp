@@ -5745,9 +5745,8 @@ JS_NewDateObjectMsec(JSContext *cx, double msec)
 }
 
 JS_PUBLIC_API(bool)
-JS_ObjectIsDate(JSContext *cx, JSObject *objArg)
+JS_ObjectIsDate(JSContext *cx, HandleObject obj)
 {
-    RootedObject obj(cx, objArg);
     assertSameCompartment(cx, obj);
     return ObjectClassIs(obj, ESClass_Date, cx);
 }
