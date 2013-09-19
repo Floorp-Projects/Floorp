@@ -6,9 +6,11 @@
 
 #include "mozilla/nsMemoryInfoDumper.h"
 
-#ifdef XP_LINUX
+#include "mozilla/Atomics.h"
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/FileUtils.h"
 #include "mozilla/Preferences.h"
-#endif
+#include "mozilla/StaticPtr.h"
 #include "mozilla/unused.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
@@ -19,6 +21,7 @@
 #include "nsGZFileWriter.h"
 #include "nsJSEnvironment.h"
 #include "nsPrintfCString.h"
+#include "pratom.h"
 
 #ifdef XP_WIN
 #include <process.h>

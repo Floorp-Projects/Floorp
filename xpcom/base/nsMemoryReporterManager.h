@@ -6,6 +6,8 @@
 
 #include "nsIMemoryReporter.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/Attributes.h"
+#include "nsString.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 

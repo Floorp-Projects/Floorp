@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIGZFileWriter.h"
+#include <stdio.h>
 #include "zlib.h"
 
 /**

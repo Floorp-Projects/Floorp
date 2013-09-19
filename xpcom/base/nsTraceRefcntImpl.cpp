@@ -9,12 +9,17 @@
 #include "nsISupports.h"
 #include "nsTArray.h"
 #include "prenv.h"
+#include "prprf.h"
+#include "prlog.h"
 #include "plstr.h"
 #include "prlink.h"
+#include <stdlib.h>
+#include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include <math.h>
 #include "nsStackWalkPrivate.h"
 #include "nsStackWalk.h"
+#include "nsString.h"
 
 #include "nsXULAppAPI.h"
 #ifdef XP_WIN

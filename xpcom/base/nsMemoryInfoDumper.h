@@ -8,8 +8,7 @@
 #define mozilla_nsMemoryInfoDumper_h
 
 #include "nsIMemoryInfoDumper.h"
-
-class nsACString;
+#include "nsString.h"
 
 /**
  * This class facilitates dumping information about our memory usage to disk.

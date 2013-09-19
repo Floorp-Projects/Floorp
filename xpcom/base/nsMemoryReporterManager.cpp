@@ -8,14 +8,18 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsMemoryReporterManager.h"
+#include "nsArrayEnumerator.h"
 #include "nsISimpleEnumerator.h"
+#include "nsIFile.h"
+#include "nsIFileStreams.h"
+#include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
-#if defined(XP_LINUX)
+#include "nsThread.h"
 #include "nsMemoryInfoDumper.h"
-#endif
 #include "mozilla/Telemetry.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Services.h"
@@ -33,6 +37,7 @@ using namespace mozilla;
 
 #if defined(XP_LINUX)
 
+#include <unistd.h>
 static nsresult GetProcSelfStatmField(int aField, int64_t* aN)
 {
     // There are more than two fields, but we're only interested in the first
@@ -450,6 +455,7 @@ public:
 
 #ifdef XP_UNIX
 
+#include <sys/time.h>
 #include <sys/resource.h>
 
 #define HAVE_PAGE_FAULT_REPORTERS 1
