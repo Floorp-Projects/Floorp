@@ -300,18 +300,27 @@ float4 SampleBlendTextureSeparablePS_1( VS_OUTPUT In) : SV_Target
   } else if(blendop == 5) {
     retval.rgb = max(output.rgb, background.rgb);
   } else {
-    if(output.r > 0)
-      retval.r = 1 - min(1, (1 - background.r) / output.r);
+    if(background.r == 0)
+	  retval.r = 0;
+	else
+    if(output.r == 1)
+	  retval.r = 1;
     else
-      retval.r = background.r ? 1 : 0;
-    if(output.g > 0)
-       retval.g = 1 - min(1, (1 - background.g) / output.g);
+      retval.r = min(1, background.r / (1 - output.r));
+    if(background.g == 0)
+	  retval.g = 0;
+	else
+    if(output.g == 1)
+	  retval.g = 1;
     else
-      retval.g = background.g ? 1 : 0;
-    if(output.b > 0)
-     retval.b = 1 - min(1, (1 - background.b) / output.b);
+      retval.g = min(1, background.g / (1 - output.g));
+    if(background.b == 0)
+	  retval.b = 0;
+	else
+    if(output.b == 1)
+	  retval.b = 1;
     else
-      retval.b = background.b ? 1 : 0;
+      retval.b = min(1, background.b / (1 - output.b));
   }
 
   output.rgb = ((1 - background.a) * output.rgb + background.a * retval.rgb) * output.a;
@@ -331,18 +340,27 @@ float4 SampleBlendTextureSeparablePS_2( VS_OUTPUT In) : SV_Target
   float4 retval = output;
 
   if(blendop == 7) {
-    if(output.r > 0)
+    if(background.r == 1)
+	  retval.r = 1;
+	else
+    if(output.r == 0)
+	  retval.r = 0;
+    else
       retval.r = 1 - min(1, (1 - background.r) / output.r);
+    if(background.g == 1)
+	  retval.g = 1;
+	else
+    if(output.g == 0)
+	  retval.g = 0;
     else
-      retval.r = background.r ? 1 : 0;
-    if(output.g > 0)
       retval.g = 1 - min(1, (1 - background.g) / output.g);
+    if(background.b == 1)
+	  retval.b = 1;
+	else
+    if(output.b == 0)
+	  retval.b = 0;
     else
-      retval.g = background.g ? 1 : 0;
-    if(output.b > 0)
       retval.b = 1 - min(1, (1 - background.b) / output.b);
-    else
-      retval.b = background.b ? 1 : 0;
   } else if(blendop == 8) {
     if(output.r <= 0.5)
       retval.r = 2 * output.r * background.r;
