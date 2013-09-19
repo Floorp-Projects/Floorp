@@ -90,9 +90,3 @@ MOCHITEST_FILES = \
 		test_zoom.xhtml \
                 test_bug872812.html \
 		$(NULL)
-
-ifneq (android,$(MOZ_WIDGET_TOOLKIT))
-MOCHITEST_FILES += \
-		test_text.html \
-		$(NULL)
-endif

@@ -296,7 +296,11 @@ nsJSUtils::EvaluateString(JSContext* aCx,
     } else {
       rv = JS_IsExceptionPending(aCx) ? NS_ERROR_FAILURE
                                       : NS_ERROR_OUT_OF_MEMORY;
-      JS_GetPendingException(aCx, aRetValue);
+      JS::RootedValue exn(aCx);
+      JS_GetPendingException(aCx, &exn);
+      if (aRetValue) {
+        *aRetValue = exn;
+      }
       JS_ClearPendingException(aCx);
     }
   }
