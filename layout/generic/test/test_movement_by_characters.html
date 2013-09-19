@@ -16,6 +16,12 @@
 
 SimpleTest.waitForExplicitFinish();
 
+if (navigator.userAgent.indexOf("Windows NT 6.2") >= 0) {
+  todo(false, "Too many intermittent failures on Windows 8 (bug 886781)");
+  SimpleTest.finish();
+  return;
+}
+
 setTimeout(focusing, 0);
 
 function focusing() {
