@@ -164,7 +164,7 @@ public:
     gint               ConvertBorderStyles(nsBorderStyle aStyle);
 
     // event callbacks
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
     gboolean           OnExposeEvent(GdkEventExpose *aEvent);
 #else
     gboolean           OnExposeEvent(cairo_t *cr);
@@ -196,7 +196,7 @@ public:
                                                guint            aTime,
                                                gpointer         aData);
 
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
   mozilla::TemporaryRef<mozilla::gfx::DrawTarget> StartRemoteDrawing() MOZ_OVERRIDE;
 #endif
 
@@ -277,7 +277,7 @@ public:
    nsresult            UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
                                                             uint8_t* aAlphas, int32_t aStride);
 
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
     gfxASurface       *GetThebesSurface();
 
     static already_AddRefed<gfxASurface> GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
