@@ -496,7 +496,7 @@
                      type="menu"
                      label="&listAllTabs.label;"
                      tooltiptext="&listAllTabs.label;"
-                     removable="true">
+                     removable="false">
         <menupopup id="alltabs-popup"
                    position="after_end">
           <menuitem id="menu_tabview"
