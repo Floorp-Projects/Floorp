@@ -1146,6 +1146,48 @@ SourceScripts.prototype = {
   },
 
   /**
+   * Pretty print a source's text. All subsequent calls to |getText| will return
+   * the pretty text.
+   *
+   * @param Object aSource
+   *        The source form from the RDP.
+   * @returns Promise
+   *          A promise that resolves to [aSource, prettyText] or rejects to
+   *          [aSource, error].
+   */
+  prettyPrint: function(aSource) {
+    let textPromise = this._cache.get(aSource.url);
+    // Only use the existing promise if it is pretty printed.
+    if (textPromise && textPromise.pretty) {
+      return textPromise;
+    }
+
+    const deferred = promise.defer();
+    this._cache.set(aSource.url, deferred.promise);
+
+    this.activeThread.source(aSource)
+      .prettyPrint(Prefs.editorTabSize, ({ error, message, source }) => {
+        if (error) {
+          deferred.reject([aSource, message || error]);
+          return;
+        }
+
+        DebuggerController.Parser.clearSource(aSource.url);
+
+        if (this.activeThread.paused) {
+          // Update the stack frame list.
+          this.activeThread._clearFrames();
+          this.activeThread.fillFrames(CALL_STACK_PAGE_SIZE);
+        }
+
+        deferred.resolve([aSource, source]);
+      });
+
+    deferred.promise.pretty = true;
+    return deferred.promise;
+  },
+
+  /**
    * Gets a specified source's text.
    *
    * @param object aSource
@@ -1697,18 +1739,19 @@ let L10N = new ViewHelpers.L10N(DBG_STRINGS_URI);
 /**
  * Shortcuts for accessing various debugger preferences.
  */
-let Prefs = new ViewHelpers.Prefs("devtools.debugger", {
-  chromeDebuggingHost: ["Char", "chrome-debugging-host"],
-  chromeDebuggingPort: ["Int", "chrome-debugging-port"],
-  sourcesWidth: ["Int", "ui.panes-sources-width"],
-  instrumentsWidth: ["Int", "ui.panes-instruments-width"],
-  panesVisibleOnStartup: ["Bool", "ui.panes-visible-on-startup"],
-  variablesSortingEnabled: ["Bool", "ui.variables-sorting-enabled"],
-  variablesOnlyEnumVisible: ["Bool", "ui.variables-only-enum-visible"],
-  variablesSearchboxVisible: ["Bool", "ui.variables-searchbox-visible"],
-  pauseOnExceptions: ["Bool", "pause-on-exceptions"],
-  ignoreCaughtExceptions: ["Bool", "ignore-caught-exceptions"],
-  sourceMapsEnabled: ["Bool", "source-maps-enabled"]
+let Prefs = new ViewHelpers.Prefs("devtools", {
+  chromeDebuggingHost: ["Char", "debugger.chrome-debugging-host"],
+  chromeDebuggingPort: ["Int", "debugger.chrome-debugging-port"],
+  sourcesWidth: ["Int", "debugger.ui.panes-sources-width"],
+  instrumentsWidth: ["Int", "debugger.ui.panes-instruments-width"],
+  panesVisibleOnStartup: ["Bool", "debugger.ui.panes-visible-on-startup"],
+  variablesSortingEnabled: ["Bool", "debugger.ui.variables-sorting-enabled"],
+  variablesOnlyEnumVisible: ["Bool", "debugger.ui.variables-only-enum-visible"],
+  variablesSearchboxVisible: ["Bool", "debugger.ui.variables-searchbox-visible"],
+  pauseOnExceptions: ["Bool", "debugger.pause-on-exceptions"],
+  ignoreCaughtExceptions: ["Bool", "debugger.ignore-caught-exceptions"],
+  sourceMapsEnabled: ["Bool", "debugger.source-maps-enabled"],
+  editorTabSize: ["Int", "editor.tabsize"]
 });
 
 /**
