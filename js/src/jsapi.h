@@ -4273,7 +4273,7 @@ JS_SetGlobalJitCompilerOption(JSContext *cx, JSJitCompilerOption opt, uint32_t v
  * Convert a uint32_t index into a jsid.
  */
 extern JS_PUBLIC_API(bool)
-JS_IndexToId(JSContext *cx, uint32_t index, jsid *id);
+JS_IndexToId(JSContext *cx, uint32_t index, JS::MutableHandleId);
 
 /*
  * Convert chars into a jsid.
@@ -4281,13 +4281,13 @@ JS_IndexToId(JSContext *cx, uint32_t index, jsid *id);
  * |chars| may not be an index.
  */
 extern JS_PUBLIC_API(bool)
-JS_CharsToId(JSContext* cx, JS::TwoByteChars chars, jsid *idp);
+JS_CharsToId(JSContext* cx, JS::TwoByteChars chars, JS::MutableHandleId);
 
 /*
  *  Test if the given string is a valid ECMAScript identifier
  */
 extern JS_PUBLIC_API(bool)
-JS_IsIdentifier(JSContext *cx, JSString *str, bool *isIdentifier);
+JS_IsIdentifier(JSContext *cx, JS::HandleString str, bool *isIdentifier);
 
 /*
  * Return the current script and line number of the most currently running
