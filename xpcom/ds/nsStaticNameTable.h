@@ -10,7 +10,7 @@
 #define nsStaticNameTable_h___
 
 #include "pldhash.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 
 /* This class supports case insensitive lookup.
  *

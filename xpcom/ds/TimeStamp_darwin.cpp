@@ -17,14 +17,12 @@
 // of storing the time value in nanoseconds.
 
 #include <mach/mach_time.h>
-#include <sys/param.h>
 #include <sys/time.h>
 #include <sys/sysctl.h>
 #include <time.h>
 
 #include "mozilla/TimeStamp.h"
-#include "nsCRT.h"
-#include "prprf.h"
+#include "nsDebug.h"
 
 // Estimate of the smallest duration of time we can measure.
 static uint64_t sResolution;
