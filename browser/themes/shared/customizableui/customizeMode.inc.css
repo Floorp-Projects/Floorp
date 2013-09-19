@@ -121,7 +121,7 @@ toolbarpaletteitem[dragover] {
   border-right-color: transparent;
 }
 
-#customization-palette {
+#customization-palette:not([hidden]) {
   display: block;
   overflow: auto;
   min-height: 3em;
