@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 FORCE_SHARED_LIB = 1
-IS_COMPONENT	= 1
 EXTRA_DSO_LDOPTS += \
 		$(XPCOM_GLUE_LDOPTS) \
 		$(XPCOM_FROZEN_LDOPTS) \
