@@ -383,7 +383,7 @@ CodeGeneratorX86::visitCompareVAndBranch(LCompareVAndBranch *lir)
 }
 
 bool
-CodeGeneratorX86::visitUInt32ToDouble(LUInt32ToDouble *lir)
+CodeGeneratorX86::visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble *lir)
 {
     Register input = ToRegister(lir->input());
     Register temp = ToRegister(lir->temp());
