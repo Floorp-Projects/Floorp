@@ -5097,7 +5097,7 @@ class LAssertRangeI : public LInstructionHelper<0, 1, 0>
     MAssertRange *mir() {
         return mir_->toAssertRange();
     }
-    Range *range() {
+    const Range *range() {
         return mir()->range();
     }
 };
@@ -5123,7 +5123,7 @@ class LAssertRangeD : public LInstructionHelper<0, 1, 1>
     MAssertRange *mir() {
         return mir_->toAssertRange();
     }
-    Range *range() {
+    const Range *range() {
         return mir()->range();
     }
 };
@@ -5149,7 +5149,7 @@ class LAssertRangeF : public LInstructionHelper<0, 1, 1>
     MAssertRange *mir() {
         return mir_->toAssertRange();
     }
-    Range *range() {
+    const Range *range() {
         return mir()->range();
     }
 };
@@ -5182,7 +5182,7 @@ class LAssertRangeV : public LInstructionHelper<0, BOX_PIECES, 3>
     MAssertRange *mir() {
         return mir_->toAssertRange();
     }
-    Range *range() {
+    const Range *range() {
         return mir()->range();
     }
 };

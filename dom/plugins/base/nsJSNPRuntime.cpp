@@ -457,7 +457,8 @@ ThrowJSException(JSContext *cx, const char *message)
                                           ucex.Length());
 
     if (str) {
-      ::JS_SetPendingException(cx, STRING_TO_JSVAL(str));
+      JS::RootedValue exn(cx, JS::StringValue(str));
+      ::JS_SetPendingException(cx, exn);
     }
 
     PopException();

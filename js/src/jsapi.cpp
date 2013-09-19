@@ -5745,9 +5745,8 @@ JS_NewDateObjectMsec(JSContext *cx, double msec)
 }
 
 JS_PUBLIC_API(bool)
-JS_ObjectIsDate(JSContext *cx, JSObject *objArg)
+JS_ObjectIsDate(JSContext *cx, HandleObject obj)
 {
-    RootedObject obj(cx, objArg);
     assertSameCompartment(cx, obj);
     return ObjectClassIs(obj, ESClass_Date, cx);
 }
@@ -5766,9 +5765,8 @@ JS_ClearDateCaches(JSContext *cx)
  * Regular Expressions.
  */
 JS_PUBLIC_API(JSObject *)
-JS_NewRegExpObject(JSContext *cx, JSObject *objArg, char *bytes, size_t length, unsigned flags)
+JS_NewRegExpObject(JSContext *cx, HandleObject obj, char *bytes, size_t length, unsigned flags)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     jschar *chars = InflateString(cx, bytes, &length);
@@ -5783,9 +5781,9 @@ JS_NewRegExpObject(JSContext *cx, JSObject *objArg, char *bytes, size_t length, 
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_NewUCRegExpObject(JSContext *cx, JSObject *objArg, jschar *chars, size_t length, unsigned flags)
+JS_NewUCRegExpObject(JSContext *cx, HandleObject obj, jschar *chars, size_t length,
+                     unsigned flags)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     RegExpStatics *res = obj->as<GlobalObject>().getRegExpStatics();
@@ -5794,9 +5792,8 @@ JS_NewUCRegExpObject(JSContext *cx, JSObject *objArg, jschar *chars, size_t leng
 }
 
 JS_PUBLIC_API(void)
-JS_SetRegExpInput(JSContext *cx, JSObject *objArg, JSString *input, bool multiline)
+JS_SetRegExpInput(JSContext *cx, HandleObject obj, HandleString input, bool multiline)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, input);
@@ -5805,9 +5802,8 @@ JS_SetRegExpInput(JSContext *cx, JSObject *objArg, JSString *input, bool multili
 }
 
 JS_PUBLIC_API(void)
-JS_ClearRegExpStatics(JSContext *cx, JSObject *objArg)
+JS_ClearRegExpStatics(JSContext *cx, HandleObject obj)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     JS_ASSERT(obj);
@@ -5816,24 +5812,16 @@ JS_ClearRegExpStatics(JSContext *cx, JSObject *objArg)
 }
 
 JS_PUBLIC_API(bool)
-JS_ExecuteRegExp(JSContext *cx, JSObject *objArg, JSObject *reobjArg, jschar *chars, size_t length,
-                 size_t *indexp, bool test, jsval *rval)
+JS_ExecuteRegExp(JSContext *cx, HandleObject obj, HandleObject reobj, jschar *chars,
+                 size_t length, size_t *indexp, bool test, MutableHandleValue rval)
 {
-    RootedObject obj(cx, objArg);
-    RootedObject reobj(cx, reobjArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
     RegExpStatics *res = obj->as<GlobalObject>().getRegExpStatics();
 
-    RootedValue val(cx);
-    if (!ExecuteRegExpLegacy(cx, res, reobj->as<RegExpObject>(), NullPtr(), chars, length, indexp,
-                             test, &val))
-    {
-        return false;
-    }
-    *rval = val;
-    return true;
+    return ExecuteRegExpLegacy(cx, res, reobj->as<RegExpObject>(), NullPtr(), chars, length, indexp,
+                               test, rval);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -5860,35 +5848,26 @@ JS_NewUCRegExpObjectNoStatics(JSContext *cx, jschar *chars, size_t length, unsig
 }
 
 JS_PUBLIC_API(bool)
-JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *objArg, jschar *chars, size_t length,
-                          size_t *indexp, bool test, jsval *rval)
+JS_ExecuteRegExpNoStatics(JSContext *cx, HandleObject obj, jschar *chars, size_t length,
+                          size_t *indexp, bool test, MutableHandleValue rval)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    RootedValue val(cx);
-    if (!ExecuteRegExpLegacy(cx, NULL, obj->as<RegExpObject>(), NullPtr(), chars, length, indexp,
-                             test, &val))
-    {
-        return false;
-    }
-    *rval = val;
-    return true;
+    return ExecuteRegExpLegacy(cx, NULL, obj->as<RegExpObject>(), NullPtr(), chars, length, indexp,
+                               test, rval);
 }
 
 JS_PUBLIC_API(bool)
-JS_ObjectIsRegExp(JSContext *cx, JSObject *objArg)
+JS_ObjectIsRegExp(JSContext *cx, HandleObject obj)
 {
-    RootedObject obj(cx, objArg);
     assertSameCompartment(cx, obj);
     return ObjectClassIs(obj, ESClass_RegExp, cx);
 }
 
 JS_PUBLIC_API(unsigned)
-JS_GetRegExpFlags(JSContext *cx, JSObject *objArg)
+JS_GetRegExpFlags(JSContext *cx, HandleObject obj)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
@@ -5896,9 +5875,8 @@ JS_GetRegExpFlags(JSContext *cx, JSObject *objArg)
 }
 
 JS_PUBLIC_API(JSString *)
-JS_GetRegExpSource(JSContext *cx, JSObject *objArg)
+JS_GetRegExpSource(JSContext *cx, HandleObject obj)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
@@ -5945,21 +5923,20 @@ JS_IsExceptionPending(JSContext *cx)
 }
 
 JS_PUBLIC_API(bool)
-JS_GetPendingException(JSContext *cx, jsval *vp)
+JS_GetPendingException(JSContext *cx, MutableHandleValue vp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     if (!cx->isExceptionPending())
         return false;
-    *vp = cx->getPendingException();
-    assertSameCompartment(cx, *vp);
+    vp.set(cx->getPendingException());
+    assertSameCompartment(cx, vp);
     return true;
 }
 
 JS_PUBLIC_API(void)
-JS_SetPendingException(JSContext *cx, jsval valueArg)
+JS_SetPendingException(JSContext *cx, HandleValue value)
 {
-    RootedValue value(cx, valueArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
@@ -5996,7 +5973,8 @@ JS_SaveExceptionState(JSContext *cx)
     CHECK_REQUEST(cx);
     state = cx->pod_malloc<JSExceptionState>();
     if (state) {
-        state->throwing = JS_GetPendingException(cx, &state->exception);
+        state->throwing =
+            JS_GetPendingException(cx, MutableHandleValue::fromMarkedLocation(&state->exception));
         if (state->throwing && JSVAL_IS_GCTHING(state->exception))
             AddValueRoot(cx, &state->exception, "JSExceptionState.exception");
     }
@@ -6010,7 +5988,7 @@ JS_RestoreExceptionState(JSContext *cx, JSExceptionState *state)
     CHECK_REQUEST(cx);
     if (state) {
         if (state->throwing)
-            JS_SetPendingException(cx, state->exception);
+            JS_SetPendingException(cx, HandleValue::fromMarkedLocation(&state->exception));
         else
             JS_ClearPendingException(cx);
         JS_DropExceptionState(cx, state);
@@ -6032,9 +6010,8 @@ JS_DropExceptionState(JSContext *cx, JSExceptionState *state)
 }
 
 JS_PUBLIC_API(JSErrorReport *)
-JS_ErrorFromException(JSContext *cx, jsval valueArg)
+JS_ErrorFromException(JSContext *cx, HandleValue value)
 {
-    RootedValue value(cx, valueArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
@@ -6149,17 +6126,13 @@ BOOL WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 #endif
 
 JS_PUBLIC_API(bool)
-JS_IndexToId(JSContext *cx, uint32_t index, jsid *idp)
+JS_IndexToId(JSContext *cx, uint32_t index, MutableHandleId id)
 {
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
-        return false;
-    *idp = id;
-    return true;
+    return IndexToId(cx, index, id);
 }
 
 JS_PUBLIC_API(bool)
-JS_CharsToId(JSContext* cx, JS::TwoByteChars chars, jsid *idp)
+JS_CharsToId(JSContext* cx, JS::TwoByteChars chars, MutableHandleId idp)
 {
     RootedAtom atom(cx, AtomizeChars<CanGC>(cx, chars.start().get(), chars.length()));
     if (!atom)
@@ -6168,12 +6141,12 @@ JS_CharsToId(JSContext* cx, JS::TwoByteChars chars, jsid *idp)
     uint32_t dummy;
     MOZ_ASSERT(!atom->isIndex(&dummy), "API misuse: |chars| must not encode an index");
 #endif
-    *idp = AtomToId(atom);
+    idp.set(AtomToId(atom));
     return true;
 }
 
 JS_PUBLIC_API(bool)
-JS_IsIdentifier(JSContext *cx, JSString *str, bool *isIdentifier)
+JS_IsIdentifier(JSContext *cx, HandleString str, bool *isIdentifier)
 {
     assertSameCompartment(cx, str);
 

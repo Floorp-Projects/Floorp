@@ -18,6 +18,14 @@ MOCHITEST_FILES = \
     data/ \
     redirect.sjs \
     $(NULL)
+
+MOCHITEST_DATA_FILES = \
+    data/app-redirect.zip \
+    data/app-updated.zip \
+    data/app.zip \
+    $(NULL)
+MOCHITEST_DATA_DEST = $(MOCHITEST_DEST)/data
+INSTALL_TARGETS += MOCHITEST_DATA
 endif
 
 include $(topsrcdir)/config/rules.mk

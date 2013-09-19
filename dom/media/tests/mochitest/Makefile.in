@@ -23,6 +23,7 @@ MOCHITEST_FILES = \
   test_getUserMedia_stopVideoAudioStreamWithFollowupVideoAudio.html \
   test_getUserMedia_stopVideoStream.html \
   test_getUserMedia_stopVideoAudioStream.html \
+  test_getUserMedia_constraints.html \
   test_peerConnection_basicAudio.html \
   test_peerConnection_basicAudioVideo.html \
   test_peerConnection_basicAudioVideoCombined.html \
