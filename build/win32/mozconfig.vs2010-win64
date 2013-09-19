@@ -1,18 +1,25 @@
+
+if [ -d "/c/Program Files (x86)/Microsoft Visual Studio 10.0" ]; then
+  _VSPATH="/c/Program Files (x86)/Microsoft Visual Studio 10.0"
+else
+  _VSPATH="/c/tools/msvs10"
+fi
+
 ## SDK redist ##
-export WIN32_REDIST_DIR=/c/tools/msvs10/VC/redist/x86/Microsoft.VC100.CRT
+export WIN32_REDIST_DIR=${_VSPATH}/VC/redist/x86/Microsoft.VC100.CRT
 
 ## moz tools location for 64-bit builders ##
 export MOZ_TOOLS=C:/mozilla-build/moztools
 
 ## includes: win8 sdk includes, winrt headers for metro, msvc 10 std library, directx sdk for d3d9 ##
-export INCLUDE=/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/include/shared:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/include/um:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/include/winrt:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/include/winrt/wrl:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/include/winrt/wrl/wrappers:/c/tools/msvs10/vc/include:/c/tools/msvs10/vc/atlmfc/include:/c/tools/sdks/dx10/include
+export INCLUDE=/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/include/shared:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/include/um:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/include/winrt:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/include/winrt/wrl:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/include/winrt/wrl/wrappers:${_VSPATH}/vc/include:${_VSPATH}/vc/atlmfc/include:/c/tools/sdks/dx10/include
 
 ## libs: win8 sdk x86 (32-bit) libs, msvc 10 (32-bit) std library, msvc 10 atl libs, directx sdk (32-bit) for d3d9  ##
-export LIBPATH=/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/Lib/win8/um/x86:/c/tools/msvs10/vc/lib:/c/tools/msvs10/vc/atlmfc/lib:/c/tools/sdks/dx10/lib
-export LIB=/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/Lib/win8/um/x86:/c/tools/msvs10/vc/lib:/c/tools/msvs10/vc/atlmfc/lib:/c/tools/sdks/dx10/lib
+export LIBPATH=/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/Lib/win8/um/x86:${_VSPATH}/vc/lib:${_VSPATH}/vc/atlmfc/lib:/c/tools/sdks/dx10/lib
+export LIB=/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/Lib/win8/um/x86:${_VSPATH}/vc/lib:${_VSPATH}/vc/atlmfc/lib:/c/tools/sdks/dx10/lib
 
 ## paths: win8 sdk x86 (32-bit) tools, msvc 10 (32-bit) build toolchain, moz tools  ##
-export PATH="/c/Program Files (x86)/Windows Kits/8.0/bin/x86:/c/tools/msvs10/Common7/IDE:/c/tools/msvs10/VC/BIN:/c/tools/msvs10/Common7/Tools:/c/tools/msvs10/VC/VCPackages:/c/mozilla-build/moztools:${PATH}"
+export PATH="/c/Program Files (x86)/Windows Kits/8.0/bin/x86:${_VSPATH}/Common7/IDE:${_VSPATH}/VC/BIN:${_VSPATH}/Common7/Tools:${_VSPATH}/VC/VCPackages:/c/mozilla-build/moztools:${PATH}"
 
 . $topsrcdir/build/mozconfig.vs2010-common
 
