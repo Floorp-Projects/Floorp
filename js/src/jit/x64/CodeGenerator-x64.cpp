@@ -376,7 +376,7 @@ CodeGeneratorX64::visitCompareVAndBranch(LCompareVAndBranch *lir)
 }
 
 bool
-CodeGeneratorX64::visitUInt32ToDouble(LUInt32ToDouble *lir)
+CodeGeneratorX64::visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble *lir)
 {
     masm.convertUInt32ToDouble(ToRegister(lir->input()), ToFloatRegister(lir->output()));
     return true;

@@ -50,7 +50,6 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     bool visitCompareBAndBranch(LCompareBAndBranch *lir);
     bool visitCompareV(LCompareV *lir);
     bool visitCompareVAndBranch(LCompareVAndBranch *lir);
-    bool visitUInt32ToDouble(LUInt32ToDouble *lir);
     bool visitTruncateDToInt32(LTruncateDToInt32 *ins);
     bool visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic *ins);
     bool visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic *ins);
@@ -60,6 +59,7 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     bool visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins);
     bool visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr *ins);
     bool visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc *ins);
+    bool visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble *lir);
 
     void postAsmJSCall(LAsmJSCall *lir) {}
 };
