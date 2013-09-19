@@ -2433,6 +2433,30 @@ MLoadFixedSlot::mightAlias(MDefinition *store)
 }
 
 bool
+MAsmJSLoadHeap::mightAlias(MDefinition *def)
+{
+    if (def->isAsmJSStoreHeap()) {
+        MAsmJSStoreHeap *store = def->toAsmJSStoreHeap();
+        if (store->viewType() != viewType())
+            return true;
+        if (!ptr()->isConstant() || !store->ptr()->isConstant())
+            return true;
+        MConstant *otherPtr = store->ptr()->toConstant();
+        return ptr()->toConstant()->value() == otherPtr->value();
+    }
+    return true;
+}
+
+bool
+MAsmJSLoadHeap::congruentTo(MDefinition *ins) const
+{
+    if (!ins->isAsmJSLoadHeap())
+        return false;
+    MAsmJSLoadHeap *load = ins->toAsmJSLoadHeap();
+    return load->viewType() == viewType() && congruentIfOperandsEqual(load);
+}
+
+bool
 MAsmJSLoadGlobalVar::mightAlias(MDefinition *def)
 {
     if (def->isAsmJSStoreGlobalVar()) {
