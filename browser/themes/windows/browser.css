@@ -2296,12 +2296,9 @@ chatbox {
 
 /* End customization mode */
 
-#main-window[privatebrowsingmode=temporary] #toolbar-menubar {
-  background-image: url("chrome://browser/skin/privatebrowsing-dark.png");
-  background-position: top right;
-  background-repeat: no-repeat;
-}
-
-#main-window[privatebrowsingmode=temporary] #toolbar-menubar:-moz-locale-dir(rtl) {
-  background-position: top left;
+#main-window[privatebrowsingmode=temporary] #TabsToolbar::after {
+  content: "";
+  display: -moz-box;
+  width: 40px;
+  background: url("chrome://browser/skin/privatebrowsing-indicator.png") no-repeat center center;
 }

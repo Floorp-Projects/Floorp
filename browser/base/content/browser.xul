@@ -874,7 +874,8 @@
                        oncommand="PanelUI.toggle(event);"/>
       </toolbaritem>
 
-      <hbox id="window-controls" hidden="true" pack="end" skipintoolbarset="true">
+      <hbox id="window-controls" hidden="true" pack="end" skipintoolbarset="true"
+            ordinal="1000">
         <toolbarbutton id="minimize-button"
                        tooltiptext="&fullScreenMinimize.tooltip;"
                        oncommand="window.minimize();"/>
