@@ -1,7 +1,7 @@
 DriverInfo = (function() {
   // ---------------------------------------------------------------------------
   // Debug info handling
-  
+
   function defaultInfoFunc(str) {
     console.log('Info: ' + str);
   }
@@ -14,7 +14,7 @@ DriverInfo = (function() {
   function info(str) {
     gInfoFunc(str);
   }
-  
+
   // ---------------------------------------------------------------------------
   // OS and driver identification
   //   Stolen from content/canvas/test/webgl/test_webgl_conformance_test_suite.html
@@ -37,19 +37,19 @@ DriverInfo = (function() {
     }
     var ext = gl.getExtension("WEBGL_debug_renderer_info");
     // this extension is unconditionally available to chrome. No need to check.
-    
+
     var webglRenderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
     var webglVendor = gl.getParameter(ext.UNMASKED_VENDOR_WEBGL);
     return [webglVendor, webglRenderer];
   }
-  
+
   var OS = {
     WINDOWS: 'windows',
     MAC: 'mac',
     LINUX: 'linux',
     ANDROID: 'android',
   };
-  
+
   var DRIVER = {
     MESA: 'mesa',
     NVIDIA: 'nvidia',
@@ -62,33 +62,33 @@ DriverInfo = (function() {
 
   if (navigator.platform.indexOf('Win') == 0) {
     kOS = OS.WINDOWS;
-    
+
     // code borrowed from browser/modules/test/browser_taskbar_preview.js
     var version = SpecialPowers.Services.sysinfo.getProperty('version');
     kOSVersion = parseFloat(version);
     // Version 6.0 is Vista, 6.1 is 7.
-    
+
   } else if (navigator.platform.indexOf('Mac') == 0) {
     kOS = OS.MAC;
-    
+
     var versionMatch = /Mac OS X (\d+.\d+)/.exec(navigator.userAgent);
     kOSVersion = versionMatch ? parseFloat(versionMatch[1]) : null;
-    
+
   } else if (navigator.appVersion.indexOf('Android') != -1) {
     kOS = OS.ANDROID;
     // From layout/tools/reftest/reftest.js:
     kOSVersion = SpecialPowers.Services.sysinfo.getProperty('version');
-    
+
   } else if (navigator.platform.indexOf('Linux') == 0) {
     // Must be checked after android, as android also has a 'Linux' platform string.
     kOS = OS.LINUX;
   }
-  
+
   var glVendor, glRenderer;
   [glVendor, glRenderer] = detectDriverInfo();
   info('GL vendor: ' + glVendor);
   info('GL renderer: ' + glRenderer);
-  
+
   if (glRenderer.contains('llvmpipe')) {
     kDriver = DRIVER.MESA;
   } else if (glRenderer.contains('Android Emulator')) {
@@ -96,7 +96,7 @@ DriverInfo = (function() {
   } else if (glVendor.contains('NVIDIA')) {
     kDriver = DRIVER.NVIDIA;
   }
-  
+
   if (kOS) {
     info('OS detected as: ' + kOS);
     info('  Version: ' + kOSVersion);
@@ -111,10 +111,10 @@ DriverInfo = (function() {
   } else {
     info('GL driver not detected.');
   }
-  
+
   return {
     setInfoFunc: setInfoFunc,
-    
+
     OS: OS,
     DRIVER: DRIVER,
     getOS: function() { return kOS; },
@@ -122,4 +122,4 @@ DriverInfo = (function() {
     getOSVersion: function() { return kOSVersion; },
   };
 })();
-    
+
