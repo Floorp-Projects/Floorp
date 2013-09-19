@@ -1803,12 +1803,12 @@ NativeMethod(JSContext *cx, unsigned argc, Value *vp)
 }
 
 #define JSPROP_ROPERM   (JSPROP_READONLY | JSPROP_PERMANENT)
-#define JS_METHOD(name, T, impl, len, perms) JS_FN(name, (NativeMethod<T,impl>), len, perms)
+#define JS_METHOD(name, T, impl, len, attrs) JS_FN(name, (NativeMethod<T,impl>), len, attrs)
 
 static const JSFunctionSpec star_generator_methods[] = {
     JS_FN("iterator", iterator_iterator, 0, 0),
-    JS_METHOD("next", StarGeneratorObject, star_generator_next, 1, JSPROP_ROPERM),
-    JS_METHOD("throw", StarGeneratorObject, star_generator_throw, 1, JSPROP_ROPERM),
+    JS_METHOD("next", StarGeneratorObject, star_generator_next, 1, 0),
+    JS_METHOD("throw", StarGeneratorObject, star_generator_throw, 1, 0),
     JS_FS_END
 };
 
