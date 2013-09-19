@@ -204,6 +204,7 @@
     "content/base/test/csp/test_CSP_frameancestors.html":"observer not working",
     "content/base/test/csp/test_CSP.html":"observer not working",
     "content/base/test/csp/test_bug836922_npolicies.html":"observer not working",
+    "content/base/test/csp/test_CSP_bug916446.html":"observer not working",
 
     "content/base/test/test_CrossSiteXHR_origin.html":"https not working, bug 907770",
     "content/base/test/test_bug326337.html":"popup windows don't have specialpowers installed, could be solved with sendmessage/receivemessage",

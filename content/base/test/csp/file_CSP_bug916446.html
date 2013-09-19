@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+  <body>
+    <ol>
+      <li id="inline-script">Inline script (green if allowed, black if blocked)</li>
+    </ol>
+
+    <script>
+      // Use inline script to set a style attribute
+      document.getElementById("inline-script").style.color = "rgb(0, 128, 0)";
+    </script>
+
+    <img src="file_CSP.sjs?testid=img_bad&type=img/png"></img>
+
+  </body>
+</html>
