@@ -125,10 +125,35 @@
     is(ex.result, Cr.NS_ERROR_NOT_AVAILABLE, "mgr.explicit exception");
     haveExplicit = false;
   }
-  dummy = mgr.resident;
-  dummy = mgr.residentFast;
-  dummy = mgr.JSMainRuntimeCompartmentsSystem;
-  dummy = mgr.JSMainRuntimeCompartmentsUser;
+  let amounts = [
+    "vsize",
+    "resident",
+    "residentFast",
+    "heapAllocated",
+    "heapOverheadRatio",
+    "JSMainRuntimeGCHeap",
+    "JSMainRuntimeTemporaryPeak",
+    "JSMainRuntimeCompartmentsSystem",
+    "JSMainRuntimeCompartmentsUser",
+    "imagesContentUsedUncompressed",
+    "storageSQLite",
+    "lowMemoryEventsVirtual",
+    "lowMemoryEventsPhysical",
+    "ghostWindows",
+    "pageFaultsHard",
+  ];
+  for (let i = 0; i < amounts.length; i++) {
+    try {
+      // If mgr[amounts[i]] throws an exception, just move on -- some amounts
+      // aren't available on all platforms.  But if the attribute simply
+      // isn't present, that indicates the distinguished amounts have changed
+      // and this file hasn't been updated appropriately.
+      dummy = mgr[amounts[i]];
+      ok(dummy !== undefined,
+         "accessed an unknown distinguished amount: " + amounts[i]);
+    } catch (ex) {
+    }
+  }
 
   let e = mgr.enumerateReporters();
   while (e.hasMoreElements()) {
@@ -155,7 +180,6 @@
   checkSpecialReport("vsize",          vsizeAmounts);
   checkSpecialReport("resident",       residentAmounts);
   checkSpecialReport("js-main-runtime-gc-heap-committed/used/gc-things", jsGcHeapAmounts);
-  checkSpecialReport("storage-sqlite", storageSqliteAmounts);
 
   ok(present.jsNonWindowCompartments,     "js-non-window compartments are present");
   ok(present.windowObjectsJsCompartments, "window-objects/.../js compartments are present");
