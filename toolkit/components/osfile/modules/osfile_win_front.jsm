@@ -20,6 +20,8 @@
      "use strict";
 
      exports.OS = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm").OS;
+     let Path = require("resource://gre/modules/osfile/ospath.jsm");
+
       // exports.OS.Win is created by osfile_win_back.jsm
      if (exports.OS && exports.OS.File) {
         return; // Avoid double-initialization
@@ -646,7 +648,7 @@
        }
        this._parent = parent;
 
-       let path = OS.Win.Path.join(this._parent, name);
+       let path = Path.join(this._parent, name);
 
        exports.OS.Shared.Win.AbstractEntry.call(this, isDir, isSymLink, name,
                                                 winCreationDate, winLastWriteDate,
@@ -841,7 +843,7 @@
      File.Error = exports.OS.Shared.Win.Error;
      exports.OS.File = File;
 
-     exports.OS.Path = exports.OS.Win.Path;
+     exports.OS.Path = exports.Path;
 
      Object.defineProperty(File, "POS_START", { value: OS.Shared.POS_START });
      Object.defineProperty(File, "POS_CURRENT", { value: OS.Shared.POS_CURRENT });
