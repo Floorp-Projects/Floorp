@@ -1449,6 +1449,11 @@ struct ScriptAndCounts
     }
 };
 
+struct GSNCache;
+
+jssrcnote *
+GetSrcNote(GSNCache &cache, JSScript *script, jsbytecode *pc);
+
 } /* namespace js */
 
 extern jssrcnote *
