@@ -15,6 +15,7 @@
 #include "gfxPattern.h"
 
 class gfxASurface;
+class gfxImageSurface;
 class gfxContext;
 
 /**
@@ -41,6 +42,7 @@ public:
                         bool aRepeat,
                         const gfxPattern::GraphicsFilter& aFilter,
                         const gfxMatrix& aTransform = gfxMatrix()) = 0;
+    virtual already_AddRefed<gfxImageSurface> GetAsImageSurface() { return nullptr; }
     virtual gfxIntSize Size() { return mSize; }
 
 protected:
@@ -62,6 +64,8 @@ public:
                         bool aRepeat,
                         const gfxPattern::GraphicsFilter& aFilter,
                         const gfxMatrix& aTransform = gfxMatrix());
+    
+    virtual already_AddRefed<gfxImageSurface> GetAsImageSurface();
 
 protected:
     nsRefPtr<gfxASurface> mSurface;
