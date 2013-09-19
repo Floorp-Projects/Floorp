@@ -287,7 +287,7 @@ let tests = [
   },
 
   function noAlert() {
-    let url = "data:text/html,<script>alert('yo!');</script>";
+    let url = "data:text/html,<script>try { alert('yo!'); } catch (e) {}</script>";
     let file = fileForURL(url);
     ok(!file.exists(), "Thumbnail file should not already exist.");
 
