@@ -161,9 +161,12 @@ nsAppShell::ScheduleNativeEventCallback()
 {
   // Post a message to the hidden message window
   NS_ADDREF_THIS(); // will be released when the event is processed
-  // Time stamp this event so we can detect cases where the event gets
-  // dropping in sub classes / modal loops we do not control. 
-  mLastNativeEventScheduled = TimeStamp::NowLoRes();
+  {
+    MutexAutoLock lock(mLastNativeEventScheduledMutex);
+    // Time stamp this event so we can detect cases where the event gets
+    // dropping in sub classes / modal loops we do not control.
+    mLastNativeEventScheduled = TimeStamp::NowLoRes();
+  }
   ::PostMessage(mEventWnd, sAppShellGeckoMsgId, 0, reinterpret_cast<LPARAM>(this));
 }
 
@@ -238,8 +241,13 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
   static const mozilla::TimeDuration nativeEventStarvationLimit =
     mozilla::TimeDuration::FromSeconds(NATIVE_EVENT_STARVATION_LIMIT);
 
-  if ((TimeStamp::NowLoRes() - mLastNativeEventScheduled) >
-      nativeEventStarvationLimit) {
+  TimeDuration timeSinceLastNativeEventScheduled;
+  {
+    MutexAutoLock lock(mLastNativeEventScheduledMutex);
+    timeSinceLastNativeEventScheduled =
+        TimeStamp::NowLoRes() - mLastNativeEventScheduled;
+  }
+  if (timeSinceLastNativeEventScheduled > nativeEventStarvationLimit) {
     ScheduleNativeEventCallback();
   }
   
