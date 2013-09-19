@@ -327,8 +327,8 @@
             <toolbarbutton id="pretty-print"
                            tooltiptext="&debuggerUI.sources.prettyPrint;"
                            class="devtools-toolbarbutton devtools-monospace"
-                           command="prettyPrintCommand"
-                           value="{}">
+                           command="prettyPrintCommand">
+              {}
             </toolbarbutton>
           </toolbar>
         </vbox>
