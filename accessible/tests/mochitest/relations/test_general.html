@@ -28,17 +28,24 @@
                    [ "label1_2", "label1_3" ]);
 
       // ancestor html:label (implicit association)
-      todo(false, "no label_for relation on implicitly associated label, bug 687414");
-      //testRelation("label1_4", RELATION_LABEL_FOR, "control1_4");
+      testRelation("label1_4", RELATION_LABEL_FOR, "control1_4");
       testRelation("control1_4", RELATION_LABELLED_BY, "label1_4");
       testRelation("control1_4_option1", RELATION_LABELLED_BY, null);
+      testRelation("label1_5", RELATION_LABEL_FOR, "control1_5");
       testRelation("control1_5", RELATION_LABELLED_BY, "label1_5");
+      testRelation("label1_6", RELATION_LABEL_FOR, "control1_6");
       testRelation("control1_6", RELATION_LABELLED_BY, "label1_6");
+      testRelation("label1_7", RELATION_LABEL_FOR, "control1_7");
       testRelation("control1_7", RELATION_LABELLED_BY, "label1_7");
+      testRelation("label1_8", RELATION_LABEL_FOR, "control1_8");
       testRelation("control1_8", RELATION_LABELLED_BY, "label1_8");
+      testRelation("label1_9", RELATION_LABEL_FOR, "control1_9");
       testRelation("control1_9", RELATION_LABELLED_BY, "label1_9");
+      testRelation("label1_10", RELATION_LABEL_FOR, "control1_10");
       testRelation("control1_10", RELATION_LABELLED_BY, "label1_10");
+      testRelation("label1_11", RELATION_LABEL_FOR, "control1_11");
       testRelation("control1_11", RELATION_LABELLED_BY, "label1_11");
+      testRelation("label1_12", RELATION_LABEL_FOR, "control1_12");
       testRelation("control1_12", RELATION_LABELLED_BY, "label1_12");
 
       testRelation("label1_13", RELATION_LABEL_FOR, null);
