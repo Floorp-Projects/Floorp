@@ -76,7 +76,6 @@ public class BookmarksPage extends HomeFragment {
 
         mList.setTag(HomePager.LIST_TAG_BOOKMARKS);
         mList.setOnUrlOpenListener(listener);
-        mList.setHeaderDividersEnabled(false);
 
         registerForContextMenu(mList);
     }
