@@ -4974,9 +4974,10 @@ class MBoundsCheckLower
   : public MUnaryInstruction
 {
     int32_t minimum_;
+    bool fallible_;
 
     MBoundsCheckLower(MDefinition *index)
-      : MUnaryInstruction(index), minimum_(0)
+      : MUnaryInstruction(index), minimum_(0), fallible_(true)
     {
         setGuard();
         setMovable();
@@ -5002,7 +5003,10 @@ class MBoundsCheckLower
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
-    bool fallible();
+    bool fallible() const {
+        return fallible_;
+    }
+    void collectRangeInfo();
 };
 
 // Load a value from a dense array's element vector and does a hole check if the

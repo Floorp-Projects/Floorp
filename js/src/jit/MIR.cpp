@@ -2373,12 +2373,6 @@ MNot::foldsTo(bool useValueNumbers)
     return this;
 }
 
-bool
-MBoundsCheckLower::fallible()
-{
-    return !range() || range()->lower() < minimum_;
-}
-
 void
 MBeta::printOpcode(FILE *fp) const
 {

@@ -1538,6 +1538,7 @@ ConvertLinearSum(MBasicBlock *block, const LinearSum &sum)
                 def = MAdd::New(def, term.term);
                 def->toAdd()->setInt32();
                 block->insertBefore(block->lastIns(), def->toInstruction());
+                def->computeRange();
             } else {
                 def = term.term;
             }
@@ -1545,10 +1546,12 @@ ConvertLinearSum(MBasicBlock *block, const LinearSum &sum)
             if (!def) {
                 def = MConstant::New(Int32Value(0));
                 block->insertBefore(block->lastIns(), def->toInstruction());
+                def->computeRange();
             }
             def = MSub::New(def, term.term);
             def->toSub()->setInt32();
             block->insertBefore(block->lastIns(), def->toInstruction());
+            def->computeRange();
         } else {
             JS_ASSERT(term.scale != 0);
             MConstant *factor = MConstant::New(Int32Value(term.scale));
@@ -1556,10 +1559,12 @@ ConvertLinearSum(MBasicBlock *block, const LinearSum &sum)
             MMul *mul = MMul::New(term.term, factor);
             mul->setInt32();
             block->insertBefore(block->lastIns(), mul);
+            mul->computeRange();
             if (def) {
                 def = MAdd::New(def, mul);
                 def->toAdd()->setInt32();
                 block->insertBefore(block->lastIns(), def->toInstruction());
+                def->computeRange();
             } else {
                 def = mul;
             }
@@ -1569,6 +1574,7 @@ ConvertLinearSum(MBasicBlock *block, const LinearSum &sum)
     if (!def) {
         def = MConstant::New(Int32Value(0));
         block->insertBefore(block->lastIns(), def->toInstruction());
+        def->computeRange();
     }
 
     return def;
@@ -1621,8 +1627,6 @@ RangeAnalysis::tryHoistBoundsCheck(MBasicBlock *header, MBoundsCheck *ins)
         return false;
     if (!SafeSub(lowerConstant, lower->sum.constant(), &lowerConstant))
         return false;
-    MBoundsCheckLower *lowerCheck = MBoundsCheckLower::New(lowerTerm);
-    lowerCheck->setMinimum(lowerConstant);
 
     // We are checking that index < boundsLength, and know that
     // index <= upperTerm + upperConstant. Thus, check that:
@@ -1632,6 +1636,10 @@ RangeAnalysis::tryHoistBoundsCheck(MBasicBlock *header, MBoundsCheck *ins)
     int32_t upperConstant = index.constant;
     if (!SafeAdd(upper->sum.constant(), upperConstant, &upperConstant))
         return false;
+
+    MBoundsCheckLower *lowerCheck = MBoundsCheckLower::New(lowerTerm);
+    lowerCheck->setMinimum(lowerConstant);
+
     MBoundsCheck *upperCheck = MBoundsCheck::New(upperTerm, ins->length());
     upperCheck->setMinimum(upperConstant);
     upperCheck->setMaximum(upperConstant);
@@ -2140,4 +2148,10 @@ void
 MMod::collectRangeInfo()
 {
     canBeNegativeDividend_ = !lhs()->range() || lhs()->range()->lower() < 0;
+}
+
+void
+MBoundsCheckLower::collectRangeInfo()
+{
+    fallible_ = !index()->range() || index()->range()->lower() < minimum_;
 }
