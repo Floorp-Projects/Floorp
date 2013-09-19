@@ -14,7 +14,6 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/unused.h"
 #include "nsProxyRelease.h"
-#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace dom {
