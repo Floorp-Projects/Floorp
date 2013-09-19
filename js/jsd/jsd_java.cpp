@@ -73,7 +73,7 @@ _constructJSStackFrameInfo( ExecEnv* ee, JSDStackFrameInfo* jsdframe,
                                   "(Lnetscape/jsdebug/JSThreadState;)",
                                   threadState );
     if( ! frame )
-        return NULL;
+        return nullptr;
 
     /* XXX fill in additional fields */
     unhand(frame)->_nativePtr = (long) jsdframe;
@@ -91,7 +91,7 @@ _constructJSPC( ExecEnv* ee, struct Hnetscape_jsdebug_Script* script, long pc )
                                   "(Lnetscape/jsdebug/Script;I)",
                                   script, pc );
     if( ! pcOb )
-        return NULL;
+        return nullptr;
 
     /* XXX fill in additional fields */
 
@@ -317,10 +317,10 @@ _errorReporter( JSDContext*     jsdc,
                 void*           callerdata )
 {
     JHandle* reporter;
-    JHandle* msg         = NULL;
-    JHandle* filename    = NULL;
+    JHandle* msg         = nullptr;
+    JHandle* filename    = nullptr;
     int      lineno      = 0;
-    JHandle* linebuf     = NULL;
+    JHandle* linebuf     = nullptr;
     int      tokenOffset = 0;
     ExecEnv* ee = EE();
 
@@ -380,9 +380,9 @@ void netscape_jsdebug_DebugController__setController(struct Hnetscape_jsdebug_De
     {
         /* XXX stop somehow... */
         /* kill context        */
-        JSD_SetDebugBreakHook(context, NULL, NULL );
-        JSD_SetErrorReporter(context, NULL, NULL);
-        JSD_SetScriptHook(context, NULL, NULL);
+        JSD_SetDebugBreakHook(context, nullptr, nullptr);
+        JSD_SetErrorReporter(context, nullptr, nullptr);
+        JSD_SetScriptHook(context, nullptr, nullptr);
         context = 0;
         controller = 0;
     }
@@ -439,16 +439,16 @@ struct Hjava_lang_String *netscape_jsdebug_DebugController_executeScriptInStackF
     jsdframe = (JSDStackFrameInfo*) unhand(frame)->_nativePtr;
 
     if( ! context || ! controller || ! jsdframe )
-        return NULL;
+        return nullptr;
 
     filenameC = allocCString(filename);
     if( ! filenameC )
-        return NULL;
+        return nullptr;
     srcC = allocCString(src);
     if( ! srcC )
     {
         free(filenameC);
-        return NULL;
+        return nullptr;
     }
 
     srclen = strlen(srcC);
@@ -464,14 +464,14 @@ struct Hjava_lang_String *netscape_jsdebug_DebugController_executeScriptInStackF
 
 
     if( ! success )
-        return NULL;
+        return nullptr;
 
     if( JSVAL_IS_NULL(rval) || JSVAL_IS_VOID(rval) )
-        return NULL;
+        return nullptr;
 
     jsstr = JSD_ValToStringInStackFrame(context,jsdthreadstate,jsdframe,rval);
     if( ! jsstr )
-        return NULL;
+        return nullptr;
 
     /* XXXbe should use JS_GetStringChars and preserve Unicode. */
     return makeJavaString((char*)JS_GetStringBytes(jsstr), JS_GetStringLength(jsstr));
@@ -533,16 +533,16 @@ struct Hnetscape_jsdebug_StackFrameInfo *netscape_jsdebug_JSThreadState_getCurre
     JSDStackFrameInfo* jsdframe;
         
     if( ! context || ! controller )
-        return NULL;
+        return nullptr;
 
     jsdstate = (JSDThreadState*) unhand(self)->nativeThreadState;
 
     if( ! jsdstate )
-        return NULL;
+        return nullptr;
 
     jsdframe = JSD_GetStackFrame(context, jsdstate);
     if( ! jsdframe )
-        return NULL;
+        return nullptr;
 
     return (struct Hnetscape_jsdebug_StackFrameInfo*)
                 _constructJSStackFrameInfo( 0, jsdframe, self );
@@ -560,23 +560,23 @@ struct Hnetscape_jsdebug_StackFrameInfo *netscape_jsdebug_JSStackFrameInfo_getCa
     JSDThreadState* jsdthreadstate;
 
     if( ! context || ! controller )
-        return NULL;
+        return nullptr;
 
     jsdframeCur = (JSDStackFrameInfo*) unhand(self)->_nativePtr;
     if( ! jsdframeCur )
-        return NULL;
+        return nullptr;
 
     threadState = (struct Hnetscape_jsdebug_JSThreadState*) unhand(self)->threadState;
     if( ! threadState )
-        return NULL;
+        return nullptr;
 
     jsdthreadstate = (JSDThreadState*) unhand(threadState)->nativeThreadState;
     if( ! jsdthreadstate )
-        return NULL;
+        return nullptr;
 
     jsdframeCaller = JSD_GetCallingStackFrame(context, jsdthreadstate, jsdframeCur);
     if( ! jsdframeCaller )
-        return NULL;
+        return nullptr;
 
     return (struct Hnetscape_jsdebug_StackFrameInfo*)
                 _constructJSStackFrameInfo( 0, jsdframeCaller, threadState );
@@ -592,31 +592,31 @@ struct Hnetscape_jsdebug_PC *netscape_jsdebug_JSStackFrameInfo_getPC(struct Hnet
     ExecEnv* ee = EE();
 
     if( ! context || ! controller || ! ee )
-        return NULL;
+        return nullptr;
 
     jsdframe = (JSDStackFrameInfo*) unhand(self)->_nativePtr;
     if( ! jsdframe )
-        return NULL;
+        return nullptr;
 
     threadState = (struct Hnetscape_jsdebug_JSThreadState*) unhand(self)->threadState;
     if( ! threadState )
-        return NULL;
+        return nullptr;
 
     jsdthreadstate = (JSDThreadState*) unhand(threadState)->nativeThreadState;
     if( ! jsdthreadstate )
-        return NULL;
+        return nullptr;
 
     jsdscript = JSD_GetScriptForStackFrame(context, jsdthreadstate, jsdframe );
     if( ! jsdscript )
-        return NULL;
+        return nullptr;
 
     script = _scriptObFromJSDScriptPtr(ee, jsdscript);
     if( ! script )
-        return NULL;
+        return nullptr;
 
     pc = JSD_GetPCForStackFrame(context, jsdthreadstate, jsdframe);
     if( ! pc )
-        return NULL;
+        return nullptr;
 
     return (struct Hnetscape_jsdebug_PC*) _constructJSPC(ee, script, pc);
 }
@@ -635,16 +635,16 @@ struct Hnetscape_jsdebug_SourceLocation *netscape_jsdebug_JSPC_getSourceLocation
     ExecEnv* ee = EE();
 
     if( ! context || ! controller || ! ee )
-        return NULL;
+        return nullptr;
 
     script = unhand(self)->script;
 
     if( ! script )
-        return NULL;
+        return nullptr;
 
     jsdscript = (JSDScript*) unhand(script)->_nativePtr;
     if( ! jsdscript )
-        return NULL;
+        return nullptr;
     pc = unhand(self)->pc;
 
     line = JSD_GetClosestLine(context, jsdscript, pc);
@@ -652,7 +652,7 @@ struct Hnetscape_jsdebug_SourceLocation *netscape_jsdebug_JSPC_getSourceLocation
 
     newPCOb = _constructJSPC(ee, script, newpc );
     if( ! newPCOb )
-        return NULL;
+        return nullptr;
 
     return (struct Hnetscape_jsdebug_SourceLocation *)
         execute_java_constructor( ee, "netscape/jsdebug/JSSourceLocation", 0, 
@@ -666,7 +666,7 @@ struct Hnetscape_jsdebug_SourceLocation *netscape_jsdebug_JSPC_getSourceLocation
 struct Hnetscape_jsdebug_SourceTextItem *netscape_jsdebug_JSSourceTextProvider_loadSourceTextItem0(struct Hnetscape_jsdebug_JSSourceTextProvider * self,struct Hjava_lang_String * url)
 {
     /* this should attempt to load the source for the indicated URL */
-    return NULL;    
+    return nullptr;    
 }
 
 void netscape_jsdebug_JSSourceTextProvider_refreshSourceTextVector(struct Hnetscape_jsdebug_JSSourceTextProvider * self)

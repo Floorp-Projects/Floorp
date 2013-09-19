@@ -745,12 +745,12 @@ extern JSDStaticLock* _jsd_global_lock;
     JS_END_MACRO
 
 /* locks for the subsystems of a given context */
-#define JSD_INIT_LOCKS(jsdc)                                    \
-    ( (NULL != (jsdc->scriptsLock      = jsd_CreateLock())) &&  \
-      (NULL != (jsdc->sourceTextLock   = jsd_CreateLock())) &&  \
-      (NULL != (jsdc->atomsLock        = jsd_CreateLock())) &&  \
-      (NULL != (jsdc->objectsLock      = jsd_CreateLock())) &&  \
-      (NULL != (jsdc->threadStatesLock = jsd_CreateLock())) )
+#define JSD_INIT_LOCKS(jsdc)                                       \
+    ( (nullptr != (jsdc->scriptsLock      = jsd_CreateLock())) &&  \
+      (nullptr != (jsdc->sourceTextLock   = jsd_CreateLock())) &&  \
+      (nullptr != (jsdc->atomsLock        = jsd_CreateLock())) &&  \
+      (nullptr != (jsdc->objectsLock      = jsd_CreateLock())) &&  \
+      (nullptr != (jsdc->threadStatesLock = jsd_CreateLock())) )
 
 #define JSD_LOCK_SCRIPTS(jsdc)        jsd_Lock(jsdc->scriptsLock)
 #define JSD_UNLOCK_SCRIPTS(jsdc)      jsd_Unlock(jsdc->scriptsLock)
