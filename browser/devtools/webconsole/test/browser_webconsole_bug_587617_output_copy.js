@@ -55,8 +55,9 @@ function consoleOpened(aHud) {
     isnot(selection.indexOf("bug587617"), -1,
           "selection text includes 'bug587617'");
 
-    waitForClipboard(selection, () => goDoCommand("cmd_copy"),
-                     testContextMenuCopy, testContextMenuCopy);
+    waitForClipboard((str) => { return selection.trim() == str.trim(); },
+      () => { goDoCommand("cmd_copy") },
+      testContextMenuCopy, testContextMenuCopy);
   });
 }
 
@@ -74,8 +75,9 @@ function testContextMenuCopy() {
 
   copyItem.doCommand();
 
-  waitForClipboard(selection, () => goDoCommand("cmd_copy"),
-                   finishTest, finishTest);
+  waitForClipboard((str) => { return selection.trim() == str.trim(); },
+    () => { goDoCommand("cmd_copy") },
+    finishTest, finishTest);
   HUD = outputNode = null;
 }
 
