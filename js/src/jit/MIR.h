@@ -8455,7 +8455,7 @@ class MAsmJSStoreHeap : public MBinaryInstruction, public MAsmJSHeapAccess
 class MAsmJSLoadGlobalVar : public MNullaryInstruction
 {
     MAsmJSLoadGlobalVar(MIRType type, unsigned globalDataOffset, bool isConstant)
-      : globalDataOffset_(globalDataOffset), isConstant_(isConstant)
+      : globalDataOffset_(globalDataOffset)
     {
         JS_ASSERT(type == MIRType_Int32 || type == MIRType_Double);
         setResultType(type);
@@ -8463,7 +8463,6 @@ class MAsmJSLoadGlobalVar : public MNullaryInstruction
     }
 
     unsigned globalDataOffset_;
-    bool isConstant_;
 
   public:
     INSTRUCTION_HEADER(AsmJSLoadGlobalVar);

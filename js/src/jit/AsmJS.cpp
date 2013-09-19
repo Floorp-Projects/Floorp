@@ -164,13 +164,6 @@ CaseBody(ParseNode *pn)
     return BinaryRight(pn);
 }
 
-static inline JSAtom *
-StringAtom(ParseNode *pn)
-{
-    JS_ASSERT(pn->isKind(PNK_STRING));
-    return pn->pn_atom;
-}
-
 static inline bool
 IsExpressionStatement(ParseNode *pn)
 {
@@ -283,19 +276,6 @@ FunctionStatementList(ParseNode *fn)
     ParseNode *last = fn->pn_body->last();
     JS_ASSERT(last->isKind(PNK_STATEMENTLIST));
     return last;
-}
-
-static inline ParseNode *
-FunctionLastReturnStatementOrNull(ParseNode *fn)
-{
-    ParseNode *listIter = ListHead(FunctionStatementList(fn));
-    ParseNode *lastReturn = NULL;
-    while (listIter) {
-        if (listIter->isKind(PNK_RETURN))
-            lastReturn = listIter;
-        listIter = listIter->pn_next;
-    }
-    return lastReturn;
 }
 
 static inline bool
