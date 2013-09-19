@@ -6,7 +6,7 @@ let manifest = { // normal provider
   name: "provider 1",
   origin: "https://example.com",
   workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
-  iconURL: "https://example.com/browser/browser/base/content/test/moz.png"
+  iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
 };
 
 function test() {
@@ -43,7 +43,7 @@ var tests = {
       userName: "trickster",
       displayName: "Kuma Lisa",
       profileURL: "http://example.com/Kuma_Lisa",
-      iconURL: "https://example.com/browser/browser/base/content/test/social/moz.png"
+      iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
     }
     Social.provider.updateUserProfile(profile);
     // check dom values
@@ -80,7 +80,7 @@ var tests = {
   testAmbientNotifications: function(next) {
     let ambience = {
       name: "testIcon",
-      iconURL: "https://example.com/browser/browser/base/content/test/moz.png",
+      iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png",
       contentPanel: "about:blank",
       counter: 42,
       label: "Test Ambient 1 \u2046",
@@ -88,7 +88,7 @@ var tests = {
     };
     let ambience2 = {
       name: "testIcon2",
-      iconURL: "https://example.com/browser/browser/base/content/test/moz.png",
+      iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png",
       contentPanel: "about:blank",
       counter: 0,
       label: "Test Ambient 2",
@@ -96,7 +96,7 @@ var tests = {
     };
     let ambience3 = {
       name: "testIcon3",
-      iconURL: "https://example.com/browser/browser/base/content/test/moz.png",
+      iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png",
       contentPanel: "about:blank",
       counter: 0,
       label: "Test Ambient 3",
@@ -104,7 +104,7 @@ var tests = {
     };
     let ambience4 = {
       name: "testIcon4",
-      iconURL: "https://example.com/browser/browser/base/content/test/moz.png",
+      iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png",
       contentPanel: "about:blank",
       counter: 0,
       label: "Test Ambient 4",

@@ -9,7 +9,7 @@ function test() {
     origin: "https://example.com",
     sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar.html",
     workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
-    iconURL: "https://example.com/browser/browser/base/content/test/moz.png",
+    iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png",
     shareURL: "https://example.com/browser/browser/base/content/test/social/share.html"
   };
   runSocialTestWithProvider(manifest, function (finishcb) {
