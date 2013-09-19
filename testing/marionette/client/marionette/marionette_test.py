@@ -337,6 +337,7 @@ class MarionetteTestCase(CommonTestCase):
 
 class MarionetteJSTestCase(CommonTestCase):
 
+    head_js_re = re.compile(r"MARIONETTE_HEAD_JS(\s*)=(\s*)['|\"](.*?)['|\"];")
     context_re = re.compile(r"MARIONETTE_CONTEXT(\s*)=(\s*)['|\"](.*?)['|\"];")
     timeout_re = re.compile(r"MARIONETTE_TIMEOUT(\s*)=(\s*)(\d+);")
     inactivity_timeout_re = re.compile(r"MARIONETTE_INACTIVITY_TIMEOUT(\s*)=(\s*)(\d+);")
@@ -375,6 +376,13 @@ class MarionetteJSTestCase(CommonTestCase):
                     js += 'const kDefaultWait = 45000;\n'
                 else:
                     js += line
+
+        if os.path.basename(self.jsFile).startswith('test_'):
+            head_js = self.head_js_re.search(js);
+            if head_js:
+                head_js = head_js.group(3)
+                head = open(os.path.join(os.path.dirname(self.jsFile), head_js), 'r')
+                js = head.read() + js;
 
         context = self.context_re.search(js)
         if context:
