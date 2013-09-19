@@ -424,7 +424,7 @@ class MochiRemote(Mochitest):
         if fail_found:
             result = 1
         if not end_found:
-            print "ERROR: missing end of test marker (process crashed?)"
+            print "Automation Error: Missing end of test marker (process crashed?)"
             result = 1
         return result
 
