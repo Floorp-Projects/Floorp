@@ -1,0 +1,109 @@
+diff --git a/gfx/cairo/cairo/src/cairo-win32-surface.c b/gfx/cairo/cairo/src/cairo-win32-surface.c
+--- a/gfx/cairo/cairo/src/cairo-win32-surface.c
++++ b/gfx/cairo/cairo/src/cairo-win32-surface.c
+@@ -1114,17 +1114,17 @@ static cairo_int_status_t
+     cairo_win32_surface_t *dst = abstract_dst;
+     cairo_win32_surface_t *src;
+     cairo_surface_pattern_t *src_surface_pattern;
+     int alpha;
+     double scalex, scaley;
+     cairo_fixed_t x0_fixed, y0_fixed;
+     cairo_int_status_t status;
+ 
+-    cairo_bool_t needs_alpha, needs_scale, needs_repeat;
++    cairo_bool_t needs_alpha, needs_scale, needs_repeat, needs_pad;
+     cairo_image_surface_t *src_image = NULL;
+ 
+     cairo_format_t src_format;
+     cairo_rectangle_int_t src_extents;
+ 
+     cairo_rectangle_int_t src_r = { src_x, src_y, width, height };
+     cairo_rectangle_int_t dst_r = { dst_x, dst_y, width, height };
+ 
+@@ -1145,17 +1145,18 @@ static cairo_int_status_t
+     {
+ 	goto UNSUPPORTED;
+     }
+ 
+     if (pattern->type != CAIRO_PATTERN_TYPE_SURFACE)
+ 	goto UNSUPPORTED;
+ 
+     if (pattern->extend != CAIRO_EXTEND_NONE &&
+-	pattern->extend != CAIRO_EXTEND_REPEAT)
++	pattern->extend != CAIRO_EXTEND_REPEAT &&
++	pattern->extend != CAIRO_EXTEND_PAD)
+ 	goto UNSUPPORTED;
+ 
+     if (mask_pattern) {
+ 	/* FIXME: When we fully support RENDER style 4-channel
+ 	 * masks we need to check r/g/b != 1.0.
+ 	 */
+ 	if (mask_pattern->type != CAIRO_PATTERN_TYPE_SOLID)
+ 	    return CAIRO_INT_STATUS_UNSUPPORTED;
+@@ -1252,16 +1253,17 @@ static cairo_int_status_t
+ 
+     /* If the src rectangle doesn't wholly lie within the src extents,
+      * fudge things.  We really need to do fixup on the unpainted
+      * region -- e.g. the SOURCE operator is broken for areas outside
+      * of the extents, because it won't clear that area to transparent
+      * black.
+      */
+ 
++    needs_pad = FALSE;
+     if (pattern->extend != CAIRO_EXTEND_REPEAT) {
+ 	needs_repeat = FALSE;
+ 
+ 	/* If the src rect and the extents of the source image don't overlap at all,
+ 	 * we can't do anything useful here.
+ 	 */
+ 	if (src_r.x > src_extents.width || src_r.y > src_extents.height ||
+ 	    (src_r.x + src_r.width) < 0 || (src_r.y + src_r.height) < 0)
+@@ -1273,40 +1275,48 @@ static cairo_int_status_t
+ 
+ 	if (src_r.x < 0) {
+ 	    src_r.width += src_r.x;
+ 
+ 	    dst_r.width += src_r.x;
+ 	    dst_r.x -= src_r.x;
+ 
+             src_r.x = 0;
++            needs_pad = TRUE;
+ 	}
+ 
+ 	if (src_r.y < 0) {
+ 	    src_r.height += src_r.y;
+ 
+ 	    dst_r.height += src_r.y;
+ 	    dst_r.y -= src_r.y;
+ 	    
+             src_r.y = 0;
++            needs_pad = TRUE;
+ 	}
+ 
+ 	if (src_r.x + src_r.width > src_extents.width) {
+ 	    src_r.width = src_extents.width - src_r.x;
+ 	    dst_r.width = src_r.width;
++            needs_pad = TRUE;
+ 	}
+ 
+ 	if (src_r.y + src_r.height > src_extents.height) {
+ 	    src_r.height = src_extents.height - src_r.y;
+ 	    dst_r.height = src_r.height;
++            needs_pad = TRUE;
+ 	}
+     } else {
+ 	needs_repeat = TRUE;
+     }
+ 
++    if (pattern->extend == CAIRO_EXTEND_PAD && needs_pad) {
++        goto UNSUPPORTED;
++    }
++
+     /*
+      * Operations that we can do:
+      *
+      * AlphaBlend uses the following formula for alpha when not use the per-pixel alpha (AlphaFormat = 0)
+      *   Dst.Alpha = Src.Alpha * (SCA/255.0) + Dst.Alpha * (1.0 - (SCA/255.0))
+      * This turns into Dst.Alpha = Src.Alpha when SCA = 255.
+      * (http://msdn.microsoft.com/en-us/library/aa921335.aspx)
+      *
