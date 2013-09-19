@@ -18,3 +18,13 @@ LIBRARY_NAME = 'docshell'
 
 LIBXUL_LIBRARY = True
 
+LOCAL_INCLUDES += [
+    '../base',
+    '../shistory/src/',
+    '/uriloader/base',
+    '/uriloader/exthandler',
+    '/uriloader/prefetch',
+    ]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    LOCAL_INCLUDES += ['/uriloader/exthandler/mac']

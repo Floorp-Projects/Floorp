@@ -9,6 +9,7 @@ import java.util.Iterator;
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.SysInfo;
+import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 
 import android.content.ContentProvider;
@@ -77,7 +78,7 @@ public class EnvironmentBuilder {
     e.sysName = SysInfo.getName();
     e.sysVersion = SysInfo.getReleaseVersion();
 
-    e.profileCreation = (int) (info.getProfileCreationTime() / HealthReportConstants.MILLISECONDS_PER_DAY);
+    e.profileCreation = (int) (info.getProfileCreationTime() / GlobalConstants.MILLISECONDS_PER_DAY);
 
     // Corresponds to Gecko pref "extensions.blocklist.enabled".
     e.isBlocklistEnabled = (info.isBlocklistEnabled() ? 1 : 0);

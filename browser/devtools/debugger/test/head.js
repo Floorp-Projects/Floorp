@@ -416,18 +416,18 @@ function backspaceText(aElement, aTimes) {
   }
 }
 
-function getTab(aTarget) {
+function getTab(aTarget, aWindow) {
   if (aTarget instanceof XULElement) {
     return promise.resolve(aTarget);
   } else {
-    return addTab(aTarget);
+    return addTab(aTarget, aWindow);
   }
 }
 
 function initDebugger(aTarget, aWindow) {
   info("Initializing a debugger panel.");
 
-  return getTab(aTarget).then(aTab => {
+  return getTab(aTarget, aWindow).then(aTab => {
     info("Debugee tab added successfully: " + aTarget);
 
     let deferred = promise.defer();
@@ -445,7 +445,7 @@ function initDebugger(aTarget, aWindow) {
         info("Debugger client resumed successfully.");
 
         prepareDebugger(debuggerPanel);
-        deferred.resolve([aTab, debuggee, debuggerPanel]);
+        deferred.resolve([aTab, debuggee, debuggerPanel, aWindow]);
       });
     });
 
