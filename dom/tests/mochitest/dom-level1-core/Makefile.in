@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES_A	= \
+MOCHITEST_FILES	= \
 		DOMTestCase.js \
 		activity-home.css \
 		exclusions.js \
@@ -68,9 +68,6 @@ MOCHITEST_FILES_A	= \
 		test_characterdatasetnodevalue.html \
 		test_characterdatasubstringexceedsvalue.html \
 		test_characterdatasubstringvalue.html \
-		$(NULL)
-
-MOCHITEST_FILES_B	= \
 		test_commentgetcomment.html \
 		test_documentcreateattribute.html \
 		test_documentcreatecdatasection.html \
@@ -144,9 +141,6 @@ MOCHITEST_FILES_B	= \
 		test_entitygetentityname.html \
 		test_entitygetpublicid.html \
 		test_entitygetpublicidnull.html \
-		$(NULL)
-
-MOCHITEST_FILES_C	= \
 		test_hc_attrappendchild1.html \
 		test_hc_attrappendchild2.html \
 		test_hc_attrappendchild3.html \
@@ -185,9 +179,6 @@ MOCHITEST_FILES_C	= \
 		test_hc_attrsetvalue2.html \
 		test_hc_attrspecifiedvalue.html \
 		test_hc_attrspecifiedvaluechanged.html \
-		$(NULL)
-
-MOCHITEST_FILES_D	= \
 		test_hc_characterdataappenddata.html \
 		test_hc_characterdataappenddatagetdata.html \
 		test_hc_characterdatadeletedatabegining.html \
@@ -268,9 +259,6 @@ MOCHITEST_FILES_D	= \
 		test_hc_elementretrievetagname.html \
 		test_hc_elementsetattributenodenull.html \
 		test_hc_elementwrongdocumenterr.html \
-		$(NULL)
-
-MOCHITEST_FILES_E	= \
 		test_hc_entitiesremovenameditem1.html \
 		test_hc_entitiessetnameditem1.html \
 		test_hc_namednodemapchildnoderange.html \
@@ -386,9 +374,6 @@ MOCHITEST_FILES_E	= \
 		test_hc_textsplittextthree.html \
 		test_hc_textsplittexttwo.html \
 		test_hc_textwithnomarkup.html \
-		$(NULL)
-
-MOCHITEST_FILES_F	= \
 		test_namednodemapchildnoderange.html \
 		test_namednodemapgetnameditem.html \
 		test_namednodemapinuseattributeerr.html \
@@ -489,9 +474,6 @@ MOCHITEST_FILES_F	= \
 		test_nodelistreturnfirstitem.html \
 		test_nodelistreturnlastitem.html \
 		test_nodelisttraverselist.html \
-		$(NULL)
-
-MOCHITEST_FILES_G	= \
 		test_nodenotationnodeattributes.html \
 		test_nodenotationnodename.html \
 		test_nodenotationnodetype.html \
@@ -557,5 +539,3 @@ MOCHITEST_FILES_G	= \
 # test_PIsetdatanomodificationallowederrEE.html was originally
 # test_processinginstructionsetdatanomodificationallowederrEE.html, but that
 # name is too long for Windows little brain.
-
-MOCHITEST_FILES_PARTS := $(foreach part,A B C D E F G,MOCHITEST_FILES_$(part))

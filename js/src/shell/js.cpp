@@ -850,7 +850,7 @@ class AutoNewContext
             RootedValue exc(oldcx);
             bool throwing = JS_IsExceptionPending(newcx);
             if (throwing)
-                JS_GetPendingException(newcx, exc.address());
+                JS_GetPendingException(newcx, &exc);
             newCompartment.destroy();
             newRequest.destroy();
             if (throwing)

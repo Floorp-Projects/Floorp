@@ -524,7 +524,7 @@ jsd_IsValidFrameInThreadState(JSDContext*        jsdc,
 
     JSD_ASSERT_VALID_THREAD_STATE(jsdthreadstate);
     JSD_ASSERT_VALID_STACK_FRAME(jsdframe);
-    
+
     return true;
 }
 
@@ -538,13 +538,13 @@ _getContextForThreadState(JSDContext* jsdc, JSDThreadState* jsdthreadstate)
     if( valid )
         return jsdthreadstate->context;
     return NULL;
-}        
+}
 
 JSDValue*
 jsd_GetException(JSDContext* jsdc, JSDThreadState* jsdthreadstate)
 {
     JSContext* cx;
-    jsval val;
+    JS::RootedValue val(cx);
 
     if(!(cx = _getContextForThreadState(jsdc, jsdthreadstate)))
         return NULL;
@@ -552,10 +552,10 @@ jsd_GetException(JSDContext* jsdc, JSDThreadState* jsdthreadstate)
     if(JS_GetPendingException(cx, &val))
         return jsd_NewValue(jsdc, val);
     return NULL;
-}        
+}
 
 bool
-jsd_SetException(JSDContext* jsdc, JSDThreadState* jsdthreadstate, 
+jsd_SetException(JSDContext* jsdc, JSDThreadState* jsdthreadstate,
                  JSDValue* jsdval)
 {
     JSContext* cx;
@@ -563,10 +563,12 @@ jsd_SetException(JSDContext* jsdc, JSDThreadState* jsdthreadstate,
     if(!(cx = _getContextForThreadState(jsdc, jsdthreadstate)))
         return false;
 
-    if(jsdval)
-        JS_SetPendingException(cx, JSD_GetValueWrappedJSVal(jsdc, jsdval));
-    else
+    if(jsdval) {
+        JS::RootedValue exn(cx, JSD_GetValueWrappedJSVal(jsdc, jsdval));
+        JS_SetPendingException(cx, exn);
+    } else {
         JS_ClearPendingException(cx);
+    }
     return true;
 }
 

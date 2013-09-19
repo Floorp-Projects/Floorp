@@ -1552,7 +1552,7 @@ xpc::EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& sour
         }
 
         // If the sandbox threw an exception, grab it off the context.
-        if (JS_GetPendingException(sandcx, exn.address())) {
+        if (JS_GetPendingException(sandcx, &exn)) {
             MOZ_ASSERT(!ok);
             JS_ClearPendingException(sandcx);
             if (returnStringOnly) {

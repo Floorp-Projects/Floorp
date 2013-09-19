@@ -104,3 +104,8 @@ var p = new Proxy(global,
                    getOwnPropertyDescriptor:function(name) { return {value:Int32Array}}});
 new Int32Array(ab)[4] = 42;
 assertEq(f1(p, null, ab)(), 42);
+
+// GVN checks
+assertEq(asmLink(asmCompile(USE_ASM + "var g=0; function f() { var x = 0; g = 1; x = g; return (x+g)|0 } return f"))(), 2);
+assertEq(asmLink(asmCompile(USE_ASM + "var g=0; function f() { var x = 0; g = 1; x = g; g = 2; return (x+g)|0 } return f"))(), 3);
+assertEq(asmLink(asmCompile(USE_ASM + "var g=0; var h=0; function f() { var x = 0; g = 1; x = g; h = 3; return (x+g)|0 } return f"))(), 2);

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_BROWSER_TESTS = \
+MOCHITEST_BROWSER_FILES = \
 	browser_dbg_aaa_run_first_leaktest.js \
 	browser_dbg_bfcache.js \
 	browser_dbg_blackboxing-01.js \
@@ -125,9 +125,6 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_watch-expressions-01.js \
 	browser_dbg_watch-expressions-02.js \
 	head.js \
-	$(NULL)
-
-MOCHITEST_BROWSER_PAGES = \
 	doc_binary_search.html \
 	doc_blackboxing.html \
 	doc_cmd-break.html \
@@ -182,7 +179,7 @@ MOCHITEST_BROWSER_PAGES = \
 # Bug 847558:
 #   Disable browser_dbg_chrome-create.js to fix Ubuntu hangs
 ifneq (Linux,$(OS_ARCH))
-MOCHITEST_BROWSER_TESTS += \
+MOCHITEST_BROWSER_FILES += \
 	browser_dbg_chrome-create.js \
 	browser_dbg_on-pause-raise.js \
 	$(NULL)
@@ -191,10 +188,8 @@ endif
 # Bug 895426:
 #   Disable browser_dbg_break-on-dom-event.js due to frequent failures
 ifneq (Darwin,$(OS_ARCH))
-MOCHITEST_BROWSER_TESTS += \
+MOCHITEST_BROWSER_FILES += \
 	browser_dbg_break-on-dom-event.js \
 	browser_dbg_event-listeners.js \
 	$(NULL)
 endif
-
-MOCHITEST_BROWSER_FILES_PARTS = MOCHITEST_BROWSER_TESTS MOCHITEST_BROWSER_PAGES

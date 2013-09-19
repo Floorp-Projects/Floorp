@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=882145
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test mozGetUserMedia Constraints</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=882145">Test mozGetUserMedia Constraints</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+/**
+  Tests covering gUM constraints API for audio, video and fake video. Exercise
+  successful parsing code and ensure that unknown mandatory constraints and
+  overconstraining cases produce appropriate errors.
+*/
+var tests = [
+  // Each test here tests a different constraint or codepath.
+  { message: "unknown mandatory constraint on video fails",
+    constraints: { video: { mandatory: { somethingUnknown:0 } } },
+    error: "NOT_SUPPORTED_ERR: somethingUnknown",
+    pass: false },
+  { message: "unknown mandatory constraint on audio fails",
+    constraints: { audio: { mandatory: { somethingUnknown:0 } } },
+    error: "NOT_SUPPORTED_ERR: somethingUnknown",
+    pass: false },
+  { message: "video overconstrained by facingMode fails",
+    constraints: { video: { mandatory: { facingMode:'left' } } },
+    error: "NO_DEVICES_FOUND",
+    pass: false },
+  { message: "Success-path: optional video facingMode + audio ignoring facingMode",
+    constraints: { fake: true,
+                   audio: { mandatory: { facingMode:'left' } },
+                   video: { optional: [{ facingMode:'left' },
+                                       { facingMode:'right' },
+                                       { facingMode:'environment' },
+                                       { facingMode:'user' },
+                                       { foo:0 }] } },
+    error: null,
+    pass: false },
+  { message: null },
+];
+
+/**
+ * Starts the test run by running through each constraint
+ * test by verifying that the right callback and error message is fired.
+ */
+
+runTest(function () {
+  var i = 0;
+  next();
+
+  function Success() {
+    info("successcallback");
+    tests[i].pass = !tests[i].error;
+    i++;
+    next();
+  }
+  function Failure(err) {
+    info("errcallback: " + err);
+    tests[i].pass = tests[i].error? (err === tests[i].error) : false;
+    i++;
+    next();
+  }
+  function next() {
+    if (tests[i].message) {
+      navigator.mozGetUserMedia(tests[i].constraints, Success, Failure);
+    } else {
+      finish();
+    }
+  }
+  function finish() {
+    tests.forEach(function (test) {
+      if (test.message) {
+        ok(test.pass, test.message);
+      } else {
+        SimpleTest.finish();
+      }
+    });
+  }
+});
+
+
+</script>
+</pre>
+</body>
+</html>
