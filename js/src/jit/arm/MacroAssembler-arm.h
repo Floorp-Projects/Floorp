@@ -374,7 +374,7 @@ class MacroAssemblerARM : public Assembler
     // calls an ion function, assuming that the stack is currently not 8 byte aligned
     void ma_callIonHalfPush(const Register reg);
 
-    void ma_call(void *dest);
+    void ma_call(ImmPtr dest);
 
     // Float registers can only be loaded/stored in continuous runs
     // when using vstm/vldm.
@@ -542,7 +542,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void call(ImmPtr imm) {
         BufferOffset bo = m_buffer.nextOffset();
         addPendingJump(bo, imm, Relocation::HARDCODED);
-        ma_call(imm.value);
+        ma_call(imm);
     }
     void call(IonCode *c) {
         BufferOffset bo = m_buffer.nextOffset();
@@ -553,7 +553,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         else
             rs = L_LDR;
 
-        ma_movPatchable(Imm32((int) c->raw()), ScratchRegister, Always, rs);
+        ma_movPatchable(ImmPtr(c->raw()), ScratchRegister, Always, rs);
         ma_callIonHalfPush(ScratchRegister);
     }
     void branch(IonCode *c) {
@@ -565,7 +565,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         else
             rs = L_LDR;
 
-        ma_movPatchable(Imm32((int) c->raw()), ScratchRegister, Always, rs);
+        ma_movPatchable(ImmPtr(c->raw()), ScratchRegister, Always, rs);
         ma_bx(ScratchRegister);
     }
     void branch(const Register reg) {
