@@ -89,10 +89,10 @@ public:
 
 private:
     bool DrawDirect(gfxContext *ctx, nsIntSize bounds,
-                      uint32_t flags, Screen *screen, Visual *visual);
+                    uint32_t flags, Screen *screen, Visual *visual);
 
     bool DrawOntoTempSurface(gfxXlibSurface *tempXlibSurface,
-                               nsIntPoint offset);
+                             nsIntPoint offset);
 
 };
 

@@ -142,7 +142,7 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
         NATIVE_DRAWING_NOTE("FALLBACK: non-X surface");
         return false;
     }
-    
+
     cairo_matrix_t matrix;
     cairo_get_matrix (cr, &matrix);
     double device_offset_x, device_offset_y;
@@ -156,7 +156,7 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
                  "Expected integer device offsets");
     nsIntPoint offset(NS_lroundf(matrix.x0 + device_offset_x),
                       NS_lroundf(matrix.y0 + device_offset_y));
-    
+
     int max_rectangles = 0;
     if (flags & DRAW_SUPPORTS_CLIP_RECT) {
       max_rectangles = 1;
@@ -193,10 +193,10 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
     /* Stop now if everything is clipped out */
     if (needs_clip && rect_count == 0)
         return true;
-      
+
     /* Check that the screen is supported.
        Visuals belong to screens, so, if alternate visuals are not supported,
-       then alternate screens cannot be supported. */  
+       then alternate screens cannot be supported. */
     bool supports_alternate_visual =
         (flags & DRAW_SUPPORTS_ALTERNATE_VISUAL) != 0;
     bool supports_alternate_screen = supports_alternate_visual &&
@@ -206,13 +206,13 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
         NATIVE_DRAWING_NOTE("FALLBACK: non-default screen");
         return false;
     }
-        
+
     /* Check that there is a visual */
     Visual *target_visual = cairo_xlib_surface_get_visual (target);
     if (!target_visual) {
         NATIVE_DRAWING_NOTE("FALLBACK: no Visual for surface");
         return false;
-    }        
+    }
     /* Check that the visual is supported */
     if (!supports_alternate_visual && target_visual != visual) {
         // Only the format of the visual is important (not the GLX properties)
@@ -226,7 +226,7 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
             return false;
         }
     }
-  
+
     /* we're good to go! */
     NATIVE_DRAWING_NOTE("TAKING FAST PATH\n");
     cairo_surface_flush (target);
