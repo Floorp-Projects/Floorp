@@ -1,4 +1,5 @@
 {
   "Static name on the prototype": true,
-  "constructor": true
+  "constructor": true,
+  "Dynamic name": true
 }
