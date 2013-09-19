@@ -51,46 +51,49 @@ ocsp_init()
 
 ocsp_stapling()
 {
+  # Parameter -4 is used as a temporary workaround for lack of IPv6 connectivity
+  # on some build bot slaves.
+
   TESTNAME="startssl valid, supports OCSP stapling"
   echo "$SCRIPTNAME: $TESTNAME"
-  echo "tstclnt -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5143 -d . < ${REQF}"
-  ${BINDIR}/tstclnt -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5143 -d . < ${REQF}
+  echo "tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5143 -d . < ${REQF}"
+  ${BINDIR}/tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5143 -d . < ${REQF}
   html_msg $? 0 "$TESTNAME"
 
   TESTNAME="startssl revoked, supports OCSP stapling"
   echo "$SCRIPTNAME: $TESTNAME"
-  echo "tstclnt -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5144 -d . < ${REQF}"
-  ${BINDIR}/tstclnt -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5144 -d . < ${REQF}
+  echo "tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5144 -d . < ${REQF}"
+  ${BINDIR}/tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5144 -d . < ${REQF}
   html_msg $? 3 "$TESTNAME"
 
   TESTNAME="comodo trial test expired revoked, supports OCSP stapling"
   echo "$SCRIPTNAME: $TESTNAME"
-  echo "tstclnt -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5145 -d . < ${REQF}"
-  ${BINDIR}/tstclnt -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5145 -d . < ${REQF}
+  echo "tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5145 -d . < ${REQF}"
+  ${BINDIR}/tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5145 -d . < ${REQF}
   html_msg $? 1 "$TESTNAME"
 
   TESTNAME="thawte (expired) valid, supports OCSP stapling"
   echo "$SCRIPTNAME: $TESTNAME"
-  echo "tstclnt -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5146 -d . < ${REQF}"
-  ${BINDIR}/tstclnt -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5146 -d . < ${REQF}
+  echo "tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5146 -d . < ${REQF}"
+  ${BINDIR}/tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5146 -d . < ${REQF}
   html_msg $? 1 "$TESTNAME"
 
   TESTNAME="thawte (expired) revoked, supports OCSP stapling"
   echo "$SCRIPTNAME: $TESTNAME"
-  echo "tstclnt -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5147 -d . < ${REQF}"
-  ${BINDIR}/tstclnt -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5147 -d . < ${REQF}
+  echo "tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5147 -d . < ${REQF}"
+  ${BINDIR}/tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5147 -d . < ${REQF}
   html_msg $? 1 "$TESTNAME"
 
   TESTNAME="digicert valid, supports OCSP stapling"
   echo "$SCRIPTNAME: $TESTNAME"
-  echo "tstclnt -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5148 -d . < ${REQF}"
-  ${BINDIR}/tstclnt -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5148 -d . < ${REQF}
+  echo "tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5148 -d . < ${REQF}"
+  ${BINDIR}/tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5148 -d . < ${REQF}
   html_msg $? 0 "$TESTNAME"
 
   TESTNAME="digicert revoked, supports OCSP stapling"
   echo "$SCRIPTNAME: $TESTNAME"
-  echo "tstclnt -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5149 -d . < ${REQF}"
-  ${BINDIR}/tstclnt -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5149 -d . < ${REQF}
+  echo "tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5149 -d . < ${REQF}"
+  ${BINDIR}/tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5149 -d . < ${REQF}
   html_msg $? 3 "$TESTNAME"
 
   TESTNAME="live valid, supports OCSP stapling"
@@ -101,8 +104,8 @@ ocsp_stapling()
 
   TESTNAME="startssl valid, doesn't support OCSP stapling"
   echo "$SCRIPTNAME: $TESTNAME"
-  echo "tstclnt -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 443 -d . < ${REQF}"
-  ${BINDIR}/tstclnt -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 443 -d . < ${REQF}
+  echo "tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 443 -d . < ${REQF}"
+  ${BINDIR}/tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 443 -d . < ${REQF}
   html_msg $? 2 "$TESTNAME"
 
   TESTNAME="cacert untrusted, doesn't support OCSP stapling"
