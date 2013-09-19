@@ -521,7 +521,7 @@ public class TopSitesPage extends HomeFragment {
 
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            return LayoutInflater.from(context).inflate(R.layout.home_item_row, parent, false);
+            return LayoutInflater.from(context).inflate(R.layout.bookmark_item_row, parent, false);
         }
     }
 
