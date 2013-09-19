@@ -240,39 +240,38 @@ IDBKeyRange::FromJSVal(JSContext* aCx,
   nsresult rv;
   nsRefPtr<IDBKeyRange> keyRange;
 
-  if (JSVAL_IS_VOID(aVal) || JSVAL_IS_NULL(aVal)) {
+  if (!aVal.isNullOrUndefined()) {
     // undefined and null returns no IDBKeyRange.
-  }
-  else if (JSVAL_IS_PRIMITIVE(aVal) ||
-           JS_IsArrayObject(aCx, JSVAL_TO_OBJECT(aVal)) ||
-           JS_ObjectIsDate(aCx, JSVAL_TO_OBJECT(aVal))) {
-    // A valid key returns an 'only' IDBKeyRange.
-    keyRange = new IDBKeyRange(false, false, true);
 
-    rv = GetKeyFromJSVal(aCx, aVal, keyRange->Lower());
-    if (NS_FAILED(rv)) {
-      return rv;
+    JS::RootedObject obj(aCx, aVal.isObject() ? &aVal.toObject() : NULL);
+    if (aVal.isPrimitive() || JS_IsArrayObject(aCx, obj) || JS_ObjectIsDate(aCx, obj)) {
+      // A valid key returns an 'only' IDBKeyRange.
+      keyRange = new IDBKeyRange(false, false, true);
+
+      rv = GetKeyFromJSVal(aCx, aVal, keyRange->Lower());
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
     }
-  }
-  else {
-    // An object is not permitted unless it's another IDBKeyRange.
-    nsIXPConnect* xpc = nsContentUtils::XPConnect();
-    NS_ASSERTION(xpc, "This should never be null!");
+    else {
+      // An object is not permitted unless it's another IDBKeyRange.
+      nsIXPConnect* xpc = nsContentUtils::XPConnect();
+      NS_ASSERTION(xpc, "This should never be null!");
 
-    nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-    rv = xpc->GetWrappedNativeOfJSObject(aCx, JSVAL_TO_OBJECT(aVal),
-                                         getter_AddRefs(wrapper));
-    if (NS_FAILED(rv)) {
-      return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+      nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+      rv = xpc->GetWrappedNativeOfJSObject(aCx, obj, getter_AddRefs(wrapper));
+      if (NS_FAILED(rv)) {
+        return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+      }
+
+      nsCOMPtr<nsIIDBKeyRange> iface;
+      if (!wrapper || !(iface = do_QueryInterface(wrapper->Native()))) {
+        // Some random JS object?
+        return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+      }
+
+      keyRange = static_cast<IDBKeyRange*>(iface.get());
     }
-
-    nsCOMPtr<nsIIDBKeyRange> iface;
-    if (!wrapper || !(iface = do_QueryInterface(wrapper->Native()))) {
-      // Some random JS object?
-      return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
-    }
-
-    keyRange = static_cast<IDBKeyRange*>(iface.get());
   }
 
   keyRange.forget(aKeyRange);

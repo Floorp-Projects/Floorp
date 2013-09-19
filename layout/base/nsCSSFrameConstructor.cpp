@@ -5433,12 +5433,16 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
     // due to dynamic changes.
     // We don't do it for SVG text, since we might need to position and
     // measure the white space glyphs due to x/y/dx/dy attributes.
+    // We check that NS_CREATE_FRAME_FOR_IGNORABLE_WHITESPACE is not set on
+    // the node. This lets us disable this optimization for specific nodes
+    // (e.g. nodes whose geometry is being queried via DOM APIs).
     if (AtLineBoundary(aIter) &&
         !styleContext->StyleText()->WhiteSpaceOrNewlineIsSignificant() &&
         aIter.List()->ParentHasNoXBLChildren() &&
         !(aState.mAdditionalStateBits & NS_FRAME_GENERATED_CONTENT) &&
         (item.mFCData->mBits & FCDATA_IS_LINE_PARTICIPANT) &&
         !(item.mFCData->mBits & FCDATA_IS_SVG_TEXT) &&
+        !item.mContent->HasFlag(NS_CREATE_FRAME_FOR_IGNORABLE_WHITESPACE) &&
         item.IsWhitespace(aState))
       return;
 
@@ -7611,6 +7615,22 @@ InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node)
 
   nsIFrame* rootFrame = presShell->GetRootFrame();
   rootFrame->InvalidateFrameSubtree();
+}
+
+nsIFrame*
+nsCSSFrameConstructor::EnsureFrameForTextNode(nsGenericDOMDataNode* aContent)
+{
+  if (aContent->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE) &&
+      !aContent->HasFlag(NS_CREATE_FRAME_FOR_IGNORABLE_WHITESPACE)) {
+    // Text frame may have been suppressed. Disable suppression and signal
+    // that a flush should be performed.
+    aContent->SetFlags(NS_CREATE_FRAME_FOR_IGNORABLE_WHITESPACE);
+    nsAutoScriptBlocker blocker;
+    BeginUpdate();
+    RecreateFramesForContent(aContent, false);
+    EndUpdate();
+  }
+  return aContent->GetPrimaryFrame();
 }
 
 nsresult

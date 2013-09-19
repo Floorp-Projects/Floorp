@@ -47,6 +47,8 @@ _MOZBUILD_EXTERNAL_VARIABLES := \
 
 _DEPRECATED_VARIABLES := \
   XPIDL_FLAGS \
+  MOCHITEST_FILES_PARTS \
+  MOCHITEST_BROWSER_FILES_PARTS \
   $(NULL)
 
 ifndef EXTERNALLY_MANAGED_MAKE_FILE
@@ -734,6 +736,13 @@ endif
 compile:: $(OBJS) $(HOST_OBJS)
 
 include $(topsrcdir)/config/makefiles/target_libs.mk
+
+ifdef IS_TOOL_DIR
+# One would think "tools:: libs" would work, but it turns out that combined with
+# bug 907365, this makes make forget to run some rules sometimes.
+tools::
+	@$(MAKE) libs
+endif
 
 ##############################################
 ifndef NO_PROFILE_GUIDED_OPTIMIZE
@@ -1739,10 +1748,8 @@ FREEZE_VARIABLES = \
   EXTRA_COMPONENTS \
   EXTRA_PP_COMPONENTS \
   MOCHITEST_FILES \
-  MOCHITEST_FILES_PARTS \
   MOCHITEST_CHROME_FILES \
   MOCHITEST_BROWSER_FILES \
-  MOCHITEST_BROWSER_FILES_PARTS \
   MOCHITEST_A11Y_FILES \
   MOCHITEST_METRO_FILES \
   MOCHITEST_ROBOCOP_FILES \

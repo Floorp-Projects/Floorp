@@ -395,6 +395,9 @@ class RecursiveMakeBackend(CommonBackend):
             fh.write('PARALLEL_DIRS += %s\n' %
                 ' '.join(obj.parallel_external_make_dirs))
 
+        if obj.is_tool_dir:
+            fh.write('IS_TOOL_DIR := 1\n')
+
     def _process_exports(self, obj, exports, backend_file, namespace=""):
         # This may not be needed, but is present for backwards compatibility
         # with the old make rules, just in case.

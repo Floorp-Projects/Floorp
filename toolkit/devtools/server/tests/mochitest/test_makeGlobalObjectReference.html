@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=914405
+
+Debugger.prototype.makeGlobalObjectReference should dereference WindowProxy
+(outer window) objects.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Mozilla Bug 914405</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script>
+
+Components.utils.import("resource://gre/modules/jsdebugger.jsm");
+addDebuggerToGlobal(this);
+
+window.onload = function () {
+  SimpleTest.waitForExplicitFinish();
+
+  var iframe = document.createElement("iframe");
+  iframe.src = "data:text/html,<html>The word 'smorgasbord', spoken by an adorably plump child, symbolizing prosperity</html>";
+  iframe.onload = iframeOnLoad;
+  document.body.appendChild(iframe);
+
+  function iframeOnLoad() {
+    var dbg = new Debugger;
+
+    var g1o = iframe.contentWindow; // 'o' for 'outer window'
+    ok(!dbg.hasDebuggee(g1o), "iframe is not initially a debuggee");
+
+    // Like addDebuggee, makeGlobalObjectReference innerizes.
+    // 'i' stands for 'inner window'.
+    // 'DO' stands for 'Debugger.Object'.
+    var g1iDO = dbg.makeGlobalObjectReference(g1o);
+    ok(!dbg.hasDebuggee(g1o), "makeGlobalObjectReference does not add g1 as debuggee, designated via outer");
+    ok(!dbg.hasDebuggee(g1iDO), "makeGlobalObjectReference does not add g1 as debuggee, designated via D.O ");
+
+    // Wrapping an object automatically outerizes it, so dereferencing an
+    // inner object D.O gets you an outer object.
+    // ('===' does distinguish inner and outer objects.)
+    // (That's a capital '=', if you must know.)
+    ok(g1iDO.unsafeDereference() === g1o, "g1iDO has the right referent");
+
+    // However, Debugger.Objects do distinguish inner and outer windows.
+    var g1oDO = g1iDO.makeDebuggeeValue(g1o);
+    ok(g1iDO !== g1oDO, "makeDebuggeeValue doesn't innerize");
+    ok(g1iDO.unsafeDereference() === g1oDO.unsafeDereference(),
+       "unsafeDereference() outerizes, so inner and outer window D.Os both dereference to outer");
+
+    ok(dbg.addDebuggee(g1o) === g1iDO, "addDebuggee returns the inner window's D.O");
+    ok(dbg.hasDebuggee(g1o), "addDebuggee adds the correct global");
+    ok(dbg.hasDebuggee(g1iDO), "hasDebuggee can take a D.O referring to the inner window");
+    ok(dbg.hasDebuggee(g1oDO), "hasDebuggee can take a D.O referring to the outer window");
+
+    var iframe2 = document.createElement("iframe");
+    iframe2.src = "data:text/html,<html>Her retrospection, in hindsight, was prescient.</html>";
+    iframe2.onload = iframe2OnLoad;
+    document.body.appendChild(iframe2);
+
+    function iframe2OnLoad() {
+      // makeGlobalObjectReference dereferences CCWs.
+      var g2o = iframe2.contentWindow;
+      g2o.g1o = g1o;
+
+      var g2iDO = dbg.addDebuggee(g2o);
+      var g2g1oDO = g2iDO.getOwnPropertyDescriptor('g1o').value;
+      ok(g2g1oDO !== g1oDO, "g2's cross-compartment wrapper for g1o gets its own D.O");
+      ok(g2g1oDO.unwrap() === g1oDO,
+         "unwrapping g2's cross-compartment wrapper for g1o gets the right D.O");
+      ok(dbg.makeGlobalObjectReference(g2g1oDO) === g1iDO,
+         "makeGlobalObjectReference unwraps cross-compartment wrappers, and innerizes");
+
+      SimpleTest.finish();
+    }
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

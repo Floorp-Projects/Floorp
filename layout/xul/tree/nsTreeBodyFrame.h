@@ -617,6 +617,10 @@ protected: // Data Members
 
   bool mReflowCallbackPosted;
 
+  // Set while we flush layout to take account of effects of
+  // overflow/underflow event handlers
+  bool mCheckingOverflow;
+
   // Hash table to keep track of which listeners we created and thus
   // have pointers to us.
   nsTHashtable<nsPtrHashKey<nsTreeImageListener> > mCreatedListeners;

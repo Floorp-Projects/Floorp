@@ -62,7 +62,8 @@ NS_IMPL_ISUPPORTS1(mozJSSubScriptLoader, mozIJSSubScriptLoader)
 static nsresult
 ReportError(JSContext *cx, const char *msg)
 {
-    JS_SetPendingException(cx, STRING_TO_JSVAL(JS_NewStringCopyZ(cx, msg)));
+    RootedValue exn(cx, JS::StringValue(JS_NewStringCopyZ(cx, msg)));
+    JS_SetPendingException(cx, exn);
     return NS_OK;
 }
 

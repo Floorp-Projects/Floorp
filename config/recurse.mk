@@ -43,10 +43,7 @@ endef
 
 $(foreach subtier,export compile libs tools,$(eval $(call CREATE_SUBTIER_TRAVERSAL_RULE,$(subtier))))
 
-compile export:: $(SUBMAKEFILES)
+compile export tools:: $(SUBMAKEFILES)
 	$(LOOP_OVER_TOOL_DIRS)
-
-tools:: $(SUBMAKEFILES)
-	$(foreach dir,$(TOOL_DIRS),$(call SUBMAKE,libs,$(dir)))
 
 endif

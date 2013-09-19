@@ -531,6 +531,10 @@ assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'const 
 assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { return u8[-2147483648>>0]|0; } return f'), this, null, buf)(),0);
 assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'const i=-2147483648; function f() { return u8[i>>0]|0; } return f'), this, null, buf)(),0);
 
+// GVN checks
+var buf = new ArrayBuffer(8192);
+assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'var i=0; function f() { var x = 0, y = 0; u8[0] = 1; u8[1] = 2; x = 0|u8[i]; i = x; y = 0|u8[i]; return y|0;} return f'), this, null, buf)(),2);
+assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'var i=0; function f() { var x = 0, y = 0; u8[0] = 1; u8[1] = 2; x = 0|u8[i]; y = 0|u8[i]; return (x+y)|0;} return f'), this, null, buf)(),2);
 
 // Heap length constraints
 var buf = new ArrayBuffer(0x0fff);
