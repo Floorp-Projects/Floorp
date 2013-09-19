@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html class="reftest-wait">
+  <head>
+    <title>CSS Test: Sticky Positioning - inline, dynamic changes</title>
+    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <link rel="match" href="inline-2-ref.html">
+    <meta name="assert" content="Sticky positioning on inline elements should move all continuations when the offsets are changed">
+    <meta name="flags" content="dom">
+    <link rel="stylesheet" type="text/css" href="ahem.css">
+    <style>
+      #scroll {
+        overflow: hidden;
+        height: 200px;
+        font: 10px/1 Ahem;
+      }
+      #sticky {
+        position: sticky;
+        top: 20px;
+        left: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scroll">
+      hello <span id="sticky">there<br>everyone</span>
+    </div>
+    <script type="text/javascript">
+      document.addEventListener("MozReftestInvalidate", function() {
+        document.getElementById("sticky").style.top = "30px";
+        document.getElementById("sticky").style.left = "30px";
+        document.documentElement.removeAttribute("class");
+      }, false);
+    </script>
+  </body>
+</html>

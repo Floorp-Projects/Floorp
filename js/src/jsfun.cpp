@@ -649,7 +649,7 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
     }
     bool haveSource = fun->isInterpreted() && !fun->isSelfHostedBuiltin();
     if (haveSource && !script->scriptSource()->hasSourceData() &&
-        !JSScript::loadSource(cx, script, &haveSource))
+        !JSScript::loadSource(cx, script->scriptSource(), &haveSource))
     {
         return NULL;
     }

@@ -1,11 +1,11 @@
 {
     "talos.zip": {
-        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.ca2229a32cb6.zip",
+        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.e11c30b59cef.zip",
         "path": ""
     },
     "global": {
         "talos_repo": "http://hg.mozilla.org/build/talos",
-        "talos_revision": "655c5140970c"
+        "talos_revision": "e11c30b59cef"
     },
     "suites": {
         "chromez": {
@@ -51,6 +51,44 @@
                 "\"c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe\"",
                 "C:/slave/talos-data/talos/xperf.config"
             ]
+        }
+    },
+    "mobile-suites": {
+        "remote-ts": {
+            "tests": ["ts_paint"]
+        },
+        "remote-tsvgx": {
+            "tests": ["tsvgx"],
+            "talos_options": [
+                "--noChrome"
+            ]
+        },
+        "remote-tcanvasmark": {
+            "tests": ["tcanvasmark"],
+            "talos_options": [
+                "--noChrome"
+            ]
+        },
+        "remote-trobopan": {
+            "tests": ["trobopan"],
+            "talos_options": [
+                "--fennecIDs", "../fennec_ids.txt"
+            ]
+        },
+        "remote-troboprovider": {
+            "tests": ["tprovider"],
+            "talos_options": [
+                "--fennecIDs", "../fennec_ids.txt"
+            ]
+        },
+        "remote-trobocheck2": {
+            "tests": ["tcheck2"],
+            "talos_options": [
+                "--fennecIDs", "../fennec_ids.txt"
+            ]
+        },
+        "remote-tp4m_nochrome": {
+            "tests": ["tp4m"]
         }
     }
 }

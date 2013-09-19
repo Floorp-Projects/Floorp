@@ -122,10 +122,46 @@ void ExceptionHandlerTest::InProcessCrash(bool aborting) {
   char minidump_file[PATH_MAX];
   ssize_t nbytes = read(fds[0], minidump_file, sizeof(minidump_file));
   ASSERT_NE(0, nbytes);
-  // Ensure that minidump file exists and is > 0 bytes.
-  struct stat st;
-  ASSERT_EQ(0, stat(minidump_file, &st));
-  ASSERT_LT(0, st.st_size);
+
+  Minidump minidump(minidump_file);
+  ASSERT_TRUE(minidump.Read());
+
+  MinidumpException* exception = minidump.GetException();
+  ASSERT_TRUE(exception);
+
+  const MDRawExceptionStream* raw_exception = exception->exception();
+  ASSERT_TRUE(raw_exception);
+
+  if (aborting) {
+    EXPECT_EQ(MD_EXCEPTION_MAC_SOFTWARE,
+              raw_exception->exception_record.exception_code);
+    EXPECT_EQ(MD_EXCEPTION_CODE_MAC_ABORT,
+              raw_exception->exception_record.exception_flags);
+  } else {
+    EXPECT_EQ(MD_EXCEPTION_MAC_BAD_ACCESS,
+              raw_exception->exception_record.exception_code);
+#if defined(__x86_64__)
+    EXPECT_EQ(MD_EXCEPTION_CODE_MAC_INVALID_ADDRESS,
+              raw_exception->exception_record.exception_flags);
+#elif defined(__i386__)
+    EXPECT_EQ(MD_EXCEPTION_CODE_MAC_PROTECTION_FAILURE,
+              raw_exception->exception_record.exception_flags);
+#endif
+  }
+
+  const MinidumpContext* context = exception->GetContext();
+  ASSERT_TRUE(context);
+
+  uint64_t instruction_pointer;
+  ASSERT_TRUE(context->GetInstructionPointer(&instruction_pointer));
+
+  // Ideally would like to sanity check that abort() is on the stack
+  // but that's hard.
+  MinidumpMemoryList* memory_list = minidump.GetMemoryList();
+  ASSERT_TRUE(memory_list);
+  MinidumpMemoryRegion* region =
+      memory_list->GetMemoryRegionForAddress(instruction_pointer);
+  EXPECT_TRUE(region);
 
   // Child process should have exited with a zero status.
   int ret;
@@ -138,11 +174,9 @@ TEST_F(ExceptionHandlerTest, InProcess) {
   InProcessCrash(false);
 }
 
-#if TARGET_OS_IPHONE
 TEST_F(ExceptionHandlerTest, InProcessAbort) {
   InProcessCrash(true);
 }
-#endif
 
 static bool DumpNameMDCallback(const char *dump_dir, const char *file_name,
                                void *context, bool success) {

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <link rel="stylesheet" type="text/css" href="ahem.css">
+    <style>
+      #scroll {
+        overflow: hidden;
+        height: 200px;
+        position: relative;
+        font: 10px/1 Ahem;
+      }
+      #sticky {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+      }
+      #hidden {
+        visibility: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scroll">
+      hello <div id="sticky"><span id="hidden">hello </span>there<br>everyone</div>
+    </div>
+  </body>
+</html>

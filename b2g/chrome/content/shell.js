@@ -1342,3 +1342,56 @@ let SensorsListener = {
 
 SensorsListener.init();
 #endif
+
+// Calling this observer will cause a shutdown an a profile reset.
+// Use eg. : Services.obs.notifyObservers(null, 'b2g-reset-profile', null);
+Services.obs.addObserver(function resetProfile(subject, topic, data) {
+  Services.obs.removeObserver(resetProfile, topic);
+
+  // Listening for 'profile-before-change2' which is late in the shutdown
+  // sequence, but still has xpcom access.
+  Services.obs.addObserver(function clearProfile(subject, topic, data) {
+    Services.obs.removeObserver(clearProfile, topic);
+#ifdef MOZ_WIDGET_GONK
+    let json = Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsIFile);
+    json.initWithPath('/system/b2g/webapps/webapps.json');
+    let toRemove = json.exists()
+      // This is a user build, just rm -r /data/local /data/b2g/mozilla
+      ? ['/data/local', '/data/b2g/mozilla']
+      // This is an eng build. We clear the profile and a set of files
+      // under /data/local.
+      : ['/data/b2g/mozilla',
+         '/data/local/permissions.sqlite',
+         '/data/local/storage',
+         '/data/local/OfflineCache'];
+
+    toRemove.forEach(function(dir) {
+      try {
+        let file = Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsIFile);
+        file.initWithPath(dir);
+        file.remove(true);
+      } catch(e) { dump(e); }
+    });
+#else
+    // Desktop builds.
+    let profile = Services.dirsvc.get('ProfD', Ci.nsIFile);
+
+    // We don't want to remove everything from the profile, since this
+    // would prevent us from starting up.
+    let whitelist = ['defaults', 'extensions', 'settings.json',
+                     'user.js', 'webapps'];
+    let enumerator = profile.directoryEntries;
+    while (enumerator.hasMoreElements()) {
+      let file = enumerator.getNext().QueryInterface(Ci.nsIFile);
+      if (whitelist.indexOf(file.leafName) == -1) {
+        file.remove(true);
+      }
+    }
+#endif
+  },
+  'profile-before-change2', false);
+
+  let appStartup = Cc['@mozilla.org/toolkit/app-startup;1']
+                     .getService(Ci.nsIAppStartup);
+  appStartup.quit(Ci.nsIAppStartup.eForceQuit);
+}, 'b2g-reset-profile', false);

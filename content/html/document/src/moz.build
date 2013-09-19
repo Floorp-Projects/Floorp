@@ -33,3 +33,12 @@ LIBXUL_LIBRARY = True
 
 MSVC_ENABLE_PGO = True
 
+LOCAL_INCLUDES += [
+    '../../content/src',
+    '/caps/include',
+    '/content/base/src',
+    '/content/events/src',
+    '/dom/base',
+    '/layout/style',
+    '/xpcom/ds',
+]

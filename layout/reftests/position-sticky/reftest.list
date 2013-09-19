@@ -41,3 +41,8 @@ fuzzy-if(Android,4,1) == containing-block-1.html containing-block-1-ref.html
 == overconstrained-1.html overconstrained-1-ref.html
 == overconstrained-2.html overconstrained-2-ref.html
 == overconstrained-3.html overconstrained-3-ref.html
+== inline-1.html inline-1-ref.html
+== inline-2.html inline-2-ref.html
+fails == inline-3.html inline-3-ref.html # bug 916302
+fails == column-contain-1a.html column-contain-1-ref.html
+== column-contain-1b.html column-contain-1-ref.html
