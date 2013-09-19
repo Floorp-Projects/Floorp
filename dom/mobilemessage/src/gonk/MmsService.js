@@ -60,7 +60,8 @@ const CONFIG_SEND_REPORT_DEFAULT_YES = 2;
 const CONFIG_SEND_REPORT_ALWAYS      = 3;
 
 const TIME_TO_BUFFER_MMS_REQUESTS    = 30000;
-const TIME_TO_RELEASE_MMS_CONNECTION = 30000;
+const PREF_TIME_TO_RELEASE_MMS_CONNECTION =
+  Services.prefs.getIntPref("network.gonk.ms-release-mms-connection");
 
 const PREF_RETRIEVAL_MODE      = 'dom.mms.retrieval_mode';
 const RETRIEVAL_MODE_MANUAL    = "manual";
@@ -293,11 +294,17 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
       if (this.refCount <= 0) {
         this.refCount = 0;
 
+        // The waiting is too small, just skip the timer creation.
+        if (PREF_TIME_TO_RELEASE_MMS_CONNECTION < 1000) {
+          this.onDisconnectTimerTimeout();
+          return;
+        }
+
         // Set a timer to delay the release of MMS network connection,
         // since the MMS requests often come consecutively in a short time.
         this.disconnectTimer.
           initWithCallback(this.onDisconnectTimerTimeout.bind(this),
-                           TIME_TO_RELEASE_MMS_CONNECTION,
+                           PREF_TIME_TO_RELEASE_MMS_CONNECTION,
                            Ci.nsITimer.TYPE_ONE_SHOT);
       }
     },
