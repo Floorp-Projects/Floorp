@@ -3282,7 +3282,6 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
         NS_ASSERTION(commonClipCount < 100,
           "Maybe you really do have more than a hundred clipping rounded rects, or maybe something has gone wrong.");
         currentClip.ApplyTo(aContext, presContext, commonClipCount);
-        aContext->NewPath();
       }
     }
 
