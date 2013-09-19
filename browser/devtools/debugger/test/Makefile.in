@@ -50,6 +50,10 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_pause-exceptions-02.js \
 	browser_dbg_pause-resume.js \
 	browser_dbg_pause-warning.js \
+	browser_dbg_pretty-print-01.js \
+	browser_dbg_pretty-print-02.js \
+	browser_dbg_pretty-print-03.js \
+	browser_dbg_pretty-print-04.js \
 	browser_dbg_progress-listener-bug.js \
 	browser_dbg_reload-preferred-script-01.js \
 	browser_dbg_reload-preferred-script-02.js \
@@ -143,6 +147,7 @@ MOCHITEST_BROWSER_PAGES = \
 	doc_large-array-buffer.html \
 	doc_minified.html \
 	doc_pause-exceptions.html \
+	doc_pretty-print.html \
 	doc_recursion-stack.html \
 	doc_script-switching-01.html \
 	doc_script-switching-02.html \
@@ -166,6 +171,7 @@ MOCHITEST_BROWSER_PAGES = \
 	code_script-switching-01.js \
 	code_script-switching-02.js \
 	code_test-editor-mode \
+	code_ugly.js \
 	testactors.js \
 	addon1.xpi \
 	addon2.xpi \
