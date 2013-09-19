@@ -354,28 +354,37 @@ TabChild::HandleEvent(nsIDOMEvent* aEvent)
     if (!nsLayoutUtils::FindIDFor(content, &viewId))
       return NS_ERROR_UNEXPECTED;
 
-    scrollFrame = nsLayoutUtils::FindScrollableFrameFor(viewId);
-    if (scrollFrame) {
-      CSSIntPoint scrollOffset = scrollFrame->GetScrollPositionCSSPixels();
+    // Note that we cannot use FindScrollableFrameFor(ROOT_SCROLL_ID) because
+    // it might return the root element from a different page in the case where
+    // that page is in the bfcache and this page is not run through layout
+    // before being drawn to the screen. Hence the code blocks below treat
+    // ROOT_SCROLL_ID separately from the non-ROOT_SCROLL_ID case.
 
+    CSSIntPoint scrollOffset;
+    if (viewId != FrameMetrics::ROOT_SCROLL_ID) {
+      scrollFrame = nsLayoutUtils::FindScrollableFrameFor(viewId);
+      if (!scrollFrame) {
+        return NS_OK;
+      }
+      scrollOffset = scrollFrame->GetScrollPositionCSSPixels();
+    } else {
       // For the root frame, we store the last metrics, including the last
       // scroll offset, sent by APZC. (This is updated in ProcessUpdateFrame()).
       // We use this here to avoid sending APZC back a scroll event that
       // originally came from APZC (besides being unnecessary, the event might
       // be slightly out of date by the time it reaches APZC).
       // We should probably do this for subframes, too.
-      if (viewId == FrameMetrics::ROOT_SCROLL_ID) {
-        if (RoundedToInt(mLastMetrics.mScrollOffset) == scrollOffset)
-          return NS_OK;
-        else
-          // Update the last scroll offset now, otherwise RecvUpdateDimensions()
-          // might trigger a scroll to the old offset before RecvUpdateFrame()
-          // gets a chance to update it.
-          mLastMetrics.mScrollOffset = scrollOffset;
+      utils->GetScrollXY(false, &scrollOffset.x, &scrollOffset.y);
+      if (RoundedToInt(mLastMetrics.mScrollOffset) == scrollOffset) {
+        return NS_OK;
       }
 
-      SendUpdateScrollOffset(presShellId, viewId, scrollOffset);
+      // Update the last scroll offset now, otherwise RecvUpdateDimensions()
+      // might trigger a scroll to the old offset before RecvUpdateFrame()
+      // gets a chance to update it.
+      mLastMetrics.mScrollOffset = scrollOffset;
     }
+    SendUpdateScrollOffset(presShellId, viewId, scrollOffset);
   }
 
   return NS_OK;
