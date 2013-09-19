@@ -74,10 +74,10 @@ static NS_METHOD streamParse (nsIInputStream* in,
       return NS_OK;
     }
     parseBuf[0]='\0';
-    if((loc_t=PL_strcasestr(lineBuf, "img"))!= NULL 
-       || (loc_t=PL_strcasestr(lineBuf, "script"))!=NULL) {
+    if((loc_t=PL_strcasestr(lineBuf, "img"))!= nullptr 
+       || (loc_t=PL_strcasestr(lineBuf, "script"))!=nullptr) {
       loc_t2=PL_strcasestr(loc_t, "src");
-      if(loc_t2!=NULL) {
+      if(loc_t2!=nullptr) {
         loc_t2+=3;
         strcpy(loc, loc_t2);
         sscanf(loc, "=\"%[^\"]", parseBuf);
@@ -91,9 +91,9 @@ static NS_METHOD streamParse (nsIInputStream* in,
     }
 
     /***NEED BETTER CHECK FOR STYLESHEETS
-    if((loc_t=PL_strcasestr(lineBuf, "link"))!= NULL) { 
+    if((loc_t=PL_strcasestr(lineBuf, "link"))!= nullptr) { 
        loc_t2=PL_strcasestr(loc_t, "href");
-      if(loc_t2!=NULL) {
+      if(loc_t2!=nullptr) {
         loc_t2+=4;
         strcpy(loc, loc_t2);
         //printf("%s\n", loc);
@@ -106,7 +106,7 @@ static NS_METHOD streamParse (nsIInputStream* in,
       }
     }
     */
-    if((loc_t=PL_strcasestr(lineBuf, "background"))!=NULL) {
+    if((loc_t=PL_strcasestr(lineBuf, "background"))!=nullptr) {
       loc_t+=10;
       strcpy(loc, loc_t);
       sscanf(loc, "=\"%[^\"]", parseBuf);

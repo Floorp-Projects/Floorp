@@ -28,8 +28,8 @@ using namespace mozilla;
 namespace mozilla {
 namespace net {
 
-static CameraStreamImpl* mCamera0 = NULL;
-static CameraStreamImpl* mCamera1 = NULL;
+static CameraStreamImpl* mCamera0 = nullptr;
+static CameraStreamImpl* mCamera1 = nullptr;
 
 /**
  * CameraStreamImpl
@@ -48,7 +48,7 @@ void CameraStreamImpl::transmitFrame(JNIEnv *env, jbyteArray *data) {
 }
 
 CameraStreamImpl* CameraStreamImpl::GetInstance(uint32_t aCamera) {
-    CameraStreamImpl* res = NULL;
+    CameraStreamImpl* res = nullptr;
     switch(aCamera) {
         case 0:
             if (mCamera0)
@@ -91,7 +91,7 @@ bool CameraStreamImpl::Init(const nsCString& contentType, const uint32_t& camera
 
 void CameraStreamImpl::Close() {
     AndroidBridge::Bridge()->CloseCamera();
-    mCallback = NULL;
+    mCallback = nullptr;
 }
 
 } // namespace net

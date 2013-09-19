@@ -202,12 +202,12 @@ class Continuation {
 };
 
 // combine segments into a single string, returning the allocated string
-// (or NULL) while emptying the list 
+// (or nullptr) while emptying the list 
 char *combineContinuations(nsTArray<Continuation>& aArray)
 {
   // Sanity check
   if (aArray.Length() == 0)
-    return NULL;
+    return nullptr;
 
   // Get an upper bound for the length
   uint32_t length = 0;
@@ -239,7 +239,7 @@ char *combineContinuations(nsTArray<Continuation>& aArray)
     // return null if empty value
     if (*result == '\0') {
       nsMemory::Free(result);
-      result = NULL;
+      result = nullptr;
     }
   } else {
     // Handle OOM
@@ -435,9 +435,9 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
   // collect results for the different algorithms (plain filename,
   // RFC5987/2231-encoded filename, + continuations) separately and decide
   // which to use at the end
-  char *caseAResult = NULL;
-  char *caseBResult = NULL;
-  char *caseCDResult = NULL;
+  char *caseAResult = nullptr;
+  char *caseBResult = nullptr;
+  char *caseCDResult = nullptr;
 
   // collect continuation segments
   nsTArray<Continuation> segments;
@@ -455,9 +455,9 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
     // find name/value
 
     const char *nameStart = str;
-    const char *nameEnd = NULL;
+    const char *nameEnd = nullptr;
     const char *valueStart = str;
-    const char *valueEnd = NULL;
+    const char *valueEnd = nullptr;
     bool isQuotedString = false;
 
     NS_ASSERTION(!nsCRT::IsAsciiSpace(*str), "should be after whitespace.");
@@ -568,11 +568,11 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
           NS_WARNING("Mandatory two single quotes are missing in header parameter\n");
         }
 
-        const char *charsetStart = NULL;
+        const char *charsetStart = nullptr;
         int32_t charsetLength = 0;
-        const char *langStart = NULL;
+        const char *langStart = nullptr;
         int32_t langLength = 0;
-        const char *rawValStart = NULL;
+        const char *rawValStart = nullptr;
         int32_t rawValLength = 0;
 
         if (sQuote2 && sQuote1) {
@@ -677,31 +677,31 @@ increment_str:
     // check that the 2231/5987 result decodes properly given the
     // specified character set
     if (!IsValidOctetSequenceForCharset(charsetB, caseBResult))
-      caseBResult = NULL;
+      caseBResult = nullptr;
   }
 
   if (caseCDResult && !charsetCD.IsEmpty()) {
     // check that the 2231/5987 result decodes properly given the
     // specified character set
     if (!IsValidOctetSequenceForCharset(charsetCD, caseCDResult))
-      caseCDResult = NULL;
+      caseCDResult = nullptr;
   }
 
   if (caseBResult) {
     // prefer simple 5987 format over 2231 with continuations
     *aResult = caseBResult;
-    caseBResult = NULL;
+    caseBResult = nullptr;
     charset.Assign(charsetB);
   }
   else if (caseCDResult) {
     // prefer 2231/5987 with or without continuations over plain format
     *aResult = caseCDResult;
-    caseCDResult = NULL;
+    caseCDResult = nullptr;
     charset.Assign(charsetCD);
   }
   else if (caseAResult) {
     *aResult = caseAResult;
-    caseAResult = NULL;
+    caseAResult = nullptr;
   }
 
   // free unused stuff
