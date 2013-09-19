@@ -46,7 +46,13 @@ var exceptionTests = [
     message: "wrong object type as second parameter" },
   { params: [{video: true, fake: true}, unexpectedCall, 1],
     error: "Argument 3 of Navigator.mozGetUserMedia is not an object.",
-    message: "wrong object type as third parameter" }
+    message: "wrong object type as third parameter" },
+
+  // Each test here verifies constraint syntax as defined in webidl
+  { params: [{ fake: true, video: { optional: [{ facingMode:'foo' }] } },
+             unexpectedCall, unexpectedCall],
+    error: "'facingMode' member of MediaTrackConstraintSet 'foo' is not a valid value for enumeration VideoFacingModeEnum.",
+    message: "invalid facingMode enum value" }
 ];
 
 /**
@@ -72,6 +78,9 @@ runTest(function () {
       navigator.mozGetUserMedia.apply(navigator, test.params);
     } catch (e) {
       exception = (e.message === test.error);
+      if(!exception) {
+        info(e.message);
+      }
     }
     ok(exception, "Exception for " + test.message);
   });

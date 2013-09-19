@@ -7412,7 +7412,7 @@ CodeGenerator::visitAsmJSCheckOverRecursed(LAsmJSCheckOverRecursed *lir)
 }
 
 bool
-CodeGenerator::emitAssertRangeI(Range *r, Register input)
+CodeGenerator::emitAssertRangeI(const Range *r, Register input)
 {
     // Check the lower bound.
     if (r->lower() != INT32_MIN) {
@@ -7430,7 +7430,7 @@ CodeGenerator::emitAssertRangeI(Range *r, Register input)
         masm.bind(&success);
     }
 
-    // For r->isDecimal() and r->exponent(), there's nothing to check, because
+    // For r->canHaveFractionalPart() and r->exponent(), there's nothing to check, because
     // if we ended up in the integer range checking code, the value is already
     // in an integer register in the integer range.
 
@@ -7438,7 +7438,7 @@ CodeGenerator::emitAssertRangeI(Range *r, Register input)
 }
 
 bool
-CodeGenerator::emitAssertRangeD(Range *r, FloatRegister input, FloatRegister temp)
+CodeGenerator::emitAssertRangeD(const Range *r, FloatRegister input, FloatRegister temp)
 {
     // Check the lower bound.
     if (!r->isLowerInfinite()) {
@@ -7461,7 +7461,7 @@ CodeGenerator::emitAssertRangeD(Range *r, FloatRegister input, FloatRegister tem
         masm.bind(&success);
     }
 
-    // This code does not yet check r->isDecimal(). This would require new
+    // This code does not yet check r->canHaveFractionalPart(). This would require new
     // assembler interfaces to make rounding instructions available.
 
     if (!r->isInfinite()) {
@@ -7488,7 +7488,7 @@ bool
 CodeGenerator::visitAssertRangeI(LAssertRangeI *ins)
 {
     Register input = ToRegister(ins->input());
-    Range *r = ins->range();
+    const Range *r = ins->range();
 
     return emitAssertRangeI(r, input);
 }
@@ -7498,7 +7498,7 @@ CodeGenerator::visitAssertRangeD(LAssertRangeD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     FloatRegister temp = ToFloatRegister(ins->temp());
-    Range *r = ins->range();
+    const Range *r = ins->range();
 
     return emitAssertRangeD(r, input, temp);
 }
@@ -7508,7 +7508,7 @@ CodeGenerator::visitAssertRangeF(LAssertRangeF *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     FloatRegister temp = ToFloatRegister(ins->temp());
-    Range *r = ins->range();
+    const Range *r = ins->range();
 
     masm.convertFloatToDouble(input, input);
     bool success = emitAssertRangeD(r, input, temp);
@@ -7519,7 +7519,7 @@ CodeGenerator::visitAssertRangeF(LAssertRangeF *ins)
 bool
 CodeGenerator::visitAssertRangeV(LAssertRangeV *ins)
 {
-    Range *r = ins->range();
+    const Range *r = ins->range();
     const ValueOperand value = ToValue(ins, LAssertRangeV::Input);
     Register tag = masm.splitTagForTest(value);
     Label done;

@@ -10,64 +10,46 @@ ifndef INCLUDED_TESTS_MOCHITEST_MK #{
 #   $1- test directory name
 #   $2- optional: if passed dot used to flatten directory hierarchy copy
 # else- relativesrcdir
-# else- determine relative path
 mochitestdir = \
     $(strip \
       $(if $(2),$(DEPTH)/_tests/testing/mochitest/$1/. \
-        ,$(if $(value relativesrcdir) \
-          ,$(DEPTH)/_tests/testing/mochitest/$1/$(relativesrcdir) \
-          ,$(DEPTH)/_tests/testing/mochitest/$1/$(subst $(topsrcdir),,$(srcdir)) \
-    )))
+        ,$(DEPTH)/_tests/testing/mochitest/$1/$(relativesrcdir) \
+    ))
 
-
-define mochitest-libs-rule-template
-libs:: $$($(1))
-	$$(call install_cmd,$$(foreach f,$$^,"$$(f)") $$(call mochitestdir,$(2),$(3)))
-endef
-
-# Provide support for modules with such a large number of tests that
-# installing them with a single $(INSTALL) invocation would overflow
-# command-line length limits on some operating systems.
-ifdef MOCHITEST_FILES_PARTS
-ifdef MOCHITEST_FILES
-$(error You must define only one of MOCHITEST_FILES_PARTS or MOCHITEST_FILES)
-endif
-$(foreach part,$(MOCHITEST_FILES_PARTS),$(eval $(call mochitest-libs-rule-template,$(part),tests)))
-endif
 
 ifdef MOCHITEST_FILES
-$(eval $(call mochitest-libs-rule-template,MOCHITEST_FILES,tests))
+MOCHITEST_DEST := $(call mochitestdir,tests)
+INSTALL_TARGETS += MOCHITEST
 endif
 
 ifdef MOCHITEST_CHROME_FILES
-$(eval $(call mochitest-libs-rule-template,MOCHITEST_CHROME_FILES,chrome))
-endif
-
-ifdef MOCHITEST_BROWSER_FILES_PARTS
-ifdef MOCHITEST_BROWSER_FILES
-$(error You must define only one of MOCHITEST_BROWSER_FILES_PARTS or MOCHITEST_BROWSER_FILES)
-endif
-$(foreach part,$(MOCHITEST_BROWSER_FILES_PARTS),$(eval $(call mochitest-libs-rule-template,$(part),browser)))
+MOCHITEST_CHROME_DEST := $(call mochitestdir,chrome)
+INSTALL_TARGETS += MOCHITEST_CHROME
 endif
 
 ifdef MOCHITEST_BROWSER_FILES
-$(eval $(call mochitest-libs-rule-template,MOCHITEST_BROWSER_FILES,browser))
+MOCHITEST_BROWSER_DEST := $(call mochitestdir,browser)
+INSTALL_TARGETS += MOCHITEST_BROWSER
 endif
 
 ifdef MOCHITEST_A11Y_FILES
-$(eval $(call mochitest-libs-rule-template,MOCHITEST_A11Y_FILES,a11y))
+MOCHITEST_A11Y_DEST := $(call mochitestdir,a11y)
+INSTALL_TARGETS += MOCHITEST_A11Y
 endif
 
 ifdef MOCHITEST_METRO_FILES
-$(eval $(call mochitest-libs-rule-template,MOCHITEST_METRO_FILES,metro))
+MOCHITEST_METRO_DEST := $(call mochitestdir,metro)
+INSTALL_TARGETS += MOCHITEST_METRO
 endif
 
 ifdef MOCHITEST_ROBOCOP_FILES
-$(eval $(call mochitest-libs-rule-template,MOCHITEST_ROBOCOP_FILES,tests/robocop,flat_hierarchy))
+MOCHITEST_ROBOCOP_DEST := $(call mochitestdir,tests/robocop,flat_hierarchy)
+INSTALL_TARGETS += MOCHITEST_ROBOCOP
 endif
 
 ifdef MOCHITEST_WEBAPPRT_CHROME_FILES
-$(eval $(call mochitest-libs-rule-template,MOCHITEST_WEBAPPRT_CHROME_FILES,webapprtChrome))
+MOCHITEST_WEBAPPRT_CHROME_DEST := $(call mochitestdir,webapprtChrome)
+INSTALL_TARGETS += MOCHITEST_WEBAPPRT_CHROME
 endif
 
 INCLUDED_TESTS_MOCHITEST_MK := 1
