@@ -245,16 +245,23 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
     if (needed.IsEmpty())
         return nullptr;
 
+    nsRefPtr<gfxASurface> temp;
     gfxIntSize size(int32_t(needed.Width()), int32_t(needed.Height()));
-    nsRefPtr<gfxASurface> temp =
-        gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, gfxASurface::ContentFromFormat(aFormat));
-    if (!temp || temp->CairoStatus())
-        return nullptr;
 
-    nsRefPtr<gfxContext> tmpCtx = new gfxContext(temp);
-    tmpCtx->SetOperator(OptimalFillOperator());
-    aDrawable->Draw(tmpCtx, needed - needed.TopLeft(), true,
-                    gfxPattern::FILTER_FAST, gfxMatrix().Translate(needed.TopLeft()));
+    nsRefPtr<gfxImageSurface> image = aDrawable->GetAsImageSurface();
+    if (image && gfxRect(0, 0, image->GetSize().width, image->GetSize().height).Contains(needed)) {
+      temp = image->GetSubimage(needed);
+    } else {
+      temp =
+          gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, gfxASurface::ContentFromFormat(aFormat));
+      if (!temp || temp->CairoStatus())
+          return nullptr;
+
+      nsRefPtr<gfxContext> tmpCtx = new gfxContext(temp);
+      tmpCtx->SetOperator(OptimalFillOperator());
+      aDrawable->Draw(tmpCtx, needed - needed.TopLeft(), true,
+                      gfxPattern::FILTER_FAST, gfxMatrix().Translate(needed.TopLeft()));
+    }
 
     nsRefPtr<gfxDrawable> drawable = 
         new gfxSurfaceDrawable(temp, size, gfxMatrix().Translate(-needed.TopLeft()));
