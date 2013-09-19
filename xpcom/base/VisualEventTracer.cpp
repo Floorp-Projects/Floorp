@@ -8,6 +8,7 @@
 #include "nscore.h"
 #include "prthread.h"
 #include "prprf.h"
+#include "prio.h"
 #include "prenv.h"
 #include "plstr.h"
 #include "nsThreadUtils.h"
