@@ -2417,6 +2417,7 @@ WebConsoleFrame.prototype = {
     if (locationNode) {
       node.appendChild(locationNode);
     }
+    node.appendChild(this.document.createTextNode("\n"));
 
     return node;
   },
