@@ -899,6 +899,11 @@ gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry *aFontEntry)
     gfxUserFontData *data = aFontEntry->mUserFontData;
     sUserFonts->PutEntry(Key(data->mURI, data->mPrincipal, aFontEntry,
                              data->mPrivate));
+
+#ifdef DEBUG_USERFONT_CACHE
+    printf("userfontcache added fontentry: %p\n", aFontEntry);
+    Dump();
+#endif
 }
 
 void
@@ -915,6 +920,11 @@ gfxUserFontSet::UserFontCache::ForgetFont(gfxFontEntry *aFontEntry)
     // would no longer find the entry (bug 838105).
     sUserFonts->EnumerateEntries(
         gfxUserFontSet::UserFontCache::Entry::RemoveIfMatches, aFontEntry);
+
+#ifdef DEBUG_USERFONT_CACHE
+    printf("userfontcache removed fontentry: %p\n", aFontEntry);
+    Dump();
+#endif
 }
 
 gfxFontEntry*
@@ -944,3 +954,52 @@ gfxUserFontSet::UserFontCache::Shutdown()
         sUserFonts = nullptr;
     }
 }
+
+#ifdef DEBUG_USERFONT_CACHE
+
+PLDHashOperator
+gfxUserFontSet::UserFontCache::Entry::DumpEntry(Entry* aEntry, void* aUserData)
+{
+    nsresult rv;
+
+    nsAutoCString principalURISpec;
+
+    nsCOMPtr<nsIURI> principalURI;
+    rv = aEntry->mPrincipal->GetURI(getter_AddRefs(principalURI));
+    if (NS_SUCCEEDED(rv)) {
+        principalURI->GetSpec(principalURISpec);
+    }
+
+    bool setDomain = false;
+    nsCOMPtr<nsIURI> domainURI;
+
+    aEntry->mPrincipal->GetDomain(getter_AddRefs(domainURI));
+    if (domainURI) {
+        setDomain = true;
+    }
+
+    NS_ASSERTION(aEntry->mURI, "null URI in userfont cache entry");
+
+    printf("userfontcache fontEntry: %p fonturihash: %8.8x family: %s domainset: %s principal: [%s]\n",
+            aEntry->mFontEntry,
+            nsURIHashKey::HashKey(aEntry->mURI),
+            NS_ConvertUTF16toUTF8(aEntry->mFontEntry->FamilyName()).get(),
+            (setDomain ? "true" : "false"),
+            principalURISpec.get()
+           );
+    return PL_DHASH_NEXT;
+}
+
+void
+gfxUserFontSet::UserFontCache::Dump()
+{
+    if (!sUserFonts) {
+        return;
+    }
+
+    printf("userfontcache dump count: %d ========\n", sUserFonts->Count());
+    sUserFonts->EnumerateEntries(Entry::DumpEntry, nullptr);
+    printf("userfontcache dump ==================\n");
+}
+
+#endif
