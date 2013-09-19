@@ -1119,18 +1119,25 @@ var gBrowserInit = {
     // If the user manually opens the download manager before the timeout, the
     // downloads will start right away, and getting the service again won't hurt.
     setTimeout(function() {
-      let DownloadsCommon =
-        Cu.import("resource:///modules/DownloadsCommon.jsm", {}).DownloadsCommon;
-      if (DownloadsCommon.useJSTransfer) {
-        // Open the data link without initalizing nsIDownloadManager.
-        DownloadsCommon.initializeAllDataLinks();
-      } else {
-        // Initalizing nsIDownloadManager will trigger the data link.
-        Services.downloads;
+      try {
+        let DownloadsCommon =
+          Cu.import("resource:///modules/DownloadsCommon.jsm", {}).DownloadsCommon;
+        if (DownloadsCommon.useJSTransfer) {
+          // Open the data link without initalizing nsIDownloadManager.
+          DownloadsCommon.initializeAllDataLinks();
+          let DownloadsTaskbar =
+            Cu.import("resource:///modules/DownloadsTaskbar.jsm", {}).DownloadsTaskbar;
+          DownloadsTaskbar.registerIndicator(window);
+        } else {
+          // Initalizing nsIDownloadManager will trigger the data link.
+          Services.downloads;
+          let DownloadTaskbarProgress =
+            Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm", {}).DownloadTaskbarProgress;
+          DownloadTaskbarProgress.onBrowserWindowLoad(window);
+        }
+      } catch (ex) {
+        Cu.reportError(ex);
       }
-      let DownloadTaskbarProgress =
-        Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm", {}).DownloadTaskbarProgress;
-      DownloadTaskbarProgress.onBrowserWindowLoad(window);
     }, 10000);
 
     // The object handling the downloads indicator is also initialized here in the

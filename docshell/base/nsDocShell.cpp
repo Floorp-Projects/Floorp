@@ -750,7 +750,6 @@ nsDocShell::nsDocShell():
     mIsAppTab(false),
     mUseGlobalHistory(false),
     mInPrivateBrowsing(false),
-    mDeviceSizeIsPageSize(false),
     mFiredUnloadEvent(false),
     mEODForCurrentDocument(false),
     mURIResultedInDocument(false),
@@ -3930,27 +3929,6 @@ nsDocShell::GetCurrentSHEntry(nsISHEntry** aEntry, bool* aOSHE)
         NS_ADDREF(*aEntry = mOSHE);
         *aOSHE = true;
     }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::SetDeviceSizeIsPageSize(bool aValue)
-{
-    if (mDeviceSizeIsPageSize != aValue) {
-      mDeviceSizeIsPageSize = aValue;
-      nsRefPtr<nsPresContext> presContext;
-      GetPresContext(getter_AddRefs(presContext));
-      if (presContext) {
-          presContext->MediaFeatureValuesChanged(presContext->eAlwaysRebuildStyle);
-      }
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetDeviceSizeIsPageSize(bool* aValue)
-{
-    *aValue = mDeviceSizeIsPageSize;
     return NS_OK;
 }
 
