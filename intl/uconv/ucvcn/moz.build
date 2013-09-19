@@ -25,3 +25,6 @@ LIBRARY_NAME = 'ucvcn_s'
 
 LIBXUL_LIBRARY = True
 
+LOCAL_INCLUDES += [
+    '../util',
+]

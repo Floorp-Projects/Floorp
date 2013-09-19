@@ -38,6 +38,30 @@ enum AsmJSMathBuiltin
     AsmJSMathBuiltin_abs, AsmJSMathBuiltin_atan2, AsmJSMathBuiltin_imul
 };
 
+// Static-link data is used to patch a module either after it has been
+// compiled or deserialized with various absolute addresses (of code or
+// data in the process) or relative addresses (of code or data in the same
+// AsmJSModule). Since AsmJSStaticLinkData can be serialized alongside the
+// AsmJSModule and isn't needed after compilation/deserialization, it
+// doesn't need to be stored in the AsmJSModule.
+struct AsmJSStaticLinkData
+{
+    struct RelativeLink
+    {
+        uint32_t patchAtOffset;
+        uint32_t targetOffset;
+    };
+
+    typedef Vector<RelativeLink> RelativeLinkVector;
+
+    size_t operationCallbackExitOffset;
+    RelativeLinkVector relativeLinks;
+
+    AsmJSStaticLinkData(ExclusiveContext *cx)
+      : relativeLinks(cx)
+    {}
+};
+
 // An asm.js module represents the collection of functions nested inside a
 // single outer "use asm" function. For example, this asm.js module:
 //   function() { "use asm"; function f() {} function g() {} return f }
@@ -327,6 +351,7 @@ class AsmJSModule
 #endif
 
     struct Pod {
+        uint32_t                          charsLength_;
         uint32_t                          numGlobalVars_;
         uint32_t                          numFFIs_;
         size_t                            funcPtrTableAndExitBytes_;
@@ -342,22 +367,13 @@ class AsmJSModule
     bool                                  linked_;
     HeapPtr<ArrayBufferObject>            maybeHeap_;
 
-    AsmJSModuleSourceDesc                 sourceDesc_;
+    uint32_t                              charsBegin_;
+    ScriptSource *                        scriptSource_;
+
     FunctionCountsVector                  functionCounts_;
 
   public:
-    explicit AsmJSModule()
-      : globalArgumentName_(NULL),
-        importArgumentName_(NULL),
-        bufferArgumentName_(NULL),
-        minHeapLength_(AsmJSAllocationGranularity),
-        code_(NULL),
-        operationCallbackExit_(NULL),
-        linked_(false)
-    {
-        mozilla::PodZero(&pod);
-    }
-
+    explicit AsmJSModule(ScriptSource *scriptSource, uint32_t charsBegin);
     ~AsmJSModule();
 
     void trace(JSTracer *trc) {
@@ -388,6 +404,21 @@ class AsmJSModule
             MarkStringUnbarriered(trc, &importArgumentName_, "asm.js import argument name");
         if (bufferArgumentName_)
             MarkStringUnbarriered(trc, &bufferArgumentName_, "asm.js buffer argument name");
+    }
+
+    ScriptSource *scriptSource() const {
+        JS_ASSERT(scriptSource_ != NULL);
+        return scriptSource_;
+    }
+    uint32_t charsBegin() const {
+        return charsBegin_;
+    }
+    void initCharsEnd(uint32_t charsEnd) {
+        JS_ASSERT(charsEnd >= charsBegin_);
+        pod.charsLength_ = charsEnd - charsBegin_;
+    }
+    uint32_t charsEnd() const {
+        return charsBegin_ + pod.charsLength_;
     }
 
     bool addGlobalVarInitConstant(const Value &v, uint32_t *globalIndex) {
@@ -568,11 +599,13 @@ class AsmJSModule
     //   2. interleaved function-pointer tables and exits. These are allocated
     //      while type checking function bodies (as exits and uses of
     //      function-pointer tables are encountered).
-    uint8_t *globalData() const {
+    size_t offsetOfGlobalData() const {
         JS_ASSERT(code_);
-        return code_ + pod.codeBytes_;
+        return pod.codeBytes_;
     }
-
+    uint8_t *globalData() const {
+        return code_ + offsetOfGlobalData();
+    }
     size_t globalDataBytes() const {
         return sizeof(void*) +
                pod.numGlobalVars_ * sizeof(uint64_t) +
@@ -614,8 +647,7 @@ class AsmJSModule
         return pod.functionBytes_;
     }
     bool containsPC(void *pc) const {
-        uint8_t *code = functionCode();
-        return pc >= code && pc < (code + functionBytes());
+        return pc >= code_ && pc < (code_ + functionBytes());
     }
 
     bool addHeapAccesses(const jit::AsmJSHeapAccessVector &accesses) {
@@ -640,17 +672,15 @@ class AsmJSModule
         return minHeapLength_;
     }
 
-    uint8_t *allocateCodeAndGlobalSegment(ExclusiveContext *cx, size_t bytesNeeded);
+    bool allocateAndCopyCode(ExclusiveContext *cx, jit::MacroAssembler &masm);
+    void staticallyLink(const AsmJSStaticLinkData &linkData);
 
-    uint8_t *functionCode() const {
+    uint8_t *codeBase() const {
         JS_ASSERT(code_);
         JS_ASSERT(uintptr_t(code_) % AsmJSPageSize == 0);
         return code_;
     }
 
-    void setOperationCallbackExit(uint8_t *ptr) {
-        operationCallbackExit_ = ptr;
-    }
     uint8_t *operationCallbackExit() const {
         return operationCallbackExit_;
     }
@@ -692,13 +722,6 @@ class AsmJSModule
     }
     PropertyName *bufferArgumentName() const {
         return bufferArgumentName_;
-    }
-
-    void initSourceDesc(ScriptSource *scriptSource, uint32_t bufStart, uint32_t bufEnd) {
-        sourceDesc_.init(scriptSource, bufStart, bufEnd);
-    }
-    const AsmJSModuleSourceDesc &sourceDesc() const {
-        return sourceDesc_;
     }
 
     void detachIonCompilation(size_t exitIndex) const {
