@@ -172,8 +172,7 @@ private:
 
   nsCOMPtr<nsIFile> mProfileStorageFile;
 
-  nsCOMPtr<nsIMemoryReporter> mStorageSQLiteUniReporter;
-  nsCOMPtr<nsIMemoryReporter> mStorageSQLiteMultiReporter;
+  nsCOMPtr<nsIMemoryReporter> mStorageSQLiteReporter;
 
   static Service *gService;
 

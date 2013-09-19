@@ -139,8 +139,10 @@ private:
 "leaks in the browser or add-ons.")
     {}
 
+    static int64_t DistinguishedAmount();
+
   private:
-    int64_t Amount() MOZ_OVERRIDE;
+    int64_t Amount() MOZ_OVERRIDE { return DistinguishedAmount(); }
   };
 
   // Protect ctor, use Init() instead.
