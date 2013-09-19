@@ -605,6 +605,10 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 MarkUnsupported(GLFeature::depth_texture);
             }
 #endif
+            // ANGLE's divisor support is busted. (see bug 916816)
+            if (IsANGLE()) {
+                MarkUnsupported(GLFeature::instanced_arrays);
+            }
         }
 
         NS_ASSERTION(!IsExtensionSupported(GLContext::ARB_pixel_buffer_object) ||
