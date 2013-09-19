@@ -269,11 +269,11 @@ Range::print(Sprinter &sp) const
     JS_ASSERT_IF(lower_infinite_, lower_ == JSVAL_INT_MIN);
     JS_ASSERT_IF(upper_infinite_, upper_ == JSVAL_INT_MAX);
 
-    // Real or Natural subset.
+    // Floating-point or Integer subset.
     if (canHaveFractionalPart_)
-        sp.printf("R");
+        sp.printf("F");
     else
-        sp.printf("N");
+        sp.printf("I");
 
     sp.printf("[");
 
@@ -352,21 +352,21 @@ Range::intersect(const Range *lhs, const Range *rhs, bool *emptyRange)
 void
 Range::unionWith(const Range *other)
 {
-   bool canHaveFractionalPart = canHaveFractionalPart_ | other->canHaveFractionalPart_;
-   uint16_t max_exponent = Max(max_exponent_, other->max_exponent_);
+    bool canHaveFractionalPart = canHaveFractionalPart_ | other->canHaveFractionalPart_;
+    uint16_t max_exponent = Max(max_exponent_, other->max_exponent_);
 
-   if (lower_infinite_ || other->lower_infinite_)
-       makeLowerInfinite();
-   else
-       setLowerInit(Min(lower_, other->lower_));
+    if (lower_infinite_ || other->lower_infinite_)
+        makeLowerInfinite();
+    else
+        setLowerInit(Min(lower_, other->lower_));
 
-   if (upper_infinite_ || other->upper_infinite_)
-       makeUpperInfinite();
-   else
-       setUpperInit(Max(upper_, other->upper_));
+    if (upper_infinite_ || other->upper_infinite_)
+        makeUpperInfinite();
+    else
+        setUpperInit(Max(upper_, other->upper_));
 
-   canHaveFractionalPart_ = canHaveFractionalPart;
-   max_exponent_ = max_exponent;
+    canHaveFractionalPart_ = canHaveFractionalPart;
+    max_exponent_ = max_exponent;
 }
 
 static const int64_t RANGE_INF_MAX = int64_t(JSVAL_INT_MAX) + 1;
@@ -824,10 +824,8 @@ MConstant::computeRange()
     int exp = Range::MaxDoubleExponent;
 
     // NaN is estimated as a Double which covers everything.
-    if (IsNaN(d)) {
-        setRange(new Range(RANGE_INF_MIN, RANGE_INF_MAX, true, exp));
+    if (IsNaN(d))
         return;
-    }
 
     // Infinity is used to set both lower and upper to the range boundaries.
     if (IsInfinite(d)) {
@@ -1540,6 +1538,7 @@ ConvertLinearSum(MBasicBlock *block, const LinearSum &sum)
                 def = MAdd::New(def, term.term);
                 def->toAdd()->setInt32();
                 block->insertBefore(block->lastIns(), def->toInstruction());
+                def->computeRange();
             } else {
                 def = term.term;
             }
@@ -1547,10 +1546,12 @@ ConvertLinearSum(MBasicBlock *block, const LinearSum &sum)
             if (!def) {
                 def = MConstant::New(Int32Value(0));
                 block->insertBefore(block->lastIns(), def->toInstruction());
+                def->computeRange();
             }
             def = MSub::New(def, term.term);
             def->toSub()->setInt32();
             block->insertBefore(block->lastIns(), def->toInstruction());
+            def->computeRange();
         } else {
             JS_ASSERT(term.scale != 0);
             MConstant *factor = MConstant::New(Int32Value(term.scale));
@@ -1558,10 +1559,12 @@ ConvertLinearSum(MBasicBlock *block, const LinearSum &sum)
             MMul *mul = MMul::New(term.term, factor);
             mul->setInt32();
             block->insertBefore(block->lastIns(), mul);
+            mul->computeRange();
             if (def) {
                 def = MAdd::New(def, mul);
                 def->toAdd()->setInt32();
                 block->insertBefore(block->lastIns(), def->toInstruction());
+                def->computeRange();
             } else {
                 def = mul;
             }
@@ -1571,6 +1574,7 @@ ConvertLinearSum(MBasicBlock *block, const LinearSum &sum)
     if (!def) {
         def = MConstant::New(Int32Value(0));
         block->insertBefore(block->lastIns(), def->toInstruction());
+        def->computeRange();
     }
 
     return def;
@@ -1623,8 +1627,6 @@ RangeAnalysis::tryHoistBoundsCheck(MBasicBlock *header, MBoundsCheck *ins)
         return false;
     if (!SafeSub(lowerConstant, lower->sum.constant(), &lowerConstant))
         return false;
-    MBoundsCheckLower *lowerCheck = MBoundsCheckLower::New(lowerTerm);
-    lowerCheck->setMinimum(lowerConstant);
 
     // We are checking that index < boundsLength, and know that
     // index <= upperTerm + upperConstant. Thus, check that:
@@ -1634,6 +1636,10 @@ RangeAnalysis::tryHoistBoundsCheck(MBasicBlock *header, MBoundsCheck *ins)
     int32_t upperConstant = index.constant;
     if (!SafeAdd(upper->sum.constant(), upperConstant, &upperConstant))
         return false;
+
+    MBoundsCheckLower *lowerCheck = MBoundsCheckLower::New(lowerTerm);
+    lowerCheck->setMinimum(lowerConstant);
+
     MBoundsCheck *upperCheck = MBoundsCheck::New(upperTerm, ins->length());
     upperCheck->setMinimum(upperConstant);
     upperCheck->setMaximum(upperConstant);
@@ -2142,4 +2148,10 @@ void
 MMod::collectRangeInfo()
 {
     canBeNegativeDividend_ = !lhs()->range() || lhs()->range()->lower() < 0;
+}
+
+void
+MBoundsCheckLower::collectRangeInfo()
+{
+    fallible_ = !index()->range() || index()->range()->lower() < minimum_;
 }

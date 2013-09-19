@@ -1328,14 +1328,6 @@ MMod::canBePowerOfTwoDivisor() const
     return true;
 }
 
-static inline MDefinition *
-TryFold(MDefinition *original, MDefinition *replacement)
-{
-    if (original->type() == replacement->type())
-        return replacement;
-    return original;
-}
-
 MDefinition *
 MMod::foldsTo(bool useValueNumbers)
 {
@@ -2381,24 +2373,15 @@ MNot::foldsTo(bool useValueNumbers)
     return this;
 }
 
-bool
-MBoundsCheckLower::fallible()
-{
-    return !range() || range()->lower() < minimum_;
-}
-
 void
 MBeta::printOpcode(FILE *fp) const
 {
-    PrintOpcodeName(fp, op());
-    fprintf(fp, " ");
-    getOperand(0)->printName(fp);
-    fprintf(fp, " ");
+    MDefinition::printOpcode(fp);
 
     Sprinter sp(GetIonContext()->cx);
     sp.init();
     comparison_->print(sp);
-    fprintf(fp, "%s", sp.string());
+    fprintf(fp, " %s", sp.string());
 }
 
 bool

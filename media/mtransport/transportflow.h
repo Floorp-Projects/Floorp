@@ -18,6 +18,7 @@
 #include "mozilla/Scoped.h"
 #include "transportlayer.h"
 #include "m_cpp_utils.h"
+#include "nsAutoPtr.h"
 
 // A stack of transport layers acts as a flow.
 // Generally, one reads and writes to the top layer.

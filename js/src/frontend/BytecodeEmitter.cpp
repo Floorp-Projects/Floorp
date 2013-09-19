@@ -605,8 +605,6 @@ EmitNonLocalJumpFixup(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *t
 #undef FLUSH_POPS
 }
 
-static const jsatomid INVALID_ATOMID = -1;
-
 static ptrdiff_t
 EmitGoto(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *toStmt, ptrdiff_t *lastp,
          SrcNoteType noteType = SRC_NULL)
