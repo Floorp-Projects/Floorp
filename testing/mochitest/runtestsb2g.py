@@ -142,7 +142,7 @@ class B2GMochitest(MochitestUtilsMixin):
             status = -1
         except:
             traceback.print_exc()
-            log.error("runtests.py | Received unexpected exception while running application\n")
+            log.error("Automation Error: Received unexpected exception while running application\n")
             status = 1
 
         self.stopWebServer(options)
