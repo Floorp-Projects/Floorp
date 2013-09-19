@@ -51,7 +51,7 @@ const RX_PSEUDO = /\s*:?:([\w-]+)(\(?\)?)\s*/g;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let {colorUtils} = require("devtools/shared/css-color");
+let {colorUtils} = require("devtools/css-color");
 
 function CssLogic()
 {
