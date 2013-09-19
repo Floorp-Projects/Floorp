@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 916446</title>
+   <!--
+   test that an invalid report-only policy (a stripped down version of what
+   web.tweetdeck.com was serving) defaults to "default-src 'none'" but only
+   sends reports and is not accidentally enforced
+   -->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:200px;height:200px;" id='testframe'></iframe>
+
+<script class="testbody" type="text/javascript">
+
+// This is used to watch the blocked data bounce off CSP and allowed data
+// get sent out to the wire.
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+  SpecialPowers.addObserver(this, "http-on-modify-request", false);
+}
+examiner.prototype  = {
+  completedTests: 0,
+  totalTests: 4,
+
+  observe: function(subject, topic, data) {
+    // subject should be an nsURI, and should be either allowed or blocked.
+    if (!SpecialPowers.can_QI(subject))
+      return;
+
+    var testpat = new RegExp("testid=([a-z0-9_]+)");
+
+    if (topic === "http-on-modify-request") {
+      //these things were allowed by CSP
+      var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIHttpChannel"), "URI.asciiSpec");
+      if (!testpat.test(asciiSpec)) return;
+      var testid = testpat.exec(asciiSpec)[1];
+      if (testid === "img_bad") {
+        // img_bad should be *allowed* because the policy is report-only
+        ok(true, "Inline scripts should execute (because the policy is report-only)");
+        this.completedTests++;
+      }
+    }
+
+    if(topic === "csp-on-violate-policy") {
+      // these were blocked
+      try {
+        var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
+        if (!testpat.test(asciiSpec)) return;
+        var testid = testpat.exec(asciiSpec)[1];
+        if (testid === "img_bad") {
+          ok(true, "External loads should trigger a violation report (because the policy should fail closed to \"default-src 'none'\")");
+          this.completedTests++;
+        }
+      } catch (e) {
+        // if that fails, the subject is probably a string
+        violation_msg = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsISupportsCString"), "data");
+        if (/Inline Scripts will not execute/.test(violation_msg)) {
+          ok(true, "Inline scripts should trigger a violation report (because the policy should fail closed to \"default-src 'none'\")");
+          this.completedTests++;
+        }
+      }
+    }
+  },
+
+  // must eventually call this to remove the listener,
+  // or mochitests might get borked.
+  remove: function() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "http-on-modify-request");
+  }
+}
+
+window.examiner = new examiner();
+
+function checkInlineScriptExecuted() {
+  var green = 'rgb(0, 128, 0)';
+  var black = 'rgb(0, 0, 0)';
+  var that = this;
+  function getElementColorById(id) {
+    return window.getComputedStyle(that.contentDocument.getElementById(id)).color;
+  }
+  if (getElementColorById('inline-script') === green) {
+    ok(true, "Inline scripts should execute (because the policy is report-only)");
+    window.examiner.completedTests++;
+  }
+
+  waitToFinish();
+}
+
+function waitToFinish() {
+  setTimeout(function wait() {
+    if (window.examiner.completedTests < window.examiner.totalTests) {
+        waitToFinish();
+    } else {
+      // Cleanup
+      window.examiner.remove();
+      SimpleTest.finish();
+    }
+  }, 10);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv(
+  {'set':[["security.csp.speccompliant", false]]},
+  function() {
+    var testframe = document.getElementById('testframe');
+    testframe.src = 'file_CSP_bug916446.html';
+    testframe.addEventListener('load', checkInlineScriptExecuted);
+  }
+);
+</script>
+</pre>
+</body>
+</html>
