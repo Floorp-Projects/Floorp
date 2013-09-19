@@ -4082,20 +4082,24 @@ JS_ClearDateCaches(JSContext *cx);
 #define JSREG_STICKY    0x08    /* only match starting at lastIndex */
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewRegExpObject(JSContext *cx, JSObject *obj, char *bytes, size_t length, unsigned flags);
+JS_NewRegExpObject(JSContext *cx, JS::HandleObject obj, char *bytes, size_t length,
+                   unsigned flags);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewUCRegExpObject(JSContext *cx, JSObject *obj, jschar *chars, size_t length, unsigned flags);
+JS_NewUCRegExpObject(JSContext *cx, JS::HandleObject obj, jschar *chars, size_t length,
+                     unsigned flags);
 
 extern JS_PUBLIC_API(void)
-JS_SetRegExpInput(JSContext *cx, JSObject *obj, JSString *input, bool multiline);
+JS_SetRegExpInput(JSContext *cx, JS::HandleObject obj, JS::HandleString input,
+                  bool multiline);
 
 extern JS_PUBLIC_API(void)
-JS_ClearRegExpStatics(JSContext *cx, JSObject *obj);
+JS_ClearRegExpStatics(JSContext *cx, JS::HandleObject obj);
 
 extern JS_PUBLIC_API(bool)
-JS_ExecuteRegExp(JSContext *cx, JSObject *obj, JSObject *reobj, jschar *chars, size_t length,
-                 size_t *indexp, bool test, jsval *rval);
+JS_ExecuteRegExp(JSContext *cx, JS::HandleObject obj, JS::HandleObject reobj,
+                 jschar *chars, size_t length, size_t *indexp, bool test,
+                 JS::MutableHandleValue rval);
 
 /* RegExp interface for clients without a global object. */
 
@@ -4106,17 +4110,17 @@ extern JS_PUBLIC_API(JSObject *)
 JS_NewUCRegExpObjectNoStatics(JSContext *cx, jschar *chars, size_t length, unsigned flags);
 
 extern JS_PUBLIC_API(bool)
-JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *reobj, jschar *chars, size_t length,
-                          size_t *indexp, bool test, jsval *rval);
+JS_ExecuteRegExpNoStatics(JSContext *cx, JS::HandleObject reobj, jschar *chars, size_t length,
+                          size_t *indexp, bool test, JS::MutableHandleValue rval);
 
 extern JS_PUBLIC_API(bool)
-JS_ObjectIsRegExp(JSContext *cx, JSObject *obj);
+JS_ObjectIsRegExp(JSContext *cx, JS::HandleObject obj);
 
 extern JS_PUBLIC_API(unsigned)
-JS_GetRegExpFlags(JSContext *cx, JSObject *obj);
+JS_GetRegExpFlags(JSContext *cx, JS::HandleObject obj);
 
 extern JS_PUBLIC_API(JSString *)
-JS_GetRegExpSource(JSContext *cx, JSObject *obj);
+JS_GetRegExpSource(JSContext *cx, JS::HandleObject obj);
 
 /************************************************************************/
 
