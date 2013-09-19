@@ -136,6 +136,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_webconsole_bug_762593_insecure_passwords_about_blank_web_console_warning.js \
 	browser_webconsole_allow_mixedcontent_securityerrors.js \
 	browser_webconsole_block_mixedcontent_securityerrors.js \
+	browser_webconsole_output_copy_newlines.js \
 	head.js \
 	$(NULL)
 
