@@ -19,6 +19,7 @@
 #define NAN std::numeric_limits<double>::quiet_NaN()
 #endif
 
+#include "nsThreadUtils.h"
 #include "nsIDOMCameraManager.h"
 #include "prlog.h"
 

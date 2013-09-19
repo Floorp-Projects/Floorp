@@ -32,6 +32,7 @@
 #include "nsAutoPtr.h"
 #include "nsISupports.h"
 #include "nsIThread.h"
+#include "nsThreadUtils.h"
 #include "nsITimer.h"
 #include "nsWeakReference.h"
 

@@ -18,7 +18,7 @@
 #include "nsIDocShell.h"
 #include "nsIDOMElement.h"
 #include "nsCOMArray.h"
-#include "nsIRunnable.h"
+#include "nsThreadUtils.h"
 #include "nsIGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsWeakReference.h"

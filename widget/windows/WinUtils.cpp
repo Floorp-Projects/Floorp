@@ -27,7 +27,6 @@
 #include "nsIChannel.h"
 #include "nsIObserver.h"
 #include "imgIEncoder.h"
-#include "nsIThread.h"
 
 #ifdef NS_ENABLE_TSF
 #include <textstor.h>
