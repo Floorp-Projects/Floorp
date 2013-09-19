@@ -86,7 +86,7 @@ class MochitestServer:
     self._process = self._automation.Process([xpcshell] + args, env = env)
     pid = self._process.pid
     if pid < 0:
-      log.error("Error starting server.")
+      log.error("TEST-UNEXPECTED-FAIL | runtests.py | Error starting server.")
       sys.exit(2)
     log.info("runtests.py | Server pid: %d", pid)
 
@@ -101,7 +101,7 @@ class MochitestServer:
       time.sleep(1)
       i += 1
     else:
-      log.error("Timed out while waiting for server startup.")
+      log.error("TEST-UNEXPECTED-FAIL | runtests.py | Timed out while waiting for server startup.")
       self.stop()
       sys.exit(1)
 
@@ -147,7 +147,7 @@ class WebSocketServer(object):
     self._process = self._automation.Process(cmd)
     pid = self._process.pid
     if pid < 0:
-      log.error("Error starting websocket server.")
+      log.error("TEST-UNEXPECTED-FAIL | runtests.py | Error starting websocket server.")
       sys.exit(2)
     log.info("runtests.py | Websocket server pid: %d", pid)
 
@@ -608,7 +608,7 @@ class Mochitest(MochitestUtilsMixin):
       status = -1
     except:
       traceback.print_exc()
-      log.error("runtests.py | Received unexpected exception while running application\n")
+      log.error("Automation Error: Received unexpected exception while running application\n")
       status = 1
 
     if options.vmwareRecording:

@@ -213,7 +213,7 @@ class ReftestServer:
         self._process = self._automation.Process([xpcshell] + args, env = env)
         pid = self._process.pid
         if pid < 0:
-            print "Error starting server."
+            print "TEST-UNEXPECTED-FAIL | remotereftests.py | Error starting server."
             return 2
         self._automation.log.info("INFO | remotereftests.py | Server pid: %d", pid)
 
@@ -233,7 +233,7 @@ class ReftestServer:
             time.sleep(1)
             i += 1
         else:
-            print "Timed out while waiting for server startup."
+            print "TEST-UNEXPECTED-FAIL | remotereftests.py | Timed out while waiting for server startup."
             self.stop()
             return 1
 
@@ -438,7 +438,7 @@ def main(args):
         else:
             dm = droid.DroidSUT(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
     except devicemanager.DMError:
-        print "Error: exception while initializing devicemanager.  Most likely the device is not in a testable state."
+        print "Automation Error: exception while initializing devicemanager.  Most likely the device is not in a testable state."
         return 1
 
     automation.setDeviceManager(dm)
