@@ -1,6 +1,0 @@
-<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
-  <ShortName>POST Search</ShortName>
-  <Url type="text/html" method="POST" template="http://mochi.test:8888/browser/browser/base/content/test/print_postdata.sjs">
-    <Param name="searchterms" value="{searchTerms}"/>
-  </Url>
-</OpenSearchDescription>

@@ -86,7 +86,7 @@ let manifest = { // normal provider
   origin: "https://example.com",
   sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar.html",
   workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
-  iconURL: "https://example.com/browser/browser/base/content/test/moz.png"
+  iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
 };
 
 function test() {
