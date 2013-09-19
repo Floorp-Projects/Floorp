@@ -4,11 +4,12 @@ package @ANDROID_PACKAGE_NAME@.tests;
 import @ANDROID_PACKAGE_NAME@.*;
 
 abstract class PixelTest extends BaseTest {
-    private static final long PAINT_CLEAR_DELAY = 3000; // milliseconds
+    private static final long PAINT_CLEAR_DELAY = 10000; // milliseconds
 
     protected final PaintedSurface loadAndGetPainted(String url) {
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
         loadUrl(url);
+        verifyHomePagerHidden();
         paintExpecter.blockUntilClear(PAINT_CLEAR_DELAY);
         paintExpecter.unregisterListener();
         PaintedSurface p = mDriver.getPaintedSurface();
