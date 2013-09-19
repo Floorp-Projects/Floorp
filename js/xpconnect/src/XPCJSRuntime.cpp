@@ -1575,23 +1575,20 @@ GetCompartmentName(JSCompartment *c, nsCString &name, bool replaceSlashes)
     }
 }
 
-// Telemetry relies on this being a uni-reporter (rather than part of the "js"
-// reporter).
-class JSMainRuntimeGCHeapReporter MOZ_FINAL : public MemoryUniReporter
+static int64_t
+JSMainRuntimeGCHeapDistinguishedAmount()
 {
-public:
-    JSMainRuntimeGCHeapReporter()
-      : MemoryUniReporter("js-main-runtime-gc-heap", KIND_OTHER, UNITS_BYTES,
-"Memory used by the garbage-collected heap in the main JSRuntime.")
-    {}
-private:
-    int64_t Amount() MOZ_OVERRIDE
-    {
-        JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
-        return int64_t(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) *
-               js::gc::ChunkSize;
-    }
-};
+    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
+    return int64_t(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) *
+           js::gc::ChunkSize;
+}
+
+static int64_t
+JSMainRuntimeTemporaryPeakDistinguishedAmount()
+{
+    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
+    return JS::PeakSizeOfTemporary(rt);
+}
 
 static int64_t
 JSMainRuntimeCompartmentsSystemDistinguishedAmount()
@@ -1607,7 +1604,6 @@ JSMainRuntimeCompartmentsUserDistinguishedAmount()
     return JS::UserCompartmentCount(rt);
 }
 
-// This is also a single reporter so it can be used by telemetry.
 class JSMainRuntimeTemporaryPeakReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
@@ -1620,8 +1616,7 @@ public:
 private:
     int64_t Amount() MOZ_OVERRIDE
     {
-        JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
-        return JS::PeakSizeOfTemporary(rt);
+        return JSMainRuntimeTemporaryPeakDistinguishedAmount();
     }
 };
 
@@ -3029,9 +3024,10 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         NS_RUNTIMEABORT("xpc_LocalizeRuntime failed.");
 
     // Register memory reporters and distinguished amount functions.
-    NS_RegisterMemoryReporter(new JSMainRuntimeGCHeapReporter());
-    NS_RegisterMemoryReporter(new JSMainRuntimeTemporaryPeakReporter());
     NS_RegisterMemoryReporter(new JSMainRuntimeCompartmentsReporter);
+    NS_RegisterMemoryReporter(new JSMainRuntimeTemporaryPeakReporter());
+    RegisterJSMainRuntimeGCHeapDistinguishedAmount(JSMainRuntimeGCHeapDistinguishedAmount);
+    RegisterJSMainRuntimeTemporaryPeakDistinguishedAmount(JSMainRuntimeTemporaryPeakDistinguishedAmount);
     RegisterJSMainRuntimeCompartmentsSystemDistinguishedAmount(JSMainRuntimeCompartmentsSystemDistinguishedAmount);
     RegisterJSMainRuntimeCompartmentsUserDistinguishedAmount(JSMainRuntimeCompartmentsUserDistinguishedAmount);
 
