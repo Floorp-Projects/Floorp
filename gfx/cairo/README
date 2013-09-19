@@ -236,6 +236,8 @@ pixman-enable-altivec-acceleration.patch: enable building the altivec accelerati
 
 win32-d3dsurface9.patch: Create a win32 d3d9 surface to support LockRect
 
+win32-avoid-extend-pad-fallback: Avoid falling back to pixman when using EXTEND_PAD
+
 ==== disable printing patch ====
 
 disable-printing.patch:  allows us to use NS_PRINTING to disable printing.
