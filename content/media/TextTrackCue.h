@@ -11,7 +11,8 @@
 #include "mozilla/dom/VTTCueBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMEventTargetHelper.h"
-#include "nsIDocument.h"
+#include "nsIWebVTTParserWrapper.h"
+#include "mozilla/StaticPtr.h"
 
 namespace mozilla {
 namespace dom {
@@ -283,6 +284,8 @@ public:
    */
   already_AddRefed<DocumentFragment> GetCueAsHTML();
 
+  void SetTrackElement(HTMLTrackElement* aTrackElement);
+
 private:
   void CueChanged();
   void SetDefaultCueSettings();
@@ -312,6 +315,8 @@ private:
   // anytime a property that relates to the display of the TextTrackCue is
   // changed.
   bool mReset;
+
+  static StaticRefPtr<nsIWebVTTParserWrapper> sParserWrapper;
 };
 
 } // namespace dom
