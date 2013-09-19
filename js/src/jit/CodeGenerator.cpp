@@ -1355,12 +1355,10 @@ CodeGenerator::visitTypeBarrierV(LTypeBarrierV *lir)
     ValueOperand operand = ToValue(lir, LTypeBarrierV::Input);
     Register scratch = ToTempRegisterOrInvalid(lir->temp());
 
-    Label matched, miss;
-    masm.guardTypeSet(operand, lir->mir()->resultTypeSet(), scratch, &matched, &miss);
-    masm.jump(&miss);
+    Label miss;
+    masm.guardTypeSet(operand, lir->mir()->resultTypeSet(), scratch, &miss);
     if (!bailoutFrom(&miss, lir->snapshot()))
         return false;
-    masm.bind(&matched);
     return true;
 }
 
@@ -1370,12 +1368,10 @@ CodeGenerator::visitTypeBarrierO(LTypeBarrierO *lir)
     Register obj = ToRegister(lir->object());
     Register scratch = ToTempRegisterOrInvalid(lir->temp());
 
-    Label matched, miss;
-    masm.guardObjectType(obj, lir->mir()->resultTypeSet(), scratch, &matched, &miss);
-    masm.jump(&miss);
+    Label miss;
+    masm.guardObjectType(obj, lir->mir()->resultTypeSet(), scratch, &miss);
     if (!bailoutFrom(&miss, lir->snapshot()))
         return false;
-    masm.bind(&matched);
     return true;
 }
 
@@ -1386,11 +1382,9 @@ CodeGenerator::visitMonitorTypes(LMonitorTypes *lir)
     Register scratch = ToTempUnboxRegister(lir->temp());
 
     Label matched, miss;
-    masm.guardTypeSet(operand, lir->mir()->typeSet(), scratch, &matched, &miss);
-    masm.jump(&miss);
+    masm.guardTypeSet(operand, lir->mir()->typeSet(), scratch, &miss);
     if (!bailoutFrom(&miss, lir->snapshot()))
         return false;
-    masm.bind(&matched);
     return true;
 }
 
@@ -2321,10 +2315,7 @@ CodeGenerator::generateArgumentsChecks()
         // ... * sizeof(Value)          - Scale by value size.
         // ArgToStackOffset(...)        - Compute displacement within arg vector.
         int32_t offset = ArgToStackOffset((i - info.startArgSlot()) * sizeof(Value));
-        Label matched;
-        masm.guardTypeSet(Address(StackPointer, offset), types, temp, &matched, &miss);
-        masm.jump(&miss);
-        masm.bind(&matched);
+        masm.guardTypeSet(Address(StackPointer, offset), types, temp, &miss);
     }
 
     if (miss.used() && !bailoutFrom(&miss, graph.entrySnapshot()))

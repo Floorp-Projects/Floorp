@@ -61,3 +61,6 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'domfile_s'
 
+LOCAL_INCLUDES += [
+    '../base',
+]

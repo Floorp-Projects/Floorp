@@ -18,6 +18,7 @@
 namespace js {
 namespace jit {
 
+class BytecodeAnalysis;
 class MBasicBlock;
 class MIRGraph;
 class MStart;
@@ -46,7 +47,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kind kind);
     bool init();
     void copySlots(MBasicBlock *from);
-    bool inherit(MBasicBlock *pred, uint32_t popped);
+    bool inherit(BytecodeAnalysis *analysis, MBasicBlock *pred, uint32_t popped);
     bool inheritResumePoint(MBasicBlock *pred);
     void assertUsesAreNotWithin(MUseIterator use, MUseIterator end);
 
@@ -67,7 +68,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     // Creates a new basic block for a MIR generator. If |pred| is not NULL,
     // its slots and stack depth are initialized from |pred|.
-    static MBasicBlock *New(MIRGraph &graph, CompileInfo &info,
+    static MBasicBlock *New(MIRGraph &graph, BytecodeAnalysis *analysis, CompileInfo &info,
                             MBasicBlock *pred, jsbytecode *entryPc, Kind kind);
     static MBasicBlock *NewPopN(MIRGraph &graph, CompileInfo &info,
                                 MBasicBlock *pred, jsbytecode *entryPc, Kind kind, uint32_t popn);

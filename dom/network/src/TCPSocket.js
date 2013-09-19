@@ -37,6 +37,7 @@ const kCLOSED = 'closed';
 const kRESUME_ERROR = 'Calling resume() on a connection that was not suspended.';
 
 const BUFFER_SIZE = 65536;
+const NETWORK_STATS_THRESHOLD = 65536;
 
 // XXX we have no TCPError implementation right now because it's really hard to
 // do on b2g18.  On mozilla-central we want a proper TCPError that ideally
@@ -160,6 +161,14 @@ TCPSocket.prototype = {
   // StartTLS
   _waitingForStartTLS: false,
   _pendingDataAfterStartTLS: [],
+
+#ifdef MOZ_WIDGET_GONK
+  // Network statistics (Gonk-specific feature)
+  _txBytes: 0,
+  _rxBytes: 0,
+  _appId: Ci.nsIScriptSecurityManager.NO_APP_ID,
+  _connectionType: Ci.nsINetworkInterface.NETWORK_TYPE_UNKNOWN,
+#endif
 
   // Public accessors.
   get readyState() {
@@ -315,6 +324,38 @@ TCPSocket.prototype = {
       BUFFER_SIZE, /* close source*/ false, /* close sink */ false);
   },
 
+#ifdef MOZ_WIDGET_GONK
+  // Helper method for collecting network statistics.
+  // Note this method is Gonk-specific.
+  _saveNetworkStats: function ts_saveNetworkStats(enforce) {
+    if (this._txBytes <= 0 && this._rxBytes <= 0) {
+      // There is no traffic at all. No need to save statistics.
+      return;
+    }
+
+    // If "enforce" is false, the traffic amount is saved to NetworkStatsServiceProxy
+    // only when the total amount exceeds the predefined threshold value.
+    // The purpose is to avoid too much overhead for collecting statistics.
+    let totalBytes = this._txBytes + this._rxBytes;
+    if (!enforce && totalBytes < NETWORK_STATS_THRESHOLD) {
+      return;
+    }
+
+    let nssProxy = Cc["@mozilla.org/networkstatsServiceProxy;1"]
+                     .getService(Ci.nsINetworkStatsServiceProxy);
+    if (!nssProxy) {
+      LOG("Error: Ci.nsINetworkStatsServiceProxy service is not available.");
+      return;
+    }
+    nssProxy.saveAppStats(this._appId, this._connectionType, Date.now(),
+                          this._rxBytes, this._txBytes);
+
+    // Reset the counters once the statistics is saved to NetworkStatsServiceProxy.
+    this._txBytes = this._rxBytes = 0;
+  },
+  // End of helper method for network statistics.
+#endif
+
   callListener: function ts_callListener(type, data) {
     if (!this["on" + type])
       return;
@@ -369,6 +410,14 @@ TCPSocket.prototype = {
     that._socketBridge = socketChild;
 
     return that;
+  },
+
+  setAppId: function ts_setAppId(appId) {
+#ifdef MOZ_WIDGET_GONK
+    this._appId = appId;
+#else
+    // Do nothing because _appId only exists on Gonk-specific platform.
+#endif
   },
 
   /* end nsITCPSocketInternal methods */
@@ -479,6 +528,17 @@ TCPSocket.prototype = {
     let transport = that._transport = this._createTransport(host, port, that._ssl);
     transport.setEventSink(that, Services.tm.currentThread);
     that._initStream(that._binaryType);
+
+#ifdef MOZ_WIDGET_GONK
+    // Set _connectionType, which is only required for network statistics.
+    // Note that nsINetworkManager, as well as nsINetworkStatsServiceProxy, is
+    // Gonk-specific.
+    let networkManager = Cc["@mozilla.org/network/manager;1"].getService(Ci.nsINetworkManager);
+    if (networkManager && networkManager.active) {
+      that._connectionType = networkManager.active.type;
+    }
+#endif
+
     return that;
   },
 
@@ -589,6 +649,13 @@ TCPSocket.prototype = {
     }
 
     this._ensureCopying();
+
+#ifdef MOZ_WIDGET_GONK
+    // Collect transmitted amount for network statistics.
+    this._txBytes += length;
+    this._saveNetworkStats(false);
+#endif
+
     return bufferNotFull;
   },
 
@@ -621,6 +688,12 @@ TCPSocket.prototype = {
   },
 
   _maybeReportErrorAndCloseIfOpen: function(status) {
+#ifdef MOZ_WIDGET_GONK
+    // Save network statistics once the connection is closed.
+    // For now this function is Gonk-specific.
+    this._saveNetworkStats(true);
+#endif
+
     // If we're closed, we've already reported the error or just don't need to
     // report the error.
     if (this._readyState === kCLOSED)
@@ -813,6 +886,12 @@ TCPSocket.prototype = {
     } else {
       this.callListener("data", this._inputStreamScriptable.read(count));
     }
+
+#ifdef MOZ_WIDGET_GONK
+    // Collect received amount for network statistics.
+    this._rxBytes += count;
+    this._saveNetworkStats(false);
+#endif
   },
 
   classID: Components.ID("{cda91b22-6472-11e1-aa11-834fec09cd0a}"),

@@ -32,9 +32,12 @@ if CONFIG['MOZ_B2G_RIL']:
 
 EXTRA_COMPONENTS += [
     'TCPServerSocket.js',
-    'TCPSocket.js',
     'TCPSocket.manifest',
     'TCPSocketParentIntermediary.js',
+]
+
+EXTRA_PP_COMPONENTS += [
+    'TCPSocket.js',
 ]
 
 if CONFIG['MOZ_B2G_RIL']:
