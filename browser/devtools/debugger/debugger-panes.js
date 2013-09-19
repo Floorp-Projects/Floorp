@@ -11,6 +11,7 @@
 function SourcesView() {
   dumpn("SourcesView was instantiated");
 
+  this.prettyPrint = this.prettyPrint.bind(this);
   this._onEditorLoad = this._onEditorLoad.bind(this);
   this._onEditorUnload = this._onEditorUnload.bind(this);
   this._onEditorSelection = this._onEditorSelection.bind(this);
@@ -51,6 +52,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this._cbTextbox = document.getElementById("conditional-breakpoint-panel-textbox");
     this._editorDeck = document.getElementById("editor-deck");
     this._stopBlackBoxButton = document.getElementById("black-boxed-message-button");
+    this._prettyPrintButton = document.getElementById("pretty-print");
 
     window.on(EVENTS.EDITOR_LOADED, this._onEditorLoad, false);
     window.on(EVENTS.EDITOR_UNLOADED, this._onEditorUnload, false);
@@ -58,6 +60,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this.widget.addEventListener("click", this._onSourceClick, false);
     this.widget.addEventListener("check", this._onSourceCheck, false);
     this._stopBlackBoxButton.addEventListener("click", this._onStopBlackBoxing, false);
+    this._prettyPrintButton.addEventListener("click", this.prettyPrint, false);
     this._cbPanel.addEventListener("popupshowing", this._onConditionalPopupShowing, false);
     this._cbPanel.addEventListener("popupshown", this._onConditionalPopupShown, false);
     this._cbPanel.addEventListener("popuphiding", this._onConditionalPopupHiding, false);
@@ -82,6 +85,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this.widget.removeEventListener("click", this._onSourceClick, false);
     this.widget.removeEventListener("check", this._onSourceCheck, false);
     this._stopBlackBoxButton.removeEventListener("click", this._onStopBlackBoxing, false);
+    this._prettyPrintButton.removeEventListener("click", this.prettyPrint, false);
     this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShowing, false);
     this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShown, false);
     this._cbPanel.removeEventListener("popuphiding", this._onConditionalPopupHiding, false);
@@ -369,6 +373,25 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   unhighlightBreakpoint: function() {
     this._unselectBreakpoint();
     this._hideConditionalPopup();
+  },
+
+  /**
+   * Pretty print the selected source.
+   */
+  prettyPrint: function() {
+    const resetEditor = () => {
+      // Only set the text when the source is still selected.
+      if (this.selectedValue === source.url) {
+        DebuggerView.setEditorLocation(source.url, 0, { force: true });
+      }
+    };
+
+    let { source } = this.selectedItem.attachment;
+    // Reset the editor even when we fail, so that we can give the user a clue
+    // as to why the source isn't pretty printed and what happened.
+    DebuggerController.SourceScripts.prettyPrint(source)
+      .then(resetEditor,
+            resetEditor);
   },
 
   /**

@@ -271,12 +271,16 @@ let DebuggerView = {
    *
    * @param object aSource
    *        The source object coming from the active thread.
+   * @param object aFlags
+   *        Additional options for setting the source. Supported options:
+   *          - force: boolean allowing whether we can get the selected url's
+   *                   text again.
    * @return object
    *         A promise that is resolved after the source text has been set.
    */
-  _setEditorSource: function(aSource) {
+  _setEditorSource: function(aSource, aFlags={}) {
     // Avoid setting the same source text in the editor again.
-    if (this._editorSource.url == aSource.url) {
+    if (this._editorSource.url == aSource.url && !aFlags.force) {
       return this._editorSource.promise;
     }
 
@@ -332,6 +336,8 @@ let DebuggerView = {
    *          - columnOffset: column offset for the caret or debug location
    *          - noCaret: don't set the caret location at the specified line
    *          - noDebug: don't set the debug location at the specified line
+   *          - force: boolean allowing whether we can get the selected url's
+   *                   text again.
    * @return object
    *         A promise that is resolved after the source text has been set.
    */
@@ -356,7 +362,7 @@ let DebuggerView = {
 
     // Make sure the requested source client is shown in the editor, then
     // update the source editor's caret position and debug location.
-    return this._setEditorSource(sourceForm).then(() => {
+    return this._setEditorSource(sourceForm, aFlags).then(() => {
       // Line numbers in the source editor should start from 1. If invalid
       // or not specified, then don't do anything.
       if (aLine < 1) {

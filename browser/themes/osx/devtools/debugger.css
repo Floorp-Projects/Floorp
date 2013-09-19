@@ -15,8 +15,12 @@
   min-width: 50px;
 }
 
-#sources-pane + .devtools-side-splitter {
+#sources-container + .devtools-side-splitter {
   -moz-border-start-color: transparent;
+}
+
+#pretty-print {
+  font-weight: bold;
 }
 
 .side-menu-widget-item-checkbox {

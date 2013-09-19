@@ -12,6 +12,7 @@ var gSource;
 function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-pretty-print");
+  gDebuggee.noop = x => x;
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect(function() {
     attachTestTabAndResume(gClient, "test-pretty-print", function(aResponse, aTabClient, aThreadClient) {
@@ -22,8 +23,14 @@ function run_test() {
   do_test_pending();
 }
 
-const CODE = "" + function main() { debugger; return 10; };
+const CODE = "" + function main() { var a = 1; debugger; noop(a); return 10; };
 const CODE_URL = "data:text/javascript," + CODE;
+
+const BP_LOCATION = {
+  url: CODE_URL,
+  line: 5,
+  column: 2
+};
 
 function evalCode() {
   gClient.addOneTimeListener("newSource", prettyPrintSource);
@@ -47,21 +54,41 @@ function runCode({ error }) {
   gDebuggee.main();
 }
 
-function testDbgStatement(event, { frame }) {
+function testDbgStatement(event, { why, frame }) {
+  do_check_eq(why.type, "debuggerStatement");
   const { url, line, column } = frame.where;
   do_check_eq(url, CODE_URL);
-  do_check_eq(line, 2);
-  do_check_eq(column, 2);
-  testStepping();
+  do_check_eq(line, 3);
+  setBreakpoint();
+}
+
+function setBreakpoint() {
+  gThreadClient.setBreakpoint(BP_LOCATION, ({ error, actualLocation }) => {
+    do_check_true(!error);
+    do_check_true(!actualLocation);
+    testStepping();
+  });
 }
 
 function testStepping() {
-  gClient.addOneTimeListener("paused", (event, { frame }) => {
-    const { url, line, column } = frame.where;
+  gClient.addOneTimeListener("paused", (event, { why, frame }) => {
+    do_check_eq(why.type, "resumeLimit");
+    const { url, line } = frame.where;
     do_check_eq(url, CODE_URL);
-    do_check_eq(line, 3);
-    do_check_eq(column, 2);
-    finishClient(gClient);
+    do_check_eq(line, 4);
+    testHitBreakpoint();
   });
   gThreadClient.stepIn();
+}
+
+function testHitBreakpoint() {
+  gClient.addOneTimeListener("paused", (event, { why, frame }) => {
+    do_check_eq(why.type, "breakpoint");
+    const { url, line, column } = frame.where;
+    do_check_eq(url, CODE_URL);
+    do_check_eq(line, BP_LOCATION.line);
+    do_check_eq(column, BP_LOCATION.column);
+    finishClient(gClient);
+  });
+  gThreadClient.resume();
 }
