@@ -281,7 +281,7 @@ ReadType3MsgBody(const uint8_t *inBuf, uint32_t start)
 static void
 ReadMsg(const char *base64buf, uint32_t bufLen)
 {
-  uint8_t *inBuf = (uint8_t *) PL_Base64Decode(base64buf, bufLen, NULL);
+  uint8_t *inBuf = (uint8_t *) PL_Base64Decode(base64buf, bufLen, nullptr);
   if (!inBuf)
   {
     printf("PL_Base64Decode failed\n");

@@ -69,7 +69,7 @@ bool TestFailure(const char* hdr,
   EXPECT_SUCCESS(rv, "Failed to create URI");
 
   rv = sss->ProcessHeader(nsISiteSecurityService::HEADER_HSTS, dummyUri, hdr,
-                          0, NULL, NULL);
+                          0, nullptr, nullptr);
   EXPECT_FAILURE(rv, "Parsed invalid header: %s", hdr);
   passed(hdr);
   return true;
