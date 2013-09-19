@@ -18,6 +18,7 @@
 #include "GfxInfoCollector.h"
 #include "nsIGfxInfoDebug.h"
 #include "mozilla/Mutex.h"
+#include "js/Value.h"
 
 namespace mozilla {
 namespace widget {  
