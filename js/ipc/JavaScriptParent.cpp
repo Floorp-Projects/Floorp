@@ -484,7 +484,7 @@ JavaScriptParent::className(JSContext *cx, HandleObject proxy)
 
     nsString name;
     if (!CallClassName(objId, &name))
-        return NULL;
+        return nullptr;
 
     return ToNewCString(name);
 }
@@ -557,13 +557,13 @@ JavaScriptParent::unwrap(JSContext *cx, ObjectId objId)
     RootedObject obj(cx, findObject(objId));
     if (obj) {
         if (!JS_WrapObject(cx, obj.address()))
-            return NULL;
+            return nullptr;
         return obj;
     }
 
     if (objId > MAX_CPOW_IDS) {
         JS_ReportError(cx, "unusable CPOW id");
-        return NULL;
+        return nullptr;
     }
 
     bool callable = !!(objId & OBJECT_IS_CALLABLE);
@@ -574,14 +574,14 @@ JavaScriptParent::unwrap(JSContext *cx, ObjectId objId)
     obj = NewProxyObject(cx,
                          &CPOWProxyHandler::singleton,
                          v,
-                         NULL,
+                         nullptr,
                          global,
                          callable ? ProxyIsCallable : ProxyNotCallable);
     if (!obj)
-        return NULL;
+        return nullptr;
 
     if (!objects_.add(objId, obj))
-        return NULL;
+        return nullptr;
 
     // Incref once we know the decref will be called.
     incref();

@@ -7,6 +7,8 @@
 #ifndef js_StructuredClone_h
 #define js_StructuredClone_h
 
+#include "mozilla/NullPtr.h"
+
 #include <stdint.h>
 
 #include "jstypes.h"
@@ -25,7 +27,7 @@ struct JSStructuredCloneWriter;
 // tag and data are the pair of uint32_t values from the header. The callback
 // may use the JS_Read* APIs to read any other relevant parts of the object
 // from the reader r. closure is any value passed to the JS_ReadStructuredClone
-// function. Return the new object on success, NULL on error/exception.
+// function. Return the new object on success, nullptr on error/exception.
 typedef JSObject *(*ReadStructuredCloneOp)(JSContext *cx, JSStructuredCloneReader *r,
                                            uint32_t tag, uint32_t data, void *closure);
 
@@ -86,7 +88,7 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
 
   public:
     JSAutoStructuredCloneBuffer()
-        : data_(NULL), nbytes_(0), version_(JS_STRUCTURED_CLONE_VERSION) {}
+        : data_(nullptr), nbytes_(0), version_(JS_STRUCTURED_CLONE_VERSION) {}
 
     ~JSAutoStructuredCloneBuffer() { clear(); }
 
@@ -106,16 +108,16 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
     // Remove the buffer so that it will not be automatically freed.
     // After this, the caller is responsible for feeding the memory back to
     // JSAutoStructuredCloneBuffer::adopt.
-    void steal(uint64_t **datap, size_t *nbytesp, uint32_t *versionp=NULL);
+    void steal(uint64_t **datap, size_t *nbytesp, uint32_t *versionp=nullptr);
 
     bool read(JSContext *cx, JS::Value *vp,
-              const JSStructuredCloneCallbacks *optionalCallbacks=NULL, void *closure=NULL);
+              const JSStructuredCloneCallbacks *optionalCallbacks=nullptr, void *closure=nullptr);
 
     bool write(JSContext *cx, JS::Value v,
-               const JSStructuredCloneCallbacks *optionalCallbacks=NULL, void *closure=NULL);
+               const JSStructuredCloneCallbacks *optionalCallbacks=nullptr, void *closure=nullptr);
 
     bool write(JSContext *cx, JS::Value v, JS::Value transferable,
-               const JSStructuredCloneCallbacks *optionalCallbacks=NULL, void *closure=NULL);
+               const JSStructuredCloneCallbacks *optionalCallbacks=nullptr, void *closure=nullptr);
 
     // Swap ownership with another JSAutoStructuredCloneBuffer.
     void swap(JSAutoStructuredCloneBuffer &other);
