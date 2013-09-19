@@ -1021,7 +1021,7 @@ nsHostResolver::CancelAsyncRequest(const char            *host,
     nsHostDBEnt *he = static_cast<nsHostDBEnt *>
                       (PL_DHashTableOperate(&mDB, &key, PL_DHASH_LOOKUP));
     if (he && he->rec) {
-        nsHostRecord* recPtr = NULL;
+        nsHostRecord* recPtr = nullptr;
         PRCList *node = he->rec->callbacks.next;
         // Remove the first nsDNSAsyncRequest callback which matches the
         // supplied listener object

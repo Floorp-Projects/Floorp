@@ -736,7 +736,7 @@ Dashboard::GetErrorString(nsresult rv)
         if (errors[i].key == rv)
             return errors[i].error;
 
-    return NULL;
+    return nullptr;
 }
 
 } } // namespace mozilla::net

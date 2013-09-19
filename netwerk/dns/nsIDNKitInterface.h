@@ -114,7 +114,7 @@ int		get_compress_mode(uint16_t *p);
  * The handle is stored in '*handlep', which is used other functions
  * in this module.
  * The version of the NAMEPREP specification can be specified with
- * 'version' parameter.  If 'version' is NULL, the latest version
+ * 'version' parameter.  If 'version' is nullptr, the latest version
  * is used.
  *
  * Returns:
@@ -145,7 +145,7 @@ idn_nameprep_map(idn_nameprep_t handle, const uint32_t *from,
 /*
  * Check if an UCS4 string 'str' contains any prohibited characters specified
  * by the draft.  If found, the pointer to the first such character is stored
- * into '*found'.  Otherwise '*found' will be NULL.
+ * into '*found'.  Otherwise '*found' will be nullptr.
  *
  * Returns:
  *	idn_success		-- check has been done properly. (But this
@@ -160,7 +160,7 @@ idn_nameprep_isprohibited(idn_nameprep_t handle, const uint32_t *str,
 /*
  * Check if an UCS4 string 'str' contains any unassigned characters specified
  * by the draft.  If found, the pointer to the first such character is stored
- * into '*found'.  Otherwise '*found' will be NULL.
+ * into '*found'.  Otherwise '*found' will be nullptr.
  *
  * Returns:
  *	idn_success		-- check has been done properly. (But this
@@ -175,7 +175,7 @@ idn_nameprep_isunassigned(idn_nameprep_t handle, const uint32_t *str,
 /*
  * Check if an UCS4 string 'str' is valid string specified by ``bidi check''
  * of the draft.  If it is not valid, the pointer to the first invalid
- * character is stored into '*found'.  Otherwise '*found' will be NULL.
+ * character is stored into '*found'.  Otherwise '*found' will be nullptr.
  *
  * Returns:
  *	idn_success		-- check has been done properly. (But this
