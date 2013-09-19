@@ -32,6 +32,7 @@
 #include "mozilla/dom/RangeBinding.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Likely.h"
+#include "nsCSSFrameConstructor.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2747,12 +2748,25 @@ static void ExtractRectFromOffset(nsIFrame* aFrame,
   }
 }
 
+static nsTextFrame*
+GetTextFrameForContent(nsIContent* aContent)
+{
+  nsIPresShell* presShell = aContent->OwnerDoc()->GetShell();
+  if (presShell) {
+    nsIFrame* frame = presShell->FrameConstructor()->EnsureFrameForTextNode(
+        static_cast<nsGenericDOMDataNode*>(aContent));
+    if (frame && frame->GetType() == nsGkAtoms::textFrame) {
+      return static_cast<nsTextFrame*>(frame);
+    }
+  }
+  return nullptr;
+}
+
 static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
                                    nsIContent* aContent, int32_t aStartOffset, int32_t aEndOffset)
 {
-  nsIFrame* frame = aContent->GetPrimaryFrame();
-  if (frame && frame->GetType() == nsGkAtoms::textFrame) {
-    nsTextFrame* textFrame = static_cast<nsTextFrame*>(frame);
+  nsTextFrame* textFrame = GetTextFrameForContent(aContent);
+  if (textFrame) {
     nsIFrame* relativeTo = nsLayoutUtils::GetContainingBlockForClientRect(textFrame);
     for (nsTextFrame* f = textFrame; f; f = static_cast<nsTextFrame*>(f->GetNextContinuation())) {
       int32_t fstart = f->GetContentOffset(), fend = f->GetContentEnd();
@@ -2808,9 +2822,8 @@ static void CollectClientRects(nsLayoutUtils::RectCallback* aCollector,
     // the range is collapsed, only continue if the cursor is in a text node
     nsCOMPtr<nsIContent> content = do_QueryInterface(aStartParent);
     if (content && content->IsNodeOfType(nsINode::eTEXT)) {
-      nsIFrame* frame = content->GetPrimaryFrame();
-      if (frame && frame->GetType() == nsGkAtoms::textFrame) {
-        nsTextFrame* textFrame = static_cast<nsTextFrame*>(frame);
+      nsTextFrame* textFrame = GetTextFrameForContent(content);
+      if (textFrame) {
         int32_t outOffset;
         nsIFrame* outFrame;
         textFrame->GetChildFrameContainingOffset(aStartOffset, false, 

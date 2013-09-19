@@ -967,7 +967,7 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
         // exception on this context.
         JS_SetOptions(cx, oldopts);
         if (!script && !function && aPropagateExceptions) {
-            JS_GetPendingException(cx, aException.address());
+            JS_GetPendingException(cx, aException);
             JS_ClearPendingException(cx);
         }
     }
@@ -1020,7 +1020,7 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
 
     if (!ok) {
         if (aPropagateExceptions) {
-            JS_GetPendingException(cx, aException.address());
+            JS_GetPendingException(cx, aException);
             JS_ClearPendingException(cx);
         }
         *aObject = nullptr;

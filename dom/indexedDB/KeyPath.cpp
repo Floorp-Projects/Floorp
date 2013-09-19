@@ -46,8 +46,8 @@ IsValidKeyPathString(JSContext* aCx, const nsAString& aKeyPath)
       return false;
     }
 
-    NS_ASSERTION(JSVAL_IS_STRING(stringVal), "This should never happen");
-    JSString* str = JSVAL_TO_STRING(stringVal);
+    NS_ASSERTION(stringVal.toString(), "This should never happen");
+    JS::RootedString str(aCx, stringVal.toString());
 
     bool isIdentifier = false;
     if (!JS_IsIdentifier(aCx, str, &isIdentifier) || !isIdentifier) {

@@ -268,7 +268,7 @@ extern SECKEYPublicKey *CERT_ExtractPublicKey(CERTCertificate *cert);
 ** Retrieve the Key Type associated with the cert we're dealing with
 */
 
-extern KeyType CERT_GetCertKeyType (CERTSubjectPublicKeyInfo *spki);
+extern KeyType CERT_GetCertKeyType (const CERTSubjectPublicKeyInfo *spki);
 
 /*
 ** Initialize the certificate database.  This is called to create

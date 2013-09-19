@@ -6117,9 +6117,9 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
   aPattern.Insert(NS_LITERAL_STRING("^(?:"), 0);
   aPattern.Append(NS_LITERAL_STRING(")$"));
 
-  JSObject* re = JS_NewUCRegExpObjectNoStatics(cx, static_cast<jschar*>
-                                                 (aPattern.BeginWriting()),
-                                               aPattern.Length(), 0);
+  JS::RootedObject re(cx, JS_NewUCRegExpObjectNoStatics(cx, static_cast<jschar*>
+                                                        (aPattern.BeginWriting()),
+                                                        aPattern.Length(), 0));
   if (!re) {
     JS_ClearPendingException(cx);
     return true;
@@ -6129,7 +6129,7 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
   size_t idx = 0;
   if (!JS_ExecuteRegExpNoStatics(cx, re,
                                  static_cast<jschar*>(aValue.BeginWriting()),
-                                 aValue.Length(), &idx, true, rval.address())) {
+                                 aValue.Length(), &idx, true, &rval)) {
     JS_ClearPendingException(cx);
     return true;
   }
