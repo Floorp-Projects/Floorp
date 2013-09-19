@@ -797,7 +797,7 @@ class JSScript : public js::gc::Cell
 
     JSFlatString *sourceData(JSContext *cx);
 
-    static bool loadSource(JSContext *cx, js::HandleScript scr, bool *worked);
+    static bool loadSource(JSContext *cx, js::ScriptSource *ss, bool *worked);
 
     void setSourceObject(js::ScriptSourceObject *object);
     js::ScriptSourceObject *sourceObject() const;
@@ -931,6 +931,8 @@ class JSScript : public js::gc::Cell
         JS_ASSERT(hasTrynotes());
         return reinterpret_cast<js::TryNoteArray *>(data + trynotesOffset());
     }
+
+    bool hasLoops();
 
     js::HeapPtrAtom &getAtom(size_t index) const {
         JS_ASSERT(index < natoms);

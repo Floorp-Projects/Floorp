@@ -74,7 +74,6 @@ libs-%:
 
 # Tailored target to just add the chrome processing for multi-locale builds
 chrome-%:
-	@$(MAKE) -C ../../toolkit/locales chrome-$*
 	@$(MAKE) chrome AB_CD=$*
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales chrome AB_CD=$*
 

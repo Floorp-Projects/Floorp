@@ -147,7 +147,6 @@ COMPONENT_LIBS += \
   mediasniffer \
   gkgfx \
   gklayout \
-  docshell \
   embedcomponents \
   webbrwsr \
   nsappshell \
@@ -166,6 +165,15 @@ COMPONENT_LIBS += \
   rdf \
   windowds \
   diskspacewatcher \
+  $(NULL)
+
+SHARED_LIBRARY_LIBS += \
+	 $(DEPTH)/docshell/base/$(LIB_PREFIX)basedocshell_s.$(LIB_SUFFIX) \
+	 $(DEPTH)/uriloader/base/$(LIB_PREFIX)uriloaderbase_s.$(LIB_SUFFIX) \
+	 $(DEPTH)/uriloader/exthandler/$(LIB_PREFIX)exthandler_s.$(LIB_SUFFIX) \
+	 $(DEPTH)/uriloader/prefetch/$(LIB_PREFIX)prefetch_s.$(LIB_SUFFIX) \
+	 $(DEPTH)/docshell/shistory/src/$(LIB_PREFIX)shistory_s.$(LIB_SUFFIX) \
+	 $(DEPTH)/docshell/build/$(LIB_PREFIX)docshell.$(LIB_SUFFIX) \
   $(NULL)
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
