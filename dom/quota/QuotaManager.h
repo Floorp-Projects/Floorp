@@ -315,6 +315,12 @@ public:
                     PersistenceType* aDefaultPersistenceType);
 
   static void
+  GetInfoForChrome(nsACString* aGroup,
+                   nsACString* aASCIIOrigin,
+                   StoragePrivilege* aPrivilege,
+                   PersistenceType* aDefaultPersistenceType);
+
+  static void
   GetOriginPatternString(uint32_t aAppId, bool aBrowserOnly,
                          const nsACString& aOrigin, nsAutoCString& _retval)
   {
