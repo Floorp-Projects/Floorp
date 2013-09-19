@@ -432,6 +432,7 @@ int nr_ice_ctx_destroy(nr_ice_ctx **ctxp)
       return(0);
 
     (*ctxp)->done_cb=0;
+    (*ctxp)->trickle_cb=0;
 
     NR_ASYNC_SCHEDULE(nr_ice_ctx_destroy_cb,*ctxp);
 
