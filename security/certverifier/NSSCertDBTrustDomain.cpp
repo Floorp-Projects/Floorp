@@ -32,31 +32,31 @@ typedef ScopedPtr<SECMODModule, SECMOD_DestroyModule> ScopedSECMODModule;
 static char*
 nss_addEscape(const char* string, char quote)
 {
-    char* newString = 0;
-    int escapes = 0, size = 0;
-    const char* src;
-    char* dest;
+  char* newString = 0;
+  int escapes = 0, size = 0;
+  const char* src;
+  char* dest;
 
-    for (src=string; *src ; src++) {
-        if ((*src == quote) || (*src == '\\')) {
-          escapes++;
-        }
-        size++;
+  for (src = string; *src; src++) {
+  if ((*src == quote) || (*src == '\\')) {
+    escapes++;
+  }
+  size++;
+  }
+
+  newString = (char*) PORT_ZAlloc(escapes + size + 1);
+  if (!newString) {
+    return nullptr;
+  }
+
+  for (src = string, dest = newString; *src; src++, dest++) {
+    if ((*src == quote) || (*src == '\\')) {
+      *dest++ = '\\';
     }
+    *dest = *src;
+  }
 
-    newString = (char*)PORT_ZAlloc(escapes+size+1);
-    if (!newString) {
-        return nullptr;
-    }
-
-    for (src=string, dest=newString; *src; src++,dest++) {
-        if ((*src == quote) || (*src == '\\')) {
-            *dest++ = '\\';
-        }
-        *dest = *src;
-    }
-
-    return newString;
+  return newString;
 }
 
 } // unnamed namespace
