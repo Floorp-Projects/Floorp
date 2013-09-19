@@ -78,13 +78,6 @@ class Bytecode
     /* Whether this is a catch/finally entry point. */
     bool exceptionEntry : 1;
 
-    /*
-     * Dynamically observed state about the execution of this opcode. These are
-     * hints about the script for use during compilation.
-     */
-    bool arrayWriteHole: 1;     /* SETELEM which has written to an array hole. */
-    bool accessGetter: 1;       /* Property read on a shape with a getter hook. */
-
     /* Stack depth before this opcode. */
     uint32_t stackDepth;
 

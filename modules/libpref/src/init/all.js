@@ -1822,7 +1822,11 @@ pref("layout.css.filters.enabled", false);
 pref("layout.css.flexbox.enabled", true);
 
 // Is support for CSS sticky positioning enabled?
+#ifdef RELEASE_BUILD
 pref("layout.css.sticky.enabled", false);
+#else
+pref("layout.css.sticky.enabled", true);
+#endif
 
 // Is support for the CSS4 image-orientation property enabled?
 pref("layout.css.image-orientation.enabled", true);

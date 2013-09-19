@@ -4817,6 +4817,16 @@ ICSetElem_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     return tailCallVM(DoSetElemFallbackInfo, masm);
 }
 
+void
+BaselineScript::noteArrayWriteHole(uint32_t pcOffset)
+{
+    ICEntry &entry = icEntryFromPCOffset(pcOffset);
+    ICFallbackStub *stub = entry.fallbackStub();
+
+    if (stub->isSetElem_Fallback())
+        stub->toSetElem_Fallback()->noteArrayWriteHole();
+}
+
 //
 // SetElem_Dense
 //

@@ -220,14 +220,12 @@ FENNEC_JAVA_FILES = \
   home/BookmarkThumbnailView.java \
   home/BrowserSearch.java \
   home/HistoryPage.java \
-  home/HomeCursorLoaderCallbacks.java \
   home/HomeFragment.java \
   home/HomeListView.java \
   home/HomePager.java \
   home/HomePagerTabStrip.java \
   home/HomeBanner.java \
   home/FadedTextView.java \
-  home/FaviconsLoader.java \
   home/LastTabsPage.java \
   home/MostRecentPage.java \
   home/MostVisitedPage.java \
