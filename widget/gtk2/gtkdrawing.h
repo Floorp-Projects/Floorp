@@ -209,7 +209,7 @@ gint moz_gtk_enable_style_props(style_prop_t styleGetProp);
  */
 gint moz_gtk_shutdown();
 
-#if (MOZ_WIDGET_GTK == 2)
+#if defined(MOZ_WIDGET_GTK2)
 /**
  * Retrieves the colormap to use for drawables passed to moz_gtk_widget_paint.
  */
@@ -217,7 +217,7 @@ GdkColormap* moz_gtk_widget_get_colormap();
 #endif
 
 /*** Widget drawing ***/
-#if (MOZ_WIDGET_GTK == 2)
+#if defined(MOZ_WIDGET_GTK2)
 /**
  * Paint a widget in the current theme.
  * widget:    a constant giving the widget to paint
