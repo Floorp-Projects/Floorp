@@ -1101,7 +1101,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
         CreateWindow(aWindow);
     }
 
-#ifdef MOZ_WIDGET_GTK2
+#if (MOZ_WIDGET_GTK == 2)
     if (mXEmbed && gtk_check_version(2,18,7) != NULL) { // older
         if (aWindow.type == NPWindowTypeWindow) {
             GdkWindow* socket_window = gdk_window_lookup(static_cast<GdkNativeWindow>(aWindow.window));

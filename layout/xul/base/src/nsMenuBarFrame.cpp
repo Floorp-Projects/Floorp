@@ -149,7 +149,7 @@ nsMenuBarFrame::ToggleMenuActiveState()
       // Activate the menu bar
       SetActive(true);
 
-#ifdef MOZ_WIDGET_GTK2
+#if (MOZ_WIDGET_GTK == 2)
       firstFrame->OpenMenu(true);
 #else
       firstFrame->SelectMenu(true);

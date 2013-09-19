@@ -6,7 +6,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
 
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
 #include "gfxPlatformGtk.h"
 #define gfxToolkitPlatform gfxPlatformGtk
 #elif defined(MOZ_WIDGET_QT)
