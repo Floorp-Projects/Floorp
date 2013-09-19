@@ -369,6 +369,9 @@ class RemoteReftest(RefTest):
         # Make sure that opening the plugins check page won't hit the network
         prefs["plugins.update.url"] = "http://127.0.0.1:8888/plugins-dummy/updateCheckURL"
 
+        # Disable skia-gl: see bug 907351
+        prefs["gfx.canvas.azure.accelerated"] = False
+
         # Set the extra prefs.
         profile.set_preferences(prefs)
 
