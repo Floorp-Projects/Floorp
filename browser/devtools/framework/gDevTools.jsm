@@ -330,6 +330,75 @@ let gDevToolsBrowser = {
   },
 
   /**
+   * This function ensures the right commands are enabled in a window,
+   * depending on their relevant prefs. It gets run when a window is registered,
+   * or when any of the devtools prefs change.
+   */
+  updateCommandAvailability: function(win) {
+    let doc = win.document;
+
+    function toggleCmd(id, isEnabled) {
+      let cmd = doc.getElementById(id);
+      if (isEnabled) {
+        cmd.removeAttribute("disabled");
+        cmd.removeAttribute("hidden");
+      } else {
+        cmd.setAttribute("disabled", "true");
+        cmd.setAttribute("hidden", "true");
+      }
+    };
+
+    // Enable developer toolbar?
+    let devToolbarEnabled = Services.prefs.getBoolPref("devtools.toolbar.enabled");
+    toggleCmd("Tools:DevToolbar", devToolbarEnabled);
+    let focusEl = doc.getElementById("Tools:DevToolbarFocus");
+    if (devToolbarEnabled) {
+      focusEl.removeAttribute("disabled");
+    } else {
+      focusEl.setAttribute("disabled", "true");
+    }
+    if (devToolbarEnabled && Services.prefs.getBoolPref("devtools.toolbar.visible")) {
+      win.DeveloperToolbar.show(false);
+    }
+
+    // Enable App Manager?
+    let appMgrEnabled = Services.prefs.getBoolPref("devtools.appmanager.enabled");
+    toggleCmd("Tools:DevAppMgr", appMgrEnabled);
+
+    // Enable Chrome Debugger?
+    let chromeEnabled = Services.prefs.getBoolPref("devtools.chrome.enabled");
+    let devtoolsRemoteEnabled = Services.prefs.getBoolPref("devtools.debugger.remote-enabled");
+    let remoteEnabled = chromeEnabled && devtoolsRemoteEnabled &&
+                        Services.prefs.getBoolPref("devtools.debugger.chrome-enabled");
+    toggleCmd("Tools:ChromeDebugger", remoteEnabled);
+
+    // Enable Error Console?
+    let consoleEnabled = Services.prefs.getBoolPref("devtools.errorconsole.enabled");
+    toggleCmd("Tools:ErrorConsole", consoleEnabled);
+
+    // Enable DevTools connection screen, if the preference allows this.
+    toggleCmd("Tools:DevToolsConnect", devtoolsRemoteEnabled);
+  },
+
+  observe: function(subject, topic, prefName) {
+    if (prefName.endsWith("enabled")) {
+      for (let win of this._trackedBrowserWindows) {
+        this.updateCommandAvailability(win);
+      }
+    }
+  },
+
+  _prefObserverRegistered: false,
+
+  ensurePrefObserver: function() {
+    if (!this._prefObserverRegistered) {
+      this._prefObserverRegistered = true;
+      Services.prefs.addObserver("devtools.", this, false);
+    }
+  },
+
+
+  /**
    * This function is for the benefit of Tools:{toolId} commands,
    * triggered from the WebDeveloper menu and keyboard shortcuts.
    *
@@ -388,6 +457,8 @@ let gDevToolsBrowser = {
    *        The document to which menuitems and handlers are to be added
    */
   registerBrowserWindow: function DT_registerBrowserWindow(win) {
+    this.updateCommandAvailability(win);
+    this.ensurePrefObserver();
     gDevToolsBrowser._trackedBrowserWindows.add(win);
     gDevToolsBrowser._addAllToolsToMenu(win.document);
 
@@ -756,6 +827,7 @@ let gDevToolsBrowser = {
    */
   destroy: function() {
     gDevTools.off("toolbox-ready", gDevToolsBrowser._connectToProfiler);
+    Services.prefs.removeObserver("devtools.", gDevToolsBrowser);
     Services.obs.removeObserver(gDevToolsBrowser.destroy, "quit-application");
   },
 }

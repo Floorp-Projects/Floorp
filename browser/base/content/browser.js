@@ -1188,63 +1188,6 @@ var gBrowserInit = {
         setUrlAndSearchBarWidthForConditionalForwardButton();
     });
 
-    // Enable developer toolbar?
-    let devToolbarEnabled = gPrefService.getBoolPref("devtools.toolbar.enabled");
-    if (devToolbarEnabled) {
-      let cmd = document.getElementById("Tools:DevToolbar");
-      cmd.removeAttribute("disabled");
-      cmd.removeAttribute("hidden");
-      document.getElementById("Tools:DevToolbarFocus").removeAttribute("disabled");
-
-      // Show the toolbar if it was previously visible
-      if (gPrefService.getBoolPref("devtools.toolbar.visible")) {
-        DeveloperToolbar.show(false);
-      }
-    }
-
-    // Enable App Manager?
-    let appMgrEnabled = gPrefService.getBoolPref("devtools.appmanager.enabled");
-    if (appMgrEnabled) {
-      let cmd = document.getElementById("Tools:DevAppMgr");
-      cmd.removeAttribute("disabled");
-      cmd.removeAttribute("hidden");
-    }
-
-    // Enable Chrome Debugger?
-    let chromeEnabled = gPrefService.getBoolPref("devtools.chrome.enabled");
-    let remoteEnabled = chromeEnabled &&
-                        gPrefService.getBoolPref("devtools.debugger.chrome-enabled") &&
-                        gPrefService.getBoolPref("devtools.debugger.remote-enabled");
-    if (remoteEnabled) {
-      let cmd = document.getElementById("Tools:ChromeDebugger");
-      cmd.removeAttribute("disabled");
-      cmd.removeAttribute("hidden");
-    }
-
-    // Enable Error Console?
-    let consoleEnabled = gPrefService.getBoolPref("devtools.errorconsole.enabled");
-    if (consoleEnabled) {
-      let cmd = document.getElementById("Tools:ErrorConsole");
-      cmd.removeAttribute("disabled");
-      cmd.removeAttribute("hidden");
-    }
-
-    // Enable Scratchpad in the UI, if the preference allows this.
-    let scratchpadEnabled = gPrefService.getBoolPref(Scratchpad.prefEnabledName);
-    if (scratchpadEnabled) {
-      let cmd = document.getElementById("Tools:Scratchpad");
-      cmd.removeAttribute("disabled");
-      cmd.removeAttribute("hidden");
-    }
-
-    // Enable DevTools connection screen, if the preference allows this.
-    let devtoolsRemoteEnabled = gPrefService.getBoolPref("devtools.debugger.remote-enabled");
-    if (devtoolsRemoteEnabled) {
-      let cmd = document.getElementById("Tools:DevToolsConnect");
-      cmd.removeAttribute("disabled");
-      cmd.removeAttribute("hidden");
-    }
-
 #ifdef MENUBAR_CAN_AUTOHIDE
     // If the user (or the locale) hasn't enabled the top-level "Character
     // Encoding" menu via the "browser.menu.showCharacterEncoding" preference,
@@ -1253,14 +1196,6 @@ var gBrowserInit = {
                                                Ci.nsIPrefLocalizedString).data)
       document.getElementById("appmenu_charsetMenu").hidden = true;
 #endif
-
-    // Enable Responsive UI?
-    let responsiveUIEnabled = gPrefService.getBoolPref("devtools.responsiveUI.enabled");
-    if (responsiveUIEnabled) {
-      let cmd = document.getElementById("Tools:ResponsiveUI");
-      cmd.removeAttribute("disabled");
-      cmd.removeAttribute("hidden");
-    }
 
     // Add Devtools menuitems and listeners
     gDevToolsBrowser.registerBrowserWindow(window);
@@ -7226,8 +7161,6 @@ function toggleAddonBar() {
 }
 
 var Scratchpad = {
-  prefEnabledName: "devtools.scratchpad.enabled",
-
   openScratchpad: function SP_openScratchpad() {
     return this.ScratchpadManager.openScratchpad();
   }
