@@ -1593,47 +1593,19 @@ private:
     }
 };
 
-// Nb: js-main-runtime-compartments/system + js-main-runtime-compartments/user
-// could be different to the number of compartments reported by JSReporter if a
-// garbage collection occurred between them being consulted.  We could move
-// these reporters into JSReporter to avoid that problem, but then we couldn't
-// easily report them via telemetry, so we live with the small risk of
-// inconsistencies.
-
-class RedundantJSMainRuntimeCompartmentsSystemReporter MOZ_FINAL : public MemoryUniReporter
+static int64_t
+JSMainRuntimeCompartmentsSystemDistinguishedAmount()
 {
-public:
-    // An empty description is ok because this is a "redundant/"-prefixed
-    // reporter and so is ignored by about:memory.
-    RedundantJSMainRuntimeCompartmentsSystemReporter()
-      : MemoryUniReporter("redundant/js-main-runtime-compartments/system",
-                          KIND_OTHER, UNITS_COUNT, "")
-    {}
-private:
-    int64_t Amount() MOZ_OVERRIDE
-    {
-        JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
-        return JS::SystemCompartmentCount(rt);
-    }
-};
+    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
+    return JS::SystemCompartmentCount(rt);
+}
 
-class RedundantJSMainRuntimeCompartmentsUserReporter MOZ_FINAL : public MemoryUniReporter
+static int64_t
+JSMainRuntimeCompartmentsUserDistinguishedAmount()
 {
-public:
-    // An empty description is ok because this is a "redundant/"-prefixed
-    // reporter and so is ignored by about:memory.
-    RedundantJSMainRuntimeCompartmentsUserReporter()
-      : MemoryUniReporter("redundant/js-main-runtime-compartments/user",
-                          KIND_OTHER, UNITS_COUNT,
-"The number of JavaScript compartments for user code in the main JSRuntime.")
-    {}
-private:
-    int64_t Amount() MOZ_OVERRIDE
-    {
-        JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
-        return JS::UserCompartmentCount(rt);
-    }
-};
+    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
+    return JS::UserCompartmentCount(rt);
+}
 
 // This is also a single reporter so it can be used by telemetry.
 class JSMainRuntimeTemporaryPeakReporter MOZ_FINAL : public MemoryUniReporter
@@ -3056,11 +3028,12 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     if (!xpc_LocalizeRuntime(runtime))
         NS_RUNTIMEABORT("xpc_LocalizeRuntime failed.");
 
+    // Register memory reporters and distinguished amount functions.
     NS_RegisterMemoryReporter(new JSMainRuntimeGCHeapReporter());
-    NS_RegisterMemoryReporter(new RedundantJSMainRuntimeCompartmentsSystemReporter());
-    NS_RegisterMemoryReporter(new RedundantJSMainRuntimeCompartmentsUserReporter());
     NS_RegisterMemoryReporter(new JSMainRuntimeTemporaryPeakReporter());
     NS_RegisterMemoryReporter(new JSMainRuntimeCompartmentsReporter);
+    RegisterJSMainRuntimeCompartmentsSystemDistinguishedAmount(JSMainRuntimeCompartmentsSystemDistinguishedAmount);
+    RegisterJSMainRuntimeCompartmentsUserDistinguishedAmount(JSMainRuntimeCompartmentsUserDistinguishedAmount);
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG
