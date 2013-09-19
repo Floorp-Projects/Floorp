@@ -114,7 +114,7 @@ bool
 LIRGeneratorX64::visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins)
 {
     JS_ASSERT(ins->input()->type() == MIRType_Int32);
-    LUInt32ToDouble *lir = new LUInt32ToDouble(useRegisterAtStart(ins->input()));
+    LAsmJSUInt32ToDouble *lir = new LAsmJSUInt32ToDouble(useRegisterAtStart(ins->input()));
     return define(lir, ins);
 }
 
