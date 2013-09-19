@@ -233,6 +233,7 @@ NetworkManager.prototype = {
             if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE ||
                 network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
                 network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) {
+              this.removeHostRoutes(network.name);
               this.addHostRoute(network);
             }
             // Add extra host route. For example, mms proxy or mmsc.
@@ -636,6 +637,15 @@ NetworkManager.prototype = {
       ifname: network.name,
       gateway: network.gateway,
       hostnames: [network.dns1, network.dns2, network.httpProxyHost]
+    };
+    this.worker.postMessage(options);
+  },
+
+  removeHostRoutes: function removeHostRoutes(ifname) {
+    debug("Going to remove all host routes on " + ifname);
+    let options = {
+      cmd: "removeHostRoutes",
+      ifname: ifname,
     };
     this.worker.postMessage(options);
   },
