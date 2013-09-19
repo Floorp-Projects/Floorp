@@ -218,10 +218,11 @@ class AliasSet {
         TypedArrayElement = 1 << 4, // A typed array element.
         DOMProperty       = 1 << 5, // A DOM property
         AsmJSGlobalVar    = 1 << 6, // An asm.js global var
-        Last              = AsmJSGlobalVar,
+        AsmJSHeap         = 1 << 7, // An asm.js heap load
+        Last              = AsmJSHeap,
         Any               = Last | (Last - 1),
 
-        NumCategories     = 7,
+        NumCategories     = 8,
 
         // Indicates load or store.
         Store_            = 1 << 31
@@ -8407,6 +8408,7 @@ class MAsmJSLoadHeap : public MUnaryInstruction, public MAsmJSHeapAccess
     MAsmJSLoadHeap(ArrayBufferView::ViewType vt, MDefinition *ptr)
       : MUnaryInstruction(ptr), MAsmJSHeapAccess(vt, false)
     {
+        setMovable();
         if (vt == ArrayBufferView::TYPE_FLOAT32 || vt == ArrayBufferView::TYPE_FLOAT64)
             setResultType(MIRType_Double);
         else
@@ -8421,6 +8423,12 @@ class MAsmJSLoadHeap : public MUnaryInstruction, public MAsmJSHeapAccess
     }
 
     MDefinition *ptr() const { return getOperand(0); }
+
+    bool congruentTo(MDefinition *ins) const;
+    AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::AsmJSHeap);
+    }
+    bool mightAlias(MDefinition *def);
 };
 
 class MAsmJSStoreHeap : public MBinaryInstruction, public MAsmJSHeapAccess
@@ -8438,6 +8446,10 @@ class MAsmJSStoreHeap : public MBinaryInstruction, public MAsmJSHeapAccess
 
     MDefinition *ptr() const { return getOperand(0); }
     MDefinition *value() const { return getOperand(1); }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::AsmJSHeap);
+    }
 };
 
 class MAsmJSLoadGlobalVar : public MNullaryInstruction
