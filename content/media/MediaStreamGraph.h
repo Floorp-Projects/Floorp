@@ -15,9 +15,7 @@
 #include "TimeVarying.h"
 #include "VideoFrameContainer.h"
 #include "VideoSegment.h"
-#include "MainThreadUtils.h"
-
-class nsIRunnable;
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 

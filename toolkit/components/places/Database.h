@@ -5,14 +5,13 @@
 #ifndef mozilla_places_Database_h_
 #define mozilla_places_Database_h_
 
-#include "MainThreadUtils.h"
+#include "nsThreadUtils.h"
 #include "nsWeakReference.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIObserver.h"
 #include "mozilla/storage.h"
 #include "mozilla/storage/StatementCache.h"
 #include "mozilla/Attributes.h"
-#include "nsIEventTarget.h"
 
 // This is the schema version. Update it at any schema change and add a
 // corresponding migrateVxx method below.
@@ -44,7 +43,6 @@
 #define TOPIC_PLACES_CONNECTION_CLOSED "places-connection-closed"
 
 class nsIStringBundle;
-class nsIRunnable;
 
 namespace mozilla {
 namespace places {
