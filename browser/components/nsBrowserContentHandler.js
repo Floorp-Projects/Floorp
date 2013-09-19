@@ -576,6 +576,16 @@ nsBrowserContentHandler.prototype = {
               overridePage = getPostUpdateOverridePage(overridePage);
 
             overridePage = overridePage.replace("%OLD_VERSION%", old_mstone);
+
+#ifdef MOZ_METRO
+            // Temporary hack to show a whatsnew on Win8 for Aurora
+            if (!overridePage) {
+              // if Windows 8 or greater
+              if (parseFloat(Services.sysinfo.getProperty("version")) >= 6.2) {
+                overridePage = "https://support.mozilla.org/kb/good-news-firefox-now-touch-friendly";
+              }
+            }
+#endif
             break;
         }
       }
