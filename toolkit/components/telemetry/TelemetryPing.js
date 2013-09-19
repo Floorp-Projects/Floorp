@@ -41,9 +41,6 @@ const TELEMETRY_DELAY = 60000;
 
 // MEM_HISTOGRAMS lists the memory reporters we turn into histograms.
 //
-// Note that we currently handle only vanilla memory reporters, not memory
-// multi-reporters.
-//
 // test_TelemetryPing.js relies on some of these memory reporters
 // being here.  If you remove any of the following histograms from
 // MEM_HISTOGRAMS, you'll have to modify test_TelemetryPing.js:
@@ -55,10 +52,7 @@ const TELEMETRY_DELAY = 60000;
 // was always really noisy anyway.  See bug 859657.
 const MEM_HISTOGRAMS = {
   "js-main-runtime-gc-heap": "MEMORY_JS_GC_HEAP",
-  "redundant/js-main-runtime-compartments/system": "MEMORY_JS_COMPARTMENTS_SYSTEM",
-  "redundant/js-main-runtime-compartments/user": "MEMORY_JS_COMPARTMENTS_USER",
   "js-main-runtime-temporary-peak": "MEMORY_JS_MAIN_RUNTIME_TEMPORARY_PEAK",
-  "redundant/resident-fast": "MEMORY_RESIDENT",
   "vsize": "MEMORY_VSIZE",
   "storage-sqlite": "MEMORY_STORAGE_SQLITE",
   "images-content-used-uncompressed":
@@ -447,6 +441,8 @@ TelemetryPing.prototype = {
 
     let histogram = Telemetry.getHistogramById("TELEMETRY_MEMORY_REPORTER_MS");
     let startTime = new Date();
+
+    // Get memory measurements from reporters.
     let e = mgr.enumerateReporters();
     while (e.hasMoreElements()) {
       let mr = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
@@ -480,6 +476,17 @@ TelemetryPing.prototype = {
       catch (e) {
       }
     }
+
+    // Get memory measurements from distinguished amount attributes.
+    let h = this.handleMemoryReport.bind(this);
+    let b = (id, n) => h(id, Ci.nsIMemoryReporter.UNITS_BYTES, n);
+    let c = (id, n) => h(id, Ci.nsIMemoryReporter.UNITS_COUNT, n);
+    let p = (id, n) => h(id, Ci.nsIMemoryReporter.UNITS_PERCENTAGE, n);
+
+    try { b("MEMORY_RESIDENT", mgr.residentFast); } catch (e) {}
+    try { c("MEMORY_JS_COMPARTMENTS_SYSTEM", mgr.JSMainRuntimeCompartmentsSystem); } catch (e) {}
+    try { c("MEMORY_JS_COMPARTMENTS_USER", mgr.JSMainRuntimeCompartmentsUser); } catch (e) {}
+
     histogram.add(new Date() - startTime);
   },
 
