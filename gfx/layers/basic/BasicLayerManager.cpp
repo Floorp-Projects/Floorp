@@ -175,9 +175,9 @@ public:
   {
     const nsIntRegion& visibleRegion = mLayer->GetEffectiveVisibleRegion();
     const nsIntRect& bounds = visibleRegion.GetBounds();
-    nsRefPtr<gfxASurface> currentSurface = mTarget->CurrentSurface();
 
     if (mTarget->IsCairo()) {
+      nsRefPtr<gfxASurface> currentSurface = mTarget->CurrentSurface();
       const gfxRect& targetOpaqueRect = currentSurface->GetOpaqueRect();
 
       // Try to annotate currentSurface with a region of pixels that have been
@@ -322,15 +322,17 @@ BasicLayerManager::PopGroupToSourceWithCachedSurface(gfxContext *aTarget, gfxCon
 {
   if (!aTarget)
     return;
-  nsRefPtr<gfxASurface> current = aPushed->CurrentSurface();
-  if (aTarget->IsCairo() && mCachedSurface.IsSurface(current)) {
-    gfxContextMatrixAutoSaveRestore saveMatrix(aTarget);
-    aTarget->IdentityMatrix();
-    aTarget->SetSource(current);
-    mCachedSurfaceInUse = false;
-  } else {
-    aTarget->PopGroupToSource();
+  if (aTarget->IsCairo()) {
+    nsRefPtr<gfxASurface> current = aPushed->CurrentSurface();
+    if (mCachedSurface.IsSurface(current)) {
+      gfxContextMatrixAutoSaveRestore saveMatrix(aTarget);
+      aTarget->IdentityMatrix();
+      aTarget->SetSource(current);
+      mCachedSurfaceInUse = false;
+      return;
+    }
   }
+  aTarget->PopGroupToSource();
 }
 
 void
