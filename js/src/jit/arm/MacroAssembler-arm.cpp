@@ -376,8 +376,8 @@ NextInst(Instruction *i)
 }
 
 void
-MacroAssemblerARM::ma_movPatchable(Imm32 imm_, Register dest,
-                                   Assembler::Condition c, RelocStyle rs, Instruction *i)
+MacroAssemblerARM::ma_movPatchable(Imm32 imm_, Register dest, Assembler::Condition c,
+                                   RelocStyle rs, Instruction *i)
 {
     int32_t imm = imm_.value;
     if (i) {
@@ -3292,7 +3292,7 @@ MacroAssemblerARM::ma_callIonHalfPush(const Register r)
 }
 
 void
-MacroAssemblerARM::ma_call(void *dest)
+MacroAssemblerARM::ma_call(ImmPtr dest)
 {
     RelocStyle rs;
     if (hasMOVWT())
@@ -3300,7 +3300,7 @@ MacroAssemblerARM::ma_call(void *dest)
     else
         rs = L_LDR;
 
-    ma_movPatchable(Imm32((uint32_t) dest), CallReg, Always, rs);
+    ma_movPatchable(dest, CallReg, Always, rs);
     as_blx(CallReg);
 }
 
@@ -3561,7 +3561,7 @@ MacroAssemblerARMCompat::callWithABI(void *fun, Result result)
 {
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
-    ma_call(fun);
+    ma_call(ImmPtr(fun));
     callWithABIPost(stackAdjust, result);
 }
 
