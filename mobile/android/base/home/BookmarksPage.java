@@ -76,7 +76,6 @@ public class BookmarksPage extends HomeFragment {
 
         mList.setTag(HomePager.LIST_TAG_BOOKMARKS);
         mList.setOnUrlOpenListener(listener);
-        mList.setHeaderDividersEnabled(false);
 
         registerForContextMenu(mList);
     }
@@ -178,7 +177,6 @@ public class BookmarksPage extends HomeFragment {
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
             mListAdapter.swapCursor(c);
-            mList.setHeaderDividersEnabled(c != null && c.getCount() > 0);
         }
 
         @Override
