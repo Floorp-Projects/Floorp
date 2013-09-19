@@ -150,14 +150,6 @@
   // the largest).  Processes without a |resident| memory reporter are saved
   // for the end.
   let fakeReporters2 = [
-    { name: "redundant/foobar",
-      collectReports: function(aCbObj, aClosure) {
-        // Shouldn't reach here;  aboutMemory.js should skip the reporter.
-        // (Nb: this must come after |mgr.explicit| is accessed, otherwise it
-        // *will* be run by nsMemoryReporterManager::GetExplicit()).
-        ok(false, "'redundant/foobar' reporter was run");
-      }
-    },
     { name: "fake3",
       collectReports: function(aCbObj, aClosure) {
         function f(aP1, aP2, aK, aU, aA) {
@@ -174,7 +166,6 @@
                                     HEAP,    BYTES,200 * MB);
         f("2nd", "other0",          OTHER,   BYTES,666 * MB);
         f("2nd", "other1",          OTHER,   BYTES,111 * MB);
-        f("2nd", "redundant/blah",  NONHEAP, BYTES,24*4*KB); // ignored!
 
         // Check that we can handle "heap-allocated" not being present.
         f("3rd", "explicit/a/b",    HEAP,    BYTES,333 * MB);
