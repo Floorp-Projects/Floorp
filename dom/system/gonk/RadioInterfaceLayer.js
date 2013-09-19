@@ -3242,7 +3242,30 @@ RILNetworkInterface.prototype = {
     if (this.cid == null) {
       return;
     }
+
     if (this.state == datacall.state) {
+      if (datacall.state != GECKO_NETWORK_STATE_CONNECTED) {
+        return;
+      }
+      // State remains connected, check for minor changes.
+      let changed = false;
+      if (this.gateway != datacall.gw) {
+        this.gateway = datacall.gw;
+        changed = true;
+      }
+      if (datacall.dns &&
+          (this.dns1 != datacall.dns[0] ||
+           this.dns2 != datacall.dns[1])) {
+        this.dns1 = datacall.dns[0];
+        this.dns2 = datacall.dns[1];
+        changed = true;
+      }
+      if (changed) {
+        if (DEBUG) this.debug("Notify for data call minor changes.");
+        Services.obs.notifyObservers(this,
+                                     kNetworkInterfaceStateChangedTopic,
+                                     null);
+      }
       return;
     }
 
