@@ -5766,9 +5766,8 @@ JS_ClearDateCaches(JSContext *cx)
  * Regular Expressions.
  */
 JS_PUBLIC_API(JSObject *)
-JS_NewRegExpObject(JSContext *cx, JSObject *objArg, char *bytes, size_t length, unsigned flags)
+JS_NewRegExpObject(JSContext *cx, HandleObject obj, char *bytes, size_t length, unsigned flags)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     jschar *chars = InflateString(cx, bytes, &length);
@@ -5783,9 +5782,9 @@ JS_NewRegExpObject(JSContext *cx, JSObject *objArg, char *bytes, size_t length, 
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_NewUCRegExpObject(JSContext *cx, JSObject *objArg, jschar *chars, size_t length, unsigned flags)
+JS_NewUCRegExpObject(JSContext *cx, HandleObject obj, jschar *chars, size_t length,
+                     unsigned flags)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     RegExpStatics *res = obj->as<GlobalObject>().getRegExpStatics();
@@ -5794,9 +5793,8 @@ JS_NewUCRegExpObject(JSContext *cx, JSObject *objArg, jschar *chars, size_t leng
 }
 
 JS_PUBLIC_API(void)
-JS_SetRegExpInput(JSContext *cx, JSObject *objArg, JSString *input, bool multiline)
+JS_SetRegExpInput(JSContext *cx, HandleObject obj, HandleString input, bool multiline)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, input);
@@ -5805,9 +5803,8 @@ JS_SetRegExpInput(JSContext *cx, JSObject *objArg, JSString *input, bool multili
 }
 
 JS_PUBLIC_API(void)
-JS_ClearRegExpStatics(JSContext *cx, JSObject *objArg)
+JS_ClearRegExpStatics(JSContext *cx, HandleObject obj)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     JS_ASSERT(obj);
@@ -5816,24 +5813,16 @@ JS_ClearRegExpStatics(JSContext *cx, JSObject *objArg)
 }
 
 JS_PUBLIC_API(bool)
-JS_ExecuteRegExp(JSContext *cx, JSObject *objArg, JSObject *reobjArg, jschar *chars, size_t length,
-                 size_t *indexp, bool test, jsval *rval)
+JS_ExecuteRegExp(JSContext *cx, HandleObject obj, HandleObject reobj, jschar *chars,
+                 size_t length, size_t *indexp, bool test, MutableHandleValue rval)
 {
-    RootedObject obj(cx, objArg);
-    RootedObject reobj(cx, reobjArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
     RegExpStatics *res = obj->as<GlobalObject>().getRegExpStatics();
 
-    RootedValue val(cx);
-    if (!ExecuteRegExpLegacy(cx, res, reobj->as<RegExpObject>(), NullPtr(), chars, length, indexp,
-                             test, &val))
-    {
-        return false;
-    }
-    *rval = val;
-    return true;
+    return ExecuteRegExpLegacy(cx, res, reobj->as<RegExpObject>(), NullPtr(), chars, length, indexp,
+                               test, rval);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -5860,35 +5849,26 @@ JS_NewUCRegExpObjectNoStatics(JSContext *cx, jschar *chars, size_t length, unsig
 }
 
 JS_PUBLIC_API(bool)
-JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *objArg, jschar *chars, size_t length,
-                          size_t *indexp, bool test, jsval *rval)
+JS_ExecuteRegExpNoStatics(JSContext *cx, HandleObject obj, jschar *chars, size_t length,
+                          size_t *indexp, bool test, MutableHandleValue rval)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    RootedValue val(cx);
-    if (!ExecuteRegExpLegacy(cx, NULL, obj->as<RegExpObject>(), NullPtr(), chars, length, indexp,
-                             test, &val))
-    {
-        return false;
-    }
-    *rval = val;
-    return true;
+    return ExecuteRegExpLegacy(cx, NULL, obj->as<RegExpObject>(), NullPtr(), chars, length, indexp,
+                               test, rval);
 }
 
 JS_PUBLIC_API(bool)
-JS_ObjectIsRegExp(JSContext *cx, JSObject *objArg)
+JS_ObjectIsRegExp(JSContext *cx, HandleObject obj)
 {
-    RootedObject obj(cx, objArg);
     assertSameCompartment(cx, obj);
     return ObjectClassIs(obj, ESClass_RegExp, cx);
 }
 
 JS_PUBLIC_API(unsigned)
-JS_GetRegExpFlags(JSContext *cx, JSObject *objArg)
+JS_GetRegExpFlags(JSContext *cx, HandleObject obj)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
@@ -5896,9 +5876,8 @@ JS_GetRegExpFlags(JSContext *cx, JSObject *objArg)
 }
 
 JS_PUBLIC_API(JSString *)
-JS_GetRegExpSource(JSContext *cx, JSObject *objArg)
+JS_GetRegExpSource(JSContext *cx, HandleObject obj)
 {
-    RootedObject obj(cx, objArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
