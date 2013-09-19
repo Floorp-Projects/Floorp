@@ -35,7 +35,6 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
-#include "nsThreadUtils.h"
 
 #include "mozilla/dom/FileListBinding.h"
 using namespace mozilla;

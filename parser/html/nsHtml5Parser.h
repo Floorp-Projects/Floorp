@@ -12,6 +12,7 @@
 #include "nsIURL.h"
 #include "nsParserCIID.h"
 #include "nsITokenizer.h"
+#include "nsThreadUtils.h"
 #include "nsIContentSink.h"
 #include "nsIRequest.h"
 #include "nsIChannel.h"

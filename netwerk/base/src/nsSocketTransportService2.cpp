@@ -24,7 +24,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Likely.h"
 #include "mozilla/PublicSSL.h"
-#include "nsThreadUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::net;

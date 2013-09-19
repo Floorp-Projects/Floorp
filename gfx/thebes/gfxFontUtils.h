@@ -16,6 +16,8 @@
 
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
+#include "nsIRunnable.h"
+#include "nsThreadUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"

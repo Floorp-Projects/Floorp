@@ -9,6 +9,8 @@
 
 #include "IndexedDatabase.h"
 
+#include "nsThreadUtils.h"
+
 #include "FileManager.h"
 #include "IndexedDatabaseManager.h"
 

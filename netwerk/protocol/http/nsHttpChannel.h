@@ -11,6 +11,7 @@
 
 #include "nsHttpTransaction.h"
 #include "nsInputStreamPump.h"
+#include "nsThreadUtils.h"
 #include "nsTArray.h"
 
 #include "nsIHttpEventSink.h"
