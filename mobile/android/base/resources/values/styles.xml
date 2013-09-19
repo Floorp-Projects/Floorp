@@ -203,6 +203,8 @@
         <item name="android:paddingRight">10dip</item>
     </style>
 
+    <style name="Widget.Home.HistoryPageTitle" parent="Widget.Home.HistoryTabIndicator"/>
+
     <!--
         TextAppearance
         Note: Gecko uses light theme as default, while Android uses dark.
