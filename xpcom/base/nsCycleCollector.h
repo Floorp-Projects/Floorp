@@ -8,6 +8,7 @@
 
 class nsICycleCollectorListener;
 class nsISupports;
+class nsScriptObjectTracer;
 
 #include "nsError.h"
 #include "nsID.h"

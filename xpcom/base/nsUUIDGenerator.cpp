@@ -13,6 +13,8 @@
 #include "prrng.h"
 #endif
 
+#include "nsMemory.h"
+
 #include "nsUUIDGenerator.h"
 
 using namespace mozilla;

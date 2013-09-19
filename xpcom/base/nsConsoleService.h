@@ -13,6 +13,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
 
+#include "nsCOMPtr.h"
 #include "nsInterfaceHashtable.h"
 #include "nsHashKeys.h"
 
