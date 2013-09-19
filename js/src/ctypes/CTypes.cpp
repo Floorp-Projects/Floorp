@@ -2590,7 +2590,7 @@ ExplicitConvert(JSContext* cx, HandleValue val, HandleObject targetType, void* b
   // hard failure (out of memory, or some other similarly serious condition).
   // We store any pending exception in case we need to re-throw it.
   RootedValue ex(cx);
-  if (!JS_GetPendingException(cx, ex.address()))
+  if (!JS_GetPendingException(cx, &ex))
     return false;
 
   // Otherwise, assume soft failure. Clear the pending exception so that we

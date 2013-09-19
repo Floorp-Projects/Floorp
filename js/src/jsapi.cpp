@@ -5924,21 +5924,20 @@ JS_IsExceptionPending(JSContext *cx)
 }
 
 JS_PUBLIC_API(bool)
-JS_GetPendingException(JSContext *cx, jsval *vp)
+JS_GetPendingException(JSContext *cx, MutableHandleValue vp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     if (!cx->isExceptionPending())
         return false;
-    *vp = cx->getPendingException();
-    assertSameCompartment(cx, *vp);
+    vp.set(cx->getPendingException());
+    assertSameCompartment(cx, vp);
     return true;
 }
 
 JS_PUBLIC_API(void)
-JS_SetPendingException(JSContext *cx, jsval valueArg)
+JS_SetPendingException(JSContext *cx, HandleValue value)
 {
-    RootedValue value(cx, valueArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
@@ -5975,7 +5974,8 @@ JS_SaveExceptionState(JSContext *cx)
     CHECK_REQUEST(cx);
     state = cx->pod_malloc<JSExceptionState>();
     if (state) {
-        state->throwing = JS_GetPendingException(cx, &state->exception);
+        state->throwing =
+            JS_GetPendingException(cx, MutableHandleValue::fromMarkedLocation(&state->exception));
         if (state->throwing && JSVAL_IS_GCTHING(state->exception))
             AddValueRoot(cx, &state->exception, "JSExceptionState.exception");
     }
@@ -5989,7 +5989,7 @@ JS_RestoreExceptionState(JSContext *cx, JSExceptionState *state)
     CHECK_REQUEST(cx);
     if (state) {
         if (state->throwing)
-            JS_SetPendingException(cx, state->exception);
+            JS_SetPendingException(cx, HandleValue::fromMarkedLocation(&state->exception));
         else
             JS_ClearPendingException(cx);
         JS_DropExceptionState(cx, state);
@@ -6011,9 +6011,8 @@ JS_DropExceptionState(JSContext *cx, JSExceptionState *state)
 }
 
 JS_PUBLIC_API(JSErrorReport *)
-JS_ErrorFromException(JSContext *cx, jsval valueArg)
+JS_ErrorFromException(JSContext *cx, HandleValue value)
 {
-    RootedValue value(cx, valueArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
