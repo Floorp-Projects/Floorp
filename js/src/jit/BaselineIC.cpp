@@ -2879,7 +2879,7 @@ ICBinaryArith_BooleanWithInt32::Compiler::generateStubCode(MacroAssembler &masm)
 
         masm.bind(&fixOverflow);
         masm.sub32(rhsReg, lhsReg);
-        masm.jump(&failure);
+        // Proceed to failure below.
         break;
       }
       case JSOP_SUB: {
@@ -2892,7 +2892,7 @@ ICBinaryArith_BooleanWithInt32::Compiler::generateStubCode(MacroAssembler &masm)
 
         masm.bind(&fixOverflow);
         masm.add32(rhsReg, lhsReg);
-        masm.jump(&failure);
+        // Proceed to failure below.
         break;
       }
       case JSOP_BITOR: {
