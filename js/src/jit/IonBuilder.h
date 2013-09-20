@@ -227,7 +227,7 @@ class IonBuilder : public MIRGenerator
 
     JSFunction *getSingleCallTarget(types::TemporaryTypeSet *calleeTypes);
     bool getPolyCallTargets(types::TemporaryTypeSet *calleeTypes, bool constructing,
-                            AutoObjectVector &targets, uint32_t maxTargets, bool *gotLambda);
+                            ObjectVector &targets, uint32_t maxTargets, bool *gotLambda);
     bool canInlineTarget(JSFunction *target, bool constructing);
 
     void popCfgStack();
@@ -495,7 +495,8 @@ class IonBuilder : public MIRGenerator
     // Oracles.
     bool canEnterInlinedFunction(JSFunction *target);
     bool makeInliningDecision(JSFunction *target, CallInfo &callInfo);
-    uint32_t selectInliningTargets(AutoObjectVector &targets, CallInfo &callInfo, Vector<bool> &choiceSet);
+    uint32_t selectInliningTargets(ObjectVector &targets, CallInfo &callInfo,
+                                   BoolVector &choiceSet);
 
     // Native inlining helpers.
     types::StackTypeSet *getOriginalInlineReturnTypeSet();
@@ -570,10 +571,10 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineSingleCall(CallInfo &callInfo, JSFunction *target);
 
     // Call functions
-    InliningStatus inlineCallsite(AutoObjectVector &targets, AutoObjectVector &originals,
+    InliningStatus inlineCallsite(ObjectVector &targets, ObjectVector &originals,
                                   bool lambda, CallInfo &callInfo);
-    bool inlineCalls(CallInfo &callInfo, AutoObjectVector &targets, AutoObjectVector &originals,
-                     Vector<bool> &choiceSet, MGetPropertyCache *maybeCache);
+    bool inlineCalls(CallInfo &callInfo, ObjectVector &targets, ObjectVector &originals,
+                     BoolVector &choiceSet, MGetPropertyCache *maybeCache);
 
     // Inlining helpers.
     bool inlineGenericFallback(JSFunction *target, CallInfo &callInfo, MBasicBlock *dispatchBlock,
@@ -713,16 +714,15 @@ class CallInfo
 {
     MDefinition *fun_;
     MDefinition *thisArg_;
-    Vector<MDefinition *> args_;
+    MDefinitionVector args_;
 
     bool constructing_;
     bool setter_;
 
   public:
-    CallInfo(JSContext *cx, bool constructing)
+    CallInfo(bool constructing)
       : fun_(NULL),
         thisArg_(NULL),
-        args_(cx),
         constructing_(constructing),
         setter_(false)
     { }
@@ -775,16 +775,16 @@ class CallInfo
         return argc() + 2;
     }
 
-    void setArgs(Vector<MDefinition *> *args) {
+    void setArgs(MDefinitionVector *args) {
         JS_ASSERT(args_.length() == 0);
         args_.append(args->begin(), args->end());
     }
 
-    Vector<MDefinition *> &argv() {
+    MDefinitionVector &argv() {
         return args_;
     }
 
-    const Vector<MDefinition *> &argv() const {
+    const MDefinitionVector &argv() const {
         return args_;
     }
 

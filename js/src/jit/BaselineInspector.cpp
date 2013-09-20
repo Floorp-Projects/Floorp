@@ -80,7 +80,7 @@ SetElemICInspector::sawTypedArrayWrite() const
 }
 
 bool
-BaselineInspector::maybeShapesForPropertyOp(jsbytecode *pc, Vector<Shape *> &shapes)
+BaselineInspector::maybeShapesForPropertyOp(jsbytecode *pc, ShapeVector &shapes)
 {
     // Return a list of shapes seen by the baseline IC for the current op.
     // An empty list indicates no shapes are known, or there was an uncacheable
