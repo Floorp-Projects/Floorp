@@ -294,6 +294,11 @@ class RecursiveMakeBackend(CommonBackend):
 
         self._traversal = RecursiveMakeTraversal()
 
+        derecurse = self.environment.substs.get('MOZ_PSEUDO_DERECURSE', '').split(',')
+        self._parallel_export = False
+        if derecurse != [''] and not 'no-parallel-export' in derecurse:
+            self._parallel_export = True
+
     def _update_from_avoid_write(self, result):
         existed, updated = result
 
@@ -390,15 +395,8 @@ class RecursiveMakeBackend(CommonBackend):
         convenience variables, and the other dependency definitions for a
         hopefully proper directory traversal.
         """
-        # Skip static dirs during export traversal
-        def export_filter(current, subdirs):
-            return current, subdirs.parallel, \
-                subdirs.dirs + subdirs.tests + subdirs.tools
-
-        # compile and tools build everything in parallel, but skip precompile.
-        def other_filter(current, subdirs):
-            if current == 'subtiers/precompile':
-                return None, [], []
+        # Traverse directories in parallel, and skip static dirs
+        def parallel_filter(current, subdirs):
             all_subdirs = subdirs.parallel + subdirs.dirs + \
                           subdirs.tests + subdirs.tools
             # subtiers/*_start and subtiers/*_finish, under subtiers/*, are
@@ -407,6 +405,20 @@ class RecursiveMakeBackend(CommonBackend):
                     all_subdirs[0].startswith('subtiers/'):
                 return current, [], all_subdirs
             return current, all_subdirs, []
+
+        # Skip static dirs during export traversal, or build everything in
+        # parallel when enabled.
+        def export_filter(current, subdirs):
+            if self._parallel_export:
+                return parallel_filter(current, subdirs)
+            return current, subdirs.parallel, \
+                subdirs.dirs + subdirs.tests + subdirs.tools
+
+        # compile and tools build everything in parallel, but skip precompile.
+        def other_filter(current, subdirs):
+            if current == 'subtiers/precompile':
+                return None, [], []
+            return parallel_filter(current, subdirs)
 
         # Skip tools dirs during libs traversal
         def libs_filter(current, subdirs):
