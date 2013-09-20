@@ -897,6 +897,28 @@ TabParent::RecvNotifyIMETextHint(const nsString& aText)
   return true;
 }
 
+bool
+TabParent::RecvRequestFocus(const bool& aCanFocus)
+{
+  nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
+  if (!fm) {
+    return true;
+  }
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
+  if (!content || !content->OwnerDoc()) {
+    return true;
+  }
+
+  uint32_t flags = nsIFocusManager::FLAG_NOSCROLL;
+  if (aCanFocus)
+    flags |= nsIFocusManager::FLAG_RAISE;
+
+  nsCOMPtr<nsIDOMElement> node = do_QueryInterface(mFrameElement);
+  fm->SetFocus(node, flags);
+  return true;
+}
+
 /**
  * Try to answer query event using cached text.
  *
