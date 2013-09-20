@@ -700,29 +700,31 @@ PropertyView.prototype = {
   buildMain: function PropertyView_buildMain()
   {
     let doc = this.tree.styleDocument;
-    let onToggle = this.onStyleToggle.bind(this);
 
     // Build the container element
     this.element = doc.createElementNS(HTML_NS, "div");
     this.element.setAttribute("class", this.propertyHeaderClassName);
+    this.element.addEventListener("dblclick",
+      this.onMatchedToggle.bind(this), false);
 
     // Make it keyboard navigable
     this.element.setAttribute("tabindex", "0");
-    this.element.addEventListener("keydown", function(aEvent) {
+    this.element.addEventListener("keydown", (aEvent) => {
       let keyEvent = Ci.nsIDOMKeyEvent;
       if (aEvent.keyCode == keyEvent.DOM_VK_F1) {
         this.mdnLinkClick();
       }
       if (aEvent.keyCode == keyEvent.DOM_VK_RETURN ||
         aEvent.keyCode == keyEvent.DOM_VK_SPACE) {
-        onToggle(aEvent);
+        this.onMatchedToggle(aEvent);
       }
-    }.bind(this), false);
+    }, false);
 
     // Build the twisty expand/collapse
     this.matchedExpander = doc.createElementNS(HTML_NS, "div");
     this.matchedExpander.className = "expander theme-twisty";
-    this.matchedExpander.addEventListener("click", onToggle, false);
+    this.matchedExpander.addEventListener("click",
+      this.onMatchedToggle.bind(this), false);
     this.element.appendChild(this.matchedExpander);
 
     // Build the style name element
@@ -818,6 +820,7 @@ PropertyView.prototype = {
     } else {
       this.matchedSelectorsContainer.innerHTML = "";
       this.matchedExpander.removeAttribute("open");
+      this.tree.styleInspector.inspector.emit("computed-view-property-collapsed");
       return promise.resolve(undefined);
     }
   },
@@ -850,7 +853,7 @@ PropertyView.prototype = {
    * @param {Event} aEvent Used to determine the class name of the targets click
    * event.
    */
-  onStyleToggle: function PropertyView_onStyleToggle(aEvent)
+  onMatchedToggle: function PropertyView_onMatchedToggle(aEvent)
   {
     this.matchedExpanded = !this.matchedExpanded;
     this.refreshMatchedSelectors();
