@@ -216,6 +216,7 @@
 #include "mozilla/dom/BrowserElementDictionariesBinding.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/WindowBinding.h"
+#include "mozilla/dom/TabChild.h"
 
 #ifdef MOZ_WEBSPEECH
 #include "mozilla/dom/SpeechSynthesis.h"
@@ -5712,6 +5713,9 @@ nsGlobalWindow::Focus()
         flags |= nsIFocusManager::FLAG_RAISE;
       return fm->SetFocus(frameElement, flags);
     }
+  }
+  else if (TabChild *child = TabChild::GetFrom(this)) {
+    child->SendRequestFocus(canFocus);
   }
   else if (canFocus) {
     // if there is no parent, this must be a toplevel window, so raise the
