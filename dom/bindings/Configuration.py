@@ -354,6 +354,7 @@ class Descriptor(DescriptorProvider):
                 raise TypeError("Descriptor for %s has unrecognized value (%s) "
                                 "for nativeOwnership" %
                                 (self.interface.identifier.name, self.nativeOwnership))
+        self.customTrace = desc.get('customTrace', self.workers)
         self.customFinalize = desc.get('customFinalize', self.workers)
         if desc.get('wantsQI', None) != None:
             self._wantsQI = desc.get('wantsQI', None)
