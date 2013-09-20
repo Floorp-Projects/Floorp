@@ -11,7 +11,7 @@ interface PaintRequest {
   /**
    * The client rect where invalidation was triggered.
    */
-  readonly attribute ClientRect clientRect;
+  readonly attribute DOMRect clientRect;
 
   /**
    * The reason for the request, as a string. If an empty string, then we don't know

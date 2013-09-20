@@ -8,8 +8,10 @@
 #include "mozilla/GfxMessageUtils.h"
 #include "nsDOMNotifyPaintEvent.h"
 #include "nsContentUtils.h"
-#include "nsClientRect.h"
 #include "nsPaintRequest.h"
+#include "mozilla/dom/DOMRect.h"
+
+using namespace mozilla::dom;
 
 nsDOMNotifyPaintEvent::nsDOMNotifyPaintEvent(mozilla::dom::EventTarget* aOwner,
                                              nsPresContext* aPresContext,
@@ -54,10 +56,10 @@ nsDOMNotifyPaintEvent::GetBoundingClientRect(nsIDOMClientRect** aResult)
   return NS_OK;
 }
 
-already_AddRefed<nsClientRect>
+already_AddRefed<DOMRect>
 nsDOMNotifyPaintEvent::BoundingClientRect()
 {
-  nsRefPtr<nsClientRect> rect = new nsClientRect(ToSupports(this));
+  nsRefPtr<DOMRect> rect = new DOMRect(ToSupports(this));
 
   if (mPresContext) {
     rect->SetLayoutRect(GetRegion().GetBounds());
@@ -73,16 +75,16 @@ nsDOMNotifyPaintEvent::GetClientRects(nsIDOMClientRectList** aResult)
   return NS_OK;
 }
 
-already_AddRefed<nsClientRectList>
+already_AddRefed<DOMRectList>
 nsDOMNotifyPaintEvent::ClientRects()
 {
   nsISupports* parent = ToSupports(this);
-  nsRefPtr<nsClientRectList> rectList = new nsClientRectList(parent);
+  nsRefPtr<DOMRectList> rectList = new DOMRectList(parent);
 
   nsRegion r = GetRegion();
   nsRegionRectIterator iter(r);
   for (const nsRect* rgnRect = iter.Next(); rgnRect; rgnRect = iter.Next()) {
-    nsRefPtr<nsClientRect> rect = new nsClientRect(parent);
+    nsRefPtr<DOMRect> rect = new DOMRect(parent);
     
     rect->SetLayoutRect(*rgnRect);
     rectList->Append(rect);

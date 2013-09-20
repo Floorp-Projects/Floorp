@@ -35,6 +35,7 @@
 #include "nsStyledElement.h"
 #include "nsIFrameLoader.h"
 #include "nsFrameLoader.h"
+#include "mozilla/dom/DOMRect.h"
 
 class nsIDocument;
 class nsString;
