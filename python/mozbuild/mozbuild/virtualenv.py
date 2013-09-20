@@ -366,7 +366,7 @@ class VirtualenvManager(object):
         # the virtualenv for paths to be proper.
 
         args = [self.python_path, __file__, 'populate', self.topsrcdir,
-            self.topobjdir, self.virtualenv_root]
+            self.topobjdir, self.virtualenv_root, self.manifest_path]
 
         result = subprocess.call(args, stdout=self.log_handle,
             stderr=subprocess.STDOUT, cwd=self.topsrcdir)
@@ -409,26 +409,19 @@ def verify_python_version(log_handle):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 4:
-        print('Usage: populate_virtualenv.py /path/to/topsrcdir /path/to/topobjdir /path/to/virtualenv')
+    if len(sys.argv) < 5:
+        print('Usage: populate_virtualenv.py /path/to/topsrcdir /path/to/topobjdir /path/to/virtualenv /path/to/virtualenv_manifest')
         sys.exit(1)
 
     verify_python_version(sys.stdout)
 
-    topsrcdir = sys.argv[1]
-    topobjdir = sys.argv[2]
-    virtualenv_path = sys.argv[3]
+    topsrcdir, topobjdir, virtualenv_path, manifest_path = sys.argv[1:5]
     populate = False
 
     # This should only be called internally.
     if sys.argv[1] == 'populate':
         populate = True
-        topsrcdir = sys.argv[2]
-        topobjdir = sys.argv[3]
-        virtualenv_path = sys.argv[4]
-
-    # path to default packages.txt
-    manifest_path = os.path.join(topsrcdir, 'build', 'virtualenv', 'packages.txt')
+        topsrcdir, topobjdir, virtualenv_path, manifest_path = sys.argv[2:]
 
     manager = VirtualenvManager(topsrcdir, topobjdir, virtualenv_path,
         sys.stdout, manifest_path)
