@@ -551,7 +551,7 @@ class AutoHashSetRooter : protected AutoGCRooter
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoValueVector : public AutoVectorRooter<Value>
+class MOZ_STACK_CLASS AutoValueVector : public AutoVectorRooter<Value>
 {
   public:
     explicit AutoValueVector(JSContext *cx
