@@ -78,9 +78,9 @@
         <item name="android:textViewStyle">@style/Widget.TextView</item>
         <item name="android:spinnerStyle">@style/Widget.Spinner</item>
         <item name="bookmarksListViewStyle">@style/Widget.BookmarksListView</item>
-        <item name="bookmarkThumbnailViewStyle">@style/Widget.BookmarkThumbnailView</item>
-        <item name="topBookmarkItemViewStyle">@style/Widget.TopBookmarkItemView</item>
-        <item name="topBookmarksViewStyle">@style/Widget.TopBookmarksView</item>
+        <item name="topSitesGridItemViewStyle">@style/Widget.TopSitesGridItemView</item>
+        <item name="topSitesGridViewStyle">@style/Widget.TopSitesGridView</item>
+        <item name="topSitesThumbnailViewStyle">@style/Widget.TopSitesThumbnailView</item>
         <item name="homeListViewStyle">@style/Widget.HomeListView</item>
     </style>
 
