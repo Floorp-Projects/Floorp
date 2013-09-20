@@ -908,7 +908,7 @@ js_str_charCodeAt(JSContext *cx, unsigned argc, Value *vp)
     return true;
 
 out_of_range:
-    args.rval().setDouble(js_NaN);
+    args.rval().setNaN();
     return true;
 }
 

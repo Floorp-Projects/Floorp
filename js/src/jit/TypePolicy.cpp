@@ -13,6 +13,8 @@
 using namespace js;
 using namespace js::jit;
 
+using JS::DoubleNaNValue;
+
 MDefinition *
 BoxInputsPolicy::boxAt(MInstruction *at, MDefinition *operand)
 {
@@ -621,7 +623,7 @@ StoreTypedArrayPolicy::adjustValueInput(MInstruction *ins, int arrayType,
       case MIRType_Object:
       case MIRType_Undefined:
         value->setFoldedUnchecked();
-        value = MConstant::New(DoubleValue(js_NaN));
+        value = MConstant::New(DoubleNaNValue());
         ins->block()->insertBefore(ins, value->toInstruction());
         break;
       case MIRType_String:

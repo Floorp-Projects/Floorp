@@ -14,6 +14,7 @@
 #include "nsICacheSession.h"
 #include "nsCharsetSource.h"
 #include "nsProxyRelease.h"
+#include "nsThreadUtils.h"
 
 // Must release mChannel on the main thread
 class nsWyciwygAsyncEvent : public nsRunnable {

@@ -53,6 +53,7 @@ using namespace js::types;
 
 using mozilla::IsNaN;
 using mozilla::PodCopy;
+using JS::GenericNaN;
 
 /*
  * Allocate array buffers with the maximum number of fixed slots marked as
@@ -1247,13 +1248,13 @@ js::ToDoubleForTypedArray(JSContext *cx, JS::HandleValue vp, double *d)
             if (!ToNumber(cx, vp, d))
                 return false;
         } else if (vp.isUndefined()) {
-            *d = js_NaN;
+            *d = GenericNaN();
         } else {
             *d = double(vp.toBoolean());
         }
     } else {
         // non-primitive assignments become NaN or 0 (for float/int arrays)
-        *d = js_NaN;
+        *d = GenericNaN();
     }
 
 #ifdef JS_MORE_DETERMINISTIC
@@ -1302,11 +1303,6 @@ template<> inline const int TypeIDOfType<float>() { return ScalarTypeRepresentat
 template<> inline const int TypeIDOfType<double>() { return ScalarTypeRepresentation::TYPE_FLOAT64; }
 template<> inline const int TypeIDOfType<uint8_clamped>() { return ScalarTypeRepresentation::TYPE_UINT8_CLAMPED; }
 
-template<typename NativeType> static inline const bool ElementTypeMayBeDouble() { return false; }
-template<> inline const bool ElementTypeMayBeDouble<uint32_t>() { return true; }
-template<> inline const bool ElementTypeMayBeDouble<float>() { return true; }
-template<> inline const bool ElementTypeMayBeDouble<double>() { return true; }
-
 template<typename ElementType>
 static inline JSObject *
 NewArray(JSContext *cx, uint32_t nelements);
@@ -1334,7 +1330,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     static const int ArrayTypeID() { return TypeIDOfType<NativeType>(); }
     static const bool ArrayTypeIsUnsigned() { return TypeIsUnsigned<NativeType>(); }
     static const bool ArrayTypeIsFloatingPoint() { return TypeIsFloatingPoint<NativeType>(); }
-    static const bool ArrayElementTypeMayBeDouble() { return ElementTypeMayBeDouble<NativeType>(); }
 
     static const size_t BYTES_PER_ELEMENT = sizeof(ThisType);
 
@@ -2241,7 +2236,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         }
 
         *result = ArrayTypeIsFloatingPoint()
-                  ? NativeType(js_NaN)
+                  ? NativeType(GenericNaN())
                   : NativeType(int32_t(0));
         return true;
     }

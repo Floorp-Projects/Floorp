@@ -12,7 +12,7 @@ const promise = require("sdk/core/promise");
 let {CssLogic} = require("devtools/styleinspector/css-logic");
 let {InplaceEditor, editableField, editableItem} = require("devtools/shared/inplace-editor");
 let {ELEMENT_STYLE, PSEUDO_ELEMENTS} = require("devtools/server/actors/styles");
-let {colorUtils} = require("devtools/shared/css-color");
+let {colorUtils} = require("devtools/css-color");
 let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 
 Cu.import("resource://gre/modules/Services.jsm");

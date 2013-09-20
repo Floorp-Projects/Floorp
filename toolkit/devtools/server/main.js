@@ -80,9 +80,7 @@ loadSubScript.call(this, "resource://gre/modules/devtools/DevToolsUtils.js");
 
 function dumpn(str) {
   if (wantLogging) {
-    for (let line of str.split(/\n/g)) {
-      dump("DBG-SERVER: " + line + "\n");
-    }
+    dump("DBG-SERVER: " + str + "\n");
   }
 }
 

@@ -1218,7 +1218,7 @@ SpdyStream3::ConvertHeaders(nsACString &aHeadersOut)
         aHeadersOut.Append(nameString);
         aHeadersOut.Append(NS_LITERAL_CSTRING(": "));
 
-        // expand NULL bytes in the value string
+        // expand nullptr bytes in the value string
         for (char *cPtr = valueString.BeginWriting();
              cPtr && cPtr < valueString.EndWriting();
              ++cPtr) {

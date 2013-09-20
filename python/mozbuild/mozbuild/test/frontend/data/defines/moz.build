@@ -1,0 +1,13 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+value = 'xyz'
+DEFINES = {
+    'FOO': True,
+}
+
+DEFINES['BAZ'] = '"abcd"'
+DEFINES.update({
+    'BAR': 7,
+    'VALUE': value
+})

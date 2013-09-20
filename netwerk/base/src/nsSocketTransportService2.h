@@ -8,7 +8,7 @@
 
 #include "nsPISocketTransportService.h"
 #include "nsIThreadInternal.h"
-#include "nsThreadUtils.h"
+#include "nsIRunnable.h"
 #include "nsEventQueue.h"
 #include "nsCOMPtr.h"
 #include "pldhash.h"
