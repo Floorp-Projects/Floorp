@@ -9,18 +9,17 @@
       iframe { width: 90%; height: 50px; }
     </style>
 <script>
-
 window.onload = function () {
-  navigateByLocation(getSubframe(window0, 0));
+  navigateByLocation(window0.frames[0]);
   navigateByOpen("window1_child0");
   navigateByForm("window2_child0");
   navigateByHyperlink("window3_child0");
 
   xpcWaitForFinishedFrames(function() {
-    isInaccessible(getSubframe(window0, 0), "Should not be able to navigate off-domain frame by setting location.");
-    isInaccessible(getSubframe(window1, 0), "Should not be able to navigate off-domain frame by calling window.open.");
-    isInaccessible(getSubframe(window2, 0), "Should not be able to navigate off-domain frame by submitting form.");
-    isInaccessible(getSubframe(window3, 0), "Should not be able to navigate off-domain frame by targeted hyperlink.");
+    isInaccessible(window0.frames[0], "Should not be able to navigate off-domain frame by setting location.");
+    isInaccessible(window1.frames[0], "Should not be able to navigate off-domain frame by calling window.open.");
+    isInaccessible(window2.frames[0], "Should not be able to navigate off-domain frame by submitting form.");
+    isInaccessible(window3.frames[0], "Should not be able to navigate off-domain frame by targeted hyperlink.");
 
     window0.close();
     window1.close();
