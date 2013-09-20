@@ -231,7 +231,11 @@ class VirtualenvManager(object):
                     # relative path allows the srcdir/objdir combination
                     # to be moved around (as long as the paths relative to
                     # each other remain the same).
-                    f.write("%s\n" % os.path.relpath(path, python_lib))
+                    try:
+                        f.write("%s\n" % os.path.relpath(path, python_lib))
+                    except ValueError:
+                        # When objdir is on a separate drive, relpath throws
+                        f.write("%s\n" % os.path.join(python_lib, path))
 
                 return True
 
