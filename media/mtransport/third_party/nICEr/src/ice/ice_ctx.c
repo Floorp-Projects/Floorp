@@ -64,7 +64,6 @@ static int nr_ice_fetch_stun_servers(int ct, nr_ice_stun_server **out);
 static int nr_ice_fetch_turn_servers(int ct, nr_ice_turn_server **out);
 #endif /* USE_TURN */
 static void nr_ice_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg);
-static int nr_ice_ctx_pair_new_trickle_candidates(nr_ice_ctx *ctx, nr_ice_candidate *cand);
 
 int nr_ice_fetch_stun_servers(int ct, nr_ice_stun_server **out)
   {
@@ -432,7 +431,6 @@ int nr_ice_ctx_destroy(nr_ice_ctx **ctxp)
       return(0);
 
     (*ctxp)->done_cb=0;
-    (*ctxp)->trickle_cb=0;
 
     NR_ASYNC_SCHEDULE(nr_ice_ctx_destroy_cb,*ctxp);
 
@@ -443,37 +441,12 @@ int nr_ice_ctx_destroy(nr_ice_ctx **ctxp)
 
 void nr_ice_initialize_finished_cb(NR_SOCKET s, int h, void *cb_arg)
   {
-    int r,_status;
-    nr_ice_candidate *cand=cb_arg;
-    nr_ice_ctx *ctx;
+    nr_ice_ctx *ctx=cb_arg;
 
-
-    assert(cb_arg);
-    if (!cb_arg)
-      return;
-    ctx = cand->ctx;
-
+/*    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Candidate %s %s",ctx->label,
+      cand->label, cand->state==NR_ICE_CAND_STATE_INITIALIZED?"INITIALIZED":"FAILED");
+*/
     ctx->uninitialized_candidates--;
-
-    if (cand->state == NR_ICE_CAND_STATE_INITIALIZED) {
-      int was_pruned = 0;
-
-      if (r=nr_ice_component_maybe_prune_candidate(ctx, cand->component,
-                                                   cand, &was_pruned)) {
-          r_log(LOG_ICE, LOG_NOTICE, "ICE(%s): Problem pruning candidates",ctx->label);
-      }
-
-      /* If we are initialized, the candidate wasn't pruned,
-         and we have a trickle ICE callback fire the callback */
-      if (ctx->trickle_cb && !was_pruned) {
-        ctx->trickle_cb(ctx->trickle_cb_arg, ctx, cand->stream, cand->component_id, cand);
-
-        if (r==nr_ice_ctx_pair_new_trickle_candidates(ctx, cand)) {
-          r_log(LOG_ICE,LOG_ERR, "ICE(%s): All could not pair new trickle candidate",ctx->label);
-          /* But continue */
-        }
-      }
-    }
 
     if(ctx->uninitialized_candidates==0){
       r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): All candidates initialized",ctx->label);
@@ -489,28 +462,6 @@ void nr_ice_initialize_finished_cb(NR_SOCKET s, int h, void *cb_arg)
       r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Waiting for %d candidates to be initialized",ctx->label, ctx->uninitialized_candidates);
     }
   }
-
-static int nr_ice_ctx_pair_new_trickle_candidates(nr_ice_ctx *ctx, nr_ice_candidate *cand)
-  {
-    int r,_status;
-    nr_ice_peer_ctx *pctx;
-
-    pctx=STAILQ_FIRST(&ctx->peers);
-    while(pctx){
-      if (pctx->state == NR_ICE_PEER_STATE_PAIRED) {
-        r = nr_ice_peer_ctx_pair_new_trickle_candidate(ctx, pctx, cand);
-        if (r)
-          ABORT(r);
-      }
-
-      pctx=STAILQ_NEXT(pctx,entry);
-    }
-
-    _status=0;
- abort:
-    return(_status);
-  }
-
 
 #define MAXADDRS 100 // Ridiculously high
 int nr_ice_initialize(nr_ice_ctx *ctx, NR_async_cb done_cb, void *cb_arg)
@@ -738,11 +689,3 @@ int nr_ice_ctx_finalize(nr_ice_ctx *ctx, nr_ice_peer_ctx *pctx)
     return(0);
   }
 
-
-int nr_ice_ctx_set_trickle_cb(nr_ice_ctx *ctx, nr_ice_trickle_candidate_cb cb, void *cb_arg)
-{
-  ctx->trickle_cb = cb;
-  ctx->trickle_cb_arg = cb_arg;
-
-  return 0;
-}

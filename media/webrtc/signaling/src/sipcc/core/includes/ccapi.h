@@ -103,7 +103,6 @@ typedef enum {
     CC_FEATURE_ADDSTREAM,
     CC_FEATURE_REMOVESTREAM,
     CC_FEATURE_ADDICECANDIDATE,
-    CC_FEATURE_FOUNDICECANDIDATE,
     CC_FEATURE_MAX
 } group_cc_feature_t;
 
@@ -169,7 +168,6 @@ static const char *const cc_feature_names[] = {
     "ADDSTREAM",
     "REMOVESTREAM",
     "ADDICECANDIDATE",
-    "FOUNDICECANDIDATE",
     "MAX"
 };
 
@@ -243,7 +241,6 @@ typedef enum cc_msgs_t_ {
     CC_MSG_ADDSTREAM,
     CC_MSG_REMOVESTREAM,
     CC_MSG_ADDCANDIDATE,
-    CC_MSG_FOUNDCANDIDATE,
     CC_MSG_AUDIT_ACK,
     CC_MSG_OPTIONS,
     CC_MSG_OPTIONS_ACK,
@@ -283,7 +280,6 @@ static const char *const cc_msg_names[] = {
     "ADDSTREAM",
     "REMOVESTREAM",
     "ADDCANDIDATE",
-    "FOUNDCANDIDATE",
     "AUDIT_ACK",
     "OPTIONS",
     "OPTIONS_ACK",
