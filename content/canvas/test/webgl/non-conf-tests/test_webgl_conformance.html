@@ -1,17 +1,14 @@
 <!DOCTYPE HTML>
-<html>
-<head>
 <title>WebGL test: 'webgl' context request</title>
 <script src="/MochiKit/MochiKit.js"></script>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css">
-<script src="webgl-util.js"></script>
-</head>
 <body>
 <canvas id="c"></canvas>
 <script>
 
-var gl = WebGLUtil.getWebGL('c', true);
+var canvas = document.getElementById('c');
+var gl = canvas.getContext('webgl');
 
 var isMobile = /Mobile/.test(navigator.userAgent);
 var isTablet = /Tablet/.test(navigator.userAgent);
@@ -26,5 +23,4 @@ if (shouldBeConformant) {
 }
 
 </script>
-</body>
-</html>
+
