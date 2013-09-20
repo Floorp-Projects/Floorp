@@ -88,12 +88,6 @@ var Appbar = {
     this._updateStarButton();
   },
 
-  onDownloadButton: function() {
-    let notificationBox = Browser.getNotificationBox();
-    notificationBox.notificationsHidden = !notificationBox.notificationsHidden;
-    ContextUI.dismiss();
-  },
-
   onPinButton: function() {
     if (this.pinButton.checked) {
       Browser.pinSite();
