@@ -60,6 +60,7 @@
 #include "shell/jsheaptools.h"
 #include "shell/jsoptparse.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/Monitor.h"
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
@@ -3228,11 +3229,91 @@ SyntaxParse(JSContext *cx, unsigned argc, jsval *vp)
 
 #ifdef JS_THREADSAFE
 
+class OffThreadState {
+  public:
+    enum State {
+        IDLE,           /* ready to work; no token, no source */
+        COMPILING,      /* working; no token, have source */
+        DONE            /* compilation done: have token and source */
+    };
+
+    OffThreadState() : monitor(), state(IDLE), token() { }
+    bool init() { return monitor.init(); }
+
+    bool startIfIdle(JSContext *cx, JSString *newSource) {
+        AutoLockMonitor alm(monitor);
+        if (state != IDLE)
+            return false;
+
+        JS_ASSERT(!token);
+        JS_ASSERT(!source);
+
+        source = newSource;
+        if (!JS_AddStringRoot(cx, &source))
+            return false;
+
+        state = COMPILING;
+        return true;
+    }
+
+    void abandon(JSContext *cx) {
+        AutoLockMonitor alm(monitor);
+        JS_ASSERT(state == COMPILING);
+        JS_ASSERT(!token);
+        JS_ASSERT(source);
+
+        JS_RemoveStringRoot(cx, &source);
+        source = NULL;
+
+        state = IDLE;
+    }
+
+    void markDone(void *newToken) {
+        AutoLockMonitor alm(monitor);
+        JS_ASSERT(state == COMPILING);
+        JS_ASSERT(!token);
+        JS_ASSERT(source);
+        JS_ASSERT(newToken);
+
+        token = newToken;
+        state = DONE;
+        alm.notify();
+    }
+
+    void *waitUntilDone(JSContext *cx) {
+        AutoLockMonitor alm(monitor);
+        if (state == IDLE)
+            return NULL;
+
+        if (state == COMPILING) {
+            while (state != DONE)
+                alm.wait();
+        }
+
+        JS_ASSERT(source);
+        JS_RemoveStringRoot(cx, &source);
+        source = NULL;
+
+        JS_ASSERT(token);
+        void *holdToken = token;
+        token = NULL;
+        state = IDLE;
+        return holdToken;
+    }
+
+  private:
+    Monitor monitor;
+    State state;
+    void *token;
+    JSString *source;
+};
+
+static OffThreadState offThreadState;
+
 static void
 OffThreadCompileScriptCallback(void *token, void *callbackData)
 {
-    // This callback is invoked off the main thread and there isn't a good way
-    // to pass the script on to the main thread. Just let the script leak.
+    offThreadState.markDone(token);
 }
 
 static bool
@@ -3257,28 +3338,49 @@ OffThreadCompileScript(JSContext *cx, unsigned argc, jsval *vp)
            .setCompileAndGo(true)
            .setSourcePolicy(CompileOptions::SAVE_SOURCE);
 
+    if (!JS::CanCompileOffThread(cx, options)) {
+        JS_ReportError(cx, "cannot compile code on worker thread");
+        return false;
+    }
+
     const jschar *chars = JS_GetStringCharsZ(cx, scriptContents);
     if (!chars)
         return false;
     size_t length = JS_GetStringLength(scriptContents);
 
-    // Prevent the string contents from ever being GC'ed. This will leak memory
-    // but since the compiled script is never consumed there isn't much choice.
-    JSString **permanentRoot = cx->new_<JSString *>();
-    if (!permanentRoot)
+    if (!offThreadState.startIfIdle(cx, scriptContents)) {
+        JS_ReportError(cx, "called offThreadCompileScript without calling runOffThreadScript"
+                       " to receive prior off-thread compilation");
         return false;
-    *permanentRoot = scriptContents;
-    if (!JS_AddStringRoot(cx, permanentRoot))
-        return false;
+    }
 
-    if (!StartOffThreadParseScript(cx, options, chars, length, cx->global(),
-                                   OffThreadCompileScriptCallback, NULL))
+    if (!JS::CompileOffThread(cx, cx->global(), options, chars, length,
+                              OffThreadCompileScriptCallback, NULL))
     {
+        offThreadState.abandon(cx);
         return false;
     }
 
     args.rval().setUndefined();
     return true;
+}
+
+static bool
+runOffThreadScript(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    void *token = offThreadState.waitUntilDone(cx);
+    if (!token) {
+        JS_ReportError(cx, "called runOffThreadScript when no compilation is pending");
+        return false;
+    }
+
+    RootedScript script(cx, JS::FinishOffThreadScript(cx, cx->runtime(), token));
+    if (!script)
+        return false;
+
+    return JS_ExecuteScript(cx, cx->global(), script, args.rval().address());
 }
 
 #endif // JS_THREADSAFE
@@ -3917,6 +4019,13 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("offThreadCompileScript", OffThreadCompileScript, 1, 0,
 "offThreadCompileScript(code)",
 "  Trigger an off thread parse/emit for the input string"),
+
+    JS_FN_HELP("runOffThreadScript", runOffThreadScript, 0, 0,
+"runOffThreadScript()",
+"  Wait for off-thread compilation to complete. If an error occurred,\n"
+"  throw the appropriate exception; otherwise, run the script and return\n"
+               "  its value."),
+
 #endif
 
     JS_FN_HELP("timeout", Timeout, 1, 0,
@@ -5266,6 +5375,11 @@ main(int argc, char **argv, char **envp)
     JS_SetOperationCallback(rt, ShellOperationCallback);
 
     JS_SetNativeStackQuota(rt, gMaxStackSize);
+
+#ifdef JS_THREADSAFE
+    if (!offThreadState.init())
+        return 1;
+#endif
 
     if (!InitWatchdog(rt))
         return 1;
