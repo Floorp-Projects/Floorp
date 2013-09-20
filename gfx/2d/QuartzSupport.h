@@ -9,6 +9,7 @@
 #ifdef XP_MACOSX
 
 #import <OpenGL/OpenGL.h>
+#import <OpenGL/gl.h>
 #import "ApplicationServices/ApplicationServices.h"
 #include "gfxTypes.h"
 #include "mozilla/RefPtr.h"
