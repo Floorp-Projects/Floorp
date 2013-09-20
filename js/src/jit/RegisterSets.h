@@ -614,14 +614,7 @@ class RegisterSet {
             gpr_.takeUnchecked(reg.gpr());
     }
     void maybeTake(ValueOperand value) {
-#if defined(JS_NUNBOX32)
-        gpr_.takeUnchecked(value.typeReg());
-        gpr_.takeUnchecked(value.payloadReg());
-#elif defined(JS_PUNBOX64)
-        gpr_.takeUnchecked(value.valueReg());
-#else
-#error "Bad architecture"
-#endif
+        gpr_.takeUnchecked(value);
     }
     void maybeTake(TypedOrValueRegister reg) {
         if (reg.hasValue())
