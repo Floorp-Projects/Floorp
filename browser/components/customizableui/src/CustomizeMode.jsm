@@ -9,6 +9,7 @@ this.EXPORTED_SYMBOLS = ["CustomizeMode"];
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
+const kPrefCustomizationAnimation = "browser.uiCustomization.disableAnimation";
 const kPaletteId = "customization-palette";
 const kAboutURI = "about:customizing";
 const kDragDataTypePrefix = "text/toolbarwrapper-id/";
@@ -27,7 +28,13 @@ Cu.import("resource://gre/modules/Promise.jsm");
 let gModuleName = "[CustomizeMode]";
 #include logging.js
 
+let gDisableAnimation = null;
+
 function CustomizeMode(aWindow) {
+  if (gDisableAnimation === null) {
+    gDisableAnimation = Services.prefs.getPrefType(kPrefCustomizationAnimation) == Ci.nsIPrefBranch.PREF_BOOL &&
+                        Services.prefs.getBoolPref(kPrefCustomizationAnimation);
+  }
   this.window = aWindow;
   this.document = aWindow.document;
   this.browser = aWindow.gBrowser;
@@ -293,6 +300,9 @@ CustomizeMode.prototype = {
     }.bind(this);
     deck.addEventListener("transitionend", customizeTransitionEnd);
 
+    if (gDisableAnimation) {
+      deck.setAttribute("fastcustomizeanimation", true);
+    }
     if (aEntering) {
       this.document.documentElement.setAttribute("customizing", true);
     } else {

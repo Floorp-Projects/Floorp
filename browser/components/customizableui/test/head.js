@@ -174,6 +174,7 @@ function waitForCondition(aConditionFn, aMaxTries=50, aCheckInterval=100) {
 }
 
 function testRunner(testAry, asyncCleanup) {
+  Services.prefs.setBoolPref("browser.uiCustomization.disableAnimation", true);
   for (let test of testAry) {
     info(test.desc);
 
@@ -191,6 +192,7 @@ function testRunner(testAry, asyncCleanup) {
     yield asyncCleanup();
   }
   ok(CustomizableUI.inDefaultState, "Should remain in default state");
+  Services.prefs.clearUserPref("browser.uiCustomization.disableAnimation");
 }
 
 function runTests(testAry, asyncCleanup) {
