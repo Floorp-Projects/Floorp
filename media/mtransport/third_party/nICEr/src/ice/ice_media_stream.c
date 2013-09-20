@@ -140,13 +140,14 @@ int nr_ice_media_stream_initialize(nr_ice_ctx *ctx, nr_ice_media_stream *stream)
     return(_status);
   }
 
+#define MAX_ATTRIBUTE_SIZE 256
+
 int nr_ice_media_stream_get_attributes(nr_ice_media_stream *stream, char ***attrsp, int *attrctp)
   {
     int attrct=0;
     nr_ice_component *comp;
     char **attrs=0;
     int index=0;
-    nr_ice_candidate *cand;
     int r,_status;
 
     *attrctp=0;
@@ -155,15 +156,12 @@ int nr_ice_media_stream_get_attributes(nr_ice_media_stream *stream, char ***attr
     comp=STAILQ_FIRST(&stream->components);
     while(comp){
       if (comp->state != NR_ICE_COMPONENT_DISABLED) {
-        cand = TAILQ_FIRST(&comp->candidates);
-        while(cand){
-          if (cand->state == NR_ICE_CAND_STATE_INITIALIZED) {
-            ++attrct;
-          }
+        if(r=nr_ice_component_prune_candidates(stream->ctx,comp))
+          ABORT(r);
 
-          cand = TAILQ_NEXT(cand, entry_comp);
-        }
+        attrct+=comp->candidate_ct;
       }
+
       comp=STAILQ_NEXT(comp,entry);
     }
 
@@ -176,7 +174,7 @@ int nr_ice_media_stream_get_attributes(nr_ice_media_stream *stream, char ***attr
     if(!(attrs=RCALLOC(sizeof(char *)*attrct)))
       ABORT(R_NO_MEMORY);
     for(index=0;index<attrct;index++){
-      if(!(attrs[index]=RMALLOC(NR_ICE_MAX_ATTRIBUTE_SIZE)))
+      if(!(attrs[index]=RMALLOC(MAX_ATTRIBUTE_SIZE)))
         ABORT(R_NO_MEMORY);
     }
 
@@ -189,15 +187,12 @@ int nr_ice_media_stream_get_attributes(nr_ice_media_stream *stream, char ***attr
 
         cand=TAILQ_FIRST(&comp->candidates);
         while(cand){
-          if (cand->state == NR_ICE_CAND_STATE_INITIALIZED) {
-            assert(index < attrct);
+          assert(index < attrct);
 
+          if(r=nr_ice_format_candidate_attribute(cand, attrs[index],MAX_ATTRIBUTE_SIZE))
+            ABORT(r);
 
-            if(r=nr_ice_format_candidate_attribute(cand, attrs[index],NR_ICE_MAX_ATTRIBUTE_SIZE))
-              ABORT(r);
-
-            index++;
-          }
+          index++;
 
           cand=TAILQ_NEXT(cand,entry_comp);
         }
@@ -248,17 +243,15 @@ int nr_ice_media_stream_get_default_candidate(nr_ice_media_stream *stream, int c
     */
     cand=TAILQ_FIRST(&comp->candidates);
     while(cand){
-      if (cand->state == NR_ICE_CAND_STATE_INITIALIZED) {
-        if (!best_cand) {
+      if (!best_cand) {
+        best_cand = cand;
+      }
+      else {
+        if (best_cand->type < cand->type) {
           best_cand = cand;
-        }
-        else {
-          if (best_cand->type < cand->type) {
+        } else if (best_cand->type == cand->type) {
+          if (best_cand->priority < cand->priority)
             best_cand = cand;
-          } else if (best_cand->type == cand->type) {
-            if (best_cand->priority < cand->priority)
-              best_cand = cand;
-          }
         }
       }
 
@@ -818,21 +811,6 @@ int nr_ice_media_stream_finalize(nr_ice_media_stream *lstr,nr_ice_media_stream *
     return(0);
   }
 
-int nr_ice_media_stream_pair_new_trickle_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_stream *pstream, nr_ice_candidate *cand)
-  {
-    int r,_status;
-    nr_ice_component *comp;
-
-    if ((r=nr_ice_media_stream_find_component(pstream, cand->component_id, &comp)))
-      ABORT(R_NOT_FOUND);
-
-    if (r=nr_ice_component_pair_candidate(pctx, comp, cand, 1))
-      ABORT(r);
-
-    _status=0;
- abort:
-    return(_status);
-  }
 
 int nr_ice_media_stream_disable_component(nr_ice_media_stream *stream, int component_id)
   {
