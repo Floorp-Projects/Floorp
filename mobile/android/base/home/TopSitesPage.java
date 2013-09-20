@@ -175,7 +175,7 @@ public class TopSitesPage extends HomeFragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         mPinSiteListener = new PinSiteListener();
 
-        mList.setTag(HomePager.LIST_TAG_MOST_VISITED);
+        mList.setTag(HomePager.LIST_TAG_TOP_SITES);
         mList.setHeaderDividersEnabled(false);
 
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
