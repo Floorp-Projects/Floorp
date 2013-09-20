@@ -20,8 +20,8 @@ function test() {
   tab.linkedBrowser.addEventListener("load", (function(event) {
     tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
 
-    if (BookmarkingUI._pendingStmt) {
-      waitForCondition(function() !BookmarkingUI._pendingStmt, finishTest, "BookmarkingUI held pending statement for too long");
+    if (BookmarkingUI.status == BookmarkingUI.STATUS_UPDATING) {
+      waitForCondition(function() BookmarkingUI.status != BookmarkingUI.STATUS_UPDATING, finishTest, "BookmarkingUI was updating for too long");
     } else {
       finishTest();
     }
