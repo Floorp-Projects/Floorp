@@ -1,4 +1,5 @@
 background/common/GlobalConstants.java
+fxa/FxAccountConstants.java
 sync/SyncConstants.java
 background/announcements/AnnouncementsConstants.java
 background/healthreport/HealthReportConstants.java

@@ -1,0 +1,88 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+
+<script>
+
+function init() {
+  window.addEventListener("message", function process(e) {doTest(e)}, false);
+  // unless we relinquish the eventloop,
+  // tests will run before the chrome event handlers are ready
+  setTimeout(doTest, 0);
+}
+
+function checkStatusValue(payload, expectedValue) {
+  return payload.status == expectedValue;
+}
+
+var tests = [
+{
+  info: "Check account creation",
+  event: "create",
+  payloadType: "message",
+  validateResponse: function(payload) {
+    return checkStatusValue(payload, "create");
+  },
+},
+{
+  info: "Check account verification",
+  event: "verified",
+  payloadType: "message",
+  validateResponse: function(payload) {
+    return checkStatusValue(payload, "verified");
+  },
+},
+{
+  info: "Check account log in",
+  event: "login",
+  payloadType: "message",
+  validateResponse: function(payload) {
+    return checkStatusValue(payload, "login");
+  },
+},
+];
+
+var currentTest = -1;
+function doTest(evt) {
+  if (evt) {
+    if (currentTest < 0 || !evt.data.content)
+      return; // not yet testing
+
+    var test = tests[currentTest];
+    if (evt.data.type != test.payloadType)
+      return; // skip unrequested events
+
+    var error = JSON.stringify(evt.data.content);
+    var pass = false;
+    try {
+      pass = test.validateResponse(evt.data.content)
+    } catch (e) {}
+    reportResult(test.info, pass, error);
+  }
+  // start the next test if there are any left
+  if (tests[++currentTest])
+    sendToBrowser(tests[currentTest].event);
+  else
+    reportFinished();
+}
+
+function reportResult(info, pass, error) {
+  var data = {type: "testResult", info: info, pass: pass, error: error};
+  window.parent.postMessage(data, "*");
+}
+
+function reportFinished(cmd) {
+  var data = {type: "testsComplete", count: tests.length};
+  window.parent.postMessage(data, "*");
+}
+
+function sendToBrowser(type) {
+  var event = new CustomEvent("FirefoxAccountsCommand", {detail: {command: type}, bubbles: true});
+  document.dispatchEvent(event);
+}
+
+</script>
+  </head>
+  <body onload="init()">
+  </body>
+</html>
