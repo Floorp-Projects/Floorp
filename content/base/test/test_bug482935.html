@@ -11,9 +11,9 @@
 var url = "bug482935.sjs";
 
 function clearCache() {
-    SpecialPowers.Cc["@mozilla.org/network/cache-service;1"].
-               getService(SpecialPowers.Ci.nsICacheService).
-               evictEntries(SpecialPowers.Ci.nsICache.STORE_ANYWHERE);
+    SpecialPowers.Cc["@mozilla.org/netwerk/cache-storage-service;1"].
+               getService(SpecialPowers.Ci.nsICacheStorageService).
+               clear();
 }
 
 // Tests that the response is cached if the request is cancelled

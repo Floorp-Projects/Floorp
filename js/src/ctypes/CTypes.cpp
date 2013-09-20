@@ -3974,7 +3974,7 @@ PointerType::ConstructData(JSContext* cx,
       thisObj = NULL;
     } else if (!JSVAL_IS_PRIMITIVE(args[1])) {
       thisObj = &args[1].toObject();
-    } else if (!JS_ValueToObject(cx, args[1], thisObj.address())) {
+    } else if (!JS_ValueToObject(cx, args[1], &thisObj)) {
       return false;
     }
   }

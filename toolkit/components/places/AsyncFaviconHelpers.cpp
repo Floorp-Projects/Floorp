@@ -7,7 +7,7 @@
 #include "AsyncFaviconHelpers.h"
 
 #include "nsICacheService.h"
-#include "nsICacheVisitor.h"
+#include "nsICacheEntry.h"
 #include "nsICachingChannel.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 
@@ -304,7 +304,7 @@ GetExpirationTimeFromChannel(nsIChannel* aChannel)
     nsCOMPtr<nsISupports> cacheToken;
     nsresult rv = cachingChannel->GetCacheToken(getter_AddRefs(cacheToken));
     if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsICacheEntryInfo> cacheEntry = do_QueryInterface(cacheToken);
+      nsCOMPtr<nsICacheEntry> cacheEntry = do_QueryInterface(cacheToken);
       uint32_t seconds;
       rv = cacheEntry->GetExpirationTime(&seconds);
       if (NS_SUCCEEDED(rv)) {

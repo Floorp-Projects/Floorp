@@ -1,8 +1,3 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
-
 var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
 var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 

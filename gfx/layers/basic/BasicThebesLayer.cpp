@@ -87,7 +87,6 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
   PROFILER_LABEL("BasicThebesLayer", "PaintThebes");
   NS_ASSERTION(BasicManager()->InDrawing(),
                "Can only draw in drawing phase");
-  nsRefPtr<gfxASurface> targetSurface = aContext->CurrentSurface();
 
   if (!mContentClient) {
     // we pass a null pointer for the Forwarder argument, which means

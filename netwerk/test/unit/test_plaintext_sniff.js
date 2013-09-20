@@ -1,10 +1,5 @@
 // Test the plaintext-or-binary sniffer
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
-
 Cu.import("resource://testing-common/httpd.js");
 
 // List of Content-Type headers to test.  For each header we have an array.

@@ -2697,7 +2697,7 @@ nsXPCComponents_Utils::ReportError(const JS::Value &errorArg, JSContext *cx)
 /* void evalInSandbox(in AString source, in nativeobj sandbox); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
-                                     const JS::Value& sandboxVal,
+                                     const JS::Value& sandboxValArg,
                                      const JS::Value& version,
                                      const JS::Value& filenameVal,
                                      int32_t lineNumber,
@@ -2705,8 +2705,9 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
                                      uint8_t optionalArgc,
                                      JS::Value *retval)
 {
+    RootedValue sandboxVal(cx, sandboxValArg);
     RootedObject sandbox(cx);
-    if (!JS_ValueToObject(cx, sandboxVal, sandbox.address()) || !sandbox)
+    if (!JS_ValueToObject(cx, sandboxVal, &sandbox) || !sandbox)
         return NS_ERROR_INVALID_ARG;
 
     // Optional third argument: JS version, as a string.

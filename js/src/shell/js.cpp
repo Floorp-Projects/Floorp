@@ -645,7 +645,7 @@ static JSScript *
 GetTopScript(JSContext *cx)
 {
     RootedScript script(cx);
-    JS_DescribeScriptedCaller(cx, script.address(), NULL);
+    JS_DescribeScriptedCaller(cx, &script, NULL);
     return script;
 }
 
@@ -1417,8 +1417,9 @@ AssertEq(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSScript *
-ValueToScript(JSContext *cx, jsval v, JSFunction **funp = NULL)
+ValueToScript(JSContext *cx, jsval vArg, JSFunction **funp = NULL)
 {
+    RootedValue v(cx, vArg);
     RootedFunction fun(cx, JS_ValueToFunction(cx, v));
     if (!fun)
         return NULL;
@@ -2332,7 +2333,7 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     if (argc > 1) {
-        if (!JS_ValueToObject(cx, args[1], parent.address()))
+        if (!JS_ValueToObject(cx, args[1], &parent))
             return false;
     } else {
         parent = JS_GetParent(JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
@@ -2353,17 +2354,18 @@ GetPDA(JSContext *cx, unsigned argc, jsval *vp)
     JSPropertyDescArray pda;
     JSPropertyDesc *pd;
 
-    if (!JS_ValueToObject(cx, argc == 0 ? UndefinedValue() : vp[2], vobj.address()))
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!JS_ValueToObject(cx, args[0], &vobj))
         return false;
     if (!vobj) {
-        JS_SET_RVAL(cx, vp, UndefinedValue());
+        args.rval().setUndefined();
         return true;
     }
 
     RootedObject aobj(cx, JS_NewArrayObject(cx, 0, NULL));
     if (!aobj)
         return false;
-    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(aobj));
+    args.rval().setObject(*aobj);
 
     ok = !!JS_GetPropertyDescArray(cx, vobj, &pda);
     if (!ok)
@@ -2552,7 +2554,7 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
     RootedScript script(cx);
     unsigned lineno;
 
-    JS_DescribeScriptedCaller(cx, script.address(), &lineno);
+    JS_DescribeScriptedCaller(cx, &script, &lineno);
     RootedValue rval(cx);
     {
         Maybe<JSAutoCompartment> ac;
@@ -3464,7 +3466,7 @@ DecompileThisScript(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedScript script (cx);
-    if (!JS_DescribeScriptedCaller(cx, script.address(), NULL)) {
+    if (!JS_DescribeScriptedCaller(cx, &script, NULL)) {
         args.rval().setString(cx->runtime()->emptyString);
         return true;
     }
@@ -3480,7 +3482,7 @@ ThisFilename(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedScript script (cx);
-    if (!JS_DescribeScriptedCaller(cx, script.address(), NULL) || !script->filename()) {
+    if (!JS_DescribeScriptedCaller(cx, &script, NULL) || !script->filename()) {
         args.rval().setString(cx->runtime()->emptyString);
         return true;
     }
@@ -4170,7 +4172,8 @@ Exec(JSContext *cx, unsigned argc, jsval *vp)
 
     JS_SET_RVAL(cx, vp, UndefinedValue());
 
-    fun = JS_ValueToFunction(cx, vp[0]);
+    RootedValue arg(cx, vp[0]);
+    fun = JS_ValueToFunction(cx, arg);
     if (!fun)
         return false;
     if (!fun->atom)

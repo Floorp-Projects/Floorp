@@ -3,8 +3,6 @@
  */
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
-const Cc = Components.classes;
-const Ci = Components.interfaces;
 
 function makeChan(uri, isPrivate) {
   var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);

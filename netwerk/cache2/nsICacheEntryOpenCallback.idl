@@ -1,0 +1,83 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsICacheEntry;
+interface nsIApplicationCache;
+
+[scriptable, uuid(cdd8b9be-71f0-4b0a-a7f4-626fbb3d2e9b)]
+interface nsICacheEntryOpenCallback : nsISupports
+{
+  /**
+   * State of the entry determined by onCacheEntryCheck.
+   *
+   * ENTRY_WANTED - the consumer is interested in the entry, we will pass it.
+   * ENTRY_NEEDS_REVALIDATION - entry needs to be revalidated first with origin server,
+   *    this means the loading channel will decide whether to use the entry content
+   *    as is after it gets a positive response from the server about validity of the
+   *    content ; when a new content needs to be loaded from the server, the loading
+   *    channel opens a new entry with OPEN_TRUNCATE flag which dooms the one
+   *    this check has been made for.
+   * ENTRY_NOT_WANTED - the consumer is not interested in the entry, we will not pass it.
+   */
+  const unsigned long ENTRY_WANTED = 0;
+  const unsigned long ENTRY_NEEDS_REVALIDATION = 1;
+  const unsigned long ENTRY_NOT_WANTED = 2;
+
+  /**
+   * Callback to perform any validity checks before the entry should be used.
+   * Called before onCacheEntryAvailable callback.
+   *
+   * @param aEntry
+   *    An entry to examine.  Consumer has a chance to decide whether the
+   *    entry is valid or not.
+   * @param aApplicationCache
+   *    Optional, application cache the entry has been found in, if any.
+   * @return
+   *    State of the entry, see the constants just above.
+   *
+   * NOTE: This callback is invoked on the cache background thread.
+   */
+  unsigned long onCacheEntryCheck(in nsICacheEntry aEntry,
+                                  in nsIApplicationCache aApplicationCache);
+
+  /**
+   * Callback implemented by consumers of nsICacheStorage fetching
+   * result of the cache async open request.
+   *
+   * @param aEntry
+   *    The entry bound to the originally requested URI.  May be null when
+   *    loading from a particular application cache and the URI has not
+   *    been found in that application cache.
+   * @param aNew
+   *    Whether no data so far has been stored for this entry, i.e. reading
+   *    it will just fail.  When aNew is true, a server request should be
+   *    made and data stored to this new entry.
+   * @param aApplicationCache
+   *    When an entry had been found in an application cache, this is the
+   *    given application cache.  It should be associated with the loading
+   *    channel.
+   * @param aResult
+   *    Result of request.  This may be a failure only when one of these
+   *    issues occur:
+   *    - the cache storage service could not be started due to some unexpected
+   *      faulure
+   *    - there is not enough disk space to create new entries
+   *    - cache entry was not found in a given application cache
+   *
+   * NOTE: In the current implementation this callback is invoked on the main thread
+   *       however, we would like to call this on a different thread in the future.
+   */
+  void onCacheEntryAvailable(in nsICacheEntry aEntry,
+                             in boolean aNew,
+                             in nsIApplicationCache aApplicationCache,
+                             in nsresult aResult);
+
+  /**
+   * Whether this callback can be invoked on any thread, or just on the main thread
+   * when the consumer is e.g. a JS.
+   */
+  readonly attribute boolean mainThreadOnly;
+};
