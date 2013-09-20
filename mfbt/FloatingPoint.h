@@ -190,7 +190,13 @@ DoubleIsInt32(double d, int32_t* i)
 static MOZ_ALWAYS_INLINE double
 UnspecifiedNaN()
 {
-  return SpecificNaN(0, 0xfffffffffffffULL);
+  /*
+   * If we can use any quiet NaN, we might as well use the all-ones NaN,
+   * since it's cheap to materialize on common platforms (such as x64, where
+   * this value can be represented in a 32-bit signed immediate field, allowing
+   * it to be stored to memory in a single instruction).
+   */
+  return SpecificNaN(1, 0xfffffffffffffULL);
 }
 
 /**
