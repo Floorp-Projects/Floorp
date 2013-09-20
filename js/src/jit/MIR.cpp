@@ -2468,7 +2468,7 @@ MLoadSlot::mightAlias(MDefinition *store)
 }
 
 void
-InlinePropertyTable::trimTo(AutoObjectVector &targets, Vector<bool> &choiceSet)
+InlinePropertyTable::trimTo(ObjectVector &targets, BoolVector &choiceSet)
 {
     for (size_t i = 0; i < targets.length(); i++) {
         // If the target was inlined, don't erase the entry.
@@ -2489,7 +2489,7 @@ InlinePropertyTable::trimTo(AutoObjectVector &targets, Vector<bool> &choiceSet)
 }
 
 void
-InlinePropertyTable::trimToTargets(AutoObjectVector &targets)
+InlinePropertyTable::trimToTargets(ObjectVector &targets)
 {
     IonSpew(IonSpew_Inlining, "Got inlineable property cache with %d cases",
             (int)numEntries());
