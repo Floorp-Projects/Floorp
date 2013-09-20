@@ -8,11 +8,19 @@
   background-image: linear-gradient(to bottom, white 1px, rgba(255, 255, 255, 0) 15px);
   background-color: -moz-dialog;
   box-shadow: -1px 0px 0px rgba(0, 0, 0, 0.2), -1px 0px 2px rgba(0, 0, 0, 0.1), 1px 0px 0px rgba(255, 255, 255, 0.2) inset;
-  margin-left: 38px;
+  -moz-margin-start: 38px;
+}
+
+.panel-subviews:-moz-locale-dir(rtl) {
+  box-shadow: 1px 0px 0px rgba(0, 0, 0, 0.2), 1px 0px 2px rgba(0, 0, 0, 0.1), -1px 0px 0px rgba(255, 255, 255, 0.2) inset;
 }
 
 .panel-viewstack[viewtype="main"] > .panel-subviews {
   transform: translateX(@menuPanelWidth@);
+}
+
+.panel-viewstack[viewtype="main"] > .panel-subviews:-moz-locale-dir(rtl) {
+  transform: translateX(-@menuPanelWidth@);
 }
 
 .panel-viewstack:not([viewtype="main"]) > .panel-mainview > #PanelUI-mainView {

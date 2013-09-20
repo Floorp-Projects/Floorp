@@ -237,15 +237,22 @@
         <parameter name="aAnchor"/>
         <body><![CDATA[
           if (aAnchor) {
-            // We need to find the left edge of the anchor, relative to the main
-            // panel. Then we need to add half the width of the anchor. This is the
-            // target that we need to transition to.
+            // We need to find the edge of the anchor, relative to the main panel.
+            // Then we need to add half the width of the anchor. This is the target
+            // that we need to transition to.
             let anchorRect = aAnchor.getBoundingClientRect();
             let mainViewRect = this._mainViewContainer.getBoundingClientRect();
-            let leftEdge = anchorRect.left - mainViewRect.left;
             let center = aAnchor.clientWidth / 2;
-            let target = leftEdge + center;
-            this._mainViewContainer.style.transform = "translateX(-" + target + "px)";
+            let direction = aAnchor.ownerDocument.defaultView.getComputedStyle(aAnchor, null).direction;
+            let edge, target;
+            if (direction == "ltr") {
+              edge = anchorRect.left - mainViewRect.left;
+              target = "-" + (edge + center);
+            } else {
+              edge = mainViewRect.right - anchorRect.right;
+              target = edge + center;
+            }
+            this._mainViewContainer.style.transform = "translateX(" + target + "px)";
             aAnchor.classList.add("panel-multiview-anchor");
           } else {
             this._mainViewContainer.style.transform = "";
