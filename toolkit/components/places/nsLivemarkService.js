@@ -965,9 +965,9 @@ LivemarkLoadListener.prototype = {
       // Calculate a new ttl
       let channel = aRequest.QueryInterface(Ci.nsICachingChannel);
       if (channel) {
-        let entryInfo = channel.cacheToken.QueryInterface(Ci.nsICacheEntryInfo);
+        let entryInfo = channel.cacheToken.QueryInterface(Ci.nsICacheEntry);
         if (entryInfo) {
-          // nsICacheEntryInfo returns value as seconds.
+          // nsICacheEntry returns value as seconds.
           let expireTime = entryInfo.expirationTime * 1000;
           let nowTime = Date.now();
           // Note, expireTime can be 0, see bug 383538.

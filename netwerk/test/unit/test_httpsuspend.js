@@ -1,11 +1,6 @@
 // This file ensures that suspending a channel directly after opening it
 // suspends future notifications correctly.
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
-
 Cu.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {

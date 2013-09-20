@@ -1,10 +1,6 @@
 /* verify that certain invalid URIs are not parsed by the resource
    protocol handler */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-
 const specs = [
   "resource:////",
   "resource:///http://www.mozilla.org/",

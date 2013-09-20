@@ -1,6 +1,3 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 const BinaryInputStream =
   Components.Constructor("@mozilla.org/binaryinputstream;1",
                          "nsIBinaryInputStream", "setInputStream");

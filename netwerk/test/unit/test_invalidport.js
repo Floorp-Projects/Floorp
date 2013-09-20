@@ -2,8 +2,6 @@
 // Perform the async open several times in order to induce exponential
 // scheduling behavior bugs.
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
 const CC = Components.Constructor;
 
 var counter = 0;
