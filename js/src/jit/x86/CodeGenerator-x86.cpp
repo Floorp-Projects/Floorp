@@ -534,7 +534,7 @@ bool
 CodeGeneratorX86::visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds *ool)
 {
     if (ool->dest().isFloat()) {
-        masm.loadConstantDouble(js_NaN, ool->dest().fpu());
+        masm.loadConstantDouble(GenericNaN(), ool->dest().fpu());
     } else {
         Register destReg = ool->dest().gpr();
         masm.xorl(destReg, destReg);

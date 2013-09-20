@@ -319,7 +319,7 @@ CodeGeneratorARM::visitMinMaxD(LMinMaxD *ins)
     masm.ma_b(&done);
 
     masm.bind(&nan);
-    masm.loadConstantDouble(js_NaN, output);
+    masm.loadConstantDouble(GenericNaN(), output);
     masm.ma_b(&done);
 
     masm.bind(&returnSecond);
