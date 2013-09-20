@@ -320,11 +320,11 @@ class Range : public TempObject {
         return lower() >= 0 && upper() <= 1 && !canHaveFractionalPart();
     }
 
-    bool hasRoundingErrors() const {
+    bool canHaveRoundingErrors() const {
         return canHaveFractionalPart() || exponent() >= MaxTruncatableExponent;
     }
 
-    bool isInfinite() const {
+    bool canBeInfiniteOrNaN() const {
         return exponent() >= MaxDoubleExponent;
     }
 
