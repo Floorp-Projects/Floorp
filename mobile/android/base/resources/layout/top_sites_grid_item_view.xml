@@ -6,7 +6,7 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
        xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
-    <org.mozilla.gecko.home.BookmarkThumbnailView
+    <org.mozilla.gecko.home.TopSitesThumbnailView
             android:id="@+id/thumbnail"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
@@ -14,18 +14,12 @@
 
     <org.mozilla.gecko.home.FadedTextView
             android:id="@+id/title"
-            style="@style/Widget.TopBookmarkItemTitle"
+            style="@style/Widget.TopSitesGridItemTitle"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/thumbnail"
             android:duplicateParentState="true"
+            android:drawablePadding="4dip"
             gecko:fadeWidth="20dip"/>
-
-    <ImageView android:id="@+id/pin"
-               style="@style/Widget.TopBookmarkItemPin"
-               android:layout_width="@dimen/top_bookmark_pinsize"
-               android:layout_height="@dimen/top_bookmark_pinsize"
-               android:layout_alignTop="@id/thumbnail"
-               android:layout_alignRight="@id/thumbnail"/>
 
 </merge>

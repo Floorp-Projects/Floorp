@@ -71,7 +71,6 @@
     <dimen name="text_selection_handle_width">47dp</dimen>
     <dimen name="text_selection_handle_height">58dp</dimen>
     <dimen name="text_selection_handle_shadow">11dp</dimen>
-    <dimen name="top_bookmark_pinsize">20dp</dimen>
     <dimen name="validation_message_height">50dp</dimen>
     <dimen name="validation_message_margin_top">6dp</dimen>
     <dimen name="forward_default_offset">-13dip</dimen>
@@ -82,8 +81,8 @@
     <!-- We need to maintain height for the tab widget on History Page
          since android does not add footer/header divider height to its
          calculation for wrap_content in LinearLayout.
-         50dp * 3 Views + 30dp padding + 4dp dividers-->
-    <dimen name="history_tab_widget_height">184dp</dimen>
+         50dp * 2 Views + 30dp padding + 4dp dividers-->
+    <dimen name="history_tab_widget_height">134dp</dimen>
 
     <!-- PageActionButtons dimensions -->
     <dimen name="page_action_button_width">32dp</dimen>

@@ -139,11 +139,15 @@ function CssHtmlTree(aStyleInspector, aPageStyle)
   this.getRTLAttr = chromeReg.isLocaleRTL("global") ? "rtl" : "ltr";
 
   // Create bound methods.
-  this.siFocusWindow = this.focusWindow.bind(this);
-  this.siBoundCopy = this.computedViewCopy.bind(this);
+  this.focusWindow = this.focusWindow.bind(this);
+  this._onContextMenu = this._onContextMenu.bind(this);
+  this._contextMenuUpdate = this._contextMenuUpdate.bind(this);
+  this._onSelectAll = this._onSelectAll.bind(this);
+  this._onCopy = this._onCopy.bind(this);
 
-  this.styleDocument.addEventListener("copy", this.siBoundCopy);
-  this.styleDocument.addEventListener("mousedown", this.siFocusWindow);
+  this.styleDocument.addEventListener("copy", this._onCopy);
+  this.styleDocument.addEventListener("mousedown", this.focusWindow);
+  this.styleDocument.addEventListener("contextmenu", this._onContextMenu);
 
   // Nodes used in templating
   this.root = this.styleDocument.getElementById("root");
@@ -161,6 +165,8 @@ function CssHtmlTree(aStyleInspector, aPageStyle)
 
   // The element that we're inspecting, and the document that it comes from.
   this.viewedElement = null;
+
+  this._buildContextMenu();
   this.createStyleViews();
 }
 
@@ -466,32 +472,128 @@ CssHtmlTree.prototype = {
    *
    * @param aEvent The event object
    */
-  focusWindow: function si_focusWindow(aEvent)
+  focusWindow: function(aEvent)
   {
     let win = this.styleDocument.defaultView;
     win.focus();
   },
 
   /**
-   * Copy selected text.
-   *
-   * @param aEvent The event object
+   * Create a context menu.
    */
-  computedViewCopy: function si_computedViewCopy(aEvent)
+  _buildContextMenu: function()
+  {
+    let doc = this.styleDocument.defaultView.parent.document;
+
+    this._contextmenu = this.styleDocument.createElementNS(XUL_NS, "menupopup");
+    this._contextmenu.addEventListener("popupshowing", this._contextMenuUpdate);
+    this._contextmenu.id = "computed-view-context-menu";
+
+    // Select All
+    this.menuitemSelectAll = createMenuItem(this._contextmenu, {
+      label: "computedView.contextmenu.selectAll",
+      accesskey: "computedView.contextmenu.selectAll.accessKey",
+      command: this._onSelectAll
+    });
+
+    // Copy
+    this.menuitemCopy = createMenuItem(this._contextmenu, {
+      label: "computedView.contextmenu.copy",
+      accesskey: "computedView.contextmenu.copy.accessKey",
+      command: this._onCopy
+    });
+
+    let popupset = doc.documentElement.querySelector("popupset");
+    if (!popupset) {
+      popupset = doc.createElementNS(XUL_NS, "popupset");
+      doc.documentElement.appendChild(popupset);
+    }
+    popupset.appendChild(this._contextmenu);
+  },
+
+  /**
+   * Update the context menu. This means enabling or disabling menuitems as
+   * appropriate.
+   */
+  _contextMenuUpdate: function()
   {
     let win = this.styleDocument.defaultView;
-    let text = win.getSelection().toString();
+    let disable = win.getSelection().isCollapsed;
+    this.menuitemCopy.disabled = disable;
+  },
 
-    // Tidy up block headings by moving CSS property names and their values onto
-    // the same line and inserting a colon between them.
-    text = text.replace(/(.+)\r\n(.+)/g, "$1: $2;");
-    text = text.replace(/(.+)\n(.+)/g, "$1: $2;");
+  /**
+   * Context menu handler.
+   */
+  _onContextMenu: function(event) {
+    try {
+      this.styleDocument.defaultView.focus();
 
-    let outerDoc = this.styleInspector.outerIFrame.ownerDocument;
-    clipboardHelper.copyString(text, outerDoc);
+      this._contextmenu.openPopup(
+          event.target.ownerDocument.documentElement,
+          "overlap", event.clientX, event.clientY, true, false, null);
+    } catch(e) {
+      console.error(e);
+    }
+  },
 
-    if (aEvent) {
-      aEvent.preventDefault();
+  /**
+   * Select all text.
+   */
+  _onSelectAll: function()
+  {
+    try {
+      let win = this.styleDocument.defaultView;
+      let selection = win.getSelection();
+
+      selection.selectAllChildren(this.styleDocument.documentElement);
+    } catch(e) {
+      console.error(e);
+    }
+  },
+
+  /**
+   * Copy selected text.
+   *
+   * @param event The event object
+   */
+  _onCopy: function(event)
+  {
+    try {
+      let win = this.styleDocument.defaultView;
+      let text = win.getSelection().toString().trim();
+
+      // Tidy up block headings by moving CSS property names and their values onto
+      // the same line and inserting a colon between them.
+      let textArray = text.split(/[\r\n]+/);
+      let result = "";
+
+      // Parse text array to output string.
+      if (textArray.length > 1) {
+        for (let prop of textArray) {
+          if (CssHtmlTree.propertyNames.indexOf(prop) !== -1) {
+            // Property name
+            result += prop;
+          } else {
+            // Property value
+            result += ": " + prop;
+            if (result.length > 0) {
+              result += ";\n";
+            }
+          }
+        }
+      } else {
+        // Short text fragment.
+        result = textArray[0];
+      }
+
+      clipboardHelper.copyString(result, this.styleDocument);
+
+      if (event) {
+        event.preventDefault();
+      }
+    } catch(e) {
+      console.error(e);
     }
   },
 
@@ -517,32 +619,25 @@ CssHtmlTree.prototype = {
     }
 
     // Remove context menu
-    let outerDoc = this.styleInspector.outerIFrame.ownerDocument;
-    let menu = outerDoc.querySelector("#computed-view-context-menu");
-    if (menu) {
-      // Copy selected
-      let menuitem = outerDoc.querySelector("#computed-view-copy");
-      menuitem.removeEventListener("command", this.siBoundCopy);
+    if (this._contextmenu) {
+      // Destroy the Select All menuitem.
+      this.menuitemCopy.removeEventListener("command", this._onCopy);
+      this.menuitemCopy = null;
 
-      // Copy property
-      menuitem = outerDoc.querySelector("#computed-view-copy-declaration");
-      menuitem.removeEventListener("command", this.siBoundCopyDeclaration);
+      // Destroy the Copy menuitem.
+      this.menuitemSelectAll.removeEventListener("command", this._onSelectAll);
+      this.menuitemSelectAll = null;
 
-      // Copy property name
-      menuitem = outerDoc.querySelector("#computed-view-copy-property");
-      menuitem.removeEventListener("command", this.siBoundCopyProperty);
-
-      // Copy property value
-      menuitem = outerDoc.querySelector("#computed-view-copy-property-value");
-      menuitem.removeEventListener("command", this.siBoundCopyPropertyValue);
-
-      menu.removeEventListener("popupshowing", this.siBoundMenuUpdate);
-      menu.parentNode.removeChild(menu);
+      // Destroy the context menu.
+      this._contextmenu.removeEventListener("popupshowing", this._contextMenuUpdate);
+      this._contextmenu.parentNode.removeChild(this._contextmenu);
+      this._contextmenu = null;
     }
 
     // Remove bound listeners
-    this.styleDocument.removeEventListener("copy", this.siBoundCopy);
-    this.styleDocument.removeEventListener("mousedown", this.siFocusWindow);
+    this.styleDocument.removeEventListener("contextmenu", this._onContextMenu);
+    this.styleDocument.removeEventListener("copy", this._onCopy);
+    this.styleDocument.removeEventListener("mousedown", this.focusWindow);
 
     // Nodes used in templating
     delete this.root;
@@ -572,6 +667,19 @@ PropertyInfo.prototype = {
     }
   }
 };
+
+function createMenuItem(aMenu, aAttributes)
+{
+  let item = aMenu.ownerDocument.createElementNS(XUL_NS, "menuitem");
+
+  item.setAttribute("label", CssHtmlTree.l10n(aAttributes.label));
+  item.setAttribute("accesskey", CssHtmlTree.l10n(aAttributes.accesskey));
+  item.addEventListener("command", aAttributes.command);
+
+  aMenu.appendChild(item);
+
+  return item;
+}
 
 /**
  * A container to give easy access to property data from the template engine.
@@ -700,29 +808,31 @@ PropertyView.prototype = {
   buildMain: function PropertyView_buildMain()
   {
     let doc = this.tree.styleDocument;
-    let onToggle = this.onStyleToggle.bind(this);
 
     // Build the container element
     this.element = doc.createElementNS(HTML_NS, "div");
     this.element.setAttribute("class", this.propertyHeaderClassName);
+    this.element.addEventListener("dblclick",
+      this.onMatchedToggle.bind(this), false);
 
     // Make it keyboard navigable
     this.element.setAttribute("tabindex", "0");
-    this.element.addEventListener("keydown", function(aEvent) {
+    this.element.addEventListener("keydown", (aEvent) => {
       let keyEvent = Ci.nsIDOMKeyEvent;
       if (aEvent.keyCode == keyEvent.DOM_VK_F1) {
         this.mdnLinkClick();
       }
       if (aEvent.keyCode == keyEvent.DOM_VK_RETURN ||
         aEvent.keyCode == keyEvent.DOM_VK_SPACE) {
-        onToggle(aEvent);
+        this.onMatchedToggle(aEvent);
       }
-    }.bind(this), false);
+    }, false);
 
     // Build the twisty expand/collapse
     this.matchedExpander = doc.createElementNS(HTML_NS, "div");
     this.matchedExpander.className = "expander theme-twisty";
-    this.matchedExpander.addEventListener("click", onToggle, false);
+    this.matchedExpander.addEventListener("click",
+      this.onMatchedToggle.bind(this), false);
     this.element.appendChild(this.matchedExpander);
 
     // Build the style name element
@@ -818,6 +928,7 @@ PropertyView.prototype = {
     } else {
       this.matchedSelectorsContainer.innerHTML = "";
       this.matchedExpander.removeAttribute("open");
+      this.tree.styleInspector.inspector.emit("computed-view-property-collapsed");
       return promise.resolve(undefined);
     }
   },
@@ -850,7 +961,7 @@ PropertyView.prototype = {
    * @param {Event} aEvent Used to determine the class name of the targets click
    * event.
    */
-  onStyleToggle: function PropertyView_onStyleToggle(aEvent)
+  onMatchedToggle: function PropertyView_onMatchedToggle(aEvent)
   {
     this.matchedExpanded = !this.matchedExpanded;
     this.refreshMatchedSelectors();

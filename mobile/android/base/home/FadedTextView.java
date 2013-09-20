@@ -10,6 +10,7 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.LinearGradient;
 import android.graphics.Shader;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.widget.TextView;
 
@@ -23,6 +24,9 @@ public class FadedTextView extends TextView {
 
     // Width of the fade effect from end of the view.
     private int mFadeWidth;
+
+    // Padding for compound drawables.
+    private int mCompoundPadding;
 
     public FadedTextView(Context context) {
         this(context, null);
@@ -38,6 +42,8 @@ public class FadedTextView extends TextView {
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.FadedTextView);
         mFadeWidth = a.getDimensionPixelSize(R.styleable.FadedTextView_fadeWidth, 0);
         a.recycle();
+
+        mCompoundPadding = getCompoundDrawablePadding();
     }
 
     /**
@@ -50,11 +56,18 @@ public class FadedTextView extends TextView {
         // Layout doesn't return a proper width for getWidth().
         // Instead check the width of the first line, as we've restricted to just one line.
         if (getLayout().getLineWidth(0) > width) {
+            final Drawable leftDrawable = getCompoundDrawables()[0];
+            int drawableWidth = 0;
+            if (leftDrawable != null) {
+                drawableWidth = leftDrawable.getIntrinsicWidth() + mCompoundPadding;
+                width -= drawableWidth;
+            }
+
             int color = getCurrentTextColor();
             float stop = ((float) (width - mFadeWidth) / (float) width);
             LinearGradient gradient = new LinearGradient(0, 0, width, 0,
                                                          new int[] { color, color, 0x0 },
-                                                         new float[] { 0, stop, 1.0f },
+                                                         new float[] { 0, stop, 1.0f - (drawableWidth / width) },
                                                          Shader.TileMode.CLAMP);
             getPaint().setShader(gradient);
         } else {

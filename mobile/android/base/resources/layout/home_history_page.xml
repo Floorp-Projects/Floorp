@@ -8,7 +8,7 @@
               android:layout_height="fill_parent"
               android:orientation="vertical">
 
-    <FrameLayout android:id="@+id/visited_page_container"
+    <FrameLayout android:id="@+id/history_page_container"
                  android:layout_width="fill_parent"
                  android:layout_height="0dp"
                  android:layout_weight="1" />
