@@ -453,6 +453,20 @@ public class BrowserDB {
         }
 
         @Override
+        public int getInt(int columnIndex) {
+            if (hasPinnedSites()) {
+                PinnedSite site = getPinnedSite(mIndex);
+                if (site != null) {
+                    return 0;
+                }
+            }
+
+            if (!super.isBeforeFirst() && !super.isAfterLast())
+                return super.getInt(columnIndex);
+            return 0;
+        }
+
+        @Override
         public String getString(int columnIndex) {
             if (hasPinnedSites()) {
                 PinnedSite site = getPinnedSite(mIndex);
