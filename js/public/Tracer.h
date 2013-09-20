@@ -7,6 +7,8 @@
 #ifndef js_Tracer_h
 #define js_Tracer_h
 
+#include "mozilla/NullPtr.h"
+ 
 #include "jspubtd.h"
 
 struct JSTracer;
@@ -93,7 +95,7 @@ struct JSTracer {
     JS_END_MACRO
 # define JS_UNSET_TRACING_LOCATION(trc)                                       \
     JS_BEGIN_MACRO                                                            \
-        (trc)->realLocation = NULL;                                           \
+        (trc)->realLocation = nullptr;                                        \
     JS_END_MACRO
 #else
 # define JS_SET_TRACING_LOCATION(trc, location)                               \
@@ -107,11 +109,11 @@ struct JSTracer {
 // Convenience macro to describe the argument of JS_CallTracer using C string
 // and index.
 # define JS_SET_TRACING_INDEX(trc, name, index)                               \
-    JS_SET_TRACING_DETAILS(trc, NULL, name, index)
+    JS_SET_TRACING_DETAILS(trc, nullptr, name, index)
 
 // Convenience macro to describe the argument of JS_CallTracer using C string.
 # define JS_SET_TRACING_NAME(trc, name)                                       \
-    JS_SET_TRACING_DETAILS(trc, NULL, name, (size_t)-1)
+    JS_SET_TRACING_DETAILS(trc, nullptr, name, (size_t)-1)
 
 // The JS_Call*Tracer family of functions traces the given GC thing reference.
 // This performs the tracing action configured on the given JSTracer:

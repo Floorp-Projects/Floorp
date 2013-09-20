@@ -7,6 +7,7 @@
 #ifndef js_CharacterEncoding_h
 #define js_CharacterEncoding_h
 
+#include "mozilla/NullPtr.h"
 #include "mozilla/Range.h"
 
 #include "jspubtd.h"
@@ -41,7 +42,7 @@ class Latin1CharsZ : public mozilla::RangedPtr<unsigned char>
     typedef mozilla::RangedPtr<unsigned char> Base;
 
   public:
-    Latin1CharsZ() : Base(NULL, 0) {}
+    Latin1CharsZ() : Base(nullptr, 0) {}
 
     Latin1CharsZ(char *aBytes, size_t aLength)
       : Base(reinterpret_cast<unsigned char *>(aBytes), aLength)
@@ -80,7 +81,7 @@ class UTF8CharsZ : public mozilla::RangedPtr<unsigned char>
     typedef mozilla::RangedPtr<unsigned char> Base;
 
   public:
-    UTF8CharsZ() : Base(NULL, 0) {}
+    UTF8CharsZ() : Base(nullptr, 0) {}
 
     UTF8CharsZ(char *aBytes, size_t aLength)
       : Base(reinterpret_cast<unsigned char *>(aBytes), aLength)
@@ -138,7 +139,7 @@ class TwoByteCharsZ : public mozilla::RangedPtr<jschar>
     typedef mozilla::RangedPtr<jschar> Base;
 
   public:
-    TwoByteCharsZ() : Base(NULL, 0) {}
+    TwoByteCharsZ() : Base(nullptr, 0) {}
 
     TwoByteCharsZ(jschar *chars, size_t length)
       : Base(chars, length)
@@ -154,7 +155,7 @@ class TwoByteCharsZ : public mozilla::RangedPtr<jschar>
  * output. The returned string is zero terminated. The returned string or the
  * returned string's |start()| must be freed with JS_free or js_free,
  * respectively. If allocation fails, an OOM error will be set and the method
- * will return a NULL chars (which can be tested for with the ! operator).
+ * will return a nullptr chars (which can be tested for with the ! operator).
  * This method cannot trigger GC.
  */
 extern Latin1CharsZ

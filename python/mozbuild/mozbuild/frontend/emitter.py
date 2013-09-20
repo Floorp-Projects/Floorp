@@ -13,6 +13,7 @@ import mozpack.path as mozpath
 
 from .data import (
     ConfigFileSubstitution,
+    Defines,
     DirectoryTraversal,
     Exports,
     GeneratedEventWebIDLFile,
@@ -122,7 +123,6 @@ class TreeMetadataEmitter(LoggingMixin):
             CPPSRCS='CPP_SOURCES',
             CPP_UNIT_TESTS='CPP_UNIT_TESTS',
             CSRCS='CSRCS',
-            DEFINES='DEFINES',
             EXPORT_LIBRARY='EXPORT_LIBRARY',
             EXTRA_COMPONENTS='EXTRA_COMPONENTS',
             EXTRA_JS_MODULES='EXTRA_JS_MODULES',
@@ -162,6 +162,10 @@ class TreeMetadataEmitter(LoggingMixin):
         if exports:
             yield Exports(sandbox, exports,
                 dist_install=not sandbox.get('NO_DIST_INSTALL', False))
+
+        defines = sandbox.get('DEFINES')
+        if defines:
+            yield Defines(sandbox, defines)
 
         program = sandbox.get('PROGRAM')
         if program:

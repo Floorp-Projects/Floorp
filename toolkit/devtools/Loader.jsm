@@ -57,6 +57,7 @@ var BuiltinProvider = {
         "devtools/toolkit/webconsole": "resource://gre/modules/devtools/toolkit/webconsole",
         "devtools/app-actor-front": "resource://gre/modules/devtools/app-actor-front.js",
         "devtools/styleinspector/css-logic": "resource://gre/modules/devtools/styleinspector/css-logic",
+        "devtools/css-color": "resource://gre/modules/devtools/css-color",
         "devtools/client": "resource://gre/modules/devtools/client",
 
         "escodegen/escodegen": "resource://gre/modules/devtools/escodegen/escodegen",

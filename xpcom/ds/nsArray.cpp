@@ -5,7 +5,8 @@
 
 #include "nsArray.h"
 #include "nsArrayEnumerator.h"
-#include "nsWeakReference.h"
+#include "nsIWeakReference.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsThreadUtils.h"
 
 // used by IndexOf()

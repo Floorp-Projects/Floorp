@@ -9,7 +9,6 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "jsapi.h"
-#include "js/Class.h"
 
 #include "nsCycleCollector.h"
 #include "nsCycleCollectionParticipant.h"
@@ -18,8 +17,11 @@
 #include "nsTArray.h"
 
 class nsCycleCollectionNoteRootCallback;
-class nsScriptObjectTracer;
 class nsIException;
+
+namespace js {
+class Class;
+}
 
 namespace mozilla {
 

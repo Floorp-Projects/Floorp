@@ -370,7 +370,7 @@ nsFileStreamBase::DoPendingOpen()
 NS_IMPL_ADDREF_INHERITED(nsFileInputStream, nsFileStreamBase)
 NS_IMPL_RELEASE_INHERITED(nsFileInputStream, nsFileStreamBase)
 
-NS_IMPL_CLASSINFO(nsFileInputStream, NULL, nsIClassInfo::THREADSAFE,
+NS_IMPL_CLASSINFO(nsFileInputStream, nullptr, nsIClassInfo::THREADSAFE,
                   NS_LOCALFILEINPUTSTREAM_CID)
 
 NS_INTERFACE_MAP_BEGIN(nsFileInputStream)
@@ -621,7 +621,7 @@ nsFileInputStream::Deserialize(const InputStreamParams& aParams)
 NS_IMPL_ADDREF_INHERITED(nsPartialFileInputStream, nsFileStreamBase)
 NS_IMPL_RELEASE_INHERITED(nsPartialFileInputStream, nsFileStreamBase)
 
-NS_IMPL_CLASSINFO(nsPartialFileInputStream, NULL, nsIClassInfo::THREADSAFE,
+NS_IMPL_CLASSINFO(nsPartialFileInputStream, nullptr, nsIClassInfo::THREADSAFE,
                   NS_PARTIALLOCALFILEINPUTSTREAM_CID)
 
 // Don't forward to nsFileInputStream as we don't want to QI to

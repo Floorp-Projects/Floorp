@@ -2718,13 +2718,6 @@ GetScriptReferent(JSObject *obj)
     return static_cast<JSScript *>(obj->getPrivate());
 }
 
-static inline void
-SetScriptReferent(JSObject *obj, JSScript *script)
-{
-    JS_ASSERT(obj->getClass() == &DebuggerScript_class);
-    obj->setPrivateGCThing(script);
-}
-
 static void
 DebuggerScript_trace(JSTracer *trc, JSObject *obj)
 {

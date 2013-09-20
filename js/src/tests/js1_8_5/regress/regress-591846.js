@@ -56,6 +56,12 @@ check(Object, 'arguments', null, false);
 
 // Reset RegExp.leftContext to the empty string.
 /x/.test('x');
-check(RegExp, 'leftContext', '', true);
+
+var d = Object.getOwnPropertyDescriptor(RegExp, "leftContext");
+assertEq(d.set, undefined);
+assertEq(typeof d.get, "function");
+assertEq(d.enumerable, true);
+assertEq(d.configurable, false);
+assertEq(d.get.call(RegExp), "");
 
 reportCompare(0, 0, "ok");

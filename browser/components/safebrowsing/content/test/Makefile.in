@@ -8,10 +8,13 @@ MOCHITEST_BROWSER_FILES := \
   browser_bug400731.js \
   $(NULL)
 
-# The browser chrome test for bug 415846 doesn't run on Mac because of its
-# bizarre special-and-unique snowflake of a help menu.
-ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-MOCHITEST_BROWSER_FILES += \
-  browser_bug415846.js \
-  $(NULL)
-endif
+
+# browser_bug415846.js disabled for too many intermittent failures (bug 546169)
+#
+# # The browser chrome test for bug 415846 doesn't run on Mac because of its
+# # bizarre special-and-unique snowflake of a help menu.
+# ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+# MOCHITEST_BROWSER_FILES += \
+#   browser_bug415846.js \
+#   $(NULL)
+# endif

@@ -528,7 +528,7 @@ nsMemoryCacheDevice::EvictEntries(const char * clientID)
 nsresult
 nsMemoryCacheDevice::EvictPrivateEntries()
 {
-    return DoEvictEntries(&IsEntryPrivate, NULL);
+    return DoEvictEntries(&IsEntryPrivate, nullptr);
 }
 
 

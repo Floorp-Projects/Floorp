@@ -881,7 +881,7 @@ net_ParseMediaType(const nsACString &aMediaTypeStr,
     // include a comma, so this check makes us a bit more tolerant.
 
     if (type != typeEnd && strncmp(type, "*/*", typeEnd - type) != 0 &&
-        memchr(type, '/', typeEnd - type) != NULL) {
+        memchr(type, '/', typeEnd - type) != nullptr) {
         // Common case here is that aContentType is empty
         bool eq = !aContentType.IsEmpty() &&
             aContentType.Equals(Substring(type, typeEnd),

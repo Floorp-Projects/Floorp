@@ -12,7 +12,7 @@
 #include "nsAHttpConnection.h"
 #include "EventTokenBucket.h"
 #include "nsCOMPtr.h"
-
+#include "nsThreadUtils.h"
 #include "nsIPipe.h"
 #include "nsIInputStream.h"
 #include "nsILoadGroup.h"
