@@ -1945,18 +1945,6 @@ nsDocShell::GatherCharsetMenuTelemetry()
 NS_IMETHODIMP
 nsDocShell::SetCharset(const char* aCharset)
 {
-    // set the default charset
-    nsCOMPtr<nsIContentViewer> viewer;
-    GetContentViewer(getter_AddRefs(viewer));
-    if (viewer) {
-      nsCOMPtr<nsIMarkupDocumentViewer> muDV(do_QueryInterface(viewer));
-      if (muDV) {
-        nsCString charset(aCharset);
-        NS_ENSURE_SUCCESS(muDV->SetDefaultCharacterSet(charset),
-                          NS_ERROR_FAILURE);
-      }
-    }
-
     // set the charset override
     nsCString charset(aCharset);
     SetForcedCharset(charset);
