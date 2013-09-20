@@ -244,6 +244,10 @@ BaselineCompile(JSContext *cx, HandleScript script)
 static MethodStatus
 CanEnterBaselineJIT(JSContext *cx, HandleScript script, bool osr)
 {
+    // Limit the locals on a given script so that stack check on baseline frames        
+    // doesn't overflow a uint32_t value.
+    static_assert(sizeof(script->nslots) == sizeof(uint16_t), "script->nslots may get too large!");
+
     JS_ASSERT(jit::IsBaselineEnabled(cx));
 
     // Skip if the script has been disabled.
@@ -252,8 +256,6 @@ CanEnterBaselineJIT(JSContext *cx, HandleScript script, bool osr)
 
     if (script->length > BaselineScript::MAX_JSSCRIPT_LENGTH)
         return Method_CantCompile;
-
-    JS_STATIC_ASSERT(sizeof(script->nslots) == sizeof(uint16_t));
 
     if (!cx->compartment()->ensureIonCompartmentExists(cx))
         return Method_Error;
