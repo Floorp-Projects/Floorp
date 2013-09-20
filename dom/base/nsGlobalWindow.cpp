@@ -34,6 +34,7 @@
 #include "nsIPermissionManager.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptTimeoutHandler.h"
+#include "mozilla/dom/TabChild.h"
 
 #ifdef XP_WIN
 // Thanks so much, Microsoft! :(
@@ -5710,6 +5711,9 @@ nsGlobalWindow::Focus()
         flags |= nsIFocusManager::FLAG_RAISE;
       return fm->SetFocus(frameElement, flags);
     }
+  }
+  else if (TabChild *child = TabChild::GetFrom(this)) {
+    child->SendRequestFocus(canFocus);
   }
   else if (canFocus) {
     // if there is no parent, this must be a toplevel window, so raise the
