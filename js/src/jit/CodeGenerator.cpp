@@ -2513,7 +2513,7 @@ CodeGenerator::visitCheckOverRecursedFailurePar(CheckOverRecursedFailurePar *ool
     LCheckOverRecursedPar *lir = ool->lir();
     Register tempReg = ToRegister(lir->getTempReg());
     RegisterSet saveSet(lir->safepoint()->liveRegs());
-    saveSet.maybeTake(tempReg);
+    saveSet.takeUnchecked(tempReg);
 
     masm.PushRegsInMask(saveSet);
     masm.movePtr(ToRegister(lir->forkJoinSlice()), CallTempReg0);
@@ -2575,7 +2575,7 @@ CodeGenerator::visitOutOfLineCheckInterruptPar(OutOfLineCheckInterruptPar *ool)
     LCheckInterruptPar *lir = ool->lir;
     Register tempReg = ToRegister(lir->getTempReg());
     RegisterSet saveSet(lir->safepoint()->liveRegs());
-    saveSet.maybeTake(tempReg);
+    saveSet.takeUnchecked(tempReg);
 
     masm.PushRegsInMask(saveSet);
     masm.movePtr(ToRegister(ool->lir->forkJoinSlice()), CallTempReg0);
@@ -3294,7 +3294,7 @@ CodeGenerator::visitOutOfLineNewGCThingPar(OutOfLineNewGCThingPar *ool)
     // but don't bother to save the objReg.
     saveSet.addUnchecked(CallTempReg0);
     saveSet.addUnchecked(CallTempReg1);
-    saveSet.maybeTake(AnyRegister(ool->objReg));
+    saveSet.takeUnchecked(AnyRegister(ool->objReg));
 
     masm.PushRegsInMask(saveSet);
     masm.move32(Imm32(ool->allocKind), CallTempReg0);
@@ -4929,7 +4929,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
         // registers, we can examine `object` to know whether an error
         // occurred.
         RegisterSet saveSet(ins->safepoint()->liveRegs());
-        saveSet.maybeTake(object);
+        saveSet.takeUnchecked(object);
 
         masm.PushRegsInMask(saveSet);
         masm.reserveStack(sizeof(PushParArgs));
