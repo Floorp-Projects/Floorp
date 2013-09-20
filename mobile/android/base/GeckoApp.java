@@ -1540,10 +1540,9 @@ abstract public class GeckoApp
                 final Context context = GeckoApp.this;
                 AnnouncementsBroadcastService.recordLastLaunch(context);
 
-                // Kick off our background services that fetch product
-                // announcements and upload health reports.  We do this by
-                // invoking the broadcast receiver, which uses the system alarm
-                // infrastructure to perform tasks at intervals.
+                // Kick off our background services. We do this by invoking the broadcast
+                // receiver, which uses the system alarm infrastructure to perform tasks at
+                // intervals.
                 GeckoPreferences.broadcastAnnouncementsPref(context);
                 GeckoPreferences.broadcastHealthReportUploadPref(context);
 
@@ -1938,6 +1937,7 @@ abstract public class GeckoApp
     public void onPause()
     {
         final BrowserHealthRecorder rec = mHealthRecorder;
+        final Context context = this;
 
         // In some way it's sad that Android will trigger StrictMode warnings
         // here as the whole point is to save to disk while the activity is not
@@ -1952,6 +1952,11 @@ abstract public class GeckoApp
                     rec.recordSessionEnd("P", editor);
                 }
                 editor.commit();
+
+                // In theory, the first browser session will not run long enough that we need to
+                // prune during it and we'd rather run it when the browser is inactive so we wait
+                // until here to register the prune service.
+                GeckoPreferences.broadcastHealthReportPrune(context);
             }
         });
 
