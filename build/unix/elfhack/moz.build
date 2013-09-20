@@ -12,6 +12,11 @@ CSRCS += [
     'test-ctors.c',
 ]
 
+if not CONFIG['CROSS_COMPILE']:
+    CSRCS += [
+        'dummy.c',
+    ]
+
 HOST_CPPSRCS += [
     'elf.cpp',
     'elfhack.cpp',
