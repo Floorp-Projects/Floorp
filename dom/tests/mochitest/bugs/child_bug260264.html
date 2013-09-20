@@ -1,14 +1,11 @@
 <html>
   <head>
-    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
-    <script type="application/javascript" src="utils_bug260264.js"></script>
   </head>
   <body>
     <iframe id="frame"></iframe>
     <script type="application/javascript">
-      document.getElementById("frame").src =
-        alter_file(alter_host(location.href, "mochi.test:8888"),
-                   "grandchild_bug260264.html");
+      var tempstr = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')+1);
+      document.getElementById("frame").src = "http://mochi.test:8888" + tempstr + "grandchild_bug260264.html" + window.location.hash;
     </script>
   </body>
 </html>

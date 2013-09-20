@@ -22,96 +22,112 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=260264
 
 SimpleTest.waitForExplicitFinish();
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var popupEvents = makePrefAccessor("dom.popup_allowed_events"),
-    blockPopups = makePrefAccessor("dom.disable_open_during_load"),
-    ownPopupPriv = makePopupPrivAccessor(location.href),
-    ecPopupPriv = makePopupPrivAccessor("http://example.com");
+function makeIframe(aEvent) {
+  var tempURL = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')+1);
+  tempURL = 'http://example.com' + tempURL + "child_bug260264.html#" + aEvent;
+  $("display").appendChild(document.createElement("iframe")).src = tempURL;
+}
 
 function test_nested_frames() {
+  SpecialPowers.pushPrefEnv({"set": [["dom.disable_open_during_load", true]]}, test_nested_frames2);
+}
 
-  var savedBlockPopups = blockPopups(true);
-
+function test_nested_frames2() {
   // Grandchild will use this name to refer to the current window:
   window.name = "parent260264";
 
-  function performer(event) {
-    $("display").appendChild(document.createElement("iframe")).src =
-      alter_file(alter_host(location.href, "example.com"),
-                             "child_bug260264.html#" + event);
+  if (tests[0]) {
+    tests[0].setup(function() {makeIframe(tests[0].event);});
+  } else {
+    ok(false, "There should have run 8 tests here");
+    SimpleTest.finish();
   }
+}
 
-  function finisher(old) {
-    popupEvents(old.events);
-    ownPopupPriv(old.ownPriv);
-    ecPopupPriv(old.ecPriv);
+function should_have_blocked(popup) {
+  ok(!popup, "popup should have been blocked");
+}
+
+function should_not_have_blocked(popup) {
+ ok(popup, "popup should not have been blocked");
+}
+
+function setupPP(aAllowedEvents, aPopup1, aPopup2, aNext) {
+  SpecialPowers.pushPrefEnv({"set": [["dom.popup_allowed_events", aAllowedEvents]]}, function() {
+  SpecialPowers.pushPermissions([{'type': 'popup', 'allow': aPopup1, 'context': document},
+                                 {'type': 'popup', 'allow': aPopup2, 'context': 'http://example.com'}], aNext);
+  });
+}
+
+/**
+ * The example_priv (DENY_ACTION) parameter controls whether or not the child frame has
+ * popup clearance.  Neither the top window nor the grandchild frame have
+ * this clearance.  The point of these tests is to make sure the child's
+ * clearance (or lack thereof) is properly considered when opening a popup
+ * from the grandchild.
+*/
+
+var tests = [
+ { event: "mouseup",
+   setup: function(aNext) {
+     setupPP("click mouseup", DENY_ACTION, DENY_ACTION, aNext);
+   },
+   report: should_not_have_blocked
+ },
+ { event: "mouseup",
+   setup: function(aNext) {
+     setupPP("click mouseup", ALLOW_ACTION, ALLOW_ACTION, aNext);
+   },
+   report: should_not_have_blocked
+ },
+ { event: "mouseup",
+   setup: function(aNext) {
+     setupPP("click", ALLOW_ACTION, ALLOW_ACTION, aNext);
+   },
+   report: should_not_have_blocked
+ },
+ { event: "mouseup",
+   setup: function(aNext) {
+     setupPP("click", DENY_ACTION, DENY_ACTION, aNext);
+   },
+   report: should_have_blocked
+ },
+ { event: "mouseover",
+   setup: function(aNext) {
+     setupPP("click mouseup", DENY_ACTION, DENY_ACTION, aNext);
+   },
+   report: should_have_blocked
+ },
+ { event: "mouseover",
+   setup: function(aNext) {
+     setupPP("click mouseup", ALLOW_ACTION, ALLOW_ACTION, aNext);
+   },
+   report: should_not_have_blocked
+ },
+ { event: "click",
+   setup: function(aNext) {
+     setupPP("click mouseup", DENY_ACTION, DENY_ACTION, aNext);
+   },
+   report: should_not_have_blocked
+ },
+ { event: "click",
+   setup: function(aNext) {
+     setupPP("click mouseup", ALLOW_ACTION, ALLOW_ACTION, aNext);
+   },
+   report: should_not_have_blocked
+ }
+];
+
+// Visible to child windows:
+function report(popup) {
+  tests[0].report(popup);
+  tests.shift();
+
+  if (tests[0]) {
+    tests[0].setup(function() {makeIframe(tests[0].event);});
+  } else {
+    SimpleTest.finish();
   }
-
-  function should_have_blocked(popup) {
-    ok(!popup, "popup should have been blocked");
-  }
-
-  function should_not_have_blocked(popup) {
-    ok(popup, "popup should not have been blocked");
-  }
-
-  /**
-   * The example_priv parameter controls whether or not the child frame has
-   * popup clearance.  Neither the top window nor the grandchild frame have
-   * this clearance.  The point of these tests is to make sure the child's
-   * clearance (or lack thereof) is properly considered when opening a popup
-   * from the grandchild.
-   */
-  function makeTest(event, example_priv, reporter, allowed_events) {
-    return {
-      event: event,
-      setup: function(old) {
-        old.events = popupEvents(allowed_events || "click mouseup");
-        old.ownPriv = ownPopupPriv(DENY_ACTION);
-        old.ecPriv = ecPopupPriv(example_priv);
-      },
-      report: reporter,
-      perform: performer,
-      finish: finisher
-    };
-  };
-
-  var tests = [
-    makeTest("mouseup",    DENY_ACTION, should_not_have_blocked),
-    makeTest("mouseup",   ALLOW_ACTION, should_not_have_blocked),
-    makeTest("mouseup",   ALLOW_ACTION, should_not_have_blocked, "click"),
-    makeTest("mouseup",    DENY_ACTION, should_have_blocked, "click"),
-    makeTest("mouseover",  DENY_ACTION, should_have_blocked),
-    makeTest("mouseover", ALLOW_ACTION, should_not_have_blocked),
-    makeTest("click",      DENY_ACTION, should_not_have_blocked),
-    makeTest("click",     ALLOW_ACTION, should_not_have_blocked)
-  ];
-
-  function resume() {
-    var options = tests[0];
-    if (options) {
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-      options.setup(tests[0].old = {});
-      options.perform(options.event);
-    } else {
-      blockPopups(savedBlockPopups);
-      SimpleTest.finish();
-    }
-  }
-
-  // Visible to child windows:
-  window.report = function(popup) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    try { tests[0].report(popup) }
-    finally {
-      tests[0].finish(tests[0].old);
-      tests.shift();
-      resume();
-    }
-  }
-
-  resume();
-
 }
 
 test_nested_frames();
