@@ -148,14 +148,21 @@ public class GeckoNetworkManager extends BroadcastReceiver {
         if (mNetworkType != NetworkType.NETWORK_WIFI) {
             return 0;
         }
- 
-        WifiManager mgr = (WifiManager)sInstance.mApplicationContext.getSystemService(Context.WIFI_SERVICE);
-        DhcpInfo d = mgr.getDhcpInfo();
-        if (d == null) {
+        try {
+            WifiManager mgr = (WifiManager)sInstance.mApplicationContext.getSystemService(Context.WIFI_SERVICE);
+            DhcpInfo d = mgr.getDhcpInfo();
+            if (d == null) {
+                return 0;
+            }
+
+            return d.gateway;
+
+        } catch (Exception ex) {
+            // getDhcpInfo() is not documented to require any permissions, but on some devices
+            // requires android.permission.ACCESS_WIFI_STATE. Just catching the generic exeption
+            // here and returning 0. Not logging because this could be noisy
             return 0;
         }
-
-        return d.gateway;
     }
 
     private void updateNetworkType() {
