@@ -89,6 +89,12 @@ class CPPUnitTests(object):
                 env[pathvar] = "%s%s%s" % (self.xre_path, os.pathsep, env[pathvar])
             else:
                 env[pathvar] = self.xre_path
+
+        # Use llvm-symbolizer for ASan if available/required
+        llvmsym = os.path.join(self.xre_path, "llvm-symbolizer")
+        if os.path.isfile(llvmsym):
+          env["ASAN_SYMBOLIZER_PATH"] = llvmsym
+
         return env
 
     def run_tests(self, programs, xre_path, symbols_path=None):
