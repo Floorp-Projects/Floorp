@@ -46,6 +46,7 @@ using mozilla::IsNegativeZero;
 using mozilla::Maybe;
 using mozilla::OldMove;
 using mozilla::MoveRef;
+using mozilla::PositiveInfinity;
 
 static const size_t LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
 
@@ -2963,7 +2964,7 @@ CheckGlobalDotImport(ModuleCompiler &m, PropertyName *varName, ParseNode *initNo
         if (field == m.cx()->names().NaN)
             return m.addGlobalConstant(varName, js_NaN, field);
         if (field == m.cx()->names().Infinity)
-            return m.addGlobalConstant(varName, js_PositiveInfinity, field);
+            return m.addGlobalConstant(varName, PositiveInfinity(), field);
         return m.failName(initNode, "'%s' is not a standard global constant", field);
     }
 

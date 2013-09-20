@@ -22,6 +22,8 @@ using namespace js::frontend;
 
 using mozilla::IsNaN;
 using mozilla::IsNegative;
+using mozilla::NegativeInfinity;
+using mozilla::PositiveInfinity;
 
 static ParseNode *
 ContainsVarOrConst(ParseNode *pn)
@@ -153,9 +155,9 @@ FoldBinaryNumeric(ExclusiveContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
             if (d == 0 || IsNaN(d))
                 d = js_NaN;
             else if (IsNegative(d) != IsNegative(d2))
-                d = js_NegativeInfinity;
+                d = NegativeInfinity();
             else
-                d = js_PositiveInfinity;
+                d = PositiveInfinity();
         } else {
             d /= d2;
         }
