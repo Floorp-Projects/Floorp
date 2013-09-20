@@ -629,6 +629,7 @@ class ScriptAnalysis
     bool canTrackVars:1;
     bool hasLoops_:1;
     bool hasTryFinally_:1;
+    bool argumentsContentsObserved_:1;
 
     uint32_t numReturnSites_;
 

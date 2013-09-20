@@ -1573,12 +1573,16 @@ ScriptAnalysis::needsArgsObj(JSContext *cx, SeenVector &seen, SSAUseChain *use)
         return false;
 
     /* We can read the frame's arguments directly for f.apply(x, arguments). */
-    if (op == JSOP_FUNAPPLY && GET_ARGC(pc) == 2 && use->u.which == 0)
+    if (op == JSOP_FUNAPPLY && GET_ARGC(pc) == 2 && use->u.which == 0) {
+        argumentsContentsObserved_ = true;
         return false;
+    }
 
     /* arguments[i] can read fp->canonicalActualArg(i) directly. */
-    if (op == JSOP_GETELEM && use->u.which == 1)
+    if (op == JSOP_GETELEM && use->u.which == 1) {
+        argumentsContentsObserved_ = true;
         return false;
+    }
 
     /* arguments.length length can read fp->numActualArgs() directly. */
     if (op == JSOP_LENGTH)
@@ -1634,19 +1638,22 @@ ScriptAnalysis::needsArgsObj(JSContext *cx)
     if (localsAliasStack())
         return true;
 
-    /*
-     * If a script has explicit mentions of 'arguments' and formals which may
-     * be stored as part of a call object, don't use lazy arguments. The
-     * compiler can then assume that accesses through arguments[i] will be on
-     * unaliased variables.
-     */
-    if (script_->funHasAnyAliasedFormal)
-        return true;
-
     unsigned pcOff = script_->argumentsBytecode() - script_->code;
 
     SeenVector seen(cx);
-    return needsArgsObj(cx, seen, SSAValue::PushedValue(pcOff, 0));
+    if (needsArgsObj(cx, seen, SSAValue::PushedValue(pcOff, 0)))
+        return true;
+
+    /*
+     * If a script explicitly accesses the contents of 'arguments', and has
+     * formals which may be stored as part of a call object, don't use lazy
+     * arguments. The compiler can then assume that accesses through
+     * arguments[i] will be on unaliased variables.
+     */
+    if (script_->funHasAnyAliasedFormal && argumentsContentsObserved_)
+        return true;
+
+    return false;
 }
 
 #ifdef DEBUG
