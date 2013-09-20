@@ -511,10 +511,13 @@ void TableTicker::InplaceTick(TickSample* sample)
 
   // Marker(s) come before the sample
   PseudoStack* stack = currThreadProfile.GetPseudoStack();
-  for (int i = 0; stack->getMarker(i) != NULL; i++) {
-    addDynamicTag(currThreadProfile, 'm', stack->getMarker(i));
+  ProfilerMarkerLinkedList* pendingMarkersList = stack->getPendingMarkers();
+  while (pendingMarkersList && pendingMarkersList->peek()) {
+    ProfilerMarker* marker = pendingMarkersList->popHead();
+    stack->addStoredMarker(marker);
+    currThreadProfile.addTag(ProfileEntry('m', marker));
   }
-  stack->mQueueClearMarker = true;
+  stack->updateGeneration(currThreadProfile.GetGenerationID());
 
   bool recordSample = true;
   if (mJankOnly) {

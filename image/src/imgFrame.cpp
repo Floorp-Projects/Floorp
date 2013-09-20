@@ -814,6 +814,7 @@ void imgFrame::SetHasNoAlpha()
   if (mFormat == gfxASurface::ImageFormatARGB32) {
       mFormat = gfxASurface::ImageFormatRGB24;
       mFormatChanged = true;
+      ThebesSurface()->SetOpaqueRect(gfxRect(0, 0, mSize.width, mSize.height));
   }
 }
 

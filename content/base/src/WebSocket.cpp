@@ -671,7 +671,7 @@ WebSocket::Init(JSContext* aCx,
   NS_ENSURE_SUCCESS(rv, rv);
 
   unsigned lineno;
-  JSScript* script;
+  JS::RootedScript script(aCx);
   if (JS_DescribeScriptedCaller(aCx, &script, &lineno)) {
     mScriptFile = JS_GetScriptFilename(aCx, script);
     mScriptLine = lineno;

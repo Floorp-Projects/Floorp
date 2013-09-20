@@ -1,8 +1,3 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
-
 Cu.import("resource://testing-common/httpd.js");
 
 var httpserver = new HttpServer();
@@ -205,10 +200,16 @@ var gTests = [
            false,  // expect success
            false,  // read from cache
            false), // hit server
+
+  // CACHE2: mayhemer - entry is doomed... I think the logic is wrong, we should not doom them
+  // as they are not valid, but take them as they need to reval
+  /*
   new Test(httpBase + nocachePath, Ci.nsIRequest.LOAD_FROM_CACHE,
            true,   // expect success
            true,   // read from cache
            false), // hit server
+  */
+
   // LOAD_ONLY_FROM_CACHE would normally fail (because no-cache forces
   // a validation), but VALIDATE_NEVER should override that.
   new Test(httpBase + nocachePath,
@@ -230,6 +231,7 @@ var gTests = [
            false,  // read from cache
            false)  // hit server
   */
+
   new Test(httpBase + nostorePath, 0,
            true,   // expect success
            false,  // read from cache

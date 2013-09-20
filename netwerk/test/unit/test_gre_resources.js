@@ -1,7 +1,5 @@
 // test that things that are expected to be in gre-resources are still there
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
 var ios = Cc["@mozilla.org/network/io-service;1"]. getService(Ci.nsIIOService);
 
 function wrapInputStream(input)

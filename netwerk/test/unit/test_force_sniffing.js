@@ -1,10 +1,5 @@
 // This file tests the flag LOAD_TREAT_APPLICATION_OCTET_STREAM_AS_UNKNOWN.
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
-
 Cu.import("resource://testing-common/httpd.js");
 
 const octetStreamType = "application/octet-stream";
