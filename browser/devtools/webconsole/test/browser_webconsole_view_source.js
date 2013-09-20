@@ -6,6 +6,10 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-error.html";
 
+let containsValue;
+let Sources;
+let containsValueInvoked = false;
+
 function test() {
   addTab(TEST_URI);
   browser.addEventListener("load", function onLoad() {
@@ -15,21 +19,32 @@ function test() {
 }
 
 function testViewSource(hud) {
+  info("console opened");
+
   let button = content.document.querySelector("button");
   ok(button, "we have the button on the page");
 
   expectUncaughtException();
   EventUtils.sendMouseEvent({ type: "click" }, button, content);
 
-  waitForMessages({
-    webconsole: hud,
-    messages: [{
-      text: "fooBazBaz is not defined",
-      category: CATEGORY_JS,
-      severity: SEVERITY_ERROR,
-    }],
-  }).then(([result]) => {
-    Cu.forceGC();
+  openDebugger().then(({panelWin: { DebuggerView }}) => {
+    info("debugger openeed");
+    Sources = DebuggerView.Sources;
+    openConsole(null, (hud) => {
+      info("console opened again");
+
+      waitForMessages({
+        webconsole: hud,
+        messages: [{
+          text: "fooBazBaz is not defined",
+          category: CATEGORY_JS,
+          severity: SEVERITY_ERROR,
+        }],
+      }).then(onMessage);
+    });
+  });
+
+  function onMessage([result]) {
     let msg = [...result.matched][0];
     ok(msg, "error message");
     let locationNode = msg.querySelector(".location");
@@ -37,8 +52,14 @@ function testViewSource(hud) {
 
     Services.ww.registerNotification(observer);
 
+    containsValue = Sources.containsValue;
+    Sources.containsValue = () => {
+      containsValueInvoked = true;
+      return false;
+    };
+
     EventUtils.sendMouseEvent({ type: "click" }, locationNode);
-  });
+  }
 }
 
 let observer = {
@@ -53,6 +74,9 @@ let observer = {
     // executeSoon() is necessary to avoid crashing Firefox. See bug 611543.
     executeSoon(function() {
       aSubject.close();
+      ok(containsValueInvoked, "custom containsValue() was invoked");
+      Sources.containsValue = containsValue;
+      Sources = containsValue = null;
       finishTest();
     });
   }
