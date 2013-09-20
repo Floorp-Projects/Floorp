@@ -23,6 +23,8 @@
 using namespace js;
 using namespace jit;
 
+using JS::GenericNaN;
+
 bool
 LIRGenerator::visitParameter(MParameter *param)
 {
@@ -1554,7 +1556,7 @@ LIRGenerator::visitToDouble(MToDouble *convert)
 
       case MIRType_Undefined:
         JS_ASSERT(conversion != MToDouble::NumbersOnly);
-        return lowerConstantDouble(js_NaN, convert);
+        return lowerConstantDouble(GenericNaN(), convert);
 
       case MIRType_Boolean:
         JS_ASSERT(conversion != MToDouble::NumbersOnly);
@@ -1603,7 +1605,7 @@ LIRGenerator::visitToFloat32(MToFloat32 *convert)
 
       case MIRType_Undefined:
         JS_ASSERT(conversion != MToFloat32::NumbersOnly);
-        return lowerConstantFloat32(js_NaN, convert);
+        return lowerConstantFloat32(GenericNaN(), convert);
 
       case MIRType_Boolean:
         JS_ASSERT(conversion != MToFloat32::NumbersOnly);

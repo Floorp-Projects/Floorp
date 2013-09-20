@@ -51,6 +51,7 @@ using mozilla::NegativeInfinity;
 using mozilla::PodCopy;
 using mozilla::PositiveInfinity;
 using mozilla::RangedPtr;
+using JS::GenericNaN;
 
 /*
  * If we're accumulating a decimal number and the number is >= 2^53, then the
@@ -304,7 +305,7 @@ num_parseFloat(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() == 0) {
-        args.rval().setDouble(js_NaN);
+        args.rval().setNaN();
         return true;
     }
     JSString *str = ToString<CanGC>(cx, args[0]);
@@ -319,7 +320,7 @@ num_parseFloat(JSContext *cx, unsigned argc, Value *vp)
     if (!js_strtod(cx, bp, end, &ep, &d))
         return false;
     if (ep == bp) {
-        args.rval().setDouble(js_NaN);
+        args.rval().setNaN();
         return true;
     }
     args.rval().setDouble(d);
@@ -334,7 +335,7 @@ js::num_parseInt(JSContext *cx, unsigned argc, Value *vp)
 
     /* Fast paths and exceptional cases. */
     if (args.length() == 0) {
-        args.rval().setDouble(js_NaN);
+        args.rval().setNaN();
         return true;
     }
 
@@ -391,7 +392,7 @@ js::num_parseInt(JSContext *cx, unsigned argc, Value *vp)
             radix = 10;
         } else {
             if (radix < 2 || radix > 36) {
-                args.rval().setDouble(js_NaN);
+                args.rval().setNaN();
                 return true;
             }
             if (radix != 16)
@@ -434,7 +435,7 @@ js::num_parseInt(JSContext *cx, unsigned argc, Value *vp)
     if (!GetPrefixInteger(cx, s, end, radix, &actualEnd, &number))
         return false;
     if (s == actualEnd)
-        args.rval().setNumber(js_NaN);
+        args.rval().setNaN();
     else
         args.rval().setNumber(negative ? -number : number);
     return true;
@@ -1116,8 +1117,6 @@ static JSConstDoubleSpec number_constants[] = {
     {0,0,0,{0,0,0}}
 };
 
-double js_NaN;
-
 #if (defined __GNUC__ && defined __i386__) || \
     (defined __SUNPRO_CC && defined __i386)
 
@@ -1150,8 +1149,8 @@ js::InitRuntimeNumberState(JSRuntime *rt)
      * Our NaN must be one particular canonical value, because we rely on NaN
      * encoding for our value representation.  See Value.h.
      */
-    d = mozilla::SpecificNaN(0, 0x8000000000000ULL);
-    number_constants[NC_NaN].dval = js_NaN = d;
+    d = GenericNaN();
+    number_constants[NC_NaN].dval = d;
     rt->NaNValue.setDouble(d);
 
     d = mozilla::PositiveInfinity();
@@ -1504,7 +1503,7 @@ CharsToNumber(ThreadSafeContext *cx, const jschar *chars, size_t length, double 
         else if (unicode::IsSpace(c))
             *result = 0.0;
         else
-            *result = js_NaN;
+            *result = GenericNaN();
         return;
     }
 
@@ -1524,7 +1523,7 @@ CharsToNumber(ThreadSafeContext *cx, const jschar *chars, size_t length, double 
             endptr == bp + 2 ||
             SkipSpace(endptr, end) != end)
         {
-            *result = js_NaN;
+            *result = GenericNaN();
         } else {
             *result = d;
         }
@@ -1541,7 +1540,7 @@ CharsToNumber(ThreadSafeContext *cx, const jschar *chars, size_t length, double 
     const jschar *ep;
     double d;
     if (!js_strtod(cx, bp, end, &ep, &d) || SkipSpace(ep, end) != end)
-        *result = js_NaN;
+        *result = GenericNaN();
     else
         *result = d;
 }
@@ -1574,7 +1573,7 @@ js::NonObjectToNumberSlow(ThreadSafeContext *cx, Value v, double *out)
     }
 
     JS_ASSERT(v.isUndefined());
-    *out = js_NaN;
+    *out = GenericNaN();
     return true;
 }
 
@@ -1627,7 +1626,7 @@ js::ToNumberSlow(ExclusiveContext *cx, Value v, double *out)
             break;
     }
 
-    *out = js_NaN;
+    *out = GenericNaN();
     return true;
 }
 

@@ -39,6 +39,7 @@ using namespace js::jit;
 
 using mozilla::DebugOnly;
 using mozilla::Maybe;
+using JS::GenericNaN;
 
 namespace js {
 namespace jit {
@@ -240,7 +241,7 @@ CodeGenerator::visitValueToDouble(LValueToDouble *lir)
 
     if (hasUndefined) {
         masm.bind(&isUndefined);
-        masm.loadConstantDouble(js_NaN, output);
+        masm.loadConstantDouble(GenericNaN(), output);
         masm.jump(&done);
     }
 
@@ -298,7 +299,7 @@ CodeGenerator::visitValueToFloat32(LValueToFloat32 *lir)
 
     if (hasUndefined) {
         masm.bind(&isUndefined);
-        masm.loadConstantFloat32((float)js_NaN, output);
+        masm.loadConstantFloat32(float(GenericNaN()), output);
         masm.jump(&done);
     }
 

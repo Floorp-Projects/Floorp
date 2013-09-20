@@ -25,6 +25,8 @@
 using namespace js;
 using namespace js::jit;
 
+using JS::GenericNaN;
+
 namespace {
 
 // Emulate a TypeSet logic from a Type object to avoid duplicating the guard
@@ -1441,7 +1443,6 @@ static const double DoubleZero = 0.0;
 static const double DoubleOne  = 1.0;
 static const float FloatZero = 0.0;
 static const float FloatOne  = 1.0;
-static const float FloatNaN = js_NaN;
 
 void
 MacroAssembler::convertValueToFloatingPoint(ValueOperand value, FloatRegister output,
@@ -1458,7 +1459,7 @@ MacroAssembler::convertValueToFloatingPoint(ValueOperand value, FloatRegister ou
     branchTestUndefined(Assembler::NotEqual, tag, fail);
 
     // fall-through: undefined
-    loadConstantFloatingPoint(js_NaN, FloatNaN, output, outputType);
+    loadConstantFloatingPoint(GenericNaN(), float(GenericNaN()), output, outputType);
     jump(&done);
 
     bind(&isNull);
@@ -1509,7 +1510,7 @@ MacroAssembler::convertValueToFloatingPoint(JSContext *cx, const Value &v, Float
     }
 
     if (v.isUndefined()) {
-        loadConstantFloatingPoint(js_NaN, FloatNaN, output, outputType);
+        loadConstantFloatingPoint(GenericNaN(), float(GenericNaN()), output, outputType);
         return true;
     }
 
@@ -1610,7 +1611,7 @@ MacroAssembler::convertTypedOrValueToFloatingPoint(TypedOrValueRegister src, Flo
         jump(fail);
         break;
       case MIRType_Undefined:
-        loadConstantFloatingPoint(js_NaN, FloatNaN, output, outputType);
+        loadConstantFloatingPoint(GenericNaN(), float(GenericNaN()), output, outputType);
         break;
       default:
         MOZ_ASSUME_UNREACHABLE("Bad MIRType");
