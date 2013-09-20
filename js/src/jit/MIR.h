@@ -1696,8 +1696,6 @@ class MCall
     bool construct_;
     // Monomorphic cache of single target from TI, or NULL.
     CompilerRootFunction target_;
-    // Holds a target's Script alive.
-    CompilerRootScript targetScript_;
     // Original value of argc from the bytecode.
     uint32_t numActualArgs_;
 
@@ -1706,7 +1704,6 @@ class MCall
     MCall(JSFunction *target, uint32_t numActualArgs, bool construct)
       : construct_(construct),
         target_(target),
-        targetScript_(NULL),
         numActualArgs_(numActualArgs),
         needsArgCheck_(true)
     {
@@ -1752,13 +1749,6 @@ class MCall
 
     void replaceArg(uint32_t index, MDefinition *def) {
         replaceOperand(NumNonArgumentOperands + index, def);
-    }
-
-    void rootTargetScript(JSFunction *target) {
-        targetScript_.setRoot(target->nonLazyScript());
-    }
-    bool hasRootedScript() {
-        return targetScript_ != NULL;
     }
 
     // For TI-informed monomorphic callsites.
@@ -4423,14 +4413,35 @@ class MRegExpTest
     }
 };
 
+struct LambdaFunctionInfo
+{
+    // The functions used in lambdas are the canonical original function in
+    // the script, and are immutable except for delazification. Record this
+    // information while still on the main thread to avoid races.
+    CompilerRootFunction fun;
+    uint16_t flags;
+    gc::Cell *scriptOrLazyScript;
+    bool singletonType;
+    bool useNewTypeForClone;
+
+    LambdaFunctionInfo(JSFunction *fun)
+      : fun(fun), flags(fun->flags),
+        scriptOrLazyScript(fun->hasScript()
+                           ? (gc::Cell *) fun->nonLazyScript()
+                           : (gc::Cell *) fun->lazyScript()),
+        singletonType(fun->hasSingletonType()),
+        useNewTypeForClone(types::UseNewTypeForClone(fun))
+    {}
+};
+
 class MLambda
   : public MUnaryInstruction,
     public SingleObjectPolicy
 {
-    CompilerRootFunction fun_;
+    LambdaFunctionInfo info_;
 
     MLambda(MDefinition *scopeChain, JSFunction *fun)
-      : MUnaryInstruction(scopeChain), fun_(fun)
+      : MUnaryInstruction(scopeChain), info_(fun)
     {
         setResultType(MIRType_Object);
         if (!fun->hasSingletonType() && !types::UseNewTypeForClone(fun))
@@ -4446,8 +4457,8 @@ class MLambda
     MDefinition *scopeChain() const {
         return getOperand(0);
     }
-    JSFunction *fun() const {
-        return fun_;
+    const LambdaFunctionInfo &info() const {
+        return info_;
     }
     TypePolicy *typePolicy() {
         return this;
@@ -4458,11 +4469,11 @@ class MLambdaPar
   : public MBinaryInstruction,
     public SingleObjectPolicy
 {
-    CompilerRootFunction fun_;
+    LambdaFunctionInfo info_;
 
     MLambdaPar(MDefinition *slice, MDefinition *scopeChain, JSFunction *fun,
                types::TemporaryTypeSet *resultTypes)
-      : MBinaryInstruction(slice, scopeChain), fun_(fun)
+      : MBinaryInstruction(slice, scopeChain), info_(fun)
     {
         JS_ASSERT(!fun->hasSingletonType());
         JS_ASSERT(!types::UseNewTypeForClone(fun));
@@ -4478,7 +4489,7 @@ class MLambdaPar
     }
 
     static MLambdaPar *New(MDefinition *slice, MLambda *lambda) {
-        return new MLambdaPar(slice, lambda->scopeChain(), lambda->fun(),
+        return new MLambdaPar(slice, lambda->scopeChain(), lambda->info().fun,
                               lambda->resultTypeSet());
     }
 
@@ -4490,8 +4501,8 @@ class MLambdaPar
         return getOperand(1);
     }
 
-    JSFunction *fun() const {
-        return fun_;
+    const LambdaFunctionInfo &info() const {
+        return info_;
     }
 };
 

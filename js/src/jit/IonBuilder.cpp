@@ -202,9 +202,6 @@ IonBuilder::getPolyCallTargets(types::TemporaryTypeSet *calleeTypes, bool constr
             *gotLambda = true;
         }
 
-        if (fun->isInterpreted() && !fun->getOrCreateScript(cx))
-            return false;
-
         // Don't optimize if we're constructing and the callee is not a
         // constructor, so that CallKnown does not have to handle this case
         // (it should always throw).
@@ -4953,7 +4950,7 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
     RootedScript scriptRoot(cx, script());
     for (uint32_t i = 0; i < originals.length(); i++) {
         fun = &originals[i]->as<JSFunction>();
-        if (fun->isInterpreted() && fun->nonLazyScript()->shouldCloneAtCallsite) {
+        if (fun->hasScript() && fun->nonLazyScript()->shouldCloneAtCallsite) {
             fun = CloneFunctionAtCallsite(cx, fun, scriptRoot, pc);
             if (!fun)
                 return false;
@@ -5103,7 +5100,7 @@ IonBuilder::testNeedsArgumentCheck(JSContext *cx, JSFunction *target, CallInfo &
     // If we have a known target, check if the caller arg types are a subset of callee.
     // Since typeset accumulates and can't decrease that means we don't need to check
     // the arguments anymore.
-    if (!target->isInterpreted())
+    if (!target->hasScript())
         return true;
 
     JSScript *targetScript = target->nonLazyScript();
@@ -5144,13 +5141,6 @@ IonBuilder::makeCallHelper(JSFunction *target, CallInfo &callInfo, bool cloneAtC
         MCall::New(target, targetArgs + 1, callInfo.argc(), callInfo.constructing());
     if (!call)
         return NULL;
-
-    // Save the script for inspection by visitCallKnown().
-    if (target && target->isInterpreted()) {
-        if (!target->getOrCreateScript(cx))
-            return NULL;
-        call->rootTargetScript(target);
-    }
 
     // Explicitly pad any missing arguments with |undefined|.
     // This permits skipping the argumentsRectifier.
@@ -8846,9 +8836,6 @@ IonBuilder::jsop_object(JSObject *obj)
 bool
 IonBuilder::jsop_lambda(JSFunction *fun)
 {
-    if (fun->isInterpreted() && !fun->getOrCreateScript(cx))
-        return false;
-
     JS_ASSERT(analysis().usesScopeChain());
     if (fun->isArrow())
         return abort("bound arrow function");

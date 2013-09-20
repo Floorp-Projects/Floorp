@@ -721,7 +721,7 @@ bool
 CodeGenerator::visitLambdaForSingleton(LLambdaForSingleton *lir)
 {
     pushArg(ToRegister(lir->scopeChain()));
-    pushArg(ImmGCPtr(lir->mir()->fun()));
+    pushArg(ImmGCPtr(lir->mir()->info().fun));
     return callVM(LambdaInfo, lir);
 }
 
@@ -730,27 +730,28 @@ CodeGenerator::visitLambda(LLambda *lir)
 {
     Register scopeChain = ToRegister(lir->scopeChain());
     Register output = ToRegister(lir->output());
-    JSFunction *fun = lir->mir()->fun();
+    const LambdaFunctionInfo &info = lir->mir()->info();
 
-    OutOfLineCode *ool = oolCallVM(LambdaInfo, lir, (ArgList(), ImmGCPtr(fun), scopeChain),
+    OutOfLineCode *ool = oolCallVM(LambdaInfo, lir, (ArgList(), ImmGCPtr(info.fun), scopeChain),
                                    StoreRegisterTo(output));
     if (!ool)
         return false;
 
-    JS_ASSERT(gen->compartment == fun->compartment());
-    JS_ASSERT(!fun->hasSingletonType());
+    JS_ASSERT(gen->compartment == info.fun->compartment());
+    JS_ASSERT(!info.singletonType);
 
-    masm.newGCThing(output, fun, ool->entry());
-    masm.initGCThing(output, fun);
+    masm.newGCThing(output, info.fun, ool->entry());
+    masm.initGCThing(output, info.fun);
 
-    emitLambdaInit(output, scopeChain, fun);
+    emitLambdaInit(output, scopeChain, info);
 
     masm.bind(ool->rejoin());
     return true;
 }
 
 void
-CodeGenerator::emitLambdaInit(const Register &output, const Register &scopeChain, JSFunction *fun)
+CodeGenerator::emitLambdaInit(const Register &output, const Register &scopeChain,
+                              const LambdaFunctionInfo &info)
 {
     // Initialize nargs and flags. We do this with a single uint32 to avoid
     // 16-bit writes.
@@ -761,15 +762,15 @@ CodeGenerator::emitLambdaInit(const Register &output, const Register &scopeChain
         } s;
         uint32_t word;
     } u;
-    u.s.nargs = fun->nargs;
-    u.s.flags = fun->flags & ~JSFunction::EXTENDED;
+    u.s.nargs = info.fun->nargs;
+    u.s.flags = info.flags & ~JSFunction::EXTENDED;
 
     JS_STATIC_ASSERT(offsetof(JSFunction, flags) == offsetof(JSFunction, nargs) + 2);
     masm.store32(Imm32(u.word), Address(output, offsetof(JSFunction, nargs)));
-    masm.storePtr(ImmGCPtr(fun->nonLazyScript()),
+    masm.storePtr(ImmGCPtr(info.scriptOrLazyScript),
                   Address(output, JSFunction::offsetOfNativeOrScript()));
     masm.storePtr(scopeChain, Address(output, JSFunction::offsetOfEnvironment()));
-    masm.storePtr(ImmGCPtr(fun->displayAtom()), Address(output, JSFunction::offsetOfAtom()));
+    masm.storePtr(ImmGCPtr(info.fun->displayAtom()), Address(output, JSFunction::offsetOfAtom()));
 }
 
 bool
@@ -780,12 +781,12 @@ CodeGenerator::visitLambdaPar(LLambdaPar *lir)
     Register scopeChainReg = ToRegister(lir->scopeChain());
     Register tempReg1 = ToRegister(lir->getTemp0());
     Register tempReg2 = ToRegister(lir->getTemp1());
-    JSFunction *fun = lir->mir()->fun();
+    const LambdaFunctionInfo &info = lir->mir()->info();
 
     JS_ASSERT(scopeChainReg != resultReg);
 
-    emitAllocateGCThingPar(lir, resultReg, sliceReg, tempReg1, tempReg2, fun);
-    emitLambdaInit(resultReg, scopeChainReg, fun);
+    emitAllocateGCThingPar(lir, resultReg, sliceReg, tempReg1, tempReg2, info.fun);
+    emitLambdaInit(resultReg, scopeChainReg, info);
     return true;
 }
 
@@ -1914,30 +1915,6 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     JS_ASSERT_IF(call->mir()->isConstructing(), target->isInterpretedConstructor());
 
     masm.checkStackAlignment();
-
-    // If the function is known to be uncompilable, just emit the call to
-    // Invoke in sequential mode, else mark as cannot compile.
-    JS_ASSERT(call->mir()->hasRootedScript());
-    JSScript *targetScript = target->nonLazyScript();
-    if (GetIonScript(targetScript, executionMode) == ION_DISABLED_SCRIPT &&
-        (executionMode == ParallelExecution || !targetScript->canBaselineCompile()))
-    {
-        if (executionMode == ParallelExecution)
-            return false;
-
-        if (!emitCallInvokeFunction(call, calleereg, call->numActualArgs(), unusedStack))
-            return false;
-
-        if (call->mir()->isConstructing()) {
-            Label notPrimitive;
-            masm.branchTestPrimitive(Assembler::NotEqual, JSReturnOperand, &notPrimitive);
-            masm.loadValue(Address(StackPointer, unusedStack), JSReturnOperand);
-            masm.bind(&notPrimitive);
-        }
-
-        dropArguments(call->numStackArgs() + 1);
-        return true;
-    }
 
     // The calleereg is known to be a non-native function, but might point to
     // a LazyScript instead of a JSScript.
