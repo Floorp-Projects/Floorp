@@ -40,6 +40,16 @@ CheckLength(ExclusiveContext *cx, size_t length)
 }
 
 static bool
+SetSourceURL(ExclusiveContext *cx, TokenStream &tokenStream, ScriptSource *ss)
+{
+    if (tokenStream.hasSourceURL()) {
+        if (!ss->setSourceURL(cx, tokenStream.sourceURL()))
+            return false;
+    }
+    return true;
+}
+
+static bool
 SetSourceMap(ExclusiveContext *cx, TokenStream &tokenStream, ScriptSource *ss)
 {
     if (tokenStream.hasSourceMapURL()) {
@@ -357,6 +367,9 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     if (!MaybeCheckEvalFreeVariables(cx, evalCaller, scopeChain, parser, pc.ref()))
         return NULL;
 
+    if (!SetSourceURL(cx, parser.tokenStream, ss))
+        return NULL;
+
     if (!SetSourceMap(cx, parser.tokenStream, ss))
         return NULL;
 
@@ -577,6 +590,9 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileOptions opt
         fun.set(fn->pn_funbox->function());
         JS_ASSERT(IsAsmJSModuleNative(fun->native()));
     }
+
+    if (!SetSourceURL(cx, parser.tokenStream, ss))
+        return false;
 
     if (!SetSourceMap(cx, parser.tokenStream, ss))
         return false;
