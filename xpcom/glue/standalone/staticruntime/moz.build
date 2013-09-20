@@ -17,3 +17,6 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'xpcomglue_staticruntime'
 
+SDK_LIBRARY = [
+    "%s%s.%s" % (CONFIG['LIB_PREFIX'], 'xpcomglue_staticruntime', CONFIG['LIB_SUFFIX']),
+]
