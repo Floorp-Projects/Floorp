@@ -173,11 +173,11 @@ RangeAnalysis::addBetaNodes()
             }
             if (smaller && greater) {
                 MBeta *beta;
-                beta = MBeta::New(smaller, new Range(JSVAL_INT_MIN, JSVAL_INT_MAX-1));
+                beta = MBeta::New(smaller, Range::NewInt32Range(JSVAL_INT_MIN, JSVAL_INT_MAX-1));
                 block->insertBefore(*block->begin(), beta);
                 replaceDominatedUsesWith(smaller, beta, block);
                 IonSpew(IonSpew_Range, "Adding beta node for smaller %d", smaller->id());
-                beta = MBeta::New(greater, new Range(JSVAL_INT_MIN+1, JSVAL_INT_MAX));
+                beta = MBeta::New(greater, Range::NewInt32Range(JSVAL_INT_MIN+1, JSVAL_INT_MAX));
                 block->insertBefore(*block->begin(), beta);
                 replaceDominatedUsesWith(greater, beta, block);
                 IonSpew(IonSpew_Range, "Adding beta node for greater %d", greater->id());
@@ -441,7 +441,7 @@ Range::and_(const Range *lhs, const Range *rhs)
     if (lhs->lower_ < 0 && rhs->lower_ < 0) {
         lower = INT_MIN;
         upper = Max(lhs->upper_, rhs->upper_);
-        return new Range(lower, upper);
+        return Range::NewInt32Range(lower, upper);
     }
 
     // Only one of both numbers can be negative.
@@ -458,7 +458,7 @@ Range::and_(const Range *lhs, const Range *rhs)
     if (rhs->lower_ < 0)
         upper = lhs->upper_;
 
-    return new Range(lower, upper);
+    return Range::NewInt32Range(lower, upper);
 }
 
 Range *
@@ -513,7 +513,7 @@ Range::or_(const Range *lhs, const Range *rhs)
         }
     }
 
-    return new Range(lower, upper);
+    return Range::NewInt32Range(lower, upper);
 }
 
 Range *
@@ -577,14 +577,14 @@ Range::xor_(const Range *lhs, const Range *rhs)
         Swap(lower, upper);
     }
 
-    return new Range(lower, upper);
+    return Range::NewInt32Range(lower, upper);
 }
 
 Range *
 Range::not_(const Range *op)
 {
     JS_ASSERT(op->isInt32());
-    return new Range(~op->upper_, ~op->lower_);
+    return Range::NewInt32Range(~op->upper_, ~op->lower_);
 }
 
 Range *
@@ -615,12 +615,12 @@ Range::lsh(const Range *lhs, int32_t c)
     if ((int32_t)((uint32_t)lhs->lower_ << shift << 1 >> shift >> 1) == lhs->lower_ &&
         (int32_t)((uint32_t)lhs->upper_ << shift << 1 >> shift >> 1) == lhs->upper_)
     {
-        return new Range(
+        return Range::NewInt32Range(
             (uint32_t)lhs->lower_ << shift,
             (uint32_t)lhs->upper_ << shift);
     }
 
-    return new Range(INT32_MIN, INT32_MAX);
+    return Range::NewInt32Range(INT32_MIN, INT32_MAX);
 }
 
 Range *
@@ -628,9 +628,9 @@ Range::rsh(const Range *lhs, int32_t c)
 {
     JS_ASSERT(lhs->isInt32());
     int32_t shift = c & 0x1f;
-    return new Range(
-        (int64_t)lhs->lower_ >> shift,
-        (int64_t)lhs->upper_ >> shift);
+    return Range::NewInt32Range(
+        lhs->lower_ >> shift,
+        lhs->upper_ >> shift);
 }
 
 Range *
@@ -643,13 +643,13 @@ Range::ursh(const Range *lhs, int32_t c)
     if ((lhs->lower_ >= 0 && lhs->hasInt32UpperBound()) ||
         (lhs->upper_ < 0 && lhs->hasInt32LowerBound()))
     {
-        return new Range(
-            (int64_t)((uint32_t)lhs->lower_ >> shift),
-            (int64_t)((uint32_t)lhs->upper_ >> shift));
+        return Range::NewUInt32Range(
+            uint32_t(lhs->lower_) >> shift,
+            uint32_t(lhs->upper_) >> shift);
     }
 
     // Otherwise return the most general range after the shift.
-    return new Range(0, (int64_t)(UINT32_MAX >> shift));
+    return Range::NewUInt32Range(0, UINT32_MAX >> shift);
 }
 
 Range *
@@ -657,7 +657,7 @@ Range::lsh(const Range *lhs, const Range *rhs)
 {
     JS_ASSERT(lhs->isInt32());
     JS_ASSERT(rhs->isInt32());
-    return new Range(INT32_MIN, INT32_MAX);
+    return Range::NewInt32Range(INT32_MIN, INT32_MAX);
 }
 
 Range *
@@ -665,13 +665,13 @@ Range::rsh(const Range *lhs, const Range *rhs)
 {
     JS_ASSERT(lhs->isInt32());
     JS_ASSERT(rhs->isInt32());
-    return new Range(Min(lhs->lower(), 0), Max(lhs->upper(), 0));
+    return Range::NewInt32Range(Min(lhs->lower(), 0), Max(lhs->upper(), 0));
 }
 
 Range *
 Range::ursh(const Range *lhs, const Range *rhs)
 {
-    return new Range(0, (lhs->lower() >= 0 && lhs->hasInt32UpperBound()) ? lhs->upper() : UINT32_MAX);
+    return Range::NewUInt32Range(0, (lhs->lower() >= 0 && lhs->hasInt32UpperBound()) ? lhs->upper() : UINT32_MAX);
 }
 
 Range *
@@ -810,7 +810,7 @@ void
 MConstant::computeRange()
 {
     if (type() == MIRType_Int32) {
-        setRange(new Range(value().toInt32(), value().toInt32()));
+        setRange(Range::NewSingleValueRange(value().toInt32()));
         return;
     }
 
@@ -838,9 +838,9 @@ MConstant::computeRange()
     if (exp < 0) {
         // This double only has a fractional part.
         if (IsNegative(d))
-            setRange(new Range(-1, 0, true, 0));
+            setRange(Range::NewDoubleRange(-1, 0));
         else
-            setRange(new Range(0, 1, true, 0));
+            setRange(Range::NewDoubleRange(0, 1));
     } else if (exp < Range::MaxTruncatableExponent) {
         // Extract the integral part.
         int64_t integral = ToInt64(d);
@@ -870,14 +870,14 @@ MConstant::computeRange()
 void
 MCharCodeAt::computeRange()
 {
-    setRange(new Range(0, 65535)); //ECMA 262 says that the integer will be
-                                   //non-negative and at most 65535.
+    // ECMA 262 says that the integer will be non-negative and at most 65535.
+    setRange(Range::NewInt32Range(0, 65535));
 }
 
 void
 MClampToUint8::computeRange()
 {
-    setRange(new Range(0, 255));
+    setRange(Range::NewUInt32Range(0, 255));
 }
 
 void
@@ -1127,18 +1127,18 @@ static Range *GetTypedArrayRange(int type)
     switch (type) {
       case ScalarTypeRepresentation::TYPE_UINT8_CLAMPED:
       case ScalarTypeRepresentation::TYPE_UINT8:
-        return new Range(0, UINT8_MAX);
+        return Range::NewUInt32Range(0, UINT8_MAX);
       case ScalarTypeRepresentation::TYPE_UINT16:
-        return new Range(0, UINT16_MAX);
+        return Range::NewUInt32Range(0, UINT16_MAX);
       case ScalarTypeRepresentation::TYPE_UINT32:
-        return new Range(0, UINT32_MAX);
+        return Range::NewUInt32Range(0, UINT32_MAX);
 
       case ScalarTypeRepresentation::TYPE_INT8:
-        return new Range(INT8_MIN, INT8_MAX);
+        return Range::NewInt32Range(INT8_MIN, INT8_MAX);
       case ScalarTypeRepresentation::TYPE_INT16:
-        return new Range(INT16_MIN, INT16_MAX);
+        return Range::NewInt32Range(INT16_MIN, INT16_MAX);
       case ScalarTypeRepresentation::TYPE_INT32:
-        return new Range(INT32_MIN, INT32_MAX);
+        return Range::NewInt32Range(INT32_MIN, INT32_MAX);
 
       case ScalarTypeRepresentation::TYPE_FLOAT32:
       case ScalarTypeRepresentation::TYPE_FLOAT64:
@@ -1168,7 +1168,7 @@ MLoadTypedArrayElementStatic::computeRange()
 void
 MArrayLength::computeRange()
 {
-    Range *r = new Range(0, UINT32_MAX);
+    Range *r = Range::NewUInt32Range(0, UINT32_MAX);
     r->extendUInt32ToInt32Min();
     setRange(r);
 }
@@ -1176,7 +1176,7 @@ MArrayLength::computeRange()
 void
 MInitializedLength::computeRange()
 {
-    Range *r = new Range(0, UINT32_MAX);
+    Range *r = Range::NewUInt32Range(0, UINT32_MAX);
     r->extendUInt32ToInt32Min();
     setRange(r);
 }
@@ -1184,13 +1184,15 @@ MInitializedLength::computeRange()
 void
 MTypedArrayLength::computeRange()
 {
-    setRange(new Range(0, INT32_MAX));
+    setRange(Range::NewUInt32Range(0, INT32_MAX));
 }
 
 void
 MStringLength::computeRange()
 {
-    setRange(new Range(0, JSString::MAX_LENGTH));
+    static_assert(JSString::MAX_LENGTH <= UINT32_MAX,
+                  "NewUInt32Range requires a uint32 value");
+    setRange(Range::NewUInt32Range(0, JSString::MAX_LENGTH));
 }
 
 void
@@ -1198,7 +1200,9 @@ MArgumentsLength::computeRange()
 {
     // This is is a conservative upper bound on what |TooManyArguments| checks.
     // If exceeded, Ion will not be entered in the first place.
-    setRange(new Range(0, SNAPSHOT_MAX_NARGS));
+    static_assert(SNAPSHOT_MAX_NARGS <= UINT32_MAX,
+                  "NewUInt32Range requires a uint32 value");
+    setRange(Range::NewUInt32Range(0, SNAPSHOT_MAX_NARGS));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
