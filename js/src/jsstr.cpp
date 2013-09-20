@@ -1876,14 +1876,8 @@ DoMatchGlobal(JSContext *cx, CallArgs args, RegExpStatics *res, Handle<JSLinearS
     //
     // In short: it's okay to cheat (by setting .lastIndex to 0, once) because
     // we can't get caught.
-    if (g.regExpIsObject()) {
-        // Don't use RegExpObject::setLastIndex, because that ignores the
-        // writability of "lastIndex" on this user-controlled RegExp object.
-        RootedValue zero(cx, Int32Value(0));
-        HandleObject regex = g.regExpObject();
-        if (!JSObject::setProperty(cx, regex, regex, cx->names().lastIndex, &zero, true))
-            return false;
-    }
+    if (!g.zeroLastIndex(cx))
+        return false;
 
     // Step 8b.
     AutoValueVector elements(cx);
