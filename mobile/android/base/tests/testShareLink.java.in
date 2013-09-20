@@ -78,7 +78,33 @@ public class testShareLink extends AboutHomeTest {
         mSolo.clickLongOnView(bookmarksItem);
         verifySharePopup(shareOptions,"bookmarks");
 
-        // TODO: Tests for new top sites list.
+        // Prepopulate top sites with history items to overflow tiles.
+        // We are trying to move away from using reflection and doing more black-box testing.
+        inputAndLoadUrl(getAbsoluteUrl("/robocop/robocop_blank_01.html"));
+        inputAndLoadUrl(getAbsoluteUrl("/robocop/robocop_blank_02.html"));
+        inputAndLoadUrl(getAbsoluteUrl("/robocop/robocop_blank_03.html"));
+        inputAndLoadUrl(getAbsoluteUrl("/robocop/robocop_blank_04.html"));
+        if (mDevice.type.equals("tablet")) {
+            // Tablets have more tile spaces to fill.
+            inputAndLoadUrl(getAbsoluteUrl("/robocop/robocop_blank_05.html"));
+            inputAndLoadUrl(getAbsoluteUrl("/robocop/robocop_boxes.html"));
+            inputAndLoadUrl(getAbsoluteUrl("/robocop/robocop_search.html"));
+            inputAndLoadUrl(getAbsoluteUrl("/robocop/robocop_text_page.html"));
+        }
+
+        // Test the share popup in Top Sites.
+        openAboutHomeTab(AboutHomeTabs.TOP_SITES);
+
+        // Scroll down a bit so that the top sites list has more items on screen.
+        int width = mDriver.getGeckoWidth();
+        int height = mDriver.getGeckoHeight();
+        mActions.drag(width / 2, width / 2, height - 10, height / 2);
+
+        ListView topSitesList = findListViewWithTag("top_sites");
+        mAsserter.is(waitForListToLoad(topSitesList), true, "list is properly loaded");
+        View mostVisitedItem = topSitesList.getChildAt(topSitesList.getHeaderViewsCount());
+        mSolo.clickLongOnView(mostVisitedItem);
+        verifySharePopup(shareOptions,"top_sites");
 
         // Test the share popup in the Most Recent tab
         openAboutHomeTab(AboutHomeTabs.MOST_RECENT);
