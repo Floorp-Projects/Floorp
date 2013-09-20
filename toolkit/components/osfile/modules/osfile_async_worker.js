@@ -390,6 +390,6 @@ if (this.Components) {
      };
   } catch(ex) {
     dump("WORKER ERROR DURING SETUP " + ex + "\n");
-    dump("WORKER ERROR DETAIL " + ex.stack + "\n");
+    dump("WORKER ERROR DETAIL " + ("moduleStack" in ex?ex.moduleStack:ex.stack) + "\n");
   }
 })(this);

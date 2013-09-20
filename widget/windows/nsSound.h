@@ -9,7 +9,9 @@
 
 #include "nsISound.h"
 #include "nsIStreamLoader.h"
-#include "nsThreadUtils.h"
+#include "nsCOMPtr.h"
+
+class nsIThread;
 
 class nsSound : public nsISound,
                 public nsIStreamLoaderObserver

@@ -17,3 +17,5 @@ EXTRA_COMPONENTS += [
     'SimpleTest.manifest',
 ]
 
+IS_COMPONENT = True
+

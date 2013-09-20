@@ -53,11 +53,6 @@ id_prototype(JSContext *cx) {
 }
 
 static inline jsid
-id_length(JSContext *cx) {
-    return NameToId(cx->names().length);
-}
-
-static inline jsid
 id___proto__(JSContext *cx) {
     return NameToId(cx->names().proto);
 }
@@ -869,6 +864,21 @@ class TypeConstraintFreezeOwnProperty : public TypeConstraint
 
 static void
 CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, HandleFunction fun);
+
+bool
+TypeObject::incrementTenureCount()
+{
+    uint32_t count = tenureCount();
+    JS_ASSERT(count <= OBJECT_FLAG_TENURE_COUNT_LIMIT);
+
+    if (count >= OBJECT_FLAG_TENURE_COUNT_LIMIT)
+        return false;
+
+    flags = (flags & ~OBJECT_FLAG_TENURE_COUNT_MASK)
+          | ((count + 1) << OBJECT_FLAG_TENURE_COUNT_SHIFT);
+
+    return count >= MaxJITAllocTenures;
+}
 
 bool
 HeapTypeSet::isOwnProperty(JSContext *cx, TypeObject *object, bool configurable)
@@ -2737,24 +2747,6 @@ TypeObject::print()
 // Type Analysis
 /////////////////////////////////////////////////////////////////////
 
-static inline TypeObject *
-GetInitializerType(JSContext *cx, JSScript *script, jsbytecode *pc)
-{
-    if (!script->compileAndGo)
-        return NULL;
-
-    JSOp op = JSOp(*pc);
-    JS_ASSERT(op == JSOP_NEWARRAY || op == JSOP_NEWOBJECT || op == JSOP_NEWINIT);
-
-    bool isArray = (op == JSOP_NEWARRAY || (op == JSOP_NEWINIT && GET_UINT8(pc) == JSProto_Array));
-    JSProtoKey key = isArray ? JSProto_Array : JSProto_Object;
-
-    if (UseNewTypeForInitializer(cx, script, pc, key))
-        return NULL;
-
-    return TypeScript::InitObject(cx, script, pc, key);
-}
-
 /*
  * Persistent constraint clearing out newScript and definite properties from
  * an object should a property on another object get a getter or setter.
@@ -3199,78 +3191,6 @@ types::UseNewTypeForClone(JSFunction *fun)
 /////////////////////////////////////////////////////////////////////
 // TypeScript
 /////////////////////////////////////////////////////////////////////
-
-/*
- * Returns true if we don't expect to compute the correct types for some value
- * pushed by the specified bytecode.
- */
-static inline bool
-IgnorePushed(const jsbytecode *pc, unsigned index)
-{
-    switch (JSOp(*pc)) {
-      /* We keep track of the scopes pushed by BINDNAME separately. */
-      case JSOP_BINDNAME:
-      case JSOP_BINDGNAME:
-      case JSOP_BINDINTRINSIC:
-        return true;
-
-      /* Stack not consistent in TRY_BRANCH_AFTER_COND. */
-      case JSOP_IN:
-      case JSOP_EQ:
-      case JSOP_NE:
-      case JSOP_LT:
-      case JSOP_LE:
-      case JSOP_GT:
-      case JSOP_GE:
-        return (index == 0);
-
-      /* Value not determining result is not pushed by OR/AND. */
-      case JSOP_OR:
-      case JSOP_AND:
-        return (index == 0);
-
-      /* Holes tracked separately. */
-      case JSOP_HOLE:
-        return (index == 0);
-
-      /* Storage for 'with' and 'let' blocks not monitored. */
-      case JSOP_ENTERWITH:
-      case JSOP_ENTERBLOCK:
-      case JSOP_ENTERLET0:
-      case JSOP_ENTERLET1:
-        return true;
-
-      /* We don't keep track of the iteration state for 'for in' or 'for each in' loops. */
-      case JSOP_ITER:
-      case JSOP_ITERNEXT:
-      case JSOP_MOREITER:
-      case JSOP_ENDITER:
-        return true;
-
-      /* Ops which can manipulate values pushed by opcodes we don't model. */
-      case JSOP_DUP:
-      case JSOP_DUP2:
-      case JSOP_SWAP:
-      case JSOP_PICK:
-        return true;
-
-      /* We don't keep track of state indicating whether there is a pending exception. */
-      case JSOP_FINALLY:
-        return true;
-
-      /*
-       * We don't treat GETLOCAL immediately followed by a pop as a use-before-def,
-       * and while the type will have been inferred correctly the method JIT
-       * may not have written the local's initial undefined value to the stack,
-       * leaving a stale value.
-       */
-      case JSOP_GETLOCAL:
-        return JSOp(pc[JSOP_GETLOCAL_LENGTH]) == JSOP_POP;
-
-      default:
-        return false;
-    }
-}
 
 bool
 JSScript::makeTypes(JSContext *cx)

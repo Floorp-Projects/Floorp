@@ -132,8 +132,8 @@ nsresult SendData(const char * aData, nsIStreamListener* aListener, nsIRequest* 
 #define SEND_DATA(x) SendData(x, converterListener, request)
 
 static const mozilla::Module::CIDEntry kTestCIDs[] = {
-    { &kTestConverterCID, false, NULL, CreateTestConverter },
-    { NULL }
+    { &kTestConverterCID, false, nullptr, CreateTestConverter },
+    { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kTestContracts[] = {
@@ -144,7 +144,7 @@ static const mozilla::Module::ContractIDEntry kTestContracts[] = {
     { NS_ISTREAMCONVERTER_KEY "?from=d/foo&to=e/foo", &kTestConverterCID },
     { NS_ISTREAMCONVERTER_KEY "?from=d/foo&to=f/foo", &kTestConverterCID },
     { NS_ISTREAMCONVERTER_KEY "?from=t/foo&to=k/foo", &kTestConverterCID },
-    { NULL }
+    { nullptr }
 };
 
 static const mozilla::Module::CategoryEntry kTestCategories[] = {
@@ -155,7 +155,7 @@ static const mozilla::Module::CategoryEntry kTestCategories[] = {
     { NS_ISTREAMCONVERTER_KEY, "?from=d/foo&to=e/foo", "x" },
     { NS_ISTREAMCONVERTER_KEY, "?from=d/foo&to=f/foo", "x" },
     { NS_ISTREAMCONVERTER_KEY, "?from=t/foo&to=k/foo", "x" },
-    { NULL }
+    { nullptr }
 };
 
 static const mozilla::Module kTestModule = {

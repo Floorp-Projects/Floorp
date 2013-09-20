@@ -2643,6 +2643,14 @@ public:
         m_formatter.twoByteRipOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, 0);
         return JmpSrc(m_formatter.size());
     }
+    JmpSrc movss_ripr(XMMRegisterID dst)
+    {
+        spew("movss      \?(%%rip), %s",
+             nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F3);
+        m_formatter.twoByteRipOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, 0);
+        return JmpSrc(m_formatter.size());
+    }
     JmpSrc movsd_rrip(XMMRegisterID src)
     {
         spew("movsd      %s, \?(%%rip)",

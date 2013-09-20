@@ -20,9 +20,7 @@
 
 
 #include "nsCRT.h"
-#include "nsIServiceManager.h"
-#include "nsCharTraits.h"
-#include "nsUTF8Utils.h"
+#include "nsDebug.h"
 
 //----------------------------------------------------------------------
 

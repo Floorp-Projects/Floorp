@@ -18,6 +18,7 @@ EXTRA_JS_MODULES += [
     'osfile_win_allthreads.jsm',
     'osfile_win_back.jsm',
     'osfile_win_front.jsm',
-    'ospath_unix_back.jsm',
-    'ospath_win_back.jsm',
+    'ospath.jsm',
+    'ospath_unix.jsm',
+    'ospath_win.jsm',
 ]

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsErrorService.h"
-#include "nsCRT.h"
+#include "nsCRTGlue.h"
 #include "nsAutoPtr.h"
 
 static void*

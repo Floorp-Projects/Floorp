@@ -14,6 +14,7 @@ from mozbuild.frontend.data import (
     DirectoryTraversal,
     ReaderSummary,
     VariablePassthru,
+    Defines,
     Exports,
     Program,
     XpcshellManifests,
@@ -132,7 +133,6 @@ class TestEmitterBasic(unittest.TestCase):
             CMMSRCS=['fans.mm', 'tans.mm'],
             CSRCS=['fans.c', 'tans.c'],
             CPP_UNIT_TESTS=['foo.cpp'],
-            DEFINES=['-Dfans', '-Dtans'],
             EXPORT_LIBRARY=True,
             EXTRA_COMPONENTS=['fans.js', 'tans.js'],
             EXTRA_PP_COMPONENTS=['fans.pp.js', 'tans.pp.js'],
@@ -265,6 +265,24 @@ class TestEmitterBasic(unittest.TestCase):
         ]
 
         self.assertEqual(local_includes, expected)
+
+    def test_defines(self):
+        reader = self.reader('defines')
+        objs = self.read_topsrcdir(reader)
+
+        defines = {}
+        for o in objs:
+            if isinstance(o, Defines):
+                defines = o.defines
+
+        expected = {
+            'BAR': 7,
+            'BAZ': '"abcd"',
+            'FOO': True,
+            'VALUE': 'xyz',
+        }
+
+        self.assertEqual(defines, expected)
 
 if __name__ == '__main__':
     main()

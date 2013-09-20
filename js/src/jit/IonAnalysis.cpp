@@ -1180,19 +1180,6 @@ jit::BuildPhiReverseMapping(MIRGraph &graph)
     return true;
 }
 
-static inline MBasicBlock *
-SkipContainedLoop(MBasicBlock *block, MBasicBlock *header)
-{
-    while (block->loopHeader() || block->isLoopHeader()) {
-        if (block->loopHeader())
-            block = block->loopHeader();
-        if (block == header)
-            break;
-        block = block->loopPredecessor();
-    }
-    return block;
-}
-
 #ifdef DEBUG
 static bool
 CheckSuccessorImpliesPredecessor(MBasicBlock *A, MBasicBlock *B)

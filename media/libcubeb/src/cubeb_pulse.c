@@ -584,7 +584,7 @@ pulse_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
     return CUBEB_ERROR;
   }
 
-  *latency = (r_usec * stm->sample_spec.rate) / PR_NSEC_PER_SEC;
+  *latency = r_usec * stm->sample_spec.rate / PA_USEC_PER_SEC;
   return CUBEB_OK;
 }
 

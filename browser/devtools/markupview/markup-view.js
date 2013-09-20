@@ -17,7 +17,7 @@ const COLLAPSE_DATA_URL_LENGTH = 60;
 const {UndoStack} = require("devtools/shared/undo");
 const {editableField, InplaceEditor} = require("devtools/shared/inplace-editor");
 const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-const {colorUtils} = require("devtools/shared/css-color");
+const {colorUtils} = require("devtools/css-color");
 const promise = require("sdk/core/promise");
 
 Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");

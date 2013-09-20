@@ -58,15 +58,15 @@ do_parse_str(char *bssid_str, char *essid_str, char *strength)
 static void
 do_dladm(nsCOMArray<nsWifiAccessPoint> &accessPoints)
 {
-  GError *err = NULL;
-  char *sout = NULL;
-  char *serr = NULL;
+  GError *err = nullptr;
+  char *sout = nullptr;
+  char *serr = nullptr;
   int exit_status = 0;
   char * dladm_args[] = { "/usr/bin/pfexec", "/usr/sbin/dladm",
                           "scan-wifi", "-p", "-o", "BSSID,ESSID,STRENGTH" };
 
-  gboolean rv = g_spawn_sync("/", dladm_args, NULL, (GSpawnFlags)0, NULL, NULL,
-                             &sout, &serr, &exit_status, &err);
+  gboolean rv = g_spawn_sync("/", dladm_args, nullptr, (GSpawnFlags)0, nullptr,
+                             nullptr, &sout, &serr, &exit_status, &err);
   if (rv && !exit_status) {
     char wlan[DLADM_SECTIONS][DLADM_STRSIZE+1];
     uint32_t section = 0;

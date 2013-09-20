@@ -1096,5 +1096,38 @@ DrawTargetCairo::SetTransform(const Matrix& aTransform)
   cairo_set_matrix(mContext, &mat);
 }
 
+cairo_t*
+BorrowedCairoContext::BorrowCairoContextFromDrawTarget(DrawTarget* aDT)
+{
+  if (aDT->GetType() != BACKEND_CAIRO || aDT->IsDualDrawTarget()) {
+    return nullptr;
+  }
+  DrawTargetCairo* cairoDT = static_cast<DrawTargetCairo*>(aDT);
+
+  cairoDT->WillChange();
+
+  // save the state to make it easier for callers to avoid mucking with things
+  cairo_save(cairoDT->mContext);
+
+  // Neuter the DrawTarget while the context is being borrowed
+  cairo_t* cairo = cairoDT->mContext;
+  cairoDT->mContext = nullptr;
+
+  return cairo;
+}
+
+void
+BorrowedCairoContext::ReturnCairoContextToDrawTarget(DrawTarget* aDT,
+                                                     cairo_t* aCairo)
+{
+  if (aDT->GetType() != BACKEND_CAIRO || aDT->IsDualDrawTarget()) {
+    return;
+  }
+  DrawTargetCairo* cairoDT = static_cast<DrawTargetCairo*>(aDT);
+
+  cairo_restore(aCairo);
+  cairoDT->mContext = aCairo;
+}
+
 }
 }
