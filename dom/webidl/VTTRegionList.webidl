@@ -7,11 +7,9 @@
  *  http://dev.w3.org/html5/webvtt/#extension-of-the-texttrack-interface-for-region-support
  */
 
-
 [Pref="media.webvtt.enabled"]
-interface TextTrackRegionList {
+interface VTTRegionList {
   readonly attribute unsigned long length;
-  getter TextTrackRegion (unsigned long index);
-  TextTrackRegion? getRegionById(DOMString id);
+  getter VTTRegion (unsigned long index);
+  VTTRegion? getRegionById(DOMString id);
 };
-
