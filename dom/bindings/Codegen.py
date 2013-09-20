@@ -3502,28 +3502,13 @@ for (uint32_t i = 0; i < length; ++i) {
         assert not isEnforceRange and not isClamp
         assert not type.treatNonCallableAsNull() or type.nullable()
 
-        if descriptorProvider.workers:
-            if isMember:
-                raise NoSuchDescriptorError("Can't handle member callbacks in "
-                                            "workers; need to sort out rooting"
-                                            "issues")
-            if isOptional:
-                # We have a specialization of Optional that will use a
-                # Rooted for the storage here.
-                declType = CGGeneric("JS::Handle<JSObject*>")
-            else:
-                declType = CGGeneric("JS::Rooted<JSObject*>")            
-            conversion = "  ${declName} = &${val}.toObject();\n"
-            declArgs = "cx"
+        name = type.unroll().identifier.name
+        if type.nullable():
+            declType = CGGeneric("nsRefPtr<%s>" % name);
         else:
-            name = type.unroll().identifier.name
-            if type.nullable():
-                declType = CGGeneric("nsRefPtr<%s>" % name);
-            else:
-                declType = CGGeneric("OwningNonNull<%s>" % name)
-            conversion = (
-                "  ${declName} = new %s(&${val}.toObject());\n" % name)
-            declArgs = None
+            declType = CGGeneric("OwningNonNull<%s>" % name)
+        conversion = (
+            "  ${declName} = new %s(&${val}.toObject());\n" % name)
 
         if allowTreatNonCallableAsNull and type.treatNonCallableAsNull():
             haveCallable = "JS_ObjectIsCallable(cx, &${val}.toObject())"
@@ -3549,8 +3534,7 @@ for (uint32_t i = 0; i < length; ++i) {
                 "${declName} = nullptr",
                 failureCode)
         return JSToNativeConversionInfo(template, declType=declType,
-                                        dealWithOptional=isOptional,
-                                        declArgs=declArgs)
+                                        dealWithOptional=isOptional)
 
     if type.isAny():
         assert not isEnforceRange and not isClamp
@@ -4204,14 +4188,6 @@ if (!returnArray) {
         return conversion, False
 
     if type.isCallback() or type.isCallbackInterface():
-        # See comments in WrapNewBindingObject explaining why we need
-        # to wrap here.
-        # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
-        if descriptorProvider.workers:
-            return (setValue("JS::ObjectOrNullValue(%s)" % result,
-                             "objectOrNull"),
-                    False)
-
         wrapCode = setValue(
             "JS::ObjectValue(*GetCallbackFromCallbackObject(%(result)s))",
             "object")
@@ -4366,8 +4342,7 @@ def infallibleForMember(member, type, descriptorProvider):
 
 def leafTypeNeedsCx(type, descriptorProvider, retVal):
     return (type.isAny() or type.isObject() or
-            (retVal and type.isSpiderMonkeyInterface()) or
-            (descriptorProvider.workers and type.isCallback()))
+            (retVal and type.isSpiderMonkeyInterface()))
 
 def leafTypeNeedsScopeObject(type, descriptorProvider, retVal):
     return (retVal and type.isSpiderMonkeyInterface())
@@ -4458,8 +4433,6 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         return result, False, None, None
     if returnType.isCallback():
         name = returnType.unroll().identifier.name
-        if descriptorProvider.workers:
-            return CGGeneric("JSObject*"), False, None, None
         return CGGeneric("nsRefPtr<%s>" % name), False, None, None
     if returnType.isAny():
         return CGGeneric("JS::Value"), False, None, None
