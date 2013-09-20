@@ -52,6 +52,17 @@ this.CryptoUtils = {
   },
 
   /**
+   * Encode the message into UTF-8 and feed the resulting bytes into the
+   * given hasher. Does not return a hash. This can be called multiple times
+   * with a single hasher, but eventually you must extract the result
+   * yourself.
+   */
+  updateUTF8: function(message, hasher) {
+    let bytes = this._utf8Converter.convertToByteArray(message, {});
+    hasher.update(bytes, bytes.length);
+  },
+
+  /**
    * UTF-8 encode a message and perform a SHA-1 over it.
    *
    * @param message
@@ -342,6 +353,159 @@ this.CryptoUtils = {
 
     return header += ', ext="' + ext +'"';
   },
+
+  /**
+   * Given an HTTP header value, strip out any attributes.
+   */
+
+  stripHeaderAttributes: function(value) {
+    let value = value || "";
+    let i = value.indexOf(";");
+    return value.substring(0, (i >= 0) ? i : undefined).trim().toLowerCase();
+  },
+
+  /**
+   * Compute the HAWK client values (mostly the header) for an HTTP request.
+   *
+   * @param  URI
+   *         (nsIURI) HTTP request URI.
+   * @param  method
+   *         (string) HTTP request method.
+   * @param  options
+   *         (object) extra parameters (all but "credentials" are optional):
+   *           credentials - (object, mandatory) HAWK credentials object.
+   *             All three keys are required:
+   *             id - (string) key identifier
+   *             key - (string) raw key bytes
+   *             algorithm - (string) which hash to use: "sha1" or "sha256"
+   *           ext - (string) application-specific data, included in MAC
+   *           localtimeOffsetMsec - (number) local clock offset (vs server)
+   *           payload - (string) payload to include in hash, containing the
+   *                     HTTP request body. If not provided, the HAWK hash
+   *                     will not cover the request body, and the server
+   *                     should not check it either. This will be UTF-8
+   *                     encoded into bytes before hashing. This function
+   *                     cannot handle arbitrary binary data, sorry (the
+   *                     UTF-8 encoding process will corrupt any codepoints
+   *                     between U+0080 and U+00FF). Callers must be careful
+   *                     to use an HTTP client function which encodes the
+   *                     payload exactly the same way, otherwise the hash
+   *                     will not match.
+   *           contentType - (string) payload Content-Type. This is included
+   *                         (without any attributes like "charset=") in the
+   *                         HAWK hash. It does *not* affect interpretation
+   *                         of the "payload" property.
+   *           hash - (base64 string) pre-calculated payload hash. If
+   *                  provided, "payload" is ignored.
+   *           ts - (number) pre-calculated timestamp, secs since epoch
+   *           now - (number) current time, ms-since-epoch, for tests
+   *           nonce - (string) pre-calculated nonce. Should only be defined
+   *                   for testing as this function will generate a
+   *                   cryptographically secure random one if not defined.
+   * @returns
+   *         (object) Contains results of operation. The object has the
+   *         following keys:
+   *           field - (string) HAWK header, to use in Authorization: header
+   *           artifacts - (object) other generated values:
+   *             ts - (number) timestamp, in seconds since epoch
+   *             nonce - (string)
+   *             method - (string)
+   *             resource - (string) path plus querystring
+   *             host - (string)
+   *             port - (number)
+   *             hash - (string) payload hash (base64)
+   *             ext - (string) app-specific data
+   *             MAC - (string) request MAC (base64)
+   */
+  computeHAWK: function(uri, method, options) {
+    let credentials = options.credentials;
+    let ts = options.ts || Math.floor(((options.now || Date.now()) +
+                                       (options.localtimeOffsetMsec || 0))
+                                      / 1000);
+
+    let hash_algo, hmac_algo;
+    if (credentials.algorithm == "sha1") {
+      hash_algo = Ci.nsICryptoHash.SHA1;
+      hmac_algo = Ci.nsICryptoHMAC.SHA1;
+    } else if (credentials.algorithm == "sha256") {
+      hash_algo = Ci.nsICryptoHash.SHA256;
+      hmac_algo = Ci.nsICryptoHMAC.SHA256;
+    } else {
+      throw new Error("Unsupported algorithm: " + credentials.algorithm);
+    }
+
+    let port;
+    if (uri.port != -1) {
+      port = uri.port;
+    } else if (uri.scheme == "http") {
+      port = 80;
+    } else if (uri.scheme == "https") {
+      port = 443;
+    } else {
+      throw new Error("Unsupported URI scheme: " + uri.scheme);
+    }
+
+    let artifacts = {
+      ts: ts,
+      nonce: options.nonce || btoa(CryptoUtils.generateRandomBytes(8)),
+      method: method.toUpperCase(),
+      resource: uri.path, // This includes both path and search/queryarg.
+      host: uri.asciiHost.toLowerCase(), // This includes punycoding.
+      port: port.toString(10),
+      hash: options.hash,
+      ext: options.ext,
+    };
+
+    let contentType = CryptoUtils.stripHeaderAttributes(options.contentType);
+
+    if (!artifacts.hash && options.hasOwnProperty("payload")) {
+      let hasher = Cc["@mozilla.org/security/hash;1"]
+                     .createInstance(Ci.nsICryptoHash);
+      hasher.init(hash_algo);
+      CryptoUtils.updateUTF8("hawk.1.payload\n", hasher);
+      CryptoUtils.updateUTF8(contentType+"\n", hasher);
+      CryptoUtils.updateUTF8(options.payload, hasher);
+      CryptoUtils.updateUTF8("\n", hasher);
+      let hash = hasher.finish(false);
+      // HAWK specifies this .hash to include trailing "==" padding.
+      let hash_b64 = CommonUtils.encodeBase64URL(hash, true);
+      artifacts.hash = hash_b64;
+    }
+
+    let requestString = ("hawk.1.header"        + "\n" +
+                         artifacts.ts.toString(10) + "\n" +
+                         artifacts.nonce        + "\n" +
+                         artifacts.method       + "\n" +
+                         artifacts.resource     + "\n" +
+                         artifacts.host         + "\n" +
+                         artifacts.port         + "\n" +
+                         (artifacts.hash || "") + "\n");
+    if (artifacts.ext) {
+      requestString += artifacts.ext.replace("\\", "\\\\").replace("\n", "\\n");
+    }
+    requestString += "\n";
+
+    let hasher = CryptoUtils.makeHMACHasher(hmac_algo,
+                                            CryptoUtils.makeHMACKey(credentials.key));
+    artifacts.mac = btoa(CryptoUtils.digestBytes(requestString, hasher));
+    // The output MAC uses "+" and "/", and padded== .
+
+    function escape(attribute) {
+      // This is used for "x=y" attributes inside HTTP headers.
+      return attribute.replace(/\\/g, "\\\\").replace(/\"/g, '\\"');
+    }
+    let header = ('Hawk id="' + credentials.id + '", ' +
+                  'ts="' + artifacts.ts + '", ' +
+                  'nonce="' + artifacts.nonce + '", ' +
+                  (artifacts.hash ? ('hash="' + artifacts.hash + '", ') : "") +
+                  (artifacts.ext ? ('ext="' + escape(artifacts.ext) + '", ') : "") +
+                  'mac="' + artifacts.mac + '"');
+    return {
+      artifacts: artifacts,
+      field: header,
+    };
+  },
+
 };
 
 XPCOMUtils.defineLazyGetter(CryptoUtils, "_utf8Converter", function() {
