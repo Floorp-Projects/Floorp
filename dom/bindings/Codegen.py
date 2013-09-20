@@ -2872,7 +2872,7 @@ for (uint32_t i = 0; i < length; ++i) {
                                           "${declName}.SetNull()", notSequence)
         # Sequence arguments that might contain traceable things need
         # to get traced
-        if not isMember and typeNeedsRooting(elementType, descriptorProvider):
+        if not isMember and typeNeedsRooting(elementType):
             holderType = CGTemplatedType("SequenceRooter", elementInfo.declType)
             # If our sequence is nullable, this will set the Nullable to be
             # not-null, but that's ok because we make an explicit SetNull() call
@@ -3612,7 +3612,7 @@ for (uint32_t i = 0; i < length; ++i) {
 
         # Dictionary arguments that might contain traceable things need to get
         # traced
-        if not isMember and typeNeedsRooting(type, descriptorProvider):
+        if not isMember and typeNeedsRooting(type):
             declType = CGTemplatedType("RootedDictionary", declType);
             declArgs = "cx"
         else:
@@ -3918,7 +3918,7 @@ class CGArgumentConverter(CGThing):
         replacer = dict(self.argcAndIndex, **self.replacementVariables)
         replacer["seqType"] = CGTemplatedType("AutoSequence",
                                               typeConversion.declType).define()
-        if typeNeedsRooting(self.argument.type, self.descriptorProvider):
+        if typeNeedsRooting(self.argument.type):
             rooterDecl = ("SequenceRooter<%s> ${holderName}(cx, &${declName});\n" %
                           typeConversion.declType.define())
         else:
@@ -4340,28 +4340,27 @@ def infallibleForMember(member, type, descriptorProvider):
                                   memberIsCreator(member), "return false;",
                                   False)[1]
 
-def leafTypeNeedsCx(type, descriptorProvider, retVal):
+def leafTypeNeedsCx(type, retVal):
     return (type.isAny() or type.isObject() or
             (retVal and type.isSpiderMonkeyInterface()))
 
-def leafTypeNeedsScopeObject(type, descriptorProvider, retVal):
-    return (retVal and type.isSpiderMonkeyInterface())
+def leafTypeNeedsScopeObject(type, retVal):
+    return retVal and type.isSpiderMonkeyInterface()
 
-def leafTypeNeedsRooting(type, descriptorProvider):
-    return (leafTypeNeedsCx(type, descriptorProvider, False) or
-            type.isSpiderMonkeyInterface())
+def leafTypeNeedsRooting(type):
+    return leafTypeNeedsCx(type, False) or type.isSpiderMonkeyInterface()
 
-def typeNeedsRooting(type, descriptorProvider):
+def typeNeedsRooting(type):
     return typeMatchesLambda(type,
-                             lambda t: leafTypeNeedsRooting(t, descriptorProvider))
+                             lambda t: leafTypeNeedsRooting(t))
 
-def typeNeedsCx(type, descriptorProvider, retVal=False):
+def typeNeedsCx(type, retVal=False):
     return typeMatchesLambda(type,
-                             lambda t: leafTypeNeedsCx(t, descriptorProvider, retVal))
+                             lambda t: leafTypeNeedsCx(t, retVal))
 
-def typeNeedsScopeObject(type, descriptorProvider, retVal=False):
+def typeNeedsScopeObject(type, retVal=False):
     return typeMatchesLambda(type,
-                             lambda t: leafTypeNeedsScopeObject(t, descriptorProvider, retVal))
+                             lambda t: leafTypeNeedsScopeObject(t, retVal))
 
 def typeMatchesLambda(type, func):
     if type is None:
@@ -4449,7 +4448,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
                                                         resultAlreadyAddRefed,
                                                         isMember="Sequence")
         # While we have our inner type, set up our rooter, if needed
-        if not isMember and typeNeedsRooting(returnType, descriptorProvider):
+        if not isMember and typeNeedsRooting(returnType):
             rooter = CGGeneric("SequenceRooter<%s > resultRooter(cx, &result);" %
                                result.define())
         else:
@@ -4463,7 +4462,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         dictName = (CGDictionary.makeDictionaryName(returnType.unroll().inner) +
                     "Initializer")
         result = CGGeneric(dictName)
-        if not isMember and typeNeedsRooting(returnType, descriptorProvider):
+        if not isMember and typeNeedsRooting(returnType):
             if nullable:
                 result = CGTemplatedType("NullableRootedDictionary", result)
             else:
@@ -4476,7 +4475,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         return result, True, None, resultArgs
     if returnType.isUnion():
         result = CGGeneric("Owning" + returnType.unroll().name)
-        if not isMember and typeNeedsRooting(returnType, descriptorProvider):
+        if not isMember and typeNeedsRooting(returnType):
             if returnType.nullable():
                 result = CGTemplatedType("NullableRootedUnion", result)
             else:
@@ -4499,18 +4498,17 @@ def isResultAlreadyAddRefed(descriptor, extendedAttributes):
     # Default to already_AddRefed on the main thread, raw pointer in workers
     return not descriptor.workers and not 'resultNotAddRefed' in extendedAttributes
 
-def needCx(returnType, arguments, extendedAttributes, descriptorProvider,
-           considerTypes):
+def needCx(returnType, arguments, extendedAttributes, considerTypes):
     return (considerTypes and
-            (typeNeedsCx(returnType, descriptorProvider, True) or
-             any(typeNeedsCx(a.type, descriptorProvider) for a in arguments)) or
+            (typeNeedsCx(returnType, True) or
+             any(typeNeedsCx(a.type) for a in arguments)) or
             'implicitJSContext' in extendedAttributes)
 
 def needScopeObject(returnType, arguments, extendedAttributes,
-                    descriptorProvider, isWrapperCached, considerTypes):
+                    isWrapperCached, considerTypes):
     return (considerTypes and not isWrapperCached and
-            (typeNeedsScopeObject(returnType, descriptorProvider, True) or
-             any(typeNeedsScopeObject(a.type, descriptorProvider) for a in arguments)))
+            (typeNeedsScopeObject(returnType, True) or
+             any(typeNeedsScopeObject(a.type) for a in arguments)))
 
 class CGCallGenerator(CGThing):
     """
@@ -4796,7 +4794,7 @@ if (global.Failed()) {
         # needsCx decision on the types involved, just on our extended
         # attributes.
         needsCx = needCx(returnType, arguments, self.extendedAttributes,
-                         descriptor, not descriptor.interface.isJSImplemented())
+                         not descriptor.interface.isJSImplemented())
         if needsCx and not (static and descriptor.workers):
             argsPre.append("cx")
 
@@ -4811,7 +4809,7 @@ if (global.Failed()) {
             needsUnwrappedVar = True
             argsPost.append("js::GetObjectCompartment(unwrappedObj.empty() ? obj : unwrappedObj.ref())")
         elif needScopeObject(returnType, arguments, self.extendedAttributes,
-                             descriptor, descriptor.wrapperCache, True):
+                             descriptor.wrapperCache, True):
             needsUnwrap = True
             needsUnwrappedVar = True
             argsPre.append("unwrappedObj.empty() ? obj : unwrappedObj.ref()")
@@ -6304,7 +6302,7 @@ class CGUnionStruct(CGThing):
             destructorCases.append(CGCase("e" + vars["name"],
                                           CGGeneric("Destroy%s();"
                                                      % vars["name"])))
-            if self.ownsMembers and typeNeedsRooting(t, self.descriptorProvider):
+            if self.ownsMembers and typeNeedsRooting(t):
                 if t.isObject():
                     traceCases.append(
                         CGCase("e" + vars["name"],
@@ -8320,7 +8318,7 @@ if (""",
 
         memberTraces = [self.getMemberTrace(m)
                         for m in self.dictionary.members
-                        if typeNeedsRooting(m.type, self.descriptorProvider)]
+                        if typeNeedsRooting(m.type)]
 
         body += "\n\n".join(memberTraces)
 
@@ -8525,7 +8523,7 @@ if (""",
 
     def getMemberTrace(self, member):
         type = member.type;
-        assert typeNeedsRooting(type, self.descriptorProvider)
+        assert typeNeedsRooting(type)
         memberLoc = self.makeMemberName(member.identifier.name)
         if member.defaultValue:
             memberData = memberLoc
@@ -9174,10 +9172,10 @@ class CGNativeMember(ClassMethod):
             args.insert(0, Argument("JS::Value", "aThisVal"))
         # And jscontext bits.
         if needCx(returnType, argList, self.extendedAttrs,
-                  self.descriptorProvider, self.passJSBitsAsNeeded):
+                  self.passJSBitsAsNeeded):
             args.insert(0, Argument("JSContext*", "cx"))
             if needScopeObject(returnType, argList, self.extendedAttrs,
-                               self.descriptorProvider, self.descriptorProvider,
+                               self.descriptorProvider,
                                self.passJSBitsAsNeeded):
                 args.insert(1, Argument("JS::Handle<JSObject*>", "obj"))
         # And if we're static, a global
@@ -10747,8 +10745,7 @@ class CGEventGetter(CGNativeMember):
             args.append(Argument("nsString&", "aRetVal"))
         elif returnType.isByteString():
             args.append(Argument("nsCString&", "aRetVal"))
-        if needCx(returnType, argList, self.extendedAttrs,
-                  self.descriptorProvider, True):
+        if needCx(returnType, argList, self.extendedAttrs, True):
             args.insert(0, Argument("JSContext*", "aCx"))
         if not 'infallible' in self.extendedAttrs:
             raise TypeError("Event code generator does not support [Throws]!")
@@ -10818,7 +10815,7 @@ class CGEventMethod(CGNativeMember):
         self.args.insert(0, Argument("mozilla::dom::EventTarget*", "aOwner"))
         constructorForNativeCaller = CGNativeMember.declare(self, cgClass) + "\n"
         self.args = list(self.originalArgs)
-        if needCx(None, self.descriptorProvider.interface.members, [], self.descriptorProvider, True):
+        if needCx(None, self.descriptorProvider.interface.members, [], True):
             self.args.insert(0, Argument("JSContext*", "aCx"))
         self.args.insert(0, Argument("const GlobalObject&", "aGlobal"))
         self.args.append(Argument('ErrorResult&', 'aRv'))
@@ -10863,7 +10860,7 @@ class CGEventMethod(CGNativeMember):
             "nsCOMPtr<mozilla::dom::EventTarget> owner = do_QueryInterface(aGlobal.GetAsSupports());\n"
             "return Constructor(owner, %s, %s);" % (self.args[0].name, self.args[1].name)
             )
-        if needCx(None, self.descriptorProvider.interface.members, [], self.descriptorProvider, True):
+        if needCx(None, self.descriptorProvider.interface.members, [], True):
             self.args.insert(0, Argument("JSContext*", "aCx"))
         self.args.insert(0, Argument("const GlobalObject&", "aGlobal"))
         self.args.append(Argument('ErrorResult&', 'aRv'))
