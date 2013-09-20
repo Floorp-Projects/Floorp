@@ -120,6 +120,10 @@ public:
 
   virtual void SetCompositableQuirks(CompositableQuirks* aQuirks);
 
+#ifdef MOZ_LAYERS_HAVE_LOG
+  virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
+#endif
+
 protected:
   RefPtr<CompositableQuirks> mQuirks;
 };
@@ -385,7 +389,13 @@ public:
   virtual void SetCompositableQuirks(CompositableQuirks* aQuirks);
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-  virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
+  virtual void PrintInfo(nsACString& aTo, const char* aPrefix)
+  {
+    RefPtr<TextureSource> source = GetTextureSources();
+    if (source) {
+      source->PrintInfo(aTo, aPrefix);
+    }
+  }
 #endif
 
 protected:
