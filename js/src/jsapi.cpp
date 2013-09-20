@@ -4241,30 +4241,10 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, const JSFunctionSpec *fs)
             if (cx->runtime()->isSelfHostingGlobal(cx->global()))
                 continue;
 
-            RootedAtom shAtom(cx, Atomize(cx, fs->selfHostedName, strlen(fs->selfHostedName)));
-            if (!shAtom)
-                return false;
-            RootedPropertyName shName(cx, shAtom->asPropertyName());
             RootedValue funVal(cx);
-            if (!cx->runtime()->maybeWrappedSelfHostedFunction(cx, shName, &funVal))
+            if (!cx->global()->getSelfHostedFunction(cx, fs, atom, &funVal))
                 return false;
-            if (!funVal.isUndefined()) {
-                if (!JSObject::defineProperty(cx, obj, atom->asPropertyName(), funVal,
-                                             NULL, NULL, flags & ~JSFUN_FLAGS_MASK))
-                {
-                    return false;
-                }
-            } else {
-                JSFunction *fun = DefineFunction(cx, obj, id, /* native = */ NULL, fs->nargs, 0,
-                                                 JSFunction::ExtendedFinalizeKind, SingletonObject);
-                if (!fun)
-                    return false;
-                fun->setIsSelfHostedBuiltin();
-                fun->setExtendedSlot(0, PrivateValue(const_cast<JSFunctionSpec*>(fs)));
-                funVal.setObject(*fun);
-            }
-            RootedObject holder(cx, cx->global()->intrinsicsHolder());
-            if (!JSObject::defineProperty(cx, holder, shName, funVal))
+            if (!JSObject::defineGeneric(cx, obj, id, funVal, NULL, NULL, 0))
                 return false;
         } else {
             JSFunction *fun = DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags);
