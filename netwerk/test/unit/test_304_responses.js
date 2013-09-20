@@ -1,11 +1,6 @@
 "use strict";
 // https://bugzilla.mozilla.org/show_bug.cgi?id=761228
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
-
 Cu.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
@@ -36,9 +31,9 @@ function make_channel(url) {
 }
 
 function clearCache() {
-    var service = Components.classes["@mozilla.org/network/cache-service;1"]
-        .getService(Ci.nsICacheService);
-    service.evictEntries(Ci.nsICache.STORE_ANYWHERE);
+    var service = Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
+        .getService(Ci.nsICacheStorageService);
+    service.clear();
 }
 
 function alwaysReturn304Handler(metadata, response) {
@@ -80,8 +75,7 @@ add_test(function test_unexpected_304() {
 // the cache.
 add_test(function test_304_stored_in_cache() {
   asyncOpenCacheEntry(
-    baseURI + existingCached304, "HTTP",
-    Ci.nsICache.STORE_ANYWHERE, Ci.nsICache.ACCESS_READ_WRITE,
+    baseURI + existingCached304, "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
     function (entryStatus, cacheEntry) {
       cacheEntry.setMetaDataElement("request-method", "GET");
       cacheEntry.setMetaDataElement("response-head",

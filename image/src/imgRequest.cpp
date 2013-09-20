@@ -26,7 +26,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIScriptSecurityManager.h"
 
-#include "nsICacheVisitor.h"
+#include "nsICacheEntry.h"
 
 #include "plstr.h" // PL_strcasestr(...)
 #include "nsNetUtil.h"
@@ -339,7 +339,7 @@ void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aReq
       nsCOMPtr<nsISupports> cacheToken;
       cacheChannel->GetCacheToken(getter_AddRefs(cacheToken));
       if (cacheToken) {
-        nsCOMPtr<nsICacheEntryInfo> entryDesc(do_QueryInterface(cacheToken));
+        nsCOMPtr<nsICacheEntry> entryDesc(do_QueryInterface(cacheToken));
         if (entryDesc) {
           uint32_t expiration;
           /* get the expiration time from the caching channel's token */

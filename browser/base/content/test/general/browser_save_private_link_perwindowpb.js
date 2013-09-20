@@ -1,6 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+let {LoadContextInfo} = Cu.import("resource://gre/modules/LoadContextInfo.jsm", null);
+
 function test() {
   // initialization
   waitForExplicitFinish();
@@ -8,27 +11,33 @@ function test() {
   let testURI = "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517.html";
   let fileName;
   let MockFilePicker = SpecialPowers.MockFilePicker;
-  let cache = Cc["@mozilla.org/network/cache-service;1"]
-              .getService(Ci.nsICacheService);
+  let cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
+              .getService(Ci.nsICacheStorageService);
 
-  function checkDiskCacheFor(filename) {
-    let visitor = {
-      visitDevice: function(deviceID, deviceInfo) {
-        if (deviceID == "disk")
-          info(deviceID + " device contains " + deviceInfo.entryCount + " entries");
-        return deviceID == "disk";
+  function checkDiskCacheFor(filename, goon) {
+    Visitor.prototype = {
+      onCacheStorageInfo: function(num, consumption)
+      {
+        info("disk storage contains " + num + " entries");
       },
-
-      visitEntry: function(deviceID, entryInfo) {
-        info(entryInfo.key);
-        is(entryInfo.key.contains(filename), false, "web content present in disk cache");
+      onCacheEntryInfo: function(entry)
+      {
+        info(entry.key);
+        is(entry.key.contains(filename), false, "web content present in disk cache");
+      },
+      onCacheEntryVisitCompleted: function()
+      {
+        goon();
       }
     };
-    cache.visitEntries(visitor);
+    function Visitor() {}
+
+    var storage = cache.diskCacheStorage(LoadContextInfo.default, false);
+    storage.asyncVisitStorage(new Visitor(), true /* Do walk entries */);
   }
 
   function contextMenuOpened(aWindow, event) {
-    cache.evictEntries(Ci.nsICache.STORE_ANYWHERE);
+    cache.clear();
 
     event.currentTarget.removeEventListener("popupshown", contextMenuOpened);
 
@@ -65,8 +74,7 @@ function test() {
 
     // Give the request a chance to finish and create a cache entry
     executeSoon(function() {
-      checkDiskCacheFor(fileName);
-      finish();
+      checkDiskCacheFor(fileName, finish);
     });
   }
 

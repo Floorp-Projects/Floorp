@@ -297,21 +297,32 @@ gfxImageSurface::GetSubimage(const gfxRect& aRect)
 {
     gfxRect r(aRect);
     r.Round();
+    MOZ_ASSERT(gfxRect(0, 0, mSize.width, mSize.height).Contains(r));
+
+    gfxImageFormat format = Format();
+
     unsigned char* subData = Data() +
         (Stride() * (int)r.Y()) +
         (int)r.X() * gfxASurface::BytePerPixelFromFormat(Format());
 
+    if (format == ImageFormatARGB32 &&
+        GetOpaqueRect().Contains(aRect)) {
+        format = ImageFormatRGB24;
+    }
+
     nsRefPtr<gfxSubimageSurface> image =
         new gfxSubimageSurface(this, subData,
-                               gfxIntSize((int)r.Width(), (int)r.Height()));
+                               gfxIntSize((int)r.Width(), (int)r.Height()),
+                               format);
 
     return image.forget();
 }
 
 gfxSubimageSurface::gfxSubimageSurface(gfxImageSurface* aParent,
                                        unsigned char* aData,
-                                       const gfxIntSize& aSize)
-  : gfxImageSurface(aData, aSize, aParent->Stride(), aParent->Format())
+                                       const gfxIntSize& aSize,
+                                       gfxImageFormat aFormat)
+  : gfxImageSurface(aData, aSize, aParent->Stride(), aFormat)
   , mParent(aParent)
 {
 }
