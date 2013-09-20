@@ -122,8 +122,7 @@ static void join_waiter() {
   NS_ProcessPendingEvents(PeerConnectionCtx::gMainThread);
 }
 
-nsresult PeerConnectionCtx::InitializeGlobal(nsIThread *mainThread,
-  nsIEventTarget* stsThread) {
+nsresult PeerConnectionCtx::InitializeGlobal(nsIThread *mainThread) {
   if (!gMainThread) {
     gMainThread = mainThread;
     CSF::VcmSIPCCBinding::setMainThread(gMainThread);
@@ -133,8 +132,6 @@ nsresult PeerConnectionCtx::InitializeGlobal(nsIThread *mainThread,
     MOZ_ASSERT(gMainThread == mainThread);
 #endif
   }
-
-  CSF::VcmSIPCCBinding::setSTSThread(stsThread);
 
   nsresult res;
 

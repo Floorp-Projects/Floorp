@@ -362,10 +362,5 @@ namespace CSF
           of its memory.
          */
         virtual Timecard *takeTimecard() = 0;
-
-	/**
-          Get the latest candidate.
-	*/
-	virtual std::string getCandidate() = 0;
     };
 };

@@ -3,8 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <string>
-#include <cstdlib>
-#include <cerrno>
 
 #include "base/histogram.h"
 #include "vcm.h"
@@ -141,7 +139,6 @@ public:
         mCode(static_cast<PeerConnectionImpl::Error>(aInfo->getStatusCode())),
         mReason(aInfo->getStatus()),
         mSdpStr(),
-	mCandidateStr(),
         mCallState(aInfo->getCallState()),
         mFsmState(aInfo->getFsmState()),
         mStateStr(aInfo->callStateToString(mCallState)),
@@ -151,10 +148,8 @@ public:
       streams = aInfo->getMediaStreams();
       mRemoteStream = mPC->media()->GetRemoteStream(streams->media_stream_id);
       MOZ_ASSERT(mRemoteStream);
-    } else if (mCallState == FOUNDICECANDIDATE) {
-	mCandidateStr = aInfo->getCandidate();
-    } else if ((mCallState == CREATEOFFERSUCCESS) ||
-	       (mCallState == CREATEANSWERSUCCESS)) {
+    }
+    if ((mCallState == CREATEOFFERSUCCESS) || (mCallState == CREATEANSWERSUCCESS)) {
         mSdpStr = aInfo->getSDP();
     }
   }
@@ -284,45 +279,6 @@ public:
         mObserver->OnAddIceCandidateError(mCode, mReason.c_str());
         break;
 
-      case FOUNDICECANDIDATE:
-        {
-            size_t end_of_level = mCandidateStr.find('\t');
-            if (end_of_level == std::string::npos) {
-                MOZ_ASSERT(false);
-                return NS_OK;
-            }
-            std::string level = mCandidateStr.substr(0, end_of_level);
-            if (!level.size()) {
-                MOZ_ASSERT(false);
-                return NS_OK;
-            }
-            char *endptr;
-            errno = 0;
-            unsigned long level_long =
-                strtoul(level.c_str(), &endptr, 10);
-            if (errno || *endptr != 0 || level_long > 65535) {
-                /* Conversion failure */
-                MOZ_ASSERT(false);
-                return NS_OK;
-            }
-            size_t end_of_mid = mCandidateStr.find('\t', end_of_level + 1);
-            if (end_of_mid == std::string::npos) {
-                MOZ_ASSERT(false);
-                return NS_OK;
-            }
-
-            std::string mid = mCandidateStr.substr(end_of_level + 1,
-                                                   end_of_mid - (end_of_level + 1));
-
-            std::string candidate = mCandidateStr.substr(end_of_mid + 1);
-
-
-            mObserver->OnIceCandidate(
-                level_long & 0xffff,
-                mid.c_str(),
-                candidate.c_str());
-        }
-        break;
       case REMOTESTREAMADD:
         {
           DOMMediaStream* stream = nullptr;
@@ -367,7 +323,6 @@ private:
   PeerConnectionImpl::Error mCode;
   std::string mReason;
   std::string mSdpStr;
-  std::string mCandidateStr;
   cc_call_state_t mCallState;
   fsmdef_states_t mFsmState;
   std::string mStateStr;
@@ -391,9 +346,7 @@ PeerConnectionImpl::PeerConnectionImpl()
   , mMedia(NULL)
   , mNumAudioStreams(0)
   , mNumVideoStreams(0)
-  , mHaveDataStream(false)
-  , mTrickle(true) // TODO(ekr@rtfm.com): Use pref
-{
+  , mHaveDataStream(false) {
 #ifdef MOZILLA_INTERNAL_API
   MOZ_ASSERT(NS_IsMainThread());
 #endif
@@ -653,7 +606,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
   mHandle = hex;
 
   STAMP_TIMECARD(mTimeCard, "Initializing PC Ctx");
-  res = PeerConnectionCtx::InitializeGlobal(mThread, mSTSThread);
+  res = PeerConnectionCtx::InitializeGlobal(mThread);
   NS_ENSURE_SUCCESS(res, res);
 
   PeerConnectionCtx *pcctx = PeerConnectionCtx::GetInstance();
@@ -1358,7 +1311,7 @@ nsresult
 PeerConnectionImpl::CheckApiState(bool assert_ice_ready) const
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
-  MOZ_ASSERT(mTrickle || !assert_ice_ready || (mIceState != kIceGathering));
+  PR_ASSERT(!assert_ice_ready || (mIceState != kIceGathering));
 
   if (mReadyState == kClosed)
     return NS_ERROR_FAILURE;
