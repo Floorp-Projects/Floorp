@@ -274,7 +274,6 @@ TokenStream::TokenStream(ExclusiveContext *cx, const CompileOptions &options,
     prevLinebase(NULL),
     userbuf(cx, base - options.column, length + options.column), // See comment below
     filename(options.filename),
-    sourceURL_(NULL),
     sourceMapURL_(NULL),
     tokenbuf(cx),
     cx(cx),
@@ -334,7 +333,6 @@ TokenStream::TokenStream(ExclusiveContext *cx, const CompileOptions &options,
 
 TokenStream::~TokenStream()
 {
-    js_free(sourceURL_);
     js_free(sourceMapURL_);
 
     JS_ASSERT_IF(originPrincipals, originPrincipals->refcount);
@@ -809,45 +807,31 @@ CharsMatch(const jschar *p, const char *q) {
 }
 
 bool
-TokenStream::getDirectives(bool isMultiline, bool shouldWarnDeprecated)
+TokenStream::getSourceMappingURL(bool isMultiline, bool shouldWarnDeprecated)
 {
-    // Match directive comments used in debugging, such as "//# sourceURL" and
-    // "//# sourceMappingURL". Use of "//@" instead of "//#" is deprecated.
+    // Match comments of the form "//# sourceMappingURL=<url>" or
+    // "/\* //# sourceMappingURL=<url> *\/"
     //
     // To avoid a crashing bug in IE, several JavaScript transpilers wrap single
     // line comments containing a source mapping URL inside a multiline
     // comment. To avoid potentially expensive lookahead and backtracking, we
     // only check for this case if we encounter a '#' character.
-
-    if (!getSourceURL(isMultiline, shouldWarnDeprecated))
-        return false;
-    if (!getSourceMappingURL(isMultiline, shouldWarnDeprecated))
-        return false;
-
-    return true;
-}
-
-bool
-TokenStream::getDirective(bool isMultiline, bool shouldWarnDeprecated,
-                          const char *directive, int directiveLength,
-                          const char *errorMsgPragma, jschar **destination) {
-    JS_ASSERT(directiveLength <= 18);
     jschar peeked[18];
     int32_t c;
 
-    if (peekChars(directiveLength, peeked) && CharsMatch(peeked, directive)) {
-        if (shouldWarnDeprecated &&
-            !reportWarning(JSMSG_DEPRECATED_PRAGMA, errorMsgPragma))
+    if (peekChars(18, peeked) && CharsMatch(peeked, " sourceMappingURL=")) {
+        if (shouldWarnDeprecated && !reportWarning(JSMSG_DEPRECATED_SOURCE_MAP)) {
             return false;
+        }
 
-        skipChars(directiveLength);
+        skipChars(18);
         tokenbuf.clear();
 
         while ((c = peekChar()) && c != EOF && !IsSpaceOrBOM2(c)) {
             getChar();
-            // Debugging directives can occur in both single- and multi-line
-            // comments. If we're currently inside a multi-line comment, we also
-            // need to recognize multi-line comment terminators.
+            // Source mapping URLs can occur in both single- and multiline
+            // comments. If we're currently inside a multiline comment, we also
+            // need to recognize multiline comment terminators.
             if (isMultiline && c == '*' && peekChar() == '/') {
                 ungetChar('*');
                 break;
@@ -856,42 +840,21 @@ TokenStream::getDirective(bool isMultiline, bool shouldWarnDeprecated,
         }
 
         if (tokenbuf.empty())
-            // The directive's URL was missing, but this is not quite an
-            // exception that we should stop and drop everything for.
+            // The source map's URL was missing, but not quite an exception that
+            // we should stop and drop everything for, though.
             return true;
 
-        size_t length = tokenbuf.length();
+        size_t sourceMapURLLength = tokenbuf.length();
 
-        js_free(*destination);
-        *destination = cx->pod_malloc<jschar>(length + 1);
-        if (!*destination)
+        js_free(sourceMapURL_);
+        sourceMapURL_ = cx->pod_malloc<jschar>(sourceMapURLLength + 1);
+        if (!sourceMapURL_)
             return false;
 
-        PodCopy(*destination, tokenbuf.begin(), length);
-        (*destination)[length] = '\0';
+        PodCopy(sourceMapURL_, tokenbuf.begin(), sourceMapURLLength);
+        sourceMapURL_[sourceMapURLLength] = '\0';
     }
-
     return true;
-}
-
-bool
-TokenStream::getSourceURL(bool isMultiline, bool shouldWarnDeprecated)
-{
-    // Match comments of the form "//# sourceURL=<url>" or
-    // "/\* //# sourceURL=<url> *\/"
-
-    return getDirective(isMultiline, shouldWarnDeprecated, " sourceURL=", 11,
-                        "sourceURL", &sourceURL_);
-}
-
-bool
-TokenStream::getSourceMappingURL(bool isMultiline, bool shouldWarnDeprecated)
-{
-    // Match comments of the form "//# sourceMappingURL=<url>" or
-    // "/\* //# sourceMappingURL=<url> *\/"
-
-    return getDirective(isMultiline, shouldWarnDeprecated, " sourceMappingURL=", 18,
-                        "sourceMappingURL", &sourceMapURL_);
 }
 
 JS_ALWAYS_INLINE Token *
@@ -1543,8 +1506,7 @@ TokenStream::getTokenInternal(Modifier modifier)
         if (matchChar('/')) {
             c = peekChar();
             if (c == '@' || c == '#') {
-                bool shouldWarn = getChar() == '@';
-                if (!getDirectives(false, shouldWarn))
+                if (!getSourceMappingURL(false, getChar() == '@'))
                     goto error;
             }
 
@@ -1562,8 +1524,7 @@ TokenStream::getTokenInternal(Modifier modifier)
             while ((c = getChar()) != EOF &&
                    !(c == '*' && matchChar('/'))) {
                 if (c == '@' || c == '#') {
-                    bool shouldWarn = c == '@';
-                    if (!getDirectives(true, shouldWarn))
+                    if (!getSourceMappingURL(true, c == '@'))
                         goto error;
                 }
             }
