@@ -51,12 +51,8 @@ MacroAssemblerX64::loadConstantDouble(double d, const FloatRegister &dest)
 void
 MacroAssemblerX64::loadConstantFloat32(float f, const FloatRegister &dest)
 {
-    // In particular, use hardware instructions if loading 0
-    uint32_t u = mozilla::BitwiseCast<uint32_t>(f);
-    if (u == 0) {
-        xorps(dest, dest);
+    if (maybeInlineFloat(f, dest))
         return;
-    }
 
     if (!floatMap_.initialized()) {
         enoughMemory_ &= floatMap_.init();
