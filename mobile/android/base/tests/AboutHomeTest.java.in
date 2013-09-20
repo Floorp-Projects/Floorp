@@ -24,12 +24,27 @@ import java.util.ArrayList;
  * To use any of these methods in your test make sure it extends AboutHomeTest instead of BaseTest
  */
 abstract class AboutHomeTest extends BaseTest {
-    protected enum AboutHomeTabs {MOST_VISITED, MOST_RECENT, TABS_FROM_LAST_TIME, BOOKMARKS, READING_LIST};
-    protected ArrayList<String> aboutHomeTabs = new ArrayList<String>() {{
-                  add("HISTORY");
+    protected enum AboutHomeTabs {HISTORY, MOST_RECENT, TABS_FROM_LAST_TIME, TOP_SITES, BOOKMARKS, READING_LIST};
+    private ArrayList<String> aboutHomeTabs = new ArrayList<String>() {{
+                  add("TOP_SITES");
                   add("BOOKMARKS");
                   add("READING_LIST");
               }};
+
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+
+        if (aboutHomeTabs.size() < 4) {
+            // Update it for tablets vs. phones.
+            if (mDevice.type.equals("phone")) {
+                aboutHomeTabs.add(0, AboutHomeTabs.HISTORY.toString());
+            } else {
+                aboutHomeTabs.add(AboutHomeTabs.HISTORY.toString());
+            }
+        }
+    }
 
     /**
      * FIXME: Write new versions of these methods and update their consumers to use the new about:home pages.
@@ -84,7 +99,6 @@ abstract class AboutHomeTest extends BaseTest {
 
         return null;
     }
-
 
    /**
     * FIXME: rewrite this to work with fig when rewriting the testBookmarksTab test
@@ -142,69 +156,120 @@ abstract class AboutHomeTest extends BaseTest {
         }
     }
 
-   // A wait in order for the about:home tab to be rendered after drag/tab selection
+    // A wait in order for the about:home tab to be rendered after drag/tab selection
     private void waitForAboutHomeTab(final int tabIndex) {
         boolean correctTab = waitForCondition(new Condition() {
             @Override
             public boolean isSatisfied() {
-              ViewPager pager = (ViewPager)mSolo.getView(ViewPager.class, 0);
-              return (pager.getCurrentItem() == tabIndex);
+                ViewPager pager = (ViewPager)mSolo.getView(ViewPager.class, 0);
+                return (pager.getCurrentItem() == tabIndex);
             }
         }, MAX_WAIT_MS);
         mAsserter.ok(correctTab, "Checking that the correct tab is displayed", "The " + aboutHomeTabs.get(tabIndex) + " tab is displayed");
     }
- 
+
+    private void clickAboutHomeTab(AboutHomeTabs tab) {
+        mSolo.clickOnText(tab.toString().replace("_", " "));
+    }
+
     /**
-     * This method can be used to open the different tabs of about:home
-     * @param AboutHomeTabs enum item {MOST_VISITED, MOST_RECENT, TABS_FROM_LAST_TIME, BOOKMARKS, READING_LIST}
+     * Swipes to an about:home tab.
+     * @param int swipeVector Value and direction to swipe (go left for negative, right for positive).
+     */
+    private void swipeAboutHome(int swipeVector) {
+        // Increase swipe width, which will especially impact tablets.
+        int swipeWidth = mDriver.getGeckoWidth() - 1;
+        int swipeHeight = mDriver.getGeckoHeight() / 2;
+
+        if (swipeVector >= 0) {
+            // Emulate swipe motion from right to left.
+            for (int i = 0; i < swipeVector; i++) {
+                mActions.drag(swipeWidth, 0, swipeHeight, swipeHeight);
+                mSolo.sleep(100);
+            }
+        } else {
+            // Emulate swipe motion from left to right.
+            for (int i = 0; i > swipeVector; i--) {
+                mActions.drag(0, swipeWidth, swipeHeight, swipeHeight);
+                mSolo.sleep(100);
+            }
+        }
+    }
+
+    /**
+     * This method can be used to open the different tabs of about:home.
+     *
+     * @param AboutHomeTabs enum item {MOST_RECENT, TABS_FROM_LAST_TIME, TOP_SITES, BOOKMARKS, READING_LIST}
      */
     protected void openAboutHomeTab(AboutHomeTabs tab) {
-        int halfWidth = mDriver.getGeckoWidth() / 2;
-        int halfHeight = mDriver.getGeckoHeight() / 2;
         focusUrlBar();
         ViewPager pager = (ViewPager)mSolo.getView(ViewPager.class, 0);
+
+        // Handle tablets by just clicking the visible tab title.
+        if (mDevice.type.equals("tablet")) {
+            // Just click for tablets, since all the titles are visible.
+            if (AboutHomeTabs.MOST_RECENT == tab || AboutHomeTabs.TABS_FROM_LAST_TIME == tab) {
+                mSolo.clickOnText(AboutHomeTabs.HISTORY.toString());
+                TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
+
+                switch (tab) {
+                    case MOST_RECENT: {
+                        mSolo.clickOnView(tabwidget.getChildAt(0));
+                        mAsserter.ok(waitForText(StringHelper.MOST_RECENT_LABEL), "Checking that we are in the most recent tab of about:home", "We are in the most recent tab");
+                        break;
+                    }
+                    case TABS_FROM_LAST_TIME: {
+                        mSolo.clickOnView(tabwidget.getChildAt(1));
+                        mAsserter.ok(waitForText(StringHelper.TABS_FROM_LAST_TIME_LABEL), "Checking that we are in the Tabs from last time tab of about:home", "We are in the Tabs from last time tab");
+                        break;
+                    }
+                }
+            } else {
+                clickAboutHomeTab(tab);
+            }
+            return;
+        }
+
+        // Handle phones (non-tablets).
+        final int currentTabIndex = pager.getCurrentItem();
+        int tabOffset = aboutHomeTabs.indexOf(tab.toString()) - currentTabIndex;
         switch (tab) {
+            case TOP_SITES : {
+                swipeAboutHome(tabOffset);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(tab.toString()));
+                break;
+            }
             case BOOKMARKS : {
-                mSolo.clickOnText(StringHelper.BOOKMARKS_LABEL);
+                swipeAboutHome(tabOffset);
                 waitForAboutHomeTab(aboutHomeTabs.indexOf(tab.toString()));
                 break;
             }
             case MOST_RECENT: {
-                mSolo.clickOnText(StringHelper.BOOKMARKS_LABEL);
-                waitForAboutHomeTab(aboutHomeTabs.indexOf(StringHelper.BOOKMARKS_LABEL));
-                mActions.drag(0, halfWidth, halfHeight, halfHeight);
-                waitForAboutHomeTab(aboutHomeTabs.indexOf(StringHelper.HISTORY_LABEL));
-                TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
-                mSolo.clickOnView(tabwidget.getChildAt(1));
-                mAsserter.ok(waitForText(StringHelper.MOST_RECENT_LABEL), "Checking that we are in the most recent tab of about:home", "We are in the most recent tab");
-                break;
-            }
-            case READING_LIST: {
-                mSolo.clickOnText(StringHelper.BOOKMARKS_LABEL);
-                waitForAboutHomeTab(aboutHomeTabs.indexOf(StringHelper.BOOKMARKS_LABEL));
-                mActions.drag(halfWidth, 0, halfHeight, halfHeight);
-                waitForAboutHomeTab(aboutHomeTabs.indexOf(tab.toString()));
-                break;
-            }
-            case MOST_VISITED: {
-                mSolo.clickOnText(StringHelper.BOOKMARKS_LABEL);
-                waitForAboutHomeTab(aboutHomeTabs.indexOf(StringHelper.BOOKMARKS_LABEL));
-                mActions.drag(0, halfWidth, halfHeight, halfHeight);
+                // MOST_RECENT is contained in the HISTORY tab.
+                tabOffset = aboutHomeTabs.indexOf(AboutHomeTabs.HISTORY.toString()) - currentTabIndex;
+                swipeAboutHome(tabOffset);
                 waitForAboutHomeTab(aboutHomeTabs.indexOf(StringHelper.HISTORY_LABEL));
                 TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
                 mSolo.clickOnView(tabwidget.getChildAt(0));
+                mAsserter.ok(waitForText(StringHelper.MOST_RECENT_LABEL), "Checking that we are in the most recent tab of about:home", "We are in the most recent tab");
                 break;
             }
             case TABS_FROM_LAST_TIME: {
-                mSolo.clickOnText(StringHelper.BOOKMARKS_LABEL);
-                waitForAboutHomeTab(aboutHomeTabs.indexOf(StringHelper.BOOKMARKS_LABEL));
-                mActions.drag(0, halfWidth, halfHeight, halfHeight);
+                // TABS_FROM_LAST_TIME is contained in the HISTORY tab.
+                tabOffset = aboutHomeTabs.indexOf(AboutHomeTabs.HISTORY.toString()) - currentTabIndex;
+                swipeAboutHome(tabOffset);
                 waitForAboutHomeTab(aboutHomeTabs.indexOf(StringHelper.HISTORY_LABEL));
                 TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
-                mSolo.clickOnView(tabwidget.getChildAt(2));
+                mSolo.clickOnView(tabwidget.getChildAt(1));
                 mAsserter.ok(waitForText(StringHelper.TABS_FROM_LAST_TIME_LABEL), "Checking that we are in the Tabs from last time tab of about:home", "We are in the Tabs from last time tab");
                 break;
             }
+            case READING_LIST: {
+                swipeAboutHome(tabOffset);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(tab.toString()));
+                break;
+            }
+
         }
     }
 }

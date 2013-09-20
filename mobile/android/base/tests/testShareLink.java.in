@@ -35,6 +35,9 @@ public class testShareLink extends AboutHomeTest {
         ArrayList<String> shareOptions;
         blockForGeckoReady();
 
+        // FIXME: This is a temporary hack workaround for a permissions problem.
+        openAboutHomeTab(AboutHomeTabs.READING_LIST);
+
         inputAndLoadUrl(url);
         verifyPageTitle(urlTitle); // Waiting for page title to ensure the page is loaded
 
@@ -59,12 +62,8 @@ public class testShareLink extends AboutHomeTest {
         mSolo.clickLongOnText(urlTitle);
         verifySharePopup(shareOptions,"urlbar");
 
-        // Test link Context Menu
-        DisplayMetrics dm = new DisplayMetrics();
-        getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
-
         // The link has a 60px height, so let's try to hit the middle
-        float top = mDriver.getGeckoTop() + 30 * dm.density;
+        float top = mDriver.getGeckoTop() + 30 * mDevice.density;
         float left = mDriver.getGeckoLeft() + mDriver.getGeckoWidth() / 2;
         mSolo.clickLongOnScreen(left, top);
         verifySharePopup("Share Link",shareOptions,"Link");
@@ -75,26 +74,11 @@ public class testShareLink extends AboutHomeTest {
         ListView bookmarksList = findListViewWithTag("bookmarks");
         mAsserter.is(waitForListToLoad(bookmarksList), true, "list is properly loaded");
 
-        int width = mDriver.getGeckoWidth();
-        int height = mDriver.getGeckoHeight();
-
-        // Scroll down a bit so that the bookmarks list has more
-        // items on screen.
-        mActions.drag(width / 2, width / 2, height - 10, height / 2);
-
         View bookmarksItem = bookmarksList.getChildAt(bookmarksList.getHeaderViewsCount());
         mSolo.clickLongOnView(bookmarksItem);
         verifySharePopup(shareOptions,"bookmarks");
 
-        // Test the share popup in the Most Visited tab
-        openAboutHomeTab(AboutHomeTabs.MOST_VISITED);
-
-        ListView mostVisitedList = findListViewWithTag("most_visited");
-        mAsserter.is(waitForListToLoad(mostVisitedList), true, "list is properly loaded");
-
-        View mostVisitedItem = mostVisitedList.getChildAt(mostVisitedList.getHeaderViewsCount());
-        mSolo.clickLongOnView(mostVisitedItem);
-        verifySharePopup(shareOptions,"most visited");
+        // TODO: Tests for new top sites list.
 
         // Test the share popup in the Most Recent tab
         openAboutHomeTab(AboutHomeTabs.MOST_RECENT);
