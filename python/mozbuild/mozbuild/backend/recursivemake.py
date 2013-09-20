@@ -395,12 +395,18 @@ class RecursiveMakeBackend(CommonBackend):
             return current, subdirs.parallel, \
                 subdirs.dirs + subdirs.tests + subdirs.tools
 
-        # compile and tools tiers use the same traversal as export, but skip
-        # precompile.
+        # compile and tools build everything in parallel, but skip precompile.
         def other_filter(current, subdirs):
             if current == 'subtiers/precompile':
                 return None, [], []
-            return export_filter(current, subdirs)
+            all_subdirs = subdirs.parallel + subdirs.dirs + \
+                          subdirs.tests + subdirs.tools
+            # subtiers/*_start and subtiers/*_finish, under subtiers/*, are
+            # kept sequential. Others are all forced parallel.
+            if current.startswith('subtiers/') and all_subdirs and \
+                    all_subdirs[0].startswith('subtiers/'):
+                return current, [], all_subdirs
+            return current, all_subdirs, []
 
         # Skip tools dirs during libs traversal
         def libs_filter(current, subdirs):
