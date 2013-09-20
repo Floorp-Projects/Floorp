@@ -104,7 +104,7 @@ include $(topsrcdir)/testing/testsuite-targets.mk
 endif
 
 default all::
-	$(call BUILDSTATUS,TIERS export compile libs tools)
+	$(call BUILDSTATUS,TIERS export $(if $(MOZ_PSEUDO_DERECURSE),compile )libs tools)
 
 include $(topsrcdir)/config/rules.mk
 
@@ -179,7 +179,10 @@ ifdef MOZ_CRASHREPORTER
 	$(SHELL) $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh $(SYMBOL_INDEX_NAME) "$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip"
 endif
 
-# defined in package-name.mk
+# MOZ_SOURCE_STAMP is defined in package-name.mk with a deferred assignment.
+# exporting it makes make run its $(shell) command for each invoked submake,
+# so transform it to an immediate assignment.
+MOZ_SOURCE_STAMP := $(MOZ_SOURCE_STAMP)
 export MOZ_SOURCE_STAMP
 
 #XXX: this is a hack, since we don't want to clobber for MSVC
