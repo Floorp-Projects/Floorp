@@ -1002,11 +1002,20 @@ let CustomizableUIInternal = {
     if (!aWidget) {
       throw new Error("getLocalizedProperty was passed a non-widget to work with.");
     }
-    if (typeof aWidget[aProp] == "string") {
-      return aWidget[aProp];
+    let def, name;
+    // Let widgets pass their own string identifiers or strings, so that
+    // we can use strings which aren't the default (in case string ids change)
+    // and so that non-builtin-widgets can also provide labels, tooltips, etc.
+    if (aWidget[aProp]) {
+      name = aWidget[aProp];
+      // By using this as the default, if a widget provides a full string rather
+      // than a string ID for localization, we will fall back to that string
+      // and return that.
+      def = aDef || name;
+    } else {
+      name = aWidget.id + "." + aProp;
+      def = aDef || "";
     }
-    let def = aDef || "";
-    let name = aWidget.id + "." + aProp;
     try {
       if (Array.isArray(aFormatArgs) && aFormatArgs.length) {
         return gWidgetsBundle.formatStringFromName(name, aFormatArgs,

@@ -30,7 +30,7 @@ function setAttributes(aNode, aAttrs) {
         aNode.removeAttribute(name);
     } else {
       if (name == "label" || name == "tooltiptext")
-        value = CustomizableUI.getLocalizedProperty(aAttrs, name);
+        value = CustomizableUI.getLocalizedProperty({id: aAttrs.id}, name);
       aNode.setAttribute(name, value);
     }
   }
@@ -274,6 +274,10 @@ const CustomizableWidgets = [{
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL],
+#ifdef XP_WIN
+    label: "preferences-button.labelWin",
+    tooltiptext: "preferences-button.tooltipWin",
+#endif
     onCommand: function(aEvent) {
       let win = aEvent.target &&
                 aEvent.target.ownerDocument &&
