@@ -47,6 +47,7 @@
 #include "nsCrossSiteListenerProxy.h"
 #include "nsSandboxFlags.h"
 #include "nsContentTypeParser.h"
+#include "nsINetworkSeer.h"
 
 #include "mozilla/CORSMode.h"
 #include "mozilla/Attributes.h"
@@ -328,6 +329,10 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
                                   false);
     httpChannel->SetReferrer(mDocument->GetDocumentURI());
   }
+
+  nsCOMPtr<nsILoadContext> loadContext(do_QueryInterface(docshell));
+  mozilla::net::SeerLearn(aRequest->mURI, mDocument->GetDocumentURI(),
+      nsINetworkSeer::LEARN_LOAD_SUBRESOURCE, loadContext);
 
   nsCOMPtr<nsIStreamLoader> loader;
   rv = NS_NewStreamLoader(getter_AddRefs(loader), this);
