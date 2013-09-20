@@ -28,6 +28,7 @@ using namespace js::jit;
 
 using mozilla::FloorLog2;
 using mozilla::NegativeInfinity;
+using JS::GenericNaN;
 
 // shared
 CodeGeneratorARM::CodeGeneratorARM(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
