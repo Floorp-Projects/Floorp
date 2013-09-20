@@ -166,6 +166,29 @@ class Range : public TempObject {
     const SymbolicBound *symbolicLower_;
     const SymbolicBound *symbolicUpper_;
 
+    void setLowerInit(int64_t x) {
+        if (x > JSVAL_INT_MAX) {
+            lower_ = JSVAL_INT_MAX;
+            hasInt32LowerBound_ = true;
+        } else if (x < JSVAL_INT_MIN) {
+            dropInt32LowerBound();
+        } else {
+            lower_ = int32_t(x);
+            hasInt32LowerBound_ = true;
+        }
+    }
+    void setUpperInit(int64_t x) {
+        if (x > JSVAL_INT_MAX) {
+            dropInt32UpperBound();
+        } else if (x < JSVAL_INT_MIN) {
+            upper_ = JSVAL_INT_MIN;
+            hasInt32UpperBound_ = true;
+        } else {
+            upper_ = int32_t(x);
+            hasInt32UpperBound_ = true;
+        }
+    }
+
   public:
     Range()
         : lower_(JSVAL_INT_MIN),
@@ -325,32 +348,10 @@ class Range : public TempObject {
         return upper_;
     }
 
-    void setLowerInit(int64_t x) {
-        if (x > JSVAL_INT_MAX) { // c.c
-            lower_ = JSVAL_INT_MAX;
-            hasInt32LowerBound_ = true;
-        } else if (x < JSVAL_INT_MIN) {
-            dropInt32LowerBound();
-        } else {
-            lower_ = (int32_t)x;
-            hasInt32LowerBound_ = true;
-        }
-    }
     void setLower(int64_t x) {
         setLowerInit(x);
         rectifyExponent();
         JS_ASSERT_IF(!hasInt32LowerBound_, lower_ == JSVAL_INT_MIN);
-    }
-    void setUpperInit(int64_t x) {
-        if (x > JSVAL_INT_MAX) {
-            dropInt32UpperBound();
-        } else if (x < JSVAL_INT_MIN) { // c.c
-            upper_ = JSVAL_INT_MIN;
-            hasInt32UpperBound_ = true;
-        } else {
-            upper_ = (int32_t)x;
-            hasInt32UpperBound_ = true;
-        }
     }
     void setUpper(int64_t x) {
         setUpperInit(x);
