@@ -2076,14 +2076,14 @@ RangeAnalysis::truncate()
             // Set truncated flag if range analysis ensure that it has no
             // rounding errors and no fractional part.
             const Range *r = iter->range();
-            bool hasRoundingErrors = !r || r->hasRoundingErrors();
+            bool canHaveRoundingErrors = !r || r->canHaveRoundingErrors();
 
             // Special case integer division: the result of a/b can be infinite
             // but cannot actually have rounding errors induced by truncation.
             if (iter->isDiv() && iter->toDiv()->specialization() == MIRType_Int32)
-                hasRoundingErrors = false;
+                canHaveRoundingErrors = false;
 
-            if (hasRoundingErrors)
+            if (canHaveRoundingErrors)
                 continue;
 
             // Ensure all observable uses are truncated.
