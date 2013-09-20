@@ -1222,8 +1222,10 @@ MOZ_ARG_ENABLE_BOOL(address-sanitizer,
 if test -n "$MOZ_ASAN"; then
     MOZ_LLVM_HACKS=1
     AC_DEFINE(MOZ_ASAN)
+    MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
 fi
 AC_SUBST(MOZ_ASAN)
+AC_SUBST(LLVM_SYMBOLIZER)
 
 dnl ========================================================
 dnl = Enable hacks required for LLVM instrumentations
