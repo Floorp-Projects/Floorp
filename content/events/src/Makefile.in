@@ -14,6 +14,7 @@ LOCAL_INCLUDES	+= \
              -I$(srcdir)/../../../dom/base \
              -I$(srcdir)/../../../dom/settings \
              -I$(srcdir)/../../../dom/src/storage \
+             -I$(srcdir)/../../../js/xpconnect/wrappers \
              -I$(srcdir)/../../../layout/generic \
              -I$(srcdir)/../../../layout/xul/base/src \
              -I$(srcdir)/../../../layout/xul/tree/ \
