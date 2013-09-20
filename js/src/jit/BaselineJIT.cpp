@@ -253,8 +253,7 @@ CanEnterBaselineJIT(JSContext *cx, HandleScript script, bool osr)
     if (script->length > BaselineScript::MAX_JSSCRIPT_LENGTH)
         return Method_CantCompile;
 
-    if (script->nslots > BaselineScript::MAX_JSSCRIPT_SLOTS)
-        return Method_CantCompile;
+    JS_STATIC_ASSERT(sizeof(script->nslots) == sizeof(uint16_t));
 
     if (!cx->compartment()->ensureIonCompartmentExists(cx))
         return Method_Error;
