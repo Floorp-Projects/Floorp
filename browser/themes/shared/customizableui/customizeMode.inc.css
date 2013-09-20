@@ -10,6 +10,11 @@
   transition-timing-function: ease-out;
 }
 
+#tab-view-deck[fastcustomizeanimation] {
+  transition-duration: 1ms;
+  transition-timing-function: linear;
+}
+
 #main-window[customizing] .customization-target {
   margin: 3px;
 }
