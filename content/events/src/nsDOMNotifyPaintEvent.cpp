@@ -3,12 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMNotifyPaintEvent.h"
-#include "AccessCheck.h"
 #include "base/basictypes.h"
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/GfxMessageUtils.h"
-#include "mozilla/Preferences.h"
+#include "nsDOMNotifyPaintEvent.h"
 #include "nsContentUtils.h"
 #include "nsClientRect.h"
 #include "nsPaintRequest.h"
@@ -34,14 +32,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 NS_IMPL_ADDREF_INHERITED(nsDOMNotifyPaintEvent, nsDOMEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMNotifyPaintEvent, nsDOMEvent)
-
-bool
-nsDOMNotifyPaintEvent::Enabled(JSContext* aCx,
-                               JS::Handle<JSObject*> /* unused */)
-{
-  return xpc::AccessCheck::isChrome(js::GetContextCompartment(aCx)) ||
-         mozilla::Preferences::GetBool("dom.send_after_paint_to_content");
-}
 
 nsRegion
 nsDOMNotifyPaintEvent::GetRegion()
