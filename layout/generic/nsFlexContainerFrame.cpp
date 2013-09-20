@@ -163,6 +163,20 @@ MarginComponentForSide(nsMargin& aMargin, Side aSide)
                        // (but something's busted if we got here)
 }
 
+// Helper-macro to let us pick one of two expressions to evaluate
+// (a width expression vs. a height expression), to get a main-axis or
+// cross-axis component.
+// For code that has e.g. a nsSize object, FlexboxAxisTracker::GetMainComponent
+// and GetCrossComponent are cleaner; but in cases where we simply have
+// two separate expressions for width and height (which may be expensive to
+// evaluate), these macros will ensure that only the expression for the correct
+// axis gets evaluated.
+#define GET_MAIN_COMPONENT(axisTracker_, width_, height_)  \
+  IsAxisHorizontal((axisTracker_).GetMainAxis()) ? (width_) : (height_)
+
+#define GET_CROSS_COMPONENT(axisTracker_, width_, height_)  \
+  IsAxisHorizontal((axisTracker_).GetCrossAxis()) ? (width_) : (height_)
+
 // Encapsulates our flex container's main & cross axes.
 class MOZ_STACK_CLASS FlexboxAxisTracker {
 public:
@@ -173,29 +187,17 @@ public:
   AxisOrientationType GetCrossAxis() const { return mCrossAxis; }
 
   nscoord GetMainComponent(const nsSize& aSize) const {
-    return IsAxisHorizontal(mMainAxis) ?
-      aSize.width : aSize.height;
+    return GET_MAIN_COMPONENT(*this, aSize.width, aSize.height);
   }
   int32_t GetMainComponent(const nsIntSize& aIntSize) const {
-    return IsAxisHorizontal(mMainAxis) ?
-      aIntSize.width : aIntSize.height;
-  }
-  nscoord GetMainComponent(const nsHTMLReflowMetrics& aMetrics) const {
-    return IsAxisHorizontal(mMainAxis) ?
-      aMetrics.width : aMetrics.height;
+    return GET_MAIN_COMPONENT(*this, aIntSize.width, aIntSize.height);
   }
 
   nscoord GetCrossComponent(const nsSize& aSize) const {
-    return IsAxisHorizontal(mCrossAxis) ?
-      aSize.width : aSize.height;
+    return GET_CROSS_COMPONENT(*this, aSize.width, aSize.height);
   }
   int32_t GetCrossComponent(const nsIntSize& aIntSize) const {
-    return IsAxisHorizontal(mCrossAxis) ?
-      aIntSize.width : aIntSize.height;
-  }
-  nscoord GetCrossComponent(const nsHTMLReflowMetrics& aMetrics) const {
-    return IsAxisHorizontal(mCrossAxis) ?
-      aMetrics.width : aMetrics.height;
+    return GET_CROSS_COMPONENT(*this, aIntSize.width, aIntSize.height);
   }
 
   nscoord GetMarginSizeInMainAxis(const nsMargin& aMargin) const {
