@@ -1246,7 +1246,7 @@ MBinaryArithInstruction::trySpecializeFloat32()
 bool
 MAbs::fallible() const
 {
-    return !implicitTruncate_ && (!range() || !range()->isInt32());
+    return !implicitTruncate_ && (!range() || !range()->hasInt32Bounds());
 }
 
 MDefinition *
@@ -1353,7 +1353,7 @@ MAdd::fallible()
     // either the truncation analysis shows that there are non-truncated uses.
     if (isTruncated())
         return false;
-    if (range() && range()->isInt32())
+    if (range() && range()->hasInt32Bounds())
         return false;
     return true;
 }
@@ -1364,7 +1364,7 @@ MSub::fallible()
     // see comment in MAdd::fallible()
     if (isTruncated())
         return false;
-    if (range() && range()->isInt32())
+    if (range() && range()->hasInt32Bounds())
         return false;
     return true;
 }
@@ -1432,7 +1432,7 @@ MMul::canOverflow()
 {
     if (isTruncated())
         return false;
-    return !range() || !range()->isInt32();
+    return !range() || !range()->hasInt32Bounds();
 }
 
 bool
@@ -1440,7 +1440,7 @@ MUrsh::canOverflow()
 {
     if (!canOverflow_)
         return false;
-    return !range() || !range()->isInt32();
+    return !range() || !range()->hasInt32Bounds();
 }
 
 static inline bool
