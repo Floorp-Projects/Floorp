@@ -13,7 +13,6 @@ from mozboot.debian import DebianBootstrapper
 from mozboot.fedora import FedoraBootstrapper
 from mozboot.freebsd import FreeBSDBootstrapper
 from mozboot.gentoo import GentooBootstrapper
-from mozboot.mint import MintBootstrapper
 from mozboot.osx import OSXBootstrapper
 from mozboot.openbsd import OpenBSDBootstrapper
 from mozboot.ubuntu import UbuntuBootstrapper
@@ -50,7 +49,12 @@ class Bootstrapper(object):
             elif distro == 'Gentoo Base System':
                 cls = GentooBootstrapper
             elif distro in ('Mint', 'LinuxMint'):
-                cls = MintBootstrapper
+                # Most Linux Mint editions are based on Ubuntu; one is based on
+                # Debian, and reports this in dist_id
+                if dist_id == 'debian':
+                    cls = DebianBootstrapper
+                else:
+                    cls = UbuntuBootstrapper
             elif distro == 'Ubuntu':
                 cls = UbuntuBootstrapper
             elif distro == 'Elementary':
