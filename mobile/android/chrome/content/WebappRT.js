@@ -149,6 +149,9 @@ let WebappRT = {
     let port = serv.port;
     serv.close();
     Services.prefs.setIntPref("devtools.debugger.remote-port", port);
+    // Clear the UNIX domain socket path to ensure a TCP socket will be used
+    // instead.
+    Services.prefs.setCharPref("devtools.debugger.unix-domain-socket", "");
 
     Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 

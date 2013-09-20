@@ -7285,6 +7285,7 @@ var RemoteDebugger = {
         break;
 
       case "devtools.debugger.remote-port":
+      case "devtools.debugger.unix-domain-socket":
         if (this._isEnabled())
           this._restart();
         break;
@@ -7298,6 +7299,10 @@ var RemoteDebugger = {
 
   _getPort: function _rd_getPort() {
     return Services.prefs.getIntPref("devtools.debugger.remote-port");
+  },
+
+  _getPath: function _rd_getPath() {
+    return Services.prefs.getCharPref("devtools.debugger.unix-domain-socket");
   },
 
   _isEnabled: function rd_isEnabled() {
@@ -7361,9 +7366,11 @@ var RemoteDebugger = {
         DebuggerServer.registerModule("resource://gre/modules/dbg-browser-actors.js");
       }
 
-      let port = this._getPort();
-      DebuggerServer.openListener(port);
-      dump("Remote debugger listening on port " + port);
+      let pathOrPort = this._getPath();
+      if (!pathOrPort)
+        pathOrPort = this._getPort();
+      DebuggerServer.openListener(pathOrPort);
+      dump("Remote debugger listening at path " + pathOrPort);
     } catch(e) {
       dump("Remote debugger didn't start: " + e);
     }
