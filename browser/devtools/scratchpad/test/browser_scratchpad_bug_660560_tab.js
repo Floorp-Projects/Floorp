@@ -28,30 +28,24 @@ function runTests()
   ok(sp.editor.hasFocus(), "the editor has focus");
 
   sp.setText("window.foo;");
-  sp.editor.setCaretOffset(0);
+  sp.editor.setCursor({ line: 0, ch: 0 });
 
   EventUtils.synthesizeKey("VK_TAB", {}, gScratchpadWindow);
 
   is(sp.getText(), "     window.foo;", "Tab key added 5 spaces");
 
-  is(sp.editor.getCaretOffset(), 5, "caret location is correct");
+  is(sp.editor.getCursor().line, 0, "line is correct");
+  is(sp.editor.getCursor().ch, 5, "character is correct");
 
-  sp.editor.setCaretOffset(6);
+  sp.editor.setCursor({ line: 0, ch: 6 });
 
   EventUtils.synthesizeKey("VK_TAB", {}, gScratchpadWindow);
 
   is(sp.getText(), "     w    indow.foo;",
      "Tab key added 4 spaces");
 
-  is(sp.editor.getCaretOffset(), 10, "caret location is correct");
-
-  // Test the new insertTextAtCaret() method.
-
-  sp.insertTextAtCaret("omg");
-
-  is(sp.getText(), "     w    omgindow.foo;", "insertTextAtCaret() works");
-
-  is(sp.editor.getCaretOffset(), 13, "caret location is correct after update");
+  is(sp.editor.getCursor().line, 0, "line is correct");
+  is(sp.editor.getCursor().ch, 10, "character is correct");
 
   gScratchpadWindow.close();
 
@@ -66,13 +60,14 @@ function runTests2()
   let sp = gScratchpadWindow.Scratchpad;
 
   sp.setText("window.foo;");
-  sp.editor.setCaretOffset(0);
+  sp.editor.setCursor({ line: 0, ch: 0 });
 
   EventUtils.synthesizeKey("VK_TAB", {}, gScratchpadWindow);
 
   is(sp.getText(), "\twindow.foo;", "Tab key added the tab character");
 
-  is(sp.editor.getCaretOffset(), 1, "caret location is correct");
+  is(sp.editor.getCursor().line, 0, "line is correct");
+  is(sp.editor.getCursor().ch, 1, "character is correct");
 
   Services.prefs.clearUserPref("devtools.editor.tabsize");
   Services.prefs.clearUserPref("devtools.editor.expandtab");

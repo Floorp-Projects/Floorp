@@ -1,0 +1,59 @@
+This is the CodeMirror editor packaged for the Mozilla Project. CodeMirror
+is a JavaScript component that provides a code editor in the browser. When
+a mode is available for the language you are coding in, it will color your
+code, and optionally help with indentation.
+
+# Upgrade
+
+Currently used version is 3.15. To upgrade, download a new version of
+CodeMirror from the project's page [1] and replace all JavaScript and
+CSS files inside the codemirror directory [2].
+
+To confirm the functionality run mochitests for the following components:
+
+ * sourceeditor
+ * scratchpad
+ * debugger
+ * styleditor
+
+The sourceeditor component contains imported CodeMirror tests [3]. Some
+tests were commented out because we don't use that functionality within
+Firefox (for example Ruby editing mode). Other than that, we don't have
+any Mozilla-specific patches applied to CodeMirror itself.
+
+# Addons
+
+To install a new CodeMirror addon add it to the codemirror directory,
+jar.mn [4] file and editor.js [5]. Also, add it to the License section
+below.
+
+# License
+
+The following files in this directory are licensed according to the contents
+in the LICENSE file:
+
+ * codemirror.css
+ * codemirror.js
+ * comment.js
+ * dialog/dialog.css
+ * dialog/dialog.js
+ * javascript.js
+ * matchbrackets.js
+ * search/match-highlighter.js
+ * search/search.js
+ * search/searchcursor.js
+ * test/codemirror.html
+ * test/cm_comment_test.js
+ * test/cm_driver.js
+ * test/cm_mode_javascript_test.js
+ * test/cm_mode_test.css
+ * test/cm_mode_test.js
+ * test/cm_test.js
+
+# Footnotes
+
+[1] http://codemirror.net
+[2] browser/devtools/sourceeditor/codemirror
+[3] browser/devtools/sourceeditor/test/browser_codemirror.js
+[4] browser/devtools/jar.mn
+[5] browser/devtools/sourceeditor/editor.js
