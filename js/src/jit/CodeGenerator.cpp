@@ -202,8 +202,6 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
     return bailoutFrom(&fails, lir->snapshot());
 }
 
-static const double DoubleZero = 0.0;
-
 bool
 CodeGenerator::visitValueToDouble(LValueToDouble *lir)
 {
@@ -235,7 +233,7 @@ CodeGenerator::visitValueToDouble(LValueToDouble *lir)
 
     if (hasNull) {
         masm.bind(&isNull);
-        masm.loadConstantDouble(DoubleZero, output);
+        masm.loadConstantDouble(0.0, output);
         masm.jump(&done);
     }
 
@@ -293,7 +291,7 @@ CodeGenerator::visitValueToFloat32(LValueToFloat32 *lir)
 
     if (hasNull) {
         masm.bind(&isNull);
-        masm.loadConstantFloat32((float)DoubleZero, output);
+        masm.loadConstantFloat32(0.0f, output);
         masm.jump(&done);
     }
 

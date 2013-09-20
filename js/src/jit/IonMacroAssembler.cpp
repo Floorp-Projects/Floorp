@@ -1439,11 +1439,6 @@ MacroAssembler::convertInt32ValueToDouble(const Address &address, Register scrat
     storeDouble(ScratchFloatReg, address);
 }
 
-static const double DoubleZero = 0.0;
-static const double DoubleOne  = 1.0;
-static const float FloatZero = 0.0;
-static const float FloatOne  = 1.0;
-
 void
 MacroAssembler::convertValueToFloatingPoint(ValueOperand value, FloatRegister output,
                                             Label *fail, MIRType outputType)
@@ -1463,7 +1458,7 @@ MacroAssembler::convertValueToFloatingPoint(ValueOperand value, FloatRegister ou
     jump(&done);
 
     bind(&isNull);
-    loadConstantFloatingPoint(DoubleZero, FloatZero, output, outputType);
+    loadConstantFloatingPoint(0.0, 0.0f, output, outputType);
     jump(&done);
 
     bind(&isBool);
@@ -1498,14 +1493,14 @@ MacroAssembler::convertValueToFloatingPoint(JSContext *cx, const Value &v, Float
 
     if (v.isBoolean()) {
         if (v.toBoolean())
-            loadConstantFloatingPoint(DoubleOne, FloatOne, output, outputType);
+            loadConstantFloatingPoint(1.0, 1.0f, output, outputType);
         else
-            loadConstantFloatingPoint(DoubleZero, FloatZero, output, outputType);
+            loadConstantFloatingPoint(0.0, 0.0f, output, outputType);
         return true;
     }
 
     if (v.isNull()) {
-        loadConstantFloatingPoint(DoubleZero, FloatZero, output, outputType);
+        loadConstantFloatingPoint(0.0, 0.0f, output, outputType);
         return true;
     }
 
@@ -1584,7 +1579,7 @@ MacroAssembler::convertTypedOrValueToFloatingPoint(TypedOrValueRegister src, Flo
     bool outputIsDouble = outputType == MIRType_Double;
     switch (src.type()) {
       case MIRType_Null:
-        loadConstantFloatingPoint(DoubleZero, FloatZero, output, outputType);
+        loadConstantFloatingPoint(0.0, 0.0f, output, outputType);
         break;
       case MIRType_Boolean:
       case MIRType_Int32:
