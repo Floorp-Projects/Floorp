@@ -24,6 +24,7 @@ using mozilla::IsNaN;
 using mozilla::IsNegative;
 using mozilla::NegativeInfinity;
 using mozilla::PositiveInfinity;
+using JS::GenericNaN;
 
 static ParseNode *
 ContainsVarOrConst(ParseNode *pn)
@@ -153,7 +154,7 @@ FoldBinaryNumeric(ExclusiveContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
             else
 #endif
             if (d == 0 || IsNaN(d))
-                d = JS::GenericNaN();
+                d = GenericNaN();
             else if (IsNegative(d) != IsNegative(d2))
                 d = NegativeInfinity();
             else
@@ -165,7 +166,7 @@ FoldBinaryNumeric(ExclusiveContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
 
       case JSOP_MOD:
         if (d2 == 0) {
-            d = JS::GenericNaN();
+            d = GenericNaN();
         } else {
             d = js_fmod(d, d2);
         }
