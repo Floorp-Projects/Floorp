@@ -31,8 +31,7 @@ CParserContext::CParserContext(CParserContext* aPrevContext,
     mAutoDetectStatus(aStatus),
     mParserCommand(aCommand),
     mMultipart(true),
-    mCopyUnused(aCopyUnused),
-    mNumConsumed(0)
+    mCopyUnused(aCopyUnused)
 { 
   MOZ_COUNT_CTOR(CParserContext); 
 } 
