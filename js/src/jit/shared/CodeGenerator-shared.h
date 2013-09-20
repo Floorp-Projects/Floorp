@@ -305,22 +305,22 @@ class CodeGeneratorShared : public LInstructionVisitor
     // be saved and restored in case future LIR instructions need those values.)
     void saveVolatile(Register output) {
         RegisterSet regs = RegisterSet::Volatile();
-        regs.maybeTake(output);
+        regs.takeUnchecked(output);
         masm.PushRegsInMask(regs);
     }
     void restoreVolatile(Register output) {
         RegisterSet regs = RegisterSet::Volatile();
-        regs.maybeTake(output);
+        regs.takeUnchecked(output);
         masm.PopRegsInMask(regs);
     }
     void saveVolatile(FloatRegister output) {
         RegisterSet regs = RegisterSet::Volatile();
-        regs.maybeTake(output);
+        regs.takeUnchecked(output);
         masm.PushRegsInMask(regs);
     }
     void restoreVolatile(FloatRegister output) {
         RegisterSet regs = RegisterSet::Volatile();
-        regs.maybeTake(output);
+        regs.takeUnchecked(output);
         masm.PopRegsInMask(regs);
     }
     void saveVolatile(RegisterSet temps) {
