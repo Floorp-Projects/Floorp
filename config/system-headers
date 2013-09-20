@@ -469,6 +469,7 @@ IOKit/IOMessage.h
 IOKit/pwr_mgt/IOPMLib.h
 iomanip
 ios
+iosfwd
 iostream
 iostream.h
 iterator
