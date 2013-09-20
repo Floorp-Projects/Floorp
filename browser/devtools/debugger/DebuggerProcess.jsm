@@ -50,6 +50,8 @@ BrowserDebuggerProcess.prototype = {
    * Initializes the debugger server.
    */
   _initServer: function() {
+    dumpn("Initializing the chrome debugger server.");
+
     if (!this.loader) {
       // Create a separate loader instance, so that we can be sure to receive a
       // separate instance of the DebuggingServer from the rest of the devtools.
@@ -58,19 +60,27 @@ BrowserDebuggerProcess.prototype = {
       this.loader = new DevToolsLoader();
       this.loader.main("devtools/server/main");
       this.debuggerServer = this.loader.DebuggerServer;
+      dumpn("Created a separate loader instance for the DebuggerServer.");
     }
 
     if (!this.debuggerServer.initialized) {
       this.debuggerServer.init();
       this.debuggerServer.addBrowserActors();
+      dumpn("initialized and added the browser actors for the DebuggerServer.");
     }
+
     this.debuggerServer.openListener(Prefs.chromeDebuggingPort);
+
+    dumpn("Finished initializing the chrome debugger server.");
+    dumpn("Started listening on port: " + Prefs.chromeDebuggingPort);
   },
 
   /**
    * Initializes a profile for the remote debugger process.
    */
   _initProfile: function() {
+    dumpn("Initializing the chrome debugger user profile.");
+
     let profileService = Cc["@mozilla.org/toolkit/profile-service;1"]
       .createInstance(Ci.nsIToolkitProfileService);
 
@@ -78,6 +88,7 @@ BrowserDebuggerProcess.prototype = {
     try {
       // Attempt to get the required chrome debugging profile name string.
       profileName = profileService.selectedProfile.name + CHROME_DEBUGGER_PROFILE_NAME;
+      dumpn("Using chrome debugger profile name: " + profileName);
     } catch (e) {
       // Requested profile string could not be retrieved.
       profileName = CHROME_DEBUGGER_PROFILE_NAME;
@@ -90,6 +101,7 @@ BrowserDebuggerProcess.prototype = {
     try {
       // Attempt to get the required chrome debugging profile toolkit object.
       profileObject = profileService.getProfileByName(profileName);
+      dumpn("Using chrome debugger profile object: " + profileObject);
 
       // The profile exists but the corresponding folder may have been deleted.
       var enumerator = Services.dirsvc.get("ProfD", Ci.nsIFile).parent.directoryEntries;
@@ -103,6 +115,7 @@ BrowserDebuggerProcess.prototype = {
       }
       // Requested profile was found but the folder was deleted. Cleanup needed.
       profileObject.remove(true);
+      dumpn("The already existing chrome debugger profile was invalid.");
     } catch (e) {
       // Requested profile object was not found.
       let msg = "Creating a profile failed. " + e.name + ": " + e.message;
@@ -113,6 +126,9 @@ BrowserDebuggerProcess.prototype = {
     // Create a new chrome debugging profile.
     this._dbgProfile = profileService.createProfile(null, null, profileName);
     profileService.flush();
+
+    dumpn("Finished creating the chrome debugger user profile.");
+    dumpn("Flushed profile service with: " + profileName);
   },
 
   /**
@@ -139,13 +155,13 @@ BrowserDebuggerProcess.prototype = {
    * Closes the remote debugger, removing the profile and killing the process.
    */
   close: function() {
+    dumpn("Cleaning up the chrome debugging process.");
+
     if (this._dbgProcess.isRunning) {
-      dumpn("Killing chrome debugging process...");
       this._dbgProcess.kill();
     }
 
     this._telemetry.toolClosed("jsbrowserdebugger");
-
     this.debuggerServer.destroy();
 
     dumpn("Chrome debugger is now closed...");
@@ -174,3 +190,7 @@ function dumpn(str) {
 }
 
 let wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
+
+Services.prefs.addObserver("devtools.debugger.log", {
+  observe: (...args) => wantLogging = Services.prefs.getBoolPref(args.pop())
+}, false);
