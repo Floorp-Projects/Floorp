@@ -2,9 +2,6 @@
 // involved in a reload runs on the right thread. It relies on the
 // assertions in necko.
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 var listener = {
   onStartRequest: function test_onStartR(request, ctx) {
   },

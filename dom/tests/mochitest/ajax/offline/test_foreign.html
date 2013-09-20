@@ -27,7 +27,7 @@ function manifestUpdated()
     .getService(SpecialPowers.Ci.nsIApplicationCacheService);
 
   foreign1cache = appCacheService.chooseApplicationCache(
-    "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.html", OfflineTest.loadContext());
+    "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.html", OfflineTest.loadContextInfo());
 
   OfflineTest.ok(foreign1cache, "foreign2.html chosen from foreign1 cache");
   OfflineTest.is(foreign1cache.manifestURI.asciiSpec, "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign1.cacheManifest")

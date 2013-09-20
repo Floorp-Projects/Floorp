@@ -20,10 +20,6 @@ var lastTest = 4;    // set to test of interest when debugging
 ////////////////////////////////////////////////////////////////////////////////
 
 // Note: sets Cc and Ci variables
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
 
 Cu.import("resource://testing-common/httpd.js");
 

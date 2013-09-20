@@ -8,11 +8,6 @@
  * This file tests the methods on NetUtil.jsm.
  */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
-
 Cu.import("resource://testing-common/httpd.js");
 
 Components.utils.import("resource://gre/modules/NetUtil.jsm");

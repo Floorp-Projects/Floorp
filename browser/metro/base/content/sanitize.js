@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+XPCOMUtils.defineLazyModuleGetter(this, "LoadContextInfo",
+                                  "resource://gre/modules/LoadContextInfo.jsm");
 function Sanitizer() {}
 
 Sanitizer.prototype = {
@@ -85,9 +87,9 @@ Sanitizer.prototype = {
     cache: {
       clear: function ()
       {
-        var cacheService = Cc["@mozilla.org/network/cache-service;1"].getService(Ci.nsICacheService);
+        var cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"].getService(Ci.nsICacheStorageService);
         try {
-          cacheService.evictEntries(Ci.nsICache.STORE_ANYWHERE);
+          cache.clear();
         } catch(er) {}
 
         let imageCache = Cc["@mozilla.org/image/cache;1"].getService(Ci.imgICache);
@@ -143,9 +145,10 @@ Sanitizer.prototype = {
     offlineApps: {
       clear: function ()
       {
-        var cacheService = Cc["@mozilla.org/network/cache-service;1"].getService(Ci.nsICacheService);
+        var cacheService = Cc["@mozilla.org/netwerk/cache-storage-service;1"].getService(Ci.nsICacheStorageService);
+        var appCacheStorage = cacheService.appCacheStorage(LoadContextInfo.default, null);
         try {
-          cacheService.evictEntries(Ci.nsICache.STORE_OFFLINE);
+          appCacheStorage.asyncEvictStorage(null);
         } catch(er) {}
       },
 

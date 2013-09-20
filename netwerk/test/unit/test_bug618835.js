@@ -11,11 +11,6 @@
 // "/redirect" and "/cl" are loaded from server the expected number of times.
 //
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
-
 Cu.import("resource://testing-common/httpd.js");
 
 var httpserv;
