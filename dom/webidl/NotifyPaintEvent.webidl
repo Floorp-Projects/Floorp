@@ -6,6 +6,7 @@
  * For more information about this interface see nsIDOMNotifyPaintEvent.idl
  */
 
+[Func="nsDOMNotifyPaintEvent::Enabled"]
 interface NotifyPaintEvent : Event
 {
   readonly attribute ClientRectList clientRects;
