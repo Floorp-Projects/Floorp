@@ -679,15 +679,15 @@ nsFlexContainerFrame::AppendFlexItemForChild(
 
   // MAIN SIZES (flex base size, min/max size)
   // -----------------------------------------
-  nscoord flexBaseSize =
-    aAxisTracker.GetMainComponent(nsSize(childRS.ComputedWidth(),
-                                         childRS.ComputedHeight()));
-  nscoord mainMinSize =
-    aAxisTracker.GetMainComponent(nsSize(childRS.mComputedMinWidth,
-                                         childRS.mComputedMinHeight));
-  nscoord mainMaxSize =
-    aAxisTracker.GetMainComponent(nsSize(childRS.mComputedMaxWidth,
-                                         childRS.mComputedMaxHeight));
+  nscoord flexBaseSize = GET_MAIN_COMPONENT(aAxisTracker,
+                                            childRS.ComputedWidth(),
+                                            childRS.ComputedHeight());
+  nscoord mainMinSize = GET_MAIN_COMPONENT(aAxisTracker,
+                                           childRS.mComputedMinWidth,
+                                           childRS.mComputedMinHeight);
+  nscoord mainMaxSize = GET_MAIN_COMPONENT(aAxisTracker,
+                                           childRS.mComputedMaxWidth,
+                                           childRS.mComputedMaxHeight);
   // This is enforced by the nsHTMLReflowState where these values come from:
   MOZ_ASSERT(mainMinSize <= mainMaxSize, "min size is larger than max size");
 
@@ -760,12 +760,12 @@ nsFlexContainerFrame::AppendFlexItemForChild(
   // CROSS MIN/MAX SIZE
   // ------------------
 
-  nscoord crossMinSize =
-    aAxisTracker.GetCrossComponent(nsSize(childRS.mComputedMinWidth,
-                                          childRS.mComputedMinHeight));
-  nscoord crossMaxSize =
-    aAxisTracker.GetCrossComponent(nsSize(childRS.mComputedMaxWidth,
-                                          childRS.mComputedMaxHeight));
+  nscoord crossMinSize = GET_CROSS_COMPONENT(aAxisTracker,
+                                             childRS.mComputedMinWidth,
+                                             childRS.mComputedMinHeight);
+  nscoord crossMaxSize = GET_CROSS_COMPONENT(aAxisTracker,
+                                             childRS.mComputedMaxWidth,
+                                             childRS.mComputedMaxHeight);
 
   // SPECIAL-CASE FOR WIDGET-IMPOSED SIZES
   // Check if we're a themed widget, in which case we might have a minimum
@@ -1501,9 +1501,9 @@ MainAxisPositionTracker::
   // contents, and we don't have any packing space.
   //   * Otherwise, we subtract our items' margin-box main-sizes from our
   // computed main-size to get our available packing space.
-  mPackingSpaceRemaining =
-    aAxisTracker.GetMainComponent(nsSize(aReflowState.ComputedWidth(),
-                                         aReflowState.ComputedHeight()));
+  mPackingSpaceRemaining = GET_MAIN_COMPONENT(aAxisTracker,
+                                              aReflowState.ComputedWidth(),
+                                              aReflowState.ComputedHeight());
   if (mPackingSpaceRemaining == NS_UNCONSTRAINEDSIZE) {
     mPackingSpaceRemaining = 0;
   } else {
@@ -2250,18 +2250,19 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   // Calculate the content-box cross size of our flex container:
   nscoord contentBoxCrossSize =
-    axisTracker.GetCrossComponent(nsSize(aReflowState.ComputedWidth(),
-                                         aReflowState.ComputedHeight()));
+    GET_CROSS_COMPONENT(axisTracker,
+                        aReflowState.ComputedWidth(),
+                        aReflowState.ComputedHeight());
 
   if (contentBoxCrossSize == NS_AUTOHEIGHT) {
     // Unconstrained 'auto' cross-size: shrink-wrap our line(s), subject
     // to our min-size / max-size constraints in that axis.
-    nscoord minCrossSize =
-      axisTracker.GetCrossComponent(nsSize(aReflowState.mComputedMinWidth,
-                                           aReflowState.mComputedMinHeight));
-    nscoord maxCrossSize =
-      axisTracker.GetCrossComponent(nsSize(aReflowState.mComputedMaxWidth,
-                                           aReflowState.mComputedMaxHeight));
+    nscoord minCrossSize = GET_CROSS_COMPONENT(axisTracker,
+                                               aReflowState.mComputedMinWidth,
+                                               aReflowState.mComputedMinHeight);
+    nscoord maxCrossSize = GET_CROSS_COMPONENT(axisTracker,
+                                               aReflowState.mComputedMaxWidth,
+                                               aReflowState.mComputedMaxHeight);
     contentBoxCrossSize =
       NS_CSS_MINMAX(lineCrossAxisPosnTracker.GetLineCrossSize(),
                     minCrossSize, maxCrossSize);
