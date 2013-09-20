@@ -10,7 +10,11 @@
 #include "nsINode.h"
 #include "nsWrapperCache.h"
 
-class nsClientRect;
+namespace mozilla {
+namespace dom {
+class DOMRect;
+}
+}
 
 /**
  * Implementation of a DOM Caret Position, which is a node and offset within
@@ -23,6 +27,8 @@ class nsClientRect;
 class nsDOMCaretPosition : public nsISupports,
                            public nsWrapperCache
 {
+  typedef mozilla::dom::DOMRect DOMRect;
+
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMCaretPosition)
@@ -55,7 +61,7 @@ public:
    *          CaretPosition, if one can be successfully determined, otherwise
    *          nullptr.
    */
-  already_AddRefed<nsClientRect> GetClientRect() const;
+  already_AddRefed<DOMRect> GetClientRect() const;
 
   /**
    * Set the anonymous content node that is the actual parent of this

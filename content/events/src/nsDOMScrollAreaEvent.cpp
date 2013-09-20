@@ -8,7 +8,7 @@
 #include "mozilla/ContentEvents.h"
 
 #include "nsDOMScrollAreaEvent.h"
-#include "nsClientRect.h"
+#include "mozilla/dom/DOMRect.h"
 
 using namespace mozilla;
 

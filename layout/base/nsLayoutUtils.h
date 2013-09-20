@@ -16,7 +16,6 @@ class nsRegion;
 class nsDisplayListBuilder;
 class nsDisplayItem;
 class nsFontMetrics;
-class nsClientRectList;
 class nsFontFaceList;
 class nsIImageLoadingContent;
 class nsStyleContext;
@@ -60,6 +59,7 @@ namespace mozilla {
 class SVGImageContext;
 struct IntrinsicSize;
 namespace dom {
+class DOMRectList;
 class Element;
 class HTMLImageElement;
 class HTMLCanvasElement;
@@ -75,6 +75,7 @@ class HTMLVideoElement;
 class nsLayoutUtils
 {
   typedef ::GraphicsFilter GraphicsFilter;
+  typedef mozilla::dom::DOMRectList DOMRectList;
 
 public:
   typedef mozilla::layers::FrameMetrics FrameMetrics;
@@ -817,9 +818,9 @@ public:
   };
 
   struct RectListBuilder : public RectCallback {
-    nsClientRectList* mRectList;
+    DOMRectList* mRectList;
 
-    RectListBuilder(nsClientRectList* aList);
+    RectListBuilder(DOMRectList* aList);
     virtual void AddRect(const nsRect& aRect);
   };
 
