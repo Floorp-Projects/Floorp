@@ -259,11 +259,20 @@ class Range : public TempObject {
         return hasInt32UpperBound_;
     }
 
-    bool isInt32() const {
+    // Test whether the value is known to be within [INT32_MIN,INT32_MAX].
+    // Note that this does not necessarily mean the value is an integer.
+    bool hasInt32Bounds() const {
         return hasInt32LowerBound() && hasInt32UpperBound();
     }
+
+    // Test whether the value is known to be representable as an int32.
+    bool isInt32() const {
+        return hasInt32Bounds() && !canHaveFractionalPart();
+    }
+
+    // Test whether the given value is known to be either 0 or 1.
     bool isBoolean() const {
-        return lower() >= 0 && upper() <= 1;
+        return lower() >= 0 && upper() <= 1 && !canHaveFractionalPart();
     }
 
     bool hasRoundingErrors() const {
@@ -376,7 +385,7 @@ class Range : public TempObject {
     //     exponent of JSVAL_INT_MIN == 32
     //     exponent of JSVAL_INT_MAX == 31
     void rectifyExponent() {
-        if (!isInt32()) {
+        if (!hasInt32Bounds()) {
             JS_ASSERT(max_exponent_ >= MaxInt32Exponent);
             return;
         }
