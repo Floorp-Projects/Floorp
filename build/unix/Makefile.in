@@ -6,6 +6,14 @@
 
 SDK_BINARY = run-mozilla.sh
 
+ifneq ($(LLVM_SYMBOLIZER),)
+# Install a copy of the llvm-symbolizer binary to dist/bin, so it can
+# be used for symbolizing traces for e.g. AddressSanitizer
+LLVMSYM_EXECUTABLES=$(LLVM_SYMBOLIZER)
+LLVMSYM_DEST=$(FINAL_TARGET)
+INSTALL_TARGETS += LLVMSYM
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 libs:: $(srcdir)/run-mozilla.sh

@@ -794,3 +794,7 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/metro/defaults
 @BINPATH@/metro/modules
 #endif
+
+#ifdef MOZ_ASAN
+@BINPATH@/llvm-symbolizer
+#endif
