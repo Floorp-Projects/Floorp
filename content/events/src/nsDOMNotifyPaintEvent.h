@@ -45,6 +45,8 @@ public:
     return mozilla::dom::NotifyPaintEventBinding::Wrap(aCx, aScope, this);
   }
 
+  static bool Enabled(JSContext* aCx, JS::Handle<JSObject*> /* unused */);
+
   already_AddRefed<nsClientRectList> ClientRects();
 
   already_AddRefed<nsClientRect> BoundingClientRect();

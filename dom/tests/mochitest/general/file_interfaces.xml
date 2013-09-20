@@ -12,7 +12,7 @@
         var excludedNames = win.excludedNames;
         var createInterfaceMap = win.createInterfaceMap;
         eval(win.runTest.toString());
-        runTest(true);
+        runTest(true, window);
         win.SimpleTest.finish();
       </constructor>
     </implementation>
