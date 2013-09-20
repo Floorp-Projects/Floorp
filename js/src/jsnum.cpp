@@ -47,6 +47,7 @@
 using namespace js;
 using namespace js::types;
 
+using mozilla::MinDoubleValue;
 using mozilla::NegativeInfinity;
 using mozilla::PodCopy;
 using mozilla::PositiveInfinity;
@@ -1143,25 +1144,16 @@ js::InitRuntimeNumberState(JSRuntime *rt)
 {
     FIX_FPU();
 
-    double d;
-
     /*
      * Our NaN must be one particular canonical value, because we rely on NaN
      * encoding for our value representation.  See Value.h.
      */
-    d = GenericNaN();
-    number_constants[NC_NaN].dval = d;
-    rt->NaNValue.setDouble(d);
+    number_constants[NC_NaN].dval = GenericNaN();
 
-    d = mozilla::PositiveInfinity();
-    number_constants[NC_POSITIVE_INFINITY].dval = d;
-    rt->positiveInfinityValue.setDouble(d);
+    number_constants[NC_POSITIVE_INFINITY].dval = mozilla::PositiveInfinity();
+    number_constants[NC_NEGATIVE_INFINITY].dval = mozilla::NegativeInfinity();
 
-    d = mozilla::NegativeInfinity();
-    number_constants[NC_NEGATIVE_INFINITY].dval = d;
-    rt->negativeInfinityValue.setDouble(d);
-
-    number_constants[NC_MIN_VALUE].dval = mozilla::MinDoubleValue();
+    number_constants[NC_MIN_VALUE].dval = MinDoubleValue();
 
     // XXX If EXPOSE_INTL_API becomes true all the time at some point,
     //     js::InitRuntimeNumberState is no longer fallible, and we should
