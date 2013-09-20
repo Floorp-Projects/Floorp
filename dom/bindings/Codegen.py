@@ -383,6 +383,8 @@ class CGList(CGThing):
         self.children.append(child)
     def prepend(self, child):
         self.children.insert(0, child)
+    def extend(self, kids):
+        self.children.extend(kids)
     def join(self, generator):
         return self.joiner.join(filter(lambda s: len(s) > 0, (child for child in generator)))
     def declare(self):
@@ -4547,7 +4549,7 @@ class CGCallGenerator(CGThing):
     """
     def __init__(self, errorReport, arguments, argsPre, returnType,
                  extendedAttributes, descriptorProvider, nativeMethodName,
-                 static, object="self"):
+                 static, object="self", argsPost=[]):
         CGThing.__init__(self)
 
         assert errorReport is None or isinstance(errorReport, CGThing)
@@ -4602,6 +4604,7 @@ class CGCallGenerator(CGThing):
             args.append(CGGeneric("result"))
         if isFallible:
             args.append(CGGeneric("rv"))
+        args.extend(CGGeneric(arg) for arg in argsPost)
 
         # Build up our actual call
         self.cgRoot = CGList([], "\n")
@@ -4825,6 +4828,7 @@ if (global.Failed()) {
             argsPre.append("cx")
 
         needsUnwrap = False
+        argsPost = []
         if isConstructor:
             needsUnwrap = True
             needsUnwrappedVar = False
@@ -4832,7 +4836,7 @@ if (global.Failed()) {
         elif descriptor.interface.isJSImplemented():
             needsUnwrap = True
             needsUnwrappedVar = True
-            argsPre.append("js::GetObjectCompartment(unwrappedObj.empty() ? obj : unwrappedObj.ref())")
+            argsPost.append("js::GetObjectCompartment(unwrappedObj.empty() ? obj : unwrappedObj.ref())")
         elif needScopeObject(returnType, arguments, self.extendedAttributes,
                              descriptor, descriptor.wrapperCache, True):
             needsUnwrap = True
@@ -4907,7 +4911,7 @@ if (!${obj}) {
                     self.getErrorReport() if self.isFallible() else None,
                     self.getArguments(), argsPre, returnType,
                     self.extendedAttributes, descriptor, nativeMethodName,
-                    static))
+                    static, argsPost=argsPost))
         self.cgRoot = CGList(cgThings, "\n")
 
     def getArguments(self):
@@ -9660,7 +9664,7 @@ class CGJSImplMember(CGNativeMember):
 
     def getArgs(self, returnType, argList):
         args = CGNativeMember.getArgs(self, returnType, argList)
-        args.insert(0, Argument("JSCompartment*", "aCompartment"))
+        args.append(Argument("JSCompartment*", "aCompartment", "nullptr"))
         return args
 
 class CGJSImplMethod(CGJSImplMember):
@@ -9702,7 +9706,7 @@ class CGJSImplMethod(CGJSImplMember):
             assert args[0].argType == 'const GlobalObject&'
             assert args[1].argType == 'JSContext*'
             constructorArgs = [arg.name for arg in args[2:]]
-            constructorArgs.insert(0, "js::GetObjectCompartment(scopeObj)")
+            constructorArgs.append("js::GetObjectCompartment(scopeObj)")
             initCall = """
 // Wrap the object before calling __Init so that __DOM_IMPL__ is available.
 nsCOMPtr<nsIGlobalObject> globalHolder = do_QueryInterface(window);
@@ -10280,7 +10284,7 @@ class CallbackMember(CGNativeMember):
             # Since we don't need this handling, we're the actual method that
             # will be called, so we need an aRethrowExceptions argument.
             if self.rethrowContentException:
-                args.insert(0, Argument("JSCompartment*", "aCompartment"))
+                args.append(Argument("JSCompartment*", "aCompartment", "nullptr"))
             else:
                 args.append(Argument("ExceptionHandling", "aExceptionHandling",
                                      "eReportExceptions"))
