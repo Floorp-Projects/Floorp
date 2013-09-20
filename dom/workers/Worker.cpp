@@ -232,7 +232,7 @@ private:
     MOZ_ASSERT(worker);
 
     JS::Rooted<JSObject*> listener(aCx);
-    if (!JS_ValueToObject(aCx, aArgs.get(0), listener.address())) {
+    if (!JS_ValueToObject(aCx, aArgs.get(0), &listener)) {
       return false;
     }
 

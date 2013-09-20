@@ -293,7 +293,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
     }
 
     if (success)
-        success = JS_ValueToObject(cx, retval, retObj.address());
+        success = JS_ValueToObject(cx, retval, &retObj);
 
     return success ? retObj.get() : nullptr;
 }
@@ -978,7 +978,8 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                 // Finally, check to see if this is the last JS frame on the
                 // stack. If so then we always want to report it.
                 if (!reportable) {
-                    reportable = !JS_DescribeScriptedCaller(cx, nullptr, nullptr);
+                    RootedScript ignored(cx);
+                    reportable = !JS_DescribeScriptedCaller(cx, &ignored, nullptr);
                 }
 
                 // Ugly special case for GetInterface. It's "special" in the
