@@ -959,15 +959,15 @@ let PlacesToolbarHelper = {
     if (!viewElt || viewElt._placesView)
       return;
 
-    // If the bookmarks toolbar item is hidden because the parent toolbar is
-    // collapsed or hidden (i.e. in a popup), spare the initialization.  Also,
-    // there is no need to initialize the toolbar if customizing because
-    // init() will be called when the customization is done.  Finally the view
-    // is hidden if the element is not on a toolbar.
-    let toolbar = viewElt.parentNode.parentNode;
-    if (toolbar.localName != "toolbar" || toolbar.collapsed ||
-        getComputedStyle(toolbar, "").display == "none" ||
-        this._isCustomizing)
+    // If the bookmarks toolbar item is:
+    // - not in a toolbar, or;
+    // - the toolbar is collapsed, or;
+    // - the toolbar is hidden some other way:
+    // don't initialize.  Also, there is no need to initialize the toolbar if
+    // customizing, because that will happen when the customization is done.
+    let toolbar = this._getParentToolbar(viewElt);
+    if (!toolbar || toolbar.collapsed || this._isCustomizing ||
+        getComputedStyle(toolbar, "").display == "none")
       return;
 
     new PlacesToolbar(this._place);
@@ -995,6 +995,16 @@ let PlacesToolbarHelper = {
         widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL) {
       PlacesCommandHook.showPlacesOrganizer("BookmarksToolbar");
     }
+  },
+
+  _getParentToolbar: function(element) {
+    while (element) {
+      if (element.localName == "toolbar") {
+        return element;
+      }
+      element = element.parentNode;
+    }
+    return null;
   }
 };
 
