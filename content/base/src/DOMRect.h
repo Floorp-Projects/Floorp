@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NSCLIENTRECT_H_
-#define NSCLIENTRECT_H_
+#ifndef MOZILLA_DOMRECT_H_
+#define MOZILLA_DOMRECT_H_
 
 #include "nsIDOMClientRect.h"
 #include "nsIDOMClientRectList.h"
@@ -17,17 +17,19 @@
 
 struct nsRect;
 
-class nsClientRect MOZ_FINAL : public nsIDOMClientRect
-                             , public nsWrapperCache
+namespace mozilla {
+namespace dom {
+
+class DOMRect MOZ_FINAL : public nsIDOMClientRect
+                        , public nsWrapperCache
 {
 public:
-  nsClientRect(nsISupports* aParent)
+  DOMRect(nsISupports* aParent)
     : mParent(aParent), mX(0.0), mY(0.0), mWidth(0.0), mHeight(0.0)
   {
     SetIsDOMBinding();
   }
-  virtual ~nsClientRect() {}
-
+  virtual ~DOMRect() {}
   
   void SetRect(float aX, float aY, float aWidth, float aHeight) {
     mX = aX; mY = aY; mWidth = aWidth; mHeight = aHeight;
@@ -36,7 +38,7 @@ public:
 
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsClientRect)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMRect)
   NS_DECL_NSIDOMCLIENTRECT
 
 
@@ -84,17 +86,17 @@ protected:
   float mX, mY, mWidth, mHeight;
 };
 
-class nsClientRectList MOZ_FINAL : public nsIDOMClientRectList,
-                                   public nsWrapperCache
+class DOMRectList MOZ_FINAL : public nsIDOMClientRectList,
+                              public nsWrapperCache
 {
 public:
-  nsClientRectList(nsISupports *aParent) : mParent(aParent)
+  DOMRectList(nsISupports *aParent) : mParent(aParent)
   {
     SetIsDOMBinding();
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsClientRectList)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMRectList)
 
   NS_DECL_NSIDOMCLIENTRECTLIST
   
@@ -106,9 +108,9 @@ public:
     return mParent;
   }
 
-  void Append(nsClientRect* aElement) { mArray.AppendElement(aElement); }
+  void Append(DOMRect* aElement) { mArray.AppendElement(aElement); }
 
-  static nsClientRectList* FromSupports(nsISupports* aSupports)
+  static DOMRectList* FromSupports(nsISupports* aSupports)
   {
 #ifdef DEBUG
     {
@@ -122,18 +124,18 @@ public:
     }
 #endif
 
-    return static_cast<nsClientRectList*>(aSupports);
+    return static_cast<DOMRectList*>(aSupports);
   }
 
   uint32_t Length()
   {
     return mArray.Length();
   }
-  nsClientRect* Item(uint32_t aIndex)
+  DOMRect* Item(uint32_t aIndex)
   {
     return mArray.SafeElementAt(aIndex);
   }
-  nsClientRect* IndexedGetter(uint32_t aIndex, bool& aFound)
+  DOMRect* IndexedGetter(uint32_t aIndex, bool& aFound)
   {
     aFound = aIndex < mArray.Length();
     if (!aFound) {
@@ -143,10 +145,13 @@ public:
   }
 
 protected:
-  virtual ~nsClientRectList() {}
+  virtual ~DOMRectList() {}
 
-  nsTArray< nsRefPtr<nsClientRect> > mArray;
+  nsTArray< nsRefPtr<DOMRect> > mArray;
   nsCOMPtr<nsISupports> mParent;
 };
 
-#endif /*NSCLIENTRECT_H_*/
+}
+}
+
+#endif /*MOZILLA_DOMRECT_H_*/

@@ -13,12 +13,20 @@
 #include "mozilla/dom/NotifyPaintEventBinding.h"
 
 class nsPaintRequestList;
-class nsClientRectList;
-class nsClientRect;
+
+namespace mozilla {
+namespace dom {
+class DOMRect;
+class DOMRectList;
+}
+}
 
 class nsDOMNotifyPaintEvent : public nsDOMEvent,
                               public nsIDOMNotifyPaintEvent
 {
+  typedef mozilla::dom::DOMRect DOMRect;
+  typedef mozilla::dom::DOMRectList DOMRectList;
+
 public:
   nsDOMNotifyPaintEvent(mozilla::dom::EventTarget* aOwner,
                         nsPresContext*           aPresContext,
@@ -45,9 +53,9 @@ public:
     return mozilla::dom::NotifyPaintEventBinding::Wrap(aCx, aScope, this);
   }
 
-  already_AddRefed<nsClientRectList> ClientRects();
+  already_AddRefed<DOMRectList> ClientRects();
 
-  already_AddRefed<nsClientRect> BoundingClientRect();
+  already_AddRefed<DOMRect> BoundingClientRect();
 
   already_AddRefed<nsPaintRequestList> PaintRequests();
 private:

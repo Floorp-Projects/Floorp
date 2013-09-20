@@ -5,8 +5,10 @@
 #include "nsDOMCaretPosition.h"
 
 #include "mozilla/dom/CaretPositionBinding.h"
-#include "nsClientRect.h"
+#include "mozilla/dom/DOMRect.h"
 #include "nsRange.h"
+
+using namespace mozilla::dom;
 
 nsDOMCaretPosition::nsDOMCaretPosition(nsINode* aNode, uint32_t aOffset)
   : mOffset(aOffset), mOffsetNode(aNode), mAnonymousContentNode(nullptr)
@@ -23,14 +25,14 @@ nsINode* nsDOMCaretPosition::GetOffsetNode() const
   return mOffsetNode;
 }
 
-already_AddRefed<nsClientRect>
+already_AddRefed<DOMRect>
 nsDOMCaretPosition::GetClientRect() const
 {
   if (!mOffsetNode) {
     return nullptr;
   }
 
-  nsRefPtr<nsClientRect> rect;
+  nsRefPtr<DOMRect> rect;
   nsRefPtr<nsRange> domRange;
   nsCOMPtr<nsINode> node;
 

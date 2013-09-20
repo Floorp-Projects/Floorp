@@ -7,7 +7,7 @@
 
 #include "mozilla/dom/PaintRequestBinding.h"
 #include "mozilla/dom/PaintRequestListBinding.h"
-#include "nsClientRect.h"
+#include "mozilla/dom/DOMRect.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -29,10 +29,10 @@ nsPaintRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
   return PaintRequestBinding::Wrap(aCx, aScope, this);
 }
 
-already_AddRefed<nsClientRect>
+already_AddRefed<DOMRect>
 nsPaintRequest::ClientRect()
 {
-  nsRefPtr<nsClientRect> clientRect = new nsClientRect(this);
+  nsRefPtr<DOMRect> clientRect = new DOMRect(this);
   clientRect->SetLayoutRect(mRequest.mRect);
   return clientRect.forget();
 }
@@ -40,7 +40,7 @@ nsPaintRequest::ClientRect()
 NS_IMETHODIMP
 nsPaintRequest::GetClientRect(nsIDOMClientRect** aResult)
 {
-  nsRefPtr<nsClientRect> clientRect = ClientRect();
+  nsRefPtr<DOMRect> clientRect = ClientRect();
   clientRect.forget(aResult);
   return NS_OK;
 }
