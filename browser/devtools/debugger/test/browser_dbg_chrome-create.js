@@ -5,6 +5,9 @@
  * Tests that a chrome debugger can be created in a new process.
  */
 
+// Enable logging for this test, bug 860349.
+Services.prefs.setBoolPref("devtools.debugger.log", true);
+
 let gProcess;
 
 function test() {
