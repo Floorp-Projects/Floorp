@@ -4133,7 +4133,7 @@ pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.use-deprecated-textures", false);
 #else
 #ifdef MOZ_WIDGET_GONK
-pref("layers.use-deprecated-textures", true);
+pref("layers.use-deprecated-textures", false);
 #else
 pref("layers.offmainthreadcomposition.enabled", false);
 pref("layers.use-deprecated-textures", true);
