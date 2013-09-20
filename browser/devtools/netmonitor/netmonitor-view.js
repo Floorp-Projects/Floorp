@@ -1864,8 +1864,11 @@ NetworkDetailsView.prototype = {
     let { mimeType, text, encoding } = aResponse.content;
 
     gNetwork.getString(text).then(aString => {
-      // Handle json.
-      if (mimeType.contains("/json")) {
+      // Handle json, which we tentatively identify by checking the MIME type
+      // for "json" after any word boundary. This works for the standard
+      // "application/json", and also for custom types like "x-bigcorp-json".
+      // This should be marginally more reliable than just looking for "json".
+      if (/\bjson/.test(mimeType)) {
         let jsonpRegex = /^[a-zA-Z0-9_$]+\(|\)$/g; // JSONP with callback.
         let sanitizedJSON = aString.replace(jsonpRegex, "");
         let callbackPadding = aString.match(jsonpRegex);
