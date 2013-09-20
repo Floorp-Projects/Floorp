@@ -39,7 +39,6 @@ REPOSITORY_PATHS = [
     'mozboot/fedora.py',
     'mozboot/freebsd.py',
     'mozboot/gentoo.py',
-    'mozboot/mint.py',
     'mozboot/openbsd.py',
     'mozboot/osx.py',
     'mozboot/ubuntu.py',
