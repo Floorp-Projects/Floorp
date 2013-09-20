@@ -10,11 +10,18 @@ findbar {
   border-top: @scopeBarSeparatorBorder@;
   min-width: 1px;
   padding: 4px 2px;
+  transition-property: margin-bottom, opacity, visibility;
+  transition-duration: 150ms, 150ms, 0s;
+  transition-timing-function: ease-in-out, ease-in-out, linear;
 }
 
-findbar[position="top"] {
-  border-top: none;
-  border-bottom: @scopeBarSeparatorBorder@;
+findbar[hidden] {
+  /* Override display:none to make the transition work. */
+  display: -moz-box;
+  visibility: collapse;
+  margin-bottom: -1em;
+  opacity: 0;
+  transition-delay: 0s, 0s, 150ms;
 }
 
 findbar:-moz-lwtheme {

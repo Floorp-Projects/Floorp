@@ -85,6 +85,13 @@ function handleRequest(request, response) {
         response.finish();
         break;
       }
+      case "json-custom-mime": {
+        response.setStatusLine(request.httpVersion, 200, "OK");
+        response.setHeader("Content-Type", "text/x-bigcorp-json; charset=utf-8", false);
+        response.write("{ \"greeting\": \"Hello oddly-named JSON!\" }");
+        response.finish();
+        break;
+      }
       case "font": {
         response.setStatusLine(request.httpVersion, 200, "OK");
         response.setHeader("Content-Type", "font/woff", false);
