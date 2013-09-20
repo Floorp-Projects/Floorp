@@ -58,6 +58,30 @@ static_assert((DoubleSignBit | DoubleExponentBits | DoubleSignificandBits) ==
               ~uint64_t(0),
               "all bits accounted for");
 
+/*
+ * Ditto for |float| that must be a 32-bit double format number type, compatible
+ * with the IEEE-754 standard.
+ */
+static_assert(sizeof(float) == sizeof(uint32_t), "float must be 32bits");
+
+const unsigned FloatExponentBias = 127;
+const unsigned FloatExponentShift = 23;
+
+const uint32_t FloatSignBit         = 0x80000000UL;
+const uint32_t FloatExponentBits    = 0x7F800000UL;
+const uint32_t FloatSignificandBits = 0x007FFFFFUL;
+
+static_assert((FloatSignBit & FloatExponentBits) == 0,
+              "sign bit doesn't overlap exponent bits");
+static_assert((FloatSignBit & FloatSignificandBits) == 0,
+              "sign bit doesn't overlap significand bits");
+static_assert((FloatExponentBits & FloatSignificandBits) == 0,
+              "exponent bits don't overlap significand bits");
+
+static_assert((FloatSignBit | FloatExponentBits | FloatSignificandBits) ==
+              ~uint32_t(0),
+              "all bits accounted for");
+
 /** Determines whether a double is NaN. */
 static MOZ_ALWAYS_INLINE bool
 IsNaN(double d)
