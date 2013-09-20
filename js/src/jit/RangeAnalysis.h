@@ -101,6 +101,10 @@ class Range : public TempObject {
     // which needs 32 bits.
     static const uint16_t MaxInt32Exponent = 31;
 
+    // UInt32 are unsigned. UINT32_MAX is pow(2,32)-1, so it's the greatest
+    // value that has an exponent of 31.
+    static const uint16_t MaxUInt32Exponent = 31;
+
     // Maximal exponenent under which we have no precission loss on double
     // operations. Double has 52 bits of mantissa, so 2^52+1 cannot be
     // represented without loss.
@@ -210,6 +214,24 @@ class Range : public TempObject {
     }
 
     Range(const MDefinition *def);
+
+    static Range *NewInt32Range(int32_t l, int32_t h) {
+        return new Range(l, h, false, MaxInt32Exponent);
+    }
+
+    static Range *NewUInt32Range(uint32_t l, uint32_t h) {
+        // For now, just pass them to the constructor as int64_t values.
+        // They'll become unbounded if they're not in the int32_t range.
+        return new Range(l, h, false, MaxUInt32Exponent);
+    }
+
+    static Range *NewDoubleRange(int64_t l, int64_t h, uint16_t e = MaxDoubleExponent) {
+        return new Range(l, h, true, e);
+    }
+
+    static Range *NewSingleValueRange(int64_t v) {
+        return new Range(v, v, false, MaxDoubleExponent);
+    }
 
     void print(Sprinter &sp) const;
     bool update(const Range *other);
