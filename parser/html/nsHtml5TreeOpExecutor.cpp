@@ -221,39 +221,6 @@ nsHtml5TreeOpExecutor::SetDocumentCharsetAndSource(nsACString& aCharset, int32_t
     mDocument->SetDocumentCharacterSetSource(aCharsetSource);
     mDocument->SetDocumentCharacterSet(aCharset);
   }
-  if (mDocShell) {
-    // the following logic to get muCV is copied from
-    // nsHTMLDocument::StartDocumentLoad
-    // We need to call muCV->SetPrevDocCharacterSet here in case
-    // the charset is detected by parser DetectMetaTag
-    nsCOMPtr<nsIMarkupDocumentViewer> mucv;
-    nsCOMPtr<nsIContentViewer> cv;
-    mDocShell->GetContentViewer(getter_AddRefs(cv));
-    if (cv) {
-      mucv = do_QueryInterface(cv);
-    } else {
-      // in this block of code, if we get an error result, we return
-      // it but if we get a null pointer, that's perfectly legal for
-      // parent and parentContentViewer
-      if (!mDocShell) {
-    	  return;
-      }
-      nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
-      mDocShell->GetSameTypeParent(getter_AddRefs(parentAsItem));
-      nsCOMPtr<nsIDocShell> parent(do_QueryInterface(parentAsItem));
-      if (parent) {
-        nsCOMPtr<nsIContentViewer> parentContentViewer;
-        nsresult rv =
-          parent->GetContentViewer(getter_AddRefs(parentContentViewer));
-        if (NS_SUCCEEDED(rv) && parentContentViewer) {
-          mucv = do_QueryInterface(parentContentViewer);
-        }
-      }
-    }
-    if (mucv) {
-      mucv->SetPrevDocCharacterSet(aCharset);
-    }
-  }
 }
 
 nsISupports*

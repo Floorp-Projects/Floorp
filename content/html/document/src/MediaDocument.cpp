@@ -21,6 +21,7 @@
 #include "nsDocElementCreatedNotificationRunner.h"
 #include "mozilla/Services.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIPrincipal.h"
 
 namespace mozilla {
 namespace dom {
@@ -150,12 +151,7 @@ MediaDocument::StartDocumentLoad(const char*         aCommand,
   // |UpdateTitleAndCharset| and the worst thing possible is a mangled 
   // filename in the titlebar and the file picker.
 
-  // When this document is opened in the window/tab of the referring 
-  // document (by a simple link-clicking), |prevDocCharacterSet| contains 
-  // the charset of the referring document. On the other hand, if the
-  // document is opened in a new window, it is |defaultCharacterSet| of |muCV| 
-  // where the charset of our interest is stored. In case of openining 
-  // in a new tab, we get the charset from the docShell. Note that we 
+  // Note that we
   // exclude UTF-8 as 'invalid' because UTF-8 is likely to be the charset 
   // of a chrome document that has nothing to do with the actual content 
   // whose charset we want to know. Even if "the actual content" is indeed 
@@ -167,28 +163,36 @@ MediaDocument::StartDocumentLoad(const char*         aCommand,
   // not being able to set the charset is not critical.
   NS_ENSURE_TRUE(docShell, NS_OK); 
 
-  nsAutoCString charset;
-  // opening in a new tab
-  docShell->GetParentCharset(charset);
+  // Temporary copy-paste code for branches. Copied from nsHTMLDocument.cpp.
+  nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
+  docShell->GetSameTypeParent(getter_AddRefs(parentAsItem));
 
-  if (charset.IsEmpty() || charset.Equals("UTF-8")) {
-    nsCOMPtr<nsIContentViewer> cv;
-    docShell->GetContentViewer(getter_AddRefs(cv));
-
-    // not being able to set the charset is not critical.
-    NS_ENSURE_TRUE(cv, NS_OK); 
-    nsCOMPtr<nsIMarkupDocumentViewer> muCV = do_QueryInterface(cv);
-    if (muCV) {
-      muCV->GetPrevDocCharacterSet(charset);   // opening in the same window/tab
-      if (charset.Equals("UTF-8") || charset.IsEmpty()) {
-        muCV->GetDefaultCharacterSet(charset); // opening in a new window
-      }
-    } 
+  nsCOMPtr<nsIDocShell> parent(do_QueryInterface(parentAsItem));
+  nsCOMPtr<nsIDocument> parentDocument;
+  nsCOMPtr<nsIContentViewer> parentContentViewer;
+  if (parent) {
+    rv = parent->GetContentViewer(getter_AddRefs(parentContentViewer));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (parentContentViewer) {
+      parentDocument = parentContentViewer->GetDocument();
+    }
   }
 
-  if (!charset.IsEmpty() && !charset.Equals("UTF-8")) {
+  if (!parentDocument) {
+    return NS_OK;
+  }
+
+  nsAutoCString charset;
+  int32_t source;
+  // opening in a new tab
+  docShell->GetParentCharset(charset);
+  docShell->GetParentCharsetSource(&source);
+
+  if (!charset.IsEmpty() &&
+      !charset.Equals("UTF-8") &&
+      NodePrincipal()->Equals(parentDocument->NodePrincipal())) {
+    SetDocumentCharacterSetSource(source);
     SetDocumentCharacterSet(charset);
-    mCharacterSetSource = kCharsetFromUserDefault;
   }
 
   return NS_OK;
