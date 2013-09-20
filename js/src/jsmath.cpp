@@ -373,9 +373,9 @@ js::math_cos(JSContext *cx, unsigned argc, Value *vp)
 #ifdef _WIN32
 #define EXP_IF_OUT_OF_RANGE(x)                  \
     if (!IsNaN(x)) {                            \
-        if (x == js_PositiveInfinity)           \
-            return js_PositiveInfinity;         \
-        if (x == js_NegativeInfinity)           \
+        if (x == PositiveInfinity())            \
+            return PositiveInfinity();          \
+        if (x == NegativeInfinity())            \
             return 0.0;                         \
     }
 #else
@@ -1275,7 +1275,7 @@ js::math_atanh(JSContext *cx, unsigned argc, Value *vp)
 double hypot(double x, double y)
 {
     if (mozilla::IsInfinite(x) || mozilla::IsInfinite(y))
-        return js_PositiveInfinity;
+        return PositiveInfinity();
 
     if (mozilla::IsNaN(x) || mozilla::IsNaN(y))
         return js_NaN;
@@ -1301,7 +1301,7 @@ js::math_hypot_impl(double x, double y)
 #ifdef XP_WIN
     // On Windows, hypot(NaN, Infinity) is NaN. ES6 requires Infinity.
     if (mozilla::IsInfinite(x) || mozilla::IsInfinite(y))
-        return js_PositiveInfinity;
+        return PositiveInfinity();
 #endif
     return hypot(x, y);
 }

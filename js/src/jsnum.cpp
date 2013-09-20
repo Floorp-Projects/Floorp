@@ -47,7 +47,9 @@
 using namespace js;
 using namespace js::types;
 
+using mozilla::NegativeInfinity;
 using mozilla::PodCopy;
+using mozilla::PositiveInfinity;
 using mozilla::RangedPtr;
 
 /*
@@ -1115,8 +1117,6 @@ static JSConstDoubleSpec number_constants[] = {
 };
 
 double js_NaN;
-double js_PositiveInfinity;
-double js_NegativeInfinity;
 
 #if (defined __GNUC__ && defined __i386__) || \
     (defined __SUNPRO_CC && defined __i386)
@@ -1155,11 +1155,11 @@ js::InitRuntimeNumberState(JSRuntime *rt)
     rt->NaNValue.setDouble(d);
 
     d = mozilla::PositiveInfinity();
-    number_constants[NC_POSITIVE_INFINITY].dval = js_PositiveInfinity = d;
+    number_constants[NC_POSITIVE_INFINITY].dval = d;
     rt->positiveInfinityValue.setDouble(d);
 
     d = mozilla::NegativeInfinity();
-    number_constants[NC_NEGATIVE_INFINITY].dval = js_NegativeInfinity = d;
+    number_constants[NC_NEGATIVE_INFINITY].dval = d;
     rt->negativeInfinityValue.setDouble(d);
 
     number_constants[NC_MIN_VALUE].dval = mozilla::MinDoubleValue();
@@ -1805,7 +1805,7 @@ js_strtod(ThreadSafeContext *cx, const jschar *s, const jschar *send,
     if ((negative = (*istr == '-')) != 0 || *istr == '+')
         istr++;
     if (*istr == 'I' && !strncmp(istr, "Infinity", 8)) {
-        d = negative ? js_NegativeInfinity : js_PositiveInfinity;
+        d = negative ? NegativeInfinity() : PositiveInfinity();
         estr = istr + 8;
     } else {
         int err;

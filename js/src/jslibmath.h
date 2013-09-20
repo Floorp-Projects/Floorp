@@ -57,8 +57,8 @@ NumberDiv(double a, double b)
             return js_NaN;
 
         if (mozilla::IsNegative(a) != mozilla::IsNegative(b))
-            return js_NegativeInfinity;
-        return js_PositiveInfinity;
+            return mozilla::NegativeInfinity();
+        return mozilla::PositiveInfinity();
     }
 
     return a / b;
