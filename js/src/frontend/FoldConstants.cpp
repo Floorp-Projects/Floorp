@@ -149,11 +149,11 @@ FoldBinaryNumeric(ExclusiveContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
 #if defined(XP_WIN)
             /* XXX MSVC miscompiles such that (NaN == 0) */
             if (IsNaN(d2))
-                d = js_NaN;
+                d = GenericNaN();
             else
 #endif
             if (d == 0 || IsNaN(d))
-                d = js_NaN;
+                d = JS::GenericNaN();
             else if (IsNegative(d) != IsNegative(d2))
                 d = NegativeInfinity();
             else
@@ -165,7 +165,7 @@ FoldBinaryNumeric(ExclusiveContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
 
       case JSOP_MOD:
         if (d2 == 0) {
-            d = js_NaN;
+            d = JS::GenericNaN();
         } else {
             d = js_fmod(d, d2);
         }

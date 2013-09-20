@@ -53,6 +53,7 @@ using namespace js::types;
 
 using mozilla::IsNaN;
 using mozilla::PodCopy;
+using JS::GenericNaN;
 
 /*
  * Allocate array buffers with the maximum number of fixed slots marked as
@@ -1247,13 +1248,13 @@ js::ToDoubleForTypedArray(JSContext *cx, JS::HandleValue vp, double *d)
             if (!ToNumber(cx, vp, d))
                 return false;
         } else if (vp.isUndefined()) {
-            *d = js_NaN;
+            *d = GenericNaN();
         } else {
             *d = double(vp.toBoolean());
         }
     } else {
         // non-primitive assignments become NaN or 0 (for float/int arrays)
-        *d = js_NaN;
+        *d = GenericNaN();
     }
 
 #ifdef JS_MORE_DETERMINISTIC
@@ -2235,7 +2236,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         }
 
         *result = ArrayTypeIsFloatingPoint()
-                  ? NativeType(js_NaN)
+                  ? NativeType(GenericNaN())
                   : NativeType(int32_t(0));
         return true;
     }

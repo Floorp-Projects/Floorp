@@ -47,6 +47,7 @@ using mozilla::Maybe;
 using mozilla::OldMove;
 using mozilla::MoveRef;
 using mozilla::PositiveInfinity;
+using JS::GenericNaN;
 
 static const size_t LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
 
@@ -2962,7 +2963,7 @@ CheckGlobalDotImport(ModuleCompiler &m, PropertyName *varName, ParseNode *initNo
 
     if (IsUseOfName(base, m.module().globalArgumentName())) {
         if (field == m.cx()->names().NaN)
-            return m.addGlobalConstant(varName, js_NaN, field);
+            return m.addGlobalConstant(varName, GenericNaN(), field);
         if (field == m.cx()->names().Infinity)
             return m.addGlobalConstant(varName, PositiveInfinity(), field);
         return m.failName(initNode, "'%s' is not a standard global constant", field);
@@ -5517,7 +5518,7 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
     // part of the out-of-bounds handling in heap loads/stores).
 #if defined(JS_CPU_ARM)
     masm.movePtr(IntArgReg1, GlobalReg);
-    masm.ma_vimm(js_NaN, NANReg);
+    masm.ma_vimm(GenericNaN(), NANReg);
 #endif
 
     // ARM and x64 have a globally-pinned HeapReg (x86 uses immediates in

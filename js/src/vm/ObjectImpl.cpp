@@ -14,6 +14,8 @@
 
 using namespace js;
 
+using JS::GenericNaN;
+
 PropDesc::PropDesc()
   : pd_(UndefinedValue()),
     value_(UndefinedValue()),
@@ -898,13 +900,13 @@ TypedElementsHeader<T>::setElement(JSContext *cx, Handle<ObjectImpl*> obj,
             if (!StringToNumber(cx, v.toString(), &d))
                 return false;
         } else if (v.isUndefined()) {
-            d = js_NaN;
+            d = GenericNaN();
         } else {
             d = double(v.toBoolean());
         }
     } else {
         // non-primitive assignments become NaN or 0 (for float/int arrays)
-        d = js_NaN;
+        d = GenericNaN();
     }
 
     assign(index, d);

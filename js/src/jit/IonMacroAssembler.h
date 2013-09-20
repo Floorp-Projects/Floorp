@@ -669,14 +669,14 @@ class MacroAssembler : public MacroAssemblerSpecific
     void canonicalizeDouble(FloatRegister reg) {
         Label notNaN;
         branchDouble(DoubleOrdered, reg, reg, &notNaN);
-        loadConstantDouble(js_NaN, reg);
+        loadConstantDouble(JS::GenericNaN(), reg);
         bind(&notNaN);
     }
 
     void canonicalizeFloat(FloatRegister reg) {
         Label notNaN;
         branchFloat(DoubleOrdered, reg, reg, &notNaN);
-        loadConstantFloat32((float)js_NaN, reg);
+        loadConstantFloat32(float(JS::GenericNaN()), reg);
         bind(&notNaN);
     }
 
