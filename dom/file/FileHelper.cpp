@@ -15,6 +15,7 @@
 #include "FileRequest.h"
 #include "FileService.h"
 #include "nsIRequest.h"
+#include "nsThreadUtils.h"
 
 USING_FILE_NAMESPACE
 
@@ -208,4 +209,18 @@ FileHelper::Finish()
   NS_ASSERTION(!(mFileStorage || mLockedFile || mFileRequest || mListener ||
                  mRequest), "Subclass didn't call FileHelper::ReleaseObjects!");
 
+}
+
+void
+FileHelper::OnStreamClose()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  Finish();
+}
+
+void
+FileHelper::OnStreamDestroy()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  Finish();
 }

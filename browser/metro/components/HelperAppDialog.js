@@ -124,7 +124,6 @@ HelperAppLauncherDialog.prototype = {
                         className: "download-host-text"
                       }
                     );
-    notificationBox.notificationsHidden = false;
     let newBar = notificationBox.appendNotification("",
                                                     "save-download",
                                                     URI_GENERIC_ICON_DOWNLOAD,

@@ -4577,16 +4577,14 @@ Parser<ParseHandler>::yieldExpression()
 
         pc->lastYieldOffset = begin;
 
-        bool isDelegatingYield = tokenStream.matchToken(TOK_MUL);
+        ParseNodeKind kind = tokenStream.matchToken(TOK_MUL) ? PNK_YIELD_STAR : PNK_YIELD;
 
         // ES6 generators require a value.
         Node exprNode = assignExpr();
         if (!exprNode)
             return null();
 
-        // FIXME: Plumb isDelegatingYield appropriately.
-        (void) isDelegatingYield;
-        return handler.newUnary(PNK_YIELD, JSOP_YIELD, begin, exprNode);
+        return handler.newUnary(kind, JSOP_NOP, begin, exprNode);
       }
 
       case NotGenerator:
@@ -4648,7 +4646,7 @@ Parser<ParseHandler>::yieldExpression()
                 return null();
         }
 
-        return handler.newUnary(PNK_YIELD, JSOP_YIELD, begin, exprNode);
+        return handler.newUnary(PNK_YIELD, JSOP_NOP, begin, exprNode);
       }
     }
 
@@ -6094,7 +6092,7 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
     ParseNode *pn = UnaryNode::create(PNK_YIELD, &handler);
     if (!pn)
         return null();
-    pn->setOp(JSOP_YIELD);
+    pn->setOp(JSOP_NOP);
     pn->setInParens(true);
     pn->pn_pos = kid->pn_pos;
     pn->pn_kid = kid;

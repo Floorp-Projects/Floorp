@@ -14,6 +14,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/NullPtr.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ReentrancyGuard.h"
 #include "mozilla/TemplateLib.h"
@@ -213,7 +214,7 @@ class HashMap
     /************************************************** Shorthand operations */
 
     bool has(const Lookup &l) const {
-        return impl.lookup(l) != NULL;
+        return impl.lookup(l) != nullptr;
     }
 
     // Overwrite existing value with v. Return false on oom.
@@ -425,7 +426,7 @@ class HashSet
     /************************************************** Shorthand operations */
 
     bool has(const Lookup &l) const {
-        return impl.lookup(l) != NULL;
+        return impl.lookup(l) != nullptr;
     }
 
     // Overwrite existing value with v. Return false on oom.
@@ -756,7 +757,7 @@ class HashTable : private AllocPolicy
         mozilla::DebugOnly<bool> validEntry;
 
       public:
-        Range() : cur(NULL), end(NULL), validEntry(false) {}
+        Range() : cur(nullptr), end(nullptr), validEntry(false) {}
 
         bool empty() const {
             return cur == end;
@@ -840,13 +841,13 @@ class HashTable : private AllocPolicy
       : AllocPolicy(*rhs)
     {
         mozilla::PodAssign(this, &*rhs);
-        rhs->table = NULL;
+        rhs->table = nullptr;
     }
     void operator=(mozilla::MoveRef<HashTable> rhs) {
         if (table)
             destroyTable(*this, table, capacity());
         mozilla::PodAssign(this, &*rhs);
-        rhs->table = NULL;
+        rhs->table = nullptr;
     }
 
   private:
@@ -947,7 +948,7 @@ class HashTable : private AllocPolicy
         entryCount(0),
         gen(0),
         removedCount(0),
-        table(NULL),
+        table(nullptr),
         entered(false),
         mutationCount(0)
     {}
@@ -1073,7 +1074,7 @@ class HashTable : private AllocPolicy
         DoubleHash dh = hash2(keyHash);
 
         // Save the first removed entry pointer so we can recycle later.
-        Entry *firstRemoved = NULL;
+        Entry *firstRemoved = nullptr;
 
         while(true) {
             if (JS_UNLIKELY(entry->isRemoved())) {
@@ -1313,7 +1314,7 @@ class HashTable : private AllocPolicy
             return;
 
         destroyTable(*this, table, capacity());
-        table = NULL;
+        table = nullptr;
         gen++;
         entryCount = 0;
         removedCount = 0;

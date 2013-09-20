@@ -7,8 +7,7 @@
 #define nsAtomTable_h__
 
 #include "mozilla/MemoryReporting.h"
-#include <stdlib.h>
-#include "nscore.h"
+#include <stddef.h>
 
 void NS_PurgeAtomTable();
 

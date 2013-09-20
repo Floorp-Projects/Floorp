@@ -18,7 +18,7 @@ public class testSystemPages extends PixelTest {
     public void testSystemPages() {
         blockForGeckoReady();
 
-        String urls [] = { "about:firefox", "about:rights", "about:home", "about:addons", "about:downloads", "about:buildconfig", "about:feedback", "about:healthreport", "about:" };
+        String urls [] = { "about:firefox", "about:rights", "about:addons", "about:downloads", "about:buildconfig", "about:feedback", "about:healthreport", "about:" };
         // Pages to be tested from the menu and their expected urls. This if of the form { {{ <path to item> }, { <expected url> }}* }
         String menuItems [][][] = {{{ "Apps" }, { "about:apps" }},
                                   {{ "Downloads" }, { "about:downloads" }},

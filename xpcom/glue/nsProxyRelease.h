@@ -9,7 +9,7 @@
 #include "nsIEventTarget.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsThreadUtils.h"
+#include "MainThreadUtils.h"
 #include "mozilla/Likely.h"
 
 #ifdef XPCOM_GLUE_AVOID_NSPR
@@ -122,7 +122,8 @@ public:
     if (NS_IsMainThread()) {
       NS_IF_RELEASE(mRawPtr);
     } else if (mRawPtr) {
-      nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+      nsCOMPtr<nsIThread> mainThread;
+      NS_GetMainThread(getter_AddRefs(mainThread));
       if (!mainThread) {
         NS_WARNING("Couldn't get main thread! Leaking pointer.");
         return;

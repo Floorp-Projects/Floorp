@@ -6,20 +6,12 @@
 #include "nsArrayEnumerator.h"
 #include "nsID.h"
 #include "nsCOMArray.h"
-#include "nsCRT.h"
-#include "nsReadableUtils.h"
-#include "nsIInputStream.h"
 #include "nsUnicharInputStream.h"
-#include "pratom.h"
-#include "nsEnumeratorUtils.h"
-#include "nsReadableUtils.h"
 #include "nsPrintfCString.h"
-#include "nsDependentString.h"
 
 #define PL_ARENA_CONST_ALIGN_MASK 3
 #include "nsPersistentProperties.h"
 #include "nsIProperties.h"
-#include "nsProperties.h"
 
 struct PropertyTableEntry : public PLDHashEntryHdr
 {

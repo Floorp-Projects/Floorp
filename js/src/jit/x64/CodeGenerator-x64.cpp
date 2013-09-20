@@ -293,9 +293,9 @@ CodeGeneratorX64::visitInterruptCheck(LInterruptCheck *lir)
     if (!ool)
         return false;
 
-    masm.movq(ImmPtr(&GetIonContext()->runtime->interrupt), ScratchReg);
-    masm.cmpl(Operand(ScratchReg, 0), Imm32(0));
-    masm.j(Assembler::NonZero, ool->entry());
+    masm.branch32(Assembler::NotEqual,
+                  AbsoluteAddress(&GetIonContext()->runtime->interrupt), Imm32(0),
+                  ool->entry());
     masm.bind(ool->rejoin());
     return true;
 }
@@ -376,7 +376,7 @@ CodeGeneratorX64::visitCompareVAndBranch(LCompareVAndBranch *lir)
 }
 
 bool
-CodeGeneratorX64::visitUInt32ToDouble(LUInt32ToDouble *lir)
+CodeGeneratorX64::visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble *lir)
 {
     masm.convertUInt32ToDouble(ToRegister(lir->input()), ToFloatRegister(lir->output()));
     return true;

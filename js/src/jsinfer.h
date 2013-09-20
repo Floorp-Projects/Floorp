@@ -409,6 +409,12 @@ enum {
     /* Flags which indicate dynamic properties of represented objects. */
     OBJECT_FLAG_DYNAMIC_MASK          = 0x00ff0000,
 
+    /* Mask/shift for tenuring count. */
+    OBJECT_FLAG_TENURE_COUNT_MASK     = 0x7f000000,
+    OBJECT_FLAG_TENURE_COUNT_SHIFT    = 24,
+    OBJECT_FLAG_TENURE_COUNT_LIMIT    =
+        OBJECT_FLAG_TENURE_COUNT_MASK >> OBJECT_FLAG_TENURE_COUNT_SHIFT,
+
     /*
      * Whether all properties of this object are considered unknown.
      * If set, all flags in DYNAMIC_MASK will also be set.
@@ -972,7 +978,7 @@ struct TypeTypedObject : public TypeObjectAddendum
  */
 
 /* Type information about an object accessed by a script. */
-struct TypeObject : gc::Cell
+struct TypeObject : gc::BarrieredCell<TypeObject>
 {
     /* Class shared by objects using this type. */
     const Class *clasp;
@@ -1115,6 +1121,39 @@ struct TypeObject : gc::Cell
      */
     //inline JSObject *getGlobal();
 
+    /* Tenure counter management. */
+
+    /*
+     * When an object allocation site generates objects that are long lived
+     * enough to frequently be tenured during minor collections, we mark the
+     * site as long lived and allocate directly into the tenured generation.
+     */
+    const static uint32_t MaxJITAllocTenures = OBJECT_FLAG_TENURE_COUNT_LIMIT - 2;
+
+    /*
+     * NewObjectCache is used when we take a stub for allocation. It is used
+     * more rarely, but still in hot paths, so pre-tenure with fewer uses.
+     */
+    const static uint32_t MaxCachedAllocTenures = 64;
+
+    /* Returns true if the allocating script should be recompiled. */
+    bool incrementTenureCount();
+    uint32_t tenureCount() const {
+        return (flags & OBJECT_FLAG_TENURE_COUNT_MASK) >> OBJECT_FLAG_TENURE_COUNT_SHIFT;
+    }
+
+    bool isLongLivedForCachedAlloc() const {
+        return tenureCount() >= MaxCachedAllocTenures;
+    }
+
+    bool isLongLivedForJITAlloc() const {
+        return tenureCount() >= MaxJITAllocTenures;
+    }
+
+    gc::InitialHeap initialHeapForJITAlloc() const {
+        return isLongLivedForJITAlloc() ? gc::TenuredHeap : gc::DefaultHeap;
+    }
+
     /* Helpers */
 
     bool addProperty(ExclusiveContext *cx, jsid id, Property **pprop);
@@ -1147,36 +1186,6 @@ struct TypeObject : gc::Cell
      * from all the compartment's type objects.
      */
     void finalize(FreeOp *fop) {}
-
-    JS::Zone *zone() const { return tenuredZone(); }
-    JS::shadow::Zone *shadowZone() const { return JS::shadow::Zone::asShadowZone(zone()); }
-
-    static void writeBarrierPre(TypeObject *type) {
-#ifdef JSGC_INCREMENTAL
-        if (!type || !type->shadowRuntimeFromAnyThread()->needsBarrier())
-            return;
-
-        JS::shadow::Zone *shadowZone = type->shadowZone();
-        if (shadowZone->needsBarrier()) {
-            TypeObject *tmp = type;
-            js::gc::MarkTypeObjectUnbarriered(shadowZone->barrierTracer(), &tmp, "write barrier");
-            JS_ASSERT(tmp == type);
-        }
-#endif
-    }
-
-    static void writeBarrierPost(TypeObject *type, void *addr) {}
-
-    static void readBarrier(TypeObject *type) {
-#ifdef JSGC_INCREMENTAL
-        JS::shadow::Zone *shadowZone = type->shadowZone();
-        if (shadowZone->needsBarrier()) {
-            TypeObject *tmp = type;
-            MarkTypeObjectUnbarriered(shadowZone->barrierTracer(), &tmp, "read barrier");
-            JS_ASSERT(tmp == type);
-        }
-#endif
-    }
 
     static inline ThingRootKind rootKind() { return THING_ROOT_TYPE_OBJECT; }
 

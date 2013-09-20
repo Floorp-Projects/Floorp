@@ -54,11 +54,11 @@ NumberDiv(double a, double b)
             || mozilla::IsNaN(b) /* XXX MSVC miscompiles such that (NaN == 0) */
 #endif
         )
-            return js_NaN;
+            return JS::GenericNaN();
 
         if (mozilla::IsNegative(a) != mozilla::IsNegative(b))
-            return js_NegativeInfinity;
-        return js_PositiveInfinity;
+            return mozilla::NegativeInfinity();
+        return mozilla::PositiveInfinity();
     }
 
     return a / b;
@@ -67,7 +67,7 @@ NumberDiv(double a, double b)
 inline double
 NumberMod(double a, double b) {
     if (b == 0) 
-        return js_NaN;
+        return JS::GenericNaN();
     return js_fmod(a, b);
 }
 

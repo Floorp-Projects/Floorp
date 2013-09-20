@@ -11,6 +11,7 @@
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIStreamListener.h"
+#include "nsThreadUtils.h"
 
 #include "Database.h"
 #include "mozilla/storage.h"

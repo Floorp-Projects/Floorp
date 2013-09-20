@@ -12,13 +12,13 @@ import types
 from mozpack.copier import FilePurger
 from mozpack.manifests import (
     InstallManifest,
-    PurgeManifest,
 )
 import mozpack.path as mozpath
 
 from .common import CommonBackend
 from ..frontend.data import (
     ConfigFileSubstitution,
+    Defines,
     DirectoryTraversal,
     Exports,
     GeneratedEventWebIDLFile,
@@ -147,19 +147,17 @@ class RecursiveMakeBackend(CommonBackend):
         self.backend_input_files.add(os.path.join(self.environment.topobjdir,
             'config', 'autoconf.mk'))
 
-        self._purge_manifests = dict(
-            dist_bin=PurgeManifest(relpath='dist/bin'),
-            dist_private=PurgeManifest(relpath='dist/private'),
-            dist_public=PurgeManifest(relpath='dist/public'),
-            dist_sdk=PurgeManifest(relpath='dist/sdk'),
-            tests=PurgeManifest(relpath='_tests'),
-            xpidl=PurgeManifest(relpath='config/makefiles/xpidl'),
-        )
-
-        self._install_manifests = dict(
-            dist_idl=InstallManifest(),
-            dist_include=InstallManifest(),
-        )
+        self._install_manifests = {
+            k: InstallManifest() for k in [
+                'dist_bin',
+                'dist_idl',
+                'dist_include',
+                'dist_public',
+                'dist_private',
+                'dist_sdk',
+                'tests',
+                'xpidl',
+            ]}
 
     def _update_from_avoid_write(self, result):
         existed, updated = result
@@ -203,6 +201,15 @@ class RecursiveMakeBackend(CommonBackend):
                         backend_file.write('%s := 1\n' % k)
                 else:
                     backend_file.write('%s := %s\n' % (k, v))
+
+        elif isinstance(obj, Defines):
+            defines = obj.get_defines()
+            if defines:
+                backend_file.write('DEFINES +=')
+                for define in defines:
+                    backend_file.write(' %s' % define)
+                backend_file.write('\n')
+
         elif isinstance(obj, Exports):
             self._process_exports(obj, obj.exports, backend_file)
 
@@ -353,7 +360,6 @@ class RecursiveMakeBackend(CommonBackend):
             self.summary.managed_count += 1
 
         self._write_manifests('install', self._install_manifests)
-        self._write_manifests('purge', self._purge_manifests)
 
     def _process_directory_traversal(self, obj, backend_file):
         """Process a data.DirectoryTraversal instance."""
@@ -422,11 +428,11 @@ class RecursiveMakeBackend(CommonBackend):
                 namespace=namespace + subdir)
 
     def _handle_idl_manager(self, manager):
-        build_files = self._purge_manifests['xpidl']
+        build_files = self._install_manifests['xpidl']
 
         for p in ('Makefile', 'backend.mk', '.deps/.mkdir.done',
             'xpt/.mkdir.done'):
-            build_files.add(p)
+            build_files.add_optional_exists(p)
 
         for idl in manager.idls.values():
             self._install_manifests['dist_idl'].add_symlink(idl['source'],
@@ -435,8 +441,10 @@ class RecursiveMakeBackend(CommonBackend):
                 % idl['root'])
 
         for module in manager.modules:
-            build_files.add(mozpath.join('xpt', '%s.xpt' % module))
-            build_files.add(mozpath.join('.deps', '%s.pp' % module))
+            build_files.add_optional_exists(mozpath.join('xpt',
+                '%s.xpt' % module))
+            build_files.add_optional_exists(mozpath.join('.deps',
+                '%s.pp' % module))
 
         modules = manager.modules
         xpt_modules = sorted(modules.keys())
@@ -465,7 +473,7 @@ class RecursiveMakeBackend(CommonBackend):
         # Create dependency for output header so we force regeneration if the
         # header was deleted. This ideally should not be necessary. However,
         # some processes (such as PGO at the time this was implemented) wipe
-        # out dist/include without regard to our install/purge manifests.
+        # out dist/include without regard to our install manifests.
 
         out_path = os.path.join(self.environment.topobjdir, 'config',
             'makefiles', 'xpidl', 'Makefile')
