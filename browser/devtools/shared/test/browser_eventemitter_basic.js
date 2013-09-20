@@ -74,6 +74,23 @@ function testEmitter(aObject) {
 
     emitter.emit("tick");
 
+    offAfterOnce();
+  }
+
+  function offAfterOnce() {
+    let enteredC1 = false;
+
+    function c1() {
+      enteredC1 = true;
+    }
+
+    emitter.once("oao", c1);
+    emitter.off("oao", c1);
+
+    emitter.emit("oao");
+
+    ok(!enteredC1, "c1 should not be called");
+
     delete emitter;
     finish();
   }
