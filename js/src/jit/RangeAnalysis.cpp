@@ -693,7 +693,7 @@ Range *
 Range::min(const Range *lhs, const Range *rhs)
 {
     // If either operand is NaN, the result is NaN.
-    if (!lhs->isInt32() || !rhs->isInt32())
+    if (!lhs->hasInt32Bounds() || !rhs->hasInt32Bounds())
         return new Range();
 
     return new Range(Min(lhs->lower(), rhs->lower()),
@@ -706,7 +706,7 @@ Range *
 Range::max(const Range *lhs, const Range *rhs)
 {
     // If either operand is NaN, the result is NaN.
-    if (!lhs->isInt32() || !rhs->isInt32())
+    if (!lhs->hasInt32Bounds() || !rhs->hasInt32Bounds())
         return new Range();
 
     return new Range(Max(lhs->lower(), rhs->lower()),
@@ -1056,7 +1056,7 @@ MMod::computeRange()
 
     // If either operand is a NaN, the result is NaN. This also conservatively
     // handles Infinity cases.
-    if (!lhs.isInt32() || !rhs.isInt32())
+    if (!lhs.hasInt32Bounds() || !rhs.hasInt32Bounds())
         return;
 
     // If RHS can be zero, the result can be NaN.
@@ -1737,8 +1737,10 @@ Range::clampToInt32()
 void
 Range::wrapAroundToInt32()
 {
-    if (!isInt32())
+    if (!hasInt32Bounds())
         set(JSVAL_INT_MIN, JSVAL_INT_MAX);
+    else if (canHaveFractionalPart())
+        set(lower(), upper(), false, exponent());
 }
 
 void
@@ -1835,12 +1837,21 @@ MDiv::truncate()
     // Remember analysis, needed to remove negative zero checks.
     setTruncated(true);
 
-    // Divisions where the lhs and rhs are unsigned and the result is
-    // truncated can be lowered more efficiently.
-    if (specialization() == MIRType_Int32 && tryUseUnsignedOperands()) {
-        unsigned_ = true;
+    if (type() == MIRType_Double || type() == MIRType_Int32) {
+        specialization_ = MIRType_Int32;
+        setResultType(MIRType_Int32);
+        if (range())
+            range()->wrapAroundToInt32();
+
+        // Divisions where the lhs and rhs are unsigned and the result is
+        // truncated can be lowered more efficiently.
+        if (tryUseUnsignedOperands())
+            unsigned_ = true;
+
         return true;
     }
+
+    JS_ASSERT(specialization() != MIRType_Int32); // fixme
 
     // No modifications.
     return false;
