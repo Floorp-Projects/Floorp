@@ -31,6 +31,10 @@
 #include "nrinterfaceprioritizer.h"
 #include "mtransport_test_utils.h"
 #include "runnable_utils.h"
+#include "stunserver.h"
+// TODO(bcampen@mozilla.com): Big fat hack since the build system doesn't give
+// us a clean way to add object files to a single executable.
+#include "stunserver.cpp"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
@@ -187,6 +191,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     PRNetAddr addr;
     PRStatus status = PR_StringToNetAddr(kDefaultStunServerAddress.c_str(),
                                          &addr);
+    addr.inet.port = kDefaultStunServerPort;
     ASSERT_EQ(PR_SUCCESS, status);
     fake_resolver_.SetAddr(kDefaultStunServerHostname, addr);
     ASSERT_TRUE(NS_SUCCEEDED(ice_ctx_->SetResolver(
@@ -586,6 +591,9 @@ class IceTestPeer : public sigslot::has_slots<> {
 class IceGatherTest : public ::testing::Test {
  public:
   void SetUp() {
+    test_utils->sts_target()->Dispatch(WrapRunnable(TestStunServer::GetInstance(),
+                                                    &TestStunServer::Reset),
+                                       NS_DISPATCH_SYNC);
     peer_ = new IceTestPeer("P1", true, false);
     peer_->AddStream(1);
   }
@@ -595,6 +603,28 @@ class IceGatherTest : public ::testing::Test {
 
     ASSERT_TRUE_WAIT(peer_->gathering_complete(), 10000);
   }
+
+  void UseFakeStunServerWithResponse(const std::string& fake_addr,
+                                     uint16_t fake_port) {
+    TestStunServer::GetInstance()->SetResponseAddr(fake_addr, fake_port);
+    // Sets an additional stun server
+    peer_->SetStunServer(TestStunServer::GetInstance()->addr(),
+                         TestStunServer::GetInstance()->port());
+  }
+
+  // NB: Only does substring matching, watch out for stuff like "1.2.3.4"
+  // matching "21.2.3.47". " 1.2.3.4 " should not have false positives.
+  bool StreamHasMatchingCandidate(unsigned int stream,
+                                  const std::string& match) {
+    std::vector<std::string> candidates = peer_->GetCandidates(stream);
+    for (size_t c = 0; c < candidates.size(); ++c) {
+      if (std::string::npos != candidates[c].find(match)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
  protected:
   mozilla::ScopedDeletePtr<IceTestPeer> peer_;
 };
@@ -867,6 +897,30 @@ TEST_F(IceGatherTest, TestGatherDisableComponent) {
 TEST_F(IceGatherTest, TestBogusCandidate) {
   Gather();
   peer_->ParseCandidate(0, kBogusIceCandidate);
+}
+
+TEST_F(IceGatherTest, VerifyTestStunServer) {
+  UseFakeStunServerWithResponse("192.0.2.133", 3333);
+  Gather();
+  ASSERT_TRUE(StreamHasMatchingCandidate(0, " 192.0.2.133 3333 "));
+}
+
+TEST_F(IceGatherTest, TestStunServerReturnsWildcardAddr) {
+  UseFakeStunServerWithResponse("0.0.0.0", 3333);
+  Gather();
+  ASSERT_FALSE(StreamHasMatchingCandidate(0, " 0.0.0.0 "));
+}
+
+TEST_F(IceGatherTest, TestStunServerReturnsPort0) {
+  UseFakeStunServerWithResponse("192.0.2.133", 0);
+  Gather();
+  ASSERT_FALSE(StreamHasMatchingCandidate(0, " 192.0.2.133 0 "));
+}
+
+TEST_F(IceGatherTest, TestStunServerReturnsLoopbackAddr) {
+  UseFakeStunServerWithResponse("127.0.0.133", 3333);
+  Gather();
+  ASSERT_FALSE(StreamHasMatchingCandidate(0, " 127.0.0.133 "));
 }
 
 TEST_F(IceConnectTest, TestGather) {
@@ -1148,7 +1202,14 @@ int main(int argc, char **argv)
   // Start the tests
   ::testing::InitGoogleTest(&argc, argv);
 
+  test_utils->sts_target()->Dispatch(
+    WrapRunnableNM(&TestStunServer::GetInstance), NS_DISPATCH_SYNC);
+
   int rv = RUN_ALL_TESTS();
+
+  test_utils->sts_target()->Dispatch(
+    WrapRunnableNM(&TestStunServer::ShutdownInstance), NS_DISPATCH_SYNC);
+
   delete test_utils;
   return rv;
 }

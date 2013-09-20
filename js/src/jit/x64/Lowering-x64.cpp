@@ -77,9 +77,9 @@ LIRGeneratorX64::visitUnbox(MUnbox *unbox)
     MDefinition *box = unbox->getOperand(0);
     LUnboxBase *lir;
     if (IsFloatingPointType(unbox->type()))
-        lir = new LUnboxFloatingPoint(useRegister(box), unbox->type());
+        lir = new LUnboxFloatingPoint(useRegisterAtStart(box), unbox->type());
     else
-        lir = new LUnbox(useRegister(box));
+        lir = new LUnbox(useRegisterAtStart(box));
 
     if (unbox->fallible() && !assignSnapshot(lir, unbox->bailoutKind()))
         return false;
@@ -114,7 +114,7 @@ bool
 LIRGeneratorX64::visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins)
 {
     JS_ASSERT(ins->input()->type() == MIRType_Int32);
-    LUInt32ToDouble *lir = new LUInt32ToDouble(useRegisterAtStart(ins->input()));
+    LAsmJSUInt32ToDouble *lir = new LAsmJSUInt32ToDouble(useRegisterAtStart(ins->input()));
     return define(lir, ins);
 }
 

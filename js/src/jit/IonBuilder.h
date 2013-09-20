@@ -653,6 +653,8 @@ class IonBuilder : public MIRGenerator
         return analysis_;
     }
 
+    GSNCache gsn;
+
     jsbytecode *pc;
     MBasicBlock *current;
     uint32_t loopDepth_;

@@ -59,6 +59,7 @@ robocop_DEST    := $(CURDIR)
 robocop_FILES   := \
   $(TESTPATH)/robocop.ini \
   $(TESTPATH)/robocop_autophone.ini \
+  $(TESTPATH)/robocop_x86.ini \
   $(NULL)
 robocop-deps := $(notdir $(robocop_FILES))
 

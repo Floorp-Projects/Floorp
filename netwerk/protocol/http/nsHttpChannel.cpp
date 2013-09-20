@@ -1205,7 +1205,7 @@ nsHttpChannel::ProcessSTSHeader()
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = sss->ProcessHeader(nsISiteSecurityService::HEADER_HSTS, mURI,
-                            stsHeader.get(), flags, NULL, NULL);
+                            stsHeader.get(), flags, nullptr, nullptr);
     if (NS_FAILED(rv)) {
         AddSecurityMessage(NS_LITERAL_STRING("InvalidSTSHeaders"),
                 NS_LITERAL_STRING("Invalid HSTS Headers"));
@@ -1635,7 +1635,7 @@ nsHttpChannel::PromptTempRedirect()
 
     nsXPIDLString messageString;
     rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("RepostFormData").get(), getter_Copies(messageString));
-    // GetStringFromName can return NS_OK and NULL messageString.
+    // GetStringFromName can return NS_OK and nullptr messageString.
     if (NS_SUCCEEDED(rv) && messageString) {
         bool repost = false;
 

@@ -69,13 +69,13 @@ JSDebugger::AddClass(const JS::Value &global, JSContext* cx)
 NS_DEFINE_NAMED_CID(JSDEBUGGER_CID);
 
 static const mozilla::Module::CIDEntry kJSDebuggerCIDs[] = {
-  { &kJSDEBUGGER_CID, false, NULL, mozilla::jsdebugger::JSDebuggerConstructor },
-  { NULL }
+  { &kJSDEBUGGER_CID, false, nullptr, mozilla::jsdebugger::JSDebuggerConstructor },
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kJSDebuggerContracts[] = {
   { JSDEBUGGER_CONTRACTID, &kJSDEBUGGER_CID },
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module kJSDebuggerModule = {

@@ -27,6 +27,8 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::FloorLog2;
+using mozilla::NegativeInfinity;
+using JS::GenericNaN;
 
 // shared
 CodeGeneratorARM::CodeGeneratorARM(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
@@ -318,7 +320,7 @@ CodeGeneratorARM::visitMinMaxD(LMinMaxD *ins)
     masm.ma_b(&done);
 
     masm.bind(&nan);
-    masm.loadConstantDouble(js_NaN, output);
+    masm.loadConstantDouble(GenericNaN(), output);
     masm.ma_b(&done);
 
     masm.bind(&returnSecond);
@@ -972,7 +974,7 @@ CodeGeneratorARM::visitPowHalfD(LPowHalfD *ins)
     Label done;
 
     // Masm.pow(-Infinity, 0.5) == Infinity.
-    masm.ma_vimm(js_NegativeInfinity, ScratchFloatReg);
+    masm.ma_vimm(NegativeInfinity(), ScratchFloatReg);
     masm.compareDouble(input, ScratchFloatReg);
     masm.ma_vneg(ScratchFloatReg, output, Assembler::Equal);
     masm.ma_b(&done, Assembler::Equal);

@@ -4,13 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSupportsPrimitives.h"
-#include "nsCRT.h"
 #include "nsMemory.h"
 #include "prprf.h"
-#include "nsIInterfaceInfoManager.h"
-#include "nsDependentString.h"
-#include "nsReadableUtils.h"
-#include "nsPromiseFlatString.h"
 
 /***************************************************************************/
 

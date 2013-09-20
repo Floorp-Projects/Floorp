@@ -10,8 +10,7 @@
 
 #include "nsISupportsPrimitives.h"
 #include "nsCOMPtr.h"
-#include "nsString.h"
-#include "nsDependentString.h"
+#include "nsStringGlue.h"
 
 class nsSupportsIDImpl MOZ_FINAL : public nsISupportsID
 {
