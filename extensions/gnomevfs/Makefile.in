@@ -4,8 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SHORT_LIBNAME	= nkgnomevfs
-IS_COMPONENT	= 1
-
 
 LOCAL_INCLUDES	= $(MOZ_GNOMEVFS_CFLAGS)
 

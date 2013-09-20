@@ -68,7 +68,7 @@ private:
 NS_IMPL_ADDREF(nsMIMEInputStream)
 NS_IMPL_RELEASE(nsMIMEInputStream)
 
-NS_IMPL_CLASSINFO(nsMIMEInputStream, NULL, nsIClassInfo::THREADSAFE,
+NS_IMPL_CLASSINFO(nsMIMEInputStream, nullptr, nsIClassInfo::THREADSAFE,
                   NS_MIMEINPUTSTREAM_CID)
 
 NS_IMPL_QUERY_INTERFACE4_CI(nsMIMEInputStream,

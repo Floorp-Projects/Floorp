@@ -391,6 +391,9 @@ pref("dom.sms.strict7BitEncoding", false); // Disabled by default.
 pref("dom.sms.requestStatusReport", true); // Enabled by default.
 pref("dom.mms.requestStatusReport", true); // Enabled by default.
 
+//The waiting time in network manager.
+pref("network.gonk.ms-release-mms-connection", 30000);
+
 // WebContacts
 pref("dom.mozContacts.enabled", true);
 pref("dom.navigator-property.disable.mozContacts", false);

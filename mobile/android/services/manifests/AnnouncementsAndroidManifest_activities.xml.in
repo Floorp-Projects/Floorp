@@ -15,6 +15,3 @@
               <action android:name="@ANDROID_PACKAGE_NAME@.ANNOUNCEMENTS_PREF" />
             </intent-filter>
         </receiver>
-
-        <receiver android:name="org.mozilla.gecko.background.announcements.AnnouncementsStartReceiver" >
-        </receiver>

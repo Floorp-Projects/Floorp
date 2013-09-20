@@ -16,8 +16,6 @@
 #include "nsStringGlue.h"
 #include "prprf.h"
 #include "prlog.h"
-#include "prinit.h"
-#include "plstr.h"
 #include "nsError.h"
 #include "prerror.h"
 #include "prerr.h"
@@ -27,13 +25,12 @@
 #include <android/log.h>
 #endif
 
-#if defined(XP_UNIX) || defined(_WIN32) || defined(XP_OS2)
-/* for abort() and getenv() */
+#ifdef _WIN32
+/* for getenv() */
 #include <stdlib.h>
 #endif
 
 #include "nsTraceRefcntImpl.h"
-#include "nsISupportsUtils.h"
 
 #if defined(XP_UNIX)
 #include <signal.h>
@@ -49,7 +46,6 @@
 
 #if defined(XP_MACOSX)
 #include <stdbool.h>
-#include <sys/types.h>
 #include <unistd.h>
 #include <sys/sysctl.h>
 #endif

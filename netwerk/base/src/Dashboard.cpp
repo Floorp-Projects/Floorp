@@ -10,6 +10,7 @@
 #include "nsIDNSService.h"
 #include "nsIThread.h"
 #include "nsSocketTransport2.h"
+#include "nsThreadUtils.h"
 
 using mozilla::AutoSafeJSContext;
 namespace mozilla {
@@ -735,7 +736,7 @@ Dashboard::GetErrorString(nsresult rv)
         if (errors[i].key == rv)
             return errors[i].error;
 
-    return NULL;
+    return nullptr;
 }
 
 } } // namespace mozilla::net

@@ -171,7 +171,7 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
 
   delete[] mFormat;
   mFormat = new int[num+1];
-  // Prevent NULL Deref - Bug 443299 
+  // Prevent nullptr Deref - Bug 443299 
   if (mFormat == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
   mFormat[num] = -1;

@@ -7,7 +7,6 @@
 #include "nsHashPropertyBag.h"
 #include "nsArray.h"
 #include "nsArrayEnumerator.h"
-#include "nsComponentManagerUtils.h"
 #include "nsIVariant.h"
 #include "nsIProperty.h"
 #include "nsVariant.h"

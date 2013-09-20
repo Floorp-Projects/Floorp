@@ -88,7 +88,7 @@ var Downloads = {
         case 0: // Downloading
         case 5: // Queued
           this.watchDownload(dl);
-          this.updateInfobar(dl);
+          this.updateInfobar();
           break;
       }
     }
@@ -194,7 +194,6 @@ var Downloads = {
   },
 
   showNotification: function dh_showNotification(title, msg, buttons, priority) {
-    this._notificationBox.notificationsHidden = false;
     let notification = this._notificationBox.appendNotification(msg,
                                               title,
                                               URI_GENERIC_ICON_DOWNLOAD,
@@ -335,9 +334,10 @@ var Downloads = {
     this._downloadProgressIndicator.updateProgress(percentComplete);
   },
 
-  _computeDownloadProgressString: function dv_computeDownloadProgressString(aDownload) {
+  _computeDownloadProgressString: function dv_computeDownloadProgressString() {
     let totTransferred = 0, totSize = 0, totSecondsLeft = 0;
-    for (let [guid, info] of this._progressNotificationInfo) {
+    let guid, info;
+    for ([guid, info] of this._progressNotificationInfo) {
       let size = info.download.size;
       let amountTransferred = info.download.amountTransferred;
       let speed = info.download.speed;
@@ -358,7 +358,7 @@ var Downloads = {
 
     if (this._downloadCount == 1) {
       return Strings.browser.GetStringFromName("alertDownloadsStart2")
-        .replace("#1", aDownload.displayName)
+        .replace("#1", info.download.displayName)
         .replace("#2", progress)
         .replace("#3", timeLeft)
     }
@@ -380,12 +380,20 @@ var Downloads = {
     this._progressNotificationInfo.set(aDownload.guid, infoObj);
   },
 
-  updateInfobar: function dv_updateInfobar(aDownload) {
-    let message = this._computeDownloadProgressString(aDownload);
-    this._updateCircularProgressMeter();
+  onDownloadButton: function dv_onDownloadButton() {
+    if (this._progressNotification) {
+      let progressBar = this._notificationBox.getNotificationWithValue("download-progress");
+      if (progressBar) {
+        this._notificationBox.removeNotification(progressBar);
+      } else {
+        this.updateInfobar();
+      }
+    }
+  },
 
-    if (this._notificationBox && this._notificationBox.notificationsHidden)
-      this._notificationBox.notificationsHidden = false;
+  updateInfobar: function dv_updateInfobar() {
+    let message = this._computeDownloadProgressString();
+    this._updateCircularProgressMeter();
 
     if (this._progressNotification == null ||
         !this._notificationBox.getNotificationWithValue("download-progress")) {
@@ -457,7 +465,7 @@ var Downloads = {
       case "dl-start":
         let download = aSubject.QueryInterface(Ci.nsIDownload);
         this.watchDownload(download);
-        this.updateInfobar(download);
+        this.updateInfobar();
         break;
       case "dl-done":
         this._downloadsInProgress--;

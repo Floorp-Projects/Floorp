@@ -1624,7 +1624,7 @@ nsOfflineCacheDevice::BindEntry(nsCacheEntry *entry)
   nsOfflineCacheRecord rec;
   rec.clientID = cid;
   rec.key = key;
-  rec.metaData = NULL; // don't write any metadata now.
+  rec.metaData = nullptr; // don't write any metadata now.
   rec.metaDataLen = 0;
   rec.generation = binding->mGeneration;
   rec.dataSize = 0;
@@ -1871,8 +1871,8 @@ nsOfflineCacheDevice::Visit(nsICacheVisitor *visitor)
     if (NS_FAILED(rv) || !hasRows)
       break;
 
-    statement->GetSharedUTF8String(0, NULL, &rec.clientID);
-    statement->GetSharedUTF8String(1, NULL, &rec.key);
+    statement->GetSharedUTF8String(0, nullptr, &rec.clientID);
+    statement->GetSharedUTF8String(1, nullptr, &rec.key);
     statement->GetSharedBlob(2, &rec.metaDataLen,
                              (const uint8_t **) &rec.metaData);
     rec.generation     = statement->AsInt32(3);

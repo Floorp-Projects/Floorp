@@ -8,7 +8,6 @@ import os
 
 from mozpack.manifests import (
     InstallManifest,
-    PurgeManifest,
 )
 from mozunit import main
 
@@ -157,10 +156,6 @@ class TestRecursiveMakeBackend(BackendTester):
                 'CSRCS += bar.c',
                 'CSRCS += foo.c',
             ],
-            'DEFINES': [
-                'DEFINES += -Dbar',
-                'DEFINES += -Dfoo',
-            ],
             'EXTRA_COMPONENTS': [
                 'EXTRA_COMPONENTS += bar.js',
                 'EXTRA_COMPONENTS += foo.js',
@@ -271,21 +266,20 @@ class TestRecursiveMakeBackend(BackendTester):
         """Ensure xpidl files and directories are written out."""
         env = self._consume('xpidl', RecursiveMakeBackend)
 
-        # Purge manifests should contain entries.
-        purge_dir = os.path.join(env.topobjdir, '_build_manifests', 'purge')
+        # Install manifests should contain entries.
         install_dir = os.path.join(env.topobjdir, '_build_manifests',
             'install')
-        self.assertTrue(os.path.isfile(os.path.join(purge_dir, 'xpidl')))
         self.assertTrue(os.path.isfile(os.path.join(install_dir, 'dist_idl')))
-
-        m = PurgeManifest(path=os.path.join(purge_dir, 'xpidl'))
-        self.assertIn('.deps/my_module.pp', m.entries)
-        self.assertIn('xpt/my_module.xpt', m.entries)
+        self.assertTrue(os.path.isfile(os.path.join(install_dir, 'xpidl')))
 
         m = InstallManifest(path=os.path.join(install_dir, 'dist_idl'))
         self.assertEqual(len(m), 2)
         self.assertIn('bar.idl', m)
         self.assertIn('foo.idl', m)
+
+        m = InstallManifest(path=os.path.join(install_dir, 'xpidl'))
+        self.assertIn('.deps/my_module.pp', m)
+        self.assertIn('xpt/my_module.xpt', m)
 
         m = InstallManifest(path=os.path.join(install_dir, 'dist_include'))
         self.assertIn('foo.h', m)
@@ -307,35 +301,14 @@ class TestRecursiveMakeBackend(BackendTester):
             '; THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.',
             ''] + ['[include:%s/xpcshell.ini]' % x for x in expected])
 
-    def test_purge_manifests_written(self):
-        env = self._consume('stub0', RecursiveMakeBackend)
-
-        purge_dir = os.path.join(env.topobjdir, '_build_manifests', 'purge')
-        self.assertTrue(os.path.exists(purge_dir))
-
-        expected = [
-            'dist_bin',
-            'dist_private',
-            'dist_public',
-            'dist_sdk',
-            'tests',
-        ]
-
-        for e in expected:
-            full = os.path.join(purge_dir, e)
-            self.assertTrue(os.path.exists(full))
-
-        m = PurgeManifest(path=os.path.join(purge_dir, 'dist_bin'))
-        self.assertEqual(m.relpath, 'dist/bin')
-
-    def test_old_purge_manifest_deleted(self):
-        # Simulate a purge manifest from a previous backend version. Ensure it
-        # is deleted.
+    def test_old_install_manifest_deleted(self):
+        # Simulate an install manifest from a previous backend version. Ensure
+        # it is deleted.
         env = self._get_environment('stub0')
-        purge_dir = os.path.join(env.topobjdir, '_build_manifests', 'purge')
+        purge_dir = os.path.join(env.topobjdir, '_build_manifests', 'install')
         manifest_path = os.path.join(purge_dir, 'old_manifest')
         os.makedirs(purge_dir)
-        m = PurgeManifest()
+        m = InstallManifest()
         m.write(path=manifest_path)
 
         self.assertTrue(os.path.exists(manifest_path))
@@ -389,6 +362,19 @@ class TestRecursiveMakeBackend(BackendTester):
             "IPDLDIRS := %s/bar %s/foo" % (topsrcdir, topsrcdir),
         ]
         self.assertEqual(lines, expected)
+
+    def test_defines(self):
+        """Test that DEFINES are written to backend.mk correctly."""
+        env = self._consume('defines', RecursiveMakeBackend)
+
+        backend_path = os.path.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        var = 'DEFINES'
+        defines = [val for val in lines if val.startswith(var)]
+
+        expected = ['DEFINES += -DFOO -DBAZ=\'"abcd"\' -DBAR=7 -DVALUE=\'xyz\'']
+        self.assertEqual(defines, expected)
 
     def test_local_includes(self):
         """Test that LOCAL_INCLUDES are written to backend.mk correctly."""

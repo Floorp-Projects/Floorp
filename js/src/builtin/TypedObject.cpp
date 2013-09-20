@@ -239,12 +239,6 @@ IsBinaryArray(JSContext *cx, HandleObject obj)
     return IsBlockOfKind(cx, obj, TypeRepresentation::Array);
 }
 
-static inline bool
-IsBinaryStruct(JSContext *cx, HandleObject obj)
-{
-    return IsBlockOfKind(cx, obj, TypeRepresentation::Struct);
-}
-
 const Class js::DataClass = {
     "Data",
     JSCLASS_HAS_CACHED_PROTO(JSProto_Data),

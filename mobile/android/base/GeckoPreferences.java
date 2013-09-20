@@ -77,6 +77,7 @@ public class GeckoPreferences
     private static String PREFS_HEALTHREPORT_LINK = NON_PREF_PREFIX + "healthreport.link";
     private static String PREFS_DEVTOOLS_REMOTE_ENABLED = "devtools.debugger.remote-enabled";
     private static String PREFS_DISPLAY_REFLOW_ON_ZOOM = "browser.zoom.reflowOnZoom";
+    private static String PREFS_SYNC = NON_PREF_PREFIX + "sync";
 
     public static String PREFS_RESTORE_SESSION = NON_PREF_PREFIX + "restoreSession3";
 
@@ -342,6 +343,11 @@ public class GeckoPreferences
                     CharSequence selectedEntry = listPref.getEntry();
                     listPref.setSummary(selectedEntry);
                     continue;
+                } else if (PREFS_SYNC.equals(key) && GeckoProfile.get(this).inGuestMode()) {
+                    // Don't show sync prefs while in guest mode.
+                    preferences.removePreference(pref);
+                    i--;
+                    continue;
                 }
 
                 // Some Preference UI elements are not actually preferences,
@@ -379,6 +385,11 @@ public class GeckoPreferences
         return sIsCharEncodingEnabled;
     }
 
+    public static void broadcastAction(final Context context, final Intent intent) {
+        fillIntentWithProfileInfo(context, intent);
+        context.sendBroadcast(intent, GlobalConstants.PER_ANDROID_PACKAGE_PERMISSION);
+    }
+
     /**
      * Broadcast an intent with <code>pref</code>, <code>branch</code>, and
      * <code>enabled</code> extras. This is intended to represent the
@@ -391,24 +402,23 @@ public class GeckoPreferences
                                            final String action,
                                            final String pref,
                                            final boolean value) {
-        final Intent intent = new Intent(action);
-        intent.setAction(action);
-        intent.putExtra("pref", pref);
-        intent.putExtra("branch", GeckoApp.PREFS_NAME);
-        intent.putExtra("enabled", value);
+        final Intent intent = new Intent(action)
+                .putExtra("pref", pref)
+                .putExtra("branch", GeckoApp.PREFS_NAME)
+                .putExtra("enabled", value);
+        broadcastAction(context, intent);
+    }
 
+    private static void fillIntentWithProfileInfo(final Context context, final Intent intent) {
         // There is a race here, but GeckoProfile returns the default profile
         // when Gecko is not explicitly running for a different profile.  In a
         // multi-profile world, this will need to be updated (possibly to
         // broadcast settings for all profiles).  See Bug 882182.
         GeckoProfile profile = GeckoProfile.get(context);
         if (profile != null) {
-            intent.putExtra("profileName", profile.getName());
-            intent.putExtra("profilePath", profile.getDir().getAbsolutePath());
+            intent.putExtra("profileName", profile.getName())
+                  .putExtra("profilePath", profile.getDir().getAbsolutePath());
         }
-
-        Log.d(LOGTAG, "Broadcast: " + action + ", " + pref + ", " + GeckoApp.PREFS_NAME + ", " + value);
-        context.sendBroadcast(intent, GlobalConstants.PER_ANDROID_PACKAGE_PERMISSION);
     }
 
     /**
@@ -449,6 +459,11 @@ public class GeckoPreferences
     public static void broadcastHealthReportUploadPref(final Context context) {
         final boolean value = getBooleanPref(context, PREFS_HEALTHREPORT_UPLOAD_ENABLED, true);
         broadcastHealthReportUploadPref(context, value);
+    }
+
+    public static void broadcastHealthReportPrune(final Context context) {
+        final Intent intent = new Intent(HealthReportConstants.ACTION_HEALTHREPORT_PRUNE);
+        broadcastAction(context, intent);
     }
 
     /**

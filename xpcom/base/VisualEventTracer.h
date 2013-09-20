@@ -20,11 +20,12 @@
  * to record in the log.
  */
 
-#include "nscore.h"
+#include <stdint.h>
+#include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
-#include "nsIVisualEventTracer.h"
 
 #ifdef MOZ_VISUAL_EVENT_TRACER
+#include "nsIVisualEventTracer.h"
 
 // Bind an object instance, usually |this|, to a name, usually URL or 
 // host name, the instance deals with for its lifetime.  The name string 

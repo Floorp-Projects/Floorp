@@ -118,7 +118,7 @@ private:
 
   // Common send code for binary + text msgs
   nsresult SendMsgCommon(const nsACString *aMsg, bool isBinary,
-                         uint32_t length, nsIInputStream *aStream = NULL);
+                         uint32_t length, nsIInputStream *aStream = nullptr);
 
   void EnqueueOutgoingMessage(nsDeque &aQueue, OutboundMessage *aMsg);
 
@@ -252,6 +252,31 @@ private:
   nsCOMPtr<nsIDashboardEventNotifier> mConnectionLogService;
   uint32_t mSerial;
   static uint32_t sSerialSeed;
+
+// These members are used for network per-app metering (bug 855949)
+// Currently, they are only available on gonk.
+public:
+  const static int32_t NETWORK_NO_TYPE = -1; // default conntection type
+  const static uint64_t NETWORK_STATS_THRESHOLD = 65536;
+
+private:
+  uint64_t                        mCountRecv;
+  uint64_t                        mCountSent;
+  uint32_t                        mAppId;
+  int32_t                         mConnectionType;
+  bool                            mIsInBrowser;
+  nsresult                        GetConnectionType(int32_t *);
+  nsresult                        SaveNetworkStats(bool);
+  void                            CountRecvBytes(uint64_t recvBytes)
+  {
+    mCountRecv += recvBytes;
+    SaveNetworkStats(false);
+  }
+  void                            CountSentBytes(uint64_t sentBytes)
+  {
+    mCountSent += sentBytes;
+    SaveNetworkStats(false);
+  }
 };
 
 class WebSocketSSLChannel : public WebSocketChannel
