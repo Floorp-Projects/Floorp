@@ -432,14 +432,18 @@ VectorImage::StartAnimation()
 nsresult
 VectorImage::StopAnimation()
 {
-  if (mError)
-    return NS_ERROR_FAILURE;
+  nsresult rv = NS_OK;
+  if (mError) {
+    rv = NS_ERROR_FAILURE;
+  } else {
+    MOZ_ASSERT(mIsFullyLoaded && mHaveAnimations,
+               "Should not have been animating!");
 
-  MOZ_ASSERT(mIsFullyLoaded && mHaveAnimations,
-             "Should not have been animating!");
+    mSVGDocumentWrapper->StopAnimation();
+  }
 
-  mSVGDocumentWrapper->StopAnimation();
-  return NS_OK;
+  mAnimating = false;
+  return rv;
 }
 
 bool
