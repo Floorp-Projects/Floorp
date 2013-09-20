@@ -7466,20 +7466,20 @@ bool
 CodeGenerator::emitAssertRangeD(const Range *r, FloatRegister input, FloatRegister temp)
 {
     // Check the lower bound.
-    if (!r->isLowerInfinite()) {
+    if (r->hasInt32LowerBound()) {
         Label success;
         masm.loadConstantDouble(r->lower(), temp);
-        if (r->isUpperInfinite())
+        if (!r->hasInt32UpperBound())
             masm.branchDouble(Assembler::DoubleUnordered, input, input, &success);
         masm.branchDouble(Assembler::DoubleGreaterThanOrEqual, input, temp, &success);
         masm.breakpoint();
         masm.bind(&success);
     }
     // Check the upper bound.
-    if (!r->isUpperInfinite()) {
+    if (r->hasInt32UpperBound()) {
         Label success;
         masm.loadConstantDouble(r->upper(), temp);
-        if (r->isLowerInfinite())
+        if (!r->hasInt32LowerBound())
             masm.branchDouble(Assembler::DoubleUnordered, input, input, &success);
         masm.branchDouble(Assembler::DoubleLessThanOrEqual, input, temp, &success);
         masm.breakpoint();
