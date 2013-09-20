@@ -265,13 +265,12 @@ namespace FunctionType {
 
   static bool Call(JSContext* cx, unsigned argc, jsval* vp);
 
-  static bool ArgTypesGetter(JSContext* cx, HandleObject obj, HandleId idval,
-    MutableHandleValue vp);
-  static bool ReturnTypeGetter(JSContext* cx, HandleObject obj, HandleId idval,
-    MutableHandleValue vp);
-  static bool ABIGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp);
-  static bool IsVariadicGetter(JSContext* cx, HandleObject obj, HandleId idval,
-    MutableHandleValue vp);
+  bool IsFunctionType(HandleValue v);
+
+  bool ArgTypesGetter(JSContext* cx, JS::CallArgs args);
+  bool ReturnTypeGetter(JSContext* cx, JS::CallArgs args);
+  bool ABIGetter(JSContext* cx, JS::CallArgs args);
+  bool IsVariadicGetter(JSContext* cx, JS::CallArgs args);
 }
 
 namespace CClosure {
@@ -295,12 +294,11 @@ namespace CData {
   static bool ToSource(JSContext* cx, unsigned argc, jsval* vp);
   static JSString *GetSourceString(JSContext *cx, HandleObject typeObj,
                                    void *data);
-  static bool ErrnoGetter(JSContext* cx, HandleObject obj, HandleId idval,
-                          MutableHandleValue vp);
+
+  bool ErrnoGetter(JSContext* cx, JS::CallArgs args);
 
 #if defined(XP_WIN)
-  static bool LastErrorGetter(JSContext* cx, HandleObject obj, HandleId idval,
-                              MutableHandleValue vp);
+  bool LastErrorGetter(JSContext* cx, JS::CallArgs args);
 #endif // defined(XP_WIN)
 }
 
@@ -553,9 +551,6 @@ static const JSClass sCDataFinalizerClass = {
 #define CTYPESCTOR_FLAGS \
   (CTYPESFN_FLAGS | JSFUN_CONSTRUCTOR)
 
-#define CTYPESPROP_FLAGS \
-  (JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)
-
 #define CTYPESACC_FLAGS \
   (JSPROP_ENUMERATE | JSPROP_PERMANENT)
 
@@ -701,15 +696,19 @@ static const JSFunctionSpec sFunctionFunction =
   JS_FN("FunctionType", FunctionType::Create, 2, CTYPESCTOR_FLAGS);
 
 static const JSPropertySpec sFunctionProps[] = {
-  { "argTypes", 0, CTYPESPROP_FLAGS,
-    JSOP_WRAPPER(FunctionType::ArgTypesGetter), JSOP_NULLWRAPPER },
-  { "returnType", 0, CTYPESPROP_FLAGS,
-    JSOP_WRAPPER(FunctionType::ReturnTypeGetter), JSOP_NULLWRAPPER },
-  { "abi", 0, CTYPESPROP_FLAGS,
-    JSOP_WRAPPER(FunctionType::ABIGetter), JSOP_NULLWRAPPER },
-  { "isVariadic", 0, CTYPESPROP_FLAGS,
-    JSOP_WRAPPER(FunctionType::IsVariadicGetter), JSOP_NULLWRAPPER },
-  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
+  JS_PSG("argTypes",
+         (Property<FunctionType::IsFunctionType, FunctionType::ArgTypesGetter>::Fun),
+         CTYPESACC_FLAGS),
+  JS_PSG("returnType",
+         (Property<FunctionType::IsFunctionType, FunctionType::ReturnTypeGetter>::Fun),
+         CTYPESACC_FLAGS),
+  JS_PSG("abi",
+         (Property<FunctionType::IsFunctionType, FunctionType::ABIGetter>::Fun),
+         CTYPESACC_FLAGS),
+  JS_PSG("isVariadic",
+         (Property<FunctionType::IsFunctionType, FunctionType::IsVariadicGetter>::Fun),
+         CTYPESACC_FLAGS),
+  JS_PS_END
 };
 
 static const JSFunctionSpec sFunctionInstanceFunctions[] = {
@@ -775,13 +774,15 @@ static const JSFunctionSpec sUInt64Functions[] = {
 };
 
 static const JSPropertySpec sModuleProps[] = {
-  { "errno", 0, JSPROP_SHARED | JSPROP_PERMANENT,
-    JSOP_WRAPPER(CData::ErrnoGetter), JSOP_NULLWRAPPER },
+  JS_PSG("errno",
+         (Property<IsCTypesGlobal, CData::ErrnoGetter>::Fun),
+         JSPROP_PERMANENT),
 #if defined(XP_WIN)
-  { "winLastError", 0, JSPROP_SHARED | JSPROP_PERMANENT,
-    JSOP_WRAPPER(CData::LastErrorGetter), JSOP_NULLWRAPPER },
+  JS_PSG("winLastError",
+         (Property<IsCTypesGlobal, CData::LastErrorGetter>::Fun),
+         JSPROP_PERMANENT),
 #endif // defined(XP_WIN)
-  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
+  JS_PS_END
 };
 
 static const JSFunctionSpec sModuleFunctions[] = {
@@ -1272,6 +1273,12 @@ bool
 IsCTypesGlobal(JSObject* obj)
 {
   return JS_GetClass(obj) == &sCTypesGlobalClass;
+}
+
+bool
+IsCTypesGlobal(HandleValue v)
+{
+  return v.isObject() && IsCTypesGlobal(&v.toObject());
 }
 
 // Get the JSCTypesCallbacks struct from the 'ctypes' object 'obj'.
@@ -5913,80 +5920,71 @@ FunctionType::GetFunctionInfo(JSObject* obj)
   return static_cast<FunctionInfo*>(JSVAL_TO_PRIVATE(slot));
 }
 
-static bool
-CheckFunctionType(JSContext* cx, JSObject* obj)
+bool
+FunctionType::IsFunctionType(HandleValue v)
 {
-  if (!CType::IsCType(obj) || CType::GetTypeCode(obj) != TYPE_function) {
-    JS_ReportError(cx, "not a FunctionType");
+  if (!v.isObject())
     return false;
-  }
-  return true;
+  JSObject* obj = &v.toObject();
+  return CType::IsCType(obj) && CType::GetTypeCode(obj) == TYPE_function;
 }
 
 bool
-FunctionType::ArgTypesGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
+FunctionType::ArgTypesGetter(JSContext* cx, JS::CallArgs args)
 {
-  if (!CheckFunctionType(cx, obj))
-    return false;
+  JS::Rooted<JSObject*> obj(cx, &args.thisv().toObject());
 
-  // Check if we have a cached argTypes array.
-  vp.set(JS_GetReservedSlot(obj, SLOT_ARGS_T));
-  if (!JSVAL_IS_VOID(vp))
+  args.rval().set(JS_GetReservedSlot(obj, SLOT_ARGS_T));
+  if (!args.rval().isUndefined())
     return true;
 
   FunctionInfo* fninfo = GetFunctionInfo(obj);
   size_t len = fninfo->mArgTypes.length();
 
   // Prepare a new array.
-  JS::AutoValueVector vec(cx);
-  if (!vec.resize(len))
-    return false;
+  JS::Rooted<JSObject*> argTypes(cx);
+  {
+      JS::AutoValueVector vec(cx);
+      if (!vec.resize(len))
+        return false;
 
-  for (size_t i = 0; i < len; ++i)
-    vec[i] = OBJECT_TO_JSVAL(fninfo->mArgTypes[i]);
+      for (size_t i = 0; i < len; ++i)
+        vec[i] = JS::ObjectValue(*fninfo->mArgTypes[i]);
 
-  RootedObject argTypes(cx, JS_NewArrayObject(cx, len, vec.begin()));
-  if (!argTypes)
-    return false;
+      argTypes = JS_NewArrayObject(cx, len, vec.begin());
+      if (!argTypes)
+        return false;
+  }
 
   // Seal and cache it.
   if (!JS_FreezeObject(cx, argTypes))
     return false;
-  JS_SetReservedSlot(obj, SLOT_ARGS_T, OBJECT_TO_JSVAL(argTypes));
+  JS_SetReservedSlot(obj, SLOT_ARGS_T, JS::ObjectValue(*argTypes));
 
-  vp.setObject(*argTypes);
+  args.rval().setObject(*argTypes);
   return true;
 }
 
 bool
-FunctionType::ReturnTypeGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
+FunctionType::ReturnTypeGetter(JSContext* cx, JS::CallArgs args)
 {
-  if (!CheckFunctionType(cx, obj))
-    return false;
-
   // Get the returnType object from the FunctionInfo.
-  vp.setObject(*GetFunctionInfo(obj)->mReturnType);
+  args.rval().setObject(*GetFunctionInfo(&args.thisv().toObject())->mReturnType);
   return true;
 }
 
 bool
-FunctionType::ABIGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
+FunctionType::ABIGetter(JSContext* cx, JS::CallArgs args)
 {
-  if (!CheckFunctionType(cx, obj))
-    return false;
-
   // Get the abi object from the FunctionInfo.
-  vp.setObject(*GetFunctionInfo(obj)->mABI);
+  args.rval().setObject(*GetFunctionInfo(&args.thisv().toObject())->mABI);
   return true;
 }
 
 bool
-FunctionType::IsVariadicGetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp)
+FunctionType::IsVariadicGetter(JSContext* cx, JS::CallArgs args)
 {
-  if (!CheckFunctionType(cx, obj))
-    return false;
-
-  vp.setBoolean(GetFunctionInfo(obj)->mIsVariadic);
+  args.rval().setBoolean(GetFunctionInfo(&args.thisv().toObject())->mIsVariadic);
   return true;
 }
 
@@ -6698,27 +6696,17 @@ CData::ToSource(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 bool
-CData::ErrnoGetter(JSContext* cx, HandleObject obj, HandleId, MutableHandleValue vp)
+CData::ErrnoGetter(JSContext* cx, JS::CallArgs args)
 {
-  if (!IsCTypesGlobal(obj)) {
-    JS_ReportError(cx, "this is not not global object ctypes");
-    return false;
-  }
-
-  vp.set(JS_GetReservedSlot(obj, SLOT_ERRNO));
+  args.rval().set(JS_GetReservedSlot(&args.thisv().toObject(), SLOT_ERRNO));
   return true;
 }
 
 #if defined(XP_WIN)
 bool
-CData::LastErrorGetter(JSContext* cx, HandleObject obj, HandleId, MutableHandleValue vp)
+CData::LastErrorGetter(JSContext* cx, JS::CallArgs args)
 {
-  if (!IsCTypesGlobal(obj)) {
-    JS_ReportError(cx, "not global object ctypes");
-    return false;
-  }
-
-  vp.set(JS_GetReservedSlot(obj, SLOT_LASTERROR));
+  args.rval().set(JS_GetReservedSlot(&args.thisv().toObject(), SLOT_LASTERROR));
   return true;
 }
 #endif // defined(XP_WIN)

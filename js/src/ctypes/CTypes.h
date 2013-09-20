@@ -305,6 +305,7 @@ struct ClosureInfo
   }
 };
 
+bool IsCTypesGlobal(HandleValue v);
 bool IsCTypesGlobal(JSObject* obj);
 
 JSCTypesCallbacks* GetCallbacks(JSObject* obj);
