@@ -30,3 +30,31 @@ interface nsISpeculativeConnect : nsISupports
 
 };
 
+/**
+ * This is used to override the default values for various values (documented
+ * inline) to determine whether or not to actually make a speculative
+ * connection.
+ */
+[builtinclass, uuid(2b6d6fb6-ab28-4f4c-af84-bfdbb7866d72)]
+interface nsISpeculativeConnectionOverrider : nsISupports
+{
+    /**
+     * Used to determine the maximum number of unused speculative connections
+     * we will have open for a host at any one time
+     */
+    [infallible] readonly attribute unsigned long parallelSpeculativeConnectLimit;
+
+    /**
+     * Used to loosen the restrictions nsHttpConnectionMgr::RestrictConnections
+     * to allow more speculative connections when we're unsure if a host will
+     * connect via SPDY or not.
+     */
+    [infallible] readonly attribute boolean ignorePossibleSpdyConnections;
+
+    /**
+     * Used to determine if we will ignore the existence of any currently idle
+     * connections when we decide whether or not to make a speculative
+     * connection.
+     */
+    [infallible] readonly attribute boolean ignoreIdle;
+};
