@@ -6362,6 +6362,8 @@ GenerateStubs(ModuleCompiler &m)
 
     Label throwLabel;
 
+    // The order of the iterations here is non-deterministic, since
+    // m.allExits() is a hash keyed by pointer values!
     for (ModuleCompiler::ExitMap::Range r = m.allExits(); !r.empty(); r.popFront()) {
         GenerateFFIExit(m, r.front().key, r.front().value, &throwLabel);
         if (m.masm().oom())
