@@ -14,7 +14,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.AdapterView;
@@ -31,12 +30,6 @@ public class BookmarksListView extends HomeListView
                                implements AdapterView.OnItemClickListener{
     public static final String LOGTAG = "GeckoBookmarksListView";
 
-    // The last motion event that was intercepted.
-    private MotionEvent mMotionEvent;
-
-    // The default touch slop.
-    private int mTouchSlop;
-
     public BookmarksListView(Context context) {
         this(context, null);
     }
@@ -47,9 +40,6 @@ public class BookmarksListView extends HomeListView
 
     public BookmarksListView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-
-        // Scaled touch slop for this context.
-        mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
     }
 
     @Override
@@ -68,36 +58,6 @@ public class BookmarksListView extends HomeListView
                 return false;
             }
         });
-    }
-
-    @Override
-    public boolean onInterceptTouchEvent(MotionEvent event) {
-        switch(event.getAction() & MotionEvent.ACTION_MASK) {
-            case MotionEvent.ACTION_DOWN: {
-                // Store the event by obtaining a copy.
-                mMotionEvent = MotionEvent.obtain(event);
-                break;
-            }
-
-            case MotionEvent.ACTION_MOVE: {
-                if ((mMotionEvent != null) &&
-                    (Math.abs(event.getY() - mMotionEvent.getY()) > mTouchSlop)) {
-                    // The user is scrolling. Pass the last event to this view,
-                    // and make this view scroll.
-                    onTouchEvent(mMotionEvent);
-                    return true;
-                }
-                break;
-            }
-
-            default: {
-                mMotionEvent = null;
-                break;
-            }
-        }
-
-        // Do default interception.
-        return super.onInterceptTouchEvent(event);
     }
 
     @Override

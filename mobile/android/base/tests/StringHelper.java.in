@@ -90,6 +90,7 @@ class StringHelper {
 
     // Labels for the about:home tabs
     public static final String HISTORY_LABEL = "HISTORY";
+    public static final String TOP_SITES_LABEL = "TOP SITES";
     public static final String BOOKMARKS_LABEL = "BOOKMARKS";
     public static final String READING_LIST_LABEL = "READING LIST";
     public static final String MOST_RECENT_LABEL = "Most recent";
