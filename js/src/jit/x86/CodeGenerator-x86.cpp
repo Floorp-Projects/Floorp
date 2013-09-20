@@ -25,6 +25,7 @@ using namespace js::jit;
 using mozilla::DebugOnly;
 using mozilla::DoubleExponentBias;
 using mozilla::DoubleExponentShift;
+using JS::GenericNaN;
 
 CodeGeneratorX86::CodeGeneratorX86(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
   : CodeGeneratorX86Shared(gen, graph, masm)
