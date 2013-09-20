@@ -33,6 +33,7 @@ function run_test()
   checkService("appinfo", Ci.nsIXULRuntime);
   checkService("blocklist", Ci.nsIBlocklistService);
   checkService("cache", Ci.nsICacheService);
+  checkService("cache2", Ci.nsICacheStorageService);
   checkService("clipboard", Ci.nsIClipboard);
   checkService("console", Ci.nsIConsoleService);
   checkService("contentPrefs", Ci.nsIContentPrefService);

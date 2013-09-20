@@ -1,7 +1,3 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-
 function gen_1MiB()
 {
   var i;
@@ -40,10 +36,8 @@ function write_datafile(status, entry)
   entry.close();
 
   // open, doom, append, read
-  asyncOpenCacheEntry("data",
-                      "HTTP",
-                      Ci.nsICache.STORE_ON_DISK,
-                      Ci.nsICache.ACCESS_READ_WRITE,
+  asyncOpenCacheEntry("http://data/",
+                      "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
                       test_read_after_doom);
 
 }
@@ -54,18 +48,19 @@ function test_read_after_doom(status, entry)
   var os = entry.openOutputStream(entry.dataSize);
   var data = gen_1MiB();
 
-  entry.doom();
+  entry.asyncDoom(null);
   write_and_check(os, data, data.length);
 
   os.close();
 
-  var is = make_input_stream_scriptable(entry.openInputStream(0));
-  var read = is.read(is.available());
-  do_check_eq(read.length, 2*1024*1024);
-  is.close();
+  var is = entry.openInputStream(0);
+  pumpReadStream(is, function(read) {
+    do_check_eq(read.length, 2*1024*1024);
+    is.close();
 
-  entry.close();
-  do_test_finished();
+    entry.close();
+    do_test_finished();
+  });
 }
 
 function run_test() {
@@ -74,10 +69,8 @@ function run_test() {
   // clear the cache
   evict_cache_entries();
 
-  asyncOpenCacheEntry("data",
-                      "HTTP",
-                      Ci.nsICache.STORE_ON_DISK,
-                      Ci.nsICache.ACCESS_WRITE,
+  asyncOpenCacheEntry("http://data/",
+                      "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
                       write_datafile);
 
   do_test_pending();
