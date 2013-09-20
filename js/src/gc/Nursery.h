@@ -109,6 +109,17 @@ class Nursery
     /* Forward a slots/elements pointer stored in an Ion frame. */
     void forwardBufferPointer(HeapSlot **pSlotsElems);
 
+#ifdef JS_GC_ZEAL
+    /*
+     * In debug and zeal builds, these bytes indicate the state of an unused
+     * segment of nursery-allocated memory.
+     */
+    static const uint8_t FreshNursery = 0x2a;
+    static const uint8_t SweptNursery = 0x2b;
+    static const uint8_t AllocatedThing = 0x2c;
+    void enterZealMode() { numActiveChunks_ = NumNurseryChunks; }
+#endif
+
   private:
     /*
      * The start and end pointers are stored under the runtime so that we can
@@ -136,16 +147,6 @@ class Nursery
      */
     typedef HashSet<HeapSlot *, PointerHasher<HeapSlot *, 3>, SystemAllocPolicy> HugeSlotsSet;
     HugeSlotsSet hugeSlots;
-
-#ifdef DEBUG
-    /*
-     * In DEBUG builds, these bytes indicate the state of an unused segment of
-     * nursery-allocated memory.
-     */
-    static const uint8_t FreshNursery = 0x2a;
-    static const uint8_t SweptNursery = 0x2b;
-    static const uint8_t AllocatedThing = 0x2c;
-#endif
 
     /* The maximum number of slots allowed to reside inline in the nursery. */
     static const size_t MaxNurserySlots = 100;
@@ -238,7 +239,7 @@ class Nursery
      * collection. This operation takes time proportional to the number of
      * dead things.
      */
-    void sweep(FreeOp *fop);
+    void sweep(JSRuntime *rt);
 
     /* Change the allocable space provided by the nursery. */
     void growAllocableSpace();
