@@ -30,10 +30,20 @@
       testStates("plugin-windowless", STATE_UNAVAILABLE);
       testAccessibleTree("plugin-windowless", { EMBEDDED_OBJECT: [ ] });
 
+      testStates("plugin-windowless-fallback", STATE_UNAVAILABLE);
+      testAccessibleTree("plugin-windowless-fallback", { EMBEDDED_OBJECT: [ ] });
+
       testStates("plugin-windowed", 0, 0, STATE_UNAVAILABLE);
       testAccessibleTree("plugin-windowed", { EMBEDDED_OBJECT: [ { NOTHING: [] } ] });
 
-      SimpleTest.finish();
+      testStates("plugin-windowed-fallback", 0, 0, STATE_UNAVAILABLE);
+      testAccessibleTree("plugin-windowed-fallback",
+                         { EMBEDDED_OBJECT: [ { NOTHING: [] } ] });
+
+      // make sure we handle content changes under the plugin.
+      getNode("fallback1").setAttribute("href", "5");
+      getNode("fallback2").setAttribute("href", "5");
+      SimpleTest.executeSoon(function () { SimpleTest.finish(); });
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -49,6 +59,9 @@
   <a target="_blank"
      title="Embedded object accessibles for inaccessible/windowless plugins should not expose a NULL child"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=816856">Bug 816856</a>
+  <a target="_blank"
+     title="Updating accessible tree for plugin with fallback shouldn't crash"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=881636">Bug 881636</a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -58,5 +71,9 @@
          width="300" height="300"></embed>
   <embed id="plugin-windowed" type="application/x-test" wmode="window"
          width="300" height="300"></embed>
+  <embed id="plugin-windowless-fallback" type="application/x-test"
+    width="300" height="300"><a id="fallback1">foo</a></embed>
+  <embed id="plugin-windowed-fallback" type="application/x-test" wmode="window"
+    width="300" height="300"><a id="fallback2">foo</a></embed>
 </body>
 </html>
