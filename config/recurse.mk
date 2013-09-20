@@ -22,7 +22,8 @@ endif
 #   make -C foo/baz
 #   make -C qux
 
-ifeq (1_.,$(MOZ_PSEUDO_DERECURSE)_$(DEPTH))
+# MOZ_PSEUDO_DERECURSE can have values other than 1.
+ifeq (1_.,$(if $(MOZ_PSEUDO_DERECURSE),1)_$(DEPTH))
 
 include root.mk
 
@@ -86,6 +87,12 @@ endif
 	+@$(MAKE) -C $* $(if $(filter $*,$(tier_$(subtier_of_$(subst /,_,$*))_staticdirs)),,$(CURRENT_TIER))
 ifdef BUG_915535_FIXED
 	$(call BUILDSTATUS,TIERDIR_FINISH $(CURRENT_TIER) $(subtier_of_$(subst /,_,$*)) $*)
+endif
+
+# The export tier requires nsinstall, which is built from config. So every
+# subdirectory traversal needs to happen after traversing config.
+ifeq ($(CURRENT_TIER),export)
+$(addsuffix /$(CURRENT_TIER),$(filter-out config,$(CURRENT_DIRS))): config/$(CURRENT_TIER)
 endif
 
 else

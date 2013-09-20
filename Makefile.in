@@ -217,3 +217,10 @@ ifdef ENABLE_TESTS
 check::
 	$(call SUBMAKE,$@,js/src)
 endif
+
+ifdef MOZ_PSEUDO_DERECURSE
+# Interdependencies for parallel export.
+js/xpconnect/src/export: config/makefiles/precompile/export
+accessible/src/xpcom/export: config/makefiles/precompile/export
+js/src/export: mfbt/export
+endif

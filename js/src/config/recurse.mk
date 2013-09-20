@@ -88,6 +88,12 @@ ifdef BUG_915535_FIXED
 	$(call BUILDSTATUS,TIERDIR_FINISH $(CURRENT_TIER) $(subtier_of_$(subst /,_,$*)) $*)
 endif
 
+# The export tier requires nsinstall, which is built from config. So every
+# subdirectory traversal needs to happen after traversing config.
+ifeq ($(CURRENT_TIER),export)
+$(addsuffix /$(CURRENT_TIER),$(filter-out config,$(CURRENT_DIRS))): config/$(CURRENT_TIER)
+endif
+
 else
 
 # Don't recurse if MAKELEVEL is NO_RECURSE_MAKELEVEL as defined above, but
