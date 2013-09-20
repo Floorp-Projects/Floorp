@@ -330,10 +330,14 @@ To see more help for a specific command, run:
 
         self.log_manager.register_structured_logger(logging.getLogger('mach'))
 
+        write_times = True
+        if args.log_no_times or 'MACH_NO_WRITE_TIMES' in os.environ:
+            write_times = False
+
         # Always enable terminal logging. The log manager figures out if we are
         # actually in a TTY or are a pipe and does the right thing.
         self.log_manager.add_terminal_logging(level=log_level,
-            write_interval=args.log_interval)
+            write_interval=args.log_interval, write_times=write_times)
 
         self.load_settings(args)
 
@@ -511,6 +515,10 @@ To see more help for a specific command, run:
             help='Prefix log line with interval from last message rather '
                 'than relative time. Note that this is NOT execution time '
                 'if there are parallel operations.')
+        global_group.add_argument('--log-no-times', dest='log_no_times',
+            action='store_true', default=False,
+            help='Do not prefix log lines with times. By default, mach will '
+                'prefix each output line with the time since command start.')
 
         # We need to be last because CommandAction swallows all remaining
         # arguments and argparse parses arguments in the order they were added.
@@ -518,4 +526,3 @@ To see more help for a specific command, run:
             registrar=Registrar, context=context)
 
         return parser
-
