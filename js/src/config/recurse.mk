@@ -22,7 +22,8 @@ endif
 #   make -C foo/baz
 #   make -C qux
 
-ifeq (1_.,$(MOZ_PSEUDO_DERECURSE)_$(DEPTH))
+# MOZ_PSEUDO_DERECURSE can have values other than 1.
+ifeq (1_.,$(if $(MOZ_PSEUDO_DERECURSE),1)_$(DEPTH))
 
 include root.mk
 
