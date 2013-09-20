@@ -5,18 +5,147 @@
 from __future__ import unicode_literals
 
 import os
+import unittest
 
 from mozpack.manifests import (
     InstallManifest,
 )
 from mozunit import main
 
-from mozbuild.backend.recursivemake import RecursiveMakeBackend
+from mozbuild.backend.recursivemake import (
+    RecursiveMakeBackend,
+    RecursiveMakeTraversal,
+)
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
 
 from mozbuild.test.backend.common import BackendTester
 
+
+class TestRecursiveMakeTraversal(unittest.TestCase):
+    def test_traversal(self):
+        traversal = RecursiveMakeTraversal()
+        traversal.add('', dirs=['A', 'B', 'C'])
+        traversal.add('', dirs=['D'])
+        traversal.add('A')
+        traversal.add('B', dirs=['E', 'F'])
+        traversal.add('C', parallel=['G', 'H'])
+        traversal.add('D', parallel=['I'], dirs=['K'])
+        traversal.add('D', parallel=['J'], dirs=['L'])
+        traversal.add('E')
+        traversal.add('F')
+        traversal.add('G')
+        traversal.add('H')
+        traversal.add('I', dirs=['M', 'N'])
+        traversal.add('J', parallel=['O', 'P'])
+        traversal.add('K', parallel=['Q', 'R'])
+        traversal.add('L', dirs=['S'])
+        traversal.add('M')
+        traversal.add('N', dirs=['T'])
+        traversal.add('O')
+        traversal.add('P', parallel=['U'])
+        traversal.add('Q')
+        traversal.add('R', dirs=['V'])
+        traversal.add('S', dirs=['W'])
+        traversal.add('T')
+        traversal.add('U')
+        traversal.add('V')
+        traversal.add('W', dirs=['X'])
+        traversal.add('X')
+
+        start, deps = traversal.compute_dependencies()
+        self.assertEqual(start, ('X',))
+        self.assertEqual(deps, {
+            'A': ('',),
+            'B': ('A',),
+            'C': ('F',),
+            'D': ('G', 'H'),
+            'E': ('B',),
+            'F': ('E',),
+            'G': ('C',),
+            'H': ('C',),
+            'I': ('D',),
+            'J': ('D',),
+            'K': ('T', 'O', 'U'),
+            'L': ('Q', 'V'),
+            'M': ('I',),
+            'N': ('M',),
+            'O': ('J',),
+            'P': ('J',),
+            'Q': ('K',),
+            'R': ('K',),
+            'S': ('L',),
+            'T': ('N',),
+            'U': ('P',),
+            'V': ('R',),
+            'W': ('S',),
+            'X': ('W',),
+        })
+
+        self.assertEqual(list(traversal.traverse('')),
+                         ['', 'A', 'B', 'E', 'F', 'C', 'G', 'H', 'D', 'I',
+                         'M', 'N', 'T', 'J', 'O', 'P', 'U', 'K', 'Q', 'R',
+                         'V', 'L', 'S', 'W', 'X'])
+
+        self.assertEqual(list(traversal.traverse('C')),
+                         ['C', 'G', 'H'])
+
+    def test_traversal_2(self):
+        traversal = RecursiveMakeTraversal()
+        traversal.add('', dirs=['A', 'B', 'C'])
+        traversal.add('A')
+        traversal.add('B', static=['D'], dirs=['E', 'F'])
+        traversal.add('C', parallel=['G', 'H'], dirs=['I'])
+        # Don't register D
+        traversal.add('E')
+        traversal.add('F')
+        traversal.add('G')
+        traversal.add('H')
+        traversal.add('I')
+
+        start, deps = traversal.compute_dependencies()
+        self.assertEqual(start, ('I',))
+        self.assertEqual(deps, {
+            'A': ('',),
+            'B': ('A',),
+            'C': ('F',),
+            'D': ('B',),
+            'E': ('D',),
+            'F': ('E',),
+            'G': ('C',),
+            'H': ('C',),
+            'I': ('G', 'H'),
+        })
+
+    def test_traversal_filter(self):
+        traversal = RecursiveMakeTraversal()
+        traversal.add('', dirs=['A', 'B', 'C'])
+        traversal.add('A')
+        traversal.add('B', static=['D'], dirs=['E', 'F'])
+        traversal.add('C', parallel=['G', 'H'], dirs=['I'])
+        traversal.add('D')
+        traversal.add('E')
+        traversal.add('F')
+        traversal.add('G')
+        traversal.add('H')
+        traversal.add('I')
+
+        def filter(current, subdirs):
+            if current == 'B':
+                current = None
+            return current, subdirs.parallel, subdirs.dirs
+
+        start, deps = traversal.compute_dependencies(filter)
+        self.assertEqual(start, ('I',))
+        self.assertEqual(deps, {
+            'A': ('',),
+            'C': ('F',),
+            'E': ('A',),
+            'F': ('E',),
+            'G': ('C',),
+            'H': ('C',),
+            'I': ('G', 'H'),
+        })
 
 class TestRecursiveMakeBackend(BackendTester):
     def test_basic(self):
