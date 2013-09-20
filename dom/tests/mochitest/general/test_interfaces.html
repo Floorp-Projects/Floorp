@@ -359,12 +359,15 @@ var interfaceNamesInGlobalScope =
     "NodeList",
     "NotifyAudioAvailableEvent",
     "Notification",
+    "NotifyPaintEvent",
     "OfflineAudioCompletionEvent",
     "OfflineAudioContext",
     "OfflineResourceList",
     "Option",
     "OscillatorNode",
     "PageTransitionEvent",
+    "PaintRequest",
+    "PaintRequestList",
     "PannerNode",
     "Performance",
     "PerformanceNavigation",
@@ -392,6 +395,7 @@ var interfaceNamesInGlobalScope =
     "SettingsLock",
     "SettingsManager",
     "SimpleGestureEvent",
+    {name: "SimpleTest", xbl: false},
     "SmartCardEvent",
     "SpeechRecognitionError",
     "SpeechRecognitionEvent",
@@ -624,9 +628,9 @@ function createInterfaceMap(isXBLScope) {
   return interfaceMap;
 }
 
-function runTest(isXBLScope, win) {
+function runTest(isXBLScope) {
   var interfaceMap = createInterfaceMap(isXBLScope);
-  for (var name of Object.getOwnPropertyNames(win)) {
+  for (var name of Object.getOwnPropertyNames(window)) {
     // An interfae name should start with an upper case character.
     if (!/^(moz)?[A-Z]/.test(name)) {
       continue;
@@ -638,8 +642,8 @@ function runTest(isXBLScope, win) {
     delete interfaceMap[name];
   }
   for (var name of Object.keys(interfaceMap)) {
-    ok(name in win === interfaceMap[name],
-       name + " should" + (interfaceMap[name] ? "" : " NOT") + " be defined on the " + (isXBLScope ? "XBL" : "global") +" scope");
+    ok(name in window === interfaceMap[name],
+       name + " should " + (interfaceMap[name] ? "" : " NOT") + " be defined on the " + (isXBLScope ? "XBL" : "global") +" scope");
     if (!interfaceMap[name]) {
       delete interfaceMap[name];
     }
@@ -653,14 +657,7 @@ function runTest(isXBLScope, win) {
   }
 }
 
-SpecialPowers.pushPrefEnv({"clear": [["dom.send_after_paint_to_content"]]}, function() {
-  var ifr = document.createElement("iframe");
-  ifr.onload = function() {
-    runTest(false, ifr.contentWindow);
-    document.body.removeChild(ifr);
-  };
-  document.body.appendChild(ifr);
-});
+runTest(false);
 SimpleTest.waitForExplicitFinish();
 
 </script>
