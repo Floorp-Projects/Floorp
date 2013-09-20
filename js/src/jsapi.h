@@ -1024,16 +1024,16 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv,
 #endif
 
 extern JS_PUBLIC_API(bool)
-JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp);
+JS_ConvertValue(JSContext *cx, JS::HandleValue v, JSType type, JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(bool)
-JS_ValueToObject(JSContext *cx, jsval v, JSObject **objp);
+JS_ValueToObject(JSContext *cx, JS::HandleValue v, JS::MutableHandleObject objp);
 
 extern JS_PUBLIC_API(JSFunction *)
-JS_ValueToFunction(JSContext *cx, jsval v);
+JS_ValueToFunction(JSContext *cx, JS::HandleValue v);
 
 extern JS_PUBLIC_API(JSFunction *)
-JS_ValueToConstructor(JSContext *cx, jsval v);
+JS_ValueToConstructor(JSContext *cx, JS::HandleValue v);
 
 extern JS_PUBLIC_API(JSString *)
 JS_ValueToString(JSContext *cx, jsval v);
@@ -4214,7 +4214,8 @@ JS_IsConstructing(JSContext *cx, const jsval *vp)
 #ifdef DEBUG
     JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
     if (JS_ObjectIsFunction(cx, callee)) {
-        JSFunction *fun = JS_ValueToFunction(cx, JS_CALLEE(cx, vp));
+        JS::RootedValue calleeValue(cx, JS_CALLEE(cx, vp));
+        JSFunction *fun = JS_ValueToFunction(cx, calleeValue);
         JS_ASSERT(JS_IsConstructor(fun));
     } else {
         JS_ASSERT(JS_GetClass(callee)->construct != NULL);
@@ -4294,7 +4295,7 @@ JS_IsIdentifier(JSContext *cx, JS::HandleString str, bool *isIdentifier);
  * frame. Returns true if a scripted frame was found, false otherwise.
  */
 extern JS_PUBLIC_API(bool)
-JS_DescribeScriptedCaller(JSContext *cx, JSScript **script, unsigned *lineno);
+JS_DescribeScriptedCaller(JSContext *cx, JS::MutableHandleScript script, unsigned *lineno);
 
 
 /*
@@ -4302,10 +4303,10 @@ JS_DescribeScriptedCaller(JSContext *cx, JSScript **script, unsigned *lineno);
  */
 
 extern JS_PUBLIC_API(void *)
-JS_EncodeScript(JSContext *cx, JSScript *script, uint32_t *lengthp);
+JS_EncodeScript(JSContext *cx, JS::HandleScript script, uint32_t *lengthp);
 
 extern JS_PUBLIC_API(void *)
-JS_EncodeInterpretedFunction(JSContext *cx, JSObject *funobj, uint32_t *lengthp);
+JS_EncodeInterpretedFunction(JSContext *cx, JS::HandleObject funobj, uint32_t *lengthp);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_DecodeScript(JSContext *cx, const void *data, uint32_t length,

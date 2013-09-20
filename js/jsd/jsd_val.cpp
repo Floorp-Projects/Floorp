@@ -572,7 +572,8 @@ jsd_GetValueFunction(JSDContext* jsdc, JSDValue* jsdval)
 
     obj = js::UncheckedUnwrap(JSVAL_TO_OBJECT(jsdval->val));
     JSAutoCompartment ac(cx, obj);
-    fun = JS_ValueToFunction(cx, OBJECT_TO_JSVAL(obj));
+    JS::RootedValue funval(cx, JS::ObjectValue(*obj));
+    fun = JS_ValueToFunction(cx, funval);
 
     return fun;
 }
