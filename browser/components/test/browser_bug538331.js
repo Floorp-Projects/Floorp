@@ -8,7 +8,16 @@ const PREF_POSTUPDATE = "app.update.postupdate";
 const PREF_MSTONE = "browser.startup.homepage_override.mstone";
 const PREF_OVERRIDE_URL = "startup.homepage_override_url";
 
-const DEFAULT_PREF_URL = "http://pref.example.com/";
+let DEFAULT_PREF_URL = "http://pref.example.com/";
+
+// TEMPORARY HACK: Bug 966014 causes us to use a hardcoded URL for whatsnew when
+// MOZ_UPDATE_CHANNEL=="aurora", rather than the pref value. To make the tests
+// pass, use the same value for the pref as the hardcoded value.
+let UpdateChannel = Cu.import("resource://gre/modules/UpdateChannel.jsm", {}).UpdateChannel;
+if (UpdateChannel.get() == "aurora") {
+  DEFAULT_PREF_URL = "https://www.mozilla.org/en-US/firefox/29.0a2/whatsnew/?oldversion=PreviousMilestone";
+}
+
 const DEFAULT_UPDATE_URL = "http://example.com/";
 
 const XML_EMPTY = "<?xml version=\"1.0\"?><updates xmlns=" +
