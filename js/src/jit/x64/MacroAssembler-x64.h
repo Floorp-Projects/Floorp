@@ -57,6 +57,16 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     typedef HashMap<double, size_t, DefaultHasher<double>, SystemAllocPolicy> DoubleMap;
     DoubleMap doubleMap_;
 
+    struct Float {
+        float value;
+        NonAssertingLabel uses;
+        Float(float value) : value(value) {}
+    };
+    Vector<Float, 0, SystemAllocPolicy> floats_;
+
+    typedef HashMap<float, size_t, DefaultHasher<float>, SystemAllocPolicy> FloatMap;
+    FloatMap floatMap_;
+
     void setupABICall(uint32_t arg);
 
   protected:
@@ -1010,15 +1020,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     void loadConstantDouble(double d, const FloatRegister &dest);
-    void loadConstantFloat32(float f, const FloatRegister &dest) {
-        union FloatPun {
-            uint32_t u;
-            float f;
-        } pun;
-        pun.f = f;
-        mov(ImmWord(pun.u), ScratchReg);
-        movq(ScratchReg, dest);
-    }
+    void loadConstantFloat32(float f, const FloatRegister &dest);
 
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail) {
         const uint64_t IndefiniteIntegerValue = 0x8000000000000000;
