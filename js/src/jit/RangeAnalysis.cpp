@@ -266,8 +266,8 @@ SymbolicBound::print(Sprinter &sp) const
 void
 Range::print(Sprinter &sp) const
 {
-    JS_ASSERT_IF(lower_infinite_, lower_ == JSVAL_INT_MIN);
-    JS_ASSERT_IF(upper_infinite_, upper_ == JSVAL_INT_MAX);
+    JS_ASSERT_IF(!hasInt32LowerBound_, lower_ == JSVAL_INT_MIN);
+    JS_ASSERT_IF(!hasInt32UpperBound_, upper_ == JSVAL_INT_MAX);
 
     // Floating-point or Integer subset.
     if (canHaveFractionalPart_)
@@ -277,8 +277,8 @@ Range::print(Sprinter &sp) const
 
     sp.printf("[");
 
-    if (lower_infinite_)
-        sp.printf("-inf");
+    if (!hasInt32LowerBound_)
+        sp.printf("?");
     else
         sp.printf("%d", lower_);
     if (symbolicLower_) {
@@ -289,8 +289,8 @@ Range::print(Sprinter &sp) const
 
     sp.printf(", ");
 
-    if (upper_infinite_)
-        sp.printf("inf");
+    if (!hasInt32UpperBound_)
+        sp.printf("?");
     else
         sp.printf("%d", upper_);
     if (symbolicUpper_) {
@@ -329,7 +329,7 @@ Range::intersect(const Range *lhs, const Range *rhs, bool *emptyRange)
     // }
     //
     // In this case, the block is dead. Right now, we just disregard this fact
-    // and make the range infinite, rather than empty.
+    // and make the range unbounded, rather than empty.
     //
     // Instead, we should use it to eliminate the dead block.
     // (Bug 765127)
@@ -343,8 +343,8 @@ Range::intersect(const Range *lhs, const Range *rhs, bool *emptyRange)
         lhs->canHaveFractionalPart_ && rhs->canHaveFractionalPart_,
         Min(lhs->max_exponent_, rhs->max_exponent_));
 
-    r->lower_infinite_ = lhs->lower_infinite_ && rhs->lower_infinite_;
-    r->upper_infinite_ = lhs->upper_infinite_ && rhs->upper_infinite_;
+    r->hasInt32LowerBound_ = lhs->hasInt32LowerBound_ || rhs->hasInt32LowerBound_;
+    r->hasInt32UpperBound_ = lhs->hasInt32UpperBound_ || rhs->hasInt32UpperBound_;
 
     return r;
 }
@@ -355,22 +355,19 @@ Range::unionWith(const Range *other)
     bool canHaveFractionalPart = canHaveFractionalPart_ | other->canHaveFractionalPart_;
     uint16_t max_exponent = Max(max_exponent_, other->max_exponent_);
 
-    if (lower_infinite_ || other->lower_infinite_)
-        makeLowerInfinite();
+    if (!hasInt32LowerBound_ || !other->hasInt32LowerBound_)
+        dropInt32LowerBound();
     else
         setLowerInit(Min(lower_, other->lower_));
 
-    if (upper_infinite_ || other->upper_infinite_)
-        makeUpperInfinite();
+    if (!hasInt32UpperBound_ || !other->hasInt32UpperBound_)
+        dropInt32UpperBound();
     else
         setUpperInit(Max(upper_, other->upper_));
 
     canHaveFractionalPart_ = canHaveFractionalPart;
     max_exponent_ = max_exponent;
 }
-
-static const int64_t RANGE_INF_MAX = int64_t(JSVAL_INT_MAX) + 1;
-static const int64_t RANGE_INF_MIN = int64_t(JSVAL_INT_MIN) - 1;
 
 Range::Range(const MDefinition *def)
   : symbolicLower_(NULL),
@@ -383,7 +380,7 @@ Range::Range(const MDefinition *def)
         else if (def->type() == MIRType_Boolean)
             set(0, 1);
         else
-            set(RANGE_INF_MIN, RANGE_INF_MAX, true, MaxDoubleExponent);
+            set(NoInt32LowerBound, NoInt32UpperBound, true, MaxDoubleExponent);
         symbolicLower_ = symbolicUpper_ = NULL;
         return;
     }
@@ -396,22 +393,22 @@ Range::Range(const MDefinition *def)
 }
 
 static inline bool
-HasInfinite(const Range *lhs, const Range *rhs)
+MissingAnyInt32Bounds(const Range *lhs, const Range *rhs)
 {
-    return lhs->isLowerInfinite() || lhs->isUpperInfinite() ||
-           rhs->isLowerInfinite() || rhs->isUpperInfinite();
+    return !lhs->hasInt32LowerBound() || !lhs->hasInt32UpperBound() ||
+           !rhs->hasInt32LowerBound() || !rhs->hasInt32UpperBound();
 }
 
 Range *
 Range::add(const Range *lhs, const Range *rhs)
 {
     int64_t l = (int64_t) lhs->lower_ + (int64_t) rhs->lower_;
-    if (lhs->isLowerInfinite() || rhs->isLowerInfinite())
-        l = RANGE_INF_MIN;
+    if (!lhs->hasInt32LowerBound() || !rhs->hasInt32LowerBound())
+        l = NoInt32LowerBound;
 
     int64_t h = (int64_t) lhs->upper_ + (int64_t) rhs->upper_;
-    if (lhs->isUpperInfinite() || rhs->isUpperInfinite())
-        h = RANGE_INF_MAX;
+    if (!lhs->hasInt32UpperBound() || !rhs->hasInt32UpperBound())
+        h = NoInt32UpperBound;
 
     return new Range(l, h, lhs->canHaveFractionalPart() || rhs->canHaveFractionalPart(),
                      Max(lhs->exponent(), rhs->exponent()) + 1);
@@ -421,12 +418,12 @@ Range *
 Range::sub(const Range *lhs, const Range *rhs)
 {
     int64_t l = (int64_t) lhs->lower_ - (int64_t) rhs->upper_;
-    if (lhs->isLowerInfinite() || rhs->isUpperInfinite())
-        l = RANGE_INF_MIN;
+    if (!lhs->hasInt32LowerBound() || !rhs->hasInt32UpperBound())
+        l = NoInt32LowerBound;
 
     int64_t h = (int64_t) lhs->upper_ - (int64_t) rhs->lower_;
-    if (lhs->isUpperInfinite() || rhs->isLowerInfinite())
-        h = RANGE_INF_MAX;
+    if (!lhs->hasInt32UpperBound() || !rhs->hasInt32LowerBound())
+        h = NoInt32UpperBound;
 
     return new Range(l, h, lhs->canHaveFractionalPart() || rhs->canHaveFractionalPart(),
                      Max(lhs->exponent(), rhs->exponent()) + 1);
@@ -595,8 +592,8 @@ Range::mul(const Range *lhs, const Range *rhs)
 {
     bool fractional = lhs->canHaveFractionalPart() || rhs->canHaveFractionalPart();
     uint16_t exponent = lhs->numBits() + rhs->numBits() - 1;
-    if (HasInfinite(lhs, rhs))
-        return new Range(RANGE_INF_MIN, RANGE_INF_MAX, fractional, exponent);
+    if (MissingAnyInt32Bounds(lhs, rhs))
+        return new Range(NoInt32LowerBound, NoInt32UpperBound, fractional, exponent);
     int64_t a = (int64_t)lhs->lower_ * (int64_t)rhs->lower_;
     int64_t b = (int64_t)lhs->lower_ * (int64_t)rhs->upper_;
     int64_t c = (int64_t)lhs->upper_ * (int64_t)rhs->lower_;
@@ -643,8 +640,8 @@ Range::ursh(const Range *lhs, int32_t c)
 
     // If the value is always non-negative or always negative, we can simply
     // compute the correct range by shifting.
-    if ((lhs->lower_ >= 0 && !lhs->isUpperInfinite()) ||
-        (lhs->upper_ < 0 && !lhs->isLowerInfinite()))
+    if ((lhs->lower_ >= 0 && lhs->hasInt32UpperBound()) ||
+        (lhs->upper_ < 0 && lhs->hasInt32LowerBound()))
     {
         return new Range(
             (int64_t)((uint32_t)lhs->lower_ >> shift),
@@ -674,7 +671,7 @@ Range::rsh(const Range *lhs, const Range *rhs)
 Range *
 Range::ursh(const Range *lhs, const Range *rhs)
 {
-    return new Range(0, (lhs->lower() >= 0 && !lhs->isUpperInfinite()) ? lhs->upper() : UINT32_MAX);
+    return new Range(0, (lhs->lower() >= 0 && lhs->hasInt32UpperBound()) ? lhs->upper() : UINT32_MAX);
 }
 
 Range *
@@ -683,8 +680,8 @@ Range::abs(const Range *op)
     // Get the lower and upper values of the operand, and adjust them
     // for infinities. Range's constructor treats any value beyond the
     // int32_t range as infinity.
-    int64_t l = (int64_t)op->lower() - op->isLowerInfinite();
-    int64_t u = (int64_t)op->upper() + op->isUpperInfinite();
+    int64_t l = (int64_t)op->lower() - !op->hasInt32LowerBound();
+    int64_t u = (int64_t)op->upper() + !op->hasInt32UpperBound();
 
     return new Range(Max(Max(int64_t(0), l), -u),
                      Max(Abs(l), Abs(u)),
@@ -741,16 +738,16 @@ Range::update(const Range *other)
 {
     bool changed =
         lower_ != other->lower_ ||
-        lower_infinite_ != other->lower_infinite_ ||
+        hasInt32LowerBound_ != other->hasInt32LowerBound_ ||
         upper_ != other->upper_ ||
-        upper_infinite_ != other->upper_infinite_ ||
+        hasInt32UpperBound_ != other->hasInt32UpperBound_ ||
         canHaveFractionalPart_ != other->canHaveFractionalPart_ ||
         max_exponent_ != other->max_exponent_;
     if (changed) {
         lower_ = other->lower_;
-        lower_infinite_ = other->lower_infinite_;
+        hasInt32LowerBound_ = other->hasInt32LowerBound_;
         upper_ = other->upper_;
-        upper_infinite_ = other->upper_infinite_;
+        hasInt32UpperBound_ = other->hasInt32UpperBound_;
         canHaveFractionalPart_ = other->canHaveFractionalPart_;
         max_exponent_ = other->max_exponent_;
     }
@@ -827,12 +824,12 @@ MConstant::computeRange()
     if (IsNaN(d))
         return;
 
-    // Infinity is used to set both lower and upper to the range boundaries.
+    // Beyond-int32 values are used to set both lower and upper to the range boundaries.
     if (IsInfinite(d)) {
         if (IsNegative(d))
-            setRange(new Range(RANGE_INF_MIN, RANGE_INF_MIN, false, exp));
+            setRange(new Range(Range::NoInt32LowerBound, Range::NoInt32LowerBound, false, exp));
         else
-            setRange(new Range(RANGE_INF_MAX, RANGE_INF_MAX, false, exp));
+            setRange(new Range(Range::NoInt32UpperBound, Range::NoInt32UpperBound, false, exp));
         return;
     }
 
@@ -864,9 +861,9 @@ MConstant::computeRange()
         // This double has a precision loss. This also mean that it cannot
         // encode any values with fractional parts.
         if (IsNegative(d))
-            setRange(new Range(RANGE_INF_MIN, RANGE_INF_MIN, false, exp));
+            setRange(new Range(Range::NoInt32LowerBound, Range::NoInt32LowerBound, false, exp));
         else
-            setRange(new Range(RANGE_INF_MAX, RANGE_INF_MAX, false, exp));
+            setRange(new Range(Range::NoInt32UpperBound, Range::NoInt32UpperBound, false, exp));
     }
 }
 
@@ -977,7 +974,7 @@ MUrsh::computeRange()
     }
 
     JS_ASSERT(range()->lower() >= 0);
-    if (type() == MIRType_Int32 && range()->isUpperInfinite())
+    if (type() == MIRType_Int32 && !range()->hasInt32UpperBound())
         range()->extendUInt32ToInt32Min();
 }
 
@@ -1155,7 +1152,7 @@ void
 MLoadTypedArrayElement::computeRange()
 {
     if (Range *range = GetTypedArrayRange(arrayType())) {
-        if (type() == MIRType_Int32 && range->isUpperInfinite())
+        if (type() == MIRType_Int32 && !range->hasInt32UpperBound())
             range->extendUInt32ToInt32Min();
         setRange(range);
     }
@@ -1493,12 +1490,12 @@ RangeAnalysis::analyzeLoopPhi(MBasicBlock *header, LoopIterationBound *loopBound
 
     Range *initRange = initial->range();
     if (modified.constant > 0) {
-        if (initRange && !initRange->isLowerInfinite())
+        if (initRange && initRange->hasInt32LowerBound())
             phi->range()->setLower(initRange->lower());
         phi->range()->setSymbolicLower(new SymbolicBound(NULL, initialSum));
         phi->range()->setSymbolicUpper(new SymbolicBound(loopBound, limitSum));
     } else {
-        if (initRange && !initRange->isUpperInfinite())
+        if (initRange && initRange->hasInt32UpperBound())
             phi->range()->setUpper(initRange->upper());
         phi->range()->setSymbolicUpper(new SymbolicBound(NULL, initialSum));
         phi->range()->setSymbolicLower(new SymbolicBound(loopBound, limitSum));
@@ -1675,15 +1672,15 @@ RangeAnalysis::analyze()
                 if (i->isAsmJSLoadHeap()) {
                     MAsmJSLoadHeap *ins = i->toAsmJSLoadHeap();
                     Range *range = ins->ptr()->range();
-                    if (range && !range->isLowerInfinite() && range->lower() >= 0 &&
-                        !range->isUpperInfinite() &&
+                    if (range && range->hasInt32LowerBound() && range->lower() >= 0 &&
+                        range->hasInt32UpperBound() &&
                         (uint32_t) range->upper() < mir->minAsmJSHeapLength())
                         ins->setSkipBoundsCheck(true);
                 } else if (i->isAsmJSStoreHeap()) {
                     MAsmJSStoreHeap *ins = i->toAsmJSStoreHeap();
                     Range *range = ins->ptr()->range();
-                    if (range && !range->isLowerInfinite() && range->lower() >= 0 &&
-                        !range->isUpperInfinite() &&
+                    if (range && range->hasInt32LowerBound() && range->lower() >= 0 &&
+                        range->hasInt32UpperBound() &&
                         (uint32_t) range->upper() < mir->minAsmJSHeapLength())
                         ins->setSkipBoundsCheck(true);
                 }
@@ -1732,8 +1729,8 @@ Range::clampToInt32()
 {
     if (isInt32())
         return;
-    int64_t l = isLowerInfinite() ? JSVAL_INT_MIN : lower();
-    int64_t h = isUpperInfinite() ? JSVAL_INT_MAX : upper();
+    int64_t l = hasInt32LowerBound() ? lower() : JSVAL_INT_MIN;
+    int64_t h = hasInt32UpperBound() ? upper() : JSVAL_INT_MAX;
     set(l, h);
 }
 
