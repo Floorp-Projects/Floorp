@@ -9207,14 +9207,11 @@ MOZ_ARG_WITH_STRING(intl-api,
     WITH_INTL="--with-intl-api=$withval"
 ])
 if test -z "$WITH_INTL"; then
-if test "$NIGHTLY_BUILD" = "1" -a "$MOZ_BUILD_APP" = "browser" -a -z "$DEVELOPER_OPTIONS"; then
-    # In desktop nightlies the Internationalization API is disabled, but all
-    # code for it is still built.  Bug 853301 will remove this so that it's
-    # built and the API is enabled.
-    WITH_INTL="--with-intl-api=build"
+if test "$MOZ_BUILD_APP" = "browser"; then
+    WITH_INTL="--with-intl-api"
 else
-    # Internationalization isn't built or exposed by default in non-desktop and
-    # non-nightly builds.  Bugs to enable:
+    # Internationalization isn't built or exposed by default in non-desktop
+    # builds.  Bugs to enable:
     #
     #   Android:  bug 864843
     #   B2G:      bug 866301
