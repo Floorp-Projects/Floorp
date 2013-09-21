@@ -234,7 +234,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     negativeInfinityValue(DoubleValue(NegativeInfinity())),
     positiveInfinityValue(DoubleValue(PositiveInfinity())),
     emptyString(NULL),
-    sourceHook(NULL),
     debugMode(false),
     spsProfiler(thisFromCtor()),
     profilingScripts(false),
@@ -398,6 +397,9 @@ JSRuntime::init(uint32_t maxbytes)
 JSRuntime::~JSRuntime()
 {
     JS_ASSERT(!isHeapBusy());
+
+    /* Free source hook early, as its destructor may want to delete roots. */
+    sourceHook = NULL;
 
     /* Off thread compilation and parsing depend on atoms still existing. */
     for (CompartmentsIter comp(this); !comp.done(); comp.next())
