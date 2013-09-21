@@ -2776,76 +2776,76 @@ PreserveWrapper(JSContext *cx, JSObject *obj)
 static nsresult
 ReadSourceFromFilename(JSContext *cx, const char *filename, jschar **src, size_t *len)
 {
-  nsresult rv;
+    nsresult rv;
 
-  // mozJSSubScriptLoader prefixes the filenames of the scripts it loads with
-  // the filename of its caller. Axe that if present.
-  const char *arrow;
-  while ((arrow = strstr(filename, " -> ")))
-    filename = arrow + strlen(" -> ");
+    // mozJSSubScriptLoader prefixes the filenames of the scripts it loads with
+    // the filename of its caller. Axe that if present.
+    const char *arrow;
+    while ((arrow = strstr(filename, " -> ")))
+        filename = arrow + strlen(" -> ");
 
-  // Get the URI.
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), filename);
-  NS_ENSURE_SUCCESS(rv, rv);
+    // Get the URI.
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), filename);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIChannel> scriptChannel;
-  rv = NS_NewChannel(getter_AddRefs(scriptChannel), uri);
-  NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIChannel> scriptChannel;
+    rv = NS_NewChannel(getter_AddRefs(scriptChannel), uri);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  // Only allow local reading.
-  nsCOMPtr<nsIURI> actualUri;
-  rv = scriptChannel->GetURI(getter_AddRefs(actualUri));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCString scheme;
-  rv = actualUri->GetScheme(scheme);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!scheme.EqualsLiteral("file") && !scheme.EqualsLiteral("jar"))
+    // Only allow local reading.
+    nsCOMPtr<nsIURI> actualUri;
+    rv = scriptChannel->GetURI(getter_AddRefs(actualUri));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCString scheme;
+    rv = actualUri->GetScheme(scheme);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!scheme.EqualsLiteral("file") && !scheme.EqualsLiteral("jar"))
+        return NS_OK;
+
+    nsCOMPtr<nsIInputStream> scriptStream;
+    rv = scriptChannel->Open(getter_AddRefs(scriptStream));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    uint64_t rawLen;
+    rv = scriptStream->Available(&rawLen);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!rawLen)
+        return NS_ERROR_FAILURE;
+
+    // Technically, this should be SIZE_MAX, but we don't run on machines
+    // where that would be less than UINT32_MAX, and the latter is already
+    // well beyond a reasonable limit.
+    if (rawLen > UINT32_MAX)
+        return NS_ERROR_FILE_TOO_BIG;
+
+    // Allocate an internal buf the size of the file.
+    nsAutoArrayPtr<unsigned char> buf(new unsigned char[rawLen]);
+    if (!buf)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    unsigned char *ptr = buf, *end = ptr + rawLen;
+    while (ptr < end) {
+        uint32_t bytesRead;
+        rv = scriptStream->Read(reinterpret_cast<char *>(ptr), end - ptr, &bytesRead);
+        if (NS_FAILED(rv))
+            return rv;
+        MOZ_ASSERT(bytesRead > 0, "stream promised more bytes before EOF");
+        ptr += bytesRead;
+    }
+
+    nsString decoded;
+    rv = nsScriptLoader::ConvertToUTF16(scriptChannel, buf, rawLen, EmptyString(), NULL, decoded);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Copy to JS engine.
+    *len = decoded.Length();
+    *src = static_cast<jschar *>(JS_malloc(cx, decoded.Length()*sizeof(jschar)));
+    if (!*src)
+        return NS_ERROR_FAILURE;
+    memcpy(*src, decoded.get(), decoded.Length()*sizeof(jschar));
+
     return NS_OK;
-
-  nsCOMPtr<nsIInputStream> scriptStream;
-  rv = scriptChannel->Open(getter_AddRefs(scriptStream));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  uint64_t rawLen;
-  rv = scriptStream->Available(&rawLen);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!rawLen)
-    return NS_ERROR_FAILURE;
-
-  // Technically, this should be SIZE_MAX, but we don't run on machines
-  // where that would be less than UINT32_MAX, and the latter is already
-  // well beyond a reasonable limit.
-  if (rawLen > UINT32_MAX)
-    return NS_ERROR_FILE_TOO_BIG;
-
-  // Allocate an internal buf the size of the file.
-  nsAutoArrayPtr<unsigned char> buf(new unsigned char[rawLen]);
-  if (!buf)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  unsigned char *ptr = buf, *end = ptr + rawLen;
-  while (ptr < end) {
-    uint32_t bytesRead;
-    rv = scriptStream->Read(reinterpret_cast<char *>(ptr), end - ptr, &bytesRead);
-    if (NS_FAILED(rv))
-      return rv;
-    MOZ_ASSERT(bytesRead > 0, "stream promised more bytes before EOF");
-    ptr += bytesRead;
-  }
-
-  nsString decoded;
-  rv = nsScriptLoader::ConvertToUTF16(scriptChannel, buf, rawLen, EmptyString(), NULL, decoded);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Copy to JS engine.
-  *len = decoded.Length();
-  *src = static_cast<jschar *>(JS_malloc(cx, decoded.Length()*sizeof(jschar)));
-  if (!*src)
-    return NS_ERROR_FAILURE;
-  memcpy(*src, decoded.get(), decoded.Length()*sizeof(jschar));
-
-  return NS_OK;
 }
 
 // The JS engine calls this object's 'load' member function when it needs
