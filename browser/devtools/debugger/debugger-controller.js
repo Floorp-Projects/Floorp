@@ -1147,7 +1147,7 @@ SourceScripts.prototype = {
 
   /**
    * Pretty print a source's text. All subsequent calls to |getText| will return
-   * the pretty text. Nothing will happen for non-javascript files.
+   * the pretty text.
    *
    * @param Object aSource
    *        The source form from the RDP.
@@ -1156,13 +1156,8 @@ SourceScripts.prototype = {
    *          [aSource, error].
    */
   prettyPrint: function(aSource) {
-    // Only attempt to pretty print JavaScript sources.
-    if (!SourceUtils.isJavaScript(aSource.url, aSource.contentType)) {
-      return promise.reject([aSource, "Can't prettify non-javascript files."]);
-    }
-
-    // Only use the existing promise if it is pretty printed.
     let textPromise = this._cache.get(aSource.url);
+    // Only use the existing promise if it is pretty printed.
     if (textPromise && textPromise.pretty) {
       return textPromise;
     }
@@ -1171,17 +1166,12 @@ SourceScripts.prototype = {
     this._cache.set(aSource.url, deferred.promise);
 
     this.activeThread.source(aSource)
-      .prettyPrint(Prefs.editorTabSize, ({ error, message, source: text }) => {
+      .prettyPrint(Prefs.editorTabSize, ({ error, message, source }) => {
         if (error) {
-          // Revert the rejected promise from the cache, so that the original
-          // source's text may be shown when the source is selected.
-          this._cache.set(aSource.url, textPromise);
           deferred.reject([aSource, message || error]);
           return;
         }
 
-        // Remove the cached source AST from the Parser, to avoid getting
-        // wrong locations when searching for functions.
         DebuggerController.Parser.clearSource(aSource.url);
 
         if (this.activeThread.paused) {
@@ -1190,7 +1180,7 @@ SourceScripts.prototype = {
           this.activeThread.fillFrames(CALL_STACK_PAGE_SIZE);
         }
 
-        deferred.resolve([aSource, text]);
+        deferred.resolve([aSource, source]);
       });
 
     deferred.promise.pretty = true;
@@ -1228,14 +1218,14 @@ SourceScripts.prototype = {
     }
 
     // Get the source text from the active thread.
-    this.activeThread.source(aSource).source(({ error, message, source: text }) => {
+    this.activeThread.source(aSource).source(aResponse => {
       if (aOnTimeout) {
         window.clearTimeout(fetchTimeout);
       }
-      if (error) {
-        deferred.reject([aSource, message || error]);
+      if (aResponse.error) {
+        deferred.reject([aSource, aResponse.message || aResponse.error]);
       } else {
-        deferred.resolve([aSource, text]);
+        deferred.resolve([aSource, aResponse.source]);
       }
     });
 
