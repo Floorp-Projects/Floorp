@@ -871,7 +871,7 @@ xpc::SandboxProxyHandler::iterate(JSContext *cx, JS::Handle<JSObject*> proxy,
 }
 
 bool
-xpc::SandboxOptions::DOMConstructors::Parse(JSContext* cx, JS::HandleObject obj)
+xpc::SandboxOptions::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
 {
     NS_ENSURE_TRUE(JS_IsArrayObject(cx, obj), false);
 
@@ -892,7 +892,7 @@ xpc::SandboxOptions::DOMConstructors::Parse(JSContext* cx, JS::HandleObject obj)
         } else if (!strcmp(name, "TextDecoder")) {
             TextDecoder = true;
         } else {
-            // Reporting error, if one of the DOM constructor names is unknown.
+            // Reporting error, if one of the global property names is unknown.
             return false;
         }
     }
@@ -900,7 +900,7 @@ xpc::SandboxOptions::DOMConstructors::Parse(JSContext* cx, JS::HandleObject obj)
 }
 
 bool
-xpc::SandboxOptions::DOMConstructors::Define(JSContext* cx, JS::HandleObject obj)
+xpc::SandboxOptions::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
 {
     if (XMLHttpRequest &&
         !JS_DefineFunction(cx, obj, "XMLHttpRequest", CreateXMLHttpRequest, 0, JSFUN_CONSTRUCTOR))
@@ -1025,7 +1025,7 @@ xpc::CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandb
              !JS_DefineFunction(cx, sandbox, "evalInWindow", EvalInWindow, 2, 0)))
             return NS_ERROR_XPC_UNEXPECTED;
 
-        if (!options.DOMConstructors.Define(cx, sandbox))
+        if (!options.GlobalProperties.Define(cx, sandbox))
             return NS_ERROR_XPC_UNEXPECTED;
     }
 
@@ -1291,21 +1291,21 @@ GetStringPropFromOptions(JSContext *cx, HandleObject from, const char *name, nsC
 }
 
 /*
- * Helper that tries to get a list of DOM constructors from the options object.
+ * Helper that tries to get a list of DOM constructors and other helpers from the options object.
  */
 static nsresult
-GetDOMConstructorsFromOptions(JSContext *cx, HandleObject from, SandboxOptions& options)
+GetGlobalPropertiesFromOptions(JSContext *cx, HandleObject from, SandboxOptions& options)
 {
     RootedValue value(cx);
     bool found;
-    nsresult rv = GetPropFromOptions(cx, from, "wantDOMConstructors", &value, &found);
+    nsresult rv = GetPropFromOptions(cx, from, "wantGlobalProperties", &value, &found);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!found)
         return NS_OK;
 
     NS_ENSURE_TRUE(value.isObject(), NS_ERROR_INVALID_ARG);
     RootedObject ctors(cx, &value.toObject());
-    bool ok = options.DOMConstructors.Parse(cx, ctors);
+    bool ok = options.GlobalProperties.Parse(cx, ctors);
     NS_ENSURE_TRUE(ok, NS_ERROR_INVALID_ARG);
     return NS_OK;
 }
@@ -1342,7 +1342,7 @@ ParseOptionsObject(JSContext *cx, jsval from, SandboxOptions &options)
                                "sameZoneAs", options.sameZoneAs.address());
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = GetDOMConstructorsFromOptions(cx, optionsObject, options);
+    rv = GetGlobalPropertiesFromOptions(cx, optionsObject, options);
 
     bool found;
     rv = GetPropFromOptions(cx, optionsObject,
