@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=817284
 
   /** Test for Bug 817284 **/
   var cu = Components.utils;
-  var sb = cu.Sandbox("http://example.com", { wantDOMConstructors: ["XMLHttpRequest"] });
+  var sb = cu.Sandbox("http://example.com", { wantGlobalProperties: ["XMLHttpRequest"] });
 
   // Test event handler calls
   var xhr = cu.evalInSandbox(
