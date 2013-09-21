@@ -1,8 +1,10 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1379114379000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1379696114000">
   <emItems>
-      <emItem  blockID="i350" id="sqlmoz@facebook.com">
+      <emItem  blockID="i454" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                                <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
@@ -180,6 +182,10 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i450" id="{dff137ae-1ffd-11e3-8277-b8ac6f996f26}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i111" os="WINNT" id="{C3949AC2-4B17-43ee-B4F1-D26B9D42404D}">
                         <versionRange  minVersion="0" maxVersion="15.0.5" severity="1">
                     </versionRange>
@@ -339,8 +345,8 @@
                   </emItem>
       <emItem  blockID="i48" id="admin@youtubespeedup.com">
                         </emItem>
-      <emItem  blockID="i104" id="yasd@youasdr3.com">
-                        <versionRange  minVersion="0" maxVersion="*">
+      <emItem  blockID="i218" id="ffxtlbr@claro.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i79" id="GifBlock@facebook.com">
@@ -391,6 +397,10 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i453" id="/^brasilescape.*\@facebook\.com$/">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i109" id="{392e123b-b691-4a5e-b52f-c4c1027e749c}">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -437,8 +447,8 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i218" id="ffxtlbr@claro.com">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+      <emItem  blockID="i104" id="yasd@youasdr3.com">
+                        <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i10" id="{8CE11043-9A15-4207-A565-0C94C42D590D}">
@@ -469,6 +479,10 @@
                   </emItem>
       <emItem  blockID="i56" id="flash@adobe.com">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i451" id="{e44a1809-4d10-4ab8-b343-3326b64c7cdd}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i216" id="fdm_ffext@freedownloadmanager.org">
@@ -564,8 +578,8 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i431" id="chinaescapeone@facebook.com">
-                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+      <emItem  blockID="i318" id="ffxtlbr@incredibar.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i312" id="extension21804@extension21804.com">
@@ -576,8 +590,8 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i318" id="ffxtlbr@incredibar.com">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+      <emItem  blockID="i431" id="chinaescapeone@facebook.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i108" id="{28bfb930-7620-11e1-b0c4-0800200c9a66}">
@@ -683,6 +697,10 @@
                   </emItem>
       <emItem  blockID="i282" id="{33e0daa6-3af3-d8b5-6752-10e949c61516}">
                         <versionRange  minVersion="0" maxVersion="1.1.999" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i452" id="{77beece6-3997-403a-92fa-0055bfcf88e5}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i45" id="{22119944-ED35-4ab1-910B-E619EA06A115}">
