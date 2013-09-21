@@ -263,6 +263,7 @@
 @BINPATH@/components/mozfind.xpt
 @BINPATH@/components/necko_about.xpt
 @BINPATH@/components/necko_cache.xpt
+@BINPATH@/components/necko_cache2.xpt
 @BINPATH@/components/necko_cookie.xpt
 @BINPATH@/components/necko_dns.xpt
 @BINPATH@/components/necko_file.xpt

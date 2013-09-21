@@ -6,6 +6,11 @@
 
 if not CONFIG['MOZ_PROFILE_GENERATE']:
     PROGRAM = 'spacetrace'
+    CSRCS += [
+        'formdata.c',
+        'spacecategory.c',
+        'spacetrace.c',
+    ]
 
 bin_suffix = CONFIG['BIN_SUFFIX']
 
@@ -17,6 +22,9 @@ simple_c_sources = [
 
 CSRCS += [
     '%s.c' % s for s in simple_c_sources
+]
+CSRCS += [
+    'tmreader.c',
 ]
 
 SIMPLE_PROGRAMS += [

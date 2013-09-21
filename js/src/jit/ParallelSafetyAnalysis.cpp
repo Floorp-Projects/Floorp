@@ -513,9 +513,7 @@ ParallelSafetyVisitor::visitNewCallObject(MNewCallObject *ins)
 bool
 ParallelSafetyVisitor::visitLambda(MLambda *ins)
 {
-    if (ins->fun()->hasSingletonType() ||
-        types::UseNewTypeForClone(ins->fun()))
-    {
+    if (ins->info().singletonType || ins->info().useNewTypeForClone) {
         // slow path: bail on parallel execution.
         return markUnsafe();
     }

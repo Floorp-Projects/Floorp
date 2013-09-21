@@ -157,7 +157,7 @@ public:
   nsresult                DeactivateGroup(const nsACString &group);
 
   nsresult                ChooseApplicationCache(const nsACString &key,
-                                                 nsILoadContext *loadContext,
+                                                 nsILoadContextInfo *loadContext,
                                                  nsIApplicationCache **out);
 
   nsresult                CacheOpportunistically(nsIApplicationCache* cache,
@@ -208,7 +208,7 @@ private:
   nsresult EnableEvictionObserver();
   nsresult DisableEvictionObserver();
 
-  bool CanUseCache(nsIURI *keyURI, const nsACString &clientID, nsILoadContext *loadContext);
+  bool CanUseCache(nsIURI *keyURI, const nsACString &clientID, nsILoadContextInfo *loadContext);
 
   nsresult MarkEntry(const nsCString &clientID,
                      const nsACString &key,

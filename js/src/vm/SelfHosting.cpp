@@ -981,11 +981,9 @@ JSRuntime::cloneSelfHostedValue(JSContext *cx, Handle<PropertyName*> name, Mutab
 }
 
 bool
-JSRuntime::maybeWrappedSelfHostedFunction(JSContext *cx, Handle<PropertyName*> name,
-                                          MutableHandleValue funVal)
+JSRuntime::maybeWrappedSelfHostedFunction(JSContext *cx, HandleId id, MutableHandleValue funVal)
 {
     RootedObject shg(cx, selfHostingGlobal_);
-    RootedId id(cx, NameToId(name));
     if (!GetUnclonedValue(cx, shg, id, funVal))
         return false;
 

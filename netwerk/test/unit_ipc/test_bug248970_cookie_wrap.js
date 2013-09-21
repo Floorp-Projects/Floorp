@@ -1,5 +1,3 @@
-const Cu = Components.utils;
-
 Cu.import("resource://gre/modules/Services.jsm");
 
 function run_test() {

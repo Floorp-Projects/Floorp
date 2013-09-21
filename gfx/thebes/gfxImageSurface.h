@@ -149,7 +149,8 @@ protected:
     friend class gfxImageSurface;
     gfxSubimageSurface(gfxImageSurface* aParent,
                        unsigned char* aData,
-                       const gfxIntSize& aSize);
+                       const gfxIntSize& aSize,
+                       gfxImageFormat aFormat);
 private:
     nsRefPtr<gfxImageSurface> mParent;
 };

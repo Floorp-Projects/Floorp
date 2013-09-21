@@ -1,8 +1,3 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
-
 Cu.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
@@ -50,7 +45,7 @@ var listener = {
         break;
       case 2:
         do_execute_soon(function() request.suspend());
-	do_execute_soon(function() request.resume());
+        do_execute_soon(function() request.resume());
         syncXHR();
         break;
     }

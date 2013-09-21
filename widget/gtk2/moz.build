@@ -67,3 +67,16 @@ CSRCS += [
 
 LIBXUL_LIBRARY = True
 
+if CONFIG['ACCESSIBILITY']:
+    CSRCS += [
+        'maiRedundantObjectFactory.c',
+    ]
+
+if CONFIG['MOZ_ENABLE_GTK2']:
+    CSRCS += [
+        'gtk2drawing.c',
+    ]
+else:
+    CSRCS += [
+        'gtk3drawing.c',
+    ]

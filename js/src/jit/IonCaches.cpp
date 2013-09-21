@@ -2151,7 +2151,7 @@ SetPropertyIC::attachGenericProxy(JSContext *cx, IonScript *ion, void *returnAdd
         RegisterSet regSet(RegisterSet::All());
         regSet.take(AnyRegister(object()));
         if (!value().constant())
-            regSet.maybeTake(value().reg());
+            regSet.takeUnchecked(value().reg());
 
         Register scratch = regSet.takeGeneral();
         masm.push(scratch);
@@ -2241,7 +2241,7 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
         RegisterSet regSet(RegisterSet::All());
         regSet.take(AnyRegister(object));
         if (!value.constant())
-            regSet.maybeTake(value.reg());
+            regSet.takeUnchecked(value.reg());
         Register scratchReg = regSet.takeGeneral();
         masm.push(scratchReg);
 
@@ -2980,7 +2980,7 @@ GenerateGetTypedArrayElement(JSContext *cx, MacroAssembler &masm, IonCache::Stub
         // Part 2: Call to translate the str into index
         RegisterSet regs = RegisterSet::Volatile();
         masm.PushRegsInMask(regs);
-        regs.maybeTake(str);
+        regs.takeUnchecked(str);
 
         Register temp = regs.takeGeneral();
 
