@@ -8305,19 +8305,15 @@ IonBuilder::getPropTryScalarPropOfTypedObject(bool *emitted,
     // Reading from an Uint32Array will result in a double for values
     // that don't fit in an int32. We have to bailout if this happens
     // and the instruction is not known to return a double.
-    bool allowDouble =
-        resultTypes->hasType(types::Type::DoubleType());
-    MIRType knownType =
-        MIRTypeForTypedArrayRead(fieldTypeRepr->type(), allowDouble);
+    bool allowDouble = resultTypes->hasType(types::Type::DoubleType());
+    MIRType knownType = MIRTypeForTypedArrayRead(fieldTypeRepr->type(), allowDouble);
 
     // Typed array offsets are expressed in units of the alignment,
     // and the binary data API guarantees all offsets are properly
     // aligned. So just do the divide.
-    MConstant *alignment =
-        MConstant::New(Int32Value(fieldTypeRepr->alignment()));
+    MConstant *alignment = MConstant::New(Int32Value(fieldTypeRepr->alignment()));
     current->add(alignment);
-    MDiv *scaledOffset =
-        MDiv::NewAsmJS(ownerOffset, alignment, MIRType_Int32);
+    MDiv *scaledOffset = MDiv::NewAsmJS(ownerOffset, alignment, MIRType_Int32);
     current->add(scaledOffset);
 
     MLoadTypedArrayElement *load =
