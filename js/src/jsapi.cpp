@@ -5463,7 +5463,25 @@ JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar *dst, size_
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    return InflateStringToBuffer(cx, src, srclen, dst, dstlenp);
+
+    if (!dst) {
+        *dstlenp = srclen;
+        return true;
+    }
+
+    size_t dstlen = *dstlenp;
+
+    if (srclen > dstlen) {
+        InflateStringToBuffer(src, dstlen, dst);
+
+        AutoSuppressGC suppress(cx);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BUFFER_TOO_SMALL);
+        return false;
+    }
+
+    InflateStringToBuffer(src, srclen, dst);
+    *dstlenp = srclen;
+    return true;
 }
 
 JS_PUBLIC_API(char *)
