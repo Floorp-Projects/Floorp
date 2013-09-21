@@ -891,6 +891,10 @@ xpc::SandboxOptions::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj
             TextEncoder = true;
         } else if (!strcmp(name, "TextDecoder")) {
             TextDecoder = true;
+        } else if (!strcmp(name, "atob")) {
+            atob = true;
+        } else if (!strcmp(name, "btoa")) {
+            btoa = true;
         } else {
             // Reporting error, if one of the global property names is unknown.
             return false;
@@ -912,6 +916,14 @@ xpc::SandboxOptions::GlobalProperties::Define(JSContext* cx, JS::HandleObject ob
 
     if (TextDecoder &&
         !dom::TextDecoderBinding::GetConstructorObject(cx, obj))
+        return false;
+
+    if (atob &&
+        !JS_DefineFunction(cx, obj, "atob", Atob, 1, 0))
+        return false;
+
+    if (btoa &&
+        !JS_DefineFunction(cx, obj, "btoa", Btoa, 1, 0))
         return false;
 
     return true;

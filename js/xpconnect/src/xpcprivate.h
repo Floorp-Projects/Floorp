@@ -3601,6 +3601,8 @@ struct SandboxOptions {
         bool XMLHttpRequest;
         bool TextDecoder;
         bool TextEncoder;
+        bool atob;
+        bool btoa;
     };
 
     SandboxOptions(JSContext *cx)
