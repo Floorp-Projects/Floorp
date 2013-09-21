@@ -3586,8 +3586,8 @@ bool
 IsSandbox(JSObject *obj);
 
 struct SandboxOptions {
-    struct DOMConstructors {
-        DOMConstructors() { mozilla::PodZero(this); }
+    struct GlobalProperties {
+        GlobalProperties() { mozilla::PodZero(this); }
         bool Parse(JSContext* cx, JS::HandleObject obj);
         bool Define(JSContext* cx, JS::HandleObject obj);
         bool XMLHttpRequest;
@@ -3610,7 +3610,7 @@ struct SandboxOptions {
     JS::RootedObject proto;
     nsCString sandboxName;
     JS::RootedObject sameZoneAs;
-    DOMConstructors DOMConstructors;
+    GlobalProperties GlobalProperties;
     JS::RootedValue metadata;
 };
 
