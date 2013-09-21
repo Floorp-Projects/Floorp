@@ -2848,30 +2848,29 @@ ReadSourceFromFilename(JSContext *cx, const char *filename, jschar **src, size_t
   return NS_OK;
 }
 
-/*
-  The JS engine calls this function when it needs the source for a chrome JS
-  function. See the comment in the XPCJSRuntime constructor.
-*/
-static bool
-SourceHook(JSContext *cx, const char *filename, jschar **src, size_t *length)
-{
-  *src = NULL;
-  *length = 0;
+// The JS engine calls this object's 'load' member function when it needs
+// the source for a chrome JS function. See the comment in the XPCJSRuntime
+// constructor.
+class XPCJSSourceHook: public js::SourceHook {
+    bool load(JSContext *cx, const char *filename, jschar **src, size_t *length) {
+        *src = NULL;
+        *length = 0;
 
-  if (!nsContentUtils::IsCallerChrome())
-    return true;
+        if (!nsContentUtils::IsCallerChrome())
+            return true;
 
-  if (!filename)
-    return true;
+        if (!filename)
+            return true;
 
-  nsresult rv = ReadSourceFromFilename(cx, filename, src, length);
-  if (NS_FAILED(rv)) {
-    xpc::Throw(cx, rv);
-    return false;
-  }
+        nsresult rv = ReadSourceFromFilename(cx, filename, src, length);
+        if (NS_FAILED(rv)) {
+            xpc::Throw(cx, rv);
+            return false;
+        }
 
-  return true;
-}
+        return true;
+    }
+};
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    : CycleCollectedJSRuntime(32L * 1024L * 1024L, JS_USE_HELPER_THREADS),
@@ -3040,7 +3039,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     // compileAndGo mode and compiled function bodies (from
     // JS_CompileFunction*). In practice, this means content scripts and event
     // handlers.
-    JS_SetSourceHook(runtime, SourceHook);
+    js::SetSourceHook(runtime, new XPCJSSourceHook);
 
     // Set up locale information and callbacks for the newly-created runtime so
     // that the various toLocaleString() methods, localeCompare(), and other

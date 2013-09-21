@@ -999,7 +999,7 @@ JSScript::loadSource(JSContext *cx, ScriptSource *ss, bool *worked)
         return true;
     jschar *src = NULL;
     size_t length;
-    if (!cx->runtime()->sourceHook(cx, ss->filename(), &src, &length))
+    if (!cx->runtime()->sourceHook->load(cx, ss->filename(), &src, &length))
         return false;
     if (!src)
         return true;
