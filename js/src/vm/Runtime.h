@@ -907,7 +907,7 @@ struct JSRuntime : public JS::shadow::Runtime,
                                        js::Handle<JSFunction*> targetFun);
     bool cloneSelfHostedValue(JSContext *cx, js::Handle<js::PropertyName*> name,
                               js::MutableHandleValue vp);
-    bool maybeWrappedSelfHostedFunction(JSContext *cx, js::Handle<js::PropertyName*> name,
+    bool maybeWrappedSelfHostedFunction(JSContext *cx, js::HandleId name,
                                         js::MutableHandleValue funVal);
 
     //-------------------------------------------------------------------------

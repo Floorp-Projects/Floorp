@@ -1,0 +1,71 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Helper interface to carry informatin about the load context
+ * encapsulating an AppID, IsInBrowser and IsPrivite properties.
+ * It shall be used where nsILoadContext cannot be used or is not
+ * available.
+ */
+[scriptable, uuid(1ea9cbdb-9df4-46a0-8c45-f4091aad9459)]
+interface nsILoadContextInfo : nsISupports
+{
+  /**
+   * Whether the context is in a Private Browsing mode
+   */
+  readonly attribute boolean isPrivate;
+
+  /**
+   * Whether the context belongs under an App
+   */
+  const unsigned long NO_APP_ID = 0;
+  const unsigned long UNKNOWN_APP_ID = 4294967295; // UINT32_MAX
+  readonly attribute uint32_t appId;
+
+  /**
+   * Whether the context is in a browser tag
+   */
+  readonly attribute boolean isInBrowserElement;
+
+  /**
+   * Whether the load is initiated as anonymous
+   */
+  readonly attribute boolean isAnonymous;
+
+%{C++
+  /**
+   * De-XPCOMed getters
+   */
+  bool IsPrivate()
+  {
+    bool pb;
+    GetIsPrivate(&pb);
+    return pb;
+  }
+
+  uint32_t AppId()
+  {
+    uint32_t appId;
+    GetAppId(&appId);
+    return appId;
+  }
+
+  bool IsInBrowserElement()
+  {
+    bool ib;
+    GetIsInBrowserElement(&ib);
+    return ib;
+  }
+
+  bool IsAnonymous()
+  {
+    bool anon;
+    GetIsAnonymous(&anon);
+    return anon;
+  }
+%}
+};

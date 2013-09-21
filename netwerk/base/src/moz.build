@@ -23,6 +23,7 @@ CPP_SOURCES += [
     'BackgroundFileSaver.cpp',
     'Dashboard.cpp',
     'EventTokenBucket.cpp',
+    'LoadContextInfo.cpp',
     'NetworkActivityMonitor.cpp',
     'ProxyAutoConfig.cpp',
     'RedirectChannelRegistrar.cpp',

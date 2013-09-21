@@ -25,3 +25,7 @@ LIBRARY_NAME = 'xpcomglue'
 EXPORTS += [
     'nsXPCOMGlue.h',
 ]
+
+SDK_LIBRARY = [
+    "%s%s.%s" % (CONFIG['LIB_PREFIX'], 'xpcomglue', CONFIG['LIB_SUFFIX']),
+]

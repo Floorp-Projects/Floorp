@@ -25,6 +25,8 @@ pref("browser.cache.disk.smart_size.first_run", false);
 pref("browser.cache.memory.enable", true);
 pref("browser.cache.memory.capacity", 1024); // kilobytes
 
+pref("browser.cache.memory_limit", 2048); // 2 MB
+
 /* image cache prefs */
 pref("image.cache.size", 1048576); // bytes
 pref("image.high_quality_downscaling.enabled", false);

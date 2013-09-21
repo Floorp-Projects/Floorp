@@ -677,6 +677,13 @@
             return false;
 
           let elt = document.commandDispatcher.focusedElement;
+
+          // Temporary fix for e10s.
+          if (elt instanceof XULElement && elt.tagName == "xul:browser" &&
+              elt.getAttribute("remote")) {
+            elt = elt.contentDocument.activeElement;
+          }
+
           if (elt) {
             if (elt instanceof HTMLInputElement && elt.mozIsTextField(false))
               return false;
