@@ -3566,6 +3566,14 @@ xpc_GetSafeJSContext()
 
 namespace xpc {
 
+// JSNatives to expose atob and btoa in various non-DOM XPConnect scopes.
+bool
+Atob(JSContext *cx, unsigned argc, jsval *vp);
+
+bool
+Btoa(JSContext *cx, unsigned argc, jsval *vp);
+
+
 // Helper function that creates a JSFunction that wraps a native function that
 // forwards the call to the original 'callable'. If the 'doclone' argument is
 // set, it also structure clones non-native arguments for extra security.
