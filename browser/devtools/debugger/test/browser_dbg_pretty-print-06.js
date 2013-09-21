@@ -28,7 +28,9 @@ function test() {
       yield waitForSourceShown(gPanel, TAB_URL);
 
       let reloaded = promise.all([
-        waitForDebuggerEvents(aPanel, gDebugger.EVENTS.NEW_SOURCE),
+        // Wait for 2 newSource notifications, one for the regular html file,
+        // and one for the js file with the syntax error.
+        waitForDebuggerEvents(aPanel, gDebugger.EVENTS.NEW_SOURCE, 2),
         waitForDebuggerEvents(aPanel, gDebugger.EVENTS.SOURCES_ADDED),
         waitForDebuggerEvents(aPanel, gDebugger.EVENTS.SOURCE_SHOWN)
       ]);
