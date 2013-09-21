@@ -650,11 +650,12 @@ js::Int32ToAtom<NoGC>(ExclusiveContext *cx, int32_t si);
 
 /* Returns a non-NULL pointer to inside cbuf.  */
 static char *
-IntToCString(ToCStringBuf *cbuf, int i, int base = 10)
+IntToCString(ToCStringBuf *cbuf, int i, size_t *len, int base = 10)
 {
     unsigned u = (i < 0) ? -i : i;
 
-    RangedPtr<char> cp(cbuf->sbuf + cbuf->sbufSize - 1, cbuf->sbuf, cbuf->sbufSize);
+    RangedPtr<char> cp(cbuf->sbuf + ToCStringBuf::sbufSize - 1, cbuf->sbuf, ToCStringBuf::sbufSize);
+    char *end = cp.get();
     *cp = '\0';
 
     /* Build the string from behind. */
@@ -681,6 +682,7 @@ IntToCString(ToCStringBuf *cbuf, int i, int base = 10)
     if (i < 0)
         *--cp = '-';
 
+    *len = end - cp.get();
     return cp.get();
 }
 
@@ -1309,8 +1311,9 @@ char *
 js::NumberToCString(JSContext *cx, ToCStringBuf *cbuf, double d, int base/* = 10*/)
 {
     int32_t i;
+    size_t len;
     return mozilla::DoubleIsInt32(d, &i)
-           ? IntToCString(cbuf, i, base)
+           ? IntToCString(cbuf, i, &len, base)
            : FracNumberToCString(cx, cbuf, d, base);
 }
 
@@ -1350,7 +1353,8 @@ js_NumberToStringWithBase(ThreadSafeContext *cx, double d, int base)
                 return str;
         }
 
-        numStr = IntToCString(&cbuf, i, base);
+        size_t len;
+        numStr = IntToCString(&cbuf, i, &len, base);
         JS_ASSERT(!cbuf.dbuf && numStr >= cbuf.sbuf && numStr < cbuf.sbuf + cbuf.sbufSize);
     } else {
         if (comp) {
@@ -1466,21 +1470,23 @@ js::NumberValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb)
     /* Convert to C-string. */
     ToCStringBuf cbuf;
     const char *cstr;
+    size_t cstrlen;
     if (v.isInt32()) {
-        cstr = IntToCString(&cbuf, v.toInt32());
+        cstr = IntToCString(&cbuf, v.toInt32(), &cstrlen);
+        JS_ASSERT(cstrlen == strlen(cstr));
     } else {
         cstr = NumberToCString(cx, &cbuf, v.toDouble());
         if (!cstr) {
             JS_ReportOutOfMemory(cx);
             return false;
         }
+        cstrlen = strlen(cstr);
     }
 
     /*
      * Inflate to jschar string.  The input C-string characters are < 127, so
      * even if jschars are UTF-8, all chars should map to one jschar.
      */
-    size_t cstrlen = strlen(cstr);
     JS_ASSERT(!cbuf.dbuf && cstrlen < cbuf.sbufSize);
     return sb.appendInflated(cstr, cstrlen);
 }
