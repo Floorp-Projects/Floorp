@@ -482,6 +482,17 @@ class MacroAssemblerX86Shared : public Assembler
         return false;
     }
 
+    bool maybeInlineFloat(float f, const FloatRegister &dest) {
+        uint32_t u = mozilla::BitwiseCast<uint32_t>(f);
+
+        // See comment above
+        if (u == 0) {
+            xorps(dest, dest);
+            return true;
+        }
+        return false;
+    }
+
     void convertBoolToInt32(Register source, Register dest) {
         // Note that C++ bool is only 1 byte, so zero extend it to clear the
         // higher-order bits.

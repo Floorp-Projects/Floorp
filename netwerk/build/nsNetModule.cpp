@@ -123,6 +123,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSerializationHelper)
 typedef mozilla::net::RedirectChannelRegistrar RedirectChannelRegistrar;
 NS_GENERIC_FACTORY_CONSTRUCTOR(RedirectChannelRegistrar)
 
+#include "CacheStorageService.h"
+typedef mozilla::net::CacheStorageService CacheStorageService;
+NS_GENERIC_FACTORY_CONSTRUCTOR(CacheStorageService)
+
 ///////////////////////////////////////////////////////////////////////////////
 
 extern nsresult
@@ -807,6 +811,7 @@ NS_DEFINE_NAMED_CID(NS_NETWORK_LINK_SERVICE_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_SERIALIZATION_HELPER_CID);
 NS_DEFINE_NAMED_CID(NS_REDIRECTCHANNELREGISTRAR_CID);
+NS_DEFINE_NAMED_CID(NS_CACHE_STORAGE_SERVICE_CID);
 
 static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_IOSERVICE_CID, false, nullptr, nsIOServiceConstructor },
@@ -946,6 +951,7 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
 #endif
     { &kNS_SERIALIZATION_HELPER_CID, false, nullptr, nsSerializationHelperConstructor },
     { &kNS_REDIRECTCHANNELREGISTRAR_CID, false, nullptr, RedirectChannelRegistrarConstructor },
+    { &kNS_CACHE_STORAGE_SERVICE_CID, false, nullptr, CacheStorageServiceConstructor },
     { nullptr }
 };
 
@@ -1088,6 +1094,7 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
 #endif
     { NS_SERIALIZATION_HELPER_CONTRACTID, &kNS_SERIALIZATION_HELPER_CID },
     { NS_REDIRECTCHANNELREGISTRAR_CONTRACTID, &kNS_REDIRECTCHANNELREGISTRAR_CID },
+    { NS_CACHE_STORAGE_SERVICE_CONTRACTID, &kNS_CACHE_STORAGE_SERVICE_CID },
     { nullptr }
 };
 

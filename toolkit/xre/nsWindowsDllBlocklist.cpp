@@ -131,6 +131,10 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   { "opnx.dll", MAKE_VERSION(1, 3, 334, 9) },
   { "prnx.dll", MAKE_VERSION(1, 3, 334, 9) },
 
+  // Older belgian ID card software causes Firefox to crash or hang on
+  // shutdown, bug 831285 and 918399.
+  { "beid35cardlayer.dll", MAKE_VERSION(3, 5, 6, 6968) },
+
   { NULL, 0 }
 };
 

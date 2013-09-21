@@ -601,33 +601,26 @@ class RegisterSet {
         return other.gpr_ == gpr_ && other.fpu_ == fpu_;
     }
 
-    void maybeTake(Register reg) {
+    void takeUnchecked(Register reg) {
         gpr_.takeUnchecked(reg);
     }
-    void maybeTake(FloatRegister reg) {
+    void takeUnchecked(FloatRegister reg) {
         fpu_.takeUnchecked(reg);
     }
-    void maybeTake(AnyRegister reg) {
+    void takeUnchecked(AnyRegister reg) {
         if (reg.isFloat())
             fpu_.takeUnchecked(reg.fpu());
         else
             gpr_.takeUnchecked(reg.gpr());
     }
-    void maybeTake(ValueOperand value) {
-#if defined(JS_NUNBOX32)
-        gpr_.takeUnchecked(value.typeReg());
-        gpr_.takeUnchecked(value.payloadReg());
-#elif defined(JS_PUNBOX64)
-        gpr_.takeUnchecked(value.valueReg());
-#else
-#error "Bad architecture"
-#endif
+    void takeUnchecked(ValueOperand value) {
+        gpr_.takeUnchecked(value);
     }
-    void maybeTake(TypedOrValueRegister reg) {
+    void takeUnchecked(TypedOrValueRegister reg) {
         if (reg.hasValue())
-            maybeTake(reg.valueReg());
+            takeUnchecked(reg.valueReg());
         else if (reg.hasTyped())
-            maybeTake(reg.typedReg());
+            takeUnchecked(reg.typedReg());
     }
 };
 

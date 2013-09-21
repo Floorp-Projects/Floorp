@@ -336,7 +336,8 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     bool emitCallToUncompiledScriptPar(LInstruction *lir, Register calleeReg);
 
-    void emitLambdaInit(const Register &resultReg, const Register &scopeChainReg, JSFunction *fun);
+    void emitLambdaInit(const Register &resultReg, const Register &scopeChainReg,
+                        const LambdaFunctionInfo &info);
 
     IonScriptCounts *maybeCreateScriptCounts();
 
