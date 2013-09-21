@@ -998,7 +998,7 @@ JSScript::loadSource(JSContext *cx, ScriptSource *ss, bool *worked)
     if (!cx->runtime()->sourceHook || !ss->sourceRetrievable())
         return true;
     jschar *src = NULL;
-    uint32_t length;
+    size_t length;
     if (!cx->runtime()->sourceHook(cx, ss->filename(), &src, &length))
         return false;
     if (!src)
@@ -1124,7 +1124,7 @@ ScriptSource::setSourceCopy(ExclusiveContext *cx, const jschar *src, uint32_t le
 }
 
 void
-ScriptSource::setSource(const jschar *src, uint32_t length)
+ScriptSource::setSource(const jschar *src, size_t length)
 {
     JS_ASSERT(!hasSourceData());
     length_ = length;
