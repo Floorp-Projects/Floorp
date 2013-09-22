@@ -11,15 +11,14 @@
 #include "nsIRunnable.h"
 #include "nsEventQueue.h"
 #include "nsCOMPtr.h"
-#include "pldhash.h"
 #include "prinrval.h"
 #include "prlog.h"
 #include "prinit.h"
-#include "prio.h"
-#include "nsASocketHandler.h"
 #include "nsIObserver.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/net/DashboardTypes.h"
+
+class nsASocketHandler;
 
 //-----------------------------------------------------------------------------
 
