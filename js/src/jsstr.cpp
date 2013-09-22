@@ -4164,29 +4164,6 @@ js::DeflateStringToBuffer(JSContext *maybecx, const jschar *src, size_t srclen,
     return true;
 }
 
-bool
-js::InflateStringToBuffer(JSContext *maybecx, const char *src, size_t srclen,
-                          jschar *dst, size_t *dstlenp)
-{
-    if (dst) {
-        size_t dstlen = *dstlenp;
-        if (srclen > dstlen) {
-            for (size_t i = 0; i < dstlen; i++)
-                dst[i] = (unsigned char) src[i];
-            if (maybecx) {
-                AutoSuppressGC suppress(maybecx);
-                JS_ReportErrorNumber(maybecx, js_GetErrorMessage, NULL,
-                                     JSMSG_BUFFER_TOO_SMALL);
-            }
-            return false;
-        }
-        for (size_t i = 0; i < srclen; i++)
-            dst[i] = (unsigned char) src[i];
-    }
-    *dstlenp = srclen;
-    return true;
-}
-
 #define ____ false
 
 /*

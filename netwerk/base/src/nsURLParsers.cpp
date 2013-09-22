@@ -9,11 +9,9 @@
 
 #include "nsURLParsers.h"
 #include "nsURLHelper.h"
-#include "nsIURI.h"
 #include "prtypes.h"
 #include "nsString.h"
 #include "nsCRT.h"
-#include "netCore.h"
 
 using namespace mozilla;
 

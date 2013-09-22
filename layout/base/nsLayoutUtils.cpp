@@ -5494,7 +5494,24 @@ nsLayoutUtils::UpdateImageVisibilityForFrame(nsIFrame* aImageFrame)
         visible = false;
         break;
       }
-      rect = sf->GetScrollPortRect();
+      // Move transformedRect to be contained in the scrollport as best we can
+      // (it might not fit) to pretend that it was scrolled into view.
+      nsRect scrollPort = sf->GetScrollPortRect();
+      if (transformedRect.XMost() > scrollPort.XMost()) {
+        transformedRect.x -= transformedRect.XMost() - scrollPort.XMost();
+      }
+      if (transformedRect.x < scrollPort.x) {
+        transformedRect.x = scrollPort.x;
+      }
+      if (transformedRect.YMost() > scrollPort.YMost()) {
+        transformedRect.y -= transformedRect.YMost() - scrollPort.YMost();
+      }
+      if (transformedRect.y < scrollPort.y) {
+        transformedRect.y = scrollPort.y;
+      }
+      transformedRect.width = std::min(transformedRect.width, scrollPort.width);
+      transformedRect.height = std::min(transformedRect.height, scrollPort.height);
+      rect = transformedRect;
       rectFrame = f;
     }
     nsIFrame* parent = f->GetParent();

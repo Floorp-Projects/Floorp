@@ -5,10 +5,8 @@
 
 #include "ipc/IPCMessageUtils.h"
 
-#include "nsAlgorithm.h"
 #include "nsBufferedStreams.h"
 #include "nsStreamUtils.h"
-#include "nsCRT.h"
 #include "nsNetCID.h"
 #include "nsIClassInfoImpl.h"
 #include "mozilla/ipc/InputStreamUtils.h"

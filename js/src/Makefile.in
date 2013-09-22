@@ -298,11 +298,18 @@ JITTEST_VALGRIND_FLAG = --valgrind
 endif
 endif
 
+ifdef MOZ_ASAN
+ifneq ($(LLVM_SYMBOLIZER),)
+# Use the LLVM symbolizer when running jit-tests under ASan, if available
+JITTEST_ASAN_ENV=ASAN_SYMBOLIZER_PATH='$(LLVM_SYMBOLIZER)'
+endif
+endif
+
 check-style::
 	(cd $(srcdir) && $(PYTHON) config/check_spidermonkey_style.py);
 
 check-jit-test::
-	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
+	$(JITTEST_ASAN_ENV) $(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
 	        --no-slow --no-progress --tinderbox --tbpl $(JITTEST_VALGRIND_FLAG) \
 	        $(DIST)/bin/$(JS_SHELL_NAME)$(BIN_SUFFIX)
 

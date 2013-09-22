@@ -539,6 +539,13 @@ MConstantElements::printOpcode(FILE *fp) const
     fprintf(fp, " %p", value());
 }
 
+void
+MLoadTypedArrayElement::printOpcode(FILE *fp) const
+{
+    MDefinition::printOpcode(fp);
+    fprintf(fp, " %s", ScalarTypeRepresentation::typeName(arrayType()));
+}
+
 MParameter *
 MParameter::New(int32_t index, types::TemporaryTypeSet *types)
 {
