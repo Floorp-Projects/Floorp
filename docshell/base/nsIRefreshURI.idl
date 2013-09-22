@@ -5,9 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIURI.idl"
+
 interface nsIChannel;
 interface nsIPrincipal;
+interface nsIURI;
 
 [scriptable, uuid(a5e61a3c-51bd-45be-ac0c-e87b71860656)]
 interface nsIRefreshURI : nsISupports {
