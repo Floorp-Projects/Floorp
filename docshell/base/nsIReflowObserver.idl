@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "domstubs.idl"
-#include "nsISupports.idl"
 
 [scriptable, uuid(832e692c-c4a6-11e2-8fd1-dce678957a39)]
 interface nsIReflowObserver : nsISupports
