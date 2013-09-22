@@ -134,13 +134,15 @@ function getDistinctNotifications() {
 }
 
 function storeCache(aURL, aContent) {
-  let cache = Cc["@mozilla.org/network/cache-service;1"].
-              getService(Ci.nsICacheService);
-  let session = cache.createSession("FTP", Ci.nsICache.STORE_ANYWHERE,
-                                    Ci.nsICache.STREAM_BASED);
+  let cache = Services.cache2;
+  let storage = cache.diskCacheStorage(LoadContextInfo.default, false);
 
   var storeCacheListener = {
-    onCacheEntryAvailable: function (entry, access, status) {
+    onCacheEntryCheck: function (entry, appcache) {
+      return nsICacheEntryOpenCallback.ENTRY_VALID;
+    },
+
+    onCacheEntryAvailable: function (entry, isnew, appcache, status) {
       do_check_eq(status, Cr.NS_OK);
 
       entry.setMetaDataElement("servertype", "0");
@@ -158,26 +160,24 @@ function storeCache(aURL, aContent) {
     }
   };
 
-  session.asyncOpenCacheEntry(aURL,
-                              Ci.nsICache.ACCESS_READ_WRITE,
-                              storeCacheListener);
+  storage.asyncOpenURI(Services.io.newURI(aURL, null, null), "",
+                       Ci.nsICacheStorage.OPEN_NORMALLY,
+                       storeCacheListener);
 }
 
 
 function checkCache(aURL) {
-  let cache = Cc["@mozilla.org/network/cache-service;1"].
-              getService(Ci.nsICacheService);
-  let session = cache.createSession("FTP", Ci.nsICache.STORE_ANYWHERE,
-                                    Ci.nsICache.STREAM_BASED);
+  let cache = Services.cache2;
+  let storage = cache.diskCacheStorage(LoadContextInfo.default, false);
 
   var checkCacheListener = {
-    onCacheEntryAvailable: function (entry, access, status) {
+    onCacheEntryAvailable: function (entry, isnew, appcache, status) {
       do_check_eq(status, Cr.NS_ERROR_CACHE_KEY_NOT_FOUND);
       do_test_finished();
     }
   };
 
-  session.asyncOpenCacheEntry(aURL,
-                              Ci.nsICache.ACCESS_READ,
-                              checkCacheListener);
+  storage.asyncOpenURI(Services.io.newURI(aURL, null, null), "",
+                       Ci.nsICacheStorage.OPEN_READONLY,
+                       checkCacheListener);
 }

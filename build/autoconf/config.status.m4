@@ -181,3 +181,5 @@ if test "$no_create" != yes && ! ${PYTHON} $CONFIG_STATUS; then
     exit 1
 fi
 ])
+
+AC_SUBST([MOZ_PSEUDO_DERECURSE])

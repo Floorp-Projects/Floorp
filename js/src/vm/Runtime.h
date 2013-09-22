@@ -11,6 +11,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Scoped.h"
 #include "mozilla/ThreadLocal.h"
 
 #include <setjmp.h>
@@ -907,7 +908,7 @@ struct JSRuntime : public JS::shadow::Runtime,
                                        js::Handle<JSFunction*> targetFun);
     bool cloneSelfHostedValue(JSContext *cx, js::Handle<js::PropertyName*> name,
                               js::MutableHandleValue vp);
-    bool maybeWrappedSelfHostedFunction(JSContext *cx, js::Handle<js::PropertyName*> name,
+    bool maybeWrappedSelfHostedFunction(JSContext *cx, js::HandleId name,
                                         js::MutableHandleValue funVal);
 
     //-------------------------------------------------------------------------
@@ -1275,7 +1276,7 @@ struct JSRuntime : public JS::shadow::Runtime,
         return !contextList.isEmpty();
     }
 
-    JS_SourceHook       sourceHook;
+    mozilla::ScopedDeletePtr<js::SourceHook> sourceHook;
 
     /* Per runtime debug hooks -- see js/OldDebugAPI.h. */
     JSDebugHooks        debugHooks;

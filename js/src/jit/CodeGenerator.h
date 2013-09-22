@@ -132,6 +132,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitNewStringObject(LNewStringObject *lir);
     bool visitNewPar(LNewPar *lir);
     bool visitNewDenseArrayPar(LNewDenseArrayPar *lir);
+    bool visitNewDerivedTypedObject(LNewDerivedTypedObject *lir);
     bool visitAbortPar(LAbortPar *lir);
     bool visitInitElem(LInitElem *lir);
     bool visitInitElemGetterSetter(LInitElemGetterSetter *lir);
@@ -148,6 +149,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitArrayLength(LArrayLength *lir);
     bool visitTypedArrayLength(LTypedArrayLength *lir);
     bool visitTypedArrayElements(LTypedArrayElements *lir);
+    bool visitTypedObjectElements(LTypedObjectElements *lir);
     bool visitStringLength(LStringLength *lir);
     bool visitInitializedLength(LInitializedLength *lir);
     bool visitSetInitializedLength(LSetInitializedLength *lir);
@@ -336,7 +338,8 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     bool emitCallToUncompiledScriptPar(LInstruction *lir, Register calleeReg);
 
-    void emitLambdaInit(const Register &resultReg, const Register &scopeChainReg, JSFunction *fun);
+    void emitLambdaInit(const Register &resultReg, const Register &scopeChainReg,
+                        const LambdaFunctionInfo &info);
 
     IonScriptCounts *maybeCreateScriptCounts();
 

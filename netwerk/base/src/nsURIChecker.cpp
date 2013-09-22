@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsURIChecker.h"
-#include "nsIServiceManager.h"
 #include "nsIAuthPrompt.h"
 #include "nsIHttpChannel.h"
 #include "nsNetUtil.h"

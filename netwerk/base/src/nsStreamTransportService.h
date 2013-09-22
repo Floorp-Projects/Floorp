@@ -4,10 +4,11 @@
 
 #include "nsIStreamTransportService.h"
 #include "nsIEventTarget.h"
-#include "nsIThreadPool.h"
 #include "nsIObserver.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
+
+class nsIThreadPool;
 
 class nsStreamTransportService MOZ_FINAL : public nsIStreamTransportService
                                          , public nsIEventTarget

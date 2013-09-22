@@ -31,6 +31,7 @@
 #include "nsServiceManagerUtils.h"   // do_GetService
 #include "nsIHttpActivityObserver.h"
 #include "nsSocketTransportService2.h"
+#include "nsICancelable.h"
 #include <algorithm>
 
 

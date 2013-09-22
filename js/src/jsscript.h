@@ -343,7 +343,7 @@ class ScriptSource
                        uint32_t length,
                        bool argumentsNotIncluded,
                        SourceCompressionTask *tok);
-    void setSource(const jschar *src, uint32_t length);
+    void setSource(const jschar *src, size_t length);
     bool ready() const { return ready_; }
     void setSourceRetrievable() { sourceRetrievable_ = true; }
     bool sourceRetrievable() const { return sourceRetrievable_; }

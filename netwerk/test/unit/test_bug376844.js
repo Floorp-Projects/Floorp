@@ -1,6 +1,3 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 const testURLs = [
   ["http://example.com/<", "http://example.com/%3C"],
   ["http://example.com/>", "http://example.com/%3E"],

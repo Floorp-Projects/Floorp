@@ -6,9 +6,13 @@
 
 #include "EventTokenBucket.h"
 
+#include "nsICancelable.h"
 #include "nsNetUtil.h"
 #include "nsSocketTransportService2.h"
-#include "nsThreadUtils.h"
+
+#ifdef DEBUG
+#include "MainThreadUtils.h"
+#endif
 
 #ifdef XP_WIN
 #include <windows.h>

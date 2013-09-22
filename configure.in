@@ -1212,8 +1212,10 @@ MOZ_ARG_ENABLE_BOOL(address-sanitizer,
 if test -n "$MOZ_ASAN"; then
     MOZ_LLVM_HACKS=1
     AC_DEFINE(MOZ_ASAN)
+    MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
 fi
 AC_SUBST(MOZ_ASAN)
+AC_SUBST(LLVM_SYMBOLIZER)
 
 dnl ========================================================
 dnl = Enable hacks required for LLVM instrumentations
@@ -1235,7 +1237,12 @@ dnl ========================================================
 if test "$GNU_CC"; then
     # Per bug 719659 comment 2, some of the headers on ancient build machines
     # may require gnu89 inline semantics.  But otherwise, we use C99.
-    CFLAGS="$CFLAGS -std=gnu99 -fgnu89-inline"
+    # But on OS X we just use C99 plus GNU extensions, in order to fix
+    # bug 917526.
+    CFLAGS="$CFLAGS -std=gnu99"
+    if test "${OS_ARCH}" != Darwin; then
+        CFLAGS="$CFLAGS -fgnu89-inline"
+    fi
     # FIXME: Let us build with strict aliasing. bug 414641.
     CFLAGS="$CFLAGS -fno-strict-aliasing"
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-h,$(notdir $@) -o $@'

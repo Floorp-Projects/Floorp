@@ -163,6 +163,20 @@ MarginComponentForSide(nsMargin& aMargin, Side aSide)
                        // (but something's busted if we got here)
 }
 
+// Helper-macro to let us pick one of two expressions to evaluate
+// (a width expression vs. a height expression), to get a main-axis or
+// cross-axis component.
+// For code that has e.g. a nsSize object, FlexboxAxisTracker::GetMainComponent
+// and GetCrossComponent are cleaner; but in cases where we simply have
+// two separate expressions for width and height (which may be expensive to
+// evaluate), these macros will ensure that only the expression for the correct
+// axis gets evaluated.
+#define GET_MAIN_COMPONENT(axisTracker_, width_, height_)  \
+  IsAxisHorizontal((axisTracker_).GetMainAxis()) ? (width_) : (height_)
+
+#define GET_CROSS_COMPONENT(axisTracker_, width_, height_)  \
+  IsAxisHorizontal((axisTracker_).GetCrossAxis()) ? (width_) : (height_)
+
 // Encapsulates our flex container's main & cross axes.
 class MOZ_STACK_CLASS FlexboxAxisTracker {
 public:
@@ -173,29 +187,17 @@ public:
   AxisOrientationType GetCrossAxis() const { return mCrossAxis; }
 
   nscoord GetMainComponent(const nsSize& aSize) const {
-    return IsAxisHorizontal(mMainAxis) ?
-      aSize.width : aSize.height;
+    return GET_MAIN_COMPONENT(*this, aSize.width, aSize.height);
   }
   int32_t GetMainComponent(const nsIntSize& aIntSize) const {
-    return IsAxisHorizontal(mMainAxis) ?
-      aIntSize.width : aIntSize.height;
-  }
-  nscoord GetMainComponent(const nsHTMLReflowMetrics& aMetrics) const {
-    return IsAxisHorizontal(mMainAxis) ?
-      aMetrics.width : aMetrics.height;
+    return GET_MAIN_COMPONENT(*this, aIntSize.width, aIntSize.height);
   }
 
   nscoord GetCrossComponent(const nsSize& aSize) const {
-    return IsAxisHorizontal(mCrossAxis) ?
-      aSize.width : aSize.height;
+    return GET_CROSS_COMPONENT(*this, aSize.width, aSize.height);
   }
   int32_t GetCrossComponent(const nsIntSize& aIntSize) const {
-    return IsAxisHorizontal(mCrossAxis) ?
-      aIntSize.width : aIntSize.height;
-  }
-  nscoord GetCrossComponent(const nsHTMLReflowMetrics& aMetrics) const {
-    return IsAxisHorizontal(mCrossAxis) ?
-      aMetrics.width : aMetrics.height;
+    return GET_CROSS_COMPONENT(*this, aIntSize.width, aIntSize.height);
   }
 
   nscoord GetMarginSizeInMainAxis(const nsMargin& aMargin) const {
@@ -677,15 +679,15 @@ nsFlexContainerFrame::AppendFlexItemForChild(
 
   // MAIN SIZES (flex base size, min/max size)
   // -----------------------------------------
-  nscoord flexBaseSize =
-    aAxisTracker.GetMainComponent(nsSize(childRS.ComputedWidth(),
-                                         childRS.ComputedHeight()));
-  nscoord mainMinSize =
-    aAxisTracker.GetMainComponent(nsSize(childRS.mComputedMinWidth,
-                                         childRS.mComputedMinHeight));
-  nscoord mainMaxSize =
-    aAxisTracker.GetMainComponent(nsSize(childRS.mComputedMaxWidth,
-                                         childRS.mComputedMaxHeight));
+  nscoord flexBaseSize = GET_MAIN_COMPONENT(aAxisTracker,
+                                            childRS.ComputedWidth(),
+                                            childRS.ComputedHeight());
+  nscoord mainMinSize = GET_MAIN_COMPONENT(aAxisTracker,
+                                           childRS.mComputedMinWidth,
+                                           childRS.mComputedMinHeight);
+  nscoord mainMaxSize = GET_MAIN_COMPONENT(aAxisTracker,
+                                           childRS.mComputedMaxWidth,
+                                           childRS.mComputedMaxHeight);
   // This is enforced by the nsHTMLReflowState where these values come from:
   MOZ_ASSERT(mainMinSize <= mainMaxSize, "min size is larger than max size");
 
@@ -758,12 +760,12 @@ nsFlexContainerFrame::AppendFlexItemForChild(
   // CROSS MIN/MAX SIZE
   // ------------------
 
-  nscoord crossMinSize =
-    aAxisTracker.GetCrossComponent(nsSize(childRS.mComputedMinWidth,
-                                          childRS.mComputedMinHeight));
-  nscoord crossMaxSize =
-    aAxisTracker.GetCrossComponent(nsSize(childRS.mComputedMaxWidth,
-                                          childRS.mComputedMaxHeight));
+  nscoord crossMinSize = GET_CROSS_COMPONENT(aAxisTracker,
+                                             childRS.mComputedMinWidth,
+                                             childRS.mComputedMinHeight);
+  nscoord crossMaxSize = GET_CROSS_COMPONENT(aAxisTracker,
+                                             childRS.mComputedMaxWidth,
+                                             childRS.mComputedMaxHeight);
 
   // SPECIAL-CASE FOR WIDGET-IMPOSED SIZES
   // Check if we're a themed widget, in which case we might have a minimum
@@ -1499,9 +1501,9 @@ MainAxisPositionTracker::
   // contents, and we don't have any packing space.
   //   * Otherwise, we subtract our items' margin-box main-sizes from our
   // computed main-size to get our available packing space.
-  mPackingSpaceRemaining =
-    aAxisTracker.GetMainComponent(nsSize(aReflowState.ComputedWidth(),
-                                         aReflowState.ComputedHeight()));
+  mPackingSpaceRemaining = GET_MAIN_COMPONENT(aAxisTracker,
+                                              aReflowState.ComputedWidth(),
+                                              aReflowState.ComputedHeight());
   if (mPackingSpaceRemaining == NS_UNCONSTRAINEDSIZE) {
     mPackingSpaceRemaining = 0;
   } else {
@@ -2248,18 +2250,19 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   // Calculate the content-box cross size of our flex container:
   nscoord contentBoxCrossSize =
-    axisTracker.GetCrossComponent(nsSize(aReflowState.ComputedWidth(),
-                                         aReflowState.ComputedHeight()));
+    GET_CROSS_COMPONENT(axisTracker,
+                        aReflowState.ComputedWidth(),
+                        aReflowState.ComputedHeight());
 
   if (contentBoxCrossSize == NS_AUTOHEIGHT) {
     // Unconstrained 'auto' cross-size: shrink-wrap our line(s), subject
     // to our min-size / max-size constraints in that axis.
-    nscoord minCrossSize =
-      axisTracker.GetCrossComponent(nsSize(aReflowState.mComputedMinWidth,
-                                           aReflowState.mComputedMinHeight));
-    nscoord maxCrossSize =
-      axisTracker.GetCrossComponent(nsSize(aReflowState.mComputedMaxWidth,
-                                           aReflowState.mComputedMaxHeight));
+    nscoord minCrossSize = GET_CROSS_COMPONENT(axisTracker,
+                                               aReflowState.mComputedMinWidth,
+                                               aReflowState.mComputedMinHeight);
+    nscoord maxCrossSize = GET_CROSS_COMPONENT(axisTracker,
+                                               aReflowState.mComputedMaxWidth,
+                                               aReflowState.mComputedMaxHeight);
     contentBoxCrossSize =
       NS_CSS_MINMAX(lineCrossAxisPosnTracker.GetLineCrossSize(),
                     minCrossSize, maxCrossSize);

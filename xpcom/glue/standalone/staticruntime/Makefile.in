@@ -9,10 +9,6 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../../../build \
 	$(NULL)
 
-SDK_LIBRARY     	= \
-	$(LIB_PREFIX)xpcomglue_staticruntime.$(LIB_SUFFIX) \
-	$(NULL)
-
 # create a static lib
 FORCE_STATIC_LIB = 1
 

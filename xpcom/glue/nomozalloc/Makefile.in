@@ -10,10 +10,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../build \
 		$(NULL)
 
-SDK_LIBRARY     =                        \
-		$(LIB_PREFIX)xpcomglue_s_nomozalloc.$(LIB_SUFFIX) \
-		$(NULL)
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 

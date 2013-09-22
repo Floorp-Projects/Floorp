@@ -1024,16 +1024,16 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv,
 #endif
 
 extern JS_PUBLIC_API(bool)
-JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp);
+JS_ConvertValue(JSContext *cx, JS::HandleValue v, JSType type, JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(bool)
-JS_ValueToObject(JSContext *cx, jsval v, JSObject **objp);
+JS_ValueToObject(JSContext *cx, JS::HandleValue v, JS::MutableHandleObject objp);
 
 extern JS_PUBLIC_API(JSFunction *)
-JS_ValueToFunction(JSContext *cx, jsval v);
+JS_ValueToFunction(JSContext *cx, JS::HandleValue v);
 
 extern JS_PUBLIC_API(JSFunction *)
-JS_ValueToConstructor(JSContext *cx, jsval v);
+JS_ValueToConstructor(JSContext *cx, JS::HandleValue v);
 
 extern JS_PUBLIC_API(JSString *)
 JS_ValueToString(JSContext *cx, jsval v);
@@ -4202,31 +4202,6 @@ JS_AbortIfWrongThread(JSRuntime *rt);
 /************************************************************************/
 
 /*
- * JS_IsConstructing must be called from within a native given the
- * native's original cx and vp arguments. If JS_IsConstructing is true,
- * JS_THIS must not be used; the constructor should construct and return a
- * new object. Otherwise, the native is called as an ordinary function and
- * JS_THIS may be used.
- */
-static JS_ALWAYS_INLINE bool
-JS_IsConstructing(JSContext *cx, const jsval *vp)
-{
-#ifdef DEBUG
-    JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
-    if (JS_ObjectIsFunction(cx, callee)) {
-        JSFunction *fun = JS_ValueToFunction(cx, JS_CALLEE(cx, vp));
-        JS_ASSERT(JS_IsConstructor(fun));
-    } else {
-        JS_ASSERT(JS_GetClass(callee)->construct != NULL);
-    }
-#else
-    (void)cx;
-#endif
-
-    return JSVAL_IS_MAGIC_IMPL(JSVAL_TO_IMPL(vp[1]));
-}
-
-/*
  * A constructor can request that the JS engine create a default new 'this'
  * object of the given class, using the callee to determine parentage and
  * [[Prototype]].
@@ -4294,7 +4269,7 @@ JS_IsIdentifier(JSContext *cx, JS::HandleString str, bool *isIdentifier);
  * frame. Returns true if a scripted frame was found, false otherwise.
  */
 extern JS_PUBLIC_API(bool)
-JS_DescribeScriptedCaller(JSContext *cx, JSScript **script, unsigned *lineno);
+JS_DescribeScriptedCaller(JSContext *cx, JS::MutableHandleScript script, unsigned *lineno);
 
 
 /*
@@ -4302,10 +4277,10 @@ JS_DescribeScriptedCaller(JSContext *cx, JSScript **script, unsigned *lineno);
  */
 
 extern JS_PUBLIC_API(void *)
-JS_EncodeScript(JSContext *cx, JSScript *script, uint32_t *lengthp);
+JS_EncodeScript(JSContext *cx, JS::HandleScript script, uint32_t *lengthp);
 
 extern JS_PUBLIC_API(void *)
-JS_EncodeInterpretedFunction(JSContext *cx, JSObject *funobj, uint32_t *lengthp);
+JS_EncodeInterpretedFunction(JSContext *cx, JS::HandleObject funobj, uint32_t *lengthp);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_DecodeScript(JSContext *cx, const void *data, uint32_t length,
