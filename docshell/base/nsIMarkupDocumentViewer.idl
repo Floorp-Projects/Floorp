@@ -15,8 +15,8 @@
 interface nsIDOMNode;
 
 %{C++
-#include "nsCOMPtr.h"
-#include "nsTArray.h"
+template<class T> class nsCOMPtr;
+template<class T> class nsTArray;
 %}
 
 interface nsIMarkupDocumentViewer;
