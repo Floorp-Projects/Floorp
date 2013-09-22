@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
 
+interface nsIDOMElement;
 interface nsITreeView;
 interface nsITreeSelection;
 interface nsITreeColumn;
