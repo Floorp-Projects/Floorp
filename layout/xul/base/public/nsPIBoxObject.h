@@ -6,6 +6,8 @@
 #ifndef nsPIBoxObject_h___
 #define nsPIBoxObject_h___
 
+#include "nsIBoxObject.h"
+
 // {2b8bb262-1b0f-4572-ba87-5d4ae4954445}
 #define NS_PIBOXOBJECT_IID \
 { 0x2b8bb262, 0x1b0f, 0x4572, \
