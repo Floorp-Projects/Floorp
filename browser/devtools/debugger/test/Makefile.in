@@ -54,6 +54,8 @@ MOCHITEST_BROWSER_FILES = \
 	browser_dbg_pretty-print-02.js \
 	browser_dbg_pretty-print-03.js \
 	browser_dbg_pretty-print-04.js \
+	browser_dbg_pretty-print-05.js \
+	browser_dbg_pretty-print-06.js \
 	browser_dbg_progress-listener-bug.js \
 	browser_dbg_reload-preferred-script-01.js \
 	browser_dbg_reload-preferred-script-02.js \
