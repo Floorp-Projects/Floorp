@@ -85,7 +85,7 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
         // not used?
         aColor = BASE_NORMAL_COLOR;
         break;
-    case eColorID_TextForeground: 
+    case eColorID_TextForeground:
         // not used?
         aColor = TEXT_NORMAL_COLOR;
         break;
@@ -246,7 +246,7 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
         break;
     case eColorID__moz_dragtargetzone:
         aColor = BG_SELECTED_COLOR;
-        break; 
+        break;
     case eColorID__moz_buttondefault:
         // default button border color
         aColor = NS_RGB(0,0,0);
@@ -359,6 +359,16 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
             rv = NS_ERROR_NOT_IMPLEMENTED;
             break;
 
+        case eIntID_IMERawInputUnderlineStyle:
+        case eIntID_IMEConvertedTextUnderlineStyle:
+            aResult = NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
+            break;
+
+        case eIntID_IMESelectedRawTextUnderlineStyle:
+        case eIntID_IMESelectedConvertedTextUnderline:
+            aResult = NS_STYLE_TEXT_DECORATION_STYLE_NONE;
+            break;
+
         case eIntID_SpellCheckerUnderlineStyle:
             aResult = NS_STYLE_TEXT_DECORATION_STYLE_WAVY;
             break;
@@ -380,6 +390,28 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     }
 
     return rv;
+}
+
+nsresult
+nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
+{
+  nsresult res = nsXPLookAndFeel::GetFloatImpl(aID, aResult);
+  if (NS_SUCCEEDED(res))
+    return res;
+  res = NS_OK;
+
+  switch (aID) {
+    case eFloatID_IMEUnderlineRelativeSize:
+        aResult = 1.0f;
+        break;
+    case eFloatID_SpellCheckerUnderlineRelativeSize:
+        aResult = 1.0f;
+        break;
+    default:
+        aResult = -1.0;
+        res = NS_ERROR_FAILURE;
+    }
+  return res;
 }
 
 /*virtual*/
