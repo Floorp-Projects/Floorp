@@ -19,16 +19,11 @@
 #include "private/pprio.h"
 
 #include "nsFileStreams.h"
-#include "nsXPIDLString.h"
-#include "prerror.h"
-#include "nsCRT.h"
 #include "nsIFile.h"
-#include "nsDirectoryIndexStream.h"
-#include "nsMimeTypes.h"
 #include "nsReadLine.h"
-#include "nsNetUtil.h"
 #include "nsIClassInfoImpl.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+#include "nsNetCID.h"
 
 #define NS_NO_INPUT_BUFFERING 1 // see http://bugzilla.mozilla.org/show_bug.cgi?id=41067
 

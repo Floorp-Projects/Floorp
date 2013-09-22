@@ -48,12 +48,12 @@ this.ForgetAboutSite = {
     PlacesUtils.history.removePagesFromHost(aDomain, true);
 
     // Cache
-    let (cs = Cc["@mozilla.org/network/cache-service;1"].
-              getService(Ci.nsICacheService)) {
+    let (cs = Cc["@mozilla.org/netwerk/cache-storage-service;1"].
+              getService(Ci.nsICacheStorageService)) {
       // NOTE: there is no way to clear just that domain, so we clear out
       //       everything)
       try {
-        cs.evictEntries(Ci.nsICache.STORE_ANYWHERE);
+        cs.clear();
       } catch (ex) {
         Cu.reportError("Exception thrown while clearing the cache: " +
           ex.toString());

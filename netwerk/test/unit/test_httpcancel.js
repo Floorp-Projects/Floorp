@@ -4,11 +4,6 @@
 // I've also shoehorned in a test that ENSURE_CALLED_BEFORE_CONNECT works as
 // expected: see comments that start with ENSURE_CALLED_BEFORE_CONNECT:
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
-
 Cu.import("resource://testing-common/httpd.js");
 
 var ios = Components.classes["@mozilla.org/network/io-service;1"]

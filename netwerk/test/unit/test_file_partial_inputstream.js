@@ -7,8 +7,6 @@
 //       do_check_eq(a, b) to avoid outputting characters which confuse
 //       the console
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
 const CC = Components.Constructor;
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
                              "nsIBinaryInputStream",

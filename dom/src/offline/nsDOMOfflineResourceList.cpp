@@ -803,9 +803,16 @@ nsDOMOfflineResourceList::CacheKeys()
   nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(window);
   nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(webNav);
 
+  uint32_t appId = 0;
+  bool inBrowser = false;
+  if (loadContext) {
+    loadContext->GetAppId(&appId);
+    loadContext->GetIsInBrowserElement(&inBrowser);
+  }
+
   nsAutoCString groupID;
-  mApplicationCacheService->BuildGroupID(
-      mManifestURI, loadContext, groupID);
+  mApplicationCacheService->BuildGroupIDForApp(
+      mManifestURI, appId, inBrowser, groupID);
 
   nsCOMPtr<nsIApplicationCache> appCache;
   mApplicationCacheService->GetActiveCache(groupID,

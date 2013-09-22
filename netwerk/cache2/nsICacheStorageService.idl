@@ -1,0 +1,82 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsICacheStorage;
+interface nsILoadContextInfo;
+interface nsIApplicationCache;
+interface nsIEventTarget;
+
+/**
+ * Provides access to particual cache storages of the network URI cache.
+ */
+[scriptable, uuid(d669bf30-b6d9-48e1-a8fb-33cd18b0d752)]
+interface nsICacheStorageService : nsISupports
+{
+  /**
+   * Get storage where entries will only remain in memory, never written
+   * to the disk.
+   *
+   * @param aLoadContextInfo
+   *    Information about the loading context, this focuses the storage JAR and
+   *    respects separate storage for private browsing.
+   */
+  nsICacheStorage memoryCacheStorage(in nsILoadContextInfo aLoadContextInfo);
+
+  /**
+   * Get storage where entries will be written to disk when not forbidden by
+   * response headers.
+   *
+   * @param aLookupAppCache
+   *    When set true (for top level document loading channels) app cache will
+   *    be first to check on to find entries in.
+   */
+  nsICacheStorage diskCacheStorage(in nsILoadContextInfo aLoadContextInfo,
+                                   in bool aLookupAppCache);
+
+  /**
+   * Get storage for a specified application cache obtained using some different
+   * mechanism.
+   *
+   * @param aLoadContextInfo
+   *    Mandatory reference to a load context information.
+   * @param aApplicationCache
+   *    Optional reference to an existing appcache.  When left null, this will
+   *    work with offline cache as a whole.
+   */
+  nsICacheStorage appCacheStorage(in nsILoadContextInfo aLoadContextInfo,
+                                  in nsIApplicationCache aApplicationCache);
+
+  /**
+   * Evict the whole cache.
+   */
+  void clear();
+
+  /**
+   * Purge only data of disk backed entries.  Metadata are left for
+   * performance purposes.
+   */
+  const uint32_t PURGE_DISK_DATA_ONLY = 1;
+  /**
+   * Purge whole disk backed entries from memory.  Disk files will
+   * be left unattended.
+   */
+  const uint32_t PURGE_DISK_ALL = 2;
+  /**
+   * Purge all entries we keep in memory, including memory-storage
+   * entries.  This may be dangerous to use.
+   */
+  const uint32_t PURGE_EVERYTHING = 3;
+  /**
+   * Purges data we keep warmed in memory.  Use for tests and for
+   * saving memory.
+   */
+  void purgeFromMemory(in uint32_t aWhat);
+
+  /**
+   * I/O thread target to use for any operations on disk
+   */
+  readonly attribute nsIEventTarget ioTarget;
+};

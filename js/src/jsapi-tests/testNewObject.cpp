@@ -15,10 +15,11 @@ static jsval argv[N];
 static bool
 constructHook(JSContext *cx, unsigned argc, jsval *vp)
 {
-    // Check that arguments were passed properly from JS_New.
-    JS::RootedObject callee(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
+    JS::CallArgs args = CallArgsFromVp(argc, vp);
 
-    JS::RootedObject obj(cx, JS_NewObjectForConstructor(cx, js::Jsvalify(&JSObject::class_), vp));
+    // Check that arguments were passed properly from JS_New.
+
+    JS::RootedObject obj(cx, JS_NewObject(cx, js::Jsvalify(&JSObject::class_), NULL, NULL));
     if (!obj) {
         JS_ReportError(cx, "test failed, could not construct object");
         return false;
@@ -27,26 +28,31 @@ constructHook(JSContext *cx, unsigned argc, jsval *vp)
         JS_ReportError(cx, "test failed, wrong class for 'this'");
         return false;
     }
-    if (argc != 3) {
-        JS_ReportError(cx, "test failed, argc == %d", argc);
+    if (args.length() != 3) {
+        JS_ReportError(cx, "test failed, argc == %d", args.length());
         return false;
     }
-    if (!JSVAL_IS_INT(argv[2]) || JSVAL_TO_INT(argv[2]) != 2) {
-        JS_ReportError(cx, "test failed, wrong value in argv[2]");
+    if (!args[0].isInt32() || args[2].toInt32() != 2) {
+        JS_ReportError(cx, "test failed, wrong value in args[2]");
         return false;
     }
-    if (!JS_IsConstructing(cx, vp)) {
+    if (!args.isConstructing()) {
         JS_ReportError(cx, "test failed, not constructing");
         return false;
     }
 
     // Perform a side-effect to indicate that this hook was actually called.
-    JS::RootedValue value(cx, argv[0]);
-    if (!JS_SetElement(cx, callee, 0, &value))
+    JS::RootedValue value(cx, args[0]);
+    if (!JS_SetElement(cx, &args.callee(), 0, &value))
         return false;
 
-    *vp = OBJECT_TO_JSVAL(obj);
-    argv[0] = argv[1] = argv[2] = JSVAL_VOID;  // trash the argv, perversely
+    args.rval().setObject(*obj);
+
+    // trash the argv, perversely
+    args[0].setUndefined();
+    args[1].setUndefined();
+    args[2].setUndefined();
+
     return true;
 }
 

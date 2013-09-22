@@ -30,11 +30,6 @@
  *
  */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
-
 Cu.import("resource://testing-common/httpd.js");
 
 // const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
@@ -129,7 +124,7 @@ function init_cache_capacity() {
 }
 
 function clean_app_cache() {
-  evict_cache_entries(Ci.nsICache.STORE_OFFLINE);
+  evict_cache_entries("appcache");
 }
 
 function do_app_cache(manifestURL, pageURL, pinned) {

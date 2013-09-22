@@ -8,15 +8,17 @@
 #define ProxyAutoConfig_h__
 
 #include "nsString.h"
-#include "prio.h"
-#include "nsITimer.h"
-#include "nsAutoPtr.h"
-#include "mozilla/net/DNS.h"
-#include "js/TypeDecls.h"
+#include "nsCOMPtr.h"
+
+class nsITimer;
+namespace JS {
+class Value;
+}
 
 namespace mozilla { namespace net {
 
 class JSRuntimeWrapper;
+union NetAddr;
 
 // The ProxyAutoConfig class is meant to be created and run on a
 // non main thread. It synchronously resolves PAC files by blocking that
@@ -24,13 +26,7 @@ class JSRuntimeWrapper;
 
 class ProxyAutoConfig  {
 public:
-  ProxyAutoConfig()
-    : mJSRuntime(nullptr)
-    , mJSNeedsSetup(false)
-    , mShutdown(false)
-  {
-    MOZ_COUNT_CTOR(ProxyAutoConfig);
-  }
+  ProxyAutoConfig();
   ~ProxyAutoConfig();
 
   nsresult Init(const nsCString &aPACURI,

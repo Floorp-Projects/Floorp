@@ -8,7 +8,7 @@
 #include "nsUnicharStreamLoader.h"
 #include "nsIInputStream.h"
 #include "nsICharsetConverterManager.h"
-#include "nsIServiceManager.h"
+#include "nsServiceManagerUtils.h"
 #include <algorithm>
 
 // 1024 bytes is specified in

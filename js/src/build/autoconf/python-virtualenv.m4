@@ -24,7 +24,7 @@ dnl If this is a mozilla-central, we'll find the virtualenv in the top
 dnl source directory. If this is a SpiderMonkey build, we assume we're at
 dnl js/src and try to find the virtualenv from the mozilla-central root.
 for base in $MOZILLA_CENTRAL_PATH $_topsrcdir $_topsrcdir/../..; do
-  possible=$base/build/virtualenv/populate_virtualenv.py
+  possible=$base/python/mozbuild/mozbuild/virtualenv.py
 
   if test -e $possible; then
     _virtualenv_topsrcdir=$base
@@ -53,7 +53,8 @@ if test -z $DONT_POPULATE_VIRTUALENV; then
   dnl virtualenv is present and up to date. It sanitizes the environment
   dnl for us, so we don't need to clean anything out.
   $PYTHON $_virtualenv_populate_path \
-    $_virtualenv_topsrcdir $MOZ_BUILD_ROOT $MOZ_BUILD_ROOT/_virtualenv || exit 1
+    $_virtualenv_topsrcdir $MOZ_BUILD_ROOT $MOZ_BUILD_ROOT/_virtualenv \
+    $_virtualenv_topsrcdir/build/virtualenv_packages.txt || exit 1
 
   case "$host_os" in
   mingw*)

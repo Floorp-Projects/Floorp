@@ -3,7 +3,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsStreamListenerWrapper.h"
-#include "nsThreadUtils.h"
+#ifdef DEBUG
+#include "MainThreadUtils.h"
+#endif
 
 NS_IMPL_ISUPPORTS3(nsStreamListenerWrapper,
                    nsIStreamListener,
