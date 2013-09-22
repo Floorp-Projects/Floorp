@@ -47,7 +47,6 @@
 #include "nsGkAtoms.h"
 #include "nsIThreadInternal.h"
 #include "nsCrossSiteListenerProxy.h"
-#include "nsINetworkSeer.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
@@ -1434,12 +1433,6 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
       return rv;
     }
 
-    if (mDocument) {
-      mozilla::net::SeerLearn(aLoadData->mURI, mDocument->GetDocumentURI(),
-                              nsINetworkSeer::LEARN_LOAD_SUBRESOURCE,
-                              mDocument);
-    }
-
     // Just load it
     nsCOMPtr<nsIInputStream> stream;
     nsCOMPtr<nsIChannel> channel;
@@ -1611,11 +1604,6 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     channelListener = corsListener;
   } else {
     channelListener = streamLoader;
-  }
-
-  if (mDocument) {
-    mozilla::net::SeerLearn(aLoadData->mURI, mDocument->GetDocumentURI(),
-                            nsINetworkSeer::LEARN_LOAD_SUBRESOURCE, mDocument);
   }
 
   rv = channel->AsyncOpen(channelListener, nullptr);
