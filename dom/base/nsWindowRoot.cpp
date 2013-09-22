@@ -19,6 +19,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIControllers.h"
+#include "nsIController.h"
 
 #include "nsCycleCollectionParticipant.h"
 
