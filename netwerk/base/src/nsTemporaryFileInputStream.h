@@ -6,8 +6,10 @@
 #ifndef nsTemporaryFileInputStream_h__
 #define nsTemporaryFileInputStream_h__
 
-#include "nsFileStreams.h"
 #include "mozilla/Mutex.h"
+#include "nsIInputStream.h"
+#include "nsAutoPtr.h"
+#include "prio.h"
 
 class nsTemporaryFileInputStream : public nsIInputStream
 {

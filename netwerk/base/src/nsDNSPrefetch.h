@@ -6,7 +6,6 @@
 #ifndef nsDNSPrefetch_h___
 #define nsDNSPrefetch_h___
 
-#include "nsCOMPtr.h"
 #include "nsString.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"

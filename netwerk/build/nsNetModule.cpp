@@ -37,6 +37,7 @@
 #include "nsCategoryCache.h"
 #include "nsIContentSniffer.h"
 #include "nsNetUtil.h"
+#include "nsIThreadPool.h"
 #include "mozilla/net/NeckoChild.h"
 
 #include "nsNetCID.h"

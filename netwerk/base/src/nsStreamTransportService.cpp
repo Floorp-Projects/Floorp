@@ -10,14 +10,13 @@
 #include "nsError.h"
 #include "nsNetCID.h"
 
-#include "nsIServiceManager.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsISeekableStream.h"
 #include "nsIPipe.h"
 #include "nsITransport.h"
-#include "nsIRunnable.h"
 #include "nsIObserverService.h"
+#include "nsIThreadPool.h"
 #include "mozilla/Services.h"
 
 //-----------------------------------------------------------------------------
