@@ -25,6 +25,8 @@ from .mozconfig import (
     MozconfigLoadException,
     MozconfigLoader,
 )
+from .virtualenv import VirtualenvManager
+
 
 def ancestors(path):
     """Emit the parent directories of a path."""
@@ -86,6 +88,7 @@ class MozbuildObject(ProcessExecutionMixin):
         self._mozconfig = None
         self._config_guess_output = None
         self._config_environment = None
+        self._virtualenv_manager = None
 
     @classmethod
     def from_environment(cls, cwd=None, detect_virtualenv_mozinfo=True):
@@ -205,6 +208,16 @@ class MozbuildObject(ProcessExecutionMixin):
                 self.topsrcdir, self.mozconfig, default='obj-@CONFIG_GUESS@')
 
         return self._topobjdir
+
+    @property
+    def virtualenv_manager(self):
+        if self._virtualenv_manager is None:
+            self._virtualenv_manager = VirtualenvManager(self.topsrcdir,
+                self.topobjdir, os.path.join(self.topobjdir, '_virtualenv'),
+                sys.stdout, os.path.join(self.topsrcdir, 'build',
+                'virtualenv_packages.txt'))
+
+        return self._virtualenv_manager
 
     @property
     def mozconfig(self):
@@ -474,6 +487,10 @@ class MozbuildObject(ProcessExecutionMixin):
 
         return cls(self.topsrcdir, self.settings, self.log_manager,
             topobjdir=self.topobjdir)
+
+    def _activate_virtualenv(self):
+        self.virtualenv_manager.ensure()
+        self.virtualenv_manager.activate()
 
 
 class MachCommandBase(MozbuildObject):

@@ -5,6 +5,7 @@
 
 #include "nsTemporaryFileInputStream.h"
 #include "nsStreamUtils.h"
+#include <algorithm>
 
 NS_IMPL_ISUPPORTS1(nsTemporaryFileInputStream, nsIInputStream)
 

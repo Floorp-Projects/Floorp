@@ -203,13 +203,33 @@ struct JSFunctionSpecWithHelp {
 extern JS_FRIEND_API(bool)
 JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj, const JSFunctionSpecWithHelp *fs);
 
-typedef bool (* JS_SourceHook)(JSContext *cx, const char *filename,
-                               jschar **src, uint32_t *length);
-
-extern JS_FRIEND_API(void)
-JS_SetSourceHook(JSRuntime *rt, JS_SourceHook hook);
-
 namespace js {
+
+/*
+ * A class of objects that return source code on demand.
+ *
+ * When code is compiled with CompileOptions::LAZY_SOURCE, SpiderMonkey
+ * doesn't retain the source code (and doesn't do lazy bytecode
+ * generation). If we ever need the source code, say, in response to a call
+ * to Function.prototype.toSource or Debugger.Source.prototype.text, then
+ * we call the 'load' member function of the instance of this class that
+ * has hopefully been registered with the runtime, passing the code's URL,
+ * and hope that it will be able to find the source.
+ */
+class SourceHook {
+  public:
+    virtual ~SourceHook() { }
+
+    /* Set |*src| and |*length| to refer to the source code for |filename|. */
+    virtual bool load(JSContext *cx, const char *filename, jschar **src, size_t *length) = 0;
+};
+
+/*
+ * Have |rt| use |hook| to retrieve LAZY_SOURCE source code.
+ * See the comments for SourceHook.
+ */
+extern JS_FRIEND_API(void)
+SetSourceHook(JSRuntime *rt, SourceHook *hook);
 
 inline JSRuntime *
 GetRuntime(const JSContext *cx)

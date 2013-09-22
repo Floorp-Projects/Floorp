@@ -9,10 +9,11 @@
 
 #include "nsCOMPtr.h"
 #include "nsDeque.h"
-#include "nsICancelable.h"
 #include "nsITimer.h"
 
 #include "mozilla/TimeStamp.h"
+
+class nsICancelable;
 
 namespace mozilla {
 namespace net {

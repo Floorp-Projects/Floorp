@@ -512,6 +512,12 @@ class Automation(object):
 
     # ASan specific environment stuff
     if self.IS_ASAN and (self.IS_LINUX or self.IS_MAC):
+      # Symbolizer support
+      llvmsym = os.path.join(xrePath, "llvm-symbolizer")
+      if os.path.isfile(llvmsym):
+        env["ASAN_SYMBOLIZER_PATH"] = llvmsym
+        self.log.info("INFO | automation.py | ASan using symbolizer at %s", llvmsym)
+
       try:
         totalMemory = int(os.popen("free").readlines()[1].split()[1])
 

@@ -7,9 +7,13 @@
 #include "mozilla/net/HttpInfo.h"
 #include "nsCxPusher.h"
 #include "nsHttp.h"
+#include "nsICancelable.h"
 #include "nsIDNSService.h"
+#include "nsIDNSRecord.h"
+#include "nsIInputStream.h"
+#include "nsISocketTransport.h"
 #include "nsIThread.h"
-#include "nsSocketTransport2.h"
+#include "nsSocketTransportService2.h"
 #include "nsThreadUtils.h"
 
 using mozilla::AutoSafeJSContext;

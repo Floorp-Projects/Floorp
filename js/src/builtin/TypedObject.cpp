@@ -2366,3 +2366,10 @@ BinaryBlock::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
 
     return true;
 }
+
+/* static */ size_t
+BinaryBlock::dataOffset()
+{
+    return JSObject::getPrivateDataOffset(BLOCK_RESERVED_SLOTS + 1);
+}
+
