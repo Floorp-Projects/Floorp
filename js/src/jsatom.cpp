@@ -388,13 +388,8 @@ js::AtomizeMaybeGC(ExclusiveContext *cx, const char *bytes, size_t length, Inter
          * js::AtomizeString rarely has to copy the temp string we make.
          */
         jschar inflated[ATOMIZE_BUF_MAX];
-        size_t inflatedLength = ATOMIZE_BUF_MAX - 1;
-        if (!InflateStringToBuffer(cx->maybeJSContext(),
-                                   bytes, length, inflated, &inflatedLength))
-        {
-            return NULL;
-        }
-        return AtomizeAndCopyChars<allowGC>(cx, inflated, inflatedLength, ib);
+        InflateStringToBuffer(bytes, length, inflated);
+        return AtomizeAndCopyChars<allowGC>(cx, inflated, length, ib);
     }
 
     jschar *tbcharsZ = InflateString(cx, bytes, &length);

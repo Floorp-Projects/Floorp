@@ -1,5 +1,3 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
 const CC = Components.Constructor;
 
 const ServerSocket = CC("@mozilla.org/network/server-socket;1",

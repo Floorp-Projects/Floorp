@@ -21,8 +21,6 @@ static MOZ_CONSTEXPR_VAR ValueOperand R0(rcx);
 static MOZ_CONSTEXPR_VAR ValueOperand R1(rbx);
 static MOZ_CONSTEXPR_VAR ValueOperand R2(rax);
 
-// BaselineTailCallReg and BaselineStubReg reuse
-// registers from R2.
 static MOZ_CONSTEXPR_VAR Register BaselineTailCallReg = rsi;
 static MOZ_CONSTEXPR_VAR Register BaselineStubReg     = rdi;
 

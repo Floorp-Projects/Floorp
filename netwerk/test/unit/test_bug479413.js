@@ -2,8 +2,6 @@
  * Test for unassigned code points in IDNs (RFC 3454 section 7)
  */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
 var idnService;
 
 function expected_pass(inputIDN)

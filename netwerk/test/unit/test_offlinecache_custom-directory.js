@@ -9,11 +9,6 @@
  * 3. checks presence of index.sql and files in the expected location
  */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
-
 Cu.import("resource://testing-common/httpd.js");
 
 var httpServer = null;
