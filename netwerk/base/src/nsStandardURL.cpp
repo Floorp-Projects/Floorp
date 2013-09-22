@@ -7,8 +7,6 @@
 #include "IPCMessageUtils.h"
 
 #include "nsStandardURL.h"
-#include "nsDependentSubstring.h"
-#include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsEscape.h"
 #include "nsIFile.h"
@@ -18,11 +16,11 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIIDNService.h"
-#include "nsNetUtil.h"
 #include "prlog.h"
 #include "nsAutoPtr.h"
 #include "nsIProgrammingLanguage.h"
-#include "nsVoidArray.h"
+#include "nsIURLParser.h"
+#include "nsNetCID.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ipc/URIUtils.h"
 #include <algorithm>

@@ -16,6 +16,7 @@
 #include "jsnum.h"
 
 #include "builtin/Eval.h"
+#include "builtin/TypedObject.h"
 #include "gc/Nursery.h"
 #include "jit/ExecutionModeInlines.h"
 #include "jit/IonLinker.h"
@@ -2861,6 +2862,25 @@ CodeGenerator::visitNewArrayCallVM(LNewArray *lir)
     return true;
 }
 
+typedef JSObject *(*NewDerivedTypedObjectFn)(JSContext *,
+                                             HandleObject type,
+                                             HandleObject owner,
+                                             int32_t offset);
+static const VMFunction CreateDerivedTypedObjInfo =
+    FunctionInfo<NewDerivedTypedObjectFn>(CreateDerivedTypedObj);
+
+bool
+CodeGenerator::visitNewDerivedTypedObject(LNewDerivedTypedObject *lir)
+{
+    // Not yet made safe for par exec:
+    JS_ASSERT(gen->info().executionMode() == SequentialExecution);
+
+    pushArg(ToRegister(lir->offset()));
+    pushArg(ToRegister(lir->owner()));
+    pushArg(ToRegister(lir->type()));
+    return callVM(CreateDerivedTypedObjInfo, lir);
+}
+
 bool
 CodeGenerator::visitNewSlots(LNewSlots *lir)
 {
@@ -3574,6 +3594,15 @@ CodeGenerator::visitTypedArrayElements(LTypedArrayElements *lir)
     Register obj = ToRegister(lir->object());
     Register out = ToRegister(lir->output());
     masm.loadPtr(Address(obj, TypedArrayObject::dataOffset()), out);
+    return true;
+}
+
+bool
+CodeGenerator::visitTypedObjectElements(LTypedObjectElements *lir)
+{
+    Register obj = ToRegister(lir->object());
+    Register out = ToRegister(lir->output());
+    masm.loadPtr(Address(obj, BinaryBlock::dataOffset()), out);
     return true;
 }
 

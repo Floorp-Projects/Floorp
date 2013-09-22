@@ -24,6 +24,7 @@
 #include "jit/IonMacroAssembler.h"
 #include "jit/MOpcodes.h"
 #include "jit/TypePolicy.h"
+#include "jit/TypeRepresentationSet.h"
 #include "vm/ScopeObject.h"
 
 namespace js {
@@ -1484,6 +1485,66 @@ class MNewPar : public MUnaryInstruction
 
     JSObject *templateObject() const {
         return templateObject_;
+    }
+};
+
+// Creates a new derived type object. At runtime, this is just a call
+// to `BinaryBlock::createDerived()`. That is, the MIR itself does not
+// compile to particularly optimized code. However, using a distinct
+// MIR for creating derived type objects allows the compiler to
+// optimize ephemeral typed objects as would be created for a
+// reference like `a.b.c` -- here, the `a.b` will create an ephemeral
+// derived type object that aliases the memory of `a` itself. The
+// specific nature of `a.b` is revealed by using
+// `MNewDerivedTypedObject` rather than `MGetProperty` or what have
+// you. Moreover, the compiler knows that there are no side-effects,
+// so `MNewDerivedTypedObject` instructions can be reordered or pruned
+// as dead code.
+class MNewDerivedTypedObject
+  : public MTernaryInstruction,
+    public Mix3Policy<ObjectPolicy<0>,
+                      ObjectPolicy<1>,
+                      IntPolicy<2> >
+{
+  private:
+    TypeRepresentationSet set_;
+
+  public:
+    INSTRUCTION_HEADER(NewDerivedTypedObject);
+
+    MNewDerivedTypedObject(TypeRepresentationSet set,
+                           MDefinition *type,
+                           MDefinition *owner,
+                           MDefinition *offset)
+      : MTernaryInstruction(type, owner, offset),
+        set_(set)
+    {
+        setMovable();
+        setResultType(MIRType_Object);
+    }
+
+    TypeRepresentationSet set() const {
+        return set_;
+    }
+
+    MDefinition *type() const {
+        return getOperand(0);
+    }
+
+    MDefinition *owner() const {
+        return getOperand(1);
+    }
+
+    MDefinition *offset() const {
+        return getOperand(2);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
     }
 };
 
@@ -4882,6 +4943,42 @@ class MTypedArrayElements
     }
 };
 
+// Load a binary data object's "elements", which is just its opaque
+// binary data space. Eventually this should probably be
+// unified with `MTypedArrayElements`.
+class MTypedObjectElements
+  : public MUnaryInstruction,
+    public SingleObjectPolicy
+{
+  private:
+    MTypedObjectElements(MDefinition *object)
+      : MUnaryInstruction(object)
+    {
+        setResultType(MIRType_Elements);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(TypedObjectElements)
+
+    static MTypedObjectElements *New(MDefinition *object) {
+        return new MTypedObjectElements(object);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    bool congruentTo(MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::ObjectFields);
+    }
+};
+
 // Perform !-operation
 class MNot
   : public MUnaryInstruction,
@@ -5422,6 +5519,8 @@ class MLoadTypedArrayElement
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::TypedArrayElement);
     }
+
+    void printOpcode(FILE *fp) const;
 
     void computeRange();
 

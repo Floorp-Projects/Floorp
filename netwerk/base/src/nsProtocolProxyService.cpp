@@ -10,8 +10,6 @@
 #include "nsProtocolProxyService.h"
 #include "nsProxyInfo.h"
 #include "nsIClassInfoImpl.h"
-#include "nsIServiceManager.h"
-#include "nsXPIDLString.h"
 #include "nsIIOService.h"
 #include "nsIObserverService.h"
 #include "nsIProtocolHandler.h"
@@ -21,17 +19,16 @@
 #include "nsPIDNSService.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsReadableUtils.h"
 #include "nsThreadUtils.h"
 #include "nsString.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
-#include "nsCRT.h"
 #include "prnetdb.h"
 #include "nsPACMan.h"
 #include "nsProxyRelease.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
+#include "nsISystemProxySettings.h"
 
 //----------------------------------------------------------------------------
 
