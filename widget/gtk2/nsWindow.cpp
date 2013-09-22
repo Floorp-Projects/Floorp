@@ -2257,7 +2257,7 @@ nsWindow::UpdateAlpha(gfxPattern* aPattern, nsIntRect aBoundsRect)
       int32_t stride = GetAlignedStride<4>(BytesPerPixel(FORMAT_A8) *
                                            aBoundsRect.width);
       int32_t bufferSize = stride * aBoundsRect.height;
-      nsAutoArrayPtr<PRUint8> imageBuffer(new (std::nothrow) PRUint8[bufferSize]);
+      nsAutoArrayPtr<uint8_t> imageBuffer(new (std::nothrow) uint8_t[bufferSize]);
       RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
           CreateDrawTargetForData(imageBuffer, ToIntSize(aBoundsRect.Size()),
                                   stride, FORMAT_A8);
