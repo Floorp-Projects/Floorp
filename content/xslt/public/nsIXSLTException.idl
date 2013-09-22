@@ -4,7 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIException.idl"
-#include "domstubs.idl"
+
+interface nsIDOMNode;
 
 [scriptable, uuid(e06dfaea-92d5-47f7-a800-c5f5404d8771)]
 interface nsIXSLTException : nsIException {

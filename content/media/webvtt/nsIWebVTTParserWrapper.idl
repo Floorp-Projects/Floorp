@@ -3,8 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIWebVTTListener.idl"
-#include "nsIDOMHTMLElement.idl"
+
+interface nsIDOMHTMLElement;
+interface nsIWebVTTListener;
+interface nsIDOMWindow;
 
 /**
  * Interface for a wrapper of a JS WebVTT parser (vtt.js).
