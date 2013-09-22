@@ -11,8 +11,6 @@
 #include "nsIStreamListener.h"
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIIOService.h"
-#include "nsIURI.h"
 #include "nsCOMPtr.h"
 
 //-----------------------------------------------------------------------------

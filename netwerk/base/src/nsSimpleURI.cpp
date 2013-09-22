@@ -9,10 +9,8 @@
 
 #include "nsSimpleURI.h"
 #include "nscore.h"
-#include "nsCRT.h"
 #include "nsString.h"
-#include "nsReadableUtils.h"
-#include "prprf.h"
+#include "plstr.h"
 #include "nsURLHelper.h"
 #include "nsNetCID.h"
 #include "nsIObjectInputStream.h"
