@@ -106,6 +106,7 @@ TypedObjectPointer.prototype.kind = function() {
 TypedObjectPointer.prototype.moveTo = function(propName) {
   switch (this.kind()) {
   case JS_TYPEREPR_SCALAR_KIND:
+  case JS_TYPEREPR_REFERENCE_KIND:
     break;
 
   case JS_TYPEREPR_ARRAY_KIND:
@@ -179,7 +180,6 @@ TypedObjectPointer.prototype.moveToField = function(propName) {
 // by `this` and produce JS values. This process is called *reification*
 // in the spec.
 
-
 // Reifies the value referenced by the pointer, meaning that it
 // returns a new object pointing at the value. If the value is
 // a scalar, it will return a JS number, but otherwise the reified
@@ -190,6 +190,9 @@ TypedObjectPointer.prototype.get = function() {
 
   if (REPR_KIND(this.typeRepr) == JS_TYPEREPR_SCALAR_KIND)
     return this.getScalar();
+
+  if (REPR_KIND(this.typeRepr) == JS_TYPEREPR_REFERENCE_KIND)
+    return this.getReference();
 
   return NewDerivedTypedDatum(this.typeObj, this.datum, this.offset);
 }
@@ -226,6 +229,22 @@ TypedObjectPointer.prototype.getScalar = function() {
   assert(false, "Unhandled scalar type: " + type);
 }
 
+TypedObjectPointer.prototype.getReference = function() {
+  var type = REPR_TYPE(this.typeRepr);
+  switch (type) {
+  case JS_REFERENCETYPEREPR_ANY:
+    return Load_Any(this.datum, this.offset);
+
+  case JS_REFERENCETYPEREPR_OBJECT:
+    return Load_Object(this.datum, this.offset);
+
+  case JS_REFERENCETYPEREPR_STRING:
+    return Load_string(this.datum, this.offset);
+  }
+
+  assert(false, "Unhandled scalar type: " + type);
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // Setting values
 //
@@ -256,6 +275,10 @@ TypedObjectPointer.prototype.set = function(fromValue) {
   switch (REPR_KIND(typeRepr)) {
   case JS_TYPEREPR_SCALAR_KIND:
     this.setScalar(fromValue);
+    return;
+
+  case JS_TYPEREPR_REFERENCE_KIND:
+    this.setReference(fromValue);
     return;
 
   case JS_TYPEREPR_ARRAY_KIND:
@@ -337,6 +360,23 @@ TypedObjectPointer.prototype.setScalar = function(fromValue) {
 
   case JS_SCALARTYPEREPR_FLOAT64:
     return Store_float64(this.datum, this.offset, +fromValue);
+  }
+
+  assert(false, "Unhandled scalar type: " + type);
+}
+
+TypedObjectPointer.prototype.setReference = function(fromValue) {
+  var type = REPR_TYPE(this.typeRepr);
+  switch (type) {
+  case JS_REFERENCETYPEREPR_ANY:
+    return Store_Any(this.datum, this.offset, fromValue);
+
+  case JS_REFERENCETYPEREPR_OBJECT:
+    var value = (fromValue === null ? fromValue : ToObject(fromValue));
+    return Store_Object(this.datum, this.offset, value);
+
+  case JS_REFERENCETYPEREPR_STRING:
+    return Store_string(this.datum, this.offset, ToString(fromValue));
   }
 
   assert(false, "Unhandled scalar type: " + type);
