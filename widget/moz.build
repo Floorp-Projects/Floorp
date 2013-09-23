@@ -55,7 +55,7 @@ TEST_TOOL_DIRS += ['tests']
 # source tree.
 #
 if CONFIG['MOZ_ENABLE_GTK']:
-    DIRS += ['gtk2']
+    DIRS += ['gtk']
 
     if CONFIG['MOZ_X11']:
         DIRS += ['gtkxtbin']
