@@ -8,6 +8,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/net/DashboardTypes.h"
 #include "nsIDashboard.h"
+#include "nsIDashboardEventNotifier.h"
 #include "nsIDNSListener.h"
 #include "nsIServiceManager.h"
 #include "nsITimer.h"

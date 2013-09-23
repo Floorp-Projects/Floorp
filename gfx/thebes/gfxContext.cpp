@@ -196,7 +196,7 @@ gfxContext::GetCairo()
 
   if (mDT->GetType() == BACKEND_CAIRO) {
     cairo_t *ctx =
-      (cairo_t*)mOriginalDT->GetNativeSurface(NATIVE_SURFACE_CAIRO_CONTEXT);
+      (cairo_t*)mDT->GetNativeSurface(NATIVE_SURFACE_CAIRO_CONTEXT);
     if (ctx) {
       return ctx;
     }

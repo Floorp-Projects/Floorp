@@ -5,19 +5,147 @@
 from __future__ import unicode_literals
 
 import os
+import unittest
 
 from mozpack.manifests import (
     InstallManifest,
-    PurgeManifest,
 )
 from mozunit import main
 
-from mozbuild.backend.recursivemake import RecursiveMakeBackend
+from mozbuild.backend.recursivemake import (
+    RecursiveMakeBackend,
+    RecursiveMakeTraversal,
+)
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
 
 from mozbuild.test.backend.common import BackendTester
 
+
+class TestRecursiveMakeTraversal(unittest.TestCase):
+    def test_traversal(self):
+        traversal = RecursiveMakeTraversal()
+        traversal.add('', dirs=['A', 'B', 'C'])
+        traversal.add('', dirs=['D'])
+        traversal.add('A')
+        traversal.add('B', dirs=['E', 'F'])
+        traversal.add('C', parallel=['G', 'H'])
+        traversal.add('D', parallel=['I'], dirs=['K'])
+        traversal.add('D', parallel=['J'], dirs=['L'])
+        traversal.add('E')
+        traversal.add('F')
+        traversal.add('G')
+        traversal.add('H')
+        traversal.add('I', dirs=['M', 'N'])
+        traversal.add('J', parallel=['O', 'P'])
+        traversal.add('K', parallel=['Q', 'R'])
+        traversal.add('L', dirs=['S'])
+        traversal.add('M')
+        traversal.add('N', dirs=['T'])
+        traversal.add('O')
+        traversal.add('P', parallel=['U'])
+        traversal.add('Q')
+        traversal.add('R', dirs=['V'])
+        traversal.add('S', dirs=['W'])
+        traversal.add('T')
+        traversal.add('U')
+        traversal.add('V')
+        traversal.add('W', dirs=['X'])
+        traversal.add('X')
+
+        start, deps = traversal.compute_dependencies()
+        self.assertEqual(start, ('X',))
+        self.assertEqual(deps, {
+            'A': ('',),
+            'B': ('A',),
+            'C': ('F',),
+            'D': ('G', 'H'),
+            'E': ('B',),
+            'F': ('E',),
+            'G': ('C',),
+            'H': ('C',),
+            'I': ('D',),
+            'J': ('D',),
+            'K': ('T', 'O', 'U'),
+            'L': ('Q', 'V'),
+            'M': ('I',),
+            'N': ('M',),
+            'O': ('J',),
+            'P': ('J',),
+            'Q': ('K',),
+            'R': ('K',),
+            'S': ('L',),
+            'T': ('N',),
+            'U': ('P',),
+            'V': ('R',),
+            'W': ('S',),
+            'X': ('W',),
+        })
+
+        self.assertEqual(list(traversal.traverse('')),
+                         ['', 'A', 'B', 'E', 'F', 'C', 'G', 'H', 'D', 'I',
+                         'M', 'N', 'T', 'J', 'O', 'P', 'U', 'K', 'Q', 'R',
+                         'V', 'L', 'S', 'W', 'X'])
+
+        self.assertEqual(list(traversal.traverse('C')),
+                         ['C', 'G', 'H'])
+
+    def test_traversal_2(self):
+        traversal = RecursiveMakeTraversal()
+        traversal.add('', dirs=['A', 'B', 'C'])
+        traversal.add('A')
+        traversal.add('B', static=['D'], dirs=['E', 'F'])
+        traversal.add('C', parallel=['G', 'H'], dirs=['I'])
+        # Don't register D
+        traversal.add('E')
+        traversal.add('F')
+        traversal.add('G')
+        traversal.add('H')
+        traversal.add('I')
+
+        start, deps = traversal.compute_dependencies()
+        self.assertEqual(start, ('I',))
+        self.assertEqual(deps, {
+            'A': ('',),
+            'B': ('A',),
+            'C': ('F',),
+            'D': ('B',),
+            'E': ('D',),
+            'F': ('E',),
+            'G': ('C',),
+            'H': ('C',),
+            'I': ('G', 'H'),
+        })
+
+    def test_traversal_filter(self):
+        traversal = RecursiveMakeTraversal()
+        traversal.add('', dirs=['A', 'B', 'C'])
+        traversal.add('A')
+        traversal.add('B', static=['D'], dirs=['E', 'F'])
+        traversal.add('C', parallel=['G', 'H'], dirs=['I'])
+        traversal.add('D')
+        traversal.add('E')
+        traversal.add('F')
+        traversal.add('G')
+        traversal.add('H')
+        traversal.add('I')
+
+        def filter(current, subdirs):
+            if current == 'B':
+                current = None
+            return current, subdirs.parallel, subdirs.dirs
+
+        start, deps = traversal.compute_dependencies(filter)
+        self.assertEqual(start, ('I',))
+        self.assertEqual(deps, {
+            'A': ('',),
+            'C': ('F',),
+            'E': ('A',),
+            'F': ('E',),
+            'G': ('C',),
+            'H': ('C',),
+            'I': ('G', 'H'),
+        })
 
 class TestRecursiveMakeBackend(BackendTester):
     def test_basic(self):
@@ -157,10 +285,6 @@ class TestRecursiveMakeBackend(BackendTester):
                 'CSRCS += bar.c',
                 'CSRCS += foo.c',
             ],
-            'DEFINES': [
-                'DEFINES += -Dbar',
-                'DEFINES += -Dfoo',
-            ],
             'EXTRA_COMPONENTS': [
                 'EXTRA_COMPONENTS += bar.js',
                 'EXTRA_COMPONENTS += foo.js',
@@ -271,21 +395,20 @@ class TestRecursiveMakeBackend(BackendTester):
         """Ensure xpidl files and directories are written out."""
         env = self._consume('xpidl', RecursiveMakeBackend)
 
-        # Purge manifests should contain entries.
-        purge_dir = os.path.join(env.topobjdir, '_build_manifests', 'purge')
+        # Install manifests should contain entries.
         install_dir = os.path.join(env.topobjdir, '_build_manifests',
             'install')
-        self.assertTrue(os.path.isfile(os.path.join(purge_dir, 'xpidl')))
         self.assertTrue(os.path.isfile(os.path.join(install_dir, 'dist_idl')))
-
-        m = PurgeManifest(path=os.path.join(purge_dir, 'xpidl'))
-        self.assertIn('.deps/my_module.pp', m.entries)
-        self.assertIn('xpt/my_module.xpt', m.entries)
+        self.assertTrue(os.path.isfile(os.path.join(install_dir, 'xpidl')))
 
         m = InstallManifest(path=os.path.join(install_dir, 'dist_idl'))
         self.assertEqual(len(m), 2)
         self.assertIn('bar.idl', m)
         self.assertIn('foo.idl', m)
+
+        m = InstallManifest(path=os.path.join(install_dir, 'xpidl'))
+        self.assertIn('.deps/my_module.pp', m)
+        self.assertIn('xpt/my_module.xpt', m)
 
         m = InstallManifest(path=os.path.join(install_dir, 'dist_include'))
         self.assertIn('foo.h', m)
@@ -307,35 +430,14 @@ class TestRecursiveMakeBackend(BackendTester):
             '; THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.',
             ''] + ['[include:%s/xpcshell.ini]' % x for x in expected])
 
-    def test_purge_manifests_written(self):
-        env = self._consume('stub0', RecursiveMakeBackend)
-
-        purge_dir = os.path.join(env.topobjdir, '_build_manifests', 'purge')
-        self.assertTrue(os.path.exists(purge_dir))
-
-        expected = [
-            'dist_bin',
-            'dist_private',
-            'dist_public',
-            'dist_sdk',
-            'tests',
-        ]
-
-        for e in expected:
-            full = os.path.join(purge_dir, e)
-            self.assertTrue(os.path.exists(full))
-
-        m = PurgeManifest(path=os.path.join(purge_dir, 'dist_bin'))
-        self.assertEqual(m.relpath, 'dist/bin')
-
-    def test_old_purge_manifest_deleted(self):
-        # Simulate a purge manifest from a previous backend version. Ensure it
-        # is deleted.
+    def test_old_install_manifest_deleted(self):
+        # Simulate an install manifest from a previous backend version. Ensure
+        # it is deleted.
         env = self._get_environment('stub0')
-        purge_dir = os.path.join(env.topobjdir, '_build_manifests', 'purge')
+        purge_dir = os.path.join(env.topobjdir, '_build_manifests', 'install')
         manifest_path = os.path.join(purge_dir, 'old_manifest')
         os.makedirs(purge_dir)
-        m = PurgeManifest()
+        m = InstallManifest()
         m.write(path=manifest_path)
 
         self.assertTrue(os.path.exists(manifest_path))
@@ -389,6 +491,19 @@ class TestRecursiveMakeBackend(BackendTester):
             "IPDLDIRS := %s/bar %s/foo" % (topsrcdir, topsrcdir),
         ]
         self.assertEqual(lines, expected)
+
+    def test_defines(self):
+        """Test that DEFINES are written to backend.mk correctly."""
+        env = self._consume('defines', RecursiveMakeBackend)
+
+        backend_path = os.path.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        var = 'DEFINES'
+        defines = [val for val in lines if val.startswith(var)]
+
+        expected = ['DEFINES += -DFOO -DBAZ=\'"abcd"\' -DBAR=7 -DVALUE=\'xyz\'']
+        self.assertEqual(defines, expected)
 
     def test_local_includes(self):
         """Test that LOCAL_INCLUDES are written to backend.mk correctly."""

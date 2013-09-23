@@ -539,6 +539,13 @@ MConstantElements::printOpcode(FILE *fp) const
     fprintf(fp, " %p", value());
 }
 
+void
+MLoadTypedArrayElement::printOpcode(FILE *fp) const
+{
+    MDefinition::printOpcode(fp);
+    fprintf(fp, " %s", ScalarTypeRepresentation::typeName(arrayType()));
+}
+
 MParameter *
 MParameter::New(int32_t index, types::TemporaryTypeSet *types)
 {
@@ -1246,7 +1253,7 @@ MBinaryArithInstruction::trySpecializeFloat32()
 bool
 MAbs::fallible() const
 {
-    return !implicitTruncate_ && (!range() || !range()->isInt32());
+    return !implicitTruncate_ && (!range() || !range()->hasInt32Bounds());
 }
 
 MDefinition *
@@ -1328,14 +1335,6 @@ MMod::canBePowerOfTwoDivisor() const
     return true;
 }
 
-static inline MDefinition *
-TryFold(MDefinition *original, MDefinition *replacement)
-{
-    if (original->type() == replacement->type())
-        return replacement;
-    return original;
-}
-
 MDefinition *
 MMod::foldsTo(bool useValueNumbers)
 {
@@ -1361,7 +1360,7 @@ MAdd::fallible()
     // either the truncation analysis shows that there are non-truncated uses.
     if (isTruncated())
         return false;
-    if (range() && range()->isInt32())
+    if (range() && range()->hasInt32Bounds())
         return false;
     return true;
 }
@@ -1372,7 +1371,7 @@ MSub::fallible()
     // see comment in MAdd::fallible()
     if (isTruncated())
         return false;
-    if (range() && range()->isInt32())
+    if (range() && range()->hasInt32Bounds())
         return false;
     return true;
 }
@@ -1440,7 +1439,7 @@ MMul::canOverflow()
 {
     if (isTruncated())
         return false;
-    return !range() || !range()->isInt32();
+    return !range() || !range()->hasInt32Bounds();
 }
 
 bool
@@ -1448,7 +1447,7 @@ MUrsh::canOverflow()
 {
     if (!canOverflow_)
         return false;
-    return !range() || !range()->isInt32();
+    return !range() || !range()->hasInt32Bounds();
 }
 
 static inline bool
@@ -2381,24 +2380,15 @@ MNot::foldsTo(bool useValueNumbers)
     return this;
 }
 
-bool
-MBoundsCheckLower::fallible()
-{
-    return !range() || range()->lower() < minimum_;
-}
-
 void
 MBeta::printOpcode(FILE *fp) const
 {
-    PrintOpcodeName(fp, op());
-    fprintf(fp, " ");
-    getOperand(0)->printName(fp);
-    fprintf(fp, " ");
+    MDefinition::printOpcode(fp);
 
     Sprinter sp(GetIonContext()->cx);
     sp.init();
     comparison_->print(sp);
-    fprintf(fp, "%s", sp.string());
+    fprintf(fp, " %s", sp.string());
 }
 
 bool
@@ -2485,7 +2475,7 @@ MLoadSlot::mightAlias(MDefinition *store)
 }
 
 void
-InlinePropertyTable::trimTo(AutoObjectVector &targets, Vector<bool> &choiceSet)
+InlinePropertyTable::trimTo(ObjectVector &targets, BoolVector &choiceSet)
 {
     for (size_t i = 0; i < targets.length(); i++) {
         // If the target was inlined, don't erase the entry.
@@ -2506,7 +2496,7 @@ InlinePropertyTable::trimTo(AutoObjectVector &targets, Vector<bool> &choiceSet)
 }
 
 void
-InlinePropertyTable::trimToTargets(AutoObjectVector &targets)
+InlinePropertyTable::trimToTargets(ObjectVector &targets)
 {
     IonSpew(IonSpew_Inlining, "Got inlineable property cache with %d cases",
             (int)numEntries());

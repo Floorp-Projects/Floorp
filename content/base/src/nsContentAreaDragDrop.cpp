@@ -51,6 +51,7 @@
 #include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "nsDOMDataTransfer.h"
+#include "nsIMIMEInfo.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLAreaElement.h"
 

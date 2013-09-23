@@ -38,6 +38,13 @@ pref("general.warnOnAboutConfig", true);
 // maximum number of dated backups to keep at any time
 pref("browser.bookmarks.max_backups",       5);
 
+// Preference for switching the cache backend, can be changed freely at runtime
+// 0 - use the old (Darin's) cache [DEFAULT]
+// 1 - use the new cache back-end (cache v2)
+// 2 - do a random choise for A/B testing (browser chooses old or new back-end at startup
+//     and keeps it per session)
+pref("browser.cache.use_new_backend",       0);
+
 pref("browser.cache.disk.enable",           true);
 // Is this the first-time smartsizing has been introduced?
 pref("browser.cache.disk.smart_size.first_run", true);
@@ -59,6 +66,9 @@ pref("browser.cache.memory.max_entry_size",  5120);
 pref("browser.cache.disk_cache_ssl",        true);
 // 0 = once-per-session, 1 = each-time, 2 = never, 3 = when-appropriate/automatically
 pref("browser.cache.check_doc_frequency",   3);
+
+// Limit for how much memory the cache can consume, for any data, in Kb
+pref("browser.cache.memory_limit", 51200); // 50 MB
 
 pref("browser.cache.offline.enable",           true);
 // enable offline apps by default, disable prompt
@@ -359,6 +369,8 @@ pref("gfx.content.azure.backends", "cairo");
 
 #ifdef ANDROID
 pref("gfx.textures.poweroftwo.force-enabled", false);
+pref("gfx.content.azure.backends", "cairo");
+pref("gfx.content.azure.enabled", true);
 #endif
 
 pref("gfx.work-around-driver-bugs", true);

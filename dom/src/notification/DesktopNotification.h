@@ -15,7 +15,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDOMWindow.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "nsThreadUtils.h"
 
 #include "nsDOMEventTargetHelper.h"
 #include "nsIDOMEvent.h"

@@ -7,13 +7,14 @@
 #ifndef jit_LIR_Common_h
 #define jit_LIR_Common_h
 
-#include "jit/RangeAnalysis.h"
 #include "jit/shared/Assembler-shared.h"
 
 // This file declares LIR instructions that are common to every platform.
 
 namespace js {
 namespace jit {
+
+class Range;
 
 template <size_t Temps, size_t ExtraUses = 0>
 class LBinaryMath : public LInstructionHelper<1, 2 + ExtraUses, Temps>
@@ -497,6 +498,32 @@ public:
 
     const LAllocation *getTemp1() {
         return getTemp(1)->output();
+    }
+};
+
+class LNewDerivedTypedObject : public LCallInstructionHelper<1, 3, 0>
+{
+  public:
+    LIR_HEADER(NewDerivedTypedObject);
+
+    LNewDerivedTypedObject(const LAllocation &type,
+                           const LAllocation &owner,
+                           const LAllocation &offset) {
+        setOperand(0, type);
+        setOperand(1, owner);
+        setOperand(2, offset);
+    }
+
+    const LAllocation *type() {
+        return getOperand(0);
+    }
+
+    const LAllocation *owner() {
+        return getOperand(1);
+    }
+
+    const LAllocation *offset() {
+        return getOperand(2);
     }
 };
 
@@ -3041,6 +3068,20 @@ class LTypedArrayElements : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Load a typed array's elements vector.
+class LTypedObjectElements : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(TypedObjectElements)
+
+    LTypedObjectElements(const LAllocation &object) {
+        setOperand(0, object);
+    }
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+};
+
 // Bailout if index >= length.
 class LBoundsCheck : public LInstructionHelper<0, 2, 0>
 {
@@ -4676,6 +4717,24 @@ class LPostWriteBarrierV : public LInstructionHelper<0, 1 + BOX_PIECES, 1>
     }
     const LDefinition *temp() {
         return getTemp(0);
+    }
+};
+
+// Generational write barrier used when writing to multiple slots in an object.
+class LPostWriteBarrierAllSlots : public LInstructionHelper<0, 1, 0>
+{
+  public:
+    LIR_HEADER(PostWriteBarrierAllSlots)
+
+    LPostWriteBarrierAllSlots(const LAllocation &obj) {
+        setOperand(0, obj);
+    }
+
+    const MPostWriteBarrier *mir() const {
+        return mir_->toPostWriteBarrier();
+    }
+    const LAllocation *object() {
+        return getOperand(0);
     }
 };
 

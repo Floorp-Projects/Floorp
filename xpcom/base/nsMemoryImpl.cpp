@@ -3,21 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsXPCOM.h"
 #include "nsMemoryImpl.h"
 #include "nsThreadUtils.h"
 
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsIServiceManager.h"
 #include "nsISimpleEnumerator.h"
 
-#include "prcvar.h"
-#include "pratom.h"
-
-#include "nsAlgorithm.h"
 #include "nsCOMPtr.h"
-#include "nsString.h"
 #include "mozilla/Services.h"
 
 #ifdef ANDROID

@@ -12,7 +12,6 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/HashFunctions.h"
 #include "nsCRT.h"
-#include "prbit.h"
 
 using namespace mozilla;
 

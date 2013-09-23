@@ -1,11 +1,6 @@
 // This testcase verifies that channels can't be reopened
 // See https://bugzilla.mozilla.org/show_bug.cgi?id=372486
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
-
 Cu.import("resource://testing-common/httpd.js");
 
 const NS_ERROR_IN_PROGRESS = 0x804b000f;

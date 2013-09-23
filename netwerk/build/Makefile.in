@@ -12,6 +12,7 @@ SHARED_LIBRARY_LIBS = \
   ../streamconv/converters/$(LIB_PREFIX)nkcnvts_s.$(LIB_SUFFIX) \
   ../mime/$(LIB_PREFIX)nkmime_s.$(LIB_SUFFIX) \
   ../cache/$(LIB_PREFIX)nkcache_s.$(LIB_SUFFIX) \
+  ../cache2/$(LIB_PREFIX)nkcache2_s.$(LIB_SUFFIX) \
   ../protocol/about/$(LIB_PREFIX)nkabout_s.$(LIB_SUFFIX) \
   $(foreach d,$(filter-out about,$(NECKO_PROTOCOLS)), \
     ../protocol/$(d)/$(LIB_PREFIX)nk$(d)_s.$(LIB_SUFFIX)) \

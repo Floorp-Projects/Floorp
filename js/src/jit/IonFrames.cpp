@@ -695,6 +695,7 @@ MarkCalleeToken(JSTracer *trc, CalleeToken token)
     }
 }
 
+#ifdef JS_NUNBOX32
 static inline uintptr_t
 ReadAllocation(const IonFrameIterator &frame, const LAllocation *a)
 {
@@ -710,6 +711,7 @@ ReadAllocation(const IonFrameIterator &frame, const LAllocation *a)
     uint8_t *argv = reinterpret_cast<uint8_t *>(frame.jsFrame()->argv());
     return *reinterpret_cast<uintptr_t *>(argv + index);
 }
+#endif
 
 static void
 MarkActualArguments(JSTracer *trc, const IonFrameIterator &frame)
@@ -725,6 +727,7 @@ MarkActualArguments(JSTracer *trc, const IonFrameIterator &frame)
         gc::MarkValueRoot(trc, &argv[i], "ion-argv");
 }
 
+#ifdef JS_NUNBOX32
 static inline void
 WriteAllocation(const IonFrameIterator &frame, const LAllocation *a, uintptr_t value)
 {
@@ -742,6 +745,7 @@ WriteAllocation(const IonFrameIterator &frame, const LAllocation *a, uintptr_t v
     uint8_t *argv = reinterpret_cast<uint8_t *>(frame.jsFrame()->argv());
     *reinterpret_cast<uintptr_t *>(argv + index) = value;
 }
+#endif
 
 static void
 MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)

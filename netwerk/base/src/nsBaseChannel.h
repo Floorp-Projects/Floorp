@@ -13,7 +13,6 @@
 #include "nsInputStreamPump.h"
 
 #include "nsIChannel.h"
-#include "nsIInputStream.h"
 #include "nsIURI.h"
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
@@ -24,6 +23,8 @@
 #include "PrivateBrowsingChannel.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
+
+class nsIInputStream;
 
 //-----------------------------------------------------------------------------
 // nsBaseChannel is designed to be subclassed.  The subclass is responsible for

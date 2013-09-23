@@ -919,17 +919,7 @@ TypeAnalyzer::checkFloatCoherency()
 
             for (MUseDefIterator use(*def); use; use++) {
                 MDefinition *consumer = use.def();
-                // The only valid uses of a Float32 are:
-                // - an operation that can consume Float32
-                // - an operation that has been specialized to Float32 (for instance, an add)
-                // - a conversion to Double
-                if (consumer->canConsumeFloat32())
-                    continue;
-                if (consumer->type() == MIRType_Float32)
-                    continue;
-                if (consumer->isToDouble())
-                    continue;
-                MOZ_ASSUME_UNREACHABLE("Float32 flowing into a non float specialized operation");
+                JS_ASSERT(consumer->isConsistentFloat32Use());
             }
         }
     }
@@ -1178,19 +1168,6 @@ jit::BuildPhiReverseMapping(MIRGraph &graph)
     }
 
     return true;
-}
-
-static inline MBasicBlock *
-SkipContainedLoop(MBasicBlock *block, MBasicBlock *header)
-{
-    while (block->loopHeader() || block->isLoopHeader()) {
-        if (block->loopHeader())
-            block = block->loopHeader();
-        if (block == header)
-            break;
-        block = block->loopPredecessor();
-    }
-    return block;
 }
 
 #ifdef DEBUG

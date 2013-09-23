@@ -141,7 +141,7 @@ nsIDNService::nsIDNService()
 
   mMultilingualTestBed = false;
 
-  if (idn_success != idn_nameprep_create(NULL, &mNamePrepHandle))
+  if (idn_success != idn_nameprep_create(nullptr, &mNamePrepHandle))
     mNamePrepHandle = nullptr;
 
   mNormalizer = do_GetService(NS_UNICODE_NORMALIZER_CONTRACTID);

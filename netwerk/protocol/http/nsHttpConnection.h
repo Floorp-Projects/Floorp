@@ -6,18 +6,13 @@
 #ifndef nsHttpConnection_h__
 #define nsHttpConnection_h__
 
-#include "nsHttp.h"
 #include "nsHttpConnectionInfo.h"
 #include "nsAHttpTransaction.h"
-#include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsProxyRelease.h"
 #include "prinrval.h"
-#include "ASpdySession.h"
 
-#include "nsIStreamListener.h"
-#include "nsISocketTransport.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIInterfaceRequestor.h"
@@ -25,6 +20,13 @@
 class nsHttpRequestHead;
 class nsHttpResponseHead;
 class nsHttpHandler;
+class nsISocketTransport;
+
+namespace mozilla {
+namespace net {
+class ASpdySession;
+}
+}
 
 //-----------------------------------------------------------------------------
 // nsHttpConnection - represents a connection to a HTTP server (or proxy)

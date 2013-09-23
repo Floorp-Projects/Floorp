@@ -9,20 +9,16 @@
 
 #include "base/basictypes.h"
 
-#include "nsIOService.h"
 #include "nsHttpHandler.h"
 #include "nsHttpTransaction.h"
-#include "nsHttpConnection.h"
 #include "nsHttpRequestHead.h"
 #include "nsHttpResponseHead.h"
 #include "nsHttpChunkedDecoder.h"
 #include "nsTransportUtils.h"
 #include "nsNetUtil.h"
-#include "nsProxyRelease.h"
-#include "nsIOService.h"
+#include "nsCRT.h"
 
 #include "nsISeekableStream.h"
-#include "nsISocketTransport.h"
 #include "nsMultiplexInputStream.h"
 #include "nsStringStream.h"
 #include "mozilla/VisualEventTracer.h"
@@ -31,6 +27,11 @@
 #include "nsServiceManagerUtils.h"   // do_GetService
 #include "nsIHttpActivityObserver.h"
 #include "nsSocketTransportService2.h"
+#include "nsICancelable.h"
+#include "nsIEventTarget.h"
+#include "nsIInputStream.h"
+#include "nsITransport.h"
+#include "nsIOService.h"
 #include <algorithm>
 
 

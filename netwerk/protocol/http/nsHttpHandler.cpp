@@ -10,9 +10,6 @@
 #include "nsHttp.h"
 #include "nsHttpHandler.h"
 #include "nsHttpChannel.h"
-#include "nsHttpConnection.h"
-#include "nsHttpResponseHead.h"
-#include "nsHttpTransaction.h"
 #include "nsHttpAuthCache.h"
 #include "nsStandardURL.h"
 #include "nsIDOMConnection.h"
@@ -21,12 +18,11 @@
 #include "nsIMozNavigatorNetwork.h"
 #include "nsINetworkProperties.h"
 #include "nsIHttpChannel.h"
-#include "nsIURL.h"
 #include "nsIStandardURL.h"
-#include "nsICacheService.h"
-#include "nsICategoryManager.h"
+#include "LoadContextInfo.h"
+#include "nsICacheStorageService.h"
+#include "nsICacheStorage.h"
 #include "nsCategoryManagerUtils.h"
-#include "nsICacheService.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefLocalizedString.h"
@@ -36,20 +32,22 @@
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
 #include "prprf.h"
-#include "nsReadableUtils.h"
-#include "nsQuickSort.h"
 #include "nsNetUtil.h"
-#include "nsIOService.h"
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "nsSocketTransportService2.h"
 #include "nsAlgorithm.h"
 #include "ASpdySession.h"
 #include "mozIApplicationClearPrivateDataParams.h"
-#include "nsICancelable.h"
 #include "EventTokenBucket.h"
 #include "Tickler.h"
-
 #include "nsIXULAppInfo.h"
+#include "nsICacheSession.h"
+#include "nsICookieService.h"
+#include "nsIObserverService.h"
+#include "nsISiteSecurityService.h"
+#include "nsIStreamConverterService.h"
+#include "nsITimer.h"
+#include "nsCRT.h"
 
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/Telemetry.h"
@@ -1715,28 +1713,83 @@ nsHttpHandler::GetCacheSessionNameForStoragePolicy(
 // nsHttpHandler::nsIObserver
 //-----------------------------------------------------------------------------
 
-static void
-EvictCacheSession(nsCacheStoragePolicy aPolicy,
-                  bool aPrivateBrowsing,
-                  uint32_t aAppId,
-                  bool aInBrowser)
+namespace { // anon
+
+class CacheStorageEvictHelper
 {
-    nsAutoCString clientId;
-    nsHttpHandler::GetCacheSessionNameForStoragePolicy(aPolicy,
-                                                       aPrivateBrowsing,
-                                                       aAppId, aInBrowser,
-                                                       clientId);
-    nsCOMPtr<nsICacheService> serv =
-        do_GetService(NS_CACHESERVICE_CONTRACTID);
-    nsCOMPtr<nsICacheSession> session;
-    nsresult rv = serv->CreateSession(clientId.get(),
-                                      nsICache::STORE_ANYWHERE,
-                                      nsICache::STREAM_BASED,
-                                      getter_AddRefs(session));
-    if (NS_SUCCEEDED(rv) && session) {
-        session->EvictEntries();
-    }
+public:
+    CacheStorageEvictHelper(uint32_t appId, bool browserOnly)
+      : mAppId(appId), mBrowserOnly(browserOnly) { }
+
+    nsresult Run();
+
+private:
+    nsCOMPtr<nsICacheStorageService> mCacheStorageService;
+    uint32_t mAppId;
+    bool mBrowserOnly;
+
+    nsresult ClearStorage(bool const aPrivate,
+                          bool const aInBrowser,
+                          bool const aAnonymous);
+};
+
+nsresult
+CacheStorageEvictHelper::Run()
+{
+    nsresult rv;
+
+    mCacheStorageService = do_GetService(
+        "@mozilla.org/netwerk/cache-storage-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Clear all [private X anonymous] combinations
+    rv = ClearStorage(false, mBrowserOnly, false);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = ClearStorage(false, mBrowserOnly, true);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = ClearStorage(true, mBrowserOnly, false);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = ClearStorage(true, mBrowserOnly, true);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
 }
+
+nsresult
+CacheStorageEvictHelper::ClearStorage(bool const aPrivate,
+                                      bool const aInBrowser,
+                                      bool const aAnonymous)
+{
+    nsresult rv;
+
+    nsRefPtr<LoadContextInfo> info = GetLoadContextInfo(
+        aPrivate, mAppId, aInBrowser, aAnonymous);
+
+    nsCOMPtr<nsICacheStorage> storage;
+
+    // Clear disk storage
+    rv = mCacheStorageService->DiskCacheStorage(info, false,
+        getter_AddRefs(storage));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = storage->AsyncEvictStorage(nullptr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Clear memory storage
+    rv = mCacheStorageService->MemoryCacheStorage(info,
+        getter_AddRefs(storage));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = storage->AsyncEvictStorage(nullptr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!aInBrowser) {
+        rv = ClearStorage(aPrivate, true, aAnonymous);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    return NS_OK;
+}
+
+} // anon
 
 NS_IMETHODIMP
 nsHttpHandler::Observe(nsISupports *subject,
@@ -1807,27 +1860,9 @@ nsHttpHandler::Observe(nsISupports *subject,
 
         MOZ_ASSERT(appId != NECKO_UNKNOWN_APP_ID);
 
-        // Now we ensure that all unique session name combinations are cleared.
-        struct {
-            nsCacheStoragePolicy policy;
-            bool privateBrowsing;
-        } policies[] = { {nsICache::STORE_OFFLINE, false},
-                         {nsICache::STORE_IN_MEMORY, false},
-                         {nsICache::STORE_IN_MEMORY, true},
-                         {nsICache::STORE_ON_DISK, false} };
-
-        for (uint32_t i = 0; i < NS_ARRAY_LENGTH(policies); i++) {
-            EvictCacheSession(policies[i].policy,
-                              policies[i].privateBrowsing,
-                              appId, browserOnly);
-
-            if (!browserOnly) {
-                EvictCacheSession(policies[i].policy,
-                                  policies[i].privateBrowsing,
-                                  appId, true);
-            }
-        }
-
+        CacheStorageEvictHelper helper(appId, browserOnly);
+        rv = helper.Run();
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
     return NS_OK;

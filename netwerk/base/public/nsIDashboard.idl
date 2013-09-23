@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIDashboardEventNotifier.idl"
 
 /* A JavaScript callback function that takes a JSON as its parameter.
  * The returned JSON contains arrays with data

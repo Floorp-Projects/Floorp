@@ -15,15 +15,13 @@
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
 #include "mozilla/net/DNS.h"
-
-#include "nsIServiceManager.h"
-
-#include "nsIObserverService.h"
-
+#include "nsISocketTransport.h"
 #include "nsISSLSocketControl.h"
-#include "prnetdb.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/VisualEventTracer.h"
+#include "mozilla/net/DashboardTypes.h"
+#include "NullHttpTransaction.h"
+#include "nsITransport.h"
+#include "nsISocketTransportService.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -211,7 +209,7 @@ nsHttpConnectionMgr::ConditionallyStopPruneDeadConnectionsTimer()
     mTimeOfNextWakeUp = UINT64_MAX;
     if (mTimer) {
         mTimer->Cancel();
-        mTimer = NULL;
+        mTimer = nullptr;
     }
 }
 

@@ -6,12 +6,10 @@
 #ifndef nsExceptionHandler_h__
 #define nsExceptionHandler_h__
 
-#include "nscore.h"
-#include "nsDataHashtable.h"
-#include "nsXPCOM.h"
+#include <stddef.h>
+#include <stdint.h>
+#include "nsError.h"
 #include "nsStringGlue.h"
-
-#include "nsIFile.h"
 
 #if defined(XP_WIN32)
 #ifdef WIN32_LEAN_AND_MEAN
@@ -23,6 +21,10 @@
 #if defined(XP_MACOSX)
 #include <mach/mach.h>
 #endif
+
+class nsIFile;
+template<class KeyClass, class DataType> class nsDataHashtable;
+class nsCStringHashKey;
 
 namespace CrashReporter {
 nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force=false);

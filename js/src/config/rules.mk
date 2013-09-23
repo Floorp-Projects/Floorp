@@ -31,6 +31,7 @@ _MOZBUILD_EXTERNAL_VARIABLES := \
   GTEST_CSRCS \
   HOST_CSRCS \
   HOST_LIBRARY_NAME \
+  IS_COMPONENT \
   LIBRARY_NAME \
   LIBXUL_LIBRARY \
   MODULE \
@@ -694,7 +695,9 @@ SUBMAKEFILES += $(addsuffix /Makefile, $(DIRS) $(TOOL_DIRS) $(PARALLEL_DIRS))
 ifndef SUPPRESS_DEFAULT_RULES
 default all::
 	$(MAKE) export
+ifdef MOZ_PSEUDO_DERECURSE
 	$(MAKE) compile
+endif
 	$(MAKE) libs
 	$(MAKE) tools
 endif # SUPPRESS_DEFAULT_RULES

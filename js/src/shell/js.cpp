@@ -60,6 +60,7 @@
 #include "shell/jsheaptools.h"
 #include "shell/jsoptparse.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/Monitor.h"
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
@@ -645,7 +646,7 @@ static JSScript *
 GetTopScript(JSContext *cx)
 {
     RootedScript script(cx);
-    JS_DescribeScriptedCaller(cx, script.address(), NULL);
+    JS_DescribeScriptedCaller(cx, &script, NULL);
     return script;
 }
 
@@ -906,6 +907,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
     const char *fileName = "@evaluate";
     RootedObject element(cx);
     JSAutoByteString fileNameBytes;
+    RootedString sourceURL(cx);
     RootedString sourceMapURL(cx);
     unsigned lineNumber = 1;
     RootedObject global(cx, NULL);
@@ -965,6 +967,14 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             return false;
         if (!JSVAL_IS_PRIMITIVE(v))
             element = JSVAL_TO_OBJECT(v);
+
+        if (!JS_GetProperty(cx, opts, "sourceURL", &v))
+            return false;
+        if (!JSVAL_IS_VOID(v)) {
+            sourceURL = JS_ValueToString(cx, v);
+            if (!sourceURL)
+                return false;
+        }
 
         if (!JS_GetProperty(cx, opts, "sourceMapURL", &v))
             return false;
@@ -1054,6 +1064,13 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         if (!script)
             return false;
 
+        if (sourceURL && !script->scriptSource()->hasSourceURL()) {
+            const jschar *surl = JS_GetStringCharsZ(cx, sourceURL);
+            if (!surl)
+                return false;
+            if (!script->scriptSource()->setSourceURL(cx, surl))
+                return false;
+        }
         if (sourceMapURL && !script->scriptSource()->hasSourceMapURL()) {
             const jschar *smurl = JS_GetStringCharsZ(cx, sourceMapURL);
             if (!smurl)
@@ -1417,8 +1434,9 @@ AssertEq(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSScript *
-ValueToScript(JSContext *cx, jsval v, JSFunction **funp = NULL)
+ValueToScript(JSContext *cx, jsval vArg, JSFunction **funp = NULL)
 {
+    RootedValue v(cx, vArg);
     RootedFunction fun(cx, JS_ValueToFunction(cx, v));
     if (!fun)
         return NULL;
@@ -2332,7 +2350,7 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     if (argc > 1) {
-        if (!JS_ValueToObject(cx, args[1], parent.address()))
+        if (!JS_ValueToObject(cx, args[1], &parent))
             return false;
     } else {
         parent = JS_GetParent(JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
@@ -2353,17 +2371,18 @@ GetPDA(JSContext *cx, unsigned argc, jsval *vp)
     JSPropertyDescArray pda;
     JSPropertyDesc *pd;
 
-    if (!JS_ValueToObject(cx, argc == 0 ? UndefinedValue() : vp[2], vobj.address()))
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!JS_ValueToObject(cx, args[0], &vobj))
         return false;
     if (!vobj) {
-        JS_SET_RVAL(cx, vp, UndefinedValue());
+        args.rval().setUndefined();
         return true;
     }
 
     RootedObject aobj(cx, JS_NewArrayObject(cx, 0, NULL));
     if (!aobj)
         return false;
-    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(aobj));
+    args.rval().setObject(*aobj);
 
     ok = !!JS_GetPropertyDescArray(cx, vobj, &pda);
     if (!ok)
@@ -2552,7 +2571,7 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
     RootedScript script(cx);
     unsigned lineno;
 
-    JS_DescribeScriptedCaller(cx, script.address(), &lineno);
+    JS_DescribeScriptedCaller(cx, &script, &lineno);
     RootedValue rval(cx);
     {
         Maybe<JSAutoCompartment> ac;
@@ -3226,11 +3245,91 @@ SyntaxParse(JSContext *cx, unsigned argc, jsval *vp)
 
 #ifdef JS_THREADSAFE
 
+class OffThreadState {
+  public:
+    enum State {
+        IDLE,           /* ready to work; no token, no source */
+        COMPILING,      /* working; no token, have source */
+        DONE            /* compilation done: have token and source */
+    };
+
+    OffThreadState() : monitor(), state(IDLE), token() { }
+    bool init() { return monitor.init(); }
+
+    bool startIfIdle(JSContext *cx, JSString *newSource) {
+        AutoLockMonitor alm(monitor);
+        if (state != IDLE)
+            return false;
+
+        JS_ASSERT(!token);
+        JS_ASSERT(!source);
+
+        source = newSource;
+        if (!JS_AddStringRoot(cx, &source))
+            return false;
+
+        state = COMPILING;
+        return true;
+    }
+
+    void abandon(JSContext *cx) {
+        AutoLockMonitor alm(monitor);
+        JS_ASSERT(state == COMPILING);
+        JS_ASSERT(!token);
+        JS_ASSERT(source);
+
+        JS_RemoveStringRoot(cx, &source);
+        source = NULL;
+
+        state = IDLE;
+    }
+
+    void markDone(void *newToken) {
+        AutoLockMonitor alm(monitor);
+        JS_ASSERT(state == COMPILING);
+        JS_ASSERT(!token);
+        JS_ASSERT(source);
+        JS_ASSERT(newToken);
+
+        token = newToken;
+        state = DONE;
+        alm.notify();
+    }
+
+    void *waitUntilDone(JSContext *cx) {
+        AutoLockMonitor alm(monitor);
+        if (state == IDLE)
+            return NULL;
+
+        if (state == COMPILING) {
+            while (state != DONE)
+                alm.wait();
+        }
+
+        JS_ASSERT(source);
+        JS_RemoveStringRoot(cx, &source);
+        source = NULL;
+
+        JS_ASSERT(token);
+        void *holdToken = token;
+        token = NULL;
+        state = IDLE;
+        return holdToken;
+    }
+
+  private:
+    Monitor monitor;
+    State state;
+    void *token;
+    JSString *source;
+};
+
+static OffThreadState offThreadState;
+
 static void
 OffThreadCompileScriptCallback(void *token, void *callbackData)
 {
-    // This callback is invoked off the main thread and there isn't a good way
-    // to pass the script on to the main thread. Just let the script leak.
+    offThreadState.markDone(token);
 }
 
 static bool
@@ -3255,28 +3354,49 @@ OffThreadCompileScript(JSContext *cx, unsigned argc, jsval *vp)
            .setCompileAndGo(true)
            .setSourcePolicy(CompileOptions::SAVE_SOURCE);
 
+    if (!JS::CanCompileOffThread(cx, options)) {
+        JS_ReportError(cx, "cannot compile code on worker thread");
+        return false;
+    }
+
     const jschar *chars = JS_GetStringCharsZ(cx, scriptContents);
     if (!chars)
         return false;
     size_t length = JS_GetStringLength(scriptContents);
 
-    // Prevent the string contents from ever being GC'ed. This will leak memory
-    // but since the compiled script is never consumed there isn't much choice.
-    JSString **permanentRoot = cx->new_<JSString *>();
-    if (!permanentRoot)
+    if (!offThreadState.startIfIdle(cx, scriptContents)) {
+        JS_ReportError(cx, "called offThreadCompileScript without calling runOffThreadScript"
+                       " to receive prior off-thread compilation");
         return false;
-    *permanentRoot = scriptContents;
-    if (!JS_AddStringRoot(cx, permanentRoot))
-        return false;
+    }
 
-    if (!StartOffThreadParseScript(cx, options, chars, length, cx->global(),
-                                   OffThreadCompileScriptCallback, NULL))
+    if (!JS::CompileOffThread(cx, cx->global(), options, chars, length,
+                              OffThreadCompileScriptCallback, NULL))
     {
+        offThreadState.abandon(cx);
         return false;
     }
 
     args.rval().setUndefined();
     return true;
+}
+
+static bool
+runOffThreadScript(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    void *token = offThreadState.waitUntilDone(cx);
+    if (!token) {
+        JS_ReportError(cx, "called runOffThreadScript when no compilation is pending");
+        return false;
+    }
+
+    RootedScript script(cx, JS::FinishOffThreadScript(cx, cx->runtime(), token));
+    if (!script)
+        return false;
+
+    return JS_ExecuteScript(cx, cx->global(), script, args.rval().address());
 }
 
 #endif // JS_THREADSAFE
@@ -3464,7 +3584,7 @@ DecompileThisScript(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedScript script (cx);
-    if (!JS_DescribeScriptedCaller(cx, script.address(), NULL)) {
+    if (!JS_DescribeScriptedCaller(cx, &script, NULL)) {
         args.rval().setString(cx->runtime()->emptyString);
         return true;
     }
@@ -3480,7 +3600,7 @@ ThisFilename(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedScript script (cx);
-    if (!JS_DescribeScriptedCaller(cx, script.address(), NULL) || !script->filename()) {
+    if (!JS_DescribeScriptedCaller(cx, &script, NULL) || !script->filename()) {
         args.rval().setString(cx->runtime()->emptyString);
         return true;
     }
@@ -3915,6 +4035,13 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("offThreadCompileScript", OffThreadCompileScript, 1, 0,
 "offThreadCompileScript(code)",
 "  Trigger an off thread parse/emit for the input string"),
+
+    JS_FN_HELP("runOffThreadScript", runOffThreadScript, 0, 0,
+"runOffThreadScript()",
+"  Wait for off-thread compilation to complete. If an error occurred,\n"
+"  throw the appropriate exception; otherwise, run the script and return\n"
+               "  its value."),
+
 #endif
 
     JS_FN_HELP("timeout", Timeout, 1, 0,
@@ -4170,7 +4297,8 @@ Exec(JSContext *cx, unsigned argc, jsval *vp)
 
     JS_SET_RVAL(cx, vp, UndefinedValue());
 
-    fun = JS_ValueToFunction(cx, vp[0]);
+    RootedValue arg(cx, vp[0]);
+    fun = JS_ValueToFunction(cx, arg);
     if (!fun)
         return false;
     if (!fun->atom)
@@ -5263,6 +5391,11 @@ main(int argc, char **argv, char **envp)
     JS_SetOperationCallback(rt, ShellOperationCallback);
 
     JS_SetNativeStackQuota(rt, gMaxStackSize);
+
+#ifdef JS_THREADSAFE
+    if (!offThreadState.init())
+        return 1;
+#endif
 
     if (!InitWatchdog(rt))
         return 1;

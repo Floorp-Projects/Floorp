@@ -10,11 +10,7 @@
 #include "nsHttp.h"
 #include "nsProxyInfo.h"
 #include "nsCOMPtr.h"
-#include "nsDependentString.h"
-#include "nsString.h"
-#include "plstr.h"
-#include "nsCRT.h"
-#include "nsIProtocolProxyService.h"
+#include "nsStringFwd.h"
 
 extern PRLogModuleInfo *gHttpLog;
 

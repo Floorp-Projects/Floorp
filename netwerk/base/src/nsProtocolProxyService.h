@@ -10,16 +10,12 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
-#include "nsIPrefBranch.h"
 #include "nsIProtocolProxyService2.h"
 #include "nsIProtocolProxyFilter.h"
-#include "nsISystemProxySettings.h"
 #include "nsIProxyInfo.h"
 #include "nsIObserver.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
-#include "nsPACMan.h"
-#include "prtime.h"
 #include "prio.h"
 #include "mozilla/Attributes.h"
 
@@ -27,6 +23,9 @@ typedef nsDataHashtable<nsCStringHashKey, uint32_t> nsFailedProxyTable;
 
 class nsProxyInfo;
 struct nsProtocolInfo;
+class nsIPrefBranch;
+class nsISystemProxySettings;
+class nsPACMan;
 
 class nsProtocolProxyService MOZ_FINAL : public nsIProtocolProxyService2
                                        , public nsIObserver

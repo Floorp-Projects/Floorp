@@ -1017,63 +1017,6 @@ private:
   static DrawEventRecorder *mRecorder;
 };
 
-#ifdef XP_MACOSX
-/* This is a helper class that let's you borrow a CGContextRef from a
- * DrawTargetCG. This is used for drawing themed widgets.
- *
- * Callers should check the cg member after constructing the object
- * to see if it succeeded. The DrawTarget should not be used while
- * the context is borrowed. */
-class BorrowedCGContext
-{
-public:
-  BorrowedCGContext()
-    : cg(nullptr)
-    , mDT(nullptr)
-  { }
-
-  BorrowedCGContext(DrawTarget *aDT)
-    : mDT(aDT)
-  {
-    cg = BorrowCGContextFromDrawTarget(aDT);
-  }
-
-  // We can optionally Init after construction in
-  // case we don't know what the DT will be at construction
-  // time.
-  CGContextRef Init(DrawTarget *aDT)
-  {
-    MOZ_ASSERT(!mDT, "Can't initialize twice!");
-    mDT = aDT;
-    cg = BorrowCGContextFromDrawTarget(aDT);
-    return cg;
-  }
-
-  // The caller needs to call Finish if cg is non-null when
-  // they are done with the context. This is currently explicit
-  // instead of happening implicitly in the destructor to make
-  // what's happening in the caller more clear. It also
-  // let's you resume using the DrawTarget in the same scope.
-  void Finish()
-  {
-    if (cg) {
-      ReturnCGContextToDrawTarget(mDT, cg);
-      cg = nullptr;
-    }
-  }
-
-  ~BorrowedCGContext() {
-    MOZ_ASSERT(!cg);
-  }
-
-  CGContextRef cg;
-private:
-  static CGContextRef BorrowCGContextFromDrawTarget(DrawTarget *aDT);
-  static void ReturnCGContextToDrawTarget(DrawTarget *aDT, CGContextRef cg);
-  DrawTarget *mDT;
-};
-#endif
-
 }
 }
 

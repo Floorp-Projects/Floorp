@@ -239,12 +239,6 @@ IsBinaryArray(JSContext *cx, HandleObject obj)
     return IsBlockOfKind(cx, obj, TypeRepresentation::Array);
 }
 
-static inline bool
-IsBinaryStruct(JSContext *cx, HandleObject obj)
-{
-    return IsBlockOfKind(cx, obj, TypeRepresentation::Struct);
-}
-
 const Class js::DataClass = {
     "Data",
     JSCLASS_HAS_CACHED_PROTO(JSProto_Data),
@@ -980,15 +974,15 @@ ArrayType::create(JSContext *cx, HandleObject arrayTypeGlobal,
 bool
 ArrayType::construct(JSContext *cx, unsigned argc, Value *vp)
 {
-    if (!JS_IsConstructing(cx, vp)) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!args.isConstructing()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_NOT_FUNCTION, "ArrayType");
         return false;
     }
 
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (argc != 2 ||
+    if (args.length() != 2 ||
         !args[0].isObject() ||
         !args[1].isNumber() ||
         args[1].toNumber() < 0)
@@ -1252,15 +1246,15 @@ StructType::create(JSContext *cx, HandleObject structTypeGlobal,
 bool
 StructType::construct(JSContext *cx, unsigned int argc, Value *vp)
 {
-    if (!JS_IsConstructing(cx, vp)) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!args.isConstructing()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_NOT_FUNCTION, "StructType");
         return false;
     }
 
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (argc >= 1 && args[0].isObject()) {
+    if (args.length() >= 1 && args[0].isObject()) {
         RootedObject structTypeGlobal(cx, &args.callee());
         RootedObject fields(cx, &args[0].toObject());
         RootedObject obj(cx, create(cx, structTypeGlobal, fields));
@@ -2372,3 +2366,10 @@ BinaryBlock::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
 
     return true;
 }
+
+/* static */ size_t
+BinaryBlock::dataOffset()
+{
+    return JSObject::getPrivateDataOffset(BLOCK_RESERVED_SLOTS + 1);
+}
+

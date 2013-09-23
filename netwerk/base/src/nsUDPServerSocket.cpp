@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIServiceManager.h"
 #include "nsSocketTransport2.h"
 #include "nsUDPServerSocket.h"
 #include "nsProxyRelease.h"
@@ -19,7 +18,7 @@
 #include "nsStreamUtils.h"
 #include "nsIPipe.h"
 #include "prerror.h"
-#include "nsINSSErrorsService.h"
+#include "nsThreadUtils.h"
 
 using namespace mozilla::net;
 using namespace mozilla;

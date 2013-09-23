@@ -7,13 +7,10 @@
 #ifndef nsHttp_h__
 #define nsHttp_h__
 
-#include "plstr.h"
+#include <stdint.h>
 #include "prtime.h"
-#include "nsISupportsUtils.h"
-#include "nsPromiseFlatString.h"
-#include "nsURLHelper.h"
-#include "netCore.h"
-#include "mozilla/Mutex.h"
+#include "nsString.h"
+#include "nsError.h"
 
 // http version codes
 #define NS_HTTP_VERSION_UNKNOWN  0
@@ -22,6 +19,9 @@
 #define NS_HTTP_VERSION_1_1     11
 
 namespace mozilla {
+
+class Mutex;
+
 namespace net {
     enum {
         SPDY_VERSION_2 = 2,

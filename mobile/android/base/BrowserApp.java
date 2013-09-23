@@ -380,7 +380,9 @@ abstract public class BrowserApp extends GeckoApp
     public void onCreate(Bundle savedInstanceState) {
         mAboutHomeStartupTimer = new Telemetry.Timer("FENNEC_STARTUP_TIME_ABOUTHOME");
 
-        String args = getIntent().getStringExtra("args");
+        final Intent intent = getIntent();
+
+        String args = intent.getStringExtra("args");
         if (args != null && args.contains(GUEST_BROWSING_ARG)) {
             mProfile = GeckoProfile.createGuestProfile(this);
         } else {
@@ -390,6 +392,10 @@ abstract public class BrowserApp extends GeckoApp
         super.onCreate(savedInstanceState);
 
         mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
+        if (Intent.ACTION_VIEW.equals(intent.getAction())) {
+            // Show the target URL immediately in the toolbar
+            mBrowserToolbar.setTitle(intent.getDataString());
+        }
 
         ((GeckoApp.MainLayout) mMainLayout).setTouchEventInterceptor(new HideTabsTouchListener());
         ((GeckoApp.MainLayout) mMainLayout).setMotionEventInterceptor(new MotionEventInterceptor() {
@@ -1395,7 +1401,7 @@ abstract public class BrowserApp extends GeckoApp
         animator.setUseHardwareLayer(false);
 
         mBrowserToolbar.startEditing(url, animator);
-        showHomePagerWithAnimator(HomePager.Page.HISTORY, animator);
+        showHomePagerWithAnimator(HomePager.Page.TOP_SITES, animator);
 
         animator.start();
     }
@@ -2179,6 +2185,9 @@ abstract public class BrowserApp extends GeckoApp
         // Dismiss editing mode if the user is loading a URL from an external app.
         if (Intent.ACTION_VIEW.equals(action)) {
             dismissEditingMode();
+
+            // Show the target URL immediately in the toolbar
+            mBrowserToolbar.setTitle(intent.getDataString());
             return;
         }
 

@@ -281,9 +281,6 @@ const testcases = [
 
 const profiles = ["ASCII", "high", "moderate"];
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 function run_test() {
     var pbi = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
     var oldProfile = pbi.getCharPref("network.IDN.restriction_profile", "moderate");

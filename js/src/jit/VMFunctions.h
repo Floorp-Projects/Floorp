@@ -575,7 +575,8 @@ class AutoDetectInvalidation
 };
 
 bool InvokeFunction(JSContext *cx, HandleObject obj0, uint32_t argc, Value *argv, Value *rval);
-JSObject *NewGCThing(JSContext *cx, gc::AllocKind allocKind, size_t thingSize);
+JSObject *NewGCThing(JSContext *cx, gc::AllocKind allocKind, size_t thingSize,
+                     gc::InitialHeap initialHeap);
 
 bool CheckOverRecursed(JSContext *cx);
 bool CheckOverRecursedWithExtra(JSContext *cx, uint32_t extra);
@@ -663,6 +664,9 @@ bool LeaveBlock(JSContext *cx, BaselineFrame *frame);
 
 bool InitBaselineFrameForOsr(BaselineFrame *frame, StackFrame *interpFrame,
                              uint32_t numStackValues);
+
+JSObject *CreateDerivedTypedObj(JSContext *cx, HandleObject type,
+                                HandleObject owner, int32_t offset);
 
 } // namespace jit
 } // namespace js

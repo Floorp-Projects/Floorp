@@ -4,12 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
 #include "nsISupports.idl"
-#include "nsIFactory.idl"
-#include "nsISHEntry.idl"
-#include "nsISHTransaction.idl"
 
+interface nsIBFCacheEntry;
+interface nsISHEntry;
 interface nsISHistoryListener;
+interface nsISHTransaction;
 interface nsIDocShell;
+interface nsIURI;
 
 %{C++
 #define NS_SHISTORY_INTERNAL_CID \
