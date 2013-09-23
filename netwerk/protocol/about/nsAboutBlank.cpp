@@ -4,8 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsAboutBlank.h"
-#include "nsIIOService.h"
-#include "nsIServiceManager.h"
 #include "nsStringStream.h"
 #include "nsNetUtil.h"
 

@@ -6,24 +6,19 @@
 #ifndef nsHttpConnectionMgr_h__
 #define nsHttpConnectionMgr_h__
 
-#include "nsHttpConnectionInfo.h"
 #include "nsHttpConnection.h"
 #include "nsHttpTransaction.h"
-#include "NullHttpTransaction.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsAutoPtr.h"
 #include "mozilla/ReentrantMonitor.h"
-#include "nsISocketTransportService.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/net/DashboardTypes.h"
 
 #include "nsIObserver.h"
 #include "nsITimer.h"
-#include "nsIX509Cert3.h"
 
 class nsHttpPipeline;
 
@@ -32,6 +27,7 @@ class nsIHttpUpgradeListener;
 namespace mozilla {
 namespace net {
 class EventTokenBucket;
+struct HttpRetParams;
 }
 }
 

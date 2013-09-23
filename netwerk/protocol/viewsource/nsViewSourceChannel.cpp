@@ -6,15 +6,9 @@
 
 #include "nsViewSourceChannel.h"
 #include "nsIIOService.h"
-#include "nsIServiceManager.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsXPIDLString.h"
-#include "nsReadableUtils.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsIHttpHeaderVisitor.h"
-#include "nsStringStream.h"
 
 NS_IMPL_ADDREF(nsViewSourceChannel)
 NS_IMPL_RELEASE(nsViewSourceChannel)

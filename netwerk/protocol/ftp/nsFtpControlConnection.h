@@ -9,16 +9,13 @@
 
 #include "nsCOMPtr.h"
 
-#include "nsIURI.h"
-#include "nsIStreamListener.h"
-#include "nsIRequest.h"
 #include "nsISocketTransport.h"
-#include "nsIOutputStream.h"
 #include "nsIAsyncInputStream.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"
 
+class nsIOutputStream;
 class nsIProxyInfo;
 class nsITransportEventSink;
 

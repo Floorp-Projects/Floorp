@@ -7,17 +7,7 @@
 #include "nsFTPChannel.h"
 #include "nsFtpConnectionThread.h"  // defines nsFtpState
 
-#include "nsIStreamListener.h"
-#include "nsIServiceManager.h"
 #include "nsThreadUtils.h"
-#include "nsNetUtil.h"
-#include "nsMimeTypes.h"
-#include "nsReadableUtils.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
-#include "nsIStreamConverterService.h"
-#include "nsISocketTransport.h"
-#include "nsURLHelper.h"
 #include "mozilla/Attributes.h"
 
 #if defined(PR_LOGGING)

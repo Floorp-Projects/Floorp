@@ -24,20 +24,14 @@ using namespace mozilla::net;
 
 #include "nsFtpProtocolHandler.h"
 #include "nsFTPChannel.h"
-#include "nsIURL.h"
 #include "nsIStandardURL.h"
-#include "nsCRT.h"
-#include "nsIComponentManager.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsIProgressEventSink.h"
 #include "prlog.h"
-#include "nsNetUtil.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIObserverService.h"
 #include "nsEscape.h"
 #include "nsAlgorithm.h"
+#include "nsICacheSession.h"
 
 //-----------------------------------------------------------------------------
 

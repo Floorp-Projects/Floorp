@@ -3,14 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <limits.h>
-
 #include "nsAboutCacheEntry.h"
 #include "nsICacheService.h"
 #include "nsICacheSession.h"
-#include "nsIStorageStream.h"
 #include "nsNetUtil.h"
-#include "nsAutoPtr.h"
 #include "prprf.h"
 #include "nsEscape.h"
 #include <algorithm>
