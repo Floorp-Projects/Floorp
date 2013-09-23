@@ -735,6 +735,9 @@ var Input = {
       case 'swipeleft1':
         this.moveCursor('movePrevious', 'Simple', 'gesture');
         break;
+      case 'exploreend1':
+        this.activateCurrent(null, true);
+        break;
       case 'swiperight2':
         this.sendScrollMessage(-1, true);
         break;
@@ -875,12 +878,13 @@ var Input = {
     mm.sendAsyncMessage(type, aDetails);
   },
 
-  activateCurrent: function activateCurrent(aData) {
+  activateCurrent: function activateCurrent(aData, aActivateIfKey = false) {
     let mm = Utils.getMessageManager(Utils.CurrentBrowser);
     let offset = aData && typeof aData.keyIndex === 'number' ?
                  aData.keyIndex - Output.brailleState.startOffset : -1;
 
-    mm.sendAsyncMessage('AccessFu:Activate', {offset: offset});
+    mm.sendAsyncMessage('AccessFu:Activate',
+                        {offset: offset, activateIfKey: aActivateIfKey});
   },
 
   sendContextMenuMessage: function sendContextMenuMessage() {
