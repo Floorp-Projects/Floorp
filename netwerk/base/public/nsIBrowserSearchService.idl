@@ -22,7 +22,7 @@ interface nsISearchSubmission : nsISupports
   readonly attribute nsIURI uri;
 };
 
-[scriptable, uuid(ccf6aa20-10a9-4a0c-a81d-31b10ea846de)]
+[scriptable, uuid(7914c4b8-f05b-40c9-a982-38a058cd1769)]
 interface nsISearchEngine : nsISupports
 {
   /**
@@ -82,6 +82,25 @@ interface nsISearchEngine : nsISupports
    *        The MIME type to check for
    */
   boolean supportsResponseType(in AString responseType);
+
+  /**
+   * Returns a string with the URL to an engine's icon matching both width and
+   * height. Returns null if icon with specified dimensions is not found.
+   *
+   * @param width
+   *        Width of the requested icon.
+   * @param height
+   *        Height of the requested icon.
+   */
+  AString getIconURLBySize(in long width, in long height);
+
+  /**
+   * Gets an array of all available icons. Each entry is an object with
+   * width, height and url properties. width and height are numeric and
+   * represent the icon's dimensions. url is a string with the URL for
+   * the icon.
+   */
+  jsval getIcons();
 
   /**
    * Supported search engine types.
