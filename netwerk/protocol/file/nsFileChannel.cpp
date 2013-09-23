@@ -11,12 +11,10 @@
 #include "nsThreadUtils.h"
 #include "nsTransportUtils.h"
 #include "nsStreamUtils.h"
-#include "nsURLHelper.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
 #include "nsAutoPtr.h"
-#include "nsStandardURL.h"
 
 #include "nsIFileURL.h"
 #include "nsIMIMEService.h"

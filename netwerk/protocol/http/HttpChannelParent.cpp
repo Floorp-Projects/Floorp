@@ -20,10 +20,6 @@
 #include "nsISerializable.h"
 #include "nsIAssociatedContentSecurity.h"
 #include "nsIApplicationCacheService.h"
-#include "nsIOfflineCacheUpdate.h"
-#include "nsIRedirectChannelRegistrar.h"
-#include "mozilla/LoadContext.h"
-#include "prinit.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 

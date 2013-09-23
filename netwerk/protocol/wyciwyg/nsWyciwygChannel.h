@@ -7,26 +7,22 @@
 #ifndef nsWyciwygChannel_h___
 #define nsWyciwygChannel_h___
 
-#include "nsWyciwygProtocolHandler.h"
-#include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
 #include "nsIWyciwygChannel.h"
-#include "nsILoadGroup.h"
-#include "nsIOutputStream.h"
-#include "nsIInputStream.h"
-#include "nsIInputStreamPump.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIProgressEventSink.h"
 #include "nsIStreamListener.h"
 #include "nsICacheListener.h"
-#include "nsICacheEntryDescriptor.h"
-#include "nsIURI.h"
-#include "nsIEventTarget.h"
-#include "nsILoadContext.h"
-#include "nsNetUtil.h"
 #include "PrivateBrowsingChannel.h"
+
+class nsICacheEntryDescriptor;
+class nsIEventTarget;
+class nsIInputStream;
+class nsIInputStreamPump;
+class nsILoadGroup;
+class nsIOutputStream;
+class nsIProgressEventSink;
+class nsIURI;
 
 extern PRLogModuleInfo * gWyciwygLog;
 

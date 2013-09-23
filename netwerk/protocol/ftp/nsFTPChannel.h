@@ -9,27 +9,15 @@
 
 #include "nsBaseChannel.h"
 
-#include "nsIIOService.h"
-#include "nsIURI.h"
 #include "nsString.h"
-#include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
-#include "nsIProtocolHandler.h"
-#include "nsIProgressEventSink.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsFtpConnectionThread.h"
-#include "netCore.h"
-#include "nsIStreamListener.h"
 #include "nsIFTPChannel.h"
 #include "nsIUploadChannel.h"
 #include "nsIProxyInfo.h"
 #include "nsIProxiedChannel.h"
 #include "nsIResumableChannel.h"
-#include "nsHashPropertyBag.h"
-#include "nsFtpProtocolHandler.h"
-#include "nsNetUtil.h"
-#include "PrivateBrowsingChannel.h"
+
+class nsIURI;
 
 class nsFtpChannel : public nsBaseChannel,
                      public nsIFTPChannel,

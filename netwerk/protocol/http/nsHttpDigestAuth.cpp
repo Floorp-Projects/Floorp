@@ -10,17 +10,14 @@
 #include "nsHttp.h"
 #include "nsHttpDigestAuth.h"
 #include "nsIHttpAuthenticableChannel.h"
-#include "nsIServiceManager.h"
-#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIURI.h"
 #include "nsString.h"
-#include "nsReadableUtils.h"
 #include "nsEscape.h"
 #include "nsNetCID.h"
-#include "plbase64.h"
 #include "prprf.h"
 #include "nsCRT.h"
+#include "nsICryptoHash.h"
 
 //-----------------------------------------------------------------------------
 // nsHttpDigestAuth <public>

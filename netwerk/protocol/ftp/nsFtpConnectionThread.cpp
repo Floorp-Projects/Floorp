@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <limits.h>
 #include <ctype.h>
 
 #include "prprf.h"
@@ -16,7 +15,6 @@
 #include "nsFtpConnectionThread.h"
 #include "nsFtpControlConnection.h"
 #include "nsFtpProtocolHandler.h"
-#include "ftpCore.h"
 #include "netCore.h"
 #include "nsCRT.h"
 #include "nsEscape.h"
@@ -35,6 +33,15 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIProtocolProxyService.h"
 #include "nsICancelable.h"
+#include "nsICacheEntryDescriptor.h"
+#include "nsIOutputStream.h"
+#include "nsIPrompt.h"
+#include "nsIProtocolHandler.h"
+#include "nsIProxyInfo.h"
+#include "nsIRunnable.h"
+#include "nsISocketTransportService.h"
+#include "nsIURI.h"
+#include "nsICacheSession.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;

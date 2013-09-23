@@ -10,11 +10,9 @@
 #include "mozilla/Base64.h"
 #include "nsIOService.h"
 #include "nsDataHandler.h"
-#include "nsNetUtil.h"
 #include "nsIPipe.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
-#include "nsReadableUtils.h"
 #include "nsEscape.h"
 
 using namespace mozilla;

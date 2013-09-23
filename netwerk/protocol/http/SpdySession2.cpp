@@ -10,11 +10,9 @@
 #include "nsHttp.h"
 #include "SpdySession2.h"
 #include "SpdyStream2.h"
-#include "nsHttpConnection.h"
 #include "nsHttpHandler.h"
 #include "prnetdb.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Preferences.h"
 #include "prprf.h"
 #include <algorithm>
 

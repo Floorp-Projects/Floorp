@@ -8,34 +8,29 @@
 #define nsHttpChannel_h__
 
 #include "HttpBaseChannel.h"
-
-#include "nsHttpTransaction.h"
-#include "nsInputStreamPump.h"
 #include "nsTArray.h"
-
-#include "nsIHttpEventSink.h"
 #include "nsICachingChannel.h"
 #include "nsICacheEntry.h"
 #include "nsICacheEntryOpenCallback.h"
 #include "nsIApplicationCacheChannel.h"
-#include "nsIPrompt.h"
-#include "nsIResumableChannel.h"
 #include "nsIProtocolProxyCallback.h"
-#include "nsICancelable.h"
 #include "nsIHttpAuthenticableChannel.h"
-#include "nsIHttpChannelAuthProvider.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsITimedChannel.h"
-#include "nsIFile.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsIThreadRetargetableStreamListener.h"
-#include "nsDNSPrefetch.h"
 #include "TimingStruct.h"
 #include "AutoClose.h"
 #include "mozilla/Telemetry.h"
 
 class nsAHttpConnection;
 class nsIPrincipal;
+class nsDNSPrefetch;
+class nsHttpTransaction;
+class nsICacheEntryDescriptor;
+class nsICancelable;
+class nsIHttpChannelAuthProvider;
+class nsInputStreamPump;
 
 namespace mozilla { namespace net {
 

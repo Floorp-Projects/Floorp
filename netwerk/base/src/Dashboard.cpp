@@ -15,6 +15,7 @@
 #include "nsIThread.h"
 #include "nsSocketTransportService2.h"
 #include "nsThreadUtils.h"
+#include "nsURLHelper.h"
 
 using mozilla::AutoSafeJSContext;
 namespace mozilla {

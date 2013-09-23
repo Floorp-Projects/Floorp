@@ -6,6 +6,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIAboutModule.h"
+#include "nsServiceManagerUtils.h"
 
 inline nsresult
 NS_GetAboutModuleName(nsIURI *aAboutURI, nsCString& aModule)

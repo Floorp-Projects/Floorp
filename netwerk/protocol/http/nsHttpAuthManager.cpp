@@ -7,9 +7,7 @@
 #include "HttpLog.h"
 
 #include "nsHttpHandler.h"
-#include "nsHttpChannel.h"
 #include "nsHttpAuthManager.h"
-#include "nsReadableUtils.h"
 #include "nsNetUtil.h"
 #include "nsIPrincipal.h"
 

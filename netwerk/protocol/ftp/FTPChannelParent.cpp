@@ -8,10 +8,7 @@
 #include "mozilla/net/FTPChannelParent.h"
 #include "nsFTPChannel.h"
 #include "nsNetUtil.h"
-#include "nsISupportsPriority.h"
-#include "nsIRedirectChannelRegistrar.h"
 #include "nsFtpProtocolHandler.h"
-#include "mozilla/LoadContext.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 

@@ -9,13 +9,12 @@
 #define mozilla_net_FTPChannelParent_h
 
 #include "mozilla/net/PFTPChannelParent.h"
-#include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoParent.h"
 #include "nsIParentChannel.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsILoadContext.h"
 
 class nsFtpChannel;
+class nsILoadContext;
 
 namespace mozilla {
 namespace net {
