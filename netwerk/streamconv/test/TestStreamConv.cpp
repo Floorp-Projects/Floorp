@@ -4,8 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIServiceManager.h"
-#include "nsIComponentManager.h"
-#include "nsIComponentRegistrar.h"
 #include "nsIStreamConverterService.h"
 #include "nsIStreamConverter.h"
 #include "nsICategoryManager.h"
@@ -13,11 +11,14 @@
 #include "nsXULAppAPI.h"
 #include "nsIStringStream.h"
 #include "nsCOMPtr.h"
-#include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
+#include "nsMemory.h"
+#include "nsServiceManagerUtils.h"
+#include "nsComponentManagerUtils.h"
+#include "nsIRequest.h"
+#include "nsNetCID.h"
 
-#include "nspr.h"
 #include <algorithm>
 
 #define ASYNC_TEST // undefine this if you want to test sycnronous conversion.
