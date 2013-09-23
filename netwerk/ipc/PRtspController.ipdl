@@ -1,0 +1,63 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PNecko;
+include URIParams;
+
+namespace mozilla {
+namespace net {
+
+/**
+ * Defined meta data format.
+ */
+union RtspMetaValue
+{
+  bool;
+  uint8_t;
+  uint32_t;
+  uint64_t;
+  nsCString;
+};
+
+/**
+ * Key-value pair.
+ */
+struct RtspMetadataParam
+{
+  nsCString name;
+  RtspMetaValue value;
+};
+
+async protocol PRtspController
+{
+  manager PNecko;
+
+parent:
+  AsyncOpen(URIParams aURI);
+  Play();
+  Pause();
+  Resume();
+  Suspend();
+  Seek(uint64_t offset);
+  Stop();
+  __delete__();
+
+child:
+  OnMediaDataAvailable(uint8_t index,
+                       nsCString data,
+                       uint32_t length,
+                       uint32_t offset,
+                       RtspMetadataParam[] meta);
+  OnConnected(uint8_t index,
+              RtspMetadataParam[] meta);
+  OnDisconnected(uint8_t index,
+                 uint32_t reason);
+  AsyncOpenFailed(uint8_t reason);
+};
+
+} //namespace net
+} //namespace mozilla

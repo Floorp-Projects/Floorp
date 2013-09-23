@@ -1,0 +1,35 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=4 ts=4 et tw=80 : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+interface nsIStreamingProtocolController;
+interface nsIChannel;
+
+#include "nsISupports.idl"
+
+%{C++
+#define NS_MEDIASTREAMCONTROLLERSERVICE_CID                                   \
+  { 0x94838530, 0x8627, 0x11e2,                                               \
+    {                                                                         \
+      0x9e, 0x96, 0x08, 0x00,                                                 \
+      0x20, 0x0c, 0x9a, 0x66                                                  \
+    }                                                                         \
+  }
+#define MEDIASTREAMCONTROLLERSERVICE_CONTRACTID                               \
+  "@mozilla.org/mediastream/mediastreamcontrollerservice;1"
+%}
+
+/**
+ * Media stream controller Service API.
+ */
+[uuid(94838530-8627-11e2-9e96-0800200c9a66)]
+interface nsIStreamingProtocolControllerService : nsISupports
+{
+    /*
+     * Create a new media stream controller from the given channel.
+     * @param channel nsIChannel for the given URI.
+     */
+    nsIStreamingProtocolController create(in nsIChannel channel);
+};

@@ -18,6 +18,16 @@ CPP_SOURCES += [
     'OMXCodecProxy.cpp',
 ]
 
+if CONFIG['MOZ_RTSP']:
+    EXPORTS += [
+        'RtspOmxDecoder.h',
+        'RtspOmxReader.h',
+    ]
+    CPP_SOURCES += [
+        'RtspOmxDecoder.cpp',
+        'RtspOmxReader.cpp',
+    ]
+
 LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'gkconomx_s'

@@ -1,0 +1,179 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=4 ts=4 et tw=80 : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+interface nsIURI;
+
+#include "nsISupports.idl"
+
+%{C++
+#define MEDIASTREAM_FRAMETYPE_NORMAL          0x00000001
+#define MEDIASTREAM_FRAMETYPE_DISCONTINUITY   0x00000002
+%}
+
+/**
+ * Metadata of the media stream.
+ */
+[uuid(294adb30-856c-11e2-9e96-0800200c9a66)]
+interface nsIStreamingProtocolMetaData : nsISupports
+{
+    /**
+     * Frame type.
+     */
+    attribute uint32_t frameType;
+
+    /**
+     * The total tracks for the given media stream session.
+     */
+    attribute uint32_t totalTracks;
+
+    /**
+     * The mime type of the track.
+     */
+    attribute ACString mimeType;
+
+    /**
+     * The width of the resolution.
+     */
+    attribute unsigned long width;
+
+    /**
+     * The height of the resolution.
+     */
+    attribute unsigned long height;
+
+    /**
+     * The duration of the media stream.
+     */
+    attribute unsigned long long duration;
+
+    /**
+     * The sample rate of the media stream.
+     */
+    attribute unsigned long sampleRate;
+
+    /**
+     * The timestamp indicates the stream absolute position
+     * relative to the beginning of the presentation.
+     */
+    attribute unsigned long long timeStamp;
+
+    /**
+     * The total number of audio channels in the media stream.
+     */
+    attribute unsigned long channelCount;
+
+    /**
+     * The AAC audio codec specific data.
+     */
+    attribute ACString esdsData;
+
+    /**
+     * The AVCC format extradata of H.264 stream.
+     */
+    attribute ACString avccData;
+};
+
+/**
+ * nsIStreamingProtocolListener
+ */
+[scriptable, uuid(c4f6b660-892e-11e2-9e96-0800200c9a66)]
+interface nsIStreamingProtocolListener : nsISupports
+{
+    /**
+     * Called when the data may be read without blocking the calling thread.
+     * @param index The track number of the media stream.
+     * @param data Raw data of the media stream on given track number.
+     * @param length The length of the raw data.
+     * @param offset The offset in the data stream from the start of the media
+     *               presentation in bytes.
+     * @param meta The meta data of the frame.
+     */
+    void onMediaDataAvailable(in uint8_t index,
+                              in ACString data,
+                              in uint32_t length,
+                              in uint32_t offset,
+                              in nsIStreamingProtocolMetaData meta);
+
+    /**
+     * Called when the meta data for a given session is available.
+     * @param index The track number of the media stream.
+     * @param meta The meta data of the media stream.
+     */
+    void onConnected(in uint8_t index, in nsIStreamingProtocolMetaData meta);
+
+    /**
+     * Called when the Rtsp session is closed.
+     * @param index Track number of the media stream.
+     * @param reason The reason of disconnection.
+     */
+    void onDisconnected(in uint8_t index, in uint32_t reason);
+};
+
+/**
+ * Media stream controller API: control and retrieve meta data from media stream.
+ */
+[uuid(a9bdd4b0-8559-11e2-9e96-0800200c9a66)]
+interface nsIStreamingProtocolController : nsISupports
+{
+    /**
+     * Preprare the URI before we can start the connection.
+     * @param aUri The URI of the media stream.
+     */
+    void init(in nsIURI aUri);
+
+    /**
+     * Asynchronously open this controller.  Data is fed to the specified
+     * media stream listener as it becomes available. If asyncOpen returns
+     * successfully, the controller is responsible for keeping itself alive
+     * until it has called onStopRequest on aListener.
+     *
+     * @param aListener The nsIStreamingProtocolListener implementation
+     */
+    void asyncOpen(in nsIStreamingProtocolListener aListener);
+
+    /*
+     * Get the metadata of a track.
+     * @param index Index of a track.
+     * @return A nsIStreamingProtocolMetaData.
+     */
+    nsIStreamingProtocolMetaData getTrackMetaData(in octet index);
+
+    /*
+     * Tell the streaming server to start sending media data.
+     */
+    void play();
+
+    /*
+     * Tell the streaming server to pause sending media data.
+     */
+    void pause();
+
+    /*
+     * Tell the streaming server to resume the suspended media stream.
+     */
+    void resume();
+
+    /*
+     * Tell the streaming server to suspend the media stream.
+     */
+    void suspend();
+
+    /*
+     * Tell the streaming server to send media data in specific time.
+     * @param seekTimeUs Start time of the media stream in microseconds.
+     */
+    void seek(in unsigned long long seekTimeUs);
+
+    /*
+     * Tell the streaming server to stop the
+     * media stream and close the connection.
+     */
+    void stop();
+
+    /**
+     * Total number of audio/video tracks.
+     */
+    readonly attribute octet totalTracks;
+};
