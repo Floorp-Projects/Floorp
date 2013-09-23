@@ -235,7 +235,6 @@ size. -->
 
 <!ENTITY history_removed "Page removed">
 
-<!ENTITY bookmark_add "Add a bookmark">
 <!ENTITY bookmark_edit_title "Edit Bookmark">
 <!ENTITY bookmark_edit_name "Name">
 <!ENTITY bookmark_edit_location "Location">
