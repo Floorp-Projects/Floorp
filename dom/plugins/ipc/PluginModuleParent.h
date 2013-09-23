@@ -10,6 +10,7 @@
 #include "base/process.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/PluginLibrary.h"
+#include "mozilla/plugins/ScopedMethodFactory.h"
 #include "mozilla/plugins/PluginProcessParent.h"
 #include "mozilla/plugins/PPluginModuleParent.h"
 #include "npapi.h"
@@ -302,7 +303,7 @@ private:
     const NPNetscapeFuncs* mNPNIface;
     nsDataHashtable<nsPtrHashKey<void>, PluginIdentifierParent*> mIdentifiers;
     nsNPAPIPlugin* mPlugin;
-    ScopedRunnableMethodFactory<PluginModuleParent> mTaskFactory;
+    ScopedMethodFactory<PluginModuleParent> mTaskFactory;
     nsString mPluginDumpID;
     nsString mBrowserDumpID;
     nsString mHangID;
