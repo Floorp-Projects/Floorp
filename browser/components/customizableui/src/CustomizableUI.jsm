@@ -566,57 +566,7 @@ let CustomizableUIInternal = {
   },
 
   onWidgetAdded: function(aWidgetId, aArea, aPosition) {
-    let areaNodes = gBuildAreas.get(aArea);
-    if (!areaNodes) {
-      return;
-    }
-
-    let placements = gPlacements.get(aArea);
-    if (!placements) {
-      ERROR("Could not find any placements for " + aArea +
-            " when adding a widget.");
-      return;
-    }
-
-    let area = gAreas.get(aArea);
-    let showInPrivateBrowsing = gPalette.has(aWidgetId)
-                              ? gPalette.get(aWidgetId).showInPrivateBrowsing
-                              : true;
-    let nextNodeId = placements[aPosition + 1];
-
-    // Go through each of the nodes associated with this area and move the
-    // widget to the requested location.
-    for (let areaNode of areaNodes) {
-      let window = areaNode.ownerDocument.defaultView;
-      if (!showInPrivateBrowsing && PrivateBrowsingUtils.isWindowPrivate(window)) {
-        continue;
-      }
-
-      let container = areaNode.customizationTarget;
-      let [provider, widgetNode] = this.getWidgetNode(aWidgetId, window);
-
-
-      this.ensureButtonContextMenu(widgetNode, aArea == CustomizableUI.AREA_PANEL);
-      if (widgetNode.localName == "toolbarbutton" && aArea == CustomizableUI.AREA_PANEL) {
-        widgetNode.setAttribute("tabindex", "0");
-        if (!widgetNode.hasAttribute("type")) {
-          widgetNode.setAttribute("type", "wrap");
-        }
-      }
-
-      let nextNode = nextNodeId ? container.querySelector(idToSelector(nextNodeId))
-                                : null;
-
-      this.notifyListeners("onWidgetBeforeDOMChange", widgetNode, nextNode, container);
-      this.insertWidgetBefore(widgetNode, nextNode, container, aArea);
-      this._addParentFlex(widgetNode);
-      this.notifyListeners("onWidgetAfterDOMChange", widgetNode, nextNode, container);
-
-      if (area.get("type") == CustomizableUI.TYPE_TOOLBAR) {
-        areaNode.setAttribute("currentset", areaNode.currentSet);
-      }
-
-    }
+    this.insertNode(aWidgetId, aArea, aPosition, true);
   },
 
   onWidgetRemoved: function(aWidgetId, aArea) {
@@ -655,7 +605,6 @@ let CustomizableUIInternal = {
         if (widgetNode.getAttribute("type") == "wrap") {
           widgetNode.removeAttribute("type");
         }
-        //XXXgijs: this won't work when removing widgets from the panel (fix in bug 902100)
         areaNode.toolbox.palette.appendChild(widgetNode);
       }
       this.notifyListeners("onWidgetAfterDOMChange", widgetNode, null, container);
@@ -672,51 +621,7 @@ let CustomizableUIInternal = {
   },
 
   onWidgetMoved: function(aWidgetId, aArea, aOldPosition, aNewPosition) {
-    let areaNodes = gBuildAreas.get(aArea);
-    if (!areaNodes) {
-      return;
-    }
-
-    let placements = gPlacements.get(aArea);
-    if (!placements) {
-      ERROR("Could not find any placements for " + aArea +
-            " when moving a widget.");
-      return;
-    }
-
-    let area = gAreas.get(aArea);
-    let showInPrivateBrowsing = gPalette.has(aWidgetId)
-                              ? gPalette.get(aWidgetId).showInPrivateBrowsing
-                              : true;
-
-    let nextNodeId = placements[aNewPosition + 1];
-
-    for (let areaNode of areaNodes) {
-      let window = areaNode.ownerDocument.defaultView;
-      if (!showInPrivateBrowsing &&
-          PrivateBrowsingUtils.isWindowPrivate(window)) {
-        continue;
-      }
-
-      let container = areaNode.customizationTarget;
-      let [provider, widgetNode] = this.getWidgetNode(aWidgetId, window);
-      if (!widgetNode) {
-        ERROR("Widget not found, unable to move");
-        continue;
-      }
-
-      let nextNode = nextNodeId ? container.querySelector(idToSelector(nextNodeId))
-                                : null;
-
-      this.notifyListeners("onWidgetBeforeDOMChange", widgetNode, nextNode, container);
-      this.insertWidgetBefore(widgetNode, nextNode, container, aArea);
-      this.notifyListeners("onWidgetAfterDOMChange", widgetNode, nextNode, container);
-
-      if (area.get("type") == CustomizableUI.TYPE_TOOLBAR) {
-        areaNode.setAttribute("currentset", areaNode.currentSet);
-      }
-
-    }
+    this.insertNode(aWidgetId, aArea, aNewPosition);
   },
 
   registerBuildArea: function(aArea, aNode) {
@@ -793,6 +698,77 @@ let CustomizableUIInternal = {
   removeLocationAttributes: function(aNode) {
     aNode.removeAttribute("customizableui-areatype");
     aNode.removeAttribute("customizableui-anchorid");
+  },
+
+  insertNode: function(aWidgetId, aArea, aPosition, isNew) {
+    let areaNodes = gBuildAreas.get(aArea);
+    if (!areaNodes) {
+      return;
+    }
+
+    let placements = gPlacements.get(aArea);
+    if (!placements) {
+      ERROR("Could not find any placements for " + aArea +
+            " when moving a widget.");
+      return;
+    }
+
+    let nextNodeId = placements[aPosition + 1];
+    // Go through each of the nodes associated with this area and move the
+    // widget to the requested location.
+    for (let areaNode of areaNodes) {
+      let window = areaNode.ownerDocument.defaultView;
+      let showInPrivateBrowsing = gPalette.has(aWidgetId)
+                                ? gPalette.get(aWidgetId).showInPrivateBrowsing
+                                : true;
+
+      if (!showInPrivateBrowsing &&
+          PrivateBrowsingUtils.isWindowPrivate(window)) {
+        continue;
+      }
+
+      let [, widgetNode] = this.getWidgetNode(aWidgetId, window);
+      if (!widgetNode) {
+        ERROR("Widget '" + aWidgetId + "' not found, unable to move");
+        continue;
+      }
+
+      if (isNew) {
+        this.ensureButtonContextMenu(widgetNode, aArea == CustomizableUI.AREA_PANEL);
+        if (widgetNode.localName == "toolbarbutton" && aArea == CustomizableUI.AREA_PANEL) {
+          widgetNode.setAttribute("tabindex", "0");
+          if (!widgetNode.hasAttribute("type")) {
+            widgetNode.setAttribute("type", "wrap");
+          }
+        }
+      }
+
+      let container = areaNode.customizationTarget;
+      let [insertionContainer, nextNode] = this.findInsertionPoints(widgetNode, nextNodeId, areaNode, aArea);
+      this.notifyListeners("onWidgetBeforeDOMChange", widgetNode, nextNode, container);
+      this.insertWidgetBefore(widgetNode, nextNode, insertionContainer, aArea);
+      if (isNew) {
+        this._addParentFlex(widgetNode);
+      }
+      this.notifyListeners("onWidgetAfterDOMChange", widgetNode, nextNode, container);
+
+      if (gAreas.get(aArea).get("type") == CustomizableUI.TYPE_TOOLBAR) {
+        areaNode.setAttribute("currentset", areaNode.currentSet);
+      }
+    }
+  },
+
+  findInsertionPoints: function(aNode, aNextNodeId, aAreaNode, aArea) {
+    let props = gAreas.get(aArea);
+    if (props.get("type") == CustomizableUI.TYPE_TOOLBAR && props.get("overflowable") &&
+        aAreaNode.getAttribute("overflowing") == "true") {
+      return aAreaNode.overflowable.getOverflowedInsertionPoints(aNode, aNextNodeId);
+    }
+    let nextNode = null;
+    if (aNextNodeId) {
+      nextNode = aAreaNode.customizationTarget.querySelector(idToSelector(aNextNodeId));
+    }
+    return [aAreaNode.customizationTarget, nextNode];
   },
 
   insertWidgetBefore: function(aNode, aNextNode, aContainer, aArea) {
@@ -2317,6 +2293,8 @@ OverflowableToolbar.prototype = {
     this._target = this._toolbar.customizationTarget;
     let doc = this._toolbar.ownerDocument;
     this._list = doc.getElementById(this._toolbar.getAttribute("overflowtarget"));
+    this._list.toolbox = this._toolbar.toolbox;
+    this._list.customizationTarget = this._list;
 
     let window = doc.defaultView;
     window.addEventListener("resize", this);
@@ -2496,6 +2474,25 @@ OverflowableToolbar.prototype = {
   _enable: function() {
     this._enabled = true;
     this._onOverflow();
+  },
+
+  getOverflowedInsertionPoints: function(aNode, aNextNodeId) {
+    if (aNode.getAttribute("overflows") == "false") {
+      return [this._target, null];
+    }
+    // Inserting at the end means we're in the overflow list by definition:
+    if (!aNextNodeId) {
+      return [this._list, null];
+    }
+
+    let nextNode = this._list.querySelector(idToSelector(aNextNodeId));
+    // If this is the first item, we can actually just append the node
+    // to the end of the toolbar.  If it results in an overflow event, we'll move
+    // the new node to the overflow target.
+    if (!nextNode.previousSibling) {
+      return [this._target, null];
+    }
+    return [this._list, nextNode];
   }
 };
 
