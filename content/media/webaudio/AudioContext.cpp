@@ -65,6 +65,7 @@ AudioContext::AudioContext(nsPIDOMWindow* aWindow,
   aWindow->AddAudioContext(this);
   SetIsDOMBinding();
 
+  mActiveNodes.Init();
   mPannerNodes.Init();
   mAudioBufferSourceNodes.Init();
   mOscillatorNodes.Init();
