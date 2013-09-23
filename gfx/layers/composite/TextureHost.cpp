@@ -161,6 +161,20 @@ TextureHost::~TextureHost()
 {
 }
 
+#ifdef MOZ_LAYERS_HAVE_LOG
+
+void
+TextureHost::PrintInfo(nsACString& aTo, const char* aPrefix)
+{
+  aTo += aPrefix;
+  aTo += nsPrintfCString("%s (0x%p)", Name(), this);
+  AppendToString(aTo, GetSize(), " [size=", "]");
+  AppendToString(aTo, GetFormat(), " [format=", "]");
+  AppendToString(aTo, mFlags, " [flags=", "]");
+}
+
+#endif
+
 void TextureSource::SetCompositableQuirks(CompositableQuirks* aQuirks)
 {
     mQuirks = aQuirks;
@@ -231,12 +245,6 @@ DeprecatedTextureHost::SwapTextures(const SurfaceDescriptor& aImage,
 }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-void
-TextureSource::PrintInfo(nsACString& aTo, const char* aPrefix)
-{
-  aTo += aPrefix;
-  aTo += nsPrintfCString("UnknownTextureSource (0x%p)", this);
-}
 
 void
 DeprecatedTextureHost::PrintInfo(nsACString& aTo, const char* aPrefix)

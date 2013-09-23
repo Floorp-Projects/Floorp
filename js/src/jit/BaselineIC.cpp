@@ -847,9 +847,13 @@ PrepareOsrTempData(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *fram
     // Copy formal args and thisv.
     memcpy(stackFrameStart, frame->argv() - 1, (numFormalArgs + 1) * sizeof(Value));
 
-    // Initialize ScopeChain, Exec, and Flags fields in StackFrame struct.
+    // Initialize ScopeChain, Exec, ArgsObj, and Flags fields in StackFrame struct.
     uint8_t *stackFrame = info->stackFrame;
     *((JSObject **) (stackFrame + StackFrame::offsetOfScopeChain())) = frame->scopeChain();
+    if (frame->script()->needsArgsObj()) {
+        JS_ASSERT(frame->hasArgsObj());
+        *((JSObject **) (stackFrame + StackFrame::offsetOfArgumentsObject())) = &frame->argsObj();
+    }
     if (frame->isFunctionFrame()) {
         // Store the function in exec field, and StackFrame::FUNCTION for flags.
         *((JSFunction **) (stackFrame + StackFrame::offsetOfExec())) = frame->fun();

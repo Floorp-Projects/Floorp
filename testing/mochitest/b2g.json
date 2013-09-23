@@ -293,7 +293,6 @@
     "dom/file/test/test_workers.html":"",
     "dom/file/test/test_write_read_data.html":"",
 
-    "dom/imptests/editing/conformancetest/test_event.html":"1 failure, bug 908879",
     "dom/imptests/editing/conformancetest/test_runtest.html":"takes too long",
 
     "dom/media/tests/mochitest/test_dataChannel_basicAudio.html":"bug 908473",
