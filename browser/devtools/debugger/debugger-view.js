@@ -240,26 +240,19 @@ let DebuggerView = {
     // Avoid setting the editor mode for very large files.
     if (aTextContent.length >= SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE) {
       this.editor.setMode(SourceEditor.MODES.TEXT);
-      return;
     }
-
-    if (aContentType) {
-      if (/javascript/.test(aContentType)) {
-        this.editor.setMode(SourceEditor.MODES.JAVASCRIPT);
-      } else {
-        this.editor.setMode(SourceEditor.MODES.HTML);
-      }
-    } else if (aTextContent.match(/^\s*</)) {
-      // Use HTML mode for files in which the first non whitespace character is
-      // &lt;, regardless of extension.
+    // Use JS mode for files with .js and .jsm extensions.
+    else if (SourceUtils.isJavaScript(aUrl, aContentType)) {
+      this.editor.setMode(SourceEditor.MODES.JAVASCRIPT);
+    }
+    // Use HTML mode for files in which the first non whitespace character is
+    // &lt;, regardless of extension.
+    else if (aTextContent.match(/^\s*</)) {
       this.editor.setMode(SourceEditor.MODES.HTML);
-    } else {
-      // Use JS mode for files with .js and .jsm extensions.
-      if (/\.jsm?$/.test(SourceUtils.trimUrlQuery(aUrl))) {
-        this.editor.setMode(SourceEditor.MODES.JAVASCRIPT);
-      } else {
-        this.editor.setMode(SourceEditor.MODES.TEXT);
-      }
+    }
+    // Unknown languange, use plain text.
+    else {
+      this.editor.setMode(SourceEditor.MODES.TEXT);
     }
   },
 

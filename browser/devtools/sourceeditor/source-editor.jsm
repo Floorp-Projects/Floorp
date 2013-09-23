@@ -9,7 +9,7 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/source-editor-ui.jsm");
+Cu.import("resource:///modules/devtools/sourceeditor/source-editor-ui.jsm");
 
 const PREF_EDITOR_COMPONENT = "devtools.editor.component";
 const SOURCEEDITOR_L10N = "chrome://browser/locale/devtools/sourceeditor.properties";
@@ -20,7 +20,7 @@ try {
   if (component == "ui") {
     throw new Error("The ui editor component is not available.");
   }
-  Cu.import("resource:///modules/source-editor-" + component + ".jsm", obj);
+  Cu.import("resource:///modules/devtools/sourceeditor/source-editor-" + component + ".jsm", obj);
 } catch (ex) {
   Cu.reportError(ex);
   Cu.reportError("SourceEditor component failed to load: " + component);
@@ -30,7 +30,7 @@ try {
 
   // Load the default editor component.
   component = Services.prefs.getCharPref(PREF_EDITOR_COMPONENT);
-  Cu.import("resource:///modules/source-editor-" + component + ".jsm", obj);
+  Cu.import("resource:///modules/devtools/sourceeditor/source-editor-" + component + ".jsm", obj);
 }
 
 // Export the SourceEditor.

@@ -643,7 +643,7 @@
           for (let name in aOptions)
             options += "," + name + "=" + aOptions[name];
 
-          let otherWin = window.openDialog("chrome://browser/content/chatWindow.xul", null, "chrome,all" + options);
+          let otherWin = window.openDialog("chrome://browser/content/chatWindow.xul", null, "chrome,all,dialog=no" + options);
 
           otherWin.addEventListener("load", function _chatLoad(event) {
             if (event.target != otherWin.document)

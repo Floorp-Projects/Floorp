@@ -10,7 +10,7 @@ const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/source-editor-ui.jsm");
+Cu.import("resource:///modules/devtools/sourceeditor/source-editor-ui.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
                                    "@mozilla.org/widget/clipboardhelper;1",
