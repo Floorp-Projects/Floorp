@@ -22,10 +22,15 @@ MOCHITEST_BROWSER_FILES := \
 ifndef RELEASE_BUILD
 MOCHITEST_BROWSER_FILES += \
 	browser_thumbnails_background.js \
-	browser_thumbnails_background_crash.js \
 	browser_thumbnails_update.js \
 	thumbnails_background.sjs \
-	thumbnails_crash_content_helper.js \
 	thumbnails_update.sjs \
 	$(NULL)
+
+ifdef MOZ_CRASHREPORTER
+MOCHITEST_BROWSER_FILES += \
+	browser_thumbnails_background_crash.js \
+	thumbnails_crash_content_helper.js \
+	$(NULL)
+endif
 endif
