@@ -3,8 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIInputStream.idl"
-#include "nsIStreamListener.idl"
+#include "nsISupports.idl"
+
+interface nsIInputStream;
+interface nsIStreamListener;
 
 %{C++
 #define NS_ISTREAMCONVERTER_KEY         "@mozilla.org/streamconv;1"

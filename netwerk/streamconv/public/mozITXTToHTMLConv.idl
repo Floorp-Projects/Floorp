@@ -12,7 +12,6 @@
  */
 
 #include "nsIStreamConverter.idl"
-#include "nsrootidl.idl"
 
 %{C++
 // {77c0e42a-1dd2-11b2-8ebf-edc6606f2f4b}

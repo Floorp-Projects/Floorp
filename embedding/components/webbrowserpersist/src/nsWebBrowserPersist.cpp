@@ -86,6 +86,7 @@
 #include "nsWebBrowserPersist.h"
 
 #include "nsIContent.h"
+#include "nsIMIMEInfo.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/dom/HTMLSharedObjectElement.h"

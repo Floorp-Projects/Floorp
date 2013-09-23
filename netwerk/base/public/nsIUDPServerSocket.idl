@@ -4,15 +4,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsINetAddr.idl"
 
+interface nsINetAddr;
 interface nsIUDPServerSocketListener;
 interface nsIUDPMessage;
 interface nsISocketTransport;
 interface nsIOutputStream;
 
 %{ C++
-#include "mozilla/net/DNS.h"
+namespace mozilla {
+namespace net {
+union NetAddr;
+}
+}
 %}
 native NetAddr(mozilla::net::NetAddr);
 [ptr] native NetAddrPtr(mozilla::net::NetAddr);

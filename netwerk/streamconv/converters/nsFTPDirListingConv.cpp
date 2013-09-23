@@ -14,6 +14,7 @@
 #include "nsCRT.h"
 #include "nsAutoPtr.h"
 #include "nsIChannel.h"
+#include "nsIURI.h"
 
 #include "ParseFTPList.h"
 #include <algorithm>
