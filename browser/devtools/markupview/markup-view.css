@@ -22,6 +22,9 @@
   margin: 0;
 }
 
+/* Tags are organized in a UL/LI tree and indented thanks to a left padding.
+ * A very large padding is used in combination with a slightly smaller margin
+ * to make sure childs actually span from edge-to-edge. */
 .child {
   margin-left: -1000em;
   padding-left: 1001em;
@@ -33,9 +36,9 @@
   position: relative;
 }
 
-/* Children are indented thanks to their parent's left padding, that means they
- * are not stretching from edge to edge, which is what we want.
- * So we insert an element and make sure it covers the whole "line" */
+/* This extra element placed in each tag is positioned absolutely to cover the
+ * whole tag line and is used for background styling (when a selection is made
+ * or when the tag is flashing) */
 .tag-line .highlighter {
   position: absolute;
   left: -1000em;
@@ -84,6 +87,10 @@
 
 .newattr:focus {
   margin-right: 0;
+}
+
+.highlighter.flash-out {
+  transition: background .5s;
 }
 
 /* Preview */
