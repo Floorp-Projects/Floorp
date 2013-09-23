@@ -1775,14 +1775,14 @@ ContentParent::Observe(nsISupports* aSubject,
     return NS_OK;
 }
 
-PCompositorParent*
+bool
 ContentParent::AllocPCompositorParent(mozilla::ipc::Transport* aTransport,
                                       base::ProcessId aOtherProcess)
 {
     return CompositorParent::Create(aTransport, aOtherProcess);
 }
 
-PImageBridgeParent*
+bool
 ContentParent::AllocPImageBridgeParent(mozilla::ipc::Transport* aTransport,
                                        base::ProcessId aOtherProcess)
 {
