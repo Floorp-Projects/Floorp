@@ -287,6 +287,11 @@ this.PermissionsTable =  { geolocation: {
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
+                           "inputmethod-manage": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
+                           },
                            "wappush": {
                              app: DENY_ACTION,
                              privileged: DENY_ACTION,

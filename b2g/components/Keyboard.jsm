@@ -31,7 +31,7 @@ let Keyboard = {
     if (this._messageManager && !Cu.isDeadWrapper(this._messageManager))
       return this._messageManager;
 
-    throw Error('no message manager set');
+    return null;
   },
 
   set messageManager(mm) {
@@ -92,6 +92,10 @@ let Keyboard = {
     // If we get a 'Keyboard:XXX' message, check that the sender has the
     // keyboard permission.
     if (msg.name.indexOf("Keyboard:") != -1) {
+      if (!this.messageManager) {
+        return;
+      }
+
       let mm;
       try {
         mm = msg.target.QueryInterface(Ci.nsIFrameLoaderOwner)
