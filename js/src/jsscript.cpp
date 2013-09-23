@@ -1208,6 +1208,7 @@ ScriptSource::destroy()
     JS_ASSERT(ready());
     adjustDataSize(0);
     js_free(filename_);
+    js_free(sourceURL_);
     js_free(sourceMapURL_);
     if (originPrincipals_)
         JS_DropPrincipals(TlsPerThreadData.get()->runtimeFromMainThread(), originPrincipals_);
@@ -1298,6 +1299,31 @@ ScriptSource::performXDR(XDRState<mode> *xdr)
         sourceMapURL_[sourceMapURLLen] = '\0';
     }
 
+    uint8_t haveSourceURL = hasSourceURL();
+    if (!xdr->codeUint8(&haveSourceURL))
+        return false;
+
+    if (haveSourceURL) {
+        uint32_t sourceURLLen = (mode == XDR_DECODE) ? 0 : js_strlen(sourceURL_);
+        if (!xdr->codeUint32(&sourceURLLen))
+            return false;
+
+        if (mode == XDR_DECODE) {
+            size_t byteLen = (sourceURLLen + 1) * sizeof(jschar);
+            sourceURL_ = static_cast<jschar *>(xdr->cx()->malloc_(byteLen));
+            if (!sourceURL_)
+                return false;
+        }
+        if (!xdr->codeChars(sourceURL_, sourceURLLen)) {
+            if (mode == XDR_DECODE) {
+                js_free(sourceURL_);
+                sourceURL_ = NULL;
+            }
+            return false;
+        }
+        sourceURL_[sourceURLLen] = '\0';
+    }
+
     uint8_t haveFilename = !!filename_;
     if (!xdr->codeUint8(&haveFilename))
         return false;
@@ -1331,20 +1357,52 @@ ScriptSource::setFilename(ExclusiveContext *cx, const char *filename)
 }
 
 bool
+ScriptSource::setSourceURL(ExclusiveContext *cx, const jschar *sourceURL)
+{
+    JS_ASSERT(sourceURL);
+    if (hasSourceURL()) {
+        if (cx->isJSContext() &&
+            !JS_ReportErrorFlagsAndNumber(cx->asJSContext(), JSREPORT_WARNING,
+                                          js_GetErrorMessage, NULL,
+                                          JSMSG_ALREADY_HAS_PRAGMA, filename_,
+                                          "//# sourceURL"))
+        {
+            return false;
+        }
+    }
+    size_t len = js_strlen(sourceURL) + 1;
+    if (len == 1)
+        return true;
+    sourceURL_ = js_strdup(cx, sourceURL);
+    if (!sourceURL_)
+        return false;
+    return true;
+}
+
+const jschar *
+ScriptSource::sourceURL()
+{
+    JS_ASSERT(hasSourceURL());
+    return sourceURL_;
+}
+
+bool
 ScriptSource::setSourceMapURL(ExclusiveContext *cx, const jschar *sourceMapURL)
 {
     JS_ASSERT(sourceMapURL);
     if (hasSourceMapURL()) {
         if (cx->isJSContext() &&
-            !JS_ReportErrorFlagsAndNumber(cx->asJSContext(), JSREPORT_WARNING, js_GetErrorMessage,
-                                          NULL, JSMSG_ALREADY_HAS_SOURCE_MAP_URL, filename_))
+            !JS_ReportErrorFlagsAndNumber(cx->asJSContext(), JSREPORT_WARNING,
+                                          js_GetErrorMessage, NULL,
+                                          JSMSG_ALREADY_HAS_PRAGMA, filename_,
+                                          "//# sourceMappingURL"))
         {
             return false;
         }
     }
 
     size_t len = js_strlen(sourceMapURL) + 1;
-    if (len == 1) 
+    if (len == 1)
         return true;
     sourceMapURL_ = js_strdup(cx, sourceMapURL);
     if (!sourceMapURL_)

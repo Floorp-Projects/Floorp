@@ -7,7 +7,7 @@
 function test() {
 
   let temp = {};
-  Cu.import("resource:///modules/source-editor.jsm", temp);
+  Cu.import("resource:///modules/devtools/sourceeditor/source-editor.jsm", temp);
   let SourceEditor = temp.SourceEditor;
 
   waitForExplicitFinish();
