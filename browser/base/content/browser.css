@@ -108,8 +108,7 @@ tabbrowser {
   min-width: 100px;
   width: 0;
   transition: min-width 200ms ease-out,
-              max-width 230ms ease-out,
-              opacity 50ms ease-out 20ms /* hide the tab for the first 20ms of the max-width transition */;
+              max-width 230ms ease-out;
 }
 
 .tabbrowser-tab:not([pinned]):not([fadein]) {
@@ -117,8 +116,7 @@ tabbrowser {
   min-width: 0.1px;
   opacity: 0 !important;
   transition: min-width 200ms ease-out,
-              max-width 230ms ease-out,
-              opacity 50ms ease-out 160ms /* hide the tab for the last 20ms of the max-width transition */;
+              max-width 230ms ease-out;
 }
 
 .tab-throbber:not([fadein]):not([pinned]),
