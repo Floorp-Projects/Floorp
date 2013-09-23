@@ -17,7 +17,6 @@
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 
-#include "nsIHttpDataUsage.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIProtocolProxyService.h"
 #include "nsIIOService.h"
@@ -54,7 +53,6 @@ class nsHttpHandler : public nsIHttpProtocolHandler
                     , public nsIObserver
                     , public nsSupportsWeakReference
                     , public nsISpeculativeConnect
-                    , public nsIHttpDataUsage
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
@@ -63,7 +61,6 @@ public:
     NS_DECL_NSIHTTPPROTOCOLHANDLER
     NS_DECL_NSIOBSERVER
     NS_DECL_NSISPECULATIVECONNECT
-    NS_DECL_NSIHTTPDATAUSAGE
 
     nsHttpHandler();
     virtual ~nsHttpHandler();
@@ -479,30 +476,8 @@ public:
     }
 
 private:
-    // for nsIHttpDataUsage
-    uint64_t mEthernetBytesRead;
-    uint64_t mEthernetBytesWritten;
-    uint64_t mCellBytesRead;
-    uint64_t mCellBytesWritten;
-    bool     mNetworkTypeKnown;
-    bool     mNetworkTypeWasEthernet;
-
     nsRefPtr<mozilla::net::Tickler> mWifiTickler;
-    nsresult GetNetworkEthernetInfo(nsIInterfaceRequestor *cb,
-                                    bool *ethernet);
-    nsresult GetNetworkEthernetInfoInner(nsIInterfaceRequestor *cb,
-                                         bool *ethernet);
-    nsresult GetNetworkInfo(nsIInterfaceRequestor *cb,
-                            bool *ethernet, uint32_t *gw);
-    nsresult GetNetworkInfoInner(nsIInterfaceRequestor *cb,
-                                 bool *ethernet, uint32_t *gw);
     void TickleWifi(nsIInterfaceRequestor *cb);
-
-public:
-    // this is called to update the member variables used for nsIHttpDataUsage
-    // it can be called from any thread
-    void UpdateDataUsage(nsIInterfaceRequestor *cb,
-                         uint64_t bytesRead, uint64_t bytesWritten);
 };
 
 extern nsHttpHandler *gHttpHandler;
