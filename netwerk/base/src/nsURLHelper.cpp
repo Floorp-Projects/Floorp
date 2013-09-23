@@ -7,19 +7,11 @@
 #include "mozilla/RangedPtr.h"
 
 #include "nsURLHelper.h"
-#include "nsReadableUtils.h"
-#include "nsIServiceManager.h"
-#include "nsIIOService.h"
 #include "nsIFile.h"
 #include "nsIURLParser.h"
-#include "nsIURI.h"
-#include "nsMemory.h"
-#include "nsEscape.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsNetCID.h"
-#include "netCore.h"
-#include "prprf.h"
 #include "prnetdb.h"
 
 using namespace mozilla;
@@ -881,7 +873,7 @@ net_ParseMediaType(const nsACString &aMediaTypeStr,
     // include a comma, so this check makes us a bit more tolerant.
 
     if (type != typeEnd && strncmp(type, "*/*", typeEnd - type) != 0 &&
-        memchr(type, '/', typeEnd - type) != NULL) {
+        memchr(type, '/', typeEnd - type) != nullptr) {
         // Common case here is that aContentType is empty
         bool eq = !aContentType.IsEmpty() &&
             aContentType.Equals(Substring(type, typeEnd),

@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIStreamConverter.idl"
-#include "nsrootidl.idl"
 
 [scriptable, uuid(933355f6-1dd2-11b2-a9b0-d335b9e35983)]
 interface nsITXTToHTMLConv : nsIStreamConverter {

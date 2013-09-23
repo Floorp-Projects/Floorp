@@ -4,9 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIMIMEInfo.idl"
-#include "nsIURI.idl"
-#include "nsIFile.idl"
+
+interface nsIFile;
+interface nsIMIMEInfo;
+interface nsIURI;
 
 %{C++
 #define NS_MIMESERVICE_CID                           \

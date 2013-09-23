@@ -72,7 +72,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
 Cu.import("resource:///modules/devtools/shared/event-emitter.js");
-Cu.import("resource:///modules/source-editor.jsm");
+Cu.import("resource:///modules/devtools/sourceeditor/source-editor.jsm");
 Cu.import("resource:///modules/devtools/BreadcrumbsWidget.jsm");
 Cu.import("resource:///modules/devtools/SideMenuWidget.jsm");
 Cu.import("resource:///modules/devtools/VariablesView.jsm");
@@ -1147,7 +1147,7 @@ SourceScripts.prototype = {
 
   /**
    * Pretty print a source's text. All subsequent calls to |getText| will return
-   * the pretty text.
+   * the pretty text. Nothing will happen for non-javascript files.
    *
    * @param Object aSource
    *        The source form from the RDP.
@@ -1156,8 +1156,13 @@ SourceScripts.prototype = {
    *          [aSource, error].
    */
   prettyPrint: function(aSource) {
-    let textPromise = this._cache.get(aSource.url);
+    // Only attempt to pretty print JavaScript sources.
+    if (!SourceUtils.isJavaScript(aSource.url, aSource.contentType)) {
+      return promise.reject([aSource, "Can't prettify non-javascript files."]);
+    }
+
     // Only use the existing promise if it is pretty printed.
+    let textPromise = this._cache.get(aSource.url);
     if (textPromise && textPromise.pretty) {
       return textPromise;
     }
@@ -1166,12 +1171,17 @@ SourceScripts.prototype = {
     this._cache.set(aSource.url, deferred.promise);
 
     this.activeThread.source(aSource)
-      .prettyPrint(Prefs.editorTabSize, ({ error, message, source }) => {
+      .prettyPrint(Prefs.editorTabSize, ({ error, message, source: text }) => {
         if (error) {
+          // Revert the rejected promise from the cache, so that the original
+          // source's text may be shown when the source is selected.
+          this._cache.set(aSource.url, textPromise);
           deferred.reject([aSource, message || error]);
           return;
         }
 
+        // Remove the cached source AST from the Parser, to avoid getting
+        // wrong locations when searching for functions.
         DebuggerController.Parser.clearSource(aSource.url);
 
         if (this.activeThread.paused) {
@@ -1180,7 +1190,7 @@ SourceScripts.prototype = {
           this.activeThread.fillFrames(CALL_STACK_PAGE_SIZE);
         }
 
-        deferred.resolve([aSource, source]);
+        deferred.resolve([aSource, text]);
       });
 
     deferred.promise.pretty = true;
@@ -1218,14 +1228,14 @@ SourceScripts.prototype = {
     }
 
     // Get the source text from the active thread.
-    this.activeThread.source(aSource).source(aResponse => {
+    this.activeThread.source(aSource).source(({ error, message, source: text }) => {
       if (aOnTimeout) {
         window.clearTimeout(fetchTimeout);
       }
-      if (aResponse.error) {
-        deferred.reject([aSource, aResponse.message || aResponse.error]);
+      if (error) {
+        deferred.reject([aSource, message || error]);
       } else {
-        deferred.resolve([aSource, aResponse.source]);
+        deferred.resolve([aSource, text]);
       }
     });
 

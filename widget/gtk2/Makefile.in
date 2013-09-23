@@ -6,21 +6,11 @@
 EXPORT_LIBRARY	= 1
 NATIVE_THEME_SUPPORT = 1
 
-
-
-ifdef ACCESSIBILITY
-CSRCS += maiRedundantObjectFactory.c
-endif
 # build our subdirs, too
 
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
 ifdef NATIVE_THEME_SUPPORT
-ifdef MOZ_ENABLE_GTK2
-CSRCS		+= gtk2drawing.c
-else
-CSRCS		+= gtk3drawing.c
-endif
 DEFINES		+= -DNATIVE_THEME_SUPPORT
 endif
 

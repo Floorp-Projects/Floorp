@@ -908,7 +908,7 @@ js_str_charCodeAt(JSContext *cx, unsigned argc, Value *vp)
     return true;
 
 out_of_range:
-    args.rval().setDouble(js_NaN);
+    args.rval().setNaN();
     return true;
 }
 
@@ -1648,13 +1648,11 @@ namespace {
  * |optarg| indicates in which argument position RegExp flags will be found, if
  * present. This is a Mozilla extension and not part of any ECMA spec.
  */
-class StringRegExpGuard
+class MOZ_STACK_CLASS StringRegExpGuard
 {
-    StringRegExpGuard(const StringRegExpGuard &) MOZ_DELETE;
-    void operator=(const StringRegExpGuard &) MOZ_DELETE;
-
     RegExpGuard re_;
     FlatMatch   fm;
+    RootedObject obj_;
 
     /*
      * Upper bound on the number of characters we are willing to potentially
@@ -1686,15 +1684,15 @@ class StringRegExpGuard
 
   public:
     StringRegExpGuard(JSContext *cx)
-      : re_(cx), fm(cx)
+      : re_(cx), fm(cx), obj_(cx)
     { }
 
     /* init must succeed in order to call tryFlatMatch or normalizeRegExp. */
     bool init(JSContext *cx, CallArgs args, bool convertVoid = false)
     {
         if (args.length() != 0 && IsObjectWithClass(args[0], ESClass_RegExp, cx)) {
-            RootedObject obj(cx, &args[0].toObject());
-            if (!RegExpToShared(cx, obj, &re_))
+            obj_ = &args[0].toObject();
+            if (!RegExpToShared(cx, obj_, &re_))
                 return false;
         } else {
             if (convertVoid && !args.hasDefined(0)) {
@@ -1785,7 +1783,27 @@ class StringRegExpGuard
         return cx->compartment()->regExps.get(cx, patstr, opt, &re_);
     }
 
+    bool zeroLastIndex(JSContext *cx) {
+        if (!regExpIsObject())
+            return true;
+
+        // Don't use RegExpObject::setLastIndex, because that ignores the
+        // writability of "lastIndex" on this user-controlled RegExp object.
+        RootedValue zero(cx, Int32Value(0));
+        return JSObject::setProperty(cx, obj_, obj_, cx->names().lastIndex, &zero, true);
+    }
+
     RegExpShared &regExp() { return *re_; }
+
+    bool regExpIsObject() { return obj_ != NULL; }
+    HandleObject regExpObject() {
+        JS_ASSERT(regExpIsObject());
+        return obj_;
+    }
+
+  private:
+    StringRegExpGuard(const StringRegExpGuard &) MOZ_DELETE;
+    void operator=(const StringRegExpGuard &) MOZ_DELETE;
 };
 
 } /* anonymous namespace */
@@ -1818,55 +1836,101 @@ DoMatchLocal(JSContext *cx, CallArgs args, RegExpStatics *res, Handle<JSLinearSt
     return true;
 }
 
+/* ES5 15.5.4.10 step 8. */
 static bool
 DoMatchGlobal(JSContext *cx, CallArgs args, RegExpStatics *res, Handle<JSLinearString*> input,
-              RegExpShared &re)
+              StringRegExpGuard &g)
 {
-    size_t charsLen = input->length();
-    const jschar *chars = input->chars();
+    // Step 8a.
+    //
+    // This single zeroing of "lastIndex" covers all "lastIndex" changes in the
+    // rest of String.prototype.match, particularly in steps 8f(i) and
+    // 8f(iii)(2)(a).  Here's why.
+    //
+    // The inputs to the calls to RegExp.prototype.exec are a RegExp object
+    // whose .global is true and a string.  The only side effect of a call in
+    // these circumstances is that the RegExp's .lastIndex will be modified to
+    // the next starting index after the discovered match (or to 0 if there's
+    // no remaining match).  Because .lastIndex is a non-configurable data
+    // property and no script-controllable code executes after step 8a, passing
+    // step 8a implies *every* .lastIndex set succeeds.  String.prototype.match
+    // calls RegExp.prototype.exec repeatedly, and the last call doesn't match,
+    // so the final value of .lastIndex is 0: exactly the state after step 8a
+    // succeeds.  No spec step lets script observe intermediate .lastIndex
+    // values.
+    //
+    // The arrays returned by RegExp.prototype.exec always have a string at
+    // index 0, for which [[Get]]s have no side effects.
+    //
+    // Filling in a new array using [[DefineOwnProperty]] is unobservable.
+    //
+    // This is a tricky point, because after this set, our implementation *can*
+    // fail.  The key is that script can't distinguish these failure modes from
+    // one where, in spec terms, we fail immediately after step 8a.  That *in
+    // reality* we might have done extra matching work, or created a partial
+    // results array to return, or hit the operation limit, is irrelevant.  The
+    // script can't tell we did any of those things but didn't update
+    // .lastIndex.  Thus we can optimize steps 8b onward however we want,
+    // including eliminating intermediate .lastIndex sets, as long as we don't
+    // add ways for script to observe the intermediate states.
+    //
+    // In short: it's okay to cheat (by setting .lastIndex to 0, once) because
+    // we can't get caught.
+    if (!g.zeroLastIndex(cx))
+        return false;
 
+    // Step 8b.
     AutoValueVector elements(cx);
 
-    MatchPair match;
-    size_t i = 0; /* Index used for iterating through the string. */
-    size_t lastMatch = 0; /* Index of last successful match. */
+    size_t lastSuccessfulStart = 0;
 
-    /* Accumulate results for each match. */
-    while (i <= charsLen) {
+    // The loop variables from steps 8c-e aren't needed, as we use different
+    // techniques from the spec to implement step 8f's loop.
+
+    // Step 8f.
+    MatchPair match;
+    size_t charsLen = input->length();
+    const jschar *chars = input->chars();
+    RegExpShared &re = g.regExp();
+    for (size_t searchIndex = 0; searchIndex <= charsLen; ) {
         if (!JS_CHECK_OPERATION_LIMIT(cx))
             return false;
 
-        size_t i_orig = i;
-
-        RegExpRunStatus status = re.executeMatchOnly(cx, chars, charsLen, &i, match);
+        // Steps 8f(i-ii), minus "lastIndex" updates (see above).
+        size_t nextSearchIndex = searchIndex;
+        RegExpRunStatus status = re.executeMatchOnly(cx, chars, charsLen, &nextSearchIndex, match);
         if (status == RegExpRunStatus_Error)
             return false;
+
+        // Step 8f(ii).
         if (status == RegExpRunStatus_Success_NotFound)
             break;
 
-        lastMatch = i_orig;
+        lastSuccessfulStart = searchIndex;
 
-        /* Extract the matched substring, root it, and remember it for later. */
+        // Steps 8f(iii)(1-3).
+        searchIndex = match.isEmpty() ? nextSearchIndex + 1 : nextSearchIndex;
+
+        // Step 8f(iii)(4-5).
         JSLinearString *str = js_NewDependentString(cx, input, match.start, match.length());
         if (!str)
             return false;
         if (!elements.append(StringValue(str)))
             return false;
-
-        if (match.isEmpty())
-            ++i;
     }
 
-    /* If unmatched, return null. */
+    // Step 8g.
     if (elements.empty()) {
         args.rval().setNull();
         return true;
     }
 
-    /* The last successful match updates the RegExpStatics. */
-    res->updateLazily(cx, input, &re, lastMatch);
+    // The last *successful* match updates the RegExpStatics. (Interestingly,
+    // this implies that String.prototype.match's semantics aren't those
+    // implied by the RegExp.prototype.exec calls in the ES5 algorithm.)
+    res->updateLazily(cx, input, &re, lastSuccessfulStart);
 
-    /* Copy the rooted vector into the array object. */
+    // Steps 8b, 8f(iii)(5-6), 8h.
     JSObject *array = NewDenseCopiedArray(cx, elements.length(), elements.begin());
     if (!array)
         return false;
@@ -1903,18 +1967,23 @@ BuildFlatMatchArray(JSContext *cx, HandleString textstr, const FlatMatch &fm, Ca
     return true;
 }
 
+/* ES5 15.5.4.10. */
 bool
 js::str_match(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+
+    /* Steps 1-2. */
     RootedString str(cx, ThisToStringForStringProto(cx, args));
     if (!str)
         return false;
 
+    /* Steps 3-4, plus the trailing-argument "flags" extension. */
     StringRegExpGuard g(cx);
     if (!g.init(cx, args, true))
         return false;
 
+    /* Fast path when the search pattern can be searched for as a string. */
     if (const FlatMatch *fm = g.tryFlatMatch(cx, str, 1, args.length()))
         return BuildFlatMatchArray(cx, str, *fm, &args);
 
@@ -1922,6 +1991,7 @@ js::str_match(JSContext *cx, unsigned argc, Value *vp)
     if (cx->isExceptionPending())
         return false;
 
+    /* Create regular-expression internals as needed to perform the match. */
     if (!g.normalizeRegExp(cx, false, 1, args))
         return false;
 
@@ -1930,9 +2000,12 @@ js::str_match(JSContext *cx, unsigned argc, Value *vp)
     if (!linearStr)
         return false;
 
-    if (g.regExp().global())
-        return DoMatchGlobal(cx, args, res, linearStr, g.regExp());
-    return DoMatchLocal(cx, args, res, linearStr, g.regExp());
+    /* Steps 5-6, 7. */
+    if (!g.regExp().global())
+        return DoMatchLocal(cx, args, res, linearStr, g.regExp());
+
+    /* Steps 6, 8. */
+    return DoMatchGlobal(cx, args, res, linearStr, g);
 }
 
 bool
@@ -2658,6 +2731,15 @@ str_replace_regexp(JSContext *cx, CallArgs args, ReplaceData &rdata)
 
     RegExpStatics *res = cx->global()->getRegExpStatics();
     RegExpShared &re = rdata.g.regExp();
+
+    // The spec doesn't describe this function very clearly, so we go ahead and
+    // assume that when the input to String.prototype.replace is a global
+    // RegExp, calling the replacer function (assuming one was provided) takes
+    // place only after the matching is done. See the comment at the beginning
+    // of DoMatchGlobal explaining why we can zero the the RegExp object's
+    // lastIndex property here.
+    if (re.global() && !rdata.g.zeroLastIndex(cx))
+        return false;
 
     /* Optimize removal. */
     if (rdata.repstr && rdata.repstr->length() == 0) {
@@ -4078,29 +4160,6 @@ js::DeflateStringToBuffer(JSContext *maybecx, const jschar *src, size_t srclen,
     }
     for (size_t i = 0; i < srclen; i++)
         dst[i] = (char) src[i];
-    *dstlenp = srclen;
-    return true;
-}
-
-bool
-js::InflateStringToBuffer(JSContext *maybecx, const char *src, size_t srclen,
-                          jschar *dst, size_t *dstlenp)
-{
-    if (dst) {
-        size_t dstlen = *dstlenp;
-        if (srclen > dstlen) {
-            for (size_t i = 0; i < dstlen; i++)
-                dst[i] = (unsigned char) src[i];
-            if (maybecx) {
-                AutoSuppressGC suppress(maybecx);
-                JS_ReportErrorNumber(maybecx, js_GetErrorMessage, NULL,
-                                     JSMSG_BUFFER_TOO_SMALL);
-            }
-            return false;
-        }
-        for (size_t i = 0; i < srclen; i++)
-            dst[i] = (unsigned char) src[i];
-    }
     *dstlenp = srclen;
     return true;
 }

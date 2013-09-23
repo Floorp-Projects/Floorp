@@ -25,6 +25,7 @@ using namespace js::jit;
 using mozilla::DebugOnly;
 using mozilla::DoubleExponentBias;
 using mozilla::DoubleExponentShift;
+using JS::GenericNaN;
 
 CodeGeneratorX86::CodeGeneratorX86(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
   : CodeGeneratorX86Shared(gen, graph, masm)
@@ -383,7 +384,7 @@ CodeGeneratorX86::visitCompareVAndBranch(LCompareVAndBranch *lir)
 }
 
 bool
-CodeGeneratorX86::visitUInt32ToDouble(LUInt32ToDouble *lir)
+CodeGeneratorX86::visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble *lir)
 {
     Register input = ToRegister(lir->input());
     Register temp = ToRegister(lir->temp());
@@ -534,7 +535,7 @@ bool
 CodeGeneratorX86::visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds *ool)
 {
     if (ool->dest().isFloat()) {
-        masm.loadConstantDouble(js_NaN, ool->dest().fpu());
+        masm.loadConstantDouble(GenericNaN(), ool->dest().fpu());
     } else {
         Register destReg = ool->dest().gpr();
         masm.xorl(destReg, destReg);

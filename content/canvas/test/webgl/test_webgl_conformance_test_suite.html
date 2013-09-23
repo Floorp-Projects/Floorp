@@ -81,6 +81,7 @@ function start() {
   
   var GLDRIVER_MESA   = 'mesa';
   var GLDRIVER_NVIDIA = 'nvidia';
+  var GLDRIVER_X86EMULATOR = 'android x86 emulator';
 
   var kOS = null;
   var kOSVersion = null;
@@ -112,6 +113,8 @@ function start() {
   
   if (glRenderer.contains('llvmpipe')) {
     kGLDriver = GLDRIVER_MESA;
+  } else if (glRenderer.contains('Android Emulator')) {
+    kGLDriver = GLDRIVER_X86EMULATOR;
   } else if (glVendor.contains('NVIDIA')) {
     kGLDriver = GLDRIVER_NVIDIA;
   }
@@ -518,13 +521,18 @@ function start() {
       break;
     }
     case OS_ANDROID: {
-      skippedTestsFilename = 'skipped_tests_android.txt';
       switch (kGLDriver) {
         case GLDRIVER_NVIDIA:
           failingTestsFilename = 'failing_tests_android_nvidia.txt';
+          skippedTestsFilename = 'skipped_tests_android.txt';
+          break;
+        case GLDRIVER_X86EMULATOR:
+          failingTestsFilename = 'failing_tests_android_x86.txt';
+          skippedTestsFilename = 'skipped_tests_android_x86.txt';
           break;
         default:
           failingTestsFilename = 'failing_tests_android.txt';
+          skippedTestsFilename = 'skipped_tests_android.txt';
           break;
       }
       break;

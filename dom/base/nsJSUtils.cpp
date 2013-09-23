@@ -31,7 +31,7 @@ bool
 nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
                               uint32_t* aLineno)
 {
-  JSScript* script = nullptr;
+  JS::RootedScript script(aContext);
   unsigned lineno = 0;
 
   if (!JS_DescribeScriptedCaller(aContext, &script, &lineno)) {

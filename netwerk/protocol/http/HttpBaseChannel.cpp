@@ -18,14 +18,15 @@
 #include "nsISeekableStream.h"
 #include "nsITimedChannel.h"
 #include "nsIEncodedChannel.h"
-#include "nsIResumableChannel.h"
 #include "nsIApplicationCacheChannel.h"
-#include "nsILoadContext.h"
 #include "nsEscape.h"
 #include "nsStreamListenerWrapper.h"
 #include "nsISecurityConsoleMessage.h"
+#include "nsURLHelper.h"
+#include "nsICookieService.h"
+#include "nsIStreamConverterService.h"
+#include "nsCRT.h"
 
-#include "prnetdb.h"
 #include <algorithm>
 
 namespace mozilla {

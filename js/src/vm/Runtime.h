@@ -11,6 +11,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Scoped.h"
 #include "mozilla/ThreadLocal.h"
 
 #include <setjmp.h>
@@ -533,11 +534,11 @@ class PerThreadData : public PerThreadDataFriendFields,
     js::AsmJSActivation *asmJSActivationStack_;
 
   public:
-    static unsigned offsetOfActivation() {
-        return offsetof(PerThreadData, activation_);
+    js::Activation *const *addressOfActivation() const {
+        return &activation_;
     }
-    static unsigned offsetOfAsmJSActivationStackReadOnly() {
-        return offsetof(PerThreadData, asmJSActivationStack_);
+    js::AsmJSActivation *const *addressOfAsmJSActivationStackReadOnly() const {
+        return &asmJSActivationStack_;
     }
 
     js::AsmJSActivation *asmJSActivationStackFromAnyThread() const {
@@ -907,7 +908,7 @@ struct JSRuntime : public JS::shadow::Runtime,
                                        js::Handle<JSFunction*> targetFun);
     bool cloneSelfHostedValue(JSContext *cx, js::Handle<js::PropertyName*> name,
                               js::MutableHandleValue vp);
-    bool maybeWrappedSelfHostedFunction(JSContext *cx, js::Handle<js::PropertyName*> name,
+    bool maybeWrappedSelfHostedFunction(JSContext *cx, js::HandleId name,
                                         js::MutableHandleValue funVal);
 
     //-------------------------------------------------------------------------
@@ -1262,9 +1263,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::ScriptAndCountsVector *scriptAndCountsVector;
 
     /* Well-known numbers held for use by this runtime's contexts. */
-    js::Value           NaNValue;
-    js::Value           negativeInfinityValue;
-    js::Value           positiveInfinityValue;
+    const js::Value     NaNValue;
+    const js::Value     negativeInfinityValue;
+    const js::Value     positiveInfinityValue;
 
     js::PropertyName    *emptyString;
 
@@ -1275,7 +1276,7 @@ struct JSRuntime : public JS::shadow::Runtime,
         return !contextList.isEmpty();
     }
 
-    JS_SourceHook       sourceHook;
+    mozilla::ScopedDeletePtr<js::SourceHook> sourceHook;
 
     /* Per runtime debug hooks -- see js/OldDebugAPI.h. */
     JSDebugHooks        debugHooks;

@@ -6,17 +6,16 @@
 
 #include "base/compiler_specific.h"
 
-#include "mozilla/net/NeckoChild.h"
+#include "mozilla/net/ChannelEventQueue.h"
 #include "WyciwygChannelChild.h"
 #include "mozilla/dom/TabChild.h"
 
 #include "nsCharsetSource.h"
 #include "nsStringStream.h"
-#include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsISerializable.h"
 #include "nsSerializationHelper.h"
-#include "nsILoadContext.h"
+#include "nsIProgressEventSink.h"
 #include "mozilla/ipc/URIUtils.h"
 
 using namespace mozilla::ipc;

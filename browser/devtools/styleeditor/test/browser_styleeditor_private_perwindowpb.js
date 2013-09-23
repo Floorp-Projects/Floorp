@@ -13,16 +13,16 @@ function test() {
   let testURI = 'http://' + TEST_HOST + '/browser/browser/devtools/styleeditor/test/test_private.html';
 
   function checkCache() {
-    checkDiskCacheFor(TEST_HOST);
-
-    gUI = null;
-    finish();
+    checkDiskCacheFor(TEST_HOST, function() {
+      gUI = null;
+      finish();
+    });
   }
 
   function doTest(aWindow) {
     aWindow.gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
       aWindow.gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
-      cache.evictEntries(Ci.nsICache.STORE_ANYWHERE);
+      cache.clear();
       openStyleEditorInWindow(aWindow, function(panel) {
         gUI = panel.UI;
         gUI.on("editor-added", onEditorAdded);

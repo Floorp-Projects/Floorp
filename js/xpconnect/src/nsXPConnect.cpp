@@ -1678,6 +1678,27 @@ JS_EXPORT_API(void) DumpCompleteHeap()
 
 } // extern "C"
 
+namespace xpc {
+
+bool
+Atob(JSContext *cx, unsigned argc, jsval *vp)
+{
+    if (!argc)
+        return true;
+
+    return xpc::Base64Decode(cx, JS_ARGV(cx, vp)[0], &JS_RVAL(cx, vp));
+}
+
+bool
+Btoa(JSContext *cx, unsigned argc, jsval *vp)
+{
+    if (!argc)
+        return true;
+
+    return xpc::Base64Encode(cx, JS_ARGV(cx, vp)[0], &JS_RVAL(cx, vp));
+}
+
+} // namespace xpc
 
 namespace mozilla {
 namespace dom {

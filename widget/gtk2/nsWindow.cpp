@@ -2112,11 +2112,30 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         return TRUE;
     }
 
+    gfxASurface* surf;
 #if defined(MOZ_WIDGET_GTK2)
-    nsRefPtr<gfxContext> ctx = new gfxContext(GetThebesSurface());
+    surf = GetThebesSurface();
 #else
-    nsRefPtr<gfxContext> ctx = new gfxContext(GetThebesSurface(cr));
+    surf = GetThebesSurface(cr);
 #endif
+
+    nsRefPtr<gfxContext> ctx;
+    if (gfxPlatform::GetPlatform()->
+            SupportsAzureContentForType(BACKEND_CAIRO)) {
+        IntSize intSize(surf->GetSize().width, surf->GetSize().height);
+        ctx = new gfxContext(gfxPlatform::GetPlatform()->
+            CreateDrawTargetForSurface(surf, intSize));
+    } else if (gfxPlatform::GetPlatform()->
+                   SupportsAzureContentForType(BACKEND_SKIA) &&
+               surf->GetType() != gfxASurface::SurfaceTypeImage) {
+       gfxImageSurface* imgSurf = static_cast<gfxImageSurface*>(surf);
+       SurfaceFormat format = ImageFormatToSurfaceFormat(imgSurf->Format());
+       IntSize intSize(surf->GetSize().width, surf->GetSize().height);
+       ctx = new gfxContext(gfxPlatform::GetPlatform()->CreateDrawTargetForData(
+           imgSurf->Data(), intSize, imgSurf->Stride(), format));
+    }  else {
+        ctx = new gfxContext(surf);
+    }
 
 #ifdef MOZ_X11
     nsIntRect boundsRect; // for shaped only
@@ -2181,23 +2200,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
             if (painted) {
                 nsRefPtr<gfxPattern> pattern = ctx->PopGroup();
 
-                nsRefPtr<gfxImageSurface> img =
-                    new gfxImageSurface(gfxIntSize(boundsRect.width, boundsRect.height),
-                                        gfxImageSurface::ImageFormatA8);
-                if (img && !img->CairoStatus()) {
-                    img->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
-
-                    nsRefPtr<gfxContext> imgCtx = new gfxContext(img);
-                    if (imgCtx) {
-                        imgCtx->SetPattern(pattern);
-                        imgCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-                        imgCtx->Paint();
-                    }
-
-                    UpdateTranslucentWindowAlphaInternal(nsIntRect(boundsRect.x, boundsRect.y,
-                                                                   boundsRect.width, boundsRect.height),
-                                                         img->Data(), img->Stride());
-                }
+                UpdateAlpha(pattern, boundsRect);
 
                 ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
                 ctx->SetPattern(pattern);
@@ -2243,6 +2246,44 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 
     // check the return value!
     return TRUE;
+}
+
+void
+nsWindow::UpdateAlpha(gfxPattern* aPattern, nsIntRect aBoundsRect)
+{
+  if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
+      // We need to create our own buffer to force the stride to match the
+      // expected stride.
+      int32_t stride = GetAlignedStride<4>(BytesPerPixel(FORMAT_A8) *
+                                           aBoundsRect.width);
+      int32_t bufferSize = stride * aBoundsRect.height;
+      nsAutoArrayPtr<uint8_t> imageBuffer(new (std::nothrow) uint8_t[bufferSize]);
+      RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
+          CreateDrawTargetForData(imageBuffer, ToIntSize(aBoundsRect.Size()),
+                                  stride, FORMAT_A8);
+
+      if (drawTarget) {
+          drawTarget->FillRect(ToRect(aBoundsRect),
+                               *aPattern->GetPattern(drawTarget),
+                               DrawOptions(1.0, OP_SOURCE));
+      }
+      UpdateTranslucentWindowAlphaInternal(aBoundsRect, imageBuffer, stride);
+  } else {
+      nsRefPtr<gfxImageSurface> img =
+          new gfxImageSurface(ThebesIntSize(aBoundsRect.Size()),
+                              gfxImageSurface::ImageFormatA8);
+      if (img && !img->CairoStatus()) {
+          img->SetDeviceOffset(-aBoundsRect.TopLeft());
+
+          nsRefPtr<gfxContext> imgCtx = new gfxContext(img);
+          imgCtx->SetPattern(aPattern);
+          imgCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
+          imgCtx->Paint();
+
+          UpdateTranslucentWindowAlphaInternal(aBoundsRect, img->Data(),
+                                               img->Stride());
+      }
+  }
 }
 
 gboolean

@@ -49,17 +49,54 @@ MacroAssemblerX64::loadConstantDouble(double d, const FloatRegister &dest)
 }
 
 void
+MacroAssemblerX64::loadConstantFloat32(float f, const FloatRegister &dest)
+{
+    if (maybeInlineFloat(f, dest))
+        return;
+
+    if (!floatMap_.initialized()) {
+        enoughMemory_ &= floatMap_.init();
+        if (!enoughMemory_)
+            return;
+    }
+    size_t floatIndex;
+    if (FloatMap::AddPtr p = floatMap_.lookupForAdd(f)) {
+        floatIndex = p->value;
+    } else {
+        floatIndex = floats_.length();
+        enoughMemory_ &= floats_.append(Float(f));
+        enoughMemory_ &= floatMap_.add(p, f, floatIndex);
+        if (!enoughMemory_)
+            return;
+    }
+    Float &flt = floats_[floatIndex];
+    JS_ASSERT(!flt.uses.bound());
+
+    // See comment in loadConstantDouble
+    JmpSrc j = masm.movss_ripr(dest.code());
+    JmpSrc prev = JmpSrc(flt.uses.use(j.offset()));
+    masm.setNextJump(j, prev);
+}
+
+void
 MacroAssemblerX64::finish()
 {
     JS_STATIC_ASSERT(CodeAlignment >= sizeof(double));
 
-    if (!doubles_.empty())
+    if (!doubles_.empty() || !floats_.empty())
         masm.align(sizeof(double));
 
     for (size_t i = 0; i < doubles_.length(); i++) {
         Double &dbl = doubles_[i];
         bind(&dbl.uses);
         masm.doubleConstant(dbl.value);
+    }
+
+    // No need to align on sizeof(float) as we are aligned on sizeof(double);
+    for (size_t i = 0; i < floats_.length(); i++) {
+        Float &flt = floats_[i];
+        bind(&flt.uses);
+        masm.floatConstant(flt.value);
     }
 
     MacroAssemblerX86Shared::finish();

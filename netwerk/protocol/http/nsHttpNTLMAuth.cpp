@@ -6,9 +6,7 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
-#include "nsHttp.h"
 #include "nsHttpNTLMAuth.h"
-#include "nsIComponentManager.h"
 #include "nsIAuthModule.h"
 #include "nsCOMPtr.h"
 #include "plbase64.h"
@@ -18,12 +16,13 @@
 
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
-#include "nsIServiceManager.h"
 #include "nsIHttpAuthenticableChannel.h"
 #include "nsIURI.h"
+#ifdef XP_WIN
 #include "nsIX509Cert.h"
 #include "nsISSLStatus.h"
 #include "nsISSLStatusProvider.h"
+#endif
 #include "mozilla/Attributes.h"
 
 static const char kAllowProxies[] = "network.automatic-ntlm-auth.allow-proxies";

@@ -1,0 +1,3 @@
+# WebVTTParserWrapper
+component {1604a67f-3b72-4027-bcba-6dddd5be6b10} WebVTTParserWrapper.js
+contract @mozilla.org/webvttParserWrapper;1 {1604a67f-3b72-4027-bcba-6dddd5be6b10}

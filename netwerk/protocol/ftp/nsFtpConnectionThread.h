@@ -6,36 +6,16 @@
 #ifndef __nsFtpState__h_
 #define __nsFtpState__h_
 
-#include "ftpCore.h"
-#include "nsFTPChannel.h"
 #include "nsBaseContentStream.h"
 
-#include "nsIThread.h"
-#include "nsIRunnable.h"
-#include "nsISocketTransportService.h"
-#include "nsISocketTransport.h"
-#include "nsIServiceManager.h"
-#include "nsIStreamListener.h"
 #include "nsICacheListener.h"
-#include "nsIURI.h"
-#include "prnetdb.h"
-#include "prtime.h"
 #include "nsString.h"
-#include "nsIFTPChannel.h"
-#include "nsIProtocolHandler.h"
 #include "nsCOMPtr.h"
 #include "nsIAsyncInputStream.h"
-#include "nsIOutputStream.h"
 #include "nsAutoPtr.h"
-#include "nsIPrompt.h"
 #include "nsITransport.h"
-#include "nsIProxyInfo.h"
 #include "mozilla/net/DNS.h"
-
 #include "nsFtpControlConnection.h"
-
-#include "nsICacheEntryDescriptor.h"
-#include "nsICacheListener.h"
 #include "nsIProtocolProxyCallback.h"
 
 // ftp server types
@@ -80,6 +60,9 @@ typedef enum _FTP_ACTION {GET, PUT} FTP_ACTION;
 
 class nsFtpChannel;
 class nsICancelable;
+class nsICacheEntryDescriptor;
+class nsIProxyInfo;
+class nsIStreamListener;
 
 // The nsFtpState object is the content stream for the channel.  It implements
 // nsIInputStreamCallback, so it can read data from the control connection.  It

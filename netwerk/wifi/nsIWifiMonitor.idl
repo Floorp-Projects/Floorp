@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIWifiListener.idl"
+
+interface nsIWifiListener;
 
 [scriptable, uuid(F289701E-D9AF-4685-BC2F-E4226FF7C018)]
 interface nsIWifiMonitor : nsISupports

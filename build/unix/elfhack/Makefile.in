@@ -12,10 +12,6 @@ VPATH += $(topsrcdir)/build
 
 OS_CXXFLAGS := $(filter-out -fno-exceptions,$(OS_CXXFLAGS)) -fexceptions
 
-ifndef CROSS_COMPILE
-CSRCS += dummy.c
-endif
-
 WRAP_LDFLAGS=
 
 include $(topsrcdir)/config/rules.mk

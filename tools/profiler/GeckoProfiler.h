@@ -76,6 +76,7 @@ class TimeStamp;
 // only recorded if a sample is collected while it is active, marker will always
 // be collected.
 #define PROFILER_MARKER(info) do {} while (0)
+#define PROFILER_MARKER_PAYLOAD(info, payload) do {} while (0)
 
 // Main thread specilization to avoid TLS lookup for performance critical use.
 #define PROFILER_MAIN_THREAD_LABEL(name_space, info) do {} while (0)

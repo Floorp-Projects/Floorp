@@ -114,7 +114,7 @@ class CompileInfo
     unsigned lineno() const {
         return script_->lineno;
     }
-    unsigned lineno(JSContext *cx, jsbytecode *pc) const {
+    unsigned lineno(jsbytecode *pc) const {
         return PCToLineNumber(script_, pc);
     }
 
@@ -140,8 +140,8 @@ class CompileInfo
         return script_->getConst(GET_UINT32_INDEX(pc));
     }
 
-    jssrcnote *getNote(JSContext *cx, jsbytecode *pc) const {
-        return js_GetSrcNote(cx, script(), pc);
+    jssrcnote *getNote(GSNCache &gsn, jsbytecode *pc) const {
+        return GetSrcNote(gsn, script(), pc);
     }
 
     // Total number of slots: args, locals, and stack.

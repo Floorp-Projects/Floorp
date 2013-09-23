@@ -3,10 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-
 function write(file, str) {
     var stream = Cc["@mozilla.org/network/safe-file-output-stream;1"]
                    .createInstance(Ci.nsIFileOutputStream);

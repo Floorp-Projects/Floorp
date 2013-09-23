@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res-auto">
+
+    <org.mozilla.gecko.home.TopSitesThumbnailView
+            android:id="@+id/thumbnail"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"/>
+
+    <org.mozilla.gecko.home.FadedTextView
+            android:id="@+id/title"
+            style="@style/Widget.TopSitesGridItemTitle"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/thumbnail"
+            android:duplicateParentState="true"
+            android:drawablePadding="4dip"
+            gecko:fadeWidth="20dip"/>
+
+</merge>

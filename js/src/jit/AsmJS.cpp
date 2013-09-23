@@ -46,6 +46,8 @@ using mozilla::IsNegativeZero;
 using mozilla::Maybe;
 using mozilla::OldMove;
 using mozilla::MoveRef;
+using mozilla::PositiveInfinity;
+using JS::GenericNaN;
 
 static const size_t LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
 
@@ -164,13 +166,6 @@ CaseBody(ParseNode *pn)
     return BinaryRight(pn);
 }
 
-static inline JSAtom *
-StringAtom(ParseNode *pn)
-{
-    JS_ASSERT(pn->isKind(PNK_STRING));
-    return pn->pn_atom;
-}
-
 static inline bool
 IsExpressionStatement(ParseNode *pn)
 {
@@ -283,19 +278,6 @@ FunctionStatementList(ParseNode *fn)
     ParseNode *last = fn->pn_body->last();
     JS_ASSERT(last->isKind(PNK_STATEMENTLIST));
     return last;
-}
-
-static inline ParseNode *
-FunctionLastReturnStatementOrNull(ParseNode *fn)
-{
-    ParseNode *listIter = ListHead(FunctionStatementList(fn));
-    ParseNode *lastReturn = NULL;
-    while (listIter) {
-        if (listIter->isKind(PNK_RETURN))
-            lastReturn = listIter;
-        listIter = listIter->pn_next;
-    }
-    return lastReturn;
 }
 
 static inline bool
@@ -960,7 +942,7 @@ js::RoundUpToNextValidAsmJSHeapLength(uint32_t length)
         return (length + 0x0003ffff) & ~0x0003ffff;
     if (length < 0x10000000u) // < 256M quanta 1M
         return (length + 0x000fffff) & ~0x000fffff;
-    if (length < 0x10000000u) // < 1024M quanta 4M
+    if (length < 0x40000000u) // < 1024M quanta 4M
         return (length + 0x003fffff) & ~0x003fffff;
     // < 4096M quanta 16M.  Note zero is returned if over 0xff000000 but such
     // lengths are not currently valid.
@@ -1766,15 +1748,28 @@ class MOZ_STACK_CLASS ModuleCompiler
             }
         }
 
-        // Global-data-section accesses
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+#if defined(JS_CPU_X86)
+        // Global data accesses in x86 need to be patched with the absolute
+        // address of the global. Globals are allocated sequentially after the
+        // code section so we can just use an RelativeLink.
+        for (unsigned i = 0; i < globalAccesses_.length(); i++) {
+            AsmJSGlobalAccess a = globalAccesses_[i];
+            AsmJSStaticLinkData::RelativeLink link;
+            link.patchAtOffset = masm_.labelOffsetToPatchOffset(a.patchAt.offset());
+            link.targetOffset = module_->offsetOfGlobalData() + a.globalDataOffset;
+            if (!linkData->relativeLinks.append(link))
+                return false;
+        }
+#endif
+
+#if defined(JS_CPU_X64)
+        // Global data accesses on x64 use rip-relative addressing and thus do
+        // not need patching after deserialization.
         uint8_t *code = module_->codeBase();
         for (unsigned i = 0; i < globalAccesses_.length(); i++) {
             AsmJSGlobalAccess a = globalAccesses_[i];
-            masm_.patchAsmJSGlobalAccess(a.offset, code, module_->globalData(), a.globalDataOffset);
+            masm_.patchAsmJSGlobalAccess(a.patchAt, code, module_->globalData(), a.globalDataOffset);
         }
-#else
-        JS_ASSERT(globalAccesses_.empty());
 #endif
 
         *module = module_.forget();
@@ -2968,9 +2963,9 @@ CheckGlobalDotImport(ModuleCompiler &m, PropertyName *varName, ParseNode *initNo
 
     if (IsUseOfName(base, m.module().globalArgumentName())) {
         if (field == m.cx()->names().NaN)
-            return m.addGlobalConstant(varName, js_NaN, field);
+            return m.addGlobalConstant(varName, GenericNaN(), field);
         if (field == m.cx()->names().Infinity)
-            return m.addGlobalConstant(varName, js_PositiveInfinity, field);
+            return m.addGlobalConstant(varName, PositiveInfinity(), field);
         return m.failName(initNode, "'%s' is not a standard global constant", field);
     }
 
@@ -5449,10 +5444,7 @@ static const RegisterSet NonVolatileRegs =
 static void
 LoadAsmJSActivationIntoRegister(MacroAssembler &masm, Register reg)
 {
-    masm.movePtr(ImmPtr(GetIonContext()->runtime), reg);
-    size_t offset = offsetof(JSRuntime, mainThread) +
-                    PerThreadData::offsetOfAsmJSActivationStackReadOnly();
-    masm.loadPtr(Address(reg, offset), reg);
+    masm.loadPtr(AbsoluteAddress(GetIonContext()->runtime->mainThread.addressOfAsmJSActivationStackReadOnly()), reg);
 }
 
 static void
@@ -5526,7 +5518,7 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
     // part of the out-of-bounds handling in heap loads/stores).
 #if defined(JS_CPU_ARM)
     masm.movePtr(IntArgReg1, GlobalReg);
-    masm.ma_vimm(js_NaN, NANReg);
+    masm.ma_vimm(GenericNaN(), NANReg);
 #endif
 
     // ARM and x64 have a globally-pinned HeapReg (x86 uses immediates in
@@ -6370,6 +6362,8 @@ GenerateStubs(ModuleCompiler &m)
 
     Label throwLabel;
 
+    // The order of the iterations here is non-deterministic, since
+    // m.allExits() is a hash keyed by pointer values!
     for (ModuleCompiler::ExitMap::Range r = m.allExits(); !r.empty(); r.popFront()) {
         GenerateFFIExit(m, r.front().key, r.front().value, &throwLabel);
         if (m.masm().oom())

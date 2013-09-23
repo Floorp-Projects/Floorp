@@ -17,7 +17,7 @@
 #include "nsIProgressEventSink.h"
 #include "nsHttpChannel.h"
 
-class nsICacheEntryDescriptor;
+class nsICacheEntry;
 class nsIAssociatedContentSecurity;
 class nsHttpHandler;
 
@@ -99,7 +99,7 @@ protected:
 
 private:
   nsCOMPtr<nsIChannel>                    mChannel;
-  nsCOMPtr<nsICacheEntryDescriptor>       mCacheDescriptor;
+  nsCOMPtr<nsICacheEntry>       mCacheEntry;
   nsCOMPtr<nsIAssociatedContentSecurity>  mAssociatedContentSecurity;
   bool mIPCClosed;                // PHttpChannel actor has been Closed()
 

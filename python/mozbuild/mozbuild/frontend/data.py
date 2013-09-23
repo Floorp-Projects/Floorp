@@ -153,6 +153,24 @@ class XPIDLFile(SandboxDerived):
         self.basename = os.path.basename(source)
         self.module = module
 
+class Defines(SandboxDerived):
+    """Sandbox container object for DEFINES, which is an OrderedDict.
+    """
+    __slots__ = ('defines')
+
+    def __init__(self, sandbox, defines):
+        SandboxDerived.__init__(self, sandbox)
+        self.defines = defines
+
+    def get_defines(self):
+        for define, value in self.defines.iteritems():
+            if value is True:
+                defstr = define
+            elif type(value) == int:
+                defstr = '%s=%s' % (define, value)
+            else:
+                defstr = '%s=\'%s\'' % (define, value)
+            yield('-D%s' % defstr)
 
 class Exports(SandboxDerived):
     """Sandbox container object for EXPORTS, which is a HierarchicalStringList.

@@ -257,13 +257,13 @@ NS_IMETHODIMP AndroidCameraInputStream::CloseWithStatus(nsresult status)
 
 NS_IMPL_ISUPPORTS0(AndroidCaptureProvider)
 
-AndroidCaptureProvider* AndroidCaptureProvider::sInstance = NULL;
+AndroidCaptureProvider* AndroidCaptureProvider::sInstance = nullptr;
 
 AndroidCaptureProvider::AndroidCaptureProvider() {
 }
 
 AndroidCaptureProvider::~AndroidCaptureProvider() {
-  AndroidCaptureProvider::sInstance = NULL;
+  AndroidCaptureProvider::sInstance = nullptr;
 }
 
 nsresult AndroidCaptureProvider::Init(nsACString& aContentType,

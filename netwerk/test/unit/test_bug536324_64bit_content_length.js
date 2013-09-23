@@ -1,9 +1,5 @@
 /* Test to ensure our 64-bit content length implementation works, at least for
    a simple HTTP case */
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
 
 Cu.import("resource://testing-common/httpd.js");
 

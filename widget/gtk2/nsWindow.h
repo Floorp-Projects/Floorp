@@ -64,6 +64,7 @@ extern PRLogModuleInfo *gWidgetDrawLog;
 
 #endif /* MOZ_LOGGING */
 
+class gfxPattern;
 class nsDragService;
 #if defined(MOZ_X11) && defined(MOZ_HAVE_SHAREDMEMORYSYSV)
 #  define MOZ_HAVE_SHMIMAGE
@@ -201,6 +202,8 @@ public:
 #endif
 
 private:
+    void               UpdateAlpha(gfxPattern* aPattern, nsIntRect aBoundsRect);
+
     void               NativeResize(int32_t aWidth,
                                     int32_t aHeight,
                                     bool    aRepaint);

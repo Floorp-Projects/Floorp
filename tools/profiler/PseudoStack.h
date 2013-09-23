@@ -100,6 +100,112 @@ public:
   }
 };
 
+class ProfilerMarkerPayload;
+class ProfilerMarkerLinkedList;
+class JSAObjectBuilder;
+class JSCustomArray;
+class ThreadProfile;
+class ProfilerMarker {
+  friend class ProfilerMarkerLinkedList;
+public:
+  ProfilerMarker(const char* aMarkerName,
+         ProfilerMarkerPayload* aPayload = nullptr);
+
+  ~ProfilerMarker();
+
+  const char* GetMarkerName() const {
+    return mMarkerName;
+  }
+
+  template<typename Builder> void
+  BuildJSObject(Builder& b, typename Builder::ArrayHandle markers) const;
+
+  void SetGeneration(int aGenID);
+
+  bool HasExpired(int aGenID) const {
+    return mGenID + 2 <= aGenID;
+  }
+
+private:
+  char* mMarkerName;
+  ProfilerMarkerPayload* mPayload;
+  ProfilerMarker* mNext;
+  int mGenID;
+};
+
+class ProfilerMarkerLinkedList {
+public:
+  ProfilerMarkerLinkedList()
+    : mHead(nullptr)
+    , mTail(nullptr)
+  {}
+
+  void insert(ProfilerMarker* elem);
+  ProfilerMarker* popHead();
+
+  const ProfilerMarker* peek() {
+    return mHead;
+  }
+
+private:
+  ProfilerMarker* mHead;
+  ProfilerMarker* mTail;
+};
+
+class PendingMarkers {
+public:
+  PendingMarkers()
+    : mSignalLock(false)
+  {}
+
+  ~PendingMarkers();
+
+  void addMarker(ProfilerMarker *aMarker);
+
+  void updateGeneration(int aGenID);
+
+  /**
+   * Track a marker which has been inserted into the ThreadProfile.
+   * This marker can safely be deleted once the generation has
+   * expired.
+   */
+  void addStoredMarker(ProfilerMarker *aStoredMarker);
+
+  // called within signal. Function must be reentrant
+  ProfilerMarkerLinkedList* getPendingMarkers()
+  {
+    // if mSignalLock then the stack is inconsistent because it's being
+    // modified by the profiled thread. Post pone these markers
+    // for the next sample. The odds of a livelock are nearly impossible
+    // and would show up in a profile as many sample in 'addMarker' thus
+    // we ignore this scenario.
+    if (mSignalLock) {
+      return nullptr;
+    }
+    return &mPendingMarkers;
+  }
+
+  void clearMarkers()
+  {
+    while (mPendingMarkers.peek()) {
+      delete mPendingMarkers.popHead();
+    }
+    while (mStoredMarkers.peek()) {
+      delete mStoredMarkers.popHead();
+    }
+  }
+
+private:
+  // Keep a list of active markers to be applied to the next sample taken
+  ProfilerMarkerLinkedList mPendingMarkers;
+  ProfilerMarkerLinkedList mStoredMarkers;
+  // If this is set then it's not safe to read mStackPointer from the signal handler
+  volatile bool mSignalLock;
+  // We don't want to modify _markers from within the signal so we allow
+  // it to queue a clear operation.
+  volatile mozilla::sig_safe_t mGenID;
+};
+
 // the PseudoStack members are read by signal
 // handlers, so the mutation of them needs to be signal-safe.
 struct PseudoStack
@@ -107,18 +213,13 @@ struct PseudoStack
 public:
   PseudoStack()
     : mStackPointer(0)
-    , mSignalLock(false)
-    , mMarkerPointer(0)
-    , mQueueClearMarker(false)
     , mRuntime(nullptr)
     , mStartJSSampling(false)
     , mPrivacyMode(false)
   { }
 
   ~PseudoStack() {
-    clearMarkers();
-    if (mStackPointer != 0 || mSignalLock != false ||
-        mMarkerPointer != 0) {
+    if (mStackPointer != 0) {
       // We're releasing the pseudostack while it's still in use.
       // The label macros keep a non ref counted reference to the
       // stack to avoid a TLS. If these are not all cleared we will
@@ -127,53 +228,24 @@ public:
     }
   }
 
-  void addMarker(const char *aMarker)
+  void addMarker(const char *aMarkerStr, ProfilerMarkerPayload *aPayload)
   {
-    char* markerCopy = strdup(aMarker);
-    mSignalLock = true;
-    STORE_SEQUENCER();
+    ProfilerMarker* marker = new ProfilerMarker(aMarkerStr, aPayload);
+    mPendingMarkers.addMarker(marker);
+  }
 
-    if (mQueueClearMarker) {
-      clearMarkers();
-    }
-    if (!aMarker) {
-      return; //discard
-    }
-    if (size_t(mMarkerPointer) == mozilla::ArrayLength(mMarkers)) {
-      return; //array full, silently drop
-    }
-    mMarkers[mMarkerPointer] = markerCopy;
-    mMarkerPointer++;
+  void addStoredMarker(ProfilerMarker *aStoredMarker) {
+    mPendingMarkers.addStoredMarker(aStoredMarker);
+  }
 
-    mSignalLock = false;
-    STORE_SEQUENCER();
+  void updateGeneration(int aGenID) {
+    mPendingMarkers.updateGeneration(aGenID);
   }
 
   // called within signal. Function must be reentrant
-  const char* getMarker(int aMarkerId)
+  ProfilerMarkerLinkedList* getPendingMarkers()
   {
-    // if mSignalLock then the stack is inconsistent because it's being
-    // modified by the profiled thread. Post pone these markers
-    // for the next sample. The odds of a livelock are nearly impossible
-    // and would show up in a profile as many sample in 'addMarker' thus
-    // we ignore this scenario.
-    // if mQueueClearMarker then we've the sampler thread has already
-    // thread the markers then they are pending deletion.
-    if (mSignalLock || mQueueClearMarker || aMarkerId < 0 ||
-      static_cast<mozilla::sig_safe_t>(aMarkerId) >= mMarkerPointer) {
-      return nullptr;
-    }
-    return mMarkers[aMarkerId];
-  }
-
-  // called within signal. Function must be reentrant
-  void clearMarkers()
-  {
-    for (mozilla::sig_safe_t i = 0; i < mMarkerPointer; i++) {
-      free(mMarkers[i]);
-    }
-    mMarkerPointer = 0;
-    mQueueClearMarker = false;
+    return mPendingMarkers.getPendingMarkers();
   }
 
   void push(const char *aName, uint32_t line)
@@ -246,19 +318,14 @@ public:
 
   // Keep a list of active checkpoints
   StackEntry volatile mStack[1024];
-  // Keep a list of active markers to be applied to the next sample taken
-  char* mMarkers[1024];
  private:
+  // Keep a list of pending markers that must be moved
+  // to the circular buffer
+  PendingMarkers mPendingMarkers;
   // This may exceed the length of mStack, so instead use the stackSize() method
   // to determine the number of valid samples in mStack
   mozilla::sig_safe_t mStackPointer;
-  // If this is set then it's not safe to read mStackPointer from the signal handler
-  volatile bool mSignalLock;
  public:
-  volatile mozilla::sig_safe_t mMarkerPointer;
-  // We don't want to modify _markers from within the signal so we allow
-  // it to queue a clear operation.
-  volatile mozilla::sig_safe_t mQueueClearMarker;
   // The runtime which is being sampled
   JSRuntime *mRuntime;
   // Start JS Profiling when possible

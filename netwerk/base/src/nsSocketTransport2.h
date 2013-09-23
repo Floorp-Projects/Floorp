@@ -15,18 +15,19 @@
 #include "nsCOMPtr.h"
 
 #include "nsISocketTransport.h"
-#include "nsIInterfaceRequestor.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIDNSListener.h"
-#include "nsIDNSRecord.h"
-#include "nsICancelable.h"
 #include "nsIClassInfo.h"
 #include "mozilla/net/DNS.h"
+#include "nsASocketHandler.h"
 
 #include "prerror.h"
 
 class nsSocketTransport;
+class nsICancelable;
+class nsIDNSRecord;
+class nsIInterfaceRequestor;
 
 nsresult
 ErrorAccordingToNSPR(PRErrorCode errorCode);

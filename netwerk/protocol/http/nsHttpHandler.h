@@ -8,34 +8,31 @@
 
 #include "nsHttp.h"
 #include "nsHttpAuthCache.h"
-#include "nsHttpConnection.h"
 #include "nsHttpConnectionMgr.h"
 #include "ASpdySession.h"
 
-#include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 
 #include "nsIHttpProtocolHandler.h"
-#include "nsIProtocolProxyService.h"
-#include "nsIIOService.h"
 #include "nsIObserver.h"
-#include "nsIObserverService.h"
-#include "nsIStreamConverterService.h"
-#include "nsICacheSession.h"
-#include "nsICookieService.h"
-#include "nsITimer.h"
-#include "nsISiteSecurityService.h"
 #include "nsISpeculativeConnect.h"
+#include "nsICache.h"
 
+class nsHttpConnection;
 class nsHttpConnectionInfo;
 class nsHttpHeaderArray;
 class nsHttpTransaction;
-class nsAHttpTransaction;
 class nsIHttpChannel;
 class nsIPrefBranch;
 class nsICancelable;
+class nsICookieService;
+class nsIIOService;
+class nsIObserverService;
+class nsISiteSecurityService;
+class nsIStreamConverterService;
+class nsITimer;
 
 namespace mozilla {
 namespace net {

@@ -7,6 +7,8 @@
 #ifndef js_ProfilingStack_h
 #define js_ProfilingStack_h
 
+#include "mozilla/NullPtr.h"
+ 
 #include "jsbytecode.h"
 #include "jstypes.h"
 
@@ -33,9 +35,9 @@ class ProfileEntry
     // if a sample were taken it would be examining bogus information.
     //
     // A ProfileEntry represents both a C++ profile entry and a JS one. Both use
-    // the string as a description, but JS uses the sp as NULL to indicate that
-    // it is a JS entry. The script_ is then only ever examined for a JS entry,
-    // and the idx is used by both, but with different meanings.
+    // the string as a description, but JS uses the sp as nullptr to indicate
+    // that it is a JS entry. The script_ is then only ever examined for a JS
+    // entry, and the idx is used by both, but with different meanings.
     //
     const char * volatile string; // Descriptive string of this entry
     void * volatile sp;           // Relevant stack pointer for the entry
@@ -49,8 +51,8 @@ class ProfileEntry
     // were marked as volatile as well.
 
     bool js() volatile {
-        JS_ASSERT_IF(sp == NULL, script_ != NULL);
-        return sp == NULL;
+        JS_ASSERT_IF(sp == nullptr, script_ != nullptr);
+        return sp == nullptr;
     }
 
     uint32_t line() volatile { JS_ASSERT(!js()); return idx; }
@@ -73,8 +75,8 @@ class ProfileEntry
     static size_t offsetOfScript() { return offsetof(ProfileEntry, script_); }
 
     // The index used in the entry can either be a line number or the offset of
-    // a pc into a script's code. To signify a NULL pc, use a -1 index. This is
-    // checked against in pc() and setPC() to set/get the right pc.
+    // a pc into a script's code. To signify a nullptr pc, use a -1 index. This
+    // is checked against in pc() and setPC() to set/get the right pc.
     static const int32_t NullPCIndex = -1;
 };
 

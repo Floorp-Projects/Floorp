@@ -10,10 +10,6 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../../build \
 	$(NULL)
 
-SDK_LIBRARY     	= \
-	$(LIB_PREFIX)xpcomglue_staticruntime_s.$(LIB_SUFFIX) \
-	$(NULL)
-
 FORCE_STATIC_LIB = 1
 
 # Statically link to the CRT on Windows

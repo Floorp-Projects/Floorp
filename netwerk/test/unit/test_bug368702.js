@@ -1,7 +1,3 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-
 function run_test() {
   var tld =
     Cc["@mozilla.org/network/effective-tld-service;1"].
