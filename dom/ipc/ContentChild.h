@@ -77,10 +77,10 @@ public:
     void SetProcessName(const nsAString& aName);
     const void GetProcessName(nsAString& aName);
 
-    PCompositorChild*
+    bool
     AllocPCompositorChild(mozilla::ipc::Transport* aTransport,
                           base::ProcessId aOtherProcess) MOZ_OVERRIDE;
-    PImageBridgeChild*
+    bool
     AllocPImageBridgeChild(mozilla::ipc::Transport* aTransport,
                            base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 

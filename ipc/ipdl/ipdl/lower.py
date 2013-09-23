@@ -2718,7 +2718,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 _allocMethod(actor.ptype, actor.side).name,
                 params=[ Decl(Type('Transport', ptr=1), 'transport'),
                          Decl(Type('ProcessId'), 'otherProcess') ],
-                ret=actortype,
+                ret=Type.BOOL,
                 virtual=1, pure=1)))
 
         # optional ActorDestroy() method; default is no-op
