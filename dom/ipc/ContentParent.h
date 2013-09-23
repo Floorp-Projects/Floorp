@@ -250,10 +250,10 @@ private:
      */
     void ShutDownProcess(bool aCloseWithError);
 
-    PCompositorParent*
+    bool
     AllocPCompositorParent(mozilla::ipc::Transport* aTransport,
                            base::ProcessId aOtherProcess) MOZ_OVERRIDE;
-    PImageBridgeParent*
+    bool
     AllocPImageBridgeParent(mozilla::ipc::Transport* aTransport,
                             base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 
