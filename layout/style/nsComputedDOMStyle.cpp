@@ -18,7 +18,6 @@
 #include "nsContentUtils.h"
 #include "nsIContent.h"
 
-#include "nsCSSProps.h"
 #include "nsDOMCSSRect.h"
 #include "nsDOMCSSRGBColor.h"
 #include "nsDOMCSSValueList.h"
@@ -43,6 +42,7 @@
 #include "mozilla/dom/Element.h"
 #include "prtime.h"
 #include "nsWrapperCacheInlines.h"
+#include "mozilla/AppUnits.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -494,9 +494,9 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorRes
   // we're computing style in, not on the document mContent is in -- the two
   // may be different.
   document->FlushPendingNotifications(
-    propEntry->mNeedsLayoutFlush ? Flush_Layout : Flush_Style);
+    propEntry->IsLayoutFlushNeeded() ? Flush_Layout : Flush_Style);
 #ifdef DEBUG
-  mFlushedPendingReflows = propEntry->mNeedsLayoutFlush;
+  mFlushedPendingReflows = propEntry->IsLayoutFlushNeeded();
 #endif
 
   mPresShell = document->GetShell();
@@ -1094,7 +1094,7 @@ nsComputedDOMStyle::DoGetTransform()
                                             mStyleContextHolder->PresContext(),
                                             dummy,
                                             bounds,
-                                            float(nsDeviceContext::AppUnitsPerCSSPixel()));
+                                            float(mozilla::AppUnitsPerCSSPixel()));
 
   return MatrixToCSSValue(matrix);
 }
@@ -5020,9 +5020,7 @@ nsComputedDOMStyle::DoGetAnimationPlayState()
 }
 
 #define COMPUTED_STYLE_MAP_ENTRY(_prop, _method)              \
-  { eCSSProperty_##_prop, &nsComputedDOMStyle::DoGet##_method, false }
-#define COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_prop, _method)       \
-  { eCSSProperty_##_prop, &nsComputedDOMStyle::DoGet##_method, true }
+  { eCSSProperty_##_prop, &nsComputedDOMStyle::DoGet##_method }
 
 const nsComputedDOMStyle::ComputedStyleMapEntry*
 nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
@@ -5063,10 +5061,10 @@ nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
     //// COMPUTED_STYLE_MAP_ENTRY(border,                   Border),
     //// COMPUTED_STYLE_MAP_ENTRY(border_bottom,            BorderBottom),
     COMPUTED_STYLE_MAP_ENTRY(border_bottom_color,           BorderBottomColor),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(border_bottom_left_radius, BorderBottomLeftRadius),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(border_bottom_right_radius,BorderBottomRightRadius),
+    COMPUTED_STYLE_MAP_ENTRY(border_bottom_left_radius,     BorderBottomLeftRadius),
+    COMPUTED_STYLE_MAP_ENTRY(border_bottom_right_radius,    BorderBottomRightRadius),
     COMPUTED_STYLE_MAP_ENTRY(border_bottom_style,           BorderBottomStyle),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(border_bottom_width,    BorderBottomWidth),
+    COMPUTED_STYLE_MAP_ENTRY(border_bottom_width,           BorderBottomWidth),
     COMPUTED_STYLE_MAP_ENTRY(border_collapse,               BorderCollapse),
     //// COMPUTED_STYLE_MAP_ENTRY(border_color,             BorderColor),
     //// COMPUTED_STYLE_MAP_ENTRY(border_image,             BorderImage),
@@ -5078,21 +5076,21 @@ nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
     //// COMPUTED_STYLE_MAP_ENTRY(border_left,              BorderLeft),
     COMPUTED_STYLE_MAP_ENTRY(border_left_color,             BorderLeftColor),
     COMPUTED_STYLE_MAP_ENTRY(border_left_style,             BorderLeftStyle),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(border_left_width,      BorderLeftWidth),
+    COMPUTED_STYLE_MAP_ENTRY(border_left_width,             BorderLeftWidth),
     //// COMPUTED_STYLE_MAP_ENTRY(border_right,             BorderRight),
     COMPUTED_STYLE_MAP_ENTRY(border_right_color,            BorderRightColor),
     COMPUTED_STYLE_MAP_ENTRY(border_right_style,            BorderRightStyle),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(border_right_width,     BorderRightWidth),
+    COMPUTED_STYLE_MAP_ENTRY(border_right_width,            BorderRightWidth),
     COMPUTED_STYLE_MAP_ENTRY(border_spacing,                BorderSpacing),
     //// COMPUTED_STYLE_MAP_ENTRY(border_style,             BorderStyle),
     //// COMPUTED_STYLE_MAP_ENTRY(border_top,               BorderTop),
     COMPUTED_STYLE_MAP_ENTRY(border_top_color,              BorderTopColor),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(border_top_left_radius,    BorderTopLeftRadius),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(border_top_right_radius,   BorderTopRightRadius),
+    COMPUTED_STYLE_MAP_ENTRY(border_top_left_radius,        BorderTopLeftRadius),
+    COMPUTED_STYLE_MAP_ENTRY(border_top_right_radius,       BorderTopRightRadius),
     COMPUTED_STYLE_MAP_ENTRY(border_top_style,              BorderTopStyle),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(border_top_width,       BorderTopWidth),
+    COMPUTED_STYLE_MAP_ENTRY(border_top_width,              BorderTopWidth),
     //// COMPUTED_STYLE_MAP_ENTRY(border_width,             BorderWidth),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(bottom,                 Bottom),
+    COMPUTED_STYLE_MAP_ENTRY(bottom,                        Bottom),
     COMPUTED_STYLE_MAP_ENTRY(box_shadow,                    BoxShadow),
     COMPUTED_STYLE_MAP_ENTRY(caption_side,                  CaptionSide),
     COMPUTED_STYLE_MAP_ENTRY(clear,                         Clear),
@@ -5126,28 +5124,28 @@ nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
     COMPUTED_STYLE_MAP_ENTRY(font_variant_numeric,          FontVariantNumeric),
     COMPUTED_STYLE_MAP_ENTRY(font_variant_position,         FontVariantPosition),
     COMPUTED_STYLE_MAP_ENTRY(font_weight,                   FontWeight),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(height,                 Height),
+    COMPUTED_STYLE_MAP_ENTRY(height,                        Height),
     COMPUTED_STYLE_MAP_ENTRY(image_orientation,             ImageOrientation),
     COMPUTED_STYLE_MAP_ENTRY(ime_mode,                      IMEMode),
     COMPUTED_STYLE_MAP_ENTRY(justify_content,               JustifyContent),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(left,                   Left),
+    COMPUTED_STYLE_MAP_ENTRY(left,                          Left),
     COMPUTED_STYLE_MAP_ENTRY(letter_spacing,                LetterSpacing),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(line_height,            LineHeight),
+    COMPUTED_STYLE_MAP_ENTRY(line_height,                   LineHeight),
     //// COMPUTED_STYLE_MAP_ENTRY(list_style,               ListStyle),
     COMPUTED_STYLE_MAP_ENTRY(list_style_image,              ListStyleImage),
     COMPUTED_STYLE_MAP_ENTRY(list_style_position,           ListStylePosition),
     COMPUTED_STYLE_MAP_ENTRY(list_style_type,               ListStyleType),
     //// COMPUTED_STYLE_MAP_ENTRY(margin,                   Margin),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(margin_bottom,          MarginBottomWidth),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(margin_left,            MarginLeftWidth),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(margin_right,           MarginRightWidth),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(margin_top,             MarginTopWidth),
+    COMPUTED_STYLE_MAP_ENTRY(margin_bottom,                 MarginBottomWidth),
+    COMPUTED_STYLE_MAP_ENTRY(margin_left,                   MarginLeftWidth),
+    COMPUTED_STYLE_MAP_ENTRY(margin_right,                  MarginRightWidth),
+    COMPUTED_STYLE_MAP_ENTRY(margin_top,                    MarginTopWidth),
     COMPUTED_STYLE_MAP_ENTRY(marker_offset,                 MarkerOffset),
     // COMPUTED_STYLE_MAP_ENTRY(marks,                      Marks),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(max_height,             MaxHeight),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(max_width,              MaxWidth),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(min_height,             MinHeight),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(min_width,              MinWidth),
+    COMPUTED_STYLE_MAP_ENTRY(max_height,                    MaxHeight),
+    COMPUTED_STYLE_MAP_ENTRY(max_width,                     MaxWidth),
+    COMPUTED_STYLE_MAP_ENTRY(min_height,                    MinHeight),
+    COMPUTED_STYLE_MAP_ENTRY(min_width,                     MinWidth),
     COMPUTED_STYLE_MAP_ENTRY(mix_blend_mode,                MixBlendMode),
     COMPUTED_STYLE_MAP_ENTRY(opacity,                       Opacity),
     // COMPUTED_STYLE_MAP_ENTRY(orphans,                    Orphans),
@@ -5161,34 +5159,34 @@ nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
     COMPUTED_STYLE_MAP_ENTRY(overflow_x,                    OverflowX),
     COMPUTED_STYLE_MAP_ENTRY(overflow_y,                    OverflowY),
     //// COMPUTED_STYLE_MAP_ENTRY(padding,                  Padding),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(padding_bottom,         PaddingBottom),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(padding_left,           PaddingLeft),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(padding_right,          PaddingRight),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(padding_top,            PaddingTop),
+    COMPUTED_STYLE_MAP_ENTRY(padding_bottom,                PaddingBottom),
+    COMPUTED_STYLE_MAP_ENTRY(padding_left,                  PaddingLeft),
+    COMPUTED_STYLE_MAP_ENTRY(padding_right,                 PaddingRight),
+    COMPUTED_STYLE_MAP_ENTRY(padding_top,                   PaddingTop),
     // COMPUTED_STYLE_MAP_ENTRY(page,                       Page),
     COMPUTED_STYLE_MAP_ENTRY(page_break_after,              PageBreakAfter),
     COMPUTED_STYLE_MAP_ENTRY(page_break_before,             PageBreakBefore),
     COMPUTED_STYLE_MAP_ENTRY(page_break_inside,             PageBreakInside),
     COMPUTED_STYLE_MAP_ENTRY(perspective,                   Perspective),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(perspective_origin,     PerspectiveOrigin),
+    COMPUTED_STYLE_MAP_ENTRY(perspective_origin,            PerspectiveOrigin),
     COMPUTED_STYLE_MAP_ENTRY(pointer_events,                PointerEvents),
     COMPUTED_STYLE_MAP_ENTRY(position,                      Position),
     COMPUTED_STYLE_MAP_ENTRY(quotes,                        Quotes),
     COMPUTED_STYLE_MAP_ENTRY(resize,                        Resize),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(right,                  Right),
+    COMPUTED_STYLE_MAP_ENTRY(right,                         Right),
     //// COMPUTED_STYLE_MAP_ENTRY(size,                     Size),
     COMPUTED_STYLE_MAP_ENTRY(table_layout,                  TableLayout),
     COMPUTED_STYLE_MAP_ENTRY(text_align,                    TextAlign),
     COMPUTED_STYLE_MAP_ENTRY(text_combine_horizontal,       TextCombineHorizontal),
     COMPUTED_STYLE_MAP_ENTRY(text_decoration,               TextDecoration),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(text_indent,            TextIndent),
+    COMPUTED_STYLE_MAP_ENTRY(text_indent,                   TextIndent),
     COMPUTED_STYLE_MAP_ENTRY(text_orientation,              TextOrientation),
     COMPUTED_STYLE_MAP_ENTRY(text_overflow,                 TextOverflow),
     COMPUTED_STYLE_MAP_ENTRY(text_shadow,                   TextShadow),
     COMPUTED_STYLE_MAP_ENTRY(text_transform,                TextTransform),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(top,                    Top),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(transform,              Transform),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(transform_origin,       TransformOrigin),
+    COMPUTED_STYLE_MAP_ENTRY(top,                           Top),
+    COMPUTED_STYLE_MAP_ENTRY(transform,                     Transform),
+    COMPUTED_STYLE_MAP_ENTRY(transform_origin,              TransformOrigin),
     COMPUTED_STYLE_MAP_ENTRY(transform_style,               TransformStyle),
     //// COMPUTED_STYLE_MAP_ENTRY(transition,               Transition),
     COMPUTED_STYLE_MAP_ENTRY(transition_delay,              TransitionDelay),
@@ -5196,11 +5194,11 @@ nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
     COMPUTED_STYLE_MAP_ENTRY(transition_property,           TransitionProperty),
     COMPUTED_STYLE_MAP_ENTRY(transition_timing_function,    TransitionTimingFunction),
     COMPUTED_STYLE_MAP_ENTRY(unicode_bidi,                  UnicodeBidi),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(vertical_align,         VerticalAlign),
+    COMPUTED_STYLE_MAP_ENTRY(vertical_align,                VerticalAlign),
     COMPUTED_STYLE_MAP_ENTRY(visibility,                    Visibility),
     COMPUTED_STYLE_MAP_ENTRY(white_space,                   WhiteSpace),
     // COMPUTED_STYLE_MAP_ENTRY(widows,                     Widows),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(width,                  Width),
+    COMPUTED_STYLE_MAP_ENTRY(width,                         Width),
     COMPUTED_STYLE_MAP_ENTRY(word_break,                    WordBreak),
     COMPUTED_STYLE_MAP_ENTRY(word_spacing,                  WordSpacing),
     COMPUTED_STYLE_MAP_ENTRY(word_wrap,                     WordWrap),
@@ -5241,10 +5239,10 @@ nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
     COMPUTED_STYLE_MAP_ENTRY(image_region,                  ImageRegion),
     COMPUTED_STYLE_MAP_ENTRY(orient,                        Orient),
     COMPUTED_STYLE_MAP_ENTRY(osx_font_smoothing,            OSXFontSmoothing),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_outline_radius_bottomLeft, OutlineRadiusBottomLeft),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_outline_radius_bottomRight,OutlineRadiusBottomRight),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_outline_radius_topLeft,    OutlineRadiusTopLeft),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_outline_radius_topRight,   OutlineRadiusTopRight),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_bottomLeft, OutlineRadiusBottomLeft),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_bottomRight,OutlineRadiusBottomRight),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_topLeft,    OutlineRadiusTopLeft),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_topRight,   OutlineRadiusTopRight),
     COMPUTED_STYLE_MAP_ENTRY(stack_sizing,                  StackSizing),
     COMPUTED_STYLE_MAP_ENTRY(_moz_tab_size,                 TabSize),
     COMPUTED_STYLE_MAP_ENTRY(text_align_last,               TextAlignLast),
