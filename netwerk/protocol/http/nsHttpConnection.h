@@ -191,9 +191,6 @@ private:
     // Directly Add a transaction to an active connection for SPDY
     nsresult AddTransaction(nsAHttpTransaction *, int32_t);
 
-    // used to inform nsIHttpDataUsage of transfer
-    void ReportDataUsage(bool);
-
 private:
     nsCOMPtr<nsISocketTransport>    mSocketTransport;
     nsCOMPtr<nsIAsyncInputStream>   mSocketIn;
@@ -226,10 +223,6 @@ private:
     int64_t                         mMaxBytesRead;       // max read in 1 activation
     int64_t                         mTotalBytesRead;     // total data read
     int64_t                         mTotalBytesWritten;  // does not include CONNECT tunnel
-
-    // for nsIHttpDataUsage
-    uint64_t                        mUnreportedBytesRead;     // subset of totalBytesRead
-    uint64_t                        mUnreportedBytesWritten;  // subset of totalBytesWritten
 
     nsRefPtr<nsIAsyncInputStream>   mInputOverflow;
 
