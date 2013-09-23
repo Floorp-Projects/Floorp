@@ -274,6 +274,12 @@ public:
    */
   void AttemptScroll(const ScreenPoint& aStartPoint, const ScreenPoint& aEndPoint);
 
+  /**
+   * Returns whether this APZC is for an element marked with the 'scrollgrab'
+   * attribute.
+   */
+  bool HasScrollgrab() const { return mFrameMetrics.mHasScrollgrab; }
+
 protected:
   /**
    * Helper method for touches beginning. Sets everything up for panning and any
