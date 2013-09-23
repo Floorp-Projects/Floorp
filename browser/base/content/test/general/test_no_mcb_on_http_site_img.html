@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+  Test 1 for Bug 909920 - See file browser_no_mcb_on_http_site.js for description.
+  https://bugzilla.mozilla.org/show_bug.cgi?id=909920
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test 1 for Bug 909920</title>
+  <link rel="stylesheet" type="text/css" href="https://example.com/browser/browser/base/content/test/general/test_no_mcb_on_http_site_img.css" />
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<script type="text/javascript">
+  function checkLoadStates() {
+   var ui = SpecialPowers.wrap(window)
+            .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+             .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+             .QueryInterface(SpecialPowers.Ci.nsIDocShell)
+             .securityUI;
+
+   var loadedMixedActive = ui &&
+     (ui.state & SpecialPowers.Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT);
+   is(loadedMixedActive, false, "OK: Should not load mixed active content!");
+
+   var blockedMixedActive = ui &&
+       (ui.state & SpecialPowers.Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT);
+   is(blockedMixedActive, false, "OK: Should not block mixed active content!");
+
+   var loadedMixedDisplay = ui &&
+     (ui.state & SpecialPowers.Ci.nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT);
+   is(loadedMixedDisplay, false, "OK: Should not load mixed display content!");
+
+   var blockedMixedDisplay = ui &&
+     (ui.state & SpecialPowers.Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_DISPLAY_CONTENT);
+   is(blockedMixedDisplay, false, "OK: Should not block mixed display content!");
+
+   var newValue = "Verifying MCB does not trigger warning/error for an http page with https css that includes http image";
+   document.getElementById("testDiv").innerHTML = newValue;
+  }
+</script>
+</head>
+<body onload="checkLoadStates()">
+  <div class="testDiv" id="testDiv">
+    Testing MCB does not trigger warning/error for an http page with https css that includes http image
+  </div>
+</body>
+</html>
