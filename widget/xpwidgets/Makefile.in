@@ -12,10 +12,10 @@ ifdef MOZ_ENABLE_D3D10_LAYER
 DEFINES		+= -DMOZ_ENABLE_D3D10_LAYER
 endif
 
-ifneq (,$(filter gtk3,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk3 gtk2,$(MOZ_WIDGET_TOOLKIT)))
 # gtk3 shares includes with gtk2
 LOCAL_INCLUDES	+= \
-		-I$(srcdir)/../gtk2 \
+		-I$(srcdir)/../gtk \
 		$(NULL)
 else
 LOCAL_INCLUDES	+= \
