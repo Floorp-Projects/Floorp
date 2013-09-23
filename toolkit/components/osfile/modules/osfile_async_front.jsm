@@ -161,8 +161,11 @@ let Scheduler = {
   latestPromise: Promise.resolve("OS.File scheduler hasn't been launched yet"),
 
   post: function post(...args) {
+    if (!this.launched && OS.Shared.DEBUG) {
+      // If we have delayed sending SET_DEBUG, do it now.
+      worker.post("SET_DEBUG", [true]);
+    }
     this.launched = true;
-
     if (this.shutdown) {
       LOG("OS.File is not available anymore. The following request has been rejected.", args);
       return Promise.reject(new Error("OS.File has been shut down."));
@@ -241,7 +244,10 @@ let readDebugPref = function readDebugPref(prefName, oldPref = false) {
 Services.prefs.addObserver(PREF_OSFILE_LOG,
   function prefObserver(aSubject, aTopic, aData) {
     OS.Shared.DEBUG = readDebugPref(PREF_OSFILE_LOG, OS.Shared.DEBUG);
-    Scheduler.post("SET_DEBUG", [OS.Shared.DEBUG]);
+    if (Scheduler.launched) {
+      // Don't start the worker just to set this preference.
+      Scheduler.post("SET_DEBUG", [OS.Shared.DEBUG]);
+    }
   }, false);
 OS.Shared.DEBUG = readDebugPref(PREF_OSFILE_LOG, false);
 
@@ -252,7 +258,8 @@ Services.prefs.addObserver(PREF_OSFILE_LOG_REDIRECT,
 OS.Shared.TEST = readDebugPref(PREF_OSFILE_LOG_REDIRECT, false);
 
 // Update worker's DEBUG flag if it's true.
-if (OS.Shared.DEBUG === true) {
+// Don't start the worker just for this, though.
+if (OS.Shared.DEBUG && Scheduler.launched) {
   Scheduler.post("SET_DEBUG", [true]);
 }
 
