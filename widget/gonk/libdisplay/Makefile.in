@@ -27,6 +27,7 @@ DEFINES += -DXPCOM_GLUE
 LOCAL_INCLUDES += \
 	-I$(ANDROID_SOURCE)/hardware/libhardware/include \
 	-I$(ANDROID_SOURCE)/hardware/libhardware_legacy/include \
+	-I$(ANDROID_SOURCE)/frameworks/native/include/gui \
 	-I$(ANDROID_SOURCE)/frameworks/native/opengl/include \
 	-I$(ANDROID_SOURCE)/system/core/libsuspend/include \
 	-I$(srcdir) \
