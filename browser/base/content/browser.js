@@ -912,7 +912,7 @@ var gBrowserInit = {
           defaultHeight = screen.availHeight * .75;
         }
 
-#ifdef MOZ_WIDGET_GTK2
+#if MOZ_WIDGET_GTK == 2
         // On X, we're not currently able to account for the size of the window
         // border.  Use 28px as a guess (titlebar + bottom window border)
         defaultHeight -= 28;

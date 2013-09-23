@@ -66,7 +66,7 @@ const PREF_AUDIO_FEED_SELECTED_READER = "browser.audioFeeds.handler.default";
 const kActionUsePlugin = 5;
 
 /*
-#ifdef MOZ_WIDGET_GTK2
+#if MOZ_WIDGET_GTK == 2
 */
 const ICON_URL_APP      = "moz-icon://dummy.exe?size=16";
 /*
