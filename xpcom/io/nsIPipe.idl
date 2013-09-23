@@ -3,9 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIAsyncInputStream.idl"
-#include "nsIAsyncOutputStream.idl"
+#include "nsISupports.idl"
 
+interface nsIAsyncInputStream;
+interface nsIAsyncOutputStream;
 interface nsIMemory;
 
 /**
@@ -99,6 +100,9 @@ interface nsISearchableInputStream : nsISupports
 };
 
 %{C++
+
+class nsIInputStream;
+class nsIOutputStream;
 
 /**
  * NS_NewPipe2

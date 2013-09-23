@@ -8,7 +8,8 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIConsoleMessage.idl"
+
+interface nsIConsoleMessage;
 
 [scriptable, uuid(eaaf61d6-1dd1-11b2-bc6e-8fc96480f20d)]
 interface nsIConsoleListener : nsISupports

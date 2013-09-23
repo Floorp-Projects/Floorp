@@ -17,6 +17,7 @@
 #include "nsEscape.h"
 #include "nsDirectoryIndexStream.h"
 #include "prlog.h"
+#include "prtime.h"
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gLog;
 #endif

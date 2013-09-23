@@ -26,6 +26,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsCRT.h"
 #include "nsIObserverService.h"
+#include "nsISimpleEnumerator.h"
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"

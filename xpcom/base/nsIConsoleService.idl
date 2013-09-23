@@ -4,8 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIConsoleListener.idl"
-#include "nsIConsoleMessage.idl"
+
+interface nsIConsoleListener;
+interface nsIConsoleMessage;
 
 [scriptable, uuid(0eb81d20-c37e-42d4-82a8-ca9ae96bdf52)]
 interface nsIConsoleService : nsISupports
