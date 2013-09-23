@@ -24,6 +24,7 @@ class nsIScrollPositionListener;
 class nsIFrame;
 class nsPresContext;
 class nsIContent;
+class nsRenderingContext;
 
 /**
  * Interface for frames that are scrollable. This interface exposes
