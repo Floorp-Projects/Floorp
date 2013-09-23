@@ -17,6 +17,7 @@
 #include "nsConsoleService.h"
 #include "nsConsoleMessage.h"
 #include "nsIClassInfoImpl.h"
+#include "nsIConsoleListener.h"
 
 #include "mozilla/Preferences.h"
 

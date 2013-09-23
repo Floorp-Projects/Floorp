@@ -23,6 +23,7 @@
 #include "Relation.h"
 #include "RootAccessible.h"
 #include "States.h"
+#include "nsISimpleEnumerator.h"
 
 #include "mozilla/Util.h"
 #include "nsXPCOMStrings.h"

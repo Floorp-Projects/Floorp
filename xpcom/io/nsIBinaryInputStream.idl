@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIInputStream.idl"
-#include "nsrootidl.idl"
 
 /**
  * This interface allows consumption of primitive data types from a "binary

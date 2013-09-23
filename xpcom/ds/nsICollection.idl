@@ -4,7 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISerializable.idl"
-#include "nsIEnumerator.idl"
+
+interface nsIEnumerator;
 
 [scriptable, uuid(83b6019c-cbc4-11d2-8cca-0060b0fc14a3)]
 interface nsICollection : nsISerializable
