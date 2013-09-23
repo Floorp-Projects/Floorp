@@ -1501,6 +1501,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         mGo.setVisibility(View.VISIBLE);
 
+        if (InputMethods.shouldDisableUrlBarUpdate(mUrlEditText.getContext())) {
+            return;
+        }
+
         int imageResource = R.drawable.ic_url_bar_go;
         String contentDescription = mActivity.getString(R.string.go);
         int imeAction = EditorInfo.IME_ACTION_GO;
