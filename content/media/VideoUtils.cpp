@@ -4,7 +4,6 @@
 
 #include "VideoUtils.h"
 #include "MediaResource.h"
-#include "MP3FrameParser.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "nsMathUtils.h"
 #include "nsSize.h"
@@ -90,37 +89,3 @@ void GetEstimatedBufferedTimeRanges(mozilla::MediaResource* aStream,
   return;
 }
 
-static const uint32_t READ_SIZE = 4096;
-
-int64_t
-GetEstimatedMP3Duration(mozilla::MediaResource *aResource,
-                        mozilla::MP3FrameParser *aParser)
-{
-  if (!aResource || !aParser) {
-    return -1;
-  }
-
-  while (aParser->IsMP3()) {
-    // Find the next cached data range past the last offset seen by the parser.
-    uint64_t parserOffset = aParser->GetLastStreamOffset();
-    int64_t readOffset = aResource->GetNextCachedData(parserOffset);
-
-    if (readOffset < 0) {
-      // No more buffered data.
-      break;
-    }
-
-    char buffer[READ_SIZE];
-    uint64_t readLength = aResource->GetCachedDataEnd(readOffset) - readOffset;
-    readLength = readLength > READ_SIZE ? READ_SIZE : readLength;
-
-    nsresult rv = aResource->ReadFromCache(buffer, readOffset, readLength);
-    if (NS_FAILED(rv)) {
-      return -1;
-    }
-
-    aParser->Parse(buffer, readLength, readOffset);
-  }
-
-  return aParser->GetDuration();
-}

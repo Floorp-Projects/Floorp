@@ -41,10 +41,6 @@ public:
   virtual nsresult GetBuffered(dom::TimeRanges* aBuffered,
                                int64_t aStartTime) MOZ_OVERRIDE;
 
-  virtual void NotifyDataArrived(const char* aBuffer,
-                                 uint32_t aLength,
-                                 int64_t aOffset) MOZ_OVERRIDE;
-
   void AudioSampleCallback(UInt32 aNumBytes,
                            UInt32 aNumPackets,
                            const void *aData,
@@ -56,7 +52,7 @@ public:
 
 private:
   void SetupDecoder();
-  nsresult Read(uint32_t *aNumBytes, char *aData);
+  nsresult ReadAndNotify(uint32_t *aNumBytes, char *aData);
 
   static OSStatus PassthroughInputDataCallback(AudioConverterRef aAudioConverter,
                                                UInt32 *aNumDataPackets,
@@ -75,7 +71,7 @@ private:
   UInt32 mAudioChannels;
   UInt32 mAudioSampleRate;
 
-  int64_t mDuration;
+  uint64_t mDuration;
 
   AudioFileStreamID mAudioFileStream;
   AudioConverterRef mAudioConverter;
