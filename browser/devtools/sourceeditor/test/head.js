@@ -139,7 +139,7 @@ function openSourceEditorWindow(aCallback, aOptions) {
   function initEditor()
   {
     let tempScope = {};
-    Cu.import("resource:///modules/source-editor.jsm", tempScope);
+    Cu.import("resource:///modules/devtools/sourceeditor/source-editor.jsm", tempScope);
 
     let box = testWin.document.querySelector("box");
     editor = new tempScope.SourceEditor();

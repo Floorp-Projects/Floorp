@@ -1,18 +1,22 @@
 <?xml version="1.0"?>
-#ifdef 0
+
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-#endif
+
 <!DOCTYPE window [
 <!ENTITY % scratchpadDTD SYSTEM "chrome://browser/locale/devtools/scratchpad.dtd" >
  %scratchpadDTD;
+<!ENTITY % editMenuStrings SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
+%editMenuStrings;
+<!ENTITY % sourceEditorStrings SYSTEM "chrome://browser/locale/devtools/sourceeditor.dtd">
+%sourceEditorStrings;
 ]>
+
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/common.css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/scratchpad.css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
-<?xul-overlay href="chrome://browser/content/devtools/source-editor-overlay.xul"?>
 
 <window id="main-window"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -27,8 +31,20 @@
 <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
 <script type="application/javascript" src="chrome://browser/content/devtools/scratchpad.js"/>
 
+
+<script type="application/javascript">
+  function goUpdateSourceEditorMenuItems() {
+    goUpdateGlobalEditMenuItems();
+    let commands = ['cmd_undo', 'cmd_redo', 'cmd_cut', 'cmd_paste', 'cmd_delete', 'cmd_findAgain'];
+    commands.forEach(goUpdateCommand);
+  }
+</script>
+
 <commandset id="editMenuCommands"/>
-<commandset id="sourceEditorCommands"/>
+
+<commandset id="sourceEditorCommands">
+  <command id="cmd_gotoLine" oncommand="goDoCommand('cmd_gotoLine')"/>
+</commandset>
 
 <commandset id="sp-commandset">
   <command id="sp-cmd-newWindow" oncommand="Scratchpad.openScratchpad();"/>
@@ -37,11 +53,6 @@
   <command id="sp-cmd-save" oncommand="Scratchpad.saveFile();"/>
   <command id="sp-cmd-saveas" oncommand="Scratchpad.saveFileAs();"/>
   <command id="sp-cmd-revert" oncommand="Scratchpad.promptRevert();" disabled="true"/>
-
-  <!-- TODO: bug 650340 - implement printFile()
-  <command id="sp-cmd-printFile" oncommand="Scratchpad.printFile();" disabled="true"/>
- -->
-
   <command id="sp-cmd-close" oncommand="Scratchpad.close();"/>
   <command id="sp-cmd-run" oncommand="Scratchpad.run();"/>
   <command id="sp-cmd-inspect" oncommand="Scratchpad.inspect();"/>
@@ -56,7 +67,7 @@
   <command id="sp-cmd-hideSidebar" oncommand="Scratchpad.sidebar.hide();"/>
 </commandset>
 
-<keyset id="sourceEditorKeys"/>
+<keyset id="editMenuKeys"/>
 
 <keyset id="sp-keyset">
   <key id="sp-key-window"
@@ -75,14 +86,6 @@
        key="&closeCmd.key;"
        command="sp-cmd-close"
        modifiers="accel"/>
-
-  <!-- TODO: bug 650340 - implement printFile
-  <key id="sp-key-printFile"
-       key="&printCmd.commandkey;"
-       command="sp-cmd-printFile"
-       modifiers="accel"/>
-  -->
-
   <key id="sp-key-run"
        key="&run.key;"
        command="sp-cmd-run"
@@ -115,10 +118,8 @@
        command="sp-cmd-documentationLink"/>
 </keyset>
 
-
 <menubar id="sp-menubar">
-  <menu id="sp-file-menu" label="&fileMenu.label;"
-        accesskey="&fileMenu.accesskey;">
+  <menu id="sp-file-menu" label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
     <menupopup id="sp-menu-filepopup">
       <menuitem id="sp-menu-newscratchpad"
                 label="&newWindowCmd.label;"
@@ -126,16 +127,19 @@
                 key="sp-key-window"
                 command="sp-cmd-newWindow"/>
       <menuseparator/>
+
       <menuitem id="sp-menu-open"
                 label="&openFileCmd.label;"
                 command="sp-cmd-openFile"
                 key="sp-key-open"
                 accesskey="&openFileCmd.accesskey;"/>
+
       <menu id="sp-open_recent-menu" label="&openRecentMenu.label;"
             accesskey="&openRecentMenu.accesskey;"
             disabled="true">
         <menupopup id="sp-menu-open_recentPopup"/>
       </menu>
+
       <menuitem id="sp-menu-save"
                 label="&saveFileCmd.label;"
                 accesskey="&saveFileCmd.accesskey;"
@@ -151,14 +155,6 @@
                 command="sp-cmd-revert"/>
       <menuseparator/>
 
-      <!-- TODO: bug 650340 - implement printFile
-      <menuitem id="sp-menu-print"
-                label="&printCmd.label;"
-                accesskey="&printCmd.accesskey;"
-                command="sp-cmd-printFile"/>
-      <menuseparator/>
-      -->
-
       <menuitem id="sp-menu-close"
                 label="&closeCmd.label;"
                 key="sp-key-close"
@@ -166,25 +162,31 @@
                 command="sp-cmd-close"/>
     </menupopup>
   </menu>
+
   <menu id="sp-edit-menu" label="&editMenu.label;"
         accesskey="&editMenu.accesskey;">
     <menupopup id="sp-menu_editpopup"
                onpopupshowing="goUpdateSourceEditorMenuItems()">
-      <menuitem id="se-menu-undo"/>
-      <menuitem id="se-menu-redo"/>
+      <menuitem id="menu_undo"/>
+      <menuitem id="menu_redo"/>
       <menuseparator/>
-      <menuitem id="se-menu-cut"/>
-      <menuitem id="se-menu-copy"/>
-      <menuitem id="se-menu-paste"/>
+      <menuitem id="menu_cut"/>
+      <menuitem id="menu_copy"/>
+      <menuitem id="menu_paste"/>
       <menuseparator/>
-      <menuitem id="se-menu-selectAll"/>
+      <menuitem id="menu_selectAll"/>
       <menuseparator/>
-      <menuitem id="se-menu-find"/>
-      <menuitem id="se-menu-findAgain"/>
+      <menuitem id="menu_find"/>
+      <menuitem id="menu_findAgain"/>
       <menuseparator/>
-      <menuitem id="se-menu-gotoLine"/>
+      <menuitem id="se-menu-gotoLine"
+          label="&gotoLineCmd.label;"
+          accesskey="&gotoLineCmd.accesskey;"
+          key="key_gotoLine"
+          command="cmd_gotoLine"/>
     </menupopup>
   </menu>
+
   <menu id="sp-execute-menu" label="&executeMenu.label;"
         accesskey="&executeMenu.accesskey;">
     <menupopup id="sp-menu_executepopup">
@@ -288,12 +290,12 @@
 <popupset id="scratchpad-popups">
   <menupopup id="scratchpad-text-popup"
              onpopupshowing="goUpdateSourceEditorMenuItems()">
-    <menuitem id="se-cMenu-cut"/>
-    <menuitem id="se-cMenu-copy"/>
-    <menuitem id="se-cMenu-paste"/>
-    <menuitem id="se-cMenu-delete"/>
+    <menuitem id="cMenu_cut"/>
+    <menuitem id="cMenu_copy"/>
+    <menuitem id="cMenu_paste"/>
+    <menuitem id="cMenu_delete"/>
     <menuseparator/>
-    <menuitem id="se-cMenu-selectAll"/>
+    <menuitem id="cMenu_selectAll"/>
     <menuseparator/>
     <menuitem id="sp-text-run"
               label="&run.label;"

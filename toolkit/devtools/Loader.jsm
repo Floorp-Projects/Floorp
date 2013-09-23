@@ -50,6 +50,8 @@ var BuiltinProvider = {
         "source-map": SourceMap,
       },
       paths: {
+        // When you add a line to this mapping, don't forget to make a
+        // corresponding addition to the SrcdirProvider mapping below as well.
         "": "resource://gre/modules/commonjs/",
         "main": "resource:///modules/devtools/main.js",
         "devtools": "resource:///modules/devtools",
@@ -60,8 +62,7 @@ var BuiltinProvider = {
         "devtools/css-color": "resource://gre/modules/devtools/css-color",
         "devtools/client": "resource://gre/modules/devtools/client",
 
-        "escodegen/escodegen": "resource://gre/modules/devtools/escodegen/escodegen",
-        "escodegen/package.json": "resource://gre/modules/devtools/escodegen/package.json",
+        "escodegen": "resource://gre/modules/devtools/escodegen",
         "estraverse": "resource://gre/modules/devtools/escodegen/estraverse",
 
         // Allow access to xpcshell test items from the loader.
@@ -93,14 +94,17 @@ var SrcdirProvider = {
                                                 Ci.nsISupportsString);
     srcdir = OS.Path.normalize(srcdir.data.trim());
     let devtoolsDir = OS.Path.join(srcdir, "browser", "devtools");
+    let toolkitDir = OS.Path.join(srcdir, "toolkit", "devtools");
+    let mainURI = this.fileURI(OS.Path.join(devtoolsDir, "main.js"));
     let devtoolsURI = this.fileURI(devtoolsDir);
-    let toolkitURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools"));
-    let serverURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools", "server"));
-    let webconsoleURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools", "webconsole"));
-    let appActorURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools", "apps", "app-actor-front.js"));
-    let cssLogicURI = this.fileURI(OS.Path.join(toolkitURI, "styleinspector", "css-logic"));
-    let clientURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools", "client"));
-    let mainURI = this.fileURI(OS.Path.join(srcdir, "browser", "devtools", "main.js"));
+    let serverURI = this.fileURI(OS.Path.join(toolkitDir, "server"));
+    let webconsoleURI = this.fileURI(OS.Path.join(toolkitDir, "webconsole"));
+    let appActorURI = this.fileURI(OS.Path.join(toolkitDir, "apps", "app-actor-front.js"));
+    let cssLogicURI = this.fileURI(OS.Path.join(toolkitDir, "styleinspector", "css-logic"));
+    let cssColorURI = this.fileURI(OS.Path.join(toolkitDir, "css-color"));
+    let clientURI = this.fileURI(OS.Path.join(toolkitDir, "client"));
+    let escodegenURI = this.fileURI(OS.Path.join(toolkitDir, "escodegen"));
+    let estraverseURI = this.fileURI(OS.Path.join(toolkitDir, "escodegen", "estraverse"));
     this.loader = new loader.Loader({
       modules: {
         "toolkit/loader": loader,
@@ -108,13 +112,16 @@ var SrcdirProvider = {
       },
       paths: {
         "": "resource://gre/modules/commonjs/",
+        "main": mainURI,
+        "devtools": devtoolsURI,
         "devtools/server": serverURI,
         "devtools/toolkit/webconsole": webconsoleURI,
         "devtools/app-actor-front": appActorURI,
-        "devtools/client": clientURI,
-        "devtools": devtoolsURI,
         "devtools/styleinspector/css-logic": cssLogicURI,
-        "main": mainURI
+        "devtools/css-color": cssColorURI,
+        "devtools/client": clientURI,
+        "escodegen": escodegenURI,
+        "estraverse": estraverseURI
       },
       globals: loaderGlobals
     });

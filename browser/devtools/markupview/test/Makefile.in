@@ -4,10 +4,12 @@
 
 MOCHITEST_BROWSER_FILES := \
 		browser_inspector_markup_colorconversion.js \
-		browser_inspector_markup_navigation.html \
-		browser_inspector_markup_navigation.js \
-		browser_inspector_markup_mutation.html \
-		browser_inspector_markup_mutation.js \
+    browser_inspector_markup_navigation.html \
+    browser_inspector_markup_navigation.js \
+    browser_inspector_markup_mutation.html \
+    browser_inspector_markup_mutation.js \
+    browser_inspector_markup_mutation_flashing.html \
+		browser_inspector_markup_mutation_flashing.js \
 		browser_inspector_markup_edit.html \
     browser_inspector_markup_edit.js \
     browser_inspector_markup_subset.html \

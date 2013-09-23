@@ -32,16 +32,16 @@ function testListeners()
 {
   openScratchpad(function(aWin, aScratchpad) {
     aScratchpad.setText("new text");
-    ok(isStar(aWin), "show start if scratchpad text changes");
+    ok(isStar(aWin), "show star if scratchpad text changes");
 
-    aScratchpad.editor.dirty = false;
+    aScratchpad.dirty = false;
     ok(!isStar(aWin), "no star before changing text");
 
     aScratchpad.setFilename("foo.js");
     aScratchpad.setText("new text2");
     ok(isStar(aWin), "shows star if scratchpad text changes");
 
-    aScratchpad.editor.dirty = false;
+    aScratchpad.dirty = false;
     ok(!isStar(aWin), "no star if scratchpad was just saved");
 
     aScratchpad.setText("new text3");
