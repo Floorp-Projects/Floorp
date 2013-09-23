@@ -1452,17 +1452,19 @@ gsmsdp_set_sctp_attributes (void *sdp_p, uint16_t level, fsmdef_media_t *media)
 {
     uint16_t a_inst;
 
-    if (sdp_add_new_attr(sdp_p, level, 0, SDP_ATTR_FMTP, &a_inst)
+    if (sdp_add_new_attr(sdp_p, level, 0, SDP_ATTR_SCTPMAP, &a_inst)
         != SDP_SUCCESS) {
-         return;
+            return;
     }
 
-    /* Use SCTP port in place of fmtp payload type */
-    (void) sdp_attr_set_fmtp_payload_type(sdp_p, level, 0, a_inst, media->local_datachannel_port);
+    sdp_attr_set_sctpmap_port(sdp_p, level, 0, a_inst,
+        media->local_datachannel_port);
 
-    sdp_attr_set_fmtp_data_channel_protocol (sdp_p, level, 0, a_inst, media->datachannel_protocol);
+    sdp_attr_set_sctpmap_protocol (sdp_p, level, 0, a_inst,
+        media->datachannel_protocol);
 
-    sdp_attr_set_fmtp_streams (sdp_p, level, 0, a_inst, media->datachannel_streams);
+    sdp_attr_set_sctpmap_streams (sdp_p, level, 0, a_inst,
+        media->datachannel_streams);
 }
 
 /*
@@ -1946,13 +1948,16 @@ gsmsdp_set_local_sdp_direction (fsmdef_dcb_t *dcb_p,
      * before adding the specified direction. Save the direction in previous
      * direction before clearing it.
      */
-    if (media->direction_set) {
-        media->previous_sdp.direction = media->direction;
-        gsmsdp_remove_sdp_direction(media, media->direction,
-                                    dcb_p->sdp ? dcb_p->sdp->src_sdp : NULL );
-        media->direction_set = FALSE;
+    if (media->type != SDP_MEDIA_APPLICATION) {
+      if (media->direction_set) {
+          media->previous_sdp.direction = media->direction;
+          gsmsdp_remove_sdp_direction(media, media->direction,
+                                      dcb_p->sdp ? dcb_p->sdp->src_sdp : NULL );
+          media->direction_set = FALSE;
+      }
+      gsmsdp_set_sdp_direction(media, direction, dcb_p->sdp ? dcb_p->sdp->src_sdp : NULL);
     }
-    gsmsdp_set_sdp_direction(media, direction, dcb_p->sdp ? dcb_p->sdp->src_sdp : NULL);
+
     /*
      * We could just get the direction from the local SDP when we need it in
      * GSM, but setting the direction in the media structure gives a quick way
@@ -2742,6 +2747,7 @@ gsmsdp_update_local_sdp (fsmdef_dcb_t *dcb_p, boolean offer,
     cc_action_data_t data;
     sdp_direction_e direction;
     boolean         local_hold = (boolean)FSM_CHK_FLAGS(media->hold, FSM_HOLD_LCL);
+    sdp_result_e    sdp_res;
 
     if (media->src_port == 0) {
         GSM_DEBUG(DEB_L_C_F_PREFIX"allocate receive port for media line",
@@ -3502,11 +3508,11 @@ gsmsdp_negotiate_datachannel_attribs(fsmdef_dcb_t* dcb_p, cc_sdp_t* sdp_p, uint1
     uint32          num_streams;
     char           *protocol;
 
-    sdp_attr_get_fmtp_streams (sdp_p->dest_sdp, level, 0, 1, &num_streams);
+    sdp_attr_get_sctpmap_streams (sdp_p->dest_sdp, level, 0, 1, &num_streams);
 
     media->datachannel_streams = num_streams;
 
-    sdp_attr_get_fmtp_data_channel_protocol(sdp_p->dest_sdp, level, 0, 1, media->datachannel_protocol);
+    sdp_attr_get_sctpmap_protocol(sdp_p->dest_sdp, level, 0, 1, media->datachannel_protocol);
 
     media->remote_datachannel_port = sdp_get_media_sctp_port(sdp_p->dest_sdp, level);
 }
@@ -4684,6 +4690,8 @@ gsmsdp_negotiate_media_lines (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p, boolean initial
     sdp_result_e    sdp_res;
     boolean         created_media_stream = FALSE;
     int             lsm_rc;
+    int             sctp_port;
+    u32             datachannel_streams;
 
     config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
 
@@ -4975,6 +4983,27 @@ gsmsdp_negotiate_media_lines (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p, boolean initial
               if (SDP_SUCCESS == sdp_res) {
                 media->rtcp_mux = TRUE;
               }
+            }
+
+            /*
+              Negotiate datachannel attributes.
+              We are using our port from config and reflecting the
+              number of streams from the other side.
+             */
+            if (media_type == SDP_MEDIA_APPLICATION) {
+              config_get_value(CFGID_SCTP_PORT, &sctp_port, sizeof(sctp_port));
+              media->local_datachannel_port = sctp_port;
+
+              sdp_res = sdp_attr_get_sctpmap_streams(sdp_p->dest_sdp,
+                media->level, 0, 1, &datachannel_streams);
+
+              /* If no streams value from the other side we will use our default
+               */
+              if (sdp_res == SDP_SUCCESS) {
+                  media->datachannel_streams = datachannel_streams;
+              }
+
+              gsmsdp_set_sctp_attributes(sdp_p->src_sdp, i, media);
             }
 
             if (!unsupported_line) {
