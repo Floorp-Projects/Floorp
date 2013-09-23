@@ -8,33 +8,23 @@
 #include "nsChromeRegistryChrome.h"
 #include "nsChromeRegistryContent.h"
 
-#include <string.h>
-
-#include "prio.h"
 #include "prprf.h"
 
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsEscape.h"
-#include "nsLayoutCID.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
-#include "nsUnicharUtils.h"
 
 #include "nsCSSStyleSheet.h"
 #include "nsIConsoleService.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDocShell.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMLocation.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsIDOMWindow.h"
-#include "nsIIOService.h"
-#include "nsIJARProtocolHandler.h"
 #include "nsIObserverService.h"
 #include "nsIPresShell.h"
-#include "nsIProtocolHandler.h"
 #include "nsIScriptError.h"
 #include "nsIWindowMediator.h"
 
