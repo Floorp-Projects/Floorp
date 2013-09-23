@@ -379,19 +379,23 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * Pretty print the selected source.
    */
   prettyPrint: function() {
-    const resetEditor = () => {
+    const resetEditor = ([{ url }]) => {
       // Only set the text when the source is still selected.
-      if (this.selectedValue === source.url) {
-        DebuggerView.setEditorLocation(source.url, 0, { force: true });
+      if (url == this.selectedValue) {
+        DebuggerView.setEditorLocation(url, 0, { force: true });
       }
     };
+    const printError = ([{ url }, error]) => {
+      let err = DevToolsUtils.safeErrorString(error);
+      let msg = "Couldn't prettify source: " + url + "\n" + err;
+      Cu.reportError(msg);
+      dumpn(msg);
+      return;
+    }
 
     let { source } = this.selectedItem.attachment;
-    // Reset the editor even when we fail, so that we can give the user a clue
-    // as to why the source isn't pretty printed and what happened.
-    DebuggerController.SourceScripts.prettyPrint(source)
-      .then(resetEditor,
-            resetEditor);
+    let prettyPrinted = DebuggerController.SourceScripts.prettyPrint(source);
+    prettyPrinted.then(resetEditor, printError);
   },
 
   /**
@@ -994,6 +998,18 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
 let SourceUtils = {
   _labelsCache: new Map(), // Can't use WeakMaps because keys are strings.
   _groupsCache: new Map(),
+
+  /**
+   * Returns true if the specified url and/or content type are specific to
+   * javascript files.
+   *
+   * @return boolean
+   *         True if the source is likely javascript.
+   */
+  isJavaScript: function(aUrl, aContentType = "") {
+    return /\.jsm?$/.test(this.trimUrlQuery(aUrl)) ||
+           aContentType.contains("javascript");
+  },
 
   /**
    * Clears the labels cache, populated by methods like

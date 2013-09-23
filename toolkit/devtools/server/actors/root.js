@@ -8,6 +8,8 @@
 
 /* Root actor for the remote debugging protocol. */
 
+Cu.import("resource://gre/modules/Services.jsm");
+
 /**
  * Methods shared between RootActor and BrowserTabActor.
  */
@@ -330,7 +332,7 @@ RootActor.prototype = {
    */
   preNest: function() {
     // Disable events in all open windows.
-    let e = windowMediator.getEnumerator(null);
+    let e = Services.wm.getEnumerator(null);
     while (e.hasMoreElements()) {
       let win = e.getNext();
       let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -345,7 +347,7 @@ RootActor.prototype = {
    */
   postNest: function(aNestData) {
     // Enable events in all open windows.
-    let e = windowMediator.getEnumerator(null);
+    let e = Services.wm.getEnumerator(null);
     while (e.hasMoreElements()) {
       let win = e.getNext();
       let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)

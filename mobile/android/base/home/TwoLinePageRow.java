@@ -200,7 +200,7 @@ public class TwoLinePageRow extends LinearLayout
             // Show blank image until the new favicon finishes loading
             mFavicon.clearImage();
 
-            mLoadFaviconTask = new LoadFaviconTask(url);
+            mLoadFaviconTask = new LoadFaviconTask(TwoLinePageRow.this, url);
 
             // Try to use a thread pool instead of serial execution of tasks
             // to add more throughput to the favicon loading routines.
@@ -242,10 +242,20 @@ public class TwoLinePageRow extends LinearLayout
         }
     }
 
-    private class LoadFaviconTask extends AsyncTask<Void, Void, Bitmap> {
+    void onFaviconLoaded(Bitmap favicon, String url) {
+        if (TextUtils.equals(mPageUrl, url)) {
+            setFaviconWithUrl(favicon, url);
+        }
+
+        mLoadFaviconTask = null;
+    }
+
+    private static class LoadFaviconTask extends AsyncTask<Void, Void, Bitmap> {
+        private final TwoLinePageRow mRow;
         private final String mUrl;
 
-        public LoadFaviconTask(String url) {
+        public LoadFaviconTask(TwoLinePageRow row, String url) {
+            mRow = row;
             mUrl = url;
         }
 
@@ -253,7 +263,7 @@ public class TwoLinePageRow extends LinearLayout
         public Bitmap doInBackground(Void... params) {
             Bitmap favicon = Favicons.getFaviconFromMemCache(mUrl);
             if (favicon == null) {
-                final ContentResolver cr = getContext().getContentResolver();
+                final ContentResolver cr = mRow.getContext().getContentResolver();
 
                 final Bitmap faviconFromDb = BrowserDB.getFaviconForUrl(cr, mUrl);
                 if (faviconFromDb != null) {
@@ -267,11 +277,7 @@ public class TwoLinePageRow extends LinearLayout
 
         @Override
         public void onPostExecute(Bitmap favicon) {
-            if (TextUtils.equals(mPageUrl, mUrl)) {
-                setFaviconWithUrl(favicon, mUrl);
-            }
-
-            mLoadFaviconTask = null;
+            mRow.onFaviconLoaded(favicon, mUrl);
         }
     }
 }

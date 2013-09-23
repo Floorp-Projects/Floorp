@@ -14,6 +14,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
                                   "resource://gre/modules/devtools/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CommandUtils",
                                   "resource:///modules/devtools/DeveloperToolbar.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "require", function() {
   let { require } = Cu.import("resource://gre/modules/devtools/Require.jsm", {});
@@ -46,9 +48,7 @@ GcliActor.prototype.getCommandSpecs = function(request) {
 };
 
 GcliActor.prototype.execute = function(request) {
-  let windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"]
-                        .getService(Ci.nsIWindowMediator);
-  let chromeWindow = windowMediator.getMostRecentWindow("navigator:browser");
+  let chromeWindow = Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType);
   let contentWindow = chromeWindow.gBrowser.selectedTab.linkedBrowser.contentWindow;
 
   let environment = CommandUtils.createEnvironment(chromeWindow.document,

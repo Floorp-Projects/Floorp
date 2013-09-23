@@ -20,6 +20,7 @@
 }
 
 #pretty-print {
+  min-width: 0;
   font-weight: bold;
 }
 
