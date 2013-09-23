@@ -2957,7 +2957,6 @@ let SessionStoreInternal = {
   restoreHistory:
     function ssi_restoreHistory(aWindow, aTabs, aTabData, aIdMap, aDocIdentMap,
                                 aRestoreImmediately) {
-    var _this = this;
     // if the tab got removed before being completely restored, then skip it
     while (aTabs.length > 0 && !(this._canRestoreTabHistory(aTabs[0]))) {
       aTabs.shift();
@@ -3026,9 +3025,11 @@ let SessionStoreInternal = {
     tab.dispatchEvent(event);
 
     // Restore the history in the next tab
-    aWindow.setTimeout(function(){
-      _this.restoreHistory(aWindow, aTabs, aTabData, aIdMap, aDocIdentMap,
-                           aRestoreImmediately);
+    aWindow.setTimeout(() => {
+      if (!aWindow.closed) {
+        this.restoreHistory(aWindow, aTabs, aTabData, aIdMap, aDocIdentMap,
+                            aRestoreImmediately);
+      }
     }, 0);
 
     // This could cause us to ignore MAX_CONCURRENT_TAB_RESTORES a bit, but
