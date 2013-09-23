@@ -6,6 +6,8 @@
 #include "nsCOMPtr.h"
 #include "nsIRandomGenerator.h"
 #include "nsPIDOMWindow.h"
+#include "MainThreadUtils.h"
+#include "nsXULAppAPI.h"
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/CryptoBinding.h"

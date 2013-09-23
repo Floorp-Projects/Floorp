@@ -16,6 +16,7 @@
 #include "nsIBrowserDOMWindow.h"
 #include "nsStringStream.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "nsNetUtil.h"
 
 #include "mozilla/unused.h"
 

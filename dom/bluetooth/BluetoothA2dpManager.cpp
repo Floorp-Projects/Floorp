@@ -19,6 +19,7 @@
 #include "mozilla/StaticPtr.h"
 #include "nsIAudioManager.h"
 #include "nsIObserverService.h"
+#include "MainThreadUtils.h"
 
 
 using namespace mozilla;
