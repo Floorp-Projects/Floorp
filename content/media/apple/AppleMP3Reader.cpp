@@ -86,16 +86,11 @@ static void _AudioSampleCallback(void *aThis,
  * put it in |aData|, and return true.
  * Otherwise, put as much data as is left into |aData|, set |aNumBytes| to the
  * amount of data we have left, and return false.
- *
- * This function also passes the read data on to the MP3 frame parser for
- * stream duration estimation.
  */
 nsresult
-AppleMP3Reader::ReadAndNotify(uint32_t *aNumBytes, char *aData)
+AppleMP3Reader::Read(uint32_t *aNumBytes, char *aData)
 {
   MediaResource *resource = mDecoder->GetResource();
-
-  uint64_t offset = resource->Tell();
 
   // Loop until we have all the data asked for, or we've reached EOS
   uint32_t totalBytes = 0;
@@ -110,18 +105,6 @@ AppleMP3Reader::ReadAndNotify(uint32_t *aNumBytes, char *aData)
       return NS_ERROR_FAILURE;
     }
   } while(totalBytes < *aNumBytes && numBytes);
-
-  // Pass the buffer to the MP3 frame parser to improve our duration estimate.
-  if (mMP3FrameParser.IsMP3()) {
-    mMP3FrameParser.Parse(aData, totalBytes, offset);
-    uint64_t duration = mMP3FrameParser.GetDuration();
-    if (duration != mDuration) {
-      LOGD("Updating media duration to %lluus\n", duration);
-      mDuration = duration;
-      ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-      mDecoder->UpdateEstimatedMediaDuration(duration);
-    }
-  }
 
   *aNumBytes = totalBytes;
 
@@ -286,7 +269,7 @@ AppleMP3Reader::DecodeAudioData()
   char bytes[AUDIO_READ_BYTES];
   uint32_t numBytes = AUDIO_READ_BYTES;
 
-  nsresult readrv = ReadAndNotify(&numBytes, bytes);
+  nsresult readrv = Read(&numBytes, bytes);
 
   // This function calls |AudioSampleCallback| above, synchronously, when it
   // finds compressed MP3 frame.
@@ -377,7 +360,7 @@ AppleMP3Reader::ReadMetadata(VideoInfo* aInfo,
   do {
     char bytes[AUDIO_READ_BYTES];
     uint32_t numBytes = AUDIO_READ_BYTES;
-    readrv = ReadAndNotify(&numBytes, bytes);
+    readrv = Read(&numBytes, bytes);
 
     rv = AudioFileStreamParseBytes(mAudioFileStream,
                                    numBytes,
@@ -402,6 +385,9 @@ AppleMP3Reader::ReadMetadata(VideoInfo* aInfo,
   aInfo->mAudioChannels = mAudioChannels;
   aInfo->mHasAudio = mStreamReady;
 
+  // Pass what data we have to the MP3 parser to get a duration estimate.
+  mDuration = GetEstimatedMP3Duration(mDecoder->GetResource(),
+                                      &mMP3FrameParser);
   {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mDecoder->SetMediaDuration(mDuration);
@@ -525,6 +511,24 @@ AppleMP3Reader::GetBuffered(dom::TimeRanges* aBuffered,
                                  mDecoder->GetMediaDuration(),
                                  aBuffered);
   return NS_OK;
+}
+
+void
+AppleMP3Reader::NotifyDataArrived(const char* aBuffer,
+                                  uint32_t aLength,
+                                  int64_t aOffset)
+{
+  // As data enters the cache, pass it to the MP3 parser to estimate the
+  // duration of the stream.
+  int64_t duration = GetEstimatedMP3Duration(mDecoder->GetResource(),
+                                             &mMP3FrameParser);
+
+  if (duration != -1 && duration != mDuration) {
+    LOGD("Updating media duration to %lluus\n", duration);
+    mDuration = duration;
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    mDecoder->UpdateEstimatedMediaDuration(duration);
+  }
 }
 
 } // namespace mozilla
