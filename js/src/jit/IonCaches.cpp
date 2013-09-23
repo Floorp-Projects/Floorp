@@ -714,8 +714,8 @@ GenerateDOMProxyChecks(JSContext *cx, MacroAssembler &masm, JSObject *obj,
 
 static void
 GenerateReadSlot(JSContext *cx, IonScript *ion, MacroAssembler &masm,
-                 IonCache::StubAttacher &attacher, JSObject *obj, PropertyName *name,
-                 JSObject *holder, Shape *shape, Register object, TypedOrValueRegister output,
+                 IonCache::StubAttacher &attacher, JSObject *obj, JSObject *holder,
+                 Shape *shape, Register object, TypedOrValueRegister output,
                  Label *failures = NULL)
 {
     JS_ASSERT(obj->isNative());
@@ -1222,7 +1222,7 @@ GetPropertyIC::tryAttachNative(JSContext *cx, IonScript *ion, HandleObject obj,
 
     switch (type) {
       case CanAttachReadSlot:
-        GenerateReadSlot(cx, ion, masm, attacher, obj, name, holder,
+        GenerateReadSlot(cx, ion, masm, attacher, obj, holder,
                             shape, object(), output());
         attachKind = idempotent() ? "idempotent reading"
                                     : "non idempotent reading";
@@ -1825,7 +1825,7 @@ GetPropertyParIC::attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *
     // Ready to generate the read slot stub.
     DispatchStubPrepender attacher(*this);
     MacroAssembler masm(cx);
-    GenerateReadSlot(cx, ion, masm, attacher, obj, name(), holder, shape, object(), output());
+    GenerateReadSlot(cx, ion, masm, attacher, obj, holder, shape, object(), output());
 
     return linkAndAttachStub(cx, masm, attacher, ion, "parallel reading");
 }
@@ -2839,7 +2839,7 @@ GetElementIC::attachGetProp(JSContext *cx, IonScript *ion, HandleObject obj,
     masm.branchTestValue(Assembler::NotEqual, val, idval, &failures);
 
     RepatchStubAppender attacher(*this);
-    GenerateReadSlot(cx, ion, masm, attacher, obj, name, holder, shape, object(), output(),
+    GenerateReadSlot(cx, ion, masm, attacher, obj, holder, shape, object(), output(),
                      &failures);
 
     return linkAndAttachStub(cx, masm, attacher, ion, "property");
@@ -3514,7 +3514,7 @@ GetElementParIC::attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *o
     ValueOperand val = index().reg().valueReg();
     masm.branchTestValue(Assembler::NotEqual, val, idval, &failures);
 
-    GenerateReadSlot(cx, ion, masm, attacher, obj, name, holder, shape, object(), output(),
+    GenerateReadSlot(cx, ion, masm, attacher, obj, holder, shape, object(), output(),
                      &failures);
 
     return linkAndAttachStub(cx, masm, attacher, ion, "parallel getelem reading");
