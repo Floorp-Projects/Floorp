@@ -44,7 +44,7 @@
 #endif
 #endif /* MOZ_X11 */
 #include <gdk/gdkkeysyms.h>
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
 #include <gtk/gtkprivate.h>
 #endif
 
@@ -156,7 +156,7 @@ static int    is_parent_grab_leave(GdkEventCrossing *aEvent);
 static void GetBrandName(nsXPIDLString& brandName);
 
 /* callbacks from widgets */
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
 static gboolean expose_event_cb           (GtkWidget *widget,
                                            GdkEventExpose *event);
 #else
@@ -302,7 +302,7 @@ protected:
 static inline int32_t
 GetBitmapStride(int32_t width)
 {
-#if defined(MOZ_X11) || defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_X11) || (MOZ_WIDGET_GTK == 2)
   return (width+7)/8;
 #else
   return cairo_format_stride_for_width(CAIRO_FORMAT_A1, width);
@@ -651,7 +651,7 @@ nsWindow::Destroy(void)
         gFocusWindow = nullptr;
     }
 
-#if defined(MOZ_WIDGET_GTK2) && defined(MOZ_X11)
+#if (MOZ_WIDGET_GTK == 2) && defined(MOZ_X11)
     // make sure that we remove ourself as the plugin focus window
     if (gPluginFocusWindow == this) {
         gPluginFocusWindow->LoseNonXEmbedPluginFocus();
@@ -1907,7 +1907,7 @@ gdk_window_flash(GdkWindow *    aGdkWindow,
   GdkGC *      gc = 0;
   GdkColor     white;
 
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
   gdk_window_get_geometry(aGdkWindow,NULL,NULL,&width,&height,NULL);
 #else
   gdk_window_get_geometry(aGdkWindow,NULL,NULL,&width,&height);
@@ -1955,7 +1955,7 @@ gdk_window_flash(GdkWindow *    aGdkWindow,
 #endif // DEBUG
 #endif
 
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
 gboolean
 nsWindow::OnExposeEvent(GdkEventExpose *aEvent)
 #else
@@ -2000,7 +2000,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
             return FALSE;
     }
 
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
     GdkRectangle *rects;
     gint nrects;
     gdk_region_get_rectangles(aEvent->region, &rects, &nrects);
@@ -2020,7 +2020,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 #endif
 
 // GTK3 TODO?
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
     if (nrects > MAX_RECTS_IN_REGION) {
         // Just use the bounding box
         rects[0] = aEvent->area;
@@ -2034,7 +2034,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 
     nsIntRegion region;
   
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
     GdkRectangle *r = rects;
     GdkRectangle *r_end = rects + nrects;
 #else
@@ -2087,7 +2087,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     }
 
     if (region.IsEmpty()) {
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
         g_free(rects);
 #else
         cairo_rectangle_list_destroy(rects);
@@ -2113,7 +2113,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     }
 
     gfxASurface* surf;
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
     surf = GetThebesSurface();
 #else
     surf = GetThebesSurface(cr);
@@ -2210,7 +2210,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     }
 #  ifdef MOZ_HAVE_SHMIMAGE
     if (nsShmImage::UseShm() && MOZ_LIKELY(!mIsDestroyed)) {
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
         mShmImage->Put(mGdkWindow, rects, r_end);
 #else
         mShmImage->Put(mGdkWindow, rects);
@@ -2219,7 +2219,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 #  endif  // MOZ_HAVE_SHMIMAGE
 #endif // MOZ_X11
 
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
     g_free(rects);
 #else
     cairo_rectangle_list_destroy(rects);
@@ -2228,7 +2228,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     listener->DidPaintWindow();
 
     // Synchronously flush any new dirty areas
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
     GdkRegion* dirtyArea = gdk_window_get_update_area(mGdkWindow);
 #else
     cairo_region_t* dirtyArea = gdk_window_get_update_area(mGdkWindow);
@@ -2236,7 +2236,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 
     if (dirtyArea) {
         gdk_window_invalidate_region(mGdkWindow, dirtyArea, false);
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
         gdk_region_destroy(dirtyArea);
 #else
         cairo_region_destroy(dirtyArea);
@@ -2507,7 +2507,7 @@ nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent)
         synthEvent = true;
         XNextEvent (GDK_WINDOW_XDISPLAY(aEvent->window), &xevent);
     }
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
     // if plugins still keeps the focus, get it back
     if (gPluginFocusWindow && gPluginFocusWindow != this) {
         nsRefPtr<nsWindow> kungFuDeathGrip = gPluginFocusWindow;
@@ -2855,7 +2855,7 @@ nsWindow::OnContainerFocusOutEvent(GdkEventFocus *aEvent)
         }
     }
 
-#if defined(MOZ_WIDGET_GTK2) && defined(MOZ_X11)
+#if (MOZ_WIDGET_GTK == 2) && defined(MOZ_X11)
     // plugin lose focus
     if (gPluginFocusWindow) {
         nsRefPtr<nsWindow> kungFuDeathGrip = gPluginFocusWindow;
@@ -3320,7 +3320,7 @@ CreateGdkWindow(GdkWindow *parent, GtkWidget *widget)
     attributes.visual = gtk_widget_get_visual(widget);
     attributes.window_type = GDK_WINDOW_CHILD;
 
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
     attributes_mask |= GDK_WA_COLORMAP;
     attributes.colormap = gtk_widget_get_colormap(widget);
 #endif
@@ -3329,7 +3329,7 @@ CreateGdkWindow(GdkWindow *parent, GtkWidget *widget)
     gdk_window_set_user_data(window, widget);
 
 // GTK3 TODO?
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
     /* set the default pixmap to None so that you don't end up with the
        gtk default which is BlackPixel. */
     gdk_window_set_back_pixmap(window, NULL, FALSE);
@@ -3461,7 +3461,7 @@ nsWindow::Create(nsIWidget        *aParent,
                 // are on a compositing window manager.
                 GdkScreen *screen = gtk_widget_get_screen(mShell);
                 if (gdk_screen_is_composited(screen)) {
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
                     GdkColormap *colormap =
                         gdk_screen_get_rgba_colormap(screen);
                     gtk_widget_set_colormap(mShell, colormap);
@@ -3640,7 +3640,7 @@ nsWindow::Create(nsIWidget        *aParent,
         hierarchy_changed_cb(GTK_WIDGET(mContainer), NULL);
         // Expose, focus, key, and drag events are sent even to GTK_NO_WINDOW
         // widgets.
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
         g_signal_connect(mContainer, "expose_event",
                          G_CALLBACK(expose_event_cb), NULL);
 #else
@@ -3697,7 +3697,7 @@ nsWindow::Create(nsIWidget        *aParent,
     }
 
     if (eventWidget) {
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
         // Don't let GTK mess with the shapes of our GdkWindows
         GTK_PRIVATE_SET_FLAG(eventWidget, GTK_HAS_SHAPE_MASK);
 #endif
@@ -4138,7 +4138,7 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
     if (!mGdkWindow)
         return;
 
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
     GdkRegion *region = gdk_region_new(); // aborts on OOM
     for (uint32_t i = 0; i < newRects->Length(); ++i) {
         const nsIntRect& r = newRects->ElementAt(i);
@@ -4268,7 +4268,7 @@ nsWindow::ApplyTransparencyBitmap()
                       maskPixmap, ShapeSet);
     XFreePixmap(xDisplay, maskPixmap);
 #else
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
     gtk_widget_reset_shapes(mShell);
     GdkBitmap* maskBitmap = gdk_bitmap_create_from_data(gtk_widget_get_window(mShell),
             mTransparencyBitmap,
@@ -4537,7 +4537,7 @@ nsWindow::SetNonXEmbedPluginFocus()
     LOGFOCUS(("\t curFocusWindow=%p\n", curFocusWindow));
 
     GdkWindow* toplevel = gdk_window_get_toplevel(mGdkWindow);
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
     GdkWindow *gdkfocuswin = gdk_window_lookup(curFocusWindow);
 #else
     GdkWindow *gdkfocuswin = gdk_x11_window_lookup_for_display(gdkDisplay,
@@ -4820,7 +4820,7 @@ is_mouse_in_window (GdkWindow* aWindow, gdouble aMouseX, gdouble aMouseY)
         window = gdk_window_get_parent(window);
     }
 
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
     gdk_drawable_get_size(aWindow, &w, &h);
 #else
     w = gdk_window_get_width(aWindow);
@@ -5024,7 +5024,7 @@ get_gtk_cursor(nsCursor aCursor)
 
 // gtk callbacks
 
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
 static gboolean
 expose_event_cb(GtkWidget *widget, GdkEventExpose *event)
 {
@@ -5331,7 +5331,7 @@ plugin_window_filter_func(GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data)
                     break;
                 xeventWindow = xevent->xreparent.window;
             }
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
             plugin_window = gdk_window_lookup(xeventWindow);
 #else
             plugin_window = gdk_x11_window_lookup_for_display(
@@ -5342,7 +5342,7 @@ plugin_window_filter_func(GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data)
                     get_gtk_widget_for_gdk_window(plugin_window);
 
 // TODO GTK3
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
                 if (GTK_IS_XTBIN(widget)) {
                     nswindow->SetPluginType(nsWindow::PluginType_NONXEMBED);
                     break;
@@ -5709,7 +5709,7 @@ get_inner_gdk_window (GdkWindow *aWindow,
          child = g_list_previous(child)) {
         GdkWindow *childWindow = (GdkWindow *) child->data;
         if (get_window_for_gdk_window(childWindow)) {
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
             gdk_window_get_geometry(childWindow, &cx, &cy, &cw, &ch, NULL);
 #else
             gdk_window_get_geometry(childWindow, &cx, &cy, &cw, &ch);
@@ -5909,7 +5909,7 @@ nsWindow::GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState)
     return NS_OK;
 }
 
-#if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_X11) && (MOZ_WIDGET_GTK == 2)
 /* static */ already_AddRefed<gfxASurface>
 nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
                                    const nsIntSize& aSize)
@@ -5951,7 +5951,7 @@ nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
 }
 #endif
 
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
 TemporaryRef<DrawTarget>
 nsWindow::StartRemoteDrawing()
 {
@@ -5971,7 +5971,7 @@ nsWindow::StartRemoteDrawing()
 
 // return the gfxASurface for rendering to this widget
 gfxASurface*
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
 nsWindow::GetThebesSurface()
 #else
 nsWindow::GetThebesSurface(cairo_t *cr)
@@ -5980,7 +5980,7 @@ nsWindow::GetThebesSurface(cairo_t *cr)
     if (!mGdkWindow)
         return nullptr;
 
-#if !defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK != 2)
     cairo_surface_t *surf = cairo_get_target(cr);
     if (cairo_surface_status(surf) != CAIRO_STATUS_SUCCESS) {
       NS_NOTREACHED("Missing cairo target?");
@@ -5991,7 +5991,7 @@ nsWindow::GetThebesSurface(cairo_t *cr)
 #ifdef MOZ_X11
     gint width, height;
 
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
     gdk_drawable_get_size(GDK_DRAWABLE(mGdkWindow), &width, &height);
 #else
     width = gdk_window_get_width(mGdkWindow);
@@ -6021,7 +6021,7 @@ nsWindow::GetThebesSurface(cairo_t *cr)
     if (!usingShm)
 #  endif  // MOZ_HAVE_SHMIMAGE
 
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
     mThebesSurface = new gfxXlibSurface
         (GDK_WINDOW_XDISPLAY(mGdkWindow),
          gdk_x11_window_get_xid(mGdkWindow),
