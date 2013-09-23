@@ -934,6 +934,12 @@ void nsNSSComponent::setValidationOptions()
                            ocspMode_FailureIsVerificationFailure
                            : ocspMode_FailureIsNotAVerificationFailure);
 
+  int OCSPTimeoutSeconds = 3;
+  if (ocspRequired || anyFreshRequired) {
+    OCSPTimeoutSeconds = 10;
+  }
+  CERT_SetOCSPTimeout(OCSPTimeoutSeconds);
+
   mDefaultCertVerifier = new CertVerifier(
       aiaDownloadEnabled ? 
         CertVerifier::missing_cert_download_on : CertVerifier::missing_cert_download_off,
