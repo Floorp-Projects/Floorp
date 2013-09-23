@@ -6,13 +6,13 @@
 #ifndef nsHttpPipeline_h__
 #define nsHttpPipeline_h__
 
-#include "nsHttp.h"
 #include "nsAHttpConnection.h"
 #include "nsAHttpTransaction.h"
-#include "nsIInputStream.h"
-#include "nsIOutputStream.h"
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
+
+class nsIInputStream;
+class nsIOutputStream;
 
 class nsHttpPipeline : public nsAHttpConnection
                      , public nsAHttpTransaction

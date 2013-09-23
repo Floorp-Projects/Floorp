@@ -8,7 +8,8 @@
 #include "HttpLog.h"
 
 #include "nsHttpHeaderArray.h"
-#include "nsHttp.h"
+#include "nsURLHelper.h"
+#include "nsIHttpHeaderVisitor.h"
 
 //-----------------------------------------------------------------------------
 // nsHttpHeaderArray <public>

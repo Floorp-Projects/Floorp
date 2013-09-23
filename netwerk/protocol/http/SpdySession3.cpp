@@ -8,16 +8,15 @@
 #include "HttpLog.h"
 
 #include "mozilla/Telemetry.h"
-#include "mozilla/Preferences.h"
 #include "nsHttp.h"
 #include "nsHttpHandler.h"
-#include "nsHttpConnection.h"
 #include "nsILoadGroup.h"
 #include "prprf.h"
 #include "prnetdb.h"
 #include "SpdyPush3.h"
 #include "SpdySession3.h"
 #include "SpdyStream3.h"
+#include "PSpdyPush3.h"
 
 #include <algorithm>
 

@@ -9,10 +9,9 @@
 
 #include "nsHttp.h"
 #include "nsTArray.h"
-#include "nsIHttpChannel.h"
-#include "nsIHttpHeaderVisitor.h"
-#include "nsCOMPtr.h"
 #include "nsString.h"
+
+class nsIHttpHeaderVisitor;
 
 class nsHttpHeaderArray
 {

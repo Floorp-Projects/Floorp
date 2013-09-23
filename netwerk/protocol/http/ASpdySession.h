@@ -8,7 +8,6 @@
 #define mozilla_net_ASpdySession_h
 
 #include "nsAHttpTransaction.h"
-#include "nsAHttpConnection.h"
 #include "prinrval.h"
 #include "nsString.h"
 

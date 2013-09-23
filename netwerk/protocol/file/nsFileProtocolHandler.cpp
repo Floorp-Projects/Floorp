@@ -6,13 +6,8 @@
 
 #include "nsFileProtocolHandler.h"
 #include "nsFileChannel.h"
-#include "nsInputStreamChannel.h"
 #include "nsStandardURL.h"
 #include "nsURLHelper.h"
-#include "nsNetCID.h"
-
-#include "nsIServiceManager.h"
-#include "nsIURL.h"
 
 #include "nsNetUtil.h"
 

@@ -6,10 +6,15 @@
 #ifndef mozilla_net_SpdyStream3_h
 #define mozilla_net_SpdyStream3_h
 
-#include "mozilla/Attributes.h"
 #include "nsAHttpTransaction.h"
+#include "zlib.h"
+
+class nsISocketTransport;
 
 namespace mozilla { namespace net {
+
+class SpdySession3;
+class SpdyPushedStream3;
 
 class SpdyStream3 : public nsAHttpSegmentReader
                   , public nsAHttpSegmentWriter

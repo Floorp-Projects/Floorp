@@ -8,16 +8,11 @@
 #ifndef mozilla_net_HttpChannelCallbackWrapper_h
 #define mozilla_net_HttpChannelCallbackWrapper_h
 
-#include "nsHttp.h"
-#include "mozilla/net/NeckoCommon.h"
-#include "PHttpChannelParams.h"
-#include "nsIParentChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIChannelEventSink.h"
 #include "nsIRedirectResultListener.h"
-#include "nsIProgressEventSink.h"
 
-class nsICacheEntryDescriptor;
+class nsIParentChannel;
 
 namespace mozilla {
 namespace net {

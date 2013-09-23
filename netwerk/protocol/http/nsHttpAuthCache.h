@@ -6,16 +6,14 @@
 #ifndef nsHttpAuthCache_h__
 #define nsHttpAuthCache_h__
 
-#include "nsHttp.h"
 #include "nsError.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
-#include "nsAString.h"
-#include "nsString.h"
 #include "nsCOMPtr.h"
 #include "plhash.h"
-#include "nsCRT.h"
 #include "nsIObserver.h"
+
+class nsCString;
 
 struct nsHttpAuthPath {
     struct nsHttpAuthPath *mNext;
