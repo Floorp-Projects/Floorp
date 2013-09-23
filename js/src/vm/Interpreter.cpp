@@ -60,17 +60,6 @@ using namespace js::types;
 using mozilla::DebugOnly;
 using mozilla::PodCopy;
 
-/* Some objects (e.g., With) delegate 'this' to another object. */
-static inline JSObject *
-CallThisObjectHook(JSContext *cx, HandleObject obj, Value *argv)
-{
-    JSObject *thisp = JSObject::thisObject(cx, obj);
-    if (!thisp)
-        return NULL;
-    argv[-1].setObject(*thisp);
-    return thisp;
-}
-
 /*
  * Note: when Clang 3.2 (32-bit) inlines the two functions below in Interpret,
  * the conservative stack scanner leaks a ton of memory and this negatively
@@ -1913,7 +1902,7 @@ END_CASE(JSOP_BINDGNAME)
 
 BEGIN_CASE(JSOP_BINDINTRINSIC)
     PUSH_OBJECT(*cx->global()->intrinsicsHolder());
-END_CASE(JSOP_BINDGNAME)
+END_CASE(JSOP_BINDINTRINSIC)
 
 BEGIN_CASE(JSOP_BINDNAME)
 {
@@ -3363,7 +3352,7 @@ default:
 
             switch (tn->kind) {
               case JSTRY_CATCH:
-                  JS_ASSERT(*regs.pc == JSOP_ENTERBLOCK);
+                JS_ASSERT(*regs.pc == JSOP_ENTERBLOCK || *regs.pc == JSOP_EXCEPTION);
 
                 /* Catch cannot intercept the closing of a generator. */
                   if (JS_UNLIKELY(cx->getPendingException().isMagic(JS_GENERATOR_CLOSING)))

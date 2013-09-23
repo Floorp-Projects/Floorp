@@ -10,12 +10,19 @@
 #include "nsAutoPtr.h"
 #include <X11/Xlib.h>
 
+namespace mozilla {
+namespace gfx {
+  class DrawTarget;
+}
+}
+
 class gfxASurface;
 class gfxXlibSurface;
 class gfxContext;
 struct nsIntRect;
 struct nsIntPoint;
 struct nsIntSize;
+typedef struct _cairo cairo_t;
 
 /**
  * This class lets us take code that draws into an X drawable and lets us
@@ -89,10 +96,19 @@ public:
 
 private:
     bool DrawDirect(gfxContext *ctx, nsIntSize bounds,
-                      uint32_t flags, Screen *screen, Visual *visual);
+                    uint32_t flags, Screen *screen, Visual *visual);
+
+    bool DrawCairo(cairo_t* cr, nsIntSize size,
+                   uint32_t flags, Screen *screen, Visual *visual);
+
+    void DrawFallback(mozilla::gfx::DrawTarget* dt, gfxContext* ctx,
+                      gfxASurface* aSurface, nsIntSize& size,
+                      nsIntRect& drawingRect, bool canDrawOverBackground,
+                      uint32_t flags, Screen* screen, Visual* visual,
+                      DrawOutput* result);
 
     bool DrawOntoTempSurface(gfxXlibSurface *tempXlibSurface,
-                               nsIntPoint offset);
+                             nsIntPoint offset);
 
 };
 

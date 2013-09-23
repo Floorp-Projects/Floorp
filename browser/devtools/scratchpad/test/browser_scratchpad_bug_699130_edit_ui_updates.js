@@ -5,7 +5,7 @@
 "use strict";
 
 let tempScope = {};
-Cu.import("resource:///modules/source-editor.jsm", tempScope);
+Cu.import("resource:///modules/devtools/sourceeditor/source-editor.jsm", tempScope);
 let SourceEditor = tempScope.SourceEditor;
 
 function test()
@@ -51,9 +51,9 @@ function runTests()
 
   let menuPopup = editMenu.menupopup;
   ok(menuPopup, "the Edit menupopup");
-  let cutItem = doc.getElementById("se-menu-cut");
+  let cutItem = doc.getElementById("menu_cut");
   ok(cutItem, "the Cut menuitem");
-  let pasteItem = doc.getElementById("se-menu-paste");
+  let pasteItem = doc.getElementById("menu_paste");
   ok(pasteItem, "the Paste menuitem");
 
   let anchor = doc.documentElement;
@@ -109,7 +109,7 @@ function runTests()
   };
 
   let firstHide = function() {
-    sp.selectRange(0, 10);
+    sp.editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 10 });
     openMenu(11, 11, showAfterSelect);
   };
 
@@ -119,9 +119,9 @@ function runTests()
   };
 
   let hideAfterSelect = function() {
-    sp.editor.addEventListener(SourceEditor.EVENTS.TEXT_CHANGED, onCut);
+    sp.editor.on("change", onCut);
     waitForFocus(function () {
-      let selectedText = sp.editor.getSelectedText();
+      let selectedText = sp.editor.getSelection();
       ok(selectedText.length > 0, "non-empty selected text will be cut");
 
       EventUtils.synthesizeKey("x", {accelKey: true}, gScratchpadWindow);
@@ -129,7 +129,7 @@ function runTests()
   };
 
   let onCut = function() {
-    sp.editor.removeEventListener(SourceEditor.EVENTS.TEXT_CHANGED, onCut);
+    sp.editor.off("change", onCut);
     openMenu(12, 12, showAfterCut);
   };
 
@@ -140,14 +140,14 @@ function runTests()
   };
 
   let hideAfterCut = function() {
-    sp.editor.addEventListener(SourceEditor.EVENTS.TEXT_CHANGED, onPaste);
+    sp.editor.on("change", onPaste);
     waitForFocus(function () {
       EventUtils.synthesizeKey("v", {accelKey: true}, gScratchpadWindow);
     }, gScratchpadWindow);
   };
 
   let onPaste = function() {
-    sp.editor.removeEventListener(SourceEditor.EVENTS.TEXT_CHANGED, onPaste);
+    sp.editor.off("change", onPaste);
     openMenu(13, 13, showAfterPaste);
   };
 
@@ -174,9 +174,9 @@ function runTests()
 
     menuPopup = doc.getElementById("scratchpad-text-popup");
     ok(menuPopup, "the context menupopup");
-    cutItem = doc.getElementById("se-cMenu-cut");
+    cutItem = doc.getElementById("cMenu_cut");
     ok(cutItem, "the Cut menuitem");
-    pasteItem = doc.getElementById("se-cMenu-paste");
+    pasteItem = doc.getElementById("cMenu_paste");
     ok(pasteItem, "the Paste menuitem");
 
     sp.setText("bug 699130: hello world! (context menu)");

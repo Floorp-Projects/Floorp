@@ -14,6 +14,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 MODULE = 'xpcom'
 
 EXPORTS += [
+    'MainThreadUtils.h',
     'nsArrayEnumerator.h',
     'nsArrayUtils.h',
     'nsBaseHashtable.h',
@@ -97,3 +98,7 @@ CPP_SOURCES += [
 ]
 
 LIBRARY_NAME = 'xpcomglue_s'
+
+SDK_LIBRARY = [
+    "%s%s.%s" % (CONFIG['LIB_PREFIX'], 'xpcomglue_s', CONFIG['LIB_SUFFIX']),
+]

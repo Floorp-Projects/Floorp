@@ -63,7 +63,7 @@ nsShutdownThread::BlockingShutdown(nsIThread *aThread)
 
   {
     MutexAutoLock lock(st->mLock);
-    rv = aThread->Dispatch(st, NS_DISPATCH_NORMAL);
+    rv = workerThread->Dispatch(st, NS_DISPATCH_NORMAL);
     if (NS_FAILED(rv)) {
       NS_WARNING(
         "Dispatching event in nsShutdownThread::BlockingShutdown failed!");

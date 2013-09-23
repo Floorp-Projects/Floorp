@@ -9,13 +9,13 @@
 interface nsIApplicationCache;
 interface nsIFile;
 interface nsIURI;
-interface nsILoadContext;
+interface nsILoadContextInfo;
 
 /**
  * The application cache service manages the set of application cache
  * groups.
  */
-[scriptable, uuid(9b5b2cde-d5dd-48d3-87f8-8e8b776952a8)]
+[scriptable, uuid(03b41c3d-0816-4134-8b2e-4f5afbdb1f06)]
 interface nsIApplicationCacheService : nsISupports
 {
     /**
@@ -23,7 +23,7 @@ interface nsIApplicationCacheService : nsISupports
      * URL and the given load context.
      */
     ACString buildGroupID(in nsIURI aManifestURL,
-                          in nsILoadContext aLoadContext);
+                          in nsILoadContextInfo aLoadContextInfo);
 
     /**
      * Same as buildGroupID method, just doesn't require load context.
@@ -87,7 +87,7 @@ interface nsIApplicationCacheService : nsISupports
      * Try to find the best application cache to serve a resource.
      */
     nsIApplicationCache chooseApplicationCache(in ACString key,
-                                               [optional] in nsILoadContext loadContext);
+                                               [optional] in nsILoadContextInfo aLoadContextInfo);
 
     /**
      * Flags the key as being opportunistically cached.

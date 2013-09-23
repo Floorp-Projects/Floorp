@@ -41,13 +41,14 @@ private:
 
   nsresult InitInternal(int32_t aAudioAgentType,
                         nsIAudioChannelAgentCallback* aCallback,
-                        bool aUseWeakRef);
+                        bool aUseWeakRef, bool aWithVideo=false);
 
   nsCOMPtr<nsIAudioChannelAgentCallback> mCallback;
   nsWeakPtr mWeakCallback;
   int32_t mAudioChannelType;
   bool mIsRegToService;
   bool mVisible;
+  bool mWithVideo;
 };
 
 } // namespace dom

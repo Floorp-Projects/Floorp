@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIBoxObject.idl"
+#include "nsISupports.idl"
 
 interface nsIDOMElement;
 
@@ -44,6 +44,8 @@ interface nsIScrollBoxObject : nsISupports
 };
 
 %{C++
+class nsIBoxObject;
+
 nsresult
 NS_NewScrollBoxObject(nsIBoxObject** aResult);
 

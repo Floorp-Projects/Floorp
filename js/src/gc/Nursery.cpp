@@ -11,6 +11,7 @@
 
 #include "jscompartment.h"
 #include "jsgc.h"
+#include "jsinfer.h"
 #include "jsutil.h"
 
 #include "gc/GCInternals.h"
@@ -349,12 +350,38 @@ js::Nursery::forwardBufferPointer(HeapSlot **pSlotsElems)
     JS_ASSERT(!isInside(*pSlotsElems));
 }
 
+static void
+MaybeInvalidateScriptUsedWithNew(JSRuntime *rt, types::TypeObject *type)
+{
+    types::TypeNewScript *newScript = type->newScript();
+    if (!newScript)
+        return;
+
+    JSScript *script = newScript->fun->nonLazyScript();
+    if (script && script->hasIonScript()) {
+        for (ContextIter cx(rt); !cx.done(); cx.next())
+            jit::Invalidate(cx, script);
+    }
+}
+
 void
 js::Nursery::collectToFixedPoint(MinorCollectionTracer *trc)
 {
     for (RelocationOverlay *p = trc->head; p; p = p->next()) {
         JSObject *obj = static_cast<JSObject*>(p->forwardingAddress());
         traceObject(trc, obj);
+
+        /*
+         * Increment tenure count and recompile the script for pre-tenuring if
+         * long-lived. Attempt to distinguish between tenuring because the
+         * object is long lived and tenuring while the nursery is still
+         * smaller than the working set size.
+         */
+        if (isFullyGrown() && !obj->hasLazyType() && obj->type()->hasNewScript() &&
+            obj->type()->incrementTenureCount())
+        {
+            MaybeInvalidateScriptUsedWithNew(trc->runtime, obj->type());
+        }
     }
 }
 

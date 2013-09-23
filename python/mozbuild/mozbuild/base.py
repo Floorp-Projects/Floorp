@@ -25,6 +25,8 @@ from .mozconfig import (
     MozconfigLoadException,
     MozconfigLoader,
 )
+from .virtualenv import VirtualenvManager
+
 
 def ancestors(path):
     """Emit the parent directories of a path."""
@@ -86,6 +88,7 @@ class MozbuildObject(ProcessExecutionMixin):
         self._mozconfig = None
         self._config_guess_output = None
         self._config_environment = None
+        self._virtualenv_manager = None
 
     @classmethod
     def from_environment(cls, cwd=None, detect_virtualenv_mozinfo=True):
@@ -205,6 +208,16 @@ class MozbuildObject(ProcessExecutionMixin):
                 self.topsrcdir, self.mozconfig, default='obj-@CONFIG_GUESS@')
 
         return self._topobjdir
+
+    @property
+    def virtualenv_manager(self):
+        if self._virtualenv_manager is None:
+            self._virtualenv_manager = VirtualenvManager(self.topsrcdir,
+                self.topobjdir, os.path.join(self.topobjdir, '_virtualenv'),
+                sys.stdout, os.path.join(self.topsrcdir, 'build',
+                'virtualenv_packages.txt'))
+
+        return self._virtualenv_manager
 
     @property
     def mozconfig(self):
@@ -475,6 +488,10 @@ class MozbuildObject(ProcessExecutionMixin):
         return cls(self.topsrcdir, self.settings, self.log_manager,
             topobjdir=self.topobjdir)
 
+    def _activate_virtualenv(self):
+        self.virtualenv_manager.ensure()
+        self.virtualenv_manager.activate()
+
 
 class MachCommandBase(MozbuildObject):
     """Base class for mach command providers that wish to be MozbuildObjects.
@@ -517,12 +534,26 @@ class MachCommandConditions(object):
     """A series of commonly used condition functions which can be applied to
     mach commands with providers deriving from MachCommandBase.
     """
+    @staticmethod
+    def is_firefox(cls):
+        """Must have a Firefox build."""
+        if hasattr(cls, 'substs'):
+            return cls.substs.get('MOZ_BUILD_APP') == 'browser'
+        return False
 
     @staticmethod
     def is_b2g(cls):
         """Must have a Boot to Gecko build."""
         if hasattr(cls, 'substs'):
             return cls.substs.get('MOZ_WIDGET_TOOLKIT') == 'gonk'
+        return False
+
+    @staticmethod
+    def is_b2g_desktop(cls):
+        """Must have a Boot to Gecko desktop build."""
+        if hasattr(cls, 'substs'):
+            return cls.substs.get('MOZ_BUILD_APP') == 'b2g' and \
+                   cls.substs.get('MOZ_WIDGET_TOOLKIT') != 'gonk'
         return False
 
 

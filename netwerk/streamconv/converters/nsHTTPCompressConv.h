@@ -7,10 +7,11 @@
 #define	__nsHTTPCompressConv__h__	1
 
 #include "nsIStreamConverter.h"
-#include "nsIStringStream.h"
 #include "nsCOMPtr.h"
 
 #include "zlib.h"
+
+class nsIStringInputStream;
 
 #define NS_HTTPCOMPRESSCONVERTER_CID                \
 {                                                   \

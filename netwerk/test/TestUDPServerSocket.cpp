@@ -9,6 +9,7 @@
 #include "nsISocketTransport.h"
 #include "nsIOutputStream.h"
 #include "nsIInputStream.h"
+#include "nsINetAddr.h"
 
 #define UDP_PORT 1234
 #define REQUEST  0x68656c6f

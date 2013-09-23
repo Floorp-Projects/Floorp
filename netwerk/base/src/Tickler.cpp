@@ -3,14 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "Tickler.h"
+
+#ifdef MOZ_USE_WIFI_TICKLER
 #include "nsComponentManagerUtils.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsServiceManagerUtils.h"
+#include "nsThreadUtils.h"
 #include "prnetdb.h"
-#include "Tickler.h"
-
-#ifdef MOZ_USE_WIFI_TICKLER
 
 #include "AndroidBridge.h"
 

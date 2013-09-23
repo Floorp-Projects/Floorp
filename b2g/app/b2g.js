@@ -25,6 +25,8 @@ pref("browser.cache.disk.smart_size.first_run", false);
 pref("browser.cache.memory.enable", true);
 pref("browser.cache.memory.capacity", 1024); // kilobytes
 
+pref("browser.cache.memory_limit", 2048); // 2 MB
+
 /* image cache prefs */
 pref("image.cache.size", 1048576); // bytes
 pref("image.high_quality_downscaling.enabled", false);
@@ -390,6 +392,9 @@ pref("dom.sms.enabled", true);
 pref("dom.sms.strict7BitEncoding", false); // Disabled by default.
 pref("dom.sms.requestStatusReport", true); // Enabled by default.
 pref("dom.mms.requestStatusReport", true); // Enabled by default.
+
+//The waiting time in network manager.
+pref("network.gonk.ms-release-mms-connection", 30000);
 
 // WebContacts
 pref("dom.mozContacts.enabled", true);

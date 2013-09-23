@@ -263,6 +263,7 @@
 @BINPATH@/components/mozfind.xpt
 @BINPATH@/components/necko_about.xpt
 @BINPATH@/components/necko_cache.xpt
+@BINPATH@/components/necko_cache2.xpt
 @BINPATH@/components/necko_cookie.xpt
 @BINPATH@/components/necko_dns.xpt
 @BINPATH@/components/necko_file.xpt
@@ -375,6 +376,9 @@
 @BINPATH@/components/crypto-SDR.js
 @BINPATH@/components/jsconsole-clhandler.manifest
 @BINPATH@/components/jsconsole-clhandler.js
+@BINPATH@/components/webvtt.xpt
+@BINPATH@/components/WebVTT.manifest
+@BINPATH@/components/WebVTTParserWrapper.js
 #ifdef MOZ_GTK
 @BINPATH@/components/nsFilePicker.manifest
 @BINPATH@/components/nsFilePicker.js
@@ -793,4 +797,8 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/metro/components
 @BINPATH@/metro/defaults
 @BINPATH@/metro/modules
+#endif
+
+#ifdef MOZ_ASAN
+@BINPATH@/llvm-symbolizer
 #endif

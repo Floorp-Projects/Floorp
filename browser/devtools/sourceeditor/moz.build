@@ -6,7 +6,10 @@
 
 TEST_DIRS += ['test']
 
+JS_MODULES_PATH = 'modules/devtools/sourceeditor'
+
 EXTRA_JS_MODULES += [
+    'editor.js',
     'source-editor-orion.jsm',
     'source-editor-ui.jsm',
     'source-editor.jsm',

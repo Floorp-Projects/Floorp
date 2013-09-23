@@ -20,14 +20,11 @@
 #include "nsNetUtil.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "netCore.h"
 #include "plstr.h"
-#include "prnetdb.h"
 #include "prerr.h"
 #include "NetworkActivityMonitor.h"
 #include "mozilla/VisualEventTracer.h"
-
-#include "nsIServiceManager.h"
+#include "nsThreadUtils.h"
 #include "nsISocketProviderService.h"
 #include "nsISocketProvider.h"
 #include "nsISSLSocketControl.h"
@@ -35,6 +32,10 @@
 #include "nsIPipe.h"
 #include "nsIProgrammingLanguage.h"
 #include "nsIClassInfoImpl.h"
+#include "nsURLHelper.h"
+#include "nsIDNSService.h"
+#include "nsIDNSRecord.h"
+#include "nsICancelable.h"
 #include <algorithm>
 
 #if defined(XP_WIN)

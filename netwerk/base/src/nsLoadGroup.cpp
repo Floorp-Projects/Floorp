@@ -10,22 +10,17 @@
 
 #include "nsArrayEnumerator.h"
 #include "nsCOMArray.h"
-#include "nsEnumeratorUtils.h"
-#include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
-#include "nsIURI.h"
 #include "prlog.h"
-#include "nsCRT.h"
-#include "netCore.h"
-#include "nsXPIDLString.h"
-#include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsIHttpChannelInternal.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Telemetry.h"
 #include "nsAutoPtr.h"
 #include "mozilla/net/PSpdyPush3.h"
+#include "nsITimedChannel.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIRequestObserver.h"
 
 using namespace mozilla;
 

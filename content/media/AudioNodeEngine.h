@@ -15,6 +15,7 @@ namespace mozilla {
 namespace dom {
 struct ThreeDPoint;
 class AudioParamTimeline;
+class DelayNodeEngine;
 }
 
 class AudioNodeStream;
@@ -205,6 +206,8 @@ public:
     MOZ_ASSERT(!mNode, "The node reference must be already cleared");
     MOZ_COUNT_DTOR(AudioNodeEngine);
   }
+
+  virtual dom::DelayNodeEngine* AsDelayNodeEngine() { return nullptr; }
 
   virtual void SetStreamTimeParameter(uint32_t aIndex, TrackTicks aParam)
   {

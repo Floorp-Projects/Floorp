@@ -15,6 +15,7 @@ CPP_SOURCES += [
     'APZCCallbackHelper.cpp',
     'GfxDriverInfo.cpp',
     'GfxInfoBase.cpp',
+    'GfxInfoCollector.cpp',
     'GfxInfoWebGL.cpp',
     'InputData.cpp',
     'PuppetWidget.cpp',

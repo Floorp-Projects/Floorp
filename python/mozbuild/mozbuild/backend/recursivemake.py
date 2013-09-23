@@ -9,16 +9,18 @@ import logging
 import os
 import types
 
+from collections import namedtuple
+
 from mozpack.copier import FilePurger
 from mozpack.manifests import (
     InstallManifest,
-    PurgeManifest,
 )
 import mozpack.path as mozpath
 
 from .common import CommonBackend
 from ..frontend.data import (
     ConfigFileSubstitution,
+    Defines,
     DirectoryTraversal,
     Exports,
     GeneratedEventWebIDLFile,
@@ -35,6 +37,7 @@ from ..frontend.data import (
     WebIDLFile,
 )
 from ..util import FileAvoidWrite
+from ..makeutil import Makefile
 
 
 class BackendMakeFile(object):
@@ -66,6 +69,7 @@ class BackendMakeFile(object):
     def __init__(self, srcdir, objdir, environment):
         self.srcdir = srcdir
         self.objdir = objdir
+        self.relobjdir = objdir[len(environment.topobjdir) + 1:]
         self.environment = environment
         self.path = os.path.join(objdir, 'backend.mk')
 
@@ -105,6 +109,135 @@ class BackendMakeFile(object):
                 'xpidl\n')
 
         return self.fh.close()
+
+
+class RecursiveMakeTraversal(object):
+    """
+    Helper class to keep track of how the "traditional" recursive make backend
+    recurses subdirectories. This is useful until all adhoc rules are removed
+    from Makefiles.
+
+    Each directory may have one or more types of subdirectories:
+        - parallel
+        - static
+        - (normal) dirs
+        - tests
+        - tools
+
+    The "traditional" recursive make backend recurses through those by first
+    building the current directory, followed by parallel directories (in
+    parallel), then static directories, dirs, tests and tools (all
+    sequentially).
+    """
+    SubDirectoryCategories = ['parallel', 'static', 'dirs', 'tests', 'tools']
+    SubDirectoriesTuple = namedtuple('SubDirectories', SubDirectoryCategories)
+    class SubDirectories(SubDirectoriesTuple):
+        def __new__(self):
+            return RecursiveMakeTraversal.SubDirectoriesTuple.__new__(self, [], [], [], [], [])
+
+    def __init__(self):
+        self._traversal = {}
+
+    def add(self, dir, **kargs):
+        """
+        Function signature is, in fact:
+            def add(self, dir, parallel=[], static=[], dirs=[],
+                               tests=[], tools=[])
+        but it's done with **kargs to avoid repetitive code.
+
+        Adds a directory to traversal, registering its subdirectories,
+        sorted by categories. If the directory was already added to
+        traversal, adds the new subdirectories to the already known lists.
+        """
+        subdirs = self._traversal.setdefault(dir, self.SubDirectories())
+        for key, value in kargs.items():
+            assert(key in self.SubDirectoryCategories)
+            getattr(subdirs, key).extend(value)
+
+    @staticmethod
+    def default_filter(current, subdirs):
+        """
+        Default filter for use with compute_dependencies and traverse.
+        """
+        return current, subdirs.parallel, \
+               subdirs.static + subdirs.dirs + subdirs.tests + subdirs.tools
+
+    def call_filter(self, current, filter):
+        """
+        Helper function to call a filter from compute_dependencies and
+        traverse.
+        """
+        return filter(current, self._traversal.get(current,
+            self.SubDirectories()))
+
+    def compute_dependencies(self, filter=None):
+        """
+        Compute make dependencies corresponding to the registered directory
+        traversal.
+
+        filter is a function with the following signature:
+            def filter(current, subdirs)
+        where current is the directory being traversed, and subdirs the
+        SubDirectories instance corresponding to it.
+        The filter function returns a tuple (filtered_current, filtered_parallel,
+        filtered_dirs) where filtered_current is either current or None if
+        the current directory is to be skipped, and filtered_parallel and
+        filtered_dirs are lists of parallel directories and sequential
+        directories, which can be rearranged from whatever is given in the
+        SubDirectories members.
+
+        The default filter corresponds to a default recursive traversal.
+        """
+        filter = filter or self.default_filter
+
+        deps = {}
+
+        def recurse(start_node, prev_nodes=None):
+            current, parallel, sequential = self.call_filter(start_node, filter)
+            if current is not None:
+                if start_node != '':
+                    deps[start_node] = prev_nodes
+                prev_nodes = (start_node,)
+            if not start_node in self._traversal:
+                return prev_nodes
+            parallel_nodes = []
+            for node in parallel:
+                nodes = recurse(node, prev_nodes)
+                if nodes != ('',):
+                    parallel_nodes.extend(nodes)
+            if parallel_nodes:
+                prev_nodes = tuple(parallel_nodes)
+            for dir in sequential:
+                prev_nodes = recurse(dir, prev_nodes)
+            return prev_nodes
+
+        return recurse(''), deps
+
+    def traverse(self, start, filter=None):
+        """
+        Iterate over the filtered subdirectories, following the traditional
+        make traversal order.
+        """
+        if filter is None:
+            filter = self.default_filter
+
+        current, parallel, sequential = self.call_filter(start, filter)
+        if current is not None:
+            yield start
+        if not start in self._traversal:
+            return
+        for node in parallel:
+            for n in self.traverse(node, filter):
+                yield n
+        for dir in sequential:
+            for d in self.traverse(dir, filter):
+                yield d
+
+    def get_subdirs(self, dir):
+        """
+        Returns all direct subdirectories under the given directory.
+        """
+        return self._traversal.get(dir, self.SubDirectories())
 
 
 class RecursiveMakeBackend(CommonBackend):
@@ -147,19 +280,24 @@ class RecursiveMakeBackend(CommonBackend):
         self.backend_input_files.add(os.path.join(self.environment.topobjdir,
             'config', 'autoconf.mk'))
 
-        self._purge_manifests = dict(
-            dist_bin=PurgeManifest(relpath='dist/bin'),
-            dist_private=PurgeManifest(relpath='dist/private'),
-            dist_public=PurgeManifest(relpath='dist/public'),
-            dist_sdk=PurgeManifest(relpath='dist/sdk'),
-            tests=PurgeManifest(relpath='_tests'),
-            xpidl=PurgeManifest(relpath='config/makefiles/xpidl'),
-        )
+        self._install_manifests = {
+            k: InstallManifest() for k in [
+                'dist_bin',
+                'dist_idl',
+                'dist_include',
+                'dist_public',
+                'dist_private',
+                'dist_sdk',
+                'tests',
+                'xpidl',
+            ]}
 
-        self._install_manifests = dict(
-            dist_idl=InstallManifest(),
-            dist_include=InstallManifest(),
-        )
+        self._traversal = RecursiveMakeTraversal()
+
+        derecurse = self.environment.substs.get('MOZ_PSEUDO_DERECURSE', '').split(',')
+        self._parallel_export = False
+        if derecurse != [''] and not 'no-parallel-export' in derecurse:
+            self._parallel_export = True
 
     def _update_from_avoid_write(self, result):
         existed, updated = result
@@ -203,6 +341,15 @@ class RecursiveMakeBackend(CommonBackend):
                         backend_file.write('%s := 1\n' % k)
                 else:
                     backend_file.write('%s := %s\n' % (k, v))
+
+        elif isinstance(obj, Defines):
+            defines = obj.get_defines()
+            if defines:
+                backend_file.write('DEFINES +=')
+                for define in defines:
+                    backend_file.write(' %s' % define)
+                backend_file.write('\n')
+
         elif isinstance(obj, Exports):
             self._process_exports(obj, obj.exports, backend_file)
 
@@ -242,8 +389,120 @@ class RecursiveMakeBackend(CommonBackend):
 
         self._backend_files[obj.srcdir] = backend_file
 
+    def _fill_root_mk(self):
+        """
+        Create two files, root.mk and root-deps.mk, the first containing
+        convenience variables, and the other dependency definitions for a
+        hopefully proper directory traversal.
+        """
+        # Traverse directories in parallel, and skip static dirs
+        def parallel_filter(current, subdirs):
+            all_subdirs = subdirs.parallel + subdirs.dirs + \
+                          subdirs.tests + subdirs.tools
+            # subtiers/*_start and subtiers/*_finish, under subtiers/*, are
+            # kept sequential. Others are all forced parallel.
+            if current.startswith('subtiers/') and all_subdirs and \
+                    all_subdirs[0].startswith('subtiers/'):
+                return current, [], all_subdirs
+            return current, all_subdirs, []
+
+        # Skip static dirs during export traversal, or build everything in
+        # parallel when enabled.
+        def export_filter(current, subdirs):
+            if self._parallel_export:
+                return parallel_filter(current, subdirs)
+            return current, subdirs.parallel, \
+                subdirs.dirs + subdirs.tests + subdirs.tools
+
+        # compile and tools build everything in parallel, but skip precompile.
+        def other_filter(current, subdirs):
+            if current == 'subtiers/precompile':
+                return None, [], []
+            return parallel_filter(current, subdirs)
+
+        # Skip tools dirs during libs traversal
+        def libs_filter(current, subdirs):
+            if current == 'subtiers/precompile':
+                return None, [], []
+            return current, subdirs.parallel, \
+                subdirs.static + subdirs.dirs + subdirs.tests
+
+        # compile and tools tiers use the same traversal as export
+        filters = {
+            'export': export_filter,
+            'compile': other_filter,
+            'libs': libs_filter,
+            'tools': other_filter,
+        }
+
+        root_deps_mk = Makefile()
+
+        # Fill the dependencies for traversal of each tier.
+        for tier, filter in filters.items():
+            main, all_deps = \
+                self._traversal.compute_dependencies(filter)
+            for dir, deps in all_deps.items():
+                rule = root_deps_mk.create_rule(['%s/%s' % (dir, tier)])
+                if deps is not None:
+                    rule.add_dependencies('%s/%s' % (d, tier) for d in deps if d)
+            root_deps_mk.create_rule(['recurse_%s' % tier]) \
+                        .add_dependencies('%s/%s' % (d, tier) for d in main)
+
+        root_mk = Makefile()
+
+        # Fill root.mk with the convenience variables.
+        for tier, filter in filters.items() + [('all', self._traversal.default_filter)]:
+            # Gather filtered subtiers for the given tier
+            all_direct_subdirs = reduce(lambda x, y: x + y,
+                                        self._traversal.get_subdirs(''), [])
+            direct_subdirs = [d for d in all_direct_subdirs
+                              if filter(d, self._traversal.get_subdirs(d))[0]]
+            subtiers = [d.replace('subtiers/', '') for d in direct_subdirs
+                        if d.startswith('subtiers/')]
+
+            if tier != 'all':
+                # Gather filtered directories for the given tier
+                dirs = [d for d in direct_subdirs if not d.startswith('subtiers/')]
+                if dirs:
+                    # For build systems without tiers (js/src), output a list
+                    # of directories for each tier.
+                    root_mk.add_statement('%s_dirs := %s' % (tier, ' '.join(dirs)))
+                    continue
+                if subtiers:
+                    # Output the list of filtered subtiers for the given tier.
+                    root_mk.add_statement('%s_subtiers := %s' % (tier, ' '.join(subtiers)))
+
+            for subtier in subtiers:
+                # subtier_dirs[0] is 'subtiers/%s_start' % subtier, skip it
+                subtier_dirs = list(self._traversal.traverse('subtiers/%s_start' % subtier, filter))[1:]
+                if tier == 'all':
+                    for dir in subtier_dirs:
+                        # Output convenience variables to be able to map directories
+                        # to subtier names from Makefiles.
+                        stamped = dir.replace('/', '_')
+                        root_mk.add_statement('subtier_of_%s := %s' % (stamped, subtier))
+
+                else:
+                    # Output the list of filtered directories for each tier/subtier
+                    # pair.
+                    root_mk.add_statement('%s_subtier_%s := %s' % (tier, subtier, ' '.join(subtier_dirs)))
+
+        root_mk.add_statement('$(call include_deps,root-deps.mk)')
+
+        root = FileAvoidWrite(
+            os.path.join(self.environment.topobjdir, 'root.mk'))
+        root_deps = FileAvoidWrite(
+            os.path.join(self.environment.topobjdir, 'root-deps.mk'))
+        root_mk.dump(root, removal_guard=False)
+        root_deps_mk.dump(root_deps, removal_guard=False)
+        self._update_from_avoid_write(root.close())
+        self._update_from_avoid_write(root_deps.close())
+
+
     def consume_finished(self):
         CommonBackend.consume_finished(self)
+
+        self._fill_root_mk()
 
         for srcdir in sorted(self._backend_files.keys()):
             bf = self._backend_files[srcdir]
@@ -353,47 +612,87 @@ class RecursiveMakeBackend(CommonBackend):
             self.summary.managed_count += 1
 
         self._write_manifests('install', self._install_manifests)
-        self._write_manifests('purge', self._purge_manifests)
 
     def _process_directory_traversal(self, obj, backend_file):
         """Process a data.DirectoryTraversal instance."""
         fh = backend_file.fh
 
+        def relativize(dirs):
+            return [mozpath.normpath(mozpath.join(backend_file.relobjdir, d))
+                for d in dirs]
+
         for tier, dirs in obj.tier_dirs.iteritems():
             fh.write('TIERS += %s\n' % tier)
+            # For pseudo derecursification, subtiers are treated as pseudo
+            # directories, with a special hierarchy:
+            # - subtier1 - subtier1_start - dirA - dirAA
+            # |          |                |      + dirAB
+            # |          |                ...
+            # |          |                + dirB
+            # |          + subtier1_finish
+            # + subtier2 - subtier2_start ...
+            # ...        + subtier2_finish
+            self._traversal.add('subtiers/%s' % tier,
+                                dirs=['subtiers/%s_start' % tier,
+                                      'subtiers/%s_finish' % tier])
 
             if dirs:
                 fh.write('tier_%s_dirs += %s\n' % (tier, ' '.join(dirs)))
                 fh.write('DIRS += $(tier_%s_dirs)\n' % tier)
+                self._traversal.add('subtiers/%s_start' % tier,
+                                    dirs=relativize(dirs))
 
             # tier_static_dirs should have the same keys as tier_dirs.
             if obj.tier_static_dirs[tier]:
                 fh.write('tier_%s_staticdirs += %s\n' % (
                     tier, ' '.join(obj.tier_static_dirs[tier])))
+                self._traversal.add('subtiers/%s_start' % tier,
+                                    static=relativize(obj.tier_static_dirs[tier]))
+
+            self._traversal.add('subtiers/%s_start' % tier)
+            self._traversal.add('subtiers/%s_finish' % tier)
+            self._traversal.add('', dirs=['subtiers/%s' % tier])
 
         if obj.dirs:
             fh.write('DIRS := %s\n' % ' '.join(obj.dirs))
+            self._traversal.add(backend_file.relobjdir, dirs=relativize(obj.dirs))
 
         if obj.parallel_dirs:
             fh.write('PARALLEL_DIRS := %s\n' % ' '.join(obj.parallel_dirs))
+            self._traversal.add(backend_file.relobjdir,
+                                parallel=relativize(obj.parallel_dirs))
 
         if obj.tool_dirs:
             fh.write('TOOL_DIRS := %s\n' % ' '.join(obj.tool_dirs))
+            self._traversal.add(backend_file.relobjdir,
+                                tools=relativize(obj.tool_dirs))
 
         if obj.test_dirs:
             fh.write('TEST_DIRS := %s\n' % ' '.join(obj.test_dirs))
+            self._traversal.add(backend_file.relobjdir,
+                                tests=relativize(obj.test_dirs))
 
         if obj.test_tool_dirs and \
             self.environment.substs.get('ENABLE_TESTS', False):
 
             fh.write('TOOL_DIRS += %s\n' % ' '.join(obj.test_tool_dirs))
+            self._traversal.add(backend_file.relobjdir,
+                                tools=relativize(obj.test_tool_dirs))
 
         if len(obj.external_make_dirs):
             fh.write('DIRS += %s\n' % ' '.join(obj.external_make_dirs))
+            self._traversal.add(backend_file.relobjdir,
+                                dirs=relativize(obj.external_make_dirs))
 
         if len(obj.parallel_external_make_dirs):
             fh.write('PARALLEL_DIRS += %s\n' %
                 ' '.join(obj.parallel_external_make_dirs))
+            self._traversal.add(backend_file.relobjdir,
+                                parallel=relativize(obj.parallel_external_make_dirs))
+
+        # The directory needs to be registered whether subdirectories have been
+        # registered or not.
+        self._traversal.add(backend_file.relobjdir)
 
         if obj.is_tool_dir:
             fh.write('IS_TOOL_DIR := 1\n')
@@ -422,11 +721,11 @@ class RecursiveMakeBackend(CommonBackend):
                 namespace=namespace + subdir)
 
     def _handle_idl_manager(self, manager):
-        build_files = self._purge_manifests['xpidl']
+        build_files = self._install_manifests['xpidl']
 
         for p in ('Makefile', 'backend.mk', '.deps/.mkdir.done',
             'xpt/.mkdir.done'):
-            build_files.add(p)
+            build_files.add_optional_exists(p)
 
         for idl in manager.idls.values():
             self._install_manifests['dist_idl'].add_symlink(idl['source'],
@@ -435,8 +734,10 @@ class RecursiveMakeBackend(CommonBackend):
                 % idl['root'])
 
         for module in manager.modules:
-            build_files.add(mozpath.join('xpt', '%s.xpt' % module))
-            build_files.add(mozpath.join('.deps', '%s.pp' % module))
+            build_files.add_optional_exists(mozpath.join('xpt',
+                '%s.xpt' % module))
+            build_files.add_optional_exists(mozpath.join('.deps',
+                '%s.pp' % module))
 
         modules = manager.modules
         xpt_modules = sorted(modules.keys())
@@ -465,7 +766,7 @@ class RecursiveMakeBackend(CommonBackend):
         # Create dependency for output header so we force regeneration if the
         # header was deleted. This ideally should not be necessary. However,
         # some processes (such as PGO at the time this was implemented) wipe
-        # out dist/include without regard to our install/purge manifests.
+        # out dist/include without regard to our install manifests.
 
         out_path = os.path.join(self.environment.topobjdir, 'config',
             'makefiles', 'xpidl', 'Makefile')

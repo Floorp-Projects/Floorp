@@ -6,7 +6,6 @@
 
 #include "domstubs.idl"
 #include "nsIDocShellTreeItem.idl"
-#include "nsIAtom.idl"
 
 %{ C++
 #include "js/TypeDecls.h"

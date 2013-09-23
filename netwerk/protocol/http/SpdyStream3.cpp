@@ -8,7 +8,6 @@
 #include "HttpLog.h"
 
 #include "mozilla/Telemetry.h"
-#include "nsAlgorithm.h"
 #include "nsHttp.h"
 #include "nsHttpHandler.h"
 #include "nsHttpRequestHead.h"
@@ -18,6 +17,7 @@
 #include "SpdyPush3.h"
 #include "SpdySession3.h"
 #include "SpdyStream3.h"
+#include "PSpdyPush3.h"
 
 #include <algorithm>
 
@@ -1218,7 +1218,7 @@ SpdyStream3::ConvertHeaders(nsACString &aHeadersOut)
         aHeadersOut.Append(nameString);
         aHeadersOut.Append(NS_LITERAL_CSTRING(": "));
 
-        // expand NULL bytes in the value string
+        // expand nullptr bytes in the value string
         for (char *cPtr = valueString.BeginWriting();
              cPtr && cPtr < valueString.EndWriting();
              ++cPtr) {

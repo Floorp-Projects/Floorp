@@ -93,10 +93,6 @@ function isInaccessible(wnd, message) {
   }
 }
 
-function getSubframe(win, i) {
-  return SpecialPowers.unwrap(SpecialPowers.wrap(win)[i]);
-}
-
 ///////////////////////////////////////////////////////////////////////////
 // Functions that require UniversalXPConnect privilege
 ///////////////////////////////////////////////////////////////////////////

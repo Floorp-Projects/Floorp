@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIPrincipal.idl"
 
 interface nsIURI;
 interface nsIDOMNode;
+interface nsIPrincipal;
 
 /**
  * The type of nsIContentPolicy::TYPE_*

@@ -39,9 +39,13 @@ using namespace js::gc;
 
 using mozilla::Atomic;
 using mozilla::DebugOnly;
+using mozilla::NegativeInfinity;
 using mozilla::PodZero;
 using mozilla::PodArrayZero;
+using mozilla::PositiveInfinity;
 using mozilla::ThreadLocal;
+using JS::GenericNaN;
+using JS::DoubleNaNValue;
 
 /* static */ ThreadLocal<PerThreadData*> js::TlsPerThreadData;
 
@@ -226,11 +230,10 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcFinalizeCallback(NULL),
     gcMallocBytes(0),
     scriptAndCountsVector(NULL),
-    NaNValue(UndefinedValue()),
-    negativeInfinityValue(UndefinedValue()),
-    positiveInfinityValue(UndefinedValue()),
+    NaNValue(DoubleNaNValue()),
+    negativeInfinityValue(DoubleValue(NegativeInfinity())),
+    positiveInfinityValue(DoubleValue(PositiveInfinity())),
     emptyString(NULL),
-    sourceHook(NULL),
     debugMode(false),
     spsProfiler(thisFromCtor()),
     profilingScripts(false),
@@ -394,6 +397,9 @@ JSRuntime::init(uint32_t maxbytes)
 JSRuntime::~JSRuntime()
 {
     JS_ASSERT(!isHeapBusy());
+
+    /* Free source hook early, as its destructor may want to delete roots. */
+    sourceHook = NULL;
 
     /* Off thread compilation and parsing depend on atoms still existing. */
     for (CompartmentsIter comp(this); !comp.done(); comp.next())

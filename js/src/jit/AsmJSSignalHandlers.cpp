@@ -13,6 +13,8 @@ using namespace js;
 using namespace js::jit;
 using namespace mozilla;
 
+using JS::GenericNaN;
+
 #if defined(XP_WIN)
 # define XMM_sig(p,i) ((p)->Xmm##i)
 # define EIP_sig(p) ((p)->Eip)
@@ -250,14 +252,14 @@ SetXMMRegToNaN(bool isFloat32, T *xmm_reg)
     if (isFloat32) {
         JS_STATIC_ASSERT(sizeof(T) == 4 * sizeof(float));
         float *floats = reinterpret_cast<float*>(xmm_reg);
-        floats[0] = js_NaN;
+        floats[0] = GenericNaN();
         floats[1] = 0;
         floats[2] = 0;
         floats[3] = 0;
     } else {
         JS_STATIC_ASSERT(sizeof(T) == 2 * sizeof(double));
         double *dbls = reinterpret_cast<double*>(xmm_reg);
-        dbls[0] = js_NaN;
+        dbls[0] = GenericNaN();
         dbls[1] = 0;
     }
 }

@@ -610,7 +610,11 @@ nsXPCWrappedJS::SystemIsBeingShutDown()
 
     // NOTE: that mClass is retained so that GetInterfaceInfo can continue to
     // work (and avoid crashing some platforms).
-    mJSObj = nullptr;
+
+    // Use of unsafeGet() is to avoid triggering post barriers in shutdown, as
+    // this will access the chunk containing mJSObj, which may have been freed
+    // at this point.
+    *mJSObj.unsafeGet() = nullptr;
 
     // Notify other wrappers in the chain.
     if (mNext)

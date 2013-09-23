@@ -41,6 +41,7 @@
 #include "nsCxPusher.h"
 #include "mozilla/Preferences.h"
 #include "nsTextNode.h"
+#include "nsIController.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

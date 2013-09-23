@@ -100,6 +100,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitMonitorTypes(LMonitorTypes *lir);
     bool visitPostWriteBarrierO(LPostWriteBarrierO *lir);
     bool visitPostWriteBarrierV(LPostWriteBarrierV *lir);
+    bool visitPostWriteBarrierAllSlots(LPostWriteBarrierAllSlots *lir);
     bool visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier *ool);
     bool visitCallNative(LCallNative *call);
     bool emitCallInvokeFunction(LInstruction *call, Register callereg,
@@ -131,6 +132,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitNewStringObject(LNewStringObject *lir);
     bool visitNewPar(LNewPar *lir);
     bool visitNewDenseArrayPar(LNewDenseArrayPar *lir);
+    bool visitNewDerivedTypedObject(LNewDerivedTypedObject *lir);
     bool visitAbortPar(LAbortPar *lir);
     bool visitInitElem(LInitElem *lir);
     bool visitInitElemGetterSetter(LInitElemGetterSetter *lir);
@@ -147,6 +149,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitArrayLength(LArrayLength *lir);
     bool visitTypedArrayLength(LTypedArrayLength *lir);
     bool visitTypedArrayElements(LTypedArrayElements *lir);
+    bool visitTypedObjectElements(LTypedObjectElements *lir);
     bool visitStringLength(LStringLength *lir);
     bool visitInitializedLength(LInitializedLength *lir);
     bool visitSetInitializedLength(LSetInitializedLength *lir);
@@ -335,7 +338,8 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     bool emitCallToUncompiledScriptPar(LInstruction *lir, Register calleeReg);
 
-    void emitLambdaInit(const Register &resultReg, const Register &scopeChainReg, JSFunction *fun);
+    void emitLambdaInit(const Register &resultReg, const Register &scopeChainReg,
+                        const LambdaFunctionInfo &info);
 
     IonScriptCounts *maybeCreateScriptCounts();
 

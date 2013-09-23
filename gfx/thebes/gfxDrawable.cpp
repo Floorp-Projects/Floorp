@@ -134,6 +134,12 @@ gfxSurfaceDrawable::Draw(gfxContext* aContext,
     return true;
 }
 
+already_AddRefed<gfxImageSurface>
+gfxSurfaceDrawable::GetAsImageSurface()
+{
+    return mSurface->GetAsImageSurface();
+}
+
 gfxCallbackDrawable::gfxCallbackDrawable(gfxDrawingCallback* aCallback,
                                          const gfxIntSize aSize)
  : gfxDrawable(aSize)

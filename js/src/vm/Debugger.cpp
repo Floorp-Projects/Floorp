@@ -2718,13 +2718,6 @@ GetScriptReferent(JSObject *obj)
     return static_cast<JSScript *>(obj->getPrivate());
 }
 
-static inline void
-SetScriptReferent(JSObject *obj, JSScript *script)
-{
-    JS_ASSERT(obj->getClass() == &DebuggerScript_class);
-    obj->setPrivateGCThing(script);
-}
-
 static void
 DebuggerScript_trace(JSTracer *trc, JSObject *obj)
 {
@@ -3760,9 +3753,30 @@ DebuggerSource_getUrl(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static bool
+DebuggerSource_getDisplayURL(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get url)", args, obj, sourceObject);
+
+    ScriptSource *ss = sourceObject->source();
+    JS_ASSERT(ss);
+
+    if (ss->hasSourceURL()) {
+        JSString *str = JS_NewUCStringCopyZ(cx, ss->sourceURL());
+        if (!str)
+            return false;
+        args.rval().setString(str);
+    } else {
+        args.rval().setNull();
+    }
+
+    return true;
+}
+
 static const JSPropertySpec DebuggerSource_properties[] = {
     JS_PSG("text", DebuggerSource_getText, 0),
     JS_PSG("url", DebuggerSource_getUrl, 0),
+    JS_PSG("displayURL", DebuggerSource_getDisplayURL, 0),
     JS_PS_END
 };
 

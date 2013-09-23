@@ -125,6 +125,7 @@ class UpvarCookie
     F(THROW) \
     F(DEBUGGER) \
     F(YIELD) \
+    F(YIELD_STAR) \
     F(GENEXP) \
     F(ARRAYCOMP) \
     F(ARRAYPUSH) \

@@ -10,6 +10,7 @@ marionette.jar:
   content/marionette-sendkeys.js    (marionette-sendkeys.js)
   content/marionette-common.js      (marionette-common.js)
   content/marionette-simpletest.js  (marionette-simpletest.js)
+  content/marionette-frame-manager.js  (marionette-frame-manager.js)
   content/EventUtils.js  (EventUtils.js)
   content/ChromeUtils.js  (ChromeUtils.js)
 #ifdef ENABLE_TESTS
