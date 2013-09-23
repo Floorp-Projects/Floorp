@@ -31,7 +31,8 @@ class RemoteOptions(MochitestOptions):
 
     def __init__(self, automation, **kwargs):
         defaults = {}
-        MochitestOptions.__init__(self, automation)
+        self._automation = automation or Automation()
+        MochitestOptions.__init__(self)
 
         self.add_option("--remote-app-path", action="store",
                     type = "string", dest = "remoteAppPath",
@@ -227,9 +228,10 @@ class MochiRemote(Mochitest):
 
     def __init__(self, automation, devmgr, options):
         self._automation = automation
-        Mochitest.__init__(self, self._automation)
+        Mochitest.__init__(self)
         self._dm = devmgr
         self.runSSLTunnel = False
+        self.environment = self._automation.environment
         self.remoteProfile = options.remoteTestRoot + "/profile"
         self._automation.setRemoteProfile(self.remoteProfile)
         self.remoteLog = options.remoteLogFile
@@ -313,7 +315,7 @@ class MochiRemote(Mochitest):
             sys.exit(1)
 
         options.profilePath = tempfile.mkdtemp()
-        self.server = MochitestServer(localAutomation, options)
+        self.server = MochitestServer(options)
         self.server.start()
 
         if (options.pidFile != ""):
@@ -499,7 +501,8 @@ class MochiRemote(Mochitest):
             for key, value in browserEnv.items():
                 try:
                     value.index(',')
-                    log.error("Found a ',' in our value, unable to process value.")
+                    log.error("buildRobotiumConfig: browserEnv - Found a ',' in our value, unable to process value. key=%s,value=%s", key, value)
+                    log.error("browserEnv=%s", browserEnv)
                 except ValueError, e:
                     envstr += "%s%s=%s" % (delim, key, value)
                     delim = ","
@@ -516,7 +519,16 @@ class MochiRemote(Mochitest):
         self.buildRobotiumConfig(options, browserEnv)
         return browserEnv
 
-        
+    def runApp(self, *args, **kwargs):
+        """front-end automation.py's `runApp` functionality until FennecRunner is written"""
+
+        # automation.py/remoteautomation `runApp` takes the profile path,
+        # whereas runtest.py's `runApp` takes a mozprofile object.
+        if 'profileDir' not in kwargs and 'profile' in kwargs:
+            kwargs['profileDir'] = kwargs.pop('profile').profile
+
+        return self._automation.runApp(*args, **kwargs)
+
 def main():
     auto = RemoteAutomation(None, "fennec")
     parser = RemoteOptions(auto)

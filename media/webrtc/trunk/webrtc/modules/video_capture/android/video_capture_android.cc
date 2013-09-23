@@ -436,13 +436,8 @@ VideoCaptureAndroid::~VideoCaptureAndroid() {
 
         // Delete global object ref to the camera.
         env->DeleteGlobalRef(_javaCaptureObj);
-        // Clean up the global class references
-        env->DeleteGlobalRef(g_javaCmClass);
-        env->DeleteGlobalRef(g_javaCmDevInfoClass);
 
         _javaCaptureObj = NULL;
-        VideoCaptureAndroid::g_javaCmClass = NULL;
-        VideoCaptureAndroid::g_javaCmDevInfoClass = NULL;
       }
       else {
         WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
