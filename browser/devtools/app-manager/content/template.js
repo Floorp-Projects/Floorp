@@ -69,12 +69,19 @@ function Template(root, store, l10nResolver) {
   this._root = root;
   this._doc = this._root.ownerDocument;
 
-  this._store.on("set", (event,path,value) => this._storeChanged(path,value));
+  this._storeChanged = this._storeChanged.bind(this);
+  this._store.on("set", this._storeChanged);
 }
 
 Template.prototype = {
   start: function() {
     this._processTree(this._root);
+  },
+
+  destroy: function() {
+    this._store.off("set", this._storeChanged);
+    this._root = null;
+    this._doc = null;
   },
 
   _resolvePath: function(path, defaultValue=null) {
@@ -110,7 +117,7 @@ Template.prototype = {
     return obj;
   },
 
-  _storeChanged: function(path, value) {
+  _storeChanged: function(event, path, value) {
 
     // The store has changed (a "set" event has been emitted).
     // We need to invalidate and rebuild the affected elements.

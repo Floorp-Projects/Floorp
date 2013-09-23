@@ -169,3 +169,7 @@ function focusSearchBoxUsingShortcut(panelWin, callback) {
   EventUtils.synthesizeKey(name, modifiers);
 }
 
+SimpleTest.registerCleanupFunction(function () {
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  gDevTools.closeToolbox(target);
+});

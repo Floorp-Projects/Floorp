@@ -253,8 +253,15 @@ CssHtmlTree.prototype = {
    */
   highlight: function(aElement) {
     if (!aElement) {
+      this.viewedElement = null;
+      this.noResults.hidden = false;
+
       if (this._refreshProcess) {
         this._refreshProcess.cancel();
+      }
+      // Hiding all properties
+      for (let propView of this.propertyViews) {
+        propView.refresh();
       }
       return promise.resolve(undefined)
     }
@@ -264,8 +271,8 @@ CssHtmlTree.prototype = {
     }
 
     this.viewedElement = aElement;
-
     this.refreshSourceFilter();
+
     return this.refreshPanel();
   },
 
@@ -314,6 +321,10 @@ CssHtmlTree.prototype = {
    */
   refreshPanel: function CssHtmlTree_refreshPanel()
   {
+    if (!this.viewedElement) {
+      return promise.resolve();
+    }
+
     return promise.all([
       this._createPropertyViews(),
       this.pageStyle.getComputed(this.viewedElement, {
@@ -341,8 +352,6 @@ CssHtmlTree.prototype = {
 
       // Reset zebra striping.
       this._darkStripe = true;
-
-      let display = this.propertyContainer.style.display;
 
       let deferred = promise.defer();
       this._refreshProcess = new UpdateProcess(this.styleWindow, this.propertyViews, {
@@ -540,12 +549,16 @@ CssHtmlTree.prototype = {
     // The document in which we display the results (csshtmltree.xul).
     delete this.styleDocument;
 
+    for (let propView of this.propertyViews)  {
+      propView.destroy();
+    }
+
     // The element that we're inspecting, and the document that it comes from.
     delete this.propertyViews;
     delete this.styleWindow;
     delete this.styleDocument;
     delete this.styleInspector;
-  },
+  }
 };
 
 function PropertyInfo(aTree, aName) {
@@ -636,6 +649,10 @@ PropertyView.prototype = {
    */
   get visible()
   {
+    if (!this.tree.viewedElement) {
+      return false;
+    }
+
     if (!this.tree.includeBrowserStyles && !this.hasMatchedSelectors) {
       return false;
     }
@@ -839,6 +856,24 @@ PropertyView.prototype = {
     }
     aEvent.preventDefault();
   },
+
+  /**
+   * Destroy this property view, removing event listeners
+   */
+  destroy: function PropertyView_destroy() {
+    this.element.removeEventListener("dblclick", this.onMatchedToggle, false);
+    this.element.removeEventListener("keydown", this.onKeyDown, false);
+    this.element = null;
+
+    this.matchedExpander.removeEventListener("click", this.onMatchedToggle, false);
+    this.matchedExpander = null;
+
+    this.nameNode.removeEventListener("click", this.onFocus, false);
+    this.nameNode = null;
+
+    this.valueNode.removeEventListener("click", this.onFocus, false);
+    this.valueNode = null;
+  }
 };
 
 /**

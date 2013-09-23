@@ -37,6 +37,7 @@ MOCHITEST_BROWSER_FILES := \
 		browser_inspector_bug_831693_search_suggestions.html \
 		browser_inspector_bug_835722_infobar_reappears.js \
 		browser_inspector_bug_840156_destroy_after_navigation.js \
+		browser_inspector_bug_922125_destroy_on_navigate.js \
 		browser_inspector_reload.js \
 		browser_inspector_navigation.js \
 		browser_inspector_select_last_selected.js \
