@@ -6,7 +6,7 @@
 // rule view.
 
 let doc;
-let inspector = null;
+let inspector;
 
 const TEST_URI = "http://example.com/browser/browser/devtools/styleinspector/" +
   "test/browser_bug722196_identify_media_queries.html";
@@ -55,7 +55,7 @@ function checkSheets()
 
 function finishUp()
 {
-  doc = null;
+  doc = inspector = null;
   gBrowser.removeCurrentTab();
   finish();
 }

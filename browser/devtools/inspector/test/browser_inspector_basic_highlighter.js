@@ -77,13 +77,14 @@ function test() {
   }
 
   function verifyNoNodeSelected() {
-    ok(doc.querySelectorAll(":-moz-devtools-highlighted").length === 0, "no node selected");
+    is(doc.querySelectorAll(":-moz-devtools-highlighted").length, 0, "no node selected");
     return promise.resolve();
   }
 
   function finishUp() {
     let h = require("devtools/inspector/highlighter");
     h._forceBasic.value = false;
+    inspector = doc = null;
     gBrowser.removeCurrentTab();
     finish();
   }

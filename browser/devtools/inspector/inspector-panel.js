@@ -18,6 +18,7 @@ loader.lazyGetter(this, "HTMLBreadcrumbs", () => require("devtools/inspector/bre
 loader.lazyGetter(this, "Highlighter", () => require("devtools/inspector/highlighter").Highlighter);
 loader.lazyGetter(this, "ToolSidebar", () => require("devtools/framework/sidebar").ToolSidebar);
 loader.lazyGetter(this, "SelectorSearch", () => require("devtools/inspector/selector-search").SelectorSearch);
+loader.lazyGetter(this, "InspectorFront", () => require("devtools/server/actors/inspector").InspectorFront);
 
 const LAYOUT_CHANGE_TIMER = 250;
 
@@ -33,6 +34,10 @@ function InspectorPanel(iframeWindow, toolbox) {
   this.panelDoc = iframeWindow.document;
   this.panelWin = iframeWindow;
   this.panelWin.inspector = this;
+  this._inspector = null;
+
+  this._onBeforeNavigate = this._onBeforeNavigate.bind(this);
+  this._target.on("will-navigate", this._onBeforeNavigate);
 
   EventEmitter.decorate(this);
 }
@@ -51,6 +56,16 @@ InspectorPanel.prototype = {
     }).then(defaultSelection => {
       return this._deferredOpen(defaultSelection);
     }).then(null, console.error);
+  },
+
+  get inspector() {
+    if (!this._target.form) {
+      throw new Error("Target.inspector requires an initialized remote actor.");
+    }
+    if (!this._inspector) {
+      this._inspector = InspectorFront(this._target.client, this._target.form);
+    }
+    return this._inspector;
   },
 
   _deferredOpen: function(defaultSelection) {
@@ -144,11 +159,17 @@ InspectorPanel.prototype = {
     return deferred.promise;
   },
 
+  _onBeforeNavigate: function() {
+    this._defaultNode = null;
+    this.selection.setNodeFront(null);
+    this._destroyMarkup();
+    this.isDirty = false;
+  },
+
   _getWalker: function() {
-    let inspector = this.target.inspector;
-    return inspector.getWalker().then(walker => {
+    return this.inspector.getWalker().then(walker => {
       this.walker = walker;
-      return inspector.getPageStyle();
+      return this.inspector.getPageStyle();
     }).then(pageStyle => {
       this.pageStyle = pageStyle;
     });
@@ -454,9 +475,16 @@ InspectorPanel.prototype = {
       this.highlighter.destroy();
     }
 
+    delete this.onLockStateChanged;
+
     if (this.walker) {
       this.walker.off("new-root", this.onNewRoot);
-      this._destroyPromise = this.walker.release().then(null, console.error);
+      this._destroyPromise = this.walker.release()
+        .then(() => this._inspector.destroy())
+        .then(() => {
+          this._inspector = null;
+        }, console.error);
+
       delete this.walker;
       delete this.pageStyle;
     } else {
@@ -470,6 +498,8 @@ InspectorPanel.prototype = {
       this.browser.removeEventListener("resize", this.scheduleLayoutChange, true);
       this.browser = null;
     }
+
+    this.target.off("will-navigate", this._onBeforeNavigate);
 
     this.target.off("thread-paused", this.updateDebuggerPausedWarning);
     this.target.off("thread-resumed", this.updateDebuggerPausedWarning);
@@ -485,6 +515,7 @@ InspectorPanel.prototype = {
     this.nodemenu.removeEventListener("popuphiding", this._resetNodeMenu, true);
     this.breadcrumbs.destroy();
     this.searchSuggestions.destroy();
+    delete this.searchBox;
     this.selection.off("new-node-front", this.onNewSelection);
     this.selection.off("before-new-node", this.onBeforeNewSelection);
     this.selection.off("before-new-node-front", this.onBeforeNewSelection);
@@ -620,6 +651,8 @@ InspectorPanel.prototype = {
       this._markupFrame.parentNode.removeChild(this._markupFrame);
       delete this._markupFrame;
     }
+
+    this._markupBox = null;
   },
 
   /**
@@ -733,15 +766,18 @@ InspectorPanel.prototype = {
    * Schedule a low-priority change event for things like paint
    * and resize.
    */
-  scheduleLayoutChange: function Inspector_scheduleLayoutChange()
+  scheduleLayoutChange: function Inspector_scheduleLayoutChange(event)
   {
-    if (this._timer) {
-      return null;
+    // Filter out non browser window resize events (i.e. triggered by iframes)
+    if (this.browser.contentWindow === event.target) {
+      if (this._timer) {
+        return null;
+      }
+      this._timer = this.panelWin.setTimeout(function() {
+        this.emit("layout-change");
+        this._timer = null;
+      }.bind(this), LAYOUT_CHANGE_TIMER);
     }
-    this._timer = this.panelWin.setTimeout(function() {
-      this.emit("layout-change");
-      this._timer = null;
-    }.bind(this), LAYOUT_CHANGE_TIMER);
   },
 
   /**

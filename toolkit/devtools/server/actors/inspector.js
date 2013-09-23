@@ -1324,11 +1324,13 @@ var WalkerActor = protocol.ActorClass({
    * @param string selector
    */
   querySelector: method(function(baseNode, selector) {
+    if (!baseNode) {
+      return {}
+    };
     let node = baseNode.rawNode.querySelector(selector);
 
     if (!node) {
-      return {
-      }
+      return {}
     };
 
     let node = this._ref(node);
@@ -2257,6 +2259,11 @@ var InspectorFront = exports.InspectorFront = protocol.FrontClass(InspectorActor
     // library, so we're going to self-own on the client side for now.
     client.addActorPool(this);
     this.manage(this);
+  },
+
+  destroy: function() {
+    delete this.walker;
+    protocol.Front.prototype.destroy.call(this);
   },
 
   getWalker: protocol.custom(function() {

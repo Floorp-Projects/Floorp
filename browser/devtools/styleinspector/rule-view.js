@@ -71,6 +71,7 @@ function createDummyDocument() {
   eventTarget.addEventListener("DOMContentLoaded", function handler(event) {
     eventTarget.removeEventListener("DOMContentLoaded", handler, false);
     deferred.resolve(window.document);
+    frame.remove();
   }, false);
   gDummyPromise = deferred.promise;
   return gDummyPromise;
@@ -1078,6 +1079,8 @@ CssRuleView.prototype = {
   destroy: function CssRuleView_destroy()
   {
     this.clear();
+ 
+    gDummyPromise = null;
 
     this.element.removeEventListener("copy", this._boundCopy);
     delete this._boundCopy;
