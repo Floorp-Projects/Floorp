@@ -1425,13 +1425,17 @@ var Scratchpad = {
     this.editor.removeEventListener(SourceEditor.EVENTS.DIRTY_CHANGED,
                                     this._onDirtyChanged);
     PreferenceObserver.uninit();
+    CloseObserver.uninit();
 
     this.editor.destroy();
     this.editor = null;
+
     if (this._sidebar) {
       this._sidebar.destroy();
       this._sidebar = null;
     }
+
+    scratchpadTargets = null;
     this.webConsoleClient = null;
     this.debuggerClient = null;
     this.initialized = false;

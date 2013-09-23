@@ -57,6 +57,10 @@ function test() {
     inspector.once("computed-view-refreshed", stylePanelAfterChange);
 
     testDiv.style.fontSize = "15px";
+
+    // FIXME: This shouldn't be needed but as long as we don't fix the bug
+    // where the rule/computed views are not updated when the selected node's
+    // styles change, it has to stay here
     inspector.emit("layout-change");
   }
 
@@ -77,6 +81,11 @@ function test() {
       inspector.once("computed-view-refreshed", stylePanelAfterSwitch);
       testDiv.style.fontSize = "20px";
       inspector.sidebar.select("computedview");
+
+      // FIXME: This shouldn't be needed but as long as we don't fix the bug
+      // where the rule/computed views are not updated when the selected node's
+      // styles change, it has to stay here
+      inspector.emit("layout-change");
     });
   }
 
