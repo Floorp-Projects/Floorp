@@ -77,6 +77,15 @@ class MochitestRunner(MozbuildObject):
     to hook up result parsing, etc.
     """
 
+    def get_webapp_runtime_path(self):
+        appname = 'webapprt-stub' + mozinfo.info.get('bin_suffix', '')
+        if sys.platform.startswith('darwin'):
+            appname = os.path.join(self.distdir, self.substs['MOZ_MACBUNDLE_NAME'],
+            'Contents', 'MacOS', appname)
+        else:
+            appname = os.path.join(self.distdir, 'bin', appname)
+        return appname
+
     def __init__(self, *args, **kwargs):
         MozbuildObject.__init__(self, *args, **kwargs)
 
@@ -211,7 +220,6 @@ class MochitestRunner(MozbuildObject):
             return 1
 
         from StringIO import StringIO
-        from automation import Automation
 
         # runtests.py is ambiguous, so we load the file/module manually.
         if 'mochitest' not in sys.modules:
@@ -221,12 +229,11 @@ class MochitestRunner(MozbuildObject):
                 imp.load_module('mochitest', fh, path,
                     ('.py', 'r', imp.PY_SOURCE))
 
+        import mozinfo
         import mochitest
 
         # This is required to make other components happy. Sad, isn't it?
         os.chdir(self.topobjdir)
-
-        automation = Automation()
 
         # Automation installs its own stream handler to stdout. Since we want
         # all logging to go through us, we just remove their handler.
@@ -235,18 +242,11 @@ class MochitestRunner(MozbuildObject):
         for handler in remove_handlers:
             logging.getLogger().removeHandler(handler)
 
-        runner = mochitest.Mochitest(automation)
+        runner = mochitest.Mochitest()
 
-        opts = mochitest.MochitestOptions(automation)
+        opts = mochitest.MochitestOptions()
         options, args = opts.parse_args([])
 
-        appname = ''
-        if sys.platform.startswith('darwin'):
-            appname = os.path.join(self.distdir, self.substs['MOZ_MACBUNDLE_NAME'],
-            'Contents', 'MacOS', 'webapprt-stub' + automation.BIN_SUFFIX)
-        else:
-            appname = os.path.join(self.distdir, 'bin', 'webapprt-stub' +
-            automation.BIN_SUFFIX)
 
         # Need to set the suite options before verifyOptions below.
         if suite == 'plain':
@@ -263,10 +263,10 @@ class MochitestRunner(MozbuildObject):
             options.a11y = True
         elif suite == 'webapprt-content':
             options.webapprtContent = True
-            options.app = appname
+            options.app = self.get_webapp_runtime_path()
         elif suite == 'webapprt-chrome':
             options.webapprtChrome = True
-            options.app = appname
+            options.app = self.get_webapp_runtime_path()
             options.browserArgs.append("-test-mode")
         else:
             raise Exception('None or unrecognized mochitest suite type.')
@@ -313,10 +313,6 @@ class MochitestRunner(MozbuildObject):
 
         if options is None:
             raise Exception('mochitest option validator failed.')
-
-        automation.setServerInfo(options.webServer, options.httpPort,
-            options.sslPort, options.webSocketPort)
-
 
         # We need this to enable colorization of output.
         self.log_manager.enable_unstructured()
