@@ -1693,50 +1693,6 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
     	    fmtp_p->cbr = (u16) strtoul_result;
     	    codec_info_found = TRUE;
 
-        } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[49].name,
-                        sdp_fmtp_codec_param[49].strlen) == 0) {
-            fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
-            if (result1 != SDP_SUCCESS) {
-                fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
-                if (result1 != SDP_SUCCESS) {
-                    sdp_attr_fmtp_no_value(sdp_p, "streams");
-                    SDP_FREE(temp_ptr);
-                    return SDP_INVALID_PARAMETER;
-                }
-            }
-            tok = tmp;
-            tok++;
-            errno = 0;
-
-            strtoul_result = strtoul(tok, &strtoul_end, 10);
-
-            if (errno || tok == strtoul_end || strtoul_result > INT_MAX) {
-                sdp_attr_fmtp_invalid_value(sdp_p, "streams", tok);
-                SDP_FREE(temp_ptr);
-                return SDP_INVALID_PARAMETER;
-            }
-
-            fmtp_p->fmtp_format = SDP_FMTP_DATACHANNEL;
-            fmtp_p->streams = (int) strtoul_result;
-            codec_info_found = TRUE;
-
-        } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[50].name,
-                sdp_fmtp_codec_param[50].strlen) == 0) {
-            fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t", &result1);
-            if (result1 != SDP_SUCCESS) {
-                fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
-                if (result1 != SDP_SUCCESS) {
-                    sdp_attr_fmtp_no_value(sdp_p, "protocol");
-                    SDP_FREE(temp_ptr);
-                    return SDP_INVALID_PARAMETER;
-                 }
-             }
-             tok = tmp;
-             tok++;
-             fmtp_p->fmtp_format = SDP_FMTP_DATACHANNEL;
-             sstrncpy(fmtp_p->protocol , tok, sizeof(fmtp_p->protocol));
-			 codec_info_found = TRUE;
-
         } else if (fmtp_ptr != NULL && *fmtp_ptr == '\n') {
             temp=PL_strtok_r(tmp, ";", &strtok_state);
             if (temp) {
@@ -2078,14 +2034,6 @@ sdp_result_e sdp_build_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p, flex_string 
 
       break;
 
-    case SDP_FMTP_DATACHANNEL:
-      FMTP_BUILD_STRING(strlen(fmtp_p->protocol) > 0,
-        "protocol", fmtp_p->protocol)
-
-      FMTP_BUILD_UNSIGNED(fmtp_p->streams > 0, "streams", fmtp_p->streams)
-
-      break;
-
     case SDP_FMTP_NTE:
     default:
       break;
@@ -2139,6 +2087,60 @@ sdp_result_e sdp_build_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p, flex_string 
     }
 
     flex_string_append(fs, "\r\n");
+
+    return SDP_SUCCESS;
+}
+
+sdp_result_e sdp_parse_attr_sctpmap(sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                    const char *ptr)
+{
+    sdp_result_e result = SDP_SUCCESS;
+    char tmp[SDP_MAX_STRING_LEN];
+
+    /* Find the payload type number. */
+    attr_p->attr.sctpmap.port = (u16)sdp_getnextnumtok(ptr, &ptr,
+                                                      " \t", &result);
+    if (result != SDP_SUCCESS) {
+        sdp_parse_error(sdp_p->peerconnection,
+            "%s Warning: no sctpmap port number",
+            sdp_p->debug_str);
+        return SDP_INVALID_PARAMETER;
+    }
+
+    ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
+    if (result != SDP_SUCCESS) {
+        sdp_parse_error(sdp_p->peerconnection,
+            "%s Warning: No sctpmap protocol specified.",
+            sdp_p->debug_str);
+        sdp_p->conf_p->num_invalid_param++;
+        return SDP_INVALID_PARAMETER;
+    }
+    sstrncpy(attr_p->attr.sctpmap.protocol, tmp,
+        sizeof (attr_p->attr.sctpmap.protocol));
+
+    attr_p->attr.sctpmap.streams = (u16) sdp_getnextnumtok(ptr, &ptr, " \t",
+        &result);
+    if (result != SDP_SUCCESS) {
+        sdp_parse_error(sdp_p->peerconnection,
+            "%s Warning: No sctpmap streams specified.",
+            sdp_p->debug_str);
+        sdp_p->conf_p->num_invalid_param++;
+        return SDP_INVALID_PARAMETER;
+    }
+
+    return SDP_SUCCESS;
+}
+
+sdp_result_e sdp_build_attr_sctpmap(sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                    flex_string *fs)
+{
+    MOZ_ASSERT(strlen(attr_p->attr.sctpmap.protocol) > 0);
+
+    flex_string_sprintf(fs, "a=%s:%u %s %u\r\n",
+        sdp_attr[attr_p->type].name,
+        attr_p->attr.sctpmap.port,
+        attr_p->attr.sctpmap.protocol,
+        attr_p->attr.sctpmap.streams);
 
     return SDP_SUCCESS;
 }
