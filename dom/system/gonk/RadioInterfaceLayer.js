@@ -2010,6 +2010,7 @@ RadioInterface.prototype = {
       body:              aDomMessage.body,
       messageClass:      aDomMessage.messageClass,
       timestamp:         aDomMessage.timestamp,
+      sentTimestamp:     aDomMessage.sentTimestamp,
       deliveryTimestamp: aDomMessage.deliveryTimestamp,
       read:              aDomMessage.read
     });
@@ -2099,6 +2100,7 @@ RadioInterface.prototype = {
                                                message.body,
                                                message.messageClass,
                                                message.timestamp,
+                                               message.sentTimestamp,
                                                0,
                                                message.read);
 
@@ -2168,6 +2170,7 @@ RadioInterface.prototype = {
                                                message.body,
                                                message.messageClass,
                                                message.timestamp,
+                                               message.sentTimestamp,
                                                0,
                                                message.read);
 
@@ -3354,6 +3357,7 @@ RadioInterface.prototype = {
                                                    sms.body,
                                                    sms.messageClass,
                                                    sms.timestamp,
+                                                   Date.now(),
                                                    0,
                                                    sms.read));
           // We don't wait for SMS-DELIVER-REPORT for silent one.
@@ -3394,8 +3398,8 @@ RadioInterface.prototype = {
     };
 
     if (silent) {
-      let deliveryStatus = RIL.GECKO_SMS_DELIVERY_STATUS_PENDING;
       let delivery = DOM_MOBILE_MESSAGE_DELIVERY_SENDING;
+      let deliveryStatus = RIL.GECKO_SMS_DELIVERY_STATUS_PENDING;
       let domMessage =
         gMobileMessageService.createSmsMessage(-1, // id
                                                0,  // threadId
@@ -3407,6 +3411,7 @@ RadioInterface.prototype = {
                                                sendingMessage.body,
                                                "normal", // message class
                                                sendingMessage.timestamp,
+                                               0,
                                                0,
                                                false);
       notifyResult(Cr.NS_OK, domMessage);
