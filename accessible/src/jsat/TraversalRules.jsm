@@ -31,6 +31,7 @@ const ROLE_CHECK_MENU_ITEM = Ci.nsIAccessibleRole.ROLE_CHECK_MENU_ITEM;
 const ROLE_PASSWORD_TEXT = Ci.nsIAccessibleRole.ROLE_PASSWORD_TEXT;
 const ROLE_RADIO_MENU_ITEM = Ci.nsIAccessibleRole.ROLE_RADIO_MENU_ITEM;
 const ROLE_TOGGLE_BUTTON = Ci.nsIAccessibleRole.ROLE_TOGGLE_BUTTON;
+const ROLE_KEY = Ci.nsIAccessibleRole.ROLE_KEY;
 const ROLE_ENTRY = Ci.nsIAccessibleRole.ROLE_ENTRY;
 const ROLE_LIST = Ci.nsIAccessibleRole.ROLE_LIST;
 const ROLE_DEFINITION_LIST = Ci.nsIAccessibleRole.ROLE_DEFINITION_LIST;
@@ -104,6 +105,7 @@ var gSimpleTraversalRoles =
    ROLE_RADIO_MENU_ITEM,
    ROLE_TOGGLE_BUTTON,
    ROLE_ENTRY,
+   ROLE_KEY,
    ROLE_HEADER,
    ROLE_HEADING,
    // Used for traversing in to child OOP frames.
