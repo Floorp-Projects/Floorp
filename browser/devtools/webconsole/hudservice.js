@@ -254,13 +254,14 @@ HUD_SERVICE.prototype =
       return deferred.promise;
     }
 
-    connect().then(getTarget).then(openWindow).then((aWindow) =>
+    connect().then(getTarget).then(openWindow).then((aWindow) => {
       this.openBrowserConsole(target, aWindow, aWindow)
         .then((aBrowserConsole) => {
           this._browserConsoleID = aBrowserConsole.hudId;
           this._browserConsoleDefer.resolve(aBrowserConsole);
           this._browserConsoleDefer = null;
-        }));
+        })
+    }, console.error);
 
     return this._browserConsoleDefer.promise;
   },
