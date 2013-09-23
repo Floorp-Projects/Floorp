@@ -20,6 +20,7 @@
 #include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
 #include "nsSize.h"                     // for nsIntSize
 #include "gfxReusableSharedImageSurfaceWrapper.h"
+ #include "nsMathUtils.h"               // for NS_roundf
 
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
 #include "cairo.h"
@@ -356,11 +357,11 @@ BasicTiledLayerBuffer::ValidateTileInternal(BasicTiledLayerTile aTile,
       RefPtr<gfx::SourceSurface> source = mSinglePaintDrawTarget->Snapshot();
       writableDrawTarget->CopySurface(
         source,
-        gfx::IntRect(roundf((aDirtyRect.x - mSinglePaintBufferOffset.x) * mResolution),
-                     roundf((aDirtyRect.y - mSinglePaintBufferOffset.y) * mResolution),
+        gfx::IntRect(NS_roundf((aDirtyRect.x - mSinglePaintBufferOffset.x) * mResolution),
+                     NS_roundf((aDirtyRect.y - mSinglePaintBufferOffset.y) * mResolution),
                      drawRect.width,
                      drawRect.height),
-        gfx::IntPoint(roundf(drawRect.x), roundf(drawRect.y)));
+        gfx::IntPoint(NS_roundf(drawRect.x), NS_roundf(drawRect.y)));
     } else {
       gfxRect drawRect(aDirtyRect.x - aTileOrigin.x, aDirtyRect.y - aTileOrigin.y,
                        aDirtyRect.width, aDirtyRect.height);
