@@ -1,0 +1,21 @@
+<html>
+<body>
+<script>
+  var im = navigator.mozInputMethod;
+  if (im) {
+    var intervalId = null;
+    // Automatically append location hash to current input field.
+    im.oninputcontextchange = function() {
+      var ctx = im.inputcontext;
+      if (ctx) {
+        intervalId = setInterval(function() {
+          ctx.replaceSurroundingText(location.hash);
+        }, 500);
+      } else {
+        clearInterval(intervalId);
+      }
+    };
+  }
+</script>
+</body>
+</html>
