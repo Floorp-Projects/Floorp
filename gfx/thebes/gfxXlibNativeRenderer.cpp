@@ -12,6 +12,7 @@
 #include "gfxAlphaRecovery.h"
 #include "cairo-xlib.h"
 #include "cairo-xlib-xrender.h"
+#include "mozilla/gfx/BorrowedContext.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;

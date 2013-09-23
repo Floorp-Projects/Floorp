@@ -9,6 +9,7 @@
 #include "PathCairo.h"
 #include "HelpersCairo.h"
 #include "ScaledFontBase.h"
+#include "BorrowedContext.h"
 
 #include "cairo.h"
 #include "cairo-tee.h"
