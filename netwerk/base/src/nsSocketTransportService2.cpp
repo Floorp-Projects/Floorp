@@ -22,6 +22,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/PublicSSL.h"
 #include "nsThreadUtils.h"
+#include "nsIFile.h"
 
 using namespace mozilla;
 using namespace mozilla::net;

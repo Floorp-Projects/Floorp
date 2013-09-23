@@ -6,9 +6,8 @@
 #include "nsISupports.idl"
 
 %{C++
-#include "nsTArray.h"
-#include "nsCOMArray.h"
-
+template<class T> class nsTArray;
+template<class T> class nsCOMArray;
 class nsCString;
 %}
 [ptr] native StringArray(nsTArray<nsCString>);

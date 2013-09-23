@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsISimpleEnumerator.idl"
 
+interface nsISimpleEnumerator;
 
 /** 
  * An optional interface for accessing or removing the cookies
