@@ -6,6 +6,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AppProcessChecker.h"
+#ifdef MOZ_CHILD_PERMISSIONS
 #include "ContentParent.h"
 #include "mozIApplication.h"
 #include "mozilla/hal_sandbox/PHalParent.h"
@@ -15,6 +16,7 @@
 using namespace mozilla::dom;
 using namespace mozilla::hal_sandbox;
 using namespace mozilla::services;
+#endif
 
 namespace mozilla {
 
