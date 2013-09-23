@@ -6,8 +6,8 @@
 #include "nsISupports.idl"
 
 %{C++
-#include "prio.h"
-#include "prlink.h"
+struct PRFileDesc;
+struct PRLibrary;
 #include <stdio.h>
 %}
 

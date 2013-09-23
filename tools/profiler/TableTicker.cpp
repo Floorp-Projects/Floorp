@@ -13,6 +13,7 @@
 #include "platform.h"
 #include "nsThreadUtils.h"
 #include "prenv.h"
+#include "prtime.h"
 #include "shared-libraries.h"
 #include "mozilla/StackWalk.h"
 #include "TableTicker.h"

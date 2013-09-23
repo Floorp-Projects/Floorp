@@ -12,6 +12,7 @@
 #include "nsTextServicesCID.h"
 #include "mozPersonalDictionary.h"
 #include "mozSpellI18NManager.h"
+#include "nsIFile.h"
 
 #define NS_SPELLCHECKER_CID         \
 { /* 8227f019-afc7-461e-b030-9f185d7a0e29 */    \

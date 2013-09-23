@@ -34,7 +34,7 @@
 #include "nsContentUtils.h"
 #include "nsTextFragment.h"
 #include "nsTextNode.h"
-
+#include "nsIInterfaceInfo.h"
 #include "nsIScriptError.h"
 
 #include "nsIStyleRuleProcessor.h"

@@ -9,6 +9,8 @@
 #include "nsNetUtil.h"
 #include "prprf.h"
 #include "nsEscape.h"
+#include "nsIAsyncInputStream.h"
+#include "nsIAsyncOutputStream.h"
 #include <algorithm>
 
 #define HEXDUMP_MAX_ROWS 16

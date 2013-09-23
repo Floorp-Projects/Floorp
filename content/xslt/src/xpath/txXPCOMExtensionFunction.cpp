@@ -18,6 +18,7 @@
 #include "txXPathObjectAdaptor.h"
 #include "mozilla/Attributes.h"
 #include "nsIClassInfo.h"
+#include "nsIInterfaceInfo.h"
 
 NS_IMPL_ISUPPORTS1(txXPathObjectAdaptor, txIXPathObject)
 
