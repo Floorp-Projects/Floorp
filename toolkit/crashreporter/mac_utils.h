@@ -6,7 +6,7 @@
 #ifndef toolkit_breakpad_mac_utils_h__
 #define toolkit_breakpad_mac_utils_h__
 
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 // Given an Objective-C NSException object, put exception info into a string.
 void GetObjCExceptionInfo(void* inException, nsACString& outString);

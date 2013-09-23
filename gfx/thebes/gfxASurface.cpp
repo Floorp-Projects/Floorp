@@ -49,7 +49,7 @@
 #include "nsCOMPtr.h"
 #include "nsIConsoleService.h"
 #include "nsServiceManagerUtils.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsIClipboardHelper.h"
 
 using namespace mozilla;

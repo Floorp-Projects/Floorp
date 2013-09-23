@@ -13,7 +13,7 @@
 #include "nsAutoJSValHolder.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsJSPrincipals.h"
 #include "nsContentUtils.h"
 #include "js/TypeDecls.h"

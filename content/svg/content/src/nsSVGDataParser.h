@@ -7,7 +7,7 @@
 #define __NS_SVGDATAPARSER_H__
 
 #include "nsError.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 //----------------------------------------------------------------------
 // helper macros

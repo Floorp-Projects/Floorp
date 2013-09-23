@@ -8,7 +8,7 @@
 
 #include "prlog.h"
 #include "nsTArray.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsIObserver.h"
 
 #include "gfxTypes.h"

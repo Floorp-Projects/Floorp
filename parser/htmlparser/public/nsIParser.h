@@ -21,7 +21,7 @@
 #include "nsISupports.h"
 #include "nsIStreamListener.h"
 #include "nsIDTD.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsTArray.h"
 #include "nsIAtom.h"
 #include "nsParserBase.h"

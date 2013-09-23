@@ -9,7 +9,7 @@
 #include "nsISupports.h"
 #include "nsColor.h"
 #include "nsRect.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 #include "nsEvent.h"
 #include "nsCOMPtr.h"

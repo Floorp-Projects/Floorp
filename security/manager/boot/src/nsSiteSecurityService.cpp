@@ -14,7 +14,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISocketProvider.h"
 #include "mozilla/Preferences.h"
