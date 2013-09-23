@@ -1102,6 +1102,10 @@ class JavaPanZoomController
         @Override
         protected float getPageStart() { return getMetrics().pageRectLeft; }
         @Override
+        protected float getMarginStart() { return mTarget.getMaxMargins().left - getMetrics().marginLeft; }
+        @Override
+        protected float getMarginEnd() { return mTarget.getMaxMargins().right - getMetrics().marginRight; }
+        @Override
         protected float getPageLength() { return getMetrics().getPageWidthWithMargins(); }
         @Override
         protected boolean marginsHidden() {
@@ -1121,6 +1125,10 @@ class JavaPanZoomController
         protected float getPageStart() { return getMetrics().pageRectTop; }
         @Override
         protected float getPageLength() { return getMetrics().getPageHeightWithMargins(); }
+        @Override
+        protected float getMarginStart() { return mTarget.getMaxMargins().top - getMetrics().marginTop; }
+        @Override
+        protected float getMarginEnd() { return mTarget.getMaxMargins().bottom - getMetrics().marginBottom; }
         @Override
         protected boolean marginsHidden() {
             ImmutableViewportMetrics metrics = getMetrics();
@@ -1169,6 +1177,11 @@ class JavaPanZoomController
                      mLastZoomFocus.y - detector.getFocusY());
             mLastZoomFocus.set(detector.getFocusX(), detector.getFocusY());
             ImmutableViewportMetrics target = getMetrics().scaleTo(zoomFactor, mLastZoomFocus);
+
+            // If overscroll is diabled, prevent zooming outside the normal document pans.
+            if (mX.getOverScrollMode() == View.OVER_SCROLL_NEVER || mY.getOverScrollMode() == View.OVER_SCROLL_NEVER) {
+                target = getValidViewportMetrics(target);
+            }
             mTarget.setViewportMetrics(target);
         }
 
