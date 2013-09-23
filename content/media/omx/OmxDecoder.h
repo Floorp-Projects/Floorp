@@ -5,6 +5,7 @@
 #include <stagefright/DataSource.h>
 #include <stagefright/MediaSource.h>
 #include <utils/RefBase.h>
+#include <stagefright/MediaExtractor.h>
 
 #include "GonkNativeWindow.h"
 #include "GonkNativeWindowClient.h"
@@ -172,7 +173,16 @@ public:
   // MediaResourceManagerClient::EventListener
   virtual void statusChanged();
 
-  bool Init();
+  // The MediaExtractor provides essential information for creating OMXCodec
+  // instance. Such as video/audio codec, we can retrieve them through the
+  // MediaExtractor::getTrackMetaData().
+  // In general cases, the extractor is created by a sp<DataSource> which
+  // connect to a MediaResource like ChannelMediaResource.
+  // Data is read from the MediaResource to create a suitable extractor which
+  // extracts data from a container.
+  // Note: RTSP requires a custom extractor because it doesn't have a container.
+  bool Init(sp<MediaExtractor>& extractor);
+
   bool TryLoad();
   bool IsDormantNeeded();
   bool IsWaitingMediaResources();

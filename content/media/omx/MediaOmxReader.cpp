@@ -76,6 +76,26 @@ void MediaOmxReader::ReleaseDecoder()
   }
 }
 
+nsresult MediaOmxReader::InitOmxDecoder()
+{
+  if (!mOmxDecoder.get()) {
+    //register sniffers, if they are not registered in this process.
+    DataSource::RegisterDefaultSniffers();
+    mDecoder->GetResource()->SetReadMode(MediaCacheStream::MODE_METADATA);
+
+    sp<DataSource> dataSource = new MediaStreamSource(mDecoder->GetResource(), mDecoder);
+    dataSource->initCheck();
+
+    sp<MediaExtractor> extractor = MediaExtractor::Create(dataSource);
+
+    mOmxDecoder = new OmxDecoder(mDecoder->GetResource(), mDecoder);
+    if (!mOmxDecoder->Init(extractor)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  return NS_OK;
+}
+
 nsresult MediaOmxReader::ReadMetadata(MediaInfo* aInfo,
                                       MetadataTags** aTags)
 {
@@ -83,11 +103,10 @@ nsresult MediaOmxReader::ReadMetadata(MediaInfo* aInfo,
 
   *aTags = nullptr;
 
-  if (!mOmxDecoder.get()) {
-    mOmxDecoder = new OmxDecoder(mDecoder->GetResource(), mDecoder);
-    if (!mOmxDecoder->Init()) {
-      return NS_ERROR_FAILURE;
-    }
+  // Initialize the internal OMX Decoder.
+  nsresult rv = InitOmxDecoder();
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   if (!mOmxDecoder->TryLoad()) {
