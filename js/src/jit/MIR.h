@@ -4286,6 +4286,28 @@ class MOsrScopeChain : public MUnaryInstruction
     }
 };
 
+// MIR representation of a JSObject ArgumentsObject pointer on the OSR StackFrame.
+// The pointer is indexed off of OsrFrameReg.
+class MOsrArgumentsObject : public MUnaryInstruction
+{
+  private:
+    MOsrArgumentsObject(MOsrEntry *entry)
+      : MUnaryInstruction(entry)
+    {
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(OsrArgumentsObject)
+    static MOsrArgumentsObject *New(MOsrEntry *entry) {
+        return new MOsrArgumentsObject(entry);
+    }
+
+    MOsrEntry *entry() {
+        return getOperand(0)->toOsrEntry();
+    }
+};
+
 // Check the current frame for over-recursion past the global stack limit.
 class MCheckOverRecursed : public MNullaryInstruction
 {
