@@ -56,11 +56,6 @@ public:
   // no MP3 frame has been detected yet.
   int64_t GetMP3Offset();
 
-  // The location in the stream of the last byte we looked at.
-  uint64_t GetLastStreamOffset() {
-    return mOffset + mBufferLength;
-  }
-
 private:
 
   // Parses aBuffer, starting at offset 0. Returns the number of bytes
