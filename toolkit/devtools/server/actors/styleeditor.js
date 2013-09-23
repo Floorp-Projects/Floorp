@@ -622,13 +622,10 @@ StyleSheetActor.prototype = {
       }
     };
 
-    if (channel instanceof Ci.nsIPrivateBrowsingChannel) {
-      let loadContext = this.window
-                            .QueryInterface(Ci.nsIInterfaceRequestor)
+    channel.loadGroup = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
                             .getInterface(Ci.nsIWebNavigation)
-                            .QueryInterface(Ci.nsILoadContext);
-      channel.setPrivate(loadContext.usePrivateBrowsing);
-    }
+                            .QueryInterface(Ci.nsIDocumentLoader)
+                            .loadGroup;
     channel.loadFlags = channel.LOAD_FROM_CACHE;
     channel.asyncOpen(streamListener, null);
   },
