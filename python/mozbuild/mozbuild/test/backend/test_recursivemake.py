@@ -467,21 +467,12 @@ class TestRecursiveMakeBackend(BackendTester):
         topsrcdir = env.topsrcdir.replace(os.sep, '/')
 
         expected = [
-            "ALL_IPDLSRCS += %s/bar/bar.ipdl" % topsrcdir,
+            "ALL_IPDLSRCS := %s/bar/bar.ipdl %s/bar/bar2.ipdlh %s/foo/foo.ipdl %s/foo/foo2.ipdlh" % tuple([topsrcdir] * 4),
             "",
-            "CPPSRCS += bar.cpp barChild.cpp barParent.cpp",
-            "",
-            "ALL_IPDLSRCS += %s/bar/bar2.ipdlh" % topsrcdir,
-            "",
-            "CPPSRCS += bar2.cpp",
-            "",
-            "ALL_IPDLSRCS += %s/foo/foo.ipdl" % topsrcdir,
-            "",
-            "CPPSRCS += foo.cpp fooChild.cpp fooParent.cpp",
-            "",
-            "ALL_IPDLSRCS += %s/foo/foo2.ipdlh" % topsrcdir,
-            "",
-            "CPPSRCS += foo2.cpp",
+            "CPPSRCS := bar.cpp barChild.cpp barParent.cpp" +
+            " bar2.cpp" +
+            " foo.cpp fooChild.cpp fooParent.cpp" +
+            " foo2.cpp",
             "",
             "IPDLDIRS := %s/bar %s/foo" % (topsrcdir, topsrcdir),
             "",
