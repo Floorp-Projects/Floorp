@@ -132,6 +132,7 @@ private:
 };
 
 class MediaResource;
+class MP3FrameParser;
 } // namespace mozilla
 
 namespace mozilla {
@@ -149,6 +150,11 @@ class TimeRanges;
 void GetEstimatedBufferedTimeRanges(mozilla::MediaResource* aStream,
                                     int64_t aDurationUsecs,
                                     mozilla::dom::TimeRanges* aOutBuffered);
+
+// Estimates the duration in microseconds of an MP3 stream with the given
+// MediaResource.
+int64_t GetEstimatedMP3Duration(mozilla::MediaResource *aResource,
+                                mozilla::MP3FrameParser *aParser);
 
 // Converts from number of audio frames (aFrames) to microseconds, given
 // the specified audio rate (aRate). Stores result in aOutUsecs. Returns true
