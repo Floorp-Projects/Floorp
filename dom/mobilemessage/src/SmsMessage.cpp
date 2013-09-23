@@ -260,10 +260,17 @@ SmsMessage::GetMessageClass(nsAString& aMessageClass)
 }
 
 NS_IMETHODIMP
-SmsMessage::GetTimestamp(DOMTimeStamp* aDate)
+SmsMessage::GetTimestamp(DOMTimeStamp* aTimestamp)
 {
-  *aDate = mData.timestamp();
+  *aTimestamp = mData.timestamp();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+SmsMessage::GetSentTimestamp(DOMTimeStamp* aSentTimestamp)
+{
+  *aSentTimestamp = 0;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

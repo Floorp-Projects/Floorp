@@ -5,7 +5,7 @@
 #include "domstubs.idl"
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(c591dcf8-5322-11e3-899e-9baad640ca82)]
+[scriptable, builtinclass, uuid(fc8153d2-0026-11e3-bf31-8b0c1d5e7638)]
 interface nsIDOMMozSmsMessage : nsISupports
 {
   /**
@@ -51,6 +51,10 @@ interface nsIDOMMozSmsMessage : nsISupports
   readonly attribute DOMString messageClass;
 
   readonly attribute DOMTimeStamp timestamp;
+
+  readonly attribute DOMTimeStamp sentTimestamp; 
+                                  // 0 if not available (e.g., |delivery| =
+                                  // "sending").
 
   readonly attribute DOMTimeStamp deliveryTimestamp;
                                   // 0 if not available (e.g., |delivery| =

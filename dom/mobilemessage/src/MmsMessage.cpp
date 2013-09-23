@@ -571,6 +571,13 @@ MmsMessage::GetTimestamp(DOMTimeStamp* aTimestamp)
 }
 
 NS_IMETHODIMP
+MmsMessage::GetSentTimestamp(DOMTimeStamp* aSentTimestamp)
+{
+  *aSentTimestamp = 0;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 MmsMessage::GetRead(bool* aRead)
 {
   *aRead = mRead;
