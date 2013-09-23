@@ -11,10 +11,10 @@
 #define _mozTXTToHTMLConv_h__
 
 #include "mozITXTToHTMLConv.h"
-#include "nsIIOService.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
+class nsIIOService;
 
 class mozTXTToHTMLConv : public mozITXTToHTMLConv
 {

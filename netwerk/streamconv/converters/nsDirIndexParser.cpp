@@ -10,17 +10,15 @@
 #include "prprf.h"
 
 #include "nsDirIndexParser.h"
-#include "nsReadableUtils.h"
-#include "nsDirIndex.h"
 #include "nsEscape.h"
-#include "nsIServiceManager.h"
 #include "nsIInputStream.h"
-#include "nsIChannel.h"
-#include "nsIURI.h"
 #include "nsCRT.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefLocalizedString.h"
+#include "nsITextToSubURI.h"
+#include "nsIDirIndex.h"
+#include "nsServiceManagerUtils.h"
 
 using namespace mozilla;
 

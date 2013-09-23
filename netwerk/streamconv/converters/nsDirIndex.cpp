@@ -4,8 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDirIndex.h"
-#include "nsReadableUtils.h"
-#include "nsCRT.h"
 #include "nsISupportsObsolete.h"
 
 NS_IMPL_ISUPPORTS1(nsDirIndex,
