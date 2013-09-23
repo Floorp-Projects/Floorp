@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 namespace mozilla {
-static int32_t AppUnitsPerCSSPixel() { return 60; }
-static int32_t AppUnitsPerCSSInch() { return 96 * AppUnitsPerCSSPixel(); }
+inline int32_t AppUnitsPerCSSPixel() { return 60; }
+inline int32_t AppUnitsPerCSSInch() { return 96 * AppUnitsPerCSSPixel(); }
 }
 #endif /* _NS_APPUNITS_H_ */

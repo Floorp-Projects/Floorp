@@ -23,6 +23,7 @@
 #include "nsDOMEventTargetHelper.h"
 #include "nsPIWindowRoot.h"
 #include "nsGlobalWindow.h"
+#include "nsDeviceContext.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
