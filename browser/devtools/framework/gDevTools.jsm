@@ -127,6 +127,33 @@ DevTools.prototype = {
   },
 
   /**
+   * Get a tool definition if it exists and is enabled.
+   *
+   * @param {string} toolId
+   *        The id of the tool to show
+   *
+   * @return {ToolDefinition|null} tool
+   *         The ToolDefinition for the id or null.
+   */
+  getToolDefinition: function DT_getToolDefinition(toolId) {
+    let tool = this._tools.get(toolId);
+    if (!tool) {
+      return null;
+    } else if (tool.id == "options") {
+      return tool;
+    }
+
+    let enabled;
+    try {
+      enabled = Services.prefs.getBoolPref(tool.visibilityswitch);
+    } catch (e) {
+      enabled = true;
+    }
+
+    return enabled ? tool : null;
+  },
+
+  /**
    * Allow ToolBoxes to get at the list of tools that they should populate
    * themselves with.
    *
@@ -136,19 +163,12 @@ DevTools.prototype = {
   getToolDefinitionMap: function DT_getToolDefinitionMap() {
     let tools = new Map();
 
-    for (let [key, value] of this._tools) {
-      let enabled;
-
-      try {
-        enabled = Services.prefs.getBoolPref(value.visibilityswitch);
-      } catch(e) {
-        enabled = true;
-      }
-
-      if (enabled || value.id == "options") {
-        tools.set(key, value);
+    for (let [id, definition] of this._tools) {
+      if (this.getToolDefinition(id)) {
+        tools.set(id, definition);
       }
     }
+
     return tools;
   },
 
@@ -162,8 +182,11 @@ DevTools.prototype = {
    */
   getToolDefinitionArray: function DT_getToolDefinitionArray() {
     let definitions = [];
-    for (let [id, definition] of this.getToolDefinitionMap()) {
-      definitions.push(definition);
+
+    for (let [id, definition] of this._tools) {
+      if (this.getToolDefinition(id)) {
+        definitions.push(definition);
+      }
     }
 
     return definitions.sort(this.ordinalSort);
@@ -415,8 +438,7 @@ let gDevToolsBrowser = {
   selectToolCommand: function(gBrowser, toolId) {
     let target = devtools.TargetFactory.forTab(gBrowser.selectedTab);
     let toolbox = gDevTools.getToolbox(target);
-    let tools = gDevTools.getToolDefinitionMap();
-    let toolDefinition = tools.get(toolId);
+    let toolDefinition = gDevTools.getToolDefinition(toolId);
 
     if (toolbox && toolbox.currentToolId == toolId) {
       toolbox.fireCustomKey(toolId);
@@ -602,13 +624,6 @@ let gDevToolsBrowser = {
       if (toolDefinition.id == "options") {
         continue;
       }
-
-      // Skip if the tool is disabled.
-      try {
-        if (!Services.prefs.getBoolPref(toolDefinition.visibilityswitch)) {
-          continue;
-        }
-      } catch(e) {}
 
       let elements = gDevToolsBrowser._createToolMenuElements(toolDefinition, doc);
 
