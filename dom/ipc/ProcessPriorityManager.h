@@ -8,9 +8,6 @@
 #define mozilla_ProcessPriorityManager_h_
 
 #include "mozilla/HalTypes.h"
-#include "mozilla/StaticPtr.h"
-#include "nsIObserver.h"
-#include "nsDataHashtable.h"
 
 namespace mozilla {
 namespace dom {
