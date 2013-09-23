@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIOutputStream.idl"
-#include "nsIFile.idl"
 
+interface nsIFile;
 
 %{C++
 #define NS_APPLEFILEDECODER_CID                      \

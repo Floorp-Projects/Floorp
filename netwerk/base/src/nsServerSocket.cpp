@@ -14,6 +14,8 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/net/DNS.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIFile.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
