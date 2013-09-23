@@ -426,7 +426,7 @@ pref("services.push.udp.wakeupEnabled", true);
 #ifdef MOZ_B2G_RIL
 pref("dom.mozNetworkStats.enabled", true);
 pref("ril.cellbroadcast.disabled", false);
-pref("dom.webapps.firstRunWithSIM", false);
+pref("dom.webapps.firstRunWithSIM", true);
 #endif
 
 // WebSettings
