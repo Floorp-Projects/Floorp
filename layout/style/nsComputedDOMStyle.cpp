@@ -43,6 +43,7 @@
 #include "mozilla/dom/Element.h"
 #include "prtime.h"
 #include "nsWrapperCacheInlines.h"
+#include "mozilla/AppUnits.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -1094,7 +1095,7 @@ nsComputedDOMStyle::DoGetTransform()
                                             mStyleContextHolder->PresContext(),
                                             dummy,
                                             bounds,
-                                            float(nsDeviceContext::AppUnitsPerCSSPixel()));
+                                            float(mozilla::AppUnitsPerCSSPixel()));
 
   return MatrixToCSSValue(matrix);
 }
