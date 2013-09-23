@@ -1547,6 +1547,13 @@ LIRGenerator::visitOsrScopeChain(MOsrScopeChain *object)
 }
 
 bool
+LIRGenerator::visitOsrArgumentsObject(MOsrArgumentsObject *object)
+{
+    LOsrArgumentsObject *lir = new LOsrArgumentsObject(useRegister(object->entry()));
+    return define(lir, object);
+}
+
+bool
 LIRGenerator::visitToDouble(MToDouble *convert)
 {
     MDefinition *opd = convert->input();
