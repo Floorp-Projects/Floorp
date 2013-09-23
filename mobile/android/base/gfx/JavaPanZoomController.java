@@ -1177,6 +1177,11 @@ class JavaPanZoomController
                      mLastZoomFocus.y - detector.getFocusY());
             mLastZoomFocus.set(detector.getFocusX(), detector.getFocusY());
             ImmutableViewportMetrics target = getMetrics().scaleTo(zoomFactor, mLastZoomFocus);
+
+            // If overscroll is diabled, prevent zooming outside the normal document pans.
+            if (mX.getOverScrollMode() == View.OVER_SCROLL_NEVER || mY.getOverScrollMode() == View.OVER_SCROLL_NEVER) {
+                target = getValidViewportMetrics(target);
+            }
             mTarget.setViewportMetrics(target);
         }
 
