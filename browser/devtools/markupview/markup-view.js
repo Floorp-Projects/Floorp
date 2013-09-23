@@ -13,6 +13,7 @@ const DEFAULT_MAX_CHILDREN = 100;
 const COLLAPSE_ATTRIBUTE_LENGTH = 120;
 const COLLAPSE_DATA_URL_REGEX = /^data.+base64/;
 const COLLAPSE_DATA_URL_LENGTH = 60;
+const CONTAINER_FLASHING_DURATION = 500;
 
 const {UndoStack} = require("devtools/shared/undo");
 const {editableField, InplaceEditor} = require("devtools/shared/inplace-editor");
@@ -357,9 +358,11 @@ MarkupView.prototype = {
    *
    * @param DOMNode aNode
    *        The node in the content document.
+   * @param boolean aFlashNode
+   *        Whether the newly imported node should be flashed
    * @returns MarkupContainer The MarkupContainer object for this element.
    */
-  importNode: function MT_importNode(aNode)
+  importNode: function MT_importNode(aNode, aFlashNode)
   {
     if (!aNode) {
       return null;
@@ -375,6 +378,9 @@ MarkupView.prototype = {
       this._rootNode = aNode;
     } else {
       var container = new MarkupContainer(this, aNode);
+      if (aFlashNode) {
+        container.flashMutation();
+      }
     }
 
     this._containers.set(aNode, container);
@@ -415,12 +421,60 @@ MarkupView.prototype = {
         container.update(false);
       } else if (type === "childList") {
         container.childrenDirty = true;
-        this._updateChildren(container);
+        // Update the children to take care of changes in the DOM
+        // Passing true as the last parameter asks for mutation flashing of the
+        // new nodes
+        this._updateChildren(container, {flash: true});
       }
     }
     this._waitForChildren().then(() => {
+      this._flashMutatedNodes(aMutations);
       this._inspector.emit("markupmutation");
     });
+  },
+
+  /**
+   * Given a list of mutations returned by the mutation observer, flash the
+   * corresponding containers to attract attention.
+   */
+  _flashMutatedNodes: function MT_flashMutatedNodes(aMutations)
+  {
+    let addedOrEditedContainers = new Set();
+    let removedContainers = new Set();
+
+    for (let {type, target, added, removed} of aMutations) {
+      let container = this._containers.get(target);
+
+      if (container) {
+        if (type === "attributes" || type === "characterData") {
+          addedOrEditedContainers.add(container);
+        } else if (type === "childList") {
+          // If there has been removals, flash the parent
+          if (removed.length) {
+            removedContainers.add(container);
+          }
+
+          // If there has been additions, flash the nodes
+          added.forEach(added => {
+            let addedContainer = this._containers.get(added);
+            addedOrEditedContainers.add(addedContainer);
+
+            // The node may be added as a result of an append, in which case it
+            // it will have been removed from another container first, but in
+            // these cases we don't want to flash both the removal and the
+            // addition
+            removedContainers.delete(container);
+          });
+        }
+      }
+    }
+
+    for (let container of removedContainers) {
+      container.flashMutation();
+    }
+    for (let container of addedOrEditedContainers) {
+      container.flashMutation();
+    }
   },
 
   /**
@@ -449,7 +503,7 @@ MarkupView.prototype = {
    */
   _expandContainer: function MT__expandContainer(aContainer)
   {
-    return this._updateChildren(aContainer, true).then(() => {
+    return this._updateChildren(aContainer, {expand: true}).then(() => {
       aContainer.expanded = true;
     });
   },
@@ -543,7 +597,7 @@ MarkupView.prototype = {
       if (!container.elt.parentNode) {
         let parentContainer = this._containers.get(parent);
         parentContainer.childrenDirty = true;
-        this._updateChildren(parentContainer, node);
+        this._updateChildren(parentContainer, {expand: node});
       }
 
       node = parent;
@@ -606,11 +660,18 @@ MarkupView.prototype = {
    *    grab a subset).
    *    container.childrenDirty should be set in that case too!
    *
-   * This method returns a promise that will be resolved when the children
-   * are ready (which may be immediately).
+   * @param MarkupContainer aContainer
+   *        The markup container whose children need updating
+   * @param Object options
+   *        Options are {expand:boolean,flash:boolean}
+   * @return a promise that will be resolved when the children are ready
+   * (which may be immediately).
    */
-  _updateChildren: function(aContainer, aExpand)
+  _updateChildren: function(aContainer, options)
   {
+    let expand = options && options.expand;
+    let flash = options && options.flash;
+
     aContainer.hasChildren = aContainer.node.hasChildren;
 
     if (!this._queuedChildUpdates) {
@@ -636,7 +697,7 @@ MarkupView.prototype = {
     // If we're not expanded (or asked to update anyway), we're done for
     // now.  Note that this will leave the childrenDirty flag set, so when
     // expanded we'll refresh the child list.
-    if (!(aContainer.expanded || aExpand)) {
+    if (!(aContainer.expanded || expand)) {
       return promise.resolve(aContainer);
     }
 
@@ -657,13 +718,13 @@ MarkupView.prototype = {
       // If children are dirty, we got a change notification for this node
       // while the request was in progress, we need to do it again.
       if (aContainer.childrenDirty) {
-        return this._updateChildren(aContainer, centered);
+        return this._updateChildren(aContainer, {expand: centered});
       }
 
       let fragment = this.doc.createDocumentFragment();
 
       for (let child of children.nodes) {
-        let container = this.importNode(child);
+        let container = this.importNode(child, flash);
         fragment.appendChild(container.elt);
       }
 
@@ -850,7 +911,7 @@ MarkupView.prototype = {
  * tree.  Manages creation of the editor for the node and
  * a <ul> for placing child elements, and expansion/collapsing
  * of the element.
- * 
+ *
  * @param MarkupView aMarkupView
  *        The markup view that owns this container.
  * @param DOMNode aNode
@@ -999,6 +1060,54 @@ MarkupContainer.prototype = {
     event.stopPropagation();
   },
 
+  /**
+   * Temporarily flash the container to attract attention.
+   * Used for markup mutations.
+   */
+  flashMutation: function() {
+    if (!this.selected) {
+      let contentWin = this.markup._frame.contentWindow;
+      this.flashed = true;
+      if (this._flashMutationTimer) {
+        contentWin.clearTimeout(this._flashMutationTimer);
+        this._flashMutationTimer = null;
+      }
+      this._flashMutationTimer = contentWin.setTimeout(() => {
+        this.flashed = false;
+      }, CONTAINER_FLASHING_DURATION);
+    }
+  },
+
+  set flashed(aValue) {
+    if (aValue) {
+      // Make sure the animation class is not here
+      this.highlighter.classList.remove("flash-out");
+
+      // Change the background
+      this.highlighter.classList.add("theme-bg-contrast");
+
+      // Change the text color
+      this.editor.elt.classList.add("theme-fg-contrast");
+      [].forEach.call(
+        this.editor.elt.querySelectorAll("[class*=theme-fg-color]"),
+        span => span.classList.add("theme-fg-contrast")
+      );
+    } else {
+      // Add the animation class to smoothly remove the background
+      this.highlighter.classList.add("flash-out");
+
+      // Remove the background
+      this.highlighter.classList.remove("theme-bg-contrast");
+
+      // Remove the text color
+      this.editor.elt.classList.remove("theme-fg-contrast");
+      [].forEach.call(
+        this.editor.elt.querySelectorAll("[class*=theme-fg-color]"),
+        span => span.classList.remove("theme-fg-contrast")
+      );
+    }
+  },
+
   _highlighted: false,
 
   /**
@@ -1006,6 +1115,7 @@ MarkupContainer.prototype = {
    * (that is if the tag is expanded)
    */
   set highlighted(aValue) {
+    this.highlighter.classList.remove("flash-out");
     this._highlighted = aValue;
     if (aValue) {
       if (!this.selected) {
@@ -1039,6 +1149,7 @@ MarkupContainer.prototype = {
   },
 
   set selected(aValue) {
+    this.highlighter.classList.remove("flash-out");
     this._selected = aValue;
     this.editor.selected = aValue;
     if (this._selected) {
@@ -1361,7 +1472,7 @@ ElementEditor.prototype = {
         }
       },
       done: (aVal, aCommit) => {
-        if (!aCommit) {
+        if (!aCommit || aVal === initial) {
           return;
         }
 
