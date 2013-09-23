@@ -9,6 +9,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsEventStateManager.h"
 #include "mozilla/LookAndFeel.h"
+#include "nsDeviceContext.h"
 
 using namespace mozilla;
 

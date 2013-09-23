@@ -13,6 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nscore.h"
 #include "nsCSSProperty.h"
+#include "nsCSSProps.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsStyleContext.h"
 #include "nsIWeakReferenceUtils.h"
@@ -543,7 +544,12 @@ private:
 
     nsCSSProperty mProperty;
     ComputeMethod mGetter;
-    bool mNeedsLayoutFlush;
+
+    bool IsLayoutFlushNeeded() const
+    {
+      return nsCSSProps::PropHasFlags(mProperty,
+                                      CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH);
+    }
   };
 
   static const ComputedStyleMapEntry* GetQueryablePropertyMap(uint32_t* aLength);

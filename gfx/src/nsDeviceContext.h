@@ -99,7 +99,7 @@ public:
      * Gets the number of app units in one CSS inch; this is
      * 96 times AppUnitsPerCSSPixel.
      */
-    static int32_t AppUnitsPerCSSInch() { return 96 * AppUnitsPerCSSPixel(); }
+    static int32_t AppUnitsPerCSSInch() { return mozilla::AppUnitsPerCSSInch(); }
 
     /**
      * Get the unscaled ratio of app units to dev pixels; useful if something

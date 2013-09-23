@@ -1703,12 +1703,6 @@ CheckScript(JSContext *cx, JSScript *script, bool osr)
         return false;
     }
 
-    if (osr && script->needsArgsObj()) {
-        // OSR-ing into functions with arguments objects is not supported.
-        IonSpew(IonSpew_Abort, "OSR script has argsobj");
-        return false;
-    }
-
     if (!script->compileAndGo) {
         IonSpew(IonSpew_Abort, "not compile-and-go");
         return false;
