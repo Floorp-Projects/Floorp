@@ -1526,33 +1526,27 @@ void
 Debugger::markAll(JSTracer *trc)
 {
     JSRuntime *rt = trc->runtime;
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        GlobalObjectSet &debuggees = c->getDebuggees();
+    for (Debugger *dbg = rt->debuggerList.getFirst(); dbg; dbg = dbg->getNext()) {
+        GlobalObjectSet &debuggees = dbg->debuggees;
         for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
             GlobalObject *global = e.front();
 
             MarkObjectUnbarriered(trc, &global, "Global Object");
             if (global != e.front())
                 e.rekeyFront(global);
+        }
 
-            const GlobalObject::DebuggerVector *debuggers = global->getDebuggers();
-            JS_ASSERT(debuggers);
-            for (Debugger * const *p = debuggers->begin(); p != debuggers->end(); p++) {
-                Debugger *dbg = *p;
+        HeapPtrObject &dbgobj = dbg->toJSObjectRef();
+        MarkObject(trc, &dbgobj, "Debugger Object");
 
-                HeapPtrObject &dbgobj = dbg->toJSObjectRef();
-                MarkObject(trc, &dbgobj, "Debugger Object");
+        dbg->scripts.trace(trc);
+        dbg->sources.trace(trc);
+        dbg->objects.trace(trc);
+        dbg->environments.trace(trc);
 
-                dbg->scripts.trace(trc);
-                dbg->sources.trace(trc);
-                dbg->objects.trace(trc);
-                dbg->environments.trace(trc);
-
-                for (Breakpoint *bp = dbg->firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
-                    MarkScriptUnbarriered(trc, &bp->site->script, "breakpoint script");
-                    MarkObject(trc, &bp->getHandlerRef(), "breakpoint handler");
-                }
-            }
+        for (Breakpoint *bp = dbg->firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
+            MarkScriptUnbarriered(trc, &bp->site->script, "breakpoint script");
+            MarkObject(trc, &bp->getHandlerRef(), "breakpoint handler");
         }
     }
 }
