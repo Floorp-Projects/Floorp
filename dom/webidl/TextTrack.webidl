@@ -34,13 +34,14 @@ interface TextTrack : EventTarget {
 
   readonly attribute TextTrackCueList? cues;
   readonly attribute TextTrackCueList? activeCues;
-  readonly attribute TextTrackRegionList? regions;
+  readonly attribute VTTRegionList? regions;
 
   void addCue(VTTCue cue);
+  [Throws]
   void removeCue(VTTCue cue);
 
            attribute EventHandler oncuechange;
   [Throws]
-  void removeRegion(TextTrackRegion region);
-  void addRegion(TextTrackRegion region);
+  void removeRegion(VTTRegion region);
+  void addRegion(VTTRegion region);
 };

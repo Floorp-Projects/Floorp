@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/TextTrack.h"
 #include "mozilla/dom/TextTrackRegion.h"
-#include "mozilla/dom/TextTrackRegionBinding.h"
+#include "mozilla/dom/VTTRegionBinding.h"
 
 namespace mozilla {
 namespace dom {
@@ -22,7 +22,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 TextTrackRegion::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return TextTrackRegionBinding::Wrap(aCx, aScope, this);
+  return VTTRegionBinding::Wrap(aCx, aScope, this);
 }
 
 already_AddRefed<TextTrackRegion>

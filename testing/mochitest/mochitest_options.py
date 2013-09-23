@@ -2,14 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import mozinfo
+import moznetwork
 import optparse
 import os
 import tempfile
 
-from automation import Automation
 from automationutils import addCommonOptions, isURL
 from mozprofile import DEFAULT_PORTS
-import moznetwork
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -322,19 +322,12 @@ class MochitestOptions(optparse.OptionParser):
         }],
     ]
 
-    def __init__(self, automation=None, **kwargs):
-        self._automation = automation or Automation()
+    def __init__(self, **kwargs):
+
         optparse.OptionParser.__init__(self, **kwargs)
-        defaults = {}
-
-        # we want to pass down everything from self._automation.__all__
-        addCommonOptions(self, defaults=dict(zip(self._automation.__all__,
-                 [getattr(self._automation, x) for x in self._automation.__all__])))
-
-        for option in self.mochitest_options:
-            self.add_option(*option[0], **option[1])
-
-        self.set_defaults(**defaults)
+        for option, value in self.mochitest_options:
+            self.add_option(*option, **value)
+        addCommonOptions(self)
         self.set_usage(self.__doc__)
 
     def verifyOptions(self, options, mochitest):
@@ -385,13 +378,18 @@ class MochitestOptions(optparse.OptionParser):
         if options.symbolsPath and not isURL(options.symbolsPath):
             options.symbolsPath = mochitest.getFullPath(options.symbolsPath)
 
-        options.webServer = self._automation.DEFAULT_WEB_SERVER
-        options.httpPort = self._automation.DEFAULT_HTTP_PORT
-        options.sslPort = self._automation.DEFAULT_SSL_PORT
-        options.webSocketPort = self._automation.DEFAULT_WEBSOCKET_PORT
+        # Set server information on the options object
+        options.webServer = '127.0.0.1'
+        options.httpPort = DEFAULT_PORTS['http']
+        options.sslPort = DEFAULT_PORTS['https']
+        #        options.webSocketPort = DEFAULT_PORTS['ws']
+        options.webSocketPort = str(9988) # <- http://hg.mozilla.org/mozilla-central/file/b871dfb2186f/build/automation.py.in#l30
+        # The default websocket port is incorrect in mozprofile; it is
+        # set to the SSL proxy setting. See:
+        # see https://bugzilla.mozilla.org/show_bug.cgi?id=916517
 
         if options.vmwareRecording:
-            if not self._automation.IS_WIN32:
+            if not mozinfo.isWin:
                 self.error("use-vmware-recording is only supported on Windows.")
             mochitest.vmwareHelperPath = os.path.join(
                 options.utilityPath, VMWARE_RECORDING_HELPER_BASENAME + ".dll")
@@ -444,7 +442,7 @@ class MochitestOptions(optparse.OptionParser):
                 options.testingModulesDir += '/'
 
         if options.immersiveMode:
-            if not self._automation.IS_WIN32:
+            if not mozinfo.isWin:
                 self.error("immersive is only supported on Windows 8 and up.")
             mochitest.immersiveHelperPath = os.path.join(
                 options.utilityPath, "metrotestharness.exe")

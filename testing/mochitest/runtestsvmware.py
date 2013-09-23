@@ -21,7 +21,8 @@ from runtests import Mochitest, MochitestOptions
 class VMwareOptions(MochitestOptions):
   def __init__(self, automation, mochitest, **kwargs):
     defaults = {}
-    MochitestOptions.__init__(self, automation, mochitest.SCRIPT_DIRECTORY)
+    self._automation = automation or Automation()
+    MochitestOptions.__init__(self, mochitest.SCRIPT_DIRECTORY)
 
     def checkPathCallback(option, opt_str, value, parser):
       path = mochitest.getFullPath(value)

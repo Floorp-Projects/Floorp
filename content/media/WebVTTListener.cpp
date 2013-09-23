@@ -5,6 +5,8 @@
 
 #include "WebVTTListener.h"
 #include "mozilla/dom/TextTrackCue.h"
+#include "mozilla/dom/TextTrackRegion.h"
+#include "mozilla/dom/VTTRegionBinding.h"
 #include "mozilla/dom/HTMLTrackElement.h"
 #include "nsIInputStream.h"
 #include "nsIWebVTTParserWrapper.h"
@@ -172,7 +174,17 @@ WebVTTListener::OnCue(const JS::Value &aCue, JSContext* aCx)
 NS_IMETHODIMP
 WebVTTListener::OnRegion(const JS::Value &aRegion, JSContext* aCx)
 {
-  // TODO: Implement VTTRegions see bug 897504
+  if (!aRegion.isObject()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  TextTrackRegion* region;
+  nsresult rv = UNWRAP_OBJECT(VTTRegion, aCx, &aRegion.toObject(),
+                              region);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mElement->mTrack->AddRegion(*region);
+
   return NS_OK;
 }
 
