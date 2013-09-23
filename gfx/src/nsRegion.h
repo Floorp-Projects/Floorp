@@ -14,7 +14,7 @@
 #include "nsError.h"                    // for nsresult
 #include "nsPoint.h"                    // for nsIntPoint, nsPoint
 #include "nsRect.h"                     // for nsIntRect, nsRect
-#include "nsStringGlue.h"               // for nsCString
+#include "nsString.h"               // for nsCString
 #include "xpcom-config.h"               // for CPP_THROW_NEW
 
 class nsIntRegion;

@@ -16,7 +16,7 @@
 #include "nsIAtom.h"                    // for nsIAtom
 #include "nsMathUtils.h"                // for NS_round
 #include "nsRenderingContext.h"         // for nsRenderingContext
-#include "nsStringGlue.h"               // for nsString
+#include "nsString.h"               // for nsString
 #include "nsStyleConsts.h"              // for NS_STYLE_HYPHENS_NONE
 
 class gfxUserFontSet;

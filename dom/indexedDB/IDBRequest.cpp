@@ -18,7 +18,7 @@
 #include "nsEventDispatcher.h"
 #include "nsJSUtils.h"
 #include "nsPIDOMWindow.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsThreadUtils.h"
 #include "nsWrapperCacheInlines.h"
 

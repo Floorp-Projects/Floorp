@@ -7,7 +7,7 @@
 #define nsCharsetAlias_h___
 
 #include "nscore.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 class nsCharsetConverterManager;
 class nsScriptableUnicodeConverter;

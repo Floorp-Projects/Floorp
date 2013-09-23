@@ -8,7 +8,7 @@
 
 #include "Workers.h"
 #include "mozilla/dom/workers/bindings/DOMBindingBase.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 BEGIN_WORKERS_NAMESPACE
 

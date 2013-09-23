@@ -16,7 +16,7 @@
 #endif
 
 #include "nsError.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "prlog.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"

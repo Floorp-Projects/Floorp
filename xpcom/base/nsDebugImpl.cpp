@@ -13,7 +13,7 @@
 #ifdef MOZ_CRASHREPORTER
 # include "nsExceptionHandler.h"
 #endif
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "prprf.h"
 #include "prlog.h"
 #include "nsError.h"

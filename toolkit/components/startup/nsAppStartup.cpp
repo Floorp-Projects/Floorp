@@ -23,7 +23,7 @@
 #include "nsNativeCharsetUtils.h"
 #include "nsThreadUtils.h"
 #include "nsAutoPtr.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "mozilla/Preferences.h"
 #include "GeckoProfiler.h"
 

@@ -25,7 +25,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsNetUtil.h"
 #include "nsScriptLoader.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"

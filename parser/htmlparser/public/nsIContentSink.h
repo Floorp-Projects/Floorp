@@ -17,7 +17,7 @@
  * about more, which is the IHTMLContentSink interface. (See that file for details).
  */
 #include "nsISupports.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "mozFlushType.h"
 #include "nsIDTD.h"
 
