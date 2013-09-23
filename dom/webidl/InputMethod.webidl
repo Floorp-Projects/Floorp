@@ -23,6 +23,10 @@ interface MozInputMethod : EventTarget {
   // allow to mutate.  this attribute should be null when there is no
   // text field currently focused.
   readonly attribute MozInputContext? inputcontext;
+
+  [ChromeOnly]
+  // Activate or decactive current input method window.
+  void setActive(boolean isActive);
 };
 
 // Manages the list of IMEs, enables/disables IME and switches to an

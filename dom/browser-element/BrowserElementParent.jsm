@@ -92,6 +92,10 @@ this.BrowserElementParentBuilder = {
   }
 }
 
+
+// The active input method iframe.
+let activeInputFrame = null;
+
 function BrowserElementParent(frameLoader, hasRemoteFrame) {
   debug("Creating new BrowserElementParent object for " + frameLoader);
   this._domRequestCounter = 0;
@@ -141,6 +145,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
     "exit-fullscreen": this._exitFullscreen,
     "got-visible": this._gotDOMRequestResult,
     "visibilitychange": this._childVisibilityChange,
+    "got-set-input-method-active": this._gotDOMRequestResult
   }
 
   this._mm.addMessageListener('browser-element-api:call', function(aMsg) {
@@ -187,6 +192,13 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   defineMethod('removeNextPaintListener', this._removeNextPaintListener);
   defineDOMRequestMethod('getCanGoBack', 'get-can-go-back');
   defineDOMRequestMethod('getCanGoForward', 'get-can-go-forward');
+
+  let principal = this._frameElement.ownerDocument.nodePrincipal;
+  let perm = Services.perms
+             .testExactPermissionFromPrincipal(principal, "inputmethod-manage");
+  if (perm === Ci.nsIPermissionManager.ALLOW_ACTION) {
+    defineMethod('setInputMethodActive', this._setInputMethodActive);
+  }
 
   // Listen to visibilitychange on the iframe's owner window, and forward
   // changes down to the child.  We want to do this while registering as few
@@ -579,6 +591,47 @@ BrowserElementParent.prototype = {
 
     if (this._nextPaintListeners.length == 0)
       this._sendAsyncMsg('deactivate-next-paint-listener');
+  },
+
+  _setInputMethodActive: function(isActive) {
+    if (typeof isActive !== 'boolean') {
+      throw Components.Exception("Invalid argument",
+                                 Cr.NS_ERROR_INVALID_ARG);
+    }
+
+    let req = Services.DOMRequest.createRequest(this._window);
+
+    // Deactivate the old input method if needed.
+    if (activeInputFrame && isActive) {
+      let reqOld = XPCNativeWrapper.unwrap(activeInputFrame)
+                                   .setInputMethodActive(false);
+      reqOld.onsuccess = function() {
+        activeInputFrame = null;
+        this._sendSetInputMethodActiveDOMRequest(req, isActive);
+      }.bind(this);
+      reqOld.onerror = function() {
+        Services.DOMRequest.fireErrorAsync(req,
+          'Failed to deactivate the old input method: ' +
+          reqOld.error + '.');
+      };
+    } else {
+      this._sendSetInputMethodActiveDOMRequest(req, isActive);
+    }
+    return req;
+  },
+
+  _sendSetInputMethodActiveDOMRequest: function(req, isActive) {
+    let id = 'req_' + this._domRequestCounter++;
+    let data = {
+      id : id,
+      args: { isActive: isActive }
+    };
+    if (this._sendAsyncMsg('set-input-method-active', data)) {
+      activeInputFrame = this._frameElement;
+      this._pendingDOMRequests[id] = req;
+    } else {
+      Services.DOMRequest.fireErrorAsync(req, 'fail');
+    }
   },
 
   _fireKeyEvent: function(data) {
