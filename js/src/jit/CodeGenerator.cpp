@@ -1025,6 +1025,18 @@ CodeGenerator::visitOsrScopeChain(LOsrScopeChain *lir)
 }
 
 bool
+CodeGenerator::visitOsrArgumentsObject(LOsrArgumentsObject *lir)
+{
+    const LAllocation *frame   = lir->getOperand(0);
+    const LDefinition *object  = lir->getDef(0);
+
+    const ptrdiff_t frameOffset = StackFrame::offsetOfArgumentsObject();
+
+    masm.loadPtr(Address(ToRegister(frame), frameOffset), ToRegister(object));
+    return true;
+}
+
+bool
 CodeGenerator::visitStackArgT(LStackArgT *lir)
 {
     const LAllocation *arg = lir->getArgument();
