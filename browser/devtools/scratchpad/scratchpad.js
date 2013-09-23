@@ -14,19 +14,34 @@
 
 "use strict";
 
-let require = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
+const Cu = Components.utils;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
-let { Cc, Ci, Cu } = require("chrome");
-let promise = require("sdk/core/promise");
-let Telemetry = require("devtools/shared/telemetry");
-let DevtoolsHelpers = require("devtools/shared/helpers");
-let TargetFactory = require("devtools/framework/target").TargetFactory;
+const SCRATCHPAD_CONTEXT_CONTENT = 1;
+const SCRATCHPAD_CONTEXT_BROWSER = 2;
+const BUTTON_POSITION_SAVE       = 0;
+const BUTTON_POSITION_CANCEL     = 1;
+const BUTTON_POSITION_DONT_SAVE  = 2;
+const BUTTON_POSITION_REVERT     = 0;
+
+const SCRATCHPAD_L10N = "chrome://browser/locale/devtools/scratchpad.properties";
+const DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
+const PREF_RECENT_FILES_MAX = "devtools.scratchpad.recentFilesMax";
+
+const VARIABLES_VIEW_URL = "chrome://browser/content/devtools/widgets/VariablesView.xul";
+
+const require   = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
+const promise   = require("sdk/core/promise");
+const Telemetry = require("devtools/shared/telemetry");
 const escodegen = require("escodegen/escodegen");
+const Editor    = require("devtools/sourceeditor/editor");
+const TargetFactory = require("devtools/framework/target").TargetFactory;
+const DevtoolsHelpers = require("devtools/shared/helpers");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource:///modules/source-editor.jsm");
 Cu.import("resource:///modules/devtools/scratchpad-manager.jsm");
 Cu.import("resource://gre/modules/jsdebugger.jsm");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
@@ -54,19 +69,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "DebuggerClient",
   "resource://gre/modules/devtools/dbg-client.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "REMOTE_TIMEOUT", () =>
-  Services.prefs.getIntPref("devtools.debugger.remote-timeout")
-);
- 
-const SCRATCHPAD_CONTEXT_CONTENT = 1;
-const SCRATCHPAD_CONTEXT_BROWSER = 2;
-const SCRATCHPAD_L10N = "chrome://browser/locale/devtools/scratchpad.properties";
-const DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
-const PREF_RECENT_FILES_MAX = "devtools.scratchpad.recentFilesMax";
-const BUTTON_POSITION_SAVE = 0;
-const BUTTON_POSITION_CANCEL = 1;
-const BUTTON_POSITION_DONT_SAVE = 2;
-const BUTTON_POSITION_REVERT = 0;
-const VARIABLES_VIEW_URL = "chrome://browser/content/devtools/widgets/VariablesView.xul";
+  Services.prefs.getIntPref("devtools.debugger.remote-timeout"));
 
 // Because we have no constructor / destructor where we can log metrics we need
 // to do so here.
@@ -79,6 +82,7 @@ telemetry.toolOpened("scratchpad");
 var Scratchpad = {
   _instanceId: null,
   _initialWindowTitle: document.title,
+  _dirty: false,
 
   /**
    * Check if provided string is a mode-line and, if it is, return an
@@ -135,23 +139,32 @@ var Scratchpad = {
   initialized: false,
 
   /**
+   * Returns the 'dirty' state of this Scratchpad.
+   */
+  get dirty()
+  {
+    let clean = this.editor && this.editor.isClean();
+    return this._dirty || !clean;
+  },
+
+  /**
+   * Sets the 'dirty' state of this Scratchpad.
+   */
+  set dirty(aValue)
+  {
+    this._dirty = aValue;
+    if (!aValue && this.editor)
+      this.editor.markClean();
+    this._updateTitle();
+  },
+
+  /**
    * Retrieve the xul:notificationbox DOM element. It notifies the user when
    * the current code execution context is SCRATCHPAD_CONTEXT_BROWSER.
    */
   get notificationBox()
   {
     return document.getElementById("scratchpad-notificationbox");
-  },
-
-  /**
-   * Get the selected text from the editor.
-   *
-   * @return string
-   *         The selected text.
-   */
-  get selectedText()
-  {
-    return this.editor.getSelectedText();
   },
 
   /**
@@ -169,24 +182,8 @@ var Scratchpad = {
    */
   getText: function SP_getText(aStart, aEnd)
   {
-    return this.editor.getText(aStart, aEnd);
-  },
-
-  /**
-   * Replace text in the source editor with the given text, in the given range.
-   *
-   * @param string aText
-   *        The text you want to put into the editor.
-   * @param number [aStart=0]
-   *        Optional, the start offset, zero based, from where you want to start
-   *        replacing text in the editor.
-   * @param number [aEnd=char count]
-   *        Optional, the end offset, zero based, where you want to stop
-   *        replacing text in the editor.
-   */
-  setText: function SP_setText(aText, aStart, aEnd)
-  {
-    this.editor.setText(aText, aStart, aEnd);
+    var value = this.editor.getText();
+    return value.slice(aStart || 0, aEnd || value.length);
   },
 
   /**
@@ -209,9 +206,8 @@ var Scratchpad = {
   {
     let title = this.filename || this._initialWindowTitle;
 
-    if (this.editor && this.editor.dirty) {
+    if (this.dirty)
       title = "*" + title;
-    }
 
     document.title = title;
   },
@@ -230,7 +226,7 @@ var Scratchpad = {
       filename: this.filename,
       text: this.getText(),
       executionContext: this.executionContext,
-      saved: !this.editor.dirty,
+      saved: !this.dirty
     };
   },
 
@@ -243,19 +239,15 @@ var Scratchpad = {
    */
   setState: function SP_setState(aState)
   {
-    if (aState.filename) {
+    if (aState.filename)
       this.setFilename(aState.filename);
-    }
-    if (this.editor) {
-      this.editor.dirty = !aState.saved;
-    }
 
-    if (aState.executionContext == SCRATCHPAD_CONTEXT_BROWSER) {
+    this.dirty = !aState.saved;
+
+    if (aState.executionContext == SCRATCHPAD_CONTEXT_BROWSER)
       this.setBrowserContext();
-    }
-    else {
+    else
       this.setContentContext();
-    }
   },
 
   /**
@@ -297,36 +289,12 @@ var Scratchpad = {
   },
 
   /**
-   * Drop the editor selection.
+   * Replaces context of an editor with provided value (a string).
+   * Note: this method is simply a shortcut to editor.setText.
    */
-  deselect: function SP_deselect()
+  setText: function SP_setText(value)
   {
-    this.editor.dropSelection();
-  },
-
-  /**
-   * Select a specific range in the Scratchpad editor.
-   *
-   * @param number aStart
-   *        Selection range start.
-   * @param number aEnd
-   *        Selection range end.
-   */
-  selectRange: function SP_selectRange(aStart, aEnd)
-  {
-    this.editor.setSelection(aStart, aEnd);
-  },
-
-  /**
-   * Get the current selection range.
-   *
-   * @return object
-   *         An object with two properties, start and end, that give the
-   *         selection range (zero based offsets).
-   */
-  getSelectionRange: function SP_getSelection()
-  {
-    return this.editor.getSelection();
+    return this.editor.setText(value);
   },
 
   /**
@@ -380,7 +348,7 @@ var Scratchpad = {
    */
   execute: function SP_execute()
   {
-    let selection = this.selectedText || this.getText();
+    let selection = this.editor.getSelection() || this.getText();
     return this.evaluate(selection);
   },
 
@@ -403,7 +371,7 @@ var Scratchpad = {
         this.writeAsErrorComment(aError.exception).then(resolve, reject);
       }
       else {
-        this.deselect();
+        this.editor.dropSelection();
         resolve();
       }
     }, reject);
@@ -434,7 +402,7 @@ var Scratchpad = {
         this._writePrimitiveAsComment(aResult).then(resolve, reject);
       }
       else {
-        this.deselect();
+        this.editor.dropSelection();
         this.sidebar.open(aString, aResult).then(resolve, reject);
       }
     }, reject);
@@ -539,7 +507,7 @@ var Scratchpad = {
           }
         }
       });
-      this.setText(prettyText);
+      this.editor.setText(prettyText);
     } catch (e) {
       this.writeAsErrorComment(DevToolsUtils.safeErrorString(e));
     }
@@ -588,17 +556,21 @@ var Scratchpad = {
    */
   writeAsComment: function SP_writeAsComment(aValue)
   {
-    let selection = this.getSelectionRange();
-    let insertionPoint = selection.start != selection.end ?
-                         selection.end : // after selected text
-                         this.editor.getCharCount(); // after text end
+    let value = "\n/*\n" + aValue + "\n*/";
 
-    let newComment = "\n/*\n" + aValue + "\n*/";
+    if (this.editor.somethingSelected()) {
+      let from = this.editor.getCursor("end");
+      this.editor.replaceSelection(this.editor.getSelection() + value);
+      let to = this.editor.getPosition(this.editor.getOffset(from) + value.length);
+      this.editor.setSelection(from, to);
+      return;
+    }
 
-    this.setText(newComment, insertionPoint, insertionPoint);
+    let text = this.editor.getText();
+    this.editor.setText(text + value);
 
-    // Select the new comment.
-    this.selectRange(insertionPoint, insertionPoint + newComment.length);
+    let [ from, to ] = this.editor.getPosition(text.length, (text + value).length);
+    this.editor.setSelection(from, to);
   },
 
   /**
@@ -814,8 +786,9 @@ var Scratchpad = {
           this.setBrowserContext();
         }
 
-        this.setText(content);
-        this.editor.resetUndo();
+        this.editor.setText(content);
+        this.editor.clearHistory();
+        document.getElementById("sp-cmd-revert").setAttribute("disabled", true);
       }
       else if (!aSilentError) {
         window.alert(this.strings.GetStringFromName("openFile.failed"));
@@ -1090,7 +1063,8 @@ var Scratchpad = {
 
     this.exportToFile(file, true, false, aStatus => {
       if (Components.isSuccessCode(aStatus)) {
-        this.editor.dirty = false;
+        this.dirty = false;
+        document.getElementById("sp-cmd-revert").setAttribute("disabled", true);
         this.setRecentFile(file);
       }
       if (aCallback) {
@@ -1113,7 +1087,7 @@ var Scratchpad = {
         this.setFilename(fp.file.path);
         this.exportToFile(fp.file, true, false, aStatus => {
           if (Components.isSuccessCode(aStatus)) {
-            this.editor.dirty = false;
+            this.dirty = false;
             this.setRecentFile(fp.file);
           }
           if (aCallback) {
@@ -1315,76 +1289,45 @@ var Scratchpad = {
       initialText = state.text;
     }
 
-    this.editor = new SourceEditor();
+    this.editor = new Editor({
+      mode: Editor.modes.js,
+      value: initialText,
+      lineNumbers: true,
+      contextMenu: "scratchpad-text-popup"
+    });
 
-    let config = {
-      mode: SourceEditor.MODES.JAVASCRIPT,
-      showLineNumbers: true,
-      initialText: initialText,
-      contextMenu: "scratchpad-text-popup",
-    };
+    this.editor.appendTo(document.querySelector("#scratchpad-editor")).then(() => {
+      var lines = initialText.split("\n");
 
-    let editorPlaceholder = document.getElementById("scratchpad-editor");
-    this.editor.init(editorPlaceholder, config,
-                     this._onEditorLoad.bind(this, state));
+      this.editor.on("change", this._onChanged);
+      this.editor.focus();
+      this.editor.setCursor({ line: lines.length, ch: lines.pop().length });
+
+      if (state)
+        this.dirty = !state.saved;
+
+      this.initialized = true;
+      this._triggerObservers("Ready");
+      this.populateRecentFilesMenu();
+      PreferenceObserver.init();
+    }).then(null, (err) => console.log(err.message));
   },
 
   /**
-   * The load event handler for the source editor. This method does post-load
-   * editor initialization.
-   *
-   * @private
-   * @param object aState
-   *        The initial Scratchpad state object.
-   */
-  _onEditorLoad: function SP__onEditorLoad(aState)
-  {
-    this.editor.addEventListener(SourceEditor.EVENTS.DIRTY_CHANGED,
-                                 this._onDirtyChanged);
-    this.editor.focus();
-    this.editor.setCaretOffset(this.editor.getCharCount());
-    if (aState) {
-      this.editor.dirty = !aState.saved;
-    }
-
-    this.initialized = true;
-    this._triggerObservers("Ready");
-    this.populateRecentFilesMenu();
-    PreferenceObserver.init();
-  },
-
-  /**
-   * Insert text at the current caret location.
-   *
-   * @param string aText
-   *        The text you want to insert.
-   */
-  insertTextAtCaret: function SP_insertTextAtCaret(aText)
-  {
-    let caretOffset = this.editor.getCaretOffset();
-    this.setText(aText, caretOffset, caretOffset);
-    this.editor.setCaretOffset(caretOffset + aText.length);
-  },
-
-  /**
-   * The Source Editor DirtyChanged event handler. This function updates the
+   * The Source Editor "change" event handler. This function updates the
    * Scratchpad window title to show an asterisk when there are unsaved changes.
    *
    * @private
-   * @see SourceEditor.EVENTS.DIRTY_CHANGED
-   * @param object aEvent
-   *        The DirtyChanged event object.
    */
-  _onDirtyChanged: function SP__onDirtyChanged(aEvent)
+  _onChanged: function SP__onChanged()
   {
     Scratchpad._updateTitle();
+
     if (Scratchpad.filename) {
-      if (Scratchpad.editor.dirty) {
+      if (Scratchpad.dirty)
         document.getElementById("sp-cmd-revert").removeAttribute("disabled");
-      }
-      else {
+      else
         document.getElementById("sp-cmd-revert").setAttribute("disabled", true);
-      }
     }
   },
 
@@ -1417,21 +1360,22 @@ var Scratchpad = {
     }
 
     // This event is created only after user uses 'reload and run' feature.
-    if (this._reloadAndRunEvent) {
+    if (this._reloadAndRunEvent && this.gBrowser) {
       this.gBrowser.selectedBrowser.removeEventListener("load",
           this._reloadAndRunEvent, true);
     }
 
-    this.editor.removeEventListener(SourceEditor.EVENTS.DIRTY_CHANGED,
-                                    this._onDirtyChanged);
     PreferenceObserver.uninit();
 
+    this.editor.off("change", this._onChanged);
     this.editor.destroy();
     this.editor = null;
+
     if (this._sidebar) {
       this._sidebar.destroy();
       this._sidebar = null;
     }
+
     this.webConsoleClient = null;
     this.debuggerClient = null;
     this.initialized = false;
@@ -1452,7 +1396,7 @@ var Scratchpad = {
    */
   promptSave: function SP_promptSave(aCallback)
   {
-    if (this.editor.dirty) {
+    if (this.dirty) {
       let ps = Services.prompt;
       let flags = ps.BUTTON_POS_0 * ps.BUTTON_TITLE_SAVE +
                   ps.BUTTON_POS_1 * ps.BUTTON_TITLE_CANCEL +

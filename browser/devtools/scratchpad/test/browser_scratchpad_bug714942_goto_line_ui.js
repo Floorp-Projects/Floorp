@@ -20,26 +20,23 @@ function runTests(aWindow, aScratchpad)
   let editor = aScratchpad.editor;
   let text = "foobar bug650345\nBug650345 bazbaz\nfoobar omg\ntest";
   editor.setText(text);
-  editor.setCaretOffset(0);
+  editor.setCursor({ line: 0, ch: 0 });
 
-  let oldPrompt = Services.prompt;
-  let desiredValue = null;
-  Services.prompt = {
-    prompt: function(aWindow, aTitle, aMessage, aValue) {
-      aValue.value = desiredValue;
-      return true;
-    },
+  let oldPrompt = editor.openDialog;
+  let desiredValue;
+
+  editor.openDialog = function (text, cb) {
+    cb(desiredValue);
   };
 
   desiredValue = 3;
   EventUtils.synthesizeKey("J", {accelKey: true}, aWindow);
-  is(editor.getCaretOffset(), 34, "caret offset is correct");
+  is(editor.getCursor().line, 2, "line is correct");
 
   desiredValue = 2;
   aWindow.goDoCommand("cmd_gotoLine")
-  is(editor.getCaretOffset(), 17, "caret offset is correct (again)");
+  is(editor.getCursor().line, 1, "line is correct (again)");
 
-  Services.prompt = oldPrompt;
-
+  editor.openDialog = oldPrompt;
   finish();
 }
