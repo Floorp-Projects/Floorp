@@ -18,7 +18,7 @@
 #include "nsIAccessibleStates.h"
 
 #include "nsIContent.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsTArray.h"
 #include "nsRefPtrHashtable.h"
 

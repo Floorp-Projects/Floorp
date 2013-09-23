@@ -13,7 +13,7 @@
 
 #include "js/TypeDecls.h"
 #include "nsAutoJSValHolder.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 namespace mozilla {
 

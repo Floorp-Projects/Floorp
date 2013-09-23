@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsapi.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "JSObjectBuilder.h"
 
 JSObjectBuilder::JSObjectBuilder(JSContext *aCx) : mCx(aCx), mOk(true)

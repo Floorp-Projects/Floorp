@@ -6,7 +6,7 @@
 
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "prthread.h"

@@ -12,7 +12,7 @@
 #include "nsColorNames.h"               // for nsColorNames
 #include "nsDebug.h"                    // for NS_ASSERTION, etc
 #include "nsStaticNameTable.h"
-#include "nsStringGlue.h"               // for nsAutoCString, nsString, etc
+#include "nsString.h"               // for nsAutoCString, nsString, etc
 #include "nscore.h"                     // for nsAString, etc
 
 using namespace mozilla;

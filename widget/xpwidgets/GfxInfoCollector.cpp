@@ -7,7 +7,7 @@
 
 #include "GfxInfoCollector.h"
 #include "jsapi.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 using namespace mozilla;
 using namespace widget;

@@ -13,7 +13,7 @@
 #include "nsCOMArray.h"
 #include "nsIPluginTag.h"
 #include "nsITimer.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 class nsPluginHost;
 struct PRLibrary;
