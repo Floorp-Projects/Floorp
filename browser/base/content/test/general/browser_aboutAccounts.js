@@ -19,7 +19,7 @@ let gTests = [
   setup: function ()
   {
     Services.prefs.setCharPref("firefox.accounts.remoteUrl",
-                               "https://example.com/browser/browser/base/content/test/accounts_testRemoteCommands.html");
+                               "https://example.com/browser/browser/base/content/test/general/accounts_testRemoteCommands.html");
   },
   run: function ()
   {
