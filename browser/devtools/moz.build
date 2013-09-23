@@ -24,3 +24,8 @@ DIRS += [
     'fontinspector',
     'app-manager',
 ]
+
+EXTRA_COMPONENTS += [
+    'devtools-clhandler.js',
+    'devtools-clhandler.manifest',
+]
