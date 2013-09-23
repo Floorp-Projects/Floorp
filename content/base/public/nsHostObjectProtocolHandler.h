@@ -15,6 +15,7 @@
 #define MEDIASTREAMURI_SCHEME "mediastream"
 #define MEDIASOURCEURI_SCHEME "mediasource"
 #define FONTTABLEURI_SCHEME "moz-fonttable"
+#define RTSPURI_SCHEME "rtsp"
 
 class nsIDOMBlob;
 class nsIDOMMediaStream;
@@ -83,6 +84,12 @@ inline bool IsBlobURI(nsIURI* aUri)
 {
   bool isBlob;
   return NS_SUCCEEDED(aUri->SchemeIs(BLOBURI_SCHEME, &isBlob)) && isBlob;
+}
+
+inline bool IsRtspURI(nsIURI* aUri)
+{
+  bool isRtsp;
+  return NS_SUCCEEDED(aUri->SchemeIs(RTSPURI_SCHEME, &isRtsp)) && isRtsp;
 }
 
 inline bool IsMediaStreamURI(nsIURI* aUri)
