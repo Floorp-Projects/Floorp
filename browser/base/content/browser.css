@@ -151,6 +151,7 @@ toolbar[printpreview="true"] {
 
 toolbar[overflowable] > .customization-target {
   overflow-x: hidden;
+  overflow-y: visible;
 }
 
 toolbar:not([overflowing]) > .overflow-button,
