@@ -20,7 +20,7 @@
 #include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
 #include "nsSize.h"                     // for nsIntSize
 #include "gfxReusableSharedImageSurfaceWrapper.h"
- #include "nsMathUtils.h"               // for NS_roundf
+#include "nsMathUtils.h"               // for NS_roundf
 
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
 #include "cairo.h"
