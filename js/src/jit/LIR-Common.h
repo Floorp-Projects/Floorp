@@ -2801,6 +2801,22 @@ class LOsrScopeChain : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Materialize a JSObject ArgumentsObject stored in an interpreter frame for OSR.
+class LOsrArgumentsObject : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(OsrArgumentsObject)
+
+    LOsrArgumentsObject(const LAllocation &entry)
+    {
+        setOperand(0, entry);
+    }
+
+    const MOsrArgumentsObject *mir() {
+        return mir_->toOsrArgumentsObject();
+    }
+};
+
 class LRegExp : public LCallInstructionHelper<1, 0, 0>
 {
   public:
