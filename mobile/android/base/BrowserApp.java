@@ -1927,17 +1927,15 @@ abstract public class BrowserApp extends GeckoApp
                 shareIntent.putExtra(Intent.EXTRA_TITLE, tab.getDisplayTitle());
 
                 // Clear the existing thumbnail extras so we don't share an old thumbnail.
-                shareIntent.removeExtra("share_screenshot");
                 shareIntent.removeExtra("share_screenshot_uri");
 
                 // Include the thumbnail of the page being shared.
                 BitmapDrawable drawable = tab.getThumbnail();
                 if (drawable != null) {
                     Bitmap thumbnail = drawable.getBitmap();
-                    shareIntent.putExtra("share_screenshot", thumbnail);
 
                     // Kobo uses a custom intent extra for sharing thumbnails.
-                    if (Build.MANUFACTURER.equals("Kobo")) {
+                    if (Build.MANUFACTURER.equals("Kobo") && thumbnail != null) {
                         File cacheDir = getExternalCacheDir();
 
                         if (cacheDir != null) {
