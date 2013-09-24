@@ -8,6 +8,7 @@
 
 #include "gfxASurface.h"
 #include "nsExpirationTracker.h"
+#include "nsSize.h"
 
 class gfxContext;
 

@@ -9,13 +9,13 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
+#include "nsTraceRefcnt.h"
 
 #include "gfxASurface.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "gfxPlatform.h"
-
-#include "nsRect.h"
+#include "gfxRect.h"
 
 #include "cairo.h"
 #include <algorithm>
@@ -55,6 +55,20 @@
 using namespace mozilla;
 
 static cairo_user_data_key_t gfxasurface_pointer_key;
+
+gfxASurface::gfxASurface()
+ : mSurface(nullptr), mFloatingRefs(0), mBytesRecorded(0),
+   mSurfaceValid(false), mAllowUseAsSource(true)
+{
+    MOZ_COUNT_CTOR(gfxASurface);
+}
+
+gfxASurface::~gfxASurface()
+{
+    RecordMemoryFreed();
+
+    MOZ_COUNT_DTOR(gfxASurface);
+}
 
 // Surfaces use refcounting that's tied to the cairo surface refcnt, to avoid
 // refcount mismatch issues.
@@ -100,6 +114,18 @@ gfxASurface::Release(void)
 
         return mFloatingRefs;
     }
+}
+
+nsrefcnt
+gfxASurface::AddRefExternal(void)
+{
+  return AddRef();
+}
+
+nsrefcnt
+gfxASurface::ReleaseExternal(void)
+{
+  return Release();
 }
 
 void
@@ -294,7 +320,7 @@ gfxASurface::Finish()
 
 already_AddRefed<gfxASurface>
 gfxASurface::CreateSimilarSurface(gfxContentType aContent,
-                                  const gfxIntSize& aSize)
+                                  const nsIntSize& aSize)
 {
     if (!mSurface || !mSurfaceValid) {
       return nullptr;
@@ -330,7 +356,7 @@ gfxASurface::CopyToARGB32ImageSurface()
       return nullptr;
     }
 
-    const gfxIntSize size = GetSize();
+    const nsIntSize size = GetSize();
     nsRefPtr<gfxImageSurface> imgSurface =
         new gfxImageSurface(size, gfxASurface::ImageFormatARGB32);
 
@@ -353,7 +379,7 @@ gfxASurface::CairoStatus()
 
 /* static */
 bool
-gfxASurface::CheckSurfaceSize(const gfxIntSize& sz, int32_t limit)
+gfxASurface::CheckSurfaceSize(const nsIntSize& sz, int32_t limit)
 {
     if (sz.width < 0 || sz.height < 0) {
         NS_WARNING("Surface width or height < 0!");
@@ -519,7 +545,7 @@ gfxASurface::MovePixels(const nsIntRect& aSourceRect,
     // a temporary surface instead.
     nsRefPtr<gfxASurface> tmp = 
       CreateSimilarSurface(GetContentType(), 
-                           gfxIntSize(aSourceRect.width, aSourceRect.height));
+                           nsIntSize(aSourceRect.width, aSourceRect.height));
     // CreateSimilarSurface can return nullptr if the current surface is
     // in an error state. This isn't good, but its better to carry
     // on with the error surface instead of crashing.
@@ -749,7 +775,7 @@ void
 gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
 {
   nsRefPtr<gfxImageSurface> imgsurf = GetAsImageSurface();
-  gfxIntSize size;
+  nsIntSize size;
 
   // FIXME/bug 831898: hack r5g6b5 for now.
   if (!imgsurf || imgsurf->Format() == ImageFormatRGB16_565) {
@@ -760,7 +786,7 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
     }
 
     imgsurf =
-      new gfxImageSurface(gfxIntSize(size.width, size.height),
+      new gfxImageSurface(nsIntSize(size.width, size.height),
                           gfxASurface::ImageFormatARGB32);
 
     if (!imgsurf || imgsurf->CairoStatus()) {
@@ -887,4 +913,35 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
   }
 
   return;
+}
+
+void
+gfxASurface::SetOpaqueRect(const gfxRect& aRect)
+{
+    if (aRect.IsEmpty()) {
+        mOpaqueRect = nullptr;
+    } else if (!!mOpaqueRect) {
+        *mOpaqueRect = aRect;
+    } else {
+        mOpaqueRect = new gfxRect(aRect);
+    }
+}
+
+/* static */const gfxRect&
+gfxASurface::GetEmptyOpaqueRect()
+{
+  static const gfxRect empty(0, 0, 0, 0);
+  return empty;
+}
+
+const nsIntSize
+gfxASurface::GetSize() const
+{
+  return nsIntSize(-1, -1);
+}
+
+already_AddRefed<gfxImageSurface>
+gfxASurface::GetAsImageSurface()
+{
+  return nullptr;
 }
