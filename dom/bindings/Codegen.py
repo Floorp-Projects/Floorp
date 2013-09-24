@@ -2429,61 +2429,6 @@ class FailureFatalCastableObjectUnwrapper(CastableObjectUnwrapper):
             exceptionCode,
             isCallbackReturnValue)
 
-class CallbackObjectUnwrapper:
-    """
-    A class for unwrapping objects implemented in JS.
-
-    |source| is the JSObject we want to use in native code.
-    |target| is an nsCOMPtr of the appropriate type in which we store the result.
-    """
-    def __init__(self, descriptor, source, target, exceptionCode,
-                 sourceDescription, codeOnFailure=None):
-        if codeOnFailure is None:
-            codeOnFailure = (
-                'ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s", "%s");\n'
-                '%s' % (sourceDescription, descriptor.interface.identifier.name,
-                        exceptionCode))
-        self.descriptor = descriptor
-        self.substitution = { "nativeType" : descriptor.nativeType,
-                              "source" : source,
-                              "target" : target,
-                              "codeOnFailure" : CGIndenter(CGGeneric(codeOnFailure)).define() }
-
-    def __str__(self):
-        checkObjectType = CGIfWrapper(
-            CGGeneric(self.substitution["codeOnFailure"]),
-            "!IsConvertibleToCallbackInterface(cx, %(source)s)" %
-            self.substitution).define() + "\n\n"
-        if self.descriptor.workers:
-            return checkObjectType + string.Template(
-                "${target} = ${source};"
-                ).substitute(self.substitution)
-
-        return checkObjectType + string.Template(
-            """nsISupports* supp = nullptr;
-if (XPCConvert::GetISupportsFromJSObject(${source}, &supp)) {
-  nsCOMPtr<nsIXPConnectWrappedNative> xpcwn = do_QueryInterface(supp);
-  if (xpcwn) {
-    supp = xpcwn->Native();
-  }
-}
-
-const nsIID& iid = NS_GET_IID(${nativeType});
-nsRefPtr<nsXPCWrappedJS> wrappedJS;
-nsresult rv = nsXPCWrappedJS::GetNewOrUsed(${source}, iid,
-                                           supp, getter_AddRefs(wrappedJS));
-if (NS_FAILED(rv) || !wrappedJS) {
-${codeOnFailure}
-}
-
-// Use a temp nsCOMPtr for the null-check, because ${target} might be
-// OwningNonNull, not an nsCOMPtr.
-nsCOMPtr<${nativeType}> tmp = do_QueryObject(wrappedJS.get());
-if (!tmp) {
-${codeOnFailure}
-}
-${target} = tmp.forget();""").substitute(self.substitution)
-
 class JSToNativeConversionInfo():
     """
     An object representing information about a JS-to-native conversion.
@@ -3217,21 +3162,7 @@ for (uint32_t i = 0; i < length; ++i) {
                 declType = "NonNull<" + typeName + ">"
 
         templateBody = ""
-        if descriptor.interface.isCallback():
-            # NOTE: This is only used for EventListener at this point
-            callbackConversion = str(CallbackObjectUnwrapper(
-                    descriptor,
-                    "callbackObj",
-                    "${declName}",
-                    exceptionCode,
-                    firstCap(sourceDescription),
-                    codeOnFailure=failureCode))
-            templateBody += (
-                "{ // Scope for callbackObj\n"
-                "  JS::Rooted<JSObject*> callbackObj(cx, &${val}.toObject());\n" +
-                CGIndenter(CGGeneric(callbackConversion)).define() +
-                "\n}")
-        elif not descriptor.skipGen and not descriptor.interface.isConsequential() and not descriptor.interface.isExternal():
+        if not descriptor.skipGen and not descriptor.interface.isConsequential() and not descriptor.interface.isExternal():
             if failureCode is not None:
                 templateBody += str(CastableObjectUnwrapper(
                         descriptor,
