@@ -44,7 +44,6 @@ friend already_AddRefed<Image> CreateSharedRGBImage(ImageContainer* aImageContai
                                                     nsIntSize aSize,
                                                     gfxImageFormat aImageFormat);
 public:
-  typedef gfxImageFormat gfxImageFormat;
   struct Header {
     gfxImageFormat mImageFormat;
   };
@@ -103,7 +102,6 @@ protected:
 class SharedRGBImage : public Image
                      , public ISharedImage
 {
-  typedef gfxImageFormat gfxImageFormat;
 public:
   SharedRGBImage(ImageClient* aCompositable);
   ~SharedRGBImage();

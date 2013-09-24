@@ -121,8 +121,6 @@ const uint32_t kMaxLenPrefLangList = 32;
 
 #define UNINITIALIZED_VALUE  (-1)
 
-typedef gfxImageFormat gfxImageFormat;
-
 inline const char*
 GetBackendName(mozilla::gfx::BackendType aBackend)
 {

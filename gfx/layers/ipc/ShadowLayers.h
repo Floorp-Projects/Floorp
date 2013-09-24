@@ -137,8 +137,6 @@ class ShadowLayerForwarder : public CompositableForwarder
   friend class DeprecatedTextureClientShmem;
   friend class ContentClientIncremental;
 
-  typedef gfxImageFormat gfxImageFormat;
-
 public:
   virtual ~ShadowLayerForwarder();
 

@@ -8,8 +8,6 @@
 #include "AndroidDirectTexture.h"
 #include "nsRect.h"
 
-typedef gfxImageFormat gfxImageFormat;
-
 namespace mozilla {
 
 AndroidDirectTexture::AndroidDirectTexture(uint32_t width, uint32_t height, uint32_t usage,

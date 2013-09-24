@@ -21,8 +21,6 @@ typedef uint32_t EGLenum;
 typedef int32_t EGLint;
 typedef uint32_t EGLBoolean;
 
-typedef gfxImageFormat gfxImageFormat;
-
 #define EGL_TRUE 1
 #define EGL_FALSE 0
 #define EGL_NONE 0x3038
@@ -392,9 +390,9 @@ uint32_t
 AndroidGraphicBuffer::GetAndroidFormat(gfxImageFormat aFormat)
 {
   switch (aFormat) {
-    case gfxImageFormat::gfxImageFormatRGB24:
+    case gfxImageFormatRGB24:
       return HAL_PIXEL_FORMAT_RGBX_8888;
-    case gfxImageFormat::gfxImageFormatRGB16_565:
+    case gfxImageFormatRGB16_565:
       return HAL_PIXEL_FORMAT_RGB_565;
     default:
       return 0;
