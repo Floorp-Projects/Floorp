@@ -16,7 +16,6 @@
 #include "nsJSPrincipals.h"
 #include "nsCOMPtr.h"
 #include "nsPrincipal.h"
-#include "nsIContentSecurityPolicy.h"
 
 class nsIURI;
 
@@ -54,7 +53,6 @@ public:
   virtual ~nsNullPrincipal();
 
   nsCOMPtr<nsIURI> mURI;
-  nsCOMPtr<nsIContentSecurityPolicy> mCSP;
 };
 
 #endif // nsNullPrincipal_h__
