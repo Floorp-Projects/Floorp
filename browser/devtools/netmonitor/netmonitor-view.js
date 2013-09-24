@@ -1539,6 +1539,7 @@ NetworkDetailsView.prototype = {
       Heritage.extend(GENERIC_VARIABLES_VIEW_SETTINGS, {
         searchPlaceholder: L10N.getStr("jsonFilterText")
       }));
+    VariablesViewController.attach(this._json);
 
     this._paramsQueryString = L10N.getStr("paramsQueryString");
     this._paramsFormData = L10N.getStr("paramsFormData");
@@ -1889,9 +1890,10 @@ NetworkDetailsView.prototype = {
             ? L10N.getFormatStr("jsonpScopeName", callbackPadding[0].slice(0, -1))
             : L10N.getStr("jsonScopeName");
 
-          let jsonScope = this._json.addScope(jsonScopeName);
-          jsonScope.addItem().populate(jsonObject, { expanded: true });
-          jsonScope.expanded = true;
+          this._json.controller.setSingleVariable({
+            label: jsonScopeName,
+            rawObject: jsonObject,
+          });
         }
         // Malformed JSON.
         else {
