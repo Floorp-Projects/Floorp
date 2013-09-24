@@ -40,12 +40,12 @@ public:
   using nsIDOMEventTarget::RemoveEventListener;
   using nsIDOMEventTarget::DispatchEvent;
   virtual void AddEventListener(const nsAString& aType,
-                                nsIDOMEventListener* aCallback,
+                                EventListener* aCallback,
                                 bool aCapture,
                                 const Nullable<bool>& aWantsUntrusted,
                                 ErrorResult& aRv) = 0;
   virtual void RemoveEventListener(const nsAString& aType,
-                                   nsIDOMEventListener* aCallback,
+                                   EventListener* aCallback,
                                    bool aCapture,
                                    ErrorResult& aRv);
   bool DispatchEvent(nsDOMEvent& aEvent, ErrorResult& aRv);
