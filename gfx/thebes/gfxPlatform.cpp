@@ -10,7 +10,6 @@
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "mozilla/layers/ISurfaceAllocator.h"     // for GfxHeapTexturesReporter
 
 #include "prlog.h"
 #include "prenv.h"
@@ -442,8 +441,6 @@ gfxPlatform::Init()
                                           false);
 
     CreateCMSOutputProfile();
-
-    NS_RegisterMemoryReporter(new GfxHeapTexturesReporter());
 }
 
 void
