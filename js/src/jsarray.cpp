@@ -1358,7 +1358,7 @@ CompareStringValues(JSContext *cx, const Value &a, const Value &b, bool *lessOrE
     return true;
 }
 
-static const uint64_t powersOf10[] = {
+static uint64_t const powersOf10[] = {
     1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 1000000000000ULL
 };
 

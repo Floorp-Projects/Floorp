@@ -1026,7 +1026,7 @@ typedef enum JSShellErrNum {
     JSShellErr_Limit
 } JSShellErrNum;
 
-const JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {
+JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {
 #define MSG_DEF(name, number, count, exception, format) \
     { format, count } ,
 #include "jsshell.msg"

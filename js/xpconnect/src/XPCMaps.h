@@ -175,7 +175,7 @@ public:
         const nsIID*         key;
         nsXPCWrappedJSClass* value;
 
-        static const struct PLDHashTableOps sOps;
+        static struct PLDHashTableOps sOps;
     };
 
     static IID2WrappedJSClassMap* newMap(int size);
@@ -232,7 +232,7 @@ public:
         const nsIID*        key;
         XPCNativeInterface* value;
 
-        static const struct PLDHashTableOps sOps;
+        static struct PLDHashTableOps sOps;
     };
 
     static IID2NativeInterfaceMap* newMap(int size);
@@ -417,7 +417,7 @@ public:
               const PLDHashEntryHdr *entry,
               const void *key);
 
-        static const struct PLDHashTableOps sOps;
+        static struct PLDHashTableOps sOps;
     };
 
     static NativeSetMap* newMap(int size);
@@ -494,7 +494,7 @@ public:
         static void
         Clear(PLDHashTable *table, PLDHashEntryHdr *entry);
 
-        static const struct PLDHashTableOps sOps;
+        static struct PLDHashTableOps sOps;
     };
 
     static IID2ThisTranslatorMap* newMap(int size);
@@ -557,7 +557,7 @@ public:
               const PLDHashEntryHdr *entry,
               const void *key);
 
-        static const struct PLDHashTableOps sOps;
+        static struct PLDHashTableOps sOps;
     };
 
     static XPCNativeScriptableSharedMap* newMap(int size);

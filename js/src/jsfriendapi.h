@@ -854,10 +854,10 @@ typedef enum DOMProxyShadowsResult {
 typedef DOMProxyShadowsResult
 (* DOMProxyShadowsCheck)(JSContext* cx, JS::HandleObject object, JS::HandleId id);
 JS_FRIEND_API(void)
-SetDOMProxyInformation(const void *domProxyHandlerFamily, uint32_t domProxyExpandoSlot,
+SetDOMProxyInformation(void *domProxyHandlerFamily, uint32_t domProxyExpandoSlot,
                        DOMProxyShadowsCheck domProxyShadowsCheck);
 
-const void *GetDOMProxyHandlerFamily();
+void *GetDOMProxyHandlerFamily();
 uint32_t GetDOMProxyExpandoSlot();
 DOMProxyShadowsCheck GetDOMProxyShadowsCheck();
 

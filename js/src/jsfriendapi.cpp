@@ -218,7 +218,7 @@ JS_SetCompartmentPrincipals(JSCompartment *compartment, JSPrincipals *principals
 
     // Any compartment with the trusted principals -- and there can be
     // multiple -- is a system compartment.
-    const JSPrincipals *trusted = compartment->runtimeFromMainThread()->trustedPrincipals();
+    JSPrincipals *trusted = compartment->runtimeFromMainThread()->trustedPrincipals();
     bool isSystem = principals && principals == trusted;
 
     // Clear out the old principals, if any.
@@ -1031,12 +1031,12 @@ js::GetDOMCallbacks(JSRuntime *rt)
     return rt->DOMcallbacks;
 }
 
-static const void *gDOMProxyHandlerFamily = NULL;
+static void *gDOMProxyHandlerFamily = NULL;
 static uint32_t gDOMProxyExpandoSlot = 0;
 static DOMProxyShadowsCheck gDOMProxyShadowsCheck;
 
 JS_FRIEND_API(void)
-js::SetDOMProxyInformation(const void *domProxyHandlerFamily, uint32_t domProxyExpandoSlot,
+js::SetDOMProxyInformation(void *domProxyHandlerFamily, uint32_t domProxyExpandoSlot,
                            DOMProxyShadowsCheck domProxyShadowsCheck)
 {
     gDOMProxyHandlerFamily = domProxyHandlerFamily;
@@ -1044,7 +1044,7 @@ js::SetDOMProxyInformation(const void *domProxyHandlerFamily, uint32_t domProxyE
     gDOMProxyShadowsCheck = domProxyShadowsCheck;
 }
 
-const void *
+void *
 js::GetDOMProxyHandlerFamily()
 {
     return gDOMProxyHandlerFamily;
