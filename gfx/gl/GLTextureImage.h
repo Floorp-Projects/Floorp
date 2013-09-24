@@ -9,10 +9,12 @@
 #include "nsAutoPtr.h"
 #include "nsRegion.h"
 #include "nsTArray.h"
-#include "gfxASurface.h"
+#include "gfxTypes.h"
 #include "GLContextTypes.h"
 #include "gfxPattern.h"
 #include "mozilla/gfx/Rect.h"
+
+class gfxASurface;
 
 namespace mozilla {
 namespace gfx {

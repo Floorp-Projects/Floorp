@@ -12,6 +12,7 @@
 #include "mozilla/DebugOnly.h"          // for DebugOnly
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
+#include "AutoMaskData.h"
 
 using namespace mozilla::gfx;
 

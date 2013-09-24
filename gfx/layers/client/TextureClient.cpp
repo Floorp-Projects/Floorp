@@ -383,6 +383,11 @@ DeprecatedTextureClientShmem::DeprecatedTextureClientShmem(CompositableForwarder
 {
 }
 
+DeprecatedTextureClientShmem::~DeprecatedTextureClientShmem()
+{
+  ReleaseResources();
+}
+
 void
 DeprecatedTextureClientShmem::ReleaseResources()
 {

@@ -26,6 +26,8 @@
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsRect.h"                     // for nsIntRect
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl
+#include "AutoMaskData.h"
+
 struct gfxMatrix;
 
 using namespace mozilla::gfx;

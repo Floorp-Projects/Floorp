@@ -9,7 +9,7 @@
 
 #include "nsTArray.h"
 #include "mozilla/MemoryReporting.h"
-#include "gfxASurface.h"
+#include "gfxTypes.h"
 #include "imgFrame.h"
 
 namespace mozilla {
