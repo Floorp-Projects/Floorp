@@ -12,15 +12,14 @@
 #include "gfxPoint.h"                   // for gfxPoint
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
+#include "mozilla/EventForwards.h"      // for nsInputEvent, nsEventStatus
 #include "mozilla/Monitor.h"            // for Monitor
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsEvent.h"                    // for nsEventStatus
 #include "nsISupportsImpl.h"
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 
 class gfx3DMatrix;
-class nsInputEvent;
 template <class E> class nsTArray;
 
 namespace mozilla {

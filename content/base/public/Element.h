@@ -33,8 +33,8 @@
 #include "mozilla/dom/Attr.h"
 #include "nsISMILAttr.h"
 #include "nsClientRect.h"
-#include "nsEvent.h"
 #include "nsAttrValue.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "Units.h"
 

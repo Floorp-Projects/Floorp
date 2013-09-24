@@ -16,8 +16,8 @@
 #ifndef GONKKEYMAPPING_H
 #define GONKKEYMAPPING_H
 
-#include "nsEvent.h"
 #include "libui/android_keycodes.h"
+#include "mozilla/EventForwards.h"
 
 namespace mozilla {
 namespace widget {

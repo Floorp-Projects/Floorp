@@ -17,17 +17,14 @@ interface nsIDOMEventTarget;
 #undef ERROR
 #endif
 
-class nsEvent;
+#include "mozilla/EventForwards.h"
 class nsDOMEvent;
-class nsCommandEvent;
 class nsPresContext;
 class nsInvalidateRequestList;
 namespace IPC {
 class Message;
 }
 namespace mozilla {
-class WheelEvent;
-
 namespace dom {
 class EventTarget;
 } // namespace dom

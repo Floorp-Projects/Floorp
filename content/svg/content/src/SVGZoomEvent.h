@@ -9,9 +9,9 @@
 #include "nsAutoPtr.h"
 #include "nsDOMUIEvent.h"
 #include "DOMSVGPoint.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/dom/SVGZoomEventBinding.h"
 
-class nsGUIEvent;
 class nsISVGPoint;
 class nsPresContext;
 

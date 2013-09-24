@@ -8,7 +8,6 @@
 
 #include "mozilla/TypedEnum.h"
 
-#include "nsEvent.h"
 #include "nsGUIEvent.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
@@ -28,7 +27,6 @@ class nsIDocShellTreeItem;
 class imgIContainer;
 class nsDOMDataTransfer;
 class MouseEnterLeaveDispatcher;
-class nsEventStates;
 class nsIMarkupDocumentViewer;
 class nsIScrollableFrame;
 class nsITimer;
