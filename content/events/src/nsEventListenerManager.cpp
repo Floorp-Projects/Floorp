@@ -26,7 +26,7 @@
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsIDocument.h"
-#include "nsMutationEvent.h"
+#include "mozilla/MutationEvent.h"
 #include "nsIXPConnect.h"
 #include "nsDOMCID.h"
 #include "nsContentUtils.h"

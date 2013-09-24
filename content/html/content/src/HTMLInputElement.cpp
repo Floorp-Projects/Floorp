@@ -58,7 +58,7 @@
 #include "nsLayoutUtils.h"
 
 #include "nsIDOMMutationEvent.h"
-#include "nsMutationEvent.h"
+#include "mozilla/MutationEvent.h"
 #include "nsEventListenerManager.h"
 
 #include "nsRuleData.h"

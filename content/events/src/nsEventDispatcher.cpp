@@ -10,7 +10,6 @@
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsError.h"
-#include "nsMutationEvent.h"
 #include <new>
 #include "nsINode.h"
 #include "nsPIDOMWindow.h"
@@ -18,6 +17,7 @@
 #include "GeckoProfiler.h"
 #include "GeneratedEvents.h"
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/MutationEvent.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

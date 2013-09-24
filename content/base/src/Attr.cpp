@@ -10,6 +10,7 @@
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/AttrBinding.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/MutationEvent.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsINameSpaceManager.h"
 #include "nsError.h"
@@ -25,7 +26,6 @@
 #include "nsEventListenerManager.h"
 #include "nsTextNode.h"
 #include "mozAutoDocUpdate.h"
-#include "nsMutationEvent.h"
 #include "nsAsyncDOMEvent.h"
 #include "nsWrapperCacheInlines.h"
 
