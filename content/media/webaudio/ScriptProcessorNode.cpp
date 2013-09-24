@@ -24,22 +24,7 @@ namespace dom {
 // buffers.
 static const float MAX_LATENCY_S = 0.5;
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(ScriptProcessorNode)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ScriptProcessorNode)
-  if (tmp->Context()) {
-    tmp->Context()->UnregisterScriptProcessorNode(tmp);
-  }
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(AudioNode)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ScriptProcessorNode, AudioNode)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ScriptProcessorNode)
-NS_INTERFACE_MAP_END_INHERITING(AudioNode)
-
-NS_IMPL_ADDREF_INHERITED(ScriptProcessorNode, AudioNode)
-NS_IMPL_RELEASE_INHERITED(ScriptProcessorNode, AudioNode)
+NS_IMPL_ISUPPORTS_INHERITED0(ScriptProcessorNode, AudioNode)
 
 // This class manages a queue of output buffers shared between
 // the main thread and the Media Stream Graph thread.
@@ -424,9 +409,6 @@ ScriptProcessorNode::ScriptProcessorNode(AudioContext* aContext,
 
 ScriptProcessorNode::~ScriptProcessorNode()
 {
-  if (Context()) {
-    Context()->UnregisterScriptProcessorNode(this);
-  }
 }
 
 JSObject*
