@@ -17,6 +17,7 @@
 
 #include "nsIWidget.h"
 #include "gfxASurface.h"
+#include "nsAutoPtr.h"
 
 #include "mozilla/X11Util.h"
 #include <X11/Xlib.h>

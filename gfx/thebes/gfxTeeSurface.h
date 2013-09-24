@@ -8,6 +8,7 @@
 
 #include "gfxASurface.h"
 #include "nsTArray.h"
+#include "nsSize.h"
 
 /**
  * Wraps a cairo_tee_surface. The first surface in the surface list is the

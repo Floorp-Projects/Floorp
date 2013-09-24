@@ -10,10 +10,13 @@
 #include "nsTArray.h"
 #include "nsString.h"
 #include "nsIObserver.h"
+#include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 
 #include "gfxTypes.h"
 #include "gfxASurface.h"
 #include "gfxColor.h"
+#include "nsRect.h"
 
 #include "qcms.h"
 
